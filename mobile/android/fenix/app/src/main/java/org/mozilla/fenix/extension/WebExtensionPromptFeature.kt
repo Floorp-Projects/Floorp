@@ -232,7 +232,7 @@ class WebExtensionPromptFeature(
 
     private fun showPostInstallationDialog(addon: Addon) {
         if (!isInstallationInProgress && !hasExistingAddonPostInstallationDialogFragment()) {
-            val addonCollectionProvider = context.components.addonCollectionProvider
+            val addonsProvider = context.components.addonsProvider
 
             // Fragment may not be attached to the context anymore during onConfirmButtonClicked handling,
             // but we still want to be able to process user selection of the 'allowInPrivateBrowsing' pref.
@@ -243,7 +243,7 @@ class WebExtensionPromptFeature(
 
             val dialog = AddonInstallationDialogFragment.newInstance(
                 addon = addon,
-                addonCollectionProvider = addonCollectionProvider,
+                addonsProvider = addonsProvider,
                 promptsStyling = AddonInstallationDialogFragment.PromptsStyling(
                     gravity = Gravity.BOTTOM,
                     shouldWidthMatchParent = true,

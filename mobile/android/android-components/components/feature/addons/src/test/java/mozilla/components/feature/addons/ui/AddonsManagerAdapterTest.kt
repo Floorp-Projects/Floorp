@@ -18,7 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
-import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.amo.AMOAddonsProvider
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter.DifferCallback
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter.NotYetSupportedSection
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter.Section
@@ -119,9 +119,9 @@ class AddonsManagerAdapterTest {
     fun `handle errors while fetching the add-on icon`() = runTestOnMain {
         val addon = mock<Addon>()
         val mockedImageView = spy(ImageView(testContext))
-        val mockedCollectionProvider = mock<AddonCollectionProvider>()
-        val adapter = AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList())
-        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).then {
+        val mockedAddonsProvider = mock<AMOAddonsProvider>()
+        val adapter = AddonsManagerAdapter(mockedAddonsProvider, mock(), emptyList())
+        whenever(mockedAddonsProvider.getAddonIconBitmap(addon)).then {
             throw IOException("Request failed")
         }
 
@@ -138,9 +138,9 @@ class AddonsManagerAdapterTest {
         val addon = mock<Addon>()
         val bitmap = mock<Bitmap>()
         val mockedImageView = spy(ImageView(testContext))
-        val mockedCollectionProvider = mock<AddonCollectionProvider>()
-        val adapter = AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList())
-        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
+        val mockedAddonsProvider = mock<AMOAddonsProvider>()
+        val adapter = AddonsManagerAdapter(mockedAddonsProvider, mock(), emptyList())
+        whenever(mockedAddonsProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
 
         adapter.fetchIcon(addon, mockedImageView, scope).join()
 
@@ -152,9 +152,9 @@ class AddonsManagerAdapterTest {
         val addon = mock<Addon>()
         val bitmap = mock<Bitmap>()
         val mockedImageView = spy(ImageView(testContext))
-        val mockedCollectionProvider = mock<AddonCollectionProvider>()
-        val adapter = spy(AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList()))
-        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenAnswer {
+        val mockedAddonsProvider = mock<AMOAddonsProvider>()
+        val adapter = spy(AddonsManagerAdapter(mockedAddonsProvider, mock(), emptyList()))
+        whenever(mockedAddonsProvider.getAddonIconBitmap(addon)).thenAnswer {
             runBlocking {
                 delay(1000)
             }
@@ -174,10 +174,10 @@ class AddonsManagerAdapterTest {
         whenever(installedState.icon).thenReturn(icon)
         whenever(addon.installedState).thenReturn(installedState)
         val mockedImageView = spy(ImageView(testContext))
-        val mockedCollectionProvider = mock<AddonCollectionProvider>()
-        val adapter = AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList())
+        val mockedAddonsProvider = mock<AMOAddonsProvider>()
+        val adapter = AddonsManagerAdapter(mockedAddonsProvider, mock(), emptyList())
         val captor = argumentCaptor<BitmapDrawable>()
-        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(null)
+        whenever(mockedAddonsProvider.getAddonIconBitmap(addon)).thenReturn(null)
 
         adapter.fetchIcon(addon, mockedImageView, scope).join()
 

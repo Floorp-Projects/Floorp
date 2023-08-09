@@ -34,7 +34,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
-import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.amo.AMOAddonsProvider
 import mozilla.components.feature.addons.databinding.MozacFeatureAddonsFragmentDialogAddonInstalledBinding
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.appName
@@ -74,9 +74,9 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
     var onDismissed: (() -> Unit)? = null
 
     /**
-     * Reference to the application's [AddonCollectionProvider] to fetch add-on icons.
+     * Reference to the application's [AMOAddonsProvider] to fetch add-on icons.
      */
-    var addonCollectionProvider: AddonCollectionProvider? = null
+    var addonsProvider: AMOAddonsProvider? = null
 
     private val safeArguments get() = requireNotNull(arguments)
 
@@ -225,7 +225,7 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
     internal fun fetchIcon(addon: Addon, iconView: ImageView, scope: CoroutineScope = this.scope): Job {
         return scope.launch {
             try {
-                val iconBitmap = addonCollectionProvider?.getAddonIconBitmap(addon)
+                val iconBitmap = addonsProvider?.getAddonIconBitmap(addon)
                 iconBitmap?.let {
                     scope.launch(Dispatchers.Main) {
                         safeArguments.putParcelable(KEY_ICON, it)
@@ -273,7 +273,7 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
          */
         fun newInstance(
             addon: Addon,
-            addonCollectionProvider: AddonCollectionProvider,
+            addonsProvider: AMOAddonsProvider,
             promptsStyling: PromptsStyling? = PromptsStyling(
                 gravity = Gravity.BOTTOM,
                 shouldWidthMatchParent = true,
@@ -304,7 +304,7 @@ class AddonInstallationDialogFragment : AppCompatDialogFragment() {
             fragment.onConfirmButtonClicked = onConfirmButtonClicked
             fragment.onDismissed = onDismissed
             fragment.arguments = arguments
-            fragment.addonCollectionProvider = addonCollectionProvider
+            fragment.addonsProvider = addonsProvider
             return fragment
         }
     }

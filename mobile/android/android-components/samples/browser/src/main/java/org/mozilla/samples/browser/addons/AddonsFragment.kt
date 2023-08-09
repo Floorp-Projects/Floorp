@@ -71,7 +71,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
 
         findPreviousInstallationDialogFragment()?.let { dialog ->
             dialog.onConfirmButtonClicked = onConfirmInstallationButtonClicked
-            dialog.addonCollectionProvider = requireContext().components.addonCollectionProvider
+            dialog.addonsProvider = requireContext().components.addonsProvider
         }
     }
 
@@ -81,7 +81,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         scope.launch {
             try {
                 val context = requireContext()
-                val addonCollectionProvider = context.components.addonCollectionProvider
+                val addonsProvider = context.components.addonsProvider
                 val addons = context.components.addonManager.getAddons()
 
                 val style = AddonsManagerAdapter.Style(
@@ -92,7 +92,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 scope.launch(Dispatchers.Main) {
                     if (adapter == null) {
                         adapter = AddonsManagerAdapter(
-                            addonCollectionProvider = addonCollectionProvider,
+                            addonsProvider = addonsProvider,
                             addonsManagerDelegate = this@AddonsFragment,
                             addons = addons,
                             style = style,
@@ -173,10 +173,10 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         if (isInstallationInProgress) {
             return
         }
-        val addonCollectionProvider = requireContext().components.addonCollectionProvider
+        val addonsProvider = requireContext().components.addonsProvider
         val dialog = AddonInstallationDialogFragment.newInstance(
             addon = addon,
-            addonCollectionProvider = addonCollectionProvider,
+            addonsProvider = addonsProvider,
             onConfirmButtonClicked = onConfirmInstallationButtonClicked,
         )
 

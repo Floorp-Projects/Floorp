@@ -38,7 +38,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.AddonManager
-import mozilla.components.feature.addons.amo.AddonCollectionProvider
+import mozilla.components.feature.addons.amo.AMOAddonsProvider
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.app.links.AppLinksInterceptor
@@ -206,11 +206,11 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     // Addons
     val addonManager by lazy {
-        AddonManager(store, engine, addonCollectionProvider, addonUpdater)
+        AddonManager(store, engine, addonsProvider, addonUpdater)
     }
 
-    val addonCollectionProvider by lazy {
-        AddonCollectionProvider(
+    val addonsProvider by lazy {
+        AMOAddonsProvider(
             applicationContext,
             client,
             collectionName = "7dfae8669acc4312a65e8ba5553036",

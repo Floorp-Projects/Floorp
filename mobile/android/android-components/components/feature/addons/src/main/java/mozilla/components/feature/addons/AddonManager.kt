@@ -74,7 +74,7 @@ class AddonManager(
             // NB: We're keeping translations only for the default locale.
             val userLanguage = Locale.getDefault().language
             val locales = listOf(userLanguage)
-            val supportedAddons = addonsProvider.getAvailableAddons(allowCache, language = userLanguage)
+            val supportedAddons = addonsProvider.getFeaturedAddons(allowCache, language = userLanguage)
                 .map {
                         addon ->
                     addon.filterTranslations(locales)

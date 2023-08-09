@@ -74,7 +74,7 @@ class AddonManagerTest {
         val addon2 = Addon(id = "ext2")
         val addon3 = Addon(id = "ext3")
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon1, addon2, addon3))
+        whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon1, addon2, addon3))
 
         // Prepare engine
         val engine: Engine = mock()
@@ -158,7 +158,7 @@ class AddonManagerTest {
     @Test
     fun `getAddons - returns temporary add-ons as supported`() = runTestOnMain {
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf())
+        whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf())
 
         // Prepare engine
         val engine: Engine = mock()
@@ -209,7 +209,7 @@ class AddonManagerTest {
         }
 
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getAvailableAddons(anyBoolean(), anyLong(), language = anyString())).thenThrow(IllegalStateException("test"))
+        whenever(addonsProvider.getFeaturedAddons(anyBoolean(), anyLong(), language = anyString())).thenThrow(IllegalStateException("test"))
         WebExtensionSupport.initialize(engine, store)
 
         AddonManager(store, mock(), addonsProvider, mock()).getAddons()
@@ -234,7 +234,7 @@ class AddonManagerTest {
         }
 
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon))
+        whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon))
         WebExtensionSupport.initialize(engine, store)
 
         val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
@@ -265,7 +265,7 @@ class AddonManagerTest {
         }
         val addonsProvider: AddonsProvider = mock()
 
-        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon))
+        whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon))
         WebExtensionSupport.initialize(engine, store)
         WebExtensionSupport.installedExtensions[addon.id] = extension
 
@@ -307,14 +307,14 @@ class AddonManagerTest {
         WebExtensionSupport.initialize(engine, store)
 
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(emptyList())
+        whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(emptyList())
         val addonsManager = AddonManager(store, mock(), addonsProvider, mock())
 
         addonsManager.getAddons()
-        verify(addonsProvider).getAvailableAddons(eq(true), eq(null), language = anyString())
+        verify(addonsProvider).getFeaturedAddons(eq(true), eq(null), language = anyString())
 
         addonsManager.getAddons(allowCache = false)
-        verify(addonsProvider).getAvailableAddons(eq(false), eq(null), language = anyString())
+        verify(addonsProvider).getFeaturedAddons(eq(false), eq(null), language = anyString())
         Unit
     }
 
