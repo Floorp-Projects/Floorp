@@ -6,6 +6,7 @@ package org.mozilla.fenix.shopping.store
 
 import mozilla.components.lib.state.State
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
+import java.util.SortedMap
 
 private const val NUMBER_OF_HIGHLIGHTS_FOR_COMPACT_MODE = 2
 
@@ -51,12 +52,8 @@ sealed interface ReviewQualityCheckState : State {
 
             /**
              * Denotes no analysis is present for the product the user is browsing.
-             *
-             * @property productUrl The url of the product the user is browsing.
              */
-            data class NoAnalysisPresent(
-                val productUrl: String,
-            ) : ProductReviewState
+            object NoAnalysisPresent : ProductReviewState
 
             /**
              * Denotes the state where analysis of the product is fetched and present.
@@ -72,13 +69,20 @@ sealed interface ReviewQualityCheckState : State {
              */
             data class AnalysisPresent(
                 val productId: String,
-                val reviewGrade: Grade,
+                val reviewGrade: Grade?,
                 val needsAnalysis: Boolean,
-                val adjustedRating: Float,
+                val adjustedRating: Float?,
                 val productUrl: String,
-                val highlights: Map<HighlightType, List<String>>?,
+                val highlights: SortedMap<HighlightType, List<String>>?,
                 val recommendedProductState: RecommendedProductState = RecommendedProductState.Initial,
-            ) : ProductReviewState
+            ) : ProductReviewState {
+                init {
+                    require(!(highlights == null && reviewGrade == null && adjustedRating == null)) {
+                        "AnalysisPresent state should only be created when at least one of " +
+                            "reviewGrade, adjustedRating or highlights is not null"
+                    }
+                }
+            }
         }
     }
 
@@ -158,7 +162,7 @@ private val fakeAnalysis = ReviewQualityCheckState.OptedIn.ProductReviewState.An
     needsAnalysis = false,
     adjustedRating = 3.6f,
     productUrl = "123",
-    highlights = mapOf(
+    highlights = sortedMapOf(
         HighlightType.QUALITY to listOf(
             "High quality",
             "Excellent craftsmanship",

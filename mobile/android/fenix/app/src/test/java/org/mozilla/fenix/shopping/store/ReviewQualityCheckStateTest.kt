@@ -5,7 +5,9 @@
 package org.mozilla.fenix.shopping.store
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
 
 class ReviewQualityCheckStateTest {
 
@@ -64,5 +66,61 @@ class ReviewQualityCheckStateTest {
         )
 
         assertEquals(expected, highlights.forCompactMode())
+    }
+
+    @Test
+    fun `WHEN AnalysisPresent is created with grade, rating and highlights as null THEN exception is thrown`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            AnalysisPresent(
+                productId = "",
+                reviewGrade = null,
+                needsAnalysis = false,
+                adjustedRating = null,
+                productUrl = "",
+                highlights = null,
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN AnalysisPresent is created with at least one of grade, rating and highlights as not null THEN no exception is thrown`() {
+        val ratingPresent = kotlin.runCatching {
+            AnalysisPresent(
+                productId = "1",
+                reviewGrade = null,
+                needsAnalysis = false,
+                adjustedRating = 1.2f,
+                productUrl = "",
+                highlights = null,
+            )
+        }
+
+        val gradePresent = kotlin.runCatching {
+            AnalysisPresent(
+                productId = "2",
+                reviewGrade = ReviewQualityCheckState.Grade.A,
+                needsAnalysis = false,
+                adjustedRating = null,
+                productUrl = "",
+                highlights = null,
+            )
+        }
+
+        val highlightsPresent = kotlin.runCatching {
+            AnalysisPresent(
+                productId = "2",
+                reviewGrade = null,
+                needsAnalysis = false,
+                adjustedRating = null,
+                productUrl = "",
+                highlights = sortedMapOf(
+                    ReviewQualityCheckState.HighlightType.QUALITY to listOf(""),
+                ),
+            )
+        }
+
+        assert(ratingPresent.isSuccess)
+        assert(gradePresent.isSuccess)
+        assert(highlightsPresent.isSuccess)
     }
 }

@@ -65,15 +65,19 @@ fun ProductAnalysis(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        ReviewGradeCard(
-            reviewGrade = productAnalysis.reviewGrade,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (productAnalysis.reviewGrade != null) {
+            ReviewGradeCard(
+                reviewGrade = productAnalysis.reviewGrade,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
-        AdjustedProductRatingCard(
-            rating = productAnalysis.adjustedRating,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (productAnalysis.adjustedRating != null) {
+            AdjustedProductRatingCard(
+                rating = productAnalysis.adjustedRating,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         if (productAnalysis.highlights != null) {
             HighlightsCard(
@@ -356,7 +360,7 @@ private fun ProductAnalysisPreview() {
                     needsAnalysis = false,
                     adjustedRating = 3.6f,
                     productUrl = "123",
-                    highlights = mapOf(
+                    highlights = sortedMapOf(
                         HighlightType.QUALITY to listOf(
                             "High quality",
                             "Excellent craftsmanship",
