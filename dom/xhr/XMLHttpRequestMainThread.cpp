@@ -46,7 +46,6 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/dom/ProgressEvent.h"
-#include "nsIDocumentLoader.h"
 #include "nsDataChannel.h"
 #include "nsIJARChannel.h"
 #include "nsIJARURI.h"
@@ -3020,98 +3019,6 @@ bool XMLHttpRequestMainThread::CanSend(ErrorResult& aRv) {
   return true;
 }
 
-namespace {
-
-// used for debug logging
-nsCString GetChannelURL(nsCOMPtr<nsIChannel>& aChannel) {
-  nsCOMPtr<nsIURI> url;
-  Unused << aChannel->GetURI(getter_AddRefs(url));
-  nsCString spec;
-  Unused << url->GetSpec(spec);
-  return spec;
-}
-
-// Finds all channels in a loadgroup which are not aExceptChannel, and not
-// related to page navigations, and adds a reference for each to aOutChannels.
-void GatherChannelsInLoadGroup(
-    nsCOMPtr<nsILoadGroup>& aLoadGroup, nsCOMPtr<nsIChannel>& aExceptChannel,
-    nsTObserverArray<nsCOMPtr<nsIChannel>>& aOutChannels) {
-  MOZ_ASSERT(aLoadGroup);
-  nsCOMPtr<nsISimpleEnumerator> iter;
-  Unused << aLoadGroup->GetRequests(getter_AddRefs(iter));
-  if (!iter) {
-    return;
-  }
-  nsCOMPtr<nsISupports> tmp;
-  bool hasMore = true;
-  while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
-    iter->GetNext(getter_AddRefs(tmp));
-    nsCOMPtr<nsIChannel> loadingChannel(do_QueryInterface(tmp));
-    if (loadingChannel) {
-      // we also do not want to affect page navigations
-      nsLoadFlags flags;
-      loadingChannel->GetLoadFlags(&flags);
-      if (!(flags & nsIChannel::LOAD_DOCUMENT_URI) &&
-          loadingChannel != aExceptChannel) {
-        aOutChannels.AppendElement(std::move(loadingChannel));
-      }
-    }
-  }
-}
-
-// Finds all the loadGroups in the given document's group, and adds a reference
-// to all of their channels to aOutChannels, except aExceptChannel, and except
-// any channels related to page navigation.
-void GatherChannelsInDocGroup(
-    const RefPtr<DocGroup>& aDocGroup, nsCOMPtr<nsIChannel>& aExceptChannel,
-    nsTObserverArray<nsCOMPtr<nsIChannel>>& aOutChannels) {
-  MOZ_ASSERT(aDocGroup);
-  for (RefPtr<Document> doc : *aDocGroup) {
-    nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
-    GatherChannelsInLoadGroup(loadGroup, aExceptChannel, aOutChannels);
-  }
-}
-
-}  // namespace
-
-// This method will find and suspend all other channels happening in the
-// same document-group or load-group. Other browsers do this during any
-// synchronous XHR, and not doing so leads to difficult-to-diagnose
-// webcompat issues (see bz697151). Will append a reference to each
-// channel suspended to aOutSuspendedChannels. Will not suspend any
-// channels related to a page navigation (see bz1537588).
-void XMLHttpRequestMainThread::SuspendOtherChannels(
-    nsTObserverArray<nsCOMPtr<nsIChannel>>& aOutSuspendedChannels) {
-  nsCOMPtr<nsILoadGroup> loadGroup;
-
-  // Pause all channels in our responsible document's docGroup.
-  nsCOMPtr<Document> responsibleDoc = GetDocumentIfCurrent();
-  if (responsibleDoc && GetOwner() && responsibleDoc->GetDocGroup()) {
-    GatherChannelsInDocGroup(responsibleDoc->GetDocGroup(), mChannel,
-                             aOutSuspendedChannels);
-  } else {
-    // If no responsible document, try the loadGroup we were constructed with.
-    GatherChannelsInLoadGroup(mLoadGroup, mChannel, aOutSuspendedChannels);
-  }
-
-  for (nsCOMPtr<nsIChannel> channel : aOutSuspendedChannels.EndLimitedRange()) {
-    MOZ_LOG(gXMLHttpRequestLog, LogLevel::Debug,
-            ("Suspending channel with URL %s\n", GetChannelURL(channel).get()));
-    channel->Suspend();
-  }
-}
-
-// This method resumes channels suspended by SuspendOtherChannels.
-void XMLHttpRequestMainThread::ResumeOtherChannels(
-    nsTObserverArray<nsCOMPtr<nsIChannel>>& aSuspendedChannels) {
-  for (nsCOMPtr<nsIChannel> channel : aSuspendedChannels.ForwardRange()) {
-    MOZ_LOG(gXMLHttpRequestLog, LogLevel::Debug,
-            ("Resuming channel with URL %s\n", GetChannelURL(channel).get()));
-    channel->Resume();
-  }
-  aSuspendedChannels.Clear();
-}
-
 void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
                                             bool aBodyIsDocumentOrString,
                                             ErrorResult& aRv) {
@@ -3242,13 +3149,11 @@ void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
 
   // If we're synchronous, spin an event loop here and wait
   RefPtr<Document> suspendedDoc;
-  nsTObserverArray<nsCOMPtr<nsIChannel>> suspendedChannels;
   if (mFlagSynchronous) {
     auto scopeExit = MakeScopeExit([&] {
       CancelSyncTimeoutTimer();
       ResumeTimeout();
       ResumeEventDispatching();
-      ResumeOtherChannels(suspendedChannels);
     });
     Maybe<AutoSuppressEventHandling> autoSuppress;
 
@@ -3267,9 +3172,6 @@ void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
       }
     }
 
-    if (StaticPrefs::network_sync_xmlhttprequest_suspends_other_requests()) {
-      SuspendOtherChannels(suspendedChannels);
-    }
     SuspendEventDispatching();
     StopProgressEventTimer();
 
