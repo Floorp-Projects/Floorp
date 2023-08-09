@@ -5,9 +5,12 @@
 package org.mozilla.fenix.collections
 
 import android.content.Context
+import android.content.DialogInterface
 import android.view.LayoutInflater
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
+import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.MainScope
@@ -109,13 +112,13 @@ internal fun CollectionsDialog.showAddNewDialog(
         ),
     )
 
-    AlertDialog.Builder(context)
+    val dialog = AlertDialog.Builder(context)
         .setTitle(R.string.tab_tray_add_new_collection)
         .setView(layout).setPositiveButton(R.string.create_collection_positive) { dialog, _ ->
 
             MainScope().launch {
                 val id = storage.createCollection(
-                    collectionNameEditText.text.toString(),
+                    collectionNameEditText.text.toString().trim(),
                     sessionList,
                 )
                 onPositiveButtonClick.invoke(id, true)
@@ -128,8 +131,18 @@ internal fun CollectionsDialog.showAddNewDialog(
             dialog.cancel()
         }
         .create().withCenterAlignedButtons()
-        .show()
+
+    collectionNameEditText.doOnTextChanged { text, _, _, _ ->
+        dialog.getButton(DialogInterface.BUTTON_POSITIVE).isClickable = text.toString().isNotBlank()
+    }
+
+    dialog.show()
 
     collectionNameEditText.setSelection(0, collectionNameEditText.text.length)
     collectionNameEditText.showKeyboard()
+
+    collectionNameEditText.setOnEditorActionListener { _, actionId, _ ->
+        val text = collectionNameEditText.text.toString()
+        actionId == EditorInfo.IME_ACTION_DONE && text.isBlank()
+    }
 }
