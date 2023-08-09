@@ -96,6 +96,10 @@ class SystemAllocPolicy : public AllocPolicyBase {
 MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(JSContext* cx);
 MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(FrontendContext* fc);
 
+// An out of memory condition which is easily user generatable and should
+// be specially handled to try and avoid a tab crash.
+MOZ_COLD JS_PUBLIC_API void ReportLargeOutOfMemory(JSContext* cx);
+
 /*
  * Allocation policy that calls the system memory functions and reports errors
  * to the context. Since the JSContext given on construction is stored for

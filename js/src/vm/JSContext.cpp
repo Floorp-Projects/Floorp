@@ -293,6 +293,10 @@ JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
   cx->onOutOfMemory();
 }
 
+JS_PUBLIC_API void js::ReportLargeOutOfMemory(JSContext* cx) {
+  js::ReportOutOfMemory(cx);
+}
+
 JS_PUBLIC_API void js::ReportOutOfMemory(FrontendContext* fc) {
   MaybeReportOutOfMemoryForDifferentialTesting();
 
