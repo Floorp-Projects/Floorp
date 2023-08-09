@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAttrValue.h"
-#include "nsAttrValueOrString.h"
-#include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "mozilla/dom/Document.h"
@@ -21,10 +18,8 @@
 #include "nsDOMJSUtils.h"
 #include "nsIScriptError.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/HTMLScriptElement.h"
 #include "mozilla/dom/HTMLScriptElementBinding.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/StaticPrefs_dom.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Script)
@@ -63,19 +58,6 @@ nsresult HTMLScriptElement::BindToTree(BindContext& aContext,
   return NS_OK;
 }
 
-namespace {
-// <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
-static const nsAttrValue::EnumTable kFetchPriorityEnumTable[] = {
-    {kFetchPriorityAttributeValueHigh, FetchPriority::High},
-    {kFetchPriorityAttributeValueLow, FetchPriority::Low},
-    {kFetchPriorityAttributeValueAuto, FetchPriority::Auto},
-    {nullptr, 0}};
-
-// <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
-static const nsAttrValue::EnumTable*
-    kFetchPriorityEnumTableInvalidValueDefault = &kFetchPriorityEnumTable[2];
-}  // namespace
-
 bool HTMLScriptElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                        const nsAString& aValue,
                                        nsIPrincipal* aMaybeScriptedPrincipal,
@@ -88,11 +70,6 @@ bool HTMLScriptElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 
     if (aAttribute == nsGkAtoms::integrity) {
       aResult.ParseStringOrAtom(aValue);
-      return true;
-    }
-
-    if (aAttribute == nsGkAtoms::fetchpriority) {
-      HTMLScriptElement::ParseFetchPriority(aValue, aResult);
       return true;
     }
   }
@@ -225,17 +202,6 @@ CORSMode HTMLScriptElement::GetCORSMode() const {
   return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 }
 
-FetchPriority HTMLScriptElement::GetFetchPriority() const {
-  const nsAttrValue* fetchpriorityAttribute =
-      GetParsedAttr(nsGkAtoms::fetchpriority);
-  if (fetchpriorityAttribute) {
-    MOZ_ASSERT(fetchpriorityAttribute->Type() == nsAttrValue::eEnum);
-    return FetchPriority(fetchpriorityAttribute->GetEnumValue());
-  }
-
-  return FetchPriority::Auto;
-}
-
 mozilla::dom::ReferrerPolicy HTMLScriptElement::GetReferrerPolicy() {
   return GetReferrerPolicyAsEnum();
 }
@@ -243,20 +209,6 @@ mozilla::dom::ReferrerPolicy HTMLScriptElement::GetReferrerPolicy() {
 bool HTMLScriptElement::HasScriptContent() {
   return (mFrozen ? mExternal : HasAttr(nsGkAtoms::src)) ||
          nsContentUtils::HasNonEmptyTextContent(this);
-}
-
-void HTMLScriptElement::GetFetchPriority(nsAString& aFetchPriority) const {
-  // <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
-  GetEnumAttr(nsGkAtoms::fetchpriority, kFetchPriorityAttributeValueAuto,
-              aFetchPriority);
-}
-
-/* static */
-FetchPriority HTMLScriptElement::ToFetchPriority(const nsAString& aValue) {
-  nsAttrValue attrValue;
-  HTMLScriptElement::ParseFetchPriority(aValue, attrValue);
-  MOZ_ASSERT(attrValue.Type() == nsAttrValue::eEnum);
-  return FetchPriority(attrValue.GetEnumValue());
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#dom-script-supports
@@ -267,14 +219,6 @@ bool HTMLScriptElement::Supports(const GlobalObject& aGlobal,
   return aType.EqualsLiteral("classic") || aType.EqualsLiteral("module") ||
          (StaticPrefs::dom_importMaps_enabled() &&
           aType.EqualsLiteral("importmap"));
-}
-
-/* static */
-void HTMLScriptElement::ParseFetchPriority(const nsAString& aValue,
-                                           nsAttrValue& aResult) {
-  aResult.ParseEnumValue(aValue, kFetchPriorityEnumTable,
-                         false /* aCaseSensitive */,
-                         kFetchPriorityEnumTableInvalidValueDefault);
 }
 
 }  // namespace mozilla::dom

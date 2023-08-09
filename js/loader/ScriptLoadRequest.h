@@ -37,7 +37,6 @@ namespace mozilla::dom {
 class ScriptLoadContext;
 class WorkerLoadContext;
 class WorkletLoadContext;
-enum class RequestPriority : uint8_t;
 
 }  // namespace mozilla::dom
 
@@ -89,7 +88,6 @@ class ScriptFetchOptions {
   ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                      enum mozilla::dom::ReferrerPolicy aReferrerPolicy,
                      const nsAString& aNonce,
-                     mozilla::dom::RequestPriority aFetchPriority,
                      const ParserMetadata aParserMetadata,
                      nsIPrincipal* aTriggeringPrincipal,
                      mozilla::dom::Element* aElement = nullptr);
@@ -112,11 +110,6 @@ class ScriptFetchOptions {
    * fetching any imported modules.
    */
   const nsString mNonce;
-
-  /*
-   * <https://html.spec.whatwg.org/multipage/webappapis.html#script-fetch-options>.
-   */
-  const mozilla::dom::RequestPriority mFetchPriority;
 
   /*
    * The parser metadata used for the initial fetch and for fetching any
@@ -299,10 +292,6 @@ class ScriptLoadRequest
     MOZ_ASSERT(IsTextSource());
     return IsUTF16Text() ? ScriptText<char16_t>().clearAndFree()
                          : ScriptText<Utf8Unit>().clearAndFree();
-  }
-
-  mozilla::dom::RequestPriority FetchPriority() const {
-    return mFetchOptions->mFetchPriority;
   }
 
   enum mozilla::dom::ReferrerPolicy ReferrerPolicy() const {

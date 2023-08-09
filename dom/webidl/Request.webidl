@@ -46,7 +46,6 @@ interface Request {
 };
 Request includes Body;
 
-// <https://fetch.spec.whatwg.org/#requestinit>.
 dictionary RequestInit {
   ByteString method;
   HeadersInit headers;
@@ -79,4 +78,3 @@ enum RequestMode { "same-origin", "no-cors", "cors", "navigate" };
 enum RequestCredentials { "omit", "same-origin", "include" };
 enum RequestCache { "default", "no-store", "reload", "no-cache", "force-cache", "only-if-cached" };
 enum RequestRedirect { "follow", "error", "manual" };
-enum RequestPriority { "high" , "low" , "auto" };

@@ -81,7 +81,6 @@ class PreloadService {
   void PreloadScript(nsIURI* aURI, const nsAString& aType,
                      const nsAString& aCharset, const nsAString& aCrossOrigin,
                      const nsAString& aReferrerPolicy, const nsAString& aNonce,
-                     const nsAString& aFetchPriority,
                      const nsAString& aIntegrity, bool aScriptFromHead,
                      uint64_t aEarlyHintPreloaderId);
 
@@ -117,8 +116,7 @@ class PreloadService {
       const nsAString& aSrcset, const nsAString& aSizes,
       const nsAString& aNonce, const nsAString& aIntegrity,
       const nsAString& aCORS, const nsAString& aReferrerPolicy,
-      const nsAString& aFetchPriority, bool aFromHeader,
-      uint64_t aEarlyHintPreloaderId);
+      bool aFromHeader, uint64_t aEarlyHintPreloaderId);
 
  private:
   nsRefPtrHashtable<PreloadHashKey, PreloaderBase> mPreloads;
