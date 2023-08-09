@@ -7902,8 +7902,8 @@ void CodeGenerator::visitNewArrayObject(LNewArrayObject* lir) {
 
   masm.movePtr(ImmPtr(shape), shapeReg);
   masm.createArrayWithFixedElements(
-      objReg, shapeReg, temp0Reg, arrayLength, arrayCapacity, allocKind,
-      mir->initialHeap(), ool->entry(),
+      objReg, shapeReg, temp0Reg, InvalidReg, arrayLength, arrayCapacity, 0, 0,
+      allocKind, mir->initialHeap(), ool->entry(),
       AllocSiteInput(gc::CatchAllAllocSite::Optimized));
   masm.bind(ool->rejoin());
 }
@@ -13752,9 +13752,9 @@ void CodeGenerator::visitRest(LRest* lir) {
 
     Label joinAlloc, failAlloc;
     masm.movePtr(ImmGCPtr(shape), temp0);
-    masm.createArrayWithFixedElements(temp2, temp0, temp1, arrayLength,
-                                      arrayCapacity, allocKind,
-                                      gc::Heap::Default, &failAlloc);
+    masm.createArrayWithFixedElements(temp2, temp0, temp1, InvalidReg,
+                                      arrayLength, arrayCapacity, 0, 0,
+                                      allocKind, gc::Heap::Default, &failAlloc);
     masm.jump(&joinAlloc);
     {
       masm.bind(&failAlloc);
