@@ -1501,7 +1501,7 @@ class TestEmitterBasic(unittest.TestCase):
         with self.assertRaisesRegex(
             SandboxValidationError,
             "Test.cpp from SOURCES would have the same object name as"
-            " Test.c from SOURCES\.",
+            " Test.c from SOURCES\\.",
         ):
             self.read_topsrcdir(reader)
 
@@ -1509,7 +1509,7 @@ class TestEmitterBasic(unittest.TestCase):
         with self.assertRaisesRegex(
             SandboxValidationError,
             "Test.cpp from SOURCES would have the same object name as"
-            " subdir/Test.cpp from SOURCES\.",
+            " subdir/Test.cpp from SOURCES\\.",
         ):
             self.read_topsrcdir(reader)
 
@@ -1517,7 +1517,7 @@ class TestEmitterBasic(unittest.TestCase):
         with self.assertRaisesRegex(
             SandboxValidationError,
             "Test.cpp from UNIFIED_SOURCES would have the same object name as"
-            " Test.c from SOURCES in non-unified builds\.",
+            " Test.c from SOURCES in non-unified builds\\.",
         ):
             self.read_topsrcdir(reader)
 
@@ -1525,7 +1525,7 @@ class TestEmitterBasic(unittest.TestCase):
         with self.assertRaisesRegex(
             SandboxValidationError,
             "Test.cpp from UNIFIED_SOURCES would have the same object name as"
-            " Test.c from UNIFIED_SOURCES in non-unified builds\.",
+            " Test.c from UNIFIED_SOURCES in non-unified builds\\.",
         ):
             self.read_topsrcdir(reader)
 
