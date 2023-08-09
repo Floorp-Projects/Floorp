@@ -9,7 +9,6 @@ import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckPreferences
@@ -23,7 +22,6 @@ class ReviewQualityCheckStoreTest {
     private val scope = coroutinesTestRule.scope
 
     @Test
-    @Ignore("Flaky, see https://bugzilla.mozilla.org/show_bug.cgi?id=1846229")
     fun `GIVEN the user has not opted in the feature WHEN store is created THEN state should display not opted in UI`() =
         runTest {
             val tested = ReviewQualityCheckStore(
@@ -34,6 +32,7 @@ class ReviewQualityCheckStoreTest {
                     ),
                 ),
             )
+            tested.waitUntilIdle()
             dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
 
@@ -52,11 +51,11 @@ class ReviewQualityCheckStoreTest {
                     ),
                 ),
             )
-            dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
             tested.dispatch(ReviewQualityCheckAction.OptIn).joinBlocking()
-            dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
 
             val expected = ReviewQualityCheckState.OptedIn(productRecommendationsPreference = false)
             assertEquals(expected, tested.state)
@@ -73,11 +72,11 @@ class ReviewQualityCheckStoreTest {
                     ),
                 ),
             )
-            dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
             tested.dispatch(ReviewQualityCheckAction.OptOut).joinBlocking()
-            dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
 
             val expected = ReviewQualityCheckState.NotOptedIn
             assertEquals(expected, tested.state)
@@ -94,11 +93,11 @@ class ReviewQualityCheckStoreTest {
                     ),
                 ),
             )
-            dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
             tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
-            dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
 
             val expected = ReviewQualityCheckState.OptedIn(productRecommendationsPreference = true)
             assertEquals(expected, tested.state)
@@ -115,11 +114,11 @@ class ReviewQualityCheckStoreTest {
                     ),
                 ),
             )
-            dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
             tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
-            dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
 
             val expected = ReviewQualityCheckState.OptedIn(productRecommendationsPreference = false)
             assertEquals(expected, tested.state)
