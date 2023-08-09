@@ -423,6 +423,11 @@ struct alignas(uintptr_t) BaselineBailoutInfo {
   jsbytecode* tryPC = nullptr;
   jsbytecode* faultPC = nullptr;
 
+  // We use this to transfer exception information out from
+  // buildExpressionStack, since it would be too risky to throw from
+  // there.
+  jsid tempId = PropertyKey::Void();
+
   // Number of baseline frames to push on the stack.
   uint32_t numFrames = 0;
 
@@ -433,6 +438,8 @@ struct alignas(uintptr_t) BaselineBailoutInfo {
   BaselineBailoutInfo(const BaselineBailoutInfo&) = default;
 
   void operator=(const BaselineBailoutInfo&) = delete;
+
+  void trace(JSTracer* aTrc);
 };
 
 enum class BailoutReason {

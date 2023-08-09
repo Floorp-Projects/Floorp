@@ -115,6 +115,7 @@ namespace jit {
   _(CheckOverRecursed, js::jit::CheckOverRecursed)                             \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)             \
   _(CheckPrivateFieldOperation, js::CheckPrivateFieldOperation)                \
+  _(CheckProxyGetByValueResult, js::jit::CheckProxyGetByValueResult)           \
   _(ClassBodyLexicalEnvironmentObjectCreateWithoutEnclosing,                   \
     js::ClassBodyLexicalEnvironmentObject::createWithoutEnclosing)             \
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \
