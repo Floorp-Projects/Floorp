@@ -104,7 +104,7 @@ def _ensure_hash_in_reftest_screenshots(extra):
     if not log_data:
         return
     for item in log_data:
-        if type(item) != dict:
+        if not isinstance(item, dict):
             # Skip relation strings.
             continue
         if "hash" not in item:
