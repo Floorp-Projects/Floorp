@@ -63,10 +63,10 @@ None-mode =
  .label= Normal mode
 
 hide-horizontality-tabs =
- .label= Hide tabs on horizontal Tab Bar
+ .label= Hide tabs on Horizontal Tab Bar
 
 verticalTab-setting =
- .label = Optimise browser for vertical Tab Bar
+ .label = Optimise browser for Vertical Tab Bar
 
 move-tabbar-position =
  .label = Display Tab Bar underneath the Toolbar
