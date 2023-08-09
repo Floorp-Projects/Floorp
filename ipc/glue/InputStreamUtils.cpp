@@ -108,7 +108,7 @@ void InputStreamHelper::SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
     return;
   }
 
-  aParams = DataPipeReceiverStreamParams(receiver);
+  aParams = DataPipeReceiverStreamParams(WrapNotNull(receiver));
   if (length != -1) {
     aParams = InputStreamLengthWrapperParams(aParams, length, false);
   }
@@ -130,13 +130,13 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
             params.stream()->TakeInternalStream(getter_AddRefs(innerStream)))) {
       return innerStream.forget();
     }
-    return do_AddRef(params.stream());
+    return do_AddRef(params.stream().get());
   }
 
   if (aParams.type() == InputStreamParams::TDataPipeReceiverStreamParams) {
     const DataPipeReceiverStreamParams& pipeParams =
         aParams.get_DataPipeReceiverStreamParams();
-    return do_AddRef(pipeParams.pipe());
+    return do_AddRef(pipeParams.pipe().get());
   }
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializable;
