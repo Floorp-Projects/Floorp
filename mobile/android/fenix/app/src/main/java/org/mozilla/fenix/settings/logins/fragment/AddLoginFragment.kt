@@ -24,6 +24,7 @@ import androidx.navigation.fragment.findNavController
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
+import mozilla.components.support.ktx.util.URLStringUtils
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
@@ -371,7 +372,13 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login), MenuProvider {
         R.id.save_login_button -> {
             view?.hideKeyboard()
             interactor.onAddLogin(
-                binding.hostnameText.text.toString(),
+                with(binding.hostnameText.text.toString()) {
+                    if (URLStringUtils.isHttpOrHttps(this)) {
+                        this
+                    } else {
+                        "$HTTPS$this"
+                    }
+                },
                 binding.usernameText.text.toString(),
                 binding.passwordText.text.toString(),
             )
@@ -384,5 +391,9 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login), MenuProvider {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val HTTPS = "https://"
     }
 }
