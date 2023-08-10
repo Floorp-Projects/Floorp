@@ -16,6 +16,7 @@
 
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCode.h"
+#include "jit/JitOptions.h"
 #include "jit/ProcessExecutableMemory.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"

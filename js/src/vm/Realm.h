@@ -25,7 +25,6 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSContext.h"
 #include "vm/PromiseLookup.h"  // js::PromiseLookup
-#include "vm/RegExpShared.h"
 #include "vm/SavedStacks.h"
 #include "wasm/WasmRealm.h"
 
@@ -338,8 +337,6 @@ class JS::Realm : public JS::shadow::Realm {
   // WebAssembly state for the realm.
   js::wasm::Realm wasm;
 
-  js::RegExpRealm regExps;
-
   js::DtoaCache dtoaCache;
   js::NewProxyCache newProxyCache;
   js::NewPlainObjectWithPropsCache newPlainObjectWithPropsCache;
@@ -482,7 +479,6 @@ class JS::Realm : public JS::shadow::Realm {
 
   void sweepAfterMinorGC(JSTracer* trc);
   void traceWeakDebugEnvironmentEdges(JSTracer* trc);
-  void traceWeakRegExps(JSTracer* trc);
 
   void clearScriptCounts();
   void clearScriptLCov();
@@ -717,9 +713,6 @@ class JS::Realm : public JS::shadow::Realm {
 
   static constexpr size_t offsetOfCompartment() {
     return offsetof(JS::Realm, compartment_);
-  }
-  static constexpr size_t offsetOfRegExps() {
-    return offsetof(JS::Realm, regExps);
   }
   static constexpr size_t offsetOfJitRealm() {
     return offsetof(JS::Realm, jitRealm_);

@@ -4269,9 +4269,8 @@ void MacroAssembler::minMaxArrayNumber(Register array, FloatRegister result,
 void MacroAssembler::branchIfNotRegExpPrototypeOptimizable(Register proto,
                                                            Register temp,
                                                            Label* fail) {
-  loadJSContext(temp);
-  loadPtr(Address(temp, JSContext::offsetOfRealm()), temp);
-  size_t offset = Realm::offsetOfRegExps() +
+  loadGlobalObjectData(temp);
+  size_t offset = GlobalObjectData::offsetOfRegExpRealm() +
                   RegExpRealm::offsetOfOptimizableRegExpPrototypeShape();
   loadPtr(Address(temp, offset), temp);
   branchTestObjShapeUnsafe(Assembler::NotEqual, proto, temp, fail);
@@ -4280,9 +4279,8 @@ void MacroAssembler::branchIfNotRegExpPrototypeOptimizable(Register proto,
 void MacroAssembler::branchIfNotRegExpInstanceOptimizable(Register regexp,
                                                           Register temp,
                                                           Label* label) {
-  loadJSContext(temp);
-  loadPtr(Address(temp, JSContext::offsetOfRealm()), temp);
-  size_t offset = Realm::offsetOfRegExps() +
+  loadGlobalObjectData(temp);
+  size_t offset = GlobalObjectData::offsetOfRegExpRealm() +
                   RegExpRealm::offsetOfOptimizableRegExpInstanceShape();
   loadPtr(Address(temp, offset), temp);
   branchTestObjShapeUnsafe(Assembler::NotEqual, regexp, temp, label);

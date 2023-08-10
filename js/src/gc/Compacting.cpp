@@ -475,7 +475,6 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
     c->traceWeakNativeIterators(trc);
 
     for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
-      r->traceWeakRegExps(trc);
       r->traceWeakSavedStacks(trc);
       r->traceWeakGlobalEdge(trc);
       r->traceWeakDebugEnvironmentEdges(trc);

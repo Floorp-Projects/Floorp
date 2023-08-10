@@ -91,7 +91,7 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
       hasIndices ? RegExpRealm::ResultShapeKind::WithIndices
                  : RegExpRealm::ResultShapeKind::Normal;
   Rooted<SharedShape*> shape(
-      cx, cx->realm()->regExps.getOrCreateMatchResultShape(cx, kind));
+      cx, cx->global()->regExpRealm().getOrCreateMatchResultShape(cx, kind));
   if (!shape) {
     return false;
   }
@@ -135,7 +135,7 @@ bool js::CreateRegExpMatchResult(JSContext* cx, HandleRegExpShared re,
   if (hasIndices) {
     // MakeIndicesArray: step 8
     Rooted<SharedShape*> indicesShape(
-        cx, cx->realm()->regExps.getOrCreateMatchResultShape(
+        cx, cx->global()->regExpRealm().getOrCreateMatchResultShape(
                 cx, RegExpRealm::ResultShapeKind::Indices));
     if (!indicesShape) {
       return false;
@@ -2164,7 +2164,8 @@ bool js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto) {
 
   NativeObject* nproto = static_cast<NativeObject*>(proto);
 
-  Shape* shape = cx->realm()->regExps.getOptimizableRegExpPrototypeShape();
+  RegExpRealm& realm = cx->global()->regExpRealm();
+  Shape* shape = realm.getOptimizableRegExpPrototypeShape();
   if (shape == nproto->shape()) {
     return true;
   }
@@ -2290,7 +2291,7 @@ bool js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto) {
     return false;
   }
 
-  cx->realm()->regExps.setOptimizableRegExpPrototypeShape(nproto->shape());
+  realm.setOptimizableRegExpPrototypeShape(nproto->shape());
   return true;
 }
 
@@ -2311,7 +2312,8 @@ bool js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj,
 
   RegExpObject* rx = &obj->as<RegExpObject>();
 
-  Shape* shape = cx->realm()->regExps.getOptimizableRegExpInstanceShape();
+  RegExpRealm& realm = cx->global()->regExpRealm();
+  Shape* shape = realm.getOptimizableRegExpInstanceShape();
   if (shape == rx->shape()) {
     return true;
   }
@@ -2328,7 +2330,7 @@ bool js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj,
     return false;
   }
 
-  cx->realm()->regExps.setOptimizableRegExpInstanceShape(rx->shape());
+  realm.setOptimizableRegExpInstanceShape(rx->shape());
   return true;
 }
 

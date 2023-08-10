@@ -325,15 +325,6 @@ void Realm::traceWeakEdgesInJitRealm(JSTracer* trc) {
   }
 }
 
-void Realm::traceWeakRegExps(JSTracer* trc) {
-  /*
-   * JIT code increments activeWarmUpCounter for any RegExpShared used by jit
-   * code for the lifetime of the JIT script. Thus, we must perform
-   * sweeping after clearing jit code.
-   */
-  regExps.traceWeak(trc);
-}
-
 void Realm::traceWeakDebugEnvironmentEdges(JSTracer* trc) {
   if (debugEnvs_) {
     debugEnvs_->traceWeak(trc);
