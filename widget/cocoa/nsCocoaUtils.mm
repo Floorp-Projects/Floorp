@@ -17,7 +17,6 @@
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsMenuBarX.h"
-#include "nsCocoaFeatures.h"
 #include "nsCocoaWindow.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestorUtils.h"

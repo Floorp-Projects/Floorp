@@ -9,7 +9,6 @@
 #include <ApplicationServices/ApplicationServices.h>
 
 #include "../../../xpcom/io/CocoaFileUtils.h"
-#include "nsCocoaFeatures.h"
 #include "nsString.h"
 
 using namespace mozilla;

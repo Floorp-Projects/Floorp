@@ -9,7 +9,6 @@
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
 #include "CoreLocationLocationProvider.h"
-#include "nsCocoaFeatures.h"
 #include "prtime.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Telemetry.h"
