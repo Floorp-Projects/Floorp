@@ -49,10 +49,6 @@
 #include "secder.h"
 #include "secerr.h"
 
-#ifdef MOZ_WIDGET_COCOA
-#  include "nsCocoaFeatures.h"
-#endif
-
 #include "TrustOverrideUtils.h"
 #include "TrustOverride-AppleGoogleDigiCertData.inc"
 #include "TrustOverride-SymantecData.inc"
@@ -1796,12 +1792,6 @@ bool LoadIPCClientCertsModule(const nsCString& dir) {
 const char* kOSClientCertsModuleName = "OS Client Cert Module";
 
 bool LoadOSClientCertsModule(const nsCString& dir) {
-#ifdef MOZ_WIDGET_COCOA
-  // osclientcerts requires macOS 10.14 or later
-  if (!nsCocoaFeatures::OnMojaveOrLater()) {
-    return false;
-  }
-#endif
   nsLiteralCString params =
       StaticPrefs::security_osclientcerts_assume_rsa_pss_support()
           ? "RSA-PSS"_ns
