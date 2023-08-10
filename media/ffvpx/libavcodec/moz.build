@@ -15,6 +15,8 @@ if CONFIG['FFVPX_ASFLAGS']:
 if CONFIG['CPU_ARCH'] == 'aarch64':
     DIRS += ['aarch64']
 
+LOCAL_INCLUDES += ['/modules/fdlibm/inexact-math-override']
+
 SharedLibrary('mozavcodec')
 SOURCES += [
     'allcodecs.c',
@@ -144,7 +146,8 @@ SYMBOLS_FILE = 'avcodec.symbols'
 NoVisibilityFlags()
 
 USE_LIBS += [
-     'mozavutil'
+    'fdlibm',
+    'mozavutil',
 ]
 
 if CONFIG['OS_TARGET'] != 'WINNT':
