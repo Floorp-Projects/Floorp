@@ -690,7 +690,7 @@ index 1420aa6385..143a6eca41 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 260ac14293..ab8ec28ba2 100644
+index a0a6f53e9a..6704328108 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -725,7 +725,7 @@ index 260ac14293..ab8ec28ba2 100644
  
  rtc_library("audio_device_generic") {
    sources = [
-@@ -210,6 +214,7 @@ rtc_library("test_audio_device_module") {
+@@ -212,6 +216,7 @@ if (!build_with_chromium) {
  # Contains default implementations of webrtc::AudioDeviceModule for Windows,
  # Linux, Mac, iOS and Android.
  rtc_library("audio_device_impl") {
@@ -733,7 +733,7 @@ index 260ac14293..ab8ec28ba2 100644
    visibility = [ "*" ]
    deps = [
      ":audio_device_api",
-@@ -261,9 +266,9 @@ rtc_library("audio_device_impl") {
+@@ -263,9 +268,9 @@ rtc_library("audio_device_impl") {
    ]
  
    if (build_with_mozilla) {
@@ -746,7 +746,7 @@ index 260ac14293..ab8ec28ba2 100644
      ]
    }
  
-@@ -401,6 +406,7 @@ rtc_library("audio_device_impl") {
+@@ -403,6 +408,7 @@ rtc_library("audio_device_impl") {
      ]
    }
  }
@@ -754,7 +754,7 @@ index 260ac14293..ab8ec28ba2 100644
  
  if (is_mac) {
    rtc_source_set("audio_device_impl_frameworks") {
-@@ -418,6 +424,7 @@ if (is_mac) {
+@@ -420,6 +426,7 @@ if (is_mac) {
    }
  }
  
@@ -762,7 +762,7 @@ index 260ac14293..ab8ec28ba2 100644
  rtc_source_set("mock_audio_device") {
    visibility = [ "*" ]
    testonly = true
-@@ -434,8 +441,10 @@ rtc_source_set("mock_audio_device") {
+@@ -436,8 +443,10 @@ rtc_source_set("mock_audio_device") {
      "../../test:test_support",
    ]
  }
@@ -774,7 +774,7 @@ index 260ac14293..ab8ec28ba2 100644
    rtc_library("audio_device_unittests") {
      testonly = true
  
-@@ -506,7 +515,7 @@ if (rtc_include_tests && !build_with_chromium) {
+@@ -508,7 +517,7 @@ if (rtc_include_tests && !build_with_chromium) {
    }
  }
  
