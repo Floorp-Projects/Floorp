@@ -9,10 +9,10 @@ Subject: Bug 1772380 - Build 1766646 - (fix-c89fdd716c) fixes for the
  2 files changed, 7 insertions(+), 16 deletions(-)
 
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 18013677e9..2276707e03 100644
+index c5d33ff9a4..04caaea592 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -133,11 +133,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
+@@ -151,11 +151,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
      return 0;
  }
  
@@ -24,7 +24,7 @@ index 18013677e9..2276707e03 100644
  void DeviceInfoV4l2::InotifyProcess()
  {
      _fd_v4l = inotify_init();
-@@ -163,16 +158,14 @@ void DeviceInfoV4l2::InotifyProcess()
+@@ -181,16 +176,14 @@ void DeviceInfoV4l2::InotifyProcess()
  
  DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
  #ifdef WEBRTC_LINUX
@@ -45,7 +45,7 @@ index 18013677e9..2276707e03 100644
  #endif
  }
  
-@@ -184,9 +177,8 @@ DeviceInfoV4l2::~DeviceInfoV4l2() {
+@@ -202,9 +195,8 @@ DeviceInfoV4l2::~DeviceInfoV4l2() {
  #ifdef WEBRTC_LINUX
      _isShutdown = true;
  

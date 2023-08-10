@@ -12,10 +12,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7bf7263db30b79413
  1 file changed, 3 insertions(+), 25 deletions(-)
 
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 6a0aebafed..6bdfc476d4 100644
+index 19b32f16b9..f77d791033 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -44,7 +44,7 @@ namespace videocapturemodule {
+@@ -62,7 +62,7 @@ namespace videocapturemodule {
  void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
  {
      if (event->mask & IN_CREATE) {
@@ -24,7 +24,7 @@ index 6a0aebafed..6bdfc476d4 100644
              DeviceChange();
          } else if ((event->mask & IN_ISDIR) && (fd == _fd_dev)) {
              if (_wd_v4l < 0) {
-@@ -56,25 +56,15 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+@@ -74,25 +74,15 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
                      DeviceChange();
                  }
              }
@@ -51,7 +51,7 @@ index 6a0aebafed..6bdfc476d4 100644
          } else {
              assert(false);
          }
-@@ -141,11 +131,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
+@@ -159,11 +149,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
                  break;
              }
          }
@@ -63,7 +63,7 @@ index 6a0aebafed..6bdfc476d4 100644
      }
      return 0;
  }
-@@ -158,11 +143,9 @@ void DeviceInfoV4l2::InotifyEventThread(void* obj)
+@@ -176,11 +161,9 @@ void DeviceInfoV4l2::InotifyEventThread(void* obj)
  void DeviceInfoV4l2::InotifyProcess()
  {
      _fd_v4l = inotify_init();
@@ -76,7 +76,7 @@ index 6a0aebafed..6bdfc476d4 100644
          _wd_dev = inotify_add_watch(_fd_dev, "/dev/", IN_CREATE);
          ProcessInotifyEvents();
  
-@@ -170,16 +153,11 @@ void DeviceInfoV4l2::InotifyProcess()
+@@ -188,16 +171,11 @@ void DeviceInfoV4l2::InotifyProcess()
            inotify_rm_watch(_fd_v4l, _wd_v4l);
          }
  

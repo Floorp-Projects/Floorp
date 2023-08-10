@@ -53,10 +53,10 @@ index 4ef00e68ab..1ae0a4c794 100644
  
  DelegatedSourceListController*
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 59fe39b7eb..18013677e9 100644
+index cd0ba6e3df..c5d33ff9a4 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -312,6 +312,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
+@@ -330,6 +330,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
        // skip devices without video capture capability
        if (!IsVideoCaptureDevice(&cap)) {

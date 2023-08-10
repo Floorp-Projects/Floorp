@@ -34,7 +34,7 @@ index 4f8b7c059b..56da475bf3 100644
  #include <vector>
  
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 9d6383c57d..6a0aebafed 100644
+index 7397a10625..19b32f16b9 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
 @@ -18,7 +18,13 @@
@@ -51,7 +51,7 @@ index 9d6383c57d..6a0aebafed 100644
  
  #include <vector>
  
-@@ -191,8 +197,8 @@ DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
+@@ -209,8 +215,8 @@ DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
      {
          _inotifyEventThread->Start();
      }
