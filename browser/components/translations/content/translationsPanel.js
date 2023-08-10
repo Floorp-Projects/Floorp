@@ -680,7 +680,8 @@ var TranslationsPanel = new (class {
         gBrowser.currentURI.spec !== this.#firstShowUriSpec
       ) {
         document.l10n.setAttributes(header, "translations-panel-header");
-        this.#firstShowUriSpec === null;
+        this.#firstShowUriSpec = null;
+        intro.hidden = true;
       } else {
         Services.prefs.setBoolPref("browser.translations.panelShown", true);
         intro.hidden = false;
