@@ -1356,9 +1356,8 @@ void gfxDWriteFontList::GetFacesInitDataForFamily(
   }
 }
 
-bool gfxDWriteFontList::ReadFaceNames(const fontlist::Family* aFamily,
-                                      const fontlist::Face* aFace,
-                                      nsCString& aPSName,
+bool gfxDWriteFontList::ReadFaceNames(fontlist::Family* aFamily,
+                                      fontlist::Face* aFace, nsCString& aPSName,
                                       nsCString& aFullName) {
   IDWriteFontCollection* collection =
 #ifdef MOZ_BUNDLED_FONTS
@@ -1463,7 +1462,7 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
     // Read PS-names and fullnames of the faces, and any alternate family names
     // (either localizations or legacy subfamily names)
     for (unsigned i = 0; i < aFamily->NumFaces(); ++i) {
-      auto* face = facePtrs[i].ToPtr<fontlist::Face>(list);
+      auto face = static_cast<fontlist::Face*>(facePtrs[i].ToPtr(list));
       if (!face) {
         continue;
       }

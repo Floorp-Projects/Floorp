@@ -1402,7 +1402,7 @@ void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
       if (facePtrs[i].IsNull()) {
         continue;
       }
-      auto* face = facePtrs[i].ToPtr<const fontlist::Face>(list);
+      auto face = static_cast<const fontlist::Face*>(facePtrs[i].ToPtr(list));
       if (face->mDescriptor.AsString(list).Equals(aliasName)) {
         // Found it! Create an entry in the Alias table.
         GenerateFontListKey(aliasName, key);
@@ -2187,9 +2187,9 @@ void gfxMacPlatformFontList::ReadFaceNamesForFamily(fontlist::Family* aFamily,
   const uint32_t kNAME = TRUETYPE_TAG('n', 'a', 'm', 'e');
   fontlist::FontList* list = SharedFontList();
   nsAutoCString canonicalName(aFamily->DisplayName().AsString(list));
-  const auto* facePtrs = aFamily->Faces(list);
+  const fontlist::Pointer* facePtrs = aFamily->Faces(list);
   for (uint32_t i = 0, n = aFamily->NumFaces(); i < n; i++) {
-    auto* face = facePtrs[i].ToPtr<const fontlist::Face>(list);
+    auto face = static_cast<fontlist::Face*>(facePtrs[i].ToPtr(list));
     if (!face) {
       continue;
     }

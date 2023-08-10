@@ -1993,7 +1993,7 @@ void gfxFontGroup::AddFamilyToFontList(fontlist::Family* aFamily,
   }
   AutoTArray<fontlist::Face*, 4> faceList;
   aFamily->FindAllFacesForStyle(pfl->SharedFontList(), mStyle, faceList);
-  for (auto* face : faceList) {
+  for (auto face : faceList) {
     gfxFontEntry* fe = pfl->GetOrCreateFontEntry(face, aFamily);
     if (fe && !HasFont(fe)) {
       FamilyFace ff(aFamily, fe, aGeneric);
