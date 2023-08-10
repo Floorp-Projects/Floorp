@@ -140,6 +140,22 @@ void AutoStubFrame::leave(MacroAssembler& masm) {
   }
 }
 
+void AutoStubFrame::storeTracedValue(MacroAssembler& masm, ValueOperand value) {
+  MOZ_ASSERT(compiler.localTracingSlots_ < 255);
+  MOZ_ASSERT(masm.framePushed() - framePushedAtEnterStubFrame_ ==
+             compiler.localTracingSlots_ * sizeof(Value));
+  masm.Push(value);
+  compiler.localTracingSlots_++;
+}
+
+void AutoStubFrame::loadTracedValue(MacroAssembler& masm, uint8_t slotIndex,
+                                    ValueOperand value) {
+  MOZ_ASSERT(slotIndex <= compiler.localTracingSlots_);
+  int32_t offset = BaselineStubFrameLayout::LocallyTracedValueOffset +
+                   slotIndex * sizeof(Value);
+  masm.loadValue(Address(FramePointer, -offset), value);
+}
+
 #ifdef DEBUG
 AutoStubFrame::~AutoStubFrame() { MOZ_ASSERT(!compiler.enteredStubFrame_); }
 #endif
@@ -238,6 +254,8 @@ JitCode* BaselineCacheIRCompiler::compile() {
     cx_->recoverFromOutOfMemory();
     return nullptr;
   }
+
+  newStubCode->setLocalTracingSlots(localTracingSlots_);
 
   return newStubCode;
 }
@@ -3600,6 +3618,126 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
 
   return true;
 }
+
+#ifdef JS_PUNBOX64
+template <typename IdType>
+bool BaselineCacheIRCompiler::emitCallScriptedProxyGetShared(
+    ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
+    uint32_t trapOffset, IdType id, uint32_t nargsAndFlags) {
+  Address trapAddr(stubAddress(trapOffset));
+  Register handler = allocator.useRegister(masm, handlerId);
+  ValueOperand target = allocator.useValueRegister(masm, targetId);
+  Register receiver = allocator.useRegister(masm, receiverId);
+  ValueOperand idVal;
+  if constexpr (std::is_same_v<IdType, ValOperandId>) {
+    idVal = allocator.useValueRegister(masm, id);
+  }
+
+  AutoScratchRegister code(allocator, masm);
+  AutoScratchRegister callee(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
+#  ifdef JS_PUNBOX64
+  ValueOperand scratchVal(scratch);
+#  else
+  AutoScratchRegister scratchExtra(allocator, masm);
+  ValueOperand scratchVal(scratch, scratchExtra);
+#  endif
+
+  masm.loadPtr(trapAddr, callee);
+
+  allocator.discardStack(masm);
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  // We need to keep the target around to potentially validate the proxy result
+  stubFrame.storeTracedValue(masm, target);
+  if constexpr (std::is_same_v<IdType, ValOperandId>) {
+    stubFrame.storeTracedValue(masm, idVal);
+  } else {
+    // We need to either trace the id here or grab the ICStubReg back from
+    // FramePointer + sizeof(void*) after the call in order to load it again.
+    // We elect to do this because it unifies the code path after the call.
+    Address idAddr(stubAddress(id));
+    masm.loadPtr(idAddr, scratch);
+    masm.tagValue(JSVAL_TYPE_STRING, scratch, scratchVal);
+    stubFrame.storeTracedValue(masm, scratchVal);
+  }
+
+  uint16_t nargs = nargsAndFlags >> JSFunction::ArgCountShift;
+  masm.alignJitStackBasedOnNArgs(std::max(uint16_t(3), nargs),
+                                 /*countIncludesThis = */ false);
+  for (size_t i = 3; i < nargs; i++) {
+    masm.Push(UndefinedValue());
+  }
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, receiver, scratchVal);
+  masm.Push(scratchVal);
+
+  if constexpr (std::is_same_v<IdType, ValOperandId>) {
+    masm.Push(idVal);
+  } else {
+    stubFrame.loadTracedValue(masm, 1, scratchVal);
+    masm.Push(scratchVal);
+  }
+
+  masm.Push(target);
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, handler, scratchVal);
+  masm.Push(scratchVal);
+
+  masm.loadJitCodeRaw(callee, code);
+
+  masm.Push(callee);
+  masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, 3);
+
+  masm.callJit(code);
+
+  Register scratch2 = code;
+
+  Label success;
+  stubFrame.loadTracedValue(masm, 0, scratchVal);
+  masm.unboxObject(scratchVal, scratch);
+  masm.branchTestObjectNeedsProxyResultValidation(Assembler::Zero, scratch,
+                                                  scratch2, &success);
+#  ifdef JS_PUNBOX64
+  ValueOperand scratchVal2(scratch2);
+#  else
+  ValueOperand scratchVal2(scratch2, callee);
+#  endif
+  stubFrame.loadTracedValue(masm, 1, scratchVal2);
+  masm.Push(JSReturnOperand);
+  masm.Push(scratchVal2);
+  masm.Push(scratch);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
+                      MutableHandleValue);
+  callVM<Fn, CheckProxyGetByValueResult>(masm);
+
+  masm.bind(&success);
+
+  stubFrame.leave(masm);
+
+  return true;
+}
+
+bool BaselineCacheIRCompiler::emitCallScriptedProxyGetResult(
+    ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
+    uint32_t trapOffset, uint32_t idOffset, uint32_t nargsAndFlags) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId,
+                                        trapOffset, idOffset, nargsAndFlags);
+}
+
+bool BaselineCacheIRCompiler::emitCallScriptedProxyGetByValueResult(
+    ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
+    ValOperandId idId, uint32_t trapOffset, uint32_t nargsAndFlags) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId,
+                                        trapOffset, idId, nargsAndFlags);
+}
+#endif
 
 bool BaselineCacheIRCompiler::emitCallBoundScriptedFunction(
     ObjOperandId calleeId, ObjOperandId targetId, Int32OperandId argcId,
