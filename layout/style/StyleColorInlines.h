@@ -43,26 +43,23 @@ inline StyleColor StyleColor::FromColor(nscolor aColor) {
   return StyleColor::Absolute(StyleAbsoluteColor::FromColor(aColor));
 }
 
-// Workaround for window.h conflict.
+template <>
+inline StyleColor StyleColor::Transparent() {
 #pragma push_macro("TRANSPARENT")
 #undef TRANSPARENT
-
-// static
-template <>
-inline const StyleColor StyleColor::TRANSPARENT =
-    StyleColor::Absolute(StyleAbsoluteColor::TRANSPARENT);
-
+  return StyleColor::Absolute(StyleAbsoluteColor::TRANSPARENT);
 #pragma pop_macro("TRANSPARENT")
+}
 
-// static
 template <>
-inline const StyleColor StyleColor::BLACK =
-    StyleColor::Absolute(StyleAbsoluteColor::BLACK);
+inline StyleColor StyleColor::Black() {
+  return StyleColor::Absolute(StyleAbsoluteColor::BLACK);
+}
 
-// static
 template <>
-inline const StyleColor StyleColor::WHITE =
-    StyleColor::Absolute(StyleAbsoluteColor::WHITE);
+inline StyleColor StyleColor::White() {
+  return StyleColor::Absolute(StyleAbsoluteColor::WHITE);
+}
 
 template <>
 StyleAbsoluteColor StyleColor::ResolveColor(const StyleAbsoluteColor&) const;
