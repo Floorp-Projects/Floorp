@@ -381,17 +381,22 @@ void SctpDataChannel::RegisterObserver(DataChannelObserver* observer) {
     }
   }
 
-  // Now do the observer registration on the network thread.
-  auto register_observer = [&] {
-    RTC_DCHECK_RUN_ON(network_thread_);
-    observer_ = observer;
-    DeliverQueuedReceivedData();
+  // Now do the observer registration on the network thread. In the common case,
+  // we'll do this asynchronously via `PostTask()`. For that reason we grab
+  // a reference to ourselves while the task is in flight. We can't use
+  // `SafeTask(network_safety_, ...)` for this since we can't assume that we
+  // have a transport (network_safety_ represents the transport connection).
+  rtc::scoped_refptr<SctpDataChannel> me(this);
+  auto register_observer = [me = std::move(me), observer = observer] {
+    RTC_DCHECK_RUN_ON(me->network_thread_);
+    me->observer_ = observer;
+    me->DeliverQueuedReceivedData();
   };
 
   if (network_thread_ == current_thread) {
     register_observer();
   } else {
-    network_thread_->BlockingCall(std::move(register_observer));
+    network_thread_->PostTask(std::move(register_observer));
   }
 }
 
