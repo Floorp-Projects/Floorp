@@ -3077,9 +3077,61 @@ def ar_config(c_compiler, toolchain_prefix=None):
 
 target_ar_config = ar_config(c_compiler, toolchain_prefix)
 
-check_prog("AR", target_ar_config.names, paths=clang_search_path)
+target_ar = check_prog("AR", target_ar_config.names, paths=clang_search_path)
 
 set_config("AR_FLAGS", target_ar_config.flags)
+
+
+@depends(c_compiler, extra_toolchain_flags, target_ar, target_ar_config)
+@checking("whether ar supports response files")
+@imports("os")
+@imports(_from="tempfile", _import="mkstemp")
+@imports(_from="__builtin__", _import="FileNotFoundError")
+@imports(_from="mozbuild.configure.util", _import="LineIO")
+def ar_supports_response_files(c_compiler, extra_toolchain_flags, ar, ar_config):
+    lib_path = list_path = None
+    try:
+        fd, obj_path = mkstemp(prefix="conftest.", suffix=".o")
+        os.close(fd)
+        if (
+            try_invoke_compiler(
+                # No configure_cache because it would not create the
+                # expected output file.
+                None,
+                [c_compiler.compiler] + c_compiler.flags,
+                c_compiler.language,
+                "void foo() {}",
+                ["-c", "-o", obj_path] + (extra_toolchain_flags or []),
+                wrapper=c_compiler.wrapper,
+                onerror=lambda: None,
+            )
+            is not None
+        ):
+            fd, list_path = mkstemp(prefix="conftest.", suffix=".list")
+            with os.fdopen(fd, "w") as list:
+                list.write(obj_path)
+                log.debug("Creating `%s` with content:", list_path)
+                log.debug("| %s", obj_path)
+            fd, lib_path = mkstemp(prefix="conftest.", suffix=".a")
+            os.close(fd)
+            os.remove(lib_path)
+            ar_command = (
+                [ar]
+                + [x.replace("$@", lib_path) for x in ar_config.flags]
+                + ["@" + list_path]
+            )
+            result = check_cmd_output(*ar_command, onerror=lambda: None)
+            return result is not None
+    finally:
+        for cleanup_path in (obj_path, list_path, lib_path):
+            if cleanup_path:
+                try:
+                    os.remove(cleanup_path)
+                except FileNotFoundError:
+                    pass
+
+
+set_config("AR_SUPPORTS_RESPONSE_FILE", True, when=ar_supports_response_files)
 
 host_ar_config = ar_config(host_c_compiler)
 

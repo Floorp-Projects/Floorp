@@ -286,6 +286,23 @@ class CommonBackend(BuildBackend):
 
         return (objs, shared_libs, os_libs, static_libs)
 
+    def _make_ar_response_file(self, objdir, objs, name):
+        if not objs:
+            return None
+
+        if not self.environment.substs.get("AR_SUPPORTS_RESPONSE_FILE"):
+            return None
+
+        response_file_path = mozpath.join(objdir, name)
+        ref = "@" + response_file_path
+        content = "\n".join(objs)
+
+        mkdir(objdir)
+        with self._write_file(response_file_path) as fh:
+            fh.write(content)
+
+        return ref
+
     def _make_list_file(self, kind, objdir, objs, name):
         if not objs:
             return None
