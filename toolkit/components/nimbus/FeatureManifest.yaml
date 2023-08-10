@@ -912,7 +912,7 @@ featureCallout:
 # 1) clone an existing one here
 # 2) update the YAML feature id to the next unused number
 # 3) update the YAML description
-# 4) add the new feature id to MESSAGING_EXPERIMENTS_DEFAULT_FEATURES list in ASRouter.jsm
+# 4) add the new feature id to MESSAGING_EXPERIMENTS_DEFAULT_FEATURES list in MessagingExperimentConstants.sys.mjs
 # 5) add the new feature id and the version it landed to the spreadsheet tab linked to above
 
 fxms-message-1:
