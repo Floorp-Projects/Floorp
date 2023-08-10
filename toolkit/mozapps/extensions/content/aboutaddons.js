@@ -262,16 +262,14 @@ async function getAddonMessageInfo(addon) {
   if (addon.blocklistState === STATE_BLOCKED) {
     return {
       linkUrl: await addon.getBlocklistURL(),
-      linkId: "details-notification-blocked-link",
-      messageId: "details-notification-blocked2",
+      messageId: "details-notification-blocked",
       messageArgs: { name },
       type: "error",
     };
   } else if (isDisabledUnsigned(addon)) {
     return {
       linkUrl: SUPPORT_URL + "unsigned-addons",
-      linkId: "details-notification-unsigned-and-disabled-link",
-      messageId: "details-notification-unsigned-and-disabled2",
+      messageId: "details-notification-unsigned-and-disabled",
       messageArgs: { name },
       type: "error",
     };
@@ -281,29 +279,27 @@ async function getAddonMessageInfo(addon) {
       addon.blocklistState !== STATE_SOFTBLOCKED)
   ) {
     return {
-      messageId: "details-notification-incompatible2",
+      messageId: "details-notification-incompatible",
       messageArgs: { name, version: Services.appinfo.version },
       type: "warning",
     };
   } else if (!isCorrectlySigned(addon)) {
     return {
       linkUrl: SUPPORT_URL + "unsigned-addons",
-      linkId: "details-notification-unsigned-link",
-      messageId: "details-notification-unsigned2",
+      messageId: "details-notification-unsigned",
       messageArgs: { name },
       type: "warning",
     };
   } else if (addon.blocklistState === STATE_SOFTBLOCKED) {
     return {
       linkUrl: await addon.getBlocklistURL(),
-      linkId: "details-notification-softblocked-link",
-      messageId: "details-notification-softblocked2",
+      messageId: "details-notification-softblocked",
       messageArgs: { name },
       type: "warning",
     };
   } else if (addon.isGMPlugin && !addon.isInstalled && addon.isActive) {
     return {
-      messageId: "details-notification-gmp-pending2",
+      messageId: "details-notification-gmp-pending",
       messageArgs: { name },
       type: "warning",
     };
@@ -2806,7 +2802,6 @@ class AddonCard extends HTMLElement {
 
     const {
       linkUrl,
-      linkId,
       messageId,
       messageArgs,
       type = "",
@@ -2814,17 +2809,18 @@ class AddonCard extends HTMLElement {
 
     if (messageId) {
       document.l10n.pauseObserving();
-      document.l10n.setAttributes(messageBar, messageId, messageArgs);
-      messageBar.setAttribute("data-l10n-attrs", "message");
+      document.l10n.setAttributes(
+        messageBar.querySelector("span"),
+        messageId,
+        messageArgs
+      );
 
       const link = messageBar.querySelector("button");
       if (linkUrl) {
-        document.l10n.setAttributes(link, linkId);
+        document.l10n.setAttributes(link, `${messageId}-link`);
         link.setAttribute("url", linkUrl);
-        link.setAttribute("slot", "actions");
         link.hidden = false;
       } else {
-        link.removeAttribute("slot");
         link.hidden = true;
       }
 
@@ -3878,7 +3874,7 @@ class TaarMessageBar extends HTMLElement {
     if (this.childElementCount == 0 && !this.hidden) {
       this.appendChild(importTemplate("taar-notice"));
       this.addEventListener("click", this);
-      this.messageBar = this.querySelector("moz-message-bar");
+      this.messageBar = this.querySelector("message-bar");
       this.messageBar.addEventListener("message-bar:user-dismissed", this);
     }
   }

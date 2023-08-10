@@ -107,9 +107,7 @@ add_task(async function testNotInstalledDisabled() {
       "The addon name should include a disabled postfix"
     );
 
-    let cardMessage = addonCard.querySelector(
-      "moz-message-bar.addon-card-message"
-    );
+    let cardMessage = addonCard.querySelector("message-bar.addon-card-message");
     is_element_hidden(cardMessage, "Warning notification is hidden");
   }
 
@@ -132,9 +130,7 @@ add_task(async function testNotInstalledDisabledDetails() {
 
     let updatesBtn = addonCard.querySelector("[action=update-check]");
     is_element_visible(updatesBtn, "Check for Updates action is visible");
-    let cardMessage = addonCard.querySelector(
-      "moz-message-bar.addon-card-message"
-    );
+    let cardMessage = addonCard.querySelector("message-bar.addon-card-message");
     is_element_hidden(cardMessage, "Warning notification is hidden");
 
     await switchView(win, "plugin");
@@ -152,9 +148,7 @@ add_task(async function testNotInstalled() {
     Assert.ok(item, "Got add-on element:" + addon.id);
 
     let warningMessageBar = await BrowserTestUtils.waitForCondition(() => {
-      return item.querySelector(
-        "moz-message-bar.addon-card-message[type=warning]"
-      );
+      return item.querySelector("message-bar.addon-card-message[type=warning]");
     }, "Wait for the addon card message to be updated");
 
     is_element_visible(warningMessageBar, "Warning notification is visible");
@@ -188,7 +182,7 @@ add_task(async function testNotInstalledDetails() {
 
     let warningMessageBar = await BrowserTestUtils.waitForCondition(() => {
       return addonCard.querySelector(
-        "moz-message-bar.addon-card-message[type=warning]"
+        "message-bar.addon-card-message[type=warning]"
       );
     }, "Wait for the addon card message to be updated");
     is_element_visible(warningMessageBar, "Warning notification is visible");

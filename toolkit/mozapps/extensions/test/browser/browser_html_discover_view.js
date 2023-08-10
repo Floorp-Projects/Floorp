@@ -649,19 +649,17 @@ add_task(async function checkDiscopaneNotice() {
   });
 
   let win = await loadInitialView("extension");
-  let messageBar = win.document.querySelector(
-    "moz-message-bar.discopane-notice"
-  );
+  let messageBar = win.document.querySelector("message-bar.discopane-notice");
   ok(messageBar, "Recommended notice should exist in extensions view");
   await switchToDiscoView(win);
-  messageBar = win.document.querySelector("moz-message-bar.discopane-notice");
+  messageBar = win.document.querySelector("message-bar.discopane-notice");
   ok(messageBar, "Recommended notice should exist in disco view");
 
-  messageBar.closeButtonEl.click();
-  messageBar = win.document.querySelector("moz-message-bar.discopane-notice");
+  messageBar.closeButton.click();
+  messageBar = win.document.querySelector("message-bar.discopane-notice");
   ok(!messageBar, "Recommended notice should not exist in disco view");
   await switchToNonDiscoView(win);
-  messageBar = win.document.querySelector("moz-message-bar.discopane-notice");
+  messageBar = win.document.querySelector("message-bar.discopane-notice");
   ok(!messageBar, "Recommended notice should not exist in extensions view");
 
   await closeView(win);

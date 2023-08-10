@@ -258,7 +258,7 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
   margin-top: 0px;
 }
 
-.update-postponed-bar + .addon-card-message:not([hidden]) {
+.update-postponed-bar + .addon-card-message {
   /* Prevent the small overlapping between the two message bars
    * when they are both visible at the same time one after the
    * other on the same addon card */
@@ -446,6 +446,20 @@ recommended-addon-card .addon-description:not(:empty) {
 
 .discopane-notice {
   margin: 24px 0;
+}
+
+.discopane-notice-content {
+  padding-block: 6px;
+}
+
+.discopane-notice-content > span {
+  flex-grow: 1;
+  margin-inline-end: 4px;
+}
+
+.discopane-notice-content > button {
+  flex-grow: 0;
+  flex-shrink: 0;
 }
 
 .view-footer {
