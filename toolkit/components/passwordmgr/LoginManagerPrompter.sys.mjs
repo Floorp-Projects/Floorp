@@ -4,6 +4,7 @@
 
 import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { showConfirmation } from "resource://gre/modules/FillHelpers.sys.mjs";
 
 const lazy = {};
 
@@ -489,6 +490,21 @@ export class LoginManagerPrompter {
       label: this._getLocalizedString(initialMsgNames.buttonLabel),
       accessKey: this._getLocalizedString(initialMsgNames.buttonAccessKey),
       callback: async () => {
+        const eventTypeMapping = {
+          "password-save": {
+            eventObject: "save",
+            confirmationHintFtlId: "confirmation-hint-password-created",
+          },
+          "password-change": {
+            eventObject: "update",
+            confirmationHintFtlId: "confirmation-hint-password-updated",
+          },
+        };
+
+        if (!eventTypeMapping[type]) {
+          throw new Error(`Unexpected doorhanger type: '${type}'`);
+        }
+
         readDataFromUI();
         if (
           type == "password-save" &&
@@ -510,17 +526,7 @@ export class LoginManagerPrompter {
           throw new Error("Unknown histogram");
         }
 
-        let eventObject;
-        if (type == "password-change") {
-          eventObject = "update";
-        } else if (type == "password-save") {
-          eventObject = "save";
-        } else {
-          throw new Error(
-            `Unexpected doorhanger type. Expected either 'password-save' or 'password-change', got ${type}`
-          );
-        }
-
+        showConfirmation(browser, eventTypeMapping[type].confirmationHintFtlId);
         // The popup does not wait until this promise is resolved, but is
         // closed immediately when the function is returned. Therefore, we set
         // the focus before awaiting the asynchronous operation.
@@ -530,7 +536,7 @@ export class LoginManagerPrompter {
         Services.telemetry.recordEvent(
           "pwmgr",
           "doorhanger_submitted",
-          eventObject,
+          eventTypeMapping[type].eventObject,
           null,
           wasModifiedEvent
         );
@@ -792,12 +798,7 @@ export class LoginManagerPrompter {
     );
 
     if (notifySaved) {
-      let anchor = notification.anchorElement;
-      lazy.log.debug("Showing the ConfirmationHint.");
-      anchor.ownerGlobal.ConfirmationHint.show(
-        anchor,
-        "confirmation-hint-password-saved"
-      );
+      showConfirmation(browser, "confirmation-hint-password-saved");
     }
 
     return notification;
