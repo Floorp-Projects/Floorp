@@ -7,6 +7,7 @@ import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   QuickSuggestRemoteSettings:
     "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   SuggestionsMap:
@@ -15,6 +16,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
+
+const RESULT_MENU_COMMAND = {
+  HELP: "help",
+  NOT_INTERESTED: "not_interested",
+  NOT_RELEVANT: "not_relevant",
+};
 
 /**
  * A feature that supports MDN suggestions.
@@ -109,6 +116,59 @@ export class MDNSuggestions extends BaseFeature {
       ),
       { showFeedbackMenu: true }
     );
+  }
+
+  getResultCommands(result) {
+    return [
+      {
+        l10n: {
+          id: "firefox-suggest-command-dont-show-mdn",
+        },
+        children: [
+          {
+            name: RESULT_MENU_COMMAND.NOT_RELEVANT,
+            l10n: {
+              id: "firefox-suggest-command-not-relevant",
+            },
+          },
+          {
+            name: RESULT_MENU_COMMAND.NOT_INTERESTED,
+            l10n: {
+              id: "firefox-suggest-command-not-interested",
+            },
+          },
+        ],
+      },
+      { name: "separator" },
+      {
+        name: RESULT_MENU_COMMAND.HELP,
+        l10n: {
+          id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+        },
+      },
+    ];
+  }
+
+  handleCommand(view, result, selType) {
+    switch (selType) {
+      case RESULT_MENU_COMMAND.HELP:
+        // "help" is handled by UrlbarInput, no need to do anything here.
+        break;
+      // selType == "dismiss" when the user presses the dismiss key shortcut.
+      case "dismiss":
+      case RESULT_MENU_COMMAND.NOT_RELEVANT:
+        lazy.QuickSuggest.blockedSuggestions.add(result.payload.url);
+        view.acknowledgeDismissal(result, {
+          id: "firefox-suggest-dismissal-acknowledgment-one-mdn",
+        });
+        break;
+      case RESULT_MENU_COMMAND.NOT_INTERESTED:
+        lazy.UrlbarPrefs.set("suggest.mdn", false);
+        view.acknowledgeDismissal(result, {
+          id: "firefox-suggest-dismissal-acknowledgment-all-mdn",
+        });
+        break;
+    }
   }
 
   #suggestionsMap = null;

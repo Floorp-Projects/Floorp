@@ -366,7 +366,9 @@ export class AddonSuggestions extends BaseFeature {
       case RESULT_MENU_COMMAND.NOT_INTERESTED:
       case RESULT_MENU_COMMAND.NOT_RELEVANT:
         lazy.UrlbarPrefs.set("suggest.addons", false);
-        view.acknowledgeDismissal(result);
+        view.acknowledgeDismissal(result, {
+          id: "firefox-suggest-dismissal-acknowledgment-all",
+        });
         break;
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
         view.acknowledgeFeedback(result);
