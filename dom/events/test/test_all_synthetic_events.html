@@ -350,6 +350,11 @@ const kEventConstructors = {
                                                        },
                                                chromeOnly: true,
                                              },
+  StyleSheetRemovedEvent:                    { create (aName, aProps) {
+                                                         return new StyleSheetRemovedEvent(aName, aProps);
+                                                       },
+                                               chromeOnly: true,
+                                             },
   SubmitEvent:                               { create (aName, aProps) {
                                                          return new SubmitEvent(aName, aProps);
                                                        },

@@ -93,6 +93,7 @@ void DocumentOrShadowRoot::RemoveStyleSheet(StyleSheet& aSheet) {
   mStyleSheets.RemoveElementAt(index);
   RemoveSheetFromStylesIfApplicable(*sheet);
   sheet->ClearAssociatedDocumentOrShadowRoot();
+  AsNode().OwnerDoc()->PostStyleSheetRemovedEvent(aSheet);
 }
 
 void DocumentOrShadowRoot::RemoveSheetFromStylesIfApplicable(

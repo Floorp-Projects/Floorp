@@ -66,7 +66,7 @@ dom/xml/test/old/toc/book.css
 dom/xml/test/old/toc/toc.css
 
 # Tests we don't want to modify at this point:
-layout/base/tests/bug839103.css
+layout/base/tests/stylesheet_change_events.css
 layout/inspector/tests/bug856317.css
 layout/inspector/tests/chrome/test_bug467669.css
 layout/inspector/tests/chrome/test_bug708874.css

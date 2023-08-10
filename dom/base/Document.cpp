@@ -225,6 +225,8 @@
 #include "mozilla/dom/StyleSheetApplicableStateChangeEvent.h"
 #include "mozilla/dom/StyleSheetApplicableStateChangeEventBinding.h"
 #include "mozilla/dom/StyleSheetList.h"
+#include "mozilla/dom/StyleSheetRemovedEvent.h"
+#include "mozilla/dom/StyleSheetRemovedEventBinding.h"
 #include "mozilla/dom/TimeoutManager.h"
 #include "mozilla/dom/ToggleEvent.h"
 #include "mozilla/dom/Touch.h"
@@ -7442,6 +7444,26 @@ void Document::PostStyleSheetApplicableStateChangeEvent(StyleSheet& aSheet) {
   RefPtr<StyleSheetApplicableStateChangeEvent> event =
       StyleSheetApplicableStateChangeEvent::Constructor(
           this, u"StyleSheetApplicableStateChanged"_ns, init);
+  event->SetTrusted(true);
+  event->SetTarget(this);
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(this, event);
+  asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
+  asyncDispatcher->PostDOMEvent();
+}
+
+void Document::PostStyleSheetRemovedEvent(StyleSheet& aSheet) {
+  if (!StyleSheetChangeEventsEnabled()) {
+    return;
+  }
+
+  StyleSheetRemovedEventInit init;
+  init.mBubbles = true;
+  init.mCancelable = false;
+  init.mStylesheet = &aSheet;
+
+  RefPtr<StyleSheetRemovedEvent> event =
+      StyleSheetRemovedEvent::Constructor(this, u"StyleSheetRemoved"_ns, init);
   event->SetTrusted(true);
   event->SetTarget(this);
   RefPtr<AsyncEventDispatcher> asyncDispatcher =

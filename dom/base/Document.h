@@ -1687,8 +1687,8 @@ class Document : public nsINode,
    * and that observers should be notified and style sets updated
    */
   void StyleSheetApplicableStateChanged(StyleSheet&);
-
   void PostStyleSheetApplicableStateChangeEvent(StyleSheet&);
+  void PostStyleSheetRemovedEvent(StyleSheet&);
 
   enum additionalSheetType {
     eAgentSheet,
