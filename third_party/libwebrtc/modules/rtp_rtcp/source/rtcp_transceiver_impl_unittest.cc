@@ -90,10 +90,6 @@ class MockRtpStreamRtcpHandler : public RtpStreamRtcpHandler {
               (override));
   MOCK_METHOD(void, OnFir, (uint32_t), (override));
   MOCK_METHOD(void, OnPli, (uint32_t), (override));
-  MOCK_METHOD(void,
-              OnReportBlock,
-              (uint32_t, const rtcp::ReportBlock&),
-              (override));
   MOCK_METHOD(void, OnReport, (const ReportBlockData&), (override));
 
  private:
@@ -113,11 +109,6 @@ class MockNetworkLinkRtcpObserver : public NetworkLinkRtcpObserver {
   MOCK_METHOD(void,
               OnReceiverEstimatedMaxBitrate,
               (Timestamp receive_time, DataRate bitrate),
-              (override));
-  MOCK_METHOD(void,
-              OnReportBlocks,
-              (Timestamp receive_time,
-               rtc::ArrayView<const rtcp::ReportBlock> report_blocks),
               (override));
   MOCK_METHOD(void,
               OnReport,
@@ -1523,7 +1514,6 @@ TEST_F(RtcpTransceiverImplTest,
   rr2->SetReportBlocks(std::vector<ReportBlock>(2));
   packet.Append(std::move(rr2));
 
-  EXPECT_CALL(link_observer, OnReportBlocks(receive_time, SizeIs(64)));
   EXPECT_CALL(link_observer, OnReport(receive_time, SizeIs(64)));
 
   rtcp_transceiver.ReceivePacket(packet.Build(), receive_time);
@@ -1550,9 +1540,6 @@ TEST_F(RtcpTransceiverImplTest,
   MockRtpStreamRtcpHandler local_stream1;
   MockRtpStreamRtcpHandler local_stream3;
   MockRtpStreamRtcpHandler local_stream4;
-  EXPECT_CALL(local_stream1, OnReportBlock(kRemoteSsrc, _));
-  EXPECT_CALL(local_stream3, OnReportBlock).Times(0);
-  EXPECT_CALL(local_stream4, OnReportBlock(kRemoteSsrc, _));
   EXPECT_CALL(local_stream1,
               OnReport(Property(&ReportBlockData::sender_ssrc, kRemoteSsrc)));
   EXPECT_CALL(local_stream3, OnReport).Times(0);

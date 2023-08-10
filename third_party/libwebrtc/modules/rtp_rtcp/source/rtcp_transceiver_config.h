@@ -22,7 +22,6 @@
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/transport_feedback.h"
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/ntp_time.h"
@@ -44,11 +43,6 @@ class NetworkLinkRtcpObserver {
                                    const rtcp::TransportFeedback& feedback) {}
   virtual void OnReceiverEstimatedMaxBitrate(Timestamp receive_time,
                                              DataRate bitrate) {}
-
-  // TODO(bugs.webrtc.org/8239): Remove this callback in favor of the `OnReport`
-  virtual void OnReportBlocks(
-      Timestamp receive_time,
-      rtc::ArrayView<const rtcp::ReportBlock> report_blocks) {}
 
   // Called on an RTCP packet with sender or receiver reports with non zero
   // report blocks. Report blocks are combined from all reports into one array.
@@ -110,10 +104,6 @@ class RtpStreamRtcpHandler {
                       rtc::ArrayView<const uint16_t> sequence_numbers) {}
   virtual void OnFir(uint32_t sender_ssrc) {}
   virtual void OnPli(uint32_t sender_ssrc) {}
-
-  // TODO(bugs.webrtc.org/8239): Remove this callback in favor of the `OnReport`
-  virtual void OnReportBlock(uint32_t sender_ssrc,
-                             const rtcp::ReportBlock& report_block) {}
 
   // Called on an RTCP packet with sender or receiver reports with a report
   // block for the handled RTP stream.
