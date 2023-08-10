@@ -145,7 +145,7 @@ add_task(async function test_less_then_equal_than_keyword_bug_1124238() {
     uri: Services.io.newURI("http://mozilla.org/test/"),
   });
   await PlacesTestUtils.addVisits("http://mozilla.com/");
-  PlacesTestUtils.addBookmarkWithDetails({
+  await PlacesTestUtils.addBookmarkWithDetails({
     uri: Services.io.newURI("http://mozilla.com/"),
     keyword: "moz",
   });
@@ -159,7 +159,7 @@ add_task(async function test_less_then_equal_than_keyword_bug_1124238() {
     matches: [
       makeVisitResult(context, {
         uri: "http://mozilla.com/",
-        title: "test visit for http://mozilla.com/",
+        title: "A bookmark",
         heuristic: true,
       }),
       makeVisitResult(context, {
