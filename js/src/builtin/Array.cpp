@@ -72,7 +72,7 @@ using JS::AutoCheckCannotGC;
 using JS::IsArrayAnswer;
 using JS::ToUint32;
 
-bool js::ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj) {
+static inline bool ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj) {
   if (!obj->is<NativeObject>()) {
     return true;
   }
@@ -114,7 +114,7 @@ bool js::PrototypeMayHaveIndexedProperties(NativeObject* obj) {
  * elements. This includes other indexed properties in its shape hierarchy, and
  * indexed properties or elements along its prototype chain.
  */
-bool js::ObjectMayHaveExtraIndexedProperties(JSObject* obj) {
+static bool ObjectMayHaveExtraIndexedProperties(JSObject* obj) {
   MOZ_ASSERT_IF(obj->hasDynamicPrototype(), !obj->is<NativeObject>());
 
   if (ObjectMayHaveExtraIndexedOwnProperties(obj)) {

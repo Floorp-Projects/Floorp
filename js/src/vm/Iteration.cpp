@@ -609,7 +609,7 @@ struct SortComparatorIds {
 
 #endif /* DEBUG */
 
-static void AssertNoEnumerableProperties(NativeObject* obj) {
+void js::AssertNoEnumerableProperties(NativeObject* obj) {
 #ifdef DEBUG
   // Verify the object has no enumerable properties if the HasEnumerable
   // ObjectFlag is not set.
@@ -626,36 +626,6 @@ static void AssertNoEnumerableProperties(NativeObject* obj) {
     }
   }
 #endif  // DEBUG
-}
-
-// Typed arrays and classes with an enumerate hook can have extra properties not
-// included in the shape's property map or the object's dense elements.
-static bool ClassCanHaveExtraEnumeratedProperties(const JSClass* clasp) {
-  return IsTypedArrayClass(clasp) || clasp->getNewEnumerate() ||
-         clasp->getEnumerate();
-}
-
-static bool ProtoMayHaveEnumerableProperties(JSObject* obj) {
-  if (!obj->is<NativeObject>()) {
-    return true;
-  }
-
-  JSObject* proto = obj->as<NativeObject>().staticPrototype();
-  while (proto) {
-    if (!proto->is<NativeObject>()) {
-      return true;
-    }
-    NativeObject* nproto = &proto->as<NativeObject>();
-    if (nproto->hasEnumerableProperty() ||
-        nproto->getDenseInitializedLength() > 0 ||
-        ClassCanHaveExtraEnumeratedProperties(nproto->getClass())) {
-      return true;
-    }
-    AssertNoEnumerableProperties(nproto);
-    proto = nproto->staticPrototype();
-  }
-
-  return false;
 }
 
 bool PropertyEnumerator::snapshot(JSContext* cx) {
