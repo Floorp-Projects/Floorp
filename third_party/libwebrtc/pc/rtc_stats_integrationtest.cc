@@ -723,11 +723,9 @@ class RTCStatsReportVerifier {
     // hierarcy.
     if (stream.type() == RTCInboundRtpStreamStats::kType ||
         stream.type() == RTCOutboundRtpStreamStats::kType) {
-      verifier.TestMemberIsDefined(stream.media_type);
       verifier.TestMemberIsIDReference(
           stream.track_id, DEPRECATED_RTCMediaStreamTrackStats::kType);
     } else {
-      verifier.TestMemberIsUndefined(stream.media_type);
       verifier.TestMemberIsUndefined(stream.track_id);
     }
     verifier.TestMemberIsIDReference(stream.transport_id,

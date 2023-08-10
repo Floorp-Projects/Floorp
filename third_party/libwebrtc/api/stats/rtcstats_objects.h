@@ -368,9 +368,6 @@ class RTC_EXPORT RTCRtpStreamStats : public RTCStats {
   RTCStatsMember<std::string> transport_id;
   RTCStatsMember<std::string> codec_id;
 
-  // Obsolete
-  RTCStatsMember<std::string> media_type;  // renamed to kind.
-
  protected:
   RTCRtpStreamStats(std::string id, Timestamp timestamp);
 };
