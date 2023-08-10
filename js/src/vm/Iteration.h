@@ -800,38 +800,6 @@ IteratorHelperObject* NewIteratorHelper(JSContext* cx);
 bool IterableToArray(JSContext* cx, HandleValue iterable,
                      MutableHandle<ArrayObject*> array);
 
-void AssertNoEnumerableProperties(NativeObject* obj);
-
-// Typed arrays and classes with an enumerate hook can have extra properties not
-// included in the shape's property map or the object's dense elements.
-static inline bool ClassCanHaveExtraEnumeratedProperties(const JSClass* clasp) {
-  return IsTypedArrayClass(clasp) || clasp->getNewEnumerate() ||
-         clasp->getEnumerate();
-}
-
-static inline bool ProtoMayHaveEnumerableProperties(JSObject* obj) {
-  if (!obj->is<NativeObject>()) {
-    return true;
-  }
-
-  JSObject* proto = obj->as<NativeObject>().staticPrototype();
-  while (proto) {
-    if (!proto->is<NativeObject>()) {
-      return true;
-    }
-    NativeObject* nproto = &proto->as<NativeObject>();
-    if (nproto->hasEnumerableProperty() ||
-        nproto->getDenseInitializedLength() > 0 ||
-        ClassCanHaveExtraEnumeratedProperties(nproto->getClass())) {
-      return true;
-    }
-    AssertNoEnumerableProperties(nproto);
-    proto = nproto->staticPrototype();
-  }
-
-  return false;
-}
-
 } /* namespace js */
 
 #endif /* vm_Iteration_h */
