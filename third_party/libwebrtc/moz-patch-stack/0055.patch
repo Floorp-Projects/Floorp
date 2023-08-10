@@ -1,29 +1,28 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 28 Oct 2021 18:13:00 +0000
-Subject: Bug 1729367 - P7 - restore mac PID tracking using new API;r=mjf
- a=webrtc-update
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 2 Sep 2021 13:22:00 -0500
+Subject: Bug 1654112 - fixes for hybrid build. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D129721
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1495ca5ef535f8ad692a3a579ca42eddc14f39a8
+- adds missing includes in several places
+- makes dom/media/webrtc/jsapi unified-only
+
+Differential Revision: https://phabricator.services.mozilla.com/D124499
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1965757ee924d49c32eab76d1a3dfa77f9eadcf4
 ---
- modules/desktop_capture/window_capturer_mac.mm | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ audio/channel_receive.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/desktop_capture/window_capturer_mac.mm b/modules/desktop_capture/window_capturer_mac.mm
-index f99b4a74d1..10f6a74650 100644
---- a/modules/desktop_capture/window_capturer_mac.mm
-+++ b/modules/desktop_capture/window_capturer_mac.mm
-@@ -170,8 +170,9 @@ void WindowCapturerMac::CaptureFrame() {
-           return webrtc::GetWindowList(
-               [sources](CFDictionaryRef window) {
-                 WindowId window_id = GetWindowId(window);
-+                int pid = GetWindowOwnerPid(window);
-                 if (window_id != kNullWindowId) {
--                  sources->push_back(DesktopCapturer::Source{window_id, GetWindowTitle(window)});
-+                  sources->push_back(DesktopCapturer::Source{window_id, pid, GetWindowTitle(window)});
-                 }
-                 return true;
-               },
+diff --git a/audio/channel_receive.h b/audio/channel_receive.h
+index c192039894..37bf903394 100644
+--- a/audio/channel_receive.h
++++ b/audio/channel_receive.h
+@@ -28,6 +28,7 @@
+ #include "call/rtp_packet_sink_interface.h"
+ #include "call/syncable.h"
+ #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
++#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+ #include "modules/rtp_rtcp/source/source_tracker.h"
+ #include "system_wrappers/include/clock.h"
+ 
 -- 
 2.34.1
 

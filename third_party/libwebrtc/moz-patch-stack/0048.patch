@@ -1,297 +1,61 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 19 Feb 2021 15:56:00 -0600
-Subject: Bug 1654112 - Get RTCP BYE and RTP timeout handling working again
- (from Bug 1595479) r=mjf,dminor
+From: Michael Froman <mfroman@mozilla.com>
+Date: Tue, 15 Jun 2021 12:18:00 -0500
+Subject: Bug 1654112 - suppress android lint warnings for WrongConstant in 2
+ libwebrtc java files. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D106145
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0b311007c033e83824f5f6996a70ab9e870f31f
+Differential Revision: https://phabricator.services.mozilla.com/D118050
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69a3a9fe9af34219880afe772
 ---
- audio/audio_receive_stream.cc                |  5 ++++-
- audio/channel_receive.cc                     | 13 +++++++++----
- audio/channel_receive.h                      |  3 ++-
- call/audio_receive_stream.h                  |  3 +++
- call/video_receive_stream.cc                 |  2 ++
- call/video_receive_stream.h                  |  3 +++
- modules/rtp_rtcp/include/rtp_rtcp_defines.h  |  8 ++++++++
- modules/rtp_rtcp/source/rtcp_receiver.cc     | 18 ++++++++++++++++--
- modules/rtp_rtcp/source/rtcp_receiver.h      |  1 +
- modules/rtp_rtcp/source/rtp_rtcp_interface.h |  3 +++
- video/rtp_video_stream_receiver2.cc          |  7 +++++--
- 11 files changed, 56 insertions(+), 10 deletions(-)
+ .../java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java    | 5 +++++
+ sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java  | 5 +++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index bde48aacde..0a78e2641d 100644
---- a/audio/audio_receive_stream.cc
-+++ b/audio/audio_receive_stream.cc
-@@ -39,6 +39,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
-   ss << "{remote_ssrc: " << remote_ssrc;
-   ss << ", local_ssrc: " << local_ssrc;
-   ss << ", nack: " << nack.ToString();
-+  ss << ", rtcp_event_observer: "
-+     << (rtcp_event_observer ? "(rtcp_event_observer)" : "nullptr");
-   ss << '}';
-   return ss.str();
- }
-@@ -73,7 +75,8 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
-       config.jitter_buffer_fast_accelerate, config.jitter_buffer_min_delay_ms,
-       config.enable_non_sender_rtt, config.decoder_factory,
-       config.codec_pair_id, std::move(config.frame_decryptor),
--      config.crypto_options, std::move(config.frame_transformer));
-+      config.crypto_options, std::move(config.frame_transformer),
-+      config.rtp.rtcp_event_observer);
- }
- }  // namespace
+diff --git a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
+index 0472114297..afd3d429af 100644
+--- a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
++++ b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
+@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
+ import static android.media.AudioManager.MODE_NORMAL;
+ import static android.media.AudioManager.MODE_RINGTONE;
  
-diff --git a/audio/channel_receive.cc b/audio/channel_receive.cc
-index e6435ad1b1..9a1abd5bfa 100644
---- a/audio/channel_receive.cc
-+++ b/audio/channel_receive.cc
-@@ -102,7 +102,8 @@ class ChannelReceive : public ChannelReceiveInterface,
-       absl::optional<AudioCodecPairId> codec_pair_id,
-       rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
-       const webrtc::CryptoOptions& crypto_options,
--      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer);
-+      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-+      RtcpEventObserver* rtcp_event_observer);
-   ~ChannelReceive() override;
- 
-   void SetSink(AudioSinkInterface* sink) override;
-@@ -541,7 +542,8 @@ ChannelReceive::ChannelReceive(
-     absl::optional<AudioCodecPairId> codec_pair_id,
-     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
-     const webrtc::CryptoOptions& crypto_options,
--    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer)
-+    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-+    RtcpEventObserver* rtcp_event_observer)
-     : worker_thread_(TaskQueueBase::Current()),
-       event_log_(rtc_event_log),
-       rtp_receive_statistics_(ReceiveStatistics::Create(clock)),
-@@ -586,6 +588,7 @@ ChannelReceive::ChannelReceive(
-   configuration.local_media_ssrc = local_ssrc;
-   configuration.rtcp_packet_type_counter_observer = this;
-   configuration.non_sender_rtt_measurement = enable_non_sender_rtt;
-+  configuration.rtcp_event_observer = rtcp_event_observer;
- 
-   if (frame_transformer)
-     InitFrameTransformerDelegate(std::move(frame_transformer));
-@@ -1117,13 +1120,15 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
-     absl::optional<AudioCodecPairId> codec_pair_id,
-     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
-     const webrtc::CryptoOptions& crypto_options,
--    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) {
-+    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-+    RtcpEventObserver* rtcp_event_observer) {
-   return std::make_unique<ChannelReceive>(
-       clock, neteq_factory, audio_device_module, rtcp_send_transport,
-       rtc_event_log, local_ssrc, remote_ssrc, jitter_buffer_max_packets,
-       jitter_buffer_fast_playout, jitter_buffer_min_delay_ms,
-       enable_non_sender_rtt, decoder_factory, codec_pair_id,
--      std::move(frame_decryptor), crypto_options, std::move(frame_transformer));
-+      std::move(frame_decryptor), crypto_options, std::move(frame_transformer),
-+      rtcp_event_observer);
- }
- 
- }  // namespace voe
-diff --git a/audio/channel_receive.h b/audio/channel_receive.h
-index 13edf04053..c192039894 100644
---- a/audio/channel_receive.h
-+++ b/audio/channel_receive.h
-@@ -186,7 +186,8 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
-     absl::optional<AudioCodecPairId> codec_pair_id,
-     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
-     const webrtc::CryptoOptions& crypto_options,
--    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer);
-+    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-+    RtcpEventObserver* rtcp_event_observer);
- 
- }  // namespace voe
- }  // namespace webrtc
-diff --git a/call/audio_receive_stream.h b/call/audio_receive_stream.h
-index b0e94fee2a..acafff9e32 100644
---- a/call/audio_receive_stream.h
-+++ b/call/audio_receive_stream.h
-@@ -19,6 +19,7 @@
- #include "absl/types/optional.h"
- #include "api/audio_codecs/audio_decoder_factory.h"
- #include "api/call/transport.h"
-+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
- #include "api/crypto/crypto_options.h"
- #include "api/rtp_parameters.h"
- #include "call/receive_stream.h"
-@@ -117,6 +118,8 @@ class AudioReceiveStreamInterface : public MediaReceiveStreamInterface {
- 
-       // See NackConfig for description.
-       NackConfig nack;
-+
-+      RtcpEventObserver* rtcp_event_observer = nullptr;
-     } rtp;
- 
-     // Receive-side RTT.
-diff --git a/call/video_receive_stream.cc b/call/video_receive_stream.cc
-index 3125c391cc..fd9908d40d 100644
---- a/call/video_receive_stream.cc
-+++ b/call/video_receive_stream.cc
-@@ -146,6 +146,8 @@ std::string VideoReceiveStreamInterface::Config::Rtp::ToString() const {
-     ss << pt << ", ";
-   }
-   ss << '}';
-+  ss << ", rtcp_event_observer: "
-+     << (rtcp_event_observer ? "(rtcp_event_observer)" : "nullptr");
-   ss << '}';
-   return ss.str();
- }
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index ebbca12b25..5d49efc6ce 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -20,6 +20,7 @@
- #include <vector>
- 
- #include "api/call/transport.h"
-+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
- #include "api/crypto/crypto_options.h"
- #include "api/rtp_headers.h"
- #include "api/rtp_parameters.h"
-@@ -236,6 +237,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-       // meta data is expected to be present in generic frame descriptor
-       // RTP header extension).
-       std::set<int> raw_payload_types;
-+
-+      RtcpEventObserver* rtcp_event_observer = nullptr;
-     } rtp;
- 
-     // Transport for outgoing packets (RTCP).
-diff --git a/modules/rtp_rtcp/include/rtp_rtcp_defines.h b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-index 6e558e1e1d..d95abf7286 100644
---- a/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-+++ b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-@@ -211,6 +211,14 @@ class RtcpBandwidthObserver {
-   virtual ~RtcpBandwidthObserver() {}
- };
- 
-+class RtcpEventObserver {
-+ public:
-+  virtual void OnRtcpBye() = 0;
-+  virtual void OnRtcpTimeout() = 0;
-+
-+  virtual ~RtcpEventObserver() {}
-+};
-+
- // NOTE! `kNumMediaTypes` must be kept in sync with RtpPacketMediaType!
- static constexpr size_t kNumMediaTypes = 5;
- enum class RtpPacketMediaType : size_t {
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 3210e7a9e3..e883668eac 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -145,6 +145,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
-       rtp_rtcp_(owner),
-       registered_ssrcs_(false, config),
-       rtcp_bandwidth_observer_(config.bandwidth_callback),
-+      rtcp_event_observer_(config.rtcp_event_observer),
-       rtcp_intra_frame_observer_(config.intra_frame_callback),
-       rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
-       network_state_estimate_observer_(config.network_state_estimate_observer),
-@@ -174,6 +175,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
-       rtp_rtcp_(owner),
-       registered_ssrcs_(true, config),
-       rtcp_bandwidth_observer_(config.bandwidth_callback),
-+      rtcp_event_observer_(config.rtcp_event_observer),
-       rtcp_intra_frame_observer_(config.intra_frame_callback),
-       rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
-       network_state_estimate_observer_(config.network_state_estimate_observer),
-@@ -812,6 +814,10 @@ bool RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
-     return false;
++import android.annotation.SuppressLint;
+ import android.content.Context;
+ import android.content.pm.PackageManager;
+ import android.media.AudioDeviceInfo;
+@@ -247,6 +248,10 @@ public final class WebRtcAudioUtils {
+     }
    }
  
-+  if (rtcp_event_observer_) {
-+    rtcp_event_observer_->OnRtcpBye();
-+  }
-+
-   // Clear our lists.
-   rtts_.erase(bye.sender_ssrc());
-   EraseIf(received_report_blocks_, [&](const auto& elem) {
-@@ -1234,12 +1240,20 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {
- }
++  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
++  // listed in the docs here:
++  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
++  @SuppressLint("WrongConstant")
+   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
+     if (Build.VERSION.SDK_INT < 23) {
+       return;
+diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+index 7894659926..7b4b809ab1 100644
+--- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
++++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
+ import static android.media.AudioManager.MODE_NORMAL;
+ import static android.media.AudioManager.MODE_RINGTONE;
  
- bool RTCPReceiver::RtcpRrTimeoutLocked(Timestamp now) {
--  return ResetTimestampIfExpired(now, last_received_rb_, report_interval_);
-+  bool result = ResetTimestampIfExpired(now, last_received_rb_, report_interval_);
-+  if (result && rtcp_event_observer_) {
-+    rtcp_event_observer_->OnRtcpTimeout();
-+  }
-+  return result;
- }
++import android.annotation.SuppressLint;
+ import android.annotation.TargetApi;
+ import android.content.Context;
+ import android.content.pm.PackageManager;
+@@ -229,6 +230,10 @@ final class WebRtcAudioUtils {
+     }
+   }
  
- bool RTCPReceiver::RtcpRrSequenceNumberTimeoutLocked(Timestamp now) {
--  return ResetTimestampIfExpired(now, last_increased_sequence_number_,
-+  bool result = ResetTimestampIfExpired(now, last_increased_sequence_number_,
-                                  report_interval_);
-+  if (result && rtcp_event_observer_) {
-+    rtcp_event_observer_->OnRtcpTimeout();
-+  }
-+  return result;
- }
- 
- }  // namespace webrtc
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 68bb16bd8b..3864aa3144 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.h
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -369,6 +369,7 @@ class RTCPReceiver final {
-   RegisteredSsrcs registered_ssrcs_;
- 
-   RtcpBandwidthObserver* const rtcp_bandwidth_observer_;
-+  RtcpEventObserver* const rtcp_event_observer_;
-   RtcpIntraFrameObserver* const rtcp_intra_frame_observer_;
-   RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
-   NetworkStateEstimateObserver* const network_state_estimate_observer_;
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index b791a5c88d..3211097eeb 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -73,6 +73,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
-     // stream.
-     RtcpBandwidthObserver* bandwidth_callback = nullptr;
- 
-+    // Called when we receive a RTCP bye or timeout
-+    RtcpEventObserver* rtcp_event_observer = nullptr;
-+
-     NetworkStateEstimateObserver* network_state_estimate_observer = nullptr;
-     TransportFeedbackObserver* transport_feedback_callback = nullptr;
-     VideoBitrateAllocationObserver* bitrate_allocation_observer = nullptr;
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 618c88f82c..f169b0970a 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -83,7 +83,8 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
-     RtcpCnameCallback* rtcp_cname_callback,
-     bool non_sender_rtt_measurement,
-     uint32_t local_ssrc,
--    RtcEventLog* rtc_event_log) {
-+    RtcEventLog* rtc_event_log,
-+    RtcpEventObserver* rtcp_event_observer) {
-   RtpRtcpInterface::Configuration configuration;
-   configuration.clock = clock;
-   configuration.audio = false;
-@@ -95,6 +96,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
-       rtcp_packet_type_counter_observer;
-   configuration.rtcp_cname_callback = rtcp_cname_callback;
-   configuration.local_media_ssrc = local_ssrc;
-+  configuration.rtcp_event_observer = rtcp_event_observer;
-   configuration.non_sender_rtt_measurement = non_sender_rtt_measurement;
-   configuration.event_log = rtc_event_log;
- 
-@@ -275,7 +277,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
-           rtcp_cname_callback,
-           config_.rtp.rtcp_xr.receiver_reference_time_report,
-           config_.rtp.local_ssrc,
--          event_log)),
-+          event_log,
-+          config_.rtp.rtcp_event_observer)),
-       nack_periodic_processor_(nack_periodic_processor),
-       complete_frame_callback_(complete_frame_callback),
-       keyframe_request_method_(config_.rtp.keyframe_method),
++  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
++  // listed in the docs here:
++  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
++  @SuppressLint("WrongConstant")
+   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
+     if (Build.VERSION.SDK_INT < 23) {
+       return;
 -- 
 2.34.1
 

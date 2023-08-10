@@ -1,81 +1,153 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Thu, 21 Mar 2019 15:48:00 +0000
-Subject: Bug 1535584 - Restore UpdateCodecFrameSize to vp9_impl.cc; r=bwc
+From: Jan Beich <jbeich@FreeBSD.org>
+Date: Fri, 12 Oct 2018 12:56:00 -0400
+Subject: Bug 1376873 - Unbreak WebRTC 64 build on BSDs. r=dminor f=gaston
 
-Differential Revision: https://phabricator.services.mozilla.com/D23713
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0898f9cfe09273e1d86c38abdd576cdf273009f0
+Also includes:
+Bug 1554949 - Fix WebRTC build failure with newer linux kernel. r=dminor
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a636ecdcb91afb1c5d436bbcbd87da4f10f7df78
 ---
- .../codecs/vp9/libvpx_vp9_encoder.cc          | 50 +++++++++++++++++++
- 1 file changed, 50 insertions(+)
+ modules/video_capture/linux/device_info_linux.cc   | 6 ++++++
+ modules/video_capture/linux/device_info_v4l2.cc    | 8 +++++++-
+ modules/video_capture/linux/video_capture_linux.cc | 9 ++++++++-
+ rtc_base/byte_order.h                              | 2 ++
+ rtc_base/physical_socket_server.cc                 | 7 +++++--
+ system_wrappers/source/cpu_info.cc                 | 4 ++--
+ 6 files changed, 30 insertions(+), 6 deletions(-)
 
-diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-index d8c9593466..1e18cc960f 100644
---- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-+++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-@@ -1159,6 +1159,14 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
-     config_changed_ = false;
-   }
+diff --git a/modules/video_capture/linux/device_info_linux.cc b/modules/video_capture/linux/device_info_linux.cc
+index 4f8b7c059b..56da475bf3 100644
+--- a/modules/video_capture/linux/device_info_linux.cc
++++ b/modules/video_capture/linux/device_info_linux.cc
+@@ -16,7 +16,13 @@
+ #include <sys/ioctl.h>
+ #include <unistd.h>
+ // v4l includes
++#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
++#include <sys/videoio.h>
++#elif defined(__sun)
++#include <sys/videodev2.h>
++#else
+ #include <linux/videodev2.h>
++#endif
  
-+  if (input_image.width() != codec_.width ||
-+      input_image.height() != codec_.height) {
-+    int ret = UpdateCodecFrameSize(input_image);
-+    if (ret < 0) {
-+      return ret;
-+    }
-+  }
-+
-   RTC_DCHECK_EQ(input_image.width(), raw_->d_w);
-   RTC_DCHECK_EQ(input_image.height(), raw_->d_h);
+ #include <vector>
  
-@@ -1286,6 +1294,48 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
-   return WEBRTC_VIDEO_CODEC_OK;
- }
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index ffa18fde8e..a6a3c21e1c 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -18,7 +18,13 @@
+ #include <sys/ioctl.h>
+ #include <unistd.h>
+ // v4l includes
++#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
++#include <sys/videoio.h>
++#elif defined(__sun)
++#include <sys/videodev2.h>
++#else
+ #include <linux/videodev2.h>
++#endif
  
-+int LibvpxVp9Encoder::UpdateCodecFrameSize(
-+    const VideoFrame& input_image) {
-+  RTC_LOG(LS_INFO) << "Reconfiging VP from " <<
-+          codec_.width << "x" << codec_.height << " to " <<
-+          input_image.width() << "x" << input_image.height();
-+  // Preserve latest bitrate/framerate setting
-+  // TODO: Mozilla - see below, we need to save more state here.
-+  //uint32_t old_bitrate_kbit = config_->rc_target_bitrate;
-+  //uint32_t old_framerate = codec_.maxFramerate;
-+
-+  codec_.width = input_image.width();
-+  codec_.height = input_image.height();
-+
-+  vpx_img_free(raw_);
-+  raw_ = vpx_img_wrap(NULL, VPX_IMG_FMT_I420, codec_.width, codec_.height,
-+                      1, NULL);
-+  // Update encoder context for new frame size.
-+  config_->g_w = codec_.width;
-+  config_->g_h = codec_.height;
-+
-+  // Determine number of threads based on the image size and #cores.
-+  config_->g_threads = NumberOfThreads(codec_.width, codec_.height,
-+                                       num_cores_);
-+
-+  // NOTE: We would like to do this the same way vp8 does it
-+  // (with vpx_codec_enc_config_set()), but that causes asserts
-+  // in AQ 3 (cyclic); and in AQ 0 it works, but on a resize to smaller
-+  // than 1/2 x 1/2 original it asserts in convolve().  Given these
-+  // bugs in trying to do it the "right" way, we basically re-do
-+  // the initialization.
-+  vpx_codec_destroy(encoder_); // clean up old state
-+  int result = InitAndSetControlSettings(&codec_);
-+  if (result == WEBRTC_VIDEO_CODEC_OK) {
-+    // TODO: Mozilla rates have become much more complicated, we need to store
-+    // more state or find another way of doing this.
-+    //return SetRates(old_bitrate_kbit, old_framerate);
-+    RTC_CHECK(false);
-+    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
-+  }
-+  return result;
+ #include <vector>
+ 
+@@ -191,8 +197,8 @@ DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
+     {
+         _inotifyEventThread->Start();
+     }
+-}
+ #endif
 +}
-+
- bool LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
-                                              absl::optional<int>* spatial_idx,
-                                              absl::optional<int>* temporal_idx,
+ 
+ int32_t DeviceInfoV4l2::Init() {
+   return 0;
+diff --git a/modules/video_capture/linux/video_capture_linux.cc b/modules/video_capture/linux/video_capture_linux.cc
+index a2ea218a8b..23a8f4f3f3 100644
+--- a/modules/video_capture/linux/video_capture_linux.cc
++++ b/modules/video_capture/linux/video_capture_linux.cc
+@@ -10,7 +10,6 @@
+ 
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <linux/videodev2.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <sys/ioctl.h>
+@@ -18,6 +17,14 @@
+ #include <sys/select.h>
+ #include <time.h>
+ #include <unistd.h>
++// v4l includes
++#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
++#include <sys/videoio.h>
++#elif defined(__sun)
++#include <sys/videodev2.h>
++#else
++#include <linux/videodev2.h>
++#endif
+ 
+ #include <new>
+ #include <string>
+diff --git a/rtc_base/byte_order.h b/rtc_base/byte_order.h
+index b8f8ae9f7a..382511daeb 100644
+--- a/rtc_base/byte_order.h
++++ b/rtc_base/byte_order.h
+@@ -90,6 +90,8 @@
+ #error WEBRTC_ARCH_BIG_ENDIAN or WEBRTC_ARCH_LITTLE_ENDIAN must be defined.
+ #endif  // defined(WEBRTC_ARCH_LITTLE_ENDIAN)
+ 
++#elif defined(WEBRTC_BSD) && !defined(__OpenBSD__)
++#include <sys/endian.h>
+ #elif defined(WEBRTC_POSIX)
+ #include <endian.h>
+ #else
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index d42168249a..33ea941808 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -75,7 +75,10 @@ typedef void* SockOptArg;
+ 
+ #endif  // WEBRTC_POSIX
+ 
+-#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(__native_client__)
++#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(WEBRTC_BSD) && !defined(__native_client__)
++#if defined(WEBRTC_LINUX)
++#include <linux/sockios.h>
++#endif
+ 
+ int64_t GetSocketRecvTimestamp(int socket) {
+   struct timeval tv_ioctl;
+@@ -643,7 +646,7 @@ int PhysicalSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
+       *slevel = IPPROTO_IP;
+       *sopt = IP_DONTFRAGMENT;
+       break;
+-#elif defined(WEBRTC_MAC) || defined(BSD) || defined(__native_client__)
++#elif defined(WEBRTC_MAC) || defined(WEBRTC_BSD) || defined(__native_client__)
+       RTC_LOG(LS_WARNING) << "Socket::OPT_DONTFRAGMENT not supported.";
+       return -1;
+ #elif defined(WEBRTC_POSIX)
+diff --git a/system_wrappers/source/cpu_info.cc b/system_wrappers/source/cpu_info.cc
+index eff720371a..94aed09c48 100644
+--- a/system_wrappers/source/cpu_info.cc
++++ b/system_wrappers/source/cpu_info.cc
+@@ -12,7 +12,7 @@
+ 
+ #if defined(WEBRTC_WIN)
+ #include <windows.h>
+-#elif defined(WEBRTC_LINUX)
++#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+ #include <unistd.h>
+ #elif defined(WEBRTC_MAC)
+ #include <sys/sysctl.h>
+@@ -30,7 +30,7 @@ static int DetectNumberOfCores() {
+   SYSTEM_INFO si;
+   GetNativeSystemInfo(&si);
+   number_of_cores = static_cast<int>(si.dwNumberOfProcessors);
+-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
++#elif defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID) || defined(WEBRTC_BSD)
+   number_of_cores = static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN));
+   if (number_of_cores <= 0) {
+     RTC_LOG(LS_ERROR) << "Failed to get number of cores";
 -- 
 2.34.1
 

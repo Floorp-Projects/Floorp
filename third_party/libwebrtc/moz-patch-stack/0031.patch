@@ -1,66 +1,43 @@
-From: Randell Jesup <rjesup@wgate.com>
-Date: Sat, 11 Jul 2020 12:31:00 +0000
-Subject: Bug 1112392 - Move webrtc Tab Sharing to work in e10s/fission
- r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Tue, 11 Feb 2020 17:07:00 +0000
+Subject: Bug 1578073 - Remove native calls in Histogram.java; r=ng
 
-Also we drop support for an independent-of-scroll/viewport capture, which
-the old Tab Sharing supported, for security reasons (and we don't need it).
+Getting the JNI calls here to work requires a good amount of webrtc.org
+machinery. It might be worth setting that up the next time we do an upstream
+merge, but for now, it is a lot simpler to just remove the affected code,
+given that we are not interested in collecting this data anyway.
 
-Differential Revision: https://phabricator.services.mozilla.com/D80974
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57a030e6e3ae9ff56f14e8cc732b0e1d3869858
+Differential Revision: https://phabricator.services.mozilla.com/D61860
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a9b07dec9f9d435416b06829fa5063aca3a476e
 ---
- modules/desktop_capture/desktop_capturer.cc | 11 +++++++++++
- modules/desktop_capture/desktop_capturer.h  |  8 ++++++++
- 2 files changed, 19 insertions(+)
+ sdk/android/src/java/org/webrtc/Histogram.java | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 5211f1acec..4baa93cab9 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -101,6 +101,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
-   return capturer;
+diff --git a/sdk/android/src/java/org/webrtc/Histogram.java b/sdk/android/src/java/org/webrtc/Histogram.java
+index 877986134a..c1d2d61a71 100644
+--- a/sdk/android/src/java/org/webrtc/Histogram.java
++++ b/sdk/android/src/java/org/webrtc/Histogram.java
+@@ -27,18 +27,13 @@ class Histogram {
+   }
+ 
+   static public Histogram createCounts(String name, int min, int max, int bucketCount) {
+-    return new Histogram(nativeCreateCounts(name, min, max, bucketCount));
++    return new Histogram(0);
+   }
+ 
+   static public Histogram createEnumeration(String name, int max) {
+-    return new Histogram(nativeCreateEnumeration(name, max));
++    return new Histogram(0);
+   }
+ 
+   public void addSample(int sample) {
+-    nativeAddSample(handle, sample);
+   }
+-
+-  private static native long nativeCreateCounts(String name, int min, int max, int bucketCount);
+-  private static native long nativeCreateEnumeration(String name, int max);
+-  private static native void nativeAddSample(long handle, int sample);
  }
- 
-+// static
-+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
-+    const DesktopCaptureOptions& options) {
-+  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
-+  if (capturer && options.detect_updated_region()) {
-+    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-+  }
-+
-+  return capturer;
-+}
-+
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
- bool DesktopCapturer::IsRunningUnderWayland() {
-   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index f39852b58e..9b667739a8 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -187,6 +187,10 @@ class RTC_EXPORT DesktopCapturer {
-   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
-       const DesktopCaptureOptions& options);
- 
-+  // Creates a DesktopCapturer instance which targets to capture tab.
-+  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
-+      const DesktopCaptureOptions& options);
-+
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-   static bool IsRunningUnderWayland();
- 
-@@ -212,6 +216,10 @@ class RTC_EXPORT DesktopCapturer {
-   // capture screens.
-   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
-       const DesktopCaptureOptions& options);
-+
-+  // Creates a DesktopCapturer instance which targets to capture tabs
-+  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
-+      const DesktopCaptureOptions& options);
- };
- 
- }  // namespace webrtc
 -- 
 2.34.1
 

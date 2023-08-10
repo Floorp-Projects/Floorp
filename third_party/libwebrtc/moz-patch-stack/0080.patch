@@ -1,34 +1,30 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 24 Feb 2023 15:01:00 +0100
-Subject: Bug 1817024 - (fix-0e2cf6cc01) Skip library
- create_peer_connection_quality_test_frame_generator. r?mjf!
+Date: Thu, 6 Jan 2022 00:16:00 +0000
+Subject: Bug 1748458 - Add TRACE_EVENT for keyframe requests. r=bwc
 
-Differential Revision: https://phabricator.services.mozilla.com/D170887
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fbbc1bf963fda30bca26ae6aac0c3459b8ebea6f
+Differential Revision: https://phabricator.services.mozilla.com/D135113
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5b2a7894ef1cf096d0e8977754507c0820e757fc
 ---
- api/BUILD.gn | 2 ++
- 1 file changed, 2 insertions(+)
+ video/rtp_video_stream_receiver2.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 4ca73b99f5..3ef383e1bc 100644
---- a/api/BUILD.gn
-+++ b/api/BUILD.gn
-@@ -738,6 +738,7 @@ rtc_library("create_frame_generator") {
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index 61ee86ee35..ec0242e915 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -735,6 +735,12 @@ void RtpVideoStreamReceiver2::OnRtpPacket(const RtpPacketReceived& packet) {
  
-+if (!build_with_mozilla) {
- rtc_library("create_peer_connection_quality_test_frame_generator") {
-   visibility = [ "*" ]
-   testonly = true
-@@ -754,6 +755,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
-+}
- 
- rtc_source_set("libjingle_logging_api") {
-   visibility = [ "*" ]
+ void RtpVideoStreamReceiver2::RequestKeyFrame() {
+   RTC_DCHECK_RUN_ON(&worker_task_checker_);
++  TRACE_EVENT2("webrtc", "RtpVideoStreamReceiver2::RequestKeyFrame",
++               "remote_ssrc", config_.rtp.remote_ssrc, "method",
++               keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp   ? "PLI"
++               : keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp ? "FIR"
++               : keyframe_request_method_ == KeyFrameReqMethod::kNone ? "None"
++                                                                      : "Other");
+   // TODO(bugs.webrtc.org/10336): Allow the sender to ignore key frame requests
+   // issued by anything other than the LossNotificationController if it (the
+   // sender) is relying on LNTF alone.
 -- 
 2.34.1
 

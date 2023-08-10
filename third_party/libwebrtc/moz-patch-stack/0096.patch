@@ -1,43 +1,71 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 16 May 2023 06:37:00 +0000
-Subject: Bug 1832770 - Cherry-pick upstream libwebrtc commit 7b0d7f48fb.
- r=grulja,webrtc-reviewers,mjf
+Date: Wed, 10 May 2023 08:01:00 +0000
+Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit 6fc1ae58be.
+ r=webrtc-reviewers,mjf
 
-Upstream commit:
-    PipeWire capturer: fix fcntl call when duplicating a file descriptor
+Upstream commit: https://webrtc.googlesource.com/src/+/6fc1ae58be7cbb61ad0431d90eb7a7dc333de2f2
+    In DeviceInfoDS check that out vars were set
 
-    The fcntl() call has variable arguments, therefore we need to pass 0 to
-    specify there are no other arguments for this call, otherwise we might
-    end up with an argument that is random garbage.
+    Bug: chromium:1441804
+    Change-Id: Id07cb61519315d77c2d7cdab1053efaaf7473e1a
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304060
+    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Reviewed-by: Per Kjellander <perkj@webrtc.org>
+    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39982}
 
-    Bug: webrtc:15174
-    Change-Id: I34f16a942d80913b667d8ade7eed557b0233be01
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305120
-    Reviewed-by: Alexander Cooper <alcooper@chromium.org>
-    Commit-Queue: Jan Grulich <grulja@gmail.com>
-    Cr-Commit-Position: refs/heads/main@{#40060}
-
-Differential Revision: https://phabricator.services.mozilla.com/D178009
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/47978aa145282f737fc77fcdcadc995e80e2a743
+Differential Revision: https://phabricator.services.mozilla.com/D177236
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60d381b6016ae5af0181b44c6a31b41eab094793
 ---
- .../desktop_capture/linux/wayland/shared_screencast_stream.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ modules/video_capture/windows/device_info_ds.cc    | 13 +++++++------
+ modules/video_capture/windows/help_functions_ds.cc |  3 +++
+ 2 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 1eea8bfbf5..17c895088a 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -449,8 +449,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
-     PipeWireThreadLoopLock thread_loop_lock(pw_main_loop_);
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index 299be99502..b5867923d1 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -504,9 +504,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
+       }
  
-     if (fd >= 0) {
--      pw_core_ = pw_context_connect_fd(pw_context_, fcntl(fd, F_DUPFD_CLOEXEC),
--                                       nullptr, 0);
-+      pw_core_ = pw_context_connect_fd(
-+          pw_context_, fcntl(fd, F_DUPFD_CLOEXEC, 0), nullptr, 0);
-     } else {
-       pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
-     }
+       if (hrVC == S_OK) {
+-        LONGLONG* frameDurationList;
+-        LONGLONG maxFPS;
+-        long listSize;
++        LONGLONG* frameDurationList = NULL;
++        LONGLONG maxFPS = 0;
++        long listSize = 0;
+         SIZE size;
+         size.cx = capability.width;
+         size.cy = capability.height;
+@@ -519,9 +519,10 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
+         hrVC = videoControlConfig->GetFrameRateList(
+             outputCapturePin, tmp, size, &listSize, &frameDurationList);
+ 
+-        // On some odd cameras, you may get a 0 for duration.
+-        // GetMaxOfFrameArray returns the lowest duration (highest FPS)
+-        if (hrVC == S_OK && listSize > 0 &&
++        // On some odd cameras, you may get a 0 for duration. Some others may
++        // not update the out vars. GetMaxOfFrameArray returns the lowest
++        // duration (highest FPS), or 0 if there was no list with elements.
++        if (hrVC == S_OK &&
+             0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
+           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
+           capability.supportFrameRateControl = true;
+diff --git a/modules/video_capture/windows/help_functions_ds.cc b/modules/video_capture/windows/help_functions_ds.cc
+index b767726107..47fecfe4a1 100644
+--- a/modules/video_capture/windows/help_functions_ds.cc
++++ b/modules/video_capture/windows/help_functions_ds.cc
+@@ -21,6 +21,9 @@ namespace webrtc {
+ namespace videocapturemodule {
+ // This returns minimum :), which will give max frame rate...
+ LONGLONG GetMaxOfFrameArray(LONGLONG* maxFps, long size) {
++  if (!maxFps || size <= 0) {
++    return 0;
++  }
+   LONGLONG maxFPS = maxFps[0];
+   for (int i = 0; i < size; i++) {
+     if (maxFPS > maxFps[i])
 -- 
 2.34.1
 

@@ -1,52 +1,26 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 24 Oct 2022 13:00:00 -0500
-Subject: Bug 1797161 - pt1 - tweak BUILD.gn around task_queue_win usage. r?ng!
+From: Michael Froman <mjfroman@mac.com>
+Date: Tue, 21 Jun 2022 11:17:46 -0500
+Subject: Bug 1772380 - to upstream - ref count this in lambda capture
 
-Add assurance that we will not build task_queue_win.cc to avoid
-possible win32k API usage.
-
-Differential Revision: https://phabricator.services.mozilla.com/D160115
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f097eb8cbd8b7686ce306a46a4db691194fd39c1
 ---
- api/task_queue/BUILD.gn | 5 +++++
- rtc_base/BUILD.gn       | 4 ++++
- 2 files changed, 9 insertions(+)
+ modules/video_capture/linux/video_capture_v4l2.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index 116a50762e..b9c50c1644 100644
---- a/api/task_queue/BUILD.gn
-+++ b/api/task_queue/BUILD.gn
-@@ -31,6 +31,11 @@ rtc_library("task_queue") {
-   ]
- }
- 
-+# Mozilla - we want to ensure that rtc_include_tests is set to false
-+# to guarantee that default_task_queue_factory is not used so we
-+# know that remaining win32k code in task_queue_win.cc is not built.
-+# See Bug 1797161 for more info.
-+assert(!rtc_include_tests, "Mozilla - verify rtc_include_tests is off")
- if (rtc_include_tests) {
- rtc_library("task_queue_test") {
-   visibility = [ "*" ]
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 079d98502e..e474ba8202 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -694,10 +694,14 @@ if (is_mac || is_ios) {
- if (is_win) {
-   rtc_library("rtc_task_queue_win") {
-     visibility = [ "../api/task_queue:default_task_queue_factory" ]
-+# See Bug 1797161 for more info.  Remove from build until win32k
-+# usage is removed.
-+if (!build_with_mozilla) {
-     sources = [
-       "task_queue_win.cc",
-       "task_queue_win.h",
-     ]
-+}
-     deps = [
-       ":checks",
-       ":logging",
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index 8a4dce93f5..edf3f1ccbd 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -243,8 +243,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   if (_captureThread.empty()) {
+     quit_ = false;
+     _captureThread = rtc::PlatformThread::SpawnJoinable(
+-        [this] {
+-          while (CaptureProcess()) {
++        [self = rtc::scoped_refptr(this)] {
++          while (self->CaptureProcess()) {
+           }
+         },
+         "CaptureThread",
 -- 
 2.34.1
 

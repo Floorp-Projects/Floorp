@@ -1,71 +1,100 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 08:01:00 +0000
-Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit 6fc1ae58be.
+Date: Wed, 10 May 2023 07:06:00 +0000
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 32b64e895c.
  r=webrtc-reviewers,mjf
 
-Upstream commit: https://webrtc.googlesource.com/src/+/6fc1ae58be7cbb61ad0431d90eb7a7dc333de2f2
-    In DeviceInfoDS check that out vars were set
+Upstream commit: https://webrtc.googlesource.com/src/+/32b64e895c0231fe6891a8f6335d66f1dad4f1f5
+    Improve ergonomics of dealing with pixel formats in v4l2 camera backend
 
-    Bug: chromium:1441804
-    Change-Id: Id07cb61519315d77c2d7cdab1053efaaf7473e1a
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304060
-    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Reviewed-by: Per Kjellander <perkj@webrtc.org>
+    Bug: webrtc:14830
+    Change-Id: Ib49bf65895fe008e75223abb03867d412c1b5a60
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291531
     Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39982}
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39976}
 
-Differential Revision: https://phabricator.services.mozilla.com/D177236
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60d381b6016ae5af0181b44c6a31b41eab094793
+Differential Revision: https://phabricator.services.mozilla.com/D177231
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f0afe1a1097f3e02d59fd06d5e83d00a0f4d69ae
 ---
- modules/video_capture/windows/device_info_ds.cc    | 13 +++++++------
- modules/video_capture/windows/help_functions_ds.cc |  3 +++
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ .../video_capture/linux/device_info_v4l2.cc   |  4 ++-
+ .../video_capture/linux/video_capture_v4l2.cc | 31 +++++++++----------
+ 2 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 299be99502..b5867923d1 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -504,9 +504,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-       }
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index 3e33c45c59..2276707e03 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -383,10 +383,10 @@ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+   video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+   video_fmt.fmt.pix.sizeimage = 0;
  
-       if (hrVC == S_OK) {
--        LONGLONG* frameDurationList;
--        LONGLONG maxFPS;
--        long listSize;
-+        LONGLONG* frameDurationList = NULL;
-+        LONGLONG maxFPS = 0;
-+        long listSize = 0;
-         SIZE size;
-         size.cx = capability.width;
-         size.cy = capability.height;
-@@ -519,9 +519,10 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-         hrVC = videoControlConfig->GetFrameRateList(
-             outputCapturePin, tmp, size, &listSize, &frameDurationList);
+-  int totalFmts = 5;
+   unsigned int videoFormats[] = {V4L2_PIX_FMT_MJPEG, V4L2_PIX_FMT_YUV420,
+                                  V4L2_PIX_FMT_YUYV, V4L2_PIX_FMT_UYVY,
+                                  V4L2_PIX_FMT_NV12};
++  constexpr int totalFmts = sizeof(videoFormats) / sizeof(unsigned int);
  
--        // On some odd cameras, you may get a 0 for duration.
--        // GetMaxOfFrameArray returns the lowest duration (highest FPS)
--        if (hrVC == S_OK && listSize > 0 &&
-+        // On some odd cameras, you may get a 0 for duration. Some others may
-+        // not update the out vars. GetMaxOfFrameArray returns the lowest
-+        // duration (highest FPS), or 0 if there was no list with elements.
-+        if (hrVC == S_OK &&
-             0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
-           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
-           capability.supportFrameRateControl = true;
-diff --git a/modules/video_capture/windows/help_functions_ds.cc b/modules/video_capture/windows/help_functions_ds.cc
-index b767726107..47fecfe4a1 100644
---- a/modules/video_capture/windows/help_functions_ds.cc
-+++ b/modules/video_capture/windows/help_functions_ds.cc
-@@ -21,6 +21,9 @@ namespace webrtc {
- namespace videocapturemodule {
- // This returns minimum :), which will give max frame rate...
- LONGLONG GetMaxOfFrameArray(LONGLONG* maxFps, long size) {
-+  if (!maxFps || size <= 0) {
-+    return 0;
-+  }
-   LONGLONG maxFPS = maxFps[0];
-   for (int i = 0; i < size; i++) {
-     if (maxFPS > maxFps[i])
+   int sizes = 13;
+   unsigned int size[][2] = {{128, 96},   {160, 120},  {176, 144},  {320, 240},
+@@ -416,6 +416,8 @@ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+             cap.videoType = VideoType::kUYVY;
+           } else if (videoFormats[fmts] == V4L2_PIX_FMT_NV12) {
+             cap.videoType = VideoType::kNV12;
++          } else {
++            RTC_DCHECK_NOTREACHED();
+           }
+ 
+           // get fps of current camera mode
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index edf3f1ccbd..3ccf0e509e 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -123,23 +123,18 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   // Supported video formats in preferred order.
+   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
+   // I420 otherwise.
+-  const int nFormats = 6;
+-  unsigned int fmts[nFormats];
+-  if (capability.width > 640 || capability.height > 480) {
+-    fmts[0] = V4L2_PIX_FMT_MJPEG;
+-    fmts[1] = V4L2_PIX_FMT_YUV420;
+-    fmts[2] = V4L2_PIX_FMT_YUYV;
+-    fmts[3] = V4L2_PIX_FMT_UYVY;
+-    fmts[4] = V4L2_PIX_FMT_NV12;
+-    fmts[5] = V4L2_PIX_FMT_JPEG;
+-  } else {
+-    fmts[0] = V4L2_PIX_FMT_YUV420;
+-    fmts[1] = V4L2_PIX_FMT_YUYV;
+-    fmts[2] = V4L2_PIX_FMT_UYVY;
+-    fmts[3] = V4L2_PIX_FMT_NV12;
+-    fmts[4] = V4L2_PIX_FMT_MJPEG;
+-    fmts[5] = V4L2_PIX_FMT_JPEG;
+-  }
++  unsigned int hdFmts[] = {
++      V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,
++      V4L2_PIX_FMT_UYVY,   V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_JPEG,
++  };
++  unsigned int sdFmts[] = {
++      V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,   V4L2_PIX_FMT_UYVY,
++      V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_JPEG,
++  };
++  const bool isHd = capability.width > 640 || capability.height > 480;
++  unsigned int* fmts = isHd ? hdFmts : sdFmts;
++  static_assert(sizeof(hdFmts) == sizeof(sdFmts));
++  constexpr int nFormats = sizeof(hdFmts) / sizeof(unsigned int);
+ 
+   // Enumerate image formats.
+   struct v4l2_fmtdesc fmt;
+@@ -188,6 +183,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
+            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
+     _captureVideoType = VideoType::kMJPEG;
++  else
++    RTC_DCHECK_NOTREACHED();
+ 
+   // set format and frame size now
+   if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
 -- 
 2.34.1
 

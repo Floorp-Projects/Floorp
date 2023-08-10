@@ -1,49 +1,47 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 18 Nov 2020 13:33:00 -0500
-Subject: Bug 1654112 - Suppress -Wclass-varargs warning in logging.h. r=ng
+From: Tommi <tommi@webrtc.org>
+Date: Thu, 22 Jun 2023 10:13:52 +0200
+Subject: (cherry-pick-branch-heads/5735) [M114] Avoid touching channel after
+ OnSctpDataChannelClosed
 
-This needs some investigation to see why we get this warning when it is not
-present upstream.
+(cherry picked from commit eec1810760ccbdf95c68ed0d2c2ae10a8575551a)
 
-Since both were doing the same thing for different compiler chains,
-also includes:
-Bug 1654112 - linux build fix (pragmas) for base-toolchains* . r=ng
-
-Differential Revision: https://phabricator.services.mozilla.com/D130086
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8d832e832ffe513246c0763a56376a8022b2447b
+Bug: chromium:1454086
+Change-Id: I39573b706c4031d091c45a182b13cb3b2dba6233
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/309920
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40332}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/310922
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5735@{#5}
+Cr-Branched-From: df7df199abd619e75b9f1d9a7e12fc3f3f748775-refs/heads/main@{#39949}
 ---
- rtc_base/logging.h | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ pc/data_channel_controller.cc | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index 8f490c44a2..9340fe2c55 100644
---- a/rtc_base/logging.h
-+++ b/rtc_base/logging.h
-@@ -48,6 +48,14 @@
- #ifndef RTC_BASE_LOGGING_H_
- #define RTC_BASE_LOGGING_H_
- 
-+#pragma GCC diagnostic push
-+#pragma GCC diagnostic ignored "-Wvarargs"
+diff --git a/pc/data_channel_controller.cc b/pc/data_channel_controller.cc
+index 166e181cfe..1746170f64 100644
+--- a/pc/data_channel_controller.cc
++++ b/pc/data_channel_controller.cc
+@@ -77,12 +77,16 @@ void DataChannelController::OnChannelStateChanged(
+     SctpDataChannel* channel,
+     DataChannelInterface::DataState state) {
+   RTC_DCHECK_RUN_ON(network_thread());
 +
-+#if defined(__clang__)
-+#  pragma clang diagnostic push
-+#  pragma clang diagnostic ignored "-Wclass-varargs"
-+#endif
++  // Stash away the internal id here in case `OnSctpDataChannelClosed` ends up
++  // releasing the last reference to the channel.
++  const int channel_id = channel->internal_id();
 +
- #include <errno.h>
+   if (state == DataChannelInterface::DataState::kClosed)
+     OnSctpDataChannelClosed(channel);
  
- #include <atomic>
-@@ -769,4 +777,9 @@ inline const char* AdaptString(const std::string& str) {
- 
- }  // namespace rtc
- 
-+#pragma GCC diagnostic pop
-+#if defined(__clang__)
-+#  pragma clang diagnostic pop
-+#endif
-+
- #endif  // RTC_BASE_LOGGING_H_
+   signaling_thread()->PostTask(
+-      SafeTask(signaling_safety_.flag(),
+-               [this, channel_id = channel->internal_id(), state = state] {
++      SafeTask(signaling_safety_.flag(), [this, channel_id, state = state] {
+                  pc_->OnSctpDataChannelStateChanged(channel_id, state);
+                }));
+ }
 -- 
 2.34.1
 
