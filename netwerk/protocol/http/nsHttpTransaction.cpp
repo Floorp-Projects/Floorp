@@ -1656,6 +1656,34 @@ void nsHttpTransaction::Close(nsresult reason) {
     if (timings.responseEnd.IsNull() && !timings.responseStart.IsNull()) {
       SetResponseEnd(TimeStamp::Now());
     }
+
+    // Accumulate download throughput telemetry
+    const int64_t TELEMETRY_DOWNLOAD_SIZE_GREATER_THAN_10MB =
+        (int64_t)10 * (int64_t)(1 << 20);
+    if ((mContentRead > TELEMETRY_DOWNLOAD_SIZE_GREATER_THAN_10MB) &&
+        !timings.requestStart.IsNull() && !timings.responseEnd.IsNull()) {
+      TimeDuration elapsed = timings.responseEnd - timings.requestStart;
+      double megabits = static_cast<double>(mContentRead) * 8.0 / 1000000.0;
+      uint32_t mpbs = static_cast<uint32_t>(megabits / elapsed.ToSeconds());
+
+      switch (mHttpVersion) {
+        case HttpVersion::v1_0:
+        case HttpVersion::v1_1:
+          glean::networking::http_1_download_throughput.AccumulateSamples(
+              {mpbs});
+          break;
+        case HttpVersion::v2_0:
+          glean::networking::http_2_download_throughput.AccumulateSamples(
+              {mpbs});
+          break;
+        case HttpVersion::v3_0:
+          glean::networking::http_3_download_throughput.AccumulateSamples(
+              {mpbs});
+          break;
+        default:
+          break;
+      }
+    }
   }
 
   if (mTrafficCategory != HttpTrafficCategory::eInvalid) {
