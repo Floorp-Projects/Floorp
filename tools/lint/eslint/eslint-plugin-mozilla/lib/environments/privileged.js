@@ -648,6 +648,7 @@ module.exports = {
     StyleSheet: false,
     StyleSheetApplicableStateChangeEvent: false,
     StyleSheetList: false,
+    StyleSheetRemovedEvent: false,
     SubtleCrypto: false,
     SyncMessageSender: false,
     TCPServerSocket: false,

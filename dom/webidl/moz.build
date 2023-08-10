@@ -1108,7 +1108,6 @@ WEBIDL_FILES += [
     "PopStateEvent.webidl",
     "PopupBlockedEvent.webidl",
     "ProgressEvent.webidl",
-    "StyleSheetApplicableStateChangeEvent.webidl",
 ]
 
 # WebExtensions API.
@@ -1188,7 +1187,6 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     "PromiseRejectionEvent.webidl",
     "ScrollViewChangeEvent.webidl",
     "SecurityPolicyViolationEvent.webidl",
-    "StyleSheetApplicableStateChangeEvent.webidl",
     "SubmitEvent.webidl",
     "TaskPriorityChangeEvent.webidl",
     "TCPServerSocketEvent.webidl",
