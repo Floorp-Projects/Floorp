@@ -226,9 +226,8 @@ class RecentlyClosedTabsInView extends ViewPage {
       </div>
       <div class=${classMap({ "cards-container": this.selectedTab })}>
         <card-container
-          .viewAllPage=${this.overview && this.recentlyClosedTabs.length
-            ? "recentlyclosed"
-            : null}
+          shortPageName="recentlyclosed"
+          ?showViewAll=${this.overview && this.recentlyClosedTabs.length}
           ?preserveCollapseState=${this.overview ? true : null}
           ?hideHeader=${this.selectedTab}
           ?hidden=${!this.recentlyClosedTabs.length && !this.overview}
