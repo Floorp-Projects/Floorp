@@ -15,13 +15,15 @@
     }
   ],
   "background": {
-    "scripts": ["readerview-background.js"]
+    "scripts": ["readerview-background.js"],
+    "persistent": false
   },
   "permissions": [
     "mozillaAddons",
     "geckoViewAddons",
     "nativeMessaging",
     "nativeMessagingFromContent",
+    "storage",
     "tabs",
     "<all_urls>"
   ]

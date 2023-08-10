@@ -5,9 +5,7 @@
 // This background script is needed to update the current tab
 // and activate reader view.
 
-let serializedDocs = new Map();
-
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   switch (message.action) {
      case 'show':
        let readerViewUrl = new URL(browser.runtime.getURL("/readerview.html"));
@@ -19,13 +17,11 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
        });
        break;
      case 'addSerializedDoc':
-        serializedDocs.set(sender.contextId.toString(), message.doc);
+        storage.session.set(sender.contextId.toString(), message.doc);
         break;
      case 'getSerializedDoc':
-       let doc = serializedDocs.get(message.id);
-       if (doc) {
-         serializedDocs.delete(message.id);
-       }
+       let doc = await storage.session.get(message.id);
+       storage.session.delete(message.id);
        sendResponse(doc);
        break;
      default:
