@@ -16,10 +16,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b5acbf536c46a66c9
  2 files changed, 15 insertions(+), 5 deletions(-)
 
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 2d5d68e817..59fe39b7eb 100644
+index a2435bcd4f..cd0ba6e3df 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -202,8 +202,7 @@ uint32_t DeviceInfoV4l2::NumberOfDevices() {
+@@ -220,8 +220,7 @@ uint32_t DeviceInfoV4l2::NumberOfDevices() {
      snprintf(device, sizeof(device), "/dev/video%d", n);
      if ((fd = open(device, O_RDONLY)) != -1) {
        // query device capabilities and make sure this is a video capture device
@@ -29,7 +29,7 @@ index 2d5d68e817..59fe39b7eb 100644
          close(fd);
          continue;
        }
-@@ -234,8 +233,7 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
+@@ -252,8 +251,7 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
      snprintf(device, sizeof(device), "/dev/video%d", n);
      if ((fd = open(device, O_RDONLY)) != -1) {
        // query device capabilities and make sure this is a video capture device
@@ -39,7 +39,7 @@ index 2d5d68e817..59fe39b7eb 100644
          close(fd);
          continue;
        }
-@@ -313,7 +311,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
+@@ -331,7 +329,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
      struct v4l2_capability cap;
      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
        // skip devices without video capture capability
@@ -48,7 +48,7 @@ index 2d5d68e817..59fe39b7eb 100644
          continue;
        }
  
-@@ -375,6 +373,15 @@ bool DeviceInfoV4l2::IsDeviceNameMatches(const char* name,
+@@ -393,6 +391,15 @@ bool DeviceInfoV4l2::IsDeviceNameMatches(const char* name,
    return false;
  }
  

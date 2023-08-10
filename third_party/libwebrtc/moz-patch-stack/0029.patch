@@ -31,7 +31,7 @@ index 56da475bf3..cae63c7c2d 100644
  #include <stdlib.h>
  #include <string.h>
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 6bdfc476d4..2d5d68e817 100644
+index f77d791033..a2435bcd4f 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
 @@ -12,6 +12,7 @@
@@ -42,7 +42,7 @@ index 6bdfc476d4..2d5d68e817 100644
  #include <stdio.h>
  #include <stdlib.h>
  #include <string.h>
-@@ -73,16 +74,13 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+@@ -91,16 +92,13 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
  
  int DeviceInfoV4l2::EventCheck(int fd)
  {
@@ -78,7 +78,7 @@ index 23a8f4f3f3..b2c206d775 100644
  #include <string.h>
  #include <sys/ioctl.h>
 diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index a1f8f9b741..f45bff4f2b 100644
+index 3521e7a21a..100eb37c2a 100644
 --- a/modules/video_capture/linux/video_capture_v4l2.cc
 +++ b/modules/video_capture/linux/video_capture_v4l2.cc
 @@ -12,7 +12,7 @@
@@ -105,7 +105,7 @@ index a1f8f9b741..f45bff4f2b 100644
  
  #include <new>
  #include <string>
-@@ -349,16 +357,13 @@ bool VideoCaptureModuleV4L2::CaptureStarted() {
+@@ -389,16 +397,13 @@ bool VideoCaptureModuleV4L2::CaptureStarted() {
  
  bool VideoCaptureModuleV4L2::CaptureProcess() {
    int retVal = 0;
@@ -127,7 +127,7 @@ index a1f8f9b741..f45bff4f2b 100644
  
    {
      MutexLock lock(&capture_lock_);
-@@ -368,12 +373,12 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
+@@ -408,12 +413,12 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
      }
  
      if (retVal < 0 && errno != EINTR) {  // continue if interrupted

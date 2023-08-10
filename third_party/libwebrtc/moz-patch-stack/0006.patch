@@ -1273,12 +1273,12 @@ index 546265049c..8acbef6d69 100644
     * Fills the member variable _captureCapabilities with capabilities for the
     * given device name.
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 0a0f55bc33..9d6383c57d 100644
+index a472e41a41..7397a10625 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -27,15 +27,187 @@
- #include "modules/video_capture/video_capture_impl.h"
- #include "rtc_base/logging.h"
+@@ -45,15 +45,187 @@
+ #define V4L2_PIX_FMT_RGBA32 v4l2_fourcc('A', 'B', '2', '4')
+ #endif
  
 +#ifdef WEBRTC_LINUX
 +#define EVENT_SIZE  ( sizeof (struct inotify_event) )
@@ -1466,7 +1466,7 @@ index 0a0f55bc33..9d6383c57d 100644
  
  uint32_t DeviceInfoV4l2::NumberOfDevices() {
    uint32_t count = 0;
-@@ -68,7 +240,8 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
+@@ -86,7 +258,8 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
                                        char* deviceUniqueIdUTF8,
                                        uint32_t deviceUniqueIdUTF8Length,
                                        char* /*productUniqueIdUTF8*/,
