@@ -131,6 +131,10 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
     ipc::SharedMemoryBasic::Handle&& aReadHandle,
     CrossProcessSemaphoreHandle&& aReaderSem,
     CrossProcessSemaphoreHandle&& aWriterSem) {
+  if (mStream) {
+    return IPC_FAIL(this, "RecvInitTranslator called twice.");
+  }
+
   mTextureType = aTextureType;
 
   // We need to initialize the stream first, because it might be used to
