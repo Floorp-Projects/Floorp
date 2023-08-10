@@ -141,13 +141,14 @@ void WindowCapturerX11::Start(Callback* callback) {
 
 void WindowCapturerX11::CaptureFrame() {
   TRACE_EVENT0("webrtc", "WindowCapturerX11::CaptureFrame");
-  x_display_->ProcessPendingXEvents();
 
   if (!x_server_pixel_buffer_.IsWindowValid()) {
     RTC_LOG(LS_ERROR) << "The window is no longer valid.";
     callback_->OnCaptureResult(Result::ERROR_PERMANENT, nullptr);
     return;
   }
+
+  x_display_->ProcessPendingXEvents();
 
   if (!has_composite_extension_) {
     // Without the Xcomposite extension we capture when the whole window is
