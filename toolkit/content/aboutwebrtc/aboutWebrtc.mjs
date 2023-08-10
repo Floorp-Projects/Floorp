@@ -302,7 +302,11 @@ class AecLogging extends Control {
   }
 
   onClick() {
-    this.setState((WGI.aecDebug = !WGI.aecDebug));
+    if (Services.env.get("MOZ_DISABLE_CONTENT_SANDBOX") != "1") {
+      this.message = "about-webrtc-aec-logging-unavailable-sandbox";
+    } else {
+      this.setState((WGI.aecDebug = !WGI.aecDebug));
+    }
     this.update();
   }
 }
