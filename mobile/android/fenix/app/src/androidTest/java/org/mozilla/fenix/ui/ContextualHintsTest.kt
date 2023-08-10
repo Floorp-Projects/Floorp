@@ -17,7 +17,6 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
-import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -49,20 +48,6 @@ class ContextualHintsTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-    }
-
-    @Test
-    fun jumpBackInCFRTest() {
-        val genericPage = getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericPage.url) {
-            verifyCookiesProtectionHintIsDisplayed(true)
-            // One back press to dismiss the TCP hint
-            mDevice.pressBack()
-        }.goToHomescreen {
-            verifyJumpBackInMessage()
-        }
     }
 
     @SmokeTest

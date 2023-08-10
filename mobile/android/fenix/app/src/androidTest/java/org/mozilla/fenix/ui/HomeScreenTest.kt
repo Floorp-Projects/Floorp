@@ -55,6 +55,7 @@ class HomeScreenTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/235396
     @Test
     fun homeScreenItemsTest() {
         homeScreen {}.dismissOnboarding()
@@ -77,8 +78,9 @@ class HomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/244199
     @Test
-    fun privateModeScreenItemsTest() {
+    fun privateBrowsingHomeScreenItemsTest() {
         homeScreen { }.dismissOnboarding()
         homeScreen { }.togglePrivateBrowsingMode()
 
@@ -89,6 +91,7 @@ class HomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1364362
     @Test
     fun verifyJumpBackInSectionTest() {
         activityTestRule.activityRule.applySettingsExceptions {
@@ -139,8 +142,9 @@ class HomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252509
     @Test
-    fun verifyPocketHomepageStoriesTest() {
+    fun verifyPocketSectionTest() {
         activityTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
@@ -168,6 +172,7 @@ class HomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252513
     @Test
     fun openPocketStoryItemTest() {
         activityTestRule.activityRule.applySettingsExceptions {
@@ -187,8 +192,9 @@ class HomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252514
     @Test
-    fun openPocketDiscoverMoreTest() {
+    fun pocketDiscoverMoreButtonTest() {
         activityTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
@@ -205,8 +211,9 @@ class HomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252515
     @Test
-    fun selectStoriesByTopicItemTest() {
+    fun selectPocketStoriesByTopicTest() {
         activityTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
@@ -222,8 +229,9 @@ class HomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252516
     @Test
-    fun verifyPocketLearnMoreLinkTest() {
+    fun pocketLearnMoreButtonTest() {
         activityTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
@@ -239,8 +247,9 @@ class HomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1569839
     @Test
-    fun verifyCustomizeHomepageTest() {
+    fun verifyCustomizeHomepageButtonTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {

@@ -60,6 +60,7 @@ class ComposeHomeScreenTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/235396
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
     fun homeScreenItemsTest() {
@@ -83,8 +84,9 @@ class ComposeHomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/244199
     @Test
-    fun privateModeScreenItemsTest() {
+    fun privateBrowsingHomeScreenItemsTest() {
         homeScreen { }.dismissOnboarding()
         homeScreen { }.togglePrivateBrowsingMode()
 
@@ -95,6 +97,7 @@ class ComposeHomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1364362
     @Test
     fun verifyJumpBackInSectionTest() {
         activityTestRule.activityRule.applySettingsExceptions {
@@ -145,9 +148,26 @@ class ComposeHomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1569867
+    @Test
+    fun verifyJumpBackInContextualHintTest() {
+        activityTestRule.activityRule.applySettingsExceptions {
+            it.isJumpBackInCFREnabled = true
+        }
+
+        val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericPage.url) {
+        }.goToHomescreen {
+            verifyJumpBackInMessage(activityTestRule)
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252509
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
-    fun verifyPocketHomepageStoriesTest() {
+    fun verifyPocketSectionTest() {
         activityTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
@@ -175,6 +195,7 @@ class ComposeHomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252513
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
     fun openPocketStoryItemTest() {
@@ -195,8 +216,9 @@ class ComposeHomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252514
     @Test
-    fun openPocketDiscoverMoreTest() {
+    fun pocketDiscoverMoreButtonTest() {
         activityTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
@@ -213,9 +235,10 @@ class ComposeHomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252515
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
-    fun selectStoriesByTopicItemTest() {
+    fun selectPocketStoriesByTopicTest() {
         activityTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
@@ -231,8 +254,9 @@ class ComposeHomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252516
     @Test
-    fun verifyPocketLearnMoreLinkTest() {
+    fun pocketLearnMoreButtonTest() {
         activityTestRule.activityRule.applySettingsExceptions {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
@@ -248,8 +272,9 @@ class ComposeHomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1569839
     @Test
-    fun verifyCustomizeHomepageTest() {
+    fun verifyCustomizeHomepageButtonTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
