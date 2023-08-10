@@ -24,10 +24,10 @@
  double	atan2(double, double);
  double	cos(double);
  double	sin(double);
-@@ -69,9 +72,9 @@
- float	ceilf(float);
+@@ -71,9 +74,9 @@
  float	fabsf(float);
  float	floorf(float);
+ float	hypotf(float, float);
  float	nearbyintf(float);
  float	rintf(float);
  float	scalbnf(float, int);

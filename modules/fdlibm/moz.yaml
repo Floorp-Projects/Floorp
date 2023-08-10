@@ -44,7 +44,9 @@ vendoring:
     - e_exp.c
     - e_expf.c
     - e_hypot.c
+    - e_hypotf.c
     - e_log10.c
+    - e_log10f.c
     - e_log2.c
     - e_log.c
     - e_logf.c
@@ -59,6 +61,7 @@ vendoring:
     - k_exp.c
     - k_expf.c
     - k_log.h
+    - k_logf.h
     - k_rem_pio2.c
     - k_sin.c
     - k_sinf.c

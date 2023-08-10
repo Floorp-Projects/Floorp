@@ -1,7 +1,7 @@
 diff --git a/fdlibm.h b/fdlibm.h
 --- a/fdlibm.h
 +++ b/fdlibm.h
-@@ -12,504 +12,66 @@
+@@ -12,504 +12,68 @@
  /*
   * from: @(#)fdlibm.h 5.1 93/09/24
   * $FreeBSD$
@@ -348,7 +348,7 @@ diff --git a/fdlibm.h b/fdlibm.h
 -float	frexpf(float, int *);	/* fundamentally !__pure2 */
 -int	ilogbf(float) __pure2;
 -float	ldexpf(float, int);
--float	log10f(float);
+ float	log10f(float);
 -float	log1pf(float);
 -float	log2f(float);
  float	logf(float);
@@ -366,7 +366,7 @@ diff --git a/fdlibm.h b/fdlibm.h
 -
 -float	erff(float);
 -float	erfcf(float);
--float	hypotf(float, float);
+ float	hypotf(float, float);
 -float	lgammaf(float);
 -float	tgammaf(float);
 -

@@ -1,3 +1,5 @@
+"math.h" is still included in e_hypotf.cpp for fabsl() and
+in e_log10f.cpp for float_t.
 diff --git a/e_acos.cpp b/e_acos.cpp
 --- a/e_acos.cpp
 +++ b/e_acos.cpp
