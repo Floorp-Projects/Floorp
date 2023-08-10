@@ -154,7 +154,7 @@ bool IsIgnoredIPv6(bool allow_mac_based_ipv6, const InterfaceAddress& ip) {
   // However, our IPAddress structure doesn't carry that so the
   // information is lost and causes binding failure.
   if (IPIsLinkLocal(ip)) {
-    RTC_LOG(LS_INFO) << "Ignore link local IP:" << ip.ToSensitiveString();
+    RTC_LOG(LS_VERBOSE) << "Ignore link local IP:" << ip.ToSensitiveString();
     return true;
   }
 
