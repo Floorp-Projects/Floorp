@@ -258,7 +258,7 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
   margin-top: 0px;
 }
 
-.update-postponed-bar + .addon-card-message {
+.update-postponed-bar + .addon-card-message:not([hidden]) {
   /* Prevent the small overlapping between the two message bars
    * when they are both visible at the same time one after the
    * other on the same addon card */
