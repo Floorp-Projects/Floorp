@@ -16,30 +16,10 @@ const OPTIN_DEFAULT = {
         position: "split",
         title: { string_id: "shopping-onboarding-headline" },
         subtitle: `Not all reviews are created equal. To help you find real reviews, from real people, Firefox can use AI technology to analyze this product’s reviews.`,
-        legal_paragraph: {
+        cta_paragraph: {
           text: {
-            // fluent ids required to render copy
-            string_id:
-              "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
-          },
-          link_keys: ["privacy_policy", "terms_of_use"],
-        },
-        privacy_policy: {
-          action: {
-            type: "OPEN_URL",
-            data: {
-              args: "https://www.mozilla.org/privacy/firefox/",
-              where: "tab",
-            },
-          },
-        },
-        terms_of_use: {
-          action: {
-            type: "OPEN_URL",
-            data: {
-              args: "https://www.mozilla.org/about/legal/terms/firefox/",
-              where: "tab",
-            },
+            fontSize: "12px",
+            raw: "By selecting Analyze Reviews you agree to Fakespot terms of use.",
           },
         },
         primary_button: {
