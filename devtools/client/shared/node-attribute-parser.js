@@ -39,35 +39,6 @@ const WILDCARD = Symbol();
 
 const ATTRIBUTE_TYPES = new Map([
   ["action", { form: { namespaceURI: HTML_NS, type: TYPE_URI } }],
-  [
-    "aria-activedescendant",
-    { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF } },
-  ],
-  [
-    "aria-controls",
-    { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF_LIST } },
-  ],
-  [
-    "aria-describedby",
-    { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF_LIST } },
-  ],
-  [
-    "aria-details",
-    { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF_LIST } },
-  ],
-  [
-    "aria-errormessage",
-    { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF } },
-  ],
-  [
-    "aria-flowto",
-    { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF_LIST } },
-  ],
-  [
-    "aria-labelledby",
-    { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF_LIST } },
-  ],
-  ["aria-owns", { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF_LIST } }],
   ["background", { body: { namespaceURI: HTML_NS, type: TYPE_URI } }],
   [
     "cite",
