@@ -1267,7 +1267,7 @@ def _get_android_run_parser():
         "--aab",
         action="store_true",
         default=False,
-        help="Install app ass App Bundle (AAB).",
+        help="Install app as Android App Bundle (AAB).",
     )
     group.add_argument(
         "--no-install",
