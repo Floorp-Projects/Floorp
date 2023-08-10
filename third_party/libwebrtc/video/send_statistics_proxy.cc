@@ -1303,20 +1303,19 @@ void SendStatisticsProxy::RtcpPacketTypesCounterUpdated(
 }
 
 void SendStatisticsProxy::OnReportBlockDataUpdated(
-    ReportBlockData report_block_data) {
+    ReportBlockData report_block) {
   MutexLock lock(&mutex_);
   VideoSendStream::StreamStats* stats =
-      GetStatsEntry(report_block_data.report_block().source_ssrc);
+      GetStatsEntry(report_block.source_ssrc());
   if (!stats)
     return;
-  const RTCPReportBlock& report_block = report_block_data.report_block();
   uma_container_->report_block_stats_.Store(
-      /*ssrc=*/report_block.source_ssrc,
-      /*packets_lost=*/report_block.packets_lost,
+      /*ssrc=*/report_block.source_ssrc(),
+      /*packets_lost=*/report_block.cumulative_lost(),
       /*extended_highest_sequence_number=*/
-      report_block.extended_highest_sequence_number);
+      report_block.extended_highest_sequence_number());
 
-  stats->report_block_data = std::move(report_block_data);
+  stats->report_block_data = std::move(report_block);
 }
 
 void SendStatisticsProxy::DataCountersUpdated(
