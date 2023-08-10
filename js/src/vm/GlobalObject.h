@@ -36,6 +36,7 @@
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
 #include "vm/Realm.h"
+#include "vm/RegExpShared.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
 
@@ -205,6 +206,7 @@ class GlobalObjectData {
   HeapPtr<SharedShape*> boundFunctionShapeWithDefaultProto;
 
   // Global state for regular expressions.
+  RegExpRealm regExpRealm;
   UniquePtr<RegExpStatics> regExpStatics;
 
   HeapPtr<ArgumentsObject*> mappedArgumentsTemplate;
@@ -238,6 +240,9 @@ class GlobalObjectData {
     static_assert(sizeof(lexicalEnvironment) == sizeof(uintptr_t),
                   "JIT code assumes field is pointer-sized");
     return offsetof(GlobalObjectData, lexicalEnvironment);
+  }
+  static constexpr size_t offsetOfRegExpRealm() {
+    return offsetof(GlobalObjectData, regExpRealm);
   }
 };
 
@@ -945,6 +950,8 @@ class GlobalObject : public NativeObject {
 
   static JSObject* getOrCreateThrowTypeError(JSContext* cx,
                                              Handle<GlobalObject*> global);
+
+  RegExpRealm& regExpRealm() { return data().regExpRealm; }
 
   // Infallibly test whether the given value is the eval function for this
   // global.

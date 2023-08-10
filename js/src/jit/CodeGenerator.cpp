@@ -2443,7 +2443,8 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
   Address flagsSlot(regexp, RegExpObject::offsetOfFlags());
   Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
 
-  SharedShape* shape = cx->realm()->regExps.getOrCreateMatchResultShape(cx);
+  SharedShape* shape =
+      cx->global()->regExpRealm().getOrCreateMatchResultShape(cx);
   if (!shape) {
     return nullptr;
   }

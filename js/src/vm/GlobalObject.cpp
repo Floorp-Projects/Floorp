@@ -1045,6 +1045,8 @@ void GlobalObjectData::trace(JSTracer* trc, GlobalObject* global) {
   TraceNullableEdge(trc, &boundFunctionShapeWithDefaultProto,
                     "global-bound-function-shape");
 
+  regExpRealm.trace(trc);
+
   if (regExpStatics) {
     regExpStatics->trace(trc);
   }

@@ -27,6 +27,7 @@
 #endif
 
 #include "jit/FlushICache.h"
+#include "jit/JitOptions.h"
 #include "util/Text.h"
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"
