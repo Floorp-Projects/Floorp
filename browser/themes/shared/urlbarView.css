@@ -352,30 +352,30 @@
 .urlbarView-button-menu {
   background-image: url("chrome://global/skin/icons/more.svg");
   background-color: var(--button-bgcolor);
-}
 
-.urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-inner + .urlbarView-button-menu:not([open]):empty {
-  display: none;
-}
+  .urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-inner + &:not([open]):empty {
+    display: none;
+  }
 
-/* Labeled result menu button */
+  /* Labeled result menu button */
 
-.urlbarView-results:not([wrap]) > .urlbarView-row > .urlbarView-button-menu:not(:empty) {
-  display: inline-flex;
-  align-items: center;
-  border-radius: var(--urlbarView-result-button-size);
-  padding-inline: 8px 26px;
-  background-position-x: right 4px;
-  font-size: var(--urlbarView-small-font-size);
-}
+  .urlbarView-results:not([wrap]) > .urlbarView-row > &:not(:empty) {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--urlbarView-result-button-size);
+    padding-inline: 8px 26px;
+    background-position-x: right 4px;
+    font-size: var(--urlbarView-small-font-size);
 
-.urlbarView-results:not([wrap]) > .urlbarView-row > .urlbarView-button-menu:not(:empty):-moz-locale-dir(rtl) {
-  background-position-x: left 4px;
-}
+    &:-moz-locale-dir(rtl) {
+      background-position-x: left 4px;
+    }
+  }
 
-.urlbarView-results[wrap] > .urlbarView-row > .urlbarView-button-menu:not(:empty) {
-  /* Hide the label in narrow windows. */
-  font-size: 0;
+  .urlbarView-results[wrap] > .urlbarView-row > &:not(:empty) {
+    /* Hide the label in narrow windows. */
+    font-size: 0;
+  }
 }
 
 /* Button with label, e.g. tip button */
