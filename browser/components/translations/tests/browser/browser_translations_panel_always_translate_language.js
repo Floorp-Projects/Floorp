@@ -162,9 +162,13 @@ add_task(
       );
     });
 
-    await waitForTranslationsPopupEvent("popupshown", () => {
-      click(button, "Opening the popup");
-    });
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      () => {
+        click(button, "Opening the popup");
+      },
+      assertPanelDefaultView
+    );
 
     await waitForTranslationsPopupEvent("popuphidden", () => {
       click(
@@ -352,9 +356,13 @@ add_task(
       );
     });
 
-    await waitForTranslationsPopupEvent("popupshown", () => {
-      click(button, "Re-opening the popup");
-    });
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      () => {
+        click(button, "Re-opening the popup");
+      },
+      assertPanelRevisitView
+    );
 
     await waitForTranslationsPopupEvent("popuphidden", () => {
       click(

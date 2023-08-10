@@ -56,9 +56,13 @@ add_task(
       }
     );
 
-    await waitForTranslationsPopupEvent("popupshown", () => {
-      click(button, "Opening the popup");
-    });
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      () => {
+        click(button, "Opening the popup");
+      },
+      assertPanelDefaultView
+    );
 
     await TestTranslationsTelemetry.assertEvent(
       "OpenPanel",
@@ -98,6 +102,7 @@ add_task(
       );
     });
 
+    assertPanelErrorView();
     await TestTranslationsTelemetry.assertEvent(
       "OpenPanel",
       Glean.translationsPanel.open,
@@ -217,6 +222,7 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
     );
   });
 
+  assertPanelErrorView();
   await TestTranslationsTelemetry.assertCounter(
     "RequestCount",
     Glean.translations.requestsCount,

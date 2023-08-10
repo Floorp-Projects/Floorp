@@ -26,9 +26,13 @@ add_task(async function test_translations_panel_retry() {
     );
   });
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Opening the popup");
+    },
+    assertPanelDefaultView
+  );
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
@@ -48,9 +52,13 @@ add_task(async function test_translations_panel_retry() {
     );
   });
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Re-opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Re-opening the popup");
+    },
+    assertPanelRevisitView
+  );
 
   info('Switch to language to "fr"');
   const toSelect = getById("translations-panel-to");
