@@ -135,7 +135,6 @@
     <ID>UndocumentedPublicClass:DeleteBrowsingDataOnQuitFragment.kt$DeleteBrowsingDataOnQuitFragment : PreferenceFragmentCompat</ID>
     <ID>UndocumentedPublicClass:DeleteBrowsingDataOnQuitType.kt$DeleteBrowsingDataOnQuitType</ID>
     <ID>UndocumentedPublicClass:DesktopFolders.kt$DesktopFolders</ID>
-    <ID>UndocumentedPublicClass:Do.kt$Do</ID>
     <ID>UndocumentedPublicClass:DownloadAdapter.kt$DownloadAdapter : AdapterSelectionHolder</ID>
     <ID>UndocumentedPublicClass:DownloadController.kt$DefaultDownloadController : DownloadController</ID>
     <ID>UndocumentedPublicClass:DownloadController.kt$DownloadController</ID>
@@ -255,9 +254,7 @@
     <ID>UndocumentedPublicClass:MetricsService.kt$MetricServiceType</ID>
     <ID>UndocumentedPublicClass:MetricsService.kt$MetricsService</ID>
     <ID>UndocumentedPublicClass:MetricsUtils.kt$MetricsUtils</ID>
-    <ID>UndocumentedPublicClass:Mode.kt$CurrentMode : AccountObserver</ID>
     <ID>UndocumentedPublicClass:Mode.kt$Mode$Normal : Mode</ID>
-    <ID>UndocumentedPublicClass:Mode.kt$Mode$Onboarding : Mode</ID>
     <ID>UndocumentedPublicClass:Mode.kt$Mode$Private : Mode</ID>
     <ID>UndocumentedPublicClass:MozillaProductDetector.kt$MozillaProductDetector</ID>
     <ID>UndocumentedPublicClass:MozillaProductDetector.kt$MozillaProductDetector$MozillaProducts</ID>
@@ -345,14 +342,6 @@
     <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$CustomizeHomeButton : AdapterItem</ID>
     <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$NimbusMessageCard : AdapterItem</ID>
     <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$NoCollectionsMessage : AdapterItem</ID>
-    <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$OnboardingFinish : AdapterItem</ID>
-    <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$OnboardingHeader : AdapterItem</ID>
-    <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$OnboardingManualSignIn : AdapterItem</ID>
-    <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$OnboardingPrivacyNotice : AdapterItem</ID>
-    <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$OnboardingSectionHeader : AdapterItem</ID>
-    <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$OnboardingThemePicker : AdapterItem</ID>
-    <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$OnboardingToolbarPositionPicker : AdapterItem</ID>
-    <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$OnboardingTrackingProtection : AdapterItem</ID>
     <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$PocketCategoriesItem : AdapterItem</ID>
     <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$PocketRecommendationsFooterItem : AdapterItem</ID>
     <ID>UndocumentedPublicClass:SessionControlAdapter.kt$AdapterItem$PocketStoriesItem : AdapterItem</ID>
@@ -634,7 +623,6 @@
     <ID>UndocumentedPublicFunction:FenixDialogFragment.kt$FenixDialogFragment$fun inflateRootView(container: ViewGroup? = null): View</ID>
     <ID>UndocumentedPublicFunction:FenixOnboarding.kt$FenixOnboarding$fun finish()</ID>
     <ID>UndocumentedPublicFunction:FenixOnboarding.kt$FenixOnboarding$fun userHasBeenOnboarded(): Boolean</ID>
-    <ID>UndocumentedPublicFunction:FenixSnackbar.kt$FenixSnackbar$fun setAction(text: String, action: () -&gt; Unit)</ID>
     <ID>UndocumentedPublicFunction:FenixSnackbar.kt$FenixSnackbar$fun setAppropriateBackground(isError: Boolean)</ID>
     <ID>UndocumentedPublicFunction:FenixSnackbar.kt$FenixSnackbar$fun setLength(duration: Int)</ID>
     <ID>UndocumentedPublicFunction:FenixSnackbar.kt$FenixSnackbar$fun setText(text: String)</ID>
@@ -712,8 +700,6 @@
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun start()</ID>
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun stop()</ID>
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun track(event: Event)</ID>
-    <ID>UndocumentedPublicFunction:Mode.kt$CurrentMode$fun emitModeChanges()</ID>
-    <ID>UndocumentedPublicFunction:Mode.kt$CurrentMode$fun getCurrentMode()</ID>
     <ID>UndocumentedPublicFunction:Mode.kt$Mode.Companion$fun fromBrowsingMode(browsingMode: BrowsingMode)</ID>
     <ID>UndocumentedPublicFunction:MozillaProductDetector.kt$MozillaProductDetector$fun getInstalledMozillaProducts(context: Context): List&lt;String&gt;</ID>
     <ID>UndocumentedPublicFunction:MozillaProductDetector.kt$MozillaProductDetector$fun packageIsInstalled(context: Context, packageName: String): Boolean</ID>

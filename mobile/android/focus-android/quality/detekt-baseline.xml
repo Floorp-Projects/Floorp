@@ -212,8 +212,6 @@
     <ID>UndocumentedPublicClass:UrlInputFragment.kt$FocusCrashException : Exception</ID>
     <ID>UndocumentedPublicClass:ViewUtils.kt$ViewUtils</ID>
     <ID>UndocumentedPublicClass:VoiceSearchActivity.kt$VoiceSearchActivity : BaseVoiceSearchActivity</ID>
-    <ID>UndocumentedPublicClass:WhatsNewStorage.kt$SharedPreferenceWhatsNewStorage : WhatsNewStorage</ID>
-    <ID>UndocumentedPublicClass:WhatsNewVersion.kt$ContextWhatsNewVersion : WhatsNewVersion</ID>
     <ID>UndocumentedPublicFunction:AboutFragment.kt$@Composable fun ColumnScope.LearnMoreLink( learnMore: String, openLearnMore: () -&gt; Job, )</ID>
     <ID>UndocumentedPublicFunction:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$fun newInstance( url: String, title: String, blockingEnabled: Boolean, requestDesktop: Boolean, ): AddToHomescreenDialogFragment</ID>
     <ID>UndocumentedPublicFunction:AdvancedSettingsFragment.kt$AdvancedSettingsFragment.Companion$fun newInstance(): AdvancedSettingsFragment</ID>
@@ -420,7 +418,6 @@
     <ID>UndocumentedPublicFunction:TelemetryWrapper.kt$TelemetryWrapper$@JvmStatic fun openSearchSettingsEvent()</ID>
     <ID>UndocumentedPublicFunction:TelemetryWrapper.kt$TelemetryWrapper$@JvmStatic fun openSelectionEvent()</ID>
     <ID>UndocumentedPublicFunction:TelemetryWrapper.kt$TelemetryWrapper$@JvmStatic fun openTabsTrayEvent()</ID>
-    <ID>UndocumentedPublicFunction:TelemetryWrapper.kt$TelemetryWrapper$@JvmStatic fun openWhatsNewEvent(highlighted: Boolean)</ID>
     <ID>UndocumentedPublicFunction:TelemetryWrapper.kt$TelemetryWrapper$@JvmStatic fun removeSearchEnginesEvent(selected: Int)</ID>
     <ID>UndocumentedPublicFunction:TelemetryWrapper.kt$TelemetryWrapper$@JvmStatic fun reportSiteIssueEvent()</ID>
     <ID>UndocumentedPublicFunction:TelemetryWrapper.kt$TelemetryWrapper$@JvmStatic fun respondToSearchSuggestionPrompt(enable: Boolean)</ID>
@@ -459,10 +456,6 @@
     <ID>UndocumentedPublicFunction:ViewUtils.kt$ViewUtils$fun hideKeyboard(view: View?)</ID>
     <ID>UndocumentedPublicFunction:ViewUtils.kt$ViewUtils$fun showKeyboard(view: View?)</ID>
     <ID>UndocumentedPublicFunction:VisibilityLifeCycleCallback.kt$VisibilityLifeCycleCallback.Companion$fun isInBackground(context: Context): Boolean</ID>
-    <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun getSessionCounter(): Int</ID>
-    <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun getVersion(): WhatsNewVersion?</ID>
-    <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun setSessionCounter(sessionCount: Int)</ID>
-    <ID>UndocumentedPublicFunction:WhatsNewStorage.kt$WhatsNewStorage$fun setVersion(version: WhatsNewVersion)</ID>
     <ID>UnusedPrivateMember:TelemetryMiddleware.kt$TelemetryMiddleware$@Suppress("ComplexMethod") private fun generateOptions(customTabConfig: CustomTabConfig): List&lt;String&gt;</ID>
     <ID>UseRequire:FactsProcessor.kt$throw IllegalArgumentException("Fact is not a context menu fact")</ID>
     <ID>UtilityClassWithPublicConstructor:AppReviewUtils.kt$AppReviewUtils</ID>

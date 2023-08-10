@@ -8,7 +8,6 @@
   <CurrentIssues>
     <ID>AbsentOrWrongFileLicense:AutoFitTextureView.kt$mozilla.components.feature.qr.views.AutoFitTextureView.kt</ID>
     <ID>AbsentOrWrongFileLicense:QrFragment.kt$mozilla.components.feature.qr.QrFragment.kt</ID>
-    <ID>BracesOnIfStatements:Connection.kt$DecryptedMessage$if</ID>
     <ID>BracesOnIfStatements:WebPush.kt$WebPushSubscription$if</ID>
     <ID>FunctionParameterNaming:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$_: View</ID>
     <ID>MaxLineLength:WebExtensionSupport.kt$WebExtensionSupport.&lt;no name provided&gt;$override</ID>
@@ -47,8 +46,6 @@
     <ID>UndocumentedPublicClass:ErrorPages.kt$ErrorPages</ID>
     <ID>UndocumentedPublicClass:FindInPageView.kt$FindInPageView$Listener</ID>
     <ID>UndocumentedPublicClass:GeckoEngineSessionState.kt$GeckoEngineSessionState : EngineSessionState</ID>
-    <ID>UndocumentedPublicClass:GitHubClient.kt$GitHubClient</ID>
-    <ID>UndocumentedPublicClass:GitHubPlugin.kt$GitHubPlugin : Plugin</ID>
     <ID>UndocumentedPublicClass:GleanApplication.kt$GleanApplication : Application</ID>
     <ID>UndocumentedPublicClass:Grammar.kt$GrammarElement</ID>
     <ID>UndocumentedPublicClass:IconLoader.kt$IconLoader$Result</ID>
@@ -207,7 +204,6 @@
     <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.TrackingProtectionPolicy.Companion$fun none()</ID>
     <ID>UndocumentedPublicFunction:EngineVersion.kt$EngineVersion$operator fun compareTo(other: EngineVersion): Int</ID>
     <ID>UndocumentedPublicFunction:Extensions.kt$fun String.toLocale(): Locale</ID>
-    <ID>UndocumentedPublicFunction:Extentions.kt$fun Project.property(names: String, defaultValue: String): String</ID>
     <ID>UndocumentedPublicFunction:ExternalAppBrowserFragment.kt$ExternalAppBrowserFragment.Companion$fun create( sessionId: String, manifest: WebAppManifest?, )</ID>
     <ID>UndocumentedPublicFunction:Facts.kt$Facts$@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) fun clearProcessors()</ID>
     <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onClearMatches()</ID>
@@ -218,8 +214,6 @@
     <ID>UndocumentedPublicFunction:GeckoEngineSession.kt$GeckoEngineSession$@Suppress("ComplexMethod") fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null, title: String? = null): HitResult?</ID>
     <ID>UndocumentedPublicFunction:GeckoEngineSessionState.kt$GeckoEngineSessionState.Companion$fun fromJSON(json: JSONObject): GeckoEngineSessionState</ID>
     <ID>UndocumentedPublicFunction:GeckoPermissionRequest.kt$GeckoPermissionRequest.Media.Companion$fun mapPermission(mediaSource: MediaSource): Permission</ID>
-    <ID>UndocumentedPublicFunction:GitHubClient.kt$GitHubClient$fun createIssue(owner: String, repoName: String, bodyJson: String): Pair&lt;Boolean, String&gt;</ID>
-    <ID>UndocumentedPublicFunction:GitHubClient.kt$GitHubClient$fun createPullRequest(owner: String, repoName: String, bodyJson: String): Pair&lt;Boolean, String&gt;</ID>
     <ID>UndocumentedPublicFunction:Headers.kt$fun List&lt;Header&gt;.toMutableHeaders()</ID>
     <ID>UndocumentedPublicFunction:HttpURLConnectionClient.kt$HttpURLConnectionClient.Companion$fun getOrCreateCookieManager(): CookieManager</ID>
     <ID>UndocumentedPublicFunction:IconGenerator.kt$IconGenerator$fun generate(context: Context, request: IconRequest): Icon</ID>
