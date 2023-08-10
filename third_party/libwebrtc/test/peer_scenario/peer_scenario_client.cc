@@ -106,7 +106,7 @@ class LambdaPeerConnectionObserver final : public PeerConnectionObserver {
       handler(candidates);
   }
   void OnAddTrack(rtc::scoped_refptr<RtpReceiverInterface> receiver,
-                  const std::vector<rtc::scoped_refptr<MediaStreamInterface> >&
+                  const std::vector<rtc::scoped_refptr<MediaStreamInterface>>&
                       streams) override {
     for (const auto& handler : handlers_->on_add_track)
       handler(receiver, streams);
