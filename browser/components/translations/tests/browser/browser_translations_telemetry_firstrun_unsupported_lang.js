@@ -24,9 +24,13 @@ add_task(
     click(appMenuButton, "Opening the app menu");
     await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
 
-    await waitForTranslationsPopupEvent("popupshown", () => {
-      click(getByL10nId("appmenuitem-translate"), "Opening the popup");
-    });
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      () => {
+        click(getByL10nId("appmenuitem-translate"), "Opening the popup");
+      },
+      assertPanelUnsupportedLanguageView
+    );
 
     await TestTranslationsTelemetry.assertEvent(
       "OpenPanel",
@@ -49,9 +53,15 @@ add_task(
       "The unsupported title is shown."
     );
 
-    click(
-      getByL10nId("translations-panel-error-change-button"),
-      "Change the languages."
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      () => {
+        click(
+          getByL10nId("translations-panel-error-change-button"),
+          "Change the languages."
+        );
+      },
+      assertPanelFirstShowView
     );
 
     info("Waiting to find the translations panel header.");
@@ -132,9 +142,13 @@ add_task(
     click(appMenuButton, "Opening the app menu");
     await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
 
-    await waitForTranslationsPopupEvent("popupshown", () => {
-      click(getByL10nId("appmenuitem-translate"), "Opening the popup");
-    });
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      () => {
+        click(getByL10nId("appmenuitem-translate"), "Opening the popup");
+      },
+      assertPanelUnsupportedLanguageView
+    );
 
     await TestTranslationsTelemetry.assertEvent(
       "OpenPanel",

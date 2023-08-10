@@ -117,6 +117,7 @@ add_task(
       );
     });
 
+    assertPanelErrorView();
     info("Waiting to find the translations panel default header.");
     const header = await waitForCondition(() =>
       maybeGetByL10nId("translations-panel-header")

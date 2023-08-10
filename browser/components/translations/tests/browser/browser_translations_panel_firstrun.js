@@ -24,9 +24,13 @@ add_task(async function test_translations_panel_firstrun() {
     "The intro message is displayed."
   );
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Opening the popup");
+    },
+    assertPanelFirstShowView
+  );
 
   ok(
     getByL10nId("translations-panel-intro-description"),
@@ -50,9 +54,13 @@ add_task(async function test_translations_panel_firstrun() {
     "The intro message is no longer there."
   );
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Opening the popup");
+    },
+    assertPanelDefaultView
+  );
 
   info("Checking for the intro text to be hidden.");
   await waitForCondition(
