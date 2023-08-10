@@ -48,29 +48,29 @@ internal abstract class DownloadsDatabase : RoomDatabase() {
 @Suppress("MaxLineLength", "MagicNumber")
 internal object Migrations {
     val migration_1_2 = object : Migration(1, 2) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL(
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
                 "ALTER TABLE downloads ADD COLUMN is_private INTEGER NOT NULL DEFAULT 0",
             )
         }
     }
     val migration_2_3 = object : Migration(2, 3) {
-        override fun migrate(database: SupportSQLiteDatabase) {
+        override fun migrate(db: SupportSQLiteDatabase) {
             // Create a temporal table
-            database.execSQL("CREATE TABLE temp_downloads (`id` TEXT NOT NULL, `url` TEXT NOT NULL, `file_name` TEXT, `content_type` TEXT, `content_length` INTEGER, `status` INTEGER NOT NULL, `destination_directory` TEXT NOT NULL, `created_at` INTEGER NOT NULL, PRIMARY KEY(`id`))")
+            db.execSQL("CREATE TABLE temp_downloads (`id` TEXT NOT NULL, `url` TEXT NOT NULL, `file_name` TEXT, `content_type` TEXT, `content_length` INTEGER, `status` INTEGER NOT NULL, `destination_directory` TEXT NOT NULL, `created_at` INTEGER NOT NULL, PRIMARY KEY(`id`))")
             // Copy the data
-            database.execSQL("INSERT INTO temp_downloads (id,url,file_name,content_type,content_length,status,destination_directory,created_at) SELECT id,url,file_name,content_type,content_length,status,destination_directory,created_at FROM downloads where is_private = 0")
+            db.execSQL("INSERT INTO temp_downloads (id,url,file_name,content_type,content_length,status,destination_directory,created_at) SELECT id,url,file_name,content_type,content_length,status,destination_directory,created_at FROM downloads where is_private = 0")
             // Remove the old table
-            database.execSQL("DROP TABLE downloads")
+            db.execSQL("DROP TABLE downloads")
             // Rename the table name to the correct one
-            database.execSQL("ALTER TABLE temp_downloads RENAME TO downloads")
+            db.execSQL("ALTER TABLE temp_downloads RENAME TO downloads")
         }
     }
 
     val migration_3_4 = object : Migration(3, 4) {
-        override fun migrate(database: SupportSQLiteDatabase) {
+        override fun migrate(db: SupportSQLiteDatabase) {
             // Clear any data urls.
-            database.execSQL("UPDATE downloads SET url='' WHERE url LIKE 'data:%' ")
+            db.execSQL("UPDATE downloads SET url='' WHERE url LIKE 'data:%' ")
         }
     }
 }

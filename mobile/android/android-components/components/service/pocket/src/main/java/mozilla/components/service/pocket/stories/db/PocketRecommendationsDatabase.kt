@@ -62,8 +62,8 @@ internal abstract class PocketRecommendationsDatabase : RoomDatabase() {
 
 internal object Migrations {
     val migration_1_2 = object : Migration(1, 2) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL(
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
                 "CREATE TABLE IF NOT EXISTS " +
                     "`${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}` (" +
                     "`url` TEXT NOT NULL, " +
@@ -82,15 +82,15 @@ internal object Migrations {
      * Migration for when adding support for pacing sponsored stories.
      */
     val migration_2_3 = object : Migration(2, 3) {
-        override fun migrate(database: SupportSQLiteDatabase) {
+        override fun migrate(db: SupportSQLiteDatabase) {
             // There are many new columns added. Drop the old table allowing to start fresh.
             // This migration is expected to only be needed in debug builds
             // with the feature not being live in any Fenix release.
-            database.execSQL(
+            db.execSQL(
                 "DROP TABLE ${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}",
             )
 
-            database.createNewSpocsTables()
+            db.createNewSpocsTables()
         }
     }
 
@@ -98,8 +98,8 @@ internal object Migrations {
      * Migration for when adding sponsored stories along with pacing support.
      */
     val migration_1_3 = object : Migration(1, 3) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.createNewSpocsTables()
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.createNewSpocsTables()
         }
     }
 
@@ -107,26 +107,26 @@ internal object Migrations {
      * Migration for when adding a new index to the spoc impression entity.
      */
     val migration_3_4 = object : Migration(3, 4) {
-        override fun migrate(database: SupportSQLiteDatabase) {
+        override fun migrate(db: SupportSQLiteDatabase) {
             // Rename the old tables to allow creating new ones
-            database.execSQL(
+            db.execSQL(
                 "ALTER TABLE `${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}` " +
                     "RENAME TO temp_spocs",
             )
-            database.execSQL(
+            db.execSQL(
                 "ALTER TABLE `${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}` " +
                     "RENAME TO temp_spocs_impressions",
             )
 
             // Create new tables with the new schema
-            database.createNewSpocsTables()
-            database.execSQL(
+            db.createNewSpocsTables()
+            db.execSQL(
                 "CREATE INDEX IF NOT EXISTS `index_spocs_impressions_spocId` " +
                     "ON `${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}` (`spocId`)",
             )
 
             // Copy the old data to the new tables
-            database.execSQL(
+            db.execSQL(
                 "INSERT INTO " +
                     "'${PocketRecommendationsDatabase.TABLE_NAME_SPOCS}' (" +
                     "id, url, title, imageUrl, sponsor, clickShim, impressionShim, " +
@@ -136,7 +136,7 @@ internal object Migrations {
                     "priority, lifetimeCapCount, flightCapCount, flightCapPeriod " +
                     "FROM temp_spocs",
             )
-            database.execSQL(
+            db.execSQL(
                 "INSERT INTO " +
                     "'${PocketRecommendationsDatabase.TABLE_NAME_SPOCS_IMPRESSIONS}' (" +
                     "spocId, impressionId, impressionDateInSeconds" +
@@ -146,8 +146,8 @@ internal object Migrations {
             )
 
             // Cleanup
-            database.execSQL("DROP TABLE temp_spocs")
-            database.execSQL("DROP TABLE temp_spocs_impressions")
+            db.execSQL("DROP TABLE temp_spocs")
+            db.execSQL("DROP TABLE temp_spocs_impressions")
         }
     }
 

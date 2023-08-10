@@ -27,28 +27,28 @@ internal abstract class ManifestDatabase : RoomDatabase() {
 
         @VisibleForTesting
         internal val MIGRATION_1_2: Migration = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                val cursor = database.query("SELECT * FROM manifests LIMIT 0,1")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val cursor = db.query("SELECT * FROM manifests LIMIT 0,1")
 
                 if (cursor.getColumnIndex("used_at") < 0) {
-                    database.execSQL("ALTER TABLE manifests ADD COLUMN used_at INTEGER NOT NULL DEFAULT 0")
+                    db.execSQL("ALTER TABLE manifests ADD COLUMN used_at INTEGER NOT NULL DEFAULT 0")
                 }
 
                 if (cursor.getColumnIndex("scope") < 0) {
-                    database.execSQL("ALTER TABLE manifests ADD COLUMN scope TEXT")
+                    db.execSQL("ALTER TABLE manifests ADD COLUMN scope TEXT")
                 }
 
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_manifests_scope ON manifests (scope)")
-                database.execSQL("UPDATE manifests SET used_at = updated_at WHERE used_at = 0")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_manifests_scope ON manifests (scope)")
+                db.execSQL("UPDATE manifests SET used_at = updated_at WHERE used_at = 0")
             }
         }
 
         @VisibleForTesting
         internal val MIGRATION_2_3: Migration = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE manifests ADD COLUMN has_share_targets INTEGER NOT NULL DEFAULT 0")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE manifests ADD COLUMN has_share_targets INTEGER NOT NULL DEFAULT 0")
 
-                database.execSQL(
+                db.execSQL(
                     "CREATE INDEX IF NOT EXISTS index_manifests_has_share_targets ON manifests (has_share_targets)",
                 )
             }
