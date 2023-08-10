@@ -303,7 +303,6 @@ var TranslationsPanel = new (class {
         "changeSourceLanguageButton",
         "translations-panel-change-source-language"
       );
-      getter("defaultTranslate", "translations-panel-translate");
       getter("dismissErrorButton", "translations-panel-dismiss-error");
       getter("error", "translations-panel-error");
       getter("errorMessage", "translations-panel-error-message");
@@ -521,7 +520,7 @@ var TranslationsPanel = new (class {
   #updateViewFromTranslationStatus(
     languageState = this.#getTranslationsActor().languageState
   ) {
-    const { defaultTranslate, toMenuList, fromMenuList, header, cancelButton } =
+    const { translateButton, toMenuList, fromMenuList, header, cancelButton } =
       this.elements;
     const { requestedTranslationPair, isEngineReady } = languageState;
 
@@ -533,18 +532,18 @@ var TranslationsPanel = new (class {
     ) {
       // A translation has been requested, but is not ready yet.
       document.l10n.setAttributes(
-        defaultTranslate,
+        translateButton,
         "translations-panel-translate-button-loading"
       );
-      defaultTranslate.disabled = true;
+      translateButton.disabled = true;
       cancelButton.hidden = false;
       this.updateUIForReTranslation(false /* isReTranslation */);
     } else {
       document.l10n.setAttributes(
-        defaultTranslate,
+        translateButton,
         "translations-panel-translate-button"
       );
-      defaultTranslate.disabled =
+      translateButton.disabled =
         // The translation languages are the same, don't allow this translation.
         toMenuList.value === fromMenuList.value ||
         // No "to" language was provided.
@@ -617,7 +616,7 @@ var TranslationsPanel = new (class {
       panel,
       error,
       toMenuList,
-      defaultTranslate,
+      translateButton,
       langSelection,
       intro,
       header,
@@ -640,7 +639,7 @@ var TranslationsPanel = new (class {
         actionCommand: () => this.#reloadLangList(),
       });
 
-      defaultTranslate.disabled = true;
+      translateButton.disabled = true;
       this.updateUIForReTranslation(false /* isReTranslation */);
       cancelButton.hidden = false;
       langSelection.hidden = true;
