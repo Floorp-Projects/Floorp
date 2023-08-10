@@ -116,7 +116,7 @@ TEST(BweRampupTest, RampUpWithUndemuxableRtpPackets) {
   auto callee_inbound_stats =
       GetStatsAndProcess(s, callee)->GetStatsOfType<RTCInboundRtpStreamStats>();
   ASSERT_THAT(callee_inbound_stats, SizeIs(1));
-  ASSERT_EQ(*callee_inbound_stats[0]->frames_received, 0);
+  ASSERT_EQ(*callee_inbound_stats[0]->frames_received, 0u);
 
   DataRate final_bwe = GetAvailableSendBitrate(GetStatsAndProcess(s, caller));
   // Ensure BWE has increased from the initial BWE. BWE will not increase unless

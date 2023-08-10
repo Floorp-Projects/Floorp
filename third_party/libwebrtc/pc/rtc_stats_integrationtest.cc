@@ -812,7 +812,8 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(inbound_stream.audio_level);
       verifier.TestMemberIsUndefined(inbound_stream.total_audio_energy);
       verifier.TestMemberIsUndefined(inbound_stream.total_samples_duration);
-      verifier.TestMemberIsNonNegative<int32_t>(inbound_stream.frames_received);
+      verifier.TestMemberIsNonNegative<uint32_t>(
+          inbound_stream.frames_received);
       verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.fir_count);
       verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.pli_count);
       verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.nack_count);
