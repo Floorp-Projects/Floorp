@@ -90,6 +90,7 @@ class StyleSheetsManager extends EventEmitter {
 
     this._targetActor = targetActor;
     this._onApplicableStateChanged = this._onApplicableStateChanged.bind(this);
+    this._onStylesheetRemoved = this._onStylesheetRemoved.bind(this);
     this._onTargetActorWindowReady = this._onTargetActorWindowReady.bind(this);
   }
 
@@ -110,6 +111,11 @@ class StyleSheetsManager extends EventEmitter {
     this._targetActor.chromeEventHandler.addEventListener(
       "StyleSheetApplicableStateChanged",
       this._onApplicableStateChanged,
+      true
+    );
+    this._targetActor.chromeEventHandler.addEventListener(
+      "StyleSheetRemoved",
+      this._onStylesheetRemoved,
       true
     );
     this._watchStyleSheetChangeEvents();
@@ -145,7 +151,7 @@ class StyleSheetsManager extends EventEmitter {
 
   _watchStyleSheetChangeEventsForWindow(window) {
     // We have to set this flag in order to get the
-    // StyleSheetApplicableStateChanged events. See Document.webidl.
+    // StyleSheetApplicableStateChanged and StyleSheetRemoved events. See Document.webidl.
     window.document.styleSheetChangeEventsEnabled = true;
   }
 
@@ -758,10 +764,11 @@ class StyleSheetsManager extends EventEmitter {
    * When appending <link>, <style> or changing `disabled` attribute to false,
    * `applicable` is passed as true. The other hand, when changing `disabled`
    * to true, this will be false.
-   * NOTE: For now, StyleSheetApplicableStateChanged will not be called when removing the
-   *       link and style element.
    *
-   * @param {StyleSheetApplicableStateChanged}
+   * NOTE: StyleSheetApplicableStateChanged is _not_ called when removing the <link>/<style>,
+   *       but a StyleSheetRemovedEvent is emitted in such case (see _onStyleSheetRemoved)
+   *
+   * @param {StyleSheetApplicableStateChangedEvent}
    *        The triggering event.
    */
   _onApplicableStateChanged({ applicable, stylesheet: styleSheet }) {
@@ -777,6 +784,16 @@ class StyleSheetsManager extends EventEmitter {
     ) {
       this._registerStyleSheet(styleSheet);
     }
+  }
+
+  /**
+   * Event handler that is called when a style sheet is removed.
+   *
+   * @param {StyleSheetRemovedEvent}
+   *        The triggering event.
+   */
+  _onStylesheetRemoved(event) {
+    this._unregisterStyleSheet(event.stylesheet);
   }
 
   /**
@@ -821,6 +838,25 @@ class StyleSheetsManager extends EventEmitter {
   }
 
   /**
+   * If the stylesheet is registered, this function will emit an "applicable-stylesheet-removed" event
+   * with the stylesheet resourceId.
+   *
+   * @param {StyleSheet} styleSheet
+   */
+  _unregisterStyleSheet(styleSheet) {
+    const existingResourceId = this._findStyleSheetResourceId(styleSheet);
+    if (!existingResourceId) {
+      return;
+    }
+
+    this._styleSheetMap.delete(existingResourceId);
+    this._styleSheetCreationData?.delete(styleSheet);
+    this.emit("applicable-stylesheet-removed", {
+      resourceId: existingResourceId,
+    });
+  }
+
+  /**
    * Returns true if the passed styleSheet should be handled.
    *
    * @param {StyleSheet} styleSheet
@@ -858,6 +894,11 @@ class StyleSheetsManager extends EventEmitter {
       this._targetActor.chromeEventHandler.removeEventListener(
         "StyleSheetApplicableStateChanged",
         this._onApplicableStateChanged,
+        true
+      );
+      this._targetActor.chromeEventHandler.removeEventListener(
+        "StyleSheetRemoved",
+        this._onStylesheetRemoved,
         true
       );
       this._unwatchStyleSheetChangeEvents();
