@@ -380,45 +380,47 @@
 
 /* Button with label, e.g. tip button */
 
-.urlbarView-button:not(:empty, .urlbarView-button-menu) {
-  border-radius: var(--toolbarbutton-border-radius);
-  padding: 7px;
-  font-size: 0.93em;
-  font-weight: 600;
-  background-clip: padding-box;
-  min-height: 16px;
-  min-width: 8.75em;
-  text-align: center;
-  flex-basis: initial;
-  flex-shrink: 0;
-}
+.urlbarView-button:not(:empty) {
+  &:not(.urlbarView-button-menu) {
+    border-radius: var(--toolbarbutton-border-radius);
+    padding: 7px;
+    font-size: 0.93em;
+    font-weight: 600;
+    background-clip: padding-box;
+    min-height: 16px;
+    min-width: 8.75em;
+    text-align: center;
+    flex-basis: initial;
+    flex-shrink: 0;
 
-.urlbarView-button:not(:empty, :hover, .urlbarView-button-menu) {
-  background-color: var(--button-bgcolor);
-}
+    &:not(:hover) {
+      background-color: var(--button-bgcolor);
+    }
 
-.urlbarView-button:not(:empty, .urlbarView-button-menu)[selected] {
-  color: var(--button-primary-color);
-  background-color: var(--button-primary-bgcolor);
-  outline-offset: var(--focus-outline-offset);
-}
+    &[selected] {
+      color: var(--button-primary-color);
+      background-color: var(--button-primary-bgcolor);
+      outline-offset: var(--focus-outline-offset);
+    }
 
-.urlbarView-button:not(:empty, .urlbarView-button-menu)[selected]:hover {
-  background-color: var(--button-primary-hover-bgcolor);
-}
+    &[selected]:hover {
+      background-color: var(--button-primary-hover-bgcolor);
+    }
 
-.urlbarView-button:not(:empty, .urlbarView-button-menu)[selected]:hover:active {
-  background-color: var(--button-primary-active-bgcolor);
-}
+    &[selected]:hover:active {
+      background-color: var(--button-primary-active-bgcolor);
+    }
 
-.urlbarView-button:not(:empty) + .urlbarView-button:empty {
-  /* Add space between a labeled button followed by an unlabeled button. */
-  margin-inline-start: 1.8em;
-}
+    &:last-child {
+      /* Add space between a labeled button and the trailing edge of the panel. */
+      margin-inline-end: 1.8em;
+    }
+  }
 
-.urlbarView-button:not(:empty, .urlbarView-button-menu):last-child {
-  /* Add space between a labeled button and the trailing edge of the panel. */
-  margin-inline-end: 1.8em;
+  + .urlbarView-button:empty {
+    /* Add space between a labeled button followed by an unlabeled button. */
+    margin-inline-start: 1.8em;
+  }
 }
 
 /* Tip rows */
@@ -426,46 +428,47 @@
 .urlbarView-row[type=tip] {
   padding-block: 18px;
   border-radius: 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--autocomplete-popup-separator-color);
+    margin-bottom: 4px;
+  }
+
+  &:not(:first-child) {
+    border-top: 1px solid var(--autocomplete-popup-separator-color);
+    margin-top: 4px;
+  }
+
+  & > .urlbarView-row-inner {
+    min-height: 32px;
+
+    /* Add space between the tip title (and the rest of row-inner) and its
+       button. */
+    margin-inline-end: 1.8em;
+  }
+
+  &:not([tip-type=dismissalAcknowledgment]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
+    width: 24px;
+    height: 24px;
+    margin-inline-end: 12px;
+    flex-basis: 24px;
+    flex-grow:  0;
+  }
+
+  & > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+  & > .urlbarView-row-inner > .urlbarView-url {
+    display: none;
+  }
+
+  & > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title {
+    white-space: normal;
+  }
+
+  &[tip-type=dismissalAcknowledgment] {
+    padding-block: 6px;
+  }
 }
 
-.urlbarView-row[type=tip]:not(:last-child) {
-  border-bottom: 1px solid var(--autocomplete-popup-separator-color);
-  margin-bottom: 4px;
-}
-
-.urlbarView-row[type=tip]:not(:first-child) {
-  border-top: 1px solid var(--autocomplete-popup-separator-color);
-  margin-top: 4px;
-}
-
-.urlbarView-row[type=tip] > .urlbarView-row-inner {
-  min-height: 32px;
-
-  /* Add space between the tip title (and the rest of row-inner) and its
-     button. */
-  margin-inline-end: 1.8em;
-}
-
-.urlbarView-row[type=tip]:not([tip-type=dismissalAcknowledgment]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
-  width: 24px;
-  height: 24px;
-  margin-inline-end: 12px;
-  flex-basis: 24px;
-  flex-grow:  0;
-}
-
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-url {
-  display: none;
-}
-
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title {
-  white-space: normal;
-}
-
-.urlbarView-row[type=tip][tip-type=dismissalAcknowledgment] {
-  padding-block: 6px;
-}
 
 /* Row label (a.k.a. group label) */
 
