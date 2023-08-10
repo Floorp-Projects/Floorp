@@ -85,7 +85,6 @@ extern UINT sAppShellGeckoMsgId;
 namespace {
 
 const wchar_t kOldWndProcProp[] = L"MozillaIPCOldWndProc";
-const wchar_t k3rdPartyWindowProp[] = L"Mozilla3rdPartyWindow";
 
 // This isn't defined before Windows XP.
 enum { WM_XP_THEMECHANGED = 0x031A };
@@ -373,13 +372,11 @@ ProcessOrDeferMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
       // This should be safe, and needs to be sync.
 #if defined(ACCESSIBILITY)
     case WM_GETOBJECT: {
-      if (!::GetPropW(hwnd, k3rdPartyWindowProp)) {
-        LONG objId = static_cast<LONG>(lParam);
-        if (objId == OBJID_CLIENT || objId == MOZOBJID_UIAROOT) {
-          WNDPROC oldWndProc = (WNDPROC)GetProp(hwnd, kOldWndProcProp);
-          if (oldWndProc) {
-            return CallWindowProcW(oldWndProc, hwnd, uMsg, wParam, lParam);
-          }
+      LONG objId = static_cast<LONG>(lParam);
+      if (objId == OBJID_CLIENT || objId == MOZOBJID_UIAROOT) {
+        WNDPROC oldWndProc = (WNDPROC)GetProp(hwnd, kOldWndProcProp);
+        if (oldWndProc) {
+          return CallWindowProcW(oldWndProc, hwnd, uMsg, wParam, lParam);
         }
       }
       return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -461,13 +458,6 @@ static bool WindowIsDeferredWindow(HWND hWnd) {
     return true;
   }
 
-  // Plugin windows that can trigger ipc calls in child:
-  // 'ShockwaveFlashFullScreen' - flash fullscreen window
-  if (className.EqualsLiteral("ShockwaveFlashFullScreen")) {
-    SetPropW(hWnd, k3rdPartyWindowProp, (HANDLE)1);
-    return true;
-  }
-
   return false;
 }
 
@@ -502,7 +492,6 @@ bool NeuterWindowProcedure(HWND hWnd) {
     NS_WARNING("SetProp failed!");
     SetWindowLongPtr(hWnd, GWLP_WNDPROC, currentWndProc);
     RemovePropW(hWnd, kOldWndProcProp);
-    RemovePropW(hWnd, k3rdPartyWindowProp);
     return false;
   }
 
@@ -523,7 +512,6 @@ void RestoreWindowProcedure(HWND hWnd) {
                  "This should never be switched out from under us!");
   }
   RemovePropW(hWnd, kOldWndProcProp);
-  RemovePropW(hWnd, k3rdPartyWindowProp);
 }
 
 LRESULT CALLBACK CallWindowProcedureHook(int nCode, WPARAM wParam,
