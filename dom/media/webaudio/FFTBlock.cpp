@@ -93,8 +93,8 @@ void FFTBlock::InterpolateFrequencyComponents(const FFTBlock& block0,
     double mag2 = abs(c2);
 
     // Interpolate magnitudes in decibels
-    double mag1db = 20.0 * log10(mag1);
-    double mag2db = 20.0 * log10(mag2);
+    double mag1db = 20.0 * fdlibm_log10(mag1);
+    double mag2db = 20.0 * fdlibm_log10(mag2);
 
     double s1 = s1base;
     double s2 = s2base;
@@ -105,16 +105,16 @@ void FFTBlock::InterpolateFrequencyComponents(const FFTBlock& block0,
     double threshold = (i > 16) ? 5.0 : 2.0;
 
     if (magdbdiff < -threshold && mag1db < 0.0) {
-      s1 = pow(s1, 0.75);
+      s1 = fdlibm_pow(s1, 0.75);
       s2 = 1.0 - s1;
     } else if (magdbdiff > threshold && mag2db < 0.0) {
-      s2 = pow(s2, 0.75);
+      s2 = fdlibm_pow(s2, 0.75);
       s1 = 1.0 - s2;
     }
 
     // Average magnitude by decibels instead of linearly
     double magdb = s1 * mag1db + s2 * mag2db;
-    double mag = pow(10.0, 0.05 * magdb);
+    double mag = fdlibm_pow(10.0, 0.05 * magdb);
 
     // Now, deal with phase
     double phase1 = arg(c1);
@@ -147,8 +147,8 @@ void FFTBlock::InterpolateFrequencyComponents(const FFTBlock& block0,
     if (phaseAccum > M_PI) phaseAccum -= 2.0 * M_PI;
     if (phaseAccum < -M_PI) phaseAccum += 2.0 * M_PI;
 
-    dft[i].r = static_cast<float>(mag * cos(phaseAccum));
-    dft[i].i = static_cast<float>(mag * sin(phaseAccum));
+    dft[i].r = static_cast<float>(mag * fdlibm_cos(phaseAccum));
+    dft[i].i = static_cast<float>(mag * fdlibm_sin(phaseAccum));
   }
 }
 
@@ -215,8 +215,8 @@ void FFTBlock::AddConstantGroupDelay(double sampleFrameDelay) {
 
     phase += i * phaseAdj;
 
-    dft[i].r = static_cast<float>(mag * cos(phase));
-    dft[i].i = static_cast<float>(mag * sin(phase));
+    dft[i].r = static_cast<float>(mag * fdlibm_cos(phase));
+    dft[i].i = static_cast<float>(mag * fdlibm_sin(phase));
   }
 }
 

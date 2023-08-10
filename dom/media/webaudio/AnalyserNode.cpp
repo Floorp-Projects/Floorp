@@ -316,7 +316,8 @@ void AnalyserNode::ApplyBlackmanWindow(float* aBuffer, uint32_t aSize) {
 
   for (uint32_t i = 0; i < aSize; ++i) {
     double x = double(i) / aSize;
-    double window = a0 - a1 * cos(2 * M_PI * x) + a2 * cos(4 * M_PI * x);
+    double window =
+        a0 - a1 * fdlibm_cos(2 * M_PI * x) + a2 * fdlibm_cos(4 * M_PI * x);
     aBuffer[i] *= window;
   }
 }

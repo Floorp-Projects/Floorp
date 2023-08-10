@@ -5,6 +5,7 @@
 #include "IIRFilter.h"
 
 #include "DenormalDisabler.h"
+#include "fdlibm.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <mozilla/Assertions.h>
@@ -131,7 +132,8 @@ void IIRFilter::getFrequencyResponse(int nFrequencies, const float* frequency,
   for (int k = 0; k < nFrequencies; ++k) {
     // zRecip = 1/z = exp(-j*frequency)
     double omega = -M_PI * frequency[k];
-    std::complex<double> zRecip = std::complex<double>(cos(omega), sin(omega));
+    std::complex<double> zRecip =
+        std::complex<double>(fdlibm_cos(omega), fdlibm_sin(omega));
 
     std::complex<double> numerator = evaluatePolynomial(
         m_feedforward->Elements(), zRecip, m_feedforward->Length() - 1);
@@ -152,7 +154,7 @@ void IIRFilter::getFrequencyResponse(int nFrequencies, const float* frequency,
 
     magResponse[k] = static_cast<float>(abs(response));
     phaseResponse[k] =
-        static_cast<float>(atan2(imag(response), real(response)));
+        static_cast<float>(fdlibm_atan2(imag(response), real(response)));
   }
 }
 

@@ -171,7 +171,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
       detune = mDetune.GetValueAtTime(ticks, count);
     }
 
-    float finalFrequency = frequency * exp2(detune / 1200.);
+    float finalFrequency = frequency * fdlibm_exp2(detune / 1200.);
     float signalPeriod = mSource->mSampleRate / finalFrequency;
     mRecomputeParameters = false;
 
@@ -212,7 +212,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
       // performances here.
       UpdateParametersIfNeeded(ticks, i);
 
-      aOutput[i] = sin(mPhase);
+      aOutput[i] = fdlibm_sinf(mPhase);
 
       IncrementPhase();
     }

@@ -412,7 +412,8 @@ float PannerNodeEngine::InverseGainFunction(double aDistance) {
 }
 
 float PannerNodeEngine::ExponentialGainFunction(double aDistance) {
-  return pow(std::max(aDistance, mRefDistance) / mRefDistance, -mRolloffFactor);
+  return fdlibm_pow(std::max(aDistance, mRefDistance) / mRefDistance,
+                    -mRolloffFactor);
 }
 
 void PannerNodeEngine::HRTFPanningFunction(const AudioBlock& aInput,
@@ -504,8 +505,8 @@ void PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
     distanceGain = ComputeDistanceGain(position);
 
     // Actually compute the left and right gain.
-    gainL = cos(0.5 * M_PI * normalizedAzimuth);
-    gainR = sin(0.5 * M_PI * normalizedAzimuth);
+    gainL = fdlibm_cos(0.5 * M_PI * normalizedAzimuth);
+    gainR = fdlibm_sin(0.5 * M_PI * normalizedAzimuth);
 
     // Compute the output.
     ApplyStereoPanning(aInput, aOutput, gainL, gainR, azimuth <= 0);
@@ -604,8 +605,8 @@ void PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
       distanceGain = ComputeDistanceGain(position);
 
       // Actually compute the left and right gain.
-      float gainL = cos(0.5 * M_PI * normalizedAzimuth);
-      float gainR = sin(0.5 * M_PI * normalizedAzimuth);
+      float gainL = fdlibm_cos(0.5 * M_PI * normalizedAzimuth);
+      float gainR = fdlibm_sin(0.5 * M_PI * normalizedAzimuth);
 
       alignedPanningL[counter] = gainL;
       alignedPanningR[counter] = gainR;
@@ -644,7 +645,7 @@ void PannerNodeEngine::ComputeAzimuthAndElevation(const ThreeDPoint& position,
   ThreeDPoint up = listenerRight.CrossProduct(listenerFront);
 
   double upProjection = sourceListener.DotProduct(up);
-  aElevation = 90 - 180 * acos(upProjection) / M_PI;
+  aElevation = 90 - 180 * fdlibm_acos(upProjection) / M_PI;
 
   if (aElevation > 90) {
     aElevation = 180 - aElevation;
@@ -662,7 +663,7 @@ void PannerNodeEngine::ComputeAzimuthAndElevation(const ThreeDPoint& position,
 
   // Actually compute the angle, and convert to degrees
   double projection = projectedSource.DotProduct(listenerRight);
-  aAzimuth = 180 * acos(projection) / M_PI;
+  aAzimuth = 180 * fdlibm_acos(projection) / M_PI;
 
   // Compute whether the source is in front or behind the listener.
   double frontBack = projectedSource.DotProduct(listenerFront);
@@ -693,7 +694,7 @@ float PannerNodeEngine::ComputeConeGain(const ThreeDPoint& position,
 
   // Angle between the source orientation vector and the source-listener vector
   double dotProduct = sourceToListener.DotProduct(orientation);
-  double angle = 180 * acos(dotProduct) / M_PI;
+  double angle = 180 * fdlibm_acos(dotProduct) / M_PI;
   double absAngle = fabs(angle);
 
   // Divide by 2 here since API is entire angle (not half-angle)
