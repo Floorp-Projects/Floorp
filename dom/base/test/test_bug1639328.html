@@ -9,10 +9,17 @@
     width: 10px;
     height: 10px;
   }
+  iframe[id^=zero-size] {
+    width: 0;
+    height: 0;
+  }
 </style>
 <iframe id="http" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
 <iframe id="https" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
 <iframe id="same-origin" src="file_bug1639328.html"></iframe>
+<iframe id="zero-size-http" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
+<iframe id="zero-size-https" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
+<iframe id="zero-size-same-origin" src="file_bug1639328.html"></iframe>
 <iframe id="display-none-http" style="display: none" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
 <iframe id="display-none-https" style="display: none" src="https://example.com/tests/dom/base/test/file_bug1639328.html"></iframe>
 <iframe id="display-none-same-origin" style="display: none" src="file_bug1639328.html"></iframe>

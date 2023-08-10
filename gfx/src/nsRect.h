@@ -254,6 +254,18 @@ struct nsRect : public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize,
   bool operator==(const nsRect& aRect) const { return IsEqualEdges(aRect); }
 
   [[nodiscard]] inline nsRect RemoveResolution(const float aResolution) const;
+
+  [[nodiscard]] mozilla::Maybe<nsRect> EdgeInclusiveIntersection(
+      const nsRect& aOther) const {
+    nscoord left = std::max(x, aOther.x);
+    nscoord top = std::max(y, aOther.y);
+    nscoord right = std::min(XMost(), aOther.XMost());
+    nscoord bottom = std::min(YMost(), aOther.YMost());
+    if (left > right || top > bottom) {
+      return mozilla::Nothing();
+    }
+    return mozilla::Some(nsRect(left, top, right - left, bottom - top));
+  }
 };
 
 /*

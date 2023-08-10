@@ -8,6 +8,7 @@
 #define mozilla_dom_EffectsInfo_h
 
 #include "nsRect.h"
+#include "Units.h"
 
 namespace mozilla::dom {
 
@@ -18,16 +19,14 @@ namespace mozilla::dom {
  */
 class EffectsInfo {
  public:
-  EffectsInfo() { *this = EffectsInfo::FullyHidden(); }
+  EffectsInfo() = default;
 
   static EffectsInfo VisibleWithinRect(
-      const nsRect& aVisibleRect, const Scale2D& aRasterScale,
+      const Maybe<nsRect>& aVisibleRect, const Scale2D& aRasterScale,
       const ParentLayerToScreenScale2D& aTransformToAncestorScale) {
     return EffectsInfo{aVisibleRect, aRasterScale, aTransformToAncestorScale};
   }
-  static EffectsInfo FullyHidden() {
-    return EffectsInfo{nsRect(), Scale2D(), ParentLayerToScreenScale2D()};
-  }
+  static EffectsInfo FullyHidden() { return {}; }
 
   bool operator==(const EffectsInfo& aOther) const {
     return mVisibleRect == aOther.mVisibleRect &&
@@ -38,11 +37,12 @@ class EffectsInfo {
     return !(*this == aOther);
   }
 
-  bool IsVisible() const { return !mVisibleRect.IsEmpty(); }
+  bool IsVisible() const { return mVisibleRect.isSome(); }
 
-  // The visible rect of this browser relative to the root frame. If this is
-  // empty then the browser can be considered invisible.
-  nsRect mVisibleRect;
+  // The visible rect of this browser relative to the root frame. This might be
+  // empty in cases where we might still be considered visible, like if we're
+  // zero-size but inside the viewport.
+  Maybe<nsRect> mVisibleRect;
   // The desired scale factors to apply to rasterized content to match
   // transforms applied in ancestor browsers. This gets propagated into the
   // scale in StackingContextHelper.
@@ -50,18 +50,12 @@ class EffectsInfo {
   // TransformToAncestorScale to be set on FrameMetrics. It includes CSS
   // transform scales and cumulative presshell resolution.
   ParentLayerToScreenScale2D mTransformToAncestorScale;
-  // The difference between mScaleX/Y and mTransformToAncestorScale is the way
-  // that CSS transforms contribute to the scale. mTransformToAncestorScale
-  // includes the exact scale factors of the combined CSS transform whereas
-  // mScaleX/Y tries to take into account animating transform scales by picking
-  // a larger scale so that we don't have to re-rasterize every frame but rather
-  // we can just scale down  content rasterized on a previous frame.
 
   // If you add new fields here, you must also update operator== and
   // TabMessageUtils.
 
  private:
-  EffectsInfo(const nsRect& aVisibleRect, const Scale2D& aRasterScale,
+  EffectsInfo(const Maybe<nsRect>& aVisibleRect, const Scale2D& aRasterScale,
               const ParentLayerToScreenScale2D& aTransformToAncestorScale)
       : mVisibleRect(aVisibleRect),
         mRasterScale(aRasterScale),

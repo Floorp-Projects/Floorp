@@ -302,18 +302,6 @@ void DOMIntersectionObserver::TakeRecords(
   aRetVal = std::move(mQueuedEntries);
 }
 
-static Maybe<nsRect> EdgeInclusiveIntersection(const nsRect& aRect,
-                                               const nsRect& aOtherRect) {
-  nscoord left = std::max(aRect.x, aOtherRect.x);
-  nscoord top = std::max(aRect.y, aOtherRect.y);
-  nscoord right = std::min(aRect.XMost(), aOtherRect.XMost());
-  nscoord bottom = std::min(aRect.YMost(), aOtherRect.YMost());
-  if (left > right || top > bottom) {
-    return Nothing();
-  }
-  return Some(nsRect(left, top, right - left, bottom - top));
-}
-
 enum class BrowsingContextOrigin { Similar, Different };
 
 // NOTE(emilio): Checking docgroup as per discussion in:
@@ -394,8 +382,9 @@ static Maybe<nsRect> ComputeTheIntersection(
       //
       // 3.3 is handled, looks like, by this same clipping, given the root
       // scroll-frame cannot escape the viewport, probably?
-      intersectionRect = EdgeInclusiveIntersection(
-          intersectionRectRelativeToContainer, subFrameRect);
+      intersectionRect =
+          intersectionRectRelativeToContainer.EdgeInclusiveIntersection(
+              subFrameRect);
       if (!intersectionRect) {
         return Nothing();
       }
@@ -413,8 +402,9 @@ static Maybe<nsRect> ComputeTheIntersection(
             intersectionRectRelativeToContainer,
             containerFrame->GetRectRelativeToSelf(), clipAxes,
             containerFrame->OverflowClipMargin(clipAxes));
-        intersectionRect = EdgeInclusiveIntersection(
-            intersectionRectRelativeToContainer, clipRect);
+        intersectionRect =
+            intersectionRectRelativeToContainer.EdgeInclusiveIntersection(
+                clipRect);
         if (!intersectionRect) {
           return Nothing();
         }
@@ -435,7 +425,7 @@ static Maybe<nsRect> ComputeTheIntersection(
   // 5.Update intersectionRect by intersecting it with the root intersection
   // rectangle.
   intersectionRect =
-      EdgeInclusiveIntersection(intersectionRectRelativeToRoot, aRootBounds);
+      intersectionRectRelativeToRoot.EdgeInclusiveIntersection(aRootBounds);
   if (intersectionRect.isNothing()) {
     return Nothing();
   }
@@ -461,7 +451,7 @@ static Maybe<nsRect> ComputeTheIntersection(
                !aRoot->PresContext()->IsRootContentDocumentCrossProcess());
 
     intersectionRect =
-        EdgeInclusiveIntersection(rect, *aRemoteDocumentVisibleRect);
+        rect.EdgeInclusiveIntersection(*aRemoteDocumentVisibleRect);
     if (intersectionRect.isNothing()) {
       return Nothing();
     }
@@ -699,10 +689,10 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   nsRect rootBounds = aInput.mRootRect;
   rootBounds.Inflate(aInput.mRootMargin);
   auto intersectionRect =
-      EdgeInclusiveIntersection(aInput.mRootRect, aTargetRect);
+      aInput.mRootRect.EdgeInclusiveIntersection(aTargetRect);
   if (intersectionRect && aInput.mRemoteDocumentVisibleRect) {
-    intersectionRect = EdgeInclusiveIntersection(
-        *intersectionRect, *aInput.mRemoteDocumentVisibleRect);
+    intersectionRect = intersectionRect->EdgeInclusiveIntersection(
+        *aInput.mRemoteDocumentVisibleRect);
   }
   return {true, rootBounds, aTargetRect, intersectionRect};
 }

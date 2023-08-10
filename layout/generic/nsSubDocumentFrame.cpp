@@ -1354,10 +1354,13 @@ bool nsDisplayRemote::CreateWebRenderCommands(
     }
 
     // Adjust mItemVisibleRect, which is relative to the reference frame, to be
-    // relative to this frame
-    nsRect visibleRect = GetBuildingRect() - ToReferenceFrame();
-    visibleRect.IntersectRect(visibleRect, destRect);
-    visibleRect -= destRect.TopLeft();
+    // relative to this frame.
+    const nsRect buildingRect = GetBuildingRect() - ToReferenceFrame();
+    Maybe<nsRect> visibleRect =
+        buildingRect.EdgeInclusiveIntersection(destRect);
+    if (visibleRect) {
+      *visibleRect -= destRect.TopLeft();
+    }
 
     // Generate an effects update notifying the browser it is visible
     MatrixScales scale = aSc.GetInheritedScale();

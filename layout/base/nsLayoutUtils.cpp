@@ -3160,13 +3160,9 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   // If we are in a remote browser, then apply clipping from ancestor browsers
   if (BrowserChild* browserChild = BrowserChild::GetFrom(presShell)) {
     if (!browserChild->IsTopLevel()) {
-      Maybe<nsRect> unscaledVisibleRect = browserChild->GetVisibleRect();
-
-      if (!unscaledVisibleRect) {
-        unscaledVisibleRect = Some(nsRect());
-      }
-
-      rootInkOverflow.IntersectRect(rootInkOverflow, *unscaledVisibleRect);
+      const nsRect unscaledVisibleRect =
+          browserChild->GetVisibleRect().valueOr(nsRect());
+      rootInkOverflow.IntersectRect(rootInkOverflow, unscaledVisibleRect);
     }
   }
 
