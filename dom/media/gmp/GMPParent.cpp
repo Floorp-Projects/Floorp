@@ -405,6 +405,17 @@ nsresult GMPParent::LoadProcess() {
   return NS_OK;
 }
 
+void GMPParent::OnPreferenceChange(const mozilla::dom::Pref& aPref) {
+  MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
+  GMP_PARENT_LOG_DEBUG("%s", __FUNCTION__);
+
+  if (!mProcess) {
+    return;
+  }
+
+  Unused << SendPreferenceUpdate(aPref);
+}
+
 mozilla::ipc::IPCResult GMPParent::RecvPGMPContentChildDestroyed() {
   --mGMPContentChildCount;
   if (!IsUsed()) {

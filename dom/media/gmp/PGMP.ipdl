@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include PrefsTypes;
 include protocol PGMPContent;
 include protocol PGMPTimer;
 include protocol PGMPStorage;
@@ -43,6 +44,7 @@ child:
   async CloseActive();
   async InitGMPContentChild(Endpoint<PGMPContentChild> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
+  async PreferenceUpdate(Pref pref);
 
   // Tells the GMP process to flush any pending telemetry.
   // Used in tests and ping assembly. Buffer contains bincoded Rust structs.
