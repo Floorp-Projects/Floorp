@@ -23,6 +23,7 @@
 #include "api/units/timestamp.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
+#include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/mocks/mock_rtcp_rtt_stats.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/app.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/bye.h"
@@ -42,6 +43,7 @@ using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
 using ::testing::Ge;
 using ::testing::NiceMock;
+using ::testing::Property;
 using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::StrictMock;
@@ -92,6 +94,7 @@ class MockRtpStreamRtcpHandler : public RtpStreamRtcpHandler {
               OnReportBlock,
               (uint32_t, const rtcp::ReportBlock&),
               (override));
+  MOCK_METHOD(void, OnReport, (const ReportBlockData&), (override));
 
  private:
   int num_calls_ = 0;
@@ -115,6 +118,11 @@ class MockNetworkLinkRtcpObserver : public NetworkLinkRtcpObserver {
               OnReportBlocks,
               (Timestamp receive_time,
                rtc::ArrayView<const rtcp::ReportBlock> report_blocks),
+              (override));
+  MOCK_METHOD(void,
+              OnReport,
+              (Timestamp receive_time,
+               rtc::ArrayView<const ReportBlockData> report_blocks),
               (override));
 };
 
@@ -1516,6 +1524,7 @@ TEST_F(RtcpTransceiverImplTest,
   packet.Append(std::move(rr2));
 
   EXPECT_CALL(link_observer, OnReportBlocks(receive_time, SizeIs(64)));
+  EXPECT_CALL(link_observer, OnReport(receive_time, SizeIs(64)));
 
   rtcp_transceiver.ReceivePacket(packet.Build(), receive_time);
 }
@@ -1544,6 +1553,11 @@ TEST_F(RtcpTransceiverImplTest,
   EXPECT_CALL(local_stream1, OnReportBlock(kRemoteSsrc, _));
   EXPECT_CALL(local_stream3, OnReportBlock).Times(0);
   EXPECT_CALL(local_stream4, OnReportBlock(kRemoteSsrc, _));
+  EXPECT_CALL(local_stream1,
+              OnReport(Property(&ReportBlockData::sender_ssrc, kRemoteSsrc)));
+  EXPECT_CALL(local_stream3, OnReport).Times(0);
+  EXPECT_CALL(local_stream4,
+              OnReport(Property(&ReportBlockData::sender_ssrc, kRemoteSsrc)));
 
   ASSERT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc1, &local_stream1));
   ASSERT_TRUE(rtcp_transceiver.AddMediaSender(kMediaSsrc3, &local_stream3));
