@@ -175,6 +175,17 @@ export class TranslationsParent extends JSWindowActorParent {
   languageState;
 
   /**
+   * The cached URI spec where the panel was first ever shown, as determined by the
+   * browser.translations.panelShown pref.
+   *
+   * Holding on to this URI value allows us to show the introductory message in the panel
+   * when the panel opens, as long as the active panel is open on that particular URI.
+   *
+   * @type {string | null}
+   */
+  firstShowUriSpec = null;
+
+  /**
    * Do not send queries or do work when the actor is already destroyed. This flag needs
    * to be checked after calls to `await`.
    */
