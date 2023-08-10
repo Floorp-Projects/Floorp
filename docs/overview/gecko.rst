@@ -37,7 +37,7 @@ being replaced with standard EcmaScript modules.
 XPCOM
 -----
 
-XPCOM (Cross-process Component Object Model) is Mozilla's version of Microsoft's
+XPCOM (Cross-Platform Component Object Model) is Mozilla's version of Microsoft's
 `COM <https://en.wikipedia.org/wiki/Component_Object_Model>`_.
 
 XPCOM and :ref:`WebIDL <WebIDL>` are the primary ways for our frontend to communicate with the
