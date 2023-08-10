@@ -167,7 +167,9 @@ class FFTBlock final {
     PerformFFT(paddedData.Elements());
   }
 
+  // aSize must be a power of 2
   void SetFFTSize(uint32_t aSize) {
+    MOZ_ASSERT(CountPopulation32(aSize) == 1);
     mFFTSize = aSize;
     mOutputBuffer.SetLength(aSize / 2 + 1);
     PodZero(mOutputBuffer.Elements(), aSize / 2 + 1);
@@ -237,7 +239,7 @@ class FFTBlock final {
         return false;
       }
 
-      mAvRDFT = sRDFTFuncs.init(log((double)mFFTSize) / M_LN2, DFT_R2C);
+      mAvRDFT = sRDFTFuncs.init(FloorLog2(mFFTSize), DFT_R2C);
     }
 #else
 #  ifdef BUILD_ARM_NEON
@@ -263,7 +265,7 @@ class FFTBlock final {
         return false;
       }
 
-      mAvIRDFT = sRDFTFuncs.init(log((double)mFFTSize) / M_LN2, IDFT_C2R);
+      mAvIRDFT = sRDFTFuncs.init(FloorLog2(mFFTSize), IDFT_C2R);
     }
 #else
 #  ifdef BUILD_ARM_NEON
@@ -286,7 +288,7 @@ class FFTBlock final {
   static OMXFFTSpec_R_F32* createOmxFFT(uint32_t aFFTSize) {
     MOZ_ASSERT((aFFTSize & (aFFTSize - 1)) == 0);
     OMX_INT bufSize;
-    OMX_INT order = log((double)aFFTSize) / M_LN2;
+    OMX_INT order = FloorLog2(aFFTSize);
     MOZ_ASSERT(aFFTSize >> order == 1);
     OMXResult status = omxSP_FFTGetBufSize_R_F32(order, &bufSize);
     if (status == OMX_Sts_NoErr) {
