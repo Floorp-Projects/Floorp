@@ -34,10 +34,9 @@ async function checkMessageState(id, addonType, expected) {
       ok(!messageBar.hidden, "message is visible");
 
       is(messageBar.getAttribute("type"), type, "message has the right type");
-      const textSpan = messageBar.querySelector("span");
       Assert.deepEqual(
-        document.l10n.getAttributes(textSpan),
-        text,
+        document.l10n.getAttributes(messageBar),
+        { id: `${text.id}2`, args: text.args },
         "message l10n data is set correctly"
       );
 

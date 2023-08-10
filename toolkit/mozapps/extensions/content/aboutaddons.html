@@ -62,6 +62,10 @@
     ></script>
     <script
       type="module"
+      src="chrome://global/content/elements/moz-message-bar.mjs"
+    ></script>
+    <script
+      type="module"
       src="chrome://global/content/elements/moz-toggle.mjs"
     ></script>
     <script
@@ -425,10 +429,9 @@
             data-l10n-id="install-postponed-button"
           ></button>
         </message-bar>
-        <message-bar class="addon-card-message" align="center" hidden>
-          <span></span>
+        <moz-message-bar class="addon-card-message" align="center" hidden>
           <button action="link"></button>
-        </message-bar>
+        </moz-message-bar>
       </div>
     </template>
 
