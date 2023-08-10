@@ -43,5 +43,6 @@ XPCOM_MANIFESTS += [
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
 
 FINAL_LIBRARY = "xul"

@@ -259,6 +259,20 @@ nsresult nsZipHandle::Init(nsZipArchive* zip, const char* entry,
   return NS_OK;
 }
 
+nsresult nsZipHandle::Init(const uint8_t* aData, uint32_t aLen,
+                           nsZipHandle** aRet) {
+  RefPtr<nsZipHandle> handle = new nsZipHandle();
+
+  handle->mFileStart = aData;
+  handle->mTotalLen = aLen;
+  nsresult rv = handle->findDataStart();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  handle.forget(aRet);
+  return NS_OK;
+}
+
 // This function finds the start of the ZIP data. If the file is a regular ZIP,
 // this is just the start of the file. If the file is a CRX file, the start of
 // the data is after the CRX header.
