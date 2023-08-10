@@ -11,6 +11,9 @@
 #  include "WinUtils.h"
 #endif
 #include "GMPLog.h"
+#include "mozilla/GeckoArgs.h"
+#include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/ipc/ProcessUtils.h"
 
 #include "base/string_util.h"
 #include "base/process_util.h"
@@ -80,7 +83,73 @@ GMPProcessParent::GMPProcessParent(const std::string& aGMPPath)
 GMPProcessParent::~GMPProcessParent() { MOZ_COUNT_DTOR(GMPProcessParent); }
 
 bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
+  class PrefSerializerRunnable final : public Runnable {
+   public:
+    PrefSerializerRunnable()
+        : Runnable("GMPProcessParent::PrefSerializerRunnable"),
+          mMonitor("GMPProcessParent::PrefSerializerRunnable::mMonitor") {}
+
+    NS_IMETHOD Run() override {
+      auto prefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
+      bool success =
+          prefSerializer->SerializeToSharedMemory(GeckoProcessType_GMPlugin,
+                                                  /* remoteType */ ""_ns);
+
+      MonitorAutoLock lock(mMonitor);
+      MOZ_ASSERT(!mComplete);
+      if (success) {
+        mPrefSerializer = std::move(prefSerializer);
+      }
+      mComplete = true;
+      lock.Notify();
+      return NS_OK;
+    }
+
+    void Wait(int32_t aTimeoutMs,
+              UniquePtr<ipc::SharedPreferenceSerializer>& aOut) {
+      MonitorAutoLock lock(mMonitor);
+
+      TimeDuration timeout = TimeDuration::FromMilliseconds(aTimeoutMs);
+      while (!mComplete) {
+        if (lock.Wait(timeout) == CVStatus::Timeout) {
+          return;
+        }
+      }
+
+      aOut = std::move(mPrefSerializer);
+    }
+
+   private:
+    Monitor mMonitor;
+    UniquePtr<ipc::SharedPreferenceSerializer> mPrefSerializer
+        MOZ_GUARDED_BY(mMonitor);
+    bool mComplete MOZ_GUARDED_BY(mMonitor) = false;
+  };
+
+  // Dispatch our runnable to the main thread to grab the serialized prefs. We
+  // can only do this on the main thread, and unfortunately we are the only
+  // process that launches from the non-main thread.
+  auto prefTask = MakeRefPtr<PrefSerializerRunnable>();
+  nsresult rv = NS_DispatchToMainThread(prefTask);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  // We don't want to release our thread context while we wait for the main
+  // thread to process the prefs. We already block when waiting for the launch
+  // of the process itself to finish, and the state machine assumes this call is
+  // blocking. This is also important for the buffering of pref updates, since
+  // we know any tasks dispatched with updates won't run until we launch (or
+  // fail to launch) the process.
+  UniquePtr<ipc::SharedPreferenceSerializer> prefSerializer;
+  prefTask->Wait(aTimeoutMs, prefSerializer);
+  if (NS_WARN_IF(!prefSerializer)) {
+    return false;
+  }
+
   vector<string> args;
+  ipc::ProcessChild::AddPlatformBuildID(args);
+  prefSerializer->AddSharedPrefCmdLineArgs(*this, args);
 
 #ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
   GMP_LOG_DEBUG("GMPProcessParent::Launch() mLaunchArch: %d", mLaunchArch);
@@ -100,7 +169,7 @@ bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
 #else
   nsAutoCString normalizedPath;
 #endif
-  nsresult rv = NormalizePath(mGMPPath.c_str(), normalizedPath);
+  rv = NormalizePath(mGMPPath.c_str(), normalizedPath);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     GMP_LOG_DEBUG(
         "GMPProcessParent::Launch: "
@@ -144,12 +213,13 @@ bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
   }
 #  endif
 
-  args.push_back(WideToUTF8(wGMPPath));
+  std::string gmpPath = WideToUTF8(wGMPPath);
+  geckoargs::sPluginPath.Put(gmpPath.c_str(), args);
 #else
   if (NS_SUCCEEDED(rv)) {
-    args.push_back(normalizedPath.get());
+    geckoargs::sPluginPath.Put(normalizedPath.get(), args);
   } else {
-    args.push_back(mGMPPath);
+    geckoargs::sPluginPath.Put(mGMPPath.c_str(), args);
   }
 #endif
 
@@ -159,6 +229,10 @@ bool GMPProcessParent::Launch(int32_t aTimeoutMs) {
   AddFdToRemap(kInvalidFd, kInvalidFd);
   AddFdToRemap(kInvalidFd, kInvalidFd);
 #endif
+
+  // We need to wait until OnChannelConnected to clear the pref serializer, but
+  // SyncLaunch will block until that is called, so we don't actually need to do
+  // any overriding, and it only lives on the stack.
   return SyncLaunch(args, aTimeoutMs);
 }
 

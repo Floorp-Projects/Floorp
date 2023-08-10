@@ -111,6 +111,7 @@ nsresult GeckoMediaPluginServiceParent::Init() {
       obsService->AddObserver(this, "browser:purge-session-history", false));
   MOZ_ALWAYS_SUCCEEDS(
       obsService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false));
+  MOZ_ALWAYS_SUCCEEDS(obsService->AddObserver(this, "nsPref:changed", false));
 
 #ifdef DEBUG
   MOZ_ALWAYS_SUCCEEDS(obsService->AddObserver(
@@ -328,9 +329,43 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
         "gmp::GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread",
         this, &GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread,
         t));
+  } else if (!strcmp("nsPref:changed", aTopic)) {
+    bool hasProcesses = false;
+    {
+      MutexAutoLock lock(mMutex);
+      for (const auto& plugin : mPlugins) {
+        if (plugin->State() == GMPState::Loaded) {
+          hasProcesses = true;
+          break;
+        }
+      }
+    }
+
+    if (hasProcesses) {
+      // We know prefs are ASCII here.
+      NS_LossyConvertUTF16toASCII strData(aSomeData);
+      mozilla::dom::Pref pref(strData, /* isLocked */ false,
+                              /* isSanitized */ false, Nothing(), Nothing());
+      Preferences::GetPreference(&pref, GeckoProcessType_GMPlugin,
+                                 /* remoteType */ ""_ns);
+      return GMPDispatch(NewRunnableMethod<mozilla::dom::Pref&&>(
+          "gmp::GeckoMediaPluginServiceParent::OnPreferenceChanged", this,
+          &GeckoMediaPluginServiceParent::OnPreferenceChanged,
+          std::move(pref)));
+    }
   }
 
   return NS_OK;
+}
+
+void GeckoMediaPluginServiceParent::OnPreferenceChanged(
+    mozilla::dom::Pref&& aPref) {
+  AssertOnGMPThread();
+
+  MutexAutoLock lock(mMutex);
+  for (const auto& plugin : mPlugins) {
+    plugin->OnPreferenceChange(aPref);
+  }
 }
 
 RefPtr<GenericPromise> GeckoMediaPluginServiceParent::EnsureInitialized() {
