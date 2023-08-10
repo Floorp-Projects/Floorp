@@ -173,17 +173,17 @@ class FontList {
 
   uint32_t NumFamilies() { return GetHeader().mFamilyCount; }
   Family* Families() {
-    return static_cast<Family*>(GetHeader().mFamilies.ToPtr(this));
+    return GetHeader().mFamilies.ToArray<Family>(this, NumFamilies());
   }
 
   uint32_t NumAliases() { return GetHeader().mAliasCount; }
   Family* AliasFamilies() {
-    return static_cast<Family*>(GetHeader().mAliases.ToPtr(this));
+    return GetHeader().mAliases.ToArray<Family>(this, NumAliases());
   }
 
   uint32_t NumLocalFaces() { return GetHeader().mLocalFaceCount; }
   LocalFaceRec* LocalFaces() {
-    return static_cast<LocalFaceRec*>(GetHeader().mLocalFaces.ToPtr(this));
+    return GetHeader().mLocalFaces.ToArray<LocalFaceRec>(this, NumLocalFaces());
   }
 
   /**
@@ -336,7 +336,7 @@ class FontList {
   Header& GetHeader() {
     // It's invalid to try and access this before the first block exists.
     MOZ_ASSERT(mBlocks.Length() > 0);
-    return *static_cast<Header*>(Pointer(0, 0).ToPtr(this));
+    return *static_cast<Header*>(mBlocks[0]->Memory());
   }
 
   /**
