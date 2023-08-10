@@ -107,6 +107,7 @@ web-platform-tests:
             # webgpu/* tests in the main WPT runs. (but still run tests in dirs
             # other than webgpu/* that are tagged webgpu, e.g. canvas tests)
             - --exclude-tag=webgpu
+            - --exclude-tag=canvas
 
 web-platform-tests-backlog:
     description: "Web platform test (backlog) run"
@@ -235,6 +236,75 @@ web-platform-tests-webgpu:
             - --test-type=testharness
             - --default-exclude
             - --tag=webgpu
+            - --exclude-tag=canvas
+
+web-platform-tests-canvas:
+    description: "Web platform Canvas test run"
+    suite: web-platform-tests
+    treeherder-symbol: W(canvas)
+    virtualization: virtual-with-gpu
+    tier:
+        by-test-platform:
+            android-em-7.0-x86_64-qr/debug-isolated-process: 3
+            default: default
+    chunks:
+        by-test-platform:
+            windows.*: 2
+            .*tsan.*: 2
+            linux.*/debug: 2
+            default: 1
+    max-run-time:
+        by-test-platform:
+            .*tsan.*: 3600
+            default: 1800
+    variants:
+        - no-fission
+        - webrender-sw+no-fission
+        - webrender-sw
+        - editor-legacy-direction
+    run-on-projects:
+        by-variant:
+            webrender-sw:
+                by-test-platform:
+                    .*-32.*/.*: []
+                    linux.*64-qr/debug: built-projects
+                    windows.*-qr/debug: built-projects
+                    android-em-7.0-x86_64-qr/debug: []
+                    default: []
+            webrender-sw+no-fission:
+                by-test-platform:
+                    .*-32.*/.*: []
+                    android-em-7.0-x86_64-qr/debug: built-projects
+                    linux.*64-qr/debug: built-projects
+                    default: []
+            no-fission:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    android.*: built-projects
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    default: []
+            editor-legacy-direction:
+                by-test-platform:
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    android.*: []
+                    .*wayland.*: []
+                    default: built-projects
+    mozharness:
+        chunked: true
+        extra-options:
+            - --test-type=testharness
+            - --skip-implementation-status=backlog
+            - --skip-implementation-status=not-implementing
+            # Because we have a separate job for them, don't run the (core)
+            # webgpu/* tests in the main WPT runs. (but still run tests in dirs
+            # other than webgpu/* that are tagged webgpu, e.g. canvas tests)
+            - --default-exclude
+            - --tag=canvas
+            - --exclude-tag=webgpu
 
 web-platform-tests-reftest-backlog:
     description: "Web platform reftest (backlog) run"
