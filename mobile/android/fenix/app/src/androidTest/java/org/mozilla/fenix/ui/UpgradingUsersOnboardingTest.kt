@@ -7,28 +7,42 @@ package org.mozilla.fenix.ui
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.relaunchCleanApp
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
- *  Tests for verifying the new onboarding features.
- *  Note: This involves setting the feature flag On for the onboarding dialog
+ *  Tests for verifying the onboarding feature for users upgrading from a version older than 106.
+ *  Note: This involves setting the feature flag On for the onboarding cards
  *
  */
-class OnboardingFeaturesTest {
+class UpgradingUsersOnboardingTest {
 
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
-        HomeActivityTestRule(isHomeOnboardingDialogEnabled = true),
+        HomeActivityIntentTestRule(isHomeOnboardingDialogEnabled = true),
     ) { it.activity }
 
-    @SmokeTest
+    // https://testrail.stage.mozaws.net/index.php?/cases/view/1913592
     @Test
     fun upgradingUsersOnboardingScreensTest() {
         homeScreen {
             verifyUpgradingUserOnboardingFirstScreen(activityTestRule)
+            clickGetStartedButton(activityTestRule)
+            verifyUpgradingUserOnboardingSecondScreen(activityTestRule)
+        }
+    }
+
+    // https://testrail.stage.mozaws.net/index.php?/cases/view/1913591
+    @Test
+    fun upgradingUsersOnboardingCanBeSkippedTest() {
+        homeScreen {
+            verifyUpgradingUserOnboardingFirstScreen(activityTestRule)
+            clickCloseButton(activityTestRule)
+            verifyHomeScreen()
+
+            relaunchCleanApp(activityTestRule.activityRule)
             clickGetStartedButton(activityTestRule)
             verifyUpgradingUserOnboardingSecondScreen(activityTestRule)
             clickSkipButton(activityTestRule)
@@ -36,6 +50,7 @@ class OnboardingFeaturesTest {
         }
     }
 
+    // https://testrail.stage.mozaws.net/index.php?/cases/view/1932156
     @Test
     fun upgradingUsersOnboardingSignInButtonTest() {
         homeScreen {

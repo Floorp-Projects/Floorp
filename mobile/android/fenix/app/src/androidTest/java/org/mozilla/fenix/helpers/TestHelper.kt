@@ -34,6 +34,7 @@ import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
@@ -117,6 +118,12 @@ object TestHelper {
 
     fun closeApp(activity: HomeActivityIntentTestRule) =
         activity.activity.finishAndRemoveTask()
+
+    fun relaunchCleanApp(activity: HomeActivityIntentTestRule) {
+        closeApp(activity)
+        Intents.release()
+        activity.launchActivity(null)
+    }
 
     fun getPermissionAllowID(): String {
         return when
