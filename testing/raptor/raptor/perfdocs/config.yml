@@ -165,6 +165,7 @@ suites:
             constant-regression: "Generates a constant value that can be changed to induce a regression."
             upload: "Measures http/2 file upload throughput"
             upload-h3: "Measures http/3 file upload throughput"
+            throttled: "Pageload test using a throttled network environment"
             sample-python-support: "A sample test that uses a python support file to modify the test command."
             connect: "Verifies that connection time on a pageload is zero when a speculative connection has first been made"
     interactive:

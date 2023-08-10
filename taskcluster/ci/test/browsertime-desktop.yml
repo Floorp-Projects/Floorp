@@ -733,3 +733,14 @@ browsertime-speculative:
             default: []
     tier: 2
     treeherder-symbol: Btime(speculative)
+
+browsertime-throttled:
+    raptor:
+        apps: [firefox]
+        run-visual-metrics: true
+        subtests: [throttled]
+    description: Raptor (browsertime) throttled network pageload tests
+    max-run-time: 420
+    run-on-projects: []
+    tier: 3
+    treeherder-symbol: Btime(throttled)
