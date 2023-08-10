@@ -194,7 +194,7 @@ class VendorManifest(MozbuildObject):
 
         self.update_yaml(new_revision, timestamp)
 
-    def process_individual(self, new_revision, timestamp, ignore_modified):
+    def fetch_individual(self, new_revision):
         # This design is used because there is no github API to query
         # for the last commit that modified a file; nor a way to get file
         # blame.  So really all we can do is just download and replace the
@@ -232,6 +232,9 @@ class VendorManifest(MozbuildObject):
                 self.manifest["vendoring"]["individual-files-default-destination"] + f
             )
             download_and_write_file(url, destination)
+
+    def process_individual(self, new_revision, timestamp, ignore_modified):
+        self.fetch_individual(new_revision)
 
         self.spurious_check(new_revision, ignore_modified)
 
