@@ -2380,5 +2380,4 @@ TEST_F(VideoChannelDoubleThreadTest, SocketOptionsMergedOnSetTransport) {
   Base::SocketOptionsMergedOnSetTransport();
 }
 
-
 // TODO(pthatcher): TestSetReceiver?

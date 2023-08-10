@@ -93,9 +93,7 @@ class FlexfecReceiveStreamTest : public ::testing::Test {
     receive_stream_->RegisterWithTransport(&rtp_stream_receiver_controller_);
   }
 
-  ~FlexfecReceiveStreamTest() {
-    receive_stream_->UnregisterFromTransport();
-  }
+  ~FlexfecReceiveStreamTest() { receive_stream_->UnregisterFromTransport(); }
 
   rtc::AutoThread main_thread_;
   MockTransport rtcp_send_transport_;

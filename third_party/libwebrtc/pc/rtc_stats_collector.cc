@@ -873,8 +873,7 @@ ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
   }
   remote_inbound->total_round_trip_time =
       report_block_data.sum_rtts().seconds<double>();
-  remote_inbound->round_trip_time_measurements =
-      report_block_data.num_rtts();
+  remote_inbound->round_trip_time_measurements = report_block_data.num_rtts();
 
   std::string local_id = RTCOutboundRtpStreamStatsIDFromSSRC(
       transport_id, media_type, report_block.source_ssrc);

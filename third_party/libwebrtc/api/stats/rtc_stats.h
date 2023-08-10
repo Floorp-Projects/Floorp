@@ -163,7 +163,9 @@ class RTC_EXPORT RTCStats {
     return std::make_unique<this_class>(*this);                                \
   }                                                                            \
                                                                                \
-  const char* this_class::type() const { return this_class::kType; }           \
+  const char* this_class::type() const {                                       \
+    return this_class::kType;                                                  \
+  }                                                                            \
                                                                                \
   std::vector<const webrtc::RTCStatsMemberInterface*>                          \
   this_class::MembersOfThisObjectAndAncestors(                                 \
@@ -194,7 +196,9 @@ class RTC_EXPORT RTCStats {
     return std::make_unique<this_class>(*this);                             \
   }                                                                         \
                                                                             \
-  const char* this_class::type() const { return this_class::kType; }        \
+  const char* this_class::type() const {                                    \
+    return this_class::kType;                                               \
+  }                                                                         \
                                                                             \
   std::vector<const webrtc::RTCStatsMemberInterface*>                       \
   this_class::MembersOfThisObjectAndAncestors(                              \

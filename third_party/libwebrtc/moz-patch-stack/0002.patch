@@ -89,10 +89,10 @@ index ea72e85218..3b8adb6819 100644
  }
  
 diff --git a/pc/peer_connection.cc b/pc/peer_connection.cc
-index 4839fcf0a1..627e4afcfa 100644
+index 0956d75f4a..3f99c96f4d 100644
 --- a/pc/peer_connection.cc
 +++ b/pc/peer_connection.cc
-@@ -1422,9 +1422,10 @@ PeerConnection::CreateDataChannelOrError(const std::string& label,
+@@ -1420,9 +1420,10 @@ PeerConnection::CreateDataChannelOrError(const std::string& label,
  
    rtc::scoped_refptr<DataChannelInterface> channel = ret.MoveValue();
  
@@ -107,7 +107,7 @@ index 4839fcf0a1..627e4afcfa 100644
    }
    NoteUsageEvent(UsageEvent::DATA_ADDED);
 diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index 59f0b01dfd..0cb10b7d07 100644
+index 6c9e647ca9..0fbc7add43 100644
 --- a/pc/sdp_offer_answer.cc
 +++ b/pc/sdp_offer_answer.cc
 @@ -3342,8 +3342,20 @@ bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {

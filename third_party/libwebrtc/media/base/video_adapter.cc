@@ -40,8 +40,8 @@ struct Fraction {
   // Determines number of output pixels if both width and height of an input of
   // `input_pixels` pixels is scaled with the fraction numerator / denominator.
   int scale_pixel_count(int input_pixels) {
-    return (numerator * numerator * static_cast<int64_t>(input_pixels))
-                                  / (denominator * denominator);
+    return (numerator * numerator * static_cast<int64_t>(input_pixels)) /
+           (denominator * denominator);
   }
 };
 

@@ -200,8 +200,12 @@ class ConstMethodCall {
     typedef class_name##Interface C;                                   \
                                                                        \
    public:                                                             \
-    const INTERNAL_CLASS* internal() const { return c(); }             \
-    INTERNAL_CLASS* internal() { return c(); }
+    const INTERNAL_CLASS* internal() const {                           \
+      return c();                                                      \
+    }                                                                  \
+    INTERNAL_CLASS* internal() {                                       \
+      return c();                                                      \
+    }
 
 // clang-format off
 // clang-format would put the semicolon alone,
@@ -245,9 +249,15 @@ class ConstMethodCall {
   }                                                             \
                                                                 \
  private:                                                       \
-  const INTERNAL_CLASS* c() const { return c_.get(); }          \
-  INTERNAL_CLASS* c() { return c_.get(); }                      \
-  void DestroyInternal() { c_ = nullptr; }                      \
+  const INTERNAL_CLASS* c() const {                             \
+    return c_.get();                                            \
+  }                                                             \
+  INTERNAL_CLASS* c() {                                         \
+    return c_.get();                                            \
+  }                                                             \
+  void DestroyInternal() {                                      \
+    c_ = nullptr;                                               \
+  }                                                             \
   rtc::scoped_refptr<INTERNAL_CLASS> c_;
 
 // Note: This doesn't use a unique_ptr, because it intends to handle a corner
@@ -264,9 +274,15 @@ class ConstMethodCall {
   }                                                             \
                                                                 \
  private:                                                       \
-  const INTERNAL_CLASS* c() const { return c_; }                \
-  INTERNAL_CLASS* c() { return c_; }                            \
-  void DestroyInternal() { delete c_; }                         \
+  const INTERNAL_CLASS* c() const {                             \
+    return c_;                                                  \
+  }                                                             \
+  INTERNAL_CLASS* c() {                                         \
+    return c_;                                                  \
+  }                                                             \
+  void DestroyInternal() {                                      \
+    delete c_;                                                  \
+  }                                                             \
   INTERNAL_CLASS* c_;
 
 #define BEGIN_PRIMARY_PROXY_MAP(class_name)                                \
@@ -292,16 +308,20 @@ class ConstMethodCall {
         primary_thread, secondary_thread, std::move(c));           \
   }
 
-#define PROXY_PRIMARY_THREAD_DESTRUCTOR()                            \
- private:                                                            \
-  rtc::Thread* destructor_thread() const { return primary_thread_; } \
-                                                                     \
+#define PROXY_PRIMARY_THREAD_DESTRUCTOR()  \
+ private:                                  \
+  rtc::Thread* destructor_thread() const { \
+    return primary_thread_;                \
+  }                                        \
+                                           \
  public:  // NOLINTNEXTLINE
 
-#define PROXY_SECONDARY_THREAD_DESTRUCTOR()                            \
- private:                                                              \
-  rtc::Thread* destructor_thread() const { return secondary_thread_; } \
-                                                                       \
+#define PROXY_SECONDARY_THREAD_DESTRUCTOR() \
+ private:                                   \
+  rtc::Thread* destructor_thread() const {  \
+    return secondary_thread_;               \
+  }                                         \
+                                            \
  public:  // NOLINTNEXTLINE
 
 #if defined(RTC_DISABLE_PROXY_TRACE_EVENTS)
