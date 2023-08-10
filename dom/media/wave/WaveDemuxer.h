@@ -120,7 +120,6 @@ class FormatChunk {
  public:
   FormatChunk() = default;
   void Init(nsTArray<uint8_t>&& aData);
-  bool IsValid() const;
 
   uint16_t WaveFormat() const;
   uint16_t Channels() const;
