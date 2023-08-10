@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73
  1 file changed, 9 insertions(+)
 
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index a96bb32716..cbdf78528d 100644
+index 5a68019a8b..fb133ff73a 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
 @@ -17,6 +17,7 @@
@@ -21,7 +21,7 @@ index a96bb32716..cbdf78528d 100644
  
  namespace webrtc {
  namespace {
-@@ -215,6 +216,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
+@@ -223,6 +224,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
      MutexLock lock(&sender_lock_);
      sender_ = nullptr;
    }

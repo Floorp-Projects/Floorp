@@ -358,7 +358,7 @@ class RtpRtcpImpl2Test : public ::testing::Test {
 
     success &= sender->SendVideo(kPayloadType, VideoCodecType::kVideoCodecVP8,
                                  rtp_timestamp, capture_time_ms, payload,
-                                 rtp_video_header, 0, {});
+                                 sizeof(payload), rtp_video_header, 0, {});
     return success;
   }
 
