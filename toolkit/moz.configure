@@ -1600,16 +1600,24 @@ with only_when("--enable-compile-environment"):
                 # that we did get packed relative relocations (DT_RELR).
                 env = os.environ.copy()
                 env["LANG"] = "C"
-                dyn = check_cmd_output(readelf, "-d", path, env=env)
+                dyn = check_cmd_output(readelf, "-d", path, env=env).splitlines()
                 tags = [
-                    int(l.split()[0], 16)
-                    for l in dyn.splitlines()
-                    if l.strip().startswith("0x")
+                    int(l.split()[0], 16) for l in dyn if l.strip().startswith("0x")
                 ]
                 # Older versions of readelf don't know about DT_RELR but will
                 # still display the tag number.
                 if 0x23 in tags:
-                    return pack_rel_relocs
+                    needed = [l for l in dyn if l.split()[1] == "(NEEDED)"]
+                    is_glibc = any(l.endswith("[libc.so.6]") for l in needed)
+                    # The mold linker doesn't add a GLIBC_ABI_DT_RELR version
+                    # dependency, which ld.so doesn't like.
+                    # https://github.com/rui314/mold/issues/653#issuecomment-1670274638
+                    if is_glibc:
+                        versions = check_cmd_output(readelf, "-V", path, env=env)
+                        if "GLIBC_ABI_DT_RELR" in versions.split():
+                            return pack_rel_relocs
+                    else:
+                        return pack_rel_relocs
         finally:
             try:
                 os.remove(path)
