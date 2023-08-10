@@ -187,6 +187,7 @@ var gTests = [
         `webRTC-selectSpeaker-richlistbox`
       );
       is(selectorList.selectedIndex, 2, "pre-selected index");
+      ok(selectorList.contains(document.activeElement), "richlistbox focus");
       checkDeviceSelectors(["speaker"]);
       await allowPrompt();
 
