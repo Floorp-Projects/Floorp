@@ -7,14 +7,16 @@
 #ifndef mozilla_ContentIterator_h
 #define mozilla_ContentIterator_h
 
+#include "js/GCAPI.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
-#include "nsCOMPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsINode.h"
 #include "nsRange.h"
 #include "nsTArray.h"
 
 class nsIContent;
-class nsINode;
 
 namespace mozilla {
 
@@ -24,6 +26,7 @@ namespace mozilla {
  * classes "final", compiler can avoid virtual calls if they are treated
  * by the users directly.
  */
+template <typename NodeType>
 class ContentIteratorBase {
  public:
   ContentIteratorBase() = delete;
@@ -94,26 +97,41 @@ class ContentIteratorBase {
 
   void SetEmpty();
 
-  nsCOMPtr<nsINode> mCurNode;
-  nsCOMPtr<nsINode> mFirst;
-  nsCOMPtr<nsINode> mLast;
+  NodeType mCurNode;
+  NodeType mFirst;
+  NodeType mLast;
   // See <https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor>.
-  nsCOMPtr<nsINode> mClosestCommonInclusiveAncestor;
+  NodeType mClosestCommonInclusiveAncestor;
+
+  Maybe<nsMutationGuard> mMutationGuard;
+  Maybe<JS::AutoAssertNoGC> mAssertNoGC;
 
   const Order mOrder;
 
+  template <typename T>
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
-                                          ContentIteratorBase&, const char*,
+                                          ContentIteratorBase<T>&, const char*,
                                           uint32_t);
-  friend void ImplCycleCollectionUnlink(ContentIteratorBase&);
+  template <typename T>
+  friend void ImplCycleCollectionUnlink(ContentIteratorBase<T>&);
 };
+
+template <typename NodeType>
+void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                 ContentIteratorBase<NodeType>&, const char*,
+                                 uint32_t aFlags = 0);
+template <typename NodeType>
+void ImplCycleCollectionUnlink(ContentIteratorBase<NodeType>&);
+
+using SafeContentIteratorBase = ContentIteratorBase<RefPtr<nsINode>>;
+using UnsafeContentIteratorBase = ContentIteratorBase<nsINode*>;
 
 /**
  * A simple iterator class for traversing the content in "close tag" order.
  */
-class PostContentIterator final : public ContentIteratorBase {
+class PostContentIterator final : public SafeContentIteratorBase {
  public:
-  PostContentIterator() : ContentIteratorBase(Order::Post) {}
+  PostContentIterator() : SafeContentIteratorBase(Order::Post) {}
   PostContentIterator(const PostContentIterator&) = delete;
   PostContentIterator& operator=(const PostContentIterator&) = delete;
   virtual ~PostContentIterator() = default;
@@ -123,21 +141,25 @@ class PostContentIterator final : public ContentIteratorBase {
   friend void ImplCycleCollectionUnlink(PostContentIterator&);
 };
 
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback, PostContentIterator& aField,
-    const char* aName, uint32_t aFlags = 0) {
-  ImplCycleCollectionTraverse(
-      aCallback, static_cast<ContentIteratorBase&>(aField), aName, aFlags);
-}
-
-inline void ImplCycleCollectionUnlink(PostContentIterator& aField) {
-  ImplCycleCollectionUnlink(static_cast<ContentIteratorBase&>(aField));
-}
+/**
+ * Different from PostContentIterator, UnsafePostContentIterator does not
+ * grab nodes with strong pointers.  Therefore, the user needs to guarantee
+ * that script won't run while this is alive.
+ */
+class MOZ_STACK_CLASS UnsafePostContentIterator final
+    : public UnsafeContentIteratorBase {
+ public:
+  UnsafePostContentIterator() : UnsafeContentIteratorBase(Order::Post) {}
+  UnsafePostContentIterator(const UnsafePostContentIterator&) = delete;
+  UnsafePostContentIterator& operator=(const UnsafePostContentIterator&) =
+      delete;
+  virtual ~UnsafePostContentIterator() = default;
+};
 
 /**
  * A simple iterator class for traversing the content in "start tag" order.
  */
-class PreContentIterator final : public ContentIteratorBase {
+class PreContentIterator final : public SafeContentIteratorBase {
  public:
   PreContentIterator() : ContentIteratorBase(Order::Pre) {}
   PreContentIterator(const PreContentIterator&) = delete;
@@ -149,23 +171,27 @@ class PreContentIterator final : public ContentIteratorBase {
   friend void ImplCycleCollectionUnlink(PreContentIterator&);
 };
 
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback, PreContentIterator& aField,
-    const char* aName, uint32_t aFlags = 0) {
-  ImplCycleCollectionTraverse(
-      aCallback, static_cast<ContentIteratorBase&>(aField), aName, aFlags);
-}
-
-inline void ImplCycleCollectionUnlink(PreContentIterator& aField) {
-  ImplCycleCollectionUnlink(static_cast<ContentIteratorBase&>(aField));
-}
+/**
+ * Different from PostContentIterator, UnsafePostContentIterator does not
+ * grab nodes with strong pointers.  Therefore, the user needs to guarantee
+ * that script won't run while this is alive.
+ */
+class MOZ_STACK_CLASS UnsafePreContentIterator final
+    : public UnsafeContentIteratorBase {
+ public:
+  UnsafePreContentIterator() : UnsafeContentIteratorBase(Order::Pre) {}
+  UnsafePreContentIterator(const UnsafePostContentIterator&) = delete;
+  UnsafePreContentIterator& operator=(const UnsafePostContentIterator&) =
+      delete;
+  virtual ~UnsafePreContentIterator() = default;
+};
 
 /**
  *  A simple iterator class for traversing the content in "top subtree" order.
  */
-class ContentSubtreeIterator final : public ContentIteratorBase {
+class ContentSubtreeIterator final : public SafeContentIteratorBase {
  public:
-  ContentSubtreeIterator() : ContentIteratorBase(Order::Pre) {}
+  ContentSubtreeIterator() : SafeContentIteratorBase(Order::Pre) {}
   ContentSubtreeIterator(const ContentSubtreeIterator&) = delete;
   ContentSubtreeIterator& operator=(const ContentSubtreeIterator&) = delete;
   virtual ~ContentSubtreeIterator() = default;
@@ -238,19 +264,6 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   // See <https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor>.
   AutoTArray<nsIContent*, 8> mInclusiveAncestorsOfEndContainer;
 };
-
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback,
-    ContentSubtreeIterator& aField, const char* aName, uint32_t aFlags = 0) {
-  ImplCycleCollectionTraverse(aCallback, aField.mRange, aName, aFlags);
-  ImplCycleCollectionTraverse(
-      aCallback, static_cast<ContentIteratorBase&>(aField), aName, aFlags);
-}
-
-inline void ImplCycleCollectionUnlink(ContentSubtreeIterator& aField) {
-  ImplCycleCollectionUnlink(aField.mRange);
-  ImplCycleCollectionUnlink(static_cast<ContentIteratorBase&>(aField));
-}
 
 }  // namespace mozilla
 

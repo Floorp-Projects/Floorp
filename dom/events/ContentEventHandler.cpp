@@ -793,7 +793,7 @@ nsresult ContentEventHandler::GenerateFlatTextContent(
     return NS_OK;
   }
 
-  PreContentIterator preOrderIter;
+  UnsafePreContentIterator preOrderIter;
   nsresult rv =
       preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -960,7 +960,7 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
 
   // baseOffset is the flattened offset of each content node.
   uint32_t baseOffset = 0;
-  PreContentIterator preOrderIter;
+  UnsafePreContentIterator preOrderIter;
   nsresult rv =
       preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1091,7 +1091,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
     }
   }
 
-  PreContentIterator preOrderIter;
+  UnsafePreContentIterator preOrderIter;
   nsresult rv = preOrderIter.Init(mRootElement);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -1565,7 +1565,7 @@ ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetFirstFrameInRangeForTextRect(
     const RawRange& aRawRange) {
   NodePosition nodePosition;
-  PreContentIterator preOrderIter;
+  UnsafePreContentIterator preOrderIter;
   nsresult rv =
       preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1628,7 +1628,7 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(
 ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
   NodePosition nodePosition;
-  PreContentIterator preOrderIter;
+  UnsafePreContentIterator preOrderIter;
   nsresult rv =
       preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2393,7 +2393,7 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
                                          OffsetAndDataFor::EditorString);
 
   // used to iterate over all contents and their frames
-  PostContentIterator postOrderIter;
+  UnsafePostContentIterator postOrderIter;
   rv = postOrderIter.Init(rawRange.Start().AsRaw(), rawRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_FAILURE;
@@ -2963,7 +2963,7 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
     return NS_OK;
   }
 
-  PreContentIterator preOrderIter;
+  UnsafePreContentIterator preOrderIter;
 
   // Working with ContentIterator, we may need to adjust the end position for
   // including it forcibly.

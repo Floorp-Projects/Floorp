@@ -788,7 +788,7 @@ class MOZ_RAII DOMIterator {
                           void* aClosure = nullptr) const;
 
  protected:
-  ContentIteratorBase* mIter;
+  SafeContentIteratorBase* mIter;
   PostContentIterator mPostOrderIter;
 };
 

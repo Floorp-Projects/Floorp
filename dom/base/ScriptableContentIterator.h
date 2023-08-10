@@ -27,7 +27,7 @@ class ScriptableContentIterator final : public nsIScriptableContentIterator {
   void EnsureContentIterator();
 
   IteratorType mIteratorType;
-  UniquePtr<ContentIteratorBase> mContentIterator;
+  UniquePtr<SafeContentIteratorBase> mContentIterator;
 };
 
 }  // namespace mozilla
