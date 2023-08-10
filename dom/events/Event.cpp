@@ -438,7 +438,7 @@ void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
   }
 
   // If this is called by default handlers, the caller will call
-  // UpdateDefaultPreventedOnContentFor when necessary.
+  // UpdateDefaultPreventedOnContent when necessary.
   if (!aCalledByDefaultHandler) {
     if (WidgetDragEvent* dragEvent = mEvent->AsDragEvent()) {
       dragEvent->UpdateDefaultPreventedOnContent(dragEvent->mCurrentTarget);
