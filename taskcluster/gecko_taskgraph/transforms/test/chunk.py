@@ -31,7 +31,6 @@ DYNAMIC_CHUNK_MULTIPLIER = {
 }
 """A multiplication factor to tweak the total duration per platform / suite."""
 
-
 transforms = TransformSequence()
 
 
