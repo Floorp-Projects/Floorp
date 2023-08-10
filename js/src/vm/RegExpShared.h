@@ -319,6 +319,10 @@ class RegExpRealm {
  public:
   enum ResultShapeKind { Normal, WithIndices, Indices, NumKinds };
 
+  // Information about the last regular expression match. This is used by the
+  // static RegExp properties such as RegExp.lastParen.
+  UniquePtr<RegExpStatics> regExpStatics;
+
  private:
   /*
    * The shapes used for the result object of re.exec(), if there is a result.

@@ -810,15 +810,15 @@ RegExpStatics* GlobalObject::getRegExpStatics(JSContext* cx,
                                               Handle<GlobalObject*> global) {
   MOZ_ASSERT(cx);
 
-  if (!global->data().regExpStatics) {
+  if (!global->regExpRealm().regExpStatics) {
     auto statics = RegExpStatics::create(cx);
     if (!statics) {
       return nullptr;
     }
-    global->data().regExpStatics = std::move(statics);
+    global->regExpRealm().regExpStatics = std::move(statics);
   }
 
-  return global->data().regExpStatics.get();
+  return global->regExpRealm().regExpStatics.get();
 }
 
 gc::FinalizationRegistryGlobalData*
@@ -1047,10 +1047,6 @@ void GlobalObjectData::trace(JSTracer* trc, GlobalObject* global) {
 
   regExpRealm.trace(trc);
 
-  if (regExpStatics) {
-    regExpStatics->trace(trc);
-  }
-
   TraceNullableEdge(trc, &mappedArgumentsTemplate, "mapped-arguments-template");
   TraceNullableEdge(trc, &unmappedArgumentsTemplate,
                     "unmapped-arguments-template");
@@ -1071,9 +1067,9 @@ void GlobalObjectData::addSizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info) const {
   info->objectsMallocHeapGlobalData += mallocSizeOf(this);
 
-  if (regExpStatics) {
+  if (regExpRealm.regExpStatics) {
     info->objectsMallocHeapGlobalData +=
-        regExpStatics->sizeOfIncludingThis(mallocSizeOf);
+        regExpRealm.regExpStatics->sizeOfIncludingThis(mallocSizeOf);
   }
 
   info->objectsMallocHeapGlobalVarNamesSet +=
