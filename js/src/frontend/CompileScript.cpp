@@ -35,6 +35,12 @@ JS_PUBLIC_API bool JS::HadFrontendErrors(JS::FrontendContext* fc) {
   return fc->hadErrors();
 }
 
+JS_PUBLIC_API bool JS::ConvertFrontendErrorsToRuntimeErrors(
+    JSContext* cx, JS::FrontendContext* fc,
+    const JS::ReadOnlyCompileOptions& options) {
+  return fc->convertToRuntimeError(cx);
+}
+
 JS_PUBLIC_API const JSErrorReport* JS::GetFrontendErrorReport(
     JS::FrontendContext* fc) {
   if (!fc->maybeError().isSome()) {

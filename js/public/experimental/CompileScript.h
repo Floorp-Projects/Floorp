@@ -45,6 +45,19 @@ JS_PUBLIC_API void SetNativeStackQuota(JS::FrontendContext* fc,
 // Returns true if there was any error reported to given FrontendContext.
 JS_PUBLIC_API bool HadFrontendErrors(JS::FrontendContext* fc);
 
+// Convert the error reported to FrontendContext into runtime error in
+// JSContext.  Returns false if the error cannot be converted (such as due to
+// OOM). An error might still be reported to the given JSContext. Also, returns
+// false when OOM is converted. Returns true otherwise.
+//
+// The options parameter isn't actually used, but the CompileOptions
+// provided to the compile/decode operation owns the filename pointer
+// that the error and warnings reported to FrontendContext point to,
+// so the CompileOptions must be alive until this call.
+JS_PUBLIC_API bool ConvertFrontendErrorsToRuntimeErrors(
+    JSContext* cx, JS::FrontendContext* fc,
+    const JS::ReadOnlyCompileOptions& options);
+
 // Returns an error report if given JS::FrontendContext had error and it has
 // an error report associated.
 //
