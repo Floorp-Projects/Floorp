@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '063d347336aba597d7715954e2938abac5a60717',
+  'chromium_revision': '26dc712e5826682d2f2e76c047d1e4dabe87d96d',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -25,7 +25,7 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:12.20230424.2.1',
+  'fuchsia_version': 'version:12.20230425.2.1',
   # By default, download the fuchsia images from the fuchsia GCS bucket.
   'fuchsia_images_bucket': 'fuchsia',
   'checkout_fuchsia': False,
@@ -48,7 +48,7 @@ deps = {
   'src/base':
     'https://chromium.googlesource.com/chromium/src/base@5d6d0d4d07d0abd28ab459f7b841e8f49399eeac',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@a972e3554c9c4788d2b42d64fc72ed6cdb47b962',
+    'https://chromium.googlesource.com/chromium/src/build@489b131ab060b13531a1bd43a706d8d12e7042e3',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@539a6f68735c631f57ae33096e9e7fc059e049cf',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -57,7 +57,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@2eff2571d4a145d216610f6a191a4af68e87d0c9',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@c78294c8c253406f563209a4adca88ae15e41c34',
     'condition': 'checkout_ios',
   },
   'src/testing':
@@ -172,7 +172,7 @@ deps = {
   'src/third_party/boringssl/src':
     'https://boringssl.googlesource.com/boringssl.git@6776d5cd8fcdf6c5e05bae2d655076dbeaa56103',
   'src/third_party/breakpad/breakpad':
-    'https://chromium.googlesource.com/breakpad/breakpad.git@9bf8d1ec526cec139b2d3fba148ce81ccf2cceab',
+    'https://chromium.googlesource.com/breakpad/breakpad.git@bfde407de559c10d6cef861b3873ff287c24e761',
   'src/third_party/catapult':
     'https://chromium.googlesource.com/catapult.git@cae7ec667dee9f5c012b54ee9ffee94eb7beda14',
   'src/third_party/ced/src': {
@@ -265,7 +265,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/kotlinc',
-              'version': 'Ly0WLNcc5HwMFsqSGLX4OrQ8nivZ9w8nSJyU7BsPIRkC',
+              'version': 'J3BAlA7yf4corBopDhlwuT9W4jR1Z9R55KD3BUTVldQC',
           },
       ],
       'condition': 'checkout_android',
@@ -336,7 +336,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@fce1207a8323b0e42f890aaf3bb4f0ecf7fcb0f5',
+    'https://chromium.googlesource.com/chromium/src/tools@c37a1309dd7d0ab3777c9a7a221abe68ee7c4ceb',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
