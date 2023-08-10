@@ -55,10 +55,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0f4d1733cb1a2d81
  modules/video_capture/BUILD.gn                | 11 +----
  rtc_base/BUILD.gn                             |  6 ++-
  rtc_base/system/BUILD.gn                      |  2 +-
- test/BUILD.gn                                 | 14 ++++++
+ test/BUILD.gn                                 | 10 +++++
  video/BUILD.gn                                |  4 +-
  webrtc.gni                                    | 34 +++++++++-----
- 30 files changed, 287 insertions(+), 101 deletions(-)
+ 30 files changed, 283 insertions(+), 101 deletions(-)
  create mode 100644 api/rtp_sender_setparameters_callback.cc
  create mode 100644 api/rtp_sender_setparameters_callback.h
  create mode 100644 common_audio/intrin.h
@@ -164,7 +164,7 @@ index d5289b85d7..8356dfe0bf 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index a0a9563ce0..4ca73b99f5 100644
+index a9217400fe..07b4b8fe87 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -35,7 +35,7 @@ rtc_source_set("callfactory_api") {
@@ -249,7 +249,7 @@ index a0a9563ce0..4ca73b99f5 100644
  
  rtc_source_set("frame_transformer_interface") {
    visibility = [ "*" ]
-@@ -565,6 +589,7 @@ rtc_source_set("peer_network_dependencies") {
+@@ -544,6 +568,7 @@ rtc_source_set("peer_network_dependencies") {
  }
  
  rtc_source_set("peer_connection_quality_test_fixture_api") {
@@ -257,7 +257,7 @@ index a0a9563ce0..4ca73b99f5 100644
    visibility = [ "*" ]
    testonly = true
    sources = [ "test/peerconnection_quality_test_fixture.h" ]
-@@ -615,6 +640,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+@@ -594,6 +619,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -1014,7 +1014,7 @@ index 77f5139a2f..486b37590c 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index bda12289c2..55153909d3 100644
+index 33e835ea08..a3c9d36707 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -240,6 +240,7 @@ rtc_library("audio_test_common") {
@@ -1056,26 +1056,15 @@ index bda12289c2..55153909d3 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1140,6 +1148,10 @@ rtc_library("test_common") {
-   if (!is_android && !build_with_chromium) {
-     deps += [ "../modules/video_capture:video_capture_internal_impl" ]
+@@ -1309,6 +1317,7 @@ if (!build_with_chromium) {
    }
-+  # This, or some form of it should be upstreamed.
-+  if (!rtc_include_tests) {
-+    deps -= [ "../rtc_base:task_queue_for_test" ]
-+  }
- }
- 
- rtc_library("mock_transport") {
-@@ -1307,6 +1319,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
-   ]
  }
  
 +if (!build_with_mozilla) {
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1320,6 +1333,7 @@ if (!build_with_chromium && is_android) {
+@@ -1322,6 +1331,7 @@ if (!build_with_chromium && is_android) {
      ]
    }
  }

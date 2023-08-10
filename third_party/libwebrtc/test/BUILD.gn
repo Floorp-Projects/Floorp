@@ -1078,82 +1078,6 @@ rtc_library("video_test_constants") {
   deps = [ "../api/units:time_delta" ]
 }
 
-rtc_library("test_common") {
-  testonly = true
-  sources = [
-    "call_test.cc",
-    "call_test.h",
-    "drifting_clock.cc",
-    "drifting_clock.h",
-    "layer_filtering_transport.cc",
-    "layer_filtering_transport.h",
-    "rtp_rtcp_observer.h",
-  ]
-
-  deps = [
-    ":direct_transport",
-    ":encoder_settings",
-    ":fake_video_codecs",
-    ":fileutils",
-    ":frame_generator_capturer",
-    ":mock_transport",
-    ":run_loop",
-    ":scoped_key_value_config",
-    ":test_support",
-    ":video_test_common",
-    ":video_test_constants",
-    "../api:array_view",
-    "../api:create_frame_generator",
-    "../api:frame_generator_api",
-    "../api:rtp_headers",
-    "../api:rtp_parameters",
-    "../api:simulated_network_api",
-    "../api:transport_api",
-    "../api/audio_codecs:builtin_audio_decoder_factory",
-    "../api/audio_codecs:builtin_audio_encoder_factory",
-    "../api/rtc_event_log",
-    "../api/task_queue",
-    "../api/task_queue:default_task_queue_factory",
-    "../api/test/video:function_video_factory",
-    "../api/transport:field_trial_based_config",
-    "../api/units:time_delta",
-    "../api/video:builtin_video_bitrate_allocator_factory",
-    "../api/video:video_bitrate_allocator_factory",
-    "../api/video:video_frame",
-    "../api/video_codecs:video_codecs_api",
-    "../call",
-    "../call:call_interfaces",
-    "../call:fake_network",
-    "../call:simulated_network",
-    "../call:simulated_packet_receiver",
-    "../call:video_stream_api",
-    "../modules/audio_device:audio_device_api",
-    "../modules/audio_device:test_audio_device_module",
-    "../modules/audio_mixer:audio_mixer_impl",
-    "../modules/rtp_rtcp",
-    "../modules/rtp_rtcp:rtp_rtcp_format",
-    "../modules/rtp_rtcp:rtp_video_header",
-    "../modules/video_coding:codec_globals_headers",
-    "../rtc_base:checks",
-    "../rtc_base:criticalsection",
-    "../rtc_base:rtc_event",
-    "../rtc_base:task_queue_for_test",
-    "../rtc_base:threading",
-    "../rtc_base:timeutils",
-    "../system_wrappers",
-    "../system_wrappers:field_trial",
-    "../video/config:encoder_config",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-  if (!is_android && !build_with_chromium) {
-    deps += [ "../modules/video_capture:video_capture_internal_impl" ]
-  }
-  # This, or some form of it should be upstreamed.
-  if (!rtc_include_tests) {
-    deps -= [ "../rtc_base:task_queue_for_test" ]
-  }
-}
-
 rtc_library("mock_transport") {
   testonly = true
   sources = [
@@ -1293,30 +1217,104 @@ rtc_library("audio_codec_mocks") {
   ]
 }
 
-rtc_library("copy_to_file_audio_capturer") {
-  testonly = true
-  sources = [
-    "testsupport/copy_to_file_audio_capturer.cc",
-    "testsupport/copy_to_file_audio_capturer.h",
-  ]
-  deps = [
-    "../api:array_view",
-    "../common_audio",
-    "../modules/audio_device:test_audio_device_module",
-    "../rtc_base:buffer",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-}
+if (!build_with_chromium) {
+  rtc_library("copy_to_file_audio_capturer") {
+    testonly = true
+    sources = [
+      "testsupport/copy_to_file_audio_capturer.cc",
+      "testsupport/copy_to_file_audio_capturer.h",
+    ]
+    deps = [
+      "../api:array_view",
+      "../common_audio",
+      "../modules/audio_device:test_audio_device_module",
+      "../rtc_base:buffer",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
 
-rtc_library("copy_to_file_audio_capturer_unittest") {
-  testonly = true
-  sources = [ "testsupport/copy_to_file_audio_capturer_unittest.cc" ]
-  deps = [
-    ":copy_to_file_audio_capturer",
-    ":fileutils",
-    ":test_support",
-    "../modules/audio_device:test_audio_device_module",
-  ]
+  rtc_library("copy_to_file_audio_capturer_unittest") {
+    testonly = true
+    sources = [ "testsupport/copy_to_file_audio_capturer_unittest.cc" ]
+    deps = [
+      ":copy_to_file_audio_capturer",
+      ":fileutils",
+      ":test_support",
+      "../modules/audio_device:test_audio_device_module",
+    ]
+  }
+
+  rtc_library("test_common") {
+    testonly = true
+    sources = [
+      "call_test.cc",
+      "call_test.h",
+      "drifting_clock.cc",
+      "drifting_clock.h",
+      "layer_filtering_transport.cc",
+      "layer_filtering_transport.h",
+      "rtp_rtcp_observer.h",
+    ]
+
+    deps = [
+      ":direct_transport",
+      ":encoder_settings",
+      ":fake_video_codecs",
+      ":fileutils",
+      ":frame_generator_capturer",
+      ":mock_transport",
+      ":run_loop",
+      ":scoped_key_value_config",
+      ":test_support",
+      ":video_test_common",
+      ":video_test_constants",
+      "../api:array_view",
+      "../api:create_frame_generator",
+      "../api:frame_generator_api",
+      "../api:rtp_headers",
+      "../api:rtp_parameters",
+      "../api:simulated_network_api",
+      "../api:transport_api",
+      "../api/audio_codecs:builtin_audio_decoder_factory",
+      "../api/audio_codecs:builtin_audio_encoder_factory",
+      "../api/rtc_event_log",
+      "../api/task_queue",
+      "../api/task_queue:default_task_queue_factory",
+      "../api/test/video:function_video_factory",
+      "../api/transport:field_trial_based_config",
+      "../api/units:time_delta",
+      "../api/video:builtin_video_bitrate_allocator_factory",
+      "../api/video:video_bitrate_allocator_factory",
+      "../api/video:video_frame",
+      "../api/video_codecs:video_codecs_api",
+      "../call",
+      "../call:call_interfaces",
+      "../call:fake_network",
+      "../call:simulated_network",
+      "../call:simulated_packet_receiver",
+      "../call:video_stream_api",
+      "../modules/audio_device:audio_device_api",
+      "../modules/audio_device:test_audio_device_module",
+      "../modules/audio_mixer:audio_mixer_impl",
+      "../modules/rtp_rtcp",
+      "../modules/rtp_rtcp:rtp_rtcp_format",
+      "../modules/rtp_rtcp:rtp_video_header",
+      "../modules/video_coding:codec_globals_headers",
+      "../rtc_base:checks",
+      "../rtc_base:criticalsection",
+      "../rtc_base:rtc_event",
+      "../rtc_base:task_queue_for_test",
+      "../rtc_base:threading",
+      "../rtc_base:timeutils",
+      "../system_wrappers",
+      "../system_wrappers:field_trial",
+      "../video/config:encoder_config",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    if (!is_android && !build_with_chromium) {
+      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
+    }
+  }
 }
 
 if (!build_with_mozilla) {
