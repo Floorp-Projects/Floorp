@@ -66,7 +66,9 @@ const double kEchoReturnLossEnhancement = 101;
 const double kResidualEchoLikelihood = -1.0f;
 const double kResidualEchoLikelihoodMax = 23.0f;
 const CallSendStatistics kCallStats = {112, 12, 13456, 17890};
-const ReportBlock kReportBlock = {456, 780, 123, 567, 890, 132, 143, 13354};
+constexpr int kFractionLost = 123;
+constexpr int kCumulativeLost = 567;
+constexpr uint32_t kInterarrivalJitter = 132;
 const int kTelephoneEventPayloadType = 123;
 const int kTelephoneEventPayloadFrequency = 65432;
 const int kTelephoneEventCode = 45;
@@ -279,12 +281,16 @@ struct ConfigHelper {
     using ::testing::SetArgPointee;
     using ::testing::SetArgReferee;
 
-    std::vector<ReportBlock> report_blocks;
-    webrtc::ReportBlock block = kReportBlock;
+    std::vector<ReportBlockData> report_blocks;
+    ReportBlockData block;
+    block.set_source_ssrc(780);
+    block.set_fraction_lost_raw(kFractionLost);
+    block.set_cumulative_lost(kCumulativeLost);
+    block.set_jitter(kInterarrivalJitter);
     report_blocks.push_back(block);  // Has wrong SSRC.
-    block.source_SSRC = kSsrc;
+    block.set_source_ssrc(kSsrc);
     report_blocks.push_back(block);  // Correct block.
-    block.fraction_lost = 0;
+    block.set_fraction_lost_raw(0);
     report_blocks.push_back(block);  // Duplicate SSRC, bad fraction_lost.
 
     EXPECT_TRUE(channel_send_);
@@ -435,12 +441,12 @@ TEST(AudioSendStreamTest, GetStats) {
     EXPECT_EQ(kCallStats.header_and_padding_bytes_sent,
               stats.header_and_padding_bytes_sent);
     EXPECT_EQ(kCallStats.packetsSent, stats.packets_sent);
-    EXPECT_EQ(kReportBlock.cumulative_num_packets_lost, stats.packets_lost);
-    EXPECT_EQ(Q8ToFloat(kReportBlock.fraction_lost), stats.fraction_lost);
+    EXPECT_EQ(stats.packets_lost, kCumulativeLost);
+    EXPECT_FLOAT_EQ(stats.fraction_lost, Q8ToFloat(kFractionLost));
     EXPECT_EQ(kIsacFormat.name, stats.codec_name);
-    EXPECT_EQ(static_cast<int32_t>(kReportBlock.interarrival_jitter /
-                                   (kIsacFormat.clockrate_hz / 1000)),
-              stats.jitter_ms);
+    EXPECT_EQ(stats.jitter_ms,
+              static_cast<int32_t>(kInterarrivalJitter /
+                                   (kIsacFormat.clockrate_hz / 1000)));
     EXPECT_EQ(kCallStats.rttMs, stats.rtt_ms);
     EXPECT_EQ(0, stats.audio_level);
     EXPECT_EQ(0, stats.total_input_energy);

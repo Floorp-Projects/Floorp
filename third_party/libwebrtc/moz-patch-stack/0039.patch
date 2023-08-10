@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7163801a480d60700
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 91a17d4d72..6a34a9ad44 100644
+index 229b379f51..f3a504ae50 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -696,9 +696,9 @@ void ChannelSend::SetSendAudioLevelIndicationStatus(bool enable, int id) {

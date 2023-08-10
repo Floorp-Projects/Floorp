@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d380a43d59f4f7cbc
  4 files changed, 35 insertions(+)
 
 diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
-index e0ad1a8bd6..9330932e3c 100644
+index 41e0b5179d..e12435b7df 100644
 --- a/audio/audio_send_stream.cc
 +++ b/audio/audio_send_stream.cc
 @@ -436,6 +436,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
@@ -27,7 +27,7 @@ index e0ad1a8bd6..9330932e3c 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 6a34a9ad44..c81758eb63 100644
+index f3a504ae50..3f276bb4c0 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -56,6 +56,31 @@ class RtpPacketSenderProxy;
@@ -88,7 +88,7 @@ index 6a34a9ad44..c81758eb63 100644
    configuration.retransmission_rate_limiter =
        retransmission_rate_limiter_.get();
    configuration.extmap_allow_mixed = extmap_allow_mixed;
-@@ -763,6 +793,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+@@ -747,6 +777,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    CallSendStatistics stats = {0};
    stats.rttMs = GetRTT();
@@ -97,7 +97,7 @@ index 6a34a9ad44..c81758eb63 100644
    StreamDataCounters rtp_stats;
    StreamDataCounters rtx_stats;
 diff --git a/audio/channel_send.h b/audio/channel_send.h
-index 08d3f92f1d..47361882d5 100644
+index a0aa42a706..4d8da42645 100644
 --- a/audio/channel_send.h
 +++ b/audio/channel_send.h
 @@ -43,6 +43,7 @@ struct CallSendStatistics {
