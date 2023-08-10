@@ -1252,8 +1252,7 @@ struct CompilationStencil {
       FrontendContext* fc, CompilationAtomCache& atomCache,
       const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
   [[nodiscard]] static bool prepareForInstantiate(
-      FrontendContext* fc, CompilationAtomCache& atomCache,
-      const CompilationStencil& stencil,
+      FrontendContext* fc, const CompilationStencil& stencil,
       PreallocatedCompilationGCOutput& gcOutput);
 
   [[nodiscard]] static bool instantiateStencils(
