@@ -524,17 +524,23 @@ class PageStyleActor extends Actor {
     this.selectedElement = node.rawNode;
 
     if (!node) {
-      return { entries: [], rules: [], sheets: [] };
+      return { entries: [] };
     }
 
     this.cssLogic.highlight(node.rawNode);
-    let entries = [];
-    entries = entries.concat(
-      this._getAllElementRules(node, undefined, options)
+
+    const entries = this.getAppliedProps(
+      node,
+      this._getAllElementRules(node, undefined, options),
+      options
     );
 
-    const result = this.getAppliedProps(node, entries, options);
-    for (const rule of result.rules) {
+    const entryRules = new Set();
+    entries.forEach(entry => {
+      entryRules.add(entry.rule);
+    });
+
+    for (const rule of entryRules) {
       try {
         // See the comment in |StyleRuleActor.form| to understand this.
         // This can throw if the authored rule text is not found (so e.g., with
@@ -546,9 +552,9 @@ class PageStyleActor extends Actor {
     // Reference to instances of StyleRuleActor for CSS rules matching the node.
     // Assume these are used by a consumer which wants to be notified when their
     // state or declarations change either directly or indirectly.
-    this._observedRules = result.rules;
+    this._observedRules = entryRules;
 
-    return result;
+    return { entries };
   }
 
   _hasInheritedProps(style) {
@@ -822,9 +828,7 @@ class PageStyleActor extends Actor {
    *   node. If adding a new rule to the stylesheet, only the new rule entry
    *   is provided and only the style properties that apply to the new
    *   rule is fetched.
-   * @returns Object containing the list of rule entries, rule actors and
-   *   stylesheet actors that applies to the given node and its associated
-   *   rules.
+   * @returns Array of rule entries that applies to the given node and its associated rules.
    */
   getAppliedProps(node, entries, options) {
     if (options.inherited) {
@@ -891,14 +895,7 @@ class PageStyleActor extends Actor {
       }
     }
 
-    const rules = new Set();
-    entries.forEach(entry => rules.add(entry.rule));
-    this._expandRules(rules);
-
-    return {
-      entries,
-      rules: [...rules],
-    };
+    return entries;
   }
 
   /**
@@ -1034,7 +1031,7 @@ class PageStyleActor extends Actor {
    * properties
    * @param NodeActor node
    * @param CSSStyleRule rule
-   * @returns Object containing its applied style properties
+   * @returns Array containing its applied style properties
    */
   getNewAppliedProps(node, rule) {
     const ruleActor = this._styleRef(rule);
@@ -1098,7 +1095,7 @@ class PageStyleActor extends Actor {
       selector,
     });
 
-    return this.getNewAppliedProps(node, cssRule);
+    return { entries: this.getNewAppliedProps(node, cssRule) };
   }
 
   /**
