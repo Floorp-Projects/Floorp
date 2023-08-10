@@ -10,10 +10,15 @@
 
 #include "modules/rtp_rtcp/include/report_block_data.h"
 
+#include "rtc_base/checks.h"
+
 namespace webrtc {
 
-TimeDelta ReportBlockData::AvgRtt() const {
-  return num_rtts_ > 0 ? sum_rtt_ / num_rtts_ : TimeDelta::Zero();
+TimeDelta ReportBlockData::jitter(int rtp_clock_rate_hz) const {
+  RTC_DCHECK_GT(rtp_clock_rate_hz, 0);
+  // Conversion to TimeDelta and division are swapped to avoid conversion
+  // to/from floating point types.
+  return TimeDelta::Seconds(jitter()) / rtp_clock_rate_hz;
 }
 
 void ReportBlockData::SetReportBlock(uint32_t sender_ssrc,

@@ -181,7 +181,7 @@ index a8e5edccc0..53dffbdf40 100644
  static constexpr size_t kNumMediaTypes = 5;
  enum class RtpPacketMediaType : size_t {
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 3210e7a9e3..e883668eac 100644
+index 29ea5ff14f..aabbf8f096 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
 @@ -145,6 +145,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
