@@ -31,7 +31,7 @@ Firefox Focus provides automatic ad blocking and tracking protection on an easy-
 
 * [Google Play: Firefox Focus (Global)](https://play.google.com/store/apps/details?id=org.mozilla.focus)
 * [Google Play: Firefox Klar (Germany, Austria & Switzerland)](https://play.google.com/store/apps/details?id=org.mozilla.klar)
-* [Download APKs](https://github.com/mozilla-mobile/focus-android/releases)
+* [Download APKs](https://github.com/mozilla-mobile/firefox-android/releases)
 
 Firefox Focus (Android) issues should now also be filed in [Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?product=Focus) under the Focus product.
 
