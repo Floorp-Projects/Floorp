@@ -8,11 +8,16 @@ import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.whenever
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.shopping.ProductAnalysisTestData
+import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckNetworkMiddleware
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckPreferences
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckPreferencesMiddleware
+import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckService
 
 class ReviewQualityCheckStoreTest {
 
@@ -124,15 +129,83 @@ class ReviewQualityCheckStoreTest {
             assertEquals(expected, tested.state)
         }
 
+    @Test
+    fun `GIVEN the user has opted in the feature WHEN the a product analysis is fetched successfully THEN state should reflect that`() =
+        runTest {
+            val reviewQualityCheckService = mock<ReviewQualityCheckService>()
+            whenever(reviewQualityCheckService.fetchProductReview())
+                .thenReturn(ProductAnalysisTestData.productAnalysis())
+
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
+                    reviewQualityCheckService = reviewQualityCheckService,
+                ),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expected = ReviewQualityCheckState.OptedIn(
+                productReviewState = ProductAnalysisTestData.analysisPresent(),
+                productRecommendationsPreference = false,
+            )
+            assertEquals(expected, tested.state)
+        }
+
+    @Test
+    fun `GIVEN the user has opted in the feature WHEN the a product analysis fetch fails THEN state should reflect that`() =
+        runTest {
+            val reviewQualityCheckService = mock<ReviewQualityCheckService>()
+            whenever(reviewQualityCheckService.fetchProductReview()).thenReturn(null)
+
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
+                    reviewQualityCheckService = reviewQualityCheckService,
+                ),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expected = ReviewQualityCheckState.OptedIn(
+                productReviewState = ReviewQualityCheckState.OptedIn.ProductReviewState.Error,
+                productRecommendationsPreference = false,
+            )
+            assertEquals(expected, tested.state)
+        }
+
     private fun provideReviewQualityCheckMiddleware(
         reviewQualityCheckPreferences: ReviewQualityCheckPreferences,
-    ): List<ReviewQualityCheckMiddleware> =
-        listOf(
-            ReviewQualityCheckPreferencesMiddleware(
-                reviewQualityCheckPreferences = reviewQualityCheckPreferences,
-                scope = this.scope,
-            ),
-        )
+        reviewQualityCheckService: ReviewQualityCheckService? = null,
+    ): List<ReviewQualityCheckMiddleware> {
+        return if (reviewQualityCheckService != null) {
+            listOf(
+                ReviewQualityCheckPreferencesMiddleware(
+                    reviewQualityCheckPreferences = reviewQualityCheckPreferences,
+                    scope = this.scope,
+                ),
+                ReviewQualityCheckNetworkMiddleware(
+                    reviewQualityCheckService = reviewQualityCheckService,
+                    scope = this.scope,
+                ),
+            )
+        } else {
+            listOf(
+                ReviewQualityCheckPreferencesMiddleware(
+                    reviewQualityCheckPreferences = reviewQualityCheckPreferences,
+                    scope = this.scope,
+                ),
+            )
+        }
+    }
 }
 
 private class FakeReviewQualityCheckPreferences(

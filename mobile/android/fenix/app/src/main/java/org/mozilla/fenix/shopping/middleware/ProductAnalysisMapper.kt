@@ -8,6 +8,7 @@ import mozilla.components.browser.engine.gecko.shopping.GeckoProductAnalysis
 import mozilla.components.browser.engine.gecko.shopping.Highlight
 import mozilla.components.concept.engine.shopping.ProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState
 
 /**
@@ -52,18 +53,27 @@ private fun String.toGrade(): ReviewQualityCheckState.Grade? =
         null
     }
 
-private fun Highlight.toHighlights(): Map<ReviewQualityCheckState.HighlightType, List<String>>? {
-    val highlights: Map<ReviewQualityCheckState.HighlightType, List<String>?> = mapOf(
-        ReviewQualityCheckState.HighlightType.QUALITY to quality,
-        ReviewQualityCheckState.HighlightType.PRICE to price,
-        ReviewQualityCheckState.HighlightType.SHIPPING to shipping,
-        ReviewQualityCheckState.HighlightType.PACKAGING_AND_APPEARANCE to appearance,
-        ReviewQualityCheckState.HighlightType.COMPETITIVENESS to competitiveness,
-    )
+private fun Highlight.toHighlights(): Map<HighlightType, List<String>>? =
+    HighlightType.values()
+        .associateWith { highlightsForType(it) }
+        .filterValues { it != null }
+        .mapValues { it.value!! }
+        .ifEmpty { null }
 
-    return highlights.filterValues { it != null }.mapValues { it.value!! }.ifEmpty { null }
-}
+private fun Highlight.highlightsForType(highlightType: HighlightType) =
+    when (highlightType) {
+        HighlightType.QUALITY -> quality
+        HighlightType.PRICE -> price
+        HighlightType.SHIPPING -> shipping
+        HighlightType.PACKAGING_AND_APPEARANCE -> appearance
+        HighlightType.COMPETITIVENESS -> competitiveness
+    }
 
+/**
+ * GeckoView sets 0.0 as default instead of null for adjusted rating. This maps 0.0 to null making
+ * it easier for the UI layer to decide whether to display a UI element based on the presence of
+ * value.
+ */
 private fun Double.toFloatOrNull(): Float? =
     if (this == 0.0) {
         null

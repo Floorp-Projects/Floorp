@@ -5,16 +5,12 @@
 package org.mozilla.fenix.shopping.store
 
 import mozilla.components.lib.state.Action
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState
 
 /**
  * Actions for review quality check feature.
  */
 sealed interface ReviewQualityCheckAction : Action {
-
-    /**
-     * Actions that are observed by middlewares.
-     */
-    sealed interface MiddlewareAction : ReviewQualityCheckAction
 
     /**
      * Actions that cause updates to state.
@@ -24,7 +20,12 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Actions related to preferences.
      */
-    sealed interface PreferencesMiddlewareAction : MiddlewareAction
+    sealed interface PreferencesMiddlewareAction : ReviewQualityCheckAction
+
+    /**
+     * Actions related to network requests.
+     */
+    sealed interface NetworkAction : ReviewQualityCheckAction
 
     /**
      * Triggered when the store is initialized.
@@ -53,4 +54,19 @@ sealed interface ReviewQualityCheckAction : Action {
         val hasUserOptedIn: Boolean,
         val isProductRecommendationsEnabled: Boolean,
     ) : UpdateAction
+
+    /**
+     * Triggered as a result of a [NetworkAction] to update the state.
+     */
+    data class UpdateProductReview(val productReviewState: ProductReviewState) : UpdateAction
+
+    /**
+     * Triggered when the user has opted in to the review quality check feature and the UI is opened.
+     */
+    object FetchProductAnalysis : NetworkAction
+
+    /**
+     * Triggered when the user retries to fetch product analysis after a failure.
+     */
+    object RetryProductAnalysis : NetworkAction
 }

@@ -7,7 +7,9 @@ package org.mozilla.fenix.shopping.ui
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
@@ -29,6 +31,8 @@ fun ReviewQualityCheckBottomSheet(
     modifier: Modifier = Modifier,
 ) {
     val reviewQualityCheckState by store.observeAsState(ReviewQualityCheckState.Initial) { it }
+    val isOptedIn =
+        remember(reviewQualityCheckState) { reviewQualityCheckState is ReviewQualityCheckState.OptedIn }
 
     ReviewQualityCheckScaffold(
         onRequestDismiss = onRequestDismiss,
@@ -61,6 +65,12 @@ fun ReviewQualityCheckBottomSheet(
             }
 
             is ReviewQualityCheckState.Initial -> {}
+        }
+    }
+
+    LaunchedEffect(isOptedIn) {
+        if (isOptedIn) {
+            store.dispatch(ReviewQualityCheckAction.FetchProductAnalysis)
         }
     }
 }
