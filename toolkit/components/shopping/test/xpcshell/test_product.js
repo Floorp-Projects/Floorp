@@ -43,6 +43,9 @@ const API_ERROR_ONCE = "http://example.com/errors/error_once.json";
 const API_ERROR_BAD_REQUEST = "http://example.com/errors/bad_request.json";
 const API_ERROR_UNPROCESSABLE =
   "http://example.com/errors/unprocessable_entity.json";
+const API_POLL = "http://example.com/poll/poll_analysis_response.json";
+const API_NEEDS_ANALYSIS =
+  "http://example.com/poll/needs_analysis_response.json";
 
 // Start with OHTTP disabled.
 disableOHTTP();
@@ -111,6 +114,35 @@ server.registerPathHandler(
       false
     );
     response.write(readFile("data/unprocessable_entity.json", false));
+  }
+);
+
+// Path to test API call that will still be processing twice and then succeeded.
+let pollingTries = 0;
+server.registerPathHandler(new URL(API_POLL).pathname, (request, response) => {
+  response.setHeader("Content-Type", "application/json; charset=utf-8", false);
+  if (pollingTries < 2) {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.write(readFile("/data/needs_analysis_response.json"));
+    pollingTries++;
+  } else {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.write(readFile("/data/analysis_response.json"));
+    pollingTries = 0;
+  }
+});
+
+// Path to test API call that will always need analysis.
+server.registerPathHandler(
+  new URL(API_NEEDS_ANALYSIS).pathname,
+  (request, response) => {
+    response.setHeader(
+      "Content-Type",
+      "application/json; charset=utf-8",
+      false
+    );
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.write(readFile("/data/needs_analysis_response.json"));
   }
 );
 
@@ -730,5 +762,76 @@ add_task(function test_new_ShoppingProduct() {
     productURI.isProduct(),
     true,
     "Passing a product URI returns a valid product"
+  );
+});
+
+add_task(async function test_product_requestAnalysis_poll() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+  let spy = sinon.spy(product, "request");
+  let startTime = Cu.now();
+  const INITIAL_TIMEOUT = 100;
+  const TIMEOUT = 50;
+  const TRIES = 3;
+  let totalTime = INITIAL_TIMEOUT + TIMEOUT * Math.pow(2, TRIES - 1);
+
+  pollingTries = 0;
+  if (!product.isProduct()) {
+    return;
+  }
+  let analysis = await product.pollForAnalysisCompleted(undefined, {
+    url: API_POLL,
+    requestSchema: ANALYSIS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+    pollInitialWait: INITIAL_TIMEOUT,
+    pollTimeout: TIMEOUT,
+    pollAttempts: TRIES,
+  });
+
+  Assert.equal(spy.callCount, TRIES, "Request is done processing");
+  Assert.ok(
+    typeof analysis == "object",
+    "Analysis object is loaded from JSON and validated"
+  );
+  Assert.equal(analysis.needs_analysis, false, "Analysis is done");
+  Assert.ok(
+    Cu.now() - startTime >= totalTime,
+    `Waited for at least ${totalTime}ms`
+  );
+});
+
+add_task(async function test_product_requestAnalysis_poll_max() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+  let spy = sinon.spy(product, "request");
+  let startTime = Cu.now();
+
+  const INITIAL_TIMEOUT = 100;
+  const TIMEOUT = 50;
+  const TRIES = 4;
+  let totalTime = INITIAL_TIMEOUT + TIMEOUT * Math.pow(2, TRIES - 1);
+
+  pollingTries = 0;
+  if (!product.isProduct()) {
+    return;
+  }
+  let analysis = await product.pollForAnalysisCompleted(undefined, {
+    url: API_NEEDS_ANALYSIS,
+    requestSchema: ANALYSIS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+    pollInitialWait: INITIAL_TIMEOUT,
+    pollTimeout: TIMEOUT,
+    pollAttempts: TRIES,
+  });
+
+  Assert.equal(spy.callCount, TRIES, "Request is done processing");
+  Assert.ok(
+    typeof analysis == "object",
+    "Analysis object is loaded from JSON and validated"
+  );
+  Assert.equal(analysis.needs_analysis, true, "Analysis not done");
+  Assert.ok(
+    Cu.now() - startTime >= totalTime,
+    `Waited for at least ${totalTime}ms`
   );
 });

@@ -25,6 +25,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const API_RETRIES = 3;
 const API_RETRY_TIMEOUT = 100;
+const API_POLL_ATTEMPTS = 6;
+const API_POLL_INITIAL_WAIT = 30000;
+const API_POLL_WAIT = 5000;
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   ohttpService: [
@@ -562,6 +565,46 @@ export class ShoppingProduct {
       };
       obliviousHttpChannel.asyncOpen(listener);
     });
+  }
+
+  /**
+   * Poll Analysis API until an analysis has completed.
+   *
+   * After an initial wait keep checking the api for results, increasing the
+   * wait each time until we have reached a maximum of tries.
+   *
+   * Passes all arguments to requestAnalysis().
+   *
+   * @param {Product} product
+   *  Product to request for (defaults to the instances product).
+   * @param {object} options
+   *  Override default API url and schema.
+   * @returns {object} result
+   *  Parsed JSON API result or null.
+   */
+  async pollForAnalysisCompleted(product, options) {
+    let pollCount = 1;
+    let initialWait = options?.pollInitialWait || API_POLL_INITIAL_WAIT;
+    let pollTimeout = options?.pollTimeout || API_POLL_WAIT;
+    let pollAttempts = options?.pollAttempts || API_POLL_ATTEMPTS;
+
+    // Initial wait while the product is analyzed
+    await new Promise(resolve => lazy.setTimeout(resolve, initialWait));
+
+    let result = await this.requestAnalysis(true, product, options);
+
+    while (result?.needs_analysis && pollCount < pollAttempts) {
+      let backOff = pollTimeout * Math.pow(2, pollCount);
+      await new Promise(resolve => lazy.setTimeout(resolve, backOff));
+      try {
+        result = await this.requestAnalysis(true, product, options);
+      } catch (error) {
+        return null;
+      }
+      pollCount++;
+    }
+
+    return result;
   }
 
   uninit() {
