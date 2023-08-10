@@ -625,7 +625,7 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   ReportBlockData* report_block_data =
       &received_report_blocks_[report_block.source_ssrc()];
   if (report_block.extended_high_seq_num() >
-      report_block_data->report_block().extended_highest_sequence_number) {
+      report_block_data->extended_highest_sequence_number()) {
     // We have successfully delivered new RTP packets to the remote side after
     // the last RR was sent from the remote side.
     last_increased_sequence_number_ = last_received_rb_;
@@ -823,7 +823,7 @@ bool RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
   // Clear our lists.
   rtts_.erase(bye.sender_ssrc());
   EraseIf(received_report_blocks_, [&](const auto& elem) {
-    return elem.second.report_block().sender_ssrc == bye.sender_ssrc();
+    return elem.second.sender_ssrc() == bye.sender_ssrc();
   });
 
   TmmbrInformation* tmmbr_info = GetTmmbrInformation(bye.sender_ssrc());

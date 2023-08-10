@@ -441,12 +441,10 @@ TEST(RtcpReceiverTest, InjectRrPacketWithTwoReportBlocks) {
   receiver.IncomingPacket(rr1.Build());
 
   EXPECT_EQ(now, receiver.LastReceivedReportBlockMs());
-  EXPECT_THAT(receiver.GetLatestReportBlockData(),
-              UnorderedElementsAre(
-                  Property(&ReportBlockData::report_block,
-                           Field(&RTCPReportBlock::fraction_lost, 0)),
-                  Property(&ReportBlockData::report_block,
-                           Field(&RTCPReportBlock::fraction_lost, 10))));
+  EXPECT_THAT(
+      receiver.GetLatestReportBlockData(),
+      UnorderedElementsAre(Property(&ReportBlockData::fraction_lost_raw, 0),
+                           Property(&ReportBlockData::fraction_lost_raw, 10)));
 
   // Insert next receiver report with same ssrc but new values.
   rtcp::ReportBlock rb3;
@@ -478,20 +476,16 @@ TEST(RtcpReceiverTest, InjectRrPacketWithTwoReportBlocks) {
   EXPECT_THAT(
       receiver.GetLatestReportBlockData(),
       UnorderedElementsAre(
-          Property(
-              &ReportBlockData::report_block,
-              AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverMainSsrc),
-                    Field(&RTCPReportBlock::fraction_lost, kFracLost[0]),
-                    Field(&RTCPReportBlock::packets_lost, kCumLost[0]),
-                    Field(&RTCPReportBlock::extended_highest_sequence_number,
-                          kSequenceNumbers[0]))),
-          Property(
-              &ReportBlockData::report_block,
-              AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverExtraSsrc),
-                    Field(&RTCPReportBlock::fraction_lost, kFracLost[1]),
-                    Field(&RTCPReportBlock::packets_lost, kCumLost[1]),
-                    Field(&RTCPReportBlock::extended_highest_sequence_number,
-                          kSequenceNumbers[1])))));
+          AllOf(Property(&ReportBlockData::source_ssrc, kReceiverMainSsrc),
+                Property(&ReportBlockData::fraction_lost_raw, kFracLost[0]),
+                Property(&ReportBlockData::cumulative_lost, kCumLost[0]),
+                Property(&ReportBlockData::extended_highest_sequence_number,
+                         kSequenceNumbers[0])),
+          AllOf(Property(&ReportBlockData::source_ssrc, kReceiverExtraSsrc),
+                Property(&ReportBlockData::fraction_lost_raw, kFracLost[1]),
+                Property(&ReportBlockData::cumulative_lost, kCumLost[1]),
+                Property(&ReportBlockData::extended_highest_sequence_number,
+                         kSequenceNumbers[1]))));
 }
 
 TEST(RtcpReceiverTest,
@@ -522,16 +516,14 @@ TEST(RtcpReceiverTest,
 
   EXPECT_EQ(now, receiver.LastReceivedReportBlockMs());
 
-  EXPECT_THAT(
-      receiver.GetLatestReportBlockData(),
-      ElementsAre(Property(
-          &ReportBlockData::report_block,
-          AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverMainSsrc),
-                Field(&RTCPReportBlock::sender_ssrc, kSenderSsrc),
-                Field(&RTCPReportBlock::fraction_lost, kFracLost[0]),
-                Field(&RTCPReportBlock::packets_lost, kCumLost[0]),
-                Field(&RTCPReportBlock::extended_highest_sequence_number,
-                      kSequenceNumbers[0])))));
+  EXPECT_THAT(receiver.GetLatestReportBlockData(),
+              ElementsAre(AllOf(
+                  Property(&ReportBlockData::source_ssrc, kReceiverMainSsrc),
+                  Property(&ReportBlockData::sender_ssrc, kSenderSsrc),
+                  Property(&ReportBlockData::fraction_lost_raw, kFracLost[0]),
+                  Property(&ReportBlockData::cumulative_lost, kCumLost[0]),
+                  Property(&ReportBlockData::extended_highest_sequence_number,
+                           kSequenceNumbers[0]))));
 
   rtcp::ReportBlock rb2;
   rb2.SetMediaSsrc(kReceiverMainSsrc);
@@ -547,16 +539,14 @@ TEST(RtcpReceiverTest,
               OnReceivedRtcpReceiverReport(SizeIs(1), _, now));
   receiver.IncomingPacket(rr2.Build());
 
-  EXPECT_THAT(
-      receiver.GetLatestReportBlockData(),
-      UnorderedElementsAre(Property(
-          &ReportBlockData::report_block,
-          AllOf(Field(&RTCPReportBlock::source_ssrc, kReceiverMainSsrc),
-                Field(&RTCPReportBlock::sender_ssrc, kSenderSsrc2),
-                Field(&RTCPReportBlock::fraction_lost, kFracLost[1]),
-                Field(&RTCPReportBlock::packets_lost, kCumLost[1]),
-                Field(&RTCPReportBlock::extended_highest_sequence_number,
-                      kSequenceNumbers[1])))));
+  EXPECT_THAT(receiver.GetLatestReportBlockData(),
+              UnorderedElementsAre(AllOf(
+                  Property(&ReportBlockData::source_ssrc, kReceiverMainSsrc),
+                  Property(&ReportBlockData::sender_ssrc, kSenderSsrc2),
+                  Property(&ReportBlockData::fraction_lost_raw, kFracLost[1]),
+                  Property(&ReportBlockData::cumulative_lost, kCumLost[1]),
+                  Property(&ReportBlockData::extended_highest_sequence_number,
+                           kSequenceNumbers[1]))));
 }
 
 TEST(RtcpReceiverTest, GetRtt) {
@@ -1573,19 +1563,18 @@ TEST(RtcpReceiverTest,
   rtcp_report.SetSenderSsrc(kSenderSsrc);
   rtcp_report.AddReportBlock(rtcp_block);
   EXPECT_CALL(observer, OnReportBlockDataUpdated)
-      .WillOnce([&](ReportBlockData report_block_data) {
-        const auto& report_block = report_block_data.report_block();
-        EXPECT_EQ(rtcp_block.source_ssrc(), report_block.source_ssrc);
-        EXPECT_EQ(kSenderSsrc, report_block.sender_ssrc);
-        EXPECT_EQ(rtcp_block.fraction_lost(), report_block.fraction_lost);
-        EXPECT_EQ(rtcp_block.cumulative_lost(), report_block.packets_lost);
+      .WillOnce([&](ReportBlockData report_block) {
+        EXPECT_EQ(rtcp_block.source_ssrc(), report_block.source_ssrc());
+        EXPECT_EQ(kSenderSsrc, report_block.sender_ssrc());
+        EXPECT_EQ(rtcp_block.fraction_lost(), report_block.fraction_lost_raw());
+        EXPECT_EQ(rtcp_block.cumulative_lost(), report_block.cumulative_lost());
         EXPECT_EQ(rtcp_block.extended_high_seq_num(),
-                  report_block.extended_highest_sequence_number);
-        EXPECT_EQ(rtcp_block.jitter(), report_block.jitter);
-        EXPECT_EQ(report_block_data.report_block_timestamp_utc(),
+                  report_block.extended_highest_sequence_number());
+        EXPECT_EQ(rtcp_block.jitter(), report_block.jitter());
+        EXPECT_EQ(report_block.report_block_timestamp_utc(),
                   Timestamp::Millis(kNtpNowMs));
         // No RTT is calculated in this test.
-        EXPECT_EQ(0u, report_block_data.num_rtts());
+        EXPECT_EQ(0u, report_block.num_rtts());
       });
   EXPECT_CALL(mocks.rtp_rtcp_impl, OnReceivedRtcpReportBlocks);
   EXPECT_CALL(mocks.bandwidth_observer, OnReceivedRtcpReceiverReport);
@@ -1627,8 +1616,7 @@ TEST(RtcpReceiverTest, VerifyRttObtainedFromReportBlockDataObserver) {
   InSequence sequence;
   EXPECT_CALL(observer, OnReportBlockDataUpdated)
       .WillOnce([&](ReportBlockData report_block_data) {
-        EXPECT_EQ(kReceiverMainSsrc,
-                  report_block_data.report_block().source_ssrc);
+        EXPECT_EQ(kReceiverMainSsrc, report_block_data.source_ssrc());
         EXPECT_EQ(1u, report_block_data.num_rtts());
         EXPECT_EQ(kRtt, report_block_data.min_rtt());
         EXPECT_EQ(kRtt, report_block_data.max_rtt());
@@ -1637,8 +1625,7 @@ TEST(RtcpReceiverTest, VerifyRttObtainedFromReportBlockDataObserver) {
       });
   EXPECT_CALL(observer, OnReportBlockDataUpdated)
       .WillOnce([](ReportBlockData report_block_data) {
-        EXPECT_EQ(kReceiverExtraSsrc,
-                  report_block_data.report_block().source_ssrc);
+        EXPECT_EQ(kReceiverExtraSsrc, report_block_data.source_ssrc());
         EXPECT_EQ(0u, report_block_data.num_rtts());
       });
   receiver.IncomingPacket(sr.Build());
@@ -1664,11 +1651,9 @@ TEST(RtcpReceiverTest, GetReportBlockDataAfterOneReportBlock) {
 
   auto report_block_datas = receiver.GetLatestReportBlockData();
   ASSERT_THAT(report_block_datas, SizeIs(1));
-  EXPECT_EQ(kReceiverMainSsrc,
-            report_block_datas[0].report_block().source_ssrc);
-  EXPECT_EQ(
-      kSequenceNumber,
-      report_block_datas[0].report_block().extended_highest_sequence_number);
+  EXPECT_EQ(kReceiverMainSsrc, report_block_datas[0].source_ssrc());
+  EXPECT_EQ(kSequenceNumber,
+            report_block_datas[0].extended_highest_sequence_number());
 }
 
 TEST(RtcpReceiverTest, GetReportBlockDataAfterTwoReportBlocksOfSameSsrc) {
@@ -1706,11 +1691,9 @@ TEST(RtcpReceiverTest, GetReportBlockDataAfterTwoReportBlocksOfSameSsrc) {
   // Only the latest block should be returned.
   auto report_block_datas = receiver.GetLatestReportBlockData();
   ASSERT_THAT(report_block_datas, SizeIs(1));
-  EXPECT_EQ(kReceiverMainSsrc,
-            report_block_datas[0].report_block().source_ssrc);
-  EXPECT_EQ(
-      kSequenceNumber2,
-      report_block_datas[0].report_block().extended_highest_sequence_number);
+  EXPECT_EQ(kReceiverMainSsrc, report_block_datas[0].source_ssrc());
+  EXPECT_EQ(kSequenceNumber2,
+            report_block_datas[0].extended_highest_sequence_number());
 }
 
 TEST(RtcpReceiverTest, GetReportBlockDataAfterTwoReportBlocksOfDifferentSsrcs) {
@@ -1747,16 +1730,12 @@ TEST(RtcpReceiverTest, GetReportBlockDataAfterTwoReportBlocksOfDifferentSsrcs) {
   // Both report blocks should be returned.
   auto report_block_datas = receiver.GetLatestReportBlockData();
   ASSERT_THAT(report_block_datas, SizeIs(2));
-  EXPECT_EQ(kReceiverMainSsrc,
-            report_block_datas[0].report_block().source_ssrc);
-  EXPECT_EQ(
-      kSequenceNumber1,
-      report_block_datas[0].report_block().extended_highest_sequence_number);
-  EXPECT_EQ(kReceiverExtraSsrc,
-            report_block_datas[1].report_block().source_ssrc);
-  EXPECT_EQ(
-      kSequenceNumber2,
-      report_block_datas[1].report_block().extended_highest_sequence_number);
+  EXPECT_EQ(kReceiverMainSsrc, report_block_datas[0].source_ssrc());
+  EXPECT_EQ(kSequenceNumber1,
+            report_block_datas[0].extended_highest_sequence_number());
+  EXPECT_EQ(kReceiverExtraSsrc, report_block_datas[1].source_ssrc());
+  EXPECT_EQ(kSequenceNumber2,
+            report_block_datas[1].extended_highest_sequence_number());
 }
 
 TEST(RtcpReceiverTest, ReceivesTransportFeedback) {
