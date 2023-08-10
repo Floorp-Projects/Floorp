@@ -24,17 +24,12 @@ TimeDelta ReportBlockData::jitter(int rtp_clock_rate_hz) const {
 void ReportBlockData::SetReportBlock(uint32_t sender_ssrc,
                                      const rtcp::ReportBlock& report_block,
                                      Timestamp report_block_timestamp_utc) {
-  report_block_.sender_ssrc = sender_ssrc;
-  report_block_.source_ssrc = report_block.source_ssrc();
-  report_block_.fraction_lost = report_block.fraction_lost();
-  report_block_.packets_lost = report_block.cumulative_lost();
-  report_block_.extended_highest_sequence_number =
-      report_block.extended_high_seq_num();
-  report_block_.jitter = report_block.jitter();
-  report_block_.delay_since_last_sender_report =
-      report_block.delay_since_last_sr();
-  report_block_.last_sender_report_timestamp = report_block.last_sr();
-
+  sender_ssrc_ = sender_ssrc;
+  source_ssrc_ = report_block.source_ssrc();
+  fraction_lost_raw_ = report_block.fraction_lost();
+  cumulative_lost_ = report_block.cumulative_lost();
+  extended_highest_sequence_number_ = report_block.extended_high_seq_num();
+  jitter_ = report_block.jitter();
   report_block_timestamp_utc_ = report_block_timestamp_utc;
 }
 
