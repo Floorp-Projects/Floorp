@@ -383,11 +383,14 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
 
   // Returns current RTT (round-trip time) estimate.
   // Returns -1 on failure else 0.
-  virtual int32_t RTT(uint32_t remote_ssrc,
-                      int64_t* rtt,
-                      int64_t* avg_rtt,
-                      int64_t* min_rtt,
-                      int64_t* max_rtt) const = 0;
+  [[deprecated]] virtual int32_t RTT(uint32_t remote_ssrc,
+                                     int64_t* rtt,
+                                     int64_t* avg_rtt,
+                                     int64_t* min_rtt,
+                                     int64_t* max_rtt) const = 0;
+
+  // Returns current RTT (round-trip time) estimate.
+  virtual absl::optional<TimeDelta> LastRtt() const = 0;
 
   // Returns the estimated RTT, with fallback to a default value.
   virtual int64_t ExpectedRetransmissionTimeMs() const = 0;

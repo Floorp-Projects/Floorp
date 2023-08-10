@@ -212,8 +212,8 @@ void AudioIngress::ReceivedRTCPPacket(
   // Deliver RTCP packet to RTP/RTCP module for parsing and processing.
   rtp_rtcp_->IncomingRtcpPacket(rtcp_packet);
 
-  int64_t rtt = 0;
-  if (rtp_rtcp_->RTT(remote_ssrc_, &rtt, nullptr, nullptr, nullptr) != 0) {
+  absl::optional<TimeDelta> rtt = rtp_rtcp_->LastRtt();
+  if (!rtt.has_value()) {
     // Waiting for valid RTT.
     return;
   }
@@ -227,8 +227,7 @@ void AudioIngress::ReceivedRTCPPacket(
 
   {
     MutexLock lock(&lock_);
-    ntp_estimator_.UpdateRtcpTimestamp(TimeDelta::Millis(rtt),
-                                       last_sr->last_remote_timestamp,
+    ntp_estimator_.UpdateRtcpTimestamp(*rtt, last_sr->last_remote_timestamp,
                                        last_sr->last_remote_rtp_timestamp);
   }
 }

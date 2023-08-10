@@ -295,6 +295,15 @@ int32_t RTCPReceiver::RTT(uint32_t remote_ssrc,
   return 0;
 }
 
+absl::optional<TimeDelta> RTCPReceiver::LastRtt() const {
+  MutexLock lock(&rtcp_receiver_lock_);
+  auto it = rtts_.find(remote_ssrc_);
+  if (it == rtts_.end()) {
+    return absl::nullopt;
+  }
+  return it->second.last_rtt();
+}
+
 RTCPReceiver::NonSenderRttStats RTCPReceiver::GetNonSenderRTT() const {
   MutexLock lock(&rtcp_receiver_lock_);
   auto it = non_sender_rtts_.find(remote_ssrc_);

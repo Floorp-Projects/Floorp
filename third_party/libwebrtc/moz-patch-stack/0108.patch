@@ -52,7 +52,7 @@ index 3e8257f906..5adca0634c 100644
  };
  
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index ec0242e915..c4ec28ee98 100644
+index 69ea3fabc0..54901eeb4c 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -341,7 +341,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(

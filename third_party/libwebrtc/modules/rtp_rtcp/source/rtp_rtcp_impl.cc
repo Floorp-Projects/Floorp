@@ -478,6 +478,17 @@ int32_t ModuleRtpRtcpImpl::RTT(const uint32_t remote_ssrc,
   return ret;
 }
 
+absl::optional<TimeDelta> ModuleRtpRtcpImpl::LastRtt() const {
+  absl::optional<TimeDelta> rtt = rtcp_receiver_.LastRtt();
+  if (!rtt.has_value()) {
+    MutexLock lock(&mutex_rtt_);
+    if (rtt_ms_ > 0) {
+      rtt = TimeDelta::Millis(rtt_ms_);
+    }
+  }
+  return rtt;
+}
+
 int64_t ModuleRtpRtcpImpl::ExpectedRetransmissionTimeMs() const {
   int64_t expected_retransmission_time_ms = rtt_ms();
   if (expected_retransmission_time_ms > 0) {
