@@ -526,6 +526,7 @@ def ci_builder(
         if ci_cat and not perf_cat:
             lkgr_builders.append(name)
     dimensions.update({"pool": "luci.webrtc.ci", "cpu": kwargs.pop("cpu", DEFAULT_CPU)})
+    dimensions["builderless"] = "1"
     properties = properties or {}
     properties = dict(properties)  # Avoid mutating the original dict.
     properties["builder_group"] = "client.webrtc"
@@ -552,6 +553,7 @@ def try_builder(
         try_cat = True,
         cq = {},
         branch_cq = True,
+        builder = None,
         **kwargs):
     """Add a pre-submit builder.
 
@@ -562,12 +564,17 @@ def try_builder(
       try_cat: boolean, whether to include this builder in the /try/ console. See also: `add_milo`.
       cq: None to exclude this from all commit queues, or a dict of kwargs for cq_tryjob_verifier.
       branch_cq: False to exclude this builder just from the release-branch CQ.
+      builder: builder to set in the dimensions, if None, builderless:1 is used.
       **kwargs: Pass on to webrtc_builder / luci.builder.
     Returns:
       A luci.builder.
     """
     add_milo(name, {"try": try_cat})
     dimensions.update({"pool": "luci.webrtc.try", "cpu": DEFAULT_CPU})
+    if builder != None:
+        dimensions["builder"] = builder
+    else:
+        dimensions["builderless"] = "1"
     properties = properties or {}
     properties["builder_group"] = "tryserver.webrtc"
     properties.update(make_reclient_properties("rbe-webrtc-untrusted"))
@@ -650,7 +657,7 @@ def normal_builder_factory(**common_kwargs):
 # Mixins:
 
 linux_builder, linux_try_job = normal_builder_factory(
-    dimensions = {"os": "Linux", "inside_docker": "0"},
+    dimensions = {"os": "Linux"},
 )
 
 android_builder, android_try_job = normal_builder_factory(
@@ -665,10 +672,6 @@ mac_builder, mac_try_job = normal_builder_factory(
     dimensions = {"os": "Mac"},
 )
 
-mac_chromium_try_job = normal_builder_factory(
-    dimensions = {"os": "Mac", "cores": "12"},
-)[1]
-
 ios_builder, ios_try_job = normal_builder_factory(
     dimensions = {"os": "Mac"},
     properties = {"xcode_build_version": WEBRTC_XCODE13},
@@ -677,6 +680,23 @@ ios_builder, ios_try_job = normal_builder_factory(
         path = "xcode_ios_" + WEBRTC_XCODE13 + ".app",
     )],
 )
+
+linux_chromium_try_job = normal_builder_factory(
+    dimensions = {"os": "Linux"},
+    builder = "chromium-compile",
+)[1]
+android_chromium_try_job = normal_builder_factory(
+    dimensions = {"os": "Linux"},
+    builder = "chromium-compile",
+)[1]
+win_chromium_try_job = normal_builder_factory(
+    dimensions = {"os": "Windows"},
+    builder = "chromium-compile",
+)[1]
+mac_chromium_try_job = normal_builder_factory(
+    dimensions = {"os": "Mac"},
+    builder = "chromium-compile",
+)[1]
 
 # Actual builder configuration:
 
@@ -706,7 +726,7 @@ android_builder("Android32 Builder x86", "Android|x86|rel")
 android_try_job("android_compile_x86_rel")
 android_builder("Android32 (more configs)", "Android|arm|more")
 android_try_job("android_arm_more_configs")
-android_try_job("android_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
+android_chromium_try_job("android_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
 
 ios_builder("iOS64 Debug", "iOS|arm64|dbg")
 ios_try_job("ios_compile_arm64_dbg")
@@ -751,34 +771,31 @@ linux_builder("Linux64 Release (Libfuzzer)", "Linux|x64|fuzz", recipe = "libfuzz
 linux_try_job("linux_libfuzzer_rel", recipe = "libfuzzer")
 linux_builder("Linux (more configs)", "Linux|x64|more")
 linux_try_job("linux_more_configs")
-linux_try_job("linux_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
-linux_try_job("linux_chromium_compile_dbg", recipe = "chromium_trybot", branch_cq = False)
 linux_try_job("linux_coverage")
-linux_try_job("webrtc_linux_chromium", recipe = "chromium_trybot", cq = None, branch_cq = False)
+linux_chromium_try_job("webrtc_linux_chromium", recipe = "chromium_trybot", cq = None, branch_cq = False)
+linux_chromium_try_job("linux_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
+linux_chromium_try_job("linux_chromium_compile_dbg", recipe = "chromium_trybot", branch_cq = False)
 
 linux_builder("Fuchsia Builder", ci_cat = None, perf_cat = "Fuchsia|x64|Builder|", prioritized = True)
 linux_builder("Fuchsia Release", "Fuchsia|x64|rel")
 linux_try_job("fuchsia_rel")
 perf_builder("Perf Fuchsia", "Fuchsia|x64|Tester|", triggered_by = ["Fuchsia Builder"])
-
 mac_builder("Mac64 Debug", "Mac|x64|dbg")
 mac_try_job("mac_dbg", cq = None)
 mac_try_job("mac_compile_dbg")
 mac_builder("Mac64 Release", "Mac|x64|rel")
-
 mac_try_job("mac_rel")
 mac_try_job("mac_compile_rel", cq = None)
 mac_builder("Mac64 Builder", ci_cat = None, perf_cat = "Mac|x64|Builder|")
 mac_builder("MacArm64 Builder", ci_cat = None, perf_cat = "Mac|arm64|Builder|")
 perf_builder("Perf Mac 11", "Mac|x64|Tester|11", triggered_by = ["Mac64 Builder"])
 perf_builder("Perf Mac M1 Arm64 12", "Mac|arm64|Tester|12", triggered_by = ["MacArm64 Builder"])
-
 mac_builder("Mac Asan", "Mac|x64|asan")
 mac_try_job("mac_asan")
-mac_chromium_try_job("mac_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
 mac_builder("MacARM64 M1 Release", "Mac|arm64M1|rel", cpu = "arm64-64-Apple_M1")
 mac_try_job("mac_rel_m1")
 mac_try_job("mac_dbg_m1")
+mac_chromium_try_job("mac_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
 
 win_builder("Win32 Debug (Clang)", "Win Clang|x86|dbg")
 win_try_job("win_x86_clang_dbg", cq = None)
@@ -798,8 +815,8 @@ win_builder("Win64 ASan", "Win Clang|x64|asan")
 win_try_job("win_asan")
 win_builder("Win (more configs)", "Win Clang|x86|more")
 win_try_job("win_x86_more_configs")
-win_try_job("win_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
-win_try_job("win_chromium_compile_dbg", recipe = "chromium_trybot", branch_cq = False)
+win_chromium_try_job("win_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
+win_chromium_try_job("win_chromium_compile_dbg", recipe = "chromium_trybot", branch_cq = False)
 
 linux_try_job(
     "presubmit",
