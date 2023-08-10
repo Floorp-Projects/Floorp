@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '26dc712e5826682d2f2e76c047d1e4dabe87d96d',
+  'chromium_revision': 'd0ae9456ec24d72631c75924df4d75784c82c9e8',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -46,9 +46,9 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@5d6d0d4d07d0abd28ab459f7b841e8f49399eeac',
+    'https://chromium.googlesource.com/chromium/src/base@f723499917e1b374d01453cb1736b5a5c0308d96',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@489b131ab060b13531a1bd43a706d8d12e7042e3',
+    'https://chromium.googlesource.com/chromium/src/build@f6692ccd70f023b0d07fe2aaef42c0af4738db09',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@539a6f68735c631f57ae33096e9e7fc059e049cf',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -61,9 +61,9 @@ deps = {
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@d617549f90135d2dbcd88fc4bbde25c466283e74',
+    'https://chromium.googlesource.com/chromium/src/testing@d23247d9e73c9203e316225575de6dcd14c655e0',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@a9eda3ac94ba46ddd377a395f5dd6f8543b7d747',
+    'https://chromium.googlesource.com/chromium/src/third_party@fd370504baec292dca401f6e01ed4a184b30ffa2',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -336,7 +336,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@c37a1309dd7d0ab3777c9a7a221abe68ee7c4ceb',
+    'https://chromium.googlesource.com/chromium/src/tools@fdea1c758d5732916133bad173dea6111243d6ac',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -2068,6 +2068,17 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/android_deps/libs/org_jetbrains_kotlinx_kotlinx_coroutines_core_jvm',
+              'version': 'version:2@1.6.4.cr1',
+          },
+      ],
+      'condition': 'checkout_android',
+      'dep_type': 'cipd',
+  },
+
+  'src/third_party/android_deps/libs/org_jetbrains_kotlinx_kotlinx_coroutines_guava': {
+      'packages': [
+          {
+              'package': 'chromium/third_party/android_deps/libs/org_jetbrains_kotlinx_kotlinx_coroutines_guava',
               'version': 'version:2@1.6.4.cr1',
           },
       ],
