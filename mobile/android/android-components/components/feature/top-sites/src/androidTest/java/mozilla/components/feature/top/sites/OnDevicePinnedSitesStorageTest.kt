@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
-import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,11 +37,9 @@ class OnDevicePinnedSitesStorageTest {
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @get:Rule
-    @Suppress("DEPRECATION")
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        TopSiteDatabase::class.java.canonicalName,
-        FrameworkSQLiteOpenHelperFactory(),
+        TopSiteDatabase::class.java,
     )
 
     @Before

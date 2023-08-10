@@ -6,7 +6,6 @@ package mozilla.components.feature.pwa.db
 
 import androidx.core.database.getStringOrNull
 import androidx.room.testing.MigrationTestHelper
-import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -20,11 +19,9 @@ class ManifestDatabaseMigrationTest {
 
     @Rule
     @JvmField
-    @Suppress("DEPRECATION")
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        ManifestDatabase::class.java.canonicalName,
-        FrameworkSQLiteOpenHelperFactory(),
+        ManifestDatabase::class.java,
     )
 
     @Test

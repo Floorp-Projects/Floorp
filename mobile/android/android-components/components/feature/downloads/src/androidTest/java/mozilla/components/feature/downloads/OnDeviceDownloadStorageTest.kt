@@ -7,7 +7,6 @@ package mozilla.components.feature.downloads
 import android.content.Context
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
-import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,11 +31,9 @@ class OnDeviceDownloadStorageTest {
     private lateinit var database: DownloadsDatabase
 
     @get:Rule
-    @Suppress("DEPRECATION")
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        DownloadsDatabase::class.java.canonicalName,
-        FrameworkSQLiteOpenHelperFactory(),
+        DownloadsDatabase::class.java,
     )
 
     @Before
