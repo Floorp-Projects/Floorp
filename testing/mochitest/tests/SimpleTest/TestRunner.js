@@ -833,25 +833,27 @@ TestRunner.testFinished = function (tests) {
       if (!testInXOriginFrame()) {
         $("testframe").contentWindow.addEventListener("unload", function () {
           var testwin = $("testframe").contentWindow;
-          if (
-            testwin.SimpleTest &&
-            testwin.SimpleTest._tests.length != testwin.SimpleTest.testsLength
-          ) {
-            var wrongtestlength =
-              testwin.SimpleTest._tests.length - testwin.SimpleTest.testsLength;
-            var wrongtestname = "";
-            for (var i = 0; i < wrongtestlength; i++) {
-              wrongtestname =
-                testwin.SimpleTest._tests[testwin.SimpleTest.testsLength + i]
-                  .name;
-              TestRunner.structuredLogger.error(
-                "TEST-UNEXPECTED-FAIL | " +
-                  TestRunner.currentTestURL +
-                  " logged result after SimpleTest.finish(): " +
-                  wrongtestname
-              );
+          if (testwin.SimpleTest) {
+            if (
+              testwin.SimpleTest._tests.length != testwin.SimpleTest.testsLength
+            ) {
+              var wrongtestlength =
+                testwin.SimpleTest._tests.length -
+                testwin.SimpleTest.testsLength;
+              var wrongtestname = "";
+              for (var i = 0; i < wrongtestlength; i++) {
+                wrongtestname =
+                  testwin.SimpleTest._tests[testwin.SimpleTest.testsLength + i]
+                    .name;
+                TestRunner.structuredLogger.error(
+                  "TEST-UNEXPECTED-FAIL | " +
+                    TestRunner.currentTestURL +
+                    " logged result after SimpleTest.finish(): " +
+                    wrongtestname
+                );
+              }
+              TestRunner.updateUI([{ result: false }]);
             }
-            TestRunner.updateUI([{ result: false }]);
           }
         });
       }
