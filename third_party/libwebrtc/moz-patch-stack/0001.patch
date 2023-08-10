@@ -38,10 +38,10 @@ Cr-Branched-From: df7df199abd619e75b9f1d9a7e12fc3f3f748775-refs/heads/main@{#399
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/pc/sctp_data_channel.cc b/pc/sctp_data_channel.cc
-index 3fed03ca11..dda9110bfc 100644
+index e024c60970..a17008fb3f 100644
 --- a/pc/sctp_data_channel.cc
 +++ b/pc/sctp_data_channel.cc
-@@ -843,7 +843,7 @@ void SctpDataChannel::SetState(DataState state) {
+@@ -848,7 +848,7 @@ void SctpDataChannel::SetState(DataState state) {
  
  // RTC_RUN_ON(network_thread_).
  void SctpDataChannel::DeliverQueuedReceivedData() {
