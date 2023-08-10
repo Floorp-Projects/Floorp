@@ -215,6 +215,7 @@ export class StyleEditorUI extends EventEmitter {
       {
         onAvailable: this.#onResourceAvailable,
         onUpdated: this.#onResourceUpdated,
+        onDestroyed: this.#onResourceDestroyed,
       }
     );
     await this.#waitForLoadingStyleSheets();
@@ -1581,6 +1582,25 @@ export class StyleEditorUI extends EventEmitter {
     }
   };
 
+  #onResourceDestroyed = resources => {
+    for (const resource of resources) {
+      if (
+        resource.resourceType !== this.#toolbox.resourceCommand.TYPES.STYLESHEET
+      ) {
+        continue;
+      }
+
+      const editorToRemove = this.editors.find(
+        editor => editor.styleSheet.resourceId == resource.resourceId
+      );
+
+      if (editorToRemove) {
+        const { styleSheet } = editorToRemove;
+        this.#removeStyleSheet(styleSheet, editorToRemove);
+      }
+    }
+  };
+
   /**
    * Set the active item's summary element.
    *
@@ -1701,6 +1721,7 @@ export class StyleEditorUI extends EventEmitter {
       {
         onAvailable: this.#onResourceAvailable,
         onUpdated: this.#onResourceUpdated,
+        onDestroyed: this.#onResourceDestroyed,
       }
     );
     this.#commands.targetCommand.unwatchTargets({
