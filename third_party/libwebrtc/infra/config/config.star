@@ -653,6 +653,16 @@ def cron_builder(name, service_account = None, **kwargs):
         **kwargs
     )
 
+def chromium_try_builder(name, **kwargs):
+    return try_builder(
+        name,
+        builder = "chromium-compile",
+        recipe = "chromium_trybot",
+        branch_cq = False,
+        execution_timeout = 3 * time.hour,
+        **kwargs
+    )
+
 def normal_builder_factory(**common_kwargs):
     def builder(*args, **kwargs):
         kwargs.update(common_kwargs)
@@ -702,7 +712,7 @@ ci_builder("Android32 Builder x86", "Android|x86|rel")
 try_builder("android_compile_x86_rel")
 ci_builder("Android32 (more configs)", "Android|arm|more")
 try_builder("android_arm_more_configs")
-try_builder("android_chromium_compile", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
+chromium_try_builder("android_chromium_compile")
 
 ios_builder("iOS64 Debug", "iOS|arm64|dbg")
 ios_try_job("ios_compile_arm64_dbg")
@@ -748,9 +758,9 @@ try_builder("linux_libfuzzer_rel", recipe = "libfuzzer")
 ci_builder("Linux (more configs)", "Linux|x64|more")
 try_builder("linux_more_configs")
 try_builder("linux_coverage")
-try_builder("webrtc_linux_chromium", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
-try_builder("linux_chromium_compile", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False, cq = None)
-try_builder("linux_chromium_compile_dbg", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
+chromium_try_builder("webrtc_linux_chromium")
+chromium_try_builder("linux_chromium_compile", cq = None)
+chromium_try_builder("linux_chromium_compile_dbg")
 
 ci_builder("Fuchsia Builder", ci_cat = None, perf_cat = "Fuchsia|x64|Builder|", prioritized = True)
 ci_builder("Fuchsia Release", "Fuchsia|x64|rel")
@@ -772,7 +782,7 @@ try_builder("mac_asan")
 ci_builder("MacARM64 M1 Release", "Mac|arm64M1|rel", cpu = "arm64-64-Apple_M1")
 try_builder("mac_rel_m1")
 try_builder("mac_dbg_m1")
-try_builder("mac_chromium_compile", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
+chromium_try_builder("mac_chromium_compile")
 
 ci_builder("Win32 Debug (Clang)", "Win Clang|x86|dbg")
 try_builder("win_x86_clang_dbg", cq = None)
@@ -792,8 +802,8 @@ ci_builder("Win64 ASan", "Win Clang|x64|asan")
 try_builder("win_asan")
 ci_builder("Win (more configs)", "Win Clang|x86|more")
 try_builder("win_x86_more_configs")
-try_builder("win_chromium_compile", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
-try_builder("win_chromium_compile_dbg", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
+chromium_try_builder("win_chromium_compile")
+chromium_try_builder("win_chromium_compile_dbg")
 
 try_builder(
     "presubmit",
