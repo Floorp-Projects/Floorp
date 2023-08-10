@@ -62,3 +62,6 @@ scripts:
     # running fix:eslint will also reformat changed JS files using prettier.
     eslint: =>lint:eslint -- --fix
     stylelint: =>lint:stylelint -- --fix
+
+  # script to import Nimbus rollouts into NimbusRolloutMessageProvider.sys.mjs
+  import-rollouts: node ./bin/import-rollouts.js
