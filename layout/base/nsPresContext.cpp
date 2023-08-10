@@ -748,21 +748,8 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
 bool nsPresContext::UpdateFontVisibility() {
   FontVisibility oldValue = mFontVisibility;
 
-  /*
-   * Expected behavior in order of precedence:
-   *  1  Chrome Rules give User Level (3)
-   *  2  RFP gives Highest Level (1 aka Base)
-   *  3  An RFPTarget of Base gives Base Level (1)
-   *  4  An RFPTarget of LangPack gives LangPack Level (2)
-   *  5  The value of the Standard Font Visibility Pref
-   *
-   * If the ETP toggle is disabled (aka
-   * ContentBlockingAllowList::Check is true), it will only override 3-5,
-   * not rules 1 or 2.
-   */
-
-  // Rule 1: Allow all font access for privileged contexts, including
-  // chrome and devtools contexts.
+  // Allow all font access for privileged contexts, including chrome and
+  // devtools contexts.
   if (Document()->ChromeRulesEnabled()) {
     mFontVisibility = FontVisibility::User;
     return mFontVisibility != oldValue;
@@ -774,36 +761,33 @@ bool nsPresContext::UpdateFontVisibility() {
     isPrivate = loadContext->UsePrivateBrowsing();
   }
 
+  // Read the relevant pref depending on RFP/trackingProtection state
+  // to determine the visibility level to use.
   int32_t level;
-  // Rule 3
   if (mDocument->ShouldResistFingerprinting(
           RFPTarget::FontVisibilityBaseSystem)) {
-    // Rule 2: Check RFP pref
-    // This is inside Rule 3 in case this document is exempted from RFP.
-    // But if it is not exempted, and RFP is enabled, we return immediately
-    // to prevent the override below from occurring.
-    if (nsRFPService::IsRFPPrefEnabled(isPrivate)) {
-      mFontVisibility = FontVisibility::Base;
-      return mFontVisibility != oldValue;
-    }
-
     level = int32_t(FontVisibility::Base);
-  }
-  // Rule 4
-  else if (mDocument->ShouldResistFingerprinting(
-               RFPTarget::FontVisibilityLangPack)) {
+  } else if (mDocument->ShouldResistFingerprinting(
+                 RFPTarget::FontVisibilityLangPack)) {
     level = int32_t(FontVisibility::LangPack);
-  }
-  // Rule 5
-  else {
-    level = StaticPrefs::layout_css_font_visibility();
+  } else if (StaticPrefs::privacy_trackingprotection_enabled() ||
+             (isPrivate &&
+              StaticPrefs::privacy_trackingprotection_pbmode_enabled())) {
+    level = StaticPrefs::layout_css_font_visibility_trackingprotection();
+  } else {
+    level = StaticPrefs::layout_css_font_visibility_standard();
   }
 
-  // Override Rules 3-5 Only: Determine if the user has exempted the
-  // domain from tracking protections, if so, use the default value.
-  if (level != StaticPrefs::layout_css_font_visibility &&
-      ContentBlockingAllowList::Check(mDocument->CookieJarSettings())) {
-    level = StaticPrefs::layout_css_font_visibility();
+  // For private browsing contexts, apply the private-mode limit.
+  if (isPrivate) {
+    int32_t priv = StaticPrefs::layout_css_font_visibility_private();
+    level = std::max(std::min(level, priv), int32_t(FontVisibility::Base));
+  }
+
+  // Determine if the user has exempted the domain from tracking protections,
+  // if so, use the standard value.
+  if (ContentBlockingAllowList::Check(mDocument->CookieJarSettings())) {
+    level = StaticPrefs::layout_css_font_visibility_standard();
   }
 
   // Clamp result to the valid range of levels.
