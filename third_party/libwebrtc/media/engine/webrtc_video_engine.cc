@@ -310,15 +310,10 @@ static bool ValidateStreamParams(const StreamParams& sp) {
 
 // Returns true if the given codec is disallowed from doing simulcast.
 bool IsCodecDisabledForSimulcast(bool legacy_scalability_mode,
-                                 webrtc::VideoCodecType codec_type,
-                                 const webrtc::FieldTrialsView& trials) {
+                                 webrtc::VideoCodecType codec_type) {
   if (legacy_scalability_mode && (codec_type == webrtc::kVideoCodecVP9 ||
                                   codec_type == webrtc::kVideoCodecAV1)) {
     return true;
-  }
-
-  if (codec_type == webrtc::kVideoCodecH264) {
-    return absl::StartsWith(trials.Lookup("WebRTC-H264Simulcast"), "Disabled");
   }
 
   return false;
@@ -2520,10 +2515,12 @@ WebRtcVideoChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
     }
   }
   // Maybe limit the number of simulcast layers depending on
-  // `legacy_scalability_mode`, codec types (VP9/AV1) and the
-  // WebRTC-H264Simulcast/Disabled/ field trial.
+  // `legacy_scalability_mode`, codec types (VP9/AV1). This path only exists
+  // for backwards compatibility and will one day be deleted. If you want SVC,
+  // please specify with the `scalability_mode` API instead amd disabling all
+  // but one encoding.
   if (IsCodecDisabledForSimulcast(legacy_scalability_mode,
-                                  encoder_config.codec_type, call_->trials())) {
+                                  encoder_config.codec_type)) {
     encoder_config.number_of_streams = 1;
   }
 
