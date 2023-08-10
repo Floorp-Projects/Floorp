@@ -53,7 +53,7 @@ enum class Limit : uint8_t {
   _LAST = MaxComputeWorkgroupsPerDimension,
 };
 
-double GetLimit(const ffi::WGPULimits&, Limit);
+uint64_t GetLimit(const ffi::WGPULimits&, Limit);
 void SetLimit(ffi::WGPULimits*, Limit, double);
 
 class SupportedLimits final : public nsWrapperCache, public ChildOf<Adapter> {

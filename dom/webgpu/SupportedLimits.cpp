@@ -18,7 +18,7 @@ SupportedLimits::SupportedLimits(Adapter* const aParent,
 
 SupportedLimits::~SupportedLimits() = default;
 
-double GetLimit(const ffi::WGPULimits& limits, const Limit limit) {
+uint64_t GetLimit(const ffi::WGPULimits& limits, const Limit limit) {
   switch (limit) {
     case Limit::MaxTextureDimension1D:
       return limits.max_texture_dimension_1d;
