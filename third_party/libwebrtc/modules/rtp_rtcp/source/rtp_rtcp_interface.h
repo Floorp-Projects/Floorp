@@ -151,6 +151,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // not negotiated. If the RID and Repaired RID extensions are not
     // registered, the RID will not be sent.
     std::string rid;
+
+    // Enables send packet batching from the egress RTP sender.
+    bool enable_send_packet_batching = false;
   };
 
   // Stats for RTCP sender reports (SR) for a specific SSRC.
@@ -319,6 +322,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // transport.
   virtual bool TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
                              const PacedPacketInfo& pacing_info) = 0;
+
+  // Notifies that a batch of packet sends is completed. The implementation can
+  // use this to optimize packet sending.
+  virtual void OnBatchComplete() = 0;
 
   // Update the FEC protection parameters to use for delta- and key-frames.
   // Only used when deferred FEC is active.

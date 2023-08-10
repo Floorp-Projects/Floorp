@@ -235,6 +235,8 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
   configuration.extmap_allow_mixed = rtp_config.extmap_allow_mixed;
   configuration.rtcp_report_interval_ms = rtcp_report_interval_ms;
   configuration.field_trials = &trials;
+  configuration.enable_send_packet_batching =
+      rtp_config.enable_send_packet_batching;
 
   std::vector<RtpStreamSender> rtp_streams;
 

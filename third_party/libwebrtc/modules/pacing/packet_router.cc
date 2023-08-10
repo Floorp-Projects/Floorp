@@ -90,6 +90,7 @@ void PacketRouter::RemoveSendRtpModuleFromMap(uint32_t ssrc) {
   auto it = send_modules_map_.find(ssrc);
   RTC_DCHECK(it != send_modules_map_.end());
   send_modules_list_.remove(it->second);
+  RTC_CHECK(modules_used_in_current_batch_.empty());
   send_modules_map_.erase(it);
 }
 
@@ -166,6 +167,7 @@ void PacketRouter::SendPacket(std::unique_ptr<RtpPacketToSend> packet,
     RTC_LOG(LS_WARNING) << "Failed to send packet, rejected by RTP module.";
     return;
   }
+  modules_used_in_current_batch_.insert(rtp_module);
 
   // Sending succeeded.
 
@@ -182,6 +184,16 @@ void PacketRouter::SendPacket(std::unique_ptr<RtpPacketToSend> packet,
   for (auto& packet : rtp_module->FetchFecPackets()) {
     pending_fec_packets_.push_back(std::move(packet));
   }
+}
+
+void PacketRouter::OnBatchComplete() {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+               "PacketRouter::OnBatchComplete");
+  for (auto& module : modules_used_in_current_batch_) {
+    module->OnBatchComplete();
+  }
+  modules_used_in_current_batch_.clear();
 }
 
 std::vector<std::unique_ptr<RtpPacketToSend>> PacketRouter::FetchFec() {
