@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.compose.ext.thenConditional
 import org.mozilla.fenix.theme.FirefoxTheme
 
 const val ITEM_WIDTH = 328
@@ -143,11 +144,10 @@ fun ListItemTabSurface(
 ) {
     val modifier = Modifier
         .size(ITEM_WIDTH.dp, ITEM_HEIGHT.dp)
-        .clickable {
-            if (onClick != null) {
-                onClick()
-            }
-        }
+        .thenConditional(
+            modifier = Modifier.clickable { onClick!!() },
+            predicate = { onClick != null },
+        )
 
     Card(
         modifier = modifier,
