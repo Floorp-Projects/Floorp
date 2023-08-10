@@ -164,19 +164,12 @@ struct RTCPReportBlock {
 typedef std::list<RTCPReportBlock> ReportBlockList;
 
 struct RtpState {
-  RtpState()
-      : sequence_number(0),
-        start_timestamp(0),
-        timestamp(0),
-        capture_time_ms(-1),
-        last_timestamp_time_ms(-1),
-        ssrc_has_acked(false) {}
-  uint16_t sequence_number;
-  uint32_t start_timestamp;
-  uint32_t timestamp;
-  int64_t capture_time_ms;
-  int64_t last_timestamp_time_ms;
-  bool ssrc_has_acked;
+  uint16_t sequence_number = 0;
+  uint32_t start_timestamp = 0;
+  uint32_t timestamp = 0;
+  Timestamp capture_time = Timestamp::MinusInfinity();
+  Timestamp last_timestamp_time = Timestamp::MinusInfinity();
+  bool ssrc_has_acked = false;
 };
 
 class RtcpIntraFrameObserver {

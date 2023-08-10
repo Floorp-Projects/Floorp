@@ -1065,16 +1065,16 @@ TEST_F(RtpRtcpImpl2Test, RtpStateReflectsCurrentState) {
   // Verify that that each of the field of GetRtpState actually reflects
   // the current state.
 
-  // Current time will be used for `timestamp`, `capture_time_ms` and
-  // `last_timestamp_time_ms`.
-  const int64_t time_ms = time_controller_.GetClock()->TimeInMilliseconds();
+  // Current time will be used for `timestamp`, `capture_time` and
+  // `last_timestamp_time`.
+  const Timestamp time = time_controller_.GetClock()->CurrentTime();
 
   // Use different than default sequence number to test `sequence_number`.
   const uint16_t kSeq = kSequenceNumber + 123;
   // Hard-coded value for `start_timestamp`.
   const uint32_t kStartTimestamp = 3456;
-  const int64_t capture_time_ms = time_ms;
-  const uint32_t timestamp = capture_time_ms * kCaptureTimeMsToRtpTimestamp;
+  const Timestamp capture_time = time;
+  const uint32_t timestamp = capture_time.ms() * kCaptureTimeMsToRtpTimestamp;
 
   sender_.impl_->SetSequenceNumber(kSeq - 1);
   sender_.impl_->SetStartTimestamp(kStartTimestamp);
@@ -1090,8 +1090,8 @@ TEST_F(RtpRtcpImpl2Test, RtpStateReflectsCurrentState) {
   EXPECT_EQ(state.sequence_number, kSeq);
   EXPECT_EQ(state.start_timestamp, kStartTimestamp);
   EXPECT_EQ(state.timestamp, timestamp);
-  EXPECT_EQ(state.capture_time_ms, capture_time_ms);
-  EXPECT_EQ(state.last_timestamp_time_ms, time_ms);
+  EXPECT_EQ(state.capture_time, capture_time);
+  EXPECT_EQ(state.last_timestamp_time, time);
   EXPECT_EQ(state.ssrc_has_acked, true);
 
   // Reset sender, advance time, restore state. Directly observing state
@@ -1104,8 +1104,8 @@ TEST_F(RtpRtcpImpl2Test, RtpStateReflectsCurrentState) {
   EXPECT_EQ(state.sequence_number, kSeq);
   EXPECT_EQ(state.start_timestamp, kStartTimestamp);
   EXPECT_EQ(state.timestamp, timestamp);
-  EXPECT_EQ(state.capture_time_ms, capture_time_ms);
-  EXPECT_EQ(state.last_timestamp_time_ms, time_ms);
+  EXPECT_EQ(state.capture_time, capture_time);
+  EXPECT_EQ(state.last_timestamp_time, time);
   EXPECT_EQ(state.ssrc_has_acked, true);
 }
 
