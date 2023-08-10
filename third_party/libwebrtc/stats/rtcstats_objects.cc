@@ -401,8 +401,7 @@ WEBRTC_RTCSTATS_IMPL(RTCRtpStreamStats, RTCStats, "rtp",
     &kind,
     &track_id,
     &transport_id,
-    &codec_id,
-    &media_type)
+    &codec_id)
 // clang-format on
 
 RTCRtpStreamStats::RTCRtpStreamStats(std::string id, Timestamp timestamp)
@@ -411,8 +410,7 @@ RTCRtpStreamStats::RTCRtpStreamStats(std::string id, Timestamp timestamp)
       kind("kind"),
       track_id("trackId"),
       transport_id("transportId"),
-      codec_id("codecId"),
-      media_type("mediaType") {}
+      codec_id("codecId") {}
 
 RTCRtpStreamStats::RTCRtpStreamStats(const RTCRtpStreamStats& other) = default;
 
