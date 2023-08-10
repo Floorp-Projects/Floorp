@@ -74,7 +74,7 @@ UniquePtr<EncodedVideoChunkData> EncodedVideoChunkData::Clone() {
 
   auto buffer =
       MakeRefPtr<MediaAlignedByteBuffer>(mBuffer->Data(), mBuffer->Length());
-  if (!buffer) {
+  if (!buffer || buffer->Size() != mBuffer->Size()) {
     LOGE("OOM to copy EncodedVideoChunkData %p", this);
     return nullptr;
   }
