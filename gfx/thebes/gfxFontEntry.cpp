@@ -157,7 +157,8 @@ void gfxFontEntry::InitializeFrom(fontlist::Face* aFace,
 bool gfxFontEntry::TrySetShmemCharacterMap() {
   MOZ_ASSERT(mShmemFace);
   auto list = gfxPlatformFontList::PlatformFontList()->SharedFontList();
-  auto* shmemCmap = mShmemFace->mCharacterMap.ToPtr<const SharedBitSet>(list);
+  const auto* shmemCmap =
+      static_cast<const SharedBitSet*>(mShmemFace->mCharacterMap.ToPtr(list));
   mShmemCharacterMap.exchange(shmemCmap);
   return shmemCmap != nullptr;
 }
