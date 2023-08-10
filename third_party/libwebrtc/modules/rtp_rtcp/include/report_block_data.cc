@@ -34,10 +34,6 @@ void ReportBlockData::SetReportBlock(uint32_t sender_ssrc,
 }
 
 void ReportBlockData::AddRoundTripTimeSample(TimeDelta rtt) {
-  if (rtt > max_rtt_)
-    max_rtt_ = rtt;
-  if (num_rtts_ == 0 || rtt < min_rtt_)
-    min_rtt_ = rtt;
   last_rtt_ = rtt;
   sum_rtt_ += rtt;
   ++num_rtts_;

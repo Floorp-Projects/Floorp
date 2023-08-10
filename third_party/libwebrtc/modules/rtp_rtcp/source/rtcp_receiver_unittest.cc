@@ -1618,8 +1618,6 @@ TEST(RtcpReceiverTest, VerifyRttObtainedFromReportBlockDataObserver) {
       .WillOnce([&](ReportBlockData report_block_data) {
         EXPECT_EQ(kReceiverMainSsrc, report_block_data.source_ssrc());
         EXPECT_EQ(1u, report_block_data.num_rtts());
-        EXPECT_EQ(kRtt, report_block_data.min_rtt());
-        EXPECT_EQ(kRtt, report_block_data.max_rtt());
         EXPECT_EQ(kRtt, report_block_data.sum_rtts());
         EXPECT_EQ(kRtt, report_block_data.last_rtt());
       });

@@ -113,15 +113,15 @@ void ModuleRtpRtcpImpl::Process() {
     // `process_rtt` first.
     if (process_rtt && rtt_stats_ != nullptr &&
         rtcp_receiver_.LastReceivedReportBlockMs() > last_rtt_process_time_) {
-      int64_t max_rtt_ms = 0;
+      TimeDelta max_rtt = TimeDelta::Zero();
       for (const auto& block : rtcp_receiver_.GetLatestReportBlockData()) {
-        if (block.last_rtt_ms() > max_rtt_ms) {
-          max_rtt_ms = block.last_rtt_ms();
+        if (block.last_rtt() > max_rtt) {
+          max_rtt = block.last_rtt();
         }
       }
       // Report the rtt.
-      if (max_rtt_ms > 0) {
-        rtt_stats_->OnRttUpdate(max_rtt_ms);
+      if (max_rtt > TimeDelta::Zero()) {
+        rtt_stats_->OnRttUpdate(max_rtt.ms());
       }
     }
 
