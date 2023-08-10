@@ -34,7 +34,7 @@
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
-#include "video/receive_statistics_proxy2.h"
+#include "video/receive_statistics_proxy.h"
 #include "video/rtp_streams_synchronizer2.h"
 #include "video/rtp_video_stream_receiver2.h"
 #include "video/transport_adapter.h"

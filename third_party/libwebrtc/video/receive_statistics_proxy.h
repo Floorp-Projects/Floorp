@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VIDEO_RECEIVE_STATISTICS_PROXY2_H_
-#define VIDEO_RECEIVE_STATISTICS_PROXY2_H_
+#ifndef VIDEO_RECEIVE_STATISTICS_PROXY_H_
+#define VIDEO_RECEIVE_STATISTICS_PROXY_H_
 
 #include <map>
 #include <memory>
@@ -220,4 +220,4 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
 
 }  // namespace internal
 }  // namespace webrtc
-#endif  // VIDEO_RECEIVE_STATISTICS_PROXY2_H_
+#endif  // VIDEO_RECEIVE_STATISTICS_PROXY_H_
