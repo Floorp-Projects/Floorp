@@ -372,25 +372,24 @@ void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
 }
 void RtpTransportControllerSend::OnSentPacket(
     const rtc::SentPacket& sent_packet) {
-  // Normally called on the network thread !
-  // TODO(bugs.webrtc.org/137439): Clarify other thread contexts calling in, and
-  // simplify task posting logic when the combined network/worker project
+  // Normally called on the network thread!
+  // TODO(crbug.com/1373439): Clarify other thread contexts calling in,
+  // and simplify task posting logic when the combined network/worker project
   // launches.
   if (TaskQueueBase::Current() != task_queue_) {
     task_queue_->PostTask(SafeTask(safety_.flag(), [this, sent_packet]() {
       RTC_DCHECK_RUN_ON(&sequence_checker_);
-      ProcessSentPacket(sent_packet, /*posted_to_worker=*/true);
+      ProcessSentPacket(sent_packet);
     }));
     return;
   }
 
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  ProcessSentPacket(sent_packet, /*posted_to_worker=*/false);
+  ProcessSentPacket(sent_packet);
 }
 
 void RtpTransportControllerSend::ProcessSentPacket(
-    const rtc::SentPacket& sent_packet,
-    bool posted_to_worker) {
+    const rtc::SentPacket& sent_packet) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   absl::optional<SentPacket> packet_msg =
       transport_feedback_adapter_.ProcessSentPacket(sent_packet);
@@ -403,24 +402,7 @@ void RtpTransportControllerSend::ProcessSentPacket(
     control_update = controller_->OnSentPacket(*packet_msg);
   if (!congestion_update && !control_update.has_updates())
     return;
-  if (posted_to_worker) {
-    ProcessSentPacketUpdates(std::move(control_update));
-  } else {
-    // TODO(bugs.webrtc.org/137439): Aim to remove downstream locks to permit
-    // removing this PostTask.
-    // At least in test situations (and possibly in production environments), we
-    // may get here synchronously with locks taken in PacketRouter::SendPacket.
-    // Because the pacer may at times synchronously re-enter
-    // PacketRouter::SendPacket, we need to break the chain here and PostTask to
-    // get out of the lock. In testing, having updates to process happens pretty
-    // rarely so we do not usually get here.
-    task_queue_->PostTask(
-        SafeTask(safety_.flag(),
-                 [this, control_update = std::move(control_update)]() mutable {
-                   RTC_DCHECK_RUN_ON(&sequence_checker_);
-                   ProcessSentPacketUpdates(std::move(control_update));
-                 }));
-  }
+  ProcessSentPacketUpdates(std::move(control_update));
 }
 
 // RTC_RUN_ON(task_queue_)

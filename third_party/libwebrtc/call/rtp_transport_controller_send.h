@@ -141,8 +141,8 @@ class RtpTransportControllerSend final
   void UpdateCongestedState() RTC_RUN_ON(sequence_checker_);
   absl::optional<bool> GetCongestedStateUpdate() const
       RTC_RUN_ON(sequence_checker_);
-  void ProcessSentPacket(const rtc::SentPacket& sent_packet,
-                         bool posted_to_worker) RTC_RUN_ON(sequence_checker_);
+  void ProcessSentPacket(const rtc::SentPacket& sent_packet)
+      RTC_RUN_ON(sequence_checker_);
   void ProcessSentPacketUpdates(NetworkControlUpdate updates)
       RTC_RUN_ON(sequence_checker_);
 
