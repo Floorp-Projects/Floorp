@@ -197,6 +197,25 @@ struct AnimationEventInfo {
   AnimationEventInfo(AnimationEventInfo&& aOther) = default;
   AnimationEventInfo& operator=(AnimationEventInfo&& aOther) = default;
 
+  bool operator<(const AnimationEventInfo& aOther) const {
+    if (this->mScheduledEventTimeStamp != aOther.mScheduledEventTimeStamp) {
+      // Null timestamps sort first
+      if (this->mScheduledEventTimeStamp.IsNull() ||
+          aOther.mScheduledEventTimeStamp.IsNull()) {
+        return this->mScheduledEventTimeStamp.IsNull();
+      }
+      return this->mScheduledEventTimeStamp < aOther.mScheduledEventTimeStamp;
+    }
+
+    // Events in the Web Animations spec are prior to CSS events.
+    if (this->IsWebAnimationEvent() != aOther.IsWebAnimationEvent()) {
+      return this->IsWebAnimationEvent();
+    }
+
+    AnimationPtrComparator<RefPtr<dom::Animation>> comparator;
+    return comparator.LessThan(this->mAnimation, aOther.mAnimation);
+  }
+
   bool IsWebAnimationEvent() const { return mData.is<WebAnimationData>(); }
 
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
@@ -300,29 +319,6 @@ class AnimationEventDispatcher final {
   }
 #endif
 
-  class AnimationEventInfoLessThan {
-   public:
-    bool operator()(const AnimationEventInfo& a,
-                    const AnimationEventInfo& b) const {
-      if (a.mScheduledEventTimeStamp != b.mScheduledEventTimeStamp) {
-        // Null timestamps sort first
-        if (a.mScheduledEventTimeStamp.IsNull() ||
-            b.mScheduledEventTimeStamp.IsNull()) {
-          return a.mScheduledEventTimeStamp.IsNull();
-        }
-        return a.mScheduledEventTimeStamp < b.mScheduledEventTimeStamp;
-      }
-
-      // Events in the Web Animations spec are prior to CSS events.
-      if (a.IsWebAnimationEvent() != b.IsWebAnimationEvent()) {
-        return a.IsWebAnimationEvent();
-      }
-
-      AnimationPtrComparator<RefPtr<dom::Animation>> comparator;
-      return comparator.LessThan(a.mAnimation, b.mAnimation);
-    }
-  };
-
   // Sort all pending CSS animation/transition events by scheduled event time
   // and composite order.
   // https://drafts.csswg.org/web-animations/#update-animations-and-send-events
@@ -335,10 +331,7 @@ class AnimationEventDispatcher final {
       pending.mAnimation->CachedChildIndexRef().reset();
     }
 
-    // FIXME: Replace with mPendingEvents.StableSort when bug 1147091 is
-    // fixed.
-    std::stable_sort(mPendingEvents.begin(), mPendingEvents.end(),
-                     AnimationEventInfoLessThan());
+    mPendingEvents.StableSort();
     mIsSorted = true;
   }
   void ScheduleDispatch();
