@@ -89,6 +89,8 @@ bool WAVTrackDemuxer::Init() {
     return false;
   }
 
+  bool hasValidFmt = false;
+
   while (true) {
     if (!HeaderParserInit()) {
       return false;
@@ -98,9 +100,7 @@ bool WAVTrackDemuxer::Init() {
     uint32_t chunkSize = mHeaderParser.GiveHeader().ChunkSize();
 
     if (chunkName == FRMT_CODE) {
-      if (!FmtChunkParserInit()) {
-        return false;
-      }
+      hasValidFmt = FmtChunkParserInit();
     } else if (chunkName == LIST_CODE) {
       mHeaderParser.Reset();
       uint64_t endOfListChunk = static_cast<uint64_t>(mOffset) + chunkSize;
@@ -124,6 +124,10 @@ bool WAVTrackDemuxer::Init() {
       mOffset += 1;
     }
     mHeaderParser.Reset();
+  }
+
+  if (!hasValidFmt) {
+    return false;
   }
 
   int64_t streamLength = StreamLength();
@@ -183,7 +187,7 @@ bool WAVTrackDemuxer::HeaderParserInit() {
 
 bool WAVTrackDemuxer::FmtChunkParserInit() {
   RefPtr<MediaRawData> fmtChunk = GetFileHeader(FindFmtChunk());
-  if (!fmtChunk) {
+  if (!fmtChunk || fmtChunk->Size() < 16) {
     return false;
   }
   nsTArray<uint8_t> fmtChunkData(fmtChunk->Data(), fmtChunk->Size());
