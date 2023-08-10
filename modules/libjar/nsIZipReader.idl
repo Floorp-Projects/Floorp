@@ -78,6 +78,16 @@ interface nsIZipReader : nsISupports
     void openInner(in nsIZipReader zipReader, in AUTF8String zipEntry);
 
     /**
+     * Opens a zip file stored in memory; the file attribute will be null.
+     *
+     * The ZipReader does not copy or take ownership of this memory; the
+     * caller must ensure that it is valid and unmodified until the
+     * ZipReader is closed or destroyed, and must free the memory as
+     * appropriate afterwards.
+     */
+    void openMemory(in voidPtr aData, in unsigned long aLength);
+
+    /**
      * The file that represents the zip with which this zip reader was
      * initialized.  This will be null if there is no underlying file.
      */
