@@ -259,9 +259,7 @@ class D3DSharedTexturesReporter final : public nsIMemoryReporter {
 NS_IMPL_ISUPPORTS(D3DSharedTexturesReporter, nsIMemoryReporter)
 
 gfxWindowsPlatform::gfxWindowsPlatform()
-    : mRenderMode(RENDER_GDI),
-      mSupportsHDR(false),
-      mDwmCompositionStatus(DwmCompositionStatus::Unknown) {
+    : mRenderMode(RENDER_GDI), mSupportsHDR(false) {
   // If win32k is locked down then we can't use COM STA and shouldn't need it.
   // Also, we won't be using any GPU memory in this process.
   if (!IsWin32kLockedDown()) {
@@ -395,27 +393,6 @@ void gfxWindowsPlatform::InitAcceleration() {
   Factory::SetSystemTextQuality(gfxVars::SystemTextQuality());
   gfxVars::SetSystemTextQualityListener(
       gfxDWriteFont::SystemTextQualityChanged);
-
-  if (XRE_IsParentProcess()) {
-    BOOL dwmEnabled = FALSE;
-    if (FAILED(::DwmIsCompositionEnabled(&dwmEnabled)) || !dwmEnabled) {
-      gfxVars::SetDwmCompositionEnabled(false);
-    } else {
-      gfxVars::SetDwmCompositionEnabled(true);
-    }
-  }
-
-  // gfxVars are not atomic, but multiple threads can query DWM status
-  // Therefore, mirror value into an atomic
-  mDwmCompositionStatus = gfxVars::DwmCompositionEnabled()
-                              ? DwmCompositionStatus::Enabled
-                              : DwmCompositionStatus::Disabled;
-
-  gfxVars::SetDwmCompositionEnabledListener([this] {
-    this->mDwmCompositionStatus = gfxVars::DwmCompositionEnabled()
-                                      ? DwmCompositionStatus::Enabled
-                                      : DwmCompositionStatus::Disabled;
-  });
 
   // CanUseHardwareVideoDecoding depends on DeviceManagerDx state,
   // so update the cached value now.
@@ -1488,12 +1465,6 @@ void gfxWindowsPlatform::InitGPUProcessSupport() {
   // If we're still enabled at this point, the user set the force-enabled pref.
 }
 
-bool gfxWindowsPlatform::DwmCompositionEnabled() {
-  MOZ_RELEASE_ASSERT(mDwmCompositionStatus != DwmCompositionStatus::Unknown);
-
-  return mDwmCompositionStatus == DwmCompositionStatus::Enabled;
-}
-
 class D3DVsyncSource final : public VsyncSource {
  public:
   D3DVsyncSource()
@@ -1507,11 +1478,6 @@ class D3DVsyncSource final : public VsyncSource {
   }
 
   void SetVsyncRate() {
-    if (!gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
-      mVsyncRate = TimeDuration::FromMilliseconds(1000.0 / 60.0);
-      return;
-    }
-
     DWM_TIMING_INFO vblankTime;
     // Make sure to init the cbSize, otherwise GetCompositionTiming will fail
     vblankTime.cbSize = sizeof(DWM_TIMING_INFO);
@@ -1659,15 +1625,6 @@ class D3DVsyncSource final : public VsyncSource {
       MOZ_ASSERT(vsync <= TimeStamp::Now());
       NotifyVsync(vsync, vsync + mVsyncRate);
 
-      // DwmComposition can be dynamically enabled/disabled
-      // so we have to check every time that it's available.
-      // When it is unavailable, we fallback to software but will try
-      // to get back to dwm rendering once it's re-enabled
-      if (!gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
-        ScheduleSoftwareVsync(vsync);
-        return;
-      }
-
       HRESULT hr = E_FAIL;
       if (!StaticPrefs::gfx_vsync_force_disable_waitforvblank()) {
         UpdateVBlankOutput();
@@ -1771,11 +1728,6 @@ class D3DVsyncSource final : public VsyncSource {
 already_AddRefed<mozilla::gfx::VsyncSource>
 gfxWindowsPlatform::CreateGlobalHardwareVsyncSource() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "GFX: Not in main thread.");
-
-  if (!DwmCompositionEnabled()) {
-    NS_WARNING("DWM not enabled, falling back to software vsync");
-    return GetSoftwareVsyncSource();
-  }
 
   RefPtr<VsyncSource> d3dVsyncSource = new D3DVsyncSource();
   return d3dVsyncSource.forget();
