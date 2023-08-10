@@ -21,6 +21,7 @@ exclude: true
 - Added [`GeckoSession.requestRecommendations`][118.5] for requesting product recommendations given a specific product url.
 - Added [`ERROR_INCOMPATIBLE`][118.6] to `WebExtension.InstallException.ErrorCodes`. ([bug 1845749]({{bugzilla}}1845749))
 - Added [`GeckoRuntimeSettings.Builder.extensionsWebAPIEnabled`][118.7]. ([bug 1847173]({{bugzilla}}1847173))
+- Changed [`GeckoSession.AccountSelectorPrompt`][118.8]: added the Provider to which the Account belongs ([bug 1847059]({{bugzilla}}1847059))
 
 [118.1]: {{javadoc_uri}}/ExperimentDelegate.html
 [118.2]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_BLOCKLISTED
@@ -29,6 +30,7 @@ exclude: true
 [118.5]: {{javadoc_uri}}/GeckoSession.html#requestRecommendations(String)
 [118.6]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_INCOMPATIBLE
 [118.7]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#extensionsWebAPIEnabled(boolean)
+[118.8]: {{javadoc_uri}}/GeckoSession.html#AccountSelectorPrompt
 
 ## v116
 - Added [`GeckoSession.didPrintPageContent`][116.1] to included extra print status for a standard print and new `GeckoPrintException.ERROR_NO_PRINT_DELEGATE`
@@ -1409,4 +1411,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 46e76646bf6c92d58aa957771d8fc39402a4cac7
+[api-version]: d735eedb188b91b0495d3c2667807f29f6915263
