@@ -939,7 +939,8 @@ void ScriptPreloader::FillDecodeOptionsForCachedStencil(
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencil(
-    JSContext* cx, const JS::DecodeOptions& options, const nsCString& path) {
+    JSContext* cx, const JS::ReadOnlyDecodeOptions& options,
+    const nsCString& path) {
   MOZ_RELEASE_ASSERT(
       !(XRE_IsContentProcess() && !mCacheInitialized),
       "ScriptPreloader must be initialized before getting cached "
@@ -965,7 +966,8 @@ already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencil(
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencilInternal(
-    JSContext* cx, const JS::DecodeOptions& options, const nsCString& path) {
+    JSContext* cx, const JS::ReadOnlyDecodeOptions& options,
+    const nsCString& path) {
   auto* cachedScript = mScripts.Get(path);
   if (cachedScript) {
     return WaitForCachedStencil(cx, options, cachedScript);
@@ -974,7 +976,8 @@ already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencilInternal(
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::WaitForCachedStencil(
-    JSContext* cx, const JS::DecodeOptions& options, CachedStencil* script) {
+    JSContext* cx, const JS::ReadOnlyDecodeOptions& options,
+    CachedStencil* script) {
   if (!script->mReadyToExecute) {
     MOZ_ASSERT(mDecodedStencils);
 
@@ -1184,7 +1187,7 @@ void ScriptPreloader::StartDecodeTask(JS::HandleObject scope) {
 }
 
 bool ScriptPreloader::StartDecodeTask(
-    JS::DecodeOptions decodeOptions,
+    const JS::ReadOnlyDecodeOptions& decodeOptions,
     Vector<JS::TranscodeSource>&& decodingSources) {
   mDecodedStencils.emplace(decodingSources.length());
   MOZ_ASSERT(mDecodedStencils);
@@ -1269,7 +1272,7 @@ bool ScriptPreloader::CachedStencil::XDREncode(JSContext* cx) {
 }
 
 already_AddRefed<JS::Stencil> ScriptPreloader::CachedStencil::GetStencil(
-    JSContext* cx, const JS::DecodeOptions& options) {
+    JSContext* cx, const JS::ReadOnlyDecodeOptions& options) {
   MOZ_ASSERT(mReadyToExecute);
   if (mStencil) {
     return do_AddRef(mStencil);

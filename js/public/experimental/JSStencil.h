@@ -23,7 +23,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions, JS::DecodeOptions
+#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions, JS::ReadOnlyDecodeOptions
 #include "js/OffThreadScriptCompilation.h"  // JS::OffThreadCompileCallback
 #include "js/SourceText.h"                  // JS::SourceText
 #include "js/Transcoding.h"  // JS::TranscodeBuffer, JS::TranscodeRange
@@ -201,14 +201,12 @@ extern JS_PUBLIC_API TranscodeResult EncodeStencil(JSContext* cx,
                                                    TranscodeBuffer& buffer);
 
 // Deserialize data and create a new Stencil.
-extern JS_PUBLIC_API TranscodeResult DecodeStencil(JSContext* cx,
-                                                   const DecodeOptions& options,
-                                                   const TranscodeRange& range,
-                                                   Stencil** stencilOut);
-extern JS_PUBLIC_API TranscodeResult DecodeStencil(JS::FrontendContext* fc,
-                                                   const DecodeOptions& options,
-                                                   const TranscodeRange& range,
-                                                   Stencil** stencilOut);
+extern JS_PUBLIC_API TranscodeResult
+DecodeStencil(JSContext* cx, const ReadOnlyDecodeOptions& options,
+              const TranscodeRange& range, Stencil** stencilOut);
+extern JS_PUBLIC_API TranscodeResult
+DecodeStencil(JS::FrontendContext* fc, const ReadOnlyDecodeOptions& options,
+              const TranscodeRange& range, Stencil** stencilOut);
 
 // Register an encoder on its script source, such that all functions can be
 // encoded as they are delazified.
@@ -255,8 +253,9 @@ extern JS_PUBLIC_API OffThreadToken* CompileModuleToStencilOffThread(
 //
 // `buffer` should be alive until the end of `FinishDecodeStencilOffThread`.
 extern JS_PUBLIC_API OffThreadToken* DecodeStencilOffThread(
-    JSContext* cx, const DecodeOptions& options, const TranscodeBuffer& buffer,
-    size_t cursor, OffThreadCompileCallback callback, void* callbackData);
+    JSContext* cx, const ReadOnlyDecodeOptions& options,
+    const TranscodeBuffer& buffer, size_t cursor,
+    OffThreadCompileCallback callback, void* callbackData);
 
 // The start of `range` should meet IsTranscodingBytecodeAligned and
 // AlignTranscodingBytecodeOffset.
@@ -264,8 +263,9 @@ extern JS_PUBLIC_API OffThreadToken* DecodeStencilOffThread(
 //
 // `range` should be alive until the end of `FinishDecodeStencilOffThread`.
 extern JS_PUBLIC_API OffThreadToken* DecodeStencilOffThread(
-    JSContext* cx, const DecodeOptions& options, const TranscodeRange& range,
-    OffThreadCompileCallback callback, void* callbackData);
+    JSContext* cx, const ReadOnlyDecodeOptions& options,
+    const TranscodeRange& range, OffThreadCompileCallback callback,
+    void* callbackData);
 
 // Finish the off-thread task to compile the source text into a JS::Stencil,
 // started by JS::CompileToStencilOffThread, and return the result JS::Stencil.

@@ -19,7 +19,7 @@
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
-#include "js/CompileOptions.h"  // JS::CompileOptions, JS::DecodeOptions, JS::ReadOnlyCompileOptions
+#include "js/CompileOptions.h"  // JS::CompileOptions, JS::ReadOnlyDecodeOptions, JS::ReadOnlyCompileOptions
 #include "js/experimental/CompileScript.h"
 #include "js/experimental/JSStencil.h"
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
@@ -1104,7 +1104,7 @@ JS::OffThreadToken* js::StartOffThreadCompileModuleToStencil(
 }
 
 JS::OffThreadToken* js::StartOffThreadDecodeStencil(
-    JSContext* cx, const JS::DecodeOptions& options,
+    JSContext* cx, const JS::ReadOnlyDecodeOptions& options,
     const JS::TranscodeRange& range, JS::OffThreadCompileCallback callback,
     void* callbackData) {
   auto task =

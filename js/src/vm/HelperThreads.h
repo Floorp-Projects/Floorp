@@ -28,6 +28,7 @@ union Utf8Unit;
 namespace JS {
 class OffThreadToken {};
 class JS_PUBLIC_API ReadOnlyCompileOptions;
+class JS_PUBLIC_API ReadOnlyDecodeOptions;
 class Zone;
 
 template <typename UnitT>
@@ -234,7 +235,7 @@ JS::OffThreadToken* StartOffThreadCompileModuleToStencil(
     JS::OffThreadCompileCallback callback, void* callbackData);
 
 JS::OffThreadToken* StartOffThreadDecodeStencil(
-    JSContext* cx, const JS::DecodeOptions& options,
+    JSContext* cx, const JS::ReadOnlyDecodeOptions& options,
     const JS::TranscodeRange& range, JS::OffThreadCompileCallback callback,
     void* callbackData);
 

@@ -1566,7 +1566,7 @@ static nsresult WriteStencil(nsIObjectOutputStream* aStream, JSContext* aCx,
 }
 
 static nsresult ReadStencil(nsIObjectInputStream* aStream, JSContext* aCx,
-                            const JS::DecodeOptions& aOptions,
+                            const JS::ReadOnlyDecodeOptions& aOptions,
                             JS::Stencil** aStencilOut) {
   // We don't serialize mutedError-ness of scripts, which is fine as long as
   // we only serialize system and XUL-y things. We can detect this by checking
