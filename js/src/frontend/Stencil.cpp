@@ -28,11 +28,11 @@
 #include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomIndex, TaggedParserAtomIndex, ParserAtomsTable, Length{1,2,3}StaticParserString, InstantiateMarkedAtoms, InstantiateMarkedAtomsAsPermanent, GetWellKnownAtom
 #include "frontend/ScopeBindingCache.h"  // ScopeBindingCache
 #include "frontend/SharedContext.h"
-#include "frontend/StencilXdr.h"        // XDRStencilEncoder, XDRStencilDecoder
-#include "gc/AllocKind.h"               // gc::AllocKind
-#include "gc/Tracer.h"                  // TraceNullableRoot
-#include "js/CallArgs.h"                // JSNative
-#include "js/CompileOptions.h"          // JS::DecodeOptions
+#include "frontend/StencilXdr.h"  // XDRStencilEncoder, XDRStencilDecoder
+#include "gc/AllocKind.h"         // gc::AllocKind
+#include "gc/Tracer.h"            // TraceNullableRoot
+#include "js/CallArgs.h"          // JSNative
+#include "js/CompileOptions.h"  // JS::DecodeOptions, JS::ReadOnlyDecodeOptions
 #include "js/experimental/JSStencil.h"  // JS::Stencil
 #include "js/GCAPI.h"                   // JS::AutoCheckCannotGC
 #include "js/Printer.h"                 // js::Fprinter
@@ -5542,7 +5542,7 @@ JS::TranscodeResult JS::EncodeStencil(JSContext* cx, JS::Stencil* stencil,
 }
 
 JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
-                                      const JS::DecodeOptions& options,
+                                      const JS::ReadOnlyDecodeOptions& options,
                                       const JS::TranscodeRange& range,
                                       JS::Stencil** stencilOut) {
   AutoReportFrontendContext fc(cx);
@@ -5550,7 +5550,7 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
 }
 
 JS::TranscodeResult JS::DecodeStencil(JS::FrontendContext* fc,
-                                      const JS::DecodeOptions& options,
+                                      const JS::ReadOnlyDecodeOptions& options,
                                       const JS::TranscodeRange& range,
                                       JS::Stencil** stencilOut) {
   RefPtr<ScriptSource> source = fc->getAllocator()->new_<ScriptSource>();

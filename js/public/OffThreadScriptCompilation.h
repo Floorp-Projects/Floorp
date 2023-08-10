@@ -15,7 +15,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/CompileOptions.h"  // JS::DecodeOptions, JS::ReadOnlyCompileOptions
+#include "js/CompileOptions.h"  // JS::ReadOnlyDecodeOptions, JS::ReadOnlyCompileOptions
 
 struct JS_PUBLIC_API JSContext;
 
@@ -49,9 +49,8 @@ using OffThreadCompileCallback = void (*)(OffThreadToken* token,
 extern JS_PUBLIC_API bool CanCompileOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
 
-extern JS_PUBLIC_API bool CanDecodeOffThread(JSContext* cx,
-                                             const DecodeOptions& options,
-                                             size_t length);
+extern JS_PUBLIC_API bool CanDecodeOffThread(
+    JSContext* cx, const ReadOnlyDecodeOptions& options, size_t length);
 
 }  // namespace JS
 

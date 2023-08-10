@@ -35,7 +35,8 @@ static nsresult HandleTranscodeResult(JSContext* cx,
 }
 
 nsresult ReadCachedStencil(StartupCache* cache, nsACString& cachePath,
-                           JSContext* cx, const JS::DecodeOptions& options,
+                           JSContext* cx,
+                           const JS::ReadOnlyDecodeOptions& options,
                            JS::Stencil** stencilOut) {
   MOZ_ASSERT(options.borrowBuffer);
   MOZ_ASSERT(!options.usePinnedBytecode);

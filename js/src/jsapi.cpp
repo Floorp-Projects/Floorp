@@ -2447,6 +2447,43 @@ CompileOptions& CompileOptions::setIntroductionInfoToCaller(
   return setIntroductionType(introductionType);
 }
 
+JS::OwningDecodeOptions::~OwningDecodeOptions() { release(); }
+
+void JS::OwningDecodeOptions::release() {
+  js_free(const_cast<char*>(introducerFilename_.c_str()));
+
+  introducerFilename_ = JS::ConstUTF8CharsZ();
+}
+
+bool JS::OwningDecodeOptions::copy(JS::FrontendContext* maybeFc,
+                                   const JS::ReadOnlyDecodeOptions& rhs) {
+  copyPODOptions(rhs);
+
+  if (rhs.introducerFilename()) {
+    MOZ_ASSERT(maybeFc);
+    const char* str =
+        DuplicateString(maybeFc, rhs.introducerFilename().c_str()).release();
+    if (!str) {
+      return false;
+    }
+    introducerFilename_ = JS::ConstUTF8CharsZ(str);
+  }
+
+  return true;
+}
+
+void JS::OwningDecodeOptions::infallibleCopy(
+    const JS::ReadOnlyDecodeOptions& rhs) {
+  copyPODOptions(rhs);
+
+  MOZ_ASSERT(!rhs.introducerFilename());
+}
+
+size_t JS::OwningDecodeOptions::sizeOfExcludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) const {
+  return mallocSizeOf(introducerFilename_.c_str());
+}
+
 JS_PUBLIC_API JSObject* JS_GetGlobalFromScript(JSScript* script) {
   return &script->global();
 }

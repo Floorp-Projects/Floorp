@@ -91,8 +91,9 @@ JS_PUBLIC_API JS::OffThreadToken* JS::CompileModuleToStencilOffThread(
 }
 
 JS_PUBLIC_API JS::OffThreadToken* JS::DecodeStencilOffThread(
-    JSContext* cx, const DecodeOptions& options, const TranscodeBuffer& buffer,
-    size_t cursor, OffThreadCompileCallback callback, void* callbackData) {
+    JSContext* cx, const ReadOnlyDecodeOptions& options,
+    const TranscodeBuffer& buffer, size_t cursor,
+    OffThreadCompileCallback callback, void* callbackData) {
   JS::TranscodeRange range(buffer.begin() + cursor, buffer.length() - cursor);
   MOZ_ASSERT(CanDecodeOffThread(cx, options, range.length()));
   return StartOffThreadDecodeStencil(cx, options, range, callback,
@@ -100,8 +101,9 @@ JS_PUBLIC_API JS::OffThreadToken* JS::DecodeStencilOffThread(
 }
 
 JS_PUBLIC_API JS::OffThreadToken* JS::DecodeStencilOffThread(
-    JSContext* cx, const DecodeOptions& options, const TranscodeRange& range,
-    OffThreadCompileCallback callback, void* callbackData) {
+    JSContext* cx, const ReadOnlyDecodeOptions& options,
+    const TranscodeRange& range, OffThreadCompileCallback callback,
+    void* callbackData) {
   MOZ_ASSERT(CanDecodeOffThread(cx, options, range.length()));
   return StartOffThreadDecodeStencil(cx, options, range, callback,
                                      callbackData);
@@ -125,7 +127,7 @@ JS_PUBLIC_API void JS::CancelOffThreadToken(JSContext* cx,
 }
 
 JS_PUBLIC_API bool JS::CanDecodeOffThread(JSContext* cx,
-                                          const DecodeOptions& options,
+                                          const ReadOnlyDecodeOptions& options,
                                           size_t length) {
   return CanDoOffThread(cx, options, length);
 }

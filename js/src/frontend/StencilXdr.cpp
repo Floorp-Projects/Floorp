@@ -1216,7 +1216,7 @@ XDRResult StencilXDR::codeSourceData(XDRState<mode>* const xdr,
 template <XDRMode mode>
 /* static */
 XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
-                                 const JS::DecodeOptions* maybeOptions,
+                                 const JS::ReadOnlyDecodeOptions* maybeOptions,
                                  RefPtr<ScriptSource>& source) {
   FrontendContext* fc = xdr->fc();
 
@@ -1310,9 +1310,9 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
   if (mode == XDR_DECODE) {
     source->introductionType_ = maybeOptions->introductionType;
     source->setIntroductionOffset(maybeOptions->introductionOffset);
-    if (maybeOptions->introducerFilename) {
+    if (maybeOptions->introducerFilename()) {
       if (!source->setIntroducerFilename(
-              fc, maybeOptions->introducerFilename.c_str())) {
+              fc, maybeOptions->introducerFilename().c_str())) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
     }
@@ -1326,12 +1326,12 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
 template /* static */
     XDRResult
     StencilXDR::codeSource(XDRState<XDR_ENCODE>* xdr,
-                           const JS::DecodeOptions* maybeOptions,
+                           const JS::ReadOnlyDecodeOptions* maybeOptions,
                            RefPtr<ScriptSource>& holder);
 template /* static */
     XDRResult
     StencilXDR::codeSource(XDRState<XDR_DECODE>* xdr,
-                           const JS::DecodeOptions* maybeOptions,
+                           const JS::ReadOnlyDecodeOptions* maybeOptions,
                            RefPtr<ScriptSource>& holder);
 
 JS_PUBLIC_API bool JS::GetScriptTranscodingBuildId(
@@ -1406,7 +1406,7 @@ static XDRResult VersionCheck(XDRState<mode>* xdr) {
 
 template <XDRMode mode>
 static XDRResult XDRStencilHeader(XDRState<mode>* xdr,
-                                  const JS::DecodeOptions* maybeOptions,
+                                  const JS::ReadOnlyDecodeOptions* maybeOptions,
                                   RefPtr<ScriptSource>& source) {
   // The XDR-Stencil header is inserted at beginning of buffer, but it is
   // computed at the end the incremental-encoding process.
@@ -1468,7 +1468,8 @@ bool StencilIncrementalEncoderPtr::addDelazification(
 }
 
 XDRResult XDRStencilDecoder::codeStencil(
-    const JS::DecodeOptions& options, frontend::CompilationStencil& stencil) {
+    const JS::ReadOnlyDecodeOptions& options,
+    frontend::CompilationStencil& stencil) {
 #ifdef DEBUG
   auto sanityCheck = mozilla::MakeScopeExit(
       [&] { MOZ_ASSERT(validateResultCode(fc(), resultCode())); });
