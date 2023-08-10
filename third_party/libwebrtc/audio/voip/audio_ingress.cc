@@ -260,25 +260,22 @@ ChannelStatistics AudioIngress::GetChannelStatistics() {
   // Get RTCP report using remote SSRC.
   const std::vector<ReportBlockData>& report_data =
       rtp_rtcp_->GetLatestReportBlockData();
-  for (const ReportBlockData& block_data : report_data) {
-    const RTCPReportBlock& rtcp_report = block_data.report_block();
-    if (rtp_rtcp_->SSRC() != rtcp_report.source_ssrc ||
-        remote_ssrc_ != rtcp_report.sender_ssrc) {
+  for (const ReportBlockData& rtcp_report : report_data) {
+    if (rtp_rtcp_->SSRC() != rtcp_report.source_ssrc() ||
+        remote_ssrc_ != rtcp_report.sender_ssrc()) {
       continue;
     }
     RemoteRtcpStatistics remote_stat;
-    remote_stat.packets_lost = rtcp_report.packets_lost;
-    remote_stat.fraction_lost =
-        static_cast<double>(rtcp_report.fraction_lost) / (1 << 8);
+    remote_stat.packets_lost = rtcp_report.cumulative_lost();
+    remote_stat.fraction_lost = rtcp_report.fraction_lost();
     if (clockrate_hz > 0) {
-      remote_stat.jitter =
-          static_cast<double>(rtcp_report.jitter) / clockrate_hz;
+      remote_stat.jitter = rtcp_report.jitter(clockrate_hz).seconds<double>();
     }
-    if (block_data.has_rtt()) {
-      remote_stat.round_trip_time = block_data.last_rtt().seconds<double>();
+    if (rtcp_report.has_rtt()) {
+      remote_stat.round_trip_time = rtcp_report.last_rtt().seconds<double>();
     }
     remote_stat.last_report_received_timestamp_ms =
-        block_data.report_block_timestamp_utc().ms();
+        rtcp_report.report_block_timestamp_utc().ms();
     channel_stats.remote_rtcp = remote_stat;
 
     // Receive only channel won't send any RTP packets.
