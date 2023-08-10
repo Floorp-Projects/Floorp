@@ -34,7 +34,7 @@ index 4f8b7c059b..56da475bf3 100644
  #include <vector>
  
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index ffa18fde8e..a6a3c21e1c 100644
+index 9d6383c57d..6a0aebafed 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
 @@ -18,7 +18,13 @@

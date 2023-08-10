@@ -1,52 +1,43 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 08:01:00 +0000
-Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit adf55790b6.
- r=webrtc-reviewers,mjf
+Date: Tue, 16 May 2023 06:37:00 +0000
+Subject: Bug 1832770 - Cherry-pick upstream libwebrtc commit 7b0d7f48fb.
+ r=grulja,webrtc-reviewers,mjf
 
-Upstream commit: https://webrtc.googlesource.com/src/+/adf55790b6ecf50c4bb2b2cf7d58441303b9d946
-    In DeviceInfoDS free the frame duration list after use
+Upstream commit:
+    PipeWire capturer: fix fcntl call when duplicating a file descriptor
 
-    Per the docs, the caller is responsible for freeing the memory.
+    The fcntl() call has variable arguments, therefore we need to pass 0 to
+    specify there are no other arguments for this call, otherwise we might
+    end up with an argument that is random garbage.
 
-    Bug: chromium:1441804
-    Change-Id: I9aaae493a1a86d8ab4f03930715a643a3c9fb61b
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304061
-    Reviewed-by: Per Kjellander <perkj@webrtc.org>
-    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39983}
+    Bug: webrtc:15174
+    Change-Id: I34f16a942d80913b667d8ade7eed557b0233be01
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305120
+    Reviewed-by: Alexander Cooper <alcooper@chromium.org>
+    Commit-Queue: Jan Grulich <grulja@gmail.com>
+    Cr-Commit-Position: refs/heads/main@{#40060}
 
-Differential Revision: https://phabricator.services.mozilla.com/D177237
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/854cc79e99130e6537eebe8433a6a7adf5e1578d
+Differential Revision: https://phabricator.services.mozilla.com/D178009
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/47978aa145282f737fc77fcdcadc995e80e2a743
 ---
- modules/video_capture/windows/device_info_ds.cc | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ .../desktop_capture/linux/wayland/shared_screencast_stream.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index b5867923d1..f6927281f3 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -519,11 +519,18 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-         hrVC = videoControlConfig->GetFrameRateList(
-             outputCapturePin, tmp, size, &listSize, &frameDurationList);
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 58781805f9..b2ad7adea8 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -452,8 +452,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     PipeWireThreadLoopLock thread_loop_lock(pw_main_loop_);
  
-+        if (hrVC == S_OK) {
-+          maxFPS = GetMaxOfFrameArray(frameDurationList, listSize);
-+        }
-+
-+        CoTaskMemFree(frameDurationList);
-+        frameDurationList = NULL;
-+        listSize = 0;
-+
-         // On some odd cameras, you may get a 0 for duration. Some others may
-         // not update the out vars. GetMaxOfFrameArray returns the lowest
-         // duration (highest FPS), or 0 if there was no list with elements.
--        if (hrVC == S_OK &&
--            0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
-+        if (0 != maxFPS) {
-           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
-           capability.supportFrameRateControl = true;
-         } else  // use existing method
+     if (fd >= 0) {
+-      pw_core_ = pw_context_connect_fd(pw_context_, fcntl(fd, F_DUPFD_CLOEXEC),
+-                                       nullptr, 0);
++      pw_core_ = pw_context_connect_fd(
++          pw_context_, fcntl(fd, F_DUPFD_CLOEXEC, 0), nullptr, 0);
+     } else {
+       pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
+     }
 -- 
 2.34.1
 
