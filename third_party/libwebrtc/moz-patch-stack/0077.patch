@@ -128,7 +128,7 @@ index 4c2dec81e9..4d5ddf28d4 100644
      TimeDelta total_decode_time = TimeDelta::Zero();
      // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalprocessingdelay
 diff --git a/modules/video_coding/include/video_coding_defines.h b/modules/video_coding/include/video_coding_defines.h
-index 8f70e0298d..bf98d5e668 100644
+index 4026c8b339..11cb1737db 100644
 --- a/modules/video_coding/include/video_coding_defines.h
 +++ b/modules/video_coding/include/video_coding_defines.h
 @@ -76,6 +76,8 @@ class VCMReceiveStatisticsCallback {
@@ -137,7 +137,7 @@ index 8f70e0298d..bf98d5e668 100644
  
 +  virtual void OnDiscardedPackets(uint32_t packets_discarded) = 0;
 +
-   virtual void OnFrameBufferTimingsUpdated(int max_decode_ms,
+   virtual void OnFrameBufferTimingsUpdated(int estimated_max_decode_time_ms,
                                             int current_delay_ms,
                                             int target_delay_ms,
 diff --git a/modules/video_coding/packet_buffer.cc b/modules/video_coding/packet_buffer.cc
@@ -201,7 +201,7 @@ index 53e08c95a1..47b2ffe199 100644
  
    void ForceSpsPpsIdrIsH264Keyframe();
 diff --git a/video/receive_statistics_proxy2.cc b/video/receive_statistics_proxy2.cc
-index f5e6307be5..2b43b756fb 100644
+index 67798b4453..87862c624a 100644
 --- a/video/receive_statistics_proxy2.cc
 +++ b/video/receive_statistics_proxy2.cc
 @@ -959,6 +959,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
@@ -217,7 +217,7 @@ index f5e6307be5..2b43b756fb 100644
    RTC_DCHECK_RUN_ON(&main_thread_);
    last_codec_type_ = codec_type;
 diff --git a/video/receive_statistics_proxy2.h b/video/receive_statistics_proxy2.h
-index 8613417d14..bfa6adf660 100644
+index 6e7445aeb2..d07d665d27 100644
 --- a/video/receive_statistics_proxy2.h
 +++ b/video/receive_statistics_proxy2.h
 @@ -90,6 +90,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
@@ -225,7 +225,7 @@ index 8613417d14..bfa6adf660 100644
                         VideoContentType content_type) override;
    void OnDroppedFrames(uint32_t frames_dropped) override;
 +  void OnDiscardedPackets(uint32_t packets_discarded) override;
-   void OnFrameBufferTimingsUpdated(int max_decode_ms,
+   void OnFrameBufferTimingsUpdated(int estimated_max_decode_time_ms,
                                     int current_delay_ms,
                                     int target_delay_ms,
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
@@ -291,7 +291,7 @@ index 69d64146a0..aaa380a73b 100644
                                   std::move(config_.frame_decryptor),
                                   std::move(config_.frame_transformer),
 diff --git a/video/video_stream_buffer_controller.cc b/video/video_stream_buffer_controller.cc
-index c95fb7d64d..cc2b7854cf 100644
+index 7b1619cd04..dcbb087609 100644
 --- a/video/video_stream_buffer_controller.cc
 +++ b/video/video_stream_buffer_controller.cc
 @@ -250,6 +250,7 @@ void VideoStreamBufferController::OnFrameReady(

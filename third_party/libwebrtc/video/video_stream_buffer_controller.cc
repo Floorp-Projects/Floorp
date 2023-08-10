@@ -338,8 +338,8 @@ void VideoStreamBufferController::UpdateJitterDelay() {
   auto timings = timing_->GetTimings();
   if (timings.num_decoded_frames) {
     stats_proxy_->OnFrameBufferTimingsUpdated(
-        timings.max_decode_duration.ms(), timings.current_delay.ms(),
-        timings.target_delay.ms(), timings.jitter_buffer_delay.ms(),
+        timings.estimated_max_decode_time.ms(), timings.current_delay.ms(),
+        timings.target_delay.ms(), timings.jitter_delay.ms(),
         timings.min_playout_delay.ms(), timings.render_delay.ms());
   }
 }
