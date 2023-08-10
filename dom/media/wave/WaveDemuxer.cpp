@@ -697,13 +697,16 @@ uint16_t FormatChunk::ExtraFormatInfoSize() const {
 }
 
 AudioConfig::ChannelLayout::ChannelMap FormatChunk::ChannelMap() const {
-  // Integer or float files -- regular mapping
-  if (WaveFormat() == 1 || WaveFormat() == 2) {
+  // Regular mapping if file doesn't have channel mapping info, of if the chunk
+  // size doesn't have the field for the size of the extension data.
+  if (WaveFormat() != 0xFFFE || mRaw.Length() < 18) {
     return AudioConfig::ChannelLayout(Channels()).Map();
   }
+  // The length of this chunk is at least 18, check if it's long enough to
+  // hold the WAVE_FORMAT_EXTENSIBLE struct, that is 22 bytes. If not, fall
+  // back to a common mapping.
   if (ExtraFormatInfoSize() < 22) {
-    MOZ_ASSERT(Channels() <= 2);
-    return AudioConfig::ChannelLayout::UNKNOWN_MAP;
+    return AudioConfig::ChannelLayout(Channels()).Map();
   }
   // ChannelLayout::ChannelMap is by design bit-per-bit compatible with
   // WAVEFORMATEXTENSIBLE's dwChannelMask attribute, we can just cast here.
