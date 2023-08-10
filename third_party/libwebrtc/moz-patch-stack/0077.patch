@@ -201,7 +201,7 @@ index 53e08c95a1..47b2ffe199 100644
  
    void ForceSpsPpsIdrIsH264Keyframe();
 diff --git a/video/receive_statistics_proxy2.cc b/video/receive_statistics_proxy2.cc
-index 4f208a1d5e..020e4bb0ae 100644
+index f5e6307be5..2b43b756fb 100644
 --- a/video/receive_statistics_proxy2.cc
 +++ b/video/receive_statistics_proxy2.cc
 @@ -959,6 +959,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
@@ -217,7 +217,7 @@ index 4f208a1d5e..020e4bb0ae 100644
    RTC_DCHECK_RUN_ON(&main_thread_);
    last_codec_type_ = codec_type;
 diff --git a/video/receive_statistics_proxy2.h b/video/receive_statistics_proxy2.h
-index 1a2bb77fa6..20139b45e5 100644
+index 8613417d14..bfa6adf660 100644
 --- a/video/receive_statistics_proxy2.h
 +++ b/video/receive_statistics_proxy2.h
 @@ -90,6 +90,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,

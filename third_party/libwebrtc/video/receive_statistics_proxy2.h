@@ -176,7 +176,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   rtc::SampleCounter jitter_buffer_delay_counter_ RTC_GUARDED_BY(main_thread_);
   rtc::SampleCounter target_delay_counter_ RTC_GUARDED_BY(main_thread_);
   rtc::SampleCounter current_delay_counter_ RTC_GUARDED_BY(main_thread_);
-  rtc::SampleCounter delay_counter_ RTC_GUARDED_BY(main_thread_);
+  rtc::SampleCounter oneway_delay_counter_ RTC_GUARDED_BY(main_thread_);
   std::unique_ptr<VideoQualityObserver> video_quality_observer_
       RTC_GUARDED_BY(main_thread_);
   mutable rtc::MovingMaxCounter<int> interframe_delay_max_moving_
