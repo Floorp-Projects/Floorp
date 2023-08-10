@@ -9,6 +9,9 @@
 # Some non-Chromium builds don't support building java targets.
 enable_java_templates = true
 
+# Enables assertions on safety checks in libc++.
+enable_safe_libcxx = true
+
 # Don't set this variable to true when building stadalone WebRTC, it is
 # only needed to support both WebRTC standalone and Chromium builds.
 build_with_chromium = false
