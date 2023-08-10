@@ -30,5 +30,11 @@ export const EmbeddedMigrationWizard = ({ handleAction }) => {
       current?.removeEventListener("MigrationWizard:Close", handleClose);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  return <migration-wizard auto-request-state="" ref={ref}></migration-wizard>;
+  return (
+    <migration-wizard
+      force-show-import-all="false"
+      auto-request-state=""
+      ref={ref}
+    ></migration-wizard>
+  );
 };
