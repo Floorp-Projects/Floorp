@@ -315,9 +315,10 @@ discopane-intro =
     security, performance, and functionality.
 
 # Notice to make user aware that the recommendations are personalized.
-discopane-notice-recommendations =
-    Some of these recommendations are personalized. They are based on other
-    extensions you’ve installed, profile preferences, and usage statistics.
+discopane-notice-recommendations2 =
+    .message =
+        Some of these recommendations are personalized. They are based on other
+        extensions you’ve installed, profile preferences, and usage statistics.
 discopane-notice-learn-more = Learn more
 
 privacy-policy = Privacy Policy
