@@ -52,6 +52,10 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
             "gecko/nsProfiler.cpp",
         ]
 
+    if CONFIG["OS_TARGET"] in ("Android", "Linux"):
+        UNIFIED_SOURCES += [
+            "core/ProfilerCPUFreq-linux-android.cpp",
+        ]
     if CONFIG["OS_TARGET"] in ("Android", "Linux", "FreeBSD"):
         if CONFIG["CPU_ARCH"] in ("arm", "aarch64", "x86", "x86_64", "mips64"):
             UNIFIED_SOURCES += [
@@ -104,6 +108,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
                 "core/PowerCounters-win.cpp",
             ]
         SOURCES += [
+            "core/ProfilerCPUFreq-win.cpp",
             "core/shared-libraries-win32.cc",
         ]
 

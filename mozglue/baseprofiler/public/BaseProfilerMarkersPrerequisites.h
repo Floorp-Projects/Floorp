@@ -755,6 +755,19 @@ class MarkerSchema {
   };
 
   enum class Searchable { NotSearchable, Searchable };
+  enum class GraphType { Line, Bar, FilledLine };
+  enum class GraphColor {
+    Blue,
+    Green,
+    Grey,
+    Ink,
+    Magenta,
+    Orange,
+    Purple,
+    Red,
+    Teal,
+    Yellow
+  };
 
   // Marker schema, with a non-empty list of locations where markers should be
   // shown.
@@ -854,12 +867,28 @@ class MarkerSchema {
     return *this;
   }
 
+  // Markers can be shown as timeline tracks.
+
+  MarkerSchema& AddChart(std::string aKey, GraphType aType) {
+    mGraphs.emplace_back(GraphData{std::move(aKey), aType, mozilla::Nothing{}});
+    return *this;
+  }
+
+  MarkerSchema& AddChartColor(std::string aKey, GraphType aType,
+                              GraphColor aColor) {
+    mGraphs.emplace_back(
+        GraphData{std::move(aKey), aType, mozilla::Some(aColor)});
+    return *this;
+  }
+
   // Internal streaming function.
   MFBT_API void Stream(JSONWriter& aWriter, const Span<const char>& aName) &&;
 
  private:
   MFBT_API static Span<const char> LocationToStringSpan(Location aLocation);
   MFBT_API static Span<const char> FormatToStringSpan(Format aFormat);
+  MFBT_API static Span<const char> GraphTypeToStringSpan(GraphType aType);
+  MFBT_API static Span<const char> GraphColorToStringSpan(GraphColor aColor);
 
   // List of marker display locations. Empty for SpecialFrontendLocation.
   std::vector<Location> mLocations;
@@ -883,6 +912,13 @@ class MarkerSchema {
   using DataRowVector = std::vector<DataRow>;
 
   DataRowVector mData;
+
+  struct GraphData {
+    std::string mKey;
+    GraphType mType;
+    mozilla::Maybe<GraphColor> mColor;
+  };
+  std::vector<GraphData> mGraphs;
 };
 
 }  // namespace mozilla
