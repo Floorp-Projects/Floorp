@@ -891,6 +891,4 @@ cron_builder(
         "config": lkgr_config,
     },
     schedule = "*/10 * * * *",  # Every 10 minutes.
-    # TODO(crbug.com/1393420): remove this.
-    experiments = {"luci.buildbucket.omit_python2": 0},
 )
