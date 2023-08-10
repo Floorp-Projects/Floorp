@@ -6548,6 +6548,10 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   stats.total_assembly_time = webrtc::TimeDelta::Millis(4);
   stats.frames_assembled_from_multiple_packets = 2;
   stats.power_efficient_decoder = true;
+  webrtc::RtpReceiveStats rtx_stats;
+  rtx_stats.packet_counter.packets = 5;
+  rtx_stats.packet_counter.payload_bytes = 23;
+  stats.rtx_rtp_stats = rtx_stats;
   stream->SetStats(stats);
 
   cricket::VideoMediaSendInfo send_info;
@@ -6586,6 +6590,10 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   EXPECT_EQ(stats.frames_assembled_from_multiple_packets,
             receive_info.receivers[0].frames_assembled_from_multiple_packets);
   EXPECT_TRUE(receive_info.receivers[0].power_efficient_decoder);
+  EXPECT_EQ(stats.rtx_rtp_stats->packet_counter.packets,
+            receive_info.receivers[0].retransmitted_packets_received);
+  EXPECT_EQ(stats.rtx_rtp_stats->packet_counter.payload_bytes,
+            receive_info.receivers[0].retransmitted_bytes_received);
 }
 
 TEST_F(WebRtcVideoChannelTest,

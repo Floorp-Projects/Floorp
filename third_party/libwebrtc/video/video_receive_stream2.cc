@@ -567,8 +567,10 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
   if (rtx_ssrc()) {
     StreamStatistician* rtx_statistician =
         rtp_receive_statistics_->GetStatistician(rtx_ssrc());
-    if (rtx_statistician)
+    if (rtx_statistician) {
       stats.total_bitrate_bps += rtx_statistician->BitrateReceived();
+      stats.rtx_rtp_stats = rtx_statistician->GetStats();
+    }
   }
 
   // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
