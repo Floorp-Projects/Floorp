@@ -42,10 +42,13 @@ GetObjectFlagsForNewProperty(const JSClass* clasp, ObjectFlags flags, jsid id,
     // JIT.
     if (propFlags.isDataProperty() && !propFlags.writable()) {
       flags.setFlag(ObjectFlag::NeedsProxyGetSetResultValidation);
-    } else if (propFlags.hasGetter() != propFlags.hasSetter()) {
+    } else if (propFlags.isAccessorProperty()) {
       // This will cover us for both get trap validation and set trap
-      // validation. We could be more aggressive and have one flag for each,
-      // since their requirements are inverted, but this should be fine.
+      // validation. We could be more aggressive, because what we really
+      // care about is if there is a getter but not a setter and vice
+      // versa, but the first pass at doing that resulted in test
+      // failures. We'll need to work on that as a follow-up if it is
+      // important.
       flags.setFlag(ObjectFlag::NeedsProxyGetSetResultValidation);
     }
   }
@@ -70,6 +73,9 @@ inline ObjectFlags CopyPropMapObjectFlags(ObjectFlags dest,
   }
   if (source.hasFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto)) {
     dest.setFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto);
+  }
+  if (source.hasFlag(ObjectFlag::NeedsProxyGetSetResultValidation)) {
+    dest.setFlag(ObjectFlag::NeedsProxyGetSetResultValidation);
   }
   return dest;
 }

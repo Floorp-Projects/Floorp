@@ -295,6 +295,12 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
                                     bool sameRealm,
                                     uint32_t nargsAndFlagsOffset);
 
+#ifndef JS_CODEGEN_X86
+  [[nodiscard]] bool emitCallScriptedProxyGetShared(
+      MDefinition* target, MDefinition* receiver, MDefinition* handler,
+      MDefinition* id, MDefinition* trapDef, WrappedFunction* trap);
+#endif
+
   CACHE_IR_TRANSPILER_GENERATED
 
  public:
@@ -791,6 +797,18 @@ bool WarpCacheIRTranspiler::emitGuardIsTypedArray(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardHasProxyHandler(ObjOperandId objId,
+                                                     uint32_t handlerOffset) {
+  MDefinition* obj = getOperand(objId);
+  const void* handler = rawPointerField(handlerOffset);
+
+  auto* ins = MGuardHasProxyHandler::New(alloc(), obj, handler);
+  add(ins);
+
+  setOperand(objId, ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardProto(ObjOperandId objId,
                                            uint32_t protoOffset) {
   MDefinition* def = getOperand(objId);
@@ -892,6 +910,26 @@ bool WarpCacheIRTranspiler::emitGuardDynamicSlotValue(ObjOperandId objId,
   auto* guard = MGuardValue::New(alloc(), load, val);
   add(guard);
   return true;
+}
+
+bool WarpCacheIRTranspiler::emitLoadScriptedProxyHandler(ObjOperandId resultId,
+                                                         ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* load = MLoadScriptedProxyHandler::New(alloc(), obj);
+  add(load);
+
+  return defineOperand(resultId, load);
+}
+
+bool WarpCacheIRTranspiler::emitIdToStringOrSymbol(ValOperandId resultId,
+                                                   ValOperandId idId) {
+  MDefinition* id = getOperand(idId);
+
+  auto* ins = MIdToStringOrSymbol::New(alloc(), id);
+  add(ins);
+
+  return defineOperand(resultId, ins);
 }
 
 bool WarpCacheIRTranspiler::emitGuardSpecificAtom(StringOperandId strId,
@@ -5103,6 +5141,80 @@ bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
   return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
                           CallKind::Scripted);
 }
+
+#ifdef JS_PUNBOX64
+bool WarpCacheIRTranspiler::emitCallScriptedProxyGetShared(
+    MDefinition* target, MDefinition* receiver, MDefinition* handler,
+    MDefinition* id, MDefinition* trapDef, WrappedFunction* trap) {
+  CallInfo callInfo(alloc(), /* constructing = */ false,
+                    /* ignoresRval = */ false);
+  callInfo.initForProxyGet(trapDef, handler, target, id, receiver);
+
+  MCall* call = makeCall(callInfo, /* needsThisCheck = */ false, trap);
+  if (!call) {
+    return false;
+  }
+
+  addEffectful(call);
+
+  if (!current->ensureHasSlots(3)) {
+    return false;
+  }
+  current->push(call);
+  current->push(id);
+  current->push(target);
+
+  MResumePoint* resumePoint =
+      MResumePoint::New(alloc(), current, loc_.toRawBytecode(),
+                        ResumeMode::ResumeAfterCheckProxyGetResult);
+  if (!resumePoint) {
+    return false;
+  }
+  call->setResumePoint(resumePoint);
+
+  current->pop();
+  current->pop();
+
+  MCheckScriptedProxyGetResult* check =
+      MCheckScriptedProxyGetResult::New(alloc(), target, id, call);
+  add(check);
+
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitCallScriptedProxyGetResult(
+    ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
+    uint32_t trapOffset, uint32_t idOffset, uint32_t nargsAndFlags) {
+  MDefinition* target = getOperand(targetId);
+  MDefinition* receiver = getOperand(receiverId);
+  MDefinition* handler = getOperand(handlerId);
+  MDefinition* trap = objectStubField(trapOffset);
+  jsid id = idStubField(idOffset);
+  MDefinition* idDef = constant(StringValue(id.toAtom()));
+  uint16_t nargs = nargsAndFlags >> 16;
+  FunctionFlags flags = FunctionFlags(uint16_t(nargsAndFlags));
+  WrappedFunction* wrappedTarget =
+      maybeWrappedFunction(trap, CallKind::Scripted, nargs, flags);
+  return emitCallScriptedProxyGetShared(target, receiver, handler, idDef, trap,
+                                        wrappedTarget);
+}
+
+bool WarpCacheIRTranspiler::emitCallScriptedProxyGetByValueResult(
+    ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
+    ValOperandId idId, uint32_t trapOffset, uint32_t nargsAndFlags) {
+  MDefinition* target = getOperand(targetId);
+  MDefinition* receiver = getOperand(receiverId);
+  MDefinition* handler = getOperand(handlerId);
+  MDefinition* trap = objectStubField(trapOffset);
+  MDefinition* idDef = getOperand(idId);
+  uint16_t nargs = nargsAndFlags >> 16;
+  FunctionFlags flags = FunctionFlags(uint16_t(nargsAndFlags));
+  WrappedFunction* wrappedTarget =
+      maybeWrappedFunction(trap, CallKind::Scripted, nargs, flags);
+  return emitCallScriptedProxyGetShared(target, receiver, handler, idDef, trap,
+                                        wrappedTarget);
+}
+#endif
 
 bool WarpCacheIRTranspiler::emitCallClassHook(ObjOperandId calleeId,
                                               Int32OperandId argcId,

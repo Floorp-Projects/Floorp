@@ -1976,6 +1976,29 @@
   num_temps: 1
   mir_op: ClampToUint8
 
+- name: LoadScriptedProxyHandler
+  result_type: WordSized
+  operands:
+    object: WordSized
+  mir_op: true
+
+#ifdef JS_PUNBOX64
+- name: CheckScriptedProxyGetResult
+  operands:
+    target: BoxedValue
+    id: BoxedValue
+    value: BoxedValue
+  num_temps: 2
+  mir_op: true
+#endif
+
+- name: IdToStringOrSymbol
+  result_type: BoxedValue
+  operands:
+    id: BoxedValue
+  num_temps: 1
+  mir_op: true
+
 # Load a boxed value from an object's fixed slot.
 - name: LoadFixedSlotV
   result_type: BoxedValue
@@ -2695,6 +2718,11 @@
   operands:
     object: WordSized
   num_temps: 1
+
+- name: GuardHasProxyHandler
+  operands:
+    object: WordSized
+  mir_op: true
 
 - name: GuardNoDenseElements
   operands:
