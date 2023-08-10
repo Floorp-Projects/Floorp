@@ -606,9 +606,9 @@ class PromptDelegateTest : BaseSessionTest(
                 prompt.providers.mapIndexed { index, item ->
                     assertThat("ID should match", index, equalTo(item.id))
                     assertThat(
-                        "Name should be the URL of the current page",
+                        "Name should be the name of the IDP taken from the manifest",
                         item.name,
-                        containsString("$TEST_HOST:$TEST_PORT"),
+                        containsString("Demo IDP"),
                     )
                     assertThat("Icon should contain a valid image", item.icon ?: "", containsString("data:image"))
                 }

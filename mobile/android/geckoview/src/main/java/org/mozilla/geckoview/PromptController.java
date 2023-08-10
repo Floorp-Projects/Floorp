@@ -599,7 +599,10 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
         accounts[i] = AccountSelectorPrompt.Account.fromBundle(accountBundles[i]);
       }
 
-      return new AccountSelectorPrompt(info.getString("id"), accounts, observer);
+      final AccountSelectorPrompt.Provider provider =
+          AccountSelectorPrompt.Provider.fromBundle(providerBundle.getBundle("provider"));
+
+      return new AccountSelectorPrompt(info.getString("id"), accounts, provider, observer);
     }
 
     @Override
