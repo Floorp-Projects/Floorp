@@ -38,12 +38,11 @@ extern GMPLogLevel GetGMPLibraryLogLevel();
 
 namespace gmp {
 
-typedef MozPromise<RefPtr<GMPContentParent::CloseBlocker>, MediaResult,
-                   /* IsExclusive = */ true>
-    GetGMPContentParentPromise;
-typedef MozPromise<RefPtr<ChromiumCDMParent>, MediaResult,
-                   /* IsExclusive = */ true>
-    GetCDMParentPromise;
+using GetGMPContentParentPromise =
+    MozPromise<RefPtr<GMPContentParentCloseBlocker>, MediaResult,
+               /* IsExclusive = */ true>;
+using GetCDMParentPromise = MozPromise<RefPtr<ChromiumCDMParent>, MediaResult,
+                                       /* IsExclusive = */ true>;
 
 class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
                                 public nsIObserver {

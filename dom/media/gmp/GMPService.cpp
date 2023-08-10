@@ -257,7 +257,7 @@ RefPtr<GetCDMParentPromise> GeckoMediaPluginService::GetCDM(
       ->Then(
           thread, __func__,
           [rawHolder, helper, keySystem = nsCString{aKeySystem}](
-              RefPtr<GMPContentParent::CloseBlocker> wrapper) {
+              const RefPtr<GMPContentParentCloseBlocker>& wrapper) {
             RefPtr<GMPContentParent> parent = wrapper->mParent;
             MOZ_ASSERT(
                 parent,
@@ -319,7 +319,7 @@ GeckoMediaPluginService::GetContentParentForTest() {
                    nsLiteralCString(CHROMIUM_CDM_API), tags)
       ->Then(
           thread, __func__,
-          [rawHolder](const RefPtr<GMPContentParent::CloseBlocker>& wrapper) {
+          [rawHolder](const RefPtr<GMPContentParentCloseBlocker>& wrapper) {
             RefPtr<GMPContentParent> parent = wrapper->mParent;
             MOZ_ASSERT(
                 parent,
@@ -460,7 +460,7 @@ GeckoMediaPluginService::GetGMPVideoDecoder(
       ->Then(
           thread, __func__,
           [rawCallback,
-           helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
+           helper](const RefPtr<GMPContentParentCloseBlocker>& wrapper) {
             RefPtr<GMPContentParent> parent = wrapper->mParent;
             UniquePtr<GetGMPVideoDecoderCallback> callback(rawCallback);
             GMPVideoDecoderParent* actor = nullptr;
@@ -500,7 +500,7 @@ GeckoMediaPluginService::GetGMPVideoEncoder(
       ->Then(
           thread, __func__,
           [rawCallback,
-           helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
+           helper](const RefPtr<GMPContentParentCloseBlocker>& wrapper) {
             RefPtr<GMPContentParent> parent = wrapper->mParent;
             UniquePtr<GetGMPVideoEncoderCallback> callback(rawCallback);
             GMPVideoEncoderParent* actor = nullptr;
