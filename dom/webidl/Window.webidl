@@ -464,9 +464,7 @@ partial interface Window {
 
   [Throws] attribute boolean fullScreen;
 
-  undefined                 updateCommands(DOMString action,
-                                           optional Selection? sel = null,
-                                           optional short reason = 0);
+  undefined                 updateCommands(DOMString action);
 
   /* Find in page.
    * @param str: the search pattern

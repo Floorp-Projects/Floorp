@@ -4110,10 +4110,9 @@ Element* nsGlobalWindowInner::GetRealFrameElement(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetFrameElement, (), aError, nullptr);
 }
 
-void nsGlobalWindowInner::UpdateCommands(const nsAString& anAction,
-                                         Selection* aSel, int16_t aReason) {
+void nsGlobalWindowInner::UpdateCommands(const nsAString& anAction) {
   if (GetOuterWindowInternal()) {
-    GetOuterWindowInternal()->UpdateCommands(anAction, aSel, aReason);
+    GetOuterWindowInternal()->UpdateCommands(anAction);
   }
 }
 
