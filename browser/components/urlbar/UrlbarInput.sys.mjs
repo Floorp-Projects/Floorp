@@ -246,6 +246,7 @@ export class UrlbarInput {
       "paste",
       "scrollend",
       "select",
+      "selectionchange",
     ];
     for (let name of this._inputFieldEvents) {
       this.addEventListener(name, this);
@@ -1456,6 +1457,7 @@ export class UrlbarInput {
       return;
     }
     let currentSelectionStart = this.selectionStart;
+    let currentSelectionEnd = this.selectionEnd;
 
     // Overriding this value clears the selection.
     this.inputField.value = this.value.substring(
@@ -1464,7 +1466,7 @@ export class UrlbarInput {
     );
     this._autofillPlaceholder = null;
     // Restore selection
-    this.setSelectionRange(currentSelectionStart, currentSelectionStart);
+    this.setSelectionRange(currentSelectionStart, currentSelectionEnd);
   }
 
   /**
@@ -3555,6 +3557,21 @@ export class UrlbarInput {
       resetSearchState: false,
       event,
     });
+  }
+
+  _on_selectionchange(event) {
+    // Confirm placeholder as user text if it gets explicitly deselected. This happens
+    // when the user wants to modify the autofilled text by either clicking on it, or
+    // pressing HOME, END, RIGHT, …
+    if (
+      this._autofillPlaceholder &&
+      this._autofillPlaceholder.value == this.value &&
+      (this._autofillPlaceholder.selectionStart != this.selectionStart ||
+        this._autofillPlaceholder.selectionEnd != this.selectionEnd)
+    ) {
+      this._autofillPlaceholder = null;
+      this.window.gBrowser.userTypedValue = this.value;
+    }
   }
 
   _on_select(event) {
