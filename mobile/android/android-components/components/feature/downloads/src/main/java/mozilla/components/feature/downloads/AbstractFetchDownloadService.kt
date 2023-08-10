@@ -840,7 +840,7 @@ abstract class AbstractFetchDownloadService : Service() {
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, getDownloadJobStatus(downloadState))
         intent.putExtra(EXTRA_DOWNLOAD_ID, downloadState.state.id)
 
-        context.sendBroadcast(intent)
+        context.sendBroadcast(intent, RECEIVE_DOWNLOAD_BROADCAST_PERMISSION)
     }
 
     /**
@@ -955,6 +955,13 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     companion object {
+
+        /**
+         * Custom permission that needs to be requested by app using feature-downloads in order to receive
+         * download releated broadcasts.
+         */
+        const val RECEIVE_DOWNLOAD_BROADCAST_PERMISSION = "org.mozilla.permission.RECEIVE_DOWNLOAD_BROADCAST"
+
         /**
          * Launches an intent to open the given file, returns whether or not the file could be opened
          */

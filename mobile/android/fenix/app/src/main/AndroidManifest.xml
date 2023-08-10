@@ -40,6 +40,9 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
+    <!-- Needed to receive broadcasts from AC code-->
+    <uses-permission android:name="org.mozilla.permission.RECEIVE_DOWNLOAD_BROADCAST" />
+
     <application
         android:name=".FenixApplication"
         android:allowBackup="false"

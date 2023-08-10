@@ -10,6 +10,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+
+* **feature-downloads**
+  * Added a custom permission `org.mozilla.permission.RECEIVE_DOWNLOAD_BROADCAST` that needs to be used by apps in order to receive download related broadcasts
+  
 * **ui-tabcounter**
   * Adds a mask overlay to the tabcounter that can be shown with `toggleCounterMask`.
 
