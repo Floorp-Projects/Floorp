@@ -78,7 +78,7 @@ class VCMReceiveStatisticsCallback {
 
   virtual void OnDiscardedPackets(uint32_t packets_discarded) = 0;
 
-  virtual void OnFrameBufferTimingsUpdated(int max_decode_ms,
+  virtual void OnFrameBufferTimingsUpdated(int estimated_max_decode_time_ms,
                                            int current_delay_ms,
                                            int target_delay_ms,
                                            int jitter_buffer_ms,

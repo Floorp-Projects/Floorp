@@ -453,7 +453,7 @@ TEST_F(VCMReceiverTimingTest, FrameForDecodingPreferLateDecoding) {
 
   auto timings = timing_.GetTimings();
   TimeDelta render_delay = timings.render_delay;
-  TimeDelta max_decode = timings.max_decode_duration;
+  TimeDelta max_decode = timings.estimated_max_decode_time;
 
   // Construct test samples.
   // render_timestamps are the timestamps stored in the Frame;

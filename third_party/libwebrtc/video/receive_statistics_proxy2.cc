@@ -664,14 +664,14 @@ void ReceiveStatisticsProxy::OnDecoderInfo(
 }
 
 void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
-    int max_decode_ms,
+    int estimated_max_decode_time_ms,
     int current_delay_ms,
     int target_delay_ms,
     int jitter_buffer_ms,
     int min_playout_delay_ms,
     int render_delay_ms) {
   RTC_DCHECK_RUN_ON(&main_thread_);
-  stats_.max_decode_ms = max_decode_ms;
+  stats_.max_decode_ms = estimated_max_decode_time_ms;
   stats_.current_delay_ms = current_delay_ms;
   stats_.target_delay_ms = target_delay_ms;
   stats_.jitter_buffer_ms = jitter_buffer_ms;
