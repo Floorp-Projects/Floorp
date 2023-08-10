@@ -18,10 +18,8 @@
 
 #ifdef XP_MACOSX
 #  include <Security/Security.h>
-#  include "KeychainSecret.h"  // for ScopedCFType
-
-#  include "nsCocoaFeatures.h"
-#endif  // XP_MACOSX
+#  include "KeychainSecret.h"
+#endif
 
 #ifdef XP_WIN
 #  include <windows.h>
