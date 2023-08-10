@@ -37,6 +37,7 @@ class MockRTPVideoFrameSenderInterface : public RTPVideoFrameSenderInterface {
                uint32_t rtp_timestamp,
                int64_t capture_time_ms,
                rtc::ArrayView<const uint8_t> payload,
+               size_t encoder_output_size,
                RTPVideoHeader video_header,
                absl::optional<int64_t> expected_retransmission_time_ms,
                std::vector<uint32_t> csrcs),
@@ -256,7 +257,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
   rtc::Event event;
   EXPECT_CALL(test_sender_,
               SendVideo(payload_type, absl::make_optional(kVideoCodecVP8),
-                        timestamp, /*capture_time_ms=*/0, buffer, _,
+                        timestamp, /*capture_time_ms=*/0, buffer, _, _,
                         /*expected_retransmission_time_ms_=*/
                         (absl::optional<int64_t>)absl::nullopt, frame_csrcs))
       .WillOnce(WithoutArgs([&] {
