@@ -64,7 +64,7 @@ BEGIN_TEST(testFrontendErrors_error) {
   CHECK(JS::GetFrontendWarningCount(fc) == 0);
 
   {
-    const JSErrorReport* report = JS::GetFrontendErrorReport(fc);
+    const JSErrorReport* report = JS::GetFrontendErrorReport(fc, options);
     CHECK(report);
 
     CHECK(report->errorNumber == JSMSG_UNEXPECTED_TOKEN_NO_EXPECT);
@@ -146,7 +146,7 @@ BEGIN_TEST(testFrontendErrors_warning) {
   CHECK(JS::GetFrontendWarningCount(fc) == 1);
 
   {
-    const JSErrorReport* report = JS::GetFrontendWarningAt(fc, 0);
+    const JSErrorReport* report = JS::GetFrontendWarningAt(fc, 0, options);
     CHECK(report);
 
     CHECK(report->errorNumber == JSMSG_STMT_AFTER_RETURN);

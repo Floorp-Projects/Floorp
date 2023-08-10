@@ -42,7 +42,7 @@ JS_PUBLIC_API bool JS::ConvertFrontendErrorsToRuntimeErrors(
 }
 
 JS_PUBLIC_API const JSErrorReport* JS::GetFrontendErrorReport(
-    JS::FrontendContext* fc) {
+    JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options) {
   if (!fc->maybeError().isSome()) {
     return nullptr;
   }
@@ -70,7 +70,8 @@ JS_PUBLIC_API size_t JS::GetFrontendWarningCount(JS::FrontendContext* fc) {
 }
 
 JS_PUBLIC_API const JSErrorReport* JS::GetFrontendWarningAt(
-    JS::FrontendContext* fc, size_t index) {
+    JS::FrontendContext* fc, size_t index,
+    const JS::ReadOnlyCompileOptions& options) {
   return &fc->warnings()[index];
 }
 

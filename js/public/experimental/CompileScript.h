@@ -69,8 +69,10 @@ JS_PUBLIC_API bool ConvertFrontendErrorsToRuntimeErrors(
 //
 // The returned pointer is valid only while the given JS::FrontendContext is
 // alive.
+//
+// See ConvertFrontendErrorsToRuntimeErrors for options parameter.
 JS_PUBLIC_API const JSErrorReport* GetFrontendErrorReport(
-    JS::FrontendContext* fc);
+    JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options);
 
 // Returns true if the JS::FrontendContext had over recuresed error.
 JS_PUBLIC_API bool HadFrontendOverRecursed(JS::FrontendContext* fc);
@@ -91,8 +93,11 @@ JS_PUBLIC_API size_t GetFrontendWarningCount(JS::FrontendContext* fc);
 // Returns an error report represents the index-th warning.
 //
 // The returned pointer is valid only while the JS::FrontendContext is alive.
-JS_PUBLIC_API const JSErrorReport* GetFrontendWarningAt(JS::FrontendContext* fc,
-                                                        size_t index);
+//
+// See ConvertFrontendErrorsToRuntimeErrors for options parameter.
+JS_PUBLIC_API const JSErrorReport* GetFrontendWarningAt(
+    JS::FrontendContext* fc, size_t index,
+    const JS::ReadOnlyCompileOptions& options);
 
 /*
  * Set supported import assertions on a FrontendContext to be used with

@@ -21,7 +21,7 @@
 #include "XULTooltipElement.h"
 #include "XULTreeElement.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/CompileOptions.h"
+#include "js/CompileOptions.h"  // JS::CompileOptions, JS::OwningCompileOptions, , JS::ReadOnlyCompileOptions, JS::ReadOnlyDecodeOptions, JS::DecodeOptions
 #include "js/experimental/CompileScript.h"  // JS::NewFrontendContext, JS::DestroyFrontendContext, JS::SetNativeStackQuota, JS::CompileGlobalScriptToStencil, JS::CompilationStorage
 #include "js/experimental/JSStencil.h"      // JS::Stencil, JS::FrontendContext
 #include "js/OffThreadScriptCompilation.h"
@@ -1785,9 +1785,10 @@ nsresult nsXULPrototypeScript::DeserializeOutOfLine(
 }
 
 #ifdef DEBUG
-static void CheckErrorsAndWarnings(JS::FrontendContext* aFc) {
+static void CheckErrorsAndWarnings(JS::FrontendContext* aFc,
+                                   const JS::ReadOnlyCompileOptions& aOptions) {
   if (JS::HadFrontendErrors(aFc)) {
-    const JSErrorReport* report = JS::GetFrontendErrorReport(aFc);
+    const JSErrorReport* report = JS::GetFrontendErrorReport(aFc, aOptions);
     if (report) {
       const char* message = "<unknown>";
       const char* filename = "<unknown>";
@@ -1821,7 +1822,7 @@ static void CheckErrorsAndWarnings(JS::FrontendContext* aFc) {
 
   size_t count = JS::GetFrontendWarningCount(aFc);
   for (size_t i = 0; i < count; i++) {
-    const JSErrorReport* report = JS::GetFrontendWarningAt(aFc, i);
+    const JSErrorReport* report = JS::GetFrontendWarningAt(aFc, i, aOptions);
 
     const char* message = "<unknown>";
     const char* filename = "<unknown>";
@@ -1887,7 +1888,7 @@ class ScriptCompileTask final : public Task {
                                                 srcBuf, compileStorage);
 #ifdef DEBUG
     // Chrome-privileged code shouldn't have any compilation error.
-    CheckErrorsAndWarnings(mFrontendContext);
+    CheckErrorsAndWarnings(mFrontendContext, mOptions);
     MOZ_ASSERT(mStencil);
 #endif
   }
