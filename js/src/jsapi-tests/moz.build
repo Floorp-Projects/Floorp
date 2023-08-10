@@ -50,6 +50,7 @@ UNIFIED_SOURCES += [
     "testForwardSetProperty.cpp",
     "testFreshGlobalEvalRedefinition.cpp",
     "testFrontendCompileStencil.cpp",
+    "testFrontendErrors.cpp",
     "testFrontendJSON.cpp",
     "testFunctionBinding.cpp",
     "testFunctionNonSyntactic.cpp",
