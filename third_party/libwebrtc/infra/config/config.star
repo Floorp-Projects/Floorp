@@ -35,6 +35,20 @@ def make_reclient_properties(instance, jobs = None):
         reclient_props["jobs"] = jobs
     return {"$build/reclient": reclient_props}
 
+def os_from_name(name):
+    """Returns the 'os' dimension based on a builder name.
+
+    Args:
+        name: name of the builder.
+    Returns:
+        The os dimension to use for the provided builder.
+    """
+    if "ios" in name.lower() or "mac" in name.lower():
+        return "Mac"
+    if "win" in name.lower():
+        return "Windows"
+    return "Linux"
+
 # Add names of builders to remove from LKGR finder to this list. This is
 # useful when a failure can be safely ignored while fixing it without
 # blocking the LKGR finder on it.
@@ -492,7 +506,6 @@ def webrtc_builder(
 def ci_builder(
         name,
         ci_cat,
-        dimensions,
         properties = None,
         perf_cat = None,
         prioritized = False,
@@ -503,7 +516,6 @@ def ci_builder(
     Args:
       name: builder name (str).
       ci_cat: the category + name for the /ci/ console, or None to omit from the console.
-      dimensions: dict of Swarming dimensions (strings) to search machines by.
       properties: dict of properties to pass to the recipe (on top of the default ones).
       perf_cat: the category + name for the /perf/ console, or None to omit from the console.
       prioritized: True to make this builder have a higher priority and never batch builds.
@@ -525,10 +537,9 @@ def ci_builder(
         add_milo(name, {"ci": ci_cat, "perf": perf_cat})
         if ci_cat and not perf_cat:
             lkgr_builders.append(name)
-    dimensions.update({"pool": "luci.webrtc.ci", "cpu": kwargs.pop("cpu", DEFAULT_CPU)})
+    dimensions = ({"os": os_from_name(name), "pool": "luci.webrtc.ci", "cpu": kwargs.pop("cpu", DEFAULT_CPU)})
     dimensions["builderless"] = "1"
     properties = properties or {}
-    properties = dict(properties)  # Avoid mutating the original dict.
     properties["builder_group"] = "client.webrtc"
     properties.update(make_reclient_properties("rbe-webrtc-trusted"))
 
@@ -548,7 +559,6 @@ def ci_builder(
 
 def try_builder(
         name,
-        dimensions,
         properties = None,
         try_cat = True,
         cq = {},
@@ -559,7 +569,6 @@ def try_builder(
 
     Args:
       name: builder name (str).
-      dimensions: dict of Swarming dimensions (strings) to search machines by.
       properties: dict of properties to pass to the recipe (on top of the default ones).
       try_cat: boolean, whether to include this builder in the /try/ console. See also: `add_milo`.
       cq: None to exclude this from all commit queues, or a dict of kwargs for cq_tryjob_verifier.
@@ -570,7 +579,7 @@ def try_builder(
       A luci.builder.
     """
     add_milo(name, {"try": try_cat})
-    dimensions.update({"pool": "luci.webrtc.try", "cpu": DEFAULT_CPU})
+    dimensions = ({"os": os_from_name(name), "pool": "luci.webrtc.try", "cpu": DEFAULT_CPU})
     if builder != None:
         dimensions["builder"] = builder
     else:
@@ -656,24 +665,7 @@ def normal_builder_factory(**common_kwargs):
 
 # Mixins:
 
-linux_builder, linux_try_job = normal_builder_factory(
-    dimensions = {"os": "Linux"},
-)
-
-android_builder, android_try_job = normal_builder_factory(
-    dimensions = {"os": "Linux"},
-)
-
-win_builder, win_try_job = normal_builder_factory(
-    dimensions = {"os": "Windows"},
-)
-
-mac_builder, mac_try_job = normal_builder_factory(
-    dimensions = {"os": "Mac"},
-)
-
 ios_builder, ios_try_job = normal_builder_factory(
-    dimensions = {"os": "Mac"},
     properties = {"xcode_build_version": WEBRTC_XCODE13},
     caches = [swarming.cache(
         name = "xcode_ios_" + WEBRTC_XCODE13,
@@ -681,52 +673,35 @@ ios_builder, ios_try_job = normal_builder_factory(
     )],
 )
 
-linux_chromium_try_job = normal_builder_factory(
-    dimensions = {"os": "Linux"},
-    builder = "chromium-compile",
-)[1]
-android_chromium_try_job = normal_builder_factory(
-    dimensions = {"os": "Linux"},
-    builder = "chromium-compile",
-)[1]
-win_chromium_try_job = normal_builder_factory(
-    dimensions = {"os": "Windows"},
-    builder = "chromium-compile",
-)[1]
-mac_chromium_try_job = normal_builder_factory(
-    dimensions = {"os": "Mac"},
-    builder = "chromium-compile",
-)[1]
-
 # Actual builder configuration:
 
-android_builder("Android32 (dbg)", "Android|arm|dbg")
-android_try_job("android_compile_arm_dbg", cq = {"experiment_percentage": 100})
-android_try_job("android_arm_dbg")
-android_builder("Android32", "Android|arm|rel")
-android_try_job("android_arm_rel")
-android_builder("Android32 Builder arm", "Android|arm|size", perf_cat = "Android|arm|Builder|", prioritized = True)
-android_try_job("android_compile_arm_rel")
+ci_builder("Android32 (dbg)", "Android|arm|dbg")
+try_builder("android_compile_arm_dbg", cq = {"experiment_percentage": 100})
+try_builder("android_arm_dbg")
+ci_builder("Android32", "Android|arm|rel")
+try_builder("android_arm_rel")
+ci_builder("Android32 Builder arm", "Android|arm|size", perf_cat = "Android|arm|Builder|", prioritized = True)
+try_builder("android_compile_arm_rel")
 perf_builder("Perf Android32 (O Pixel2)", "Android|arm|Tester|O Pixel2", triggered_by = ["Android32 Builder arm"])
 perf_builder("Perf Android32 (R Pixel5)", "Android|arm|Tester|R Pixel5", triggered_by = ["Android32 Builder arm"])
-android_try_job("android_compile_arm64_dbg", cq = None)
-android_try_job("android_arm64_dbg", cq = None)
-android_builder("Android64", "Android|arm64|rel")
-android_try_job("android_arm64_rel")
-android_builder("Android64 Builder arm64", "Android|arm64|size", perf_cat = "Android|arm64|Builder|", prioritized = True)
+try_builder("android_compile_arm64_dbg", cq = None)
+try_builder("android_arm64_dbg", cq = None)
+ci_builder("Android64", "Android|arm64|rel")
+try_builder("android_arm64_rel")
+ci_builder("Android64 Builder arm64", "Android|arm64|size", perf_cat = "Android|arm64|Builder|", prioritized = True)
 perf_builder("Perf Android64 (O Pixel2)", "Android|arm64|Tester|O Pixel2", triggered_by = ["Android64 Builder arm64"])
 perf_builder("Perf Android64 (R Pixel5)", "Android|arm64|Tester|R Pixel5", triggered_by = ["Android64 Builder arm64"])
-android_try_job("android_compile_arm64_rel")
-android_builder("Android64 Builder x64 (dbg)", "Android|x64|dbg")
-android_try_job("android_compile_x64_dbg")
-android_try_job("android_compile_x64_rel", cq = None)
-android_builder("Android32 Builder x86 (dbg)", "Android|x86|dbg")
-android_try_job("android_compile_x86_dbg")
-android_builder("Android32 Builder x86", "Android|x86|rel")
-android_try_job("android_compile_x86_rel")
-android_builder("Android32 (more configs)", "Android|arm|more")
-android_try_job("android_arm_more_configs")
-android_chromium_try_job("android_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
+try_builder("android_compile_arm64_rel")
+ci_builder("Android64 Builder x64 (dbg)", "Android|x64|dbg")
+try_builder("android_compile_x64_dbg")
+try_builder("android_compile_x64_rel", cq = None)
+ci_builder("Android32 Builder x86 (dbg)", "Android|x86|dbg")
+try_builder("android_compile_x86_dbg")
+ci_builder("Android32 Builder x86", "Android|x86|rel")
+try_builder("android_compile_x86_rel")
+ci_builder("Android32 (more configs)", "Android|arm|more")
+try_builder("android_arm_more_configs")
+try_builder("android_chromium_compile", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
 
 ios_builder("iOS64 Debug", "iOS|arm64|dbg")
 ios_try_job("ios_compile_arm64_dbg")
@@ -737,88 +712,89 @@ ios_try_job("ios_dbg_simulator")
 ios_builder("iOS API Framework Builder", "iOS|fat|size", recipe = "ios_api_framework", prioritized = True)
 ios_try_job("ios_api_framework", recipe = "ios_api_framework")
 
-linux_builder("Linux32 Debug", "Linux|x86|dbg")
-linux_try_job("linux_x86_dbg")
-linux_builder("Linux32 Release", "Linux|x86|rel")
-linux_try_job("linux_x86_rel")
-linux_builder("Linux64 Debug", "Linux|x64|dbg")
-linux_try_job("linux_dbg", cq = None)
-linux_try_job("linux_compile_dbg")
-linux_builder("Linux64 Release", "Linux|x64|rel")
-linux_try_job("linux_rel")
-linux_builder("Linux64 Builder", "Linux|x64|size", perf_cat = "Linux|x64|Builder|", prioritized = True)
-linux_try_job("linux_compile_rel")
+ci_builder("Linux32 Debug", "Linux|x86|dbg")
+try_builder("linux_x86_dbg")
+ci_builder("Linux32 Release", "Linux|x86|rel")
+try_builder("linux_x86_rel")
+ci_builder("Linux64 Debug", "Linux|x64|dbg")
+try_builder("linux_dbg", cq = None)
+try_builder("linux_compile_dbg")
+ci_builder("Linux64 Release", "Linux|x64|rel")
+try_builder("linux_rel")
+ci_builder("Linux64 Builder", "Linux|x64|size", perf_cat = "Linux|x64|Builder|", prioritized = True)
+try_builder("linux_compile_rel")
 perf_builder("Perf Linux Bionic", "Linux|x64|Tester|Bionic", triggered_by = ["Linux64 Builder"])
-linux_builder("Linux32 Debug (ARM)", "Linux|arm|dbg")
-linux_try_job("linux_compile_arm_dbg")
-linux_builder("Linux32 Release (ARM)", "Linux|arm|rel")
-linux_try_job("linux_compile_arm_rel")
-linux_builder("Linux64 Debug (ARM)", "Linux|arm64|dbg")
-linux_try_job("linux_compile_arm64_dbg")
-linux_builder("Linux64 Release (ARM)", "Linux|arm64|rel")
-linux_try_job("linux_compile_arm64_rel")
-linux_builder("Linux Asan", "Linux|x64|asan")
-linux_try_job("linux_asan")
-linux_builder("Linux MSan", "Linux|x64|msan")
-linux_try_job("linux_msan")
-linux_builder("Linux Tsan v2", "Linux|x64|tsan")
-linux_try_job("linux_tsan2")
-linux_builder("Linux UBSan", "Linux|x64|ubsan")
-linux_try_job("linux_ubsan")
-linux_builder("Linux UBSan vptr", "Linux|x64|ubsan")
-linux_try_job("linux_ubsan_vptr")
-linux_builder("Linux64 Release (Libfuzzer)", "Linux|x64|fuzz", recipe = "libfuzzer")
-linux_try_job("linux_libfuzzer_rel", recipe = "libfuzzer")
-linux_builder("Linux (more configs)", "Linux|x64|more")
-linux_try_job("linux_more_configs")
-linux_try_job("linux_coverage")
-linux_chromium_try_job("webrtc_linux_chromium", recipe = "chromium_trybot", cq = None, branch_cq = False)
-linux_chromium_try_job("linux_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
-linux_chromium_try_job("linux_chromium_compile_dbg", recipe = "chromium_trybot", branch_cq = False)
+ci_builder("Linux32 Debug (ARM)", "Linux|arm|dbg")
+try_builder("linux_compile_arm_dbg")
+ci_builder("Linux32 Release (ARM)", "Linux|arm|rel")
+try_builder("linux_compile_arm_rel")
+ci_builder("Linux64 Debug (ARM)", "Linux|arm64|dbg")
+try_builder("linux_compile_arm64_dbg")
+ci_builder("Linux64 Release (ARM)", "Linux|arm64|rel")
+try_builder("linux_compile_arm64_rel")
+ci_builder("Linux Asan", "Linux|x64|asan")
+try_builder("linux_asan")
+ci_builder("Linux MSan", "Linux|x64|msan")
+try_builder("linux_msan")
+ci_builder("Linux Tsan v2", "Linux|x64|tsan")
+try_builder("linux_tsan2")
+ci_builder("Linux UBSan", "Linux|x64|ubsan")
+try_builder("linux_ubsan")
+ci_builder("Linux UBSan vptr", "Linux|x64|ubsan")
+try_builder("linux_ubsan_vptr")
+ci_builder("Linux64 Release (Libfuzzer)", "Linux|x64|fuzz", recipe = "libfuzzer")
+try_builder("linux_libfuzzer_rel", recipe = "libfuzzer")
+ci_builder("Linux (more configs)", "Linux|x64|more")
+try_builder("linux_more_configs")
+try_builder("linux_coverage")
+try_builder("webrtc_linux_chromium", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
+try_builder("linux_chromium_compile", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False, cq = None)
+try_builder("linux_chromium_compile_dbg", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
 
-linux_builder("Fuchsia Builder", ci_cat = None, perf_cat = "Fuchsia|x64|Builder|", prioritized = True)
-linux_builder("Fuchsia Release", "Fuchsia|x64|rel")
-linux_try_job("fuchsia_rel")
+ci_builder("Fuchsia Builder", ci_cat = None, perf_cat = "Fuchsia|x64|Builder|", prioritized = True)
+ci_builder("Fuchsia Release", "Fuchsia|x64|rel")
+try_builder("fuchsia_rel")
 perf_builder("Perf Fuchsia", "Fuchsia|x64|Tester|", triggered_by = ["Fuchsia Builder"])
-mac_builder("Mac64 Debug", "Mac|x64|dbg")
-mac_try_job("mac_dbg", cq = None)
-mac_try_job("mac_compile_dbg")
-mac_builder("Mac64 Release", "Mac|x64|rel")
-mac_try_job("mac_rel")
-mac_try_job("mac_compile_rel", cq = None)
-mac_builder("Mac64 Builder", ci_cat = None, perf_cat = "Mac|x64|Builder|")
-mac_builder("MacArm64 Builder", ci_cat = None, perf_cat = "Mac|arm64|Builder|")
+
+ci_builder("Mac64 Debug", "Mac|x64|dbg")
+try_builder("mac_dbg", cq = None)
+try_builder("mac_compile_dbg")
+ci_builder("Mac64 Release", "Mac|x64|rel")
+try_builder("mac_rel")
+try_builder("mac_compile_rel", cq = None)
+ci_builder("Mac64 Builder", ci_cat = None, perf_cat = "Mac|x64|Builder|")
+ci_builder("MacArm64 Builder", ci_cat = None, perf_cat = "Mac|arm64|Builder|")
 perf_builder("Perf Mac 11", "Mac|x64|Tester|11", triggered_by = ["Mac64 Builder"])
 perf_builder("Perf Mac M1 Arm64 12", "Mac|arm64|Tester|12", triggered_by = ["MacArm64 Builder"])
-mac_builder("Mac Asan", "Mac|x64|asan")
-mac_try_job("mac_asan")
-mac_builder("MacARM64 M1 Release", "Mac|arm64M1|rel", cpu = "arm64-64-Apple_M1")
-mac_try_job("mac_rel_m1")
-mac_try_job("mac_dbg_m1")
-mac_chromium_try_job("mac_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
+ci_builder("Mac Asan", "Mac|x64|asan")
+try_builder("mac_asan")
+ci_builder("MacARM64 M1 Release", "Mac|arm64M1|rel", cpu = "arm64-64-Apple_M1")
+try_builder("mac_rel_m1")
+try_builder("mac_dbg_m1")
+try_builder("mac_chromium_compile", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
 
-win_builder("Win32 Debug (Clang)", "Win Clang|x86|dbg")
-win_try_job("win_x86_clang_dbg", cq = None)
-win_try_job("win_compile_x86_clang_dbg")
-win_builder("Win32 Release (Clang)", "Win Clang|x86|rel")
-win_try_job("win_x86_clang_rel")
-win_try_job("win_compile_x86_clang_rel", cq = None)
-win_builder("Win64 Builder (Clang)", ci_cat = None, perf_cat = "Win|x64|Builder|")
+ci_builder("Win32 Debug (Clang)", "Win Clang|x86|dbg")
+try_builder("win_x86_clang_dbg", cq = None)
+try_builder("win_compile_x86_clang_dbg")
+ci_builder("Win32 Release (Clang)", "Win Clang|x86|rel")
+try_builder("win_x86_clang_rel")
+try_builder("win_compile_x86_clang_rel", cq = None)
+ci_builder("Win64 Builder (Clang)", ci_cat = None, perf_cat = "Win|x64|Builder|")
 perf_builder("Perf Win 10", "Win|x64|Tester|10", triggered_by = ["Win64 Builder (Clang)"])
-win_builder("Win64 Debug (Clang)", "Win Clang|x64|dbg")
-win_try_job("win_x64_clang_dbg")
-win_try_job("win_compile_x64_clang_dbg")
-win_builder("Win64 Release (Clang)", "Win Clang|x64|rel")
-win_try_job("win_x64_clang_rel")
-win_try_job("win_compile_x64_clang_rel")
-win_builder("Win64 ASan", "Win Clang|x64|asan")
-win_try_job("win_asan")
-win_builder("Win (more configs)", "Win Clang|x86|more")
-win_try_job("win_x86_more_configs")
-win_chromium_try_job("win_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
-win_chromium_try_job("win_chromium_compile_dbg", recipe = "chromium_trybot", branch_cq = False)
+ci_builder("Win64 Debug (Clang)", "Win Clang|x64|dbg")
+try_builder("win_x64_clang_dbg")
+try_builder("win_compile_x64_clang_dbg")
+ci_builder("Win64 Release (Clang)", "Win Clang|x64|rel")
+try_builder("win_x64_clang_rel")
+try_builder("win_compile_x64_clang_rel")
+ci_builder("Win64 ASan", "Win Clang|x64|asan")
+try_builder("win_asan")
+ci_builder("Win (more configs)", "Win Clang|x86|more")
+try_builder("win_x86_more_configs")
+try_builder("win_chromium_compile", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
+try_builder("win_chromium_compile_dbg", builder = "chromium-compile", recipe = "chromium_trybot", branch_cq = False)
 
-linux_try_job(
+try_builder(
     "presubmit",
     recipe = "run_presubmit",
     properties = {"repo_name": "webrtc", "runhooks": True},
