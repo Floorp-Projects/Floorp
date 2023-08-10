@@ -17,7 +17,7 @@ Differential Revision: https://phabricator.services.mozilla.com/D163960
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8e9a326a99cd5eaa6e447ff57c01ad9d79a09744
 ---
  api/video/frame_buffer.cc               | 33 +++++++++++++++++++++++++
- video/receive_statistics_proxy2.cc      | 11 +++++++++
+ video/receive_statistics_proxy.cc       | 11 +++++++++
  video/rtp_video_stream_receiver2.cc     |  4 +++
  video/video_stream_buffer_controller.cc |  7 ++++++
  4 files changed, 55 insertions(+)
@@ -115,10 +115,10 @@ index 8267b8e6cb..f5d93f5f76 100644
    num_dropped_frames_ += num_dropped_frames;
    num_discarded_packets_ += num_discarded_packets;
  }
-diff --git a/video/receive_statistics_proxy2.cc b/video/receive_statistics_proxy2.cc
-index 886a5a8f93..103a0e9f3c 100644
---- a/video/receive_statistics_proxy2.cc
-+++ b/video/receive_statistics_proxy2.cc
+diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
+index 84faaa79f7..c944b32337 100644
+--- a/video/receive_statistics_proxy.cc
++++ b/video/receive_statistics_proxy.cc
 @@ -20,6 +20,7 @@
  #include "rtc_base/strings/string_builder.h"
  #include "rtc_base/thread.h"

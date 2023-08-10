@@ -13,7 +13,7 @@
 #include "api/video_codecs/video_decoder.h"
 #include "modules/video_coding/video_receiver2.h"
 #include "rtc_base/checks.h"
-#include "video/receive_statistics_proxy2.h"
+#include "video/receive_statistics_proxy.h"
 
 namespace webrtc {
 namespace internal {

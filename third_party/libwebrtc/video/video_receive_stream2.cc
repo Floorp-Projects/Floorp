@@ -52,7 +52,7 @@
 #include "system_wrappers/include/clock.h"
 #include "video/call_stats2.h"
 #include "video/frame_dumping_decoder.h"
-#include "video/receive_statistics_proxy2.h"
+#include "video/receive_statistics_proxy.h"
 #include "video/render/incoming_video_stream.h"
 #include "video/task_queue_frame_decode_scheduler.h"
 

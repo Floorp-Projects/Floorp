@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video/receive_statistics_proxy2.h"
+#include "video/receive_statistics_proxy.h"
 
 #include <algorithm>
 #include <cmath>

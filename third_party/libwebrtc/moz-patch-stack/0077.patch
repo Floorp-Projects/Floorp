@@ -21,8 +21,8 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ee566d1bfb654d36e
  .../include/video_coding_defines.h            |  2 ++
  modules/video_coding/packet_buffer.cc         | 10 +++++---
  modules/video_coding/packet_buffer.h          |  5 +++-
- video/receive_statistics_proxy2.cc            |  5 ++++
- video/receive_statistics_proxy2.h             |  1 +
+ video/receive_statistics_proxy.cc             |  5 ++++
+ video/receive_statistics_proxy.h              |  1 +
  video/rtp_video_stream_receiver2.cc           |  5 +++-
  video/rtp_video_stream_receiver2.h            |  2 ++
  video/video_receive_stream2.cc                |  1 +
@@ -200,10 +200,10 @@ index 53e08c95a1..47b2ffe199 100644
    void Clear();
  
    void ForceSpsPpsIdrIsH264Keyframe();
-diff --git a/video/receive_statistics_proxy2.cc b/video/receive_statistics_proxy2.cc
-index 67798b4453..87862c624a 100644
---- a/video/receive_statistics_proxy2.cc
-+++ b/video/receive_statistics_proxy2.cc
+diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
+index daae7a3b68..5d6e4e3460 100644
+--- a/video/receive_statistics_proxy.cc
++++ b/video/receive_statistics_proxy.cc
 @@ -959,6 +959,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
        }));
  }
@@ -216,10 +216,10 @@ index 67798b4453..87862c624a 100644
  void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
    RTC_DCHECK_RUN_ON(&main_thread_);
    last_codec_type_ = codec_type;
-diff --git a/video/receive_statistics_proxy2.h b/video/receive_statistics_proxy2.h
-index 6e7445aeb2..d07d665d27 100644
---- a/video/receive_statistics_proxy2.h
-+++ b/video/receive_statistics_proxy2.h
+diff --git a/video/receive_statistics_proxy.h b/video/receive_statistics_proxy.h
+index b69c77be20..6f108df7ba 100644
+--- a/video/receive_statistics_proxy.h
++++ b/video/receive_statistics_proxy.h
 @@ -90,6 +90,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
                         size_t size_bytes,
                         VideoContentType content_type) override;
@@ -279,7 +279,7 @@ index dc9cea422d..90bce6d4b5 100644
        RTC_GUARDED_BY(packet_sequence_checker_);
    UniqueTimestampCounter frame_counter_
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 69d64146a0..aaa380a73b 100644
+index 999a5d9e4d..46f25f0f81 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
 @@ -211,6 +211,7 @@ VideoReceiveStream2::VideoReceiveStream2(
