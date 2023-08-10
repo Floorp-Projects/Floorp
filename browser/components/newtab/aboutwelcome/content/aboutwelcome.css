@@ -931,7 +931,7 @@ html {
   margin: auto 0 auto auto;
 }
 .onboardingContainer .screen[pos=split] .section-main.embedded-migration .main-content {
-  padding-block: 76px 0;
+  padding-block: 100px 0;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content {
   border-radius: 0 8px 8px 0;
