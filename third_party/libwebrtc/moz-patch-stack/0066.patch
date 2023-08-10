@@ -9,7 +9,7 @@ Subject: Bug 1772380 - Build 1766646 - (fix-c89fdd716c) fixes for the
  2 files changed, 7 insertions(+), 16 deletions(-)
 
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index da88ce4109..3e33c45c59 100644
+index 18013677e9..2276707e03 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
 @@ -133,11 +133,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
