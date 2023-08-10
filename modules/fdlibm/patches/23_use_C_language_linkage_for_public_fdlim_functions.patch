@@ -1,0 +1,38 @@
+diff --git a/fdlibm.h b/fdlibm.h
+--- a/fdlibm.h
++++ b/fdlibm.h
+@@ -16,16 +16,20 @@
+ 
+ #ifndef mozilla_imported_fdlibm_h
+ #define	mozilla_imported_fdlibm_h
+ 
+ #ifndef M_PI_2
+ #define	M_PI_2		1.57079632679489661923	/* pi/2 */
+ #endif
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
+ double	fdlibm_acos(double);
+ double	fdlibm_asin(double);
+ double	fdlibm_atan(double);
+ double	fdlibm_atan2(double, double);
+ double	fdlibm_cos(double);
+ double	fdlibm_sin(double);
+ double	fdlibm_tan(double);
+ 
+@@ -72,9 +74,13 @@ float	fdlibm_sqrtf(float);
+ float	fdlibm_ceilf(float);
+ float	fdlibm_fabsf(float);
+ float	fdlibm_floorf(float);
+ float	fdlibm_nearbyintf(float);
+ float	fdlibm_rintf(float);
+ float	fdlibm_scalbnf(float, int);
+ float	fdlibm_truncf(float);
+ 
++#ifdef __cplusplus
++}  // extern "C"
++#endif
++
+ #endif /* !mozilla_imported_fdlibm_h */

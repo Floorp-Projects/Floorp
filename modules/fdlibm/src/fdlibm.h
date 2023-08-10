@@ -21,6 +21,10 @@
 #define	M_PI_2		1.57079632679489661923	/* pi/2 */
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 double	fdlibm_acos(double);
 double	fdlibm_asin(double);
 double	fdlibm_atan(double);
@@ -76,5 +80,9 @@ float	fdlibm_nearbyintf(float);
 float	fdlibm_rintf(float);
 float	fdlibm_scalbnf(float, int);
 float	fdlibm_truncf(float);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif /* !mozilla_imported_fdlibm_h */
