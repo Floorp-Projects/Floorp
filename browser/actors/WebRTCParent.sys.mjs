@@ -753,9 +753,17 @@ function prompt(aActor, aBrowser, aRequest) {
         }
       }
 
-      // If the notification has been cancelled (e.g. due to entering full-screen), also cancel the webRTC request
       if (aTopic == "removed" && notification && isCancel) {
+        // The notification has been cancelled (e.g. due to entering
+        // full-screen).  Also cancel the webRTC request.
         aActor.denyRequest(aRequest);
+      } else if (
+        aTopic == "shown" &&
+        audioOutputDevices.length > 1 &&
+        !notification.wasDismissed
+      ) {
+        // Focus the list on first show so that arrow keys select the speaker.
+        doc.getElementById("webRTC-selectSpeaker-richlistbox").focus();
       }
 
       if (aTopic != "showing") {
