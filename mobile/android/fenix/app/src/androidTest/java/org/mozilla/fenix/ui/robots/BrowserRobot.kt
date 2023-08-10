@@ -862,11 +862,34 @@ class BrowserRobot {
         }
     }
 
+    fun verifySurveyButton() {
+        val button = mDevice.findObject(
+            UiSelector().text(
+                getStringResource(
+                    R.string.preferences_take_survey,
+                ),
+            ),
+        )
+        assertTrue(button.waitForExists(waitingTime))
+    }
+
     fun clickOpenLinksInAppsDismissCFRButton() =
         itemWithResIdContainingText(
             "$packageName:id/dismiss",
             getStringResource(R.string.open_in_app_cfr_negative_button_text),
         ).click()
+
+    fun clickTakeSurveyButton() {
+        val button = mDevice.findObject(
+            UiSelector().text(
+                getStringResource(
+                    R.string.preferences_take_survey,
+                ),
+            ),
+        )
+        button.waitForExists(waitingTime)
+        button.click()
+    }
 
     fun longClickToolbar() = mDevice.findObject(By.res("$packageName:id/mozac_browser_toolbar_url_view")).click(LONG_CLICK_DURATION)
 
@@ -1170,6 +1193,14 @@ class BrowserRobot {
             DownloadRobot().interact()
             return DownloadRobot.Transition()
         }
+
+        fun clickSurveyButton(interact: BrowserRobot.() -> unit): BrowserRobot.Transition {
+            surveyButton.waitForExists(waitingTime)
+            surveyButton.click()
+
+            BrowserRobot().interact()
+            return Transition()
+        }
     }
 }
 
@@ -1325,3 +1356,6 @@ private val contextMenuShareLink =
 // Open in external app option
 private val contextMenuOpenInExternalApp =
     itemContainingText(getStringResource(R.string.mozac_feature_contextmenu_open_link_in_external_app))
+
+private val surveyButton =
+    itemContainingText(getStringResource(R.string.preferences_take_survey))
