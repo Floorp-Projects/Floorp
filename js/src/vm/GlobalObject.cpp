@@ -713,29 +713,34 @@ JSFunction* GlobalObject::createConstructor(JSContext* cx, Native ctor,
 }
 
 static NativeObject* CreateBlankProto(JSContext* cx, const JSClass* clasp,
-                                      HandleObject proto) {
+                                      HandleObject proto,
+                                      ObjectFlags objFlags) {
   MOZ_ASSERT(!clasp->isJSFunction());
 
   if (clasp == &PlainObject::class_) {
+    // NOTE: There should be no reason currently to support this. It could
+    // however be added later if needed.
+    MOZ_ASSERT(objFlags.isEmpty());
     return NewPlainObjectWithProto(cx, proto, TenuredObject);
   }
 
-  return NewTenuredObjectWithGivenProto(cx, clasp, proto);
+  return NewTenuredObjectWithGivenProto(cx, clasp, proto, objFlags);
 }
 
 /* static */
 NativeObject* GlobalObject::createBlankPrototype(JSContext* cx,
                                                  Handle<GlobalObject*> global,
-                                                 const JSClass* clasp) {
+                                                 const JSClass* clasp,
+                                                 ObjectFlags objFlags) {
   RootedObject objectProto(cx, &global->getObjectPrototype());
-  return CreateBlankProto(cx, clasp, objectProto);
+  return CreateBlankProto(cx, clasp, objectProto, objFlags);
 }
 
 /* static */
 NativeObject* GlobalObject::createBlankPrototypeInheriting(JSContext* cx,
                                                            const JSClass* clasp,
                                                            HandleObject proto) {
-  return CreateBlankProto(cx, clasp, proto);
+  return CreateBlankProto(cx, clasp, proto, ObjectFlags());
 }
 
 bool js::LinkConstructorAndPrototype(JSContext* cx, JSObject* ctor_,
