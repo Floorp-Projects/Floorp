@@ -95,6 +95,7 @@ browsertime:
     - browsertime-regression-tests
     - browsertime-upload
     - browsertime-speculative
+    - browsertime-throttled
 
 browsertime-clang:
     - browsertime-tp6
