@@ -166,7 +166,7 @@ allprojects {
         kotlinOptions.jvmTarget = "17"
         kotlinOptions.allWarningsAsErrors = true
         kotlinOptions.freeCompilerArgs += [
-            "-opt-in=kotlin.RequiresOptIn", "-Xjvm-default=all"
+            "-opt-in=kotlin.RequiresOptIn", "-Xjvm-default=all-compatibility"
         ]
     }
 }
