@@ -190,6 +190,8 @@ void MediaChannel::SendRtp(const uint8_t* data,
       [this, packet_id = options.packet_id,
        included_in_feedback = options.included_in_feedback,
        included_in_allocation = options.included_in_allocation,
+       batchable = options.batchable,
+       last_packet_in_batch = options.last_packet_in_batch,
        packet = rtc::CopyOnWriteBuffer(data, len, kMaxRtpPacketLen)]() mutable {
         rtc::PacketOptions rtc_options;
         rtc_options.packet_id = packet_id;
@@ -200,6 +202,8 @@ void MediaChannel::SendRtp(const uint8_t* data,
             included_in_feedback;
         rtc_options.info_signaled_after_sent.included_in_allocation =
             included_in_allocation;
+        rtc_options.batchable = batchable;
+        rtc_options.last_packet_in_batch = last_packet_in_batch;
         SendPacket(&packet, rtc_options);
       };
 

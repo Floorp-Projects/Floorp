@@ -30,10 +30,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c303f3d267415184f
  2 files changed, 23 insertions(+), 2 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/rtp_sender_egress.cc b/modules/rtp_rtcp/source/rtp_sender_egress.cc
-index d6052f8db3..7b0af2f5e6 100644
+index fdc2792793..02c0ee145b 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_egress.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_egress.cc
-@@ -209,8 +209,9 @@ void RtpSenderEgress::SendPacket(std::unique_ptr<RtpPacketToSend> packet,
+@@ -208,8 +208,9 @@ void RtpSenderEgress::SendPacket(std::unique_ptr<RtpPacketToSend> packet,
    // In case of VideoTimingExtension, since it's present not in every packet,
    // data after rtp header may be corrupted if these packets are protected by
    // the FEC.
@@ -46,10 +46,10 @@ index d6052f8db3..7b0af2f5e6 100644
    }
    if (packet->HasExtension<AbsoluteSendTime>()) {
 diff --git a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
-index 504a467c9b..a63dc3e5be 100644
+index 75f18354ec..a31ee37c43 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
-@@ -268,6 +268,26 @@ TEST_F(RtpSenderEgressTest,
+@@ -309,6 +309,26 @@ TEST_F(RtpSenderEgressTest,
    EXPECT_TRUE(transport_.last_packet()->options.included_in_allocation);
  }
  

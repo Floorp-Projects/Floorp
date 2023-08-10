@@ -344,6 +344,11 @@ bool ModuleRtpRtcpImpl2::TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
   return true;
 }
 
+void ModuleRtpRtcpImpl2::OnBatchComplete() {
+  RTC_DCHECK(rtp_sender_);
+  rtp_sender_->packet_sender.OnBatchComplete();
+}
+
 void ModuleRtpRtcpImpl2::SetFecProtectionParams(
     const FecProtectionParams& delta_params,
     const FecProtectionParams& key_params) {

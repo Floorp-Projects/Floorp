@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/cleanup/cleanup.h"
 #include "absl/strings/match.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
@@ -374,6 +375,9 @@ Timestamp PacingController::NextSendTime() const {
 }
 
 void PacingController::ProcessPackets() {
+  absl::Cleanup cleanup = [packet_sender = packet_sender_] {
+    packet_sender->OnBatchComplete();
+  };
   const Timestamp now = CurrentTime();
   Timestamp target_send_time = now;
 

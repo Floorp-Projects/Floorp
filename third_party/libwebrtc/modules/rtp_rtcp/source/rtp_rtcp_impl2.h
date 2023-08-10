@@ -146,6 +146,7 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
 
   bool TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
                      const PacedPacketInfo& pacing_info) override;
+  void OnBatchComplete() override;
 
   void SetFecProtectionParams(const FecProtectionParams& delta_params,
                               const FecProtectionParams& key_params) override;

@@ -88,6 +88,7 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               (std::unique_ptr<RtpPacketToSend> packet,
                const PacedPacketInfo& pacing_info),
               (override));
+  MOCK_METHOD(void, OnBatchComplete, (), (override));
   MOCK_METHOD(void,
               SetFecProtectionParams,
               (const FecProtectionParams& delta_params,

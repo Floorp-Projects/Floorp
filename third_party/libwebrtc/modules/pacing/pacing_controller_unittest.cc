@@ -138,6 +138,7 @@ class MockPacingControllerCallback : public PacingController::PacketSender {
               GetRtxSsrcForMedia,
               (uint32_t),
               (const, override));
+  MOCK_METHOD(void, OnBatchComplete, (), (override));
 };
 
 // Mock callback implementing the raw api.
@@ -165,6 +166,7 @@ class MockPacketSender : public PacingController::PacketSender {
               GetRtxSsrcForMedia,
               (uint32_t),
               (const, override));
+  MOCK_METHOD(void, OnBatchComplete, (), (override));
 };
 
 class PacingControllerPadding : public PacingController::PacketSender {
@@ -201,6 +203,8 @@ class PacingControllerPadding : public PacingController::PacketSender {
   absl::optional<uint32_t> GetRtxSsrcForMedia(uint32_t) const override {
     return absl::nullopt;
   }
+
+  void OnBatchComplete() override {}
 
   size_t padding_sent() { return padding_sent_; }
   size_t total_bytes_sent() { return total_bytes_sent_; }
@@ -260,6 +264,7 @@ class PacingControllerProbing : public PacingController::PacketSender {
   absl::optional<uint32_t> GetRtxSsrcForMedia(uint32_t) const override {
     return absl::nullopt;
   }
+  void OnBatchComplete() override {}
 
   int packets_sent() const { return packets_sent_; }
   int padding_packets_sent() const { return padding_packets_sent_; }
@@ -1451,6 +1456,13 @@ TEST_F(PacingControllerTest, PaddingOveruse) {
   // Don't send padding if queue is non-empty, even if padding budget > 0.
   EXPECT_CALL(callback_, SendPadding).Times(0);
   AdvanceTimeUntil(pacer->NextSendTime());
+  pacer->ProcessPackets();
+}
+
+TEST_F(PacingControllerTest, ProvidesOnBatchCompleteToPacketSender) {
+  MockPacketSender callback;
+  auto pacer = std::make_unique<PacingController>(&clock_, &callback, trials_);
+  EXPECT_CALL(callback, OnBatchComplete);
   pacer->ProcessPackets();
 }
 

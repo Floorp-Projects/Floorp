@@ -67,6 +67,7 @@ class RtpSenderEgress {
 
   void SendPacket(std::unique_ptr<RtpPacketToSend> packet,
                   const PacedPacketInfo& pacing_info) RTC_LOCKS_EXCLUDED(lock_);
+  void OnBatchComplete();
   uint32_t Ssrc() const { return ssrc_; }
   absl::optional<uint32_t> RtxSsrc() const { return rtx_ssrc_; }
   absl::optional<uint32_t> FlexFecSsrc() const { return flexfec_ssrc_; }
@@ -100,6 +101,13 @@ class RtpSenderEgress {
       rtc::ArrayView<const uint16_t> sequence_numbers);
 
  private:
+  struct Packet {
+    std::unique_ptr<RtpPacketToSend> rtp_packet;
+    PacedPacketInfo info;
+    Timestamp now;
+  };
+  void CompleteSendPacket(const Packet& compound_packet, bool last_in_batch)
+      RTC_LOCKS_EXCLUDED(lock_) RTC_RUN_ON(pacer_checker_);
   RtpSendRates GetSendRatesLocked(Timestamp now) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_);
   bool HasCorrectSsrc(const RtpPacketToSend& packet) const;
@@ -128,6 +136,7 @@ class RtpSenderEgress {
   // Called on a timer, once a second, on the worker_queue_.
   void PeriodicUpdate();
 
+  const bool enable_send_packet_batching_;
   TaskQueueBase* const worker_queue_;
   RTC_NO_UNIQUE_ADDRESS SequenceChecker pacer_checker_;
   const uint32_t ssrc_;
@@ -138,9 +147,7 @@ class RtpSenderEgress {
   RtpPacketHistory* const packet_history_;
   Transport* const transport_;
   RtcEventLog* const event_log_;
-#if BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
   const bool is_audio_;
-#endif
   const bool need_rtp_packet_infos_;
   VideoFecGenerator* const fec_generator_ RTC_GUARDED_BY(pacer_checker_);
   absl::optional<uint16_t> last_sent_seq_ RTC_GUARDED_BY(pacer_checker_);
@@ -178,6 +185,7 @@ class RtpSenderEgress {
   const std::unique_ptr<RtpSequenceNumberMap> rtp_sequence_number_map_
       RTC_GUARDED_BY(worker_queue_);
   RepeatingTaskHandle update_task_ RTC_GUARDED_BY(worker_queue_);
+  std::vector<Packet> packets_to_send_ RTC_GUARDED_BY(pacer_checker_);
   ScopedTaskSafety task_safety_;
 };
 

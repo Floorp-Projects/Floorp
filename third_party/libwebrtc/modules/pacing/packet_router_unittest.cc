@@ -252,6 +252,7 @@ TEST_F(PacketRouterTest, PadsOnLastActiveMediaStream) {
 
   // If the last active module is removed, and no module sends media before
   // the next padding request, and arbitrary module will be selected.
+  packet_router_.OnBatchComplete();
   packet_router_.RemoveSendRtpModule(&rtp_2);
 
   // Send on and then remove all remaining modules.
@@ -301,6 +302,7 @@ TEST_F(PacketRouterTest, AllocatesTransportSequenceNumbers) {
               packet_router.CurrentTransportSequenceNumber());
   }
 
+  packet_router.OnBatchComplete();
   packet_router.RemoveSendRtpModule(&rtp_1);
 }
 
@@ -346,7 +348,7 @@ TEST_F(PacketRouterTest, SendPacketWithoutTransportSequenceNumbers) {
           _))
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
-
+  packet_router_.OnBatchComplete();
   packet_router_.RemoveSendRtpModule(&rtp_1);
 }
 
@@ -390,6 +392,7 @@ TEST_F(PacketRouterTest, SendPacketAssignsTransportSequenceNumbers) {
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
+  packet_router_.OnBatchComplete();
   packet_router_.RemoveSendRtpModule(&rtp_1);
   packet_router_.RemoveSendRtpModule(&rtp_2);
 }
@@ -430,6 +433,7 @@ TEST_F(PacketRouterTest, DoesNotIncrementTransportSequenceNumberOnSendFailure) {
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
+  packet_router_.OnBatchComplete();
   packet_router_.RemoveSendRtpModule(&rtp);
 }
 
@@ -491,6 +495,24 @@ TEST_F(PacketRouterTest, ReportsRtxSsrc) {
   EXPECT_EQ(packet_router_.GetRtxSsrcForMedia(kSsrc2), absl::nullopt);
   EXPECT_EQ(packet_router_.GetRtxSsrcForMedia(kInvalidSsrc), absl::nullopt);
 
+  packet_router_.RemoveSendRtpModule(&rtp_1);
+  packet_router_.RemoveSendRtpModule(&rtp_2);
+}
+
+TEST_F(PacketRouterTest, RoutesBatchCompleteToActiveModules) {
+  NiceMock<MockRtpRtcpInterface> rtp_1;
+  NiceMock<MockRtpRtcpInterface> rtp_2;
+  constexpr uint32_t kSsrc1 = 4711;
+  constexpr uint32_t kSsrc2 = 1234;
+  ON_CALL(rtp_1, SSRC).WillByDefault(Return(kSsrc1));
+  ON_CALL(rtp_2, SSRC).WillByDefault(Return(kSsrc2));
+  packet_router_.AddSendRtpModule(&rtp_1, false);
+  packet_router_.AddSendRtpModule(&rtp_2, false);
+  EXPECT_CALL(rtp_1, TrySendPacket).WillOnce(Return(true));
+  packet_router_.SendPacket(BuildRtpPacket(kSsrc1), PacedPacketInfo());
+  EXPECT_CALL(rtp_1, OnBatchComplete);
+  EXPECT_CALL(rtp_2, OnBatchComplete).Times(0);
+  packet_router_.OnBatchComplete();
   packet_router_.RemoveSendRtpModule(&rtp_1);
   packet_router_.RemoveSendRtpModule(&rtp_2);
 }
