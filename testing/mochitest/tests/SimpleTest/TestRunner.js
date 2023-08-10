@@ -834,7 +834,15 @@ TestRunner.testFinished = function (tests) {
         $("testframe").contentWindow.addEventListener("unload", function () {
           var testwin = $("testframe").contentWindow;
           if (testwin.SimpleTest) {
-            if (
+            if (typeof testwin.SimpleTest.testsLength === "undefined") {
+              TestRunner.structuredLogger.error(
+                "TEST-UNEXPECTED-FAIL | " +
+                  TestRunner.currentTestURL +
+                  " fired an unload callback with missing test data," +
+                  " possibly due to the test navigating or reloading"
+              );
+              TestRunner.updateUI([{ result: false }]);
+            } else if (
               testwin.SimpleTest._tests.length != testwin.SimpleTest.testsLength
             ) {
               var wrongtestlength =
