@@ -17,9 +17,13 @@ add_task(async function test_translations_panel_manage_languages() {
     "The button is available."
   );
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Opening the popup");
+    },
+    assertPanelDefaultView
+  );
 
   const gearIcon = getByL10nId("translations-panel-settings-button");
   click(gearIcon, "Open the preferences menu");

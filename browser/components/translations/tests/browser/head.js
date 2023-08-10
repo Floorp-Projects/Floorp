@@ -297,6 +297,137 @@ async function assertCheckboxState(
 }
 
 /**
+ * Asserts that for each provided expectation, the visible state of the corresponding
+ * element in TranslationsPanel.elements both exists and matches the visibility expectation.
+ *
+ * @param {object} expectations
+ *   A list of expectations for the visibility of any subset of TranslationsPanel.elements
+ */
+function assertPanelElementVisibility(expectations = {}) {
+  // Assume nothing is visible by default, and overwrite them
+  // with any specific expectations provided in the argument.
+  const finalExpectations = {
+    cancelButton: false,
+    changeSourceLanguageButton: false,
+    dismissErrorButton: false,
+    error: false,
+    fromMenuList: false,
+    fromLabel: false,
+    header: false,
+    intro: false,
+    langSelection: false,
+    restoreButton: false,
+    toLabel: false,
+    toMenuList: false,
+    translateButton: false,
+    unsupportedHint: false,
+    ...expectations,
+  };
+  const elements = TranslationsPanel.elements;
+  for (const propertyName in finalExpectations) {
+    ok(
+      elements.hasOwnProperty(propertyName),
+      `Expected translations panel elements to have property ${propertyName}`
+    );
+    if (finalExpectations.hasOwnProperty(propertyName)) {
+      is(
+        isVisible(elements[propertyName]),
+        finalExpectations[propertyName],
+        `The element "${propertyName}" visibility should match the expectation`
+      );
+    }
+  }
+}
+
+/**
+ * Asserts that the mainViewId of the panel matches the given string.
+ *
+ * @param {string} expectedId
+ */
+function assertPanelMainViewId(expectedId) {
+  const mainViewId =
+    TranslationsPanel.elements.multiview.getAttribute("mainViewId");
+  is(
+    mainViewId,
+    expectedId,
+    "The TranslationsPanel mainViewId should match its expected value"
+  );
+}
+
+/**
+ * A collection of element visibility expectations for the default panel view.
+ */
+const defaultViewVisibilityExpectations = {
+  cancelButton: true,
+  fromMenuList: true,
+  fromLabel: true,
+  header: true,
+  langSelection: true,
+  toMenuList: true,
+  toLabel: true,
+  translateButton: true,
+};
+
+/**
+ * Asserts that panel element visibility matches the default panel view.
+ */
+function assertPanelDefaultView() {
+  assertPanelMainViewId("translations-panel-view-default");
+  assertPanelElementVisibility({
+    ...defaultViewVisibilityExpectations,
+  });
+}
+
+/**
+ * Asserts that panel element visibility matches the panel error view.
+ */
+function assertPanelErrorView() {
+  assertPanelMainViewId("translations-panel-view-default");
+  assertPanelElementVisibility({
+    error: true,
+    ...defaultViewVisibilityExpectations,
+  });
+}
+
+/**
+ * Asserts that panel element visibility matches the panel first-show view.
+ */
+function assertPanelFirstShowView() {
+  assertPanelMainViewId("translations-panel-view-default");
+  assertPanelElementVisibility({
+    intro: true,
+    ...defaultViewVisibilityExpectations,
+  });
+}
+
+/**
+ * Asserts that panel element visibility matches the panel revisit view.
+ */
+function assertPanelRevisitView() {
+  assertPanelMainViewId("translations-panel-view-default");
+  assertPanelElementVisibility({
+    header: true,
+    langSelection: true,
+    restoreButton: true,
+    toLabel: true,
+    toMenuList: true,
+    translateButton: true,
+  });
+}
+
+/**
+ * Asserts that panel element visibility matches the panel unsupported language view.
+ */
+function assertPanelUnsupportedLanguageView() {
+  assertPanelMainViewId("translations-panel-view-unsupported-language");
+  assertPanelElementVisibility({
+    changeSourceLanguageButton: true,
+    dismissErrorButton: true,
+    unsupportedHint: true,
+  });
+}
+
+/**
  * Navigate to a URL and indicate a message as to why.
  */
 async function navigate(url, message) {
@@ -437,9 +568,15 @@ function maybeGetByL10nId(l10nId, doc = document) {
  *
  * @param {"popupshown" | "popuphidden"} eventName
  * @param {Function} callback
+ * @param {Function} postEventAssertion
+ *   An optional assertion to be made immediately after the event occurs.
  * @returns {Promise<void>}
  */
-async function waitForTranslationsPopupEvent(eventName, callback) {
+async function waitForTranslationsPopupEvent(
+  eventName,
+  callback,
+  postEventAssertion = null
+) {
   // De-lazify the panel elements.
   TranslationsPanel.elements;
   const panel = document.getElementById("translations-panel");
@@ -450,6 +587,9 @@ async function waitForTranslationsPopupEvent(eventName, callback) {
   await callback();
   info("Waiting for the translations panel popup to be shown");
   await promise;
+  if (postEventAssertion) {
+    postEventAssertion();
+  }
   // Wait a single tick on the event loop.
   await new Promise(resolve => setTimeout(resolve, 0));
 }

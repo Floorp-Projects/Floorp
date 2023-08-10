@@ -63,12 +63,16 @@ add_task(async function test_translations_panel_auto_offer() {
     "The button is still shown."
   );
 
-  await waitForTranslationsPopupEvent("popupshown", async () => {
-    await navigate(
-      TRANSLATIONS_TESTER_ES_DOT_ORG,
-      "Navigate to a page on a different domain."
-    );
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    async () => {
+      await navigate(
+        TRANSLATIONS_TESTER_ES_DOT_ORG,
+        "Navigate to a page on a different domain."
+      );
+    },
+    assertPanelDefaultView
+  );
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(

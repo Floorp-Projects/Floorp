@@ -28,9 +28,13 @@ add_task(async function test_translations_panel_basics() {
     );
   });
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Opening the popup");
+    },
+    assertPanelDefaultView
+  );
 
   const panel = document.getElementById("translations-panel");
   const label = document.getElementById(panel.getAttribute("aria-labelledby"));
@@ -59,9 +63,13 @@ add_task(async function test_translations_panel_basics() {
 
   is(button.getAttribute("data-l10n-id"), "urlbar-translations-button-loading");
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Open the popup again");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Open the popup again");
+    },
+    assertPanelDefaultView
+  );
 
   const loadingButton = getByL10nId(
     "translations-panel-translate-button-loading"
@@ -103,9 +111,13 @@ add_task(async function test_translations_panel_basics() {
     );
   });
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Re-opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Re-opening the popup");
+    },
+    assertPanelRevisitView
+  );
 
   ok(
     getByL10nId("translations-panel-translate-button").disabled,

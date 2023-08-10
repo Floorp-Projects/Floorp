@@ -26,9 +26,13 @@ add_task(async function test_translations_panel_switch_language() {
     );
   });
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Opening the popup");
+    },
+    assertPanelDefaultView
+  );
 
   const translateButton = getByL10nId("translations-panel-translate-button");
   const fromSelect = getById("translations-panel-from");
