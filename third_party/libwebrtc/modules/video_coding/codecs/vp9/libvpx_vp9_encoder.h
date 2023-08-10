@@ -146,8 +146,6 @@ class LibvpxVp9Encoder : public VP9Encoder {
   InterLayerPredMode inter_layer_pred_;
   bool external_ref_control_;
   const bool trusted_rate_controller_;
-  bool layer_buffering_;
-  const bool full_superframe_drop_;
   vpx_svc_frame_drop_t svc_drop_frame_;
   bool first_frame_in_picture_;
   VideoBitrateAllocation current_bitrate_allocation_;
