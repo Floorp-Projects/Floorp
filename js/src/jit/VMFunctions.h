@@ -538,6 +538,9 @@ bool CallDOMSetter(JSContext* cx, const JSJitInfo* jitInfo, HandleObject obj,
 void HandleCodeCoverageAtPC(BaselineFrame* frame, jsbytecode* pc);
 void HandleCodeCoverageAtPrologue(BaselineFrame* frame);
 
+bool CheckProxyGetByValueResult(JSContext* cx, HandleObject obj, HandleValue id,
+                                HandleValue value, MutableHandleValue result);
+
 bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
                                MegamorphicCacheEntry* entry, Value* vp);
 
