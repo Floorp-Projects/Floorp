@@ -448,20 +448,6 @@ recommended-addon-card .addon-description:not(:empty) {
   margin: 24px 0;
 }
 
-.discopane-notice-content {
-  padding-block: 6px;
-}
-
-.discopane-notice-content > span {
-  flex-grow: 1;
-  margin-inline-end: 4px;
-}
-
-.discopane-notice-content > button {
-  flex-grow: 0;
-  flex-shrink: 0;
-}
-
 .view-footer {
   text-align: center;
 }
