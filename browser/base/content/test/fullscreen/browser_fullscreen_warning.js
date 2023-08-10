@@ -195,3 +195,34 @@ add_task(async function test_reshow_fullscreen_notification() {
     await document.exitFullscreen();
   });
 });
+
+add_task(async function test_fullscreen_reappear() {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    let fsWarning = document.getElementById("fullscreen-warning");
+
+    info("Entering full screen and wait for the fullscreen warning to appear.");
+    await Promise.all([
+      waitForWarningState(fsWarning, "onscreen"),
+      SpecialPowers.spawn(browser, [], async () => {
+        content.document.body.requestFullscreen();
+      }),
+    ]);
+
+    info("Wait for fullscreen warning timed out.");
+    await waitForWarningState(fsWarning, "hidden");
+
+    info("Move mouse to the top of screen.");
+    await Promise.all([
+      waitForWarningState(fsWarning, "ontop"),
+      EventUtils.synthesizeMouse(document.documentElement, 100, 0, {
+        type: "mousemove",
+      }),
+    ]);
+
+    info("Wait for fullscreen warning timed out again.");
+    await waitForWarningState(fsWarning, "hidden");
+
+    info("Exit fullscreen.");
+    await document.exitFullscreen();
+  });
+});
