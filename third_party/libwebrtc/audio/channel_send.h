@@ -52,18 +52,6 @@ struct CallSendStatistics {
   uint32_t nacks_received;
 };
 
-// See section 6.4.2 in http://www.ietf.org/rfc/rfc3550.txt for details.
-struct ReportBlock {
-  uint32_t sender_SSRC;  // SSRC of sender
-  uint32_t source_SSRC;
-  uint8_t fraction_lost;
-  int32_t cumulative_num_packets_lost;
-  uint32_t extended_highest_sequence_number;
-  uint32_t interarrival_jitter;
-  uint32_t last_SR_timestamp;
-  uint32_t delay_since_last_SR;
-};
-
 namespace voe {
 
 class ChannelSendInterface {
@@ -87,7 +75,7 @@ class ChannelSendInterface {
       RtpTransportControllerSendInterface* transport,
       RtcpBandwidthObserver* bandwidth_observer) = 0;
   virtual void ResetSenderCongestionControlObjects() = 0;
-  virtual std::vector<ReportBlock> GetRemoteRTCPReportBlocks() const = 0;
+  virtual std::vector<ReportBlockData> GetRemoteRTCPReportBlocks() const = 0;
   virtual ANAStats GetANAStatistics() const = 0;
   virtual void RegisterCngPayloadType(int payload_type,
                                       int payload_frequency) = 0;

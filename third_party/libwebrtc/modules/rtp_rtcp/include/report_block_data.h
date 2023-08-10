@@ -96,6 +96,13 @@ class ReportBlockData {
   size_t num_rtts() const { return num_rtts_; }
   bool has_rtt() const { return num_rtts_ != 0; }
 
+  void set_source_ssrc(uint32_t ssrc) { report_block_.source_ssrc = ssrc; }
+  void set_fraction_lost_raw(uint8_t lost) {
+    report_block_.fraction_lost = lost;
+  }
+  void set_cumulative_lost(int lost) { report_block_.packets_lost = lost; }
+  void set_jitter(uint32_t jitter) { report_block_.jitter = jitter; }
+
   void SetReportBlock(uint32_t sender_ssrc,
                       const rtcp::ReportBlock& report_block,
                       Timestamp report_block_timestamp_utc);

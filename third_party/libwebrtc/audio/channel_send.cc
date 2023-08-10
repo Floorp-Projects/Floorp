@@ -144,7 +144,7 @@ class ChannelSend : public ChannelSendInterface,
       RtcpBandwidthObserver* bandwidth_observer) override;
   void ResetSenderCongestionControlObjects() override;
   void SetRTCP_CNAME(absl::string_view c_name) override;
-  std::vector<ReportBlock> GetRemoteRTCPReportBlocks() const override;
+  std::vector<ReportBlockData> GetRemoteRTCPReportBlocks() const override;
   CallSendStatistics GetRTCPStatistics() const override;
 
   // ProcessAndEncodeAudio() posts a task on the shared encoder task queue,
@@ -767,28 +767,12 @@ void ChannelSend::SetRTCP_CNAME(absl::string_view c_name) {
   RTC_DCHECK_EQ(0, ret) << "SetRTCP_CNAME() failed to set RTCP CNAME";
 }
 
-std::vector<ReportBlock> ChannelSend::GetRemoteRTCPReportBlocks() const {
+std::vector<ReportBlockData> ChannelSend::GetRemoteRTCPReportBlocks() const {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   // Get the report blocks from the latest received RTCP Sender or Receiver
   // Report. Each element in the vector contains the sender's SSRC and a
   // report block according to RFC 3550.
-  std::vector<ReportBlock> report_blocks;
-  for (const ReportBlockData& data : rtp_rtcp_->GetLatestReportBlockData()) {
-    ReportBlock report_block;
-    report_block.sender_SSRC = data.report_block().sender_ssrc;
-    report_block.source_SSRC = data.report_block().source_ssrc;
-    report_block.fraction_lost = data.report_block().fraction_lost;
-    report_block.cumulative_num_packets_lost = data.report_block().packets_lost;
-    report_block.extended_highest_sequence_number =
-        data.report_block().extended_highest_sequence_number;
-    report_block.interarrival_jitter = data.report_block().jitter;
-    report_block.last_SR_timestamp =
-        data.report_block().last_sender_report_timestamp;
-    report_block.delay_since_last_SR =
-        data.report_block().delay_since_last_sender_report;
-    report_blocks.push_back(report_block);
-  }
-  return report_blocks;
+  return rtp_rtcp_->GetLatestReportBlockData();
 }
 
 CallSendStatistics ChannelSend::GetRTCPStatistics() const {
