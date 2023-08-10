@@ -329,8 +329,10 @@ TEST(PHC, TestPHCDisabling)
   free(s);
 }
 
-TEST(PHC, TestPHCExhaustion)
-{
+// This test is disabled for now, see Bug 1845017 and Bug 1845655.
+// TEST(PHC, TestPHCExhaustion)
+// {
+void DisabledPHCExhaustionTest() {
   // PHC hardcodes the amount of allocations to track.
 #if defined(XP_MACOSX) && defined(__aarch64__)
   const unsigned NUM_ALLOCATIONS = 1024;
