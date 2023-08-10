@@ -12,6 +12,7 @@ import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
 
 import { AutofillTelemetry } from "resource://autofill/AutofillTelemetry.sys.mjs";
+import { showConfirmation } from "resource://gre/modules/FillHelpers.sys.mjs";
 
 const lazy = {};
 
@@ -89,6 +90,7 @@ const CONTENT = {
       label: GetStringFromName("saveAddressLabel"),
       accessKey: GetStringFromName("saveAddressAccessKey"),
       callbackState: "create",
+      confirmationHintId: "confirmation-hint-address-created",
     },
     secondaryActions: [
       {
@@ -122,12 +124,14 @@ const CONTENT = {
       label: GetStringFromName("updateAddressLabel"),
       accessKey: GetStringFromName("updateAddressAccessKey"),
       callbackState: "update",
+      confirmationHintId: "confirmation-hint-address-updated",
     },
     secondaryActions: [
       {
         label: GetStringFromName("createAddressLabel"),
         accessKey: GetStringFromName("createAddressAccessKey"),
         callbackState: "create",
+        confirmationHintId: "confirmation-hint-address-created",
       },
     ],
     options: {
@@ -152,6 +156,7 @@ const CONTENT = {
       label: GetStringFromName("saveCreditCardLabel"),
       accessKey: GetStringFromName("saveCreditCardAccessKey"),
       callbackState: "save",
+      confimationHintId: "confirmation-hint-credit-card-created",
     },
     secondaryActions: [
       {
@@ -218,12 +223,14 @@ const CONTENT = {
       label: GetStringFromName("updateCreditCardLabel"),
       accessKey: GetStringFromName("updateCreditCardAccessKey"),
       callbackState: "update",
+      confirmationHintId: "confirmation-hint-credit-card-updated",
     },
     secondaryActions: [
       {
         label: GetStringFromName("createCreditCardLabel"),
         accessKey: GetStringFromName("createCreditCardAccessKey"),
         callbackState: "create",
+        confirmationHintId: "confirmation-hint-credit-card-created",
       },
     ],
     options: {
@@ -253,8 +260,12 @@ export let FormAutofillPrompter = {
       return [null, null];
     }
 
-    let { label, accessKey, callbackState } = mainActionParams;
-    let callback = resolve.bind(null, callbackState);
+    let { label, accessKey, callbackState, confirmationHintId } =
+      mainActionParams;
+    let callback = resolve.bind(null, {
+      state: callbackState,
+      confirmationHintId,
+    });
     let mainAction = { label, accessKey, callback };
 
     if (!secondaryActionParams) {
@@ -263,7 +274,10 @@ export let FormAutofillPrompter = {
 
     let secondaryActions = [];
     for (let params of secondaryActionParams) {
-      let cb = resolve.bind(null, params.callbackState);
+      let cb = resolve.bind(null, {
+        state: params.callbackState,
+        confirmationHintId: params.confirmationHintId,
+      });
       secondaryActions.push({
         label: params.label,
         accessKey: params.accessKey,
@@ -661,13 +675,14 @@ export let FormAutofillPrompter = {
         ...this._createActions(mainAction, secondaryActions, resolve),
         options
       );
-    }).then(state => {
+    }).then(({ state, confirmationHintId }) => {
       AutofillTelemetry.recordDoorhangerClicked(
         telemetryType,
         state,
         flowId,
         isCapture
       );
+      showConfirmation(browser, confirmationHintId);
       return state;
     });
   },
