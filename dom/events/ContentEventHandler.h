@@ -12,6 +12,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
@@ -25,7 +26,6 @@ namespace mozilla {
 
 namespace dom {
 class Element;
-class Text;
 }  // namespace dom
 
 enum LineBreakType { LINE_BREAK_TYPE_NATIVE, LINE_BREAK_TYPE_XP };
@@ -49,6 +49,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
   class MOZ_STACK_CLASS RawRangeBase final {
    public:
     RawRangeBase();
+    RawRangeBase(RawRangeBase<NodeType, RangeBoundaryType>&&) noexcept;
     template <typename OtherNodeType, typename OtherRangeBoundaryType>
     explicit RawRangeBase(
         const RawRangeBase<OtherNodeType, OtherRangeBoundaryType>& aOther);
@@ -339,15 +340,41 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // QueryContentRect() sets the rect of aContent's frame(s) to aEvent.
   nsresult QueryContentRect(nsIContent* aContent,
                             WidgetQueryContentEvent* aEvent);
-  // Initialize aRawRange from the offset of FlatText and the text length.
-  // If aExpandToClusterBoundaries is true, the start offset and the end one are
-  // expanded to nearest cluster boundaries.
-  nsresult SetRawRangeFromFlatTextOffset(UnsafeRawRange* aRawRange,
-                                         uint32_t aOffset, uint32_t aLength,
-                                         LineBreakType aLineBreakType,
-                                         bool aExpandToClusterBoundaries,
-                                         uint32_t* aNewOffset = nullptr,
-                                         dom::Text** aLastTextNode = nullptr);
+
+  struct MOZ_STACK_CLASS DOMRangeAndAdjustedOffsetInFlattenedText {
+    bool RangeStartsFromLastTextNode() const {
+      return mLastTextNode && mRange.GetStartContainer() == mLastTextNode;
+    }
+    bool RangeStartsFromEndOfContainer() const {
+      return mRange.GetStartContainer() &&
+             mRange.GetStartContainer()->Length() == mRange.StartOffset();
+    }
+    bool RangeStartsFromContent() const {
+      return mRange.GetStartContainer() &&
+             mRange.GetStartContainer()->IsContent();
+    }
+
+    // The range in the DOM tree.
+    UnsafeRawRange mRange;
+    // Actual start offset of the range in the flattened text.  If aOffset
+    // of ConvertFlatTextOffsetToDOMRange() is middle of a surrogate pair,
+    // a CRLF or a complex character of some languages, this may be set to
+    // different offset.
+    uint32_t mAdjustedOffset = 0;
+    // The last text node which is found while walking the tree.
+    // If the range ends in a text node, this is the text node.  Otherwise,
+    // the last found text node before the end container of mRange.
+    dom::Text* mLastTextNode = nullptr;
+  };
+  /**
+   * Scans the DOM tree and set mRange as same as from aOffset to aOffset +
+   * aLength in the flattened text.
+   */
+  Result<DOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
+  ConvertFlatTextOffsetToDOMRange(uint32_t aOffset, uint32_t aLength,
+                                  LineBreakType aLineBreakType,
+                                  bool aExpandToClusterBoundaries);
+
   // If the aCollapsedRawRange isn't in text node but next to a text node,
   // this method modifies it in the text node.  Otherwise, not modified.
   nsresult AdjustCollapsedRangeMaybeIntoTextNode(RawRange& aCollapsedRawRange);
