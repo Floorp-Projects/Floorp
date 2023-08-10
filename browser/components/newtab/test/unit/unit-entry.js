@@ -370,7 +370,6 @@ const TEST_GLOBAL = {
       removeListener() {},
     },
   },
-  PluralForm: { get() {} },
   Preferences: FakePrefs,
   PrivateBrowsingUtils: {
     isBrowserPrivate: () => false,

@@ -187,11 +187,8 @@ StringBundle is a runtime API used primarily for localization of C++ code.
 The messages are stored in `.properties` files and loaded using the StringBundle API
 and then retrieved from there via imperative calls.
 
-The system provides external arguments which can be placed into the string, and
-supports basic plural categories via a proprietary API `PluralForm.sys.mjs`.
-
-Adding new StringBundle messages should only be done after serious consideration,
-and in particular any new use of PluralForm messages should be avoided.
+The system provides external positional arguments which can be placed into the string.
+Adding new StringBundle messages should only be done after serious consideration.
 
 .. _Pontoon: https://pontoon.mozilla.org/
 .. _hg.mozilla.org/l10n-central: https://hg.mozilla.org/l10n-central/
