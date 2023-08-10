@@ -4794,13 +4794,11 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
     // - crbug.com/1187289
     for (const auto& entry : channels) {
       std::string error;
-      bool success =
-          context_->worker_thread()->BlockingCall([&]() {
-            return (source == cricket::CS_LOCAL)
-                       ? entry.first->SetLocalContent(entry.second, type, error)
-                       : entry.first->SetRemoteContent(entry.second, type,
-                                                       error);
-          });
+      bool success = context_->worker_thread()->BlockingCall([&]() {
+        return (source == cricket::CS_LOCAL)
+                   ? entry.first->SetLocalContent(entry.second, type, error)
+                   : entry.first->SetRemoteContent(entry.second, type, error);
+      });
       if (!success) {
         return RTCError(RTCErrorType::INVALID_PARAMETER, error);
       }

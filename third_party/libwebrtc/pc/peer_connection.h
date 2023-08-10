@@ -265,9 +265,7 @@ class PeerConnection : public PeerConnectionInternal,
   }
   rtc::Thread* worker_thread() const final { return context_->worker_thread(); }
 
-  std::string session_id() const override {
-    return session_id_;
-  }
+  std::string session_id() const override { return session_id_; }
 
   bool initial_offerer() const override {
     RTC_DCHECK_RUN_ON(signaling_thread());

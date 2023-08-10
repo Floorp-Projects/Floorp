@@ -11,6 +11,7 @@
 #include "api/video_codecs/video_encoder.h"
 
 #include <string.h>
+
 #include <algorithm>
 
 #include "rtc_base/checks.h"

@@ -923,14 +923,14 @@ int RtpVideoSender::ProtectionRequest(const FecProtectionParams* delta_params,
   *sent_nack_rate_bps = 0;
   *sent_fec_rate_bps = 0;
   for (const RtpStreamSender& stream : rtp_streams_) {
-      stream.rtp_rtcp->SetFecProtectionParams(*delta_params, *key_params);
+    stream.rtp_rtcp->SetFecProtectionParams(*delta_params, *key_params);
 
-      auto send_bitrate = stream.rtp_rtcp->GetSendRates();
-      *sent_video_rate_bps += send_bitrate[RtpPacketMediaType::kVideo].bps();
-      *sent_fec_rate_bps +=
-          send_bitrate[RtpPacketMediaType::kForwardErrorCorrection].bps();
-      *sent_nack_rate_bps +=
-          send_bitrate[RtpPacketMediaType::kRetransmission].bps();
+    auto send_bitrate = stream.rtp_rtcp->GetSendRates();
+    *sent_video_rate_bps += send_bitrate[RtpPacketMediaType::kVideo].bps();
+    *sent_fec_rate_bps +=
+        send_bitrate[RtpPacketMediaType::kForwardErrorCorrection].bps();
+    *sent_nack_rate_bps +=
+        send_bitrate[RtpPacketMediaType::kRetransmission].bps();
   }
   return 0;
 }

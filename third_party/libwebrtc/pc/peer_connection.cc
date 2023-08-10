@@ -634,20 +634,18 @@ RTCError PeerConnection::Initialize(
   }
 
   // Network thread initialization.
-  transport_controller_copy_ =
-      network_thread()->BlockingCall([&] {
-        RTC_DCHECK_RUN_ON(network_thread());
-        network_thread_safety_ = PendingTaskSafetyFlag::Create();
-        InitializePortAllocatorResult pa_result = InitializePortAllocator_n(
-            stun_servers, turn_servers, configuration);
-        // Send information about IPv4/IPv6 status.
-        PeerConnectionAddressFamilyCounter address_family =
-            pa_result.enable_ipv6 ? kPeerConnection_IPv6 : kPeerConnection_IPv4;
-        RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.IPMetrics",
-                                  address_family,
-                                  kPeerConnectionAddressFamilyCounter_Max);
-        return InitializeTransportController_n(configuration, dependencies);
-      });
+  transport_controller_copy_ = network_thread()->BlockingCall([&] {
+    RTC_DCHECK_RUN_ON(network_thread());
+    network_thread_safety_ = PendingTaskSafetyFlag::Create();
+    InitializePortAllocatorResult pa_result =
+        InitializePortAllocator_n(stun_servers, turn_servers, configuration);
+    // Send information about IPv4/IPv6 status.
+    PeerConnectionAddressFamilyCounter address_family =
+        pa_result.enable_ipv6 ? kPeerConnection_IPv6 : kPeerConnection_IPv4;
+    RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.IPMetrics", address_family,
+                              kPeerConnectionAddressFamilyCounter_Max);
+    return InitializeTransportController_n(configuration, dependencies);
+  });
 
   configuration_ = configuration;
 
