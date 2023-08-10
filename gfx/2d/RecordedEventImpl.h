@@ -3206,6 +3206,13 @@ RecordedSourceSurfaceCreation::RecordedSourceSurfaceCreation(S& aStream)
   ReadElement(aStream, mSize);
   ReadElementConstrained(aStream, mFormat, SurfaceFormat::A8R8G8B8_UINT32,
                          SurfaceFormat::UNKNOWN);
+
+  if (!Factory::AllowedSurfaceSize(mSize)) {
+    gfxCriticalNote << "RecordedSourceSurfaceCreation read invalid size "
+                    << mSize;
+    aStream.SetIsBad();
+  }
+
   if (!aStream.good()) {
     return;
   }
