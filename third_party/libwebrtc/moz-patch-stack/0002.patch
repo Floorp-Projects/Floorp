@@ -1,46 +1,266 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Sat, 13 Feb 2021 04:20:00 -0800
-Subject: Bug 1654112 - Add pid_t to desktop_capture_types.h; r=pehrsons
+From: Philipp Hancke <phancke@microsoft.com>
+Date: Tue, 9 May 2023 09:41:03 +0200
+Subject: (cherry-pick-branch-heads/5735) [m114] Attempt to recycle a stopped
+ data m-line before creating a new one
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Upstreaming bug 1697385
+which avoids an infinitely growing SDP if the remote end rejects
+the datachannel section. This will reactivate the m-line even if
+all datachannels are closed.
 
-Also includes:
-Bug 1654112 - Clarifying prev. rev that moved pid_t into the global namespace; r=dminor
+BUG=chromium:1442604
+(cherry picked from commit 522380ff734174faab694e1b67c9d20fffa8738e)
 
-Differential Revision: https://phabricator.services.mozilla.com/D107897
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a1898f1ef689577c7193ff7be7
+No-Try: True
+Change-Id: If60f93b406271163df692d96102baab701923602
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304241
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40029}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305420
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5735@{#2}
+Cr-Branched-From: df7df199abd619e75b9f1d9a7e12fc3f3f748775-refs/heads/main@{#39949}
 ---
- modules/desktop_capture/desktop_capture_types.h | 4 ++++
- modules/video_capture/video_capture.h           | 1 +
- 2 files changed, 5 insertions(+)
+ pc/data_channel_controller.cc          |  2 +-
+ pc/data_channel_controller.h           |  5 +-
+ pc/data_channel_controller_unittest.cc |  6 +-
+ pc/peer_connection.cc                  |  7 ++-
+ pc/sdp_offer_answer.cc                 | 40 +++++++++++--
+ pc/sdp_offer_answer_unittest.cc        | 80 ++++++++++++++++++++++++++
+ 6 files changed, 126 insertions(+), 14 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
-index 9627076eea..381d1021c4 100644
---- a/modules/desktop_capture/desktop_capture_types.h
-+++ b/modules/desktop_capture/desktop_capture_types.h
-@@ -13,6 +13,10 @@
+diff --git a/pc/data_channel_controller.cc b/pc/data_channel_controller.cc
+index 0a0d93e236..166e181cfe 100644
+--- a/pc/data_channel_controller.cc
++++ b/pc/data_channel_controller.cc
+@@ -28,7 +28,7 @@ DataChannelController::~DataChannelController() {
+       << "Missing call to PrepareForShutdown?";
+ }
  
- #include <stdint.h>
+-bool DataChannelController::HasDataChannelsForTest() const {
++bool DataChannelController::HasDataChannels() const {
+   auto has_channels = [&] {
+     RTC_DCHECK_RUN_ON(network_thread());
+     return !sctp_data_channels_n_.empty();
+diff --git a/pc/data_channel_controller.h b/pc/data_channel_controller.h
+index ac47c8aa28..1b5c8beadb 100644
+--- a/pc/data_channel_controller.h
++++ b/pc/data_channel_controller.h
+@@ -87,8 +87,9 @@ class DataChannelController : public SctpDataChannelControllerInterface,
+                                      const InternalDataChannelInit& config);
+   void AllocateSctpSids(rtc::SSLRole role);
  
-+#ifdef XP_WIN      // Moving this into the global namespace
-+typedef int pid_t; // matching what used to be in
-+#endif             // video_capture_defines.h
+-  // Used by tests to check if data channels are currently tracked.
+-  bool HasDataChannelsForTest() const;
++  // Check if data channels are currently tracked. Used to decide whether a
++  // rejected m=application section should be reoffered.
++  bool HasDataChannels() const;
+ 
+   // At some point in time, a data channel has existed.
+   bool HasUsedDataChannels() const;
+diff --git a/pc/data_channel_controller_unittest.cc b/pc/data_channel_controller_unittest.cc
+index ea72e85218..3b8adb6819 100644
+--- a/pc/data_channel_controller_unittest.cc
++++ b/pc/data_channel_controller_unittest.cc
+@@ -105,17 +105,17 @@ TEST_F(DataChannelControllerTest, CreateDataChannelEarlyRelease) {
+ 
+ TEST_F(DataChannelControllerTest, CreateDataChannelEarlyClose) {
+   DataChannelControllerForTest dcc(pc_.get());
+-  EXPECT_FALSE(dcc.HasDataChannelsForTest());
++  EXPECT_FALSE(dcc.HasDataChannels());
+   EXPECT_FALSE(dcc.HasUsedDataChannels());
+   auto ret = dcc.InternalCreateDataChannelWithProxy(
+       "label", InternalDataChannelInit(DataChannelInit()));
+   ASSERT_TRUE(ret.ok());
+   auto channel = ret.MoveValue();
+-  EXPECT_TRUE(dcc.HasDataChannelsForTest());
++  EXPECT_TRUE(dcc.HasDataChannels());
+   EXPECT_TRUE(dcc.HasUsedDataChannels());
+   channel->Close();
+   run_loop_.Flush();
+-  EXPECT_FALSE(dcc.HasDataChannelsForTest());
++  EXPECT_FALSE(dcc.HasDataChannels());
+   EXPECT_TRUE(dcc.HasUsedDataChannels());
+ }
+ 
+diff --git a/pc/peer_connection.cc b/pc/peer_connection.cc
+index 4839fcf0a1..627e4afcfa 100644
+--- a/pc/peer_connection.cc
++++ b/pc/peer_connection.cc
+@@ -1422,9 +1422,10 @@ PeerConnection::CreateDataChannelOrError(const std::string& label,
+ 
+   rtc::scoped_refptr<DataChannelInterface> channel = ret.MoveValue();
+ 
+-  // Trigger the onRenegotiationNeeded event for
+-  // the first SCTP DataChannel.
+-  if (first_datachannel) {
++  // Check the onRenegotiationNeeded event (with plan-b backward compat)
++  if (configuration_.sdp_semantics == SdpSemantics::kUnifiedPlan ||
++      (configuration_.sdp_semantics == SdpSemantics::kPlanB_DEPRECATED &&
++       first_datachannel)) {
+     sdp_handler_->UpdateNegotiationNeeded();
+   }
+   NoteUsageEvent(UsageEvent::DATA_ADDED);
+diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
+index 59f0b01dfd..0cb10b7d07 100644
+--- a/pc/sdp_offer_answer.cc
++++ b/pc/sdp_offer_answer.cc
+@@ -3342,8 +3342,20 @@ bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
+   // 4. If connection has created any RTCDataChannels, and no m= section in
+   // description has been negotiated yet for data, return true.
+   if (data_channel_controller()->HasUsedDataChannels()) {
+-    if (!cricket::GetFirstDataContent(description->description()->contents()))
++    const cricket::ContentInfo* data_content =
++        cricket::GetFirstDataContent(description->description()->contents());
++    if (!data_content) {
+       return true;
++    }
++    // The remote end might have rejected the data content.
++    const cricket::ContentInfo* remote_data_content =
++        current_remote_description()
++            ? current_remote_description()->description()->GetContentByName(
++                  data_content->name)
++            : nullptr;
++    if (remote_data_content && remote_data_content->rejected) {
++      return true;
++    }
+   }
+   if (!ConfiguredForMedia()) {
+     return false;
+@@ -4263,10 +4275,28 @@ void SdpOfferAnswerHandler::GetOptionsForUnifiedPlanOffer(
+   }
+   // Lastly, add a m-section if we have requested local data channels and an
+   // m section does not already exist.
+-  if (!pc_->GetDataMid() && data_channel_controller()->HasUsedDataChannels()) {
+-    session_options->media_description_options.push_back(
+-        GetMediaDescriptionOptionsForActiveData(
+-            mid_generator_.GenerateString()));
++  if (!pc_->GetDataMid() && data_channel_controller()->HasUsedDataChannels() &&
++      data_channel_controller()->HasDataChannels()) {
++    // Attempt to recycle a stopped m-line.
++    // TODO(crbug.com/1442604): GetDataMid() should return the mid if one was
++    // ever created but rejected.
++    bool recycled = false;
++    for (size_t i = 0; i < session_options->media_description_options.size();
++         i++) {
++      auto media_description = session_options->media_description_options[i];
++      if (media_description.type == cricket::MEDIA_TYPE_DATA &&
++          media_description.stopped) {
++        session_options->media_description_options[i] =
++            GetMediaDescriptionOptionsForActiveData(media_description.mid);
++        recycled = true;
++        break;
++      }
++    }
++    if (!recycled) {
++      session_options->media_description_options.push_back(
++          GetMediaDescriptionOptionsForActiveData(
++              mid_generator_.GenerateString()));
++    }
+   }
+ }
+ 
+diff --git a/pc/sdp_offer_answer_unittest.cc b/pc/sdp_offer_answer_unittest.cc
+index 33b1e746d9..4c4554f12c 100644
+--- a/pc/sdp_offer_answer_unittest.cc
++++ b/pc/sdp_offer_answer_unittest.cc
+@@ -34,6 +34,7 @@
+ #include "modules/audio_processing/include/audio_processing.h"
+ #include "p2p/base/port_allocator.h"
+ #include "pc/peer_connection_wrapper.h"
++#include "pc/session_description.h"
+ #include "pc/test/fake_audio_capture_module.h"
+ #include "pc/test/mock_peer_connection_observers.h"
+ #include "rtc_base/rtc_certificate_generator.h"
+@@ -467,4 +468,83 @@ TEST_F(SdpOfferAnswerTest, RollbackPreservesAddTrackMid) {
+   EXPECT_EQ(saved_mid, first_transceiver->mid());
+ }
+ 
++#ifdef WEBRTC_HAVE_SCTP
 +
- namespace webrtc {
- 
- enum class CaptureType { kWindow, kScreen };
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 187eba76a0..258bc7f810 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -13,6 +13,7 @@
- 
- #include "api/video/video_rotation.h"
- #include "api/video/video_sink_interface.h"
-+#include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
- #include <set>
++TEST_F(SdpOfferAnswerTest, RejectedDataChannelsDoNotGetReoffered) {
++  auto pc = CreatePeerConnection();
++  EXPECT_TRUE(pc->pc()->CreateDataChannelOrError("dc", nullptr).ok());
++  EXPECT_TRUE(pc->CreateOfferAndSetAsLocal());
++  auto mid = pc->pc()->local_description()->description()->contents()[0].mid();
++
++  // An answer that rejects the datachannel content.
++  std::string sdp =
++      "v=0\r\n"
++      "o=- 4131505339648218884 3 IN IP4 **-----**\r\n"
++      "s=-\r\n"
++      "t=0 0\r\n"
++      "a=ice-ufrag:zGWFZ+fVXDeN6UoI/136\r\n"
++      "a=ice-pwd:9AUNgUqRNI5LSIrC1qFD2iTR\r\n"
++      "a=fingerprint:sha-256 "
++      "AD:52:52:E0:B1:37:34:21:0E:15:8E:B7:56:56:7B:B4:39:0E:6D:1C:F5:84:A7:EE:"
++      "B5:27:3E:30:B1:7D:69:42\r\n"
++      "a=setup:passive\r\n"
++      "m=application 0 UDP/DTLS/SCTP webrtc-datachannel\r\n"
++      "c=IN IP4 0.0.0.0\r\n"
++      "a=sctp-port:5000\r\n"
++      "a=max-message-size:262144\r\n"
++      "a=mid:" +
++      mid + "\r\n";
++  auto answer = CreateSessionDescription(SdpType::kAnswer, sdp);
++  ASSERT_TRUE(pc->SetRemoteDescription(std::move(answer)));
++  // The subsequent offer should not recycle the m-line since the existing data
++  // channel is closed.
++  auto offer = pc->CreateOffer();
++  const auto& offer_contents = offer->description()->contents();
++  ASSERT_EQ(offer_contents.size(), 1u);
++  EXPECT_EQ(offer_contents[0].mid(), mid);
++  EXPECT_EQ(offer_contents[0].rejected, true);
++}
++
++TEST_F(SdpOfferAnswerTest, RejectedDataChannelsDoGetReofferedWhenActive) {
++  auto pc = CreatePeerConnection();
++  EXPECT_TRUE(pc->pc()->CreateDataChannelOrError("dc", nullptr).ok());
++  EXPECT_TRUE(pc->CreateOfferAndSetAsLocal());
++  auto mid = pc->pc()->local_description()->description()->contents()[0].mid();
++
++  // An answer that rejects the datachannel content.
++  std::string sdp =
++      "v=0\r\n"
++      "o=- 4131505339648218884 3 IN IP4 **-----**\r\n"
++      "s=-\r\n"
++      "t=0 0\r\n"
++      "a=ice-ufrag:zGWFZ+fVXDeN6UoI/136\r\n"
++      "a=ice-pwd:9AUNgUqRNI5LSIrC1qFD2iTR\r\n"
++      "a=fingerprint:sha-256 "
++      "AD:52:52:E0:B1:37:34:21:0E:15:8E:B7:56:56:7B:B4:39:0E:6D:1C:F5:84:A7:EE:"
++      "B5:27:3E:30:B1:7D:69:42\r\n"
++      "a=setup:passive\r\n"
++      "m=application 0 UDP/DTLS/SCTP webrtc-datachannel\r\n"
++      "c=IN IP4 0.0.0.0\r\n"
++      "a=sctp-port:5000\r\n"
++      "a=max-message-size:262144\r\n"
++      "a=mid:" +
++      mid + "\r\n";
++  auto answer = CreateSessionDescription(SdpType::kAnswer, sdp);
++  ASSERT_TRUE(pc->SetRemoteDescription(std::move(answer)));
++
++  // The subsequent offer should recycle the m-line when there is a new data
++  // channel.
++  EXPECT_TRUE(pc->pc()->CreateDataChannelOrError("dc2", nullptr).ok());
++  EXPECT_TRUE(pc->pc()->ShouldFireNegotiationNeededEvent(
++      pc->observer()->latest_negotiation_needed_event()));
++
++  auto offer = pc->CreateOffer();
++  const auto& offer_contents = offer->description()->contents();
++  ASSERT_EQ(offer_contents.size(), 1u);
++  EXPECT_EQ(offer_contents[0].mid(), mid);
++  EXPECT_EQ(offer_contents[0].rejected, false);
++}
++
++#endif  // WEBRTC_HAVE_SCTP
++
+ }  // namespace webrtc
 -- 
 2.34.1
 

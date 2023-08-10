@@ -1,31 +1,25 @@
-From: Jed Davis <jld@mozilla.com>
-Date: Sun, 17 Nov 2019 03:40:00 +0000
-Subject: Bug 1545504 - Strengthen bounds check in WebRTC PhysicalSocketServer.
- r=jesup
+From: Dan Minor <dminor@mozilla.com>
+Date: Mon, 13 Aug 2018 08:34:00 -0400
+Subject: Bug 1376873 - Allow single channel opus; r=padenot
 
-PhysicalSocketServer isn't currently used by Mozilla's WebRTC
-integration, but just in case, let's make sure that this array index is
-bounds-checked in actual use, not just in debug builds (which tend to
-never see realistic test conditions).
-
-Differential Revision: https://phabricator.services.mozilla.com/D52745
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2b079067648bfe0d064a334bf19bdcc233e26b6e
+Differential Revision: https://phabricator.services.mozilla.com/D7469
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92a7c3eee9f0c80ffbf79fdab8f8f2b8f6bd7701
 ---
- rtc_base/physical_socket_server.cc | 2 +-
+ modules/audio_coding/codecs/opus/audio_encoder_opus.cc | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index 33ea941808..2dfdd9a5df 100644
---- a/rtc_base/physical_socket_server.cc
-+++ b/rtc_base/physical_socket_server.cc
-@@ -1431,7 +1431,7 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
-         int fd = pdispatcher->GetDescriptor();
-         // "select"ing a file descriptor that is equal to or larger than
-         // FD_SETSIZE will result in undefined behavior.
--        RTC_DCHECK_LT(fd, FD_SETSIZE);
-+        RTC_CHECK_LT(fd, FD_SETSIZE);
-         if (fd > fdmax)
-           fdmax = fd;
+diff --git a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
+index 51b0fcd492..17e0e33b1d 100644
+--- a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
++++ b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
+@@ -240,7 +240,7 @@ std::unique_ptr<AudioEncoder> AudioEncoderOpusImpl::MakeAudioEncoder(
+ absl::optional<AudioEncoderOpusConfig> AudioEncoderOpusImpl::SdpToConfig(
+     const SdpAudioFormat& format) {
+   if (!absl::EqualsIgnoreCase(format.name, "opus") ||
+-      format.clockrate_hz != kRtpTimestampRateHz || format.num_channels != 2) {
++      format.clockrate_hz != kRtpTimestampRateHz) {
+     return absl::nullopt;
+   }
  
 -- 
 2.34.1

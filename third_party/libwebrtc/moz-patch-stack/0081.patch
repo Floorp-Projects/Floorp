@@ -1,33 +1,26 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Wed, 12 Apr 2023 16:03:00 +0000
-Subject: Bug 1826428 - remove libwebrtc's jvm_android.cc from build
- r=ng,webrtc-reviewers
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 11 Jan 2023 22:42:00 +0000
+Subject: Bug 1800942 - Add DCHECKs to
+ TimestampExtrapolator::ExtrapolateLocalTime. r=mjf
 
-Based on info from John Lin and previous try runs, we're almost
-certainly not using this.  Let's try removing it from the build
-and landing it.  If no problems emerge, we'll be able to remove
-our custom changes to upstream code in jvm_android.cc.
-
-Differential Revision: https://phabricator.services.mozilla.com/D174793
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/dca1b97525487ae57d43ced1ebdb4a2d9c9dae89
+Differential Revision: https://phabricator.services.mozilla.com/D166536
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c5df7f40392464ffc63f44a53ddcaab2091741e0
 ---
- modules/utility/BUILD.gn | 4 ++++
- 1 file changed, 4 insertions(+)
+ modules/video_coding/timing/timestamp_extrapolator.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/utility/BUILD.gn b/modules/utility/BUILD.gn
-index 8cefe5653c..b8d75865f7 100644
---- a/modules/utility/BUILD.gn
-+++ b/modules/utility/BUILD.gn
-@@ -25,5 +25,9 @@ rtc_source_set("utility") {
-       "../../rtc_base:platform_thread",
-       "../../rtc_base/system:arch",
-     ]
-+
-+    if (build_with_mozilla) {
-+      sources -= [ "source/jvm_android.cc" ]
-+    }
-   }
- }
+diff --git a/modules/video_coding/timing/timestamp_extrapolator.cc b/modules/video_coding/timing/timestamp_extrapolator.cc
+index a90df8bf7f..77e5508a76 100644
+--- a/modules/video_coding/timing/timestamp_extrapolator.cc
++++ b/modules/video_coding/timing/timestamp_extrapolator.cc
+@@ -125,6 +125,7 @@ void TimestampExtrapolator::Update(Timestamp now, uint32_t ts90khz) {
+ absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
+     uint32_t timestamp90khz) const {
+   int64_t unwrapped_ts90khz = unwrapper_.PeekUnwrap(timestamp90khz);
++  RTC_DCHECK_GE(unwrapped_ts90khz, 0);
+ 
+   if (!first_unwrapped_timestamp_) {
+     return absl::nullopt;
 -- 
 2.34.1
 

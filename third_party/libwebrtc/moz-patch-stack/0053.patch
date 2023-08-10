@@ -1,30 +1,74 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 20 Aug 2021 13:52:00 +0200
-Subject: Bug 1654112 - Don't check the calling thread in
- webrtc::AudioReceiveStream::GetSources. r=ng
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Mar 2021 08:55:00 -0600
+Subject: Bug 1654112 - libwebrtc modification: Surface video RTCP SR stats
+ again. r=ng
 
-source_tracker_ is thread safe with its own internal mutex, so this call is safe
-as long as the caller has a guarantee for the lifetime of the
-AudioReceiveStream. This is similar to webrtc::VideoReceiveStream.
+libwebrtc has stopped surfacing these, and Chromium does not support
+these stats at all.
 
-Upliftable.
-
-Differential Revision: https://phabricator.services.mozilla.com/D123226
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c186df8a088e46285a15e40149182daa34cc6805
+Differential Revision: https://phabricator.services.mozilla.com/D108674
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/edac9d01a9ac7594f4b22708a4690753638ca32c
 ---
- audio/audio_receive_stream.cc | 1 -
- 1 file changed, 1 deletion(-)
+ video/rtp_video_stream_receiver2.cc | 10 ++++++++++
+ video/rtp_video_stream_receiver2.h  |  6 ++++++
+ video/video_receive_stream2.cc      |  8 ++++++++
+ 3 files changed, 24 insertions(+)
 
-diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 0a78e2641d..8a3ac93a36 100644
---- a/audio/audio_receive_stream.cc
-+++ b/audio/audio_receive_stream.cc
-@@ -367,7 +367,6 @@ int AudioReceiveStreamImpl::GetBaseMinimumPlayoutDelayMs() const {
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index f169b0970a..e28476ed30 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -1051,6 +1051,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
+   return absl::nullopt;
  }
  
- std::vector<RtpSource> AudioReceiveStreamImpl::GetSources() const {
--  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-   return source_tracker_.GetSources();
++// Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
++// stats at all, and even on the most recent libwebrtc code there does not
++// seem to be any support for these stats right now. So, we hack this in.
++void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
++    uint32_t* packet_count, uint32_t* octet_count,
++    int64_t* ntp_timestamp_ms) const {
++  RTC_DCHECK_RUN_ON(&worker_task_checker_);
++  rtp_rtcp_->RemoteRTCPSenderInfo(packet_count, octet_count, ntp_timestamp_ms);
++}
++
+ void RtpVideoStreamReceiver2::ManageFrame(
+     std::unique_ptr<RtpFrameObject> frame) {
+   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
+index f9ed339c0a..53378e9e9b 100644
+--- a/video/rtp_video_stream_receiver2.h
++++ b/video/rtp_video_stream_receiver2.h
+@@ -206,6 +206,12 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
+   absl::optional<int64_t> LastReceivedPacketMs() const;
+   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
+ 
++  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
++  // stats at all, and even on the most recent libwebrtc code there does not
++  // seem to be any support for these stats right now. So, we hack this in.
++  void RemoteRTCPSenderInfo(uint32_t* packet_count, uint32_t* octet_count,
++                            int64_t* ntp_timestamp_ms) const;
++
+  private:
+   // Implements RtpVideoFrameReceiver.
+   void ManageFrame(std::unique_ptr<RtpFrameObject> frame) override;
+diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
+index 9cc78c7241..b1aab2773a 100644
+--- a/video/video_receive_stream2.cc
++++ b/video/video_receive_stream2.cc
+@@ -569,6 +569,14 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
+     if (rtx_statistician)
+       stats.total_bitrate_bps += rtx_statistician->BitrateReceived();
+   }
++
++  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
++  // stats at all, and even on the most recent libwebrtc code there does not
++  // seem to be any support for these stats right now. So, we hack this in.
++  rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
++      &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
++      &stats.rtcp_sender_ntp_timestamp_ms);
++
+   return stats;
  }
  
 -- 

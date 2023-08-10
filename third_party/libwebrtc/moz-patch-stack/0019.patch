@@ -1,47 +1,32 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Fri, 29 Mar 2019 18:43:00 +0000
-Subject: Bug 1539220 - Prefer non-RGB24 capabilities when available;
- r=pehrsons
+From: Jed Davis <jld@mozilla.com>
+Date: Sun, 17 Nov 2019 03:40:00 +0000
+Subject: Bug 1545504 - Strengthen bounds check in WebRTC PhysicalSocketServer.
+ r=jesup
 
-We've hit a number of problems with handling of RGB24 video capture on
-Windows. This adds a check that will ignore any RGB24 capture capabilities
-when determining a best match if there are other capabilities available to
-workaround the problems.
+PhysicalSocketServer isn't currently used by Mozilla's WebRTC
+integration, but just in case, let's make sure that this array index is
+bounds-checked in actual use, not just in debug builds (which tend to
+never see realistic test conditions).
 
-Differential Revision: https://phabricator.services.mozilla.com/D25449
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c12307f3817bec87712ab5930493c3135c76b0a0
+Differential Revision: https://phabricator.services.mozilla.com/D52745
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2b079067648bfe0d064a334bf19bdcc233e26b6e
 ---
- modules/video_capture/device_info_impl.cc | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ rtc_base/physical_socket_server.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
-index 7cccdb51a7..2a6afb3147 100644
---- a/modules/video_capture/device_info_impl.cc
-+++ b/modules/video_capture/device_info_impl.cc
-@@ -100,10 +100,23 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
-   const int32_t numberOfCapabilies =
-       static_cast<int32_t>(_captureCapabilities.size());
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index 33ea941808..2dfdd9a5df 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -1431,7 +1431,7 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
+         int fd = pdispatcher->GetDescriptor();
+         // "select"ing a file descriptor that is equal to or larger than
+         // FD_SETSIZE will result in undefined behavior.
+-        RTC_DCHECK_LT(fd, FD_SETSIZE);
++        RTC_CHECK_LT(fd, FD_SETSIZE);
+         if (fd > fdmax)
+           fdmax = fd;
  
-+  bool hasNonRGB24Capability = false;
-   for (int32_t tmp = 0; tmp < numberOfCapabilies;
-        ++tmp)  // Loop through all capabilities
-   {
-     VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (capability.videoType != VideoType::kRGB24) {
-+      hasNonRGB24Capability = true;
-+    }
-+  }
-+
-+  for (int32_t tmp = 0; tmp < numberOfCapabilies;
-+       ++tmp)  // Loop through all capabilities
-+  {
-+    VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (hasNonRGB24Capability && capability.videoType == VideoType::kRGB24) {
-+      continue;
-+    }
- 
-     const int32_t diffWidth = capability.width - requested.width;
-     const int32_t diffHeight = capability.height - requested.height;
 -- 
 2.34.1
 

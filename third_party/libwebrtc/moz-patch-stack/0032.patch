@@ -1,40 +1,36 @@
-From: James Willcox <snorp@snorp.net>
-Date: Fri, 18 Sep 2020 22:29:00 +0000
-Subject: Bug 1553459 - Migrate to AndroidX r=geckoview-reviewers,agi
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 12 Feb 2020 17:19:00 +0000
+Subject: Bug 1578073 - Suppress MissingPermission lint in Camera2Session;
+ r=snorp
 
-Differential Revision: https://phabricator.services.mozilla.com/D90711
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf8917364050fc7d981b190cdc1db5ab57357f9b
+Depends on D61861
+
+Differential Revision: https://phabricator.services.mozilla.com/D62457
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/722c4a6d1dad867f9ce47fe96d71b5dedb4cbaa8
 ---
- sdk/android/src/java/org/webrtc/EglBase14Impl.java   | 1 -
- sdk/android/src/java/org/webrtc/GlGenericDrawer.java | 3 ---
- 2 files changed, 4 deletions(-)
+ sdk/android/src/java/org/webrtc/Camera2Session.java | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/sdk/android/src/java/org/webrtc/EglBase14Impl.java b/sdk/android/src/java/org/webrtc/EglBase14Impl.java
-index e53dda6e4c..caf45b091e 100644
---- a/sdk/android/src/java/org/webrtc/EglBase14Impl.java
-+++ b/sdk/android/src/java/org/webrtc/EglBase14Impl.java
-@@ -21,7 +21,6 @@ import android.opengl.GLException;
- import android.os.Build;
- import android.view.Surface;
- import androidx.annotation.Nullable;
--import org.webrtc.EglBase;
+diff --git a/sdk/android/src/java/org/webrtc/Camera2Session.java b/sdk/android/src/java/org/webrtc/Camera2Session.java
+index dec97a2c25..d5ee80c73e 100644
+--- a/sdk/android/src/java/org/webrtc/Camera2Session.java
++++ b/sdk/android/src/java/org/webrtc/Camera2Session.java
+@@ -10,6 +10,7 @@
  
- /**
-  * Holds EGL state and utility methods for handling an EGL14 EGLContext, an EGLDisplay,
-diff --git a/sdk/android/src/java/org/webrtc/GlGenericDrawer.java b/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
-index b70a3728b9..34144e2f75 100644
---- a/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
-+++ b/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
-@@ -14,9 +14,6 @@ import android.opengl.GLES11Ext;
- import android.opengl.GLES20;
- import androidx.annotation.Nullable;
- import java.nio.FloatBuffer;
--import org.webrtc.GlShader;
--import org.webrtc.GlUtil;
--import org.webrtc.RendererCommon;
+ package org.webrtc;
  
- /**
-  * Helper class to implement an instance of RendererCommon.GlDrawer that can accept multiple input
++import android.annotation.SuppressLint;
+ import android.content.Context;
+ import android.hardware.camera2.CameraAccessException;
+ import android.hardware.camera2.CameraCaptureSession;
+@@ -347,6 +348,7 @@ class Camera2Session implements CameraSession {
+     Logging.d(TAG, "Using capture format: " + captureFormat);
+   }
+ 
++  @SuppressLint("MissingPermission")
+   private void openCamera() {
+     checkIsOnCameraThread();
+ 
 -- 
 2.34.1
 

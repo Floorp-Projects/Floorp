@@ -1,44 +1,52 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 19 Feb 2021 13:45:00 +0100
-Subject: Bug 1654112 - libwebrtc: Add a REMB on/off switch to
- VideoReceiveStream. r=ng
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 18 Nov 2020 15:19:00 -0500
+Subject: Bug 1654112 - Fully qualify kIvfHeaderSize. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D105774
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7330681cf4de6d8dd868cc661cbdd6679bbc07b3
+Differential Revision: https://phabricator.services.mozilla.com/D130087
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9452e226943fea4b0f6ff67e0ee85587d9c23a44
 ---
- call/video_receive_stream.h         | 3 +++
- video/rtp_video_stream_receiver2.cc | 3 +--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ modules/video_coding/utility/ivf_file_writer.cc | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 767c3c64fd..ebbca12b25 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -205,6 +205,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-       // disabled.
-       KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
+diff --git a/modules/video_coding/utility/ivf_file_writer.cc b/modules/video_coding/utility/ivf_file_writer.cc
+index 668390a78c..5b27ef3ef7 100644
+--- a/modules/video_coding/utility/ivf_file_writer.cc
++++ b/modules/video_coding/utility/ivf_file_writer.cc
+@@ -39,7 +39,7 @@ IvfFileWriter::IvfFileWriter(FileWrapper file, size_t byte_limit)
+       last_timestamp_(-1),
+       using_capture_timestamps_(false),
+       file_(std::move(file)) {
+-  RTC_DCHECK(byte_limit == 0 || kIvfHeaderSize <= byte_limit)
++  RTC_DCHECK(byte_limit == 0 || webrtc::kIvfHeaderSize <= byte_limit)
+       << "The byte_limit is too low, not even the header will fit.";
+ }
  
-+      // See draft-alvestrand-rmcat-remb for information.
-+      bool remb = false;
-+
-       bool tmmbr = false;
+@@ -59,7 +59,7 @@ bool IvfFileWriter::WriteHeader() {
+     return false;
+   }
  
-       // See LntfConfig for description.
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index c35be9142d..618c88f82c 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -296,9 +296,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
-       frames_decryptable_(false),
-       absolute_capture_time_interpolator_(clock) {
-   packet_sequence_checker_.Detach();
--  constexpr bool remb_candidate = true;
-   if (packet_router_)
--    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), remb_candidate);
-+    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), config_.rtp.remb);
+-  uint8_t ivf_header[kIvfHeaderSize] = {0};
++  uint8_t ivf_header[webrtc::kIvfHeaderSize] = {0};
+   ivf_header[0] = 'D';
+   ivf_header[1] = 'K';
+   ivf_header[2] = 'I';
+@@ -113,13 +113,13 @@ bool IvfFileWriter::WriteHeader() {
+                                           static_cast<uint32_t>(num_frames_));
+   ByteWriter<uint32_t>::WriteLittleEndian(&ivf_header[28], 0);  // Reserved.
  
-   RTC_DCHECK(config_.rtp.rtcp_mode != RtcpMode::kOff)
-       << "A stream should not be configured with RTCP disabled. This value is "
+-  if (!file_.Write(ivf_header, kIvfHeaderSize)) {
++  if (!file_.Write(ivf_header, webrtc::kIvfHeaderSize)) {
+     RTC_LOG(LS_ERROR) << "Unable to write IVF header for ivf output file.";
+     return false;
+   }
+ 
+-  if (bytes_written_ < kIvfHeaderSize) {
+-    bytes_written_ = kIvfHeaderSize;
++  if (bytes_written_ < webrtc::kIvfHeaderSize) {
++    bytes_written_ = webrtc::kIvfHeaderSize;
+   }
+ 
+   return true;
 -- 
 2.34.1
 

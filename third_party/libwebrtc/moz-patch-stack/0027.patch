@@ -1,28 +1,58 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 11 Feb 2020 17:04:00 +0000
-Subject: Bug 1578073 - Fix warning: [cast] redundant cast to int; r=ng
+From: Wang Qing <wangqing-hf@loongson.cn>
+Date: Wed, 25 Sep 2019 14:15:00 +0000
+Subject: Bug 1579834 - [WebRTC] Add mips64 support; r=dminor
 
-Differential Revision: https://phabricator.services.mozilla.com/D61852
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/82877c8a864072c03f45234c6649645ed609e098
+Differential Revision: https://phabricator.services.mozilla.com/D45620
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca3fbdf62bd7649dafc62438d
 ---
- sdk/android/api/org/webrtc/TextureBufferImpl.java | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc | 2 +-
+ modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/sdk/android/api/org/webrtc/TextureBufferImpl.java b/sdk/android/api/org/webrtc/TextureBufferImpl.java
-index c08fc4c29b..8e0e40ef70 100644
---- a/sdk/android/api/org/webrtc/TextureBufferImpl.java
-+++ b/sdk/android/api/org/webrtc/TextureBufferImpl.java
-@@ -136,8 +136,8 @@ public class TextureBufferImpl implements VideoFrame.TextureBuffer {
-     cropAndScaleMatrix.preScale(cropWidth / (float) width, cropHeight / (float) height);
+diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
+index 1ac71899ee..3fe86f2f85 100644
+--- a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
++++ b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
+@@ -47,7 +47,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
+ const char kVp8PostProcFieldTrial[] = "WebRTC-VP8-Postproc-Config";
  
-     return applyTransformMatrix(cropAndScaleMatrix,
--        (int) Math.round(unscaledWidth * cropWidth / (float) width),
--        (int) Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
-+        Math.round(unscaledWidth * cropWidth / (float) width),
-+        Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
-   }
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID)  || defined(WEBRTC_ARCH_MIPS)
+ constexpr bool kIsArm = true;
+ #else
+ constexpr bool kIsArm = false;
+diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
+index 5457402542..bceb321951 100644
+--- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
++++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
+@@ -693,7 +693,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
  
-   /**
+ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+   // On mobile platform, use a lower speed setting for lower resolutions for
+   // CPUs with 4 or more cores.
+   RTC_DCHECK_GT(number_of_cores_, 0);
+@@ -726,7 +726,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+ }
+ 
+ int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
+-#if defined(WEBRTC_ANDROID)
++#if defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+   if (width * height >= 320 * 180) {
+     if (cpus >= 4) {
+       // 3 threads for CPUs with 4 and more cores since most of times only 4
+@@ -800,7 +800,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
+   // multi-res encoding feature?
+   denoiserState denoiser_state = kDenoiserOnYOnly;
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+   denoiser_state = kDenoiserOnYOnly;
+ #else
+   denoiser_state = kDenoiserOnAdaptive;
 -- 
 2.34.1
 

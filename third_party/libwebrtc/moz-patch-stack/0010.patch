@@ -1,56 +1,52 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 12 Feb 2021 14:27:00 +0000
-Subject: Bug 1654112 - Get OS X build working.
- r=ng,firefox-build-system-reviewers,glandium
+From: Dan Minor <dminor@mozilla.com>
+Date: Tue, 27 Mar 2018 15:43:00 -0400
+Subject: Bug 1376873 - Disable Mid support in RtpDemuxer; r=mjf
 
-* Pull in sdk/objc/base and sdk/objc/helpers
-* Add gclient_args.gni to keep build happy.
-* Add a missing include path for libyuv
-* Support .m files in build.
+The only use of Mid in the current webrtc.org code is in the unit tests.
+RtpStreamReceiverController only allows adding sinks using SSRCs. Because
+of this, we'll end up dropping packets in the RtpDemuxer with the current
+code as none of our Mids will be recognized.
 
-Differential Revision: https://phabricator.services.mozilla.com/D105015
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
+Tip of webrtc.org fully supports using Mids, so we'll be able to enable this
+code again after the next update.
+
+Differential Revision: https://phabricator.services.mozilla.com/D7442
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b3ba8452e77105c72f6ddbc49cbe5a53dbea1507
 ---
- modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
- modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ call/rtp_demuxer.cc | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index 8b9af35193..76fec13a39 100644
---- a/modules/desktop_capture/mac/screen_capturer_mac.mm
-+++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -357,7 +357,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
-   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
-        it != desktop_config_.displays.end();
-        ++it) {
--    screens->push_back({it->id, std::string()});
-+    Source value = {it->id, 0, std::string()};
-+    screens->push_back(value);
+diff --git a/call/rtp_demuxer.cc b/call/rtp_demuxer.cc
+index 0b74f2ac0a..5c53f48144 100644
+--- a/call/rtp_demuxer.cc
++++ b/call/rtp_demuxer.cc
+@@ -272,13 +272,17 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
+   // RSID and RRID are routed to the same sinks. If an RSID is specified on a
+   // repair packet, it should be ignored and the RRID should be used.
+   std::string packet_mid, packet_rsid;
+-  bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
++  //bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
+   bool has_rsid = packet.GetExtension<RepairedRtpStreamId>(&packet_rsid);
+   if (!has_rsid) {
+     has_rsid = packet.GetExtension<RtpStreamId>(&packet_rsid);
    }
-   return true;
- }
-diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
-index 5d881662ea..989ec7ea54 100644
---- a/modules/desktop_capture/mac/window_list_utils.cc
-+++ b/modules/desktop_capture/mac/window_list_utils.cc
-@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
-             // the check in the map. Also skip the window if owner name is
-             // empty too.
-             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
--              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
-+              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
-               RTC_DCHECK(!sources.empty());
-               // Get an iterator on the last valid element in the source list.
-               std::list<DesktopCapturer::Source>::const_iterator last_source =
-@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
-                       pid, last_source));
-             }
-           } else {
--            sources.push_back(DesktopCapturer::Source{window_id, title});
-+            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
-             // Once the window with empty title has been removed no other empty
-             // windows are allowed for the same pid.
-             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
+   uint32_t ssrc = packet.Ssrc();
+ 
++  // Mid support is half-baked in branch 64. RtpStreamReceiverController only
++  // supports adding sinks by ssrc, so our mids will never show up in
++  // known_mids_, causing us to drop packets here.
++#if 0
+   // The BUNDLE spec says to drop any packets with unknown MIDs, even if the
+   // SSRC is known/latched.
+   if (has_mid && known_mids_.find(packet_mid) == known_mids_.end()) {
+@@ -352,6 +356,7 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
+     }
+   }
+ 
++#endif
+   // We trust signaled SSRC more than payload type which is likely to conflict
+   // between streams.
+   const auto ssrc_sink_it = sink_by_ssrc_.find(ssrc);
 -- 
 2.34.1
 

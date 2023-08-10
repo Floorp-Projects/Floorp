@@ -1,102 +1,134 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 21 Aug 2018 13:39:00 -0400
-Subject: Bug 1376873 - Fix up logging in WebrtcLog.cpp; r=ng
+From: Tommi <tommi@webrtc.org>
+Date: Thu, 1 Jun 2023 16:08:52 +0200
+Subject: (cherry-pick-branch-heads/5735) [M114] Move transceiver iteration
+ loop over to the signaling thread.
 
-The webrtc::Trace code is removed by this update. We already had support for
-LOG (now RTC_LOG) in WebrtcLog.cpp. This removes the trace code from
-WebRtcLog.cpp and moves the aec logging code from webrtc::Trace to
-rtc::LogMessage.
+This is required for ReportTransportStats since iterating over the
+transceiver list from the network thread is not safe.
 
-This also disables logging to stderr in rtc_base/logging.cc. We could disable
-it using the API, but that happens through peerconnection resulting in some
-logging occuring during getusermedia.
+(cherry picked from commit dba22d31909298161318e00d43a80cdb0abc940f)
 
-The aec logs were testing with --disable-e10s. Rather than trying to
-work around sandboxing, I think it makes more sense to fix Bug 1404982 and
-store the logs in memory for retrieval from about:webrtc.
-
-Differential Revision: https://phabricator.services.mozilla.com/D7429
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e84c60e2c9373f4d2dc24e769375a92c17c2a0ad
+No-Try: true
+Bug: chromium:1446274, webrtc:12692
+Change-Id: I7c514df9f029112c4b1da85826af91217850fb26
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/307340
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40197}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/308001
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5735@{#3}
+Cr-Branched-From: df7df199abd619e75b9f1d9a7e12fc3f3f748775-refs/heads/main@{#39949}
 ---
- .../audio_processing/logging/apm_data_dumper.cc    |  2 +-
- rtc_base/logging.cc                                | 11 ++++++++++-
- rtc_base/logging.h                                 | 14 ++++++++++++++
- 3 files changed, 25 insertions(+), 2 deletions(-)
+ pc/peer_connection.cc                 | 35 +++++++++++++++++----------
+ pc/peer_connection.h                  |  3 ++-
+ pc/peer_connection_integrationtest.cc |  8 ++++++
+ 3 files changed, 32 insertions(+), 14 deletions(-)
 
-diff --git a/modules/audio_processing/logging/apm_data_dumper.cc b/modules/audio_processing/logging/apm_data_dumper.cc
-index f787b65604..a15321ad48 100644
---- a/modules/audio_processing/logging/apm_data_dumper.cc
-+++ b/modules/audio_processing/logging/apm_data_dumper.cc
-@@ -42,7 +42,7 @@ std::string FormFileName(absl::string_view output_dir,
- #endif
- 
-   std::stringstream ss;
--  std::string base = webrtc::Trace::aec_debug_filename();
-+  std::string base = rtc::LogMessage::aec_debug_filename();
-   ss << base;
- 
-   if (base.length() && base.back() != sep) {
-diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index 61a3c667ba..c28dbe3a10 100644
---- a/rtc_base/logging.cc
-+++ b/rtc_base/logging.cc
-@@ -54,6 +54,15 @@ static const int kMaxLogLineSize = 1024 - 60;
- #include "rtc_base/time_utils.h"
- 
- namespace rtc {
+diff --git a/pc/peer_connection.cc b/pc/peer_connection.cc
+index 627e4afcfa..f7aec9ebcc 100644
+--- a/pc/peer_connection.cc
++++ b/pc/peer_connection.cc
+@@ -735,9 +735,6 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
+   transport_controller_->SubscribeIceConnectionState(
+       [this](cricket::IceConnectionState s) {
+         RTC_DCHECK_RUN_ON(network_thread());
+-        if (s == cricket::kIceConnectionConnected) {
+-          ReportTransportStats();
+-        }
+         signaling_thread()->PostTask(
+             SafeTask(signaling_thread_safety_.flag(), [this, s]() {
+               RTC_DCHECK_RUN_ON(signaling_thread());
+@@ -2401,6 +2398,20 @@ void PeerConnection::OnTransportControllerConnectionState(
+     case cricket::kIceConnectionConnected:
+       RTC_LOG(LS_INFO) << "Changing to ICE connected state because "
+                           "all transports are writable.";
++      {
++        std::vector<RtpTransceiverProxyRefPtr> transceivers;
++        if (ConfiguredForMedia()) {
++          transceivers = rtp_manager()->transceivers()->List();
++        }
 +
-+bool LogMessage::aec_debug_ = false;
-+uint32_t LogMessage::aec_debug_size_ = 4*1024*1024;
-+std::string LogMessage::aec_filename_base_;
++        network_thread()->PostTask(
++            SafeTask(network_thread_safety_,
++                     [this, transceivers = std::move(transceivers)] {
++                       RTC_DCHECK_RUN_ON(network_thread());
++                       ReportTransportStats(std::move(transceivers));
++                     }));
++      }
 +
-+std::string LogMessage::aec_debug_filename() {
-+  return aec_filename_base_;
-+}
-+
- namespace {
+       SetIceConnectionState(PeerConnectionInterface::kIceConnectionConnected);
+       NoteUsageEvent(UsageEvent::ICE_STATE_CONNECTED);
+       break;
+@@ -2743,20 +2754,18 @@ void PeerConnection::OnTransportControllerGatheringState(
+ }
  
- // By default, release builds don't log, debug builds at info level
-@@ -114,7 +123,7 @@ std::string LogLineRef::DefaultLogLine() const {
- // LogMessage
- /////////////////////////////////////////////////////////////////////////////
- 
--bool LogMessage::log_to_stderr_ = true;
-+bool LogMessage::log_to_stderr_ = false;
- 
- // The list of logging streams currently configured.
- // Note: we explicitly do not clean this up, because of the uncertain ordering
-diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index d59b9a0ef7..8f490c44a2 100644
---- a/rtc_base/logging.h
-+++ b/rtc_base/logging.h
-@@ -581,6 +581,16 @@ class LogMessage {
+ // Runs on network_thread().
+-void PeerConnection::ReportTransportStats() {
++void PeerConnection::ReportTransportStats(
++    std::vector<RtpTransceiverProxyRefPtr> transceivers) {
+   TRACE_EVENT0("webrtc", "PeerConnection::ReportTransportStats");
+   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+   std::map<std::string, std::set<cricket::MediaType>>
+       media_types_by_transport_name;
+-  if (ConfiguredForMedia()) {
+-    for (const auto& transceiver :
+-         rtp_manager()->transceivers()->UnsafeList()) {
+-      if (transceiver->internal()->channel()) {
+-        std::string transport_name(
+-            transceiver->internal()->channel()->transport_name());
+-        media_types_by_transport_name[transport_name].insert(
+-            transceiver->media_type());
+-      }
++  for (const auto& transceiver : transceivers) {
++    if (transceiver->internal()->channel()) {
++      std::string transport_name(
++          transceiver->internal()->channel()->transport_name());
++      media_types_by_transport_name[transport_name].insert(
++          transceiver->media_type());
+     }
    }
- #endif  // RTC_LOG_ENABLED()
  
-+  // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
-+  static void set_aec_debug(bool enable) { aec_debug_ = enable; }
-+  static void set_aec_debug_size(uint32_t size) { aec_debug_size_ = size; }
-+  static bool aec_debug() { return aec_debug_; }
-+  static uint32_t aec_debug_size() { return aec_debug_size_; }
-+  static std::string aec_debug_filename();
-+  static void set_aec_debug_filename(const char* filename) {
-+    aec_filename_base_ = filename;
-+  }
+diff --git a/pc/peer_connection.h b/pc/peer_connection.h
+index 32d304e6e7..21b9a5a430 100644
+--- a/pc/peer_connection.h
++++ b/pc/peer_connection.h
+@@ -569,7 +569,8 @@ class PeerConnection : public PeerConnectionInternal,
+ 
+   // Invoked when TransportController connection completion is signaled.
+   // Reports stats for all transports in use.
+-  void ReportTransportStats() RTC_RUN_ON(network_thread());
++  void ReportTransportStats(std::vector<RtpTransceiverProxyRefPtr> transceivers)
++      RTC_RUN_ON(network_thread());
+ 
+   // Gather the usage of IPv4/IPv6 as best connection.
+   static void ReportBestConnectionState(const cricket::TransportStats& stats);
+diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
+index 812833000b..07c5e0c0d3 100644
+--- a/pc/peer_connection_integrationtest.cc
++++ b/pc/peer_connection_integrationtest.cc
+@@ -1831,6 +1831,10 @@ TEST_P(PeerConnectionIntegrationTest,
+   EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
+                  callee()->ice_connection_state(), kDefaultTimeout);
+ 
++  // Part of reporting the stats will occur on the network thread, so flush it
++  // before checking NumEvents.
++  SendTask(network_thread(), [] {});
 +
-  private:
-   friend class LogMessageForTesting;
+   EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
+                           "WebRTC.PeerConnection.CandidatePairType_UDP",
+                           webrtc::kIceCandidatePairHostNameHostName));
+@@ -1959,6 +1963,10 @@ TEST_P(PeerConnectionIntegrationIceStatesTest, MAYBE_VerifyBestConnection) {
+   EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
+                  callee()->ice_connection_state(), kDefaultTimeout);
  
-@@ -636,6 +646,10 @@ class LogMessage {
- 
-   // The stringbuilder that buffers the formatted message before output
-   rtc::StringBuilder print_stream_;
++  // Part of reporting the stats will occur on the network thread, so flush it
++  // before checking NumEvents.
++  SendTask(network_thread(), [] {});
 +
-+  static bool aec_debug_;
-+  static uint32_t aec_debug_size_;
-+  static std::string aec_filename_base_;
- };
- 
- //////////////////////////////////////////////////////////////////////
+   // TODO(bugs.webrtc.org/9456): Fix it.
+   const int num_best_ipv4 = webrtc::metrics::NumEvents(
+       "WebRTC.PeerConnection.IPMetrics", webrtc::kBestConnections_IPv4);
 -- 
 2.34.1
 
