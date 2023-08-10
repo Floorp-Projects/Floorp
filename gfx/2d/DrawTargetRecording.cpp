@@ -375,6 +375,15 @@ void DrawTargetRecording::Stroke(const Path* aPath, const Pattern& aPattern,
           this, circle.value(), aPattern, aStrokeOptions, aOptions));
       return;
     }
+
+    auto line = path->AsLine();
+    if (line) {
+      EnsurePatternDependenciesStored(aPattern);
+      mRecorder->RecordEvent(RecordedStrokeLine(this, line->origin,
+                                                line->destination, aPattern,
+                                                aStrokeOptions, aOptions));
+      return;
+    }
   }
 
   RefPtr<PathRecording> pathRecording = EnsurePathStored(aPath);

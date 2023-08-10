@@ -143,6 +143,47 @@ Maybe<Circle> PathOps::AsCircle() const {
   return Nothing();
 }
 
+Maybe<Line> PathOps::AsLine() const {
+  if (mPathData.empty()) {
+    return Nothing();
+  }
+
+  Line retval;
+
+  const uint8_t* nextByte = mPathData.data();
+  const uint8_t* end = nextByte + mPathData.size();
+  OpType opType = *reinterpret_cast<const OpType*>(nextByte);
+  nextByte += sizeof(OpType);
+
+  if (opType == OpType::OP_MOVETO) {
+    MOZ_ASSERT(nextByte != end);
+
+    NEXT_PARAMS(Point)
+    retval.origin = params;
+  } else {
+    return Nothing();
+  }
+
+  if (nextByte >= end) {
+    return Nothing();
+  }
+
+  opType = *reinterpret_cast<const OpType*>(nextByte);
+  nextByte += sizeof(OpType);
+
+  if (opType == OpType::OP_LINETO) {
+    MOZ_ASSERT(nextByte != end);
+
+    NEXT_PARAMS(Point)
+
+    if (nextByte == end) {
+      retval.destination = params;
+      return Some(retval);
+    }
+  }
+
+  return Nothing();
+}
 #undef NEXT_PARAMS
 
 size_t PathOps::NumberOfOps() const {
