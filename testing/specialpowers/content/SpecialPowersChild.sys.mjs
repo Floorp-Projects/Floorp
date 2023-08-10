@@ -636,16 +636,6 @@ export class SpecialPowersChild extends JSWindowActorChild {
     return chromeScript;
   }
 
-  async importInMainProcess(importString) {
-    var message = await this.sendQuery("SPImportInMainProcess", importString);
-    if (message.hadError) {
-      throw new Error(
-        "SpecialPowers.importInMainProcess failed with error " +
-          message.errorMessage
-      );
-    }
-  }
-
   get Services() {
     return Services;
   }

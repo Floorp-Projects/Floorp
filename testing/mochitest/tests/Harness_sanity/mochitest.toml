@@ -35,11 +35,6 @@ skip-if = true #depends on fix for bug 1048446
 
 ['test_getweakmapkeys.html']
 
-['test_importInMainProcess.html']
-skip-if = '''
-  verify'''
-support-files = "importtesting_chromescript.js"
-
 ['test_sanity.html']
 
 ['test_sanityEventUtils.html']

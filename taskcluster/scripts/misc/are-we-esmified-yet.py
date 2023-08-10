@@ -50,8 +50,6 @@ excluded_files = [
     "python/mozbuild/mozbuild/test/backend/data/build/baz.jsm",
     "python/mozbuild/mozbuild/test/backend/data/build/foo.jsm",
     "python/mozbuild/mozbuild/test/backend/data/build/qux.jsm",
-    # Testcase for test harness.
-    "testing/mochitest/tests/Harness_sanity/ImportTesting.jsm",
     # EXPORTED_SYMBOLS inside testcase.
     "tools/lint/eslint/eslint-plugin-mozilla/tests/mark-exported-symbols-as-used.js",
 ]

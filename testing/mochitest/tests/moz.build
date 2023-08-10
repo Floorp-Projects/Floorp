@@ -6,10 +6,6 @@
 
 DIRS += ["SimpleTest"]
 
-TESTING_JS_MODULES += [
-    "Harness_sanity/ImportTesting.jsm",
-]
-
 MOCHITEST_MANIFESTS += ["Harness_sanity/mochitest.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["Harness_sanity/xpcshell.toml"]
 BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]
