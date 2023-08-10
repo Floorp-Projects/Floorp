@@ -125,3 +125,5 @@ shopping-unanalyzed-product-analyze-link = Analyze reviews
 ## Onboarding message strings.
 
 shopping-onboarding-headline = Shop based on <b>real</b> reviews
+# Future localization note - "Yes, try it" will need to be directly referenced when the button is added to fluent so it maintains parity with this copy
+shopping-onboarding-opt-in-privacy-policy-and-terms-of-use = By selecting “Yes, try it” you agree to the <a data-l10n-name="privacy_policy">privacy policy</a> and <a data-l10n-name="terms_of_use">terms of use</a> of { -fakespot-brand-name }, a { -vendor-short-name } company.
