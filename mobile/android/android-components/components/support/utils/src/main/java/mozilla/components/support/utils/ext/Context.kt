@@ -4,6 +4,7 @@
 
 package mozilla.components.support.utils.ext
 
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -61,6 +62,7 @@ fun Context.navigateToDefaultBrowserAppsSettings() {
  * @return The first sticky intent found that matches [filter],
  * or null if there are none.
  */
+@SuppressLint("UnspecifiedRegisterReceiverFlag")
 fun Context.registerReceiverCompat(
     broadcastReceiver: BroadcastReceiver?,
     filter: IntentFilter,
