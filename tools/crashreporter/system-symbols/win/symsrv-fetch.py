@@ -15,8 +15,8 @@
 # limitations under the License.
 
 
-# This script will read a CSV of modules from Socorro, and try to retrieve
-# missing symbols from Microsoft's symbol server. It honors a list
+# This script will fetch a thousand recent crashes from Socorro, and try to
+# retrieve missing symbols from Microsoft's symbol server. It honors a list
 # (ignorelist.txt) of symbols that are known to be from our applications,
 # and it maintains its own list of symbols that the MS symbol server
 # doesn't have (skiplist.txt).
@@ -26,6 +26,8 @@
 
 import argparse
 import asyncio
+import collections
+import json
 import logging
 import os
 import shutil
@@ -37,18 +39,24 @@ from urllib.parse import quote, urljoin
 from aiofile import AIOFile, LineReader
 from aiohttp import ClientSession, ClientTimeout
 from aiohttp.connector import TCPConnector
+from aiohttp_retry import JitterRetry, RetryClient
 
 # Just hardcoded here
 MICROSOFT_SYMBOL_SERVER = "https://msdl.microsoft.com/download/symbols/"
 USER_AGENT = "Microsoft-Symbol-Server/6.3.0.0"
 MOZILLA_SYMBOL_SERVER = "https://symbols.mozilla.org/"
-MISSING_SYMBOLS_URL = "https://symbols.mozilla.org/missingsymbols.csv?microsoft=only"
+CRASHSTATS_API_URL = "https://crash-stats.mozilla.org/api/"
+SUPERSEARCH_PARAM = "SuperSearch/?proto_signature=~.DLL&proto_signature=~.dll&platform=Windows&_results_number=1000"
+PROCESSED_CRASHES_PARAM = "ProcessedCrash/?crash_id="
 HEADERS = {"User-Agent": USER_AGENT}
 SYM_SRV = "SRV*{0}*https://msdl.microsoft.com/download/symbols;SRV*{0}*https://software.intel.com/sites/downloads/symbols;SRV*{0}*https://download.amd.com/dir/bin;SRV*{0}*https://driver-symbols.nvidia.com"  # noqa
 TIMEOUT = 7200
 RETRIES = 5
 
 
+MissingSymbol = collections.namedtuple(
+    "MissingSymbol", ["debug_file", "debug_id", "filename", "code_id"]
+)
 log = logging.getLogger()
 
 
@@ -141,14 +149,71 @@ def write_skiplist(skiplist):
         )
 
 
-async def fetch_missing_symbols(u):
-    log.info("Trying missing symbols from %s" % u)
-    async with ClientSession() as client:
-        async with client.get(u, headers=HEADERS) as resp:
-            # The server currently does not set an encoding so force it to UTF-8
-            data = await resp.text("UTF-8")
-            # just skip the first line since it contains column headers
-            return data.splitlines()[1:]
+async def fetch_crash(session, url):
+    async with session.get(url) as resp:
+        if resp.status == 200:
+            return json.loads(await resp.text())
+
+        raise RuntimeError("Network request returned status = " + str(resp.status))
+
+
+async def fetch_crashes(session, urls):
+    tasks = []
+    for url in urls:
+        task = asyncio.create_task(fetch_crash(session, url))
+        tasks.append(task)
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+
+
+async def fetch_latest_crashes(client, url):
+    async with client.get(url + SUPERSEARCH_PARAM) as resp:
+        if resp.status != 200:
+            resp.raise_for_status()
+        data = await resp.text()
+        reply = json.loads(data)
+        crashes = []
+        for crash in reply.get("hits"):
+            if "uuid" in crash:
+                crashes.append(crash.get("uuid"))
+        return crashes
+
+
+async def fetch_missing_symbols(url):
+    log.info("Looking for missing symbols on %s" % url)
+    connector = TCPConnector(limit=4, limit_per_host=0)
+    missing_symbols = set()
+    crash_count = 0
+
+    client_session = ClientSession(
+        headers=HEADERS, connector=connector, timeout=ClientTimeout(total=TIMEOUT)
+    )
+    while crash_count < 1000:
+        async with RetryClient(
+            client_session=client_session,
+            retry_options=JitterRetry(attempts=30, statuses=[429]),
+        ) as client:
+            crash_uuids = await fetch_latest_crashes(client, url)
+            urls = [url + PROCESSED_CRASHES_PARAM + uuid for uuid in crash_uuids]
+            crashes = await fetch_crashes(client, urls)
+            for crash in crashes:
+                if type(crash) is not dict:
+                    continue
+
+                crash_count += 1
+                modules = crash.get("json_dump").get("modules")
+                for module in modules:
+                    if module.get("missing_symbols"):
+                        missing_symbols.add(
+                            MissingSymbol(
+                                module.get("debug_file"),
+                                module.get("debug_id"),
+                                module.get("filename"),
+                                module.get("code_id"),
+                            )
+                        )
+
+    return missing_symbols
 
 
 async def get_list(filename):
@@ -191,15 +256,11 @@ async def get_skiplist():
 def get_missing_symbols(missing_symbols, skiplist, ignorelist):
     modules = defaultdict(set)
     stats = {"ignorelist": 0, "skiplist": 0}
-    for line in missing_symbols:
-        line = line.rstrip()
-        bits = line.split(",")
-        if len(bits) < 2:
-            continue
-        pdb, debug_id = bits[:2]
-        code_file, code_id = None, None
-        if len(bits) >= 4:
-            code_file, code_id = bits[2:4]
+    for symbol in missing_symbols:
+        pdb = symbol.debug_file
+        debug_id = symbol.debug_id
+        code_file = symbol.filename
+        code_id = symbol.code_id
         if pdb and debug_id and pdb.endswith(".pdb"):
             if pdb.lower() in ignorelist:
                 stats["ignorelist"] += 1
@@ -401,7 +462,7 @@ async def fetch_and_write(output, client, filename, file_id):
     return True
 
 
-async def fetch_all(output, modules):
+async def fetch_all_modules(output, modules):
     loop = asyncio.get_event_loop()
     tasks = []
     fetched_modules = []
@@ -461,10 +522,10 @@ def main():
         description="Fetch missing symbols from Microsoft symbol server"
     )
     parser.add_argument(
-        "--missing-symbols",
+        "--crashstats-api",
         type=str,
-        help="missing symbols URL",
-        default=MISSING_SYMBOLS_URL,
+        help="crash-stats API URL",
+        default=CRASHSTATS_API_URL,
     )
     parser.add_argument("zip", type=str, help="output zip file")
     parser.add_argument(
@@ -484,7 +545,7 @@ def main():
     log.info("Started")
 
     missing_symbols, ignorelist, known_ms_symbols, skiplist = get_base_data(
-        args.missing_symbols
+        args.crashstats_api
     )
 
     modules, stats_skipped = get_missing_symbols(missing_symbols, skiplist, ignorelist)
@@ -493,7 +554,7 @@ def main():
     temp_path = mkdtemp(prefix="symcache")
 
     modules, stats_collect = asyncio.run(collect(modules))
-    modules = asyncio.run(fetch_all(temp_path, modules))
+    modules = asyncio.run(fetch_all_modules(temp_path, modules))
 
     file_index, stats_dump = asyncio.run(
         dump(symbol_path, temp_path, modules, args.dump_syms)
