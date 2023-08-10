@@ -17,6 +17,8 @@ extern "C" {
 // This module is for GCC x86 and x64.
 #if !defined(LIBYUV_DISABLE_X86) && (defined(__x86_64__) || defined(__i386__))
 
+#include <immintrin.h>
+
 #if defined(HAS_ARGBTOYROW_SSSE3) || defined(HAS_ARGBGRAYROW_SSSE3)
 
 // Constants for ARGB
@@ -5141,6 +5143,25 @@ void DetileSplitUVRow_SSSE3(const uint8_t* src_uv,
       : "cc", "memory", "xmm0", "xmm1");
 }
 #endif  // HAS_DETILESPLITUVROW_SSSE3
+
+#ifdef HAS_MERGEUVROW_AVX512BW
+__attribute__ ((target("avx512vl,avx512bw")))
+void MergeUVRow_AVX512BW(const uint8_t* src_u,
+                         const uint8_t* src_v,
+                         uint8_t* dst_uv,
+                         int width) {
+  do {
+    const __m512i u = _mm512_cvtepu8_epi16(_mm256_loadu_epi8(src_u));
+    const __m512i v = _mm512_slli_epi64(_mm512_cvtepu8_epi16(_mm256_loadu_epi8(src_v)), 8);
+    const __m512i uv = _mm512_or_si512(u, v);
+    _mm512_storeu_epi8(dst_uv, uv);
+    src_u += 32;
+    src_v += 32;
+    dst_uv += 64;
+    width -= 32;
+  } while (width > 0);
+}
+#endif  // HAS_MERGEUVROW_AVX512BW
 
 #ifdef HAS_MERGEUVROW_AVX2
 void MergeUVRow_AVX2(const uint8_t* src_u,

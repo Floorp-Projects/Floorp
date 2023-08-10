@@ -599,6 +599,14 @@ void MergeUVPlane(const uint8_t* src_u,
     }
   }
 #endif
+#if defined(HAS_MERGEUVROW_AVX512BW)
+  if (TestCpuFlag(kCpuHasAVX512BW)) {
+    MergeUVRow = MergeUVRow_Any_AVX512BW;
+    if (IS_ALIGNED(width, 32)) {
+      MergeUVRow = MergeUVRow_AVX512BW;
+    }
+  }
+#endif
 #if defined(HAS_MERGEUVROW_NEON)
   if (TestCpuFlag(kCpuHasNEON)) {
     MergeUVRow = MergeUVRow_Any_NEON;
