@@ -8,7 +8,9 @@
 #define mozilla_ContentEventHandler_h_
 
 #include "js/GCAPI.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/RangeBoundary.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
 #include "nsIFrame.h"
@@ -43,14 +45,21 @@ class MOZ_STACK_CLASS ContentEventHandler {
    * responsible for making sure the start/end nodes are in document order.
    * This is enforced by assertions in DEBUG builds.
    */
-  class MOZ_STACK_CLASS RawRange final {
+  template <typename NodeType, typename RangeBoundaryType>
+  class MOZ_STACK_CLASS RawRangeBase final {
    public:
-    RawRange() = default;
+    RawRangeBase();
+    template <typename OtherNodeType, typename OtherRangeBoundaryType>
+    explicit RawRangeBase(
+        const RawRangeBase<OtherNodeType, OtherRangeBoundaryType>& aOther);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    ~RawRangeBase();
+#endif
 
     void Clear() {
       mRoot = nullptr;
-      mStart = RangeBoundary();
-      mEnd = RangeBoundary();
+      mStart = {};
+      mEnd = {};
     }
 
     bool IsPositioned() const { return mStart.IsSet() && mEnd.IsSet(); }
@@ -59,16 +68,19 @@ class MOZ_STACK_CLASS ContentEventHandler {
     nsINode* GetEndContainer() const { return mEnd.Container(); }
     uint32_t StartOffset() const {
       return *mStart.Offset(
-          RangeBoundary::OffsetFilter::kValidOrInvalidOffsets);
+          RangeBoundaryType::OffsetFilter::kValidOrInvalidOffsets);
     }
     uint32_t EndOffset() const {
-      return *mEnd.Offset(RangeBoundary::OffsetFilter::kValidOrInvalidOffsets);
+      return *mEnd.Offset(
+          RangeBoundaryType::OffsetFilter::kValidOrInvalidOffsets);
     }
     nsIContent* StartRef() const { return mStart.Ref(); }
     nsIContent* EndRef() const { return mEnd.Ref(); }
 
-    const RangeBoundary& Start() const { return mStart; }
-    const RangeBoundary& End() const { return mEnd; }
+    const RangeBoundaryType& Start() const { return mStart; }
+    const RangeBoundaryType& End() const { return mEnd; }
+
+    nsINode* GetRoot() const { return mRoot; }
 
     // XXX: Make these use RangeBoundaries...
     nsresult CollapseTo(const RawRangeBoundary& aBoundary) {
@@ -96,11 +108,19 @@ class MOZ_STACK_CLASS ContentEventHandler {
    private:
     inline void AssertStartIsBeforeOrEqualToEnd();
 
-    nsCOMPtr<nsINode> mRoot;
+    NodeType mRoot;
 
-    RangeBoundary mStart;
-    RangeBoundary mEnd;
+    RangeBoundaryType mStart;
+    RangeBoundaryType mEnd;
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    nsMutationGuard mMutationGuard;
+    Maybe<JS::AutoAssertNoGC> mAssertNoGC;
+#endif
   };
+
+  using RawRange = RawRangeBase<RefPtr<nsINode>, RangeBoundary>;
+  using UnsafeRawRange = RawRangeBase<nsINode*, RawRangeBoundary>;
 
  public:
   using Element = dom::Element;
@@ -295,12 +315,14 @@ class MOZ_STACK_CLASS ContentEventHandler {
   nsresult GenerateFlatTextContent(const Element* aElement, nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get the contents of aRange as plain text.
-  nsresult GenerateFlatTextContent(const RawRange& aRawRange, nsString& aString,
+  nsresult GenerateFlatTextContent(const UnsafeRawRange& aRawRange,
+                                   nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get offset of start of aRange.  Note that the result includes the length
   // of line breaker caused by the start of aContent because aRange never
   // includes the line breaker caused by its start node.
-  nsresult GetStartOffset(const RawRange& aRawRange, uint32_t* aOffset,
+  template <typename RawRangeType>
+  nsresult GetStartOffset(const RawRangeType& aRawRange, uint32_t* aOffset,
                           LineBreakType aLineBreakType);
   // Check if we should insert a line break before aContent.
   // This should return false only when aContent is an html element which
@@ -320,8 +342,8 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // Initialize aRawRange from the offset of FlatText and the text length.
   // If aExpandToClusterBoundaries is true, the start offset and the end one are
   // expanded to nearest cluster boundaries.
-  nsresult SetRawRangeFromFlatTextOffset(RawRange* aRawRange, uint32_t aOffset,
-                                         uint32_t aLength,
+  nsresult SetRawRangeFromFlatTextOffset(UnsafeRawRange* aRawRange,
+                                         uint32_t aOffset, uint32_t aLength,
                                          LineBreakType aLineBreakType,
                                          bool aExpandToClusterBoundaries,
                                          uint32_t* aNewOffset = nullptr,
@@ -344,7 +366,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
                                const dom::Text& aTextNode, uint32_t aBaseOffset,
                                uint32_t aXPStartOffset, uint32_t aXPEndOffset,
                                LineBreakType aLineBreakType);
-  nsresult GenerateFlatFontRanges(const RawRange& aRawRange,
+  nsresult GenerateFlatFontRanges(const UnsafeRawRange& aRawRange,
                                   FontRangeArray& aFontRanges,
                                   uint32_t& aLength,
                                   LineBreakType aLineBreakType);
@@ -377,13 +399,15 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // This returns invalid FrameAndNodeOffset if there is no content which
   // should affect to computing text rect in the range.  mOffsetInNode is start
   // offset in the frame.
-  FrameAndNodeOffset GetFirstFrameInRangeForTextRect(const RawRange& aRawRange);
+  FrameAndNodeOffset GetFirstFrameInRangeForTextRect(
+      const UnsafeRawRange& aRawRange);
 
   // Get last frame before the end of the given range for computing text rect.
   // This returns invalid FrameAndNodeOffset if there is no content which
   // should affect to computing text rect in the range.  mOffsetInNode is end
   // offset in the frame.
-  FrameAndNodeOffset GetLastFrameInRangeForTextRect(const RawRange& aRawRange);
+  FrameAndNodeOffset GetLastFrameInRangeForTextRect(
+      const UnsafeRawRange& aRawRange);
 
   struct MOZ_STACK_CLASS FrameRelativeRect final {
     // mRect is relative to the mBaseFrame's position.
