@@ -425,6 +425,10 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
   RTCStatsMember<uint64_t> fec_packets_discarded;
   RTCStatsMember<uint64_t> bytes_received;
   RTCStatsMember<uint64_t> header_bytes_received;
+  // Inbound RTX stats. Only defined when RTX is used and it is therefore
+  // possible to distinguish retransmissions.
+  RTCStatsMember<uint64_t> retransmitted_packets_received;
+  RTCStatsMember<uint64_t> retransmitted_bytes_received;
   RTCStatsMember<double> last_packet_received_timestamp;
   RTCStatsMember<double> jitter_buffer_delay;
   RTCStatsMember<double> jitter_buffer_target_delay;

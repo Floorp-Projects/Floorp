@@ -53,12 +53,12 @@ index f9ed339c0a..53378e9e9b 100644
    // Implements RtpVideoFrameReceiver.
    void ManageFrame(std::unique_ptr<RtpFrameObject> frame) override;
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 9cc78c7241..b1aab2773a 100644
+index d4ca5e8eb7..eed695e24b 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
-@@ -569,6 +569,14 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
-     if (rtx_statistician)
-       stats.total_bitrate_bps += rtx_statistician->BitrateReceived();
+@@ -571,6 +571,14 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
+       stats.rtx_rtp_stats = rtx_statistician->GetStats();
+     }
    }
 +
 +  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP

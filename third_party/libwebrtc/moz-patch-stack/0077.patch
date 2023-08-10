@@ -115,7 +115,7 @@ index 94edf64d5a..81fd12da58 100644
  
  }  // namespace webrtc
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 18b8a71e3c..9ef1a9b53e 100644
+index 4c2dec81e9..4d5ddf28d4 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
 @@ -108,6 +108,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
@@ -279,7 +279,7 @@ index dc9cea422d..90bce6d4b5 100644
        RTC_GUARDED_BY(packet_sequence_checker_);
    UniqueTimestampCounter frame_counter_
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index ea250ec321..5bad053c36 100644
+index 2a8a58fd0d..c5866cd2b5 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
 @@ -211,6 +211,7 @@ VideoReceiveStream2::VideoReceiveStream2(

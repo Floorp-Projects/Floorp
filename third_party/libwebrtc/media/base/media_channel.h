@@ -439,6 +439,9 @@ struct MediaReceiverInfo {
   int64_t header_and_padding_bytes_received = 0;
   int packets_received = 0;
   int packets_lost = 0;
+
+  absl::optional<uint64_t> retransmitted_bytes_received;
+  absl::optional<uint64_t> retransmitted_packets_received;
   absl::optional<uint32_t> nacks_sent;
   // Jitter (network-related) latency (cumulative).
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferdelay

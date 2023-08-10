@@ -141,7 +141,7 @@ index 3125c391cc..fd9908d40d 100644
    return ss.str();
  }
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index ebbca12b25..5d49efc6ce 100644
+index 0885015121..2e1dc9a8ee 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
 @@ -20,6 +20,7 @@
@@ -152,7 +152,7 @@ index ebbca12b25..5d49efc6ce 100644
  #include "api/crypto/crypto_options.h"
  #include "api/rtp_headers.h"
  #include "api/rtp_parameters.h"
-@@ -236,6 +237,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+@@ -237,6 +238,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
        // meta data is expected to be present in generic frame descriptor
        // RTP header extension).
        std::set<int> raw_payload_types;

@@ -20,12 +20,12 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99267b6d193fbcb3e
  11 files changed, 32 insertions(+), 22 deletions(-)
 
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 87fd54fd1c..18b8a71e3c 100644
+index e2c0a3ba7e..4c2dec81e9 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
-@@ -147,10 +147,11 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-     RtpReceiveStats rtp_stats;
+@@ -148,10 +148,11 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
      RtcpPacketTypeCounter rtcp_packet_type_counts;
+     absl::optional<RtpReceiveStats> rtx_rtp_stats;
  
 -    // Mozilla modification: Init these three.
 +    // Mozilla modification: Init these.
@@ -190,10 +190,10 @@ index 53378e9e9b..dc9cea422d 100644
   private:
    // Implements RtpVideoFrameReceiver.
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index b1aab2773a..ea250ec321 100644
+index eed695e24b..2a8a58fd0d 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
-@@ -575,7 +575,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
+@@ -577,7 +577,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
    // seem to be any support for these stats right now. So, we hack this in.
    rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
        &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
