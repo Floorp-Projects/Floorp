@@ -317,7 +317,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // Try to send the provided packet. Returns true iff packet matches any of
   // the SSRCs for this module (media/rtx/fec etc) and was forwarded to the
   // transport.
-  virtual bool TrySendPacket(RtpPacketToSend* packet,
+  virtual bool TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
                              const PacedPacketInfo& pacing_info) = 0;
 
   // Update the FEC protection parameters to use for delta- and key-frames.

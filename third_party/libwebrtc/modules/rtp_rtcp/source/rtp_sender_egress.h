@@ -65,8 +65,8 @@ class RtpSenderEgress {
                   RtpPacketHistory* packet_history);
   ~RtpSenderEgress();
 
-  void SendPacket(RtpPacketToSend* packet, const PacedPacketInfo& pacing_info)
-      RTC_LOCKS_EXCLUDED(lock_);
+  void SendPacket(std::unique_ptr<RtpPacketToSend> packet,
+                  const PacedPacketInfo& pacing_info) RTC_LOCKS_EXCLUDED(lock_);
   uint32_t Ssrc() const { return ssrc_; }
   absl::optional<uint32_t> RtxSsrc() const { return rtx_ssrc_; }
   absl::optional<uint32_t> FlexFecSsrc() const { return flexfec_ssrc_; }

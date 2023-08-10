@@ -320,7 +320,7 @@ bool ModuleRtpRtcpImpl2::OnSendingRtpFrame(uint32_t timestamp,
   return true;
 }
 
-bool ModuleRtpRtcpImpl2::TrySendPacket(RtpPacketToSend* packet,
+bool ModuleRtpRtcpImpl2::TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
                                        const PacedPacketInfo& pacing_info) {
   RTC_DCHECK(rtp_sender_);
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
@@ -340,7 +340,7 @@ bool ModuleRtpRtcpImpl2::TrySendPacket(RtpPacketToSend* packet,
     rtp_sender_->sequencer.Sequence(*packet);
   }
 
-  rtp_sender_->packet_sender.SendPacket(packet, pacing_info);
+  rtp_sender_->packet_sender.SendPacket(std::move(packet), pacing_info);
   return true;
 }
 

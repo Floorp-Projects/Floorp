@@ -41,7 +41,7 @@ void RtpSenderEgress::NonPacedPacketSender::EnqueuePackets(
     std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
   for (auto& packet : packets) {
     PrepareForSend(packet.get());
-    sender_->SendPacket(packet.get(), PacedPacketInfo());
+    sender_->SendPacket(std::move(packet), PacedPacketInfo());
   }
   auto fec_packets = sender_->FetchFecPackets();
   if (!fec_packets.empty()) {
@@ -113,7 +113,7 @@ RtpSenderEgress::~RtpSenderEgress() {
   update_task_.Stop();
 }
 
-void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
+void RtpSenderEgress::SendPacket(std::unique_ptr<RtpPacketToSend> packet,
                                  const PacedPacketInfo& pacing_info) {
   RTC_DCHECK_RUN_ON(&pacer_checker_);
   RTC_DCHECK(packet);

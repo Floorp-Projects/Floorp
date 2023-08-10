@@ -162,7 +162,7 @@ void PacketRouter::SendPacket(std::unique_ptr<RtpPacketToSend> packet,
   }
 
   RtpRtcpInterface* rtp_module = it->second;
-  if (!rtp_module->TrySendPacket(packet.get(), cluster_info)) {
+  if (!rtp_module->TrySendPacket(std::move(packet), cluster_info)) {
     RTC_LOG(LS_WARNING) << "Failed to send packet, rejected by RTP module.";
     return;
   }

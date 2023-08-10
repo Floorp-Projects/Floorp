@@ -144,7 +144,7 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
                          int payload_type,
                          bool force_sender_report) override;
 
-  bool TrySendPacket(RtpPacketToSend* packet,
+  bool TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
                      const PacedPacketInfo& pacing_info) override;
 
   void SetFecProtectionParams(const FecProtectionParams& delta_params,
