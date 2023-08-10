@@ -893,6 +893,7 @@ irintl(long double x)
 #define log fdlibm_log
 #define logf fdlibm_logf
 #define log10 fdlibm_log10
+#define log10f fdlibm_log10f
 #define pow fdlibm_pow
 #define powf fdlibm_powf
 #define ceil fdlibm_ceil
@@ -906,6 +907,7 @@ irintl(long double x)
 #define cbrt fdlibm_cbrt
 #define expm1 fdlibm_expm1
 #define hypot fdlibm_hypot
+#define hypotf fdlibm_hypotf
 #define log1p fdlibm_log1p
 #define log2 fdlibm_log2
 #define scalb fdlibm_scalb

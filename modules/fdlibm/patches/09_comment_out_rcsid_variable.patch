@@ -190,6 +190,30 @@ diff --git a/e_hypot.cpp b/e_hypot.cpp
   *	has error less than sqrt(2)/2 ulp, than 
   *	sqrt(z) has error less than 1 ulp (exercise).
   *
+diff --git a/e_hypotf.cpp b/e_hypotf.cpp
+--- a/e_hypotf.cpp
++++ b/e_hypotf.cpp
+@@ -8,18 +8,18 @@
+  *
+  * Developed at SunPro, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ #include "math.h"
+ #include "math_private.h"
+ 
+ float
+ __ieee754_hypotf(float x, float y)
+ {
+ 	float a,b,t1,t2,y1,y2,w;
 diff --git a/e_log.cpp b/e_log.cpp
 --- a/e_log.cpp
 +++ b/e_log.cpp
@@ -253,6 +277,30 @@ diff --git a/e_log10.cpp b/e_log10.cpp
  log10_2lo  =  3.69423907715893078616e-13; /* 0x3D59FEF3, 0x11F12B36 */
  
  static const double zero   =  0.0;
+diff --git a/e_log10f.cpp b/e_log10f.cpp
+--- a/e_log10f.cpp
++++ b/e_log10f.cpp
+@@ -4,18 +4,18 @@
+  *
+  * Developed at SunPro, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /*
+  * Float version of e_log10.c.  See the latter for most comments.
+  */
+ 
+ #include "math.h"
+ #include "math_private.h"
+ #include "k_logf.h"
 diff --git a/e_log2.cpp b/e_log2.cpp
 --- a/e_log2.cpp
 +++ b/e_log2.cpp
@@ -426,6 +474,30 @@ diff --git a/k_log.h b/k_log.h
   * The following describes the overall strategy for computing
   * logarithms in base e.  The argument reduction and adding the final
   * term of the polynomial are done by the caller for increased accuracy
+diff --git a/k_logf.h b/k_logf.h
+--- a/k_logf.h
++++ b/k_logf.h
+@@ -4,18 +4,18 @@
+  *
+  * Developed at SunPro, a Sun Microsystems, Inc. business.
+  * Permission to use, copy, modify, and distribute this
+  * software is freely granted, provided that this notice
+  * is preserved.
+  * ====================================================
+  */
+ 
+-#include <sys/cdefs.h>
+-__FBSDID("$FreeBSD$");
++//#include <sys/cdefs.h>
++//__FBSDID("$FreeBSD$");
+ 
+ /*
+  * Float version of k_log.h.  See the latter for most comments.
+  */
+ 
+ static const float
+ /* |(log(1+s)-log(1-s))/s - Lg(s)| < 2**-34.24 (~[-4.95e-11, 4.97e-11]). */
+ Lg1 =      0xaaaaaa.0p-24,	/* 0.66666662693 */
 diff --git a/k_rem_pio2.cpp b/k_rem_pio2.cpp
 --- a/k_rem_pio2.cpp
 +++ b/k_rem_pio2.cpp
