@@ -14,10 +14,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/263be02fdeb0c3556
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 17c895088a..0102346036 100644
+index b2ad7adea8..757b0123d4 100644
 --- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
 +++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -281,7 +281,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
+@@ -284,7 +284,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
  
    that->stream_size_ = DesktopSize(width, height);
  
@@ -26,7 +26,7 @@ index 17c895088a..0102346036 100644
    auto builder = spa_pod_builder{buffer, sizeof(buffer)};
  
    // Setup buffers and meta header for new format.
-@@ -364,7 +364,7 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
+@@ -367,7 +367,7 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
    {
      PipeWireThreadLoopLock thread_loop_lock(that->pw_main_loop_);
  
@@ -35,7 +35,7 @@ index 17c895088a..0102346036 100644
  
      spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
  
-@@ -482,7 +482,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+@@ -485,7 +485,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
  
      pw_stream_add_listener(pw_stream_, &spa_stream_listener_,
                             &pw_stream_events_, this);
