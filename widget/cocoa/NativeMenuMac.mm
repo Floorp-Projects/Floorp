@@ -28,7 +28,6 @@
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 #include "nsDeviceContext.h"
-#include "nsCocoaFeatures.h"
 
 namespace mozilla {
 

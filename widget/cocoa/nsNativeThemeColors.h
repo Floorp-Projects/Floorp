@@ -8,7 +8,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include "nsCocoaFeatures.h"
 #include "SDKDeclarations.h"
 #include "mozilla/ColorScheme.h"
 

@@ -9,7 +9,6 @@
 #include "nsCocoaFeatures.h"
 #include "nsNativeThemeColors.h"
 #include "nsStyleConsts.h"
-#include "nsCocoaFeatures.h"
 #include "nsIContent.h"
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
