@@ -231,7 +231,11 @@ class MOZ_RAII AutoProfilerStats {
     MACRO(20, "processcpu", ProcessCPU,                                      \
           "Sample the CPU utilization of each process")                      \
                                                                              \
-    MACRO(21, "power", Power, POWER_HELP)
+    MACRO(21, "power", Power, POWER_HELP)                                    \
+                                                                             \
+    MACRO(22, "cpufreq", CPUFrequency,                                       \
+          "Record the clock frequency of "                                   \
+          "every CPU core for every profiler sample.")
 // *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {

@@ -38,6 +38,7 @@
 #include "ProfilerChild.h"
 #include "ProfilerCodeAddressService.h"
 #include "ProfilerControl.h"
+#include "ProfilerCPUFreq.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "ProfilerParent.h"
 #include "ProfilerRustBindings.h"
@@ -357,6 +358,9 @@ static uint32_t AvailableFeatures() {
 
 #if !defined(GP_OS_windows)
   ProfilerFeature::ClearNoTimerResolutionChange(features);
+#endif
+#if !defined(HAVE_CPU_FREQ_SUPPORT)
+  ProfilerFeature::ClearCPUFrequency(features);
 #endif
 
   return features;
@@ -762,6 +766,7 @@ class ActivePS {
                                     ? new ProcessCPUCounter(aLock)
                                     : nullptr),
         mMaybePowerCounters(nullptr),
+        mMaybeCPUFreq(nullptr),
         // The new sampler thread doesn't start sampling immediately because the
         // main loop within Run() is blocked until this function's caller
         // unlocks gPSMutex.
@@ -816,6 +821,10 @@ class ActivePS {
         locked_profiler_add_sampled_counter(aLock, powerCounter);
       }
     }
+
+    if (ProfilerFeature::HasCPUFrequency(aFeatures)) {
+      mMaybeCPUFreq = new ProfilerCPUFreq();
+    }
   }
 
   ~ActivePS() {
@@ -825,6 +834,8 @@ class ActivePS {
     MOZ_ASSERT(
         !mMaybePowerCounters,
         "mMaybePowerCounters should have been deleted before ~ActivePS()");
+    MOZ_ASSERT(!mMaybeCPUFreq,
+               "mMaybeCPUFreq should have been deleted before ~ActivePS()");
 
 #if !defined(RELEASE_OR_BETA)
     if (ShouldInterposeIOs()) {
@@ -907,6 +918,11 @@ class ActivePS {
       }
       delete sInstance->mMaybePowerCounters;
       sInstance->mMaybePowerCounters = nullptr;
+    }
+
+    if (sInstance->mMaybeCPUFreq) {
+      delete sInstance->mMaybeCPUFreq;
+      sInstance->mMaybeCPUFreq = nullptr;
     }
 
     auto samplerThread = sInstance->mSamplerThread;
@@ -1215,6 +1231,8 @@ class ActivePS {
 
   PS_GET(PowerCounters*, MaybePowerCounters);
 
+  PS_GET(ProfilerCPUFreq*, MaybeCPUFreq);
+
   PS_GET_AND_SET(bool, IsPaused)
 
   // True if sampling is paused (though generic `SetIsPaused()` or specific
@@ -1446,6 +1464,9 @@ class ActivePS {
 
   // Used to collect power use data, if the power feature is on.
   PowerCounters* mMaybePowerCounters;
+
+  // Used to collect cpu frequency, if the CPU frequency feature is on.
+  ProfilerCPUFreq* mMaybeCPUFreq;
 
   // The current sampler thread. This class is not responsible for destroying
   // the SamplerThread object; the Destroy() method returns it so the caller
@@ -3912,6 +3933,26 @@ class SamplerThread {
   void operator=(const SamplerThread&) = delete;
 };
 
+namespace geckoprofiler::markers {
+struct CPUSpeedMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("CPUSpeed");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   uint32_t aCPUSpeedMHz) {
+    aWriter.DoubleProperty("speed", double(aCPUSpeedMHz) / 1000);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.SetTableLabel("{marker.name} Speed = {marker.data.speed}GHz");
+    schema.AddKeyLabelFormat("speed", "CPU Speed (GHz)", MS::Format::String);
+    schema.AddChartColor("speed", MS::GraphType::Bar, MS::GraphColor::Ink);
+    return schema;
+  }
+};
+}  // namespace geckoprofiler::markers
+
 // [[nodiscard]] static
 bool ActivePS::AppendPostSamplingCallback(PSLockRef aLock,
                                           PostSamplingCallback&& aCallback) {
@@ -3986,6 +4027,35 @@ void SamplerThread::Run() {
   // interval, unless when sampling runs late -- See end of while() loop.
   TimeStamp scheduledSampleStart = TimeStamp::Now();
 
+#if defined(HAVE_CPU_FREQ_SUPPORT)
+  // Used to collect CPU core frequencies, if the cpufreq feature is on.
+  Vector<uint32_t> CPUSpeeds;
+
+  if (XRE_IsParentProcess() && ProfilerFeature::HasCPUFrequency(features) &&
+      CPUSpeeds.resize(GetNumberOfProcessors())) {
+    {
+      PSAutoLock lock;
+      if (ProfilerCPUFreq* cpuFreq = ActivePS::MaybeCPUFreq(lock); cpuFreq) {
+        cpuFreq->Sample();
+        for (size_t i = 0; i < CPUSpeeds.length(); ++i) {
+          CPUSpeeds[i] = cpuFreq->GetCPUSpeedMHz(i);
+        }
+      }
+    }
+    TimeStamp now = TimeStamp::Now();
+    for (size_t i = 0; i < CPUSpeeds.length(); ++i) {
+      nsAutoCString name;
+      name.AssignLiteral("CPU ");
+      name.AppendInt(i);
+
+      PROFILER_MARKER(name, OTHER,
+                      MarkerOptions(MarkerThreadId::MainThread(),
+                                    MarkerTiming::IntervalStart(now)),
+                      CPUSpeedMarker, CPUSpeeds[i]);
+    }
+  }
+#endif
+
   while (true) {
     const TimeStamp sampleStart = TimeStamp::Now();
 
@@ -4038,6 +4108,40 @@ void SamplerThread::Run() {
             processCPUCounter->Add(static_cast<int64_t>(*cpu));
           }
         }
+
+#if defined(HAVE_CPU_FREQ_SUPPORT)
+        if (XRE_IsParentProcess() && CPUSpeeds.length() > 0) {
+          unsigned newSpeed[CPUSpeeds.length()];
+          if (ProfilerCPUFreq* cpuFreq = ActivePS::MaybeCPUFreq(lock);
+              cpuFreq) {
+            cpuFreq->Sample();
+            for (size_t i = 0; i < CPUSpeeds.length(); ++i) {
+              newSpeed[i] = cpuFreq->GetCPUSpeedMHz(i);
+            }
+          }
+          TimeStamp now = TimeStamp::Now();
+          for (size_t i = 0; i < CPUSpeeds.length(); ++i) {
+            if (newSpeed[i] == CPUSpeeds[i]) {
+              continue;
+            }
+
+            nsAutoCString name;
+            name.AssignLiteral("CPU ");
+            name.AppendInt(i);
+
+            PROFILER_MARKER_UNTYPED(
+                name, OTHER,
+                MarkerOptions(MarkerThreadId::MainThread(),
+                              MarkerTiming::IntervalEnd(now)));
+            PROFILER_MARKER(name, OTHER,
+                            MarkerOptions(MarkerThreadId::MainThread(),
+                                          MarkerTiming::IntervalStart(now)),
+                            CPUSpeedMarker, newSpeed[i]);
+
+            CPUSpeeds[i] = newSpeed[i];
+          }
+        }
+#endif
 
         if (PowerCounters* powerCounters = ActivePS::MaybePowerCounters(lock);
             powerCounters) {

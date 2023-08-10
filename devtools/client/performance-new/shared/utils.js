@@ -552,6 +552,15 @@ const featureDescriptions = [
     })(),
     experimental: true,
   },
+  {
+    name: "CPU Frequency",
+    value: "cpufreq",
+    title:
+      "Record the clock frequency of every CPU core for every profiler sample.",
+    experimental: true,
+    disabledReason:
+      "This feature is only available on Windows, Linux and Android.",
+  },
 ];
 
 module.exports = {

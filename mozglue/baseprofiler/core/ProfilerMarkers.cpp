@@ -265,6 +265,25 @@ void MarkerSchema::Stream(JSONWriter& aWriter,
       }
     }
     aWriter.EndArray();
+
+    if (!mGraphs.empty()) {
+      aWriter.StartArrayProperty("graphs");
+      {
+        for (const GraphData& graph : mGraphs) {
+          aWriter.StartObjectElement();
+          {
+            aWriter.StringProperty("key", graph.mKey);
+            aWriter.StringProperty("type", GraphTypeToStringSpan(graph.mType));
+            if (graph.mColor) {
+              aWriter.StringProperty("color",
+                                     GraphColorToStringSpan(*graph.mColor));
+            }
+          }
+          aWriter.EndObject();
+        }
+      }
+      aWriter.EndArray();
+    }
   }
   aWriter.EndObject();
 }
@@ -327,6 +346,52 @@ Span<const char> MarkerSchema::FormatToStringSpan(
       return mozilla::MakeStringSpan("decimal");
     default:
       MOZ_CRASH("Unexpected Format enum");
+      return {};
+  }
+}
+
+/* static */
+Span<const char> MarkerSchema::GraphTypeToStringSpan(
+    MarkerSchema::GraphType aType) {
+  switch (aType) {
+    case GraphType::Line:
+      return mozilla::MakeStringSpan("line");
+    case GraphType::Bar:
+      return mozilla::MakeStringSpan("bar");
+    case GraphType::FilledLine:
+      return mozilla::MakeStringSpan("line-filled");
+    default:
+      MOZ_CRASH("Unexpected GraphType enum");
+      return {};
+  }
+}
+
+/* static */
+Span<const char> MarkerSchema::GraphColorToStringSpan(
+    MarkerSchema::GraphColor aColor) {
+  switch (aColor) {
+    case GraphColor::Blue:
+      return mozilla::MakeStringSpan("blue");
+    case GraphColor::Green:
+      return mozilla::MakeStringSpan("green");
+    case GraphColor::Grey:
+      return mozilla::MakeStringSpan("grey");
+    case GraphColor::Ink:
+      return mozilla::MakeStringSpan("ink");
+    case GraphColor::Magenta:
+      return mozilla::MakeStringSpan("magenta");
+    case GraphColor::Orange:
+      return mozilla::MakeStringSpan("orange");
+    case GraphColor::Purple:
+      return mozilla::MakeStringSpan("purple");
+    case GraphColor::Red:
+      return mozilla::MakeStringSpan("red");
+    case GraphColor::Teal:
+      return mozilla::MakeStringSpan("teal");
+    case GraphColor::Yellow:
+      return mozilla::MakeStringSpan("yellow");
+    default:
+      MOZ_CRASH("Unexpected GraphColor enum");
       return {};
   }
 }
