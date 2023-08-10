@@ -47,9 +47,6 @@ Bootstrap configures everything for GeckoView and Fennec (Firefox for Android) d
 
    git checkout central/default
 
-If you are on Windows, you will need to install the
-`Java 1.8 SDK <https://adoptopenjdk.net/?variant=openjdk8>`__.
-
 If you are on a mac, you will need to have the Xcode build tools
 installed. You can do this by either `installing
 Xcode <https://developer.apple.com/xcode/>`__ or installing only the
