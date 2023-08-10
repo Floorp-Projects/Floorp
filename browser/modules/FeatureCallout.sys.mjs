@@ -205,7 +205,6 @@ export class FeatureCallout {
         type: "touradvance",
         target: this._container,
       });
-      this._pageEventManager?.clear();
       // wait for fade out transition
       this.win.setTimeout(async () => {
         // If the initial message was deployed from outside by ASRouter as a
@@ -240,12 +239,10 @@ export class FeatureCallout {
           }
         }
         let updated = await this._updateConfig(nextMessage);
-        if (!updated) {
+        if (!updated && !this.currentScreen) {
           this.endTour();
           return;
         }
-        this._addCalloutLinkElements();
-        this._setupWindowFunctions();
         let rendering = await this._renderCallout();
         if (!rendering) {
           this.endTour();
@@ -328,34 +325,53 @@ export class FeatureCallout {
     }
   }
 
-  _addCalloutLinkElements() {
-    const addStylesheet = href => {
-      if (this.doc.querySelector(`link[href="${href}"]`)) {
-        return;
-      }
-      const link = this.doc.head.appendChild(this.doc.createElement("link"));
-      link.rel = "stylesheet";
-      link.href = href;
-    };
-    const addLocalization = hrefs => {
-      hrefs.forEach(href => {
-        this.win.MozXULElement.insertFTLIfNeeded(href);
-      });
-    };
-
-    // Update styling to be compatible with about:welcome bundle
-    addStylesheet(
-      "chrome://activity-stream/content/aboutwelcome/aboutwelcome.css"
-    );
-
-    addLocalization([
+  async _addCalloutLinkElements() {
+    for (const path of [
       "browser/newtab/onboarding.ftl",
       "browser/spotlight.ftl",
       "branding/brand.ftl",
       "toolkit/branding/brandings.ftl",
       "browser/newtab/asrouter.ftl",
       "browser/featureCallout.ftl",
-    ]);
+    ]) {
+      this.win.MozXULElement.insertFTLIfNeeded(path);
+    }
+
+    const addChromeSheet = async href => {
+      try {
+        this.win.windowUtils.loadSheetUsingURIString(
+          href,
+          Ci.nsIDOMWindowUtils.AUTHOR_SHEET
+        );
+      } catch (error) {
+        // the sheet was probably already loaded. I don't think there's a way to
+        // check for this via JS, but the method checks and throws if it's
+        // already loaded, so we can just treat the error as expected.
+      }
+    };
+    const addStylesheet = href => {
+      if (this.win.isChromeWindow) {
+        // for chrome, load the stylesheet using a special method to make sure
+        // it's loaded synchronously before the first paint & position.
+        return addChromeSheet(href);
+      }
+      if (this.doc.querySelector(`link[href="${href}"]`)) {
+        return null;
+      }
+      const link = this.doc.head.appendChild(this.doc.createElement("link"));
+      const loaded =
+        !!link.sheet ||
+        new Promise(resolve => {
+          link.addEventListener("load", resolve, { once: true });
+        });
+      link.rel = "stylesheet";
+      link.href = href;
+      return loaded;
+    };
+    // Update styling to be compatible with about:welcome bundle
+    await addStylesheet(
+      "chrome://activity-stream/content/aboutwelcome/aboutwelcome.css"
+    );
   }
 
   /**
@@ -1230,6 +1246,8 @@ export class FeatureCallout {
    * @returns {Promise<Boolean>} whether the callout was rendered.
    */
   async _renderCallout() {
+    this._setupWindowFunctions();
+    await this._addCalloutLinkElements();
     let container = this._createContainer();
     if (container) {
       // This results in rendering the Feature Callout
@@ -1354,6 +1372,37 @@ export class FeatureCallout {
   }
 
   /**
+   * Get the element that should be initially focused. Prioritize the primary
+   * button, then the secondary button, then any additional button, excluding
+   * pseudo-links and the dismiss button. If no button is found, focus the first
+   * input element. If no affirmative action is found, focus the first button,
+   * which is probably the dismiss button. If no button is found, focus the
+   * container itself.
+   * @returns {Element|null} The element to focus when the callout is shown.
+   */
+  getInitialFocus() {
+    if (!this._container) {
+      return null;
+    }
+    return (
+      this._container.querySelector(
+        ".primary:not(:disabled, [hidden], .text-link, .cta-link)"
+      ) ||
+      this._container.querySelector(
+        ".secondary:not(:disabled, [hidden], .text-link, .cta-link)"
+      ) ||
+      this._container.querySelector(
+        "button:not(:disabled, [hidden], .text-link, .cta-link, .dismiss-button)"
+      ) ||
+      this._container.querySelector("input:not(:disabled, [hidden])") ||
+      this._container.querySelector(
+        "button:not(:disabled, [hidden], .text-link, .cta-link)"
+      ) ||
+      this._container
+    );
+  }
+
+  /**
    * Show a feature callout message, either by requesting one from ASRouter or
    * by showing a message passed as an argument.
    * @param {Object} [message] optional message to show instead of requesting one
@@ -1376,19 +1425,13 @@ export class FeatureCallout {
           this.win.requestAnimationFrame(() => {
             this.win.requestAnimationFrame(() => {
               this.ready = true;
+              this._pageEventManager?.clear();
               this._attachPageEventListeners(
                 this.currentScreen?.content?.page_event_listeners
               );
               this.win.addEventListener("keypress", this, { capture: true });
               this._positionCallout();
-              let initialFocus =
-                this._container.querySelector(".primary") ||
-                this._container.querySelector(".secondary") ||
-                this._container.querySelector(
-                  "button:not(:disabled, [hidden])"
-                ) ||
-                this._container;
-              initialFocus?.focus();
+              this.getInitialFocus()?.focus();
               this.win.addEventListener("focus", this, {
                 capture: true, // get the event before retargeting
                 passive: true,
@@ -1409,8 +1452,6 @@ export class FeatureCallout {
       return false;
     }
 
-    this._addCalloutLinkElements();
-    this._setupWindowFunctions();
     let rendering = (await this._renderCallout()) && !!this.currentScreen;
     if (!rendering) {
       this.endTour();
