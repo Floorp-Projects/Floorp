@@ -124,8 +124,8 @@ MatchedFilterLagAggregator::PreEchoLagAggregator::PreEchoLagAggregator(
     size_t max_filter_lag,
     size_t down_sampling_factor)
     : block_size_log2_(GetDownSamplingBlockSizeLog2(down_sampling_factor)),
-      penalize_high_delays_initial_phase_(
-          field_trial::IsEnabled("WebRTC-Aec3PenalyzeHighDelaysInitialPhase")),
+      penalize_high_delays_initial_phase_(!field_trial::IsDisabled(
+          "WebRTC-Aec3PenalyzeHighDelaysInitialPhase")),
       histogram_(
           ((max_filter_lag + 1) * down_sampling_factor) >> kBlockSizeLog2,
           0) {
