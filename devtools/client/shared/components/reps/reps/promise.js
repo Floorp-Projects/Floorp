@@ -59,7 +59,7 @@ define(function (require, exports, module) {
       };
     }
 
-    if (props.mode !== MODE.TINY) {
+    if (props.mode !== MODE.TINY && props.mode !== MODE.HEADER) {
       return Grip.rep(props);
     }
 
@@ -69,6 +69,10 @@ define(function (require, exports, module) {
       className: "objectBox objectBox-object",
       title: shouldRenderTooltip ? "Promise" : null,
     };
+
+    if (props.mode === MODE.HEADER) {
+      return span(config, getTitle(object));
+    }
 
     const { Rep } = require("devtools/client/shared/components/reps/reps/rep");
 

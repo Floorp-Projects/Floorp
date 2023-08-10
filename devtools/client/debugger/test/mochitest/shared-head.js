@@ -2311,7 +2311,7 @@ async function assertPreviewTextValue(
  * @param {Array} previews
  */
 async function assertPreviews(dbg, previews) {
-  for (const { line, column, expression, result, fields } of previews) {
+  for (const { line, column, expression, result, header, fields } of previews) {
     info(" # Assert preview on " + line + ":" + column);
 
     if (result) {
@@ -2329,18 +2329,23 @@ async function assertPreviews(dbg, previews) {
         "popup"
       );
 
-      info("Wait for top level node to expand and child nodes to load");
-      await waitForElementWithSelector(
-        dbg,
-        ".preview-popup .node:first-of-type .arrow.expanded"
-      );
+      info("Wait for child nodes to load");
       await waitUntil(
         () => popupEl.querySelectorAll(".preview-popup .node").length > 1
       );
+      ok(true, "child nodes loaded");
 
       const oiNodes = Array.from(
         popupEl.querySelectorAll(".preview-popup .node")
       );
+
+      if (header) {
+        is(
+          oiNodes[0].querySelector(".objectBox").textContent,
+          header,
+          "popup has expected value"
+        );
+      }
 
       for (const [field, value] of fields) {
         const node = oiNodes.find(

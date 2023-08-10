@@ -67,6 +67,12 @@ describe("CommentNode", () => {
     );
     expectActorAttribute(component, object.actor);
 
+    component = renderRep({ mode: MODE.HEADER });
+    expect(component.text()).toEqual(
+      "<!-- test\\nand test\\na… test\\nand test -->"
+    );
+    expectActorAttribute(component, object.actor);
+
     component = renderRep({ mode: MODE.LONG });
     expect(component.text()).toEqual(`<!-- ${stub.preview.textContent} -->`);
     expectActorAttribute(component, object.actor);

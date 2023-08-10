@@ -85,6 +85,11 @@ define(function (require, exports, module) {
       return span(config, ...tinyModeItems);
     }
 
+    if (mode === MODE.HEADER) {
+      config.title = shouldRenderTooltip ? getTitle(props, object) : null;
+      return span(config, getTitleElement(props, object));
+    }
+
     const propsArray = safePropIterator(props, object, maxLengthMap.get(mode));
 
     config.title = shouldRenderTooltip ? getTitle(props, object) : null;

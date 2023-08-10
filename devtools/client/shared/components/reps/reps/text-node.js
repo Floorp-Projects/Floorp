@@ -46,7 +46,7 @@ define(function (require, exports, module) {
     const config = getElementConfig({ ...props, isInTree });
     const inspectIcon = getInspectIcon({ ...props, isInTree });
 
-    if (mode === MODE.TINY) {
+    if (mode === MODE.TINY || mode === MODE.HEADER) {
       return span(config, getTitle(grip), inspectIcon);
     }
 

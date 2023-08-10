@@ -8,6 +8,9 @@
 "use strict";
 
 add_task(async function () {
+  // Make sure the toolbox is tall enough to be able to display the whole popup.
+  await pushPref("devtools.toolbox.footer.height", 500);
+
   const dbg = await initDebugger(
     "doc-preview-getter.html",
     "preview-getter.js"
@@ -20,11 +23,7 @@ add_task(async function () {
   info("Hovers over 'this' token to display the preview.");
   const { tokenEl } = await tryHovering(dbg, 5, 8, "previewPopup");
 
-  info("Wait for top level node to expand");
-  await waitForElementWithSelector(
-    dbg,
-    ".preview-popup .tree-node:first-of-type .arrow.expanded"
-  );
+  info("Wait for properties to be loaded");
   await waitUntil(
     () => dbg.win.document.querySelectorAll(".preview-popup .node").length > 1
   );
