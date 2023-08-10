@@ -365,23 +365,19 @@ class MessageLogger(object):
 
 
 def call(*args, **kwargs):
-    """front-end function to mozprocess.ProcessHandler"""
-    # TODO: upstream -> mozprocess
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=791383
+    """wraps mozprocess.run_and_wait with process output logging"""
     log = get_proxy_logger("mochitest")
 
-    def on_output(line):
+    def on_output(proc, line):
+        cmdline = subprocess.list2cmdline(proc.args)
         log.process_output(
-            process=process.pid,
-            data=line.decode("utf8", "replace"),
-            command=process.commandline,
+            process=proc.pid,
+            data=line,
+            command=cmdline,
         )
 
-    process = mozprocess.ProcessHandlerMixin(
-        *args, processOutputLine=on_output, **kwargs
-    )
-    process.run()
-    return process.wait()
+    process = mozprocess.run_and_wait(*args, output_line_handler=on_output, **kwargs)
+    return process.returncode
 
 
 def killPid(pid, log):
@@ -568,16 +564,26 @@ class MochitestServer(object):
             self._utilityPath, "xpcshell" + mozinfo.info["bin_suffix"]
         )
         command = [xpcshell] + args
-        server_logfile = None
         if MOCHITEST_SERVER_LOGGING and "MOZ_UPLOAD_DIR" in os.environ:
-            server_logfile = os.path.join(
+            server_logfile_path = os.path.join(
                 os.environ["MOZ_UPLOAD_DIR"],
                 "mochitest-server-%d.txt" % MochitestServer.instance_count,
             )
-        self._process = mozprocess.ProcessHandler(
-            command, cwd=SCRIPT_DIR, env=env, logfile=server_logfile
-        )
-        self._process.run()
+            self.server_logfile = open(server_logfile_path, "w")
+            self._process = subprocess.Popen(
+                command,
+                cwd=SCRIPT_DIR,
+                env=env,
+                stdout=self.server_logfile,
+                stderr=subprocess.STDOUT,
+            )
+        else:
+            self.server_logfile = None
+            self._process = subprocess.Popen(
+                command,
+                cwd=SCRIPT_DIR,
+                env=env,
+            )
         self._log.info("%s : launching %s" % (self.__class__.__name__, command))
         pid = self._process.pid
         self._log.info("runtests.py | Server pid: %d" % pid)
@@ -619,6 +625,8 @@ class MochitestServer(object):
             self._log.info("Failed to stop web server on %s" % self.shutdownURL)
             traceback.print_exc()
         finally:
+            if self.server_logfile is not None:
+                self.server_logfile.close()
             if self._process is not None:
                 # Kill the server immediately to avoid logging intermittent
                 # shutdown crashes, sometimes observed on Windows 10.
@@ -667,13 +675,9 @@ class WebSocketServer(object):
         env["PYTHONPATH"] = os.pathsep.join(sys.path)
         # Start the process. Ignore stderr so that exceptions from the server
         # are not treated as failures when parsing the test log.
-        self._process = mozprocess.ProcessHandler(
-            cmd,
-            cwd=SCRIPT_DIR,
-            env=env,
-            processStderrLine=lambda _: None,
+        self._process = subprocess.Popen(
+            cmd, cwd=SCRIPT_DIR, env=env, stderr=subprocess.DEVNULL
         )
-        self._process.run()
         pid = self._process.pid
         self._log.info("runtests.py | Websocket server pid: %d" % pid)
 
@@ -888,7 +892,7 @@ def findTestMediaDevices(log):
         gst = gst010
     else:
         gst = gst10
-    process = mozprocess.ProcessHandler(
+    process = subprocess.Popen(
         [
             gst,
             "--no-fault",
@@ -900,7 +904,6 @@ def findTestMediaDevices(log):
             "device=%s" % device,
         ]
     )
-    process.run()
     info["video"] = {"name": name, "process": process}
 
     # check if PulseAudio module-null-sink is loaded
@@ -1339,8 +1342,7 @@ class MochitestDesktop(object):
             "--port",
             options.websocket_process_bridge_port,
         ]
-        self.websocketProcessBridge = mozprocess.ProcessHandler(command, cwd=SCRIPT_DIR)
-        self.websocketProcessBridge.run()
+        self.websocketProcessBridge = subprocess.Popen(command, cwd=SCRIPT_DIR)
         self.log.info(
             "runtests.py | websocket/process bridge pid: %d"
             % self.websocketProcessBridge.pid
@@ -1348,7 +1350,7 @@ class MochitestDesktop(object):
 
         # ensure the server is up, wait for at most ten seconds
         for i in range(1, 100):
-            if self.websocketProcessBridge.proc.poll() is not None:
+            if self.websocketProcessBridge.poll() is not None:
                 self.log.error(
                     "runtests.py | websocket/process bridge failed "
                     "to launch. Are all the dependencies installed?"
@@ -2126,17 +2128,16 @@ toolbar#nav-bar {
                     continue
         else:
 
-            def _psInfo(line):
+            def _psInfo(_, line):
                 if pname in line:
                     self.log.info(line)
 
-            process = mozprocess.ProcessHandler(
-                ["ps", "-f"], processOutputLine=_psInfo, universal_newlines=True
+            mozprocess.run_and_wait(
+                ["ps", "-f"],
+                output_line_handler=_psInfo,
             )
-            process.run()
-            process.wait()
 
-            def _psKill(line):
+            def _psKill(_, line):
                 parts = line.split()
                 if len(parts) == 3 and parts[0].isdigit():
                     pid = int(parts[0])
@@ -2151,13 +2152,10 @@ toolbar#nav-bar {
                                 % (pname, pid)
                             )
 
-            process = mozprocess.ProcessHandler(
+            mozprocess.run_and_wait(
                 ["ps", "-o", "pid,ppid,comm"],
-                processOutputLine=_psKill,
-                universal_newlines=True,
+                output_line_handler=_psKill,
             )
-            process.run()
-            process.wait()
 
     def execute_start_script(self):
         if not self.start_script or not self.marionette:
