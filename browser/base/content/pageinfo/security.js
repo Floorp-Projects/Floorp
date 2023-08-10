@@ -14,7 +14,6 @@ const { DownloadUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
-  PluralForm: "resource://gre/modules/PluralForm.sys.mjs",
 });
 
 var security = {

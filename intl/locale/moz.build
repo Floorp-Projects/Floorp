@@ -52,7 +52,6 @@ UNIFIED_SOURCES += [
 
 EXTRA_JS_MODULES += [
     "LangPackMatcher.sys.mjs",
-    "PluralForm.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

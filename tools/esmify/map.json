@@ -713,7 +713,6 @@
   "resource://gre/modules/PlacesSyncUtils.jsm": "toolkit/components/places/PlacesSyncUtils.jsm",
   "resource://gre/modules/PlacesTransactions.jsm": "toolkit/components/places/PlacesTransactions.jsm",
   "resource://gre/modules/PlacesUtils.jsm": "toolkit/components/places/PlacesUtils.jsm",
-  "resource://gre/modules/PluralForm.jsm": "intl/locale/PluralForm.jsm",
   "resource://gre/modules/PolicySearchEngine.jsm": "toolkit/components/search/PolicySearchEngine.jsm",
   "resource://gre/modules/PopupNotifications.jsm": "toolkit/modules/PopupNotifications.jsm",
   "resource://gre/modules/Preferences.jsm": "toolkit/modules/Preferences.jsm",

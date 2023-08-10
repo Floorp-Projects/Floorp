@@ -24,7 +24,6 @@ const JSMs = [
   "resource://gre/modules/LightweightThemeManager.jsm",
   "resource://gre/modules/NetUtil.jsm",
   "resource://gre/modules/PlacesUtils.jsm",
-  "resource://gre/modules/PluralForm.jsm",
   "resource://gre/modules/PrivateBrowsingUtils.jsm",
   "resource://gre/modules/Timer.jsm",
   "resource://gre/modules/XPCOMUtils.jsm",

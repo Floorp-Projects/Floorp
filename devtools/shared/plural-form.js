@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * The code below is mostly is a slight modification of intl/locale/PluralForm.jsm that
- * removes dependencies on chrome privileged APIs. To make maintenance easier, this file
- * is kept as close as possible to the original in terms of implementation.
- * The modified methods here are
+ * The code below is mostly is a slight modification of the now removed
+ * intl/locale/PluralForm.jsm that removes dependencies on chrome privileged
+ * APIs. To make maintenance easier, this file is kept as close as possible to
+ * the original in terms of implementation. The modified methods here are
  * - makeGetter (remove code adding the caller name to the log)
  * - get ruleNum() (rely on LocalizationHelper instead of String.services)
  * - log() (rely on console.log)
