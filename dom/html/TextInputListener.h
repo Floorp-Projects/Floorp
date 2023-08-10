@@ -67,9 +67,7 @@ class TextInputListener final : public nsIDOMEventListener,
  protected:
   virtual ~TextInputListener() = default;
 
-  nsresult UpdateTextInputCommands(const nsAString& aCommandsToUpdate,
-                                   dom::Selection* aSelection = nullptr,
-                                   int16_t aReason = 0);
+  nsresult UpdateTextInputCommands(const nsAString& aCommandsToUpdate);
 
  protected:
   nsIFrame* mFrame;

@@ -864,7 +864,7 @@ void TextInputListener::OnSelectionChange(Selection& aSelection,
     return;
   }
 
-  UpdateTextInputCommands(u"select"_ns, &aSelection, aReason);
+  UpdateTextInputCommands(u"select"_ns);
 }
 
 MOZ_CAN_RUN_SCRIPT
@@ -1061,8 +1061,7 @@ void TextInputListener::HandleValueChanged(TextEditor& aTextEditor) {
 }
 
 nsresult TextInputListener::UpdateTextInputCommands(
-    const nsAString& aCommandsToUpdate, Selection* aSelection,
-    int16_t aReason) {
+    const nsAString& aCommandsToUpdate) {
   nsIContent* content = mFrame->GetContent();
   if (NS_WARN_IF(!content)) {
     return NS_ERROR_FAILURE;
@@ -1075,7 +1074,7 @@ nsresult TextInputListener::UpdateTextInputCommands(
   if (NS_WARN_IF(!domWindow)) {
     return NS_ERROR_FAILURE;
   }
-  domWindow->UpdateCommands(aCommandsToUpdate, aSelection, aReason);
+  domWindow->UpdateCommands(aCommandsToUpdate);
   return NS_OK;
 }
 

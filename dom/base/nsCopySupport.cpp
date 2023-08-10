@@ -898,7 +898,7 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
   // Now that we have copied, update the clipboard commands. This should have
   // the effect of updating the enabled state of the paste menu item.
   if (doDefault || count) {
-    piWindow->UpdateCommands(u"clipboard"_ns, nullptr, 0);
+    piWindow->UpdateCommands(u"clipboard"_ns);
   }
 
   if (aActionTaken) {
