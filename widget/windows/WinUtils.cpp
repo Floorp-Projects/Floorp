@@ -604,18 +604,6 @@ nsWindow* WinUtils::GetNSWindowPtr(HWND aWnd) {
   return sExtantNSWindows.Get(aWnd);  // or nullptr
 }
 
-static BOOL CALLBACK AddMonitor(HMONITOR, HDC, LPRECT, LPARAM aParam) {
-  (*(int32_t*)aParam)++;
-  return TRUE;
-}
-
-/* static */
-int32_t WinUtils::GetMonitorCount() {
-  int32_t monitorCount = 0;
-  EnumDisplayMonitors(nullptr, nullptr, AddMonitor, (LPARAM)&monitorCount);
-  return monitorCount;
-}
-
 /* static */
 bool WinUtils::IsOurProcessWindow(HWND aWnd) {
   if (!aWnd) {
