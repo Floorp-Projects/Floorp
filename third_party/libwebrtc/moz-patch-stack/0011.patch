@@ -63,7 +63,7 @@ index 567b5b36f3..0ec14bc8c6 100644
    int32_t RTT(uint32_t remote_ssrc,
                int64_t* last_rtt_ms,
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 75fee87deb..7fd56600c7 100644
+index d87763ac41..4852f01e0f 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 @@ -506,6 +506,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
@@ -79,7 +79,7 @@ index 75fee87deb..7fd56600c7 100644
      const {
    return rtcp_receiver_.GetLatestReportBlockData();
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index c8e90c25b0..38e20261c5 100644
+index f9d7c7234c..d54d3632cd 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
 @@ -184,6 +184,9 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
@@ -93,7 +93,7 @@ index c8e90c25b0..38e20261c5 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index d33ef86169..12c2ee2317 100644
+index 79ae08d2ea..ad824538e2 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 @@ -486,6 +486,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
@@ -109,7 +109,7 @@ index d33ef86169..12c2ee2317 100644
      const {
    return rtcp_receiver_.GetLatestReportBlockData();
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index e6da54929b..79833288de 100644
+index 214ef0406c..f9443ffd35 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 @@ -197,6 +197,9 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
@@ -123,7 +123,7 @@ index e6da54929b..79833288de 100644
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
    // Within this list, the ReportBlockData::RTCPReportBlock::source_ssrc(),
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 66a29c9ddd..7f329ab1a7 100644
+index 92f1a5bbe6..69c695c437 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -392,6 +392,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {

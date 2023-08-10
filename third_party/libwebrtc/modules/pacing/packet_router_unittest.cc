@@ -41,6 +41,7 @@ using ::testing::Field;
 using ::testing::Gt;
 using ::testing::Le;
 using ::testing::NiceMock;
+using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::Return;
 using ::testing::SaveArg;
@@ -194,10 +195,8 @@ TEST_F(PacketRouterTest, PadsOnLastActiveMediaStream) {
   EXPECT_CALL(rtp_1, SupportsPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_1, SupportsRtxPayloadPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_1, TrySendPacket).WillRepeatedly(Return(false));
-  EXPECT_CALL(
-      rtp_1,
-      TrySendPacket(
-          ::testing::Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc1)), _))
+  EXPECT_CALL(rtp_1, TrySendPacket(
+                         Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc1)), _))
       .WillRepeatedly(Return(true));
 
   NiceMock<MockRtpRtcpInterface> rtp_2;
@@ -205,10 +204,8 @@ TEST_F(PacketRouterTest, PadsOnLastActiveMediaStream) {
   EXPECT_CALL(rtp_2, SupportsPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_2, SupportsRtxPayloadPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_2, TrySendPacket).WillRepeatedly(Return(false));
-  EXPECT_CALL(
-      rtp_2,
-      TrySendPacket(
-          ::testing::Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc2)), _))
+  EXPECT_CALL(rtp_2, TrySendPacket(
+                         Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc2)), _))
       .WillRepeatedly(Return(true));
 
   // Third module is sending media, but does not support rtx.
@@ -217,10 +214,8 @@ TEST_F(PacketRouterTest, PadsOnLastActiveMediaStream) {
   EXPECT_CALL(rtp_3, SupportsPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_3, SupportsRtxPayloadPadding).WillRepeatedly(Return(false));
   EXPECT_CALL(rtp_3, TrySendPacket).WillRepeatedly(Return(false));
-  EXPECT_CALL(
-      rtp_3,
-      TrySendPacket(
-          ::testing::Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc3)), _))
+  EXPECT_CALL(rtp_3, TrySendPacket(
+                         Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc3)), _))
       .WillRepeatedly(Return(true));
 
   packet_router_.AddSendRtpModule(&rtp_1, false);
@@ -346,8 +341,8 @@ TEST_F(PacketRouterTest, SendPacketWithoutTransportSequenceNumbers) {
   EXPECT_CALL(
       rtp_1,
       TrySendPacket(
-          Property(&RtpPacketToSend::HasExtension<TransportSequenceNumber>,
-                   false),
+          Pointee(Property(
+              &RtpPacketToSend::HasExtension<TransportSequenceNumber>, false)),
           _))
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
@@ -375,10 +370,10 @@ TEST_F(PacketRouterTest, SendPacketAssignsTransportSequenceNumbers) {
   EXPECT_TRUE(packet->ReserveExtension<TransportSequenceNumber>());
   EXPECT_CALL(
       rtp_1,
-      TrySendPacket(
-          Property(&RtpPacketToSend::GetExtension<TransportSequenceNumber>,
-                   transport_sequence_number),
-          _))
+      TrySendPacket(Pointee(Property(
+                        &RtpPacketToSend::GetExtension<TransportSequenceNumber>,
+                        transport_sequence_number)),
+                    _))
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
@@ -388,10 +383,10 @@ TEST_F(PacketRouterTest, SendPacketAssignsTransportSequenceNumbers) {
 
   EXPECT_CALL(
       rtp_2,
-      TrySendPacket(
-          Property(&RtpPacketToSend::GetExtension<TransportSequenceNumber>,
-                   transport_sequence_number),
-          _))
+      TrySendPacket(Pointee(Property(
+                        &RtpPacketToSend::GetExtension<TransportSequenceNumber>,
+                        transport_sequence_number)),
+                    _))
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
@@ -413,10 +408,11 @@ TEST_F(PacketRouterTest, DoesNotIncrementTransportSequenceNumberOnSendFailure) {
   auto packet = BuildRtpPacket(kSsrc);
   EXPECT_TRUE(packet->ReserveExtension<TransportSequenceNumber>());
   EXPECT_CALL(
-      rtp, TrySendPacket(
-               Property(&RtpPacketToSend::GetExtension<TransportSequenceNumber>,
-                        kStartTransportSequenceNumber),
-               _))
+      rtp,
+      TrySendPacket(Pointee(Property(
+                        &RtpPacketToSend::GetExtension<TransportSequenceNumber>,
+                        kStartTransportSequenceNumber)),
+                    _))
       .WillOnce(Return(false));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
@@ -426,10 +422,11 @@ TEST_F(PacketRouterTest, DoesNotIncrementTransportSequenceNumberOnSendFailure) {
   EXPECT_TRUE(packet->ReserveExtension<TransportSequenceNumber>());
 
   EXPECT_CALL(
-      rtp, TrySendPacket(
-               Property(&RtpPacketToSend::GetExtension<TransportSequenceNumber>,
-                        kStartTransportSequenceNumber),
-               _))
+      rtp,
+      TrySendPacket(Pointee(Property(
+                        &RtpPacketToSend::GetExtension<TransportSequenceNumber>,
+                        kStartTransportSequenceNumber)),
+                    _))
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 

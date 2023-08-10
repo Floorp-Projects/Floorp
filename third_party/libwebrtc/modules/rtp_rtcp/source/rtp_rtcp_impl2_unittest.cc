@@ -728,7 +728,8 @@ TEST_F(RtpRtcpImpl2Test, StoresPacketInfoForSentPackets) {
   packet.SetTimestamp(1);
   packet.set_first_packet_of_frame(true);
   packet.SetMarker(true);
-  sender_.impl_->TrySendPacket(&packet, pacing_info);
+  sender_.impl_->TrySendPacket(std::make_unique<RtpPacketToSend>(packet),
+                               pacing_info);
   AdvanceTime(TimeDelta::Millis(1));
 
   std::vector<RtpSequenceNumberMap::Info> seqno_info =
@@ -743,13 +744,16 @@ TEST_F(RtpRtcpImpl2Test, StoresPacketInfoForSentPackets) {
   packet.SetTimestamp(2);
   packet.set_first_packet_of_frame(true);
   packet.SetMarker(false);
-  sender_.impl_->TrySendPacket(&packet, pacing_info);
+  sender_.impl_->TrySendPacket(std::make_unique<RtpPacketToSend>(packet),
+                               pacing_info);
 
   packet.set_first_packet_of_frame(false);
-  sender_.impl_->TrySendPacket(&packet, pacing_info);
+  sender_.impl_->TrySendPacket(std::make_unique<RtpPacketToSend>(packet),
+                               pacing_info);
 
   packet.SetMarker(true);
-  sender_.impl_->TrySendPacket(&packet, pacing_info);
+  sender_.impl_->TrySendPacket(std::make_unique<RtpPacketToSend>(packet),
+                               pacing_info);
 
   AdvanceTime(TimeDelta::Millis(1));
 
@@ -907,7 +911,7 @@ TEST_F(RtpRtcpImpl2Test, PaddingNotAllowedInMiddleOfFrame) {
   packet->set_first_packet_of_frame(true);
   packet->SetMarker(false);  // Marker false - not last packet of frame.
 
-  EXPECT_TRUE(sender_.impl_->TrySendPacket(packet.get(), pacing_info));
+  EXPECT_TRUE(sender_.impl_->TrySendPacket(std::move(packet), pacing_info));
 
   // Padding not allowed in middle of frame.
   EXPECT_THAT(sender_.impl_->GeneratePadding(kPaddingSize), SizeIs(0u));
@@ -917,7 +921,7 @@ TEST_F(RtpRtcpImpl2Test, PaddingNotAllowedInMiddleOfFrame) {
   packet->set_first_packet_of_frame(true);
   packet->SetMarker(true);
 
-  EXPECT_TRUE(sender_.impl_->TrySendPacket(packet.get(), pacing_info));
+  EXPECT_TRUE(sender_.impl_->TrySendPacket(std::move(packet), pacing_info));
 
   // Padding is OK again.
   EXPECT_THAT(sender_.impl_->GeneratePadding(kPaddingSize), SizeIs(Gt(0u)));
@@ -936,7 +940,7 @@ TEST_F(RtpRtcpImpl2Test, PaddingTimestampMatchesMedia) {
   auto padding = sender_.impl_->GeneratePadding(kPaddingSize);
   ASSERT_FALSE(padding.empty());
   for (auto& packet : padding) {
-    sender_.impl_->TrySendPacket(packet.get(), PacedPacketInfo());
+    sender_.impl_->TrySendPacket(std::move(packet), PacedPacketInfo());
   }
 
   // Verify we sent a new packet, but with the same timestamp.

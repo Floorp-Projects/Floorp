@@ -563,7 +563,8 @@ TEST_F(RtpRtcpImplTest, StoresPacketInfoForSentPackets) {
   packet.SetTimestamp(1);
   packet.set_first_packet_of_frame(true);
   packet.SetMarker(true);
-  sender_.impl_->TrySendPacket(&packet, pacing_info);
+  sender_.impl_->TrySendPacket(std::make_unique<RtpPacketToSend>(packet),
+                               pacing_info);
 
   std::vector<RtpSequenceNumberMap::Info> seqno_info =
       sender_.impl_->GetSentRtpPacketInfos(std::vector<uint16_t>{1});
@@ -577,13 +578,16 @@ TEST_F(RtpRtcpImplTest, StoresPacketInfoForSentPackets) {
   packet.SetTimestamp(2);
   packet.set_first_packet_of_frame(true);
   packet.SetMarker(false);
-  sender_.impl_->TrySendPacket(&packet, pacing_info);
+  sender_.impl_->TrySendPacket(std::make_unique<RtpPacketToSend>(packet),
+                               pacing_info);
 
   packet.set_first_packet_of_frame(false);
-  sender_.impl_->TrySendPacket(&packet, pacing_info);
+  sender_.impl_->TrySendPacket(std::make_unique<RtpPacketToSend>(packet),
+                               pacing_info);
 
   packet.SetMarker(true);
-  sender_.impl_->TrySendPacket(&packet, pacing_info);
+  sender_.impl_->TrySendPacket(std::make_unique<RtpPacketToSend>(packet),
+                               pacing_info);
 
   seqno_info =
       sender_.impl_->GetSentRtpPacketInfos(std::vector<uint16_t>{2, 3, 4});
