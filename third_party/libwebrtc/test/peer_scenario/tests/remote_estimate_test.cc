@@ -61,7 +61,8 @@ TEST(RemoteEstimateEndToEnd, OfferedCapabilityIsInAnswer) {
 }
 
 TEST(RemoteEstimateEndToEnd, AudioUsesAbsSendTimeExtension) {
-  // Defined before PeerScenario so it gets destructed after, to avoid use after free.
+  // Defined before PeerScenario so it gets destructed after, to avoid use after
+  // free.
   std::atomic<bool> received_abs_send_time(false);
   PeerScenario s(*test_info_);
 
