@@ -163,7 +163,11 @@ class OpenTabsInView extends ViewPage {
     const recentTabs = Array.from(this.windows.values())
       .flat()
       .sort((a, b) => b.lastAccessed - a.lastAccessed);
-    return html`<card-container preserveCollapseState viewAllPage="opentabs">
+    return html`<card-container
+      preserveCollapseState
+      shortPageName="opentabs"
+      showViewAll="true"
+    >
       <h2 data-l10n-id="firefoxview-opentabs-header" slot="header"></h2>
       <fxview-tab-list
         @fxview-tab-list-primary-action=${onTabListRowClick}
@@ -260,7 +264,7 @@ class OpenTabsInViewCard extends MozLitElement {
 
   render() {
     return html`
-      <card-container>
+      <card-container shortPageName="opentabs">
         <h2 slot="header">${this.title}</h2>
         <div class="fxview-tab-list-container" slot="main">
           <fxview-tab-list

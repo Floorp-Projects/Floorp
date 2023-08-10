@@ -16,7 +16,8 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {boolean} hideHeader - Optional property given if the card container should not display a header
  * @property {boolean} isInnerCard - Optional property given if the card a nested card within another card and given a border rather than box-shadow
  * @property {boolean} preserveCollapseState - Whether or not the expanded/collapsed state should persist
- * @property {string} viewAllPage - The location hash for the 'View all' header link to navigate to
+ * @property {string} shortPageName - Page name that the 'View all' link will navigate to and the preserveCollapseState pref will use
+ * @property {boolean} showViewAll - True if you need to display a 'View all' header link to navigate
  */
 class CardContainer extends MozLitElement {
   constructor() {
@@ -30,7 +31,8 @@ class CardContainer extends MozLitElement {
     isExpanded: { type: Boolean },
     isInnerCard: { type: Boolean },
     preserveCollapseState: { type: Boolean },
-    viewAllPage: { type: String },
+    shortPageName: { type: String },
+    showViewAll: { type: Boolean },
   };
 
   static queries = {
@@ -46,8 +48,8 @@ class CardContainer extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    if (this.preserveCollapseState && this.viewAllPage) {
-      this.openStatePref = `browser.tabs.firefox-view.ui-state.${this.viewAllPage}.open`;
+    if (this.preserveCollapseState && this.shortPageName) {
+      this.openStatePref = `browser.tabs.firefox-view.ui-state.${this.shortPageName}.open`;
       this.isExpanded = Services.prefs.getBoolPref(this.openStatePref, true);
     }
   }
@@ -56,7 +58,7 @@ class CardContainer extends MozLitElement {
 
   onToggleContainer() {
     this.isExpanded = this.detailsExpanded;
-    if (this.preserveCollapseState && this.viewAllPage) {
+    if (this.preserveCollapseState) {
       Services.prefs.setBoolPref(this.openStatePref, this.isExpanded);
     }
   }
@@ -80,7 +82,7 @@ class CardContainer extends MozLitElement {
             id="header"
             class="card-container-header"
             ?hidden=${ifDefined(this.hideHeader)}
-            ?withViewAll=${ifDefined(this.viewAllPage)}
+            ?withViewAll=${this.showViewAll}
           >
             <span
               class="icon chevron-icon"
@@ -92,10 +94,10 @@ class CardContainer extends MozLitElement {
             <slot name="header"></slot>
           </summary>
           <a
-            href="about:firefoxview-next#${this.viewAllPage}"
+            href="about:firefoxview-next#${this.shortPageName}"
             class="view-all-link"
             data-l10n-id="firefoxview-view-all-link"
-            ?hidden=${!this.viewAllPage}
+            ?hidden=${!this.showViewAll}
           ></a>
           <slot name="main"></slot>
           <slot name="footer" class="card-container-footer"></slot>

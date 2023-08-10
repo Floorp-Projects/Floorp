@@ -296,7 +296,7 @@ class SyncedTabsInView extends ViewPage {
           data-l10n-id="firefoxview-syncedtabs-device-notabs"
         ></div>`;
     }
-    return html`<card-container>
+    return html`<card-container shortPageName="syncedtabs">
       <h2 slot="header">
         <span class="icon ${deviceType}" role="presentation"></span>
         ${deviceName}
@@ -394,7 +394,7 @@ class SyncedTabsInView extends ViewPage {
           );
         } else {
           renderArray.push(
-            html`<card-container
+            html`<card-container shortPageName="syncedtabs"
               >${this.deviceTemplate(
                 renderInfo[id].name,
                 renderInfo[id].deviceType,
@@ -469,7 +469,8 @@ class SyncedTabsInView extends ViewPage {
       renderArray.push(
         html`<card-container
           preserveCollapseState
-          viewAllPage=${this._currentSetupStateIndex == 4 ? "syncedtabs" : null}
+          shortPageName="syncedtabs"
+          ?showViewAll=${this._currentSetupStateIndex == 4}
         >
           >
           <h2
