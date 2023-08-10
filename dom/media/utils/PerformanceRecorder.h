@@ -323,7 +323,7 @@ class PerformanceRecorderImpl : public PerformanceRecorderBase {
       MOZ_ASSERT(elapsedTimeUs >= 0, "Elapsed time can't be less than 0!");
       aStageMutator(stage);
       AUTO_PROFILER_STATS(PROFILER_MARKER_UNTYPED);
-      ::profiler_add_marker(
+      profiler_add_marker(
           stage.Name(), stage.Category(),
           MarkerOptions(MarkerTiming::Interval(startTime, now)));
     }
