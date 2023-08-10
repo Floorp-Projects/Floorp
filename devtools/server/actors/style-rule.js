@@ -1142,7 +1142,7 @@ class StyleRuleActor extends Actor {
     }
 
     return selectorPromise.then(newCssRule => {
-      let ruleProps = null;
+      let entries = null;
       let isMatching = false;
 
       if (newCssRule) {
@@ -1151,19 +1151,24 @@ class StyleRuleActor extends Actor {
           newCssRule
         );
         if (ruleEntry.length === 1) {
-          ruleProps = this.pageStyle.getAppliedProps(node, ruleEntry, {
+          entries = this.pageStyle.getAppliedProps(node, ruleEntry, {
             matchedSelectors: true,
           });
         } else {
-          ruleProps = this.pageStyle.getNewAppliedProps(node, newCssRule);
+          entries = this.pageStyle.getNewAppliedProps(node, newCssRule);
         }
 
-        isMatching = ruleProps.entries.some(
+        isMatching = entries.some(
           ruleProp => !!ruleProp.matchedDesugaredSelectors.length
         );
       }
 
-      return { ruleProps, isMatching };
+      const result = { isMatching };
+      if (entries) {
+        result.ruleProps = { entries };
+      }
+
+      return result;
     });
   }
 
