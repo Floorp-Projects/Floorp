@@ -92,17 +92,23 @@ class RtcpTransceiverImpl {
 
   void HandleReceivedPacket(const rtcp::CommonHeader& rtcp_packet_header,
                             Timestamp now,
-                            std::vector<rtcp::ReportBlock>& report_blocks);
+                            std::vector<rtcp::ReportBlock>& rtcp_report_blocks,
+                            std::vector<ReportBlockData>& report_blocks);
   // Individual rtcp packet handlers.
   void HandleBye(const rtcp::CommonHeader& rtcp_packet_header);
   void HandleSenderReport(const rtcp::CommonHeader& rtcp_packet_header,
                           Timestamp now,
-                          std::vector<rtcp::ReportBlock>& report_blocks);
+                          std::vector<rtcp::ReportBlock>& rtcp_report_blocks,
+                          std::vector<ReportBlockData>& report_blocks);
   void HandleReceiverReport(const rtcp::CommonHeader& rtcp_packet_header,
-                            std::vector<rtcp::ReportBlock>& report_blocks);
-  void CallbackOnReportBlocks(
+                            Timestamp now,
+                            std::vector<rtcp::ReportBlock>& rtcp_report_blocks,
+                            std::vector<ReportBlockData>& report_blocks);
+  void HandleReportBlocks(
       uint32_t sender_ssrc,
-      rtc::ArrayView<const rtcp::ReportBlock> report_blocks);
+      Timestamp now,
+      rtc::ArrayView<const rtcp::ReportBlock> rtcp_report_blocks,
+      std::vector<ReportBlockData>& report_blocks);
   void HandlePayloadSpecificFeedback(
       const rtcp::CommonHeader& rtcp_packet_header,
       Timestamp now);
@@ -122,7 +128,8 @@ class RtcpTransceiverImpl {
                            uint32_t remote_ssrc);
   void ProcessReportBlocks(
       Timestamp now,
-      rtc::ArrayView<const rtcp::ReportBlock> report_blocks);
+      rtc::ArrayView<const rtcp::ReportBlock> rtcp_report_blocks,
+      rtc::ArrayView<const ReportBlockData> report_blocks);
 
   void ReschedulePeriodicCompoundPackets();
   void SchedulePeriodicCompoundPackets(TimeDelta delay);
