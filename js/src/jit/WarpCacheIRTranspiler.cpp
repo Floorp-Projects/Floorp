@@ -5177,9 +5177,9 @@ bool WarpCacheIRTranspiler::emitCallScriptedProxyGetShared(
 
   MCheckScriptedProxyGetResult* check =
       MCheckScriptedProxyGetResult::New(alloc(), target, id, call);
-  add(check);
+  addEffectfulUnsafe(check);
 
-  return true;
+  return resumeAfterUnchecked(check);
 }
 
 bool WarpCacheIRTranspiler::emitCallScriptedProxyGetResult(
@@ -5846,9 +5846,9 @@ bool WarpCacheIRTranspiler::emitCloseIterScriptedResult(ObjOperandId iterId,
 
   MCheckIsObj* check = MCheckIsObj::New(
       alloc(), call, uint8_t(CheckIsObjectKind::IteratorReturn));
-  add(check);
+  addEffectfulUnsafe(check);
 
-  return true;
+  return resumeAfterUnchecked(check);
 }
 
 bool WarpCacheIRTranspiler::emitGuardGlobalGeneration(

@@ -536,7 +536,7 @@
     id: Value
     value: Value
   guard: true
-  alias_set: none
+  alias_set: custom
 #endif
 
 - name: IdToStringOrSymbol
@@ -2418,7 +2418,7 @@
   result_type: Object
   guard: true
   folds_to: custom
-  alias_set: none
+  alias_set: custom
 
 - name: CheckObjCoercible
   operands:
