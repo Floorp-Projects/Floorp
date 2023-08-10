@@ -111,12 +111,13 @@ PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents,
   if (numberOfComponents <= MinPeriodicWaveSize) {
     m_periodicWaveSize = MinPeriodicWaveSize;
   } else {
-    unsigned npow2 =
-        exp2f(floorf(logf(numberOfComponents - 1.0) / logf(2.0f) + 1.0f));
+    unsigned npow2 = fdlibm_exp2f(floorf(
+        fdlibm_logf(numberOfComponents - 1.0) / fdlibm_logf(2.0f) + 1.0f));
     m_periodicWaveSize = std::min(MaxPeriodicWaveSize, npow2);
   }
 
-  m_numberOfRanges = (unsigned)(3.0f * logf(m_periodicWaveSize) / logf(2.0f));
+  m_numberOfRanges =
+      (unsigned)(3.0f * fdlibm_logf(m_periodicWaveSize) / fdlibm_logf(2.0f));
   m_bandLimitedTables.SetLength(m_numberOfRanges);
   m_lowestFundamentalFrequency = nyquist / maxNumberOfPartials();
   m_rateScale = m_periodicWaveSize / m_sampleRate;
@@ -168,7 +169,8 @@ void PeriodicWave::waveDataForFundamentalFrequency(
   float ratio = fundamentalFrequency > 0
                     ? fundamentalFrequency / m_lowestFundamentalFrequency
                     : 0.5;
-  float centsAboveLowestFrequency = logf(ratio) / logf(2.0f) * 1200;
+  float centsAboveLowestFrequency =
+      fdlibm_logf(ratio) / fdlibm_logf(2.0f) * 1200;
 
   // Add one to round-up to the next range just in time to truncate
   // partials before aliasing occurs.
@@ -207,7 +209,7 @@ unsigned PeriodicWave::numberOfPartialsForRange(unsigned rangeIndex) const {
   float centsToCull = rangeIndex * m_centsPerRange;
 
   // A value from 0 -> 1 representing what fraction of the partials to keep.
-  float cullingScale = exp2(-centsToCull / 1200);
+  float cullingScale = fdlibm_exp2f(-centsToCull / 1200);
 
   // The very top range will have all the partials culled.
   unsigned numberOfPartials = cullingScale * maxNumberOfPartials();
@@ -325,7 +327,7 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape) {
         // Sawtooth-shaped waveform with the first half ramping from
         // zero to maximum and the second half from minimum to zero.
         a = 0;
-        b = -invOmega * cos(0.5 * omega);
+        b = -invOmega * fdlibm_cos(0.5 * omega);
         break;
       case OscillatorType::Triangle:
         // Triangle-shaped waveform going from its maximum value to

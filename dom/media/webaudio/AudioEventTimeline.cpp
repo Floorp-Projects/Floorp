@@ -16,13 +16,13 @@ static float LinearInterpolate(double t0, float v0, double t1, float v1,
 
 static float ExponentialInterpolate(double t0, float v0, double t1, float v1,
                                     double t) {
-  return v0 * powf(v1 / v0, (t - t0) / (t1 - t0));
+  return v0 * fdlibm_powf(v1 / v0, (t - t0) / (t1 - t0));
 }
 
 static float ExponentialApproach(double t0, double v0, float v1,
                                  double timeConstant, double t) {
   if (!mozilla::dom::WebAudioUtils::FuzzyEqual(timeConstant, 0.0)) {
-    return v1 + (v0 - v1) * expf(-(t - t0) / timeConstant);
+    return v1 + (v0 - v1) * fdlibm_expf(-(t - t0) / timeConstant);
   } else {
     return v1;
   }

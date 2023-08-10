@@ -62,8 +62,8 @@ class StereoPannerNodeEngine final : public AudioNodeEngine {
       aPanning += 1;
     }
 
-    aLeftGain = cos(0.5 * M_PI * aPanning);
-    aRightGain = sin(0.5 * M_PI * aPanning);
+    aLeftGain = fdlibm_cos(0.5 * M_PI * aPanning);
+    aRightGain = fdlibm_sin(0.5 * M_PI * aPanning);
   }
 
   void SetToSilentStereoBlock(AudioBlock* aChunk) {

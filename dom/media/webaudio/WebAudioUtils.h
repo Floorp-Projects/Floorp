@@ -10,6 +10,7 @@
 #include <cmath>
 #include <limits>
 #include <type_traits>
+#include "fdlibm.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Logging.h"
 #include "MediaSegment.h"
@@ -59,21 +60,21 @@ void ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
  * value is 0.
  */
 inline float ConvertLinearToDecibels(float aLinearValue, float aMinDecibels) {
-  return aLinearValue ? 20.0f * log10f(aLinearValue) : aMinDecibels;
+  return aLinearValue ? 20.0f * fdlibm_log10f(aLinearValue) : aMinDecibels;
 }
 
 /**
  * Converts a decibel value to a linear value.
  */
 inline float ConvertDecibelsToLinear(float aDecibels) {
-  return powf(10.0f, 0.05f * aDecibels);
+  return fdlibm_powf(10.0f, 0.05f * aDecibels);
 }
 
 /**
  * Converts a decibel to a linear value.
  */
 inline float ConvertDecibelToLinear(float aDecibel) {
-  return powf(10.0f, 0.05f * aDecibel);
+  return fdlibm_powf(10.0f, 0.05f * aDecibel);
 }
 
 inline void FixNaN(double& aDouble) {
@@ -84,7 +85,7 @@ inline void FixNaN(double& aDouble) {
 
 inline double DiscreteTimeConstantForSampleRate(double timeConstant,
                                                 double sampleRate) {
-  return 1.0 - exp(-1.0 / (sampleRate * timeConstant));
+  return 1.0 - fdlibm_exp(-1.0 / (sampleRate * timeConstant));
 }
 
 inline bool IsTimeValid(double aTime) {

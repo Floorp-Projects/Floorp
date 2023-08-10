@@ -34,6 +34,8 @@
 #include <algorithm>
 #include <math.h>
 
+#include "fdlibm.h"
+
 namespace WebCore {
 
 Biquad::Biquad() {
@@ -104,10 +106,10 @@ void Biquad::setLowpassParams(double cutoff, double resonance) {
     setNormalizedCoefficients(1, 0, 0, 1, 0, 0);
   } else if (cutoff > 0) {
     // Compute biquad coefficients for lowpass filter
-    double g = pow(10.0, -0.05 * resonance);
+    double g = fdlibm_pow(10.0, -0.05 * resonance);
     double w0 = M_PI * cutoff;
-    double cos_w0 = cos(w0);
-    double alpha = 0.5 * sin(w0) * g;
+    double cos_w0 = fdlibm_cos(w0);
+    double alpha = 0.5 * fdlibm_sin(w0) * g;
 
     double b1 = 1.0 - cos_w0;
     double b0 = 0.5 * b1;
@@ -133,10 +135,10 @@ void Biquad::setHighpassParams(double cutoff, double resonance) {
     setNormalizedCoefficients(0, 0, 0, 1, 0, 0);
   } else if (cutoff > 0) {
     // Compute biquad coefficients for highpass filter
-    double g = pow(10.0, -0.05 * resonance);
+    double g = fdlibm_pow(10.0, -0.05 * resonance);
     double w0 = M_PI * cutoff;
-    double cos_w0 = cos(w0);
-    double alpha = 0.5 * sin(w0) * g;
+    double cos_w0 = fdlibm_cos(w0);
+    double alpha = 0.5 * fdlibm_sin(w0) * g;
 
     double b1 = -1.0 - cos_w0;
     double b0 = -0.5 * b1;
@@ -170,7 +172,7 @@ void Biquad::setLowShelfParams(double frequency, double dbGain) {
   // Clip frequencies to between 0 and 1, inclusive.
   frequency = std::max(0.0, std::min(frequency, 1.0));
 
-  double A = pow(10.0, dbGain / 40);
+  double A = fdlibm_pow(10.0, dbGain / 40);
 
   if (frequency == 1) {
     // The z-transform is a constant gain.
@@ -178,8 +180,8 @@ void Biquad::setLowShelfParams(double frequency, double dbGain) {
   } else if (frequency > 0) {
     double w0 = M_PI * frequency;
     double S = 1;  // filter slope (1 is max value)
-    double alpha = 0.5 * sin(w0) * sqrt((A + 1 / A) * (1 / S - 1) + 2);
-    double k = cos(w0);
+    double alpha = 0.5 * fdlibm_sin(w0) * sqrt((A + 1 / A) * (1 / S - 1) + 2);
+    double k = fdlibm_cos(w0);
     double k2 = 2 * sqrt(A) * alpha;
     double aPlusOne = A + 1;
     double aMinusOne = A - 1;
@@ -202,7 +204,7 @@ void Biquad::setHighShelfParams(double frequency, double dbGain) {
   // Clip frequencies to between 0 and 1, inclusive.
   frequency = std::max(0.0, std::min(frequency, 1.0));
 
-  double A = pow(10.0, dbGain / 40);
+  double A = fdlibm_pow(10.0, dbGain / 40);
 
   if (frequency == 1) {
     // The z-transform is 1.
@@ -210,8 +212,8 @@ void Biquad::setHighShelfParams(double frequency, double dbGain) {
   } else if (frequency > 0) {
     double w0 = M_PI * frequency;
     double S = 1;  // filter slope (1 is max value)
-    double alpha = 0.5 * sin(w0) * sqrt((A + 1 / A) * (1 / S - 1) + 2);
-    double k = cos(w0);
+    double alpha = 0.5 * fdlibm_sin(w0) * sqrt((A + 1 / A) * (1 / S - 1) + 2);
+    double k = fdlibm_cos(w0);
     double k2 = 2 * sqrt(A) * alpha;
     double aPlusOne = A + 1;
     double aMinusOne = A - 1;
@@ -237,13 +239,13 @@ void Biquad::setPeakingParams(double frequency, double Q, double dbGain) {
   // Don't let Q go negative, which causes an unstable filter.
   Q = std::max(0.0, Q);
 
-  double A = pow(10.0, dbGain / 40);
+  double A = fdlibm_pow(10.0, dbGain / 40);
 
   if (frequency > 0 && frequency < 1) {
     if (Q > 0) {
       double w0 = M_PI * frequency;
-      double alpha = sin(w0) / (2 * Q);
-      double k = cos(w0);
+      double alpha = fdlibm_sin(w0) / (2 * Q);
+      double k = fdlibm_cos(w0);
 
       double b0 = 1 + alpha * A;
       double b1 = -2 * k;
@@ -275,8 +277,8 @@ void Biquad::setAllpassParams(double frequency, double Q) {
   if (frequency > 0 && frequency < 1) {
     if (Q > 0) {
       double w0 = M_PI * frequency;
-      double alpha = sin(w0) / (2 * Q);
-      double k = cos(w0);
+      double alpha = fdlibm_sin(w0) / (2 * Q);
+      double k = fdlibm_cos(w0);
 
       double b0 = 1 - alpha;
       double b1 = -2 * k;
@@ -308,8 +310,8 @@ void Biquad::setNotchParams(double frequency, double Q) {
   if (frequency > 0 && frequency < 1) {
     if (Q > 0) {
       double w0 = M_PI * frequency;
-      double alpha = sin(w0) / (2 * Q);
-      double k = cos(w0);
+      double alpha = fdlibm_sin(w0) / (2 * Q);
+      double k = fdlibm_cos(w0);
 
       double b0 = 1;
       double b1 = -2 * k;
@@ -341,8 +343,8 @@ void Biquad::setBandpassParams(double frequency, double Q) {
   if (frequency > 0 && frequency < 1) {
     double w0 = M_PI * frequency;
     if (Q > 0) {
-      double alpha = sin(w0) / (2 * Q);
-      double k = cos(w0);
+      double alpha = fdlibm_sin(w0) / (2 * Q);
+      double k = fdlibm_cos(w0);
 
       double b0 = alpha;
       double b1 = 0;
@@ -414,7 +416,7 @@ void Biquad::getFrequencyResponse(int nFrequencies, const float* frequency,
 
   for (int k = 0; k < nFrequencies; ++k) {
     double omega = -M_PI * frequency[k];
-    Complex z = Complex(cos(omega), sin(omega));
+    Complex z = Complex(fdlibm_cos(omega), fdlibm_sin(omega));
     Complex numerator = b0 + (b1 + b2 * z) * z;
     Complex denominator = Complex(1, 0) + (a1 + a2 * z) * z;
     // Strangely enough, using complex division:
@@ -432,7 +434,7 @@ void Biquad::getFrequencyResponse(int nFrequencies, const float* frequency,
 
     magResponse[k] = static_cast<float>(abs(response));
     phaseResponse[k] =
-        static_cast<float>(atan2(imag(response), real(response)));
+        static_cast<float>(fdlibm_atan2(imag(response), real(response)));
   }
 }
 

@@ -118,8 +118,8 @@ void DynamicsCompressor::setEmphasisStageParameters(
   float gk = 1 - gain / 20;
   float f1 = normalizedFrequency * gk;
   float f2 = normalizedFrequency / gk;
-  float r1 = expf(-f1 * M_PI);
-  float r2 = expf(-f2 * M_PI);
+  float r1 = fdlibm_expf(-f1 * M_PI);
+  float r2 = fdlibm_expf(-f2 * M_PI);
 
   MOZ_ASSERT(m_numberOfChannels == m_preFilterPacks.Length());
 
