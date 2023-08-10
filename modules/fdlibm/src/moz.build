@@ -8,7 +8,7 @@ EXPORTS += [
     'fdlibm.h',
 ]
 
-FINAL_LIBRARY = 'js'
+Library('fdlibm')
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
