@@ -69,14 +69,6 @@ class ReportBlockData {
   // Jitter converted to common time units.
   TimeDelta jitter(int rtp_clock_rate_hz) const;
 
-  [[deprecated]] int64_t report_block_timestamp_utc_us() const {
-    return report_block_timestamp_utc_.us();
-  }
-  [[deprecated]] int64_t last_rtt_ms() const { return last_rtt_.ms(); }
-  [[deprecated]] int64_t min_rtt_ms() const { return min_rtt_.ms(); }
-  [[deprecated]] int64_t max_rtt_ms() const { return max_rtt_.ms(); }
-  [[deprecated]] int64_t sum_rtt_ms() const { return sum_rtt_.ms(); }
-
   // Time in utc epoch (Jan 1st, 1970) the report block was received.
   Timestamp report_block_timestamp_utc() const {
     return report_block_timestamp_utc_;
@@ -85,16 +77,21 @@ class ReportBlockData {
   // Round Trip Time measurments for given (sender_ssrc, source_ssrc) pair.
   // Min, max, sum, number of measurements are since beginning of the call.
   TimeDelta last_rtt() const { return last_rtt_; }
-  TimeDelta min_rtt() const { return min_rtt_; }
-  TimeDelta max_rtt() const { return max_rtt_; }
   TimeDelta sum_rtts() const { return sum_rtt_; }
   size_t num_rtts() const { return num_rtts_; }
   bool has_rtt() const { return num_rtts_ != 0; }
 
+  void set_sender_ssrc(uint32_t ssrc) { sender_ssrc_ = ssrc; }
   void set_source_ssrc(uint32_t ssrc) { source_ssrc_ = ssrc; }
   void set_fraction_lost_raw(uint8_t lost) { fraction_lost_raw_ = lost; }
   void set_cumulative_lost(int lost) { cumulative_lost_ = lost; }
+  void set_extended_highest_sequence_number(uint32_t sn) {
+    extended_highest_sequence_number_ = sn;
+  }
   void set_jitter(uint32_t jitter) { jitter_ = jitter; }
+  void set_report_block_timestamp_utc(Timestamp arrival_time) {
+    report_block_timestamp_utc_ = arrival_time;
+  }
 
   void SetReportBlock(uint32_t sender_ssrc,
                       const rtcp::ReportBlock& report_block,
@@ -110,8 +107,6 @@ class ReportBlockData {
   uint32_t jitter_ = 0;
   Timestamp report_block_timestamp_utc_ = Timestamp::Zero();
   TimeDelta last_rtt_ = TimeDelta::Zero();
-  TimeDelta min_rtt_ = TimeDelta::Zero();
-  TimeDelta max_rtt_ = TimeDelta::Zero();
   TimeDelta sum_rtt_ = TimeDelta::Zero();
   size_t num_rtts_ = 0;
 };

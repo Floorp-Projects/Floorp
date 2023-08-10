@@ -63,7 +63,7 @@ index 567b5b36f3..0ec14bc8c6 100644
    int32_t RTT(uint32_t remote_ssrc,
                int64_t* last_rtt_ms,
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index d87763ac41..4852f01e0f 100644
+index 913885e557..8a10a54f4a 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 @@ -506,6 +506,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
