@@ -3355,7 +3355,10 @@ void CodeGenerator::visitRegExpPrototypeOptimizable(
       new (alloc()) OutOfLineRegExpPrototypeOptimizable(ins);
   addOutOfLineCode(ool, ins->mir());
 
-  masm.branchIfNotRegExpPrototypeOptimizable(object, temp, ool->entry());
+  const GlobalObject* global = gen->realm->maybeGlobal();
+  MOZ_ASSERT(global);
+  masm.branchIfNotRegExpPrototypeOptimizable(object, temp, global,
+                                             ool->entry());
   masm.move32(Imm32(0x1), output);
 
   masm.bind(ool->rejoin());
@@ -3406,7 +3409,9 @@ void CodeGenerator::visitRegExpInstanceOptimizable(
       new (alloc()) OutOfLineRegExpInstanceOptimizable(ins);
   addOutOfLineCode(ool, ins->mir());
 
-  masm.branchIfNotRegExpInstanceOptimizable(object, temp, ool->entry());
+  const GlobalObject* global = gen->realm->maybeGlobal();
+  MOZ_ASSERT(global);
+  masm.branchIfNotRegExpInstanceOptimizable(object, temp, global, ool->entry());
   masm.move32(Imm32(0x1), output);
 
   masm.bind(ool->rejoin());

@@ -8297,7 +8297,8 @@ bool CacheIRCompiler::emitRegExpPrototypeOptimizableResult(
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   Label slow, done;
-  masm.branchIfNotRegExpPrototypeOptimizable(proto, scratch, &slow);
+  masm.branchIfNotRegExpPrototypeOptimizable(
+      proto, scratch, /* maybeGlobal = */ nullptr, &slow);
   masm.moveValue(BooleanValue(true), output.valueReg());
   masm.jump(&done);
 
@@ -8335,7 +8336,8 @@ bool CacheIRCompiler::emitRegExpInstanceOptimizableResult(
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   Label slow, done;
-  masm.branchIfNotRegExpInstanceOptimizable(regexp, scratch, &slow);
+  masm.branchIfNotRegExpInstanceOptimizable(regexp, scratch,
+                                            /* maybeGlobal = */ nullptr, &slow);
   masm.moveValue(BooleanValue(true), output.valueReg());
   masm.jump(&done);
 
