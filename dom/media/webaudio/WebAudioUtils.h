@@ -59,21 +59,21 @@ void ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
  * value is 0.
  */
 inline float ConvertLinearToDecibels(float aLinearValue, float aMinDecibels) {
-  return aLinearValue ? 20.0f * std::log10(aLinearValue) : aMinDecibels;
+  return aLinearValue ? 20.0f * log10f(aLinearValue) : aMinDecibels;
 }
 
 /**
  * Converts a decibel value to a linear value.
  */
 inline float ConvertDecibelsToLinear(float aDecibels) {
-  return std::pow(10.0f, 0.05f * aDecibels);
+  return powf(10.0f, 0.05f * aDecibels);
 }
 
 /**
  * Converts a decibel to a linear value.
  */
 inline float ConvertDecibelToLinear(float aDecibel) {
-  return std::pow(10.0f, 0.05f * aDecibel);
+  return powf(10.0f, 0.05f * aDecibel);
 }
 
 inline void FixNaN(double& aDouble) {
@@ -84,7 +84,7 @@ inline void FixNaN(double& aDouble) {
 
 inline double DiscreteTimeConstantForSampleRate(double timeConstant,
                                                 double sampleRate) {
-  return 1.0 - std::exp(-1.0 / (sampleRate * timeConstant));
+  return 1.0 - exp(-1.0 / (sampleRate * timeConstant));
 }
 
 inline bool IsTimeValid(double aTime) {
