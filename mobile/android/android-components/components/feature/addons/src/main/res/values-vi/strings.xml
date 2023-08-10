@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">Đã cài đặt thành công %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Không thể cài đặt %1$s</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">Không thể cài đặt %1$s vì nó có khả năng gây ra các vấn đề về bảo mật và tính ổn định</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Đã bật thành công %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

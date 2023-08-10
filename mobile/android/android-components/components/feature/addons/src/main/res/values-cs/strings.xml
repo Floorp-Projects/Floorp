@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">Doplněk %1$s byl úspěšně nainstalován</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Doplněk %1$s se nepodařilo nainstalovat</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">Doplněk %1$s nebylo možné nainstalovat, protože existuje vysoké riziko, že způsobí problémy se stabilitou nebo zabezpečením.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Doplněk %1$s byl úspěšně povolen</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

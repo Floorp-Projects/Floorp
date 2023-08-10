@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">Það tókst að setja inn %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Ekki tókst að setja inn %1$s</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">Ekki tókst að setja inn %1$s þar sem það er þekkt fyrir að valda hruni eða öryggisvandamálum</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s var virkjað á árangursríkan hátt</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

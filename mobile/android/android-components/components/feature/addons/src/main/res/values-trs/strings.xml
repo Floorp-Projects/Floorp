@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">Ngà huā %1$s gārasunt</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Nu ga\'ue nāñùn %1$s</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">%1$s nu gā’hue nāginunj dadin’ gā’hue gà’huì’ yī’ij da’ ga’hiaj sun man asi da’ dūgumîn man sò’</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Ngà huā yūgui %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
