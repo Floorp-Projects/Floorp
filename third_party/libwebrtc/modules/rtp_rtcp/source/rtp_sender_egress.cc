@@ -298,7 +298,7 @@ void RtpSenderEgress::CompleteSendPacket(const Packet& compound_packet,
     RtpPacketMediaType packet_type = *packet->packet_type();
     RtpPacketCounter counter(*packet);
     size_t size = packet->size();
-    // TODO(bugs.webrtc.org/137439): clean up task posting when the combined
+    // TODO(crbug.com/1373439): clean up task posting when the combined
     // network/worker project launches.
     if (TaskQueueBase::Current() != worker_queue_) {
       worker_queue_->PostTask(SafeTask(

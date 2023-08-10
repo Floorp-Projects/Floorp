@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "absl/cleanup/cleanup.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/network_types.h"
 #include "rtc_base/checks.h"
@@ -83,7 +84,7 @@ void TaskQueuePacedSender::CreateProbeClusters(
     std::vector<ProbeClusterConfig> probe_cluster_configs) {
   RTC_DCHECK_RUN_ON(task_queue_);
   pacing_controller_.CreateProbeClusters(probe_cluster_configs);
-  MaybeProcessPackets(Timestamp::MinusInfinity());
+  MaybeScheduleProcessPackets();
 }
 
 void TaskQueuePacedSender::Pause() {
@@ -100,14 +101,14 @@ void TaskQueuePacedSender::Resume() {
 void TaskQueuePacedSender::SetCongested(bool congested) {
   RTC_DCHECK_RUN_ON(task_queue_);
   pacing_controller_.SetCongested(congested);
-  MaybeProcessPackets(Timestamp::MinusInfinity());
+  MaybeScheduleProcessPackets();
 }
 
 void TaskQueuePacedSender::SetPacingRates(DataRate pacing_rate,
                                           DataRate padding_rate) {
   RTC_DCHECK_RUN_ON(task_queue_);
   pacing_controller_.SetPacingRates(pacing_rate, padding_rate);
-  MaybeProcessPackets(Timestamp::MinusInfinity());
+  MaybeScheduleProcessPackets();
 }
 
 void TaskQueuePacedSender::EnqueuePackets(
@@ -200,6 +201,12 @@ void TaskQueuePacedSender::OnStatsUpdated(const Stats& stats) {
   current_stats_ = stats;
 }
 
+// RTC_RUN_ON(task_queue_)
+void TaskQueuePacedSender::MaybeScheduleProcessPackets() {
+  if (!processing_packets_)
+    MaybeProcessPackets(Timestamp::MinusInfinity());
+}
+
 void TaskQueuePacedSender::MaybeProcessPackets(
     Timestamp scheduled_process_time) {
   RTC_DCHECK_RUN_ON(task_queue_);
@@ -210,6 +217,15 @@ void TaskQueuePacedSender::MaybeProcessPackets(
   if (is_shutdown_ || !is_started_) {
     return;
   }
+
+  // Protects against re-entry from transport feedback calling into the task
+  // queue pacer.
+  RTC_DCHECK(!processing_packets_);
+  processing_packets_ = true;
+  absl::Cleanup cleanup = [this] {
+    RTC_DCHECK_RUN_ON(task_queue_);
+    processing_packets_ = false;
+  };
 
   Timestamp next_send_time = pacing_controller_.NextSendTime();
   RTC_DCHECK(next_send_time.IsFinite());

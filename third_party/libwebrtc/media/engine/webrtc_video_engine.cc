@@ -1774,7 +1774,7 @@ void WebRtcVideoChannel::OnPacketReceived(
   // depending on configuration set at object initialization.
   RTC_DCHECK_RUN_ON(&network_thread_checker_);
 
-  // TODO(bugs.webrtc.org/137439): Stop posting to the worker thread when the
+  // TODO(crbug.com/1373439): Stop posting to the worker thread when the
   // combined network/worker project launches.
   if (webrtc::TaskQueueBase::Current() != worker_thread_) {
     worker_thread_->PostTask(
