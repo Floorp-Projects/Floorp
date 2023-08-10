@@ -872,6 +872,8 @@ impl Color {
                     color.components = color.components.map(normalize);
                 }
 
+                color.alpha = normalize(color.alpha);
+
                 ComputedColor::Absolute(color)
             },
             Color::LightDark(ref ld) => ld.compute(context?),
