@@ -1,0 +1,288 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+#TODO daily build not changed about cache and refactoring
+
+name: "(B) 📅　❌🍎 Daily Build with auto-update without mac"
+
+permissions:
+  contents: write
+  discussions: write
+
+on:
+  workflow_dispatch:
+
+
+#----------------------------------------- JOBS -----------------------------------------#
+jobs:
+  get-display-version:
+    runs-on: ubuntu-latest
+    outputs:
+      display-version: ${{ steps.get.outputs.display-version }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        sparse-checkout: 'browser/config/version_display.txt'
+    - name: Get Display Version
+      id: get
+      run: |
+        echo "display-version=$(cat browser/config/version_display.txt)" >> $GITHUB_OUTPUT
+
+  get-inside-version:
+    runs-on: ubuntu-latest
+    outputs:
+      inside-version: ${{ steps.get.outputs.inside-version }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        sparse-checkout: 'browser/config/version.txt'
+    - name: Get Inside Version
+      id: get
+      run: |
+        echo "inside-version=$(cat browser/config/version.txt)" >> $GITHUB_OUTPUT
+
+  get-buildid:
+    runs-on: ubuntu-latest
+    outputs:
+      buildids: ${{ steps.get.outputs.bid }}
+    steps:
+    - id: get
+      shell: bash -xe {0}
+      run: |
+        bdat=`date +"%Y%m%d%I%M%S"`
+        echo "bid=${bdat}" >> $GITHUB_OUTPUT
+
+#----------------------------------------- WIN -----------------------------------------#
+
+#? Original branding of the code is official
+#? It seems in PGO build, branding is not important in NOT deploying binary
+  build-win-x86_64-profgen:
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      profgen: true
+      aarch64: false
+      zstd: true
+
+  win-x86_64-gen-profdata-and-jarlog:
+    needs: build-win-x86_64-profgen
+    runs-on: windows-2022
+
+    steps:
+    - uses: actions/download-artifact@v3
+      name: Download artifact 📥
+      with:
+        name: floorp-windows-x86_64-build-with-profgen-zstd
+        path: C:\artifact
+
+    - name:  Unpack artifact
+      run: |
+        cd C:\artifact
+        zstd -d floorp-*.tar.zst
+        7z x floorp-*.tar
+
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+
+    - name: Setup 🪛
+      run: |
+        (New-Object System.Net.WebClient).DownloadFile("https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe","C:\MozillaBuildSetup-Latest.exe")
+        C:\MozillaBuildSetup-Latest.exe /S | out-null
+
+    - name: Generate 🔄
+      run: |
+        $workspace_dir = [regex]::replace($env:GITHUB_WORKSPACE, "^([A-Z]):", { "/" + $args.value.Substring(0, 1).toLower() }) -replace "\\","/"
+
+        echo "cd $workspace_dir" '' >> mozilla-build-run.sh
+        echo 'export PATH=/c/mozilla-build/msys2/usr/bin:$PATH' '' >> mozilla-build-run.sh
+        echo './mach --no-interactive bootstrap --application-choice browser' '' >> mozilla-build-run.sh
+        echo 'LLVM_PROFDATA=/c/Users/runneradmin/.mozbuild/clang/bin/llvm-profdata.exe JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary /c/artifact/floorp/floorp.exe' '' >> mozilla-build-run.sh
+        C:\mozilla-build\start-shell.bat $workspace_dir\mozilla-build-run.sh
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: floorp-windows-x86_64-profdata-and-jarlog
+        path: |
+          merged.profdata
+          en-US.log
+
+  build-win-x86_64-with-profdata-and-jarlog:
+    needs: [win-x86_64-gen-profdata-and-jarlog,get-buildid]
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      aarch64: false
+      mar: true
+      beta: true
+      profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
+      out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+
+  win-x86_64-gen-update-xml:
+    needs: [get-display-version, get-buildid, get-inside-version,build-win-x86_64-with-profdata-and-jarlog]
+    runs-on: ubuntu-latest
+    steps:
+    - name: generate update XML file
+      run: |
+        echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+          <updates>
+            <update
+              type=\"minor\"
+              displayVersion=\"${DISPVER}\"
+              appVersion=\"${INSDVER}\"
+              platformVersion=\"${INSDVER}\"
+              buildID=\"${BUILDID}\"
+              detailsURL=\"https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/\"
+            >
+            <patch
+              type=\"complete\"
+              URL=\"https://github.com/${GHREPO}/releases/download/beta/${MAR_NAME}\"
+              size=\"${MAR_SIZE}\"
+            />
+            </update>
+          </updates>" > WINNT-x86_64.xml
+      env:
+        DISPVER: ${{needs.get-display-version.outputs.display-version}}
+        INSDVER: ${{needs.get-inside-version.outputs.inside-version}}
+        BUILDID: ${{needs.get-buildid.outputs.buildids}}
+        GHREPO: ${{github.repository}}
+        MAR_NAME: ${{needs.build-win-x86_64-with-profdata-and-jarlog.outputs.mar_name}}
+        MAR_SIZE: ${{needs.build-win-x86_64-with-profdata-and-jarlog.outputs.mar_size}}
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: update-xml-floorp-win-x86_64
+        path: |
+          WINNT-x86_64.xml
+
+######################################################## ↑ Windows x86_64 ########################################################
+#----------------------------------------- LINUX -----------------------------------------#
+  build-linux-x86_64-PGO:
+    uses: ./.github/workflows/linux-build.yml
+    needs: [get-buildid]
+    with:
+      aarch64: false
+      beta: true
+      mar: true
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+
+  linux-x86_64-gen-update-xml:
+    runs-on: 'ubuntu-latest'
+    needs: [build-linux-x86_64-PGO,get-display-version,get-inside-version,get-buildid]
+    steps:
+      - name: generate update XML file
+        run: |
+          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+            <updates>
+              <update
+                type=\"minor\"
+                displayVersion=\"${DISPVER}\"
+                appVersion=\"${INSDVER}\"
+                platformVersion=\"${INSDVER}\"
+                buildID=\"${BUILDID}\"
+                detailsURL=\"https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/\"
+              >
+              <patch
+                type=\"complete\"
+                URL=\"https://github.com/${GHREPO}/releases/download/beta/${MAR_NAME}\"
+                size=\"${MAR_SIZE}\"
+              />
+            </update>
+          </updates>" > LINUX-x86_64.xml
+        env:
+          DISPVER: ${{needs.get-display-version.outputs.display-version}}
+          INSDVER: ${{needs.get-inside-version.outputs.inside-version}}
+          BUILDID: ${{needs.get-buildid.outputs.buildids}}
+          GHREPO: ${{github.repository}}
+          MAR_NAME: ${{needs.build-linux-x86_64-PGO.outputs.mar_name}}
+          MAR_SIZE: ${{needs.build-linux-x86_64-PGO.outputs.mar_size}}
+      - name: Publish 🎁
+        uses: actions/upload-artifact@v3
+        with:
+          name: update-xml-floorp-linux-x86_64
+          path: |
+            LINUX-x86_64.xml
+
+################################################################ ↑ Linux x86_64 Build ####################################################################################
+
+
+##################################################################### Deployments #######################################################################################################
+#----------------------------------------- deploy -----------------------------------------#
+  Deployments:
+    needs: [get-display-version, get-buildid, get-inside-version, linux-x86_64-gen-update-xml, win-x86_64-gen-update-xml]
+    runs-on: ubuntu-latest
+    environment:
+      name: Deploy-to-stable-release
+    steps:
+
+    - name: Release version & date📦
+      run: |
+        echo "Release version: ${{ needs.get-display-version.outputs.display-version }}"
+        echo "Release date: ${{ needs.get-buildid.outputs.buildids }}"
+
+    - name: make directory 📁
+      run: |
+        mkdir -p ~/downloads/artifacts
+        mkdir -p ~/downloads/artifacts/linux-x64
+        mkdir -p ~/downloads/artifacts/windows-x64
+
+    - name: download Linux x86_64 build artifact 📥
+      uses: actions/download-artifact@v3
+      with:
+        name: floorp-linux-x64
+        path: ~/downloads/artifacts/linux-x64
+
+    - name: download Linux x86_64 build artifact 📥
+      uses: actions/download-artifact@v3
+      with:
+        name: update-xml-floorp-linux-x86_64
+        path: ~/downloads/artifacts/linux-x64
+
+    - name: download Windows x86_64 build artifact📥
+      uses: actions/download-artifact@v3
+      with:
+        name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
+        path: ~/downloads/artifacts/windows-x64
+
+    - name: download Windows x86_64 update xml📥
+      uses: actions/download-artifact@v3
+      with:
+        name: update-xml-floorp-win-x86_64
+        path: ~/downloads/artifacts/windows-x64
+
+    - name: check file structure 🗃
+      run: |
+        cd ~/downloads/artifacts
+        echo "current directory: $PWD"
+        echo "****************************************************************************************************"
+        find . -print | sed -e "s;[^/]*/;|____;g;s;____|; |;g"
+        echo "****************************************************************************************************"
+
+    - name: Deploy to GitHub Releases 🚀
+      id: create_release
+      uses: "softprops/action-gh-release@v1"
+      with:
+        files: |
+          /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
+          /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.mar
+          /home/runner/downloads/artifacts/linux-x64/floorp-*.en-US.linux-x86_64.tar.bz2
+          /home/runner/downloads/artifacts/windows-x64/floorp-*.en-US.win64.installer.exe
+          /home/runner/downloads/artifacts/windows-x64/floorp-*.en-US.win64.zip
+          /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.xml
+          /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.xml
+
+        tag_name: "beta"
+        name: "Floorp beta build: v${{ needs.get-display-version.outputs.display-version }} | ${{ needs.get-buildid.outputs.buildids }}"
+        body: |
+          "Floorp Daylight": v${{ needs.get-display-version.outputs.display-version }} (Firefox v${{ needs.get-inside-version.outputs.inside-version }})
+
+          **This is NOT the release (stable) channel version of Floorp. This is a beta build of Floorp. It is intended for testing purposes only. It is not recommended that you use this version of Floorp for daily browsing. If you would like to download the release version of Floorp, please visit [floorp.app](https://floorp.app).**
+        draft: false
+        prerelease: true
+        token: ${{ github.token }}
+    env:
+      GITHUB_REPOSITORY: ${{ github.repository }}

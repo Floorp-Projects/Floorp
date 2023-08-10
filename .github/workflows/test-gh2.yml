@@ -1,0 +1,62 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+on:
+  workflow_call:
+    inputs:
+      pgo:
+        description: this enables Profile Guided Optimization.
+        type: boolean
+        default: false
+      aarch64:
+        description: enable aarch64 build
+        type: boolean
+        default: false
+
+jobs:
+  hallo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check setup Node.js time
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+      - name: install octokit/rest.js
+        run: |
+          npm install @octokit/rest
+
+      - name: get workflow
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.actions
+              .getWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId,
+              })
+              .then((res) => {
+                console.log(res);
+              });
+
+      - name: echo hallo2
+        run: |
+          echo ${{github.run_id}}
+          cat $GITHUB_EVENT_PATH
+          echo hallo2
+  hallo2:
+    runs-on: ubuntu-latest
+    needs: hallo
+    steps:
+      - name: echo hallo
+        run: |
+          echo ${{github.run_id}}
+          cat $GITHUB_EVENT_PATH
+          echo hallo
+      - name: echo hallo2
+        run: |
+          echo hallo2

@@ -5,15 +5,19 @@
 # Please write our copyright if you use this file.
 # © 2023 Floorp Projects & Contributors
 
-name: Debian x64 Build
+name: "(d) 📦 linux x86_64 deb(-ppa) pack"
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       tarball-url-x86-64:
         type: string
         required: true
         description: URL of target tarball file (x86_64)
+      ppa:
+        type: boolean
+        required: true
+        description: Do upload deb to ppa
 
 jobs:
   build:
@@ -28,10 +32,10 @@ jobs:
 
     - name: Change PPA mirror servers
       run: |
-         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
-         sudo apt update
-    
-    - name: download Artifact 📦    
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    - name: download Artifact 📦
       run: |
         mkdir -p /home/runner/artifact
         wget -P /home/runner/artifact ${{ inputs.tarball-url-x86-64 }}

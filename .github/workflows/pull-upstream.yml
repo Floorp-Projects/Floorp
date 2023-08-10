@@ -5,14 +5,13 @@
 # Please write our copyright if you use this file.
 # © 2023 Floorp Projects & Contributors
 
-name: Pull upstream
+name: "(U) 🧰 Pull upstream"
 
 on: workflow_dispatch
 
 jobs:
   pull-upstream:
     name: Pull upstream
-    
     runs-on: ubuntu-latest
 
     steps:

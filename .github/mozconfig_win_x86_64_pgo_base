@@ -22,13 +22,15 @@ ac_add_options --with-mozilla-api-keyfile="$PWD/floorp/apis/api-mozilla-key"
 ac_add_options --with-google-location-service-api-keyfile="$PWD/floorp/apis/api-google-location-service-key"
 ac_add_options --with-google-safebrowsing-api-keyfile="$PWD/floorp/apis/api-google-safe-browsing-key"
 
-export WINSYSROOT="$RUNNER_USERDIR/win-cross/vs2019"
+export WINSYSROOT="$(echo ~)/win-cross/vs2019"
 
-export MIDL="$RUNNER_USERDIR/win-cross/wine/bin/widl"
-export WINE="$RUNNER_USERDIR/win-cross/wine/bin/wine64"
+export MIDL="$(echo ~)/win-cross/wine/bin/widl"
+export WINE="$(echo ~)/win-cross/wine/bin/wine64"
 export WINEDEBUG=-all
 
-ac_add_options --target=x86_64-pc-mingw32
+#? https://bugzilla.mozilla.org/show_bug.cgi?id=1617793
+#? https://phabricator.services.mozilla.com/D170170
+ac_add_options --target=x86_64-pc-windows-msvc
 
 export MOZ_STUB_INSTALLER=1
 
