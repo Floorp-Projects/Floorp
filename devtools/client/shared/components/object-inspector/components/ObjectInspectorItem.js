@@ -273,7 +273,7 @@ class ObjectInspectorItem extends Component {
 
     return dom.div(
       this.getTreeItemProps(),
-      arrow,
+      this.props.mode === MODE.HEADER ? null : arrow,
       labelElement,
       delimiter,
       value,

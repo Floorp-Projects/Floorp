@@ -97,3 +97,19 @@ button.remove-watchpoint-getorset {
 .theme-light button[class*="remove-watchpoint-"]:hover {
   background-color: transparent;
 }
+
+
+/* Specific style for when root nodes are displayed as header (e.g. in debugger preview popup */
+.tree.object-inspector.header-root-node {
+  .tree-node[aria-level="1"] {
+    border-block-end: 1px solid var(--theme-splitter-color);
+    padding-block-end: 4px;
+    margin-block-end: 4px;
+    overflow-x: clip;
+    word-break: keep-all;
+  }
+
+  .tree-node:not([aria-level="1"]) .tree-indent:first-of-type {
+    width: 0;
+  }
+}

@@ -45,6 +45,9 @@ const {
   nodeHasGetter,
   nodeHasSetter,
 } = Utils.node;
+const {
+  MODE,
+} = require("resource://devtools/client/shared/components/reps/reps/constants.js");
 
 // This implements a component that renders an interactive inspector
 // for looking at JavaScript objects. It expects descriptions of
@@ -224,7 +227,15 @@ class ObjectInspector extends Component {
   }
 
   setExpanded(item, expand) {
-    if (!this.isNodeExpandable(item)) {
+    if (
+      !this.isNodeExpandable(item) ||
+      // Don't allow to collapse header root node
+      (
+        this.props.displayRootNodeAsHeader &&
+        !expand &&
+        this.props.roots[0] == item
+      )
+    ) {
       return;
     }
 
@@ -293,6 +304,7 @@ class ObjectInspector extends Component {
       disableWrap = false,
       expandedPaths,
       inline,
+      displayRootNodeAsHeader = false,
     } = this.props;
 
     const classNames = ["object-inspector"];
@@ -301,6 +313,9 @@ class ObjectInspector extends Component {
     }
     if (disableWrap) {
       classNames.push("nowrap");
+    }
+    if (displayRootNodeAsHeader) {
+      classNames.push("header-root-node");
     }
 
     return Tree({
@@ -332,6 +347,7 @@ class ObjectInspector extends Component {
           depth,
           focused,
           arrow,
+          mode: displayRootNodeAsHeader && this.props.roots[0] == item ? MODE.HEADER : this.props.mode ,
           expanded,
           setExpanded: this.setExpanded,
         }),
