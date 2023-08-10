@@ -387,9 +387,8 @@ TEST(CallTest, RecreatingAudioStreamWithSameSsrcReusesRtpState) {
     EXPECT_EQ(rtp_state1.sequence_number, rtp_state2.sequence_number);
     EXPECT_EQ(rtp_state1.start_timestamp, rtp_state2.start_timestamp);
     EXPECT_EQ(rtp_state1.timestamp, rtp_state2.timestamp);
-    EXPECT_EQ(rtp_state1.capture_time_ms, rtp_state2.capture_time_ms);
-    EXPECT_EQ(rtp_state1.last_timestamp_time_ms,
-              rtp_state2.last_timestamp_time_ms);
+    EXPECT_EQ(rtp_state1.capture_time, rtp_state2.capture_time);
+    EXPECT_EQ(rtp_state1.last_timestamp_time, rtp_state2.last_timestamp_time);
   }
 }
 

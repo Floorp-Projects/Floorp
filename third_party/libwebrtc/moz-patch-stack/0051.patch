@@ -162,10 +162,10 @@ index 0885015121..2e1dc9a8ee 100644
  
      // Transport for outgoing packets (RTCP).
 diff --git a/modules/rtp_rtcp/include/rtp_rtcp_defines.h b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-index 6e558e1e1d..d95abf7286 100644
+index a8e5edccc0..53dffbdf40 100644
 --- a/modules/rtp_rtcp/include/rtp_rtcp_defines.h
 +++ b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-@@ -211,6 +211,14 @@ class RtcpBandwidthObserver {
+@@ -204,6 +204,14 @@ class RtcpBandwidthObserver {
    virtual ~RtcpBandwidthObserver() {}
  };
  
