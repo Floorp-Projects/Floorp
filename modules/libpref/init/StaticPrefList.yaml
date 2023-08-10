@@ -8493,9 +8493,28 @@
 #   1 - only base system fonts
 #   2 - also fonts from optional language packs
 #   3 - also user-installed fonts
-- name: layout.css.font-visibility
+- name: layout.css.font-visibility.standard
   type: int32_t
   value: 3
+  mirror: always
+
+# font-visibility setting when Tracking Protection is enabled
+- name: layout.css.font-visibility.trackingprotection
+  type: int32_t
+  value: 3
+  mirror: always
+
+# Max font-visibility setting for Private Browsing contexts
+# (The actual value used in a private-browsing context will be the lesser of
+# the appropriate standard/trackingprotection/RFP value from above, and the
+# private-browsing level specified by this pref.)
+- name: layout.css.font-visibility.private
+  type: int32_t
+#if defined(NIGHTLY_BUILD)
+  value: 2
+#else
+  value: 3
+#endif
   mirror: always
 
 # Is support for GeometryUtils.getBoxQuads enabled?

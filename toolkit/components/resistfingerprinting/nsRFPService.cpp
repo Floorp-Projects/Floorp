@@ -100,8 +100,7 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 // Fingerprinting protections that are enabled by default. This can be
 // overridden using the privacy.fingerprintingProtection.overrides pref.
 const uint64_t kDefaultFingerintingProtections =
-    uint64_t(RFPTarget::CanvasRandomization) |
-    uint64_t(RFPTarget::FontVisibilityLangPack);
+    uint64_t(RFPTarget::CanvasRandomization);
 
 // ============================================================================
 // ============================================================================
@@ -169,16 +168,6 @@ nsresult nsRFPService::Init() {
   UpdateFPPOverrideList();
 
   return rv;
-}
-
-/* static */
-bool nsRFPService::IsRFPPrefEnabled(bool aIsPrivateMode) {
-  if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() ||
-      (aIsPrivateMode &&
-       StaticPrefs::privacy_resistFingerprinting_pbmode_DoNotUseDirectly())) {
-    return true;
-  }
-  return false;
 }
 
 /* static */

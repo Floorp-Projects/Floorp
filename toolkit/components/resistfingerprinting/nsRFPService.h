@@ -161,10 +161,6 @@ class nsRFPService final : public nsIObserver {
 
   static nsRFPService* GetOrCreate();
 
-  // _Rarely_ you will need to know if RFP is enabled, or if FPP is enabled.
-  // 98% of the time you should use nsContentUtils::ShouldResistFingerprinting
-  // as the difference will not matter to you.
-  static bool IsRFPPrefEnabled(bool aIsPrivateMode);
   static bool IsRFPEnabledFor(RFPTarget aTarget);
 
   // --------------------------------------------------------------------------
