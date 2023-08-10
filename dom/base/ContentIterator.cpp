@@ -6,6 +6,7 @@
 
 #include "ContentIterator.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/RangeUtils.h"
@@ -19,6 +20,11 @@
 namespace mozilla {
 
 using namespace dom;
+
+#define NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(aResultType, aMethodName, ...) \
+  template aResultType ContentIteratorBase<RefPtr<nsINode>>::aMethodName(      \
+      __VA_ARGS__);                                                            \
+  template aResultType ContentIteratorBase<nsINode*>::aMethodName(__VA_ARGS__)
 
 static bool ComparePostMode(const RawRangeBoundary& aStart,
                             const RawRangeBoundary& aEnd, nsINode& aNode) {
@@ -115,13 +121,15 @@ static bool NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
   return ComparePostMode(aStart, aEnd, *aNode);
 }
 
-// Each concreate class of ContentIteratorBase may be owned by another class
-// which may be owned by JS.  Therefore, all of them should be in the cycle
-// collection.  However, we cannot make non-refcountable classes only with the
-// macros.  So, we need to make them cycle collectable without the macros.
+// Each concrete class of ContentIteratorBase<RefPtr<nsINode>> may be owned by
+// another class which may be owned by JS.  Therefore, all of them should be in
+// the cycle collection.  However, we cannot make non-refcountable classes only
+// with the macros.  So, we need to make them cycle collectable without the
+// macros.
+template <typename NodeType>
 void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                                 ContentIteratorBase& aField, const char* aName,
-                                 uint32_t aFlags = 0) {
+                                 ContentIteratorBase<NodeType>& aField,
+                                 const char* aName, uint32_t aFlags /* = 0 */) {
   ImplCycleCollectionTraverse(aCallback, aField.mCurNode, aName, aFlags);
   ImplCycleCollectionTraverse(aCallback, aField.mFirst, aName, aFlags);
   ImplCycleCollectionTraverse(aCallback, aField.mLast, aName, aFlags);
@@ -129,22 +137,76 @@ void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                               aName, aFlags);
 }
 
-void ImplCycleCollectionUnlink(ContentIteratorBase& aField) {
+template <typename NodeType>
+void ImplCycleCollectionUnlink(ContentIteratorBase<NodeType>& aField) {
   ImplCycleCollectionUnlink(aField.mCurNode);
   ImplCycleCollectionUnlink(aField.mFirst);
   ImplCycleCollectionUnlink(aField.mLast);
   ImplCycleCollectionUnlink(aField.mClosestCommonInclusiveAncestor);
 }
 
-ContentIteratorBase::ContentIteratorBase(Order aOrder) : mOrder(aOrder) {}
+void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                                 PostContentIterator& aField, const char* aName,
+                                 uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(
+      aCallback, static_cast<SafeContentIteratorBase&>(aField), aName, aFlags);
+}
 
-ContentIteratorBase::~ContentIteratorBase() = default;
+void ImplCycleCollectionUnlink(PostContentIterator& aField) {
+  ImplCycleCollectionUnlink(static_cast<SafeContentIteratorBase&>(aField));
+}
+
+void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                                 PreContentIterator& aField, const char* aName,
+                                 uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(
+      aCallback, static_cast<SafeContentIteratorBase&>(aField), aName, aFlags);
+}
+
+void ImplCycleCollectionUnlink(PreContentIterator& aField) {
+  ImplCycleCollectionUnlink(static_cast<SafeContentIteratorBase&>(aField));
+}
+
+void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                                 ContentSubtreeIterator& aField,
+                                 const char* aName, uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(aCallback, aField.mRange, aName, aFlags);
+  ImplCycleCollectionTraverse(
+      aCallback, static_cast<SafeContentIteratorBase&>(aField), aName, aFlags);
+}
+
+void ImplCycleCollectionUnlink(ContentSubtreeIterator& aField) {
+  ImplCycleCollectionUnlink(aField.mRange);
+  ImplCycleCollectionUnlink(static_cast<SafeContentIteratorBase&>(aField));
+}
+
+/******************************************************
+ * ContentIteratorBase
+ ******************************************************/
+
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(, ContentIteratorBase, Order);
+
+template <typename NodeType>
+ContentIteratorBase<NodeType>::ContentIteratorBase(Order aOrder)
+    : mOrder(aOrder) {}
+
+template ContentIteratorBase<RefPtr<nsINode>>::~ContentIteratorBase();
+template ContentIteratorBase<nsINode*>::~ContentIteratorBase();
+
+template <typename NodeType>
+ContentIteratorBase<NodeType>::~ContentIteratorBase() {
+  MOZ_DIAGNOSTIC_ASSERT_IF(mMutationGuard.isSome(),
+                           !mMutationGuard->Mutated(0));
+}
 
 /******************************************************
  * Init routines
  ******************************************************/
 
-nsresult ContentIteratorBase::Init(nsINode* aRoot) {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(nsresult, Init, nsINode*);
+
+template <typename NodeType>
+nsresult ContentIteratorBase<NodeType>::Init(nsINode* aRoot) {
   if (NS_WARN_IF(!aRoot)) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -164,7 +226,10 @@ nsresult ContentIteratorBase::Init(nsINode* aRoot) {
   return NS_OK;
 }
 
-nsresult ContentIteratorBase::Init(AbstractRange* aRange) {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(nsresult, Init, AbstractRange*);
+
+template <typename NodeType>
+nsresult ContentIteratorBase<NodeType>::Init(AbstractRange* aRange) {
   if (NS_WARN_IF(!aRange)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -176,10 +241,14 @@ nsresult ContentIteratorBase::Init(AbstractRange* aRange) {
   return InitInternal(aRange->StartRef().AsRaw(), aRange->EndRef().AsRaw());
 }
 
-nsresult ContentIteratorBase::Init(nsINode* aStartContainer,
-                                   uint32_t aStartOffset,
-                                   nsINode* aEndContainer,
-                                   uint32_t aEndOffset) {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(nsresult, Init, nsINode*, uint32_t,
+                                        nsINode*, uint32_t);
+
+template <typename NodeType>
+nsresult ContentIteratorBase<NodeType>::Init(nsINode* aStartContainer,
+                                             uint32_t aStartOffset,
+                                             nsINode* aEndContainer,
+                                             uint32_t aEndOffset) {
   if (NS_WARN_IF(!RangeUtils::IsValidPoints(aStartContainer, aStartOffset,
                                             aEndContainer, aEndOffset))) {
     return NS_ERROR_INVALID_ARG;
@@ -189,8 +258,12 @@ nsresult ContentIteratorBase::Init(nsINode* aStartContainer,
                       RawRangeBoundary(aEndContainer, aEndOffset));
 }
 
-nsresult ContentIteratorBase::Init(const RawRangeBoundary& aStart,
-                                   const RawRangeBoundary& aEnd) {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(nsresult, Init, const RawRangeBoundary&,
+                                        const RawRangeBoundary&);
+
+template <typename NodeType>
+nsresult ContentIteratorBase<NodeType>::Init(const RawRangeBoundary& aStart,
+                                             const RawRangeBoundary& aEnd) {
   if (NS_WARN_IF(!RangeUtils::IsValidPoints(aStart, aEnd))) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -198,10 +271,11 @@ nsresult ContentIteratorBase::Init(const RawRangeBoundary& aStart,
   return InitInternal(aStart, aEnd);
 }
 
-class MOZ_STACK_CLASS ContentIteratorBase::Initializer final {
+template <typename NodeType>
+class MOZ_STACK_CLASS ContentIteratorBase<NodeType>::Initializer final {
  public:
-  Initializer(ContentIteratorBase& aIterator, const RawRangeBoundary& aStart,
-              const RawRangeBoundary& aEnd)
+  Initializer(ContentIteratorBase<NodeType>& aIterator,
+              const RawRangeBoundary& aStart, const RawRangeBoundary& aEnd)
       : mIterator{aIterator},
         mStart{aStart},
         mEnd{aEnd},
@@ -232,21 +306,40 @@ class MOZ_STACK_CLASS ContentIteratorBase::Initializer final {
   const bool mStartIsCharacterData;
 };
 
-nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
-                                           const RawRangeBoundary& aEnd) {
+template <>
+nsresult ContentIteratorBase<RefPtr<nsINode>>::InitInternal(
+    const RawRangeBoundary& aStart, const RawRangeBoundary& aEnd) {
   Initializer initializer{*this, aStart, aEnd};
   return initializer.Run();
 }
 
-bool ContentIteratorBase::Initializer::IsCollapsedNonCharacterRange() const {
+template <>
+nsresult ContentIteratorBase<nsINode*>::InitInternal(
+    const RawRangeBoundary& aStart, const RawRangeBoundary& aEnd) {
+  Initializer initializer{*this, aStart, aEnd};
+  nsresult rv = initializer.Run();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  mMutationGuard.emplace();
+  mAssertNoGC.emplace();
+  return NS_OK;
+}
+
+template <typename NodeType>
+bool ContentIteratorBase<NodeType>::Initializer::IsCollapsedNonCharacterRange()
+    const {
   return !mStartIsCharacterData && mStart == mEnd;
 }
 
-bool ContentIteratorBase::Initializer::IsSingleNodeCharacterRange() const {
+template <typename NodeType>
+bool ContentIteratorBase<NodeType>::Initializer::IsSingleNodeCharacterRange()
+    const {
   return mStartIsCharacterData && mStart.Container() == mEnd.Container();
 }
 
-nsresult ContentIteratorBase::Initializer::Run() {
+template <typename NodeType>
+nsresult ContentIteratorBase<NodeType>::Initializer::Run() {
   // get common content parent
   mIterator.mClosestCommonInclusiveAncestor =
       nsContentUtils::GetClosestCommonInclusiveAncestor(mStart.Container(),
@@ -294,7 +387,9 @@ nsresult ContentIteratorBase::Initializer::Run() {
   return NS_OK;
 }
 
-nsINode* ContentIteratorBase::Initializer::DetermineFirstNode() const {
+template <typename NodeType>
+nsINode* ContentIteratorBase<NodeType>::Initializer::DetermineFirstNode()
+    const {
   nsIContent* cChild = nullptr;
 
   // Try to get the child at our starting point. This might return null if
@@ -366,8 +461,9 @@ nsINode* ContentIteratorBase::Initializer::DetermineFirstNode() const {
   return result;
 }
 
-Result<nsINode*, nsresult> ContentIteratorBase::Initializer::DetermineLastNode()
-    const {
+template <typename NodeType>
+Result<nsINode*, nsresult>
+ContentIteratorBase<NodeType>::Initializer::DetermineLastNode() const {
   const bool endIsCharacterData = mEnd.Container()->IsCharacterData();
 
   if (endIsCharacterData || !mEnd.Container()->HasChildren() ||
@@ -446,7 +542,10 @@ Result<nsINode*, nsresult> ContentIteratorBase::Initializer::DetermineLastNode()
   return cChild;
 }
 
-void ContentIteratorBase::SetEmpty() {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(void, SetEmpty);
+
+template <typename NodeType>
+void ContentIteratorBase<NodeType>::SetEmpty() {
   mCurNode = nullptr;
   mFirst = nullptr;
   mLast = nullptr;
@@ -454,7 +553,8 @@ void ContentIteratorBase::SetEmpty() {
 }
 
 // static
-nsINode* ContentIteratorBase::GetDeepFirstChild(nsINode* aRoot) {
+template <typename NodeType>
+nsINode* ContentIteratorBase<NodeType>::GetDeepFirstChild(nsINode* aRoot) {
   if (NS_WARN_IF(!aRoot) || !aRoot->HasChildren()) {
     return aRoot;
   }
@@ -463,7 +563,9 @@ nsINode* ContentIteratorBase::GetDeepFirstChild(nsINode* aRoot) {
 }
 
 // static
-nsIContent* ContentIteratorBase::GetDeepFirstChild(nsIContent* aRoot) {
+template <typename NodeType>
+nsIContent* ContentIteratorBase<NodeType>::GetDeepFirstChild(
+    nsIContent* aRoot) {
   if (NS_WARN_IF(!aRoot)) {
     return nullptr;
   }
@@ -480,7 +582,8 @@ nsIContent* ContentIteratorBase::GetDeepFirstChild(nsIContent* aRoot) {
 }
 
 // static
-nsINode* ContentIteratorBase::GetDeepLastChild(nsINode* aRoot) {
+template <typename NodeType>
+nsINode* ContentIteratorBase<NodeType>::GetDeepLastChild(nsINode* aRoot) {
   if (NS_WARN_IF(!aRoot) || !aRoot->HasChildren()) {
     return aRoot;
   }
@@ -489,7 +592,8 @@ nsINode* ContentIteratorBase::GetDeepLastChild(nsINode* aRoot) {
 }
 
 // static
-nsIContent* ContentIteratorBase::GetDeepLastChild(nsIContent* aRoot) {
+template <typename NodeType>
+nsIContent* ContentIteratorBase<NodeType>::GetDeepLastChild(nsIContent* aRoot) {
   if (NS_WARN_IF(!aRoot)) {
     return nullptr;
   }
@@ -504,7 +608,8 @@ nsIContent* ContentIteratorBase::GetDeepLastChild(nsIContent* aRoot) {
 
 // Get the next sibling, or parent's next sibling, or grandpa's next sibling...
 // static
-nsIContent* ContentIteratorBase::GetNextSibling(nsINode* aNode) {
+template <typename NodeType>
+nsIContent* ContentIteratorBase<NodeType>::GetNextSibling(nsINode* aNode) {
   if (NS_WARN_IF(!aNode)) {
     return nullptr;
   }
@@ -530,7 +635,8 @@ nsIContent* ContentIteratorBase::GetNextSibling(nsINode* aNode) {
 
 // Get the prev sibling, or parent's prev sibling, or grandpa's prev sibling...
 // static
-nsIContent* ContentIteratorBase::GetPrevSibling(nsINode* aNode) {
+template <typename NodeType>
+nsIContent* ContentIteratorBase<NodeType>::GetPrevSibling(nsINode* aNode) {
   if (NS_WARN_IF(!aNode)) {
     return nullptr;
   }
@@ -554,7 +660,8 @@ nsIContent* ContentIteratorBase::GetPrevSibling(nsINode* aNode) {
   return ContentIteratorBase::GetPrevSibling(parent);
 }
 
-nsINode* ContentIteratorBase::NextNode(nsINode* aNode) {
+template <typename NodeType>
+nsINode* ContentIteratorBase<NodeType>::NextNode(nsINode* aNode) {
   nsINode* node = aNode;
 
   // if we are a Pre-order iterator, use pre-order
@@ -587,7 +694,8 @@ nsINode* ContentIteratorBase::NextNode(nsINode* aNode) {
   return parent;
 }
 
-nsINode* ContentIteratorBase::PrevNode(nsINode* aNode) {
+template <typename NodeType>
+nsINode* ContentIteratorBase<NodeType>::PrevNode(nsINode* aNode) {
   nsINode* node = aNode;
 
   // if we are a Pre-order iterator, use pre-order
@@ -620,7 +728,10 @@ nsINode* ContentIteratorBase::PrevNode(nsINode* aNode) {
  * ContentIteratorBase routines
  ******************************************************/
 
-void ContentIteratorBase::First() {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(void, First);
+
+template <typename NodeType>
+void ContentIteratorBase<NodeType>::First() {
   if (!mFirst) {
     MOZ_ASSERT(IsDone());
     mCurNode = nullptr;
@@ -631,7 +742,10 @@ void ContentIteratorBase::First() {
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to position iterator!");
 }
 
-void ContentIteratorBase::Last() {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(void, Last);
+
+template <typename NodeType>
+void ContentIteratorBase<NodeType>::Last() {
   // Note that mLast can be nullptr if SetEmpty() is called in Init()
   // since at that time, Init() returns NS_OK.
   if (!mLast) {
@@ -644,7 +758,10 @@ void ContentIteratorBase::Last() {
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to position iterator!");
 }
 
-void ContentIteratorBase::Next() {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(void, Next);
+
+template <typename NodeType>
+void ContentIteratorBase<NodeType>::Next() {
   if (IsDone()) {
     return;
   }
@@ -657,7 +774,10 @@ void ContentIteratorBase::Next() {
   mCurNode = NextNode(mCurNode);
 }
 
-void ContentIteratorBase::Prev() {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(void, Prev);
+
+template <typename NodeType>
+void ContentIteratorBase<NodeType>::Prev() {
   if (IsDone()) {
     return;
   }
@@ -672,7 +792,10 @@ void ContentIteratorBase::Prev() {
 
 // Keeping arrays of indexes for the stack of nodes makes PositionAt
 // interesting...
-nsresult ContentIteratorBase::PositionAt(nsINode* aCurNode) {
+NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD(nsresult, PositionAt, nsINode*);
+
+template <typename NodeType>
+nsresult ContentIteratorBase<NodeType>::PositionAt(nsINode* aCurNode) {
   if (NS_WARN_IF(!aCurNode)) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -1053,5 +1176,7 @@ nsIContent* ContentSubtreeIterator::GetTopAncestorInRange(
 
   MOZ_CRASH("This should only be possible if aNode was null");
 }
+
+#undef NS_INSTANTIATE_CONTENT_ITER_BASE_METHOD
 
 }  // namespace mozilla
