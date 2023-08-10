@@ -496,6 +496,8 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
 #endif  // defined(DEBUG) || defined(JS_JITSPEW)
 };
 
+class JS_PUBLIC_API OwningDecodeOptions;
+
 /**
  * Compilation options, with dynamic lifetime. An instance of this type
  * makes a copy of / holds / roots all dynamically allocated resources
@@ -528,6 +530,9 @@ class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
   /** Set this to a copy of |rhs|.  Return false on OOM. */
   bool copy(JSContext* cx, const ReadOnlyCompileOptions& rhs);
   bool copy(JS::FrontendContext* fc, const ReadOnlyCompileOptions& rhs);
+
+  void steal(OwningCompileOptions&& rhs);
+  void steal(OwningDecodeOptions&& rhs);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -789,7 +794,7 @@ class JS_PUBLIC_API ReadOnlyDecodeOptions {
   ReadOnlyDecodeOptions& operator=(const ReadOnlyDecodeOptions&) = delete;
 
   template <typename T>
-  void copyPODOptions(const T& options) {
+  void copyPODOptionsFrom(const T& options) {
     borrowBuffer = options.borrowBuffer;
     usePinnedBytecode = options.usePinnedBytecode;
     allocateInstantiationStorage = options.allocateInstantiationStorage;
@@ -799,16 +804,21 @@ class JS_PUBLIC_API ReadOnlyDecodeOptions {
     introductionOffset = options.introductionOffset;
   }
 
- public:
-  void copyTo(CompileOptions& options) const {
+  template <typename T>
+  void copyPODOptionsTo(T& options) const {
     options.borrowBuffer = borrowBuffer;
     options.usePinnedBytecode = usePinnedBytecode;
     options.allocateInstantiationStorage = allocateInstantiationStorage;
     options.forceAsync = forceAsync;
-    options.introducerFilename_ = introducerFilename_;
     options.introductionType = introductionType;
     options.introductionLineno = introductionLineno;
     options.introductionOffset = introductionOffset;
+  }
+
+ public:
+  void copyTo(CompileOptions& options) const {
+    copyPODOptionsTo(options);
+    options.introducerFilename_ = introducerFilename_;
   }
 
   JS::ConstUTF8CharsZ introducerFilename() const { return introducerFilename_; }
@@ -820,13 +830,15 @@ class MOZ_STACK_CLASS JS_PUBLIC_API DecodeOptions final
   DecodeOptions() = default;
 
   explicit DecodeOptions(const ReadOnlyCompileOptions& options) {
-    copyPODOptions(options);
+    copyPODOptionsFrom(options);
 
     introducerFilename_ = options.introducerFilename();
   }
 };
 
 class JS_PUBLIC_API OwningDecodeOptions final : public ReadOnlyDecodeOptions {
+  friend class OwningCompileOptions;
+
  public:
   OwningDecodeOptions() = default;
 

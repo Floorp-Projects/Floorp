@@ -2359,6 +2359,31 @@ size_t JS::OwningCompileOptions::sizeOfExcludingThis(
          mallocSizeOf(introducerFilename_.c_str());
 }
 
+void JS::OwningCompileOptions::steal(JS::OwningCompileOptions&& rhs) {
+  // Release existing string allocations.
+  release();
+
+  copyPODNonTransitiveOptions(rhs);
+  copyPODTransitiveOptions(rhs);
+
+  filename_ = rhs.filename_;
+  rhs.filename_ = JS::ConstUTF8CharsZ();
+  introducerFilename_ = rhs.introducerFilename_;
+  rhs.introducerFilename_ = JS::ConstUTF8CharsZ();
+  sourceMapURL_ = rhs.sourceMapURL_;
+  rhs.sourceMapURL_ = nullptr;
+}
+
+void JS::OwningCompileOptions::steal(JS::OwningDecodeOptions&& rhs) {
+  // Release existing string allocations.
+  release();
+
+  rhs.copyPODOptionsTo(*this);
+
+  introducerFilename_ = rhs.introducerFilename_;
+  rhs.introducerFilename_ = JS::ConstUTF8CharsZ();
+}
+
 template <typename ContextT>
 bool JS::OwningCompileOptions::copyImpl(ContextT* cx,
                                         const ReadOnlyCompileOptions& rhs) {
@@ -2457,7 +2482,7 @@ void JS::OwningDecodeOptions::release() {
 
 bool JS::OwningDecodeOptions::copy(JS::FrontendContext* maybeFc,
                                    const JS::ReadOnlyDecodeOptions& rhs) {
-  copyPODOptions(rhs);
+  copyPODOptionsFrom(rhs);
 
   if (rhs.introducerFilename()) {
     MOZ_ASSERT(maybeFc);
@@ -2474,7 +2499,7 @@ bool JS::OwningDecodeOptions::copy(JS::FrontendContext* maybeFc,
 
 void JS::OwningDecodeOptions::infallibleCopy(
     const JS::ReadOnlyDecodeOptions& rhs) {
-  copyPODOptions(rhs);
+  copyPODOptionsFrom(rhs);
 
   MOZ_ASSERT(!rhs.introducerFilename());
 }
