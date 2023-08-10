@@ -12,6 +12,7 @@
 
 #include <utility>
 
+#include "api/test/mock_transformable_video_frame.h"
 #include "rtc_base/event.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -22,6 +23,8 @@ namespace webrtc {
 namespace {
 
 using ::testing::_;
+using ::testing::NiceMock;
+using ::testing::Return;
 using ::testing::SaveArg;
 using ::testing::WithoutArgs;
 
@@ -215,6 +218,55 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest, MetadataAfterSetMetadata) {
   EXPECT_EQ(metadata.GetFrameId(), actual_metadata.GetFrameId());
   EXPECT_EQ(metadata.GetSsrc(), actual_metadata.GetSsrc());
   EXPECT_EQ(metadata.GetCsrcs(), actual_metadata.GetCsrcs());
+}
+
+TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+       ReceiverFrameConvertedToSenderFrame) {
+  auto delegate = rtc::make_ref_counted<RTPSenderVideoFrameTransformerDelegate>(
+      &test_sender_, frame_transformer_,
+      /*ssrc=*/1111, /*csrcs=*/std::vector<uint32_t>(),
+      time_controller_.CreateTaskQueueFactory().get());
+
+  const uint8_t payload_type = 1;
+  const uint32_t timestamp = 2;
+  const std::vector<uint32_t> frame_csrcs = {123, 456, 789};
+
+  auto mock_receiver_frame =
+      std::make_unique<NiceMock<MockTransformableVideoFrame>>();
+  ON_CALL(*mock_receiver_frame, GetDirection)
+      .WillByDefault(Return(TransformableFrameInterface::Direction::kReceiver));
+  VideoFrameMetadata metadata;
+  metadata.SetCodec(kVideoCodecVP8);
+  metadata.SetRTPVideoHeaderCodecSpecifics(RTPVideoHeaderVP8());
+  metadata.SetCsrcs(frame_csrcs);
+  ON_CALL(*mock_receiver_frame, Metadata).WillByDefault(Return(metadata));
+  rtc::ArrayView<const uint8_t> buffer =
+      (rtc::ArrayView<const uint8_t>)*EncodedImageBuffer::Create(1);
+  ON_CALL(*mock_receiver_frame, GetData).WillByDefault(Return(buffer));
+  ON_CALL(*mock_receiver_frame, GetPayloadType)
+      .WillByDefault(Return(payload_type));
+  ON_CALL(*mock_receiver_frame, GetTimestamp).WillByDefault(Return(timestamp));
+
+  rtc::scoped_refptr<TransformedFrameCallback> callback;
+  EXPECT_CALL(*frame_transformer_, RegisterTransformedFrameSinkCallback)
+      .WillOnce(SaveArg<0>(&callback));
+  delegate->Init();
+  ASSERT_TRUE(callback);
+
+  rtc::Event event;
+  EXPECT_CALL(test_sender_,
+              SendVideo(payload_type, absl::make_optional(kVideoCodecVP8),
+                        timestamp, /*capture_time_ms=*/0, buffer, _,
+                        /*expected_retransmission_time_ms_=*/
+                        (absl::optional<int64_t>)absl::nullopt, frame_csrcs))
+      .WillOnce(WithoutArgs([&] {
+        event.Set();
+        return true;
+      }));
+
+  callback->OnTransformedFrame(std::move(mock_receiver_frame));
+
+  event.Wait(TimeDelta::Seconds(1));
 }
 
 }  // namespace

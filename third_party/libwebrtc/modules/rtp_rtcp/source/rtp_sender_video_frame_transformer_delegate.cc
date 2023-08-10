@@ -165,21 +165,34 @@ void RTPSenderVideoFrameTransformerDelegate::OnTransformedFrame(
 void RTPSenderVideoFrameTransformerDelegate::SendVideo(
     std::unique_ptr<TransformableFrameInterface> transformed_frame) const {
   RTC_DCHECK_RUN_ON(transformation_queue_.get());
-  RTC_CHECK_EQ(transformed_frame->GetDirection(),
-               TransformableFrameInterface::Direction::kSender);
   MutexLock lock(&sender_lock_);
   if (!sender_)
     return;
-  auto* transformed_video_frame =
-      static_cast<TransformableVideoSenderFrame*>(transformed_frame.get());
-  sender_->SendVideo(transformed_video_frame->GetPayloadType(),
-                     transformed_video_frame->GetCodecType(),
-                     transformed_video_frame->GetTimestamp(),
-                     transformed_video_frame->GetCaptureTimeMs(),
-                     transformed_video_frame->GetData(),
-                     transformed_video_frame->GetHeader(),
-                     transformed_video_frame->GetExpectedRetransmissionTimeMs(),
-                     transformed_video_frame->Metadata().GetCsrcs());
+  if (transformed_frame->GetDirection() ==
+      TransformableFrameInterface::Direction::kSender) {
+    auto* transformed_video_frame =
+        static_cast<TransformableVideoSenderFrame*>(transformed_frame.get());
+    sender_->SendVideo(
+        transformed_video_frame->GetPayloadType(),
+        transformed_video_frame->GetCodecType(),
+        transformed_video_frame->GetTimestamp(),
+        transformed_video_frame->GetCaptureTimeMs(),
+        transformed_video_frame->GetData(),
+        transformed_video_frame->GetHeader(),
+        transformed_video_frame->GetExpectedRetransmissionTimeMs(),
+        transformed_video_frame->Metadata().GetCsrcs());
+  } else {
+    auto* transformed_video_frame =
+        static_cast<TransformableVideoFrameInterface*>(transformed_frame.get());
+    VideoFrameMetadata metadata = transformed_video_frame->Metadata();
+    sender_->SendVideo(
+        transformed_video_frame->GetPayloadType(), metadata.GetCodec(),
+        transformed_video_frame->GetTimestamp(),
+        /*capture_time_ms=*/0, transformed_video_frame->GetData(),
+        RTPVideoHeader::FromMetadata(metadata),
+        /*expected_retransmission_time_ms_=*/absl::nullopt,
+        metadata.GetCsrcs());
+  }
 }
 
 void RTPSenderVideoFrameTransformerDelegate::SetVideoStructureUnderLock(

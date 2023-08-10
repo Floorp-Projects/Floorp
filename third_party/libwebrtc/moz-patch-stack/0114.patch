@@ -57,7 +57,7 @@ index c863db4ccf..adc53d2243 100644
                : nullptr) {
    if (frame_transformer_delegate_)
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index 34b4af0ec9..71f7db6f70 100644
+index 7dfd7ca4ad..a96bb32716 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
 @@ -31,7 +31,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
@@ -120,7 +120,7 @@ index 34b4af0ec9..71f7db6f70 100644
    return true;
  }
  
-@@ -215,7 +221,7 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+@@ -228,7 +234,7 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
        encoded_image, new_header, original->GetPayloadType(), new_header.codec,
        original->GetTimestamp(),
        absl::nullopt,  // expected_retransmission_time_ms
