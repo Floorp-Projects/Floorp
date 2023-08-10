@@ -16,17 +16,17 @@ template mozilla::ProfileBufferBlockIndex AddMarkerToBuffer(
     const mozilla::MarkerCategory&, mozilla::MarkerOptions&&,
     mozilla::baseprofiler::markers::TextMarker, const std::string&);
 
-template mozilla::ProfileBufferBlockIndex profiler_add_marker(
+template mozilla::ProfileBufferBlockIndex profiler_add_marker_impl(
     const mozilla::ProfilerString8View&, const mozilla::MarkerCategory&,
     mozilla::MarkerOptions&&, mozilla::baseprofiler::markers::TextMarker,
     const std::string&);
 
-template mozilla::ProfileBufferBlockIndex profiler_add_marker(
+template mozilla::ProfileBufferBlockIndex profiler_add_marker_impl(
     const mozilla::ProfilerString8View&, const mozilla::MarkerCategory&,
     mozilla::MarkerOptions&&, mozilla::baseprofiler::markers::TextMarker,
     const nsCString&);
 
-template mozilla::ProfileBufferBlockIndex profiler_add_marker(
+template mozilla::ProfileBufferBlockIndex profiler_add_marker_impl(
     const mozilla::ProfilerString8View&, const mozilla::MarkerCategory&,
     mozilla::MarkerOptions&&, mozilla::baseprofiler::markers::Tracing,
     const mozilla::ProfilerString8View&);

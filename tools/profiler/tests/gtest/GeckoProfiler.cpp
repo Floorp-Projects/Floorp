@@ -2389,9 +2389,9 @@ TEST(GeckoProfiler, Markers)
   longstrCut[kMax - 1] = '\0';
 
   // Test basic markers 2.0.
-  EXPECT_TRUE(
-      profiler_add_marker("default-templated markers 2.0 with empty options",
-                          geckoprofiler::category::OTHER, {}));
+  EXPECT_TRUE(profiler_add_marker_impl(
+      "default-templated markers 2.0 with empty options",
+      geckoprofiler::category::OTHER, {}));
 
   PROFILER_MARKER_UNTYPED(
       "default-templated markers 2.0 with option", OTHER,
@@ -2400,7 +2400,7 @@ TEST(GeckoProfiler, Markers)
   PROFILER_MARKER("explicitly-default-templated markers 2.0 with empty options",
                   OTHER, {}, NoPayload);
 
-  EXPECT_TRUE(profiler_add_marker(
+  EXPECT_TRUE(profiler_add_marker_impl(
       "explicitly-default-templated markers 2.0 with option",
       geckoprofiler::category::OTHER, {},
       ::geckoprofiler::markers::NoPayload{}));
@@ -2421,10 +2421,10 @@ TEST(GeckoProfiler, Markers)
 
   // Keep this one first! (It's used to record `ts1` and `ts2`, to compare
   // to serialized numbers in other markers.)
-  EXPECT_TRUE(profiler_add_marker("FirstMarker", geckoprofiler::category::OTHER,
-                                  MarkerTiming::Interval(ts1, ts2),
-                                  geckoprofiler::markers::TextMarker{},
-                                  "First Marker"));
+  EXPECT_TRUE(profiler_add_marker_impl(
+      "FirstMarker", geckoprofiler::category::OTHER,
+      MarkerTiming::Interval(ts1, ts2), geckoprofiler::markers::TextMarker{},
+      "First Marker"));
 
   // User-defined marker type with different properties, and fake schema.
   struct GtestMarker {
@@ -2483,10 +2483,10 @@ TEST(GeckoProfiler, Markers)
       return schema;
     }
   };
-  EXPECT_TRUE(
-      profiler_add_marker("Gtest custom marker", geckoprofiler::category::OTHER,
-                          MarkerTiming::Interval(ts1, ts2), GtestMarker{}, 42,
-                          43.0, "gtest text", "gtest unique text", ts1));
+  EXPECT_TRUE(profiler_add_marker_impl(
+      "Gtest custom marker", geckoprofiler::category::OTHER,
+      MarkerTiming::Interval(ts1, ts2), GtestMarker{}, 42, 43.0, "gtest text",
+      "gtest unique text", ts1));
 
   // User-defined marker type with no data, special frontend schema.
   struct GtestSpecialMarker {
@@ -2499,9 +2499,9 @@ TEST(GeckoProfiler, Markers)
       return mozilla::MarkerSchema::SpecialFrontendLocation{};
     }
   };
-  EXPECT_TRUE(profiler_add_marker("Gtest special marker",
-                                  geckoprofiler::category::OTHER, {},
-                                  GtestSpecialMarker{}));
+  EXPECT_TRUE(profiler_add_marker_impl("Gtest special marker",
+                                       geckoprofiler::category::OTHER, {},
+                                       GtestSpecialMarker{}));
 
   // User-defined marker type that is never used, so it shouldn't appear in the
   // output.
@@ -2693,11 +2693,11 @@ TEST(GeckoProfiler, Markers)
       /* uint64_t aRedirectChannelId = 0 */
   );
 
-  EXPECT_TRUE(profiler_add_marker(
+  EXPECT_TRUE(profiler_add_marker_impl(
       "Text in main thread with stack", geckoprofiler::category::OTHER,
       {MarkerStack::Capture(), MarkerTiming::Interval(ts1, ts2)},
       geckoprofiler::markers::TextMarker{}, ""));
-  EXPECT_TRUE(profiler_add_marker(
+  EXPECT_TRUE(profiler_add_marker_impl(
       "Text from main thread with stack", geckoprofiler::category::OTHER,
       MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
       geckoprofiler::markers::TextMarker{}, ""));
@@ -2705,11 +2705,11 @@ TEST(GeckoProfiler, Markers)
   std::thread registeredThread([]() {
     AUTO_PROFILER_REGISTER_THREAD("Marker test sub-thread");
     // Marker in non-profiled thread won't be stored.
-    EXPECT_FALSE(profiler_add_marker(
+    EXPECT_FALSE(profiler_add_marker_impl(
         "Text in registered thread with stack", geckoprofiler::category::OTHER,
         MarkerStack::Capture(), geckoprofiler::markers::TextMarker{}, ""));
     // Marker will be stored in main thread, with stack from registered thread.
-    EXPECT_TRUE(profiler_add_marker(
+    EXPECT_TRUE(profiler_add_marker_impl(
         "Text from registered thread with stack",
         geckoprofiler::category::OTHER,
         MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
@@ -2719,13 +2719,13 @@ TEST(GeckoProfiler, Markers)
 
   std::thread unregisteredThread([]() {
     // Marker in unregistered thread won't be stored.
-    EXPECT_FALSE(profiler_add_marker("Text in unregistered thread with stack",
-                                     geckoprofiler::category::OTHER,
-                                     MarkerStack::Capture(),
-                                     geckoprofiler::markers::TextMarker{}, ""));
+    EXPECT_FALSE(profiler_add_marker_impl(
+        "Text in unregistered thread with stack",
+        geckoprofiler::category::OTHER, MarkerStack::Capture(),
+        geckoprofiler::markers::TextMarker{}, ""));
     // Marker will be stored in main thread, but stack cannot be captured in an
     // unregistered thread.
-    EXPECT_TRUE(profiler_add_marker(
+    EXPECT_TRUE(profiler_add_marker_impl(
         "Text from unregistered thread with stack",
         geckoprofiler::category::OTHER,
         MarkerOptions(MarkerThreadId::MainThread(), MarkerStack::Capture()),
@@ -2733,22 +2733,22 @@ TEST(GeckoProfiler, Markers)
   });
   unregisteredThread.join();
 
-  EXPECT_TRUE(profiler_add_marker("Tracing", geckoprofiler::category::OTHER, {},
-                                  geckoprofiler::markers::Tracing{},
-                                  "category"));
+  EXPECT_TRUE(
+      profiler_add_marker_impl("Tracing", geckoprofiler::category::OTHER, {},
+                               geckoprofiler::markers::Tracing{}, "category"));
 
-  EXPECT_TRUE(profiler_add_marker("Text", geckoprofiler::category::OTHER, {},
-                                  geckoprofiler::markers::TextMarker{},
-                                  "Text text"));
+  EXPECT_TRUE(profiler_add_marker_impl("Text", geckoprofiler::category::OTHER,
+                                       {}, geckoprofiler::markers::TextMarker{},
+                                       "Text text"));
 
   // Ensure that we evaluate to false for markers with very long texts by
   // testing against a ~3mb string. A string of this size should exceed the
   // available buffer chunks (max: 2) that are available and be discarded.
-  EXPECT_FALSE(profiler_add_marker("Text", geckoprofiler::category::OTHER, {},
-                                   geckoprofiler::markers::TextMarker{},
-                                   std::string(3 * 1024 * 1024, 'x')));
+  EXPECT_FALSE(profiler_add_marker_impl(
+      "Text", geckoprofiler::category::OTHER, {},
+      geckoprofiler::markers::TextMarker{}, std::string(3 * 1024 * 1024, 'x')));
 
-  EXPECT_TRUE(profiler_add_marker(
+  EXPECT_TRUE(profiler_add_marker_impl(
       "MediaSample", geckoprofiler::category::OTHER, {},
       geckoprofiler::markers::MediaSampleMarker{}, 123, 456, 789));
 
@@ -4947,9 +4947,9 @@ TEST(GeckoProfiler, FailureHandling)
       return mozilla::MarkerSchema::SpecialFrontendLocation{};
     }
   };
-  EXPECT_TRUE(profiler_add_marker("Gtest failing marker",
-                                  geckoprofiler::category::OTHER, {},
-                                  GtestFailingMarker{}));
+  EXPECT_TRUE(profiler_add_marker_impl("Gtest failing marker",
+                                       geckoprofiler::category::OTHER, {},
+                                       GtestFailingMarker{}));
 
   ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
   profiler_pause();
@@ -5022,7 +5022,7 @@ TEST(GeckoProfiler, NoMarkerStacks)
   ASSERT_TRUE(!profiler_capture_backtrace());
 
   // Add a marker with a stack to test.
-  EXPECT_TRUE(profiler_add_marker(
+  EXPECT_TRUE(profiler_add_marker_impl(
       "Text with stack", geckoprofiler::category::OTHER, MarkerStack::Capture(),
       geckoprofiler::markers::TextMarker{}, ""));
 
