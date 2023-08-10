@@ -138,3 +138,60 @@ add_task(async function test_fullscreen_pointerlock_conflict() {
     await document.exitFullscreen();
   });
 });
+
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1821884
+add_task(async function test_reshow_fullscreen_notification() {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    let newWin = await BrowserTestUtils.openNewBrowserWindow();
+    let fsWarning = document.getElementById("fullscreen-warning");
+
+    info("Entering full screen and wait for the fullscreen warning to appear.");
+    await SimpleTest.promiseFocus(window);
+    await Promise.all([
+      waitForWarningState(fsWarning, "onscreen"),
+      BrowserTestUtils.waitForEvent(fsWarning, "transitionend"),
+      SpecialPowers.spawn(browser, [], async () => {
+        content.document.body.requestFullscreen();
+      }),
+    ]);
+
+    info(
+      "Switch focus away from the fullscreen window, the fullscreen warning should still hide automatically."
+    );
+    await Promise.all([
+      waitForWarningState(fsWarning, "hidden"),
+      SimpleTest.promiseFocus(newWin),
+    ]);
+
+    info(
+      "Switch focus back to the fullscreen window, the fullscreen warning should show again."
+    );
+    await Promise.all([
+      waitForWarningState(fsWarning, "onscreen"),
+      SimpleTest.promiseFocus(window),
+    ]);
+
+    info("Wait for fullscreen warning timed out.");
+    await waitForWarningState(fsWarning, "hidden");
+
+    info("The fullscreen warning should not show again.");
+    await SimpleTest.promiseFocus(newWin);
+    await SimpleTest.promiseFocus(window);
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    });
+    checkWarningState(
+      fsWarning,
+      "hidden",
+      "The fullscreen warning should not show."
+    );
+
+    info("Close new browser window.");
+    await BrowserTestUtils.closeWindow(newWin);
+
+    info("Exit fullscreen.");
+    await document.exitFullscreen();
+  });
+});
