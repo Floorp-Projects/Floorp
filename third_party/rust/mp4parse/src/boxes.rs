@@ -146,6 +146,9 @@ box_database!(
     AVCConfigurationBox               0x6176_6343, // "avcC"
     H263SampleEntry                   0x7332_3633, // "s263"
     H263SpecificBox                   0x6432_3633, // "d263"
+    HEV1SampleEntry                   0x6865_7631, // "hev1"
+    HVC1SampleEntry                   0x6876_6331, // "hvc1"
+    HEVCConfigurationBox              0x6876_6343, // "hvcC"
     MP4AudioSampleEntry               0x6d70_3461, // "mp4a"
     MP4VideoSampleEntry               0x6d70_3476, // "mp4v"
     #[cfg(feature = "3gpp")]

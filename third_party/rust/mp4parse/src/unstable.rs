@@ -146,7 +146,7 @@ pub fn create_sample_table(
     };
 
     // According to spec, no sync table means every sample is sync sample.
-    let has_sync_table = matches!(track.stss, Some(_));
+    let has_sync_table = track.stss.is_some();
 
     let mut sample_size_iter = stsz.sample_sizes.iter();
 
