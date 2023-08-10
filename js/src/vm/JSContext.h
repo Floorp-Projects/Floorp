@@ -522,7 +522,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   bool isInUnsafeRegion() const { return bool(inUnsafeRegion); }
 
   // For JIT use.
-  void resetInUnsafeRegion() {
+  MOZ_NEVER_INLINE void resetInUnsafeRegion() {
     MOZ_ASSERT(inUnsafeRegion >= 0);
     inUnsafeRegion = 0;
   }
