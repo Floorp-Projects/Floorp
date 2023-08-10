@@ -735,7 +735,6 @@ PresShell::PresShell(Document* aDocument)
       mLastResolutionChangeOrigin(ResolutionChangeOrigin::Apz),
       mPaintCount(0),
       mAPZFocusSequenceNumber(0),
-      mCanvasBackgroundColor(NS_RGBA(0, 0, 0, 0)),
       mActiveSuppressDisplayport(0),
       mPresShellId(++sNextPresShellId),
       mFontSizeInflationEmPerLine(0),
@@ -782,7 +781,6 @@ PresShell::PresShell(Document* aDocument)
       mNoDelayedMouseEvents(false),
       mNoDelayedKeyEvents(false),
       mApproximateFrameVisibilityVisited(false),
-      mHasCSSBackgroundColor(true),
       mIsLastChromeOnlyEscapeKeyConsumed(false),
       mHasReceivedPaintMessage(false),
       mIsLastKeyDownCanceled(false),
@@ -2483,8 +2481,7 @@ nsPageSequenceFrame* PresShell::GetPageSequenceFrame() const {
 }
 
 nsCanvasFrame* PresShell::GetCanvasFrame() const {
-  nsIFrame* frame = mFrameConstructor->GetDocElementContainingBlock();
-  return do_QueryFrame(frame);
+  return mFrameConstructor->GetCanvasFrame();
 }
 
 void PresShell::RestoreRootScrollPosition() {
@@ -5296,48 +5293,50 @@ static bool AddCanvasBackgroundColor(const nsDisplayList* aList,
     nsDisplayList* sublist = i->GetSameCoordinateSystemChildren();
     if (sublist && !(isBlendContainer && !aCSSBackgroundColor) &&
         AddCanvasBackgroundColor(sublist, aCanvasFrame, aColor,
-                                 aCSSBackgroundColor))
+                                 aCSSBackgroundColor)) {
       return true;
+    }
   }
   return false;
 }
 
-void PresShell::AddCanvasBackgroundColorItem(
-    nsDisplayListBuilder* aBuilder, nsDisplayList* aList, nsIFrame* aFrame,
-    const nsRect& aBounds, nscolor aBackstopColor,
-    AddCanvasBackgroundColorFlags aFlags) {
+void PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder* aBuilder,
+                                             nsDisplayList* aList,
+                                             nsIFrame* aFrame,
+                                             const nsRect& aBounds,
+                                             nscolor aBackstopColor) {
   if (aBounds.IsEmpty()) {
     return;
   }
-  // We don't want to add an item for the canvas background color if the frame
-  // (sub)tree we are painting doesn't include any canvas frames. There isn't
-  // an easy way to check this directly, but if we check if the root of the
-  // (sub)tree we are painting is a canvas frame that should cover us in all
-  // cases (it will usually be a viewport frame when we have a canvas frame in
-  // the (sub)tree).
-  if (!(aFlags & AddCanvasBackgroundColorFlags::ForceDraw) &&
-      !aFrame->IsViewportFrame() && !aFrame->IsPageContentFrame()) {
+  const bool isViewport = aFrame->IsViewportFrame();
+  nscolor canvasColor;
+  if (isViewport) {
+    canvasColor = mCanvasBackground.mViewportColor;
+  } else if (aFrame->IsPageContentFrame()) {
+    canvasColor = mCanvasBackground.mPageColor;
+  } else {
+    // We don't want to add an item for the canvas background color if the frame
+    // (sub)tree we are painting doesn't include any canvas frames.
+    return;
+  }
+  const nscolor bgcolor = NS_ComposeColors(aBackstopColor, canvasColor);
+  if (NS_GET_A(bgcolor) == 0) {
     return;
   }
 
-  nscolor bgcolor = NS_ComposeColors(aBackstopColor, mCanvasBackgroundColor);
-  if (NS_GET_A(bgcolor) == 0) return;
-
   // To make layers work better, we want to avoid having a big non-scrolled
-  // color background behind a scrolled transparent background. Instead,
-  // we'll try to move the color background into the scrolled content
-  // by making nsDisplayCanvasBackground paint it.
+  // color background behind a scrolled transparent background. Instead, we'll
+  // try to move the color background into the scrolled content by making
+  // nsDisplayCanvasBackground paint it.
   bool addedScrollingBackgroundColor = false;
-  if (!aFrame->GetParent()) {
-    nsIScrollableFrame* sf =
-        aFrame->PresShell()->GetRootScrollFrameAsScrollable();
-    if (sf) {
+  if (isViewport) {
+    if (nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable()) {
       nsCanvasFrame* canvasFrame = do_QueryFrame(sf->GetScrolledFrame());
       if (canvasFrame && canvasFrame->IsVisibleForPainting()) {
         // TODO: We should be able to set canvas background color during display
         // list building to avoid calling this function.
         addedScrollingBackgroundColor = AddCanvasBackgroundColor(
-            aList, canvasFrame, bgcolor, mHasCSSBackgroundColor);
+            aList, canvasFrame, bgcolor, mCanvasBackground.mCSSSpecified);
       }
     }
   }
@@ -5421,9 +5420,27 @@ nscolor PresShell::GetDefaultBackgroundColorToDraw() const {
 }
 
 void PresShell::UpdateCanvasBackground() {
-  auto canvasBg = ComputeCanvasBackground();
-  mCanvasBackgroundColor = canvasBg.mColor;
-  mHasCSSBackgroundColor = canvasBg.mCSSSpecified;
+  mCanvasBackground = ComputeCanvasBackground();
+}
+
+struct SingleCanvasBackground {
+  nscolor mColor = 0;
+  bool mCSSSpecified = false;
+};
+
+static SingleCanvasBackground ComputeSingleCanvasBackground(nsIFrame* aCanvas) {
+  MOZ_ASSERT(aCanvas->IsCanvasFrame());
+  const nsIFrame* bgFrame = nsCSSRendering::FindBackgroundFrame(aCanvas);
+  nscolor color = NS_RGBA(0, 0, 0, 0);
+  bool drawBackgroundImage = false;
+  bool drawBackgroundColor = false;
+  if (!bgFrame->IsThemed()) {
+    // Ignore the CSS background-color if -moz-appearance is used.
+    color = nsCSSRendering::DetermineBackgroundColor(
+        aCanvas->PresContext(), bgFrame->Style(), aCanvas, drawBackgroundImage,
+        drawBackgroundColor);
+  }
+  return {color, drawBackgroundColor};
 }
 
 PresShell::CanvasBackground PresShell::ComputeCanvasBackground() const {
@@ -5432,26 +5449,29 @@ PresShell::CanvasBackground PresShell::ComputeCanvasBackground() const {
   // cache of that color.
   nsIFrame* canvas = GetCanvasFrame();
   if (!canvas) {
+    nscolor color = GetDefaultBackgroundColorToDraw();
     // If the root element of the document (ie html) has style 'display: none'
     // then the document's background color does not get drawn; return the color
     // we actually draw.
-    return {GetDefaultBackgroundColorToDraw(), false};
+    return {color, color, false};
   }
 
-  const nsIFrame* bgFrame = nsCSSRendering::FindBackgroundFrame(canvas);
-  nscolor color = NS_RGBA(0, 0, 0, 0);
-  bool drawBackgroundImage = false;
-  bool drawBackgroundColor = false;
-  if (!bgFrame->IsThemed()) {
-    // Ignore the CSS background-color if -moz-appearance is used.
-    color = nsCSSRendering::DetermineBackgroundColor(
-        mPresContext, bgFrame->Style(), canvas, drawBackgroundImage,
-        drawBackgroundColor);
-  }
+  auto viewportBg = ComputeSingleCanvasBackground(canvas);
   if (!IsTransparentContainerElement()) {
-    color = NS_ComposeColors(GetDefaultBackgroundColorToDraw(), color);
+    viewportBg.mColor =
+        NS_ComposeColors(GetDefaultBackgroundColorToDraw(), viewportBg.mColor);
   }
-  return {color, drawBackgroundColor};
+  nscolor pageColor = viewportBg.mColor;
+  nsCanvasFrame* docElementCb =
+      mFrameConstructor->GetDocElementContainingBlock();
+  if (canvas != docElementCb) {
+    // We're in paged mode / print / print-preview, and just computed the "root"
+    // canvas background. Compute the doc element containing block background
+    // too.
+    MOZ_ASSERT(mPresContext->IsRootPaginatedDocument());
+    pageColor = ComputeSingleCanvasBackground(docElementCb).mColor;
+  }
+  return {viewportBg.mColor, pageColor, viewportBg.mCSSSpecified};
 }
 
 nscolor PresShell::ComputeBackstopColor(nsView* aDisplayRoot) {
@@ -6417,7 +6437,7 @@ void PresShell::PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags) {
     return;
   }
 
-  bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
+  bgcolor = NS_ComposeColors(bgcolor, mCanvasBackground.mViewportColor);
 
   if (renderer->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
     LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(

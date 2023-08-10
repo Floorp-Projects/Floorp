@@ -1135,11 +1135,11 @@ void nsImageRenderer::ComputeObjectAnchorPoint(const Position& aPos,
 static nsIFrame* GetPageSequenceForCanvas(const nsIFrame* aCanvasFrame) {
   MOZ_ASSERT(aCanvasFrame->IsCanvasFrame(), "not a canvas frame");
   nsPresContext* pc = aCanvasFrame->PresContext();
-  if (!pc->IsPrintingOrPrintPreview()) {
+  if (!pc->IsRootPaginatedDocument()) {
     return nullptr;
   }
   auto* ps = pc->PresShell()->GetPageSequenceFrame();
-  if (!ps) {
+  if (NS_WARN_IF(!ps)) {
     return nullptr;
   }
   if (ps->GetParent() != aCanvasFrame) {

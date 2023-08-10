@@ -158,8 +158,7 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
         }));
   }
 
-  // Create a popupgroup element for system privileged non-XUL documents to
-  // support context menus and tooltips.
+  // Create a default tooltip element for system privileged documents.
   if (XRE_IsParentProcess() && doc->NodePrincipal()->IsSystemPrincipal()) {
     nsNodeInfoManager* nodeInfoManager = doc->NodeInfoManager();
     RefPtr<NodeInfo> nodeInfo = nodeInfoManager->GetNodeInfo(

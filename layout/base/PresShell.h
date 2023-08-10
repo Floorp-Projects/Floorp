@@ -891,17 +891,25 @@ class PresShell final : public nsStubDocumentObserver,
    * PresShell::PaintDefaultBackground, and nsDocShell::SetupNewViewer;
    * bug 488242, bug 476557 and other bugs mentioned there.
    */
-  void SetCanvasBackground(nscolor aColor) { mCanvasBackgroundColor = aColor; }
-  nscolor GetCanvasBackground() const { return mCanvasBackgroundColor; }
+  void SetCanvasBackground(nscolor aColor) {
+    mCanvasBackground.mViewportColor = aColor;
+  }
+  nscolor GetCanvasBackground() const {
+    return mCanvasBackground.mViewportColor;
+  }
 
-  /**
-   * Use the current frame tree (if it exists) to update the background color of
-   * the most recently drawn canvas.
-   */
   struct CanvasBackground {
-    nscolor mColor = 0;
+    // The canvas frame background for the whole viewport.
+    nscolor mViewportColor = 0;
+    // The canvas frame background for a printed page. Note that when
+    // print-previewing / in paged mode we have multiple canvas frames (one for
+    // the viewport, one for each page).
+    nscolor mPageColor = 0;
     bool mCSSSpecified = false;
   };
+
+  // Use the current frame tree (if it exists) to update the background color of
+  // the canvas frames.
   CanvasBackground ComputeCanvasBackground() const;
   void UpdateCanvasBackground();
 
@@ -1558,30 +1566,17 @@ class PresShell final : public nsStubDocumentObserver,
 
   /**
    * Add a solid color item to the bottom of aList with frame aFrame and bounds
-   * aBounds. Checks first if this needs to be done by checking if aFrame is a
-   * canvas frame (if the AddCanvasBackgroundColorFlags::ForceDraw is passed
-   * then this check is skipped). aBackstopColor is composed behind the
-   * background color of the canvas, it is transparent by default.
+   * aBounds. aBackstopColor is composed behind the background color of the
+   * canvas, and it is transparent by default.
    *
    * We attempt to make the background color part of the scrolled canvas (to
    * reduce transparent layers), and if async scrolling is enabled (and the
    * background is opaque) then we add a second, unscrolled item to handle the
    * checkerboarding case.
-   *
-   * AddCanvasBackgroundColorFlags::AddSubDocument should be specified when
-   * calling this for a subdocument, and LayoutUseContainersForRootFrame might
-   * cause the whole list to be scrolled. In that case the second unscrolled
-   * item will be elided.
-   *
-   * AddCanvasBackgroundColorFlags::AppendUnscrolledOnly only attempts to add
-   * the unscrolled item, so that we can add it manually after
-   * LayoutUseContainersForRootFrame has built the scrolling ContainerLayer.
    */
   void AddCanvasBackgroundColorItem(
       nsDisplayListBuilder* aBuilder, nsDisplayList* aList, nsIFrame* aFrame,
-      const nsRect& aBounds, nscolor aBackstopColor = NS_RGBA(0, 0, 0, 0),
-      AddCanvasBackgroundColorFlags aFlags =
-          AddCanvasBackgroundColorFlags::None);
+      const nsRect& aBounds, nscolor aBackstopColor = NS_RGBA(0, 0, 0, 0));
 
   size_t SizeOfTextRuns(MallocSizeOf aMallocSizeOf) const;
 
@@ -3048,7 +3043,7 @@ class PresShell final : public nsStubDocumentObserver,
   nscoord mLastAnchorScrollPositionY = 0;
 
   // Most recent canvas background color.
-  nscolor mCanvasBackgroundColor;
+  CanvasBackground mCanvasBackground;
 
   int32_t mActiveSuppressDisplayport;
 
@@ -3167,8 +3162,6 @@ class PresShell final : public nsStubDocumentObserver,
   bool mNoDelayedKeyEvents : 1;
 
   bool mApproximateFrameVisibilityVisited : 1;
-
-  bool mHasCSSBackgroundColor : 1;
 
   // Whether the last chrome-only escape key event is consumed.
   bool mIsLastChromeOnlyEscapeKeyConsumed : 1;

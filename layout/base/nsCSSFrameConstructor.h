@@ -325,9 +325,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // have a psuedo-element style
   nsIFrame* GetRootElementStyleFrame() { return mRootElementStyleFrame; }
   nsPageSequenceFrame* GetPageSequenceFrame() { return mPageSequenceFrame; }
-
-  // Get the frame that is the parent of the root element.
-  nsContainerFrame* GetDocElementContainingBlock() {
+  // Returns the outermost canvas frame. There's usually one per document, but
+  // if but if we're in printing / paginated mode we might have multiple:  one
+  // per page plus the background one.
+  nsCanvasFrame* GetCanvasFrame() { return mCanvasFrame; }
+  // Get the frame that is the parent of the root element's frame.
+  nsCanvasFrame* GetDocElementContainingBlock() {
     return mDocElementContainingBlock;
   }
 
@@ -345,16 +348,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   struct FrameConstructionItem;
   class FrameConstructionItemList;
 
-  // Set the root element frame, and create frames for anonymous content if
-  // there is a canvas frame.
-  //
-  // It's important to do this _before_ constructing the children of the root
-  // element, because XUL popups depend on the anonymous root popupgroup being
-  // constructed already.
-  void SetRootElementFrameAndConstructCanvasAnonContent(
-      nsContainerFrame* aRootElementFrame, nsFrameConstructorState&,
-      nsFrameList&);
-
   mozilla::PrintedSheetFrame* ConstructPrintedSheetFrame(
       PresShell* aPresShell, nsContainerFrame* aParentFrame,
       nsIFrame* aPrevSheetFrame);
@@ -362,7 +355,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   nsContainerFrame* ConstructPageFrame(PresShell* aPresShell,
                                        nsContainerFrame* aParentFrame,
                                        nsIFrame* aPrevPageFrame,
-                                       nsContainerFrame*& aCanvasFrame);
+                                       nsCanvasFrame*& aCanvasFrame);
 
   void InitAndRestoreFrame(const nsFrameConstructorState& aState,
                            nsIContent* aContent, nsContainerFrame* aParentFrame,
@@ -2124,13 +2117,16 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // about the following frames.
 
   // This is just the outermost frame for the root element.
-  nsContainerFrame* mRootElementFrame;
+  nsContainerFrame* mRootElementFrame = nullptr;
   // This is the frame for the root element that has no pseudo-element style.
-  nsIFrame* mRootElementStyleFrame;
+  nsIFrame* mRootElementStyleFrame = nullptr;
   // This is the containing block that contains the root element ---
   // the real "initial containing block" according to CSS 2.1.
-  nsContainerFrame* mDocElementContainingBlock;
-  nsPageSequenceFrame* mPageSequenceFrame;
+  nsCanvasFrame* mDocElementContainingBlock = nullptr;
+  // This is usually mDocElementContainingBlock, except when printing, where it
+  // is the canvas frame that is under all the printed pages.
+  nsCanvasFrame* mCanvasFrame = nullptr;
+  nsPageSequenceFrame* mPageSequenceFrame = nullptr;
 
   // FrameConstructionItem arena + list of freed items available for re-use.
   mozilla::ArenaAllocator<4096, 8> mFCItemPool;

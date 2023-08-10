@@ -431,11 +431,9 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
   bool constructZoomItem = subdocRootFrame && parentAPD != subdocAPD;
-  bool needsOwnLayer = false;
-  if (constructZoomItem || presContext->IsRootContentDocumentCrossProcess() ||
-      (sf && sf->IsScrollingActive())) {
-    needsOwnLayer = true;
-  }
+  bool needsOwnLayer = constructZoomItem ||
+                       presContext->IsRootContentDocumentCrossProcess() ||
+                       (sf && sf->IsScrollingActive());
 
   nsDisplayList childItems(aBuilder);
 
@@ -465,26 +463,22 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           hasDocumentLevelListenersForApzAwareEvents);
       subdocRootFrame->BuildDisplayListForStackingContext(aBuilder,
                                                           &childItems);
-    }
-
-    if (!aBuilder->IsForEventDelivery()) {
-      // If we are going to use a displayzoom below then any items we put under
-      // it need to have underlying frames from the subdocument. So we need to
-      // calculate the bounds based on which frame will be the underlying frame
-      // for the canvas background color item.
-      nsRect bounds =
-          GetContentRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
-      if (subdocRootFrame) {
+      if (!aBuilder->IsForEventDelivery()) {
+        // If we are going to use a displayzoom below then any items we put
+        // under it need to have underlying frames from the subdocument. So we
+        // need to calculate the bounds based on which frame will be the
+        // underlying frame for the canvas background color item.
+        nsRect bounds =
+            GetContentRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
         bounds = bounds.ScaleToOtherAppUnitsRoundOut(parentAPD, subdocAPD);
-      }
 
-      // Add the canvas background color to the bottom of the list. This
-      // happens after we've built the list so that
-      // AddCanvasBackgroundColorItem can monkey with the contents if
-      // necessary.
-      presShell->AddCanvasBackgroundColorItem(
-          aBuilder, &childItems, frame, bounds, NS_RGBA(0, 0, 0, 0),
-          AddCanvasBackgroundColorFlags::ForceDraw);
+        // Add the canvas background color to the bottom of the list. This
+        // happens after we've built the list so that
+        // AddCanvasBackgroundColorItem can monkey with the contents if
+        // necessary.
+        presShell->AddCanvasBackgroundColorItem(aBuilder, &childItems, frame,
+                                                bounds, NS_RGBA(0, 0, 0, 0));
+      }
     }
   }
 

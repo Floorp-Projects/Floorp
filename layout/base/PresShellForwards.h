@@ -185,14 +185,6 @@ enum class ResolutionChangeOrigin : uint8_t {
   MainThreadAdjustment,
 };
 
-// See comment at declaration of AddCanvasBackgroundColorItem() for the detail.
-enum class AddCanvasBackgroundColorFlags {
-  None = 0,
-  ForceDraw = 1 << 0,
-};
-
-MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AddCanvasBackgroundColorFlags)
-
 enum class PaintFlags {
   None = 0,
   /* Sync-decode images. */
