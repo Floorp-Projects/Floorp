@@ -315,10 +315,9 @@ discopane-intro =
     security, performance, and functionality.
 
 # Notice to make user aware that the recommendations are personalized.
-discopane-notice-recommendations2 =
-    .message =
-        Some of these recommendations are personalized. They are based on other
-        extensions you’ve installed, profile preferences, and usage statistics.
+discopane-notice-recommendations =
+    Some of these recommendations are personalized. They are based on other
+    extensions you’ve installed, profile preferences, and usage statistics.
 discopane-notice-learn-more = Learn more
 
 privacy-policy = Privacy Policy
@@ -393,8 +392,7 @@ addon-detail-homepage-label = Homepage
 addon-detail-rating-label = Rating
 
 # Message for add-ons with a staged pending update.
-install-postponed-message2 =
-    .message = This extension will be updated when { -brand-short-name } restarts.
+install-postponed-message = This extension will be updated when { -brand-short-name } restarts.
 install-postponed-button = Update Now
 
 # This string is used to show that an add-on is disabled.
@@ -520,25 +518,19 @@ addon-page-options-button =
 
 # Variables:
 #   $version (string) - Application version.
-details-notification-incompatible2 =
-    .message = { $name } is incompatible with { -brand-short-name } { $version }.
+details-notification-incompatible = { $name } is incompatible with { -brand-short-name } { $version }.
 details-notification-incompatible-link = More Information
 
-details-notification-unsigned-and-disabled2 =
-    .message = { $name } could not be verified for use in { -brand-short-name } and has been disabled.
+details-notification-unsigned-and-disabled = { $name } could not be verified for use in { -brand-short-name } and has been disabled.
 details-notification-unsigned-and-disabled-link = More Information
 
-details-notification-unsigned2 =
-    .message = { $name } could not be verified for use in { -brand-short-name }. Proceed with caution.
+details-notification-unsigned = { $name } could not be verified for use in { -brand-short-name }. Proceed with caution.
 details-notification-unsigned-link = More Information
 
-details-notification-blocked2 =
-    .message = { $name } has been disabled due to security or stability issues.
+details-notification-blocked = { $name } has been disabled due to security or stability issues.
 details-notification-blocked-link = More Information
 
-details-notification-softblocked2 =
-    .message = { $name } is known to cause security or stability issues.
+details-notification-softblocked = { $name } is known to cause security or stability issues.
 details-notification-softblocked-link = More Information
 
-details-notification-gmp-pending2 =
-    .message = { $name } will be installed shortly.
+details-notification-gmp-pending = { $name } will be installed shortly.

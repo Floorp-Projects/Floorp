@@ -62,10 +62,6 @@
     ></script>
     <script
       type="module"
-      src="chrome://global/content/elements/moz-message-bar.mjs"
-    ></script>
-    <script
-      type="module"
       src="chrome://global/content/elements/moz-toggle.mjs"
     ></script>
     <script
@@ -419,22 +415,20 @@
             <span class="addon-description" tabindex="-1"></span>
           </div>
         </div>
-        <moz-message-bar
-          class="update-postponed-bar"
-          data-l10n-id="install-postponed-message2"
-          data-l10n-attrs="message"
-          align="center"
-          hidden
-        >
+        <message-bar class="update-postponed-bar" align="center" hidden>
+          <span
+            class="description"
+            data-l10n-id="install-postponed-message"
+          ></span>
           <button
-            slot="actions"
             action="install-postponed"
             data-l10n-id="install-postponed-button"
           ></button>
-        </moz-message-bar>
-        <moz-message-bar class="addon-card-message" align="center" hidden>
+        </message-bar>
+        <message-bar class="addon-card-message" align="center" hidden>
+          <span></span>
           <button action="link"></button>
-        </moz-message-bar>
+        </message-bar>
       </div>
     </template>
 
@@ -675,20 +669,17 @@
     </template>
 
     <template name="taar-notice">
-      <moz-message-bar
-        class="discopane-notice"
-        data-l10n-id="discopane-notice-recommendations2"
-        data-l10n-attrs="message"
-        dismissable
-      >
-        <a
-          is="moz-support-link"
-          support-page="personalized-addons"
-          data-l10n-id="discopane-notice-learn-more"
-          action="notice-learn-more"
-          slot="support-link"
-        ></a>
-      </moz-message-bar>
+      <message-bar class="discopane-notice" dismissable>
+        <div class="discopane-notice-content">
+          <span data-l10n-id="discopane-notice-recommendations"></span>
+          <a
+            is="moz-support-link"
+            support-page="personalized-addons"
+            data-l10n-id="discopane-notice-learn-more"
+            action="notice-learn-more"
+          ></a>
+        </div>
+      </message-bar>
     </template>
 
     <template name="recommended-footer">

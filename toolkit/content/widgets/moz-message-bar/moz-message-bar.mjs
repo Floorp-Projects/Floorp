@@ -43,7 +43,6 @@ export default class MozMessageBar extends MozLitElement {
   static queries = {
     actionsSlotEl: "slot[name=actions]",
     actionsEl: ".actions",
-    closeButtonEl: "button.close",
   };
 
   static properties = {
