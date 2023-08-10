@@ -131,6 +131,7 @@ treeherder:
         support-license: support-license
         support-locale: support-locale
         support-migration: support-migration
+        support-remotesettings: support-remotesettings
         support-rusthttp: support-rusthttp
         support-rusterrors: support-rusterrors
         support-rustlog: support-rustlog

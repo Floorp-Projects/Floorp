@@ -50,6 +50,7 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':ui-colors')
     implementation project(':support-base')
+    implementation project(':support-remotesettings')
 
     implementation ComponentsDependencies.androidx_core_ktx
 

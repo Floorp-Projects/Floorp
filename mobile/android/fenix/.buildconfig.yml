@@ -78,6 +78,7 @@ projects:
     - support-images
     - support-ktx
     - support-locale
+    - support-remotesettings
     - support-rusterrors
     - support-rusthttp
     - support-rustlog

@@ -633,6 +633,7 @@ projects:
     - support-base
     - support-images
     - support-ktx
+    - support-remotesettings
     - support-test
     - support-utils
     - tooling-lint
@@ -689,6 +690,7 @@ projects:
     - support-base
     - support-images
     - support-ktx
+    - support-remotesettings
     - support-test
     - support-test-libstate
     - support-utils
@@ -728,6 +730,7 @@ projects:
     - support-base
     - support-images
     - support-ktx
+    - support-remotesettings
     - support-test
     - support-test-libstate
     - support-utils
@@ -829,6 +832,7 @@ projects:
     - support-base
     - support-images
     - support-ktx
+    - support-remotesettings
     - support-test
     - support-test-libstate
     - support-utils
@@ -989,6 +993,7 @@ projects:
     - support-base
     - support-images
     - support-ktx
+    - support-remotesettings
     - support-test
     - support-test-libstate
     - support-utils
@@ -1083,6 +1088,7 @@ projects:
     - support-base
     - support-images
     - support-ktx
+    - support-remotesettings
     - support-test
     - support-test-fakes
     - support-test-libstate
@@ -1418,6 +1424,7 @@ projects:
     - support-base
     - support-images
     - support-ktx
+    - support-remotesettings
     - support-test
     - support-utils
     - tooling-lint
@@ -1592,6 +1599,7 @@ projects:
     - support-images
     - support-ktx
     - support-locale
+    - support-remotesettings
     - support-rustlog
     - support-utils
     - support-webextensions
@@ -1641,6 +1649,7 @@ projects:
     - support-images
     - support-ktx
     - support-locale
+    - support-remotesettings
     - support-rusthttp
     - support-utils
     - tooling-lint
@@ -2028,6 +2037,17 @@ projects:
     - support-utils
     - tooling-lint
     - ui-icons
+  support-remotesettings:
+    description: A component to help fetch data from remote servers.
+    path: components/support/remotesettings
+    publish: true
+    upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
+    - support-base
+    - support-ktx
+    - support-utils
+    - tooling-lint
   support-rusterrors:
     description: A bridge for reporting Rust errors to Sentry/Glean
     path: components/support/rusterrors

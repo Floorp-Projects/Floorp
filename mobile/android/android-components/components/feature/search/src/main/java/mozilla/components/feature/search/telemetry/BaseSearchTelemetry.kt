@@ -6,7 +6,6 @@ package mozilla.components.feature.search.telemetry
 
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
