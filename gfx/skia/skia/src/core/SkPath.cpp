@@ -3424,40 +3424,45 @@ SkPathVerbAnalysis sk_path_analyze_verbs(const uint8_t vbs[], int verbCount) {
 
     bool needMove = true;
     bool invalid = false;
-    for (int i = 0; i < verbCount; ++i) {
-        switch ((SkPathVerb)vbs[i]) {
-            case SkPathVerb::kMove:
-                needMove = false;
-                info.points += 1;
-                break;
-            case SkPathVerb::kLine:
-                invalid |= needMove;
-                info.segmentMask |= kLine_SkPathSegmentMask;
-                info.points += 1;
-                break;
-            case SkPathVerb::kQuad:
-                invalid |= needMove;
-                info.segmentMask |= kQuad_SkPathSegmentMask;
-                info.points += 2;
-                break;
-            case SkPathVerb::kConic:
-                invalid |= needMove;
-                info.segmentMask |= kConic_SkPathSegmentMask;
-                info.points += 2;
-                info.weights += 1;
-                break;
-            case SkPathVerb::kCubic:
-                invalid |= needMove;
-                info.segmentMask |= kCubic_SkPathSegmentMask;
-                info.points += 3;
-                break;
-            case SkPathVerb::kClose:
-                invalid |= needMove;
-                needMove = true;
-                break;
-            default:
-                invalid = true;
-                break;
+
+    if (verbCount >= (INT_MAX / 3)) {
+        invalid = true;
+    } else {
+        for (int i = 0; i < verbCount; ++i) {
+            switch ((SkPathVerb)vbs[i]) {
+                case SkPathVerb::kMove:
+                    needMove = false;
+                    info.points += 1;
+                    break;
+                case SkPathVerb::kLine:
+                    invalid |= needMove;
+                    info.segmentMask |= kLine_SkPathSegmentMask;
+                    info.points += 1;
+                    break;
+                case SkPathVerb::kQuad:
+                    invalid |= needMove;
+                    info.segmentMask |= kQuad_SkPathSegmentMask;
+                    info.points += 2;
+                    break;
+                case SkPathVerb::kConic:
+                    invalid |= needMove;
+                    info.segmentMask |= kConic_SkPathSegmentMask;
+                    info.points += 2;
+                    info.weights += 1;
+                    break;
+                case SkPathVerb::kCubic:
+                    invalid |= needMove;
+                    info.segmentMask |= kCubic_SkPathSegmentMask;
+                    info.points += 3;
+                    break;
+                case SkPathVerb::kClose:
+                    invalid |= needMove;
+                    needMove = true;
+                    break;
+                default:
+                    invalid = true;
+                    break;
+            }
         }
     }
     info.valid = !invalid;
