@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/receiver.h"
+#include "modules/video_coding/deprecated/receiver.h"
 
 #include <cstdint>
 #include <cstdlib>

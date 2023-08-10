@@ -308,8 +308,6 @@ rtc_library("video_coding_legacy") {
   visibility = [ ":video_coding_unittests" ]
   sources = [
     "include/video_coding.h",
-    "receiver.cc",
-    "receiver.h",
     "video_coding_impl.cc",
     "video_coding_impl.h",
     "video_receiver.cc",
@@ -352,6 +350,7 @@ rtc_library("video_coding_legacy") {
     "deprecated:deprecated_jitter_buffer",
     "deprecated:deprecated_jitter_buffer_common",
     "deprecated:deprecated_packet",
+    "deprecated:deprecated_receiver",
     "deprecated:deprecated_session_info",
     "timing:inter_frame_delay_variation_calculator",
     "timing:jitter_estimator",
@@ -1208,7 +1207,6 @@ if (rtc_include_tests) {
       "loss_notification_controller_unittest.cc",
       "nack_requester_unittest.cc",
       "packet_buffer_unittest.cc",
-      "receiver_unittest.cc",
       "rtp_frame_reference_finder_unittest.cc",
       "rtp_vp8_ref_finder_unittest.cc",
       "rtp_vp9_ref_finder_unittest.cc",
