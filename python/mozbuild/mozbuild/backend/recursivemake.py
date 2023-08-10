@@ -1419,7 +1419,17 @@ class RecursiveMakeBackend(MakeBackend):
             or isinstance(obj, (StaticLibrary, SandboxedWasmLibrary))
             and obj.no_expand_lib
         ):
-            backend_file.write_once("%s_OBJS := %s\n" % (obj.name, objs_ref))
+            response_file_path = "%s.list" % obj.name.replace(".", "_")
+            response_file_ref = self._make_ar_response_file(
+                obj.objdir, objs, response_file_path
+            )
+            if response_file_ref:
+                backend_file.write_once(
+                    "%s_OBJS := %s\n" % (obj.name, response_file_ref)
+                )
+                backend_file.write_once("%s: %s\n" % (obj_target, response_file_path))
+            else:
+                backend_file.write_once("%s_OBJS := %s\n" % (obj.name, objs_ref))
             backend_file.write("%s: %s\n" % (obj_target, objs_ref))
         elif not isinstance(obj, (HostLibrary, StaticLibrary, SandboxedWasmLibrary)):
             list_file_path = "%s.list" % obj.name.replace(".", "_")
