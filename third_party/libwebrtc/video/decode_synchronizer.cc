@@ -175,6 +175,10 @@ void DecodeSynchronizer::RemoveFrameScheduler(
 
 void DecodeSynchronizer::ScheduleNextTick() {
   RTC_DCHECK_RUN_ON(worker_queue_);
+  if (tick_scheduled_) {
+    return;
+  }
+  tick_scheduled_ = true;
   metronome_->RequestCallOnNextTick(
       SafeTask(safety_.flag(), [this] { OnTick(); }));
 }
@@ -182,6 +186,7 @@ void DecodeSynchronizer::ScheduleNextTick() {
 void DecodeSynchronizer::OnTick() {
   TRACE_EVENT0("webrtc", __func__);
   RTC_DCHECK_RUN_ON(worker_queue_);
+  tick_scheduled_ = false;
   expected_next_tick_ = clock_->CurrentTime() + metronome_->TickPeriod();
 
   for (auto* scheduler : schedulers_) {
