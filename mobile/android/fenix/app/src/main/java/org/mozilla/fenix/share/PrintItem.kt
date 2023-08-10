@@ -43,9 +43,7 @@ fun PrintItem(
 
         Icon(
             painter = painterResource(R.drawable.ic_print),
-            contentDescription = stringResource(
-                R.string.content_description_close_button,
-            ),
+            contentDescription = null,
             tint = FirefoxTheme.colors.iconPrimary,
         )
 
