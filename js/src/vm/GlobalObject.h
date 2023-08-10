@@ -207,7 +207,6 @@ class GlobalObjectData {
 
   // Global state for regular expressions.
   RegExpRealm regExpRealm;
-  UniquePtr<RegExpStatics> regExpStatics;
 
   HeapPtr<ArgumentsObject*> mappedArgumentsTemplate;
   HeapPtr<ArgumentsObject*> unmappedArgumentsTemplate;

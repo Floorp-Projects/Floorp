@@ -929,6 +929,10 @@ SharedShape* RegExpRealm::createMatchResultShape(JSContext* cx,
 }
 
 void RegExpRealm::trace(JSTracer* trc) {
+  if (regExpStatics) {
+    regExpStatics->trace(trc);
+  }
+
   for (auto& shape : matchResultShapes_) {
     TraceNullableEdge(trc, &shape, "RegExpRealm::matchResultShapes_");
   }
