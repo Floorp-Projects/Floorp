@@ -41,20 +41,23 @@ enum LineBreakType { LINE_BREAK_TYPE_NATIVE, LINE_BREAK_TYPE_XP };
 class MOZ_STACK_CLASS ContentEventHandler {
  private:
   /**
-   * RawRange is a helper class of ContentEventHandler class.  The caller is
-   * responsible for making sure the start/end nodes are in document order.
-   * This is enforced by assertions in DEBUG builds.
+   * SimpleRangeBase is a helper template class of ContentEventHandler class
+   * that stores 2 DOM points as a range without observing the mutation.  I.e.,
+   * similar to dom::StaticRange, but can only be on the stack and does not have
+   * unnecessary features for ContentEventHandler so it is fast.
+   * Therefore, initializers are responsible for making sure the start/end nodes
+   * are in document order. This is enforced by assertions in DEBUG builds.
    */
   template <typename NodeType, typename RangeBoundaryType>
-  class MOZ_STACK_CLASS RawRangeBase final {
+  class MOZ_STACK_CLASS SimpleRangeBase final {
    public:
-    RawRangeBase();
-    RawRangeBase(RawRangeBase<NodeType, RangeBoundaryType>&&) noexcept;
+    SimpleRangeBase();
+    SimpleRangeBase(SimpleRangeBase<NodeType, RangeBoundaryType>&&) noexcept;
     template <typename OtherNodeType, typename OtherRangeBoundaryType>
-    explicit RawRangeBase(
-        const RawRangeBase<OtherNodeType, OtherRangeBoundaryType>& aOther);
+    explicit SimpleRangeBase(
+        const SimpleRangeBase<OtherNodeType, OtherRangeBoundaryType>& aOther);
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    ~RawRangeBase();
+    ~SimpleRangeBase();
 #endif
 
     void Clear() {
@@ -120,8 +123,8 @@ class MOZ_STACK_CLASS ContentEventHandler {
 #endif
   };
 
-  using RawRange = RawRangeBase<RefPtr<nsINode>, RangeBoundary>;
-  using UnsafeRawRange = RawRangeBase<nsINode*, RawRangeBoundary>;
+  using SimpleRange = SimpleRangeBase<RefPtr<nsINode>, RangeBoundary>;
+  using UnsafeSimpleRange = SimpleRangeBase<nsINode*, RawRangeBoundary>;
 
  public:
   using Element = dom::Element;
@@ -171,9 +174,9 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // is called, i.e., handling eQuerySelectedText, it's the specified selection
   // by WidgetQueryContentEvent::mInput::mSelectionType.
   RefPtr<Selection> mSelection;
-  // mFirstSelectedRawRange is initialized from the first range of mSelection,
-  // if it exists.  Otherwise, it is reset by Clear().
-  RawRange mFirstSelectedRawRange;
+  // mFirstSelectedSimpleRange is initialized from the first range of
+  // mSelection, if it exists.  Otherwise, it is reset by Clear().
+  SimpleRange mFirstSelectedSimpleRange;
   RefPtr<Element> mRootElement;
 
   MOZ_CAN_RUN_SCRIPT nsresult Init(WidgetQueryContentEvent* aEvent);
@@ -316,15 +319,15 @@ class MOZ_STACK_CLASS ContentEventHandler {
   nsresult GenerateFlatTextContent(const Element* aElement, nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get the contents of aRange as plain text.
-  nsresult GenerateFlatTextContent(const UnsafeRawRange& aRawRange,
+  nsresult GenerateFlatTextContent(const UnsafeSimpleRange& aSimpleRange,
                                    nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get offset of start of aRange.  Note that the result includes the length
   // of line breaker caused by the start of aContent because aRange never
   // includes the line breaker caused by its start node.
-  template <typename RawRangeType>
-  nsresult GetStartOffset(const RawRangeType& aRawRange, uint32_t* aOffset,
-                          LineBreakType aLineBreakType);
+  template <typename SimpleRangeType>
+  nsresult GetStartOffset(const SimpleRangeType& aSimpleRange,
+                          uint32_t* aOffset, LineBreakType aLineBreakType);
   // Check if we should insert a line break before aContent.
   // This should return false only when aContent is an html element which
   // is typically used in a paragraph like <em>.
@@ -355,7 +358,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
     }
 
     // The range in the DOM tree.
-    UnsafeRawRange mRange;
+    UnsafeSimpleRange mRange;
     // Actual start offset of the range in the flattened text.  If aOffset
     // of ConvertFlatTextOffsetToDOMRange() is middle of a surrogate pair,
     // a CRLF or a complex character of some languages, this may be set to
@@ -375,9 +378,10 @@ class MOZ_STACK_CLASS ContentEventHandler {
                                   LineBreakType aLineBreakType,
                                   bool aExpandToClusterBoundaries);
 
-  // If the aCollapsedRawRange isn't in text node but next to a text node,
+  // If the aSimpleRange isn't in text node but next to a text node,
   // this method modifies it in the text node.  Otherwise, not modified.
-  nsresult AdjustCollapsedRangeMaybeIntoTextNode(RawRange& aCollapsedRawRange);
+  // Note that aSimpleRange must be collapsed.
+  nsresult AdjustCollapsedRangeMaybeIntoTextNode(SimpleRange& aSimpleRange);
   // Convert the frame relative offset to be relative to the root frame of the
   // root presContext (but still measured in appUnits of aFrame's presContext).
   nsresult ConvertToRootRelativeOffset(nsIFrame* aFrame, nsRect& aRect);
@@ -393,11 +397,11 @@ class MOZ_STACK_CLASS ContentEventHandler {
                                const dom::Text& aTextNode, uint32_t aBaseOffset,
                                uint32_t aXPStartOffset, uint32_t aXPEndOffset,
                                LineBreakType aLineBreakType);
-  nsresult GenerateFlatFontRanges(const UnsafeRawRange& aRawRange,
+  nsresult GenerateFlatFontRanges(const UnsafeSimpleRange& aSimpleRange,
                                   FontRangeArray& aFontRanges,
                                   uint32_t& aLength,
                                   LineBreakType aLineBreakType);
-  nsresult QueryTextRectByRange(const RawRange& aRawRange,
+  nsresult QueryTextRectByRange(const SimpleRange& aSimpleRange,
                                 LayoutDeviceIntRect& aRect,
                                 WritingMode& aWritingMode);
 
@@ -427,14 +431,14 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // should affect to computing text rect in the range.  mOffsetInNode is start
   // offset in the frame.
   FrameAndNodeOffset GetFirstFrameInRangeForTextRect(
-      const UnsafeRawRange& aRawRange);
+      const UnsafeSimpleRange& aSimpleRange);
 
   // Get last frame before the end of the given range for computing text rect.
   // This returns invalid FrameAndNodeOffset if there is no content which
   // should affect to computing text rect in the range.  mOffsetInNode is end
   // offset in the frame.
   FrameAndNodeOffset GetLastFrameInRangeForTextRect(
-      const UnsafeRawRange& aRawRange);
+      const UnsafeSimpleRange& aSimpleRange);
 
   struct MOZ_STACK_CLASS FrameRelativeRect final {
     // mRect is relative to the mBaseFrame's position.
