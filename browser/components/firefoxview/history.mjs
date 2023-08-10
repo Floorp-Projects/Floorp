@@ -456,11 +456,10 @@ class HistoryInView extends ViewPage {
         class="show-all-history-footer"
         ?hidden=${!this.allHistoryItems.size}
       >
-        <span
-          class="show-all-history-link"
+        <button
           data-l10n-id="firefoxview-show-all-history"
           @click=${this.showAllHistory}
-        ></span>
+        ></button>
       </div>
     `;
   }

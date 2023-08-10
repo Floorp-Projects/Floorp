@@ -16,12 +16,7 @@
 
 .show-all-history-footer {
   text-align: center;
-  color: var(--fxview-primary-action-background);
-  cursor: pointer;
-}
-
-.show-all-history-link {
-  text-decoration: underline;
+  margin-block-end: 24px;
 }
 
 .import-history-banner .banner-text {
