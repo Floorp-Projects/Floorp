@@ -36,9 +36,13 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     );
   });
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Opening the popup");
+    },
+    assertPanelFirstShowView
+  );
 
   await TestTranslationsTelemetry.assertEvent(
     "OpenPanel",
@@ -142,6 +146,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     }
   );
 
+  assertPanelErrorView();
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
       getByL10nId("translations-panel-translate-cancel"),
@@ -168,9 +173,13 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     }
   );
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Opening the popup");
+    },
+    assertPanelFirstShowView
+  );
 
   await TestTranslationsTelemetry.assertEvent(
     "OpenPanel",

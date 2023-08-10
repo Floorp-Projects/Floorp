@@ -22,9 +22,13 @@ add_task(async function test_unsupported_lang() {
   click(appMenuButton, "Opening the app menu");
   await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(getByL10nId("appmenuitem-translate"), "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(getByL10nId("appmenuitem-translate"), "Opening the popup");
+    },
+    assertPanelUnsupportedLanguageView
+  );
 
   ok(
     getByL10nId("translations-panel-error-unsupported"),
@@ -39,9 +43,15 @@ add_task(async function test_unsupported_lang() {
     "The learn more link is available"
   );
 
-  click(
-    getByL10nId("translations-panel-error-change-button"),
-    "Change the languages."
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(
+        getByL10nId("translations-panel-error-change-button"),
+        "Change the languages."
+      );
+    },
+    assertPanelDefaultView
   );
 
   info("Waiting to find the translations panel header.");

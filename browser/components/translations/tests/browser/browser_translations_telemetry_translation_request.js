@@ -47,9 +47,13 @@ add_task(async function test_translations_telemetry_manual_translation() {
     }
   );
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(button, "Opening the popup");
+    },
+    assertPanelDefaultView
+  );
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
