@@ -75,8 +75,8 @@ struct InstantiationStorage {
       InstantiationStorage* storage);
 
   friend JS_PUBLIC_API bool PrepareForInstantiate(
-      JS::FrontendContext* fc, JS::CompilationStorage& compileStorage,
-      JS::Stencil& stencil, JS::InstantiationStorage& storage);
+      JS::FrontendContext* fc, JS::Stencil& stencil,
+      JS::InstantiationStorage& storage);
 
   friend struct js::ParseTask;
 

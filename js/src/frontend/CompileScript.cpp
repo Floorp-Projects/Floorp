@@ -189,28 +189,8 @@ already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
                                           compileStorage);
 }
 
-#ifdef DEBUG
-// We don't need to worry about GC if the CompilationInput has no GC pointers
-static bool isGCSafe(js::frontend::CompilationInput& input) {
-  bool isGlobalOrModule =
-      input.target == CompilationInput::CompilationTarget::Global ||
-      input.target == CompilationInput::CompilationTarget::Module;
-  bool scopeHasNoGC =
-      input.enclosingScope.isStencil() || input.enclosingScope.isNull();
-  bool scriptHasNoGC =
-      input.lazyOuterScript().isStencil() || input.lazyOuterScript().isNull();
-  bool cacheHasNoGC = input.atomCache.empty();
-
-  return isGlobalOrModule && scopeHasNoGC && scriptHasNoGC && cacheHasNoGC;
-}
-#endif  // DEBUG
-
-bool JS::PrepareForInstantiate(JS::FrontendContext* fc,
-                               JS::CompilationStorage& compileStorage,
-                               JS::Stencil& stencil,
+bool JS::PrepareForInstantiate(JS::FrontendContext* fc, JS::Stencil& stencil,
                                JS::InstantiationStorage& storage) {
-  MOZ_ASSERT(compileStorage.hasInput());
-  MOZ_ASSERT(isGCSafe(compileStorage.getInput()));
   if (!storage.gcOutput_) {
     storage.gcOutput_ =
         fc->getAllocator()
@@ -219,6 +199,6 @@ bool JS::PrepareForInstantiate(JS::FrontendContext* fc,
       return false;
     }
   }
-  return CompilationStencil::prepareForInstantiate(
-      fc, compileStorage.getInput().atomCache, stencil, *storage.gcOutput_);
+  return CompilationStencil::prepareForInstantiate(fc, stencil,
+                                                   *storage.gcOutput_);
 }

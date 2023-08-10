@@ -597,8 +597,7 @@ void CompileToStencilTask<Unit>::parse(FrontendContext* fc) {
   }
 
   if (options.allocateInstantiationStorage) {
-    if (!JS::PrepareForInstantiate(fc, compileStorage_, *stencil_,
-                                   instantiationStorage_)) {
+    if (!JS::PrepareForInstantiate(fc, *stencil_, instantiationStorage_)) {
       stencil_ = nullptr;
     }
   }
@@ -620,8 +619,7 @@ void CompileModuleToStencilTask<Unit>::parse(FrontendContext* fc) {
   }
 
   if (options.allocateInstantiationStorage) {
-    if (!JS::PrepareForInstantiate(fc, compileStorage_, *stencil_,
-                                   instantiationStorage_)) {
+    if (!JS::PrepareForInstantiate(fc, *stencil_, instantiationStorage_)) {
       stencil_ = nullptr;
     }
   }
@@ -637,29 +635,16 @@ DecodeStencilTask::DecodeStencilTask(JSContext* cx,
 }
 
 void DecodeStencilTask::parse(FrontendContext* fc) {
-  if (!compileStorage_.allocateInput(fc, options)) {
-    return;
-  }
-  if (!compileStorage_.getInput().initForGlobal(fc)) {
-    return;
-  }
+  JS::DecodeOptions decodeOptions(options);
 
-  stencil_ = fc->getAllocator()->new_<frontend::CompilationStencil>(
-      compileStorage_.getInput().source);
-  if (!stencil_) {
-    return;
-  }
-
-  bool succeeded = false;
-  (void)stencil_->deserializeStencils(fc, options, range, &succeeded);
-  if (!succeeded) {
-    stencil_ = nullptr;
+  JS::TranscodeResult tr =
+      JS::DecodeStencil(fc, decodeOptions, range, getter_AddRefs(stencil_));
+  if (tr != JS::TranscodeResult::Ok) {
     return;
   }
 
   if (options.allocateInstantiationStorage) {
-    if (!JS::PrepareForInstantiate(fc, compileStorage_, *stencil_,
-                                   instantiationStorage_)) {
+    if (!JS::PrepareForInstantiate(fc, *stencil_, instantiationStorage_)) {
       stencil_ = nullptr;
     }
   }
@@ -1839,7 +1824,6 @@ GlobalHelperThreadState::finishStencilTask(JSContext* cx,
     return nullptr;
   }
 
-  MOZ_ASSERT(parseTask->compileStorage_.hasInput());
   MOZ_ASSERT(parseTask->stencil_.get());
 
   if (storage) {

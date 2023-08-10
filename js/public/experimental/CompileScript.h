@@ -157,8 +157,8 @@ extern JS_PUBLIC_API already_AddRefed<JS::Stencil> CompileModuleScriptToStencil(
     JS::SourceText<char16_t>& srcBuf, JS::CompilationStorage& compileStorage);
 
 extern JS_PUBLIC_API bool PrepareForInstantiate(
-    JS::FrontendContext* fc, JS::CompilationStorage& compileStorage,
-    JS::Stencil& stencil, JS::InstantiationStorage& storage);
+    JS::FrontendContext* fc, JS::Stencil& stencil,
+    JS::InstantiationStorage& storage);
 
 }  // namespace JS
 

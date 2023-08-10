@@ -6963,7 +6963,7 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
 
   JS::InstantiationStorage storage;
   if (prepareForInstantiate) {
-    if (!JS::PrepareForInstantiate(&fc, compileStorage, *stencil, storage)) {
+    if (!JS::PrepareForInstantiate(&fc, *stencil, storage)) {
       return false;
     }
   }

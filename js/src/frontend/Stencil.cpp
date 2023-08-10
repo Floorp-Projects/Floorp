@@ -2910,15 +2910,10 @@ bool CompilationStencil::prepareForInstantiate(
 
 /* static */
 bool CompilationStencil::prepareForInstantiate(
-    FrontendContext* fc, CompilationAtomCache& atomCache,
-    const CompilationStencil& stencil,
+    FrontendContext* fc, const CompilationStencil& stencil,
     PreallocatedCompilationGCOutput& gcOutput) {
-  if (!gcOutput.allocate(fc, stencil.scriptData.size(),
-                         stencil.scopeData.size())) {
-    return false;
-  }
-
-  return atomCache.allocate(fc, stencil.parserAtomData.size());
+  return gcOutput.allocate(fc, stencil.scriptData.size(),
+                           stencil.scopeData.size());
 }
 
 bool CompilationStencil::serializeStencils(JSContext* cx,
