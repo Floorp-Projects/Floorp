@@ -10,7 +10,7 @@
   --autocomplete-popup-highlight-background: SelectedItem;
   --autocomplete-popup-highlight-color: SelectedItemText;
 
-  --urlbar-popup-action-color: hsl(178, 100%, 28%);
+  --urlbarView-secondary-text-color: color-mix(in srgb, currentColor 73%, transparent);
 
   --urlbarView-action-slide-in-distance: 200px;
 
@@ -43,20 +43,17 @@
 
 :root[lwt-toolbar-field-focus-brighttext] {
   --urlbar-popup-url-color: var(--lwt-brighttext-url-color);
-  --urlbar-popup-action-color: #30e60b;
+  --urlbar-popup-action-color: rgb(191,191,201);
 }
 
 :root[lwt-toolbar-field-brighttext] {
   --autocomplete-popup-highlight-background: rgb(0, 99, 225);
 }
 
-:root[lwt-toolbar-field-focus-brighttext] {
-  --urlbar-popup-action-color: rgb(191,191,201);
-}
-
 @media (prefers-contrast) {
   :root {
     --urlbarView-result-button-background-opacity: 100%;
+    --urlbarView-secondary-text-color: currentColor;
   }
 }
 
@@ -616,6 +613,8 @@
 
 .urlbarView-row:is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action,
 .urlbarView-row[selected] > .urlbarView-row-inner > .urlbarView-url,
+.urlbarView-row[rich-suggestion]:is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-action,
+.urlbarView-row[rich-suggestion][selected] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-url,
 .urlbarView-row[type=tabtosearch][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
   color: inherit;
 }
@@ -754,7 +753,7 @@
 .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description,
 .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
   font-size: var(--urlbarView-small-font-size);
-  color: var(--urlbar-popup-action-color);
+  color: var(--urlbarView-secondary-text-color);
   white-space: normal;
 }
 
