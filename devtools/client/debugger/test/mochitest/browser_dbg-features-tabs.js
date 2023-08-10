@@ -40,6 +40,20 @@ add_task(async function () {
   // Some sources are loaded from the same URL and only one tab will be opened for them
   is(countTabs(dbg), uniqueUrls.size, "Got a tab for each distinct source URL");
 
+  invokeInTab("breakInEval");
+  await waitFor(
+    () => countTabs(dbg) == uniqueUrls.size + 1,
+    "Wait for the tab for the new evaled source"
+  );
+  await resume(dbg);
+
+  invokeInTab("breakInEval");
+  await waitFor(
+    () => countTabs(dbg) == uniqueUrls.size + 2,
+    "Wait for yet another tab for the second evaled source"
+  );
+  await resume(dbg);
+
   await reload(dbg, ...INTEGRATION_TEST_PAGE_SOURCES);
 
   await waitFor(

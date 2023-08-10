@@ -58,8 +58,9 @@ const INDEX_PAGE_CONTENT = `<!DOCTYPE html>
           this.newFunction = new Function("${NEW_FUNCTION_CONTENT}");
 
           // This method will be called via invokeInTab.
+          let inFunctionIncrement = 1;
           function breakInNewFunction() {
-            new Function("a\\n", "b", "debugger;")();
+            new Function("a\\n", "b" +inFunctionIncrement++, "debugger;")();
           }
         </script>
       </head>
@@ -332,15 +333,32 @@ add_task(async function testSourceTextContent() {
     "scripts with HTTP error code do not appear in the source list"
   );
 
-  const onNewSource = waitForDispatch(dbg.store, "ADD_SOURCES");
+  info(
+    "Verify that breaking in a source without url displays the right content"
+  );
+  let onNewSource = waitForDispatch(dbg.store, "ADD_SOURCES");
   invokeInTab("breakInNewFunction");
   await waitForPaused(dbg);
-  const { sources } = await onNewSource;
+  let { sources } = await onNewSource;
   is(sources.length, 1, "Got a unique source related to new Function source");
-  const newFunctionSource = sources[0];
+  let newFunctionSource = sources[0];
   // We acknowledge the function header as well as the new line in the first argument
   assertPausedAtSourceAndLine(dbg, newFunctionSource.id, 4, 0);
-  is(getCM(dbg).getValue(), "function anonymous(a\n,b\n) {\ndebugger;\n}");
+  is(getCM(dbg).getValue(), "function anonymous(a\n,b1\n) {\ndebugger;\n}");
+  await resume(dbg);
+
+  info(
+    "Break a second time in a source without url to verify we display the right content"
+  );
+  onNewSource = waitForDispatch(dbg.store, "ADD_SOURCES");
+  invokeInTab("breakInNewFunction");
+  await waitForPaused(dbg);
+  ({ sources } = await onNewSource);
+  is(sources.length, 1, "Got a unique source related to new Function source");
+  newFunctionSource = sources[0];
+  // We acknowledge the function header as well as the new line in the first argument
+  assertPausedAtSourceAndLine(dbg, newFunctionSource.id, 4, 0);
+  is(getCM(dbg).getValue(), "function anonymous(a\n,b2\n) {\ndebugger;\n}");
   await resume(dbg);
 
   // As we are loading the page while the debugger is already opened,

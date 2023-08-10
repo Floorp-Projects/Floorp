@@ -54,7 +54,9 @@ function matchesSource(tab, source) {
 }
 
 function matchesUrl(tab, source) {
-  return tab.url === source.url && tab.isOriginal == source.isOriginal;
+  return (
+    source.url && tab.url === source.url && tab.isOriginal == source.isOriginal
+  );
 }
 
 function addVisibleTabsForSourceActors(state, sourceActors) {
