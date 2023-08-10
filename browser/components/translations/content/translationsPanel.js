@@ -222,14 +222,6 @@ var TranslationsPanel = new (class {
   #isPopupOpen = false;
 
   /**
-   * Show the introductory message on the first load, and keep on showing it for
-   * this URI, until the user navigates away.
-   *
-   * @type {string | null}
-   */
-  #firstShowUriSpec = null;
-
-  /**
    * Where the lazy elements are stored.
    *
    * @type {Record<string, Element>?}
@@ -670,17 +662,18 @@ var TranslationsPanel = new (class {
       this.updateUIForReTranslation(false /* isReTranslation */);
       cancelButton.hidden = false;
       multiview.setAttribute("mainViewId", "translations-panel-view-default");
+      let actor = this.#getTranslationsActor();
 
       if (!this._hasShownPanel) {
-        this.#firstShowUriSpec = gBrowser.currentURI.spec;
+        actor.firstShowUriSpec = gBrowser.currentURI.spec;
       }
 
       if (
         this._hasShownPanel &&
-        gBrowser.currentURI.spec !== this.#firstShowUriSpec
+        gBrowser.currentURI.spec !== actor.firstShowUriSpec
       ) {
         document.l10n.setAttributes(header, "translations-panel-header");
-        this.#firstShowUriSpec = null;
+        actor.firstShowUriSpec = null;
         intro.hidden = true;
       } else {
         Services.prefs.setBoolPref("browser.translations.panelShown", true);
@@ -1507,7 +1500,8 @@ var TranslationsPanel = new (class {
             // button's accessible tooltip label.
             if (
               this._hasShownPanel &&
-              gBrowser.currentURI.spec !== this.#firstShowUriSpec
+              gBrowser.currentURI.spec !==
+                this.#getTranslationsActor().firstShowUriSpec
             ) {
               document.l10n.setAttributes(
                 button,
