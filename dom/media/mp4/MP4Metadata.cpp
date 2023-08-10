@@ -334,6 +334,9 @@ MP4Metadata::ResultAndTrackInfo MP4Metadata::GetTrackInfo(
       case MP4PARSE_CODEC_EC3:
         codecString = "ec-3";
         break;
+      case MP4PARSE_CODEC_HEVC:
+        codecString = "hevc";
+        break;
     }
   }
   MOZ_LOG(gMP4MetadataLog, LogLevel::Debug,

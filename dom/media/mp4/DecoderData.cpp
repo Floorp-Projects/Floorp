@@ -326,6 +326,8 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
     mMimeType = "video/av1"_ns;
   } else if (codecType == MP4PARSE_CODEC_MP4V) {
     mMimeType = "video/mp4v-es"_ns;
+  } else if (codecType == MP4PARSE_CODEC_HEVC) {
+    mMimeType = "video/hevc"_ns;
   }
   mTrackId = track->track_id;
   if (track->duration > TimeUnit::MaxTicks()) {
