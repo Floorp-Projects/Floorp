@@ -66,9 +66,9 @@ void ContentEventHandler::RawRange::AssertStartIsBeforeOrEqualToEnd() {
   MOZ_ASSERT(
       *nsContentUtils::ComparePoints(
           mStart.Container(),
-          *mStart.Offset(NodePosition::OffsetFilter::kValidOrInvalidOffsets),
+          *mStart.Offset(RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
           mEnd.Container(),
-          *mEnd.Offset(NodePosition::OffsetFilter::kValidOrInvalidOffsets)) <=
+          *mEnd.Offset(RangeBoundary::OffsetFilter::kValidOrInvalidOffsets)) <=
       0);
 }
 
@@ -1564,7 +1564,7 @@ void ContentEventHandler::EnsureNonEmptyRect(LayoutDeviceIntRect& aRect) const {
 ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetFirstFrameInRangeForTextRect(
     const RawRange& aRawRange) {
-  NodePosition nodePosition;
+  RawNodePosition nodePosition;
   UnsafePreContentIterator preOrderIter;
   nsresult rv =
       preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
@@ -1616,18 +1616,18 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(
 
   Result<nsIFrame*, nsresult> firstFrameOrError = GetFrameForTextRect(
       nodePosition.Container(),
-      *nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets), true);
+      *nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets), true);
   if (NS_WARN_IF(firstFrameOrError.isErr()) || !firstFrameOrError.inspect()) {
     return FrameAndNodeOffset();
   }
   return FrameAndNodeOffset(
       firstFrameOrError.inspect(),
-      *nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets));
+      *nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets));
 }
 
 ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
-  NodePosition nodePosition;
+  RawNodePosition nodePosition;
   UnsafePreContentIterator preOrderIter;
   nsresult rv =
       preOrderIter.Init(aRawRange.Start().AsRaw(), aRawRange.End().AsRaw());
@@ -1698,7 +1698,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
       // is 0, we should store current position but continue looking for
       // previous node (If there are no nodes before it, we should use current
       // node position for returning its frame).
-      if (*nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets) ==
+      if (*nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets) ==
           0) {
         continue;
       }
@@ -1718,7 +1718,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
 
   Result<nsIFrame*, nsresult> lastFrameOrError = GetFrameForTextRect(
       nodePosition.Container(),
-      *nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets), true);
+      *nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets), true);
   if (NS_WARN_IF(lastFrameOrError.isErr()) || !lastFrameOrError.inspect()) {
     return FrameAndNodeOffset();
   }
@@ -1729,7 +1729,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
   if (!lastFrameOrError.inspect()->IsTextFrame()) {
     return FrameAndNodeOffset(
         lastFrameOrError.inspect(),
-        *nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets));
+        *nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets));
   }
 
   int32_t start = lastFrameOrError.inspect()->GetOffsets().first;
@@ -1738,16 +1738,17 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
   // node and it's not 0, the frame shouldn't be added to the text rect.  So,
   // this should return previous text frame and its last offset if there is
   // at least one text frame.
-  if (*nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets) &&
-      *nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets) ==
+  if (*nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets) &&
+      *nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets) ==
           static_cast<uint32_t>(start)) {
     const uint32_t newNodePositionOffset =
-        *nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets);
+        *nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets);
     MOZ_ASSERT(newNodePositionOffset != 0);
     nodePosition = {nodePosition.Container(), newNodePositionOffset - 1u};
     lastFrameOrError = GetFrameForTextRect(
         nodePosition.Container(),
-        *nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets), true);
+        *nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets),
+        true);
     if (NS_WARN_IF(lastFrameOrError.isErr()) || !lastFrameOrError.inspect()) {
       return FrameAndNodeOffset();
     }
@@ -1755,7 +1756,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
 
   return FrameAndNodeOffset(
       lastFrameOrError.inspect(),
-      *nodePosition.Offset(NodePosition::OffsetFilter::kValidOffsets));
+      *nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets));
 }
 
 ContentEventHandler::FrameRelativeRect
@@ -2868,8 +2869,9 @@ nsresult ContentEventHandler::OnQueryCharacterAtPoint(
 
   uint32_t tentativeCaretOffset = 0;
   if (NS_WARN_IF(NS_FAILED(GetFlatTextLengthInRange(
-          NodePosition(mRootElement, 0u), NodePosition(tentativeCaretOffsets),
-          mRootElement, &tentativeCaretOffset, GetLineBreakType(aEvent))))) {
+          RawNodePosition(mRootElement, 0u),
+          RawNodePosition(tentativeCaretOffsets), mRootElement,
+          &tentativeCaretOffset, GetLineBreakType(aEvent))))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2886,7 +2888,7 @@ nsresult ContentEventHandler::OnQueryCharacterAtPoint(
   NS_ENSURE_TRUE(contentOffsets.content, NS_ERROR_FAILURE);
   uint32_t offset = 0;
   if (NS_WARN_IF(NS_FAILED(GetFlatTextLengthInRange(
-          NodePosition(mRootElement, 0u), NodePosition(contentOffsets),
+          RawNodePosition(mRootElement, 0u), RawNodePosition(contentOffsets),
           mRootElement, &offset, GetLineBreakType(aEvent))))) {
     return NS_ERROR_FAILURE;
   }
@@ -2950,7 +2952,7 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
 
 /* static */
 nsresult ContentEventHandler::GetFlatTextLengthInRange(
-    const NodePosition& aStartPosition, const NodePosition& aEndPosition,
+    const RawNodePosition& aStartPosition, const RawNodePosition& aEndPosition,
     const Element* aRootElement, uint32_t* aLength,
     LineBreakType aLineBreakType, bool aIsRemovingNode /* = false */) {
   if (NS_WARN_IF(!aRootElement) || NS_WARN_IF(!aStartPosition.IsSet()) ||
@@ -2967,7 +2969,7 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
 
   // Working with ContentIterator, we may need to adjust the end position for
   // including it forcibly.
-  NodePosition endPosition(aEndPosition);
+  RawNodePosition endPosition(aEndPosition);
 
   // This may be called for retrieving the text of removed nodes.  Even in this
   // case, the node thinks it's still in the tree because UnbindFromTree() will
@@ -2983,11 +2985,11 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
     MOZ_ASSERT(aStartPosition.Container() == endPosition.Container(),
                "At removing the node, start and end node should be same");
     MOZ_ASSERT(*aStartPosition.Offset(
-                   NodePosition::OffsetFilter::kValidOrInvalidOffsets) == 0,
+                   RawNodePosition::OffsetFilter::kValidOrInvalidOffsets) == 0,
                "When the node is being removed, the start offset should be 0");
     MOZ_ASSERT(
         static_cast<uint32_t>(*endPosition.Offset(
-            NodePosition::OffsetFilter::kValidOrInvalidOffsets)) ==
+            RawNodePosition::OffsetFilter::kValidOrInvalidOffsets)) ==
             endPosition.Container()->GetChildCount(),
         "When the node is being removed, the end offset should be child count");
     nsresult rv = preOrderIter.Init(aStartPosition.Container());
@@ -3012,7 +3014,7 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
         if (NS_WARN_IF(!firstChild)) {
           return NS_ERROR_FAILURE;
         }
-        endPosition = NodePositionBefore(firstChild, 0u);
+        endPosition = RawNodePositionBefore(firstChild, 0u);
       } else {
         // When the end node is empty, move the end position after the node.
         nsIContent* parentContent = endPosition.Container()->GetParent();
@@ -3025,7 +3027,7 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
           return NS_ERROR_FAILURE;
         }
         MOZ_ASSERT(*indexInParent != UINT32_MAX);
-        endPosition = NodePositionBefore(parentContent, *indexInParent + 1u);
+        endPosition = RawNodePositionBefore(parentContent, *indexInParent + 1u);
       }
     }
 
@@ -3079,7 +3081,7 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
         *aLength += GetTextLength(
             *textNode, aLineBreakType,
             *endPosition.Offset(
-                NodePosition::OffsetFilter::kValidOrInvalidOffsets));
+                RawNodePosition::OffsetFilter::kValidOrInvalidOffsets));
       } else {
         *aLength += GetTextLength(*textNode, aLineBreakType);
       }
@@ -3124,10 +3126,9 @@ nsresult ContentEventHandler::GetStartOffset(const RawRange& aRawRange,
     startIsContainer =
         nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
   }
-  const NodePosition& startPos =
-      startIsContainer ? NodePosition(startNode, aRawRange.StartOffset())
-                       : NodePositionBefore(startNode, aRawRange.StartOffset());
-  return GetFlatTextLengthInRange(NodePosition(mRootElement, 0u), startPos,
+  RawNodePosition startPos(startNode, aRawRange.StartOffset());
+  startPos.mAfterOpenTag = startIsContainer;
+  return GetFlatTextLengthInRange(RawNodePosition(mRootElement, 0u), startPos,
                                   mRootElement, aOffset, aLineBreakType);
 }
 
