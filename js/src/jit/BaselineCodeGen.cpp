@@ -907,9 +907,7 @@ void BaselineCompilerCodeGen::loadGlobalLexicalEnvironment(Register dest) {
 
 template <>
 void BaselineInterpreterCodeGen::loadGlobalLexicalEnvironment(Register dest) {
-  masm.loadPtr(AbsoluteAddress(cx->addressOfRealm()), dest);
-  masm.loadPtr(Address(dest, Realm::offsetOfActiveGlobal()), dest);
-  masm.loadPrivate(Address(dest, GlobalObject::offsetOfGlobalDataSlot()), dest);
+  masm.loadGlobalObjectData(dest);
   masm.loadPtr(Address(dest, GlobalObjectData::offsetOfLexicalEnvironment()),
                dest);
 }

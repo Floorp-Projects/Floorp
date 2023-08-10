@@ -2072,6 +2072,12 @@ static const uint8_t* ContextRealmPtr(CompileRuntime* rt) {
           JSContext::offsetOfRealm());
 }
 
+void MacroAssembler::loadGlobalObjectData(Register dest) {
+  loadPtr(AbsoluteAddress(ContextRealmPtr(runtime())), dest);
+  loadPtr(Address(dest, Realm::offsetOfActiveGlobal()), dest);
+  loadPrivate(Address(dest, GlobalObject::offsetOfGlobalDataSlot()), dest);
+}
+
 void MacroAssembler::switchToRealm(Register realm) {
   storePtr(realm, AbsoluteAddress(ContextRealmPtr(runtime())));
 }

@@ -4792,6 +4792,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void loadJSContext(Register dest);
 
+  void loadGlobalObjectData(Register dest);
+
   void switchToRealm(Register realm);
   void switchToRealm(const void* realm, Register scratch);
   void switchToObjectRealm(Register obj, Register scratch);
