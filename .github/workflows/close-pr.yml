@@ -1,0 +1,17 @@
+name: close pull request
+on:
+  pull_request:
+    types: [opened, reopened]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: close
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR=$(echo "$GITHUB_REF" | awk 'BEGIN { FS = "/" } ; { print $3 }')
+          gh pr close $PR --comment "(Automated Close) Please do not file pull requests here, see https://firefox-source-docs.mozilla.org/contributing/how_to_submit_a_patch.html"
+          gh pr lock $PR
