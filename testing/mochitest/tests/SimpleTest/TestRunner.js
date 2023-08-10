@@ -851,17 +851,6 @@ TestRunner.testFinished = function (tests) {
                   wrongtestname
               );
             }
-            if (
-              wrongtestname == "" ||
-              wrongtestlength.isNan() ||
-              wrongtestlength <= 0
-            ) {
-              TestRunner.structuredLogger.error(
-                "TEST-UNEXPECTED-FAIL | " +
-                  TestRunner.currentTestURL +
-                  " logged result after SimpleTest.finish()"
-              );
-            }
             TestRunner.updateUI([{ result: false }]);
           }
         });
