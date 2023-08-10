@@ -2071,6 +2071,7 @@ const EmbeddedMigrationWizard = ({
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("migration-wizard", {
+    "force-show-import-all": "false",
     "auto-request-state": "",
     ref: ref
   });
