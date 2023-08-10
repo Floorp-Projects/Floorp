@@ -14,9 +14,8 @@ from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_runtime, tags
 from mozbuild.util import memoize
 from moztest.resolve import TEST_SUITES, TestManifestLoader, TestResolver
-from taskgraph.util.yaml import load_yaml
 
-from gecko_taskgraph import GECKO
+from gecko_taskgraph import GECKO, TEST_VARIANTS
 from gecko_taskgraph.util.bugbug import CT_LOW, BugbugTimeoutException, push_schedules
 
 logger = logging.getLogger(__name__)
@@ -99,9 +98,8 @@ def guess_mozinfo_from_task(task, repo=""):
             info["os_version"] = new_ver
             break
 
-    test_variants = load_yaml(GECKO, "taskcluster", "ci", "test", "variants.yml")
-    for variant in test_variants:
-        tag = test_variants[variant]["suffix"]
+    for variant in TEST_VARIANTS:
+        tag = TEST_VARIANTS[variant]["suffix"]
         value = variant in setting["runtime"].keys()
 
         if tag == "1proc":

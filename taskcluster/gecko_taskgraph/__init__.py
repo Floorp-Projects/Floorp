@@ -8,10 +8,12 @@ from taskgraph import config as taskgraph_config
 from taskgraph import morph as taskgraph_morph
 from taskgraph.util import schema
 from taskgraph.util import taskcluster as tc_util
+from taskgraph.util.yaml import load_yaml
 
 from gecko_taskgraph.config import graph_config_schema
 
 GECKO = os.path.normpath(os.path.realpath(os.path.join(__file__, "..", "..", "..")))
+TEST_VARIANTS = load_yaml(GECKO, "taskcluster", "ci", "test", "variants.yml")
 
 # Maximum number of dependencies a single task can have
 # https://firefox-ci-tc.services.mozilla.com/docs/reference/platform/queue/task-schema
