@@ -314,7 +314,6 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mDidSetRealShowInfo(false),
       mDidLoadURLInit(false),
       mSkipKeyPress(false),
-      mDidSetEffectsInfo(false),
       mShouldSendWebProgressEventsToParent(false),
       mRenderLayers(true),
       mIsPreservingLayers(false),
@@ -2742,8 +2741,6 @@ void BrowserChild::InitAPZState() {
 }
 
 IPCResult BrowserChild::RecvUpdateEffects(const EffectsInfo& aEffects) {
-  mDidSetEffectsInfo = true;
-
   bool needInvalidate = false;
   if (mEffectsInfo.IsVisible() && aEffects.IsVisible() &&
       mEffectsInfo != aEffects) {
@@ -3207,8 +3204,7 @@ Maybe<nsRect> BrowserChild::GetVisibleRect() const {
     // artifacts when resizing
     return Nothing();
   }
-
-  return mDidSetEffectsInfo ? Some(mEffectsInfo.mVisibleRect) : Nothing();
+  return mEffectsInfo.mVisibleRect;
 }
 
 Maybe<LayoutDeviceRect>

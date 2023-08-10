@@ -804,7 +804,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   bool mDidLoadURLInit : 1;
 
   bool mSkipKeyPress : 1;
-  bool mDidSetEffectsInfo : 1;
 
   bool mCoalesceMouseMoveEvents : 1;
 
