@@ -129,6 +129,8 @@ class RTCPReceiver final {
               int64_t* min_rtt_ms,
               int64_t* max_rtt_ms) const;
 
+  absl::optional<TimeDelta> LastRtt() const;
+
   // Returns non-sender RTT metrics for the remote SSRC.
   NonSenderRttStats GetNonSenderRTT() const;
 
