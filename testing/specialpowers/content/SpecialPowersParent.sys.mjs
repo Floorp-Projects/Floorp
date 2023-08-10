@@ -1178,17 +1178,6 @@ export class SpecialPowersParent extends JSWindowActorParent {
           return result;
         }
 
-        case "SPImportInMainProcess": {
-          var message = { hadError: false, errorMessage: null };
-          try {
-            ChromeUtils.import(aMessage.data);
-          } catch (e) {
-            message.hadError = true;
-            message.errorMessage = e.toString();
-          }
-          return message;
-        }
-
         case "SPCleanUpSTSData": {
           let origin = aMessage.data.origin;
           let uri = Services.io.newURI(origin);

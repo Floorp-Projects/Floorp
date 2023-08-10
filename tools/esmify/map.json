@@ -1053,7 +1053,6 @@
   "resource://testing-common/FluentSyntax.jsm": "intl/l10n/FluentSyntax.jsm",
   "resource://testing-common/FormHistoryTestUtils.jsm": "toolkit/components/satchel/test/FormHistoryTestUtils.jsm",
   "resource://testing-common/HandlerServiceTestUtils.jsm": "uriloader/exthandler/tests/HandlerServiceTestUtils.jsm",
-  "resource://testing-common/ImportTesting.jsm": "testing/mochitest/tests/Harness_sanity/ImportTesting.jsm",
   "resource://testing-common/LangPackMatcherTestUtils.jsm": "intl/locale/tests/LangPackMatcherTestUtils.jsm",
   "resource://testing-common/LoginTestUtils.jsm": "toolkit/components/passwordmgr/test/LoginTestUtils.jsm",
   "resource://testing-common/MessageChannel.jsm": "toolkit/components/extensions/MessageChannel.jsm",
