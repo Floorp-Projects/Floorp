@@ -190,7 +190,7 @@ add_task(async function test_empty_state() {
     is(noTabs.length, 2, "Should be 2 empty devices");
 
     let headers =
-      syncedTabsComponent.shadowRoot.querySelectorAll("h2[slot=header]");
+      syncedTabsComponent.shadowRoot.querySelectorAll("h3[slot=header]");
     ok(
       headers[0].textContent.includes("Other Desktop"),
       "Text is correct (Desktop)"
@@ -230,7 +230,7 @@ add_task(async function test_tabs() {
     await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
 
     let headers =
-      syncedTabsComponent.shadowRoot.querySelectorAll("h2[slot=header]");
+      syncedTabsComponent.shadowRoot.querySelectorAll("h3[slot=header]");
     ok(
       headers[0].textContent.includes("My desktop"),
       "Text is correct (My desktop)"
@@ -293,7 +293,7 @@ add_task(async function test_empty_desktop_same_name() {
     is(noTabs.length, 1, "Should be 1 empty devices");
 
     let headers =
-      syncedTabsComponent.shadowRoot.querySelectorAll("h2[slot=header]");
+      syncedTabsComponent.shadowRoot.querySelectorAll("h3[slot=header]");
     ok(
       headers[0].textContent.includes("A Device"),
       "Text is correct (Desktop)"
@@ -341,7 +341,7 @@ add_task(async function test_empty_desktop_same_name_three() {
     is(noTabs.length, 2, "Should be 2 empty devices");
 
     let headers =
-      syncedTabsComponent.shadowRoot.querySelectorAll("h2[slot=header]");
+      syncedTabsComponent.shadowRoot.querySelectorAll("h3[slot=header]");
     ok(
       headers[0].textContent.includes("A Device"),
       "Text is correct (Desktop)"
