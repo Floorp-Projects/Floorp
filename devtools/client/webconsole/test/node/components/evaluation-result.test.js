@@ -459,7 +459,7 @@ describe("EvaluationResult component:", () => {
 
     const locationLink = wrapper.find(`.message-location`);
     expect(locationLink.length).toBe(1);
-    expect(locationLink.text()).toBe("debugger eval code:1:4");
+    expect(locationLink.text()).toBe("debugger eval code:1:5");
   });
 
   it("has a timestamp when passed a truthy timestampsVisible prop", () => {

@@ -162,12 +162,12 @@ If the referent is an error created with an engine internal message template
 this is a string which is the name of the template; `undefined` otherwise.
 
 ### `errorLineNumber`
-If the referent is an Error object, this is the line number at which the
-referent was created; `undefined`  otherwise.
+If the referent is an Error object, this is the 1-origin line number at which
+the referent was created; `undefined`  otherwise.
 
 ### `errorColumnNumber`
-If the referent is an Error object, this is the column number at which the
-referent was created; `undefined`  otherwise.
+If the referent is an Error object, this is the 1-origin column number at which
+the referent was created; `undefined`  otherwise.
 
 ### `isBoundFunction`
 If the referent is a debuggee function, returns `true` if the referent is a

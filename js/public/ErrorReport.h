@@ -120,7 +120,7 @@ class JSErrorBase {
   // Source line number.
   unsigned lineno;
 
-  // Zero-based column index in line.
+  // Column index in line (1-origin).
   unsigned column;
 
   // the error number, e.g. see js/public/friend/ErrorNumbers.msg.
@@ -172,6 +172,13 @@ class JSErrorBase {
 
   JSString* newMessageString(JSContext* cx);
 
+  // JSErrorBase uses 1-origin column numbers.
+  // If the caller uses 0-origin column numbers, this method should be used to
+  // convert (bug 1144340).
+  static uint32_t fromZeroOriginToOneOrigin(uint32_t column) {
+    return column + 1;
+  }
+
  private:
   void freeMessage();
 };
@@ -197,7 +204,8 @@ class JSErrorNotes {
   JSErrorNotes();
   ~JSErrorNotes();
 
-  // Add an note to the given position.
+  // Add a note to the given position.
+  // column is 1-origin.
   bool addNoteASCII(JSContext* cx, const char* filename, unsigned sourceId,
                     unsigned lineno, unsigned column,
                     JSErrorCallback errorCallback, void* userRef,
@@ -530,6 +538,7 @@ extern JS_PUBLIC_API void JS_ReportAllocationOverflow(JSContext* cx);
 
 namespace JS {
 
+// columnNumber is 1-origin.
 extern JS_PUBLIC_API bool CreateError(
     JSContext* cx, JSExnType type, HandleObject stack, HandleString fileName,
     uint32_t lineNumber, uint32_t columnNumber, JSErrorReport* report,

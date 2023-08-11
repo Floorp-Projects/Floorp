@@ -106,8 +106,13 @@ class ErrorObject : public NativeObject {
 
   inline JSString* fileName(JSContext* cx) const;
   inline uint32_t sourceId() const;
+
+  // Line number (1-origin).
   inline uint32_t lineNumber() const;
+
+  // Column number (1-origin).
   inline uint32_t columnNumber() const;
+
   inline JSObject* stack() const;
 
   JSString* getMessage() const {

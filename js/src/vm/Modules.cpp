@@ -20,6 +20,7 @@
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
 #include "frontend/FrontendContext.h"   // js::AutoReportFrontendContext
 #include "js/Context.h"                 // js::AssertHeapIsIdle
+#include "js/ErrorReport.h"             // JSErrorBase
 #include "js/RootingAPI.h"              // JS::MutableHandle
 #include "js/Value.h"                   // JS::Value
 #include "vm/EnvironmentObject.h"       // js::ModuleEnvironmentObject
@@ -854,6 +855,7 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
   return ns;
 }
 
+// column is 0-origin.
 static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
                                  Handle<Value> resolution, bool isDirectImport,
                                  Handle<JSAtom*> name, uint32_t line,
@@ -904,8 +906,9 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
   }
 
   RootedValue error(cx);
-  if (!JS::CreateError(cx, JSEXN_SYNTAXERR, nullptr, filename, line, column,
-                       nullptr, message, JS::NothingHandleValue, &error)) {
+  if (!JS::CreateError(cx, JSEXN_SYNTAXERR, nullptr, filename, line,
+                       JSErrorBase::fromZeroOriginToOneOrigin(column), nullptr,
+                       message, JS::NothingHandleValue, &error)) {
     return;
   }
 

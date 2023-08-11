@@ -266,7 +266,7 @@ static ErrorObject* CreateErrorObject(JSContext* cx, const CallArgs& args,
     }
   } else {
     lineNumber = iter.done() ? 0 : iter.computeLine(&columnNumber);
-    columnNumber = FixupColumnForDisplay(columnNumber);
+    columnNumber = FixupMaybeWASMColumnForDisplay(columnNumber);
   }
 
   RootedObject stack(cx);

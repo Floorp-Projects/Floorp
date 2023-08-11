@@ -17,188 +17,188 @@ function testThrow(code, column) {
 
 testThrow(`
 ...a)=>
-`, 0);
+`, 1);
 
 // default parameter
 
 testThrow(`
 function f(x=...a) =>
-`, 13);
+`, 14);
 
 // rest parameter
 
 testThrow(`
 function f(... ...a) =>
-`, 15);
+`, 16);
 
 // destructuring parameter
 
 testThrow(`
 ([... ...a)=>
-`, 6);
+`, 7);
 
 testThrow(`
 ({...a)=>
-`, 6);
+`, 7);
 
 testThrow(`
 function f([... ...a)=>
-`, 16);
+`, 17);
 
 testThrow(`
 function f({...a)=>
-`, 16);
+`, 17);
 
 // arrow
 
 testThrow(`
 x => ...a)=>
-`, 5);
+`, 6);
 
 // template literal
 
-testThrow("`${ ...a)=>}`", 4);
+testThrow("`${ ...a)=>}`", 5);
 
 // destructing assignment
 
 testThrow(`
 var [... ...a)=>
-`, 9);
+`, 10);
 
 testThrow(`
 var {...a)=>
-`, 9);
+`, 10);
 
 // initializer
 
 testThrow(`
 var [a] = ...a)=>
-`, 10);
+`, 11);
 
 testThrow(`
 var {a:a} = ...a)=>
-`, 12);
+`, 13);
 
 testThrow(`
 var a = ...a)=>
-`, 8);
+`, 9);
 
 // if statement
 
 testThrow(`
 if (...a) =>
-`, 4);
+`, 5);
 
 // for statement
 
 testThrow(`
 for (...a)=>
-`, 5);
+`, 6);
 
 testThrow(`
 for (let a in ...a)=>
-`, 14);
+`, 15);
 
 testThrow(`
 for (let a of ...a)=>
-`, 14);
+`, 15);
 
 testThrow(`
 for (; ...a)=>
-`, 7);
+`, 8);
 
 testThrow(`
 for (;; ...a)=>
-`, 8);
+`, 9);
 
 // case
 
 testThrow(`
 switch (x) { case ...a)=>
-`, 18);
+`, 19);
 
 // return statement
 
 testThrow(`
 function f(x) { return ...a)=>
-`, 23);
+`, 24);
 
 // yield expression
 
 testThrow(`
 function* f(x) { yield ...a)=>
-`, 23);
+`, 24);
 
 // throw statement
 
 testThrow(`
 throw ...a) =>
-`, 6);
+`, 7);
 
 // class
 
 testThrow(`
 class A extends ...a) =>
-`, 16);
+`, 17);
 
 // conditional expression
 
 testThrow(`
 1 ? ...a) =>
-`, 4);
+`, 5);
 
 testThrow(`
 1 ? 2 : ...a) =>
-`, 8);
+`, 9);
 
 // unary operators
 
 testThrow(`
 void ...a) =>
-`, 5);
+`, 6);
 
 testThrow(`
 typeof ...a) =>
-`, 7);
+`, 8);
 
 testThrow(`
 ++ ...a) =>
-`, 3);
+`, 4);
 
 testThrow(`
 delete ...a) =>
-`, 7);
+`, 8);
 
 // new
 
 testThrow(`
 new ...a) =>
-`, 4);
+`, 5);
 
 // member expression
 
 testThrow(`
 x[...a) =>
-`, 2);
+`, 3);
 
 // array literal
 
 testThrow(`
 [... ...a) =>
-`, 5);
+`, 6);
 
 // object literal
 
 testThrow(`
 ({[...a) =>
-`, 3);
+`, 4);
 
 testThrow(`
 ({x: ...a) =>
-`, 5);
+`, 6);
 
 // assignment
 
 testThrow(`
 x = ...a) =>
-`, 4);
+`, 5);

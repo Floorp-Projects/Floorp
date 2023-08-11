@@ -650,12 +650,12 @@ describe("PageError component:", () => {
 
     const note = notes.eq(0);
     expect(note.find(".message-body").text()).toBe(
-      "note: Previously declared at line 2, column 6"
+      "note: Previously declared at line 2, column 7"
     );
 
     // There should be the location.
     const locationLink = note.find(`.message-location`);
     expect(locationLink.length).toBe(1);
-    expect(locationLink.text()).toBe("test-console-api.html:2:6");
+    expect(locationLink.text()).toBe("test-console-api.html:2:7");
   });
 });

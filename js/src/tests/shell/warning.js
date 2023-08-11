@@ -15,7 +15,7 @@ assertEq(warning !== null, true);
 assertEq(warning.name, "SyntaxError");
 assertEq(warning.message.includes("Directive Prologue"), true);
 assertEq(warning.lineNumber, 1);
-assertEq(warning.columnNumber, 28);
+assertEq(warning.columnNumber, 29);
 
 // Disabled.
 

@@ -5,7 +5,7 @@ try {
   eval(`
 
   /aaa(/;
-012345678;
+123456789;
 `);
 } catch (e) {
   line = e.lineNumber;
@@ -13,4 +13,4 @@ try {
 }
 
 assertEq(line, 3);
-assertEq(column, 6);
+assertEq(column, 7);
