@@ -2,13 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-// We load this into a worker using importScripts, and in tests using import.
-// We use var to avoid name collision errors.
-// eslint-disable-next-line no-var
-var EXPORTED_SYMBOLS = ["RecipeExecutor"];
-
 /**
  * RecipeExecutor is the core feature engineering pipeline for the in-browser
  * personalization work. These pipelines are called "recipes". A recipe is an
@@ -31,7 +24,7 @@ var EXPORTED_SYMBOLS = ["RecipeExecutor"];
  * RecipeExecutor.ITEM_BUILDER_REGISTRY, while combiner functions are allowed
  * in RecipeExecutor.ITEM_COMBINER_REGISTRY .
  */
-const RecipeExecutor = class RecipeExecutor {
+export class RecipeExecutor {
   constructor(nbTaggers, nmfTaggers, tokenize) {
     this.ITEM_BUILDER_REGISTRY = {
       nb_tag: this.naiveBayesTag,
@@ -1123,4 +1116,4 @@ const RecipeExecutor = class RecipeExecutor {
 
     return newItem1;
   }
-};
+}
