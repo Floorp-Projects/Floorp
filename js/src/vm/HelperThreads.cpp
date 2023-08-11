@@ -314,9 +314,6 @@ static JSRuntime* GetSelectorRuntime(const CompilationSelector& selector) {
     JSRuntime* operator()(JSScript* script) {
       return script->runtimeFromMainThread();
     }
-    JSRuntime* operator()(Realm* realm) {
-      return realm->runtimeFromMainThread();
-    }
     JSRuntime* operator()(Zone* zone) { return zone->runtimeFromMainThread(); }
     JSRuntime* operator()(ZonesInState zbs) { return zbs.runtime; }
     JSRuntime* operator()(JSRuntime* runtime) { return runtime; }
@@ -328,7 +325,6 @@ static JSRuntime* GetSelectorRuntime(const CompilationSelector& selector) {
 static bool JitDataStructuresExist(const CompilationSelector& selector) {
   struct Matcher {
     bool operator()(JSScript* script) { return !!script->zone()->jitZone(); }
-    bool operator()(Realm* realm) { return !!realm->zone()->jitZone(); }
     bool operator()(Zone* zone) { return !!zone->jitZone(); }
     bool operator()(ZonesInState zbs) { return zbs.runtime->hasJitRuntime(); }
     bool operator()(JSRuntime* runtime) { return runtime->hasJitRuntime(); }
@@ -343,7 +339,6 @@ static bool IonCompileTaskMatches(const CompilationSelector& selector,
     jit::IonCompileTask* task_;
 
     bool operator()(JSScript* script) { return script == task_->script(); }
-    bool operator()(Realm* realm) { return realm == task_->script()->realm(); }
     bool operator()(Zone* zone) {
       return zone == task_->script()->zoneFromAnyThread();
     }

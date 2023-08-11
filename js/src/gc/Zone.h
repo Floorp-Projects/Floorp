@@ -287,6 +287,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   js::MainThreadOrGCTaskOrIonCompileData<js::jit::JitZone*> jitZone_;
 
+  // Number of realms in this zone that have a non-null object allocation
+  // metadata builder.
+  js::MainThreadOrIonCompileData<size_t> numRealmsWithAllocMetadataBuilder_{0};
+
   // Last time at which JIT code was discarded for this zone. This is only set
   // when JitScripts and Baseline code are discarded as well.
   js::MainThreadData<mozilla::TimeStamp> lastDiscardedCodeTime_;
@@ -440,6 +444,17 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::jit::JitZone* jitZone() { return jitZone_; }
 
   bool ensureJitZoneExists(JSContext* cx) { return !!getJitZone(cx); }
+
+  void incNumRealmsWithAllocMetadataBuilder() {
+    numRealmsWithAllocMetadataBuilder_++;
+  }
+  void decNumRealmsWithAllocMetadataBuilder() {
+    MOZ_ASSERT(numRealmsWithAllocMetadataBuilder_ > 0);
+    numRealmsWithAllocMetadataBuilder_--;
+  }
+  bool hasRealmWithAllocMetadataBuilder() const {
+    return numRealmsWithAllocMetadataBuilder_ > 0;
+  }
 
   void prepareForCompacting();
 

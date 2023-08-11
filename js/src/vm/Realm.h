@@ -702,6 +702,9 @@ class JS::Realm : public JS::shadow::Realm {
   static constexpr size_t offsetOfCompartment() {
     return offsetof(JS::Realm, compartment_);
   }
+  static constexpr size_t offsetOfAllocationMetadataBuilder() {
+    return offsetof(JS::Realm, allocationMetadataBuilder_);
+  }
   static constexpr size_t offsetOfDebugModeBits() {
     return offsetof(JS::Realm, debugModeBits_);
   }

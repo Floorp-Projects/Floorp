@@ -123,6 +123,8 @@ class CompileZone {
 
   gc::AllocSite* catchAllAllocSite(JS::TraceKind traceKind,
                                    gc::CatchAllAllocSite siteKind);
+
+  bool hasRealmWithAllocMetadataBuilder();
 };
 
 class CompileRealm {
@@ -141,8 +143,6 @@ class CompileRealm {
 
   const GlobalObject* maybeGlobal();
   const uint32_t* addressOfGlobalWriteBarriered();
-
-  bool hasAllocationMetadataBuilder();
 };
 
 class JitCompileOptions {

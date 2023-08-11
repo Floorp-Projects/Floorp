@@ -264,7 +264,8 @@ template void MacroAssembler::loadFromTypedBigIntArray(Scalar::Type arrayType,
 
 // Inlined version of gc::CheckAllocatorState that checks the bare essentials
 // and bails for anything that cannot be handled with our jit allocators.
-void MacroAssembler::checkAllocatorState(Label* fail) {
+void MacroAssembler::checkAllocatorState(Register temp, gc::AllocKind allocKind,
+                                         Label* fail) {
   // Don't execute the inline path if GC probes are built in.
 #ifdef JS_GC_PROBES
   jump(fail);
@@ -277,11 +278,16 @@ void MacroAssembler::checkAllocatorState(Label* fail) {
            fail);
 #endif
 
-  // Don't execute the inline path if the realm has an object metadata callback,
-  // as the metadata to use for the object may vary between executions of the
-  // op.
-  if (realm()->hasAllocationMetadataBuilder()) {
-    jump(fail);
+  // If the zone has a realm with an object allocation metadata hook, emit a
+  // guard for this. Note that IC stubs and some other trampolines can be shared
+  // across realms, so we don't bake in a realm pointer.
+  if (gc::IsObjectAllocKind(allocKind) &&
+      realm()->zone()->hasRealmWithAllocMetadataBuilder()) {
+    loadJSContext(temp);
+    loadPtr(Address(temp, JSContext::offsetOfRealm()), temp);
+    branchPtr(Assembler::NotEqual,
+              Address(temp, Realm::offsetOfAllocationMetadataBuilder()),
+              ImmWord(0), fail);
   }
 }
 
@@ -420,7 +426,7 @@ void MacroAssembler::allocateObject(Register result, Register temp,
                                     const AllocSiteInput& allocSite) {
   MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
 
-  checkAllocatorState(fail);
+  checkAllocatorState(temp, allocKind, fail);
 
   if (shouldNurseryAllocate(allocKind, initialHeap)) {
     MOZ_ASSERT(initialHeap == gc::Heap::Default);
@@ -685,7 +691,7 @@ void MacroAssembler::allocateString(Register result, Register temp,
   MOZ_ASSERT(allocKind == gc::AllocKind::STRING ||
              allocKind == gc::AllocKind::FAT_INLINE_STRING);
 
-  checkAllocatorState(fail);
+  checkAllocatorState(temp, allocKind, fail);
 
   if (shouldNurseryAllocate(allocKind, initialHeap)) {
     MOZ_ASSERT(initialHeap == gc::Heap::Default);
@@ -708,14 +714,16 @@ void MacroAssembler::newGCFatInlineString(Register result, Register temp,
 
 void MacroAssembler::newGCBigInt(Register result, Register temp,
                                  gc::Heap initialHeap, Label* fail) {
-  checkAllocatorState(fail);
+  constexpr gc::AllocKind allocKind = gc::AllocKind::BIGINT;
 
-  if (shouldNurseryAllocate(gc::AllocKind::BIGINT, initialHeap)) {
+  checkAllocatorState(temp, allocKind, fail);
+
+  if (shouldNurseryAllocate(allocKind, initialHeap)) {
     MOZ_ASSERT(initialHeap == gc::Heap::Default);
     return nurseryAllocateBigInt(result, temp, fail);
   }
 
-  freeListAllocate(result, temp, gc::AllocKind::BIGINT, fail);
+  freeListAllocate(result, temp, allocKind, fail);
 }
 
 void MacroAssembler::copySlotsFromTemplate(

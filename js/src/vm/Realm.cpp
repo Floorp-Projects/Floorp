@@ -66,6 +66,10 @@ Realm::~Realm() {
     runtime_->lcovOutput().writeLCovResult(*lcovRealm_);
   }
 
+  if (allocationMetadataBuilder_) {
+    forgetAllocationMetadataBuilder();
+  }
+
   MOZ_ASSERT(runtime_->numRealms > 0);
   runtime_->numRealms--;
 }
@@ -338,18 +342,31 @@ void Realm::setAllocationMetadataBuilder(
     const js::AllocationMetadataBuilder* builder) {
   // Clear any jitcode in the runtime, which behaves differently depending on
   // whether there is a creation callback.
-  ReleaseAllJITCode(runtime_->gcContext());
+  if (bool(allocationMetadataBuilder_) != bool(builder)) {
+    ReleaseAllJITCode(runtime_->gcContext());
+    if (builder) {
+      zone()->incNumRealmsWithAllocMetadataBuilder();
+    } else {
+      zone()->decNumRealmsWithAllocMetadataBuilder();
+    }
+  }
 
   allocationMetadataBuilder_ = builder;
 }
 
 void Realm::forgetAllocationMetadataBuilder() {
+  if (!allocationMetadataBuilder_) {
+    return;
+  }
+
   // Unlike setAllocationMetadataBuilder, we don't have to discard all JIT
   // code here (code is still valid, just a bit slower because it doesn't do
   // inline GC allocations when a metadata builder is present), but we do want
-  // to cancel off-thread Ion compilations to avoid races when Ion calls
-  // hasAllocationMetadataBuilder off-thread.
-  CancelOffThreadIonCompile(this);
+  // to cancel off-thread Ion compilations to avoid races when Ion accesses
+  // numRealmsWithAllocMetadataBuilder_ off-thread.
+  CancelOffThreadIonCompile(zone());
+
+  zone()->decNumRealmsWithAllocMetadataBuilder();
 
   allocationMetadataBuilder_ = nullptr;
 }
