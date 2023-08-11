@@ -40,6 +40,14 @@ typedef std::complex<double> Complex;
 FFmpegRDFTFuncs FFTBlock::sRDFTFuncs;
 #endif
 
+static double fdlibm_cabs(const Complex& z) {
+  return fdlibm_hypot(real(z), imag(z));
+}
+
+static double fdlibm_carg(const Complex& z) {
+  return fdlibm_atan2(imag(z), real(z));
+}
+
 FFTBlock* FFTBlock::CreateInterpolatedBlock(const FFTBlock& block0,
                                             const FFTBlock& block1,
                                             double interp) {
@@ -89,8 +97,8 @@ void FFTBlock::InterpolateFrequencyComponents(const FFTBlock& block0,
     Complex c1(dft1[i].r, dft1[i].i);
     Complex c2(dft2[i].r, dft2[i].i);
 
-    double mag1 = abs(c1);
-    double mag2 = abs(c2);
+    double mag1 = fdlibm_cabs(c1);
+    double mag2 = fdlibm_cabs(c2);
 
     // Interpolate magnitudes in decibels
     double mag1db = 20.0 * fdlibm_log10(mag1);
@@ -117,8 +125,8 @@ void FFTBlock::InterpolateFrequencyComponents(const FFTBlock& block0,
     double mag = fdlibm_pow(10.0, 0.05 * magdb);
 
     // Now, deal with phase
-    double phase1 = arg(c1);
-    double phase2 = arg(c2);
+    double phase1 = fdlibm_carg(c1);
+    double phase2 = fdlibm_carg(c2);
 
     double deltaPhase1 = phase1 - lastPhase1;
     double deltaPhase2 = phase2 - lastPhase2;
@@ -169,8 +177,8 @@ double FFTBlock::ExtractAverageGroupDelay() {
   // Calculate weighted average group delay
   for (int i = 1; i < halfSize; i++) {
     Complex c(dft[i].r, dft[i].i);
-    double mag = abs(c);
-    double phase = arg(c);
+    double mag = fdlibm_cabs(c);
+    double phase = fdlibm_carg(c);
 
     double deltaPhase = phase - lastPhase;
     lastPhase = phase;
@@ -210,8 +218,8 @@ void FFTBlock::AddConstantGroupDelay(double sampleFrameDelay) {
   // Add constant group delay
   for (int i = 1; i < halfSize; i++) {
     Complex c(dft[i].r, dft[i].i);
-    double mag = abs(c);
-    double phase = arg(c);
+    double mag = fdlibm_cabs(c);
+    double phase = fdlibm_carg(c);
 
     phase += i * phaseAdj;
 

@@ -152,7 +152,8 @@ void IIRFilter::getFrequencyResponse(int nFrequencies, const float* frequency,
                n;
     std::complex<double> response = std::complex<double>(r, i);
 
-    magResponse[k] = static_cast<float>(abs(response));
+    magResponse[k] =
+        static_cast<float>(fdlibm_hypot(real(response), imag(response)));
     phaseResponse[k] =
         static_cast<float>(fdlibm_atan2(imag(response), real(response)));
   }
