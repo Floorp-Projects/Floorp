@@ -353,7 +353,12 @@ class RTCStatsMember : public RTCStatsMemberInterface {
     return value_.value();
   }
 
-  // Value getters.
+  // Getter methods that look the same as absl::optional<T>. Please prefer these
+  // in order to unblock replacing RTCStatsMember<T> with absl::optional<T> in
+  // the future (https://crbug.com/webrtc/15164).
+  bool has_value() const { return value_.has_value(); }
+  const T& value() const { return value_.value(); }
+  T& value() { return value_.value(); }
   T& operator*() {
     RTC_DCHECK(value_);
     return *value_;
@@ -362,8 +367,6 @@ class RTCStatsMember : public RTCStatsMemberInterface {
     RTC_DCHECK(value_);
     return *value_;
   }
-
-  // Value getters, arrow operator.
   T* operator->() {
     RTC_DCHECK(value_);
     return &(*value_);
