@@ -1351,26 +1351,3 @@ void nsTextControlFrame::nsAnonDivObserver::ContentRemoved(
     nsIContent* aChild, nsIContent* aPreviousSibling) {
   mFrame.ClearCachedValue();
 }
-
-Maybe<nscoord> nsTextControlFrame::GetNaturalBaselineBOffset(
-    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext aExportContext) const {
-  if (!IsSingleLineTextControl()) {
-    if (StyleDisplay()->IsContainLayout()) {
-      return Nothing{};
-    }
-
-    if (aBaselineGroup == BaselineSharingGroup::First) {
-      return Some(std::clamp(mFirstBaseline, 0, BSize(aWM)));
-    }
-    // This isn't great, but the content of the root NAC isn't guaranteed
-    // to be loaded, so the best we can do is the edge of the border-box.
-    if (aWM.IsCentralBaseline()) {
-      return Some(BSize(aWM) / 2);
-    }
-    return Some(0);
-  }
-  NS_ASSERTION(!IsSubtreeDirty(), "frame must not be dirty");
-  return GetSingleLineTextControlBaseline(this, mFirstBaseline, aWM,
-                                          aBaselineGroup);
-}
