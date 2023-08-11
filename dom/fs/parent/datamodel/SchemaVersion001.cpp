@@ -146,7 +146,9 @@ Result<bool, QMResult> CheckIfEmpty(ResultConnection& aConn) {
   QM_TRY_UNWRAP(ResultStatement stmt,
                 ResultStatement::Create(aConn, areThereTablesQuery));
 
-  return stmt.YesOrNoQuery();
+  QM_TRY_UNWRAP(bool tablesExist, stmt.YesOrNoQuery());
+
+  return !tablesExist;
 };
 
 nsresult SchemaVersion001::CreateTables(ResultConnection& aConn,
