@@ -50,7 +50,7 @@ function enterFullscreen() {
 async function testFullscreenIsModal(modal) {
   info("testing modal: " + modal);
   is(document.fullscreenElement, null, "Shouldn't be in fullscreen");
-  await SpecialPowers.pushPrefEnv({ set: [["dom.fullscreen.modal", modal]] });
+
   await enterFullscreen();
 
   clickButton(/* expectEvent = */ !modal);
@@ -66,7 +66,4 @@ add_task(async function() {
   await testFullscreenIsModal(true);
 });
 
-add_task(async function() {
-  await testFullscreenIsModal(false);
-});
 </script>
