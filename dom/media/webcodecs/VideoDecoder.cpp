@@ -164,8 +164,8 @@ static nsTArray<nsCString> GuessMIMETypes(MIMECreateParam aParam) {
   return types;
 }
 
-static bool IsOnLinux() {
-#if defined(XP_LINUX) && !defined(ANDROID)
+static bool IsOnLinuxOrMac() {
+#if (defined(XP_LINUX) && !defined(ANDROID)) || defined(XP_MACOSX)
   return true;
 #else
   return false;
@@ -192,9 +192,8 @@ static bool IsSupportedCodec(const nsAString& aCodec) {
 
 // https://w3c.github.io/webcodecs/#check-configuration-support
 static bool CanDecode(MIMECreateParam aParam) {
-  // Bug 1840508: H264-annexb doesn't work on non-linux platform. We only enable
-  // Linux for now.
-  if (!IsOnLinux()) {
+  // TODO: Enable on Windows and Android (Bug 1840508)
+  if (!IsOnLinuxOrMac()) {
     return false;
   }
   if (!IsSupportedCodec(aParam.mParsedCodec)) {
