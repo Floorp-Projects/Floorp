@@ -109,7 +109,9 @@ function isObject(value) {
  *         - result: the result of the evaluation.
  */
 exports.evalWithDebugger = function (string, options = {}, webConsole) {
-  if (isCommand(string.trim()) && options.eager) {
+  const isCmd = isCommand(string.trim());
+
+  if (isCmd && options.eager) {
     return {
       result: null,
     };
@@ -118,6 +120,31 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
   const { frame, dbg } = getFrameDbg(options, webConsole);
 
   const { dbgGlobal, bindSelf } = getDbgGlobal(options, dbg, webConsole);
+
+  if (isCmd) {
+    const { command, args } = getCommandAndArgs(string);
+
+    const helpers = WebConsoleCommandsManager.getColonCommandFunction(
+      webConsole,
+      dbgGlobal,
+      string,
+      options.selectedNodeActor,
+      command
+    );
+
+    let result;
+    try {
+      result = helpers.commandFunc(args);
+    } catch (e) {
+      console.log(e);
+      return `throw "${e}"`;
+    }
+
+    return {
+      result,
+      helperResult: helpers.getHelperResult(),
+    };
+  }
 
   const helpers = WebConsoleCommandsManager.getWebConsoleCommands(
     webConsole,
@@ -174,27 +201,16 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
 
   let result;
   try {
-    if (isCommand(string)) {
-      try {
-        const { command, args } = getCommandAndArgs(string);
-        const commandFunc = helpers.rawCommands.get(command);
-        result = commandFunc(helpers.rawOwner, args);
-      } catch (e) {
-        console.log(e);
-        return `throw "${e}"`;
-      }
-    } else {
-      const evalString = getEvalInput(string, bindings);
-      result = getEvalResult(
-        dbg,
-        evalString,
-        evalOptions,
-        bindings,
-        frame,
-        dbgGlobal,
-        noSideEffectDebugger
-      );
-    }
+    const evalString = getEvalInput(string, bindings);
+    result = getEvalResult(
+      dbg,
+      evalString,
+      evalOptions,
+      bindings,
+      frame,
+      dbgGlobal,
+      noSideEffectDebugger
+    );
   } finally {
     // We need to be absolutely sure that the sideeffect-free debugger's
     // debuggees are removed because otherwise we risk them terminating
