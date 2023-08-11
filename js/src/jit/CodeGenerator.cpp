@@ -1916,10 +1916,10 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
 //
 // inputOutputDataStartOffset is the offset relative to the frame pointer
 // register. This offset is negative for the RegExpExecTest stub.
-static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
-                                    Register regexp, Register input,
-                                    Register lastIndex, Register temp1,
-                                    Register temp2, Register temp3,
+static bool PrepareAndExecuteRegExp(MacroAssembler& masm, Register regexp,
+                                    Register input, Register lastIndex,
+                                    Register temp1, Register temp2,
+                                    Register temp3,
                                     int32_t inputOutputDataStartOffset,
                                     gc::Heap initialStringHeap, Label* notFound,
                                     Label* failure) {
@@ -2140,11 +2140,10 @@ static bool PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm,
   masm.branch32(Assembler::Equal, temp1, Imm32(RegExpRunStatus_Error), failure);
 
   // Lazily update the RegExpStatics.
-  RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global());
-  if (!res) {
-    return false;
-  }
-  masm.movePtr(ImmPtr(res), temp1);
+  size_t offset = GlobalObjectData::offsetOfRegExpRealm() +
+                  RegExpRealm::offsetOfRegExpStatics();
+  masm.loadGlobalObjectData(temp1);
+  masm.loadPtr(Address(temp1, offset), temp1);
   UpdateRegExpStatics(masm, regexp, input, lastIndex, temp1, temp2, temp3,
                       initialStringHeap, volatileRegs);
 
@@ -2444,12 +2443,6 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
   Address flagsSlot(regexp, RegExpObject::offsetOfFlags());
   Address lastIndexSlot(regexp, RegExpObject::offsetOfLastIndex());
 
-  SharedShape* shape =
-      cx->global()->regExpRealm().getOrCreateMatchResultShape(cx);
-  if (!shape) {
-    return nullptr;
-  }
-
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
   StackMacroAssembler masm(cx, temp);
@@ -2471,7 +2464,7 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
   int32_t inputOutputDataStartOffset = 2 * sizeof(void*);
 
   Label notFound, oolEntry;
-  if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
+  if (!PrepareAndExecuteRegExp(masm, regexp, input, lastIndex, temp1, temp2,
                                temp3, inputOutputDataStartOffset,
                                initialStringHeap, &notFound, &oolEntry)) {
     return nullptr;
@@ -2505,7 +2498,10 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
     // Load the array length in temp2 and the shape in temp3.
     Label allocated;
     masm.load32(pairCountAddress, temp2);
-    masm.movePtr(ImmGCPtr(shape), temp3);
+    size_t offset = GlobalObjectData::offsetOfRegExpRealm() +
+                    RegExpRealm::offsetOfNormalMatchResultShape();
+    masm.loadGlobalObjectData(temp3);
+    masm.loadPtr(Address(temp3, offset), temp3);
 
     auto emitAllocObject = [&](size_t elementCapacity) {
       gc::AllocKind kind = GuessArrayGCKind(elementCapacity);
@@ -2983,7 +2979,7 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   int32_t inputOutputDataStartOffset = 2 * sizeof(void*);
 
   Label notFound, oolEntry;
-  if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
+  if (!PrepareAndExecuteRegExp(masm, regexp, input, lastIndex, temp1, temp2,
                                temp3, inputOutputDataStartOffset,
                                initialStringHeap, &notFound, &oolEntry)) {
     return nullptr;
@@ -3193,7 +3189,7 @@ JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
   static_assert(inputOutputDataStartOffset >= -256);
 
   Label notFound, oolEntry;
-  if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
+  if (!PrepareAndExecuteRegExp(masm, regexp, input, lastIndex, temp1, temp2,
                                temp3, inputOutputDataStartOffset,
                                initialStringHeap, &notFound, &oolEntry)) {
     return nullptr;

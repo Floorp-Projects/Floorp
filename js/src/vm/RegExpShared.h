@@ -417,11 +417,19 @@ class RegExpRealm {
     optimizableRegExpInstanceShape_ = shape;
   }
 
-  static size_t offsetOfOptimizableRegExpPrototypeShape() {
+  static constexpr size_t offsetOfOptimizableRegExpPrototypeShape() {
     return offsetof(RegExpRealm, optimizableRegExpPrototypeShape_);
   }
-  static size_t offsetOfOptimizableRegExpInstanceShape() {
+  static constexpr size_t offsetOfOptimizableRegExpInstanceShape() {
     return offsetof(RegExpRealm, optimizableRegExpInstanceShape_);
+  }
+  static constexpr size_t offsetOfRegExpStatics() {
+    return offsetof(RegExpRealm, regExpStatics);
+  }
+  static constexpr size_t offsetOfNormalMatchResultShape() {
+    static_assert(sizeof(HeapPtr<SharedShape*>) == sizeof(uintptr_t));
+    return offsetof(RegExpRealm, matchResultShapes_) +
+           ResultShapeKind::Normal * sizeof(uintptr_t);
   }
 };
 
