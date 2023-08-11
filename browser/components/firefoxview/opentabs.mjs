@@ -168,7 +168,7 @@ class OpenTabsInView extends ViewPage {
       shortPageName="opentabs"
       showViewAll="true"
     >
-      <h2 data-l10n-id="firefoxview-opentabs-header" slot="header"></h2>
+      <h3 data-l10n-id="firefoxview-opentabs-header" slot="header"></h3>
       <fxview-tab-list
         @fxview-tab-list-primary-action=${onTabListRowClick}
         maxTabsLength="5"
@@ -265,7 +265,7 @@ class OpenTabsInViewCard extends MozLitElement {
   render() {
     return html`
       <card-container shortPageName="opentabs">
-        <h2 slot="header">${this.title}</h2>
+        <h3 slot="header">${this.title}</h3>
         <div class="fxview-tab-list-container" slot="main">
           <fxview-tab-list
             ?compactRows=${this.classList.contains("width-limited")}

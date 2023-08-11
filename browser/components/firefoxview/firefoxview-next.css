@@ -140,3 +140,8 @@ panel-item::part(button):hover {
 panel-item::part(button):hover:active {
   background-color: var(--fxview-element-background-active);
 }
+
+fxview-category-navigation h1 {
+  font-size: 1.6em;
+  font-weight: 700;
+}

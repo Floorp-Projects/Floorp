@@ -232,10 +232,10 @@ class RecentlyClosedTabsInView extends ViewPage {
           ?hideHeader=${this.selectedTab}
           ?hidden=${!this.recentlyClosedTabs.length && !this.overview}
         >
-          <h2
+          <h3
             slot="header"
             data-l10n-id="firefoxview-recently-closed-header"
-          ></h2>
+          ></h3>
           <fxview-tab-list
             class="with-dismiss-button"
             ?hidden=${!this.recentlyClosedTabs.length}

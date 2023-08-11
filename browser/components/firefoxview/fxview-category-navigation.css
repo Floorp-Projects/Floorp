@@ -23,11 +23,6 @@ nav {
   margin-inline-start: var(--fxviewcategorynav-button-padding);
 }
 
-::slotted(h2) {
-  font-size: 1.6em;
-  margin: 0;
-}
-
 .category-nav-buttons,
 ::slotted(.category-nav-footer) {
   display: grid;
