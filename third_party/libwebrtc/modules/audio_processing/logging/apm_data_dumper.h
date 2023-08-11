@@ -42,7 +42,7 @@ namespace webrtc {
 // Functor used to use as a custom deleter in the map of file pointers to raw
 // files.
 struct RawFileCloseFunctor {
-  void operator()(FILE* f) const { if (f) fclose(f); }
+  void operator()(FILE* f) const { fclose(f); }
 };
 #endif
 
@@ -116,9 +116,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(&v, sizeof(v), 1, file);
-      }
+      fwrite(&v, sizeof(v), 1, file);
     }
 #endif
   }
@@ -133,9 +131,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(v, sizeof(v[0]), v_length, file);
-      }
+      fwrite(v, sizeof(v[0]), v_length, file);
     }
 #endif
   }
@@ -162,9 +158,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(&v, sizeof(v), 1, file);
-      }
+      fwrite(&v, sizeof(v), 1, file);
     }
 #endif
   }
@@ -179,9 +173,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(v, sizeof(v[0]), v_length, file);
-      }
+      fwrite(v, sizeof(v[0]), v_length, file);
     }
 #endif
   }
@@ -220,11 +212,9 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        for (size_t k = 0; k < v_length; ++k) {
-          int16_t value = static_cast<int16_t>(v[k]);
-          fwrite(&value, sizeof(value), 1, file);
-        }
+      for (size_t k = 0; k < v_length; ++k) {
+        int16_t value = static_cast<int16_t>(v[k]);
+        fwrite(&value, sizeof(value), 1, file);
       }
     }
 #endif
@@ -252,9 +242,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(&v, sizeof(v), 1, file);
-      }
+      fwrite(&v, sizeof(v), 1, file);
     }
 #endif
   }
@@ -269,9 +257,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(v, sizeof(v[0]), v_length, file);
-      }
+      fwrite(v, sizeof(v[0]), v_length, file);
     }
 #endif
   }
@@ -298,9 +284,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(&v, sizeof(v), 1, file);
-      }
+      fwrite(&v, sizeof(v), 1, file);
     }
 #endif
   }
@@ -315,9 +299,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(v, sizeof(v[0]), v_length, file);
-      }
+      fwrite(v, sizeof(v[0]), v_length, file);
     }
 #endif
   }
@@ -331,9 +313,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(&v, sizeof(v), 1, file);
-      }
+      fwrite(&v, sizeof(v), 1, file);
     }
 #endif
   }
@@ -348,9 +328,7 @@ class ApmDataDumper {
 
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
-      if (file) {
-        fwrite(v, sizeof(v[0]), v_length, file);
-      }
+      fwrite(v, sizeof(v[0]), v_length, file);
     }
 #endif
   }
