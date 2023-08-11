@@ -8,7 +8,7 @@ transforms:
     - taskgraph.transforms.from_deps
     - android_taskgraph.transforms.upstream_artifacts
     - android_taskgraph.transforms.treeherder:transforms
-    - android_taskgraph.transforms.signing_apk:transforms
+    - android_taskgraph.transforms.signing_android_app:transforms
     - android_taskgraph.transforms.notify:transforms
     - taskgraph.transforms.task:transforms
 

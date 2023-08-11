@@ -46,6 +46,11 @@ def add_signing_indexes(config, task):
                 template.format(**subs)
                 for template in SIGNING_ROUTE_TEMPLATES
             ])
+
+    elif task["attributes"].get("aab"):
+        # no indexes for AAB signing
+        return task
+
     else:
         raise NotImplementedError(f"Unsupported artifact_type. Task: {task}")
 
