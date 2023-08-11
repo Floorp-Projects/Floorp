@@ -703,17 +703,17 @@ inline void JSONFullParseHandlerAnyChar::finishObjectMember(
 
 inline bool JSONFullParseHandlerAnyChar::finishObject(
     Vector<StackEntry, 10>& stack, JS::MutableHandle<JS::Value> vp,
-    PropertyVector& properties) {
-  MOZ_ASSERT(&properties == &stack.back().properties());
+    PropertyVector* properties) {
+  MOZ_ASSERT(properties == &stack.back().properties());
 
-  JSObject* obj = NewPlainObjectWithMaybeDuplicateKeys(cx, properties.begin(),
-                                                       properties.length());
+  JSObject* obj = NewPlainObjectWithMaybeDuplicateKeys(cx, properties->begin(),
+                                                       properties->length());
   if (!obj) {
     return false;
   }
 
   vp.setObject(*obj);
-  if (!freeProperties.append(&properties)) {
+  if (!freeProperties.append(properties)) {
     return false;
   }
   stack.popBack();
@@ -748,17 +748,17 @@ inline bool JSONFullParseHandlerAnyChar::arrayElement(
 
 inline bool JSONFullParseHandlerAnyChar::finishArray(
     Vector<StackEntry, 10>& stack, JS::MutableHandle<JS::Value> vp,
-    ElementVector& elements) {
-  MOZ_ASSERT(&elements == &stack.back().elements());
+    ElementVector* elements) {
+  MOZ_ASSERT(elements == &stack.back().elements());
 
   ArrayObject* obj =
-      NewDenseCopiedArray(cx, elements.length(), elements.begin());
+      NewDenseCopiedArray(cx, elements->length(), elements->begin());
   if (!obj) {
     return false;
   }
 
   vp.setObject(*obj);
-  if (!freeElements.append(&elements)) {
+  if (!freeElements.append(elements)) {
     return false;
   }
   stack.popBack();
@@ -835,7 +835,7 @@ bool JSONPerHandlerParser<CharT, HandlerT>::parseImpl(TempValueT& value,
 
         token = tokenizer.advanceAfterProperty();
         if (token == JSONToken::ObjectClose) {
-          if (!handler.finishObject(stack, &value, *properties)) {
+          if (!handler.finishObject(stack, &value, properties)) {
             return false;
           }
           break;
@@ -890,7 +890,7 @@ bool JSONPerHandlerParser<CharT, HandlerT>::parseImpl(TempValueT& value,
           goto JSONValue;
         }
         if (token == JSONToken::ArrayClose) {
-          if (!handler.finishArray(stack, &value, *elements)) {
+          if (!handler.finishArray(stack, &value, elements)) {
             return false;
           }
           break;
@@ -928,7 +928,7 @@ bool JSONPerHandlerParser<CharT, HandlerT>::parseImpl(TempValueT& value,
 
             token = tokenizer.advance();
             if (token == JSONToken::ArrayClose) {
-              if (!handler.finishArray(stack, &value, *elements)) {
+              if (!handler.finishArray(stack, &value, elements)) {
                 return false;
               }
               break;
@@ -944,7 +944,7 @@ bool JSONPerHandlerParser<CharT, HandlerT>::parseImpl(TempValueT& value,
 
             token = tokenizer.advanceAfterObjectOpen();
             if (token == JSONToken::ObjectClose) {
-              if (!handler.finishObject(stack, &value, *properties)) {
+              if (!handler.finishObject(stack, &value, properties)) {
                 return false;
               }
               break;
@@ -1014,7 +1014,7 @@ inline bool JSONSyntaxParseHandler<CharT>::objectOpen(
 
 template <typename CharT>
 inline bool JSONSyntaxParseHandler<CharT>::finishObject(
-    Vector<StackEntry, 10>& stack, DummyValue* vp, PropertyVector& properties) {
+    Vector<StackEntry, 10>& stack, DummyValue* vp, PropertyVector* properties) {
   stack.popBack();
   return true;
 }
@@ -1031,7 +1031,7 @@ inline bool JSONSyntaxParseHandler<CharT>::arrayOpen(
 
 template <typename CharT>
 inline bool JSONSyntaxParseHandler<CharT>::finishArray(
-    Vector<StackEntry, 10>& stack, DummyValue* vp, ElementVector& elements) {
+    Vector<StackEntry, 10>& stack, DummyValue* vp, ElementVector* elements) {
   stack.popBack();
   return true;
 }
