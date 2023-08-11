@@ -13,7 +13,6 @@ add_task(async function testNoPermissionPrompt() {
       SpecialPowers.pushPrefEnv(
         {
           set: [
-            ["permissions.delegation.enabled", true],
             ["dom.vibrator.enabled", true],
             ["dom.security.featurePolicy.header.enabled", true],
             ["dom.security.featurePolicy.webidl.enabled", true],

@@ -86,10 +86,6 @@ NS_IMETHODIMP
 PermissionDelegateHandler::MaybeUnsafePermissionDelegate(
     const nsTArray<nsCString>& aTypes, bool* aMaybeUnsafe) {
   *aMaybeUnsafe = false;
-  if (!StaticPrefs::permissions_delegation_enabled()) {
-    return NS_OK;
-  }
-
   for (auto& type : aTypes) {
     const DelegateInfo* info =
         GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(type));
@@ -107,22 +103,11 @@ PermissionDelegateHandler::MaybeUnsafePermissionDelegate(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PermissionDelegateHandler::GetPermissionDelegateFPEnabled(bool* aEnabled) {
-  MOZ_ASSERT(NS_IsMainThread());
-  *aEnabled = StaticPrefs::permissions_delegation_enabled();
-  return NS_OK;
-}
-
 /* static */
 nsresult PermissionDelegateHandler::GetDelegatePrincipal(
     const nsACString& aType, nsIContentPermissionRequest* aRequest,
     nsIPrincipal** aResult) {
   MOZ_ASSERT(aRequest);
-
-  if (!StaticPrefs::permissions_delegation_enabled()) {
-    return aRequest->GetPrincipal(aResult);
-  }
 
   const DelegateInfo* info =
       GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(aType));
@@ -203,10 +188,6 @@ bool PermissionDelegateHandler::HasPermissionDelegated(
     return false;
   }
 
-  if (!StaticPrefs::permissions_delegation_enabled()) {
-    return true;
-  }
-
   if (info->mPolicy == DelegatePolicy::ePersistDeniedCrossOrigin &&
       !mDocument->IsTopLevelContentDocument() &&
       IsCrossOriginContentToTop(mDocument)) {
@@ -238,11 +219,6 @@ nsresult PermissionDelegateHandler::GetPermission(const nsACString& aType,
       nsIPrincipal*, const nsACString&, uint32_t*) =
       aExactHostMatch ? &nsIPermissionManager::TestExactPermissionFromPrincipal
                       : &nsIPermissionManager::TestPermissionFromPrincipal;
-
-  if (!StaticPrefs::permissions_delegation_enabled()) {
-    return (mPermissionManager->*testPermission)(mPrincipal, aType,
-                                                 aPermission);
-  }
 
   if (info->mPolicy == DelegatePolicy::ePersistDeniedCrossOrigin &&
       !mDocument->IsTopLevelContentDocument() &&

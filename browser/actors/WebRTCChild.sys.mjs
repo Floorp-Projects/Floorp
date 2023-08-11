@@ -392,14 +392,8 @@ function prompt(
       Ci.nsIPermissionDelegateHandler
     );
 
-  const shouldDelegatePermission =
-    permDelegateHandler.permissionDelegateFPEnabled;
-
   let secondOrigin = undefined;
-  if (
-    shouldDelegatePermission &&
-    permDelegateHandler.maybeUnsafePermissionDelegate(requestTypes)
-  ) {
+  if (permDelegateHandler.maybeUnsafePermissionDelegate(requestTypes)) {
     // We are going to prompt both first party and third party origin.
     // SecondOrigin should be third party
     secondOrigin = aContentWindow.document.nodePrincipal.origin;
@@ -412,7 +406,6 @@ function prompt(
     documentURI: aContentWindow.document.documentURI,
     secure: aSecure,
     isHandlingUserInput: aIsHandlingUserInput,
-    shouldDelegatePermission,
     requestTypes,
     sharingScreen,
     sharingAudio,
