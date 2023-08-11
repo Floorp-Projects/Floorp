@@ -47,12 +47,15 @@ Review groups
    * - #cookies
      - `Core: Cookies </mots/index.html#core-cookies>`__
      - `Member list <https://phabricator.services.mozilla.com/project/members/177/>`__
-   * - #dom-workers-and-storage-reviewers
-     - DOM Workers & Storage
-     - `Member list <https://phabricator.services.mozilla.com/project/members/115/>`__
+   * - #desktop-theme-reviewers
+     - User interface CSS
+     - `Member list <https://phabricator.services.mozilla.com/project/members/141/>`__
    * - #devtools-reviewers
      - Firefox DevTools
      - `Member list <https://phabricator.services.mozilla.com/project/members/153/>`__
+   * - #dom-workers-and-storage-reviewers
+     - DOM Workers & Storage
+     - `Member list <https://phabricator.services.mozilla.com/project/members/115/>`__
    * - #fluent-reviewers
      - Changes to Fluent (FTL) files (translation).
      - `Member list <https://phabricator.services.mozilla.com/project/members/105/>`__
