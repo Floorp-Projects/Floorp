@@ -250,6 +250,9 @@ bool LRecoverInfo::appendDefinition(MDefinition* def) {
 
 bool LRecoverInfo::appendResumePoint(MResumePoint* rp) {
   // Stores should be recovered first.
+  if (!rp->storesEmpty()) {
+    hasSideEffects_ = true;
+  }
   for (auto iter(rp->storesBegin()), end(rp->storesEnd()); iter != end;
        ++iter) {
     if (!appendDefinition(iter->operand)) {

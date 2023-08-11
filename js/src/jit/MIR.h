@@ -8835,6 +8835,7 @@ class MResumePoint final : public MNode
 
   MStoresToRecoverList::iterator storesBegin() const { return stores_.begin(); }
   MStoresToRecoverList::iterator storesEnd() const { return stores_.end(); }
+  bool storesEmpty() const { return stores_.empty(); }
 
   void setDiscarded() { isDiscarded_ = true; }
   bool isDiscarded() const { return isDiscarded_; }
