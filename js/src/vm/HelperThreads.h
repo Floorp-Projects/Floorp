@@ -187,7 +187,7 @@ inline void CancelOffThreadIonCompile(JSRuntime* runtime) {
 }
 
 #ifdef DEBUG
-bool HasOffThreadIonCompile(JS::Realm* realm);
+bool HasOffThreadIonCompile(JS::Zone* zone);
 #endif
 
 /*
