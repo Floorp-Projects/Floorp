@@ -234,6 +234,11 @@ function evalWithDebugger(string, options = {}, webConsole) {
     );
   }
 
+  // The help function needs to be easy to guess, so we make the () optional.
+  if (string.trim() === "help" && isHelpFunction(result, bindings)) {
+    return evalWithDebugger(":help", options, webConsole);
+  }
+
   return {
     result,
     // Retrieve the result of commands, if any ran
@@ -244,6 +249,18 @@ function evalWithDebugger(string, options = {}, webConsole) {
   };
 }
 exports.evalWithDebugger = evalWithDebugger;
+
+/**
+ * Checks if the evaluation result is the 'help' function in bindings.
+ */
+function isHelpFunction(result, bindings) {
+  return (
+    "return" in result &&
+    result.return &&
+    result.return.class === "Function" &&
+    result.return === bindings.help
+  );
+}
 
 function getEvalResult(
   dbg,
@@ -556,11 +573,6 @@ function updateConsoleInputEvaluation(dbg, webConsole) {
 
 function getEvalInput(string, bindings) {
   const trimmedString = string.trim();
-  // The help function needs to be easy to guess, so we make the () optional.
-  if (bindings?.help && trimmedString === "help") {
-    return "help()";
-  }
-
   // Add easter egg for console.mihai().
   if (
     trimmedString == "console.mihai()" ||
