@@ -10,6 +10,7 @@
  * This test is used for the permanent Telemetry probe MSE_SOURCE_BUFFER_TYPE.
  * which is used to measure the usage of mime type used in MSE.
  */
+const VIDEO_HEVC = "video/hevc";
 const VIDEO_WEBM = "video/webm";
 const AUDIO_WEBM = "audio/webm";
 const VIDEO_MP4 = "video/mp4";
@@ -20,7 +21,7 @@ const AUDIO_MP3 = "audio/mpeg";
 const AUDIO_AAC = "audio/aac";
 
 // The order follows `MSE_SOURCE_BUFFER_TYPE` in `Histogram.json`.
-const gLabelNames = [VIDEO_WEBM, AUDIO_WEBM, VIDEO_MP4, AUDIO_MP4,
+const gLabelNames = [VIDEO_HEVC, VIDEO_WEBM, AUDIO_WEBM, VIDEO_MP4, AUDIO_MP4,
                      VIDEO_MP2T, AUDIO_MP2T, AUDIO_MP3, AUDIO_AAC];
 
 add_task(async function setTestPref() {
@@ -30,6 +31,10 @@ add_task(async function setTestPref() {
 
 add_task(async function testSourceBufferTypeProbe() {
   for (let label of gLabelNames) {
+    // HEVC will be tested in another task.
+    if (label == VIDEO_HEVC) {
+      continue;
+    }
     info(`calling 'isTypeSupported()' should increase the probe value`);
     MediaSource.isTypeSupported(label);
     assertLabelValueEqualTo(label, 1);
@@ -42,6 +47,31 @@ add_task(async function testSourceBufferTypeProbe() {
       info(`ignore error for unsupported type ${label}`);
     }
     assertLabelValueEqualTo(label, 2);
+  }
+});
+
+add_task(async function testSourceBufferHEVCTypeProbe() {
+  // These are all possible mime types for HEVC
+  const mimeTypes = [
+    "video/mp4; codecs=\"hvc1\"",
+    "video/mp4; codecs=\"hev1\"",
+    "video/mp4; codecs=\"hvc1.1.6.L93.B0\"",
+    "video/mp4; codecs=\"hev1.1.6.L93.B0\"",
+  ];
+  for (let idx = 0; idx < mimeTypes.length; idx++) {
+    const mimeType = mimeTypes[idx];
+    info(`calling 'isTypeSupported()' should increase the probe value`);
+    MediaSource.isTypeSupported(mimeType);
+    assertLabelValueEqualTo(VIDEO_HEVC, idx * 2 + 1);
+
+    info(`calling 'addSourceBuffer()' should increase the probe value`);
+    try {
+      const source = new MediaSource();
+      source.addSourceBuffer(mimeType);
+    } catch (e) {
+      info(`ignore error for unsupported type ${mimeType}`);
+    }
+    assertLabelValueEqualTo(VIDEO_HEVC, idx * 2 + 2);
   }
 });
 

@@ -14427,10 +14427,11 @@
     "products": ["firefox", "geckoview_streaming"],
     "record_in_processes": ["main", "content"],
     "alert_emails": ["media-alerts@mozilla.com"],
-    "bug_numbers": [1699249],
+    "bug_numbers": [1699249, 1848211],
     "expires_in_version": "never",
     "kind": "categorical",
     "labels": [
+      "VideoHevc",
       "VideoWebm",
       "AudioWebm",
       "VideoMp4",
