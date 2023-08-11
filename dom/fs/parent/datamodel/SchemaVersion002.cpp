@@ -47,6 +47,21 @@ nsresult PopulateFileIds(ResultConnection& aConn) {
       ";"_ns);
 }
 
+nsresult PopulateMainFiles(ResultConnection& aConn) {
+  return aConn->ExecuteSimpleSQL(
+      "INSERT OR IGNORE INTO MainFiles ( fileId, handle ) "
+      "SELECT handle, handle FROM Files "
+      ";"_ns);
+}
+
+nsresult ClearFileIds(ResultConnection& aConn) {
+  return aConn->ExecuteSimpleSQL("DELETE FROM FileIds;"_ns);
+}
+
+nsresult ClearMainFiles(ResultConnection& aConn) {
+  return aConn->ExecuteSimpleSQL("DELETE FROM MainFiles;"_ns);
+}
+
 nsresult ConnectUsagesToFileIds(ResultConnection& aConn) {
   QM_TRY(
       MOZ_TO_RESULT(aConn->ExecuteSimpleSQL("PRAGMA foreign_keys = OFF;"_ns)));
@@ -126,11 +141,17 @@ Result<DatabaseVersion, QMResult> SchemaVersion002::InitializeConnection(
 
     if (!wasEmpty) {
       QM_TRY(QM_TO_RESULT(PopulateFileIds(aConn)));
-      QM_TRY(QM_TO_RESULT(ConnectUsagesToFileIds(aConn)));
     }
 
+    QM_TRY(QM_TO_RESULT(ConnectUsagesToFileIds(aConn)));
+
     QM_TRY(QM_TO_RESULT(CreateMainFiles(aConn)));
+    if (!wasEmpty) {
+      QM_TRY(QM_TO_RESULT(PopulateMainFiles(aConn)));
+    }
+
     QM_TRY(QM_TO_RESULT(CreateEntryNamesView(aConn)));
+
     QM_TRY(QM_TO_RESULT(aConn->SetSchemaVersion(sVersion)));
 
     QM_TRY(QM_TO_RESULT(transaction.Commit()));
@@ -138,6 +159,35 @@ Result<DatabaseVersion, QMResult> SchemaVersion002::InitializeConnection(
     if (!wasEmpty) {
       QM_TRY(QM_TO_RESULT(aConn->ExecuteSimpleSQL("VACUUM;"_ns)));
     }
+  }
+
+  auto UsagesTableRefsFilesTable = [&aConn]() -> Result<bool, QMResult> {
+    const nsLiteralCString query =
+        "SELECT pragma_foreign_key_list.'table'=='Files' "
+        "FROM pragma_foreign_key_list('Usages');"_ns;
+
+    QM_TRY_UNWRAP(ResultStatement stmt, ResultStatement::Create(aConn, query));
+
+    return stmt.YesOrNoQuery();
+  };
+
+  QM_TRY_UNWRAP(auto usagesTableRefsFilesTable, UsagesTableRefsFilesTable());
+
+  if (usagesTableRefsFilesTable) {
+    QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(aConn));
+
+    QM_TRY(QM_TO_RESULT(ClearFileIds(aConn)));
+    QM_TRY(QM_TO_RESULT(PopulateFileIds(aConn)));
+    QM_TRY(QM_TO_RESULT(ConnectUsagesToFileIds(aConn)));
+    QM_TRY(QM_TO_RESULT(ClearMainFiles(aConn)));
+    QM_TRY(QM_TO_RESULT(PopulateMainFiles(aConn)));
+
+    QM_TRY(QM_TO_RESULT(transaction.Commit()));
+
+    QM_TRY(QM_TO_RESULT(aConn->ExecuteSimpleSQL("VACUUM;"_ns)));
+
+    QM_TRY_UNWRAP(usagesTableRefsFilesTable, UsagesTableRefsFilesTable());
+    MOZ_ASSERT(!usagesTableRefsFilesTable);
   }
 
   QM_TRY(QM_TO_RESULT(aConn->ExecuteSimpleSQL("PRAGMA foreign_keys = ON;"_ns)));
