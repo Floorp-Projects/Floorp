@@ -106,13 +106,13 @@ return `undefined`.)
 called `new WebAssembly.Module` with the string `"> wasm"` appended.
 
 ### `startLine`
-**If the instance refers to JavaScript source**, the start line of the
+**If the instance refers to JavaScript source**, the 1-origin start line of the
 source within the file or URL it was loaded from. This is normally `1`, but
 may have another value if the source is part of an HTML document.
 
 ### `startColumn`
-**If the instance refers to JavaScript source**, the start column of the
-source within the file or URL it was loaded from. This is normally `1`, but
+**If the instance refers to JavaScript source**, the 0-origin start column of
+the source within the file or URL it was loaded from. This is normally `0`, but
 may have another value if the source is part of an HTML document.
 
 ### `id`

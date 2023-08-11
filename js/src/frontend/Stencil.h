@@ -607,7 +607,11 @@ class StencilModuleEntry {
   // then it is the module specifier string, otherwise the import/export spec
   // that failed. Exports may not fill these fields if an error cannot be
   // generated such as `export let x;`.
+
+  // Line number (1-origin).
   uint32_t lineno = 0;
+
+  // Column number (0-origin).
   uint32_t column = 0;
 
  private:

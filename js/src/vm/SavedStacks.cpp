@@ -214,8 +214,13 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
 
   JSAtom* source;
   uint32_t sourceId;
+
+  // Line number (1-origin).
   uint32_t line;
+
+  // Columm number (1-origin).
   uint32_t column;
+
   JSAtom* functionDisplayName;
   JSAtom* asyncCause;
   SavedFrame* parent;

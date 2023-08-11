@@ -618,9 +618,9 @@ class ScriptSource {
   // 0 for other cases.
   uint32_t parameterListEnd_ = 0;
 
-  // Line number within the file where this source starts.
+  // Line number within the file where this source starts (1-origin).
   uint32_t startLine_ = 0;
-  // Column number within the file where this source starts.
+  // Column number within the file where this source starts (0-origin).
   uint32_t startColumn_ = 0;
 
   // See: CompileOptions::mutedErrors.
@@ -1540,7 +1540,9 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   [[nodiscard]] bool appendSourceDataForToString(JSContext* cx,
                                                  js::StringBuffer& buf);
 
+  // Line number (1-origin)
   uint32_t lineno() const { return extent_.lineno; }
+  // Column number in Unicode Code Points (0-origin)
   uint32_t column() const { return extent_.column; }
 
   JS::DelazificationOption delazificationMode() const {
