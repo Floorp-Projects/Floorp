@@ -118,9 +118,9 @@ done
 
 echo $"
 To manually create the no-op tracking files needed,
-run the following command for each commit in question:
-  ( export UPSTREAM_COMMIT=\"{sha-of-upstream-commit}\" ; \\
-    export PICKED_COMMIT=\"{sha-of-already-used-commit}\" ; \\
-    echo \"We already cherry-picked this when we vendored \$PICKED_COMMIT.\" \\
-    > $STATE_DIR/\$UPSTREAM_COMMIT.no-op-cherry-pick-msg )
+run the following command (in bash) for each commit in question:
+  ( export FUTURE_UPSTREAM_COMMIT=\"{short-sha-of-upstream-commit}\" ; \\
+    export ALREADY_USED_COMMIT=\"{short-sha-of-already-used-commit}\" ; \\
+    echo \"We already cherry-picked this when we vendored \$ALREADY_USED_COMMIT.\" \\
+    > $STATE_DIR/\$FUTURE_UPSTREAM_COMMIT.no-op-cherry-pick-msg )
 "
