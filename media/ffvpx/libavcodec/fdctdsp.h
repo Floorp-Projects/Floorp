@@ -21,17 +21,28 @@
 
 #include <stdint.h>
 
-#include "avcodec.h"
+#include "libavutil/attributes_internal.h"
+
+struct AVCodecContext;
 
 typedef struct FDCTDSPContext {
     void (*fdct)(int16_t *block /* align 16 */);
     void (*fdct248)(int16_t *block /* align 16 */);
 } FDCTDSPContext;
 
-void ff_fdctdsp_init(FDCTDSPContext *c, AVCodecContext *avctx);
-void ff_fdctdsp_init_ppc(FDCTDSPContext *c, AVCodecContext *avctx,
+FF_VISIBILITY_PUSH_HIDDEN
+void ff_fdctdsp_init(FDCTDSPContext *c, struct AVCodecContext *avctx);
+void ff_fdctdsp_init_ppc(FDCTDSPContext *c, struct AVCodecContext *avctx,
                          unsigned high_bit_depth);
-void ff_fdctdsp_init_x86(FDCTDSPContext *c, AVCodecContext *avctx,
+void ff_fdctdsp_init_x86(FDCTDSPContext *c, struct AVCodecContext *avctx,
                          unsigned high_bit_depth);
+
+void ff_fdct_ifast(int16_t *data);
+void ff_fdct_ifast248(int16_t *data);
+void ff_jpeg_fdct_islow_8(int16_t *data);
+void ff_jpeg_fdct_islow_10(int16_t *data);
+void ff_fdct248_islow_8(int16_t *data);
+void ff_fdct248_islow_10(int16_t *data);
+FF_VISIBILITY_POP_HIDDEN
 
 #endif /* AVCODEC_FDCTDSP_H */

@@ -174,6 +174,8 @@ int av_parse_cpu_caps(unsigned *flags, const char *s)
         { "armv8",    NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_ARMV8    },    .unit = "flags" },
         { "neon",     NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_NEON     },    .unit = "flags" },
         { "vfp",      NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_VFP      },    .unit = "flags" },
+        { "dotprod",  NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_DOTPROD  },    .unit = "flags" },
+        { "i8mm",     NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_I8MM     },    .unit = "flags" },
 #elif ARCH_MIPS
         { "mmi",      NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_MMI      },    .unit = "flags" },
         { "msa",      NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_MSA      },    .unit = "flags" },
@@ -188,6 +190,7 @@ int av_parse_cpu_caps(unsigned *flags, const char *s)
         { "rvv-f32",  NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_RVV_F32 },     .unit = "flags" },
         { "rvv-i64",  NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_RVV_I64 },     .unit = "flags" },
         { "rvv",      NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_RVV_F64 },     .unit = "flags" },
+        { "rvb-addr",NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_RVB_ADDR },   .unit = "flags" },
         { "rvb-basic",NULL, 0, AV_OPT_TYPE_CONST, { .i64 = AV_CPU_FLAG_RVB_BASIC },   .unit = "flags" },
 #endif
         { NULL },

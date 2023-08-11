@@ -50,7 +50,7 @@ static const AVOption avcodec_options[] = {
 {"bt", "Set video bitrate tolerance (in bits/s). In 1-pass mode, bitrate tolerance specifies how far "
        "ratecontrol is willing to deviate from the target average bitrate value. This is not related "
        "to minimum/maximum bitrate. Lowering tolerance too much has an adverse effect on quality.",
-       OFFSET(bit_rate_tolerance), AV_OPT_TYPE_INT, {.i64 = AV_CODEC_DEFAULT_BITRATE*20 }, 1, INT_MAX, V|E},
+       OFFSET(bit_rate_tolerance), AV_OPT_TYPE_INT, {.i64 = AV_CODEC_DEFAULT_BITRATE*20 }, 0, INT_MAX, A|V|E},
 {"flags", NULL, OFFSET(flags), AV_OPT_TYPE_FLAGS, {.i64 = DEFAULT }, 0, UINT_MAX, V|A|S|E|D, "flags"},
 {"unaligned", "allow decoders to produce unaligned output", 0, AV_OPT_TYPE_CONST, { .i64 = AV_CODEC_FLAG_UNALIGNED }, INT_MIN, INT_MAX, V | D, "flags" },
 {"mv4", "use four motion vectors per macroblock (MPEG-4)", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_4MV }, INT_MIN, INT_MAX, V|E, "flags"},
@@ -72,7 +72,9 @@ static const AVOption avcodec_options[] = {
 {"ilme", "interlaced motion estimation", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_INTERLACED_ME }, INT_MIN, INT_MAX, V|E, "flags"},
 {"cgop", "closed GOP", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_CLOSED_GOP }, INT_MIN, INT_MAX, V|E, "flags"},
 {"output_corrupt", "Output even potentially corrupted frames", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_OUTPUT_CORRUPT }, INT_MIN, INT_MAX, V|D, "flags"},
-{"drop_changed", "Drop frames whose parameters differ from first decoded frame", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_DROPCHANGED }, INT_MIN, INT_MAX, A|V|D, "flags"},
+#if FF_API_DROPCHANGED
+{"drop_changed", "Drop frames whose parameters differ from first decoded frame", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_DROPCHANGED }, INT_MIN, INT_MAX, A|V|D | AV_OPT_FLAG_DEPRECATED, "flags"},
+#endif
 {"flags2", NULL, OFFSET(flags2), AV_OPT_TYPE_FLAGS, {.i64 = DEFAULT}, 0, UINT_MAX, V|A|E|D|S, "flags2"},
 {"fast", "allow non-spec-compliant speedup tricks", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG2_FAST }, INT_MIN, INT_MAX, V|E, "flags2"},
 {"noout", "skip bitstream encoding", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG2_NO_OUTPUT }, INT_MIN, INT_MAX, V|E, "flags2"},
@@ -259,8 +261,8 @@ static const AVOption avcodec_options[] = {
 {"default"         , "discard useless frames",              0, AV_OPT_TYPE_CONST, {.i64 = AVDISCARD_DEFAULT }, INT_MIN, INT_MAX, V|D, "avdiscard"},
 {"noref"           , "discard all non-reference frames",    0, AV_OPT_TYPE_CONST, {.i64 = AVDISCARD_NONREF  }, INT_MIN, INT_MAX, V|D, "avdiscard"},
 {"bidir"           , "discard all bidirectional frames",    0, AV_OPT_TYPE_CONST, {.i64 = AVDISCARD_BIDIR   }, INT_MIN, INT_MAX, V|D, "avdiscard"},
-{"nokey"           , "discard all frames except keyframes", 0, AV_OPT_TYPE_CONST, {.i64 = AVDISCARD_NONKEY  }, INT_MIN, INT_MAX, V|D, "avdiscard"},
 {"nointra"         , "discard all frames except I frames",  0, AV_OPT_TYPE_CONST, {.i64 = AVDISCARD_NONINTRA}, INT_MIN, INT_MAX, V|D, "avdiscard"},
+{"nokey"           , "discard all frames except keyframes", 0, AV_OPT_TYPE_CONST, {.i64 = AVDISCARD_NONKEY  }, INT_MIN, INT_MAX, V|D, "avdiscard"},
 {"all"             , "discard all frames",                  0, AV_OPT_TYPE_CONST, {.i64 = AVDISCARD_ALL     }, INT_MIN, INT_MAX, V|D, "avdiscard"},
 {"bidir_refine", "refine the two motion vectors used in bidirectional macroblocks", OFFSET(bidir_refine), AV_OPT_TYPE_INT, {.i64 = 1 }, 0, 4, V|E},
 {"keyint_min", "minimum interval between IDR-frames", OFFSET(keyint_min), AV_OPT_TYPE_INT, {.i64 = 25 }, INT_MIN, INT_MAX, V|E},
@@ -276,7 +278,9 @@ static const AVOption avcodec_options[] = {
 #endif
 {"rc_max_vbv_use", NULL, OFFSET(rc_max_available_vbv_use), AV_OPT_TYPE_FLOAT, {.dbl = 0 }, 0.0, FLT_MAX, V|E},
 {"rc_min_vbv_use", NULL, OFFSET(rc_min_vbv_overflow_use),  AV_OPT_TYPE_FLOAT, {.dbl = 3 },     0.0, FLT_MAX, V|E},
+#if FF_API_TICKS_PER_FRAME
 {"ticks_per_frame", NULL, OFFSET(ticks_per_frame), AV_OPT_TYPE_INT, {.i64 = 1 }, 1, INT_MAX, A|V|E|D},
+#endif
 {"color_primaries", "color primaries", OFFSET(color_primaries), AV_OPT_TYPE_INT, {.i64 = AVCOL_PRI_UNSPECIFIED }, 1, INT_MAX, V|E|D, "color_primaries_type"},
 {"bt709",       "BT.709",         0, AV_OPT_TYPE_CONST, {.i64 = AVCOL_PRI_BT709 },        INT_MIN, INT_MAX, V|E|D, "color_primaries_type"},
 {"unknown",     "Unspecified",    0, AV_OPT_TYPE_CONST, {.i64 = AVCOL_PRI_UNSPECIFIED },  INT_MIN, INT_MAX, V|E|D, "color_primaries_type"},

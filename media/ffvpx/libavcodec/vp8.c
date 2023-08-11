@@ -31,6 +31,7 @@
 #include "avcodec.h"
 #include "codec_internal.h"
 #include "decode.h"
+#include "hwaccel_internal.h"
 #include "hwconfig.h"
 #include "mathops.h"
 #include "thread.h"
@@ -104,23 +105,21 @@ static int vp8_alloc_frame(VP8Context *s, VP8Frame *f, int ref)
     if ((ret = ff_thread_get_ext_buffer(s->avctx, &f->tf,
                                         ref ? AV_GET_BUFFER_FLAG_REF : 0)) < 0)
         return ret;
-    if (!(f->seg_map = av_buffer_allocz(s->mb_width * s->mb_height)))
+    if (!(f->seg_map = av_buffer_allocz(s->mb_width * s->mb_height))) {
+        ret = AVERROR(ENOMEM);
         goto fail;
-    if (s->avctx->hwaccel) {
-        const AVHWAccel *hwaccel = s->avctx->hwaccel;
-        if (hwaccel->frame_priv_data_size) {
-            f->hwaccel_priv_buf = av_buffer_allocz(hwaccel->frame_priv_data_size);
-            if (!f->hwaccel_priv_buf)
-                goto fail;
-            f->hwaccel_picture_private = f->hwaccel_priv_buf->data;
-        }
     }
+    ret = ff_hwaccel_frame_priv_alloc(s->avctx, &f->hwaccel_picture_private,
+                                      &f->hwaccel_priv_buf);
+    if (ret < 0)
+        goto fail;
+
     return 0;
 
 fail:
     av_buffer_unref(&f->seg_map);
     ff_thread_release_ext_buffer(s->avctx, &f->tf);
-    return AVERROR(ENOMEM);
+    return ret;
 }
 
 static void vp8_release_frame(VP8Context *s, VP8Frame *f)
@@ -167,6 +166,9 @@ static void vp8_decode_flush_impl(AVCodecContext *avctx, int free_mem)
 
     if (free_mem)
         free_buffers(s);
+
+    if (FF_HW_HAS_CB(avctx, flush))
+        FF_HW_SIMPLE_CALL(avctx, flush);
 }
 
 static void vp8_decode_flush(AVCodecContext *avctx)
@@ -2732,7 +2734,10 @@ int vp78_decode_frame(AVCodecContext *avctx, AVFrame *rframe, int *got_frame,
         goto err;
     }
 
-    curframe->tf.f->key_frame = s->keyframe;
+    if (s->keyframe)
+        curframe->tf.f->flags |= AV_FRAME_FLAG_KEY;
+    else
+        curframe->tf.f->flags &= ~AV_FRAME_FLAG_KEY;
     curframe->tf.f->pict_type = s->keyframe ? AV_PICTURE_TYPE_I
                                             : AV_PICTURE_TYPE_P;
     if ((ret = vp8_alloc_frame(s, curframe, referenced)) < 0)
@@ -2760,15 +2765,16 @@ int vp78_decode_frame(AVCodecContext *avctx, AVFrame *rframe, int *got_frame,
         ff_thread_finish_setup(avctx);
 
     if (avctx->hwaccel) {
-        ret = avctx->hwaccel->start_frame(avctx, avpkt->data, avpkt->size);
+        const FFHWAccel *hwaccel = ffhwaccel(avctx->hwaccel);
+        ret = hwaccel->start_frame(avctx, avpkt->data, avpkt->size);
         if (ret < 0)
             goto err;
 
-        ret = avctx->hwaccel->decode_slice(avctx, avpkt->data, avpkt->size);
+        ret = hwaccel->decode_slice(avctx, avpkt->data, avpkt->size);
         if (ret < 0)
             goto err;
 
-        ret = avctx->hwaccel->end_frame(avctx);
+        ret = hwaccel->end_frame(avctx);
         if (ret < 0)
             goto err;
 

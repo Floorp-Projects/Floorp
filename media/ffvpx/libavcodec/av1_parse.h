@@ -49,9 +49,6 @@ typedef struct AV1OBU {
     int raw_size;
     const uint8_t *raw_data;
 
-    /** GetBitContext initialized to the start of the payload */
-    GetBitContext gb;
-
     int type;
 
     int temporal_id;
@@ -180,5 +177,8 @@ static inline int get_obu_bit_length(const uint8_t *buf, int size, int type)
 
     return size;
 }
+
+AVRational ff_av1_framerate(int64_t ticks_per_frame, int64_t units_per_tick,
+                            int64_t time_scale);
 
 #endif /* AVCODEC_AV1_PARSE_H */

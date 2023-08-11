@@ -71,7 +71,7 @@ void av_bprint_init(AVBPrint *buf, unsigned size_init, unsigned size_max)
     unsigned size_auto = (char *)buf + sizeof(*buf) -
                          buf->reserved_internal_buffer;
 
-    if (size_max == 1)
+    if (size_max == AV_BPRINT_SIZE_AUTOMATIC)
         size_max = size_auto;
     buf->str      = buf->reserved_internal_buffer;
     buf->len      = 0;
@@ -84,6 +84,11 @@ void av_bprint_init(AVBPrint *buf, unsigned size_init, unsigned size_max)
 
 void av_bprint_init_for_buffer(AVBPrint *buf, char *buffer, unsigned size)
 {
+    if (size == 0) {
+        av_bprint_init(buf, 0, AV_BPRINT_SIZE_COUNT_ONLY);
+        return;
+    }
+
     buf->str      = buffer;
     buf->len      = 0;
     buf->size     = size;

@@ -57,12 +57,6 @@ typedef struct AVCodecInternal {
     int is_copy;
 
     /**
-     * An audio frame with less than required samples has been submitted (and
-     * potentially padded with silence). Reject all subsequent frames.
-     */
-    int last_audio_frame;
-
-    /**
      * Audio encoders can set this flag during init to indicate that they
      * want the small last frame to be padded to a multiple of pad_samples.
      */
@@ -94,13 +88,6 @@ typedef struct AVCodecInternal {
      */
     uint8_t *byte_buffer;
     unsigned int byte_buffer_size;
-
-    /**
-     * This is set to AV_PKT_FLAG_KEY for encoders that encode intra-only
-     * formats (i.e. whose codec descriptor has AV_CODEC_PROP_INTRA_ONLY set).
-     * This is used to set said flag generically for said encoders.
-     */
-    int intra_only_flag;
 
     void *frame_thread_encoder;
 
@@ -148,17 +135,14 @@ typedef struct AVCodecInternal {
     AVFrame *buffer_frame;
     int draining_done;
 
-    int showed_multi_packet_warning;
-
-    /* to prevent infinite loop on errors when draining */
-    int nb_draining_errors;
-
+#if FF_API_DROPCHANGED
     /* used when avctx flag AV_CODEC_FLAG_DROPCHANGED is set */
     int changed_frames_dropped;
     int initial_format;
     int initial_width, initial_height;
     int initial_sample_rate;
     AVChannelLayout initial_ch_layout;
+#endif
 
 #if CONFIG_LCMS2
     FFIccContext icc; /* used to read and write embedded ICC profiles */
@@ -172,15 +156,6 @@ typedef struct AVCodecInternal {
 int ff_match_2uint16(const uint16_t (*tab)[2], int size, int a, int b);
 
 unsigned int ff_toupper4(unsigned int x);
-
-void ff_color_frame(AVFrame *frame, const int color[4]);
-
-/**
- * Maximum size in bytes of extradata.
- * This value was chosen such that every bit of the buffer is
- * addressable by a 32-bit signed integer as used by get_bits.
- */
-#define FF_MAX_EXTRADATA_SIZE ((1 << 28) - AV_INPUT_BUFFER_PADDING_SIZE)
 
 /**
  * 2^(x) for integer x
@@ -231,17 +206,5 @@ int ff_alloc_timecode_sei(const AVFrame *frame, AVRational rate, size_t prefix_l
  * bits per pixel.
  */
 int64_t ff_guess_coded_bitrate(AVCodecContext *avctx);
-
-/**
- * Check if a value is in the list. If not, return the default value
- *
- * @param ctx                Context for the log msg
- * @param val_name           Name of the checked value, for log msg
- * @param array_valid_values Array of valid int, ended with INT_MAX
- * @param default_value      Value return if checked value is not in the array
- * @return                   Value or default_value.
- */
-int ff_int_from_list_or_default(void *ctx, const char * val_name, int val,
-                                const int * array_valid_values, int default_value);
 
 #endif /* AVCODEC_INTERNAL_H */

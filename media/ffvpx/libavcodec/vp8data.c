@@ -16,16 +16,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef AVUTIL_AARCH64_CPU_H
-#define AVUTIL_AARCH64_CPU_H
+#include "stdint.h"
 
-#include "libavutil/cpu.h"
-#include "libavutil/cpu_internal.h"
+// cat 1 and 2 are defined in vp8data.h
+static const uint8_t vp8_dct_cat3_prob[] = {
+    173, 148, 140, 0
+};
+static const uint8_t vp8_dct_cat4_prob[] = {
+    176, 155, 140, 135, 0
+};
+static const uint8_t vp8_dct_cat5_prob[] = {
+    180, 157, 141, 134, 130, 0
+};
+static const uint8_t vp8_dct_cat6_prob[] = {
+    254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0
+};
 
-#define have_armv8(flags) CPUEXT(flags, ARMV8)
-#define have_neon(flags) CPUEXT(flags, NEON)
-#define have_vfp(flags)  CPUEXT(flags, VFP)
-#define have_dotprod(flags) CPUEXT(flags, DOTPROD)
-#define have_i8mm(flags)    CPUEXT(flags, I8MM)
+// only used for cat3 and above; cat 1 and 2 are referenced directly.
+const uint8_t *const ff_vp8_dct_cat_prob[] = {
+    vp8_dct_cat3_prob,
+    vp8_dct_cat4_prob,
+    vp8_dct_cat5_prob,
+    vp8_dct_cat6_prob,
+};
 
-#endif /* AVUTIL_AARCH64_CPU_H */
