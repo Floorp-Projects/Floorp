@@ -464,20 +464,6 @@ int32_t ModuleRtpRtcpImpl::SetCNAME(absl::string_view c_name) {
   return rtcp_sender_.SetCNAME(c_name);
 }
 
-// Get RoundTripTime.
-int32_t ModuleRtpRtcpImpl::RTT(const uint32_t remote_ssrc,
-                               int64_t* rtt,
-                               int64_t* avg_rtt,
-                               int64_t* min_rtt,
-                               int64_t* max_rtt) const {
-  int32_t ret = rtcp_receiver_.RTT(remote_ssrc, rtt, avg_rtt, min_rtt, max_rtt);
-  if (rtt && *rtt == 0) {
-    // Try to get RTT from RtcpRttStats class.
-    *rtt = rtt_ms();
-  }
-  return ret;
-}
-
 absl::optional<TimeDelta> ModuleRtpRtcpImpl::LastRtt() const {
   absl::optional<TimeDelta> rtt = rtcp_receiver_.LastRtt();
   if (!rtt.has_value()) {

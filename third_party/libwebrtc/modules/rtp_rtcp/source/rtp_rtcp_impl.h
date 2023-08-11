@@ -170,11 +170,6 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
   int32_t SetCNAME(absl::string_view c_name) override;
 
   // Get RoundTripTime.
-  [[deprecated]] int32_t RTT(uint32_t remote_ssrc,
-                             int64_t* rtt,
-                             int64_t* avg_rtt,
-                             int64_t* min_rtt,
-                             int64_t* max_rtt) const override;
   absl::optional<TimeDelta> LastRtt() const override;
 
   int64_t ExpectedRetransmissionTimeMs() const override;
