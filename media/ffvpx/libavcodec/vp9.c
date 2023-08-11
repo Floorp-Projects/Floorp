@@ -27,6 +27,7 @@
 #include "codec_internal.h"
 #include "decode.h"
 #include "get_bits.h"
+#include "hwaccel_internal.h"
 #include "hwconfig.h"
 #include "profiles.h"
 #include "thread.h"
@@ -119,12 +120,14 @@ static int vp9_frame_alloc(AVCodecContext *avctx, VP9Frame *f)
         s->frame_extradata_pool = av_buffer_pool_init(sz * (1 + sizeof(VP9mvrefPair)), NULL);
         if (!s->frame_extradata_pool) {
             s->frame_extradata_pool_size = 0;
+            ret = AVERROR(ENOMEM);
             goto fail;
         }
         s->frame_extradata_pool_size = sz;
     }
     f->extradata = av_buffer_pool_get(s->frame_extradata_pool);
     if (!f->extradata) {
+        ret = AVERROR(ENOMEM);
         goto fail;
     }
     memset(f->extradata->data, 0, f->extradata->size);
@@ -132,22 +135,16 @@ static int vp9_frame_alloc(AVCodecContext *avctx, VP9Frame *f)
     f->segmentation_map = f->extradata->data;
     f->mv = (VP9mvrefPair *) (f->extradata->data + sz);
 
-    if (avctx->hwaccel) {
-        const AVHWAccel *hwaccel = avctx->hwaccel;
-        av_assert0(!f->hwaccel_picture_private);
-        if (hwaccel->frame_priv_data_size) {
-            f->hwaccel_priv_buf = av_buffer_allocz(hwaccel->frame_priv_data_size);
-            if (!f->hwaccel_priv_buf)
-                goto fail;
-            f->hwaccel_picture_private = f->hwaccel_priv_buf->data;
-        }
-    }
+    ret = ff_hwaccel_frame_priv_alloc(avctx, &f->hwaccel_picture_private,
+                                      &f->hwaccel_priv_buf);
+    if (ret < 0)
+        goto fail;
 
     return 0;
 
 fail:
     vp9_frame_unref(avctx, f);
-    return AVERROR(ENOMEM);
+    return ret;
 }
 
 static int vp9_frame_ref(AVCodecContext *avctx, VP9Frame *dst, VP9Frame *src)
@@ -237,6 +234,13 @@ static int update_size(AVCodecContext *avctx, int w, int h)
         case AV_PIX_FMT_YUV444P:
         case AV_PIX_FMT_YUV444P10:
         case AV_PIX_FMT_YUV444P12:
+#if CONFIG_VP9_VAAPI_HWACCEL
+            *fmtp++ = AV_PIX_FMT_VAAPI;
+#endif
+            break;
+        case AV_PIX_FMT_GBRP:
+        case AV_PIX_FMT_GBRP10:
+        case AV_PIX_FMT_GBRP12:
 #if CONFIG_VP9_VAAPI_HWACCEL
             *fmtp++ = AV_PIX_FMT_VAAPI;
 #endif
@@ -1606,7 +1610,10 @@ static int vp9_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     if ((ret = vp9_frame_alloc(avctx, &s->s.frames[CUR_FRAME])) < 0)
         return ret;
     f = s->s.frames[CUR_FRAME].tf.f;
-    f->key_frame = s->s.h.keyframe;
+    if (s->s.h.keyframe)
+        f->flags |= AV_FRAME_FLAG_KEY;
+    else
+        f->flags &= ~AV_FRAME_FLAG_KEY;
     f->pict_type = (s->s.h.keyframe || s->s.h.intraonly) ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_P;
 
     if (s->s.frames[REF_FRAME_SEGMAP].tf.f->buf[0] &&
@@ -1629,13 +1636,14 @@ static int vp9_decode_frame(AVCodecContext *avctx, AVFrame *frame,
     }
 
     if (avctx->hwaccel) {
-        ret = avctx->hwaccel->start_frame(avctx, NULL, 0);
+        const FFHWAccel *hwaccel = ffhwaccel(avctx->hwaccel);
+        ret = hwaccel->start_frame(avctx, NULL, 0);
         if (ret < 0)
             return ret;
-        ret = avctx->hwaccel->decode_slice(avctx, pkt->data, pkt->size);
+        ret = hwaccel->decode_slice(avctx, pkt->data, pkt->size);
         if (ret < 0)
             return ret;
-        ret = avctx->hwaccel->end_frame(avctx);
+        ret = hwaccel->end_frame(avctx);
         if (ret < 0)
             return ret;
         goto finish;
@@ -1791,6 +1799,9 @@ static void vp9_decode_flush(AVCodecContext *avctx)
         vp9_frame_unref(avctx, &s->s.frames[i]);
     for (i = 0; i < 8; i++)
         ff_thread_release_ext_buffer(avctx, &s->s.refs[i]);
+
+    if (FF_HW_HAS_CB(avctx, flush))
+        FF_HW_SIMPLE_CALL(avctx, flush);
 }
 
 static av_cold int vp9_decode_init(AVCodecContext *avctx)

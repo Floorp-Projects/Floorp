@@ -214,6 +214,16 @@ enum AVFrameSideDataType {
      * Ambient viewing environment metadata, as defined by H.274.
      */
     AV_FRAME_DATA_AMBIENT_VIEWING_ENVIRONMENT,
+
+    /**
+     * Provide encoder-specific hinting information about changed/unchanged
+     * portions of a frame.  It can be used to pass information about which
+     * macroblocks can be skipped because they didn't change from the
+     * corresponding ones in the previous frame. This could be useful for
+     * applications which know this information in advance to speed up
+     * encoding.
+     */
+    AV_FRAME_DATA_VIDEO_HINT,
 };
 
 enum AVActiveFormatDescription {
@@ -416,10 +426,15 @@ typedef struct AVFrame {
      */
     int format;
 
+#if FF_API_FRAME_KEY
     /**
      * 1 -> keyframe, 0-> not
+     *
+     * @deprecated Use AV_FRAME_FLAG_KEY instead
      */
+    attribute_deprecated
     int key_frame;
+#endif
 
     /**
      * Picture type of the frame.
@@ -486,25 +501,50 @@ typedef struct AVFrame {
     void *opaque;
 
     /**
-     * When decoding, this signals how much the picture must be delayed.
-     * extra_delay = repeat_pict / (2*fps)
+     * Number of fields in this frame which should be repeated, i.e. the total
+     * duration of this frame should be repeat_pict + 2 normal field durations.
+     *
+     * For interlaced frames this field may be set to 1, which signals that this
+     * frame should be presented as 3 fields: beginning with the first field (as
+     * determined by AV_FRAME_FLAG_TOP_FIELD_FIRST being set or not), followed
+     * by the second field, and then the first field again.
+     *
+     * For progressive frames this field may be set to a multiple of 2, which
+     * signals that this frame's duration should be (repeat_pict + 2) / 2
+     * normal frame durations.
+     *
+     * @note This field is computed from MPEG2 repeat_first_field flag and its
+     * associated flags, H.264 pic_struct from picture timing SEI, and
+     * their analogues in other codecs. Typically it should only be used when
+     * higher-layer timing information is not available.
      */
     int repeat_pict;
 
+#if FF_API_INTERLACED_FRAME
     /**
      * The content of the picture is interlaced.
+     *
+     * @deprecated Use AV_FRAME_FLAG_INTERLACED instead
      */
+    attribute_deprecated
     int interlaced_frame;
 
     /**
      * If the content is interlaced, is top field displayed first.
+     *
+     * @deprecated Use AV_FRAME_FLAG_TOP_FIELD_FIRST instead
      */
+    attribute_deprecated
     int top_field_first;
+#endif
 
+#if FF_API_PALETTE_HAS_CHANGED
     /**
      * Tell user application that palette has changed from previous frame.
      */
+    attribute_deprecated
     int palette_has_changed;
+#endif
 
 #if FF_API_REORDERED_OPAQUE
     /**
@@ -583,9 +623,22 @@ typedef struct AVFrame {
  */
 #define AV_FRAME_FLAG_CORRUPT       (1 << 0)
 /**
+ * A flag to mark frames that are keyframes.
+ */
+#define AV_FRAME_FLAG_KEY (1 << 1)
+/**
  * A flag to mark the frames which need to be decoded, but shouldn't be output.
  */
 #define AV_FRAME_FLAG_DISCARD   (1 << 2)
+/**
+ * A flag to mark frames whose content is interlaced.
+ */
+#define AV_FRAME_FLAG_INTERLACED (1 << 3)
+/**
+ * A flag to mark frames where the top field is displayed first if the content
+ * is interlaced.
+ */
+#define AV_FRAME_FLAG_TOP_FIELD_FIRST (1 << 4)
 /**
  * @}
  */
@@ -794,6 +847,19 @@ void av_frame_free(AVFrame **frame);
 int av_frame_ref(AVFrame *dst, const AVFrame *src);
 
 /**
+ * Ensure the destination frame refers to the same data described by the source
+ * frame, either by creating a new reference for each AVBufferRef from src if
+ * they differ from those in dst, by allocating new buffers and copying data if
+ * src is not reference counted, or by unrefencing it if src is empty.
+ *
+ * Frame properties on dst will be replaced by those from src.
+ *
+ * @return 0 on success, a negative AVERROR on error. On error, dst is
+ *         unreferenced.
+ */
+int av_frame_replace(AVFrame *dst, const AVFrame *src);
+
+/**
  * Create a new frame that references the same data as src.
  *
  * This is a shortcut for av_frame_alloc()+av_frame_ref().
@@ -901,7 +967,7 @@ int av_frame_copy_props(AVFrame *dst, const AVFrame *src);
  * @return the buffer reference that contains the plane or NULL if the input
  * frame is not valid.
  */
-AVBufferRef *av_frame_get_plane_buffer(AVFrame *frame, int plane);
+AVBufferRef *av_frame_get_plane_buffer(const AVFrame *frame, int plane);
 
 /**
  * Add a new side data to a frame.

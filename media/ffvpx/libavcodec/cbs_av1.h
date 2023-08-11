@@ -215,6 +215,8 @@ typedef struct AV1RawFrameHeader {
     uint8_t uniform_tile_spacing_flag;
     uint8_t tile_cols_log2;
     uint8_t tile_rows_log2;
+    uint8_t tile_start_col_sb[AV1_MAX_TILE_COLS];
+    uint8_t tile_start_row_sb[AV1_MAX_TILE_COLS];
     uint8_t width_in_sbs_minus_1[AV1_MAX_TILE_COLS];
     uint8_t height_in_sbs_minus_1[AV1_MAX_TILE_ROWS];
     uint16_t context_update_tile_id;
@@ -370,6 +372,12 @@ typedef struct AV1RawMetadataTimecode {
     uint32_t time_offset_value;
 } AV1RawMetadataTimecode;
 
+typedef struct AV1RawMetadataUnknown {
+    uint8_t     *payload;
+    AVBufferRef *payload_ref;
+    size_t       payload_size;
+} AV1RawMetadataUnknown;
+
 typedef struct AV1RawMetadata {
     uint64_t metadata_type;
     union {
@@ -378,6 +386,7 @@ typedef struct AV1RawMetadata {
         AV1RawMetadataScalability scalability;
         AV1RawMetadataITUTT35     itut_t35;
         AV1RawMetadataTimecode    timecode;
+        AV1RawMetadataUnknown     unknown;
     } metadata;
 } AV1RawMetadata;
 
