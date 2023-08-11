@@ -29,6 +29,7 @@ class ExperimentDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(TRACEMONKEY_PDF_PATH)
 
         sessionRule.waitUntilCalled(object : ContentDelegate {
+            @Deprecated("Changing to Experiment Delegate in Bug 1840658.")
             override fun onGetNimbusFeature(session: GeckoSession, featureId: String): JSONObject? {
                 assertThat(
                     "Feature id should match",

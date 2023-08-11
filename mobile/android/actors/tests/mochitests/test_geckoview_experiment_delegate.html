@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1845824
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test Experiment Delegate</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="head.js" type="application/javascript"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+  // Note: TestRunnerActivity provides a pseudo Experiment Delegate for this test.
+  async function requestExperiment(message) {
+    const chromeScript = SpecialPowers.loadChromeScript(_ => {
+      /* eslint-env mozilla/chrome-script */
+      addMessageListener("experiment", (msg) => {
+        var result;
+        const navigator = Services.wm.getMostRecentWindow("navigator:geckoview");
+        const experimentActor = navigator.window.moduleManager.getActor("GeckoViewExperimentDelegate");
+        switch (msg.endpoint) {
+          case 'getExperimentFeature':
+            result = experimentActor.getExperimentFeature(msg.feature);
+            break;
+          case 'recordExposure':
+            result = experimentActor.recordExposure(msg.feature);
+            break
+          case 'recordExperimentExposure':
+            result = experimentActor.recordExperimentExposure(msg.feature, msg.slug);
+            break;
+          case 'recordExperimentMalformedConfig':
+            result = experimentActor.recordExperimentMalformedConfig(msg.feature, msg.part);
+            break;
+          default:
+            result = null;
+            break;
+        }
+        return result;
+      });
+
+    });
+
+    const result = await chromeScript.sendQuery("experiment", message);
+    chromeScript.destroy();
+    return result;
+  }
+
+  add_task(async function test_getExperimentFeature() {
+     const success = await requestExperiment({endpoint: "getExperimentFeature", feature: "test"});
+     is(success["item-one"], true, "Retrieved TestRunnerActivity experiment feature 'test' for 'item-one'.");
+     is(success["item-two"], 5, "Retrieved TestRunnerActivity experiment feature 'test' for 'item-two'.");
+    var didErrorOccur = false;
+     try {
+      await requestExperiment({endpoint: "getExperimentFeature", feature: "no-feature"});
+    } catch (error) {
+      is(error, "An error occurred while retrieving feature data.", "Correctly failed when the feature did not exist.");
+      didErrorOccur = true;
+    }
+     is(didErrorOccur, true, "Error was caught when no feature existed.");
+  });
+
+  add_task(async function test_recordExposure() {
+     const success = await requestExperiment({endpoint: "recordExposure", feature: "test"});
+     is(success, true, "Recorded exposure for the feature.");
+    var didErrorOccur = false;
+     try {
+      await requestExperiment({endpoint: "recordExposure", feature: "no-feature"});
+    } catch (error) {
+      is(error, "An error occurred while recording feature.", "Correctly failed when the feature did not exist.");
+      didErrorOccur = true;
+    }
+     is(didErrorOccur, true, "Error was caught when no feature existed.");
+  });
+
+
+  add_task(async function test_recordExperimentExposure() {
+     const success = await requestExperiment({endpoint: "recordExperimentExposure", feature: "test", slug: "test"});
+     is(success, true, "Recorded experiment exposure for the feature.");
+    var didErrorOccur = false;
+     try {
+      await requestExperiment({endpoint: "recordExperimentExposure", feature: "no-feature", slug: "no-slug"});
+    } catch (error) {
+      is(error, "An error occurred while recording experiment feature.", "Correctly failed when the feature did not exist.");
+      didErrorOccur = true;
+    }
+     is(didErrorOccur, true, "Error was caught when no feature existed.");
+  });
+
+
+  add_task(async function test_recordExperimentMalformedConfig() {
+     const success = await requestExperiment({endpoint: "recordExperimentMalformedConfig", feature: "test", part: "test"});
+     is(success, true, "Recorded exposure for the feature.");
+    var didErrorOccur = false;
+     try {
+      await requestExperiment({endpoint: "recordExperimentMalformedConfig", feature: "no-feature", part:"no-part"});
+    } catch (error) {
+      is(error, "An error occurred while recording malformed feature config.", "Correctly failed when the feature did not exist.");
+      didErrorOccur = true;
+    }
+     is(didErrorOccur, true, "Error was caught when no feature existed.");
+  });
+
+</script>
+</body>
+</html>

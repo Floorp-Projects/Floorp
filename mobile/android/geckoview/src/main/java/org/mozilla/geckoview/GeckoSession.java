@@ -839,6 +839,95 @@ public class GeckoSession {
         }
       };
 
+  private final GeckoSessionHandler<ExperimentDelegate> mExperimentHandler =
+      new GeckoSessionHandler<ExperimentDelegate>(
+          "GeckoViewExperiment",
+          this,
+          new String[] {
+            "GeckoView:GetExperimentFeature",
+            "GeckoView:RecordExposure",
+            "GeckoView:RecordExperimentExposure",
+            "GeckoView:RecordMalformedConfig"
+          }) {
+        @Override
+        public void handleMessage(
+            final ExperimentDelegate delegate,
+            final String event,
+            final GeckoBundle message,
+            final EventCallback callback) {
+
+          if (delegate == null) {
+            if (callback != null) {
+              callback.sendError("No experiment delegate registered.");
+            }
+            Log.w(LOGTAG, "No experiment delegate registered.");
+            return;
+          }
+          final String feature = message.getString("feature", "");
+          if ("GeckoView:GetExperimentFeature".equals(event) && callback != null) {
+            final GeckoResult<JSONObject> result = delegate.onGetExperimentFeature(feature);
+            result
+                .accept(
+                    json -> {
+                      try {
+                        callback.sendSuccess(GeckoBundle.fromJSONObject(json));
+                      } catch (final JSONException e) {
+                        callback.sendError("An error occured when serializing the feature data.");
+                      }
+                    })
+                .exceptionally(
+                    e -> {
+                      callback.sendError("An error occurred while retrieving feature data.");
+                      return null;
+                    });
+
+          } else if ("GeckoView:RecordExposure".equals(event) && callback != null) {
+            final GeckoResult<Void> result = delegate.onRecordExposureEvent(feature);
+            result
+                .accept(
+                    a -> {
+                      callback.sendSuccess(true);
+                    })
+                .exceptionally(
+                    e -> {
+                      callback.sendError("An error occurred while recording feature.");
+                      return null;
+                    });
+
+          } else if ("GeckoView:RecordExperimentExposure".equals(event) && callback != null) {
+            final String slug = message.getString("slug", "");
+            final GeckoResult<Void> result =
+                delegate.onRecordExperimentExposureEvent(feature, slug);
+            result
+                .accept(
+                    a -> {
+                      callback.sendSuccess(true);
+                    })
+                .exceptionally(
+                    e -> {
+                      callback.sendError("An error occurred while recording experiment feature.");
+                      return null;
+                    });
+
+          } else if ("GeckoView:RecordMalformedConfig".equals(event) && callback != null) {
+            final String part = message.getString("part", "");
+            final GeckoResult<Void> result =
+                delegate.onRecordMalformedConfigurationEvent(feature, part);
+            result
+                .accept(
+                    a -> {
+                      callback.sendSuccess(true);
+                    })
+                .exceptionally(
+                    e -> {
+                      callback.sendError(
+                          "An error occurred while recording malformed feature config.");
+                      return null;
+                    });
+          }
+        }
+      };
+
   private final GeckoSessionHandler<ContentDelegate> mProcessHangHandler =
       new GeckoSessionHandler<ContentDelegate>(
           "GeckoViewProcessHangMonitor", this, new String[] {"GeckoView:HangReport"}) {
@@ -1146,7 +1235,8 @@ public class GeckoSession {
         mScrollHandler,
         mSelectionActionDelegate,
         mContentBlockingHandler,
-        mMediaSessionHandler
+        mMediaSessionHandler,
+        mExperimentHandler
       };
 
   private static class PermissionCallback
@@ -1650,6 +1740,7 @@ public class GeckoSession {
     mId = id;
     mWindow = new Window(runtime, this, mNativeQueue);
     mWebExtensionController.setRuntime(runtime);
+    mExperimentHandler.setDelegate(getRuntimeExperimentDelegate(), this);
 
     onWindowChanged(WINDOW_OPEN, /* inProgress */ true);
 
@@ -3908,13 +3999,18 @@ public class GeckoSession {
     default void onCookieBannerHandled(@NonNull final GeckoSession session) {}
 
     /**
-     * This method is called when GeckoView is requesting a specific Nimbus feature in using message
-     * `GeckoView:GetNimbusFeature`.
+     * This method is scheduled for deprecation, see Bug 1846074 for details. Please switch to the
+     * [ExperimentDelegate.onGetExperimentFeature] for the same functionality.
+     *
+     * <p>This method is called when GeckoView is requesting a specific Nimbus feature in using
+     * message `GeckoView:GetNimbusFeature`.
      *
      * @param session GeckoSession that initiated the callback.
      * @param featureId Nimbus feature id of the collected data.
      * @return A {@link JSONObject} with the feature.
      */
+    @Deprecated
+    @DeprecationSchedule(version = 122, id = "session-nimbus")
     @AnyThread
     default @Nullable JSONObject onGetNimbusFeature(
         @NonNull final GeckoSession session, @NonNull final String featureId) {
@@ -7677,6 +7773,45 @@ public class GeckoSession {
   @AnyThread
   public void setPrintDelegate(final @Nullable PrintDelegate delegate) {
     mPrintHandler.setDelegate(delegate, this);
+  }
+
+  /**
+   * Gets the experiment delegate for this session.
+   *
+   * @return The current {@link ExperimentDelegate} for this session, if any.
+   */
+  @AnyThread
+  public @Nullable ExperimentDelegate getExperimentDelegate() {
+    return mExperimentHandler.getDelegate();
+  }
+
+  /**
+   * Gets the experiment delegate from the runtime.
+   *
+   * @return The current {@link ExperimentDelegate} for the runtime or null.
+   */
+  @AnyThread
+  private @Nullable ExperimentDelegate getRuntimeExperimentDelegate() {
+    final GeckoRuntime runtime = this.getRuntime();
+    if (runtime != null) {
+      final GeckoRuntimeSettings runtimeSettings = runtime.getSettings();
+      if (runtimeSettings != null) {
+        return runtimeSettings.getExperimentDelegate();
+      }
+    }
+    Log.w(LOGTAG, "Could not retrieve experiment delegate from runtime.");
+    return null;
+  }
+
+  /**
+   * Sets the experiment delegate for this session. Default is set to the runtime experiment
+   * delegate.
+   *
+   * @param delegate An instance of {@link ExperimentDelegate}.
+   */
+  @AnyThread
+  public void setExperimentDelegate(final @Nullable ExperimentDelegate delegate) {
+    mExperimentHandler.setDelegate(delegate, this);
   }
 
   /** Thrown when failure occurs when printing from a website. */

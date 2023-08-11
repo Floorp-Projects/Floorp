@@ -49,6 +49,7 @@ import java.io.InputStream;
 import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
+import java.lang.Deprecated;
 import java.lang.Double;
 import java.lang.Exception;
 import java.lang.Float;
@@ -83,6 +84,7 @@ import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
 import org.mozilla.geckoview.CrashHandler;
+import org.mozilla.geckoview.DeprecationSchedule;
 import org.mozilla.geckoview.ExperimentDelegate;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
@@ -660,6 +662,7 @@ package org.mozilla.geckoview {
 
   public static class ExperimentDelegate.ExperimentException extends Exception {
     ctor public ExperimentException(int);
+    field public static final int ERROR_EXPERIMENT_DELEGATE_NOT_IMPLEMENTED = -4;
     field public static final int ERROR_EXPERIMENT_SLUG_NOT_FOUND = -3;
     field public static final int ERROR_FEATURE_NOT_FOUND = -2;
     field public static final int ERROR_UNKNOWN = -1;
@@ -942,6 +945,7 @@ package org.mozilla.geckoview {
     method @AnyThread @Nullable public ContentBlocking.Delegate getContentBlockingDelegate();
     method @Nullable @UiThread public GeckoSession.ContentDelegate getContentDelegate();
     method @AnyThread @NonNull public static String getDefaultUserAgent();
+    method @AnyThread @Nullable public ExperimentDelegate getExperimentDelegate();
     method @AnyThread @NonNull public SessionFinder getFinder();
     method @AnyThread @Nullable public GeckoSession.HistoryDelegate getHistoryDelegate();
     method @AnyThread @Nullable public GeckoSession.MediaDelegate getMediaDelegate();
@@ -987,6 +991,7 @@ package org.mozilla.geckoview {
     method @UiThread public void setAutofillDelegate(@Nullable Autofill.Delegate);
     method @AnyThread public void setContentBlockingDelegate(@Nullable ContentBlocking.Delegate);
     method @UiThread public void setContentDelegate(@Nullable GeckoSession.ContentDelegate);
+    method @AnyThread public void setExperimentDelegate(@Nullable ExperimentDelegate);
     method @AnyThread public void setFocused(boolean);
     method @AnyThread public void setHistoryDelegate(@Nullable GeckoSession.HistoryDelegate);
     method @AnyThread public void setMediaDelegate(@Nullable GeckoSession.MediaDelegate);
@@ -1038,7 +1043,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onFirstContentfulPaint(@NonNull GeckoSession);
     method @UiThread default public void onFocusRequest(@NonNull GeckoSession);
     method @UiThread default public void onFullScreen(@NonNull GeckoSession, boolean);
-    method @AnyThread @Nullable default public JSONObject onGetNimbusFeature(@NonNull GeckoSession, @NonNull String);
+    method @AnyThread @Deprecated @DeprecationSchedule(version=122,id="session-nimbus") @Nullable default public JSONObject onGetNimbusFeature(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onKill(@NonNull GeckoSession);
     method @UiThread default public void onMetaViewportFitChange(@NonNull GeckoSession, @NonNull String);
     method @UiThread default public void onPaintStatusReset(@NonNull GeckoSession);
