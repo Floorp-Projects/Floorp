@@ -12,15 +12,24 @@
 #include "prlink.h"
 #include "mozilla/Logging.h"
 #include "WidgetUtilsGtk.h"
-
 #ifdef MOZ_X11
 #  include <X11/Xlib.h>
 #  include <X11/Xutil.h>
 #  include <gdk/gdkx.h>
 #endif
+#ifdef MOZ_ENABLE_DBUS
+#  include <gio/gio.h>
+#  include "AsyncDBus.h"
+#  include "WakeLockListener.h"
+#  include "nsIObserverService.h"
+#  include "mozilla/UniquePtrExtensions.h"
+#endif
 
 using mozilla::LogLevel;
 static mozilla::LazyLogModule sIdleLog("nsIUserIdleService");
+
+using namespace mozilla;
+using namespace mozilla::widget;
 
 #ifdef MOZ_X11
 typedef struct {
@@ -41,8 +50,6 @@ typedef void (*_XScreenSaverQueryInfo_fn)(Display* dpy, Drawable drw,
 class UserIdleServiceX11 : public UserIdleServiceImpl {
  public:
   bool PollIdleTime(uint32_t* aIdleTime) override {
-    MOZ_ASSERT(!mInitialized);
-
     // Ask xscreensaver about idle time:
     *aIdleTime = 0;
 
@@ -69,10 +76,16 @@ class UserIdleServiceX11 : public UserIdleServiceImpl {
     return false;
   }
 
-  UserIdleServiceX11() {
-    MOZ_ASSERT(mozilla::widget::GdkIsX11Display());
+  explicit UserIdleServiceX11(
+      RefPtr<nsUserIdleServiceGTK> aUserIdleServiceGTK) {
+    MOZ_LOG(sIdleLog, LogLevel::Info,
+            ("UserIdleServiceX11::UserIdleServiceX11()\n"));
 
-    // This will leak - See comments in ~nsUserIdleServiceGTK().
+    if (!mozilla::widget::GdkIsX11Display()) {
+      return;
+    }
+
+    // This will leak - See comments in ~UserIdleServiceX11().
     PRLibrary* xsslib = PR_LoadLibrary("libXss.so.1");
     if (!xsslib)  // ouch.
     {
@@ -98,9 +111,14 @@ class UserIdleServiceX11 : public UserIdleServiceImpl {
       MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to get XSSQueryInfo!\n"));
     }
 
-    mInitialized = mXSSQueryExtension && mXSSAllocInfo && mXSSQueryInfo;
+    mSupported = mXSSQueryExtension && mXSSAllocInfo && mXSSQueryInfo;
+    if (mSupported) {
+      // UserIdleServiceX11 uses sync init, confirm it now.
+      aUserIdleServiceGTK->AcceptServiceCallback();
+    }
   }
 
+ protected:
   ~UserIdleServiceX11() {
 #  ifdef MOZ_X11
     if (mXssInfo) {
@@ -127,17 +145,152 @@ class UserIdleServiceX11 : public UserIdleServiceImpl {
 };
 #endif
 
-nsUserIdleServiceGTK::nsUserIdleServiceGTK() {
-  mIdleService = mozilla::MakeUnique<UserIdleServiceX11>();
-  if (mIdleService->IsAvailable()) {
-    return;
+#ifdef MOZ_ENABLE_DBUS
+class UserIdleServiceMutter : public UserIdleServiceImpl {
+ public:
+  bool PollIdleTime(uint32_t* aIdleTime) override {
+    MOZ_LOG(sIdleLog, LogLevel::Info,
+            ("UserIdleServiceMutter::PollIdleTime()\n"));
+
+    MOZ_ASSERT(mProxy);
+    GUniquePtr<GError> error;
+
+    RefPtr<GVariant> result = dont_AddRef(g_dbus_proxy_call_sync(
+        mProxy, "GetIdletime", nullptr, G_DBUS_CALL_FLAGS_NONE, -1,
+        mCancellable, getter_Transfers(error)));
+    if (!result) {
+      MOZ_LOG(sIdleLog, LogLevel::Info,
+              ("UserIdleServiceMutter::PollIdleTime() failed, message: %s\n",
+               error->message));
+      return false;
+    }
+    if (!g_variant_is_of_type(result, G_VARIANT_TYPE_TUPLE) ||
+        g_variant_n_children(result) != 1) {
+      MOZ_LOG(
+          sIdleLog, LogLevel::Info,
+          ("UserIdleServiceMutter::PollIdleTime() Unexpected params type: %s\n",
+           g_variant_get_type_string(result)));
+      return false;
+    }
+    RefPtr<GVariant> iTime = dont_AddRef(g_variant_get_child_value(result, 0));
+    if (!g_variant_is_of_type(iTime, G_VARIANT_TYPE_UINT64)) {
+      MOZ_LOG(
+          sIdleLog, LogLevel::Info,
+          ("UserIdleServiceMutter::PollIdleTime() Unexpected params type: %s\n",
+           g_variant_get_type_string(result)));
+      return false;
+    }
+    uint64_t idleTime = g_variant_get_uint64(iTime);
+    if (idleTime > std::numeric_limits<uint32_t>::max()) {
+      idleTime = std::numeric_limits<uint32_t>::max();
+    }
+    *aIdleTime = idleTime;
+    MOZ_LOG(sIdleLog, LogLevel::Info,
+            ("UserIdleServiceMutter::PollIdleTime() %d\n", *aIdleTime));
+    return true;
   }
-  // TODO: Gnome/KDE services.
-  mIdleService = nullptr;
+
+  explicit UserIdleServiceMutter(
+      RefPtr<nsUserIdleServiceGTK> aUserIdleServiceGTK) {
+    MOZ_LOG(sIdleLog, LogLevel::Info,
+            ("UserIdleServiceMutter::UserIdleServiceMutter()\n"));
+
+    mSupported = true;
+    mCancellable = dont_AddRef(g_cancellable_new());
+    CreateDBusProxyForBus(
+        G_BUS_TYPE_SESSION,
+        GDBusProxyFlags(G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS |
+                        G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES),
+        nullptr, "org.gnome.Mutter.IdleMonitor",
+        "/org/gnome/Mutter/IdleMonitor/Core", "org.gnome.Mutter.IdleMonitor",
+        mCancellable)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [self = RefPtr{this}, service = RefPtr{aUserIdleServiceGTK}](
+                RefPtr<GDBusProxy>&& aProxy) {
+              self->mProxy = std::move(aProxy);
+              service->AcceptServiceCallback();
+            },
+            [self = RefPtr{this}, service = RefPtr{aUserIdleServiceGTK}](
+                GUniquePtr<GError>&& aError) {
+              self->mSupported = false;
+              service->RejectAndTryNextServiceCallback();
+            });
+  }
+
+ protected:
+  ~UserIdleServiceMutter() {
+    if (mCancellable) {
+      g_cancellable_cancel(mCancellable);
+      mCancellable = nullptr;
+    }
+    mProxy = nullptr;
+  }
+
+ private:
+  RefPtr<GDBusProxy> mProxy;
+  RefPtr<GCancellable> mCancellable;
+};
+#endif
+
+void nsUserIdleServiceGTK::ProbeService() {
+  MOZ_LOG(sIdleLog, LogLevel::Info,
+          ("nsUserIdleServiceGTK::ProbeService() mIdleServiceType %d\n",
+           mIdleServiceType));
+
+  RefPtr<UserIdleServiceImpl> idleService;
+  switch (mIdleServiceType) {
+#ifdef MOZ_ENABLE_DBUS
+    case IDLE_SERVICE_MUTTER:
+      idleService = new UserIdleServiceMutter(this);
+      break;
+#endif
+    case IDLE_SERVICE_XSCREENSAVER:
+      idleService = new UserIdleServiceX11(this);
+      break;
+    default:
+      return;
+  }
+
+  if (idleService && idleService->IsSupported()) {
+    // Service is supported. Save it and leave service itself
+    // to call AcceptServiceCallback()/RejectAndTryNextServiceCallback()
+    // according to configure result.
+    mIdleService = idleService;
+  } else {
+    // Service is not supported. Call RejectAndTryNextServiceCallback() now
+    // to try another one.
+    RejectAndTryNextServiceCallback();
+  }
 }
 
+void nsUserIdleServiceGTK::AcceptServiceCallback() {
+  MOZ_LOG(sIdleLog, LogLevel::Info,
+          ("nsUserIdleServiceGTK::AcceptServiceCallback() type %d\n",
+           mIdleServiceType));
+  mIdleServiceInitialized = true;
+}
+
+void nsUserIdleServiceGTK::RejectAndTryNextServiceCallback() {
+  MOZ_LOG(sIdleLog, LogLevel::Info,
+          ("nsUserIdleServiceGTK::RejectAndTryNextServiceCallback() type %d\n",
+           mIdleServiceType));
+
+  mIdleServiceType++;
+  if (mIdleServiceType < IDLE_SERVICE_NONE) {
+    MOZ_LOG(sIdleLog, LogLevel::Info,
+            ("nsUserIdleServiceGTK try next idle service\n"));
+    ProbeService();
+  } else {
+    MOZ_LOG(sIdleLog, LogLevel::Info, ("nsUserIdleServiceGTK failed\n"));
+    mIdleServiceInitialized = false;
+  }
+}
+
+nsUserIdleServiceGTK::nsUserIdleServiceGTK() { ProbeService(); }
+
 bool nsUserIdleServiceGTK::PollIdleTime(uint32_t* aIdleTime) {
-  if (!mIdleService) {
+  if (!mIdleServiceInitialized) {
     return false;
   }
   return mIdleService->PollIdleTime(aIdleTime);

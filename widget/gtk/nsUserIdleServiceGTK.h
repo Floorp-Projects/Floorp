@@ -14,19 +14,25 @@
 
 class UserIdleServiceImpl {
  public:
-  virtual bool PollIdleTime(uint32_t* aIdleTime) = 0;
+  NS_INLINE_DECL_REFCOUNTING(UserIdleServiceImpl);
 
-  bool IsAvailable() const { return mInitialized; }
-  virtual ~UserIdleServiceImpl() = default;
+  virtual bool PollIdleTime(uint32_t* aIdleTime) = 0;
+  bool IsSupported() const { return mSupported; };
 
  protected:
-  bool mInitialized = false;
+  virtual ~UserIdleServiceImpl() = default;
+  bool mSupported = false;
 };
+
+#define IDLE_SERVICE_MUTTER 0
+#define IDLE_SERVICE_XSCREENSAVER 1
+#define IDLE_SERVICE_NONE 2
 
 class nsUserIdleServiceGTK : public nsUserIdleService {
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(nsUserIdleServiceGTK, nsUserIdleService)
 
+  // The idle time in ms
   virtual bool PollIdleTime(uint32_t* aIdleTime) override;
 
   static already_AddRefed<nsUserIdleServiceGTK> GetInstance() {
@@ -44,13 +50,24 @@ class nsUserIdleServiceGTK : public nsUserIdleService {
     return idleService.forget();
   }
 
+  void ProbeService();
+  void AcceptServiceCallback();
+  void RejectAndTryNextServiceCallback();
+
  protected:
   nsUserIdleServiceGTK();
 
  private:
-  ~nsUserIdleServiceGTK(){};
+  ~nsUserIdleServiceGTK() = default;
 
-  mozilla::UniquePtr<UserIdleServiceImpl> mIdleService;
+  RefPtr<UserIdleServiceImpl> mIdleService;
+#ifdef MOZ_ENABLE_DBUS
+  int mIdleServiceType = IDLE_SERVICE_MUTTER;
+#else
+  int mIdleServiceType = IDLE_SERVICE_XSCREENSAVER;
+#endif
+  // We have a working idle service.
+  bool mIdleServiceInitialized = false;
 };
 
 #endif  // nsUserIdleServiceGTK_h__
