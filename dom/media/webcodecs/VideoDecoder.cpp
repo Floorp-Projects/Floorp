@@ -87,18 +87,29 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
  * The followings are helpers for VideoDecoder methods
  */
 
+static Maybe<nsString> ParseCodecString(const nsAString& aCodec) {
+  // Trim the spaces on each end.
+  nsString str(aCodec);
+  str.Trim(" ");
+  nsTArray<nsString> codecs;
+  if (!ParseCodecsString(str, codecs) || codecs.Length() != 1 ||
+      codecs[0] != str) {
+    return Nothing();
+  }
+  return Some(codecs[0]);
+}
+
 // https://w3c.github.io/webcodecs/#valid-videodecoderconfig
 static Result<Ok, nsCString> Validate(const VideoDecoderConfig& aConfig) {
-  nsTArray<nsString> codecs;
-  if (!ParseCodecsString(aConfig.mCodec, codecs) || codecs.Length() != 1 ||
-      codecs[0] != aConfig.mCodec) {
+  Maybe<nsString> codec = ParseCodecString(aConfig.mCodec);
+  if (!codec || codec->IsEmpty()) {
     return Err("invalid codec string"_ns);
   }
 
   // WebCodecs doesn't support theora
-  if (!IsAV1CodecString(codecs[0]) && !IsVP9CodecString(codecs[0]) &&
-      !IsVP8CodecString(codecs[0]) && !IsH264CodecString(codecs[0]) &&
-      !IsH265CodecString(codecs[0])) {
+  if (!IsAV1CodecString(*codec) && !IsVP9CodecString(*codec) &&
+      !IsVP8CodecString(*codec) && !IsH264CodecString(*codec) &&
+      !IsH265CodecString(*codec)) {
     return Err("unsupported codec"_ns);
   }
 
