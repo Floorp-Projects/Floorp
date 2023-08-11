@@ -252,7 +252,6 @@ rtc_library("video_stream_buffer_controller") {
     "../api/video:video_rtp_headers",
     "../modules/video_coding",
     "../modules/video_coding:frame_helpers",
-    "../modules/video_coding:video_codec_interface",
     "../modules/video_coding/timing:inter_frame_delay_variation_calculator",
     "../modules/video_coding/timing:jitter_estimator",
     "../modules/video_coding/timing:timing_module",

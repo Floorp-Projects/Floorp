@@ -95,7 +95,8 @@ class VCMTimingTest : public VCMTiming {
               ());
 };
 
-class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
+class VideoStreamBufferControllerStatsObserverMock
+    : public VideoStreamBufferControllerStatsObserver {
  public:
   MOCK_METHOD(void,
               OnCompleteFrame,
@@ -225,7 +226,8 @@ class VideoStreamBufferControllerFixture
   DecodeSynchronizer decode_sync_;
 
   ::testing::NiceMock<VCMTimingTest> timing_;
-  ::testing::NiceMock<VCMReceiveStatisticsCallbackMock> stats_callback_;
+  ::testing::NiceMock<VideoStreamBufferControllerStatsObserverMock>
+      stats_callback_;
   std::unique_ptr<VideoStreamBufferController> buffer_;
 
  private:

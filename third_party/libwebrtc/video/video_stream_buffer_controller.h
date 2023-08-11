@@ -17,7 +17,6 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/encoded_frame.h"
 #include "api/video/frame_buffer.h"
-#include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/timing/inter_frame_delay_variation_calculator.h"
 #include "modules/video_coding/timing/jitter_estimator.h"
 #include "modules/video_coding/timing/timing.h"
@@ -36,13 +35,35 @@ class FrameSchedulingReceiver {
   virtual void OnDecodableFrameTimeout(TimeDelta wait_time) = 0;
 };
 
+class VideoStreamBufferControllerStatsObserver {
+ public:
+  virtual ~VideoStreamBufferControllerStatsObserver() = default;
+
+  virtual void OnCompleteFrame(bool is_keyframe,
+                               size_t size_bytes,
+                               VideoContentType content_type) = 0;
+
+  virtual void OnDroppedFrames(uint32_t frames_dropped) = 0;
+
+  virtual void OnDiscardedPackets(uint32_t packets_discarded) = 0;
+
+  virtual void OnFrameBufferTimingsUpdated(int estimated_max_decode_time_ms,
+                                           int current_delay_ms,
+                                           int target_delay_ms,
+                                           int jitter_buffer_ms,
+                                           int min_playout_delay_ms,
+                                           int render_delay_ms) = 0;
+
+  virtual void OnTimingFrameInfoUpdated(const TimingFrameInfo& info) = 0;
+};
+
 class VideoStreamBufferController {
  public:
   VideoStreamBufferController(
       Clock* clock,
       TaskQueueBase* worker_queue,
       VCMTiming* timing,
-      VCMReceiveStatisticsCallback* stats_proxy,
+      VideoStreamBufferControllerStatsObserver* stats_proxy,
       FrameSchedulingReceiver* receiver,
       TimeDelta max_wait_for_keyframe,
       TimeDelta max_wait_for_frame,
@@ -79,7 +100,7 @@ class VideoStreamBufferController {
   const absl::optional<RttMultExperiment::Settings> rtt_mult_settings_ =
       RttMultExperiment::GetRttMultValue();
   Clock* const clock_;
-  VCMReceiveStatisticsCallback* const stats_proxy_;
+  VideoStreamBufferControllerStatsObserver* const stats_proxy_;
   FrameSchedulingReceiver* const receiver_;
   VCMTiming* const timing_;
   const std::unique_ptr<FrameDecodeScheduler> frame_decode_scheduler_

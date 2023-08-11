@@ -245,7 +245,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
     RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
     RtcpCnameCallback* rtcp_cname_callback,
     NackPeriodicProcessor* nack_periodic_processor,
-    VCMReceiveStatisticsCallback* vcm_receive_statistics,
+    VideoStreamBufferControllerStatsObserver* vcm_receive_statistics,
     OnCompleteFrameCallback* complete_frame_callback,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
