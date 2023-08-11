@@ -983,8 +983,8 @@ package org.mozilla.geckoview {
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
     method @AnyThread public void reload();
     method @AnyThread public void reload(int);
-    method @NonNull @UiThread public GeckoResult<GeckoSession.ReviewAnalysis> requestAnalysis(@NonNull String);
-    method @NonNull @UiThread public GeckoResult<List<GeckoSession.Recommendation>> requestRecommendations(@NonNull String);
+    method @AnyThread @NonNull public GeckoResult<GeckoSession.ReviewAnalysis> requestAnalysis(@NonNull String);
+    method @AnyThread @NonNull public GeckoResult<List<GeckoSession.Recommendation>> requestRecommendations(@NonNull String);
     method @AnyThread public void restoreState(@NonNull GeckoSession.SessionState);
     method @AnyThread @NonNull public GeckoResult<InputStream> saveAsPdf();
     method @AnyThread public void setActive(boolean);
