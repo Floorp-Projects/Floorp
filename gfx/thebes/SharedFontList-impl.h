@@ -173,17 +173,17 @@ class FontList {
 
   uint32_t NumFamilies() { return GetHeader().mFamilyCount; }
   Family* Families() {
-    return static_cast<Family*>(GetHeader().mFamilies.ToPtr(this));
+    return GetHeader().mFamilies.ToArray<Family>(this, NumFamilies());
   }
 
   uint32_t NumAliases() { return GetHeader().mAliasCount; }
   Family* AliasFamilies() {
-    return static_cast<Family*>(GetHeader().mAliases.ToPtr(this));
+    return GetHeader().mAliases.ToArray<Family>(this, NumAliases());
   }
 
   uint32_t NumLocalFaces() { return GetHeader().mLocalFaceCount; }
   LocalFaceRec* LocalFaces() {
-    return static_cast<LocalFaceRec*>(GetHeader().mLocalFaces.ToPtr(this));
+    return GetHeader().mLocalFaces.ToArray<LocalFaceRec>(this, NumLocalFaces());
   }
 
   /**
@@ -211,12 +211,13 @@ class FontList {
   /**
    * Header fields present in every shared-memory block. The mBlockSize field
    * is not modified after initial block creation (before the block has been
-   * shared to any other process), and the mAllocated field is used only by
-   * the parent process, so neither of these needs to be std::atomic<>.
+   * shared to any other process), so does not need to be std::atomic<>.
+   * The mAllocated field is checked during Pointer::ToPtr(), so we make that
+   * atomic to avoid data races.
    */
   struct BlockHeader {
-    uint32_t mAllocated;  // Space allocated from this block.
-    uint32_t mBlockSize;  // Total size of this block.
+    std::atomic<uint32_t> mAllocated;  // Space allocated from this block.
+    uint32_t mBlockSize;               // Total size of this block.
   };
 
   /**
@@ -310,15 +311,15 @@ class FontList {
     // Get pointer to the mapped memory.
     void* Memory() const { return mShmem->memory(); }
 
-    // Because only the parent process does allocation, this doesn't need to
-    // be an atomic.
-    // Further allocations may happen within the block after it has been shared
-    // to content processes, but as their access is read-only and they cannot
-    // do allocations themselves, they never look at this field; only the parent
-    // reads or updates it.
-    uint32_t& Allocated() const {
-      MOZ_ASSERT(XRE_IsParentProcess());
+    // Only the parent process does allocation, so only it will update this
+    // field. Content processes read the value when checking Pointer validity.
+    uint32_t Allocated() const {
       return static_cast<BlockHeader*>(Memory())->mAllocated;
+    }
+
+    void StoreAllocated(uint32_t aSize) {
+      MOZ_ASSERT(XRE_IsParentProcess());
+      static_cast<BlockHeader*>(Memory())->mAllocated.store(aSize);
     }
 
     // This is stored by the parent process during block creation and never
@@ -336,7 +337,7 @@ class FontList {
   Header& GetHeader() {
     // It's invalid to try and access this before the first block exists.
     MOZ_ASSERT(mBlocks.Length() > 0);
-    return *static_cast<Header*>(Pointer(0, 0).ToPtr(this));
+    return *static_cast<Header*>(mBlocks[0]->Memory());
   }
 
   /**

@@ -70,11 +70,23 @@ struct Pointer {
    * FontList, which will know where the shared memory block is mapped in
    * the current process's address space.
    *
+   * aSize is the expected size of the pointed-to object, for bounds checking.
+   *
    * NOTE!
    * In child processes this may fail and return nullptr, even if IsNull() is
    * false, in cases where the font list is in the process of being rebuilt.
    */
-  void* ToPtr(FontList* aFontList) const;
+  void* ToPtr(FontList* aFontList, size_t aSize) const;
+
+  template <typename T>
+  T* ToPtr(FontList* aFontList) const {
+    return static_cast<T*>(ToPtr(aFontList, sizeof(T)));
+  }
+
+  template <typename T>
+  T* ToArray(FontList* aFontList, size_t aCount) const {
+    return static_cast<T*>(ToPtr(aFontList, sizeof(T) * aCount));
+  }
 
   Pointer& operator=(const Pointer& aOther) {
     mBlockAndOffset.store(aOther.mBlockAndOffset);
@@ -111,14 +123,14 @@ struct String {
     // allocate or copy. But that's unsafe because in the event of font-list
     // reinitalization, that shared memory will be unmapped; then any copy of
     // the nsCString that may still be around will crash if accessed.
-    return nsCString(static_cast<const char*>(mPointer.ToPtr(aList)), mLength);
+    return nsCString(mPointer.ToArray<const char>(aList, mLength), mLength);
   }
 
   void Assign(const nsACString& aString, FontList* aList);
 
   const char* BeginReading(FontList* aList) const {
     MOZ_ASSERT(!mPointer.IsNull());
-    auto str = static_cast<const char*>(mPointer.ToPtr(aList));
+    auto* str = mPointer.ToArray<const char>(aList, mLength);
     return str ? str : "";
   }
 
@@ -284,7 +296,7 @@ struct Family {
 
   Pointer* Faces(FontList* aList) const {
     MOZ_ASSERT(IsInitialized());
-    return static_cast<Pointer*>(mFaces.ToPtr(aList));
+    return mFaces.ToArray<Pointer>(aList, mFaceCount);
   }
 
   FontVisibility Visibility() const { return mVisibility; }
