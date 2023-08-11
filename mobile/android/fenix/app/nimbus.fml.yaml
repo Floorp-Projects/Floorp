@@ -332,6 +332,10 @@ features:
         description: "A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric."
         type: Map<String, Boolean>
         default: {}
+      enable-event-timestamps:
+        description: "Enables precise event timestamps for Glean events"
+        type: Boolean
+        default: false
 
   splash-screen:
     description: "A feature that extends splash screen duration, allowing additional data fetching time for the app's initial run."

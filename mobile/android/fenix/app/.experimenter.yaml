@@ -28,6 +28,9 @@ glean:
   hasExposure: true
   exposureDescription: ""
   variables:
+    event-timestamps-enabled:
+      type: boolean
+      description: Whether Glean reports all events with precise wall-clock timestamps
     metrics-enabled:
       type: json
       description: "A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric."

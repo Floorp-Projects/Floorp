@@ -203,6 +203,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             httpClient = ConceptFetchHttpUploader(
                 lazy(LazyThreadSafetyMode.NONE) { components.core.client },
             ),
+            enableEventTimestamps = FxNimbus.features.glean.value().enableEventTimestamps,
         )
 
         Glean.initialize(
