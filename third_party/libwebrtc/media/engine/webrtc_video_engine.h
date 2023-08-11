@@ -247,24 +247,24 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
   bool SendCodecHasLntf() const override {
     RTC_DCHECK_RUN_ON(&thread_checker_);
-    if (!send_codec_) {
+    if (!send_codec()) {
       return false;
     }
-    return HasLntf(send_codec_->codec);
+    return HasLntf(send_codec()->codec);
   }
   bool SendCodecHasNack() const override {
     RTC_DCHECK_RUN_ON(&thread_checker_);
-    if (!send_codec_) {
+    if (!send_codec()) {
       return false;
     }
-    return HasNack(send_codec_->codec);
+    return HasNack(send_codec()->codec);
   }
   absl::optional<int> SendCodecRtxTime() const override {
     RTC_DCHECK_RUN_ON(&thread_checker_);
-    if (!send_codec_) {
+    if (!send_codec()) {
       return absl::nullopt;
     }
-    return send_codec_->rtx_time;
+    return send_codec()->rtx_time;
   }
   void SetReceiverFeedbackParameters(bool lntf_enabled,
                                      bool nack_enabled,
@@ -615,6 +615,21 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
   void FillReceiveCodecStats(VideoMediaReceiveInfo* video_media_info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
+
+  // Accessor function for send_codec_. Introduced in order to ensure
+  // that a receive channel does not touch the send codec directly.
+  // Can go away once these are different classes.
+  // TODO(bugs.webrtc.org/13931): Remove this function
+  absl::optional<VideoCodecSettings>& send_codec() {
+    RTC_DCHECK(role() == MediaChannel::Role::kSend ||
+               role() == MediaChannel::Role::kBoth);
+    return send_codec_;
+  }
+  const absl::optional<VideoCodecSettings>& send_codec() const {
+    RTC_DCHECK(role() == MediaChannel::Role::kSend ||
+               role() == MediaChannel::Role::kBoth);
+    return send_codec_;
+  }
 
   webrtc::TaskQueueBase* const worker_thread_;
   webrtc::ScopedTaskSafety task_safety_;
