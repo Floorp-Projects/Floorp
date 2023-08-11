@@ -56,17 +56,14 @@ class InputStreamCallback {
         request.startsWith("GET / HTTP/1.1\r\n"),
         "Should get a simple GET / HTTP/1.1 request"
       );
-      let response =
-        "HTTP/1.1 200 OK\r\n" +
-        "Content-Length: 2\r\n" +
-        "Content-Type: text/plain\r\n" +
-        "\r\nOK";
-      let written = this.output.write(response, response.length);
-      equal(
-        written,
-        response.length,
-        "should have been able to write entire response"
-      );
+      let response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n";
+      this.output.write(response, response.length);
+      // Keep writing a response until the client disconnects due to the
+      // logoutAndTeardown. If the client never disconnects, the test will time
+      // out, indicating a bug.
+      while (true) {
+        this.output.write("a", 1);
+      }
     }
     this.output.close();
     info("done with input stream ready");
