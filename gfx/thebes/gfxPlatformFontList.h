@@ -112,8 +112,7 @@ class ShmemCharMapHashEntry final : public PLDHashEntryHdr {
       return false;
     }
 
-    return static_cast<const SharedBitSet*>(mCharMap.ToPtr(mList))
-        ->Equals(aCharMap);
+    return mCharMap.ToPtr<const SharedBitSet>(mList)->Equals(aCharMap);
   }
 
   static KeyTypePointer KeyToPointer(KeyType aCharMap) { return aCharMap; }
@@ -412,9 +411,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
    * Read PSName and FullName of the given face, for src:local lookup,
    * returning true if actually implemented and succeeded.
    */
-  virtual bool ReadFaceNames(mozilla::fontlist::Family* aFamily,
-                             mozilla::fontlist::Face* aFace, nsCString& aPSName,
-                             nsCString& aFullName) {
+  virtual bool ReadFaceNames(const mozilla::fontlist::Family* aFamily,
+                             const mozilla::fontlist::Face* aFace,
+                             nsCString& aPSName, nsCString& aFullName) {
     return false;
   }
 
@@ -1043,7 +1042,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   nsTHashMap<nsCStringHashKey, mozilla::fontlist::LocalFaceRec::InitData>
       mLocalNameTable;
 
-  nsRefPtrHashtable<nsPtrHashKey<mozilla::fontlist::Face>, gfxFontEntry>
+  nsRefPtrHashtable<nsPtrHashKey<const mozilla::fontlist::Face>, gfxFontEntry>
       mFontEntries MOZ_GUARDED_BY(mLock);
 
   mozilla::UniquePtr<FontPrefs> mFontPrefs;
