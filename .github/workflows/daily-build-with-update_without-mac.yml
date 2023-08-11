@@ -159,7 +159,6 @@ jobs:
         path: |
           WINNT-x86_64.xml
 
-######################################################## ↑ Windows x86_64 ########################################################
 #----------------------------------------- LINUX -----------------------------------------#
   build-linux-x86_64-PGO:
     uses: ./.github/workflows/linux-build.yml
@@ -207,11 +206,122 @@ jobs:
           path: |
             LINUX-x86_64.xml
 
-################################################################ ↑ Linux x86_64 Build ####################################################################################
+#----------------------------------------- macOS -----------------------------------------#
 
+  build-mac-universal-profgen:
+    uses: ./.github/workflows/macOS-Universal.yml
+    with:
+      profgen: true
+    secrets:
+      MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
+
+  mac-universal-gen-profdata-and-jarlog:
+    needs: [build-mac-universal-profgen]
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        # GitHub doesn't support M1 macs yet, so we need to use a self-hosted runner.
+        runs-on: [macos-latest, self-hosted]
+        # macos-latest is x86_64, self-hosted is arm64
+
+    steps:
+      - name: Init
+        run: |
+          export RUNNER_USERDIR=`echo ~`
+          echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+          mkdir -p ~/downloads/artifacts
+
+      - name: Clean up (Self-hosted only)
+        if: ${{ matrix.runs-on == 'self-hosted' }}
+        run: |
+          rm -rf ~/downloads/artifacts
+          rm -rf ./floorp
+
+      - uses: actions/checkout@v3
+        name: Clone 🧬
+
+      - name: Check Arch type
+        shell: bash
+        run: |
+          if [[ $GHA_BUILD_MACHINE != 'macos-latest' ]]; then
+            export ARCH_TYPE=`echo "aarch64"`
+            echo "ARCH_TYPE=$ARCH_TYPE" >> $GITHUB_ENV
+          else
+            export ARCH_TYPE=`echo "x86_64"`
+            echo "ARCH_TYPE=$ARCH_TYPE" >> $GITHUB_ENV
+          fi
+        env:
+          GHA_BUILD_MACHINE: ${{ matrix.runs-on }}
+
+      - uses: actions/download-artifact@v3
+        id: download-artifacts-mac-enable-profgen
+        name: Download artifact 📥
+        with:
+          name: floorp-mac-${{ env.ARCH_TYPE }}-build-with-profgen 
+          path: ~/downloads/artifacts
+
+      - name: setup environment 🌲
+        run: |
+          echo -e "ac_add_options --enable-bootstrap" >> mozconfig
+
+          echo 'mozconfig: **********************'
+          cat ./mozconfig
+          echo '*********************************'
+
+          brew install gnu-tar
+          export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
+          ./mach --no-interactive bootstrap --application-choice browser
+
+      - name: Extract artifact 📂
+        run: |
+          mkdir -p ./floorp
+          cp ${{ steps.download-artifacts-mac-enable-profgen.outputs.download-path }}/${ARCH_TYPE}-apple-darwin-output.tar.xz ./
+          tar xf ${ARCH_TYPE}-apple-darwin-output.tar.xz
+          
+      - name: Generate Profdata 📊
+        run: |
+          LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-${ARCH_TYPE}-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
+        env:
+          GHA_BUILD_MACHINE: ${{ matrix.runs-on }}
+      
+      - name: Publish 🎁
+        uses: actions/upload-artifact@v3
+        with:
+          name: floorp-${{ env.ARCH_TYPE }}-apple-darwin-profdata-and-jarlog
+          path: |
+            merged.profdata
+            en-US.log
+
+  build-mac-universal-with-profdata:
+    uses: ./.github/workflows/macOS-Universal.yml
+    needs: [get-buildid, mac-universal-gen-profdata-and-jarlog]
+    with:
+      build-with-profdata-and-jarlog: true
+      beta: true
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+    secrets:
+      MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
+
+  create-mac-universal-artifact:
+    uses: ./.github/workflows/macOS-integration.yml
+    needs: [get-buildid, get-display-version, get-inside-version, build-mac-universal-with-profdata]
+    with:
+      beta: true
+      mar: true
+      x86_64_artifact_name: floorp-mac-x86_64-package
+      aarch64_artifact_name: floorp-mac-aarch64-package
+      display_version: ${{needs.get-display-version.outputs.display-version}} 
+      inside_version: ${{needs.get-inside-version.outputs.inside-version}}
+      MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+    secrets:
+      macOS_CERTIFICATES_P12_For_App_BASE64: ${{ secrets.macOS_CERTIFICATES_P12_For_App_BASE64 }}
+      macOS_CERTIFICATES_P12_PASSWORD: ${{ secrets.macOS_CERTIFICATES_P12_PASSWORD }}
+      macOS_AppleDeveloperId: ${{ secrets.macOS_AppleDeveloperId }}
+      macOS_AppleAccountId: ${{ secrets.macOS_AppleAccountId }}
+      macOS_AppleTeamId: ${{ secrets.macOS_AppleTeamId }}
+      macOS_AppleAccountAppSpecificPassword: ${{ secrets.macOS_AppleAccountAppSpecificPassword }}
 
 ##################################################################### Deployments #######################################################################################################
-#----------------------------------------- deploy -----------------------------------------#
   Deployments:
     needs: [get-display-version, get-buildid, get-inside-version, linux-x86_64-gen-update-xml, win-x86_64-gen-update-xml]
     runs-on: ubuntu-latest

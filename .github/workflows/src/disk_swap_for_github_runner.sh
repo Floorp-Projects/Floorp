@@ -7,39 +7,32 @@ echo
 
 sudo swapoff /mnt/swapfile
 sudo rm /mnt/swapfile
-
-sudo fallocate -l 8G /mnt/swapfile
+sudo fallocate -l 10G /mnt/swapfile
 sudo chmod 600 /mnt/swapfile
 sudo mkswap /mnt/swapfile
 sudo swapon /mnt/swapfile
-
+sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+sudo apt autoremove -y
 sudo apt clean
-sudo apt remove temurin* openjdk*
-sudo apt remove microsoft-edge* firefox* google-chrome*
-sudo apt remove mono* libmono* msbuild* dotnet*
-sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
-sudo apt remove gfortran* php* julia* r-*
-sudo apt remove mysql* postgresql*
-sudo apt remove google-cloud-sdk azure-cli powershell snapd
-
-sudo rm -rf /usr/share/swift &
-sudo rm -rf /usr/local/aws-cli &
-sudo rm -rf /usr/local/aws-sam-cli &
-sudo rm -rf /usr/local/julia* &
-sudo rm -rf /usr/local/lib/android &
-sudo rm -rf /usr/local/lib/node_modules &
-sudo rm -rf /opt/hostedtoolcache &
-sudo rm -rf /opt/pipx &
-sudo rm -rf /snap &
-wait
-
-sudo fallocate -l 12G /home/runner/swapfile
-sudo chmod 600 /home/runner/swapfile
-sudo mkswap /home/runner/swapfile
-sudo swapon /home/runner/swapfile
-
-sudo sysctl vm.swappiness=10
-
+sudo rm -rf /usr/share/dotnet
+sudo rm -rf /usr/local/lib/android
+sudo rm -rf /usr/local/graalvm
+sudo rm -rf /usr/local/share/powershell
+sudo rm -rf /usr/local/share/chromium
+sudo rm -rf /usr/local/lib/node_modules
+sudo rm -rf /opt/ghc
+sudo rm -rf /usr/local/share/boost
+sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+sudo rm -rf /etc/apache2
+sudo rm -rf /etc/nginx
+sudo rm -rf /usr/local/share/chrome_driver
+sudo rm -rf /usr/local/share/edge_driver
+sudo rm -rf /usr/local/share/gecko_driver
+sudo rm -rf /usr/share/java
+sudo fallocate -l 10G /home/runner/swapfile2
+sudo chmod 600 /home/runner/swapfile2
+sudo mkswap /home/runner/swapfile2
+sudo swapon /home/runner/swapfile2
 echo
 echo
 

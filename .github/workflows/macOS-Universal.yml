@@ -5,86 +5,114 @@
 # Please write our copyright if you use this file.
 # © 2023 Floorp Projects & Contributors
 
-name: "(A) ⚒ macOS Universal build"
+#! SELF HOST DOES NOT SUPPORTED
+#TODO! buildjet config not implemented
+#TODO: separate Publish to other workflow
 
-on: workflow_dispatch
+name: "(A) ⚒ macOS Universal Build"
+on:
+  workflow_call:
+    inputs:
+      profgen:
+        description: generate profile for PGO.
+        type: boolean
+        default: false
+      beta:
+        type: boolean
+        default: false
+      #? if set this, use profdata, jarlog in build
+      build-with-profdata-and-jarlog:
+        description: build with profdata and jarlog
+        type: boolean
+        default: false
+      out_artifact_name:
+        type: string
+        default: ""
+      MOZ_BUILD_DATE:
+        type: string
+        default: ""
+      #? If you want to ALWAYS build with buildjet, do default to true
+      buildjet:
+        type: boolean
+        default: false
+      #? buildjet cache also is, but idk how to use on sccache
+    secrets:
+      MACOS_CROSS_TOOLS_KEY:
+        description: macOS cross tools 7z password
+        required: true
+  workflow_dispatch:
+    inputs:
+      profgen:
+        description: generate profile for PGO.
+        type: boolean
+        default: false
+      beta:
+        type: boolean
+        default: false
+      #? if set this, use profdata, jarlog in build
+      build-with-profdata-and-jarlog:
+        description: build with profdata and jarlog
+        type: boolean
+        default: false
+      out_artifact_name:
+        type: string
+        default: ""
+      MOZ_BUILD_DATE:
+        type: string
+        default: ""
+      #? If you want to ALWAYS build with buildjet, do default to true
+      buildjet:
+        type: boolean
+        default: false
+      #? buildjet cache also is, but idk how to use on sccache
 
 jobs:
-
-  get-buildid:
-    runs-on: ubuntu-latest
-
-    outputs:
-      buildids: ${{ steps.get.outputs.bid }}
-
+  mac-build:
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        runs-on: ${{ fromJson('[["ubuntu-latest"],"[buildjet-16vcpu-ubuntu-2204"]]')[inputs.buildjet] }}
+        arch: [x86_64, aarch64]
     steps:
-    - id: get
-      shell: bash -xe {0}
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: "lts/*"
+    - name: Check Argument Compatibility
+      shell: node {0}
       run: |
-        bdat=`date +"%Y%m%d%I%M%S"`
-        echo "bid=${bdat}" >> $GITHUB_OUTPUT
+        if (
+          process.env.GHA_profgen == "true"
+          && process.env.GHA_profdata_jarlog_artifact_name == "true"
+        ) {process.exit(-1); console.log("profgen and use-profdata is not compatible")}
 
-
-  build-m1:
-    runs-on: 'ubuntu-latest'
-
-    steps:
-    - name: Init
-      run: |
-        export RUNNER_USERDIR=`echo ~`
-        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+      env:
+        GHA_profgen: ${{inputs.profgen}}
+        GHA_beta: ${{inputs.beta}}
+        GHA_profdata_jarlog_artifact_name: ${{inputs.build-with-profdata-and-jarlog}}
+        GHA_out-artifact-name: ${{inputs.out_artifact_name}}
 
     - name: Change PPA mirror servers
       run: |
         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
         sudo apt update
-        sudo apt upgrade -y
-
-    - name: Setup Disk & Swap Space 💿
-      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
-      run: |
-        echo Before:
-        free -h
-        df -h
-        echo
-        echo
-        sudo swapoff /mnt/swapfile
-        sudo rm /mnt/swapfile
-
-        sudo apt clean
-        sudo apt remove temurin* openjdk*
-        sudo apt remove microsoft-edge* firefox* google-chrome*
-        sudo apt remove mono* libmono* msbuild* dotnet*
-        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
-        sudo apt remove gfortran* php* julia* r-*
-        sudo apt remove mysql* postgresql*
-        sudo apt remove google-cloud-sdk azure-cli powershell snapd
-
-        sudo rm -rf /usr/share/swift &
-        sudo rm -rf /usr/local/aws-cli &
-        sudo rm -rf /usr/local/aws-sam-cli &
-        sudo rm -rf /usr/local/julia* &
-        sudo rm -rf /usr/local/lib/android &
-        sudo rm -rf /usr/local/lib/node_modules &
-        sudo rm -rf /opt/hostedtoolcache &
-        sudo rm -rf /opt/pipx &
-        sudo rm -rf /snap &
-        wait
-
-        sudo fallocate -l 20G /home/runner/swapfile
-        sudo chmod 600 /home/runner/swapfile
-        sudo mkswap /home/runner/swapfile
-        sudo swapon /home/runner/swapfile
-
-        sudo sysctl vm.swappiness=10
-
-        echo
-        echo
-        echo After:
-        free -h
-        df -h
+        echo "$GHA_aarch64"
 
     - uses: actions/checkout@v3
+      name: Clone 🧬
+
+    - name: Clone l10n-central 🧬
+      uses: actions/checkout@v3
+      with:
+        repository: Floorp-Projects/l10n-central
+        path: l10n-central
+
+    #! ON UBUNTU RUNNER
+    - name: Setup Disk & Swap Space 💿
+      if: matrix.runs-on != 'buildjet-16vcpu-ubuntu-2204'
+      run: |
+        chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
+        .github/workflows/src/disk_swap_for_github_runner.sh
 
     - name: Configure sccache
       uses: actions/github-script@v6
@@ -93,686 +121,169 @@ jobs:
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-    - name: Create environment 🌲
+    - uses: actions/download-artifact@v3
+      name: Download artifact if use profdata📥
+      if: inputs.build-with-profdata-and-jarlog
+      with:
+        name: floorp-${{ matrix.arch }}-apple-darwin-profdata-and-jarlog
+        path: ~/artifact
+
+    - name: Setup Cross Build tools 🪛
+      run: |
+        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
+        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
+
+    ## TODO: move mozconfig_darwin_pgo_base to src/macOS
+    - name: Create config for "${{ matrix.arch }}" 📦
       run: |
         sudo apt update
         sudo apt upgrade -y
 
         cp ./.github/mozconfig_darwin_pgo_base mozconfig
 
-        echo 'ac_add_options --target=aarch64-apple-darwin' >> mozconfig
-        echo 'ac_add_options --enable-optimize="-O3 -mcpu=apple-m1 -w"' >> mozconfig
-        echo 'export RUSTFLAGS="-Ctarget-cpu=apple-m1"' >> mozconfig
-
-        echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
-
-        # SCCACHE SETTINGS START
-        echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
-        echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
-        echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
-        echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
-        # SCCACHE SETTINGS END
+        if [[ $GHA_ARCH == 'x86_64' ]];then
+          cat ./.github/workflows/src/mac/x86_64-optimize-base >> mozconfig
+        else
+          cat ./.github/workflows/src/mac/aarch64-optimize-base >> mozconfig
+        fi
 
         echo 'mozconfig: **********************'
         cat ./mozconfig
         echo '*********************************'
 
         ./mach --no-interactive bootstrap --application-choice browser
+        sudo apt install -y p7zip-full zip tar
+      env:
+        GHA_ARCH: ${{matrix.arch}}
 
-    - name: setup cross compile environment 📀
+    - name: Bootstrap 🥾
       run: |
-        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
-        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
 
-    - name: setup rust 🦀
-      run: |
-        rustup target add aarch64-apple-darwin
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
 
-    - name: Build 🔨
-      run: |
-        ./mach configure
-        ./mach build
-
-    - name: Package 📦
-      run: |
-        ./mach package
-        tar zcvf aarch64-apple-darwin-output.tar.xz ./obj-aarch64-apple-darwin/dist/floorp
-
-    - name: Publish 🎁
-      uses: actions/upload-artifact@v3
-      with:
-        name: aarch64-apple-darwin
-        path: aarch64-apple-darwin-output.tar.xz
-
-  generate-profdata-and-jarlog-M1:
-    name: Generate profdata and jarlog for M1
-    needs: [build-m1]
-
-    runs-on: self-hosted
-    # GitHub doesn't support M1 macs yet, so we need to use a self-hosted runner.
-
-    steps:
-      - name: Init
-        run: |
-          export RUNNER_USERDIR=`echo ~`
-          export WORKING_DIR=`pwd`
-          echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
-          echo "WORKING_DIR=$WORKING_DIR" >> $GITHUB_ENV
-          mkdir -p ~/downloads/artifacts
-
-      - name: Clean up (Self-hosted only)
-        if: ${{ runner.name }} == 'self-hosted'
-        run: |
-          rm -rf ~/downloads/artifacts
-          rm -rf ./floorp
-
-      - uses: actions/download-artifact@v3
-        id: download-artifact-M1
-        name: Download artifact 📥
-        with:
-          name: aarch64-apple-darwin
-          path: ~/downloads/artifacts
-
-      - uses: actions/checkout@v3
-        name: Clone 🧬
-
-      - name: setup environment 🌲
-        run: |
-          echo -e "ac_add_options --enable-bootstrap" >> mozconfig
-
-          echo 'mozconfig: **********************'
-          cat ./mozconfig
-          echo '*********************************'
-
-          brew install gnu-tar
-          export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
-          ./mach --no-interactive bootstrap --application-choice browser
-
-      - name: Extract Artifact 📦
-        run: |
-          cp ${{steps.download-artifact-M1.outputs.download-path}}/aarch64-apple-darwin-output.tar.xz ./
-          tar xf aarch64-apple-darwin-output.tar.xz
-
-      - name: Generate Profdata 📊
-        run: |
-          LLVM_PROFDATA=/Users/surapunoyousei/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-aarch64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
-
-      - name: Publish 🎁
-        uses: actions/upload-artifact@master
-        with:
-          name: floorp-aarch64-apple-darwin-profdata-and-jarlog
-          path: |
-            merged.profdata
-            en-US.log
-
-  M1-build-with-PGO:
-    runs-on: 'ubuntu-latest'
-
-    needs: [generate-profdata-and-jarlog-M1, get-buildid]
-
-    steps:
-    - name: Init
-      run: |
-        export RUNNER_USERDIR=`echo ~`
-        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
-
-    - name: Change PPA mirror servers
-      run: |
-        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
-        sudo apt update
-        sudo apt upgrade -y
-
-    - name: Setup Disk & Swap Space 💿
-      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
-      run: |
-        echo Before:
-        free -h
-        df -h
-        echo
-        echo
-        sudo swapoff /mnt/swapfile
-        sudo rm /mnt/swapfile
-
-        sudo apt clean
-        sudo apt remove temurin* openjdk*
-        sudo apt remove microsoft-edge* firefox* google-chrome*
-        sudo apt remove mono* libmono* msbuild* dotnet*
-        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
-        sudo apt remove gfortran* php* julia* r-*
-        sudo apt remove mysql* postgresql*
-        sudo apt remove google-cloud-sdk azure-cli powershell snapd
-
-        sudo rm -rf /usr/share/swift &
-        sudo rm -rf /usr/local/aws-cli &
-        sudo rm -rf /usr/local/aws-sam-cli &
-        sudo rm -rf /usr/local/julia* &
-        sudo rm -rf /usr/local/lib/android &
-        sudo rm -rf /usr/local/lib/node_modules &
-        sudo rm -rf /opt/hostedtoolcache &
-        sudo rm -rf /opt/pipx &
-        sudo rm -rf /snap &
-        wait
-
-        sudo fallocate -l 20G /home/runner/swapfile
-        sudo chmod 600 /home/runner/swapfile
-        sudo mkswap /home/runner/swapfile
-        sudo swapon /home/runner/swapfile
-
-        sudo sysctl vm.swappiness=10
-
-        echo
-        echo
-        echo After:
-        free -h
-        df -h
-
-    - uses: actions/checkout@v3
-
-    - name: download artifact 📥
-      uses: actions/download-artifact@v3
-      with:
-        name: floorp-aarch64-apple-darwin-profdata-and-jarlog
-        path: /home/runner/profdata-and-jarlog/
-
-    - name: Configure sccache
-      uses: actions/github-script@v6
-      with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-    - name: Create environment 🌲
-      run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
-        sudo apt update
-        sudo apt upgrade -y
-
-        cp ./.github/mozconfig_darwin_pgo_base mozconfig
-
-        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'ac_add_options --target=aarch64-apple-darwin' >> mozconfig
-        echo 'ac_add_options --enable-optimize="-O3 -mcpu=apple-m1 -w"' >> mozconfig
-        echo 'export RUSTFLAGS="-Ctarget-cpu=apple-m1"' >> mozconfig
-        echo 'ac_add_options --with-pgo-profile-path=/home/runner/profdata-and-jarlog/merged.profdata' >> mozconfig
-        echo 'ac_add_options --with-pgo-jarlog=/home/runner/profdata-and-jarlog/en-US.log' >> mozconfig
-        echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
+        if [[ $GHA_beta != 'true' ]];then
+          echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        else
+          echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
+        fi
 
         echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
 
-        # SCCACHE SETTINGS START
+        if [[ $GHA_profgen == 'true' ]]; then
+          echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+        elif [[ $GHA_profdata_jarlog_artifact_name == 'true' ]]; then
+          echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
+          echo 'ac_add_options --with-pgo-profile-path=$(echo ~)/artifact/merged.profdata' >> mozconfig
+          echo 'ac_add_options --with-pgo-jarlog=$(echo ~)/artifact/en-US.log' >> mozconfig
+        fi
+
+        # SCCACHE START
         echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
         echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
         echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
         echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
-        # SCCACHE SETTINGS END
+        # SCCACHE END
 
-        echo 'mozconfig: **********************'
-        cat ./mozconfig
-        echo '*********************************'
-
-
-        git clone --depth 1 -b 11.0.0 https://github.com/floorp-projects/l10n-central
         ./mach --no-interactive bootstrap --application-choice browser
-        sudo apt install -y p7zip-full zip tar
 
-    - name: setup cross compile environment 📀
-      run: |
-        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
-        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
+        echo "DISPLAY_VERSION=$(cat ./browser/config/version_display.txt)" >> $GITHUB_ENV
+        echo "UPDATE_CHANNEL=release" >> $GITHUB_ENV
+      env:
+        GHA_profgen: ${{inputs.profgen}}
+        GHA_beta: ${{inputs.beta}}
+        GHA_profdata_jarlog_artifact_name : ${{inputs.build-with-profdata-and-jarlog}}
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
-    - name: setup rust 🦀
+    - name: setup Rust 🦀
       run: |
-        rustup target add aarch64-apple-darwin
+        if [[ $GHA_ARCH == 'x86_64' ]];then
+          rustup target add x86_64-apple-darwin
+        else
+          rustup target add aarch64-apple-darwin
+        fi
+
+        #? https://github.com/mozilla/sccache#known-caveats
+        export CARGO_INCREMENTAL=0
+      env:
+        GHA_ARCH: ${{matrix.arch}}
+
+    - name: Change update url if beta
+      if: inputs.beta
+      run: |
+        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{github.repository}}/releases/download/beta/WINNT-x86_64.xml |g' ./build/application.ini.in
+        sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
+
+    #On Package, if not copies, error occur
+    - name: Copy l10n files if beta
+      if: inputs.beta
+      run: |
+          for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+            mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/beta
+            cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+            cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+            cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+          done
 
     - name: Build 🔨
       run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
 
-        ./mach configure
         ./mach build
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
     - name: Package 📦
-      run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
 
+      run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
         ./mach package
-        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
-        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
-        ./mach build
-        ./mach package
-        AB_CD=multi ./mach package
 
-    - name: compression 🗜️
+        ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
+
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+
+    - name: Copy & Compress Artifacts 📁
       run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        mkdir ~/output
+        if [[ $GHA_ARCH == 'aarch64' ]];then
+          arch="aarch64"
+        else
+          arch="x86_64"
+        fi
 
-        tar -czf floorp-aarch64-apple-darwin-with-pgo.tar.gz ./obj-aarch64-apple-darwin/dist/
+        if [[ $GHA_profgen = 'true' ]];then
+        tar zcvf ${arch}-apple-darwin-output.tar.xz ./obj-${arch}-apple-darwin/dist/floorp
+          mv ${arch}-apple-darwin-output.tar.xz ~/output/
+        else
+          tar -czf floorp-${arch}-apple-darwin-with-pgo.tar.gz ./obj-${arch}-apple-darwin/dist/
+          mv floorp-${arch}-apple-darwin-with-pgo.tar.gz ~/output/
+        fi
 
-    - name: Publish 🎁
-      uses: actions/upload-artifact@master
-      with:
-        name: floorp-aarch64-apple-darwin-with-pgo
-        path: floorp-aarch64-apple-darwin-with-pgo.tar.gz
+      env:
+        GHA_profgen: ${{inputs.profgen}}
+        GHA_ARCH: ${{matrix.arch}}
 
-##################################################################### Intel Build #######################################################################################################
-
-  build-intel:
-    runs-on: 'ubuntu-latest'
-
-    steps:
-    - name: Init
+    # Publish START
+    - name: make name of publish archive
+      shell: node {0}
       run: |
-        export RUNNER_USERDIR=`echo ~`
-        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
-    - uses: actions/checkout@v3
+        const fs = require('fs');
+        let name = process.env.GHA_out_artifact_name ? process.env.GHA_out_artifact_name : process.env.GHA_default_name
+        fs.appendFileSync(process.env.GITHUB_ENV, `ARTIFACT_NAME=${name}`);
+      env:
+        GHA_out_artifact_name : ${{inputs.out_artifact_name}}
+        GHA_default_name: floorp-mac-${{ matrix.arch }}-${{fromJson('["package","build-with-profgen"]')[inputs.profgen]}}
 
-    - name: Change PPA mirror servers
-      run: |
-        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
-        sudo apt update
-
-    - name: Setup Disk & Swap Space 💿
-      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
-      run: |
-        echo Before:
-        free -h
-        df -h
-        echo
-        echo
-        sudo swapoff /mnt/swapfile
-        sudo rm /mnt/swapfile
-
-        sudo apt clean
-        sudo apt remove temurin* openjdk*
-        sudo apt remove microsoft-edge* firefox* google-chrome*
-        sudo apt remove mono* libmono* msbuild* dotnet*
-        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
-        sudo apt remove gfortran* php* julia* r-*
-        sudo apt remove mysql* postgresql*
-        sudo apt remove google-cloud-sdk azure-cli powershell snapd
-
-        sudo rm -rf /usr/share/swift &
-        sudo rm -rf /usr/local/aws-cli &
-        sudo rm -rf /usr/local/aws-sam-cli &
-        sudo rm -rf /usr/local/julia* &
-        sudo rm -rf /usr/local/lib/android &
-        sudo rm -rf /usr/local/lib/node_modules &
-        sudo rm -rf /opt/hostedtoolcache &
-        sudo rm -rf /opt/pipx &
-        sudo rm -rf /snap &
-        wait
-
-        sudo fallocate -l 20G /home/runner/swapfile
-        sudo chmod 600 /home/runner/swapfile
-        sudo mkswap /home/runner/swapfile
-        sudo swapon /home/runner/swapfile
-
-        sudo sysctl vm.swappiness=10
-
-        echo
-        echo
-        echo After:
-        free -h
-        df -h
-
-    - name: Configure sccache
-      uses: actions/github-script@v6
-      with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-    - name: Create environment 🌲
-      run: |
-        sudo apt update
-        sudo apt upgrade -y
-
-        cp ./.github/mozconfig_darwin_pgo_base mozconfig
-
-        echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
-        echo 'ac_add_options --enable-optimize="-O3 -march=nehalem -mtune=haswell -w"' >> mozconfig
-        echo 'export RUSTFLAGS="-Ctarget-cpu=nehalem"' >> mozconfig
-
-        echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
-
-        # SCCACHE SETTINGS START
-        echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
-        echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
-        echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
-        echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
-        # SCCACHE SETTINGS END
-
-        echo 'mozconfig: **********************'
-        cat ./mozconfig
-        echo '*********************************'
-
-        ./mach --no-interactive bootstrap --application-choice browser
-        sudo apt install -y p7zip-full zip tar
-
-    - name: setup cross compile environment 📀
-      run: |
-        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
-        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
-
-    - name: setup rust 🦀
-      run: |
-        rustup target add x86_64-apple-darwin
-
-    - name: Build 🔨
-      run: |
-        ./mach configure
-        ./mach build
-
-    - name: Package 📦
-      run: |
-        ./mach package
-        tar zcvf x86_64-apple-darwin.tar.xz ./obj-x86_64-apple-darwin/dist/floorp
-
-    - name: Publish 🎁
+    - name: Publish Package🎁
       uses: actions/upload-artifact@v3
       with:
-        name: x86_64-apple-darwin
-        path: x86_64-apple-darwin.tar.xz
-
-  generate-profdata-and-jarlog-intel:
-    name: Generate profdata and jarlog for intel
-    needs: [build-intel]
-
-    runs-on: macos-latest
-
-    steps:
-      - name: Init
-        run: |
-          export RUNNER_USERDIR=`echo ~`
-          echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
-          mkdir -p ~/downloads/artifacts
-
-      - uses: actions/download-artifact@v3
-        name: Download artifact 📥
-        id: download-artifact-Intel
-        with:
-          name: x86_64-apple-darwin
-          path: ~/downloads/artifacts
-
-      - uses: actions/checkout@v3
-        name: Clone 🧬
-
-      - name: setup environment 🌲
-        run: |
-          echo -e "ac_add_options --enable-bootstrap" >> mozconfig
-
-          echo 'mozconfig: **********************'
-          cat ./mozconfig
-          echo '*********************************'
-
-          brew install gnu-tar
-          export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
-          ./mach --no-interactive bootstrap --application-choice browser
-
-      - name: Extract Artifact 📦
-        run: |
-          cp ${{ steps.download-artifact-Intel.outputs.download-path }}/x86_64-apple-darwin.tar.xz ./
-          tar xf x86_64-apple-darwin.tar.xz
-
-      - name: Generate Profdata 📊
-        run: |
-          LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
-
-      - name: Publish 🎁
-        uses: actions/upload-artifact@master
-        with:
-          name: floorp-x86_64-apple-darwin-profdata-and-jarlog
-          path: |
-            merged.profdata
-            en-US.log
-
-  Intel-build-with-PGO:
-    runs-on: 'ubuntu-latest'
-
-    needs: [generate-profdata-and-jarlog-intel, get-buildid]
-
-    steps:
-    - name: Init
-      run: |
-        export RUNNER_USERDIR=`echo ~`
-        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
-
-    - name: Change PPA mirror servers
-      run: |
-          sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
-          sudo apt update
-          sudo apt upgrade -y
-
-    - name: Setup Disk & Swap Space 💿
-      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
-      run: |
-        echo Before:
-        free -h
-        df -h
-        echo
-        echo
-        sudo swapoff /mnt/swapfile
-        sudo rm /mnt/swapfile
-
-        sudo apt clean
-        sudo apt remove temurin* openjdk*
-        sudo apt remove microsoft-edge* firefox* google-chrome*
-        sudo apt remove mono* libmono* msbuild* dotnet*
-        sudo apt remove llvm-15* llvm-14* llvm-13* llvm-12* libllvm15* libllvm14* libllvm13* libllvm12*
-        sudo apt remove gfortran* php* julia* r-*
-        sudo apt remove mysql* postgresql*
-        sudo apt remove google-cloud-sdk azure-cli powershell snapd
-
-        sudo rm -rf /usr/share/swift &
-        sudo rm -rf /usr/local/aws-cli &
-        sudo rm -rf /usr/local/aws-sam-cli &
-        sudo rm -rf /usr/local/julia* &
-        sudo rm -rf /usr/local/lib/android &
-        sudo rm -rf /usr/local/lib/node_modules &
-        sudo rm -rf /opt/hostedtoolcache &
-        sudo rm -rf /opt/pipx &
-        sudo rm -rf /snap &
-        wait
-
-        sudo fallocate -l 20G /home/runner/swapfile
-        sudo chmod 600 /home/runner/swapfile
-        sudo mkswap /home/runner/swapfile
-        sudo swapon /home/runner/swapfile
-
-        sudo sysctl vm.swappiness=10
-
-        echo
-        echo
-        echo After:
-        free -h
-        df -h
-
-    - uses: actions/checkout@v3
-
-    - name: download artifact 📥
-      uses: actions/download-artifact@v3
-      with:
-        name: floorp-x86_64-apple-darwin-profdata-and-jarlog
-        path: /home/runner/profdata-and-jarlog/
-
-    - name: Configure sccache
-      uses: actions/github-script@v6
-      with:
-        script: |
-          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-    - name: Create environment 🌲
-      run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
-        sudo apt update
-        sudo apt upgrade -y
-
-        cp ./.github/mozconfig_darwin_pgo_base mozconfig
-
-        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
-        echo 'ac_add_options --enable-optimize="-O3 -march=nehalem -mtune=haswell -w"' >> mozconfig
-        echo 'export RUSTFLAGS="-Ctarget-cpu=nehalem"' >> mozconfig
-        echo 'ac_add_options --with-pgo-profile-path=/home/runner/profdata-and-jarlog/merged.profdata' >> mozconfig
-        echo 'ac_add_options --with-pgo-jarlog=/home/runner/profdata-and-jarlog/en-US.log' >> mozconfig
-        echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
-
-        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
-
-        # SCCACHE SETTINGS START
-        echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
-        echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
-        echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
-        echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
-        # SCCACHE SETTINGS END
-
-        echo 'mozconfig: **********************'
-        cat ./mozconfig
-        echo '*********************************'
-
-        git clone --depth 1 -b 11.0.0 https://github.com/floorp-projects/l10n-central
-        ./mach --no-interactive bootstrap --application-choice browser
-        sudo apt install -y p7zip-full zip tar
-
-    - name: setup cross compile environment 📀
-      run: |
-        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
-        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
-
-    - name: setup rust 🦀
-      run: |
-        rustup target add x86_64-apple-darwin
-
-    - name: Build 🔨
-      run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
-        ./mach configure
-        ./mach build
-
-    - name: Package 📦
-      run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
-        ./mach package
-        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
-        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
-        ./mach build
-        ./mach package
-        AB_CD=multi ./mach package
-
-    - name: compression 🗜️
-      run: |
-        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
-
-        tar -czf floorp-x86_64-apple-darwin-with-pgo.tar.gz ./obj-x86_64-apple-darwin/dist/
-
-    - name: Publish 🎁
-      uses: actions/upload-artifact@master
-      with:
-        name: floorp-x86_64-apple-darwin-with-pgo
-        path: floorp-x86_64-apple-darwin-with-pgo.tar.gz
-
-######################################################## Integration #######################################################
-
-  integration:
-    needs: [Intel-build-with-PGO, M1-build-with-PGO, get-buildid]
-    runs-on: macos-latest
-
-    steps:
-
-    - name: delete old artifacts 🗑️
-      run: |
-        rm -rf ./obj-x86_64-apple-darwin/dist/
-        rm -rf ./obj-aarch64-apple-darwin/dist/
-        rm -rf ~/downloads/artifacts
-        rm -rf ./floorp
-
-    - uses: actions/checkout@v3
-
-    - name: download M1 build artifact 📥
-      uses: actions/download-artifact@v3
-      with:
-        name: floorp-aarch64-apple-darwin-with-pgo
-        path: ./
-
-    - name: download Intel build artifact 📥
-      uses: actions/download-artifact@v3
-      with:
-        name: floorp-x86_64-apple-darwin-with-pgo
-        path: ./
-
-    - name: Extract 📦
-      run: |
-        brew install gnu-tar
-        export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
-        tar -xf ./floorp-aarch64-apple-darwin-with-pgo.tar.gz
-        tar -xf ./floorp-x86_64-apple-darwin-with-pgo.tar.gz
-
-    - name: Create environment 🌲
-      shell: bash
-      run: |
-        ./mach --no-interactive bootstrap --application-choice browser
-        echo -e "ac_add_options --enable-bootstrap" >> mozconfig
-
-        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
-
-        echo 'mozconfig: **********************'
-        cat ./mozconfig
-        echo '*********************************'
-
-        echo "****************************************************************************************************"
-        echo "floorp.app folder structure: x86_64-apple-darwin"
-        ls -l ./obj-x86_64-apple-darwin/dist/
-        echo "****************************************************************************************************"
-        echo "floorp.app folder structure: aarch64-apple-darwin"
-        ls -l ./obj-aarch64-apple-darwin/dist/
-        echo "****************************************************************************************************"
-
-    - name: Integration 🗃 & Package 📦
-      run: |
-        ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
-        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
-        unzip ./.github/base.zip
-        hdiutil attach ./floorp-macOS-universal-temp.dmg
-        hdiutil attach ./base.dmg
-        cp -r /Volumes/Floorp/Floorp.app /Volumes/Floorp\ Installer/
-        hdiutil detach /Volumes/Floorp\ Installer/
-        hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg
-
-    - name: Publish 🎁
-      uses: actions/upload-artifact@v3
-      with:
-        name: Universal-Artifact
-        path: floorp-macOS-universal.dmg
-
-######################################################## Cleanup #######################################################
-
-  cleanup:
-    needs: integration
-    runs-on: ubuntu-latest
-    steps:
-    - uses: geekyeggo/delete-artifact@v2
-      with:
-        name: |
-          x86_64-apple-darwin
-          aarch64-apple-darwin
-          floorp-aarch64-apple-darwin-with-pgo
-          floorp-x86_64-apple-darwin-with-pgo
+        name: ${{env.ARTIFACT_NAME}}
+        path: ~/output
+    # Publish END

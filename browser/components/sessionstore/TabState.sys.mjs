@@ -98,12 +98,19 @@ var TabStateInternal = {
       tabData.muteReason = tab.muteReason;
     }
 
+    tabData.workspace = tab.getAttribute("floorp-workspace");
+    if (!tabData.workspace) {
+      tabData.workspace = Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
+    }
+    console.log("workspace: " + tabData.workspace);
+
     tabData.searchMode = tab.ownerGlobal.gURLBar.getSearchMode(browser, true);
 
     tabData.userContextId = tab.userContextId || 0;
 
     // Save tab attributes.
     tabData.attributes = lazy.TabAttributes.get(tab);
+    console.log("attributes: " + tabData.attributes);
 
     if (options.extData) {
       tabData.extData = options.extData;

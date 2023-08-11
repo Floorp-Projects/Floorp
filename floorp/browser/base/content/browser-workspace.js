@@ -208,6 +208,7 @@ const workspaceFunctions = {
           );
         }
       } else {
+        /*
         let tabsStates = JSON.parse(
           Services.prefs.getStringPref(WORKSPACE_TABS_PREF)
         );
@@ -255,6 +256,7 @@ const workspaceFunctions = {
             );
           }
         }
+        */
       }
 
       const toolbarButtonEle = window.MozXULElement.parseXULToFragment(`
