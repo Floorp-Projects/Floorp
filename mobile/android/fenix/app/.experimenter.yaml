@@ -47,9 +47,6 @@ juno-onboarding:
     cards:
       type: json
       description: Collection of user facing onboarding cards.
-    enabled:
-      type: boolean
-      description: "if true, juno onboarding is shown to the user."
 messaging:
   description: "The in-app messaging system.\n"
   hasExposure: true

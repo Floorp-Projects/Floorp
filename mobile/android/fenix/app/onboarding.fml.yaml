@@ -5,10 +5,6 @@ features:
     description: A feature that shows juno onboarding flow.
 
     variables:
-      enabled:
-        description: if true, juno onboarding is shown to the user.
-        type: Boolean
-        default: false
       cards:
         description: Collection of user facing onboarding cards.
         type: Map<String, OnboardingCardData>
@@ -50,14 +46,6 @@ features:
               ordering: 30
               primary-button-label: juno_onboarding_enable_notifications_positive_button
               secondary-button-label: juno_onboarding_enable_notifications_negative_button
-
-    defaults:
-      - channel: developer
-        value:
-          enabled: false
-      - channel: nightly
-        value:
-          enabled: true
 
 objects:
 
