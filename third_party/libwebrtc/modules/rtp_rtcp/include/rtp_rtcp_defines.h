@@ -219,7 +219,7 @@ enum class RtpPacketMediaType : size_t {
   kRetransmission,                // Retransmisions, sent as response to NACK.
   kForwardErrorCorrection,        // FEC packets.
   kPadding = kNumMediaTypes - 1,  // RTX or plain padding sent to maintain BWE.
-  // Again, don't forget to udate `kNumMediaTypes` if you add another value!
+  // Again, don't forget to update `kNumMediaTypes` if you add another value!
 };
 
 struct RtpPacketSendInfo {
