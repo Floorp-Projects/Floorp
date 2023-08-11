@@ -55,20 +55,20 @@ const workspaceFunctions = {
           ?.removeAttribute("floorp-firstVisibleTab");
         for (let i = 0; i < tabs.length; i++) {
           let tab = tabs[i];
-          if (!tab.hasAttribute("floorp-workspace")) {
+          if (!tab.hasAttribute("floorpWorkspace")) {
             tab.setAttribute(
-              "floorp-workspace",
+              "floorpWorkspace",
               Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
             );
           }
           if (
-            tab.getAttribute("floorp-workspace") ==
+            tab.getAttribute("floorpWorkspace") ==
             Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
           ) {
             lastTab = tab;
           }
           if (
-            tab.getAttribute("floorp-workspace") ==
+            tab.getAttribute("floorpWorkspace") ==
               Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF) &&
             firstTab == null
           ) {
@@ -203,11 +203,15 @@ const workspaceFunctions = {
       if (Services.prefs.getStringPref(WORKSPACE_TABS_PREF) === "[]") {
         for (let i = 0; i < tabs.length; i++) {
           tabs[i].setAttribute(
-            "floorp-workspace",
+            "floorpWorkspace",
             Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
           );
         }
       } else {
+
+        // NOTE: If you want to Floorp Workspaces to userChrome.js file, Please use this code.(But, It's not working.)
+         
+        // Remove Comment out and Delete this comment out. it will work.
         /*
         let tabsStates = JSON.parse(
           Services.prefs.getStringPref(WORKSPACE_TABS_PREF)
@@ -230,7 +234,7 @@ const workspaceFunctions = {
             tabsStates[i][i].workspace != ""
           ) {
             let state = tabsStates[i][i].workspace;
-            tab.setAttribute("floorp-workspace", state);
+            tab.setAttribute("floorpWorkspace", state);
           } else if (
             arryURLs.includes(tabURL) &&
             tabURL != undefined &&
@@ -242,11 +246,11 @@ const workspaceFunctions = {
             console.info(
               `Tab ${i} has been set to workspace ${value} because of matching URL(${tabURL}).`
             );
-            tab.setAttribute("floorp-workspace", value);
+            tab.setAttribute("floorpWorkspace", value);
             arryURLs.splice(index, 1);
           } else {
             tab.setAttribute(
-              "floorp-workspace",
+              "floorpWorkspace",
               Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
             );
             console.info(
@@ -380,7 +384,7 @@ const workspaceFunctions = {
         let tabs = gBrowser.tabs;
         for (let i = 0; i < tabs.length; i++) {
           let tab = tabs[i];
-          let tabWorkspace = tab.getAttribute("floorp-workspace");
+          let tabWorkspace = tab.getAttribute("floorpWorkspace");
           if (tabWorkspace == workspace) {
             gBrowser.removeTab(tab);
           }
@@ -431,8 +435,8 @@ const workspaceFunctions = {
         let tabs = gBrowser.tabs;
         for (let i = 0; i < tabs.length; i++) {
           let tab = tabs[i];
-          if (tab.getAttribute("floorp-workspace") == label) {
-            tab.setAttribute("floorp-workspace", input.value);
+          if (tab.getAttribute("floorpWorkspace") == label) {
+            tab.setAttribute("floorpWorkspace", input.value);
           }
         }
         workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
@@ -567,7 +571,7 @@ const workspaceFunctions = {
       );
       for (let i = 0; i < tabs.length; i++) {
         let tab = tabs[i];
-        let workspace = tab.getAttribute("floorp-workspace");
+        let workspace = tab.getAttribute("floorpWorkspace");
         if (
           workspace == currentWorkspace ||
           !Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF)
@@ -622,10 +626,10 @@ const workspaceFunctions = {
       //get all workspace tabs Workspace
       for (let i = 0; i < tabs.length; i++) {
         let tab = tabs[i];
-        let tabWorkspace = tab.getAttribute("floorp-workspace");
+        let tabWorkspace = tab.getAttribute("floorpWorkspace");
         if (!allWorkspacesArray.includes(tabWorkspace)) {
           tab.setAttribute(
-            "floorp-workspace",
+            "floorpWorkspace",
             Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
           );
           console.warn("Move default. unmatched tabs found");
@@ -636,7 +640,7 @@ const workspaceFunctions = {
         let tab = tabs[i];
         let tabState = {
           [i]: {
-            workspace: tab.getAttribute("floorp-workspace"),
+            workspace: tab.getAttribute("floorpWorkspace"),
             url: tab.linkedBrowser.currentURI.spec,
           },
         };
@@ -710,7 +714,7 @@ const workspaceFunctions = {
         )
       ) {
         document
-          .querySelector(`[floorp-workspace="${label}"]`)
+          .querySelector(`[floorpWorkspace="${label}"]`)
           ?.setAttribute(`lastShowWorkspaceTab-${label}`, "true");
       }
       for (let i = 0; i < tabs.length; i++) {
@@ -939,7 +943,7 @@ const workspaceFunctions = {
       let willMoveWorkspace = workspace;
       for (let i = 0; i < gBrowser.selectedTabs.length; i++) {
         gBrowser.selectedTabs[i].setAttribute(
-          "floorp-workspace",
+          "floorpWorkspace",
           willMoveWorkspace
         );
       }
@@ -983,8 +987,8 @@ const workspaceFunctions = {
       for (let i = 0; i < tabs.length; i++) {
         let tab = tabs[i];
         if (
-          tab.getAttribute("floorp-workspace") ==
-            gBrowser.selectedTab.getAttribute("floorp-workspace") &&
+          tab.getAttribute("floorpWorkspace") ==
+            gBrowser.selectedTab.getAttribute("floorpWorkspace") &&
           tab != gBrowser.selectedTab
         ) {
           nextTab = tab;
@@ -1052,7 +1056,7 @@ const workspaceFunctions = {
         let parentElem = document.getElementById("workspaceTabContextMenu");
         if (
           workspace !=
-          TabContextMenu.contextTab.getAttribute("floorp-workspace")
+          TabContextMenu.contextTab.getAttribute("floorpWorkspace")
         ) {
           parentElem.appendChild(menuItem);
         }

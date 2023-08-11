@@ -16,8 +16,6 @@ const ATTRIBUTES_TO_SKIP = new Set([
   "floorp-workspace",
 ]);
 
-console.log("TabAttributes.sys.mjs");
-
 // A set of tab attributes to persist. We will read a given list of tab
 // attributes when collecting tab data and will re-set those attributes when
 // the given tab data is restored to a new tab.
