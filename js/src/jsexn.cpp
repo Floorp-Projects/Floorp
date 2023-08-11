@@ -675,7 +675,7 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
     ownedReport.filename = JS::ConstUTF8CharsZ(filename.get());
     ownedReport.sourceId = frame->getSourceId();
     ownedReport.lineno = frame->getLine();
-    // Follow FixupColumnForDisplay and set column to 1 for WASM.
+    // Follow FixupMaybeWASMColumnForDisplay and set column to 1 for WASM.
     ownedReport.column = frame->isWasm() ? 1 : frame->getColumn();
     ownedReport.isMuted = frame->getMutedErrors();
   } else {
@@ -688,7 +688,7 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
       ownedReport.sourceId =
           iter.hasScript() ? iter.script()->scriptSource()->id() : 0;
       ownedReport.lineno = iter.computeLine(&column);
-      ownedReport.column = FixupColumnForDisplay(column);
+      ownedReport.column = FixupMaybeWASMColumnForDisplay(column);
       ownedReport.isMuted = iter.mutedErrors();
     }
   }

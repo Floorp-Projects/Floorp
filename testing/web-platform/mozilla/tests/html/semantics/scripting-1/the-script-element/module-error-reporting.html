@@ -28,37 +28,37 @@
         test.step(() => assert_true(event.error instanceof SyntaxError));
         test.step(() => assert_true(event.filename.endsWith("/bad_local_export.js")));
         test.step(() => assert_equals(event.lineno, 3));
-        test.step(() => assert_equals(event.colno, 7));
+        test.step(() => assert_equals(event.colno, 8));
         break;
       case 2:
         test.step(() => assert_true(event.error instanceof TypeError));
         test.step(() => assert_true(event.filename.endsWith("/import_resolve_failure.js")));
         test.step(() => assert_equals(event.lineno, 2));
-        test.step(() => assert_equals(event.colno, 16));
+        test.step(() => assert_equals(event.colno, 17));
         break;
       case 3:
         test.step(() => assert_true(event.error instanceof TypeError));
         test.step(() => assert_true(event.filename.endsWith("/indirect_export_resolve_failure.js")));
         test.step(() => assert_equals(event.lineno, 2));
-        test.step(() => assert_equals(event.colno, 19));
+        test.step(() => assert_equals(event.colno, 20));
         break;
       case 4:
         test.step(() => assert_true(event.error instanceof SyntaxError));
         test.step(() => assert_true(event.filename.endsWith("/missing_import.js")));
         test.step(() => assert_equals(event.lineno, 2));
-        test.step(() => assert_equals(event.colno, 8));
+        test.step(() => assert_equals(event.colno, 9));
         break;
       case 5:
         test.step(() => assert_true(event.error instanceof SyntaxError));
         test.step(() => assert_true(event.filename.endsWith("/missing_indirect_export.js")));
         test.step(() => assert_equals(event.lineno, 2));
-        test.step(() => assert_equals(event.colno, 11));
+        test.step(() => assert_equals(event.colno, 12));
         break;
       case 6:
         test.step(() => assert_true(event.error instanceof SyntaxError));
         test.step(() => assert_true(event.filename.endsWith("/module_eval_error.js")));
         test.step(() => assert_equals(event.lineno, 3));
-        test.step(() => assert_equals(event.colno, 0));
+        test.step(() => assert_equals(event.colno, 1));
         break;
       }
   }

@@ -9,7 +9,7 @@ function testErrorPosition(src) {
     catch (e) {
         failed = true;
         assertEq(e.lineNumber, 1)
-        assertEq(e.columnNumber, src.length - 1)
+        assertEq(e.columnNumber, src.length)
     }
 
     assertEq(failed, true);

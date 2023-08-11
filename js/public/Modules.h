@@ -263,6 +263,10 @@ GetRequestedModulesCount(JSContext* cx, Handle<JSObject*> moduleRecord);
 extern JS_PUBLIC_API JSString* GetRequestedModuleSpecifier(
     JSContext* cx, Handle<JSObject*> moduleRecord, uint32_t index);
 
+/*
+ * Get the position of a requested module's name in the source.
+ * lineNumber is 1-origin, and columnNumber is 0-origin.
+ */
 extern JS_PUBLIC_API void GetRequestedModuleSourcePos(
     JSContext* cx, Handle<JSObject*> moduleRecord, uint32_t index,
     uint32_t* lineNumber, uint32_t* columnNumber);

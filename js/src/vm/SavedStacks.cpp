@@ -19,6 +19,7 @@
 #include "gc/GCContext.h"
 #include "gc/HashUtil.h"
 #include "js/CharacterEncoding.h"
+#include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyAndElement.h"    // JS_DefineProperty, JS_GetProperty
 #include "js/PropertySpec.h"
@@ -1985,7 +1986,7 @@ UniqueChars BuildUTF8StackString(JSContext* cx, JSPrincipals* principals,
   return JS_EncodeStringToUTF8(cx, stackStr);
 }
 
-uint32_t FixupColumnForDisplay(uint32_t column) {
+uint32_t FixupMaybeWASMColumnForDisplay(uint32_t column) {
   // As described in WasmFrameIter::computeLine(), for wasm frames, the
   // function index is returned as the column with the high bit set. In paths
   // that format error stacks into strings, this information can be used to
@@ -1995,10 +1996,7 @@ uint32_t FixupColumnForDisplay(uint32_t column) {
     return 1;
   }
 
-  // XXX: Make the column 1-based as in other browsers, instead of 0-based
-  // which is how SpiderMonkey stores it internally. This will be
-  // unnecessary once bug 1144340 is fixed.
-  return column + 1;
+  return JSErrorBase::fromZeroOriginToOneOrigin(column);
 }
 
 } /* namespace js */

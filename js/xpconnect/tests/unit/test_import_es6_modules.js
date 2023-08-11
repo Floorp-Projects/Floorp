@@ -46,7 +46,7 @@ add_task(async function() {
     fileName: "resource://test/es6module_parse_error.js",
     stack: "testFailure",
     lineNumber: 1,
-    columnNumber: 5,
+    columnNumber: 6,
   });
 
   // Test parse error in import.
@@ -55,7 +55,7 @@ add_task(async function() {
     fileName: "resource://test/es6module_parse_error.js",
     stack: "testFailure",
     lineNumber: 1,
-    columnNumber: 5,
+    columnNumber: 6,
   });
 
   // Test import error.
@@ -63,7 +63,7 @@ add_task(async function() {
     type: "SyntaxError",
     fileName: "resource://test/es6module_import_error.js",
     lineNumber: 1,
-    columnNumber: 9,
+    columnNumber: 10,
   });
 
   // Test execution failure.
@@ -105,7 +105,7 @@ add_task(async function() {
     stack: "testFailure",
     fileName: "resource://test/es6module_top_level_await.js",
     lineNumber: 1,
-    columnNumber: 0,
+    columnNumber: 1,
   });
 
   // Test dynamic import is not supported.

@@ -7,7 +7,7 @@ var gw = dbg.addDebuggee(g);
 
 var syntaxError = gw.executeInGlobal("\nlet a, a;").throw;
 assertEq(syntaxError.errorLineNumber, 2);
-assertEq(syntaxError.errorColumnNumber, 7);
+assertEq(syntaxError.errorColumnNumber, 8);
 
 var typeError = gw.executeInGlobal("\n1 + f();").throw;
 assertEq(typeError.errorLineNumber, 2);

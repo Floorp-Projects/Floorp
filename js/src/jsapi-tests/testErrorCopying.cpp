@@ -13,8 +13,8 @@
 #include "jsapi-tests/tests.h"
 
 BEGIN_TEST(testErrorCopying_columnCopied) {
-  // 0        1         2
-  // 1234567890123456789012345678
+  //    0        1         2
+  //    1234567890123456789012345678
   EXEC("function check() { Object; foo; }");
 
   JS::RootedValue rval(cx);

@@ -52,28 +52,28 @@ function test(...args) {
 
 test(`
 let a, a;
-`, "a", [2, 4], [2, 7]);
+`, "a", [2, 5], [2, 8]);
 
 test(`
 let a;
 let a;
-`, "a", [2, 4], [3, 4]);
+`, "a", [2, 5], [3, 5]);
 
 test(`
 let a;
 const a = 1;
-`, "a", [2, 4], [3, 6]);
+`, "a", [2, 5], [3, 7]);
 
 test(`
 let a;
 var a;
-`, "a", [2, 4], [3, 4]);
+`, "a", [2, 5], [3, 5]);
 
 test(`
 let a;
 function a() {
 }
-`, "a", [2, 4], [3, 9]);
+`, "a", [2, 5], [3, 10]);
 
 test(`
 {
@@ -81,34 +81,34 @@ test(`
   function a() {
   }
 }
-`, "a", [3, 6], [4, 11]);
+`, "a", [3, 7], [4, 12]);
 
 // const
 
 test(`
 const a = 1, a = 2;
-`, "a", [2, 6], [2, 13]);
+`, "a", [2, 7], [2, 14]);
 
 test(`
 const a = 1;
 const a = 2;
-`, "a", [2, 6], [3, 6]);
+`, "a", [2, 7], [3, 7]);
 
 test(`
 const a = 1;
 let a;
-`, "a", [2, 6], [3, 4]);
+`, "a", [2, 7], [3, 5]);
 
 test(`
 const a = 1;
 var a;
-`, "a", [2, 6], [3, 4]);
+`, "a", [2, 7], [3, 5]);
 
 test(`
 const a = 1;
 function a() {
 }
-`, "a", [2, 6], [3, 9]);
+`, "a", [2, 7], [3, 10]);
 
 test(`
 {
@@ -116,31 +116,31 @@ test(`
   function a() {
   }
 }
-`, "a", [3, 8], [4, 11]);
+`, "a", [3, 9], [4, 12]);
 
 // var
 
 test(`
 var a;
 let a;
-`, "a", [2, 4], [3, 4]);
+`, "a", [2, 5], [3, 5]);
 
 test(`
 var a;
 const a = 1;
-`, "a", [2, 4], [3, 6]);
+`, "a", [2, 5], [3, 7]);
 
 // function
 
 test(`
 function a() {};
 let a;
-`, "a", [2, 9], [3, 4]);
+`, "a", [2, 10], [3, 5]);
 
 test(`
 function a() {};
 const a = 1;
-`, "a", [2, 9], [3, 6]);
+`, "a", [2, 10], [3, 7]);
 
 // Annex B lexical function
 
@@ -149,14 +149,14 @@ test(`
   function a() {};
   let a;
 }
-`, "a", [3, 11], [4, 6]);
+`, "a", [3, 12], [4, 7]);
 
 test(`
 {
   function a() {};
   const a = 1;
 }
-`, "a", [3, 11], [4, 8]);
+`, "a", [3, 12], [4, 9]);
 
 // catch parameter
 
@@ -165,14 +165,13 @@ try {
 } catch (a) {
   let a;
 }
-`, "a", [3, 9], [4, 6]);
-
+`, "a", [3, 10], [4, 7]);
 test(`
 try {
 } catch (a) {
   const a = 1;
 }
-`, "a", [3, 9], [4, 8]);
+`, "a", [3, 10], [4, 9]);
 
 test(`
 try {
@@ -180,7 +179,7 @@ try {
   function a() {
   }
 }
-`, "a", [3, 9], [4, 11]);
+`, "a", [3, 10], [4, 12]);
 
 // parameter
 
@@ -188,37 +187,37 @@ test(`
 function f(a) {
   let a;
 }
-`, "a", [2, 11], [3, 6]);
+`, "a", [2, 12], [3, 7]);
 
 test(`
 function f(a) {
   const a = 1;
 }
-`, "a", [2, 11], [3, 8]);
+`, "a", [2, 12], [3, 9]);
 
 test(`
 function f([a]) {
   let a;
 }
-`, "a", [2, 12], [3, 6]);
+`, "a", [2, 13], [3, 7]);
 
 test(`
 function f({a}) {
   let a;
 }
-`, "a", [2, 12], [3, 6]);
+`, "a", [2, 13], [3, 7]);
 
 test(`
 function f(...a) {
   let a;
 }
-`, "a", [2, 14], [3, 6]);
+`, "a", [2, 15], [3, 7]);
 
 test(`
 function f(a=1) {
   let a;
 }
-`, "a", [2, 11], [3, 6]);
+`, "a", [2, 12], [3, 7]);
 
 // eval
 // We don't have position information at runtime.
@@ -227,4 +226,4 @@ function f(a=1) {
 test_eval(`
 let a;
 eval("var a");
-`, "a", [npos, npos], [1, 4]);
+`, "a", [npos, npos], [1, 5]);

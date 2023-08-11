@@ -35,6 +35,7 @@
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ
+#include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_smprintf
 #include "js/RegExpFlags.h"           // JS::RegExpFlags
@@ -900,6 +901,8 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
 
     uint32_t line, column;
     computeLineAndColumn(offset, &line, &column);
+
+    column = JSErrorBase::fromZeroOriginToOneOrigin(column);
 
     if (!notes->addNoteASCII(anyChars.fc, anyChars.getFilename().c_str(), 0,
                              line, column, GetErrorMessage, nullptr,
