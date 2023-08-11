@@ -2701,4 +2701,30 @@ TEST_F(JsepTransportControllerTest, RollbackAndAddToDifferentBundleGroup) {
   EXPECT_EQ(mid2_transport, mid3_transport);
 }
 
+// Test that a bundle-only offer without rtcp-mux in the bundle-only section
+// is accepted.
+TEST_F(JsepTransportControllerTest, BundleOnlySectionDoesNotNeedRtcpMux) {
+  CreateJsepTransportController(JsepTransportController::Config());
+  cricket::ContentGroup bundle_group(cricket::GROUP_TYPE_BUNDLE);
+  bundle_group.AddContentName(kAudioMid1);
+  bundle_group.AddContentName(kVideoMid1);
+
+  auto offer = std::make_unique<cricket::SessionDescription>();
+  AddAudioSection(offer.get(), kAudioMid1, kIceUfrag1, kIcePwd1,
+                  cricket::ICEMODE_FULL, cricket::CONNECTIONROLE_ACTPASS,
+                  nullptr);
+  AddVideoSection(offer.get(), kVideoMid1, kIceUfrag1, kIcePwd1,
+                  cricket::ICEMODE_FULL, cricket::CONNECTIONROLE_ACTPASS,
+                  nullptr);
+  offer->AddGroup(bundle_group);
+
+  // Remove rtcp-mux and set bundle-only on the second content.
+  offer->contents()[1].media_description()->set_rtcp_mux(false);
+  offer->contents()[1].bundle_only = true;
+
+  EXPECT_TRUE(
+      transport_controller_->SetRemoteDescription(SdpType::kOffer, offer.get())
+          .ok());
+}
+
 }  // namespace webrtc
