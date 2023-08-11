@@ -47,7 +47,7 @@ TREEHERDER_TRY_BASE_URL = "https://treeherder.mozilla.org/jobs?repo=try&revision
 
 # Prevent users from running more than 300 tests at once. It's possible, but
 # it's more likely that a query is broken and is selecting far too much.
-MAX_PERF_TASKS = 300
+MAX_PERF_TASKS = 600
 
 # Name of the base category with no variants applied to it
 BASE_CATEGORY_NAME = "base"
