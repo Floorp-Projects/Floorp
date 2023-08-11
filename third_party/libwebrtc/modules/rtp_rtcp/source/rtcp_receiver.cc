@@ -258,45 +258,17 @@ uint32_t RTCPReceiver::RemoteSSRC() const {
 
 void RTCPReceiver::RttStats::AddRtt(TimeDelta rtt) {
   last_rtt_ = rtt;
-  if (rtt < min_rtt_) {
-    min_rtt_ = rtt;
-  }
-  if (rtt > max_rtt_) {
-    max_rtt_ = rtt;
-  }
   sum_rtt_ += rtt;
   ++num_rtts_;
 }
 
-int32_t RTCPReceiver::RTT(uint32_t remote_ssrc,
-                          int64_t* last_rtt_ms,
-                          int64_t* avg_rtt_ms,
-                          int64_t* min_rtt_ms,
-                          int64_t* max_rtt_ms) const {
+absl::optional<TimeDelta> RTCPReceiver::AverageRtt() const {
   MutexLock lock(&rtcp_receiver_lock_);
-
-  auto it = rtts_.find(remote_ssrc);
+  auto it = rtts_.find(remote_ssrc_);
   if (it == rtts_.end()) {
-    return -1;
+    return absl::nullopt;
   }
-
-  if (last_rtt_ms) {
-    *last_rtt_ms = it->second.last_rtt().ms();
-  }
-
-  if (avg_rtt_ms) {
-    *avg_rtt_ms = it->second.average_rtt().ms();
-  }
-
-  if (min_rtt_ms) {
-    *min_rtt_ms = it->second.min_rtt().ms();
-  }
-
-  if (max_rtt_ms) {
-    *max_rtt_ms = it->second.max_rtt().ms();
-  }
-
-  return 0;
+  return it->second.average_rtt();
 }
 
 absl::optional<TimeDelta> RTCPReceiver::LastRtt() const {
