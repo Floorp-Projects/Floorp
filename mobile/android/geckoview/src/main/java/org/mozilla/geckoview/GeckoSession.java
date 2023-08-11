@@ -2998,7 +2998,7 @@ public class GeckoSession {
    * @param url The URL of the product page.
    * @return a {@link GeckoResult} result of review analysis object.
    */
-  @UiThread
+  @AnyThread
   public @NonNull GeckoResult<ReviewAnalysis> requestAnalysis(@NonNull final String url) {
     final GeckoBundle bundle = new GeckoBundle(1);
     bundle.putString("url", url);
@@ -3013,7 +3013,7 @@ public class GeckoSession {
    * @param url The URL of the product page.
    * @return a {@link GeckoResult} result of product recommendations.
    */
-  @UiThread
+  @AnyThread
   public @NonNull GeckoResult<List<Recommendation>> requestRecommendations(
       @NonNull final String url) {
     final GeckoBundle bundle = new GeckoBundle(1);
