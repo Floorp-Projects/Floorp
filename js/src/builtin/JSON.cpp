@@ -29,6 +29,7 @@
 #include "util/StringBuffer.h"
 #include "vm/BooleanObject.h"  // js::BooleanObject
 #include "vm/Interpreter.h"
+#include "vm/Iteration.h"
 #include "vm/JSAtomUtils.h"  // ToAtom
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
@@ -805,19 +806,16 @@ static bool CanFastStringifyObject(NativeObject* obj) {
   }
 
   if (obj->is<ArrayObject>()) {
-    if (ProtoMayHaveEnumerableProperties(obj)) {
-      // Array objects look up properties with keys [0..length). Non-Arrays only
-      // look at own properties, so they do not need this check.
+    // Arrays will look up all keys [0..length) so disallow anything that could
+    // find those keys anywhere but in the dense elements.
+    if (!IsPackedArray(obj) && ObjectMayHaveExtraIndexedProperties(obj)) {
       return false;
     }
-    if (obj->isIndexed() && !obj->hasEnumerableProperty()) {
-      // Array objects may have sparse indexes, which will normally trigger
-      // a SPARSE_INDEX bailout when those properties are iterated over. But
-      // there is an optimization where non-element properties are skipped if
-      // !obj->hasEnumerableProperty(), so force a bail here.
-      //
-      // Non-Arrays do not output properties named [0..length), so will not run
-      // into this problem.
+  } else {
+    // Non-Arrays will only look at own properties, but still disallow any
+    // indexed properties other than in the dense elements because they would
+    // require sorting.
+    if (ObjectMayHaveExtraIndexedOwnProperties(obj)) {
       return false;
     }
   }
@@ -841,7 +839,6 @@ static bool CanFastStringifyObject(NativeObject* obj) {
   MACRO(DEEP_RECURSION)                       \
   MACRO(NON_DATA_PROPERTY)                    \
   MACRO(TOO_MANY_PROPERTIES)                  \
-  MACRO(SPARSE_INDEX)                         \
   MACRO(BIGINT)                               \
   MACRO(API)                                  \
   MACRO(HAVE_REPLACER)                        \
@@ -1037,8 +1034,8 @@ class OwnNonIndexKeysIterForJSON {
       return;
     }
     if (!nobj->hasEnumerableProperty()) {
-      // Note that any shortcut condition here must consider the possibility of
-      // sparse indexes. See CanFastStringifyObject() for details.
+      // Non-Arrays with no enumerable properties can just be skipped.
+      MOZ_ASSERT(!nobj->is<ArrayObject>());
       done_ = true;
       return;
     }
@@ -1364,7 +1361,11 @@ static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
       }
 
       MOZ_ASSERT(iter.done());
-      top.advanceToProperties();
+      if (top.isArray) {
+        MOZ_ASSERT(!top.nobj->isIndexed());
+      } else {
+        top.advanceToProperties();
+      }
     }
 
     if (top.iter.is<OwnNonIndexKeysIterForJSON>()) {
@@ -1380,18 +1381,12 @@ static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
 
         PropertyInfoWithKey prop = iter.next();
 
-        uint32_t index = -1;
-        if (top.nobj->isIndexed() && IdIsIndex(prop.key(), &index)) {
-          // Do not support sparse elements, because they need to be sorted
-          // numerically and before any non-index property names.
-          *whySlow = BailReason::SPARSE_INDEX;
-          return true;
-        }
-
-        if (top.isArray) {
-          // Arrays ignore non-index properties.
-          continue;
-        }
+        // A non-Array with indexed elements would need to sort the indexes
+        // numerically, which this code does not support. These objects are
+        // skipped when obj->isIndexed(), so no index properties should be found
+        // here.
+        mozilla::DebugOnly<uint32_t> index = -1;
+        MOZ_ASSERT(!IdIsIndex(prop.key(), &index));
 
         Value val = top.nobj->getSlot(prop.slot());
         if (!PreprocessFastValue(cx, &val, scx, whySlow)) {
@@ -1412,15 +1407,9 @@ static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
         }
         wroteMember = true;
 
-        if (prop.key().isString()) {
-          if (!Quote(cx, scx->sb, prop.key().toString())) {
-            return false;
-          }
-        } else {
-          MOZ_ASSERT(int32_t(index) >= 0, "not a string, not an index");
-          if (!EmitQuotedIndexColon(scx->sb, index)) {
-            return false;
-          }
+        MOZ_ASSERT(prop.key().isString());
+        if (!Quote(cx, scx->sb, prop.key().toString())) {
+          return false;
         }
 
         if (!scx->sb.append(':')) {
