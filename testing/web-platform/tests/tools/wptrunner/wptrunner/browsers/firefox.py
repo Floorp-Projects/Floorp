@@ -232,7 +232,7 @@ def run_info_browser_version(**kwargs):
 
 
 def update_properties():
-    return (["os", "debug", "fission", "processor", "swgl", "asan", "tsan", "domstreams", "editorLegacyDirectionMode"],
+    return (["os", "debug", "fission", "processor", "swgl", "asan", "tsan", "editorLegacyDirectionMode"],
             {"os": ["version"], "processor": ["bits"]})
 
 
