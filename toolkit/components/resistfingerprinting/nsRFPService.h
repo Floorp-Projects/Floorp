@@ -11,6 +11,7 @@
 #include "PLDHashTable.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/TypedEnumBits.h"
 #include "nsHashtablesFwd.h"
 #include "nsICookieJarSettings.h"
 #include "nsIObserver.h"
@@ -151,6 +152,8 @@ enum class RFPTarget : uint64_t {
 };
 
 #undef ITEM_VALUE
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(RFPTarget);
 
 // ============================================================================
 
