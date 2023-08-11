@@ -1699,6 +1699,22 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the review quality check CFR should be displayed to the user.
+     */
+    var shouldShowReviewQualityCheckCFR by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_should_show_review_quality_cfr),
+        default = true,
+    )
+
+    /**
+     * Time in milliseconds since the user first opted in the review quality check feature.
+     */
+    var reviewQualityCheckOptInTimeInMillis by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_review_quality_opt_in_time),
+        default = 0L,
+    )
+
+    /**
      * Get the current mode for how https-only is enabled.
      */
     fun getHttpsOnlyMode(): HttpsOnlyMode {

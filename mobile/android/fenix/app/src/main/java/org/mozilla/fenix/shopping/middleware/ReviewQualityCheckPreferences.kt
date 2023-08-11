@@ -31,6 +31,11 @@ interface ReviewQualityCheckPreferences {
      * Sets whether the user has enabled product recommendations.
      */
     suspend fun setProductRecommendationsEnabled(isEnabled: Boolean)
+
+    /**
+     * Updates the condition to display the opted in CFR.
+     */
+    suspend fun updateCFRCondition(time: Long)
 }
 
 /**
@@ -57,5 +62,12 @@ class ReviewQualityCheckPreferencesImpl(
 
     override suspend fun setProductRecommendationsEnabled(isEnabled: Boolean) {
         settings.isReviewQualityCheckProductRecommendationsEnabled = isEnabled
+    }
+
+    override suspend fun updateCFRCondition(time: Long) = with(settings) {
+        if (reviewQualityCheckOptInTimeInMillis == 0L) {
+            reviewQualityCheckOptInTimeInMillis = time
+            shouldShowReviewQualityCheckCFR = true
+        }
     }
 }

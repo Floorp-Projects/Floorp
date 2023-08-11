@@ -73,6 +73,7 @@ class ReviewQualityCheckPreferencesMiddleware(
 
                     // Update the preference
                     reviewQualityCheckPreferences.setEnabled(true)
+                    reviewQualityCheckPreferences.updateCFRCondition(System.currentTimeMillis())
                 }
             }
 

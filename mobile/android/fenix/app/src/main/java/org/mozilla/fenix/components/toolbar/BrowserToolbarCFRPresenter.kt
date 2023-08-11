@@ -5,19 +5,24 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.clickable
 import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getColor
+import androidx.core.view.isVisible
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.transformWhile
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.cfr.CFRPopup
@@ -28,8 +33,11 @@ import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.TOTAL_COOKIE_PROTECTION
+import org.mozilla.fenix.shopping.DefaultShoppingExperienceFeature
+import org.mozilla.fenix.shopping.ShoppingExperienceFeature
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -39,9 +47,9 @@ import org.mozilla.fenix.utils.Settings
 private const val CFR_TO_ANCHOR_VERTICAL_PADDING = -6
 
 /**
- * The minimum number of opened tabs to show the CFR.
+ * The minimum number of opened tabs to show the Total Cookie Protection CFR.
  */
-private const val CRF_MINIMUM_NUMBER_OPENED_TABS = 5
+private const val CFR_MINIMUM_NUMBER_OPENED_TABS = 5
 
 /**
  * Delegate for handling all the business logic for showing CFRs in the toolbar.
@@ -51,6 +59,7 @@ private const val CRF_MINIMUM_NUMBER_OPENED_TABS = 5
  * @param settings used to read and write persistent user settings
  * @param toolbar will serve as anchor for the CFRs
  * @param sessionId optional custom tab id used to identify the custom tab in which to show a CFR.
+ * @param shoppingExperienceFeature Used to determine if [ShoppingExperienceFeature] is enabled.
  */
 class BrowserToolbarCFRPresenter(
     private val context: Context,
@@ -58,41 +67,73 @@ class BrowserToolbarCFRPresenter(
     private val settings: Settings,
     private val toolbar: BrowserToolbar,
     private val sessionId: String? = null,
+    private val shoppingExperienceFeature: ShoppingExperienceFeature = DefaultShoppingExperienceFeature(
+        context.settings(),
+    ),
 ) {
     @VisibleForTesting
-    internal var tcpCfrScope: CoroutineScope? = null
+    internal var scope: CoroutineScope? = null
 
     @VisibleForTesting
-    internal var tcpCfrPopup: CFRPopup? = null
+    internal var popup: CFRPopup? = null
 
     /**
      * Start observing [browserStore] for updates which may trigger showing a CFR.
      */
     @Suppress("MagicNumber")
     fun start() {
-        if (shouldShowCFR()) {
-            tcpCfrScope = browserStore.flowScoped { flow ->
-                flow
-                    .mapNotNull { it.findCustomTabOrSelectedTab(sessionId)?.content?.progress }
-                    // The "transformWhile" below ensures that the 100% progress is only collected once.
-                    .transformWhile { progress ->
-                        emit(progress)
-                        progress != 100
-                    }
-                    .filter { it == 100 }
-                    .collect {
-                        tcpCfrScope?.cancel()
-                        showTcpCfr()
-                    }
+        when (getCFRToShow()) {
+            ToolbarCFR.TCP -> {
+                scope = browserStore.flowScoped { flow ->
+                    flow.mapNotNull { it.findCustomTabOrSelectedTab(sessionId)?.content?.progress }
+                        // The "transformWhile" below ensures that the 100% progress is only collected once.
+                        .transformWhile { progress ->
+                            emit(progress)
+                            progress != 100
+                        }.filter { it == 100 }.collect {
+                            scope?.cancel()
+                            showTcpCfr()
+                        }
+                }
+            }
+
+            ToolbarCFR.SHOPPING, ToolbarCFR.SHOPPING_OPTED_IN -> {
+                scope = browserStore.flowScoped { flow ->
+                    flow.mapNotNull { it.selectedTab }
+                        .filter { it.isProductUrl && it.content.progress == 100 && !it.content.loading }
+                        .distinctUntilChanged()
+                        .collect {
+                            if (toolbar.findViewById<View>(R.id.mozac_browser_toolbar_page_actions).isVisible) {
+                                scope?.cancel()
+                                showShoppingCFR(getCFRToShow() == ToolbarCFR.SHOPPING_OPTED_IN)
+                            }
+                        }
+                }
+            }
+
+            ToolbarCFR.NONE -> {
+                // no-op
             }
         }
     }
 
-    private fun shouldShowCFR(): Boolean {
-        return settings.shouldShowTotalCookieProtectionCFR && (
+    private fun getCFRToShow(): ToolbarCFR = when {
+        settings.shouldShowTotalCookieProtectionCFR && (
             !settings.shouldShowCookieBannerReEngagementDialog() ||
-                settings.openTabsCount >= CRF_MINIMUM_NUMBER_OPENED_TABS
-            )
+                settings.openTabsCount >= CFR_MINIMUM_NUMBER_OPENED_TABS
+            ) -> ToolbarCFR.TCP
+
+        shoppingExperienceFeature.isEnabled &&
+            settings.shouldShowReviewQualityCheckCFR -> {
+            val optInTime = settings.reviewQualityCheckOptInTimeInMillis
+            if (optInTime != 0L && System.currentTimeMillis() - optInTime > Settings.ONE_DAY_MS) {
+                ToolbarCFR.SHOPPING_OPTED_IN
+            } else {
+                ToolbarCFR.SHOPPING
+            }
+        }
+
+        else -> ToolbarCFR.NONE
     }
 
     /**
@@ -100,7 +141,7 @@ class BrowserToolbarCFRPresenter(
      * CFRs already shown are not automatically dismissed.
      */
     fun stop() {
-        tcpCfrScope?.cancel()
+        scope?.cancel()
     }
 
     @VisibleForTesting
@@ -151,7 +192,7 @@ class BrowserToolbarCFRPresenter(
                                 ),
                             )
                             TrackingProtection.tcpSumoLinkClicked.record(NoExtras())
-                            tcpCfrPopup?.dismiss()
+                            popup?.dismiss()
                         },
                         style = FirefoxTheme.typography.body2.copy(
                             textDecoration = TextDecoration.Underline,
@@ -161,9 +202,60 @@ class BrowserToolbarCFRPresenter(
             },
         ).run {
             settings.shouldShowTotalCookieProtectionCFR = false
-            tcpCfrPopup = this
+            popup = this
             show()
             TrackingProtection.tcpCfrShown.record(NoExtras())
         }
     }
+
+    @VisibleForTesting
+    internal fun showShoppingCFR(shouldShowOptedInCFR: Boolean) {
+        CFRPopup(
+            anchor = toolbar.findViewById(
+                R.id.mozac_browser_toolbar_page_actions,
+            ),
+            properties = CFRPopupProperties(
+                popupWidth = 475.dp,
+                popupAlignment = CFRPopup.PopupAlignment.BODY_CENTERED_IN_SCREEN,
+                popupBodyColors = listOf(
+                    getColor(context, R.color.fx_mobile_layer_color_gradient_start),
+                    getColor(context, R.color.fx_mobile_layer_color_gradient_end),
+                ),
+                popupVerticalOffset = CFR_TO_ANCHOR_VERTICAL_PADDING.dp,
+                dismissButtonColor = getColor(context, R.color.fx_mobile_icon_color_oncolor),
+                indicatorDirection = if (settings.toolbarPosition == ToolbarPosition.TOP) {
+                    CFRPopup.IndicatorDirection.UP
+                } else {
+                    CFRPopup.IndicatorDirection.DOWN
+                },
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+            ),
+            onDismiss = {},
+            text = {
+                FirefoxTheme {
+                    Text(
+                        text = if (shouldShowOptedInCFR) {
+                            stringResource(id = R.string.review_quality_check_second_cfr_message)
+                        } else {
+                            stringResource(id = R.string.review_quality_check_first_cfr_message)
+                        },
+                        color = FirefoxTheme.colors.textOnColorPrimary,
+                        style = FirefoxTheme.typography.body2,
+                    )
+                }
+            },
+        ).run {
+            settings.shouldShowReviewQualityCheckCFR = false
+            popup = this
+            show()
+        }
+    }
+}
+
+/**
+ * The CFR to be shown in the toolbar.
+ */
+private enum class ToolbarCFR {
+    TCP, SHOPPING, SHOPPING_OPTED_IN, NONE
 }

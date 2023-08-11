@@ -15,6 +15,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.ShoppingProductAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.TabSessionState
@@ -34,6 +35,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.shopping.ShoppingExperienceFeature
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -55,7 +57,7 @@ class BrowserToolbarCFRPresenterTest {
 
         presenter.start()
 
-        assertNotNull(presenter.tcpCfrScope)
+        assertNotNull(presenter.scope)
 
         browserStore.dispatch(ContentAction.UpdateProgressAction(customTab.id, 0)).joinBlocking()
         verify(exactly = 0) { presenter.showTcpCfr() }
@@ -78,7 +80,7 @@ class BrowserToolbarCFRPresenterTest {
 
         presenter.start()
 
-        assertNotNull(presenter.tcpCfrScope)
+        assertNotNull(presenter.scope)
 
         browserStore.dispatch(ContentAction.UpdateProgressAction(normalTab.id, 1)).joinBlocking()
         verify(exactly = 0) { presenter.showTcpCfr() }
@@ -101,7 +103,7 @@ class BrowserToolbarCFRPresenterTest {
 
         presenter.start()
 
-        assertNotNull(presenter.tcpCfrScope)
+        assertNotNull(presenter.scope)
 
         browserStore.dispatch(ContentAction.UpdateProgressAction(privateTab.id, 14)).joinBlocking()
         verify(exactly = 0) { presenter.showTcpCfr() }
@@ -124,7 +126,7 @@ class BrowserToolbarCFRPresenterTest {
 
         presenter.start()
 
-        assertNotNull(presenter.tcpCfrScope)
+        assertNotNull(presenter.scope)
 
         browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 99)).joinBlocking()
         browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
@@ -139,12 +141,13 @@ class BrowserToolbarCFRPresenterTest {
             settings = mockk {
                 every { shouldShowTotalCookieProtectionCFR } returns false
                 every { shouldShowCookieBannerReEngagementDialog() } returns false
+                every { shouldShowReviewQualityCheckCFR } returns false
             },
         )
 
         presenter.start()
 
-        assertNull(presenter.tcpCfrScope)
+        assertNull(presenter.scope)
     }
 
     @Test
@@ -153,7 +156,7 @@ class BrowserToolbarCFRPresenterTest {
             every { cancel() } just Runs
         }
         val presenter = createPresenter()
-        presenter.tcpCfrScope = tcpScope
+        presenter.scope = tcpScope
 
         presenter.stop()
 
@@ -171,7 +174,7 @@ class BrowserToolbarCFRPresenterTest {
         presenter.showTcpCfr()
 
         verify { settings.shouldShowTotalCookieProtectionCFR = false }
-        assertNotNull(presenter.tcpCfrPopup)
+        assertNotNull(presenter.popup)
     }
 
     @Test
@@ -187,6 +190,104 @@ class BrowserToolbarCFRPresenterTest {
         assertNotNull(TrackingProtection.tcpCfrShown.testGetValue())
     }
 
+    @Test
+    fun `GIVEN the current tab is showing a product page WHEN the tab is not loading THEN the CFR is shown`() {
+        val tab = createTab(url = "")
+        val browserStore = createBrowserStore(
+            tab = tab,
+            selectedTabId = tab.id,
+        )
+        val presenter = createPresenter(
+            browserStore = browserStore,
+            settings = mockk {
+                every { shouldShowTotalCookieProtectionCFR } returns false
+                every { shouldShowReviewQualityCheckCFR } returns true
+                every { reviewQualityCheckOptInTimeInMillis } returns System.currentTimeMillis()
+            },
+        )
+        every { presenter.showShoppingCFR(any()) } just Runs
+
+        presenter.start()
+
+        assertNotNull(presenter.scope)
+
+        browserStore.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
+        verify(exactly = 0) { presenter.showShoppingCFR(eq(false)) }
+
+        browserStore.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tab.id, true)).joinBlocking()
+        verify(exactly = 0) { presenter.showShoppingCFR(eq(false)) }
+
+        browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
+        verify(exactly = 0) { presenter.showShoppingCFR(eq(false)) }
+
+        browserStore.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
+        verify { presenter.showShoppingCFR(eq(false)) }
+    }
+
+    @Test
+    fun `GIVEN review quality CFR was previously displayed WHEN starting the presenter THEN don't observe the store`() {
+        val settings = mockk<Settings> {
+            every { shouldShowReviewQualityCheckCFR } returns false
+            every { shouldShowTotalCookieProtectionCFR } returns false
+        }
+        val presenter = createPresenter(settings = settings)
+
+        presenter.start()
+
+        assertNull(presenter.scope)
+    }
+
+    @Test
+    fun `GIVEN review quality feature is not enabled WHEN starting the presenter THEN don't observe the store`() {
+        val presenter = createPresenter(
+            settings = mockk {
+                every { shouldShowTotalCookieProtectionCFR } returns false
+            },
+            shoppingExperienceFeature = mockk {
+                every { isEnabled } returns false
+            },
+        )
+
+        presenter.start()
+
+        assertNull(presenter.scope)
+    }
+
+    @Test
+    fun `GIVEN the user opted in the shopping feature AND the opted in shopping CFR should be shown WHEN the tab is not loading THEN the CFR is shown`() {
+        val tab = createTab(url = "")
+        val browserStore = createBrowserStore(
+            tab = tab,
+            selectedTabId = tab.id,
+        )
+
+        val presenter = createPresenter(
+            settings = mockk {
+                every { shouldShowTotalCookieProtectionCFR } returns false
+                every { shouldShowReviewQualityCheckCFR } returns true
+                every { reviewQualityCheckOptInTimeInMillis } returns System.currentTimeMillis() - Settings.TWO_DAYS_MS
+            },
+            browserStore = browserStore,
+        )
+        every { presenter.showShoppingCFR(any()) } just Runs
+
+        presenter.start()
+
+        assertNotNull(presenter.scope)
+
+        browserStore.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
+        verify(exactly = 0) { presenter.showShoppingCFR(eq(true)) }
+
+        browserStore.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tab.id, true)).joinBlocking()
+        verify(exactly = 0) { presenter.showShoppingCFR(eq(true)) }
+
+        browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
+        verify(exactly = 0) { presenter.showShoppingCFR(eq(true)) }
+
+        browserStore.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
+        verify { presenter.showShoppingCFR(eq(true)) }
+    }
+
     /**
      * Creates and return a [spyk] of a [BrowserToolbarCFRPresenter] that can handle actually showing CFRs.
      */
@@ -197,11 +298,13 @@ class BrowserToolbarCFRPresenterTest {
         settings: Settings = mockk {
             every { shouldShowTotalCookieProtectionCFR } returns true
             every { shouldShowCookieBannerReEngagementDialog() } returns false
+            every { shouldShowReviewQualityCheckCFR } returns false
         },
         toolbar: BrowserToolbar = mockk(),
         sessionId: String? = null,
     ) = spyk(createPresenter(context, anchor, browserStore, settings, toolbar, sessionId)) {
         every { showTcpCfr() } just Runs
+        every { showShoppingCFR(any()) } just Runs
     }
 
     /**
@@ -212,17 +315,23 @@ class BrowserToolbarCFRPresenterTest {
         context: Context = mockk {
             every { getString(R.string.tcp_cfr_message) } returns "Test"
             every { getColor(any()) } returns 0
+            every { getString(R.string.pref_key_should_show_review_quality_cfr) } returns "test"
         },
-        anchor: View = mockk(),
+        anchor: View = mockk(relaxed = true),
         browserStore: BrowserStore = mockk(),
         settings: Settings = mockk(relaxed = true) {
             every { shouldShowTotalCookieProtectionCFR } returns true
             every { shouldShowCookieBannerReEngagementDialog() } returns false
+            every { shouldShowReviewQualityCheckCFR } returns true
         },
         toolbar: BrowserToolbar = mockk {
             every { findViewById<View>(R.id.mozac_browser_toolbar_security_indicator) } returns anchor
+            every { findViewById<View>(R.id.mozac_browser_toolbar_page_actions) } returns anchor
         },
         sessionId: String? = null,
+        shoppingExperienceFeature: ShoppingExperienceFeature = mockk {
+            every { isEnabled } returns true
+        },
     ) = spyk(
         BrowserToolbarCFRPresenter(
             context = context,
@@ -230,6 +339,7 @@ class BrowserToolbarCFRPresenterTest {
             settings = settings,
             toolbar = toolbar,
             sessionId = sessionId,
+            shoppingExperienceFeature = shoppingExperienceFeature,
         ),
     )
 

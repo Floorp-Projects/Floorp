@@ -48,11 +48,13 @@ class ReviewQualityCheckStoreTest {
     @Test
     fun `GIVEN the user has not opted in the feature WHEN the user opts in THEN state should display opted in UI`() =
         runTest {
+            var cfrConditionUpdated = false
             val tested = ReviewQualityCheckStore(
                 middleware = provideReviewQualityCheckMiddleware(
                     reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
                         isEnabled = false,
                         isProductRecommendationsEnabled = false,
+                        updateCFRCallback = { cfrConditionUpdated = true },
                     ),
                 ),
             )
@@ -64,6 +66,7 @@ class ReviewQualityCheckStoreTest {
 
             val expected = ReviewQualityCheckState.OptedIn(productRecommendationsPreference = false)
             assertEquals(expected, tested.state)
+            assertEquals(true, cfrConditionUpdated)
         }
 
     @Test
@@ -157,7 +160,7 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
-    fun `GIVEN the user has opted in the feature WHEN the a product analysis fetch fails THEN state should reflect that`() =
+    fun `WHEN the user opts in the feature THEN update the preferences`() =
         runTest {
             val reviewQualityCheckService = mock<ReviewQualityCheckService>()
             whenever(reviewQualityCheckService.fetchProductReview()).thenReturn(null)
@@ -211,6 +214,7 @@ class ReviewQualityCheckStoreTest {
 private class FakeReviewQualityCheckPreferences(
     private val isEnabled: Boolean = false,
     private val isProductRecommendationsEnabled: Boolean = false,
+    private val updateCFRCallback: () -> Unit = { },
 ) : ReviewQualityCheckPreferences {
     override suspend fun enabled(): Boolean = isEnabled
 
@@ -220,5 +224,9 @@ private class FakeReviewQualityCheckPreferences(
     }
 
     override suspend fun setProductRecommendationsEnabled(isEnabled: Boolean) {
+    }
+
+    override suspend fun updateCFRCondition(time: Long) {
+        updateCFRCallback()
     }
 }
