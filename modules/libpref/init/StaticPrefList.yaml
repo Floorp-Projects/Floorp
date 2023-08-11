@@ -12778,11 +12778,6 @@
   value: 1
   mirror: always
 
-- name: permissions.delegation.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: permissions.isolateBy.userContext
   type: RelaxedAtomicBool
   value: false

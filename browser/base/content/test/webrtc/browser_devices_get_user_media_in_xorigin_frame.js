@@ -786,7 +786,6 @@ var gTests = [
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["permissions.delegation.enabled", true],
       ["dom.security.featurePolicy.header.enabled", true],
       ["dom.security.featurePolicy.webidl.enabled", true],
     ],

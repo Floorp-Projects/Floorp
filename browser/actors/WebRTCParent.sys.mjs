@@ -95,9 +95,7 @@ export class WebRTCParent extends JSWindowActorParent {
           this.manager.topWindowContext.documentPrincipal.origin;
         data.isThirdPartyOrigin = isThirdPartyOrigin;
 
-        data.origin = data.shouldDelegatePermission
-          ? this.manager.topWindowContext.documentPrincipal.origin
-          : this.manager.documentPrincipal.origin;
+        data.origin = this.manager.topWindowContext.documentPrincipal.origin;
 
         let browser = this.getBrowser();
         if (browser.fxrPermissionPrompt) {
@@ -397,12 +395,9 @@ export class WebRTCParent extends JSWindowActorParent {
     }
 
     // Don't use persistent permissions from the top-level principal
-    // if we're in a cross-origin iframe and permission delegation is not
-    // allowed, or when we're handling a potentially insecure third party
+    // if we're handling a potentially insecure third party
     // through a wildcard ("*") allow attribute.
-    let limited =
-      (aRequest.isThirdPartyOrigin && !aRequest.shouldDelegatePermission) ||
-      aRequest.secondOrigin;
+    let limited = aRequest.secondOrigin;
 
     let map = lazy.webrtcUI.activePerms.get(this.manager.outerWindowId);
     // We consider a camera or mic active if it is active or was active within a
@@ -1221,15 +1216,9 @@ function prompt(aActor, aBrowser, aRequest) {
       return false;
     }
 
-    // Don't offer "always remember" action in third party with no permission
-    // delegation
-    if (aRequest.isThirdPartyOrigin && !aRequest.shouldDelegatePermission) {
-      return false;
-    }
-
     // Don't offer "always remember" action in maybe unsafe permission
     // delegation
-    if (aRequest.shouldDelegatePermission && aRequest.secondOrigin) {
+    if (aRequest.secondOrigin) {
       return false;
     }
 

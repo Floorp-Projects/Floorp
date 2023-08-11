@@ -301,9 +301,7 @@
     SimpleTest.executeSoon(nextTest);
   }
 
-  SpecialPowers.pushPrefEnv({"set": [
-    ["permissions.delegation.enabled", true],
-  ]}).then(nextTest);
+  nextTest()
   </script>
 </body>
 
