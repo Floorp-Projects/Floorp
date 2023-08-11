@@ -352,12 +352,14 @@ CssRuleView.prototype = {
   },
 
   isPanelVisible() {
+    if (this.inspector.is3PaneModeEnabled) {
+      return true;
+    }
     return (
       this.inspector.toolbox &&
       this.inspector.sidebar &&
       this.inspector.toolbox.currentToolId === "inspector" &&
-      (this.inspector.sidebar.getCurrentTabID() == "ruleview" ||
-        this.inspector.is3PaneModeEnabled)
+      this.inspector.sidebar.getCurrentTabID() == "ruleview"
     );
   },
 
@@ -2052,85 +2054,52 @@ CssRuleView.prototype = {
   },
 };
 
-class RuleViewTool {
-  constructor(inspector, window) {
-    this.inspector = inspector;
-    this.document = window.document;
+function RuleViewTool(inspector, window) {
+  this.inspector = inspector;
+  this.document = window.document;
 
-    this.view = new CssRuleView(this.inspector, this.document);
+  this.view = new CssRuleView(this.inspector, this.document);
 
-    this.refresh = this.refresh.bind(this);
-    this.onDetachedFront = this.onDetachedFront.bind(this);
-    this.onPanelSelected = this.onPanelSelected.bind(this);
-    this.onDetachedFront = this.onDetachedFront.bind(this);
-    this.onSelected = this.onSelected.bind(this);
-    this.onViewRefreshed = this.onViewRefreshed.bind(this);
+  this._onResourceAvailable = this._onResourceAvailable.bind(this);
+  this.refresh = this.refresh.bind(this);
+  this.onDetachedFront = this.onDetachedFront.bind(this);
+  this.onPanelSelected = this.onPanelSelected.bind(this);
+  this.onDetachedFront = this.onDetachedFront.bind(this);
+  this.onSelected = this.onSelected.bind(this);
+  this.onViewRefreshed = this.onViewRefreshed.bind(this);
 
-    this.#abortController = new window.AbortController();
-    const { signal } = this.#abortController;
-    const baseEventConfig = { signal };
+  this.view.on("ruleview-refreshed", this.onViewRefreshed);
+  this.inspector.selection.on("detached-front", this.onDetachedFront);
+  this.inspector.selection.on("new-node-front", this.onSelected);
+  this.inspector.selection.on("pseudoclass", this.refresh);
+  this.inspector.ruleViewSideBar.on("ruleview-selected", this.onPanelSelected);
+  this.inspector.sidebar.on("ruleview-selected", this.onPanelSelected);
+  this.inspector.styleChangeTracker.on("style-changed", this.refresh);
 
-    this.view.on("ruleview-refreshed", this.onViewRefreshed, baseEventConfig);
-    this.inspector.selection.on(
-      "detached-front",
-      this.onDetachedFront,
-      baseEventConfig
-    );
-    this.inspector.selection.on(
-      "new-node-front",
-      this.onSelected,
-      baseEventConfig
-    );
-    this.inspector.selection.on("pseudoclass", this.refresh, baseEventConfig);
-    this.inspector.ruleViewSideBar.on(
-      "ruleview-selected",
-      this.onPanelSelected,
-      baseEventConfig
-    );
-    this.inspector.sidebar.on(
-      "ruleview-selected",
-      this.onPanelSelected,
-      baseEventConfig
-    );
-    this.inspector.toolbox.on(
-      "inspector-selected",
-      this.onPanelSelected,
-      baseEventConfig
-    );
-    this.inspector.styleChangeTracker.on(
-      "style-changed",
-      this.refresh,
-      baseEventConfig
-    );
+  this.inspector.commands.resourceCommand.watchResources(
+    [this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+    {
+      onAvailable: this._onResourceAvailable,
+      ignoreExistingResources: true,
+    }
+  );
 
-    this.inspector.commands.resourceCommand.watchResources(
-      [
-        this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-        this.inspector.commands.resourceCommand.TYPES.STYLESHEET,
-      ],
-      {
-        onAvailable: this.#onResourceAvailable,
-        ignoreExistingResources: true,
-      }
-    );
+  // At the moment `readyPromise` is only consumed in tests (see `openRuleView`) to be
+  // notified when the ruleview was first populated to match the initial selected node.
+  this.readyPromise = this.onSelected();
+}
 
-    // At the moment `readyPromise` is only consumed in tests (see `openRuleView`) to be
-    // notified when the ruleview was first populated to match the initial selected node.
-    this.readyPromise = this.onSelected();
-  }
-
-  #abortController;
-
+RuleViewTool.prototype = {
   isPanelVisible() {
     if (!this.view) {
       return false;
     }
     return this.view.isPanelVisible();
-  }
+  },
 
   onDetachedFront() {
     this.onSelected(false);
-  }
+  },
 
   onSelected(selectElement = true) {
     // Ignore the event if the view has been destroyed, or if it's inactive.
@@ -2162,16 +2131,15 @@ class RuleViewTool {
     return this.view
       .selectElement(this.inspector.selection.nodeFront)
       .then(done, done);
-  }
+  },
 
   refresh() {
     if (this.isPanelVisible()) {
       this.view.refreshPanel();
     }
-  }
+  },
 
-  #onResourceAvailable = resources => {
-    let hasNewStylesheet = false;
+  _onResourceAvailable(resources) {
     for (const resource of resources) {
       if (
         resource.resourceType ===
@@ -2180,31 +2148,15 @@ class RuleViewTool {
         resource.targetFront.isTopLevel
       ) {
         this.clearUserProperties();
-        continue;
-      }
-
-      if (
-        resource.resourceType ===
-          this.inspector.commands.resourceCommand.TYPES.STYLESHEET &&
-        // resource.isNew is only true when the stylesheet was added from DevTools,
-        // for example when adding a rule in the rule view. In such cases, we're already
-        // updating the rule view, so ignore those.
-        !resource.isNew
-      ) {
-        hasNewStylesheet = true;
       }
     }
-
-    if (hasNewStylesheet) {
-      this.refresh();
-    }
-  };
+  },
 
   clearUserProperties() {
     if (this.view && this.view.store && this.view.store.userProperties) {
       this.view.store.userProperties.clear();
     }
-  }
+  },
 
   onPanelSelected() {
     if (this.inspector.selection.nodeFront === this.view._viewedElement) {
@@ -2212,34 +2164,34 @@ class RuleViewTool {
     } else {
       this.onSelected();
     }
-  }
+  },
 
   onViewRefreshed() {
     this.inspector.emit("rule-view-refreshed");
-  }
+  },
 
   destroy() {
-    if (this.#abortController) {
-      this.#abortController.abort();
-    }
+    this.inspector.styleChangeTracker.off("style-changed", this.refresh);
+    this.inspector.selection.off("detached-front", this.onDetachedFront);
+    this.inspector.selection.off("pseudoclass", this.refresh);
+    this.inspector.selection.off("new-node-front", this.onSelected);
+    this.inspector.currentTarget.off("navigate", this.clearUserProperties);
+    this.inspector.sidebar.off("ruleview-selected", this.onPanelSelected);
 
     this.inspector.commands.resourceCommand.unwatchResources(
       [this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
       {
-        onAvailable: this.#onResourceAvailable,
+        onAvailable: this._onResourceAvailable,
       }
     );
 
+    this.view.off("ruleview-refreshed", this.onViewRefreshed);
+
     this.view.destroy();
 
-    this.view =
-      this.document =
-      this.inspector =
-      this.readyPromise =
-      this.#abortController =
-        null;
-  }
-}
+    this.view = this.document = this.inspector = this.readyPromise = null;
+  },
+};
 
 exports.CssRuleView = CssRuleView;
 exports.RuleViewTool = RuleViewTool;

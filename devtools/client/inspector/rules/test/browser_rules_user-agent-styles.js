@@ -185,7 +185,6 @@ async function compareAppliedStylesWithUI(inspector, view, filter) {
   entries = [...entryMap.values()];
 
   const elementStyle = view._elementStyle;
-  await waitFor(() => elementStyle.rules.length === entries.length);
   is(
     elementStyle.rules.length,
     entries.length,
