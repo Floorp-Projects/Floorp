@@ -26,7 +26,7 @@
 #include "gc/PublicIterators.h"
 #include "gc/Tenuring.h"
 #include "jit/JitFrames.h"
-#include "jit/JitRealm.h"
+#include "jit/JitZone.h"
 #include "js/Printer.h"
 #include "util/DifferentialTesting.h"
 #include "util/GetPidProvider.h"  // getpid()
@@ -455,11 +455,9 @@ void js::Nursery::updateAllocFlagsForZone(JS::Zone* zone) {
 void js::Nursery::discardCodeAndSetJitFlagsForZone(JS::Zone* zone) {
   zone->forceDiscardJitCode(runtime()->gcContext());
 
-  for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
-    if (jit::JitRealm* jitRealm = r->jitRealm()) {
-      jitRealm->discardStubs();
-      jitRealm->setStringsCanBeInNursery(zone->allocNurseryStrings());
-    }
+  if (jit::JitZone* jitZone = zone->jitZone()) {
+    jitZone->discardStubs();
+    jitZone->setStringsCanBeInNursery(zone->allocNurseryStrings());
   }
 }
 

@@ -66,6 +66,7 @@ void CheckMainThread<Helper>::check() const {
 template class CheckMainThread<AllowedHelperThread::None>;
 template class CheckMainThread<AllowedHelperThread::GCTask>;
 template class CheckMainThread<AllowedHelperThread::IonCompile>;
+template class CheckMainThread<AllowedHelperThread::GCTaskOrIonCompile>;
 
 template <GlobalLock Lock, AllowedHelperThread Helper>
 void CheckGlobalLock<Lock, Helper>::check() const {

@@ -1372,14 +1372,10 @@ void GCRuntime::sweepJitDataOnMainThread(JS::GCContext* gcx) {
     }
   }
 
-  // JitZone/JitRealm must be swept *after* discarding JIT code, because
+  // JitZone must be swept *after* discarding JIT code, because
   // Zone::discardJitCode might access CacheIRStubInfos deleted here.
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_JIT_DATA);
-
-    for (SweepGroupRealmsIter r(rt); !r.done(); r.next()) {
-      r->traceWeakEdgesInJitRealm(&trc);
-    }
 
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
       if (jit::JitZone* jitZone = zone->jitZone()) {

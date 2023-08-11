@@ -15,7 +15,7 @@
 
 #include "gc/GC.h"
 #include "gc/PublicIterators.h"
-#include "jit/JitRealm.h"
+#include "jit/JitZone.h"
 #include "js/HeapAPI.h"
 #include "js/Value.h"
 #include "util/DifferentialTesting.h"
@@ -98,11 +98,8 @@ void js::ReleaseAllJITCode(JS::GCContext* gcx) {
 
   for (ZonesIter zone(gcx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
     zone->forceDiscardJitCode(gcx);
-  }
-
-  for (RealmsIter realm(gcx->runtime()); !realm.done(); realm.next()) {
-    if (jit::JitRealm* jitRealm = realm->jitRealm()) {
-      jitRealm->discardStubs();
+    if (jit::JitZone* jitZone = zone->jitZone()) {
+      jitZone->discardStubs();
     }
   }
 }

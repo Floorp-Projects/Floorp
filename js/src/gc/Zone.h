@@ -285,7 +285,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrGCTaskData<js::UniquePtr<js::gc::FinalizationObservers>>
       finalizationObservers_;
 
-  js::MainThreadOrGCTaskData<js::jit::JitZone*> jitZone_;
+  js::MainThreadOrGCTaskOrIonCompileData<js::jit::JitZone*> jitZone_;
 
   // Last time at which JIT code was discarded for this zone. This is only set
   // when JitScripts and Baseline code are discarded as well.
@@ -432,6 +432,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   static constexpr size_t offsetOfNeedsIncrementalBarrier() {
     return offsetof(Zone, needsIncrementalBarrier_);
   }
+  static constexpr size_t offsetOfJitZone() { return offsetof(Zone, jitZone_); }
 
   js::jit::JitZone* getJitZone(JSContext* cx) {
     return jitZone_ ? jitZone_ : createJitZone(cx);

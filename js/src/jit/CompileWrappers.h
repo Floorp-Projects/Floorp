@@ -94,12 +94,16 @@ class CompileRuntime {
   bool runtimeMatches(JSRuntime* rt);
 };
 
+class JitZone;
+
 class CompileZone {
   friend class MacroAssembler;
   JS::Zone* zone();
 
  public:
   static CompileZone* get(JS::Zone* zone);
+
+  const JitZone* jitZone();
 
   CompileRuntime* runtime();
   bool isAtomsZone();
@@ -121,8 +125,6 @@ class CompileZone {
                                    gc::CatchAllAllocSite siteKind);
 };
 
-class JitRealm;
-
 class CompileRealm {
   JS::Realm* realm();
 
@@ -136,8 +138,6 @@ class CompileRealm {
 
   const mozilla::non_crypto::XorShift128PlusRNG*
   addressOfRandomNumberGenerator();
-
-  const JitRealm* jitRealm();
 
   const GlobalObject* maybeGlobal();
   const uint32_t* addressOfGlobalWriteBarriered();

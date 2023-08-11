@@ -691,7 +691,6 @@ class JS::Realm : public JS::shadow::Realm {
   mozilla::HashCodeScrambler randomHashCodeScrambler();
 
   bool ensureJitRealmExists(JSContext* cx);
-  void traceWeakEdgesInJitRealm(JSTracer* trc);
 
   js::jit::JitRealm* jitRealm() { return jitRealm_.get(); }
 
@@ -713,9 +712,6 @@ class JS::Realm : public JS::shadow::Realm {
 
   static constexpr size_t offsetOfCompartment() {
     return offsetof(JS::Realm, compartment_);
-  }
-  static constexpr size_t offsetOfJitRealm() {
-    return offsetof(JS::Realm, jitRealm_);
   }
   static constexpr size_t offsetOfDebugModeBits() {
     return offsetof(JS::Realm, debugModeBits_);

@@ -135,8 +135,6 @@ bool Realm::ensureJitRealmExists(JSContext* cx) {
     return false;
   }
 
-  jitRealm->initialize(zone()->allocNurseryStrings());
-
   jitRealm_ = std::move(jitRealm);
   return true;
 }
@@ -316,12 +314,6 @@ void Realm::traceWeakGlobalEdge(JSTracer* trc) {
   auto result = TraceWeakEdge(trc, &global_, "Realm::global_");
   if (result.isDead()) {
     result.initialTarget()->releaseData(runtime_->gcContext());
-  }
-}
-
-void Realm::traceWeakEdgesInJitRealm(JSTracer* trc) {
-  if (jitRealm_) {
-    jitRealm_->traceWeak(trc, this);
   }
 }
 
