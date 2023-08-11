@@ -200,8 +200,8 @@ const uint32_t* CompileRealm::addressOfGlobalWriteBarriered() {
   return &realm()->globalWriteBarriered;
 }
 
-bool CompileRealm::hasAllocationMetadataBuilder() {
-  return realm()->hasAllocationMetadataBuilder();
+bool CompileZone::hasRealmWithAllocMetadataBuilder() {
+  return zone()->hasRealmWithAllocMetadataBuilder();
 }
 
 JitCompileOptions::JitCompileOptions()

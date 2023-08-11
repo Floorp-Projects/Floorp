@@ -192,6 +192,8 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
 Zone::~Zone() {
   MOZ_ASSERT_IF(regExps_.ref(), regExps().empty());
 
+  MOZ_ASSERT(numRealmsWithAllocMetadataBuilder_ == 0);
+
   DebugAPI::deleteDebugScriptMap(debugScriptMap);
   js_delete(finalizationObservers_.ref().release());
 
