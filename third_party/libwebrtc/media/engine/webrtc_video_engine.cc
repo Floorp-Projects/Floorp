@@ -797,7 +797,7 @@ bool WebRtcVideoChannel::GetChangedSendParameters(
   if (negotiated_codecs_ != negotiated_codecs) {
     if (negotiated_codecs.empty()) {
       changed_params->send_codec = absl::nullopt;
-    } else if (send_codec_ != negotiated_codecs.front()) {
+    } else if (send_codec() != negotiated_codecs.front()) {
       changed_params->send_codec = negotiated_codecs.front();
     }
     changed_params->negotiated_codecs = std::move(negotiated_codecs);
@@ -903,7 +903,7 @@ void WebRtcVideoChannel::RequestEncoderSwitch(
         new_codec_setting.codec.params[kv.first] = kv.second;
       }
 
-      if (send_codec_ == new_codec_setting) {
+      if (send_codec() == new_codec_setting) {
         // Already using this codec, no switch required.
         return;
       }
@@ -931,7 +931,7 @@ bool WebRtcVideoChannel::ApplyChangedParams(
     negotiated_codecs_ = *changed_params.negotiated_codecs;
 
   if (changed_params.send_codec)
-    send_codec_ = changed_params.send_codec;
+    send_codec() = changed_params.send_codec;
 
   if (changed_params.extmap_allow_mixed) {
     SetExtmapAllowMixed(*changed_params.extmap_allow_mixed);
@@ -951,10 +951,10 @@ bool WebRtcVideoChannel::ApplyChangedParams(
       bitrate_config_.max_bitrate_bps = -1;
     }
 
-    if (send_codec_) {
+    if (send_codec()) {
       // TODO(holmer): Changing the codec parameters shouldn't necessarily mean
       // that we change the min/max of bandwidth estimation. Reevaluate this.
-      bitrate_config_ = GetBitrateConfigForCodec(send_codec_->codec);
+      bitrate_config_ = GetBitrateConfigForCodec(send_codec()->codec);
       if (!changed_params.send_codec) {
         // If the codec isn't changing, set the start bitrate to -1 which means
         // "unchanged" so that BWE isn't affected.
@@ -985,12 +985,12 @@ bool WebRtcVideoChannel::ApplyChangedParams(
   if (role() == MediaChannel::Role::kBoth) {
     if (changed_params.send_codec || changed_params.rtcp_mode) {
       // Update receive feedback parameters from new codec or RTCP mode.
-      if (send_codec_) {
+      if (send_codec()) {
         SetReceiverFeedbackParameters(
-            HasLntf(send_codec_->codec), HasNack(send_codec_->codec),
+            HasLntf(send_codec()->codec), HasNack(send_codec()->codec),
             send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
                                            : webrtc::RtcpMode::kCompound,
-            send_codec_->rtx_time);
+            send_codec()->rtx_time);
       }
     }
   } else {
@@ -1042,9 +1042,9 @@ webrtc::RtpParameters WebRtcVideoChannel::GetRtpSendParameters(
   // Need to add the common list of codecs to the send stream-specific
   // RTP parameters.
   for (const VideoCodec& codec : send_params_.codecs) {
-    if (send_codec_ && send_codec_->codec.id == codec.id) {
+    if (send_codec() && send_codec()->codec.id == codec.id) {
       // Put the current send codec to the front of the codecs list.
-      RTC_DCHECK_EQ(codec.name, send_codec_->codec.name);
+      RTC_DCHECK_EQ(codec.name, send_codec()->codec.name);
       rtp_params.codecs.insert(rtp_params.codecs.begin(),
                                codec.ToCodecParameters());
     } else {
@@ -1286,11 +1286,11 @@ void WebRtcVideoChannel::SetReceiverReportSsrc(uint32_t ssrc) {
 
 bool WebRtcVideoChannel::GetSendCodec(VideoCodec* codec) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  if (!send_codec_) {
+  if (!send_codec()) {
     RTC_LOG(LS_VERBOSE) << "GetSendCodec: No send codec set.";
     return false;
   }
-  *codec = send_codec_->codec;
+  *codec = send_codec()->codec;
   return true;
 }
 
@@ -1312,7 +1312,7 @@ bool WebRtcVideoChannel::SetSend(bool send) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   TRACE_EVENT0("webrtc", "WebRtcVideoChannel::SetSend");
   RTC_LOG(LS_VERBOSE) << "SetSend: " << (send ? "true" : "false");
-  if (send && !send_codec_) {
+  if (send && !send_codec()) {
     RTC_DLOG(LS_ERROR) << "SetSend(true) called before setting codec.";
     return false;
   }
@@ -1408,7 +1408,7 @@ bool WebRtcVideoChannel::AddSendStream(const StreamParams& sp) {
   WebRtcVideoSendStream* stream = new WebRtcVideoSendStream(
       call_, sp, std::move(config), default_send_options_,
       video_config_.enable_cpu_adaptation, bitrate_config_.max_bitrate_bps,
-      send_codec_, send_rtp_extensions_, send_params_);
+      send_codec(), send_rtp_extensions_, send_params_);
 
   uint32_t ssrc = sp.first_ssrc();
   RTC_DCHECK(ssrc != 0);
@@ -1558,16 +1558,17 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
     config->rtp.rtcp_mode = send_params_.rtcp.reduced_size
                                 ? webrtc::RtcpMode::kReducedSize
                                 : webrtc::RtcpMode::kCompound;
+    // rtx-time (RFC 4588) is a declarative attribute similar to rtcp-rsize and
+    // determined by the sender / send codec.
+    if (send_codec() && send_codec()->rtx_time) {
+      config->rtp.nack.rtp_history_ms = *send_codec()->rtx_time;
+    }
   } else {
-    // The mode is determined by a call to the configuration function.
+    // The mode and rtx time is determined by a call to the configuration
+    // function.
     config->rtp.rtcp_mode = rtp_config_.rtcp_mode;
   }
 
-  // rtx-time (RFC 4588) is a declarative attribute similar to rtcp-rsize and
-  // determined by the sender / send codec.
-  if (send_codec_ && send_codec_->rtx_time) {
-    config->rtp.nack.rtp_history_ms = *send_codec_->rtx_time;
-  }
   sp.GetFidSsrc(ssrc, &config->rtp.rtx_ssrc);
 
   // TODO(brandtr): Generalize when we add support for multistream protection.
@@ -1765,7 +1766,7 @@ void WebRtcVideoChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
 void WebRtcVideoChannel::FillSendCodecStats(
     VideoMediaSendInfo* video_media_info) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  if (!send_codec_) {
+  if (!send_codec()) {
     return;
   }
   // Note: since RTP stats don't account for RTX and FEC separately (see
@@ -1773,7 +1774,7 @@ void WebRtcVideoChannel::FillSendCodecStats(
   // we can omit the codec information for those here and only insert the
   // primary codec that is being used to send here.
   video_media_info->send_codecs.insert(std::make_pair(
-      send_codec_->codec.id, send_codec_->codec.ToCodecParameters()));
+      send_codec()->codec.id, send_codec()->codec.ToCodecParameters()));
 }
 
 void WebRtcVideoChannel::FillReceiveCodecStats(
