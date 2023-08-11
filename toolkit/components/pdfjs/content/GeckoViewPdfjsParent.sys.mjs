@@ -262,7 +262,9 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
       case "PDFJS:Parent:saveURL":
         return this.#save(aMsg);
       case "PDFJS:Parent:getNimbus":
-        return this.#getNimbus();
+        return this.#getExperimentFeature();
+      case "PDFJS:Parent:recordExposure":
+        return this.#recordExposure();
       default:
         break;
     }
@@ -326,21 +328,32 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
     this.#fileSaver.save(data);
   }
 
-  async #getNimbus() {
+  async #getExperimentFeature() {
     let result = null;
     try {
-      result = await this.eventDispatcher.sendRequestForResult({
-        type: "GeckoView:GetNimbusFeature",
-        featureId: "pdfjs",
-      });
+      const experimentActor = this.window.moduleManager.getActor(
+        "GeckoViewExperimentDelegate"
+      );
+      result = await experimentActor.getExperimentFeature("pdfjs");
     } catch (e) {
-      warn`Cannot get Nimbus: ${e}`;
+      warn`Cannot get experiment feature: ${e}`;
     }
     this.browser.sendMessageToActor(
       "PDFJS:Child:getNimbus",
       result,
       "GeckoViewPdfjs"
     );
+  }
+
+  async #recordExposure() {
+    try {
+      const experimentActor = this.window.moduleManager.getActor(
+        "GeckoViewExperimentDelegate"
+      );
+      experimentActor.recordExposure("pdfjs");
+    } catch (e) {
+      warn`Cannot record experiment exposure: ${e}`;
+    }
   }
 }
 
