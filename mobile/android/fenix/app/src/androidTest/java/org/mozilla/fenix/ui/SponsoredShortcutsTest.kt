@@ -49,6 +49,7 @@ class SponsoredShortcutsTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729331
     // Expected for en-us defaults
     @SmokeTest
     @Test
@@ -67,6 +68,7 @@ class SponsoredShortcutsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729338
     @Test
     fun openSponsoredShortcutTest() {
         homeScreen {
@@ -76,8 +78,9 @@ class SponsoredShortcutsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729334
     @Test
-    fun openSponsoredShortcutInPrivateBrowsingTest() {
+    fun openSponsoredShortcutInPrivateTabTest() {
         homeScreen {
             sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
         }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
@@ -86,9 +89,10 @@ class SponsoredShortcutsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729335
     @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25926")
     @Test
-    fun verifySponsorsAndPrivacyLinkTest() {
+    fun openSponsorsAndYourPrivacyOptionTest() {
         homeScreen {
             sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
         }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
@@ -97,9 +101,10 @@ class SponsoredShortcutsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729336
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
-    fun verifySponsoredShortcutsSettingsOptionTest() {
+    fun openSponsoredShortcutsSettingsOptionTest() {
         homeScreen {
             sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
         }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
@@ -108,6 +113,7 @@ class SponsoredShortcutsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729337
     @Test
     fun verifySponsoredShortcutsDetailsTest() {
         homeScreen {
@@ -119,6 +125,7 @@ class SponsoredShortcutsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729328
     // 1 sponsored shortcut should be displayed if there are 7 pinned top sites
     @Test
     fun verifySponsoredShortcutsListWithSevenPinnedSitesTest() {
@@ -169,6 +176,7 @@ class SponsoredShortcutsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1729329
     // No sponsored shortcuts should be displayed if there are 8 pinned top sites
     @Test
     fun verifySponsoredShortcutsListWithEightPinnedSitesTest() {
