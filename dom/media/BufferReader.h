@@ -309,6 +309,17 @@ class MOZ_RAII BufferReader {
     return true;
   }
 
+  template <typename T>
+  mozilla::Result<Span<const T>, nsresult> ReadSpan(size_t aLength) {
+    auto ptr = Read(aLength * sizeof(T));
+    if (!ptr) {
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error,
+              ("%s: failure", __func__));
+      return mozilla::Err(NS_ERROR_FAILURE);
+    }
+    return Span(reinterpret_cast<const T*>(ptr), aLength);
+  }
+
  private:
   const uint8_t* mPtr;
   size_t mRemaining;
