@@ -619,7 +619,7 @@ nsresult NotifySecondaryKeyPermissionUpdateInContentProcess(
       }
       bool thirdParty;
       nsresult rv = aTopPrincipal->IsThirdPartyURI(topURI, &thirdParty);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (NS_FAILED(rv)) {
         continue;
       }
       if (!thirdParty) {
