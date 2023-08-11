@@ -563,10 +563,7 @@ static Result<CombinedBufferLayout, nsCString> ParseVideoFrameCopyToOptions(
   MOZ_TRY_VAR(parsedRect, ParseVisibleRect(aVisibleRect, overrideRect,
                                            aCodedSize, aFormat));
 
-  const Sequence<PlaneLayout>* optLayout = nullptr;
-  if (aOptions.mLayout.WasPassed()) {
-    optLayout = &aOptions.mLayout.Value();
-  }
+  const Sequence<PlaneLayout>* optLayout = OptionalToPointer(aOptions.mLayout);
 
   return ComputeLayoutAndAllocationSize(parsedRect, aFormat, optLayout);
 }
@@ -903,10 +900,7 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
   MOZ_TRY_VAR(parsedRect, ParseVisibleRect(gfx::IntRect({0, 0}, codedSize),
                                            visibleRect, codedSize, format));
 
-  const Sequence<PlaneLayout>* optLayout = nullptr;
-  if (aInit.mLayout.WasPassed()) {
-    optLayout = &aInit.mLayout.Value();
-  }
+  const Sequence<PlaneLayout>* optLayout = OptionalToPointer(aInit.mLayout);
 
   CombinedBufferLayout combinedLayout;
   MOZ_TRY_VAR(combinedLayout,
@@ -936,9 +930,8 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
 
   Maybe<uint64_t> duration = OptionalToMaybe(aInit.mDuration);
 
-  VideoColorSpaceInit colorSpace = PickColorSpace(
-      aInit.mColorSpace.WasPassed() ? &aInit.mColorSpace.Value() : nullptr,
-      aInit.mFormat);
+  VideoColorSpaceInit colorSpace =
+      PickColorSpace(OptionalToPointer(aInit.mColorSpace), aInit.mFormat);
 
   RefPtr<layers::Image> data;
   MOZ_TRY_VAR(data,

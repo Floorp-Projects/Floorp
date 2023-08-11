@@ -49,6 +49,11 @@ Maybe<T> OptionalToMaybe(const Optional<T>& aOptional) {
 }
 
 template <typename T>
+const T* OptionalToPointer(const Optional<T>& aOptional) {
+  return aOptional.WasPassed() ? &aOptional.Value() : nullptr;
+}
+
+template <typename T>
 Maybe<T> NullableToMaybe(const Nullable<T>& aNullable) {
   if (!aNullable.IsNull()) {
     return Some(aNullable.Value());
