@@ -20,6 +20,11 @@ const TEST_REDIRECT_TOP_PAGE =
   TEST_3RD_PARTY_DOMAIN + TEST_PATH + "redirect.sjs?" + TEST_TOP_PAGE;
 const TEST_REDIRECT_3RD_PARTY_PAGE =
   TEST_DOMAIN + TEST_PATH + "redirect.sjs?" + TEST_3RD_PARTY_PARTITIONED_PAGE;
+const TEST_REDIRECT_ANOTHER_3RD_PARTY_PAGE =
+  TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTPS +
+  TEST_PATH +
+  "redirect.sjs?" +
+  TEST_TOP_PAGE_HTTPS;
 
 const COLLECTION_NAME = "partitioning-exempt-urls";
 const EXCEPTION_LIST_PREF_NAME = "privacy.restrict3rdpartystorage.skip_list";
@@ -259,9 +264,49 @@ async function runTestRedirectHeuristic(disableHeuristics) {
   await cleanup();
 }
 
+async function runTestRedirectHeuristicWithSameSite() {
+  info("Starting Dynamic FPI Redirect Between Same Site Heuristic test...");
+
+  info("Creating a new tab");
+  let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE_HTTPS);
+  gBrowser.selectedTab = tab;
+
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+
+  info(
+    `Redirecting from ${TEST_DOMAIN_HTTPS} to ${TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTPS}`
+  );
+
+  await redirectWithUserInteraction(
+    browser,
+    TEST_REDIRECT_ANOTHER_3RD_PARTY_PAGE,
+    TEST_TOP_PAGE_HTTPS
+  );
+
+  info("Checking if a permission was set between the redirect");
+
+  const principal = browser.contentPrincipal;
+
+  is(
+    Services.perms.testPermissionFromPrincipal(
+      principal,
+      `3rdPartyStorage^${TEST_ANOTHER_3RD_PARTY_DOMAIN_HTTPS.slice(0, -1)}`
+    ),
+    Services.perms.UNKNOWN_ACTION,
+    "No permission was set for same-site redirect"
+  );
+
+  info("Removing the tab");
+  BrowserTestUtils.removeTab(tab);
+
+  await cleanup();
+}
 add_task(async function testRedirectHeuristic() {
   await runTestRedirectHeuristic(false);
 });
+
+add_task(runTestRedirectHeuristicWithSameSite);
 
 add_task(async function testRedirectHeuristicDisabled() {
   await runTestRedirectHeuristic(true);

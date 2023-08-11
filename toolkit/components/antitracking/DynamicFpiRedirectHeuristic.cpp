@@ -318,6 +318,19 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     return;
   }
 
+  // Check if the new principal is a third party principal
+  bool aResult;
+  rv = newPrincipal->IsThirdPartyPrincipal(oldPrincipal, &aResult);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Error while checking if new principal is third party"));
+    return;
+  }
+  if (!aResult) {
+    LOG(("New principal is a first party principal"));
+    return;
+  }
+
   LOG(("Adding a first-party storage exception for %s...",
        PromiseFlatCString(newOrigin).get()));
 
