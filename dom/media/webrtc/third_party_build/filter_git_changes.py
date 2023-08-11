@@ -38,13 +38,13 @@ def filter_git_changes(github_path, commit_sha, diff_filter):
     # First, search for changes in files that are specifically included.
     # Do this first, because some of these files might be filtered out
     # by the exclude list.
-    regex_includes = "|".join(["^.\t{}".format(i) for i in include_list])
+    regex_includes = "|".join(["^.\t{}$".format(i) for i in include_list])
     included_files = [
         path for path in changed_files if re.findall(regex_includes, path)
     ]
 
     # Convert the exclude list to a regex string.
-    regex_excludes = "|".join(["^.\t{}".format(i) for i in exclude_list])
+    regex_excludes = "|".join(["^.\t{}$".format(i) for i in exclude_list])
 
     # Filter out the excluded files/paths.
     files_not_excluded = [
