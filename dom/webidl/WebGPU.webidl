@@ -1122,7 +1122,7 @@ enum GPUQueryType {
 interface GPUCanvasContext {
     readonly attribute (HTMLCanvasElement or OffscreenCanvas) canvas;
 
-    undefined configure(GPUCanvasConfiguration descriptor);
+    undefined configure(GPUCanvasConfiguration configuration);
     undefined unconfigure();
 
     [Throws]
