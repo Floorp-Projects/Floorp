@@ -23,6 +23,7 @@ class ShaderModule final : public ObjectBase, public ChildOf<Device> {
   ShaderModule(Device* const aParent, RawId aId,
                const RefPtr<dom::Promise>& aCompilationInfo);
   already_AddRefed<dom::Promise> CompilationInfo(ErrorResult& aRv);
+  already_AddRefed<dom::Promise> GetCompilationInfo(ErrorResult& aRv);
 
   const RawId mId;
 
