@@ -22,11 +22,11 @@
 
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory();
+		module.exports = root.pdfjsWorker = factory();
 	else if(typeof define === 'function' && define.amd)
-		define("pdfjs-dist/build/pdf.worker", [], factory);
+		define("pdfjs-dist/build/pdf.worker", [], () => { return (root.pdfjsWorker = factory()); });
 	else if(typeof exports === 'object')
-		exports["pdfjs-dist/build/pdf.worker"] = factory();
+		exports["pdfjs-dist/build/pdf.worker"] = root.pdfjsWorker = factory();
 	else
 		root["pdfjs-dist/build/pdf.worker"] = root.pdfjsWorker = factory();
 })(globalThis, () => {
@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.10.27';
+    const workerVersion = '3.10.70';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -1151,6 +1151,9 @@ class FeatureTest {
       isWin: navigator.platform.includes("Win"),
       isMac: navigator.platform.includes("Mac")
     });
+  }
+  static get isCSSRoundSupported() {
+    return shadow(this, "isCSSRoundSupported", globalThis.CSS?.supports?.("width: round(1.5px, 1px)"));
   }
 }
 exports.FeatureTest = FeatureTest;
@@ -2793,9 +2796,7 @@ class ChunkedStreamManager {
   }
   abort(reason) {
     this.aborted = true;
-    if (this.pdfNetworkStream) {
-      this.pdfNetworkStream.cancelAllRequests(reason);
-    }
+    this.pdfNetworkStream?.cancelAllRequests(reason);
     for (const capability of this._promisesByRequest.values()) {
       capability.reject(reason);
     }
@@ -4139,7 +4140,7 @@ class PDFDocument {
       const partName = (0, _util.stringToPDFString)(field.get("T"));
       name = name === "" ? partName : `${name}.${partName}`;
     }
-    if (!field.has("Kids") && /\[\d+\]$/.test(name)) {
+    if (!field.has("Kids") && field.has("T") && /\[\d+\]$/.test(name)) {
       name = name.substring(0, name.lastIndexOf("["));
     }
     if (!promises.has(name)) {
@@ -4338,15 +4339,31 @@ class AnnotationFactory {
         return -1;
       }
       const pageRef = annotDict.getRaw("P");
-      if (!(pageRef instanceof _primitives.Ref)) {
+      if (pageRef instanceof _primitives.Ref) {
+        try {
+          const pageIndex = await pdfManager.ensureCatalog("getPageIndex", [pageRef]);
+          return pageIndex;
+        } catch (ex) {
+          (0, _util.info)(`_getPageIndex -- not a valid page reference: "${ex}".`);
+        }
+      }
+      if (annotDict.has("Kids")) {
         return -1;
       }
-      const pageIndex = await pdfManager.ensureCatalog("getPageIndex", [pageRef]);
-      return pageIndex;
+      const numPages = await pdfManager.ensureDoc("numPages");
+      for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
+        const page = await pdfManager.getPage(pageIndex);
+        const annotations = await pdfManager.ensure(page, "annotations");
+        for (const annotRef of annotations) {
+          if (annotRef instanceof _primitives.Ref && (0, _primitives.isRefsEqual)(annotRef, ref)) {
+            return pageIndex;
+          }
+        }
+      }
     } catch (ex) {
       (0, _util.warn)(`_getPageIndex: "${ex}".`);
-      return -1;
     }
+    return -1;
   }
   static generateImages(annotations, xref, isOffscreenCanvasSupported) {
     if (!isOffscreenCanvasSupported) {
@@ -4388,7 +4405,8 @@ class AnnotationFactory {
             baseFont.set("Encoding", _primitives.Name.get("WinAnsiEncoding"));
             const buffer = [];
             baseFontRef = xref.getNewTemporaryRef();
-            await (0, _writer.writeObject)(baseFontRef, baseFont, buffer, null);
+            const transform = xref.encrypt ? xref.encrypt.createCipherTransform(baseFontRef.num, baseFontRef.gen) : null;
+            await (0, _writer.writeObject)(baseFontRef, baseFont, buffer, transform);
             dependencies.push({
               ref: baseFontRef,
               data: buffer.join("")
@@ -4416,7 +4434,8 @@ class AnnotationFactory {
             const buffer = [];
             if (smaskStream) {
               const smaskRef = xref.getNewTemporaryRef();
-              await (0, _writer.writeObject)(smaskRef, smaskStream, buffer, null);
+              const transform = xref.encrypt ? xref.encrypt.createCipherTransform(smaskRef.num, smaskRef.gen) : null;
+              await (0, _writer.writeObject)(smaskRef, smaskStream, buffer, transform);
               dependencies.push({
                 ref: smaskRef,
                 data: buffer.join("")
@@ -4425,7 +4444,8 @@ class AnnotationFactory {
               buffer.length = 0;
             }
             const imageRef = image.imageRef = xref.getNewTemporaryRef();
-            await (0, _writer.writeObject)(imageRef, imageStream, buffer, null);
+            const transform = xref.encrypt ? xref.encrypt.createCipherTransform(imageRef.num, imageRef.gen) : null;
+            await (0, _writer.writeObject)(imageRef, imageStream, buffer, transform);
             dependencies.push({
               ref: imageRef,
               data: buffer.join("")
@@ -5261,7 +5281,7 @@ class WidgetAnnotation extends Annotation {
     if (data.fieldName === undefined) {
       data.fieldName = this._constructFieldName(dict);
     }
-    if (data.fieldName && /\[\d+\]$/.test(data.fieldName) && !dict.has("Kids")) {
+    if (data.fieldName && /\[\d+\]$/.test(data.fieldName) && !dict.has("Kids") && dict.has("T")) {
       data.baseFieldName = data.fieldName.substring(0, data.fieldName.lastIndexOf("["));
     }
     if (data.actions === undefined) {
@@ -7387,6 +7407,8 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
     this.data.file = file.serializable;
     const name = dict.get("Name");
     this.data.name = name instanceof _primitives.Name ? (0, _util.stringToPDFString)(name.name) : "PushPin";
+    const fillAlpha = dict.get("ca");
+    this.data.fillAlpha = typeof fillAlpha === "number" && fillAlpha >= 0 && fillAlpha <= 1 ? fillAlpha : null;
   }
 }
 
@@ -41242,9 +41264,6 @@ async function writeDict(dict, buffer, transform) {
 }
 async function writeStream(stream, buffer, transform) {
   let string = stream.getString();
-  if (transform !== null) {
-    string = transform.encryptString(string);
-  }
   const {
     dict
   } = stream;
@@ -41279,6 +41298,9 @@ async function writeStream(stream, buffer, transform) {
     } catch (ex) {
       (0, _util.info)(`writeStream - cannot compress data: "${ex}".`);
     }
+  }
+  if (transform !== null) {
+    string = transform.encryptString(string);
   }
   dict.set("Length", string.length);
   await writeDict(dict, buffer, transform);
@@ -57807,8 +57829,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.10.27';
-const pdfjsBuild = '399475247';
+const pdfjsVersion = '3.10.70';
+const pdfjsBuild = '1d523d3ec';
 })();
 
 /******/ 	return __webpack_exports__;
