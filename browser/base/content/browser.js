@@ -863,7 +863,14 @@ const gClickAndHoldListenersOnElement = {
       aEvent.button == 0 &&
       aEvent.target == aEvent.currentTarget &&
       !aEvent.currentTarget.open &&
-      !aEvent.currentTarget.disabled
+      !aEvent.currentTarget.disabled &&
+      // When menupopup is not hidden and we receive
+      // a click event, it means the mousedown occurred
+      // on aEvent.currentTarget and mouseup occurred on
+      // aEvent.currentTarget.menupopup, we don't
+      // need to handle the click event as menupopup
+      // handled mouseup event already.
+      aEvent.currentTarget.menupopup.hidden
     ) {
       let cmdEvent = document.createEvent("xulcommandevent");
       cmdEvent.initCommandEvent(
