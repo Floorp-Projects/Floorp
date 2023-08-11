@@ -10,22 +10,18 @@
 
 #include "nsUserIdleService.h"
 #include "mozilla/AppShutdown.h"
-#ifdef MOZ_X11
-#  include <X11/Xlib.h>
-#  include <X11/Xutil.h>
-#  include <gdk/gdkx.h>
-#endif
+#include "mozilla/UniquePtr.h"
 
-#ifdef MOZ_X11
-typedef struct {
-  Window window;               // Screen saver window
-  int state;                   // ScreenSaver(Off,On,Disabled)
-  int kind;                    // ScreenSaver(Blanked,Internal,External)
-  unsigned long til_or_since;  // milliseconds since/til screensaver kicks in
-  unsigned long idle;          // milliseconds idle
-  unsigned long event_mask;    // event stuff
-} XScreenSaverInfo;
-#endif
+class UserIdleServiceImpl {
+ public:
+  virtual bool PollIdleTime(uint32_t* aIdleTime) = 0;
+
+  bool IsAvailable() const { return mInitialized; }
+  virtual ~UserIdleServiceImpl() = default;
+
+ protected:
+  bool mInitialized = false;
+};
 
 class nsUserIdleServiceGTK : public nsUserIdleService {
  public:
@@ -48,14 +44,13 @@ class nsUserIdleServiceGTK : public nsUserIdleService {
     return idleService.forget();
   }
 
- private:
-  ~nsUserIdleServiceGTK();
-#ifdef MOZ_X11
-  XScreenSaverInfo* mXssInfo;
-#endif
-
  protected:
   nsUserIdleServiceGTK();
+
+ private:
+  ~nsUserIdleServiceGTK(){};
+
+  mozilla::UniquePtr<UserIdleServiceImpl> mIdleService;
 };
 
 #endif  // nsUserIdleServiceGTK_h__

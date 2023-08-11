@@ -13,113 +13,132 @@
 #include "mozilla/Logging.h"
 #include "WidgetUtilsGtk.h"
 
-using mozilla::LogLevel;
+#ifdef MOZ_X11
+#  include <X11/Xlib.h>
+#  include <X11/Xutil.h>
+#  include <gdk/gdkx.h>
+#endif
 
+using mozilla::LogLevel;
 static mozilla::LazyLogModule sIdleLog("nsIUserIdleService");
 
 #ifdef MOZ_X11
+typedef struct {
+  Window window;               // Screen saver window
+  int state;                   // ScreenSaver(Off,On,Disabled)
+  int kind;                    // ScreenSaver(Blanked,Internal,External)
+  unsigned long til_or_since;  // milliseconds since/til screensaver kicks in
+  unsigned long idle;          // milliseconds idle
+  unsigned long event_mask;    // event stuff
+} XScreenSaverInfo;
+
 typedef bool (*_XScreenSaverQueryExtension_fn)(Display* dpy, int* event_base,
                                                int* error_base);
-
 typedef XScreenSaverInfo* (*_XScreenSaverAllocInfo_fn)(void);
-
 typedef void (*_XScreenSaverQueryInfo_fn)(Display* dpy, Drawable drw,
                                           XScreenSaverInfo* info);
 
-static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nullptr;
-static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nullptr;
-static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nullptr;
-#endif
-static bool sInitialized = false;
+class UserIdleServiceX11 : public UserIdleServiceImpl {
+ public:
+  bool PollIdleTime(uint32_t* aIdleTime) override {
+    MOZ_ASSERT(!mInitialized);
 
-static void Initialize() {
-#ifdef MOZ_X11
-  if (!mozilla::widget::GdkIsX11Display()) {
-    return;
-  }
+    // Ask xscreensaver about idle time:
+    *aIdleTime = 0;
 
-  // This will leak - See comments in ~nsUserIdleServiceGTK().
-  PRLibrary* xsslib = PR_LoadLibrary("libXss.so.1");
-  if (!xsslib)  // ouch.
-  {
-    MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to find libXss.so!\n"));
-    return;
-  }
+    // We might not have a display (cf. in xpcshell)
+    Display* dplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
+    if (!dplay) {
+      MOZ_LOG(sIdleLog, LogLevel::Warning, ("No display found!\n"));
+      return false;
+    }
 
-  _XSSQueryExtension = (_XScreenSaverQueryExtension_fn)PR_FindFunctionSymbol(
-      xsslib, "XScreenSaverQueryExtension");
-  _XSSAllocInfo = (_XScreenSaverAllocInfo_fn)PR_FindFunctionSymbol(
-      xsslib, "XScreenSaverAllocInfo");
-  _XSSQueryInfo = (_XScreenSaverQueryInfo_fn)PR_FindFunctionSymbol(
-      xsslib, "XScreenSaverQueryInfo");
-
-  if (!_XSSQueryExtension)
+    int event_base, error_base;
+    if (mXSSQueryExtension(dplay, &event_base, &error_base)) {
+      if (!mXssInfo) mXssInfo = mXSSAllocInfo();
+      if (!mXssInfo) return false;
+      mXSSQueryInfo(dplay, GDK_ROOT_WINDOW(), mXssInfo);
+      *aIdleTime = mXssInfo->idle;
+      MOZ_LOG(sIdleLog, LogLevel::Info,
+              ("UserIdleServiceX11::PollIdleTime() %d\n", *aIdleTime));
+      return true;
+    }
+    // If we get here, we couldn't get to XScreenSaver:
     MOZ_LOG(sIdleLog, LogLevel::Warning,
-            ("Failed to get XSSQueryExtension!\n"));
-  if (!_XSSAllocInfo)
-    MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to get XSSAllocInfo!\n"));
-  if (!_XSSQueryInfo)
-    MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to get XSSQueryInfo!\n"));
+            ("XSSQueryExtension returned false!\n"));
+    return false;
+  }
 
-  sInitialized = true;
-#endif
-}
+  UserIdleServiceX11() {
+    MOZ_ASSERT(mozilla::widget::GdkIsX11Display());
 
-#ifdef MOZ_X11
-nsUserIdleServiceGTK::nsUserIdleServiceGTK() : mXssInfo(nullptr) {
-#else
-nsUserIdleServiceGTK::nsUserIdleServiceGTK() {
-#endif
-  Initialize();
-}
+    // This will leak - See comments in ~nsUserIdleServiceGTK().
+    PRLibrary* xsslib = PR_LoadLibrary("libXss.so.1");
+    if (!xsslib)  // ouch.
+    {
+      MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to find libXss.so!\n"));
+      return;
+    }
 
-nsUserIdleServiceGTK::~nsUserIdleServiceGTK() {
-#ifdef MOZ_X11
-  if (mXssInfo) XFree(mXssInfo);
-#endif
+    mXSSQueryExtension = (_XScreenSaverQueryExtension_fn)PR_FindFunctionSymbol(
+        xsslib, "XScreenSaverQueryExtension");
+    mXSSAllocInfo = (_XScreenSaverAllocInfo_fn)PR_FindFunctionSymbol(
+        xsslib, "XScreenSaverAllocInfo");
+    mXSSQueryInfo = (_XScreenSaverQueryInfo_fn)PR_FindFunctionSymbol(
+        xsslib, "XScreenSaverQueryInfo");
+
+    if (!mXSSQueryExtension) {
+      MOZ_LOG(sIdleLog, LogLevel::Warning,
+              ("Failed to get XSSQueryExtension!\n"));
+    }
+    if (!mXSSAllocInfo) {
+      MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to get XSSAllocInfo!\n"));
+    }
+    if (!mXSSQueryInfo) {
+      MOZ_LOG(sIdleLog, LogLevel::Warning, ("Failed to get XSSQueryInfo!\n"));
+    }
+
+    mInitialized = mXSSQueryExtension && mXSSAllocInfo && mXSSQueryInfo;
+  }
+
+  ~UserIdleServiceX11() {
+#  ifdef MOZ_X11
+    if (mXssInfo) {
+      XFree(mXssInfo);
+    }
+#  endif
 
 // It is not safe to unload libXScrnSaver until each display is closed because
 // the library registers callbacks through XESetCloseDisplay (Bug 397607).
 // (Also the library and its functions are scoped for the file not the object.)
-#if 0
-    if (xsslib) {
-        PR_UnloadLibrary(xsslib);
-        xsslib = nullptr;
-    }
+#  if 0
+        if (xsslib) {
+            PR_UnloadLibrary(xsslib);
+            xsslib = nullptr;
+        }
+#  endif
+  }
+
+ private:
+  XScreenSaverInfo* mXssInfo = nullptr;
+  _XScreenSaverQueryExtension_fn mXSSQueryExtension = nullptr;
+  _XScreenSaverAllocInfo_fn mXSSAllocInfo = nullptr;
+  _XScreenSaverQueryInfo_fn mXSSQueryInfo = nullptr;
+};
 #endif
+
+nsUserIdleServiceGTK::nsUserIdleServiceGTK() {
+  mIdleService = mozilla::MakeUnique<UserIdleServiceX11>();
+  if (mIdleService->IsAvailable()) {
+    return;
+  }
+  // TODO: Gnome/KDE services.
+  mIdleService = nullptr;
 }
 
 bool nsUserIdleServiceGTK::PollIdleTime(uint32_t* aIdleTime) {
-#ifdef MOZ_X11
-  if (!sInitialized) {
-    // For some reason, we could not find xscreensaver.
+  if (!mIdleService) {
     return false;
   }
-
-  // Ask xscreensaver about idle time:
-  *aIdleTime = 0;
-
-  // We might not have a display (cf. in xpcshell)
-  Display* dplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
-  if (!dplay) {
-    MOZ_LOG(sIdleLog, LogLevel::Warning, ("No display found!\n"));
-    return false;
-  }
-
-  if (!_XSSQueryExtension || !_XSSAllocInfo || !_XSSQueryInfo) {
-    return false;
-  }
-
-  int event_base, error_base;
-  if (_XSSQueryExtension(dplay, &event_base, &error_base)) {
-    if (!mXssInfo) mXssInfo = _XSSAllocInfo();
-    if (!mXssInfo) return false;
-    _XSSQueryInfo(dplay, GDK_ROOT_WINDOW(), mXssInfo);
-    *aIdleTime = mXssInfo->idle;
-    return true;
-  }
-  // If we get here, we couldn't get to XScreenSaver:
-  MOZ_LOG(sIdleLog, LogLevel::Warning, ("XSSQueryExtension returned false!\n"));
-#endif
-  return false;
+  return mIdleService->PollIdleTime(aIdleTime);
 }
