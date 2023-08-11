@@ -2068,16 +2068,37 @@ class RuleViewTool {
     this.onSelected = this.onSelected.bind(this);
     this.onViewRefreshed = this.onViewRefreshed.bind(this);
 
-    this.view.on("ruleview-refreshed", this.onViewRefreshed);
-    this.inspector.selection.on("detached-front", this.onDetachedFront);
-    this.inspector.selection.on("new-node-front", this.onSelected);
-    this.inspector.selection.on("pseudoclass", this.refresh);
+    this.#abortController = new window.AbortController();
+    const { signal } = this.#abortController;
+    const baseEventConfig = { signal };
+
+    this.view.on("ruleview-refreshed", this.onViewRefreshed, baseEventConfig);
+    this.inspector.selection.on(
+      "detached-front",
+      this.onDetachedFront,
+      baseEventConfig
+    );
+    this.inspector.selection.on(
+      "new-node-front",
+      this.onSelected,
+      baseEventConfig
+    );
+    this.inspector.selection.on("pseudoclass", this.refresh, baseEventConfig);
     this.inspector.ruleViewSideBar.on(
       "ruleview-selected",
-      this.onPanelSelected
+      this.onPanelSelected,
+      baseEventConfig
     );
-    this.inspector.sidebar.on("ruleview-selected", this.onPanelSelected);
-    this.inspector.styleChangeTracker.on("style-changed", this.refresh);
+    this.inspector.sidebar.on(
+      "ruleview-selected",
+      this.onPanelSelected,
+      baseEventConfig
+    );
+    this.inspector.styleChangeTracker.on(
+      "style-changed",
+      this.refresh,
+      baseEventConfig
+    );
 
     this.inspector.commands.resourceCommand.watchResources(
       [
@@ -2094,6 +2115,8 @@ class RuleViewTool {
     // notified when the ruleview was first populated to match the initial selected node.
     this.readyPromise = this.onSelected();
   }
+
+  #abortController;
 
   isPanelVisible() {
     if (!this.view) {
@@ -2193,12 +2216,9 @@ class RuleViewTool {
   }
 
   destroy() {
-    this.inspector.styleChangeTracker.off("style-changed", this.refresh);
-    this.inspector.selection.off("detached-front", this.onDetachedFront);
-    this.inspector.selection.off("pseudoclass", this.refresh);
-    this.inspector.selection.off("new-node-front", this.onSelected);
-    this.inspector.currentTarget.off("navigate", this.clearUserProperties);
-    this.inspector.sidebar.off("ruleview-selected", this.onPanelSelected);
+    if (this.#abortController) {
+      this.#abortController.abort();
+    }
 
     this.inspector.commands.resourceCommand.unwatchResources(
       [this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
@@ -2207,11 +2227,14 @@ class RuleViewTool {
       }
     );
 
-    this.view.off("ruleview-refreshed", this.onViewRefreshed);
-
     this.view.destroy();
 
-    this.view = this.document = this.inspector = this.readyPromise = null;
+    this.view =
+      this.document =
+      this.inspector =
+      this.readyPromise =
+      this.#abortController =
+        null;
   }
 }
 
