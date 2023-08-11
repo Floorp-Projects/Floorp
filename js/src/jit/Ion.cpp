@@ -522,12 +522,8 @@ bool RecompileInfo::traceWeak(JSTracer* trc) {
 void JitZone::traceWeak(JSTracer* trc, Zone* zone) {
   MOZ_ASSERT(this == zone->jitZone());
 
-#ifdef DEBUG
   // Any outstanding compilations should have been cancelled by the GC.
-  for (RealmsInZoneIter realm(zone); !realm.done(); realm.next()) {
-    MOZ_ASSERT(!HasOffThreadIonCompile(realm));
-  }
-#endif
+  MOZ_ASSERT(!HasOffThreadIonCompile(zone));
 
   for (WeakHeapPtr<JitCode*>& stub : stubs_) {
     TraceWeakEdge(trc, &stub, "JitZone::stubs_");
@@ -2426,11 +2422,7 @@ static void InvalidateActivation(JS::GCContext* gcx,
 
 void jit::InvalidateAll(JS::GCContext* gcx, Zone* zone) {
   // The caller should previously have cancelled off thread compilation.
-#ifdef DEBUG
-  for (RealmsInZoneIter realm(zone); !realm.done(); realm.next()) {
-    MOZ_ASSERT(!HasOffThreadIonCompile(realm));
-  }
-#endif
+  MOZ_ASSERT(!HasOffThreadIonCompile(zone));
   if (zone->isAtomsZone()) {
     return;
   }

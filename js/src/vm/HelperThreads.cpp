@@ -439,7 +439,7 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
 }
 
 #ifdef DEBUG
-bool js::HasOffThreadIonCompile(Realm* realm) {
+bool js::HasOffThreadIonCompile(Zone* zone) {
   AutoLockHelperThreadState lock;
 
   if (!HelperThreadState().isInitialized(lock)) {
@@ -450,14 +450,17 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
       HelperThreadState().ionWorklist(lock);
   for (size_t i = 0; i < worklist.length(); i++) {
     jit::IonCompileTask* task = worklist[i];
-    if (task->script()->realm() == realm) {
+    if (task->script()->zoneFromAnyThread() == zone) {
       return true;
     }
   }
 
   for (auto* helper : HelperThreadState().helperTasks(lock)) {
-    if (helper->is<jit::IonCompileTask>() &&
-        helper->as<jit::IonCompileTask>()->script()->realm() == realm) {
+    if (!helper->is<jit::IonCompileTask>()) {
+      continue;
+    }
+    JSScript* script = helper->as<jit::IonCompileTask>()->script();
+    if (script->zoneFromAnyThread() == zone) {
       return true;
     }
   }
@@ -466,15 +469,15 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
       HelperThreadState().ionFinishedList(lock);
   for (size_t i = 0; i < finished.length(); i++) {
     jit::IonCompileTask* task = finished[i];
-    if (task->script()->realm() == realm) {
+    if (task->script()->zoneFromAnyThread() == zone) {
       return true;
     }
   }
 
-  JSRuntime* rt = realm->runtimeFromMainThread();
+  JSRuntime* rt = zone->runtimeFromMainThread();
   jit::IonCompileTask* task = rt->jitRuntime()->ionLazyLinkList(rt).getFirst();
   while (task) {
-    if (task->script()->realm() == realm) {
+    if (task->script()->zone() == zone) {
       return true;
     }
     task = task->getNext();
