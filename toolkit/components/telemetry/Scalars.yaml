@@ -6259,10 +6259,11 @@ browser.searchinit:
     bug_numbers:
       - 1789438
       - 1811158
+      - 1846899
     description: >
       Records the number of secure (i.e., using https) OpenSearch search
       engines a given user has installed
-    expires: "119"
+    expires: "126"
     keyed: false
     kind: uint
     notification_emails:
@@ -6277,10 +6278,11 @@ browser.searchinit:
     bug_numbers:
       - 1789438
       - 1811158
+      - 1846899
     description: >
       Records the number of insecure (i.e., using http) OpenSearch search
       engines a given user has installed
-    expires: "119"
+    expires: "126"
     keyed: false
     kind: uint
     notification_emails:
@@ -6295,10 +6297,11 @@ browser.searchinit:
     bug_numbers:
       - 1789438
       - 1811158
+      - 1846899
     description: >
       Records the number of OpenSearch search engines with secure updates
       enabled (i.e., using https) a given user has installed
-    expires: "119"
+    expires: "126"
     keyed: false
     kind: uint
     notification_emails:
@@ -6313,10 +6316,11 @@ browser.searchinit:
     bug_numbers:
       - 1789438
       - 1811158
+      - 1846899
     description: >
       Records the number of OpenSearch search engines with insecure updates
       enabled (i.e., using http) a given user has installed
-    expires: "119"
+    expires: "126"
     keyed: false
     kind: uint
     notification_emails:
