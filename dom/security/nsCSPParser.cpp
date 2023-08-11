@@ -427,11 +427,6 @@ nsCSPBaseSrc* nsCSPParser::keywordSource() {
   }
 
   if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_INLINE)) {
-    nsWeakPtr ctx = mCSPContext->GetLoadingContext();
-    nsCOMPtr<Document> doc = do_QueryReferent(ctx);
-    if (doc) {
-      doc->SetHasUnsafeInlineCSP(true);
-    }
     // make sure script-src only contains 'unsafe-inline' once;
     // ignore duplicates and log warning
     if (mUnsafeInlineKeywordSrc) {
@@ -448,11 +443,6 @@ nsCSPBaseSrc* nsCSPParser::keywordSource() {
   }
 
   if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_EVAL)) {
-    nsWeakPtr ctx = mCSPContext->GetLoadingContext();
-    nsCOMPtr<Document> doc = do_QueryReferent(ctx);
-    if (doc) {
-      doc->SetHasUnsafeEvalCSP(true);
-    }
     mHasAnyUnsafeEval = true;
     return new nsCSPKeywordSrc(CSP_UTF16KeywordToEnum(mCurToken));
   }

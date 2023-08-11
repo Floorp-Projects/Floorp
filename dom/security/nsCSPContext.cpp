@@ -462,12 +462,6 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString, bool aReportOnly,
     }
 
     mPolicies.AppendElement(policy);
-
-    // set the flag on the document for CSP telemetry
-    nsCOMPtr<Document> doc = do_QueryReferent(mLoadingContext);
-    if (doc) {
-      doc->SetHasCSP(true);
-    }
   }
 
   return NS_OK;

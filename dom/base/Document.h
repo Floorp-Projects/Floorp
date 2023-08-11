@@ -1067,25 +1067,6 @@ class Document : public nsINode,
   void SetBidiOptions(uint32_t aBidiOptions) { mBidiOptions = aBidiOptions; }
 
   /**
-   * Set CSP flag for this document.
-   */
-  void SetHasCSP(bool aHasCSP) { mHasCSP = aHasCSP; }
-
-  /**
-   * Set unsafe-inline CSP flag for this document.
-   */
-  void SetHasUnsafeInlineCSP(bool aHasUnsafeInlineCSP) {
-    mHasUnsafeInlineCSP = aHasUnsafeInlineCSP;
-  }
-
-  /**
-   * Set unsafe-eval CSP flag for this document.
-   */
-  void SetHasUnsafeEvalCSP(bool aHasUnsafeEvalCSP) {
-    mHasUnsafeEvalCSP = aHasUnsafeEvalCSP;
-  }
-
-  /**
    * Returns true if the document holds a CSP
    * delivered through an HTTP Header.
    */
@@ -4678,15 +4659,6 @@ class Document : public nsINode,
   // True if an nsIAnimationObserver is perhaps attached to a node in the
   // document.
   bool mMayHaveAnimationObservers : 1;
-
-  // True if a document load has a CSP attached.
-  bool mHasCSP : 1;
-
-  // True if a document load has a CSP with unsafe-eval attached.
-  bool mHasUnsafeEvalCSP : 1;
-
-  // True if a document load has a CSP with unsafe-inline attached.
-  bool mHasUnsafeInlineCSP : 1;
 
   // True if the document has a CSP delivered throuh a header
   bool mHasCSPDeliveredThroughHeader : 1;
