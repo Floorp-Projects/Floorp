@@ -115,6 +115,12 @@ extern "C" bool FOG_TooLateToSend(void) {
   return AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownNetTeardown);
 }
 
+// This allows us to pass the configurable maximum ping limit (in pings per
+// minute) to Rust. Default value is 15.
+extern "C" uint32_t FOG_MaxPingLimit(void) {
+  return NimbusFeatures::GetInt("glean"_ns, "gleanMaxPingsPerMinute"_ns, 15);
+}
+
 NS_IMETHODIMP
 FOG::InitializeFOG(const nsACString& aDataPathOverride,
                    const nsACString& aAppIdOverride) {

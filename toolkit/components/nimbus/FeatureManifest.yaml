@@ -1111,7 +1111,11 @@ glean:
       type: json
       description: >-
         A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric.
-
+    gleanMaxPingsPerMinute:
+      type: int
+      description: >-
+        Maximum number of pings that can be sent in a 60 second interval
+        
 majorRelease2022:
   description: Major Release 2022
   owner: firefoxview@mozilla.com

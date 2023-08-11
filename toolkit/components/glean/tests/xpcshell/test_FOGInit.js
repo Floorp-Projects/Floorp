@@ -39,3 +39,11 @@ add_task(function test_fog_init_works() {
     "FOG init happened, and its time was measured."
   );
 });
+
+add_task(function test_fog_initialized_with_correct_rate_limit() {
+  Assert.greater(
+    Glean.fog.maxPingsPerMinute.testGetValue(),
+    0,
+    "FOG has been initialized with a ping rate limit of greater than 0."
+  );
+});

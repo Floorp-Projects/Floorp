@@ -153,6 +153,19 @@ fn build_configuration(
         app_id_override.to_utf8().to_string()
     };
 
+    extern "C" {
+        fn FOG_MaxPingLimit() -> u32;
+    }
+
+    // SAFETY NOTE: Safe because it returns a primitive by value.
+    let pings_per_interval = unsafe { FOG_MaxPingLimit() };
+    metrics::fog::max_pings_per_minute.set(pings_per_interval.into());
+
+    let rate_limit = Some(glean::PingRateLimit {
+        seconds_per_interval: 60,
+        pings_per_interval,
+    });
+
     let configuration = Configuration {
         upload_enabled: false,
         data_path,
@@ -164,7 +177,7 @@ fn build_configuration(
         use_core_mps: true,
         trim_data_to_registered_pings: true,
         log_level: None,
-        rate_limit: None,
+        rate_limit,
     };
 
     Ok((configuration, client_info))

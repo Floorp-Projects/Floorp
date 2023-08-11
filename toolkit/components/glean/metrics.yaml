@@ -63,6 +63,22 @@ fog:
       - glean-team@mozilla.com
     expires: never
 
+  max_pings_per_minute:
+    type: quantity
+    unit: int
+    description: |
+      Value of the configurable rate limit, in pings per minute, for Glean pings as set at init.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834792
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1834792
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - glean-team@mozilla.com
+    expires: never
+
 fog.ipc:
   replay_failures:
     type: counter
