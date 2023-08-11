@@ -70,13 +70,8 @@ export var OSKeyStore = {
   },
 
   canReauth() {
-    // The OS auth dialog is not supported on macOS < 10.12
-    // (Darwin 16) due to various issues (bug 1622304 and bug 1622303).
-    // We have no support on linux (bug 1527745.)
-    if (
-      AppConstants.platform == "win" ||
-      AppConstants.isPlatformAndVersionAtLeast("macosx", "16")
-    ) {
+    // We have no support on linux (bug 1527745)
+    if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
       lazy.log.debug(
         "canReauth, returning true, this._testReauth:",
         this._testReauth
