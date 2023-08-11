@@ -19,6 +19,9 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html><script>
   console.log(false);
   console.log(undefined);
   console.log(null);
+  /* Verify that the conflicting binding on user code doesn't break the
+   * functionality. */
+  function copy() { alert("user-defined function is called"); }
 </script>`;
 const copyObjectMenuItemId = "#console-menu-copy-object";
 

@@ -139,6 +139,10 @@ const WebConsoleCommandsManager = {
    *        String to evaluate.
    * @param string selectedNodeActorID
    *        The Node actor ID of the currently selected DOM Element, if any is selected.
+   * @param bool ignoreExistingBindings
+   *        If true, define all bindings even if there's conflicting existing
+   *        symbols.  This is for the case evaluating non-user code in frame
+   *        environment.
    *
    * @return object
    *         Object with two properties:
@@ -158,7 +162,8 @@ const WebConsoleCommandsManager = {
     debuggerGlobal,
     frame,
     evalInput,
-    selectedNodeActorID
+    selectedNodeActorID,
+    ignoreExistingBindings
   ) {
     const bindings = Object.create(null);
 
@@ -209,7 +214,10 @@ const WebConsoleCommandsManager = {
       // so always expose the commands as the command will try to call its JavaScript method (see getEvalInput).
       // Otherwise, when we run user code, we want to avoid overriding existing symbols with commands.
       // Also ignore commands which can only be run with the `:` prefix.
+      //
+      // When we run internal code, always override existing symbols.
       if (
+        !ignoreExistingBindings &&
         !isCmd &&
         (this._isCommandNameAlreadyInScope(name, frame, debuggerGlobal) ||
           colonOnlyCommandNames.includes(name))
