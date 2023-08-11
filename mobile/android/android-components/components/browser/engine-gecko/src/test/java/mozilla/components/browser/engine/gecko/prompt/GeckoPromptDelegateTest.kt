@@ -1200,7 +1200,7 @@ class GeckoPromptDelegateTest {
             },
         )
 
-        val geckoProvider = GECKO_PROMPT_PROVIDER_SELECTOR(0, "name", "icon")
+        val geckoProvider = GECKO_PROMPT_PROVIDER_SELECTOR(0, "name", "icon", "domain")
         val acProvider = geckoProvider.toProvider()
         val geckoPrompt = geckoProviderSelectorPrompt(listOf(geckoProvider))
         var geckoResult = promptDelegate.onSelectIdentityCredentialProvider(mock(), geckoPrompt)
