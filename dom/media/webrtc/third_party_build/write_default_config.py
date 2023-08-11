@@ -14,6 +14,9 @@ text = """#!/bin/bash
 # fork of libwebrtc (at https://github.com/mozilla/libwebrtc).
 export MOZ_LIBWEBRTC_SRC=$$STATE_DIR/moz-libwebrtc
 
+# The previous fast-forward bug number is used for some error messaging.
+export MOZ_PRIOR_FASTFORWARD_BUG="$priorbugnum"
+
 # Fast-forwarding each Chromium version of libwebrtc should be done
 # under a separate bugzilla bug.  This bug number is used when crafting
 # the commit summary as each upstream commit is vendored into the
@@ -53,7 +56,7 @@ export MOZ_LIBWEBRTC_OFFICIAL_BRANCH="moz-mods-chr$m2-for-rel$t2"
 """
 
 
-def build_default_config_env(bug_number, milestone, target):
+def build_default_config_env(prior_bug_number, bug_number, milestone, target):
     prior_branch_head = lookup_branch_head.get_branch_head(milestone)
     if prior_branch_head is None:
         sys.exit("error: chromium milestone '{}' is not found.".format(milestone))
@@ -65,6 +68,7 @@ def build_default_config_env(bug_number, milestone, target):
 
     s = Template(text)
     return s.substitute(
+        priorbugnum=prior_bug_number,
         bugnum=bug_number,
         m1=milestone,
         m2=milestone + 1,
@@ -79,22 +83,28 @@ if __name__ == "__main__":
         description="Updates the default_config_env file for new release/milestone"
     )
     parser.add_argument(
-        "--bug-number",
+        "--prior-bug-number",
         required=True,
         type=int,
         help="integer Bugzilla number (example: 1800920)",
     )
     parser.add_argument(
+        "--bug-number",
+        required=True,
+        type=int,
+        help="integer Bugzilla number (example: 1806510)",
+    )
+    parser.add_argument(
         "--milestone",
         required=True,
         type=int,
-        help="integer chromium milestone (example: 106)",
+        help="integer chromium milestone (example: 107)",
     )
     parser.add_argument(
         "--release-target",
         required=True,
         type=int,
-        help="integer firefox release (example: 110)",
+        help="integer firefox release (example: 111)",
     )
     parser.add_argument(
         "--output-path",
@@ -106,6 +116,9 @@ if __name__ == "__main__":
     with open(args.output_path, "w") as ofile:
         ofile.write(
             build_default_config_env(
-                args.bug_number, args.milestone, args.release_target
+                args.prior_bug_number,
+                args.bug_number,
+                args.milestone,
+                args.release_target,
             )
         )

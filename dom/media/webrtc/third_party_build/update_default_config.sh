@@ -45,6 +45,7 @@ An error has occurred running $SCRIPT_DIR/write_default_config.py
 "
 MOZCONFIG=dom/media/webrtc/third_party_build/default_mozconfig \
   ./mach python $SCRIPT_DIR/write_default_config.py \
+  --prior-bug-number $MOZ_FASTFORWARD_BUG \
   --bug-number $NEW_BUG_NUMBER \
   --milestone $MOZ_NEXT_LIBWEBRTC_MILESTONE \
   --release-target $MOZ_NEXT_FIREFOX_REL_TARGET \
