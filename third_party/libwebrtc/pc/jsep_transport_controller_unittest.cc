@@ -864,7 +864,7 @@ TEST_F(JsepTransportControllerTest,
                   ->SetRemoteDescription(SdpType::kAnswer, description.get())
                   .ok());
   // The BUNDLE should be enabled, the incomplete video transport should be
-  // deleted and the states shoud be updated.
+  // deleted and the states should be updated.
   fake_video_dtls = static_cast<FakeDtlsTransport*>(
       transport_controller_->GetDtlsTransport(kVideoMid1));
   EXPECT_EQ(fake_audio_dtls, fake_video_dtls);
