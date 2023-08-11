@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import url("chrome://global/skin/global.css");
 @import url("chrome://global/skin/in-content/common.css");
 
 :host {
@@ -299,7 +300,10 @@ summary {
   content: url("chrome://global/skin/icons/error.svg");
   -moz-context-properties: fill;
   fill: var(--in-content-danger-button-background);
-  margin-inline-end: 8px;
+  margin-block: 0;
+  margin-inline: 0 8px;
+  width: 16px;
+  height: 16px;
 }
 
 .page-portrait-icon {
