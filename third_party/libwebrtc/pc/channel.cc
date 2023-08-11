@@ -911,16 +911,16 @@ VoiceChannel::~VoiceChannel() {
 void VoiceChannel::UpdateMediaSendRecvState_w() {
   // Render incoming data if we're the active call, and we have the local
   // content. We receive data on the default channel and multiplexed streams.
-  bool ready_to_receive = enabled() && webrtc::RtpTransceiverDirectionHasRecv(
-                                           local_content_direction());
-  media_receive_channel()->SetPlayout(ready_to_receive);
+  bool receive = enabled() && webrtc::RtpTransceiverDirectionHasRecv(
+                                  local_content_direction());
+  media_receive_channel()->SetPlayout(receive);
 
   // Send outgoing data if we're the active call, we have the remote content,
   // and we have had some form of connectivity.
   bool send = IsReadyToSendMedia_w();
   media_send_channel()->SetSend(send);
 
-  RTC_LOG(LS_INFO) << "Changing voice state, recv=" << ready_to_receive
+  RTC_LOG(LS_INFO) << "Changing voice state, recv=" << receive
                    << " send=" << send << " for " << ToString();
 }
 
@@ -1077,10 +1077,14 @@ VideoChannel::~VideoChannel() {
 void VideoChannel::UpdateMediaSendRecvState_w() {
   // Send outgoing data if we're the active call, we have the remote content,
   // and we have had some form of connectivity.
+  bool receive = enabled() && webrtc::RtpTransceiverDirectionHasRecv(
+                                  local_content_direction());
+  media_receive_channel()->SetReceive(receive);
+
   bool send = IsReadyToSendMedia_w();
   media_send_channel()->SetSend(send);
-  RTC_LOG(LS_INFO) << "Changing video state, send=" << send << " for "
-                   << ToString();
+  RTC_LOG(LS_INFO) << "Changing video state, recv=" << receive
+                   << " send=" << send << " for " << ToString();
 }
 
 bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,

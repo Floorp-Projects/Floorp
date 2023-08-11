@@ -128,6 +128,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   webrtc::RtpParameters GetRtpReceiveParameters(uint32_t ssrc) const override;
   webrtc::RtpParameters GetDefaultRtpReceiveParameters() const override;
   bool GetSendCodec(VideoCodec* send_codec) override;
+  void SetReceive(bool receive) override;
   bool SetSend(bool send) override;
   bool SetVideoSend(
       uint32_t ssrc,
@@ -337,8 +338,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool MaybeCreateDefaultReceiveStream(
       const webrtc::RtpPacketReceived& parsed_packet)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
-  void ReCreateDefaulReceiveStream(uint32_t ssrc,
-                                   absl::optional<uint32_t> rtx_ssrc);
+  void ReCreateDefaultReceiveStream(uint32_t ssrc,
+                                    absl::optional<uint32_t> rtx_ssrc);
   void ConfigureReceiverRtp(
       webrtc::VideoReceiveStreamInterface::Config* config,
       webrtc::FlexfecReceiveStream::Config* flexfec_config,
@@ -540,6 +541,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
     void SetLocalSsrc(uint32_t local_ssrc);
     void UpdateRtxSsrc(uint32_t ssrc);
+    void StartReceiveStream();
+    void StopReceiveStream();
 
    private:
     // Attempts to reconfigure an already existing `flexfec_stream_`, create
@@ -549,7 +552,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
     void RecreateReceiveStream();
     void CreateReceiveStream();
-    void StartReceiveStream();
 
     // Applies a new receive codecs configration to `config_`. Returns true
     // if the internal stream needs to be reconstructed, or false if no changes
@@ -575,6 +577,9 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // Start NTP time is estimated as current remote NTP time (estimated from
     // RTCP) minus the elapsed time, as soon as remote NTP time is available.
     int64_t estimated_remote_start_ntp_time_ms_ RTC_GUARDED_BY(sink_lock_);
+
+    RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker thread_checker_;
+    bool receiving_ RTC_GUARDED_BY(&thread_checker_);
   };
 
   void Construct(webrtc::Call* call, WebRtcVideoEngine* engine);
@@ -619,6 +624,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
   uint32_t rtcp_receiver_report_ssrc_ RTC_GUARDED_BY(thread_checker_);
   bool sending_ RTC_GUARDED_BY(thread_checker_);
+  bool receiving_ RTC_GUARDED_BY(&thread_checker_);
   webrtc::Call* const call_;
 
   rtc::VideoSinkInterface<webrtc::VideoFrame>* default_sink_

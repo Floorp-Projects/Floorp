@@ -486,6 +486,7 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   bool HasSink(uint32_t ssrc) const;
 
   bool SetSend(bool send) override;
+  void SetReceive(bool receive) override {}
   bool SetVideoSend(
       uint32_t ssrc,
       const VideoOptions* options,
