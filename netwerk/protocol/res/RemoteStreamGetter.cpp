@@ -36,7 +36,7 @@ RequestOrReason RemoteStreamGetter::GetAsync(nsIStreamListener* aListener,
   nsCOMPtr<nsICancelable> cancelableRequest(this);
 
   RefPtr<RemoteStreamGetter> self = this;
-  Maybe<LoadInfoArgs> loadInfoArgs;
+  LoadInfoArgs loadInfoArgs;
   nsresult rv = ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
   if (NS_FAILED(rv)) {
     return Err(rv);

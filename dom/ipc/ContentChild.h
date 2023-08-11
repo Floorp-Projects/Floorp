@@ -729,9 +729,8 @@ class ContentChild final : public PContentChild,
       const uint64_t& aInnerWindowId, const bool& aFromChromeContext);
 
   mozilla::ipc::IPCResult RecvReportFrameTimingData(
-      const mozilla::Maybe<LoadInfoArgs>& loadInfoArgs,
-      const nsString& entryName, const nsString& initiatorType,
-      UniquePtr<PerformanceTimingData>&& aData);
+      const LoadInfoArgs& loadInfoArgs, const nsString& entryName,
+      const nsString& initiatorType, UniquePtr<PerformanceTimingData>&& aData);
 
   mozilla::ipc::IPCResult RecvLoadURI(
       const MaybeDiscarded<BrowsingContext>& aContext,
