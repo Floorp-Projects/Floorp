@@ -20,6 +20,7 @@ auto CameraPortalImpl::Start() -> RefPtr<CameraPortalPromise> {
 
 void CameraPortalImpl::OnCameraRequestResult(xdg_portal::RequestResponse result,
                                              int fd) {
+  MOZ_ASSERT(NS_IsMainThread());
   if (result == xdg_portal::RequestResponse::kSuccess) {
     mPromiseHolder.Resolve(fd, __func__);
   } else if (result == xdg_portal::RequestResponse::kUserCancelled) {

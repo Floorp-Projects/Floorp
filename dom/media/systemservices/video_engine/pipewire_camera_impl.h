@@ -22,7 +22,8 @@ namespace mozilla {
  */
 class CameraPortalImpl : public webrtc::CameraPortal::PortalNotifier {
  public:
-  NS_INLINE_DECL_REFCOUNTING(CameraPortalImpl)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_MAIN_THREAD(
+      CameraPortalImpl)
 
   CameraPortalImpl() = default;
 
