@@ -639,8 +639,8 @@ dictionary GPUPrimitiveState {
     GPUFrontFace frontFace = "ccw";
     GPUCullMode cullMode = "none";
 
-    // Enable depth clamping (requires "depth-clamping" feature)
-    boolean clampDepth = false;
+    // Requires "depth-clip-control" feature.
+    boolean unclippedDepth = false;
 };
 
 enum GPUPrimitiveTopology {

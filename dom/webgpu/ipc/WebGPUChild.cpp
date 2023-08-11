@@ -1035,6 +1035,7 @@ RawId WebGPUChild::DeviceCreateRenderPipelineImpl(
                                                            : ffi::WGPUFace_Back;
       desc.primitive.cull_mode = &cullFace;
     }
+    desc.primitive.unclipped_depth = prim.mUnclippedDepth;
   }
   desc.multisample = ConvertMultisampleState(aDesc.mMultisample);
 
