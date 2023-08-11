@@ -33,6 +33,11 @@ void ShaderModule::Cleanup() {
 }
 
 already_AddRefed<dom::Promise> ShaderModule::CompilationInfo(ErrorResult& aRv) {
+  return GetCompilationInfo(aRv);
+}
+
+already_AddRefed<dom::Promise> ShaderModule::GetCompilationInfo(
+    ErrorResult& aRv) {
   RefPtr<dom::Promise> tmp = mCompilationInfo;
   return tmp.forget();
 }
