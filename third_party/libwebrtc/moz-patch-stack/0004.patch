@@ -1922,7 +1922,7 @@ index b15dc0a9ff..837dccaeb6 100644
  }
  
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 6b5c918f85..cf4da8f6e5 100644
+index f6544d106a..427e14da53 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -423,6 +423,12 @@ rtc_library("logging") {
