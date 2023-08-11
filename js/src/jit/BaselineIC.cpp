@@ -372,7 +372,7 @@ class MOZ_STATIC_CLASS OpToFallbackKindTable {
 static constexpr OpToFallbackKindTable FallbackKindTable;
 
 void ICScript::initICEntries(JSContext* cx, JSScript* script) {
-  MOZ_ASSERT(cx->realm()->jitRealm());
+  MOZ_ASSERT(cx->zone()->jitZone());
   MOZ_ASSERT(jit::IsBaselineInterpreterEnabled());
 
   MOZ_ASSERT(numICEntries() == script->numICEntries());

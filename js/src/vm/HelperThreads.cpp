@@ -327,8 +327,8 @@ static JSRuntime* GetSelectorRuntime(const CompilationSelector& selector) {
 
 static bool JitDataStructuresExist(const CompilationSelector& selector) {
   struct Matcher {
-    bool operator()(JSScript* script) { return !!script->realm()->jitRealm(); }
-    bool operator()(Realm* realm) { return !!realm->jitRealm(); }
+    bool operator()(JSScript* script) { return !!script->zone()->jitZone(); }
+    bool operator()(Realm* realm) { return !!realm->zone()->jitZone(); }
     bool operator()(Zone* zone) { return !!zone->jitZone(); }
     bool operator()(ZonesInState zbs) { return zbs.runtime->hasJitRuntime(); }
     bool operator()(JSRuntime* runtime) { return runtime->hasJitRuntime(); }

@@ -17,7 +17,6 @@
 #include "debugger/DebugAPI.h"
 #include "debugger/Debugger.h"
 #include "gc/GC.h"
-#include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "js/CallAndConstruct.h"      // JS::IsCallable
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -116,26 +115,6 @@ bool JSRuntime::createJitRuntime(JSContext* cx) {
     return false;
   }
 
-  return true;
-}
-
-bool Realm::ensureJitRealmExists(JSContext* cx) {
-  using namespace js::jit;
-
-  if (jitRealm_) {
-    return true;
-  }
-
-  if (!zone()->getJitZone(cx)) {
-    return false;
-  }
-
-  UniquePtr<JitRealm> jitRealm = cx->make_unique<JitRealm>();
-  if (!jitRealm) {
-    return false;
-  }
-
-  jitRealm_ = std::move(jitRealm);
   return true;
 }
 
@@ -514,8 +493,7 @@ void Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                    size_t* innerViewsArg,
                                    size_t* objectMetadataTablesArg,
                                    size_t* savedStacksSet,
-                                   size_t* nonSyntacticLexicalEnvironmentsArg,
-                                   size_t* jitRealm) {
+                                   size_t* nonSyntacticLexicalEnvironmentsArg) {
   *realmObject += mallocSizeOf(this);
   wasm.addSizeOfExcludingThis(mallocSizeOf, realmTables);
 
@@ -524,10 +502,6 @@ void Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                   nonSyntacticLexicalEnvironmentsArg);
 
   *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);
-
-  if (jitRealm_) {
-    *jitRealm += jitRealm_->sizeOfIncludingThis(mallocSizeOf);
-  }
 }
 
 bool Realm::shouldCaptureStackForThrow() {

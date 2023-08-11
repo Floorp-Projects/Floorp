@@ -1836,9 +1836,6 @@ static void ReportRealmStats(const JS::RealmStats& realmStats,
                  realmStats.nonSyntacticLexicalScopesTable,
                  "The non-syntactic lexical scopes table.");
 
-  ZRREPORT_BYTES(realmJSPathPrefix + "jit-realm"_ns, realmStats.jitRealm,
-                 "The JIT realm.");
-
   if (sundriesGCHeap > 0) {
     // We deliberately don't use ZRREPORT_GC_BYTES here.
     REPORT_GC_BYTES(

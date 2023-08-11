@@ -8357,7 +8357,7 @@ static bool BaselineCompile(JSContext* cx, unsigned argc, Value* vp) {
       returnedStr = "can't compile";
       break;
     }
-    if (!cx->realm()->ensureJitRealmExists(cx)) {
+    if (!cx->zone()->ensureJitZoneExists(cx)) {
       return false;
     }
 
