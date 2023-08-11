@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Apply some defaults and minor modifications to the jobs defined in the
-APK and AAB signing kinds.
+Apply some defaults and minor modifications to the jobs defined in the build
+kind.
 """
 
 from taskgraph.transforms.base import TransformSequence
