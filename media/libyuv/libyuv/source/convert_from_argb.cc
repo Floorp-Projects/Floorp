@@ -389,14 +389,6 @@ int ARGBToNV12(const uint8_t* src_argb,
     }
   }
 #endif
-#if defined(HAS_MERGEUVROW_AVX512BW)
-  if (TestCpuFlag(kCpuHasAVX512BW)) {
-    MergeUVRow_ = MergeUVRow_Any_AVX512BW;
-    if (IS_ALIGNED(halfwidth, 32)) {
-      MergeUVRow_ = MergeUVRow_AVX512BW;
-    }
-  }
-#endif
 #if defined(HAS_MERGEUVROW_NEON)
   if (TestCpuFlag(kCpuHasNEON)) {
     MergeUVRow_ = MergeUVRow_Any_NEON;
@@ -567,14 +559,6 @@ int ARGBToNV21(const uint8_t* src_argb,
     }
   }
 #endif
-#if defined(HAS_MERGEUVROW_AVX512BW)
-  if (TestCpuFlag(kCpuHasAVX512BW)) {
-    MergeUVRow_ = MergeUVRow_Any_AVX512BW;
-    if (IS_ALIGNED(halfwidth, 64)) {
-      MergeUVRow_ = MergeUVRow_AVX512BW;
-    }
-  }
-#endif
 #if defined(HAS_MERGEUVROW_NEON)
   if (TestCpuFlag(kCpuHasNEON)) {
     MergeUVRow_ = MergeUVRow_Any_NEON;
@@ -739,14 +723,6 @@ int ABGRToNV12(const uint8_t* src_abgr,
     MergeUVRow_ = MergeUVRow_Any_AVX2;
     if (IS_ALIGNED(halfwidth, 32)) {
       MergeUVRow_ = MergeUVRow_AVX2;
-    }
-  }
-#endif
-#if defined(HAS_MERGEUVROW_AVX512BW)
-  if (TestCpuFlag(kCpuHasAVX512BW)) {
-    MergeUVRow_ = MergeUVRow_Any_AVX512BW;
-    if (IS_ALIGNED(halfwidth, 64)) {
-      MergeUVRow_ = MergeUVRow_AVX512BW;
     }
   }
 #endif
@@ -915,14 +891,6 @@ int ABGRToNV21(const uint8_t* src_abgr,
     MergeUVRow_ = MergeUVRow_Any_AVX2;
     if (IS_ALIGNED(halfwidth, 32)) {
       MergeUVRow_ = MergeUVRow_AVX2;
-    }
-  }
-#endif
-#if defined(HAS_MERGEUVROW_AVX512BW)
-  if (TestCpuFlag(kCpuHasAVX512BW)) {
-    MergeUVRow_ = MergeUVRow_Any_AVX512BW;
-    if (IS_ALIGNED(halfwidth, 64)) {
-      MergeUVRow_ = MergeUVRow_AVX512BW;
     }
   }
 #endif
@@ -2950,14 +2918,6 @@ int RAWToJNV21(const uint8_t* src_raw,
     MergeUVRow_ = MergeUVRow_Any_AVX2;
     if (IS_ALIGNED(halfwidth, 32)) {
       MergeUVRow_ = MergeUVRow_AVX2;
-    }
-  }
-#endif
-#if defined(HAS_MERGEUVROW_AVX512BW)
-  if (TestCpuFlag(kCpuHasAVX512BW)) {
-    MergeUVRow_ = MergeUVRow_Any_AVX512BW;
-    if (IS_ALIGNED(halfwidth, 64)) {
-      MergeUVRow_ = MergeUVRow_AVX512BW;
     }
   }
 #endif
