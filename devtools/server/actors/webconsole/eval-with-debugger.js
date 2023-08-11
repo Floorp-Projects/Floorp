@@ -108,7 +108,11 @@ function isObject(value) {
  *         - global: the Debugger.Object for the global where the string was evaluated in.
  *         - result: the result of the evaluation.
  */
-exports.evalWithDebugger = function (string, options = {}, webConsole) {
+function evalWithDebugger(string, options = {}, webConsole) {
+  if (string.trim() === "?") {
+    return evalWithDebugger(":help", options, webConsole);
+  }
+
   const isCmd = isCommand(string.trim());
 
   if (isCmd && options.eager) {
@@ -238,7 +242,8 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
     frame,
     dbgGlobal,
   };
-};
+}
+exports.evalWithDebugger = evalWithDebugger;
 
 function getEvalResult(
   dbg,
@@ -552,7 +557,7 @@ function updateConsoleInputEvaluation(dbg, webConsole) {
 function getEvalInput(string, bindings) {
   const trimmedString = string.trim();
   // The help function needs to be easy to guess, so we make the () optional.
-  if (bindings?.help && (trimmedString === "help" || trimmedString === "?")) {
+  if (bindings?.help && trimmedString === "help") {
     return "help()";
   }
 
