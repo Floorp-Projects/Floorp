@@ -218,7 +218,7 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
   // Line number (1-origin).
   uint32_t line;
 
-  // Columm number (1-origin).
+  // Columm number in UTF-16 code units (1-origin).
   uint32_t column;
 
   JSAtom* functionDisplayName;

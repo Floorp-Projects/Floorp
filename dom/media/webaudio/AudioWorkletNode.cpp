@@ -50,7 +50,7 @@ struct ProcessorErrorDetails {
   ProcessorErrorDetails() : mLineno(0), mColno(0) {}
   // Line number (1-origin).
   unsigned mLineno;
-  // Column number (1-origin).
+  // Column number in UTF-16 code units (1-origin).
   unsigned mColno;
   nsString mFilename;
   nsString mMessage;

@@ -96,13 +96,13 @@ bool cls_testPrintError_PrintWarning::warningSuccess = false;
 
 #define BURRITO "\xF0\x9F\x8C\xAF"
 
-BEGIN_TEST(testPrintError_UTF16CodePoints) {
+BEGIN_TEST(testPrintError_UTF16CodeUnits) {
   AutoStreamBuffer buf;
 
   static const char utf8code[] =
       "function f() {\n  var x = `\n" BURRITO "`; " BURRITO "; } f();";
 
-  CHECK(!execDontReport(utf8code, "testPrintError_UTF16CodePoints.js", 1));
+  CHECK(!execDontReport(utf8code, "testPrintError_UTF16CodeUnits.js", 1));
 
   JS::ExceptionStack exnStack(cx);
   CHECK(JS::StealPendingExceptionStack(cx, &exnStack));
@@ -112,14 +112,14 @@ BEGIN_TEST(testPrintError_UTF16CodePoints) {
   JS::PrintError(buf.stream(), builder, false);
 
   CHECK(
-      buf.contains("testPrintError_UTF16CodePoints.js:3:5 SyntaxError: illegal "
+      buf.contains("testPrintError_UTF16CodeUnits.js:3:6 SyntaxError: illegal "
                    "character U+1F32F:\n"
-                   "testPrintError_UTF16CodePoints.js:3:5 " BURRITO
-                   "`; " BURRITO "; } f();\n"
-                   "testPrintError_UTF16CodePoints.js:3:5 .....^\n"));
+                   "testPrintError_UTF16CodeUnits.js:3:6 " BURRITO "`; " BURRITO
+                   "; } f();\n"
+                   "testPrintError_UTF16CodeUnits.js:3:6 .....^\n"));
 
   return true;
 }
-END_TEST(testPrintError_UTF16CodePoints)
+END_TEST(testPrintError_UTF16CodeUnits)
 
 #undef BURRITO

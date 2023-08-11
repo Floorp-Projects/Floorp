@@ -455,7 +455,7 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
 
   // Line number of the first character (1-origin).
   unsigned lineno = 1;
-  // Column number of the first character (0-origin).
+  // Column number of the first character in UTF-16 code units (0-origin).
   unsigned column = 0;
 
   // The offset within the ScriptSource's full uncompressed text of the first

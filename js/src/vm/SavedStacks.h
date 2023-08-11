@@ -269,7 +269,7 @@ class SavedStacks {
     // Line number (1-origin).
     size_t line;
 
-    // Column number (1-origin).
+    // Column number in UTF-16 code units (1-origin).
     uint32_t column;
   };
 

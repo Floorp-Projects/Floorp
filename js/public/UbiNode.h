@@ -248,7 +248,7 @@ class BaseStackFrame {
   // Get this frame's line number (1-origin).
   virtual uint32_t line() const = 0;
 
-  // Get this frame's column number (1-origin).
+  // Get this frame's column number in UTF-16 code units (1-origin).
   virtual uint32_t column() const = 0;
 
   // Get this frame's source name. Never null.

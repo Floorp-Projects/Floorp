@@ -111,7 +111,7 @@ class ErrorObject : public NativeObject {
   // Line number (1-origin).
   inline uint32_t lineNumber() const;
 
-  // Column number (1-origin).
+  // Column number in UTF-16 code units (1-origin).
   inline uint32_t columnNumber() const;
 
   inline JSObject* stack() const;

@@ -1136,7 +1136,7 @@ class FlowGraphSummary {
     // Line number (1-origin).
     size_t lineno_;
 
-    // Column number (0-origin).
+    // Column number in UTF-16 code units (0-origin).
     size_t column_;
   };
 

@@ -120,7 +120,7 @@ class JSErrorBase {
   // Source line number (1-origin).
   unsigned lineno;
 
-  // Column number in line (1-origin).
+  // Column number in line in UTF-16 code units (1-origin).
   unsigned column;
 
   // the error number, e.g. see js/public/friend/ErrorNumbers.msg.

@@ -363,12 +363,12 @@ class SourceUnits;
  *
  * for either |Unit = Utf8Unit| or |Unit = char16_t|.
  *
- * Note that the latter quantity is *not* the same as a column number, which is
- * a count of code *points*.  Computing a column number requires the offset
- * within the line and the source units of that line (including what type |Unit|
- * is, to know how to decode them).  If you need a column number, functions in
- * |GeneralTokenStreamChars<Unit>| will consult this and source units to compute
- * it.
+ * Note that, if |Unit = Utf8Unit|, the latter quantity is *not* the same as a
+ * column number, which is a count of UTF-16 code units.  Computing a column
+ * number requires the offset within the line and the source units of that line
+ * (including what type |Unit| is, to know how to decode them).  If you need a
+ * column number, functions in |GeneralTokenStreamChars<Unit>| will consult
+ * this and source units to compute it.
  */
 class SourceCoords {
   // For a given buffer holding source code, |lineStartOffsets_| has one
@@ -515,7 +515,7 @@ enum class UnitsType : unsigned char {
 
 class ChunkInfo {
  private:
-  // Column number (0-origin).
+  // Column number in UTF-16 code units (0-origin).
   // Store everything in |unsigned char|s so everything packs.
   unsigned char column_[sizeof(uint32_t)];
   unsigned char unitsType_;
@@ -580,6 +580,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
   JS::ConstUTF8CharsZ filename_;
 
   // Column number computation fields.
+  // Used only for UTF-8 case.
 
   /**
    * A map of (line number => sequence of the column numbers at
@@ -911,7 +912,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
 
  private:
   /**
-   * Compute the "partial" column number in Unicode code points of the absolute
+   * Compute the "partial" column number in UTF-16 code units of the absolute
    * |offset| within source text on the line of |lineToken| (which must have
    * been computed from |offset|).
    *
@@ -944,13 +945,13 @@ class TokenStreamAnyChars : public TokenStreamShared {
    * the browser before SpiderMonkey would see it.  So the partial column of the
    * "4" in the inequality would be 16, not 19.
    *
-   * Code points are not all equal length, so counting requires *some* kind of
-   * linear-time counting from the start of the line.  This function attempts
-   * various tricks to reduce this cost.  If these optimizations succeed,
-   * repeated calls to this function on a line will pay a one-time cost linear
-   * in the length of the line, then each call pays a separate constant-time
-   * cost.  If the optimizations do not succeed, this function works in time
-   * linear in the length of the line.
+   * UTF-16 code units are not all equal length in UTF-8 source, so counting
+   * requires *some* kind of linear-time counting from the start of the line.
+   * This function attempts various tricks to reduce this cost.  If these
+   * optimizations succeed, repeated calls to this function on a line will pay
+   * a one-time cost linear in the length of the line, then each call pays a
+   * separate constant-time cost.  If the optimizations do not succeed, this
+   * function works in time linear in the length of the line.
    *
    * It's unusual for a function in *this* class to be |Unit|-templated, but
    * while this operation manages |Unit|-agnostic fields in this class and in
@@ -961,6 +962,11 @@ class TokenStreamAnyChars : public TokenStreamShared {
   uint32_t computePartialColumn(const LineToken lineToken,
                                 const uint32_t offset,
                                 const SourceUnits<Unit>& sourceUnits) const;
+
+  template <typename Unit>
+  uint32_t computePartialColumnForUTF8(
+      const LineToken lineToken, const uint32_t offset, const uint32_t start,
+      const uint32_t offsetInLine, const SourceUnits<Unit>& sourceUnits) const;
 
   /**
    * Update line/column information for the start of a new line at

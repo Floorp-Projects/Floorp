@@ -340,7 +340,7 @@ class BytecodeSection {
   // we can get undefined behavior.
   uint32_t currentLine_;
 
-  // 0-origin column index on currentLine_ of last
+  // 0-origin column index in UTF-16 code units on currentLine_ of last
   // SrcNoteType::ColSpan-annotated opcode.
   //
   // WARNING: If this becomes out of sync with already-emitted srcnotes,

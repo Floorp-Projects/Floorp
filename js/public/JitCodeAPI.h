@@ -39,7 +39,7 @@ struct JitCodeSourceInfo {
 
   // Line number (1-origin).
   uint32_t lineno = 0;
-  // Column number (0-origin).
+  // Column number in UTF-16 code units (0-origin).
   uint32_t colno = 0;
 };
 
