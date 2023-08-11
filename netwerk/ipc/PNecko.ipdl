@@ -147,8 +147,8 @@ parent:
   /**
    * Page thumbnails remote resource loading
    */
-  async GetPageThumbStream(nullable nsIURI uri, LoadInfoArgs? loadInfo) returns (RemoteStreamInfo? info);
-  async GetPageIconStream(nullable nsIURI uri, LoadInfoArgs? loadInfo) returns (RemoteStreamInfo? info);
+  async GetPageThumbStream(nullable nsIURI uri, LoadInfoArgs loadInfo) returns (RemoteStreamInfo? info);
+  async GetPageIconStream(nullable nsIURI uri, LoadInfoArgs loadInfo) returns (RemoteStreamInfo? info);
 
 child:
   /* Predictor Methods */

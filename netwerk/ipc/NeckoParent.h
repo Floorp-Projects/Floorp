@@ -195,12 +195,12 @@ class NeckoParent : public PNeckoParent {
 
   /* Page thumbnails remote resource loading */
   mozilla::ipc::IPCResult RecvGetPageThumbStream(
-      nsIURI* aURI, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
+      nsIURI* aURI, const LoadInfoArgs& aLoadInfoArgs,
       GetPageThumbStreamResolver&& aResolve);
 
   /* Page icon remote resource loading */
   mozilla::ipc::IPCResult RecvGetPageIconStream(
-      nsIURI* aURI, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
+      nsIURI* aURI, const LoadInfoArgs& aLoadInfoArgs,
       GetPageIconStreamResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvInitSocketProcessBridge(

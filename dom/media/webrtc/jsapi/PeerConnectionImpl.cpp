@@ -4616,11 +4616,11 @@ std::unique_ptr<NrSocketProxyConfig> PeerConnectionImpl::GetProxyConfig()
       new net::LoadInfo(doc->NodePrincipal(), doc->NodePrincipal(), doc, 0,
                         nsIContentPolicy::TYPE_INVALID);
 
-  Maybe<net::LoadInfoArgs> loadInfoArgs;
+  net::LoadInfoArgs loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(
       mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
   return std::unique_ptr<NrSocketProxyConfig>(new NrSocketProxyConfig(
-      net::WebrtcProxyConfig(id, alpn, *loadInfoArgs, mForceProxy)));
+      net::WebrtcProxyConfig(id, alpn, loadInfoArgs, mForceProxy)));
 }
 
 std::map<uint64_t, PeerConnectionAutoTimer>
