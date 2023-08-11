@@ -162,11 +162,11 @@ index 0885015121..2e1dc9a8ee 100644
  
      // Transport for outgoing packets (RTCP).
 diff --git a/modules/rtp_rtcp/include/rtp_rtcp_defines.h b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-index f047a45a6a..f817e8df7b 100644
+index 27fdf82508..ecf4582dbf 100644
 --- a/modules/rtp_rtcp/include/rtp_rtcp_defines.h
 +++ b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-@@ -177,6 +177,14 @@ class RtcpBandwidthObserver {
-   virtual ~RtcpBandwidthObserver() {}
+@@ -203,6 +203,14 @@ class NetworkLinkRtcpObserver {
+   virtual void OnRttUpdate(Timestamp receive_time, TimeDelta rtt) {}
  };
  
 +class RtcpEventObserver {
@@ -181,26 +181,26 @@ index f047a45a6a..f817e8df7b 100644
  static constexpr size_t kNumMediaTypes = 5;
  enum class RtpPacketMediaType : size_t {
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index d0799dbb76..4e55a45191 100644
+index ef9caa0655..a90811d48b 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.cc
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -145,6 +145,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
-       rtp_rtcp_(owner),
+@@ -146,6 +146,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
        registered_ssrcs_(false, config),
-       rtcp_bandwidth_observer_(config.bandwidth_callback),
+       deprecated_rtcp_bandwidth_observer_(config.bandwidth_callback),
+       network_link_rtcp_observer_(config.network_link_rtcp_observer),
 +      rtcp_event_observer_(config.rtcp_event_observer),
        rtcp_intra_frame_observer_(config.intra_frame_callback),
        rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
        network_state_estimate_observer_(config.network_state_estimate_observer),
-@@ -174,6 +175,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
-       rtp_rtcp_(owner),
+@@ -177,6 +178,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
        registered_ssrcs_(true, config),
-       rtcp_bandwidth_observer_(config.bandwidth_callback),
+       deprecated_rtcp_bandwidth_observer_(config.bandwidth_callback),
+       network_link_rtcp_observer_(config.network_link_rtcp_observer),
 +      rtcp_event_observer_(config.rtcp_event_observer),
        rtcp_intra_frame_observer_(config.intra_frame_callback),
        rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
        network_state_estimate_observer_(config.network_state_estimate_observer),
-@@ -828,6 +830,10 @@ bool RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
+@@ -832,6 +834,10 @@ bool RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
      return false;
    }
  
@@ -211,7 +211,7 @@ index d0799dbb76..4e55a45191 100644
    // Clear our lists.
    rtts_.erase(bye.sender_ssrc());
    EraseIf(received_report_blocks_, [&](const auto& elem) {
-@@ -1250,12 +1256,20 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {
+@@ -1282,12 +1288,20 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {
  }
  
  bool RTCPReceiver::RtcpRrTimeoutLocked(Timestamp now) {
@@ -235,24 +235,24 @@ index d0799dbb76..4e55a45191 100644
  
  }  // namespace webrtc
 diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 8713d0e106..7d32feeff6 100644
+index 7a0ee29b80..c83e2f4743 100644
 --- a/modules/rtp_rtcp/source/rtcp_receiver.h
 +++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -371,6 +371,7 @@ class RTCPReceiver final {
-   RegisteredSsrcs registered_ssrcs_;
+@@ -372,6 +372,7 @@ class RTCPReceiver final {
  
-   RtcpBandwidthObserver* const rtcp_bandwidth_observer_;
+   RtcpBandwidthObserver* const deprecated_rtcp_bandwidth_observer_;
+   NetworkLinkRtcpObserver* const network_link_rtcp_observer_;
 +  RtcpEventObserver* const rtcp_event_observer_;
    RtcpIntraFrameObserver* const rtcp_intra_frame_observer_;
    RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
    NetworkStateEstimateObserver* const network_state_estimate_observer_;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 98fd45ba04..c2a4a3361c 100644
+index 95d6bb4718..ffcd9ffdff 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -73,6 +73,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
-     // stream.
-     RtcpBandwidthObserver* bandwidth_callback = nullptr;
+@@ -79,6 +79,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+     // bandwidth estimation related message.
+     NetworkLinkRtcpObserver* network_link_rtcp_observer = nullptr;
  
 +    // Called when we receive a RTCP bye or timeout
 +    RtcpEventObserver* rtcp_event_observer = nullptr;

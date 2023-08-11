@@ -117,6 +117,7 @@ rtc_library("rtp_rtcp_format") {
     "../../api/audio_codecs:audio_codecs_api",
     "../../api/transport:network_control",
     "../../api/transport/rtp:dependency_descriptor",
+    "../../api/units:data_rate",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
     "../../api/video:video_frame",
@@ -477,6 +478,7 @@ rtc_library("fec_test_helper") {
 rtc_library("mock_rtp_rtcp") {
   testonly = true
   public = [
+    "mocks/mock_network_link_rtcp_observer.h",
     "mocks/mock_recovered_packet_receiver.h",
     "mocks/mock_rtcp_bandwidth_observer.h",
     "mocks/mock_rtcp_rtt_stats.h",
@@ -485,6 +487,10 @@ rtc_library("mock_rtp_rtcp") {
   deps = [
     ":rtp_rtcp",
     ":rtp_rtcp_format",
+    "../../api:array_view",
+    "../../api/units:data_rate",
+    "../../api/units:time_delta",
+    "../../api/units:timestamp",
     "../../api/video:video_bitrate_allocation",
     "../../rtc_base:checks",
     "../../test:test_support",

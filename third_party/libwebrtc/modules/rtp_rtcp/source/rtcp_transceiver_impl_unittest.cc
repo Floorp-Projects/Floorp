@@ -24,6 +24,7 @@
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
+#include "modules/rtp_rtcp/mocks/mock_network_link_rtcp_observer.h"
 #include "modules/rtp_rtcp/mocks/mock_rtcp_rtt_stats.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/app.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/bye.h"
@@ -94,27 +95,6 @@ class MockRtpStreamRtcpHandler : public RtpStreamRtcpHandler {
 
  private:
   int num_calls_ = 0;
-};
-
-class MockNetworkLinkRtcpObserver : public NetworkLinkRtcpObserver {
- public:
-  MOCK_METHOD(void,
-              OnRttUpdate,
-              (Timestamp receive_time, TimeDelta rtt),
-              (override));
-  MOCK_METHOD(void,
-              OnTransportFeedback,
-              (Timestamp receive_time, const rtcp::TransportFeedback& feedback),
-              (override));
-  MOCK_METHOD(void,
-              OnReceiverEstimatedMaxBitrate,
-              (Timestamp receive_time, DataRate bitrate),
-              (override));
-  MOCK_METHOD(void,
-              OnReport,
-              (Timestamp receive_time,
-               rtc::ArrayView<const ReportBlockData> report_blocks),
-              (override));
 };
 
 constexpr TimeDelta kReportPeriod = TimeDelta::Seconds(1);
