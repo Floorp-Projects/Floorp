@@ -8,6 +8,8 @@
 const TEST_URI = "<h1>Hello DevTools</h1>";
 
 add_task(async function () {
+  // Disable transition so changes made in styleeditor are instantly applied
+  await pushPref("devtools.styleeditor.transitions", false);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
 
@@ -47,6 +49,44 @@ add_task(async function () {
     getRuleViewPropertyValue(view, "body h1", "color"),
     "navy",
     "Expected value is displayed for the color property"
+  );
+
+  info("Add Stylesheet from StyleEditor");
+  const styleEditor = await inspector.toolbox.selectTool("styleeditor");
+  const onEditorAdded = styleEditor.UI.once("editor-added");
+  // create a new style sheet
+  styleEditor.panelWindow.document
+    .querySelector(".style-editor-newButton")
+    .click();
+
+  const editor = await onEditorAdded;
+  await editor.getSourceEditor();
+
+  if (!editor.sourceEditor.hasFocus()) {
+    info("Waiting for stylesheet editor to gain focus");
+    await editor.sourceEditor.once("focus");
+  }
+  ok(editor.sourceEditor.hasFocus(), "new editor has focus");
+
+  const stylesheetText = `:is(h1) { font-size: 36px; }`;
+  await new Promise(resolve => {
+    waitForFocus(function () {
+      for (const c of stylesheetText) {
+        EventUtils.synthesizeKey(c, {}, styleEditor.panelWindow);
+      }
+      resolve();
+    }, styleEditor.panelWindow);
+  });
+
+  info("Select inspector again");
+  await inspector.toolbox.selectTool("inspector");
+  await waitFor(() => getRuleSelectors(view).includes(":is(h1)"));
+  ok(true, "Rules view was refreshed when selecting the inspector");
+  checkRulesViewSelectors(view, ["element", "body h1", ":is(h1)"]);
+  is(
+    getRuleViewPropertyValue(view, ":is(h1)", "font-size"),
+    "36px",
+    "Expected value is displayed for the font-size property"
   );
 });
 

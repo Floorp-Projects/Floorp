@@ -352,14 +352,12 @@ CssRuleView.prototype = {
   },
 
   isPanelVisible() {
-    if (this.inspector.is3PaneModeEnabled) {
-      return true;
-    }
     return (
       this.inspector.toolbox &&
       this.inspector.sidebar &&
       this.inspector.toolbox.currentToolId === "inspector" &&
-      this.inspector.sidebar.getCurrentTabID() == "ruleview"
+      (this.inspector.sidebar.getCurrentTabID() == "ruleview" ||
+        this.inspector.is3PaneModeEnabled)
     );
   },
 
@@ -2091,6 +2089,11 @@ class RuleViewTool {
     );
     this.inspector.sidebar.on(
       "ruleview-selected",
+      this.onPanelSelected,
+      baseEventConfig
+    );
+    this.inspector.toolbox.on(
+      "inspector-selected",
       this.onPanelSelected,
       baseEventConfig
     );
