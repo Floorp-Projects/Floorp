@@ -150,11 +150,17 @@ add_task(async function testActiveEvent() {
 
 add_task(async function testConsumedEvent() {
   await setPreferences();
+  SpecialPowers.Services.prefs.setIntPref(
+    "dom.user_activation.transient.timeout",
+    1000
+  );
 
+  const timeout =
+    SpecialPowers.getIntPref("dom.user_activation.transient.timeout") + 1000;
   // Timeout to consume transient activation
   await openPageAndRunCode(
     TEST_TOP_PAGE_HTTPS,
-    getExpectPopupAndClickAfterDelay("accept", 6000),
+    getExpectPopupAndClickAfterDelay("accept", timeout),
     TEST_3RD_PARTY_PAGE,
     requestStorageAccessAndExpectUserActivationConsumed
   );
