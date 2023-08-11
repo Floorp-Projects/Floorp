@@ -23,11 +23,11 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ee566d1bfb654d36e
  video/receive_statistics_proxy.cc       |  5 +++++
  video/receive_statistics_proxy.h        |  1 +
  video/rtp_video_stream_receiver2.cc     |  5 ++++-
- video/rtp_video_stream_receiver2.h      |  2 ++
+ video/rtp_video_stream_receiver2.h      |  3 +++
  video/video_receive_stream2.cc          |  1 +
  video/video_stream_buffer_controller.cc | 12 ++++++++++++
  video/video_stream_buffer_controller.h  |  5 +++++
- 12 files changed, 69 insertions(+), 8 deletions(-)
+ 12 files changed, 70 insertions(+), 8 deletions(-)
 
 diff --git a/api/video/frame_buffer.cc b/api/video/frame_buffer.cc
 index 4cdf2212a6..8267b8e6cb 100644
@@ -215,14 +215,14 @@ index 9c38dec1d8..052989906a 100644
                                     int current_delay_ms,
                                     int target_delay_ms,
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 59ecbb3ab1..e817a2bb4d 100644
+index 59ecbb3ab1..dccaa3158f 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -244,6 +244,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
      RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
      RtcpCnameCallback* rtcp_cname_callback,
      NackPeriodicProcessor* nack_periodic_processor,
-+    VCMReceiveStatisticsCallback* vcm_receive_statistics,
++    VideoStreamBufferControllerStatsObserver* vcm_receive_statistics,
      OnCompleteFrameCallback* complete_frame_callback,
      rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
@@ -245,22 +245,30 @@ index 59ecbb3ab1..e817a2bb4d 100644
    }
  }
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index dc9cea422d..90bce6d4b5 100644
+index dc9cea422d..a39e7bd006 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
-@@ -91,6 +91,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
+@@ -49,6 +49,7 @@
+ #include "rtc_base/thread_annotations.h"
+ #include "video/buffered_frame_decryptor.h"
+ #include "video/unique_timestamp_counter.h"
++#include "video/video_stream_buffer_controller.h"
+ 
+ namespace webrtc {
+ 
+@@ -91,6 +92,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
        RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
        RtcpCnameCallback* rtcp_cname_callback,
        NackPeriodicProcessor* nack_periodic_processor,
-+      VCMReceiveStatisticsCallback* vcm_receive_statistics,
++      VideoStreamBufferControllerStatsObserver* vcm_receive_statistics,
        // The KeyFrameRequestSender is optional; if not provided, key frame
        // requests are sent via the internal RtpRtcp module.
        OnCompleteFrameCallback* complete_frame_callback,
-@@ -361,6 +362,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
+@@ -361,6 +363,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
    std::unique_ptr<LossNotificationController> loss_notification_controller_
        RTC_GUARDED_BY(packet_sequence_checker_);
  
-+  VCMReceiveStatisticsCallback* const vcm_receive_statistics_;
++  VideoStreamBufferControllerStatsObserver* const vcm_receive_statistics_;
    video_coding::PacketBuffer packet_buffer_
        RTC_GUARDED_BY(packet_sequence_checker_);
    UniqueTimestampCounter frame_counter_
