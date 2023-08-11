@@ -1,1129 +1,1218 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Mon, 14 Feb 2022 17:50:52 -0600
-Subject: (fix) reconcile github with what was actually committed in
- moz-central
+From: Dan Minor <dminor@mozilla.com>
+Date: Thu, 5 Nov 2020 07:47:00 +0000
+Subject: Bug 1654112 - Tweak upstream gn files for Firefox build. r=ng
 
+Differential Revision: https://phabricator.services.mozilla.com/D130075
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/127ace4d8887f11abb201d300a849772a2b519f8
+
+Bug 1820869 - avoid building unreachable files. r=ng,webrtc-reviewers
+
+Differential Revision: https://phabricator.services.mozilla.com/D171922
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/88b3cc6bbece7c53d00e124713330f3d34d2789d
+
+Bug 1822194 - (fix-acabb3641b) Break the new SetParametersCallback stuff into stand-alone files.
+
+acabb3641b from upstream added a callback mechanism to allow failures to be
+propagated back to RTCRtpSender.setParameters. Unfortunately, this callback
+mechanism was (needlessly) tightly coupled to libwebrtc's implementation of
+RTCRtpSender, and also their media channel code. This introduced a lot of
+unnecessary dependencies throughout libwebrtc, that spilled into our code as
+well.
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59232687efa00e5f7b7bd3d6befca129149e2bf5
+
+Bug 1828517 - (fix-794d599741) account for moved files in BUILD.gn that we don't want to build.
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4a969f6709183d4f55215adaffb8a52b790a8492
+
+Bug 1839451 - (fix-186ebdc1b0) remove BUILD.gn refs to gone files delayable.h, media_channel.h
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0f4d1733cb1a2d8189097af4b5537118ebc95a6
 ---
- .../signal_processing/filter_ar_fast_q12.c    |    2 +-
- .../linux/wayland/base_capturer_pipewire.cc   |   11 +-
- .../video_capture/linux/device_info_v4l2.cc   |    1 +
- rtc_base/trace_event.h                        | 1055 +----------------
- 4 files changed, 15 insertions(+), 1054 deletions(-)
+ .gn                                           |  2 +
+ BUILD.gn                                      | 45 ++++++++++++++++++-
+ api/BUILD.gn                                  | 32 ++++++++++++-
+ api/rtp_sender_interface.h                    |  4 +-
+ api/rtp_sender_setparameters_callback.cc      | 27 +++++++++++
+ api/rtp_sender_setparameters_callback.h       | 28 ++++++++++++
+ api/task_queue/BUILD.gn                       |  2 +
+ api/transport/BUILD.gn                        |  2 +
+ call/BUILD.gn                                 | 14 +++++-
+ call/audio_send_stream.h                      |  2 +-
+ call/video_send_stream.h                      |  2 +-
+ common_audio/BUILD.gn                         |  4 --
+ common_audio/fir_filter_avx2.cc               |  2 +
+ common_audio/intrin.h                         |  8 ++++
+ media/BUILD.gn                                | 35 ++++++++++++++-
+ media/base/media_channel.h                    |  4 --
+ media/base/media_channel_impl.cc              | 13 ------
+ modules/audio_coding/BUILD.gn                 |  2 +-
+ modules/audio_device/BUILD.gn                 | 19 +++++---
+ modules/audio_processing/aec3/BUILD.gn        | 13 +++---
+ .../aec3/adaptive_fir_filter_avx2.cc          |  2 +-
+ .../audio_processing/agc2/rnn_vad/BUILD.gn    |  2 +-
+ modules/desktop_capture/BUILD.gn              | 29 +-----------
+ modules/portal/BUILD.gn                       | 24 ++++++++++
+ modules/video_capture/BUILD.gn                | 11 +----
+ rtc_base/BUILD.gn                             |  6 ++-
+ rtc_base/system/BUILD.gn                      |  2 +-
+ test/BUILD.gn                                 | 10 +++++
+ video/BUILD.gn                                |  4 +-
+ webrtc.gni                                    | 34 +++++++++-----
+ 30 files changed, 283 insertions(+), 101 deletions(-)
+ create mode 100644 api/rtp_sender_setparameters_callback.cc
+ create mode 100644 api/rtp_sender_setparameters_callback.h
+ create mode 100644 common_audio/intrin.h
 
-diff --git a/common_audio/signal_processing/filter_ar_fast_q12.c b/common_audio/signal_processing/filter_ar_fast_q12.c
-index 8b8bdb1af5..9010f1ce82 100644
---- a/common_audio/signal_processing/filter_ar_fast_q12.c
-+++ b/common_audio/signal_processing/filter_ar_fast_q12.c
+diff --git a/.gn b/.gn
+index 445772fada..c280fae405 100644
+--- a/.gn
++++ b/.gn
+@@ -69,6 +69,8 @@ default_args = {
+   # Prevent jsoncpp to pass -Wno-deprecated-declarations to users
+   jsoncpp_no_deprecated_declarations = false
+ 
++  use_custom_libcxx = false
++
+   # Fixes the abi-revision issue.
+   # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
+   # Chromium fix resolves the problem.
+diff --git a/BUILD.gn b/BUILD.gn
+index d5289b85d7..8356dfe0bf 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -32,7 +32,7 @@ if (is_android) {
+   import("//build/config/android/rules.gni")
+ }
+ 
+-if (!build_with_chromium) {
++if (!build_with_chromium && !build_with_mozilla) {
+   # This target should (transitively) cause everything to be built; if you run
+   # 'ninja default' and then 'ninja all', the second build should do no work.
+   group("default") {
+@@ -152,6 +152,10 @@ config("common_inherited_config") {
+     defines += [ "WEBRTC_ENABLE_OBJC_SYMBOL_EXPORT" ]
+   }
+ 
++  if (build_with_mozilla) {
++    defines += [ "WEBRTC_MOZILLA_BUILD" ]
++  }
++
+   if (!rtc_builtin_ssl_root_certificates) {
+     defines += [ "WEBRTC_EXCLUDE_BUILT_IN_SSL_ROOT_CERTS" ]
+   }
+@@ -466,9 +470,11 @@ config("common_config") {
+   }
+ }
+ 
++if (is_mac) {
+ config("common_objc") {
+   frameworks = [ "Foundation.framework" ]
+ }
++}
+ 
+ if (!build_with_chromium) {
+   # Target to build all the WebRTC production code.
+@@ -518,6 +524,33 @@ if (!build_with_chromium) {
+       "sdk",
+       "video",
+     ]
++    if (build_with_mozilla) {
++      deps -= [
++        "api:create_peerconnection_factory",
++        "api:rtc_error",
++        "api:transport_api",
++        "api/crypto",
++        "api/rtc_event_log:rtc_event_log_factory",
++        "api/task_queue",
++        "api/task_queue:default_task_queue_factory",
++        "api/test/metrics",
++        "api/video_codecs:video_decoder_factory_template",
++        "api/video_codecs:video_decoder_factory_template_dav1d_adapter",
++        "api/video_codecs:video_decoder_factory_template_libvpx_vp8_adapter",
++        "api/video_codecs:video_decoder_factory_template_libvpx_vp9_adapter",
++        "api/video_codecs:video_decoder_factory_template_open_h264_adapter",
++        "api/video_codecs:video_encoder_factory_template",
++        "api/video_codecs:video_encoder_factory_template_libaom_av1_adapter",
++        "api/video_codecs:video_encoder_factory_template_libvpx_vp8_adapter",
++        "api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
++        "api/video_codecs:video_encoder_factory_template_open_h264_adapter",
++        "logging:rtc_event_log_api",
++        "p2p:rtc_p2p",
++        "pc:libjingle_peerconnection",
++        "pc:rtc_pc",
++        "sdk",
++      ]
++    }
+ 
+     if (rtc_include_builtin_audio_codecs) {
+       deps += [
+@@ -530,6 +563,16 @@ if (!build_with_chromium) {
+       deps += [
+         "api/video:video_frame",
+         "api/video:video_rtp_headers",
++        "test:rtp_test_utils",
++      ]
++      # Added when we removed deps in other places to avoid building
++      # unreachable sources.  See Bug 1820869.
++      deps += [
++        "api/video_codecs:video_codecs_api",
++        "api/video_codecs:rtc_software_fallback_wrappers",
++        "media:rtc_encoder_simulcast_proxy",
++        "modules/video_coding:webrtc_vp8",
++        "modules/video_coding:webrtc_vp9",
+       ]
+     } else {
+       deps += [
+diff --git a/api/BUILD.gn b/api/BUILD.gn
+index a9217400fe..07b4b8fe87 100644
+--- a/api/BUILD.gn
++++ b/api/BUILD.gn
+@@ -35,7 +35,7 @@ rtc_source_set("callfactory_api") {
+   ]
+ }
+ 
+-if (!build_with_chromium) {
++if (!build_with_chromium && !build_with_mozilla) {
+   rtc_library("create_peerconnection_factory") {
+     visibility = [ "*" ]
+     allow_poison = [ "default_task_queue" ]
+@@ -186,6 +186,10 @@ rtc_source_set("ice_transport_interface") {
+ }
+ 
+ rtc_library("dtls_transport_interface") {
++# Previously, Mozilla has tried to limit including this dep, but as
++# upstream changes, it requires whack-a-mole.  Making it an empty
++# definition has the same effect, but only requires one change.
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+ 
+   sources = [
+@@ -202,6 +206,7 @@ rtc_library("dtls_transport_interface") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+ }
++}
+ 
+ rtc_library("dtmf_sender_interface") {
+   visibility = [ "*" ]
+@@ -214,6 +219,10 @@ rtc_library("dtmf_sender_interface") {
+ }
+ 
+ rtc_library("rtp_sender_interface") {
++# Previously, Mozilla has tried to limit including this dep, but as
++# upstream changes, it requires whack-a-mole.  Making it an empty
++# definition has the same effect, but only requires one change.
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+ 
+   sources = [
+@@ -225,8 +234,8 @@ rtc_library("rtp_sender_interface") {
+     ":dtmf_sender_interface",
+     ":frame_transformer_interface",
+     ":media_stream_interface",
+-    ":rtc_error",
+     ":rtp_parameters",
++    ":rtp_sender_setparameters_callback",
+     ":scoped_refptr",
+     "../rtc_base:checks",
+     "../rtc_base:refcount",
+@@ -234,10 +243,24 @@ rtc_library("rtp_sender_interface") {
+     "crypto:frame_encryptor_interface",
+     "video_codecs:video_codecs_api",
+   ]
++}
++}
++
++rtc_library("rtp_sender_setparameters_callback") {
++  visibility = [ "*" ]
++
++  sources = [
++    "rtp_sender_setparameters_callback.cc",
++    "rtp_sender_setparameters_callback.h",
++  ]
++  deps = [
++    ":rtc_error",
++  ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
+ }
+ 
+ rtc_library("libjingle_peerconnection_api") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   cflags = []
+   sources = [
+@@ -354,6 +377,7 @@ rtc_library("libjingle_peerconnection_api") {
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
+ }
++}
+ 
+ rtc_source_set("frame_transformer_interface") {
+   visibility = [ "*" ]
+@@ -544,6 +568,7 @@ rtc_source_set("peer_network_dependencies") {
+ }
+ 
+ rtc_source_set("peer_connection_quality_test_fixture_api") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   testonly = true
+   sources = [ "test/peerconnection_quality_test_fixture.h" ]
+@@ -594,6 +619,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
+ }
++}
+ 
+ rtc_source_set("frame_generator_api") {
+   visibility = [ "*" ]
+@@ -899,6 +925,7 @@ rtc_source_set("refcountedbase") {
+   ]
+ }
+ 
++if (!build_with_mozilla) {
+ rtc_library("ice_transport_factory") {
+   visibility = [ "*" ]
+   sources = [
+@@ -917,6 +944,7 @@ rtc_library("ice_transport_factory") {
+     "rtc_event_log:rtc_event_log",
+   ]
+ }
++}
+ 
+ rtc_library("neteq_simulator_api") {
+   visibility = [ "*" ]
+diff --git a/api/rtp_sender_interface.h b/api/rtp_sender_interface.h
+index 2786a2ac19..98ee91b1cc 100644
+--- a/api/rtp_sender_interface.h
++++ b/api/rtp_sender_interface.h
+@@ -32,9 +32,9 @@
+ #include "rtc_base/ref_count.h"
+ #include "rtc_base/system/rtc_export.h"
+ 
+-namespace webrtc {
++#include "api/rtp_sender_setparameters_callback.h"
+ 
+-using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
++namespace webrtc {
+ 
+ class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
+  public:
+diff --git a/api/rtp_sender_setparameters_callback.cc b/api/rtp_sender_setparameters_callback.cc
+new file mode 100644
+index 0000000000..99728ef95e
+--- /dev/null
++++ b/api/rtp_sender_setparameters_callback.cc
+@@ -0,0 +1,27 @@
++/*
++ *  Copyright 2015 The WebRTC project authors. All Rights Reserved.
++ *
++ *  Use of this source code is governed by a BSD-style license
++ *  that can be found in the LICENSE file in the root of the source
++ *  tree. An additional intellectual property rights grant can be found
++ *  in the file PATENTS.  All contributing project authors may
++ *  be found in the AUTHORS file in the root of the source tree.
++ */
++
++// File added by mozilla, to decouple this from libwebrtc's implementation of
++// RTCRtpSender.
++
++#include "api/rtp_sender_setparameters_callback.h"
++
++namespace webrtc {
++
++webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
++                                             RTCError error) {
++  if (callback) {
++    std::move(callback)(error);
++    callback = nullptr;
++  }
++  return error;
++}
++
++} // namespace webrtc
+diff --git a/api/rtp_sender_setparameters_callback.h b/api/rtp_sender_setparameters_callback.h
+new file mode 100644
+index 0000000000..45194f5ace
+--- /dev/null
++++ b/api/rtp_sender_setparameters_callback.h
+@@ -0,0 +1,28 @@
++/*
++ *  Copyright 2015 The WebRTC project authors. All Rights Reserved.
++ *
++ *  Use of this source code is governed by a BSD-style license
++ *  that can be found in the LICENSE file in the root of the source
++ *  tree. An additional intellectual property rights grant can be found
++ *  in the file PATENTS.  All contributing project authors may
++ *  be found in the AUTHORS file in the root of the source tree.
++ */
++
++// File added by mozilla, to decouple this from libwebrtc's implementation of
++// RTCRtpSender.
++
++#ifndef API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
++#define API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
++
++#include "api/rtc_error.h"
++#include "absl/functional/any_invocable.h"
++
++namespace webrtc {
++
++using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
++
++webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
++                                             RTCError error);
++} // namespace webrtc
++
++#endif  // API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
+diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
+index 65bb1ae21b..116a50762e 100644
+--- a/api/task_queue/BUILD.gn
++++ b/api/task_queue/BUILD.gn
+@@ -31,6 +31,7 @@ rtc_library("task_queue") {
+   ]
+ }
+ 
++if (rtc_include_tests) {
+ rtc_library("task_queue_test") {
+   visibility = [ "*" ]
+   testonly = true
+@@ -79,6 +80,7 @@ rtc_library("task_queue_test") {
+     ]
+   }
+ }
++}
+ 
+ rtc_library("default_task_queue_factory") {
+   visibility = [ "*" ]
+diff --git a/api/transport/BUILD.gn b/api/transport/BUILD.gn
+index 12a1f57066..d8f095c700 100644
+--- a/api/transport/BUILD.gn
++++ b/api/transport/BUILD.gn
+@@ -90,6 +90,7 @@ rtc_source_set("sctp_transport_factory_interface") {
+ }
+ 
+ rtc_source_set("stun_types") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "stun.cc",
+@@ -110,6 +111,7 @@ rtc_source_set("stun_types") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ if (rtc_include_tests) {
+   rtc_source_set("test_feedback_generator_interface") {
+diff --git a/call/BUILD.gn b/call/BUILD.gn
+index 63a3a2d53d..a85ad0c0d4 100644
+--- a/call/BUILD.gn
++++ b/call/BUILD.gn
+@@ -46,7 +46,7 @@ rtc_library("call_interfaces") {
+     "../api:rtc_error",
+     "../api:rtp_headers",
+     "../api:rtp_parameters",
+-    "../api:rtp_sender_interface",
++    "../api:rtp_sender_setparameters_callback",
+     "../api:scoped_refptr",
+     "../api:transport_api",
+     "../api/adaptation:resource_adaptation_api",
+@@ -346,6 +346,16 @@ rtc_library("call") {
+     "//third_party/abseil-cpp/absl/strings",
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
++  if (build_with_mozilla) { # See Bug 1820869.
++    sources -= [
++      "call_factory.cc",
++      "degraded_call.cc",
++    ]
++    deps -= [
++      ":fake_network",
++      ":simulated_network",
++    ]
++  }
+ }
+ 
+ rtc_source_set("receive_stream_interface") {
+@@ -373,7 +383,7 @@ rtc_library("video_stream_api") {
+     "../api:frame_transformer_interface",
+     "../api:rtp_headers",
+     "../api:rtp_parameters",
+-    "../api:rtp_sender_interface",
++    "../api:rtp_sender_setparameters_callback",
+     "../api:scoped_refptr",
+     "../api:transport_api",
+     "../api/adaptation:resource_adaptation_api",
+diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
+index 9c2fad652f..f9e49db574 100644
+--- a/call/audio_send_stream.h
++++ b/call/audio_send_stream.h
+@@ -25,7 +25,7 @@
+ #include "api/crypto/frame_encryptor_interface.h"
+ #include "api/frame_transformer_interface.h"
+ #include "api/rtp_parameters.h"
+-#include "api/rtp_sender_interface.h"
++#include "api/rtp_sender_setparameters_callback.h"
+ #include "api/scoped_refptr.h"
+ #include "call/audio_sender.h"
+ #include "call/rtp_config.h"
+diff --git a/call/video_send_stream.h b/call/video_send_stream.h
+index 431c267e1e..de18fc7b92 100644
+--- a/call/video_send_stream.h
++++ b/call/video_send_stream.h
+@@ -23,7 +23,7 @@
+ #include "api/crypto/crypto_options.h"
+ #include "api/frame_transformer_interface.h"
+ #include "api/rtp_parameters.h"
+-#include "api/rtp_sender_interface.h"
++#include "api/rtp_sender_setparameters_callback.h"
+ #include "api/scoped_refptr.h"
+ #include "api/video/video_content_type.h"
+ #include "api/video/video_frame.h"
+diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
+index 2ae6d32710..a45214f754 100644
+--- a/common_audio/BUILD.gn
++++ b/common_audio/BUILD.gn
+@@ -267,14 +267,10 @@ if (current_cpu == "x86" || current_cpu == "x64") {
+       "resampler/sinc_resampler_avx2.cc",
+     ]
+ 
+-    if (is_win) {
+-      cflags = [ "/arch:AVX2" ]
+-    } else {
+       cflags = [
+         "-mavx2",
+         "-mfma",
+       ]
+-    }
+ 
+     deps = [
+       ":fir_filter",
+diff --git a/common_audio/fir_filter_avx2.cc b/common_audio/fir_filter_avx2.cc
+index 9cb0f770ca..0031392f8a 100644
+--- a/common_audio/fir_filter_avx2.cc
++++ b/common_audio/fir_filter_avx2.cc
+@@ -15,6 +15,8 @@
+ #include <string.h>
+ #include <xmmintrin.h>
+ 
++#include "common_audio/intrin.h"
++
+ #include "rtc_base/checks.h"
+ #include "rtc_base/memory/aligned_malloc.h"
+ 
+diff --git a/common_audio/intrin.h b/common_audio/intrin.h
+new file mode 100644
+index 0000000000..f6ff7f218f
+--- /dev/null
++++ b/common_audio/intrin.h
+@@ -0,0 +1,8 @@
++#if defined (__SSE__)
++  #include <immintrin.h>
++  #if defined (__clang__)
++    #include <avxintrin.h>
++    #include <avx2intrin.h>
++    #include <fmaintrin.h>
++  #endif
++#endif
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index cf0f3d3bd8..a3d03da735 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
+     "../api:media_stream_interface",
+     "../api:rtc_error",
+     "../api:rtp_parameters",
+-    "../api:rtp_sender_interface",
++    "../api:rtp_sender_setparameters_callback",
+     "../api:scoped_refptr",
+     "../api:sequence_checker",
+     "../api:transport_api",
+@@ -139,9 +139,19 @@ rtc_library("rtc_media_base") {
+     "base/video_source_base.cc",
+     "base/video_source_base.h",
+   ]
++  if (build_with_mozilla) {
++    sources -= [
++      "base/adapted_video_track_source.cc",
++      "base/adapted_video_track_source.h",
++      "base/audio_source.h",
++      "base/media_engine.cc",
++      "base/media_engine.h",
++    ]
++  }
+ }
+ 
+ rtc_library("media_channel_impl") {
++if (!build_with_mozilla) {
+   sources = [
+     "base/media_channel_impl.cc",
+     "base/media_channel_impl.h",
+@@ -190,6 +200,7 @@ rtc_library("media_channel_impl") {
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
+ }
++}
+ 
+ rtc_source_set("media_channel") {
+   sources = [ "base/media_channel.h" ]
+@@ -263,6 +274,7 @@ rtc_library("codec") {
+ }
+ 
+ rtc_library("rtp_utils") {
++if (!build_with_mozilla) {
+   sources = [
+     "base/rtp_utils.cc",
+     "base/rtp_utils.h",
+@@ -279,8 +291,10 @@ rtc_library("rtp_utils") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_library("stream_params") {
++if (!build_with_mozilla) {
+   sources = [
+     "base/stream_params.cc",
+     "base/stream_params.h",
+@@ -293,6 +307,7 @@ rtc_library("stream_params") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
+ }
++}
+ 
+ rtc_library("media_constants") {
+   sources = [
+@@ -303,6 +318,7 @@ rtc_library("media_constants") {
+ }
+ 
+ rtc_library("turn_utils") {
++if (!build_with_mozilla) {
+   sources = [
+     "base/turn_utils.cc",
+     "base/turn_utils.h",
+@@ -313,14 +329,17 @@ rtc_library("turn_utils") {
+     "../rtc_base/system:rtc_export",
+   ]
+ }
++}
+ 
+ rtc_library("rid_description") {
++if (!build_with_mozilla) {
+   sources = [
+     "base/rid_description.cc",
+     "base/rid_description.h",
+   ]
+   deps = []
+ }
++}
+ 
+ rtc_library("rtc_simulcast_encoder_adapter") {
+   visibility = [ "*" ]
+@@ -392,6 +411,12 @@ rtc_library("rtc_internal_video_codecs") {
+     "../system_wrappers:field_trial",
+     "../test:fake_video_codecs",
+   ]
++  if (build_with_mozilla) {
++    deps -= [
++      "../modules/video_coding:webrtc_multiplex", # See Bug 1820869.
++      "../test:fake_video_codecs",
++    ]
++  }
+ 
+   if (enable_libaom) {
+     defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
+@@ -417,6 +442,14 @@ rtc_library("rtc_internal_video_codecs") {
+     "engine/multiplex_codec_factory.cc",
+     "engine/multiplex_codec_factory.h",
+   ]
++  if (build_with_mozilla) {
++    sources -= [
++      "engine/fake_video_codec_factory.cc",
++      "engine/fake_video_codec_factory.h",
++      "engine/internal_encoder_factory.cc", # See Bug 1820869.
++      "engine/multiplex_codec_factory.cc", # See Bug 1820869.
++    ]
++  }
+ }
+ 
+ rtc_library("rtc_audio_video") {
+diff --git a/media/base/media_channel.h b/media/base/media_channel.h
+index 52aedeccd2..97a6b9bd4f 100644
+--- a/media/base/media_channel.h
++++ b/media/base/media_channel.h
+@@ -64,10 +64,6 @@ class Timing;
+ 
+ namespace webrtc {
+ class VideoFrame;
+-
+-webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
+-                                             RTCError error);
+-
+ }  // namespace webrtc
+ 
+ namespace cricket {
+diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
+index 0de04b6b23..7dbb24a9ee 100644
+--- a/media/base/media_channel_impl.cc
++++ b/media/base/media_channel_impl.cc
+@@ -31,19 +31,6 @@
+ #include "modules/rtp_rtcp/include/report_block_data.h"
+ #include "rtc_base/checks.h"
+ 
+-namespace webrtc {
+-
+-webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
+-                                             RTCError error) {
+-  if (callback) {
+-    std::move(callback)(error);
+-    callback = nullptr;
+-  }
+-  return error;
+-}
+-
+-}  // namespace webrtc
+-
+ namespace cricket {
+ using webrtc::FrameDecryptorInterface;
+ using webrtc::FrameEncryptorInterface;
+diff --git a/modules/audio_coding/BUILD.gn b/modules/audio_coding/BUILD.gn
+index 1420aa6385..143a6eca41 100644
+--- a/modules/audio_coding/BUILD.gn
++++ b/modules/audio_coding/BUILD.gn
+@@ -553,7 +553,7 @@ rtc_library("webrtc_opus_wrapper") {
+     deps += [ rtc_opus_dir ]
+     public_configs = [ "//third_party/opus:opus_config" ]
+   } else if (build_with_mozilla) {
+-    include_dirs = [ getenv("DIST") + "/include/opus" ]
++    public_configs = [ "//third_party/opus:opus_config" ]
+   }
+ }
+ 
+diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
+index a0a6f53e9a..6704328108 100644
+--- a/modules/audio_device/BUILD.gn
++++ b/modules/audio_device/BUILD.gn
+@@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
+ }
+ 
+ rtc_source_set("audio_device") {
++if (!build_with_mozilla) { # See Bug 1820869.
+   visibility = [ "*" ]
+   public_deps = [
+     ":audio_device_api",
+@@ -40,6 +41,7 @@ rtc_source_set("audio_device") {
+     ":audio_device_impl",
+   ]
+ }
++}
+ 
+ rtc_source_set("audio_device_api") {
+   visibility = [ "*" ]
+@@ -58,6 +60,7 @@ rtc_source_set("audio_device_api") {
+ }
+ 
+ rtc_library("audio_device_buffer") {
++if (!build_with_mozilla) { # See Bug 1820869.
+   sources = [
+     "audio_device_buffer.cc",
+     "audio_device_buffer.h",
+@@ -85,6 +88,7 @@ rtc_library("audio_device_buffer") {
+     "../../system_wrappers:metrics",
+   ]
+ }
++}
+ 
+ rtc_library("audio_device_generic") {
+   sources = [
+@@ -212,6 +216,7 @@ if (!build_with_chromium) {
+ # Contains default implementations of webrtc::AudioDeviceModule for Windows,
+ # Linux, Mac, iOS and Android.
+ rtc_library("audio_device_impl") {
++if (!build_with_mozilla) { # See Bug 1820869.
+   visibility = [ "*" ]
+   deps = [
+     ":audio_device_api",
+@@ -263,9 +268,9 @@ rtc_library("audio_device_impl") {
+   ]
+ 
+   if (build_with_mozilla) {
+-    sources += [
+-      "opensl/single_rw_fifo.cc",
+-      "opensl/single_rw_fifo.h",
++    sources -= [
++      "include/test_audio_device.cc",
++      "include/test_audio_device.h",
+     ]
+   }
+ 
+@@ -403,6 +408,7 @@ rtc_library("audio_device_impl") {
+     ]
+   }
+ }
++}
+ 
+ if (is_mac) {
+   rtc_source_set("audio_device_impl_frameworks") {
+@@ -420,6 +426,7 @@ if (is_mac) {
+   }
+ }
+ 
++if (!build_with_mozilla) { # See Bug 1820869.
+ rtc_source_set("mock_audio_device") {
+   visibility = [ "*" ]
+   testonly = true
+@@ -436,8 +443,10 @@ rtc_source_set("mock_audio_device") {
+     "../../test:test_support",
+   ]
+ }
++}
+ 
+-if (rtc_include_tests && !build_with_chromium) {
++# See Bug 1820869 for !build_with_mozilla.
++if (rtc_include_tests && !build_with_chromium && !build_with_mozilla) {
+   rtc_library("audio_device_unittests") {
+     testonly = true
+ 
+@@ -508,7 +517,7 @@ if (rtc_include_tests && !build_with_chromium) {
+   }
+ }
+ 
+-if (!build_with_chromium && is_android) {
++if ((!build_with_chromium && !build_with_mozilla) && is_android) {
+   rtc_android_library("audio_device_java") {
+     sources = [
+       "android/java/src/org/webrtc/voiceengine/BuildInfo.java",
+diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
+index f5eb5d5951..3e11a245a1 100644
+--- a/modules/audio_processing/aec3/BUILD.gn
++++ b/modules/audio_processing/aec3/BUILD.gn
+@@ -264,14 +264,11 @@ if (current_cpu == "x86" || current_cpu == "x64") {
+       "vector_math_avx2.cc",
+     ]
+ 
+-    if (is_win) {
+-      cflags = [ "/arch:AVX2" ]
+-    } else {
+-      cflags = [
+-        "-mavx2",
+-        "-mfma",
+-      ]
+-    }
++    cflags = [
++      "-mavx",
++      "-mavx2",
++      "-mfma",
++    ]
+ 
+     deps = [
+       ":adaptive_fir_filter",
+diff --git a/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc b/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
+index b6eda9f117..8d6e1cf3d7 100644
+--- a/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
++++ b/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
 @@ -8,7 +8,7 @@
   *  be found in the AUTHORS file in the root of the source tree.
   */
  
--#include "stddef.h"
-+#include <stddef.h>
+-#include <immintrin.h>
++#include "common_audio/intrin.h"
  
+ #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
  #include "rtc_base/checks.h"
- #include "common_audio/signal_processing/include/signal_processing_library.h"
-diff --git a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-index 4ef00e68ab..1ae0a4c794 100644
---- a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-+++ b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-@@ -173,6 +173,15 @@ void BaseCapturerPipeWire::CaptureFrame() {
-   callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
- }
- 
-+// Keep in sync with defines at browser/actors/WebRTCParent.jsm
-+// With PipeWire we can't select which system resource is shared so
-+// we don't create a window/screen list. Instead we place these constants
-+// as window name/id so frontend code can identify PipeWire backend
-+// and does not try to create screen/window preview.
-+
-+#define PIPEWIRE_ID   0xaffffff
-+#define PIPEWIRE_NAME "####_PIPEWIRE_PORTAL_####"
-+
- bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
-   RTC_DCHECK(sources->size() == 0);
-   // List of available screens is already presented by the xdg-desktop-portal,
-@@ -189,7 +198,7 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
- bool BaseCapturerPipeWire::SelectSource(SourceId id) {
-   // Screen selection is handled by the xdg-desktop-portal.
-   selected_source_id_ = id;
--  return true;
-+  return id == PIPEWIRE_ID;
- }
- 
- DelegatedSourceListController*
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index cd0ba6e3df..c5d33ff9a4 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -330,6 +330,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
-     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-       // skip devices without video capture capability
-       if (!IsVideoCaptureDevice(&cap)) {
-+        close(fd);
-         continue;
-       }
- 
-diff --git a/rtc_base/trace_event.h b/rtc_base/trace_event.h
-index 6689bc0c37..b34df0c93f 100644
---- a/rtc_base/trace_event.h
-+++ b/rtc_base/trace_event.h
-@@ -1,1052 +1,3 @@
--// Copyright (c) 2012 The Chromium Authors. All rights reserved.
--// Use of this source code is governed by a BSD-style license that can be
--// found in the LICENSE file under third_party_mods/chromium or at:
--// http://src.chromium.org/svn/trunk/src/LICENSE
+diff --git a/modules/audio_processing/agc2/rnn_vad/BUILD.gn b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
+index 9093a68cf3..3003a585bd 100644
+--- a/modules/audio_processing/agc2/rnn_vad/BUILD.gn
++++ b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
+@@ -122,7 +122,7 @@ rtc_source_set("vector_math") {
+ if (current_cpu == "x86" || current_cpu == "x64") {
+   rtc_library("vector_math_avx2") {
+     sources = [ "vector_math_avx2.cc" ]
+-    if (is_win) {
++    if (is_win && !build_with_mozilla) {
+       cflags = [ "/arch:AVX2" ]
+     } else {
+       cflags = [
+diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
+index 6f3e9d26c5..42d72865b9 100644
+--- a/modules/desktop_capture/BUILD.gn
++++ b/modules/desktop_capture/BUILD.gn
+@@ -341,37 +341,12 @@ rtc_library("desktop_capture") {
+     ]
+     deps += [ ":desktop_capture_objc" ]
+   }
 -
--#ifndef RTC_BASE_TRACE_EVENT_H_
--#define RTC_BASE_TRACE_EVENT_H_
--
--#include <string>
--
--#include "rtc_base/event_tracer.h"
--
--#if defined(TRACE_EVENT0)
--#error "Another copy of trace_event.h has already been included."
--#endif
--
--#if defined(RTC_DISABLE_TRACE_EVENTS)
--#define RTC_TRACE_EVENTS_ENABLED 0
--#else
--#define RTC_TRACE_EVENTS_ENABLED 1
--#endif
--
--// Type values for identifying types in the TraceValue union.
--#define TRACE_VALUE_TYPE_BOOL (static_cast<unsigned char>(1))
--#define TRACE_VALUE_TYPE_UINT (static_cast<unsigned char>(2))
--#define TRACE_VALUE_TYPE_INT (static_cast<unsigned char>(3))
--#define TRACE_VALUE_TYPE_DOUBLE (static_cast<unsigned char>(4))
--#define TRACE_VALUE_TYPE_POINTER (static_cast<unsigned char>(5))
--#define TRACE_VALUE_TYPE_STRING (static_cast<unsigned char>(6))
--#define TRACE_VALUE_TYPE_COPY_STRING (static_cast<unsigned char>(7))
--
--#if RTC_TRACE_EVENTS_ENABLED
--
--// Extracted from Chromium's src/base/debug/trace_event.h.
--
--// This header is designed to give you trace_event macros without specifying
--// how the events actually get collected and stored. If you need to expose trace
--// event to some other universe, you can copy-and-paste this file,
--// implement the TRACE_EVENT_API macros, and do any other necessary fixup for
--// the target platform. The end result is that multiple libraries can funnel
--// events through to a shared trace event collector.
--
--// Trace events are for tracking application performance and resource usage.
--// Macros are provided to track:
--//    Begin and end of function calls
--//    Counters
--//
--// Events are issued against categories. Whereas RTC_LOG's
--// categories are statically defined, TRACE categories are created
--// implicitly with a string. For example:
--//   TRACE_EVENT_INSTANT0("MY_SUBSYSTEM", "SomeImportantEvent")
--//
--// Events can be INSTANT, or can be pairs of BEGIN and END in the same scope:
--//   TRACE_EVENT_BEGIN0("MY_SUBSYSTEM", "SomethingCostly")
--//   doSomethingCostly()
--//   TRACE_EVENT_END0("MY_SUBSYSTEM", "SomethingCostly")
--// Note: our tools can't always determine the correct BEGIN/END pairs unless
--// these are used in the same scope. Use ASYNC_BEGIN/ASYNC_END macros if you
--// need them to be in separate scopes.
--//
--// A common use case is to trace entire function scopes. This
--// issues a trace BEGIN and END automatically:
--//   void doSomethingCostly() {
--//     TRACE_EVENT0("MY_SUBSYSTEM", "doSomethingCostly");
--//     ...
--//   }
--//
--// Additional parameters can be associated with an event:
--//   void doSomethingCostly2(int howMuch) {
--//     TRACE_EVENT1("MY_SUBSYSTEM", "doSomethingCostly",
--//         "howMuch", howMuch);
--//     ...
--//   }
--//
--// The trace system will automatically add to this information the
--// current process id, thread id, and a timestamp in microseconds.
--//
--// To trace an asynchronous procedure such as an IPC send/receive, use
--// ASYNC_BEGIN and ASYNC_END:
--//   [single threaded sender code]
--//     static int send_count = 0;
--//     ++send_count;
--//     TRACE_EVENT_ASYNC_BEGIN0("ipc", "message", send_count);
--//     Send(new MyMessage(send_count));
--//   [receive code]
--//     void OnMyMessage(send_count) {
--//       TRACE_EVENT_ASYNC_END0("ipc", "message", send_count);
--//     }
--// The third parameter is a unique ID to match ASYNC_BEGIN/ASYNC_END pairs.
--// ASYNC_BEGIN and ASYNC_END can occur on any thread of any traced process.
--// Pointers can be used for the ID parameter, and they will be mangled
--// internally so that the same pointer on two different processes will not
--// match. For example:
--//   class MyTracedClass {
--//    public:
--//     MyTracedClass() {
--//       TRACE_EVENT_ASYNC_BEGIN0("category", "MyTracedClass", this);
--//     }
--//     ~MyTracedClass() {
--//       TRACE_EVENT_ASYNC_END0("category", "MyTracedClass", this);
--//     }
--//   }
--//
--// Trace event also supports counters, which is a way to track a quantity
--// as it varies over time. Counters are created with the following macro:
--//   TRACE_COUNTER1("MY_SUBSYSTEM", "myCounter", g_myCounterValue);
--//
--// Counters are process-specific. The macro itself can be issued from any
--// thread, however.
--//
--// Sometimes, you want to track two counters at once. You can do this with two
--// counter macros:
--//   TRACE_COUNTER1("MY_SUBSYSTEM", "myCounter0", g_myCounterValue[0]);
--//   TRACE_COUNTER1("MY_SUBSYSTEM", "myCounter1", g_myCounterValue[1]);
--// Or you can do it with a combined macro:
--//   TRACE_COUNTER2("MY_SUBSYSTEM", "myCounter",
--//       "bytesPinned", g_myCounterValue[0],
--//       "bytesAllocated", g_myCounterValue[1]);
--// This indicates to the tracing UI that these counters should be displayed
--// in a single graph, as a summed area chart.
--//
--// Since counters are in a global namespace, you may want to disembiguate with a
--// unique ID, by using the TRACE_COUNTER_ID* variations.
--//
--// By default, trace collection is compiled in, but turned off at runtime.
--// Collecting trace data is the responsibility of the embedding
--// application. In Chrome's case, navigating to about:tracing will turn on
--// tracing and display data collected across all active processes.
--//
--//
--// Memory scoping note:
--// Tracing copies the pointers, not the string content, of the strings passed
--// in for category, name, and arg_names.  Thus, the following code will
--// cause problems:
--//     char* str = strdup("impprtantName");
--//     TRACE_EVENT_INSTANT0("SUBSYSTEM", str);  // BAD!
--//     free(str);                   // Trace system now has dangling pointer
--//
--// To avoid this issue with the `name` and `arg_name` parameters, use the
--// TRACE_EVENT_COPY_XXX overloads of the macros at additional runtime overhead.
--// Notes: The category must always be in a long-lived char* (i.e. static const).
--//        The `arg_values`, when used, are always deep copied with the _COPY
--//        macros.
--//
--// When are string argument values copied:
--// const char* arg_values are only referenced by default:
--//     TRACE_EVENT1("category", "name",
--//                  "arg1", "literal string is only referenced");
--// Use TRACE_STR_COPY to force copying of a const char*:
--//     TRACE_EVENT1("category", "name",
--//                  "arg1", TRACE_STR_COPY("string will be copied"));
--// std::string arg_values are always copied:
--//     TRACE_EVENT1("category", "name",
--//                  "arg1", std::string("string will be copied"));
--//
--//
--// Thread Safety:
--// Thread safety is provided by methods defined in event_tracer.h. See the file
--// for details.
--
--// By default, const char* argument values are assumed to have long-lived scope
--// and will not be copied. Use this macro to force a const char* to be copied.
--#define TRACE_STR_COPY(str) \
--  webrtc::trace_event_internal::TraceStringWithCopy(str)
--
--// This will mark the trace event as disabled by default. The user will need
--// to explicitly enable the event.
--#define TRACE_DISABLED_BY_DEFAULT(name) "disabled-by-default-" name
--
--// By default, uint64 ID argument values are not mangled with the Process ID in
--// TRACE_EVENT_ASYNC macros. Use this macro to force Process ID mangling.
--#define TRACE_ID_MANGLE(id) \
--  webrtc::trace_event_internal::TraceID::ForceMangle(id)
--
--// Records a pair of begin and end events called "name" for the current
--// scope, with 0, 1 or 2 associated arguments. If the category is not
--// enabled, then this does nothing.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--#define TRACE_EVENT0(category, name) \
--  INTERNAL_TRACE_EVENT_ADD_SCOPED(category, name)
--#define TRACE_EVENT1(category, name, arg1_name, arg1_val) \
--  INTERNAL_TRACE_EVENT_ADD_SCOPED(category, name, arg1_name, arg1_val)
--#define TRACE_EVENT2(category, name, arg1_name, arg1_val, arg2_name, arg2_val) \
--  INTERNAL_TRACE_EVENT_ADD_SCOPED(category, name, arg1_name, arg1_val,         \
--                                  arg2_name, arg2_val)
--
--// Records a single event called "name" immediately, with 0, 1 or 2
--// associated arguments. If the category is not enabled, then this
--// does nothing.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--#define TRACE_EVENT_INSTANT0(category, name)                          \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_INSTANT, category, name, \
--                           TRACE_EVENT_FLAG_NONE)
--#define TRACE_EVENT_INSTANT1(category, name, arg1_name, arg1_val)     \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_INSTANT, category, name, \
--                           TRACE_EVENT_FLAG_NONE, arg1_name, arg1_val)
--#define TRACE_EVENT_INSTANT2(category, name, arg1_name, arg1_val, arg2_name, \
--                             arg2_val)                                       \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_INSTANT, category, name,        \
--                           TRACE_EVENT_FLAG_NONE, arg1_name, arg1_val,       \
--                           arg2_name, arg2_val)
--#define TRACE_EVENT_COPY_INSTANT0(category, name)                     \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_INSTANT, category, name, \
--                           TRACE_EVENT_FLAG_COPY)
--#define TRACE_EVENT_COPY_INSTANT1(category, name, arg1_name, arg1_val) \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_INSTANT, category, name,  \
--                           TRACE_EVENT_FLAG_COPY, arg1_name, arg1_val)
--#define TRACE_EVENT_COPY_INSTANT2(category, name, arg1_name, arg1_val, \
--                                  arg2_name, arg2_val)                 \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_INSTANT, category, name,  \
--                           TRACE_EVENT_FLAG_COPY, arg1_name, arg1_val, \
--                           arg2_name, arg2_val)
--
--// Records a single BEGIN event called "name" immediately, with 0, 1 or 2
--// associated arguments. If the category is not enabled, then this
--// does nothing.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--#define TRACE_EVENT_BEGIN0(category, name)                          \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_BEGIN, category, name, \
--                           TRACE_EVENT_FLAG_NONE)
--#define TRACE_EVENT_BEGIN1(category, name, arg1_name, arg1_val)     \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_BEGIN, category, name, \
--                           TRACE_EVENT_FLAG_NONE, arg1_name, arg1_val)
--#define TRACE_EVENT_BEGIN2(category, name, arg1_name, arg1_val, arg2_name, \
--                           arg2_val)                                       \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_BEGIN, category, name,        \
--                           TRACE_EVENT_FLAG_NONE, arg1_name, arg1_val,     \
--                           arg2_name, arg2_val)
--#define TRACE_EVENT_COPY_BEGIN0(category, name)                     \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_BEGIN, category, name, \
--                           TRACE_EVENT_FLAG_COPY)
--#define TRACE_EVENT_COPY_BEGIN1(category, name, arg1_name, arg1_val) \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_BEGIN, category, name,  \
--                           TRACE_EVENT_FLAG_COPY, arg1_name, arg1_val)
--#define TRACE_EVENT_COPY_BEGIN2(category, name, arg1_name, arg1_val,   \
--                                arg2_name, arg2_val)                   \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_BEGIN, category, name,    \
--                           TRACE_EVENT_FLAG_COPY, arg1_name, arg1_val, \
--                           arg2_name, arg2_val)
--
--// Records a single END event for "name" immediately. If the category
--// is not enabled, then this does nothing.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--#define TRACE_EVENT_END0(category, name)                          \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_END, category, name, \
--                           TRACE_EVENT_FLAG_NONE)
--#define TRACE_EVENT_END1(category, name, arg1_name, arg1_val)     \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_END, category, name, \
--                           TRACE_EVENT_FLAG_NONE, arg1_name, arg1_val)
--#define TRACE_EVENT_END2(category, name, arg1_name, arg1_val, arg2_name, \
--                         arg2_val)                                       \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_END, category, name,        \
--                           TRACE_EVENT_FLAG_NONE, arg1_name, arg1_val,   \
--                           arg2_name, arg2_val)
--#define TRACE_EVENT_COPY_END0(category, name)                     \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_END, category, name, \
--                           TRACE_EVENT_FLAG_COPY)
--#define TRACE_EVENT_COPY_END1(category, name, arg1_name, arg1_val) \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_END, category, name,  \
--                           TRACE_EVENT_FLAG_COPY, arg1_name, arg1_val)
--#define TRACE_EVENT_COPY_END2(category, name, arg1_name, arg1_val, arg2_name, \
--                              arg2_val)                                       \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_END, category, name,             \
--                           TRACE_EVENT_FLAG_COPY, arg1_name, arg1_val,        \
--                           arg2_name, arg2_val)
--
--// Records the value of a counter called "name" immediately. Value
--// must be representable as a 32 bit integer.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--#define TRACE_COUNTER1(category, name, value)                         \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_COUNTER, category, name, \
--                           TRACE_EVENT_FLAG_NONE, "value",            \
--                           static_cast<int>(value))
--#define TRACE_COPY_COUNTER1(category, name, value)                    \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_COUNTER, category, name, \
--                           TRACE_EVENT_FLAG_COPY, "value",            \
--                           static_cast<int>(value))
--
--// Records the values of a multi-parted counter called "name" immediately.
--// The UI will treat value1 and value2 as parts of a whole, displaying their
--// values as a stacked-bar chart.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--#define TRACE_COUNTER2(category, name, value1_name, value1_val, value2_name, \
--                       value2_val)                                           \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_COUNTER, category, name,        \
--                           TRACE_EVENT_FLAG_NONE, value1_name,               \
--                           static_cast<int>(value1_val), value2_name,        \
--                           static_cast<int>(value2_val))
--#define TRACE_COPY_COUNTER2(category, name, value1_name, value1_val,  \
--                            value2_name, value2_val)                  \
--  INTERNAL_TRACE_EVENT_ADD(TRACE_EVENT_PHASE_COUNTER, category, name, \
--                           TRACE_EVENT_FLAG_COPY, value1_name,        \
--                           static_cast<int>(value1_val), value2_name, \
--                           static_cast<int>(value2_val))
--
--// Records the value of a counter called "name" immediately. Value
--// must be representable as a 32 bit integer.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--// - `id` is used to disambiguate counters with the same name. It must either
--//   be a pointer or an integer value up to 64 bits. If it's a pointer, the bits
--//   will be xored with a hash of the process ID so that the same pointer on
--//   two different processes will not collide.
--#define TRACE_COUNTER_ID1(category, name, id, value)                          \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_COUNTER, category, name, \
--                                   id, TRACE_EVENT_FLAG_NONE, "value",        \
--                                   static_cast<int>(value))
--#define TRACE_COPY_COUNTER_ID1(category, name, id, value)                     \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_COUNTER, category, name, \
--                                   id, TRACE_EVENT_FLAG_COPY, "value",        \
--                                   static_cast<int>(value))
--
--// Records the values of a multi-parted counter called "name" immediately.
--// The UI will treat value1 and value2 as parts of a whole, displaying their
--// values as a stacked-bar chart.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--// - `id` is used to disambiguate counters with the same name. It must either
--//   be a pointer or an integer value up to 64 bits. If it's a pointer, the bits
--//   will be xored with a hash of the process ID so that the same pointer on
--//   two different processes will not collide.
--#define TRACE_COUNTER_ID2(category, name, id, value1_name, value1_val,        \
--                          value2_name, value2_val)                            \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_COUNTER, category, name, \
--                                   id, TRACE_EVENT_FLAG_NONE, value1_name,    \
--                                   static_cast<int>(value1_val), value2_name, \
--                                   static_cast<int>(value2_val))
--#define TRACE_COPY_COUNTER_ID2(category, name, id, value1_name, value1_val,   \
--                               value2_name, value2_val)                       \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_COUNTER, category, name, \
--                                   id, TRACE_EVENT_FLAG_COPY, value1_name,    \
--                                   static_cast<int>(value1_val), value2_name, \
--                                   static_cast<int>(value2_val))
--
--// Records a single ASYNC_BEGIN event called "name" immediately, with 0, 1 or 2
--// associated arguments. If the category is not enabled, then this
--// does nothing.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--// - `id` is used to match the ASYNC_BEGIN event with the ASYNC_END event. ASYNC
--//   events are considered to match if their category, name and id values all
--//   match. `id` must either be a pointer or an integer value up to 64 bits. If
--//   it's a pointer, the bits will be xored with a hash of the process ID so
--//   that the same pointer on two different processes will not collide.
--// An asynchronous operation can consist of multiple phases. The first phase is
--// defined by the ASYNC_BEGIN calls. Additional phases can be defined using the
--// ASYNC_STEP macros. When the operation completes, call ASYNC_END.
--// An ASYNC trace typically occur on a single thread (if not, they will only be
--// drawn on the thread defined in the ASYNC_BEGIN event), but all events in that
--// operation must use the same `name` and `id`. Each event can have its own
--// args.
--#define TRACE_EVENT_ASYNC_BEGIN0(category, name, id)                        \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_BEGIN, category, \
--                                   name, id, TRACE_EVENT_FLAG_NONE)
--#define TRACE_EVENT_ASYNC_BEGIN1(category, name, id, arg1_name, arg1_val)      \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_BEGIN, category,    \
--                                   name, id, TRACE_EVENT_FLAG_NONE, arg1_name, \
--                                   arg1_val)
--#define TRACE_EVENT_ASYNC_BEGIN2(category, name, id, arg1_name, arg1_val,      \
--                                 arg2_name, arg2_val)                          \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_BEGIN, category,    \
--                                   name, id, TRACE_EVENT_FLAG_NONE, arg1_name, \
--                                   arg1_val, arg2_name, arg2_val)
--#define TRACE_EVENT_COPY_ASYNC_BEGIN0(category, name, id)                   \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_BEGIN, category, \
--                                   name, id, TRACE_EVENT_FLAG_COPY)
--#define TRACE_EVENT_COPY_ASYNC_BEGIN1(category, name, id, arg1_name, arg1_val) \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_BEGIN, category,    \
--                                   name, id, TRACE_EVENT_FLAG_COPY, arg1_name, \
--                                   arg1_val)
--#define TRACE_EVENT_COPY_ASYNC_BEGIN2(category, name, id, arg1_name, arg1_val, \
--                                      arg2_name, arg2_val)                     \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_BEGIN, category,    \
--                                   name, id, TRACE_EVENT_FLAG_COPY, arg1_name, \
--                                   arg1_val, arg2_name, arg2_val)
--
--// Records a single ASYNC_STEP event for `step` immediately. If the category
--// is not enabled, then this does nothing. The `name` and `id` must match the
--// ASYNC_BEGIN event above. The `step` param identifies this step within the
--// async event. This should be called at the beginning of the next phase of an
--// asynchronous operation.
--#define TRACE_EVENT_ASYNC_STEP0(category, name, id, step)                   \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_STEP, category,  \
--                                   name, id, TRACE_EVENT_FLAG_NONE, "step", \
--                                   step)
--#define TRACE_EVENT_ASYNC_STEP1(category, name, id, step, arg1_name, arg1_val) \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_STEP, category,     \
--                                   name, id, TRACE_EVENT_FLAG_NONE, "step",    \
--                                   step, arg1_name, arg1_val)
--#define TRACE_EVENT_COPY_ASYNC_STEP0(category, name, id, step)              \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_STEP, category,  \
--                                   name, id, TRACE_EVENT_FLAG_COPY, "step", \
--                                   step)
--#define TRACE_EVENT_COPY_ASYNC_STEP1(category, name, id, step, arg1_name,   \
--                                     arg1_val)                              \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_STEP, category,  \
--                                   name, id, TRACE_EVENT_FLAG_COPY, "step", \
--                                   step, arg1_name, arg1_val)
--
--// Records a single ASYNC_END event for "name" immediately. If the category
--// is not enabled, then this does nothing.
--#define TRACE_EVENT_ASYNC_END0(category, name, id)                        \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_END, category, \
--                                   name, id, TRACE_EVENT_FLAG_NONE)
--#define TRACE_EVENT_ASYNC_END1(category, name, id, arg1_name, arg1_val)        \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_END, category,      \
--                                   name, id, TRACE_EVENT_FLAG_NONE, arg1_name, \
--                                   arg1_val)
--#define TRACE_EVENT_ASYNC_END2(category, name, id, arg1_name, arg1_val,        \
--                               arg2_name, arg2_val)                            \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_END, category,      \
--                                   name, id, TRACE_EVENT_FLAG_NONE, arg1_name, \
--                                   arg1_val, arg2_name, arg2_val)
--#define TRACE_EVENT_COPY_ASYNC_END0(category, name, id)                   \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_END, category, \
--                                   name, id, TRACE_EVENT_FLAG_COPY)
--#define TRACE_EVENT_COPY_ASYNC_END1(category, name, id, arg1_name, arg1_val)   \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_END, category,      \
--                                   name, id, TRACE_EVENT_FLAG_COPY, arg1_name, \
--                                   arg1_val)
--#define TRACE_EVENT_COPY_ASYNC_END2(category, name, id, arg1_name, arg1_val,   \
--                                    arg2_name, arg2_val)                       \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_ASYNC_END, category,      \
--                                   name, id, TRACE_EVENT_FLAG_COPY, arg1_name, \
--                                   arg1_val, arg2_name, arg2_val)
--
--// Records a single FLOW_BEGIN event called "name" immediately, with 0, 1 or 2
--// associated arguments. If the category is not enabled, then this
--// does nothing.
--// - category and name strings must have application lifetime (statics or
--//   literals). They may not include " chars.
--// - `id` is used to match the FLOW_BEGIN event with the FLOW_END event. FLOW
--//   events are considered to match if their category, name and id values all
--//   match. `id` must either be a pointer or an integer value up to 64 bits. If
--//   it's a pointer, the bits will be xored with a hash of the process ID so
--//   that the same pointer on two different processes will not collide.
--// FLOW events are different from ASYNC events in how they are drawn by the
--// tracing UI. A FLOW defines asynchronous data flow, such as posting a task
--// (FLOW_BEGIN) and later executing that task (FLOW_END). Expect FLOWs to be
--// drawn as lines or arrows from FLOW_BEGIN scopes to FLOW_END scopes. Similar
--// to ASYNC, a FLOW can consist of multiple phases. The first phase is defined
--// by the FLOW_BEGIN calls. Additional phases can be defined using the FLOW_STEP
--// macros. When the operation completes, call FLOW_END. An async operation can
--// span threads and processes, but all events in that operation must use the
--// same `name` and `id`. Each event can have its own args.
--#define TRACE_EVENT_FLOW_BEGIN0(category, name, id)                        \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category, \
--                                   name, id, TRACE_EVENT_FLAG_NONE)
--#define TRACE_EVENT_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val)       \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category,     \
--                                   name, id, TRACE_EVENT_FLAG_NONE, arg1_name, \
--                                   arg1_val)
--#define TRACE_EVENT_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val,       \
--                                arg2_name, arg2_val)                           \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category,     \
--                                   name, id, TRACE_EVENT_FLAG_NONE, arg1_name, \
--                                   arg1_val, arg2_name, arg2_val)
--#define TRACE_EVENT_COPY_FLOW_BEGIN0(category, name, id)                   \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category, \
--                                   name, id, TRACE_EVENT_FLAG_COPY)
--#define TRACE_EVENT_COPY_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val)  \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category,     \
--                                   name, id, TRACE_EVENT_FLAG_COPY, arg1_name, \
--                                   arg1_val)
--#define TRACE_EVENT_COPY_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val,  \
--                                     arg2_name, arg2_val)                      \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category,     \
--                                   name, id, TRACE_EVENT_FLAG_COPY, arg1_name, \
--                                   arg1_val, arg2_name, arg2_val)
--
--// Records a single FLOW_STEP event for `step` immediately. If the category
--// is not enabled, then this does nothing. The `name` and `id` must match the
--// FLOW_BEGIN event above. The `step` param identifies this step within the
--// async event. This should be called at the beginning of the next phase of an
--// asynchronous operation.
--#define TRACE_EVENT_FLOW_STEP0(category, name, id, step)                    \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_STEP, category,   \
--                                   name, id, TRACE_EVENT_FLAG_NONE, "step", \
--                                   step)
--#define TRACE_EVENT_FLOW_STEP1(category, name, id, step, arg1_name, arg1_val) \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_STEP, category,     \
--                                   name, id, TRACE_EVENT_FLAG_NONE, "step",   \
--                                   step, arg1_name, arg1_val)
--#define TRACE_EVENT_COPY_FLOW_STEP0(category, name, id, step)               \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_STEP, category,   \
--                                   name, id, TRACE_EVENT_FLAG_COPY, "step", \
--                                   step)
--#define TRACE_EVENT_COPY_FLOW_STEP1(category, name, id, step, arg1_name,    \
--                                    arg1_val)                               \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_STEP, category,   \
--                                   name, id, TRACE_EVENT_FLAG_COPY, "step", \
--                                   step, arg1_name, arg1_val)
--
--// Records a single FLOW_END event for "name" immediately. If the category
--// is not enabled, then this does nothing.
--#define TRACE_EVENT_FLOW_END0(category, name, id)                              \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
--                                   id, TRACE_EVENT_FLAG_NONE)
--#define TRACE_EVENT_FLOW_END1(category, name, id, arg1_name, arg1_val)         \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
--                                   id, TRACE_EVENT_FLAG_NONE, arg1_name,       \
--                                   arg1_val)
--#define TRACE_EVENT_FLOW_END2(category, name, id, arg1_name, arg1_val,         \
--                              arg2_name, arg2_val)                             \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
--                                   id, TRACE_EVENT_FLAG_NONE, arg1_name,       \
--                                   arg1_val, arg2_name, arg2_val)
--#define TRACE_EVENT_COPY_FLOW_END0(category, name, id)                         \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
--                                   id, TRACE_EVENT_FLAG_COPY)
--#define TRACE_EVENT_COPY_FLOW_END1(category, name, id, arg1_name, arg1_val)    \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
--                                   id, TRACE_EVENT_FLAG_COPY, arg1_name,       \
--                                   arg1_val)
--#define TRACE_EVENT_COPY_FLOW_END2(category, name, id, arg1_name, arg1_val,    \
--                                   arg2_name, arg2_val)                        \
--  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
--                                   id, TRACE_EVENT_FLAG_COPY, arg1_name,       \
--                                   arg1_val, arg2_name, arg2_val)
--
--////////////////////////////////////////////////////////////////////////////////
--// Implementation specific tracing API definitions.
--
--// Get a pointer to the enabled state of the given trace category. Only
--// long-lived literal strings should be given as the category name. The returned
--// pointer can be held permanently in a local static for example. If the
--// unsigned char is non-zero, tracing is enabled. If tracing is enabled,
--// TRACE_EVENT_API_ADD_TRACE_EVENT can be called. It's OK if tracing is disabled
--// between the load of the tracing state and the call to
--// TRACE_EVENT_API_ADD_TRACE_EVENT, because this flag only provides an early out
--// for best performance when tracing is disabled.
--// const unsigned char*
--//     TRACE_EVENT_API_GET_CATEGORY_ENABLED(const char* category_name)
--#define TRACE_EVENT_API_GET_CATEGORY_ENABLED \
--  webrtc::EventTracer::GetCategoryEnabled
--
--// Add a trace event to the platform tracing system.
--// void TRACE_EVENT_API_ADD_TRACE_EVENT(
--//                    char phase,
--//                    const unsigned char* category_enabled,
--//                    const char* name,
--//                    unsigned long long id,
--//                    int num_args,
--//                    const char** arg_names,
--//                    const unsigned char* arg_types,
--//                    const unsigned long long* arg_values,
--//                    unsigned char flags)
--#define TRACE_EVENT_API_ADD_TRACE_EVENT webrtc::EventTracer::AddTraceEvent
--
--////////////////////////////////////////////////////////////////////////////////
--
--// Implementation detail: trace event macros create temporary variables
--// to keep instrumentation overhead low. These macros give each temporary
--// variable a unique name based on the line number to prevent name collissions.
--#define INTERNAL_TRACE_EVENT_UID3(a, b) trace_event_unique_##a##b
--#define INTERNAL_TRACE_EVENT_UID2(a, b) INTERNAL_TRACE_EVENT_UID3(a, b)
--#define INTERNAL_TRACE_EVENT_UID(name_prefix) \
--  INTERNAL_TRACE_EVENT_UID2(name_prefix, __LINE__)
--
--#if WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS
--#define INTERNAL_TRACE_EVENT_INFO_TYPE const unsigned char*
--#else
--#define INTERNAL_TRACE_EVENT_INFO_TYPE static const unsigned char*
--#endif  // WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS
--
--// Implementation detail: internal macro to create static category.
--#define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category)               \
--  INTERNAL_TRACE_EVENT_INFO_TYPE INTERNAL_TRACE_EVENT_UID(catstatic) = \
--      TRACE_EVENT_API_GET_CATEGORY_ENABLED(category);
--
--// Implementation detail: internal macro to create static category and add
--// event if the category is enabled.
--#define INTERNAL_TRACE_EVENT_ADD(phase, category, name, flags, ...)        \
--  do {                                                                     \
--    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category);                      \
--    if (*INTERNAL_TRACE_EVENT_UID(catstatic)) {                            \
--      webrtc::trace_event_internal::AddTraceEvent(                         \
--          phase, INTERNAL_TRACE_EVENT_UID(catstatic), name,                \
--          webrtc::trace_event_internal::kNoEventId, flags, ##__VA_ARGS__); \
--    }                                                                      \
--  } while (0)
--
--// Implementation detail: internal macro to create static category and add begin
--// event if the category is enabled. Also adds the end event when the scope
--// ends.
--#define INTERNAL_TRACE_EVENT_ADD_SCOPED(category, name, ...)                   \
--  INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category);                            \
--  webrtc::trace_event_internal::TraceEndOnScopeClose INTERNAL_TRACE_EVENT_UID( \
--      profileScope);                                                           \
--  if (*INTERNAL_TRACE_EVENT_UID(catstatic)) {                                  \
--    webrtc::trace_event_internal::AddTraceEvent(                               \
--        TRACE_EVENT_PHASE_BEGIN, INTERNAL_TRACE_EVENT_UID(catstatic), name,    \
--        webrtc::trace_event_internal::kNoEventId, TRACE_EVENT_FLAG_NONE,       \
--        ##__VA_ARGS__);                                                        \
--    INTERNAL_TRACE_EVENT_UID(profileScope)                                     \
--        .Initialize(INTERNAL_TRACE_EVENT_UID(catstatic), name);                \
--  }
--
--// Implementation detail: internal macro to create static category and add
--// event if the category is enabled.
--#define INTERNAL_TRACE_EVENT_ADD_WITH_ID(phase, category, name, id, flags, \
--                                         ...)                              \
--  do {                                                                     \
--    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category);                      \
--    if (*INTERNAL_TRACE_EVENT_UID(catstatic)) {                            \
--      unsigned char trace_event_flags = flags | TRACE_EVENT_FLAG_HAS_ID;   \
--      webrtc::trace_event_internal::TraceID trace_event_trace_id(          \
--          id, &trace_event_flags);                                         \
--      webrtc::trace_event_internal::AddTraceEvent(                         \
--          phase, INTERNAL_TRACE_EVENT_UID(catstatic), name,                \
--          trace_event_trace_id.data(), trace_event_flags, ##__VA_ARGS__);  \
--    }                                                                      \
--  } while (0)
--
--// Notes regarding the following definitions:
--// New values can be added and propagated to third party libraries, but existing
--// definitions must never be changed, because third party libraries may use old
--// definitions.
--
--// Phase indicates the nature of an event entry. E.g. part of a begin/end pair.
--#define TRACE_EVENT_PHASE_BEGIN ('B')
--#define TRACE_EVENT_PHASE_END ('E')
--#define TRACE_EVENT_PHASE_INSTANT ('I')
--#define TRACE_EVENT_PHASE_ASYNC_BEGIN ('S')
--#define TRACE_EVENT_PHASE_ASYNC_STEP ('T')
--#define TRACE_EVENT_PHASE_ASYNC_END ('F')
--#define TRACE_EVENT_PHASE_FLOW_BEGIN ('s')
--#define TRACE_EVENT_PHASE_FLOW_STEP ('t')
--#define TRACE_EVENT_PHASE_FLOW_END ('f')
--#define TRACE_EVENT_PHASE_METADATA ('M')
--#define TRACE_EVENT_PHASE_COUNTER ('C')
--
--// Flags for changing the behavior of TRACE_EVENT_API_ADD_TRACE_EVENT.
--#define TRACE_EVENT_FLAG_NONE (static_cast<unsigned char>(0))
--#define TRACE_EVENT_FLAG_COPY (static_cast<unsigned char>(1 << 0))
--#define TRACE_EVENT_FLAG_HAS_ID (static_cast<unsigned char>(1 << 1))
--#define TRACE_EVENT_FLAG_MANGLE_ID (static_cast<unsigned char>(1 << 2))
--
--namespace webrtc {
--namespace trace_event_internal {
--
--// Specify these values when the corresponding argument of AddTraceEvent is not
--// used.
--const int kZeroNumArgs = 0;
--const unsigned long long kNoEventId = 0;
--
--// TraceID encapsulates an ID that can either be an integer or pointer. Pointers
--// are mangled with the Process ID so that they are unlikely to collide when the
--// same pointer is used on different processes.
--class TraceID {
-- public:
--  class ForceMangle {
--   public:
--    explicit ForceMangle(unsigned long long id) : data_(id) {}
--    explicit ForceMangle(unsigned long id) : data_(id) {}
--    explicit ForceMangle(unsigned int id) : data_(id) {}
--    explicit ForceMangle(unsigned short id) : data_(id) {}
--    explicit ForceMangle(unsigned char id) : data_(id) {}
--    explicit ForceMangle(long long id)
--        : data_(static_cast<unsigned long long>(id)) {}
--    explicit ForceMangle(long id)
--        : data_(static_cast<unsigned long long>(id)) {}
--    explicit ForceMangle(int id) : data_(static_cast<unsigned long long>(id)) {}
--    explicit ForceMangle(short id)
--        : data_(static_cast<unsigned long long>(id)) {}
--    explicit ForceMangle(signed char id)
--        : data_(static_cast<unsigned long long>(id)) {}
--
--    unsigned long long data() const { return data_; }
--
--   private:
--    unsigned long long data_;
--  };
--
--  explicit TraceID(const void* id, unsigned char* flags)
--      : data_(
--            static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(id))) {
--    *flags |= TRACE_EVENT_FLAG_MANGLE_ID;
--  }
--  explicit TraceID(ForceMangle id, unsigned char* flags) : data_(id.data()) {
--    *flags |= TRACE_EVENT_FLAG_MANGLE_ID;
--  }
--  explicit TraceID(unsigned long long id, unsigned char* flags) : data_(id) {
--    (void)flags;
--  }
--  explicit TraceID(unsigned long id, unsigned char* flags) : data_(id) {
--    (void)flags;
--  }
--  explicit TraceID(unsigned int id, unsigned char* flags) : data_(id) {
--    (void)flags;
--  }
--  explicit TraceID(unsigned short id, unsigned char* flags) : data_(id) {
--    (void)flags;
--  }
--  explicit TraceID(unsigned char id, unsigned char* flags) : data_(id) {
--    (void)flags;
--  }
--  explicit TraceID(long long id, unsigned char* flags)
--      : data_(static_cast<unsigned long long>(id)) {
--    (void)flags;
--  }
--  explicit TraceID(long id, unsigned char* flags)
--      : data_(static_cast<unsigned long long>(id)) {
--    (void)flags;
--  }
--  explicit TraceID(int id, unsigned char* flags)
--      : data_(static_cast<unsigned long long>(id)) {
--    (void)flags;
--  }
--  explicit TraceID(short id, unsigned char* flags)
--      : data_(static_cast<unsigned long long>(id)) {
--    (void)flags;
--  }
--  explicit TraceID(signed char id, unsigned char* flags)
--      : data_(static_cast<unsigned long long>(id)) {
--    (void)flags;
--  }
--
--  unsigned long long data() const { return data_; }
--
-- private:
--  unsigned long long data_;
--};
--
--// Simple union to store various types as unsigned long long.
--union TraceValueUnion {
--  bool as_bool;
--  unsigned long long as_uint;
--  long long as_int;
--  double as_double;
--  const void* as_pointer;
--  const char* as_string;
--};
--
--// Simple container for const char* that should be copied instead of retained.
--class TraceStringWithCopy {
-- public:
--  explicit TraceStringWithCopy(const char* str) : str_(str) {}
--  operator const char*() const { return str_; }
--
-- private:
--  const char* str_;
--};
--
--// Define SetTraceValue for each allowed type. It stores the type and
--// value in the return arguments. This allows this API to avoid declaring any
--// structures so that it is portable to third_party libraries.
--#define INTERNAL_DECLARE_SET_TRACE_VALUE(actual_type, union_member,      \
--                                         value_type_id)                  \
--  static inline void SetTraceValue(actual_type arg, unsigned char* type, \
--                                   unsigned long long* value) {          \
--    TraceValueUnion type_value;                                          \
--    type_value.union_member = arg;                                       \
--    *type = value_type_id;                                               \
--    *value = type_value.as_uint;                                         \
--  }
--// Simpler form for int types that can be safely casted.
--#define INTERNAL_DECLARE_SET_TRACE_VALUE_INT(actual_type, value_type_id) \
--  static inline void SetTraceValue(actual_type arg, unsigned char* type, \
--                                   unsigned long long* value) {          \
--    *type = value_type_id;                                               \
--    *value = static_cast<unsigned long long>(arg);                       \
--  }
--
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned long long, TRACE_VALUE_TYPE_UINT)
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned long, TRACE_VALUE_TYPE_UINT)
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned int, TRACE_VALUE_TYPE_UINT)
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned short, TRACE_VALUE_TYPE_UINT)
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned char, TRACE_VALUE_TYPE_UINT)
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(long long, TRACE_VALUE_TYPE_INT)
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(long, TRACE_VALUE_TYPE_INT)
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(int, TRACE_VALUE_TYPE_INT)
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(short, TRACE_VALUE_TYPE_INT)
--INTERNAL_DECLARE_SET_TRACE_VALUE_INT(signed char, TRACE_VALUE_TYPE_INT)
--INTERNAL_DECLARE_SET_TRACE_VALUE(bool, as_bool, TRACE_VALUE_TYPE_BOOL)
--INTERNAL_DECLARE_SET_TRACE_VALUE(double, as_double, TRACE_VALUE_TYPE_DOUBLE)
--INTERNAL_DECLARE_SET_TRACE_VALUE(const void*,
--                                 as_pointer,
--                                 TRACE_VALUE_TYPE_POINTER)
--INTERNAL_DECLARE_SET_TRACE_VALUE(const char*,
--                                 as_string,
--                                 TRACE_VALUE_TYPE_STRING)
--INTERNAL_DECLARE_SET_TRACE_VALUE(const TraceStringWithCopy&,
--                                 as_string,
--                                 TRACE_VALUE_TYPE_COPY_STRING)
--
--#undef INTERNAL_DECLARE_SET_TRACE_VALUE
--#undef INTERNAL_DECLARE_SET_TRACE_VALUE_INT
--
--// std::string version of SetTraceValue so that trace arguments can be strings.
--static inline void SetTraceValue(const std::string& arg,
--                                 unsigned char* type,
--                                 unsigned long long* value) {
--  TraceValueUnion type_value;
--  type_value.as_string = arg.c_str();
--  *type = TRACE_VALUE_TYPE_COPY_STRING;
--  *value = type_value.as_uint;
--}
--
--// These AddTraceEvent template functions are defined here instead of in the
--// macro, because the arg_values could be temporary objects, such as
--// std::string. In order to store pointers to the internal c_str and pass
--// through to the tracing API, the arg_values must live throughout
--// these procedures.
--
--static inline void AddTraceEvent(char phase,
--                                 const unsigned char* category_enabled,
--                                 const char* name,
--                                 unsigned long long id,
--                                 unsigned char flags) {
--  TRACE_EVENT_API_ADD_TRACE_EVENT(phase, category_enabled, name, id,
--                                  kZeroNumArgs, nullptr, nullptr, nullptr,
--                                  flags);
--}
--
--template <class ARG1_TYPE>
--static inline void AddTraceEvent(char phase,
--                                 const unsigned char* category_enabled,
--                                 const char* name,
--                                 unsigned long long id,
--                                 unsigned char flags,
--                                 const char* arg1_name,
--                                 const ARG1_TYPE& arg1_val) {
--  const int num_args = 1;
--  unsigned char arg_types[1];
--  unsigned long long arg_values[1];
--  SetTraceValue(arg1_val, &arg_types[0], &arg_values[0]);
--  TRACE_EVENT_API_ADD_TRACE_EVENT(phase, category_enabled, name, id, num_args,
--                                  &arg1_name, arg_types, arg_values, flags);
--}
--
--template <class ARG1_TYPE, class ARG2_TYPE>
--static inline void AddTraceEvent(char phase,
--                                 const unsigned char* category_enabled,
--                                 const char* name,
--                                 unsigned long long id,
--                                 unsigned char flags,
--                                 const char* arg1_name,
--                                 const ARG1_TYPE& arg1_val,
--                                 const char* arg2_name,
--                                 const ARG2_TYPE& arg2_val) {
--  const int num_args = 2;
--  const char* arg_names[2] = {arg1_name, arg2_name};
--  unsigned char arg_types[2];
--  unsigned long long arg_values[2];
--  SetTraceValue(arg1_val, &arg_types[0], &arg_values[0]);
--  SetTraceValue(arg2_val, &arg_types[1], &arg_values[1]);
--  TRACE_EVENT_API_ADD_TRACE_EVENT(phase, category_enabled, name, id, num_args,
--                                  arg_names, arg_types, arg_values, flags);
--}
--
--// Used by TRACE_EVENTx macro. Do not use directly.
--class TraceEndOnScopeClose {
-- public:
--  // Note: members of data_ intentionally left uninitialized. See Initialize.
--  TraceEndOnScopeClose() : p_data_(nullptr) {}
--  ~TraceEndOnScopeClose() {
--    if (p_data_)
--      AddEventIfEnabled();
--  }
--
--  void Initialize(const unsigned char* category_enabled, const char* name) {
--    data_.category_enabled = category_enabled;
--    data_.name = name;
--    p_data_ = &data_;
--  }
--
-- private:
--  // Add the end event if the category is still enabled.
--  void AddEventIfEnabled() {
--    // Only called when p_data_ is non-null.
--    if (*p_data_->category_enabled) {
--      TRACE_EVENT_API_ADD_TRACE_EVENT(TRACE_EVENT_PHASE_END,
--                                      p_data_->category_enabled, p_data_->name,
--                                      kNoEventId, kZeroNumArgs, nullptr,
--                                      nullptr, nullptr, TRACE_EVENT_FLAG_NONE);
+-  if (build_with_mozilla) {
+-    sources += [
+-      "desktop_device_info.cc",
+-      "desktop_device_info.h",
+-    ]
+-    if (is_win) {
+-      sources += [
+-        "app_capturer_win.cc",
+-        "win/desktop_device_info_win.cc",
+-        "win/win_shared.cc",
+-      ]
 -    }
 -  }
+   if (rtc_use_x11_extensions || rtc_use_pipewire) {
+     sources += [
+       "mouse_cursor_monitor_linux.cc",
+       "screen_capturer_linux.cc",
+       "window_capturer_linux.cc",
+     ]
 -
--  // This Data struct workaround is to avoid initializing all the members
--  // in Data during construction of this object, since this object is always
--  // constructed, even when tracing is disabled. If the members of Data were
--  // members of this class instead, compiler warnings occur about potential
--  // uninitialized accesses.
--  struct Data {
--    const unsigned char* category_enabled;
--    const char* name;
--  };
--  Data* p_data_;
--  Data data_;
--};
+-    if (build_with_mozilla && (is_linux || is_chromeos)) {
+-      sources += [
+-        "app_capturer_linux.cc",
+-        "linux/x11/app_capturer_x11.cc",
+-        "linux/x11/desktop_device_info_linux.cc",
+-        "linux/x11/desktop_device_info_linux.h",
+-        "linux/x11/shared_x_util.cc",
+-        "linux/x11/shared_x_util.h",
+-      ]
+-    }
+   }
+ 
+   if (rtc_use_x11_extensions) {
+@@ -537,9 +512,7 @@ rtc_library("desktop_capture") {
+     deps += [ "../../rtc_base:sanitizer" ]
+   }
+ 
+-  if (!build_with_mozilla) {
+-    deps += [ "//third_party/libyuv" ]
+-  }
++  deps += [ "//third_party/libyuv" ]
+ 
+   if (use_desktop_capture_differ_sse2) {
+     deps += [ ":desktop_capture_differ_sse2" ]
+diff --git a/modules/portal/BUILD.gn b/modules/portal/BUILD.gn
+index d0756f269b..d7768b2323 100644
+--- a/modules/portal/BUILD.gn
++++ b/modules/portal/BUILD.gn
+@@ -11,6 +11,7 @@ import("//tools/generate_stubs/rules.gni")
+ import("../../webrtc.gni")
+ 
+ if ((is_linux || is_chromeos) && rtc_use_pipewire) {
++if (!build_with_mozilla) {
+   pkg_config("gio") {
+     packages = [
+       "gio-2.0",
+@@ -88,6 +89,12 @@ if ((is_linux || is_chromeos) && rtc_use_pipewire) {
+       defines += [ "WEBRTC_USE_GIO" ]
+     }
+   }
++} else {
++  config("pipewire_all") {
++  }
++  config("pipewire_config") {
++  }
++}
+ 
+   rtc_library("portal") {
+     sources = [
+@@ -120,5 +127,22 @@ if ((is_linux || is_chromeos) && rtc_use_pipewire) {
+ 
+       deps += [ ":pipewire_stubs" ]
+     }
++
++    if (build_with_mozilla) {
++      configs -= [
++        ":gio",
++        ":pipewire",
++        ":pipewire_config",
++      ]
++      deps -= [ ":pipewire_stubs" ]
++      defines -= [ "WEBRTC_DLOPEN_PIPEWIRE" ]
++      public_deps = [
++        "//third_party/pipewire",
++        "//third_party/drm",
++        "//third_party/gbm",
++        "//third_party/libepoxy"
++      ]
++    }
+   }
+ }
++
+diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
+index b42536db85..aff496cc01 100644
+--- a/modules/video_capture/BUILD.gn
++++ b/modules/video_capture/BUILD.gn
+@@ -121,21 +121,12 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+         "strmiids.lib",
+         "user32.lib",
+       ]
 -
--}  // namespace trace_event_internal
--}  // namespace webrtc
--#else
+-      if (build_with_mozilla) {
+-        sources += [
+-          "windows/BaseFilter.cpp",
+-          "windows/BaseInputPin.cpp",
+-          "windows/BasePin.cpp",
+-          "windows/MediaType.cpp",
+-        ]
+-      }
+     }
+     if (is_fuchsia) {
+       sources += [ "video_capture_factory_null.cc" ]
+     }
+ 
+-    if (build_with_mozilla && is_android) {
++    if (!build_with_mozilla && is_android) {
+       include_dirs = [
+         "/config/external/nspr",
+         "/nsprpub/lib/ds",
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index cf4da8f6e5..2044dbd624 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -288,6 +288,7 @@ rtc_library("sample_counter") {
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+ }
+ 
++if (!build_with_mozilla) { # See Bug 1820869.
+ rtc_library("timestamp_aligner") {
+   visibility = [ "*" ]
+   sources = [
+@@ -301,6 +302,7 @@ rtc_library("timestamp_aligner") {
+     "system:rtc_export",
+   ]
+ }
++}
+ 
+ rtc_library("zero_memory") {
+   visibility = [ "*" ]
+@@ -832,7 +834,9 @@ rtc_library("rtc_json") {
+     "strings/json.h",
+   ]
+   deps = [ ":stringutils" ]
++if (!build_with_mozilla) {
+   all_dependent_configs = [ "//third_party/jsoncpp:jsoncpp_config" ]
++}
+   if (rtc_build_json) {
+     deps += [ "//third_party/jsoncpp" ]
+   } else {
+@@ -2086,7 +2090,7 @@ if (rtc_include_tests) {
+   }
+ }
+ 
+-if (is_android) {
++if (is_android && !build_with_mozilla) {
+   rtc_android_library("base_java") {
+     visibility = [ "*" ]
+     sources = [
+diff --git a/rtc_base/system/BUILD.gn b/rtc_base/system/BUILD.gn
+index 77f5139a2f..486b37590c 100644
+--- a/rtc_base/system/BUILD.gn
++++ b/rtc_base/system/BUILD.gn
+@@ -101,7 +101,7 @@ if (is_mac || is_ios) {
+ rtc_source_set("warn_current_thread_is_deadlocked") {
+   sources = [ "warn_current_thread_is_deadlocked.h" ]
+   deps = []
+-  if (is_android && !build_with_chromium) {
++  if (is_android && (!build_with_chromium && !build_with_mozilla)) {
+     sources += [ "warn_current_thread_is_deadlocked.cc" ]
+     deps += [
+       "..:logging",
+diff --git a/test/BUILD.gn b/test/BUILD.gn
+index 33e835ea08..a3c9d36707 100644
+--- a/test/BUILD.gn
++++ b/test/BUILD.gn
+@@ -240,6 +240,7 @@ rtc_library("audio_test_common") {
+   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+ }
+ 
++if (!build_with_mozilla) {
+ if (!build_with_chromium) {
+   if (is_mac || is_ios) {
+     rtc_library("video_test_mac") {
+@@ -292,8 +293,12 @@ if (!build_with_chromium) {
+     }
+   }
+ }
++}
+ 
+ rtc_library("rtp_test_utils") {
++  if (build_with_mozilla) {
++  sources = []
++  } else {
+   testonly = true
+   sources = [
+     "rtcp_packet_parser.cc",
+@@ -303,6 +308,7 @@ rtc_library("rtp_test_utils") {
+     "rtp_file_writer.cc",
+     "rtp_file_writer.h",
+   ]
++  }
+ 
+   deps = [
+     "../api:array_view",
+@@ -555,7 +561,9 @@ rtc_library("video_test_support") {
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+ 
+   if (!is_ios) {
++    if (!build_with_mozilla) {
+     deps += [ "//third_party:jpeg" ]
++    }
+     sources += [ "testsupport/jpeg_frame_writer.cc" ]
+   } else {
+     sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
+@@ -1309,6 +1317,7 @@ if (!build_with_chromium) {
+   }
+ }
+ 
++if (!build_with_mozilla) {
+ if (!build_with_chromium && is_android) {
+   rtc_android_library("native_test_java") {
+     testonly = true
+@@ -1322,6 +1331,7 @@ if (!build_with_chromium && is_android) {
+     ]
+   }
+ }
++}
+ 
+ rtc_library("call_config_utils") {
+   # TODO(bugs.webrtc.org/10814): Remove rtc_json_suppressions as soon as it
+diff --git a/video/BUILD.gn b/video/BUILD.gn
+index 1fa27dbd3d..dceb37c28b 100644
+--- a/video/BUILD.gn
++++ b/video/BUILD.gn
+@@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
+     "../api:fec_controller_api",
+     "../api:rtc_error",
+     "../api:rtp_parameters",
+-    "../api:rtp_sender_interface",
++    "../api:rtp_sender_setparameters_callback",
+     "../api:scoped_refptr",
+     "../api/adaptation:resource_adaptation_api",
+     "../api/units:data_rate",
+@@ -375,7 +375,7 @@ rtc_library("video_stream_encoder_impl") {
+     ":video_stream_encoder_interface",
+     "../api:field_trials_view",
+     "../api:rtp_parameters",
+-    "../api:rtp_sender_interface",
++    "../api:rtp_sender_setparameters_callback",
+     "../api:sequence_checker",
+     "../api/adaptation:resource_adaptation_api",
+     "../api/task_queue:pending_task_safety_flag",
+diff --git a/webrtc.gni b/webrtc.gni
+index 928a59104b..962cb07866 100644
+--- a/webrtc.gni
++++ b/webrtc.gni
+@@ -35,6 +35,11 @@ if (is_mac) {
+   import("//build/config/mac/rules.gni")
+ }
+ 
++if (is_android) {
++  import("//build/config/android/config.gni")
++  import("//build/config/android/rules.gni")
++}
++
+ if (is_fuchsia) {
+   import("//build/config/fuchsia/config.gni")
+ }
+@@ -42,6 +47,11 @@ if (is_fuchsia) {
+ # This declare_args is separated from the next one because args declared
+ # in this one, can be read from the next one (args defined in the same
+ # declare_args cannot be referenced in that scope).
++declare_args() {
++  # Enable to use the Mozilla internal settings.
++  build_with_mozilla = true
++}
++
+ declare_args() {
+   # Setting this to true will make RTC_EXPORT (see rtc_base/system/rtc_export.h)
+   # expand to code that will manage symbols visibility.
+@@ -88,7 +98,7 @@ declare_args() {
+   # will tell the pre-processor to remove the default definition of the
+   # SystemTimeNanos() which is defined in rtc_base/system_time.cc. In
+   # that case a new implementation needs to be provided.
+-  rtc_exclude_system_time = build_with_chromium
++  rtc_exclude_system_time = build_with_chromium || build_with_mozilla
+ 
+   # Setting this to false will require the API user to pass in their own
+   # SSLCertificateVerifier to verify the certificates presented from a
+@@ -114,7 +124,7 @@ declare_args() {
+ 
+   # Used to specify an external OpenSSL include path when not compiling the
+   # library that comes with WebRTC (i.e. rtc_build_ssl == 0).
+-  rtc_ssl_root = ""
++  rtc_ssl_root = "unused"
+ 
+   # Enable when an external authentication mechanism is used for performing
+   # packet authentication for RTP packets instead of libsrtp.
+@@ -131,13 +141,13 @@ declare_args() {
+   rtc_enable_bwe_test_logging = false
+ 
+   # Set this to false to skip building examples.
+-  rtc_build_examples = true
++  rtc_build_examples = false
+ 
+   # Set this to false to skip building tools.
+-  rtc_build_tools = true
++  rtc_build_tools = false
+ 
+   # Set this to false to skip building code that requires X11.
+-  rtc_use_x11 = ozone_platform_x11
++  rtc_use_x11 = use_x11
+ 
+   # Set this to use PipeWire on the Wayland display server.
+   # By default it's only enabled on desktop Linux (excludes ChromeOS) and
+@@ -148,9 +158,6 @@ declare_args() {
+   # Set this to link PipeWire and required libraries directly instead of using the dlopen.
+   rtc_link_pipewire = false
+ 
+-  # Enable to use the Mozilla internal settings.
+-  build_with_mozilla = false
 -
--////////////////////////////////////////////////////////////////////////////////
--// This section defines no-op alternatives to the tracing macros when
--// RTC_DISABLE_TRACE_EVENTS is defined.
--
--#define RTC_NOOP() \
--  do {             \
--  } while (0)
--
--#define TRACE_STR_COPY(str) RTC_NOOP()
--
--#define TRACE_DISABLED_BY_DEFAULT(name) "disabled-by-default-" name
--
--#define TRACE_ID_MANGLE(id) 0
--
--#define TRACE_EVENT0(category, name) RTC_NOOP()
--#define TRACE_EVENT1(category, name, arg1_name, arg1_val) RTC_NOOP()
--#define TRACE_EVENT2(category, name, arg1_name, arg1_val, arg2_name, arg2_val) \
--  RTC_NOOP()
--
--#define TRACE_EVENT_INSTANT0(category, name) RTC_NOOP()
--#define TRACE_EVENT_INSTANT1(category, name, arg1_name, arg1_val) RTC_NOOP()
--
--#define TRACE_EVENT_INSTANT2(category, name, arg1_name, arg1_val, arg2_name, \
--                             arg2_val)                                       \
--  RTC_NOOP()
--
--#define TRACE_EVENT_COPY_INSTANT0(category, name) RTC_NOOP()
--#define TRACE_EVENT_COPY_INSTANT1(category, name, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_INSTANT2(category, name, arg1_name, arg1_val, \
--                                  arg2_name, arg2_val)                 \
--  RTC_NOOP()
--
--#define TRACE_EVENT_BEGIN0(category, name) RTC_NOOP()
--#define TRACE_EVENT_BEGIN1(category, name, arg1_name, arg1_val) RTC_NOOP()
--#define TRACE_EVENT_BEGIN2(category, name, arg1_name, arg1_val, arg2_name, \
--                           arg2_val)                                       \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_BEGIN0(category, name) RTC_NOOP()
--#define TRACE_EVENT_COPY_BEGIN1(category, name, arg1_name, arg1_val) RTC_NOOP()
--#define TRACE_EVENT_COPY_BEGIN2(category, name, arg1_name, arg1_val, \
--                                arg2_name, arg2_val)                 \
--  RTC_NOOP()
--
--#define TRACE_EVENT_END0(category, name) RTC_NOOP()
--#define TRACE_EVENT_END1(category, name, arg1_name, arg1_val) RTC_NOOP()
--#define TRACE_EVENT_END2(category, name, arg1_name, arg1_val, arg2_name, \
--                         arg2_val)                                       \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_END0(category, name) RTC_NOOP()
--#define TRACE_EVENT_COPY_END1(category, name, arg1_name, arg1_val) RTC_NOOP()
--#define TRACE_EVENT_COPY_END2(category, name, arg1_name, arg1_val, arg2_name, \
--                              arg2_val)                                       \
--  RTC_NOOP()
--
--#define TRACE_COUNTER1(category, name, value) RTC_NOOP()
--#define TRACE_COPY_COUNTER1(category, name, value) RTC_NOOP()
--
--#define TRACE_COUNTER2(category, name, value1_name, value1_val, value2_name, \
--                       value2_val)                                           \
--  RTC_NOOP()
--#define TRACE_COPY_COUNTER2(category, name, value1_name, value1_val, \
--                            value2_name, value2_val)                 \
--  RTC_NOOP()
--
--#define TRACE_COUNTER_ID1(category, name, id, value) RTC_NOOP()
--#define TRACE_COPY_COUNTER_ID1(category, name, id, value) RTC_NOOP()
--
--#define TRACE_COUNTER_ID2(category, name, id, value1_name, value1_val, \
--                          value2_name, value2_val)                     \
--  RTC_NOOP()
--#define TRACE_COPY_COUNTER_ID2(category, name, id, value1_name, value1_val, \
--                               value2_name, value2_val)                     \
--  RTC_NOOP()
--
--#define TRACE_EVENT_ASYNC_BEGIN0(category, name, id) RTC_NOOP()
--#define TRACE_EVENT_ASYNC_BEGIN1(category, name, id, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_ASYNC_BEGIN2(category, name, id, arg1_name, arg1_val, \
--                                 arg2_name, arg2_val)                     \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_ASYNC_BEGIN0(category, name, id) RTC_NOOP()
--#define TRACE_EVENT_COPY_ASYNC_BEGIN1(category, name, id, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_ASYNC_BEGIN2(category, name, id, arg1_name, arg1_val, \
--                                      arg2_name, arg2_val)                     \
--  RTC_NOOP()
--
--#define TRACE_EVENT_ASYNC_STEP0(category, name, id, step) RTC_NOOP()
--#define TRACE_EVENT_ASYNC_STEP1(category, name, id, step, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_ASYNC_STEP0(category, name, id, step) RTC_NOOP()
--#define TRACE_EVENT_COPY_ASYNC_STEP1(category, name, id, step, arg1_name, \
--                                     arg1_val)                            \
--  RTC_NOOP()
--
--#define TRACE_EVENT_ASYNC_END0(category, name, id) RTC_NOOP()
--#define TRACE_EVENT_ASYNC_END1(category, name, id, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_ASYNC_END2(category, name, id, arg1_name, arg1_val, \
--                               arg2_name, arg2_val)                     \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_ASYNC_END0(category, name, id) RTC_NOOP()
--#define TRACE_EVENT_COPY_ASYNC_END1(category, name, id, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_ASYNC_END2(category, name, id, arg1_name, arg1_val, \
--                                    arg2_name, arg2_val)                     \
--  RTC_NOOP()
--
--#define TRACE_EVENT_FLOW_BEGIN0(category, name, id) RTC_NOOP()
--#define TRACE_EVENT_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val, \
--                                arg2_name, arg2_val)                     \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_FLOW_BEGIN0(category, name, id) RTC_NOOP()
--#define TRACE_EVENT_COPY_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val, \
--                                     arg2_name, arg2_val)                     \
--  RTC_NOOP()
--
--#define TRACE_EVENT_FLOW_STEP0(category, name, id, step) RTC_NOOP()
--#define TRACE_EVENT_FLOW_STEP1(category, name, id, step, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_FLOW_STEP0(category, name, id, step) RTC_NOOP()
--#define TRACE_EVENT_COPY_FLOW_STEP1(category, name, id, step, arg1_name, \
--                                    arg1_val)                            \
--  RTC_NOOP()
--
--#define TRACE_EVENT_FLOW_END0(category, name, id) RTC_NOOP()
--#define TRACE_EVENT_FLOW_END1(category, name, id, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_FLOW_END2(category, name, id, arg1_name, arg1_val, \
--                              arg2_name, arg2_val)                     \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_FLOW_END0(category, name, id) RTC_NOOP()
--#define TRACE_EVENT_COPY_FLOW_END1(category, name, id, arg1_name, arg1_val) \
--  RTC_NOOP()
--#define TRACE_EVENT_COPY_FLOW_END2(category, name, id, arg1_name, arg1_val, \
--                                   arg2_name, arg2_val)                     \
--  RTC_NOOP()
--
--#define TRACE_EVENT_API_GET_CATEGORY_ENABLED ""
--
--#define TRACE_EVENT_API_ADD_TRACE_EVENT RTC_NOOP()
--
--#endif  // RTC_TRACE_EVENTS_ENABLED
--
--#endif  // RTC_BASE_TRACE_EVENT_H_
-+// This header is diverted to a similar header in Gecko, that is defining the
-+// same macros, modified to talk to the Gecko Profiler.
-+#include "GeckoTraceEvent.h"
+   # Experimental: enable use of Android AAudio which requires Android SDK 26 or above
+   # and NDK r16 or above.
+   rtc_enable_android_aaudio = false
+@@ -225,7 +232,7 @@ declare_args() {
+   # When set to true, a capturer implementation that uses the
+   # Windows.Graphics.Capture APIs will be available for use. This introduces a
+   # dependency on the Win 10 SDK v10.0.17763.0.
+-  rtc_enable_win_wgc = is_win
++  rtc_enable_win_wgc = false
+ 
+   # Includes the dav1d decoder in the internal decoder factory when set to true.
+   rtc_include_dav1d_in_internal_decoder_factory = true
+@@ -260,7 +267,7 @@ declare_args() {
+   rtc_build_json = !build_with_mozilla
+   rtc_build_libsrtp = !build_with_mozilla
+   rtc_build_libvpx = !build_with_mozilla
+-  rtc_libvpx_build_vp9 = !build_with_mozilla
++  rtc_libvpx_build_vp9 = true
+   rtc_build_opus = !build_with_mozilla
+   rtc_build_ssl = !build_with_mozilla
+ 
+@@ -279,7 +286,7 @@ declare_args() {
+ 
+   # Chromium uses its own IO handling, so the internal ADM is only built for
+   # standalone WebRTC.
+-  rtc_include_internal_audio_device = !build_with_chromium
++  rtc_include_internal_audio_device = !build_with_chromium && !build_with_mozilla
+ 
+   # Set this to true to enable the avx2 support in webrtc.
+   # TODO: Make sure that AVX2 works also for non-clang compilers.
+@@ -323,6 +330,9 @@ declare_args() {
+   rtc_enable_grpc = rtc_enable_protobuf && (is_linux || is_mac)
+ }
+ 
++# Enable liboam only on non-mozilla builds.
++enable_libaom = !build_with_mozilla
++
+ # Make it possible to provide custom locations for some libraries (move these
+ # up into declare_args should we need to actually use them for the GN build).
+ rtc_libvpx_dir = "//third_party/libvpx"
+@@ -1118,7 +1128,7 @@ if (is_mac || is_ios) {
+   }
+ }
+ 
+-if (is_android) {
++if (is_android && !build_with_mozilla) {
+   template("rtc_android_library") {
+     android_library(target_name) {
+       forward_variables_from(invoker,
 -- 
 2.34.1
 

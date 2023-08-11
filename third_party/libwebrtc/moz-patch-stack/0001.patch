@@ -1,55 +1,134 @@
-From: Yuwei Huang <yuweih@chromium.org>
-Date: Tue, 9 May 2023 16:01:33 -0700
-Subject: (cherry-pick-branch-heads/5735) [M114] Fix bug of messages being
- delivered before data channel is open
+From: Tommi <tommi@webrtc.org>
+Date: Thu, 1 Jun 2023 16:08:52 +0200
+Subject: (cherry-pick-branch-heads/5735) [M114] Move transceiver iteration
+ loop over to the signaling thread.
 
-If the caller calls RegisterObserver() on the network thread while the
-state is not kOpen but there are queued received data, those received
-data will be immediately delivered to the observer before the state is
-transitioned to kOpen, which may break the observer's assertions and
-cause problems.
+This is required for ReportTransportStats since iterating over the
+transceiver list from the network thread is not safe.
 
-The problem turns out to be that, when SctpDataChannel::RegisterObserver
-calls DeliverQueuedReceivedData(), the data will be passed to the
-observer without checking the |state_| first, meanwhile
-SctpDataChannel::UpdateState does effectively check the state and
-null-check |observer_| before delivering the received data. This CL
-fixes this by simply making DeliverQueuedReceivedData() also check
-`state_ == kOpen`. In case the state transitions to kOpen after
-RegisterObserver() is called, the first DeliverQueuedReceivedData()
-call will be no-op, while the second DeliverQueuedReceivedData() call
-will do the work.
+(cherry picked from commit dba22d31909298161318e00d43a80cdb0abc940f)
 
-(cherry picked from commit 20838941240536b52e24e47ce99ad6c2175dba1a)
-
-No-Try: True
-Bug: chromium:1442696
-Change-Id: If25ce6a038d704939b1a8ae73d7ced110448b050
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304687
-Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+No-Try: true
+Bug: chromium:1446274, webrtc:12692
+Change-Id: I7c514df9f029112c4b1da85826af91217850fb26
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/307340
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
 Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40036}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305380
+Cr-Original-Commit-Position: refs/heads/main@{#40197}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/308001
 Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5735@{#1}
+Cr-Commit-Position: refs/branch-heads/5735@{#3}
 Cr-Branched-From: df7df199abd619e75b9f1d9a7e12fc3f3f748775-refs/heads/main@{#39949}
 ---
- pc/sctp_data_channel.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ pc/peer_connection.cc                 | 35 +++++++++++++++++----------
+ pc/peer_connection.h                  |  3 ++-
+ pc/peer_connection_integrationtest.cc |  8 ++++++
+ 3 files changed, 32 insertions(+), 14 deletions(-)
 
-diff --git a/pc/sctp_data_channel.cc b/pc/sctp_data_channel.cc
-index e024c60970..a17008fb3f 100644
---- a/pc/sctp_data_channel.cc
-+++ b/pc/sctp_data_channel.cc
-@@ -848,7 +848,7 @@ void SctpDataChannel::SetState(DataState state) {
+diff --git a/pc/peer_connection.cc b/pc/peer_connection.cc
+index 3f99c96f4d..8d0be1c837 100644
+--- a/pc/peer_connection.cc
++++ b/pc/peer_connection.cc
+@@ -733,9 +733,6 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
+   transport_controller_->SubscribeIceConnectionState(
+       [this](cricket::IceConnectionState s) {
+         RTC_DCHECK_RUN_ON(network_thread());
+-        if (s == cricket::kIceConnectionConnected) {
+-          ReportTransportStats();
+-        }
+         signaling_thread()->PostTask(
+             SafeTask(signaling_thread_safety_.flag(), [this, s]() {
+               RTC_DCHECK_RUN_ON(signaling_thread());
+@@ -2399,6 +2396,20 @@ void PeerConnection::OnTransportControllerConnectionState(
+     case cricket::kIceConnectionConnected:
+       RTC_LOG(LS_INFO) << "Changing to ICE connected state because "
+                           "all transports are writable.";
++      {
++        std::vector<RtpTransceiverProxyRefPtr> transceivers;
++        if (ConfiguredForMedia()) {
++          transceivers = rtp_manager()->transceivers()->List();
++        }
++
++        network_thread()->PostTask(
++            SafeTask(network_thread_safety_,
++                     [this, transceivers = std::move(transceivers)] {
++                       RTC_DCHECK_RUN_ON(network_thread());
++                       ReportTransportStats(std::move(transceivers));
++                     }));
++      }
++
+       SetIceConnectionState(PeerConnectionInterface::kIceConnectionConnected);
+       NoteUsageEvent(UsageEvent::ICE_STATE_CONNECTED);
+       break;
+@@ -2741,20 +2752,18 @@ void PeerConnection::OnTransportControllerGatheringState(
+ }
  
- // RTC_RUN_ON(network_thread_).
- void SctpDataChannel::DeliverQueuedReceivedData() {
--  if (!observer_) {
-+  if (!observer_ || state_ != kOpen) {
-     return;
+ // Runs on network_thread().
+-void PeerConnection::ReportTransportStats() {
++void PeerConnection::ReportTransportStats(
++    std::vector<RtpTransceiverProxyRefPtr> transceivers) {
+   TRACE_EVENT0("webrtc", "PeerConnection::ReportTransportStats");
+   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+   std::map<std::string, std::set<cricket::MediaType>>
+       media_types_by_transport_name;
+-  if (ConfiguredForMedia()) {
+-    for (const auto& transceiver :
+-         rtp_manager()->transceivers()->UnsafeList()) {
+-      if (transceiver->internal()->channel()) {
+-        std::string transport_name(
+-            transceiver->internal()->channel()->transport_name());
+-        media_types_by_transport_name[transport_name].insert(
+-            transceiver->media_type());
+-      }
++  for (const auto& transceiver : transceivers) {
++    if (transceiver->internal()->channel()) {
++      std::string transport_name(
++          transceiver->internal()->channel()->transport_name());
++      media_types_by_transport_name[transport_name].insert(
++          transceiver->media_type());
+     }
    }
  
+diff --git a/pc/peer_connection.h b/pc/peer_connection.h
+index 26d2531bef..37f8df0012 100644
+--- a/pc/peer_connection.h
++++ b/pc/peer_connection.h
+@@ -567,7 +567,8 @@ class PeerConnection : public PeerConnectionInternal,
+ 
+   // Invoked when TransportController connection completion is signaled.
+   // Reports stats for all transports in use.
+-  void ReportTransportStats() RTC_RUN_ON(network_thread());
++  void ReportTransportStats(std::vector<RtpTransceiverProxyRefPtr> transceivers)
++      RTC_RUN_ON(network_thread());
+ 
+   // Gather the usage of IPv4/IPv6 as best connection.
+   static void ReportBestConnectionState(const cricket::TransportStats& stats);
+diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
+index 812833000b..07c5e0c0d3 100644
+--- a/pc/peer_connection_integrationtest.cc
++++ b/pc/peer_connection_integrationtest.cc
+@@ -1831,6 +1831,10 @@ TEST_P(PeerConnectionIntegrationTest,
+   EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
+                  callee()->ice_connection_state(), kDefaultTimeout);
+ 
++  // Part of reporting the stats will occur on the network thread, so flush it
++  // before checking NumEvents.
++  SendTask(network_thread(), [] {});
++
+   EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
+                           "WebRTC.PeerConnection.CandidatePairType_UDP",
+                           webrtc::kIceCandidatePairHostNameHostName));
+@@ -1959,6 +1963,10 @@ TEST_P(PeerConnectionIntegrationIceStatesTest, MAYBE_VerifyBestConnection) {
+   EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
+                  callee()->ice_connection_state(), kDefaultTimeout);
+ 
++  // Part of reporting the stats will occur on the network thread, so flush it
++  // before checking NumEvents.
++  SendTask(network_thread(), [] {});
++
+   // TODO(bugs.webrtc.org/9456): Fix it.
+   const int num_best_ipv4 = webrtc::metrics::NumEvents(
+       "WebRTC.PeerConnection.IPMetrics", webrtc::kBestConnections_IPv4);
 -- 
 2.34.1
 
