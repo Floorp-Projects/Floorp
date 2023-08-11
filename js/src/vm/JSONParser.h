@@ -249,7 +249,7 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
                                  PropertyVector** properties);
   inline bool finishObject(Vector<StackEntry, 10>& stack,
                            JS::MutableHandle<JS::Value> vp,
-                           PropertyVector& properties);
+                           PropertyVector* properties);
 
   inline bool arrayOpen(Vector<StackEntry, 10>& stack,
                         ElementVector** elements);
@@ -258,7 +258,7 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
                            ElementVector** elements);
   inline bool finishArray(Vector<StackEntry, 10>& stack,
                           JS::MutableHandle<JS::Value> vp,
-                          ElementVector& elements);
+                          ElementVector* elements);
 
   inline bool errorReturn() const {
     return parseType == ParseType::AttemptForEval;
@@ -382,7 +382,7 @@ class MOZ_STACK_CLASS JSONSyntaxParseHandler {
                                  DummyValue& value,
                                  PropertyVector** properties) {}
   inline bool finishObject(Vector<StackEntry, 10>& stack, DummyValue* vp,
-                           PropertyVector& properties);
+                           PropertyVector* properties);
 
   inline bool arrayOpen(Vector<StackEntry, 10>& stack,
                         ElementVector** elements);
@@ -391,7 +391,7 @@ class MOZ_STACK_CLASS JSONSyntaxParseHandler {
     return true;
   }
   inline bool finishArray(Vector<StackEntry, 10>& stack, DummyValue* vp,
-                          ElementVector& elements);
+                          ElementVector* elements);
 
   inline bool errorReturn() const { return false; }
 
