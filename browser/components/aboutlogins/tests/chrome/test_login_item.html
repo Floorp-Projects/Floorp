@@ -53,6 +53,16 @@ const TEST_LOGIN_2 = {
   timeLastUsed: "8000",
 };
 
+const TEST_LOGIN_3 = {
+  guid: "987654321",
+  origin: "https://example.com",
+  username: "user2",
+  password: "pass2",
+  timeCreated: "4000",
+  timePasswordChanged: "4000",
+  timeLastUsed: "4000",
+};
+
 const TEST_BREACH = {
   Name: "Test-Breach",
   breachAlertURL: "https://monitor.firefox.com/breach-details/Test-Breach",
@@ -131,15 +141,6 @@ add_task(async function test_set_login() {
   let passwordDisplayInput = gLoginItem._passwordDisplayInput;
   is(passwordDisplayInput.value, CONCEALED_PASSWORD_TEXT, "password display should be populated");
   ok(!isHidden(passwordDisplayInput), "Password display input should be visible");
-
-  let timeline = getLoginTimeline(gLoginItem);
-  ok(!isHidden(timeline), "Timeline should be visible");
-  let actions = timeline.shadowRoot.querySelectorAll(".action");
-  verifyTimelineActions(actions, [
-    "login-item-timeline-action-created",
-    "login-item-timeline-action-updated",
-    "login-item-timeline-action-used",
-  ]);
 
   let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
   ok(copyButtons.every(button => !isHidden(button)), "The copy buttons should be visible when viewing a login");
@@ -490,6 +491,33 @@ add_task(async function test_copy_button_state() {
   ok(!copyPasswordButton.shadowRoot.querySelector("button").disabled, "The copy-password-button should be enabled");
 
   copyPasswordButton.shadowRoot.querySelector("button").click();
+  });
+
+  add_task(async function test_login_timeline_state() {
+    gLoginItem.setLogin(TEST_LOGIN_1);
+    await asyncElementRendered();
+
+    let timeline = getLoginTimeline(gLoginItem);
+    ok(!isHidden(timeline), "Timeline should be visible");
+    is(timeline.history.length, 3, "All 3 timestamps (created, updated, used) must be shown")
+    let actions = timeline.shadowRoot.querySelectorAll(".action");
+    verifyTimelineActions(actions, [
+      "login-item-timeline-action-created",
+      "login-item-timeline-action-updated",
+      "login-item-timeline-action-used",
+    ]);
+
+    gLoginItem.setLogin(TEST_LOGIN_3);
+    await asyncElementRendered();
+
+    timeline = getLoginTimeline(gLoginItem);
+    ok(!isHidden(timeline), "Timeline should be visible");
+    is(timeline.history.length, 2, "Created and Last Used must be shown only")
+    actions = timeline.shadowRoot.querySelectorAll(".action");
+    verifyTimelineActions(actions, [
+      "login-item-timeline-action-created",
+      "login-item-timeline-action-used",
+    ]);
   });
 
 </script>
