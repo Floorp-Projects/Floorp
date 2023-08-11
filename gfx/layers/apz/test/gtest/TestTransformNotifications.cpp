@@ -352,6 +352,8 @@ TEST_F(APZCTransformNotificationTester,
 
 TEST_F(APZCTransformNotificationTester,
        PanFollowedByWheelTransformNotifications) {
+  // Needed because the test uses SmoothWheel()
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
   // Ensure that the TransformEnd delay is 100ms.
   SCOPED_GFX_PREF_INT("apz.scrollend-event.content.delay_ms", 100);
 

@@ -83,6 +83,8 @@ APZEventResult Wheel(const RefPtr<InputReceiver>& aTarget,
   return aTarget->ReceiveInputEvent(input);
 }
 
+// Tests that use this function should set general.smoothScroll=true, otherwise
+// the smooth scroll animation code will set the animation duration to 0.
 template <class InputReceiver>
 APZEventResult SmoothWheel(const RefPtr<InputReceiver>& aTarget,
                            const ScreenIntPoint& aPoint,
