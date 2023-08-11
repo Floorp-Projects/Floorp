@@ -704,6 +704,11 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   // Presence of EncoderSelector allows switching to specific encoders.
   bool allow_codec_switching_ = false;
 
+  // RTP parameters that need to be set when creating a video receive stream.
+  // Only used in Receiver mode - in Both mode, it reads those things from the
+  // codec.
+  webrtc::VideoReceiveStreamInterface::Config::Rtp rtp_config_;
+
   // Callback invoked whenever the send codec changes.
   // TODO(bugs.webrtc.org/13931): Remove again when coupling isn't needed.
   absl::AnyInvocable<void()> send_codec_changed_callback_;
