@@ -446,23 +446,6 @@ int32_t ModuleRtpRtcpImpl2::SetCNAME(absl::string_view c_name) {
   return rtcp_sender_.SetCNAME(c_name);
 }
 
-// TODO(tommi): Check if `avg_rtt_ms`, `min_rtt_ms`, `max_rtt_ms` params are
-// actually used in practice (some callers ask for it but don't use it). It
-// could be that only `rtt` is needed and if so, then the fast path could be to
-// just call rtt_ms() and rely on the calculation being done periodically.
-int32_t ModuleRtpRtcpImpl2::RTT(const uint32_t remote_ssrc,
-                                int64_t* rtt,
-                                int64_t* avg_rtt,
-                                int64_t* min_rtt,
-                                int64_t* max_rtt) const {
-  int32_t ret = rtcp_receiver_.RTT(remote_ssrc, rtt, avg_rtt, min_rtt, max_rtt);
-  if (rtt && *rtt == 0) {
-    // Try to get RTT from RtcpRttStats class.
-    *rtt = rtt_ms();
-  }
-  return ret;
-}
-
 absl::optional<TimeDelta> ModuleRtpRtcpImpl2::LastRtt() const {
   absl::optional<TimeDelta> rtt = rtcp_receiver_.LastRtt();
   if (!rtt.has_value()) {
