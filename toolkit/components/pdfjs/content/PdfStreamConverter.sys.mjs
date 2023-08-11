@@ -1136,7 +1136,7 @@ PdfStreamConverter.prototype = {
 
         let actor = getActor(domWindow);
         actor?.init(actions.supportsIntegratedFind());
-
+        actor?.sendAsyncMessage("PDFJS:Parent:recordExposure");
         listener.onStopRequest(aRequest, statusCode);
       },
     };

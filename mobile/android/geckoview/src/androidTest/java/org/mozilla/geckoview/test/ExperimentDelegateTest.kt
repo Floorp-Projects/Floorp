@@ -15,8 +15,6 @@ import org.mozilla.geckoview.ExperimentDelegate.ExperimentException
 import org.mozilla.geckoview.ExperimentDelegate.ExperimentException.ERROR_EXPERIMENT_SLUG_NOT_FOUND
 import org.mozilla.geckoview.ExperimentDelegate.ExperimentException.ERROR_FEATURE_NOT_FOUND
 import org.mozilla.geckoview.GeckoResult
-import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import java.lang.RuntimeException
 
@@ -27,18 +25,22 @@ class ExperimentDelegateTest : BaseSessionTest() {
     @Test
     fun withPdfJS() {
         mainSession.loadTestPath(TRACEMONKEY_PDF_PATH)
-
-        sessionRule.waitUntilCalled(object : ContentDelegate {
-            @Deprecated("Changing to Experiment Delegate in Bug 1840658.")
-            override fun onGetNimbusFeature(session: GeckoSession, featureId: String): JSONObject? {
-                assertThat(
-                    "Feature id should match",
-                    featureId,
-                    equalTo("pdfjs"),
-                )
-                return null
-            }
-        })
+        sessionRule.addExternalDelegateUntilTestEnd(
+            ExperimentDelegate::class,
+            sessionRule::setExperimentDelegate,
+            { sessionRule.setExperimentDelegate(null) },
+            object : ExperimentDelegate {
+                @AssertCalled(count = 1)
+                override fun onGetExperimentFeature(feature: String): GeckoResult<JSONObject> {
+                    assertThat(
+                        "Feature id should match",
+                        feature,
+                        equalTo("pdfjs"),
+                    )
+                    return GeckoResult<JSONObject>()
+                }
+            },
+        )
     }
 
     /*
