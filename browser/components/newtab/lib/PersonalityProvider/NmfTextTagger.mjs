@@ -2,14 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-// We load this into a worker using importScripts, and in tests using import.
-// We use var to avoid name collision errors.
-// eslint-disable-next-line no-var
-var EXPORTED_SYMBOLS = ["NmfTextTagger"];
-
-const NmfTextTagger = class NmfTextTagger {
+export class NmfTextTagger {
   constructor(model, toksToTfIdfVector) {
     this.model = model;
     this.toksToTfIdfVector = toksToTfIdfVector;
@@ -62,4 +55,4 @@ const NmfTextTagger = class NmfTextTagger {
 
     return predictions;
   }
-};
+}
