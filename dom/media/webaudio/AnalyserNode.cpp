@@ -299,7 +299,7 @@ bool AnalyserNode::FFTAnalysis() {
 
   for (uint32_t i = 0; i < mOutputBuffer.Length(); ++i) {
     double scalarMagnitude =
-        NS_hypot(mAnalysisBlock.RealData(i), mAnalysisBlock.ImagData(i)) *
+        fdlibm_hypot(mAnalysisBlock.RealData(i), mAnalysisBlock.ImagData(i)) *
         magnitudeScale;
     mOutputBuffer[i] = mSmoothingTimeConstant * mOutputBuffer[i] +
                        (1.0 - mSmoothingTimeConstant) * scalarMagnitude;
