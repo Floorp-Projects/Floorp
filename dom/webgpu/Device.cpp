@@ -316,6 +316,7 @@ already_AddRefed<Texture> Device::InitSwapChain(
   desc.mSampleCount = 1;
   desc.mUsage = aDesc.mUsage | dom::GPUTextureUsage_Binding::COPY_SRC;
   desc.mViewFormats = aDesc.mViewFormats;
+  // TODO: `mAlphaMode`: <https://bugzilla.mozilla.org/show_bug.cgi?id=1846605>
   return CreateTexture(desc);
 }
 
