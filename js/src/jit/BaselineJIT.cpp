@@ -309,13 +309,13 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
     }
   }
 
-  // Check this before calling ensureJitRealmExists, so we're less
+  // Check this before calling ensureJitZoneExists, so we're less
   // likely to report OOM in JSRuntime::createJitRuntime.
   if (!CanLikelyAllocateMoreExecutableMemory()) {
     return Method_Skipped;
   }
 
-  if (!cx->realm()->ensureJitRealmExists(cx)) {
+  if (!cx->zone()->ensureJitZoneExists(cx)) {
     return Method_Error;
   }
 
@@ -400,7 +400,7 @@ static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
     return Method_Skipped;
   }
 
-  if (!cx->realm()->ensureJitRealmExists(cx)) {
+  if (!cx->zone()->ensureJitZoneExists(cx)) {
     return Method_Error;
   }
 

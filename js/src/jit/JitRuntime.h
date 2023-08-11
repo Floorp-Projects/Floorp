@@ -46,7 +46,6 @@ class GCMarker;
 namespace jit {
 
 class FrameSizeClass;
-class JitRealm;
 class Label;
 class MacroAssembler;
 struct VMFunctionData;
@@ -121,8 +120,6 @@ class PerfSpewerRangeRecorder;
 
 class JitRuntime {
  private:
-  friend class JitRealm;
-
   MainThreadData<uint64_t> nextCompilationId_{0};
 
   // Buffer for OSR from baseline to Ion. To avoid holding on to this for too

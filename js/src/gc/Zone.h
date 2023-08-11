@@ -439,6 +439,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   }
   js::jit::JitZone* jitZone() { return jitZone_; }
 
+  bool ensureJitZoneExists(JSContext* cx) { return !!getJitZone(cx); }
+
   void prepareForCompacting();
 
   void traceRootsInMajorGC(JSTracer* trc);

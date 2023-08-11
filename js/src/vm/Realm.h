@@ -34,10 +34,6 @@ namespace coverage {
 class LCovRealm;
 }  // namespace coverage
 
-namespace jit {
-class JitRealm;
-}  // namespace jit
-
 class AutoRestoreRealmDebugMode;
 class Debugger;
 class GlobalObject;
@@ -259,8 +255,6 @@ class JS::Realm : public JS::shadow::Realm {
 
   JSPrincipals* principals_ = nullptr;
 
-  js::UniquePtr<js::jit::JitRealm> jitRealm_;
-
   // Bookkeeping information for debug scope objects.
   js::UniquePtr<js::DebugEnvironments> debugEnvs_;
 
@@ -404,8 +398,7 @@ class JS::Realm : public JS::shadow::Realm {
                               size_t* innerViewsArg,
                               size_t* objectMetadataTablesArg,
                               size_t* savedStacksSet,
-                              size_t* nonSyntacticLexicalEnvironmentsArg,
-                              size_t* jitRealm);
+                              size_t* nonSyntacticLexicalEnvironmentsArg);
 
   JS::Zone* zone() { return zone_; }
   const JS::Zone* zone() const { return zone_; }
@@ -689,10 +682,6 @@ class JS::Realm : public JS::shadow::Realm {
   }
 
   mozilla::HashCodeScrambler randomHashCodeScrambler();
-
-  bool ensureJitRealmExists(JSContext* cx);
-
-  js::jit::JitRealm* jitRealm() { return jitRealm_.get(); }
 
   js::DebugEnvironments* debugEnvs() { return debugEnvs_.get(); }
   js::UniquePtr<js::DebugEnvironments>& debugEnvsRef() { return debugEnvs_; }

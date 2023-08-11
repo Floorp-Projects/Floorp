@@ -36,7 +36,6 @@
 #include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
-#include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "jit/JitZone.h"
@@ -531,10 +530,6 @@ void JitZone::traceWeak(JSTracer* trc, Zone* zone) {
 
   baselineCacheIRStubCodes_.traceWeak(trc);
   inlinedCompilations_.traceWeak(trc);
-}
-
-size_t JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-  return mallocSizeOf(this);
 }
 
 void JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -1614,7 +1609,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     return AbortReason::Error;
   }
 
-  if (!cx->realm()->ensureJitRealmExists(cx)) {
+  if (!cx->zone()->ensureJitZoneExists(cx)) {
     return AbortReason::Error;
   }
 

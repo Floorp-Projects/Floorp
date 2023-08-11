@@ -968,7 +968,7 @@ static Handle<HeapObject> DummyCode() {
 // Finalize code. This is called last, so that we know how many
 // registers we need.
 Handle<HeapObject> SMRegExpMacroAssembler::GetCode(Handle<String> source) {
-  if (!cx_->realm()->ensureJitRealmExists(cx_)) {
+  if (!cx_->zone()->ensureJitZoneExists(cx_)) {
     return DummyCode();
   }
 
