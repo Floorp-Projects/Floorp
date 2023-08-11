@@ -117,10 +117,10 @@ class JSErrorBase {
   // Unique identifier for the script source.
   unsigned sourceId;
 
-  // Source line number.
+  // Source line number (1-origin).
   unsigned lineno;
 
-  // Column index in line (1-origin).
+  // Column number in line (1-origin).
   unsigned column;
 
   // the error number, e.g. see js/public/friend/ErrorNumbers.msg.

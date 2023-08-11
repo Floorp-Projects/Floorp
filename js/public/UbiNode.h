@@ -245,10 +245,10 @@ class BaseStackFrame {
   // Get this frame's parent frame.
   virtual StackFrame parent() const = 0;
 
-  // Get this frame's line number.
+  // Get this frame's line number (1-origin).
   virtual uint32_t line() const = 0;
 
-  // Get this frame's column number.
+  // Get this frame's column number (1-origin).
   virtual uint32_t column() const = 0;
 
   // Get this frame's source name. Never null.

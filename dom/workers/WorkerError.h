@@ -22,8 +22,8 @@ class WorkerErrorBase {
  public:
   nsString mMessage;
   nsString mFilename;
-  uint32_t mLineNumber;
-  uint32_t mColumnNumber;
+  uint32_t mLineNumber;    // 1-origin.
+  uint32_t mColumnNumber;  // 1-origin
   uint32_t mErrorNumber;
 
   WorkerErrorBase() : mLineNumber(0), mColumnNumber(0), mErrorNumber(0) {}

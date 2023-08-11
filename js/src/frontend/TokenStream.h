@@ -515,6 +515,7 @@ enum class UnitsType : unsigned char {
 
 class ChunkInfo {
  private:
+  // Column number (0-origin).
   // Store everything in |unsigned char|s so everything packs.
   unsigned char column_[sizeof(uint32_t)];
   unsigned char unitsType_;

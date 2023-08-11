@@ -48,7 +48,9 @@ class SavedFrame : public NativeObject {
   // Convenient getters for SavedFrame's reserved slots for use from C++.
   JSAtom* getSource();
   uint32_t getSourceId();
+  // Line number (1-origin).
   uint32_t getLine();
+  // Column number (1-origin).
   uint32_t getColumn();
   JSAtom* getFunctionDisplayName();
   JSAtom* getAsyncCause();

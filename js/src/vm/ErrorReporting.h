@@ -37,7 +37,11 @@ struct ErrorMetadata {
   // The line and column numbers where the error occurred.  If the error
   // is with respect to the entire script and not with respect to a
   // particular location, these will both be zero.
+
+  // Line number (1-origin).
   uint32_t lineNumber;
+
+  // Column number (0-origin).
   uint32_t columnNumber;
 
   // If the error occurs at a particular location, context surrounding the

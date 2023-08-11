@@ -219,8 +219,8 @@ struct SourceExtent {
   uint32_t toStringEnd = 0;
 
   // Line and column of |sourceStart_| position.
-  uint32_t lineno = 1;  // 1-indexed.
-  uint32_t column = 0;  // Count of Code Points
+  uint32_t lineno = 1;  // Line number (1-origin)
+  uint32_t column = 0;  // Column number in Unicode Code Points (0-origin)
 
   FunctionKey toFunctionKey() const {
     // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
