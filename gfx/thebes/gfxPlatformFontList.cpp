@@ -860,8 +860,7 @@ gfxFontEntry* gfxPlatformFontList::LookupInSharedFaceNameList(
       auto* families = list->Families();
       if (families) {
         family = &families[rec->mFamilyIndex];
-        face = static_cast<fontlist::Face*>(
-            family->Faces(list)[rec->mFaceIndex].ToPtr(list));
+        face = family->Faces(list)[rec->mFaceIndex].ToPtr<fontlist::Face>(list);
       }
     }
   } else {
@@ -1744,7 +1743,7 @@ bool gfxPlatformFontList::InitializeFamily(fontlist::Family* aFamily,
       auto* faces = aFamily->Faces(list);
       if (faces) {
         for (size_t i = 0; i < aFamily->NumFaces(); i++) {
-          auto* face = static_cast<fontlist::Face*>(faces[i].ToPtr(list));
+          auto* face = faces[i].ToPtr<fontlist::Face>(list);
           if (face && face->mCharacterMap.IsNull()) {
             // We don't want to cache this font entry, as the parent will most
             // likely never use it again; it's just to populate the charmap for
@@ -1888,7 +1887,7 @@ ShmemCharMapHashEntry::ShmemCharMapHashEntry(const gfxSparseBitSet* aCharMap)
       mHash(aCharMap->GetChecksum()) {
   size_t len = SharedBitSet::RequiredSize(*aCharMap);
   mCharMap = mList->Alloc(len);
-  SharedBitSet::Create(mCharMap.ToPtr(mList), len, *aCharMap);
+  SharedBitSet::Create(mCharMap.ToPtr(mList, len), len, *aCharMap);
 }
 
 fontlist::Pointer gfxPlatformFontList::GetShmemCharMapLocked(
@@ -2982,7 +2981,7 @@ void gfxPlatformFontList::SetCharacterMap(uint32_t aGeneration,
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return;
   }
-  fontlist::Face* face = static_cast<fontlist::Face*>(aFacePtr.ToPtr(list));
+  auto* face = aFacePtr.ToPtr<fontlist::Face>(list);
   if (face) {
     face->mCharacterMap = GetShmemCharMap(&aMap);
   }
@@ -3010,7 +3009,7 @@ void gfxPlatformFontList::SetupFamilyCharMap(
   // should have hit the MOZ_DIAGNOSTIC_ASSERT in FontList::ToSharedPointer
   // rather than passing a null or bad pointer to the parent.)
 
-  auto* family = static_cast<fontlist::Family*>(aFamilyPtr.ToPtr(list));
+  auto* family = aFamilyPtr.ToPtr<fontlist::Family>(list);
   if (!family) {
     // Unable to resolve to a native pointer (or it was null).
     NS_WARNING("unexpected null Family pointer");
