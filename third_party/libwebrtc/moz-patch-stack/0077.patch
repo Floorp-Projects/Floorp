@@ -30,7 +30,7 @@ index 5d6e4e3460..84faaa79f7 100644
  
  void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index e817a2bb4d..ec20e43777 100644
+index dccaa3158f..b5e120b8b7 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -1207,7 +1207,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
