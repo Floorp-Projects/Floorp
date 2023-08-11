@@ -962,7 +962,7 @@ index b42536db85..aff496cc01 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index cf4da8f6e5..2044dbd624 100644
+index 427e14da53..f67ca71210 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -288,6 +288,7 @@ rtc_library("sample_counter") {
@@ -991,7 +991,7 @@ index cf4da8f6e5..2044dbd624 100644
    if (rtc_build_json) {
      deps += [ "//third_party/jsoncpp" ]
    } else {
-@@ -2086,7 +2090,7 @@ if (rtc_include_tests) {
+@@ -2082,7 +2086,7 @@ if (rtc_include_tests) {
    }
  }
  
