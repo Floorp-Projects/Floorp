@@ -1548,8 +1548,12 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
 
   nsPreflightCache::CacheEntry* entry = nullptr;
 
-  // Disable cache if devtools says so.
-  bool disableCache = Preferences::GetBool("devtools.cache.disabled");
+  nsLoadFlags loadFlags;
+  rv = aRequestChannel->GetLoadFlags(&loadFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Disable preflight cache if devtools says so or on other force reloads
+  bool disableCache = (loadFlags & nsIRequest::LOAD_BYPASS_CACHE);
 
   if (sPreflightCache && !disableCache) {
     OriginAttributes attrs;
@@ -1584,10 +1588,6 @@ nsresult nsCORSListenerProxy::StartCORSPreflight(
   rv = aRequestChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
-
-  nsLoadFlags loadFlags;
-  rv = aRequestChannel->GetLoadFlags(&loadFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Preflight requests should never be intercepted by service workers and
   // are always anonymous.
