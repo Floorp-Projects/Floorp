@@ -590,6 +590,16 @@ export class FormAutoComplete {
       return "";
     }
 
+    // Running simple heuristics first, because running the SignUpFormRuleset is expensive
+    if (
+      !(
+        lazy.LoginHelper.isInferredEmailField(input) ||
+        lazy.LoginHelper.isInferredUsernameField(input)
+      )
+    ) {
+      return "";
+    }
+
     const formRoot = lazy.FormLikeFactory.findRootForField(input);
 
     if (!HTMLFormElement.isInstance(formRoot)) {
