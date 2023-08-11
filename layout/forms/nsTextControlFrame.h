@@ -79,7 +79,14 @@ class nsTextControlFrame : public nsContainerFrame,
 
   Maybe<nscoord> GetNaturalBaselineBOffset(
       mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-      BaselineExportContext aExportContext) const override;
+      BaselineExportContext) const override {
+    if (!IsSingleLineTextControl()) {
+      return Nothing{};
+    }
+    NS_ASSERTION(!IsSubtreeDirty(), "frame must not be dirty");
+    return GetSingleLineTextControlBaseline(this, mFirstBaseline, aWM,
+                                            aBaselineGroup);
+  }
 
   static Maybe<nscoord> GetSingleLineTextControlBaseline(
       const nsIFrame* aFrame, nscoord aFirstBaseline, mozilla::WritingMode aWM,
