@@ -122,6 +122,7 @@ dictionary GPUDeviceDescriptor
          : GPUObjectDescriptorBase {
     sequence<GPUFeatureName> requiredFeatures = [];
     record<DOMString, GPUSize64> requiredLimits;
+    GPUQueueDescriptor defaultQueue = {};
 };
 
 enum GPUFeatureName {
@@ -1047,6 +1048,10 @@ dictionary GPURenderBundleEncoderDescriptor
          : GPURenderPassLayout {
     boolean depthReadOnly = false;
     boolean stencilReadOnly = false;
+};
+
+dictionary GPUQueueDescriptor
+         : GPUObjectDescriptorBase {
 };
 
 //TODO: use [AllowShared] on BufferSource
