@@ -204,11 +204,8 @@ static bool CanDecode(const VideoDecoderConfigInternal& aConfig) {
 static bool CanDecode(const VideoDecoderConfig& aConfig) {
   // Converting Optional to Maybe may looks better, but it requires memory
   // allocations.
-  return CanDecode(
-      aConfig.mCodec,
-      aConfig.mCodedWidth.WasPassed() ? &aConfig.mCodedWidth.Value() : nullptr,
-      aConfig.mCodedHeight.WasPassed() ? &aConfig.mCodedHeight.Value()
-                                       : nullptr);
+  return CanDecode(aConfig.mCodec, OptionalToPointer(aConfig.mCodedWidth),
+                   OptionalToPointer(aConfig.mCodedHeight));
 }
 
 static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
