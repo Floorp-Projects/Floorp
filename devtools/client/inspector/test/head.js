@@ -1008,14 +1008,9 @@ async function assertTooltipHiddenOnMouseOut(tooltip, target) {
  * @return {DOMNode} The rule editor if any at this index
  */
 function getRuleViewRuleEditor(view, childrenIndex, nodeIndex) {
-  const child = view.element.children[childrenIndex];
-  if (!child) {
-    return null;
-  }
-
   return nodeIndex !== undefined
-    ? child.childNodes[nodeIndex]?._ruleEditor
-    : child._ruleEditor;
+    ? view.element.children[childrenIndex].childNodes[nodeIndex]._ruleEditor
+    : view.element.children[childrenIndex]._ruleEditor;
 }
 
 /**
