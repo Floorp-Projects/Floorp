@@ -118,3 +118,23 @@ promise_test(t => {
 
   return endAfterEventLoopTurn();
 }, 'Test VideoDecoder construction');
+
+const validConfigs = [
+  {
+    comment: 'valid codec with spaces',
+    config: {codec: '  vp09.00.10.08  '},
+  },
+];  // validConfigs
+
+validConfigs.forEach(entry => {
+  promise_test(
+    async t => {
+      try {
+        await VideoDecoder.isConfigSupported(entry.config);
+      } catch (e) {
+        assert_true(false, entry.comment + ' should not throw');
+      }
+    },
+    'Test that VideoDecoder.isConfigSupported() accepts config:' +
+        entry.comment);
+});
