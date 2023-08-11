@@ -118,7 +118,8 @@ interface GPUAdapter {
     Promise<GPUAdapterInfo> requestAdapterInfo(optional sequence<DOMString> unmaskHints = []);
 };
 
-dictionary GPUDeviceDescriptor {
+dictionary GPUDeviceDescriptor
+         : GPUObjectDescriptorBase {
     sequence<GPUFeatureName> requiredFeatures = [];
     record<DOMString, GPUSize64> requiredLimits;
 };

@@ -118,6 +118,7 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
 
   RefPtr<Buffer> buffer =
       new Buffer(aDevice, id, aDesc.mSize, aDesc.mUsage, std::move(mapping));
+  buffer->SetLabel(aDesc.mLabel);
 
   if (aDesc.mMappedAtCreation) {
     // Mapped at creation's raison d'être is write access, since the buffer is
