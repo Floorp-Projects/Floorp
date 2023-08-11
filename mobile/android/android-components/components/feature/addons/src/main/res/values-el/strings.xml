@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">Επιτυχής εγκατάσταση του %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Αποτυχία εγκατάστασης του %1$s</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">Δεν είναι δυνατή η εγκατάσταση του %1$s, επειδή είναι πολύ πιθανό να προκαλέσει προβλήματα σταθερότητας ή ασφάλειας</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Επιτυχής ενεργοποίηση του %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">A(z) %1$s sikeresen telepítve</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">A(z) %1$s telepítése sikertelen</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">A(z) %1$s nem volt telepíthető, mert stabilitási és biztonsági szempontból magas kockázatú.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">A(z) %1$s sikeresen engedélyezve</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

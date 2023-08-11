@@ -623,6 +623,8 @@
     <string name="wallpaper_classic_title">%s 经典</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title" moz:RemovedIn="118" tools:ignore="UnusedResources">限定版</string>
+    <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
+    <string name="wallpaper_artist_series_title">艺术家系列</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
     <string name="wallpaper_limited_edition_description_with_learn_more" moz:RemovedIn="118" tools:ignore="UnusedResources">全新“凡人之声”壁纸集。%s</string>
     <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
@@ -1246,7 +1248,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">知道了</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">无法打印</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">无法打印</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">无法打印此页面</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">打印</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
