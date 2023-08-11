@@ -972,6 +972,7 @@ already_AddRefed<Promise> VideoDecoder::Flush(ErrorResult& aRv) {
   LOG("VideoDecoder %p, Flush", this);
 
   if (mState != CodecState::Configured) {
+    LOG("VideoDecoder %p, wrong state!", this);
     aRv.ThrowInvalidStateError("Decoder must be configured first");
     return nullptr;
   }
