@@ -179,7 +179,11 @@ class RtpTransportControllerSend final
 
   TimeDelta process_interval_ RTC_GUARDED_BY(sequence_checker_);
 
-  std::map<uint32_t, RTCPReportBlock> last_report_blocks_
+  struct LossReport {
+    uint32_t extended_highest_sequence_number = 0;
+    int cumulative_lost = 0;
+  };
+  std::map<uint32_t, LossReport> last_report_blocks_
       RTC_GUARDED_BY(sequence_checker_);
   Timestamp last_report_block_time_ RTC_GUARDED_BY(sequence_checker_);
 

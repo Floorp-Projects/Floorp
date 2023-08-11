@@ -670,15 +670,18 @@ void RtpTransportControllerSend::OnReceivedRtcpReceiverReportBlocks(
 
   // Compute the packet loss from all report blocks.
   for (const RTCPReportBlock& report_block : report_blocks) {
-    auto it = last_report_blocks_.find(report_block.source_ssrc);
-    if (it != last_report_blocks_.end()) {
-      auto number_of_packets = report_block.extended_highest_sequence_number -
-                               it->second.extended_highest_sequence_number;
-      total_packets_delta += number_of_packets;
-      auto lost_delta = report_block.packets_lost - it->second.packets_lost;
-      total_packets_lost_delta += lost_delta;
+    auto [it, inserted] =
+        last_report_blocks_.try_emplace(report_block.source_ssrc);
+    LossReport& last_loss_report = it->second;
+    if (!inserted) {
+      total_packets_delta += report_block.extended_highest_sequence_number -
+                             last_loss_report.extended_highest_sequence_number;
+      total_packets_lost_delta +=
+          report_block.packets_lost - last_loss_report.cumulative_lost;
     }
-    last_report_blocks_[report_block.source_ssrc] = report_block;
+    last_loss_report.extended_highest_sequence_number =
+        report_block.extended_highest_sequence_number;
+    last_loss_report.cumulative_lost = report_block.packets_lost;
   }
   // Can only compute delta if there has been previous blocks to compare to. If
   // not, total_packets_delta will be unchanged and there's nothing more to do.
