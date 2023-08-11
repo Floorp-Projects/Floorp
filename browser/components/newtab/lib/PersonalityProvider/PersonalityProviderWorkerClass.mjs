@@ -2,18 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-// PersonalityProviderWorker.js imports the following scripts before this.
-/* import-globals-from Tokenize.jsm */
-/* import-globals-from NaiveBayesTextTagger.jsm */
-/* import-globals-from NmfTextTagger.jsm */
-/* import-globals-from RecipeExecutor.jsm */
-
-// We load this into a worker using importScripts, and in tests using import.
-// We use var to avoid name collision errors.
-// eslint-disable-next-line no-var
-var EXPORTED_SYMBOLS = ["PersonalityProviderWorker"];
+import {
+  tokenize,
+  toksToTfIdfVector,
+} from "resource://activity-stream/lib/PersonalityProvider/Tokenize.mjs";
+import { NaiveBayesTextTagger } from "resource://activity-stream/lib/PersonalityProvider/NaiveBayesTextTagger.mjs";
+import { NmfTextTagger } from "resource://activity-stream/lib/PersonalityProvider/NmfTextTagger.mjs";
+import { RecipeExecutor } from "resource://activity-stream/lib/PersonalityProvider/RecipeExecutor.mjs";
 
 // A helper function to create a hash out of a file.
 async function _getFileHash(filepath) {
@@ -31,7 +26,7 @@ async function _getFileHash(filepath) {
  * This allows Firefox to classify pages into topics, by examining the text found on the page.
  * It does this by looking at the history text content, title, and description.
  */
-const PersonalityProviderWorker = class PersonalityProviderWorker {
+export class PersonalityProviderWorker {
   async getPersonalityProviderDir() {
     const personalityProviderDir = PathUtils.join(
       await PathUtils.getLocalProfileDir(),
@@ -101,9 +96,9 @@ const PersonalityProviderWorker = class PersonalityProviderWorker {
    */
   async _downloadAttachment(record) {
     const {
-      attachment: { location, filename },
+      attachment: { location: loc, filename },
     } = record;
-    const remoteFilePath = this.baseAttachmentsURL + location;
+    const remoteFilePath = this.baseAttachmentsURL + loc;
     const localFilePath = PathUtils.join(
       await this.getPersonalityProviderDir(),
       filename
@@ -230,10 +225,10 @@ const PersonalityProviderWorker = class PersonalityProviderWorker {
    * Examines the user's browse history and returns an interest vector that
    * describes the topics the user frequently browses.
    */
-  createInterestVector(history) {
+  createInterestVector(historyObj) {
     let interestVector = {};
 
-    for (let historyRec of history) {
+    for (let historyRec of historyObj) {
       let ivItem = this.recipeExecutor.executeRecipe(
         historyRec,
         this.interestConfig.history_item_builder
@@ -308,4 +303,4 @@ const PersonalityProviderWorker = class PersonalityProviderWorker {
 
     return { scorableItem, rankingVector };
   }
-};
+}

@@ -1,5 +1,5 @@
-import { RecipeExecutor } from "lib/PersonalityProvider/RecipeExecutor.jsm";
-import { tokenize } from "lib/PersonalityProvider/Tokenize.jsm";
+import { RecipeExecutor } from "lib/PersonalityProvider/RecipeExecutor.mjs";
+import { tokenize } from "lib/PersonalityProvider/Tokenize.mjs";
 
 class MockTagger {
   constructor(mode, tagScoreMap) {
