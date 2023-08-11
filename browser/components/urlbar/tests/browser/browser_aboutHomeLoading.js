@@ -14,7 +14,7 @@ const { TabStateFlusher } = ChromeUtils.importESModule(
   "resource:///modules/sessionstore/TabStateFlusher.sys.mjs"
 );
 
-add_task(function addHomeButton() {
+add_setup(function addHomeButton() {
   CustomizableUI.addWidgetToArea("home-button", "nav-bar");
   registerCleanupFunction(() =>
     CustomizableUI.removeWidgetFromArea("home-button")
@@ -125,6 +125,7 @@ add_task(async function clearURLBarAfterManuallyLoadingAboutHome() {
  */
 add_task(async function dontTemporarilyShowAboutHome() {
   requestLongerTimeout(2);
+  let currentBrowser;
 
   await SpecialPowers.pushPrefEnv({ set: [["browser.startup.page", 1]] });
   let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
@@ -133,7 +134,38 @@ add_task(async function dontTemporarilyShowAboutHome() {
   let promiseTabSwitch = BrowserTestUtils.switchTab(win.gBrowser, () => {});
   win.BrowserOpenTab();
   await promiseTabSwitch;
+  currentBrowser = win.gBrowser.selectedBrowser;
   is(win.gBrowser.visibleTabs.length, 2, "2 tabs opened");
+
+  // We need to load *something* here otherwise SessionStore will refuse to save this
+  // window when it closes as there is no user interaction, no tab history, and all the
+  // tab URIs are in the ignore list.
+  let loadPromise = BrowserTestUtils.browserLoaded(
+    currentBrowser,
+    false,
+    "about:logo"
+  );
+  BrowserTestUtils.loadURIString(currentBrowser, "about:logo");
+  await loadPromise;
+
+  let homeButton = win.document.getElementById("home-button");
+  ok(BrowserTestUtils.is_visible(homeButton), "home-button is visible");
+
+  let changeListener;
+  let locationChangePromise = new Promise(resolve => {
+    changeListener = {
+      onLocationChange() {
+        is(win.gURLBar.value, "", "URL bar value should stay empty.");
+        resolve();
+      },
+    };
+    win.gBrowser.addProgressListener(changeListener);
+  });
+  homeButton.click();
+  info("Waiting for location change to about:home");
+  await locationChangePromise;
+  win.gBrowser.removeProgressListener(changeListener);
+
   await TabStateFlusher.flush(win.gBrowser.selectedBrowser);
   await BrowserTestUtils.closeWindow(win);
   ok(SessionStore.getClosedWindowCount(), "Should have a closed window");
