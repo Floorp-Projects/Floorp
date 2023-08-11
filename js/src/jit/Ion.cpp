@@ -316,12 +316,6 @@ uint8_t* JitRuntime::allocateIonOsrTempData(size_t size) {
 
 void JitRuntime::freeIonOsrTempData() { ionOsrTempData_.ref().reset(); }
 
-JitRealm::JitRealm() : initialStringHeap(gc::Heap::Tenured) {}
-
-void JitRealm::initialize(bool zoneHasNurseryStrings) {
-  setStringsCanBeInNursery(zoneHasNurseryStrings);
-}
-
 template <typename T>
 static T PopNextBitmaskValue(uint32_t* bitmask) {
   MOZ_ASSERT(*bitmask);
@@ -332,7 +326,7 @@ static T PopNextBitmaskValue(uint32_t* bitmask) {
   return T(index);
 }
 
-void JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const {
+void JitZone::performStubReadBarriers(uint32_t stubsToBarrier) const {
   while (stubsToBarrier) {
     auto stub = PopNextBitmaskValue<StubIndex>(&stubsToBarrier);
     const WeakHeapPtr<JitCode*>& jitCode = stubs_[stub];
@@ -437,15 +431,6 @@ void JitRuntime::TraceWeakJitcodeGlobalTable(JSRuntime* rt, JSTracer* trc) {
   }
 }
 
-void JitRealm::traceWeak(JSTracer* trc, JS::Realm* realm) {
-  // Any outstanding compilations should have been cancelled by the GC.
-  MOZ_ASSERT(!HasOffThreadIonCompile(realm));
-
-  for (WeakHeapPtr<JitCode*>& stub : stubs_) {
-    TraceWeakEdge(trc, &stub, "JitRealm::stubs_");
-  }
-}
-
 bool JitZone::addInlinedCompilation(const RecompileInfo& info,
                                     JSScript* inlined) {
   MOZ_ASSERT(inlined != info.script());
@@ -536,6 +521,17 @@ bool RecompileInfo::traceWeak(JSTracer* trc) {
 
 void JitZone::traceWeak(JSTracer* trc, Zone* zone) {
   MOZ_ASSERT(this == zone->jitZone());
+
+#ifdef DEBUG
+  // Any outstanding compilations should have been cancelled by the GC.
+  for (RealmsInZoneIter realm(zone); !realm.done(); realm.next()) {
+    MOZ_ASSERT(!HasOffThreadIonCompile(realm));
+  }
+#endif
+
+  for (WeakHeapPtr<JitCode*>& stub : stubs_) {
+    TraceWeakEdge(trc, &stub, "JitZone::stubs_");
+  }
 
   baselineCacheIRStubCodes_.traceWeak(trc);
   inlinedCompilations_.traceWeak(trc);
@@ -1626,7 +1622,7 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     return AbortReason::Error;
   }
 
-  if (!cx->realm()->jitRealm()->ensureIonStubsExist(cx)) {
+  if (!cx->zone()->jitZone()->ensureIonStubsExist(cx)) {
     return AbortReason::Error;
   }
 

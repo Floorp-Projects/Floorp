@@ -15,9 +15,9 @@
 #include "jit/CacheIRReader.h"
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
-#include "jit/JitRealm.h"
 #include "jit/JitScript.h"
 #include "jit/JitSpewer.h"
+#include "jit/JitZone.h"
 #include "jit/MIRGenerator.h"
 #include "jit/TrialInlining.h"
 #include "jit/TypeData.h"
@@ -874,22 +874,22 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     // them.
     switch (op) {
       case CacheOp::CallRegExpMatcherResult:
-        if (!cx_->realm()->jitRealm()->ensureRegExpMatcherStubExists(cx_)) {
+        if (!cx_->zone()->jitZone()->ensureRegExpMatcherStubExists(cx_)) {
           return abort(AbortReason::Error);
         }
         break;
       case CacheOp::CallRegExpSearcherResult:
-        if (!cx_->realm()->jitRealm()->ensureRegExpSearcherStubExists(cx_)) {
+        if (!cx_->zone()->jitZone()->ensureRegExpSearcherStubExists(cx_)) {
           return abort(AbortReason::Error);
         }
         break;
       case CacheOp::RegExpBuiltinExecMatchResult:
-        if (!cx_->realm()->jitRealm()->ensureRegExpExecMatchStubExists(cx_)) {
+        if (!cx_->zone()->jitZone()->ensureRegExpExecMatchStubExists(cx_)) {
           return abort(AbortReason::Error);
         }
         break;
       case CacheOp::RegExpBuiltinExecTestResult:
-        if (!cx_->realm()->jitRealm()->ensureRegExpExecTestStubExists(cx_)) {
+        if (!cx_->zone()->jitZone()->ensureRegExpExecTestStubExists(cx_)) {
           return abort(AbortReason::Error);
         }
         break;

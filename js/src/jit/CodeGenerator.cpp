@@ -960,7 +960,7 @@ CodeGenerator::CodeGenerator(MIRGenerator* gen, LIRGraph* graph,
       ionScriptLabels_(gen->alloc()),
       ionNurseryObjectLabels_(gen->alloc()),
       scriptCounts_(nullptr),
-      realmStubsToReadBarrier_(0) {}
+      zoneStubsToReadBarrier_(0) {}
 
 CodeGenerator::~CodeGenerator() { js_delete(scriptCounts_); }
 
@@ -2779,12 +2779,12 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
   return code;
 }
 
-JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
+JitCode* JitZone::generateRegExpMatcherStub(JSContext* cx) {
   return GenerateRegExpMatchStubShared(cx, initialStringHeap,
                                        /* isExecMatch = */ false);
 }
 
-JitCode* JitRealm::generateRegExpExecMatchStub(JSContext* cx) {
+JitCode* JitZone::generateRegExpExecMatchStub(JSContext* cx) {
   return GenerateRegExpMatchStubShared(cx, initialStringHeap,
                                        /* isExecMatch = */ true);
 }
@@ -2856,9 +2856,9 @@ void CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir) {
   OutOfLineRegExpMatcher* ool = new (alloc()) OutOfLineRegExpMatcher(lir);
   addOutOfLineCode(ool, lir->mir());
 
-  const JitRealm* jitRealm = gen->realm->jitRealm();
+  const JitZone* jitZone = gen->realm->zone()->jitZone();
   JitCode* regExpMatcherStub =
-      jitRealm->regExpMatcherStubNoBarrier(&realmStubsToReadBarrier_);
+      jitZone->regExpMatcherStubNoBarrier(&zoneStubsToReadBarrier_);
   masm.call(regExpMatcherStub);
   masm.branchTestUndefined(Assembler::Equal, JSReturnOperand, ool->entry());
   masm.bind(ool->rejoin());
@@ -2926,9 +2926,9 @@ void CodeGenerator::visitRegExpExecMatch(LRegExpExecMatch* lir) {
   auto* ool = new (alloc()) OutOfLineRegExpExecMatch(lir);
   addOutOfLineCode(ool, lir->mir());
 
-  const JitRealm* jitRealm = gen->realm->jitRealm();
+  const JitZone* jitZone = gen->realm->zone()->jitZone();
   JitCode* regExpExecMatchStub =
-      jitRealm->regExpExecMatchStubNoBarrier(&realmStubsToReadBarrier_);
+      jitZone->regExpExecMatchStubNoBarrier(&zoneStubsToReadBarrier_);
   masm.call(regExpExecMatchStub);
   masm.branchTestUndefined(Assembler::Equal, JSReturnOperand, ool->entry());
 
@@ -2936,7 +2936,7 @@ void CodeGenerator::visitRegExpExecMatch(LRegExpExecMatch* lir) {
   masm.freeStack(RegExpReservedStack);
 }
 
-JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
+JitCode* JitZone::generateRegExpSearcherStub(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting RegExpSearcher stub");
 
   Register regexp = RegExpSearcherRegExpReg;
@@ -2958,7 +2958,7 @@ JitCode* JitRealm::generateRegExpSearcherStub(JSContext* cx) {
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
   StackMacroAssembler masm(cx, temp);
-  AutoCreatedBy acb(masm, "JitRealm::generateRegExpSearcherStub");
+  AutoCreatedBy acb(masm, "JitZone::generateRegExpSearcherStub");
 
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
@@ -3116,9 +3116,9 @@ void CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir) {
   OutOfLineRegExpSearcher* ool = new (alloc()) OutOfLineRegExpSearcher(lir);
   addOutOfLineCode(ool, lir->mir());
 
-  const JitRealm* jitRealm = gen->realm->jitRealm();
+  const JitZone* jitZone = gen->realm->zone()->jitZone();
   JitCode* regExpSearcherStub =
-      jitRealm->regExpSearcherStubNoBarrier(&realmStubsToReadBarrier_);
+      jitZone->regExpSearcherStubNoBarrier(&zoneStubsToReadBarrier_);
   masm.call(regExpSearcherStub);
   masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpSearcherResultFailed),
                 ool->entry());
@@ -3135,7 +3135,7 @@ void CodeGenerator::visitRegExpSearcherLastLimit(
   masm.loadAndClearRegExpSearcherLastLimit(result, scratch);
 }
 
-JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
+JitCode* JitZone::generateRegExpExecTestStub(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting RegExpExecTest stub");
 
   Register regexp = RegExpExecTestRegExpReg;
@@ -3145,7 +3145,7 @@ JitCode* JitRealm::generateRegExpExecTestStub(JSContext* cx) {
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
   StackMacroAssembler masm(cx, temp);
-  AutoCreatedBy acb(masm, "JitRealm::generateRegExpExecTestStub");
+  AutoCreatedBy acb(masm, "JitZone::generateRegExpExecTestStub");
 
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
@@ -3289,9 +3289,9 @@ void CodeGenerator::visitRegExpExecTest(LRegExpExecTest* lir) {
   auto* ool = new (alloc()) OutOfLineRegExpExecTest(lir);
   addOutOfLineCode(ool, lir->mir());
 
-  const JitRealm* jitRealm = gen->realm->jitRealm();
+  const JitZone* jitZone = gen->realm->zone()->jitZone();
   JitCode* regExpExecTestStub =
-      jitRealm->regExpExecTestStubNoBarrier(&realmStubsToReadBarrier_);
+      jitZone->regExpExecTestStubNoBarrier(&zoneStubsToReadBarrier_);
   masm.call(regExpExecTestStub);
 
   masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpExecTestResultFailed),
@@ -11403,9 +11403,9 @@ void CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs,
       lir, ArgList(lhs, rhs, static_cast<Imm32>(int32_t(gc::Heap::Default))),
       StoreRegisterTo(output));
 
-  const JitRealm* jitRealm = gen->realm->jitRealm();
+  const JitZone* jitZone = gen->realm->zone()->jitZone();
   JitCode* stringConcatStub =
-      jitRealm->stringConcatStubNoBarrier(&realmStubsToReadBarrier_);
+      jitZone->stringConcatStubNoBarrier(&zoneStubsToReadBarrier_);
   masm.call(stringConcatStub);
   masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
@@ -11735,13 +11735,13 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   masm.bind(done);
 }
 
-JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
+JitCode* JitZone::generateStringConcatStub(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting StringConcat stub");
 
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jcx(cx);
   StackMacroAssembler masm(cx, temp);
-  AutoCreatedBy acb(masm, "JitRealm::generateStringConcatStub");
+  AutoCreatedBy acb(masm, "JitZone::generateStringConcatStub");
 
   Register lhs = CallTempReg0;
   Register rhs = CallTempReg1;
@@ -14212,8 +14212,8 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
 
   // Perform any read barriers which were skipped while compiling the
   // script, which may have happened off-thread.
-  const JitRealm* jr = gen->realm->jitRealm();
-  jr->performStubReadBarriers(realmStubsToReadBarrier_);
+  JitZone* jitZone = cx->zone()->jitZone();
+  jitZone->performStubReadBarriers(zoneStubsToReadBarrier_);
 
   if (scriptCounts_ && !script->hasScriptCounts() &&
       !script->initScriptCounts(cx)) {
@@ -14222,7 +14222,6 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
 
   IonCompilationId compilationId =
       cx->runtime()->jitRuntime()->nextCompilationId();
-  JitZone* jitZone = cx->zone()->jitZone();
   jitZone->currentCompilationIdRef().emplace(compilationId);
   auto resetCurrentId = mozilla::MakeScopeExit(
       [jitZone] { jitZone->currentCompilationIdRef().reset(); });
