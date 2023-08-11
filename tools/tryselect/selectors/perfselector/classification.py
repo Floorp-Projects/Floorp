@@ -266,24 +266,6 @@ class ClassificationProvider:
                 "suites": [Suites.RAPTOR.value],
                 "tasks": [],
             },
-            "Pageload (essential)": {
-                "query": {
-                    Suites.RAPTOR.value: ["'browsertime 'tp6 'essential"],
-                },
-                "variant-restrictions": {Suites.RAPTOR.value: [Variants.FISSION.value]},
-                "suites": [Suites.RAPTOR.value],
-                "app-restrictions": {
-                    Suites.RAPTOR.value: [
-                        Apps.FIREFOX.value,
-                        Apps.CHROME.value,
-                        Apps.CHROMIUM.value,
-                        Apps.FENIX.value,
-                        Apps.GECKOVIEW.value,
-                        Apps.CHROMIUM_RELEASE.value,
-                    ],
-                },
-                "tasks": [],
-            },
             "Speedometer 3": {
                 "query": {
                     Suites.RAPTOR.value: ["'browsertime 'speedometer3"],
