@@ -124,7 +124,8 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
     dbgGlobal,
     frame,
     string,
-    options.selectedNodeActor
+    options.selectedNodeActor,
+    !!options.disableBreaks
   );
   let { bindings } = helpers;
 
