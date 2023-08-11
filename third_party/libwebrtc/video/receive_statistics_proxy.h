@@ -24,7 +24,6 @@
 #include "api/video_codecs/video_decoder.h"
 #include "call/video_receive_stream.h"
 #include "modules/include/module_common_types.h"
-#include "modules/video_coding/include/video_coding_defines.h"
 #include "rtc_base/numerics/histogram_percentile_counter.h"
 #include "rtc_base/numerics/moving_max_counter.h"
 #include "rtc_base/numerics/sample_counter.h"
@@ -35,6 +34,7 @@
 #include "video/quality_threshold.h"
 #include "video/stats_counter.h"
 #include "video/video_quality_observer2.h"
+#include "video/video_stream_buffer_controller.h"
 
 namespace webrtc {
 
@@ -45,7 +45,7 @@ namespace internal {
 // Declared in video_receive_stream2.h.
 struct VideoFrameMetaData;
 
-class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
+class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
                                public RtcpCnameCallback,
                                public RtcpPacketTypeCounterObserver {
  public:
@@ -85,7 +85,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   // Indicates video stream has been paused (no incoming packets).
   void OnStreamInactive();
 
-  // Overrides VCMReceiveStatisticsCallback.
+  // Implements VideoStreamBufferControllerStatsObserver.
   void OnCompleteFrame(bool is_keyframe,
                        size_t size_bytes,
                        VideoContentType content_type) override;
@@ -100,10 +100,10 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
 
   void OnTimingFrameInfoUpdated(const TimingFrameInfo& info) override;
 
-  // Overrides RtcpCnameCallback.
+  // Implements RtcpCnameCallback.
   void OnCname(uint32_t ssrc, absl::string_view cname) override;
 
-  // Overrides RtcpPacketTypeCounterObserver.
+  // Implements RtcpPacketTypeCounterObserver.
   void RtcpPacketTypesCounterUpdated(
       uint32_t ssrc,
       const RtcpPacketTypeCounter& packet_counter) override;

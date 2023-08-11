@@ -15,20 +15,19 @@ Bug 1804288 - (fix-de7ae5755b) reimplement Bug 1742181 - libwebrtc: Implement pa
 Differential Revision: https://phabricator.services.mozilla.com/D163959
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ee566d1bfb654d36e5d58dce637fb0580b989ac1
 ---
- api/video/frame_buffer.cc                     | 25 ++++++++++++++++---
- api/video/frame_buffer.h                      |  4 +++
- call/video_receive_stream.h                   |  2 ++
- .../include/video_coding_defines.h            |  2 ++
- modules/video_coding/packet_buffer.cc         | 10 +++++---
- modules/video_coding/packet_buffer.h          |  5 +++-
- video/receive_statistics_proxy.cc             |  5 ++++
- video/receive_statistics_proxy.h              |  1 +
- video/rtp_video_stream_receiver2.cc           |  5 +++-
- video/rtp_video_stream_receiver2.h            |  2 ++
- video/video_receive_stream2.cc                |  1 +
- video/video_stream_buffer_controller.cc       | 12 +++++++++
- video/video_stream_buffer_controller.h        |  3 +++
- 13 files changed, 69 insertions(+), 8 deletions(-)
+ api/video/frame_buffer.cc               | 25 ++++++++++++++++++++++---
+ api/video/frame_buffer.h                |  4 ++++
+ call/video_receive_stream.h             |  2 ++
+ modules/video_coding/packet_buffer.cc   | 10 +++++++---
+ modules/video_coding/packet_buffer.h    |  5 ++++-
+ video/receive_statistics_proxy.cc       |  5 +++++
+ video/receive_statistics_proxy.h        |  1 +
+ video/rtp_video_stream_receiver2.cc     |  5 ++++-
+ video/rtp_video_stream_receiver2.h      |  2 ++
+ video/video_receive_stream2.cc          |  1 +
+ video/video_stream_buffer_controller.cc | 12 ++++++++++++
+ video/video_stream_buffer_controller.h  |  5 +++++
+ 12 files changed, 69 insertions(+), 8 deletions(-)
 
 diff --git a/api/video/frame_buffer.cc b/api/video/frame_buffer.cc
 index 4cdf2212a6..8267b8e6cb 100644
@@ -127,19 +126,6 @@ index 4c2dec81e9..4d5ddf28d4 100644
      // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totaldecodetime
      TimeDelta total_decode_time = TimeDelta::Zero();
      // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalprocessingdelay
-diff --git a/modules/video_coding/include/video_coding_defines.h b/modules/video_coding/include/video_coding_defines.h
-index 4026c8b339..11cb1737db 100644
---- a/modules/video_coding/include/video_coding_defines.h
-+++ b/modules/video_coding/include/video_coding_defines.h
-@@ -76,6 +76,8 @@ class VCMReceiveStatisticsCallback {
- 
-   virtual void OnDroppedFrames(uint32_t frames_dropped) = 0;
- 
-+  virtual void OnDiscardedPackets(uint32_t packets_discarded) = 0;
-+
-   virtual void OnFrameBufferTimingsUpdated(int estimated_max_decode_time_ms,
-                                            int current_delay_ms,
-                                            int target_delay_ms,
 diff --git a/modules/video_coding/packet_buffer.cc b/modules/video_coding/packet_buffer.cc
 index 52ef5c2d85..be45db6ef0 100644
 --- a/modules/video_coding/packet_buffer.cc
@@ -217,10 +203,10 @@ index daae7a3b68..5d6e4e3460 100644
    RTC_DCHECK_RUN_ON(&main_thread_);
    last_codec_type_ = codec_type;
 diff --git a/video/receive_statistics_proxy.h b/video/receive_statistics_proxy.h
-index b69c77be20..6f108df7ba 100644
+index 9c38dec1d8..052989906a 100644
 --- a/video/receive_statistics_proxy.h
 +++ b/video/receive_statistics_proxy.h
-@@ -90,6 +90,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
+@@ -90,6 +90,7 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
                         size_t size_bytes,
                         VideoContentType content_type) override;
    void OnDroppedFrames(uint32_t frames_dropped) override;
@@ -291,7 +277,7 @@ index 999a5d9e4d..46f25f0f81 100644
                                   std::move(config_.frame_decryptor),
                                   std::move(config_.frame_transformer),
 diff --git a/video/video_stream_buffer_controller.cc b/video/video_stream_buffer_controller.cc
-index 7b1619cd04..dcbb087609 100644
+index d76fd6852c..a59ed7b2e3 100644
 --- a/video/video_stream_buffer_controller.cc
 +++ b/video/video_stream_buffer_controller.cc
 @@ -250,6 +250,7 @@ void VideoStreamBufferController::OnFrameReady(
@@ -321,10 +307,19 @@ index 7b1619cd04..dcbb087609 100644
    auto timings = timing_->GetTimings();
    if (timings.num_decoded_frames) {
 diff --git a/video/video_stream_buffer_controller.h b/video/video_stream_buffer_controller.h
-index 85852d5398..a700a619a7 100644
+index 8aaec5c509..dcac7e9110 100644
 --- a/video/video_stream_buffer_controller.h
 +++ b/video/video_stream_buffer_controller.h
-@@ -67,6 +67,7 @@ class VideoStreamBufferController {
+@@ -45,6 +45,8 @@ class VideoStreamBufferControllerStatsObserver {
+ 
+   virtual void OnDroppedFrames(uint32_t frames_dropped) = 0;
+ 
++  virtual void OnDiscardedPackets(uint32_t packets_discarded) = 0;
++
+   virtual void OnFrameBufferTimingsUpdated(int estimated_max_decode_time_ms,
+                                            int current_delay_ms,
+                                            int target_delay_ms,
+@@ -86,6 +88,7 @@ class VideoStreamBufferController {
    void OnTimeout(TimeDelta delay);
    void FrameReadyForDecode(uint32_t rtp_timestamp, Timestamp render_time);
    void UpdateDroppedFrames() RTC_RUN_ON(&worker_sequence_checker_);
@@ -332,7 +327,7 @@ index 85852d5398..a700a619a7 100644
    void UpdateJitterDelay();
    void UpdateTimingFrameInfo();
    bool IsTooManyFramesQueued() const RTC_RUN_ON(&worker_sequence_checker_);
-@@ -95,6 +96,8 @@ class VideoStreamBufferController {
+@@ -114,6 +117,8 @@ class VideoStreamBufferController {
        RTC_GUARDED_BY(&worker_sequence_checker_);
    int frames_dropped_before_last_new_frame_
        RTC_GUARDED_BY(&worker_sequence_checker_) = 0;

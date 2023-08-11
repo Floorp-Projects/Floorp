@@ -80,7 +80,7 @@ VideoStreamBufferController::VideoStreamBufferController(
     Clock* clock,
     TaskQueueBase* worker_queue,
     VCMTiming* timing,
-    VCMReceiveStatisticsCallback* stats_proxy,
+    VideoStreamBufferControllerStatsObserver* stats_proxy,
     FrameSchedulingReceiver* receiver,
     TimeDelta max_wait_for_keyframe,
     TimeDelta max_wait_for_frame,
