@@ -37,8 +37,7 @@ class PersonalityProvider {
     }
 
     this._personalityProviderWorker = new BasePromiseWorker(
-      "resource://activity-stream/lib/PersonalityProvider/PersonalityProviderWorker.mjs",
-      { type: "module" }
+      "resource://activity-stream/lib/PersonalityProvider/PersonalityProviderWorker.js"
     );
 
     return this._personalityProviderWorker;

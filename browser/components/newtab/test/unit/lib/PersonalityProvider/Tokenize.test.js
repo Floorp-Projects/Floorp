@@ -1,7 +1,7 @@
 import {
   tokenize,
   toksToTfIdfVector,
-} from "lib/PersonalityProvider/Tokenize.mjs";
+} from "lib/PersonalityProvider/Tokenize.jsm";
 
 const EPSILON = 0.00001;
 

@@ -1,12 +1,12 @@
 import { GlobalOverrider } from "test/unit/utils";
-import { PersonalityProviderWorker } from "lib/PersonalityProvider/PersonalityProviderWorkerClass.mjs";
+import { PersonalityProviderWorker } from "lib/PersonalityProvider/PersonalityProviderWorkerClass.jsm";
 import {
   tokenize,
   toksToTfIdfVector,
-} from "lib/PersonalityProvider/Tokenize.mjs";
-import { RecipeExecutor } from "lib/PersonalityProvider/RecipeExecutor.mjs";
-import { NmfTextTagger } from "lib/PersonalityProvider/NmfTextTagger.mjs";
-import { NaiveBayesTextTagger } from "lib/PersonalityProvider/NaiveBayesTextTagger.mjs";
+} from "lib/PersonalityProvider/Tokenize.jsm";
+import { RecipeExecutor } from "lib/PersonalityProvider/RecipeExecutor.jsm";
+import { NmfTextTagger } from "lib/PersonalityProvider/NmfTextTagger.jsm";
+import { NaiveBayesTextTagger } from "lib/PersonalityProvider/NaiveBayesTextTagger.jsm";
 
 describe("Personality Provider Worker Class", () => {
   let instance;

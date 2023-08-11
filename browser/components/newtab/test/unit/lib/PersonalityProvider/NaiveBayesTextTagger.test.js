@@ -1,8 +1,8 @@
-import { NaiveBayesTextTagger } from "lib/PersonalityProvider/NaiveBayesTextTagger.mjs";
+import { NaiveBayesTextTagger } from "lib/PersonalityProvider/NaiveBayesTextTagger.jsm";
 import {
   tokenize,
   toksToTfIdfVector,
-} from "lib/PersonalityProvider/Tokenize.mjs";
+} from "lib/PersonalityProvider/Tokenize.jsm";
 
 const EPSILON = 0.00001;
 
