@@ -106,21 +106,6 @@ static Result<Ok, nsCString> Validate(const VideoDecoderConfig& aConfig) {
     return Err("invalid codec string"_ns);
   }
 
-  // WebCodecs doesn't support theora
-  if (!IsAV1CodecString(*codec) && !IsVP9CodecString(*codec) &&
-      !IsVP8CodecString(*codec) && !IsH264CodecString(*codec) &&
-      !IsH265CodecString(*codec)) {
-    return Err("unsupported codec"_ns);
-  }
-
-  // Gecko allows codec string starts with vp9 or av1 but Webcodecs requires to
-  // starts with av01 and vp09.
-  // https://www.w3.org/TR/webcodecs-codec-registry/#video-codec-registry
-  if (StringBeginsWith(aConfig.mCodec, u"vp9"_ns) ||
-      StringBeginsWith(aConfig.mCodec, u"av1"_ns)) {
-    return Err("invalid codec string"_ns);
-  }
-
   if (aConfig.mCodedWidth.WasPassed() != aConfig.mCodedHeight.WasPassed()) {
     return aConfig.mCodedWidth.WasPassed()
                ? Err("Invalid VideoDecoderConfig: codedWidth passed without codedHeight"_ns)
@@ -150,23 +135,23 @@ static Result<Ok, nsCString> Validate(const VideoDecoderConfig& aConfig) {
 // MIMECreateParam.
 struct MIMECreateParam {
   MOZ_IMPLICIT MIMECreateParam(const VideoDecoderConfigInternal& aConfig)
-      : mCodec(aConfig.mCodec),
+      : mParsedCodec(ParseCodecString(aConfig.mCodec).valueOr(EmptyString())),
         mWidth(aConfig.mCodedWidth),
         mHeight(aConfig.mCodedHeight) {}
   MOZ_IMPLICIT MIMECreateParam(const VideoDecoderConfig& aConfig)
-      : mCodec(aConfig.mCodec),
+      : mParsedCodec(ParseCodecString(aConfig.mCodec).valueOr(EmptyString())),
         mWidth(OptionalToMaybe(aConfig.mCodedWidth)),
         mHeight(OptionalToMaybe(aConfig.mCodedHeight)) {}
 
-  const nsAString& mCodec;
+  const nsString mParsedCodec;
   const Maybe<uint32_t> mWidth;
   const Maybe<uint32_t> mHeight;
 };
 
 static nsTArray<nsCString> GuessMIMETypes(MIMECreateParam aParam) {
-  const auto codec = NS_ConvertUTF16toUTF8(aParam.mCodec);
+  const auto codec = NS_ConvertUTF16toUTF8(aParam.mParsedCodec);
   nsTArray<nsCString> types;
-  for (const nsCString& container : GuessContainers(aParam.mCodec)) {
+  for (const nsCString& container : GuessContainers(aParam.mParsedCodec)) {
     nsPrintfCString mime("video/%s; codecs=%s", container.get(), codec.get());
     if (aParam.mWidth) {
       mime.Append(nsPrintfCString("; width=%d", *aParam.mWidth));
@@ -187,11 +172,32 @@ static bool IsOnLinux() {
 #endif
 }
 
+static bool IsSupportedCodec(const nsAString& aCodec) {
+  // H265 is unsupported.
+  if (!IsAV1CodecString(aCodec) && !IsVP9CodecString(aCodec) &&
+      !IsVP8CodecString(aCodec) && !IsH264CodecString(aCodec)) {
+    return false;
+  }
+
+  // Gecko allows codec string starts with vp9 or av1 but Webcodecs requires to
+  // starts with av01 and vp09.
+  // https://www.w3.org/TR/webcodecs-codec-registry/#video-codec-registry
+  if (StringBeginsWith(aCodec, u"vp9"_ns) ||
+      StringBeginsWith(aCodec, u"av1"_ns)) {
+    return false;
+  }
+
+  return true;
+}
+
 // https://w3c.github.io/webcodecs/#check-configuration-support
 static bool CanDecode(MIMECreateParam aParam) {
   // Bug 1840508: H264-annexb doesn't work on non-linux platform. We only enable
   // Linux for now.
   if (!IsOnLinux()) {
+    return false;
+  }
+  if (!IsSupportedCodec(aParam.mParsedCodec)) {
     return false;
   }
   // TODO: Instead of calling CanHandleContainerType with the guessed the
