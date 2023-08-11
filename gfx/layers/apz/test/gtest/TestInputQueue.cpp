@@ -11,6 +11,9 @@
 // Test of scenario described in bug 1269067 - that a continuing mouse drag
 // doesn't interrupt a wheel scrolling animation
 TEST_F(APZCTreeManagerTester, WheelInterruptedByMouseDrag) {
+  // Needed because the test uses SmoothWheel()
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
+
   // Set up a scrollable layer
   CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);

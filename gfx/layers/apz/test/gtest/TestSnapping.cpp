@@ -17,6 +17,9 @@ class APZCSnappingTesterMock : public APZCTreeManagerTester {
 };
 
 TEST_F(APZCSnappingTesterMock, Bug1265510) {
+  // Needed because the test uses SmoothWheel()
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
+
   const char* treeShape = "x(x)";
   LayerIntRegion layerVisibleRegion[] = {LayerIntRect(0, 0, 100, 100),
                                          LayerIntRect(0, 100, 100, 100)};
