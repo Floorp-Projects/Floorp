@@ -22,6 +22,7 @@ gcloud:
   test-targets:
     - notPackage org.mozilla.fenix.screenshots
     - notPackage org.mozilla.fenix.syncintegration
+    - notPackage org.mozilla.fenix.experimentintegration
     - class org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest
     - class org.mozilla.fenix.ui.NavigationToolbarTest#goBackTest
     - class org.mozilla.fenix.ui.NavigationToolbarTest#goForwardTest

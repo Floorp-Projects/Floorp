@@ -425,6 +425,15 @@ class SettingsRobot {
             SettingsSubMenuHttpsOnlyModeRobot().interact()
             return SettingsSubMenuHttpsOnlyModeRobot.Transition()
         }
+
+        fun openExperimentsMenu(interact: SettingsSubMenuExperimentsRobot.() -> Unit): SettingsSubMenuExperimentsRobot.Transition {
+            scrollToElementByText("Nimbus Experiments")
+            fun nimbusExperimentsButton() = mDevice.findObject(textContains("Nimbus Experiments"))
+            nimbusExperimentsButton().click()
+
+            SettingsSubMenuExperimentsRobot().interact()
+            return SettingsSubMenuExperimentsRobot.Transition()
+        }
     }
 
     companion object {

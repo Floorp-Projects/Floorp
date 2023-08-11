@@ -35,6 +35,7 @@ import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.settings.SupportUtils
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
