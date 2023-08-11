@@ -166,8 +166,8 @@ If the referent is an Error object, this is the 1-origin line number at which
 the referent was created; `undefined`  otherwise.
 
 ### `errorColumnNumber`
-If the referent is an Error object, this is the 1-origin column number at which
-the referent was created; `undefined`  otherwise.
+If the referent is an Error object, this is the 1-origin column number in
+UTF-16 code units at which the referent was created; `undefined`  otherwise.
 
 ### `isBoundFunction`
 If the referent is a debuggee function, returns `true` if the referent is a

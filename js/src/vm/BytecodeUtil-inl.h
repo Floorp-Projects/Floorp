@@ -231,7 +231,7 @@ class BytecodeRangeWithPosition : private BytecodeRange {
   // Line number (1-origin).
   size_t lineno;
 
-  // Column number (0-origin).
+  // Column number in UTF-16 code units (0-origin).
   size_t column;
 
   const SrcNote* sn;

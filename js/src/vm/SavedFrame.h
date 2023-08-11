@@ -50,7 +50,7 @@ class SavedFrame : public NativeObject {
   uint32_t getSourceId();
   // Line number (1-origin).
   uint32_t getLine();
-  // Column number (1-origin).
+  // Column number in UTF-16 code units (1-origin).
   uint32_t getColumn();
   JSAtom* getFunctionDisplayName();
   JSAtom* getAsyncCause();

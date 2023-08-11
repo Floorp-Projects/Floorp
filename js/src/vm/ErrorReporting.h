@@ -41,7 +41,7 @@ struct ErrorMetadata {
   // Line number (1-origin).
   uint32_t lineNumber;
 
-  // Column number (0-origin).
+  // Column number in UTF-16 code units (0-origin).
   uint32_t columnNumber;
 
   // If the error occurs at a particular location, context surrounding the

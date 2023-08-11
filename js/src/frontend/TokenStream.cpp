@@ -597,8 +597,23 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
     const SourceUnits<Unit>& sourceUnits) const {
   lineToken.assertConsistentOffset(offset);
 
-  const uint32_t line = lineNumber(lineToken);
   const uint32_t start = srcCoords.lineStart(lineToken);
+  const uint32_t offsetInLine = offset - start;
+
+  if constexpr (std::is_same_v<Unit, char16_t>) {
+    // Column number is in UTF-16 code units.
+    return offsetInLine;
+  }
+
+  return computePartialColumnForUTF8(lineToken, offset, start, offsetInLine,
+                                     sourceUnits);
+}
+
+template <typename Unit>
+uint32_t TokenStreamAnyChars::computePartialColumnForUTF8(
+    const LineToken lineToken, const uint32_t offset, const uint32_t start,
+    const uint32_t offsetInLine, const SourceUnits<Unit>& sourceUnits) const {
+  const uint32_t line = lineNumber(lineToken);
 
   // Reset the previous offset/column cache for this line, if the previous
   // lookup wasn't on this line.
@@ -630,21 +645,19 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
     partialOffset += offsetDelta;
 
     if (unitsType == UnitsType::GuaranteedSingleUnit) {
-      MOZ_ASSERT(unicode::CountCodePoints(begin, end) == offsetDelta,
+      MOZ_ASSERT(unicode::CountUTF16CodeUnits(begin, end) == offsetDelta,
                  "guaranteed-single-units also guarantee pointer distance "
-                 "equals code point count");
+                 "equals UTF-16 code unit count");
       partialCols += offsetDelta;
     } else {
       partialCols +=
-          AssertedCast<uint32_t>(unicode::CountCodePoints(begin, end));
+          AssertedCast<uint32_t>(unicode::CountUTF16CodeUnits(begin, end));
     }
 
     this->lastOffsetOfComputedColumn_ = partialOffset;
     this->lastComputedColumn_ = partialCols;
     return partialCols;
   };
-
-  const uint32_t offsetInLine = offset - start;
 
   // We won't add an entry to |longLineColumnInfo_| for lines where the maximum
   // column has offset less than this value.  The most common (non-minified)
@@ -786,16 +799,17 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
       MOZ_ASSERT(chunkLimit <= limit);
 
       size_t numUnits = PointerRangeSize(begin, chunkLimit);
-      size_t numCodePoints = unicode::CountCodePoints(begin, chunkLimit);
+      size_t numUTF16CodeUnits =
+          unicode::CountUTF16CodeUnits(begin, chunkLimit);
 
       // If this chunk (which will become non-final at the end of the loop) is
       // all single-unit code points, annotate the chunk accordingly.
-      if (numUnits == numCodePoints) {
+      if (numUnits == numUTF16CodeUnits) {
         lastChunkVectorForLine_->back().guaranteeSingleUnits();
       }
 
       partialOffset += numUnits;
-      partialColumn += numCodePoints;
+      partialColumn += numUTF16CodeUnits;
 
       lastChunkVectorForLine_->infallibleEmplaceBack(
           partialColumn, UnitsType::PossiblyMultiUnit);

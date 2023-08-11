@@ -642,7 +642,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   // Line number (1-origin).
   unsigned lineno_;
 
-  // Column number (0-origin).
+  // Column number in UTF-16 code units (0-origin).
   unsigned columnIndex_;
 
  public:

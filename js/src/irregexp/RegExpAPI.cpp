@@ -179,7 +179,7 @@ static size_t ComputeColumn(const Latin1Char* begin, const Latin1Char* end) {
 }
 
 static size_t ComputeColumn(const char16_t* begin, const char16_t* end) {
-  return unicode::CountCodePoints(begin, end);
+  return unicode::CountUTF16CodeUnits(begin, end);
 }
 
 // This function is varargs purely so it can call ReportCompileErrorLatin1.
