@@ -27,6 +27,17 @@ namespace webrtc {
 
 namespace {
 
+// Global reference counter which is increased when a DesktopFrameWithCursor is
+// created and decreased when the same object is destructed. Only used for
+// debugging purposes to ensure that we never end up in state where
+// `g_ref_count` is larger than one since that could indicate a flickering
+// cursor (cursor-less version of the frame is not restored properly and it can
+// can lead to visible trails of old cursors).
+// See https://crbug.com/1421656#c99 for more details.
+int g_ref_count = 0;
+
+uint64_t g_num_flicker_warnings = 0;
+
 // Helper function that blends one image into another. Source image must be
 // pre-multiplied with the alpha channel. Destination is assumed to be opaque.
 void AlphaBlend(uint8_t* dest,
@@ -96,6 +107,7 @@ DesktopFrameWithCursor::DesktopFrameWithCursor(
                    frame->data(),
                    frame->shared_memory()),
       original_frame_(std::move(frame)) {
+  ++g_ref_count;
   MoveFrameInfoFrom(original_frame_.get());
 
   DesktopVector image_pos = position.subtract(cursor.hotspot());
@@ -105,11 +117,6 @@ DesktopFrameWithCursor::DesktopFrameWithCursor(
   cursor_rect_.IntersectWith(DesktopRect::MakeSize(size()));
 
   if (!previous_cursor_rect.equals(cursor_rect_)) {
-    RTC_LOG(LS_VERBOSE) << "[MOUSE] cursors moved => cursor_rect=("
-                        << cursor_rect_.top_left().x() << ","
-                        << cursor_rect_.top_left().y() << ") ("
-                        << cursor_rect_.size().width() << "x"
-                        << cursor_rect_.size().height() << ")";
     mutable_updated_region()->AddRect(cursor_rect_);
     // TODO(crbug:1323241) Update this code to properly handle the case where
     // |previous_cursor_rect| is outside of the boundaries of |frame|.
@@ -118,11 +125,6 @@ DesktopFrameWithCursor::DesktopFrameWithCursor(
     // we're running on.
     mutable_updated_region()->AddRect(previous_cursor_rect);
   } else if (cursor_changed) {
-    RTC_LOG(LS_VERBOSE) << "[MOUSE] cursor changed => cursor_rect=("
-                        << cursor_rect_.top_left().x() << ","
-                        << cursor_rect_.top_left().y() << ") ("
-                        << cursor_rect_.size().width() << "x"
-                        << cursor_rect_.size().height() << ")";
     mutable_updated_region()->AddRect(cursor_rect_);
   }
 
@@ -148,6 +150,11 @@ DesktopFrameWithCursor::DesktopFrameWithCursor(
 }
 
 DesktopFrameWithCursor::~DesktopFrameWithCursor() {
+  if (--g_ref_count > 0) {
+    ++g_num_flicker_warnings;
+    RTC_LOG(LS_WARNING) << "Cursor might be flickering; number of warnings="
+                        << g_num_flicker_warnings;
+  }
   // Restore original content of the frame.
   if (restore_frame_) {
     DesktopRect target_rect = DesktopRect::MakeSize(restore_frame_->size());
