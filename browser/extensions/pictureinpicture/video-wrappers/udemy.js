@@ -5,6 +5,33 @@
 "use strict";
 
 class PictureInPictureVideoWrapper {
+  play(video) {
+    let playPauseButton = document.querySelector(
+      `[data-purpose="play-button"]`
+    );
+    if (video.paused) {
+      playPauseButton?.click();
+    }
+  }
+
+  pause(video) {
+    let playPauseButton = document.querySelector(
+      `[data-purpose="pause-button"]`
+    );
+    if (!video.paused) {
+      playPauseButton?.click();
+    }
+  }
+
+  setMuted(video, shouldMute) {
+    let muteButton = document.querySelector(
+      `[data-purpose="volume-control-button"]`
+    );
+    if (video.muted !== shouldMute && muteButton) {
+      muteButton.click();
+    }
+  }
+
   setCaptionContainerObserver(video, updateCaptionsFunction) {
     let container = document.querySelector(
       ".video-player--video-player--1sfof"
