@@ -4,6 +4,9 @@
 # fork of libwebrtc (at https://github.com/mozilla/libwebrtc).
 export MOZ_LIBWEBRTC_SRC=$STATE_DIR/moz-libwebrtc
 
+# The previous fast-forward bug number is used for some error messaging.
+export MOZ_PRIOR_FASTFORWARD_BUG="1839451"
+
 # Fast-forwarding each Chromium version of libwebrtc should be done
 # under a separate bugzilla bug.  This bug number is used when crafting
 # the commit summary as each upstream commit is vendored into the
