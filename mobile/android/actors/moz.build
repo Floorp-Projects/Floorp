@@ -14,6 +14,7 @@ FINAL_TARGET_FILES.actors += [
     "GeckoViewClipboardPermissionParent.sys.mjs",
     "GeckoViewContentChild.sys.mjs",
     "GeckoViewContentParent.sys.mjs",
+    "GeckoViewExperimentDelegateParent.sys.mjs",
     "GeckoViewFormValidationChild.sys.mjs",
     "GeckoViewPermissionChild.sys.mjs",
     "GeckoViewPermissionParent.sys.mjs",

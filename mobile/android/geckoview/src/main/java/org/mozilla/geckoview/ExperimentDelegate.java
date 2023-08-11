@@ -6,6 +6,8 @@
 
 package org.mozilla.geckoview;
 
+import static org.mozilla.geckoview.ExperimentDelegate.ExperimentException.ERROR_EXPERIMENT_DELEGATE_NOT_IMPLEMENTED;
+
 import androidx.annotation.AnyThread;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -42,7 +44,10 @@ public interface ExperimentDelegate {
    */
   @AnyThread
   default @NonNull GeckoResult<JSONObject> onGetExperimentFeature(@NonNull String feature) {
-    return null;
+    final GeckoResult<JSONObject> result = new GeckoResult<>();
+    result.completeExceptionally(
+        new ExperimentException(ERROR_EXPERIMENT_DELEGATE_NOT_IMPLEMENTED));
+    return result;
   }
 
   /**
@@ -64,7 +69,10 @@ public interface ExperimentDelegate {
    */
   @AnyThread
   default @NonNull GeckoResult<Void> onRecordExposureEvent(@NonNull String feature) {
-    return null;
+    final GeckoResult<Void> result = new GeckoResult<>();
+    result.completeExceptionally(
+        new ExperimentException(ERROR_EXPERIMENT_DELEGATE_NOT_IMPLEMENTED));
+    return result;
   }
 
   /**
@@ -86,7 +94,10 @@ public interface ExperimentDelegate {
   @AnyThread
   default @NonNull GeckoResult<Void> onRecordExperimentExposureEvent(
       @NonNull String feature, @NonNull String slug) {
-    return null;
+    final GeckoResult<Void> result = new GeckoResult<>();
+    result.completeExceptionally(
+        new ExperimentException(ERROR_EXPERIMENT_DELEGATE_NOT_IMPLEMENTED));
+    return result;
   }
 
   /**
@@ -102,7 +113,10 @@ public interface ExperimentDelegate {
   @AnyThread
   default @NonNull GeckoResult<Void> onRecordMalformedConfigurationEvent(
       @NonNull String feature, @NonNull String part) {
-    return null;
+    final GeckoResult<Void> result = new GeckoResult<>();
+    result.completeExceptionally(
+        new ExperimentException(ERROR_EXPERIMENT_DELEGATE_NOT_IMPLEMENTED));
+    return result;
   }
 
   /**
@@ -129,9 +143,18 @@ public interface ExperimentDelegate {
     /** The experiment slug was not available. */
     public static final int ERROR_EXPERIMENT_SLUG_NOT_FOUND = -3;
 
+    /** The experiment delegate is not implemented. */
+    public static final int ERROR_EXPERIMENT_DELEGATE_NOT_IMPLEMENTED = -4;
+
     /** Experiment exception error codes. */
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef(value = {ERROR_UNKNOWN, ERROR_FEATURE_NOT_FOUND, ERROR_EXPERIMENT_SLUG_NOT_FOUND})
+    @IntDef(
+        value = {
+          ERROR_UNKNOWN,
+          ERROR_FEATURE_NOT_FOUND,
+          ERROR_EXPERIMENT_SLUG_NOT_FOUND,
+          ERROR_EXPERIMENT_DELEGATE_NOT_IMPLEMENTED
+        })
     public @interface Codes {}
 
     /** One of {@link Codes} that provides more information about this exception. */

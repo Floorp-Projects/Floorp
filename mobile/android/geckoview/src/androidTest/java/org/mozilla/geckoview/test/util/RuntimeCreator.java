@@ -80,7 +80,7 @@ public class RuntimeCreator {
       if (delegate != null) {
         return delegate.onGetExperimentFeature(feature);
       }
-      return null;
+      return ExperimentDelegate.super.onGetExperimentFeature(feature);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class RuntimeCreator {
       if (delegate != null) {
         return delegate.onRecordExposureEvent(feature);
       }
-      return null;
+      return ExperimentDelegate.super.onRecordExposureEvent(feature);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class RuntimeCreator {
       if (delegate != null) {
         return delegate.onRecordExperimentExposureEvent(feature, slug);
       }
-      return null;
+      return ExperimentDelegate.super.onRecordExperimentExposureEvent(feature, slug);
     }
 
     @Override
@@ -106,7 +106,7 @@ public class RuntimeCreator {
       if (delegate != null) {
         return delegate.onRecordMalformedConfigurationEvent(feature, part);
       }
-      return null;
+      return ExperimentDelegate.super.onRecordMalformedConfigurationEvent(feature, part);
     }
   }
 
