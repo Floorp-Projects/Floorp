@@ -971,6 +971,8 @@ class VideoMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
   // Get the receive parameters for the incoming stream identified by `ssrc`.
   virtual webrtc::RtpParameters GetRtpReceiveParameters(
       uint32_t ssrc) const = 0;
+  // Starts or stops decoding of remote video.
+  virtual void SetReceive(bool receive) = 0;
   // Retrieve the receive parameters for the default receive
   // stream, which is used when SSRCs are not signaled.
   virtual webrtc::RtpParameters GetDefaultRtpReceiveParameters() const = 0;

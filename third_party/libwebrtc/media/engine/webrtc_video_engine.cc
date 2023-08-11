@@ -676,6 +676,8 @@ WebRtcVideoChannel::WebRtcVideoChannel(
     webrtc::VideoBitrateAllocatorFactory* bitrate_allocator_factory)
     : VideoMediaChannel(role, call->network_thread(), config.enable_dscp),
       worker_thread_(call->worker_thread()),
+      sending_(false),
+      receiving_(false),
       call_(call),
       default_sink_(nullptr),
       video_config_(config.video),
@@ -691,7 +693,6 @@ WebRtcVideoChannel::WebRtcVideoChannel(
       crypto_options_(crypto_options) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   rtcp_receiver_report_ssrc_ = kDefaultRtcpReceiverReportSsrc;
-  sending_ = false;
   recv_codecs_ = MapCodecs(GetPayloadTypesAndDefaultCodecs(
       decoder_factory_, /*is_decoder_factory=*/true,
       /*include_rtx=*/true, call_->trials()));
@@ -1293,6 +1294,20 @@ bool WebRtcVideoChannel::GetSendCodec(VideoCodec* codec) {
   return true;
 }
 
+void WebRtcVideoChannel::SetReceive(bool receive) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  TRACE_EVENT0("webrtc", "WebRtcVideoChannel::SetReceive");
+  RTC_LOG(LS_VERBOSE) << "SetReceive: " << (receive ? "true" : "false");
+  for (const auto& kv : receive_streams_) {
+    if (receive) {
+      kv.second->StartReceiveStream();
+    } else {
+      kv.second->StopReceiveStream();
+    }
+  }
+  receiving_ = receive;
+}
+
 bool WebRtcVideoChannel::SetSend(bool send) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   TRACE_EVENT0("webrtc", "WebRtcVideoChannel::SetSend");
@@ -1503,10 +1518,13 @@ bool WebRtcVideoChannel::AddRecvStream(const StreamParams& sp,
   if (unsignaled_frame_transformer_ && !config.frame_transformer)
     config.frame_transformer = unsignaled_frame_transformer_;
 
-  receive_streams_[sp.first_ssrc()] =
+  auto receive_stream =
       new WebRtcVideoReceiveStream(call_, sp, std::move(config), default_stream,
                                    recv_codecs_, flexfec_config);
-
+  if (receiving_) {
+    receive_stream->StartReceiveStream();
+  }
+  receive_streams_[sp.first_ssrc()] = receive_stream;
   return true;
 }
 
@@ -1841,7 +1859,7 @@ bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
       // stream with a "random" SSRC and the RTX SSRC from the packet.  The
       // stream will be recreated on the first media packet, unless we are
       // extremely lucky and used the right media SSRC.
-      ReCreateDefaulReceiveStream(/*ssrc =*/14795, /*rtx_ssrc=*/packet.Ssrc());
+      ReCreateDefaultReceiveStream(/*ssrc =*/14795, /*rtx_ssrc=*/packet.Ssrc());
     }
     return true;
   } else {
@@ -1863,12 +1881,12 @@ bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
     }
   }
   // RTX SSRC not yet known.
-  ReCreateDefaulReceiveStream(packet.Ssrc(), absl::nullopt);
+  ReCreateDefaultReceiveStream(packet.Ssrc(), absl::nullopt);
   last_unsignalled_ssrc_creation_time_ms_ = rtc::TimeMillis();
   return true;
 }
 
-void WebRtcVideoChannel::ReCreateDefaulReceiveStream(
+void WebRtcVideoChannel::ReCreateDefaultReceiveStream(
     uint32_t ssrc,
     absl::optional<uint32_t> rtx_ssrc) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
@@ -2960,7 +2978,8 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::WebRtcVideoReceiveStream(
       flexfec_stream_(nullptr),
       sink_(NULL),
       first_frame_timestamp_(-1),
-      estimated_remote_start_ntp_time_ms_(0) {
+      estimated_remote_start_ntp_time_ms_(0),
+      receiving_(false) {
   RTC_DCHECK(config_.decoder_factory);
   RTC_DCHECK(config_.decoders.empty())
       << "Decoder info is supplied via `recv_codecs`";
@@ -2988,7 +3007,6 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::WebRtcVideoReceiveStream(
   flexfec_config_.payload_type = flexfec_config.payload_type;
 
   CreateReceiveStream();
-  StartReceiveStream();
 }
 
 WebRtcVideoChannel::WebRtcVideoReceiveStream::~WebRtcVideoReceiveStream() {
@@ -3189,6 +3207,7 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetRecvParameters(
 }
 
 void WebRtcVideoChannel::WebRtcVideoReceiveStream::RecreateReceiveStream() {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_DCHECK(stream_);
   absl::optional<int> base_minimum_playout_delay_ms;
   absl::optional<webrtc::VideoReceiveStreamInterface::RecordingState>
@@ -3217,8 +3236,9 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::RecreateReceiveStream() {
     stream_->SetAndGetRecordingState(std::move(*recording_state),
                                      /*generate_key_frame=*/false);
   }
-
-  StartReceiveStream();
+  if (receiving_) {
+    StartReceiveStream();
+  }
 }
 
 void WebRtcVideoChannel::WebRtcVideoReceiveStream::CreateReceiveStream() {
@@ -3235,7 +3255,16 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::CreateReceiveStream() {
 }
 
 void WebRtcVideoChannel::WebRtcVideoReceiveStream::StartReceiveStream() {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  receiving_ = true;
   stream_->Start();
+}
+
+void WebRtcVideoChannel::WebRtcVideoReceiveStream::StopReceiveStream() {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  receiving_ = false;
+  stream_->Stop();
+  RecreateReceiveStream();
 }
 
 void WebRtcVideoChannel::WebRtcVideoReceiveStream::OnFrame(
