@@ -464,10 +464,8 @@ int64_t ModuleRtpRtcpImpl2::ExpectedRetransmissionTimeMs() const {
   }
   // No rtt available (`kRttUpdateInterval` not yet passed?), so try to
   // poll avg_rtt_ms directly from rtcp receiver.
-  if (rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), nullptr,
-                         &expected_retransmission_time_ms, nullptr,
-                         nullptr) == 0) {
-    return expected_retransmission_time_ms;
+  if (absl::optional<TimeDelta> rtt = rtcp_receiver_.AverageRtt()) {
+    return rtt->ms();
   }
   return kDefaultExpectedRetransmissionTimeMs;
 }
@@ -588,7 +586,9 @@ bool ModuleRtpRtcpImpl2::TimeToSendFullNackList(int64_t now) const {
   // Use RTT from RtcpRttStats class if provided.
   int64_t rtt = rtt_ms();
   if (rtt == 0) {
-    rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), NULL, &rtt, NULL, NULL);
+    if (absl::optional<TimeDelta> average_rtt = rtcp_receiver_.AverageRtt()) {
+      rtt = average_rtt->ms();
+    }
   }
 
   const int64_t kStartUpRttMs = 100;
@@ -662,7 +662,9 @@ void ModuleRtpRtcpImpl2::OnReceivedNack(
   // Use RTT from RtcpRttStats class if provided.
   int64_t rtt = rtt_ms();
   if (rtt == 0) {
-    rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), NULL, &rtt, NULL, NULL);
+    if (absl::optional<TimeDelta> average_rtt = rtcp_receiver_.AverageRtt()) {
+      rtt = average_rtt->ms();
+    }
   }
   rtp_sender_->packet_generator.OnReceivedNack(nack_sequence_numbers, rtt);
 }
