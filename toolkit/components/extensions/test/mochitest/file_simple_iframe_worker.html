@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+
+<script type="application/javascript">
+"use strict";
+
+fetch("file_simple_iframe.txt");
+const worker = new Worker("file_simple_worker.js?iniframe=true");
+worker.onmessage = (msg) => {
+  worker.postMessage("file_simple_iframe_worker.txt");
+}
+
+const sharedworker = new SharedWorker("file_simple_sharedworker.js?iniframe=true");
+sharedworker.port.onmessage = (msg) => {
+  sharedworker.port.postMessage("file_simple_iframe_sharedworker.txt");
+}
+sharedworker.port.start();
+
+</script>
+</body>
+</html>
