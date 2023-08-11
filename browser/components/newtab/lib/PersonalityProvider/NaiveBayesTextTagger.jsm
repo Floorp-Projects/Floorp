@@ -2,7 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export class NaiveBayesTextTagger {
+"use strict";
+
+// We load this into a worker using importScripts, and in tests using import.
+// We use var to avoid name collision errors.
+// eslint-disable-next-line no-var
+var EXPORTED_SYMBOLS = ["NaiveBayesTextTagger"];
+
+const NaiveBayesTextTagger = class NaiveBayesTextTagger {
   constructor(model, toksToTfIdfVector) {
     this.model = model;
     this.toksToTfIdfVector = toksToTfIdfVector;
@@ -57,4 +64,4 @@ export class NaiveBayesTextTagger {
       confident,
     };
   }
-}
+};

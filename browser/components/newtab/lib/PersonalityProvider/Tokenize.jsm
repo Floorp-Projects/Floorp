@@ -1,6 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+// We load this into a worker using importScripts, and in tests using import.
+// We use var to avoid name collision errors.
+// eslint-disable-next-line no-var
+var EXPORTED_SYMBOLS = ["tokenize", "toksToTfIdfVector"];
 
 // Unicode specifies certain mnemonics for code pages and character classes.
 // They call them "character properties" https://en.wikipedia.org/wiki/Unicode_character_property .
@@ -40,7 +46,7 @@ const REGEXP_ALPHANUMS = new RegExp(
  * breaks", and os is not appropriate for languages without them
  * (e.g. Chinese).
  */
-export function tokenize(text) {
+function tokenize(text) {
   return text
     .toLocaleLowerCase()
     .split(REGEXP_SPLITS)
@@ -52,7 +58,7 @@ export function tokenize(text) {
  * not preindexed (i.e. does have a computed inverse document frequency) will
  * be dropped.
  */
-export function toksToTfIdfVector(tokens, vocab_idfs) {
+function toksToTfIdfVector(tokens, vocab_idfs) {
   let tfidfs = {};
 
   // calcualte the term frequencies
