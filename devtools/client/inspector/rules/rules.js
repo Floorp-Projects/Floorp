@@ -2077,7 +2077,10 @@ function RuleViewTool(inspector, window) {
   this.inspector.styleChangeTracker.on("style-changed", this.refresh);
 
   this.inspector.commands.resourceCommand.watchResources(
-    [this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+    [
+      this.inspector.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      this.inspector.commands.resourceCommand.TYPES.STYLESHEET,
+    ],
     {
       onAvailable: this._onResourceAvailable,
       ignoreExistingResources: true,
@@ -2140,6 +2143,7 @@ RuleViewTool.prototype = {
   },
 
   _onResourceAvailable(resources) {
+    let hasNewStylesheet = false;
     for (const resource of resources) {
       if (
         resource.resourceType ===
@@ -2148,7 +2152,23 @@ RuleViewTool.prototype = {
         resource.targetFront.isTopLevel
       ) {
         this.clearUserProperties();
+        continue;
       }
+
+      if (
+        resource.resourceType ===
+          this.inspector.commands.resourceCommand.TYPES.STYLESHEET &&
+        // resource.isNew is only true when the stylesheet was added from DevTools,
+        // for example when adding a rule in the rule view. In such cases, we're already
+        // updating the rule view, so ignore those.
+        !resource.isNew
+      ) {
+        hasNewStylesheet = true;
+      }
+    }
+
+    if (hasNewStylesheet) {
+      this.refresh();
     }
   },
 
