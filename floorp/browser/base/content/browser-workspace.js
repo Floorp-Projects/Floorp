@@ -420,7 +420,6 @@ const workspaceFunctions = {
         result &&
         input.value != "" &&
         input.value.length < 20 &&
-        input.value != l10n.formatValueSync("workspace-default") &&
         pattern.test(input.value)
       ) {
         input.value = input.value.replace(/\s+/g, "-");
@@ -473,6 +472,7 @@ const workspaceFunctions = {
             "\n" +
             l10n.formatValueSync("workspace-error-discription")
         );
+        return;
       }
 
       //add icon to workspace
