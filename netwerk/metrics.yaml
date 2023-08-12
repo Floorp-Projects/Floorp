@@ -196,3 +196,66 @@ networking:
       - necko@mozilla.com
       - acreskey@mozilla.com
     expires: 120
+
+  http_1_download_throughput:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 10000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The download throughput for http/1.1 requests larger than 10MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1846798
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1846798#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: NETWORKING_HTTP_1_DOWNLOAD_THROUGHPUT
+
+  http_2_download_throughput:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 10000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The download throughput for http/2 requests larger than 10MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1846798
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1846798#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: NETWORKING_HTTP_2_DOWNLOAD_THROUGHPUT
+
+  http_3_download_throughput:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 10000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The download throughput for http/3 requests larger than 10MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1846798
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1846798#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: NETWORKING_HTTP_3_DOWNLOAD_THROUGHPUT

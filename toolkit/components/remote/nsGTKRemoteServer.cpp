@@ -18,6 +18,10 @@
 
 #include "nsGTKToolkit.h"
 
+#ifdef MOZ_WAYLAND
+#  include "mozilla/WidgetUtilsGtk.h"
+#endif
+
 nsresult nsGTKRemoteServer::Startup(const char* aAppName,
                                     const char* aProfileName) {
   NS_ASSERTION(aAppName, "Don't pass a null appname!");
@@ -25,6 +29,12 @@ nsresult nsGTKRemoteServer::Startup(const char* aAppName,
   if (mServerWindow) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
+
+#ifdef MOZ_WAYLAND
+  if (mozilla::widget::GdkIsWaylandDisplay()) {
+    return NS_ERROR_FAILURE;
+  }
+#endif
 
   XRemoteBaseStartup(aAppName, aProfileName);
 
