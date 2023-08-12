@@ -3646,3 +3646,54 @@ toolbarspring {
 	min-height: 16px !important;
 	min-width: 16px !important;
 }
+
+#workspace-button {
+	border-right: none !important;
+}
+
+#workspace-delete > .toolbarbutton-icon {
+	width: 20px !important;
+	height: 20px !important;
+	min-height: 20px !important;
+	min-width: 20px !important;
+}
+
+.workspace-item-icon > .toolbarbutton-icon {
+	width: 20px !important;
+	height: 20px !important;
+	min-height: 20px !important;
+	min-width: 20px !important;
+}
+
+.workspace-item > .toolbarbutton-icon {
+	width: 20px !important;
+	height: 20px !important;
+	min-height: 20px !important;
+	min-width: 20px !important;
+}
+
+#tabs-newtab-button > .toolbarbutton-icon {
+	width: 16px !important;
+	height: 16px !important;
+	min-height: 16px !important;
+	min-width: 16px !important;
+}
+
+#firefox-view-button > .toolbarbutton-icon {
+	width: 24px !important;
+	min-height: 24px !important;
+	min-width: 24px !important;
+	height: 24px !important;
+}
+
+#fxa-avatar-image {
+	width: 20px !important;
+	height: 20px !important;
+	min-height: 20px !important;
+	min-width: 20px !important;
+}
+
+#sidebar-switcher-target {
+	min-width: unset !important;
+    padding: 10px !important;
+}
