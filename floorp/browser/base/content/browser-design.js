@@ -29,7 +29,7 @@ function setBrowserDesign() {
     case 1:
       break;
     case 3:
-      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.LeptonUIMultitab : ThemeCSS.LeptonUI;
+      Tag.innerText = ThemeCSS.LeptonUI;
       break;
      //4 is deleted at v11.0.0 because it is MaterialUI.
     case 5:

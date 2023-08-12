@@ -12374,3 +12374,8 @@
     }
   }
 }
+
+/* multi-row tab toolbar */
+:root[uidensity="compact"] #TabsToolbar:not([multibar]) #tabbrowser-arrowscrollbox[flex] {
+  height: inherit !important;
+}
