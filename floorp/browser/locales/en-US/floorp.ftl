@@ -522,6 +522,9 @@ workspaces-reset-warning = Warning! Running this operation will delete all your 
 manage-workspace-on-bms-option =
     .label = Manage Workspace on Browser Manager Sidebar
 
+show-workspace-name-option =
+    .label = Show Workspace Name on Tab Bar's Workspace Button
+
 workspaces-manage-title = Manage Workspaces
 workspaces-manage-description = Manage your Workspaces. Change workspace icon.
 workspaces-manage-label =

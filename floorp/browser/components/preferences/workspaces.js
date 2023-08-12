@@ -20,6 +20,7 @@ Preferences.addAll([
   { id: "floorp.browser.workspace.closePopupAfterClick", type: "bool" },
   { id: "floorp.browser.workspace.excludePinnedTabs", type: "bool" },
   { id: "floorp.browser.workspace.manageOnBMS", type: "bool" },
+  { id: "floorp.browser.workspace.showWorkspaceName", type: "bool" },
 ])
 
 function coventToDateAndTime(timestamp) {

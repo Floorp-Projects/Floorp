@@ -14,6 +14,7 @@ const WORKSPACE_CURRENT_PREF = "floorp.browser.workspace.current";
 const WORKSPACE_ALL_PREF = "floorp.browser.workspace.all";
 const WORKSPACE_TABS_PREF = "floorp.browser.workspace.tabs.state";
 const WORKSPACE_MANAGE_ON_BMS_PREF = "floorp.browser.workspace.manageOnBMS";
+const WORKSPACE_SHOW_WORKSPACE_NAME_PREF = "floorp.browser.workspace.showWorkspaceName";
 const WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF =
   "floorp.browser.workspace.closePopupAfterClick";
 const WORKSPACE_EXCLUDED_PINNED_TABS_PREF =
@@ -591,7 +592,7 @@ const workspaceFunctions = {
           }
         }
 
-        if (currentWorkspace != l10n.formatValueSync("workspace-default")) {
+        if (Services.prefs.getBoolPref(WORKSPACE_SHOW_WORKSPACE_NAME_PREF)) {
           document
             .getElementById("workspace-button")
             .setAttribute("label", currentWorkspace.replace(/-/g, " "));
