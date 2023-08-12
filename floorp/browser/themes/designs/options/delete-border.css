@@ -90,3 +90,17 @@
   :root[customizing] #navigator-toolbox {
     border-bottom: 1px solid var(--chrome-content-separator-color) !important;
   }
+
+  #toolbar-items-verticaltabs {
+    border-radius: 10px;
+    border: solid 1px var(--toolbar-bgcolor);
+  }
+
+  #sidebar-splitter {
+    background-color: var(--toolbar-bgcolor);
+    border-color: var(--toolbar-bgcolor);
+  }
+
+  #sidebar-box {
+    background: var(--toolbar-bgcolor);
+  }
