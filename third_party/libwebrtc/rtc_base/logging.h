@@ -595,9 +595,7 @@ class LogMessage {
   static bool aec_debug() { return aec_debug_; }
   static uint32_t aec_debug_size() { return aec_debug_size_; }
   static std::string aec_debug_filename();
-  static void set_aec_debug_filename(const char* filename) {
-    aec_filename_base_ = filename;
-  }
+  static void set_aec_debug_filename(const char* filename);
 
  private:
   friend class LogMessageForTesting;

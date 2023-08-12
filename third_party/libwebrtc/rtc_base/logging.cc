@@ -69,6 +69,11 @@ std::string LogMessage::aec_debug_filename() {
   return aec_filename_base_;
 }
 
+void LogMessage::set_aec_debug_filename(const char* filename) {
+  aec_filename_base_ = filename;
+  webrtc::ApmDataDumper::SetOutputDirectory(aec_filename_base_);
+}
+
 namespace {
 
 // By default, release builds don't log, debug builds at info level
