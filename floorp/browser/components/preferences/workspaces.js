@@ -87,6 +87,11 @@ const gWorkspacesPane = {
 
     // get workspace backups.
     const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);
+
+    if (!file.exists()) {
+      return;
+    }
+
     const fstream = Cc[
       "@mozilla.org/network/file-input-stream;1"
     ].createInstance(Ci.nsIFileInputStream);
