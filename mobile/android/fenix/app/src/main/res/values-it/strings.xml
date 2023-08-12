@@ -1240,7 +1240,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Chiudi</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">Impossibile stampare</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Impossibile stampare</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">Impossibile stampare questa pagina</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Stampa</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

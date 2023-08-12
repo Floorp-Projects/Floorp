@@ -979,7 +979,7 @@
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
-    <string name="tab_crash_title_2">සමාවන්න. %1$s සඳහා පිටුව පූරණය කළ නොහැකිය.</string>
+    <string name="tab_crash_title_2">සමාවන්න. %1$s සඳහා පිටුව පූරණය කිරීමට නොහැකිය.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">බිඳ වැටීමේ වාර්තාව මොසිල්ලා වෙත යවන්න</string>
     <!-- Close tab button text on the tab crash page -->
@@ -1197,7 +1197,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">ඉවතලන්න</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">මුද්‍රණයට නොහැකිය</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">මුද්‍රණයට නොහැකිය</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">මෙම පිටුව මුද්‍රණයට නොහැකිය</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">මුද්‍රණය</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

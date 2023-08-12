@@ -54,7 +54,7 @@
     <string name="menu_remove_from_shortcuts">කෙටිමං වෙතින් ඉවත් කරන්න</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">අළුත් දෑ</string>
+    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">අළුත් දෑ</string>
     <string name="menu_settings">සැකසුම්</string>
     <string name="menu_about">පිළිබඳව</string>
     <string name="menu_help">උදව්</string>
@@ -834,7 +834,7 @@
     <string name="biometric_prompt_title">ඇඟිලි සටහන භාවිතයෙන් තහවුරු කරන්න</string>
 
     <!-- Subtitle text for biometric prompt pop-up -->
-    <string name="biometric_prompt_subtitle">වත්මන් වාරය සමඟ ඉදිරියට යාමට ඔබගේ ඇඟිලි සටහන භාවිතා කළ හැකිය.</string>
+    <string name="biometric_prompt_subtitle">වත්මන් වාරය සමඟ ඉදිරියට යාමට ඔබගේ ඇඟිලි සටහන භාවිතා කිරීමට හැකිය.</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->

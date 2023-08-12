@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s бо муваффақият насб карда шуд</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Насбкунии %1$s иҷро нашуд</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">«%1$s» насб карда намешавад, зеро ки он барои ба вуҷуд овардани мушкилиҳои устуворӣ ва амниятӣ хатари баланд дорад.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s бо муваффақият фаъол карда шуд</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
