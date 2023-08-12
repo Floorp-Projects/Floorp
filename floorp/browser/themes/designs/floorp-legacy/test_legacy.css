@@ -1398,20 +1398,17 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   white-space: nowrap;
 }
 
-:is(#navigator-toolbox>#PersonalToolbar .toolbarbutton-1>.toolbarbutton-icon,
-#navigator-toolbox .toolbarbutton-1> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack),
+:is(#navigator-toolbox>#PersonalToolbar .toolbarbutton-1:not(#workspace-button)>.toolbarbutton-icon,
+#navigator-toolbox .toolbarbutton-1:not(#workspace-button) > :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack),
 /* no ::part workaround - may have side effects */
 #scrollbutton-up[part="scrollbutton-up"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon,
-#scrollbutton-down[part="scrollbutton-down"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon):not(#workspace-icon image) {
+#scrollbutton-down[part="scrollbutton-down"]:not(.menupopup-scrollbutton)>.toolbarbutton-icon):not(#workspace-button #workspace-icon image) {
   background: 0 !important;
   padding: 6px !important;
   width: auto !important;
   height: auto !important;
 }
-#workspace-icon image{
-    width: auto !important;
-  height: auto !important;
-}
+
 /* #endregion*/
 /* #region パーソナルバー*/
 /* EdgeFr-Fox by bmFtZQ - personalbar.css */
@@ -2108,7 +2105,7 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
 
 
 /* clipped tabs */
-:where(#tabbrowser-tabs[closebuttons=activetab] .tab-content:not([pinned]))) {
+:where(#tabbrowser-tabs[closebuttons=activetab] .tab-content:not([pinned])) {
   padding-inline-start: 8px !important;
 }
 
@@ -3469,7 +3466,10 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
 }
 
 /* fix workspace icon */
-#workspace-button > .toolbarbutton-icon {
+#workspace-button > .toolbarbutton-icon[class] {
   max-width: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
   max-height: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
+  width: 35px !important;
+  height: 35px !important;
+  padding-inline: 0 !important;
 }
