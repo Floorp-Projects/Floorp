@@ -114,7 +114,6 @@ const welcomeFunctions = {
             Services.prefs.setBoolPref("browser.display.statusbar", false);
             Services.prefs.setBoolPref("floorp.browser.sidebar.enable" , true);
             Services.prefs.setBoolPref("floorp.tabsleep.enabled", false);
-            Services.prefs.setBoolPref("floorp.browser.workspace.tab.enabled", true);
             Services.prefs.setIntPref("floorp.download.notification", 4);
         },
 
@@ -122,7 +121,6 @@ const welcomeFunctions = {
             Services.prefs.setBoolPref("browser.display.statusbar", false);
             Services.prefs.setBoolPref("floorp.browser.sidebar.enable" , false);
             Services.prefs.setBoolPref("floorp.tabsleep.enabled", false);
-            Services.prefs.setBoolPref("floorp.browser.workspace.tab.enabled", false);
             Services.prefs.setIntPref("floorp.download.notification", 4);
         },
 
@@ -130,7 +128,6 @@ const welcomeFunctions = {
             Services.prefs.setBoolPref("browser.display.statusbar", true);
             Services.prefs.setBoolPref("floorp.browser.sidebar.enable" , true);
             Services.prefs.setBoolPref("floorp.tabsleep.enabled", true);
-            Services.prefs.setBoolPref("floorp.browser.workspace.tab.enabled", true);
             Services.prefs.setIntPref("floorp.download.notification", 3);
         }
     }
