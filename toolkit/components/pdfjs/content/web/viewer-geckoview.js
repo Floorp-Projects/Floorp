@@ -1511,22 +1511,27 @@ const PDFViewerApplication = {
     };
   },
   async _initializeAutoPrint(pdfDocument, openActionPromise) {
-    const [openAction, jsActions] = await Promise.all([openActionPromise, !this.pdfViewer.enableScripting ? pdfDocument.getJSActions() : null]);
+    const [openAction, jsActions] = await Promise.all([openActionPromise, this.pdfViewer.enableScripting ? null : pdfDocument.getJSActions()]);
     if (pdfDocument !== this.pdfDocument) {
       return;
     }
-    let triggerAutoPrint = false;
-    if (openAction?.action === "Print") {
-      triggerAutoPrint = true;
-    }
+    let triggerAutoPrint = openAction?.action === "Print";
     if (jsActions) {
+      console.warn("Warning: JavaScript support is not enabled");
       for (const name in jsActions) {
-        if (jsActions[name]) {
-          console.warn("Warning: JavaScript support is not enabled");
+        if (triggerAutoPrint) {
           break;
         }
+        switch (name) {
+          case "WillClose":
+          case "WillSave":
+          case "DidSave":
+          case "WillPrint":
+          case "DidPrint":
+            continue;
+        }
+        triggerAutoPrint = jsActions[name].some(js => _ui_utils.AutoPrintRegExp.test(js));
       }
-      triggerAutoPrint ||= !!(jsActions.OpenAction && _ui_utils.AutoPrintRegExp.test(jsActions.OpenAction));
     }
     if (triggerAutoPrint) {
       this.triggerPrinting();
@@ -6091,7 +6096,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.10.70';
+    const viewerVersion = '3.10.80';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9715,8 +9720,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.10.70';
-const pdfjsBuild = '1d523d3ec';
+const pdfjsVersion = '3.10.80';
+const pdfjsBuild = '690b87389';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;

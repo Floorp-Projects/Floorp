@@ -1475,22 +1475,27 @@ const PDFViewerApplication = {
     };
   },
   async _initializeAutoPrint(pdfDocument, openActionPromise) {
-    const [openAction, jsActions] = await Promise.all([openActionPromise, !this.pdfViewer.enableScripting ? pdfDocument.getJSActions() : null]);
+    const [openAction, jsActions] = await Promise.all([openActionPromise, this.pdfViewer.enableScripting ? null : pdfDocument.getJSActions()]);
     if (pdfDocument !== this.pdfDocument) {
       return;
     }
-    let triggerAutoPrint = false;
-    if (openAction?.action === "Print") {
-      triggerAutoPrint = true;
-    }
+    let triggerAutoPrint = openAction?.action === "Print";
     if (jsActions) {
+      console.warn("Warning: JavaScript support is not enabled");
       for (const name in jsActions) {
-        if (jsActions[name]) {
-          console.warn("Warning: JavaScript support is not enabled");
+        if (triggerAutoPrint) {
           break;
         }
+        switch (name) {
+          case "WillClose":
+          case "WillSave":
+          case "DidSave":
+          case "WillPrint":
+          case "DidPrint":
+            continue;
+        }
+        triggerAutoPrint = jsActions[name].some(js => _ui_utils.AutoPrintRegExp.test(js));
       }
-      triggerAutoPrint ||= !!(jsActions.OpenAction && _ui_utils.AutoPrintRegExp.test(jsActions.OpenAction));
     }
     if (triggerAutoPrint) {
       this.triggerPrinting();
@@ -4050,7 +4055,8 @@ class AnnotationEditorParams {
     editorFreeTextColor,
     editorInkColor,
     editorInkThickness,
-    editorInkOpacity
+    editorInkOpacity,
+    editorStampAddImage
   }) {
     const dispatchEvent = (typeStr, value) => {
       this.eventBus.dispatch("switchannotationeditorparams", {
@@ -4073,6 +4079,9 @@ class AnnotationEditorParams {
     });
     editorInkOpacity.addEventListener("input", function () {
       dispatchEvent("INK_OPACITY", this.valueAsNumber);
+    });
+    editorStampAddImage.addEventListener("click", () => {
+      dispatchEvent("CREATE");
     });
     this.eventBus._on("annotationeditorparamschanged", evt => {
       for (const [type, value] of evt.details) {
@@ -8554,7 +8563,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.10.70';
+    const viewerVersion = '3.10.80';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12187,14 +12196,15 @@ class Toolbar {
     editorFreeTextParamsToolbar,
     editorInkButton,
     editorInkParamsToolbar,
-    editorStampButton
+    editorStampButton,
+    editorStampParamsToolbar
   }) {
     const editorModeChanged = ({
       mode
     }) => {
       (0, _ui_utils.toggleCheckedBtn)(editorFreeTextButton, mode === _pdfjsLib.AnnotationEditorType.FREETEXT, editorFreeTextParamsToolbar);
       (0, _ui_utils.toggleCheckedBtn)(editorInkButton, mode === _pdfjsLib.AnnotationEditorType.INK, editorInkParamsToolbar);
-      (0, _ui_utils.toggleCheckedBtn)(editorStampButton, mode === _pdfjsLib.AnnotationEditorType.STAMP);
+      (0, _ui_utils.toggleCheckedBtn)(editorStampButton, mode === _pdfjsLib.AnnotationEditorType.STAMP, editorStampParamsToolbar);
       const isDisable = mode === _pdfjsLib.AnnotationEditorType.DISABLE;
       editorFreeTextButton.disabled = isDisable;
       editorInkButton.disabled = isDisable;
@@ -12693,8 +12703,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.10.70';
-const pdfjsBuild = '1d523d3ec';
+const pdfjsVersion = '3.10.80';
+const pdfjsBuild = '690b87389';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
@@ -12723,6 +12733,7 @@ function getViewerConfiguration() {
       editorInkButton: document.getElementById("editorInk"),
       editorInkParamsToolbar: document.getElementById("editorInkParamsToolbar"),
       editorStampButton: document.getElementById("editorStamp"),
+      editorStampParamsToolbar: document.getElementById("editorStampParamsToolbar"),
       download: document.getElementById("download")
     },
     secondaryToolbar: {
@@ -12809,7 +12820,8 @@ function getViewerConfiguration() {
       editorFreeTextColor: document.getElementById("editorFreeTextColor"),
       editorInkColor: document.getElementById("editorInkColor"),
       editorInkThickness: document.getElementById("editorInkThickness"),
-      editorInkOpacity: document.getElementById("editorInkOpacity")
+      editorInkOpacity: document.getElementById("editorInkOpacity"),
+      editorStampAddImage: document.getElementById("editorStampAddImage")
     },
     printContainer: document.getElementById("printContainer"),
     openFileInput: null,
