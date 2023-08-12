@@ -120,6 +120,18 @@ jobs:
             echo 'mozconfig: **********************'
             cat ./mozconfig
             echo '*********************************'
+
+            echo 'folder structure: **********************'
+            ls -l ./
+            echo '*********************************'
+
+            echo "****************************************************************************************************"
+            echo "floorp.app folder structure: x86_64-apple-darwin"
+            ls -l ./obj-x86_64-apple-darwin/dist/
+            echo "****************************************************************************************************"
+            echo "floorp.app folder structure: aarch64-apple-darwin"
+            ls -l ./obj-aarch64-apple-darwin/dist/
+            echo "****************************************************************************************************"
             
         - name: Integration 🗃
           run: |
