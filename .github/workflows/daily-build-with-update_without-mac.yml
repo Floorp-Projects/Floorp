@@ -7,7 +7,7 @@
 
 #TODO daily build not changed about cache and refactoring
 
-name: "(B) 📅　❌🍎 Daily Build with auto-update without mac"
+name: "(B) TEST: 📅 Daily Build with auto-update"
 
 permissions:
   contents: write
@@ -339,6 +339,7 @@ jobs:
         mkdir -p ~/downloads/artifacts
         mkdir -p ~/downloads/artifacts/linux-x64
         mkdir -p ~/downloads/artifacts/windows-x64
+        mkdir -p ~/downloads/artifacts/macOS-x64
 
     - name: download Linux x86_64 build artifact 📥
       uses: actions/download-artifact@v3
@@ -364,6 +365,12 @@ jobs:
         name: update-xml-floorp-win-x86_64
         path: ~/downloads/artifacts/windows-x64
 
+    - name: download macOS Universal build artifact📥
+      uses: actions/download-artifact@v3
+      with:
+        name: Universal-Artifact
+        path: ~/downloads/artifacts/macOS-x64
+
     - name: check file structure 🗃
       run: |
         cd ~/downloads/artifacts
@@ -379,11 +386,14 @@ jobs:
         files: |
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
           /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.mar
+          /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.mar
           /home/runner/downloads/artifacts/linux-x64/floorp-*.en-US.linux-x86_64.tar.bz2
           /home/runner/downloads/artifacts/windows-x64/floorp-*.en-US.win64.installer.exe
           /home/runner/downloads/artifacts/windows-x64/floorp-*.en-US.win64.zip
+          /home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg
           /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.xml
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.xml
+          /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.xml
 
         tag_name: "beta"
         name: "Floorp beta build: v${{ needs.get-display-version.outputs.display-version }} | ${{ needs.get-buildid.outputs.buildids }}"
