@@ -35,20 +35,14 @@ std::string FormFileName(absl::string_view output_dir,
                          int instance_index,
                          int reinit_index,
                          absl::string_view suffix) {
-#ifdef WEBRTC_WIN
-  char sep = '\\';
-#else
-  char sep = '/';
-#endif
-
-  std::stringstream ss;
-  std::string base = rtc::LogMessage::aec_debug_filename();
-  ss << base;
-
-  if (base.length() && base.back() != sep) {
-    ss << sep;
+  char buf[1024];
+  rtc::SimpleStringBuilder ss(buf);
+  if (!output_dir.empty()) {
+    ss << output_dir;
+    if (output_dir.back() != kPathDelimiter) {
+      ss << kPathDelimiter;
+    }
   }
-
   ss << name << "_" << instance_index << "-" << reinit_index << suffix;
   return ss.str();
 }
