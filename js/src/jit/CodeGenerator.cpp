@@ -57,7 +57,6 @@
 #include "js/RegExpFlags.h"      // JS::RegExpFlag
 #include "js/ScalarType.h"       // js::Scalar::Type
 #include "proxy/DOMProxy.h"
-#include "proxy/ScriptedProxyHandler.h"
 #include "util/CheckedArithmetic.h"
 #include "util/Unicode.h"
 #include "vm/ArrayBufferViewObject.h"
@@ -4586,18 +4585,6 @@ void CodeGenerator::visitGuardIsTypedArray(LGuardIsTypedArray* guard) {
   Label bail;
   masm.loadObjClassUnsafe(obj, temp);
   masm.branchIfClassIsNotTypedArray(temp, &bail);
-  bailoutFrom(&bail, guard->snapshot());
-}
-
-void CodeGenerator::visitGuardHasProxyHandler(LGuardHasProxyHandler* guard) {
-  Register obj = ToRegister(guard->input());
-
-  Label bail;
-
-  Address handlerAddr(obj, ProxyObject::offsetOfHandler());
-  masm.branchPtr(Assembler::NotEqual, handlerAddr,
-                 ImmPtr(guard->mir()->handler()), &bail);
-
   bailoutFrom(&bail, guard->snapshot());
 }
 
@@ -14547,77 +14534,6 @@ void CodeGenerator::visitMegamorphicSetElement(LMegamorphicSetElement* lir) {
   restoreVolatile(temp0);
 
   masm.bind(&done);
-}
-
-void CodeGenerator::visitLoadScriptedProxyHandler(
-    LLoadScriptedProxyHandler* ins) {
-  const Register obj = ToRegister(ins->getOperand(0));
-  Register output = ToRegister(ins->output());
-
-  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), output);
-  masm.unboxObject(Address(output, js::detail::ProxyReservedSlots::offsetOfSlot(
-                                       ScriptedProxyHandler::HANDLER_EXTRA)),
-                   output);
-}
-
-#ifdef JS_PUNBOX64
-void CodeGenerator::visitCheckScriptedProxyGetResult(
-    LCheckScriptedProxyGetResult* ins) {
-  ValueOperand target = ToValue(ins, LCheckScriptedProxyGetResult::TargetIndex);
-  ValueOperand value = ToValue(ins, LCheckScriptedProxyGetResult::ValueIndex);
-  ValueOperand id = ToValue(ins, LCheckScriptedProxyGetResult::IdIndex);
-  Register scratch = ToRegister(ins->temp0());
-  Register scratch2 = ToRegister(ins->temp1());
-
-  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
-                      MutableHandleValue);
-  OutOfLineCode* ool = oolCallVM<Fn, CheckProxyGetByValueResult>(
-      ins, ArgList(scratch, id, value), StoreValueTo(value));
-
-  masm.unboxObject(target, scratch);
-  masm.branchTestObjectNeedsProxyResultValidation(Assembler::NonZero, scratch,
-                                                  scratch2, ool->entry());
-  masm.bind(ool->rejoin());
-}
-#endif
-
-void CodeGenerator::visitIdToStringOrSymbol(LIdToStringOrSymbol* ins) {
-  ValueOperand id = ToValue(ins, LIdToStringOrSymbol::IdIndex);
-  ValueOperand output = ToOutValue(ins);
-  Register scratch = ToRegister(ins->temp0());
-
-  masm.moveValue(id, output);
-
-  Label done, callVM;
-  Maybe<Label> bail;
-
-  MDefinition* idDef = ins->mir()->idVal();
-  if (idDef->isBox()) {
-    idDef = idDef->toBox()->input();
-  }
-  if (idDef->type() != MIRType::Int32) {
-    bail.emplace();
-    ScratchTagScope tag(masm, output);
-    masm.splitTagForTest(output, tag);
-    masm.branchTestString(Assembler::Equal, tag, &done);
-    masm.branchTestSymbol(Assembler::Equal, tag, &done);
-    masm.branchTestInt32(Assembler::NotEqual, tag, &*bail);
-  }
-
-  masm.unboxInt32(output, scratch);
-
-  using Fn = JSLinearString* (*)(JSContext*, int);
-  OutOfLineCode* ool = oolCallVM<Fn, Int32ToString<CanGC>>(
-      ins, ArgList(scratch), StoreRegisterTo(output.scratchReg()));
-
-  emitIntToString(scratch, output.scratchReg(), ool->entry());
-
-  masm.bind(ool->rejoin());
-  masm.tagValue(JSVAL_TYPE_STRING, output.scratchReg(), output);
-  masm.bind(&done);
-  if (bail) {
-    bailoutFrom(&*bail, ins->snapshot());
-  }
 }
 
 void CodeGenerator::visitLoadFixedSlotV(LLoadFixedSlotV* ins) {
