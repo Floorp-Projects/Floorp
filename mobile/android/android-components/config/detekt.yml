@@ -53,7 +53,7 @@ output-reports:
 comments:
   active: true
   AbsentOrWrongFileLicense:
-    active: false
+    active: true # Enabled in https://bugzilla.mozilla.org/show_bug.cgi?id=1795140
     licenseTemplateFile: 'license.template'
     licenseTemplateIsRegex: false
   CommentOverPrivateFunction:
@@ -784,9 +784,3 @@ style:
     active: true
     excludeImports:
       - 'java.util.*'
-
-# Custom Rules
-
-mozilla-rules:
-  AbsentOrWrongFileLicense:
-    active: true
