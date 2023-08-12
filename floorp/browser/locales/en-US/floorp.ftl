@@ -24,7 +24,7 @@ open-new-tab-use-default =
 open-new-tab-at-the-end =
  .label = Open new tabs at the end of the Tab Bar
 open-new-tab-next-to-current =
- .label = Open new tabs right of the current tab
+ .label = Open new tabs next to the current tab
 enable-multitab = 
  .label = Enable multi-row tabs
 multirow-tabs-limit = 
@@ -33,19 +33,19 @@ multirow-tabs-newtab =
  .label = Place the "Open a new tab" button at the end of the lowest row of tabs
 multirow-tabs-value = Number of rows when multi-row tabs are enabled
 enable-tab-sleep = 
- .label = Enable Tab Sleep
-tab-sleep-timeout-minutes-value = Put inactive tabs to sleep after the following period of time (minutes)
+ .label = Enable Sleeping Tabs
+tab-sleep-timeout-minutes-value = Tabs will sleep after being inactive for (minutes)
 tab-sleep-settings-button = Settings...
 tab-sleep-settings-dialog-title =
- .title = Tab Sleep Settings
+ .title = Sleeping Tabs Settings
 tab-sleep-settings-dialog-excludehosts-label = Exclude hosts
 tab-sleep-settings-dialog-excludehosts-label-2 = Enter one host per line.
-tab-sleep-tab-context-menu-excludetab = Do not put this tab to sleep
+tab-sleep-tab-context-menu-excludetab = Keep Tab awake
 enable-floorp-workspace =
  .label = Enable Workspaces
-workspace-warring = Workspaces cannot be used with Tab Group add-ons. If you want to use tab group add-ons, please disable Workspace & restart { -brand-short-name }.
+workspace-warring = Workspaces cannot be used with Tab Group add-ons. If you want to use tab group add-ons, please disable Workspaces and restart { -brand-short-name }.
 enable-tab-scroll-change =
- .label = Switch tabs by scrolling
+ .label = Switch tabs by scrolling with your mouse
 enable-tab-scroll-reverse =
  .label = Reverse direction of scrolling tabs
 enable-tab-scroll-wrap =
@@ -63,10 +63,10 @@ None-mode =
  .label= Normal mode
 
 hide-horizontality-tabs =
- .label= Hide tabs on horizontal Tab Bar
+ .label= Hide tabs on Horizontal Tab Bar
 
 verticalTab-setting =
- .label = Optimise browser for vertical Tab Bar
+ .label = Optimise browser for Vertical Tab Bar
 
 move-tabbar-position =
  .label = Display Tab Bar underneath the Toolbar
@@ -87,10 +87,10 @@ multirow-tabbar =
  .label = Multi-Row Tab Bar
 vertical-tabbar =
  .label = Vertical Tab Bar (experimental)
-native-tabbar-tip = Sidebar add-ons and in-built sidebars cannot be used at the same time as vertical tabs as this leverages the Firefox sidebar.
+native-tabbar-tip = Sidebar add-ons and in-built sidebars cannot be used at the same time as Vertical Tabs as this leverages the Firefox sidebar.
 
 hover-vertical-tab =
- .label = Collapse vertical Tab Bar
+ .label = Collapse Vertical Tab Bar
 
 TST = Tree Style Tab
 about-TST = Tree Style Tab is a popular add-on that allows you to display tabs in a tree structure. Floorp 10 has a built-in this add-on. Please install the add-on restore Floorp 10's built-in Tree Style Tab.
@@ -120,7 +120,7 @@ enable-userscript =
 about-legacy-components = Enabling this feature may cause unexpected bugs or fatal errors
 
 Search-positon-top =
- .label = Display the search bar at the top of the page
+ .label = Display the Find Bar at the top of the page
 allow-auto-restart =
  .label = Restart automatically when settings that require a restart are changed
 
@@ -138,7 +138,7 @@ floorp-update-latest =
 
 ## system theme color
 
-system-color-settings = This theme supports both light and dark mode - choose what mode you'd like the theme to use.
+system-color-settings = Some themes have both light and dark modes - choose which mode you'd like these themes to use.
 preferences-theme-appearance-header = Theme Mode
 
 system-theme-dark =
@@ -217,9 +217,9 @@ use-custom-useragent-mode =
 
 ## DMR UI
 download-mgr-UI =
- .label = Enable a simple downloads management interface
+ .label = Enable the SimpleUI Download Manager
 downloading-red-color =
- .label = Use red downloads icon when downloading
+ .label = Use the red downloads icon when downloading
 
 sidebar-preferences = Sidebar
 
@@ -247,7 +247,7 @@ bsb-header = Browser Manager Sidebar
 bsb-context = Use the following Container Tab
 bsb-userAgent-label = 
   .label = Use Mobile User Agent in this Web Panel
-bsb-width = Width (If set to 0, use global values)
+bsb-width = Width (if set to 0, the global value will be used)
 bsb-page = Page to open
 
 bsb-add = Add Web Panel on Browser Manager Sidebar
@@ -385,7 +385,7 @@ floorp-lepton-enable-back-button-autohide =
 floorp-lepton-enable-forward-button-autohide =
     .label = Automatically hide forward button
 floorp-lepton-enable-page-action-button-autohide =
-    .label = Automatically hide buttons on the address bar
+    .label = Automatically hide buttons on the Address Bar
 floorp-lepton-enable-toolbar-overlap =
     .label = Show Toolbar over website content
 floorp-lepton-enable-toolbar-overlap-allow-layout-shift-autohide =
@@ -402,11 +402,11 @@ floorp-lepton-enable-navbar-hide =
 floorp-lepton-enable-sidebar_header-hide =
     .label = Hide Sidebar Headers
 floorp-lepton-enable-urlbar_iconbox-hide =
-    .label = Hide address bar icons
+    .label = Hide Address Bar icons
 floorp-lepton-enable-bookmarkbar_icon-hide =
-    .label = Hide bookmarks bar icons
+    .label = Hide Bookmarks Bar icons
 floorp-lepton-enable-bookmarkbar_label-hide =
-    .label = Hide bookmarks bar labels
+    .label = Hide Bookmarks Bar labels
 floorp-lepton-enable-disabled_menu-hide =
     .label = Hide disabled context menu items
 
@@ -418,18 +418,18 @@ positon-preferences = Position adjustments
 floorp-lepton-enable-centered-tab =
     .label = Center labels in tabs
 floorp-lepton-enable-centered-urlbar =
-    .label = Center text in the address bar
+    .label = Center text in the Address Bar
 floorp-lepton-enable-centered-bookmarkbar =
     .label = Center Bookmarks Bar items
 
 urlbar-preferences = Address Bar
 
 floorp-lepton-enable-urlbar-icon-move-to-left =
-    .label = Move address bar icons to the left side
+    .label = Move Address Bar icons to the left side
 floorp-lepton-enable-urlname-go_button_when_typing =
     .label = When typing, show a Go button
 floorp-lepton-enable-always-show-page_action =
-    .label = Always show page actions in the address bar
+    .label = Always show page actions in the Address Bar
 
 tabbar-preferences = Tab Bar
 
@@ -606,7 +606,7 @@ WebRTC =
 ################################################################### browser ###############################################################
 
 rest-mode = Taking a break...
-rest-mode-description = { -brand-short-name } is currently suspended. Press ENTER or OK to continue.
+rest-mode-description = Floorp is currently suspended. Press ENTER or OK to continue.
 
 Sidebar2 =
   .label = Browser Manager Sidebar
@@ -657,7 +657,7 @@ sidebar2-history-sidebar = History
 show-history-sidebar =
   .tooltiptext = Show { sidebar2-history-sidebar } Sidebar
 
-sidebar2-download-sidebar = Download
+sidebar2-download-sidebar = Downloads
 
 show-download-sidebar =
   .tooltiptext = Show { sidebar2-download-sidebar } Sidebar
@@ -680,7 +680,7 @@ sidebar-preferences-button =
   .tooltiptext = Settings
 
 sidebar-keepWidth-button =
-  .tooltiptext = Use this width on this Panel
+  .tooltiptext = Keep using the current width on this Panel
 
 sidebar2-keep-width-for-global =
   .label = Apply this width to all panels without a custom width
@@ -802,12 +802,12 @@ update-portable-notification-failed-prepare-message = Failed to prepare update.
 ##################################################################### Open link in external ###############################################################
 openInExternal-title = Open in external browser
 open-link-in-external-enabled-option =
- .label = Enable "Open in external browser" feature
+ .label = Enable the "Open in external browser" feature
 open-link-in-external-select-browser-option = Choose what browser will be opened
 open-link-in-external-select-browser-option-default =
  .label = Default browser
 open-link-in-external-tab-context-menu = Open in external browser
-open-link-in-external-tab-dialog-title-error = An error occurred
+open-link-in-external-tab-dialog-title-error = An error occurred:
 open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser is not found or is not configured.
 open-link-in-external-tab-dialog-message-selected-browser-not-found = The selected browser does not exist.
 
@@ -849,7 +849,7 @@ floorp-show-all-downloads =
 workspace-prompt-title = Floorp Workspace
 please-enter-workspace-name = Please enter the Workspace's new name.
 please-enter-workspace-name-2 = The Workspace's name cannot contain symbols and spaces.
-workspace-error = An error occurred
+workspace-error = An error occurred:
 workspace-error-discription = Either a Workspace with this name exists or the name is invalid.
 
 workspace-button = Workspaces
@@ -880,7 +880,7 @@ sharemode-menuitem =
 ############################################################################## Welcome page ###############################################################
 
 welcome-login-to-firefox-account = Login to Firefox Account
-welcome-to-floorp = Welcome to { -brand-short-name } !
+welcome-to-floorp = Welcome to { -brand-short-name }!
 welcome-discribe-floorp = { -brand-short-name } is a feature-rich flexible browser that supports various environments and is based on Firefox.
 welcome-start-setup = Ready to jump in?
 welcome-skip-to-start-browsing = Skip to Start Browsing
@@ -905,5 +905,5 @@ welcome-import-data-button = Import Data...
 welcome-import-data-skip = Skip Import
 welcome-select-button = Select
 welcome-finish-setup = Setup Complete!
-welcome-finish-setup-description = You're all set! Other settings like Vertical tab & Addons can be found from about:preferences. Enjoy { -brand-short-name } !
+welcome-finish-setup-description = You're all set! Other settings like Vertical Tabs & Add-ons can be found in about:preferences. Enjoy { -brand-short-name }!
 welcomet-finish-setup = Start Browsing the Web
