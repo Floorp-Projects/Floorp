@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["AboutWelcomeChild"];
+const EXPORTED_SYMBOLS = ["AboutWelcomeChild", "AboutWelcomeShoppingChild"];
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -29,12 +29,15 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return new Logger("AboutWelcomeChild");
 });
 
-async function getSelectedTheme(child) {
-  let activeThemeId = await child.sendQuery("AWPage:GET_SELECTED_THEME");
-  return activeThemeId;
-}
-
 class AboutWelcomeChild extends JSWindowActorChild {
+  // Can be used to avoid accesses to the document/contentWindow after it's
+  // destroyed, which may throw unhandled exceptions.
+  _destroyed = false;
+
+  didDestroy() {
+    this._destroyed = true;
+  }
+
   actorCreated() {
     this.exportFunctions();
   }
@@ -225,7 +228,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
   }
 
   AWGetSelectedTheme() {
-    return this.wrapPromise(getSelectedTheme(this));
+    return this.wrapPromise(this.sendQuery("AWPage:GET_SELECTED_THEME"));
   }
 
   /**
@@ -336,4 +339,101 @@ class AboutWelcomeChild extends JSWindowActorChild {
   handleEvent(event) {
     lazy.log.debug(`Received page event ${event.type}`);
   }
+}
+
+const OPTIN_DEFAULT = {
+  id: "FAKESPOT_OPTIN_DEFAULT",
+  template: "multistage",
+  backdrop: "transparent",
+  transitions: true,
+  screens: [
+    {
+      id: "FS_OPT_IN",
+      content: {
+        position: "split",
+        title: { string_id: "shopping-onboarding-headline" },
+        subtitle: `Not all reviews are created equal. To help you find real reviews, from real people, Firefox can use AI technology to analyze this product’s reviews.`,
+        legal_paragraph: {
+          text: {
+            // fluent ids required to render copy
+            string_id:
+              "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
+          },
+          link_keys: ["privacy_policy", "terms_of_use"],
+        },
+        privacy_policy: {
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://www.mozilla.org/privacy/firefox/",
+              where: "tab",
+            },
+          },
+        },
+        terms_of_use: {
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://www.mozilla.org/about/legal/terms/firefox/",
+              where: "tab",
+            },
+          },
+        },
+        primary_button: {
+          label: "Analyze Reviews",
+          action: {
+            type: "SET_PREF",
+            data: {
+              pref: {
+                name: "browser.shopping.experience2023.optedIn",
+                value: 1,
+              },
+            },
+          },
+        },
+        secondary_button: {
+          label: "Not Now",
+          action: {
+            type: "SET_PREF",
+            data: {
+              pref: {
+                name: "browser.shopping.experience2023.active",
+                value: false,
+              },
+            },
+          },
+        },
+        info_text: {
+          raw: "Review quality check is available when you shop on Amazon, Best Buy, and Walmart.",
+        },
+      },
+    },
+  ],
+};
+
+class AboutWelcomeShoppingChild extends AboutWelcomeChild {
+  // TODO - Add dismiss: true to the primary CTA so it cleans up the React
+  // content, which will stop being rendered on opt-in. See bug 1848429.
+  AWFinish() {
+    if (this._destroyed) {
+      return;
+    }
+    let root = this.document.getElementById("multi-stage-message-root");
+    if (root) {
+      let { parentElement } = root;
+      let newRoot = this.document.createElement("div");
+      newRoot.id = "multi-stage-message-root";
+      newRoot.className = "onboardingContainer shopping";
+      newRoot.slot = "multi-stage-message-slot";
+      root.remove();
+      parentElement.appendChild(newRoot);
+    }
+  }
+
+  // TODO - Move messages into an ASRouter message provider. See bug 1848251.
+  AWGetFeatureConfig() {
+    return Cu.cloneInto(OPTIN_DEFAULT, this.contentWindow);
+  }
+
+  AWEnsureLangPackInstalled() {}
 }

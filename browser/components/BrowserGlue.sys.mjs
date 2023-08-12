@@ -382,6 +382,22 @@ let JSWINDOWACTORS = {
     matches: ["about:tabcrashed*"],
   },
 
+  AboutWelcomeShopping: {
+    parent: {
+      moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/AboutWelcomeChild.jsm",
+      events: {
+        // This is added so the actor instantiates immediately and makes
+        // methods available to the page js on load.
+        DOMDocElementInserted: {},
+      },
+    },
+    matches: ["about:shoppingsidebar"],
+    remoteTypes: ["privilegedabout"],
+  },
+
   AboutWelcome: {
     parent: {
       moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
@@ -394,11 +410,7 @@ let JSWINDOWACTORS = {
         DOMDocElementInserted: {},
       },
     },
-    matches: [
-      "about:welcome",
-      // TBD: Move shopping window functions setup to child actor. See Bug 1843461
-      "about:shoppingsidebar",
-    ],
+    matches: ["about:welcome"],
     remoteTypes: ["privilegedabout"],
 
     // See Bug 1618306

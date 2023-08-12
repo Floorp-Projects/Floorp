@@ -23,33 +23,36 @@ class AboutWelcome extends React.PureComponent {
     if (!this.props.skipFxA) {
       this.fetchFxAFlowUri();
     }
-    // Record impression with performance data after allowing the page to load
-    const recordImpression = domState => {
-      const { domComplete, domInteractive } = performance
-        .getEntriesByType("navigation")
-        .pop();
-      AboutWelcomeUtils.sendImpressionTelemetry(this.props.messageId, {
-        domComplete,
-        domInteractive,
-        mountStart: performance.getEntriesByName("mount").pop().startTime,
-        domState,
-        source: this.props.UTMTerm,
-      });
-    };
-    if (document.readyState === "complete") {
-      // Page might have already triggered a load event because it waited for async data,
-      // e.g., attribution, so the dom load timing could be of a empty content
-      // with domState in telemetry captured as 'complete'
-      recordImpression(document.readyState);
-    } else {
-      window.addEventListener("load", () => recordImpression("load"), {
-        once: true,
-      });
-    }
 
-    // Captures user has seen about:welcome by setting
-    // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
-    window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN", this.props.messageId);
+    if (document.location.href === "about:welcome") {
+      // Record impression with performance data after allowing the page to load
+      const recordImpression = domState => {
+        const { domComplete, domInteractive } = performance
+          .getEntriesByType("navigation")
+          .pop();
+        AboutWelcomeUtils.sendImpressionTelemetry(this.props.messageId, {
+          domComplete,
+          domInteractive,
+          mountStart: performance.getEntriesByName("mount").pop().startTime,
+          domState,
+          source: this.props.UTMTerm,
+        });
+      };
+      if (document.readyState === "complete") {
+        // Page might have already triggered a load event because it waited for async data,
+        // e.g., attribution, so the dom load timing could be of a empty content
+        // with domState in telemetry captured as 'complete'
+        recordImpression(document.readyState);
+      } else {
+        window.addEventListener("load", () => recordImpression("load"), {
+          once: true,
+        });
+      }
+
+      // Captures user has seen about:welcome by setting
+      // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
+      window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN", this.props.messageId);
+    }
   }
 
   render() {
