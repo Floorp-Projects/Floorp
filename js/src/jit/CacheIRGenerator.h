@@ -153,10 +153,6 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
   AttachDecision tryAttachGenericProxy(Handle<ProxyObject*> obj,
                                        ObjOperandId objId, HandleId id,
                                        bool handleDOMProxies);
-#ifdef JS_PUNBOX64
-  AttachDecision tryAttachScriptedProxy(Handle<ProxyObject*> obj,
-                                        ObjOperandId objId, HandleId id);
-#endif
   AttachDecision tryAttachDOMProxyExpando(Handle<ProxyObject*> obj,
                                           ObjOperandId objId, HandleId id,
                                           ValOperandId receiverId);

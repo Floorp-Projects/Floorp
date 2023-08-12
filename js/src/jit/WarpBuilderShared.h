@@ -112,20 +112,6 @@ class MOZ_STACK_CLASS CallInfo {
     setCallee(callee);
     setThis(thisVal);
   }
-
-  void initForProxyGet(MDefinition* callee, MDefinition* handler,
-                       MDefinition* target, MDefinition* id,
-                       MDefinition* receiver) {
-    MOZ_ASSERT(args_.empty());
-    setCallee(callee);
-    setThis(handler);
-    static_assert(decltype(args_)::InlineLength >= 3,
-                  "Appending three arguments should be infallible");
-    MOZ_ALWAYS_TRUE(args_.append(target));
-    MOZ_ALWAYS_TRUE(args_.append(id));
-    MOZ_ALWAYS_TRUE(args_.append(receiver));
-  }
-
   void initForSetterCall(MDefinition* callee, MDefinition* thisVal,
                          MDefinition* rhs) {
     MOZ_ASSERT(args_.empty());
