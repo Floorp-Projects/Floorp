@@ -198,6 +198,7 @@ MSG_DEF(JSMSG_ALLOC_OVERFLOW,          0, JSEXN_INTERNALERR, "allocation size ov
 MSG_DEF(JSMSG_BAD_BYTECODE,            1, JSEXN_INTERNALERR, "unimplemented JavaScript bytecode {0}")
 MSG_DEF(JSMSG_BUFFER_TOO_SMALL,        0, JSEXN_INTERNALERR, "buffer too small")
 MSG_DEF(JSMSG_BYTECODE_TOO_BIG,        2, JSEXN_INTERNALERR, "bytecode {0} too large (limit {1})")
+MSG_DEF(JSMSG_DECODE_FAILURE,          0, JSEXN_INTERNALERR, "failed to decode cache")
 MSG_DEF(JSMSG_NEED_DIET,               1, JSEXN_INTERNALERR, "{0} too large")
 MSG_DEF(JSMSG_OUT_OF_MEMORY,           0, JSEXN_INTERNALERR, "out of memory")
 MSG_DEF(JSMSG_OVER_RECURSED,           0, JSEXN_INTERNALERR, "too much recursion")
