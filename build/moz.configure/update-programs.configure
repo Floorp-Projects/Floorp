@@ -182,7 +182,10 @@ set_config("MOZ_DEFAULT_BROWSER_AGENT", default_agent_flag)
 # ==============================================================================
 @depends(target, build_project)
 def notification_server_default(target, build_project):
-    return target.os == "WINNT" and build_project == "browser"
+    return target.os == "WINNT" and build_project in (
+        "browser",
+        "comm/mail",
+    )
 
 
 option(

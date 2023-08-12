@@ -109,6 +109,7 @@ const AnnotationEditorType = {
 exports.AnnotationEditorType = AnnotationEditorType;
 const AnnotationEditorParamsType = {
   RESIZE: 1,
+  CREATE: 2,
   FREETEXT_SIZE: 11,
   FREETEXT_COLOR: 12,
   FREETEXT_OPACITY: 13,
@@ -943,7 +944,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.10.70',
+    apiVersion: '3.10.80',
     data,
     password,
     disableAutoFetch,
@@ -2589,9 +2590,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.10.70';
+const version = '3.10.80';
 exports.version = version;
-const build = '1d523d3ec';
+const build = '690b87389';
 exports.build = build;
 
 /***/ }),
@@ -2778,6 +2779,7 @@ class AnnotationEditor {
   #hasBeenClicked = false;
   #isEditing = false;
   #isInEditMode = false;
+  _initialOptions = Object.create(null);
   _uiManager = null;
   _focusEventsAllowed = true;
   #isDraggable = false;
@@ -2797,6 +2799,7 @@ class AnnotationEditor {
     this._uiManager = parameters.uiManager;
     this.annotationElementId = null;
     this._willKeepAspectRatio = false;
+    this._initialOptions.isCentered = parameters.isCentered;
     const {
       rotation,
       rawDims: {
@@ -2834,6 +2837,12 @@ class AnnotationEditor {
   static get defaultPropertiesToUpdate() {
     return [];
   }
+  static isHandlingMimeForPasting(_mime) {
+    return false;
+  }
+  static paste(item, parent) {
+    (0, _util.unreachable)("Not implemented");
+  }
   get propertiesToUpdate() {
     return [];
   }
@@ -2843,6 +2852,28 @@ class AnnotationEditor {
   set _isDraggable(value) {
     this.#isDraggable = value;
     this.div?.classList.toggle("draggable", value);
+  }
+  center() {
+    const [pageWidth, pageHeight] = this.pageDimensions;
+    switch (this.parentRotation) {
+      case 90:
+        this.x -= this.height * pageHeight / (pageWidth * 2);
+        this.y += this.width * pageWidth / (pageHeight * 2);
+        break;
+      case 180:
+        this.x += this.width / 2;
+        this.y += this.height / 2;
+        break;
+      case 270:
+        this.x += this.height * pageHeight / (pageWidth * 2);
+        this.y -= this.width * pageWidth / (pageHeight * 2);
+        break;
+      default:
+        this.x -= this.width / 2;
+        this.y -= this.height / 2;
+        break;
+    }
+    this.fixAndSetPosition();
   }
   addCommands(params) {
     this._uiManager.addCommands(params);
@@ -3827,6 +3858,7 @@ class AnnotationEditorUIManager {
   #filterFactory = null;
   #idManager = new IdManager();
   #isEnabled = false;
+  #isWaiting = false;
   #lastActiveElement = null;
   #mode = _util.AnnotationEditorType.NONE;
   #selectedEditors = new Set();
@@ -4057,7 +4089,18 @@ class AnnotationEditorUIManager {
   }
   paste(event) {
     event.preventDefault();
-    let data = event.clipboardData.getData("application/pdfjs");
+    const {
+      clipboardData
+    } = event;
+    for (const item of clipboardData.items) {
+      for (const editorType of this.#editorTypes) {
+        if (editorType.isHandlingMimeForPasting(item.type)) {
+          editorType.paste(item, this.currentLayer);
+          return;
+        }
+      }
+    }
+    let data = clipboardData.getData("application/pdfjs");
     if (!data) {
       return;
     }
@@ -4181,6 +4224,9 @@ class AnnotationEditorUIManager {
     this.#allLayers.delete(layer.pageIndex);
   }
   updateMode(mode, editId = null) {
+    if (this.#mode === mode) {
+      return;
+    }
     this.#mode = mode;
     if (mode === _util.AnnotationEditorType.NONE) {
       this.setEditingState(false);
@@ -4217,11 +4263,29 @@ class AnnotationEditorUIManager {
     if (!this.#editorTypes) {
       return;
     }
+    if (type === _util.AnnotationEditorParamsType.CREATE) {
+      this.currentLayer.addNewEditor(type);
+      return;
+    }
     for (const editor of this.#selectedEditors) {
       editor.updateParams(type, value);
     }
     for (const editorType of this.#editorTypes) {
       editorType.updateDefaultParams(type, value);
+    }
+  }
+  enableWaiting(mustWait = false) {
+    if (this.#isWaiting === mustWait) {
+      return;
+    }
+    this.#isWaiting = mustWait;
+    for (const layer of this.#allLayers.values()) {
+      if (mustWait) {
+        layer.disableClick();
+      } else {
+        layer.enableClick();
+      }
+      layer.div.classList.toggle("waiting", mustWait);
     }
   }
   #enableAll() {
@@ -9959,7 +10023,7 @@ class AnnotationEditorLayer {
     const editor = this.#createAndAddNewEditor({
       offsetX: 0,
       offsetY: 0
-    });
+    }, false);
     editor.setInBackground();
   }
   setEditingState(isEditing) {
@@ -10158,6 +10222,27 @@ class AnnotationEditorLayer {
     }
     return null;
   }
+  pasteEditor(mode, params) {
+    this.#uiManager.updateToolbar(mode);
+    this.#uiManager.updateMode(mode);
+    const {
+      offsetX,
+      offsetY
+    } = this.#getCenterPoint();
+    const id = this.getNextId();
+    const editor = this.#createNewEditor({
+      parent: this,
+      id,
+      x: offsetX,
+      y: offsetY,
+      uiManager: this.#uiManager,
+      isCentered: true,
+      ...params
+    });
+    if (editor) {
+      this.add(editor);
+    }
+  }
   deserialize(data) {
     switch (data.annotationType ?? data.annotationEditorType) {
       case _util.AnnotationEditorType.FREETEXT:
@@ -10169,19 +10254,42 @@ class AnnotationEditorLayer {
     }
     return null;
   }
-  #createAndAddNewEditor(event) {
+  #createAndAddNewEditor(event, isCentered) {
     const id = this.getNextId();
     const editor = this.#createNewEditor({
       parent: this,
       id,
       x: event.offsetX,
       y: event.offsetY,
-      uiManager: this.#uiManager
+      uiManager: this.#uiManager,
+      isCentered
     });
     if (editor) {
       this.add(editor);
     }
     return editor;
+  }
+  #getCenterPoint() {
+    const {
+      x,
+      y,
+      width,
+      height
+    } = this.div.getBoundingClientRect();
+    const tlX = Math.max(0, x);
+    const tlY = Math.max(0, y);
+    const brX = Math.min(window.innerWidth, x + width);
+    const brY = Math.min(window.innerHeight, y + height);
+    const centerX = (tlX + brX) / 2 - x;
+    const centerY = (tlY + brY) / 2 - y;
+    const [offsetX, offsetY] = this.viewport.rotation % 180 === 0 ? [centerX, centerY] : [centerY, centerX];
+    return {
+      offsetX,
+      offsetY
+    };
+  }
+  addNewEditor() {
+    this.#createAndAddNewEditor(this.#getCenterPoint(), true);
   }
   setSelected(editor) {
     this.#uiManager.setSelected(editor);
@@ -10213,7 +10321,11 @@ class AnnotationEditorLayer {
       this.#allowClick = true;
       return;
     }
-    this.#createAndAddNewEditor(event);
+    if (this.#uiManager.getMode() === _util.AnnotationEditorType.STAMP) {
+      this.#uiManager.unselectAll();
+      return;
+    }
+    this.#createAndAddNewEditor(event, false);
   }
   pointerdown(event) {
     if (this.#hadPointerDown) {
@@ -10503,6 +10615,10 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     }
     this.enableEditMode();
     this.editorDiv.focus();
+    if (this._initialOptions?.isCentered) {
+      this.center();
+    }
+    this._initialOptions = null;
   }
   isEmpty() {
     return !this.editorDiv || this.editorDiv.innerText.trim() === "";
@@ -14246,6 +14362,7 @@ class StampEditor extends _editor.AnnotationEditor {
   #bitmapId = null;
   #bitmapPromise = null;
   #bitmapUrl = null;
+  #bitmapFile = null;
   #canvas = null;
   #observer = null;
   #resizeTimeoutId = null;
@@ -14258,13 +14375,32 @@ class StampEditor extends _editor.AnnotationEditor {
       name: "stampEditor"
     });
     this.#bitmapUrl = params.bitmapUrl;
+    this.#bitmapFile = params.bitmapFile;
   }
   static get supportedTypes() {
     const types = ["apng", "avif", "bmp", "gif", "jpeg", "png", "svg+xml", "webp", "x-icon"];
-    return (0, _util.shadow)(this, "supportedTypes", types.map(type => `image/${type}`).join(","));
+    return (0, _util.shadow)(this, "supportedTypes", types.map(type => `image/${type}`));
+  }
+  static get supportedTypesStr() {
+    return (0, _util.shadow)(this, "supportedTypesStr", this.supportedTypes.join(","));
+  }
+  static isHandlingMimeForPasting(mime) {
+    return this.supportedTypes.includes(mime);
+  }
+  static paste(item, parent) {
+    parent.pasteEditor(_util.AnnotationEditorType.STAMP, {
+      bitmapFile: item.getAsFile()
+    });
+  }
+  #getBitmapDone() {
+    this._uiManager.enableWaiting(false);
+    if (this.#canvas) {
+      this.div.focus();
+    }
   }
   #getBitmap() {
     if (this.#bitmapId) {
+      this._uiManager.enableWaiting(true);
       this._uiManager.imageManager.getFromId(this.#bitmapId).then(data => {
         if (!data) {
           this.remove();
@@ -14272,12 +14408,13 @@ class StampEditor extends _editor.AnnotationEditor {
         }
         this.#bitmap = data.bitmap;
         this.#createCanvas();
-      });
+      }).finally(() => this.#getBitmapDone());
       return;
     }
     if (this.#bitmapUrl) {
       const url = this.#bitmapUrl;
       this.#bitmapUrl = null;
+      this._uiManager.enableWaiting(true);
       this.#bitmapPromise = this._uiManager.imageManager.getFromUrl(url).then(data => {
         this.#bitmapPromise = null;
         if (!data) {
@@ -14290,18 +14427,38 @@ class StampEditor extends _editor.AnnotationEditor {
           isSvg: this.#isSvg
         } = data);
         this.#createCanvas();
-      });
+      }).finally(() => this.#getBitmapDone());
+      return;
+    }
+    if (this.#bitmapFile) {
+      const file = this.#bitmapFile;
+      this.#bitmapFile = null;
+      this._uiManager.enableWaiting(true);
+      this.#bitmapPromise = this._uiManager.imageManager.getFromFile(file).then(data => {
+        this.#bitmapPromise = null;
+        if (!data) {
+          this.remove();
+          return;
+        }
+        ({
+          bitmap: this.#bitmap,
+          id: this.#bitmapId,
+          isSvg: this.#isSvg
+        } = data);
+        this.#createCanvas();
+      }).finally(() => this.#getBitmapDone());
       return;
     }
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = StampEditor.supportedTypes;
+    input.accept = StampEditor.supportedTypesStr;
     this.#bitmapPromise = new Promise(resolve => {
       input.addEventListener("change", async () => {
         this.#bitmapPromise = null;
         if (!input.files || input.files.length === 0) {
           this.remove();
         } else {
+          this._uiManager.enableWaiting(true);
           const data = await this._uiManager.imageManager.getFromFile(input.files[0]);
           if (!data) {
             this.remove();
@@ -14321,7 +14478,7 @@ class StampEditor extends _editor.AnnotationEditor {
         this.remove();
         resolve();
       });
-    });
+    }).finally(() => this.#getBitmapDone());
     input.click();
   }
   remove() {
@@ -14373,10 +14530,10 @@ class StampEditor extends _editor.AnnotationEditor {
       baseY = this.y;
     }
     super.render();
+    this.div.hidden = true;
     if (this.#bitmap) {
       this.#createCanvas();
     } else {
-      this.div.classList.add("loading");
       this.#getBitmap();
     }
     if (this.width) {
@@ -14405,11 +14562,12 @@ class StampEditor extends _editor.AnnotationEditor {
     }
     const [parentWidth, parentHeight] = this.parentDimensions;
     this.setDims(width * parentWidth / pageWidth, height * parentHeight / pageHeight);
+    this._uiManager.enableWaiting(false);
     const canvas = this.#canvas = document.createElement("canvas");
     div.append(canvas);
+    div.hidden = false;
     this.#drawBitmap(width, height);
     this.#createObserver();
-    div.classList.remove("loading");
     if (!this.#hasBeenAddedInUndoStack) {
       this.parent.addUndoableEditor(this);
       this.#hasBeenAddedInUndoStack = true;
@@ -14420,7 +14578,12 @@ class StampEditor extends _editor.AnnotationEditor {
     this.width = width / parentWidth;
     this.height = height / parentHeight;
     this.setDims(width, height);
-    this.fixAndSetPosition();
+    if (this._initialOptions?.isCentered) {
+      this.center();
+    } else {
+      this.fixAndSetPosition();
+    }
+    this._initialOptions = null;
     if (this.#resizeTimeoutId !== null) {
       clearTimeout(this.#resizeTimeoutId);
     }
@@ -14865,8 +15028,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.10.70';
-const pdfjsBuild = '1d523d3ec';
+const pdfjsVersion = '3.10.80';
+const pdfjsBuild = '690b87389';
 })();
 
 /******/ 	return __webpack_exports__;
