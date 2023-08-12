@@ -217,7 +217,7 @@ use-custom-useragent-mode =
 
 ## DMR UI
 download-mgr-UI =
- .label = Enable the simple downloads management interface
+ .label = Enable the SimpleUI Download Manager
 downloading-red-color =
  .label = Use the red downloads icon when downloading
 
