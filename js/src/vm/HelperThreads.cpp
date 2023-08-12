@@ -632,12 +632,28 @@ DecodeStencilTask::DecodeStencilTask(JSContext* cx,
   MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
 }
 
+static void ReportDecodeFailure(JS::FrontendContext* fc) {
+  js::ErrorMetadata metadata;
+  metadata.filename = JS::ConstUTF8CharsZ("<unknown>");
+  metadata.lineNumber = 0;
+  metadata.columnNumber = 0;
+  metadata.lineLength = 0;
+  metadata.tokenOffset = 0;
+  metadata.isMuted = false;
+
+  js::ReportCompileErrorLatin1(fc, std::move(metadata), nullptr,
+                               JSMSG_DECODE_FAILURE);
+}
+
 void DecodeStencilTask::parse(FrontendContext* fc) {
   JS::DecodeOptions decodeOptions(options);
 
   JS::TranscodeResult tr =
       JS::DecodeStencil(fc, decodeOptions, range, getter_AddRefs(stencil_));
   if (tr != JS::TranscodeResult::Ok) {
+    if (tr != JS::TranscodeResult::Throw) {
+      ReportDecodeFailure(fc);
+    }
     return;
   }
 
