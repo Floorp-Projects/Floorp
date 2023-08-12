@@ -279,7 +279,7 @@
   width: 12px;
   height: 12px;
   margin-top: var(--urlbarView-favicon-width);
-  margin-inline-start: 8px;
+  margin-inline-start: calc(var(--urlbarView-icon-margin-start) + var(--urlbarView-favicon-width) - 6px);
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill, stroke;
