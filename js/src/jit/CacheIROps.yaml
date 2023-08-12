@@ -459,7 +459,7 @@
 
 - name: GuardHasProxyHandler
   shared: false
-  transpile: true
+  transpile: false
   cost_estimate: 1
   args:
     obj: ObjId
@@ -662,22 +662,6 @@
     obj: ObjId
     offset: RawInt32Field
     val: ValueField
-
-- name: LoadScriptedProxyHandler
-  shared: true
-  transpile: true
-  cost_estimate: 1
-  args:
-    result: ObjId
-    obj: ObjId
-
-- name: IdToStringOrSymbol
-  shared: true
-  transpile: true
-  cost_estimate: 2
-  args:
-    result: ValId
-    id: ValId
 
 - name: LoadFixedSlot
   shared: true
@@ -1840,33 +1824,6 @@
     flags: CallFlagsImm
     argcFixed: UInt32Imm
 
-#ifdef JS_PUNBOX64
-- name: CallScriptedProxyGetResult
-  shared: false
-  transpile: true
-  cost_estimate: 4
-  custom_writer: true
-  args:
-    target: ValId
-    receiver: ObjId
-    handler: ObjId
-    trap: ObjectField
-    property: IdField
-    nargsAndFlags: UInt32Imm
-
-- name: CallScriptedProxyGetByValueResult
-  shared: false
-  transpile: true
-  cost_estimate: 4
-  custom_writer: true
-  args:
-    target: ValId
-    receiver: ObjId
-    handler: ObjId
-    property: ValId
-    trap: ObjectField
-    nargsAndFlags: UInt32Imm
-#endif
 
 # Meta ops generate no code, but contain data for the Warp Transpiler.
 - name: MetaScriptedThisShape

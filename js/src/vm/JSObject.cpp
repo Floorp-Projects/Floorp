@@ -740,9 +740,11 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
 
 /* * */
 
-static MOZ_ALWAYS_INLINE NativeObject* NewObject(
-    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
-    gc::AllocKind kind, NewObjectKind newKind, ObjectFlags objFlags) {
+static MOZ_ALWAYS_INLINE NativeObject* NewObject(JSContext* cx,
+                                                 const JSClass* clasp,
+                                                 Handle<TaggedProto> proto,
+                                                 gc::AllocKind kind,
+                                                 NewObjectKind newKind) {
   MOZ_ASSERT(clasp->isNativeObject());
 
   // Some classes have specialized allocation functions and shouldn't end up
@@ -763,7 +765,7 @@ static MOZ_ALWAYS_INLINE NativeObject* NewObject(
 
   Rooted<SharedShape*> shape(
       cx, SharedShape::getInitialShape(cx, clasp, cx->realm(), proto, nfixed,
-                                       objFlags));
+                                       ObjectFlags()));
   if (!shape) {
     return nullptr;
   }
@@ -778,20 +780,21 @@ static MOZ_ALWAYS_INLINE NativeObject* NewObject(
   return obj;
 }
 
-NativeObject* js::NewObjectWithGivenTaggedProto(
-    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto,
-    gc::AllocKind allocKind, NewObjectKind newKind, ObjectFlags objFlags) {
-  return NewObject(cx, clasp, proto, allocKind, newKind, objFlags);
+NativeObject* js::NewObjectWithGivenTaggedProto(JSContext* cx,
+                                                const JSClass* clasp,
+                                                Handle<TaggedProto> proto,
+                                                gc::AllocKind allocKind,
+                                                NewObjectKind newKind) {
+  return NewObject(cx, clasp, proto, allocKind, newKind);
 }
 
 NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
                                           HandleObject protoArg,
                                           gc::AllocKind allocKind,
-                                          NewObjectKind newKind,
-                                          ObjectFlags objFlags) {
+                                          NewObjectKind newKind) {
   if (protoArg) {
     return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(protoArg),
-                                         allocKind, newKind, objFlags);
+                                         allocKind, newKind);
   }
 
   // Find the appropriate proto for clasp. Built-in classes have a cached
@@ -807,7 +810,7 @@ NativeObject* js::NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
   }
 
   Rooted<TaggedProto> taggedProto(cx, TaggedProto(proto));
-  return NewObject(cx, clasp, taggedProto, allocKind, newKind, objFlags);
+  return NewObject(cx, clasp, taggedProto, allocKind, newKind);
 }
 
 bool js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget,

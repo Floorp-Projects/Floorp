@@ -230,10 +230,6 @@ inline bool JSObject::hasInvalidatedTeleporting() const {
   return hasFlag(js::ObjectFlag::InvalidatedTeleporting);
 }
 
-inline bool JSObject::needsProxyGetSetResultValidation() const {
-  return hasFlag(js::ObjectFlag::NeedsProxyGetSetResultValidation);
-}
-
 MOZ_ALWAYS_INLINE bool JSObject::maybeHasInterestingSymbolProperty() const {
   if (is<js::NativeObject>()) {
     return as<js::NativeObject>().hasInterestingSymbol();
@@ -357,17 +353,14 @@ inline gc::Heap GetInitialHeap(NewObjectKind newKind, const JSClass* clasp,
 NativeObject* NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
                                             Handle<TaggedProto> proto,
                                             gc::AllocKind allocKind,
-                                            NewObjectKind newKind,
-                                            ObjectFlags objFlags);
+                                            NewObjectKind newKind);
 
 template <NewObjectKind NewKind>
 inline NativeObject* NewObjectWithGivenTaggedProto(JSContext* cx,
                                                    const JSClass* clasp,
-                                                   Handle<TaggedProto> proto,
-                                                   ObjectFlags objFlags) {
+                                                   Handle<TaggedProto> proto) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
-  return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, NewKind,
-                                       objFlags);
+  return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, NewKind);
 }
 
 namespace detail {
@@ -375,8 +368,7 @@ namespace detail {
 template <typename T, NewObjectKind NewKind>
 inline T* NewObjectWithGivenTaggedProtoForKind(JSContext* cx,
                                                Handle<TaggedProto> proto) {
-  JSObject* obj = NewObjectWithGivenTaggedProto<NewKind>(cx, &T::class_, proto,
-                                                         ObjectFlags());
+  JSObject* obj = NewObjectWithGivenTaggedProto<NewKind>(cx, &T::class_, proto);
   return obj ? &obj->as<T>() : nullptr;
 }
 
@@ -389,18 +381,25 @@ inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
                                                                         proto);
 }
 
+inline NativeObject* NewObjectWithGivenProto(
+    JSContext* cx, const JSClass* clasp, HandleObject proto,
+    gc::AllocKind allocKind, NewObjectKind newKind = GenericObject) {
+  return NewObjectWithGivenTaggedProto(cx, clasp, AsTaggedProto(proto),
+                                       allocKind, newKind);
+}
+
 inline NativeObject* NewObjectWithGivenProto(JSContext* cx,
                                              const JSClass* clasp,
                                              HandleObject proto) {
-  return NewObjectWithGivenTaggedProto<GenericObject>(
-      cx, clasp, AsTaggedProto(proto), ObjectFlags());
+  return NewObjectWithGivenTaggedProto<GenericObject>(cx, clasp,
+                                                      AsTaggedProto(proto));
 }
 
-inline NativeObject* NewTenuredObjectWithGivenProto(
-    JSContext* cx, const JSClass* clasp, HandleObject proto,
-    ObjectFlags objFlags = ObjectFlags()) {
-  return NewObjectWithGivenTaggedProto<TenuredObject>(
-      cx, clasp, AsTaggedProto(proto), objFlags);
+inline NativeObject* NewTenuredObjectWithGivenProto(JSContext* cx,
+                                                    const JSClass* clasp,
+                                                    HandleObject proto) {
+  return NewObjectWithGivenTaggedProto<TenuredObject>(cx, clasp,
+                                                      AsTaggedProto(proto));
 }
 
 template <typename T>
@@ -429,16 +428,13 @@ inline T* NewObjectWithGivenProtoAndKinds(JSContext* cx, HandleObject proto,
 NativeObject* NewObjectWithClassProto(JSContext* cx, const JSClass* clasp,
                                       HandleObject proto,
                                       gc::AllocKind allocKind,
-                                      NewObjectKind newKind = GenericObject,
-                                      ObjectFlags objFlags = ObjectFlags());
+                                      NewObjectKind newKind = GenericObject);
 
 inline NativeObject* NewObjectWithClassProto(
     JSContext* cx, const JSClass* clasp, HandleObject proto,
-    NewObjectKind newKind = GenericObject,
-    ObjectFlags objFlags = ObjectFlags()) {
+    NewObjectKind newKind = GenericObject) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
-  return NewObjectWithClassProto(cx, clasp, proto, allocKind, newKind,
-                                 objFlags);
+  return NewObjectWithClassProto(cx, clasp, proto, allocKind, newKind);
 }
 
 template <class T>
@@ -449,10 +445,8 @@ inline T* NewObjectWithClassProto(JSContext* cx, HandleObject proto) {
 
 template <class T>
 inline T* NewObjectWithClassProtoAndKind(JSContext* cx, HandleObject proto,
-                                         NewObjectKind newKind,
-                                         ObjectFlags objFlags = ObjectFlags()) {
-  JSObject* obj =
-      NewObjectWithClassProto(cx, &T::class_, proto, newKind, objFlags);
+                                         NewObjectKind newKind) {
+  JSObject* obj = NewObjectWithClassProto(cx, &T::class_, proto, newKind);
   return obj ? &obj->as<T>() : nullptr;
 }
 

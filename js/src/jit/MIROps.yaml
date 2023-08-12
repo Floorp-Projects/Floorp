@@ -522,31 +522,6 @@
   # The flags are packed with the length in a fixed private slot.
   alias_set: custom
 
-- name: LoadScriptedProxyHandler
-  operands:
-    object: Object
-  result_type: Object
-  congruent_to: if_operands_equal
-  alias_set: none
-
-#ifdef JS_PUNBOX64
-- name: CheckScriptedProxyGetResult
-  operands:
-    target: Value
-    id: Value
-    value: Value
-  guard: true
-  alias_set: custom
-#endif
-
-- name: IdToStringOrSymbol
-  operands:
-    idVal: Value
-  result_type: Value
-  congruent_to: if_operands_equal
-  alias_set: none
-  folds_to: custom
-
 # Given a MIRType::Value A and a MIRType::Object B:
 # If the Value may be safely unboxed to an Object, return Object(A).
 # Otherwise, return B.
@@ -1757,17 +1732,6 @@
   congruent_to: if_operands_equal
   alias_set: none
 
-- name: GuardHasProxyHandler
-  operands:
-    object: Object
-  arguments:
-    handler: const void*
-  result_type: Object
-  guard: true
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: none
-
 # Loads a specific JSObject* that was originally nursery-allocated.
 # See also WarpObjectField.
 - name: NurseryObject
@@ -2418,7 +2382,7 @@
   result_type: Object
   guard: true
   folds_to: custom
-  alias_set: custom
+  alias_set: none
 
 - name: CheckObjCoercible
   operands:
