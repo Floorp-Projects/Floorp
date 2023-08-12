@@ -2729,7 +2729,7 @@ bool WarpBuilder::build_CheckIsObj(BytecodeLocation loc) {
   MCheckIsObj* ins = MCheckIsObj::New(alloc(), val, uint8_t(kind));
   current->add(ins);
   current->push(ins);
-  return resumeAfter(ins, loc);
+  return true;
 }
 
 bool WarpBuilder::build_CheckObjCoercible(BytecodeLocation loc) {

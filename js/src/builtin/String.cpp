@@ -3992,19 +3992,8 @@ SharedShape* StringObject::assignInitialShape(JSContext* cx,
 
 JSObject* StringObject::createPrototype(JSContext* cx, JSProtoKey key) {
   Rooted<JSString*> empty(cx, cx->runtime()->emptyString);
-
-  // Because the `length` property of a StringObject is both non-configurable
-  // and non-writable, we need to take the slow path of proxy result
-  // validation for them, and so we need to ensure that the initial ObjectFlags
-  // reflect that. Normally this would be handled for us, but the special
-  // SharedShape::ensureInitialCustomShape path which ultimately takes us
-  // through StringObject::assignInitialShape which adds the problematic
-  // property sneaks past our flag setting logic and results in a failed
-  // lookup of the initial shape in SharedShape::insertInitialShape.
   Rooted<StringObject*> proto(
-      cx, GlobalObject::createBlankPrototype<StringObject>(
-              cx, cx->global(),
-              ObjectFlags({ObjectFlag::NeedsProxyGetSetResultValidation})));
+      cx, GlobalObject::createBlankPrototype<StringObject>(cx, cx->global()));
   if (!proto) {
     return nullptr;
   }
