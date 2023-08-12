@@ -46,9 +46,6 @@ on:
         description: generate profile for PGO.
         type: boolean
         default: false
-      beta:
-        type: boolean
-        default: false
       #? if set this, use profdata, jarlog in build
       build-with-profdata-and-jarlog:
         description: build with profdata and jarlog
@@ -88,7 +85,6 @@ jobs:
 
       env:
         GHA_profgen: ${{inputs.profgen}}
-        GHA_beta: ${{inputs.beta}}
         GHA_profdata_jarlog_artifact_name: ${{inputs.build-with-profdata-and-jarlog}}
         GHA_out-artifact-name: ${{inputs.out_artifact_name}}
 
@@ -163,12 +159,7 @@ jobs:
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
 
-        if [[ $GHA_beta != 'true' ]];then
-          echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
-        else
-          echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
-        fi
-
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
         echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
 
         if [[ $GHA_profgen == 'true' ]]; then
@@ -192,7 +183,6 @@ jobs:
         echo "UPDATE_CHANNEL=release" >> $GITHUB_ENV
       env:
         GHA_profgen: ${{inputs.profgen}}
-        GHA_beta: ${{inputs.beta}}
         GHA_profdata_jarlog_artifact_name : ${{inputs.build-with-profdata-and-jarlog}}
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
