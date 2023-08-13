@@ -111,7 +111,6 @@ nsresult GeckoMediaPluginServiceParent::Init() {
       obsService->AddObserver(this, "browser:purge-session-history", false));
   MOZ_ALWAYS_SUCCEEDS(
       obsService->AddObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false));
-  MOZ_ALWAYS_SUCCEEDS(obsService->AddObserver(this, "nsPref:changed", false));
 
 #ifdef DEBUG
   MOZ_ALWAYS_SUCCEEDS(obsService->AddObserver(
@@ -329,43 +328,9 @@ GeckoMediaPluginServiceParent::Observe(nsISupports* aSubject,
         "gmp::GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread",
         this, &GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread,
         t));
-  } else if (!strcmp("nsPref:changed", aTopic)) {
-    bool hasProcesses = false;
-    {
-      MutexAutoLock lock(mMutex);
-      for (const auto& plugin : mPlugins) {
-        if (plugin->State() == GMPState::Loaded) {
-          hasProcesses = true;
-          break;
-        }
-      }
-    }
-
-    if (hasProcesses) {
-      // We know prefs are ASCII here.
-      NS_LossyConvertUTF16toASCII strData(aSomeData);
-      mozilla::dom::Pref pref(strData, /* isLocked */ false,
-                              /* isSanitized */ false, Nothing(), Nothing());
-      Preferences::GetPreference(&pref, GeckoProcessType_GMPlugin,
-                                 /* remoteType */ ""_ns);
-      return GMPDispatch(NewRunnableMethod<mozilla::dom::Pref&&>(
-          "gmp::GeckoMediaPluginServiceParent::OnPreferenceChanged", this,
-          &GeckoMediaPluginServiceParent::OnPreferenceChanged,
-          std::move(pref)));
-    }
   }
 
   return NS_OK;
-}
-
-void GeckoMediaPluginServiceParent::OnPreferenceChanged(
-    mozilla::dom::Pref&& aPref) {
-  AssertOnGMPThread();
-
-  MutexAutoLock lock(mMutex);
-  for (const auto& plugin : mPlugins) {
-    plugin->OnPreferenceChange(aPref);
-  }
 }
 
 RefPtr<GenericPromise> GeckoMediaPluginServiceParent::EnsureInitialized() {
@@ -1829,94 +1794,82 @@ GMPServiceParent::~GMPServiceParent() {
 mozilla::ipc::IPCResult GMPServiceParent::RecvLaunchGMP(
     const NodeIdVariant& aNodeIdVariant, const nsACString& aAPI,
     nsTArray<nsCString>&& aTags, nsTArray<ProcessId>&& aAlreadyBridgedTo,
-    LaunchGMPResolver&& aResolve) {
-  GMPLaunchResult result;
-
+    uint32_t* aOutPluginId, GMPPluginType* aOutPluginType,
+    ProcessId* aOutProcessId, nsCString* aOutDisplayName,
+    Endpoint<PGMPContentParent>* aOutEndpoint, nsresult* aOutRv,
+    nsCString* aOutErrorDescription) {
   if (mService->IsShuttingDown()) {
-    result.pluginId() = 0;
-    result.pluginType() = GMPPluginType::Unknown;
-    result.pid() = base::kInvalidProcessId;
-    result.result() = NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-    result.errorDescription() = "Service is shutting down."_ns;
-    aResolve(std::move(result));
+    *aOutRv = NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+    *aOutErrorDescription = "Service is shutting down."_ns;
+    *aOutPluginId = 0;
+    *aOutPluginType = GMPPluginType::Unknown;
     return IPC_OK();
   }
 
   nsCString nodeIdString;
   nsresult rv = mService->GetNodeId(aNodeIdVariant, nodeIdString);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    result.pluginId() = 0;
-    result.pluginType() = GMPPluginType::Unknown;
-    result.pid() = base::kInvalidProcessId;
-    result.result() = rv;
-    result.errorDescription() = "GetNodeId failed."_ns;
-    aResolve(std::move(result));
+  if (!NS_SUCCEEDED(rv)) {
+    *aOutRv = rv;
+    *aOutErrorDescription = "GetNodeId failed."_ns;
+    *aOutPluginId = 0;
+    *aOutPluginType = GMPPluginType::Unknown;
     return IPC_OK();
   }
 
   RefPtr<GMPParent> gmp =
       mService->SelectPluginForAPI(nodeIdString, aAPI, aTags);
   if (gmp) {
-    result.pluginId() = gmp->GetPluginId();
-    result.pluginType() = gmp->GetPluginType();
+    *aOutPluginId = gmp->GetPluginId();
+    *aOutPluginType = gmp->GetPluginType();
   } else {
-    result.pluginId() = 0;
-    result.pluginType() = GMPPluginType::Unknown;
-    result.pid() = base::kInvalidProcessId;
-    result.result() = NS_ERROR_FAILURE;
-    result.errorDescription() = "SelectPluginForAPI returns nullptr."_ns;
-    aResolve(std::move(result));
+    *aOutRv = NS_ERROR_FAILURE;
+    *aOutErrorDescription = "SelectPluginForAPI returns nullptr."_ns;
+    *aOutPluginId = 0;
+    *aOutPluginType = GMPPluginType::Unknown;
     return IPC_OK();
   }
 
-  if (!gmp->EnsureProcessLoaded(&result.pid())) {
-    result.pid() = base::kInvalidProcessId;
-    result.result() = NS_ERROR_FAILURE;
-    result.errorDescription() = "Process has not loaded."_ns;
-    aResolve(std::move(result));
+  if (!gmp->EnsureProcessLoaded(aOutProcessId)) {
+    *aOutRv = NS_ERROR_FAILURE;
+    *aOutErrorDescription = "Process has not loaded."_ns;
     return IPC_OK();
   }
 
-  MOZ_ASSERT(result.pid() != base::kInvalidProcessId);
+  *aOutDisplayName = gmp->GetDisplayName();
 
-  result.displayName() = gmp->GetDisplayName();
-
-  if (aAlreadyBridgedTo.Contains(result.pid())) {
-    result.result() = NS_OK;
-    aResolve(std::move(result));
+  if (aAlreadyBridgedTo.Contains(*aOutProcessId)) {
+    *aOutRv = NS_OK;
     return IPC_OK();
   }
 
   Endpoint<PGMPContentParent> parent;
   Endpoint<PGMPContentChild> child;
-  rv = PGMPContent::CreateEndpoints(OtherPid(), result.pid(), &parent, &child);
+  rv =
+      PGMPContent::CreateEndpoints(OtherPid(), *aOutProcessId, &parent, &child);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    result.result() = rv;
-    result.errorDescription() = "PGMPContent::CreateEndpoints failed."_ns;
-    aResolve(std::move(result));
+    *aOutRv = rv;
+    *aOutErrorDescription = "PGMPContent::CreateEndpoints failed."_ns;
     return IPC_OK();
   }
 
+  *aOutEndpoint = std::move(parent);
+
   if (!gmp->SendInitGMPContentChild(std::move(child))) {
-    result.result() = NS_ERROR_FAILURE;
-    result.errorDescription() = "SendInitGMPContentChild failed."_ns;
+    *aOutRv = NS_ERROR_FAILURE;
+    *aOutErrorDescription = "SendInitGMPContentChild failed."_ns;
     return IPC_OK();
   }
 
   gmp->IncrementGMPContentChildCount();
 
-  result.result() = NS_OK;
-  result.endpoint() = std::move(parent);
-  aResolve(std::move(result));
+  *aOutRv = NS_OK;
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult GMPServiceParent::RecvGetGMPNodeId(
     const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
-    const nsAString& aGMPName, GetGMPNodeIdResolver&& aResolve) {
-  nsCString id;
-  nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin, aGMPName, id);
-  aResolve(id);
+    const nsAString& aGMPName, nsCString* aID) {
+  nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin, aGMPName, *aID);
   if (!NS_SUCCEEDED(rv)) {
     return IPC_FAIL(
         this,

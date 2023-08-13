@@ -9,7 +9,6 @@
 #include "base/string_util.h"
 #include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/BackgroundHangMonitor.h"
-#include "mozilla/GeckoArgs.h"
 
 using mozilla::ipc::IOThreadChild;
 
@@ -18,24 +17,27 @@ namespace mozilla::gmp {
 GMPProcessChild::~GMPProcessChild() = default;
 
 bool GMPProcessChild::Init(int aArgc, char* aArgv[]) {
-  Maybe<const char*> parentBuildID =
-      geckoargs::sParentBuildID.Get(aArgc, aArgv);
-  if (NS_WARN_IF(parentBuildID.isNothing())) {
-    return false;
-  }
+  nsAutoString pluginFilename;
 
-  Maybe<const char*> pluginPath = geckoargs::sPluginPath.Get(aArgc, aArgv);
-  if (NS_WARN_IF(pluginPath.isNothing())) {
-    return false;
-  }
+#if defined(XP_UNIX)
+  // NB: need to be very careful in ensuring that the first arg
+  // (after the binary name) here is indeed the plugin module path.
+  // Keep in sync with dom/plugins/PluginModuleParent.
+  std::vector<std::string> values = CommandLine::ForCurrentProcess()->argv();
+  MOZ_ASSERT(values.size() >= 2, "not enough args");
+  CopyUTF8toUTF16(nsDependentCString(values[1].c_str()), pluginFilename);
+#elif defined(XP_WIN)
+  std::vector<std::wstring> values =
+      CommandLine::ForCurrentProcess()->GetLooseValues();
+  MOZ_ASSERT(values.size() >= 1, "not enough loose args");
+  pluginFilename = nsDependentString(values[0].c_str());
+#else
+#  error Not implemented
+#endif
 
-  NS_ConvertUTF8toUTF16 widePluginPath(*pluginPath);
+  BackgroundHangMonitor::Startup();
 
-  if (!ProcessChild::InitPrefs(aArgc, aArgv)) {
-    return false;
-  }
-
-  return mPlugin->Init(widePluginPath, *parentBuildID, TakeInitialEndpoint());
+  return mPlugin->Init(pluginFilename, TakeInitialEndpoint());
 }
 
 void GMPProcessChild::CleanUp() { BackgroundHangMonitor::Shutdown(); }

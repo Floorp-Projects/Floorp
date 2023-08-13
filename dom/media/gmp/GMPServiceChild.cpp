@@ -5,6 +5,7 @@
 
 #include "GMPServiceChild.h"
 
+#include "GMPContentParent.h"
 #include "GMPLog.h"
 #include "GMPParent.h"
 #include "base/task.h"
@@ -121,112 +122,67 @@ GeckoMediaPluginServiceChild::GetContentParent(
       thread, __func__,
       [nodeIdVariant = aNodeIdVariant, self, api, tags = aTags.Clone(), helper,
        rawHolder](GMPServiceChild* child) {
+        UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(
+            rawHolder);
+        nsresult rv;
+
         nsTArray<base::ProcessId> alreadyBridgedTo;
+        child->GetAlreadyBridgedTo(alreadyBridgedTo);
 
-        // We want to force the content process to keep all of our
-        // GMPContentParent IPDL objects alive while we wait to resolve which
-        // process can satisfy our request. This avoids a race condition where
-        // the last dependency is released before we can acquire our own.
-        auto* rawBlockers =
-            new nsTArray<RefPtr<GMPContentParentCloseBlocker>>();
-        child->GetAndBlockAlreadyBridgedTo(alreadyBridgedTo, *rawBlockers);
+        base::ProcessId otherProcess;
+        nsCString displayName;
+        uint32_t pluginId = 0;
+        GMPPluginType pluginType = GMPPluginType::Unknown;
+        ipc::Endpoint<PGMPContentParent> endpoint;
+        nsCString errorDescription;
 
-        child->SendLaunchGMP(
-            nodeIdVariant, api, tags, alreadyBridgedTo,
-            [rawHolder, self, helper, rawBlockers,
-             child = RefPtr{child}](GMPLaunchResult&& aResult) {
-              UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(
-                  rawHolder);
-              UniquePtr<nsTArray<RefPtr<GMPContentParentCloseBlocker>>>
-                  blockers(rawBlockers);
-              if (helper && aResult.pluginId()) {
-                // Note: Even if the launch failed, we need to connect the crash
-                // helper so that if the launch failed due to the plugin
-                // crashing, we can report the crash via the crash reporter. The
-                // crash handling notification will arrive shortly if the launch
-                // failed due to the plugin crashing.
-                self->ConnectCrashHelper(aResult.pluginId(), helper);
-              }
+        bool ok = child->SendLaunchGMP(
+            nodeIdVariant, api, tags, alreadyBridgedTo, &pluginId, &pluginType,
+            &otherProcess, &displayName, &endpoint, &rv, &errorDescription);
 
-              if (NS_WARN_IF(NS_FAILED(aResult.result()))) {
-                MediaResult error(
-                    aResult.result(),
-                    nsPrintfCString(
-                        "GeckoMediaPluginServiceChild::GetContentParent "
-                        "SendLaunchGMPForNodeId failed with description (%s)",
-                        aResult.errorDescription().get()));
+        if (helper && pluginId) {
+          // Note: Even if the launch failed, we need to connect the crash
+          // helper so that if the launch failed due to the plugin crashing, we
+          // can report the crash via the crash reporter. The crash handling
+          // notification will arrive shortly if the launch failed due to the
+          // plugin crashing.
+          self->ConnectCrashHelper(pluginId, helper);
+        }
 
-                GMP_LOG_DEBUG("%s failed to launch GMP with error: %s",
-                              __CLASS__, aResult.errorDescription().get());
-                self->mPendingGetContentParents -= 1;
-                self->RemoveShutdownBlockerIfNeeded();
+        if (!ok || NS_FAILED(rv)) {
+          MediaResult error(
+              rv, nsPrintfCString(
+                      "GeckoMediaPluginServiceChild::GetContentParent "
+                      "SendLaunchGMPForNodeId failed with description (%s)",
+                      errorDescription.get()));
 
-                holder->Reject(error, __func__);
-                return;
-              }
+          GMP_LOG_DEBUG("%s failed to launch GMP with error: %s", __CLASS__,
+                        error.Description().get());
+          self->mPendingGetContentParents -= 1;
+          self->RemoveShutdownBlockerIfNeeded();
 
-              // If we didn't explicitly fail, we should have been told about a
-              // process running.
-              MOZ_ASSERT(aResult.pid() != base::kInvalidProcessId);
+          holder->Reject(error, __func__);
+          return;
+        }
 
-              // It is possible the GMP process may have terminated before we
-              // were able to process this result. In that case, we should just
-              // fail as normal as the initialization of the IPDL objects would
-              // have just failed anyways and produced the same result.
-              bool contains = child->HasAlreadyBridgedTo(aResult.pid());
-              if (NS_WARN_IF(!contains && !aResult.endpoint().IsValid())) {
-                MediaResult error(
-                    aResult.result(),
-                    "GeckoMediaPluginServiceChild::GetContentParent "
-                    "SendLaunchGMPForNodeId failed with process exit"_ns);
+        RefPtr<GMPContentParent> parent = child->GetBridgedGMPContentParent(
+            otherProcess, std::move(endpoint));
+        if (!alreadyBridgedTo.Contains(otherProcess)) {
+          parent->SetDisplayName(displayName);
+          parent->SetPluginId(pluginId);
+          parent->SetPluginType(pluginType);
+        }
 
-                GMP_LOG_DEBUG("%s failed to launch GMP with process exit",
-                              __CLASS__);
-                self->mPendingGetContentParents -= 1;
-                self->RemoveShutdownBlockerIfNeeded();
+        // The content parent is no longer pending.
+        self->mPendingGetContentParents -= 1;
+        MOZ_ASSERT(child->HaveContentParents(),
+                   "We should have at least one content parent!");
+        // We don't check if we need to remove the shutdown blocker here as
+        // we should always have at least one live content parent.
 
-                holder->Reject(error, __func__);
-                return;
-              }
-
-              RefPtr<GMPContentParent> parent =
-                  child->GetBridgedGMPContentParent(
-                      aResult.pid(), std::move(aResult.endpoint()));
-              if (!contains) {
-                parent->SetDisplayName(aResult.displayName());
-                parent->SetPluginId(aResult.pluginId());
-                parent->SetPluginType(aResult.pluginType());
-              }
-
-              // The content parent is no longer pending.
-              self->mPendingGetContentParents -= 1;
-              MOZ_ASSERT(child->HaveContentParents(),
-                         "We should have at least one content parent!");
-              // We don't check if we need to remove the shutdown blocker here
-              // as we should always have at least one live content parent.
-
-              RefPtr<GMPContentParentCloseBlocker> blocker(
-                  new GMPContentParentCloseBlocker(parent));
-              holder->Resolve(blocker, __func__);
-            },
-            [rawHolder, self, helper,
-             rawBlockers](const ipc::ResponseRejectReason&) {
-              UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(
-                  rawHolder);
-              UniquePtr<nsTArray<RefPtr<GMPContentParentCloseBlocker>>>
-                  blockers(rawBlockers);
-              MediaResult error(
-                  NS_ERROR_FAILURE,
-                  "GeckoMediaPluginServiceChild::GetContentParent "
-                  "SendLaunchGMPForNodeId failed with IPC error"_ns);
-
-              GMP_LOG_DEBUG("%s failed to launch GMP with IPC error",
-                            __CLASS__);
-              self->mPendingGetContentParents -= 1;
-              self->RemoveShutdownBlockerIfNeeded();
-
-              holder->Reject(error, __func__);
-            });
+        RefPtr<GMPContentParent::CloseBlocker> blocker(
+            new GMPContentParent::CloseBlocker(parent));
+        holder->Resolve(blocker, __func__);
       },
       [self, rawHolder](MediaResult result) {
         self->mPendingGetContentParents -= 1;
@@ -364,16 +320,14 @@ GeckoMediaPluginServiceChild::GetNodeId(
   GetServiceChild()->Then(
       thread, __func__,
       [rawCallback, origin, topLevelOrigin, gmpName](GMPServiceChild* child) {
-        child->SendGetGMPNodeId(
-            origin, topLevelOrigin, gmpName,
-            [rawCallback](nsCString&& aId) {
-              UniquePtr<GetNodeIdCallback> callback(rawCallback);
-              callback->Done(NS_OK, aId);
-            },
-            [rawCallback](const ipc::ResponseRejectReason&) {
-              UniquePtr<GetNodeIdCallback> callback(rawCallback);
-              callback->Done(NS_ERROR_FAILURE, ""_ns);
-            });
+        UniquePtr<GetNodeIdCallback> callback(rawCallback);
+        nsCString outId;
+        if (!child->SendGetGMPNodeId(origin, topLevelOrigin, gmpName, &outId)) {
+          callback->Done(NS_ERROR_FAILURE, ""_ns);
+          return;
+        }
+
+        callback->Done(NS_OK, outId);
       },
       [rawCallback](nsresult rv) {
         UniquePtr<GetNodeIdCallback> callback(rawCallback);
@@ -550,19 +504,9 @@ void GMPServiceChild::RemoveGMPContentParent(
   }
 }
 
-bool GMPServiceChild::HasAlreadyBridgedTo(base::ProcessId aPid) const {
-  return mContentParents.Contains(aPid);
-}
-
-void GMPServiceChild::GetAndBlockAlreadyBridgedTo(
-    nsTArray<base::ProcessId>& aAlreadyBridgedTo,
-    nsTArray<RefPtr<GMPContentParentCloseBlocker>>& aBlockers) {
-  aAlreadyBridgedTo.SetCapacity(mContentParents.Count());
-  aBlockers.SetCapacity(mContentParents.Count());
-  for (auto iter = mContentParents.Iter(); !iter.Done(); iter.Next()) {
-    aAlreadyBridgedTo.AppendElement(iter.Key());
-    aBlockers.AppendElement(new GMPContentParentCloseBlocker(iter.UserData()));
-  }
+void GMPServiceChild::GetAlreadyBridgedTo(
+    nsTArray<base::ProcessId>& aAlreadyBridgedTo) {
+  AppendToArray(aAlreadyBridgedTo, mContentParents.Keys());
 }
 
 class OpenPGMPServiceChild : public mozilla::Runnable {

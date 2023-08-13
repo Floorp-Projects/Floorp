@@ -508,7 +508,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   MessageLoop::Type uiLoopType;
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Content:
-    case GeckoProcessType_GMPlugin:
     case GeckoProcessType_GPU:
     case GeckoProcessType_IPDLUnitTest:
     case GeckoProcessType_VR:
@@ -518,6 +517,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
       // Content processes need the XPCOM/chromium frankenventloop
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
       break;
+    case GeckoProcessType_GMPlugin:
     case GeckoProcessType_RemoteSandboxBroker:
       uiLoopType = MessageLoop::TYPE_DEFAULT;
       break;

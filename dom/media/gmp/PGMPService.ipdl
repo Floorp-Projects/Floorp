@@ -6,34 +6,29 @@
 include protocol PGMPContent;
 include GMPTypes;
 
-using mozilla::ipc::Endpoint from "mozilla/ipc/Endpoint.h";
 using base::ProcessId from "base/process.h";
 using GMPPluginType from "GMPNativeTypes.h";
 
 namespace mozilla {
 namespace gmp {
 
-struct GMPLaunchResult {
-  uint32_t pluginId;
-  GMPPluginType pluginType;
-  ProcessId pid;
-  nsCString displayName;
-  Endpoint<PGMPContentParent> endpoint;
-  nsresult result;
-  nsCString errorDescription;
-};
-
 [NeedsOtherPid, ChildImpl=virtual, ParentImpl=virtual]
-async protocol PGMPService
+sync protocol PGMPService
 {
 parent:
-  async LaunchGMP(NodeIdVariant nodeIdVariant,
-                  nsCString api,
-                  nsCString[] tags,
-                  ProcessId[] alreadyBridgedTo)
-    returns (GMPLaunchResult aResult);
+  sync LaunchGMP(NodeIdVariant nodeIdVariant,
+                 nsCString api,
+                 nsCString[] tags,
+                 ProcessId[] alreadyBridgedTo)
+    returns (uint32_t pluginId,
+             GMPPluginType pluginType,
+             ProcessId id,
+             nsCString displayName,
+             Endpoint<PGMPContentParent> endpoint,
+             nsresult aResult,
+             nsCString aErrorDescription);
 
-  async GetGMPNodeId(nsString origin, nsString topLevelOrigin, nsString gmpName)
+  sync GetGMPNodeId(nsString origin, nsString topLevelOrigin, nsString gmpName)
     returns (nsCString id);
 child:
   async BeginShutdown();
