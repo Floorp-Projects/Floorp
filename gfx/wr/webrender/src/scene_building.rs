@@ -62,7 +62,7 @@ use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, SurfaceInfo
 use crate::picture_graph::PictureGraph;
 use crate::prim_store::{PrimitiveInstance};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
-use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex, PictureIndex};
+use crate::prim_store::{InternablePrimitive, PictureIndex, SegmentInstanceIndex};
 use crate::prim_store::{PolygonKey};
 use crate::prim_store::backdrop::{BackdropCapture, BackdropRender};
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};

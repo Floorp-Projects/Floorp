@@ -667,6 +667,7 @@ impl InternablePrimitive for PrimitiveKeyKind {
 pub struct VisibleMaskImageTile {
     pub tile_offset: TileOffset,
     pub tile_rect: LayoutRect,
+    pub task_id: RenderTaskId,
 }
 
 #[derive(Debug)]

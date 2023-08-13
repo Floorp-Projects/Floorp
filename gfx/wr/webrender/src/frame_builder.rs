@@ -355,6 +355,7 @@ impl FrameBuilder {
                             data_stores,
                             composite_state,
                             clip_tree: &mut scene.clip_tree,
+                            rg_builder,
                         };
 
                         // If we have a tile cache for this picture, see if any of the
