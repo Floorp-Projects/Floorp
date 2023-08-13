@@ -329,8 +329,8 @@ jobs:
           /home/runner/downloads/artifacts/linux-aarch64/LINUX-aarch64.mar
           /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.mar
           /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.mar
-          /home/runner/downloads/artifacts/linux-x64/floorp-*.en-US.linux-x86_64.tar.bz2
-          /home/runner/downloads/artifacts/linux-aarch64/floorp-*.en-US.linux-aarch64.tar.bz2
+          /home/runner/downloads/artifacts/linux-x64/floorp-*.linux-x86_64.tar.bz2
+          /home/runner/downloads/artifacts/linux-aarch64/floorp-*.linux-aarch64.tar.bz2
           /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
           /home/runner/downloads/artifacts/windows-x64/floorp-*.en-US.win64.zip
           /home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg
@@ -351,6 +351,8 @@ jobs:
     steps:
     - name: Run GitHub Actions for Release x86_64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
@@ -366,6 +368,8 @@ jobs:
 
     - name: Run GitHub Actions for Release aarch64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
@@ -381,6 +385,8 @@ jobs:
 
     - name: Run GitHub Actions for Release x86_64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
@@ -398,6 +404,8 @@ jobs:
 
     - name: Run GitHub Actions for Release aarch64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
+        echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
+        sleep 60
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
@@ -441,7 +449,7 @@ jobs:
             "ref": "ESR115",
             "inputs": {
               "ppa": "true",
-              "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2"
+              "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-x86_64.tar.bz2"
             }
           }'
 
@@ -455,7 +463,7 @@ jobs:
             "ref": "ESR115",
             "inputs": {
               "ppa": "false",
-              "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2"
+              "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.linux-x86_64.tar.bz2"
             }
           }'
 

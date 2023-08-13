@@ -68,7 +68,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        runs-on: ${{ fromJson('[["ubuntu-latest"],"[buildjet-16vcpu-ubuntu-2204"]]')[inputs.buildjet] }}
+        runs-on: ${{ fromJson('[["ubuntu-latest"], ["buildjet-16vcpu-ubuntu-2204"]]')[inputs.buildjet] }}
         arch: [x86_64, aarch64]
     steps:
     - name: Use Node.js
