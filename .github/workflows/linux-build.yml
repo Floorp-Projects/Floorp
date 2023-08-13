@@ -30,8 +30,6 @@ on:
       beta:
         type: boolean
         default: false
-      #! does not compartible with aarch64
-      #? maybe light change needed to fix
       mar:
         type: boolean
         default: false
@@ -232,16 +230,36 @@ jobs:
       id: gen-mar
       if: inputs.mar
       run: |
-        touch "obj-x86_64-pc-linux-gnu/dist/floorp/precomplete"
-        MAR="obj-x86_64-pc-linux-gnu/dist/host/bin/mar" \
-        MOZ_PRODUCT_VERSION=$(cat browser/config/version_display.txt) \
-        MAR_CHANNEL_ID=release \
-        ./tools/update-packaging/make_full_update.sh ~/output "obj-x86_64-pc-linux-gnu/dist/floorp"
+        if [[ $GHA_ARCH == 'aarch64' ]];then
 
-        mv ~/output/*.mar ~/output/LINUX-x86_64.mar
+          touch "obj-aarch64-unknown-linux-gnu/dist/floorp/precomplete"
 
-        echo "MAR_NAME=LINUX-x86_64.mar" >> $GITHUB_OUTPUT
-        echo "MAR_SIZE=$(stat -c "%s" ~/output/LINUX-x86_64.mar)" >> $GITHUB_OUTPUT
+          MAR="obj-aarch64-unknown-linux-gnu/dist/host/bin/mar" \
+          MOZ_PRODUCT_VERSION=$(cat browser/config/version_display.txt) \
+          MAR_CHANNEL_ID=release \
+          ./tools/update-packaging/make_full_update.sh ~/output "obj-aarch64-unknown-linux-gnu/dist/floorp"
+
+          mv ~/output/*.mar ~/output/LINUX-aarch64.mar
+
+          echo "MAR_NAME=LINUX-aarch64.mar" >> $GITHUB_OUTPUT
+          echo "MAR_SIZE=$(stat -c "%s" ~/output/LINUX-aarch64.mar)" >> $GITHUB_OUTPUT
+  
+        else
+
+          touch "obj-x86_64-pc-linux-gnu/dist/floorp/precomplete"
+
+          MAR="obj-x86_64-pc-linux-gnu/dist/host/bin/mar" \
+          MOZ_PRODUCT_VERSION=$(cat browser/config/version_display.txt) \
+          MAR_CHANNEL_ID=release \
+          ./tools/update-packaging/make_full_update.sh ~/output "obj-x86_64-pc-linux-gnu/dist/floorp"
+
+          mv ~/output/*.mar ~/output/LINUX-x86_64.mar
+
+          echo "MAR_NAME=LINUX-x86_64.mar" >> $GITHUB_OUTPUT
+          echo "MAR_SIZE=$(stat -c "%s" ~/output/LINUX-x86_64.mar)" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GHA_ARCH: ${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}}
 
     #PUBLISH START
     - name: Publish🎁

@@ -263,8 +263,8 @@ jobs:
 
         if [[ $GHA_zstd != 'true' ]];then
           cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer-stub.exe ~/output/
-          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer.exe ~/output/
           cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip ~/output/
+          cp obj-${arch}-pc-windows-msvc/dist/install/sea/floorp-*.en-US.${arch_inst}.installer.exe ~/output/floorp-win64.installer.exe
         else
           cp obj-${arch}-pc-windows-msvc/dist/floorp-*.en-US.${arch_inst}.zip ~/output/
           7z x ~/output/floorp-*.en-US.${arch_inst}.zip
@@ -276,6 +276,7 @@ jobs:
       env:
         GHA_aarch64: ${{inputs.aarch64}}
         GHA_zstd: ${{inputs.zstd}}
+        GHA_beta: ${{inputs.beta}}
 
     - name: Create MAR artifact 📦
       id: gen-mar
