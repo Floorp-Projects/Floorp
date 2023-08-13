@@ -206,7 +206,7 @@ jobs:
         fi
         ./mach package
 
-        ./mach package-multi-locale --locales ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW
+        ./mach package-multi-locale --locales ar cs da de el en-US en-GB es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th tr vi zh-CN zh-TW
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
