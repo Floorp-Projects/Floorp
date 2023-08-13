@@ -66,6 +66,7 @@ jobs:
       profgen: true
       aarch64: false
       zstd: true
+      buildjet: true
 
   Part2-win-x86_64-gen-profdata-and-jarlog:
     needs: Part1-win-x86_64-build-with-profgen-zstd
@@ -117,6 +118,7 @@ jobs:
       aarch64: false
       mar: true
       beta: false
+      buildjet: true
       profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
       out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
@@ -130,6 +132,7 @@ jobs:
       aarch64: false
       beta: false
       mar: true
+      buildjet: true
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
 
 ################################################################ ↑ Linux x86_64 Build ####################################################################################
@@ -140,6 +143,7 @@ jobs:
       aarch64: true
       beta: false
       mar: true
+      buildjet: true
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
 
 ################################################ ↑ Linux AArch64 Build ################################################
@@ -150,6 +154,7 @@ jobs:
     uses: ./.github/workflows/macOS-Universal.yml
     with:
       profgen: true
+      buildjet: true
     secrets:
       MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
 
@@ -234,6 +239,7 @@ jobs:
     uses: ./.github/workflows/macOS-Universal.yml
     needs: [get-buildid,  Part2-macOS-Universal-gen-profdata-and-jarlog]
     with:
+      buildjet: true
       build-with-profdata-and-jarlog: true
       beta: false
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
