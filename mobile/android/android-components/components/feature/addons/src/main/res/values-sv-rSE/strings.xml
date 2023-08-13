@@ -170,6 +170,8 @@
     <string name="mozac_feature_addons_successfully_installed">%1$s har installerats</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Det gick inte att installera %1$s</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted">%1$s kunde inte installeras eftersom det finns en stor risk för att stabilitets- eller säkerhetsproblem uppstår</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s har aktiverats</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

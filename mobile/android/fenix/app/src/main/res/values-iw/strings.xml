@@ -551,7 +551,7 @@
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">‏%s קלאסי</string>
     <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title">מהדורה מוגבלת</string>
+    <string name="wallpaper_limited_edition_title" moz:RemovedIn="118" tools:ignore="UnusedResources">מהדורה מוגבלת</string>
 
     <!-- Wallpaper onboarding dialog body text. -->
     <string name="wallpapers_onboarding_dialog_body_text">אפשר לבחור טפט שהולם אותך.</string>
@@ -1144,7 +1144,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">סגירה</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">לא ניתן להדפיס</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">לא ניתן להדפיס</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">לא ניתן להדפיס דף זה</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">הדפסה</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
