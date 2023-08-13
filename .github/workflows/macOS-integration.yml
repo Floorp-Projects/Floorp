@@ -186,7 +186,7 @@ jobs:
            chmod +x ./floorp/build/bin/mac/mar
            chmod +x ./tools/update-packaging/make_full_update.sh
            touch "obj-x86_64-apple-darwin/dist/floorp/precomplete"
-           MAR="floorp/build/bin/mac/mar" MOZ_PRODUCT_VERSION=${{ inputs.display_version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal-${{ inputs.display_version }}.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
+           MAR="floorp/build/bin/mac/mar" MOZ_PRODUCT_VERSION=${{ inputs.display_version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
 
            export MACOS_MAR_SIZE=`stat -f%z ./output/DARWIN-Universal.mar`
            echo "MACOS_MAR_SIZE=$MACOS_MAR_SIZE" >> $GITHUB_ENV
