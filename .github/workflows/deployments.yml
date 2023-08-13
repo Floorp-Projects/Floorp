@@ -133,7 +133,7 @@ jobs:
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
 
 ################################################################ ↑ Linux x86_64 Build ####################################################################################
-  Part1-linux-aarch64-build-with-PGO:
+  Part1-linux-aarch64-build:
     uses: ./.github/workflows/linux-build.yml
     needs: [get-buildid]
     with:
@@ -262,7 +262,7 @@ jobs:
 ####################################################################### macOS Universal #######################################################################
 
   Deploy-to-installer:
-    needs: [Part1-linux-x86_64-build-with-PGO, Part1-linux-aarch64-build-with-PGO, Part4-macOS-Universal-package-and-sign, Part3-win-x86_64-build-with-profdata-and-jarlog, get-display-version]
+    needs: [Part1-linux-x86_64-build-with-PGO, Part1-linux-aarch64-build, Part4-macOS-Universal-package-and-sign, Part3-win-x86_64-build-with-profdata-and-jarlog, get-display-version]
     runs-on: ubuntu-latest
     environment: 
       name: Deploy-to-installer-release
