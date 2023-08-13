@@ -9,7 +9,6 @@
 #include "base/task.h"
 #include "ChildProfilerController.h"
 #include "ChromiumCDMAdapter.h"
-#include "GeckoProfiler.h"
 #ifdef XP_LINUX
 #  include "dlfcn.h"
 #endif
@@ -39,7 +38,6 @@
 #include "nsThreadManager.h"
 #include "nsXULAppAPI.h"
 #include "nsIXULRuntime.h"
-#include "nsXPCOM.h"
 #include "prio.h"
 #ifdef XP_WIN
 #  include <stdlib.h>  // for _exit()
@@ -76,7 +74,7 @@ GMPChild::~GMPChild() {
 #endif
 }
 
-bool GMPChild::Init(const nsAString& aPluginPath, const char* aParentBuildID,
+bool GMPChild::Init(const nsAString& aPluginPath,
                     mozilla::ipc::UntypedEndpoint&& aEndpoint) {
   GMP_CHILD_LOG_DEBUG("%s pluginPath=%s", __FUNCTION__,
                       NS_ConvertUTF16toUTF8(aPluginPath).get());
@@ -91,34 +89,9 @@ bool GMPChild::Init(const nsAString& aPluginPath, const char* aParentBuildID,
     return false;
   }
 
-  // This must be checked before any IPDL message, which may hit sentinel
-  // errors due to parent and content processes having different
-  // versions.
-  MessageChannel* channel = GetIPCChannel();
-  if (channel && !channel->SendBuildIDsMatchMessage(aParentBuildID)) {
-    // We need to quit this process if the buildID doesn't match the parent's.
-    // This can occur when an update occurred in the background.
-    ipc::ProcessChild::QuickExit();
-  }
-
   CrashReporterClient::InitSingleton(this);
 
-  if (NS_WARN_IF(NS_FAILED(NS_InitMinimalXPCOM()))) {
-    return false;
-  }
-
   mPluginPath = aPluginPath;
-
-  nsAutoCString processName("GMPlugin Process");
-
-  nsAutoCString pluginName;
-  if (GetPluginName(pluginName)) {
-    processName.AppendLiteral(" (");
-    processName.Append(pluginName);
-    processName.AppendLiteral(")");
-  }
-
-  profiler_set_process_name(processName);
 
   return true;
 }
@@ -282,24 +255,6 @@ bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
   }
 
   CopyUTF16toUTF8(path, aOutLibPath);
-  return true;
-}
-
-bool GMPChild::GetPluginName(nsACString& aPluginName) const {
-  // Extract the plugin directory name if possible.
-  nsCOMPtr<nsIFile> libFile;
-  nsresult rv = NS_NewLocalFile(mPluginPath, true, getter_AddRefs(libFile));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  nsCOMPtr<nsIFile> parent;
-  rv = libFile->GetParent(getter_AddRefs(parent));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  nsAutoString parentLeafName;
-  rv = parent->GetLeafName(parentLeafName);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  aPluginName.Assign(NS_ConvertUTF16toUTF8(parentLeafName));
   return true;
 }
 
@@ -694,11 +649,6 @@ mozilla::ipc::IPCResult GMPChild::RecvInitProfiler(
     Endpoint<PProfilerChild>&& aEndpoint) {
   mProfilerController =
       mozilla::ChildProfilerController::Create(std::move(aEndpoint));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult GMPChild::RecvPreferenceUpdate(const Pref& aPref) {
-  Preferences::SetPreference(aPref);
   return IPC_OK();
 }
 

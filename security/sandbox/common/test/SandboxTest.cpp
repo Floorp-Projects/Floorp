@@ -202,7 +202,7 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
               service->GetContentParentForTest()->Then(
                   thread, __func__,
                   [self, processPromise](
-                      const RefPtr<gmp::GMPContentParentCloseBlocker>&
+                      const RefPtr<gmp::GMPContentParent::CloseBlocker>&
                           wrapper) {
                     RefPtr<gmp::GMPContentParent> parent = wrapper->mParent;
                     MOZ_ASSERT(parent,

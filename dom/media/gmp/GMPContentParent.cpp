@@ -199,22 +199,4 @@ nsresult GMPContentParent::GetGMPVideoEncoder(GMPVideoEncoderParent** aGMPVE) {
   return NS_OK;
 }
 
-void GMPContentParentCloseBlocker::Destroy() {
-  MOZ_ASSERT(mParent);
-  MOZ_ASSERT(mEventTarget);
-
-  if (!mEventTarget->IsOnCurrentThread()) {
-    mEventTarget->Dispatch(NS_NewRunnableFunction(
-        __func__, [parent = std::move(mParent), eventTarget = mEventTarget]() {
-          parent->RemoveCloseBlocker();
-        }));
-    mEventTarget = nullptr;
-    return;
-  }
-
-  mParent->RemoveCloseBlocker();
-  mParent = nullptr;
-  mEventTarget = nullptr;
-}
-
 }  // namespace mozilla::gmp
