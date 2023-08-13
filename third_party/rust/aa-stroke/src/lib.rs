@@ -540,7 +540,7 @@ fn line_intersection(a: Point, a_perp: Vector, b: Point, b_perp: Vector) -> Opti
 
 fn is_interior_angle(a: Vector, b: Vector) -> bool {
     /* angles of 180 and 0 degress will evaluate to 0, however
-     * we to treat 180 as an interior angle and 180 as an exterior angle */
+     * we to treat 0 as an interior angle and 180 as an exterior angle */
     dot(perp(a), b) > 0. || a == b /* 0 degrees is interior */
 }
 
@@ -659,7 +659,9 @@ impl<'z> Stroker<'z> {
     pub fn line_to_capped(&mut self, pt: Point) {
         if let Some(cur_pt) = self.cur_pt {
             let normal = compute_normal(cur_pt, pt).unwrap_or(self.last_normal);
-            self.line_to(if self.stroked_path.aa && self.style.cap == LineCap::Butt { pt - flip(normal) * 0.5} else { pt });
+            // if we have a butt cap end the line half a pixel early so we have room to put the cap.
+            // XXX: this will probably mess things up if the line is shorter than 1/2 pixel long
+            self.line_to(if self.stroked_path.aa && self.style.cap == LineCap::Butt { pt + perp(normal) * 0.5} else { pt });
             if let (Some(cur_pt), Some((_point, _normal))) = (self.cur_pt, self.start_point) {
                 // cap end
                 cap_line(&mut self.stroked_path, &self.style, cur_pt, self.last_normal);
@@ -686,10 +688,13 @@ impl<'z> Stroker<'z> {
                 if self.start_point.is_none() {
                     if !self.closed_subpath {
                         // cap beginning
-                        cap_line(stroked_path, &self.style, cur_pt, flip(normal));
+                        let mut cur_pt = cur_pt;
                         if stroked_path.aa && self.style.cap == LineCap::Butt {
-                            
+                            // adjust the starting point to make room for the cap
+                            // XXX: this will probably mess things up if the line is shorter than 1/2 pixel long
+                            cur_pt += perp(flip(normal)) * 0.5;
                         }
+                        cap_line(stroked_path, &self.style, cur_pt, flip(normal));
                     }
                     self.start_point = Some((cur_pt, normal));
                 } else {
@@ -886,6 +891,21 @@ fn curve() {
         stroker.close();
     let stroked = stroker.finish();
     assert_eq!(stroked.len(), 1089);
+}
+
+#[test]
+fn butt_cap() {
+    let mut stroker = Stroker::new(&StrokeStyle{
+        cap: LineCap::Butt,
+        join: LineJoin::Bevel,
+        width: 1.,
+        ..Default::default()});
+    stroker.move_to(Point::new(20., 20.5), false);
+    stroker.line_to_capped(Point::new(40., 20.5));
+    let result = stroker.finish();
+    for v in result {
+        assert!(v.y == 20.5 || v.y == 19.5 || v.y == 21.5);
+    }
 }
 
 #[test]

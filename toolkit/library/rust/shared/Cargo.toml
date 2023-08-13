@@ -95,7 +95,7 @@ processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
 wpf-gpu-raster = { git = "https://github.com/FirefoxGraphics/wpf-gpu-raster", rev = "5ab6fe33d00021325ee920b3c10526dc8301cf46" }
-aa-stroke = { git = "https://github.com/FirefoxGraphics/aa-stroke", rev = "cfe9ee39f5af56ae26004835d90c4bb2973ce519" }
+aa-stroke = { git = "https://github.com/FirefoxGraphics/aa-stroke", rev = "c1916bc1b5336438207881a362fc3dd921d915e4" }
 
 # Force url to stay at 2.1.0. See bug 1734538.
 url = "=2.1.0"
