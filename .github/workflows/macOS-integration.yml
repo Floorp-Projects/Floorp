@@ -219,6 +219,4 @@ jobs:
             name: ${{ env.ARTIFACT_NAME }}
             if-no-files-found: ignore
             path: |
-             ./output/floorp-macOS-universal.dmg
-             ./output/DARWIN-Universal-${{ inputs.display_version }}.mar
-             ./output/DARWIN-Universal.xml
+             ./output/

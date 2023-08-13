@@ -334,6 +334,13 @@ jobs:
           /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
           /home/runner/downloads/artifacts/windows-x64/floorp-*.en-US.win64.zip
           /home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg
+        tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
+        name: "v${{ needs.get-display-version.outputs.display-version }}"
+        draft: false
+        prerelease: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
 
   Deploy-to-updater:
     needs: [get-display-version, Deploy-to-installer, get-buildid, get-inside-version]
@@ -351,7 +358,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-x86_64.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-x86_64.mar",
               "os": "Linux",
               "arch": "x86_64"
             }
@@ -366,7 +373,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64.mar",
               "os": "Linux",
               "arch": "aarch64"
             }
@@ -381,7 +388,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal.mar",
               "os": "Darwin",
               "arch": "x86_64",
               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
@@ -398,7 +405,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal.mar",
               "os": "Darwin",
               "arch": "aarch64",
               "buildid": "${{ needs.get-buildid.outputs.buildids }}",
@@ -418,7 +425,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
               "os": "WINNT",
               "arch": "x86_64"
             }
@@ -429,12 +436,12 @@ jobs:
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-x64-deb.yml/dispatches" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/workflows/linux-x64-deb.yml/dispatches" \
           -d '{
             "ref": "ESR115",
             "inputs": {
               "ppa": "true",
-              "tarball-url-x86-64": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2"
+              "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2"
             }
           }'
 
@@ -443,12 +450,12 @@ jobs:
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-x64-deb.yml/dispatches" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/workflows/linux-x64-deb.yml/dispatches" \
           -d '{
             "ref": "ESR115",
             "inputs": {
               "ppa": "false",
-              "tarball-url-x86-64": "https://github.com/Floorp-Projects/Floorp/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2"
+              "tarball-url-x86-64": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2"
             }
           }'
 
