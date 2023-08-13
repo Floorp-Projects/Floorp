@@ -942,11 +942,15 @@ const workspaceFunctions = {
       }
 
       let willMoveWorkspace = workspace;
-      for (let i = 0; i < gBrowser.selectedTabs.length; i++) {
-        gBrowser.selectedTabs[i].setAttribute(
-          "floorpWorkspace",
-          willMoveWorkspace
-        );
+      if (gBrowser.selectedTabs.length > 1) {
+        for (let i = 0; i < gBrowser.selectedTabs.length; i++) {
+          gBrowser.selectedTabs[i].setAttribute(
+            "floorpWorkspace",
+            willMoveWorkspace
+          );
+        }
+      } else {
+        tab.setAttribute("floorpWorkspace", willMoveWorkspace);
       }
 
       workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
