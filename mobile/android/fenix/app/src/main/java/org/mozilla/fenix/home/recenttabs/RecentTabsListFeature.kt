@@ -41,7 +41,7 @@ sealed class RecentTab {
     /**
      * A tab that was recently viewed
      *
-     * @param state Recently viewed [TabSessionState]
+     * @property state Recently viewed [TabSessionState]
      */
     data class Tab(val state: TabSessionState) : RecentTab()
 }

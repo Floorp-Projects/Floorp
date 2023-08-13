@@ -17,6 +17,7 @@ import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryFragmentAction
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentState
+import org.mozilla.fenix.library.history.HistoryFragmentStore
 
 /**
  * A [Middleware] for initiating navigation events based on [HistoryFragmentAction]s that are
@@ -24,6 +25,8 @@ import org.mozilla.fenix.library.history.HistoryFragmentState
  *
  * @property navController [NavController] for handling navigation events
  * @property openToBrowser Callback to open history items in a browser window.
+ * @property onBackPressed Callback to handle back press actions.
+ * @property scope [CoroutineScope] used to launch coroutines.
  */
 class HistoryNavigationMiddleware(
     private val navController: NavController,

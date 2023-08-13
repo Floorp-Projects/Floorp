@@ -30,7 +30,7 @@ interface AddressManagementController {
 /**
  * The default implementation of [AddressManagementController].
  *
- * @param navController [NavController] used for navigation.
+ * @property navController [NavController] used for navigation.
  */
 class DefaultAddressManagementController(
     private val navController: NavController,

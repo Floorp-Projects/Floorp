@@ -30,8 +30,8 @@ import org.mozilla.fenix.GleanMetrics.TabsTray as TabsTrayMetrics
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param lifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState.inactiveTabs].
- * @param interactor [InactiveTabsInteractor] used to respond to interactions with the inactive tabs header
+ * @property tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState.inactiveTabs].
+ * @property interactor [InactiveTabsInteractor] used to respond to interactions with the inactive tabs header
  * and the auto close dialog.
  */
 @Suppress("LongParameterList")

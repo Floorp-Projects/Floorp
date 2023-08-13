@@ -14,8 +14,8 @@ sealed class RecentlyVisitedItem {
     /**
      * A history highlight - previously accessed webpage of particular importance.
      *
-     * @param title The title of the webpage. May be [url] if the title is unavailable.
-     * @param url The URL of the webpage.
+     * @property title The title of the webpage. May be [url] if the title is unavailable.
+     * @property url The URL of the webpage.
      */
     data class RecentHistoryHighlight(
         val title: String,

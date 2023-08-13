@@ -18,7 +18,7 @@ import org.mozilla.fenix.ext.components
  *
  * Will automatically register callbacks for service workers requests and cleanup when [homeActivity] is destroyed.
  *
- * @param homeActivity [HomeActivity] used for navigating to browser or accessing various app components.
+ * @property homeActivity [HomeActivity] used for navigating to browser or accessing various app components.
  */
 class ServiceWorkerSupportFeature(
     private val homeActivity: HomeActivity,

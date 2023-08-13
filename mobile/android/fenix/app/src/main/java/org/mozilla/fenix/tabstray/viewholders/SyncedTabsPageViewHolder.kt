@@ -18,9 +18,9 @@ import org.mozilla.fenix.theme.Theme
 /**
  * Temporary ViewHolder to render [SyncedTabsList] until all of the Tabs Tray is written in Compose.
  *
- * @param composeView Root ComposeView passed-in from TrayPagerAdapter.
- * @param tabsTrayStore Store used as a Composable State to listen for changes to [TabsTrayState.syncedTabs].
- * @param interactor [SyncedTabsInteractor] used to respond to interactions with synced tabs.
+ * @property composeView Root ComposeView passed-in from TrayPagerAdapter.
+ * @property tabsTrayStore Store used as a Composable State to listen for changes to [TabsTrayState.syncedTabs].
+ * @property interactor [SyncedTabsInteractor] used to respond to interactions with synced tabs.
  */
 class SyncedTabsPageViewHolder(
     private val composeView: ComposeView,

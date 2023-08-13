@@ -59,6 +59,7 @@ enum class Theme {
  * The theme for Mozilla Firefox for Android (Fenix).
  *
  * @param theme The current [Theme] that is displayed.
+ * @param content The children composables to be laid out.
  */
 @Composable
 fun FirefoxTheme(

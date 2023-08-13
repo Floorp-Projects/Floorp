@@ -22,16 +22,19 @@ class PermissionStorage(
 
     /**
      * Persists the [sitePermissions] provided as a parameter.
-     * @param sitePermissions the [sitePermissions] to be stored.
+     *
+     * @param sitePermissions The [SitePermissions] to be stored.
+     * @param private Indicates if the [SitePermissions] belongs to a private session.
      */
     suspend fun add(sitePermissions: SitePermissions, private: Boolean) = withContext(dispatcher) {
         permissionsStorage.save(sitePermissions, private = private)
     }
 
     /**
-     * Finds all SitePermissions that match the [origin].
-     * @param origin the site to be used as filter in the search.
-     * @param private indicates if the [origin] belongs to a private session.
+     * Finds all [SitePermissions] that match the [origin].
+     *
+     * @param origin The site to be used as filter in the search.
+     * @param private Indicates if the [origin] belongs to a private session.
      */
     suspend fun findSitePermissionsBy(origin: String, private: Boolean): SitePermissions? =
         withContext(dispatcher) {
@@ -39,9 +42,10 @@ class PermissionStorage(
         }
 
     /**
-     * Replaces an existing SitePermissions with the values of [sitePermissions] provided as a parameter.
-     * @param sitePermissions the sitePermissions to be updated.
-     * @param private indicates if the [SitePermissions] belongs to a private session.
+     * Replaces an existing SitePermissions with the values of provided [sitePermissions].
+     *
+     * @param sitePermissions The [SitePermissions] to be updated.
+     * @param private Indicates if the [SitePermissions] belongs to a private session.
      */
     suspend fun updateSitePermissions(sitePermissions: SitePermissions, private: Boolean) =
         withContext(dispatcher) {
@@ -63,7 +67,7 @@ class PermissionStorage(
 
     /**
      * Deletes all sitePermissions that match the sitePermissions provided as a parameter.
-     * @param sitePermissions the sitePermissions to be deleted from the storage.
+     * @param sitePermissions The [SitePermissions] to be deleted from the storage.
      */
     suspend fun deleteSitePermissions(sitePermissions: SitePermissions) = withContext(dispatcher) {
         permissionsStorage.remove(sitePermissions, private = false)

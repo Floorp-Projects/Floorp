@@ -39,7 +39,7 @@ class NimbusExperimentsFragment : Fragment() {
 
                 NimbusExperiments(
                     experiments = experiments,
-                    onSelectedExperiment = { experiment ->
+                    onExperimentClick = { experiment ->
                         val directions =
                             NimbusExperimentsFragmentDirections.actionNimbusExperimentsFragmentToNimbusBranchesFragment(
                                 experimentId = experiment.slug,

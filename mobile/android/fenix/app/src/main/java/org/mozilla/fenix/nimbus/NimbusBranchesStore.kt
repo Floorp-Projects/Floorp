@@ -39,8 +39,8 @@ sealed class NimbusBranchesAction : Action {
     /**
      * Updates the list of Nimbus branches and selected branch.
      *
-     * @param branches The list of [Branch]s to display in the branches list.
-     * @param selectedBranch The selected [Branch] slug for a Nimbus experiment.
+     * @property branches The list of [Branch]s to display in the branches list.
+     * @property selectedBranch The selected [Branch] slug for a Nimbus experiment.
      */
     data class UpdateBranches(val branches: List<Branch>, val selectedBranch: String) :
         NimbusBranchesAction()
@@ -48,7 +48,7 @@ sealed class NimbusBranchesAction : Action {
     /**
      * Updates the selected branch.
      *
-     * @param selectedBranch The selected [Branch] slug for a Nimbus experiment.
+     * @property selectedBranch The selected [Branch] slug for a Nimbus experiment.
      */
     data class UpdateSelectedBranch(val selectedBranch: String) : NimbusBranchesAction()
 

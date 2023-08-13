@@ -17,7 +17,7 @@ import java.io.File
  * Manages various functions related to the locally-stored wallpaper assets.
  *
  * @property storageRootDirectory The top level app-local storage directory.
- * @param coroutineDispatcher Dispatcher used to execute suspending functions. Default parameter
+ * @property coroutineDispatcher Dispatcher used to execute suspending functions. Default parameter
  * should be likely be used except for when under test.
  */
 class WallpaperFileManager(

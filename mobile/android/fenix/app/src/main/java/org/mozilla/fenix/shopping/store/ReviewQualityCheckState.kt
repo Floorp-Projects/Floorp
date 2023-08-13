@@ -42,6 +42,7 @@ sealed interface ReviewQualityCheckState : State {
      * @property productRecommendationsPreference User preference whether to show product
      * recommendations. True if product recommendations should be shown. Null indicates that product
      * recommendations are disabled.
+     * @property productVendor The vendor of the product.
      */
     data class OptedIn(
         val productReviewState: ProductReviewState = ProductReviewState.Loading,

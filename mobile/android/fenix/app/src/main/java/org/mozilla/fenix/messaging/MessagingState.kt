@@ -9,8 +9,9 @@ import mozilla.components.service.nimbus.messaging.MessageSurfaceId
 
 /**
  * Represent all the state related to the Messaging framework.
- * @param messages Indicates all the available messages.
- * @param messageToShow Indicates the message that should be shown to users,
+ *
+ * @property messages Indicates all the available messages.
+ * @property messageToShow Indicates the message that should be shown to users,
  * if it is null means there is not message that is eligible to be shown to users.
  */
 data class MessagingState(

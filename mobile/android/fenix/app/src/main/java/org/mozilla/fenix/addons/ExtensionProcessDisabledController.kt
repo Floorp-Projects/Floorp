@@ -19,14 +19,13 @@ import mozilla.components.support.webextensions.ExtensionProcessDisabledPopupObs
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.geckoview.WebExtensionController
 
 /**
  * Controller for showing the user a dialog when the the extension process spawning has been disabled.
  *
  * @param context to show the AlertDialog
  * @param store The [BrowserStore] which holds the state for showing the dialog
- * @param webExtensionController to call when a user enables the process spawning
+ * @param engine An [Engine] instance used for handling extension process spawning.
  * @param builder to use for creating the dialog which can be styled as needed
  * @param appName to be added to the message. Optional and mainly relevant for testing
  */
@@ -52,12 +51,12 @@ class ExtensionProcessDisabledController(
         /**
          * Present a dialog to the user notifying of extension process spawning disabled and also asking
          * whether they would like to continue trying or disable extensions. If the user chooses to retry,
-         * enable the extension process spawning with [WebExtensionController.enableExtensionProcessSpawning].
-         * Otherwise, call [WebExtensionController.disableExtensionProcessSpawning].
+         * enable the extension process spawning with [Engine.enableExtensionProcessSpawning].
+         * Otherwise, call [Engine.disableExtensionProcessSpawning].
          *
          * @param context to show the AlertDialog
          * @param store The [BrowserStore] which holds the state for showing the dialog
-         * @param webExtensionController to call when the user enables or disables the process spawning
+         * @param engine An [Engine] instance used for handling extension process spawning
          * @param builder to use for creating the dialog which can be styled as needed
          * @param appName to be added to the message. Necessary to be added as a param for testing
          */

@@ -12,7 +12,15 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
  * [InfoBanner] that will automatically scroll with the top [BrowserToolbar].
  * Only to be used with [BrowserToolbar]s placed at the top of the screen.
  *
- * @param shouldScrollWithTopToolbar whether to follow the Y translation of the top toolbar or not
+ * @property context A [Context] for accessing system resources.
+ * @param container The layout where the banner will be shown.
+ * @property shouldScrollWithTopToolbar whether to follow the Y translation of the top toolbar or not.
+ * @param message The message displayed in the banner.
+ * @param dismissText The text on the dismiss button.
+ * @param actionText The text on the action to perform button.
+ * @param dismissByHiding Whether or not to hide the banner when dismissed.
+ * @param dismissAction  Optional callback invoked when the user dismisses the banner.
+ * @param actionToPerform The action to be performed on action button press.
  */
 @Suppress("LongParameterList")
 class DynamicInfoBanner(

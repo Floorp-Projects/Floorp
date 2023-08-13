@@ -36,7 +36,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
- * @param interactor [PrivateBrowsingInteractor] which will have delegated to all user interactions.
+ * @property interactor [PrivateBrowsingInteractor] which will have delegated to all user interactions.
  */
 class PrivateBrowsingDescriptionViewHolder(
     composeView: ComposeView,

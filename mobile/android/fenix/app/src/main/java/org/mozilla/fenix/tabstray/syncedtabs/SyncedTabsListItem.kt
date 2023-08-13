@@ -14,24 +14,24 @@ sealed class SyncedTabsListItem {
     /**
      * A device header for displaying a synced device.
      *
-     * @param displayName The user's custom name of their synced device.
+     * @property displayName The user's custom name of their synced device.
      */
     data class Device(val displayName: String) : SyncedTabsListItem()
 
     /**
      * A section for displaying a synced device and its tabs.
      *
-     * @param displayName The user's custom name of their synced device.
-     * @param tabs The user's tabs from their synced device.
+     * @property displayName The user's custom name of their synced device.
+     * @property tabs The user's tabs from their synced device.
      */
     data class DeviceSection(val displayName: String, val tabs: List<Tab>) : SyncedTabsListItem()
 
     /**
      * A tab that was synced.
      *
-     * @param displayTitle The title of the tab's web page.
-     * @param displayURL The tab's URL up to BrowserToolbar.MAX_URI_LENGTH characters long.
-     * @param tab The underlying SyncTab object passed when the tab is clicked.
+     * @property displayTitle The title of the tab's web page.
+     * @property displayURL The tab's URL up to BrowserToolbar.MAX_URI_LENGTH characters long.
+     * @property tab The underlying SyncTab object passed when the tab is clicked.
      */
     data class Tab(
         val displayTitle: String,
@@ -47,8 +47,8 @@ sealed class SyncedTabsListItem {
     /**
      * A message displayed if an error was encountered.
      *
-     * @param errorText The text to be displayed to the user.
-     * @param errorButton Optional class to set up and handle any clicks in the Error UI.
+     * @property errorText The text to be displayed to the user.
+     * @property errorButton Optional class to set up and handle any clicks in the Error UI.
      */
     data class Error(
         val errorText: String,
@@ -58,9 +58,8 @@ sealed class SyncedTabsListItem {
     /**
      * A button displayed if an error has optional interaction.
      *
-     * @param buttonText The error button's text and accessibility hint.
-     * @param onClick Lambda called when the button is clicked.
-     *
+     * @property buttonText The error button's text and accessibility hint.
+     * @property onClick Lambda called when the button is clicked.
      */
     data class ErrorButton(
         val buttonText: String,

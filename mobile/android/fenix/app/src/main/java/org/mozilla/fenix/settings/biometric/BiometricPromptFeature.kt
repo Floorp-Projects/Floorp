@@ -22,10 +22,10 @@ import org.mozilla.fenix.settings.biometric.ext.isHardwareAvailable
 /**
  * A [LifecycleAwareFeature] for the Android Biometric API to prompt for user authentication.
  *
- * @param context Android context.
- * @param fragment The fragment on which this feature will live.
- * @param onAuthSuccess A success callback.
- * @param onAuthFailure A failure callback if authentication failed.
+ * @property context Android context.
+ * @property fragment The fragment on which this feature will live.
+ * @property onAuthFailure A failure callback if authentication failed.
+ * @property onAuthSuccess A success callback.
  */
 class BiometricPromptFeature(
     private val context: Context,

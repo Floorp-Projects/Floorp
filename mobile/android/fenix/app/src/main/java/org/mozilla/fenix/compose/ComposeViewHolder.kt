@@ -17,7 +17,7 @@ import org.mozilla.fenix.theme.Theme
 /**
  * [RecyclerView.ViewHolder] used for Jetpack Compose UI content .
  *
- * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @property composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
  */
 abstract class ComposeViewHolder(

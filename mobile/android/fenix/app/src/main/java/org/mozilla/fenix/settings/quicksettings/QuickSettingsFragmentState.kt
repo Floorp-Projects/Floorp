@@ -31,9 +31,10 @@ data class QuickSettingsFragmentState(
 /**
  * [State] to be rendered by [WebsiteInfoView] indicating whether the connection is secure or not.
  *
- * @param websiteUrl [String] the URL of the current web page.
- * @param websiteTitle [String] the title of the current web page.
- * @param websiteSecurityUiValues UI values to represent the security of the website.
+ * @property websiteUrl [String] the URL of the current web page.
+ * @property websiteTitle [String] the title of the current web page.
+ * @property websiteSecurityUiValues UI values to represent the security of the website.
+ * @property certificateName the certificate name of the current web page.
  */
 data class WebsiteInfoState(
     val websiteUrl: String,
@@ -50,7 +51,7 @@ data class WebsiteInfoState(
          * @param websiteUrl [String] the URL of the current web page.
          * @param websiteTitle [String] the title of the current web page.
          * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
-         * @param certificateName [String] the certificate name of the current web  page.
+         * @param certificateName [String] the certificate name of the current web page.
          */
         fun createWebsiteInfoState(
             websiteUrl: String,
@@ -91,6 +92,7 @@ typealias WebsitePermissionsState = Map<PhoneFeature, WebsitePermission>
  * Contains a limited number of implementations because there is a known, finite number of permissions
  * we need to display to the user.
  *
+ * @property phoneFeature The Android phone feature available for the current website.
  * @property status The *allowed* / *blocked* permission status to be shown to the user.
  * @property isVisible Whether this permission should be shown to the user.
  * @property isEnabled Visual indication about whether this permission is *enabled* / *disabled*

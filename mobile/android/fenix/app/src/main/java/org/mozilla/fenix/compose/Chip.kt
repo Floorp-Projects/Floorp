@@ -95,10 +95,10 @@ fun SelectableChip(
 /**
  * Wrapper for the color parameters of [SelectableChip].
  *
- * @param selectedBackgroundColor Background [Color] when the chip is selected.
- * @param unselectedBackgroundColor Background [Color] when the chip is not selected.
- * @param selectedTextColor Text [Color] when the chip is selected.
- * @param unselectedTextColor Text [Color] when the chip is not selected.
+ * @property selectedBackgroundColor Background [Color] when the chip is selected.
+ * @property unselectedBackgroundColor Background [Color] when the chip is not selected.
+ * @property selectedTextColor Text [Color] when the chip is selected.
+ * @property unselectedTextColor Text [Color] when the chip is not selected.
  */
 data class SelectableChipColors(
     val selectedBackgroundColor: Color,

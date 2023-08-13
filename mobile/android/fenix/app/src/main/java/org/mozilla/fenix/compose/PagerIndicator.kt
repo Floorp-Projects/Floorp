@@ -35,9 +35,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * indicators to show progress, instead of just showing the current one as active.
  *
  * @param pagerState The state object of your [HorizontalPager] to be used to observe the list's state.
- * @param pageCount The size of indicators should be displayed, defaults to [PagerState.pageCount].
- * If you are implementing a looping pager with a much larger [PagerState.pageCount]
- * than indicators should displayed, e.g. [Int.MAX_VALUE], specify you real size in this param.
  * @param modifier The modifier to apply to this layout.
  * @param activeColor The color of the active page indicator, and the color of previous page
  * indicators in case [leaveTrail] is set to true.

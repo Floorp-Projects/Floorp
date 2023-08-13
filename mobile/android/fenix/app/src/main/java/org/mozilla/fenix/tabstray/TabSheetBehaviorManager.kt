@@ -30,11 +30,11 @@ private const val DIM_CONVERSION = 1000f
 /**
  * Helper class for updating how the tray looks and behaves depending on app state / internal tray state.
  *
- * @param behavior [BottomSheetBehavior] that will actually control the tray.
+ * @property behavior [BottomSheetBehavior] that will actually control the tray.
  * @param orientation current Configuration.ORIENTATION_* of the device.
- * @param maxNumberOfTabs highest number of tabs in each tray page.
- * @param numberForExpandingTray limit depending on which the tray should be collapsed or expanded.
- * @param displayMetrics [DisplayMetrics] used for adapting resources to the current display.
+ * @property maxNumberOfTabs highest number of tabs in each tray page.
+ * @property numberForExpandingTray limit depending on which the tray should be collapsed or expanded.
+ * @property displayMetrics [DisplayMetrics] used for adapting resources to the current display.
  */
 internal class TabSheetBehaviorManager(
     private val behavior: BottomSheetBehavior<out View>,

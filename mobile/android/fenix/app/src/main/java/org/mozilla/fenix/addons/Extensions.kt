@@ -12,6 +12,7 @@ import org.mozilla.fenix.components.FenixSnackbar
  *
  * @param view A [View] used to determine a parent for the [FenixSnackbar].
  * @param text The text to display in the [FenixSnackbar].
+ * @param duration The duration to show the [FenixSnackbar] for.
  */
 internal fun showSnackBar(view: View, text: String, duration: Int = FenixSnackbar.LENGTH_SHORT) {
     FenixSnackbar.make(

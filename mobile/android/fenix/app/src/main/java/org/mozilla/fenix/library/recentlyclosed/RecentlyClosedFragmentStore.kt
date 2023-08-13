@@ -30,8 +30,10 @@ sealed class RecentlyClosedFragmentAction : Action {
 }
 
 /**
- * The state for the Recently Closed Screen
- * @property items List of recently closed tabs to display
+ * The state for the Recently Closed Screen.
+ *
+ * @property items List of recently closed tabs to display.
+ * @property selectedTabs List of selected recently closed tabs.
  */
 data class RecentlyClosedFragmentState(
     val items: List<TabState> = emptyList(),

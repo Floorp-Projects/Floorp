@@ -62,11 +62,11 @@ interface WebsitePermissionInteractor {
  * - camera
  *
  * @param containerView [ViewGroup] in which this View will inflate itself.
- * @param interactor [WebsitePermissionInteractor] which will have delegated to all user interactions.
+ * @property interactor [WebsitePermissionInteractor] which will have delegated to all user interactions.
  */
 class WebsitePermissionsView(
     containerView: ViewGroup,
-    val interactor: WebsitePermissionInteractor,
+    private val interactor: WebsitePermissionInteractor,
 ) {
     private val context = containerView.context
 

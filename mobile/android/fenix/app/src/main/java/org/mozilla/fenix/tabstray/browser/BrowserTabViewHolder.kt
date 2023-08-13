@@ -26,7 +26,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
      * A RecyclerView ViewHolder implementation for "tab" items with grid layout.
      *
      * @param imageLoader [ImageLoader] used to load tab thumbnails.
-     * @param interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
+     * @property interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
      * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
      * @param selectionHolder [SelectionHolder]<[TabSessionState]> for helping with selecting
      * any number of displayed [TabSessionState]s.
@@ -80,7 +80,7 @@ sealed class BrowserTabViewHolder(itemView: View) : RecyclerView.ViewHolder(item
      * A RecyclerView ViewHolder implementation for "tab" items with list layout.
      *
      * @param imageLoader [ImageLoader] used to load tab thumbnails.
-     * @param interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
+     * @property interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
      * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
      * @param selectionHolder [SelectionHolder]<[TabSessionState]> for helping with selecting
      * any number of displayed [TabSessionState]s.

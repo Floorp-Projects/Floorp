@@ -23,7 +23,8 @@ import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteract
  * View holder for the recent bookmarks header and "Show all" button.
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
- * @param interactor [RecentBookmarksInteractor] which will have delegated to all user interactions.
+ * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
+ * @property interactor [RecentBookmarksInteractor] which will have delegated to all user interactions.
  */
 class RecentBookmarksHeaderViewHolder(
     composeView: ComposeView,

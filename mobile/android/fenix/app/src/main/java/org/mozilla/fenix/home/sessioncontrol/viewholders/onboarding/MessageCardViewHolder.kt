@@ -27,6 +27,8 @@ import org.mozilla.fenix.wallpapers.WallpaperState
 /**
  * View holder for the Nimbus Message Card.
  *
+ * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
  * @property interactor [SessionControlInteractor] which will have delegated to all user
  * interactions.
  */

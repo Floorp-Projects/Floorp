@@ -15,7 +15,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.utils.Settings
 
 /**
- * Class for interacting with the a blocklist stored in [settings].
+ * Class for interacting with the blocklist stored in [settings].
  * The blocklist is a set of SHA1 hashed URLs, which are stripped
  * of protocols and common subdomains like "www" or "mobile".
  *

@@ -944,7 +944,17 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
      * Navigates to the browser fragment and loads a URL or performs a search (depending on the
      * value of [searchTermOrURL]).
      *
+     * @param searchTermOrURL The entered search term to search or URL to be loaded.
+     * @param newTab Whether or not to load the URL in a new tab.
+     * @param from The [BrowserDirection] to indicate which fragment the browser is being
+     * opened from.
+     * @param customTabSessionId Optional custom tab session ID if navigating from a custom tab.
+     * @param engine Optional [SearchEngine] to use when performing a search.
+     * @param forceSearch Whether or not to force performing a search.
      * @param flags Flags that will be used when loading the URL (not applied to searches).
+     * @param requestDesktopMode Whether or not to request the desktop mode for the session.
+     * @param historyMetadata The [HistoryMetadataKey] of the new tab in case this tab
+     * was opened from history.
      * @param additionalHeaders The extra headers to use when loading the URL.
      */
     @Suppress("LongParameterList")
@@ -1048,7 +1058,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     /**
      * Loads a URL or performs a search (depending on the value of [searchTermOrURL]).
      *
+     * @param searchTermOrURL The entered search term to search or URL to be loaded.
+     * @param newTab Whether or not to load the URL in a new tab.
+     * @param engine Optional [SearchEngine] to use when performing a search.
+     * @param forceSearch Whether or not to force performing a search.
      * @param flags Flags that will be used when loading the URL (not applied to searches).
+     * @param requestDesktopMode Whether or not to request the desktop mode for the session.
      * @param historyMetadata The [HistoryMetadataKey] of the new tab in case this tab
      * was opened from history.
      * @param additionalHeaders The extra headers to use when loading the URL.

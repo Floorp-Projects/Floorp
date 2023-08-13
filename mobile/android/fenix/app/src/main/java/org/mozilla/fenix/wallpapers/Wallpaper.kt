@@ -12,12 +12,13 @@ import java.util.Date
  *
  * @property name The name of the wallpaper.
  * @property collection The name of the collection the wallpaper belongs to.
- * is not restricted.
  * @property textColor The 8 digit hex code color that should be used for text overlaying the wallpaper.
  * @property cardColorLight The 8 digit hex code color that should be used for cards overlaying the wallpaper
  * when the user's theme is set to Light.
  * @property cardColorDark The 8 digit hex code color that should be used for cards overlaying the wallpaper
  * when the user's theme is set to Dark.
+ * @property thumbnailFileState The download state of the wallpaper thumbnail.
+ * @property assetsFileState The download state of the wallpaper assets.
  */
 data class Wallpaper(
     val name: String,
@@ -32,6 +33,8 @@ data class Wallpaper(
      * Type that represents a collection that a [Wallpaper] belongs to.
      *
      * @property name The name of the collection the wallpaper belongs to.
+     * @property heading The heading of the collection.
+     * @property description The description of the collection.
      * @property learnMoreUrl The URL that can be visited to learn more about a collection, if any.
      * @property availableLocales The locales that this wallpaper is restricted to. If null, the wallpaper
      * is not restricted.
@@ -107,8 +110,8 @@ data class Wallpaper(
         /**
          * Defines the standard path at which a wallpaper resource is kept on disk.
          *
-         * @param type The type of image that should be retrieved.
          * @param name The name of the wallpaper.
+         * @param type The type of image that should be retrieved.
          */
         fun getLocalPath(name: String, type: ImageType) = "wallpapers/$name/${type.lowercase()}.png"
 

@@ -33,6 +33,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param icon [Painter] icon to be displayed inside the action button.
  * @param modifier [Modifier] to be applied to the action button.
+ * @param contentDescription The content description to describe the icon.
  * @param label Text to be displayed next to the icon.
  * @param onClick Invoked when the button is clicked.
  */

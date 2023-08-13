@@ -26,15 +26,18 @@ import org.mozilla.fenix.trackingprotection.ProtectionsState
  * MVI View that knows how to display cookie banner handling details for a site.
  *
  * @param container [ViewGroup] in which this View will inflate itself.
- * @param publicSuffixList To show short url.
- * @param interactor [CookieBannerDetailsInteractor] which will have delegated to all user interactions.
+ * @property context An Android [Context].
+ * @property ioScope [CoroutineScope] with an IO dispatcher used for structured concurrency.
+ * @property publicSuffixList To show short url.
+ * @property interactor [CookieBannerDetailsInteractor] which will have delegated to all user interactions.
+ * @property onDismiss Lambda invoked to dismiss the cookie banner.
  */
 class CookieBannerHandlingDetailsView(
     container: ViewGroup,
     private val context: Context,
     private val ioScope: CoroutineScope,
     private val publicSuffixList: PublicSuffixList,
-    val interactor: CookieBannerDetailsInteractor,
+    private val interactor: CookieBannerDetailsInteractor,
     private val onDismiss: () -> Unit,
 ) {
     val binding = ComponentCookieBannerDetailsPanelBinding.inflate(

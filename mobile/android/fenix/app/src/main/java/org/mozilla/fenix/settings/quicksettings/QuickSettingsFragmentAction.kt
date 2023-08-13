@@ -25,11 +25,11 @@ sealed class WebsitePermissionAction(open val updatedFeature: PhoneFeature) : Qu
     /**
      * Change resulting from toggling a specific [WebsitePermission] for the current website.
      *
-     * @param updatedFeature [PhoneFeature] backing a certain [WebsitePermission].
+     * @property updatedFeature [PhoneFeature] backing a certain [WebsitePermission].
      * Allows to easily identify which permission changed
      * **Must be the name of one of the properties of [WebsitePermissionsState]**.
-     * @param updatedStatus [String] the new [WebsitePermission#status] which will be shown to the user.
-     * @param updatedEnabledStatus [Boolean] the new [WebsitePermission#enabled] which will be shown to the user.
+     * @property updatedStatus [String] the new [WebsitePermission#status] which will be shown to the user.
+     * @property updatedEnabledStatus [Boolean] the new [WebsitePermission#enabled] which will be shown to the user.
      */
     class TogglePermission(
         override val updatedFeature: PhoneFeature,
@@ -40,7 +40,7 @@ sealed class WebsitePermissionAction(open val updatedFeature: PhoneFeature) : Qu
     /**
      * Change resulting from changing a specific [WebsitePermission.Autoplay] for the current website.
      *
-     * @param autoplayValue [AutoplayValue] backing a certain [WebsitePermission.Autoplay].
+     * @property autoplayValue [AutoplayValue] backing a certain [WebsitePermission.Autoplay].
      * Allows to easily identify which permission changed
      */
     class ChangeAutoplay(
@@ -55,7 +55,7 @@ sealed class TrackingProtectionAction : QuickSettingsFragmentAction() {
     /**
      * Toggles the enabled state of tracking protection.
      *
-     * @param isTrackingProtectionEnabled Whether or not tracking protection is enabled.
+     * @property isTrackingProtectionEnabled Whether or not tracking protection is enabled.
      */
     data class ToggleTrackingProtectionEnabled(val isTrackingProtectionEnabled: Boolean) :
         TrackingProtectionAction()

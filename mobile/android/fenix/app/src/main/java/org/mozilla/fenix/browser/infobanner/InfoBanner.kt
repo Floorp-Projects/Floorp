@@ -17,12 +17,14 @@ import org.mozilla.fenix.ext.settings
  * Displays an Info Banner in the specified container with a message and an optional action.
  * The container can be a placeholder layout inserted in the original screen, or an existing layout.
  *
- * @param context - A [Context] for accessing system resources.
- * @param container - The layout where the banner will be shown
- * @param message - The message displayed in the banner
- * @param dismissText - The text on the dismiss button
- * @param actionText - The text on the action to perform button
- * @param actionToPerform - The action to be performed on action button press
+ * @property context A [Context] for accessing system resources.
+ * @property container The layout where the banner will be shown.
+ * @property message The message displayed in the banner.
+ * @property dismissText The text on the dismiss button.
+ * @property actionText The text on the action to perform button.
+ * @property dismissByHiding Whether or not to hide the banner when dismissed.
+ * @property dismissAction  Optional callback invoked when the user dismisses the banner.
+ * @property actionToPerform The action to be performed on action button press.
  */
 @SuppressWarnings("LongParameterList")
 open class InfoBanner(

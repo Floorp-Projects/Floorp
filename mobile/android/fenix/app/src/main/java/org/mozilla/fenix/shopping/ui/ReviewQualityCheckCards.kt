@@ -107,6 +107,7 @@ fun ReviewQualityCheckExpandableCard(
  * @param modifier Modifier to be applied to the card.
  * @param backgroundColor The background color of the card.
  * @param elevation The elevation of the card.
+ * @param contentPadding Padding used within the card container.
  * @param content The content of the card.
  */
 @Composable

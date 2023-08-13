@@ -29,11 +29,11 @@ import org.mozilla.fenix.tabstray.browser.compose.ComposeListViewHolder
 /**
  * A [RecyclerView.Adapter] for browser tabs.
  *
- * @param context [Context] used for various platform interactions or accessing [Components]
- * @param interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
- * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
- * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
- * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
+ * @property context [Context] used for various platform interactions or accessing [Components]
+ * @property interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
+ * @property store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
+ * @property featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
+ * @property viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
  */
 class BrowserTabsAdapter(
     private val context: Context,

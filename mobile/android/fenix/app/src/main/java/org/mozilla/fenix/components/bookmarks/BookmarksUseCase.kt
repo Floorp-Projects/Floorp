@@ -51,8 +51,8 @@ class BookmarksUseCase(
     /**
      * Uses for retrieving recently added bookmarks.
      *
-     * @param bookmarksStorage [BookmarksStorage] to retrieve the bookmark data.
-     * @param historyStorage Optional [HistoryStorage] to retrieve the preview image of a visited
+     * @property bookmarksStorage [BookmarksStorage] to retrieve the bookmark data.
+     * @property historyStorage Optional [HistoryStorage] to retrieve the preview image of a visited
      * page associated with a bookmark.
      */
     class RetrieveRecentBookmarksUseCase internal constructor(

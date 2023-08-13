@@ -41,14 +41,14 @@ sealed class AutofillAction : Action {
     /**
      * Updates the list of addresses with the provided [addresses].
      *
-     * @param addresses The list of [Address]es to display in the address list.
+     * @property addresses The list of [Address]es to display in the address list.
      */
     data class UpdateAddresses(val addresses: List<Address>) : AutofillAction()
 
     /**
      * Updates the list of credit cards with the provided [creditCards].
      *
-     * @param creditCards The list of [CreditCard]s to display in the credit card list.
+     * @property creditCards The list of [CreditCard]s to display in the credit card list.
      */
     data class UpdateCreditCards(val creditCards: List<CreditCard>) : AutofillAction()
 }

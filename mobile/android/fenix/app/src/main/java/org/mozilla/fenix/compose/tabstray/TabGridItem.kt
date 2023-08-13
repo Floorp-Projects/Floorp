@@ -272,6 +272,8 @@ private fun clickableColor() = when (isSystemInDarkTheme()) {
  * Thumbnail specific for the [TabGridItem], which can be selected.
  *
  * @param tab Tab, containing the thumbnail to be displayed.
+ * @param size Size of the thumbnail.
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param multiSelectionSelected Whether or not the multiple selection is enabled.
  */
 @Composable

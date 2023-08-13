@@ -16,7 +16,7 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
  * from [ReviewQualityCheckState.Initial] to [ReviewQualityCheckState.NotOptedIn].
  *
  * @param store The store to observe.
- * @param onRequestStateExpanded Callback to request the bottom sheet to be expanded.
+ * @property onRequestStateExpanded Callback to request the bottom sheet to be expanded.
  */
 class ReviewQualityCheckBottomSheetStateFeature(
     store: ReviewQualityCheckStore,

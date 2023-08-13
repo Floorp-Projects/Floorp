@@ -35,7 +35,7 @@ internal const val POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT = 8
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @param interactor [PocketStoriesInteractor] callback for user interaction.
+ * @property interactor [PocketStoriesInteractor] callback for user interaction.
  */
 class PocketCategoriesViewHolder(
     composeView: ComposeView,

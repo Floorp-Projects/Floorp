@@ -22,7 +22,9 @@ import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
 /**
  * View holder for the recent tabs header and "Show all" button.
  *
- * @param interactor [RecentTabInteractor] which will have delegated to all user interactions.
+ * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
+ * @property interactor [RecentTabInteractor] which will have delegated to all user interactions.
  */
 class RecentTabsHeaderViewHolder(
     composeView: ComposeView,

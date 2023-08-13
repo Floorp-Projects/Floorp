@@ -90,6 +90,7 @@ private const val TOP_SITES_FAVICON_SIZE = 36
  * @param onSettingsClicked Invoked when the user clicks on the "Settings" menu item.
  * @param onSponsorPrivacyClicked Invoked when the user clicks on the "Our sponsors & your privacy"
  * menu item.
+ * @param onTopSitesItemBound Invoked during the composition of a top site item.
  */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -242,6 +243,7 @@ data class TopSiteColors(
  * @param topSiteColors The color set defined by [TopSiteColors] used to style a top site.
  * @param onTopSiteClick Invoked when the user clicks on a top site.
  * @param onTopSiteLongClick Invoked when the user long clicks on a top site.
+ * @param onTopSitesItemBound Invoked during the composition of a top site item.
  */
 @Suppress("LongParameterList", "LongMethod")
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)

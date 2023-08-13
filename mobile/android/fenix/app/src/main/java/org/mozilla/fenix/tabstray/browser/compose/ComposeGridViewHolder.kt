@@ -24,10 +24,10 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
 /**
  * A Compose ViewHolder implementation for "tab" items with grid layout.
  *
- * @param interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
- * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
+ * @property interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
+ * @property store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
  * @param composeItemView that displays a "tab".
- * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
+ * @property featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
  */
 class ComposeGridViewHolder(

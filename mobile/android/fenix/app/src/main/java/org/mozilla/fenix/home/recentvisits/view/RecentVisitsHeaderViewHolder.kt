@@ -22,6 +22,8 @@ import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
 /**
  * View holder for the "Recent visits" section header with the "Show all" button.
  *
+ * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
  * @property interactor [RecentVisitsInteractor] which will have delegated to all user
  * interactions.
  */

@@ -21,7 +21,7 @@ import org.mozilla.fenix.wallpapers.WallpaperState
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @param interactor [TopSiteInteractor] which will have delegated to all user top sites
+ * @property interactor [TopSiteInteractor] which will have delegated to all user top sites
  * interactions.
  */
 class TopSitesViewHolder(

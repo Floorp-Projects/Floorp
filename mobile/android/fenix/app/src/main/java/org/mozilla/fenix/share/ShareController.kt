@@ -74,14 +74,19 @@ interface ShareController {
 /**
  * Default behavior of [ShareController]. Other implementations are possible.
  *
- * @param context [Context] used for various Android interactions.
- * @param shareSubject desired message subject used when sharing through 3rd party apps, like email clients.
- * @param shareData the list of [ShareData]s that can be shared.
- * @param sendTabUseCases instance of [SendTabUseCases] which allows sending tabs to account devices.
- * @param snackbar - instance of [FenixSnackbar] for displaying styled snackbars
- * @param navController - [NavController] used for navigation.
- * @param fxaEntrypoint - the entrypoint if we need to authenticate, it will be reported in telemetry
- * @param dismiss - callback signalling sharing can be closed.
+ * @property context [Context] used for various Android interactions.
+ * @property shareSubject Desired message subject used when sharing through 3rd party apps, like email clients.
+ * @property shareData The list of [ShareData]s that can be shared.
+ * @property sendTabUseCases Instance of [SendTabUseCases] which allows sending tabs to account devices.
+ * @property saveToPdfUseCase Instance of [SessionUseCases.SaveToPdfUseCase] to generate a PDF of a given tab.
+ * @property printUseCase Instance of [SessionUseCases.PrintContentUseCase] to print content of a given tab.
+ * @property snackbar Instance of [FenixSnackbar] for displaying styled snackbars.
+ * @property navController [NavController] used for navigation.
+ * @property recentAppsStorage Instance of [RecentAppsStorage] for storing and retrieving the most recent apps.
+ * @property viewLifecycleScope [CoroutineScope] used for retrieving the most recent apps in the background.
+ * @property dispatcher Dispatcher used to execute suspending functions.
+ * @property fxaEntrypoint The entrypoint if we need to authenticate, it will be reported in telemetry.
+ * @property dismiss Callback signalling sharing can be closed.
  */
 @Suppress("TooManyFunctions", "LongParameterList")
 class DefaultShareController(

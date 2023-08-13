@@ -175,11 +175,12 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
  * @property activity [HomeActivity] used to perform top-level app actions.
  * @property appStore [AppStore] used to dispatch any [AppAction].
  * @property tabsTrayStore [TabsTrayStore] used to read/update the [TabsTrayState].
- * @property settings [Settings] used to update any user preferences.
  * @property browserStore [BrowserStore] used to read/update the current [BrowserState].
+ * @property settings [Settings] used to update any user preferences.
  * @property browsingModeManager [BrowsingModeManager] used to read/update the current [BrowsingMode].
  * @property navController [NavController] used to navigate away from the tabs tray.
  * @property navigateToHomeAndDeleteSession Lambda used to return to the Homescreen and delete the current session.
+ * @property profiler [Profiler] used to add profiler markers.
  * @property navigationInteractor [NavigationInteractor] used to perform navigation actions with side effects.
  * @property tabsUseCases Use case wrapper for interacting with tabs.
  * @property bookmarksUseCase Use case wrapper for interacting with bookmarks.

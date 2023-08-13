@@ -20,13 +20,13 @@ import org.mozilla.fenix.ext.loadIntoView
  * Currently it does not support any user interaction.
  *
  * @param container [ViewGroup] in which this View will inflate itself.
- * @param icons Icons component for loading, caching and processing website icons.
- * @param interactor [WebSiteInfoInteractor] which will have delegated to all user interactions.
+ * @property icons Icons component for loading, caching and processing website icons.
+ * @property interactor [WebSiteInfoInteractor] which will have delegated to all user interactions.
  */
 class ConnectionDetailsView(
     container: ViewGroup,
     private val icons: BrowserIcons,
-    val interactor: WebSiteInfoInteractor,
+    private val interactor: WebSiteInfoInteractor,
 ) {
     val binding = ConnectionDetailsWebsiteInfoBinding.inflate(
         LayoutInflater.from(container.context),

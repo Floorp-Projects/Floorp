@@ -326,7 +326,7 @@ class DefaultSessionControlControllerTest {
             removeCollectionWithUndo = { collection ->
                 actualCollection = collection
             },
-        ).handleCollectionRemoveTab(expectedCollection, tab, false)
+        ).handleCollectionRemoveTab(expectedCollection, tab)
 
         assertNotNull(Collections.tabRemoved.testGetValue())
         val recordedEvents = Collections.tabRemoved.testGetValue()!!
@@ -340,7 +340,7 @@ class DefaultSessionControlControllerTest {
     fun `handleCollectionRemoveTab multiple tabs`() {
         val collection: TabCollection = mockk(relaxed = true)
         val tab: ComponentTab = mockk(relaxed = true)
-        createController().handleCollectionRemoveTab(collection, tab, false)
+        createController().handleCollectionRemoveTab(collection, tab)
 
         assertNotNull(Collections.tabRemoved.testGetValue())
         val recordedEvents = Collections.tabRemoved.testGetValue()!!

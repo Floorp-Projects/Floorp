@@ -11,7 +11,7 @@ interface SyncInteractor {
 /**
  * Interactor for [TurnOnSyncFragment].
  *
- * @param syncController Handles the interactions
+ * @property syncController Handles the interactions
  */
 class DefaultSyncInteractor(private val syncController: DefaultSyncController) : SyncInteractor {
     override fun onCameraPermissionsNeeded() {

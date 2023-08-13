@@ -60,7 +60,7 @@ const val HEADER_ITEM_KEY = "header"
  * @param selectedTabId The ID of the currently selected tab.
  * @param selectionMode [TabsTrayState.Mode] indicating whether the Tabs Tray is in single selection
  * or multi-selection and contains the set of selected tabs.
- * @param modifier
+ * @param modifier [Modifier] to be applied to the layout.
  * @param onTabClose Invoked when the user clicks to close a tab.
  * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
  * @param onTabClick Invoked when the user clicks on a tab.

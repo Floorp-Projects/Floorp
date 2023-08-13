@@ -19,10 +19,10 @@ import org.mozilla.fenix.utils.Settings
 /**
  * Controller for the saved logins list
  *
- * @param loginsFragmentStore Store used to hold in-memory collection state.
- * @param navController NavController manages app navigation within a NavHost.
- * @param browserNavigator Controller allowing browser navigation to any Uri.
- * @param settings SharedPreferences wrapper for easier usage.
+ * @property loginsFragmentStore Store used to hold in-memory collection state.
+ * @property navController NavController manages app navigation within a NavHost.
+ * @property browserNavigator Controller allowing browser navigation to any Uri.
+ * @property settings SharedPreferences wrapper for easier usage.
  */
 class LoginsListController(
     private val loginsFragmentStore: LoginsFragmentStore,

@@ -16,6 +16,7 @@ interface AwesomeBarInteractor {
     /**
      * Called whenever a suggestion containing a URL is tapped
      * @param url the url the suggestion was providing
+     * @param flags the [LoadUrlFlags] to use when loading the provided url.
      */
     fun onUrlTapped(url: String, flags: LoadUrlFlags = LoadUrlFlags.none())
 

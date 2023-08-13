@@ -83,7 +83,7 @@ interface SessionControlController {
     /**
      * @see [CollectionInteractor.onCollectionRemoveTab]
      */
-    fun handleCollectionRemoveTab(collection: TabCollection, tab: ComponentTab, wasSwiped: Boolean)
+    fun handleCollectionRemoveTab(collection: TabCollection, tab: ComponentTab)
 
     /**
      * @see [CollectionInteractor.onCollectionShareTabsClicked]
@@ -244,7 +244,6 @@ class DefaultSessionControlController(
     override fun handleCollectionRemoveTab(
         collection: TabCollection,
         tab: ComponentTab,
-        wasSwiped: Boolean,
     ) {
         Collections.tabRemoved.record(NoExtras())
 

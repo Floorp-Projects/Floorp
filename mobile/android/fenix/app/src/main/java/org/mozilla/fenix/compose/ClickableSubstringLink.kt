@@ -21,7 +21,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * [Text] containing a substring styled as an URL informing when this is clicked.
  *
- * @param text Full text that will be displayed
+ * @param text Full text that will be displayed.
+ * @param textStyle The [TextStyle] to apply to the text.
  * @param textColor [Color] of the normal text. The URL substring will have a default URL style applied.
  * @param linkTextColor [Color] of the link text.
  * @param linkTextDecoration The decorations to paint on the link text (e.g., an underline).

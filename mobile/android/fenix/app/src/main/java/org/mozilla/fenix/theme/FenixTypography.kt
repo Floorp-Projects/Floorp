@@ -21,17 +21,17 @@ import androidx.compose.ui.unit.sp
 /**
  * A custom typography for Mozilla Firefox for Android (Fenix).
  *
- * @param headline5 Currently not in-use.
- * @param headline6 Used for headings on Onboarding Modals and App Bar Titles.
- * @param headline7 Used for headings on Cards, Dialogs, Banners, and Homepage.
- * @param headline8 Used for Small Headings.
- * @param subtitle1 Used for Lists.
- * @param subtitle2 Currently not in-use.
- * @param body1 Currently not in-use.
- * @param body2 Used for body text.
- * @param button Used for Buttons.
- * @param caption Used for captions.
- * @param overline Used for Sheets.
+ * @property headline5 Currently not in-use.
+ * @property headline6 Used for headings on Onboarding Modals and App Bar Titles.
+ * @property headline7 Used for headings on Cards, Dialogs, Banners, and Homepage.
+ * @property headline8 Used for Small Headings.
+ * @property subtitle1 Used for Lists.
+ * @property subtitle2 Currently not in-use.
+ * @property body1 Currently not in-use.
+ * @property body2 Used for body text.
+ * @property button Used for Buttons.
+ * @property caption Used for captions.
+ * @property overline Used for Sheets.
  */
 @Suppress("LongParameterList")
 class FenixTypography(

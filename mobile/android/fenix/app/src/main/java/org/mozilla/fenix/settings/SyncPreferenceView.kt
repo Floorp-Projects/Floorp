@@ -20,14 +20,14 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
  * that manages the sync account authentication. A toggle will be also added
  * depending on the sync account status.
  *
- * @param syncPreference The sync [SyncPreference] to update and handle navigation.
+ * @property syncPreference The sync [SyncPreference] to update and handle navigation.
  * @param lifecycleOwner View lifecycle owner used to determine when to cancel UI jobs.
  * @param accountManager An instance of [FxaAccountManager].
- * @param syncEngine The sync engine that will be used for the sync status lookup.
- * @param loggedOffTitle Text label for the setting when user is not logged in.
- * @param loggedInTitle Text label for the setting when user is logged in.
- * @param onSyncSignInClicked A callback executed when the sync sign in [syncPreference] is clicked.
- * @param onReconnectClicked A callback executed when the [syncPreference] is clicked with a
+ * @property syncEngine The sync engine that will be used for the sync status lookup.
+ * @property loggedOffTitle Text label for the setting when user is not logged in.
+ * @property loggedInTitle Text label for the setting when user is logged in.
+ * @property onSyncSignInClicked A callback executed when the sync sign in [syncPreference] is clicked.
+ * @property onReconnectClicked A callback executed when the [syncPreference] is clicked with a
  * preference status of "Reconnect".
  */
 @Suppress("LongParameterList")

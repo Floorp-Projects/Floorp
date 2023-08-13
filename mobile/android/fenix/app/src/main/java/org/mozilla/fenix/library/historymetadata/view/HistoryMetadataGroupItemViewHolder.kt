@@ -41,7 +41,9 @@ class HistoryMetadataGroupItemViewHolder(
 
     /**
      * Displays the data of the given history record.
-     * @param isPendingDeletion hides the item unless user evokes Undo snackbar action.
+     *
+     * @param item The [History.Metadata] to display.
+     * @param isPendingDeletion Whether or not the [item] is pending deletion.
      */
     fun bind(item: History.Metadata, isPendingDeletion: Boolean) {
         binding.historyLayout.isVisible = !isPendingDeletion

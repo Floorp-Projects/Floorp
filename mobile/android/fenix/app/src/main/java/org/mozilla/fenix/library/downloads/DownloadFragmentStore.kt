@@ -50,9 +50,12 @@ sealed class DownloadFragmentAction : Action {
 }
 
 /**
- * The state for the Download Screen
- * @property items List of DownloadItem to display
- * @property mode Current Mode of Download
+ * The state of the Download screen.
+ *
+ * @property items List of [DownloadItem] to display.
+ * @property mode Current [Mode] of the Download screen.
+ * @property pendingDeletionIds Set of [DownloadItem] IDs that are waiting to be deleted.
+ * @property isDeletingItems Whether or not download items are being deleted.
  */
 data class DownloadFragmentState(
     val items: List<DownloadItem>,
@@ -64,7 +67,7 @@ data class DownloadFragmentState(
         open val selectedItems = emptySet<DownloadItem>()
 
         object Normal : Mode()
-        data class Editing(override val selectedItems: Set<DownloadItem>) : DownloadFragmentState.Mode()
+        data class Editing(override val selectedItems: Set<DownloadItem>) : Mode()
     }
 }
 

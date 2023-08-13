@@ -82,7 +82,7 @@ class StandardSnackbarErrorBinding(
 /**
  * Standard Snackbar Error data class.
  *
- * @param message that will appear on the snackbar.
+ * @property message that will appear on the snackbar.
  */
 data class StandardSnackbarError(
     val message: String,

@@ -25,7 +25,7 @@ import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @param interactor [CollectionInteractor] callback for user interactions.
+ * @property interactor [CollectionInteractor] callback for user interactions.
  */
 class TabInCollectionViewHolder(
     composeView: ComposeView,
@@ -51,11 +51,10 @@ class TabInCollectionViewHolder(
                     tab = tab,
                     isLastInCollection = tabInfo.value.isLastInCollection,
                     onClick = { interactor.onCollectionOpenTabClicked(tab) },
-                    onRemove = { wasSwiped ->
+                    onRemove = {
                         interactor.onCollectionRemoveTab(
                             collection = collection,
                             tab = tab,
-                            wasSwiped = wasSwiped,
                         )
                     },
                 )

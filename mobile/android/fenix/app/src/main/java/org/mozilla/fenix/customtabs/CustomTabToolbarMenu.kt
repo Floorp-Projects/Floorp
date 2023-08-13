@@ -31,11 +31,13 @@ import java.util.Locale
 
 /**
  * Builds the toolbar object used with the 3-dot menu in the custom tab browser fragment.
- * @param store reference to the application's [BrowserStore].
- * @param sessionId ID of the open custom tab session.
- * @param shouldReverseItems If true, reverse the menu items.
- * @param isSandboxCustomTab If true, menu should not show the "Open in Firefox" and "POWERED BY FIREFOX" items.
- * @param onItemTapped Called when a menu item is tapped.
+ *
+ * @property context An Android [Context].
+ * @property store reference to the application's [BrowserStore].
+ * @property sessionId ID of the open custom tab session.
+ * @property shouldReverseItems If true, reverse the menu items.
+ * @property isSandboxCustomTab If true, menu should not show the "Open in Firefox" and "POWERED BY FIREFOX" items.
+ * @property onItemTapped Called when a menu item is tapped.
  */
 class CustomTabToolbarMenu(
     private val context: Context,

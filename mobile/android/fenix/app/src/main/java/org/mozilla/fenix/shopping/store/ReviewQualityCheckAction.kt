@@ -57,6 +57,7 @@ sealed interface ReviewQualityCheckAction : Action {
      *
      * @property isProductRecommendationsEnabled Reflects the user preference update to display
      * recommended product. Null when product recommendations feature is disabled.
+     * @property productVendor The vendor of the product.
      */
     data class OptInCompleted(
         val isProductRecommendationsEnabled: Boolean?,

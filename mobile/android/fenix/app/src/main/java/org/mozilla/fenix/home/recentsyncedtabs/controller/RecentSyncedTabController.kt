@@ -10,6 +10,7 @@ import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recentsyncedtabs.interactor.RecentSyncedTabInteractor
@@ -43,6 +44,8 @@ interface RecentSyncedTabController {
  *
  * @property tabsUseCase Use cases to open the synced tab when clicked.
  * @property navController [NavController] to navigate to synced tabs tray.
+ * @property accessPoint The action or screen that was used to navigate to the tabs tray.
+ * @property appStore The [AppStore] that holds the state of the [HomeFragment].
  */
 class DefaultRecentSyncedTabController(
     private val tabsUseCase: TabsUseCases,

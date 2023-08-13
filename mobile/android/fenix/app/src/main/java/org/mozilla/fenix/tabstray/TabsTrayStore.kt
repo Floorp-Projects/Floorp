@@ -21,6 +21,7 @@ import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
  * @property inactiveTabs The list of tabs are considered inactive.
  * @property normalTabs The list of normal tabs that do not fall under [inactiveTabs].
  * @property privateTabs The list of tabs that are [ContentState.private].
+ * @property syncedTabs The list of synced tabs.
  * @property syncing Whether the Synced Tabs feature should fetch the latest tabs from paired devices.
  */
 data class TabsTrayState(

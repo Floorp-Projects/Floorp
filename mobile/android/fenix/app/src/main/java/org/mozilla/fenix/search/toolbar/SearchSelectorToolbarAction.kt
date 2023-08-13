@@ -32,6 +32,7 @@ import org.mozilla.fenix.search.SearchDialogFragmentStore
  * A [Toolbar.Action] implementation that shows a [SearchSelector].
  *
  * @property store [SearchDialogFragmentStore] containing the complete state of the search dialog.
+ * @property defaultSearchEngine The user selected or default [SearchEngine].
  * @property menu An instance of [SearchSelectorMenu] to display a popup menu for the search
  * selections.
  */

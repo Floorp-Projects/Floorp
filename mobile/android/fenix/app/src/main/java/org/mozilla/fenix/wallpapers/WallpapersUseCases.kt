@@ -27,11 +27,6 @@ import java.util.Date
  * @param client Handles downloading wallpapers and their metadata.
  * @param storageRootDirectory The top level app-local storage directory.
  * @param currentLocale The locale currently being used on the device.
- *
- * @property initialize Usecase for initializing wallpaper feature. Should usually be called early
- * in the app's lifetime to ensure that any potential long-running tasks can complete quickly.
- * @property loadBitmap Usecase for loading specific wallpaper bitmaps.
- * @property selectWallpaper Usecase for selecting a new wallpaper.
  */
 class WallpapersUseCases(
     context: Context,
@@ -42,6 +37,9 @@ class WallpapersUseCases(
 ) {
     private val downloader = WallpaperDownloader(storageRootDirectory, client)
     private val fileManager = WallpaperFileManager(storageRootDirectory)
+
+    // Use case for initializing wallpaper feature. Should usually be called early
+    // in the app's lifetime to ensure that any potential long-running tasks can complete quickly.
     val initialize: InitializeWallpapersUseCase by lazy {
         val metadataFetcher = WallpaperMetadataFetcher(client)
         val migrationHelper = LegacyWallpaperMigration(
@@ -59,15 +57,20 @@ class WallpapersUseCases(
             currentLocale = currentLocale,
         )
     }
+
+    // Use case for loading specific wallpaper bitmaps.
     val loadBitmap: LoadBitmapUseCase by lazy {
         DefaultLoadBitmapUseCase(
             filesDir = context.filesDir,
             getOrientation = { context.resources.configuration.orientation },
         )
     }
+
     val loadThumbnail: LoadThumbnailUseCase by lazy {
         DefaultLoadThumbnailUseCase(storageRootDirectory)
     }
+
+    // Use case for selecting a new wallpaper.
     val selectWallpaper: SelectWallpaperUseCase by lazy {
         DefaultSelectWallpaperUseCase(context.settings(), appStore, fileManager, downloader)
     }

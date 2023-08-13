@@ -68,8 +68,8 @@ interface PocketStoriesController {
 /**
  * Default behavior for handling all user interactions with the Pocket recommended stories feature.
  *
- * @param homeActivity [HomeActivity] used to open URLs in a new tab.
- * @param appStore [AppStore] from which to read the current Pocket recommendations and dispatch new actions on.
+ * @property homeActivity [HomeActivity] used to open URLs in a new tab.
+ * @property appStore [AppStore] from which to read the current Pocket recommendations and dispatch new actions on.
  */
 internal class DefaultPocketStoriesController(
     private val homeActivity: HomeActivity,

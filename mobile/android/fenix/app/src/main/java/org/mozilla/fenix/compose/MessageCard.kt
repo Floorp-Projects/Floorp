@@ -157,12 +157,12 @@ private fun MessageCardIconButton(
 /**
  * Wrapper for the color parameters of [MessageCard].
  *
- * @param backgroundColor The background [Color] of the message.
- * @param titleTextColor [Color] to apply to the message's title, or the body text when there is no title.
- * @param messageTextColor [Color] to apply to the message's body text.
- * @param iconColor [Color] to apply to the message's icon.
- * @param buttonColor The background [Color] of the message's button.
- * @param buttonTextColor [Color] to apply to the button text.
+ * @property backgroundColor The background [Color] of the message.
+ * @property titleTextColor [Color] to apply to the message's title, or the body text when there is no title.
+ * @property messageTextColor [Color] to apply to the message's body text.
+ * @property iconColor [Color] to apply to the message's icon.
+ * @property buttonColor The background [Color] of the message's button.
+ * @property buttonTextColor [Color] to apply to the button text.
  */
 data class MessageCardColors(
     val backgroundColor: Color,

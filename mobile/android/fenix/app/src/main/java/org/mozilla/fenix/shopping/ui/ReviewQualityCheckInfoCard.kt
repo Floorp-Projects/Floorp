@@ -191,8 +191,8 @@ enum class ReviewQualityCheckInfoType {
 /**
  * Model for the optional button in a [ReviewQualityCheckInfoCard].
  *
- * @param text The text to show in the button.
- * @param onClick The callback to invoke when the button is clicked.
+ * @property text The text to show in the button.
+ * @property onClick The callback to invoke when the button is clicked.
  */
 data class InfoCardButtonText(
     val text: String,

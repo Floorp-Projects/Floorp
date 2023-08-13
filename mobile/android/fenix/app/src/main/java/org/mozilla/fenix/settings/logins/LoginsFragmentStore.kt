@@ -64,14 +64,17 @@ sealed class LoginsAction : Action {
 }
 
 /**
- * The state for the Saved Logins Screen
- * @property loginList Filterable list of logins to display
- * @property currentItem The last item that was opened into the detail view
- * @property searchedForText String used by the user to filter logins
- * @property sortingStrategy sorting strategy selected by the user (Currently we support
- * sorting alphabetically and by last used)
- * @property highlightedItem The current selected sorting strategy from the sort menu
- * @property duplicateLogin Duplicate login for the current add/save login form
+ * The state for the Saved Logins Screen.
+ *
+ * @property isLoading Whether or not the list of logins are being loaded.
+ * @property loginList Filterable list of [SavedLogin]s that persist in storage.
+ * @property filteredItems Filtered list of [SavedLogin]s to display.
+ * @property currentItem The last item that was opened in the detail view.
+ * @property searchedForText String used by the user to filter logins.
+ * @property sortingStrategy Sorting strategy selected by the user. Currently, we support
+ * sorting alphabetically and by last used.
+ * @property highlightedItem The current selected sorting strategy from the sort menu.
+ * @property duplicateLogin Duplicate login for the current add/save login form.
  */
 data class LoginsListState(
     val isLoading: Boolean = false,

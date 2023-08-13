@@ -41,6 +41,8 @@ fun Context.getUndoDelay(): Long {
  * @param onCancel A suspend block to execute in case of cancellation.
  * @param operation A suspend block to execute if user doesn't cancel via the displayed [FenixSnackbar].
  * @param anchorView A [View] to which [FenixSnackbar] should be anchored.
+ * @param elevation The elevation of the [FenixSnackbar].
+ * @param paddedForBottomToolbar Whether or not [FenixSnackbar] is displayed with the bottom toolbar.
  */
 @Suppress("LongParameterList")
 fun CoroutineScope.allowUndo(

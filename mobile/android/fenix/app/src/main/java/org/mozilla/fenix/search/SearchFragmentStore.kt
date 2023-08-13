@@ -72,35 +72,37 @@ sealed class SearchEngineSource {
 /**
  * The state for the Search Screen
  *
- * @property query The current search query string
- * @property url The current URL of the tab (if this fragment is shown for an already existing tab)
+ * @property query The current search query string.
+ * @property url The current URL of the tab (if this fragment is shown for an already existing tab).
  * @property searchTerms The search terms used to search previously in this tab (if this fragment is shown
- * for an already existing tab)
- * @property searchEngineSource The current selected search engine with the context of how it was selected
- * @property defaultEngine The current default search engine (or null if none is available yet)
- * @property showSearchSuggestions Whether or not to show search suggestions from the search engine in the AwesomeBar
- * @property showSearchSuggestionsHint Whether or not to show search suggestions in private hint panel
- * @property showSearchShortcuts Whether or not to show search shortcuts in the AwesomeBar
+ * for an already existing tab).
+ * @property searchEngineSource The current selected search engine with the context of how it was selected.
+ * @property defaultEngine The current default search engine (or null if none is available yet).
+ * @property showSearchSuggestions Whether or not to show search suggestions from the search engine in the AwesomeBar.
+ * @property showSearchSuggestionsHint Whether or not to show search suggestions in private hint panel.
+ * @property showSearchShortcuts Whether or not to show search shortcuts in the AwesomeBar.
  * @property areShortcutsAvailable Whether or not there are >=2 search engines installed
  * so to know to present users with certain options or not.
  * @property showSearchShortcutsSetting Whether the setting for showing search shortcuts is enabled
  * or disabled.
- * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar
+ * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar.
  * @property showSearchTermHistory Whether or not to show suggestions based on the previously used search terms
  * with the currently selected search engine.
  * @property showHistorySuggestionsForCurrentEngine Whether or not to show history suggestions for only
  * the current search engine.
- * @property showAllHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
+ * @property showAllHistorySuggestions Whether or not to show history suggestions in the AwesomeBar.
  * @property showBookmarksSuggestionsForCurrentEngine Whether or not to show bookmarks suggestions for only
  * the current search engine.
- * @property showAllBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
+ * @property showAllBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar.
  * @property showSyncedTabsSuggestionsForCurrentEngine Whether or not to show synced tabs suggestions for only
  * the current search engine.
- * @property showAllSyncedTabsSuggestions Whether or not to show the synced tabs suggestion in the AwesomeBar
+ * @property showAllSyncedTabsSuggestions Whether or not to show the synced tabs suggestion in the AwesomeBar.
  * @property showSessionSuggestionsForCurrentEngine Whether or not to show local tabs suggestions for only
  * the current search engine.
- * @property showAllSessionSuggestions Whether or not to show the session suggestion in the AwesomeBar
- * @property pastedText The text pasted from the long press toolbar menu
+ * @property showAllSessionSuggestions Whether or not to show the session suggestion in the AwesomeBar.
+ * @property tabId The ID of the current tab.
+ * @property pastedText The text pasted from the long press toolbar menu.
+ * @property searchAccessPoint The source of the performed search.
  * @property clipboardHasUrl Indicates if the clipboard contains an URL.
  */
 data class SearchFragmentState(

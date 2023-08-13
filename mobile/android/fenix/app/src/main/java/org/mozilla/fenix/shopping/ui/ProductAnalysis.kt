@@ -53,6 +53,7 @@ import java.util.SortedMap
  * @param productAnalysis The product analysis to display.
  * @param productVendor The vendor of the product.
  * @param onOptOutClick Invoked when the user opts out of the review quality check feature.
+ * @param onReanalyzeClick Invoked when the user clicks to re-analyze a product.
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
  * @param onReviewGradeLearnMoreClick Invoked when the user clicks to learn more about review grades.

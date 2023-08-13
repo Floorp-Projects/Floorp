@@ -15,8 +15,6 @@ import org.mozilla.fenix.components.metrics.MetricsUtils
  * Interactor for the Bookmarks screen.
  * Provides implementations for the BookmarkViewInteractor.
  *
- * @property bookmarkStore bookmarks state
- * @property viewModel view state
  * @property bookmarksController view controller
  */
 @SuppressWarnings("TooManyFunctions")

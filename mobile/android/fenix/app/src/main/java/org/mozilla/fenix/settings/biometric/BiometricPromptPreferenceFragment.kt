@@ -95,6 +95,7 @@ abstract class BiometricPromptPreferenceFragment : PreferenceFragmentCompat() {
     /**
      * Use [BiometricPromptFeature] or [KeyguardManager] to confirm device security.
      *
+     * @param context An Android [Context].
      * @param prefList a list of [Preference]s to disable while authentication is happening.
      */
     fun verifyCredentialsOrShowSetupWarning(context: Context, prefList: List<Int>) {

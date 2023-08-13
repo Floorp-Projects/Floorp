@@ -19,6 +19,7 @@ import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Compa
 import org.mozilla.fenix.settings.quicksettings.WebsiteInfoState.Companion.createWebsiteInfoState
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
+import org.mozilla.fenix.settings.quicksettings.protections.ProtectionsView
 import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
 import org.mozilla.fenix.trackingprotection.ProtectionsState
 import org.mozilla.fenix.utils.Settings
@@ -50,13 +51,17 @@ class QuickSettingsFragmentStore(
          * @param context [Context] used for access to various Android resources.
          * @param websiteUrl [String] the URL of the current web page.
          * @param websiteTitle [String] the title of the current web page.
+         * @param certificateName [String] the certificate name of the current web page.
          * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
          * @param permissions [SitePermissions]? list of website permissions and their status.
+         * @param permissionHighlights [PermissionHighlightsState] Current state of the website
+         * permissions.
          * @param settings [Settings] application settings.
-         * @param certificateName [String] the certificate name of the current web page.
          * @param sessionId [String] The current session ID.
          * @param isTrackingProtectionEnabled [Boolean] Current status of tracking protection
          * for this session.
+         * @param cookieBannerUIMode [CookieBannerUIMode] The current cookie banner state to
+         * display.
          */
         @Suppress("LongParameterList")
         fun createStore(
@@ -96,14 +101,15 @@ class QuickSettingsFragmentStore(
         )
 
         /**
-         * Construct an initial [WebsitePermissions
-         * State] to be rendered by [WebsitePermissionsView]
+         * Construct an initial [WebsitePermissionsState] to be rendered by [WebsitePermissionsView]
          * containing the permissions requested by the current website.
          *
          * Users can modify the returned [WebsitePermissionsState] after it is initially displayed.
          *
          * @param context [Context] used for various Android interactions.
          * @param permissions [SitePermissions]? list of website permissions and their status.
+         * @param permissionHighlights [PermissionHighlightsState] Current state of the website
+         * permissions.
          * @param settings [Settings] application settings.
          */
         @VisibleForTesting
@@ -134,8 +140,8 @@ class QuickSettingsFragmentStore(
          * @param websiteUrl [String] the URL of the current web page.
          * @param isTrackingProtectionEnabled [Boolean] Current status of tracking protection
          * for this session.
-         * @param isCookieHandlingEnabled [Boolean] Current status of cookie banner handling
-         * for this session.
+         * @param cookieBannerUIMode [CookieBannerUIMode] The current cookie banner state to
+         * display.
          */
         @VisibleForTesting
         fun createTrackingProtectionState(

@@ -64,11 +64,11 @@ fun List<Tab>.toTabSessionStateList(store: BrowserStore): List<TabSessionState> 
 }
 
 /**
- * @param store Store used to hold in-memory collection state.
- * @param browserStore The global `BrowserStore` instance.
- * @param dismiss Callback to dismiss the collection creation dialog.
- * @param tabCollectionStorage Storage used to save tab collections to disk.
- * @param scope Coroutine scope to launch coroutines.
+ * @property store Store used to hold in-memory collection state.
+ * @property browserStore The global `BrowserStore` instance.
+ * @property dismiss Callback to dismiss the collection creation dialog.
+ * @property tabCollectionStorage Storage used to save tab collections to disk.
+ * @property scope Coroutine scope to launch coroutines.
  */
 class DefaultCollectionCreationController(
     private val store: CollectionCreationStore,

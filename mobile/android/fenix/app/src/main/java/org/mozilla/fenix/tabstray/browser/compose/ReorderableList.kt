@@ -72,14 +72,14 @@ fun createListReorderState(
 /**
  * Class containing details about the current state of dragging in list.
  *
- * @param listState State of the list.
- * @param scope [CoroutineScope] used for scrolling to the target item.
- * @param hapticFeedback [HapticFeedback] used for performing haptic feedback on item long press.
- * @param touchSlop Distance in pixels the user can wander until we consider they started dragging.
- * @param onMove Callback to be invoked when switching between two items.
- * @param onLongPress Optional callback to be invoked when long pressing an item.
- * @param onExitLongPress Optional callback to be invoked when the item is dragged after long press.
- * @param ignoredItems List of keys for non-draggable items.
+ * @property listState State of the list.
+ * @property scope [CoroutineScope] used for scrolling to the target item.
+ * @property hapticFeedback [HapticFeedback] used for performing haptic feedback on item long press.
+ * @property touchSlop Distance in pixels the user can wander until we consider they started dragging.
+ * @property onMove Callback to be invoked when switching between two items.
+ * @property ignoredItems List of keys for non-draggable items.
+ * @property onLongPress Optional callback to be invoked when long pressing an item.
+ * @property onExitLongPress Optional callback to be invoked when the item is dragged after long press.
  */
 @Suppress("LongParameterList")
 class ListReorderState internal constructor(

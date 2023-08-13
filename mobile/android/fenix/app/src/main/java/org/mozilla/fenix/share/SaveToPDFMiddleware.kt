@@ -32,7 +32,9 @@ import java.io.IOException
 
 /**
  * [BrowserAction] middleware reacting in response to Save to PDF related [Action]s.
+ *
  * @property context An Application context.
+ * @property mainScope Coroutine scope to launch coroutines.
  */
 class SaveToPDFMiddleware(
     private val context: Context,
@@ -120,7 +122,7 @@ class SaveToPDFMiddleware(
     /**
      * Use to generate extra sources for Save To PDF telemetry.
      *
-     * @param isPdfViewer - If the page has a PDF viewer or not.
+     * @param isPdfViewer If the page has a PDF viewer or not.
      * @return processed page source type to send in telemetry.
      */
     @VisibleForTesting // package
@@ -136,8 +138,8 @@ class SaveToPDFMiddleware(
     /**
      * Indicates the Print or Save As PDF action was requested and posts telemetry via Glean.
      *
-     * @param isPrint - if the telemetry is for printing
-     * @param tab - tab state to use for page source category
+     * @param tab tab state to use for page source category
+     * @param isPrint if the telemetry is for printing
      */
     private fun postTelemetryTapped(tab: TabSessionState?, isPrint: Boolean) {
         mainScope.launch {
@@ -179,8 +181,8 @@ class SaveToPDFMiddleware(
     /**
      * Indicates the Print or Save As PDF action completed and generated a PDF and posts telemetry via Glean.
      *
-     * @param isPrint - if the telemetry is for printing
-     * @param tab - tab state to use for page source category
+     * @param tab tab state to use for page source category
+     * @param isPrint if the telemetry is for printing
      */
     private fun postTelemetryCompleted(tab: TabSessionState?, isPrint: Boolean) {
         mainScope.launch {
@@ -222,9 +224,9 @@ class SaveToPDFMiddleware(
     /**
      * Indicates the Print or Save As PDF action failed and the reason for failure and posts telemetry via Glean.
      *
-     * @param isPrint - if the telemetry is for printing
-     * @param tab - tab state to use for page source category
-     * @param throwable - failure state to use for failure reason category
+     * @param tab tab state to use for page source category
+     * @param throwable failure state to use for failure reason category
+     * @param isPrint if the telemetry is for printing
      */
     private fun postTelemetryFailed(tab: TabSessionState?, throwable: Throwable, isPrint: Boolean) {
         val telFailureReason = telemetryErrorReason(throwable as Exception)

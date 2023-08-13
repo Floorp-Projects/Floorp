@@ -59,9 +59,9 @@ import org.mozilla.fenix.wallpapers.Wallpaper
  * a snackbar will be displayed.
  *
  * @param wallpaperGroups Wallpapers groups to add to grid.
- * @param selectedWallpaper The currently selected wallpaper.
  * @param defaultWallpaper The default wallpaper.
  * @param loadWallpaperResource Callback to handle loading a wallpaper bitmap. Only optional in the default case.
+ * @param selectedWallpaper The currently selected wallpaper.
  * @param onSelectWallpaper Callback for when a new wallpaper is selected.
  * @param onLearnMoreClick Callback for when the learn more action is clicked from the group description.
  * Parameters are the URL that is clicked and the name of the collection.
@@ -187,10 +187,10 @@ private fun WallpaperGroupHeading(
  *
  * @param wallpapers Wallpapers to add to grid.
  * @param defaultWallpaper The default wallpaper.
- * @param loadWallpaperResource Callback to handle loading a wallpaper bitmap. Only optional in the default case.
  * @param selectedWallpaper The currently selected wallpaper.
- * @param numColumns The number of columns that will occupy the grid.
+ * @param loadWallpaperResource Callback to handle loading a wallpaper bitmap. Only optional in the default case.
  * @param onSelectWallpaper Action to take when a new wallpaper is selected.
+ * @param numColumns The number of columns that will occupy the grid.
  */
 @Composable
 @Suppress("LongParameterList")
@@ -240,7 +240,6 @@ fun WallpaperThumbnails(
  * @param isSelected Whether the wallpaper is currently selected.
  * @param isLoading Whether the wallpaper is currently downloading.
  * @param aspectRatio The ratio of height to width of the thumbnail.
- * @param onSelect Action to take when this wallpaper is selected.
  * @param loadingOpacity Opacity of the currently downloading wallpaper.
  * @param onSelect Action to take when a new wallpaper is selected.
  */

@@ -40,12 +40,11 @@ import org.mozilla.fenix.utils.Settings
  * MVI View that displays the tracking protection, cookie banner handling toggles and the navigation
  * to additional tracking protection details.
  *
- * @param containerView [ViewGroup] in which this View will inflate itself.
- * @param trackingProtectionDivider trackingProtectionDivider The divider line between tracking protection layout
+ * @property containerView [ViewGroup] in which this View will inflate itself.
+ * @property trackingProtectionDivider trackingProtectionDivider The divider line between tracking protection layout
  * and other views from [QuickSettingsSheetDialogFragment].
- * @param interactor [ProtectionsInteractor] which will have delegated to all user
- * @param settings [Settings] application settings.
- * interactions.
+ * @property interactor [ProtectionsInteractor] which will have delegated to all user interactions.
+ * @property settings [Settings] application settings.
  */
 class ProtectionsView(
     val containerView: ViewGroup,

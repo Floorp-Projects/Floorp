@@ -39,6 +39,8 @@ typealias OnNegativeButtonClick = () -> Unit
 /**
  * A data class for creating a dialog to prompt adding/creating a collection. See also [show].
  *
+ * @property storage An instance of [TabCollectionStorage] to retrieve and modify collections.
+ * @property sessionList List of [TabSessionState] to add to a collection.
  * @property onPositiveButtonClick Invoked when a user clicks on a confirmation button in the dialog.
  * @property onNegativeButtonClick Invoked when a user clicks on a cancel button in the dialog.
  */

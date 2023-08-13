@@ -75,6 +75,7 @@ fun HomeSectionHeader(
  * Homepage header content.
  *
  * @param headerText The header string.
+ * @param textColor [Color] to apply to the text.
  * @param description The content description for the "Show all" button.
  * @param showAllTextColor [Color] for the "Show all" button.
  * @param onShowAllClick Invoked when "Show all" button is clicked.

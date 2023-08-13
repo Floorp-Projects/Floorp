@@ -72,6 +72,7 @@ private const val THUMBNAIL_SIZE = 108
  *
  * @param recentTabs List of [RecentTab] to display.
  * @param menuItems List of [RecentTabMenuItem] shown long clicking a [RecentTab].
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param backgroundColor The background [Color] of each item.
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  */
@@ -113,6 +114,8 @@ fun RecentTabs(
  * A recent tab item.
  *
  * @param tab [RecentTab.Tab] that was recently viewed.
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
+ * @param menuItems List of [RecentTabMenuItem] to be shown in a menu.
  * @param backgroundColor The background [Color] of the item.
  * @param onRecentTabClick Invoked when the user clicks on a recent tab.
  */
@@ -217,6 +220,7 @@ private fun RecentTabItem(
  * A recent tab image.
  *
  * @param tab [RecentTab] that was recently viewed.
+ * @param storage [ThumbnailStorage] to obtain tab thumbnail bitmaps from.
  * @param modifier [Modifier] used to draw the image content.
  * @param contentScale [ContentScale] used to draw image content.
  */

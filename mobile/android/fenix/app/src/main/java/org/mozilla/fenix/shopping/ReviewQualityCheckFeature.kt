@@ -26,6 +26,7 @@ import org.mozilla.fenix.components.AppStore
  * @property shoppingExperienceFeature Reference to the [ShoppingExperienceFeature].
  * @property onAvailabilityChange Invoked when availability of this feature changes based on feature
  * flag and when the loaded page is a supported product page.
+ * @property onBottomSheetCollapsed Invoked when the bottom sheet is collapsed.
  */
 class ReviewQualityCheckFeature(
     private val appStore: AppStore,

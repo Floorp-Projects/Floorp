@@ -14,7 +14,8 @@ import org.mozilla.fenix.home.recenttabs.RecentTab
  * This [Middleware] reacts to item removals from the home screen, adding them to a blocklist.
  * Additionally, it reacts to state changes in order to filter them by the blocklist.
  *
- * @param settings Blocklist is stored here as a string set
+ * @property blocklistHandler An instance of [BlocklistHandler] for interacting with the blocklist
+ * stored in shared preferences.
  */
 class BlocklistMiddleware(
     private val blocklistHandler: BlocklistHandler,

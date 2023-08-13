@@ -33,7 +33,11 @@ typealias OnViewHolderToDraw = (RecyclerView.ViewHolder) -> Boolean
 /**
  * An [ItemTouchHelper] for handling tab swiping to delete.
  *
+ * @param interactionDelegate [TabsTray.Delegate] for handling all user interactions.
  * @param onViewHolderTouched See [OnViewHolderTouched].
+ * @param onViewHolderDraw See [OnViewHolderToDraw].
+ * @param featureNameHolder Contains the identifying name of the feature.
+ * @param delegate The Callback which controls the behavior of this touch helper.
  */
 class TabsTouchHelper(
     interactionDelegate: TabsTray.Delegate,
@@ -46,7 +50,11 @@ class TabsTouchHelper(
 /**
  * An [ItemTouchHelper.Callback] for drawing custom layouts on [RecyclerView.ViewHolder] interactions.
  *
- * @param onViewHolderTouched invoked when a tab is about to be swiped. See [OnViewHolderTouched].
+ * @param delegate [TabsTray.Delegate] for handling all user interactions.
+ * @property onViewHolderTouched Invoked when a tab is about to be swiped. See [OnViewHolderTouched].
+ * @property onViewHolderDraw Invoked when a tab is drawn. See [OnViewHolderToDraw].
+ * @param featureNameHolder Contains the identifying name of the feature.
+ * @param onRemove A callback invoked when a tab is removed.
  */
 class TouchCallback(
     delegate: TabsTray.Delegate,

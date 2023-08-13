@@ -28,6 +28,8 @@ internal const val DEFAULT_COUNTRY = "US"
  *
  * @property countryCode The country code used to lookup the address data. Should match desktop entries.
  * @property displayName The name to display when selected.
+ * @property subregionTitleResource The string resource for the subregion title.
+ * @property subregions THe list of subregions.
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 internal data class Country(

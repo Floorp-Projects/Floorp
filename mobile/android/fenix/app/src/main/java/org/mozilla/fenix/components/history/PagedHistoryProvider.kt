@@ -81,7 +81,8 @@ interface PagedHistoryProvider {
 }
 
 /**
- * @param historyStorage
+ * @property historyStorage An instance [PlacesHistoryStorage] that provides read/write methods for
+ * history data.
  */
 class DefaultPagedHistoryProvider(
     private val historyStorage: PlacesHistoryStorage,

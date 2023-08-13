@@ -32,7 +32,7 @@ interface CreditCardsManagementInteractor {
 /**
  * The default implementation of [CreditCardsManagementInteractor].
  *
- * @param controller An instance of [CreditCardsManagementController] which will be delegated for
+ * @property controller An instance of [CreditCardsManagementController] which will be delegated for
  * all user interactions.
  */
 class DefaultCreditCardsManagementInteractor(

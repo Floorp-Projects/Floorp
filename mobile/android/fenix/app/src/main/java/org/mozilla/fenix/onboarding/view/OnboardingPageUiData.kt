@@ -21,7 +21,8 @@ data class OnboardingPageUiData(
 ) {
     /**
      * Model for different types of Onboarding Pages.
-     * @param telemetryId Identifier for the page, used in telemetry.
+     *
+     * @property telemetryId Identifier for the page, used in telemetry.
      */
     enum class Type(
         val telemetryId: String,

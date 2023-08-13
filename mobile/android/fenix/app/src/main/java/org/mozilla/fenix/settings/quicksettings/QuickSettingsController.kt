@@ -91,18 +91,21 @@ interface QuickSettingsController {
 /**
  * Default behavior of [QuickSettingsController]. Other implementations are possible.
  *
- * @param context [Context] used for various Android interactions.
- * @param quickSettingsStore [QuickSettingsFragmentStore] holding the State for all Views displayed
+ * @property context [Context] used for various Android interactions.
+ * @property quickSettingsStore [QuickSettingsFragmentStore] holding the State for all Views displayed
  * in this Controller's Fragment.
- * @param ioScope [CoroutineScope] with an IO dispatcher used for structured concurrency.
- * @param navController NavController] used for navigation.
- * @param sitePermissions [SitePermissions]? list of website permissions and their status.
- * @param settings [Settings] application settings.
- * @param permissionStorage [PermissionStorage] app state for website permissions exception.
- * @param reload [ReloadUrlUseCase] callback allowing for reloading the current web page.
- * @param requestRuntimePermissions [OnNeedToRequestPermissions] callback allowing for requesting
+ * @property browserStore The application's [BrowserStore].
+ * @property ioScope [CoroutineScope] with an IO dispatcher used for structured concurrency.
+ * @property navController NavController] used for navigation.
+ * @property sessionId ID of the session to manipulate.
+ * @property sitePermissions [SitePermissions]? list of website permissions and their status.
+ * @property settings [Settings] application settings.
+ * @property permissionStorage [PermissionStorage] app state for website permissions exception.
+ * @property reload [ReloadUrlUseCase] callback allowing for reloading the current web page.
+ * @property requestRuntimePermissions [OnNeedToRequestPermissions] callback allowing for requesting
  * specific Android runtime permissions.
- * @param displayPermissions callback for when [WebsitePermissionsView] needs to be displayed.
+ * @property displayPermissions callback for when [WebsitePermissionsView] needs to be displayed.
+ * @property engine An [Engine] instance used for clearing the browsing data.
  */
 @Suppress("TooManyFunctions", "LongParameterList")
 class DefaultQuickSettingsController(

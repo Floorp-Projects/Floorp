@@ -7,8 +7,10 @@ package org.mozilla.fenix.library.historymetadata
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.PendingDeletionHistory
+import org.mozilla.fenix.library.historymetadata.view.HistoryMetadataGroupView
 
 /**
  * The [Store] for holding the [HistoryMetadataGroupFragmentState] and applying
@@ -21,7 +23,7 @@ class HistoryMetadataGroupFragmentStore(initialState: HistoryMetadataGroupFragme
     )
 
 /**
- * Actions to dispatch through the [HistoryMetadataGroupFragmentStore to modify the
+ * Actions to dispatch through the [HistoryMetadataGroupFragmentStore] to modify the
  * [HistoryMetadataGroupFragmentState] through the [historyStateReducer].
  */
 sealed class HistoryMetadataGroupFragmentAction : Action {
@@ -31,7 +33,7 @@ sealed class HistoryMetadataGroupFragmentAction : Action {
     data class Deselect(val item: History.Metadata) : HistoryMetadataGroupFragmentAction()
 
     /**
-     * Updates the set of items marked for removal from the [org.mozilla.fenix.components.AppStore]
+     * Updates the set of items marked for removal from the [AppStore]
      * to the [HistoryMetadataGroupFragmentStore], to be hidden from the UI.
      */
     data class UpdatePendingDeletionItems(val pendingDeletionItems: Set<PendingDeletionHistory>) :
@@ -41,7 +43,7 @@ sealed class HistoryMetadataGroupFragmentAction : Action {
     object DeleteAll : HistoryMetadataGroupFragmentAction()
 
     /**
-     * Updates the empty state of [org.mozilla.fenix.library.historymetadata.view.HistoryMetadataGroupView].
+     * Updates the empty state of [HistoryMetadataGroupView].
      */
     data class ChangeEmptyState(val isEmpty: Boolean) : HistoryMetadataGroupFragmentAction()
 }
@@ -50,6 +52,8 @@ sealed class HistoryMetadataGroupFragmentAction : Action {
  * The state for [HistoryMetadataGroupFragment].
  *
  * @property items The list of [History.Metadata] to display.
+ * @property pendingDeletionItems The set of [PendingDeletionHistory] marked for removal.
+ * @property isEmpty Whether or not the screen is empty.
  */
 data class HistoryMetadataGroupFragmentState(
     val items: List<History.Metadata>,

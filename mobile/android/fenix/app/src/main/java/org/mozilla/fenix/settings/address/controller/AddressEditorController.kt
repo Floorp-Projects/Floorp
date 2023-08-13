@@ -43,10 +43,10 @@ interface AddressEditorController {
 /**
  * The default implementation of [AddressEditorController].
  *
- * @param storage An instance of the [AutofillCreditCardsAddressesStorage] for adding and retrieving
+ * @property storage An instance of the [AutofillCreditCardsAddressesStorage] for adding and retrieving
  * addresses.
- * @param lifecycleScope [CoroutineScope] scope to launch coroutines.
- * @param navController [NavController] used for navigation.
+ * @property lifecycleScope [CoroutineScope] scope to launch coroutines.
+ * @property navController [NavController] used for navigation.
  */
 class DefaultAddressEditorController(
     private val storage: AutofillCreditCardsAddressesStorage,

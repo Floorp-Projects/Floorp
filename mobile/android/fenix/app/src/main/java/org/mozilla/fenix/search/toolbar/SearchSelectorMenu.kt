@@ -43,7 +43,7 @@ class SearchSelectorMenu(
         /**
          * The menu item to display a search engine.
          *
-         * @param searchEngine The [SearchEngine] that was selected.
+         * @property searchEngine The [SearchEngine] that was selected.
          */
         data class SearchEngine(val searchEngine: MozSearchEngine) : Item()
     }

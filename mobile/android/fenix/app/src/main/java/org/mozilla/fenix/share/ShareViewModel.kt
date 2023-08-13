@@ -168,7 +168,9 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Returns a list of apps that can be shared to.
+     *
      * @param intentActivities List of activities from [getIntentActivities].
+     * @param context Android context.
      */
     @VisibleForTesting
     @WorkerThread
