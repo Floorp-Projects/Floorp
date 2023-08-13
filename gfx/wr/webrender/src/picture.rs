@@ -2084,6 +2084,7 @@ impl TileCacheInstance {
                 frame_context.global_device_pixel_scale,
                 &frame_context.global_screen_world_rect,
                 &mut frame_state.data_stores.clip,
+                frame_state.rg_builder,
                 true,
             );
 

@@ -15,8 +15,8 @@ use crate::clip::{ClipStore, ClipItemKind};
 use crate::frame_builder::{FrameGlobalResources};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress};
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
-use crate::gpu_types::{TransformPalette, ZBufferIdGenerator, TransformPaletteId, PrimitiveInstanceData, MaskInstance};
-use crate::gpu_types::{ZBufferId};
+use crate::gpu_types::{TransformPalette, ZBufferIdGenerator, TransformPaletteId, MaskInstance};
+use crate::gpu_types::{ZBufferId, QuadSegment};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
 use crate::prepare::write_prim_blocks;
@@ -233,8 +233,6 @@ pub struct ColorRenderTarget {
     pub resolve_ops: Vec<ResolveOp>,
     pub clear_color: Option<ColorF>,
 
-    pub prim_instances: Vec<PrimitiveInstanceData>,
-    pub prim_instances_with_scissor: FastHashMap<DeviceIntRect, Vec<PrimitiveInstanceData>>,
     pub clip_masks: ClipMaskInstanceList,
 }
 
@@ -258,8 +256,6 @@ impl RenderTarget for ColorRenderTarget {
             used_rect,
             resolve_ops: Vec::new(),
             clear_color: Some(ColorF::TRANSPARENT),
-            prim_instances: Vec::new(),
-            prim_instances_with_scissor: FastHashMap::default(),
             clip_masks: ClipMaskInstanceList::new(),
         }
     }
@@ -389,12 +385,15 @@ impl RenderTarget for ColorRenderTarget {
                     render_tasks,
                     |_, instance| {
                         if info.prim_needs_scissor_rect {
-                            self.prim_instances_with_scissor
+                            self.clip_masks
+                                .prim_instances_with_scissor
                                 .entry(target_rect)
                                 .or_insert(Vec::new())
                                 .push(instance);
                         } else {
-                            self.prim_instances.push(instance);
+                            self.clip_masks
+                                .prim_instances
+                                .push(instance);
                         }
                     }
                 );
@@ -504,6 +503,7 @@ pub struct AlphaRenderTarget {
     pub zero_clears: Vec<RenderTaskId>,
     pub one_clears: Vec<RenderTaskId>,
     pub texture_id: CacheTextureId,
+    pub clip_masks: ClipMaskInstanceList,
 }
 
 impl RenderTarget for AlphaRenderTarget {
@@ -521,6 +521,7 @@ impl RenderTarget for AlphaRenderTarget {
             zero_clears: Vec::new(),
             one_clears: Vec::new(),
             texture_id,
+            clip_masks: ClipMaskInstanceList::new(),
         }
     }
 
@@ -533,7 +534,7 @@ impl RenderTarget for AlphaRenderTarget {
         task_id: RenderTaskId,
         ctx: &RenderTargetContext,
         gpu_cache: &mut GpuCache,
-        _: &mut GpuBufferBuilder,
+        gpu_buffer_builder: &mut GpuBufferBuilder,
         render_tasks: &RenderTaskGraph,
         clip_store: &ClipStore,
         transforms: &mut TransformPalette,
@@ -543,7 +544,6 @@ impl RenderTarget for AlphaRenderTarget {
         let target_rect = task.get_target_rect();
 
         match task.kind {
-            RenderTaskKind::Prim(..) |
             RenderTaskKind::Image(..) |
             RenderTaskKind::Cached(..) |
             RenderTaskKind::Readback(..) |
@@ -558,6 +558,33 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::TileComposite(..) |
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: should not be added to alpha target!");
+            }
+            RenderTaskKind::Prim(ref info) => {
+                let render_task_address = task_id.into();
+                let target_rect = task.get_target_rect();
+                let content_rect = DeviceRect::new(
+                    info.content_origin,
+                    info.content_origin + target_rect.size().to_f32(),
+                );
+
+                // TODO(gw): Could likely be more efficient by choosing to clear to 0 or 1
+                //           based on the clip chain, or even skipping clear and masking the
+                //           prim region with blend disabled.
+                self.one_clears.push(task_id);
+
+                build_mask_tasks(
+                    info,
+                    render_task_address,
+                    target_rect,
+                    content_rect,
+                    ctx.clip_store,
+                    ctx.data_stores,
+                    ctx.spatial_tree,
+                    gpu_buffer_builder,
+                    transforms,
+                    render_tasks,
+                    &mut self.clip_masks,
+                );
             }
             RenderTaskKind::VerticalBlur(..) => {
                 self.zero_clears.push(task_id);
@@ -980,6 +1007,16 @@ fn build_mask_tasks(
             spatial_tree,
         );
 
+        // Work out a local space rect for the clip that will ensure we write to every
+        // pixel covered by the primitive. For 2d cases, this will be exact. For complex
+        // perspective cases, it will be a conservative estimate.
+        let mapper = SpaceMapper::new_with_target(
+            info.raster_spatial_node_index,
+            clip_node.item.spatial_node_index,
+            task_world_rect,
+            spatial_tree,
+        );
+
         let (clip_address, clip_rect, fast_path) = match clip_node.item.kind {
             ClipItemKind::RoundedRectangle { rect, radius, mode } => {
                 let (fast_path, clip_address) = if radius.is_uniform().is_some() {
@@ -1027,20 +1064,57 @@ fn build_mask_tasks(
             ClipItemKind::BoxShadow { .. } => {
                 panic!("bug: box-shadow clips not expected on non-legacy rect/quads");
             }
-            ClipItemKind::Image { .. } => {
-                panic!("bug: image-masks not expected on rect/quads");
+            ClipItemKind::Image { rect, .. } => {
+                for tile in clip_store.visible_mask_tiles(&clip_instance) {
+                    let clip_prim_address = write_prim_blocks(
+                        gpu_buffer_builder,
+                        rect,
+                        rect,
+                        PremultipliedColorF::WHITE,
+                        &[QuadSegment {
+                            rect: tile.tile_rect,
+                            task_id: tile.task_id,
+                        }]
+                    );
+
+                    let texture = render_tasks
+                        .resolve_texture(tile.task_id)
+                        .expect("bug: texture not found for tile");
+
+                    add_quad_to_batch(
+                        render_task_address,
+                        clip_transform_id,
+                        clip_prim_address,
+                        quad_flags,
+                        EdgeAaSegmentMask::empty(),
+                        0,
+                        tile.task_id,
+                        ZBufferId(0),
+                        render_tasks,
+                        |_, prim| {
+                            if clip_needs_scissor_rect {
+                                results
+                                    .image_mask_instances_with_scissor
+                                    .entry((target_rect, texture))
+                                    .or_insert(Vec::new())
+                                    .push(prim);
+                            } else {
+                                results
+                                    .image_mask_instances
+                                    .entry(texture)
+                                    .or_insert(Vec::new())
+                                    .push(prim);
+                            }
+                        }
+                    );
+                }
+
+                // TODO(gw): For now, we skip the main mask prim below for image masks. Perhaps
+                //           we can better merge the logic together?
+                // TODO(gw): How to efficiently handle if the image-mask rect doesn't cover local prim rect?
+                continue;
             }
         };
-
-        // Work out a local space rect for the clip that will ensure we write to every
-        // pixel covered by the primitive. For 2d cases, this will be exact. For complex
-        // perspective cases, it will be a conservative estimate.
-        let mapper = SpaceMapper::new_with_target(
-            info.raster_spatial_node_index,
-            clip_node.item.spatial_node_index,
-            task_world_rect,
-            spatial_tree,
-        );
 
         let bounding_rect = match mapper.unmap(&task_world_rect) {
             Some(rect) => rect,

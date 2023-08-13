@@ -21,6 +21,7 @@ use crate::picture::{SurfaceIndex, RasterConfig, SubSliceIndex};
 use crate::prim_store::{ClipTaskIndex, PictureIndex, PrimitiveInstanceKind};
 use crate::prim_store::{PrimitiveStore, PrimitiveInstance};
 use crate::render_backend::{DataStores, ScratchBuffer};
+use crate::render_task_graph::RenderTaskGraphBuilder;
 use crate::resource_cache::ResourceCache;
 use crate::scene::SceneProperties;
 use crate::space::SpaceMapper;
@@ -44,6 +45,7 @@ pub struct FrameVisibilityState<'a> {
     pub data_stores: &'a mut DataStores,
     pub clip_tree: &'a mut ClipTree,
     pub composite_state: &'a mut CompositeState,
+    pub rg_builder: &'a mut RenderTaskGraphBuilder,
     /// A stack of currently active off-screen surfaces during the
     /// visibility frame traversal.
     pub surface_stack: Vec<(PictureIndex, SurfaceIndex)>,
@@ -295,6 +297,7 @@ pub fn update_prim_visibility(
                     device_pixel_scale,
                     &world_culling_rect,
                     &mut frame_state.data_stores.clip,
+                    frame_state.rg_builder,
                     true,
                 );
 
