@@ -152,9 +152,6 @@ ALL_PROCESSES += [
     DllBlocklistEntry("grabdll.dll", (2, 6, 1, 0)),
     DllBlocklistEntry("grabkernel.dll", (1, 0, 0, 1)),
 
-    # ESET, bug 1229252
-    DllBlocklistEntry("eoppmonitor.dll", ALL_VERSIONS),
-
     # SS2OSD, bug 1262348
     DllBlocklistEntry("ss2osd.dll", ALL_VERSIONS),
     DllBlocklistEntry("ss2devprops.dll", ALL_VERSIONS),
