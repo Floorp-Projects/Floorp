@@ -226,3 +226,55 @@ add_task(async function test_fullscreen_reappear() {
     await document.exitFullscreen();
   });
 });
+
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1847901
+add_task(async function test_fullscreen_warning_disabled() {
+  // Disable fullscreen warning
+  await SpecialPowers.pushPrefEnv({
+    set: [["full-screen-api.warning.timeout", 0]],
+  });
+
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    let newWin = await BrowserTestUtils.openNewBrowserWindow();
+    let fsWarning = document.getElementById("fullscreen-warning");
+    let mut = new MutationObserver(mutations => {
+      ok(false, `${mutations[0].attributeName} attribute should not change`);
+    });
+    mut.observe(fsWarning, {
+      attributeFilter: ["hidden", "onscreen", "ontop"],
+    });
+
+    info("Entering full screen.");
+    await SimpleTest.promiseFocus(window);
+    await SpecialPowers.spawn(browser, [], async () => {
+      return content.document.body.requestFullscreen();
+    });
+    // Wait a bit to ensure no state change.
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    });
+
+    info("The fullscreen warning should still not show after switching focus.");
+    await SimpleTest.promiseFocus(newWin);
+    await SimpleTest.promiseFocus(window);
+    // Wait a bit to ensure no state change.
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    });
+
+    mut.disconnect();
+
+    info("Close new browser window.");
+    await BrowserTestUtils.closeWindow(newWin);
+
+    info("Exit fullscreen.");
+    await document.exitFullscreen();
+  });
+
+  // Revert the setting to avoid affecting subsequent tests.
+  await SpecialPowers.popPrefEnv();
+});
