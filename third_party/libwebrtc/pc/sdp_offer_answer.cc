@@ -5113,11 +5113,7 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
 
 bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  if (pc_->sctp_mid().has_value()) {
-    RTC_DCHECK_EQ(mid, *pc_->sctp_mid());
-    return true;  // data channel already created.
-  }
-
+  RTC_DCHECK(!pc_->sctp_mid().has_value() || mid == pc_->sctp_mid().value());
   RTC_LOG(LS_INFO) << "Creating data channel, mid=" << mid;
 
   absl::optional<std::string> transport_name =
