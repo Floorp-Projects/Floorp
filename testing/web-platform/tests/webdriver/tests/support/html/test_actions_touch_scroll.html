@@ -1,0 +1,70 @@
+<!doctype html>
+<meta charset=utf-8>
+<html>
+
+  <head>
+    <title>Test Actions Touch Scroll</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      #scrollable {
+        width: 50vw;
+        height: 50vh;
+        background-color: yellow;
+        overflow: scroll;
+      }
+
+      #scrollContent {
+        width: 200vw;
+        height: 200vh;
+        background-color: blue;
+      }
+    </style>
+    <script>
+      "use strict";
+      var els = {};
+      var allEvents = { events: [] };
+      function displayMessage(message) {
+        document.getElementById("events").innerHTML = "<p>" + message + "</p>";
+      }
+
+      function appendMessage(message) {
+        document.getElementById("events").innerHTML += "<p>" + message + "</p>";
+      }
+
+      function recordScrollEvent(event) {
+        allEvents.events.push({
+          "type": event.type,
+          "target": event.target.id
+        });
+        appendMessage(event.type + " " +
+          "target id: " + event.target.id);
+      }
+
+      function resetEvents() {
+        allEvents.events.length = 0;
+        displayMessage("");
+      }
+    </script>
+  </head>
+
+  <body>
+    <h2>Scrollable content</h2>
+    <div id="scrollable">
+      <div id="scrollContent"></div>
+    </div>
+    <div id="resultContainer">
+      <h2>Events</h2>
+      <div id="events"></div>
+    </div>
+  </body>
+  <script>
+    var scrollable = document.getElementById("scrollable");
+    scrollable.addEventListener("scroll", recordScrollEvent);
+  </script>
+
+</html>
