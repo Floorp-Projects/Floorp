@@ -30,10 +30,10 @@ index 2f7b139f9f..43fedd8595 100644
    virtual VideoFrameMetadata Metadata() const = 0;
  
 diff --git a/modules/rtp_rtcp/source/rtp_sender.h b/modules/rtp_rtcp/source/rtp_sender.h
-index fb6c8001f0..70a5c773ab 100644
+index 158d073b7a..1b053b4802 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.h
 +++ b/modules/rtp_rtcp/source/rtp_sender.h
-@@ -140,6 +140,10 @@ class RTPSender {
+@@ -143,6 +143,10 @@ class RTPSender {
  
    uint32_t SSRC() const RTC_LOCKS_EXCLUDED(send_mutex_) { return ssrc_; }
  
