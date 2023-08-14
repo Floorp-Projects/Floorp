@@ -252,3 +252,60 @@ ${helpers.two_properties_shorthand(
         }
     }
 </%helpers:shorthand>
+
+<%helpers:shorthand name="zoom" engines="gecko"
+                    sub_properties="transform transform-origin"
+                    gecko_pref="layout.css.zoom-transform-hack.enabled"
+                    flags="SHORTHAND_IN_GETCS IS_LEGACY_SHORTHAND"
+                    spec="Not a standard, only a compat hack">
+    use crate::parser::Parse;
+    use crate::values::specified::{Number, NumberOrPercentage, TransformOrigin};
+    use crate::values::generics::transform::{Transform, TransformOperation};
+
+    pub fn parse_value<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Longhands, ParseError<'i>> {
+        let zoom = match input.try_parse(|input| NumberOrPercentage::parse(context, input)) {
+            Ok(number_or_percent) => number_or_percent.to_number(),
+            Err(..) => {
+                input.expect_ident_matching("normal")?;
+                Number::new(1.0)
+            },
+        };
+
+        // Make sure that the initial value matches the values for the
+        // longhands, just for general sanity.  `zoom: 1` and `zoom: 0` are
+        // ignored, see [1][2]. They are just hack for the "has layout" mode on
+        // IE.
+        //
+        // [1]: https://bugs.webkit.org/show_bug.cgi?id=18467
+        // [2]: https://bugzilla.mozilla.org/show_bug.cgi?id=1593009
+        Ok(if zoom.get() == 1.0 || zoom.get() == 0.0 {
+            expanded! {
+                transform: Transform::none(),
+                transform_origin: TransformOrigin::initial_value(),
+            }
+        } else {
+            expanded! {
+                transform: Transform(vec![TransformOperation::Scale(zoom, zoom)].into()),
+                transform_origin: TransformOrigin::zero_zero(),
+            }
+        })
+    }
+
+    impl<'a> ToCss for LonghandsToSerialize<'a>  {
+        fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result where W: fmt::Write {
+            if self.transform.0.is_empty() && *self.transform_origin == TransformOrigin::initial_value() {
+                return 1.0f32.to_css(dest);
+            }
+            if *self.transform_origin != TransformOrigin::zero_zero() {
+                return Ok(())
+            }
+            match &*self.transform.0 {
+                [TransformOperation::Scale(x, y)] if x == y => x.to_css(dest),
+                _ => Ok(()),
+            }
+        }
+    }
+</%helpers:shorthand>
