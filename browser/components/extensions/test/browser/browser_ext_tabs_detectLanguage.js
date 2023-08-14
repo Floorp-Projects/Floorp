@@ -1,29 +1,15 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Verify detectLangauge</title>
-  <meta charset="utf-8">
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-
-<script type="text/javascript">
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
-
 
 add_task(async function testDetectLanguage() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["tabs"],
-      host_permissions: ["<all_urls>"],
-      granted_host_permissions: true
     },
 
-    background: async function() {
-      const BASE_PATH = "tests/toolkit/components/extensions/test/mochitest";
+    background: async function () {
+      const BASE_PATH = "browser/browser/components/extensions/test/browser";
 
       function loadTab(url) {
         return browser.tabs.create({ url });
@@ -31,7 +17,7 @@ add_task(async function testDetectLanguage() {
 
       try {
         let tab = await loadTab(
-          `https://example.com/${BASE_PATH}/file_language_ja.html`
+          `http://example.co.jp/${BASE_PATH}/file_language_ja.html`
         );
         let lang = await browser.tabs.detectLanguage(tab.id);
         browser.test.assertEq(
@@ -42,7 +28,7 @@ add_task(async function testDetectLanguage() {
         await browser.tabs.remove(tab.id);
 
         tab = await loadTab(
-          `https://example.com/${BASE_PATH}/file_language_fr_en.html`
+          `http://example.co.jp/${BASE_PATH}/file_language_fr_en.html`
         );
         lang = await browser.tabs.detectLanguage(tab.id);
         browser.test.assertEq(
@@ -53,7 +39,7 @@ add_task(async function testDetectLanguage() {
         await browser.tabs.remove(tab.id);
 
         tab = await loadTab(
-          `https://example.com/${BASE_PATH}/file_language_tlh.html`
+          `http://example.co.jp/${BASE_PATH}/file_language_tlh.html`
         );
         lang = await browser.tabs.detectLanguage(tab.id);
         browser.test.assertEq(
@@ -77,9 +63,3 @@ add_task(async function testDetectLanguage() {
 
   await extension.unload();
 });
-
-
-</script>
-
-</body>
-</html>
