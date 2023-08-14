@@ -29,20 +29,13 @@ DataChannelController::~DataChannelController() {
 }
 
 bool DataChannelController::HasDataChannels() const {
-  auto has_channels = [&] {
-    RTC_DCHECK_RUN_ON(network_thread());
-    return !sctp_data_channels_n_.empty();
-  };
-
-  if (network_thread()->IsCurrent())
-    return has_channels();
-
-  return network_thread()->BlockingCall(std::move(has_channels));
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  return channel_usage_ == DataChannelUsage::kInUse;
 }
 
 bool DataChannelController::HasUsedDataChannels() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  return has_used_data_channels_;
+  return channel_usage_ != DataChannelUsage::kNeverUsed;
 }
 
 RTCError DataChannelController::SendData(
@@ -85,10 +78,15 @@ void DataChannelController::OnChannelStateChanged(
   if (state == DataChannelInterface::DataState::kClosed)
     OnSctpDataChannelClosed(channel);
 
-  signaling_thread()->PostTask(
-      SafeTask(signaling_safety_.flag(), [this, channel_id, state = state] {
-                 pc_->OnSctpDataChannelStateChanged(channel_id, state);
-               }));
+  DataChannelUsage channel_usage = sctp_data_channels_n_.empty()
+                                       ? DataChannelUsage::kHaveBeenUsed
+                                       : DataChannelUsage::kInUse;
+  signaling_thread()->PostTask(SafeTask(
+      signaling_safety_.flag(), [this, channel_id, state, channel_usage] {
+        RTC_DCHECK_RUN_ON(signaling_thread());
+        channel_usage_ = channel_usage;
+        pc_->OnSctpDataChannelStateChanged(channel_id, state);
+      }));
 }
 
 void DataChannelController::OnDataReceived(
@@ -173,6 +171,8 @@ void DataChannelController::SetupDataChannelTransport_n(
 void DataChannelController::PrepareForShutdown() {
   RTC_DCHECK_RUN_ON(signaling_thread());
   signaling_safety_.reset(PendingTaskSafetyFlag::CreateDetachedInactive());
+  if (channel_usage_ != DataChannelUsage::kNeverUsed)
+    channel_usage_ = DataChannelUsage::kHaveBeenUsed;
 }
 
 void DataChannelController::TeardownDataChannelTransport_n(RTCError error) {
@@ -241,7 +241,7 @@ bool DataChannelController::HandleOpenMessage_n(
 void DataChannelController::OnDataChannelOpenMessage(
     rtc::scoped_refptr<SctpDataChannel> channel,
     bool ready_to_send) {
-  has_used_data_channels_ = true;
+  channel_usage_ = DataChannelUsage::kInUse;
   auto proxy = SctpDataChannel::CreateProxy(channel, signaling_safety_.flag());
 
   pc_->Observer()->OnDataChannel(proxy);
@@ -346,7 +346,7 @@ DataChannelController::InternalCreateDataChannelWithProxy(
   if (!ret.ok())
     return ret.MoveError();
 
-  has_used_data_channels_ = true;
+  channel_usage_ = DataChannelUsage::kInUse;
   return SctpDataChannel::CreateProxy(ret.MoveValue(),
                                       signaling_safety_.flag());
 }
