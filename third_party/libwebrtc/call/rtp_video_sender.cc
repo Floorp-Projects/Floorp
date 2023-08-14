@@ -191,7 +191,6 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
     const RtpSenderObservers& observers,
     int rtcp_report_interval_ms,
     Transport* send_transport,
-    RtcpBandwidthObserver* bandwidth_callback,
     RtpTransportControllerSendInterface* transport,
     const std::map<uint32_t, RtpState>& suspended_ssrcs,
     RtcEventLog* event_log,
@@ -212,7 +211,7 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
   configuration.intra_frame_callback = observers.intra_frame_callback;
   configuration.rtcp_loss_notification_observer =
       observers.rtcp_loss_notification_observer;
-  configuration.bandwidth_callback = bandwidth_callback;
+  configuration.network_link_rtcp_observer = transport->GetRtcpObserver();
   configuration.network_state_estimate_observer =
       transport->network_state_estimate_observer();
   configuration.transport_feedback_callback =
@@ -390,7 +389,6 @@ RtpVideoSender::RtpVideoSender(
                                           observers,
                                           rtcp_report_interval_ms,
                                           send_transport,
-                                          transport->GetBandwidthObserver(),
                                           transport,
                                           suspended_ssrcs,
                                           event_log,

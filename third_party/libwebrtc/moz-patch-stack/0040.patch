@@ -27,7 +27,7 @@ index 0caf59a20e..bffb910832 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index a18ab8754b..2b77699864 100644
+index e1e44ef7e4..4c1d056cc5 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -55,6 +55,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;

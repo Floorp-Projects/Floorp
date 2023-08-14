@@ -24,11 +24,11 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e699
  10 files changed, 18 insertions(+), 6 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 2b77699864..51f3dfd7b7 100644
+index 4c1d056cc5..5ee97f290e 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -428,7 +428,7 @@ ChannelSend::ChannelSend(
-       transport_controller->GetBandwidthObserver();
+       transport_controller->GetRtcpObserver();
    configuration.transport_feedback_callback =
        transport_controller->transport_feedback_observer();
 -  configuration.clock = (clock ? clock : Clock::GetRealTimeClock());
