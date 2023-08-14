@@ -9,6 +9,9 @@ import {
   RECOMMENDATIONS_API,
   RECOMMENDATIONS_RESPONSE_SCHEMA,
   RECOMMENDATIONS_REQUEST_SCHEMA,
+  ATTRIBUTION_API,
+  ATTRIBUTION_RESPONSE_SCHEMA,
+  ATTRIBUTION_REQUEST_SCHEMA,
   ProductConfig,
 } from "chrome://global/content/shopping/ProductConfig.mjs";
 
@@ -603,6 +606,65 @@ export class ShoppingProduct {
       }
       pollCount++;
     }
+
+    return result;
+  }
+
+  /**
+   * Send an event to the Ad Attribution API
+   *
+   * @param {string} eventName
+   *  Event name options are:
+   *  - "impression"
+   *  - "click"
+   * @param {string} aid
+   *  The aid (Ad ID) from the recommendation.
+   * @param {string} [source]
+   *  Source of the event
+   * @param {object} [options]
+   *  Override default API url and schema.
+   * @returns {object} result
+   *  Parsed JSON API result or null.
+   */
+  async sendAttributionEvent(
+    eventName,
+    aid,
+    source = "firefox_sidebar",
+    options = {
+      url: ATTRIBUTION_API,
+      requestSchema: ATTRIBUTION_REQUEST_SCHEMA,
+      responseSchema: ATTRIBUTION_RESPONSE_SCHEMA,
+    }
+  ) {
+    if (!eventName) {
+      throw new Error("An event name is required.");
+    }
+    if (!aid) {
+      throw new Error("An Ad ID is required.");
+    }
+
+    let requestOptions = {
+      event_source: source,
+    };
+
+    switch (eventName) {
+      case "impression":
+        requestOptions.event_name = "trusted_deals_impression";
+        requestOptions.aidvs = [aid];
+        break;
+      case "click":
+        requestOptions.event_name = "trusted_deals_link_clicked";
+        requestOptions.aid = aid;
+        break;
+      default:
+        throw new Error(`"${eventName}" is not a valid event name`);
+    }
+
+    let { url, requestSchema, responseSchema } = options;
+    let result = await this.request(url, requestOptions, {
+      requestSchema,
+      responseSchema,
+    });
 
     return result;
   }
