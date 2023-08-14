@@ -636,10 +636,12 @@ nsresult nsExternalHelperAppService::Init() {
 nsExternalHelperAppService::~nsExternalHelperAppService() {}
 
 nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
-    const nsACString& aMimeContentType, nsIRequest* aRequest,
+    const nsACString& aMimeContentType, nsIChannel* aChannel,
     BrowsingContext* aContentContext, bool aForceSave,
     nsIInterfaceRequestor* aWindowContext,
     nsIStreamListener** aStreamListener) {
+  NS_ENSURE_ARG_POINTER(aChannel);
+
   // We need to get a hold of a ContentChild so that we can begin forwarding
   // this data to the parent.  In the HTTP case, this is unfortunate, since
   // we're actually passing data from parent->child->parent wastefully, but
@@ -660,26 +662,23 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   nsAutoString fileName;
   nsCOMPtr<nsILoadInfo> loadInfo;
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-  if (channel) {
-    channel->GetURI(getter_AddRefs(uri));
-    channel->GetContentLength(&contentLength);
-    channel->GetContentDisposition(&contentDisposition);
-    channel->GetContentDispositionFilename(fileName);
-    channel->GetContentDispositionHeader(disp);
-    loadInfo = channel->LoadInfo();
+  aChannel->GetURI(getter_AddRefs(uri));
+  aChannel->GetContentLength(&contentLength);
+  aChannel->GetContentDisposition(&contentDisposition);
+  aChannel->GetContentDispositionFilename(fileName);
+  aChannel->GetContentDispositionHeader(disp);
+  loadInfo = aChannel->LoadInfo();
 
-    nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(aRequest));
-    wasFileChannel = fileChan != nullptr;
-  }
+  nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(aChannel));
+  wasFileChannel = fileChan != nullptr;
 
   nsCOMPtr<nsIURI> referrer;
-  NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
+  NS_GetReferrerFromChannel(aChannel, getter_AddRefs(referrer));
 
   mozilla::net::LoadInfoArgs loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
 
-  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aRequest));
+  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aChannel));
   // Determine whether a new window was opened specifically for this request
   bool shouldCloseWindow = false;
   if (props) {
@@ -715,23 +714,21 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
-    const nsACString& aMimeContentType, nsIRequest* aRequest,
+    const nsACString& aMimeContentType, nsIChannel* aChannel,
     BrowsingContext* aContentContext, bool aForceSave,
     nsIInterfaceRequestor* aWindowContext,
     nsIStreamListener** aStreamListener) {
   MOZ_ASSERT(!XRE_IsContentProcess());
+  NS_ENSURE_ARG_POINTER(aChannel);
 
   nsAutoString fileName;
   nsAutoCString fileExtension;
   uint32_t reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-  if (channel) {
-    uint32_t contentDisposition = -1;
-    channel->GetContentDisposition(&contentDisposition);
-    if (contentDisposition == nsIChannel::DISPOSITION_ATTACHMENT) {
-      reason = nsIHelperAppLauncherDialog::REASON_SERVERREQUEST;
-    }
+  uint32_t contentDisposition = -1;
+  aChannel->GetContentDisposition(&contentDisposition);
+  if (contentDisposition == nsIChannel::DISPOSITION_ATTACHMENT) {
+    reason = nsIHelperAppLauncherDialog::REASON_SERVERREQUEST;
   }
 
   *aStreamListener = nullptr;
@@ -739,7 +736,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
   // Get the file extension and name that we will need later
   nsCOMPtr<nsIURI> uri;
   bool allowURLExtension =
-      GetFileNameFromChannel(channel, fileName, getter_AddRefs(uri));
+      GetFileNameFromChannel(aChannel, fileName, getter_AddRefs(uri));
 
   uint32_t flags = VALIDATE_ALLOW_EMPTY;
   if (aMimeContentType.Equals(APPLICATION_GUESS_FROM_EXT,
@@ -758,12 +755,10 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
   }
 
   if (flags & VALIDATE_GUESS_FROM_EXTENSION) {
-    if (channel) {
-      // Replace the content type with what was guessed.
-      nsAutoCString mimeType;
-      mimeInfo->GetMIMEType(mimeType);
-      channel->SetContentType(mimeType);
-    }
+    // Replace the content type with what was guessed.
+    nsAutoCString mimeType;
+    mimeInfo->GetMIMEType(mimeType);
+    aChannel->SetContentType(mimeType);
 
     if (reason == nsIHelperAppLauncherDialog::REASON_CANTHANDLE) {
       reason = nsIHelperAppLauncherDialog::REASON_TYPESNIFFED;
@@ -790,7 +785,7 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::DoContent(
-    const nsACString& aMimeContentType, nsIRequest* aRequest,
+    const nsACString& aMimeContentType, nsIChannel* aChannel,
     nsIInterfaceRequestor* aContentContext, bool aForceSave,
     nsIInterfaceRequestor* aWindowContext,
     nsIStreamListener** aStreamListener) {
@@ -809,12 +804,12 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(
   }
 
   if (XRE_IsContentProcess()) {
-    return DoContentContentProcessHelper(aMimeContentType, aRequest, bc,
+    return DoContentContentProcessHelper(aMimeContentType, aChannel, bc,
                                          aForceSave, aWindowContext,
                                          aStreamListener);
   }
 
-  nsresult rv = CreateListener(aMimeContentType, aRequest, bc, aForceSave,
+  nsresult rv = CreateListener(aMimeContentType, aChannel, bc, aForceSave,
                                aWindowContext, aStreamListener);
   return rv;
 }

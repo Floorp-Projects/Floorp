@@ -7,7 +7,7 @@
 #include "nsICancelable.idl"
 
 interface nsIURI;
-interface nsIRequest;
+interface nsIChannel;
 interface nsIStreamListener;
 interface nsIFile;
 interface nsIMIMEInfo;
@@ -28,7 +28,7 @@ interface nsIExternalHelperAppService : nsISupports
    * is issued, the stream listener implementation will launch the helper app
    * with this data.
    * @param aMimeContentType The content type of the incoming data
-   * @param aRequest The request corresponding to the incoming data
+   * @param aChannel The channel corresponding to the incoming data
    * @param aContentContext Used in processing content document refresh
    *  headers after target content is downloaded.
    * @param aForceSave True to always save this content to disk, regardless of
@@ -39,7 +39,7 @@ interface nsIExternalHelperAppService : nsISupports
    * @return A nsIStreamListener which the caller should pump the data into.
    */
   nsIStreamListener doContent (in ACString aMimeContentType,
-                               in nsIRequest aRequest,
+                               in nsIChannel aChannel,
                                in nsIInterfaceRequestor aContentContext,
                                in boolean aForceSave,
                                [optional] in nsIInterfaceRequestor aWindowContext);
@@ -52,8 +52,8 @@ interface nsIExternalHelperAppService : nsISupports
    * Replaces doContent for native code, and uses BrowsingContext.
    *
    * @param aMimeContentType The content type of the incoming data
-   * @param aRequest The request corresponding to the incoming data
-   * @param aContentContext The BrowsingContext that the request was initiated
+   * @param aChannel The channel corresponding to the incoming data
+   * @param aContentContext The BrowsingContext that the channel was initiated
    *  by. Used for closing the window if we opened one specifically for this download.
    * @param aForceSave True to always save this content to disk, regardless of
    *  nsIMIMEInfo and other such influences.
@@ -63,7 +63,7 @@ interface nsIExternalHelperAppService : nsISupports
    * @return A nsIStreamListener which the caller should pump the data into.
    */
   nsIStreamListener createListener (in ACString aMimeContentType,
-                                                   in nsIRequest aRequest,
+                                                   in nsIChannel aChannel,
                                                    in BrowsingContext aContentContext,
                                                    in boolean aForceSave,
                                                    [optional] in nsIInterfaceRequestor aWindowContext);
