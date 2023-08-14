@@ -339,7 +339,7 @@ class SyncedTabsInView extends ViewPage {
       )}
       <fxview-tab-list
         slot="main"
-        class="syncedtabs"
+        class="with-context-menu"
         hasPopup="menu"
         .tabItems=${ifDefined(tabItems)}
         maxTabsLength=${this.maxTabsLength}

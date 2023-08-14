@@ -5,11 +5,9 @@
 import {
   classMap,
   html,
-  ifDefined,
   map,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { ViewPage } from "./viewpage.mjs";
 
 const lazy = {};
@@ -82,7 +80,7 @@ class OpenTabsInView extends ViewPage {
       return null;
     }
     if (this.overview) {
-      return this._getOverviewTemplate();
+      return this.getOverviewTemplate();
     }
     const { window: currentWindow } =
       window.browsingContext.embedderWindowGlobal.browsingContext;
@@ -159,23 +157,14 @@ class OpenTabsInView extends ViewPage {
    * @returns {TemplateResult}
    *   The overview template.
    */
-  _getOverviewTemplate() {
-    const recentTabs = Array.from(this.windows.values())
+  getOverviewTemplate() {
+    const tabs = Array.from(this.windows.values())
       .flat()
       .sort((a, b) => b.lastAccessed - a.lastAccessed);
-    return html`<card-container
-      preserveCollapseState
-      shortPageName="opentabs"
-      showViewAll="true"
-    >
-      <h3 data-l10n-id="firefoxview-opentabs-header" slot="header"></h3>
-      <fxview-tab-list
-        @fxview-tab-list-primary-action=${onTabListRowClick}
-        maxTabsLength="5"
-        slot="main"
-        .tabItems=${getTabListItems(recentTabs)}
-      ></fxview-tab-list>
-    </card-container>`;
+    return html`<view-opentabs-card
+      .tabs=${tabs}
+      .overview=${true}
+    ></view-opentabs-card>`;
   }
 
   handleEvent({ detail, target, type }) {
@@ -247,11 +236,12 @@ customElements.define("view-opentabs", OpenTabsInView);
  * @property {string} title
  *   The window title.
  */
-class OpenTabsInViewCard extends MozLitElement {
+class OpenTabsInViewCard extends ViewPage {
   static properties = {
     showMore: { type: Boolean },
     tabs: { type: Array },
     title: { type: String },
+    overview: { type: Boolean },
   };
   static MAX_TABS_FOR_COMPACT_HEIGHT = 7;
 
@@ -260,33 +250,91 @@ class OpenTabsInViewCard extends MozLitElement {
     this.showMore = false;
     this.tabs = [];
     this.title = "";
+    this.overview = false;
+  }
+
+  static queries = {
+    panelList: "panel-list",
+  };
+
+  closeTab() {
+    const tab = this.triggerNode.tabElement;
+    const browserWindow = tab.ownerGlobal;
+    browserWindow.gBrowser.removeTab(tab, { animate: true });
+  }
+
+  panelListTemplate() {
+    return html`
+      <panel-list slot="menu">
+        <panel-item
+          data-l10n-id="fxviewtabrow-close-tab"
+          data-l10n-attrs="accesskey"
+          @click=${this.closeTab}
+        ></panel-item>
+        <panel-item
+          data-l10n-id="fxviewtabrow-copy-link"
+          data-l10n-attrs="accesskey"
+          @click=${this.copyLink}
+        ></panel-item>
+      </panel-list>
+    `;
+  }
+
+  openContextMenu(e) {
+    this.triggerNode = e.originalTarget;
+    this.panelList.toggle(e.detail.originalEvent);
+  }
+
+  getMaxTabsLength() {
+    if (this.overview) {
+      return 5;
+    } else if (this.classList.contains("height-limited") && !this.showMore) {
+      return OpenTabsInViewCard.MAX_TABS_FOR_COMPACT_HEIGHT;
+    }
+    return -1;
   }
 
   render() {
     return html`
-      <card-container shortPageName="opentabs">
-        <h3 slot="header">${this.title}</h3>
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/firefoxview-next.css"
+      />
+      <card-container
+        ?preserveCollapseState=${this.overview}
+        shortPageName="opentabs"
+        ?showViewAll=${this.overview}
+      >
+        ${this.overview
+          ? html`<h3
+              slot="header"
+              data-l10n-id=${"firefoxview-opentabs-header"}
+            ></h3>`
+          : html`<h3 slot="header">${this.title}</h3>`}
         <div class="fxview-tab-list-container" slot="main">
           <fxview-tab-list
+            class="with-context-menu"
+            .hasPopup=${"menu"}
             ?compactRows=${this.classList.contains("width-limited")}
             @fxview-tab-list-primary-action=${onTabListRowClick}
-            .maxTabsLength=${ifDefined(
-              this.classList.contains("height-limited") && !this.showMore
-                ? OpenTabsInViewCard.MAX_TABS_FOR_COMPACT_HEIGHT
-                : -1
-            )}
-            .tabItems=${ifDefined(getTabListItems(this.tabs))}
-          ></fxview-tab-list>
+            @fxview-tab-list-secondary-action=${this.openContextMenu}
+            .maxTabsLength=${this.getMaxTabsLength()}
+            .tabItems=${getTabListItems(this.tabs)}
+            >${this.panelListTemplate()}</fxview-tab-list
+          >
         </div>
-        <div
-          @click=${() => (this.showMore = !this.showMore)}
-          data-l10n-id="${this.showMore
-            ? "firefoxview-show-less"
-            : "firefoxview-show-more"}"
-          ?hidden=${!this.classList.contains("height-limited") ||
-          this.tabs.length <= OpenTabsInViewCard.MAX_TABS_FOR_COMPACT_HEIGHT}
-          slot="footer"
-        ></div>
+        ${!this.overview
+          ? html` <div
+              @click=${() => (this.showMore = !this.showMore)}
+              data-l10n-id="${this.showMore
+                ? "firefoxview-show-less"
+                : "firefoxview-show-more"}"
+              ?hidden=${!this.classList.contains("height-limited") ||
+              this.tabs.length <=
+                OpenTabsInViewCard.MAX_TABS_FOR_COMPACT_HEIGHT}
+              slot="footer"
+            ></div>`
+          : null}
       </card-container>
     `;
   }
@@ -307,7 +355,12 @@ function getTabListItems(tabs) {
     ?.filter(tab => !tab.closing && !tab.hidden && !tab.pinned)
     .map(tab => ({
       icon: tab.getAttribute("image"),
-      primaryL10nId: "firefoxview-opentabs-focus-tab",
+      primaryL10nId: "firefoxview-opentabs-tab-row",
+      primaryL10nArgs: JSON.stringify({
+        url: tab.linkedBrowser?.currentURI?.spec,
+      }),
+      secondaryL10nId: "fxviewtabrow-options-menu-button",
+      secondaryL10nArgs: JSON.stringify({ tabTitle: tab.label }),
       tabElement: tab,
       time: tab.lastAccessed,
       title: tab.label,
