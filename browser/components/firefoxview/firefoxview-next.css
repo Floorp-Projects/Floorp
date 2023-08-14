@@ -97,9 +97,8 @@ fxview-tab-list.with-dismiss-button::part(secondary-button) {
   background-image: url("chrome://global/skin/icons/close.svg");
 }
 
-fxview-tab-list.history::part(secondary-button),
-fxview-tab-list.syncedtabs::part(secondary-button) {
-    background-image: url("chrome://global/skin/icons/more.svg");
+fxview-tab-list.with-context-menu::part(secondary-button) {
+  background-image: url("chrome://global/skin/icons/more.svg");
 }
 
 .sticky-container {
