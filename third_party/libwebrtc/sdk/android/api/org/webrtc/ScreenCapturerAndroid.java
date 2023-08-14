@@ -17,6 +17,8 @@ import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.view.Surface;
 import androidx.annotation.Nullable;
 
@@ -113,7 +115,7 @@ public class ScreenCapturerAndroid implements VideoCapturer, VideoSink {
     // Let MediaProjection callback use the SurfaceTextureHelper thread.
     mediaProjection.registerCallback(mediaProjectionCallback, surfaceTextureHelper.getHandler());
 
-    createVirtualDisplay();
+    updateVirtualDisplay();
     capturerObserver.onCapturerStarted(true);
     surfaceTextureHelper.startListening(ScreenCapturerAndroid.this);
   }
@@ -171,24 +173,33 @@ public class ScreenCapturerAndroid implements VideoCapturer, VideoSink {
     this.height = height;
 
     if (virtualDisplay == null) {
-      // Capturer is stopped, the virtual display will be created in startCaptuer().
+      // Capturer is stopped, the virtual display will be created in startCapture().
       return;
     }
 
     // Create a new virtual display on the surfaceTextureHelper thread to avoid interference
     // with frame processing, which happens on the same thread (we serialize events by running
     // them on the same thread).
-    ThreadUtils.invokeAtFrontUninterruptibly(surfaceTextureHelper.getHandler(), new Runnable() {
-      @Override
-      public void run() {
-        virtualDisplay.release();
-        createVirtualDisplay();
-      }
-    });
+    ThreadUtils.invokeAtFrontUninterruptibly(
+        surfaceTextureHelper.getHandler(), this::updateVirtualDisplay);
   }
 
-  private void createVirtualDisplay() {
+  private void updateVirtualDisplay() {
     surfaceTextureHelper.setTextureSize(width, height);
+    // Before Android S (12), resizing the virtual display can cause the captured screen to be
+    // scaled incorrectly, so keep the behavior of recreating the virtual display prior to Android
+    // S.
+    if (virtualDisplay == null || VERSION.SDK_INT < VERSION_CODES.S) {
+      createVirtualDisplay();
+    } else {
+      virtualDisplay.resize(width, height, VIRTUAL_DISPLAY_DPI);
+      virtualDisplay.setSurface(new Surface(surfaceTextureHelper.getSurfaceTexture()));
+    }
+  }
+  private void createVirtualDisplay() {
+    if (virtualDisplay != null) {
+      virtualDisplay.release();
+    }
     virtualDisplay = mediaProjection.createVirtualDisplay("WebRTC_ScreenCapture", width, height,
         VIRTUAL_DISPLAY_DPI, DISPLAY_FLAGS, new Surface(surfaceTextureHelper.getSurfaceTexture()),
         null /* callback */, null /* callback handler */);
