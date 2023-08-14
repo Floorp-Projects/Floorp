@@ -139,12 +139,14 @@ void HTMLStyleElement::SetTextContentInternal(const nsAString& aTextContent,
     }
   }
 
+  const bool updatesWereEnabled = mUpdatesEnabled;
   DisableUpdates();
 
   aError = nsContentUtils::SetNodeTextContent(this, aTextContent, true);
-  mTriggeringPrincipal = aScriptedPrincipal;
-
-  Unused << EnableUpdatesAndUpdateStyleSheet(nullptr);
+  if (updatesWereEnabled) {
+    mTriggeringPrincipal = aScriptedPrincipal;
+    Unused << EnableUpdatesAndUpdateStyleSheet(nullptr);
+  }
 }
 
 void HTMLStyleElement::SetDevtoolsAsTriggeringPrincipal() {
