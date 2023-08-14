@@ -7659,14 +7659,12 @@ const nsIGlobalObject* nsPIDOMWindowInner::AsGlobal() const {
 }
 
 void nsPIDOMWindowInner::SaveStorageAccessPermissionGranted() {
-  mStorageAccessPermissionGranted = true;
+  mUsingStorageAccess = true;
 
   nsGlobalWindowInner::Cast(this)->StorageAccessPermissionGranted();
 }
 
-bool nsPIDOMWindowInner::HasStorageAccessPermissionGranted() {
-  return mStorageAccessPermissionGranted;
-}
+bool nsPIDOMWindowInner::UsingStorageAccess() { return mUsingStorageAccess; }
 
 nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
                                        WindowGlobalChild* aActor)
@@ -7690,7 +7688,7 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
       mNumOfIndexedDBDatabases(0),
       mNumOfOpenWebSockets(0),
       mEvent(nullptr),
-      mStorageAccessPermissionGranted(false),
+      mUsingStorageAccess(false),
       mWindowGlobalChild(aActor),
       mWasSuspendedByGroup(false) {
   MOZ_ASSERT(aOuterWindow);
