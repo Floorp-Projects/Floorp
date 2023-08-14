@@ -546,6 +546,8 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       topLevelPrincipalInfo, optionalResultPrincipalURI, triggeringRemoteType,
       aLoadInfo->GetSandboxedNullPrincipalID(), aLoadInfo->GetSecurityFlags(),
       aLoadInfo->GetSandboxFlags(), aLoadInfo->GetTriggeringSandboxFlags(),
+      aLoadInfo->GetTriggeringWindowId(),
+      aLoadInfo->GetTriggeringStorageAccess(),
       aLoadInfo->InternalContentPolicyType(),
       static_cast<uint32_t>(aLoadInfo->GetTainting()),
       aLoadInfo->GetBlockAllMixedContent(),
@@ -829,7 +831,8 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       triggeringRemoteType, loadInfoArgs.sandboxedNullPrincipalID(), clientInfo,
       reservedClientInfo, initialClientInfo, controller,
       loadInfoArgs.securityFlags(), loadInfoArgs.sandboxFlags(),
-      loadInfoArgs.triggeringSandboxFlags(), loadInfoArgs.contentPolicyType(),
+      loadInfoArgs.triggeringSandboxFlags(), loadInfoArgs.triggeringWindowId(),
+      loadInfoArgs.triggeringStorageAccess(), loadInfoArgs.contentPolicyType(),
       static_cast<LoadTainting>(loadInfoArgs.tainting()),
       loadInfoArgs.blockAllMixedContent(),
       loadInfoArgs.upgradeInsecureRequests(),
@@ -928,6 +931,8 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetAllowDeprecatedSystemRequests(),
       aLoadInfo->GetIsInDevToolsContext(), aLoadInfo->GetParserCreatedScript(),
       aLoadInfo->GetTriggeringSandboxFlags(),
+      aLoadInfo->GetTriggeringWindowId(),
+      aLoadInfo->GetTriggeringStorageAccess(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
@@ -969,6 +974,13 @@ nsresult MergeParentLoadInfoForwarder(
 
   rv = aLoadInfo->SetTriggeringSandboxFlags(
       aForwarderArgs.triggeringSandboxFlags());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aLoadInfo->SetTriggeringWindowId(aForwarderArgs.triggeringWindowId());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aLoadInfo->SetTriggeringStorageAccess(
+      aForwarderArgs.triggeringStorageAccess());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aLoadInfo->SetHasValidUserGestureActivation(
