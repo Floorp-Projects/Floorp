@@ -274,6 +274,7 @@ mozilla::ipc::IPCResult FilePickerParent::RecvOpen(
     mFilePicker->SetDisplaySpecialDirectory(aDisplaySpecialDirectory);
   }
 
+  MOZ_ASSERT(!mCallback);
   mCallback = new FilePickerShownCallback(this);
 
   mFilePicker->Open(mCallback);
