@@ -36,11 +36,18 @@
   </div>
   <script type="application/javascript">
     async function test() {
-      const proximityThreshold =
-          SpecialPowers.getIntPref("layout.css.scroll-snap.proximity-threshold");
-
       let transformEndPromise = promiseTransformEnd();
-      await promiseMoveMouseAndScrollWheelOver(scroller, 100, 100);
+
+      // The scroll delta value for promiseMoveMouseAndScrollWheelOver doesn't
+      // exactly mean promiseMoveMouseAndScrollWheelOver scrolls the delta
+      // pixels. It will be convered to OS internal values depending on
+      // platforms. Below values are empirical values to work this test on all
+      // platforms.
+      const scrollDelta = getPlatform() == "mac" ? 10 : 100;
+      // Scroll to a position where the distance from the next snap target
+      // position is less than the scroll snap proximity value.
+      await promiseMoveMouseAndScrollWheelOver(scroller, 100, 100,
+        true /* waitForScroll */, scrollDelta);
 
       await transformEndPromise;
       await promiseApzFlushedRepaints();
@@ -62,7 +69,7 @@
       // `waitForScroll=true`, there should be other scroll events after the
       // first one.
       await promiseMoveMouseAndScrollWheelOver(scroller, 100, 100,
-          true /* waitForScroll */, proximityThreshold + 1000);
+          true /* waitForScroll */, scrollDelta + 1000);
 
       // Expand the scrollable region during the wheel scroll.
       spacer.style.height = "2200px";
