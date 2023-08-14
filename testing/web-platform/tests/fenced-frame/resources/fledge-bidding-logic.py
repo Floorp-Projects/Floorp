@@ -14,6 +14,7 @@ def main(request, response):
 
   # Parse URL params.
   ad_with_size = request.GET.first(b"ad-with-size", None)
+  automatic_beacon = request.GET.first(b"automatic-beacon", None)
 
   # Use URL params to modify JS
   render_obj = 'ad.renderUrl'
@@ -30,6 +31,17 @@ def main(request, response):
          }
       '''
     )
+
+  register_ad_beacon = ''
+  if automatic_beacon is not None:
+    register_ad_beacon = (
+    '''registerAdBeacon({
+        'reserved.top_navigation':
+        browserSignals.interestGroupOwner +
+        '/fenced-frame/resources/automatic-beacon-store.py'
+      });
+    '''
+  )
 
   # Generate Javascript.
   # Note: Python fstrings use double-brackets ( {{, }} ) to insert bracket
@@ -63,22 +75,13 @@ def main(request, response):
     '''
   )
 
-  register_ad_beacon = (
-    '''registerAdBeacon({
-        'reserved.top_navigation':
-        browserSignals.interestGroupOwner +
-        '/fenced-frame/resources/automatic-beacon-store.py'
-      });
-    '''
-  )
-
   report_win = (
     f'''function reportWin(
       auctionSignals,
       perBuyerSignals,
       sellerSignals,
       browserSignals) {{
-        {'' if ad_with_size is not None else register_ad_beacon}
+        {register_ad_beacon}
         return;
       }}
     '''
