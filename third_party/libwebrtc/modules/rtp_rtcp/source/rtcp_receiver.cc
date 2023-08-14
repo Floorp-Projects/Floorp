@@ -150,8 +150,6 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       rtcp_intra_frame_observer_(config.intra_frame_callback),
       rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
       network_state_estimate_observer_(config.network_state_estimate_observer),
-      deprecated_transport_feedback_observer_(
-          config.transport_feedback_callback),
       bitrate_allocation_observer_(config.bitrate_allocation_observer),
       report_interval_(config.rtcp_report_interval_ms > 0
                            ? TimeDelta::Millis(config.rtcp_report_interval_ms)
@@ -182,8 +180,6 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       rtcp_intra_frame_observer_(config.intra_frame_callback),
       rtcp_loss_notification_observer_(config.rtcp_loss_notification_observer),
       network_state_estimate_observer_(config.network_state_estimate_observer),
-      deprecated_transport_feedback_observer_(
-          config.transport_feedback_callback),
       bitrate_allocation_observer_(config.bitrate_allocation_observer),
       report_interval_(config.rtcp_report_interval_ms > 0
                            ? TimeDelta::Millis(config.rtcp_report_interval_ms)
@@ -1209,12 +1205,6 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
   if ((packet_information.packet_type_flags & kRtcpSr) ||
       (packet_information.packet_type_flags & kRtcpRr)) {
     rtp_rtcp_->OnReceivedRtcpReportBlocks(packet_information.report_blocks);
-  }
-
-  if (deprecated_transport_feedback_observer_ &&
-      (packet_information.packet_type_flags & kRtcpTransportFeedback)) {
-    deprecated_transport_feedback_observer_->OnTransportFeedback(
-        *packet_information.transport_feedback);
   }
 
   if (network_state_estimate_observer_ &&

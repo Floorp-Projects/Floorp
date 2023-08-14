@@ -100,15 +100,6 @@ class MockReportBlockDataObserverImpl : public ReportBlockDataObserver {
   MOCK_METHOD(void, OnReportBlockDataUpdated, (ReportBlockData), (override));
 };
 
-class MockTransportFeedbackObserver : public TransportFeedbackObserver {
- public:
-  MOCK_METHOD(void, OnAddPacket, (const RtpPacketSendInfo&), (override));
-  MOCK_METHOD(void,
-              OnTransportFeedback,
-              (const rtcp::TransportFeedback&),
-              (override));
-};
-
 class MockModuleRtpRtcp : public RTCPReceiver::ModuleRtpRtcp {
  public:
   MOCK_METHOD(void, SetTmmbn, (std::vector<rtcp::TmmbItem>), (override));
@@ -157,7 +148,6 @@ struct ReceiverMocks {
   StrictMock<MockRtcpBandwidthObserver> bandwidth_observer;
   StrictMock<MockRtcpIntraFrameObserver> intra_frame_observer;
   StrictMock<MockRtcpLossNotificationObserver> rtcp_loss_notification_observer;
-  StrictMock<MockTransportFeedbackObserver> transport_feedback_observer;
   StrictMock<MockVideoBitrateAllocationObserver> bitrate_allocation_observer;
   StrictMock<MockModuleRtpRtcp> rtp_rtcp_impl;
   NiceMock<MockNetworkLinkRtcpObserver> network_link_rtcp_observer;
@@ -173,7 +163,6 @@ RtpRtcpInterface::Configuration DefaultConfiguration(ReceiverMocks* mocks) {
   config.intra_frame_callback = &mocks->intra_frame_observer;
   config.rtcp_loss_notification_observer =
       &mocks->rtcp_loss_notification_observer;
-  config.transport_feedback_callback = &mocks->transport_feedback_observer;
   config.bitrate_allocation_observer = &mocks->bitrate_allocation_observer;
   config.rtcp_report_interval_ms = kRtcpIntervalMs;
   config.local_media_ssrc = kReceiverMainSsrc;
@@ -556,7 +545,6 @@ TEST(RtcpReceiverTest, NotifiesNetworkLinkObserverOnReportBlocks) {
   ReceiverMocks mocks;
   RtpRtcpInterface::Configuration config = DefaultConfiguration(&mocks);
   config.bandwidth_callback = nullptr;
-  config.transport_feedback_callback = nullptr;
   config.network_link_rtcp_observer = &mocks.network_link_rtcp_observer;
   RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
@@ -1781,30 +1769,10 @@ TEST(RtcpReceiverTest, GetReportBlockDataAfterTwoReportBlocksOfDifferentSsrcs) {
             report_block_datas[1].extended_highest_sequence_number());
 }
 
-TEST(RtcpReceiverTest, ReceivesTransportFeedback) {
-  ReceiverMocks mocks;
-  RTCPReceiver receiver(DefaultConfiguration(&mocks), &mocks.rtp_rtcp_impl);
-  receiver.SetRemoteSSRC(kSenderSsrc);
-
-  rtcp::TransportFeedback packet;
-  packet.SetMediaSsrc(kReceiverMainSsrc);
-  packet.SetSenderSsrc(kSenderSsrc);
-  packet.SetBase(1, Timestamp::Millis(1));
-  packet.AddReceivedPacket(1, Timestamp::Millis(1));
-
-  EXPECT_CALL(
-      mocks.transport_feedback_observer,
-      OnTransportFeedback(AllOf(
-          Property(&rtcp::TransportFeedback::media_ssrc, kReceiverMainSsrc),
-          Property(&rtcp::TransportFeedback::sender_ssrc, kSenderSsrc))));
-  receiver.IncomingPacket(packet.Build());
-}
-
 TEST(RtcpReceiverTest, NotifiesNetworkLinkObserverOnTransportFeedback) {
   ReceiverMocks mocks;
   RtpRtcpInterface::Configuration config = DefaultConfiguration(&mocks);
   config.bandwidth_callback = nullptr;
-  config.transport_feedback_callback = nullptr;
   config.network_link_rtcp_observer = &mocks.network_link_rtcp_observer;
   RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
@@ -1831,7 +1799,6 @@ TEST(RtcpReceiverTest,
   ReceiverMocks mocks;
   RtpRtcpInterface::Configuration config = DefaultConfiguration(&mocks);
   config.bandwidth_callback = nullptr;
-  config.transport_feedback_callback = nullptr;
   config.network_link_rtcp_observer = &mocks.network_link_rtcp_observer;
   RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
@@ -1851,7 +1818,6 @@ TEST(RtcpReceiverTest,
   ReceiverMocks mocks;
   RtpRtcpInterface::Configuration config = DefaultConfiguration(&mocks);
   config.bandwidth_callback = nullptr;
-  config.transport_feedback_callback = nullptr;
   config.network_link_rtcp_observer = &mocks.network_link_rtcp_observer;
   RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
@@ -1885,7 +1851,6 @@ TEST(RtcpReceiverTest, NotifiesNetworkLinkObserverOnRemb) {
   ReceiverMocks mocks;
   RtpRtcpInterface::Configuration config = DefaultConfiguration(&mocks);
   config.bandwidth_callback = nullptr;
-  config.transport_feedback_callback = nullptr;
   config.network_link_rtcp_observer = &mocks.network_link_rtcp_observer;
   RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
@@ -1902,7 +1867,10 @@ TEST(RtcpReceiverTest, NotifiesNetworkLinkObserverOnRemb) {
 
 TEST(RtcpReceiverTest, HandlesInvalidTransportFeedback) {
   ReceiverMocks mocks;
-  RTCPReceiver receiver(DefaultConfiguration(&mocks), &mocks.rtp_rtcp_impl);
+  RtpRtcpInterface::Configuration config = DefaultConfiguration(&mocks);
+  config.bandwidth_callback = nullptr;
+  config.network_link_rtcp_observer = &mocks.network_link_rtcp_observer;
+  RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
 
   // Send a compound packet with a TransportFeedback followed by something else.
@@ -1912,10 +1880,10 @@ TEST(RtcpReceiverTest, HandlesInvalidTransportFeedback) {
   packet->SetBase(1, Timestamp::Millis(1));
   packet->AddReceivedPacket(1, Timestamp::Millis(1));
 
-  static uint32_t kBitrateBps = 50000;
+  static constexpr DataRate kBitrate = DataRate::BitsPerSec(50'000);
   auto remb = std::make_unique<rtcp::Remb>();
   remb->SetSenderSsrc(kSenderSsrc);
-  remb->SetBitrateBps(kBitrateBps);
+  remb->SetBitrateBps(kBitrate.bps());
   rtcp::CompoundPacket compound;
   compound.Append(std::move(packet));
   compound.Append(std::move(remb));
@@ -1927,10 +1895,10 @@ TEST(RtcpReceiverTest, HandlesInvalidTransportFeedback) {
                                        42);
 
   // Stress no transport feedback is expected.
-  EXPECT_CALL(mocks.transport_feedback_observer, OnTransportFeedback).Times(0);
+  EXPECT_CALL(mocks.network_link_rtcp_observer, OnTransportFeedback).Times(0);
   // But remb should be processed and cause a callback
-  EXPECT_CALL(mocks.bandwidth_observer,
-              OnReceivedEstimatedBitrate(kBitrateBps));
+  EXPECT_CALL(mocks.network_link_rtcp_observer,
+              OnReceiverEstimatedMaxBitrate(_, kBitrate));
   receiver.IncomingPacket(built_packet);
 }
 

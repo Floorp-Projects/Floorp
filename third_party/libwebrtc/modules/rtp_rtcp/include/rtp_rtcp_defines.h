@@ -240,14 +240,9 @@ class NetworkStateEstimateObserver {
 
 class TransportFeedbackObserver {
  public:
-  TransportFeedbackObserver() {}
-  virtual ~TransportFeedbackObserver() {}
+  virtual ~TransportFeedbackObserver() = default;
 
   virtual void OnAddPacket(const RtpPacketSendInfo& packet_info) = 0;
-
-  // TODO(bugs.webrtc.org/8239): Remove this function in favor of receiving
-  // feedback message via `NetworkLinkRtcpObserver` interface.
-  virtual void OnTransportFeedback(const rtcp::TransportFeedback& feedback) {}
 };
 
 // Interface for PacketRouter to send rtcp feedback on behalf of

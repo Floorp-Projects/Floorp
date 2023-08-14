@@ -367,7 +367,6 @@ class RTCPReceiver final {
   RtcpIntraFrameObserver* const rtcp_intra_frame_observer_;
   RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
   NetworkStateEstimateObserver* const network_state_estimate_observer_;
-  TransportFeedbackObserver* const deprecated_transport_feedback_observer_;
   VideoBitrateAllocationObserver* const bitrate_allocation_observer_;
   const TimeDelta report_interval_;
 
