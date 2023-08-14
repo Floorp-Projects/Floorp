@@ -15,6 +15,7 @@
 #include "rtc_base/event.h"
 #include "rtc_base/platform_thread.h"
 #include "system_wrappers/include/clock.h"
+#include "test/field_trial.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -104,6 +105,19 @@ TEST_F(RateLimitTest, WindowSizeLimits) {
   EXPECT_FALSE(rate_limiter->SetWindowSize(0));
   EXPECT_TRUE(rate_limiter->SetWindowSize(kWindowSizeMs));
   EXPECT_FALSE(rate_limiter->SetWindowSize(kWindowSizeMs + 1));
+}
+
+TEST_F(RateLimitTest, DiablesRtxRateLimiterByFieldTrial) {
+  webrtc::test::ScopedFieldTrials trial(
+      "WebRTC-DisableRtxRateLimiter/Enabled/");
+
+  // Fill rate, extend window to full size.
+  EXPECT_TRUE(rate_limiter->TryUseRate(kRateFillingBytes / 2));
+  clock_.AdvanceTimeMilliseconds(kWindowSizeMs - 1);
+  EXPECT_TRUE(rate_limiter->TryUseRate(kRateFillingBytes / 2));
+
+  // Does not limit rate even when all rate consumed.
+  EXPECT_TRUE(rate_limiter->TryUseRate(1));
 }
 
 static constexpr TimeDelta kMaxTimeout = TimeDelta::Seconds(30);
