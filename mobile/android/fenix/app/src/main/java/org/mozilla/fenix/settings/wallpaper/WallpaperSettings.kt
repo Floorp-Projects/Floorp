@@ -113,6 +113,7 @@ fun WallpaperSettings(
 }
 
 @Composable
+@Suppress("Deprecation")
 private fun WallpaperGroupHeading(
     collection: Wallpaper.Collection,
     onLearnMoreClick: (String, String) -> Unit,

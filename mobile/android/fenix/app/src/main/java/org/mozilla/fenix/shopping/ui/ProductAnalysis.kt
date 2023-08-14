@@ -320,6 +320,7 @@ private fun SettingsCard(
     }
 }
 
+@Suppress("Deprecation")
 @Composable
 private fun ReviewQualityInfo(
     modifier: Modifier = Modifier,

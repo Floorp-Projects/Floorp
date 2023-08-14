@@ -6,7 +6,6 @@ package org.mozilla.fenix.onboarding.view
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -28,18 +26,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import mozilla.components.support.ktx.android.content.isScreenReaderEnabled
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.LinkText
+import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.compose.button.SecondaryButton
@@ -61,11 +55,6 @@ private const val IMAGE_HEIGHT_RATIO_MEDIUM = 0.36f
  * The ratio of the image height to the parent height for small devices like Nexus 4, Nexus 1.
  */
 private const val IMAGE_HEIGHT_RATIO_SMALL = 0.28f
-
-/**
- * The tag used for links in the text for annotated strings.
- */
-private const val URL_TAG = "URL_TAG"
 
 /**
  * A composable for displaying onboarding page content.
@@ -188,64 +177,6 @@ private fun DescriptionText(
             style = FirefoxTheme.typography.body2,
         )
     }
-}
-
-/**
- * A composable for displaying text that contains a clickable link text.
- *
- * @param text The complete text.
- * @param linkTextState The clickable part of the text.
- */
-@Composable
-private fun LinkText(
-    text: String,
-    linkTextState: LinkTextState,
-) {
-    val context = LocalContext.current
-    val annotatedString = buildAnnotatedString {
-        val startIndex = text.indexOf(linkTextState.text, ignoreCase = true)
-        val endIndex = startIndex + linkTextState.text.length
-        append(text)
-        addStyle(
-            style = SpanStyle(color = FirefoxTheme.colors.textAccent),
-            start = startIndex,
-            end = endIndex,
-        )
-
-        addStringAnnotation(
-            tag = URL_TAG,
-            annotation = linkTextState.url,
-            start = startIndex,
-            end = endIndex,
-        )
-    }
-
-    // When using UrlAnnotation, talkback shows links in a separate dialog and
-    // opens them in the default browser. Since this component allows the caller to define the
-    // onClick behaviour - e.g. to open the link in in-app custom tab, here StringAnnotation is used
-    // and modifier is enabled with Role.Button when screen reader is enabled.
-    ClickableText(
-        text = annotatedString,
-        style = FirefoxTheme.typography.body2.copy(
-            textAlign = TextAlign.Center,
-            color = FirefoxTheme.colors.textSecondary,
-        ),
-        modifier = Modifier.clickable(
-            enabled = context.isScreenReaderEnabled,
-            role = Role.Button,
-            onClickLabel = linkTextState.text,
-            onClick = { linkTextState.onClick(linkTextState.url) },
-        ),
-        onClick = {
-            if (!context.isScreenReaderEnabled) {
-                val range: AnnotatedString.Range<String>? =
-                    annotatedString.getStringAnnotations(URL_TAG, it, it).firstOrNull()
-                range?.let { stringAnnotation ->
-                    linkTextState.onClick(stringAnnotation.item)
-                }
-            }
-        },
-    )
 }
 
 /**

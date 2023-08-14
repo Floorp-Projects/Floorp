@@ -5,6 +5,7 @@
 package org.mozilla.fenix.onboarding.view
 
 import androidx.compose.ui.layout.ContentScale
+import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.nimbus.OnboardingCardData
 import org.mozilla.fenix.nimbus.OnboardingCardType
 import org.mozilla.fenix.settings.SupportUtils

@@ -507,6 +507,7 @@ fun PocketStoriesCategories(
  * @param linkTextColor [Color] of the link text.
  */
 @OptIn(ExperimentalComposeUiApi::class)
+@Suppress("Deprecation")
 @Composable
 fun PoweredByPocketHeader(
     onLearnMoreClicked: (String) -> Unit,

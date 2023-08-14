@@ -5,6 +5,7 @@
 package org.mozilla.fenix.onboarding.view
 
 import androidx.annotation.DrawableRes
+import org.mozilla.fenix.compose.LinkTextState
 
 /**
  * Model containing data for [OnboardingPage].
@@ -25,15 +26,6 @@ data class OnboardingPageState(
     val primaryButton: Action,
     val secondaryButton: Action? = null,
     val onRecordImpressionEvent: () -> Unit = {},
-)
-
-/**
- * Model containing link text, url and action.
- */
-data class LinkTextState(
-    val text: String,
-    val url: String,
-    val onClick: (String) -> Unit,
 )
 
 /**

@@ -8,6 +8,7 @@ import androidx.compose.ui.layout.ContentScale
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.settings.SupportUtils
 
 class JunoOnboardingMapperTest {

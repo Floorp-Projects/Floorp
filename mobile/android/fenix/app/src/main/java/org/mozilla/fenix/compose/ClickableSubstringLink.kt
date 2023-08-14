@@ -29,6 +29,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param clickableEndIndex [text] index at which the URL substring ends.
  * @param onClick Callback to be invoked only when the URL substring is clicked.
  */
+@Deprecated("Use LinkText instead", ReplaceWith("LinkText", "org.mozilla.fenix.compose.LinkText"))
 @Composable
 fun ClickableSubstringLink(
     text: String,
@@ -86,6 +87,7 @@ fun ClickableSubstringLink(
 }
 
 @Composable
+@Suppress("Deprecation")
 @Preview
 private fun ClickableSubstringTextPreview() {
     val text = "This text contains a link"
