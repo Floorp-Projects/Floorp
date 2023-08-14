@@ -1572,7 +1572,7 @@ MOZ_CAN_RUN_SCRIPT static void GetActionHint(const IMEState& aState,
                                              nsAString& aActionHint) {
   MOZ_ASSERT(aContent.IsHTMLElement());
 
-  if (aState.IsEditable() && StaticPrefs::dom_forms_enterkeyhint()) {
+  if (aState.IsEditable()) {
     nsGenericHTMLElement::FromNode(&aContent)->GetEnterKeyHint(aActionHint);
 
     // If enterkeyhint is set, we don't infer action hint.

@@ -7477,7 +7477,6 @@ _ZN5style7stylist11CascadeData18clear_cascade_data17heb714cd17ee568d9E
 ?ConstructorEnabled@ElementInternals_Binding@dom@mozilla@@YA_NPAUJSContext@@V?$Handle@PAVJSObject@@@JS@@@Z
 ?html5_inert_enabled@StaticPrefs@mozilla@@YA_NXZ
 ?dom_forms_inputmode@StaticPrefs@mozilla@@YA_NXZ
-?dom_forms_enterkeyhint@StaticPrefs@mozilla@@YA_NXZ
 ?dom_forms_autocapitalize@StaticPrefs@mozilla@@YA_NXZ
 ?CustomElements@nsGlobalWindowInner@@UAEPAVCustomElementRegistry@dom@mozilla@@XZ
 ??0CustomElementRegistry@dom@mozilla@@QAE@PAVnsPIDOMWindowInner@@@Z
