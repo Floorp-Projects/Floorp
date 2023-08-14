@@ -6719,7 +6719,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-08-09T15:14:39Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-08-12T15:10:58Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -8189,7 +8189,7 @@ ftr
 // https://www.iana.org/domains/root/db/fujitsu.html
 fujitsu
 
-// fun : Radix FZC
+// fun : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/fun.html
 fun
 
@@ -8525,7 +8525,7 @@ horse
 // https://www.iana.org/domains/root/db/hospital.html
 hospital
 
-// host : Radix FZC
+// host : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/host.html
 host
 
@@ -9445,7 +9445,7 @@ ong
 // https://www.iana.org/domains/root/db/onl.html
 onl
 
-// online : Radix FZC
+// online : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/online.html
 online
 
@@ -9649,7 +9649,7 @@ pramerica
 // https://www.iana.org/domains/root/db/praxi.html
 praxi
 
-// press : Radix FZC
+// press : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/press.html
 press
 
@@ -10113,7 +10113,7 @@ sina
 // https://www.iana.org/domains/root/db/singles.html
 singles
 
-// site : Radix FZC
+// site : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/site.html
 site
 
@@ -10193,7 +10193,7 @@ soy
 // https://www.iana.org/domains/root/db/spa.html
 spa
 
-// space : Radix FZC
+// space : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/space.html
 space
 
@@ -10245,7 +10245,7 @@ stockholm
 // https://www.iana.org/domains/root/db/storage.html
 storage
 
-// store : Radix FZC
+// store : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/store.html
 store
 
@@ -10361,7 +10361,7 @@ tdk
 // https://www.iana.org/domains/root/db/team.html
 team
 
-// tech : Radix FZC
+// tech : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/tech.html
 tech
 
@@ -10545,7 +10545,7 @@ unicom
 // https://www.iana.org/domains/root/db/university.html
 university
 
-// uno : Radix FZC
+// uno : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/uno.html
 uno
 
@@ -10713,7 +10713,7 @@ webcam
 // https://www.iana.org/domains/root/db/weber.html
 weber
 
-// website : Radix FZC
+// website : Radix FZC DMCC
 // https://www.iana.org/domains/root/db/website.html
 website
 
