@@ -164,6 +164,11 @@ CacheIOThread::CacheIOThread() {
 }
 
 CacheIOThread::~CacheIOThread() {
+  {
+    MonitorAutoLock lock(mMonitor);
+    MOZ_RELEASE_ASSERT(mShutdown);
+  }
+
   if (mXPCOMThread) {
     nsIThread* thread = mXPCOMThread;
     thread->Release();
