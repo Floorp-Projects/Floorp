@@ -380,6 +380,13 @@ class InactivePropertyHelper {
         fixId: "inactive-css-not-table-fix",
         msgId: "inactive-css-not-table",
       },
+      // empty-cells property used on non-table-cell elements.
+      {
+        invalidProperties: ["empty-cells"],
+        when: () => !this.checkComputedStyle("display", ["table-cell"]),
+        fixId: "inactive-css-not-table-cell-fix",
+        msgId: "inactive-css-not-table-cell",
+      },
       // scroll-padding-* properties used on non-scrollable elements.
       {
         invalidProperties: [
