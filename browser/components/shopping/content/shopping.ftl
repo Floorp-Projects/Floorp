@@ -50,6 +50,10 @@ shopping-message-bar-generic-error-message = Couldn’t load information. Please
 shopping-message-bar-warning-not-enough-reviews-title = Not enough reviews yet
 shopping-message-bar-warning-not-enough-reviews-message = When this product has more reviews, we’ll be able to analyze them.
 
+shopping-message-bar-warning-product-not-available-title = Product is not available
+shopping-message-bar-warning-product-not-available-message = If you see that this product is back in stock, report it to us and we’ll work on updating the analysis.
+shopping-message-bar-warning-product-not-available-button = Report this product is back in stock
+
 ## Strings for the product review snippets card
 
 shopping-highlights-label =
