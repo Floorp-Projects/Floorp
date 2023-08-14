@@ -69,12 +69,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // Called when the receiver sends a loss notification.
     RtcpLossNotificationObserver* rtcp_loss_notification_observer = nullptr;
 
-    // Called when we receive a changed estimate from the receiver of out
-    // stream.
-    // TODO(bugs.webrtc.org/13757): Deprecated and Remove in favor of
-    // `network_link_rtcp_observer`
-    RtcpBandwidthObserver* bandwidth_callback = nullptr;
-
     // Called when receive an RTCP message related to the link in general, e.g.
     // bandwidth estimation related message.
     NetworkLinkRtcpObserver* network_link_rtcp_observer = nullptr;
