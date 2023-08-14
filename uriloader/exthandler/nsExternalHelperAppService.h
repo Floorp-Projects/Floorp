@@ -253,7 +253,7 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
 
  private:
   nsresult DoContentContentProcessHelper(
-      const nsACString& aMimeContentType, nsIRequest* aRequest,
+      const nsACString& aMimeContentType, nsIChannel* aChannel,
       mozilla::dom::BrowsingContext* aContentContext, bool aForceSave,
       nsIInterfaceRequestor* aWindowContext,
       nsIStreamListener** aStreamListener);
