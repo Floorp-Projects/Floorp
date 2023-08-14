@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "chrome://global/content/shopping/events_request.schema.json",
+  "title": "Ad events request",
+  "type": "object",
+  "properties": {
+    "event_name": {
+      "description": "Event name string",
+      "type": "string",
+      "examples": ["trusted_deals_impression", "trusted_deals_link_clicked"]
+    },
+    "event_source": {
+      "description": "Where event was dispatched from",
+      "type": "string",
+      "examples": ["firefox_sidebar"]
+    },
+    "aidvs": {
+      "description": "Ad identifiers for impression",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "aid": {
+      "description": "Ad identifier for clicks",
+      "type": "string"
+    },
+    "properties": {
+      "description": "Extra properties",
+      "type": "object"
+    }
+  },
+  "required": ["event_name", "event_source"]
+}

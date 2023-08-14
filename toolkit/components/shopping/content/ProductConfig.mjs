@@ -16,6 +16,11 @@ const RECOMMENDATIONS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/recommendations_response.schema.json";
 const RECOMMENDATIONS_REQUEST_SCHEMA =
   "chrome://global/content/shopping/recommendations_request.schema.json";
+const ATTRIBUTION_API = "https://staging-partner-ads.fakespot.io";
+const ATTRIBUTION_RESPONSE_SCHEMA =
+  "chrome://global/content/shopping/attribution_response.schema.json";
+const ATTRIBUTION_REQUEST_SCHEMA =
+  "chrome://global/content/shopping/attribution_request.schema.json";
 
 const ProductConfig = {
   amazon: {
@@ -52,5 +57,8 @@ export {
   RECOMMENDATIONS_API,
   RECOMMENDATIONS_RESPONSE_SCHEMA,
   RECOMMENDATIONS_REQUEST_SCHEMA,
+  ATTRIBUTION_API,
+  ATTRIBUTION_RESPONSE_SCHEMA,
+  ATTRIBUTION_REQUEST_SCHEMA,
   ProductConfig,
 };

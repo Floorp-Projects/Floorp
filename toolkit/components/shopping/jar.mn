@@ -10,3 +10,5 @@ toolkit.jar:
   content/global/shopping/recommendations_response.schema.json (schemas/recommendations_response.schema.json)
   content/global/shopping/analysis_request.schema.json (schemas/analysis_request.schema.json)
   content/global/shopping/recommendations_request.schema.json (schemas/recommendations_request.schema.json)
+  content/global/shopping/attribution_response.schema.json (schemas/attribution_response.schema.json)
+  content/global/shopping/attribution_request.schema.json (schemas/attribution_request.schema.json)
