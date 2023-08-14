@@ -60,6 +60,7 @@ interface nsITRRSkipReason: nsISupports
     TRR_HEURISTIC_TRIPPED_VPN = 45,                // The heuristic was tripped due to a vpn being detected
     TRR_HEURISTIC_TRIPPED_PROXY = 46,              // The heuristic was tripped due to a proxy being detected
     TRR_HEURISTIC_TRIPPED_NRPT = 47,               // The heuristic was tripped due to a NRPT being detected
+    TRR_BAD_URL = 48, // We attempted to use a bad URL (doesn't parse or is not https).
   };
 };
 

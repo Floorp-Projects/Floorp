@@ -150,6 +150,7 @@ nsresult TRR::CreateQueryURI(nsIURI** aOutURI) {
 
   nsresult rv = NS_NewURI(getter_AddRefs(dnsURI), uri);
   if (NS_FAILED(rv)) {
+    RecordReason(TRRSkippedReason::TRR_BAD_URL);
     return rv;
   }
 
