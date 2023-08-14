@@ -194,6 +194,15 @@ function makeExpectedResult({
   source = "remote-settings",
 } = {}) {
   const isTopPick = !!suggestion.is_top_pick;
+  const url = new URL(suggestion.url);
+  url.searchParams.set("utm_medium", "firefox-desktop");
+  url.searchParams.set("utm_source", "firefox-suggest");
+  url.searchParams.set(
+    "utm_campaign",
+    "firefox-mdn-web-docs-suggestion-experiment"
+  );
+  url.searchParams.set("utm_content", "treatment");
+
   return {
     isBestMatch: isTopPick,
     suggestedIndex: isTopPick ? 1 : -1,
@@ -205,8 +214,9 @@ function makeExpectedResult({
       provider: source == "remote-settings" ? "MDNSuggestions" : "mdn",
       telemetryType: "mdn",
       title: suggestion.title,
-      url: suggestion.url,
-      displayUrl: suggestion.url.replace(/^https:\/\//, ""),
+      url: url.href,
+      originalUrl: suggestion.url,
+      displayUrl: url.href.replace(/^https:\/\//, ""),
       description: isTopPick ? suggestion.description : "",
       icon: "chrome://global/skin/icons/mdn.svg",
       shouldShowUrl: true,
