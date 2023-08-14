@@ -113,7 +113,6 @@ void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
   int64_t now_ms = clock_->TimeInMilliseconds();
 
   incoming_bitrate_.Update(packet.size(), now_ms);
-  receive_counters_.last_packet_received_timestamp_ms = now_ms;
   receive_counters_.transmitted.AddPacket(packet);
   --cumulative_loss_;
 
@@ -221,10 +220,9 @@ RtpReceiveStats StreamStatisticianImpl::GetStats() const {
     stats.interarrival_jitter =
         webrtc::TimeDelta::Seconds(stats.jitter) / last_payload_type_frequency_;
   }
-  if (receive_counters_.last_packet_received_timestamp_ms.has_value()) {
+  if (last_receive_time_ms_ > 0) {
     stats.last_packet_received_timestamp_ms =
-        *receive_counters_.last_packet_received_timestamp_ms +
-        delta_internal_unix_epoch_ms_;
+        last_receive_time_ms_ + delta_internal_unix_epoch_ms_;
   }
   stats.packet_counter = receive_counters_.transmitted;
   return stats;

@@ -590,16 +590,17 @@ TEST_P(ReceiveStatisticsTest, StreamDataCounters) {
 
 TEST_P(ReceiveStatisticsTest, LastPacketReceivedTimestamp) {
   clock_.AdvanceTimeMilliseconds(42);
+  packet1_.SetSequenceNumber(100);
   receive_statistics_->OnRtpPacket(packet1_);
-  StreamDataCounters counters = receive_statistics_->GetStatistician(kSsrc1)
-                                    ->GetReceiveStreamDataCounters();
+  RtpReceiveStats counters =
+      receive_statistics_->GetStatistician(kSsrc1)->GetStats();
 
   EXPECT_EQ(42, counters.last_packet_received_timestamp_ms);
 
   clock_.AdvanceTimeMilliseconds(3);
+  packet1_.SetSequenceNumber(101);
   receive_statistics_->OnRtpPacket(packet1_);
-  counters = receive_statistics_->GetStatistician(kSsrc1)
-                 ->GetReceiveStreamDataCounters();
+  counters = receive_statistics_->GetStatistician(kSsrc1)->GetStats();
   EXPECT_EQ(45, counters.last_packet_received_timestamp_ms);
 }
 
