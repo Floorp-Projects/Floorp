@@ -929,6 +929,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     new_result["min_back_window"] = test.get("min_back_window", None)
                     new_result["max_back_window"] = test.get("max_back_window", None)
                     new_result["fore_window"] = test.get("fore_window", None)
+                    new_result["alert_change_type"] = test.get(
+                        "alert_change_type", None
+                    )
 
                     # All Browsertime measurements are elapsed times in milliseconds.
                     new_result["subtest_lower_is_better"] = test.get(
