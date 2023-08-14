@@ -6,6 +6,7 @@
 
 #include "SchemaVersion002.h"
 
+#include "FileSystemFileManager.h"
 #include "ResultStatement.h"
 #include "StartedTransaction.h"
 #include "fs/FileSystemConstants.h"
@@ -54,12 +55,177 @@ nsresult PopulateMainFiles(ResultConnection& aConn) {
       ";"_ns);
 }
 
-nsresult ClearFileIds(ResultConnection& aConn) {
-  return aConn->ExecuteSimpleSQL("DELETE FROM FileIds;"_ns);
+Result<Ok, QMResult> ClearInvalidFileIds(
+    ResultConnection& aConn, data::FileSystemFileManager& aFileManager) {
+  // We cant't just clear all file ids because if a file was accessed using
+  // writable file stream a new file id was created which is not the same as
+  // entry id.
+
+  // Get all file ids first.
+  QM_TRY_INSPECT(
+      const auto& allFileIds,
+      ([&aConn]() -> Result<nsTArray<FileId>, QMResult> {
+        const nsLiteralCString allFileIdsQuery =
+            "SELECT fileId FROM FileIds;"_ns;
+
+        QM_TRY_UNWRAP(ResultStatement stmt,
+                      ResultStatement::Create(aConn, allFileIdsQuery));
+
+        nsTArray<FileId> fileIds;
+
+        while (true) {
+          QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
+          if (!moreResults) {
+            break;
+          }
+
+          QM_TRY_UNWRAP(FileId fileId, stmt.GetFileIdByColumn(/* Column */ 0u));
+
+          fileIds.AppendElement(fileId);
+        }
+
+        return std::move(fileIds);
+      }()));
+
+  // Filter out file ids which have non-zero-sized files on disk.
+  QM_TRY_INSPECT(const auto& invalidFileIds,
+                 ([&aFileManager](const nsTArray<FileId>& aFileIds)
+                      -> Result<nsTArray<FileId>, QMResult> {
+                   nsTArray<FileId> fileIds;
+
+                   for (const auto& fileId : aFileIds) {
+                     QM_TRY_UNWRAP(auto file, aFileManager.GetFile(fileId));
+
+                     QM_TRY_INSPECT(const bool& exists,
+                                    QM_TO_RESULT_INVOKE_MEMBER(file, Exists));
+
+                     if (exists) {
+                       QM_TRY_INSPECT(
+                           const int64_t& fileSize,
+                           QM_TO_RESULT_INVOKE_MEMBER(file, GetFileSize));
+
+                       if (fileSize != 0) {
+                         continue;
+                       }
+
+                       QM_TRY(QM_TO_RESULT(file->Remove(false)));
+                     }
+
+                     fileIds.AppendElement(fileId);
+                   }
+
+                   return std::move(fileIds);
+                 }(allFileIds)));
+
+  // Finally, clear invalid file ids.
+  QM_TRY(([&aConn](const nsTArray<FileId>& aFileIds) -> Result<Ok, QMResult> {
+    for (const auto& fileId : aFileIds) {
+      const nsLiteralCString clearFileIdsQuery =
+          "DELETE FROM FileIds "
+          "WHERE fileId = :fileId "
+          ";"_ns;
+
+      QM_TRY_UNWRAP(ResultStatement stmt,
+                    ResultStatement::Create(aConn, clearFileIdsQuery));
+
+      QM_TRY(QM_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, fileId)));
+
+      QM_TRY(QM_TO_RESULT(stmt.Execute()));
+    }
+
+    return Ok{};
+  }(invalidFileIds)));
+
+  return Ok{};
 }
 
-nsresult ClearMainFiles(ResultConnection& aConn) {
-  return aConn->ExecuteSimpleSQL("DELETE FROM MainFiles;"_ns);
+Result<Ok, QMResult> ClearInvalidMainFiles(
+    ResultConnection& aConn, data::FileSystemFileManager& aFileManager) {
+  // We cant't just clear all main files because if a file was accessed using
+  // writable file stream a new main file was created which is not the same as
+  // entry id.
+
+  // Get all main files first.
+  QM_TRY_INSPECT(
+      const auto& allMainFiles,
+      ([&aConn]() -> Result<nsTArray<std::pair<EntryId, FileId>>, QMResult> {
+        const nsLiteralCString allMainFilesQuery =
+            "SELECT handle, fileId FROM MainFiles;"_ns;
+
+        QM_TRY_UNWRAP(ResultStatement stmt,
+                      ResultStatement::Create(aConn, allMainFilesQuery));
+
+        nsTArray<std::pair<EntryId, FileId>> mainFiles;
+
+        while (true) {
+          QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
+          if (!moreResults) {
+            break;
+          }
+
+          QM_TRY_UNWRAP(EntryId entryId,
+                        stmt.GetEntryIdByColumn(/* Column */ 0u));
+          QM_TRY_UNWRAP(FileId fileId, stmt.GetFileIdByColumn(/* Column */ 1u));
+
+          mainFiles.AppendElement(std::pair<EntryId, FileId>(entryId, fileId));
+        }
+
+        return std::move(mainFiles);
+      }()));
+
+  // Filter out main files which have non-zero-sized files on disk.
+  QM_TRY_INSPECT(
+      const auto& invalidMainFiles,
+      ([&aFileManager](const nsTArray<std::pair<EntryId, FileId>>& aMainFiles)
+           -> Result<nsTArray<std::pair<EntryId, FileId>>, QMResult> {
+        nsTArray<std::pair<EntryId, FileId>> mainFiles;
+
+        for (const auto& mainFile : aMainFiles) {
+          QM_TRY_UNWRAP(auto file, aFileManager.GetFile(mainFile.second));
+
+          QM_TRY_INSPECT(const bool& exists,
+                         QM_TO_RESULT_INVOKE_MEMBER(file, Exists));
+
+          if (exists) {
+            QM_TRY_INSPECT(const int64_t& fileSize,
+                           QM_TO_RESULT_INVOKE_MEMBER(file, GetFileSize));
+
+            if (fileSize != 0) {
+              continue;
+            }
+
+            QM_TRY(QM_TO_RESULT(file->Remove(false)));
+          }
+
+          mainFiles.AppendElement(mainFile);
+        }
+
+        return std::move(mainFiles);
+      }(allMainFiles)));
+
+  // Finally, clear invalid main files.
+  QM_TRY(([&aConn](const nsTArray<std::pair<EntryId, FileId>>& aMainFiles)
+              -> Result<Ok, QMResult> {
+    for (const auto& mainFile : aMainFiles) {
+      const nsLiteralCString clearMainFilesQuery =
+          "DELETE FROM MainFiles "
+          "WHERE handle = :entryId AND fileId = :fileId "
+          ";"_ns;
+
+      QM_TRY_UNWRAP(ResultStatement stmt,
+                    ResultStatement::Create(aConn, clearMainFilesQuery));
+
+      QM_TRY(
+          QM_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, mainFile.first)));
+      QM_TRY(QM_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, mainFile.second)));
+
+      QM_TRY(QM_TO_RESULT(stmt.Execute()));
+    }
+
+    return Ok{};
+  }(invalidMainFiles)));
+
+  return Ok{};
 }
 
 nsresult ConnectUsagesToFileIds(ResultConnection& aConn) {
@@ -117,7 +283,8 @@ nsresult CreateEntryNamesView(ResultConnection& aConn) {
 }  // namespace
 
 Result<DatabaseVersion, QMResult> SchemaVersion002::InitializeConnection(
-    ResultConnection& aConn, const Origin& aOrigin) {
+    ResultConnection& aConn, data::FileSystemFileManager& aFileManager,
+    const Origin& aOrigin) {
   QM_TRY_UNWRAP(const bool wasEmpty, CheckIfEmpty(aConn));
 
   DatabaseVersion currentVersion = 0;
@@ -161,6 +328,10 @@ Result<DatabaseVersion, QMResult> SchemaVersion002::InitializeConnection(
     }
   }
 
+  // The upgrade from version 1 to version 2 was buggy, so we have to check if
+  // the Usages table still references the Files table which is a sign that
+  // the upgrade wasn't complete. This extra query has only negligible perf
+  // impact. See bug 1847989.
   auto UsagesTableRefsFilesTable = [&aConn]() -> Result<bool, QMResult> {
     const nsLiteralCString query =
         "SELECT pragma_foreign_key_list.'table'=='Files' "
@@ -176,10 +347,14 @@ Result<DatabaseVersion, QMResult> SchemaVersion002::InitializeConnection(
   if (usagesTableRefsFilesTable) {
     QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(aConn));
 
-    QM_TRY(QM_TO_RESULT(ClearFileIds(aConn)));
+    // The buggy upgrade didn't call PopulateFileIds, ConnectUsagesToFileIds
+    // and PopulateMainFiles was completely missing. Since invalid file ids
+    // and main files could be inserted when the profile was broken, we need
+    // to clear them before populating.
+    QM_TRY(ClearInvalidFileIds(aConn, aFileManager));
     QM_TRY(QM_TO_RESULT(PopulateFileIds(aConn)));
     QM_TRY(QM_TO_RESULT(ConnectUsagesToFileIds(aConn)));
-    QM_TRY(QM_TO_RESULT(ClearMainFiles(aConn)));
+    QM_TRY(ClearInvalidMainFiles(aConn, aFileManager));
     QM_TRY(QM_TO_RESULT(PopulateMainFiles(aConn)));
 
     QM_TRY(QM_TO_RESULT(transaction.Commit()));
