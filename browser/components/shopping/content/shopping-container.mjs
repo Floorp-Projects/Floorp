@@ -30,6 +30,7 @@ export class ShoppingContainer extends MozLitElement {
     showOnboarding: { type: Boolean },
     productUrl: { type: String },
     recommendationData: { type: Object },
+    isOffline: { type: Boolean },
   };
 
   static get queries() {
@@ -69,6 +70,7 @@ export class ShoppingContainer extends MozLitElement {
     this.showOnboarding = showOnboarding;
     this.productUrl = productUrl;
     this.recommendationData = recommendationData;
+    this.isOffline = !navigator.onLine;
   }
 
   handleEvent(event) {
@@ -155,7 +157,7 @@ export class ShoppingContainer extends MozLitElement {
     `;
   }
 
-  renderContainer(sidebarContent) {
+  renderContainer(sidebarContent, hideSettings = false) {
     return html`<link
         rel="stylesheet"
         href="chrome://browser/content/shopping/shopping-container.css"
@@ -179,23 +181,32 @@ export class ShoppingContainer extends MozLitElement {
             data-l10n-id="shopping-close-button"
           ></button>
         </div>
-        <div id="content" aria-busy=${!this.data}>${sidebarContent}</div>
+        <div id="content" aria-busy=${!this.data}>
+          ${sidebarContent}
+          ${!hideSettings
+            ? html`<shopping-settings></shopping-settings>`
+            : null}
+        </div>
       </div>`;
   }
 
   render() {
     let content;
+    let hideSettings;
     if (this.showOnboarding) {
       content = html`<slot name="multi-stage-message-slot"></slot>`;
+      hideSettings = true;
+    } else if (this.isOffline) {
+      content = html`<shopping-message-bar
+        type="offline"
+      ></shopping-message-bar>`;
     } else if (!this.data) {
       content = this.getLoadingTemplate();
+      hideSettings = true;
     } else {
-      content = html`
-        ${this.getContentTemplate()}
-        <shopping-settings></shopping-settings>
-      `;
+      content = this.getContentTemplate();
     }
-    return this.renderContainer(content);
+    return this.renderContainer(content, hideSettings);
   }
 }
 

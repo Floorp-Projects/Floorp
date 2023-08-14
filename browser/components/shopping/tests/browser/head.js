@@ -152,6 +152,7 @@ function getAnalysisDetails(browser, data) {
     }
     returnState.shoppingMessageBarType =
       shoppingContainer.shoppingMessageBarEl?.getAttribute("type");
+    returnState.isOffline = shoppingContainer.isOffline;
     return returnState;
   });
 }
