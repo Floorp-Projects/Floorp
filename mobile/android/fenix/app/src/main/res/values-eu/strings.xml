@@ -614,11 +614,17 @@
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">%s klasikoa</string>
     <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title">Edizio mugatua</string>
+    <string name="wallpaper_limited_edition_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Edizio mugatua</string>
+    <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
+    <string name="wallpaper_artist_series_title">Artisten serieak</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more">Ahots Independenteen bilduma berria. %s</string>
+    <string name="wallpaper_limited_edition_description_with_learn_more" moz:RemovedIn="118" tools:ignore="UnusedResources">Ahots Independenteen bilduma berria. %s</string>
+    <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description_with_learn_more">Ahots Independenteen bilduma. %s</string>
     <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description">Ahots Independenteen bilduma berria.</string>
+    <string name="wallpaper_limited_edition_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Ahots Independenteen bilduma berria.</string>
+    <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description">Ahots Independenteen bilduma.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Probatu kolore ukitu bat</string>
     <!-- Wallpaper onboarding dialog body text. -->
@@ -1214,7 +1220,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Baztertu</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">Ezin da inprimatu</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Ezin da inprimatu</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">Ezin da orria inprimatu</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Inprimatu</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

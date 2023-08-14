@@ -1225,7 +1225,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Hylkää</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">Tulostaminen ei onnistu</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Tulostaminen ei onnistu</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">Sivun tulostaminen ei onnistunut</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Tulosta</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

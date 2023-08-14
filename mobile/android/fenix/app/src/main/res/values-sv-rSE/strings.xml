@@ -620,11 +620,15 @@
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Begränsad utgåva</string>
     <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
-    <string name="wallpaper_artist_series_title">Konstnärsserier</string>
+    <string name="wallpaper_artist_series_title">Konstnärsserie</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
     <string name="wallpaper_limited_edition_description_with_learn_more" moz:RemovedIn="118" tools:ignore="UnusedResources">Den nya Independent Voices-kollektionen. %s</string>
+    <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description_with_learn_more">Independent Voices-samlingen. %s</string>
     <!-- Description text for the limited edition wallpapers. -->
     <string name="wallpaper_limited_edition_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Den nya Independent Voices-kollektionen.</string>
+    <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description">Independent Voices-samlingen.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Prova en skvätt färg</string>
     <!-- Wallpaper onboarding dialog body text. -->
@@ -1220,7 +1224,7 @@
     <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Det går inte att skriva ut</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_page_error">Det går inte att skriva ut den här sidan</string>
+    <string name="unable_to_print_page_error">Det gick inte att skriva ut den här sidan</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Skriv ut</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->

@@ -613,6 +613,8 @@
     <string name="wallpaper_classic_title">Класічны %s</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Абмежаванае выданне</string>
+    <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
+    <string name="wallpaper_artist_series_title">Мастакоўская серыя</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
     <string name="wallpaper_limited_edition_description_with_learn_more" moz:RemovedIn="118" tools:ignore="UnusedResources">Новая калекцыя «Незалежныя галасы». %s</string>
     <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
@@ -1216,7 +1218,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Адхіліць</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">Немагчыма надрукаваць</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Немагчыма надрукаваць</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">Немагчыма надрукаваць гэту старонку</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Друкаваць</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
