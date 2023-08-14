@@ -74,82 +74,82 @@ test64('(i64.xor (i64.const 0x1234567851505150) (i64.const 0x515051500f0f1337))'
 
 // {AND,OR,XOR}{32,64} identities: first arg is all zeroes
 
-test32('(i32.and (i32.const 0) (get_local 1))',
+test32('(i32.and (i32.const 0) (local.get 1))',
        '33 c0   xor %eax, %eax',
        1234,5678, 0);
-test64('(i64.and (i64.const 0) (get_local 1))',
+test64('(i64.and (i64.const 0) (local.get 1))',
        '33 c0   xor %eax, %eax',
        1234n,5678n, 0n);
 
-test32('(i32.or (i32.const 0) (get_local 1))',
+test32('(i32.or (i32.const 0) (local.get 1))',
        `8b ..   mov %e.., %ecx
         8b c1   mov %ecx, %eax`,
        1234,5678, 5678);
-test64('(i64.or (i64.const 0) (get_local 1))',
+test64('(i64.or (i64.const 0) (local.get 1))',
        `48 89 ..   mov %r.., %rcx
         48 89 c8   mov %rcx, %rax`,
        1234n,5678n, 5678n);
 
-test32('(i32.xor (i32.const 0) (get_local 1))',
+test32('(i32.xor (i32.const 0) (local.get 1))',
        `8b ..   mov %e.., %ecx
         8b c1   mov %ecx, %eax`,
        1234,5678, 5678);
-test64('(i64.xor (i64.const 0) (get_local 1))',
+test64('(i64.xor (i64.const 0) (local.get 1))',
        `48 89 ..   mov %r.., %rcx
         48 89 c8   mov %rcx, %rax`,
        1234n,5678n, 5678n);
 
 // {AND,OR,XOR}{32,64} identities: second arg is all zeroes
 
-test32('(i32.and (get_local 0) (i32.const 0))',
+test32('(i32.and (local.get 0) (i32.const 0))',
        '33 c0   xor %eax, %eax',
        1234,5678, 0);
-test64('(i64.and (get_local 0) (i64.const 0))',
+test64('(i64.and (local.get 0) (i64.const 0))',
        '33 c0   xor %eax, %eax',
        1234n,5678n, 0n);
 
-test32('(i32.or (get_local 0) (i32.const 0))',
+test32('(i32.or (local.get 0) (i32.const 0))',
      // 8b cf   mov %edi, %ecx  -- expected on Linux but not on Windows
        `8b c1   mov %ecx, %eax`,
        1234,5678, 1234, {no_prefix: true}); // required on Linux
-test64('(i64.or (get_local 0) (i64.const 0))',
+test64('(i64.or (local.get 0) (i64.const 0))',
      // 48 89 f9   mov %rdi, %rcx  -- ditto
        `48 89 c8   mov %rcx, %rax`,
        1234n,5678n, 1234n, {no_prefix: true});
 
-test32('(i32.xor (get_local 0) (i32.const 0))',
+test32('(i32.xor (local.get 0) (i32.const 0))',
      // 8b cf   mov %edi, %ecx  -- ditto
        `8b c1   mov %ecx, %eax`,
        1234,5678, 1234, {no_prefix: true});
-test64('(i64.xor (get_local 0) (i64.const 0))',
+test64('(i64.xor (local.get 0) (i64.const 0))',
      // 48 89 f9   mov %rdi, %rcx  -- ditto
        `48 89 c8   mov %rcx, %rax`,
        1234n,5678n, 1234n, {no_prefix: true});
 
 // {AND,OR,XOR}{32,64} identities: first arg is all ones
 
-test32('(i32.and (i32.const 0xffffffff) (get_local 1))',
+test32('(i32.and (i32.const 0xffffffff) (local.get 1))',
        `8b ..   mov %e.., %ecx
         8b c1   mov %ecx, %eax`,
        1234,5678, 5678);
-test64('(i64.and (i64.const 0xffffffffffffffff) (get_local 1))',
+test64('(i64.and (i64.const 0xffffffffffffffff) (local.get 1))',
        `48 89 ..   mov %r.., %rcx
         48 89 c8   mov %rcx, %rax`,
        1234n,5678n, 5678n);
 
-test32('(i32.or (i32.const 0xffffffff) (get_local 1))',
+test32('(i32.or (i32.const 0xffffffff) (local.get 1))',
        'b8 ff ff ff ff   mov \\$-0x01, %eax',
        1234,5678, -1/*0xffffffff*/);
-test64('(i64.or (i64.const 0xffffffffffffffff) (get_local 1))',
+test64('(i64.or (i64.const 0xffffffffffffffff) (local.get 1))',
        '48 c7 c0 ff ff ff ff   mov \\$-0x01, %rax',
        1234n,5678n, -1n/*0xffffffffffffffff*/);
 
-test32('(i32.xor (i32.const 0xffffffff) (get_local 1))',
+test32('(i32.xor (i32.const 0xffffffff) (local.get 1))',
        `8b ..   mov %e.., %ecx
         8b c1   mov %ecx, %eax
         f7 d0   not %eax`,
        1234,5678, -5679);
-test64('(i64.xor (i64.const 0xffffffffffffffff) (get_local 1))',
+test64('(i64.xor (i64.const 0xffffffffffffffff) (local.get 1))',
        `48 89 ..   mov %r.., %rcx
         48 89 c8   mov %rcx, %rax
         48 f7 d0   not %rax`,
@@ -157,28 +157,28 @@ test64('(i64.xor (i64.const 0xffffffffffffffff) (get_local 1))',
 
 // {AND,OR,XOR}{32,64} identities: second arg is all ones
 
-test32('(i32.and (get_local 0) (i32.const 0xffffffff))',
+test32('(i32.and (local.get 0) (i32.const 0xffffffff))',
      // 8b cf   mov %edi, %ecx  -- expected on Linux but not on Windows
        `8b c1   mov %ecx, %eax`,
        1234,5678, 1234, {no_prefix: true}); // required on Linux
-test64('(i64.and (get_local 0) (i64.const 0xffffffffffffffff))',
+test64('(i64.and (local.get 0) (i64.const 0xffffffffffffffff))',
      // 48 89 f9   mov %rdi, %rcx  -- ditto
        `48 89 c8   mov %rcx, %rax`,
        1234n,5678n, 1234n, {no_prefix: true});
 
-test32('(i32.or (get_local 0) (i32.const 0xffffffff))',
+test32('(i32.or (local.get 0) (i32.const 0xffffffff))',
        'b8 ff ff ff ff   mov \\$-0x01, %eax',
        1234,5678, -1/*0xffffffff*/);
-test64('(i64.or (get_local 0) (i64.const 0xffffffffffffffff))',
+test64('(i64.or (local.get 0) (i64.const 0xffffffffffffffff))',
        '48 c7 c0 ff ff ff ff   mov \\$-0x01, %rax',
        1234n,5678n, -1n/*0xffffffffffffffff*/);
 
-test32('(i32.xor (get_local 0) (i32.const 0xffffffff))',
+test32('(i32.xor (local.get 0) (i32.const 0xffffffff))',
      // 8b cf   mov %edi, %ecx  -- ditto
        `8b c1   mov %ecx, %eax
         f7 d0   not %eax`,
        1234,5678, -1235, {no_prefix: true});
-test64('(i64.xor (get_local 0) (i64.const 0xffffffffffffffff))',
+test64('(i64.xor (local.get 0) (i64.const 0xffffffffffffffff))',
      // 48 89 f9   mov %rdi, %rcx  -- ditto
        `48 89 c8   mov %rcx, %rax
         48 f7 d0   not %rax`,
@@ -186,27 +186,27 @@ test64('(i64.xor (get_local 0) (i64.const 0xffffffffffffffff))',
 
 // {AND,OR,XOR}{32,64} identities: both args the same
 
-test32('(i32.and (get_local 0) (get_local 0))',
+test32('(i32.and (local.get 0) (local.get 0))',
      // 8b cf   mov %edi, %ecx  -- ditto
        `8b c1   mov %ecx, %eax`,
        1234,5678, 1234, {no_prefix: true});
-test64('(i64.and (get_local 0) (get_local 0))',
+test64('(i64.and (local.get 0) (local.get 0))',
      // 48 89 f9   mov %rdi, %rcx  -- ditto
        `48 89 c8   mov %rcx, %rax`,
        1234n,5678n, 1234n, {no_prefix: true});
 
-test32('(i32.or (get_local 0) (get_local 0))',
+test32('(i32.or (local.get 0) (local.get 0))',
      // 8b cf   mov %edi, %ecx  -- ditto
        `8b c1   mov %ecx, %eax`,
        1234,5678, 1234, {no_prefix: true});
-test64('(i64.or (get_local 0) (get_local 0))',
+test64('(i64.or (local.get 0) (local.get 0))',
      // 48 89 f9   mov %rdi, %rcx  -- ditto
        `48 89 c8   mov %rcx, %rax`,
        1234n,5678n, 1234n, {no_prefix: true});
 
-test32('(i32.xor (get_local 0) (get_local 0))',
+test32('(i32.xor (local.get 0) (local.get 0))',
        '33 c0   xor %eax, %eax',
        1234,5678, 0);
-test64('(i64.xor (get_local 0) (get_local 0))',
+test64('(i64.xor (local.get 0) (local.get 0))',
        '33 c0   xor %eax, %eax',
        1234n,5678n, 0n);

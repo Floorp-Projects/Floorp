@@ -5,7 +5,7 @@ assertEq(wasmEvalText(`
       i32.const 0
       if
         i32.const 1
-        tee_local $p
+        local.tee $p
         br_table $out $out
       end
     end

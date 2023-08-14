@@ -52,24 +52,24 @@ monitorLocalValues(
     [{}]
 );
 monitorLocalValues(
-    '(module (func (export "test") (local i32) (i32.const 1) (set_local 0)))',
+    '(module (func (export "test") (local i32) (i32.const 1) (local.set 0)))',
     undefined,
     [{var0: [0, 1]}]
 );
 monitorLocalValues(
-    '(module (func (export "test") (local f32) (f32.const 1.5) (set_local 0)))',
+    '(module (func (export "test") (local f32) (f32.const 1.5) (local.set 0)))',
     undefined,
     [{var0: [0, 1.5]}]
 );
 monitorLocalValues(
-    '(module (func (export "test") (local f64) (f64.const 42.25) (set_local 0)))',
+    '(module (func (export "test") (local f64) (f64.const 42.25) (local.set 0)))',
     undefined,
     [{var0: [0, 42.25]}]
 );
 monitorLocalValues(
     `(module
-  (func (param i32) (result i32) (get_local 0) (i32.const 2) (i32.add))
-  (func (param i32) (local i32) (get_local 0) (call 0) (set_local 1))
+  (func (param i32) (result i32) (local.get 0) (i32.const 2) (i32.add))
+  (func (param i32) (local i32) (local.get 0) (call 0) (local.set 1))
   (func (export "test") (i32.const 1) (call 1))
 )`.replace(/\n/g, " "),
     undefined,

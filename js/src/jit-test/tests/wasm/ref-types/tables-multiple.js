@@ -421,7 +421,7 @@ wasmEvalText(
        (table (export "t") 10 externref)
        (func (param i32)
          (return)
-         (table.get (get_local 0))
+         (table.get (local.get 0))
          (drop)
         )
     )`);
@@ -431,7 +431,7 @@ wasmEvalText(
        (table (export "t") 10 externref)
        (func (param i32) (param i32)
          (return)
-         (table.grow (get_local 1))
+         (table.grow (local.get 1))
          (drop)
         )
     )`);
@@ -441,7 +441,7 @@ wasmEvalText(
        (table (export "t") 10 externref)
        (func (param i32) (param externref)
          (return)
-         (table.set (get_local 0) (get_local 1))
+         (table.set (local.get 0) (local.get 1))
         )
     )`);
 

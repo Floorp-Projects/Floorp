@@ -25,7 +25,7 @@ let i = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(`
      local.get $i
      i32.const 3
      i32.add
-     tee_local $i
+     local.tee $i
      i64.extend_u/i32
 
      ;; if the memory is too small, grow it.
