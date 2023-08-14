@@ -12,6 +12,7 @@ class ShoppingMessageBar extends MozLitElement {
     ["generic-error", this.getGenericErrorTemplate()],
     ["not-enough-reviews", this.getNotEnoughReviewsTemplate()],
     ["product-not-available", this.getProductNotAvailableTemplate()],
+    ["offline", this.getOfflineWarningTemplate()],
   ]);
 
   static properties = {
@@ -78,6 +79,20 @@ class ShoppingMessageBar extends MozLitElement {
           class="small-button"
           data-l10n-id="shopping-message-bar-warning-product-not-available-button"
         ></button>
+      </article>
+    </message-bar>`;
+  }
+
+  getOfflineWarningTemplate() {
+    return html` <message-bar type="warning">
+      <article id="message-bar-container" aria-labelledby="header">
+        <strong
+          id="header"
+          data-l10n-id="shopping-message-bar-warning-offline-title"
+        ></strong>
+        <span
+          data-l10n-id="shopping-message-bar-warning-offline-message"
+        ></span>
       </article>
     </message-bar>`;
   }

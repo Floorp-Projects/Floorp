@@ -54,6 +54,9 @@ shopping-message-bar-warning-product-not-available-title = Product is not availa
 shopping-message-bar-warning-product-not-available-message = If you see that this product is back in stock, report it to us and we’ll work on updating the analysis.
 shopping-message-bar-warning-product-not-available-button = Report this product is back in stock
 
+shopping-message-bar-warning-offline-title = No network connection
+shopping-message-bar-warning-offline-message = Check your network connection. Then, try reloading the page.
+
 ## Strings for the product review snippets card
 
 shopping-highlights-label =
