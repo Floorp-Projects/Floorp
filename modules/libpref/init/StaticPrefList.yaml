@@ -8184,6 +8184,13 @@
   value: true
   mirror: always
 
+# Make `zoom` a `transform` + `transform-origin` alias.
+- name: layout.css.zoom-transform-hack.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether the `-moz-control-character-visibility` property is exposed to
 # content.
 #
