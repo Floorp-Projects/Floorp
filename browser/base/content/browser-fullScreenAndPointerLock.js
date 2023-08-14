@@ -64,8 +64,12 @@ var PointerlockFsWarning = {
       this._element.addEventListener("transitionend", this);
       this._element.addEventListener("transitioncancel", this);
       window.addEventListener("mousemove", this, true);
-      window.addEventListener("activate", this);
-      window.addEventListener("deactivate", this);
+      // If the user explicitly disables the prompt, there's no need to detect
+      // activation.
+      if (timeout > 0) {
+        window.addEventListener("activate", this);
+        window.addEventListener("deactivate", this);
+      }
       // The timeout to hide the warning box after a while.
       this._timeoutHide = new this.Timeout(() => {
         window.removeEventListener("activate", this);
