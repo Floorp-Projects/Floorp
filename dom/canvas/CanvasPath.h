@@ -83,11 +83,7 @@ class CanvasPath final : public nsWrapperCache {
   mutable RefPtr<gfx::Path> mPath;
   mutable RefPtr<gfx::PathBuilder> mPathBuilder;
 
-  // Whether an internal segment was zero-length.
-  mutable bool mPruned = false;
-
   void EnsurePathBuilder() const;
-  void EnsureCapped() const;
 };
 
 }  // namespace dom
