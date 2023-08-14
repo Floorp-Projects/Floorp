@@ -13,6 +13,11 @@ import android.widget.ImageView
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -22,9 +27,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import mozilla.components.browser.icons.compose.IconLoaderScope
+import mozilla.components.browser.icons.compose.IconLoaderState
+import mozilla.components.browser.icons.compose.InternalIconLoaderScope
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.extension.IconMessageHandler
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
@@ -253,6 +260,57 @@ class BrowserIcons constructor(
                 view.get()?.setTag(R.id.mozac_browser_icons_tag_job, null)
             }
         }
+    }
+
+    /**
+     * Loads an icon using [BrowserIcons] into the given Composable [content]. Synchronous loading
+     * via an in-memory cache is attempted first, followed by an asynchronous load as a fallback.
+     *
+     * @param url The URL of the website an icon should be loaded for.
+     * @param iconSize The preferred size of the icon that should be loaded.
+     * @param isPrivate Whether this request for this icon came from a private session.
+     * @param content The Composable content block to render the icon.
+     */
+    @Composable
+    fun LoadableImage(
+        url: String,
+        iconSize: IconRequest.Size = IconRequest.Size.DEFAULT,
+        isPrivate: Boolean = false,
+        content: @Composable IconLoaderScope.() -> Unit,
+    ) {
+        val request = IconRequest(url, iconSize, emptyList(), null, isPrivate)
+        val iconLoaderScope = remember(request) { InternalIconLoaderScope() }
+
+        // Happy path: try to load icon synchronously from an in-memory cache.
+        val desiredSize = desiredSizeForRequest(request)
+        val inMemoryIcon = loadIconMemoryOnly(request, desiredSize)
+        if (inMemoryIcon != null) {
+            iconLoaderScope.state.value = IconLoaderState.Icon(
+                BitmapPainter(inMemoryIcon.bitmap.asImageBitmap()),
+                inMemoryIcon.color,
+                inMemoryIcon.source,
+                inMemoryIcon.maskable,
+            )
+        } else {
+            // Unhappy path: if the in-memory load didn't succeed, try the expensive IO loaders.
+            val deferredIcon = loadIconInternalAsync(request, desiredSize)
+
+            LaunchedEffect(request) {
+                try {
+                    val icon = deferredIcon.await()
+                    iconLoaderScope.state.value = IconLoaderState.Icon(
+                        BitmapPainter(icon.bitmap.asImageBitmap()),
+                        icon.color,
+                        icon.source,
+                        icon.maskable,
+                    )
+                } catch (e: CancellationException) {
+                    Logger.debug("Could not retrieve icon for $url", e)
+                }
+            }
+        }
+
+        iconLoaderScope.content()
     }
 
     private fun desiredSizeForRequest(request: IconRequest) = DesiredSize(

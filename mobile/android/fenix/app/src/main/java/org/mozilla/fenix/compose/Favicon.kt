@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.browser.icons.IconRequest
-import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
 import org.mozilla.fenix.components.components
@@ -47,10 +46,10 @@ fun Favicon(
             modifier = modifier,
         )
     } else {
-        components.core.icons.Loader(
+        components.core.icons.LoadableImage(
             url = url,
             isPrivate = isPrivate,
-            size = size.toIconRequestSize(),
+            iconSize = size.toIconRequestSize(),
         ) {
             Placeholder {
                 FaviconPlaceholder(

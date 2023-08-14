@@ -337,19 +337,10 @@ private fun TopSiteFaviconCard(
                 color = backgroundColor,
                 shape = RoundedCornerShape(4.dp),
             ) {
-                val drawableForUrl = getDrawableForUrl(topSite.url)
-                when {
-                    drawableForUrl != null -> {
-                        FaviconImage(painterResource(drawableForUrl))
-                    }
-
-                    topSite is TopSite.Provided -> {
-                        FaviconBitmap(topSite)
-                    }
-
-                    else -> {
-                        FaviconDefault(topSite.url)
-                    }
+                if (topSite is TopSite.Provided) {
+                    FaviconBitmap(topSite)
+                } else {
+                    FavIconForUrl(topSite.url)
                 }
             }
         }
@@ -404,16 +395,18 @@ private fun FaviconDefault(url: String) {
     Favicon(url = url, size = TOP_SITES_FAVICON_SIZE.dp)
 }
 
-private fun getDrawableForUrl(url: String) =
+@Composable
+private fun FavIconForUrl(url: String) {
     when (url) {
-        SupportUtils.POCKET_TRENDING_URL -> R.drawable.ic_pocket
-        SupportUtils.BAIDU_URL -> R.drawable.ic_baidu
-        SupportUtils.JD_URL -> R.drawable.ic_jd
-        SupportUtils.PDD_URL -> R.drawable.ic_pdd
-        SupportUtils.TC_URL -> R.drawable.ic_tc
-        SupportUtils.MEITUAN_URL -> R.drawable.ic_meituan
-        else -> null
+        SupportUtils.POCKET_TRENDING_URL -> FaviconImage(painterResource(R.drawable.ic_pocket))
+        SupportUtils.BAIDU_URL -> FaviconImage(painterResource(R.drawable.ic_baidu))
+        SupportUtils.JD_URL -> FaviconImage(painterResource(R.drawable.ic_jd))
+        SupportUtils.PDD_URL -> FaviconImage(painterResource(R.drawable.ic_pdd))
+        SupportUtils.TC_URL -> FaviconImage(painterResource(R.drawable.ic_tc))
+        SupportUtils.MEITUAN_URL -> FaviconImage(painterResource(R.drawable.ic_meituan))
+        else -> FaviconDefault(url)
     }
+}
 
 @Composable
 @Suppress("LongParameterList")
