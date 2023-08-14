@@ -371,11 +371,7 @@ struct StreamDataCounters {
            fec.payload_bytes;
   }
 
-  int64_t first_packet_time_ms;  // Time when first packet is sent/received.
-  // The timestamp at which the last packet was received, i.e. the time of the
-  // local clock when it was received - not the RTP timestamp of that packet.
-  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-lastpacketreceivedtimestamp
-  absl::optional<int64_t> last_packet_received_timestamp_ms;
+  int64_t first_packet_time_ms;    // Time when first packet is sent/received.
   RtpPacketCounter transmitted;    // Number of transmitted packets/bytes.
   RtpPacketCounter retransmitted;  // Number of retransmitted packets/bytes.
   RtpPacketCounter fec;            // Number of redundancy packets/bytes.
