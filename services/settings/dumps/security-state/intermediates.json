@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1691743681420,
+      "derHash": "DtVnGu6WFs3norGz3SOYtuEeWR2pdEki2MMtF/Z8ypM=",
+      "subject": "CN=TWCA Secure SSL Certification Authority,OU=Secure SSL Sub-CA,O=TAIWAN-CA,C=TW",
+      "subjectDN": "MG8xCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExGjAYBgNVBAsTEVNlY3VyZSBTU0wgU3ViLUNBMTAwLgYDVQQDEydUV0NBIFNlY3VyZSBTU0wgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ecec9266ff245492e1a172585358e3e67c817179645c78b040729531a2ce40cc",
+        "size": 2032,
+        "filename": "UF3fknYIk07Cq2Y0ayIdVanP0UaBIGpSIs6_eA0d_e0=.pem",
+        "location": "security-state-staging/intermediates/92beeb38-0a3f-4c91-85a1-0747906a534f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "UF3fknYIk07Cq2Y0ayIdVanP0UaBIGpSIs6/eA0d/e0=",
+      "crlite_enrolled": false,
+      "id": "afa677b2-2744-4891-aa66-0e302ea96f30",
+      "last_modified": 1691744223786
+    },
+    {
       "schema": 1691462897692,
       "derHash": "hz8LqA46wiJlbf0EFYzBXCkn1C1dBfAd7kpH60OpFt8=",
       "subject": "CN=Sectigo Public Server Authentication CA DV E36,O=Sectigo Limited,C=GB",
@@ -2303,24 +2321,6 @@
       "crlite_enrolled": false,
       "id": "1afda35e-956c-46f3-85f2-2e84242c2017",
       "last_modified": 1683687423830
-    },
-    {
-      "schema": 1683686878828,
-      "derHash": "tM3PL0oRQc/mBPfVBifJb4gqq5XB07ekq7JGFdsVfRc=",
-      "subject": "CN=BJCA Generic CA2,O=BEIJING CERTIFICATE AUTHORITY,C=CN",
-      "subjectDN": "MFAxCzAJBgNVBAYTAkNOMSYwJAYDVQQKDB1CRUlKSU5HIENFUlRJRklDQVRFIEFVVEhPUklUWTEZMBcGA1UEAwwQQkpDQSBHZW5lcmljIENBMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f097ecf027e6de14d4c09d02efde8bae582c4fec4e9920bd5843e270ee48eb40",
-        "size": 1154,
-        "filename": "31wNnjIOnIWZ2H6NJiuXBRLBhzngPMa3QpiMJNJ-Nt0=.pem",
-        "location": "security-state-staging/intermediates/ba5c1b80-d5d7-4af9-a8bc-aba07c4e6983.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "31wNnjIOnIWZ2H6NJiuXBRLBhzngPMa3QpiMJNJ+Nt0=",
-      "crlite_enrolled": false,
-      "id": "c526314c-38f2-4e77-95a6-cba2ac31a152",
-      "last_modified": 1683687423828
     },
     {
       "schema": 1683686877217,
@@ -28855,5 +28855,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1691463423580
+  "timestamp": 1691765823425
 }
