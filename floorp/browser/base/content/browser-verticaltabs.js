@@ -76,7 +76,6 @@ function setVerticalTabs() {
 
   } else {
     Services.prefs.setBoolPref("floorp.browser.tabs.verticaltab", false);
-    Services.prefs.setIntPref("floorp.browser.tabbar.settings", 0);
     document.querySelector("#verticalTabsStyle")?.remove()
     let verticalTabs = document.querySelector("#toolbar-items-verticaltabs")
     if(verticalTabs != null){
