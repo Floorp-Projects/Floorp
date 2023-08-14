@@ -107,8 +107,6 @@ struct LoadInfoArgs
   uint32_t                    securityFlags;
   uint32_t                    sandboxFlags;
   uint32_t                    triggeringSandboxFlags;
-  uint64_t                    triggeringWindowId;
-  bool                        triggeringStorageAccess;
   nsContentPolicyType         contentPolicyType;
   uint32_t                    tainting;
   bool                        blockAllMixedContent;
@@ -239,12 +237,6 @@ struct ParentLoadInfoForwarderArgs
 
   // Sandbox Flags of the Document that triggered the load
   uint32_t triggeringSandboxFlags;
-
-  // Window ID and UsingStorageAccess of the Document that triggered the load.
-  // Used by the Storage Access API to determine if SubDocument loads should
-  // be partitioned or not.
-  uint64_t triggeringWindowId;
-  bool triggeringStorageAccess;
 
   // We must also note that the tainting value was explicitly set
   // by the service worker.

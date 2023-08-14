@@ -589,7 +589,7 @@ nsresult ServiceWorkerPrivate::Initialize() {
       /* useRegularPrincipal */ true,
 
       // ServiceWorkers run as first-party, no storage-access permission needed.
-      /* usingStorageAccess */ false,
+      /* hasStorageAccessPermissionGranted */ false,
 
       cjsData, domain,
       /* isSecureContext */ true,

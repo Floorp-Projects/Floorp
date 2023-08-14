@@ -607,16 +607,16 @@ bool ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
     return false;
   }
 
-  // Document::UsingStorageAccess first checks if storage access granted is
+  // Document::HasStoragePermission first checks if storage access granted is
   // cached in the inner window, if no, it then checks the storage permission
   // flag in the channel's loadinfo
-  bool allowed = document->UsingStorageAccess();
+  bool allowed = document->HasStorageAccessPermissionGranted();
 
   if (!allowed) {
     *aRejectedReason = blockedReason;
   } else {
     if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug) &&
-        aWindow->UsingStorageAccess()) {
+        aWindow->HasStorageAccessPermissionGranted()) {
       LOG(("Permission stored in the window. All good."));
     }
   }
@@ -807,7 +807,7 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
 
   // Let's see if we have to grant the access for this particular channel.
 
-  // UsingStorageAccess only applies to channels that load
+  // HasStorageAccessPermissionGranted only applies to channels that load
   // documents, for sub-resources loads, just returns the result from loadInfo.
   bool isDocument = false;
   aChannel->GetIsDocument(&isDocument);
@@ -815,7 +815,7 @@ bool ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
   if (isDocument) {
     nsCOMPtr<nsPIDOMWindowInner> inner =
         AntiTrackingUtils::GetInnerWindow(targetBC);
-    if (inner && inner->UsingStorageAccess()) {
+    if (inner && inner->HasStorageAccessPermissionGranted()) {
       LOG(("Permission stored in the window. All good."));
       return true;
     }

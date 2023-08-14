@@ -1006,7 +1006,7 @@ StorageAccessAPIHelper::CheckExistingPermissionDecidesStorageAccessAPI(
     }
     return Some(false);
   }
-  if (aDocument->UsingStorageAccess()) {
+  if (aDocument->HasStorageAccessPermissionGranted()) {
     return Some(true);
   }
   return Nothing();

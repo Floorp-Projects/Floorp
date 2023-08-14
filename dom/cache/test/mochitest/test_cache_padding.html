@@ -85,9 +85,9 @@ function fetchOpaqueResponse(url) {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
-  "set": [["dom.caches.enabled", true],
-          ["dom.caches.testing.enabled", true],
-          ["dom.quotaManager.testing", true]],
+  "set": [["dom.caches.testing.enabled", true],
+          ["dom.quotaManager.testing", true],
+          ["privacy.partition.always_partition_third_party_non_cookie_storage", false]],
 }, async function() {
   // This test is mainly to verify we only generate different padding size for
   // the opaque response which is comming from netwrok.
@@ -99,6 +99,12 @@ SpecialPowers.pushPrefEnv({
   // the file-system.
   // Note: For the cloned and cached opaque response, the padding size shouldn't
   // be changed. Thus, it makes the attacker harder to get the padding size.
+
+  // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+  // Acquire storage access permission here so that the Cache API is avaialable
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  await SpecialPowers.addPermission("storageAccessAPI", true, window.location.href);
+  await SpecialPowers.wrap(document).requestStorageAccess();
 
   const name = "cachePadding";
   const other_name = "cachePaddingOther";

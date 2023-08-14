@@ -253,7 +253,7 @@ async function cleanUpData() {
   ok(true, "Deleted all data.");
 }
 
-async function setPreferences(alwaysPartitionStorage = true) {
+async function setPreferences(alwaysPartitionStorage = false) {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.storage_access.auto_grants", true],

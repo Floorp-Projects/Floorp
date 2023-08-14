@@ -20,12 +20,23 @@ function runTests(testFile, order) {
   async function setupPrefs() {
     // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
     // Acquire storage access permission here so that the Cache API is avaialable
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    await SpecialPowers.addPermission(
+      "storageAccessAPI",
+      true,
+      window.location.href
+    );
+    await SpecialPowers.wrap(document).requestStorageAccess();
     return SpecialPowers.pushPrefEnv({
       set: [
         ["dom.caches.testing.enabled", true],
         ["dom.serviceWorkers.enabled", true],
         ["dom.serviceWorkers.testing.enabled", true],
         ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+        [
+          "privacy.partition.always_partition_third_party_non_cookie_storage",
+          false,
+        ],
       ],
     });
   }
