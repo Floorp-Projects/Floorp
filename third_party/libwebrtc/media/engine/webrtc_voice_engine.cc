@@ -1877,7 +1877,7 @@ bool WebRtcVoiceMediaChannel::AddSendStream(const StreamParams& sp) {
   if (role() == MediaChannel::Role::kBoth) {
     // In legacy kBoth mode, the MediaChannel takes the responsibility for
     // telling the receiver about the local SSRC.
-    // In kSend mode, this is the caller's responsibility.
+    // In kSend mode, this happens via a callback.
 
     // At this point the stream's local SSRC has been updated. If it is the
     // first send stream, make sure that all the receive streams are updated
@@ -1888,6 +1888,12 @@ bool WebRtcVoiceMediaChannel::AddSendStream(const StreamParams& sp) {
         call_->OnLocalSsrcUpdated(kv.second->stream(), ssrc);
       }
     }
+  } else if (ssrc_list_changed_callback_) {
+    std::set<uint32_t> ssrcs_in_use;
+    for (auto it : send_streams_) {
+      ssrcs_in_use.insert(it.first);
+    }
+    ssrc_list_changed_callback_(ssrcs_in_use);
   }
 
   send_streams_[ssrc]->SetSend(send_);
