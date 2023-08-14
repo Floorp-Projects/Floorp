@@ -1,0 +1,15 @@
+[DEFAULT]
+support-files = [
+  "!/accessible/tests/mochitest/*.js",
+  "!/accessible/tests/mochitest/treeview.css"]
+
+['test_listbox.xhtml']
+
+['test_menu.xhtml']
+
+['test_menulist.xhtml']
+
+['test_tabs.xhtml']
+
+['test_tree.xhtml']
+

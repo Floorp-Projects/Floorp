@@ -1,0 +1,27 @@
+[DEFAULT]
+support-files = [
+  "!/accessible/tests/mochitest/*.js",
+  "!/dom/media/test/bug461281.ogg"]
+
+['test_anchors.html']
+
+['test_aria.html']
+
+['test_controls.html']
+
+['test_general.html']
+
+['test_general.xhtml']
+
+['test_keys.html']
+
+['test_keys.xhtml']
+
+['test_media.html']
+
+['test_select.html']
+
+['test_tree.xhtml']
+
+['test_treegrid.xhtml']
+

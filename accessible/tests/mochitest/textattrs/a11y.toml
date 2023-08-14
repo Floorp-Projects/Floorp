@@ -1,0 +1,17 @@
+[DEFAULT]
+prefs = "mathml.legacy_mathvariant_attribute.disabled=true"
+support-files = [
+  "!/accessible/tests/mochitest/*.js",
+  "!/accessible/tests/mochitest/moz.png"]
+
+['test_general.html']
+
+['test_general.xhtml']
+
+['test_invalid.html']
+
+['test_mathml.html']
+
+['test_spelling.html']
+
+['test_svg.html']

@@ -1,0 +1,20 @@
+[DEFAULT]
+support-files = [ "zoom_tree.xhtml",
+  "!/accessible/tests/mochitest/*.js",
+  "!/accessible/tests/mochitest/letters.gif"]
+
+['test_browser.html']
+
+['test_general.html']
+
+['test_menu.xhtml']
+
+['test_shadowroot.html']
+support-files = "test_shadowroot_subframe.html"
+
+['test_zoom.html']
+
+['test_zoom_text.html']
+
+['test_zoom_tree.xhtml']
+
