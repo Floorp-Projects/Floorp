@@ -149,6 +149,10 @@ static void MakeDatabaseManagerVersions(
                                                     getter_AddRefs(connection));
   ASSERT_NSEQ(NS_OK, rv);
 
+  auto fmRes = FileSystemFileManager::CreateFileSystemFileManager(
+      GetOriginMetadataSample());
+  ASSERT_FALSE(fmRes.isErr());
+
   const Origin& testOrigin = GetTestOrigin();
 
   if (1 == aVersion) {
@@ -158,17 +162,13 @@ static void MakeDatabaseManagerVersions(
   } else {
     ASSERT_EQ(2, aVersion);
 
-    TEST_TRY_UNWRAP(
-        TestFileSystemDatabaseManagerVersions::sVersion,
-        SchemaVersion002::InitializeConnection(connection, testOrigin));
+    TEST_TRY_UNWRAP(TestFileSystemDatabaseManagerVersions::sVersion,
+                    SchemaVersion002::InitializeConnection(
+                        connection, *fmRes.inspect(), testOrigin));
   }
   ASSERT_NE(0, TestFileSystemDatabaseManagerVersions::sVersion);
 
   TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(GetTestOrigin()));
-
-  auto fmRes = FileSystemFileManager::CreateFileSystemFileManager(
-      GetOriginMetadataSample());
-  ASSERT_FALSE(fmRes.isErr());
 
   QM_TRY_UNWRAP(auto streamTransportService,
                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
