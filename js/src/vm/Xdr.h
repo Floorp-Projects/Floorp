@@ -92,6 +92,11 @@ class XDRBuffer<XDR_ENCODE> : public XDRBufferBase {
     return nullptr;
   }
 
+  uint8_t* bufferAt(size_t cursor) {
+    MOZ_ASSERT(cursor < buffer_.length());
+    return &buffer_[cursor];
+  }
+
  private:
   JS::TranscodeBuffer& buffer_;
 };
@@ -309,6 +314,38 @@ class XDRState : public XDRCoderBase {
   XDRResult codeUint32(uint32_t* n) { return codeUintImpl(n); }
 
   XDRResult codeUint64(uint64_t* n) { return codeUintImpl(n); }
+
+  void codeUint32At(uint32_t* n, size_t cursor) {
+    if constexpr (mode == XDR_ENCODE) {
+      uint8_t* ptr = buf->bufferAt(cursor);
+      memcpy(ptr, n, sizeof(uint32_t));
+    } else {
+      MOZ_CRASH("not supported.");
+    }
+  }
+
+  const uint8_t* bufferAt(size_t cursor) const {
+    if constexpr (mode == XDR_ENCODE) {
+      return buf->bufferAt(cursor);
+    }
+
+    MOZ_CRASH("not supported.");
+  }
+
+  XDRResult peekArray(size_t n, const uint8_t** p) {
+    if constexpr (mode == XDR_DECODE) {
+      const uint8_t* ptr = buf->peek(n);
+      if (!ptr) {
+        return fail(JS::TranscodeResult::Failure_BadDecode);
+      }
+
+      *p = ptr;
+
+      return mozilla::Ok();
+    }
+
+    MOZ_CRASH("not supported.");
+  }
 
   /*
    * Use SFINAE to refuse any specialization which is not an enum.  Uses of
