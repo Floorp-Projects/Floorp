@@ -36,13 +36,11 @@
   </div>
   <script type="application/javascript">
     async function test() {
-      const proximityThreshold = scroller.getBoundingClientRect().height * 0.3;
+      const proximityThreshold =
+          SpecialPowers.getIntPref("layout.css.scroll-snap.proximity-threshold");
 
       let transformEndPromise = promiseTransformEnd();
-      // Scroll to a position where the distance from the next snap target
-      // position is less than the scroll snap proximity value.
-      await promiseMoveMouseAndScrollWheelOver(scroller, 100, 100,
-        true /* waitForScroll */, 200 - proximityThreshold + 1);
+      await promiseMoveMouseAndScrollWheelOver(scroller, 100, 100);
 
       await transformEndPromise;
       await promiseApzFlushedRepaints();

@@ -36,7 +36,8 @@
   </div>
   <script type="application/javascript">
     async function test() {
-      const proximityThreshold = scroller.getBoundingClientRect().height * 0.3;
+      const proximityThreshold =
+          SpecialPowers.getIntPref("layout.css.scroll-snap.proximity-threshold");
 
       let transformEndPromise = promiseTransformEnd();
       scroller.scrollBy({left: 0, top: 100, behavior: "smooth"});

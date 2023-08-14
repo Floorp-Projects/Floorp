@@ -8824,6 +8824,13 @@
   value: 0.750f
   mirror: always
 
+# Set the threshold distance in CSS pixels below which scrolling will snap to
+# an edge, when scroll snapping is set to "proximity".
+- name: layout.css.scroll-snap.proximity-threshold
+  type: RelaxedAtomicInt32
+  value: 200
+  mirror: always
+
 # Stylo thread-pool size.
 # Negative means auto, 0 disables the thread-pool (main-thread styling), other
 # numbers override as specified.
