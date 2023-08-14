@@ -1730,10 +1730,11 @@ linux64-aarch64/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
         extra-config:
-            mozconfig_platform: linux64-aarch64
+            extra_mozconfig_content:
+                - ac_add_options --target=aarch64
+                - unset MOZ_STDCXX_COMPAT
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        mozconfig-variant: opt
         tooltool-downloads: public
     run-on-projects: ['integration']
     fetches:
