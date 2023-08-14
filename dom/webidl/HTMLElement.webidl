@@ -55,7 +55,7 @@ interface HTMLElement : Element {
            attribute boolean spellcheck;
   [CEReactions, Pure, SetterThrows, Pref="dom.forms.inputmode"]
            attribute DOMString inputMode;
-  [CEReactions, Pure, SetterThrows, Pref="dom.forms.enterkeyhint"]
+  [CEReactions, Pure, SetterThrows]
            attribute DOMString enterKeyHint;
   [CEReactions, Pure, SetterThrows, Pref="dom.forms.autocapitalize"]
            attribute DOMString autocapitalize;

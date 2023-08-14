@@ -4481,7 +4481,6 @@ Gecko_MediaFeatures_HasSystemMetric
 ?ConstructorEnabled@ElementInternals_Binding@dom@mozilla@@YA_NPEAUJSContext@@V?$Handle@PEAVJSObject@@@JS@@@Z
 ?html5_inert_enabled@StaticPrefs@mozilla@@YA_NXZ
 ?dom_forms_inputmode@StaticPrefs@mozilla@@YA_NXZ
-?dom_forms_enterkeyhint@StaticPrefs@mozilla@@YA_NXZ
 ?dom_forms_autocapitalize@StaticPrefs@mozilla@@YA_NXZ
 ?CreateObject@?$BindingJSObjectCreator@VHTMLSharedElement@dom@mozilla@@@dom@mozilla@@QEAAXPEAUJSContext@@PEBUJSClass@@V?$Handle@PEAVJSObject@@@JS@@PEAVHTMLSharedElement@23@V?$MutableHandle@PEAVJSObject@@@7@@Z
 ?SetAttribute@Element@dom@mozilla@@QEAAXAEBV?$nsTSubstring@_S@@0PEAVnsIPrincipal@@AEAVErrorResult@3@@Z

@@ -812,8 +812,7 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       }
     } else if ((aName == nsGkAtoms::inputmode &&
                 StaticPrefs::dom_forms_inputmode()) ||
-               (aName == nsGkAtoms::enterkeyhint &&
-                StaticPrefs::dom_forms_enterkeyhint())) {
+               aName == nsGkAtoms::enterkeyhint) {
       nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
       if (window && window->GetFocusedElement() == this) {
         if (IMEContentObserver* observer =
