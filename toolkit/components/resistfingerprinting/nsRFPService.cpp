@@ -99,9 +99,8 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 
 // Fingerprinting protections that are enabled by default. This can be
 // overridden using the privacy.fingerprintingProtection.overrides pref.
-const uint64_t kDefaultFingerintingProtections =
-    uint64_t(RFPTarget::CanvasRandomization) |
-    uint64_t(RFPTarget::FontVisibilityLangPack);
+const RFPTarget kDefaultFingerintingProtections =
+    RFPTarget::CanvasRandomization | RFPTarget::FontVisibilityLangPack;
 
 // ============================================================================
 // ============================================================================
@@ -114,7 +113,7 @@ static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
 
 // Actually enabled fingerprinting protections.
-static Atomic<uint64_t> sEnabledFingerintingProtections;
+static Atomic<RFPTarget> sEnabledFingerintingProtections;
 
 /* static */
 nsRFPService* nsRFPService::GetOrCreate() {
@@ -195,7 +194,7 @@ bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
     if (aTarget == RFPTarget::IsAlwaysEnabledForPrecompute) {
       return true;
     }
-    return sEnabledFingerintingProtections & uint64_t(aTarget);
+    return bool(sEnabledFingerintingProtections & aTarget);
   }
 
   return false;
@@ -211,7 +210,7 @@ void nsRFPService::UpdateFPPOverrideList() {
     return;
   }
 
-  uint64_t enabled = kDefaultFingerintingProtections;
+  RFPTarget enabled = kDefaultFingerintingProtections;
   for (const nsAString& each : targetOverrides.Split(',')) {
     Maybe<RFPTarget> mappedValue =
         nsRFPService::TextToRFPTarget(Substring(each, 1, each.Length() - 1));
@@ -222,17 +221,19 @@ void nsRFPService::UpdateFPPOverrideList() {
                 ("RFPTarget::%s is not a valid value",
                  NS_ConvertUTF16toUTF8(each).get()));
       } else if (each[0] == '+') {
-        enabled |= uint64_t(target);
+        enabled |= target;
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
                 ("Mapped value %s (0x%" PRIx64
                  "), to an addition, now we have 0x%" PRIx64,
-                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target), enabled));
+                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target),
+                 uint64_t(enabled)));
       } else if (each[0] == '-') {
-        enabled &= ~uint64_t(target);
+        enabled &= ~target;
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
                 ("Mapped value %s (0x%" PRIx64
                  ") to a subtraction, now we have 0x%" PRIx64,
-                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target), enabled));
+                 NS_ConvertUTF16toUTF8(each).get(), uint64_t(target),
+                 uint64_t(enabled)));
       } else {
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
                 ("Mapped value %s (0x%" PRIx64
