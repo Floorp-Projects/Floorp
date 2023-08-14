@@ -116,6 +116,43 @@ add_task(async function dont_clear_placeholder_after_selection_change() {
   await cleanUp();
 });
 
+add_task(async function modify_autofilled_selection() {
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "",
+    url: "https://developer.mozilla.org/en-US/",
+  });
+
+  let userTypedValue = "d";
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: userTypedValue,
+  });
+
+  Assert.equal(
+    gURLBar.value,
+    "developer.mozilla.org/",
+    "autofilled value is as expected"
+  );
+  await sendNavigationKey("KEY_ArrowDown");
+
+  let selectionChangedPromise = waitForSelectionChange();
+  gURLBar.selectionStart = gURLBar.value.length - 6;
+  gURLBar.selectionEnd = gURLBar.value.length - 1;
+
+  await selectionChangedPromise;
+  await UrlbarTestUtils.promiseSearchComplete(window);
+
+  EventUtils.sendChar("j", window);
+
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  is(
+    gURLBar.value,
+    "https://developer.mozilla.org/j/",
+    "gURLBar contains correct modified autofilled value"
+  );
+});
+
 async function cleanUp() {
   await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   await PlacesUtils.bookmarks.eraseEverything();

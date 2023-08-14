@@ -1396,6 +1396,15 @@ export class UrlbarInput {
     }
 
     this.setResultForCurrentValue(result);
+
+    // Update placeholder selection and value to the current selected result to
+    // prevent the on_selectionchange event to detect a "accent-character"
+    // insertion.
+    if (!result.autofill && this._autofillPlaceholder) {
+      this._autofillPlaceholder.value = this.value;
+      this._autofillPlaceholder.selectionStart = this.value.length;
+      this._autofillPlaceholder.selectionEnd = this.value.length;
+    }
     return false;
   }
 
@@ -3569,9 +3578,9 @@ export class UrlbarInput {
   }
 
   _on_selectionchange(event) {
-    // Confirm placeholder as user text if it gets explicitly deselected. This happens
-    // when the user wants to modify the autofilled text by either clicking on it, or
-    // pressing HOME, END, RIGHT, …
+    // Confirm placeholder as user text if it gets explicitly deselected. This
+    // happens when the user wants to modify the autofilled text by either
+    // clicking on it, or pressing HOME, END, RIGHT, …
     if (
       this._autofillPlaceholder &&
       this._autofillPlaceholder.value == this.value &&
