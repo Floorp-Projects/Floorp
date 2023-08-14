@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d380a43d59f4f7cbc
  4 files changed, 35 insertions(+)
 
 diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
-index 41e0b5179d..e12435b7df 100644
+index 0caf59a20e..bffb910832 100644
 --- a/audio/audio_send_stream.cc
 +++ b/audio/audio_send_stream.cc
-@@ -436,6 +436,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
+@@ -431,6 +431,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
    stats.target_bitrate_bps = channel_send_->GetTargetBitrate();
  
    webrtc::CallSendStatistics call_stats = channel_send_->GetRTCPStatistics();
@@ -27,12 +27,12 @@ index 41e0b5179d..e12435b7df 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index f3a504ae50..3f276bb4c0 100644
+index a18ab8754b..2b77699864 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -56,6 +56,31 @@ class RtpPacketSenderProxy;
+@@ -55,6 +55,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;
+ class RtpPacketSenderProxy;
  class TransportSequenceNumberProxy;
- class VoERtcpObserver;
  
 +class RtcpCounterObserver : public RtcpPacketTypeCounterObserver {
 + public:
@@ -62,24 +62,24 @@ index f3a504ae50..3f276bb4c0 100644
  class ChannelSend : public ChannelSendInterface,
                      public AudioPacketizationCallback,  // receive encoded
                                                          // packets from the ACM
-@@ -210,6 +235,8 @@ class ChannelSend : public ChannelSendInterface,
-   // RtcpBandwidthObserver
-   const std::unique_ptr<VoERtcpObserver> rtcp_observer_;
+@@ -207,6 +232,8 @@ class ChannelSend : public ChannelSendInterface,
+   bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_) = false;
+   bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_) = false;
  
 +  const std::unique_ptr<RtcpCounterObserver> rtcp_counter_observer_;
 +
    PacketRouter* packet_router_ RTC_GUARDED_BY(&worker_thread_checker_) =
        nullptr;
-   TransportFeedbackObserver* const feedback_observer_;
-@@ -463,6 +490,7 @@ ChannelSend::ChannelSend(
+   const std::unique_ptr<RtpPacketSenderProxy> rtp_packet_pacer_proxy_;
+@@ -384,6 +411,7 @@ ChannelSend::ChannelSend(
+     const FieldTrialsView& field_trials)
      : ssrc_(ssrc),
        event_log_(rtc_event_log),
-       rtcp_observer_(new VoERtcpObserver(this)),
 +      rtcp_counter_observer_(new RtcpCounterObserver(ssrc)),
-       feedback_observer_(feedback_observer),
        rtp_packet_pacer_proxy_(new RtpPacketSenderProxy()),
        retransmission_rate_limiter_(
-@@ -485,6 +513,8 @@ ChannelSend::ChannelSend(
+           new RateLimiter(clock, kMaxRetransmissionWindowMs)),
+@@ -408,6 +436,8 @@ ChannelSend::ChannelSend(
  
    configuration.event_log = event_log_;
    configuration.rtt_stats = rtcp_rtt_stats;
@@ -88,7 +88,7 @@ index f3a504ae50..3f276bb4c0 100644
    configuration.retransmission_rate_limiter =
        retransmission_rate_limiter_.get();
    configuration.extmap_allow_mixed = extmap_allow_mixed;
-@@ -747,6 +777,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+@@ -668,6 +698,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    CallSendStatistics stats = {0};
    stats.rttMs = GetRTT();
@@ -97,7 +97,7 @@ index f3a504ae50..3f276bb4c0 100644
    StreamDataCounters rtp_stats;
    StreamDataCounters rtx_stats;
 diff --git a/audio/channel_send.h b/audio/channel_send.h
-index a0aa42a706..4d8da42645 100644
+index 00d954c952..f0c9232296 100644
 --- a/audio/channel_send.h
 +++ b/audio/channel_send.h
 @@ -43,6 +43,7 @@ struct CallSendStatistics {
