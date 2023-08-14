@@ -71,12 +71,10 @@ const CROSS_ORIGIN = "http://example.com" + SJS_PATH;
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({"set": [["network.preload", true]]})
-
 // test same origin
-.then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=no-cache", false, true))
-.then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=404&cacheControl=no-cache", false, false))
-.then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", false, true))
+testPreloadEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=no-cache", false, true)
+  .then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=404&cacheControl=no-cache", false, false))
+  .then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=200&cacheControl=max-age%3D120", false, true))
 .then(() => testPreloadEvent(SAME_ORIGIN + "?statusCode=404&cacheControl=max-age%3D120", false, false))
 
 // test cross origin without CORS

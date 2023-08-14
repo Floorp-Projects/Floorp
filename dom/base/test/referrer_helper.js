@@ -80,10 +80,6 @@ function resetState() {
  */
 var tests = (function* () {
   yield SpecialPowers.pushPrefEnv(
-    { set: [["network.preload", true]] },
-    advance
-  );
-  yield SpecialPowers.pushPrefEnv(
     { set: [["security.mixed_content.block_active_content", false]] },
     advance
   );

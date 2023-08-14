@@ -110,10 +110,8 @@ const CROSS_ORIGIN = "http://example.com";
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({"set": [["network.preload", true]]})
-
 // Test changing as parameter from a wrong to a correct one.
-.then(() => testPreloadEventAsAttributeChange(SAME_ORIGIN + IMAGE_PATH))
+testPreloadEventAsAttributeChange(SAME_ORIGIN + IMAGE_PATH)
 // Test changing type parameter from a wrong to a correct one for given as parameter.
 .then(() => testPreloadEventAttributeChange(SAME_ORIGIN + IMAGE_PATH, "type", "text/vtt", "image/png"))
 // Test changing media parameter from a wrong to a correct one.

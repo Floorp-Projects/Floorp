@@ -57,7 +57,6 @@ async function checkCache(originAttributes) {
 add_task(async () => {
   do_get_profile();
 
-  Services.prefs.setBoolPref("network.preload", true);
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
 
   const server = CookieXPCShellUtils.createServer({

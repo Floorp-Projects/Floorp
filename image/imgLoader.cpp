@@ -2330,7 +2330,7 @@ nsresult imgLoader::LoadImage(
   }
 
   // Look in the preloaded images of loading document first.
-  if (StaticPrefs::network_preload() && !aLinkPreload && aLoadingDocument) {
+  if (!aLinkPreload && aLoadingDocument) {
     // All Early Hints preloads are Link preloads, therefore we don't have a
     // Early Hints preload here
     MOZ_ASSERT(!aEarlyHintPreloaderId);

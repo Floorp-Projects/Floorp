@@ -15,16 +15,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1596040
 
   async function run() {
     const prefSetting = [
-      { manifest: true, preload: true },
-      { manifest: true, preload: false },
-      { manifest: false, preload: true },
-      { manifest: false, preload: false },
+      { manifest: true, modulepreload: true },
+      { manifest: true, modulepreload: false },
+      { manifest: false, modulepreload: true },
+      { manifest: false, modulepreload: false },
     ];
-    for (const { manifest, preload } of prefSetting) {
+    for (const { manifest, modulepreload } of prefSetting) {
       await SpecialPowers.pushPrefEnv({
         set: [
           ["dom.manifest.enabled", manifest],
-          ["network.preload", preload],
+          ["network.modulepreload", modulepreload],
         ],
       });
       const { relList } = document.createElement("link");
@@ -34,9 +34,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1596040
         `Expected manifest to be ${manifest}`
       );
       is(
-        relList.supports("preload"),
-        preload,
-        `Expected preload to be ${preload}`
+        relList.supports("modulepreload"),
+        modulepreload,
+        `Expected preload to be ${modulepreload}`
       );
     }
   }

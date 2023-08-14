@@ -68,10 +68,6 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     return nullptr;
   }
 
-  if (!StaticPrefs::network_preload()) {
-    return nullptr;
-  }
-
   nsAutoString as, charset, crossOrigin, integrity, referrerPolicy, rel, srcset,
       sizes, type, url;
 
@@ -120,10 +116,6 @@ void PreloadService::PreloadLinkHeader(
     const nsAString& aReferrerPolicy, uint64_t aEarlyHintPreloaderId) {
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
     MOZ_ASSERT_UNREACHABLE("Caller should check");
-    return;
-  }
-
-  if (!StaticPrefs::network_preload()) {
     return;
   }
 
