@@ -802,6 +802,18 @@ if (AppConstants.platform == "win") {
     affectedByDNSForSingleWordHosts: true,
   });
 } else {
+  const homeDir = Services.dirsvc.get("Home", Ci.nsIFile).path;
+
+  testcases.push({
+    input: "~",
+    fixedURI: `file://${homeDir}`,
+    protocolChange: true,
+  });
+  testcases.push({
+    input: "~/foo",
+    fixedURI: `file://${homeDir}/foo`,
+    protocolChange: true,
+  });
   testcases.push({
     input: "/some/file.txt",
     fixedURI: "file:///some/file.txt",
