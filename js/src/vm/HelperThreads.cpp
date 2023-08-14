@@ -672,6 +672,19 @@ DecodeStencilTask::DecodeStencilTask(JSContext* cx,
   MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
 }
 
+static void ReportDecodeFailure(JS::FrontendContext* fc) {
+  js::ErrorMetadata metadata;
+  metadata.filename = JS::ConstUTF8CharsZ("<unknown>");
+  metadata.lineNumber = 0;
+  metadata.columnNumber = 0;
+  metadata.lineLength = 0;
+  metadata.tokenOffset = 0;
+  metadata.isMuted = false;
+
+  js::ReportCompileErrorLatin1(fc, std::move(metadata), nullptr,
+                               JSMSG_DECODE_FAILURE);
+}
+
 void DecodeStencilTask::parse(FrontendContext* fc) {
   if (!compileStorage_.allocateInput(fc, options)) {
     return;
@@ -689,6 +702,9 @@ void DecodeStencilTask::parse(FrontendContext* fc) {
   bool succeeded = false;
   (void)stencil_->deserializeStencils(fc, options, range, &succeeded);
   if (!succeeded) {
+    if (!fc->hadErrors()) {
+      ReportDecodeFailure(fc);
+    }
     stencil_ = nullptr;
     return;
   }
