@@ -65,6 +65,7 @@ add_task(async function test_visits_cache_is_updated() {
 });
 
 add_task(async function test_filter_visits_by_age() {
+  const now = new Date();
   await PlacesUtils.history.insertMany([
     {
       url: "https://www.example.com/",
@@ -72,13 +73,15 @@ add_task(async function test_filter_visits_by_age() {
     },
     {
       url: "https://example.net/",
-      visits: [{ date: new Date() }],
+      visits: [{ date: now }],
     },
   ]);
   let history = await placesQuery.getHistory({ daysOld: 1 });
-  history = [...history.values()].flat();
-  Assert.equal(history.length, 1, "The older visit should be excluded.");
-  Assert.equal(history[0].url, "https://example.net/");
+  Assert.equal(history.size, 1, "The older visit should be excluded.");
+  Assert.equal(
+    history.get(placesQuery.getStartOfDayTimestamp(now))[0].url,
+    "https://example.net/"
+  );
   await PlacesUtils.history.clear();
 });
 
@@ -133,7 +136,77 @@ add_task(async function test_visits_limit_option() {
     },
   ]);
   let history = await placesQuery.getHistory({ limit: 1 });
-  history = [...history.values()].flat();
-  Assert.equal(history.length, 1, "Number of visits should be limited to 1.");
+  Assert.equal(
+    [...history.values()].reduce((acc, { length }) => acc + length, 0),
+    1,
+    "Number of visits should be limited to 1."
+  );
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function test_dedupe_visits_by_url() {
+  const today = new Date();
+  const yesterday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() - 1
+  );
+  await PlacesUtils.history.insertMany([
+    {
+      url: "https://www.example.com/",
+      visits: [{ date: yesterday }],
+    },
+    {
+      url: "https://www.example.com/",
+      visits: [{ date: today }],
+    },
+    {
+      url: "https://www.example.com/",
+      visits: [{ date: today }],
+    },
+  ]);
+  info("Get history sorted by date.");
+  let history = await placesQuery.getHistory({ sortBy: "date" });
+  Assert.equal(
+    history.get(placesQuery.getStartOfDayTimestamp(yesterday)).length,
+    1,
+    "There was only one visit from yesterday."
+  );
+  Assert.equal(
+    history.get(placesQuery.getStartOfDayTimestamp(today)).length,
+    1,
+    "The duplicate visit from today should be removed."
+  );
+
+  info("Get history sorted by site.");
+  history = await placesQuery.getHistory({ sortBy: "site" });
+  Assert.equal(
+    history.get("example.com").length,
+    1,
+    "The duplicate visits for this site should be removed."
+  );
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function test_dedupe_visits_by_base_url_and_title() {
+  const now = new Date();
+  await PlacesUtils.history.insertMany([
+    {
+      url: "https://searchfox.org/mozilla-central/source/browser/components/firefoxview/card-container.css#26",
+      title: "card-container.css - mozsearch",
+      visits: [{ date: now }],
+    },
+    {
+      url: "https://searchfox.org/mozilla-central/source/browser/components/firefoxview/card-container.css#23",
+      title: "card-container.css - mozsearch",
+      visits: [{ date: now }],
+    },
+  ]);
+  const history = await placesQuery.getHistory({ sortBy: "date" });
+  Assert.equal(
+    history.get(placesQuery.getStartOfDayTimestamp(now)).length,
+    1,
+    "The duplicate visit should be removed."
+  );
   await PlacesUtils.history.clear();
 });
