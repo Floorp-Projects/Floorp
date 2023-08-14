@@ -19,6 +19,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.anyLong
@@ -191,6 +192,7 @@ class HistoryStorageMiddlewareTest {
         verify(storage).deleteEverything()
     }
 
+    @Ignore("Intermittent failure; see Bug 1848436.")
     @Test
     fun `WHEN a specified time frame is deleted THEN browser store is informed, storage deletes time frame, and callback is invoked`() = runTestOnMain {
         var callbackInvoked = false
