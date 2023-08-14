@@ -1,0 +1,10 @@
+[DEFAULT]
+support-files = "!/accessible/tests/mochitest/*.js"
+
+['test_focus_radio.xhtml']
+
+['test_focusedChild.html']
+
+['test_takeFocus.html']
+
+['test_takeFocus.xhtml']

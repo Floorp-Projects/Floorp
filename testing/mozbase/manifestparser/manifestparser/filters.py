@@ -474,7 +474,7 @@ class pathprefix(InstanceFilter):
             for testpath in self.paths:
                 tp = os.path.normpath(testpath)
 
-                if tp.endswith(".ini"):
+                if tp.endswith(".ini") or tp.endswith(".toml"):
                     mpaths = [test["manifest_relpath"]]
                     if "ancestor_manifest" in test:
                         mpaths.append(test["ancestor_manifest"])

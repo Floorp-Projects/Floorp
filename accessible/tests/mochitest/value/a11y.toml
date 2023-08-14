@@ -1,0 +1,16 @@
+[DEFAULT]
+support-files = "!/accessible/tests/mochitest/*.js"
+
+['test_ariavalue.html']
+
+['test_datetime.html']
+
+['test_general.html']
+
+['test_meter.html']
+
+['test_number.html']
+
+['test_progress.html']
+
+['test_range.html']

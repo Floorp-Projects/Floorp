@@ -921,9 +921,9 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(objs), 8)
 
         metadata = {
-            "a11y.ini": {
+            "a11y.toml": {
                 "flavor": "a11y",
-                "installs": {"a11y.ini": False, "test_a11y.js": True},
+                "installs": {"a11y.toml": False, "test_a11y.js": True},
                 "pattern-installs": 1,
             },
             "browser.ini": {

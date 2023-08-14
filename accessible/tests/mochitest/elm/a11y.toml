@@ -1,0 +1,20 @@
+[DEFAULT]
+support-files = [
+  "!/accessible/tests/mochitest/*.js",
+  "!/accessible/tests/mochitest/moz.png",
+  "!/dom/media/test/bug461281.ogg",
+  "!/dom/security/test/csp/dummy.pdf"]
+  
+['test_HTMLSpec.html']
+
+['test_MathMLSpec.html']
+
+['test_figure.html']
+
+['test_listbox.xhtml']
+
+['test_nsApplicationAcc.html']
+
+['test_shadowroot.html']
+support-files = "test_shadowroot_subframe.html"
+

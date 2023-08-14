@@ -1,0 +1,34 @@
+[DEFAULT]
+support-files = [ "doc.html",
+  "!/accessible/tests/mochitest/*.js"]
+
+['test_atcaretoffset.html']
+
+['test_charboundary.html']
+
+['test_doc.html']
+
+['test_dynamic.html']
+
+['test_general.xhtml']
+
+['test_gettext.html']
+
+['test_hypertext.html']
+
+['test_lineboundary.html']
+
+['test_paragraphboundary.html']
+
+['test_passwords.html']
+
+['test_selection.html']
+
+['test_settext_input_event.html']
+
+['test_textBounds.html']
+
+['test_wordboundary.html']
+
+['test_words.html']
+
