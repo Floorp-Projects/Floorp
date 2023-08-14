@@ -4275,8 +4275,7 @@ void SdpOfferAnswerHandler::GetOptionsForUnifiedPlanOffer(
   }
   // Lastly, add a m-section if we have requested local data channels and an
   // m section does not already exist.
-  if (!pc_->GetDataMid() && data_channel_controller()->HasUsedDataChannels() &&
-      data_channel_controller()->HasDataChannels()) {
+  if (!pc_->GetDataMid() && data_channel_controller()->HasDataChannels()) {
     // Attempt to recycle a stopped m-line.
     // TODO(crbug.com/1442604): GetDataMid() should return the mid if one was
     // ever created but rejected.

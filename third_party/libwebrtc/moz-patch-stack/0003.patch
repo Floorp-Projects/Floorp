@@ -20,10 +20,10 @@ Cr-Branched-From: df7df199abd619e75b9f1d9a7e12fc3f3f748775-refs/heads/main@{#399
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/pc/data_channel_controller.cc b/pc/data_channel_controller.cc
-index 166e181cfe..1746170f64 100644
+index 7fea6c5e55..93599fdba9 100644
 --- a/pc/data_channel_controller.cc
 +++ b/pc/data_channel_controller.cc
-@@ -77,12 +77,16 @@ void DataChannelController::OnChannelStateChanged(
+@@ -70,6 +70,11 @@ void DataChannelController::OnChannelStateChanged(
      SctpDataChannel* channel,
      DataChannelInterface::DataState state) {
    RTC_DCHECK_RUN_ON(network_thread());
@@ -35,13 +35,16 @@ index 166e181cfe..1746170f64 100644
    if (state == DataChannelInterface::DataState::kClosed)
      OnSctpDataChannelClosed(channel);
  
-   signaling_thread()->PostTask(
--      SafeTask(signaling_safety_.flag(),
--               [this, channel_id = channel->internal_id(), state = state] {
-+      SafeTask(signaling_safety_.flag(), [this, channel_id, state = state] {
-                  pc_->OnSctpDataChannelStateChanged(channel_id, state);
-                }));
- }
+@@ -77,8 +82,7 @@ void DataChannelController::OnChannelStateChanged(
+                                        ? DataChannelUsage::kHaveBeenUsed
+                                        : DataChannelUsage::kInUse;
+   signaling_thread()->PostTask(SafeTask(
+-      signaling_safety_.flag(), [this, channel_id = channel->internal_id(),
+-                                 state = state, channel_usage] {
++      signaling_safety_.flag(), [this, channel_id, state, channel_usage] {
+         RTC_DCHECK_RUN_ON(signaling_thread());
+         channel_usage_ = channel_usage;
+         pc_->OnSctpDataChannelStateChanged(channel_id, state);
 -- 
 2.34.1
 
