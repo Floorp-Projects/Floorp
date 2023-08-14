@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9452e226943fea4b0
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/modules/video_coding/utility/ivf_file_writer.cc b/modules/video_coding/utility/ivf_file_writer.cc
-index 668390a78c..5b27ef3ef7 100644
+index cabfd497c6..c0b65e9bdf 100644
 --- a/modules/video_coding/utility/ivf_file_writer.cc
 +++ b/modules/video_coding/utility/ivf_file_writer.cc
 @@ -39,7 +39,7 @@ IvfFileWriter::IvfFileWriter(FileWrapper file, size_t byte_limit)
