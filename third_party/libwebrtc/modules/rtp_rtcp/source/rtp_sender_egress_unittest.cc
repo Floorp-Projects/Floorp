@@ -63,10 +63,6 @@ class MockSendPacketObserver : public SendPacketObserver {
 class MockTransportFeedbackObserver : public TransportFeedbackObserver {
  public:
   MOCK_METHOD(void, OnAddPacket, (const RtpPacketSendInfo&), (override));
-  MOCK_METHOD(void,
-              OnTransportFeedback,
-              (const rtcp::TransportFeedback&),
-              (override));
 };
 
 class MockStreamDataCountersCallback : public StreamDataCountersCallback {
