@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index d8c5d6b9fa..32f6e671bb 100644
+index f784b8eebc..528ed6c616 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -281,12 +281,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
