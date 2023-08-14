@@ -614,7 +614,7 @@ function mainThreadFetch(
             // If there was a real stream error, we would have already rejected above.
             resolve({
               content: "",
-              contentType: "text/plan",
+              contentType: "text/plain",
             });
             return;
           }
