@@ -328,7 +328,16 @@
         </vbox>
       </radiogroup>
     </vbox>
-    <vbox id="doNotTrackLearnMoreBox">
+    <vbox id="nonTechnicalPrivacyBox">
+      <hbox id="globalPrivacyControlBox" flex="1" align="center" hidden="true">
+        <checkbox id="globalPrivacyControlCheckbox"
+                class="tail-with-learn-more"
+                preference="privacy.globalprivacycontrol.enabled"
+                data-l10n-id="global-privacy-control-description" />
+        <html:a is="moz-support-link"
+            id="globalPrivacyControlLearnMoreLink"
+            support-page="global-privacy-control" />
+      </hbox>
       <label>
         <label class="tail-with-learn-more" data-l10n-id="do-not-track-description" id="doNotTrackDesc"></label>
       <html:a is="moz-support-link"
