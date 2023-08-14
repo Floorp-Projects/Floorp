@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '15e9b8d197db2aea29e40db6f018a792f14cc530',
+  'chromium_revision': '634d3c7e621ac72a1d32faa8e01637e3f1782443',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -57,13 +57,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@99cf5daace8fbfb4ba9107c2311d345afa4071e8',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@2d114bd897447bb1afcd0ae9f81e8a41dd4aca91',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@1f716e1171d6166bf8f9213189c86d32b25f7896',
+    'https://chromium.googlesource.com/chromium/src/testing@c2564f39b7b946fb69910be679afdec534741d0f',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@3069405d544bd581e9803ff39dc60b262f0d18de',
+    'https://chromium.googlesource.com/chromium/src/third_party@ce9a1cc97845bad0936baf9cc9c0cd7550540f86',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -183,7 +183,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@3a5cc4081382ea47793f166b3d71b19e35ad83f7',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@63d20c330ba3ba5f644ade9e50b22ef3be09c1b8',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@8d21d41d8bec5c0b266ee305d1a708dc5c23b594',
   'src/third_party/flatbuffers/src':
@@ -197,7 +197,7 @@ deps = {
       'condition': 'checkout_linux',
   },
   'src/third_party/freetype/src':
-    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@2342a03a9d3e58a82e698fc4074dc2e5f95c4e26',
+    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@562f34819229080abb05b4e7ae7e9e47fc84c6eb',
   'src/third_party/harfbuzz-ng/src':
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@8df5cdbcda495a582e72a7e2ce35d6106401edce',
   'src/third_party/google_benchmark/src': {
@@ -281,7 +281,7 @@ deps = {
   'src/third_party/dav1d/libdav1d':
     'https://chromium.googlesource.com/external/github.com/videolan/dav1d.git@f8ae94eca0f53502a2cddd29a263c1edea4822a0',
   'src/third_party/libaom/source/libaom':
-    'https://aomedia.googlesource.com/aom.git@b5f92a98836e0ed7c84cf584b5523516b15d24bd',
+    'https://aomedia.googlesource.com/aom.git@0a770ff99dfb2fc8c2c50f3b9bb0fec620316224',
   'src/third_party/libunwindstack': {
       'url': 'https://chromium.googlesource.com/chromium/src/third_party/libunwindstack.git@4dbfa0e8c844c8e243b297bc185e54a99ff94f9e',
       'condition': 'checkout_android',
@@ -291,7 +291,7 @@ deps = {
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@52076a9c79b980180a86832acd20f17c1e583e3e',
   'src/third_party/libyuv':
-    'https://chromium.googlesource.com/libyuv/libyuv.git@a37799344d29dc8e4d3fb00ced5f07e5ce8bf1b9',
+    'https://chromium.googlesource.com/libyuv/libyuv.git@8670bcf17faca69603d2d49fa6ebd0e45123471f',
   'src/third_party/lss': {
     'url': 'https://chromium.googlesource.com/linux-syscall-support.git@ce877209e11aa69dcfffbd53ef90ea1d07136521',
     'condition': 'checkout_android or checkout_linux',
@@ -336,7 +336,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@fee54dd10a2f4b154f6308f78d209179ac442cc0',
+    'https://chromium.googlesource.com/chromium/src/tools@2fe69ef6f505eb602b44b15d8e7358a36ef15f64',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
