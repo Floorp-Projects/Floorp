@@ -672,7 +672,7 @@ CpuOveruseOptions VideoStreamEncoderResourceManager::GetCpuOveruseOptions()
   // This is already ensured by the only caller of this method:
   // StartResourceAdaptation().
   RTC_DCHECK(encoder_settings_.has_value());
-  CpuOveruseOptions options(field_trials_);
+  CpuOveruseOptions options;
   // Hardware accelerated encoders are assumed to be pipelined; give them
   // additional overuse time.
   if (encoder_settings_->encoder_info().is_hardware_accelerated) {
