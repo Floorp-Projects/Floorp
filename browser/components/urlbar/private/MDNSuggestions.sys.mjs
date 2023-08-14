@@ -96,9 +96,19 @@ export class MDNSuggestions extends BaseFeature {
       return null;
     }
 
+    const url = new URL(suggestion.url);
+    url.searchParams.set("utm_medium", "firefox-desktop");
+    url.searchParams.set("utm_source", "firefox-suggest");
+    url.searchParams.set(
+      "utm_campaign",
+      "firefox-mdn-web-docs-suggestion-experiment"
+    );
+    url.searchParams.set("utm_content", "treatment");
+
     const payload = {
       icon: "chrome://global/skin/icons/mdn.svg",
-      url: suggestion.url,
+      url: url.href,
+      originalUrl: suggestion.url,
       title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
       description: suggestion.description,
       shouldShowUrl: true,
@@ -157,7 +167,12 @@ export class MDNSuggestions extends BaseFeature {
       // selType == "dismiss" when the user presses the dismiss key shortcut.
       case "dismiss":
       case RESULT_MENU_COMMAND.NOT_RELEVANT:
-        lazy.QuickSuggest.blockedSuggestions.add(result.payload.url);
+        // MDNSuggestions adds the UTM parameters to the original URL and
+        // returns it as payload.url in the result. However, as
+        // UrlbarProviderQuickSuggest filters suggestions with original URL of
+        // provided suggestions, need to use the original URL when adding to the
+        // block list.
+        lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
         view.acknowledgeDismissal(result, {
           id: "firefox-suggest-dismissal-acknowledgment-one-mdn",
         });

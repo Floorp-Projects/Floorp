@@ -64,7 +64,7 @@ add_task(async function basic() {
   const onLoad = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     false,
-    suggestion.url
+    result.payload.url
   );
   EventUtils.synthesizeMouseAtCenter(element.row, {});
   await onLoad;
