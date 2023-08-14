@@ -35,6 +35,9 @@ WheelScrollAnimation::WheelScrollAnimation(
     ScrollWheelInput::ScrollDeltaType aDeltaType)
     : GenericScrollAnimation(aApzc, aInitialPosition,
                              OriginForDeltaType(aDeltaType)) {
+  MOZ_ASSERT(StaticPrefs::general_smoothScroll(),
+             "We shouldn't be creating a WheelScrollAnimation if smooth "
+             "scrolling is disabled");
   mDirectionForcedToOverscroll =
       mApzc.mScrollMetadata.GetDisregardedDirection();
 }
