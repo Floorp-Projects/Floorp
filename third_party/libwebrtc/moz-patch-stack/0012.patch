@@ -1,37 +1,45 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Mon, 13 Aug 2018 10:24:00 -0400
-Subject: Bug 1376873 - Fix warning in mean_variance_estimator.cc; r=padenot
+Date: Wed, 19 Sep 2018 15:06:00 -0400
+Subject: Bug 1376873 - Fix up rotation in video_capture_impl.cc; r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D7470
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cb6c555654c0bca72999f1e414d8d6d0b59186c9
+This fixes a bug in the upstream code introduced when they removed the
+ConvertToI420 helper method from webrtc_libyuv.cc. The buffer size is
+passed into libyuv::ConvertI420 incorrectly when rotation is applied, which
+causes bad rendering and instabilities.
+
+Differential Revision: https://phabricator.services.mozilla.com/D7478
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c56cb66f86518dfb046c642ebeb07cf51c23a3cb
 ---
- .../echo_detector/mean_variance_estimator.cc                | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ modules/video_capture/video_capture_impl.cc | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/modules/audio_processing/echo_detector/mean_variance_estimator.cc b/modules/audio_processing/echo_detector/mean_variance_estimator.cc
-index a85740387b..a9ebb8cd92 100644
---- a/modules/audio_processing/echo_detector/mean_variance_estimator.cc
-+++ b/modules/audio_processing/echo_detector/mean_variance_estimator.cc
-@@ -10,7 +10,7 @@
+diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
+index 184e865365..0c6e3784a2 100644
+--- a/modules/video_capture/video_capture_impl.cc
++++ b/modules/video_capture/video_capture_impl.cc
+@@ -214,12 +214,21 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+     }
+   }
  
- #include "modules/audio_processing/echo_detector/mean_variance_estimator.h"
- 
--#include <math.h>
-+#include <cmath>
- 
- #include "rtc_base/checks.h"
- 
-@@ -26,8 +26,8 @@ void MeanVarianceEstimator::Update(float value) {
-   mean_ = (1.f - kAlpha) * mean_ + kAlpha * value;
-   variance_ =
-       (1.f - kAlpha) * variance_ + kAlpha * (value - mean_) * (value - mean_);
--  RTC_DCHECK(isfinite(mean_));
--  RTC_DCHECK(isfinite(variance_));
-+  RTC_DCHECK(std::isfinite(mean_));
-+  RTC_DCHECK(std::isfinite(variance_));
- }
- 
- float MeanVarianceEstimator::std_deviation() const {
++  int dst_width = buffer->width();
++  int dst_height = buffer->height();
++
++  // LibYuv expects pre-rotation_mode values for dst.
++  // Stride values should correspond to the destination values.
++  if (rotation_mode == libyuv::kRotate90 || rotation_mode == libyuv::kRotate270) {
++    std::swap(dst_width, dst_height);
++  }
++
+   const int conversionResult = libyuv::ConvertToI420(
+       videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
+       buffer.get()->StrideY(), buffer.get()->MutableDataU(),
+       buffer.get()->StrideU(), buffer.get()->MutableDataV(),
+       buffer.get()->StrideV(), 0, 0,  // No Cropping
+-      width, height, target_width, target_height, rotation_mode,
++      width, height, dst_width, dst_height, rotation_mode,
+       ConvertVideoType(frameInfo.videoType));
+   if (conversionResult != 0) {
+     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
 -- 
 2.34.1
 
