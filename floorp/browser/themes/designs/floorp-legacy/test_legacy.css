@@ -1623,6 +1623,13 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   margin-left: 16px !important;
   margin-inline-start: 8px !important;
 }
+#firefox-view-button {
+  max-width: 38px !important;
+  max-height: 38px !important;
+}
+#firefox-view-button > .toolbarbutton-icon {
+  scale: 0.5;
+}
 
 .tab-background:not(#browser *)::before {
   border-bottom-right-radius: 8px !important;
