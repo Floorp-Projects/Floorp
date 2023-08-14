@@ -33,7 +33,7 @@ define(function (require, exports, module) {
     const { object, mode = MODE.SHORT, shouldRenderTooltip } = props;
 
     let { textContent } = object.preview;
-    if (mode === MODE.TINY || mode === MODE.HEADER) {
+    if (mode === MODE.TINY) {
       textContent = cropMultipleLines(textContent, 30);
     } else if (mode === MODE.SHORT) {
       textContent = cropString(textContent, 50);

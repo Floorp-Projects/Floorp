@@ -22,8 +22,7 @@ add_task(async function () {
     {
       line: 8,
       column: 4,
-      header: `function secondCall()`,
-      fields: [["name", `"secondCall"`]],
+      fields: [["secondCall()"]],
       expression: "secondCall",
     },
   ]);
@@ -36,8 +35,7 @@ add_task(async function () {
     {
       line: 6,
       column: 12,
-      header: `function firstCall()`,
-      fields: [["name", `"firstCall"`]],
+      fields: [["firstCall()"]],
       expression: "firstCall",
     },
   ]);
@@ -45,8 +43,7 @@ add_task(async function () {
     {
       line: 8,
       column: 4,
-      header: `function secondCall()`,
-      fields: [["name", `"secondCall"`]],
+      fields: [["secondCall()"]],
       expression: "secondCall",
     },
   ]);

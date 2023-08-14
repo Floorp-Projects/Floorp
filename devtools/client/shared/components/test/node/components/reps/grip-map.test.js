@@ -53,11 +53,6 @@ describe("GripMap - empty map", () => {
     expect(component.prop("title")).toBe(`Map(${getLength(object)})`);
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true });
-    expect(component.text()).toBe(defaultOutput);
-    expect(component.prop("title")).toBe(`Map(${getLength(object)})`);
-    expectActorAttribute(component, object.actor);
-
     component = renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true });
     expect(component.text()).toBe(defaultOutput);
     expect(component.prop("title")).toBe(`Map(${getLength(object)})`);
@@ -88,7 +83,7 @@ describe("GripMap - Symbol-keyed Map", () => {
 
     length = getMapLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`Map${length}`);
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Map${length}`);
+
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(out);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(out);
   });
@@ -119,14 +114,6 @@ describe("GripMap - WeakMap", () => {
     ).toBe(`WeakMap${length}`);
     expect(
       renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
-    ).toBe(`WeakMap(${getLength(object)})`);
-
-    length = getMapLengthBubbleText(object, { mode: MODE.HEADER });
-    expect(
-      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).text()
-    ).toBe(`WeakMap${length}`);
-    expect(
-      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).prop("title")
     ).toBe(`WeakMap(${getLength(object)})`);
 
     expect(
@@ -180,7 +167,7 @@ describe("GripMap - max entries", () => {
 
     length = getMapLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`Map${length}`);
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Map${length}`);
+
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(out);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(out);
   });
@@ -206,7 +193,7 @@ describe("GripMap - more than max entries", () => {
 
     length = getMapLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`Map${length}`);
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Map${length}`);
+
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     const longString = Array.from({ length: maxLengthMap.get(MODE.LONG) }).map(
@@ -238,7 +225,7 @@ describe("GripMap - uninteresting entries", () => {
 
     length = getMapLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`Map${length}`);
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Map${length}`);
+
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     length = getMapLengthBubbleText(object, { mode: MODE.LONG });

@@ -54,10 +54,6 @@ describe("Grip - empty object", () => {
     expect(component.text()).toBe("{}");
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.HEADER });
-    expect(component.text()).toBe("Object");
-    expectActorAttribute(component, object.actor);
-
     component = renderRep({ mode: MODE.SHORT });
     expect(component.text()).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
@@ -82,7 +78,6 @@ describe("Grip - Boolean object", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("Boolean");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Boolean");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -102,7 +97,6 @@ describe("Grip - Number object", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("Number");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Number");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -131,12 +125,6 @@ describe("Grip - String object", () => {
     ).toBe("String");
     expect(
       renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
-    ).toBe("String");
-    expect(
-      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).text()
-    ).toBe("String");
-    expect(
-      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).prop("title")
     ).toBe("String");
     expect(
       renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).text()
@@ -171,7 +159,6 @@ describe("Grip - Proxy", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(out);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("Proxy");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Proxy");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(out);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(out);
   });
@@ -202,12 +189,6 @@ describe("Grip - ArrayBuffer", () => {
       renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
     ).toBe("ArrayBuffer");
     expect(
-      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).text()
-    ).toBe("ArrayBuffer");
-    expect(
-      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).prop("title")
-    ).toBe("ArrayBuffer");
-    expect(
       renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).text()
     ).toBe(defaultOutput);
     expect(
@@ -236,7 +217,6 @@ describe("Grip - SharedArrayBuffer", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("SharedArrayBuffer");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("SharedArrayBuffer");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -257,7 +237,6 @@ describe("Grip - ApplicationCache", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("OfflineResourceList");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("OfflineResourceList");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     const longOutput =
@@ -283,7 +262,6 @@ describe("Grip - Object with max props", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -312,12 +290,6 @@ describe("Grip - Object with more than short mode max props", () => {
     ).toBe("{…}");
     expect(
       renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
-    ).toBe("Object");
-    expect(
-      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).text()
-    ).toBe("Object");
-    expect(
-      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).prop("title")
     ).toBe("Object");
     expect(
       renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).text()
@@ -350,7 +322,6 @@ describe("Grip - Object with more than long mode max props", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     const props = Array.from({ length: maxLengthMap.get(MODE.LONG) }).map(
@@ -375,7 +346,6 @@ describe("Grip - Object with non-enumerable properties", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -395,7 +365,6 @@ describe("Grip - Object with nested object", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
 
@@ -428,7 +397,6 @@ describe("Grip - Object with nested array", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -453,7 +421,6 @@ describe("Grip - Object with connected nodes", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -533,7 +500,6 @@ describe("Grip - Object with getter", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -552,7 +518,6 @@ describe("Grip - Object with setter", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -571,7 +536,6 @@ describe("Grip - Object with getter and setter", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -592,7 +556,6 @@ describe("Grip - Object with symbol properties", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(
       'Object { x: 10, Symbol(): "first unnamed symbol", ' +
@@ -617,7 +580,6 @@ describe("Grip - Object with more than max symbol properties", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(
       'Object { Symbol("i-0"): "value-0", Symbol("i-1"): "value-1", ' +
@@ -649,10 +611,6 @@ describe("Grip - Without preview", () => {
     expect(component.text()).toBe("{}");
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ mode: MODE.HEADER });
-    expect(component.text()).toBe("Object");
-    expectActorAttribute(component, object.actor);
-
     component = renderRep({ mode: MODE.SHORT });
     expect(component.text()).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
@@ -681,7 +639,6 @@ describe("Grip - Generator object", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("Generator");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Generator");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -703,7 +660,6 @@ describe("Grip - DeadObject object", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("DeadObject");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("DeadObject");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -723,7 +679,6 @@ describe.skip("Grip - Object with __proto__ property", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.HEADER }).text()).toBe("Object");
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });

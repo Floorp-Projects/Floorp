@@ -51,14 +51,6 @@ describe("Promise - Pending", () => {
     expectActorAttribute(component, object.actor);
 
     component = renderRep(object, {
-      mode: MODE.HEADER,
-      shouldRenderTooltip: true,
-    });
-    expect(component.text()).toBe("Promise");
-    expect(component.prop("title")).toBe("Promise");
-    expectActorAttribute(component, object.actor);
-
-    component = renderRep(object, {
       mode: MODE.SHORT,
       shouldRenderTooltip: true,
     });
@@ -89,7 +81,6 @@ describe("Promise - fulfilled with string", () => {
     expect(renderRep(object, { mode: MODE.TINY }).text()).toBe(
       'Promise { "fulfilled" }'
     );
-    expect(renderRep(object, { mode: MODE.HEADER }).text()).toBe("Promise");
     expect(renderRep(object, { mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep(object, { mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -108,7 +99,6 @@ describe("Promise - fulfilled with object", () => {
     expect(renderRep(object, { mode: MODE.TINY }).text()).toBe(
       'Promise { "fulfilled" }'
     );
-    expect(renderRep(object, { mode: MODE.HEADER }).text()).toBe("Promise");
     expect(renderRep(object, { mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep(object, { mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -133,7 +123,6 @@ describe("Promise - fulfilled with array", () => {
     expect(renderRep(object, { mode: MODE.TINY }).text()).toBe(
       'Promise { "fulfilled" }'
     );
-    expect(renderRep(object, { mode: MODE.HEADER }).text()).toBe("Promise");
     expect(renderRep(object, { mode: MODE.SHORT }).text()).toBe(out);
     expect(renderRep(object, { mode: MODE.LONG }).text()).toBe(out);
   });
@@ -203,7 +192,6 @@ describe("Promise - rejected with number", () => {
     expect(renderRep(object, { mode: MODE.TINY }).text()).toBe(
       'Promise { "rejected" }'
     );
-    expect(renderRep(object, { mode: MODE.HEADER }).text()).toBe("Promise");
     expect(renderRep(object, { mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep(object, { mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -222,7 +210,6 @@ describe("Promise - rejected with object", () => {
     expect(renderRep(object, { mode: MODE.TINY }).text()).toBe(
       'Promise { "rejected" }'
     );
-    expect(renderRep(object, { mode: MODE.HEADER }).text()).toBe("Promise");
     expect(renderRep(object, { mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep(object, { mode: MODE.LONG }).text()).toBe(defaultOutput);
   });

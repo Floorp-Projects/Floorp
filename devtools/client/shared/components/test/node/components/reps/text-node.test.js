@@ -49,11 +49,6 @@ describe("TextNode", () => {
     expect(component.prop("title")).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
 
-    component = renderRep({ shouldRenderTooltip: true, mode: MODE.HEADER });
-    expect(component.text()).toBe("#text");
-    expect(component.prop("title")).toBe(defaultOutput);
-    expectActorAttribute(component, object.actor);
-
     component = renderRep({ shouldRenderTooltip: true, mode: MODE.SHORT });
     expect(component.text()).toBe(defaultOutput);
     expect(component.prop("title")).toBe(defaultOutput);
@@ -77,10 +72,6 @@ describe("TextNode", () => {
     expect(component.prop("title")).toBe(defaultTooltip);
 
     component = renderRep({ shouldRenderTooltip: true, mode: MODE.TINY });
-    expect(component.text()).toBe("#text");
-    expect(component.prop("title")).toBe(defaultTooltip);
-
-    component = renderRep({ shouldRenderTooltip: true, mode: MODE.HEADER });
     expect(component.text()).toBe("#text");
     expect(component.prop("title")).toBe(defaultTooltip);
 
@@ -108,10 +99,6 @@ describe("TextNode", () => {
     expect(component.text()).toBe("#text");
     expect(component.prop("title")).toBe(defaultTooltip);
 
-    component = renderRep({ shouldRenderTooltip: true, mode: MODE.HEADER });
-    expect(component.text()).toBe("#text");
-    expect(component.prop("title")).toBe(defaultTooltip);
-
     component = renderRep({ shouldRenderTooltip: true, mode: MODE.SHORT });
     expect(component.text()).toBe(defaultOutput);
     expect(component.prop("title")).toBe(defaultTooltip);
@@ -134,10 +121,6 @@ describe("TextNode", () => {
     expect(component.prop("title")).toBe(defaultTooltip);
 
     component = renderRep({ shouldRenderTooltip: true, mode: MODE.TINY });
-    expect(component.text()).toBe("#text");
-    expect(component.prop("title")).toBe(defaultTooltip);
-
-    component = renderRep({ shouldRenderTooltip: true, mode: MODE.HEADER });
     expect(component.text()).toBe("#text");
     expect(component.prop("title")).toBe(defaultTooltip);
 

@@ -11,9 +11,8 @@
 }
 
 .popover .preview-popup {
-  padding: 5px 10px;
+  padding: 10px;
   max-width: 450px;
-  min-width: 200px;
 }
 
 .tooltip .preview-popup {
