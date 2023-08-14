@@ -624,7 +624,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   void SaveStorageAccessPermissionGranted();
 
-  bool UsingStorageAccess();
+  bool HasStorageAccessPermissionGranted();
 
   uint32_t UpdateLockCount(bool aIncrement) {
     MOZ_ASSERT_IF(!aIncrement, mLockCount > 0);
@@ -744,8 +744,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   mozilla::dom::Event* mEvent;
 
   // A boolean flag indicating whether storage access is granted for the
-  // current window and that it is currently being used by this window.
-  bool mUsingStorageAccess;
+  // current window. These are also set as permissions, but it could happen
+  // that we need to access them synchronously in this context, and for
+  // this, we need a copy here.
+  bool mStorageAccessPermissionGranted;
 
   // The WindowGlobalChild actor for this window.
   //

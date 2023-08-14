@@ -98,7 +98,7 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mWatchedByDevTools(false),
       mStorageAccess(StorageAccess::eDeny),
       mUseRegularPrincipal(false),
-      mUsingStorageAccess(false),
+      mHasStorageAccessPermissionGranted(false),
       mServiceWorkersTestingInWindow(false),
       mShouldResistFingerprinting(false),
       mIsThirdPartyContextToTopWindow(true),

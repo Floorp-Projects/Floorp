@@ -432,16 +432,6 @@ interface nsILoadInfo : nsISupports
   */
   [infallible] attribute unsigned long triggeringSandboxFlags;
 
-
-  /**
-  * The window id and storage access status of the window of the
-  * context that triggered the load. This is used to allow self-initiated
-  * same-origin navigations to propogate their "has storage access" bit
-  * to the next Document.
-  */
-  [infallible] attribute unsigned long long triggeringWindowId;
-  [infallible] attribute boolean triggeringStorageAccess;
-
   /**
    * Allows to query only the security mode bits from above.
    */

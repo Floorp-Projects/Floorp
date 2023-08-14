@@ -115,24 +115,6 @@ TRRLoadInfo::SetTriggeringSandboxFlags(uint32_t aResult) {
 }
 
 NS_IMETHODIMP
-TRRLoadInfo::GetTriggeringWindowId(uint64_t* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP
-TRRLoadInfo::SetTriggeringWindowId(uint64_t aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TRRLoadInfo::GetTriggeringStorageAccess(bool* aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP
-TRRLoadInfo::SetTriggeringStorageAccess(bool aResult) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 TRRLoadInfo::GetSecurityMode(uint32_t* aFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

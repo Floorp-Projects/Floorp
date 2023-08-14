@@ -81,12 +81,6 @@ class AntiTrackingUtils final {
   // access.
   static Maybe<size_t> CountSitesAllowStorageAccess(nsIPrincipal* aPrincipal);
 
-  // Test whether or not there is a storage access permission in aTopPrincipal
-  // with secondary key for embedee aPrincipal.
-  static nsresult TestStoragePermissionInParent(nsIPrincipal* aTopPrincipal,
-                                                nsIPrincipal* aPrincipal,
-                                                bool* aResult);
-
   // Returns the storage permission state for the given channel. And this is
   // meant to be called in the parent process. This only reflects the fact that
   // whether the channel has the storage permission. It doesn't take the window

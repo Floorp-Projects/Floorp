@@ -385,49 +385,6 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
 }
 
 /* static */
-nsresult AntiTrackingUtils::TestStoragePermissionInParent(
-    nsIPrincipal* aTopPrincipal, nsIPrincipal* aPrincipal, bool* aResult) {
-  NS_ENSURE_ARG(aResult);
-  *aResult = false;
-  NS_ENSURE_ARG(aTopPrincipal);
-  NS_ENSURE_ARG(aPrincipal);
-
-  nsCOMPtr<nsIPermissionManager> permMgr =
-      components::PermissionManager::Service();
-  NS_ENSURE_TRUE(permMgr, NS_ERROR_FAILURE);
-
-  // Build the permission keys
-  nsAutoCString requestPermissionKey;
-  bool success = AntiTrackingUtils::CreateStoragePermissionKey(
-      aPrincipal, requestPermissionKey);
-  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
-
-  nsAutoCString requestFramePermissionKey;
-  success = AntiTrackingUtils::CreateStorageFramePermissionKey(
-      aPrincipal, requestFramePermissionKey);
-  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
-
-  // Test the permission
-  uint32_t access = nsIPermissionManager::UNKNOWN_ACTION;
-  nsresult rv = permMgr->TestPermissionFromPrincipal(
-      aTopPrincipal, requestPermissionKey, &access);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (access == nsIPermissionManager::ALLOW_ACTION) {
-    *aResult = true;
-    return NS_OK;
-  }
-
-  uint32_t frameAccess = nsIPermissionManager::UNKNOWN_ACTION;
-  rv = permMgr->TestPermissionFromPrincipal(
-      aTopPrincipal, requestFramePermissionKey, &frameAccess);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aResult = frameAccess == nsIPermissionManager::ALLOW_ACTION;
-  return NS_OK;
-}
-
-/* static */
 nsILoadInfo::StoragePermissionState
 AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
@@ -546,19 +503,9 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     return nsILoadInfo::HasStoragePermission;
   }
 
-  if (policyType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
-    uint64_t targetWindowIdNoTop = bc->GetCurrentInnerWindowId();
-    uint64_t triggeringWindowId;
-    loadInfo->GetTriggeringWindowId(&triggeringWindowId);
-    bool triggeringStorageAccess;
-    loadInfo->GetTriggeringStorageAccess(&triggeringStorageAccess);
-    if (targetWindowIdNoTop == triggeringWindowId && triggeringStorageAccess &&
-        trackingPrincipal->Equals(loadInfo->TriggeringPrincipal())) {
-      return nsILoadInfo::HasStoragePermission;
-    }
-  } else if (!bc->IsTop()) {
-    // Only check the frame only permission if the channel is not in the top
-    // browsing context.
+  // Only check the frame only permission if the channel is not in the top
+  // browsing context.
+  if (!bc->IsTop()) {
     RefPtr<nsEffectiveTLDService> etld = nsEffectiveTLDService::GetInstance();
     if (!etld) {
       return nsILoadInfo::NoStoragePermission;

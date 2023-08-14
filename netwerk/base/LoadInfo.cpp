@@ -576,8 +576,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mSecurityFlags(rhs.mSecurityFlags),
       mSandboxFlags(rhs.mSandboxFlags),
       mTriggeringSandboxFlags(rhs.mTriggeringSandboxFlags),
-      mTriggeringWindowId(rhs.mTriggeringWindowId),
-      mTriggeringStorageAccess(rhs.mTriggeringStorageAccess),
       mInternalContentPolicyType(rhs.mInternalContentPolicyType),
       mTainting(rhs.mTainting),
       mBlockAllMixedContent(rhs.mBlockAllMixedContent),
@@ -653,8 +651,7 @@ LoadInfo::LoadInfo(
     const Maybe<ClientInfo>& aInitialClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController,
     nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags,
-    uint32_t aTriggeringSandboxFlags, uint64_t aTriggeringWindowId,
-    bool aTriggeringStorageAccess, nsContentPolicyType aContentPolicyType,
+    uint32_t aTriggeringSandboxFlags, nsContentPolicyType aContentPolicyType,
     LoadTainting aTainting, bool aBlockAllMixedContent,
     bool aUpgradeInsecureRequests, bool aBrowserUpgradeInsecureRequests,
     bool aBrowserDidUpgradeInsecureRequests,
@@ -702,8 +699,6 @@ LoadInfo::LoadInfo(
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
       mTriggeringSandboxFlags(aTriggeringSandboxFlags),
-      mTriggeringWindowId(aTriggeringWindowId),
-      mTriggeringStorageAccess(aTriggeringStorageAccess),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(aTainting),
       mBlockAllMixedContent(aBlockAllMixedContent),
@@ -977,30 +972,6 @@ LoadInfo::GetTriggeringSandboxFlags(uint32_t* aResult) {
 NS_IMETHODIMP
 LoadInfo::SetTriggeringSandboxFlags(uint32_t aFlags) {
   mTriggeringSandboxFlags = aFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTriggeringWindowId(uint64_t* aResult) {
-  *aResult = mTriggeringWindowId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTriggeringWindowId(uint64_t aFlags) {
-  mTriggeringWindowId = aFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetTriggeringStorageAccess(bool* aResult) {
-  *aResult = mTriggeringStorageAccess;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetTriggeringStorageAccess(bool aFlags) {
-  mTriggeringStorageAccess = aFlags;
   return NS_OK;
 }
 

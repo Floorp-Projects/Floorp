@@ -86,8 +86,6 @@ nsDocShellLoadState::nsDocShellLoadState(
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
   mPartitionedPrincipalToInherit = aLoadState.PartitionedPrincipalToInherit();
   mTriggeringSandboxFlags = aLoadState.TriggeringSandboxFlags();
-  mTriggeringWindowId = aLoadState.TriggeringWindowId();
-  mTriggeringStorageAccess = aLoadState.TriggeringStorageAccess();
   mTriggeringRemoteType = aLoadState.TriggeringRemoteType();
   mCsp = aLoadState.Csp();
   mOriginalURIString = aLoadState.OriginalURIString();
@@ -152,8 +150,6 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mResultPrincipalURIIsSome(aOther.mResultPrincipalURIIsSome),
       mTriggeringPrincipal(aOther.mTriggeringPrincipal),
       mTriggeringSandboxFlags(aOther.mTriggeringSandboxFlags),
-      mTriggeringWindowId(aOther.mTriggeringWindowId),
-      mTriggeringStorageAccess(aOther.mTriggeringStorageAccess),
       mCsp(aOther.mCsp),
       mKeepResultPrincipalURIIfSet(aOther.mKeepResultPrincipalURIIfSet),
       mLoadReplace(aOther.mLoadReplace),
@@ -208,8 +204,6 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
     : mURI(aURI),
       mResultPrincipalURIIsSome(false),
       mTriggeringSandboxFlags(0),
-      mTriggeringWindowId(0),
-      mTriggeringStorageAccess(false),
       mKeepResultPrincipalURIIfSet(false),
       mLoadReplace(false),
       mInheritPrincipal(false),
@@ -449,9 +443,6 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
   loadState->SetHasValidUserGestureActivation(
       aLoadURIOptions.mHasValidUserGestureActivation);
   loadState->SetTriggeringSandboxFlags(aLoadURIOptions.mTriggeringSandboxFlags);
-  loadState->SetTriggeringWindowId(aLoadURIOptions.mTriggeringWindowId);
-  loadState->SetTriggeringStorageAccess(
-      aLoadURIOptions.mTriggeringStorageAccess);
   loadState->SetPostDataStream(postData);
   loadState->SetHeadersStream(aLoadURIOptions.mHeaders);
   loadState->SetBaseURI(aLoadURIOptions.mBaseURI);
@@ -569,23 +560,6 @@ void nsDocShellLoadState::SetTriggeringSandboxFlags(uint32_t flags) {
 
 uint32_t nsDocShellLoadState::TriggeringSandboxFlags() const {
   return mTriggeringSandboxFlags;
-}
-
-void nsDocShellLoadState::SetTriggeringWindowId(uint64_t aTriggeringWindowId) {
-  mTriggeringWindowId = aTriggeringWindowId;
-}
-
-uint64_t nsDocShellLoadState::TriggeringWindowId() const {
-  return mTriggeringWindowId;
-}
-
-void nsDocShellLoadState::SetTriggeringStorageAccess(
-    bool aTriggeringStorageAccess) {
-  mTriggeringStorageAccess = aTriggeringStorageAccess;
-}
-
-bool nsDocShellLoadState::TriggeringStorageAccess() const {
-  return mTriggeringStorageAccess;
 }
 
 bool nsDocShellLoadState::InheritPrincipal() const { return mInheritPrincipal; }
@@ -1279,8 +1253,6 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize(
   loadState.PrincipalToInherit() = mPrincipalToInherit;
   loadState.PartitionedPrincipalToInherit() = mPartitionedPrincipalToInherit;
   loadState.TriggeringSandboxFlags() = mTriggeringSandboxFlags;
-  loadState.TriggeringWindowId() = mTriggeringWindowId;
-  loadState.TriggeringStorageAccess() = mTriggeringStorageAccess;
   loadState.TriggeringRemoteType() = mTriggeringRemoteType;
   loadState.Csp() = mCsp;
   loadState.OriginalURIString() = mOriginalURIString;
