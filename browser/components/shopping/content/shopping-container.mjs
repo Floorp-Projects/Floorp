@@ -31,6 +31,7 @@ export class ShoppingContainer extends MozLitElement {
     productUrl: { type: String },
     recommendationData: { type: Object },
     isOffline: { type: Boolean },
+    analysisEvent: { type: Object },
   };
 
   static get queries() {
@@ -53,6 +54,8 @@ export class ShoppingContainer extends MozLitElement {
     this.initialized = true;
 
     window.document.addEventListener("Update", this);
+    window.document.addEventListener("NewAnalysisRequested", this);
+    window.document.addEventListener("ReAnalysisRequested", this);
 
     window.dispatchEvent(
       new CustomEvent("ContentReady", {
@@ -62,7 +65,13 @@ export class ShoppingContainer extends MozLitElement {
     );
   }
 
-  async _update({ data, showOnboarding, productUrl, recommendationData }) {
+  async _update({
+    data,
+    showOnboarding,
+    productUrl,
+    recommendationData,
+    isPolledRequestDone,
+  }) {
     // If we're not opted in or there's no shopping URL in the main browser,
     // the actor will pass `null`, which means this will clear out any existing
     // content in the sidebar.
@@ -71,12 +80,26 @@ export class ShoppingContainer extends MozLitElement {
     this.productUrl = productUrl;
     this.recommendationData = recommendationData;
     this.isOffline = !navigator.onLine;
+    this.isPolledRequestDone = isPolledRequestDone;
   }
 
   handleEvent(event) {
     switch (event.type) {
       case "Update":
         this._update(event.detail);
+        break;
+      case "NewAnalysisRequested":
+      case "ReAnalysisRequested":
+        this.analysisEvent = {
+          type: event.type,
+          productUrl: this.productUrl,
+        };
+        window.dispatchEvent(
+          new CustomEvent("PolledRequestMade", {
+            bubbles: true,
+            composed: true,
+          })
+        );
         break;
     }
   }
@@ -94,6 +117,21 @@ export class ShoppingContainer extends MozLitElement {
   }
 
   getContentTemplate() {
+    // The user requested an analysis which is not done yet.
+    // We only want to show the analysis-in-progress message-bar
+    // for the product currently in view.
+    if (
+      this.analysisEvent?.productUrl == this.productUrl &&
+      !this.isPolledRequestDone
+    ) {
+      return html`<shopping-message-bar
+          type="analysis-in-progress"
+        ></shopping-message-bar>
+        ${this.analysisEvent.type == "ReAnalysisRequested"
+          ? this.getAnalysisDetailsTemplate()
+          : null}`;
+    }
+
     if (this.data?.error) {
       return html`<shopping-message-bar
         type="generic-error"

@@ -762,6 +762,7 @@ let JSWINDOWACTORS = {
       esModuleURI: "resource:///actors/ShoppingSidebarChild.sys.mjs",
       events: {
         ContentReady: { wantUntrusted: true },
+        PolledRequestMade: { wantUntrusted: true },
         // This is added so the actor instantiates immediately and makes
         // methods available to the page js on load.
         DOMDocElementInserted: {},
