@@ -22,6 +22,11 @@ on:
         type: boolean
         required: true
         default: true
+      release-note-url:
+        description: 'Release Note URL'
+        type: string
+        required: true
+        default: 'https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/'
 
 #----------------------------------------- JOBS -----------------------------------------#
 jobs:
@@ -386,7 +391,8 @@ jobs:
             "inputs": {
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64.mar",
               "os": "Linux",
-              "arch": "aarch64"
+              "arch": "aarch64",
+              "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'
 
@@ -405,7 +411,8 @@ jobs:
               "os": "Darwin",
               "arch": "x86_64",
               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
-              "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}"
+              "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}",
+              "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'
 
@@ -425,7 +432,8 @@ jobs:
               "arch": "aarch64",
               "buildid": "${{ needs.get-buildid.outputs.buildids }}",
               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
-              "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}"
+              "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}",
+              "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'
 
@@ -442,7 +450,8 @@ jobs:
             "inputs": {
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
               "os": "WINNT",
-              "arch": "x86_64"
+              "arch": "x86_64",
+              "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'
 
