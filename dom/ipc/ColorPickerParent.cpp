@@ -63,6 +63,7 @@ mozilla::ipc::IPCResult ColorPickerParent::RecvOpen() {
     return IPC_OK();
   }
 
+  MOZ_ASSERT(!mCallback);
   mCallback = new ColorPickerShownCallback(this);
 
   mPicker->Open(mCallback);
