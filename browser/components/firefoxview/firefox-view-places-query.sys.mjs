@@ -4,35 +4,14 @@
 
 import { PlacesQuery } from "resource://gre/modules/PlacesQuery.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
-});
-
 /**
  * Extension of PlacesQuery which provides additional caches for Firefox View.
  */
 export class FirefoxViewPlacesQuery extends PlacesQuery {
-  /** @type {Map<number, HistoryVisit[]>} */
-  visitsByDay = new Map();
-  /** @type {Map<number, HistoryVisit[]>} */
-  visitsByMonth = new Map();
-
   /** @type {Date} */
   #todaysDate = null;
   /** @type {Date} */
   #yesterdaysDate = null;
-
-  initializeCache(options) {
-    super.initializeCache(options);
-    this.#resetDateCaches();
-  }
-
-  close() {
-    super.close();
-    this.#resetDateCaches();
-  }
 
   get visitsFromToday() {
     if (this.cachedHistory == null || this.#todaysDate == null) {
@@ -50,11 +29,60 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
     return this.cachedHistory.has(mapKey) ? this.cachedHistory.get(mapKey) : [];
   }
 
-  #resetDateCaches() {
-    this.visitsByDay.clear();
-    this.visitsByMonth.clear();
-    this.#todaysDate = null;
-    this.#yesterdaysDate = null;
+  /**
+   * Get a list of visits per day for each day on this month, excluding today
+   * and yesterday.
+   *
+   * @returns {HistoryVisit[][]}
+   *   A list of visits for each day.
+   */
+  get visitsByDay() {
+    const visitsPerDay = [];
+    for (const [time, visits] of this.cachedHistory.entries()) {
+      const date = new Date(time);
+      if (
+        this.#isSameDate(date, this.#todaysDate) ||
+        this.#isSameDate(date, this.#yesterdaysDate)
+      ) {
+        continue;
+      } else if (!this.#isSameMonth(date, this.#todaysDate)) {
+        break;
+      } else {
+        visitsPerDay.push(visits);
+      }
+    }
+    return visitsPerDay;
+  }
+
+  /**
+   * Get a list of visits per month for each month, excluding this one, and
+   * excluding yesterday's visits if yesterday happens to fall on the previous
+   * month.
+   *
+   * @returns {HistoryVisit[][]}
+   *   A list of visits for each month.
+   */
+  get visitsByMonth() {
+    const visitsPerMonth = [];
+    let previousMonth = null;
+    for (const [time, visits] of this.cachedHistory.entries()) {
+      const date = new Date(time);
+      if (
+        this.#isSameDate(date, this.#yesterdaysDate) ||
+        this.#isSameMonth(date, this.#todaysDate)
+      ) {
+        continue;
+      }
+      const month = this.getStartOfMonthTimestamp(date);
+      if (month !== previousMonth) {
+        visitsPerMonth.push(visits);
+      } else {
+        visitsPerMonth[visitsPerMonth.length - 1] =
+          visitsPerMonth[visitsPerMonth.length - 1].concat(visits);
+      }
+      previousMonth = month;
+    }
+    return visitsPerMonth;
   }
 
   appendToCache(visit) {
@@ -90,32 +118,8 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
   async fetchHistory() {
     await super.fetchHistory();
     if (this.cachedHistoryOptions.sortBy === "date") {
-      this.#buildDateContainers();
+      this.#setTodaysDate();
     }
-  }
-
-  #buildDateContainers() {
-    this.#setTodaysDate();
-    this.cachedHistory.forEach((visits, time) => {
-      const date = new Date(time);
-      if (
-        this.#isSameDate(date, this.#todaysDate) ||
-        this.#isSameDate(date, this.#yesterdaysDate)
-      ) {
-        // Getters for visits from today/yesterday will handle this.
-        return;
-      }
-      if (this.#isSameMonth(date, this.#todaysDate)) {
-        this.visitsByDay.set(time, visits);
-      } else {
-        const mapKey = this.getStartOfMonthTimestamp(date);
-        if (!this.visitsByMonth.has(mapKey)) {
-          this.visitsByMonth.set(mapKey, []);
-        }
-        const container = this.visitsByMonth.get(mapKey);
-        this.visitsByMonth.set(mapKey, container.concat(visits));
-      }
-    });
   }
 
   handlePageVisited(event) {
@@ -124,41 +128,7 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
       return;
     }
     if (this.cachedHistoryOptions.sortBy === "date") {
-      if (this.#todaysDate == null) {
-        this.#setTodaysDate();
-      }
-      if (
-        visit.date.getTime() > this.#todaysDate.getTime() &&
-        !this.#isSameDate(visit.date, this.#todaysDate)
-      ) {
-        // Today's date has passed, thus we need to rebuild date caches.
-        this.#resetDateCaches();
-        this.#buildDateContainers();
-        return;
-      }
-      if (
-        this.#isSameDate(visit.date, this.#todaysDate) ||
-        this.#isSameDate(visit.date, this.#yesterdaysDate)
-      ) {
-        // Getters for visits from today/yesterday will handle this.
-        return;
-      }
-      if (this.#isSameMonth(visit.date, this.#todaysDate)) {
-        const mapKey = this.getStartOfDayTimestamp(visit.date);
-        this.visitsByDay.set(mapKey, this.cachedHistory.get(mapKey));
-      } else {
-        const mapKey = this.getStartOfMonthTimestamp(visit.date);
-        if (!this.visitsByMonth.has(mapKey)) {
-          this.visitsByMonth.set(mapKey, []);
-        }
-        const container = this.visitsByMonth.get(mapKey);
-        const insertionPoint = lazy.BinarySearch.insertionIndexOf(
-          (a, b) => b.date.getTime() - a.date.getTime(),
-          container,
-          visit
-        );
-        container.splice(insertionPoint, 0, visit);
-      }
+      this.#setTodaysDate();
     }
   }
 
