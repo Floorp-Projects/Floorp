@@ -173,6 +173,32 @@ TEST_P(PeerConnectionMediaChannelSplitTest, VideoPacketLossCausesNack) {
   EXPECT_TRUE_WAIT(NacksReceivedCount(*caller()) > 0, kDefaultTimeout);
 }
 
+// Test that we can get capture start ntp time.
+TEST_P(PeerConnectionMediaChannelSplitTest,
+       GetCaptureStartNtpTimeWithOldStatsApi) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddAudioTrack();
+
+  callee()->AddAudioTrack();
+
+  // Do offer/answer, wait for the callee to receive some frames.
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+
+  // Get the remote audio track created on the receiver, so they can be used as
+  // GetStats filters.
+  auto receivers = callee()->pc()->GetReceivers();
+  ASSERT_EQ(1u, receivers.size());
+  auto remote_audio_track = receivers[0]->track();
+
+  // Get the audio output level stats. Note that the level is not available
+  // until an RTCP packet has been received.
+  EXPECT_TRUE_WAIT(callee()->OldGetStatsForTrack(remote_audio_track.get())
+                           ->CaptureStartNtpTime() > 0,
+                   2 * kMaxWaitForFramesMs);
+}
+
 INSTANTIATE_TEST_SUITE_P(PeerConnectionMediaChannelSplitTest,
                          PeerConnectionMediaChannelSplitTest,
                          Values("WebRTC-SplitMediaChannel/Disabled/",
