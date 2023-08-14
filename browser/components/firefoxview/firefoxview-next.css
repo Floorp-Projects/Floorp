@@ -62,7 +62,8 @@ body {
 #pages {
   width: 90%;
   margin: 0 auto;
-  max-width: 1136px;
+  min-width: 43rem;
+  max-width: 71rem;
 }
 
 @media (min-width: 120rem) {
