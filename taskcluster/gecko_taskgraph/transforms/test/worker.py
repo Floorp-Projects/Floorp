@@ -94,6 +94,7 @@ WINDOWS_WORKER_TYPES = {
 MACOSX_WORKER_TYPES = {
     "macosx1015-64": "t-osx-1015-r8",
     "macosx1100-64": "t-osx-1100-m1",
+    "macosx1300-64": "t-osx-1300-m2",
 }
 
 transforms = TransformSequence()
@@ -114,6 +115,8 @@ def set_worker_type(config, tasks):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1015-64"]
         elif test_platform.startswith("macosx1100-64"):
             task["worker-type"] = MACOSX_WORKER_TYPES["macosx1100-64"]
+        elif test_platform.startswith("macosx1300-64"):
+            task["worker-type"] = MACOSX_WORKER_TYPES["macosx1300-64"]
         elif test_platform.startswith("win"):
             # figure out what platform the job needs to run on
             if task["virtualization"] == "hardware":

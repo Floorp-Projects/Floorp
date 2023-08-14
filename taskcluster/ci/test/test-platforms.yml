@@ -361,6 +361,11 @@ macosx1015-64-ccov-qr/opt:
     test-sets:
         - macosx1015-64-qr-tests
 
+macosx1300-64-shippable-qr/opt:
+    build-platform: macosx64-shippable/opt
+    test-sets:
+        - macosx1300-64-qr-tests
+
 ##
 # Android platforms (matching /android-em.*/)
 #
