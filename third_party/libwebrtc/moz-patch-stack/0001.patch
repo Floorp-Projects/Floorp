@@ -1,134 +1,86 @@
-From: Tommi <tommi@webrtc.org>
-Date: Thu, 1 Jun 2023 16:08:52 +0200
-Subject: (cherry-pick-branch-heads/5735) [M114] Move transceiver iteration
- loop over to the signaling thread.
+From: Philipp Hancke <phancke@microsoft.com>
+Date: Thu, 15 Jun 2023 07:21:56 +0200
+Subject: (cherry-pick-branch-heads/5735) [M114] sdp: reject duplicate ssrcs in
+ ssrc-groups
 
-This is required for ReportTransportStats since iterating over the
-transceiver list from the network thread is not safe.
+while not really covered by
+  https://www.rfc-editor.org/rfc/rfc5576.html#section-4.2
+and using the same SSRC for RTX and primary payload may work
+since payload type demuxing *could* be used is not a good idea.
+This also applies to flexfec's FEC-FR.
 
-(cherry picked from commit dba22d31909298161318e00d43a80cdb0abc940f)
+For the nonstandard SIM ssrc-group duplicates make no sense.
+This rejects duplicates for unknown ssrc-groups as well.
+
+BUG=chromium:1454860
+
+(cherry picked from commit 6a38a3eb38f732b89ca0d8e36c43a434670c4ef5)
 
 No-Try: true
-Bug: chromium:1446274, webrtc:12692
-Change-Id: I7c514df9f029112c4b1da85826af91217850fb26
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/307340
+Change-Id: I3e86101dbd5d6c4099f2fdb7b4a52d5cd0809c5f
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/308820
+Reviewed-by: Taylor Brandstetter <deadbeef@webrtc.org>
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40197}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/308001
-Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5735@{#3}
+Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+Cr-Original-Commit-Position: refs/heads/main@{#40292}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/309601
+Cr-Commit-Position: refs/branch-heads/5735@{#4}
 Cr-Branched-From: df7df199abd619e75b9f1d9a7e12fc3f3f748775-refs/heads/main@{#39949}
 ---
- pc/peer_connection.cc                 | 35 +++++++++++++++++----------
- pc/peer_connection.h                  |  3 ++-
- pc/peer_connection_integrationtest.cc |  8 ++++++
- 3 files changed, 32 insertions(+), 14 deletions(-)
+ pc/webrtc_sdp.cc          |  5 +++++
+ pc/webrtc_sdp_unittest.cc | 26 ++++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+)
 
-diff --git a/pc/peer_connection.cc b/pc/peer_connection.cc
-index 59d38727dc..20ffd36eba 100644
---- a/pc/peer_connection.cc
-+++ b/pc/peer_connection.cc
-@@ -733,9 +733,6 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
-   transport_controller_->SubscribeIceConnectionState(
-       [this](cricket::IceConnectionState s) {
-         RTC_DCHECK_RUN_ON(network_thread());
--        if (s == cricket::kIceConnectionConnected) {
--          ReportTransportStats();
--        }
-         signaling_thread()->PostTask(
-             SafeTask(signaling_thread_safety_.flag(), [this, s]() {
-               RTC_DCHECK_RUN_ON(signaling_thread());
-@@ -2399,6 +2396,20 @@ void PeerConnection::OnTransportControllerConnectionState(
-     case cricket::kIceConnectionConnected:
-       RTC_LOG(LS_INFO) << "Changing to ICE connected state because "
-                           "all transports are writable.";
-+      {
-+        std::vector<RtpTransceiverProxyRefPtr> transceivers;
-+        if (ConfiguredForMedia()) {
-+          transceivers = rtp_manager()->transceivers()->List();
-+        }
-+
-+        network_thread()->PostTask(
-+            SafeTask(network_thread_safety_,
-+                     [this, transceivers = std::move(transceivers)] {
-+                       RTC_DCHECK_RUN_ON(network_thread());
-+                       ReportTransportStats(std::move(transceivers));
-+                     }));
-+      }
-+
-       SetIceConnectionState(PeerConnectionInterface::kIceConnectionConnected);
-       NoteUsageEvent(UsageEvent::ICE_STATE_CONNECTED);
-       break;
-@@ -2742,20 +2753,18 @@ void PeerConnection::OnTransportControllerGatheringState(
- }
- 
- // Runs on network_thread().
--void PeerConnection::ReportTransportStats() {
-+void PeerConnection::ReportTransportStats(
-+    std::vector<RtpTransceiverProxyRefPtr> transceivers) {
-   TRACE_EVENT0("webrtc", "PeerConnection::ReportTransportStats");
-   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
-   std::map<std::string, std::set<cricket::MediaType>>
-       media_types_by_transport_name;
--  if (ConfiguredForMedia()) {
--    for (const auto& transceiver :
--         rtp_manager()->transceivers()->UnsafeList()) {
--      if (transceiver->internal()->channel()) {
--        std::string transport_name(
--            transceiver->internal()->channel()->transport_name());
--        media_types_by_transport_name[transport_name].insert(
--            transceiver->media_type());
--      }
-+  for (const auto& transceiver : transceivers) {
-+    if (transceiver->internal()->channel()) {
-+      std::string transport_name(
-+          transceiver->internal()->channel()->transport_name());
-+      media_types_by_transport_name[transport_name].insert(
-+          transceiver->media_type());
+diff --git a/pc/webrtc_sdp.cc b/pc/webrtc_sdp.cc
+index 6d041ff0a1..4beb6b0faa 100644
+--- a/pc/webrtc_sdp.cc
++++ b/pc/webrtc_sdp.cc
+@@ -3542,6 +3542,11 @@ bool ParseSsrcGroupAttribute(absl::string_view line,
+     if (!GetValueFromString(line, fields[i], &ssrc, error)) {
+       return false;
      }
++    // Reject duplicates. While not forbidden by RFC 5576,
++    // they don't make sense.
++    if (absl::c_linear_search(ssrcs, ssrc)) {
++      return ParseFailed(line, "Duplicate SSRC in ssrc-group", error);
++    }
+     ssrcs.push_back(ssrc);
    }
- 
-diff --git a/pc/peer_connection.h b/pc/peer_connection.h
-index 26d2531bef..37f8df0012 100644
---- a/pc/peer_connection.h
-+++ b/pc/peer_connection.h
-@@ -567,7 +567,8 @@ class PeerConnection : public PeerConnectionInternal,
- 
-   // Invoked when TransportController connection completion is signaled.
-   // Reports stats for all transports in use.
--  void ReportTransportStats() RTC_RUN_ON(network_thread());
-+  void ReportTransportStats(std::vector<RtpTransceiverProxyRefPtr> transceivers)
-+      RTC_RUN_ON(network_thread());
- 
-   // Gather the usage of IPv4/IPv6 as best connection.
-   static void ReportBestConnectionState(const cricket::TransportStats& stats);
-diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
-index 812833000b..07c5e0c0d3 100644
---- a/pc/peer_connection_integrationtest.cc
-+++ b/pc/peer_connection_integrationtest.cc
-@@ -1831,6 +1831,10 @@ TEST_P(PeerConnectionIntegrationTest,
-   EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
-                  callee()->ice_connection_state(), kDefaultTimeout);
- 
-+  // Part of reporting the stats will occur on the network thread, so flush it
-+  // before checking NumEvents.
-+  SendTask(network_thread(), [] {});
+   ssrc_groups->push_back(SsrcGroup(semantics, ssrcs));
+diff --git a/pc/webrtc_sdp_unittest.cc b/pc/webrtc_sdp_unittest.cc
+index 0e1e62e53f..b2c751717e 100644
+--- a/pc/webrtc_sdp_unittest.cc
++++ b/pc/webrtc_sdp_unittest.cc
+@@ -5056,3 +5056,29 @@ TEST_F(WebRtcSdpTest, RejectSessionLevelMediaLevelExtmapMixedUsage) {
+   JsepSessionDescription jdesc(kDummyType);
+   EXPECT_FALSE(SdpDeserialize(sdp, &jdesc));
+ }
 +
-   EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                           "WebRTC.PeerConnection.CandidatePairType_UDP",
-                           webrtc::kIceCandidatePairHostNameHostName));
-@@ -1959,6 +1963,10 @@ TEST_P(PeerConnectionIntegrationIceStatesTest, MAYBE_VerifyBestConnection) {
-   EXPECT_EQ_WAIT(webrtc::PeerConnectionInterface::kIceConnectionConnected,
-                  callee()->ice_connection_state(), kDefaultTimeout);
- 
-+  // Part of reporting the stats will occur on the network thread, so flush it
-+  // before checking NumEvents.
-+  SendTask(network_thread(), [] {});
-+
-   // TODO(bugs.webrtc.org/9456): Fix it.
-   const int num_best_ipv4 = webrtc::metrics::NumEvents(
-       "WebRTC.PeerConnection.IPMetrics", webrtc::kBestConnections_IPv4);
++TEST_F(WebRtcSdpTest, RejectDuplicateSsrcInSsrcGroup) {
++  std::string sdp =
++      "v=0\r\n"
++      "o=- 0 3 IN IP4 127.0.0.1\r\n"
++      "s=-\r\n"
++      "t=0 0\r\n"
++      "a=group:BUNDLE 0\r\n"
++      "a=fingerprint:sha-1 "
++      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
++      "a=setup:actpass\r\n"
++      "a=ice-ufrag:ETEn\r\n"
++      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
++      "m=video 9 UDP/TLS/RTP/SAVPF 96 97\r\n"
++      "c=IN IP4 0.0.0.0\r\n"
++      "a=rtcp-mux\r\n"
++      "a=sendonly\r\n"
++      "a=mid:0\r\n"
++      "a=rtpmap:96 VP8/90000\r\n"
++      "a=rtpmap:97 rtx/90000\r\n"
++      "a=fmtp:97 apt=96\r\n"
++      "a=ssrc-group:FID 1234 1234\r\n"
++      "a=ssrc:1234 cname:test\r\n";
++  JsepSessionDescription jdesc(kDummyType);
++  EXPECT_FALSE(SdpDeserialize(sdp, &jdesc));
++}
 -- 
 2.34.1
 
