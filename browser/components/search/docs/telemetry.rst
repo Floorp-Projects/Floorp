@@ -37,6 +37,8 @@ Persisted Search
 
   the search term will persist in the Urlbar, causing it to enter a Persisted Search state.
 
+.. _serp-definitions:
+
 Definitions
 -----------
 
@@ -143,8 +145,24 @@ This telemetry is handled by `SearchSERPTelemetry.sys.mjs and the associated par
 browser.search.content.*
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-  These keyed scalar track counts of SERP page loads. The key format is
-  ``<provider>:[tagged|tagged-follow-on|organic]:[<code>|other|none]``.
+  These keyed scalars track counts of SERP page loads.
+
+  The key format is ``<provider>:[tagged|tagged-follow-on|organic]:[<code>|other|none]``.
+  The values in angled brackets will be replaced by real values based on the URL of the
+  SERP page. The key format is built from:
+
+  - ``<provider>`` The name of the provider. This is not linked to search engine
+    ids, as the search may have been generated organically.
+  - ``[tagged|tagged-follow-on|organic]`` The type of SERP load. See the
+    :ref:`definitions section above <serp-definitions>`.
+  - ``[<code>|other|none]`` Details of the code associated with the SERP load:
+
+    - ``<code>`` The partner code found in the URL. This is only for partners
+      associated with the product.
+    - ``other`` The SERP load had a partner code, but it is not recognised as
+      an associated partner or an organic code.
+    - ``none`` The SERP load had no partner codes, or it was a recognised organic code,
+      e.g. some sites assign their own codes for searches.
 
   They are broken down by the originating SAP where known:
 
