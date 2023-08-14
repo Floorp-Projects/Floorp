@@ -79,7 +79,7 @@ class HistoryInView extends ViewPage {
   disconnectedCallback() {
     super.disconnectedCallback();
     this.placesQuery.close();
-    this.migrationWizardDialog.removeEventListener(
+    this.migrationWizardDialog?.removeEventListener(
       "MigrationWizard:Close",
       this.migrationWizardDialog
     );
