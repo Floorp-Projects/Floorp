@@ -32,7 +32,8 @@ def filter_git_changes(github_path, commit_sha, diff_filter):
     changed_files = [line for line in changed_files if line != ""]
 
     # Fetch the list of excludes and includes used in the vendoring script.
-    exclude_list = vendor_libwebrtc.get_excluded_paths()
+    exclude_file_list = vendor_libwebrtc.get_excluded_files()
+    exclude_dir_list = vendor_libwebrtc.get_excluded_dirs()
     include_list = vendor_libwebrtc.get_included_path_overrides()
 
     # First, search for changes in files that are specifically included.
@@ -43,12 +44,20 @@ def filter_git_changes(github_path, commit_sha, diff_filter):
         path for path in changed_files if re.findall(regex_includes, path)
     ]
 
-    # Convert the exclude list to a regex string.
-    regex_excludes = "|".join(["^.\t{}$".format(i) for i in exclude_list])
-
-    # Filter out the excluded files/paths.
+    # Convert the directory exclude list to a regex string and filter
+    # out the excluded directory paths (note the lack of trailing '$'
+    # in the regex).
+    regex_excludes = "|".join(["^.\t{}".format(i) for i in exclude_dir_list])
     files_not_excluded = [
         path for path in changed_files if not re.findall(regex_excludes, path)
+    ]
+
+    # Convert the file exclude list to a regex string and filter out the
+    # excluded file paths.  The trailing '$' in the regex ensures that
+    # we can exclude, for example, '.vpython' and not '.vpython3'.
+    regex_excludes = "|".join(["^.\t{}$".format(i) for i in exclude_file_list])
+    files_not_excluded = [
+        path for path in files_not_excluded if not re.findall(regex_excludes, path)
     ]
 
     return included_files + files_not_excluded

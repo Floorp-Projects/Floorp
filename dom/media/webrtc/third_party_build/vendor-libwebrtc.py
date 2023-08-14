@@ -22,7 +22,8 @@ THIRDPARTY_USED_IN_FIREFOX = [
 LIBWEBRTC_DIR = os.path.normpath("third_party/libwebrtc")
 
 
-def get_excluded_paths():
+# Files in this list are excluded.
+def get_excluded_files():
     return [
         ".clang-format",
         ".git-blame-ignore-revs",
@@ -39,6 +40,14 @@ def get_excluded_paths():
         "presubmit_test.py",
         "presubmit_test_mocks.py",
         "pylintrc",
+    ]
+
+
+# Directories in this list are excluded.  Directories are handled
+# separately from files so that script 'filter_git_changes.py' can use
+# different regex handling for directory paths.
+def get_excluded_dirs():
+    return [
         # Only the camera code under sdk/android/api/org/webrtc is used, so
         # we remove sdk/android and add back the specific files we want.
         "sdk/android",
@@ -46,7 +55,7 @@ def get_excluded_paths():
 
 
 # Paths in this list are included even if their parent directory is
-# excluded in get_excluded_paths()
+# excluded in get_excluded_dirs()
 def get_included_path_overrides():
     return [
         "sdk/android/src/java/org/webrtc/NativeLibrary.java",
@@ -302,7 +311,7 @@ def unpack(target):
             except NotADirectoryError:
                 pass
 
-        unused_libwebrtc_in_firefox = get_excluded_paths()
+        unused_libwebrtc_in_firefox = get_excluded_files() + get_excluded_dirs()
         forced_used_in_firefox = get_included_path_overrides()
 
         # adjust target_path if GitHub packaging is involved
