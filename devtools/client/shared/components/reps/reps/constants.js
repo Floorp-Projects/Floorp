@@ -11,8 +11,6 @@ define(function (require, exports, module) {
       TINY: Symbol("TINY"),
       SHORT: Symbol("SHORT"),
       LONG: Symbol("LONG"),
-      // Used by Debugger Preview popup
-      HEADER: Symbol("HEADER"),
     },
   };
 });

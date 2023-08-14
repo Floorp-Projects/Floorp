@@ -84,10 +84,6 @@ define(function (require, exports, module) {
       );
     }
 
-    if (mode === MODE.HEADER) {
-      return span(config, title);
-    }
-
     const max = maxLengthMap.get(mode);
     const items = arrayIterator(props, object, max);
     brackets = needSpace(!!items.length);
@@ -152,10 +148,6 @@ define(function (require, exports, module) {
       }
 
       return span({ className: "objectTitle" }, title, length, trailingSpace);
-    }
-
-    if (props.mode === MODE.HEADER) {
-      return span({ className: "objectTitle" }, title, length);
     }
 
     return span({ className: "objectTitle" }, title, length, " ");

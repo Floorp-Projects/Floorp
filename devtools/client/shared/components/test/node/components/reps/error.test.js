@@ -55,17 +55,6 @@ describe("Error - Simple error", () => {
     expect(renderedComponent.text()).toEqual("Error");
   });
 
-  it("renders with expected text for simple error in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("Error");
-  });
-
   it("renders with error type and preview message when in short mode", () => {
     const renderedComponent = shallow(
       ErrorRep.rep({
@@ -140,17 +129,6 @@ describe("Error - Multi line stack error", () => {
 
     expect(renderedComponent.text()).toEqual("Error");
   });
-
-  it("renders expected text for simple multiline error in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("Error");
-  });
 });
 
 describe("Error - Error without stacktrace", () => {
@@ -212,17 +190,6 @@ describe("Error - Eval error", () => {
 
     expect(renderedComponent.text()).toEqual("EvalError");
   });
-
-  it("renders with expected text for an EvalError in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("EvalError");
-  });
 });
 
 describe("Error - Internal error", () => {
@@ -249,17 +216,6 @@ describe("Error - Internal error", () => {
       ErrorRep.rep({
         object: stub,
         mode: MODE.TINY,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("InternalError");
-  });
-
-  it("renders with expected text for an InternalError in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
       })
     );
 
@@ -296,17 +252,6 @@ describe("Error - Range error", () => {
 
     expect(renderedComponent.text()).toEqual("RangeError");
   });
-
-  it("renders with expected text for RangeError in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("RangeError");
-  });
 });
 
 describe("Error - Reference error", () => {
@@ -333,17 +278,6 @@ describe("Error - Reference error", () => {
       ErrorRep.rep({
         object: stub,
         mode: MODE.TINY,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("ReferenceError");
-  });
-
-  it("renders with expected text for ReferenceError in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
       })
     );
 
@@ -380,17 +314,6 @@ describe("Error - Syntax error", () => {
 
     expect(renderedComponent.text()).toEqual("SyntaxError");
   });
-
-  it("renders with expected text for SyntaxError in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("SyntaxError");
-  });
 });
 
 describe("Error - Type error", () => {
@@ -422,17 +345,6 @@ describe("Error - Type error", () => {
 
     expect(renderedComponent.text()).toEqual("TypeError");
   });
-
-  it("renders with expected text for TypeError in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("TypeError");
-  });
 });
 
 describe("Error - URI error", () => {
@@ -459,17 +371,6 @@ describe("Error - URI error", () => {
       ErrorRep.rep({
         object: stub,
         mode: MODE.TINY,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("URIError");
-  });
-
-  it("renders with expected text for URIError in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
       })
     );
 
@@ -507,17 +408,6 @@ describe("Error - DOMException", () => {
 
     expect(renderedComponent.text()).toEqual("DOMException");
   });
-
-  it("renders with expected text for DOMException in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
-      })
-    );
-
-    expect(renderedComponent.text()).toEqual("DOMException");
-  });
 });
 
 describe("Error - base-loader.sys.mjs", () => {
@@ -539,17 +429,6 @@ describe("Error - base-loader.sys.mjs", () => {
       ErrorRep.rep({
         object: stub,
         mode: MODE.TINY,
-      })
-    );
-
-    expect(renderedComponent).toMatchSnapshot();
-  });
-
-  it("renders as expected in HEADER mode", () => {
-    const renderedComponent = shallow(
-      ErrorRep.rep({
-        object: stub,
-        mode: MODE.HEADER,
       })
     );
 
