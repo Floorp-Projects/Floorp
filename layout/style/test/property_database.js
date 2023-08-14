@@ -13674,18 +13674,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.backdrop-filter.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.zoom-transform-hack.enabled")) {
-  gCSSProperties["zoom"] = {
-    domProp: "zoom",
-    inherited: false,
-    type: CSS_TYPE_LEGACY_SHORTHAND,
-    subproperties: ["transform", "transform-origin"],
-    initial_values: ["normal", "1.0", "0", "0%", "100%"],
-    other_values: ["10%", "2", "2.5"],
-    invalid_values: ["0 0", "foo", "10px"],
-  };
-}
-
 if (IsCSSPropertyPrefEnabled("layout.css.math-depth.enabled")) {
   gCSSProperties["math-depth"] = {
     domProp: "mathDepth",
