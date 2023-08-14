@@ -3043,11 +3043,7 @@
 # disabled.
 - name: dom.keyboardevent.init_key_event.enabled_in_addons
   type: bool
-#if defined(RELEASE_OR_BETA)
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # If this is true, keypress events for non-printable keys are dispatched only
