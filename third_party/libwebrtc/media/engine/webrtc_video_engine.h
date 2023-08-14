@@ -11,7 +11,10 @@
 #ifndef MEDIA_ENGINE_WEBRTC_VIDEO_ENGINE_H_
 #define MEDIA_ENGINE_WEBRTC_VIDEO_ENGINE_H_
 
+#include <stddef.h>
+
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <set>
@@ -19,26 +22,54 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/any_invocable.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "api/array_view.h"
 #include "api/call/transport.h"
+#include "api/crypto/crypto_options.h"
+#include "api/crypto/frame_decryptor_interface.h"
+#include "api/crypto/frame_encryptor_interface.h"
+#include "api/field_trials_view.h"
+#include "api/frame_transformer_interface.h"
+#include "api/rtc_error.h"
+#include "api/rtp_headers.h"
+#include "api/rtp_parameters.h"
+#include "api/rtp_sender_interface.h"
+#include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/task_queue_base.h"
+#include "api/transport/bitrate_settings.h"
 #include "api/transport/field_trial_based_config.h"
+#include "api/transport/rtp/rtp_source.h"
+#include "api/video/recordable_encoded_frame.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
+#include "api/video/video_stream_encoder_settings.h"
 #include "api/video_codecs/sdp_video_format.h"
+#include "api/video_codecs/video_encoder_factory.h"
 #include "call/call.h"
 #include "call/flexfec_receive_stream.h"
+#include "call/rtp_config.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
+#include "media/base/codec.h"
+#include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
+#include "media/base/media_config.h"
 #include "media/base/media_engine.h"
+#include "media/base/stream_params.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 class VideoDecoderFactory;
@@ -141,7 +172,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool RemoveRecvStream(uint32_t ssrc) override;
   void ResetUnsignaledRecvStream() override;
   absl::optional<uint32_t> GetUnsignaledSsrc() const override;
-  bool SetLocalSsrc(const StreamParams& sp) override;
   void OnDemuxerCriteriaUpdatePending() override;
   void OnDemuxerCriteriaUpdateComplete() override;
   bool SetSink(uint32_t ssrc,
@@ -190,6 +220,15 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       absl::AnyInvocable<void()> callback) override {
     send_codec_changed_callback_ = std::move(callback);
   }
+
+  void SetSsrcListChangedCallback(
+      absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) override {
+    ssrc_list_changed_callback_ = std::move(callback);
+  }
+
+  // Choose one of the available SSRCs (or default if none) as the current
+  // receiver report SSRC.
+  void ChooseReceiverReportSsrc(const std::set<uint32_t>& choices) override;
 
   // Implemented for VideoMediaChannelTest.
   bool sending() const {
@@ -733,6 +772,9 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   // Callback invoked whenever the send codec changes.
   // TODO(bugs.webrtc.org/13931): Remove again when coupling isn't needed.
   absl::AnyInvocable<void()> send_codec_changed_callback_;
+  // Callback invoked whenever the list of SSRCs changes.
+  absl::AnyInvocable<void(const std::set<uint32_t>&)>
+      ssrc_list_changed_callback_;
 };
 
 }  // namespace cricket

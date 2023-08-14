@@ -12,20 +12,40 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
 #include <functional>
+#include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "absl/algorithm/algorithm.h"
 #include "absl/algorithm/container.h"
 #include "absl/functional/bind_front.h"
 #include "absl/strings/match.h"
+#include "api/audio/audio_frame.h"
 #include "api/audio/audio_frame_processor.h"
 #include "api/audio_codecs/audio_codec_pair_id.h"
+#include "api/audio_codecs/audio_encoder.h"
 #include "api/call/audio_sink.h"
 #include "api/field_trials_view.h"
+#include "api/make_ref_counted.h"
+#include "api/media_types.h"
+#include "api/priority.h"
+#include "api/rtp_headers.h"
+#include "api/rtp_transceiver_direction.h"
 #include "api/task_queue/pending_task_safety_flag.h"
+#include "api/transport/bitrate_settings.h"
+#include "api/units/data_rate.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
+#include "call/audio_receive_stream.h"
+#include "call/packet_receiver.h"
+#include "call/rtp_config.h"
+#include "call/rtp_transport_controller_send_interface.h"
 #include "media/base/audio_source.h"
 #include "media/base/media_constants.h"
 #include "media/base/stream_params.h"
@@ -33,26 +53,25 @@
 #include "media/engine/payload_type_mapper.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "modules/async_audio_processing/async_audio_processing.h"
-#include "modules/audio_device/audio_device_impl.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
-#include "modules/audio_processing/aec_dump/aec_dump_factory.h"
 #include "modules/audio_processing/include/audio_processing.h"
+#include "modules/audio_processing/include/audio_processing_statistics.h"
+#include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
-#include "rtc_base/arraysize.h"
-#include "rtc_base/byte_order.h"
-#include "rtc_base/experiments/field_trial_parser.h"
-#include "rtc_base/experiments/field_trial_units.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/dscp.h"
 #include "rtc_base/experiments/struct_parameters_parser.h"
-#include "rtc_base/helpers.h"
 #include "rtc_base/ignore_wundef.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/race_checker.h"
+#include "rtc_base/string_encode.h"
 #include "rtc_base/strings/audio_format_to_string.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/strings/string_format.h"
-#include "rtc_base/third_party/base64/base64.h"
+#include "rtc_base/thread_annotations.h"
+#include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
 
@@ -1992,14 +2011,26 @@ absl::optional<uint32_t> WebRtcVoiceMediaChannel::GetUnsignaledSsrc() const {
   return unsignaled_recv_ssrcs_.back();
 }
 
-bool WebRtcVoiceMediaChannel::SetLocalSsrc(const StreamParams& sp) {
-  RTC_DCHECK(role() == MediaChannel::Role::kReceive);
-  uint32_t ssrc = sp.first_ssrc();
+void WebRtcVoiceMediaChannel::SetSsrcListChangedCallback(
+    absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) {
+  ssrc_list_changed_callback_ = std::move(callback);
+}
+
+void WebRtcVoiceMediaChannel::ChooseReceiverReportSsrc(
+    const std::set<uint32_t>& choices) {
+  // Don't change SSRC if set is empty. Note that this differs from
+  // the behavior of video.
+  if (choices.empty()) {
+    return;
+  }
+  if (choices.find(receiver_reports_ssrc_) != choices.end()) {
+    return;
+  }
+  uint32_t ssrc = *(choices.begin());
   receiver_reports_ssrc_ = ssrc;
   for (auto& kv : recv_streams_) {
     call_->OnLocalSsrcUpdated(kv.second->stream(), ssrc);
   }
-  return true;
 }
 
 // Not implemented.

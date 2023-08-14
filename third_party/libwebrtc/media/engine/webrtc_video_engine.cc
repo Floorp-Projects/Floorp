@@ -14,33 +14,52 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <initializer_list>
 #include <set>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/container/inlined_vector.h"
 #include "absl/functional/bind_front.h"
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
+#include "api/make_ref_counted.h"
 #include "api/media_stream_interface.h"
-#include "api/video/video_codec_constants.h"
+#include "api/media_types.h"
+#include "api/priority.h"
+#include "api/rtp_transceiver_direction.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
+#include "api/video/resolution.h"
 #include "api/video/video_codec_type.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/sdp_video_format.h"
+#include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "call/call.h"
+#include "call/packet_receiver.h"
+#include "call/receive_stream.h"
+#include "call/rtp_transport_controller_send_interface.h"
+#include "common_video/frame_counts.h"
+#include "common_video/include/quality_limitation_reason.h"
+#include "media/base/media_constants.h"
+#include "media/base/rid_description.h"
+#include "media/base/rtp_utils.h"
 #include "media/engine/webrtc_media_engine.h"
-#include "media/engine/webrtc_voice_engine.h"
+#include "modules/rtp_rtcp/include/report_block_data.h"
+#include "modules/rtp_rtcp/include/rtcp_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
-#include "modules/video_coding/codecs/vp9/svc_config.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
-#include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/dscp.h"
 #include "rtc_base/experiments/field_trial_parser.h"
-#include "rtc_base/experiments/field_trial_units.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/numerics/safe_conversions.h"
+#include "rtc_base/socket.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
@@ -1284,6 +1303,22 @@ void WebRtcVideoChannel::SetReceiverReportSsrc(uint32_t ssrc) {
     receive_stream->SetLocalSsrc(ssrc);
 }
 
+void WebRtcVideoChannel::ChooseReceiverReportSsrc(
+    const std::set<uint32_t>& choices) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  // If we can continue using the current receiver report, do so.
+  if (choices.find(rtcp_receiver_report_ssrc_) != choices.end()) {
+    return;
+  }
+  // Go back to the default if list has been emptied.
+  if (choices.empty()) {
+    SetReceiverReportSsrc(kDefaultRtcpReceiverReportSsrc);
+    return;
+  }
+  // Any number is as good as any other.
+  SetReceiverReportSsrc(*choices.begin());
+}
+
 bool WebRtcVideoChannel::GetSendCodec(VideoCodec* codec) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   if (!send_codec()) {
@@ -1417,8 +1452,10 @@ bool WebRtcVideoChannel::AddSendStream(const StreamParams& sp) {
   // If legacy kBoth mode, tell my receiver part about its SSRC.
   // In kSend mode, this is the responsibility of the caller.
   if (role() == MediaChannel::Role::kBoth) {
-    if (rtcp_receiver_report_ssrc_ == kDefaultRtcpReceiverReportSsrc) {
-      SetReceiverReportSsrc(ssrc);
+    ChooseReceiverReportSsrc(send_ssrcs_);
+  } else {
+    if (ssrc_list_changed_callback_) {
+      ssrc_list_changed_callback_(send_ssrcs_);
     }
   }
 
@@ -1446,9 +1483,12 @@ bool WebRtcVideoChannel::RemoveSendStream(uint32_t ssrc) {
   send_streams_.erase(it);
 
   // Switch receiver report SSRCs, the one in use is no longer valid.
-  if (rtcp_receiver_report_ssrc_ == ssrc) {
-    SetReceiverReportSsrc(send_streams_.empty() ? kDefaultRtcpReceiverReportSsrc
-                                                : send_streams_.begin()->first);
+  if (role() == MediaChannel::Role::kBoth) {
+    ChooseReceiverReportSsrc(send_ssrcs_);
+  } else {
+    if (ssrc_list_changed_callback_) {
+      ssrc_list_changed_callback_(send_ssrcs_);
+    }
   }
 
   delete removed_stream;
@@ -1615,15 +1655,6 @@ void WebRtcVideoChannel::ResetUnsignaledRecvStream() {
       ++it;
     }
   }
-}
-
-bool WebRtcVideoChannel::SetLocalSsrc(const StreamParams& sp) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  RTC_DCHECK(role() == MediaChannel::Role::kReceive);
-  if (rtcp_receiver_report_ssrc_ == kDefaultRtcpReceiverReportSsrc) {
-    SetReceiverReportSsrc(sp.first_ssrc());
-  }
-  return true;
 }
 
 absl::optional<uint32_t> WebRtcVideoChannel::GetUnsignaledSsrc() const {

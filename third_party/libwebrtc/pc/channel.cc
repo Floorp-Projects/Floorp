@@ -712,18 +712,6 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
     if (media_send_channel()->AddSendStream(new_stream)) {
       RTC_LOG(LS_INFO) << "Add send stream ssrc: " << new_stream.ssrcs[0]
                        << " into " << ToString();
-      // Must also tell the corresponding receive stream to listen for
-      // RRs coming in on the new stream's SSRC
-      if (media_send_channel_impl_) {
-        if (all_streams.size() == 1) {
-          if (!media_receive_channel()->SetLocalSsrc(new_stream)) {
-            error_desc = StringFormat(
-                "Failed to set local ssrc: %u into m-section with mid='%s'",
-                new_stream.first_ssrc(), mid().c_str());
-            ret = false;
-          }
-        }
-      }
     } else {
       error_desc = StringFormat(
           "Failed to add send stream ssrc: %u into m-section with mid='%s'",

@@ -11,27 +11,60 @@
 #ifndef MEDIA_ENGINE_WEBRTC_VOICE_ENGINE_H_
 #define MEDIA_ENGINE_WEBRTC_VOICE_ENGINE_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
+#include "absl/functional/any_invocable.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "api/audio/audio_frame_processor.h"
+#include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/audio_codec_pair_id.h"
+#include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/audio_codecs/audio_encoder_factory.h"
+#include "api/audio_codecs/audio_format.h"
+#include "api/audio_options.h"
+#include "api/call/audio_sink.h"
+#include "api/call/transport.h"
+#include "api/crypto/crypto_options.h"
+#include "api/crypto/frame_decryptor_interface.h"
+#include "api/crypto/frame_encryptor_interface.h"
 #include "api/field_trials_view.h"
+#include "api/frame_transformer_interface.h"
+#include "api/rtc_error.h"
+#include "api/rtp_parameters.h"
+#include "api/rtp_sender_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/rtp/rtp_source.h"
+#include "call/audio_send_stream.h"
 #include "call/audio_state.h"
 #include "call/call.h"
+#include "media/base/codec.h"
+#include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
+#include "media/base/media_config.h"
 #include "media/base/media_engine.h"
 #include "media/base/rtp_utils.h"
+#include "media/base/stream_params.h"
 #include "modules/async_audio_processing/async_audio_processing.h"
+#include "modules/audio_device/include/audio_device.h"
+#include "modules/audio_processing/include/audio_processing.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/buffer.h"
+#include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_route.h"
+#include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/task_queue.h"
 
 namespace webrtc {
@@ -183,7 +216,9 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   void ResetUnsignaledRecvStream() override;
   absl::optional<uint32_t> GetUnsignaledSsrc() const override;
 
-  bool SetLocalSsrc(const StreamParams& sp) override;
+  void ChooseReceiverReportSsrc(const std::set<uint32_t>& choices) override;
+  void SetSsrcListChangedCallback(
+      absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) override;
 
   void OnDemuxerCriteriaUpdatePending() override;
   void OnDemuxerCriteriaUpdateComplete() override;
@@ -334,11 +369,13 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   uint32_t receiver_reports_ssrc_ = 0xFA17FA17u;
 
   class WebRtcAudioSendStream;
+
   std::map<uint32_t, WebRtcAudioSendStream*> send_streams_;
   std::vector<webrtc::RtpExtension> send_rtp_extensions_;
   std::string mid_;
 
   class WebRtcAudioReceiveStream;
+
   std::map<uint32_t, WebRtcAudioReceiveStream*> recv_streams_;
   std::vector<webrtc::RtpExtension> recv_rtp_extensions_;
   webrtc::RtpHeaderExtensionMap recv_rtp_extension_map_;
@@ -360,6 +397,10 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
 
   void FillSendCodecStats(VoiceMediaSendInfo* voice_media_info);
   void FillReceiveCodecStats(VoiceMediaReceiveInfo* voice_media_info);
+
+  // Callback invoked whenever the list of SSRCs changes.
+  absl::AnyInvocable<void(const std::set<uint32_t>&)>
+      ssrc_list_changed_callback_;
 };
 
 }  // namespace cricket
