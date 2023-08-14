@@ -11,6 +11,7 @@ class ShoppingMessageBar extends MozLitElement {
     ["stale", this.getStaleWarningTemplate()],
     ["generic-error", this.getGenericErrorTemplate()],
     ["not-enough-reviews", this.getNotEnoughReviewsTemplate()],
+    ["product-not-available", this.getProductNotAvailableTemplate()],
   ]);
 
   static properties = {
@@ -59,6 +60,24 @@ class ShoppingMessageBar extends MozLitElement {
         <span
           data-l10n-id="shopping-message-bar-warning-not-enough-reviews-message"
         ></span>
+      </article>
+    </message-bar>`;
+  }
+
+  getProductNotAvailableTemplate() {
+    return html`<message-bar type="warning">
+      <article id="message-bar-container" aria-labelledby="header">
+        <strong
+          id="header"
+          data-l10n-id="shopping-message-bar-warning-product-not-available-title"
+        ></strong>
+        <span
+          data-l10n-id="shopping-message-bar-warning-product-not-available-message"
+        ></span>
+        <button
+          class="small-button"
+          data-l10n-id="shopping-message-bar-warning-product-not-available-button"
+        ></button>
       </article>
     </message-bar>`;
   }

@@ -98,6 +98,12 @@ export class ShoppingContainer extends MozLitElement {
       ></shopping-message-bar>`;
     }
 
+    if (this.data.deleted_product) {
+      return html`<shopping-message-bar
+        type="product-not-available"
+      ></shopping-message-bar>`;
+    }
+
     if (this.data.needs_analysis) {
       if (!this.data.product_id) {
         // Product is not yet registered to our db and thus we cannot show any data.
