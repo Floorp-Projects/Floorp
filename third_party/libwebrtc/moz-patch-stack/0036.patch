@@ -77,7 +77,7 @@ index ed92a1b296..d5cf5c031c 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index d5289b85d7..8356dfe0bf 100644
+index d847605cdd..fc5ef15b32 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -32,7 +32,7 @@ if (is_android) {
@@ -89,7 +89,7 @@ index d5289b85d7..8356dfe0bf 100644
    # This target should (transitively) cause everything to be built; if you run
    # 'ninja default' and then 'ninja all', the second build should do no work.
    group("default") {
-@@ -152,6 +152,10 @@ config("common_inherited_config") {
+@@ -153,6 +153,10 @@ config("common_inherited_config") {
      defines += [ "WEBRTC_ENABLE_OBJC_SYMBOL_EXPORT" ]
    }
  
@@ -100,7 +100,7 @@ index d5289b85d7..8356dfe0bf 100644
    if (!rtc_builtin_ssl_root_certificates) {
      defines += [ "WEBRTC_EXCLUDE_BUILT_IN_SSL_ROOT_CERTS" ]
    }
-@@ -466,9 +470,11 @@ config("common_config") {
+@@ -467,9 +471,11 @@ config("common_config") {
    }
  }
  
@@ -112,7 +112,7 @@ index d5289b85d7..8356dfe0bf 100644
  
  if (!build_with_chromium) {
    # Target to build all the WebRTC production code.
-@@ -518,6 +524,33 @@ if (!build_with_chromium) {
+@@ -519,6 +525,33 @@ if (!build_with_chromium) {
        "sdk",
        "video",
      ]
@@ -146,7 +146,7 @@ index d5289b85d7..8356dfe0bf 100644
  
      if (rtc_include_builtin_audio_codecs) {
        deps += [
-@@ -530,6 +563,16 @@ if (!build_with_chromium) {
+@@ -531,6 +564,16 @@ if (!build_with_chromium) {
        deps += [
          "api/video:video_frame",
          "api/video:video_rtp_headers",

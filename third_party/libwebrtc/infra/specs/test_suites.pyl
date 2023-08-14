@@ -23,6 +23,9 @@
           '../../third_party/android_sdk/public/platform-tools/adb',
         ]
       },
+      'video_codec_perf_tests': {
+        'mixins': ['perf-video-codec-perf-tests'],
+      },
       'webrtc_perf_tests': {
         'mixins': ['perf-webrtc-perf-tests'],
       },
@@ -72,6 +75,9 @@
       'low_bandwidth_audio_perf_test': {
         'mixins': ['perf-low-bandwidth-audio-perf-test'],
         'args': ['.', '--remove'],
+      },
+      'video_codec_perf_tests': {
+        'mixins': ['perf-video-codec-perf-tests'],
       },
       'webrtc_perf_tests': {
         'mixins': ['perf-webrtc-perf-tests'],
@@ -242,6 +248,11 @@
         'mixins': ['baremetal-try-pool'],
       }
     },
+    'video_codec_perf_tests_tryserver': {
+      'video_codec_perf_tests': {
+        'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
+      }
+    },
     'webrtc_perf_tests': {
       'webrtc_perf_tests': {
         'mixins': ['perf-webrtc-perf-tests'],
@@ -275,6 +286,7 @@
       'desktop_tests',
       'linux_desktop_specific_tests',
       'video_capture_tests_tryserver',
+      'video_codec_perf_tests_tryserver',
       'webrtc_perf_tests_tryserver',
     ],
     'linux_desktop_tests_with_video_capture': [

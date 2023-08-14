@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/876b3f5821cd5c305
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 9492870751..00444cdbfa 100644
+index fd5147967a..d492d83400 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -573,7 +573,7 @@ if (!build_with_chromium) {
+@@ -574,7 +574,7 @@ if (!build_with_chromium) {
        deps += [
          "api/video_codecs:video_codecs_api",
          "api/video_codecs:rtc_software_fallback_wrappers",
