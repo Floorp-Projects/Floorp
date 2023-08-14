@@ -18573,19 +18573,48 @@ bool Document::HasThirdPartyChannel() {
   return false;
 }
 
+bool Document::IsContentInaccessibleAboutBlank() const {
+  if (!mDocumentURI || !NS_IsAboutBlank(mDocumentURI)) {
+    return false;
+  }
+  nsIPrincipal* prin = NodePrincipal();
+  if (!prin->GetIsNullPrincipal()) {
+    return false;
+  }
+  nsCOMPtr<nsIPrincipal> prec = prin->GetPrecursorPrincipal();
+  if (prec) {
+    return false;
+  }
+  // FIXME(emilio): This doesn't account for internal about:blank documents we
+  // do on cross-process navigations in iframes. That makes our per-document
+  // telemetry probes not really reliable but doesn't affect the correctness of
+  // our page probes, so it's not too terrible.
+  BrowsingContext* bc = GetBrowsingContext();
+  return bc && bc->IsTop() && bc->Group()->Toplevels().Length() == 1;
+}
+
 bool Document::ShouldIncludeInTelemetry(bool aAllowExtensionURIs) {
-  if (!(IsContentDocument() || IsResourceDoc())) {
+  if (!IsContentDocument() && !IsResourceDoc()) {
     return false;
   }
 
-  if (!aAllowExtensionURIs &&
-      NodePrincipal()->GetIsAddonOrExpandedAddonPrincipal()) {
+  if (IsContentInaccessibleAboutBlank()) {
     return false;
   }
 
-  return !NodePrincipal()->SchemeIs("about") &&
-         !NodePrincipal()->SchemeIs("chrome") &&
-         !NodePrincipal()->SchemeIs("resource");
+  nsIPrincipal* prin = NodePrincipal();
+  if (!aAllowExtensionURIs && prin->GetIsAddonOrExpandedAddonPrincipal()) {
+    return false;
+  }
+
+  // TODO(emilio): Should this use GetIsContentPrincipal() +
+  // GetPrecursorPrincipal() instead (accounting for add-ons separately)?
+  if (prin->IsSystemPrincipal() || prin->SchemeIs("about") ||
+      prin->SchemeIs("chrome") || prin->SchemeIs("resource")) {
+    return false;
+  }
+
+  return true;
 }
 
 void Document::GetConnectedShadowRoots(
