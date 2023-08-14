@@ -233,6 +233,19 @@ class InactivePropertyHelper {
           "inactive-css-not-grid-or-flex-container-or-multicol-container-fix",
         msgId: "inactive-css-not-grid-or-flex-container-or-multicol-container",
       },
+      // Multi-column related properties used on non-multi-column container.
+      {
+        invalidProperties: [
+          "column-fill",
+          "column-rule",
+          "column-rule-color",
+          "column-rule-style",
+          "column-rule-width",
+        ],
+        when: () => !this.multiColContainer,
+        fixId: "inactive-css-not-multicol-container-fix",
+        msgId: "inactive-css-not-multicol-container",
+      },
       // Inline properties used on non-inline-level elements.
       {
         invalidProperties: ["vertical-align"],
