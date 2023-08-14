@@ -126,6 +126,10 @@ class RtpHelper : public Base {
   virtual absl::optional<uint32_t> GetUnsignaledSsrc() const {
     return absl::nullopt;
   }
+  void ChooseReceiverReportSsrc(const std::set<uint32_t>& choices) override {}
+  void SetSsrcListChangedCallback(
+      absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) override {}
+
   virtual bool SetLocalSsrc(const StreamParams& sp) { return true; }
   virtual void OnDemuxerCriteriaUpdatePending() {}
   virtual void OnDemuxerCriteriaUpdateComplete() {}
@@ -519,6 +523,9 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   }
   void SetSendCodecChangedCallback(
       absl::AnyInvocable<void()> callback) override {}
+  void SetSsrcListChangedCallback(
+      absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) override {}
+
   bool SendCodecHasLntf() const override { return false; }
   bool SendCodecHasNack() const override { return false; }
   absl::optional<int> SendCodecRtxTime() const override {

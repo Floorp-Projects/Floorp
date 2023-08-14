@@ -13,6 +13,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -263,6 +264,9 @@ class MediaSendChannelInterface
       webrtc::VideoEncoderFactory::EncoderSelectorInterface* encoder_selector) {
   }
   virtual webrtc::RtpParameters GetRtpSendParameters(uint32_t ssrc) const = 0;
+  // Called whenever the list of sending SSRCs changes.
+  virtual void SetSsrcListChangedCallback(
+      absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) = 0;
 };
 
 class MediaReceiveChannelInterface
@@ -288,8 +292,7 @@ class MediaReceiveChannelInterface
   // Gets the current unsignaled receive stream's SSRC, if there is one.
   virtual absl::optional<uint32_t> GetUnsignaledSsrc() const = 0;
   // Sets the local SSRC for listening to incoming RTCP reports.
-  virtual bool SetLocalSsrc(const StreamParams& sp) = 0;
-
+  virtual void ChooseReceiverReportSsrc(const std::set<uint32_t>& choices) = 0;
   // This is currently a workaround because of the demuxer state being managed
   // across two separate threads. Once the state is consistently managed on
   // the same thread (network), this workaround can be removed.
