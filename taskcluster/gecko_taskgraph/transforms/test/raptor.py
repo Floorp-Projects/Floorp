@@ -21,7 +21,9 @@ raptor_description_schema = Schema(
             Optional("activity"): optionally_keyed_by("app", str),
             Optional("apps"): optionally_keyed_by("test-platform", "subtest", [str]),
             Optional("binary-path"): optionally_keyed_by("app", str),
-            Optional("run-visual-metrics"): optionally_keyed_by("app", bool),
+            Optional("run-visual-metrics"): optionally_keyed_by(
+                "app", "test-platform", bool
+            ),
             Optional("subtests"): optionally_keyed_by("app", "test-platform", list),
             Optional("test"): str,
             Optional("test-url-param"): optionally_keyed_by(

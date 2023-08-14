@@ -212,7 +212,11 @@ browsertime-tp6-essential:
         raptor:
             apps: [firefox, chrome, chromium, custom-car]
             test: tp6
-            run-visual-metrics: true
+            run-visual-metrics:
+                by-test-platform:
+                    macosx1300.*shippable.*: false
+                    # Bug 1845014 Resolve osx 1300 vismet permafails
+                    default: true
             subtests:
                 - amazon
                 - [bing-search, bing]
@@ -293,50 +297,60 @@ browsertime-benchmark:
     raptor:
         apps: [firefox, chrome, chromium, safari, custom-car]
         subtests:
-            by-app:
-                firefox:
-                    - ares6
-                    - [assorted-dom, dom]
-                    - [jetstream2, js2]
-                    - [matrix-react-bench, mrb]
-                    - [motionmark-animometer, mm-a]
-                    - [motionmark-htmlsuite, mm-h]
-                    - [speedometer, sp]
-                    - [speedometer3, sp3]
-                    - [stylebench, sb]
-                    - [sunspider, ss]
-                    - [twitch-animation, tw-a]
-                    - [unity-webgl, ugl]
-                    - [webaudio, wa]
-                safari:
-                    - ares6
-                    - [assorted-dom, dom]
-                    - [jetstream2, js2]
-                    # - [matrix-react-bench, mrb] (Bug 1802922)
-                    - [motionmark-animometer, mm-a]
-                    - [motionmark-htmlsuite, mm-h]
-                    - [speedometer, sp]
-                    - [speedometer3, sp3]
-                    - [stylebench, sb]
-                    - [sunspider, ss]
-                    - [unity-webgl, ugl]
-                    # - [webaudio, wa] (Bug 1802922)
-                custom-car:
-                    - [speedometer, sp]
-                    - [speedometer3, sp3]
+            by-test-platform:
+                macosx1300.*shippable.*:
+                    by-app:
+                        custom-car: []
+                        chromium: []
+                        safari: []  # Bug 1848400 safari perma-fails on osx1300
+                        default:
+                            - [speedometer, sp]
+                            - [speedometer3, sp3]
                 default:
-                    - ares6
-                    - [assorted-dom, dom]
-                    - [jetstream2, js2]
-                    - [matrix-react-bench, mrb]
-                    - [motionmark-animometer, mm-a]
-                    - [motionmark-htmlsuite, mm-h]
-                    - [speedometer, sp]
-                    - [speedometer3, sp3]
-                    - [stylebench, sb]
-                    - [sunspider, ss]
-                    - [unity-webgl, ugl]
-                    - [webaudio, wa]
+                    by-app:
+                        firefox:
+                            - ares6
+                            - [assorted-dom, dom]
+                            - [jetstream2, js2]
+                            - [matrix-react-bench, mrb]
+                            - [motionmark-animometer, mm-a]
+                            - [motionmark-htmlsuite, mm-h]
+                            - [speedometer, sp]
+                            - [speedometer3, sp3]
+                            - [stylebench, sb]
+                            - [sunspider, ss]
+                            - [twitch-animation, tw-a]
+                            - [unity-webgl, ugl]
+                            - [webaudio, wa]
+                        safari:
+                            - ares6
+                            - [assorted-dom, dom]
+                            - [jetstream2, js2]
+                            # - [matrix-react-bench, mrb] (Bug 1802922)
+                            - [motionmark-animometer, mm-a]
+                            - [motionmark-htmlsuite, mm-h]
+                            - [speedometer, sp]
+                            - [speedometer3, sp3]
+                            - [stylebench, sb]
+                            - [sunspider, ss]
+                            - [unity-webgl, ugl]
+                            # - [webaudio, wa] (Bug 1802922)
+                        custom-car:
+                            - [speedometer, sp]
+                            - [speedometer3, sp3]
+                        default:
+                            - ares6
+                            - [assorted-dom, dom]
+                            - [jetstream2, js2]
+                            - [matrix-react-bench, mrb]
+                            - [motionmark-animometer, mm-a]
+                            - [motionmark-htmlsuite, mm-h]
+                            - [speedometer, sp]
+                            - [speedometer3, sp3]
+                            - [stylebench, sb]
+                            - [sunspider, ss]
+                            - [unity-webgl, ugl]
+                            - [webaudio, wa]
     treeherder-symbol: Btime()
     tier:
         by-app:
@@ -403,6 +417,8 @@ browsertime-benchmark:
             matrix-react-bench: 1500
             motionmark-htmlsuite: 1500
             unity-webgl: 1500
+            speedometer3: 2100
+            speedometer: 2100
             default: 900
     mozharness:
         extra-options:
