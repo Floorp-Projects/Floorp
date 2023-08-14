@@ -222,6 +222,14 @@ export class BrowserTestUtilsChild extends JSWindowActorChild {
           dump("\nEt tu, Brute?\n");
           ChromeUtils.privateNoteIntentionalCrash();
 
+          try {
+            // Annotate test failure to allow callers to separate intentional
+            // crashes from unintentional crashes.
+            Services.appinfo.annotateCrashReport("TestKey", "CrashFrame");
+          } catch (e) {
+            dump(`Failed to annotate crash in CrashFrame: ${e}\n`);
+          }
+
           switch (aMessage.data.crashType) {
             case "CRASH_OOM": {
               let debug = Cc["@mozilla.org/xpcom/debug;1"].getService(
