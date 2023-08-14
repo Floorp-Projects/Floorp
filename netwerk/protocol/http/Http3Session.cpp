@@ -2286,8 +2286,10 @@ void Http3Session::CloseConnectionTelemetry(CloseError& aError, bool aClosing) {
       break;
     case CloseError::Tag::EchRetry:
       key = "transport_crypto_alert"_ns;
-      value = 121;
+      value = 100;
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(value <= 100);
 
   key.Append(aClosing ? "_closing"_ns : "_closed"_ns);
 
