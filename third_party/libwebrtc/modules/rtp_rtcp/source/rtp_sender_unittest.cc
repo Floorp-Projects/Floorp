@@ -65,10 +65,8 @@ const uint32_t kSsrc = 725242;
 const uint32_t kRtxSsrc = 12345;
 const uint32_t kFlexFecSsrc = 45678;
 const uint64_t kStartTime = 123456789;
-const size_t kMaxPaddingSize = 224u;
 const uint8_t kPayloadData[] = {47, 11, 32, 93, 89};
 const int64_t kDefaultExpectedRetransmissionTimeMs = 125;
-const size_t kMaxPaddingLength = 224;      // Value taken from rtp_sender.cc.
 const uint32_t kTimestampTicksPerMs = 90;  // 90kHz clock.
 constexpr absl::string_view kMid = "mid";
 constexpr absl::string_view kRid = "f";
@@ -1115,7 +1113,7 @@ TEST_F(RtpSenderTest, GeneratePaddingResendsOldPacketsWithRtx) {
     padding_bytes_generated += packet->padding_size();
   }
 
-  EXPECT_EQ(padding_bytes_generated, kMaxPaddingSize);
+  EXPECT_EQ(padding_bytes_generated, kMaxPaddingLength);
 }
 
 TEST_F(RtpSenderTest, LimitsPayloadPaddingSize) {
@@ -1187,7 +1185,7 @@ TEST_F(RtpSenderTest, GeneratePaddingCreatesPurePaddingWithoutRtx) {
   // maximum size.
   const size_t kPaddingBytesRequested = kPayloadPacketSize + kRtxHeaderSize;
   const size_t kExpectedNumPaddingPackets =
-      (kPaddingBytesRequested + kMaxPaddingSize - 1) / kMaxPaddingSize;
+      (kPaddingBytesRequested + kMaxPaddingLength - 1) / kMaxPaddingLength;
   size_t padding_bytes_generated = 0;
   std::vector<std::unique_ptr<RtpPacketToSend>> padding_packets =
       GeneratePadding(kPaddingBytesRequested);
@@ -1204,7 +1202,7 @@ TEST_F(RtpSenderTest, GeneratePaddingCreatesPurePaddingWithoutRtx) {
   }
 
   EXPECT_EQ(padding_bytes_generated,
-            kExpectedNumPaddingPackets * kMaxPaddingSize);
+            kExpectedNumPaddingPackets * kMaxPaddingLength);
 }
 
 TEST_F(RtpSenderTest, SupportsPadding) {
