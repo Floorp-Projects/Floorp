@@ -67,6 +67,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
       case "ContentReady":
         this.updateContent();
         break;
+      case "PolledRequestMade":
+        this.updateContent({ isPolledRequest: true });
+        break;
     }
   }
 
@@ -105,7 +108,10 @@ export class ShoppingSidebarChild extends RemotePageChild {
    *        is current. Defaults to false.
    *
    */
-  async updateContent({ haveUpdatedURI = false } = {}) {
+  async updateContent({
+    haveUpdatedURI = false,
+    isPolledRequest = false,
+  } = {}) {
     // updateContent is an async function, and when we're off making requests or doing
     // other things asynchronously, the actor can be destroyed, the user
     // might navigate to a new page, the user might disable the feature ... -
@@ -126,11 +132,14 @@ export class ShoppingSidebarChild extends RemotePageChild {
     // state has changed. In both cases, we want to clear out content
     // immediately, without waiting for potentially async operations like
     // obtaining product information.
-    this.sendToContent("Update", {
-      showOnboarding: !this.canFetchAndShowData,
-      data: null,
-      recommendationData: null,
-    });
+    // Do not clear data however if an analysis was requested via a call-to-action.
+    if (!isPolledRequest) {
+      this.sendToContent("Update", {
+        showOnboarding: !this.canFetchAndShowData,
+        data: null,
+        recommendationData: null,
+      });
+    }
     if (this.canFetchAndShowData) {
       if (!this.#productURI) {
         // If we already have a URI and it's just null, bail immediately.
@@ -149,10 +158,19 @@ export class ShoppingSidebarChild extends RemotePageChild {
 
       let uri = this.#productURI;
       this.#product = new ShoppingProduct(uri);
-      let data = await this.#product.requestAnalysis().catch(err => {
+      let data;
+      let isPolledRequestDone;
+      try {
+        if (!isPolledRequest) {
+          data = await this.#product.requestAnalysis();
+        } else {
+          data = await this.#product.pollForAnalysisCompleted();
+          isPolledRequestDone = true;
+        }
+      } catch (err) {
         console.error("Failed to fetch product analysis data", err);
-        return { error: err };
-      });
+        data = { error: err };
+      }
       // Check if we got nuked from orbit, or the product URI or opt in changed while we waited.
       if (!canContinue(uri)) {
         return;
@@ -161,6 +179,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
         showOnboarding: false,
         data,
         productUrl: this.#productURI.spec,
+        isPolledRequestDone,
       });
 
       if (!this.canFetchAndShowAd || data.error) {
@@ -181,6 +200,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
           data,
           productUrl: this.#productURI.spec,
           recommendationData,
+          isPolledRequestDone,
         });
       });
     }

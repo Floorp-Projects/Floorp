@@ -15,6 +15,21 @@ class UnanalyzedProductCard extends MozLitElement {
     productURL: { type: String, reflect: true },
   };
 
+  static get queries() {
+    return {
+      analysisLinkEl: "#unanalyzed-product-analysis-link",
+    };
+  }
+
+  onClickAnalysisLink() {
+    this.dispatchEvent(
+      new CustomEvent("NewAnalysisRequested", {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   // TODO: add link for product analysis once finalized
   render() {
     return html`
@@ -34,6 +49,7 @@ class UnanalyzedProductCard extends MozLitElement {
             data-l10n-id="shopping-unanalyzed-product-analyze-link"
             target="_blank"
             href="https://staging.fakespot.com/analyze?url=${this.productURL}"
+            @click=${this.onClickAnalysisLink}
           ></a>
         </div>
       </shopping-card>
