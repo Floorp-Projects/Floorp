@@ -11,9 +11,14 @@
 
 namespace mozilla::dom::fs {
 
+namespace data {
+class FileSystemFileManager;
+}  // namespace data
+
 struct SchemaVersion002 {
   static Result<DatabaseVersion, QMResult> InitializeConnection(
-      ResultConnection& aConn, const Origin& aOrigin);
+      ResultConnection& aConn, data::FileSystemFileManager& aFileManager,
+      const Origin& aOrigin);
 
   static constexpr DatabaseVersion sVersion = 2;
 };
