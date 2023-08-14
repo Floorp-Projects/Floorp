@@ -78,5 +78,5 @@ default_args = {
       "//third_party/llvm-build/Release+Asserts/bin/llvm-readelf"
   fuchsia_target_api_level = 9
 
-  use_cxx17 = false
+  use_cxx17 = true
 }
