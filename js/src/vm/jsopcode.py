@@ -301,7 +301,7 @@ def get_opcodes(dir):
             if opcode.op_snake != expected_snake:
                 raise ValueError(
                     "Unexpected snake-case name for {}: expected {!r}, got {!r}".format(
-                        opcode.op_camel, expected_snake, opcode.op_snake
+                        opcode.op, expected_snake, opcode.op_snake
                     )
                 )
 
