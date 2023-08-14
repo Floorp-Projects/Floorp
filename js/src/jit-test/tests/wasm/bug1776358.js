@@ -14,7 +14,7 @@ let func = wasmEvalText(`(module
           )
         ))
         ;; Division to trigger a trap.
-        (i32.div_s (get_local 0) (get_local 0))
+        (i32.div_s (local.get 0) (local.get 0))
     )
     (export "" (func 1))
 )`).exports[""];

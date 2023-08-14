@@ -42,7 +42,7 @@ function validateOneArg(type, value) {
         `(module
            (type $f-${type} (func (param ${type}) (result ${type})))
            (func $id-${type} (param ${type}) (result ${type})
-             (get_local 0))
+             (local.get 0))
            (func $t (result ${type})
              (return_call_indirect (type $f-${type}) (${type}.const ${value})
                                    (i32.const 0)))
@@ -57,7 +57,7 @@ function validateTwoArgs(t0, v0, t1, v1) {
         `(module
            (type $f (func (param ${t0} ${t1}) (result ${t1})))
            (func $second-${t0}-${t1} (param ${t0} ${t1}) (result ${t1})
-             (get_local 1))
+             (local.get 1))
            (func $t (result ${t1})
              (return_call_indirect (type $f)
                                    (${t0}.const ${v0}) (${t1}.const ${v1})
@@ -74,11 +74,11 @@ wasmValidateText(
     `(module
        (type $f (func (param i64) (result i64)))
        (func $id-i64 (param i64) (result i64)
-         (get_local 0))
+         (local.get 0))
        (func $dispatch1 (param i32 i64) (result i64)
-         (return_call_indirect (type $f) (get_local 1) (get_local 0)))
+         (return_call_indirect (type $f) (local.get 1) (local.get 0)))
        (func $dispatch2 (param i32) (result i64)
-         (return_call_indirect (type $f) (i64.const 42) (get_local 0)))
+         (return_call_indirect (type $f) (i64.const 42) (local.get 0)))
        (func $t1 (result i64)
          (return_call $dispatch1 (i32.const 0) (i64.const 1)))
        (func $t2 (result i64)
@@ -90,15 +90,15 @@ wasmValidateText(
        (type $i64-i64 (func (param i64 i64) (result i64)))
        (func $fac (type $i64-i64)
          (return_call_indirect (type $i64-i64)
-           (get_local 0) (i64.const 1) (i32.const 0)))
+           (local.get 0) (i64.const 1) (i32.const 0)))
 
        (func $fac-acc (param i64 i64) (result i64)
-         (if (result i64) (i64.eqz (get_local 0))
-           (then (get_local 1))
+         (if (result i64) (i64.eqz (local.get 0))
+           (then (local.get 1))
            (else
              (return_call_indirect (type $i64-i64)
-               (i64.sub (get_local 0) (i64.const 1))
-               (i64.mul (get_local 0) (get_local 1))
+               (i64.sub (local.get 0) (i64.const 1))
+               (i64.mul (local.get 0) (local.get 1))
                (i32.const 0)))))
 
        (table anyfunc (elem $fac-acc)))`);
@@ -107,18 +107,18 @@ wasmValidateText(
     `(module
        (type $t (func (param i32) (result i32)))
        (func $even (param i32) (result i32)
-         (if (result i32) (i32.eqz (get_local 0))
+         (if (result i32) (i32.eqz (local.get 0))
            (then (i32.const 44))
            (else
              (return_call_indirect (type $t)
-               (i32.sub (get_local 0) (i32.const 1))
+               (i32.sub (local.get 0) (i32.const 1))
                (i32.const 1)))))
        (func $odd (param i32) (result i32)
-         (if (result i32) (i32.eqz (get_local 0))
+         (if (result i32) (i32.eqz (local.get 0))
            (then (i32.const 99))
            (else
              (return_call_indirect (type $t)
-               (i32.sub (get_local 0) (i32.const 1))
+               (i32.sub (local.get 0) (i32.const 1))
                (i32.const 0)))))
        (table anyfunc (elem $even $odd)))`);
 

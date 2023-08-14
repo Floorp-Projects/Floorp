@@ -181,8 +181,8 @@ wasmValidateText('(module (func (local i32) (local.set 0 (i32.const 0))))');
 wasmValidateText('(module (func (local i32) (local f32) (local.set 0 (local.get 0))))');
 wasmValidateText('(module (func (local i32) (local f32) (local.set 1 (local.get 1))))');
 
-wasmFullPass('(module (func (result i32) (local i32) (tee_local 0 (i32.const 42))) (export "run" (func 0)))', 42);
-wasmFullPass('(module (func (result i32) (local i32) (tee_local 0 (local.get 0))) (export "run" (func 0)))', 0);
+wasmFullPass('(module (func (result i32) (local i32) (local.tee 0 (i32.const 42))) (export "run" (func 0)))', 42);
+wasmFullPass('(module (func (result i32) (local i32) (local.tee 0 (local.get 0))) (export "run" (func 0)))', 0);
 
 wasmFullPass('(module (func (param $a i32) (result i32) (local.get $a)) (export "run" (func 0)))', 0);
 wasmFullPass('(module (func (param $a i32) (result i32) (local $b i32) (block (result i32) (local.set $b (local.get $a)) (local.get $b))) (export "run" (func 0)))', 42, {}, 42);

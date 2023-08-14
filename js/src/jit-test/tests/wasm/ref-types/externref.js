@@ -179,7 +179,7 @@ assertJoin(`(block $out (result externref) (loop $top (result externref)
     local.get $i
     i32.const 1
     i32.add
-    tee_local $i
+    local.tee $i
     i32.const 10
     i32.eq
     if
@@ -193,7 +193,7 @@ assertJoin(`(block $out (loop $top
     local.get $i
     i32.const 1
     i32.add
-    tee_local $i
+    local.tee $i
     i32.const 10
     i32.le_s
     if
@@ -210,7 +210,7 @@ assertJoin(`(block $out (result externref) (loop $top
     local.get $i
     i32.const 1
     i32.add
-    tee_local $i
+    local.tee $i
     i32.const 10
     i32.eq
     br_if $out
@@ -223,7 +223,7 @@ assertJoin(`(block $out (result externref) (block $unreachable (result externref
     local.get $i
     i32.const 1
     i32.add
-    tee_local $i
+    local.tee $i
     br_table $unreachable $out
     ) unreachable))
 `);
@@ -476,7 +476,7 @@ wasmEvalText(
     `(module
        (func (param externref)
          (return)
-         (ref.is_null (get_local 0))
+         (ref.is_null (local.get 0))
          (drop)
         )
     )`);

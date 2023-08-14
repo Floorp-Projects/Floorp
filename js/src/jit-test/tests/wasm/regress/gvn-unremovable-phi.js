@@ -8,7 +8,7 @@ wasmEvalText(`(module
       local.get $x
       br_if $top
       i32.const 1
-      tee_local $p
+      local.tee $p
       local.get $y
       local.set $x
       i32.add

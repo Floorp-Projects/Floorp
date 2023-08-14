@@ -329,12 +329,12 @@ for ( [ty, expect_tst] of
     `(module
        (func (export "f") (param $p1 ${ty}) (param $p2 ${ty}) (result i32)
          (local $x i32)
-         (set_local $x (i32.const 0x4D2))
+         (local.set $x (i32.const 0x4D2))
          (if (${ty}.eq (${ty}.and (local.get $p1) (local.get $p2))
                        (${ty}.const 0))
-           (set_local $x (i32.const 0x11D7))
+           (local.set $x (i32.const 0x11D7))
          )
-         (get_local $x)
+         (local.get $x)
        )
     )`,
     'f',
@@ -362,12 +362,12 @@ for ( [imm, expect1, expect2] of
     `(module
        (func (export "f") (param $p1 i64) (result i32)
          (local $x i32)
-         (set_local $x (i32.const 0x4D2))
+         (local.set $x (i32.const 0x4D2))
          (if (i64.eq (i64.and (i64.const ${imm}) (local.get $p1))
                      (i64.const 0))
-           (set_local $x (i32.const 0x11D7))
+           (local.set $x (i32.const 0x11D7))
          )
-         (get_local $x)
+         (local.get $x)
        )
     )`,
     'f',

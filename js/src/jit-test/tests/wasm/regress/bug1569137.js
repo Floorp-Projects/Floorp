@@ -5,8 +5,8 @@ let { exports: { f } } = wasmEvalText(`
  (func (export "f") (result f32)
   (local $0 i32) (local $1 f64) (local $2 i32)
 
-  (set_local 0 (i32.const 134219779))
-  (set_local 1 (f64.const 3810600700439633677210579e165))
+  (local.set 0 (i32.const 134219779))
+  (local.set 1 (f64.const 3810600700439633677210579e165))
 
   (f32.floor
    (loop $label$2 (result f32)

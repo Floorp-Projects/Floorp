@@ -70,7 +70,7 @@ monitorLocalValues(
   (type (struct i32 i64))
   (func (export "test")
     (local (ref null 0))
-    (set_local 0 (struct.new 0 (i32.const 1) (i64.const 2)))
+    (local.set 0 (struct.new 0 (i32.const 1) (i64.const 2)))
   )
 )`,
   undefined,
@@ -82,7 +82,7 @@ monitorLocalValues(
   (func (export "test")
     (local (ref null 0))
     (i64.const 3)
-    (set_local 0 (array.new 0 (i32.const 123) (i32.const 2)))
+    (local.set 0 (array.new 0 (i32.const 123) (i32.const 2)))
     drop
   )
 )`,

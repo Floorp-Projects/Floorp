@@ -35,7 +35,7 @@ function validateOneArg(type, value) {
     wasmValidateText(
         `(module
            (func $id-${type} (param ${type}) (result ${type})
-             (get_local 0))
+             (local.get 0))
            (func $t (result ${type})
              (return_call $id-${type} (${type}.const ${value}))))`);
 }
@@ -47,7 +47,7 @@ function validateTwoArgs(t0, v0, t1, v1) {
     wasmValidateText(
         `(module
            (func $second-${t0}-${t1} (param ${t0} ${t1}) (result ${t1})
-             (get_local 1))
+             (local.get 1))
            (func $t (result ${t1})
              (return_call $second-${t0}-${t1}
                           (${t0}.const ${v0}) (${t1}.const ${v1}))))`);
@@ -61,34 +61,34 @@ for (let {type: t0, value: v0} of constants) {
 wasmValidateText(
     `(module
        (func $fac-acc (param i64 i64) (result i64)
-         (if (result i64) (i64.eqz (get_local 0))
-           (then (get_local 1))
+         (if (result i64) (i64.eqz (local.get 0))
+           (then (local.get 1))
            (else
              (return_call $fac-acc
-               (i64.sub (get_local 0) (i64.const 1))
-               (i64.mul (get_local 0) (get_local 1))))))
+               (i64.sub (local.get 0) (i64.const 1))
+               (i64.mul (local.get 0) (local.get 1))))))
        (func $t (result i64)
          (return_call $fac-acc (i64.const 0) (i64.const 1))))`);
 
 wasmValidateText(
     `(module
        (func $count (param i64) (result i64)
-         (if (result i64) (i64.eqz (get_local 0))
-           (then (get_local 0))
-           (else (return_call $count (i64.sub (get_local 0) (i64.const 1))))))
+         (if (result i64) (i64.eqz (local.get 0))
+           (then (local.get 0))
+           (else (return_call $count (i64.sub (local.get 0) (i64.const 1))))))
        (func $t (result i64)
          (return_call $count (i64.const 0))))`);
 
 wasmValidateText(
     `(module
        (func $even (param i64) (result i32)
-         (if (result i32) (i64.eqz (get_local 0))
+         (if (result i32) (i64.eqz (local.get 0))
            (then (i32.const 44))
-           (else (return_call $odd (i64.sub (get_local 0) (i64.const 1))))))
+           (else (return_call $odd (i64.sub (local.get 0) (i64.const 1))))))
        (func $odd (param i64) (result i32)
-         (if (result i32) (i64.eqz (get_local 0))
+         (if (result i32) (i64.eqz (local.get 0))
            (then (i32.const 99))
-           (else (return_call $even (i64.sub (get_local 0) (i64.const 1))))))
+           (else (return_call $even (i64.sub (local.get 0) (i64.const 1))))))
        (func $t (result i32)
          (return_call $even (i64.const 0))))`);
 

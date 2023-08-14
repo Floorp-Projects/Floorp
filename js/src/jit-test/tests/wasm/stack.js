@@ -38,7 +38,7 @@ wasmFullPass(` (module
      f64.const 5.0
      local.set $local
      f64.const 5.0
-     tee_local $local
+     local.tee $local
      drop
      block
        i32.const 0

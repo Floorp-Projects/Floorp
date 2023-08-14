@@ -8,9 +8,9 @@ function moduleText(cmp_kind /* "eq", "ne", "le_u" etc */)
           (func (export "cmpI32_selI32")
               (param i32) (param i32) (param i32) (param i32)
               (result i32)
-              (select (get_local 2)
-                      (get_local 3)
-                      (i32.${cmp_kind} (get_local 0) (get_local 1))
+              (select (local.get 2)
+                      (local.get 3)
+                      (i32.${cmp_kind} (local.get 0) (local.get 1))
               )
           ))`;
 }
