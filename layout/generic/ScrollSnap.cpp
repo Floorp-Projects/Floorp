@@ -367,12 +367,11 @@ Maybe<SnapTarget> ScrollSnapUtils::GetSnapPointForDestination(
 
   bool snapped = false;
   auto finalPos = calcSnapPoints.GetBestEdge();
-  nscoord proximityThreshold =
-      StaticPrefs::layout_css_scroll_snap_proximity_threshold();
-  proximityThreshold = nsPresContext::CSSPixelsToAppUnits(proximityThreshold);
+  constexpr float proximityRatio = 0.3;
   if (aSnapInfo.mScrollSnapStrictnessY ==
           StyleScrollSnapStrictness::Proximity &&
-      std::abs(aDestination.y - finalPos.mPosition.y) > proximityThreshold) {
+      std::abs(aDestination.y - finalPos.mPosition.y) >
+          aSnapInfo.mSnapportSize.height * proximityRatio) {
     finalPos.mPosition.y = aDestination.y;
   } else if (aSnapInfo.mScrollSnapStrictnessY !=
                  StyleScrollSnapStrictness::None &&
@@ -381,7 +380,8 @@ Maybe<SnapTarget> ScrollSnapUtils::GetSnapPointForDestination(
   }
   if (aSnapInfo.mScrollSnapStrictnessX ==
           StyleScrollSnapStrictness::Proximity &&
-      std::abs(aDestination.x - finalPos.mPosition.x) > proximityThreshold) {
+      std::abs(aDestination.x - finalPos.mPosition.x) >
+          aSnapInfo.mSnapportSize.width * proximityRatio) {
     finalPos.mPosition.x = aDestination.x;
   } else if (aSnapInfo.mScrollSnapStrictnessX !=
                  StyleScrollSnapStrictness::None &&
