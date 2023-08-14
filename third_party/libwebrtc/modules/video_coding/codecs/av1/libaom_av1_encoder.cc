@@ -643,9 +643,6 @@ int32_t LibaomAv1Encoder::Encode(
     if (SvcEnabled()) {
       SetSvcLayerId(*layer_frame);
       SetSvcRefFrameConfig(*layer_frame);
-
-      SET_ENCODER_PARAM_OR_RETURN_ERROR(AV1E_SET_ERROR_RESILIENT_MODE,
-                                        layer_frame->TemporalId() > 0 ? 1 : 0);
     }
 
     // Encode a frame. The presentation timestamp `pts` should not use real
