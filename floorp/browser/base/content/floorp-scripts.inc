@@ -8,7 +8,6 @@
 // This file contains the functions that are used by the floorp browser
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-overrides.js", this);
-Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-design.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-rest-mode.js", this);
 
@@ -20,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-favicon-color.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-UI-custom.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-manager-sidebar.js", this);
+    Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-toolbar-features.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-statusbar.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-userChrome.js", this);

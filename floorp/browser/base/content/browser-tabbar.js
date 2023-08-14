@@ -63,7 +63,7 @@ const tabbarDisplayStyleFunctions = {
 
         //move tabbar to navigator-toolbox's bottom
         tabbarContents.navigatorToolboxtabbarElement.appendChild(tabbarContents.tabbarElement);
-        tabbarContents.navbarElement.appendChild(document.querySelector("#floorp-tabbar-window-manage-container"));
+        tabbarContents.PanelUIMenuButton.after(document.querySelector("#floorp-tabbar-window-manage-container"));
         tabbarContents.modifyCSS = document.createElement("style");
         tabbarContents.modifyCSS.id = "floorp-tabbar-modify-css";
         tabbarContents.modifyCSS.textContent = `
@@ -79,7 +79,7 @@ const tabbarDisplayStyleFunctions = {
 
         //move tabbar to window's bottom
         tabbarContents.browserElement.after(tabbarContents.titleBarElement);
-        tabbarContents.navbarElement.appendChild(document.querySelector("#floorp-tabbar-window-manage-container"));
+        tabbarContents.PanelUIMenuButton.after(document.querySelector("#floorp-tabbar-window-manage-container"));
         tabbarContents.modifyCSS = document.createElement("style");
         tabbarContents.modifyCSS.id = "floorp-tabbar-modify-css";
         tabbarContents.modifyCSS.textContent = `
@@ -129,6 +129,7 @@ const tabbarDisplayStyleFunctions = {
 
 SessionStore.promiseInitialized.then(() => {
   tabbarContents = {
+    PanelUIMenuButton: document.querySelector("#PanelUI-menu-button"),
     tabbarDisplayStylePref: "floorp.browser.tabbar.settings",
     tabbarElement: document.querySelector("#TabsToolbar"),
     titleBarElement: document.querySelector("#titlebar"),
