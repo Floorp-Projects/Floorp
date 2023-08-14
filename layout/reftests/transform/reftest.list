@@ -152,10 +152,6 @@ fails == translate-rounding-3.html translate-rounding-viewport-ref.html # bug 13
 pref(layout.css.individual-transform.enabled,true) == animate-layer-scale-inherit-4.html animate-layer-scale-inherit-4-ref.html
 fuzzy-if(winWidget,0-1,0-1000) == 1569215-1.html 1569215-1-ref.html
 
-test-pref(layout.css.zoom-transform-hack.enabled,true) == zoom-hack-1.html zoom-hack-ref.html
-test-pref(layout.css.zoom-transform-hack.enabled,false) != zoom-hack-1.html zoom-hack-ref.html
-test-pref(layout.css.zoom-transform-hack.enabled,true) == zoom-hack-2.html zoom-hack-ref.html
-
 == transform-anon-block-1.html transform-anon-block-1-ref.html
 test-pref(layout.animation.prerender.partial.jank,true) test-pref(layout.animation.prerender.partial,true) == partial-prerender-expansion-translate.html partial-prerender-expansion-ref.html
 test-pref(layout.animation.prerender.partial,true) == partial-prerender-translate-1.html about:blank
