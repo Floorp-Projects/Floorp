@@ -1053,6 +1053,7 @@ if (rtc_include_tests) {
       "../../api/video_codecs:video_codecs_api",
       "../../media:rtc_internal_video_codecs",
       "../../rtc_base:logging",
+      "../../system_wrappers:field_trial",
       "../../test:fileutils",
       "../../test:test_main",
       "../../test:test_support",

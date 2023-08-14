@@ -147,6 +147,10 @@
     # TODO(bugs.webrtc.org/9292): remove use_webcam and the ensure script.
     "use_webcam": True,
   },
+  "video_codec_perf_tests": {
+    "label": "//modules/video_coding:video_codec_perf_tests",
+    "type": "console_test_launcher",
+  },
   "video_engine_tests": {
     "label": "//:video_engine_tests",
     "type": "console_test_launcher",

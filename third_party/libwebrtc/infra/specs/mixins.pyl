@@ -174,7 +174,7 @@
         'location':
         '.',
         'revision':
-        'git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118'
+        'git_revision:3e597065cb23c1fe03aeb2ebd792d83e0709c5c2'
       }]
     }
   },
@@ -224,6 +224,12 @@
         'pool': 'WebRTC-perf',
         'gce': '1'
       }
+    }
+  },
+  'perf-video-codec-perf-tests': {
+    'merge': {
+      'script': '//tools_webrtc/perf/process_perf_results.py',
+      'args': ['--test-suite', 'video_codec_perf_tests']
     }
   },
   'perf-webrtc-perf-tests': {
