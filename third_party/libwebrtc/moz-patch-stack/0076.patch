@@ -10,10 +10,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56fbf0469e25fa0d5
  2 files changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index 5d6e4e3460..84faaa79f7 100644
+index ab16d8f763..46270d74f9 100644
 --- a/video/receive_statistics_proxy.cc
 +++ b/video/receive_statistics_proxy.cc
-@@ -960,8 +960,13 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+@@ -832,8 +832,13 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
  }
  
  void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {

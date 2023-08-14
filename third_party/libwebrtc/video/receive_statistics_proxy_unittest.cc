@@ -699,37 +699,6 @@ TEST_F(ReceiveStatisticsProxyTest,
       0, metrics::NumSamples("WebRTC.Video.ReceiveStreamLifetimeInSeconds"));
 }
 
-TEST_F(ReceiveStatisticsProxyTest, BadCallHistogramsAreUpdated) {
-  // Based on the tuning parameters this will produce 7 uncertain states,
-  // then 10 certainly bad states. There has to be 10 certain states before
-  // any histograms are recorded.
-  const int kNumBadSamples = 17;
-  // We only count one sample per second.
-  const TimeDelta kBadFameInterval = TimeDelta::Millis(1100);
-
-  StreamDataCounters counters;
-  counters.first_packet_time_ms = Now().ms();
-
-  webrtc::VideoFrame frame = CreateFrame(kWidth, kHeight);
-
-  for (int i = 0; i < kNumBadSamples; ++i) {
-    time_controller_.AdvanceTime(kBadFameInterval);
-    statistics_proxy_->OnRenderedFrame(MetaData(frame));
-  }
-  statistics_proxy_->UpdateHistograms(absl::nullopt, counters, nullptr);
-  EXPECT_METRIC_EQ(1, metrics::NumSamples("WebRTC.Video.BadCall.Any"));
-  EXPECT_METRIC_EQ(1, metrics::NumEvents("WebRTC.Video.BadCall.Any", 100));
-
-  EXPECT_METRIC_EQ(1, metrics::NumSamples("WebRTC.Video.BadCall.FrameRate"));
-  EXPECT_METRIC_EQ(1,
-                   metrics::NumEvents("WebRTC.Video.BadCall.FrameRate", 100));
-
-  EXPECT_METRIC_EQ(
-      0, metrics::NumSamples("WebRTC.Video.BadCall.FrameRateVariance"));
-
-  EXPECT_METRIC_EQ(0, metrics::NumSamples("WebRTC.Video.BadCall.Qp"));
-}
-
 TEST_F(ReceiveStatisticsProxyTest, PacketLossHistogramIsUpdated) {
   statistics_proxy_->UpdateHistograms(10, StreamDataCounters(), nullptr);
   EXPECT_METRIC_EQ(
