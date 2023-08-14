@@ -361,7 +361,6 @@ class RTCPReceiver final {
   // The set of registered local SSRCs.
   RegisteredSsrcs registered_ssrcs_;
 
-  RtcpBandwidthObserver* const deprecated_rtcp_bandwidth_observer_;
   NetworkLinkRtcpObserver* const network_link_rtcp_observer_;
   RtcpEventObserver* const rtcp_event_observer_;
   RtcpIntraFrameObserver* const rtcp_intra_frame_observer_;

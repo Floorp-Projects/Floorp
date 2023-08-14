@@ -144,7 +144,6 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       receiver_only_(config.receiver_only),
       rtp_rtcp_(owner),
       registered_ssrcs_(false, config),
-      deprecated_rtcp_bandwidth_observer_(config.bandwidth_callback),
       network_link_rtcp_observer_(config.network_link_rtcp_observer),
       rtcp_event_observer_(config.rtcp_event_observer),
       rtcp_intra_frame_observer_(config.intra_frame_callback),
@@ -174,7 +173,6 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       receiver_only_(config.receiver_only),
       rtp_rtcp_(owner),
       registered_ssrcs_(true, config),
-      deprecated_rtcp_bandwidth_observer_(config.bandwidth_callback),
       network_link_rtcp_observer_(config.network_link_rtcp_observer),
       rtcp_event_observer_(config.rtcp_event_observer),
       rtcp_intra_frame_observer_(config.intra_frame_callback),
@@ -1093,16 +1091,10 @@ void RTCPReceiver::NotifyTmmbrUpdated() {
   std::vector<rtcp::TmmbItem> bounding =
       TMMBRHelp::FindBoundingSet(TmmbrReceived());
 
-  if (!bounding.empty()) {
+  if (!bounding.empty() && network_link_rtcp_observer_) {
     // We have a new bandwidth estimate on this channel.
     uint64_t bitrate_bps = TMMBRHelp::CalcMinBitrateBps(bounding);
-    if (deprecated_rtcp_bandwidth_observer_ &&
-        bitrate_bps <= std::numeric_limits<uint32_t>::max()) {
-      deprecated_rtcp_bandwidth_observer_->OnReceivedEstimatedBitrate(
-          bitrate_bps);
-    }
-    if (network_link_rtcp_observer_ &&
-        bitrate_bps < std::numeric_limits<int64_t>::max()) {
+    if (bitrate_bps < std::numeric_limits<int64_t>::max()) {
       network_link_rtcp_observer_->OnReceiverEstimatedMaxBitrate(
           clock_->CurrentTime(), DataRate::BitsPerSec(bitrate_bps));
     }
@@ -1162,23 +1154,6 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
           loss_notification->media_ssrc(), loss_notification->last_decoded(),
           loss_notification->last_received(),
           loss_notification->decodability_flag());
-    }
-  }
-  if (deprecated_rtcp_bandwidth_observer_) {
-    RTC_DCHECK(!receiver_only_);
-    if (packet_information.packet_type_flags & kRtcpRemb) {
-      RTC_LOG(LS_VERBOSE)
-          << "Incoming REMB: "
-          << packet_information.receiver_estimated_max_bitrate_bps;
-      deprecated_rtcp_bandwidth_observer_->OnReceivedEstimatedBitrate(
-          packet_information.receiver_estimated_max_bitrate_bps);
-    }
-    if ((packet_information.packet_type_flags & kRtcpSr) ||
-        (packet_information.packet_type_flags & kRtcpRr)) {
-      deprecated_rtcp_bandwidth_observer_->OnReceivedRtcpReceiverReport(
-          packet_information.report_blocks,
-          packet_information.rtt.value_or(TimeDelta::Zero()).ms(),
-          clock_->TimeInMilliseconds());
     }
   }
 

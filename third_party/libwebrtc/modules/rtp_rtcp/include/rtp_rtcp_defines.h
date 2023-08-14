@@ -167,21 +167,6 @@ class RtcpLossNotificationObserver {
                                           bool decodability_flag) = 0;
 };
 
-// TODO(bugs.webrtc.org/13757): Remove this interface in favor of the
-// NetworkLinkRtcpObserver that uses more descriptive types.
-class RtcpBandwidthObserver {
- public:
-  // REMB or TMMBR
-  virtual void OnReceivedEstimatedBitrate(uint32_t bitrate) = 0;
-
-  virtual void OnReceivedRtcpReceiverReport(
-      const ReportBlockList& report_blocks,
-      int64_t rtt,
-      int64_t now_ms) = 0;
-
-  virtual ~RtcpBandwidthObserver() {}
-};
-
 // Interface to watch incoming rtcp packets related to the link in general.
 // All message handlers have default empty implementation. This way users only
 // need to implement the ones they are interested in.
