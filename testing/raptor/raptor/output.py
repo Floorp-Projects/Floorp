@@ -1817,6 +1817,7 @@ class BrowsertimeOutput(PerftestOutput):
                     "subtests": {},
                 },
             )
+
             # Add the alert window settings if needed
             for alert_option, schema_name in (
                 ("min_back_window", "minBackWindow"),
@@ -1830,7 +1831,10 @@ class BrowsertimeOutput(PerftestOutput):
             if self.app in ("chrome", "chrome-m", "chromium", "custom-car"):
                 suite["shouldAlert"] = False
             # Check if the test has set optional properties
-            if "alert_change_type" in test and "alertChangeType" not in suite:
+            if (
+                test.get("alert_change_type", None) is not None
+                and "alertChangeType" not in suite
+            ):
                 suite["alertChangeType"] = test["alert_change_type"]
 
             def _process_measurements(measurement_name, replicates):
