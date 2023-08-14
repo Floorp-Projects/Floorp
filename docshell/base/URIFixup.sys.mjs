@@ -925,8 +925,8 @@ function fileURIFixup(uriString) {
       path = uriString.replace(/\//g, "\\");
     }
   } else {
-    // UNIX: Check if it starts with "/".
-    attemptFixup = uriString.startsWith("/");
+    // UNIX: Check if it starts with "/" or "~".
+    attemptFixup = /^[~/]/.test(uriString);
   }
   if (attemptFixup) {
     try {
