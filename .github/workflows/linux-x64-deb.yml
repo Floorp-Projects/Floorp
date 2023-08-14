@@ -89,6 +89,7 @@ jobs:
         zip -r dist.zip floorp-$DISPVER.deb
 
     - name: Update PPA 👻
+      if: inputs.ppa
       run: |
         echo "::add-mask::${{ secrets.KEYMASK }}"
         export DISPVER=`cat browser/config/version_display.txt`
