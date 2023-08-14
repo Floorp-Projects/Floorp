@@ -11691,13 +11691,6 @@
   value: false
   mirror: always
 
-# Enables `<link rel="preload">` tag and `Link: rel=preload` response header
-# handling.
-- name: network.preload
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Enables `<link rel="preconnect">` tag and `Link: rel=preconnect` response header
 # handling.
 - name: network.preconnect

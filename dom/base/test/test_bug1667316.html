@@ -72,68 +72,62 @@ const SAME_ORIGIN = "http://mochi.test:8888" + SJS_PATH;
 const CROSS_ORIGIN = "http://example.com" + SJS_PATH;
 
 SimpleTest.waitForExplicitFinish();
+SpecialPowers.spawnChrome([], () => {
+  let window = this.browsingContext.currentWindowGlobal;
+  window.ChannelEventSink = {
+    _classDescription: "WebRequest channel event sink",
+    _classID: Components.ID("115062f8-92f1-11e5-8b7f-08001110f7ec"),
+    _contractID: "@mozilla.org/webrequest/channel-event-sink;1",
 
-SpecialPowers.pushPrefEnv({"set": [["network.preload", true]]})
+    QueryInterface: ChromeUtils.generateQI(["nsIChannelEventSink", "nsIFactory"]),
 
+    init() {
+      Components.manager
+        .QueryInterface(Ci.nsIComponentRegistrar)
+        .registerFactory(
+          this._classID,
+          this._classDescription,
+          this._contractID,
+          this
+        );
+    },
 
-.then(async () => {
-  await SpecialPowers.spawnChrome([], () => {
-
-let window = this.browsingContext.currentWindowGlobal;
-window.ChannelEventSink = {
-  _classDescription: "WebRequest channel event sink",
-  _classID: Components.ID("115062f8-92f1-11e5-8b7f-08001110f7ec"),
-  _contractID: "@mozilla.org/webrequest/channel-event-sink;1",
-
-  QueryInterface: ChromeUtils.generateQI(["nsIChannelEventSink", "nsIFactory"]),
-
-  init() {
-    Components.manager
-      .QueryInterface(Ci.nsIComponentRegistrar)
-      .registerFactory(
-        this._classID,
-        this._classDescription,
+    register() {
+      Services.catMan.addCategoryEntry(
+        "net-channel-event-sinks",
         this._contractID,
-        this
+        this._contractID,
+        false,
+        true
       );
-  },
+    },
 
-  register() {
-    Services.catMan.addCategoryEntry(
-      "net-channel-event-sinks",
-      this._contractID,
-      this._contractID,
-      false,
-      true
-    );
-  },
+    unregister() {
+      Components.manager
+        .QueryInterface(Ci.nsIComponentRegistrar)
+        .unregisterFactory(this._classID, window.ChannelEventSink);
+      Services.catMan.deleteCategoryEntry(
+        "net-channel-event-sinks",
+        this._contractID,
+        false
+      );
+    },
 
-  unregister() {
-    Components.manager
-      .QueryInterface(Ci.nsIComponentRegistrar)
-      .unregisterFactory(this._classID, window.ChannelEventSink);
-    Services.catMan.deleteCategoryEntry(
-      "net-channel-event-sinks",
-      this._contractID,
-      false
-    );
-  },
+    // nsIChannelEventSink implementation
+    asyncOnChannelRedirect(oldChannel, newChannel, flags, redirectCallback) {
+      // Abort the redirection.
+      redirectCallback.onRedirectVerifyCallback(Cr.NS_ERROR_NO_INTERFACE);
+    },
 
-  // nsIChannelEventSink implementation
-  asyncOnChannelRedirect(oldChannel, newChannel, flags, redirectCallback) {
-    // Abort the redirection.
-    redirectCallback.onRedirectVerifyCallback(Cr.NS_ERROR_NO_INTERFACE);
-  },
+    // nsIFactory implementation
+    createInstance(iid) {
+      return this.QueryInterface(iid);
+    },
+  };
 
-  // nsIFactory implementation
-  createInstance(iid) {
-    return this.QueryInterface(iid);
-  },
-};
-
-window.ChannelEventSink.init();
-window.ChannelEventSink.register();
-})})
+  window.ChannelEventSink.init();
+  window.ChannelEventSink.register();
+})
 
 // test cross origin by redirection without CORS
 .then(() => testPreloadEvent(SAME_ORIGIN + "?redirect=crossorigin&statusCode=200&cacheControl=no-cache", false, false))

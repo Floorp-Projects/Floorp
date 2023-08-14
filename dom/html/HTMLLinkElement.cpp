@@ -309,26 +309,21 @@ void HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 }
 
 // Keep this and the arrays below in sync with ToLinkMask in LinkStyle.cpp.
-#define SUPPORTED_REL_VALUES_BASE                                              \
-  "prefetch", "dns-prefetch", "stylesheet", "next", "alternate", "preconnect", \
-      "icon", "search", nullptr
+#define SUPPORTED_REL_VALUES_BASE                                           \
+  "preload", "prefetch", "dns-prefetch", "stylesheet", "next", "alternate", \
+      "preconnect", "icon", "search", nullptr
 
 static const DOMTokenListSupportedToken sSupportedRelValueCombinations[][12] = {
     {SUPPORTED_REL_VALUES_BASE},
     {"manifest", SUPPORTED_REL_VALUES_BASE},
-    {"preload", SUPPORTED_REL_VALUES_BASE},
-    {"preload", "manifest", SUPPORTED_REL_VALUES_BASE},
     {"modulepreload", SUPPORTED_REL_VALUES_BASE},
-    {"modulepreload", "manifest", SUPPORTED_REL_VALUES_BASE},
-    {"modulepreload", "preload", SUPPORTED_REL_VALUES_BASE},
-    {"modulepreload", "preload", "manifest", SUPPORTED_REL_VALUES_BASE}};
+    {"modulepreload", "manifest", SUPPORTED_REL_VALUES_BASE}};
 #undef SUPPORTED_REL_VALUES_BASE
 
 nsDOMTokenList* HTMLLinkElement::RelList() {
   if (!mRelList) {
     int index = (StaticPrefs::dom_manifest_enabled() ? 1 : 0) |
-                (StaticPrefs::network_preload() ? 2 : 0) |
-                (StaticPrefs::network_modulepreload() ? 4 : 0);
+                (StaticPrefs::network_modulepreload() ? 2 : 0);
 
     mRelList = new nsDOMTokenList(this, nsGkAtoms::rel,
                                   sSupportedRelValueCombinations[index]);

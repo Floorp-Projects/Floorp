@@ -34,18 +34,6 @@ add_task(async function test_103_preload_disabled() {
   Services.prefs.setBoolPref("network.early-hints.enabled", true);
 });
 
-// Test that with preload config option disabled, no early hint requests are made
-add_task(async function test_103_preload_disabled() {
-  Services.prefs.setBoolPref("network.preload", false);
-  await test_hint_preload(
-    "test_103_preload_disabled",
-    "https://example.com",
-    "https://example.com/browser/netwerk/test/browser/early_hint_pixel.sjs",
-    { hinted: 0, normal: 1 }
-  );
-  Services.prefs.clearUserPref("network.preload");
-});
-
 // Preload with same origin in secure context with mochitest http proxy
 add_task(async function test_103_preload_https() {
   await test_hint_preload(

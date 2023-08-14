@@ -27,8 +27,6 @@ user_pref("focusmanager.testmode", true);
 user_pref("media.navigator.streams.fake", true);
 // Disable permission prompt for getUserMedia
 user_pref("media.navigator.permission.disabled", true);
-// Enable pre-fetching of resources
-user_pref("network.preload", true);
 // Enable direct connection
 user_pref("network.proxy.type", 0);
 // Web-platform-tests load a lot of URLs very quickly. This puts avoidable and
