@@ -1,32 +1,30 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 20 Aug 2021 13:52:00 +0200
-Subject: Bug 1654112 - Don't check the calling thread in
- webrtc::AudioReceiveStream::GetSources. r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 28 Oct 2021 18:13:00 +0000
+Subject: Bug 1729367 - P6 - Restore PID recording post cherry-pick;r=mjf
 
-source_tracker_ is thread safe with its own internal mutex, so this call is safe
-as long as the caller has a guarantee for the lifetime of the
-AudioReceiveStream. This is similar to webrtc::VideoReceiveStream.
+This restores the code from P0, which was removed to make cherry-picking 439ffe462a66ad9fa9a251b265e4ab28c2647d25 and 449a78b1e20ea85b11f967cf3a184ee610ce21c3 easier.
 
-Upliftable.
-
-Differential Revision: https://phabricator.services.mozilla.com/D123226
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c186df8a088e46285a15e40149182daa34cc6805
+Differential Revision: https://phabricator.services.mozilla.com/D129714
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/72a83cb2e571023cd4150bbdef5be5455ce851f4
 ---
- audio/audio_receive_stream.cc | 1 -
- 1 file changed, 1 deletion(-)
+ modules/desktop_capture/win/window_capture_utils.cc | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 0a78e2641d..8a3ac93a36 100644
---- a/audio/audio_receive_stream.cc
-+++ b/audio/audio_receive_stream.cc
-@@ -367,7 +367,6 @@ int AudioReceiveStreamImpl::GetBaseMinimumPlayoutDelayMs() const {
- }
+diff --git a/modules/desktop_capture/win/window_capture_utils.cc b/modules/desktop_capture/win/window_capture_utils.cc
+index ccfef49bc5..d58c02e17c 100644
+--- a/modules/desktop_capture/win/window_capture_utils.cc
++++ b/modules/desktop_capture/win/window_capture_utils.cc
+@@ -79,6 +79,10 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
+   DesktopCapturer::Source window;
+   window.id = reinterpret_cast<WindowId>(hwnd);
  
- std::vector<RtpSource> AudioReceiveStreamImpl::GetSources() const {
--  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-   return source_tracker_.GetSources();
- }
- 
++  DWORD pid;
++  GetWindowThreadProcessId(hwnd, &pid);
++  window.pid = static_cast<pid_t>(pid);
++
+   // GetWindowText* are potentially blocking operations if `hwnd` is
+   // owned by the current process. The APIs will send messages to the window's
+   // message loop, and if the message loop is waiting on this operation we will
 -- 
 2.34.1
 
