@@ -523,7 +523,7 @@ void RtpTransportControllerSend::OnRttUpdate(Timestamp receive_time,
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   RoundTripTimeUpdate report;
   report.receive_time = receive_time;
-  report.round_trip_time = rtt;
+  report.round_trip_time = rtt.RoundTo(TimeDelta::Millis(1));
   report.smoothed = false;
   if (controller_ && !report.round_trip_time.IsZero())
     PostUpdates(controller_->OnRoundTripTimeUpdate(report));
