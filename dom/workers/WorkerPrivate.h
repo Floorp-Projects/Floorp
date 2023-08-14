@@ -934,7 +934,7 @@ class WorkerPrivate final
 
   mozilla::StorageAccess StorageAccess() const {
     AssertIsOnWorkerThread();
-    if (mLoadInfo.mHasStorageAccessPermissionGranted) {
+    if (mLoadInfo.mUsingStorageAccess) {
       return mozilla::StorageAccess::eAllow;
     }
 
@@ -946,9 +946,9 @@ class WorkerPrivate final
     return mLoadInfo.mUseRegularPrincipal;
   }
 
-  bool HasStorageAccessPermissionGranted() const {
+  bool UsingStorageAccess() const {
     AssertIsOnWorkerThread();
-    return mLoadInfo.mHasStorageAccessPermissionGranted;
+    return mLoadInfo.mUsingStorageAccess;
   }
 
   nsICookieJarSettings* CookieJarSettings() const {
