@@ -31,7 +31,6 @@
 #include "rtc_base/rate_tracker.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
-#include "video/quality_threshold.h"
 #include "video/stats_counter.h"
 #include "video/video_quality_observer2.h"
 #include "video/video_stream_buffer_controller.h"
@@ -143,8 +142,6 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
     rtc::HistogramPercentileCounter interframe_delay_percentiles;
   };
 
-  void QualitySample(Timestamp now);
-
   // Removes info about old frames and then updates the framerate.
   void UpdateFramerate(int64_t now_ms) const;
 
@@ -154,14 +151,6 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
   Clock* const clock_;
   const int64_t start_ms_;
 
-  int64_t last_sample_time_ RTC_GUARDED_BY(main_thread_);
-
-  QualityThreshold fps_threshold_ RTC_GUARDED_BY(main_thread_);
-  QualityThreshold qp_threshold_ RTC_GUARDED_BY(main_thread_);
-  QualityThreshold variance_threshold_ RTC_GUARDED_BY(main_thread_);
-  rtc::SampleCounter qp_sample_ RTC_GUARDED_BY(main_thread_);
-  int num_bad_states_ RTC_GUARDED_BY(main_thread_);
-  int num_certain_states_ RTC_GUARDED_BY(main_thread_);
   // Note: The `stats_.rtp_stats` member is not used or populated by this class.
   mutable VideoReceiveStreamInterface::Stats stats_
       RTC_GUARDED_BY(main_thread_);
