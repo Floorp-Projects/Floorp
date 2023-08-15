@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-07-31T11:44:03.490227'
+updated_at: '2023-08-14T10:31:04.423828'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -332,6 +332,10 @@ people:
     bmo_id: 496127
     name: Eric Rahm
     nick: erahm
+  - &ErichDonGubler
+    bmo_id: 713343
+    name: Erich Gubler
+    nick: ErichDonGubler
   - &evilpie
     bmo_id: 393835
     name: Tom S
@@ -481,6 +485,10 @@ people:
     bmo_id: 456498
     name: Jan-Ivar Bruaroey
     nick: jib
+  - &jimb
+    bmo_id: 298765
+    name: Jim Blandy
+    nick: jimb
   - &jimm
     bmo_id: 279663
     name: Jim Mathies
@@ -919,6 +927,10 @@ people:
     bmo_id: 586681
     name: Ted Campbell
     nick: tcampbell
+  - &teoxoy
+    bmo_id: 715425
+    name: Teodor Tanasoaia
+    nick: teoxoy
   - &teshaq
     bmo_id: 663555
     name: Tarik Eshaq
@@ -2747,16 +2759,28 @@ modules:
     description: WebGPU implementation
     includes:
       - dom/webgpu/**/*
+      - gfx/wgpu_bindings/**/*
+      - third_party/rust/naga/**/*
+      - third_party/rust/wgpu-core/**/*
+      - third_party/rust/wgpu-hal/**/*
+      - third_party/rust/wgpu-types/**/*
     meta:
       group: dev-platform
       url: https://wiki.mozilla.org/Platform/GFX/WebGPU
       components:
         - Core::Graphics::WebGPU
+      review_group: webgpu-reviewers
+      owners_emeritus:
+        - *kvark
+      peers_emeritus:
+        - *josh
     owners:
-      - *kvark
+      - *jimb
     peers:
-      - *josh
+      - *ErichDonGubler
       - *jgilbert
+      - *nical
+      - *teoxoy
     machine_name: core_webgpu_graphics_submodule
 
   - name: 'Core: WebRTC'
@@ -4134,5 +4158,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 3065db57c505f3626a5f196b97e9807bbce4734c
-  export: 68264b6973c70966dc381cf7f6ca7fbec3957b28
+  config: e2e3b49a942b73fe6f346acbd36e8f16be0aa462
+  export: 0a0420ba1ffe62709be477ecec609b902decb460
