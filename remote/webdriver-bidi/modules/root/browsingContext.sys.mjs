@@ -15,7 +15,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  modal: "chrome://remote/content/shared/Prompt.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
   ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
@@ -62,6 +64,20 @@ export const ClipRectangleType = {
 const CreateType = {
   tab: "tab",
   window: "window",
+};
+
+/**
+ * Enum of user prompt types supported by the browsingContext.handleUserPrompt
+ * command, these types can be retrieved from `dialog.args.promptType`.
+ *
+ * @readonly
+ * @enum {UserPromptType}
+ */
+const UserPromptType = {
+  alert: "alert",
+  confirm: "confirm",
+  prompt: "prompt",
+  beforeunload: "beforeunload",
 };
 
 /**
@@ -524,6 +540,106 @@ class BrowsingContextModule extends Module {
     });
 
     return { contexts: contextsInfo };
+  }
+
+  /**
+   * Closes an open prompt.
+   *
+   * @param {object=} options
+   * @param {string} options.context
+   *     Id of the browsing context.
+   * @param {boolean=} options.accept
+   *     Whether user prompt should be accepted or dismissed.
+   *     Defaults to true.
+   * @param {string=} options.userText
+   *     Input to the user prompt's value field.
+   *     Defaults to an empty string.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchAlertError}
+   *     If there is no current user prompt.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   * @throws {UnsupportedOperationError}
+   *     Raised when the command is called for "beforeunload" prompt.
+   */
+  async handleUserPrompt(options = {}) {
+    const { accept = true, context: contextId, userText = "" } = options;
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+
+    const context = this.#getBrowsingContext(contextId);
+
+    lazy.assert.boolean(
+      accept,
+      `Expected "accept" to be a boolean, got ${accept}`
+    );
+
+    lazy.assert.string(
+      userText,
+      `Expected "userText" to be a string, got ${userText}`
+    );
+
+    const tab = lazy.TabManager.getTabForBrowsingContext(context);
+    const browser = lazy.TabManager.getBrowserForTab(tab);
+    const window = lazy.TabManager.getWindowForTab(tab);
+    const dialog = lazy.modal.findPrompt({
+      window,
+      contentBrowser: browser,
+    });
+
+    const closePrompt = async callback => {
+      const dialogClosed = new lazy.EventPromise(
+        window,
+        "DOMModalDialogClosed"
+      );
+      callback();
+      await dialogClosed;
+    };
+
+    if (dialog && dialog.isOpen) {
+      switch (dialog.args.promptType) {
+        case UserPromptType.alert: {
+          await closePrompt(() => dialog.accept());
+          return;
+        }
+        case UserPromptType.confirm: {
+          await closePrompt(() => {
+            if (accept) {
+              dialog.accept();
+            } else {
+              dialog.dismiss();
+            }
+          });
+
+          return;
+        }
+        case UserPromptType.prompt: {
+          await closePrompt(() => {
+            if (accept) {
+              dialog.text = userText;
+              dialog.accept();
+            } else {
+              dialog.dismiss();
+            }
+          });
+
+          return;
+        }
+        case UserPromptType.beforeunload: {
+          // TODO: Bug 1824220. Implement support for "beforeunload" prompts.
+          throw new lazy.error.UnsupportedOperationError(
+            '"beforeunload" prompts are not supported yet.'
+          );
+        }
+      }
+    }
+
+    throw new lazy.error.NoSuchAlertError();
   }
 
   /**
