@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+  content/browser/aboutlogins/components/login-list-lit-item.mjs        (content/components/login-list-lit-item.mjs)
+  content/browser/aboutlogins/components/login-list-lit-item.css        (content/components/login-list-lit-item.css)
   content/browser/aboutlogins/components/login-alert.css                 (content/components/login-alert.css)
   content/browser/aboutlogins/components/login-alert.mjs                 (content/components/login-alert.mjs)
   content/browser/aboutlogins/components/confirmation-dialog.css         (content/components/confirmation-dialog.css)
