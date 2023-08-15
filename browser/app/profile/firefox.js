@@ -736,6 +736,10 @@ pref("browser.shopping.experience2023.optedIn", 0);
 // True by default, will be set to false on opt out.
 pref("browser.shopping.experience2023.active", true);
 
+// Activates the ad card in the shopping sidebar.
+// True by default, will be set to false on opt out.
+pref("browser.shopping.experience2023.ads.enabled", true);
+
 // Enables the display of the Mozilla VPN banner in private browsing windows
 pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source=firefox-browser&utm_medium=firefox-%CHANNEL%-browser&utm_campaign=private-browsing-vpn-link");
 
