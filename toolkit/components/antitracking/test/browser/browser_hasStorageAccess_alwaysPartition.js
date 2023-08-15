@@ -22,7 +22,7 @@ var settings = [
     topPage: TEST_TOP_PAGE_HTTPS,
     thirdPartyPage: TEST_4TH_PARTY_PAGE_HTTPS,
     setup: () => {
-      let type = "3rdPartyStorage^https://not-tracking.example.com";
+      let type = "3rdPartyFrameStorage^https://not-tracking.example.com";
       let permission = Services.perms.ALLOW_ACTION;
       let expireType = Services.perms.EXPIRE_SESSION;
       PermissionTestUtils.add(
@@ -109,19 +109,9 @@ var testCases = [
     cases: [
       [true] /* same-origin non-tracker */,
       [false, foreignBlocked] /* 3rd-party non-tracker */,
-      [
-        SpecialPowers.Services.prefs.getBoolPref(
-          "network.cookie.rejectForeignWithExceptions.enabled"
-        ),
-        foreignBlocked,
-      ] /* 3rd-party tracker with permission */,
+      [false, foreignBlocked] /* 3rd-party tracker with permission */,
       [false, foreignBlocked] /* 3rd-party tracker */,
-      [
-        SpecialPowers.Services.prefs.getBoolPref(
-          "network.cookie.rejectForeignWithExceptions.enabled"
-        ),
-        foreignBlocked,
-      ] /* 3rd-party non-tracker with permission */,
+      [false, foreignBlocked] /* 3rd-party non-tracker with permission */,
       [true] /* same-site tracker */,
       [true] /* same-origin tracker */,
       [false, foreignBlocked] /* insecure tracker */,
@@ -160,7 +150,7 @@ var testCases = [
       [true] /* 3rd-party non-tracker */,
       [true] /* 3rd-party non-tracker with permission */,
       [false, trackerBlocked] /* 3rd-party tracker */,
-      [true] /* 3rd-party tracker with permission */,
+      [false, trackerBlocked] /* 3rd-party tracker with permission */,
       [true] /* same-site tracker */,
       [true] /* same-origin tracker */,
       [false, trackerBlocked] /* insecure tracker */,
@@ -171,9 +161,9 @@ var testCases = [
     cases: [
       [true] /* same-origin non-tracker */,
       [false] /* 3rd-party non-tracker */,
-      [true] /* 3rd-party non-tracker with permission */,
+      [false] /* 3rd-party non-tracker with permission */,
       [false, trackerBlocked] /* 3rd-party tracker */,
-      [true] /* 3rd-party tracker with permission */,
+      [false, trackerBlocked] /* 3rd-party tracker with permission */,
       [true] /* same-site tracker */,
       [true] /* same-origin tracker */,
       [false, trackerBlocked] /* insecure tracker */,
