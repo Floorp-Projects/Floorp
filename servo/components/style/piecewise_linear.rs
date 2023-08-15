@@ -24,6 +24,7 @@ type ValueType = CSSFloat;
     PartialEq,
     SpecifiedValueInfo,
     ToResolvedValue,
+    ToShmem,
     Serialize,
     Deserialize,
 )]
@@ -54,6 +55,7 @@ impl ToCss for PiecewiseLinearFunctionEntry {
     SpecifiedValueInfo,
     ToResolvedValue,
     ToCss,
+    ToShmem,
     Serialize,
     Deserialize,
 )]
@@ -61,7 +63,9 @@ impl ToCss for PiecewiseLinearFunctionEntry {
 #[css(comma)]
 pub struct PiecewiseLinearFunction {
     #[css(iterable)]
-    entries: crate::OwnedSlice<PiecewiseLinearFunctionEntry>,
+    #[ignore_malloc_size_of = "Arc"]
+    #[shmem(field_bound)]
+    entries: crate::ArcSlice<PiecewiseLinearFunctionEntry>,
 }
 
 /// Parameters to define one linear stop.
@@ -133,18 +137,6 @@ impl PiecewiseLinearFunction {
         unreachable!("Input is supposed to be within the entries' min & max!");
     }
 
-    /// Create the piecewise linear function from an iterator that generates the parameter tuple.
-    pub fn from_iter<Iter>(iter: Iter) -> Self
-    where
-        Iter: Iterator<Item = PiecewiseLinearFunctionBuildParameters> + ExactSizeIterator,
-    {
-        let mut builder = PiecewiseLinearFunctionBuilder::with_capacity(iter.len());
-        for (y, x_start) in iter {
-            builder = builder.push(y, x_start);
-        }
-        builder.build()
-    }
-
     #[allow(missing_docs)]
     pub fn iter(&self) -> Iter<PiecewiseLinearFunctionEntry> {
         self.entries.iter()
@@ -167,11 +159,6 @@ pub struct PiecewiseLinearFunctionBuilder {
 }
 
 impl PiecewiseLinearFunctionBuilder {
-    #[allow(missing_docs)]
-    pub fn new() -> Self {
-        PiecewiseLinearFunctionBuilder::default()
-    }
-
     /// Create a builder for a known amount of linear stop entries.
     pub fn with_capacity(len: usize) -> Self {
         PiecewiseLinearFunctionBuilder {
@@ -208,9 +195,8 @@ impl PiecewiseLinearFunctionBuilder {
     /// the x value is calculated later. If the end x value is specified, a flat segment
     /// is generated. If start x value is not specified but end x is, it is treated as
     /// start x.
-    pub fn push(mut self, y: CSSFloat, x_start: Option<CSSFloat>) -> Self {
-        self.create_entry(y, x_start);
-        self
+    pub fn push(&mut self, y: CSSFloat, x_start: Option<CSSFloat>) {
+        self.create_entry(y, x_start)
     }
 
     /// Finish building the piecewise linear function by resolving all undefined x values,
@@ -222,10 +208,10 @@ impl PiecewiseLinearFunctionBuilder {
         if self.entries.len() == 1 {
             // Don't bother resolving anything.
             return PiecewiseLinearFunction {
-                entries: crate::OwnedSlice::from_slice(&[PiecewiseLinearFunctionEntry {
+                entries: crate::ArcSlice::from_iter(std::iter::once(PiecewiseLinearFunctionEntry {
                     x: 0.,
                     y: self.entries[0].y,
-                }]),
+                })),
             };
         }
         // Guaranteed at least two elements.
@@ -287,7 +273,7 @@ impl PiecewiseLinearFunctionBuilder {
             "Should've mapped one-to-one!"
         );
         PiecewiseLinearFunction {
-            entries: result.into(),
+            entries: crate::ArcSlice::from_iter(result.into_iter()),
         }
     }
 }
