@@ -304,6 +304,26 @@ def test_get_raptor_test_list_extra_profiler_run_disabled(create_args):
     assert test_list[0].get("extra_profiler_run") is None
 
 
+def test_get_raptor_test_list_extra_profiler_run_enabled_chrome(create_args):
+    args = create_args(
+        app="chrome", test="amazon", extra_profiler_run=True, browser_cycles=1
+    )
+
+    test_list = get_raptor_test_list(args, mozinfo.os)
+    assert len(test_list) == 1
+    assert test_list[0]["name"] == "amazon"
+    assert test_list[0]["extra_profiler_run"] is True
+
+
+def test_get_raptor_test_list_extra_profiler_run_disabled_chrome(create_args):
+    args = create_args(app="chrome", test="amazon", browser_cycles=1)
+
+    test_list = get_raptor_test_list(args, mozinfo.os)
+    assert len(test_list) == 1
+    assert test_list[0]["name"] == "amazon"
+    assert test_list[0].get("extra_profiler_run") is None
+
+
 def test_get_raptor_test_list_debug_mode(create_args):
     args = create_args(test="amazon", debug_mode=True, browser_cycles=1)
 
