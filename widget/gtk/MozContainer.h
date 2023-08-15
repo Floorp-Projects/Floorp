@@ -61,7 +61,7 @@
 #define MOZ_CONTAINER_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS((obj), MOZ_CONTAINER_TYPE, MozContainerClass))
 #ifdef MOZ_WAYLAND
-#define MOZ_WL_CONTAINER(obj) (&MOZ_CONTAINER(obj)->data.wl_container)
+#  define MOZ_WL_CONTAINER(obj) (&MOZ_CONTAINER(obj)->data.wl_container)
 #endif
 
 typedef struct _MozContainer MozContainer;
