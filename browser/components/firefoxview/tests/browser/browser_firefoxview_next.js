@@ -22,3 +22,65 @@ add_task(async function about_firefoxview_next_pref() {
     is(document.location.href, "about:firefoxview");
   });
 });
+
+add_task(async function test_aria_roles() {
+  Services.prefs.setBoolPref("browser.tabs.firefox-view-next", true);
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview-next");
+
+    is(
+      document.querySelector("main").getAttribute("role"),
+      "application",
+      "The main element has role='application'"
+    );
+
+    let recentlyClosedComponent = document.querySelector(
+      "view-recentlyclosed[slot=recentlyclosed]"
+    );
+    let recentlyClosedEmptyState = recentlyClosedComponent.emptyState;
+    let descriptionEls = recentlyClosedEmptyState.descriptionEls;
+    is(
+      descriptionEls[1].querySelector("a").getAttribute("aria-details"),
+      "card-container",
+      "The link within the recently closed empty state has the expected 'aria-details' attribute."
+    );
+
+    let syncedTabsComponent = document.querySelector(
+      "view-syncedtabs[slot=syncedtabs]"
+    );
+    let syncedTabsEmptyState = syncedTabsComponent.emptyState;
+    is(
+      syncedTabsEmptyState.querySelector("button").getAttribute("aria-details"),
+      "empty-container",
+      "The button within the synced tabs empty state has the expected 'aria-details' attribute."
+    );
+
+    // Test keyboard navigation from card-container summary
+    // elements to links/buttons in empty states
+    const tab = async shiftKey => {
+      info(`Tab${shiftKey ? " + Shift" : ""}`);
+      EventUtils.synthesizeKey("KEY_Tab", { shiftKey });
+    };
+    recentlyClosedComponent.cardEl.summaryEl.focus();
+    await tab();
+    is(
+      recentlyClosedEmptyState.shadowRoot.activeElement,
+      descriptionEls[1].querySelector("a"),
+      "Focus should be on the link within the recently closed empty state"
+    );
+    await tab();
+    is(
+      syncedTabsComponent.shadowRoot.querySelector("card-container").shadowRoot
+        .activeElement,
+      syncedTabsComponent.shadowRoot.querySelector("card-container").summaryEl,
+      "Focus should be on summary element of the synced tabs card-container"
+    );
+    await tab();
+    is(
+      syncedTabsComponent.shadowRoot.activeElement,
+      syncedTabsEmptyState.querySelector("button"),
+      "Focus should be on button element of the synced tabs empty state"
+    );
+  });
+});
