@@ -52,10 +52,6 @@ class SyncedTabsInView extends ViewPage {
     devices: { type: Array },
   };
 
-  static queries = {
-    emptyState: "fxview-empty-state",
-  };
-
   connectedCallback() {
     super.connectedCallback();
     this.addEventListener("click", this);
@@ -229,7 +225,6 @@ class SyncedTabsInView extends ViewPage {
         ?isInnerCard=${this.overview}
         mainImageUrl="${ifDefined(mainImageUrl)}"
         headerIconUrl="${ifDefined(headerIconUrl)}"
-        id="empty-container"
       >
         <button
           class="primary"
@@ -238,7 +233,6 @@ class SyncedTabsInView extends ViewPage {
           data-l10n-id="${ifDefined(buttonLabel)}"
           data-action="${action}"
           @click=${this.handleEvent}
-          aria-details="empty-container"
         ></button>
         <div slot="primary-action"
           ?hidden=${!checkboxLabel} >
