@@ -26,17 +26,17 @@
 
     async function test() {
       const utils = SpecialPowers.getDOMWindowUtils(window);
-    
+
       // Zoom in.
       let resolution = 3.0;
       utils.setResolutionAndScaleTo(resolution);
       await promiseApzFlushedRepaints();
-    
+
       var subframe = document.getElementById("scrollbox");
       let scrollPromise = new Promise(resolve => {
         subframe.addEventListener("scroll", resolve, {once: true});
       });
-    
+
       // Scroll down a small amount (5px). The bug in this case is that the
       // scroll thumb does not start moving until the mouse has already moved
       // by some distance, so if the bug occurs, the first 5px of mouse movement
@@ -46,25 +46,25 @@
         ok(true, "No scrollbar, can't do this test");
         return;
       }
-    
+
       // the events above might be stuck in APZ input queue for a bit until the
       // layer is activated, so we wait here until the scroll event listener is
       // triggered.
       await scrollPromise;
-    
+
       await dragFinisher();
-    
+
       // Flush everything just to be safe
       await promiseOnlyApzControllerFlushed();
-    
+
       // Check that we've scrolled at all.
       ok(subframe.scrollTop > 0, "Scrollbar drag resulted in a scroll position of " + subframe.scrollTop);
     }
-    
+
     waitUntilApzStable()
     .then(test)
     .then(subtestDone, subtestFailed);
-    
+
   </script>
 </body>
 </html>
