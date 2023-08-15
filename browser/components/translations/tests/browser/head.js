@@ -449,6 +449,25 @@ async function navigate(url, message) {
 }
 
 /**
+ * Click the reader-mode button if the reader-mode button is available.
+ * Fails if the reader-mode button is hidden.
+ */
+async function toggleReaderMode() {
+  const readerButton = document.getElementById("reader-mode-button");
+  is(readerButton.hidden, false, "Reader mode button should be visible");
+
+  const readyPromise = readerButton.getAttribute("readeractive")
+    ? waitForCondition(() => !readerButton.getAttribute("readeractive"))
+    : BrowserTestUtils.waitForContentEvent(
+        gBrowser.selectedBrowser,
+        "AboutReaderContentReady"
+      );
+
+  click(readerButton, "Clicking the reader-mode button");
+  await readyPromise;
+}
+
+/**
  * Add a tab to the page
  *
  * @param {string} url
