@@ -4605,23 +4605,26 @@ void MacroAssembler::branchTestObjectNeedsProxyResultValidation(
   MOZ_ASSERT(cond == Assembler::Zero || cond == Assembler::NonZero);
 
   Label done;
-  Label* needsValidation = cond == NonZero ? label : &done;
+  Label* doValidation = cond == NonZero ? label : &done;
+  Label* skipValidation = cond == NonZero ? &done : label;
 
   loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
   branchTest32(Assembler::Zero,
                Address(scratch, Shape::offsetOfImmutableFlags()),
-               Imm32(Shape::isNativeBit()), needsValidation);
+               Imm32(Shape::isNativeBit()), doValidation);
   static_assert(sizeof(ObjectFlags) == sizeof(uint16_t));
   load16ZeroExtend(Address(scratch, Shape::offsetOfObjectFlags()), scratch);
   branchTest32(Assembler::NonZero, scratch,
                Imm32(uint32_t(ObjectFlag::NeedsProxyGetSetResultValidation)),
-               needsValidation);
+               doValidation);
 
   loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
   loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  loadPtr(Address(scratch, BaseShape::offsetOfClasp()), scratch);
   loadPtr(Address(scratch, offsetof(JSClass, cOps)), scratch);
+  branchTestPtr(Assembler::Zero, scratch, scratch, skipValidation);
   loadPtr(Address(scratch, offsetof(JSClassOps, resolve)), scratch);
-  branchTestPtr(Assembler::NonZero, scratch, scratch, needsValidation);
+  branchTestPtr(Assembler::NonZero, scratch, scratch, doValidation);
   bind(&done);
 }
 
