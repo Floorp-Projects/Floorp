@@ -17,6 +17,10 @@ namespace mozilla::gmp {
 
 class GMPChild;
 
+/**
+ * This class allows the GMP process to receive requests to create GMP
+ * decoder/encoder objects on behalf of the parent/content processes.
+ */
 class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
  public:
   // Mark AddRef and Release as `final`, as they overload pure virtual
