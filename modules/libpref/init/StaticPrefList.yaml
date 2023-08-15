@@ -15603,17 +15603,28 @@
   value: 0.05f
   mirror: always
 
+# When using pixel deltas for pan input, how many pixels do we consider a whole
+# swipe?
+#
 # The values for this pref are derived from trial and error in an effort to
 # match the existing behavior on the respective platforms.
-- name: widget.swipe.whole-page-pixel-size
+- name: widget.swipe.pixel-size
   type: float
-#if defined(XP_WIN)
-  value: 1100.0f
-#elif defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   value: 550.0f
 #else
-  value: 40.0f
+  value: 1100.0f
 #endif
+  mirror: always
+
+# When using page deltas for pan input, how many pages do we consider a whole
+# swipe navigation?
+#
+# This is only relevant for GTK which is as of right now the only platform
+# which supports page-based pan gestures.
+- name: widget.swipe.page-size
+  type: float
+  value: 40.0f
   mirror: always
 
 - name: widget.transparent-windows

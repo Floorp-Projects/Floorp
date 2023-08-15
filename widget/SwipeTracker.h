@@ -90,11 +90,12 @@ class SwipeTracker final : public nsARefreshObserver {
   TimeStamp mLastAnimationFrameTime;
   const uint32_t mAllowedDirections;
   const uint32_t mSwipeDirection;
-  double mGestureAmount;
-  double mCurrentVelocity;
-  bool mEventsAreControllingSwipe;
-  bool mEventsHaveStartedNewGesture;
-  bool mRegisteredWithRefreshDriver;
+  double mGestureAmount = 0.0;
+  double mCurrentVelocity = 0.0;
+  bool mDeltaTypeIsPage = false;
+  bool mEventsAreControllingSwipe = true;
+  bool mEventsHaveStartedNewGesture = false;
+  bool mRegisteredWithRefreshDriver= false;
 };
 
 struct SwipeEventQueue {

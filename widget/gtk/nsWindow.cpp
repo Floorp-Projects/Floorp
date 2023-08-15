@@ -4991,8 +4991,7 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
 
           LOG("[%d] pan smooth event dx=%f dy=%f inprogress=%d\n", aEvent->time,
               aEvent->delta_x, aEvent->delta_y, mPanInProgress);
-          PanGestureInput::PanGestureType eventType =
-              PanGestureInput::PANGESTURE_PAN;
+          auto eventType = PanGestureInput::PANGESTURE_PAN;
           if (sGdkEventIsScrollStopEvent((GdkEvent*)aEvent)) {
             eventType = PanGestureInput::PANGESTURE_END;
             mPanInProgress = false;

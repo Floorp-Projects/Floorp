@@ -49,12 +49,7 @@ SwipeTracker::SwipeTracker(nsIWidget& aWidget,
           PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent))),
       mLastEventTimeStamp(aSwipeStartEvent.mTimeStamp),
       mAllowedDirections(aAllowedDirections),
-      mSwipeDirection(aSwipeDirection),
-      mGestureAmount(0.0),
-      mCurrentVelocity(0.0),
-      mEventsAreControllingSwipe(true),
-      mEventsHaveStartedNewGesture(false),
-      mRegisteredWithRefreshDriver(false) {
+      mSwipeDirection(aSwipeDirection) {
   SendSwipeEvent(eSwipeGestureStart, 0, 0.0, aSwipeStartEvent.mTimeStamp);
   ProcessEvent(aSwipeStartEvent, /* aProcessingFirstEvent = */ true);
 }
@@ -67,7 +62,7 @@ SwipeTracker::~SwipeTracker() {
 }
 
 double SwipeTracker::SwipeSuccessTargetValue() const {
-  return (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT)
+  return mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT
              ? -1.0
              : 1.0;
 }
@@ -76,13 +71,11 @@ double SwipeTracker::ClampToAllowedRange(double aGestureAmount) const {
   // gestureAmount needs to stay between -1 and 0 when swiping right and
   // between 0 and 1 when swiping left.
   double min =
-      (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT)
-          ? -1.0
-          : 0.0;
+      mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT ? -1.0
+                                                                          : 0.0;
   double max =
-      (mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_LEFT)
-          ? 1.0
-          : 0.0;
+      mSwipeDirection == dom::SimpleGestureEvent_Binding::DIRECTION_LEFT ? 1.0
+                                                                         : 0.0;
   return clamped(aGestureAmount, min, max);
 }
 
@@ -117,9 +110,15 @@ nsEventStatus SwipeTracker::ProcessEvent(
                                         : nsEventStatus_eConsumeNoDefault;
   }
 
-  double delta = -aEvent.mPanDisplacement.x /
-                 mWidget.GetDefaultScaleInternal() /
-                 StaticPrefs::widget_swipe_whole_page_pixel_size();
+  mDeltaTypeIsPage = aEvent.mDeltaType == PanGestureInput::PANDELTA_PAGE;
+  double delta = [&]() -> double {
+    if (mDeltaTypeIsPage) {
+      return -aEvent.mPanDisplacement.x / StaticPrefs::widget_swipe_page_size();
+    }
+    return -aEvent.mPanDisplacement.x / mWidget.GetDefaultScaleInternal() /
+           StaticPrefs::widget_swipe_pixel_size();
+  }();
+
   mGestureAmount = ClampToAllowedRange(mGestureAmount + delta);
   if (aEvent.mType != PanGestureInput::PANGESTURE_END) {
     if (!aProcessingFirstEvent) {
@@ -186,14 +185,22 @@ void SwipeTracker::StartAnimating(double aStartValue, double aTargetValue) {
   }
 }
 
-void SwipeTracker::WillRefresh(mozilla::TimeStamp aTime) {
+void SwipeTracker::WillRefresh(TimeStamp aTime) {
+  // FIXME(emilio): shouldn't we be using `aTime`?
   TimeStamp now = TimeStamp::Now();
   mAxis.Simulate(now - mLastAnimationFrameTime);
   mLastAnimationFrameTime = now;
 
-  bool isFinished =
-      mAxis.IsFinished(1.0 / StaticPrefs::widget_swipe_whole_page_pixel_size());
-  mGestureAmount = (isFinished ? mAxis.GetDestination() : mAxis.GetPosition());
+  const double wholeSize = mDeltaTypeIsPage
+                               ? StaticPrefs::widget_swipe_page_size()
+                               : StaticPrefs::widget_swipe_pixel_size();
+  // NOTE(emilio): It's unclear this makes sense for page-based swiping, but
+  // this preserves behavior and all platforms probably will end up converging
+  // in pixel-based pan input, so...
+  const double minIncrement = 1.0 / wholeSize;
+  const bool isFinished = mAxis.IsFinished(minIncrement);
+
+  mGestureAmount = isFinished ? mAxis.GetDestination() : mAxis.GetPosition();
   SendSwipeEvent(eSwipeGestureUpdate, 0, mGestureAmount, now);
 
   if (isFinished) {
