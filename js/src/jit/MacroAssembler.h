@@ -1814,6 +1814,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void branchIfObjectNotExtensible(Register obj, Register scratch,
                                    Label* label);
 
+  void branchTestObjectNeedsProxyResultValidation(Condition condition,
+                                                  Register obj,
+                                                  Register scratch,
+                                                  Label* label);
+
   inline void branchTestClassIsProxy(bool proxy, Register clasp, Label* label);
 
   inline void branchTestObjectIsProxy(bool proxy, Register object,

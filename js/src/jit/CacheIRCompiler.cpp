@@ -35,6 +35,7 @@
 #include "js/ScalarType.h"          // js::Scalar::Type
 #include "proxy/DOMProxy.h"
 #include "proxy/Proxy.h"
+#include "proxy/ScriptedProxyHandler.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/ArrayBufferViewObject.h"
@@ -2249,6 +2250,82 @@ bool CacheIRCompiler::emitGuardDynamicSlotValue(ObjOperandId objId,
   BaseIndex slotVal(scratch1, scratch2, TimesOne);
   masm.branchTestValue(Assembler::NotEqual, slotVal, scratchVal,
                        failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitLoadScriptedProxyHandler(ObjOperandId resultId,
+                                                   ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  Register output = allocator.defineRegister(masm, resultId);
+
+  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), output);
+  masm.unboxObject(Address(output, js::detail::ProxyReservedSlots::offsetOfSlot(
+                                       ScriptedProxyHandler::HANDLER_EXTRA)),
+                   output);
+  return true;
+}
+
+bool CacheIRCompiler::emitIdToStringOrSymbol(ValOperandId resultId,
+                                             ValOperandId idId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  ValueOperand id = allocator.useValueRegister(masm, idId);
+  ValueOperand output = allocator.defineValueRegister(masm, resultId);
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.moveValue(id, output);
+
+  Label done, intDone, callVM;
+  {
+    ScratchTagScope tag(masm, output);
+    masm.splitTagForTest(output, tag);
+    masm.branchTestString(Assembler::Equal, tag, &done);
+    masm.branchTestSymbol(Assembler::Equal, tag, &done);
+    masm.branchTestInt32(Assembler::NotEqual, tag, failure->label());
+  }
+
+  Register intReg = output.scratchReg();
+  masm.unboxInt32(output, intReg);
+
+  masm.boundsCheck32PowerOfTwo(intReg, StaticStrings::INT_STATIC_LIMIT,
+                               &callVM);
+
+  // Fast path for small integers.
+  masm.movePtr(ImmPtr(&cx_->runtime()->staticStrings->intStaticTable), scratch);
+  masm.loadPtr(BaseIndex(scratch, intReg, ScalePointer), intReg);
+  masm.jump(&intDone);
+
+  masm.bind(&callVM);
+  LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
+                               liveVolatileFloatRegs());
+  masm.PushRegsInMask(volatileRegs);
+
+  using Fn = JSLinearString* (*)(JSContext* cx, int32_t i);
+  masm.setupUnalignedABICall(scratch);
+  masm.loadJSContext(scratch);
+  masm.passABIArg(scratch);
+  masm.passABIArg(intReg);
+  masm.callWithABI<Fn, js::Int32ToStringPure>();
+
+  masm.storeCallPointerResult(intReg);
+
+  LiveRegisterSet ignore;
+  ignore.add(intReg);
+  masm.PopRegsInMaskIgnore(volatileRegs, ignore);
+
+  masm.branchPtr(Assembler::Equal, intReg, ImmPtr(nullptr), failure->label());
+
+  masm.bind(&intDone);
+  masm.tagValue(JSVAL_TYPE_STRING, intReg, output);
+  masm.bind(&done);
+
   return true;
 }
 

@@ -622,6 +622,28 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     callNativeSetter_(receiver, setter, rhs, sameRealm, nargsAndFlags);
   }
 
+#ifdef JS_PUNBOX64
+  void callScriptedProxyGetResult(ValOperandId target, ObjOperandId receiver,
+                                  ObjOperandId handler, JSFunction* trap,
+                                  HandleId property) {
+    MOZ_ASSERT(trap->hasJitEntry());
+    uint32_t nargsAndFlags = trap->flagsAndArgCountRaw();
+    callScriptedProxyGetResult_(target, receiver, handler, trap, property,
+                                nargsAndFlags);
+  }
+
+  void callScriptedProxyGetByValueResult(ValOperandId target,
+                                         ObjOperandId receiver,
+                                         ObjOperandId handler,
+                                         ValOperandId property,
+                                         JSFunction* trap) {
+    MOZ_ASSERT(trap->hasJitEntry());
+    uint32_t nargsAndFlags = trap->flagsAndArgCountRaw();
+    callScriptedProxyGetByValueResult_(target, receiver, handler, property,
+                                       trap, nargsAndFlags);
+  }
+#endif
+
   void metaScriptedThisShape(Shape* thisShape) {
     metaScriptedThisShape_(thisShape);
   }
