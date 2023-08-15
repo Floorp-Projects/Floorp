@@ -183,6 +183,13 @@ Both of these steps are required to satisfy the ``_expose_gecko_profiler()`` `me
 
 You should also keep in mind these `default parameters <https://searchfox.org/mozilla-central/rev/2e06f92ba068e32a9a7213ee726e8171f91605c7/testing/raptor/raptor/browsertime/base.py#474-495>`_, which you may or may not want to change yourself in your tests configuration file.
 
+Gathering a Chrome trace with Raptor-Browsertime
+------------------------------------------------
+
+Browsertime supports the ability to profile Chrome applications and this functionality is now available in Raptor.
+
+If running a Chrome/Chromium/Chromium-as-release test locally, simply add the ``--extra-profiler-run`` flag to your command line. By default the Chrome trace is run in CI now, and can be opened in the Firefox profiler UI. At the moment only pageload tracing is supported.
+
 Upgrading Browsertime In-Tree
 -----------------------------
 To upgrade the browsertime version used in-tree you can run, then commit the changes made to ``package.json`` and ``package-lock.json``:
