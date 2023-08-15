@@ -20,7 +20,8 @@ export const modal = {
 };
 
 /**
- * Check for already existing modal or tab modal dialogs
+ * Check for already existing modal or tab modal dialogs and
+ * return the first one.
  *
  * @param {browser.Context} context
  *     Reference to the browser context to check for existent dialogs.
@@ -29,7 +30,7 @@ export const modal = {
  *     Returns instance of the Dialog class, or `null` if no modal dialog
  *     is present.
  */
-modal.findModalDialogs = function (context) {
+modal.findPrompt = function (context) {
   // First check if there is a modal dialog already present for the
   // current browser window.
   for (let win of Services.wm.getEnumerator(null)) {
