@@ -309,13 +309,13 @@ void moz_container_remove(GtkContainer* container, GtkWidget* child_widget) {
     g_object_unref(parent_window);
   }
 
-  moz_container->data.children = g_list_remove(moz_container->data.children, child);
+  moz_container->data.children =
+      g_list_remove(moz_container->data.children, child);
   g_free(child);
 }
 
 void moz_container_forall(GtkContainer* container, gboolean include_internals,
                           GtkCallback callback, gpointer callback_data) {
-
   g_return_if_fail(IS_MOZ_CONTAINER(container));
   g_return_if_fail(callback);
 
