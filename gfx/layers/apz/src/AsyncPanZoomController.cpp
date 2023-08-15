@@ -4853,6 +4853,13 @@ AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
   return asyncTransform;
 }
 
+Matrix4x4 AsyncPanZoomController::GetPaintedResolutionTransform() const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  MOZ_ASSERT(IsRootContent());
+  float resolution = mLastContentPaintMetrics.GetPresShellResolution();
+  return Matrix4x4::Scaling(resolution, resolution, 1.f);
+}
+
 LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
     AsyncTransformConsumer aMode) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);

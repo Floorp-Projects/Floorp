@@ -1237,6 +1237,16 @@ class AsyncPanZoomController {
       AsyncTransformComponents aComponents = LayoutAndVisual,
       std::size_t aSampleIndex = 0) const;
 
+  /**
+   * Returns a transform that scales by the resolution that was in place
+   * at "painting" (display list building) time. This is used as a
+   * component of some transforms related to APZCs in out-of-process
+   * subdocuments.
+   *
+   * Can only be called for the root content APZC.
+   */
+  Matrix4x4 GetPaintedResolutionTransform() const;
+
   AutoTArray<wr::SampledScrollOffset, 2> GetSampledScrollOffsets() const;
 
   /**
