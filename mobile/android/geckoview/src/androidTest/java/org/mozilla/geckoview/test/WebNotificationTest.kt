@@ -7,6 +7,7 @@ import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
@@ -92,6 +93,7 @@ class WebNotificationTest : BaseSessionTest() {
             value = "true",
         ),
     )
+    @Ignore // Bug 1843046 - Disabled because private notifications are temporarily disabled.
     @Test
     fun onShowNotification() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.vibrate.enabled" to true))
@@ -195,6 +197,7 @@ class WebNotificationTest : BaseSessionTest() {
             value = "true",
         ),
     )
+    @Ignore // Bug 1843046 - Disabled because private notifications are temporarily disabled.
     @Test
     fun clickPrivateNotificationParceled() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.vibrate.enabled" to true))
