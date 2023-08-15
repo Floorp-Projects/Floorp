@@ -576,6 +576,17 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
     }
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  // If we're loading an error page on android, it must complete within the same
+  // process as the errored page load would complete in due to code expecting
+  // that behavior. See bug 1673763.
+  if (aLoadStateLoadType == LOAD_ERROR_PAGE) {
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+            ("Forcing error page load to complete in the current process"));
+    behavior = IsolationBehavior::Anywhere;
+  }
+#endif
+
   // If we're loading for a specific extension, we'll need to perform a
   // BCG-switching load to get our toplevel extension window in the correct
   // BrowsingContextGroup.
