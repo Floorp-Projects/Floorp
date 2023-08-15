@@ -84,8 +84,6 @@ class WebRenderLayerScrollData final {
     mTransformIsPerspective = aTransformIsPerspective;
   }
   bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
-  void SetResolution(float aResolution) { mResolution = aResolution; }
-  float GetResolution() const { return mResolution; }
 
   void SetEventRegionsOverride(const EventRegionsOverride& aOverride) {
     mEventRegionsOverride = aOverride;
@@ -208,7 +206,6 @@ class WebRenderLayerScrollData final {
   ViewID mAncestorTransformId;
   gfx::Matrix4x4 mTransform;
   bool mTransformIsPerspective;
-  float mResolution;
   LayerIntRegion mVisibleRegion;
   // The remote documents only need their size because their origin is always
   // (0, 0).

@@ -299,7 +299,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     // See WebRenderLayerScrollData::Initialize for more context.
     //  * The ancestor transform is associated with whichever layer has scroll
     //    id matching GetAncestorTransformId().
-    //  * The resolution is associated with the "topmost" layer.
     //  * The transform is associated with the "bottommost" layer.
     // Multiple transforms may apply to the same layer (e.g. if there is only
     // one scrollmetadata on the layer, then it is both "topmost" and
@@ -316,11 +315,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
         Metrics().GetScrollId() == mLayer->GetAncestorTransformId();
     if (emitAncestorTransform) {
       transform = mLayer->GetAncestorTransform();
-    }
-    if (AtTopLayer()) {
-      float resolution = mLayer->GetResolution();
-      transform =
-          transform * gfx::Matrix4x4::Scaling(resolution, resolution, 1.f);
     }
     if (AtBottomLayer()) {
       transform = mLayer->GetTransform() * transform;
