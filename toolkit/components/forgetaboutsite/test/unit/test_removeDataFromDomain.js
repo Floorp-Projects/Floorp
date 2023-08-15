@@ -108,7 +108,7 @@ function check_disabled_host(aHost, aIsDisabled) {
  *        The host to add the login for.
  */
 async function add_login(aHost) {
-  check_login_exists(aHost, false);
+  await check_login_exists(aHost, false);
   let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
     Ci.nsILoginInfo
   );
@@ -122,7 +122,7 @@ async function add_login(aHost) {
     LOGIN_PASSWORD_FIELD
   );
   await Services.logins.addLoginAsync(login);
-  check_login_exists(aHost, true);
+  await check_login_exists(aHost, true);
 }
 
 /**
@@ -133,8 +133,8 @@ async function add_login(aHost) {
  * @param aExists
  *        True if the login should exist, false otherwise.
  */
-function check_login_exists(aHost, aExists) {
-  let logins = Services.logins.findLogins(aHost, "", null);
+async function check_login_exists(aHost, aExists) {
+  let logins = await Services.logins.searchLoginsAsync({ origin: aHost });
   Assert.equal(logins.length, aExists ? 1 : 0);
 }
 
@@ -314,24 +314,24 @@ async function test_login_manager_logins_cleared_with_direct_match() {
   const TEST_HOST = "http://mozilla.org";
   await add_login(TEST_HOST);
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  check_login_exists(TEST_HOST, true);
+  await check_login_exists(TEST_HOST, true);
 }
 
 async function test_login_manager_logins_cleared_with_subdomain() {
   const TEST_HOST = "http://www.mozilla.org";
   await add_login(TEST_HOST);
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  check_login_exists(TEST_HOST, true);
+  await check_login_exists(TEST_HOST, true);
 }
 
 async function test_login_manager_logins_not_cleared_with_uri_contains_domain() {
   const TEST_HOST = "http://ilovemozilla.org";
   await add_login(TEST_HOST);
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  check_login_exists(TEST_HOST, true);
+  await check_login_exists(TEST_HOST, true);
 
   Services.logins.removeAllUserFacingLogins();
-  check_login_exists(TEST_HOST, false);
+  await check_login_exists(TEST_HOST, false);
 }
 
 async function test_login_manager_disabled_hosts_cleared_base_domain() {
