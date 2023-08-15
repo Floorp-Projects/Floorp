@@ -56,6 +56,13 @@
 #ifdef MOZ_INCLUDE_MOZALLOC_H_FROM_${HEADER}
 // See if we're in code that can use mozalloc.
 #  if !defined(NS_NO_XPCOM) && !defined(MOZ_NO_MOZALLOC)
+//   In recent versions of MSVC, <new>, which mozalloc.h includes, uses
+//   <type_traits> without including it. Before MSVC 17.7, this worked
+//   fine because <new> included <exception>, which includes <type_traits>.
+//   That is still the case, but it now also includes <cstdlib> before
+//   <type_traits>, so when something includes <exception> before <new>,
+//   we get here before <type_traits> is included, which ends up not working.
+#    include <type_traits>
 #    include "mozilla/mozalloc.h"
 #  else
 #    error "STL code can only be used with infallible ::operator new()"
