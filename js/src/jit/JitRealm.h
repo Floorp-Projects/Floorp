@@ -105,6 +105,7 @@ class JitRealm {
     MOZ_ASSERT(!hasStubs());
     initialStringHeap = allow ? gc::Heap::Default : gc::Heap::Tenured;
   }
+  gc::Heap getInitialStringHeap() const { return initialStringHeap; }
 
   JitCode* stringConcatStubNoBarrier(uint32_t* requiredBarriersOut) const {
     return getStubNoBarrier(StringConcat, requiredBarriersOut);

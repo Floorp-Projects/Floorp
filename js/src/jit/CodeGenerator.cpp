@@ -2405,9 +2405,7 @@ void CreateDependentString::generateFallback(MacroAssembler& masm) {
 // Generate the RegExpMatcher and RegExpExecMatch stubs. These are very similar,
 // but RegExpExecMatch also has to load and update .lastIndex for global/sticky
 // regular expressions.
-static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
-                                              gc::Heap initialStringHeap,
-                                              bool isExecMatch) {
+static JitCode* GenerateRegExpMatchStubShared(JSContext* cx, bool isExecMatch) {
   if (isExecMatch) {
     JitSpew(JitSpew_Codegen, "# Emitting RegExpExecMatch stub");
   } else {
@@ -2476,6 +2474,9 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
   // The InputOutputData is placed above the frame pointer and return address on
   // the stack.
   int32_t inputOutputDataStartOffset = 2 * sizeof(void*);
+
+  JS::AutoAssertNoGC nogc(cx);
+  gc::Heap initialStringHeap = cx->realm()->jitRealm()->getInitialStringHeap();
 
   Label notFound, oolEntry;
   if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex, temp1, temp2,
@@ -2762,13 +2763,11 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
 }
 
 JitCode* JitRealm::generateRegExpMatcherStub(JSContext* cx) {
-  return GenerateRegExpMatchStubShared(cx, initialStringHeap,
-                                       /* isExecMatch = */ false);
+  return GenerateRegExpMatchStubShared(cx, /* isExecMatch = */ false);
 }
 
 JitCode* JitRealm::generateRegExpExecMatchStub(JSContext* cx) {
-  return GenerateRegExpMatchStubShared(cx, initialStringHeap,
-                                       /* isExecMatch = */ true);
+  return GenerateRegExpMatchStubShared(cx, /* isExecMatch = */ true);
 }
 
 class OutOfLineRegExpMatcher : public OutOfLineCodeBase<CodeGenerator> {
