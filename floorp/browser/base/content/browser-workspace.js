@@ -1626,6 +1626,7 @@ async function checkTabGroupAddonInstalledAndStartWorkspace() {
     if (addon === null) {
       continue;
     } else if (addon.isActive && workspaceTabEnabled) {
+      Services.prefs.setBoolPref(WORKSPACE_TAB_ENABLED_PREF, false);
       return;
     }
   }
