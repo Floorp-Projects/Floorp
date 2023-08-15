@@ -121,27 +121,25 @@
   color: var(--autocomplete-popup-highlight-color);
 }
 
+/** Quick actions **/
+
 .urlbarView-row[dynamicType=quickactions] > .urlbarView-row-inner {
   align-items: start;
 }
 
-.urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
+.urlbarView-dynamic-quickactions-buttons {
   display: flex;
   flex-grow: 1;
   gap: 0.9em 1.8em;
   max-width: 100%;
+
+  &[data-is-quickactions-searchmode] {
+    flex-wrap: wrap;
+  }
 }
 
-.urlbarView-dynamic-quickactions-buttons[data-is-quickactions-searchmode] {
-  flex-wrap: wrap;
-}
-
-.urlbarView-results[wrap] > .urlbarView-row[dynamicType=quickactions] > .urlbarView-row-inner {
-  flex-wrap: unset;
-}
-
-.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row {
-  box-shadow: 0px 0px 1px rgba(128, 128, 142, 0.9), 0px 0px 4px rgba(128, 128, 142, 0.5);
+.urlbarView-quickaction-row {
+  box-shadow: 0 0 1px rgba(128, 128, 142, 0.9), 0 0 4px rgba(128, 128, 142, 0.5);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -150,46 +148,42 @@
   position: relative;
   overflow: hidden;
   min-width: 16px;
-}
 
-.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row[disabled] {
-  opacity: .4;
-}
+  &[disabled] {
+    opacity: .4;
+  }
 
-.urlbarView-row[dynamicType=quickactions] .urlbarView-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: .8em;
-  font-weight: 500;
-}
+  &:hover:not([disabled]):not([selected]) {
+    background-color: var(--autocomplete-popup-hover-background);
+  }
 
-.urlbarView-row[dynamicType=quickactions] .urlbarView-favicon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  &[selected] {
+    background-color: var(--autocomplete-popup-highlight-background);
+    color: var(--autocomplete-popup-highlight-color);
+  }
 
-.urlbarView-row[dynamicType=quickactions] .urlbarView-favicon-img {
-  width: 16px;
-  height: 16px;
+  > .urlbarView-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: .8em;
+    font-weight: 500;
+  }
+
+  > .urlbarView-favicon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    > .urlbarView-favicon-img {
+      width: 16px;
+      height: 16px;
+    }
+  }
 }
 
 .urlbarView-row[dynamicType=quickactions][label]::before {
   top: -1em;
   margin-inline-start: 6px;
-}
-
-.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row:hover:not([disabled]):not([selected]) {
-  background-color: var(--autocomplete-popup-hover-background);
-}
-
-.urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row[selected] {
-  background-color: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
-}
-
-.urlbarView-row[dynamicType=quickactions] .urlbarView-title {
-  display: flex;
 }
 
 /**
