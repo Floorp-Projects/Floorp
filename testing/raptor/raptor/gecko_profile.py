@@ -5,7 +5,6 @@
 """
 Module to handle Gecko profiling.
 """
-import gzip
 import json
 import os
 import tempfile
@@ -17,9 +16,10 @@ from mozgeckoprofiler import ProfileSymbolicator
 
 here = os.path.dirname(os.path.realpath(__file__))
 LOG = RaptorLogger(component="raptor-gecko-profile")
+from raptor_profiling import RaptorProfiling
 
 
-class GeckoProfile(object):
+class GeckoProfile(RaptorProfiling):
     """
     Handle Gecko profiling.
 
@@ -27,15 +27,11 @@ class GeckoProfile(object):
     """
 
     def __init__(self, upload_dir, raptor_config, test_config):
-        self.upload_dir = upload_dir
-        self.raptor_config = raptor_config
-        self.test_config = test_config
+        super().__init__(upload_dir, raptor_config, test_config)
         self.cleanup = True
 
-        # Create a temporary directory into which the tests can put
-        # their profiles. These files will be assembled into one big
-        # zip file later on, which is put into the MOZ_UPLOAD_DIR.
-        self.gecko_profile_dir = tempfile.mkdtemp()
+        # define the key in the results json for gecko profiles
+        self.profile_entry_string = "geckoProfiles"
 
         # Each test INI can specify gecko_profile_interval and entries but they
         # can be overrided by user input.
@@ -80,23 +76,13 @@ class GeckoProfile(object):
         LOG.info(
             "Activating gecko profiling, temp profile dir:"
             " {0}, interval: {1}, entries: {2}".format(
-                self.gecko_profile_dir, gecko_profile_interval, gecko_profile_entries
+                self.temp_profile_dir, gecko_profile_interval, gecko_profile_entries
             )
         )
 
     @property
     def _is_extra_profiler_run(self):
         return self.raptor_config.get("extra_profiler_run", False)
-
-    def _open_gecko_profile(self, profile_path):
-        """Open a gecko profile and return the contents."""
-        if profile_path.endswith(".gz"):
-            with gzip.open(profile_path, "r") as profile_file:
-                profile = json.load(profile_file)
-        else:
-            with open(profile_path, "r", encoding="utf-8") as profile_file:
-                profile = json.load(profile_file)
-        return profile
 
     def _symbolicate_profile(self, profile, missing_symbols_zip, symbolicator):
         try:
@@ -113,123 +99,6 @@ class GeckoProfile(object):
             # Do not raise an exception and return the profile so we won't block
             # the profile capturing pipeline if symbolication fails.
             return profile
-
-    def collect_profiles(self):
-        """Returns all profiles files."""
-
-        def __get_test_type():
-            """Returns the type of test that was run.
-
-            For benchmark/scenario tests, we return those specific types,
-            but for pageloads we return cold or warm depending on the --cold
-            flag.
-            """
-            if self.test_config.get("type", "pageload") not in (
-                "benchmark",
-                "scenario",
-            ):
-                return "cold" if self.raptor_config.get("cold", False) else "warm"
-            else:
-                return self.test_config.get("type", "benchmark")
-
-        res = []
-        if self.raptor_config.get("browsertime"):
-            topdir = self.raptor_config.get("browsertime_result_dir")
-
-            # Get the browsertime.json file along with the cold/warm splits
-            # if they exist from a chimera test
-            results = {"main": None, "cold": None, "warm": None}
-            profiling_dir = os.path.join(topdir, "profiling")
-            result_dir = profiling_dir if self._is_extra_profiler_run else topdir
-
-            if not os.path.isdir(result_dir):
-                # Result directory not found. Return early. Caller will decide
-                # if this should throw an error or not.
-                LOG.info("Could not find the result directory.")
-                return []
-
-            for filename in os.listdir(result_dir):
-                if filename == "browsertime.json":
-                    results["main"] = os.path.join(result_dir, filename)
-                elif filename == "cold-browsertime.json":
-                    results["cold"] = os.path.join(result_dir, filename)
-                elif filename == "warm-browsertime.json":
-                    results["warm"] = os.path.join(result_dir, filename)
-                if all(results.values()):
-                    break
-
-            if not any(results.values()):
-                if self._is_extra_profiler_run:
-                    LOG.info(
-                        "Could not find any browsertime result JSONs in the artifacts "
-                        " for the extra profiler run"
-                    )
-                    return []
-                else:
-                    raise Exception(
-                        "Could not find any browsertime result JSONs in the artifacts"
-                    )
-
-            profile_locations = []
-            if self.raptor_config.get("chimera", False):
-                if results["warm"] is None or results["cold"] is None:
-                    if self._is_extra_profiler_run:
-                        LOG.info(
-                            "The test ran in chimera mode but we found no cold "
-                            "and warm browsertime JSONs. Cannot symbolicate profiles. "
-                            "Failing silently because this is an extra profiler run."
-                        )
-                        return []
-                    else:
-                        raise Exception(
-                            "The test ran in chimera mode but we found no cold "
-                            "and warm browsertime JSONs. Cannot symbolicate profiles."
-                        )
-                profile_locations.extend(
-                    [("cold", results["cold"]), ("warm", results["warm"])]
-                )
-            else:
-                # When we don't run in chimera mode, it means that we
-                # either ran a benchmark, scenario test or separate
-                # warm/cold pageload tests.
-                profile_locations.append(
-                    (
-                        __get_test_type(),
-                        results["main"],
-                    )
-                )
-
-            for testtype, results_json in profile_locations:
-                with open(results_json, encoding="utf-8") as f:
-                    data = json.load(f)
-                results_dir = os.path.dirname(results_json)
-                for entry in data:
-                    try:
-                        for rel_profile_path in entry["files"]["geckoProfiles"]:
-                            res.append(
-                                {
-                                    "path": os.path.join(results_dir, rel_profile_path),
-                                    "type": testtype,
-                                }
-                            )
-                    except KeyError:
-                        if self._is_extra_profiler_run:
-                            LOG.info("Failed to find profiles for extra profiler run.")
-                        else:
-                            LOG.error("Failed to find profiles.")
-        else:
-            # Raptor-webext stores its profiles in the self.gecko_profile_dir
-            # directory
-            for profile in os.listdir(self.gecko_profile_dir):
-                res.append(
-                    {
-                        "path": os.path.join(self.gecko_profile_dir, profile),
-                        "type": __get_test_type(),
-                    }
-                )
-
-        LOG.info("Found %s profiles: %s" % (len(res), str(res)))
-        return res
 
     def symbolicate(self):
         """
@@ -299,7 +168,7 @@ class GeckoProfile(object):
 
                 LOG.info("Opening profile at %s" % profile_path)
                 try:
-                    profile = self._open_gecko_profile(profile_path)
+                    profile = self._open_profile_file(profile_path)
                 except FileNotFoundError:
                     if self._is_extra_profiler_run:
                         LOG.info("Profile not found on extra profiler run.")
@@ -362,7 +231,7 @@ class GeckoProfile(object):
         """
         Clean up temp folders created with the instance creation.
         """
-        mozfile.remove(self.gecko_profile_dir)
+        mozfile.remove(self.temp_profile_dir)
         if self.cleanup:
             for symbol_path in self.symbol_paths.values():
                 mozfile.remove(symbol_path)
