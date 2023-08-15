@@ -31,6 +31,7 @@ import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
@@ -246,7 +247,12 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
     private fun navigateToSaveLoginSettingFragment() {
         val directions =
             SavedLoginsAuthFragmentDirections.actionSavedLoginsAuthFragmentToSavedLoginsSettingFragment()
-        findNavController().navigate(directions)
+        findNavController().navigateWithBreadcrumb(
+            directions = directions,
+            navigateFrom = "SavedLoginsAuthFragment",
+            navigateTo = "ActionSavedLoginsAuthFragmentToSavedLoginsSettingFragment",
+            crashReporter = requireComponents.analytics.crashReporter,
+        )
     }
 
     private fun navigateToLoginExceptionFragment() {

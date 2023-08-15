@@ -16,6 +16,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
@@ -131,7 +132,14 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             getPreferenceKey(R.string.pref_key_add_search_engine) -> {
                 val directions = SearchEngineFragmentDirections
                     .actionSearchEngineFragmentToAddSearchEngineFragment()
-                findNavController().navigate(directions)
+                context?.let {
+                    findNavController().navigateWithBreadcrumb(
+                        directions = directions,
+                        navigateFrom = "SearchEngineFragment",
+                        navigateTo = "ActionSearchEngineFragmentToAddSearchEngineFragment",
+                        it.components.analytics.crashReporter,
+                    )
+                }
             }
             getPreferenceKey(R.string.pref_key_default_search_engine) -> {
                 val directions = SearchEngineFragmentDirections
@@ -141,7 +149,14 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             getPreferenceKey(R.string.pref_key_manage_search_shortcuts) -> {
                 val directions = SearchEngineFragmentDirections
                     .actionSearchEngineFragmentToSearchShortcutsFragment()
-                findNavController().navigate(directions)
+                context?.let {
+                    findNavController().navigateWithBreadcrumb(
+                        directions = directions,
+                        navigateFrom = "SearchEngineFragment",
+                        navigateTo = "ActionSearchEngineFragmentToSearchShortcutsFragment",
+                        it.components.analytics.crashReporter,
+                    )
+                }
             }
         }
 

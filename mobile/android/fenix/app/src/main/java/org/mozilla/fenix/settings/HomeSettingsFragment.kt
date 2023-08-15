@@ -15,6 +15,7 @@ import org.mozilla.fenix.GleanMetrics.CustomizeHome
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.utils.view.addToRadioGroup
@@ -167,8 +168,11 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
 
         requirePreference<Preference>(R.string.pref_key_wallpapers).apply {
             setOnPreferenceClickListener {
-                view?.findNavController()?.navigate(
-                    HomeSettingsFragmentDirections.actionHomeSettingsFragmentToWallpaperSettingsFragment(),
+                view?.findNavController()?.navigateWithBreadcrumb(
+                    directions = HomeSettingsFragmentDirections.actionHomeSettingsFragmentToWallpaperSettingsFragment(),
+                    navigateFrom = "HomeSettingsFragment",
+                    navigateTo = "ActionHomeSettingsFragmentToWallpaperSettingsFragment",
+                    crashReporter = context.components.analytics.crashReporter,
                 )
                 true
             }

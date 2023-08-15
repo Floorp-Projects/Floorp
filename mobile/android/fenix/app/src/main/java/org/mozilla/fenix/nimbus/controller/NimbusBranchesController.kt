@@ -11,7 +11,9 @@ import mozilla.components.service.nimbus.ui.NimbusBranchesAdapterDelegate
 import org.mozilla.experiments.nimbus.Branch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
+import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.NimbusBranchesAction
 import org.mozilla.fenix.nimbus.NimbusBranchesFragmentDirections
@@ -51,9 +53,12 @@ class NimbusBranchesController(
                 )
                     .setText(snackbarText)
                     .setAction(buttonText) {
-                        navController.navigate(
-                            NimbusBranchesFragmentDirections
+                        navController.navigateWithBreadcrumb(
+                            directions = NimbusBranchesFragmentDirections
                                 .actionNimbusBranchesFragmentToDataChoicesFragment(),
+                            navigateFrom = "NimbusBranchesController",
+                            navigateTo = "ActionNimbusBranchesFragmentToDataChoicesFragment",
+                            crashReporter = context.components.analytics.crashReporter,
                         )
                     }
                     .show()

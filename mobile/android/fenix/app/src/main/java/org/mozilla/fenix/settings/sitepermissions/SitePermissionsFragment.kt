@@ -13,7 +13,9 @@ import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
@@ -79,7 +81,13 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
         if (phoneFeature == PhoneFeature.AUTOPLAY_AUDIBLE) {
             Autoplay.visitedSetting.record(NoExtras())
         }
-
-        Navigation.findNavController(requireView()).navigate(directions)
+        context?.let {
+            Navigation.findNavController(requireView()).navigateWithBreadcrumb(
+                directions = directions,
+                navigateFrom = "SitePermissionsFragment",
+                navigateTo = "ActionSitePermissionsToManagePhoneFeatures",
+                crashReporter = it.components.analytics.crashReporter,
+            )
+        }
     }
 }

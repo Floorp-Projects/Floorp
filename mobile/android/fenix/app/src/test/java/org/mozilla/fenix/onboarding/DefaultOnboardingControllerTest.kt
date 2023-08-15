@@ -54,6 +54,7 @@ class DefaultOnboardingControllerTest {
             activity = activity,
             navController = navController,
             onboarding = onboarding,
+            crashReporter = mockk(relaxed = true),
         )
     }
 

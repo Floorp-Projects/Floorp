@@ -27,7 +27,9 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.FragmentTurnOnSyncBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -66,7 +68,14 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment(
             entrypoint = args.entrypoint,
         )
-        requireView().findNavController().navigate(directions)
+        context?.let {
+            requireView().findNavController().navigateWithBreadcrumb(
+                directions = directions,
+                navigateFrom = "TurnOnSyncFragment",
+                navigateTo = "ActionTurnOnSyncFragmentToPairFragment",
+                crashReporter = it.components.analytics.crashReporter,
+            )
+        }
         SyncAuth.scanPairing.record(NoExtras())
     }
 

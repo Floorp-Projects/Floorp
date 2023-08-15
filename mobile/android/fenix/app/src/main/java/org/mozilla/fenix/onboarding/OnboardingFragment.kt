@@ -100,6 +100,7 @@ class OnboardingFragment : Fragment() {
                 activity = activity,
                 navController = findNavController(),
                 onboarding = requireComponents.fenixOnboarding,
+                crashReporter = requireComponents.analytics.crashReporter,
             ),
             privateBrowsingController = DefaultPrivateBrowsingController(
                 activity = activity,

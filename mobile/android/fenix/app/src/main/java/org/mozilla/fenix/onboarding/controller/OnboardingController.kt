@@ -5,8 +5,10 @@
 package org.mozilla.fenix.onboarding.controller
 
 import androidx.navigation.NavController
+import mozilla.components.lib.crash.CrashReporter
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.onboarding.OnboardingFragmentDirections
 import org.mozilla.fenix.onboarding.interactor.OnboardingInteractor
@@ -34,13 +36,17 @@ class DefaultOnboardingController(
     private val activity: HomeActivity,
     private val navController: NavController,
     private val onboarding: FenixOnboarding,
+    private val crashReporter: CrashReporter,
 ) : OnboardingController {
 
     override fun handleFinishOnboarding(focusOnAddressBar: Boolean) {
         onboarding.finish()
 
-        navController.navigate(
-            OnboardingFragmentDirections.actionHome(focusOnAddressBar = focusOnAddressBar),
+        navController.navigateWithBreadcrumb(
+            directions = OnboardingFragmentDirections.actionHome(focusOnAddressBar = focusOnAddressBar),
+            navigateFrom = "OnboardingFragment",
+            navigateTo = "ActionHome",
+            crashReporter = crashReporter,
         )
 
         if (focusOnAddressBar) {

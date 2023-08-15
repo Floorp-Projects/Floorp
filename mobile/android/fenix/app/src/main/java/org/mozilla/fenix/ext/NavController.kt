@@ -9,7 +9,10 @@ import androidx.annotation.IdRes
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
+import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
+import java.lang.IllegalArgumentException
 
 /**
  * Navigate from the fragment with [id] using the given [directions].
@@ -33,6 +36,29 @@ fun NavController.navigateSafe(
 ) {
     if (currentDestination?.id == resId) {
         this.navigate(directions)
+    }
+}
+
+/**
+ * Navigates using the given [directions], and submit a Breadcrumb
+ * when an [IllegalArgumentException] happens.
+ */
+fun NavController.navigateWithBreadcrumb(
+    directions: NavDirections,
+    navigateFrom: String,
+    navigateTo: String,
+    crashReporter: CrashReporter,
+) {
+    try {
+        this.navigate(directions)
+    } catch (e: IllegalArgumentException) {
+        crashReporter.recordCrashBreadcrumb(
+            Breadcrumb(
+                "Navigation - " +
+                    "where we are: $currentDestination," + "where we are going: $navigateTo, " +
+                    "where we thought we were: $navigateFrom",
+            ),
+        )
     }
 }
 
