@@ -153,7 +153,7 @@ extern "C" int UniFFIFixturesCallbackHandlerLogger(uint64_t aHandle, uint32_t aM
     // use case for callbacks is logging, which fits very well with this model.
     //
     // So, here we simple queue the callback and return immediately.
-    mozilla::uniffi::QueueCallback(0, aHandle, aMethod, argsData, argsLen);
+    mozilla::uniffi::QueueCallback(0, aHandle, aMethod, aArgsData, aArgsLen);
     return CALLBACK_INTERFACE_SUCCESS;
 }
 static StaticRefPtr<dom::UniFFICallbackHandler> JS_CALLBACK_HANDLER_LOGGER;

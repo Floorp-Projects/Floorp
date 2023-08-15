@@ -52,7 +52,7 @@ extern "C" int {{ cbi.c_handler(prefix) }}(uint64_t aHandle, uint32_t aMethod, c
     // use case for callbacks is logging, which fits very well with this model.
     //
     // So, here we simple queue the callback and return immediately.
-    mozilla::uniffi::QueueCallback({{ callback_ids.get(ci, cbi) }}, aHandle, aMethod, argsData, argsLen);
+    mozilla::uniffi::QueueCallback({{ callback_ids.get(ci, cbi) }}, aHandle, aMethod, aArgsData, aArgsLen);
     return CALLBACK_INTERFACE_SUCCESS;
 }
 static StaticRefPtr<dom::UniFFICallbackHandler> {{ cbi.js_handler() }};
