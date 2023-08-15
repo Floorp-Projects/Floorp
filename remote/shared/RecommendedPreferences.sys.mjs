@@ -105,6 +105,9 @@ const COMMON_PREFERENCES = new Map([
   // inconsistently.
   ["browser.download.panel.shown", true],
 
+  // Make sure Topsites doesn't hit the network to retrieve sponsored tiles.
+  ["browser.newtabpage.activity-stream.showSponsoredTopSites", false],
+
   // Always display a blank page
   ["browser.newtabpage.enabled", false],
 

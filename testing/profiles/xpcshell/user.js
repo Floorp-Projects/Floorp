@@ -33,5 +33,7 @@ user_pref("gfx.color_management.force_srgb", true);
 user_pref("gfx.color_management.mode", 1);
 // Don't enable remote tiles on new-tab pages in xpcshell
 user_pref("browser.topsites.contile.enabled", false);
+// Don't pull sponsored Top Sites content from the network
+user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
 user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true);
 user_pref("preferences.force-disable.check.once.policy", true);
