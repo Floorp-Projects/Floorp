@@ -17257,94 +17257,123 @@ Document::CreatePermissionGrantPromise(
 
   return [inner, self, principal, aHasUserInteraction, aTopLevelBaseDomain,
           aFrameOnly]() {
-    // Create the user prompt
     RefPtr<StorageAccessAPIHelper::StorageAccessPermissionGrantPromise::Private>
         p = new StorageAccessAPIHelper::StorageAccessPermissionGrantPromise::
             Private(__func__);
-    RefPtr<StorageAccessPermissionRequest> sapr =
-        StorageAccessPermissionRequest::Create(
-            inner, principal, aTopLevelBaseDomain, aFrameOnly,
-            // Allow
-            [p] {
-              Telemetry::AccumulateCategorical(
-                  Telemetry::LABELS_STORAGE_ACCESS_API_UI::Allow);
-              p->Resolve(StorageAccessAPIHelper::eAllow, __func__);
-            },
-            // Block
-            [p] {
-              Telemetry::AccumulateCategorical(
-                  Telemetry::LABELS_STORAGE_ACCESS_API_UI::Deny);
-              p->Reject(false, __func__);
-            });
 
-    using PromptResult = ContentPermissionRequestBase::PromptResult;
-    PromptResult pr = sapr->CheckPromptPrefs();
+    RefPtr<PWindowGlobalChild::HasStorageAccessPermissionPromise> promise;
+    // Test the permission
+    MOZ_ASSERT(XRE_IsContentProcess());
 
-    if (pr == PromptResult::Pending) {
-      // We're about to show a prompt, record the request attempt
-      Telemetry::AccumulateCategorical(
-          Telemetry::LABELS_STORAGE_ACCESS_API_UI::Request);
-    }
+    WindowGlobalChild* wgc = inner->GetWindowGlobalChild();
+    MOZ_ASSERT(wgc);
 
-    // Try to auto-grant the storage access so the user doesn't see the prompt.
-    self->AutomaticStorageAccessPermissionCanBeGranted(aHasUserInteraction)
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            // If the autogrant check didn't fail, call this function
-            [p, pr, sapr, inner](
-                const Document::AutomaticStorageAccessPermissionGrantPromise::
-                    ResolveOrRejectValue& aValue) -> void {
-              // Make a copy because we can't modified copy-captured lambda
-              // variables.
-              PromptResult pr2 = pr;
+    promise = wgc->SendHasStorageAccessPermission();
+    MOZ_ASSERT(promise);
+    promise->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [self, p, inner, principal, aHasUserInteraction, aTopLevelBaseDomain,
+         aFrameOnly](bool aGranted) {
+          if (aGranted) {
+            p->Resolve(true, __func__);
+            return;
+          }
 
-              // If the user didn't already click "allow" and we can autogrant,
-              // do that!
-              bool storageAccessCanBeGrantedAutomatically =
-                  aValue.IsResolve() && aValue.ResolveValue();
-              bool autoGrant = false;
-              if (pr2 == PromptResult::Pending &&
-                  storageAccessCanBeGrantedAutomatically) {
-                pr2 = PromptResult::Granted;
-                autoGrant = true;
+          // Create the user prompt
+          RefPtr<StorageAccessPermissionRequest> sapr =
+              StorageAccessPermissionRequest::Create(
+                  inner, principal, aTopLevelBaseDomain, aFrameOnly,
+                  // Allow
+                  [p] {
+                    Telemetry::AccumulateCategorical(
+                        Telemetry::LABELS_STORAGE_ACCESS_API_UI::Allow);
+                    p->Resolve(StorageAccessAPIHelper::eAllow, __func__);
+                  },
+                  // Block
+                  [p] {
+                    Telemetry::AccumulateCategorical(
+                        Telemetry::LABELS_STORAGE_ACCESS_API_UI::Deny);
+                    p->Reject(false, __func__);
+                  });
 
-                Telemetry::AccumulateCategorical(
-                    Telemetry::LABELS_STORAGE_ACCESS_API_UI::
-                        AllowAutomatically);
-              }
+          using PromptResult = ContentPermissionRequestBase::PromptResult;
+          PromptResult pr = sapr->CheckPromptPrefs();
 
-              // If we can complete the permission request, do so.
-              if (pr2 != PromptResult::Pending) {
-                MOZ_ASSERT_IF(pr2 != PromptResult::Granted,
-                              pr2 == PromptResult::Denied);
-                if (pr2 == PromptResult::Granted) {
-                  StorageAccessAPIHelper::StorageAccessPromptChoices choice =
-                      StorageAccessAPIHelper::eAllow;
-                  if (autoGrant) {
-                    choice = StorageAccessAPIHelper::eAllowAutoGrant;
-                  }
-                  if (!autoGrant) {
-                    p->Resolve(choice, __func__);
-                  } else {
-                    // We capture sapr here to prevent it from destructing
-                    // before the callbacks complete.
-                    sapr->MaybeDelayAutomaticGrants()->Then(
-                        GetCurrentSerialEventTarget(), __func__,
-                        [p, sapr, choice] { p->Resolve(choice, __func__); },
-                        [p, sapr] { p->Reject(false, __func__); });
-                  }
-                  return;
-                }
-                p->Reject(false, __func__);
-                return;
-              }
+          if (pr == PromptResult::Pending) {
+            // We're about to show a prompt, record the request attempt
+            Telemetry::AccumulateCategorical(
+                Telemetry::LABELS_STORAGE_ACCESS_API_UI::Request);
+          }
 
-              // If we get here, the auto-decision failed and we need to
-              // wait for the user prompt to complete.
-              sapr->RequestDelayedTask(
-                  inner->EventTargetFor(TaskCategory::Other),
-                  ContentPermissionRequestBase::DelayedTaskType::Request);
-            });
+          // Try to auto-grant the storage access so the user doesn't see the
+          // prompt.
+          self->AutomaticStorageAccessPermissionCanBeGranted(
+                  aHasUserInteraction)
+              ->Then(
+                  GetCurrentSerialEventTarget(), __func__,
+                  // If the autogrant check didn't fail, call this function
+                  [p, pr, sapr,
+                   inner](const Document::
+                              AutomaticStorageAccessPermissionGrantPromise::
+                                  ResolveOrRejectValue& aValue) -> void {
+                    // Make a copy because we can't modified copy-captured
+                    // lambda variables.
+                    PromptResult pr2 = pr;
+
+                    // If the user didn't already click "allow" and we can
+                    // autogrant, do that!
+                    bool storageAccessCanBeGrantedAutomatically =
+                        aValue.IsResolve() && aValue.ResolveValue();
+                    bool autoGrant = false;
+                    if (pr2 == PromptResult::Pending &&
+                        storageAccessCanBeGrantedAutomatically) {
+                      pr2 = PromptResult::Granted;
+                      autoGrant = true;
+
+                      Telemetry::AccumulateCategorical(
+                          Telemetry::LABELS_STORAGE_ACCESS_API_UI::
+                              AllowAutomatically);
+                    }
+
+                    // If we can complete the permission request, do so.
+                    if (pr2 != PromptResult::Pending) {
+                      MOZ_ASSERT_IF(pr2 != PromptResult::Granted,
+                                    pr2 == PromptResult::Denied);
+                      if (pr2 == PromptResult::Granted) {
+                        StorageAccessAPIHelper::StorageAccessPromptChoices
+                            choice = StorageAccessAPIHelper::eAllow;
+                        if (autoGrant) {
+                          choice = StorageAccessAPIHelper::eAllowAutoGrant;
+                        }
+                        if (!autoGrant) {
+                          p->Resolve(choice, __func__);
+                        } else {
+                          // We capture sapr here to prevent it from destructing
+                          // before the callbacks complete.
+                          sapr->MaybeDelayAutomaticGrants()->Then(
+                              GetCurrentSerialEventTarget(), __func__,
+                              [p, sapr, choice] {
+                                p->Resolve(choice, __func__);
+                              },
+                              [p, sapr] { p->Reject(false, __func__); });
+                        }
+                        return;
+                      }
+                      p->Reject(false, __func__);
+                      return;
+                    }
+
+                    // If we get here, the auto-decision failed and we need to
+                    // wait for the user prompt to complete.
+                    sapr->RequestDelayedTask(
+                        inner->EventTargetFor(TaskCategory::Other),
+                        ContentPermissionRequestBase::DelayedTaskType::Request);
+                  });
+        },
+        [p](mozilla::ipc::ResponseRejectReason aError) {
+          p->Reject(false, __func__);
+          return p;
+        });
 
     return p;
   };
