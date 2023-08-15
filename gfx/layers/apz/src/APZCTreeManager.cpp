@@ -3573,9 +3573,12 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
               messages.AppendElement(
                   MatrixMessage(Nothing(), ScreenRect(), layersId));
             } else {
+              // It's important to pass aRemoteLayersId=layersId here (not
+              // parent->GetLayersId()). layersId is the LayersId of the
+              // remote content for which this transform is being computed.
               messages.AppendElement(MatrixMessage(
-                  Some(parent->GetTransformToGecko()),
-                  parent->GetRemoteDocumentScreenRect(), layersId));
+                  Some(parent->GetTransformToGecko(layersId)),
+                  parent->GetRemoteDocumentScreenRect(layersId), layersId));
             }
           }
         },
