@@ -32,7 +32,7 @@ object FenixVersions {
     const val installreferrer = "2.2"
 
     const val junit = "5.9.3"
-    const val mockk = "1.13.5"
+    const val mockk = "1.13.7"
 
     const val mockwebserver = "4.11.0"
 
