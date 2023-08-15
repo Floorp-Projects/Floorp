@@ -13,7 +13,7 @@ AntiTracking._createTask({
     await callRequestStorageAccess();
 
     const TRACKING_PAGE =
-      "http://another-tracking.example.net/browser/browser/base/content/test/protectionsUI/trackingPage.html";
+      "https://another-tracking.example.net/browser/browser/base/content/test/protectionsUI/trackingPage.html";
     async function runChecks(name) {
       let iframe = document.createElement("iframe");
       iframe.src = TRACKING_PAGE;
@@ -44,11 +44,11 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
+  thirdPartyPage: TEST_3RD_PARTY_PAGE,
   errorMessageDomains: [
-    "http://tracking.example.org",
-    "http://tracking.example.org",
-    "http://tracking.example.org",
+    "https://tracking.example.org",
+    "https://tracking.example.org",
+    "https://tracking.example.org",
   ],
 });
 
@@ -79,10 +79,10 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
+  thirdPartyPage: TEST_3RD_PARTY_PAGE,
   errorMessageDomains: [
-    "http://tracking.example.org",
-    "http://tracking.example.org",
+    "https://tracking.example.org",
+    "https://tracking.example.org",
   ],
 });
 
@@ -110,10 +110,10 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
+  thirdPartyPage: TEST_3RD_PARTY_PAGE,
   errorMessageDomains: [
-    "http://tracking.example.org",
-    "http://tracking.example.org",
+    "https://tracking.example.org",
+    "https://tracking.example.org",
   ],
 });
 
@@ -141,10 +141,10 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
+  thirdPartyPage: TEST_3RD_PARTY_PAGE,
   errorMessageDomains: [
-    "http://tracking.example.org",
-    "http://tracking.example.org",
+    "https://tracking.example.org",
+    "https://tracking.example.org",
   ],
 });
 
