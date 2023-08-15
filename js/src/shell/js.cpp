@@ -6716,8 +6716,12 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     if (!JS_GetProperty(cx, opts, "newCompartment", &v)) {
       return false;
     }
-    if (v.isBoolean() && v.toBoolean()) {
-      creationOptions.setNewCompartmentAndZone();
+    if (v.isBoolean()) {
+      if (v.toBoolean()) {
+        creationOptions.setNewCompartmentAndZone();
+      } else {
+        creationOptions.setExistingCompartment(cx->global());
+      }
     }
 
     if (!JS_GetProperty(cx, opts, "discardSource", &v)) {
