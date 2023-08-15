@@ -484,7 +484,7 @@ GeckoDriver.prototype.newSession = async function (cmd) {
       }
 
       // Check if there is already an open dialog for the selected browser window.
-      this.dialog = lazy.modal.findModalDialogs(this.curBrowser);
+      this.dialog = lazy.modal.findPrompt(this.curBrowser);
     }
 
     lazy.registerCommandsActor(this.currentSession.id);
@@ -1314,8 +1314,8 @@ GeckoDriver.prototype.setWindowHandle = async function (
       tab?.linkedBrowser.browsingContext;
   }
 
-  // Check for existing dialogs for the new window
-  this.dialog = lazy.modal.findModalDialogs(this.curBrowser);
+  // Check for an existing dialog for the new window
+  this.dialog = lazy.modal.findPrompt(this.curBrowser);
 
   // If there is an open window modal dialog the underlying chrome window
   // cannot be focused.
