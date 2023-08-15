@@ -342,13 +342,28 @@ TLSTransportLayer::TLSTransportLayer(nsISocketTransport* aTransport,
 }
 
 TLSTransportLayer::~TLSTransportLayer() {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("TLSTransportLayer dtor this=[%p]", this));
-  if (mFD) {
-    PR_Close(mFD);
-    mFD = nullptr;
+
+  auto closeSocket = [fd = mFD, socketControl = std::move(mTLSSocketControl)] {
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+    if (fd) {
+      PR_Close(fd);
+    }
+    // mTLSSocketControl must be released after closing fd
+  };
+
+  if (OnSocketThread()) {
+    closeSocket();
+    return;
   }
-  mTLSSocketControl = nullptr;
+
+  if (mFD) {
+    gSocketTransportService->Dispatch(NS_NewRunnableFunction(
+        "TLSTransportLayer::~TLSTransportLayer", std::move(closeSocket)));
+    return;
+  }
+
+  // mTLSSocketControl is released when closeSocket goes out of scope
 }
 
 bool TLSTransportLayer::Init(const char* aTLSHost, int32_t aTLSPort) {
