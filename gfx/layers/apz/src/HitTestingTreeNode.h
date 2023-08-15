@@ -148,14 +148,17 @@ class HitTestingTreeNode {
   const CSSTransformMatrix& GetTransform() const;
   /* This is similar to APZCTreeManager::GetApzcToGeckoTransform but without
    * the async bits. It's used on the main-thread for transforming coordinates
-   * across a BrowserParent/BrowserChild interface.*/
-  LayerToScreenMatrix4x4 GetTransformToGecko() const;
+   * across a BrowserParent/BrowserChild interface.
+   * |aRemoteLayersId| is the LayersId of the remote subtree for which this
+   * transform will be used. */
+  LayerToScreenMatrix4x4 GetTransformToGecko(LayersId aRemoteLayersId) const;
   const LayerIntRegion& GetVisibleRegion() const;
 
   /* Returns the screen coordinate rectangle of remote iframe corresponding to
    * this node. The rectangle is the result of clipped by ancestor async
    * scrolling. */
-  ScreenRect GetRemoteDocumentScreenRect() const;
+  ScreenRect GetRemoteDocumentScreenRect(
+      LayersId aRemoteDocumentLayersId) const;
 
   Maybe<ScrollableLayerGuid::ViewID> GetAsyncZoomContainerId() const;
 
