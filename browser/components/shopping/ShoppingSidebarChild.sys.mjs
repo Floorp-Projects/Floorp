@@ -22,6 +22,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
     }
   }
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "adsEnabled",
+  "browser.shopping.experience2023.ads.enabled",
+  true
+);
 
 export class ShoppingSidebarChild extends RemotePageChild {
   constructor() {
@@ -78,8 +84,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
   }
 
   get canFetchAndShowAd() {
-    // TODO: Bug 1840520 will add the pref that toggles showing ads
-    return true;
+    return lazy.adsEnabled;
   }
 
   optedInStateChanged() {
