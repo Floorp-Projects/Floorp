@@ -138,6 +138,12 @@ export class ShoppingContainer extends MozLitElement {
       ></shopping-message-bar>`;
     }
 
+    if (this.data.deleted_product_reported) {
+      return html`<shopping-message-bar
+        type="product-not-available-reported"
+      ></shopping-message-bar>`;
+    }
+
     if (this.data.deleted_product) {
       return html`<shopping-message-bar
         type="product-not-available"
