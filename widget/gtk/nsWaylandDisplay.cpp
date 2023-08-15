@@ -101,54 +101,49 @@ static void global_registry_handler(void* data, wl_registry* registry,
     return;
   }
 
-  nsDependentCString iface(interface);
-  if (iface.EqualsLiteral("wl_shm")) {
+  if (strcmp(interface, "wl_shm") == 0) {
     auto* shm = WaylandRegistryBind<wl_shm>(registry, id, &wl_shm_interface, 1);
     display->SetShm(shm);
-  } else if (iface.EqualsLiteral("zwp_idle_inhibit_manager_v1")) {
+  } else if (strcmp(interface, "zwp_idle_inhibit_manager_v1") == 0) {
     auto* idle_inhibit_manager =
         WaylandRegistryBind<zwp_idle_inhibit_manager_v1>(
             registry, id, &zwp_idle_inhibit_manager_v1_interface, 1);
     display->SetIdleInhibitManager(idle_inhibit_manager);
-  } else if (iface.EqualsLiteral("zwp_relative_pointer_manager_v1")) {
+  } else if (strcmp(interface, "zwp_relative_pointer_manager_v1") == 0) {
     auto* relative_pointer_manager =
         WaylandRegistryBind<zwp_relative_pointer_manager_v1>(
             registry, id, &zwp_relative_pointer_manager_v1_interface, 1);
     display->SetRelativePointerManager(relative_pointer_manager);
-  } else if (iface.EqualsLiteral("zwp_pointer_constraints_v1")) {
+  } else if (strcmp(interface, "zwp_pointer_constraints_v1") == 0) {
     auto* pointer_constraints = WaylandRegistryBind<zwp_pointer_constraints_v1>(
         registry, id, &zwp_pointer_constraints_v1_interface, 1);
     display->SetPointerConstraints(pointer_constraints);
-  } else if (iface.EqualsLiteral("wl_compositor")) {
+  } else if (strcmp(interface, "wl_compositor") == 0) {
     // Requested wl_compositor version 4 as we need wl_surface_damage_buffer().
     auto* compositor = WaylandRegistryBind<wl_compositor>(
         registry, id, &wl_compositor_interface, 4);
     display->SetCompositor(compositor);
-  } else if (iface.EqualsLiteral("wl_subcompositor")) {
+  } else if (strcmp(interface, "wl_subcompositor") == 0) {
     auto* subcompositor = WaylandRegistryBind<wl_subcompositor>(
         registry, id, &wl_subcompositor_interface, 1);
     display->SetSubcompositor(subcompositor);
-  } else if (iface.EqualsLiteral("wp_viewporter")) {
+  } else if (strcmp(interface, "wp_viewporter") == 0) {
     auto* viewporter = WaylandRegistryBind<wp_viewporter>(
         registry, id, &wp_viewporter_interface, 1);
     display->SetViewporter(viewporter);
-  } else if (iface.EqualsLiteral("zwp_linux_dmabuf_v1") && version > 2) {
+  } else if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
     auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
         registry, id, &zwp_linux_dmabuf_v1_interface, 3);
     display->SetDmabuf(dmabuf);
-  } else if (iface.EqualsLiteral("xdg_activation_v1")) {
+  } else if (strcmp(interface, "xdg_activation_v1") == 0) {
     auto* activation = WaylandRegistryBind<xdg_activation_v1>(
         registry, id, &xdg_activation_v1_interface, 1);
     display->SetXdgActivation(activation);
-  } else if (iface.EqualsLiteral("wl_seat")) {
     // Install keyboard handlers for main thread only
+  } else if (strcmp(interface, "wl_seat") == 0) {
     auto* seat =
         WaylandRegistryBind<wl_seat>(registry, id, &wl_seat_interface, 1);
     KeymapWrapper::SetSeat(seat, id);
-  } else if (iface.EqualsLiteral("wp_fractional_scale_manager_v1")) {
-    auto* manager = WaylandRegistryBind<wp_fractional_scale_manager_v1>(
-        registry, id, &wp_fractional_scale_manager_v1_interface, 1);
-    display->SetFractionalScaleManager(manager);
   }
 }
 
