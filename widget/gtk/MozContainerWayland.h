@@ -33,25 +33,25 @@ struct wl_surface;
 struct wl_subsurface;
 
 struct MozContainerWayland {
-  struct wl_surface* surface;
-  struct wl_subsurface* subsurface;
-  int subsurface_dx, subsurface_dy;
-  struct wl_egl_window* eglwindow;
-  struct wl_callback* frame_callback_handler;
-  struct wp_viewport* viewport;
-  gboolean opaque_region_needs_updates;
-  int opaque_region_corner_radius;
-  gboolean opaque_region_used;
-  gboolean ready_to_draw;
-  gboolean commit_to_parent;
-  gboolean before_first_size_alloc;
-  gboolean waiting_to_show;
-  int buffer_scale;
+  struct wl_surface* surface = nullptr;
+  struct wl_subsurface* subsurface = nullptr;
+  int subsurface_dx = 0;
+  int subsurface_dy = 0;
+  struct wl_egl_window* eglwindow = nullptr;
+  struct wl_callback* frame_callback_handler = nullptr;
+  struct wp_viewport* viewport = nullptr;
+  gboolean opaque_region_needs_updates = false;
+  int opaque_region_corner_radius = 0;
+  gboolean opaque_region_used = false;
+  gboolean ready_to_draw = false;
+  gboolean commit_to_parent = false;
+  gboolean before_first_size_alloc = false;
+  gboolean waiting_to_show = false;
+  int buffer_scale = 1;
   std::vector<std::function<void(void)>> initial_draw_cbs;
-  // mozcontainer is used from Compositor and Rendering threads
-  // so we need to control access to mozcontainer where wayland internals
-  // are used directly.
-  mozilla::Mutex* container_lock;
+  // mozcontainer is used from Compositor and Rendering threads so we need to
+  // control access to mozcontainer where wayland internals are used directly.
+  mozilla::Mutex container_lock{"MozContainerWayland::container_lock"};
 };
 
 struct _MozContainer;
