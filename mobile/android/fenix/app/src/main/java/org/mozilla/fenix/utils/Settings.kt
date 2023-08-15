@@ -1790,6 +1790,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the shopping experience feature is enabled.
+     */
+    val enableShoppingExperience by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_shopping_experience),
+        default = FxNimbus.features.shoppingExperience.value().enabled,
+    )
+
+    /**
      * Adjust Activated User sent
      */
     var growthUserActivatedSent by booleanPreference(

@@ -50,6 +50,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.dialog.CookieBannerReEngagementDialogUtils
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
+import org.mozilla.fenix.shopping.DefaultShoppingExperienceFeature
 import org.mozilla.fenix.shopping.ReviewQualityCheckFeature
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.theme.ThemeManager
@@ -226,6 +227,9 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         reviewQualityCheckFeature.set(
             feature = ReviewQualityCheckFeature(
                 browserStore = context.components.core.store,
+                shoppingExperienceFeature = DefaultShoppingExperienceFeature(
+                    settings = requireContext().settings(),
+                ),
                 onAvailabilityChange = { reviewQualityCheckAvailable = it },
             ),
             owner = this,

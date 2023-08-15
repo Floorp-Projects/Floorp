@@ -25,7 +25,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  */
 class ReviewQualityCheckFeature(
     private val browserStore: BrowserStore,
-    private val shoppingExperienceFeature: ShoppingExperienceFeature = ShoppingExperienceFeature(),
+    private val shoppingExperienceFeature: ShoppingExperienceFeature,
     private val onAvailabilityChange: (isAvailable: Boolean) -> Unit,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null

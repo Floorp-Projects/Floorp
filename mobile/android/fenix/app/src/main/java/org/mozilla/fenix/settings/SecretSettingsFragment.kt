@@ -64,6 +64,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_shopping_experience).apply {
+            isVisible = Config.channel.isNightlyOrDebug
+            isChecked = context.settings().enableShoppingExperience
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
         // for performance reasons, this is only available in Nightly or Debug builds
         requirePreference<EditTextPreference>(R.string.pref_key_custom_glean_server_url).apply {
             isVisible = Config.channel.isNightlyOrDebug && BuildConfig.GLEAN_CUSTOM_URL.isNullOrEmpty()
