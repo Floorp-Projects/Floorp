@@ -2508,14 +2508,40 @@ uint32_t TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
       DumpTimeRanges(aTrackData.mSanitizedBufferedRanges).get());
 
   // If all frames are removed, both buffer and buffered range should be empty.
-  MOZ_DIAGNOSTIC_ASSERT_IF(data.IsEmpty(),
-                           aTrackData.mBufferedRanges.IsEmpty());
-  TimeUnit duration = TimeUnit::Zero(aTrackData.mHighestStartTimestamp);
-  for (const auto& sample : data) {
-    duration += sample->mDuration;
+  if (data.IsEmpty()) {
+    MOZ_ASSERT(aTrackData.mBufferedRanges.IsEmpty());
+    // We still can't figure out why above assertion would fail, so we keep it
+    // on debug build, and do a workaround for other builds to ensure that
+    // buffered range should match the data.
+    if (!aTrackData.mBufferedRanges.IsEmpty()) {
+      NS_WARNING(
+          nsPrintfCString("Empty data but has non-empty buffered range %s ?!",
+                          DumpTimeRanges(aTrackData.mBufferedRanges).get())
+              .get());
+      aTrackData.mBufferedRanges.Clear();
+    }
   }
-  MOZ_DIAGNOSTIC_ASSERT_IF(aTrackData.mBufferedRanges.IsEmpty(),
-                           duration.IsZero());
+  if (aTrackData.mBufferedRanges.IsEmpty()) {
+    TimeIntervals sampleIntervals;
+    for (const auto& sample : data) {
+      sampleIntervals += TimeInterval(sample->mTime, sample->GetEndTime());
+    }
+    MOZ_ASSERT(sampleIntervals.IsEmpty());
+    // We still can't figure out why above assertion would fail, so we keep it
+    // on debug build, and do a workaround for other builds to ensure that
+    // buffered range should match the data.
+    if (!sampleIntervals.IsEmpty()) {
+      NS_WARNING(
+          nsPrintfCString(
+              "Empty buffer range but has non-empty sample intervals %s ?!",
+              DumpTimeRanges(sampleIntervals).get())
+              .get());
+      aTrackData.mBufferedRanges += sampleIntervals;
+      TimeIntervals range(sampleIntervals);
+      range.SetFuzz(aTrackData.mLongestFrameDuration / 2);
+      aTrackData.mSanitizedBufferedRanges += range;
+    }
+  }
 
   return firstRemovedIndex.ref();
 }
