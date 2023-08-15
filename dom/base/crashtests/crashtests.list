@@ -267,5 +267,6 @@ pref(dom.enable_web_task_scheduling,true) load 1780790.html
 load 1700237.html
 load 1811939.html
 load 1822717.html
+load 1835886.html
 load 1836824.html
 skip-if(Android) load 1838484.html
