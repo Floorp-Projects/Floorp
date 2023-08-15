@@ -60,6 +60,12 @@ body {
 }
 
 #pages {
+  overflow-y: auto;
+  height: 100vh;
+  width: 100%;
+}
+
+.main-container {
   width: 90%;
   margin: 0 auto;
   min-width: 43rem;
