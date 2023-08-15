@@ -63,7 +63,7 @@ function readFromStream(stream, count) {
     }
     count -= actuallyRead;
   }
-  return lazy.decoder.decode(arrayBuffer);
+  return arrayBuffer;
 }
 
 /**
@@ -313,6 +313,10 @@ export class ShoppingProduct {
       responseSchema,
     });
 
+    for (let ad of result) {
+      ad.image_blob = await this.requestImageBlob(ad.image_url);
+    }
+
     this.recommendations = result;
 
     return result;
@@ -533,7 +537,7 @@ export class ShoppingProduct {
     signal.addEventListener("abort", abortHandler);
     return new Promise((resolve, reject) => {
       let listener = {
-        _buffer: "",
+        _buffer: [],
         _headers: null,
         QueryInterface: ChromeUtils.generateQI([
           "nsIStreamListener",
@@ -548,7 +552,7 @@ export class ShoppingProduct {
             });
         },
         onDataAvailable(request, stream, offset, count) {
-          this._buffer += readFromStream(stream, count);
+          this._buffer.push(readFromStream(stream, count));
         },
         onStopRequest(request, requestStatus) {
           signal.removeEventListener("abort", abortHandler);
@@ -561,13 +565,75 @@ export class ShoppingProduct {
             status: httpStatus,
             headers: this._headers,
             json() {
-              return JSON.parse(result);
+              let decodedBuffer = result.reduce((accumulator, currVal) => {
+                return accumulator + lazy.decoder.decode(currVal);
+              }, "");
+              return JSON.parse(decodedBuffer);
+            },
+            blob() {
+              return new Blob(result, { type: "image/jpeg" });
             },
           });
         },
       };
       obliviousHttpChannel.asyncOpen(listener);
     });
+  }
+
+  /**
+   * Requests an image for a recommended product.
+   *
+   * @param {string} imageUrl
+   * @returns {blob} A blob of the image
+   */
+  async requestImageBlob(imageUrl) {
+    let ohttpRelayURL = Services.prefs.getStringPref(
+      "toolkit.shopping.ohttpRelayURL",
+      ""
+    );
+    let ohttpConfigURL = Services.prefs.getStringPref(
+      "toolkit.shopping.ohttpConfigURL",
+      ""
+    );
+
+    let imgRequestPromise;
+    if (ohttpRelayURL && ohttpConfigURL) {
+      let config = await this.getOHTTPConfig(ohttpConfigURL);
+      if (!config) {
+        console.error(
+          new Error(
+            "OHTTP was configured for shopping but we couldn't get a valid config."
+          )
+        );
+        return null;
+      }
+
+      let imgRequestOptions = {
+        signal: this._abortController.signal,
+        headers: {
+          Accept: "image/jpeg",
+        },
+      };
+
+      imgRequestPromise = this.ohttpRequest(
+        ohttpRelayURL,
+        config,
+        imageUrl,
+        imgRequestOptions
+      );
+    } else {
+      imgRequestPromise = fetch(imageUrl);
+    }
+
+    let imgResult;
+    try {
+      let response = await imgRequestPromise;
+      imgResult = await response.blob();
+    } catch (error) {
+      console.error(error);
+    }
+
+    return imgResult;
   }
 
   /**
