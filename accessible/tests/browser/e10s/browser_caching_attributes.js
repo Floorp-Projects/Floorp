@@ -638,3 +638,80 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test the placeholder attribute.
+ */
+addAccessibleTask(
+  `
+<input id="htmlWithLabel" aria-label="label" placeholder="HTML">
+<input id="htmlNoLabel" placeholder="HTML">
+<input id="ariaWithLabel" aria-label="label" aria-placeholder="ARIA">
+<input id="ariaNoLabel" aria-placeholder="ARIA">
+<input id="both" aria-label="label" placeholder="HTML" aria-placeholder="ARIA">
+<input id="mutate" placeholder="HTML">
+  `,
+  async function (browser, docAcc) {
+    const htmlWithLabel = findAccessibleChildByID(docAcc, "htmlWithLabel");
+    testAttrs(htmlWithLabel, { placeholder: "HTML" }, true);
+    const htmlNoLabel = findAccessibleChildByID(docAcc, "htmlNoLabel");
+    // placeholder is used as name, so not exposed as attribute.
+    testAbsentAttrs(htmlNoLabel, { placeholder: "" });
+    const ariaWithLabel = findAccessibleChildByID(docAcc, "ariaWithLabel");
+    testAttrs(ariaWithLabel, { placeholder: "ARIA" }, true);
+    const ariaNoLabel = findAccessibleChildByID(docAcc, "ariaNoLabel");
+    // No label doesn't impact aria-placeholder.
+    testAttrs(ariaNoLabel, { placeholder: "ARIA" }, true);
+    const both = findAccessibleChildByID(docAcc, "both");
+    testAttrs(both, { placeholder: "HTML" }, true);
+
+    const mutate = findAccessibleChildByID(docAcc, "mutate");
+    testAbsentAttrs(mutate, { placeholder: "" });
+    info("Adding label to mutate");
+    await invokeContentTask(browser, [], () => {
+      content.document
+        .getElementById("mutate")
+        .setAttribute("aria-label", "label");
+    });
+    await untilCacheAttrIs(
+      mutate,
+      "placeholder",
+      "HTML",
+      "mutate placeholder correct"
+    );
+    info("Removing mutate placeholder");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("mutate").removeAttribute("placeholder");
+    });
+    await untilCacheAttrAbsent(
+      mutate,
+      "placeholder",
+      "mutate placeholder not present"
+    );
+    info("Setting mutate aria-placeholder");
+    await invokeContentTask(browser, [], () => {
+      content.document
+        .getElementById("mutate")
+        .setAttribute("aria-placeholder", "ARIA");
+    });
+    await untilCacheAttrIs(
+      mutate,
+      "placeholder",
+      "ARIA",
+      "mutate placeholder correct"
+    );
+    info("Setting mutate placeholder");
+    await invokeContentTask(browser, [], () => {
+      content.document
+        .getElementById("mutate")
+        .setAttribute("placeholder", "HTML");
+    });
+    await untilCacheAttrIs(
+      mutate,
+      "placeholder",
+      "HTML",
+      "mutate placeholder correct"
+    );
+  },
+  { chrome: true, topLevel: true }
+);
