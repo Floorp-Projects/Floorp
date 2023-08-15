@@ -1018,6 +1018,9 @@ class MOZ_RAII AutoStubFrame {
 
   void enter(MacroAssembler& masm, Register scratch);
   void leave(MacroAssembler& masm);
+  void storeTracedValue(MacroAssembler& masm, ValueOperand val);
+  void loadTracedValue(MacroAssembler& masm, uint8_t slotIndex,
+                       ValueOperand result);
 
 #ifdef DEBUG
   ~AutoStubFrame();
