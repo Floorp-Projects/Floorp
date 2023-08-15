@@ -156,12 +156,12 @@ class StencilXDR {
 /*
  * The structure of the Stencil XDR buffer is:
  *
- * 1. Header
- *   a. Version
- *   b. ScriptSource
- *   d. Alignment padding
- * 2. Stencil
- *   a. CompilationStencil
+ * 1. Version
+ * 2. length of content
+ * 3. checksum of content
+ * 4. content
+ *   a. ScriptSource
+ *   b. CompilationStencil
  */
 
 /*
