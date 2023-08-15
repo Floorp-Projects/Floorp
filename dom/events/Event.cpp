@@ -437,12 +437,38 @@ void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
     return;
   }
 
-  // If this is called by default handlers, the caller will call
-  // UpdateDefaultPreventedOnContent when necessary.
-  if (!aCalledByDefaultHandler) {
-    if (WidgetDragEvent* dragEvent = mEvent->AsDragEvent()) {
-      dragEvent->UpdateDefaultPreventedOnContent(dragEvent->mCurrentTarget);
+  if (mEvent->mClass == eDragEventClass) {
+    UpdateDefaultPreventedOnContentForDragEvent();
+  }
+}
+
+void Event::UpdateDefaultPreventedOnContentForDragEvent() {
+  WidgetDragEvent* dragEvent = mEvent->AsDragEvent();
+  if (!dragEvent) {
+    return;
+  }
+
+  nsIPrincipal* principal = nullptr;
+  // Since we now have HTMLEditorEventListener registered on nsWindowRoot,
+  // mCurrentTarget could be nsWindowRoot, so we need to use
+  // mTarget if that's the case.
+  MOZ_ASSERT_IF(dragEvent->mInHTMLEditorEventListener,
+                mEvent->mCurrentTarget->IsRootWindow());
+  EventTarget* target = dragEvent->mInHTMLEditorEventListener
+                            ? mEvent->mTarget
+                            : mEvent->mCurrentTarget;
+
+  nsINode* node = nsINode::FromEventTargetOrNull(target);
+  if (node) {
+    principal = node->NodePrincipal();
+  } else {
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(target);
+    if (sop) {
+      principal = sop->GetPrincipal();
     }
+  }
+  if (principal && !principal->IsSystemPrincipal()) {
+    dragEvent->mDefaultPreventedOnContent = true;
   }
 }
 
