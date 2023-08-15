@@ -24,7 +24,6 @@ WebRenderLayerScrollData::WebRenderLayerScrollData()
     : mDescendantCount(-1),
       mAncestorTransformId(ScrollableLayerGuid::NULL_SCROLL_ID),
       mTransformIsPerspective(false),
-      mResolution(1.f),
       mEventRegionsOverride(EventRegionsOverride::NoOverride),
       mFixedPositionSides(mozilla::SideBits::eNone),
       mFixedPosScrollContainerId(ScrollableLayerGuid::NULL_SCROLL_ID),
@@ -182,9 +181,6 @@ void WebRenderLayerScrollData::Dump(std::ostream& aOut,
     if (mTransformIsPerspective) {
       aOut << ", transformIsPerspective";
     }
-  }
-  if (mResolution != 1.f) {
-    aOut << ", resolution=" << mResolution;
   }
   aOut << ", visible=" << mVisibleRegion;
   if (mReferentId) {
@@ -442,7 +438,6 @@ void ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Write(
   WriteParam(aWriter, aParam.mAncestorTransformId);
   WriteParam(aWriter, aParam.mTransform);
   WriteParam(aWriter, aParam.mTransformIsPerspective);
-  WriteParam(aWriter, aParam.mResolution);
   WriteParam(aWriter, aParam.mVisibleRegion);
   WriteParam(aWriter, aParam.mRemoteDocumentSize);
   WriteParam(aWriter, aParam.mReferentId);
@@ -470,7 +465,6 @@ bool ParamTraits<mozilla::layers::WebRenderLayerScrollData>::Read(
          ReadParam(aReader, &aResult->mAncestorTransformId) &&
          ReadParam(aReader, &aResult->mTransform) &&
          ReadParam(aReader, &aResult->mTransformIsPerspective) &&
-         ReadParam(aReader, &aResult->mResolution) &&
          ReadParam(aReader, &aResult->mVisibleRegion) &&
          ReadParam(aReader, &aResult->mRemoteDocumentSize) &&
          ReadParam(aReader, &aResult->mReferentId) &&
