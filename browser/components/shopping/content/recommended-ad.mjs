@@ -27,18 +27,11 @@ class RecommendedAd extends MozLitElement {
 
   disconnectedCallback() {
     this.clearRecommendationAdTimeout();
-    this.revokeImageUrl();
   }
 
   clearRecommendationAdTimeout() {
     if (this.recommendationAdTimeout) {
       clearTimeout(this.recommendationAdTimeout);
-    }
-  }
-
-  revokeImageUrl() {
-    if (this.imageUrl) {
-      URL.revokeObjectURL(this.imageUrl);
     }
   }
 
@@ -82,9 +75,6 @@ class RecommendedAd extends MozLitElement {
       this.adSeen = true;
     }
 
-    this.revokeImageUrl();
-    this.imageUrl = URL.createObjectURL(this.product.image_blob);
-
     return html`
       <link
         rel="stylesheet"
@@ -98,7 +88,7 @@ class RecommendedAd extends MozLitElement {
           this.product.url
         } target="_blank" @click=${this.handleClick}>
           <div id="ad-content">
-            <img id="ad-preview-image" src=${this.imageUrl}></img>
+            <img id="ad-preview-image"></img>
             <span id="ad-title" lang="en">${this.product.name}</span>
             <letter-grade letter="${this.product.grade}"></letter-grade>
           </div>
