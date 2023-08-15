@@ -1,0 +1,76 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.list-item  {
+  display: flex;
+  align-items: center;
+  padding-block: 10px;
+  padding-inline: 12px 18px;
+  border-inline-start: 4px solid transparent;
+  user-select: none;
+}
+
+.list-item:not(.selected):hover  {
+  background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
+}
+
+.list-item:not(.selected):hover:active  {
+  background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
+}
+
+.list-item.keyboard-selected  {
+  border-inline-start-color: var(--in-content-border-color);
+  background-color: var(--in-content-button-background-hover);
+}
+
+.list-item.selected  {
+  border-inline-start-color: var(--in-content-accent-color);
+  background-color: var(--in-content-page-background);
+}
+
+.list-item.selected .title  {
+  font-weight: 600;
+}
+
+.labels {
+  flex-grow: 1;
+  overflow: hidden;
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.title,
+.subtitle {
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.icon {
+  height: 16px;
+  width: 16px;
+  margin-inline-end: 12px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+}
+
+.subtitle {
+  font-size: 0.85em;
+  color: var(--text-color-deemphasized);
+}
+
+.alert-icon {
+  min-width: 16px;
+  width: 16px;
+  margin-inline-start: 12px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.75;
+}

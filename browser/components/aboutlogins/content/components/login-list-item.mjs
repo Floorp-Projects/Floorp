@@ -2,80 +2,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { LoginListItem, NewListItem } from "./login-list-lit-item.mjs";
 /**
- * LoginListItemFactory is used instead of the "login-list-item" custom element
- * since there may be 100s of login-list-items on about:logins and each
- * custom element carries with it significant overhead when used in large
- * numbers.
+ * This file will be removed once login-list is made into a lit-component since
+ * whatever the update function does, lit does internally automatically.
  */
 export default class LoginListItemFactory {
   static create(login) {
-    let template = document.querySelector("#login-list-item-template");
-    let fragment = template.content.cloneNode(true);
-    let listItem = fragment.firstElementChild;
-
-    LoginListItemFactory.update(listItem, login);
-
-    return listItem;
+    if (!login.guid) {
+      const newListItem = new NewListItem();
+      newListItem.classList.add("list-item");
+      return newListItem;
+    }
+    const loginListItem = new LoginListItem();
+    loginListItem.classList.add("list-item");
+    LoginListItemFactory.update(loginListItem, login);
+    return loginListItem;
   }
 
   static update(listItem, login) {
-    let title = listItem.querySelector(".title");
-    let username = listItem.querySelector(".username");
-    let alertIcon = listItem.querySelector(".alert-icon");
-
-    const favicon = listItem.querySelector(".favicon");
-    favicon.src = `page-icon:${login.origin}`;
-
-    if (!login.guid) {
-      listItem.id = "new-login-list-item";
-      document.l10n.setAttributes(title, "login-list-item-title-new-login");
-      document.l10n.setAttributes(
-        username,
-        "login-list-item-subtitle-new-login"
-      );
-      return;
-    }
+    listItem.title = login.title;
+    listItem.username = login.username;
+    listItem.favicon = `page-icon:${login.origin}`;
 
     // Prepend the ID with a string since IDs must not begin with a number.
     if (!listItem.id) {
       listItem.id = "lli-" + login.guid;
       listItem.dataset.guid = login.guid;
-    }
-    if (title.textContent != login.title) {
-      title.textContent = login.title;
-    }
-
-    let trimmedUsernameValue = login.username.trim();
-    if (trimmedUsernameValue) {
-      if (username.textContent != trimmedUsernameValue) {
-        username.removeAttribute("data-l10n-id");
-        username.textContent = trimmedUsernameValue;
-      }
-    } else {
-      document.l10n.setAttributes(
-        username,
-        "login-list-item-subtitle-missing-username"
-      );
-    }
-
-    if (listItem.classList.contains("breached")) {
-      alertIcon.src =
-        "chrome://browser/content/aboutlogins/icons/breached-website.svg";
-      document.l10n.setAttributes(
-        alertIcon,
-        "about-logins-list-item-breach-icon"
-      );
-    } else if (listItem.classList.contains("vulnerable")) {
-      alertIcon.src =
-        "chrome://browser/content/aboutlogins/icons/vulnerable-password.svg";
-
-      document.l10n.setAttributes(
-        alertIcon,
-        "about-logins-list-item-vulnerable-password-icon"
-      );
-    } else {
-      alertIcon.src = "";
     }
   }
 }
