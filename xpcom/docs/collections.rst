@@ -4,7 +4,23 @@ XPCOM Collections
 ``nsTArray`` and ``AutoTArray``
 -------------------------------
 
-``nsTArray<T>`` is a typesafe array for holding various objects.
+``nsTArray<T>`` is a typesafe array for holding various objects, similar to ``std::vector<T>``. (note that
+``nsTArray<T>`` is dynamically-sized, unlike ``std::array<T>``) Here's an
+incomplete list of mappings between the two:
+
+================== ==================================================
+std::vector<T>     nsTArray<T>
+================== ==================================================
+``size()``         ``Length()``
+``empty()``        ``IsEmpty()``
+``resize()``       ``SetLength()`` or ``SetLengthAndRetainStorage()``
+``capacity()``     ``Capacity()``
+``reserve()``      ``SetCapacity()``
+``push_back()``    ``AppendElement()``
+``insert()``       ``AppendElements()``
+``emplace_back()`` ``EmplaceBack()``
+``clear()``        ``Clear()`` or ``ClearAndRetainStorage()``
+================== ==================================================
 
 Rust Bindings
 ~~~~~~~~~~~~~
