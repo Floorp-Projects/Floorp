@@ -42,6 +42,9 @@ impl Config for SpiderMonkeyConfig {
     fn simd_enabled(&self) -> bool {
         true
     }
+    fn tail_call_enabled(&self) -> bool {
+        true
+    }
 }
 
 #[no_mangle]
