@@ -276,6 +276,18 @@ class SearchUseCases(
         }
     }
 
+    /**
+     * Restores bundled search engines that may have been removed.
+     */
+    class RestoreHiddenSearchEnginesUseCase(private val store: BrowserStore) {
+        /**
+         * Restores all hidden engines back to the bundled engine list.
+         */
+        operator fun invoke() {
+            store.dispatch(SearchAction.RestoreHiddenSearchEnginesAction)
+        }
+    }
+
     val defaultSearch: DefaultSearchUseCase by lazy {
         DefaultSearchUseCase(store, tabsUseCases, sessionUseCases)
     }
@@ -302,5 +314,9 @@ class SearchUseCases(
 
     val updateDisabledSearchEngineIds: UpdateDisabledSearchEngineIdsUseCase by lazy {
         UpdateDisabledSearchEngineIdsUseCase(store)
+    }
+
+    val restoreHiddenSearchEngines: RestoreHiddenSearchEnginesUseCase by lazy {
+        RestoreHiddenSearchEnginesUseCase(store)
     }
 }

@@ -85,8 +85,9 @@ class SearchMiddleware(
         next(action)
 
         when (action) {
-            is SearchAction.ShowSearchEngineAction, is SearchAction.HideSearchEngineAction ->
-                updateHiddenSearchEngines(context.state.search.hiddenSearchEngines)
+            is SearchAction.ShowSearchEngineAction, is SearchAction.HideSearchEngineAction,
+            is SearchAction.RestoreHiddenSearchEnginesAction,
+            -> updateHiddenSearchEngines(context.state.search.hiddenSearchEngines)
             is SearchAction.AddAdditionalSearchEngineAction, is SearchAction.RemoveAdditionalSearchEngineAction ->
                 updateAdditionalSearchEngines(context.state.search.additionalSearchEngines)
             is SearchAction.UpdateDisabledSearchEngineIdsAction -> updateDisabledSearchEngineIds(

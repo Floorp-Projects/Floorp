@@ -468,16 +468,90 @@ class SearchUseCasesTest {
 
         assertEquals(0, store.state.search.disabledSearchEngineIds.size)
     }
+
+    @Test
+    fun `WHEN restore search engines use case is invoked GIVEN there are hidden engines THEN hidden engines are added back to the bundled engine list`() {
+        val regionSearchEngines = listOf(
+            SearchEngine("bundled-engine-a", "Regional Engine A", mock(), type = SearchEngine.Type.BUNDLED),
+            SearchEngine("bundled-engine-b", "Regional Engine B", mock(), type = SearchEngine.Type.BUNDLED),
+        )
+
+        val hiddenEngine = SearchEngine(
+            "bundled-engine-c",
+            "Regional Engine C",
+            mock(),
+            type = SearchEngine.Type.BUNDLED,
+        )
+
+        val store = BrowserStore(getBrowserState(hiddenSearchEngine = listOf(hiddenEngine), regionSearchEngines = regionSearchEngines))
+        val useCases = SearchUseCases(store, mock(), mock())
+
+        assertEquals(2, store.state.search.regionSearchEngines.size)
+        assertEquals(1, store.state.search.hiddenSearchEngines.size)
+
+        assertEquals("bundled-engine-a", store.state.search.regionSearchEngines[0].id)
+        assertEquals("bundled-engine-b", store.state.search.regionSearchEngines[1].id)
+        assertEquals("bundled-engine-c", store.state.search.hiddenSearchEngines[0].id)
+
+        useCases.restoreHiddenSearchEngines.invoke()
+        store.waitUntilIdle()
+
+        assertEquals(3, store.state.search.regionSearchEngines.size)
+        assertEquals(0, store.state.search.hiddenSearchEngines.size)
+
+        assertEquals("bundled-engine-a", store.state.search.regionSearchEngines[0].id)
+        assertEquals("bundled-engine-b", store.state.search.regionSearchEngines[1].id)
+        assertEquals("bundled-engine-c", store.state.search.regionSearchEngines[2].id)
+    }
+
+    @Test
+    fun `WHEN restore search engines use case is invoked GIVEN there are no hidden engines THEN do nothing`() {
+        val regionSearchEngines = listOf(
+            SearchEngine("bundled-engine-a", "Regional Engine A", mock(), type = SearchEngine.Type.BUNDLED),
+            SearchEngine("bundled-engine-b", "Regional Engine B", mock(), type = SearchEngine.Type.BUNDLED),
+            SearchEngine("bundled-engine-c", "Regional Engine C", mock(), type = SearchEngine.Type.BUNDLED),
+        )
+        val store = BrowserStore(getBrowserState(hiddenSearchEngine = emptyList(), regionSearchEngines = regionSearchEngines))
+        val useCases = SearchUseCases(store, mock(), mock())
+
+        assertEquals(0, store.state.search.hiddenSearchEngines.size)
+        assertEquals(3, store.state.search.regionSearchEngines.size)
+
+        assertEquals("bundled-engine-a", store.state.search.regionSearchEngines[0].id)
+        assertEquals("bundled-engine-b", store.state.search.regionSearchEngines[1].id)
+        assertEquals("bundled-engine-c", store.state.search.regionSearchEngines[2].id)
+
+        useCases.restoreHiddenSearchEngines.invoke()
+        store.waitUntilIdle()
+
+        assertEquals(0, store.state.search.hiddenSearchEngines.size)
+        assertEquals(3, store.state.search.regionSearchEngines.size)
+
+        assertEquals("bundled-engine-a", store.state.search.regionSearchEngines[0].id)
+        assertEquals("bundled-engine-b", store.state.search.regionSearchEngines[1].id)
+        assertEquals("bundled-engine-c", store.state.search.regionSearchEngines[2].id)
+    }
 }
 
-private fun getBrowserState(disabledSearchEngineIds: List<String> = emptyList()) = BrowserState(
+private fun getBrowserState(
+    disabledSearchEngineIds: List<String> = emptyList(),
+    regionSearchEngines: List<SearchEngine> = listOf(
+        SearchEngine("engine-a", "Engine A", mock(), type = SearchEngine.Type.BUNDLED),
+        SearchEngine("engine-b", "Engine B", mock(), type = SearchEngine.Type.BUNDLED),
+        SearchEngine("engine-c", "Engine C", mock(), type = SearchEngine.Type.BUNDLED),
+    ),
+    hiddenSearchEngine: List<SearchEngine> = listOf(
+        SearchEngine(
+            "engine-i",
+            "Engine I",
+            mock(),
+            type = SearchEngine.Type.BUNDLED,
+        ),
+    ),
+) = BrowserState(
     search = SearchState(
         region = RegionState("US", "US"),
-        regionSearchEngines = listOf(
-            SearchEngine("engine-a", "Engine A", mock(), type = SearchEngine.Type.BUNDLED),
-            SearchEngine("engine-b", "Engine B", mock(), type = SearchEngine.Type.BUNDLED),
-            SearchEngine("engine-c", "Engine C", mock(), type = SearchEngine.Type.BUNDLED),
-        ),
+        regionSearchEngines = regionSearchEngines,
         customSearchEngines = listOf(
             SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
             SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM),
@@ -492,9 +566,7 @@ private fun getBrowserState(disabledSearchEngineIds: List<String> = emptyList())
             SearchEngine("engine-g", "Engine G", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
             SearchEngine("engine-h", "Engine H", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL),
         ),
-        hiddenSearchEngines = listOf(
-            SearchEngine("engine-i", "Engine I", mock(), type = SearchEngine.Type.BUNDLED),
-        ),
+        hiddenSearchEngines = hiddenSearchEngine,
         disabledSearchEngineIds = disabledSearchEngineIds,
         regionDefaultSearchEngineId = "engine-b",
         userSelectedSearchEngineId = null,

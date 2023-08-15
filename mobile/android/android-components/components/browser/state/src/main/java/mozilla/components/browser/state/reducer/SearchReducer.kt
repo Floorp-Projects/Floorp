@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.SearchAction
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SearchState
 
@@ -20,12 +21,13 @@ internal object SearchReducer {
             is SearchAction.UpdateCustomSearchEngineAction -> state.updateCustomSearchEngine(action)
             is SearchAction.RemoveCustomSearchEngineAction -> state.removeSearchEngine(action)
             is SearchAction.SelectSearchEngineAction -> state.selectSearchEngine(action)
-            is SearchAction.ShowSearchEngineAction -> state.showSearchEngine(action)
+            is SearchAction.ShowSearchEngineAction -> state.maybeShowSearchEngine(action)
             is SearchAction.HideSearchEngineAction -> state.hideSearchEngine(action)
             is SearchAction.AddAdditionalSearchEngineAction -> state.addAdditionalSearchEngine(action)
             is SearchAction.RemoveAdditionalSearchEngineAction -> state.removeAdditionalSearchEngine(action)
             is SearchAction.UpdateDisabledSearchEngineIdsAction ->
                 state.updateDisabledSearchEngineIds(action)
+            is SearchAction.RestoreHiddenSearchEnginesAction -> state.restoreHiddenSearchEngines()
         }
     }
 }
@@ -102,23 +104,28 @@ private fun BrowserState.selectSearchEngine(
     )
 }
 
-private fun BrowserState.showSearchEngine(
+private fun BrowserState.maybeShowSearchEngine(
     action: SearchAction.ShowSearchEngineAction,
 ): BrowserState {
     val searchEngine = search.hiddenSearchEngines.find { searchEngine -> searchEngine.id == action.searchEngineId }
-
     return if (searchEngine != null) {
-        copy(
-            search = search.copy(
-                hiddenSearchEngines = search.hiddenSearchEngines - searchEngine,
-                regionSearchEngines = (search.regionSearchEngines + searchEngine).sortedBy {
-                    search.regionSearchEnginesOrder.indexOf(it.id)
-                },
-            ),
-        )
+        return showSearchEngine(searchEngine)
     } else {
         this
     }
+}
+
+private fun BrowserState.showSearchEngine(
+    searchEngine: SearchEngine,
+): BrowserState {
+    return copy(
+        search = search.copy(
+            hiddenSearchEngines = search.hiddenSearchEngines - searchEngine,
+            regionSearchEngines = (search.regionSearchEngines + searchEngine).sortedBy {
+                search.regionSearchEnginesOrder.indexOf(it.id)
+            },
+        ),
+    )
 }
 
 private fun BrowserState.hideSearchEngine(
@@ -190,4 +197,10 @@ private fun BrowserState.updateDisabledSearchEngineIds(
             disabledSearchEngineIds = updatedDisabledSearchEngineShortcutIds,
         ),
     )
+}
+
+private fun BrowserState.restoreHiddenSearchEngines(): BrowserState {
+    return search.hiddenSearchEngines.fold(this) { state, engine ->
+        state.showSearchEngine(engine)
+    }
 }

@@ -223,6 +223,75 @@ class SearchActionTest {
     }
 
     @Test
+    fun `WHEN restore hidden search engines action GIVEN there are hidden engines THEN hidden engines are added back to the bundled engine list`() {
+        val store = BrowserStore(
+            BrowserState(
+                search = SearchState(
+                    regionSearchEngines = listOf(
+                        SearchEngine(id = "google", name = "Google", icon = mock(), type = SearchEngine.Type.BUNDLED),
+                        SearchEngine(id = "bing", name = "Bing", icon = mock(), type = SearchEngine.Type.BUNDLED),
+                    ),
+                    hiddenSearchEngines = listOf(
+                        SearchEngine(id = "duckduckgo", name = "DuckDuckGo", icon = mock(), type = SearchEngine.Type.BUNDLED),
+                    ),
+                ),
+            ),
+        )
+
+        assertEquals(2, store.state.search.regionSearchEngines.size)
+        assertEquals(1, store.state.search.hiddenSearchEngines.size)
+
+        assertEquals("google", store.state.search.regionSearchEngines[0].id)
+        assertEquals("bing", store.state.search.regionSearchEngines[1].id)
+        assertEquals("duckduckgo", store.state.search.hiddenSearchEngines[0].id)
+
+        store.dispatch(
+            SearchAction.RestoreHiddenSearchEnginesAction,
+        ).joinBlocking()
+
+        assertEquals(3, store.state.search.regionSearchEngines.size)
+        assertEquals(0, store.state.search.hiddenSearchEngines.size)
+
+        assertEquals("google", store.state.search.regionSearchEngines[0].id)
+        assertEquals("bing", store.state.search.regionSearchEngines[1].id)
+        assertEquals("duckduckgo", store.state.search.regionSearchEngines[2].id)
+    }
+
+    @Test
+    fun `WHEN restore hidden search engines action GIVEN there are no hidden engines THEN there are no changes`() {
+        val store = BrowserStore(
+            BrowserState(
+                search = SearchState(
+                    regionSearchEngines = listOf(
+                        SearchEngine(id = "google", name = "Google", icon = mock(), type = SearchEngine.Type.BUNDLED),
+                        SearchEngine(id = "bing", name = "Bing", icon = mock(), type = SearchEngine.Type.BUNDLED),
+                        SearchEngine(id = "duckduckgo", name = "DuckDuckGo", icon = mock(), type = SearchEngine.Type.BUNDLED),
+                    ),
+                    hiddenSearchEngines = listOf(),
+                ),
+            ),
+        )
+
+        assertEquals(3, store.state.search.regionSearchEngines.size)
+        assertEquals(0, store.state.search.hiddenSearchEngines.size)
+
+        assertEquals("google", store.state.search.regionSearchEngines[0].id)
+        assertEquals("bing", store.state.search.regionSearchEngines[1].id)
+        assertEquals("duckduckgo", store.state.search.regionSearchEngines[2].id)
+
+        store.dispatch(
+            SearchAction.RestoreHiddenSearchEnginesAction,
+        ).joinBlocking()
+
+        assertEquals(3, store.state.search.regionSearchEngines.size)
+        assertEquals(0, store.state.search.hiddenSearchEngines.size)
+
+        assertEquals("google", store.state.search.regionSearchEngines[0].id)
+        assertEquals("bing", store.state.search.regionSearchEngines[1].id)
+        assertEquals("duckduckgo", store.state.search.regionSearchEngines[2].id)
+    }
+
+    @Test
     fun `ShowSearchEngineAction - Adds hidden search engines back to region search engines`() {
         val store = BrowserStore(
             BrowserState(

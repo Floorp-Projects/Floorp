@@ -1846,4 +1846,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      * Indicates if the new Search settings UI is enabled.
      */
     var enableUnifiedSearchSettingsUI: Boolean = showUnifiedSearchFeature && FeatureFlags.unifiedSearchSettings
+
+    /**
+     * Indicates if hidden engines were restored due to migration to unified search settings UI.
+     * Should be removed once we expect the majority of the users to migrate.
+     * Tracking: https://bugzilla.mozilla.org/show_bug.cgi?id=1850767
+     */
+    var hiddenEnginesRestored: Boolean by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_hidden_engines_restored),
+        default = false,
+    )
 }

@@ -1244,6 +1244,50 @@ class SearchMiddlewareTest {
     }
 
     @Test
+    fun `WHEN restore hidden search engines action THEN hidden engines are added back to bundled engines list`() = runTestOnMain {
+        val metadataStorage = SearchMetadataStorage(testContext, preferences = lazy { FakeSharedPreferences() })
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher),
+            metadataStorage = metadataStorage,
+        )
+        val store = BrowserStore(middleware = listOf(searchMiddleware))
+
+        store.dispatch(
+            SearchAction.SetRegionAction(
+                RegionState("US", "US"),
+            ),
+        ).joinBlocking()
+        wait(store, dispatcher)
+
+        val google = store.state.search.regionSearchEngines.find { searchEngine -> searchEngine.name == "Google" }
+        assertNotNull(google!!)
+        assertEquals(0, store.state.search.hiddenSearchEngines.size)
+        assertEquals(0, metadataStorage.getHiddenSearchEngines().size)
+
+        store.dispatch(SearchAction.HideSearchEngineAction(google.id)).joinBlocking()
+        wait(store, dispatcher)
+
+        assertNull(store.state.search.regionSearchEngines.find { it.id == google.id })
+
+        assertEquals(1, store.state.search.hiddenSearchEngines.size)
+        assertEquals(1, metadataStorage.getHiddenSearchEngines().size)
+        assertNotNull(store.state.search.hiddenSearchEngines.find { it.id == google.id })
+        assertNotNull(metadataStorage.getHiddenSearchEngines().find { it == google.id })
+
+        store.dispatch(SearchAction.RestoreHiddenSearchEnginesAction).joinBlocking()
+        wait(store, dispatcher)
+
+        assertNotNull(store.state.search.regionSearchEngines.find { it.id == google.id })
+
+        assertEquals(0, store.state.search.hiddenSearchEngines.size)
+        assertEquals(0, metadataStorage.getHiddenSearchEngines().size)
+        assertNull(store.state.search.hiddenSearchEngines.find { it.id == google.id })
+        assertNull(metadataStorage.getHiddenSearchEngines().find { it == google.id })
+    }
+
+    @Test
     fun `Hiding and showing search engines`() {
         val searchMiddleware = SearchMiddleware(
             testContext,

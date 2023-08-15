@@ -367,6 +367,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             components.core.contileTopSitesUpdater.startPeriodicWork()
         }
 
+        if (settings().enableUnifiedSearchSettingsUI && !settings().hiddenEnginesRestored) {
+            settings().hiddenEnginesRestored = true
+            components.useCases.searchUseCases.restoreHiddenSearchEngines.invoke()
+        }
+
         // To assess whether the Pocket stories are to be downloaded or not multiple SharedPreferences
         // are read possibly needing to load them on the current thread. Move that to a background thread.
         lifecycleScope.launch(IO) {

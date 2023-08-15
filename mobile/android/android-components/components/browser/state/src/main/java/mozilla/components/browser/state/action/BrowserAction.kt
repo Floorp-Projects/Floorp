@@ -1533,6 +1533,11 @@ sealed class SearchAction : BrowserAction() {
         val searchEngineId: String,
         val isEnabled: Boolean,
     ) : SearchAction()
+
+    /**
+     * Restores hidden engines from [SearchState.hiddenSearchEngines] back to [SearchState.regionSearchEngines]
+     */
+    object RestoreHiddenSearchEnginesAction : SearchAction()
 }
 
 /**
