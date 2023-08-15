@@ -479,6 +479,9 @@ NotificationPermissionRequest::Run() {
   bool blocked = false;
   if (isSystem) {
     mPermission = NotificationPermission::Granted;
+  } else if (mPrincipal->GetPrivateBrowsingId() != 0) {
+    mPermission = NotificationPermission::Denied;
+    blocked = true;
   } else {
     // File are automatically granted permission.
 
@@ -1466,7 +1469,12 @@ already_AddRefed<Promise> Notification::RequestPermission(
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
+
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
+  if (!principal) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
   RefPtr<Promise> promise = Promise::Create(window->AsGlobal(), aRv);
   if (aRv.Failed()) {
@@ -1520,6 +1528,14 @@ NotificationPermission Notification::GetPermissionInternal(
   }
 
   nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
+  if (!principal) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return NotificationPermission::Denied;
+  }
+
+  if (principal->GetPrivateBrowsingId() != 0) {
+    return NotificationPermission::Denied;
+  }
   // Disallow showing notification if our origin is not the same origin as the
   // toplevel one, see https://github.com/whatwg/notifications/issues/177.
   if (!StaticPrefs::dom_webnotifications_allowcrossoriginiframe()) {
