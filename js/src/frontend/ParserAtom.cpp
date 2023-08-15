@@ -32,7 +32,7 @@ namespace js {
 namespace frontend {
 
 JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId atomId) {
-#define ASSERT_OFFSET_(_, NAME, _2)              \
+#define ASSERT_OFFSET_(NAME, _)                  \
   static_assert(offsetof(JSAtomState, NAME) ==   \
                 int32_t(WellKnownAtomId::NAME) * \
                     sizeof(js::ImmutableTenuredPtr<PropertyName*>));
@@ -1279,7 +1279,7 @@ bool WellKnownParserAtoms::init() {
 
   // Add well-known strings to the HashMap. The HashMap is used for dynamic
   // lookups later and does not change once this init method is complete.
-#define COMMON_NAME_INIT_(_, NAME, _2)                         \
+#define COMMON_NAME_INIT_(NAME, _)                             \
   if (!initSingle(GetWellKnownAtomInfo(WellKnownAtomId::NAME), \
                   TaggedParserAtomIndex::WellKnown::NAME())) { \
     return false;                                              \
