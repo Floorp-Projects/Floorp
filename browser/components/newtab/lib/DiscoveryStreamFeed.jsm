@@ -2209,7 +2209,7 @@ getHardcodedLayout = ({
   spocPositions = [1, 5, 7, 11, 18, 20],
   spocTopsitesPositions = [1],
   spocPlacementData = { ad_types: [3617], zone_ids: [217758, 217995] },
-  spocTopsitesPlacementData,
+  spocTopsitesPlacementData = { ad_types: [3120], zone_ids: [280143] },
   widgetPositions = [],
   widgetData = [],
   sponsoredCollectionsEnabled = false,
