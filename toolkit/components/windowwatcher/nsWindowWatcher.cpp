@@ -1282,7 +1282,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     if (parentInnerWin) {
       loadState->SetTriggeringWindowId(parentInnerWin->WindowID());
       loadState->SetTriggeringStorageAccess(
-          parentInnerWin->HasStorageAccessPermissionGranted());
+          parentInnerWin->UsingStorageAccess());
     }
 
     if (subjectPrincipal) {

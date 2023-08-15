@@ -18326,12 +18326,12 @@ nsICookieJarSettings* Document::CookieJarSettings() {
   return mCookieJarSettings;
 }
 
-bool Document::HasStorageAccessPermissionGranted() {
+bool Document::UsingStorageAccess() {
   // The HasStoragePermission flag in LoadInfo remains fixed when
   // it is set in the parent process, so we need to check the cache
   // to see if the permission is granted afterwards.
   nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (inner && inner->HasStorageAccessPermissionGranted()) {
+  if (inner && inner->UsingStorageAccess()) {
     return true;
   }
 

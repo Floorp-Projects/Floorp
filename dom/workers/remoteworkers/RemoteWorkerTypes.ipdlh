@@ -62,7 +62,7 @@ struct RemoteWorkerData
   PrincipalInfo partitionedPrincipalInfo;
 
   bool useRegularPrincipal;
-  bool hasStorageAccessPermissionGranted;
+  bool usingStorageAccess;
 
   CookieJarSettingsArgs cookieJarSettings;
 
