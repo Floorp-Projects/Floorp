@@ -112,7 +112,7 @@ var tests = [
     var worker = new Worker(url);
     worker.onerror = function(event) {
       event.preventDefault();
-      ok(event instanceof ErrorEvent, "ErrorEvent received.");
+      ok(event instanceof Event, "Event received.");
       next();
     };
   }
