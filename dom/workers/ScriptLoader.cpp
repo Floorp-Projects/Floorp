@@ -1151,9 +1151,28 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
       return false;
     }
 
+    // https://html.spec.whatwg.org/#run-a-worker
+    // if script's error to rethrow is non-null, then:
+    //    Queue a global task on the DOM manipulation task source given worker's
+    //    relevant global object to fire an event named error at worker.
+    //
+    // The event will be dispatched in CompileScriptRunnable.
+    if (request->mModuleScript->HasParseError()) {
+      // Here we assign an error code that is not a JS Exception, so
+      // CompileRunnable can dispatch the event.
+      mRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return false;
+    }
+
     // Implements To fetch a worklet/module worker script graph
     // Step 5. Fetch the descendants of and link result.
     if (!request->InstantiateModuleGraph()) {
+      return false;
+    }
+
+    if (request->mModuleScript->HasErrorToRethrow()) {
+      // See the comments when we check HasParseError() above.
+      mRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
       return false;
     }
 
