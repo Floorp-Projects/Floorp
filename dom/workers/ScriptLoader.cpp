@@ -602,6 +602,10 @@ nsContentPolicyType WorkerScriptLoader::GetContentPolicyType(
     return mWorkerRef->Private()->ContentPolicyType();
   }
   if (aRequest->IsModuleRequest()) {
+    if (aRequest->AsModuleRequest()->IsDynamicImport()) {
+      return nsIContentPolicy::TYPE_INTERNAL_MODULE;
+    }
+
     // Implements the destination for Step 14 in
     // https://html.spec.whatwg.org/#worker-processing-model
     //
@@ -610,6 +614,7 @@ nsContentPolicyType WorkerScriptLoader::GetContentPolicyType(
     // "sharedworker".
     return nsIContentPolicy::TYPE_INTERNAL_WORKER_STATIC_MODULE;
   }
+  // For script imported in worker's importScripts().
   return nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
 }
 

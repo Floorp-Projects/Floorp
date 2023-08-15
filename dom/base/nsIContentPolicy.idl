@@ -336,7 +336,11 @@ interface nsIContentPolicy : nsISupports
 
     /**
      * Indicates an internal constant for ES6 module scripts
-     * loaded through script elements or an import statement.
+     * loaded through script elements or an import statement (static import) or
+     * an import expression (dynamic import).
+     * It also indicates the load for dynamic import in workers.
+     * For static import in module workers,
+     * please check TYPE_INTERNAL_WORKER_STATIC_MODULE.
      *
      * This will be mapped to TYPE_SCRIPT before being passed
      * to content policy implementations.
