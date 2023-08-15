@@ -15353,10 +15353,9 @@
   mirror: always
 
 #ifdef MOZ_WAYLAND
-# Force fractional scaling using wp_viewporter. Valid values: 0.5 - 8
-- name: widget.wayland.fractional_buffer_scale
-  type: float
-  value: 0.0f
+- name: widget.wayland.fractional-scale.enabled
+  type: bool
+  value: false
   mirror: once
 
 # Use opaque region for MozContainer wl_surface
