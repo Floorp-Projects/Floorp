@@ -58,7 +58,7 @@ add_task(async function test_telemetry_events() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(
-      ".login-list-item.breached"
+      "login-list-item.breached"
     );
     loginListItem.click();
   });
@@ -193,7 +193,7 @@ add_task(async function test_telemetry_events() {
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let loginList = content.document.querySelector("login-list");
     let loginListItem = loginList.shadowRoot.querySelector(
-      ".login-list-item.vulnerable"
+      "login-list-item.vulnerable"
     );
     loginListItem.click();
   });

@@ -41,7 +41,7 @@ if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
         async login => {
           let loginList = content.document.querySelector("login-list");
           let loginListItem = loginList.shadowRoot.querySelector(
-            ".login-list-item[data-guid]:not([hidden])"
+            "login-list-item[data-guid]:not([hidden])"
           );
           info("Clicking on the first login");
 

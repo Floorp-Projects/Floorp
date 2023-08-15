@@ -49,7 +49,9 @@ add_task(async function test_query_parameter_filter() {
 
     await ContentTaskUtils.waitForCondition(() => {
       const selectedLoginItem = Cu.waiveXrays(
-        loginList.shadowRoot.querySelector("li[aria-selected='true']")
+        loginList.shadowRoot.querySelector(
+          "login-list-item[aria-selected='true']"
+        )
       );
       return selectedLoginItem.dataset.guid === logins[0].guid;
     }, "Waiting for TEST_LOGIN1 to be selected for the login-item view");
@@ -87,12 +89,13 @@ add_task(async function test_query_parameter_filter() {
       "the actual input inside of login-filter should be focused"
     );
 
-    let hiddenLoginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item[hidden]"
-    );
+    let hiddenLoginListItems =
+      loginList.shadowRoot.querySelectorAll(".list-item[hidden]");
+
     let visibleLoginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item:not([hidden])"
+      ".list-item:not([hidden])"
     );
+
     Assert.equal(
       visibleLoginListItems.length,
       1,
@@ -109,9 +112,9 @@ add_task(async function test_query_parameter_filter() {
       "One saved login and one blank login should be hidden"
     );
     Assert.equal(
-      hiddenLoginListItems[0].id,
-      "new-login-list-item",
-      "#new-login-list-item should be hidden"
+      hiddenLoginListItems[0].tagName,
+      "NEW-LIST-ITEM",
+      "new-list-item should be hidden"
     );
     Assert.equal(
       hiddenLoginListItems[1].dataset.guid,
@@ -168,7 +171,7 @@ add_task(async function test_query_parameter_filter_no_logins_for_site() {
     );
 
     let visibleLoginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item:not([hidden])"
+      "login-list-item:not([hidden])"
     );
     Assert.equal(visibleLoginListItems.length, 0, "No login should be visible");
 
@@ -253,7 +256,7 @@ add_task(async function test_query_parameter_filter_no_login_until_backspace() {
     );
 
     let visibleLoginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item:not([hidden])"
+      "login-list-item:not([hidden])"
     );
     Assert.equal(
       visibleLoginListItems.length,

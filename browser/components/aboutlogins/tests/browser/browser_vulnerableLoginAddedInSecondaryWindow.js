@@ -67,7 +67,7 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
 
       await ContentTaskUtils.waitForCondition(
         () =>
-          loginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]")
+          loginList.shadowRoot.querySelectorAll("login-list-item[data-guid]")
             .length == 2,
         "waiting for all two initials logins to get added to login-list"
       );
@@ -105,14 +105,14 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
 
       await ContentTaskUtils.waitForCondition(
         () =>
-          loginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]")
+          loginList.shadowRoot.querySelectorAll("login-list-item[data-guid]")
             .length == 3,
         "waiting for new login to get added to login-list"
       );
 
       let vulnerableLoginGuid = Cu.waiveXrays(loginItem)._login.guid;
       let vulnerableListItem = loginList.shadowRoot.querySelector(
-        `.login-list-item[data-guid="${vulnerableLoginGuid}"]`
+        `login-list-item[data-guid="${vulnerableLoginGuid}"]`
       );
 
       Assert.ok(
@@ -157,7 +157,7 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
       "The login list should be sorted by Alerts"
     );
     let loginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item[data-guid]"
+      "login-list-item[data-guid]"
     );
     for (let i = 1; i < loginListItems.length; i++) {
       if (loginListItems[i].matches(".vulnerable, .breached")) {
@@ -210,7 +210,7 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
       "waiting for sort to get updated to 'alerts'"
     );
     let loginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item[data-guid]"
+      "login-list-item[data-guid]"
     );
     for (let i = 1; i < loginListItems.length; i++) {
       if (loginListItems[i].matches(".vulnerable, .breached")) {

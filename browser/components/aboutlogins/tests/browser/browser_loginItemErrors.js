@@ -60,9 +60,7 @@ add_task(async function test_showLoginItemErrors() {
       );
 
       await ContentTaskUtils.waitForCondition(() => {
-        return (
-          loginList.shadowRoot.querySelectorAll(".login-list-item").length === 3
-        );
+        return loginList.shadowRoot.querySelectorAll(".list-item").length === 3;
       }, "Waiting for login item to be created.");
 
       Assert.ok(
@@ -94,7 +92,7 @@ add_task(async function test_showLoginItemErrors() {
 
       let loginListItem = Cu.waiveXrays(
         loginList.shadowRoot.querySelector(
-          `.login-list-item[data-guid='${loginToUpdate.guid}']`
+          `login-list-item[data-guid='${loginToUpdate.guid}']`
         )
       );
       loginListItem.click();

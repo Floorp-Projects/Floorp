@@ -142,7 +142,7 @@ add_task(async function test_list_filtered() {
     // Up/down keys must select previous/next item in the list
     function pressKeyAndExpectSelection(key, selectedIndex) {
       sendKey(key);
-      ok(ol.querySelectorAll(".login-list-item[data-guid]:not([hidden])")[selectedIndex]?.classList?.contains("keyboard-selected"),
+      ok(ol.querySelectorAll("login-list-item[data-guid]:not([hidden])")[selectedIndex]?.classList?.contains("keyboard-selected"),
         `item ${selectedIndex} should be marked as keyboard-selected`);
       is(ol.querySelector(".selected").dataset.guid, LOGINS[selectedIndex].guid, `item ${selectedIndex} must be selected`);
     }

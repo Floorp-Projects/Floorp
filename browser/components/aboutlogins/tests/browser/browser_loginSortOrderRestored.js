@@ -54,7 +54,7 @@ add_task(async function test_sort_order_persisted() {
           );
           Assert.equal(
             loginList._list.querySelector(
-              ".login-list-item[data-guid]:not([hidden])"
+              "login-list-item[data-guid]:not([hidden])"
             ).dataset.guid,
             testLogin3Guid,
             "the first login should be TEST_LOGIN3 since they are sorted by alerts"
@@ -66,7 +66,7 @@ add_task(async function test_sort_order_persisted() {
           );
           Assert.equal(
             loginList._list.querySelector(
-              ".login-list-item[data-guid]:not([hidden])"
+              "login-list-item[data-guid]:not([hidden])"
             ).dataset.guid,
             testLogin1Guid,
             "the first login should be TEST_LOGIN1 since it has the most recent timePasswordChanged value"
@@ -110,7 +110,7 @@ add_task(async function test_sort_order_persisted() {
           );
           Assert.equal(
             loginList._list.querySelector(
-              ".login-list-item[data-guid]:not([hidden])"
+              "login-list-item[data-guid]:not([hidden])"
             ).dataset.guid,
             testLogin3Guid,
             "the first login should be TEST_LOGIN3 since they are sorted by alerts"
@@ -149,7 +149,7 @@ add_task(async function test_sort_order_persisted() {
           await ContentTaskUtils.waitForCondition(
             () =>
               loginList._list.querySelector(
-                ".login-list-item[data-guid]:not([hidden])"
+                "login-list-item[data-guid]:not([hidden])"
               ),
             "wait for a visible loging to get populated"
           );
@@ -160,7 +160,7 @@ add_task(async function test_sort_order_persisted() {
           );
           Assert.equal(
             loginList._list.querySelector(
-              ".login-list-item[data-guid]:not([hidden])"
+              "login-list-item[data-guid]:not([hidden])"
             ).dataset.guid,
             testLogin2Guid,
             "the first login should be TEST_LOGIN2 since it is sorted first by 'name'"
