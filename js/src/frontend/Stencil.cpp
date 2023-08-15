@@ -3648,7 +3648,7 @@ void frontend::DumpTaggedParserAtomIndex(js::JSONPrinter& json,
         json.property("atom", "");
         break;
 
-#  define CASE_(_, name, _2) case WellKnownAtomId::name:
+#  define CASE_(name, _) case WellKnownAtomId::name:
         FOR_EACH_NONTINY_COMMON_PROPERTYNAME(CASE_)
 #  undef CASE_
 
@@ -3726,7 +3726,7 @@ void frontend::DumpTaggedParserAtomIndexNoQuote(
         out.put("#<zero-length name>");
         break;
 
-#  define CASE_(_, name, _2) case WellKnownAtomId::name:
+#  define CASE_(name, _) case WellKnownAtomId::name:
         FOR_EACH_NONTINY_COMMON_PROPERTYNAME(CASE_)
 #  undef CASE_
 

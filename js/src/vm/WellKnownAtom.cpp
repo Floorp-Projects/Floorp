@@ -7,8 +7,8 @@
 #include "vm/WellKnownAtom.h"
 
 js::WellKnownAtomInfo js::wellKnownAtomInfos[] = {
-#define ENUM_ENTRY_(_, _2, TEXT) \
-  {uint32_t(sizeof(TEXT) - 1),   \
+#define ENUM_ENTRY_(_, TEXT)   \
+  {uint32_t(sizeof(TEXT) - 1), \
    mozilla::HashStringKnownLength(TEXT, sizeof(TEXT) - 1), TEXT},
     FOR_EACH_COMMON_PROPERTYNAME(ENUM_ENTRY_)
 #undef ENUM_ENTRY_
