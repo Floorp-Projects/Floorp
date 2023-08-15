@@ -32,12 +32,16 @@ html,body {
   overflow: visible;
 }
 
+.grid {
+  display: inline-grid;
+  baseline-source: last;
+}
   </style>
 </head>
 <body>
 
 <div>
-  <div style="display:inline-grid">
+  <div class="grid">
     A
     <textarea class="block">textarea</textarea>
   </div>
@@ -45,7 +49,7 @@ html,body {
 </div>
 
 <div>
-  <div style="display:inline-grid">
+  <div class="grid">
     A
     <textarea class="block no-theme">textarea</textarea>
   </div>
@@ -53,7 +57,7 @@ html,body {
 </div>
 
 <div>
-  <div style="display:inline-grid">
+  <div class="grid">
     A
     <textarea class="block no-theme no-scroll">textarea</textarea>
   </div>
@@ -61,7 +65,7 @@ html,body {
 </div>
 
 <div>
-  <div style="display:inline-block">
+  <div class="grid">
     A<br>
     <div style="display:inline-block"><fieldset style="display:inline">fieldset-first<br>fieldset-last</fieldset></div>
   </div>
