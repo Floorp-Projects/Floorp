@@ -53,7 +53,8 @@ IonCacheIRCompiler::IonCacheIRCompiler(JSContext* cx, TempAllocator& alloc,
       writer_(writer),
       ic_(ic),
       ionScript_(ionScript),
-      savedLiveRegs_(false) {
+      savedLiveRegs_(false),
+      localTracingSlots_(0) {
   MOZ_ASSERT(ic_);
   MOZ_ASSERT(ionScript_);
 }
@@ -270,6 +271,22 @@ void IonCacheIRCompiler::enterStubFrame(MacroAssembler& masm,
   masm.moveStackPtrTo(FramePointer);
 
   enteredStubFrame_ = true;
+}
+
+void IonCacheIRCompiler::storeTracedValue(MacroAssembler& masm,
+                                          ValueOperand value) {
+  MOZ_ASSERT(localTracingSlots_ < 255);
+  masm.Push(value);
+  localTracingSlots_++;
+}
+
+void IonCacheIRCompiler::loadTracedValue(MacroAssembler& masm,
+                                         uint8_t slotIndex,
+                                         ValueOperand value) {
+  MOZ_ASSERT(slotIndex <= localTracingSlots_);
+  int32_t offset = IonICCallFrameLayout::LocallyTracedValueOffset +
+                   slotIndex * sizeof(Value);
+  masm.loadValue(Address(FramePointer, -offset), value);
 }
 
 bool IonCacheIRCompiler::init() {
@@ -593,6 +610,8 @@ JitCode* IonCacheIRCompiler::compile(IonICStub* stub) {
     cx_->recoverFromOutOfMemory();
     return nullptr;
   }
+
+  newStubCode->setLocalTracingSlots(localTracingSlots_);
 
   for (CodeOffset offset : nextCodeOffsets_) {
     Assembler::PatchDataWithValueCheck(CodeLocationLabel(newStubCode, offset),
@@ -921,6 +940,145 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult(
   masm.freeStack(masm.framePushed() - framePushedBefore);
   return true;
 }
+
+#ifdef JS_PUNBOX64
+template <typename IdType>
+bool IonCacheIRCompiler::emitCallScriptedProxyGetShared(ValOperandId targetId,
+                                                        ObjOperandId receiverId,
+                                                        ObjOperandId handlerId,
+                                                        uint32_t trapOffset,
+                                                        IdType id) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoSaveLiveRegisters save(*this);
+  AutoOutputRegister output(*this);
+
+  ValueOperand target = allocator.useValueRegister(masm, targetId);
+  Register receiver = allocator.useRegister(masm, receiverId);
+  Register handler = allocator.useRegister(masm, handlerId);
+  ValueOperand idVal;
+  if constexpr (std::is_same_v<IdType, ValOperandId>) {
+    idVal = allocator.useValueRegister(masm, id);
+  }
+
+  JSFunction* trap = &objectStubField(trapOffset)->as<JSFunction>();
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  ValueOperand scratchVal(scratch);
+  ValueOperand scratchVal2(scratch2);
+
+  allocator.discardStack(masm);
+
+  uint32_t framePushedBefore = masm.framePushed();
+
+  enterStubFrame(masm, save);
+
+  // We need to keep the target around to potentially validate the proxy result
+  storeTracedValue(masm, target);
+  if constexpr (std::is_same_v<IdType, ValOperandId>) {
+    // Same for the id, assuming it's not baked in
+    storeTracedValue(masm, idVal);
+  }
+  uint32_t framePushedBeforeArgs = masm.framePushed();
+
+  // The JitFrameLayout pushed below will be aligned to JitStackAlignment,
+  // so we just have to make sure the stack is aligned after we push the
+  // |this| + argument Values.
+  uint32_t argSize = (std::max(trap->nargs(), (size_t)3) + 1) * sizeof(Value);
+  uint32_t padding =
+      ComputeByteAlignment(masm.framePushed() + argSize, JitStackAlignment);
+  MOZ_ASSERT(padding % sizeof(uintptr_t) == 0);
+  MOZ_ASSERT(padding < JitStackAlignment);
+  masm.reserveStack(padding);
+
+  for (size_t i = 3; i < trap->nargs(); i++) {
+    masm.Push(UndefinedValue());
+  }
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, receiver, scratchVal);
+  masm.Push(scratchVal);
+
+  if constexpr (std::is_same_v<IdType, ValOperandId>) {
+    masm.Push(idVal);
+  } else {
+    masm.movePropertyKey(idStubField(id), scratch);
+    masm.tagValue(JSVAL_TYPE_STRING, scratch, scratchVal);
+    masm.Push(scratchVal);
+  }
+
+  masm.Push(target);
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, handler, scratchVal);
+  masm.Push(scratchVal);
+
+  masm.movePtr(ImmGCPtr(trap), scratch);
+
+  masm.Push(scratch);
+  masm.PushFrameDescriptorForJitCall(FrameType::IonICCall, /* argc = */ 3);
+
+  // Check stack alignment. Add 2 * sizeof(uintptr_t) for the return address and
+  // frame pointer pushed by the call/callee.
+  MOZ_ASSERT(
+      ((masm.framePushed() + 2 * sizeof(uintptr_t)) % JitStackAlignment) == 0);
+
+  MOZ_ASSERT(trap->hasJitEntry());
+  masm.loadJitCodeRaw(scratch, scratch);
+  masm.callJit(scratch);
+
+  masm.storeCallResultValue(output);
+
+  Label success, end;
+  loadTracedValue(masm, 0, scratchVal);
+  masm.unboxObject(scratchVal, scratch);
+  masm.branchTestObjectNeedsProxyResultValidation(Assembler::Zero, scratch,
+                                                  scratch2, &success);
+
+  if constexpr (std::is_same_v<IdType, ValOperandId>) {
+    loadTracedValue(masm, 1, scratchVal2);
+  } else {
+    masm.moveValue(StringValue(idStubField(id).toString()), scratchVal2);
+  }
+
+  uint32_t framePushedAfterCall = masm.framePushed();
+  masm.freeStack(masm.framePushed() - framePushedBeforeArgs);
+
+  masm.Push(output.valueReg());
+  masm.Push(scratchVal2);
+  masm.Push(scratch);
+
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
+                      MutableHandleValue);
+  callVM<Fn, CheckProxyGetByValueResult>(masm);
+
+  masm.storeCallResultValue(output);
+
+  masm.jump(&end);
+  masm.bind(&success);
+  masm.setFramePushed(framePushedAfterCall);
+
+  // Restore the frame pointer and stack pointer.
+  masm.loadPtr(Address(FramePointer, 0), FramePointer);
+  masm.freeStack(masm.framePushed() - framePushedBefore);
+  masm.bind(&end);
+
+  return true;
+}
+
+bool IonCacheIRCompiler::emitCallScriptedProxyGetResult(
+    ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
+    uint32_t trapOffset, uint32_t id, uint32_t nargsAndFlags) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId,
+                                        trapOffset, id);
+}
+
+bool IonCacheIRCompiler::emitCallScriptedProxyGetByValueResult(
+    ValOperandId targetId, ObjOperandId receiverId, ObjOperandId handlerId,
+    ValOperandId idId, uint32_t trapOffset, uint32_t nargsAndFlags) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  return emitCallScriptedProxyGetShared(targetId, receiverId, handlerId,
+                                        trapOffset, idId);
+}
+#endif
 
 bool IonCacheIRCompiler::emitCallInlinedGetterResult(
     ValOperandId receiverId, uint32_t getterOffset, uint32_t icScriptOffset,
