@@ -98,6 +98,17 @@ const MOCK_ANALYZED_PRODUCT_RESPONSE = {
   needs_analysis: false,
 };
 
+const MOCK_UNAVAILABLE_PRODUCT_RESPONSE = {
+  ...MOCK_POPULATED_DATA,
+  product_id: "ABCD123",
+  deleted_product: true,
+};
+
+const MOCK_UNAVAILABLE_PRODUCT_REPORTED_RESPONSE = {
+  ...MOCK_UNAVAILABLE_PRODUCT_RESPONSE,
+  deleted_product_reported: true,
+};
+
 function verifyAnalysisDetailsVisible(shoppingContainer) {
   ok(
     shoppingContainer.reviewReliabilityEl,

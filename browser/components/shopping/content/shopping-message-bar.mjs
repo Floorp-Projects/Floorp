@@ -12,6 +12,10 @@ class ShoppingMessageBar extends MozLitElement {
     ["generic-error", this.getGenericErrorTemplate()],
     ["not-enough-reviews", this.getNotEnoughReviewsTemplate()],
     ["product-not-available", this.getProductNotAvailableTemplate()],
+    [
+      "product-not-available-reported",
+      this.getProductNotAvailableReportedTemplate(),
+    ],
     ["offline", this.getOfflineWarningTemplate()],
     ["analysis-in-progress", this.getAnalysisInProgressTemplate()],
   ]);
@@ -100,6 +104,21 @@ class ShoppingMessageBar extends MozLitElement {
       </article>
     </message-bar>`;
   }
+
+  getProductNotAvailableReportedTemplate() {
+    return html`<message-bar type="warning">
+      <article id="message-bar-container" aria-labelledby="header">
+        <strong
+          id="header"
+          data-l10n-id="shopping-message-bar-warning-product-not-available-reported-title"
+        ></strong>
+        <span
+          data-l10n-id="shopping-message-bar-warning-product-not-available-reported-message"
+        ></span>
+      </article>
+    </message-bar>`;
+  }
+
   getAnalysisInProgressTemplate() {
     // TODO: Bug 1847839 - insert spinner into message-bar
     return html` <message-bar>
