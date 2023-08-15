@@ -228,24 +228,24 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadFileNotFound() {
-        // TODO: Bug 1673954
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         testLoadExpectError(
             "file:///test.mozilla",
             WebRequestError.ERROR_CATEGORY_URI,
             WebRequestError.ERROR_FILE_NOT_FOUND,
         )
 
-        val promise = mainSession.evaluatePromiseJS("document.addCertException(false)")
-        var exceptionCaught = false
-        try {
-            val result = promise.value as Boolean
-            assertThat("Promise should not resolve", result, equalTo(false))
-        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
-            exceptionCaught = true
+        // This is temporarily disabled on Fission. See bug 1673954
+        if (!sessionRule.env.isFission) {
+            val promise = mainSession.evaluatePromiseJS("document.addCertException(false)")
+            var exceptionCaught = false
+            try {
+                val result = promise.value as Boolean
+                assertThat("Promise should not resolve", result, equalTo(false))
+            } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+                exceptionCaught = true
+            }
+            assertThat("document.addCertException failed with exception", exceptionCaught, equalTo(true))
         }
-        assertThat("document.addCertException failed with exception", exceptionCaught, equalTo(true))
     }
 
     @Test fun loadUnknownHost() {
