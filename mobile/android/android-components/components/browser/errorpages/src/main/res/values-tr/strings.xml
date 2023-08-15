@@ -51,8 +51,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Gelişmiş…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[<label><b>%1$s</b> HTTP Sıkı Aktarım Güvenliği (HSTS) denilen bir güvenlik ilkesi uyguluyor. Bu nedenle <b>%2$s</b> bu siteye yalnızca güvenli bir şekilde bağlanabilir. Bu siteye ayrıcalık tanıyarak siteyi ziyaret edemezsiniz.]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[<label><b>%1$s</b> HTTP Sıkı Aktarım Güvenliği (HSTS) denilen bir güvenlik ilkesi uyguluyor. Bu nedenle <b>%2$s</b> bu siteye yalnızca güvenli bir şekilde bağlanabilir. Bu siteye ayrıcalık tanıyarak siteyi ziyaret edemezsiniz.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Geri dön</string>
@@ -73,7 +71,7 @@
     <string name="mozac_browser_errorpages_net_timeout_title">Bağlantı zaman aşımına uğradı</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>İstenen site bağlantı isteğine yanıt vermeyince tarayıcı da beklemeyi bıraktı.</p><ul><li>Sunucu, yoğun talep veya geçici bir kesinti nedeniyle hizmet veremiyor olabilir. Daha sonra yeniden deneyin.</li><li>Diğer siteler de mi açılmıyor? Öyleyse cihazınızın ağ bağlantısın kontrol edin.</li><li>Cihazınız veya ağınız bir güvenlik duvarıyla veya vekil sunucuyla korunuyorsa hatalı ayarlar internete erişmenizi engelleyebilir.</li><li>Her yolu denemenize rağmen hâlâ bağlantı kuramıyorsanız ağ yöneticinize veya internet servis sağlayıcınıza başvurun.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>İstenen site bağlantı isteğine yanıt vermeyince tarayıcı da beklemeyi bıraktı.</p><ul><li>Sunucu, yoğun talep veya geçici bir kesinti nedeniyle hizmet veremiyor olabilir. Daha sonra yeniden deneyin.</li><li>Diğer siteler de mi açılmıyor? Öyleyse cihazınızın ağ bağlantısını kontrol edin.</li><li>Cihazınız veya ağınız bir güvenlik duvarıyla veya vekil sunucuyla korunuyorsa hatalı ayarlar internete erişmenizi engelleyebilir.</li><li>Her yolu denemenize rağmen hâlâ bağlantı kuramıyorsanız ağ yöneticinize veya internet servis sağlayıcınıza başvurun.</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Bağlanılamadı</string>

@@ -1522,9 +1522,9 @@
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">Setélan Kilung</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="preference_enhanced_tracking_protection">Protéksi Palacakan Tingkat Lanjut</string>
+    <string name="preference_enhanced_tracking_protection">Kilung Palacakan anu Dironjatkeun</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary">Ayeuna mituran Total Cookie Protection, bénténg pangwedelna tur ngahalangan palacak meuntas-loka.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Ayeuna mituran Kilung Réréméh Total, bénténg pangwedelna tur ngahalangan palacak meuntas-loka.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s ngajaga anjeun ti kalolobaan palacak anu nunutur lalampahan anjeun jero jaringan.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->

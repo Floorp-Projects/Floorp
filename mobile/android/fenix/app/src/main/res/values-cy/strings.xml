@@ -1208,7 +1208,7 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Cau</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">Methu argraffu</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Methu argraffu</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Argraffu</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
@@ -1904,11 +1904,11 @@
     <string name="search_add_custom_engine_form_description">Manylion peiriant chwilio cyfaddas</string>
 
     <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
-    <string name="search_add_custom_engine_suggest_url_label">API awgrym chwilio (dewisol)</string>
+    <string name="search_add_custom_engine_suggest_url_label">API awgrymiadau chwilio (dewisol)</string>
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
-    <string name="search_add_custom_engine_suggest_string_hint">URL API awgrym chwilio</string>
+    <string name="search_add_custom_engine_suggest_string_hint">URL API awgrymiadau chwilio</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Disodli ymholiad gyda &quot;%s&quot;. Enghraifft:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Amnewid yr ymholiad gyda “%s”. Enghraifft:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Cadw</string>
 
