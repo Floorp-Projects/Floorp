@@ -41,8 +41,6 @@ class GeckoInstance(object):
         # and causing false-positive test failures. See bug 1176798, bug 1177018,
         # bug 1210465.
         "apz.content_response_timeout": 60000,
-        # Don't pull sponsored Top Sites content from the network
-        "browser.newtabpage.activity-stream.showSponsoredTopSites": False,
         # Disable geolocation ping (#1)
         "browser.region.network.url": "",
         # Don't pull Top Sites content from the network
