@@ -141,7 +141,7 @@ struct WorkerLoadInfoData {
   bool mWatchedByDevTools;
   StorageAccess mStorageAccess;
   bool mUseRegularPrincipal;
-  bool mHasStorageAccessPermissionGranted;
+  bool mUsingStorageAccess;
   bool mServiceWorkersTestingInWindow;
   bool mShouldResistFingerprinting;
   OriginAttributes mOriginAttributes;

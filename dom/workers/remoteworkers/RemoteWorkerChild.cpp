@@ -260,8 +260,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mLoadingPrincipal = loadingPrincipalOrErr.unwrap();
   info.mStorageAccess = aData.storageAccess();
   info.mUseRegularPrincipal = aData.useRegularPrincipal();
-  info.mHasStorageAccessPermissionGranted =
-      aData.hasStorageAccessPermissionGranted();
+  info.mUsingStorageAccess = aData.usingStorageAccess();
   info.mIsThirdPartyContextToTopWindow = aData.isThirdPartyContextToTopWindow();
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();

@@ -2812,8 +2812,7 @@ nsresult WorkerPrivate::GetLoadInfo(
         aParent->AssociatedBrowsingContextID();
     loadInfo.mStorageAccess = aParent->StorageAccess();
     loadInfo.mUseRegularPrincipal = aParent->UseRegularPrincipal();
-    loadInfo.mHasStorageAccessPermissionGranted =
-        aParent->HasStorageAccessPermissionGranted();
+    loadInfo.mUsingStorageAccess = aParent->UsingStorageAccess();
     loadInfo.mCookieJarSettings = aParent->CookieJarSettings();
     if (loadInfo.mCookieJarSettings) {
       loadInfo.mCookieJarSettingsArgs = aParent->CookieJarSettingsArgs();
@@ -2963,17 +2962,16 @@ nsresult WorkerPrivate::GetLoadInfo(
           globalWindow->GetBrowsingContext()->Id();
       loadInfo.mStorageAccess = StorageAllowedForWindow(globalWindow);
       loadInfo.mUseRegularPrincipal = document->UseRegularPrincipal();
-      loadInfo.mHasStorageAccessPermissionGranted =
-          document->HasStorageAccessPermissionGranted();
+      loadInfo.mUsingStorageAccess = document->UsingStorageAccess();
       loadInfo.mShouldResistFingerprinting =
           document->ShouldResistFingerprinting(
               RFPTarget::IsAlwaysEnabledForPrecompute);
 
       // This is an hack to deny the storage-access-permission for workers of
       // sub-iframes.
-      if (loadInfo.mHasStorageAccessPermissionGranted &&
+      if (loadInfo.mUsingStorageAccess &&
           StorageAllowedForDocument(document) != StorageAccess::eAllow) {
-        loadInfo.mHasStorageAccessPermissionGranted = false;
+        loadInfo.mUsingStorageAccess = false;
       }
       loadInfo.mIsThirdPartyContextToTopWindow =
           AntiTrackingUtils::IsThirdPartyWindow(globalWindow, nullptr);
@@ -3029,7 +3027,7 @@ nsresult WorkerPrivate::GetLoadInfo(
       loadInfo.mWindowID = UINT64_MAX;
       loadInfo.mStorageAccess = StorageAccess::eAllow;
       loadInfo.mUseRegularPrincipal = true;
-      loadInfo.mHasStorageAccessPermissionGranted = false;
+      loadInfo.mUsingStorageAccess = false;
       loadInfo.mCookieJarSettings =
           mozilla::net::CookieJarSettings::Create(loadInfo.mLoadingPrincipal);
       loadInfo.mShouldResistFingerprinting =
@@ -3083,9 +3081,8 @@ nsresult WorkerPrivate::GetLoadInfo(
     // well as the hasStoragePermission flag.
     nsCOMPtr<nsILoadInfo> channelLoadInfo = loadInfo.mChannel->LoadInfo();
     rv = channelLoadInfo->SetStoragePermission(
-        loadInfo.mHasStorageAccessPermissionGranted
-            ? nsILoadInfo::HasStoragePermission
-            : nsILoadInfo::NoStoragePermission);
+        loadInfo.mUsingStorageAccess ? nsILoadInfo::HasStoragePermission
+                                     : nsILoadInfo::NoStoragePermission);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = loadInfo.SetPrincipalsAndCSPFromChannel(loadInfo.mChannel);
@@ -4117,7 +4114,7 @@ void WorkerPrivate::PropagateStorageAccessPermissionGrantedInternal() {
   auto data = mWorkerThreadAccessible.Access();
 
   mLoadInfo.mUseRegularPrincipal = true;
-  mLoadInfo.mHasStorageAccessPermissionGranted = true;
+  mLoadInfo.mUsingStorageAccess = true;
 
   WorkerGlobalScope* globalScope = GlobalScope();
   if (globalScope) {

@@ -4018,8 +4018,7 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aErrorURI, nsIURI* aFailedURI,
         mBrowsingContext->GetCurrentInnerWindowId());
     nsPIDOMWindowInner* innerWin = mScriptGlobal->GetCurrentInnerWindow();
     if (innerWin) {
-      loadState->SetTriggeringStorageAccess(
-          innerWin->HasStorageAccessPermissionGranted());
+      loadState->SetTriggeringStorageAccess(innerWin->UsingStorageAccess());
     }
   }
   loadState->SetLoadType(LOAD_ERROR_PAGE);
@@ -4208,7 +4207,7 @@ nsresult nsDocShell::ReloadDocument(nsDocShell* aDocShell, Document* aDocument,
   nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
   uint32_t triggeringSandboxFlags = aDocument->GetSandboxFlags();
   uint64_t triggeringWindowId = aDocument->InnerWindowID();
-  bool triggeringStorageAccess = aDocument->HasStorageAccessPermissionGranted();
+  bool triggeringStorageAccess = aDocument->UsingStorageAccess();
 
   nsAutoString contentTypeHint;
   aDocument->GetContentType(contentTypeHint);
@@ -5245,8 +5244,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
         doc->HasValidTransientUserGestureActivation());
     loadState->SetTriggeringSandboxFlags(doc->GetSandboxFlags());
     loadState->SetTriggeringWindowId(doc->InnerWindowID());
-    loadState->SetTriggeringStorageAccess(
-        doc->HasStorageAccessPermissionGranted());
+    loadState->SetTriggeringStorageAccess(doc->UsingStorageAccess());
   }
 
   loadState->SetPrincipalIsExplicit(true);
@@ -10537,7 +10535,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       Document* contextDoc = context->GetExtantDoc();
       if (contextDoc) {
         aLoadState->SetTriggeringStorageAccess(
-            contextDoc->HasStorageAccessPermissionGranted());
+            contextDoc->UsingStorageAccess());
       }
     }
   }
@@ -13074,8 +13072,7 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   if (mBrowsingContext) {
     triggeringSandboxFlags = aContent->OwnerDoc()->GetSandboxFlags();
     triggeringWindowId = aContent->OwnerDoc()->InnerWindowID();
-    triggeringStorageAccess =
-        aContent->OwnerDoc()->HasStorageAccessPermissionGranted();
+    triggeringStorageAccess = aContent->OwnerDoc()->UsingStorageAccess();
   }
 
   uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
