@@ -9,9 +9,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
-ChromeUtils.defineLazyGetter(lazy, "logger", () =>
-  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
-);
+ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
 

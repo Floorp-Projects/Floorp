@@ -9,7 +9,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   EventDispatcher:
     "chrome://remote/content/marionette/actors/MarionetteEventsParent.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-  modal: "chrome://remote/content/marionette/modal.sys.mjs",
+  modal: "chrome://remote/content/shared/Prompt.sys.mjs",
   PageLoadStrategy:
     "chrome://remote/content/shared/webdriver/Capabilities.sys.mjs",
   ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
