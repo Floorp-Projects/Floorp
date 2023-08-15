@@ -268,10 +268,10 @@ class nsWindow final : public nsBaseWidget {
   RefPtr<mozilla::VsyncDispatcher> GetVsyncDispatcher() override;
   bool SynchronouslyRepaintOnResize() override;
 
-  void OnDPIChanged(void);
-  void OnCheckResize(void);
-  void OnCompositedChanged(void);
-  void OnScaleChanged();
+  void OnDPIChanged();
+  void OnCheckResize();
+  void OnCompositedChanged();
+  void OnScaleChanged(bool aForce);
   void DispatchResized();
 
   static guint32 sLastButtonPressTime;
@@ -374,7 +374,6 @@ class nsWindow final : public nsBaseWidget {
 
   // HiDPI scale conversion
   gint GdkCeiledScaleFactor();
-  bool UseFractionalScale() const;
   double FractionalScaleFactor();
 
   // To GDK

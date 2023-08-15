@@ -13,7 +13,7 @@
 
 union wl_argument;
 
-/* Those strucures are just placeholders and will be replaced by
+/* Those structures are just placeholders and will be replaced by
  * real symbols from libwayland during run-time linking. We need to make
  * them explicitly visible.
  */
