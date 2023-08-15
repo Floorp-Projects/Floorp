@@ -55,6 +55,8 @@
   margin-top: 8px;
   cursor: inherit;
   font-weight: 600;
+  grid-template-columns: min-content 1fr;
+  gap: 0 16px;
 }
 
 .fxview-tab-row-header:hover,
