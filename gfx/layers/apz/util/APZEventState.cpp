@@ -276,7 +276,19 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
     return;
   }
 
-  SendPendingTouchPreventedResponse(false);
+  // If the touch block is waiting for a content response, send one now.
+  // Bug 1848736: Why is a content response needed here? Can it be removed?
+  // However, do not clear |mPendingTouchPreventedResponse|, because APZ will
+  // wait for an additional content response before processing touch-move
+  // events (since the first touch-move could still be prevented, and that
+  // should prevent the touch block from being processed).
+  if (mPendingTouchPreventedResponse) {
+    APZES_LOG("Sending response %d for pending guid: %s block id: %" PRIu64
+              " due to long tap\n",
+              false, ToString(mPendingTouchPreventedGuid).c_str(),
+              mPendingTouchPreventedBlockId);
+    mContentReceivedInputBlockCallback(mPendingTouchPreventedBlockId, false);
+  }
 
 #ifdef XP_WIN
   // On Windows, we fire the contextmenu events when the user lifts their
@@ -423,10 +435,8 @@ void APZEventState::ProcessTouchEvent(
 
       if (mPendingTouchPreventedResponse) {
         MOZ_ASSERT(aGuid == mPendingTouchPreventedGuid);
-        mPendingTouchPreventedResponse = false;
-      }
-      if (!mTouchStartPrevented) {
         mContentReceivedInputBlockCallback(aInputBlockId, isTouchPrevented);
+        mPendingTouchPreventedResponse = false;
       }
       break;
     }
