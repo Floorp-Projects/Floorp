@@ -47,6 +47,9 @@ async function initTest() {
 
 function runTest()
 {
+  // Make sure our snapshots don't depend on mouse position.
+  synthesizeMouse(document.documentElement, 0, 0, { type: "mousemove" });
+
   var isWinOrLinux = navigator.platform.includes("Win") || navigator.platform.includes("Linux");
 
   function checkFocus(element, visible, testid)
