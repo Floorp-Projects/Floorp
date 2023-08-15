@@ -12225,7 +12225,7 @@ void Document::SetReadyStateInternal(ReadyState aReadyState,
   }
 
   if (aUpdateTimingInformation && READYSTATE_LOADING == aReadyState) {
-    SetLoadingOrRestoredFromBFCacheTimeStampToNow();
+    mLoadingTimeStamp = TimeStamp::Now();
   }
   NotifyLoading(mAncestorIsLoading, mReadyState, aReadyState);
   mReadyState = aReadyState;
@@ -13578,9 +13578,8 @@ nsresult Document::GetStateObject(JS::MutableHandle<JS::Value> aState) {
 
 void Document::SetNavigationTiming(nsDOMNavigationTiming* aTiming) {
   mTiming = aTiming;
-  if (!mLoadingOrRestoredFromBFCacheTimeStamp.IsNull() && mTiming) {
-    mTiming->SetDOMLoadingTimeStamp(GetDocumentURI(),
-                                    mLoadingOrRestoredFromBFCacheTimeStamp);
+  if (!mLoadingTimeStamp.IsNull() && mTiming) {
+    mTiming->SetDOMLoadingTimeStamp(GetDocumentURI(), mLoadingTimeStamp);
   }
 
   // If there's already the DocumentTimeline instance, tell it since the
