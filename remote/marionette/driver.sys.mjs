@@ -2746,10 +2746,11 @@ GeckoDriver.prototype.acceptDialog = async function () {
  * @throws {NoSuchWindowError}
  *     Top-level browsing context has been discarded.
  */
-GeckoDriver.prototype.getTextFromDialog = function () {
+GeckoDriver.prototype.getTextFromDialog = async function () {
   lazy.assert.open(this.getBrowsingContext({ top: true }));
   this._checkIfAlertIsPresent();
-  return this.dialog.text;
+  const text = await this.dialog.getText();
+  return text;
 };
 
 /**
@@ -2809,7 +2810,7 @@ GeckoDriver.prototype._handleUserPrompts = async function () {
     return;
   }
 
-  let textContent = this.dialog.text;
+  const textContent = await this.dialog.getText();
 
   const behavior = this.currentSession.unhandledPromptBehavior;
   switch (behavior) {
