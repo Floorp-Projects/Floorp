@@ -752,6 +752,17 @@ Setting the "reftest-no-sync-layers" attribute on the root element skips this
 step, enabling testing that layer-tree updates are being correctly generated.
 However the test must manually wait for a MozAfterPaint event before ending.
 
+SpecialPowers
+-------------
+
+Some tests may require synthesized user input events or other functions that
+normally cannot be run from a typical script. Layout reftests have access to
+`SpecialPowers` for such cases.
+
+Test authors have ability to access the privilegd `nsIDOMWindowUtils` interface
+using `SpecialPowers.getDOMWindowUtils(window)`. The interface contains many
+interesting abilities, including event synthesization.
+
 Debugging Failures
 ------------------
 
