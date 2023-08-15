@@ -356,9 +356,12 @@ void moz_container_wayland_unmap(GtkWidget* widget) {
   MozClearPointer(wl_container->subsurface, wl_subsurface_destroy);
   MozClearPointer(wl_container->surface, wl_surface_destroy);
   MozClearPointer(wl_container->viewport, wp_viewport_destroy);
+  MozClearPointer(wl_container->fractional_scale,
+                  wp_fractional_scale_v1_destroy);
 
   wl_container->ready_to_draw = false;
   wl_container->buffer_scale = 1;
+  wl_container->current_fractional_scale = 0.0;
 }
 
 static gboolean moz_container_wayland_map_event(GtkWidget* widget,
@@ -536,6 +539,24 @@ static void moz_container_wayland_surface_set_scale_locked(
   wl_container->buffer_scale = scale;
 }
 
+static void fractional_scale_handle_preferred_scale(
+    void* data, struct wp_fractional_scale_v1* info, uint32_t wire_scale) {
+  MozContainer* container = MOZ_CONTAINER(data);
+  MozContainerWayland* wl_container = &container->data.wl_container;
+  wl_container->current_fractional_scale = wire_scale / 120.0;
+
+  RefPtr<nsWindow> window = moz_container_get_nsWindow(container);
+  LOGWAYLAND("%s [%p] scale: %f\n", __func__, window.get(),
+             wl_container->current_fractional_scale);
+  MOZ_DIAGNOSTIC_ASSERT(window);
+  window->OnScaleChanged(/* aForce = */ true);
+}
+
+static const struct wp_fractional_scale_v1_listener fractional_scale_listener =
+    {
+        .preferred_scale = fractional_scale_handle_preferred_scale,
+};
+
 void moz_container_wayland_set_scale_factor_locked(
     const MutexAutoLock& aProofOfLock, MozContainer* container) {
   if (gfx::gfxVars::UseWebRenderCompositor()) {
@@ -546,22 +567,39 @@ void moz_container_wayland_set_scale_factor_locked(
   MozContainerWayland* wl_container = &container->data.wl_container;
   wl_container->container_lock.AssertCurrentThreadOwns();
 
-  nsWindow* window = moz_container_get_nsWindow(container);
-  MOZ_DIAGNOSTIC_ASSERT(window);
-  if (window->UseFractionalScale()) {
-    if (!wl_container->viewport) {
-      wl_container->viewport = wp_viewporter_get_viewport(
-          WaylandDisplayGet()->GetViewporter(), wl_container->surface);
+  if (StaticPrefs::widget_wayland_fractional_scale_enabled_AtStartup()) {
+    if (!wl_container->fractional_scale) {
+      if (auto* manager = WaylandDisplayGet()->GetFractionalScaleManager()) {
+        wl_container->fractional_scale =
+            wp_fractional_scale_manager_v1_get_fractional_scale(
+                manager, wl_container->surface);
+        wp_fractional_scale_v1_add_listener(wl_container->fractional_scale,
+                                            &fractional_scale_listener,
+                                            container);
+      }
     }
 
-    GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(container));
-    wp_viewport_set_destination(wl_container->viewport,
-                                gdk_window_get_width(gdkWindow),
-                                gdk_window_get_height(gdkWindow));
-  } else {
-    moz_container_wayland_surface_set_scale_locked(
-        aProofOfLock, wl_container, window->GdkCeiledScaleFactor());
+    if (wl_container->fractional_scale) {
+      if (!wl_container->viewport) {
+        if (auto* viewporter = WaylandDisplayGet()->GetViewporter()) {
+          wl_container->viewport =
+              wp_viewporter_get_viewport(viewporter, wl_container->surface);
+        }
+      }
+      if (wl_container->viewport) {
+        GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(container));
+        wp_viewport_set_destination(wl_container->viewport,
+                                    gdk_window_get_width(gdkWindow),
+                                    gdk_window_get_height(gdkWindow));
+        return;
+      }
+    }
   }
+
+  nsWindow* window = moz_container_get_nsWindow(container);
+  MOZ_DIAGNOSTIC_ASSERT(window);
+  moz_container_wayland_surface_set_scale_locked(
+      aProofOfLock, wl_container, window->GdkCeiledScaleFactor());
 }
 
 void moz_container_wayland_set_scale_factor(MozContainer* container) {
@@ -766,7 +804,15 @@ gboolean moz_container_wayland_can_draw(MozContainer* container) {
   return wl_container->ready_to_draw;
 }
 
+double moz_container_wayland_get_fractional_scale(MozContainer* container) {
+  return container->data.wl_container.current_fractional_scale;
+}
+
 double moz_container_wayland_get_scale(MozContainer* container) {
+  double scale = moz_container_wayland_get_fractional_scale(container);
+  if (scale != 0.0) {
+    return scale;
+  }
   nsWindow* window = moz_container_get_nsWindow(container);
   return window ? window->FractionalScaleFactor() : 1;
 }
