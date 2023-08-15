@@ -199,7 +199,7 @@ add_task(async function test() {
     loginFilter.value = "pass1";
     Assert.equal(
       loginList._list.querySelectorAll(
-        ".login-list-item[data-guid]:not([hidden])"
+        "login-list-item[data-guid]:not([hidden])"
       ).length,
       1,
       "login-list should show corresponding result when primary password is enabled"
@@ -207,7 +207,7 @@ add_task(async function test() {
     loginFilter.value = "";
     Assert.equal(
       loginList._list.querySelectorAll(
-        ".login-list-item[data-guid]:not([hidden])"
+        "login-list-item[data-guid]:not([hidden])"
       ).length,
       1,
       "login-list should show all results since the filter is empty"
@@ -225,7 +225,7 @@ add_task(async function test() {
     loginFilter.value = "pass1";
     Assert.equal(
       loginList._list.querySelectorAll(
-        ".login-list-item[data-guid]:not([hidden])"
+        "login-list-item[data-guid]:not([hidden])"
       ).length,
       1,
       "login-list should show login with matching password since MP is disabled"

@@ -234,7 +234,7 @@ add_task(async function test_tab_to_edit_button() {
 
       for (let guidToSelect of [testLoginNormalGuid, testLoginBreachedGuid]) {
         let loginListItem = loginList.shadowRoot.querySelector(
-          `.login-list-item[data-guid="${guidToSelect}"]`
+          `login-list-item[data-guid="${guidToSelect}"]`
         );
         loginListItem.click();
         await ContentTaskUtils.waitForCondition(() => {

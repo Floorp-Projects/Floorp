@@ -48,7 +48,7 @@ add_task(async function test_added_login_shows_breach_warning() {
         content.document.querySelector("login-list")
       );
       await ContentTaskUtils.waitForCondition(
-        () => loginList.shadowRoot.querySelectorAll(".login-list-item").length,
+        () => loginList.shadowRoot.querySelectorAll("login-list-item").length,
         "Waiting for login-list to get populated"
       );
       let { listItem: regularListItem } = loginList._logins[regularLoginGuid];
@@ -217,7 +217,7 @@ add_task(async function test_added_login_shows_breach_warning() {
         "the vulnerable alert should be hidden now"
       );
       Assert.equal(
-        vulnerableListItem.querySelector(".alert-icon").src,
+        vulnerableListItem.notificationIcon,
         "",
         ".alert-icon for the vulnerable list item should have its source removed"
       );

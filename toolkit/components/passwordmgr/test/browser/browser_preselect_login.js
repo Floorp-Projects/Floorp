@@ -46,13 +46,14 @@ const isExpectedLoginItemSelected = async ({ expectedGuid }) => {
 
   await ContentTaskUtils.waitForCondition(
     () =>
-      loginList.querySelector("li[aria-selected='true']")?.dataset?.guid ===
-      expectedGuid,
+      loginList.querySelector("login-list-item[aria-selected='true']")?.dataset
+        ?.guid === expectedGuid,
     "Wait for login item to be selected"
   );
 
   Assert.equal(
-    loginList.querySelector("li[aria-selected='true']")?.dataset?.guid,
+    loginList.querySelector("login-list-item[aria-selected='true']")?.dataset
+      ?.guid,
     expectedGuid,
     "Expected login is preselected"
   );

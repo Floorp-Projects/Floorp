@@ -368,13 +368,13 @@ add_task(
       loginFilter.value = "bugzilla.mozilla.org";
       Assert.equal(
         loginList._list.querySelectorAll(
-          ".login-list-item[data-guid]:not([hidden])"
+          "login-list-item[data-guid]:not([hidden])"
         ).length,
         1,
         "filter should have one login showing"
       );
       let visibleLoginGuid = loginList.shadowRoot.querySelectorAll(
-        ".login-list-item[data-guid]:not([hidden])"
+        "login-list-item[data-guid]:not([hidden])"
       )[0].dataset.guid;
 
       let createButton = loginList._createLoginButton;
@@ -397,7 +397,7 @@ add_task(
       );
       Assert.equal(
         loginList.shadowRoot.querySelectorAll(
-          ".login-list-item[data-guid]:not([hidden])"
+          "login-list-item[data-guid]:not([hidden])"
         )[0].dataset.guid,
         visibleLoginGuid,
         "the same login should still be visible"
@@ -419,7 +419,7 @@ add_task(async function test_cancel_create_login_with_logins_filtered_out() {
     await Promise.resolve();
     Assert.equal(
       loginList._list.querySelectorAll(
-        ".login-list-item[data-guid]:not([hidden])"
+        "login-list-item[data-guid]:not([hidden])"
       ).length,
       0,
       "filter should have no logins showing"
@@ -443,7 +443,7 @@ add_task(async function test_cancel_create_login_with_logins_filtered_out() {
       "login-filter should be cleared if there were no logins in the list"
     );
     let visibleLoginItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item[data-guid]:not([hidden])"
+      "login-list-item[data-guid]:not([hidden])"
     );
     Assert.equal(
       visibleLoginItems.length,

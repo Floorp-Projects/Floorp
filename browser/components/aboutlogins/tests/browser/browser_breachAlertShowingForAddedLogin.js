@@ -57,7 +57,7 @@ add_task(async function test_added_login_shows_breach_warning() {
       let breachedLoginListItems;
       await ContentTaskUtils.waitForCondition(() => {
         breachedLoginListItems = loginList._list.querySelectorAll(
-          ".login-list-item[data-guid].breached"
+          "login-list-item[data-guid].breached"
         );
         return breachedLoginListItems.length == 1;
       }, "waiting for the login to get marked as breached");

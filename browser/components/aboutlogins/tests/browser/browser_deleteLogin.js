@@ -58,7 +58,7 @@ add_task(async function test_login_item() {
     await SpecialPowers.spawn(browser, [], async () => {
       let loginList = content.document.querySelector("login-list");
       let loginListItem = loginList.shadowRoot.querySelector(
-        ".login-list-item[data-guid]:not([hidden])"
+        "login-list-item[data-guid]:not([hidden])"
       );
       info("Clicking on the first login");
       loginListItem.click();
@@ -111,7 +111,7 @@ add_task(async function test_login_item() {
     return SpecialPowers.spawn(browser, [], async () => {
       let loginList = content.document.querySelector("login-list");
       let loginListItem = loginList.shadowRoot.querySelector(
-        ".login-list-item[data-guid]:not([hidden])"
+        "login-list-item[data-guid]:not([hidden])"
       );
       info("Clicking on the first login");
       loginListItem.click();

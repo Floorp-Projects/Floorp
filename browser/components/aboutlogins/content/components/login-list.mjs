@@ -154,7 +154,6 @@ export default class LoginList extends HTMLElement {
     const activeDescendantId = this._list.getAttribute("aria-activedescendant");
     let activeDescendant =
       activeDescendantId && this.shadowRoot.getElementById(activeDescendantId);
-
     return activeDescendant;
   }
 
@@ -192,27 +191,25 @@ export default class LoginList extends HTMLElement {
 
     // Show, hide, and update state of the list items per the applied search filter.
     for (let guid of this._loginGuidsSortedOrder) {
-      let { listItem, login } = this._logins[guid];
+      let { listItem } = this._logins[guid];
 
       if (guid == this._selectedGuid) {
         this._setListItemAsSelected(listItem);
       }
-      listItem.classList.toggle(
-        "breached",
-        !!this._breachesByLoginGUID &&
-          this._breachesByLoginGUID.has(listItem.dataset.guid)
-      );
-      listItem.classList.toggle(
-        "vulnerable",
-        !!this._vulnerableLoginsByLoginGUID &&
-          this._vulnerableLoginsByLoginGUID.has(listItem.dataset.guid) &&
-          !listItem.classList.contains("breached")
-      );
+
       if (
-        listItem.classList.contains("breached") ||
-        listItem.classList.contains("vulnerable")
+        !!this._breachesByLoginGUID &&
+        this._breachesByLoginGUID.has(listItem.dataset.guid)
       ) {
-        LoginListItemFactory.update(listItem, login);
+        listItem.notificationIcon = "breached";
+      } else if (
+        !!this._vulnerableLoginsByLoginGUID &&
+        this._vulnerableLoginsByLoginGUID.has(listItem.dataset.guid) &&
+        listItem.notificationIcon !== "breached"
+      ) {
+        listItem.notificationIcon = "vulnerable";
+      } else {
+        listItem.notificationIcon = "";
       }
       listItem.hidden = !visibleLoginGuids.has(listItem.dataset.guid);
     }
@@ -256,7 +253,7 @@ export default class LoginList extends HTMLElement {
     let activeDescendant = this.#activeDescendant;
     if (!activeDescendant || activeDescendant.hidden) {
       let visibleListItem = this._list.querySelector(
-        ".login-list-item:not([hidden])"
+        "login-list-item:not([hidden])"
       );
       if (visibleListItem) {
         this._list.setAttribute("aria-activedescendant", visibleListItem.id);
@@ -308,7 +305,14 @@ export default class LoginList extends HTMLElement {
   handleEvent(event) {
     switch (event.type) {
       case "click": {
-        let listItem = event.originalTarget.closest(".login-list-item");
+        let listItem;
+        if (event.originalTarget.tagName === "LOGIN-LIST-ITEM") {
+          listItem = event.originalTarget;
+        } else {
+          listItem = event.originalTarget
+            ? event.originalTarget.getRootNode().host
+            : null;
+        }
         if (!listItem || !listItem.dataset.guid) {
           return;
         }
@@ -324,9 +328,9 @@ export default class LoginList extends HTMLElement {
         );
 
         let extra = {};
-        if (listItem.classList.contains("breached")) {
+        if (listItem.notificationIcon === "breached") {
           extra = { breached: "true" };
-        } else if (listItem.classList.contains("vulnerable")) {
+        } else if (listItem.notificationIcon === "vulnerable") {
           extra = { vulnerable: "true" };
         }
         recordTelemetryEvent({
@@ -357,7 +361,7 @@ export default class LoginList extends HTMLElement {
         }
 
         let firstVisibleListItem = this._list.querySelector(
-          ".login-list-item[data-guid]:not([hidden])"
+          "login-list-item[data-guid]:not([hidden])"
         );
         let newlySelectedLogin;
         if (firstVisibleListItem) {
@@ -413,7 +417,7 @@ export default class LoginList extends HTMLElement {
         }
 
         let listItem = this._list.querySelector(
-          `.login-list-item[data-guid="${event.detail.guid}"]`
+          `login-list-item[data-guid="${event.detail.guid}"]`
         );
         if (listItem) {
           this._setListItemAsSelected(listItem);
@@ -617,7 +621,7 @@ export default class LoginList extends HTMLElement {
     // the login-intro or empty-search text will be shown instead of the login-list.
     if (this._selectedGuid == login.guid) {
       let visibleListItems = this._list.querySelectorAll(
-        ".login-list-item[data-guid]:not([hidden])"
+        "login-list-item[data-guid]:not([hidden])"
       );
       if (visibleListItems.length > 1) {
         let index = [...visibleListItems].findIndex(listItem => {
@@ -727,8 +731,7 @@ export default class LoginList extends HTMLElement {
           previousItem.parentElement.previousElementSibling);
     } while (
       previousItem &&
-      (previousItem.hidden ||
-        !previousItem.classList.contains("login-list-item"))
+      (previousItem.hidden || previousItem.tagName !== "LOGIN-LIST-ITEM")
     );
 
     return previousItem;
@@ -745,9 +748,8 @@ export default class LoginList extends HTMLElement {
           nextItem.parentElement.nextElementSibling);
     } while (
       nextItem &&
-      (nextItem.hidden || !nextItem.classList.contains("login-list-item"))
+      (nextItem.hidden || nextItem.tagName !== "LOGIN-LIST-ITEM")
     );
-
     return nextItem;
   }
 
@@ -761,13 +763,12 @@ export default class LoginList extends HTMLElement {
     if (
       !activeDescendant ||
       activeDescendant.hidden ||
-      !activeDescendant.classList.contains("login-list-item")
+      activeDescendant.tagName !== "LOGIN-LIST-ITEM"
     ) {
       activeDescendant =
-        this._list.querySelector(".login-list-item[data-guid]:not([hidden])") ||
+        this._list.querySelector("login-list-item[data-guid]:not([hidden])") ||
         this._list.firstElementChild;
     }
-
     return activeDescendant;
   }
 
@@ -888,12 +889,14 @@ export default class LoginList extends HTMLElement {
     let oldSelectedItem = this._list.querySelector(".selected");
     if (oldSelectedItem) {
       oldSelectedItem.classList.remove("selected");
+      oldSelectedItem.selected = false;
       oldSelectedItem.removeAttribute("aria-selected");
     }
     this.classList.toggle("create-login-selected", !listItem.dataset.guid);
     this._blankLoginListItem.hidden = !!listItem.dataset.guid;
     this._createLoginButton.disabled = !listItem.dataset.guid;
     listItem.classList.add("selected");
+    listItem.selected = true;
     listItem.setAttribute("aria-selected", "true");
     this._list.setAttribute("aria-activedescendant", listItem.id);
     this._selectedGuid = listItem.dataset.guid;

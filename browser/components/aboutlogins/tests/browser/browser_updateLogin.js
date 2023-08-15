@@ -87,7 +87,7 @@ add_task(async function test_login_item() {
     await Promise.resolve();
 
     let loginListItem = Cu.waiveXrays(
-      loginList.shadowRoot.querySelector(".login-list-item[data-guid]")
+      loginList.shadowRoot.querySelector("login-list-item[data-guid]")
     );
 
     loginListItem.click();
@@ -133,7 +133,7 @@ add_task(async function test_login_item() {
         content.document.querySelector("login-list")
       );
       let loginListItem = Cu.waiveXrays(
-        loginList.shadowRoot.querySelector(".login-list-item[data-guid]")
+        loginList.shadowRoot.querySelector("login-list-item[data-guid]")
       );
       loginListItem.click();
 
@@ -417,11 +417,11 @@ add_task(async function test_login_item() {
         content.document.querySelector("login-list")
       );
       let loginListItem = Cu.waiveXrays(
-        loginList.shadowRoot.querySelector(".login-list-item[data-guid]")
+        loginList.shadowRoot.querySelector("login-list-item[data-guid]")
       );
       await ContentTaskUtils.waitForCondition(() => {
         loginListItem = loginList.shadowRoot.querySelector(
-          ".login-list-item[data-guid]"
+          "login-list-item[data-guid]"
         );
         return !loginListItem;
       }, "Waiting for login to be removed from list");

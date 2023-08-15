@@ -171,7 +171,7 @@ add_task(
         );
         Assert.equal(
           loginList.shadowRoot.querySelector(
-            ".login-list-item.selected[data-guid]"
+            "login-list-item.selected[data-guid]"
           ).dataset.guid,
           testLogin1Guid,
           "the login that was just added should be selected"
