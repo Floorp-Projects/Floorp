@@ -12,6 +12,7 @@ import subprocess
 from contextlib import redirect_stdout
 from datetime import datetime, timedelta
 
+import requests
 from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object
@@ -44,6 +45,9 @@ PERFHERDER_BASE_URL = (
     "compare?originalProject=try&originalRevision=%s&newProject=try&newRevision=%s"
 )
 TREEHERDER_TRY_BASE_URL = "https://treeherder.mozilla.org/jobs?repo=try&revision=%s"
+TREEHERDER_ALERT_TASKS_URL = (
+    "https://treeherder.mozilla.org/api/performance/alertsummary-tasks/?id=%s"
+)
 
 # Prevent users from running more than 300 tests at once. It's possible, but
 # it's more likely that a query is broken and is selecting far too much.
@@ -282,6 +286,14 @@ class PerfParser(CompareParser):
                 "action": "store_true",
                 "default": False,
                 "help": "Deletes the try_perf_revision_cache file",
+            },
+        ],
+        [
+            ["--alert"],
+            {
+                "type": str,
+                "default": None,
+                "help": "Run tests that produced this alert summary.",
             },
         ],
         [
@@ -1040,6 +1052,7 @@ class PerfParser(CompareParser):
         extra_args,
         comparator,
         comparator_args,
+        alert_summary_id,
     ):
         """Perf-specific push to try method.
 
@@ -1059,6 +1072,8 @@ class PerfParser(CompareParser):
             ",".join(selected_categories),
             "&".join([q for q in queries if q is not None and len(q) > 0]),
         )
+        if alert_summary_id:
+            msg = f"Perf alert summary id={alert_summary_id}"
 
         # Get the comparator to run
         comparator_klass = get_comparator(comparator)
@@ -1188,7 +1203,30 @@ class PerfParser(CompareParser):
         # Perform the selection, then push to try and return the revisions
         queries = []
         selected_categories = []
-        if not show_all:
+        alert_summary_id = kwargs.get("alert")
+        if alert_summary_id:
+            alert_tasks = requests.get(
+                TREEHERDER_ALERT_TASKS_URL % alert_summary_id,
+                headers={"User-Agent": "mozilla-central"},
+            )
+            if alert_tasks.status_code != 200:
+                print(
+                    "\nFailed to obtain tasks from alert due to:\n"
+                    f"Alert ID: {alert_summary_id}\n"
+                    f"Status Code: {alert_tasks.status_code}\n"
+                    f"Response Message: {alert_tasks.json()}\n"
+                )
+                alert_tasks.raise_for_status()
+            alert_tasks = set([task for task in alert_tasks.json()["tasks"] if task])
+            selected_tasks = alert_tasks & set(all_tasks)
+            if not selected_tasks:
+                raise Exception("Alert ID has no task to run.")
+            elif len(selected_tasks) != len(alert_tasks):
+                print(
+                    "\nAll the tasks of the Alert Summary couldn't be found in the taskgraph.\n"
+                    f"Not exist tasks: {alert_tasks - set(all_tasks)}\n"
+                )
+        elif not show_all:
             # Expand the categories first
             categories = PerfParser.get_categories(**kwargs)
             selected_tasks, selected_categories, queries = PerfParser.get_perf_tasks(
@@ -1225,6 +1263,7 @@ class PerfParser(CompareParser):
             kwargs.get("extra_args", []),
             kwargs.get("comparator", "BasePerfComparator"),
             kwargs.get("comparator_args", []),
+            alert_summary_id,
         )
 
     def run_category_checks():
