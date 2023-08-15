@@ -245,9 +245,11 @@ void nsUserIdleServiceGTK::ProbeService() {
       idleService = new UserIdleServiceMutter(this);
       break;
 #endif
+#ifdef MOZ_X11
     case IDLE_SERVICE_XSCREENSAVER:
       idleService = new UserIdleServiceX11(this);
       break;
+#endif
     default:
       return;
   }
