@@ -49,7 +49,7 @@ class FxviewEmptyState extends MozLitElement {
        />
        <card-container hideHeader="true" exportparts="image" ?isInnerCard="${
          this.isInnerCard
-       }">
+       }" id="card-container">
          <div slot="main" class=${this.isSelectedTab ? "selectedTab" : null}>
            <img class="image" role="presentation" alt="" ?hidden=${!this
              .mainImageUrl} src=${this.mainImageUrl}/>
@@ -70,6 +70,7 @@ class FxviewEmptyState extends MozLitElement {
                  data-l10n-id="${descLabel}"
                >
                  <a
+                   aria-details="card-container"
                    ?hidden=${!this.descriptionLink}
                    data-l10n-name=${ifDefined(this.descriptionLink?.name)}
                    href=${ifDefined(this.descriptionLink?.url)}
