@@ -294,7 +294,7 @@ void ImageLoader::RemoveRequestToFrameMapping(imgIRequest* aRequest,
                                      FrameOnlyComparator());
     if (found) {
       UnblockOnloadIfNeeded(frameSet->ElementAt(i - 1));
-      frameSet->RemoveElementAt(i - 1);
+      frameSet->RemoveElementAtUnsafe(i - 1);
     }
 
     if (frameSet->IsEmpty()) {

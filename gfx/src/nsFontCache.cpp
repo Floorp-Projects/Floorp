@@ -65,7 +65,7 @@ already_AddRefed<nsFontMetrics> nsFontCache::GetMetricsFor(
   // start from the end, which is where we put the most-recent-used element
   const int32_t n = mFontMetrics.Length() - 1;
   for (int32_t i = n; i >= 0; --i) {
-    nsFontMetrics* fm = mFontMetrics[i];
+    nsFontMetrics* fm = mFontMetrics.Elements()[i];
     if (fm->Font().Equals(aFont) &&
         fm->GetUserFontSet() == aParams.userFontSet &&
         fm->Language() == language &&
@@ -73,7 +73,7 @@ already_AddRefed<nsFontMetrics> nsFontCache::GetMetricsFor(
         fm->ExplicitLanguage() == aParams.explicitLanguage) {
       if (i != n) {
         // promote it to the end of the cache
-        mFontMetrics.RemoveElementAt(i);
+        mFontMetrics.RemoveElementAtUnsafe(i);
         mFontMetrics.AppendElement(fm);
       }
       fm->GetThebesFontGroup()->UpdateUserFonts();
