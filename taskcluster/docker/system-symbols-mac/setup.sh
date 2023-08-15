@@ -13,7 +13,7 @@ make "$ncpu" dmg-bin hfsplus
 cp dmg/dmg hfs/hfsplus /builds/worker/bin
 strip /builds/worker/bin/dmg /builds/worker/bin/hfsplus
 
-pip3 install --no-cache-dir git+https://github.com/mozilla/reposado
+pip3 install --break-system-packages --no-cache-dir git+https://github.com/mozilla/reposado@3dd826dfd89c8a1224aecf381637aa0bf90a3a3c
 
 python3 /usr/local/bin/repoutil --configure <<EOF
 /opt/data-reposado/html/
@@ -21,7 +21,7 @@ python3 /usr/local/bin/repoutil --configure <<EOF
 http://example.com/
 EOF
 
-pip3 install --no-cache-dir -r /setup/requirements.txt
+pip3 install --break-system-packages --no-cache-dir -r /setup/requirements.txt
 
 cd /
 rm -rf /setup

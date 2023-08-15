@@ -247,13 +247,13 @@ jobs:
         parent: debian11-base
     system-symbols-mac:
         symbol: I(system-symbols-mac)
-        parent: debian11-base
+        parent: debian12-base
     system-symbols-win:
         symbol: I(system-symbols-win)
-        parent: debian11-base
+        parent: debian12-base
     system-symbols-linux-scraper:
         symbol: I(system-symbols-linux)
-        parent: debian11-base
+        parent: debian12-base
     push-to-try:
         symbol: I(push-to-try)
         parent: debian11-base
