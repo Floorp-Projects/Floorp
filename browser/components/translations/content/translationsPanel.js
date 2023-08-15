@@ -1397,6 +1397,19 @@ var TranslationsPanel = new (class {
   handleEventId = 0;
 
   /**
+   * An event handler that allows the TranslationsPanel object
+   * to be compatible with the addTabsProgressListener function.
+   *
+   * @param {tabbrowser} browser
+   */
+  onLocationChange(browser) {
+    if (browser.currentURI.spec.startsWith("about:reader")) {
+      // Hide the translations button when entering reader mode.
+      TranslationsPanel.#hideTranslationsButton();
+    }
+  }
+
+  /**
    * Set the state of the translations button in the URL bar.
    *
    * @param {CustomEvent} event
