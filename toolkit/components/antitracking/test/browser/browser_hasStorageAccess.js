@@ -200,8 +200,6 @@ var testCases = [
             "privacy.partition.always_partition_third_party_non_cookie_storage",
             false,
           ],
-          // Testing Storage Access API grants constrained to secure contexts
-          ["dom.storage_access.dont_grant_insecure_contexts", true],
         ],
         expectedBlockingNotifications: 0,
         runInPrivateWindow: false,

@@ -16,7 +16,7 @@ AntiTracking._createTask({
     await callRequestStorageAccess();
 
     const TRACKING_PAGE =
-      "http://another-tracking.example.net/browser/browser/base/content/test/protectionsUI/trackingPage.html";
+      "https://another-tracking.example.net/browser/browser/base/content/test/protectionsUI/trackingPage.html";
     async function runChecks(name) {
       let iframe = document.createElement("iframe");
       iframe.src = TRACKING_PAGE;
@@ -47,13 +47,13 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
+  thirdPartyPage: TEST_3RD_PARTY_PAGE,
   errorMessageDomains: [
-    "http://tracking.example.org",
-    "http://tracking.example.org",
-    "http://tracking.example.org",
-    "http://tracking.example.org",
-    "http://trackertest.org",
+    "https://tracking.example.org",
+    "https://tracking.example.org",
+    "https://tracking.example.org",
+    "https://tracking.example.org",
+    // "http://trackertest.org" does not show an error message since it is an insecure context
   ],
 });
 
@@ -84,8 +84,8 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
-  errorMessageDomains: ["http://tracking.example.org"],
+  thirdPartyPage: TEST_3RD_PARTY_PAGE,
+  errorMessageDomains: ["https://tracking.example.org"],
 });
 
 add_task(async _ => {
@@ -112,8 +112,8 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
-  errorMessageDomains: ["http://example.net", "http://tracking.example.org"],
+  thirdPartyPage: TEST_3RD_PARTY_PAGE,
+  errorMessageDomains: ["http://example.net", "https://tracking.example.org"],
 });
 
 add_task(async _ => {
@@ -140,8 +140,8 @@ AntiTracking._createTask({
   iframeSandbox: null,
   accessRemoval: null,
   callbackAfterRemoval: null,
-  thirdPartyPage: TEST_3RD_PARTY_PAGE_HTTP,
-  errorMessageDomains: ["http://tracking.example.org"],
+  thirdPartyPage: TEST_3RD_PARTY_PAGE,
+  errorMessageDomains: ["https://tracking.example.org"],
 });
 
 add_task(async _ => {

@@ -13,10 +13,6 @@ Services.scriptloader.loadSubScript(
 );
 
 add_task(async function testInsecureContext() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.storage_access.dont_grant_insecure_contexts", true]],
-  });
-
   await setPreferences();
 
   await openPageAndRunCode(
