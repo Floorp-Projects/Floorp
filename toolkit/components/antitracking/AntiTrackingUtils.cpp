@@ -503,9 +503,19 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     return nsILoadInfo::HasStoragePermission;
   }
 
-  // Only check the frame only permission if the channel is not in the top
-  // browsing context.
-  if (!bc->IsTop()) {
+  if (policyType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    uint64_t targetWindowIdNoTop = bc->GetCurrentInnerWindowId();
+    uint64_t triggeringWindowId;
+    loadInfo->GetTriggeringWindowId(&triggeringWindowId);
+    bool triggeringStorageAccess;
+    loadInfo->GetTriggeringStorageAccess(&triggeringStorageAccess);
+    if (targetWindowIdNoTop == triggeringWindowId && triggeringStorageAccess &&
+        trackingPrincipal->Equals(loadInfo->TriggeringPrincipal())) {
+      return nsILoadInfo::HasStoragePermission;
+    }
+  } else if (!bc->IsTop()) {
+    // Only check the frame only permission if the channel is not in the top
+    // browsing context.
     RefPtr<nsEffectiveTLDService> etld = nsEffectiveTLDService::GetInstance();
     if (!etld) {
       return nsILoadInfo::NoStoragePermission;
