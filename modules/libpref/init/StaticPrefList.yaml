@@ -592,11 +592,7 @@
 #    (multiplied then by pixelsPerLineStep which in GNOME-web is 40).
 -   name: apz.gtk.pangesture.delta_mode
     type: uint32_t
-#ifdef NIGHTLY_BUILD
-    value: 2
-#else
     value: 0
-#endif
     mirror: always
 
 -   name: apz.gtk.pangesture.page_delta_mode_multiplier

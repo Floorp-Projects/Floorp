@@ -5029,7 +5029,11 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
           mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase.reset();
 
           const bool isPageMode =
+#ifdef NIGHTLY_BUILD
+              StaticPrefs::apz_gtk_pangesture_delta_mode() == 1;
+#else
               StaticPrefs::apz_gtk_pangesture_delta_mode() != 2;
+#endif
           const double multiplier =
               isPageMode
                   ? StaticPrefs::apz_gtk_pangesture_page_delta_mode_multiplier()
