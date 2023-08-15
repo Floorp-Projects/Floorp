@@ -9,8 +9,8 @@ const OLD_HOST = "http://mozilla.org";
 const NEW_HOST = "http://mozilla.com";
 const FXA_HOST = "chrome://FirefoxAccounts";
 
-function checkLoginExists(host, shouldExist) {
-  const logins = Services.logins.findLogins(host, "", null);
+async function checkLoginExists(origin, shouldExist) {
+  const logins = await Services.logins.searchLoginsAsync({ origin });
   equal(
     logins.length,
     shouldExist ? 1 : 0,
@@ -19,7 +19,7 @@ function checkLoginExists(host, shouldExist) {
 }
 
 async function addLogin(host, timestamp) {
-  checkLoginExists(host, false);
+  await checkLoginExists(host, false);
   let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
     Ci.nsILoginInfo
   );
@@ -27,7 +27,7 @@ async function addLogin(host, timestamp) {
   login.QueryInterface(Ci.nsILoginMetaInfo);
   login.timePasswordChanged = timestamp;
   await Services.logins.addLoginAsync(login);
-  checkLoginExists(host, true);
+  await checkLoginExists(host, true);
 }
 
 async function setupPasswords() {
@@ -62,27 +62,27 @@ add_task(async function testPasswords() {
     extension.sendMessage(method, {});
     await extension.awaitMessage("passwordsRemoved");
 
-    checkLoginExists(OLD_HOST, false);
-    checkLoginExists(NEW_HOST, false);
-    checkLoginExists(FXA_HOST, true);
+    await checkLoginExists(OLD_HOST, false);
+    await checkLoginExists(NEW_HOST, false);
+    await checkLoginExists(FXA_HOST, true);
 
     // Clear passwords with recent since value.
     await setupPasswords();
     extension.sendMessage(method, { since: REFERENCE_DATE - 1000 });
     await extension.awaitMessage("passwordsRemoved");
 
-    checkLoginExists(OLD_HOST, true);
-    checkLoginExists(NEW_HOST, false);
-    checkLoginExists(FXA_HOST, true);
+    await checkLoginExists(OLD_HOST, true);
+    await checkLoginExists(NEW_HOST, false);
+    await checkLoginExists(FXA_HOST, true);
 
     // Clear passwords with old since value.
     await setupPasswords();
     extension.sendMessage(method, { since: REFERENCE_DATE - 20000 });
     await extension.awaitMessage("passwordsRemoved");
 
-    checkLoginExists(OLD_HOST, false);
-    checkLoginExists(NEW_HOST, false);
-    checkLoginExists(FXA_HOST, true);
+    await checkLoginExists(OLD_HOST, false);
+    await checkLoginExists(NEW_HOST, false);
+    await checkLoginExists(FXA_HOST, true);
   }
 
   await extension.startup();

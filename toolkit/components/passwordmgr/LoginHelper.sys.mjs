@@ -171,14 +171,14 @@ class ImportRowProcessor {
    *        A login object.
    * @returns {boolean} True if the entry is similar or identical to another previously processed entry, false otherwise.
    */
-  checkConflictingWithExistingLogins(login) {
+  async checkConflictingWithExistingLogins(login) {
     // While here we're passing formActionOrigin and httpRealm, they could be empty/null and get
     // ignored in that case, leading to multiple logins for the same username.
-    let existingLogins = Services.logins.findLogins(
-      login.origin,
-      login.formActionOrigin,
-      login.httpRealm
-    );
+    let existingLogins = await Services.logins.searchLoginsAsync({
+      origin: login.origin,
+      httpRealm: login.httpRealm,
+    });
+
     // Check for an existing login that matches *including* the password.
     // If such a login exists, we do not need to add a new login.
     if (
@@ -1498,7 +1498,7 @@ export const LoginHelper = {
         if (processor.checkConflictingOriginWithPreviousRows(login)) {
           continue;
         }
-        if (processor.checkConflictingWithExistingLogins(login)) {
+        if (await processor.checkConflictingWithExistingLogins(login)) {
           continue;
         }
         processor.addLoginToSummary(login, "added");
