@@ -1364,10 +1364,16 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
         if (!aLayer.Metadata().IsPaginatedPresentation()) {
           if (ancestorTransform.IsFinite() &&
               existingAncestorTransform.IsFinite()) {
-            MOZ_ASSERT(
-                false,
-                "Two layers that scroll together have different ancestor "
-                "transforms");
+            // Log separately from the assert because assert doesn't allow
+            // printf-style arguments, but it's important for debugging that the
+            // log identifies *which* scroll frame violated the condition.
+            MOZ_LOG(sLog, LogLevel::Error,
+                    ("Two layers that scroll together have different ancestor "
+                     "transforms (guid=%s)",
+                     ToString(apzc->GetGuid()).c_str()));
+            MOZ_ASSERT(false,
+                       "Two layers that scroll together have different "
+                       "ancestor transforms");
           } else {
             MOZ_ASSERT(ancestorTransform.IsFinite() ==
                        existingAncestorTransform.IsFinite());
