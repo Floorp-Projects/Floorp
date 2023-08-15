@@ -1045,13 +1045,6 @@ class Document : public nsINode,
 
   void SetLoadedAsData(bool aLoadedAsData, bool aConsiderForMemoryReporting);
 
-  TimeStamp GetLoadingOrRestoredFromBFCacheTimeStamp() const {
-    return mLoadingOrRestoredFromBFCacheTimeStamp;
-  }
-  void SetLoadingOrRestoredFromBFCacheTimeStampToNow() {
-    mLoadingOrRestoredFromBFCacheTimeStamp = TimeStamp::Now();
-  }
-
   /**
    * Normally we assert if a runnable labeled with one DocGroup touches data
    * from another DocGroup. Calling IgnoreDocGroupMismatches() on a document
@@ -5122,9 +5115,8 @@ class Document : public nsINode,
 
   RefPtr<nsDOMNavigationTiming> mTiming;
 
-  // Recorded time of change to 'loading' state
-  // or time of the page gets restored from BFCache.
-  TimeStamp mLoadingOrRestoredFromBFCacheTimeStamp;
+  // Recorded time of change to 'loading' state.
+  TimeStamp mLoadingTimeStamp;
 
   // Decided to use nsTObserverArray because it allows us to
   // remove candidates while iterating them and this is what
