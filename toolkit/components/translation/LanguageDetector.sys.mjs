@@ -185,6 +185,8 @@ export var LanguageDetector = {
       text,
     });
 
+    workerManager.flushWorker();
+
     return confident ? language : null;
   },
 };
