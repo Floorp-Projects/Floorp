@@ -1848,14 +1848,17 @@ class nsTArray_Impl
   // @param aCount The number of elements to remove.
   void RemoveElementsAt(index_type aStart, size_type aCount);
 
- private:
   // Remove a range of elements from this array, but do not check that
   // the range is in bounds.
   // @param aStart The starting index of the elements to remove.
   // @param aCount The number of elements to remove.
   void RemoveElementsAtUnsafe(index_type aStart, size_type aCount);
 
- public:
+  // Same as above, but remove just one element.
+  void RemoveElementAtUnsafe(index_type aIndex) {
+    RemoveElementsAtUnsafe(aIndex, 1);
+  }
+
   // A variation on the RemoveElementsAt method defined above.
   void RemoveElementAt(index_type aIndex) { RemoveElementsAt(aIndex, 1); }
 
@@ -2726,8 +2729,9 @@ inline void ImplCycleCollectionTraverse(
     nsTArray_Impl<E, Alloc>& aField, const char* aName, uint32_t aFlags = 0) {
   ::detail::SetCycleCollectionArrayFlag(aFlags);
   size_t length = aField.Length();
+  E* elements = aField.Elements();
   for (size_t i = 0; i < length; ++i) {
-    ImplCycleCollectionTraverse(aCallback, aField[i], aName, aFlags);
+    ImplCycleCollectionTraverse(aCallback, elements[i], aName, aFlags);
   }
 }
 

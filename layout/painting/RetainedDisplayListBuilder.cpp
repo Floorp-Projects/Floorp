@@ -1319,26 +1319,26 @@ void RetainedDisplayListBuilder::InvalidateCaretFramesIfNeeded() {
   mPreviousCaret = mBuilder.GetCaretFrame();
 }
 
-static void ClearFrameProps(nsTArray<nsIFrame*>& aFrames) {
-  for (nsIFrame* f : aFrames) {
-    DL_LOGV("RDL - Clearing modified flags for frame %p", f);
-    if (f->HasOverrideDirtyRegion()) {
-      f->SetHasOverrideDirtyRegion(false);
-      f->RemoveProperty(nsDisplayListBuilder::DisplayListBuildingRect());
-      f->RemoveProperty(
-          nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
-    }
-
-    f->SetFrameIsModified(false);
-    f->SetHasModifiedDescendants(false);
-  }
-}
-
 class AutoClearFramePropsArray {
  public:
   explicit AutoClearFramePropsArray(size_t aCapacity) : mFrames(aCapacity) {}
   AutoClearFramePropsArray() = default;
-  ~AutoClearFramePropsArray() { ClearFrameProps(mFrames); }
+  ~AutoClearFramePropsArray() {
+    size_t len = mFrames.Length();
+    nsIFrame** elements = mFrames.Elements();
+    for (size_t i = 0; i < len; ++i) {
+      nsIFrame* f = elements[i];
+      DL_LOGV("RDL - Clearing modified flags for frame %p", f);
+      if (f->HasOverrideDirtyRegion()) {
+        f->SetHasOverrideDirtyRegion(false);
+        f->RemoveProperty(nsDisplayListBuilder::DisplayListBuildingRect());
+        f->RemoveProperty(
+            nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
+      }
+      f->SetFrameIsModified(false);
+      f->SetHasModifiedDescendants(false);
+    }
+  }
 
   nsTArray<nsIFrame*>& Frames() { return mFrames; }
   bool IsEmpty() const { return mFrames.IsEmpty(); }

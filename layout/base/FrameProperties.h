@@ -413,7 +413,7 @@ inline uint64_t FrameProperties::TakeInternal(UntypedDescriptor aProperty,
   }
 
   uint64_t result = mProperties.Elements()[index].mValue;
-  mProperties.RemoveElementAt(index);
+  mProperties.RemoveElementAtUnsafe(index);
 
   return result;
 }
@@ -426,7 +426,7 @@ inline void FrameProperties::RemoveInternal(UntypedDescriptor aProperty,
   auto index = mProperties.IndexOf(aProperty, 0, PropertyComparator());
   if (index != nsTArray<PropertyValue>::NoIndex) {
     mProperties.Elements()[index].DestroyValueFor(aFrame);
-    mProperties.RemoveElementAt(index);
+    mProperties.RemoveElementAtUnsafe(index);
   }
 }
 

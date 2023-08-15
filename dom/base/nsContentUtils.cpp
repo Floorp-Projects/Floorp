@@ -2861,11 +2861,13 @@ static Node* GetCommonAncestorInternal(Node* aNode1, Node* aNode2,
   // Find where the parent chain differs
   uint32_t pos1 = parents1.Length();
   uint32_t pos2 = parents2.Length();
+  Node** data1 = parents1.Elements();
+  Node** data2 = parents2.Elements();
   Node* parent = nullptr;
   uint32_t len;
   for (len = std::min(pos1, pos2); len > 0; --len) {
-    Node* child1 = parents1.ElementAt(--pos1);
-    Node* child2 = parents2.ElementAt(--pos2);
+    Node* child1 = data1[--pos1];
+    Node* child2 = data2[--pos2];
     if (child1 != child2) {
       break;
     }
