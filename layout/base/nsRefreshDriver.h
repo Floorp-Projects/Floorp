@@ -486,6 +486,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations(mozilla::TimeStamp aNowTime);
   void UpdateRelevancyOfContentVisibilityAutoFrames();
+  void MaybeIncreaseMeasuredTicksSinceLoading();
 
   enum class IsExtraTick {
     No,

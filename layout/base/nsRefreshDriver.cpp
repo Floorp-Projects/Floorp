@@ -2149,6 +2149,12 @@ void nsRefreshDriver::FlushAutoFocusDocuments() {
   }
 }
 
+void nsRefreshDriver::MaybeIncreaseMeasuredTicksSinceLoading() {
+  if (mPresContext && mPresContext->IsRoot()) {
+    mPresContext->MaybeIncreaseMeasuredTicksSinceLoading();
+  }
+}
+
 void nsRefreshDriver::CancelFlushAutoFocus(Document* aDocument) {
   mAutoFocusFlushDocuments.RemoveElement(aDocument);
 }
@@ -2593,6 +2599,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
       DispatchAnimationEvents();
       RunFullscreenSteps();
       RunFrameRequestCallbacks(aNowTime);
+      MaybeIncreaseMeasuredTicksSinceLoading();
 
       if (mPresContext && mPresContext->GetPresShell()) {
         AutoTArray<PresShell*, 16> observers;
