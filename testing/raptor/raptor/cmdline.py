@@ -51,6 +51,8 @@ APPS = {
 }
 INTEGRATED_APPS = list(APPS.keys())
 
+TRACE_APPS = (CHROME, CHROMIUM, CHROMIUM_RELEASE)
+
 
 def print_all_activities():
     all_activities = []

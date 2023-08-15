@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-module to handle Gecko profiling.
+Module to handle Gecko profiling.
 """
 import gzip
 import json
@@ -67,7 +67,7 @@ class GeckoProfile(object):
         # Make sure no archive already exists in the location where
         # we plan to output our profiler archive
         self.profile_arcname = os.path.join(
-            self.upload_dir, "profile_{0}.zip".format(test_config["name"])
+            self.upload_dir, "profile_{0}.zip".format(self.test_config["name"])
         )
         LOG.info("Clearing archive {0}".format(self.profile_arcname))
         mozfile.remove(self.profile_arcname)
@@ -83,6 +83,10 @@ class GeckoProfile(object):
                 self.gecko_profile_dir, gecko_profile_interval, gecko_profile_entries
             )
         )
+
+    @property
+    def _is_extra_profiler_run(self):
+        return self.raptor_config.get("extra_profiler_run", False)
 
     def _open_gecko_profile(self, profile_path):
         """Open a gecko profile and return the contents."""
@@ -110,9 +114,6 @@ class GeckoProfile(object):
             # the profile capturing pipeline if symbolication fails.
             return profile
 
-    def _is_extra_profiler_run(self):
-        return self.raptor_config.get("extra_profiler_run", False)
-
     def collect_profiles(self):
         """Returns all profiles files."""
 
@@ -139,8 +140,7 @@ class GeckoProfile(object):
             # if they exist from a chimera test
             results = {"main": None, "cold": None, "warm": None}
             profiling_dir = os.path.join(topdir, "profiling")
-            is_extra_profiler_run = self._is_extra_profiler_run()
-            result_dir = profiling_dir if is_extra_profiler_run else topdir
+            result_dir = profiling_dir if self._is_extra_profiler_run else topdir
 
             if not os.path.isdir(result_dir):
                 # Result directory not found. Return early. Caller will decide
@@ -159,7 +159,7 @@ class GeckoProfile(object):
                     break
 
             if not any(results.values()):
-                if is_extra_profiler_run:
+                if self._is_extra_profiler_run:
                     LOG.info(
                         "Could not find any browsertime result JSONs in the artifacts "
                         " for the extra profiler run"
@@ -173,7 +173,7 @@ class GeckoProfile(object):
             profile_locations = []
             if self.raptor_config.get("chimera", False):
                 if results["warm"] is None or results["cold"] is None:
-                    if is_extra_profiler_run:
+                    if self._is_extra_profiler_run:
                         LOG.info(
                             "The test ran in chimera mode but we found no cold "
                             "and warm browsertime JSONs. Cannot symbolicate profiles. "
@@ -213,7 +213,7 @@ class GeckoProfile(object):
                                 }
                             )
                     except KeyError:
-                        if is_extra_profiler_run:
+                        if self._is_extra_profiler_run:
                             LOG.info("Failed to find profiles for extra profiler run.")
                         else:
                             LOG.error("Failed to find profiles.")
@@ -237,9 +237,8 @@ class GeckoProfile(object):
 
         """
         profiles = self.collect_profiles()
-        is_extra_profiler_run = self._is_extra_profiler_run()
         if len(profiles) == 0:
-            if is_extra_profiler_run:
+            if self._is_extra_profiler_run:
                 LOG.info("No profiles collected in the extra profiler run")
             else:
                 LOG.error("No profiles collected")
@@ -302,7 +301,7 @@ class GeckoProfile(object):
                 try:
                     profile = self._open_gecko_profile(profile_path)
                 except FileNotFoundError:
-                    if is_extra_profiler_run:
+                    if self._is_extra_profiler_run:
                         LOG.info("Profile not found on extra profiler run.")
                     else:
                         LOG.error("Profile not found.")
