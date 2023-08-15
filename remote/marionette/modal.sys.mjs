@@ -316,13 +316,6 @@ modal.Dialog = class {
     return this.curBrowser_.getTabModal();
   }
 
-  get text() {
-    if (lazy.AppInfo.isAndroid) {
-      return this.window.getPromptText();
-    }
-    return this.ui.infoBody.textContent;
-  }
-
   get ui() {
     let tm = this.tabModal;
     return tm ? tm.ui : null;
@@ -371,5 +364,19 @@ modal.Dialog = class {
       const { button0, button1 } = this.ui;
       (button1 ? button1 : button0).click();
     }
+  }
+
+  /**
+   * Returns text of the prompt.
+   *
+   * @returns {string | Promise}
+   *     Returns string on desktop and Promise on Android.
+   */
+  async getText() {
+    if (lazy.AppInfo.isAndroid) {
+      const textPromise = await this.window.getPromptText();
+      return textPromise;
+    }
+    return this.ui.infoBody.textContent;
   }
 };
