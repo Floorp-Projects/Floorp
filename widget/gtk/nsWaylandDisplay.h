@@ -12,7 +12,6 @@
 
 #include "mozilla/widget/mozwayland.h"
 #include "mozilla/widget/gbm.h"
-#include "mozilla/widget/fractional-scale-v1-client-protocol.h"
 #include "mozilla/widget/idle-inhibit-unstable-v1-client-protocol.h"
 #include "mozilla/widget/relative-pointer-unstable-v1-client-protocol.h"
 #include "mozilla/widget/pointer-constraints-unstable-v1-client-protocol.h"
@@ -21,7 +20,8 @@
 #include "mozilla/widget/xdg-activation-v1-client-protocol.h"
 #include "mozilla/widget/xdg-output-unstable-v1-client-protocol.h"
 
-namespace mozilla::widget {
+namespace mozilla {
+namespace widget {
 
 // Our general connection to Wayland display server,
 // holds our display connection and runs event loop.
@@ -48,9 +48,7 @@ class nsWaylandDisplay {
   }
   zwp_linux_dmabuf_v1* GetDmabuf() { return mDmabuf; };
   xdg_activation_v1* GetXdgActivation() { return mXdgActivation; };
-  wp_fractional_scale_manager_v1* GetFractionalScaleManager() {
-    return mFractionalScaleManager;
-  }
+
   void SetShm(wl_shm* aShm);
   void SetCompositor(wl_compositor* aCompositor);
   void SetSubcompositor(wl_subcompositor* aSubcompositor);
@@ -62,9 +60,6 @@ class nsWaylandDisplay {
   void SetPointerConstraints(zwp_pointer_constraints_v1* aPointerConstraints);
   void SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf);
   void SetXdgActivation(xdg_activation_v1* aXdgActivation);
-  void SetFractionalScaleManager(wp_fractional_scale_manager_v1* aManager) {
-    mFractionalScaleManager = aManager;
-  }
 
   ~nsWaylandDisplay();
 
@@ -81,7 +76,6 @@ class nsWaylandDisplay {
   wp_viewporter* mViewporter = nullptr;
   zwp_linux_dmabuf_v1* mDmabuf = nullptr;
   xdg_activation_v1* mXdgActivation = nullptr;
-  wp_fractional_scale_manager_v1* mFractionalScaleManager = nullptr;
   bool mExplicitSync = false;
 };
 
@@ -89,7 +83,8 @@ wl_display* WaylandDisplayGetWLDisplay();
 nsWaylandDisplay* WaylandDisplayGet();
 void WaylandDisplayRelease();
 
-}  // namespace mozilla::widget
+}  // namespace widget
+}  // namespace mozilla
 
 template <class T>
 static inline T* WaylandRegistryBind(struct wl_registry* wl_registry,

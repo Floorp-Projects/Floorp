@@ -1,5 +1,5 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=4:tabstop=4:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -33,28 +33,25 @@ struct wl_surface;
 struct wl_subsurface;
 
 struct MozContainerWayland {
-  struct wl_surface* surface = nullptr;
-  struct wl_subsurface* subsurface = nullptr;
-  int subsurface_dx = 0;
-  int subsurface_dy = 0;
-  struct wl_egl_window* eglwindow = nullptr;
-  struct wl_callback* frame_callback_handler = nullptr;
-  struct wp_viewport* viewport = nullptr;
-  struct wp_fractional_scale_v1* fractional_scale = nullptr;
-  gboolean opaque_region_needs_updates = false;
-  int opaque_region_corner_radius = 0;
-  gboolean opaque_region_used = false;
-  gboolean ready_to_draw = false;
-  gboolean commit_to_parent = false;
-  gboolean before_first_size_alloc = false;
-  gboolean waiting_to_show = false;
-  // Zero means no fractional scale set.
-  double current_fractional_scale = 0.0;
-  int buffer_scale = 1;
+  struct wl_surface* surface;
+  struct wl_subsurface* subsurface;
+  int subsurface_dx, subsurface_dy;
+  struct wl_egl_window* eglwindow;
+  struct wl_callback* frame_callback_handler;
+  struct wp_viewport* viewport;
+  gboolean opaque_region_needs_updates;
+  int opaque_region_corner_radius;
+  gboolean opaque_region_used;
+  gboolean ready_to_draw;
+  gboolean commit_to_parent;
+  gboolean before_first_size_alloc;
+  gboolean waiting_to_show;
+  int buffer_scale;
   std::vector<std::function<void(void)>> initial_draw_cbs;
-  // mozcontainer is used from Compositor and Rendering threads so we need to
-  // control access to mozcontainer where wayland internals are used directly.
-  mozilla::Mutex container_lock{"MozContainerWayland::container_lock"};
+  // mozcontainer is used from Compositor and Rendering threads
+  // so we need to control access to mozcontainer where wayland internals
+  // are used directly.
+  mozilla::Mutex* container_lock;
 };
 
 struct _MozContainer;
@@ -103,7 +100,6 @@ void moz_container_wayland_update_opaque_region(MozContainer* container,
                                                 int corner_radius);
 gboolean moz_container_wayland_can_draw(MozContainer* container);
 double moz_container_wayland_get_scale(MozContainer* container);
-double moz_container_wayland_get_fractional_scale(MozContainer* container);
 void moz_container_wayland_set_commit_to_parent(MozContainer* container);
 bool moz_container_wayland_is_commiting_to_parent(MozContainer* container);
 bool moz_container_wayland_is_waiting_to_show(MozContainer* container);
