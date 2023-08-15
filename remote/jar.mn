@@ -23,6 +23,7 @@ remote.jar:
   content/shared/Navigate.sys.mjs (shared/Navigate.sys.mjs)
   content/shared/NavigationManager.sys.mjs (shared/NavigationManager.sys.mjs)
   content/shared/PDF.sys.mjs (shared/PDF.sys.mjs)
+  content/shared/Prompt.sys.mjs (shared/Prompt.sys.mjs)
   content/shared/Realm.sys.mjs (shared/Realm.sys.mjs)
   content/shared/RecommendedPreferences.sys.mjs (shared/RecommendedPreferences.sys.mjs)
   content/shared/RemoteError.sys.mjs (shared/RemoteError.sys.mjs)

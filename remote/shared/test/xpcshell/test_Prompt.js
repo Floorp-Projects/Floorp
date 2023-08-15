@@ -5,7 +5,7 @@
 "use strict";
 
 const { modal } = ChromeUtils.importESModule(
-  "chrome://remote/content/marionette/modal.sys.mjs"
+  "chrome://remote/content/shared/Prompt.sys.mjs"
 );
 
 const chromeWindow = {};
