@@ -200,6 +200,8 @@ struct DocShellLoadStateInit
   // The TriggineringSandboxFlags are the SandboxFlags of the entity
   // responsible for causing the load to occur.
   uint32_t TriggeringSandboxFlags;
+  uint64_t TriggeringWindowId;
+  bool TriggeringStorageAccess;
   int32_t? CancelContentJSEpoch;
 
   bool ResultPrincipalURIIsSome;
