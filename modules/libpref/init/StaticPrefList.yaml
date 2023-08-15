@@ -12894,14 +12894,6 @@
   value: true
   mirror: always
 
-# The maximum amount of time CUPS should spend enumerating print destinations
-# (in milliseconds).
-# The default value chosen here is completely arbitrary.
-- name: print.cups.enum_dests_timeout_ms
-  type: RelaxedAtomicUint32
-  value: 150
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "privacy."
 #---------------------------------------------------------------------------
