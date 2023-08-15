@@ -24,8 +24,7 @@ requestLongerTimeout(2);
 
 add_task(async () => {
   // Set the default values for an OS that supports swipe to nav, except for
-  // whole-page-pixel-size which varies by OS, we vary it in differente tests
-  // in this file.
+  // pixel-size which varies by OS, we vary it in differente tests in this file.
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
@@ -35,7 +34,7 @@ add_task(async () => {
       // Set the velocity-contribution to 0 so we can exactly control the
       // values in the swipe tracker via the delta in the events that we send.
       ["widget.swipe.success-velocity-contribution", 0.0],
-      ["widget.swipe.whole-page-pixel-size", 550.0],
+      ["widget.swipe.pixel-size", 550.0],
     ],
   });
 
@@ -149,10 +148,10 @@ add_task(async () => {
   await SpecialPowers.popPrefEnv();
 });
 
-// Same test as above but whole-page-pixel-size is increased and the multipliers passed to panLeftToRight correspondingly increased.
+// Same test as above but pixel-size is increased and the multipliers passed to panLeftToRight correspondingly increased.
 add_task(async () => {
   // Set the default values for an OS that supports swipe to nav, except for
-  // whole-page-pixel-size which varies by OS, we vary it in differente tests
+  // pixel-size which varies by OS, we vary it in differente tests
   // in this file.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -163,7 +162,7 @@ add_task(async () => {
       // Set the velocity-contribution to 0 so we can exactly control the
       // values in the swipe tracker via the delta in the events that we send.
       ["widget.swipe.success-velocity-contribution", 0.0],
-      ["widget.swipe.whole-page-pixel-size", 1100.0],
+      ["widget.swipe.pixel-size", 1100.0],
     ],
   });
 
@@ -248,7 +247,7 @@ add_task(async () => {
 
 add_task(async () => {
   // Set the default values for an OS that supports swipe to nav, except for
-  // whole-page-pixel-size which varies by OS, we vary it in different tests
+  // pixel-size which varies by OS, we vary it in different tests
   // in this file.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -261,7 +260,7 @@ add_task(async () => {
       // pushes us into success territory without going into success territory
       // purely from th deltas.
       ["widget.swipe.success-velocity-contribution", 2.0],
-      ["widget.swipe.whole-page-pixel-size", 550.0],
+      ["widget.swipe.pixel-size", 550.0],
     ],
   });
 
@@ -350,7 +349,7 @@ add_task(async () => {
 
 add_task(async () => {
   // Set the default values for an OS that supports swipe to nav, except for
-  // whole-page-pixel-size which varies by OS, we vary it in differente tests
+  // pixel-size which varies by OS, we vary it in differente tests
   // in this file.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -361,7 +360,7 @@ add_task(async () => {
       // Set the velocity-contribution to 0 so we can exactly control the
       // values in the swipe tracker via the delta in the events that we send.
       ["widget.swipe.success-velocity-contribution", 0.0],
-      ["widget.swipe.whole-page-pixel-size", 550.0],
+      ["widget.swipe.pixel-size", 550.0],
     ],
   });
 
@@ -422,7 +421,7 @@ add_task(async () => {
       // Set the velocity-contribution to 0 so we can exactly control the
       // values in the swipe tracker via the delta in the events that we send.
       ["widget.swipe.success-velocity-contribution", 0.0],
-      ["widget.swipe.whole-page-pixel-size", 550.0],
+      ["widget.swipe.pixel-size", 550.0],
     ],
   });
 
@@ -536,7 +535,7 @@ add_task(async () => {
 });
 
 add_task(async () => {
-  // success-velocity-contribution is very high and whole-page-pixel-size is
+  // success-velocity-contribution is very high and pixel-size is
   // very low so that one swipe goes over the threshold asap.
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -545,7 +544,7 @@ add_task(async () => {
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       ["widget.swipe.success-velocity-contribution", 999999.0],
-      ["widget.swipe.whole-page-pixel-size", 1.0],
+      ["widget.swipe.pixel-size", 1.0],
     ],
   });
 
