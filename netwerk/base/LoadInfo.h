@@ -212,7 +212,8 @@ class LoadInfo final : public nsILoadInfo {
       const Maybe<mozilla::dom::ClientInfo>& aInitialClientInfo,
       const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
       nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags,
-      uint32_t aTriggeringSandboxFlags, nsContentPolicyType aContentPolicyType,
+      uint32_t aTriggeringSandboxFlags, uint64_t aTriggeringWindowId,
+      bool aTriggeringStorageAccess, nsContentPolicyType aContentPolicyType,
       LoadTainting aTainting, bool aBlockAllMixedContent,
       bool aUpgradeInsecureRequests, bool aBrowserUpgradeInsecureRequests,
       bool aBrowserDidUpgradeInsecureRequests,
@@ -306,6 +307,8 @@ class LoadInfo final : public nsILoadInfo {
   nsSecurityFlags mSecurityFlags;
   uint32_t mSandboxFlags;
   uint32_t mTriggeringSandboxFlags = 0;
+  uint64_t mTriggeringWindowId = 0;
+  bool mTriggeringStorageAccess = false;
   nsContentPolicyType mInternalContentPolicyType;
   LoadTainting mTainting = LoadTainting::Basic;
   bool mBlockAllMixedContent = false;
