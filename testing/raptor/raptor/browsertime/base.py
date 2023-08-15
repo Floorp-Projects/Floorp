@@ -17,7 +17,7 @@ import six
 from benchmark import Benchmark
 from logger.logger import RaptorLogger
 from manifestparser.util import evaluate_list_from_string
-from perftest import Perftest
+from perftest import TRACE_APPS, Perftest
 from results import BrowsertimeResultsHandler
 
 LOG = RaptorLogger(component="raptor-browsertime")
@@ -393,6 +393,7 @@ class Browsertime(Perftest):
             "--firefox.android.intentArgument",
             "--firefox.args",
             "--firefox.preference",
+            "--chrome.traceCategory",
         ]
 
         # In this code block we check if any priority 2 argument is in conflict with a priority
@@ -499,52 +500,21 @@ class Browsertime(Perftest):
         else:
             priority1_options.extend(["--video", "false", "--visualMetrics", "false"])
 
-        if self.config["gecko_profile"] or extra_profiler_run:
+        if self.config["app"] == "firefox" and (
+            self.config["gecko_profile"] or extra_profiler_run
+        ):
             self.config[
                 "browsertime_result_dir"
             ] = self.results_handler.result_dir_for_test(test)
-            self._init_gecko_profiling(test)
-            priority1_options.append("--firefox.geckoProfiler")
-            if self._expose_gecko_profiler(extra_profiler_run, test):
-                priority1_options.extend(
-                    [
-                        "--firefox.geckoProfilerRecordingType",
-                        "custom",
-                    ]
-                )
-            for option, browser_time_option, default in (
-                (
-                    "gecko_profile_features",
-                    "--firefox.geckoProfilerParams.features",
-                    "js,stackwalk,cpu,screenshots",
-                ),
-                (
-                    "gecko_profile_threads",
-                    "--firefox.geckoProfilerParams.threads",
-                    "GeckoMain,Compositor,Renderer",
-                ),
-                (
-                    "gecko_profile_interval",
-                    "--firefox.geckoProfilerParams.interval",
-                    None,
-                ),
-                (
-                    "gecko_profile_entries",
-                    "--firefox.geckoProfilerParams.bufferSize",
-                    str(13_107_200 * 5),  # ~500mb
-                ),
-            ):
-                # 0 is a valid value. The setting may be present but set to None.
-                value = self.config.get(option)
-                if value is None:
-                    value = test.get(option)
-                if value is None:
-                    value = default
-                if option == "gecko_profile_threads":
-                    extra = self.config.get("gecko_profile_extra_threads", [])
-                    value = ",".join(value.split(",") + extra)
-                if value is not None:
-                    priority1_options.extend([browser_time_option, str(value)])
+            self._compose_gecko_profiler_cmds(test, priority1_options)
+
+        elif self.config["app"] in TRACE_APPS and extra_profiler_run:
+            self.config[
+                "browsertime_result_dir"
+            ] = self.results_handler.result_dir_for_test(test)
+            self._compose_chrome_trace_cmds(
+                test, priority1_options, browsertime_options
+            )
 
         # Add any user-specified flags here, let them override anything
         # with no restrictions
@@ -587,6 +557,85 @@ class Browsertime(Perftest):
             + [browsertime_script]
             + browsertime_options
         )
+
+    def _compose_gecko_profiler_cmds(self, test, priority1_options):
+        """Modify the command line options for running the gecko profiler
+        in the Firefox application"""
+
+        LOG.info("Composing Gecko Profiler commands")
+        self._init_gecko_profiling(test)
+        priority1_options.append("--firefox.geckoProfiler")
+        if self._expose_gecko_profiler(self.config.get("extra_profiler_run"), test):
+            priority1_options.extend(
+                [
+                    "--firefox.geckoProfilerRecordingType",
+                    "custom",
+                ]
+            )
+        for option, browsertime_option, default in (
+            (
+                "gecko_profile_features",
+                "--firefox.geckoProfilerParams.features",
+                "js,stackwalk,cpu,screenshots",
+            ),
+            (
+                "gecko_profile_threads",
+                "--firefox.geckoProfilerParams.threads",
+                "GeckoMain,Compositor,Renderer",
+            ),
+            (
+                "gecko_profile_interval",
+                "--firefox.geckoProfilerParams.interval",
+                None,
+            ),
+            (
+                "gecko_profile_entries",
+                "--firefox.geckoProfilerParams.bufferSize",
+                str(13_107_200 * 5),  # ~500mb
+            ),
+        ):
+            # 0 is a valid value. The setting may be present but set to None.
+            value = self.config.get(option)
+            if value is None:
+                value = test.get(option)
+            if value is None:
+                value = default
+            if option == "gecko_profile_threads":
+                extra = self.config.get("gecko_profile_extra_threads", [])
+                value = ",".join(value.split(",") + extra)
+            if value is not None:
+                priority1_options.extend([browsertime_option, str(value)])
+
+    def _compose_chrome_trace_cmds(self, test, priority1_options, browsertime_options):
+        """Modify the command line options for running a Trace on chrom* applications
+        as defined by the TRACE_APPS variable"""
+
+        LOG.info("Composing Chrome Trace commands")
+        self._init_chrome_trace(test)
+        priority1_options.extend(["--chrome.trace"])
+
+        # current categories to capture, we can modify this as needed in the future
+        # reference:
+        # https://source.chromium.org/chromium/chromium/src/+/main:third_party/devtools-frontend/src/front_end/panels/timeline/TimelineController.ts;l=80-94;drc=6c0298a8ce155553c84b312a701298141bfc1330
+        # https://github.com/sitespeedio/browsertime/blob/28bd484d31f51412b6e5e132f81749f65949b47c/lib/chrome/settings/traceCategories.js#L4
+        trace_categories = [
+            "disabled-by-default-devtools.timeline",
+            "disabled-by-default-devtools.timeline.frame",
+            "disabled-by-default-devtools.timeline.stack",
+            "disabled-by-default-v8.compile",
+            "disabled-by-default-v8.cpu_profiler.hires",
+            "disabled-by-default-lighthouse",
+            "disabled-by-default-v8.cpu_profiler",
+        ]
+
+        if "--chrome.traceCategory" not in browsertime_options:
+            # if this option already exists presumably the user has
+            # already specified the desired options So we can skip to
+            # enabling screenshots before returning
+            for cat in trace_categories:
+                # add each tracing event we want to capture with browsertime
+                priority1_options.extend(["--chrome.traceCategory", cat])
+        priority1_options.extend(["--chrome.enableTraceScreenshots"])
 
     def _finalize_pageload_test_setup(self, browsertime_options, test):
         """This function finalizes remaining configurations for browsertime pageload tests.

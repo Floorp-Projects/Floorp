@@ -9,6 +9,7 @@ import re
 from constants.raptor_tests_constants import YOUTUBE_PLAYBACK_MEASURE
 from logger.logger import RaptorLogger
 from manifestparser import TestManifest
+from perftest import TRACE_APPS
 from six.moves.urllib.parse import parse_qs, unquote, urlencode, urlsplit, urlunsplit
 from utils import (
     bool_from_str,
@@ -94,7 +95,6 @@ def validate_test_ini(test_details):
     # if 'alert-on' is specified, we need to make sure that the value given is valid
     # i.e. any 'alert_on' values must be values that exist in the 'measure' ini setting
     if test_details.get("alert_on") is not None:
-
         # support with or without spaces, i.e. 'measure = fcp, loadtime' or '= fcp,loadtime'
         # convert to a list; and remove any spaces
         # this can also have regexes inside
@@ -444,7 +444,9 @@ def get_raptor_test_list(args, oskey):
             next_test.pop("gecko_profile_threads", None)
             next_test.pop("gecko_profile_features", None)
 
-        if args.extra_profiler_run is True and args.app == "firefox":
+        if args.extra_profiler_run is True and (
+            args.app == "firefox" or args.app in TRACE_APPS
+        ):
             next_test["extra_profiler_run"] = True
             LOG.info("extra-profiler-run enabled")
             next_test["extra_profiler_run_browser_cycles"] = 1
