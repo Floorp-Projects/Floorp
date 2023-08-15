@@ -8,6 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Gtk")
 
 SOURCES += [
+    "fractional-scale-v1-protocol.c",
     "idle-inhibit-unstable-v1-protocol.c",
     "linux-dmabuf-unstable-v1-protocol.c",
     "pointer-constraints-unstable-v1-protocol.c",
@@ -18,6 +19,7 @@ SOURCES += [
 ]
 
 EXPORTS.mozilla.widget += [
+    "fractional-scale-v1-client-protocol.h",
     "idle-inhibit-unstable-v1-client-protocol.h",
     "linux-dmabuf-unstable-v1-client-protocol.h",
     "pointer-constraints-unstable-v1-client-protocol.h",
