@@ -1618,8 +1618,12 @@ ColorScheme nsPresContext::DefaultBackgroundColorScheme() const {
   dom::Document* doc = Document();
   // Use a dark background for top-level about:blank that is inaccessible to
   // content JS.
-  if (doc->IsContentInaccessibleAboutBlank()) {
-    return doc->PreferredColorScheme(Document::IgnoreRFP::Yes);
+  {
+    BrowsingContext* bc = doc->GetBrowsingContext();
+    if (bc && bc->IsTop() && !bc->HasOpener() && doc->GetDocumentURI() &&
+        NS_IsAboutBlank(doc->GetDocumentURI())) {
+      return doc->PreferredColorScheme(Document::IgnoreRFP::Yes);
+    }
   }
   // Prefer the root color-scheme (since generally the default canvas
   // background comes from the root element's background-color), and fall back

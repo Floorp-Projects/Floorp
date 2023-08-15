@@ -1103,13 +1103,12 @@ void WindowGlobalParent::FinishAccumulatingPageUseCounters() {
 
     Telemetry::Accumulate(Telemetry::TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED, 1);
 
-    bool any = false;
     for (int32_t c = 0; c < eUseCounter_Count; ++c) {
       auto uc = static_cast<UseCounter>(c);
       if (!mPageUseCounters->mUseCounters[uc]) {
         continue;
       }
-      any = true;
+
       auto id = static_cast<Telemetry::HistogramID>(
           Telemetry::HistogramFirstUseCounter + uc * 2 + 1);
       if (dumpCounters) {
@@ -1117,11 +1116,6 @@ void WindowGlobalParent::FinishAccumulatingPageUseCounters() {
                       Telemetry::GetHistogramName(id), urlForLogging->get());
       }
       Telemetry::Accumulate(id, 1);
-    }
-
-    if (!any) {
-      MOZ_LOG(gUseCountersLog, LogLevel::Debug,
-              (" > page use counter data was received, but was empty"));
     }
   } else {
     MOZ_LOG(gUseCountersLog, LogLevel::Debug,
