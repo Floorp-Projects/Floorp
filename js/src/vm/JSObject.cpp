@@ -58,7 +58,6 @@
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/Watchtower.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 #include "vm/WrapperObject.h"
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
@@ -292,13 +291,6 @@ bool js::Throw(JSContext* cx, HandleId id, unsigned errorNumber,
 
 /*** PropertyDescriptor operations and DefineProperties *********************/
 
-#ifndef ENABLE_DECORATORS
-// These are defined by CommonPropertyNames.h and WellKnownAtom.{cpp,h}
-// when decorators are enabled.
-static const char js_getter_str[] = "getter";
-static const char js_setter_str[] = "setter";
-#endif
-
 static Result<> CheckCallable(JSContext* cx, JSObject* obj,
                               const char* fieldName) {
   if (obj && !obj->isCallable()) {
@@ -376,15 +368,14 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
   if (hasGet) {
     if (v.isObject()) {
       if (checkAccessors) {
-        JS_TRY_OR_RETURN_FALSE(cx,
-                               CheckCallable(cx, &v.toObject(), js_getter_str));
+        JS_TRY_OR_RETURN_FALSE(cx, CheckCallable(cx, &v.toObject(), "getter"));
       }
       getter = &v.toObject();
     } else if (v.isUndefined()) {
       getter = nullptr;
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BAD_GET_SET_FIELD, js_getter_str);
+                                JSMSG_BAD_GET_SET_FIELD, "getter");
       return false;
     }
   }
@@ -399,15 +390,14 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
   if (hasSet) {
     if (v.isObject()) {
       if (checkAccessors) {
-        JS_TRY_OR_RETURN_FALSE(cx,
-                               CheckCallable(cx, &v.toObject(), js_setter_str));
+        JS_TRY_OR_RETURN_FALSE(cx, CheckCallable(cx, &v.toObject(), "setter"));
       }
       setter = &v.toObject();
     } else if (v.isUndefined()) {
       setter = nullptr;
     } else {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_BAD_GET_SET_FIELD, js_setter_str);
+                                JSMSG_BAD_GET_SET_FIELD, "setter");
       return false;
     }
   }
@@ -438,11 +428,11 @@ bool js::ToPropertyDescriptor(JSContext* cx, HandleValue descval,
 Result<> js::CheckPropertyDescriptorAccessors(JSContext* cx,
                                               Handle<PropertyDescriptor> desc) {
   if (desc.hasGetter()) {
-    MOZ_TRY(CheckCallable(cx, desc.getter(), js_getter_str));
+    MOZ_TRY(CheckCallable(cx, desc.getter(), "getter"));
   }
 
   if (desc.hasSetter()) {
-    MOZ_TRY(CheckCallable(cx, desc.setter(), js_setter_str));
+    MOZ_TRY(CheckCallable(cx, desc.setter(), "setter"));
   }
 
   return Ok();
@@ -2711,7 +2701,7 @@ void GetObjectSlotNameFunctor::operator()(JS::TracingContext* tcx, char* buf,
         }
 #define TEST_SLOT_MATCHES_PROTOTYPE(name, clasp) \
   else if ((JSProto_##name) == slot) {           \
-    slotname = js_##name##_str;                  \
+    slotname = #name;                            \
   }
         JS_FOR_EACH_PROTOTYPE(TEST_SLOT_MATCHES_PROTOTYPE)
 #undef TEST_SLOT_MATCHES_PROTOTYPE

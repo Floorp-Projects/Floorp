@@ -9,7 +9,6 @@
 #include "frontend/CompilationStencil.h"  // ScopeContext
 #include "frontend/Parser.h"              // ParserBase
 #include "js/friend/ErrorMessages.h"      // JSMSG_*
-#include "vm/WellKnownAtom.h"             // js_*_str
 
 using mozilla::Maybe;
 using mozilla::Nothing;
@@ -379,7 +378,7 @@ ParseContext::ParseContext(FrontendContext* fc, ParseContext*& parent,
 
 bool ParseContext::init() {
   if (scriptId_ == UINT32_MAX) {
-    errorReporter_.errorNoOffset(JSMSG_NEED_DIET, js_script_str);
+    errorReporter_.errorNoOffset(JSMSG_NEED_DIET, "script");
     return false;
   }
 

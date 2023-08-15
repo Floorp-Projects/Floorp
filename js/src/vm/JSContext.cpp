@@ -58,9 +58,8 @@
 #include "vm/JSObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Realm.h"
-#include "vm/StringType.h"     // StringToNewUTF8CharsZ
-#include "vm/ToSource.h"       // js::ValueToSource
-#include "vm/WellKnownAtom.h"  // js_*_str
+#include "vm/StringType.h"  // StringToNewUTF8CharsZ
+#include "vm/ToSource.h"    // js::ValueToSource
 
 #include "vm/Compartment-inl.h"
 #include "vm/Stack-inl.h"
@@ -575,7 +574,7 @@ void js::ReportIsNotDefined(JSContext* cx, Handle<PropertyName*> name) {
 
 const char* NullOrUndefinedToCharZ(HandleValue v) {
   MOZ_ASSERT(v.isNullOrUndefined());
-  return v.isNull() ? js_null_str : js_undefined_str;
+  return v.isNull() ? "null" : "undefined";
 }
 
 void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
@@ -594,8 +593,8 @@ void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
     return;
   }
 
-  if (strcmp(bytes.get(), js_undefined_str) == 0 ||
-      strcmp(bytes.get(), js_null_str) == 0) {
+  if (strcmp(bytes.get(), "undefined") == 0 ||
+      strcmp(bytes.get(), "null") == 0) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NO_PROPERTIES,
                              bytes.get());
   } else {
@@ -636,8 +635,8 @@ void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
     return;
   }
 
-  if (strcmp(bytes.get(), js_undefined_str) == 0 ||
-      strcmp(bytes.get(), js_null_str) == 0) {
+  if (strcmp(bytes.get(), "undefined") == 0 ||
+      strcmp(bytes.get(), "null") == 0) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL,
                              keyStr.get(), bytes.get());
     return;

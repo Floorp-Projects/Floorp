@@ -56,7 +56,6 @@
 #include "vm/JSScript.h"
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
 #include "vm/Scope.h"          // GetScopeDataTrailingNames
-#include "vm/WellKnownAtom.h"  // js_*_str
 #include "wasm/AsmJS.h"
 
 #include "frontend/ParseContext-inl.h"
@@ -9555,7 +9554,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
       // detected this way, so don't bother passing around an extra parameter
       // everywhere.
       if (!pc_->allowReturn()) {
-        error(JSMSG_BAD_RETURN_OR_YIELD, js_return_str);
+        error(JSMSG_BAD_RETURN_OR_YIELD, "return");
         return null();
       }
       return returnStatement(yieldHandling);
@@ -9768,7 +9767,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
       // detected this way, so don't bother passing around an extra parameter
       // everywhere.
       if (!pc_->allowReturn()) {
-        error(JSMSG_BAD_RETURN_OR_YIELD, js_return_str);
+        error(JSMSG_BAD_RETURN_OR_YIELD, "return");
         return null();
       }
       return returnStatement(yieldHandling);
@@ -10509,10 +10508,10 @@ const char* PerHandlerParser<ParseHandler>::nameIsArgumentsOrEval(Node node) {
              "must only call this function on known names");
 
   if (handler_.isEvalName(node)) {
-    return js_eval_str;
+    return "eval";
   }
   if (handler_.isArgumentsName(node)) {
-    return js_arguments_str;
+    return "arguments";
   }
   return nullptr;
 }

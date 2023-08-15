@@ -56,8 +56,7 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/SharedArrayObject.h"
 #include "vm/StringType.h"
-#include "vm/Warnings.h"       // js::WarnNumberASCII
-#include "vm/WellKnownAtom.h"  // js_*_str
+#include "vm/Warnings.h"  // js::WarnNumberASCII
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCompile.h"
@@ -3361,7 +3360,7 @@ const JSFunctionSpec WasmGlobalObject::methods[] = {
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
     JS_FN("type", WasmGlobalObject::type, 0, JSPROP_ENUMERATE),
 #endif
-    JS_FN(js_valueOf_str, WasmGlobalObject::valueGetter, 0, JSPROP_ENUMERATE),
+    JS_FN("valueOf", WasmGlobalObject::valueGetter, 0, JSPROP_ENUMERATE),
     JS_FS_END};
 
 const JSFunctionSpec WasmGlobalObject::static_methods[] = {JS_FS_END};
@@ -5161,7 +5160,7 @@ static const JSFunctionSpec WebAssembly_mozIntGemm_methods[] = {
 #endif  // ENABLE_WASM_MOZ_INTGEMM
 
 static const JSFunctionSpec WebAssembly_static_methods[] = {
-    JS_FN(js_toSource_str, WebAssembly_toSource, 0, 0),
+    JS_FN("toSource", WebAssembly_toSource, 0, 0),
     JS_FN("compile", WebAssembly_compile, 1, JSPROP_ENUMERATE),
     JS_FN("instantiate", WebAssembly_instantiate, 1, JSPROP_ENUMERATE),
     JS_FN("validate", WebAssembly_validate, 1, JSPROP_ENUMERATE),
@@ -5260,7 +5259,7 @@ static const ClassSpec WebAssemblyClassSpec = {
     WebAssemblyClassFinish};
 
 const JSClass js::WasmNamespaceObject::class_ = {
-    js_WebAssembly_str, JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly),
+    "WebAssembly", JSCLASS_HAS_CACHED_PROTO(JSProto_WebAssembly),
     JS_NULL_CLASS_OPS, &WebAssemblyClassSpec};
 
 // Sundry

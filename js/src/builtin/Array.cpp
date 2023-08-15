@@ -45,7 +45,6 @@
 #include "vm/StringType.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 #include "vm/TypedArrayObject.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 #include "vm/WrapperObject.h"
 #ifdef ENABLE_RECORD_TUPLE
 #  include "vm/TupleType.h"
@@ -4841,9 +4840,9 @@ static bool array_concat(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static const JSFunctionSpec array_methods[] = {
-    JS_FN(js_toSource_str, array_toSource, 0, 0),
-    JS_SELF_HOSTED_FN(js_toString_str, "ArrayToString", 0, 0),
-    JS_FN(js_toLocaleString_str, array_toLocaleString, 0, 0),
+    JS_FN("toSource", array_toSource, 0, 0),
+    JS_SELF_HOSTED_FN("toString", "ArrayToString", 0, 0),
+    JS_FN("toLocaleString", array_toLocaleString, 0, 0),
 
     /* Perl-ish methods. */
     JS_INLINABLE_FN("join", array_join, 1, 0, ArrayJoin),

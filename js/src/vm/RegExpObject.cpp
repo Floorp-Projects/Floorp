@@ -27,7 +27,6 @@
 #include "vm/PlainObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringType.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
@@ -179,7 +178,7 @@ static const ClassSpec RegExpObjectClassSpec = {
     FinishRegExpClassInit};
 
 const JSClass RegExpObject::class_ = {
-    js_RegExp_str,
+    "RegExp",
     JSCLASS_HAS_RESERVED_SLOTS(RegExpObject::RESERVED_SLOTS) |
         JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     JS_NULL_CLASS_OPS, &RegExpObjectClassSpec};

@@ -38,7 +38,6 @@
 #include "vm/Shape.h"
 #include "vm/StringType.h"
 #include "vm/TypedArrayObject.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
@@ -2039,14 +2038,14 @@ static bool IteratorConstructor(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  if (!ThrowIfNotConstructing(cx, args, js_Iterator_str)) {
+  if (!ThrowIfNotConstructing(cx, args, "Iterator")) {
     return false;
   }
   // Throw TypeError if NewTarget is the active function object, preventing the
   // Iterator constructor from being used directly.
   if (args.callee() == args.newTarget().toObject()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_BOGUS_CONSTRUCTOR, js_Iterator_str);
+                              JSMSG_BOGUS_CONSTRUCTOR, "Iterator");
     return false;
   }
 
@@ -2076,7 +2075,7 @@ static const ClassSpec IteratorObjectClassSpec = {
 };
 
 const JSClass IteratorObject::class_ = {
-    js_Iterator_str,
+    "Iterator",
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
     JS_NULL_CLASS_OPS,
     &IteratorObjectClassSpec,

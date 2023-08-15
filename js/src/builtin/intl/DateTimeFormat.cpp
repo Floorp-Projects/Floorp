@@ -36,7 +36,6 @@
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Runtime.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
@@ -94,7 +93,7 @@ static const JSFunctionSpec dateTimeFormat_methods[] = {
     JS_SELF_HOSTED_FN("formatRange", "Intl_DateTimeFormat_formatRange", 2, 0),
     JS_SELF_HOSTED_FN("formatRangeToParts",
                       "Intl_DateTimeFormat_formatRangeToParts", 2, 0),
-    JS_FN(js_toSource_str, dateTimeFormat_toSource, 0, 0),
+    JS_FN("toSource", dateTimeFormat_toSource, 0, 0),
     JS_FS_END};
 
 static const JSPropertySpec dateTimeFormat_properties[] = {

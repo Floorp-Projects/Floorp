@@ -31,7 +31,7 @@
 #include "vm/StaticStrings.h"
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
+#include "vm/WellKnownAtom.h"  // WellKnownAtomInfo, WellKnownAtomId, wellKnownAtomInfos
 
 #ifdef ENABLE_RECORD_TUPLE
 #  include "vm/RecordType.h"

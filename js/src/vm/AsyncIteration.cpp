@@ -18,7 +18,6 @@
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"
 #include "vm/SelfHosting.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/JSObject-inl.h"
 #include "vm/List-inl.h"
@@ -1395,14 +1394,14 @@ static bool AsyncIteratorConstructor(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  if (!ThrowIfNotConstructing(cx, args, js_AsyncIterator_str)) {
+  if (!ThrowIfNotConstructing(cx, args, "AsyncIterator")) {
     return false;
   }
   // Throw TypeError if NewTarget is the active function object, preventing the
   // Iterator constructor from being used directly.
   if (args.callee() == args.newTarget().toObject()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_BOGUS_CONSTRUCTOR, js_AsyncIterator_str);
+                              JSMSG_BOGUS_CONSTRUCTOR, "AsyncIterator");
     return false;
   }
 
@@ -1434,7 +1433,7 @@ static const ClassSpec AsyncIteratorObjectClassSpec = {
 };
 
 const JSClass AsyncIteratorObject::class_ = {
-    js_AsyncIterator_str,
+    "AsyncIterator",
     JSCLASS_HAS_CACHED_PROTO(JSProto_AsyncIterator),
     JS_NULL_CLASS_OPS,
     &AsyncIteratorObjectClassSpec,

@@ -53,8 +53,7 @@
 #include "vm/Opcodes.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
-#include "vm/ToSource.h"       // js::ValueToSource
-#include "vm/WellKnownAtom.h"  // js_*_str
+#include "vm/ToSource.h"  // js::ValueToSource
 
 #include "gc/GC-inl.h"
 #include "vm/BytecodeIterator-inl.h"
@@ -1924,11 +1923,11 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       return write("super[") && decompilePCForStackOperand(pc, -2) &&
              write("]");
     case JSOp::Null:
-      return write(js_null_str);
+      return write("null");
     case JSOp::True:
-      return write(js_true_str);
+      return write("true");
     case JSOp::False:
-      return write(js_false_str);
+      return write("false");
     case JSOp::Zero:
     case JSOp::One:
     case JSOp::Int8:
@@ -1947,12 +1946,12 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       break;
     }
     case JSOp::Undefined:
-      return write(js_undefined_str);
+      return write("undefined");
     case JSOp::GlobalThis:
     case JSOp::NonSyntacticGlobalThis:
       // |this| could convert to a very long object initialiser, so cite it by
       // its keyword name.
-      return write(js_this_str);
+      return write("this");
     case JSOp::NewTarget:
       return write("new.target");
     case JSOp::ImportMeta:
@@ -2521,8 +2520,8 @@ UniqueChars js::DecompileValueGenerator(JSContext* cx, int spindex,
   }
   if (!fallback) {
     if (v.isUndefined()) {
-      return DuplicateString(
-          cx, js_undefined_str);  // Prevent users from seeing "(void 0)"
+      return DuplicateString(cx, "undefined");  // Prevent users from seeing
+                                                // "(void 0)"
     }
     fallback = ValueToSource(cx, v);
     if (!fallback) {
