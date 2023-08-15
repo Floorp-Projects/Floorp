@@ -12419,7 +12419,7 @@
 # When a Http/3 connection failed, whether to retry with a different IP address.
 - name: network.http.http3.retry_different_ip_family
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # This is for testing purpose. When true, nsUDPSocket::SendWithAddress will
