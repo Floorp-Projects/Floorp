@@ -84,6 +84,8 @@ class Event : public nsISupports, public nsWrapperCache {
   void ConstructorInit(EventTarget* aOwner, nsPresContext* aPresContext,
                        WidgetEvent* aEvent);
 
+  void UpdateDefaultPreventedOnContentForDragEvent();
+
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Event)

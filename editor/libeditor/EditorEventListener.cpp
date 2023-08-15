@@ -875,10 +875,13 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
     return NS_OK;
   }
 
-  aDragEvent->PreventDefault();
-
   WidgetDragEvent* asWidgetEvent = aDragEvent->WidgetEventPtr()->AsDragEvent();
-  asWidgetEvent->UpdateDefaultPreventedOnContent(asWidgetEvent->mTarget);
+  AutoRestore<bool> inHTMLEditorEventListener(
+      asWidgetEvent->mInHTMLEditorEventListener);
+  if (mEditorBase->IsHTMLEditor()) {
+    asWidgetEvent->mInHTMLEditorEventListener = true;
+  }
+  aDragEvent->PreventDefault();
 
   aDragEvent->StopImmediatePropagation();
 
