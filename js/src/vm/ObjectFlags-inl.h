@@ -32,6 +32,24 @@ GetObjectFlagsForNewProperty(const JSClass* clasp, ObjectFlags flags, jsid id,
     flags.setFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto);
   }
 
+  // https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver
+  // Proxy.[[Get]] or [[Set]] Step 9
+  if (!propFlags.configurable()) {
+    MOZ_ASSERT(clasp->isNativeObject());
+    // NOTE: there is a hole which this flag does not cover, which is if the
+    // class has a resolve hook which could lazily define a non-configurable
+    // non-writable property. We can just look this up directly though in the
+    // JIT.
+    if (propFlags.isDataProperty() && !propFlags.writable()) {
+      flags.setFlag(ObjectFlag::NeedsProxyGetSetResultValidation);
+    } else if (propFlags.hasGetter() != propFlags.hasSetter()) {
+      // This will cover us for both get trap validation and set trap
+      // validation. We could be more aggressive and have one flag for each,
+      // since their requirements are inverted, but this should be fine.
+      flags.setFlag(ObjectFlag::NeedsProxyGetSetResultValidation);
+    }
+  }
+
   if (propFlags.enumerable()) {
     flags.setFlag(ObjectFlag::HasEnumerable);
   }

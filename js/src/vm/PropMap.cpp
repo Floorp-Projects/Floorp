@@ -1094,7 +1094,8 @@ void PropMap::dump(js::GenericPrinter& out) const {
       dumpFlag(PropertyFlag::Enumerable, "enumerable");
       dumpFlag(PropertyFlag::Configurable, "configurable");
       dumpFlag(PropertyFlag::Writable, "writable");
-      dumpFlag(PropertyFlag::AccessorProperty, "accessor");
+      dumpFlag(PropertyFlag::HasGetter, "hasGetter");
+      dumpFlag(PropertyFlag::HasSetter, "hasSetter");
       dumpFlag(PropertyFlag::CustomDataProperty, "custom-data");
       out.putChar(')');
     }
