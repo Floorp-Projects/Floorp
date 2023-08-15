@@ -316,9 +316,18 @@ class AsyncPanZoomController {
    * we asked gecko to paint. In cases where that last request has not yet been
    * processed, this is needed to transform input events properly into a space
    * gecko will understand.
+   *
+   * This is meant to be called in the context of computing a chain of
+   * transforms used for transforming event coordinates (specifically,
+   * APZCTreeManager::GetApzcToGeckoTransform() and
+   * HitTestingTreeNode::GetTransformToGecko()). The caller needs to pass
+   * in |aForLayersId| the LayersId of the content for which the chain will be
+   * used. If this content is in an out-of-process subdocument, the returned
+   * transform includes the painted resolution transform (see bug 1827330 for
+   * details).
    */
   Matrix4x4 GetTransformToLastDispatchedPaint(
-      const AsyncTransformComponents& aComponents = LayoutAndVisual) const;
+      const AsyncTransformComponents& aComponents, LayersId aForLayersId) const;
 
   /**
    * Returns the number of CSS pixels of checkerboard according to the metrics
@@ -1236,6 +1245,24 @@ class AsyncPanZoomController {
       AsyncTransformConsumer aMode,
       AsyncTransformComponents aComponents = LayoutAndVisual,
       std::size_t aSampleIndex = 0) const;
+
+  /**
+   * A variant of GetCurrentAsyncTransform() intended for use when computing
+   * the screen-to-apzc and apzc-to-gecko transforms. This includes the
+   * overscroll transform, and additionally requires the caller to pass in
+   * the LayersId of the APZC whose screen-to-apzc or apzc-to-gecko transform
+   * is being computed in |aForLayersId|; if that APZC is in an out-of-process
+   * subdocument, and we are the zoomable (root-content) APZC, the returned
+   * transform includes the resolution at painting time, not just the async
+   * change to the resolution since painting. This is done because
+   * out-of-process content expects the screen-to-apzc and apzc-to-gecko
+   * transforms to include the painted resolution (see bug 1827330 for details).
+   *
+   * Should only be called from
+   * APZCTreeManager::{GetScreenToApzcTransform(),GetApzcToGeckoTransform()}.
+   */
+  AsyncTransformComponentMatrix GetAsyncTransformForInputTransformation(
+      AsyncTransformComponents aComponents, LayersId aForLayersId) const;
 
   /**
    * Returns a transform that scales by the resolution that was in place

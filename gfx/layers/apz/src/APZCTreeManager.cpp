@@ -3158,8 +3158,8 @@ ScreenToParentLayerMatrix4x4 APZCTreeManager::GetScreenToApzcTransform(
     ancestorUntransform = parent->GetAncestorTransform().Inverse();
     // asyncUntransform is updated to PA.Inverse() when parent == P
     Matrix4x4 asyncUntransform = parent
-                                     ->GetCurrentAsyncTransformWithOverscroll(
-                                         AsyncPanZoomController::eForHitTesting)
+                                     ->GetAsyncTransformForInputTransformation(
+                                         LayoutAndVisual, aApzc->GetLayersId())
                                      .Inverse()
                                      .ToUnknownMatrix();
     // untransformSinceLastApzc is RC.Inverse() * QC.Inverse() * PA.Inverse()
@@ -3195,17 +3195,17 @@ ParentLayerToScreenMatrix4x4 APZCTreeManager::GetApzcToGeckoTransform(
   // notation where the leftmost matrix in a multiplication is applied first.
 
   // asyncUntransform is LA.Inverse()
-  Matrix4x4 asyncUntransform =
-      aApzc
-          ->GetCurrentAsyncTransformWithOverscroll(
-              AsyncPanZoomController::eForHitTesting, aComponents)
-          .Inverse()
-          .ToUnknownMatrix();
+  Matrix4x4 asyncUntransform = aApzc
+                                   ->GetAsyncTransformForInputTransformation(
+                                       aComponents, aApzc->GetLayersId())
+                                   .Inverse()
+                                   .ToUnknownMatrix();
 
   // aTransformToGeckoOut is initialized to LA.Inverse() * LD * MC * NC * OC *
   // PC
   result = asyncUntransform *
-           aApzc->GetTransformToLastDispatchedPaint(aComponents) *
+           aApzc->GetTransformToLastDispatchedPaint(aComponents,
+                                                    aApzc->GetLayersId()) *
            aApzc->GetAncestorTransform();
 
   for (AsyncPanZoomController* parent = aApzc->GetParent(); parent;
@@ -3216,7 +3216,8 @@ ParentLayerToScreenMatrix4x4 APZCTreeManager::GetApzcToGeckoTransform(
     // Note: Do not pass the async transform components for the current target
     // to the parent.
     result = result *
-             parent->GetTransformToLastDispatchedPaint(LayoutAndVisual) *
+             parent->GetTransformToLastDispatchedPaint(LayoutAndVisual,
+                                                       aApzc->GetLayersId()) *
              parent->GetAncestorTransform();
 
     // The above value for result when parent == P matches the required output

@@ -4853,6 +4853,22 @@ AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
   return asyncTransform;
 }
 
+AsyncTransformComponentMatrix
+AsyncPanZoomController::GetAsyncTransformForInputTransformation(
+    AsyncTransformComponents aComponents, LayersId aForLayersId) const {
+  AsyncTransformComponentMatrix result;
+  // If we are the root, and |aForLayersId| is different from our LayersId,
+  // |aForLayersId| must be in a remote subdocument.
+  if (IsRootContent() && aForLayersId != GetLayersId()) {
+    result =
+        ViewAs<AsyncTransformComponentMatrix>(GetPaintedResolutionTransform());
+  }
+  // Order of transforms: the painted resolution (if any) applies first, and
+  // any async transform on top of that.
+  return result *
+         GetCurrentAsyncTransformWithOverscroll(eForHitTesting, aComponents);
+}
+
 Matrix4x4 AsyncPanZoomController::GetPaintedResolutionTransform() const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   MOZ_ASSERT(IsRootContent());
@@ -5035,7 +5051,7 @@ void AsyncPanZoomController::UnapplyAsyncTestAttributes(
 }
 
 Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint(
-    const AsyncTransformComponents& aComponents) const {
+    const AsyncTransformComponents& aComponents, LayersId aForLayersId) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   CSSPoint componentOffset;
 
@@ -5076,8 +5092,16 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint(
       lastDispatchedZoom != LayoutDeviceToParentLayerScale(0)) {
     zoomChange = lastContentZoom.scale / lastDispatchedZoom.scale;
   }
-  return Matrix4x4::Translation(scrollChange.x, scrollChange.y, 0)
-      .PostScale(zoomChange, zoomChange, 1);
+  Matrix4x4 result;
+  // If we are the root, and |aForLayersId| is different from our LayersId,
+  // |aForLayersId| must be in a remote subdocument.
+  if (IsRootContent() && aForLayersId != GetLayersId()) {
+    result = GetPaintedResolutionTransform();
+  }
+  // Order of transforms: the painted resolution (if any) applies first, and
+  // any async transform on top of that.
+  return result * Matrix4x4::Translation(scrollChange.x, scrollChange.y, 0)
+                      .PostScale(zoomChange, zoomChange, 1);
 }
 
 CSSRect AsyncPanZoomController::GetVisibleRect(
