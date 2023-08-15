@@ -57,8 +57,7 @@
 #include "vm/Stack.h"
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
-#include "wasm/WasmJS.h"       // WasmExceptionObject
+#include "wasm/WasmJS.h"  // WasmExceptionObject
 
 #include "vm/Compartment-inl.h"
 #include "vm/ErrorObject-inl.h"
@@ -380,7 +379,7 @@ static bool IsDuckTypedErrorObject(JSContext* cx, HandleObject exnObject,
   AutoClearPendingException acpe(cx);
 
   bool found;
-  if (!JS_HasProperty(cx, exnObject, js_message_str, &found) || !found) {
+  if (!JS_HasProperty(cx, exnObject, "message", &found) || !found) {
     return false;
   }
 
@@ -391,13 +390,13 @@ static bool IsDuckTypedErrorObject(JSContext* cx, HandleObject exnObject,
   }
   if (!found) {
     // If that doesn't work, try "fileName".
-    filename_str = js_fileName_str;
+    filename_str = "fileName";
     if (!JS_HasProperty(cx, exnObject, filename_str, &found) || !found) {
       return false;
     }
   }
 
-  if (!JS_HasProperty(cx, exnObject, js_lineNumber_str, &found) || !found) {
+  if (!JS_HasProperty(cx, exnObject, "lineNumber", &found) || !found) {
     return false;
   }
 
@@ -540,14 +539,14 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
     RootedValue val(cx);
 
     RootedString name(cx);
-    if (JS_GetProperty(cx, exnObject, js_name_str, &val) && val.isString()) {
+    if (JS_GetProperty(cx, exnObject, "name", &val) && val.isString()) {
       name = val.toString();
     } else {
       cx->clearPendingException();
     }
 
     RootedString msg(cx);
-    if (JS_GetProperty(cx, exnObject, js_message_str, &val) && val.isString()) {
+    if (JS_GetProperty(cx, exnObject, "message", &val) && val.isString()) {
       msg = val.toString();
     } else {
       cx->clearPendingException();
@@ -576,14 +575,14 @@ bool JS::ErrorReportBuilder::init(JSContext* cx,
     }
 
     uint32_t lineno;
-    if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &val) ||
+    if (!JS_GetProperty(cx, exnObject, "lineNumber", &val) ||
         !ToUint32(cx, val, &lineno)) {
       cx->clearPendingException();
       lineno = 0;
     }
 
     uint32_t column;
-    if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, &val) ||
+    if (!JS_GetProperty(cx, exnObject, "columnNumber", &val) ||
         !ToUint32(cx, val, &column)) {
       cx->clearPendingException();
       column = 0;

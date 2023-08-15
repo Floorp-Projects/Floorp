@@ -70,7 +70,6 @@
 #include "vm/Scope.h"               // GetScopeDataTrailingNames
 #include "vm/SharedStencil.h"       // ScopeNote
 #include "vm/ThrowMsgKind.h"        // ThrowMsgKind
-#include "vm/WellKnownAtom.h"       // js_*_str
 
 using namespace js;
 using namespace js::frontend;
@@ -2477,7 +2476,7 @@ bool BytecodeEmitter::getNslots(uint32_t* nslots) {
   uint64_t nslots64 =
       maxFixedSlots + static_cast<uint64_t>(bytecodeSection().maxStackDepth());
   if (nslots64 > UINT32_MAX) {
-    reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
+    reportError(nullptr, JSMSG_NEED_DIET, "script");
     return false;
   }
   *nslots = nslots64;
@@ -12427,7 +12426,7 @@ bool BytecodeEmitter::newSrcNote2(SrcNoteType type, ptrdiff_t offset,
 
 bool BytecodeEmitter::newSrcNoteOperand(ptrdiff_t operand) {
   if (!SrcNote::isRepresentableOperand(operand)) {
-    reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
+    reportError(nullptr, JSMSG_NEED_DIET, "script");
     return false;
   }
 

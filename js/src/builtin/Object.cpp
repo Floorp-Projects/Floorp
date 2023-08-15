@@ -39,7 +39,6 @@
 #include "vm/StringType.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 #include "vm/Watchtower.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
@@ -2224,18 +2223,18 @@ bool js::obj_setProto(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static const JSFunctionSpec object_methods[] = {
-    JS_FN(js_toSource_str, obj_toSource, 0, 0),
-    JS_INLINABLE_FN(js_toString_str, obj_toString, 0, 0, ObjectToString),
-    JS_SELF_HOSTED_FN(js_toLocaleString_str, "Object_toLocaleString", 0, 0),
-    JS_SELF_HOSTED_FN(js_valueOf_str, "Object_valueOf", 0, 0),
-    JS_SELF_HOSTED_FN(js_hasOwnProperty_str, "Object_hasOwnProperty", 1, 0),
-    JS_INLINABLE_FN(js_isPrototypeOf_str, obj_isPrototypeOf, 1, 0,
+    JS_FN("toSource", obj_toSource, 0, 0),
+    JS_INLINABLE_FN("toString", obj_toString, 0, 0, ObjectToString),
+    JS_SELF_HOSTED_FN("toLocaleString", "Object_toLocaleString", 0, 0),
+    JS_SELF_HOSTED_FN("valueOf", "Object_valueOf", 0, 0),
+    JS_SELF_HOSTED_FN("hasOwnProperty", "Object_hasOwnProperty", 1, 0),
+    JS_INLINABLE_FN("isPrototypeOf", obj_isPrototypeOf, 1, 0,
                     ObjectIsPrototypeOf),
-    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1, 0),
-    JS_SELF_HOSTED_FN(js_defineGetter_str, "ObjectDefineGetter", 2, 0),
-    JS_SELF_HOSTED_FN(js_defineSetter_str, "ObjectDefineSetter", 2, 0),
-    JS_SELF_HOSTED_FN(js_lookupGetter_str, "ObjectLookupGetter", 1, 0),
-    JS_SELF_HOSTED_FN(js_lookupSetter_str, "ObjectLookupSetter", 1, 0),
+    JS_FN("propertyIsEnumerable", obj_propertyIsEnumerable, 1, 0),
+    JS_SELF_HOSTED_FN("__defineGetter__", "ObjectDefineGetter", 2, 0),
+    JS_SELF_HOSTED_FN("__defineSetter__", "ObjectDefineSetter", 2, 0),
+    JS_SELF_HOSTED_FN("__lookupGetter__", "ObjectLookupGetter", 1, 0),
+    JS_SELF_HOSTED_FN("__lookupSetter__", "ObjectLookupSetter", 1, 0),
     JS_FS_END};
 
 static const JSPropertySpec object_properties[] = {
@@ -2350,7 +2349,7 @@ static const ClassSpec PlainObjectClassSpec = {
     object_methods,          object_properties,
     FinishObjectClassInit};
 
-const JSClass PlainObject::class_ = {js_Object_str,
+const JSClass PlainObject::class_ = {"Object",
                                      JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
                                      JS_NULL_CLASS_OPS, &PlainObjectClassSpec};
 

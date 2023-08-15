@@ -36,7 +36,6 @@
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/StringType.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -1267,8 +1266,8 @@ static bool Locale_toSource(JSContext* cx, unsigned argc, Value* vp) {
 static const JSFunctionSpec locale_methods[] = {
     JS_FN("maximize", Locale_maximize, 0, 0),
     JS_FN("minimize", Locale_minimize, 0, 0),
-    JS_FN(js_toString_str, Locale_toString, 0, 0),
-    JS_FN(js_toSource_str, Locale_toSource, 0, 0), JS_FS_END};
+    JS_FN("toString", Locale_toString, 0, 0),
+    JS_FN("toSource", Locale_toSource, 0, 0), JS_FS_END};
 
 static const JSPropertySpec locale_properties[] = {
     JS_PSG("baseName", Locale_baseName, 0),

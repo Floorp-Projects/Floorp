@@ -29,7 +29,6 @@
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/Time.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/JSObject-inl.h"
 
@@ -1021,7 +1020,7 @@ const char* js::GetUnaryMathFunctionName(UnaryMathFunction fun) {
 }
 
 static const JSFunctionSpec math_static_methods[] = {
-    JS_FN(js_toSource_str, math_toSource, 0, 0),
+    JS_FN("toSource", math_toSource, 0, 0),
     JS_INLINABLE_FN("abs", math_abs, 1, 0, MathAbs),
     JS_INLINABLE_FN("acos", math_acos, 1, 0, MathACos),
     JS_INLINABLE_FN("asin", math_asin, 1, 0, MathASin),
@@ -1085,6 +1084,5 @@ static const ClassSpec MathClassSpec = {CreateMathObject,
                                         nullptr,
                                         nullptr};
 
-const JSClass js::MathClass = {js_Math_str,
-                               JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
+const JSClass js::MathClass = {"Math", JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
                                JS_NULL_CLASS_OPS, &MathClassSpec};

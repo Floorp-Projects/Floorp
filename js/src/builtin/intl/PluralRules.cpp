@@ -20,7 +20,6 @@
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/StringType.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -67,7 +66,7 @@ static const JSFunctionSpec pluralRules_methods[] = {
                       0),
     JS_SELF_HOSTED_FN("select", "Intl_PluralRules_select", 1, 0),
     JS_SELF_HOSTED_FN("selectRange", "Intl_PluralRules_selectRange", 2, 0),
-    JS_FN(js_toSource_str, pluralRules_toSource, 0, 0), JS_FS_END};
+    JS_FN("toSource", pluralRules_toSource, 0, 0), JS_FS_END};
 
 static const JSPropertySpec pluralRules_properties[] = {
     JS_STRING_SYM_PS(toStringTag, "Intl.PluralRules", JSPROP_READONLY),

@@ -17,7 +17,6 @@
 #include "util/BitArray.h"
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "gc/Nursery-inl.h"
 #include "vm/FrameIter-inl.h"  // js::FrameIter::unaliasedForEachActual
@@ -1045,7 +1044,7 @@ void ArgumentsObject::trace(JSTracer* trc, JSObject* obj) {
   ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
   if (ArgumentsData* data =
           argsobj.data()) {  // Template objects have no ArgumentsData.
-    TraceRange(trc, data->numArgs, data->begin(), js_arguments_str);
+    TraceRange(trc, data->numArgs, data->begin(), "arguments");
   }
 }
 

@@ -25,7 +25,6 @@
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
@@ -953,8 +952,8 @@ const JSPropertySpec js::regexp_properties[] = {
     JS_PS_END};
 
 const JSFunctionSpec js::regexp_methods[] = {
-    JS_SELF_HOSTED_FN(js_toSource_str, "$RegExpToString", 0, 0),
-    JS_SELF_HOSTED_FN(js_toString_str, "$RegExpToString", 0, 0),
+    JS_SELF_HOSTED_FN("toSource", "$RegExpToString", 0, 0),
+    JS_SELF_HOSTED_FN("toString", "$RegExpToString", 0, 0),
     JS_FN("compile", regexp_compile, 2, 0),
     JS_SELF_HOSTED_FN("exec", "RegExp_prototype_Exec", 1, 0),
     JS_SELF_HOSTED_FN("test", "RegExpTest", 1, 0),

@@ -45,7 +45,6 @@
 #include "vm/FrameIter.h"  // js::{,NonBuiltin}FrameIter
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
 
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::AssertedCast;
@@ -71,8 +70,7 @@ struct ReservedWordInfo {
 };
 
 static const ReservedWordInfo reservedWords[] = {
-#define RESERVED_WORD_INFO(word, name, type) \
-  {js_##word##_str, js::frontend::type},
+#define RESERVED_WORD_INFO(word, name, type) {#word, js::frontend::type},
     FOR_EACH_JAVASCRIPT_RESERVED_WORD(RESERVED_WORD_INFO)
 #undef RESERVED_WORD_INFO
 };
@@ -199,7 +197,7 @@ const char* ReservedWordToCharZ(TokenKind tt) {
   switch (tt) {
 #define EMIT_CASE(word, name, type) \
   case type:                        \
-    return js_##word##_str;
+    return #word;
     FOR_EACH_JAVASCRIPT_RESERVED_WORD(EMIT_CASE)
 #undef EMIT_CASE
     default:
