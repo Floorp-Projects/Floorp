@@ -185,6 +185,7 @@ const workspaceFunctions = {
       },
     },
   },
+
   manageWorkspaceFunctions: {
     initWorkspace() {
       // First run

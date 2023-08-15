@@ -17,6 +17,7 @@ DIRS += [
 
 EXTRA_JS_MODULES += [
     "BrowserManagerSidebar.jsm",
+    "CustomKeyboardShortcutUtils.sys.mjs",
     "DesktopFileParser.jsm",
     "EscapeShell.jsm",
     "FloorpActors.jsm",
