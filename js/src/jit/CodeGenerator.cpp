@@ -1888,6 +1888,7 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
                           RegExpStatics::offsetOfMatchesInput(),
                           temp1 /* prev */, temp2 /* next */, volatileRegs);
   } else {
+    masm.debugAssertGCThingIsTenured(input, temp1);
     masm.storePtr(input, pendingInputAddress);
     masm.storePtr(input, matchesInputAddress);
   }
@@ -2412,6 +2413,9 @@ static JitCode* GenerateRegExpMatchStubShared(JSContext* cx,
   } else {
     JitSpew(JitSpew_Codegen, "# Emitting RegExpMatcher stub");
   }
+
+  // |initialStringHeap| could be stale after a GC.
+  JS::AutoCheckCannotGC nogc(cx);
 
   Register regexp = RegExpMatcherRegExpReg;
   Register input = RegExpMatcherStringReg;
