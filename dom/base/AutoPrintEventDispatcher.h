@@ -35,7 +35,9 @@ class AutoPrintEventDispatcher {
       if (RefPtr<nsPresContext> presContext = doc->GetPresContext()) {
         presContext->EmulateMedium(aBefore ? nsGkAtoms::print : nullptr);
         // Ensure media query listeners fire.
-        doc->FlushPendingNotifications(FlushType::Style);
+        // FIXME(emilio): This is hacky, at best, but is required for compat
+        // with some pages, see bug 774398.
+        doc->EvaluateMediaQueriesAndReportChanges(/* aRecurse = */ false);
       }
     }
   }

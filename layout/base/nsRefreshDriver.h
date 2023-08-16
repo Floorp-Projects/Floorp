@@ -419,6 +419,11 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     mNeedToUpdateIntersectionObservations = true;
   }
 
+  void ScheduleMediaQueryListenerUpdate() {
+    EnsureTimerStarted();
+    mMightNeedMediaQueryListenerUpdate = true;
+  }
+
   void EnsureContentRelevancyUpdateHappens() {
     EnsureTimerStarted();
     mNeedToUpdateContentRelevancy = true;
@@ -440,6 +445,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     eHasVisualViewportResizeEvents = 1 << 4,
     eHasScrollEvents = 1 << 5,
     eHasVisualViewportScrollEvents = 1 << 6,
+    eHasPendingMediaQueryListeners = 1 << 7,
   };
 
   void AddForceNotifyContentfulPaintPresContext(nsPresContext* aPresContext);
@@ -477,7 +483,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     }
     operator RefPtr<nsARefreshObserver>() { return mObserver; }
   };
-  typedef nsTObserverArray<ObserverData> ObserverArray;
+  using ObserverArray = nsTObserverArray<ObserverData>;
   MOZ_CAN_RUN_SCRIPT
   void FlushAutoFocusDocuments();
   void RunFullscreenSteps();
@@ -486,6 +492,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations(mozilla::TimeStamp aNowTime);
   void UpdateRelevancyOfContentVisibilityAutoFrames();
+  void EvaluateMediaQueriesAndReportChanges();
 
   enum class IsExtraTick {
     No,
@@ -627,6 +634,10 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // True if we need to flush in order to update intersection observations in
   // all our documents.
   bool mNeedToUpdateIntersectionObservations : 1;
+
+  // True if we might need to report media query changes in any of our
+  // documents.
+  bool mMightNeedMediaQueryListenerUpdate : 1;
 
   // True if we need to update the relevancy of `content-visibility: auto`
   // elements in our documents.

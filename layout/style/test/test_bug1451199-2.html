@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1451199
       is(l.matches, false,
          "Should not match portrait by the time we get notified");
       SimpleTest.finish();
-    });
+    }, { once: true });
     iframe.width = "200";
   });
   </script>

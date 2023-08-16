@@ -14132,6 +14132,35 @@ void Document::SetDevToolsWatchingDOMMutations(bool aValue) {
   }
 }
 
+void EvaluateMediaQueryLists(nsTArray<RefPtr<MediaQueryList>>& aListsToNotify,
+                             Document& aDocument, bool aRecurse) {
+  if (nsPresContext* pc = aDocument.GetPresContext()) {
+    pc->FlushPendingMediaFeatureValuesChanged();
+  }
+
+  for (MediaQueryList* mql : aDocument.MediaQueryLists()) {
+    if (mql->EvaluateOnRenderingUpdate()) {
+      aListsToNotify.AppendElement(mql);
+    }
+  }
+  if (!aRecurse) {
+    return;
+  }
+  auto recurse = [&](Document& aSubDoc) {
+    EvaluateMediaQueryLists(aListsToNotify, aSubDoc, true);
+    return CallState::Continue;
+  };
+  aDocument.EnumerateSubDocuments(recurse);
+}
+
+void Document::EvaluateMediaQueriesAndReportChanges(bool aRecurse) {
+  AutoTArray<RefPtr<MediaQueryList>, 32> mqls;
+  EvaluateMediaQueryLists(mqls, *this, aRecurse);
+  for (auto& mql : mqls) {
+    mql->FireChangeEvent();
+  }
+}
+
 void Document::MaybeWarnAboutZoom() {
   if (mHasWarnedAboutZoom) {
     return;
