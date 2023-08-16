@@ -732,7 +732,6 @@ def ffmpeg(value, target):
 
 set_config("MOZ_FFMPEG", ffmpeg)
 set_define("MOZ_FFMPEG", ffmpeg)
-imply_option("--enable-fmp4", ffmpeg, "--enable-ffmpeg")
 
 # AV1 Video Codec Support
 # ==============================================================
@@ -775,29 +774,6 @@ def jxl(value, is_nightly):
 
 set_config("MOZ_JXL", jxl)
 set_define("MOZ_JXL", jxl)
-
-# Built-in fragmented MP4 support.
-# ==============================================================
-option(
-    "--disable-fmp4",
-    env="MOZ_FMP4",
-    help="Disable support for in built Fragmented MP4 parsing",
-)
-
-
-@depends("--disable-fmp4", target, wmf, applemedia)
-def fmp4(value, target, wmf, applemedia):
-    enabled = bool(value)
-    if value.origin == "default":
-        # target.os == 'Android' includes all B2G versions
-        enabled = wmf or applemedia or target.os == "Android"
-    if enabled:
-        return True
-
-
-set_config("MOZ_FMP4", fmp4)
-set_define("MOZ_FMP4", fmp4)
-
 
 set_config("MOZ_SAMPLE_TYPE_FLOAT32", True)
 set_define("MOZ_SAMPLE_TYPE_FLOAT32", True)
@@ -863,12 +839,6 @@ option(
     when=eme_choices,
     help="{Enable|Disable} support for Encrypted Media Extensions",
 )
-
-
-@depends("--enable-eme", fmp4, when=eme_choices)
-def eme(enabled, fmp4):
-    if enabled and enabled.origin != "default" and not fmp4:
-        die("Encrypted Media Extension support requires " "Fragmented MP4 support")
 
 
 @depends("--enable-eme", when=eme_choices)

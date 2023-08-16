@@ -12,27 +12,20 @@
 #include "mozilla/HelperMacros.h"
 #include "mozilla/Logging.h"
 
-#if defined(MOZ_FMP4)
 extern mozilla::LogModule* GetDemuxerLog();
 
-#  define LOG_ERROR(name, arg, ...)                \
-    MOZ_LOG(                                       \
-        GetDemuxerLog(), mozilla::LogLevel::Error, \
-        (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#  define LOG_WARN(name, arg, ...)                   \
-    MOZ_LOG(                                         \
-        GetDemuxerLog(), mozilla::LogLevel::Warning, \
-        (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-#  define LOG_DEBUG(name, arg, ...)                \
-    MOZ_LOG(                                       \
-        GetDemuxerLog(), mozilla::LogLevel::Debug, \
-        (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
-
-#else
-#  define LOG_ERROR(...)
-#  define LOG_WARN(...)
-#  define LOG_DEBUG(...)
-#endif
+#define LOG_ERROR(name, arg, ...)                \
+  MOZ_LOG(                                       \
+      GetDemuxerLog(), mozilla::LogLevel::Error, \
+      (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define LOG_WARN(name, arg, ...)                   \
+  MOZ_LOG(                                         \
+      GetDemuxerLog(), mozilla::LogLevel::Warning, \
+      (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+#define LOG_DEBUG(name, arg, ...)                \
+  MOZ_LOG(                                       \
+      GetDemuxerLog(), mozilla::LogLevel::Debug, \
+      (MOZ_STRINGIFY(name) "(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 

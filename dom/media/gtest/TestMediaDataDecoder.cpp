@@ -9,6 +9,7 @@
 #include "DecoderTraits.h"
 #include "MediaContainerType.h"
 #include "MP4Demuxer.h"
+#include "MP4Decoder.h"
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"
 #include "mozilla/AbstractThread.h"
@@ -48,9 +49,8 @@ class BenchmarkRunner {
 
 TEST(MediaDataDecoder, H264)
 {
-  if (!DecoderTraits::IsMP4SupportedType(
-          MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)),
-          /* DecoderDoctorDiagnostics* */ nullptr)) {
+  if (!MP4Decoder::IsSupportedType(MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)),
+                                   /* DecoderDoctorDiagnostics* */ nullptr)) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MockMediaResource> resource = new MockMediaResource("gizmo.mp4");
@@ -67,9 +67,8 @@ TEST(MediaDataDecoder, H264)
     !defined(MOZ_FFVPX_AUDIOONLY)
 TEST(MediaDataDecoder, AV1)
 {
-  if (!DecoderTraits::IsMP4SupportedType(
-          MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)),
-          /* DecoderDoctorDiagnostics* */ nullptr)) {
+  if (!MP4Decoder::IsSupportedType(MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)),
+                                   /* DecoderDoctorDiagnostics* */ nullptr)) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MockMediaResource> resource = new MockMediaResource("av1.mp4");

@@ -4,14 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TrackBuffersManager.h"
 #include "ContainerParser.h"
+#include "MP4Demuxer.h"
 #include "MediaInfo.h"
 #include "MediaSourceDemuxer.h"
 #include "MediaSourceUtils.h"
 #include "SourceBuffer.h"
 #include "SourceBufferResource.h"
 #include "SourceBufferTask.h"
+#include "TrackBuffersManager.h"
 #include "WebMDemuxer.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
@@ -19,10 +20,6 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsMimeTypes.h"
-
-#ifdef MOZ_FMP4
-#  include "MP4Demuxer.h"
-#endif
 
 #include <limits>
 
@@ -1047,14 +1044,12 @@ void TrackBuffersManager::CreateDemuxerforMIMEType() {
     return;
   }
 
-#ifdef MOZ_FMP4
   if (mType.Type() == MEDIAMIMETYPE(VIDEO_MP4) ||
       mType.Type() == MEDIAMIMETYPE(AUDIO_MP4)) {
     mInputDemuxer = new MP4Demuxer(mCurrentInputBuffer);
     DDLINKCHILD("demuxer", mInputDemuxer.get());
     return;
   }
-#endif
   NS_WARNING("Not supported (yet)");
 }
 

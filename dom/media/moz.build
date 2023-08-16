@@ -44,6 +44,7 @@ DIRS += [
     "mediasource",
     "mediasession",
     "mp3",
+    "mp4",
     "ogg",
     "platforms",
     "systemservices",
@@ -59,9 +60,6 @@ DIRS += [
 
 if CONFIG["MOZ_ANDROID_HLS_SUPPORT"]:
     DIRS += ["hls"]
-
-if CONFIG["MOZ_FMP4"]:
-    DIRS += ["mp4"]
 
 if CONFIG["MOZ_WEBRTC"]:
     DIRS += ["bridge"]
