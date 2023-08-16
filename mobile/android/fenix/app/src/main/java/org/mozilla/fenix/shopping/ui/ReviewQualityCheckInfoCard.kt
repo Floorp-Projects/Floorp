@@ -137,6 +137,7 @@ enum class ReviewQualityCheckInfoType {
     Confirmation,
     Error,
     Info,
+    AnalysisUpdate,
     ;
 
     val cardBackgroundColor: Color
@@ -146,6 +147,7 @@ enum class ReviewQualityCheckInfoType {
             Confirmation -> FirefoxTheme.colors.layerConfirmation
             Error -> FirefoxTheme.colors.layerError
             Info -> FirefoxTheme.colors.layerInfo
+            AnalysisUpdate -> Color.Transparent
         }
 
     val buttonBackgroundColor: Color
@@ -155,12 +157,14 @@ enum class ReviewQualityCheckInfoType {
             Confirmation -> FirefoxTheme.colors.actionConfirmation
             Error -> FirefoxTheme.colors.actionError
             Info -> FirefoxTheme.colors.actionInfo
+            AnalysisUpdate -> FirefoxTheme.colors.actionSecondary
         }
 
     val buttonTextColor: Color
         @Composable
         get() = when {
             this == Info && !isSystemInDarkTheme() -> FirefoxTheme.colors.textOnColorPrimary
+            this == AnalysisUpdate -> FirefoxTheme.colors.textActionSecondary
             else -> FirefoxTheme.colors.textPrimary
         }
 }
@@ -177,6 +181,7 @@ private class PreviewModelParameterProvider : PreviewParameterProvider<PreviewMo
             PreviewModel(ReviewQualityCheckInfoType.Confirmation, R.drawable.mozac_ic_checkmark_24),
             PreviewModel(ReviewQualityCheckInfoType.Error, R.drawable.mozac_ic_information_fill_24),
             PreviewModel(ReviewQualityCheckInfoType.Info, R.drawable.mozac_ic_information_fill_24),
+            PreviewModel(ReviewQualityCheckInfoType.AnalysisUpdate, R.drawable.mozac_ic_information_fill_24),
         )
 }
 

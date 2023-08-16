@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -59,10 +60,12 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param modifier The modifier to be applied to the Composable.
  */
 @Composable
+@Suppress("LongParameterList")
 fun ProductAnalysis(
     productRecommendationsEnabled: Boolean,
     productAnalysis: AnalysisPresent,
     onOptOutClick: () -> Unit,
+    onReanalyzeClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onReviewGradeLearnMoreClick: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -71,6 +74,12 @@ fun ProductAnalysis(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        if (productAnalysis.needsAnalysis) {
+            ReanalyzeCard(
+                onReanalyzeClick = onReanalyzeClick,
+            )
+        }
+
         if (productAnalysis.reviewGrade != null) {
             ReviewGradeCard(
                 reviewGrade = productAnalysis.reviewGrade,
@@ -109,6 +118,27 @@ fun ProductAnalysis(
             onTurnOffReviewQualityCheckClick = onOptOutClick,
         )
     }
+}
+
+@Composable
+private fun ReanalyzeCard(
+    onReanalyzeClick: () -> Unit,
+) {
+    ReviewQualityCheckInfoCard(
+        title = stringResource(R.string.review_quality_check_outdated_analysis_warning_title),
+        type = ReviewQualityCheckInfoType.AnalysisUpdate,
+        modifier = Modifier.fillMaxWidth(),
+        buttonText = stringResource(R.string.review_quality_check_outdated_analysis_warning_action),
+        onButtonClick = onReanalyzeClick,
+        icon = {
+            Icon(
+                painter = painterResource(id = R.drawable.mozac_ic_information_fill_24),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = FirefoxTheme.colors.iconPrimary,
+            )
+        },
+    )
 }
 
 @Composable
@@ -504,6 +534,7 @@ private fun ProductAnalysisPreview() {
                     ),
                 ),
                 onOptOutClick = {},
+                onReanalyzeClick = {},
                 onProductRecommendationsEnabledStateChange = {
                     productRecommendationsEnabled.value = it
                 },
@@ -526,6 +557,23 @@ private fun ReviewQualityInfoPreview() {
             ReviewQualityInfo(
                 modifier = Modifier.fillMaxWidth(),
                 onLearnMoreClick = {},
+            )
+        }
+    }
+}
+
+@Composable
+@LightDarkPreview
+private fun ReanalyzeCardPreview() {
+    FirefoxTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = FirefoxTheme.colors.layer1)
+                .padding(all = 16.dp),
+        ) {
+            ReanalyzeCard(
+                onReanalyzeClick = {},
             )
         }
     }

@@ -55,6 +55,7 @@ fun ReviewQualityCheckBottomSheet(
                         onRequestDismiss()
                         store.dispatch(ReviewQualityCheckAction.OptOut)
                     },
+                    onReanalyzeClick = {},
                     onProductRecommendationsEnabledStateChange = {
                         store.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation)
                     },
@@ -83,6 +84,7 @@ fun ReviewQualityCheckBottomSheet(
 private fun ProductReview(
     state: ReviewQualityCheckState.OptedIn,
     onOptOutClick: () -> Unit,
+    onReanalyzeClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onReviewGradeLearnMoreClick: (String) -> Unit,
 ) {
@@ -96,6 +98,7 @@ private fun ProductReview(
                     productRecommendationsEnabled = state.productRecommendationsPreference,
                     productAnalysis = productReviewState,
                     onOptOutClick = onOptOutClick,
+                    onReanalyzeClick = onReanalyzeClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
                 )
