@@ -305,10 +305,28 @@ void OffscreenCanvas::CommitFrameToCompositor() {
   mDisplay->CommitFrameToCompositor(mCurrentContext, mTextureType, update);
 }
 
-OffscreenCanvasCloneData* OffscreenCanvas::ToCloneData() {
-  return new OffscreenCanvasCloneData(mDisplay, mWidth, mHeight,
-                                      mCompositorBackendType, mTextureType,
-                                      mNeutered, mIsWriteOnly, mExpandedReader);
+UniquePtr<OffscreenCanvasCloneData> OffscreenCanvas::ToCloneData(
+    JSContext* aCx) {
+  if (NS_WARN_IF(mNeutered)) {
+    ErrorResult rv;
+    rv.ThrowDataCloneError(
+        "Cannot clone placeholder canvas that is already transferred.");
+    MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(aCx));
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(mCurrentContext)) {
+    ErrorResult rv;
+    rv.ThrowInvalidStateError("Cannot clone canvas with context.");
+    MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(aCx));
+    return nullptr;
+  }
+
+  auto cloneData = MakeUnique<OffscreenCanvasCloneData>(
+      mDisplay, mWidth, mHeight, mCompositorBackendType, mTextureType,
+      mNeutered, mIsWriteOnly, mExpandedReader);
+  SetNeutered();
+  return cloneData;
 }
 
 already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
