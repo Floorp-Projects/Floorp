@@ -632,7 +632,7 @@ class FunctionBox : public SuspendableContext {
     MOZ_ASSERT(!isScriptExtraFieldCopiedToStencil);
     extent_.sourceStart = offset;
     extent_.lineno = line;
-    extent_.column = column.zeroOriginValue();
+    extent_.column = column;
   }
 
   void setEnd(uint32_t end) {
