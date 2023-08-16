@@ -1222,15 +1222,6 @@ class AsyncPanZoomController {
       std::size_t aSampleIndex = 0) const;
 
   /**
-   * Returns the same transform as GetCurrentAsyncTransform(), but includes
-   * any transform due to axis over-scroll.
-   */
-  AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(
-      AsyncTransformConsumer aMode,
-      AsyncTransformComponents aComponents = LayoutAndVisual,
-      std::size_t aSampleIndex = 0) const;
-
-  /**
    * A variant of GetCurrentAsyncTransform() intended for use when computing
    * the screen-to-apzc and apzc-to-gecko transforms. This includes the
    * overscroll transform, and additionally requires the caller to pass in
