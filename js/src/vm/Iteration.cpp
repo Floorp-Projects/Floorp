@@ -2003,7 +2003,7 @@ NativeObject* GlobalObject::getOrCreateArrayIteratorPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
   return MaybeNativeObject(getOrCreateBuiltinProto(
       cx, global, ProtoKind::ArrayIteratorProto,
-      cx->names().ArrayIterator.toHandle(),
+      cx->names().Array_Iterator_.toHandle(),
       initObjectIteratorProto<ProtoKind::ArrayIteratorProto,
                               &ArrayIteratorPrototypeClass,
                               array_iterator_methods>));
@@ -2014,7 +2014,7 @@ JSObject* GlobalObject::getOrCreateStringIteratorPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
   return getOrCreateBuiltinProto(
       cx, global, ProtoKind::StringIteratorProto,
-      cx->names().StringIterator.toHandle(),
+      cx->names().String_Iterator_.toHandle(),
       initObjectIteratorProto<ProtoKind::StringIteratorProto,
                               &StringIteratorPrototypeClass,
                               string_iterator_methods>);
@@ -2025,7 +2025,7 @@ JSObject* GlobalObject::getOrCreateRegExpStringIteratorPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
   return getOrCreateBuiltinProto(
       cx, global, ProtoKind::RegExpStringIteratorProto,
-      cx->names().RegExpStringIterator.toHandle(),
+      cx->names().RegExp_String_Iterator_.toHandle(),
       initObjectIteratorProto<ProtoKind::RegExpStringIteratorProto,
                               &RegExpStringIteratorPrototypeClass,
                               regexp_string_iterator_methods>);
