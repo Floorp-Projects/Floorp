@@ -305,8 +305,8 @@ class ANSSymbolReader {
 
   // Takes a *clustered* idx. Inlined, for use in hot paths.
   template <bool uses_lz77>
-  JXL_INLINE size_t ReadHybridUintClustered(size_t ctx,
-                                            BitReader* JXL_RESTRICT br) {
+  JXL_INLINE size_t ReadHybridUintClusteredInlined(size_t ctx,
+                                                   BitReader* JXL_RESTRICT br) {
     if (uses_lz77) {
       if (JXL_UNLIKELY(num_to_copy_ > 0)) {
         size_t ret = lz77_window_[(copy_pos_++) & kWindowMask];
@@ -361,6 +361,23 @@ class ANSSymbolReader {
     if (uses_lz77 && lz77_window_)
       lz77_window_[(num_decoded_++) & kWindowMask] = ret;
     return ret;
+  }
+
+  // same but not inlined
+  template <bool uses_lz77>
+  size_t ReadHybridUintClustered(size_t ctx, BitReader* JXL_RESTRICT br) {
+    return ReadHybridUintClusteredInlined<uses_lz77>(ctx, br);
+  }
+
+  // inlined only in the no-lz77 case
+  template <bool uses_lz77>
+  JXL_INLINE size_t
+  ReadHybridUintClusteredMaybeInlined(size_t ctx, BitReader* JXL_RESTRICT br) {
+    if (uses_lz77) {
+      return ReadHybridUintClustered<uses_lz77>(ctx, br);
+    } else {
+      return ReadHybridUintClusteredInlined<uses_lz77>(ctx, br);
+    }
   }
 
   // inlined, for use in hot paths

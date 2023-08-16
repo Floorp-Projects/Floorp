@@ -37,12 +37,7 @@ struct ACSConfig {
   size_t masking_field_stride;
   const float* JXL_RESTRICT src_rows[3];
   size_t src_stride;
-  // Cost for 1 (-1), 2 (-2) explicitly, cost for others computed with cost1 +
-  // cost2 + sqrt(q) * cost_delta.
-  float cost1;
-  float cost2;
   float cost_delta;
-  float base_entropy;
   float zeros_mul;
   const float& Pixel(size_t c, size_t x, size_t y) const {
     return src_rows[c][y * src_stride + x];

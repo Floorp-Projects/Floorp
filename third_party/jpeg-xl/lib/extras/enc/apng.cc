@@ -191,9 +191,9 @@ void MaybeAddCICP(const JxlColorEncoding& c_enc, png_structp png_ptr,
   cicp_data[3] = 1;
   cicp_chunk.data = cicp_data;
   cicp_chunk.size = sizeof(cicp_data);
-  cicp_chunk.location = PNG_HAVE_PLTE;
+  cicp_chunk.location = PNG_HAVE_IHDR;
   memcpy(cicp_chunk.name, "cICP", 5);
-  png_set_keep_unknown_chunks(png_ptr, 3,
+  png_set_keep_unknown_chunks(png_ptr, PNG_HANDLE_CHUNK_ALWAYS,
                               reinterpret_cast<const png_byte*>("cICP"), 1);
   png_set_unknown_chunks(png_ptr, info_ptr, &cicp_chunk, 1);
 }
@@ -241,6 +241,28 @@ void MaybeAddGAMA(const JxlColorEncoding& c_enc, png_structp png_ptr,
     default:;
       // No gAMA chunk.
   }
+}
+
+void MaybeAddCLLi(const JxlColorEncoding& c_enc, const float intensity_target,
+                  png_structp png_ptr, png_infop info_ptr) {
+  if (c_enc.transfer_function != JXL_TRANSFER_FUNCTION_PQ) return;
+
+  const uint32_t max_cll =
+      static_cast<uint32_t>(10000.f * Clamp1(intensity_target, 0.f, 10000.f));
+  png_byte chunk_data[8] = {};
+  chunk_data[0] = (max_cll >> 24) & 0xFF;
+  chunk_data[1] = (max_cll >> 16) & 0xFF;
+  chunk_data[2] = (max_cll >> 8) & 0xFF;
+  chunk_data[3] = max_cll & 0xFF;
+  // Leave MaxFALL set to 0.
+  png_unknown_chunk chunk;
+  memcpy(chunk.name, "cLLi", 5);
+  chunk.data = chunk_data;
+  chunk.size = sizeof chunk_data;
+  chunk.location = PNG_HAVE_IHDR;
+  png_set_keep_unknown_chunks(png_ptr, PNG_HANDLE_CHUNK_ALWAYS,
+                              reinterpret_cast<const png_byte*>("cLLi"), 1);
+  png_set_unknown_chunks(png_ptr, info_ptr, &chunk, 1);
 }
 
 Status APNGEncoder::EncodePackedPixelFileToAPNG(
@@ -332,6 +354,8 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
         MaybeAddCHRM(ppf.color_encoding, png_ptr, info_ptr);
         MaybeAddGAMA(ppf.color_encoding, png_ptr, info_ptr);
       }
+      MaybeAddCLLi(ppf.color_encoding, ppf.info.intensity_target, png_ptr,
+                   info_ptr);
 
       std::vector<std::string> textstrings;
       JXL_RETURN_IF_ERROR(BlobsWriterPNG::Encode(ppf.metadata, &textstrings));

@@ -641,6 +641,9 @@ Status Splines::InitializeDrawCache(const size_t image_xsize,
     JXL_WARNING(
         "Large total_estimated_area_reached, expect slower decoding: %" PRIu64,
         total_estimated_area_reached);
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+    return JXL_FAILURE("Total spline area is too large");
+#endif
   }
 
   for (Spline& spline : splines) {

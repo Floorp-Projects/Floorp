@@ -63,15 +63,14 @@ class Rec2408ToneMapper {
         Min(Set(df_, target_range_.second),
             ZeroIfNegative(
                 Mul(Set(df_, 10000), TF_PQ().DisplayFromEncoded(df_, e4))));
-
-    const V ratio = Div(new_luminance, luminance);
-    const V inv_target_peak = Set(df_, inv_target_peak_);
+    const V min_luminance = Set(df_, 1e-6f);
+    const auto use_cap = Le(luminance, min_luminance);
+    const V ratio = Div(new_luminance, Max(luminance, min_luminance));
+    const V cap = Mul(new_luminance, Set(df_, inv_target_peak_));
     const V normalizer = Set(df_, normalizer_);
     const V multiplier = Mul(ratio, normalizer);
     for (V* const val : {red, green, blue}) {
-      *val = IfThenElse(Le(luminance, Set(df_, 1e-6f)),
-                        Mul(new_luminance, inv_target_peak),
-                        Mul(*val, multiplier));
+      *val = IfThenElse(use_cap, cap, Mul(*val, multiplier));
     }
   }
 
@@ -197,30 +196,37 @@ void GamutMap(V* red, V* green, V* blue, const float primaries_luminances[3],
   // That will reduce its luminance.
   // - For luminance preservation, getting all components below 1 is
   // done by mixing in yet more gray. That will desaturate it further.
-  V gray_mix_saturation = Zero(df);
-  V gray_mix_luminance = Zero(df);
+  const V zero = Zero(df);
+  const V one = Set(df, 1);
+  V gray_mix_saturation = zero;
+  V gray_mix_luminance = zero;
   for (const V* ch : {red, green, blue}) {
     const V& val = *ch;
-    const V inv_val_minus_gray = Div(Set(df, 1), (Sub(val, luminance)));
+    const V val_minus_gray = Sub(val, luminance);
+    const V inv_val_minus_gray =
+        Div(one, IfThenElse(Eq(val_minus_gray, zero), one, val_minus_gray));
+    const V val_over_val_minus_gray = Mul(val, inv_val_minus_gray);
     gray_mix_saturation =
-        IfThenElse(Ge(val, luminance), gray_mix_saturation,
-                   Max(gray_mix_saturation, Mul(val, inv_val_minus_gray)));
+        IfThenElse(Ge(val_minus_gray, zero), gray_mix_saturation,
+                   Max(gray_mix_saturation, val_over_val_minus_gray));
     gray_mix_luminance =
         Max(gray_mix_luminance,
-            IfThenElse(Le(val, luminance), gray_mix_saturation,
-                       Mul(Sub(val, Set(df, 1)), inv_val_minus_gray)));
+            IfThenElse(Le(val_minus_gray, zero), gray_mix_saturation,
+                       Sub(val_over_val_minus_gray, inv_val_minus_gray)));
   }
   const V gray_mix = Clamp(
       MulAdd(Set(df, preserve_saturation),
              Sub(gray_mix_saturation, gray_mix_luminance), gray_mix_luminance),
-      Zero(df), Set(df, 1));
-  for (V* const val : {red, green, blue}) {
-    *val = MulAdd(gray_mix, Sub(luminance, *val), *val);
+      zero, one);
+  for (V* const ch : {red, green, blue}) {
+    V& val = *ch;
+    val = MulAdd(gray_mix, Sub(luminance, val), val);
   }
-  const V normalizer =
-      Div(Set(df, 1), Max(Set(df, 1), Max(*red, Max(*green, *blue))));
-  for (V* const val : {red, green, blue}) {
-    *val = Mul(*val, normalizer);
+  const V max_clr = Max(Max(one, *red), Max(*green, *blue));
+  const V normalizer = Div(one, max_clr);
+  for (V* const ch : {red, green, blue}) {
+    V& val = *ch;
+    val = Mul(val, normalizer);
   }
 }
 

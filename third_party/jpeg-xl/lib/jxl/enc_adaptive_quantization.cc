@@ -736,7 +736,7 @@ ImageF TileDistMap(const ImageF& distmap, int tile_size, int margin,
 
 static const float kDcQuantPow = 0.83;
 static const float kDcQuant = 1.095924047623553f;
-static const float kAcQuant = 0.7784;
+static const float kAcQuant = 0.7635;
 
 // Computes the decoded image for a given set of compression parameters.
 ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,

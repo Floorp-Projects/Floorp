@@ -125,12 +125,7 @@ bool DecodeImageJXL(const uint8_t* bytes, size_t bytes_size,
 
   JxlPixelFormat format;
   std::vector<JxlPixelFormat> accepted_formats = dparams.accepted_formats;
-  if (accepted_formats.empty()) {
-    for (const uint32_t num_channels : {1, 2, 3, 4}) {
-      accepted_formats.push_back(
-          {num_channels, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, /*align=*/0});
-    }
-  }
+
   JxlColorEncoding color_encoding;
   size_t num_color_channels = 0;
   if (!dparams.color_space.empty()) {
@@ -169,6 +164,10 @@ bool DecodeImageJXL(const uint8_t* bytes, size_t bytes_size,
   } else {
     events |= (JXL_DEC_COLOR_ENCODING | JXL_DEC_FRAME | JXL_DEC_PREVIEW_IMAGE |
                JXL_DEC_BOX);
+    if (accepted_formats.empty()) {
+      // decoding just the metadata, not the pixel data
+      events ^= (JXL_DEC_FULL_IMAGE | JXL_DEC_PREVIEW_IMAGE);
+    }
   }
   if (JXL_DEC_SUCCESS != JxlDecoderSubscribeEvents(dec, events)) {
     fprintf(stderr, "JxlDecoderSubscribeEvents failed\n");
@@ -206,7 +205,7 @@ bool DecodeImageJXL(const uint8_t* bytes, size_t bytes_size,
     return false;
   }
   uint32_t progression_index = 0;
-  bool codestream_done = false;
+  bool codestream_done = accepted_formats.empty();
   BoxProcessor boxes(dec);
   for (;;) {
     JxlDecoderStatus status = JxlDecoderProcessInput(dec);
@@ -285,6 +284,7 @@ bool DecodeImageJXL(const uint8_t* bytes, size_t bytes_size,
         fprintf(stderr, "JxlDecoderGetBasicInfo failed\n");
         return false;
       }
+      if (accepted_formats.empty()) continue;
       if (num_color_channels != 0) {
         // Mark the change in number of color channels due to the requested
         // color space.

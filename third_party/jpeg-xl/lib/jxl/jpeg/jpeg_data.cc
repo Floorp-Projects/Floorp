@@ -343,7 +343,7 @@ Status JPEGData::VisitFields(Visitor* visitor) {
   }
   uint32_t tail_data_len = tail_data.size();
   if (!visitor->IsReading() && tail_data_len > 4260096) {
-    return JXL_FAILURE("Tail data too large (max size = 4260096, size = %u).",
+    return JXL_FAILURE("Tail data too large (max size = 4260096, size = %u)",
                        tail_data_len);
   }
   JXL_RETURN_IF_ERROR(visitor->U32(Val(0), BitsOffset(8, 1),
@@ -366,6 +366,46 @@ Status JPEGData::VisitFields(Visitor* visitor) {
         bool bbit = bit;
         JXL_RETURN_IF_ERROR(visitor->Bool(false, &bbit));
         bit = bbit;
+      }
+    }
+  }
+
+  {
+    size_t dht_index = 0;
+    size_t scan_index = 0;
+    bool is_progressive = false;
+    bool ac_ok[kMaxHuffmanTables] = {false};
+    bool dc_ok[kMaxHuffmanTables] = {false};
+    for (uint8_t marker : marker_order) {
+      if (marker == 0xC2) {
+        is_progressive = true;
+      } else if (marker == 0xC4) {
+        for (; dht_index < huffman_code.size();) {
+          const JPEGHuffmanCode& huff = huffman_code[dht_index++];
+          size_t index = huff.slot_id;
+          if (index & 0x10) {
+            index -= 0x10;
+            ac_ok[index] = true;
+          } else {
+            dc_ok[index] = true;
+          }
+          if (huff.is_last) break;
+        }
+      } else if (marker == 0xDA) {
+        const JPEGScanInfo& si = scan_info[scan_index++];
+        for (size_t i = 0; i < si.num_components; ++i) {
+          const JPEGComponentScanInfo& csi = si.components[i];
+          size_t dc_tbl_idx = csi.dc_tbl_idx;
+          size_t ac_tbl_idx = csi.ac_tbl_idx;
+          bool want_dc = !is_progressive || (si.Ss == 0);
+          if (want_dc && !dc_ok[dc_tbl_idx]) {
+            return JXL_FAILURE("DC Huffman table used before defined");
+          }
+          bool want_ac = !is_progressive || (si.Ss != 0) || (si.Se != 0);
+          if (want_ac && !ac_ok[ac_tbl_idx]) {
+            return JXL_FAILURE("AC Huffman table used before defined");
+          }
+        }
       }
     }
   }

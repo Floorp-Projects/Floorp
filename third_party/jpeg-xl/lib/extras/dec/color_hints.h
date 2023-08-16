@@ -10,6 +10,8 @@
 // information into the file, and those that support it may not have it.
 // To allow attaching color information to those file formats the caller can
 // define these color hints.
+// Besides color space information, 'ColorHints' may also include other
+// additional information such as Exif, XMP and JUMBF metadata.
 
 #include <stddef.h>
 #include <stdint.h>

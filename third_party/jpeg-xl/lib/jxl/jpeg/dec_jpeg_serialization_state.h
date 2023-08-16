@@ -16,9 +16,12 @@ namespace jxl {
 namespace jpeg {
 
 struct HuffmanCodeTable {
-  int depth[256];
-  int code[256];
-  void InitDepths() { std::fill(std::begin(depth), std::end(depth), 0); }
+  int8_t depth[256];
+  uint16_t code[256];
+  bool initialized = false;
+  void InitDepths(int value = 0) {
+    std::fill(std::begin(depth), std::end(depth), value);
+  }
 };
 
 // Handles the packing of bits into output bytes.

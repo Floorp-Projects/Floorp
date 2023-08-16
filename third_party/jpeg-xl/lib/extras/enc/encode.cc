@@ -129,6 +129,27 @@ Status SelectFormat(const std::vector<JxlPixelFormat>& accepted_formats,
   return true;
 }
 
+template <int metadata>
+class MetadataEncoder : public Encoder {
+ public:
+  std::vector<JxlPixelFormat> AcceptedFormats() const override {
+    std::vector<JxlPixelFormat> formats;
+    // empty, i.e. no need for actual pixel data
+    return formats;
+  }
+
+  Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded,
+                ThreadPool* pool) const override {
+    JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
+    encoded->icc.clear();
+    encoded->bitstreams.resize(1);
+    if (metadata == 0) encoded->bitstreams.front() = ppf.metadata.exif;
+    if (metadata == 1) encoded->bitstreams.front() = ppf.metadata.xmp;
+    if (metadata == 2) encoded->bitstreams.front() = ppf.metadata.jumbf;
+    return true;
+  }
+};
+
 std::unique_ptr<Encoder> Encoder::FromExtension(std::string extension) {
   std::transform(
       extension.begin(), extension.end(), extension.begin(),
@@ -143,6 +164,12 @@ std::unique_ptr<Encoder> Encoder::FromExtension(std::string extension) {
   if (extension == ".ppm") return GetPPMEncoder();
   if (extension == ".pfm") return GetPFMEncoder();
   if (extension == ".exr") return GetEXREncoder();
+  if (extension == ".exif") return jxl::make_unique<MetadataEncoder<0>>();
+  if (extension == ".xmp") return jxl::make_unique<MetadataEncoder<1>>();
+  if (extension == ".xml") return jxl::make_unique<MetadataEncoder<1>>();
+  if (extension == ".jumbf") return jxl::make_unique<MetadataEncoder<2>>();
+  if (extension == ".jumb") return jxl::make_unique<MetadataEncoder<2>>();
+
   return nullptr;
 }
 

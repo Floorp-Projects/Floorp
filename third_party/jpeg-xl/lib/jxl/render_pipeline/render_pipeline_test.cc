@@ -232,7 +232,7 @@ TEST_P(RenderPipelineTestParam, PipelineTest) {
 #if JXL_HIGH_PRECISION
     constexpr float kMaxError = 1e-5;
 #else
-    constexpr float kMaxError = 1e-4;
+    constexpr float kMaxError = 5e-4;
 #endif
     Image3F def = std::move(*io_default.frames[i].color());
     Image3F pip = std::move(*io_slow_pipeline.frames[i].color());

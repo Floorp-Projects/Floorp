@@ -349,6 +349,30 @@ typedef enum {
    */
   JXL_ENC_FRAME_SETTING_BUFFERING = 34,
 
+  /** Keep or discard Exif metadata boxes derived from a JPEG frame when using
+   * JxlEncoderAddJPEGFrame. This has no effect on boxes added using
+   * JxlEncoderAddBox. When JxlEncoderStoreJPEGMetadata is set to 1, this option
+   * cannot be set to 0. Even when Exif metadata is discarded, the orientation
+   * will still be applied. 0 = discard Exif metadata, 1 = keep Exif metadata
+   * (default).
+   */
+  JXL_ENC_FRAME_SETTING_JPEG_KEEP_EXIF = 35,
+
+  /** Keep or discard XMP metadata boxes derived from a JPEG frame when using
+   * JxlEncoderAddJPEGFrame. This has no effect on boxes added using
+   * JxlEncoderAddBox. When JxlEncoderStoreJPEGMetadata is set to 1, this option
+   * cannot be set to 0. 0 = discard XMP metadata, 1 = keep XMP metadata
+   * (default).
+   */
+  JXL_ENC_FRAME_SETTING_JPEG_KEEP_XMP = 36,
+
+  /** Keep or discard JUMBF metadata boxes derived from a JPEG frame when using
+   * JxlEncoderAddJPEGFrame. This has no effect on boxes added using
+   * JxlEncoderAddBox. 0 = discard JUMBF metadata, 1 = keep JUMBF metadata
+   * (default).
+   */
+  JXL_ENC_FRAME_SETTING_JPEG_KEEP_JUMBF = 37,
+
   /** Enum value not to be used as an option. This value is added to force the
    * C compiler to have the enum to take a known size.
    */
@@ -931,6 +955,26 @@ JXL_EXPORT void JxlEncoderInitBlendInfo(JxlBlendInfo* blend_info);
  */
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetBasicInfo(JxlEncoder* enc,
                                                    const JxlBasicInfo* info);
+
+/**
+ * Sets the upsampling method the decoder will use in case there are frames
+ * with JXL_ENC_FRAME_SETTING_RESAMPLING set. This is useful in combination
+ * with the JXL_ENC_FRAME_SETTING_ALREADY_DOWNSAMPLED option, to control the
+ * type of upsampling that will be used.
+ *
+ * @param enc encoder object.
+ * @param factor upsampling factor to configure (1, 2, 4 or 8; for 1 this
+ * function has no effect at all)
+ * @param mode upsampling mode to use for this upsampling:
+ * -1: default (good for photographic images, no signaling overhead)
+ * 0: nearest neighbor (good for pixel art)
+ * 1: 'pixel dots' (same as NN for 2x, diamond-shaped 'pixel dots' for 4x/8x)
+ * @return JXL_ENC_SUCCESS if the operation was successful,
+ * JXL_ENC_ERROR or JXL_ENC_NOT_SUPPORTED otherwise
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetUpsamplingMode(JxlEncoder* enc,
+                                                        const int64_t factor,
+                                                        const int64_t mode);
 
 /**
  * Initializes a JxlExtraChannelInfo struct to default values.
