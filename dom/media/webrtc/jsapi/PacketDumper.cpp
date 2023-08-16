@@ -22,9 +22,7 @@ RefPtr<PacketDumper> PacketDumper::GetPacketDumper(
 }
 
 PacketDumper::PacketDumper(const std::string& aPcHandle)
-    : mPcHandle(aPcHandle),
-      mPacketDumpEnabled(false),
-      mPacketDumpFlagsMutex("Packet dump flags mutex") {}
+    : mPcHandle(aPcHandle), mPacketDumpFlagsMutex("Packet dump flags mutex") {}
 
 void PacketDumper::Dump(size_t aLevel, dom::mozPacketDumpType aType,
                         bool aSending, const void* aData, size_t aSize) {
@@ -41,13 +39,36 @@ void PacketDumper::Dump(size_t aLevel, dom::mozPacketDumpType aType,
       [this, self = RefPtr<PacketDumper>(this), aLevel, aType, aSending,
        aSize](UniquePtr<uint8_t[]>& aPacket) -> nsresult {
         // Check again; packet dump might have been disabled since the dispatch
-        if (ShouldDumpPacket(aLevel, aType, aSending)) {
-          PeerConnectionWrapper pcw(mPcHandle);
-          RefPtr<PeerConnectionImpl> pc = pcw.impl();
-          if (pc) {
-            pc->DumpPacket_m(aLevel, aType, aSending, aPacket, aSize);
-          }
+        if (!ShouldDumpPacket(aLevel, aType, aSending)) {
+          return NS_OK;
         }
+
+        PeerConnectionWrapper pcw(mPcHandle);
+        RefPtr<PeerConnectionImpl> pc = pcw.impl();
+        if (!pc) {
+          return NS_OK;
+        }
+
+        if (!aSending && (aType == dom::mozPacketDumpType::Rtcp ||
+                          aType == dom::mozPacketDumpType::Srtcp)) {
+          AutoTArray<size_t, 4> dumpLevels;
+          {
+            MutexAutoLock lock(mPacketDumpFlagsMutex);
+            unsigned flag = 1 << (unsigned)aType;
+            for (size_t i = 0; i < mRecvPacketDumpFlags.size(); ++i) {
+              if (mRecvPacketDumpFlags[i] & flag) {
+                dumpLevels.AppendElement(i);
+              }
+            }
+          }
+          for (size_t level : dumpLevels) {
+            pc->DumpPacket_m(level, aType, aSending, aPacket, aSize);
+          }
+          return NS_OK;
+        }
+
+        pc->DumpPacket_m(aLevel, aType, aSending, aPacket, aSize);
+
         return NS_OK;
       },
       std::move(ownedPacket)));
@@ -73,6 +94,11 @@ nsresult PacketDumper::EnablePacketDump(unsigned long aLevel,
     packetDumpFlags->resize(aLevel + 1);
   }
 
+  mPacketDumpRtcpRecvCount += !aSending &&
+                              (aType == dom::mozPacketDumpType::Rtcp ||
+                               aType == dom::mozPacketDumpType::Srtcp) &&
+                              !((*packetDumpFlags)[aLevel] & flag);
+
   (*packetDumpFlags)[aLevel] |= flag;
   return NS_OK;
 }
@@ -91,6 +117,10 @@ nsresult PacketDumper::DisablePacketDump(unsigned long aLevel,
 
   MutexAutoLock lock(mPacketDumpFlagsMutex);
   if (aLevel < packetDumpFlags->size()) {
+    mPacketDumpRtcpRecvCount -= !aSending &&
+                                (aType == dom::mozPacketDumpType::Rtcp ||
+                                 aType == dom::mozPacketDumpType::Srtcp) &&
+                                ((*packetDumpFlags)[aLevel] & flag);
     (*packetDumpFlags)[aLevel] &= ~flag;
   }
 
@@ -101,6 +131,12 @@ bool PacketDumper::ShouldDumpPacket(size_t aLevel, dom::mozPacketDumpType aType,
                                     bool aSending) const {
   if (!mPacketDumpEnabled) {
     return false;
+  }
+
+  if (!aSending && (aType == dom::mozPacketDumpType::Rtcp ||
+                    aType == dom::mozPacketDumpType::Srtcp)) {
+    // Received (S)RTCP is dumped per-transport, not per-pipeline.
+    return mPacketDumpRtcpRecvCount > 0;
   }
 
   MutexAutoLock lock(mPacketDumpFlagsMutex);

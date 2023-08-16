@@ -163,7 +163,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   int32_t RtcpPacketsSent() const { return mRtcpPacketsSent; }
   int32_t RtpPacketsReceived() const { return mRtpPacketsReceived; }
   int64_t RtpBytesReceived() const { return mRtpBytesReceived; }
-  int32_t RtcpPacketsReceived() const { return mRtcpPacketsReceived; }
 
   const dom::RTCStatsTimestampMaker& GetTimestampMaker() const;
 
@@ -179,7 +178,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   void IncrementRtpPacketsSent(const MediaPacket& aPacket);
   void IncrementRtcpPacketsSent();
   void IncrementRtpPacketsReceived(int aBytes);
-  void IncrementRtcpPacketsReceived();
 
   virtual void SendPacket(MediaPacket&& packet);
 
@@ -190,9 +188,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   void PacketReceived(const std::string& aTransportId,
                       const MediaPacket& packet);
   void AlpnNegotiated(const std::string& aAlpn, bool aPrivacyRequested);
-
-  void RtpPacketReceived(const MediaPacket& packet);
-  void RtcpPacketReceived(const MediaPacket& packet);
 
   void EncryptedPacketSending(const std::string& aTransportId,
                               const MediaPacket& aPacket);
@@ -224,7 +219,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   int32_t mRtpPacketsSent;
   int32_t mRtcpPacketsSent;
   int32_t mRtpPacketsReceived;
-  int32_t mRtcpPacketsReceived;
   int64_t mRtpBytesSent;
   int64_t mRtpBytesReceived;
 
@@ -246,8 +240,6 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   MediaEventProducerExc<webrtc::RtpPacketReceived, webrtc::RTPHeader>
       mRtpReceiveEvent;
-  MediaEventProducerExc<MediaPacket> mSenderRtcpReceiveEvent;
-  MediaEventProducerExc<MediaPacket> mReceiverRtcpReceiveEvent;
 
   MediaEventListener mRtpSendEventListener;
   MediaEventListener mSenderRtcpSendEventListener;

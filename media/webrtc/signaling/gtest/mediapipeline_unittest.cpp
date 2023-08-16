@@ -224,7 +224,7 @@ class LoopbackTransport : public MediaTransportHandler {
 
   void SendPacket(const std::string& aTransportId,
                   MediaPacket&& aPacket) override {
-    peer_->SignalPacketReceived(aTransportId, aPacket);
+    peer_->LoopbackPacketReceived(aTransportId, aPacket);
   }
 
   void SetState(const std::string& aTransportId, TransportLayer::State aState) {
@@ -236,8 +236,19 @@ class LoopbackTransport : public MediaTransportHandler {
     MediaTransportHandler::OnRtcpStateChange(aTransportId, aState);
   }
 
+  void LoopbackPacketReceived(const std::string& aTransportId,
+                              const MediaPacket& aPacket) {
+    if (aPacket.len() && aPacket.type() == MediaPacket::RTCP) {
+      ++rtcp_packets_received_;
+    }
+    SignalPacketReceived(aTransportId, aPacket);
+  }
+
+  int RtcpPacketsReceived() const { return rtcp_packets_received_; }
+
  private:
-  RefPtr<MediaTransportHandler> peer_;
+  RefPtr<LoopbackTransport> peer_;
+  std::atomic<int> rtcp_packets_received_{0};
 };
 
 class TestAgent {
@@ -326,9 +337,7 @@ class TestAgent {
 
   int GetAudioRtcpCountSent() { return audio_pipeline_->RtcpPacketsSent(); }
 
-  int GetAudioRtcpCountReceived() {
-    return audio_pipeline_->RtcpPacketsReceived();
-  }
+  int GetAudioRtcpCountReceived() { return transport_->RtcpPacketsReceived(); }
 
  protected:
   ConcreteControl control_;

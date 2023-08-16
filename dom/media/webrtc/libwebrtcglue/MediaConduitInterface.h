@@ -134,17 +134,10 @@ class MediaSessionConduit {
   virtual MediaEventSourceExc<MediaPacket>& SenderRtcpSendEvent() = 0;
   virtual MediaEventSourceExc<MediaPacket>& ReceiverRtcpSendEvent() = 0;
 
-  // Receiving packets...
-  // from an rtp-receiving pipeline
+  // Receiving RTP packets
   virtual void ConnectReceiverRtpEvent(
       MediaEventSourceExc<webrtc::RtpPacketReceived, webrtc::RTPHeader>&
           aEvent) = 0;
-  // from an rtp-receiving pipeline
-  virtual void ConnectReceiverRtcpEvent(
-      MediaEventSourceExc<MediaPacket>& aEvent) = 0;
-  // from an rtp-transmitting pipeline
-  virtual void ConnectSenderRtcpEvent(
-      MediaEventSourceExc<MediaPacket>& aEvent) = 0;
 
   // Sts thread only.
   virtual Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const = 0;

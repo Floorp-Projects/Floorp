@@ -47,11 +47,13 @@
 #include "jsep/JsepSessionImpl.h"
 
 #include "transportbridge/MediaPipeline.h"
+#include "transportbridge/RtpLogger.h"
 #include "jsapi/RTCRtpReceiver.h"
 #include "jsapi/RTCRtpSender.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs_media.h"
 
 #ifdef XP_WIN
 // We need to undef the MS macro for Document::CreateEvent
@@ -1997,6 +1999,14 @@ PeerConnectionImpl::SetPeerIdentity(const nsAString& aPeerIdentity) {
   return NS_OK;
 }
 
+void PeerConnectionImpl::OnRtcpPacketReceived(MediaPacket aPacket) {
+  MOZ_ASSERT(mCall->mCallThread->IsOnCurrentThread());
+  MOZ_ASSERT(mCall->Call());
+
+  mCall->Call()->Receiver()->DeliverRtcpPacket(
+      rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()));
+}
+
 nsresult PeerConnectionImpl::OnAlpnNegotiated(bool aPrivacyRequested) {
   PC_AUTO_ENTER_API_CALL(false);
   MOZ_DIAGNOSTIC_ASSERT(!mRequestedPrivacy ||
@@ -2574,6 +2584,7 @@ PeerConnectionImpl::Close() {
              "%s: Closing PeerConnectionImpl %s; "
              "ending call",
              __FUNCTION__, mHandle.c_str());
+  mRtcpReceiveListener.DisconnectIfExists();
   if (mJsepSession) {
     mJsepSession->Close();
   }
@@ -4223,7 +4234,8 @@ PeerConnectionImpl::SignalHandler::SignalHandler(PeerConnectionImpl* aPc,
                                                  MediaTransportHandler* aSource)
     : mHandle(aPc->GetHandle()),
       mSource(aSource),
-      mSTSThread(aPc->GetSTSThread()) {
+      mSTSThread(aPc->GetSTSThread()),
+      mPacketDumper(aPc->GetPacketDumper()) {
   ConnectSignals();
 }
 
@@ -4244,6 +4256,8 @@ void PeerConnectionImpl::SignalHandler::ConnectSignals() {
       this, &PeerConnectionImpl::SignalHandler::ConnectionStateChange_s);
   mSource->SignalRtcpStateChange.connect(
       this, &PeerConnectionImpl::SignalHandler::ConnectionStateChange_s);
+  mSource->SignalPacketReceived.connect(
+      this, &PeerConnectionImpl::SignalHandler::OnPacketReceived_s);
 }
 
 void PeerConnectionImpl::AddIceCandidate(const std::string& aCandidate,
@@ -4436,6 +4450,8 @@ already_AddRefed<dom::RTCRtpTransceiver> PeerConnectionImpl::CreateTransceiver(
             u"WebrtcCallWrapper shutdown blocker"_ns,
             NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
         ctx->GetSharedWebrtcState());
+    mRtcpReceiveListener = mSignalHandler->RtcpReceiveEvent().Connect(
+        mCall->mCallThread, this, &PeerConnectionImpl::OnRtcpPacketReceived);
   }
 
   if (aAddTrackMagic) {
@@ -4557,6 +4573,39 @@ void PeerConnectionImpl::SignalHandler::ConnectionStateChange_s(
                                }
                              }),
       NS_DISPATCH_NORMAL);
+}
+
+void PeerConnectionImpl::SignalHandler::OnPacketReceived_s(
+    const std::string& aTransportId, const MediaPacket& aPacket) {
+  ASSERT_ON_THREAD(mSTSThread);
+
+  if (!aPacket.len()) {
+    return;
+  }
+
+  if (aPacket.type() != MediaPacket::RTCP) {
+    return;
+  }
+
+  CSFLogVerbose(LOGTAG, "%s received RTCP packet.", mHandle.c_str());
+
+  RtpLogger::LogPacket(aPacket, true, mHandle);
+
+  // Might be nice to pass ownership of the buffer in this case, but it is a
+  // small optimization in a rare case.
+  mPacketDumper->Dump(SIZE_MAX, dom::mozPacketDumpType::Srtcp, false,
+                      aPacket.encrypted_data(), aPacket.encrypted_len());
+
+  mPacketDumper->Dump(SIZE_MAX, dom::mozPacketDumpType::Rtcp, false,
+                      aPacket.data(), aPacket.len());
+
+  if (StaticPrefs::media_webrtc_net_force_disable_rtcp_reception()) {
+    CSFLogVerbose(LOGTAG, "%s RTCP packet forced to be dropped",
+                  mHandle.c_str());
+    return;
+  }
+
+  mRtcpReceiveEvent.Notify(aPacket.Clone());
 }
 
 /**
