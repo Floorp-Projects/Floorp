@@ -48,6 +48,7 @@
 #include "RTCStatsReport.h"
 
 #include "mozilla/net/StunAddrsRequestChild.h"
+#include "MediaEventSource.h"
 #include "MediaTransportHandler.h"
 #include "nsIHttpChannelInternal.h"
 #include "RTCDtlsTransport.h"
@@ -490,6 +491,8 @@ class PeerConnectionImpl final
 
   bool IsClosed() const;
 
+  void OnRtcpPacketReceived(MediaPacket aPacket);
+
   // called when DTLS connects; we only need this once
   nsresult OnAlpnNegotiated(bool aPrivacyRequested);
 
@@ -930,14 +933,23 @@ class PeerConnectionImpl final
     void AlpnNegotiated_s(const std::string& aAlpn, bool aPrivacyRequested);
     void ConnectionStateChange_s(const std::string& aTransportId,
                                  TransportLayer::State aState);
+    void OnPacketReceived_s(const std::string& aTransportId,
+                            const MediaPacket& aPacket);
+
+    MediaEventSourceExc<MediaPacket>& RtcpReceiveEvent() {
+      return mRtcpReceiveEvent;
+    }
 
    private:
     const std::string mHandle;
     RefPtr<MediaTransportHandler> mSource;
     RefPtr<nsISerialEventTarget> mSTSThread;
+    RefPtr<PacketDumper> mPacketDumper;
+    MediaEventProducerExc<MediaPacket> mRtcpReceiveEvent;
   };
 
   mozilla::UniquePtr<SignalHandler> mSignalHandler;
+  MediaEventListener mRtcpReceiveListener;
 
   // Make absolutely sure our refcount does not go to 0 before Close() is called
   // This is because Close does a stats query, which needs the

@@ -41,9 +41,12 @@ class PacketDumper {
 
   // This class is not cycle-collected, so it cannot hold onto a strong ref
   const std::string mPcHandle;
-  std::vector<unsigned> mSendPacketDumpFlags;
-  std::vector<unsigned> mRecvPacketDumpFlags;
-  Atomic<bool> mPacketDumpEnabled;
+  std::vector<unsigned> mSendPacketDumpFlags
+      MOZ_GUARDED_BY(mPacketDumpFlagsMutex);
+  std::vector<unsigned> mRecvPacketDumpFlags
+      MOZ_GUARDED_BY(mPacketDumpFlagsMutex);
+  Atomic<bool> mPacketDumpEnabled{false};
+  Atomic<int> mPacketDumpRtcpRecvCount{0};
   mutable Mutex mPacketDumpFlagsMutex;
 };
 

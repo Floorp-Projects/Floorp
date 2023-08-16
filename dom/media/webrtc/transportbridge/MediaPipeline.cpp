@@ -259,7 +259,6 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
       mRtpPacketsSent(0),
       mRtcpPacketsSent(0),
       mRtpPacketsReceived(0),
-      mRtcpPacketsReceived(0),
       mRtpBytesSent(0),
       mRtpBytesReceived(0),
       mPc(aPc),
@@ -426,13 +425,11 @@ void MediaPipeline::CheckTransportStates() {
 
   if (mRtpState == TransportLayer::TS_OPEN && mRtcpState == mRtpState) {
     if (mDirection == DirectionType::TRANSMIT) {
-      mConduit->ConnectSenderRtcpEvent(mSenderRtcpReceiveEvent);
       mRtpSendEventListener = mConduit->SenderRtpSendEvent().Connect(
           mStsThread, this, &MediaPipeline::SendPacket);
       mSenderRtcpSendEventListener = mConduit->SenderRtcpSendEvent().Connect(
           mStsThread, this, &MediaPipeline::SendPacket);
     } else {
-      mConduit->ConnectReceiverRtcpEvent(mReceiverRtcpReceiveEvent);
       mConduit->ConnectReceiverRtpEvent(mRtpReceiveEvent);
       mReceiverRtcpSendEventListener =
           mConduit->ReceiverRtcpSendEvent().Connect(mStsThread, this,
@@ -513,18 +510,20 @@ void MediaPipeline::IncrementRtpPacketsReceived(int32_t aBytes) {
   }
 }
 
-void MediaPipeline::IncrementRtcpPacketsReceived() {
+void MediaPipeline::PacketReceived(const std::string& aTransportId,
+                                   const MediaPacket& packet) {
   ASSERT_ON_THREAD(mStsThread);
-  ++mRtcpPacketsReceived;
-  if (!(mRtcpPacketsReceived % 100)) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-            ("RTCP received packet count for %s Pipeline %p: %u",
-             mDescription.c_str(), this, mRtcpPacketsReceived));
-  }
-}
 
-void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
-  ASSERT_ON_THREAD(mStsThread);
+  if (mTransportId != aTransportId) {
+    return;
+  }
+
+  MOZ_ASSERT(mRtpState == TransportLayer::TS_OPEN);
+  MOZ_ASSERT(mRtcpState == mRtpState);
+
+  if (packet.type() != MediaPacket::RTP) {
+    return;
+  }
 
   if (mDirection == DirectionType::TRANSMIT) {
     return;
@@ -593,68 +592,6 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
                       packet.len());
 
   mRtpReceiveEvent.Notify(std::move(parsedPacket), header);
-}
-
-void MediaPipeline::RtcpPacketReceived(const MediaPacket& packet) {
-  ASSERT_ON_THREAD(mStsThread);
-
-  if (!packet.len()) {
-    return;
-  }
-
-  // We do not filter RTCP. This is because a compound RTCP packet can contain
-  // any collection of RTCP packets, and webrtc.org already knows how to filter
-  // out what it is interested in, and what it is not. Maybe someday we should
-  // have a TransportLayer that breaks up compound RTCP so we can filter them
-  // individually, but I doubt that will matter much.
-
-  MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-          ("%s received RTCP packet.", mDescription.c_str()));
-  IncrementRtcpPacketsReceived();
-
-  RtpLogger::LogPacket(packet, true, mDescription);
-
-  // Might be nice to pass ownership of the buffer in this case, but it is a
-  // small optimization in a rare case.
-  mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Srtcp, false,
-                      packet.encrypted_data(), packet.encrypted_len());
-
-  mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Rtcp, false,
-                      packet.data(), packet.len());
-
-  if (StaticPrefs::media_webrtc_net_force_disable_rtcp_reception()) {
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-            ("%s RTCP packet forced to be dropped", mDescription.c_str()));
-    return;
-  }
-
-  if (mDirection == DirectionType::TRANSMIT) {
-    mSenderRtcpReceiveEvent.Notify(packet.Clone());
-  } else {
-    mReceiverRtcpReceiveEvent.Notify(packet.Clone());
-  }
-}
-
-void MediaPipeline::PacketReceived(const std::string& aTransportId,
-                                   const MediaPacket& packet) {
-  ASSERT_ON_THREAD(mStsThread);
-
-  if (mTransportId != aTransportId) {
-    return;
-  }
-
-  MOZ_ASSERT(mRtpState == TransportLayer::TS_OPEN);
-  MOZ_ASSERT(mRtcpState == mRtpState);
-
-  switch (packet.type()) {
-    case MediaPacket::RTP:
-      RtpPacketReceived(packet);
-      break;
-    case MediaPacket::RTCP:
-      RtcpPacketReceived(packet);
-      break;
-    default:;
-  }
 }
 
 void MediaPipeline::AlpnNegotiated(const std::string& aAlpn,
