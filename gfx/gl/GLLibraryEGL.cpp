@@ -447,17 +447,7 @@ bool GLLibraryEGL::Init(nsACString* const out_failureId) {
 
     do {
       // Windows 8.1+ has d3dcompiler_47.dll in the system directory.
-      // Try it first. Note that _46 will never be in the system
-      // directory. So there is no point trying _46 in the system
-      // directory.
-
       if (LoadLibrarySystem32(L"d3dcompiler_47.dll")) break;
-
-#  ifdef MOZ_D3DCOMPILER_VISTA_DLL
-      if (LoadLibraryForEGLOnWindows(NS_LITERAL_STRING_FROM_CSTRING(
-              MOZ_STRINGIFY(MOZ_D3DCOMPILER_VISTA_DLL))))
-        break;
-#  endif
 
       MOZ_ASSERT(false, "d3dcompiler DLL loading failed.");
     } while (false);
