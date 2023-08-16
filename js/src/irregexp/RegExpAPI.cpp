@@ -29,6 +29,7 @@
 #include "irregexp/RegExpNativeMacroAssembler.h"
 #include "irregexp/RegExpShim.h"
 #include "jit/JitCommon.h"
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin, JS::ColumnNumberOffset
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/friend/StackLimits.h"    // js::ReportOverRecursed
 #include "util/StringBuffer.h"
@@ -174,12 +175,16 @@ size_t IsolateSizeOfIncludingThis(Isolate* isolate,
   return isolate->sizeOfIncludingThis(mallocSizeOf);
 }
 
-static size_t ComputeColumn(const Latin1Char* begin, const Latin1Char* end) {
-  return PointerRangeSize(begin, end);
+static JS::ColumnNumberZeroOrigin ComputeColumn(const Latin1Char* begin,
+                                                const Latin1Char* end) {
+  return JS::ColumnNumberZeroOrigin(
+      AssertedCast<uint32_t>(PointerRangeSize(begin, end)));
 }
 
-static size_t ComputeColumn(const char16_t* begin, const char16_t* end) {
-  return unicode::CountUTF16CodeUnits(begin, end);
+static JS::ColumnNumberZeroOrigin ComputeColumn(const char16_t* begin,
+                                                const char16_t* end) {
+  return JS::ColumnNumberZeroOrigin(
+      AssertedCast<uint32_t>(unicode::CountUTF16CodeUnits(begin, end)));
 }
 
 // This function is varargs purely so it can call ReportCompileErrorLatin1.
@@ -187,7 +192,7 @@ static size_t ComputeColumn(const char16_t* begin, const char16_t* end) {
 template <typename CharT>
 static void ReportSyntaxError(TokenStreamAnyChars& ts,
                               mozilla::Maybe<uint32_t> line,
-                              mozilla::Maybe<uint32_t> column,
+                              mozilla::Maybe<JS::ColumnNumberZeroOrigin> column,
                               RegExpCompileData& result, CharT* start,
                               size_t length, ...) {
   MOZ_ASSERT(line.isSome() == column.isSome());
@@ -213,8 +218,8 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
   // a line of context based on the expression source.
   uint32_t location = ts.currentToken().pos.begin;
   if (ts.fillExceptingContext(&err, location)) {
-    uint32_t columnNumber =
-        AssertedCast<uint32_t>(ComputeColumn(start, start + offset));
+    JS::ColumnNumberZeroOrigin columnNumber =
+        ComputeColumn(start, start + offset);
     if (line.isSome()) {
       // If this pattern is being checked by the frontend Parser instead
       // of other API entry points like |new RegExp|, then the parser will
@@ -223,14 +228,15 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
       // We adjust the columnNumber to point to the actual syntax error
       // inside the literal.
       err.lineNumber = *line;
-      err.columnNumber = *column + columnNumber;
+      auto offset = JS::ColumnNumberOffset(columnNumber.zeroOriginValue());
+      err.columnNumber = (*column + offset).zeroOriginValue();
     } else {
       // Line breaks are not significant in pattern text in the same way as
       // in source text, so act as though pattern text is a single line, then
       // compute a column based on "code point" count (treating a lone
       // surrogate as a "code point" in UTF-16).  Gak.
       err.lineNumber = 1;
-      err.columnNumber = columnNumber;
+      err.columnNumber = columnNumber.zeroOriginValue();
     }
   }
 
@@ -312,7 +318,7 @@ bool CheckPatternSyntax(js::LifoAlloc& alloc, JS::NativeStackLimit stackLimit,
                         TokenStreamAnyChars& ts,
                         const mozilla::Range<const char16_t> chars,
                         JS::RegExpFlags flags, mozilla::Maybe<uint32_t> line,
-                        mozilla::Maybe<uint32_t> column) {
+                        mozilla::Maybe<JS::ColumnNumberZeroOrigin> column) {
   RegExpCompileData result;
   JS::AutoAssertNoGC nogc;
   if (!CheckPatternSyntaxImpl(alloc, stackLimit, chars.begin().get(),
