@@ -180,7 +180,7 @@ class EventListenerManager final : public EventListenerManagerBase {
   class ListenerSignalFollower : public dom::AbortFollower {
    public:
     explicit ListenerSignalFollower(EventListenerManager* aListenerManager,
-                                    Listener* aListener);
+                                    Listener* aListener, nsAtom* aTypeAtom);
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(ListenerSignalFollower)
@@ -207,7 +207,6 @@ class EventListenerManager final : public EventListenerManagerBase {
   struct Listener {
     RefPtr<ListenerSignalFollower> mSignalFollower;
     EventListenerHolder mListener;
-    RefPtr<nsAtom> mTypeAtom;
     EventMessage mEventMessage;
 
     enum ListenerType : uint8_t {
@@ -246,7 +245,6 @@ class EventListenerManager final : public EventListenerManagerBase {
     Listener(Listener&& aOther)
         : mSignalFollower(std::move(aOther.mSignalFollower)),
           mListener(std::move(aOther.mListener)),
-          mTypeAtom(std::move(aOther.mTypeAtom)),
           mEventMessage(aOther.mEventMessage),
           mListenerType(aOther.mListenerType),
           mListenerIsHandler(aOther.mListenerIsHandler),
@@ -582,7 +580,6 @@ class EventListenerManager final : public EventListenerManagerBase {
   bool HasNonPassiveNonSystemGroupListenersForUntrustedKeyEvents();
 
   bool HasApzAwareListeners();
-  bool IsApzAwareListener(Listener* aListener);
   bool IsApzAwareEvent(nsAtom* aEvent);
 
   bool HasNonPassiveWheelListener();
@@ -618,8 +615,8 @@ class EventListenerManager final : public EventListenerManagerBase {
    * or false if iteration should be stopped.
    */
   MOZ_CAN_RUN_SCRIPT
-  bool HandleEventSingleListener(Listener* aListener, WidgetEvent* aEvent,
-                                 dom::Event* aDOMEvent,
+  bool HandleEventSingleListener(Listener* aListener, nsAtom* aTypeAtom,
+                                 WidgetEvent* aEvent, dom::Event* aDOMEvent,
                                  dom::EventTarget* aCurrentTarget,
                                  bool aItemInShadowTree);
 
@@ -649,7 +646,7 @@ class EventListenerManager final : public EventListenerManagerBase {
    * will look for it on mTarget.  If aBody is provided, aElement should be
    * as well; otherwise it will also be inferred from mTarget.
    */
-  nsresult CompileEventHandlerInternal(Listener* aListener,
+  nsresult CompileEventHandlerInternal(Listener* aListener, nsAtom* aTypeAtom,
                                        const nsAString* aBody,
                                        dom::Element* aElement);
 
