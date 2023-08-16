@@ -52,6 +52,11 @@ describe("GripArray - basic", () => {
     expect(component.prop("title")).toBe("Array");
     expectActorAttribute(component, object.actor);
 
+    component = renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true });
+    expect(component.text()).toBe("Array");
+    expect(component.prop("title")).toBe("Array");
+    expectActorAttribute(component, object.actor);
+
     component = renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true });
     expect(component.text()).toBe(defaultOutput);
     expect(component.prop("title")).toBe("Array");
@@ -76,7 +81,7 @@ describe("GripArray - max props", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
-
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
 
@@ -110,7 +115,7 @@ describe("GripArray - more than short mode max props", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
-
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     length = getGripLengthBubbleText(object, { mode: MODE.LONG });
@@ -146,6 +151,12 @@ describe("GripArray - more than long mode max props", () => {
       renderRep({ mode: MODE.TINY, shouldRenderTooltip: true }).prop("title")
     ).toBe("Array");
     expect(
+      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).text()
+    ).toBe(`Array${length}`);
+    expect(
+      renderRep({ mode: MODE.HEADER, shouldRenderTooltip: true }).prop("title")
+    ).toBe("Array");
+    expect(
       renderRep({ mode: MODE.SHORT, shouldRenderTooltip: true }).text()
     ).toBe(defaultOutput);
     expect(
@@ -176,7 +187,7 @@ describe("GripArray - recursive array", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
-
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
   });
@@ -194,6 +205,7 @@ describe("GripArray - preview limit", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(shortOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(shortOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
   });
@@ -210,7 +222,7 @@ describe("GripArray - empty slots", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
-
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     length = getGripLengthBubbleText(object, { mode: MODE.LONG });
@@ -229,7 +241,7 @@ describe("GripArray - empty slots", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
-
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     length = getGripLengthBubbleText(object, { mode: MODE.LONG });
@@ -247,6 +259,7 @@ describe("GripArray - empty slots", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
   });
@@ -261,6 +274,7 @@ describe("GripArray - empty slots", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
   });
@@ -275,6 +289,7 @@ describe("GripArray - empty slots", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
   });
@@ -288,6 +303,7 @@ describe("GripArray - empty slots", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(
       `Array${length} [ 0, <1 empty slot>, 2, <1 empty slot>, 4, 5 ]`
@@ -303,6 +319,7 @@ describe("GripArray - empty slots", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(
       `Array${length} [ 0, <2 empty slots>, 3, <3 empty slots>, 7, 8 ]`
@@ -319,6 +336,7 @@ describe("GripArray - empty slots", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
   });
@@ -333,6 +351,7 @@ describe("GripArray - empty slots", () => {
 
     expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(longOutput);
   });
@@ -353,6 +372,9 @@ describe("GripArray - NamedNodeMap", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`NamedNodeMap${length}`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(
+      `NamedNodeMap${length}`
+    );
 
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
@@ -374,6 +396,7 @@ describe("GripArray - NodeList", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`NodeList${length}`);
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`NodeList${length}`);
 
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
     expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
@@ -453,6 +476,9 @@ describe("GripArray - DocumentFragment", () => {
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(
       `DocumentFragment${length}`
     );
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(
+      `DocumentFragment${length}`
+    );
 
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
@@ -486,6 +512,10 @@ describe("GripArray - Items not in preview", () => {
     expect(component.text()).toBe(`${length} […]`);
     expectActorAttribute(component, object.actor);
 
+    component = renderRep({ mode: MODE.HEADER });
+    expect(component.text()).toBe(`Array${length}`);
+    expectActorAttribute(component, object.actor);
+
     component = renderRep({ mode: MODE.SHORT });
     expect(component.text()).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
@@ -516,6 +546,10 @@ describe("GripArray - Set", () => {
     expect(component.text()).toBe(`Set${length}`);
     expectActorAttribute(component, object.actor);
 
+    component = renderRep({ mode: MODE.HEADER });
+    expect(component.text()).toBe(`Set${length}`);
+    expectActorAttribute(component, object.actor);
+
     component = renderRep({ mode: MODE.SHORT });
     expect(component.text()).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
@@ -537,6 +571,10 @@ describe("GripArray - Set", () => {
     expectActorAttribute(component, object.actor);
 
     component = renderRep({ mode: MODE.TINY });
+    expect(component.text()).toBe(`Set${length}`);
+    expectActorAttribute(component, object.actor);
+
+    component = renderRep({ mode: MODE.HEADER });
     expect(component.text()).toBe(`Set${length}`);
     expectActorAttribute(component, object.actor);
 
@@ -577,6 +615,10 @@ describe("GripArray - WeakSet", () => {
     expect(component.text()).toBe(`WeakSet${length}`);
     expectActorAttribute(component, object.actor);
 
+    component = renderRep({ mode: MODE.HEADER });
+    expect(component.text()).toBe(`WeakSet${length}`);
+    expectActorAttribute(component, object.actor);
+
     component = renderRep({ mode: MODE.SHORT });
     expect(component.text()).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
@@ -602,6 +644,10 @@ describe("GripArray - WeakSet", () => {
     expectActorAttribute(component, object.actor);
 
     component = renderRep({ mode: MODE.TINY });
+    expect(component.text()).toBe(`WeakSet${length}`);
+    expectActorAttribute(component, object.actor);
+
+    component = renderRep({ mode: MODE.HEADER });
     expect(component.text()).toBe(`WeakSet${length}`);
     expectActorAttribute(component, object.actor);
 
@@ -635,6 +681,10 @@ describe("GripArray - DOMTokenList", () => {
     expect(component.text()).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
 
+    component = renderRep({ mode: MODE.HEADER });
+    expect(component.text()).toBe(`DOMTokenList${length}`);
+    expectActorAttribute(component, object.actor);
+
     component = renderRep({ mode: MODE.SHORT });
     expect(component.text()).toBe(defaultOutput);
     expectActorAttribute(component, object.actor);
@@ -657,7 +707,7 @@ describe("GripArray - accessor", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
-
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     length = getGripLengthBubbleText(object, { mode: MODE.LONG });
@@ -676,7 +726,7 @@ describe("GripArray - accessor", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
-
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     length = getGripLengthBubbleText(object, { mode: MODE.LONG });
@@ -695,7 +745,7 @@ describe("GripArray - accessor", () => {
 
     length = getGripLengthBubbleText(object, { mode: MODE.TINY });
     expect(renderRep({ mode: MODE.TINY }).text()).toBe(`${length} […]`);
-
+    expect(renderRep({ mode: MODE.HEADER }).text()).toBe(`Array${length}`);
     expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
 
     length = getGripLengthBubbleText(object, { mode: MODE.LONG });

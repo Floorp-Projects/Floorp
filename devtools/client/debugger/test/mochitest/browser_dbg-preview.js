@@ -28,7 +28,7 @@ add_task(async function () {
   ]);
 
   await testPreviews(dbg, "objects", [
-    { line: 27, column: 10, expression: "empty", result: "{}" },
+    { line: 27, column: 10, expression: "empty", result: "Object" },
     { line: 28, column: 22, expression: "foo", result: 1 },
   ]);
 
@@ -124,10 +124,6 @@ async function testBucketedArray(dbg) {
   );
 
   info("Wait for top level node to expand and child nodes to load");
-  await waitForElementWithSelector(
-    dbg,
-    ".preview-popup .node:first-of-type .arrow.expanded"
-  );
   await waitUntil(
     () => popupEl.querySelectorAll(".preview-popup .node").length > 1
   );

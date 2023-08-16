@@ -47,6 +47,20 @@ describe("ElementNode - BodyNode", () => {
     expectActorAttribute(renderedComponent, stub.actor);
   });
 
+  it("renders with expected text content in HEADER mode", () => {
+    const renderedComponent = shallow(
+      ElementNode.rep({
+        object: stub,
+        mode: MODE.HEADER,
+      })
+    );
+
+    expect(renderedComponent.text()).toEqual(
+      '<body id="body-id" class="body-class">'
+    );
+    expectActorAttribute(renderedComponent, stub.actor);
+  });
+
   it("renders with expected text content on tiny mode", () => {
     const renderedComponent = shallow(
       ElementNode.rep({

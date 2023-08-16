@@ -710,6 +710,21 @@ exports[`Error - URI error renders with expected text for URIError 1`] = `
 </span>
 `;
 
+exports[`Error - base-loader.sys.mjs renders as expected in HEADER mode 1`] = `
+<span
+  className="objectBox-stackTrace "
+  data-link-actor-id="server1.conn1.child1/obj1020"
+  title={null}
+>
+  <span
+    className="objectTitle"
+    key="title"
+  >
+    Error
+  </span>
+</span>
+`;
+
 exports[`Error - base-loader.sys.mjs renders as expected in tiny mode 1`] = `
 <span
   className="objectBox-stackTrace "
