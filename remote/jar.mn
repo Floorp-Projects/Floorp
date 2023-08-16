@@ -71,6 +71,7 @@ remote.jar:
   content/shared/webdriver/KeyData.sys.mjs (shared/webdriver/KeyData.sys.mjs)
   content/shared/webdriver/NodeCache.sys.mjs (shared/webdriver/NodeCache.sys.mjs)
   content/shared/webdriver/Session.sys.mjs (shared/webdriver/Session.sys.mjs)
+  content/shared/webdriver/URLPattern.sys.mjs (shared/webdriver/URLPattern.sys.mjs)
   content/shared/webdriver/process-actors/WebDriverProcessDataChild.sys.mjs (shared/webdriver/process-actors/WebDriverProcessDataChild.sys.mjs)
   content/shared/webdriver/process-actors/WebDriverProcessDataParent.sys.mjs (shared/webdriver/process-actors/WebDriverProcessDataParent.sys.mjs)
 
