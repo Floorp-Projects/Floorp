@@ -276,7 +276,7 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
 
   if (!esg.foundScript()) {
     RootedScript maybeScript(cx);
-    unsigned lineno;
+    uint32_t lineno;
     const char* filename;
     bool mutedErrors;
     uint32_t pcOffset;
