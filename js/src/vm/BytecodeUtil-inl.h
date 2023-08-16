@@ -162,8 +162,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
     }
   }
 
-  size_t frontLineNumber() const { return lineno; }
-  size_t frontColumnNumber() const { return column; }
+  uint32_t frontLineNumber() const { return lineno; }
+  uint32_t frontColumnNumber() const { return column; }
 
   // Entry points are restricted to bytecode offsets that have an
   // explicit mention in the line table.  This restriction avoids a
@@ -226,13 +226,13 @@ class BytecodeRangeWithPosition : private BytecodeRange {
     isEntryPoint = lastLinePC == frontPC();
   }
 
-  size_t initialLine;
+  uint32_t initialLine;
 
   // Line number (1-origin).
-  size_t lineno;
+  uint32_t lineno;
 
   // Column number in UTF-16 code units (0-origin).
-  size_t column;
+  uint32_t column;
 
   const SrcNote* sn;
   jsbytecode* snpc;
