@@ -34,7 +34,7 @@
 #elif defined(XP_DARWIN)
 #  include <mach/exc.h>
 #  include <mach/mach.h>
-#else
+#elif !defined(__wasi__)
 #  include <signal.h>
 #endif
 

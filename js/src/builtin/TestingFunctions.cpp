@@ -818,7 +818,7 @@ static bool WasmIsSupported(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool WasmIsSupportedByHardware(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setBoolean(wasm::HasPlatformSupport(cx));
+  args.rval().setBoolean(wasm::HasPlatformSupport());
   return true;
 }
 
