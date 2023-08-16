@@ -5,7 +5,8 @@
 import {
   html,
   ifDefined,
-  map,
+  classMap,
+  repeat,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
@@ -41,6 +42,17 @@ class FxviewEmptyState extends MozLitElement {
     descriptionEls: { all: ".description" },
   };
 
+  linkTemplate(descriptionLink) {
+    if (!descriptionLink) {
+      return html``;
+    }
+    return html` <a
+      data-l10n-name=${descriptionLink.name}
+      href=${descriptionLink.url}
+      target=${descriptionLink?.sameTarget ? "_self" : "_blank"}
+    />`;
+  }
+
   render() {
     return html`
        <link
@@ -63,20 +75,17 @@ class FxviewEmptyState extends MozLitElement {
                    .headerIconUrl} src=${ifDefined(this.headerIconUrl)}></img>
                  <span data-l10n-id="${this.headerLabel}"></span>
              </h2>
-             ${map(
+             ${repeat(
                this.descriptionLabels,
+               descLabel => descLabel,
                (descLabel, index) => html`<p
-                 class="description ${index !== 0 ? "secondary" : null}"
+                 class=${classMap({
+                   description: true,
+                   secondary: index !== 0,
+                 })}
                  data-l10n-id="${descLabel}"
                >
-                 <a
-                   ?hidden=${!this.descriptionLink}
-                   data-l10n-name=${ifDefined(this.descriptionLink?.name)}
-                   href=${ifDefined(this.descriptionLink?.url)}
-                   target=${this.descriptionLink?.sameTarget
-                     ? "_self"
-                     : "_blank"}
-                 />
+                 ${this.linkTemplate(this.descriptionLink)} />
                </p>`
              )}
              <slot name="primary-action"></slot>
