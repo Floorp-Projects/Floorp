@@ -9,6 +9,8 @@
 
 #include "vm/ErrorObject.h"
 
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
+
 #include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 
@@ -27,9 +29,10 @@ inline uint32_t js::ErrorObject::lineNumber() const {
   return val.isInt32() ? val.toInt32() : 0;
 }
 
-inline uint32_t js::ErrorObject::columnNumber() const {
+inline JS::ColumnNumberOneOrigin js::ErrorObject::columnNumber() const {
   Value val = getReservedSlot(COLUMNNUMBER_SLOT);
-  return val.isInt32() ? val.toInt32() : 0;
+  return val.isInt32() ? JS::ColumnNumberOneOrigin(val.toInt32())
+                       : JS::ColumnNumberOneOrigin::zero();
 }
 
 inline JSObject* js::ErrorObject::stack() const {
