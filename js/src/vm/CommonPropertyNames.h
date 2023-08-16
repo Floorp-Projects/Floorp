@@ -126,7 +126,7 @@
   MACRO_(decodeURI, "decodeURI")                                               \
   MACRO_(decodeURIComponent, "decodeURIComponent")                             \
   MACRO_(default_, "default")                                                  \
-  MACRO_(defineDataPropertyIntrinsic, "DefineDataProperty")                    \
+  MACRO_(DefineDataProperty, "DefineDataProperty")                             \
   MACRO_(defineGetter, "__defineGetter__")                                     \
   MACRO_(defineProperty, "defineProperty")                                     \
   MACRO_(defineSetter, "__defineSetter__")                                     \
