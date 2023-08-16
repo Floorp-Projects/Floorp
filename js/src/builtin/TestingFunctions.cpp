@@ -6661,7 +6661,7 @@ static bool EvalReturningScope(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   JS::AutoFilename filename;
-  unsigned lineno;
+  uint32_t lineno;
 
   JS::DescribeScriptedCaller(cx, &filename, &lineno);
 

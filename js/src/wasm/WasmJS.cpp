@@ -4208,7 +4208,7 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
     return false;
   }
 
-  unsigned line = args.scriptedCaller.line;
+  uint32_t line = args.scriptedCaller.line;
 
   // Ideally we'd report a JSMSG_WASM_COMPILE_ERROR here, but there's no easy
   // way to create an ErrorObject for an arbitrary error code with multiple

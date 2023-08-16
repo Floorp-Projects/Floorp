@@ -289,8 +289,8 @@ static bool AssertParentProcessWithCallerLocationImpl(GlobalObject& aGlobal,
   JSContext* cx = jsapi.cx();
 
   JS::AutoFilename scriptFilename;
-  unsigned lineNo = 0;
-  unsigned colNo = 0;
+  uint32_t lineNo = 0;
+  uint32_t colNo = 0;
 
   NS_ENSURE_TRUE(
       JS::DescribeScriptedCaller(cx, &scriptFilename, &lineNo, &colNo), false);
