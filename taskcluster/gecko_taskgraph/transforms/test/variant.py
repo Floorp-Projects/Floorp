@@ -7,18 +7,14 @@ import jsone
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.treeherder import join_symbol, split_symbol
-from taskgraph.util.yaml import load_yaml
 from voluptuous import Any, Optional, Required
 
-import gecko_taskgraph
+from gecko_taskgraph.util.chunking import TEST_VARIANTS
 from gecko_taskgraph.util.copy_task import copy_task
 from gecko_taskgraph.util.templates import merge
 
 transforms = TransformSequence()
 
-TEST_VARIANTS = load_yaml(
-    gecko_taskgraph.GECKO, "taskcluster", "ci", "test", "variants.yml"
-)
 """List of available test variants defined."""
 
 
