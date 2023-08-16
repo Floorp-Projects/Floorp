@@ -103,7 +103,8 @@ static std::tuple<JS::ArrayBufferOrView, size_t, size_t> GetArrayBufferInfo(
   return std::make_tuple(
       JS::ArrayBufferOrView::fromObject(
           JS_GetArrayBufferViewBuffer(aCx, obj, &isSharedMemory)),
-      JS_GetTypedArrayByteOffset(obj), JS_GetTypedArrayByteLength(obj));
+      JS_GetArrayBufferViewByteOffset(obj),
+      JS_GetArrayBufferViewByteLength(obj));
 }
 
 Result<Ok, nsresult> CloneBuffer(
