@@ -1927,19 +1927,22 @@ EventListenerManager::Listener* EventListenerManager::GetListenerFor(
     bool aAllowsUntrusted, bool aInSystemEventGroup, bool aIsHandler) {
   NS_ENSURE_TRUE(aListener, nullptr);
 
-  RefPtr<ListenerArray> listeners;
-  if (aType.IsVoid()) {
-    listeners = mListenerMap.GetListenersForAllEvents();
-  } else {
+  RefPtr<ListenerArray> listeners = ([&]() -> RefPtr<ListenerArray> {
+    if (aType.IsVoid()) {
+      return mListenerMap.GetListenersForAllEvents();
+    }
+
     for (auto& mapEntry : mListenerMap.mEntries) {
       if (RefPtr<nsAtom> typeAtom = mapEntry.mTypeAtom) {
         if (Substring(nsDependentAtomString(typeAtom), 2).Equals(aType)) {
-          listeners = mapEntry.mListeners;
-          break;
+          return mapEntry.mListeners;
         }
       }
     }
-  }
+
+    return nullptr;
+  })();
+
   if (!listeners) {
     return nullptr;
   }
