@@ -22,6 +22,7 @@
 #include "frontend/FrontendContext.h"     // js::AutoReportFrontendContext
 #include "frontend/Parser.h"  // frontend::Parser, frontend::ParseGoal
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::ConstUTF8CharsZ, JS::UTF8CharsToNewTwoByteCharsZ
+#include "js/ColumnNumber.h"            // JS::ColumnNumberZeroOrigin
 #include "js/experimental/JSStencil.h"  // JS::Stencil
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"              // JS::Rooted
@@ -64,7 +65,7 @@ static void ReportSourceTooLongImpl(JS::FrontendContext* fc, ...) {
   js::ErrorMetadata metadata;
   metadata.filename = JS::ConstUTF8CharsZ("<unknown>");
   metadata.lineNumber = 0;
-  metadata.columnNumber = 0;
+  metadata.columnNumber = JS::ColumnNumberZeroOrigin::zero();
   metadata.lineLength = 0;
   metadata.tokenOffset = 0;
   metadata.isMuted = false;
