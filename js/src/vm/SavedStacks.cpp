@@ -1875,14 +1875,13 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
     }
 
     uint32_t sourceId = script->scriptSource()->id();
-    uint32_t column;
+    JS::LimitedColumnNumberZeroOrigin column;
     uint32_t line = PCToLineNumber(script, pc, &column);
 
     PCKey key(script, pc);
-    LocationValue value(
-        source, sourceId, line,
-        JS::TaggedColumnNumberOneOrigin(JS::LimitedColumnNumberOneOrigin(
-            JS::LimitedColumnNumberZeroOrigin(column))));
+    LocationValue value(source, sourceId, line,
+                        JS::TaggedColumnNumberOneOrigin(
+                            JS::LimitedColumnNumberOneOrigin(column)));
     if (!pcLocationMap.add(p, key, value)) {
       ReportOutOfMemory(cx);
       return false;
