@@ -1974,12 +1974,14 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
 
   // Reserve an environment slot for a "*namespace*" psuedo-binding and mark as
   // closed-over. We do not know until module linking if this will be used.
-  if (!noteDeclaredName(TaggedParserAtomIndex::WellKnown::starNamespaceStar(),
-                        DeclarationKind::Const, pos())) {
+  if (!noteDeclaredName(
+          TaggedParserAtomIndex::WellKnown::star_namespace_star_(),
+          DeclarationKind::Const, pos())) {
     return nullptr;
   }
   modulepc.varScope()
-      .lookupDeclaredName(TaggedParserAtomIndex::WellKnown::starNamespaceStar())
+      .lookupDeclaredName(
+          TaggedParserAtomIndex::WellKnown::star_namespace_star_())
       ->value()
       ->setClosedOver();
 

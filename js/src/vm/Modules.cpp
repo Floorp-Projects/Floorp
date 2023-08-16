@@ -608,7 +608,7 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
         //                this export.
         // Step 5.a.ii.2. Return ResolvedBinding Record { [[Module]]:
         //                importedModule, [[BindingName]]: namespace }.
-        name = cx->names().starNamespaceStar;
+        name = cx->names().star_namespace_star_;
         return CreateResolvedBindingObject(cx, importedModule, name, result);
       } else {
         // Step 5.a.iii.1. Assert: module imports a specific binding for this
@@ -832,7 +832,7 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
     importedModule = binding->module();
     bindingName = binding->bindingName();
 
-    if (bindingName == cx->names().starNamespaceStar) {
+    if (bindingName == cx->names().star_namespace_star_) {
       importedNamespace = GetOrCreateModuleNamespace(cx, importedModule);
       if (!importedNamespace) {
         return nullptr;
@@ -1002,7 +1002,7 @@ bool js::ModuleInitializeEnvironment(JSContext* cx,
       bindingName = binding->bindingName();
 
       // Step 7.d.iii. If resolution.[[BindingName]] is namespace, then:
-      if (bindingName == cx->names().starNamespaceStar) {
+      if (bindingName == cx->names().star_namespace_star_) {
         // Step 7.d.iii.1. Let namespace be ?
         //                 GetModuleNamespace(resolution.[[Module]]).
         Rooted<ModuleNamespaceObject*> ns(
