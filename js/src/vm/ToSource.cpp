@@ -128,7 +128,7 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
 
   switch (v.type()) {
     case JS::ValueType::Undefined:
-      return cx->names().void0;
+      return cx->names().void_0_;
 
     case JS::ValueType::String:
       return StringToSource(cx, v.toString());

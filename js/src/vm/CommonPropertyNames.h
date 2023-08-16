@@ -60,7 +60,7 @@
   MACRO_(bigint64, "bigint64")                                                 \
   MACRO_(biguint64, "biguint64")                                               \
   MACRO_(bound, "bound")                                                       \
-  MACRO_(boundWithSpace, "bound ")                                             \
+  MACRO_(boundWithSpace_, "bound ")                                            \
   MACRO_(break_, "break")                                                      \
   MACRO_(breakdown, "breakdown")                                               \
   MACRO_(buffer, "buffer")                                                     \
@@ -292,7 +292,7 @@
   MACRO_(integer, "integer")                                                   \
   MACRO_(interface, "interface")                                               \
   MACRO_(InterpretGeneratorResume, "InterpretGeneratorResume")                 \
-  MACRO_(InvalidDate, "Invalid Date")                                          \
+  MACRO_(Invalid_Date_, "Invalid Date")                                        \
   MACRO_(isBreakpoint, "isBreakpoint")                                         \
   IF_DECORATORS(MACRO_(IsCallable, "IsCallable"))                              \
   MACRO_(isDisjointFrom, "isDisjointFrom")                                     \
@@ -317,7 +317,7 @@
   MACRO_(isSupersetOf, "isSupersetOf")                                         \
   MACRO_(IterableToList, "IterableToList")                                     \
   MACRO_(IteratorClose, "IteratorClose")                                       \
-  MACRO_(IteratorHelper, "Iterator Helper")                                    \
+  MACRO_(Iterator_Helper_, "Iterator Helper")                                  \
   MACRO_(IteratorNext, "IteratorNext")                                         \
   MACRO_(iterate, "iterate")                                                   \
   MACRO_(join, "join")                                                         \
@@ -426,7 +426,7 @@
   MACRO_(one, "one")                                                           \
   MACRO_(optimizedOut, "optimizedOut")                                         \
   MACRO_(other, "other")                                                       \
-  MACRO_(outOfMemory, "out of memory")                                         \
+  MACRO_(out_of_memory_, "out of memory")                                      \
   MACRO_(overflow, "overflow")                                                 \
   MACRO_(ownKeys, "ownKeys")                                                   \
   MACRO_(package, "package")                                                   \
@@ -586,7 +586,7 @@
   MACRO_(var, "var")                                                           \
   MACRO_(variable, "variable")                                                 \
   MACRO_(void_, "void")                                                        \
-  MACRO_(void0, "(void 0)")                                                    \
+  MACRO_(void_0_, "(void 0)")                                                  \
   MACRO_(wasm, "wasm")                                                         \
   MACRO_(WasmAnyRef, "WasmAnyRef")                                             \
   MACRO_(wasmcall, "wasmcall")                                                 \

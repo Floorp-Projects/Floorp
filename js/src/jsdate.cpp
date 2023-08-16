@@ -2840,7 +2840,7 @@ static bool date_toUTCString(JSContext* cx, unsigned argc, Value* vp) {
 
   double utctime = unwrapped->UTCTime().toNumber();
   if (!std::isfinite(utctime)) {
-    args.rval().setString(cx->names().InvalidDate);
+    args.rval().setString(cx->names().Invalid_Date_);
     return true;
   }
 
@@ -3058,7 +3058,7 @@ static bool FormatDate(JSContext* cx, DateTimeInfo::ForceUTC forceUTC,
                        double utcTime, FormatSpec format,
                        MutableHandleValue rval) {
   if (!std::isfinite(utcTime)) {
-    rval.setString(cx->names().InvalidDate);
+    rval.setString(cx->names().Invalid_Date_);
     return true;
   }
 
