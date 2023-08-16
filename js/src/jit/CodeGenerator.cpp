@@ -7280,12 +7280,6 @@ bool CodeGenerator::generateBody() {
         lineNumber = PCToLineNumber(current->mir()->info().script(),
                                     current->mir()->pc(), &columnNumber);
       }
-    } else {
-#  ifdef DEBUG
-      lineNumber = current->mir()->lineno();
-      columnNumber =
-          JS::LimitedColumnNumberZeroOrigin(current->mir()->columnIndex());
-#  endif
     }
     JitSpew(JitSpew_Codegen, "--------------------------------");
     JitSpew(JitSpew_Codegen, "# block%zu %s:%zu:%u%s:", i,
