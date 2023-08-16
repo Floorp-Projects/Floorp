@@ -60,7 +60,7 @@ impl TestTokenCredential {
         &self,
         client_data_hash: &ClientDataHash,
         flags: AuthenticatorDataFlags,
-    ) -> Result<GetAssertionResponse, HIDError> {
+    ) -> GetAssertionResponse {
         let credentials = Some(PublicKeyCredentialDescriptor {
             id: self.id.clone(),
             transports: vec![],
@@ -79,17 +79,16 @@ impl TestTokenCredential {
             ..Default::default()
         });
 
-        let mut data = auth_data.to_vec().or(Err(HIDError::DeviceError))?;
+        let mut data = auth_data.to_vec().unwrap();
         data.extend_from_slice(client_data_hash.as_ref());
-        let signature =
-            ecdsa_p256_sha256_sign_raw(&self.privkey, &data).or(Err(HIDError::DeviceError))?;
-        Ok(GetAssertionResponse {
+        let signature = ecdsa_p256_sha256_sign_raw(&self.privkey, &data).unwrap();
+        GetAssertionResponse {
             credentials,
             auth_data,
             signature,
             user,
             number_of_credentials: Some(1),
-        })
+        }
     }
 }
 
@@ -364,7 +363,7 @@ impl VirtualFidoDevice for TestToken {
             // return at most one assertion matching an allowed credential ID
             for credential in eligible_cred_iter {
                 if req.allow_list.iter().any(|x| x.id == credential.id) {
-                    let assertion = credential.assert(&req.client_data_hash, flags)?.into();
+                    let assertion = credential.assert(&req.client_data_hash, flags).into();
                     assertions.push(assertion);
                     break;
                 }
@@ -376,7 +375,7 @@ impl VirtualFidoDevice for TestToken {
             // return a list of credentials here. The UI to select one of the results blocks
             // testing.
             for credential in eligible_cred_iter.filter(|x| x.is_discoverable_credential) {
-                let assertion = credential.assert(&req.client_data_hash, flags)?.into();
+                let assertion = credential.assert(&req.client_data_hash, flags).into();
                 assertions.push(assertion);
                 break;
             }
