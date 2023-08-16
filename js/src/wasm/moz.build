@@ -43,6 +43,7 @@ UNIFIED_SOURCES += [
     "WasmProcess.cpp",
     "WasmRealm.cpp",
     "WasmSerialize.cpp",
+    "WasmSignalHandlers.cpp",
     "WasmStubs.cpp",
     "WasmTable.cpp",
     "WasmTypeDef.cpp",
@@ -57,10 +58,6 @@ GeneratedFile(
     script="GenerateIntrinsics.py",
     inputs=["WasmIntrinsic.yaml"],
 )
-
-# We don't support signals for wasi yet.
-if CONFIG["OS_ARCH"] != "WASI":
-    UNIFIED_SOURCES += ["WasmSignalHandlers.cpp"]
 
 # Make sure all WebAssembly code is built with libfuzzer
 # coverage instrumentation in FUZZING mode.

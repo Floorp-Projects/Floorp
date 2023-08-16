@@ -242,7 +242,7 @@ bool wasm::ThreadsAvailable(JSContext* cx) {
   return WasmThreadsFlag(cx) && AnyCompilerAvailable(cx);
 }
 
-bool wasm::HasPlatformSupport(JSContext* cx) {
+bool wasm::HasPlatformSupport() {
 #if !MOZ_LITTLE_ENDIAN()
   return false;
 #else
@@ -258,13 +258,6 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
   if (!JitOptions.supportsUnalignedAccesses) {
     return false;
   }
-
-#  ifndef __wasi__
-  // WASI doesn't support signals so we don't have this function.
-  if (!wasm::EnsureFullSignalHandlers(cx)) {
-    return false;
-  }
-#  endif
 
   if (!jit::JitSupportsAtomics()) {
     return false;
@@ -292,7 +285,7 @@ bool wasm::HasSupport(JSContext* cx) {
   }
   // Do not check for compiler availability, as that may be run-time variant.
   // For HasSupport() we want a stable answer depending only on prefs.
-  return prefEnabled && HasPlatformSupport(cx);
+  return prefEnabled && HasPlatformSupport() && EnsureFullSignalHandlers(cx);
 }
 
 bool wasm::StreamingCompilationAvailable(JSContext* cx) {

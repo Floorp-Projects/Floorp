@@ -23,7 +23,7 @@ namespace wasm {
 // This predicate must be checked and must be true to call any of the top-level
 // wasm eval/compile methods.
 
-bool HasPlatformSupport(JSContext* cx);
+bool HasPlatformSupport();
 
 // Return whether WebAssembly is supported on this platform. This determines
 // whether the WebAssembly object is exposed to JS in this context / realm and
