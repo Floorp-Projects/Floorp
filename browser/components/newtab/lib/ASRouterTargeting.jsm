@@ -496,7 +496,7 @@ async function getAutofillRecords(data) {
     name: "FormAutofill:GetRecords",
     data,
   });
-  return records?.length ?? 0;
+  return records?.records?.length ?? 0;
 }
 
 // Attribution data can be encoded multiple times so we need this function to
