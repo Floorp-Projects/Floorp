@@ -30,60 +30,7 @@ const TEST_DATA = [
         type: "load",
         filename: TEST_URL + ":29:38",
         attributes: ["Bubbling"],
-        handler: `
-          () => {
-            const handler1 = function liveDivDblClick() {
-              alert(1);
-            };
-            const handler2 = function liveDivDragStart() {
-              alert(2);
-            };
-            const handler3 = function liveDivDragLeave() {
-              alert(3);
-            };
-            const handler4 = function liveDivDragEnd() {
-              alert(4);
-            };
-            const handler5 = function liveDivDrop() {
-              alert(5);
-            };
-            const handler6 = function liveDivDragOver() {
-              alert(6);
-            };
-            const handler7 = function divClick1() {
-              alert(7);
-            };
-            const handler8 = function divClick2() {
-              alert(8);
-            };
-            const handler9 = function divKeyDown() {
-              alert(9);
-            };
-            const handler10 = function divDragOut() {
-              alert(10);
-            };
-
-            if ($("#livediv").live) {
-              $("#livediv").live("dblclick", handler1);
-              $("#livediv").live("dragstart", handler2);
-            }
-
-            if ($("#livediv").delegate) {
-              $(document).delegate("#livediv", "dragleave", handler3);
-              $(document).delegate("#livediv", "dragend", handler4);
-            }
-
-            if ($("#livediv").on) {
-              $(document).on("drop", "#livediv", handler5);
-              $(document).on("dragover", "#livediv", handler6);
-              $(document).on("dragout", "#livediv:xxxxx", handler10);
-            }
-
-            const div = $("div")[0];
-            $(div).click(handler7);
-            $(div).click(handler8);
-            $(div).keydown(handler9);
-          }`,
+        handler: getDocMarkupEventsJQueryLoadHandlerText(),
       },
     ],
   },

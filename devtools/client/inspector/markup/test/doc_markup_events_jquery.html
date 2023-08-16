@@ -19,13 +19,13 @@
       "use strict";
 
       const jq = document.location.search.substr(1);
-
       const script = document.createElement("script");
       script.setAttribute("type", "text/javascript");
       script.setAttribute("src", jq);
-
       document.head.appendChild(script);
 
+      // If you update the content of the callback, remember to
+      // update helper_events_test_runner.js `getDocMarkupEventsJQueryLoadHandlerText`.
       window.addEventListener("load", () => {
         const handler1 = function liveDivDblClick() { alert(1); };
         const handler2 = function liveDivDragStart() { alert(2); };
@@ -58,6 +58,14 @@
         $(div).click(handler7);
         $(div).click(handler8);
         $(div).keydown(handler9);
+
+        class MyClass {
+          constructor() {
+            $(document).on("click", '#inclassboundeventdiv', this.onClick.bind(this));
+          }
+          onClick() { alert(11); }
+        }
+        new MyClass();
       });
     </script>
   </head>
@@ -65,5 +73,7 @@
     <div id="testdiv"></div>
     <br>
     <div id="livediv"></div>
+    <br>
+    <div id="inclassboundeventdiv"></div>
   </body>
 </html>
