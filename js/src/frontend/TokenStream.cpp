@@ -454,7 +454,8 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
 
 bool TokenStreamAnyChars::checkOptions() {
   // Constrain starting columns to where they will saturate.
-  if (options().column > JS::LimitedColumnNumberZeroOrigin::Limit) {
+  if (options().column.zeroOriginValue() >
+      JS::LimitedColumnNumberZeroOrigin::Limit) {
     reportErrorNoOffset(JSMSG_BAD_COLUMN_NUMBER);
     return false;
   }
@@ -842,7 +843,7 @@ GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
       return JS::LimitedColumnNumberZeroOrigin::limit();
     }
 
-    uint32_t firstLineOffset = anyChars.options_.column;
+    uint32_t firstLineOffset = anyChars.options_.column.zeroOriginValue();
     column += JS::ColumnNumberOffset(firstLineOffset);
   }
 
