@@ -271,7 +271,7 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
   }
   MOZ_ASSERT(uintptr_t(names) == uintptr_t(commonNames + 1));
 
-  emptyString = commonNames->empty;
+  emptyString = commonNames->empty_;
 
   // The self-hosted atoms are those that exist in a self-hosted JS source file,
   // but are not defined in any of the well-known atom collections.

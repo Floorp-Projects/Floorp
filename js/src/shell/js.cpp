@@ -1968,7 +1968,7 @@ static bool CreateUserArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
   // The reference is made through a private name, because we don't want to
   // expose |userBuffer| to user-code.
 
-  auto* privateName = NewPrivateName(cx, cx->names().empty.toHandle());
+  auto* privateName = NewPrivateName(cx, cx->names().empty_.toHandle());
   if (!privateName) {
     return false;
   }
@@ -8744,7 +8744,7 @@ static bool TransplantableObject(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  jsid emptyId = NameToId(cx->names().empty);
+  jsid emptyId = NameToId(cx->names().empty_);
   RootedObject transplant(
       cx, NewFunctionByIdWithReserved(cx, TransplantObject, 0, 0, emptyId));
   if (!transplant) {

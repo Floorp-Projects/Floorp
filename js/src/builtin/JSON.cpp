@@ -1611,7 +1611,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
   }
 
   Rooted<PlainObject*> wrapper(cx);
-  RootedId emptyId(cx, NameToId(cx->names().empty));
+  RootedId emptyId(cx, NameToId(cx->names().empty_));
   if (replacer && replacer->isCallable()) {
     // We can skip creating the initial wrapper object if no replacer
     // function is present.
@@ -1823,11 +1823,11 @@ static bool Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp) {
     return false;
   }
 
-  if (!DefineDataProperty(cx, obj, cx->names().empty, vp)) {
+  if (!DefineDataProperty(cx, obj, cx->names().empty_, vp)) {
     return false;
   }
 
-  Rooted<jsid> id(cx, NameToId(cx->names().empty));
+  Rooted<jsid> id(cx, NameToId(cx->names().empty_));
   return Walk(cx, obj, id, reviver, vp);
 }
 
@@ -2054,7 +2054,7 @@ static bool json_parseImmutable(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  RootedId id(cx, NameToId(cx->names().empty));
+  RootedId id(cx, NameToId(cx->names().empty_));
   return BuildImmutableProperty(cx, unfiltered, id, reviver, args.rval());
 }
 #endif

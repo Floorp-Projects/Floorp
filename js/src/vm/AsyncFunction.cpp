@@ -264,7 +264,7 @@ JSFunction* NewHandler(JSContext* cx, Native handler,
                        JS::Handle<JSObject*> target) {
   cx->check(target);
 
-  JS::Handle<PropertyName*> funName = cx->names().empty;
+  JS::Handle<PropertyName*> funName = cx->names().empty_;
   JS::Rooted<JSFunction*> handlerFun(
       cx, NewNativeFunction(cx, handler, 0, funName,
                             gc::AllocKind::FUNCTION_EXTENDED, GenericObject));

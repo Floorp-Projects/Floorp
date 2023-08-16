@@ -72,7 +72,7 @@ PropertyName* js::EnvironmentCoordinateNameSlow(JSScript* script,
 
   /* Beware nameless destructuring formal. */
   if (!id.isAtom()) {
-    return script->runtimeFromAnyThread()->commonNames->empty;
+    return script->runtimeFromAnyThread()->commonNames->empty_;
   }
   return id.toAtom()->asPropertyName();
 }

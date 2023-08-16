@@ -3121,7 +3121,7 @@ JS_PUBLIC_API JSString* JS_NewUCStringCopyN(JSContext* cx, const char16_t* s,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   if (!n) {
-    return cx->names().empty;
+    return cx->names().empty_;
   }
   return NewStringCopyN<CanGC>(cx, s, n);
 }
