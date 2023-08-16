@@ -103,3 +103,4 @@ Detailed Docs
   first-run
   targeting-attributes
   targeting-guide
+  telemetry
