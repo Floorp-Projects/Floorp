@@ -15,6 +15,7 @@
 #include "InputBlockState.h"        // for InputBlockState
 #include "InputData.h"              // for InputData, etc
 #include "WRHitTester.h"            // for WRHitTester
+#include "apz/src/APZUtils.h"
 #include "mozilla/RecursiveMutex.h"
 #include "mozilla/dom/MouseEventBinding.h"  // for MouseEvent constants
 #include "mozilla/dom/BrowserParent.h"      // for AreRecordReplayTabsActive
@@ -878,7 +879,8 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
 
   for (const StickyPositionInfo& info : mStickyPositionInfo) {
     MOZ_ASSERT(info.mStickyPositionAnimationId.isSome());
-    SideBits sides = SidesStuckToRootContent(info, lock);
+    SideBits sides = SidesStuckToRootContent(
+        info, AsyncTransformConsumer::eForCompositing, lock);
     if (sides == SideBits::eNone) {
       continue;
     }
@@ -2110,7 +2112,8 @@ void APZCTreeManager::AdjustEventPointForDynamicToolbar(
     SideBits sideBits = SideBits::eNone;
     {
       RecursiveMutexAutoLock lock(mTreeLock);
-      sideBits = SidesStuckToRootContent(aHit.mNode.Get(lock));
+      sideBits = SidesStuckToRootContent(
+          aHit.mNode.Get(lock), AsyncTransformConsumer::eForEventHandling);
     }
     MutexAutoLock lock(mMapLock);
     aEventPoint -= RoundedToInt(apz::ComputeFixedMarginsOffset(
@@ -3376,13 +3379,13 @@ bool APZCTreeManager::IsFixedToRootContent(
 }
 
 SideBits APZCTreeManager::SidesStuckToRootContent(
-    const HitTestingTreeNode* aNode) const {
+    const HitTestingTreeNode* aNode, AsyncTransformConsumer aMode) const {
   MutexAutoLock lock(mMapLock);
-  return SidesStuckToRootContent(StickyPositionInfo(aNode), lock);
+  return SidesStuckToRootContent(StickyPositionInfo(aNode), aMode, lock);
 }
 
 SideBits APZCTreeManager::SidesStuckToRootContent(
-    const StickyPositionInfo& aStickyInfo,
+    const StickyPositionInfo& aStickyInfo, AsyncTransformConsumer aMode,
     const MutexAutoLock& aProofOfMapLock) const {
   SideBits result = SideBits::eNone;
 
@@ -3409,8 +3412,7 @@ SideBits APZCTreeManager::SidesStuckToRootContent(
   ParentLayerPoint translation =
       stickyTargetApzc
           ->GetCurrentAsyncTransform(
-              AsyncPanZoomController::eForEventHandling,
-              AsyncTransformComponents{AsyncTransformComponent::eLayout})
+              aMode, AsyncTransformComponents{AsyncTransformComponent::eLayout})
           .mTranslation;
 
   if (apz::IsStuckAtTop(translation.y, aStickyInfo.mStickyScrollRangeInner,
