@@ -44,8 +44,6 @@ async function addVirtualAuthenticator() {
       webauthnTransport.removeVirtualAuthenticator(id);
     });
   });
-
-  return id;
 }
 
 function handleEventMessage(event) {
@@ -431,57 +429,4 @@ function verifySignature(key, data, derSig) {
 
   let alg = { name: "ECDSA", hash: "SHA-256" };
   return crypto.subtle.verify(alg, key, sigData, data);
-}
-
-async function addCredential(authenticatorId, rpId) {
-  let keyPair = await crypto.subtle.generateKey(
-    {
-      name: "ECDSA",
-      namedCurve: "P-256",
-    },
-    true,
-    ["sign"]
-  );
-
-  let credId = new Uint8Array(32);
-  crypto.getRandomValues(credId);
-  credId = bytesToBase64UrlSafe(credId);
-
-  let privateKey = await crypto.subtle
-    .exportKey("pkcs8", keyPair.privateKey)
-    .then(privateKey => bytesToBase64UrlSafe(privateKey));
-
-  await SpecialPowers.spawnChrome(
-    [authenticatorId, credId, rpId, privateKey],
-    (authenticatorId, credId, rpId, privateKey) => {
-      let webauthnTransport = Cc[
-        "@mozilla.org/webauthn/transport;1"
-      ].getService(Ci.nsIWebAuthnTransport);
-
-      webauthnTransport.addCredential(
-        authenticatorId,
-        credId,
-        true, // resident key
-        rpId,
-        privateKey,
-        "VGVzdCBVc2Vy", // "Test User"
-        0 // sign count
-      );
-    }
-  );
-
-  return credId;
-}
-
-async function removeCredential(authenticatorId, credId) {
-  await SpecialPowers.spawnChrome(
-    [authenticatorId, credId],
-    (authenticatorId, credId) => {
-      let webauthnTransport = Cc[
-        "@mozilla.org/webauthn/transport;1"
-      ].getService(Ci.nsIWebAuthnTransport);
-
-      webauthnTransport.removeCredential(authenticatorId, credId);
-    }
-  );
 }
