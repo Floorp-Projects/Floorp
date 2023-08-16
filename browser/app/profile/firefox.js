@@ -2263,10 +2263,6 @@ pref("signon.showAutoCompleteFooter", true);
 pref("signon.showAutoCompleteImport", "import");
 pref("signon.suggestImportCount", 3);
 
-// Enable the "Simplify Page" feature in Print Preview. This feature
-// is disabled by default in toolkit.
-pref("print.use_simplify_page", true);
-
 // Space separated list of URLS that are allowed to send objects (instead of
 // only strings) through webchannels. Bug 1275612 tracks removing this pref and capability.
 pref("webchannel.allowObject.urlWhitelist", "https://content.cdn.mozilla.net https://install.mozilla.org");
