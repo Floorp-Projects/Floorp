@@ -57,7 +57,6 @@ using RegisterState = JS::ProfilingFrameIterator::RegisterState;
 class WasmFrameIter {
  public:
   enum class Unwind { True, False };
-  static constexpr uint32_t ColumnBit = 1u << 31;
 
  private:
   jit::JitActivation* activation_;
