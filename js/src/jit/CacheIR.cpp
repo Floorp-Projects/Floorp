@@ -6059,7 +6059,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayJoin() {
         writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
     sepId = writer.guardToString(argValId);
   } else {
-    sepId = writer.loadConstantString(cx_->names().comma);
+    sepId = writer.loadConstantString(cx_->names().comma_);
   }
 
   // Do the join.
