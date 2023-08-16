@@ -659,13 +659,13 @@ static bool DoAtomicsWait(JSContext* cx,
   switch (atomics_wait_impl(cx, unwrappedSab->rawBufferObject(),
                             indexedPosition, value, timeout)) {
     case FutexThread::WaitResult::NotEqual:
-      r.setString(cx->names().futexNotEqual);
+      r.setString(cx->names().not_equal_);
       return true;
     case FutexThread::WaitResult::OK:
-      r.setString(cx->names().futexOK);
+      r.setString(cx->names().ok);
       return true;
     case FutexThread::WaitResult::TimedOut:
-      r.setString(cx->names().futexTimedOut);
+      r.setString(cx->names().timed_out_);
       return true;
     case FutexThread::WaitResult::Error:
       return false;
