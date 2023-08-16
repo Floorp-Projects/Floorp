@@ -14,13 +14,18 @@ from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_runtime, tags
 from mozbuild.util import memoize
 from moztest.resolve import TEST_SUITES, TestManifestLoader, TestResolver
+from taskgraph.util.yaml import load_yaml
 
-from gecko_taskgraph import GECKO, TEST_VARIANTS
+from gecko_taskgraph import GECKO
 from gecko_taskgraph.util.bugbug import CT_LOW, BugbugTimeoutException, push_schedules
 
 logger = logging.getLogger(__name__)
 here = os.path.abspath(os.path.dirname(__file__))
 resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
+
+TEST_VARIANTS = {}
+if os.path.exists(os.path.join(GECKO, "taskcluster", "ci", "test", "variants.yml")):
+    TEST_VARIANTS = load_yaml(GECKO, "taskcluster", "ci", "test", "variants.yml")
 
 
 def guess_mozinfo_from_task(task, repo=""):
