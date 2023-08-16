@@ -251,7 +251,7 @@ class ReadableStreamFromAlgorithms final
 
   ReadableStreamFromAlgorithms(nsIGlobalObject* aGlobal,
                                JS::Handle<JSObject*> aIteratorRecord)
-      : mGlobal(aGlobal), mIteratorRecord(aIteratorRecord) {
+      : mGlobal(aGlobal), mIteratorRecordMaybeCrossRealm(aIteratorRecord) {
     mozilla::HoldJSObjects(this);
   };
 
@@ -264,8 +264,10 @@ class ReadableStreamFromAlgorithms final
       ErrorResult& aRv) override {
     aRv.MightThrowJSException();
 
+    JS::Rooted<JSObject*> iteratorRecord(aCx, mIteratorRecordMaybeCrossRealm);
+    JSAutoRealm ar(aCx, iteratorRecord);
+
     // Step 1. Let nextResult be IteratorNext(iteratorRecord).
-    JS::Rooted<JSObject*> iteratorRecord(aCx, mIteratorRecord);
     JS::Rooted<JS::Value> nextResult(aCx);
     if (!JS::IteratorNext(aCx, iteratorRecord, &nextResult)) {
       // Step 2. If nextResult is an abrupt completion, return a promise
@@ -292,8 +294,10 @@ class ReadableStreamFromAlgorithms final
                 return nullptr;
               }
 
-              // Step 4.2. Let done be ? IteratorComplete(iterResult).
               JS::Rooted<JSObject*> iterResult(aCx, &aIterResult.toObject());
+              JSAutoRealm ar(aCx, iterResult);
+
+              // Step 4.2. Let done be ? IteratorComplete(iterResult).
               bool done = false;
               if (!JS::IteratorComplete(aCx, iterResult, &done)) {
                 aRv.StealExceptionFromJSContext(aCx);
@@ -337,8 +341,10 @@ class ReadableStreamFromAlgorithms final
       ErrorResult& aRv) override {
     aRv.MightThrowJSException();
 
+    JS::Rooted<JSObject*> iteratorRecord(aCx, mIteratorRecordMaybeCrossRealm);
+    JSAutoRealm ar(aCx, iteratorRecord);
+
     // Step 1. Let iterator be iteratorRecord.[[Iterator]].
-    JS::Rooted<JSObject*> iteratorRecord(aCx, mIteratorRecord);
     JS::Rooted<JS::Value> iterator(aCx);
     if (!JS::GetIteratorRecordIterator(aCx, iteratorRecord, &iterator)) {
       aRv.StealExceptionFromJSContext(aCx);
@@ -403,12 +409,12 @@ class ReadableStreamFromAlgorithms final
  private:
   // Virtually const, but are cycle collected
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  JS::Heap<JSObject*> mIteratorRecord;
+  JS::Heap<JSObject*> mIteratorRecordMaybeCrossRealm;
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_WITH_JS_MEMBERS(
     ReadableStreamFromAlgorithms, UnderlyingSourceAlgorithmsWrapper, (mGlobal),
-    (mIteratorRecord))
+    (mIteratorRecordMaybeCrossRealm))
 NS_IMPL_ADDREF_INHERITED(ReadableStreamFromAlgorithms,
                          UnderlyingSourceAlgorithmsWrapper)
 NS_IMPL_RELEASE_INHERITED(ReadableStreamFromAlgorithms,
