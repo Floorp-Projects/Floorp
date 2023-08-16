@@ -8,6 +8,7 @@
 #include "DecoderData.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 #include "VideoUtils.h"
 #include "MP4Metadata.h"
@@ -265,8 +266,12 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* aTrack,
   if (aTrack->duration > TimeUnit::MaxTicks()) {
     mDuration = TimeUnit::FromInfinity();
   } else {
-    mDuration =
-        TimeUnit(AssertedCast<int64_t>(aTrack->duration), aTrack->time_scale);
+    if (aTrack->duration) {
+      mDuration =
+          TimeUnit(AssertedCast<int64_t>(aTrack->duration), aTrack->time_scale);
+    } else {
+      mIsLive = true;
+    }
   }
   mMediaTime = TimeUnit(aTrack->media_time, aTrack->time_scale);
   mTrackId = aTrack->track_id;
@@ -333,8 +338,12 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
   if (track->duration > TimeUnit::MaxTicks()) {
     mDuration = TimeUnit::FromInfinity();
   } else {
-    mDuration =
-        TimeUnit(AssertedCast<int64_t>(track->duration), track->time_scale);
+    if (track->duration > 0) {
+      mDuration =
+          TimeUnit(AssertedCast<int64_t>(track->duration), track->time_scale);
+    } else {
+      mIsLive = true;
+    }
   }
   mMediaTime = TimeUnit(track->media_time, track->time_scale);
   mDisplay.width = AssertedCast<int32_t>(video->display_width);
@@ -345,6 +354,7 @@ MediaResult MP4VideoInfo::Update(const Mp4parseTrackInfo* track,
   Mp4parseByteData extraData = video->sample_info[0].extra_data;
   // If length is 0 we append nothing
   mExtraData->AppendElements(extraData.data, extraData.length);
+  mIsLive |= StaticPrefs::media_low_latency_decoding_force_enabled();
   return NS_OK;
 }
 
