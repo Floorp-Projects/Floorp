@@ -587,7 +587,7 @@ SavedFrame* SavedFrame::create(JSContext* cx) {
 
 bool SavedFrame::isSelfHosted(JSContext* cx) {
   JSAtom* source = getSource();
-  return source == cx->names().selfHosted;
+  return source == cx->names().self_hosted_;
 }
 
 bool SavedFrame::isWasm() {
@@ -1389,7 +1389,7 @@ static inline bool captureIsSatisfied(JSContext* cx, JSPrincipals* principals,
       auto subsumes = cx_->runtime()->securityCallbacks->subsumes;
       return (!subsumes || subsumes(target.principals, framePrincipals_)) &&
              (!target.ignoreSelfHosted ||
-              frameSource_ != cx_->names().selfHosted);
+              frameSource_ != cx_->names().self_hosted_);
     }
 
     bool operator()(JS::MaxFrames& target) { return target.maxFrames == 1; }
