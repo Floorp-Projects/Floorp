@@ -2248,19 +2248,21 @@ bool EventListenerManager::HasNonPassiveWheelListener() {
 }
 
 void EventListenerManager::RemoveAllListeners() {
-  for (auto& entry : mListenerMap.mEntries) {
+  while (!mListenerMap.IsEmpty()) {
+    size_t entryIndex = mListenerMap.mEntries.Length() - 1;
+    EventListenerMapEntry& entry = mListenerMap.mEntries[entryIndex];
     RefPtr<nsAtom> type = entry.mTypeAtom;
-    ListenerArray& listeners = *entry.mListeners;
-    while (!listeners.IsEmpty()) {
-      size_t idx = listeners.Length() - 1;
-      listeners.RemoveElementAt(idx);
-      NotifyEventListenerRemoved(type);
-      if (IsDeviceType(type)) {
-        DisableDevice(type);
-      }
+    MOZ_ASSERT(!entry.mListeners->IsEmpty());
+    size_t idx = entry.mListeners->Length() - 1;
+    entry.mListeners->RemoveElementAt(idx);
+    if (entry.mListeners->IsEmpty()) {
+      mListenerMap.mEntries.RemoveElementAt(entryIndex);
+    }
+    NotifyEventListenerRemoved(type);
+    if (IsDeviceType(type)) {
+      DisableDevice(type);
     }
   }
-  mListenerMap.Clear();
 }
 
 already_AddRefed<nsIScriptGlobalObject>
