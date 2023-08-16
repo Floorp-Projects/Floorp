@@ -16,8 +16,6 @@ ChromeUtils.defineLazyGetter(
 );
 
 class ProfileAutoCompleteResult {
-  externalEntries = [];
-
   constructor(
     searchString,
     focusedFieldName,
@@ -75,25 +73,20 @@ class ProfileAutoCompleteResult {
     );
   }
 
-  getAt(index) {
-    for (const group of [this._popupLabels, this.externalEntries]) {
-      if (index < group.length) {
-        return group[index];
-      }
-      index -= group.length;
-    }
-
-    throw Components.Exception(
-      "Index out of range.",
-      Cr.NS_ERROR_ILLEGAL_VALUE
-    );
-  }
-
   /**
    * @returns {number} The number of results
    */
   get matchCount() {
-    return this._popupLabels.length + this.externalEntries.length;
+    return this._popupLabels.length;
+  }
+
+  _checkIndexBounds(index) {
+    if (index < 0 || index >= this._popupLabels.length) {
+      throw Components.Exception(
+        "Index out of range.",
+        Cr.NS_ERROR_ILLEGAL_VALUE
+      );
+    }
   }
 
   /**
@@ -122,12 +115,14 @@ class ProfileAutoCompleteResult {
    * @returns {string} The result at the specified index
    */
   getValueAt(index) {
-    this.getAt(index);
+    this._checkIndexBounds(index);
     return "";
   }
 
   getLabelAt(index) {
-    const label = this.getAt(index);
+    this._checkIndexBounds(index);
+
+    let label = this._popupLabels[index];
     if (typeof label == "string") {
       return label;
     }
@@ -141,8 +136,8 @@ class ProfileAutoCompleteResult {
    * @returns {string} The comment at the specified index
    */
   getCommentAt(index) {
-    const item = this.getAt(index);
-    return item.comment ?? JSON.stringify(this._matchingProfiles[index]);
+    this._checkIndexBounds(index);
+    return JSON.stringify(this._matchingProfiles[index]);
   }
 
   /**
@@ -152,12 +147,8 @@ class ProfileAutoCompleteResult {
    * @returns {string} The style hint at the specified index
    */
   getStyleAt(index) {
-    const itemStyle = this.getAt(index).style;
-    if (itemStyle) {
-      return itemStyle;
-    }
-
-    if (index == this._popupLabels.length - 1) {
+    this._checkIndexBounds(index);
+    if (index == this.matchCount - 1) {
       return "autofill-footer";
     }
     if (this._isInputAutofilled) {
@@ -174,7 +165,7 @@ class ProfileAutoCompleteResult {
    * @returns {string} The image url at the specified index
    */
   getImageAt(index) {
-    this.getAt(index);
+    this._checkIndexBounds(index);
     return "";
   }
 
@@ -195,7 +186,7 @@ class ProfileAutoCompleteResult {
    * @returns {boolean} True if the value is removable
    */
   isRemovableAt(index) {
-    return false;
+    return true;
   }
 
   /**
@@ -476,11 +467,7 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
   }
 
   getStyleAt(index) {
-    const itemStyle = this.getAt(index).style;
-    if (itemStyle) {
-      return itemStyle;
-    }
-
+    this._checkIndexBounds(index);
     if (!this._isSecure) {
       return "autofill-insecureWarning";
     }
@@ -489,13 +476,8 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
   }
 
   getImageAt(index) {
-    this.getAt(index);
-
-    if (index < this._cardTypes.length) {
-      let network = this._cardTypes[index];
-      return lazy.CreditCard.getCreditCardLogo(network);
-    }
-
-    return "";
+    this._checkIndexBounds(index);
+    let network = this._cardTypes[index];
+    return lazy.CreditCard.getCreditCardLogo(network);
   }
 }
