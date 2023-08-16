@@ -122,7 +122,6 @@ add_task(async () => {
     "no-controls": {
       canToggle: true,
       toggleStyles: TOGGLE_STYLES_LEFT_EXPLAINER,
-      shouldSeeClickEventAfterToggle: true,
     },
   });
 
@@ -155,7 +154,6 @@ add_task(async () => {
     "no-controls": {
       canToggle: true,
       toggleStyles: TOGGLE_STYLES_RIGHT_EXPLAINER,
-      shouldSeeClickEventAfterToggle: true,
     },
   });
 
