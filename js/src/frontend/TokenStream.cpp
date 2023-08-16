@@ -1458,7 +1458,7 @@ void TokenStreamAnyChars::computeErrorMetadataNoOffset(
   err->isMuted = mutedErrors;
   err->filename = filename_;
   err->lineNumber = 0;
-  err->columnNumber = 0;
+  err->columnNumber = JS::ColumnNumberZeroOrigin::zero();
 
   MOZ_ASSERT(err->lineOfContext == nullptr);
 }
@@ -1477,7 +1477,9 @@ bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
                                maybeCx->realm()->principals());
       if (!iter.done() && iter.filename()) {
         err->filename = JS::ConstUTF8CharsZ(iter.filename());
-        err->lineNumber = iter.computeLine(&err->columnNumber);
+        uint32_t columnNumber;
+        err->lineNumber = iter.computeLine(&columnNumber);
+        err->columnNumber = JS::ColumnNumberZeroOrigin(columnNumber);
         return false;
       }
     }

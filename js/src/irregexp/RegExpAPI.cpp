@@ -229,14 +229,14 @@ static void ReportSyntaxError(TokenStreamAnyChars& ts,
       // inside the literal.
       err.lineNumber = *line;
       auto offset = JS::ColumnNumberOffset(columnNumber.zeroOriginValue());
-      err.columnNumber = (*column + offset).zeroOriginValue();
+      err.columnNumber = *column + offset;
     } else {
       // Line breaks are not significant in pattern text in the same way as
       // in source text, so act as though pattern text is a single line, then
       // compute a column based on "code point" count (treating a lone
       // surrogate as a "code point" in UTF-16).  Gak.
       err.lineNumber = 1;
-      err.columnNumber = columnNumber.zeroOriginValue();
+      err.columnNumber = columnNumber;
     }
   }
 
