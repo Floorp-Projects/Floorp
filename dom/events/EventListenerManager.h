@@ -246,7 +246,8 @@ class EventListenerManager final : public EventListenerManagerBase {
           mListenerIsHandler(aOther.mListenerIsHandler),
           mHandlerIsString(aOther.mHandlerIsString),
           mAllEvents(aOther.mAllEvents),
-          mEnabled(aOther.mEnabled) {
+          mEnabled(aOther.mEnabled),
+          mFlags(aOther.mFlags) {
       aOther.mListenerType = eNoListener;
       aOther.mListenerIsHandler = false;
       aOther.mHandlerIsString = false;
