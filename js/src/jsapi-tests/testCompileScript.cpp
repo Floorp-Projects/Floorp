@@ -98,7 +98,7 @@ bool testCompile() {
     const js::CompileError& error = fc->maybeError().ref();
     CHECK(JSEXN_SYNTAXERR == error.exnType);
     CHECK(error.lineno == 1);
-    CHECK(error.column == 10);
+    CHECK(error.column.oneOriginValue() == 10);
   }
 
   return true;
@@ -199,7 +199,7 @@ bool testCompileModule() {
     const js::CompileError& error = fc->maybeError().ref();
     CHECK(JSEXN_SYNTAXERR == error.exnType);
     CHECK(error.lineno == 1);
-    CHECK(error.column == 10);
+    CHECK(error.column.oneOriginValue() == 10);
   }
 
   return true;

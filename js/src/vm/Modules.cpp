@@ -19,17 +19,17 @@
 #include "ds/Sort.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
 #include "frontend/FrontendContext.h"   // js::AutoReportFrontendContext
-#include "js/ColumnNumber.h"            // JS::ColumnNumberZeroOrigin
-#include "js/Context.h"                 // js::AssertHeapIsIdle
-#include "js/ErrorReport.h"             // JSErrorBase
-#include "js/RootingAPI.h"              // JS::MutableHandle
-#include "js/Value.h"                   // JS::Value
-#include "vm/EnvironmentObject.h"       // js::ModuleEnvironmentObject
-#include "vm/JSAtomUtils.h"             // AtomizeString
-#include "vm/JSContext.h"               // CHECK_THREAD, JSContext
-#include "vm/JSObject.h"                // JSObject
-#include "vm/List.h"                    // ListObject
-#include "vm/Runtime.h"                 // JSRuntime
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
+#include "js/Context.h"            // js::AssertHeapIsIdle
+#include "js/ErrorReport.h"        // JSErrorBase
+#include "js/RootingAPI.h"         // JS::MutableHandle
+#include "js/Value.h"              // JS::Value
+#include "vm/EnvironmentObject.h"  // js::ModuleEnvironmentObject
+#include "vm/JSAtomUtils.h"        // AtomizeString
+#include "vm/JSContext.h"          // CHECK_THREAD, JSContext
+#include "vm/JSObject.h"           // JSObject
+#include "vm/List.h"               // ListObject
+#include "vm/Runtime.h"            // JSRuntime
 
 #include "vm/JSAtomUtils-inl.h"  // AtomToId
 #include "vm/JSContext-inl.h"    // JSContext::{c,releaseC}heck
@@ -907,7 +907,7 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
 
   RootedValue error(cx);
   if (!JS::CreateError(cx, JSEXN_SYNTAXERR, nullptr, filename, line,
-                       column.oneOriginValue(), nullptr, message,
+                       JS::ColumnNumberOneOrigin(column), nullptr, message,
                        JS::NothingHandleValue, &error)) {
     return;
   }

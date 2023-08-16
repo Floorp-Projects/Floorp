@@ -3895,7 +3895,7 @@ static bool CopyErrorReportToObject(JSContext* cx, JSErrorReport* report,
     return false;
   }
 
-  RootedValue columnVal(cx, Int32Value(report->column));
+  RootedValue columnVal(cx, Int32Value(report->column.oneOriginValue()));
   if (!DefineDataProperty(cx, obj, cx->names().columnNumber, columnVal)) {
     return false;
   }
