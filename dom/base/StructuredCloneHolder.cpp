@@ -1472,16 +1472,17 @@ StructuredCloneHolder::CustomWriteTransferHandler(
       if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(canvas);
 
-        if (!canvas->MayNeuter()) {
+        UniquePtr<OffscreenCanvasCloneData> clonedCanvas =
+            canvas->ToCloneData(aCx);
+        if (!clonedCanvas) {
           return false;
         }
 
         *aExtraData = 0;
         *aTag = SCTAG_DOM_CANVAS;
-        *aContent = canvas->ToCloneData();
+        *aContent = clonedCanvas.release();
         MOZ_ASSERT(*aContent);
         *aOwnership = JS::SCTAG_TMO_CUSTOM;
-        canvas->SetNeutered();
 
         return true;
       }
