@@ -162,7 +162,7 @@ APZSampler::GetCurrentScrollOffsetAndRange(
       // scroll-linked effets into accounts, so we have to fix this in the
       // future.
       apzc->GetCurrentAsyncVisualViewport(
-              AsyncPanZoomController::AsyncTransformConsumer::eForCompositing)
+              AsyncTransformConsumer::eForCompositing)
           .TopLeft(),
       apzc->GetCurrentScrollRangeInCssPixels()});
 }
