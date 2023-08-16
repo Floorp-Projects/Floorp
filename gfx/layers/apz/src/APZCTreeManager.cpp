@@ -1289,7 +1289,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
       aState.mPaintLogger.LogTestData(
           aMetrics.GetScrollId(), "asyncScrollOffset",
           apzc->GetCurrentAsyncScrollOffset(
-              AsyncPanZoomController::eForHitTesting));
+              AsyncPanZoomController::eForEventHandling));
       aState.mPaintLogger.LogTestData(aMetrics.GetScrollId(),
                                       "hasAsyncKeyScrolled",
                                       apzc->TestHasAsyncKeyScrolled());
@@ -3409,7 +3409,7 @@ SideBits APZCTreeManager::SidesStuckToRootContent(
   ParentLayerPoint translation =
       stickyTargetApzc
           ->GetCurrentAsyncTransform(
-              AsyncPanZoomController::eForHitTesting,
+              AsyncPanZoomController::eForEventHandling,
               AsyncTransformComponents{AsyncTransformComponent::eLayout})
           .mTranslation;
 

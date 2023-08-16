@@ -167,7 +167,7 @@ TEST_F(APZCAxisLockTester, BasicDominantAxisUse) {
 
   // Ensure that we have not panned on the horizontal axis.
   ParentLayerPoint panEndOffset = apzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
   EXPECT_EQ(panEndOffset.x, 0);
 
   // The lock onto the Y axis extends into momentum scroll.
@@ -209,7 +209,7 @@ TEST_F(APZCAxisLockTester, BasicDominantAxisUse) {
   // reasonable.
   apzc->AdvanceAnimationsUntilEnd();
   ParentLayerPoint finalOffset = apzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
 
   // Ensure we have scrolled some amount on the Y axis in momentum scroll.
   EXPECT_GT(finalOffset.y, panEndOffset.y);
@@ -258,7 +258,7 @@ TEST_F(APZCAxisLockTester, NewGestureBreaksMomentumAxisLock) {
 
   // Double check that we have not panned on the vertical axis.
   ParentLayerPoint panEndOffset = apzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
   EXPECT_EQ(panEndOffset.y, 0);
 
   // Ensure that the axis locks extends into momentum scroll.
@@ -290,7 +290,7 @@ TEST_F(APZCAxisLockTester, NewGestureBreaksMomentumAxisLock) {
   EXPECT_EQ(apzc->GetVelocityVector().y, 0);
 
   ParentLayerPoint beforeBreakOffset = apzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
   EXPECT_EQ(beforeBreakOffset.y, 0);
   // Ensure we have scrolled some amount on the X axis in momentum scroll.
   EXPECT_GT(beforeBreakOffset.x, panEndOffset.x);
@@ -303,7 +303,7 @@ TEST_F(APZCAxisLockTester, NewGestureBreaksMomentumAxisLock) {
   apzc->AdvanceAnimations(mcc->GetSampleTime());
 
   ParentLayerPoint afterBreakOffset = apzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
 
   QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   PanGesture(PanGestureInput::PANGESTURE_PAN, apzc, ScreenIntPoint(50, 50),
@@ -338,7 +338,7 @@ TEST_F(APZCAxisLockTester, NewGestureBreaksMomentumAxisLock) {
   // reasonable.
   apzc->AdvanceAnimationsUntilEnd();
   ParentLayerPoint finalOffset = apzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
 
   EXPECT_GT(finalOffset.y, 0);
   // Ensure that we did not scroll on the X axis after the vertical scroll
@@ -457,8 +457,8 @@ TEST_F(APZCAxisLockTester, TestDominantAxisScrolling) {
 
   apzc = ApzcOf(root);
 
-  ParentLayerPoint lastOffset =
-      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  ParentLayerPoint lastOffset = apzc->GetCurrentAsyncScrollOffset(
+      AsyncPanZoomController::eForEventHandling);
 
   // In dominant axis mode, test pan gesture events with varying gesture
   // angles and ensure that we only pan on one axis.
@@ -483,7 +483,7 @@ TEST_F(APZCAxisLockTester, TestDominantAxisScrolling) {
     apzc->AdvanceAnimationsUntilEnd();
 
     ParentLayerPoint scrollOffset = apzc->GetCurrentAsyncScrollOffset(
-        AsyncPanZoomController::eForHitTesting);
+        AsyncPanZoomController::eForEventHandling);
 
     if (panX > panY) {
       // If we're closer to the X axis ensure that we moved on the horizontal
@@ -564,13 +564,13 @@ TEST_F(APZCAxisLockTester, TestScrollHandoffAxisLockConflict) {
 
   // There should be movement in the child.
   ParentLayerPoint childCurrentOffset = apzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
   EXPECT_GT(childCurrentOffset.y, 0);
   EXPECT_EQ(childCurrentOffset.x, 0);
 
   // There should be no movement in the parent.
   ParentLayerPoint parentCurrentOffset = rootApzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
   EXPECT_EQ(parentCurrentOffset.y, 0);
   EXPECT_EQ(parentCurrentOffset.x, 0);
 
@@ -599,12 +599,12 @@ TEST_F(APZCAxisLockTester, TestScrollHandoffAxisLockConflict) {
 
   // There should be some movement in the child on the x-axis.
   ParentLayerPoint childFinalOffset = apzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
   EXPECT_GT(childFinalOffset.x, 0);
 
   // There should still be no movement in the parent.
   ParentLayerPoint parentFinalOffset = rootApzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
   EXPECT_EQ(parentFinalOffset.y, 0);
   EXPECT_EQ(parentFinalOffset.x, 0);
 }
@@ -632,7 +632,7 @@ TEST_P(APZCAxisLockCompatTester, TestPanGestureStart) {
   mcc->AdvanceByMillis(5);
   apzc->AdvanceAnimationsUntilEnd();
   ParentLayerPoint currentOffset = apzc->GetCurrentAsyncScrollOffset(
-      AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting);
+      AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling);
 
   EXPECT_EQ(currentOffset.x, 0);
   EXPECT_EQ(currentOffset.y, 10);

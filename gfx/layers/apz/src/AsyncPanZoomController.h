@@ -1177,20 +1177,20 @@ class AsyncPanZoomController {
    * Allows consumers of async transforms to specify for what purpose they are
    * using the async transform:
    *
-   *   |eForHitTesting| is intended for hit-testing and other uses that need
-   *                    the most up-to-date transform, reflecting all events
-   *                    that have been processed so far, even if the transform
-   *                    is not yet reflected visually.
+   *   |eForEventHandling| is intended for event handling and other uses that
+   *                       need the most up-to-date transform, reflecting all
+   *                       events that have been processed so far, even if the
+   *                       transform is not yet reflected visually.
    *   |eForCompositing| is intended for the transform that should be reflected
    *                     visually.
    *
    * For example, if an APZC has metrics with the mForceDisableApz flag set,
    * then the |eForCompositing| async transform will be empty, while the
-   * |eForHitTesting| async transform will reflect processed input events
+   * |eForEventHandling| async transform will reflect processed input events
    * regardless of mForceDisableApz.
    */
   enum AsyncTransformConsumer {
-    eForHitTesting,
+    eForEventHandling,
     eForCompositing,
   };
 
