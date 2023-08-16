@@ -1379,6 +1379,11 @@ class TelemetryEvent {
 
   #PING_PREFS = {
     maxRichResults: Glean.urlbar.prefMaxResults,
+    "quicksuggest.dataCollection.enabled":
+      Glean.urlbar.prefQuicksuggestDataCollection,
+    "suggest.quicksuggest.nonsponsored":
+      Glean.urlbar.prefQuicksuggestNonsponsored,
+    "suggest.quicksuggest.sponsored": Glean.urlbar.prefQuicksuggestSponsored,
     "suggest.topsites": Glean.urlbar.prefSuggestTopsites,
   };
 

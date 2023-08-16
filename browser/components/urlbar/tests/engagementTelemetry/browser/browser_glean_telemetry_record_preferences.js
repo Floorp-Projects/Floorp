@@ -34,21 +34,41 @@ add_task(async function prefMaxRichResults() {
   );
 });
 
-add_task(async function prefSuggestTopsites() {
-  Assert.equal(
-    Glean.urlbar.prefSuggestTopsites.testGetValue(),
-    UrlbarPrefs.get("suggest.topsites"),
-    "Record prefSuggestTopsites when UrlbarController is initialized"
-  );
+add_task(async function boolPref() {
+  const testData = [
+    {
+      green: "prefQuicksuggestDataCollection",
+      pref: "quicksuggest.dataCollection.enabled",
+    },
+    {
+      green: "prefQuicksuggestNonsponsored",
+      pref: "suggest.quicksuggest.nonsponsored",
+    },
+    {
+      green: "prefQuicksuggestSponsored",
+      pref: "suggest.quicksuggest.sponsored",
+    },
+    {
+      green: "prefSuggestTopsites",
+      pref: "suggest.topsites",
+    },
+  ];
 
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.suggest.topsites", !UrlbarPrefs.get("suggest.topsites")],
-    ],
-  });
-  Assert.equal(
-    Glean.urlbar.prefSuggestTopsites.testGetValue(),
-    UrlbarPrefs.get("suggest.topsites"),
-    "Record prefSuggestTopsites when the suggest.topsites pref is updated"
-  );
+  for (const { green, pref } of testData) {
+    Assert.equal(
+      Glean.urlbar[green].testGetValue(),
+      UrlbarPrefs.get(pref),
+      `Record ${green} when UrlbarController is initialized`
+    );
+
+    await SpecialPowers.pushPrefEnv({
+      set: [[`browser.urlbar.${pref}`, !UrlbarPrefs.get(pref)]],
+    });
+
+    Assert.equal(
+      Glean.urlbar[green].testGetValue(),
+      UrlbarPrefs.get(pref),
+      `Record ${green} when the ${pref} pref is updated`
+    );
+  }
 });
