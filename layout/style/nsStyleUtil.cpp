@@ -82,78 +82,32 @@ bool nsStyleUtil::LangTagCompare(const nsACString& aAttributeValue,
     return false;
   }
 
-  int32_t attrPriv = -1;
   AutoLangId attrLangId(aAttributeValue);
   if (!attrLangId.IsValid()) {
-    // If it was invalid due to private subtags, try stripping them and
-    // re-parsing what remains.
-    attrPriv = aAttributeValue.LowerCaseFindASCII("-x-");
-    if (attrPriv >= 0) {
-      nsAutoCString temp(aAttributeValue);
-      temp.Truncate(attrPriv);
-      attrLangId.Reset(temp);
-      if (!attrLangId.IsValid()) {
-        return false;
-      }
-    }
+    return false;
   }
 
-  int32_t selPriv = -1;
   AutoLangId selectorId(aSelectorValue);
   if (!selectorId.IsValid()) {
     // If it was "invalid" because of a wildcard language subtag, replace that
     // with 'und' and try again.
     // XXX Should unic_langid_new handle the wildcard internally?
-    bool wildcard = false;
     if (aSelectorValue[0] == '*') {
-      wildcard = true;
       nsAutoCString temp(aSelectorValue);
       temp.Replace(0, 1, "und");
       selectorId.Reset(temp);
-      if (selectorId.IsValid()) {
-        intl::ffi::unic_langid_clear_language(selectorId);
+      if (!selectorId.IsValid()) {
+        return false;
       }
-    }
-    // If it was invalid due to private subtags, try stripping them.
-    if (!selectorId.IsValid()) {
-      selPriv = aSelectorValue.LowerCaseFindASCII("-x-");
-      if (selPriv >= 0) {
-        nsAutoCString temp(aSelectorValue);
-        temp.Truncate(selPriv);
-        // Also do the wildcard replacement if necessary.
-        if (wildcard) {
-          temp.Replace(0, 1, "und");
-        }
-        selectorId.Reset(temp);
-        if (!selectorId.IsValid()) {
-          return false;
-        }
-        if (wildcard) {
-          intl::ffi::unic_langid_clear_language(selectorId);
-        }
-      }
-    }
-  }
-
-  if (!intl::ffi::unic_langid_matches(attrLangId, selectorId,
-                                      /* match addrLangId as range */ false,
-                                      /* match selectorId as range */ true)) {
-    return false;
-  }
-
-  // If the selector included private subtags, we also require them to match.
-  // However, if the attribute has private subtags but the selector doesn't,
-  // they are ignored; the selector still matches the (non-private) subtags in
-  // the attribute.
-  if (selPriv >= 0) {
-    if (attrPriv < 0) {
+      intl::ffi::unic_langid_clear_language(selectorId);
+    } else {
       return false;
     }
-    return Substring(aAttributeValue, attrPriv)
-        .EqualsIgnoreCase(Substring(aSelectorValue, selPriv));
   }
 
-  return true;
+  return intl::ffi::unic_langid_matches(attrLangId, selectorId,
+                                        /* match addrLangId as range */ false,
+                                        /* match selectorId as range */ true);
 }
 
 bool nsStyleUtil::ValueIncludes(const nsAString& aValueList,
