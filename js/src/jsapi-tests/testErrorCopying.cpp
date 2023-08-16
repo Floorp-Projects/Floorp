@@ -26,7 +26,7 @@ BEGIN_TEST(testErrorCopying_columnCopied) {
   JS::ErrorReportBuilder report(cx);
   CHECK(report.init(cx, exnStack, JS::ErrorReportBuilder::WithSideEffects));
 
-  CHECK_EQUAL(report.report()->column, 28u);
+  CHECK_EQUAL(report.report()->column.oneOriginValue(), 28u);
   return true;
 }
 

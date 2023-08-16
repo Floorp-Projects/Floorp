@@ -195,7 +195,7 @@ void xpc::ErrorBase::Init(JSErrorBase* aReport) {
 
   mSourceId = aReport->sourceId;
   mLineNumber = aReport->lineno;
-  mColumn = aReport->column;
+  mColumn = aReport->column.oneOriginValue();
 }
 
 void xpc::ErrorNote::Init(JSErrorNotes::Note* aNote) {

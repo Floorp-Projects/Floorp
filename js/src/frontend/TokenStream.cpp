@@ -35,7 +35,7 @@
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::TaggedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberZeroOrigin
 #include "js/ErrorReport.h"   // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_smprintf
@@ -916,8 +916,9 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     computeLineAndColumn(offset, &line, &column);
 
     if (!notes->addNoteASCII(anyChars.fc, anyChars.getFilename().c_str(), 0,
-                             line, column.oneOriginValue(), GetErrorMessage,
-                             nullptr, JSMSG_BAD_CODE_UNITS, badUnitsStr)) {
+                             line, JS::ColumnNumberOneOrigin(column),
+                             GetErrorMessage, nullptr, JSMSG_BAD_CODE_UNITS,
+                             badUnitsStr)) {
       break;
     }
 
