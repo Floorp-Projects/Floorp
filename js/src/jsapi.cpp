@@ -2462,7 +2462,7 @@ CompileOptions& CompileOptions::setIntroductionInfoToCaller(
     MutableHandle<JSScript*> introductionScript) {
   RootedScript maybeScript(cx);
   const char* filename;
-  unsigned lineno;
+  uint32_t lineno;
   uint32_t pcOffset;
   bool mutedErrors;
   DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno,
@@ -4524,7 +4524,7 @@ const char* AutoFilename::get() const {
 }
 
 JS_PUBLIC_API bool DescribeScriptedCaller(JSContext* cx, AutoFilename* filename,
-                                          unsigned* lineno, unsigned* column) {
+                                          uint32_t* lineno, uint32_t* column) {
   if (filename) {
     filename->reset();
   }

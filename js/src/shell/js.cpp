@@ -4144,7 +4144,7 @@ static bool EvalInContext(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   JS::AutoFilename filename;
-  unsigned lineno;
+  uint32_t lineno;
 
   DescribeScriptedCaller(cx, &filename, &lineno);
   {

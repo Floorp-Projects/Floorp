@@ -1027,8 +1027,8 @@ nsresult EventListenerManager::SetEventHandler(nsAtom* aName,
 
     // Perform CSP check
     nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
-    unsigned lineNum = 0;
-    unsigned columnNum = 0;
+    uint32_t lineNum = 0;
+    uint32_t columnNum = 0;
 
     JSContext* cx = nsContentUtils::GetCurrentJSContext();
     if (cx && !JS::DescribeScriptedCaller(cx, nullptr, &lineNum, &columnNum)) {

@@ -531,8 +531,8 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
   if (reportViolation) {
     JS::AutoFilename scriptFilename;
     nsAutoString fileName;
-    unsigned lineNum = 0;
-    unsigned columnNum = 0;
+    uint32_t lineNum = 0;
+    uint32_t columnNum = 0;
     if (JS::DescribeScriptedCaller(cx, &scriptFilename, &lineNum, &columnNum)) {
       if (const char* file = scriptFilename.get()) {
         CopyUTF8toUTF16(nsDependentCString(file), fileName);

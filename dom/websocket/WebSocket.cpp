@@ -1371,7 +1371,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 
-    unsigned lineno, column;
+    uint32_t lineno, column;
     JS::AutoFilename file;
     if (!JS::DescribeScriptedCaller(aGlobal.Context(), &file, &lineno,
                                     &column)) {
@@ -1608,7 +1608,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, bool aIsSecure,
   } else {
     MOZ_ASSERT(aCx);
 
-    unsigned lineno, column;
+    uint32_t lineno, column;
     JS::AutoFilename file;
     if (JS::DescribeScriptedCaller(aCx, &file, &lineno, &column)) {
       mScriptFile = file.get();

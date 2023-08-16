@@ -217,7 +217,7 @@ bool ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type,
     return false;
   }
   AutoFilename filename;
-  unsigned line = 0, column = 0;
+  uint32_t line = 0, column = 0;
   DescribeScriptedCaller(cx, &filename, &line, &column);
 
   // Warn to the terminal for the logs.
