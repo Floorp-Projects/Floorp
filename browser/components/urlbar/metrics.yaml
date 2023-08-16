@@ -297,8 +297,8 @@ urlbar:
           the results list, so we can link each result to a group. The possible
           group names are: `heuristic`, `adaptive_history`, `search_history`,
           `search_suggest`, `search_suggest_rich`, `trending_search`,
-          `trending_search_rich`, `top_pick`, `top_site`, `remote_tab`, 
-          `addon`, `general`, `suggest`, `about_page` and `suggested_index`. 
+          `trending_search_rich`, `top_pick`, `top_site`, `remote_tab`,
+          `addon`, `general`, `suggest`, `about_page` and `suggested_index`.
           If the group did not fall into any of these, this will be `unknown`
           and a bug should be filed to investigate it. If engagement_type is
           `drop_go` or `paste_go`, this will be empty string because no results
@@ -528,6 +528,64 @@ urlbar:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    send_in_pings:
+      - events
+
+  pref_quicksuggest_data_collection:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether the user has opted in to data collection for Firefox Suggest,
+      i.e., online suggestions served from Merino.
+      Corresponds to the value of the
+      `browser.urlbar.quicksuggest.dataCollection.enabled` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    send_in_pings:
+      - events
+
+  pref_quicksuggest_nonsponsored:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether non-sponsored quick suggest results are shown in the urlbar.
+      Corresponds to the value of the
+      `browser.urlbar.suggest.quicksuggest.nonsponsored` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    send_in_pings:
+      - events
+
+  pref_quicksuggest_sponsored:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether sponsored quick suggest results are shown in the urlbar.
+      Corresponds to the value of the
+      `browser.urlbar.suggest.quicksuggest.sponsored` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
     data_sensitivity:
       - interaction
     notification_emails:
