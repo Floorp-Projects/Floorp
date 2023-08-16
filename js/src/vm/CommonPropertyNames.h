@@ -404,24 +404,24 @@
   MACRO_(null, "null")                                                         \
   MACRO_(numberingSystem, "numberingSystem")                                   \
   MACRO_(numeric, "numeric")                                                   \
-  MACRO_(objectArguments, "[object Arguments]")                                \
-  MACRO_(objectArray, "[object Array]")                                        \
-  MACRO_(objectBigInt, "[object BigInt]")                                      \
-  MACRO_(objectBoolean, "[object Boolean]")                                    \
-  MACRO_(objectDate, "[object Date]")                                          \
-  MACRO_(objectError, "[object Error]")                                        \
-  MACRO_(objectFunction, "[object Function]")                                  \
-  MACRO_(objectNull, "[object Null]")                                          \
-  MACRO_(objectNumber, "[object Number]")                                      \
-  MACRO_(objectObject, "[object Object]")                                      \
-  IF_RECORD_TUPLE(MACRO_(objectRecord, "[object Record]"))                     \
-  MACRO_(objectRegExp, "[object RegExp]")                                      \
-  MACRO_(objects, "objects")                                                   \
-  MACRO_(objectString, "[object String]")                                      \
-  MACRO_(objectSymbol, "[object Symbol]")                                      \
-  IF_RECORD_TUPLE(MACRO_(objectTuple, "[object Tuple]"))                       \
-  MACRO_(objectUndefined, "[object Undefined]")                                \
+  MACRO_(object_Arguments_, "[object Arguments]")                              \
+  MACRO_(object_Array_, "[object Array]")                                      \
+  MACRO_(object_BigInt_, "[object BigInt]")                                    \
+  MACRO_(object_Boolean_, "[object Boolean]")                                  \
+  MACRO_(object_Date_, "[object Date]")                                        \
+  MACRO_(object_Error_, "[object Error]")                                      \
+  MACRO_(object_Function_, "[object Function]")                                \
+  MACRO_(object_Null_, "[object Null]")                                        \
+  MACRO_(object_Number_, "[object Number]")                                    \
+  MACRO_(object_Object_, "[object Object]")                                    \
+  IF_RECORD_TUPLE(MACRO_(object_Record_, "[object Record]"))                   \
+  MACRO_(object_RegExp_, "[object RegExp]")                                    \
+  MACRO_(object_String_, "[object String]")                                    \
+  MACRO_(object_Symbol_, "[object Symbol]")                                    \
+  IF_RECORD_TUPLE(MACRO_(object_Tuple_, "[object Tuple]"))                     \
+  MACRO_(object_Undefined_, "[object Undefined]")                              \
   MACRO_(Object_valueOf, "Object_valueOf")                                     \
+  MACRO_(objects, "objects")                                                   \
   MACRO2(of, "of")                                                             \
   MACRO_(offset, "offset")                                                     \
   MACRO_(one, "one")                                                           \

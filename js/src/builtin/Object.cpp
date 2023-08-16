@@ -542,7 +542,7 @@ static JSString* GetBuiltinTagSlow(JSContext* cx, HandleObject obj) {
 
   // Step 5.
   if (isArray) {
-    return cx->names().objectArray;
+    return cx->names().object_Array_;
   }
 
   // Steps 6-14.
@@ -553,28 +553,28 @@ static JSString* GetBuiltinTagSlow(JSContext* cx, HandleObject obj) {
 
   switch (cls) {
     case ESClass::String:
-      return cx->names().objectString;
+      return cx->names().object_String_;
     case ESClass::Arguments:
-      return cx->names().objectArguments;
+      return cx->names().object_Arguments_;
     case ESClass::Error:
-      return cx->names().objectError;
+      return cx->names().object_Error_;
     case ESClass::Boolean:
-      return cx->names().objectBoolean;
+      return cx->names().object_Boolean_;
     case ESClass::Number:
-      return cx->names().objectNumber;
+      return cx->names().object_Number_;
     case ESClass::Date:
-      return cx->names().objectDate;
+      return cx->names().object_Date_;
     case ESClass::RegExp:
-      return cx->names().objectRegExp;
+      return cx->names().object_RegExp_;
     default:
       if (obj->isCallable()) {
         // Non-standard: Prevent <object> from showing up as Function.
         JSObject* unwrapped = CheckedUnwrapDynamic(obj, cx);
         if (!unwrapped || !unwrapped->getClass()->isDOMClass()) {
-          return cx->names().objectFunction;
+          return cx->names().object_Function_;
         }
       }
-      return cx->names().objectObject;
+      return cx->names().object_Object_;
   }
 }
 
@@ -586,51 +586,51 @@ static MOZ_ALWAYS_INLINE JSString* GetBuiltinTagFast(JSObject* obj,
   // Optimize the non-proxy case to bypass GetBuiltinClass.
   if (clasp == &PlainObject::class_) {
     // This case is by far the most common so we handle it first.
-    return cx->names().objectObject;
+    return cx->names().object_Object_;
   }
 
   if (clasp == &ArrayObject::class_) {
-    return cx->names().objectArray;
+    return cx->names().object_Array_;
   }
 
   if (clasp->isJSFunction()) {
-    return cx->names().objectFunction;
+    return cx->names().object_Function_;
   }
 
   if (clasp == &StringObject::class_) {
-    return cx->names().objectString;
+    return cx->names().object_String_;
   }
 
   if (clasp == &NumberObject::class_) {
-    return cx->names().objectNumber;
+    return cx->names().object_Number_;
   }
 
   if (clasp == &BooleanObject::class_) {
-    return cx->names().objectBoolean;
+    return cx->names().object_Boolean_;
   }
 
   if (clasp == &DateObject::class_) {
-    return cx->names().objectDate;
+    return cx->names().object_Date_;
   }
 
   if (clasp == &RegExpObject::class_) {
-    return cx->names().objectRegExp;
+    return cx->names().object_RegExp_;
   }
 
   if (obj->is<ArgumentsObject>()) {
-    return cx->names().objectArguments;
+    return cx->names().object_Arguments_;
   }
 
   if (obj->is<ErrorObject>()) {
-    return cx->names().objectError;
+    return cx->names().object_Error_;
   }
 
   if (obj->isCallable() && !obj->getClass()->isDOMClass()) {
     // Non-standard: Prevent <object> from showing up as Function.
-    return cx->names().objectFunction;
+    return cx->names().object_Function_;
   }
 
-  return cx->names().objectObject;
+  return cx->names().object_Object_;
 }
 
 // For primitive values we try to avoid allocating the object if we can
@@ -655,15 +655,15 @@ static JSAtom* MaybeObjectToStringPrimitive(JSContext* cx, const Value& v) {
   // Return the direct result.
   switch (protoKey) {
     case JSProto_String:
-      return cx->names().objectString;
+      return cx->names().object_String_;
     case JSProto_Number:
-      return cx->names().objectNumber;
+      return cx->names().object_Number_;
     case JSProto_Boolean:
-      return cx->names().objectBoolean;
+      return cx->names().object_Boolean_;
     case JSProto_Symbol:
-      return cx->names().objectSymbol;
+      return cx->names().object_Symbol_;
     case JSProto_BigInt:
-      return cx->names().objectBigInt;
+      return cx->names().object_BigInt_;
     default:
       break;
   }
@@ -680,13 +680,13 @@ bool js::obj_toString(JSContext* cx, unsigned argc, Value* vp) {
   if (args.thisv().isPrimitive()) {
     // Step 1.
     if (args.thisv().isUndefined()) {
-      args.rval().setString(cx->names().objectUndefined);
+      args.rval().setString(cx->names().object_Undefined_);
       return true;
     }
 
     // Step 2.
     if (args.thisv().isNull()) {
-      args.rval().setString(cx->names().objectNull);
+      args.rval().setString(cx->names().object_Null_);
       return true;
     }
 
