@@ -16,13 +16,11 @@
 #include "mozilla/Result.h"
 #include "MediaData.h"
 #include "nsMimeTypes.h"
-#ifdef MOZ_FMP4
-#  include "AtomType.h"
-#  include "BufferReader.h"
-#  include "ByteStream.h"
-#  include "MP4Interval.h"
-#  include "SampleIterator.h"
-#endif
+#include "AtomType.h"
+#include "BufferReader.h"
+#include "ByteStream.h"
+#include "MP4Interval.h"
+#include "SampleIterator.h"
 #include "SourceBufferResource.h"
 #include <algorithm>
 
@@ -310,8 +308,6 @@ class WebMContainerParser
   Maybe<WebMTimeDataOffset> mLastMapping;
 };
 
-#ifdef MOZ_FMP4
-
 DDLoggedTypeDeclNameAndBase(MP4Stream, ByteStream);
 
 class MP4Stream : public ByteStream, public DecoderDoctorLifeLogger<MP4Stream> {
@@ -595,9 +591,6 @@ class MP4ContainerParser : public ContainerParser,
   RefPtr<MP4Stream> mStream;
   UniquePtr<MoofParser> mParser;
 };
-#endif  // MOZ_FMP4
-
-#ifdef MOZ_FMP4
 DDLoggedTypeDeclNameAndBase(ADTSContainerParser, ContainerParser);
 
 class ADTSContainerParser
@@ -737,7 +730,6 @@ class ADTSContainerParser
   // Especially when we generate the timestamps ourselves.
   int64_t GetRoundingError() override { return 0; }
 };
-#endif  // MOZ_FMP4
 
 /*static*/
 UniquePtr<ContainerParser> ContainerParser::CreateForMIMEType(
@@ -747,7 +739,6 @@ UniquePtr<ContainerParser> ContainerParser::CreateForMIMEType(
     return MakeUnique<WebMContainerParser>(aType);
   }
 
-#ifdef MOZ_FMP4
   if (aType.Type() == MEDIAMIMETYPE(VIDEO_MP4) ||
       aType.Type() == MEDIAMIMETYPE(AUDIO_MP4)) {
     return MakeUnique<MP4ContainerParser>(aType);
@@ -755,7 +746,6 @@ UniquePtr<ContainerParser> ContainerParser::CreateForMIMEType(
   if (aType.Type() == MEDIAMIMETYPE("audio/aac")) {
     return MakeUnique<ADTSContainerParser>(aType);
   }
-#endif
 
   return MakeUnique<ContainerParser>(aType);
 }
