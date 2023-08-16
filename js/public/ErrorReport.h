@@ -118,10 +118,10 @@ class JSErrorBase {
   unsigned sourceId;
 
   // Source line number (1-origin).
-  unsigned lineno;
+  uint32_t lineno;
 
   // Column number in line in UTF-16 code units (1-origin).
-  unsigned column;
+  uint32_t column;
 
   // the error number, e.g. see js/public/friend/ErrorNumbers.msg.
   unsigned errorNumber;
@@ -195,7 +195,7 @@ class JSErrorNotes {
   js::Vector<js::UniquePtr<Note>, 1, js::SystemAllocPolicy> notes_;
 
   bool addNoteVA(js::FrontendContext* fc, const char* filename,
-                 unsigned sourceId, unsigned lineno, unsigned column,
+                 unsigned sourceId, uint32_t lineno, uint32_t column,
                  JSErrorCallback errorCallback, void* userRef,
                  const unsigned errorNumber,
                  js::ErrorArgumentsType argumentsType, va_list ap);
@@ -207,27 +207,27 @@ class JSErrorNotes {
   // Add a note to the given position.
   // column is 1-origin.
   bool addNoteASCII(JSContext* cx, const char* filename, unsigned sourceId,
-                    unsigned lineno, unsigned column,
+                    uint32_t lineno, uint32_t column,
                     JSErrorCallback errorCallback, void* userRef,
                     const unsigned errorNumber, ...);
   bool addNoteASCII(js::FrontendContext* fc, const char* filename,
-                    unsigned sourceId, unsigned lineno, unsigned column,
+                    unsigned sourceId, uint32_t lineno, uint32_t column,
                     JSErrorCallback errorCallback, void* userRef,
                     const unsigned errorNumber, ...);
   bool addNoteLatin1(JSContext* cx, const char* filename, unsigned sourceId,
-                     unsigned lineno, unsigned column,
+                     uint32_t lineno, uint32_t column,
                      JSErrorCallback errorCallback, void* userRef,
                      const unsigned errorNumber, ...);
   bool addNoteLatin1(js::FrontendContext* fc, const char* filename,
-                     unsigned sourceId, unsigned lineno, unsigned column,
+                     unsigned sourceId, uint32_t lineno, uint32_t column,
                      JSErrorCallback errorCallback, void* userRef,
                      const unsigned errorNumber, ...);
   bool addNoteUTF8(JSContext* cx, const char* filename, unsigned sourceId,
-                   unsigned lineno, unsigned column,
+                   uint32_t lineno, uint32_t column,
                    JSErrorCallback errorCallback, void* userRef,
                    const unsigned errorNumber, ...);
   bool addNoteUTF8(js::FrontendContext* fc, const char* filename,
-                   unsigned sourceId, unsigned lineno, unsigned column,
+                   unsigned sourceId, uint32_t lineno, uint32_t column,
                    JSErrorCallback errorCallback, void* userRef,
                    const unsigned errorNumber, ...);
 
