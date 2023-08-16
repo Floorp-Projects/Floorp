@@ -1334,7 +1334,7 @@ bool GlobalObject::initAsyncFromSyncIteratorProto(
   if (!DefinePropertiesAndFunctions(cx, asyncFromSyncIterProto, nullptr,
                                     async_from_sync_iter_methods) ||
       !DefineToStringTag(cx, asyncFromSyncIterProto,
-                         cx->names().AsyncFromSyncIterator)) {
+                         cx->names().Async_from_Sync_Iterator_)) {
     return false;
   }
 

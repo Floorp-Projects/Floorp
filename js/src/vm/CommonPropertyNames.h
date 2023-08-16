@@ -36,7 +36,7 @@
   MACRO_(approximatelySign, "approximatelySign")                               \
   MACRO_(arguments, "arguments")                                               \
   MACRO_(ArgumentsLength, "ArgumentsLength")                                   \
-  MACRO_(ArrayIterator, "Array Iterator")                                      \
+  MACRO_(Array_Iterator_, "Array Iterator")                                    \
   MACRO_(ArrayIteratorNext, "ArrayIteratorNext")                               \
   MACRO_(ArraySort, "ArraySort")                                               \
   MACRO_(ArraySpeciesCreate, "ArraySpeciesCreate")                             \
@@ -46,7 +46,7 @@
   MACRO_(assert_, "assert")                                                    \
   MACRO_(Async, "Async")                                                       \
   MACRO_(async, "async")                                                       \
-  MACRO_(AsyncFromSyncIterator, "Async-from-Sync Iterator")                    \
+  MACRO_(Async_from_Sync_Iterator_, "Async-from-Sync Iterator")                \
   MACRO_(AsyncFunctionNext, "AsyncFunctionNext")                               \
   MACRO_(AsyncFunctionThrow, "AsyncFunctionThrow")                             \
   MACRO_(AsyncGenerator, "AsyncGenerator")                                     \
@@ -342,7 +342,7 @@
   MACRO_(lookupSetter, "__lookupSetter__")                                     \
   MACRO_(many, "many")                                                         \
   MACRO_(MapConstructorInit, "MapConstructorInit")                             \
-  MACRO_(MapIterator, "Map Iterator")                                          \
+  MACRO_(Map_Iterator_, "Map Iterator")                                        \
   MACRO_(maxColumn, "maxColumn")                                               \
   MACRO_(maximum, "maximum")                                                   \
   MACRO_(maximumFractionDigits, "maximumFractionDigits")                       \
@@ -457,7 +457,7 @@
   MACRO_(quarter, "quarter")                                                   \
   MACRO_(raw, "raw")                                                           \
   MACRO_(reason, "reason")                                                     \
-  MACRO_(RegExpStringIterator, "RegExp String Iterator")                       \
+  MACRO_(RegExp_String_Iterator_, "RegExp String Iterator")                    \
   MACRO_(RegExp_prototype_Exec, "RegExp_prototype_Exec")                       \
   MACRO_(region, "region")                                                     \
   MACRO_(register_, "register")                                                \
@@ -490,7 +490,7 @@
   MACRO_(SetCanonicalName, "SetCanonicalName")                                 \
   MACRO_(SetConstructorInit, "SetConstructorInit")                             \
   MACRO_(SetIsInlinableLargeFunction, "SetIsInlinableLargeFunction")           \
-  MACRO_(SetIterator, "Set Iterator")                                          \
+  MACRO_(Set_Iterator_, "Set Iterator")                                        \
   MACRO_(setPrototypeOf, "setPrototypeOf")                                     \
   MACRO_(shape, "shape")                                                       \
   MACRO_(shared, "shared")                                                     \
@@ -511,7 +511,7 @@
   MACRO_(static_, "static")                                                    \
   MACRO_(status, "status")                                                     \
   MACRO_(sticky, "sticky")                                                     \
-  MACRO_(StringIterator, "String Iterator")                                    \
+  MACRO_(String_Iterator_, "String Iterator")                                  \
   MACRO_(strings, "strings")                                                   \
   MACRO_(String_split, "String_split")                                         \
   MACRO_(StructType, "StructType")                                             \
