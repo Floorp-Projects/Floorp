@@ -145,15 +145,15 @@
   MACRO_(domNode, "domNode")                                                   \
   MACRO_(done, "done")                                                         \
   MACRO_(dotAll, "dotAll")                                                     \
-  MACRO_(dotArgs, ".args")                                                     \
-  MACRO_(dotFieldKeys, ".fieldKeys")                                           \
-  MACRO_(dotGenerator, ".generator")                                           \
-  MACRO_(dotInitializers, ".initializers")                                     \
-  MACRO_(dotNewTarget, ".newTarget")                                           \
-  MACRO_(dotPrivateBrand, ".privateBrand")                                     \
-  MACRO_(dotStaticFieldKeys, ".staticFieldKeys")                               \
-  MACRO_(dotStaticInitializers, ".staticInitializers")                         \
-  MACRO_(dotThis, ".this")                                                     \
+  MACRO_(dot_args_, ".args")                                                   \
+  MACRO_(dot_fieldKeys_, ".fieldKeys")                                         \
+  MACRO_(dot_generator_, ".generator")                                         \
+  MACRO_(dot_initializers_, ".initializers")                                   \
+  MACRO_(dot_newTarget_, ".newTarget")                                         \
+  MACRO_(dot_privateBrand_, ".privateBrand")                                   \
+  MACRO_(dot_staticFieldKeys_, ".staticFieldKeys")                             \
+  MACRO_(dot_staticInitializers_, ".staticInitializers")                       \
+  MACRO_(dot_this_, ".this")                                                   \
   MACRO_(each, "each")                                                         \
   MACRO_(element, "element")                                                   \
   MACRO_(elementType, "elementType")                                           \
