@@ -28,6 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   PdfJsDefaultPreferences: "resource://pdf.js/PdfJsDefaultPreferences.sys.mjs",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   WebsiteFilter: "resource:///modules/policies/WebsiteFilter.sys.mjs",
 });
 
@@ -1272,6 +1273,35 @@ export var Policies = {
           param.Locked
         );
       }
+    },
+  },
+
+  FirefoxSuggest: {
+    onBeforeAddons(manager, param) {
+      (async () => {
+        await lazy.UrlbarPrefs.firefoxSuggestScenarioStartupPromise;
+        if ("WebSuggestions" in param) {
+          PoliciesUtils.setDefaultPref(
+            "browser.urlbar.suggest.quicksuggest.nonsponsored",
+            param.WebSuggestions,
+            param.Locked
+          );
+        }
+        if ("SponsoredSuggestions" in param) {
+          PoliciesUtils.setDefaultPref(
+            "browser.urlbar.suggest.quicksuggest.sponsored",
+            param.SponsoredSuggestions,
+            param.Locked
+          );
+        }
+        if ("ImproveSuggest" in param) {
+          PoliciesUtils.setDefaultPref(
+            "browser.urlbar.quicksuggest.dataCollection.enabled",
+            param.ImproveSuggest,
+            param.Locked
+          );
+        }
+      })();
     },
   },
 
