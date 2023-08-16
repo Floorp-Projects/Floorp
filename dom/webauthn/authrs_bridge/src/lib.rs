@@ -20,6 +20,7 @@ use authenticator::{
     statecallback::StateCallback,
     Assertion, Pin, RegisterResult, SignResult, StateMachine, StatusPinUv, StatusUpdate,
 };
+use base64::Engine;
 use moz_task::RunnableBuilder;
 use nserror::{
     nsresult, NS_ERROR_DOM_INVALID_STATE_ERR, NS_ERROR_DOM_NOT_ALLOWED_ERR,
@@ -858,11 +859,20 @@ impl AuthrsTransport {
         user_handle: &nsACString,
         sign_count: u32,
     ) -> Result<(), nsresult> {
+        let credential_id = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .decode(credential_id)
+            .or(Err(NS_ERROR_INVALID_ARG))?;
+        let private_key = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .decode(private_key)
+            .or(Err(NS_ERROR_INVALID_ARG))?;
+        let user_handle = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .decode(user_handle)
+            .or(Err(NS_ERROR_INVALID_ARG))?;
         self.test_token_manager.add_credential(
             authenticator_id,
-            credential_id.as_ref(),
-            private_key.as_ref(),
-            user_handle.as_ref(),
+            &credential_id,
+            &private_key,
+            &user_handle,
             sign_count,
             rp_id.to_string(),
             is_resident_credential,
@@ -883,6 +893,9 @@ impl AuthrsTransport {
         authenticator_id: u64,
         credential_id: &nsACString,
     ) -> Result<(), nsresult> {
+        let credential_id = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .decode(credential_id)
+            .or(Err(NS_ERROR_INVALID_ARG))?;
         self.test_token_manager
             .remove_credential(authenticator_id, credential_id.as_ref())
     }
