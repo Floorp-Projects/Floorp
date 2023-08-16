@@ -2689,11 +2689,12 @@ const js::SrcNote* js::GetSrcNote(JSContext* cx, JSScript* script,
   return GetSrcNote(cx->caches().gsnCache, script, pc);
 }
 
-unsigned js::PCToLineNumber(unsigned startLine, unsigned startCol,
+unsigned js::PCToLineNumber(unsigned startLine,
+                            JS::LimitedColumnNumberZeroOrigin startCol,
                             SrcNote* notes, jsbytecode* code, jsbytecode* pc,
-                            unsigned* columnp) {
+                            JS::LimitedColumnNumberZeroOrigin* columnp) {
   unsigned lineno = startLine;
-  unsigned column = startCol;
+  JS::LimitedColumnNumberZeroOrigin column = startCol;
 
   /*
    * Walk through source notes accumulating their deltas, keeping track of
@@ -2712,14 +2713,14 @@ unsigned js::PCToLineNumber(unsigned startLine, unsigned startCol,
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
       lineno = SrcNote::SetLine::getLine(sn, startLine);
-      column = 0;
+      column = JS::LimitedColumnNumberZeroOrigin::zero();
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
-      column = 0;
+      column = JS::LimitedColumnNumberZeroOrigin::zero();
     } else if (type == SrcNoteType::ColSpan) {
       ptrdiff_t colspan = SrcNote::ColSpan::getSpan(sn);
-      MOZ_ASSERT(ptrdiff_t(column) + colspan >= 0);
-      column += colspan;
+      MOZ_ASSERT(ptrdiff_t(column.zeroOriginValue()) + colspan >= 0);
+      column += JS::ColumnNumberOffset(colspan);
     }
   }
 
@@ -2731,14 +2732,14 @@ unsigned js::PCToLineNumber(unsigned startLine, unsigned startCol,
 }
 
 unsigned js::PCToLineNumber(JSScript* script, jsbytecode* pc,
-                            unsigned* columnp) {
+                            JS::LimitedColumnNumberZeroOrigin* columnp) {
   /* Cope with InterpreterFrame.pc value prior to entering Interpret. */
   if (!pc) {
     return 0;
   }
 
-  return PCToLineNumber(script->lineno(), script->column().zeroOriginValue(),
-                        script->notes(), script->code(), pc, columnp);
+  return PCToLineNumber(script->lineno(), script->column(), script->notes(),
+                        script->code(), pc, columnp);
 }
 
 jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {

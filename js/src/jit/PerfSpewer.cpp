@@ -940,7 +940,7 @@ void IonPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
   }
 #endif
   uint32_t lineno = 0;
-  uint32_t colno = 0;
+  JS::LimitedColumnNumberZeroOrigin colno;
 
   for (OpcodeEntry& entry : opcodes_) {
     jsbytecode* pc = entry.bytecodepc;
@@ -955,15 +955,14 @@ void IonPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
             CreateProfilerSourceEntry(profilerRecord, lock)) {
       srcInfo->offset = entry.offset;
       srcInfo->lineno = lineno;
-      srcInfo->colno = JS::LimitedColumnNumberZeroOrigin(colno);
+      srcInfo->colno = colno;
       srcInfo->filename = JS_smprintf("%s", filename);
     }
 
 #ifdef JS_ION_PERF
     if (perfProfiling) {
       WriteJitDumpDebugEntry(uint64_t(code->raw()) + entry.offset, filename,
-                             lineno, JS::LimitedColumnNumberZeroOrigin(colno),
-                             lock);
+                             lineno, colno, lock);
     }
 #endif
   }

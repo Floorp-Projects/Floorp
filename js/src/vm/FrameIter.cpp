@@ -629,11 +629,10 @@ unsigned FrameIter::computeLine(
       if (isWasm()) {
         return wasmFrame().computeLine(column);
       }
-      unsigned columnNumber;
+      JS::LimitedColumnNumberZeroOrigin columnNumber;
       unsigned lineNumber = PCToLineNumber(script(), pc(), &columnNumber);
       if (column) {
-        *column = JS::TaggedColumnNumberZeroOrigin(
-            JS::LimitedColumnNumberZeroOrigin(columnNumber));
+        *column = JS::TaggedColumnNumberZeroOrigin(columnNumber);
       }
       return lineNumber;
   }
