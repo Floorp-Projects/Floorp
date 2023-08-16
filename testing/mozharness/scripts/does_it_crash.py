@@ -9,6 +9,8 @@
     Runs a thing to see if it crashes within a set period.
 """
 import os
+import signal
+import subprocess
 import sys
 
 import requests
@@ -16,8 +18,8 @@ import requests
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 import mozinstall
+import mozprocess
 from mozharness.base.script import BaseScript
-from mozprocess import ProcessHandler
 
 
 class DoesItCrash(BaseScript):
@@ -105,7 +107,32 @@ class DoesItCrash(BaseScript):
         else:
             self.install_dir = ""
 
+    def kill(self, proc):
+        is_win = os.name == "nt"
+        if is_win:
+            proc.send_signal(signal.CTRL_BREAK_EVENT)
+        else:
+            os.killpg(proc.pid, signal.SIGKILL)
+        try:
+            proc.wait(5)
+            self.log("process terminated")
+        except subprocess.TimeoutExpired:
+            self.error("unable to terminate process!")
+
     def run_thing(self):
+
+        self.timed_out = False
+
+        def timeout_handler(proc):
+            self.log(f"timeout detected: killing pid {proc.pid}")
+            self.timed_out = True
+            self.kill(proc)
+
+        self.output = []
+
+        def output_line_handler(proc, line):
+            self.output.append(line)
+
         thing = os.path.abspath(
             os.path.join(self.install_dir, self.config["thing_to_run"])
         )
@@ -114,26 +141,21 @@ class DoesItCrash(BaseScript):
         timeout = self.config["run_for"]
 
         self.log(f"Running {thing} with args {args}")
-        p = ProcessHandler(
-            thing,
-            args=args,
-            shell=False,
-            storeOutput=True,
-            kill_on_timeout=True,
-            stream=False,
+        cmd = [thing]
+        cmd.extend(args)
+        mozprocess.run_and_wait(
+            cmd,
+            timeout=timeout,
+            timeout_handler=timeout_handler,
+            output_line_handler=output_line_handler,
         )
-        p.run(timeout)
-        # Wait for the timeout + a grace period (to make sure we don't interrupt
-        # process tear down).
-        # Without this, this script could potentially hang
-        p.wait(timeout + 10)
-        if not p.timedOut:
+        if not self.timed_out:
             # It crashed, oh no!
             self.critical(
                 f"TEST-UNEXPECTED-FAIL: {thing} did not run for {timeout} seconds"
             )
             self.critical("Output was:")
-            for l in p.output:
+            for l in self.output:
                 self.critical(l)
             self.fatal("fail")
         else:
