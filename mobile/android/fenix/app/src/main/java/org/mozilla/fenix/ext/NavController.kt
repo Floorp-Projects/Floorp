@@ -59,6 +59,7 @@ fun NavController.navigateWithBreadcrumb(
                     "where we thought we were: $navigateFrom",
             ),
         )
+        crashReporter.submitCaughtException(e)
     }
 }
 
