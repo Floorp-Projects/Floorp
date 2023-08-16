@@ -6,9 +6,12 @@
 #include "SocketProcessBackgroundParent.h"
 #include "SocketProcessLogging.h"
 
+#include "mozilla/net/HttpConnectionMgrParent.h"
+#include "mozilla/net/WebSocketConnectionParent.h"
 #include "mozilla/psm/IPCClientCertsParent.h"
 #include "mozilla/psm/VerifySSLServerCertParent.h"
 #include "mozilla/psm/SelectTLSClientAuthCertParent.h"
+#include "nsIHttpChannelInternal.h"
 
 namespace mozilla::net {
 
@@ -121,6 +124,38 @@ mozilla::ipc::IPCResult SocketProcessBackgroundParent::RecvInitIPCClientCerts(
         RefPtr<psm::IPCClientCertsParent> parent =
             new psm::IPCClientCertsParent();
         endpoint.Bind(parent);
+      }));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+SocketProcessBackgroundParent::RecvInitWebSocketConnection(
+    Endpoint<PWebSocketConnectionParent>&& aEndpoint,
+    const uint32_t& aListenerId) {
+  LOG(("SocketProcessBackgroundParent::RecvInitWebSocketConnection\n"));
+  if (!aEndpoint.IsValid()) {
+    return IPC_FAIL(this, "Invalid endpoint");
+  }
+
+  nsCOMPtr<nsISerialEventTarget> transportQueue;
+  if (NS_FAILED(NS_CreateBackgroundTaskQueue("WebSocketConnection",
+                                             getter_AddRefs(transportQueue)))) {
+    return IPC_FAIL(this, "NS_CreateBackgroundTaskQueue failed");
+  }
+
+  transportQueue->Dispatch(NS_NewRunnableFunction(
+      "InitWebSocketConnection",
+      [endpoint = std::move(aEndpoint), aListenerId]() mutable {
+        Maybe<nsCOMPtr<nsIHttpUpgradeListener>> listener =
+            net::HttpConnectionMgrParent::GetAndRemoveHttpUpgradeListener(
+                aListenerId);
+        if (!listener) {
+          return;
+        }
+
+        RefPtr<WebSocketConnectionParent> actor =
+            new WebSocketConnectionParent(*listener);
+        endpoint.Bind(actor);
       }));
   return IPC_OK();
 }

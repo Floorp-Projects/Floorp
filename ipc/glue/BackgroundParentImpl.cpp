@@ -65,8 +65,6 @@
 #include "mozilla/ipc/PBackgroundTestParent.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
 #include "mozilla/net/HttpBackgroundChannelParent.h"
-#include "mozilla/net/HttpConnectionMgrParent.h"
-#include "mozilla/net/WebSocketConnectionParent.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIPrincipal.h"
 #include "nsProxyRelease.h"
@@ -1377,27 +1375,6 @@ BackgroundParentImpl::AllocPLockManagerParent(NotNull<nsIPrincipal*> aPrincipal,
 
 already_AddRefed<dom::PFetchParent> BackgroundParentImpl::AllocPFetchParent() {
   return MakeAndAddRef<dom::FetchParent>();
-}
-
-already_AddRefed<mozilla::net::PWebSocketConnectionParent>
-BackgroundParentImpl::AllocPWebSocketConnectionParent(
-    const uint32_t& aListenerId) {
-  Maybe<nsCOMPtr<nsIHttpUpgradeListener>> listener =
-      net::HttpConnectionMgrParent::GetAndRemoveHttpUpgradeListener(
-          aListenerId);
-  if (!listener) {
-    return nullptr;
-  }
-
-  RefPtr<mozilla::net::WebSocketConnectionParent> actor =
-      new mozilla::net::WebSocketConnectionParent(*listener);
-  return actor.forget();
-}
-
-mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPWebSocketConnectionConstructor(
-    PWebSocketConnectionParent* actor, const uint32_t& aListenerId) {
-  return IPC_OK();
 }
 
 }  // namespace mozilla::ipc

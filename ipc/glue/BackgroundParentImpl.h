@@ -360,11 +360,6 @@ class BackgroundParentImpl : public PBackgroundParent {
       const nsAString& aGroupName, const nsACString& aEndpointURL,
       const PrincipalInfo& aPrincipalInfo) override;
 
-  already_AddRefed<mozilla::net::PWebSocketConnectionParent>
-  AllocPWebSocketConnectionParent(const uint32_t& aListenerId) override;
-  mozilla::ipc::IPCResult RecvPWebSocketConnectionConstructor(
-      PWebSocketConnectionParent* actor, const uint32_t& aListenerId) override;
-
   already_AddRefed<PLockManagerParent> AllocPLockManagerParent(
       NotNull<nsIPrincipal*> aPrincipal, const nsID& aClientId) final;
 

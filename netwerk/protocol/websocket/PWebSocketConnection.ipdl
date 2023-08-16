@@ -6,8 +6,6 @@
 
 include "mozilla/ipc/TransportSecurityInfoUtils.h";
 
-include protocol PBackground;
-
 [RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 
 namespace mozilla {
@@ -15,8 +13,6 @@ namespace net {
 
 protocol PWebSocketConnection
 {
-  manager PBackground;
-
 parent:
   async OnTransportAvailable(nullable nsITransportSecurityInfo aSecurityInfo);
   async OnError(nsresult aStatus);
