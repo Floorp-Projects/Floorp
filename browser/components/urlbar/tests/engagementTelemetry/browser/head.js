@@ -258,6 +258,15 @@ async function initSapTest() {
   await setup();
 }
 
+async function initSearchEngineDefaultIdTest() {
+  /* import-globals-from head-search_engine_default_id.js */
+  Services.scriptloader.loadSubScript(
+    "chrome://mochitests/content/browser/browser/components/urlbar/tests/engagementTelemetry/browser/head-search_engine_default_id.js",
+    this
+  );
+  await setup();
+}
+
 async function initSearchModeTest() {
   /* import-globals-from head-search_mode.js */
   Services.scriptloader.loadSubScript(

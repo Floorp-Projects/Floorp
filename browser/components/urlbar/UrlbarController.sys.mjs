@@ -1112,6 +1112,7 @@ class TelemetryEvent {
     let results = currentResults
       .map(r => lazy.UrlbarUtils.searchEngagementTelemetryType(r))
       .join(",");
+    const search_engine_default_id = Services.search.defaultEngine.telemetryId;
 
     let eventInfo;
     if (method === "engagement") {
@@ -1138,11 +1139,13 @@ class TelemetryEvent {
         n_chars: numChars,
         n_words: numWords,
         n_results: numResults,
+        selected_position: selIndex + 1,
         selected_result,
         selected_result_subtype,
         provider,
         engagement_type:
           selType === "help" || selType === "dismiss" ? selType : action,
+        search_engine_default_id,
         groups,
         results,
       };
@@ -1154,6 +1157,7 @@ class TelemetryEvent {
         n_chars: numChars,
         n_words: numWords,
         n_results: numResults,
+        search_engine_default_id,
         groups,
         results,
       };
@@ -1166,6 +1170,7 @@ class TelemetryEvent {
         n_chars: numChars,
         n_words: numWords,
         n_results: numResults,
+        search_engine_default_id,
         groups,
         results,
       };
