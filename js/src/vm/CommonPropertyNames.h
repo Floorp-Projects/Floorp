@@ -127,9 +127,9 @@
   MACRO_(decodeURIComponent, "decodeURIComponent")                             \
   MACRO_(default_, "default")                                                  \
   MACRO_(DefineDataProperty, "DefineDataProperty")                             \
-  MACRO_(defineGetter, "__defineGetter__")                                     \
+  MACRO_(defineGetter_, "__defineGetter__")                                    \
   MACRO_(defineProperty, "defineProperty")                                     \
-  MACRO_(defineSetter, "__defineSetter__")                                     \
+  MACRO_(defineSetter_, "__defineSetter__")                                    \
   MACRO_(delete_, "delete")                                                    \
   MACRO_(deleteProperty, "deleteProperty")                                     \
   MACRO_(detached, "detached")                                                 \
@@ -335,8 +335,8 @@
   MACRO_(literal, "literal")                                                   \
   MACRO_(loc, "loc")                                                           \
   MACRO_(locale, "locale")                                                     \
-  MACRO_(lookupGetter, "__lookupGetter__")                                     \
-  MACRO_(lookupSetter, "__lookupSetter__")                                     \
+  MACRO_(lookupGetter_, "__lookupGetter__")                                    \
+  MACRO_(lookupSetter_, "__lookupSetter__")                                    \
   MACRO_(many, "many")                                                         \
   MACRO_(MapConstructorInit, "MapConstructorInit")                             \
   MACRO_(Map_Iterator_, "Map Iterator")                                        \
