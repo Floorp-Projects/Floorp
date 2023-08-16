@@ -2225,25 +2225,13 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
               : BaselineSharingGroup::Last;
     } else {
       // The flex item wants to be aligned in the cross axis using one of its
-      // baselines, but baseline alignment is not possible because the
-      // FlexItem's block axis is *orthogonal* to the container's cross
-      // axis. To handle this, we just directly convert our align-self value to
-      // a fallback value here, so that we don't have to handle this with
-      // special cases elsewhere.  We are treating this case as one where it is
-      // appropriate to use the fallback values defined at
-      // https://www.w3.org/TR/css-align/#baseline-values
-      // (Note that the css-align-3 spec suggests that the fallback value is
-      // 'start'/'end', but interop & webcompat seems to require that we
-      // instead fall back to 'flex-start'/'flex-end' for flex items.)
-      //
-      // XXXdholbert Per a spec change, we're now really supposed to handle
-      // this scenairo by synthesizing a baseline from the item's border box
-      // and using that for baseline alignment.  See bug 1818933
-      if (usingItemFirstBaseline) {
-        mAlignSelf = {StyleAlignFlags::FLEX_START};
-      } else {
-        mAlignSelf = {StyleAlignFlags::FLEX_END};
-      }
+      // baselines, but we cannot get its baseline because the FlexItem's block
+      // axis is *orthogonal* to the container's cross axis. To handle this, we
+      // are supposed to synthesize a baseline from the item's border box and
+      // using that for baseline alignment.
+      mBaselineSharingGroup = usingItemFirstBaseline
+                                  ? BaselineSharingGroup::First
+                                  : BaselineSharingGroup::Last;
     }
   }
 }
@@ -2294,10 +2282,35 @@ nscoord FlexItem::BaselineOffsetFromOuterCrossEdge(
   // NOTE:
   //  * We only use baselines for aligning in the flex container's cross axis.
   //  * Baselines are a measurement in the item's block axis.
-  // ...so we only expect to get here if the item's block axis is parallel (or
-  // antiparallel) to the container's cross axis.  (Otherwise, the FlexItem
-  // constructor should've resolved mAlignSelf with a fallback value, which
-  // would prevent this function from being called.)
+  if (IsBlockAxisMainAxis()) {
+    // We get here if the item's block axis is *orthogonal* the container's
+    // cross axis. For example, a flex item with writing-mode:horizontal-tb in a
+    // column-oriented flex container. We need to synthesize the item's baseline
+    // from its border-box edge.
+    const bool isMainAxisHorizontal =
+        mCBWM.PhysicalAxis(MainAxis()) == mozilla::eAxisHorizontal;
+
+    // When the main axis is horizontal, the synthesized baseline is the bottom
+    // edge of the item's border-box. Otherwise, when the main axis is vertical,
+    // the left edge. This is for compatibility with Google Chrome.
+    nscoord marginTopOrLeftToBaseline =
+        isMainAxisHorizontal ? PhysicalMargin().top : PhysicalMargin().left;
+    if (mCBWM.IsAlphabeticalBaseline()) {
+      marginTopOrLeftToBaseline += (isMainAxisHorizontal ? CrossSize() : 0);
+    } else {
+      MOZ_ASSERT(mCBWM.IsCentralBaseline());
+      marginTopOrLeftToBaseline += CrossSize() / 2;
+    }
+
+    return aStartSide == mozilla::eSideTop || aStartSide == mozilla::eSideLeft
+               ? marginTopOrLeftToBaseline
+               : OuterCrossSize() - marginTopOrLeftToBaseline;
+  }
+
+  // We get here if the item's block axis is parallel (or antiparallel) to the
+  // container's cross axis. We call ResolvedAscent() to get the item's
+  // baseline. If the item has no baseline, the method will synthesize one from
+  // the border-box edge.
   MOZ_ASSERT(IsBlockAxisCrossAxis(),
              "Only expecting to be doing baseline computations when the "
              "cross axis is the block axis");
