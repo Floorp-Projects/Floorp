@@ -894,7 +894,7 @@ void BaselinePerfSpewer::saveJitCodeSourceInfo(
             CreateProfilerSourceEntry(profilerRecord, lock)) {
       srcInfo->offset = offset;
       srcInfo->lineno = lineno;
-      srcInfo->colno = colno.zeroOriginValue();
+      srcInfo->colno = colno;
       srcInfo->filename = JS_smprintf("%s", filename);
     }
 
@@ -955,7 +955,7 @@ void IonPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
             CreateProfilerSourceEntry(profilerRecord, lock)) {
       srcInfo->offset = entry.offset;
       srcInfo->lineno = lineno;
-      srcInfo->colno = colno;
+      srcInfo->colno = JS::LimitedColumnNumberZeroOrigin(colno);
       srcInfo->filename = JS_smprintf("%s", filename);
     }
 
