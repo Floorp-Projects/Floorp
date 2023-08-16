@@ -8,7 +8,8 @@
 #include "WebSocketConnectionChild.h"
 
 #include "WebSocketConnection.h"
-#include "mozilla/net/SocketProcessBackgroundChild.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "nsISerializable.h"
 #include "nsITLSSocketControl.h"
 #include "nsITransportSecurityInfo.h"
@@ -31,8 +32,6 @@ WebSocketConnectionChild::~WebSocketConnectionChild() {
 }
 
 void WebSocketConnectionChild::Init(uint32_t aListenerId) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsresult rv;
   mSocketThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
@@ -40,24 +39,17 @@ void WebSocketConnectionChild::Init(uint32_t aListenerId) {
     return;
   }
 
-  ipc::Endpoint<PWebSocketConnectionParent> parentEndpoint;
-  ipc::Endpoint<PWebSocketConnectionChild> childEndpoint;
-  PWebSocketConnection::CreateEndpoints(&parentEndpoint, &childEndpoint);
-
-  if (NS_FAILED(SocketProcessBackgroundChild::WithActor(
-          "SendInitWebSocketConnection",
-          [aListenerId, endpoint = std::move(parentEndpoint)](
-              SocketProcessBackgroundChild* aActor) mutable {
-            Unused << aActor->SendInitWebSocketConnection(std::move(endpoint),
-                                                          aListenerId);
-          }))) {
-    return;
-  }
-
+  RefPtr<WebSocketConnectionChild> self = this;
   mSocketThread->Dispatch(NS_NewRunnableFunction(
-      "BindWebSocketConnectionChild",
-      [self = RefPtr{this}, endpoint = std::move(childEndpoint)]() mutable {
-        endpoint.Bind(self);
+      "WebSocketConnectionChild::Init", [self, aListenerId]() {
+        mozilla::ipc::PBackgroundChild* actorChild = mozilla::ipc::
+            BackgroundChild::GetOrCreateForSocketParentBridgeForCurrentThread();
+        if (!actorChild) {
+          return;
+        }
+
+        Unused << actorChild->SendPWebSocketConnectionConstructor(self,
+                                                                  aListenerId);
       }));
 }
 

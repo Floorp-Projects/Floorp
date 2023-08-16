@@ -8,9 +8,8 @@
 #include "VerifySSLServerCertChild.h"
 
 #include "CertVerifier.h"
-#include "mozilla/net/SocketProcessBackgroundChild.h"
-#include "mozilla/psm/PVerifySSLServerCertParent.h"
-#include "mozilla/psm/PVerifySSLServerCertChild.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "nsNSSIOLayer.h"
 #include "nsSerializationHelper.h"
 
@@ -99,33 +98,19 @@ SECStatus RemoteProcessCertVerification(
     dcInfo.ref().authKeyBits() = static_cast<uint32_t>(aDcInfo->authKeyBits);
   }
 
-  ipc::Endpoint<PVerifySSLServerCertParent> parentEndpoint;
-  ipc::Endpoint<PVerifySSLServerCertChild> childEndpoint;
-  PVerifySSLServerCert::CreateEndpoints(&parentEndpoint, &childEndpoint);
-
-  if (NS_FAILED(net::SocketProcessBackgroundChild::WithActor(
-          "SendInitVerifySSLServerCert",
-          [endpoint = std::move(parentEndpoint),
-           peerCertBytes = std::move(peerCertBytes),
-           hostName = PromiseFlatCString(aHostName), port(aPort),
-           originAttributes(aOriginAttributes),
-           stapledOCSPResponse = std::move(stapledOCSPResponse),
-           sctsFromTLSExtension = std::move(sctsFromTLSExtension),
-           dcInfo = std::move(dcInfo), providerFlags(aProviderFlags),
-           certVerifierFlags(aCertVerifierFlags)](
-              net::SocketProcessBackgroundChild* aActor) mutable {
-            Unused << aActor->SendInitVerifySSLServerCert(
-                std::move(endpoint), peerCertBytes, hostName, port,
-                originAttributes, stapledOCSPResponse, sctsFromTLSExtension,
-                dcInfo, providerFlags, certVerifierFlags);
-          }))) {
+  mozilla::ipc::PBackgroundChild* actorChild = mozilla::ipc::BackgroundChild::
+      GetOrCreateForSocketParentBridgeForCurrentThread();
+  if (!actorChild) {
     PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
     return SECFailure;
   }
 
   RefPtr<VerifySSLServerCertChild> authCert = new VerifySSLServerCertChild(
       aResultTask, std::move(aPeerCertChain), aProviderFlags);
-  if (!childEndpoint.Bind(authCert)) {
+  if (!actorChild->SendPVerifySSLServerCertConstructor(
+          authCert, peerCertBytes, PromiseFlatCString(aHostName), aPort,
+          aOriginAttributes, stapledOCSPResponse, sctsFromTLSExtension, dcInfo,
+          aProviderFlags, aCertVerifierFlags)) {
     PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
     return SECFailure;
   }

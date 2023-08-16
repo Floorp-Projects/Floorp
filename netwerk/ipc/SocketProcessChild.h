@@ -8,7 +8,6 @@
 
 #include "mozilla/net/PSocketProcessChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/psm/IPCClientCertsChild.h"
 #include "mozilla/Mutex.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTHashMap.h"
@@ -25,7 +24,6 @@ namespace mozilla {
 namespace net {
 
 class ProxyAutoConfigChild;
-class SocketProcessBackgroundChild;
 class SocketProcessBridgeParent;
 class BackgroundDataBridgeParent;
 
@@ -92,7 +90,7 @@ class SocketProcessChild final : public PSocketProcessChild {
   already_AddRefed<PAltSvcTransactionChild> AllocPAltSvcTransactionChild(
       const HttpConnectionInfoCloneArgs& aConnInfo, const uint32_t& aCaps);
 
-  bool IsShuttingDown();
+  bool IsShuttingDown() { return mShuttingDown; }
 
   already_AddRefed<PDNSRequestChild> AllocPDNSRequestChild(
       const nsACString& aHost, const nsACString& aTrrServer,
@@ -153,14 +151,9 @@ class SocketProcessChild final : public PSocketProcessChild {
   mozilla::ipc::IPCResult RecvUnblockUntrustedModulesThread();
 #endif  // defined(XP_WIN)
 
-  already_AddRefed<psm::IPCClientCertsChild> GetIPCClientCertsActor();
-  void CloseIPCClientCertsActor();
-
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();
-
-  void InitSocketBackground();
 
  private:
   // Mapping of content process id and the SocketProcessBridgeParent.
@@ -170,16 +163,11 @@ class SocketProcessChild final : public PSocketProcessChild {
 
   RefPtr<ChildProfilerController> mProfilerController;
 
+  bool mShuttingDown{false};
   // Protect the table below.
   Mutex mMutex MOZ_UNANNOTATED{"SocketProcessChild::mMutex"};
   nsTHashMap<uint64_t, RefPtr<BackgroundDataBridgeParent>>
       mBackgroundDataBridgeMap;
-
-  bool mShuttingDown MOZ_GUARDED_BY(mMutex) = false;
-
-  nsCOMPtr<nsIEventTarget> mSocketThread;
-  // mIPCClientCertsChild is only accessed on the socket thread.
-  RefPtr<psm::IPCClientCertsChild> mIPCClientCertsChild;
 };
 
 }  // namespace net

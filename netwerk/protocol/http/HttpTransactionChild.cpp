@@ -10,6 +10,7 @@
 #include "HttpTransactionChild.h"
 
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
 #include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/net/InputChannelThrottleQueueChild.h"
@@ -25,6 +26,8 @@
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
 #include "OpaqueResponseUtils.h"
+
+using mozilla::ipc::BackgroundParent;
 
 namespace mozilla::net {
 
@@ -285,6 +288,7 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
     return NS_OK;
   }
 
+  ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(mDataBridgeParent);
 
   if (!mDataBridgeParent->CanSend()) {
@@ -446,7 +450,7 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
     if (dataBridgeParent) {
       mDataBridgeParent = std::move(dataBridgeParent.ref());
 
-      nsCOMPtr<nsISerialEventTarget> backgroundThread =
+      nsCOMPtr<nsIThread> backgroundThread =
           mDataBridgeParent->GetBackgroundThread();
       nsCOMPtr<nsIThreadRetargetableRequest> retargetableTransactionPump;
       retargetableTransactionPump = do_QueryObject(mTransactionPump);

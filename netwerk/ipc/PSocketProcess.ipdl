@@ -10,13 +10,13 @@ include protocol PWebrtcTCPSocket;
 include protocol PHttpTransaction;
 include protocol PHttpConnectionMgr;
 include protocol PInputChannelThrottleQueue;
+include protocol PBackgroundStarter;
 include protocol PAltService;
 include protocol PAltSvcTransaction;
 include protocol PTRRService;
 include protocol PProxyConfigLookup;
 include protocol PNativeDNSResolverOverride;
 include protocol PProxyAutoConfig;
-include protocol PSocketProcessBackground;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 include protocol PSandboxTesting;
@@ -25,6 +25,7 @@ include protocol PSandboxTesting;
 include MemoryReportTypes;
 include NeckoChannelParams;
 include PrefsTypes;
+include PSMIPCTypes;
 
 include "mozilla/ipc/ByteBufUtils.h";
 
@@ -120,7 +121,7 @@ parent:
                             PRTime   aTimestamp,
                             uint64_t aExtraSizeData,
                             nsCString aExtraStringData);
-  async InitSocketBackground(Endpoint<PSocketProcessBackgroundParent> aEndpoint);
+  async InitBackground(Endpoint<PBackgroundStarterParent> aEndpoint);
   async PAltService();
   async PProxyConfigLookup(nullable nsIURI aUri, uint32_t aFlags);
   async CachePushCheck(nullable nsIURI aPushedURL,

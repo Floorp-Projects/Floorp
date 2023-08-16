@@ -31,6 +31,9 @@ class BackgroundParentImpl : public PBackgroundParent {
   already_AddRefed<PBackgroundIDBFactoryParent>
   AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo) override;
 
+  already_AddRefed<net::PBackgroundDataBridgeParent>
+  AllocPBackgroundDataBridgeParent(const uint64_t& aChannelID) override;
+
   mozilla::ipc::IPCResult RecvPBackgroundIDBFactoryConstructor(
       PBackgroundIDBFactoryParent* aActor,
       const LoggingInfo& aLoggingInfo) override;
@@ -192,6 +195,39 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   already_AddRefed<PVsyncParent> AllocPVsyncParent() override;
 
+  already_AddRefed<mozilla::psm::PVerifySSLServerCertParent>
+  AllocPVerifySSLServerCertParent(
+      const nsTArray<ByteArray>& aPeerCertChain, const nsACString& aHostName,
+      const int32_t& aPort, const OriginAttributes& aOriginAttributes,
+      const Maybe<ByteArray>& aStapledOCSPResponse,
+      const Maybe<ByteArray>& aSctsFromTLSExtension,
+      const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
+      const uint32_t& aProviderFlags,
+      const uint32_t& aCertVerifierFlags) override;
+
+  mozilla::ipc::IPCResult RecvPVerifySSLServerCertConstructor(
+      PVerifySSLServerCertParent* aActor, nsTArray<ByteArray>&& aPeerCertChain,
+      const nsACString& aHostName, const int32_t& aPort,
+      const OriginAttributes& aOriginAttributes,
+      const Maybe<ByteArray>& aStapledOCSPResponse,
+      const Maybe<ByteArray>& aSctsFromTLSExtension,
+      const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
+      const uint32_t& aProviderFlags,
+      const uint32_t& aCertVerifierFlags) override;
+
+  virtual already_AddRefed<mozilla::psm::PSelectTLSClientAuthCertParent>
+  AllocPSelectTLSClientAuthCertParent(
+      const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
+      const int32_t& aPort, const uint32_t& aProviderFlags,
+      const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
+      const nsTArray<ByteArray>& aCANames) override;
+  virtual mozilla::ipc::IPCResult RecvPSelectTLSClientAuthCertConstructor(
+      PSelectTLSClientAuthCertParent* actor, const nsACString& aHostName,
+      const OriginAttributes& aOriginAttributes, const int32_t& aPort,
+      const uint32_t& aProviderFlags, const uint32_t& aProviderTlsFlags,
+      const ByteArray& aServerCertBytes,
+      nsTArray<ByteArray>&& aCANames) override;
+
   PBroadcastChannelParent* AllocPBroadcastChannelParent(
       const PrincipalInfo& aPrincipalInfo, const nsACString& aOrigin,
       const nsAString& aChannel) override;
@@ -234,6 +270,8 @@ class BackgroundParentImpl : public PBackgroundParent {
   mozilla::ipc::IPCResult RecvPMessagePortConstructor(
       PMessagePortParent* aActor, const nsID& aUUID,
       const nsID& aDestinationUUID, const uint32_t& aSequenceID) override;
+
+  already_AddRefed<PIPCClientCertsParent> AllocPIPCClientCertsParent() override;
 
   bool DeallocPMessagePortParent(PMessagePortParent* aActor) override;
 
@@ -359,6 +397,15 @@ class BackgroundParentImpl : public PBackgroundParent {
   mozilla::ipc::IPCResult RecvRemoveEndpoint(
       const nsAString& aGroupName, const nsACString& aEndpointURL,
       const PrincipalInfo& aPrincipalInfo) override;
+
+  dom::PMediaTransportParent* AllocPMediaTransportParent() override;
+  bool DeallocPMediaTransportParent(
+      dom::PMediaTransportParent* aActor) override;
+
+  already_AddRefed<mozilla::net::PWebSocketConnectionParent>
+  AllocPWebSocketConnectionParent(const uint32_t& aListenerId) override;
+  mozilla::ipc::IPCResult RecvPWebSocketConnectionConstructor(
+      PWebSocketConnectionParent* actor, const uint32_t& aListenerId) override;
 
   already_AddRefed<PLockManagerParent> AllocPLockManagerParent(
       NotNull<nsIPrincipal*> aPrincipal, const nsID& aClientId) final;

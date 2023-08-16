@@ -26,6 +26,7 @@ include protocol PFileSystemRequest;
 include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
 include protocol PHttpBackgroundChannel;
+include protocol PIPCClientCerts;
 include protocol PIdleScheduler;
 include protocol PMediaTransport;
 include protocol PRemoteWorker;
@@ -40,14 +41,17 @@ include protocol PLockManager;
 include protocol PMIDIManager;
 include protocol PMIDIPort;
 include protocol PQuota;
+include protocol PSelectTLSClientAuthCert;
 include protocol PServiceWorker;
 include protocol PServiceWorkerContainer;
 include protocol PServiceWorkerManager;
 include protocol PServiceWorkerRegistration;
 include protocol PWebAuthnTransaction;
 include protocol PUDPSocket;
+include protocol PVerifySSLServerCert;
 include protocol PVsync;
 include protocol PRemoteDecoderManager;
+include protocol PWebSocketConnection;
 include protocol PWebTransport;
 include protocol PFetch;
 
@@ -61,6 +65,7 @@ include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
 include ProtocolTypes;
+include PSMIPCTypes;
 include RemoteWorkerTypes;
 include MIDITypes;
 
@@ -82,6 +87,7 @@ namespace ipc {
 [NeedsOtherPid, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PBackground
 {
+  manages PBackgroundDataBridge;
   manages PBackgroundIDBFactory;
   manages PBackgroundIndexedDBUtils;
   manages PBackgroundSDBConnection;
@@ -104,8 +110,10 @@ sync protocol PBackground
   manages PGamepadEventChannel;
   manages PGamepadTestChannel;
   manages PHttpBackgroundChannel;
+  manages PIPCClientCerts;
   manages PIdleScheduler;
   manages PLockManager;
+  manages PMediaTransport;
   manages PRemoteWorker;
   manages PRemoteWorkerController;
   manages PRemoteWorkerService;
@@ -115,18 +123,23 @@ sync protocol PBackground
   manages PMessagePort;
   manages PCameras;
   manages PQuota;
+  manages PSelectTLSClientAuthCert;
   manages PServiceWorker;
   manages PServiceWorkerContainer;
   manages PServiceWorkerManager;
   manages PServiceWorkerRegistration;
   manages PWebAuthnTransaction;
+  manages PWebSocketConnection;
   manages PUDPSocket;
+  manages PVerifySSLServerCert;
   manages PVsync;
   manages PFetch;
 
 parent:
   // Only called at startup during mochitests to check the basic infrastructure.
   async PBackgroundTest(nsCString testArg);
+
+  async PBackgroundDataBridge(uint64_t channelID);
 
   async PBackgroundIDBFactory(LoggingInfo loggingInfo);
 
@@ -272,13 +285,37 @@ parent:
 
   async PIdleScheduler();
 
+  async PMediaTransport();
+
+  async PSelectTLSClientAuthCert(nsCString aHostName,
+                                 OriginAttributes aOriginAttributes,
+                                 int32_t aPort,
+                                 uint32_t aProviderFlags,
+                                 uint32_t aProviderTlsFlags,
+                                 ByteArray aServerCertBytes,
+                                 ByteArray[] aCANames);
+
+  async PVerifySSLServerCert(ByteArray[] aPeerCertChain,
+                             nsCString aHostName,
+                             int32_t aPort,
+                             OriginAttributes aOriginAttributes,
+                             ByteArray? aStapledOCSPResponse,
+                             ByteArray? aSctsFromTLSExtension,
+                             DelegatedCredentialInfoArg? aDcInfo,
+                             uint32_t aProviderFlags,
+                             uint32_t aCertVerifierFlags);
+
   async EnsureRDDProcessAndCreateBridge()
       returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
 
   async EnsureUtilityProcessAndCreateBridge(RemoteDecodeIn aLocation)
       returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
 
+  async PWebSocketConnection(uint32_t aListenerId);
+
   async PLockManager(nsIPrincipal aPrincipalInfo, nsID aClientId);
+
+  async PIPCClientCerts();
 
   async PFetch();
 
