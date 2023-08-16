@@ -1,0 +1,10 @@
+<html class="reftest-wait">
+<audio id='a'>
+<source src='1848660.wav'>
+</audio>
+<script>
+function done() {
+  document.documentElement.removeAttribute("class");
+}
+a.addEventListener('error', done, true)
+</script>
