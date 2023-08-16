@@ -1,0 +1,35 @@
+<head>
+  <title>Test for ServiceWorker importScripts</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script id="worker" type="javascript/worker">
+onconnect = async function(e) {
+    e.ports[0].onmessage = async function(msg) {
+      try {
+        self.importScripts("N:", "");
+      } catch (ex) {
+        e.source.postMessage("done");
+      }
+    };
+};
+</script>
+<script>
+SimpleTest.waitForExplicitFinish();
+document.addEventListener("DOMContentLoaded", async () => {
+    const blob = new Blob([document.querySelector('#worker').textContent],
+                          {type: "text/javascript"});
+    const sw = new SharedWorker(window.URL.createObjectURL(blob));
+    sw.port.postMessage([], []);
+    sw.port.onmessage = function(e) {
+      if (e.data == "done") {
+        ok(true);
+        SimpleTest.finish();
+      }
+    };
+});
+</script>
+</pre>
+</body>
+</html>
