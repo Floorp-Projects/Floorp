@@ -211,9 +211,6 @@
   MACRO_(from, "from")                                                         \
   MACRO_(fromAsync, "fromAsync")                                               \
   MACRO_(fulfilled, "fulfilled")                                               \
-  MACRO_(futexNotEqual, "not-equal")                                           \
-  MACRO2(futexOK, "ok")                                                        \
-  MACRO_(futexTimedOut, "timed-out")                                           \
   MACRO_(GatherAsyncParentCompletions, "GatherAsyncParentCompletions")         \
   MACRO_(gcCycleNumber, "gcCycleNumber")                                       \
   MACRO_(Generator, "Generator")                                               \
@@ -398,6 +395,7 @@
   MACRO_(nonincrementalReason, "nonincrementalReason")                         \
   MACRO_(NoPrivateGetter, "NoPrivateGetter")                                   \
   MACRO_(noStack, "noStack")                                                   \
+  MACRO_(not_equal_, "not-equal")                                              \
   MACRO_(notation, "notation")                                                 \
   MACRO_(notes, "notes")                                                       \
   MACRO_(Now, "Now")                                                           \
@@ -424,6 +422,7 @@
   MACRO_(objects, "objects")                                                   \
   MACRO2(of, "of")                                                             \
   MACRO_(offset, "offset")                                                     \
+  MACRO2(ok, "ok")                                                             \
   MACRO_(one, "one")                                                           \
   MACRO_(optimizedOut, "optimizedOut")                                         \
   MACRO_(other, "other")                                                       \
@@ -525,6 +524,7 @@
   MACRO_(then, "then")                                                         \
   MACRO_(this_, "this")                                                        \
   MACRO_(throw_, "throw")                                                      \
+  MACRO_(timed_out_, "timed-out")                                              \
   MACRO_(timestamp, "timestamp")                                               \
   MACRO_(timeStyle, "timeStyle")                                               \
   MACRO_(timeZone, "timeZone")                                                 \
