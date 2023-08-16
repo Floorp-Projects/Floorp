@@ -575,9 +575,7 @@ MBasicBlock::MBasicBlock(MIRGraph& graph, const CompileInfo& info,
       mark_(false),
       immediatelyDominated_(graph.alloc()),
       immediateDominator_(nullptr),
-      trackedSite_(site),
-      lineno_(0u),
-      columnIndex_(0u) {
+      trackedSite_(site) {
   MOZ_ASSERT(trackedSite_, "trackedSite_ is non-nullptr");
 }
 
