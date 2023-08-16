@@ -103,10 +103,6 @@ inline void AssertIsOnBackgroundThread() {}
 
 inline void AssertIsInMainProcess() { MOZ_ASSERT(XRE_IsParentProcess()); }
 
-inline void AssertIsInMainOrSocketProcess() {
-  MOZ_ASSERT(XRE_IsParentProcess() || XRE_IsSocketProcess());
-}
-
 }  // namespace ipc
 }  // namespace mozilla
 

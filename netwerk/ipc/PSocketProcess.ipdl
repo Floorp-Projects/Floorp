@@ -10,7 +10,6 @@ include protocol PWebrtcTCPSocket;
 include protocol PHttpTransaction;
 include protocol PHttpConnectionMgr;
 include protocol PInputChannelThrottleQueue;
-include protocol PBackgroundStarter;
 include protocol PAltService;
 include protocol PAltSvcTransaction;
 include protocol PTRRService;
@@ -121,7 +120,6 @@ parent:
                             PRTime   aTimestamp,
                             uint64_t aExtraSizeData,
                             nsCString aExtraStringData);
-  async InitBackground(Endpoint<PBackgroundStarterParent> aEndpoint);
   async InitSocketBackground(Endpoint<PSocketProcessBackgroundParent> aEndpoint);
   async PAltService();
   async PProxyConfigLookup(nullable nsIURI aUri, uint32_t aFlags);

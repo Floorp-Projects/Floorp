@@ -21,13 +21,6 @@ class ContentProcess;
 
 }  // namespace dom
 
-namespace net {
-
-class SocketProcessChild;
-class SocketProcessBridgeChild;
-
-}  // namespace net
-
 namespace ipc {
 
 class PBackgroundChild;
@@ -52,13 +45,12 @@ class PBackgroundStarterChild;
 // The PBackgroundChild actor and all its sub-protocol actors will be
 // automatically destroyed when its designated thread completes.
 //
-// Init{Content,Socket}Starter must be called on the main thread
+// InitContentStarter must be called on the main thread
 // with an actor bridging to the relevant target process type before these
 // methods can be used.
 class BackgroundChild final {
   friend class mozilla::dom::ContentParent;
   friend class mozilla::dom::ContentProcess;
-  friend class mozilla::net::SocketProcessChild;
 
  public:
   // See above.
@@ -68,16 +60,10 @@ class BackgroundChild final {
   static PBackgroundChild* GetOrCreateForCurrentThread();
 
   // See above.
-  static PBackgroundChild* GetOrCreateForSocketParentBridgeForCurrentThread();
-
-  // See above.
   static void CloseForCurrentThread();
 
   // See above.
   static void InitContentStarter(mozilla::dom::ContentChild* aContent);
-
-  // See above.
-  static void InitSocketStarter(mozilla::net::SocketProcessChild* aSocket);
 
  private:
   // Only called by this class's friends.
