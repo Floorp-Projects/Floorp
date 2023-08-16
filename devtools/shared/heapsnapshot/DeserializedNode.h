@@ -8,6 +8,7 @@
 
 #include <utility>
 
+#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberOneOrigin
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
 #include "mozilla/HashFunctions.h"
@@ -158,7 +159,7 @@ struct DeserializedStackFrame {
   StackFrameId id;
   Maybe<StackFrameId> parent;
   uint32_t line;
-  uint32_t column;
+  JS::TaggedColumnNumberOneOrigin column;
   // Borrowed references to strings owned by this DeserializedStackFrame's
   // owning HeapSnapshot.
   const char16_t* source;
@@ -169,13 +170,11 @@ struct DeserializedStackFrame {
   // AddRef'ing because this frame's lifetime is equal to that of its owner.
   HeapSnapshot* owner;
 
-  explicit DeserializedStackFrame(StackFrameId id,
-                                  const Maybe<StackFrameId>& parent,
-                                  uint32_t line, uint32_t column,
-                                  const char16_t* source,
-                                  const char16_t* functionDisplayName,
-                                  bool isSystem, bool isSelfHosted,
-                                  HeapSnapshot& owner)
+  explicit DeserializedStackFrame(
+      StackFrameId id, const Maybe<StackFrameId>& parent, uint32_t line,
+      JS::TaggedColumnNumberOneOrigin column, const char16_t* source,
+      const char16_t* functionDisplayName, bool isSystem, bool isSelfHosted,
+      HeapSnapshot& owner)
       : id(id),
         parent(parent),
         line(line),
@@ -198,7 +197,6 @@ struct DeserializedStackFrame {
       : id(0),
         parent(Nothing()),
         line(0),
-        column(0),
         source(nullptr),
         functionDisplayName(nullptr),
         isSystem(false),
@@ -281,7 +279,9 @@ class ConcreteStackFrame<DeserializedStackFrame> : public BaseStackFrame {
 
   uint64_t identifier() const override { return get().id; }
   uint32_t line() const override { return get().line; }
-  uint32_t column() const override { return get().column; }
+  JS::TaggedColumnNumberOneOrigin column() const override {
+    return get().column;
+  }
   bool isSystem() const override { return get().isSystem; }
   bool isSelfHosted(JSContext* cx) const override { return get().isSelfHosted; }
   void trace(JSTracer* trc) override {}

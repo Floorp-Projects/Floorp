@@ -261,7 +261,9 @@ class ConcreteStackFrame<SavedFrame> : public BaseStackFrame {
 
   StackFrame parent() const override { return get().getParent(); }
   uint32_t line() const override { return get().getLine(); }
-  uint32_t column() const override { return get().getColumn().rawValue(); }
+  JS::TaggedColumnNumberOneOrigin column() const override {
+    return get().getColumn();
+  }
 
   AtomOrTwoByteChars source() const override {
     auto source = get().getSource();
