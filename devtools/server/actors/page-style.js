@@ -538,14 +538,7 @@ class PageStyleActor extends Actor {
       entryRules.add(entry.rule);
     });
 
-    for (const rule of entryRules) {
-      try {
-        // See the comment in |StyleRuleActor.form| to understand this.
-        // This can throw if the authored rule text is not found (so e.g., with
-        // CSSOM or constructable stylesheets).
-        await rule.getAuthoredCssText();
-      } catch (ex) {}
-    }
+    await Promise.all(entries.map(entry => entry.rule.getAuthoredCssText()));
 
     // Reference to instances of StyleRuleActor for CSS rules matching the node.
     // Assume these are used by a consumer which wants to be notified when their
