@@ -118,7 +118,7 @@ class BytecodeRangeWithPosition : private BytecodeRange {
       : BytecodeRange(cx, script),
         initialLine(script->lineno()),
         lineno(script->lineno()),
-        column(script->column()),
+        column(script->column().zeroOriginValue()),
         sn(script->notes()),
         snpc(script->code()),
         isEntryPoint(false),

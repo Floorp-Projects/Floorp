@@ -141,7 +141,8 @@ void CacheIRHealth::spewShapeInformation(AutoStructuredSpewer& spew,
               {
                 spew->property("filename", baseScript->filename());
                 spew->property("line", baseScript->lineno());
-                spew->property("column", baseScript->column());
+                spew->property("column",
+                               baseScript->column().zeroOriginValue());
               }
               spew->endObject();
             }
@@ -305,7 +306,7 @@ void CacheIRHealth::spewScriptFinalWarmUpCount(JSContext* cx,
 
   spew->property("filename", filename);
   spew->property("line", script->lineno());
-  spew->property("column", script->column());
+  spew->property("column", script->column().zeroOriginValue());
   spew->property("finalWarmUpCount", warmUpCount);
 }
 
