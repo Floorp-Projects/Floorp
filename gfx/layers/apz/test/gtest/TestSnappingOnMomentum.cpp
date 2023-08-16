@@ -96,9 +96,7 @@ TEST_F(APZCSnappingOnMomentumTesterMock, Snap_On_Momentum) {
              ScreenIntPoint(50, 80), ScreenPoint(0, 0), mcc->Time());
 
   apzc->AdvanceAnimationsUntilEnd();
-  EXPECT_EQ(
-      100.0f,
-      apzc->GetCurrentAsyncScrollOffset(
-              AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling)
-          .y);
+  EXPECT_EQ(100.0f, apzc->GetCurrentAsyncScrollOffset(
+                            AsyncTransformConsumer::eForEventHandling)
+                        .y);
 }

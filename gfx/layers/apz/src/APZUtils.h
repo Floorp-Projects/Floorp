@@ -150,6 +150,27 @@ constexpr AsyncTransformComponents LayoutAndVisual(
     AsyncTransformComponent::eLayout, AsyncTransformComponent::eVisual);
 
 /**
+ * Allows consumers of async transforms to specify for what purpose they are
+ * using the async transform:
+ *
+ *   |eForEventHandling| is intended for event handling and other uses that
+ *                       need the most up-to-date transform, reflecting all
+ *                       events that have been processed so far, even if the
+ *                       transform is not yet reflected visually.
+ *   |eForCompositing| is intended for the transform that should be reflected
+ *                     visually.
+ *
+ * For example, if an APZC has metrics with the mForceDisableApz flag set,
+ * then the |eForCompositing| async transform will be empty, while the
+ * |eForEventHandling| async transform will reflect processed input events
+ * regardless of mForceDisableApz.
+ */
+enum class AsyncTransformConsumer {
+  eForEventHandling,
+  eForCompositing,
+};
+
+/**
  * Metrics that GeckoView wants to know at every composite.
  * These are the effective visual scroll offset and zoom level of
  * the root content APZC at composition time.
