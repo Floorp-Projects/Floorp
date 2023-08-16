@@ -744,7 +744,7 @@ class StyleRuleActor extends Actor {
   async getRuleText() {
     // Bail out if the rule is not supported or not an element inline style.
     if (!this.#isRuleSupported(true) && this.type !== ELEMENT_STYLE) {
-      return Promise.resolve("");
+      return "";
     }
 
     let ruleBodyText;
@@ -776,7 +776,7 @@ class StyleRuleActor extends Actor {
 
     const text = `${selectorText} {${ruleBodyText}}`;
     const { result } = SharedCssLogic.prettifyCSS(text);
-    return Promise.resolve(result);
+    return result;
   }
 
   /**
