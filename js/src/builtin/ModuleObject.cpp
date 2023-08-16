@@ -18,7 +18,7 @@
 #include "frontend/Stencil.h"
 #include "gc/GCContext.h"
 #include "gc/Tracer.h"
-#include "js/ColumnNumber.h"          // JS::LimitedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin, JS::LimitedColumnNumberZeroOrigin
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Modules.h"  // JS::GetModulePrivate, JS::ModuleDynamicImportHook
 #include "vm/EqualityOperations.h"  // js::SameValue
@@ -86,7 +86,7 @@ static Value StringOrNullValue(JSString* maybeString) {
 ImportEntry::ImportEntry(Handle<ModuleRequestObject*> moduleRequest,
                          Handle<JSAtom*> maybeImportName,
                          Handle<JSAtom*> localName, uint32_t lineNumber,
-                         uint32_t columnNumber)
+                         JS::ColumnNumberZeroOrigin columnNumber)
     : moduleRequest_(moduleRequest),
       importName_(maybeImportName),
       localName_(localName),
@@ -106,7 +106,7 @@ ExportEntry::ExportEntry(Handle<JSAtom*> maybeExportName,
                          Handle<ModuleRequestObject*> moduleRequest,
                          Handle<JSAtom*> maybeImportName,
                          Handle<JSAtom*> maybeLocalName, uint32_t lineNumber,
-                         uint32_t columnNumber)
+                         JS::ColumnNumberZeroOrigin columnNumber)
     : exportName_(maybeExportName),
       moduleRequest_(moduleRequest),
       importName_(maybeImportName),
@@ -129,7 +129,8 @@ void ExportEntry::trace(JSTracer* trc) {
 
 /* static */
 RequestedModule::RequestedModule(Handle<ModuleRequestObject*> moduleRequest,
-                                 uint32_t lineNumber, uint32_t columnNumber)
+                                 uint32_t lineNumber,
+                                 JS::ColumnNumberZeroOrigin columnNumber)
     : moduleRequest_(moduleRequest),
       lineNumber_(lineNumber),
       columnNumber_(columnNumber) {}
@@ -1739,9 +1740,9 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
 
       markUsedByStencil(localName);
       markUsedByStencil(importName);
-      entry = StencilModuleEntry::importEntry(moduleRequestIndex, localName,
-                                              importName, line,
-                                              column.zeroOriginValue());
+      entry = StencilModuleEntry::importEntry(
+          moduleRequestIndex, localName, importName, line,
+          JS::ColumnNumberZeroOrigin(column));
     } else {
       MOZ_ASSERT(item->isKind(ParseNodeKind::ImportNamespaceSpec));
       auto* spec = &item->as<UnaryNode>();
@@ -1752,7 +1753,8 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
 
       markUsedByStencil(localName);
       entry = StencilModuleEntry::importNamespaceEntry(
-          moduleRequestIndex, localName, line, column.zeroOriginValue());
+          moduleRequestIndex, localName, line,
+          JS::ColumnNumberZeroOrigin(column));
     }
 
     if (!importEntries_.put(localName, entry)) {
@@ -1981,9 +1983,9 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
 
       markUsedByStencil(importName);
       markUsedByStencil(exportName);
-      entry = StencilModuleEntry::exportFromEntry(moduleRequestIndex,
-                                                  importName, exportName, line,
-                                                  column.zeroOriginValue());
+      entry = StencilModuleEntry::exportFromEntry(
+          moduleRequestIndex, importName, exportName, line,
+          JS::ColumnNumberZeroOrigin(column));
     } else if (spec->isKind(ParseNodeKind::ExportNamespaceSpec)) {
       auto* exportNameNode = &spec->as<UnaryNode>().kid()->as<NameNode>();
 
@@ -1991,12 +1993,13 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
 
       markUsedByStencil(exportName);
       entry = StencilModuleEntry::exportNamespaceFromEntry(
-          moduleRequestIndex, exportName, line, column.zeroOriginValue());
+          moduleRequestIndex, exportName, line,
+          JS::ColumnNumberZeroOrigin(column));
     } else {
       MOZ_ASSERT(spec->isKind(ParseNodeKind::ExportBatchSpecStmt));
 
       entry = StencilModuleEntry::exportBatchFromEntry(
-          moduleRequestIndex, line, column.zeroOriginValue());
+          moduleRequestIndex, line, JS::ColumnNumberZeroOrigin(column));
     }
 
     if (!exportEntries_.append(entry)) {
@@ -2039,7 +2042,7 @@ bool ModuleBuilder::appendExportEntry(
   markUsedByStencil(localName);
   markUsedByStencil(exportName);
   auto entry = frontend::StencilModuleEntry::exportAsEntry(
-      localName, exportName, line, column.zeroOriginValue());
+      localName, exportName, line, JS::ColumnNumberZeroOrigin(column));
   if (!exportEntries_.append(entry)) {
     return false;
   }
@@ -2082,7 +2085,7 @@ bool ModuleBuilder::maybeAppendRequestedModule(
   eitherParser_.computeLineAndColumn(node->pn_pos.begin, &line, &column);
 
   auto entry = frontend::StencilModuleEntry::requestedModule(
-      moduleRequest, line, column.zeroOriginValue());
+      moduleRequest, line, JS::ColumnNumberZeroOrigin(column));
 
   if (!requestedModules_.append(entry)) {
     js::ReportOutOfMemory(fc_);

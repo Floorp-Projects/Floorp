@@ -19,6 +19,7 @@
 #include "ds/Sort.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
 #include "frontend/FrontendContext.h"   // js::AutoReportFrontendContext
+#include "js/ColumnNumber.h"            // JS::ColumnNumberZeroOrigin
 #include "js/Context.h"                 // js::AssertHeapIsIdle
 #include "js/ErrorReport.h"             // JSErrorBase
 #include "js/RootingAPI.h"              // JS::MutableHandle
@@ -205,7 +206,8 @@ JS_PUBLIC_API void JS::GetRequestedModuleSourcePos(
 
   auto& module = moduleRecord->as<ModuleObject>();
   *lineNumber = module.requestedModules()[index].lineNumber();
-  *columnNumber = module.requestedModules()[index].columnNumber();
+  *columnNumber =
+      module.requestedModules()[index].columnNumber().zeroOriginValue();
 }
 
 JS_PUBLIC_API JSScript* JS::GetModuleScript(JS::HandleObject moduleRecord) {
@@ -855,11 +857,10 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
   return ns;
 }
 
-// column is 0-origin.
 static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
                                  Handle<Value> resolution, bool isDirectImport,
                                  Handle<JSAtom*> name, uint32_t line,
-                                 uint32_t column) {
+                                 JS::ColumnNumberZeroOrigin column) {
   MOZ_ASSERT(line != 0);
 
   bool isAmbiguous = resolution == StringValue(cx->names().ambiguous);
@@ -907,8 +908,8 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
 
   RootedValue error(cx);
   if (!JS::CreateError(cx, JSEXN_SYNTAXERR, nullptr, filename, line,
-                       JSErrorBase::fromZeroOriginToOneOrigin(column), nullptr,
-                       message, JS::NothingHandleValue, &error)) {
+                       column.oneOriginValue(), nullptr, message,
+                       JS::NothingHandleValue, &error)) {
     return;
   }
 
