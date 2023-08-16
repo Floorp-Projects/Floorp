@@ -111,8 +111,28 @@ p:first-letter {
 }
 
 dialog::backdrop {
-    background-color: tomato;
+    background-color: transparent;
 }
+
+.highlights-container {
+    &::highlight(search) {
+        background-color: tomato;
+        color: gold;
+    }
+
+    &::highlight(search) {
+        color: white;
+    }
+
+    &::highlight(filter) {
+        background-color: purple;
+    }
+
+    &::highlight(unused) {
+        background-color: cyan;
+    }
+}
+
 
     </style>
   </head>
@@ -140,10 +160,29 @@ dialog::backdrop {
     </ol>
 
     <dialog>In dialog</dialog>
+
+    <section class="highlights-container">
+        Firefox Developer Tools is a set of web developer tools built into Firefox.
+        You can use them to examine, edit, and debug HTML, CSS, and JavaScript.
+    </section>
+
     <script>
         "use strict";
         // This is the only way to have the ::backdrop style to be applied
         document.querySelector("dialog").showModal()
+
+        // Register highlights for ::highlight pseudo elements
+        const highlightsContainer = document.querySelector(".highlights-container");
+
+        const searchRange = new Range();
+        searchRange.setStart(highlightsContainer.firstChild, 0);
+        searchRange.setEnd(highlightsContainer.firstChild, 10);
+        CSS.highlights.set("search", new globalThis.Highlight(searchRange));
+
+        const filterRange = new Range();
+        filterRange.setStart(highlightsContainer.firstChild, 20);
+        filterRange.setEnd(highlightsContainer.firstChild, 100);
+        CSS.highlights.set("filter", new globalThis.Highlight(filterRange));
     </script>
   </body>
 </html>
