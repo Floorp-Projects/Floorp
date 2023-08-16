@@ -3045,30 +3045,20 @@ AsyncPanZoomController* APZCTreeManager::FindRootContentApzcForLayersId(
    are applied to L are (in order from top to bottom):
 
         L's CSS transform                   (hereafter referred to as transform matrix LC)
-        L's nontransient async transform    (hereafter referred to as transform matrix LN)
-        L's transient async transform       (hereafter referred to as transform matrix LT)
+        L's async transform                 (hereafter referred to as transform matrix LA)
         M's CSS transform                   (hereafter referred to as transform matrix MC)
-        M's nontransient async transform    (hereafter referred to as transform matrix MN)
-        M's transient async transform       (hereafter referred to as transform matrix MT)
+        M's async transform                 (hereafter referred to as transform matrix MA)
         ...
         R's CSS transform                   (hereafter referred to as transform matrix RC)
-        R's nontransient async transform    (hereafter referred to as transform matrix RN)
-        R's transient async transform       (hereafter referred to as transform matrix RT)
+        R's async transform                 (hereafter referred to as transform matrix RA)
 
-   Also, for any layer, the async transform is the combination of its transient and non-transient
-   parts. That is, for any layer L:
-                  LA === LN * LT
-        LA.Inverse() === LT.Inverse() * LN.Inverse()
-
-   If we want user input to modify L's transient async transform, we have to first convert
-   user input from screen space to the coordinate space of L's transient async transform. Doing
+   If we want user input to modify L's async transform, we have to first convert
+   user input from screen space to the coordinate space of L's async transform. Doing
    this involves applying the following transforms (in order from top to bottom):
-        RT.Inverse()
-        RN.Inverse()
+        RA.Inverse()
         RC.Inverse()
         ...
-        MT.Inverse()
-        MN.Inverse()
+        MA.Inverse()
         MC.Inverse()
    This combined transformation is returned by GetScreenToApzcTransform().
 
