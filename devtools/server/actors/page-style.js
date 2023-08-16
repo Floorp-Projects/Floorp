@@ -634,17 +634,33 @@ class PageStyleActor extends Actor {
 
     // Now any pseudos.
     if (showElementStyles && !options.skipPseudo) {
+      const relevantPseudoElements = [];
       for (const readPseudo of PSEUDO_ELEMENTS) {
-        if (this._pseudoIsRelevant(bindingElement, readPseudo)) {
-          this._getElementRules(
-            bindingElement,
-            readPseudo,
-            inherited,
-            options
-          ).forEach(oneRule => {
-            rules.push(oneRule);
-          });
+        if (!this._pseudoIsRelevant(bindingElement, readPseudo)) {
+          continue;
         }
+
+        if (readPseudo === "::highlight") {
+          InspectorUtils.getRegisteredCssHighlights(
+            this.inspector.targetActor.window.document,
+            // only active
+            true
+          ).forEach(name => {
+            relevantPseudoElements.push(`::highlight(${name})`);
+          });
+        } else {
+          relevantPseudoElements.push(readPseudo);
+        }
+      }
+
+      for (const readPseudo of relevantPseudoElements) {
+        const pseudoRules = this._getElementRules(
+          bindingElement,
+          readPseudo,
+          inherited,
+          options
+        );
+        rules.push(...pseudoRules);
       }
     }
 
@@ -685,10 +701,8 @@ class PageStyleActor extends Actor {
       case "::first-letter":
       case "::first-line":
       case "::selection":
-        return true;
-      // We don't want the method to throw, but we don't handle those yet (See Bug 1840872)
       case "::highlight":
-        return false;
+        return true;
       case "::marker":
         return this._nodeIsListItem(node);
       case "::backdrop":
