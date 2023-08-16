@@ -2069,13 +2069,12 @@ JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
     auto principals =
         js::ReconstructedSavedFramePrincipals::getSingleton(ubiFrame.get());
 
-    if (!stackChain.emplaceBack(
-            source, ubiFrame.get().sourceId(), ubiFrame.get().line(),
-            JS::TaggedColumnNumberOneOrigin::fromRaw(ubiFrame.get().column()),
-            functionDisplayName,
-            /* asyncCause */ nullptr,
-            /* parent */ nullptr, principals,
-            /* mutedErrors */ true)) {
+    if (!stackChain.emplaceBack(source, ubiFrame.get().sourceId(),
+                                ubiFrame.get().line(), ubiFrame.get().column(),
+                                functionDisplayName,
+                                /* asyncCause */ nullptr,
+                                /* parent */ nullptr, principals,
+                                /* mutedErrors */ true)) {
       ReportOutOfMemory(cx);
       return false;
     }
