@@ -31,57 +31,47 @@ import { copyToTheClipboard } from "../../utils/clipboard";
  */
 export function showTabContextMenu(event, source) {
   return async ({ dispatch, getState }) => {
-    const sourceId = source.id;
-
     const state = getState();
-    const tabSources = getSourcesForTabs(state);
+    const selectedLocation = getSelectedLocation(state);
+
     const isBlackBoxed = isSourceBlackBoxed(state, source);
     const isSourceOnIgnoreList =
       isSourceMapIgnoreListEnabled(state) &&
       isSourceOnSourceMapIgnoreList(state, source);
-    const selectedLocation = getSelectedLocation(state);
+    const tabsSources = getSourcesForTabs(state);
 
-    const tabCount = tabSources.length;
-    const otherTabs = tabSources.filter(t => t.id !== sourceId);
-    const sourceTab = tabSources.find(t => t.id == sourceId);
-    const tabURLs = tabSources.map(t => t.url);
-    const otherTabURLs = otherTabs.map(t => t.url);
-
-    if (!sourceTab || !selectedLocation || !selectedLocation.source.id) {
-      return;
-    }
+    const otherTabsSources = tabsSources.filter(s => s !== source);
+    const tabIndex = tabsSources.findIndex(s => s === source);
+    const followingTabsSources = tabsSources.slice(tabIndex + 1);
 
     const tabMenuItems = getTabMenuItems();
     const items = [
       {
         item: {
           ...tabMenuItems.closeTab,
-          click: () => dispatch(closeTab(sourceTab)),
+          click: () => dispatch(closeTab(source)),
         },
       },
       {
         item: {
           ...tabMenuItems.closeOtherTabs,
-          disabled: otherTabURLs.length === 0,
-          click: () => dispatch(closeTabs(otherTabURLs)),
+          disabled: otherTabsSources.length === 0,
+          click: () => dispatch(closeTabs(otherTabsSources)),
         },
       },
       {
         item: {
           ...tabMenuItems.closeTabsToEnd,
-          disabled:
-            tabCount === 1 ||
-            tabSources.some((t, i) => t.id === sourceId && tabCount - 1 === i),
+          disabled: followingTabsSources.length === 0,
           click: () => {
-            const tabIndex = tabSources.findIndex(t => t.id == sourceId);
-            dispatch(closeTabs(tabURLs.filter((t, i) => i > tabIndex)));
+            dispatch(closeTabs(followingTabsSources));
           },
         },
       },
       {
         item: {
           ...tabMenuItems.closeAllTabs,
-          click: () => dispatch(closeTabs(tabURLs)),
+          click: () => dispatch(closeTabs(tabsSources)),
         },
       },
       { item: { type: "separator" } },
@@ -90,7 +80,10 @@ export function showTabContextMenu(event, source) {
           ...tabMenuItems.copySource,
           // Only enable when this is the selected source as this requires the source to be loaded,
           // which may not be the case if the tab wasn't ever selected.
-          disabled: selectedLocation.source.id !== source.id,
+          //
+          // Note that when opening the debugger, you may have tabs opened from a previous session,
+          // but no selected location.
+          disabled: selectedLocation?.source.id !== source.id,
           click: () => {
             dispatch(copyToClipboard(selectedLocation));
           },
@@ -108,7 +101,7 @@ export function showTabContextMenu(event, source) {
           ...tabMenuItems.showSource,
           // Source Tree only shows sources with URL
           disabled: !source.url,
-          click: () => dispatch(showSource(sourceId)),
+          click: () => dispatch(showSource(source.id)),
         },
       },
       {
@@ -124,8 +117,8 @@ export function showTabContextMenu(event, source) {
       {
         item: {
           ...tabMenuItems.prettyPrint,
-          disabled: isPretty(sourceTab),
-          click: () => dispatch(togglePrettyPrint(sourceId)),
+          disabled: isPretty(source),
+          click: () => dispatch(togglePrettyPrint(source.id)),
         },
       },
     ];
