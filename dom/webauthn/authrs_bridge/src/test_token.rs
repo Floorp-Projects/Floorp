@@ -27,6 +27,7 @@ use authenticator::errors::{AuthenticatorError, CommandError, HIDError, U2FToken
 use authenticator::{ctap2, statecallback::StateCallback};
 use authenticator::{FidoDevice, FidoDeviceIO, FidoProtocol, VirtualFidoDevice};
 use authenticator::{RegisterResult, SignResult, StatusUpdate};
+use base64::Engine;
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_ERROR_NOT_IMPLEMENTED, NS_OK};
 use nsstring::{nsACString, nsCString};
 use rand::{thread_rng, RngCore};
@@ -60,7 +61,7 @@ impl TestTokenCredential {
         &self,
         client_data_hash: &ClientDataHash,
         flags: AuthenticatorDataFlags,
-    ) -> GetAssertionResponse {
+    ) -> Result<GetAssertionResponse, HIDError> {
         let credentials = Some(PublicKeyCredentialDescriptor {
             id: self.id.clone(),
             transports: vec![],
@@ -79,16 +80,17 @@ impl TestTokenCredential {
             ..Default::default()
         });
 
-        let mut data = auth_data.to_vec().unwrap();
+        let mut data = auth_data.to_vec().or(Err(HIDError::DeviceError))?;
         data.extend_from_slice(client_data_hash.as_ref());
-        let signature = ecdsa_p256_sha256_sign_raw(&self.privkey, &data).unwrap();
-        GetAssertionResponse {
+        let signature =
+            ecdsa_p256_sha256_sign_raw(&self.privkey, &data).or(Err(HIDError::DeviceError))?;
+        Ok(GetAssertionResponse {
             credentials,
             auth_data,
             signature,
             user,
             number_of_credentials: Some(1),
-        }
+        })
     }
 }
 
@@ -363,7 +365,7 @@ impl VirtualFidoDevice for TestToken {
             // return at most one assertion matching an allowed credential ID
             for credential in eligible_cred_iter {
                 if req.allow_list.iter().any(|x| x.id == credential.id) {
-                    let assertion = credential.assert(&req.client_data_hash, flags).into();
+                    let assertion = credential.assert(&req.client_data_hash, flags)?.into();
                     assertions.push(assertion);
                     break;
                 }
@@ -375,7 +377,7 @@ impl VirtualFidoDevice for TestToken {
             // return a list of credentials here. The UI to select one of the results blocks
             // testing.
             for credential in eligible_cred_iter.filter(|x| x.is_discoverable_credential) {
-                let assertion = credential.assert(&req.client_data_hash, flags).into();
+                let assertion = credential.assert(&req.client_data_hash, flags)?.into();
                 assertions.push(assertion);
                 break;
             }
@@ -561,7 +563,9 @@ struct CredentialParameters {
 impl CredentialParameters {
     xpcom_method!(get_credential_id => GetCredentialId() -> nsACString);
     fn get_credential_id(&self) -> Result<nsCString, nsresult> {
-        Ok(nsCString::from(&self.credential_id))
+        Ok(base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .encode(&self.credential_id)
+            .into())
     }
 
     xpcom_method!(get_is_resident_credential => GetIsResidentCredential() -> bool);
@@ -576,12 +580,16 @@ impl CredentialParameters {
 
     xpcom_method!(get_private_key => GetPrivateKey() -> nsACString);
     fn get_private_key(&self) -> Result<nsCString, nsresult> {
-        Ok(nsCString::from(&self.private_key))
+        Ok(base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .encode(&self.private_key)
+            .into())
     }
 
     xpcom_method!(get_user_handle => GetUserHandle() -> nsACString);
     fn get_user_handle(&self) -> Result<nsCString, nsresult> {
-        Ok(nsCString::from(&self.user_handle))
+        Ok(base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .encode(&self.user_handle)
+            .into())
     }
 
     xpcom_method!(get_sign_count => GetSignCount() -> u32);

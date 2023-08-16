@@ -326,6 +326,7 @@ name = "authrs_bridge"
 version = "0.1.0"
 dependencies = [
  "authenticator",
+ "base64 0.21.0",
  "log",
  "moz_task",
  "nserror",
