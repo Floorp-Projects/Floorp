@@ -133,6 +133,11 @@ class Highlight final : public nsISupports, public nsWrapperCache {
   }
 
   /**
+   * @brief This mirrors the `size` property in JS world (_not_ exposed via webIDL)
+   */
+  uint32_t Size() const { return mRanges.Length(); }
+
+  /**
    * @brief Adds a `Range` to this highlight.
    *
    * This adds `aRange` both to the setlike data storage and the internal one

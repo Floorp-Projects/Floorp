@@ -29,6 +29,8 @@
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/CSSStyleRule.h"
+#include "mozilla/dom/Highlight.h"
+#include "mozilla/dom/HighlightRegistry.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/LinkStyle.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -800,6 +802,20 @@ already_AddRefed<nsINodeList> InspectorUtils::GetOverflowingChildrenOfElement(
   AddOverflowingChildrenOfElement(scrolledFrame, outerFrame, scrollPortRect,
                                   *list);
   return list.forget();
+}
+
+/* static */
+void InspectorUtils::GetRegisteredCssHighlights(GlobalObject& aGlobalObject,
+                                                Document& aDocument,
+                                                bool aActiveOnly,
+                                                nsTArray<nsString>& aResult) {
+  for (auto const& iter : aDocument.HighlightRegistry().HighlightsOrdered()) {
+    const RefPtr<nsAtom>& highlightName = iter.first();
+    const RefPtr<Highlight>& highlight = iter.second();
+    if (!aActiveOnly || highlight->Size() > 0) {
+      aResult.AppendElement(highlightName->GetUTF16String());
+    }
+  }
 }
 
 }  // namespace dom

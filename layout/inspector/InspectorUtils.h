@@ -244,6 +244,13 @@ class InspectorUtils {
    */
   static bool IsCustomElementName(GlobalObject&, const nsAString& aName,
                                   const nsAString& aNamespaceURI);
+
+  /**
+   * Get the names of registered Highlights
+   */
+  static void GetRegisteredCssHighlights(GlobalObject& aGlobal,
+                                         Document& aDocument, bool aActiveOnly,
+                                         nsTArray<nsString>& aResult);
 };
 
 }  // namespace mozilla::dom

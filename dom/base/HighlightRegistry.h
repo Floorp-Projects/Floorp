@@ -132,6 +132,14 @@ class HighlightRegistry final : public nsISupports, public nsWrapperCache {
    */
   RefPtr<nsFrameSelection> GetFrameSelection();
 
+  /**
+   * @brief Get the registry name-value tuples.
+   */
+  nsTArray<CompactPair<RefPtr<nsAtom>, RefPtr<Highlight>>> const &
+  HighlightsOrdered() {
+    return mHighlightsOrdered;
+  }
+
  private:
   /**
    * Parent document.
