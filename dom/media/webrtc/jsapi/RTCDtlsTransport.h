@@ -31,6 +31,7 @@ class RTCDtlsTransport : public DOMEventTargetHelper {
   IMPL_EVENT_HANDLER(statechange)
   RTCDtlsTransportState State() const { return mState; }
 
+  void UpdateStateNoEvent(TransportLayer::State aState);
   void UpdateState(TransportLayer::State aState);
 
  private:

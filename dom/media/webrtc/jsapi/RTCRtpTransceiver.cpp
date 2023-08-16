@@ -374,7 +374,7 @@ void RTCRtpTransceiver::Close() {
   // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-close
   mShutdown = true;
   if (mDtlsTransport) {
-    mDtlsTransport->UpdateState(TransportLayer::TS_CLOSED);
+    mDtlsTransport->UpdateStateNoEvent(TransportLayer::TS_CLOSED);
   }
   StopImpl();
 }
