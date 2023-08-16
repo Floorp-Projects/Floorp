@@ -1051,7 +1051,7 @@ void OggDemuxer::FindStartTime(TimeUnit& aOutStartTime) {
 
   if (HasVideo()) {
     FindStartTime(TrackInfo::kVideoTrack, videoStartTime);
-    if (!videoStartTime.IsPosInf()) {
+    if (!videoStartTime.IsPosInf() && videoStartTime.IsValid()) {
       OGG_DEBUG("OggDemuxer::FindStartTime() video=%s",
                 videoStartTime.ToString().get());
       mVideoOggState.mStartTime = Some(videoStartTime);
@@ -1059,16 +1059,24 @@ void OggDemuxer::FindStartTime(TimeUnit& aOutStartTime) {
   }
   if (HasAudio()) {
     FindStartTime(TrackInfo::kAudioTrack, audioStartTime);
-    if (!audioStartTime.IsPosInf()) {
+    if (!audioStartTime.IsPosInf() && audioStartTime.IsValid()) {
       OGG_DEBUG("OggDemuxer::FindStartTime() audio=%s",
                 audioStartTime.ToString().get());
       mAudioOggState.mStartTime = Some(audioStartTime);
     }
   }
 
-  TimeUnit startTime = std::min(videoStartTime, audioStartTime);
-  if (!startTime.IsPosInf()) {
-    aOutStartTime = startTime;
+  TimeUnit minStartTime;
+  if (videoStartTime.IsValid() && audioStartTime.IsValid()) {
+    minStartTime = std::min(videoStartTime, audioStartTime);
+  } else if (videoStartTime.IsValid()) {
+    minStartTime = videoStartTime;
+  } else if (audioStartTime.IsValid()) {
+    minStartTime = audioStartTime;
+  }
+
+  if (!minStartTime.IsPosInf()) {
+    aOutStartTime = minStartTime;
   }
 }
 
@@ -1165,7 +1173,12 @@ nsresult OggDemuxer::SeekInternal(TrackInfo::TrackType aType,
       continue;
     }
     TimeUnit startTstamp = state->PacketStartTime(packet);
-    if (foundKeyframe && startTstamp > adjustedTarget) {
+    if (!startTstamp.IsValid()) {
+      OGG_DEBUG("Invalid tstamp on packet %p (granulepos: %" PRId64 ")", packet,
+                packet->granulepos);
+    }
+    if (foundKeyframe && startTstamp.IsValid() &&
+        startTstamp > adjustedTarget) {
       break;
     }
     if (state->IsKeyframe(packet)) {
@@ -1174,7 +1187,8 @@ nsresult OggDemuxer::SeekInternal(TrackInfo::TrackType aType,
       tempPackets.Erase();
       foundKeyframe = true;
     }
-    if (foundKeyframe && startTstamp == adjustedTarget) {
+    if (foundKeyframe && startTstamp.IsValid() &&
+        startTstamp == adjustedTarget) {
       break;
     }
     if (foundKeyframe) {
