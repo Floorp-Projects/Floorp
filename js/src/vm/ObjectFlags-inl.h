@@ -28,7 +28,7 @@ GetObjectFlagsForNewProperty(const JSClass* clasp, ObjectFlags flags, jsid id,
   }
 
   if ((!propFlags.isDataProperty() || !propFlags.writable()) &&
-      clasp == &PlainObject::class_ && !id.isAtom(cx->names().proto)) {
+      clasp == &PlainObject::class_ && !id.isAtom(cx->names().proto_)) {
     flags.setFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto);
   }
 

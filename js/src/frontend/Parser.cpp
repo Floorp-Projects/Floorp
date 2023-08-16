@@ -12299,7 +12299,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
           return null();
         }
 
-        if (propAtom == TaggedParserAtomIndex::WellKnown::proto()) {
+        if (propAtom == TaggedParserAtomIndex::WellKnown::proto_()) {
           if (seenPrototypeMutation) {
             // Directly report the error when we're definitely not
             // in a destructuring context.
@@ -12543,7 +12543,7 @@ GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
           return null();
         }
 
-        if (propAtom == TaggedParserAtomIndex::WellKnown::proto()) {
+        if (propAtom == TaggedParserAtomIndex::WellKnown::proto_()) {
           errorAt(namePos.begin, JSMSG_RECORD_NO_PROTO);
           return null();
         }

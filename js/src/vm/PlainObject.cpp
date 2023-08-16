@@ -72,7 +72,7 @@ void PlainObject::assertHasNoNonWritableOrAccessorPropExclProto() const {
   static constexpr size_t MaxCount = 8;
 
   size_t count = 0;
-  PropertyName* protoName = runtimeFromMainThread()->commonNames->proto;
+  PropertyName* protoName = runtimeFromMainThread()->commonNames->proto_;
 
   for (ShapePropertyIter<NoGC> iter(shape()); !iter.done(); iter++) {
     // __proto__ is always allowed.

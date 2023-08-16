@@ -906,7 +906,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
       return true;
     }
     // __proto__ is not supported by CanAddNewPropertyExcludingProtoFast.
-    if (MOZ_UNLIKELY(id.isAtom(cx->names().proto))) {
+    if (MOZ_UNLIKELY(id.isAtom(cx->names().proto_))) {
       return true;
     }
     if (MOZ_UNLIKELY(!iter->isDataProperty())) {
