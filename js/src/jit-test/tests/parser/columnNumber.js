@@ -35,7 +35,7 @@ if (helperThreadCount() > 0) {
 // Check handling of columns near the limit of our ability to represent them.
 // (This is hardly thorough, but since web content can't set column numbers,
 // it's probably not worth it to be thorough.)
-const maxColumn = Math.pow(2, 30) - 2;
+const maxColumn = Math.pow(2, 30) - 1;
 assertEq(evaluate("saveStack().column", { columnNumber: maxColumn }),
          maxColumn + 1);
 

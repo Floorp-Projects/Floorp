@@ -13,8 +13,7 @@
 #include <stddef.h>   // ptrdiff_t, size_t
 #include <stdint.h>   // int8_t, uint8_t, uint32_t
 
-#include "jstypes.h"          // js::{Bit, BitMask}
-#include "js/ColumnNumber.h"  // JS::ColumnNumberOffset
+#include "jstypes.h"  // js::{Bit, BitMask}
 
 namespace js {
 
@@ -211,30 +210,29 @@ class SrcNote {
      */
     static constexpr ptrdiff_t ColSpanSignBit = 1 << (OperandBits - 1);
 
-    static inline JS::ColumnNumberOffset fromOperand(ptrdiff_t operand) {
+    static inline ptrdiff_t fromOperand(ptrdiff_t operand) {
       // There should be no bits set outside the field we're going to
       // sign-extend.
       MOZ_ASSERT(!(operand & ~((1U << OperandBits) - 1)));
 
       // Sign-extend the least significant OperandBits bits.
-      return JS::ColumnNumberOffset((operand ^ ColSpanSignBit) -
-                                    ColSpanSignBit);
+      return (operand ^ ColSpanSignBit) - ColSpanSignBit;
     }
 
    public:
     static constexpr ptrdiff_t MinColSpan = -ColSpanSignBit;
     static constexpr ptrdiff_t MaxColSpan = ColSpanSignBit - 1;
 
-    static inline ptrdiff_t toOperand(JS::ColumnNumberOffset colspan) {
+    static inline ptrdiff_t toOperand(ptrdiff_t colspan) {
       // Truncate the two's complement colspan, for storage as an operand.
-      ptrdiff_t operand = colspan.value() & ((1U << OperandBits) - 1);
+      ptrdiff_t operand = colspan & ((1U << OperandBits) - 1);
 
       // When we read this back, we'd better get the value we stored.
       MOZ_ASSERT(fromOperand(operand) == colspan);
       return operand;
     }
 
-    static inline JS::ColumnNumberOffset getSpan(const SrcNote* sn);
+    static inline ptrdiff_t getSpan(const SrcNote* sn);
   };
 
   class SetLine {
@@ -367,7 +365,7 @@ class SrcNoteReader {
 };
 
 /* static */
-inline JS::ColumnNumberOffset SrcNote::ColSpan::getSpan(const SrcNote* sn) {
+inline ptrdiff_t SrcNote::ColSpan::getSpan(const SrcNote* sn) {
   return fromOperand(SrcNoteReader::getOperand(sn, unsigned(Operands::Span)));
 }
 

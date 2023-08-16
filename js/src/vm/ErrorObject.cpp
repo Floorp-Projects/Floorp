@@ -24,7 +24,6 @@
 #include "js/CallNonGenericMethod.h"
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
 #include "js/Class.h"
-#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberZeroOrigin
 #include "js/Conversions.h"
 #include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -259,16 +258,14 @@ static ErrorObject* CreateErrorObject(JSContext* cx, const CallArgs& args,
     return nullptr;
   }
 
-  uint32_t lineNumber;
-  JS::ColumnNumberOneOrigin columnNumber;
+  uint32_t lineNumber, columnNumber = 0;
   if (!hasOptions && args.length() > messageArg + 2) {
     if (!ToUint32(cx, args[messageArg + 2], &lineNumber)) {
       return nullptr;
     }
   } else {
-    JS::TaggedColumnNumberZeroOrigin tmp;
-    lineNumber = iter.done() ? 0 : iter.computeLine(&tmp);
-    columnNumber = JS::ColumnNumberOneOrigin(tmp.oneOriginValue());
+    lineNumber = iter.done() ? 0 : iter.computeLine(&columnNumber);
+    columnNumber = FixupMaybeWASMColumnForDisplay(columnNumber);
   }
 
   RootedObject stack(cx);
@@ -447,8 +444,7 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
                            JSExnType type, UniquePtr<JSErrorReport> errorReport,
                            HandleString fileName, HandleObject stack,
                            uint32_t sourceId, uint32_t lineNumber,
-                           JS::ColumnNumberOneOrigin columnNumber,
-                           HandleString message,
+                           uint32_t columnNumber, HandleString message,
                            Handle<mozilla::Maybe<JS::Value>> cause) {
   MOZ_ASSERT(JSEXN_ERR <= type && type < JSEXN_ERROR_LIMIT);
   AssertObjectIsSavedFrameOrWrapper(cx, stack);
@@ -504,8 +500,7 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
   obj->setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(report));
   obj->initReservedSlot(FILENAME_SLOT, StringValue(fileName));
   obj->initReservedSlot(LINENUMBER_SLOT, Int32Value(lineNumber));
-  obj->initReservedSlot(COLUMNNUMBER_SLOT,
-                        Int32Value(columnNumber.oneOriginValue()));
+  obj->initReservedSlot(COLUMNNUMBER_SLOT, Int32Value(columnNumber));
   if (message) {
     obj->initReservedSlot(MESSAGE_SLOT, StringValue(message));
   }
@@ -527,7 +522,7 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
 ErrorObject* js::ErrorObject::create(JSContext* cx, JSExnType errorType,
                                      HandleObject stack, HandleString fileName,
                                      uint32_t sourceId, uint32_t lineNumber,
-                                     JS::ColumnNumberOneOrigin columnNumber,
+                                     uint32_t columnNumber,
                                      UniquePtr<JSErrorReport> report,
                                      HandleString message,
                                      Handle<mozilla::Maybe<JS::Value>> cause,

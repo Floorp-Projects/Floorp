@@ -58,10 +58,9 @@
 #include "frontend/TDZCheckCache.h"                // TDZCheckCache
 #include "frontend/TryEmitter.h"                   // TryEmitter
 #include "frontend/WhileEmitter.h"                 // WhileEmitter
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberOffset
-#include "js/friend/ErrorMessages.h"  // JSMSG_*
-#include "js/friend/StackLimits.h"    // AutoCheckRecursionLimit
-#include "util/StringBuffer.h"        // StringBuffer
+#include "js/friend/ErrorMessages.h"               // JSMSG_*
+#include "js/friend/StackLimits.h"                 // AutoCheckRecursionLimit
+#include "util/StringBuffer.h"                     // StringBuffer
 #include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
 #include "vm/CompletionKind.h"      // CompletionKind
 #include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
@@ -609,18 +608,17 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
     return true;
   }
 
-  JS::LimitedColumnNumberZeroOrigin columnIndex =
-      errorReporter().columnAt(offset);
+  uint32_t columnIndex = errorReporter().columnAt(offset);
+  MOZ_ASSERT(columnIndex <= ColumnLimit);
 
   // Assert colspan is always representable.
-  static_assert((0 - ptrdiff_t(JS::LimitedColumnNumberZeroOrigin::Limit)) >=
-                SrcNote::ColSpan::MinColSpan);
-  static_assert((ptrdiff_t(JS::LimitedColumnNumberZeroOrigin::Limit) - 0) <=
-                SrcNote::ColSpan::MaxColSpan);
+  static_assert((0 - ptrdiff_t(ColumnLimit)) >= SrcNote::ColSpan::MinColSpan);
+  static_assert((ptrdiff_t(ColumnLimit) - 0) <= SrcNote::ColSpan::MaxColSpan);
 
-  JS::ColumnNumberOffset colspan = columnIndex - bytecodeSection().lastColumn();
+  ptrdiff_t colspan =
+      ptrdiff_t(columnIndex) - ptrdiff_t(bytecodeSection().lastColumn());
 
-  if (colspan != JS::ColumnNumberOffset::zero()) {
+  if (colspan != 0) {
     if (!newSrcNote2(SrcNoteType::ColSpan,
                      SrcNote::ColSpan::toOperand(colspan))) {
       return false;

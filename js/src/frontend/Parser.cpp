@@ -43,8 +43,7 @@
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/TokenStream.h"  // IsKeyword, ReservedWordTokenKind, ReservedWordToCharZ, DeprecatedContent, *TokenStream*, CharBuffer, TokenKindToDesc
 #include "irregexp/RegExpAPI.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
-#include "js/ErrorReport.h"   // JSErrorBase
+#include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
 #include "js/RegExpFlags.h"     // JS::RegExpFlags
@@ -375,8 +374,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   MOZ_ASSERT(checkOptionsCalled_);
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(
-      /* len = */ 0, options().lineno,
-      JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options().column));
+      /* len = */ 0, options().lineno, options().column);
   Directives directives(options().forceStrictMode());
   GlobalSharedContext globalsc(this->fc_, ScopeKind::Global, options(),
                                directives, extent);
@@ -467,19 +465,20 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
     return;
   }
 
-  uint32_t line;
-  JS::LimitedColumnNumberZeroOrigin column;
+  uint32_t line, column;
   tokenStream.computeLineAndColumn(openedPos, &line, &column);
+
+  column = JSErrorBase::fromZeroOriginToOneOrigin(column);
 
   const size_t MaxWidth = sizeof("4294967295");
   char columnNumber[MaxWidth];
-  SprintfLiteral(columnNumber, "%" PRIu32, column.oneOriginValue());
+  SprintfLiteral(columnNumber, "%" PRIu32, column);
   char lineNumber[MaxWidth];
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-  if (!notes->addNoteASCII(this->fc_, getFilename().c_str(), 0, line,
-                           JS::ColumnNumberOneOrigin(column), GetErrorMessage,
-                           nullptr, noteNumber, lineNumber, columnNumber)) {
+  if (!notes->addNoteASCII(this->fc_, getFilename().c_str(), 0, line, column,
+                           GetErrorMessage, nullptr, noteNumber, lineNumber,
+                           columnNumber)) {
     return;
   }
 
@@ -509,20 +508,20 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclarationHelper(
     return;
   }
 
-  uint32_t line;
-  JS::LimitedColumnNumberZeroOrigin column;
+  uint32_t line, column;
   tokenStream.computeLineAndColumn(prevPos, &line, &column);
+
+  column = JSErrorBase::fromZeroOriginToOneOrigin(column);
 
   const size_t MaxWidth = sizeof("4294967295");
   char columnNumber[MaxWidth];
-  SprintfLiteral(columnNumber, "%" PRIu32, column.oneOriginValue());
+  SprintfLiteral(columnNumber, "%" PRIu32, column);
   char lineNumber[MaxWidth];
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-  if (!notes->addNoteASCII(this->fc_, getFilename().c_str(), 0, line,
-                           JS::ColumnNumberOneOrigin(column), GetErrorMessage,
-                           nullptr, noteErrorNumber, lineNumber,
-                           columnNumber)) {
+  if (!notes->addNoteASCII(this->fc_, getFilename().c_str(), 0, line, column,
+                           GetErrorMessage, nullptr, noteErrorNumber,
+                           lineNumber, columnNumber)) {
     return;
   }
 
@@ -2610,8 +2609,7 @@ TaggedParserAtomIndex ParserBase::prefixAccessorName(
 template <class ParseHandler, typename Unit>
 void GeneralParser<ParseHandler, Unit>::setFunctionStartAtPosition(
     FunctionBox* funbox, TokenPos pos) const {
-  uint32_t startLine;
-  JS::LimitedColumnNumberZeroOrigin startColumn;
+  uint32_t startLine, startColumn;
   tokenStream.computeLineAndColumn(pos.begin, &startLine, &startColumn);
 
   // NOTE: `Debugger::CallData::findScripts` relies on sourceStart and
@@ -11543,17 +11541,16 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   RegExpFlags flags = anyChars.currentToken().regExpFlags();
 
   uint32_t offset = anyChars.currentToken().pos.begin;
-  uint32_t line;
-  JS::LimitedColumnNumberZeroOrigin column;
+  uint32_t line, column;
   tokenStream.computeLineAndColumn(offset, &line, &column);
 
   if (!handler_.reuseRegexpSyntaxParse()) {
     // Verify that the Regexp will syntax parse when the time comes to
     // instantiate it. If we have already done a syntax parse, we can
     // skip this.
-    if (!irregexp::CheckPatternSyntax(
-            this->alloc_, this->fc_->stackLimit(), anyChars, range, flags,
-            Some(line), Some(JS::ColumnNumberZeroOrigin(column)))) {
+    if (!irregexp::CheckPatternSyntax(this->alloc_, this->fc_->stackLimit(),
+                                      anyChars, range, flags, Some(line),
+                                      Some(column))) {
       return nullptr;
     }
   }
@@ -11589,14 +11586,13 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
   RegExpFlags flags = anyChars.currentToken().regExpFlags();
 
   uint32_t offset = anyChars.currentToken().pos.begin;
-  uint32_t line;
-  JS::LimitedColumnNumberZeroOrigin column;
+  uint32_t line, column;
   tokenStream.computeLineAndColumn(offset, &line, &column);
 
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
   if (!irregexp::CheckPatternSyntax(this->alloc_, this->fc_->stackLimit(),
                                     anyChars, source, flags, Some(line),
-                                    Some(JS::ColumnNumberZeroOrigin(column)))) {
+                                    Some(column))) {
     return null();
   }
 

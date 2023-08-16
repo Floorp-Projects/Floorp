@@ -17,7 +17,6 @@
 #include "gc/Barrier.h"        // HeapPtr
 #include "gc/ZoneAllocator.h"  // CellAllocPolicy
 #include "js/Class.h"          // JSClass, ObjectOpResult
-#include "js/ColumnNumber.h"   // JS::ColumnNumberZeroOrigin
 #include "js/GCVector.h"
 #include "js/Id.h"  // jsid
 #include "js/Modules.h"
@@ -74,19 +73,19 @@ class ImportEntry {
   // Line number (1-origin).
   const uint32_t lineNumber_;
 
-  // Column number in UTF-16 code units.
-  const JS::ColumnNumberZeroOrigin columnNumber_;
+  // Column number in UTF-16 code units (0-origin).
+  const uint32_t columnNumber_;
 
  public:
   ImportEntry(Handle<ModuleRequestObject*> moduleRequest,
               Handle<JSAtom*> maybeImportName, Handle<JSAtom*> localName,
-              uint32_t lineNumber, JS::ColumnNumberZeroOrigin columnNumber);
+              uint32_t lineNumber, uint32_t columnNumber);
 
   ModuleRequestObject* moduleRequest() const { return moduleRequest_; }
   JSAtom* importName() const { return importName_; }
   JSAtom* localName() const { return localName_; }
   uint32_t lineNumber() const { return lineNumber_; }
-  JS::ColumnNumberZeroOrigin columnNumber() const { return columnNumber_; }
+  uint32_t columnNumber() const { return columnNumber_; }
 
   void trace(JSTracer* trc);
 };
@@ -102,20 +101,20 @@ class ExportEntry {
   // Line number (1-origin).
   const uint32_t lineNumber_;
 
-  // Column number in UTF-16 code units.
-  const JS::ColumnNumberZeroOrigin columnNumber_;
+  // Column number in UTF-16 code units (0-origin).
+  const uint32_t columnNumber_;
 
  public:
   ExportEntry(Handle<JSAtom*> maybeExportName,
               Handle<ModuleRequestObject*> maybeModuleRequest,
               Handle<JSAtom*> maybeImportName, Handle<JSAtom*> maybeLocalName,
-              uint32_t lineNumber, JS::ColumnNumberZeroOrigin columnNumber);
+              uint32_t lineNumber, uint32_t columnNumber);
   JSAtom* exportName() const { return exportName_; }
   ModuleRequestObject* moduleRequest() const { return moduleRequest_; }
   JSAtom* importName() const { return importName_; }
   JSAtom* localName() const { return localName_; }
   uint32_t lineNumber() const { return lineNumber_; }
-  JS::ColumnNumberZeroOrigin columnNumber() const { return columnNumber_; }
+  uint32_t columnNumber() const { return columnNumber_; }
 
   void trace(JSTracer* trc);
 };
@@ -128,15 +127,15 @@ class RequestedModule {
   // Line number (1-origin).
   const uint32_t lineNumber_;
 
-  // Column number in UTF-16 code units.
-  const JS::ColumnNumberZeroOrigin columnNumber_;
+  // Column number in UTF-16 code units (0-origin).
+  const uint32_t columnNumber_;
 
  public:
   RequestedModule(Handle<ModuleRequestObject*> moduleRequest,
-                  uint32_t lineNumber, JS::ColumnNumberZeroOrigin columnNumber);
+                  uint32_t lineNumber, uint32_t columnNumber);
   ModuleRequestObject* moduleRequest() const { return moduleRequest_; }
   uint32_t lineNumber() const { return lineNumber_; }
-  JS::ColumnNumberZeroOrigin columnNumber() const { return columnNumber_; }
+  uint32_t columnNumber() const { return columnNumber_; }
 
   void trace(JSTracer* trc);
 };

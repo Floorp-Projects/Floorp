@@ -19,7 +19,6 @@
 #ifndef wasm_frame_iter_h
 #define wasm_frame_iter_h
 
-#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberZeroOrigin
 #include "js/ProfilingFrameIterator.h"
 #include "js/TypeDecls.h"
 
@@ -58,6 +57,7 @@ using RegisterState = JS::ProfilingFrameIterator::RegisterState;
 class WasmFrameIter {
  public:
   enum class Unwind { True, False };
+  static constexpr uint32_t ColumnBit = 1u << 31;
 
  private:
   jit::JitActivation* activation_;
@@ -87,7 +87,7 @@ class WasmFrameIter {
   JSAtom* functionDisplayAtom() const;
   unsigned lineOrBytecode() const;
   uint32_t funcIndex() const;
-  unsigned computeLine(JS::TaggedColumnNumberZeroOrigin* column) const;
+  unsigned computeLine(uint32_t* column) const;
   const CodeRange* codeRange() const { return codeRange_; }
   void** unwoundAddressOfReturnAddress() const;
   bool debugEnabled() const;

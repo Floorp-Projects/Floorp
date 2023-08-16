@@ -638,6 +638,18 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   // this cycle. This is also used for tracking calls and optimizations when
   // profiling.
   BytecodeSite* trackedSite_;
+
+  // Line number (1-origin).
+  unsigned lineno_;
+
+  // Column number in UTF-16 code units (0-origin).
+  unsigned columnIndex_;
+
+ public:
+  void setLineno(unsigned l) { lineno_ = l; }
+  unsigned lineno() const { return lineno_; }
+  void setColumnIndex(unsigned c) { columnIndex_ = c; }
+  unsigned columnIndex() const { return columnIndex_; }
 };
 
 using MBasicBlockIterator = InlineListIterator<MBasicBlock>;

@@ -1192,7 +1192,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
 
   RootedScript maybeScript(cx);
   const char* filename;
-  uint32_t lineno;
+  unsigned lineno;
   bool mutedErrors;
   uint32_t pcOffset;
   DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno,

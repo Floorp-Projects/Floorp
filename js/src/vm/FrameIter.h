@@ -17,7 +17,6 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "jit/JSJitFrameIter.h"  // js::jit::{InlineFrameIterator,JSJitFrameIter}
-#include "js/ColumnNumber.h"     // JS::TaggedColumnNumberZeroOrigin
 #include "js/RootingAPI.h"       // JS::Handle, JS::Rooted
 #include "js/TypeDecls.h"  // jsbytecode, JSContext, JSAtom, JSFunction, JSObject, JSScript
 #include "js/Value.h"       // JS::Value
@@ -284,8 +283,7 @@ class FrameIter {
   ScriptSource* scriptSource() const;
   const char* filename() const;
   const char16_t* displayURL() const;
-  unsigned computeLine(
-      JS::TaggedColumnNumberZeroOrigin* column = nullptr) const;
+  unsigned computeLine(uint32_t* column = nullptr) const;
   JSAtom* maybeFunctionDisplayAtom() const;
   bool mutedErrors() const;
 
