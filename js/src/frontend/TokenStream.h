@@ -205,6 +205,7 @@
 #include "frontend/Token.h"
 #include "frontend/TokenKind.h"
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin
 #include "js/CompileOptions.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/HashTable.h"             // js::HashMap
@@ -511,14 +512,14 @@ class ChunkInfo {
   unsigned char unitsType_;
 
  public:
-  ChunkInfo(uint32_t col, UnitsType type)
+  ChunkInfo(JS::ColumnNumberZeroOrigin col, UnitsType type)
       : unitsType_(static_cast<unsigned char>(type)) {
-    memcpy(column_, &col, sizeof(col));
+    memcpy(column_, col.addressOfValueForTranscode(), sizeof(col));
   }
 
-  uint32_t column() const {
-    uint32_t col;
-    memcpy(&col, column_, sizeof(uint32_t));
+  JS::ColumnNumberZeroOrigin column() const {
+    JS::ColumnNumberZeroOrigin col;
+    memcpy(col.addressOfValueForTranscode(), column_, sizeof(uint32_t));
     return col;
   }
 
@@ -624,7 +625,7 @@ class TokenStreamAnyChars : public TokenStreamShared {
    * The column number for the offset (in code units) of the last column
    * computation performed, relative to source start.
    */
-  mutable uint32_t lastComputedColumn_ = 0;
+  mutable JS::ColumnNumberZeroOrigin lastComputedColumn_;
 
   // Intra-token fields.
 
@@ -949,12 +950,12 @@ class TokenStreamAnyChars : public TokenStreamShared {
    * And this is the best place to do that.
    */
   template <typename Unit>
-  uint32_t computePartialColumn(const LineToken lineToken,
-                                const uint32_t offset,
-                                const SourceUnits<Unit>& sourceUnits) const;
+  JS::ColumnNumberZeroOrigin computePartialColumn(
+      const LineToken lineToken, const uint32_t offset,
+      const SourceUnits<Unit>& sourceUnits) const;
 
   template <typename Unit>
-  uint32_t computePartialColumnForUTF8(
+  JS::ColumnNumberZeroOrigin computePartialColumnForUTF8(
       const LineToken lineToken, const uint32_t offset, const uint32_t start,
       const uint32_t offsetInLine, const SourceUnits<Unit>& sourceUnits) const;
 
@@ -1983,9 +1984,10 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
    * |offset| must be a code point boundary, preceded only by validly-encoded
    * source units.  (It doesn't have to be *followed* by valid source units.)
    */
-  uint32_t computeColumn(LineToken lineToken, uint32_t offset) const;
+  JS::LimitedColumnNumberZeroOrigin computeColumn(LineToken lineToken,
+                                                  uint32_t offset) const;
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
-                            uint32_t* column) const;
+                            JS::LimitedColumnNumberZeroOrigin* column) const;
 
   /**
    * Fill in |err| completely, except for line-of-context information.
@@ -1996,7 +1998,9 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
   [[nodiscard]] bool fillExceptingContext(ErrorMetadata* err,
                                           uint32_t offset) const {
     if (anyCharsAccess().fillExceptingContext(err, offset)) {
-      computeLineAndColumn(offset, &err->lineNumber, &err->columnNumber);
+      JS::LimitedColumnNumberZeroOrigin columnNumber;
+      computeLineAndColumn(offset, &err->lineNumber, &columnNumber);
+      err->columnNumber = columnNumber.zeroOriginValue();
       return true;
     }
     return false;
@@ -2533,7 +2537,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     return anyChars.lineNumber(lineToken);
   }
 
-  uint32_t columnAt(size_t offset) const final {
+  JS::LimitedColumnNumberZeroOrigin columnAt(size_t offset) const final {
     return computeColumn(anyCharsAccess().lineToken(offset), offset);
   }
 

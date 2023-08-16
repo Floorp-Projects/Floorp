@@ -19,6 +19,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
+#include "js/ColumnNumber.h"          // JS::LimitedColumnNumberZeroOrigin
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/PropertyAndElement.h"    // JS_DefineFunction
@@ -725,8 +726,8 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
 
   dst.setObject(*loc);
 
-  uint32_t startLineNum, startColumnIndex;
-  uint32_t endLineNum, endColumnIndex;
+  uint32_t startLineNum, endLineNum;
+  JS::LimitedColumnNumberZeroOrigin startColumnIndex, endColumnIndex;
   parser->tokenStream.computeLineAndColumn(pos->begin, &startLineNum,
                                            &startColumnIndex);
   parser->tokenStream.computeLineAndColumn(pos->end, &endLineNum,
@@ -743,7 +744,7 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
   if (!defineProperty(to, "line", val)) {
     return false;
   }
-  val.setNumber(startColumnIndex);
+  val.setNumber(startColumnIndex.zeroOriginValue());
   if (!defineProperty(to, "column", val)) {
     return false;
   }
@@ -759,7 +760,7 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
   if (!defineProperty(to, "line", val)) {
     return false;
   }
-  val.setNumber(endColumnIndex);
+  val.setNumber(endColumnIndex.zeroOriginValue());
   if (!defineProperty(to, "column", val)) {
     return false;
   }

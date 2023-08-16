@@ -14,6 +14,7 @@
 #include <stddef.h>  // for size_t
 #include <stdint.h>  // for uint32_t
 
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin
 #include "js/UniquePtr.h"
 #include "vm/ErrorReporting.h"  // ErrorMetadata, ReportCompile{Error,Warning}
 
@@ -334,7 +335,7 @@ class ErrorReporter : public ErrorReportMixin {
   virtual uint32_t lineAt(size_t offset) const = 0;
 
   // Returns the column number for given offset.
-  virtual uint32_t columnAt(size_t offset) const = 0;
+  virtual JS::LimitedColumnNumberZeroOrigin columnAt(size_t offset) const = 0;
 };
 
 }  // namespace frontend
