@@ -58,9 +58,10 @@
 #include "frontend/TDZCheckCache.h"                // TDZCheckCache
 #include "frontend/TryEmitter.h"                   // TryEmitter
 #include "frontend/WhileEmitter.h"                 // WhileEmitter
-#include "js/friend/ErrorMessages.h"               // JSMSG_*
-#include "js/friend/StackLimits.h"                 // AutoCheckRecursionLimit
-#include "util/StringBuffer.h"                     // StringBuffer
+#include "js/ColumnNumber.h"          // JS::LimitedColumnNumberZeroOrigin
+#include "js/friend/ErrorMessages.h"  // JSMSG_*
+#include "js/friend/StackLimits.h"    // AutoCheckRecursionLimit
+#include "util/StringBuffer.h"        // StringBuffer
 #include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
 #include "vm/CompletionKind.h"      // CompletionKind
 #include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
@@ -609,11 +610,13 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   }
 
   uint32_t columnIndex = errorReporter().columnAt(offset);
-  MOZ_ASSERT(columnIndex <= ColumnLimit);
+  MOZ_ASSERT(columnIndex <= JS::LimitedColumnNumberZeroOrigin::Limit);
 
   // Assert colspan is always representable.
-  static_assert((0 - ptrdiff_t(ColumnLimit)) >= SrcNote::ColSpan::MinColSpan);
-  static_assert((ptrdiff_t(ColumnLimit) - 0) <= SrcNote::ColSpan::MaxColSpan);
+  static_assert((0 - ptrdiff_t(JS::LimitedColumnNumberZeroOrigin::Limit)) >=
+                SrcNote::ColSpan::MinColSpan);
+  static_assert((ptrdiff_t(JS::LimitedColumnNumberZeroOrigin::Limit) - 0) <=
+                SrcNote::ColSpan::MaxColSpan);
 
   ptrdiff_t colspan =
       ptrdiff_t(columnIndex) - ptrdiff_t(bytecodeSection().lastColumn());

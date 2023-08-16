@@ -19,7 +19,8 @@
 #include "gc/GCContext.h"
 #include "gc/HashUtil.h"
 #include "js/CharacterEncoding.h"
-#include "js/ErrorReport.h"           // JSErrorBase
+#include "js/ColumnNumber.h"  // JS::WasmFunctionIndex, JS::TaggedColumnNumberZeroOrigin, JS::TaggedColumnNumberOneOrigin
+#include "js/ErrorReport.h"   // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyAndElement.h"    // JS_DefineProperty, JS_GetProperty
 #include "js/PropertySpec.h"
@@ -591,18 +592,15 @@ bool SavedFrame::isSelfHosted(JSContext* cx) {
 }
 
 bool SavedFrame::isWasm() {
-  // See WasmFrameIter::computeLine() comment.
-  return bool(getColumn() & wasm::WasmFrameIter::ColumnBit);
+  return bool(getColumn() & JS::TaggedColumnNumberOneOrigin::WasmFunctionTag);
 }
 
 uint32_t SavedFrame::wasmFuncIndex() {
-  // See WasmFrameIter::computeLine() comment.
   MOZ_ASSERT(isWasm());
-  return getColumn() & ~wasm::WasmFrameIter::ColumnBit;
+  return getColumn() & ~JS::TaggedColumnNumberOneOrigin::WasmFunctionTag;
 }
 
 uint32_t SavedFrame::wasmBytecodeOffset() {
-  // See WasmFrameIter::computeLine() comment.
   MOZ_ASSERT(isWasm());
   return getLine();
 }
@@ -1992,13 +1990,8 @@ UniqueChars BuildUTF8StackString(JSContext* cx, JSPrincipals* principals,
 }
 
 uint32_t FixupMaybeWASMColumnForDisplay(uint32_t column) {
-  // As described in WasmFrameIter::computeLine(), for wasm frames, the
-  // function index is returned as the column with the high bit set. In paths
-  // that format error stacks into strings, this information can be used to
-  // synthesize a proper wasm frame. But when raw column numbers are handed
-  // out, we just fix them to 1 to avoid confusion.
-  if (column & wasm::WasmFrameIter::ColumnBit) {
-    return 1;
+  if (column & JS::TaggedColumnNumberZeroOrigin::WasmFunctionTag) {
+    return JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberOneOrigin;
   }
 
   return JSErrorBase::fromZeroOriginToOneOrigin(column);

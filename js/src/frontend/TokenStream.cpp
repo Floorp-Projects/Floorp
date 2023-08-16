@@ -35,6 +35,7 @@
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ
+#include "js/ColumnNumber.h"          // JS::LimitedColumnNumberZeroOrigin
 #include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_smprintf
@@ -453,7 +454,7 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
 
 bool TokenStreamAnyChars::checkOptions() {
   // Constrain starting columns to where they will saturate.
-  if (options().column > ColumnLimit) {
+  if (options().column > JS::LimitedColumnNumberZeroOrigin::Limit) {
     reportErrorNoOffset(JSMSG_BAD_COLUMN_NUMBER);
     return false;
   }
@@ -832,19 +833,16 @@ uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
       anyChars.computePartialColumn(lineToken, offset, this->sourceUnits);
 
   if (lineToken.isFirstLine()) {
-    if (column > ColumnLimit) {
-      return ColumnLimit;
+    if (column > JS::LimitedColumnNumberZeroOrigin::Limit) {
+      return JS::LimitedColumnNumberZeroOrigin::Limit;
     }
-
-    static_assert(uint32_t(ColumnLimit + ColumnLimit) > ColumnLimit,
-                  "Adding ColumnLimit should not overflow");
 
     uint32_t firstLineOffset = anyChars.options_.column;
     column += firstLineOffset;
   }
 
-  if (column > ColumnLimit) {
-    return ColumnLimit;
+  if (column > JS::LimitedColumnNumberZeroOrigin::Limit) {
+    return JS::LimitedColumnNumberZeroOrigin::Limit;
   }
 
   return column;
