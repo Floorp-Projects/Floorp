@@ -91,7 +91,8 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
         "Trial inlining for %s script '%s' (%s:%u:%u (%p)) (inliningRoot=%p)",
         (isRecursive ? "inner" : "outer"),
         funName ? funName.get() : "<unnamed>", script->filename(),
-        script->lineno(), script->column(), frame->script(), root);
+        script->lineno(), script->column().zeroOriginValue(), frame->script(),
+        root);
     JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
   }
 
@@ -545,7 +546,7 @@ TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
             funName ? funName.get() : "<unnamed>",
             baseScript ? baseScript->filename() : "<not-scripted>",
             baseScript ? baseScript->lineno() : 0,
-            baseScript ? baseScript->column() : 0);
+            baseScript ? baseScript->column().zeroOriginValue() : 0);
     JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
   }
 #endif
