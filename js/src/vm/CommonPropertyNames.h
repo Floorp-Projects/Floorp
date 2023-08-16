@@ -576,9 +576,9 @@
   MACRO_(unwatch, "unwatch")                                                   \
   MACRO_(url, "url")                                                           \
   MACRO_(usage, "usage")                                                       \
-  MACRO_(useAsm, "use asm")                                                    \
+  MACRO_(use_asm_, "use asm")                                                  \
+  MACRO_(use_strict_, "use strict")                                            \
   MACRO_(useGrouping, "useGrouping")                                           \
-  MACRO_(useStrict, "use strict")                                              \
   MACRO_(UTC, "UTC")                                                           \
   MACRO_(value, "value")                                                       \
   MACRO_(valueOf, "valueOf")                                                   \

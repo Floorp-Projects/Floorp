@@ -656,7 +656,7 @@ static inline bool IsUseOfName(ParseNode* pn, TaggedParserAtomIndex name) {
 }
 
 static inline bool IsIgnoredDirectiveName(TaggedParserAtomIndex atom) {
-  return atom != TaggedParserAtomIndex::WellKnown::useStrict();
+  return atom != TaggedParserAtomIndex::WellKnown::use_strict_();
 }
 
 static inline bool IsIgnoredDirective(ParseNode* pn) {
