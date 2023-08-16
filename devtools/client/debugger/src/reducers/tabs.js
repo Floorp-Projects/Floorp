@@ -24,9 +24,6 @@ function update(state = initialTabState(), action) {
     case "MOVE_TAB_BY_SOURCE_ID":
       return moveTabInListBySourceId(state, action);
 
-    case "CLOSE_TAB":
-      return removeSourceFromTabList(state, action);
-
     case "CLOSE_TABS":
       return removeSourcesFromTabList(state, action);
 
@@ -107,14 +104,6 @@ function addVisibleTabsForOriginalSources(
   });
 
   return changed ? { tabs } : state;
-}
-
-function removeSourceFromTabList(state, { source }) {
-  const newTabs = state.tabs.filter(tab => !matchesSource(tab, source));
-  if (newTabs.length == state.tabs.length) {
-    return state;
-  }
-  return { tabs: newTabs };
 }
 
 function removeSourcesFromTabList(state, { sources }) {

@@ -81,6 +81,8 @@ add_task(async function () {
     `function query() {console.log("query x=1");}\n`
   );
 
+  // Update displayed sources, so that we pass the right source objects to closeTab
+  displayedSources = dbg.selectors.getDisplayedSourcesList();
   for (const source of displayedSources) {
     info(`Closing '${source.url}'`);
     await closeTab(dbg, source);

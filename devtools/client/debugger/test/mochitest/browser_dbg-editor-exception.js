@@ -19,7 +19,7 @@ async function openActiveTabContextMenuAndSelectCloseTabItem(dbg) {
   info(`Open the current active tab context menu`);
   rightClickElement(dbg, "activeTab");
   await waitForOpen;
-  const wait = waitForDispatch(dbg.store, "CLOSE_TAB");
+  const wait = waitForDispatch(dbg.store, "CLOSE_TABS");
   info(`Select the close tab context menu item`);
   selectContextMenuItem(dbg, `#node-menu-close-tab`);
   return wait;
