@@ -302,6 +302,7 @@ class EventListenerManager final : public EventListenerManagerBase {
     // The event type. Null if this entry is for "all events" listeners.
     RefPtr<nsAtom> mTypeAtom;
     // The array of listeners. New listeners are always added at the end.
+    // Always non-null.
     // This is a RefPtr rather than an inline member for two reasons:
     //  - It needs to be a separate heap allocation so that, if the array of
     //    entries is mutated during iteration, the ListenerArray remains in a
