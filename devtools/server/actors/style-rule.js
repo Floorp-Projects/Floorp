@@ -849,11 +849,9 @@ class StyleRuleActor extends Actor {
    * the authored text of a (nested) rule, so all the references are properly updated.
    */
   async updateAncestorRulesAuthoredText() {
-    const promises = [];
-    for (const ancestorRule of this.ancestorRules) {
-      promises.push(ancestorRule.getAuthoredCssText(true));
-    }
-    await Promise.all(promises);
+    return Promise.all(
+      this.ancestorRules.map(rule => rule.getAuthoredCssText(true))
+    );
   }
 
   /**
