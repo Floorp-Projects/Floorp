@@ -25,6 +25,7 @@
 #include "gc/Zone.h"           // for Zone
 #include "gc/ZoneAllocator.h"  // for AddCellMemory
 #include "js/CallArgs.h"       // for CallArgs, CallArgsFromVp
+#include "js/ColumnNumber.h"   // JS::WasmFunctionIndex
 #include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*
 #include "js/GCVariant.h"             // for GCVariant
 #include "js/HeapAPI.h"               // for GCCellPtr
@@ -372,9 +373,11 @@ bool DebuggerScript::CallData::getStartLine() {
 }
 
 bool DebuggerScript::CallData::getStartColumn() {
-  args.rval().setNumber(
-      referent.get().match([](BaseScript*& s) { return s->column(); },
-                           [](WasmInstanceObject*&) { return (uint32_t)0; }));
+  args.rval().setNumber(referent.get().match(
+      [](BaseScript*& s) { return s->column(); },
+      [](WasmInstanceObject*&) {
+        return JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberZeroOrigin;
+      }));
   return true;
 }
 

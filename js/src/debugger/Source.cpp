@@ -17,7 +17,8 @@
 #include "debugger/Debugger.h"         // for DebuggerSourceReferent, Debugger
 #include "debugger/Script.h"           // for DebuggerScript
 #include "frontend/FrontendContext.h"  // for AutoReportFrontendContext
-#include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
+#include "gc/Tracer.h"        // for TraceManuallyBarrieredCrossCompartmentEdge
+#include "js/ColumnNumber.h"  // JS::WasmFunctionIndex
 #include "js/CompilationAndEvaluation.h"  // for Compile
 #include "js/ErrorReport.h"  // for JS_ReportErrorASCII,  JS_ReportErrorNumberASCII
 #include "js/experimental/TypedData.h"  // for JS_NewUint8Array
@@ -353,7 +354,9 @@ class DebuggerSourceGetStartColumnMatcher {
     ScriptSource* ss = sourceObject->source();
     return ss->startColumn();
   }
-  ReturnType match(Handle<WasmInstanceObject*> instanceObj) { return 0; }
+  ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
+    return JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberZeroOrigin;
+  }
 };
 
 bool DebuggerSource::CallData::getStartColumn() {
