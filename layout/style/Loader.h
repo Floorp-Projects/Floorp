@@ -272,10 +272,9 @@ class Loader final {
    * @param aObserver the observer to notify when the load completes.
    *        May be null.
    * @param aBuffer the stylesheet data
-   * @param aLineNumber the line number at which the stylesheet data started.
    */
   Result<LoadSheetResult, nsresult> LoadInlineStyle(
-      const SheetInfo&, const nsAString& aBuffer, uint32_t aLineNumber,
+      const SheetInfo&, const nsAString& aBuffer,
       nsICSSLoaderObserver* aObserver);
 
   /**

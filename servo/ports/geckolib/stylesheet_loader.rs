@@ -95,7 +95,6 @@ pub struct AsyncStylesheetParser {
     bytes: nsCString,
     origin: Origin,
     quirks_mode: QuirksMode,
-    line_number_offset: u32,
     should_record_use_counters: bool,
     allow_import_rules: AllowImportRules,
 }
@@ -107,7 +106,6 @@ impl AsyncStylesheetParser {
         bytes: nsCString,
         origin: Origin,
         quirks_mode: QuirksMode,
-        line_number_offset: u32,
         should_record_use_counters: bool,
         allow_import_rules: AllowImportRules,
     ) -> Self {
@@ -117,7 +115,6 @@ impl AsyncStylesheetParser {
             bytes,
             origin,
             quirks_mode,
-            line_number_offset,
             should_record_use_counters,
             allow_import_rules,
         }
@@ -143,7 +140,6 @@ impl AsyncStylesheetParser {
             Some(&self),
             None,
             self.quirks_mode.into(),
-            self.line_number_offset,
             use_counters.as_deref(),
             self.allow_import_rules,
             /* sanitized_output = */ None,
