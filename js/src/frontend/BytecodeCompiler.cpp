@@ -28,7 +28,7 @@
 #include "js/AllocPolicy.h"        // js::SystemAllocPolicy, ReportOutOfMemory
 #include "js/CharacterEncoding.h"  // JS_EncodeStringToUTF8
 #include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin
-#include "js/ErrorReport.h"        // JS_ReportErrorASCII
+#include "js/ErrorReport.h"  // JS_ReportErrorASCII
 #include "js/experimental/JSStencil.h"
 #include "js/GCVector.h"    // JS::StackGCVector
 #include "js/Id.h"          // JS::PropertyKey
