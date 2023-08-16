@@ -25,6 +25,7 @@ const errors = [
   error.NoSuchElementError,
   error.NoSuchFrameError,
   error.NoSuchHandleError,
+  error.NoSuchInterceptError,
   error.NoSuchNodeError,
   error.NoSuchScriptError,
   error.NoSuchShadowRootError,
@@ -401,6 +402,22 @@ add_task(function test_NoSuchFrameError() {
   equal("NoSuchFrameError", err.name);
   equal("foo", err.message);
   equal("no such frame", err.status);
+  ok(err instanceof error.WebDriverError);
+});
+
+add_task(function test_NoSuchHandleError() {
+  let err = new error.NoSuchHandleError("foo");
+  equal("NoSuchHandleError", err.name);
+  equal("foo", err.message);
+  equal("no such handle", err.status);
+  ok(err instanceof error.WebDriverError);
+});
+
+add_task(function test_NoSuchInterceptError() {
+  let err = new error.NoSuchInterceptError("foo");
+  equal("NoSuchInterceptError", err.name);
+  equal("foo", err.message);
+  equal("no such intercept", err.status);
   ok(err instanceof error.WebDriverError);
 });
 
