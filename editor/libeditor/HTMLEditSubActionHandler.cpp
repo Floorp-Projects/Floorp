@@ -1569,6 +1569,20 @@ nsresult HTMLEditor::InsertLineBreakAsSubAction() {
 
     auto pointToPutCaret =
         EditorDOMPoint::After(*unwrappedInsertBRElementResult.GetNewNode());
+    if (MOZ_UNLIKELY(!pointToPutCaret.IsSet())) {
+      NS_WARNING("Inserted <br> was unexpectedly removed");
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+    WSScanResult backwardScanFromBeforeBRElementResult =
+        WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
+            editingHost,
+            EditorDOMPoint(unwrappedInsertBRElementResult.GetNewNode()));
+    if (MOZ_UNLIKELY(backwardScanFromBeforeBRElementResult.Failed())) {
+      NS_WARNING(
+          "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary() failed");
+      return Err(NS_ERROR_FAILURE);
+    }
+
     WSScanResult forwardScanFromAfterBRElementResult =
         WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(editingHost,
                                                          pointToPutCaret);
@@ -1576,8 +1590,13 @@ nsresult HTMLEditor::InsertLineBreakAsSubAction() {
       NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
       return Err(NS_ERROR_FAILURE);
     }
-
-    if (forwardScanFromAfterBRElementResult.ReachedBlockBoundary()) {
+    const bool brElementIsAfterBlock =
+        backwardScanFromBeforeBRElementResult.ReachedBlockBoundary();
+    const bool brElementIsBeforeBlock =
+        forwardScanFromAfterBRElementResult.ReachedBlockBoundary();
+    const bool isEmptyEditingHost = HTMLEditUtils::IsEmptyNode(*editingHost);
+    if (brElementIsBeforeBlock &&
+        (isEmptyEditingHost || !brElementIsAfterBlock)) {
       // Empty last line is invisible if it's immediately before either parent
       // or another block's boundary so that we need to put invisible <br>
       // element here for making it visible.
@@ -2185,8 +2204,23 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
   MOZ_ASSERT(aPointToBreak.IsSet());
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  bool brElementIsAfterBlock = false, brElementIsBeforeBlock = false;
   const bool editingHostIsEmpty = HTMLEditUtils::IsEmptyNode(aEditingHost);
+  WSRunScanner wsRunScanner(&aEditingHost, aPointToBreak);
+  WSScanResult backwardScanResult =
+      wsRunScanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(aPointToBreak);
+  if (MOZ_UNLIKELY(backwardScanResult.Failed())) {
+    NS_WARNING(
+        "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom() failed");
+    return Err(NS_ERROR_FAILURE);
+  }
+  const bool brElementIsAfterBlock = backwardScanResult.ReachedBlockBoundary();
+  WSScanResult forwardScanResult =
+      wsRunScanner.ScanNextVisibleNodeOrBlockBoundaryFrom(aPointToBreak);
+  if (MOZ_UNLIKELY(forwardScanResult.Failed())) {
+    NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
+    return Err(NS_ERROR_FAILURE);
+  }
+  const bool brElementIsBeforeBlock = forwardScanResult.ReachedBlockBoundary();
 
   // First, insert a <br> element.
   RefPtr<Element> brElement;
@@ -2206,23 +2240,6 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
     brElement = unwrappedInsertBRElementResult.UnwrapNewNode();
   } else {
     EditorDOMPoint pointToBreak(aPointToBreak);
-    WSRunScanner wsRunScanner(&aEditingHost, pointToBreak);
-    WSScanResult backwardScanResult =
-        wsRunScanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToBreak);
-    if (MOZ_UNLIKELY(backwardScanResult.Failed())) {
-      NS_WARNING(
-          "WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundaryFrom() failed");
-      return Err(NS_ERROR_FAILURE);
-    }
-    brElementIsAfterBlock = backwardScanResult.ReachedBlockBoundary();
-    WSScanResult forwardScanResult =
-        wsRunScanner.ScanNextVisibleNodeOrBlockBoundaryFrom(pointToBreak);
-    if (MOZ_UNLIKELY(forwardScanResult.Failed())) {
-      NS_WARNING(
-          "WSRunScanner::ScanNextVisibleNodeOrBlockBoundaryFrom() failed");
-      return Err(NS_ERROR_FAILURE);
-    }
-    brElementIsBeforeBlock = forwardScanResult.ReachedBlockBoundary();
     // If the container of the break is a link, we need to split it and
     // insert new <br> between the split links.
     RefPtr<Element> linkNode =
@@ -2350,7 +2367,8 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
           rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
           "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
     }
-  } else if (forwardScanFromAfterBRElementResult.ReachedBlockBoundary()) {
+  } else if (forwardScanFromAfterBRElementResult.ReachedBlockBoundary() &&
+             !brElementIsAfterBlock) {
     auto invisibleAdditionalBRElementResult =
         InsertAdditionalInvisibleLineBreak();
     if (invisibleAdditionalBRElementResult.isErr()) {
