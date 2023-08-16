@@ -11,7 +11,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mozilla.appservices.logins.DatabaseLoginsStorage
-import mozilla.appservices.logins.migrateLoginsWithMetrics
 import mozilla.components.concept.storage.EncryptedLogin
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
@@ -22,14 +21,8 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
 import java.io.Closeable
 
-// Older database that was encrypted using SQLCipher
-const val DB_NAME_SQLCIPHER = "logins.sqlite"
-
 // Current database
 const val DB_NAME = "logins2.sqlite"
-
-// Prefs key that we stored the old SQLCipher encryption key
-const val ENCRYPTION_KEY_SQLCIPHER = "passwords"
 
 // Name of our preferences file
 const val PREFS_NAME = "logins"
@@ -38,9 +31,8 @@ const val PREFS_NAME = "logins"
 //   - 0 / unset: We haven't done the SQLCipher migration
 //   - 1: We performed v1 of the SQLCipher migration
 //
-// If we discover errors in the migration later, then we can bump this number
-// and potentially write code to recover data for users who ran the v1
-// migration.
+// We no longer migrate SQLCipher, if the user hasn't
+// successfully migrated - we delete the DB
 const val SQL_CIPHER_MIGRATION = "sql-cipher-migration"
 
 /**
@@ -105,9 +97,9 @@ class SyncableLoginsStorage(
     val crypto by lazy { LoginsCrypto(context, securePrefs.value, this) }
 
     internal val conn by lazy {
-        // Migration must run before we initialize the database.
+        // We do not migrate SQLCipher anymore, we should delete it if it exists
         runBlocking(coroutineContext) {
-            migrateSQLCipherDBIfNeeded()
+            deleteSQLCipherDBIfNeeded()
         }
         LoginStorageConnection.init(dbPath = context.getDatabasePath(DB_NAME).absolutePath)
         LoginStorageConnection
@@ -248,30 +240,25 @@ class SyncableLoginsStorage(
         conn.close()
     }
 
-    private suspend fun migrateSQLCipherDBIfNeeded() {
-        // Migrate the SQLCipher DB if needed
-        val sqlcipherKey = securePrefs.value.getString(ENCRYPTION_KEY_SQLCIPHER) ?: return
+    /*
+     * We not longer migrate SQLCipher, we delete the DB, key and any
+     * associated prefs
+     */
+    private suspend fun deleteSQLCipherDBIfNeeded() {
+        // Older database that was encrypted using SQLCipher
+        val dbNameSqlCipher = "logins.sqlite"
+        // Prefs key that we stored the old SQLCipher encryption key
+        val encryptionKeySqlCipher = "passwords"
 
         val version = plaintextPrefs.getInt(SQL_CIPHER_MIGRATION, 0)
-
         if (version == 0) {
-            try {
-                migrateLoginsWithMetrics(
-                    context.getDatabasePath(DB_NAME).absolutePath,
-                    crypto.getOrGenerateKey().key,
-                    context.getDatabasePath(DB_NAME_SQLCIPHER).absolutePath,
-                    sqlcipherKey,
-                )
-                // Note: DatabaseLoginsStorage.migrateLogins, defined in
-                // application-services, is responsible for reporting the migration
-                // metrics
-            } finally {
-                // Set the new version regardless of if the migration
-                // succeeded.  If it failed, it's just going to fail until we
-                // update the code and bump the version number.
-                plaintextPrefs.edit().putInt(SQL_CIPHER_MIGRATION, 1).apply()
-            }
+            // Older database that was encrypted using SQLCipher, majority of clients won't
+            // have anything to actually delete
+            securePrefs.value.remove(encryptionKeySqlCipher)
+            val file = context.getDatabasePath(dbNameSqlCipher)
+            file.delete()
         }
+        plaintextPrefs.edit().putInt(SQL_CIPHER_MIGRATION, 1).apply()
     }
 }
 
