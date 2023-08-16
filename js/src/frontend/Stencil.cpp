@@ -4421,7 +4421,7 @@ void ScriptStencilExtra::dumpFields(js::JSONPrinter& json) const {
   json.property("toStringStart", extent.toStringStart);
   json.property("toStringEnd", extent.toStringEnd);
   json.property("lineno", extent.lineno);
-  json.property("column", extent.column);
+  json.property("column", extent.column.zeroOriginValue());
   json.endObject();
 
   json.property("memberInitializers", memberInitializers_);
@@ -4584,7 +4584,7 @@ static void DumpInputScriptFields(js::JSONPrinter& json,
     json.property("toStringStart", extent.toStringStart);
     json.property("toStringEnd", extent.toStringEnd);
     json.property("lineno", extent.lineno);
-    json.property("column", extent.column);
+    json.property("column", extent.column.zeroOriginValue());
   }
   json.endObject();
 
