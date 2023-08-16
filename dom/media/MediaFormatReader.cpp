@@ -377,8 +377,7 @@ void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
 
   switch (aData.mTrack) {
     case TrackInfo::kAudioTrack: {
-      bool lowLatency =
-          ownerData.GetCurrentInfo()->GetAsAudioInfo()->mIsLive;
+      bool lowLatency = ownerData.GetCurrentInfo()->GetAsAudioInfo()->mIsLive;
       p = platform->CreateDecoder(
           {*ownerData.GetCurrentInfo()->GetAsAudioInfo(), mOwner->mCrashHelper,
            CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
@@ -393,8 +392,7 @@ void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
       // decoding, so specify LAYERS_NONE if we want to forcibly disable it.
       using Option = CreateDecoderParams::Option;
       using OptionSet = CreateDecoderParams::OptionSet;
-      bool lowLatency =
-          ownerData.GetCurrentInfo()->GetAsVideoInfo()->mIsLive;
+      bool lowLatency = ownerData.GetCurrentInfo()->GetAsVideoInfo()->mIsLive;
       p = platform->CreateDecoder(
           {*ownerData.GetCurrentInfo()->GetAsVideoInfo(),
            mOwner->mKnowsCompositor, mOwner->GetImageContainer(),
