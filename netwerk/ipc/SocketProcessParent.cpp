@@ -16,7 +16,6 @@
 #include "mozilla/FOGIPC.h"
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ProxyConfigLookupParent.h"
-#include "mozilla/net/SocketProcessBackgroundParent.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
@@ -248,25 +247,13 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult SocketProcessParent::RecvInitSocketBackground(
-    Endpoint<PSocketProcessBackgroundParent>&& aEndpoint) {
-  if (!aEndpoint.IsValid()) {
-    return IPC_FAIL(this, "Invalid endpoint");
+mozilla::ipc::IPCResult SocketProcessParent::RecvInitBackground(
+    Endpoint<PBackgroundStarterParent>&& aEndpoint) {
+  LOG(("SocketProcessParent::RecvInitBackground\n"));
+  if (!ipc::BackgroundParent::AllocStarter(nullptr, std::move(aEndpoint))) {
+    return IPC_FAIL(this, "BackgroundParent::Alloc failed");
   }
 
-  nsCOMPtr<nsISerialEventTarget> transportQueue;
-  if (NS_FAILED(NS_CreateBackgroundTaskQueue("SocketBackgroundParentQueue",
-                                             getter_AddRefs(transportQueue)))) {
-    return IPC_FAIL(this, "NS_CreateBackgroundTaskQueue failed");
-  }
-
-  transportQueue->Dispatch(
-      NS_NewRunnableFunction("BindSocketBackgroundParent",
-                             [endpoint = std::move(aEndpoint)]() mutable {
-                               RefPtr<SocketProcessBackgroundParent> parent =
-                                   new SocketProcessBackgroundParent();
-                               endpoint.Bind(parent);
-                             }));
   return IPC_OK();
 }
 

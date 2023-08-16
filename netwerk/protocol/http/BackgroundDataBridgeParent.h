@@ -16,7 +16,7 @@ class BackgroundDataBridgeParent final : public PBackgroundDataBridgeParent {
 
   explicit BackgroundDataBridgeParent(uint64_t aChannelID);
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  already_AddRefed<nsISerialEventTarget> GetBackgroundThread();
+  already_AddRefed<nsIThread> GetBackgroundThread();
   void Destroy();
   void OnStopRequest(nsresult aStatus, const ResourceTimingStructArgs& aTiming,
                      const TimeStamp& aLastActiveTabOptHit,
@@ -26,7 +26,7 @@ class BackgroundDataBridgeParent final : public PBackgroundDataBridgeParent {
   virtual ~BackgroundDataBridgeParent() = default;
 
   uint64_t mChannelID;
-  nsCOMPtr<nsISerialEventTarget> mBackgroundThread;
+  nsCOMPtr<nsIThread> mBackgroundThread;
 };
 
 }  // namespace net

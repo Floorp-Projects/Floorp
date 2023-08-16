@@ -12,7 +12,6 @@
 
 #include "HttpChannelChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/net/BackgroundDataBridgeChild.h"
@@ -54,17 +53,23 @@ nsresult HttpBackgroundChannelChild::Init(HttpChannelChild* aChannelChild) {
   return NS_OK;
 }
 
-void HttpBackgroundChannelChild::CreateDataBridge(
-    Endpoint<PBackgroundDataBridgeChild>&& aEndpoint) {
+void HttpBackgroundChannelChild::CreateDataBridge() {
   MOZ_ASSERT(OnSocketThread());
 
   if (!mChannelChild) {
     return;
   }
 
+  PBackgroundChild* actorChild =
+      BackgroundChild::GetOrCreateSocketActorForCurrentThread();
+  if (NS_WARN_IF(!actorChild)) {
+    return;
+  }
+
   RefPtr<BackgroundDataBridgeChild> dataBridgeChild =
       new BackgroundDataBridgeChild(this);
-  aEndpoint.Bind(dataBridgeChild);
+  Unused << actorChild->SendPBackgroundDataBridgeConstructor(
+      dataBridgeChild, mChannelChild->ChannelId());
 }
 
 void HttpBackgroundChannelChild::OnChannelClosed() {

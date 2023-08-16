@@ -8,7 +8,6 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
-#include "mozilla/net/PBackgroundDataBridge.h"
 #include "nsHttp.h"
 #include "nsICacheEntry.h"
 #include "mozilla/BasePrincipal.h"
@@ -3171,20 +3170,11 @@ void HttpChannelChild::MaybeConnectToSocketProcess() {
   }
   SocketProcessBridgeChild::GetSocketProcessBridge()->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [bgChild, channelId = ChannelId()](
-          const RefPtr<SocketProcessBridgeChild>& aBridge) {
-        Endpoint<PBackgroundDataBridgeParent> parentEndpoint;
-        Endpoint<PBackgroundDataBridgeChild> childEndpoint;
-        PBackgroundDataBridge::CreateEndpoints(&parentEndpoint, &childEndpoint);
-        aBridge->SendInitBackgroundDataBridge(std::move(parentEndpoint),
-                                              channelId);
-
+      [bgChild]() {
         gSocketTransportService->Dispatch(
-            NS_NewRunnableFunction(
-                "HttpBackgroundChannelChild::CreateDataBridge",
-                [bgChild, endpoint = std::move(childEndpoint)]() mutable {
-                  bgChild->CreateDataBridge(std::move(endpoint));
-                }),
+            NewRunnableMethod("HttpBackgroundChannelChild::CreateDataBridge",
+                              bgChild,
+                              &HttpBackgroundChannelChild::CreateDataBridge),
             NS_DISPATCH_NORMAL);
       },
       []() { NS_WARNING("Failed to create SocketProcessBridgeChild"); });

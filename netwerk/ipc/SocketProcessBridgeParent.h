@@ -21,19 +21,20 @@ class SocketProcessBridgeParent final : public PSocketProcessBridgeParent {
 
   explicit SocketProcessBridgeParent(ProcessId aId);
 
-  mozilla::ipc::IPCResult RecvInitBackgroundDataBridge(
-      Endpoint<PBackgroundDataBridgeParent>&& aEndpoint, uint64_t aChannelID);
+  mozilla::ipc::IPCResult RecvTest();
+  mozilla::ipc::IPCResult RecvInitBackground(
+      Endpoint<PBackgroundStarterParent>&& aEndpoint);
 
-  mozilla::ipc::IPCResult RecvInitMediaTransport(
-      Endpoint<PMediaTransportParent>&& aEndpoint);
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+  void DeferredDestroy();
 
-  void ActorDestroy(ActorDestroyReason aReason) override;
+  bool Closed() const { return mClosed; }
 
  private:
   ~SocketProcessBridgeParent();
 
-  nsCOMPtr<nsISerialEventTarget> mMediaTransportTaskQueue;
   ProcessId mId;
+  bool mClosed;
 };
 
 }  // namespace net

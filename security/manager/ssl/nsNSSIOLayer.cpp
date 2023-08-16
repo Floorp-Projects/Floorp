@@ -27,6 +27,8 @@
 #include "mozilla/RandomNum.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/net/SSLTokensCache.h"
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/psm/IPCClientCertsChild.h"
@@ -1658,6 +1660,24 @@ loser:
   return NS_ERROR_FAILURE;
 }
 
+already_AddRefed<IPCClientCertsChild> GetIPCClientCertsActor() {
+  PBackgroundChild* backgroundActor =
+      BackgroundChild::GetOrCreateForSocketParentBridgeForCurrentThread();
+  if (!backgroundActor) {
+    return nullptr;
+  }
+  RefPtr<PIPCClientCertsChild> actor =
+      SingleManagedOrNull(backgroundActor->ManagedPIPCClientCertsChild());
+  if (!actor) {
+    actor = backgroundActor->SendPIPCClientCertsConstructor(
+        new IPCClientCertsChild());
+    if (!actor) {
+      return nullptr;
+    }
+  }
+  return actor.forget().downcast<IPCClientCertsChild>();
+}
+
 extern "C" {
 
 const uint8_t kIPCClientCertsObjectTypeCert = 1;
@@ -1668,14 +1688,7 @@ const uint8_t kIPCClientCertsObjectTypeECKey = 3;
 // parent process to find certificates and keys and send identifying
 // information about them over IPC.
 void DoFindObjects(FindObjectsCallback cb, void* ctx) {
-  net::SocketProcessChild* socketChild =
-      net::SocketProcessChild::GetSingleton();
-  if (!socketChild) {
-    return;
-  }
-
-  RefPtr<IPCClientCertsChild> ipcClientCertsActor(
-      socketChild->GetIPCClientCertsActor());
+  RefPtr<IPCClientCertsChild> ipcClientCertsActor(GetIPCClientCertsActor());
   if (!ipcClientCertsActor) {
     return;
   }
@@ -1719,14 +1732,7 @@ void DoFindObjects(FindObjectsCallback cb, void* ctx) {
 void DoSign(size_t cert_len, const uint8_t* cert, size_t data_len,
             const uint8_t* data, size_t params_len, const uint8_t* params,
             SignCallback cb, void* ctx) {
-  net::SocketProcessChild* socketChild =
-      net::SocketProcessChild::GetSingleton();
-  if (!socketChild) {
-    return;
-  }
-
-  RefPtr<IPCClientCertsChild> ipcClientCertsActor(
-      socketChild->GetIPCClientCertsActor());
+  RefPtr<IPCClientCertsChild> ipcClientCertsActor(GetIPCClientCertsActor());
   if (!ipcClientCertsActor) {
     return;
   }

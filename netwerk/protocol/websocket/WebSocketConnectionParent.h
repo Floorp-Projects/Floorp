@@ -56,7 +56,7 @@ class WebSocketConnectionParent final : public PWebSocketConnectionParent,
 
   nsCOMPtr<nsIHttpUpgradeListener> mUpgradeListener;
   RefPtr<WebSocketConnectionListener> mListener;
-  nsCOMPtr<nsISerialEventTarget> mBackgroundThread;
+  nsCOMPtr<nsIEventTarget> mBackgroundThread;
   nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
   Atomic<bool> mClosed{false};
   Mutex mMutex MOZ_UNANNOTATED{"WebSocketConnectionParent::mMutex"};

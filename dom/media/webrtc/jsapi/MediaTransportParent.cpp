@@ -235,4 +235,6 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvGetIceStats(
   return ipc::IPCResult::Ok();
 }
 
+void MediaTransportParent::ActorDestroy(ActorDestroyReason aWhy) {}
+
 }  // namespace mozilla

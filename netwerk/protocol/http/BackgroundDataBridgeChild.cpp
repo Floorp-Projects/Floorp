@@ -27,7 +27,7 @@ mozilla::ipc::IPCResult BackgroundDataBridgeChild::RecvOnTransportAndData(
   }
 
   if (mBgChild->ChannelClosed()) {
-    Close();
+    Unused << Send__delete__(this);
     return IPC_OK();
   }
 
@@ -44,7 +44,7 @@ mozilla::ipc::IPCResult BackgroundDataBridgeChild::RecvOnStopRequest(
   }
 
   if (mBgChild->ChannelClosed()) {
-    Close();
+    Unused << Send__delete__(this);
     return IPC_OK();
   }
 

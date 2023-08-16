@@ -9,7 +9,6 @@
 #define mozilla_net_HttpBackgroundChannelChild_h
 
 #include "mozilla/net/PHttpBackgroundChannelChild.h"
-#include "mozilla/ipc/Endpoint.h"
 #include "nsIRunnable.h"
 #include "nsTArray.h"
 
@@ -18,7 +17,6 @@ using mozilla::ipc::IPCResult;
 namespace mozilla {
 namespace net {
 
-class PBackgroundDataBridgeChild;
 class BackgroundDataBridgeChild;
 class HttpChannelChild;
 
@@ -97,7 +95,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  void CreateDataBridge(Endpoint<PBackgroundDataBridgeChild>&& aEndpoint);
+  void CreateDataBridge();
 
  private:
   virtual ~HttpBackgroundChannelChild();
