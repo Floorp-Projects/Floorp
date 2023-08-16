@@ -36,15 +36,12 @@
   MACRO_(approximatelySign, "approximatelySign")                               \
   MACRO_(arguments, "arguments")                                               \
   MACRO_(ArgumentsLength, "ArgumentsLength")                                   \
-  MACRO_(ArrayBufferSpecies, "$ArrayBufferSpecies")                            \
   MACRO_(ArrayIterator, "Array Iterator")                                      \
   MACRO_(ArrayIteratorNext, "ArrayIteratorNext")                               \
   MACRO_(ArraySort, "ArraySort")                                               \
-  MACRO_(ArraySpecies, "$ArraySpecies")                                        \
   MACRO_(ArraySpeciesCreate, "ArraySpeciesCreate")                             \
   MACRO_(ArrayToLocaleString, "ArrayToLocaleString")                           \
   MACRO_(ArrayType, "ArrayType")                                               \
-  MACRO_(ArrayValues, "$ArrayValues")                                          \
   MACRO2(as, "as")                                                             \
   MACRO_(assert_, "assert")                                                    \
   MACRO_(Async, "Async")                                                       \
@@ -140,6 +137,11 @@
   MACRO_(disambiguation, "disambiguation")                                     \
   MACRO_(displayURL, "displayURL")                                             \
   MACRO2(do_, "do")                                                            \
+  MACRO_(dollar_ArrayBufferSpecies_, "$ArrayBufferSpecies")                    \
+  MACRO_(dollar_ArraySpecies_, "$ArraySpecies")                                \
+  MACRO_(dollar_ArrayValues_, "$ArrayValues")                                  \
+  MACRO_(dollar_RegExpFlagsGetter_, "$RegExpFlagsGetter")                      \
+  MACRO_(dollar_RegExpToString_, "$RegExpToString")                            \
   MACRO_(domNode, "domNode")                                                   \
   MACRO_(done, "done")                                                         \
   MACRO_(dotAll, "dotAll")                                                     \
@@ -455,9 +457,7 @@
   MACRO_(quarter, "quarter")                                                   \
   MACRO_(raw, "raw")                                                           \
   MACRO_(reason, "reason")                                                     \
-  MACRO_(RegExpFlagsGetter, "$RegExpFlagsGetter")                              \
   MACRO_(RegExpStringIterator, "RegExp String Iterator")                       \
-  MACRO_(RegExpToString, "$RegExpToString")                                    \
   MACRO_(RegExp_prototype_Exec, "RegExp_prototype_Exec")                       \
   MACRO_(region, "region")                                                     \
   MACRO_(register_, "register")                                                \

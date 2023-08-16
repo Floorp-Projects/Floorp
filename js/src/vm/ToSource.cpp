@@ -212,8 +212,8 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
         case ESClass::RegExp: {
           FixedInvokeArgs<0> args(cx);
           RootedValue rval(cx);
-          if (!CallSelfHostedFunction(cx, cx->names().RegExpToString, v, args,
-                                      &rval)) {
+          if (!CallSelfHostedFunction(cx, cx->names().dollar_RegExpToString_, v,
+                                      args, &rval)) {
             return nullptr;
           }
           return ToString<CanGC>(cx, rval);

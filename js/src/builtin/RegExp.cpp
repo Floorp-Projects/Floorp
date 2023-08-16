@@ -2179,7 +2179,7 @@ bool js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto) {
   }
 
   if (!IsSelfHostedFunctionWithName(flagsGetter,
-                                    cx->names().RegExpFlagsGetter)) {
+                                    cx->names().dollar_RegExpFlagsGetter_)) {
     return false;
   }
 

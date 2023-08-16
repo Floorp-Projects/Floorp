@@ -79,7 +79,7 @@ bool js::ForOfPIC::Chain::initialize(JSContext* cx) {
   if (!IsFunctionObject(iterator, &iterFun)) {
     return true;
   }
-  if (!IsSelfHostedFunctionWithName(iterFun, cx->names().ArrayValues)) {
+  if (!IsSelfHostedFunctionWithName(iterFun, cx->names().dollar_ArrayValues_)) {
     return true;
   }
 
