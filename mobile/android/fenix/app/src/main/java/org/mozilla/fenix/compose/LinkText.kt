@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,11 +44,16 @@ data class LinkTextState(
  *
  * @param text The complete text.
  * @param linkTextState The clickable part of the text.
+ * @param style [TextStyle] applied to the text.
  */
 @Composable
 fun LinkText(
     text: String,
     linkTextState: LinkTextState,
+    style: TextStyle = FirefoxTheme.typography.body2.copy(
+        textAlign = TextAlign.Center,
+        color = FirefoxTheme.colors.textSecondary,
+    ),
 ) {
     val context = LocalContext.current
     val annotatedString = buildAnnotatedString {
@@ -76,10 +82,7 @@ fun LinkText(
     // and modifier is enabled with Role.Button when screen reader is enabled.
     ClickableText(
         text = annotatedString,
-        style = FirefoxTheme.typography.body2.copy(
-            textAlign = TextAlign.Center,
-            color = FirefoxTheme.colors.textSecondary,
-        ),
+        style = style,
         modifier = Modifier.clickable(
             enabled = context.isScreenReaderEnabled,
             role = Role.Button,
@@ -124,6 +127,25 @@ private fun LinkTextMiddlePreview() {
     FirefoxTheme {
         Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             LinkText(text = "This is clickable text, followed by normal text", linkTextState = state)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun LinkTextStyledPreview() {
+    val state = LinkTextState(
+        text = "clickable text",
+        url = "www.mozilla.com",
+        onClick = {},
+    )
+    FirefoxTheme {
+        Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
+            LinkText(
+                text = "This is clickable text, in a different style",
+                linkTextState = state,
+                style = FirefoxTheme.typography.headline5,
+            )
         }
     }
 }
