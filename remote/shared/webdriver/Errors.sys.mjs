@@ -27,6 +27,7 @@ const ERRORS = new Set([
   "NoSuchElementError",
   "NoSuchFrameError",
   "NoSuchHandleError",
+  "NoSuchInterceptError",
   "NoSuchNodeError",
   "NoSuchScriptError",
   "NoSuchShadowRootError",
@@ -585,6 +586,21 @@ class NoSuchHandleError extends WebDriverError {
 }
 
 /**
+ * Tried to remove an unknown network intercept.
+ *
+ * @param {string=} message
+ *     Optional string describing error situation.
+ * @param {object=} data
+ *     Additional error data helpful in diagnosing the error.
+ */
+class NoSuchInterceptError extends WebDriverError {
+  constructor(message, data = {}) {
+    super(message, data);
+    this.status = "no such intercept";
+  }
+}
+
+/**
  * A node as given by its unique shared id could not be found within the cache
  * of known nodes.
  *
@@ -787,6 +803,7 @@ const STATUSES = new Map([
   ["no such element", NoSuchElementError],
   ["no such frame", NoSuchFrameError],
   ["no such handle", NoSuchHandleError],
+  ["no such intercept", NoSuchInterceptError],
   ["no such node", NoSuchNodeError],
   ["no such script", NoSuchScriptError],
   ["no such shadow root", NoSuchShadowRootError],
