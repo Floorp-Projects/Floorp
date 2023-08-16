@@ -51,7 +51,7 @@ define(function (require, exports, module) {
     const title = getTitle(props, object);
     const isEmpty = getLength(object) === 0;
 
-    if (isEmpty || mode === MODE.TINY) {
+    if (isEmpty || mode === MODE.TINY || mode === MODE.HEADER) {
       return span(config, title);
     }
 
