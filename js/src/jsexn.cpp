@@ -352,9 +352,9 @@ bool js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     return false;
   }
 
-  ErrorObject* errObject = ErrorObject::create(
-      cx, exnType, stack, fileName, sourceId, lineNumber,
-      columnNumber.oneOriginValue(), std::move(report), messageStr, cause);
+  ErrorObject* errObject =
+      ErrorObject::create(cx, exnType, stack, fileName, sourceId, lineNumber,
+                          columnNumber, std::move(report), messageStr, cause);
   if (!errObject) {
     return false;
   }
@@ -741,7 +741,7 @@ JSObject* js::CopyErrorObject(JSContext* cx, Handle<ErrorObject*> err) {
   }
   uint32_t sourceId = err->sourceId();
   uint32_t lineNumber = err->lineNumber();
-  uint32_t columnNumber = err->columnNumber();
+  JS::ColumnNumberOneOrigin columnNumber = err->columnNumber();
   JSExnType errorType = err->type();
 
   // Create the Error object.
@@ -768,9 +768,9 @@ JS_PUBLIC_API bool JS::CreateError(JSContext* cx, JSExnType type,
     }
   }
 
-  JSObject* obj = js::ErrorObject::create(
-      cx, type, stack, fileName, 0, lineNumber, columnNumber.oneOriginValue(),
-      std::move(rep), message, cause);
+  JSObject* obj =
+      js::ErrorObject::create(cx, type, stack, fileName, 0, lineNumber,
+                              columnNumber, std::move(rep), message, cause);
   if (!obj) {
     return false;
   }

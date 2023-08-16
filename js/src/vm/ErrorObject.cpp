@@ -277,8 +277,7 @@ static ErrorObject* CreateErrorObject(JSContext* cx, const CallArgs& args,
   }
 
   return ErrorObject::create(cx, exnType, stack, fileName, sourceId, lineNumber,
-                             columnNumber.oneOriginValue(), nullptr, message,
-                             cause, proto);
+                             columnNumber, nullptr, message, cause, proto);
 }
 
 static bool Error(JSContext* cx, unsigned argc, Value* vp) {
@@ -448,7 +447,8 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
                            JSExnType type, UniquePtr<JSErrorReport> errorReport,
                            HandleString fileName, HandleObject stack,
                            uint32_t sourceId, uint32_t lineNumber,
-                           uint32_t columnNumber, HandleString message,
+                           JS::ColumnNumberOneOrigin columnNumber,
+                           HandleString message,
                            Handle<mozilla::Maybe<JS::Value>> cause) {
   MOZ_ASSERT(JSEXN_ERR <= type && type < JSEXN_ERROR_LIMIT);
   AssertObjectIsSavedFrameOrWrapper(cx, stack);
@@ -504,7 +504,8 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
   obj->setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(report));
   obj->initReservedSlot(FILENAME_SLOT, StringValue(fileName));
   obj->initReservedSlot(LINENUMBER_SLOT, Int32Value(lineNumber));
-  obj->initReservedSlot(COLUMNNUMBER_SLOT, Int32Value(columnNumber));
+  obj->initReservedSlot(COLUMNNUMBER_SLOT,
+                        Int32Value(columnNumber.oneOriginValue()));
   if (message) {
     obj->initReservedSlot(MESSAGE_SLOT, StringValue(message));
   }
@@ -526,7 +527,7 @@ bool js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj,
 ErrorObject* js::ErrorObject::create(JSContext* cx, JSExnType errorType,
                                      HandleObject stack, HandleString fileName,
                                      uint32_t sourceId, uint32_t lineNumber,
-                                     uint32_t columnNumber,
+                                     JS::ColumnNumberOneOrigin columnNumber,
                                      UniquePtr<JSErrorReport> report,
                                      HandleString message,
                                      Handle<mozilla::Maybe<JS::Value>> cause,
@@ -585,7 +586,7 @@ JSErrorReport* js::ErrorObject::getOrCreateErrorReport(JSContext* cx) {
   // Coordinates.
   report.sourceId = sourceId();
   report.lineno = lineNumber();
-  report.column = JS::ColumnNumberOneOrigin(columnNumber());
+  report.column = columnNumber();
 
   // Message. Note that |new Error()| will result in an undefined |message|
   // slot, so we need to explicitly substitute the empty string in that case.
