@@ -230,6 +230,7 @@ toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
      temporarily showing the toolbar for new tabs doesn't resize the content
      area for all tabs. */
   margin-bottom: calc(-1 * var(--bookmarks-toolbar-overlapping-browser-height));
+  z-index: 1;
 }
 
 :root[BookmarksToolbarOverlapsBrowser] .newTabBrowserPanel,
