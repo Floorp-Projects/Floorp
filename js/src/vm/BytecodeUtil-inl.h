@@ -202,9 +202,7 @@ class BytecodeRangeWithPosition : private BytecodeRange {
 
       SrcNoteType type = sn->type();
       if (type == SrcNoteType::ColSpan) {
-        ptrdiff_t colspan = SrcNote::ColSpan::getSpan(sn);
-        MOZ_ASSERT(ptrdiff_t(column.zeroOriginValue()) + colspan >= 0);
-        column += JS::ColumnNumberOffset(colspan);
+        column += SrcNote::ColSpan::getSpan(sn);
         lastLinePC = snpc;
       } else if (type == SrcNoteType::SetLine) {
         lineno = SrcNote::SetLine::getLine(sn, initialLine);

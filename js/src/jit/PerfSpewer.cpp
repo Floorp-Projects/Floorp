@@ -880,7 +880,7 @@ void BaselinePerfSpewer::saveJitCodeSourceInfo(
       lineno++;
       colno = JS::LimitedColumnNumberZeroOrigin::zero();
     } else if (type == SrcNoteType::ColSpan) {
-      colno += JS::ColumnNumberOffset(SrcNote::ColSpan::getSpan(sn));
+      colno += SrcNote::ColSpan::getSpan(sn);
     } else {
       continue;
     }
