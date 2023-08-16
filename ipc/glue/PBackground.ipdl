@@ -87,7 +87,6 @@ namespace ipc {
 [NeedsOtherPid, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PBackground
 {
-  manages PBackgroundDataBridge;
   manages PBackgroundIDBFactory;
   manages PBackgroundIndexedDBUtils;
   manages PBackgroundSDBConnection;
@@ -113,7 +112,6 @@ sync protocol PBackground
   manages PIPCClientCerts;
   manages PIdleScheduler;
   manages PLockManager;
-  manages PMediaTransport;
   manages PRemoteWorker;
   manages PRemoteWorkerController;
   manages PRemoteWorkerService;
@@ -138,8 +136,6 @@ sync protocol PBackground
 parent:
   // Only called at startup during mochitests to check the basic infrastructure.
   async PBackgroundTest(nsCString testArg);
-
-  async PBackgroundDataBridge(uint64_t channelID);
 
   async PBackgroundIDBFactory(LoggingInfo loggingInfo);
 
@@ -284,8 +280,6 @@ parent:
                        PrincipalInfo aPrincipalInfo);
 
   async PIdleScheduler();
-
-  async PMediaTransport();
 
   async PSelectTLSClientAuthCert(nsCString aHostName,
                                  OriginAttributes aOriginAttributes,

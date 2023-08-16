@@ -19,7 +19,6 @@
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/net/AltSvcTransactionChild.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
@@ -194,7 +193,7 @@ void SocketProcessChild::CleanUp() {
   LOG(("SocketProcessChild::CleanUp\n"));
 
   for (const auto& parent : mSocketProcessBridgeParentMap.Values()) {
-    if (!parent->Closed()) {
+    if (parent->CanSend()) {
       parent->Close();
     }
   }
@@ -456,13 +455,11 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvPDNSRequestConstructor(
 
 void SocketProcessChild::AddDataBridgeToMap(
     uint64_t aChannelId, BackgroundDataBridgeParent* aActor) {
-  ipc::AssertIsOnBackgroundThread();
   MutexAutoLock lock(mMutex);
   mBackgroundDataBridgeMap.InsertOrUpdate(aChannelId, RefPtr{aActor});
 }
 
 void SocketProcessChild::RemoveDataBridgeFromMap(uint64_t aChannelId) {
-  ipc::AssertIsOnBackgroundThread();
   MutexAutoLock lock(mMutex);
   mBackgroundDataBridgeMap.Remove(aChannelId);
 }
