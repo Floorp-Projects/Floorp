@@ -2000,7 +2000,7 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     if (anyCharsAccess().fillExceptingContext(err, offset)) {
       JS::LimitedColumnNumberZeroOrigin columnNumber;
       computeLineAndColumn(offset, &err->lineNumber, &columnNumber);
-      err->columnNumber = columnNumber.zeroOriginValue();
+      err->columnNumber = JS::ColumnNumberZeroOrigin(columnNumber);
       return true;
     }
     return false;
