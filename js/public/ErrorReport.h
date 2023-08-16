@@ -172,13 +172,6 @@ class JSErrorBase {
 
   JSString* newMessageString(JSContext* cx);
 
-  // JSErrorBase uses 1-origin column numbers.
-  // If the caller uses 0-origin column numbers, this method should be used to
-  // convert (bug 1144340).
-  static uint32_t fromZeroOriginToOneOrigin(uint32_t column) {
-    return column + 1;
-  }
-
  private:
   void freeMessage();
 };
