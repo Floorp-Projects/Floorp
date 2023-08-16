@@ -5,6 +5,7 @@
 
 #include "lib/extras/enc/jxl.h"
 
+#include <jxl/encode.h>
 #include <jxl/encode_cxx.h>
 
 #include "lib/jxl/exif.h"
@@ -87,9 +88,35 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
       fprintf(stderr, "Storing JPEG metadata failed.\n");
       return false;
     }
+    if (!params.jpeg_store_metadata && params.jpeg_strip_exif) {
+      JxlEncoderFrameSettingsSetOption(settings,
+                                       JXL_ENC_FRAME_SETTING_JPEG_KEEP_EXIF, 0);
+    }
+    if (!params.jpeg_store_metadata && params.jpeg_strip_xmp) {
+      JxlEncoderFrameSettingsSetOption(settings,
+                                       JXL_ENC_FRAME_SETTING_JPEG_KEEP_XMP, 0);
+    }
+    if (params.jpeg_strip_jumbf) {
+      JxlEncoderFrameSettingsSetOption(
+          settings, JXL_ENC_FRAME_SETTING_JPEG_KEEP_JUMBF, 0);
+    }
     if (JXL_ENC_SUCCESS != JxlEncoderAddJPEGFrame(settings, jpeg_bytes->data(),
                                                   jpeg_bytes->size())) {
-      fprintf(stderr, "JxlEncoderAddJPEGFrame() failed.\n");
+      JxlEncoderError error = JxlEncoderGetError(enc);
+      if (error == JXL_ENC_ERR_BAD_INPUT) {
+        fprintf(stderr,
+                "Error while decoding the JPEG image. It may be corrupt (e.g. "
+                "truncated) or of an unsupported type (e.g. CMYK).\n");
+      } else if (error == JXL_ENC_ERR_JBRD) {
+        fprintf(stderr,
+                "JPEG bitstream reconstruction data could not be created. "
+                "Possibly there is too much tail data.\n"
+                "Try using --jpeg_store_metadata 0, to losslessly "
+                "recompress the JPEG image data without bitstream "
+                "reconstruction data.\n");
+      } else {
+        fprintf(stderr, "JxlEncoderAddJPEGFrame() failed.\n");
+      }
       return false;
     }
   } else {
@@ -118,6 +145,12 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
     }
     if (JXL_ENC_SUCCESS != JxlEncoderSetBasicInfo(enc, &basic_info)) {
       fprintf(stderr, "JxlEncoderSetBasicInfo() failed.\n");
+      return false;
+    }
+    if (JXL_ENC_SUCCESS !=
+        JxlEncoderSetUpsamplingMode(enc, params.already_downsampled,
+                                    params.upsampling_mode)) {
+      fprintf(stderr, "JxlEncoderSetUpsamplingMode() failed.\n");
       return false;
     }
     if (JXL_ENC_SUCCESS !=

@@ -56,9 +56,19 @@ PaddedBytes ReadTestData(const std::string& filename) {
   return result;
 }
 
+void DefaultAcceptedFormats(extras::JXLDecompressParams& dparams) {
+  if (dparams.accepted_formats.empty()) {
+    for (const uint32_t num_channels : {1, 2, 3, 4}) {
+      dparams.accepted_formats.push_back(
+          {num_channels, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, /*align=*/0});
+    }
+  }
+}
+
 Status DecodeFile(extras::JXLDecompressParams dparams,
                   const Span<const uint8_t> file, CodecInOut* JXL_RESTRICT io,
                   ThreadPool* pool) {
+  DefaultAcceptedFormats(dparams);
   SetThreadParallelRunner(dparams, pool);
   extras::PackedPixelFile ppf;
   JXL_RETURN_IF_ERROR(DecodeImageJXL(file.data(), file.size(), dparams,
@@ -139,6 +149,7 @@ bool Roundtrip(const CodecInOut* io, const CompressParams& cparams,
                extras::JXLDecompressParams dparams,
                CodecInOut* JXL_RESTRICT io2, std::stringstream& failures,
                size_t* compressed_size, ThreadPool* pool, AuxOut* aux_out) {
+  DefaultAcceptedFormats(dparams);
   if (compressed_size) {
     *compressed_size = static_cast<size_t>(-1);
   }
@@ -203,6 +214,7 @@ size_t Roundtrip(const extras::PackedPixelFile& ppf_in,
                  extras::JXLCompressParams cparams,
                  extras::JXLDecompressParams dparams, ThreadPool* pool,
                  extras::PackedPixelFile* ppf_out) {
+  DefaultAcceptedFormats(dparams);
   SetThreadParallelRunner(cparams, pool);
   SetThreadParallelRunner(dparams, pool);
   std::vector<uint8_t> compressed;

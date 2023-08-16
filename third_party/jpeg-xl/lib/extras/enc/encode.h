@@ -43,6 +43,8 @@ class Encoder {
 
   virtual ~Encoder() = default;
 
+  // Set of pixel formats that this encoder takes as input.
+  // If empty, the 'encoder' does not need any pixels (it's metadata-only).
   virtual std::vector<JxlPixelFormat> AcceptedFormats() const = 0;
 
   // Any existing data in encoded_image is discarded.

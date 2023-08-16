@@ -43,12 +43,16 @@ struct JXLCompressParams {
   bool use_container = false;
   // Whether to enable/disable byte-exact jpeg reconstruction for jpeg inputs.
   bool jpeg_store_metadata = true;
+  bool jpeg_strip_exif = false;
+  bool jpeg_strip_xmp = false;
+  bool jpeg_strip_jumbf = false;
   // Whether to create brob boxes.
   bool compress_boxes = true;
   // Upper bound on the intensity level present in the image in nits (zero means
   // that the library chooses a default).
   float intensity_target = 0;
   int already_downsampled = 1;
+  int upsampling_mode = -1;
   // Overrides for bitdepth, codestream level and alpha premultiply.
   size_t override_bitdepth = 0;
   int32_t codestream_level = -1;

@@ -31,7 +31,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/highway/CMakeLists.txt" AND
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/highway/LICENSE"
                  ${PROJECT_BINARY_DIR}/LICENSE.highway COPYONLY)
 else()
-  find_package(HWY 1.0.0)
+  find_package(HWY 1.0.4)
   if (NOT HWY_FOUND)
     message(FATAL_ERROR
         "Highway library (hwy) not found. Install libhwy-dev or download it "

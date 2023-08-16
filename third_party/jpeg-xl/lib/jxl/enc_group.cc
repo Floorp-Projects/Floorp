@@ -209,39 +209,39 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
   {
     static const double kMul1[3][3] = {
         {
-            0.30628347689416235,
-            0.19096514988140451,
-            0.10092267072278764,
+            0.13289977307244785,
+            0.13991489841351781,
+            0.083900681804010419,
         },
         {
-            0.68175730483344243,
-            0.19038660767376803,
-            0.14069887255219371,
+            0.69938583107168562,
+            0.19612117586770869,
+            0.15307492924107463,
         },
         {
-            0.74599469660659012,
-            0.10465705596003883,
-            0.075491104183520744,
+            0.099160801461836312,
+            0.16684944507307059,
+            0.16608517854968413,
         },
     };
     static const double kMul2[3][3] = {
         {
-            0.022707896753424779,
-            0.84465309720205983,
-            5.2275313293658812,
+            0.24773711435293466,
+            0.65189637683223112,
+            1.0,
         },
         {
-            0.17545973555482378,
-            0.97395015736868384,
-            1.9659234163151995,
+            0.46465181913392556,
+            0.3142440606068525,
+            0.30128806880068809,
         },
         {
-            0.75243833661051895,
-            1.7774383804879366,
-            0.3793181712352986,
+            0.45203398366713637,
+            0.15063329382779103,
+            0.067846407329923752,
         },
     };
-    const float kQuantNormalizer = 2.9037220690527175;
+    const float kQuantNormalizer = 2.8261379721245263;
     sum_of_error *= kQuantNormalizer;
     sum_of_vals *= kQuantNormalizer;
     if (quant_kind >= AcStrategy::Type::DCT16X16) {
@@ -252,9 +252,15 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
       } else if (quant_kind == AcStrategy::Type::DCT16X16) {
         ix = 0;
       }
-      if (sum_of_error > kMul1[ix][c] * xsize * ysize * kBlockDim * kBlockDim &&
-          sum_of_error > kMul2[ix][c] * sum_of_vals) {
-        *quant += 1;
+      int step =
+          sum_of_error / (kMul1[ix][c] * xsize * ysize * kBlockDim * kBlockDim +
+                          kMul2[ix][c] * sum_of_vals);
+      if (step >= 2) {
+        step = 2;
+      }
+      if (sum_of_error > kMul1[ix][c] * xsize * ysize * kBlockDim * kBlockDim +
+                             kMul2[ix][c] * sum_of_vals) {
+        *quant += step;
         if (*quant >= Quantizer::kQuantMax) {
           *quant = Quantizer::kQuantMax - 1;
         }

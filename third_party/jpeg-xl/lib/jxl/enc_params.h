@@ -122,6 +122,11 @@ struct CompressParams {
   // Use brotli compression for any boxes derived from a JPEG frame.
   bool jpeg_compress_boxes = true;
 
+  // Preserve this metadata when doing JPEG recompression.
+  bool jpeg_keep_exif = true;
+  bool jpeg_keep_xmp = true;
+  bool jpeg_keep_jumbf = true;
+
   // Set the noise to what it would approximately be if shooting at the nominal
   // exposure for a given ISO setting on a 35mm camera.
   float photon_noise_iso = 0;

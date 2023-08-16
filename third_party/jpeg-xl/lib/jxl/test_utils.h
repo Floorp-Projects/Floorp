@@ -50,6 +50,8 @@ PaddedBytes ReadTestData(const std::string& filename);
 void JxlBasicInfoSetFromPixelFormat(JxlBasicInfo* basic_info,
                                     const JxlPixelFormat* pixel_format);
 
+void DefaultAcceptedFormats(extras::JXLDecompressParams& dparams);
+
 template <typename Params>
 void SetThreadParallelRunner(Params params, ThreadPool* pool) {
   if (pool && !params.runner_opaque) {

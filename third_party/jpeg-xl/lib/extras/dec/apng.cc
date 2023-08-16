@@ -586,6 +586,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
   std::vector<std::vector<uint8_t>> chunksInfo;
   bool isAnimated = false;
   bool hasInfo = false;
+  bool seenFctl = false;
   APNGFrame frameRaw = {};
   uint32_t num_channels;
   JxlPixelFormat format;
@@ -653,6 +654,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
       while (!r.Eof()) {
         id = read_chunk(&r, &chunk);
         if (!id) break;
+        seenFctl |= (id == kId_fcTL);
 
         if (id == kId_acTL && !hasInfo && !isAnimated) {
           isAnimated = true;
@@ -713,6 +715,10 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
           }
         } else if (id == kId_IDAT) {
           // First IDAT chunk means we now have all header info
+          if (seenFctl) {
+            // `fcTL` chunk must appear after all `IDAT` chunks
+            return JXL_FAILURE("IDAT chunk after fcTL chunk");
+          }
           hasInfo = true;
           JXL_CHECK(w == png_get_image_width(png_ptr, info_ptr));
           JXL_CHECK(h == png_get_image_height(png_ptr, info_ptr));
@@ -780,6 +786,9 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
             break;
           }
         } else if (id == kId_fdAT && isAnimated) {
+          if (!hasInfo) {
+            return JXL_FAILURE("fDAT chunk before iDAT");
+          }
           png_save_uint_32(chunk.data() + 4, chunk.size() - 16);
           memcpy(chunk.data() + 8, "IDAT", 4);
           if (processing_data(png_ptr, info_ptr, chunk.data() + 4,

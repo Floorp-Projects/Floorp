@@ -802,6 +802,7 @@ JxlEncoderStatus JxlEncoderSetBasicInfo(JxlEncoder* enc,
                                             info->exponent_bits_per_sample)) {
     return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE, "Invalid bit depth");
   }
+
   enc->metadata.m.bit_depth.bits_per_sample = info->bits_per_sample;
   enc->metadata.m.bit_depth.exponent_bits_per_sample =
       info->exponent_bits_per_sample;
@@ -917,6 +918,55 @@ void JxlEncoderInitExtraChannelInfo(JxlExtraChannelType type,
   info->spot_color[2] = 0;
   info->spot_color[3] = 0;
   info->cfa_channel = 0;
+}
+
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetUpsamplingMode(JxlEncoder* enc,
+                                                        const int64_t factor,
+                                                        const int64_t mode) {
+  // for convenience, allow calling this with factor 1 and just make it a no-op
+  if (factor == 1) return JXL_ENC_SUCCESS;
+  if (factor != 2 && factor != 4 && factor != 8)
+    return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE,
+                         "Invalid upsampling factor");
+  if (mode < -1)
+    return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE, "Invalid upsampling mode");
+  if (mode > 1)
+    return JXL_API_ERROR(enc, JXL_ENC_ERR_NOT_SUPPORTED,
+                         "Unsupported upsampling mode");
+
+  const size_t count = (factor == 2 ? 15 : (factor == 4 ? 55 : 210));
+  auto& td = enc->metadata.transform_data;
+  float* weights = (factor == 2 ? td.upsampling2_weights
+                                : (factor == 4 ? td.upsampling4_weights
+                                               : td.upsampling8_weights));
+  if (mode == -1) {
+    // Default fancy upsampling: don't signal custom weights
+    enc->metadata.transform_data.custom_weights_mask &= ~(factor >> 1);
+  } else if (mode == 0) {
+    // Nearest neighbor upsampling
+    enc->metadata.transform_data.custom_weights_mask |= (factor >> 1);
+    memset(weights, 0, sizeof(float) * count);
+    if (factor == 2) {
+      weights[9] = 1.f;
+    } else if (factor == 4) {
+      for (int i : {19, 24, 49}) weights[i] = 1.f;
+    } else if (factor == 8) {
+      for (int i : {39, 44, 49, 54, 119, 124, 129, 174, 179, 204}) {
+        weights[i] = 1.f;
+      }
+    }
+  } else if (mode == 1) {
+    // 'Pixel dots' upsampling (nearest-neighbor with cut corners)
+    JxlEncoderSetUpsamplingMode(enc, factor, 0);
+    if (factor == 4) {
+      weights[19] = 0.f;
+      weights[24] = 0.5f;
+    } else if (factor == 8) {
+      for (int i : {39, 44, 49, 119}) weights[i] = 0.f;
+      for (int i : {54, 124}) weights[i] = 0.5f;
+    }
+  }
+  return JXL_ENC_SUCCESS;
 }
 
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelInfo(
@@ -1285,6 +1335,15 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
                              "Buffering has to be in [0..3]");
       }
       return JXL_ENC_SUCCESS;
+    case JXL_ENC_FRAME_SETTING_JPEG_KEEP_EXIF:
+      frame_settings->values.cparams.jpeg_keep_exif = value;
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_FRAME_SETTING_JPEG_KEEP_XMP:
+      frame_settings->values.cparams.jpeg_keep_xmp = value;
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_FRAME_SETTING_JPEG_KEEP_JUMBF:
+      frame_settings->values.cparams.jpeg_keep_jumbf = value;
+      return JXL_ENC_SUCCESS;
 
     default:
       return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
@@ -1376,6 +1435,9 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetFloatOption(
     case JXL_ENC_FRAME_SETTING_FILL_ENUM:
     case JXL_ENC_FRAME_SETTING_JPEG_COMPRESS_BOXES:
     case JXL_ENC_FRAME_SETTING_BUFFERING:
+    case JXL_ENC_FRAME_SETTING_JPEG_KEEP_EXIF:
+    case JXL_ENC_FRAME_SETTING_JPEG_KEEP_XMP:
+    case JXL_ENC_FRAME_SETTING_JPEG_KEEP_JUMBF:
       return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
                            "Int option, try setting it with "
                            "JxlEncoderFrameSettingsSetOption");
@@ -1567,7 +1629,8 @@ JxlEncoderStatus JxlEncoderAddJPEGFrame(
         frame_settings->enc->metadata.m.orientation);
     jxl::InterpretExif(io.blobs.exif, &orientation);
     frame_settings->enc->metadata.m.orientation = orientation;
-
+  }
+  if (!io.blobs.exif.empty() && frame_settings->values.cparams.jpeg_keep_exif) {
     size_t exif_size = io.blobs.exif.size();
     // Exif data in JPEG is limited to 64k
     if (exif_size > 0xFFFF) {
@@ -1581,19 +1644,26 @@ JxlEncoderStatus JxlEncoderAddJPEGFrame(
     JxlEncoderAddBox(frame_settings->enc, "Exif", exif.data(), exif_size,
                      frame_settings->values.cparams.jpeg_compress_boxes);
   }
-  if (!io.blobs.xmp.empty()) {
+  if (!io.blobs.xmp.empty() && frame_settings->values.cparams.jpeg_keep_xmp) {
     JxlEncoderUseBoxes(frame_settings->enc);
     JxlEncoderAddBox(frame_settings->enc, "xml ", io.blobs.xmp.data(),
                      io.blobs.xmp.size(),
                      frame_settings->values.cparams.jpeg_compress_boxes);
   }
-  if (!io.blobs.jumbf.empty()) {
+  if (!io.blobs.jumbf.empty() &&
+      frame_settings->values.cparams.jpeg_keep_jumbf) {
     JxlEncoderUseBoxes(frame_settings->enc);
     JxlEncoderAddBox(frame_settings->enc, "jumb", io.blobs.jumbf.data(),
                      io.blobs.jumbf.size(),
                      frame_settings->values.cparams.jpeg_compress_boxes);
   }
   if (frame_settings->enc->store_jpeg_metadata) {
+    if (!frame_settings->values.cparams.jpeg_keep_exif ||
+        !frame_settings->values.cparams.jpeg_keep_xmp) {
+      return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
+                           "Need to preserve EXIF and XMP to allow JPEG "
+                           "bitstream reconstruction");
+    }
     jxl::jpeg::JPEGData data_in = *io.Main().jpeg_data;
     jxl::PaddedBytes jpeg_data;
     if (!jxl::jpeg::EncodeJPEGData(data_in, &jpeg_data,

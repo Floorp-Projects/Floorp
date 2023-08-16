@@ -122,8 +122,8 @@ TEST(JxlTest, RoundtripSmallD1) {
 
   {
     PackedPixelFile ppf_out;
-    EXPECT_NEAR(Roundtrip(t.ppf(), {}, {}, pool, &ppf_out), 766, 40);
-    EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(1.2));
+    EXPECT_NEAR(Roundtrip(t.ppf(), {}, {}, pool, &ppf_out), 816, 40);
+    EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.888));
   }
 
   // With a lower intensity target than the default, the bitrate should be
@@ -203,7 +203,7 @@ TEST(JxlTest, RoundtripOutOfOrderProcessing) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_EPF, 3);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 23553, 400);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 22999, 400);
   EXPECT_LE(ButteraugliDistance(t.ppf(), ppf_out), 1.35);
 }
 
@@ -223,7 +223,7 @@ TEST(JxlTest, RoundtripOutOfOrderProcessingBorder) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_RESAMPLING, 2);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 10907, 200);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 11015, 200);
   EXPECT_LE(ButteraugliDistance(t.ppf(), ppf_out), 2.9);
 }
 
@@ -296,9 +296,9 @@ TEST(JxlTest, RoundtripMultiGroup) {
   };
 
   auto run_kitten = std::async(std::launch::async, test, SpeedTier::kKitten,
-                               1.0f, 56570u, 11.7);
+                               1.0f, 55602u, 11.7);
   auto run_wombat = std::async(std::launch::async, test, SpeedTier::kWombat,
-                               2.0f, 35274u, 20.0);
+                               2.0f, 33624u, 20.0);
 }
 
 TEST(JxlTest, RoundtripRGBToGrayscale) {
@@ -357,7 +357,7 @@ TEST(JxlTest, RoundtripLargeFast) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_EFFORT, 7);  // kSquirrel
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 453713, 5000);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 445555, 5000);
   EXPECT_THAT(ComputeDistance2(t.ppf(), ppf_out), IsSlightlyBelow(100));
 }
 
@@ -374,7 +374,7 @@ TEST(JxlTest, RoundtripDotsForceEpf) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_DOTS, 1);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 41087, 300);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 41777, 300);
   EXPECT_THAT(ComputeDistance2(t.ppf(), ppf_out), IsSlightlyBelow(18));
 }
 
@@ -454,7 +454,7 @@ TEST(JxlTest, RoundtripSmallNL) {
   t.SetDimensions(xsize, ysize);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), {}, {}, pool, &ppf_out), 753, 45);
+  EXPECT_NEAR(Roundtrip(t.ppf(), {}, {}, pool, &ppf_out), 801, 45);
   EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(1.1));
 }
 
@@ -470,7 +470,7 @@ TEST(JxlTest, RoundtripNoGaborishNoAR) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_GABORISH, 0);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 38009, 200);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 38900, 200);
   EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(1.8));
 }
 
@@ -515,7 +515,7 @@ TEST(JxlTest, RoundtripSmallPatchesAlpha) {
 
   PackedPixelFile ppf_out;
   EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 597, 100);
-  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.015f));
+  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.018f));
 }
 
 TEST(JxlTest, RoundtripSmallPatches) {
@@ -540,7 +540,7 @@ TEST(JxlTest, RoundtripSmallPatches) {
 
   PackedPixelFile ppf_out;
   EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 486, 100);
-  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.015f));
+  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.018f));
 }
 
 // TODO(szabadka) Add encoder and decoder API functions that accept frame
@@ -846,14 +846,14 @@ TEST(JxlTest, RoundtripAlphaPremultiplied) {
           EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames,
                                           ButteraugliParams(), GetJxlCms(),
                                           /*distmap=*/nullptr),
-                      IsSlightlyBelow(1.2));
+                      IsSlightlyBelow(1.111));
           EXPECT_TRUE(UnpremultiplyAlpha(io2));
           EXPECT_FALSE(io2.Main().AlphaIsPremultiplied());
         }
         EXPECT_THAT(ButteraugliDistance(io_nopremul.frames, io2.frames,
                                         ButteraugliParams(), GetJxlCms(),
                                         /*distmap=*/nullptr),
-                    IsSlightlyBelow(1.47));
+                    IsSlightlyBelow(1.55));
       }
     }
   }
@@ -874,7 +874,7 @@ TEST(JxlTest, RoundtripAlphaResampling) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_EXTRA_CHANNEL_RESAMPLING, 2);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 12745, 130);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 13155, 130);
   EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(5.2));
 }
 
@@ -1129,7 +1129,7 @@ TEST(JxlTest, RoundtripDots) {
   cparams.distance = 0.04;
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 277976, 4000);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 273333, 4000);
   EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(0.35));
 }
 
@@ -1149,8 +1149,8 @@ TEST(JxlTest, RoundtripNoise) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_NOISE, 1);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 38244, 750);
-  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(1.3));
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, pool, &ppf_out), 39261, 750);
+  EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(1.35));
 }
 
 TEST(JxlTest, RoundtripLossless8Gray) {
@@ -1262,6 +1262,7 @@ size_t RoundtripJpeg(const PaddedBytes& jpeg_in, ThreadPool* pool) {
                                      &compressed));
 
   jxl::JXLDecompressParams dparams;
+  test::DefaultAcceptedFormats(dparams);
   test::SetThreadParallelRunner(dparams, pool);
   std::vector<uint8_t> out;
   jxl::PackedPixelFile ppf;
@@ -1290,6 +1291,7 @@ void RoundtripJpegToPixels(const PaddedBytes& jpeg_in,
   EXPECT_TRUE(extras::EncodeImageJXL({}, extras::PackedPixelFile(), &jpeg_bytes,
                                      &compressed));
 
+  test::DefaultAcceptedFormats(dparams);
   test::SetThreadParallelRunner(dparams, pool);
   EXPECT_TRUE(DecodeImageJXL(compressed.data(), compressed.size(), dparams,
                              nullptr, ppf_out, nullptr));
@@ -1473,7 +1475,7 @@ TEST(JxlTest, RoundtripProgressive) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_RESPONSIVE, 1);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 63570, 750);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 62160, 750);
   EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(1.4));
 }
 
@@ -1490,7 +1492,7 @@ TEST(JxlTest, RoundtripProgressiveLevel2Slow) {
   cparams.AddOption(JXL_ENC_FRAME_SETTING_RESPONSIVE, 1);
 
   PackedPixelFile ppf_out;
-  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 74621, 1000);
+  EXPECT_NEAR(Roundtrip(t.ppf(), cparams, {}, &pool, &ppf_out), 71111, 1000);
   EXPECT_THAT(ButteraugliDistance(t.ppf(), ppf_out), IsSlightlyBelow(1.17));
 }
 

@@ -194,7 +194,7 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
             pixel_type *JXL_RESTRICT r = channel.Row(y);
             for (size_t x = 0; x < channel.w; x++) {
               uint32_t v =
-                  reader->ReadHybridUintClustered<uses_lz77>(ctx_id, br);
+                  reader->ReadHybridUintClusteredInlined<uses_lz77>(ctx_id, br);
               r[x] = UnpackSigned(v);
             }
           }
@@ -203,7 +203,8 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
             pixel_type *JXL_RESTRICT r = channel.Row(y);
             for (size_t x = 0; x < channel.w; x++) {
               uint32_t v =
-                  reader->ReadHybridUintClustered<uses_lz77>(ctx_id, br);
+                  reader->ReadHybridUintClusteredMaybeInlined<uses_lz77>(ctx_id,
+                                                                         br);
               r[x] = make_pixel(v, multiplier, offset);
             }
           }
@@ -255,7 +256,8 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
           pixel_type top = (y ? *(r + x - onerow) : left);
           pixel_type topleft = (x && y ? *(r + x - 1 - onerow) : left);
           pixel_type guess = ClampedGradient(top, left, topleft);
-          uint64_t v = reader->ReadHybridUintClustered<uses_lz77>(ctx_id, br);
+          uint64_t v = reader->ReadHybridUintClusteredMaybeInlined<uses_lz77>(
+              ctx_id, br);
           r[x] = make_pixel(v, 1, guess);
         }
       }
@@ -293,34 +295,70 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
                 std::max<pixel_type_w>(-kPropRangeFast, top + left - topleft),
                 kPropRangeFast - 1);
         uint32_t ctx_id = context_lookup[pos];
-        uint64_t v = reader->ReadHybridUintClustered<uses_lz77>(ctx_id, br);
+        uint64_t v =
+            reader->ReadHybridUintClusteredMaybeInlined<uses_lz77>(ctx_id, br);
         r[x] = make_pixel(v, multipliers[pos],
                           static_cast<pixel_type_w>(offsets[pos]) + guess);
       }
     }
-  } else if (!uses_lz77 && is_wp_only) {
+  } else if (!uses_lz77 && is_wp_only && channel.w > 8) {
     JXL_DEBUG_V(8, "WP fast track.");
-    const intptr_t onerow = channel.plane.PixelsPerRow();
     weighted::State wp_state(wp_header, channel.w, channel.h);
     Properties properties(1);
     for (size_t y = 0; y < channel.h; y++) {
       pixel_type *JXL_RESTRICT r = channel.Row(y);
-      for (size_t x = 0; x < channel.w; x++) {
+      const pixel_type *JXL_RESTRICT rtop = (y ? channel.Row(y - 1) : r - 1);
+      const pixel_type *JXL_RESTRICT rtoptop =
+          (y > 1 ? channel.Row(y - 2) : rtop);
+      const pixel_type *JXL_RESTRICT rtopleft =
+          (y ? channel.Row(y - 1) - 1 : r - 1);
+      const pixel_type *JXL_RESTRICT rtopright =
+          (y ? channel.Row(y - 1) + 1 : r - 1);
+      size_t x = 0;
+      {
         size_t offset = 0;
-        pixel_type_w left = (x ? r[x - 1] : y ? *(r + x - onerow) : 0);
-        pixel_type_w top = (y ? *(r + x - onerow) : left);
-        pixel_type_w topleft = (x && y ? *(r + x - 1 - onerow) : left);
-        pixel_type_w topright =
-            (x + 1 < channel.w && y ? *(r + x + 1 - onerow) : top);
-        pixel_type_w toptop = (y > 1 ? *(r + x - onerow - onerow) : top);
+        pixel_type_w left = y ? rtop[x] : 0;
+        pixel_type_w toptop = y ? rtoptop[x] : 0;
+        pixel_type_w topright = (x + 1 < channel.w && y ? rtop[x + 1] : left);
         int32_t guess = wp_state.Predict</*compute_properties=*/true>(
-            x, y, channel.w, top, left, topright, topleft, toptop, &properties,
+            x, y, channel.w, left, left, topright, left, toptop, &properties,
             offset);
         uint32_t pos =
             kPropRangeFast + std::min(std::max(-kPropRangeFast, properties[0]),
                                       kPropRangeFast - 1);
         uint32_t ctx_id = context_lookup[pos];
-        uint64_t v = reader->ReadHybridUintClustered<uses_lz77>(ctx_id, br);
+        uint64_t v =
+            reader->ReadHybridUintClusteredInlined<uses_lz77>(ctx_id, br);
+        r[x] = make_pixel(v, multipliers[pos],
+                          static_cast<pixel_type_w>(offsets[pos]) + guess);
+        wp_state.UpdateErrors(r[x], x, y, channel.w);
+      }
+      for (x = 1; x + 1 < channel.w; x++) {
+        size_t offset = 0;
+        int32_t guess = wp_state.Predict</*compute_properties=*/true>(
+            x, y, channel.w, rtop[x], r[x - 1], rtopright[x], rtopleft[x],
+            rtoptop[x], &properties, offset);
+        uint32_t pos =
+            kPropRangeFast + std::min(std::max(-kPropRangeFast, properties[0]),
+                                      kPropRangeFast - 1);
+        uint32_t ctx_id = context_lookup[pos];
+        uint64_t v =
+            reader->ReadHybridUintClusteredInlined<uses_lz77>(ctx_id, br);
+        r[x] = make_pixel(v, multipliers[pos],
+                          static_cast<pixel_type_w>(offsets[pos]) + guess);
+        wp_state.UpdateErrors(r[x], x, y, channel.w);
+      }
+      {
+        size_t offset = 0;
+        int32_t guess = wp_state.Predict</*compute_properties=*/true>(
+            x, y, channel.w, rtop[x], r[x - 1], rtop[x], rtopleft[x],
+            rtoptop[x], &properties, offset);
+        uint32_t pos =
+            kPropRangeFast + std::min(std::max(-kPropRangeFast, properties[0]),
+                                      kPropRangeFast - 1);
+        uint32_t ctx_id = context_lookup[pos];
+        uint64_t v =
+            reader->ReadHybridUintClusteredInlined<uses_lz77>(ctx_id, br);
         r[x] = make_pixel(v, multipliers[pos],
                           static_cast<pixel_type_w>(offsets[pos]) + guess);
         wp_state.UpdateErrors(r[x], x, y, channel.w);
@@ -351,8 +389,8 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
           PredictionResult res =
               PredictTreeNoWPNEC(&properties, channel.w, p + x, onerow, x, y,
                                  tree_lookup, references);
-          uint64_t v =
-              reader->ReadHybridUintClustered<uses_lz77>(res.context, br);
+          uint64_t v = reader->ReadHybridUintClusteredInlined<uses_lz77>(
+              res.context, br);
           p[x] = make_pixel(v, res.multiplier, res.guess);
         }
         for (size_t x = channel.w - 2; x < channel.w; x++) {
@@ -368,8 +406,8 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
           PredictionResult res =
               PredictTreeNoWP(&properties, channel.w, p + x, onerow, x, y,
                               tree_lookup, references);
-          uint64_t v =
-              reader->ReadHybridUintClustered<uses_lz77>(res.context, br);
+          uint64_t v = reader->ReadHybridUintClusteredMaybeInlined<uses_lz77>(
+              res.context, br);
           p[x] = make_pixel(v, res.multiplier, res.guess);
         }
       }
@@ -399,8 +437,8 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
           PredictionResult res =
               PredictTreeWPNEC(&properties, channel.w, p + x, onerow, x, y,
                                tree_lookup, references, &wp_state);
-          uint64_t v =
-              reader->ReadHybridUintClustered<uses_lz77>(res.context, br);
+          uint64_t v = reader->ReadHybridUintClusteredInlined<uses_lz77>(
+              res.context, br);
           p[x] = make_pixel(v, res.multiplier, res.guess);
           wp_state.UpdateErrors(p[x], x, y, channel.w);
         }

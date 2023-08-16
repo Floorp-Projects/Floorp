@@ -358,8 +358,6 @@ bool JpegXlSaveGui::SaveDialog() {
   gtk_widget_show(separator);
 
   // Advanced Settings Frame
-  std::vector<GtkWidget*> advanced_opts;
-
   frame_advanced = gtk_frame_new("Advanced Settings");
   gimp_help_set_help_data(frame_advanced,
                           "Some advanced settings may produce malformed files.",
