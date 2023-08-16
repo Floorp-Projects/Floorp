@@ -744,7 +744,7 @@ class GeckoEngineSession(
                 response.grade,
                 response.adjustedRating,
                 response.needsAnalysis,
-                response.lastAnalysisTime,
+                response.lastAnalysisTime.toLong(),
                 response.deletedProductReported,
                 response.deletedProduct,
                 highlights,

@@ -25,7 +25,7 @@ data class GeckoProductAnalysis(
     val grade: String?,
     val adjustedRating: Double,
     val needsAnalysis: Boolean,
-    val lastAnalysisTime: Int,
+    val lastAnalysisTime: Long,
     val deletedProductReported: Boolean,
     val deletedProduct: Boolean,
     val highlights: Highlight?,

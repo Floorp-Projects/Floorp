@@ -17,7 +17,7 @@ object ProductAnalysisTestData {
         grade: String? = "A",
         adjustedRating: Double = 4.5,
         needsAnalysis: Boolean = false,
-        lastAnalysisTime: Int = 0,
+        lastAnalysisTime: Long = 0L,
         deletedProductReported: Boolean = false,
         deletedProduct: Boolean = false,
         highlights: Highlight? = null,
