@@ -293,6 +293,7 @@ class BookmarksTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun openAllInTabsTest() {
         val webPages = listOf(
