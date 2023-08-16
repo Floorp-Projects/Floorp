@@ -283,10 +283,6 @@ class TrackInfo {
   // rendered directly by non-gecko components.
   bool mIsRenderedExternally;
 
-  // True if the track represent live media
-  // This allows configuring decoders in low-latency mode.
-  bool mIsLive = false;
-
   virtual AudioInfo* GetAsAudioInfo() { return nullptr; }
   virtual VideoInfo* GetAsVideoInfo() { return nullptr; }
   virtual TextInfo* GetAsTextInfo() { return nullptr; }
