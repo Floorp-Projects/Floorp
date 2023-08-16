@@ -33,15 +33,13 @@ class PictureInPictureVideoWrapper {
   }
 
   setCaptionContainerObserver(video, updateCaptionsFunction) {
-    let container = document.querySelector(
-      ".video-player--video-player--1sfof"
-    );
+    let container = video.parentElement;
 
     if (container) {
       updateCaptionsFunction("");
       const callback = function (mutationsList, observer) {
         let text = container.querySelector(
-          ".captions-display--captions-container--1-aQJ"
+          `[data-purpose="captions-cue-text"]`
         )?.innerText;
         if (!text) {
           updateCaptionsFunction("");
