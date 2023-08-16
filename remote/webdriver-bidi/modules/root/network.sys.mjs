@@ -320,6 +320,38 @@ class NetworkModule extends Module {
     };
   }
 
+  /**
+   * Removes an existing network intercept.
+   *
+   * @param {object=} options
+   * @param {string} options.intercept
+   *     The id of the intercept to remove.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchInterceptError}
+   *     Raised if the intercept id could not be found in the internal intercept
+   *     map.
+   */
+  removeIntercept(options = {}) {
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1845345.
+    this.assertExperimentalCommandsEnabled("network.removeIntercept");
+    const { intercept } = options;
+
+    lazy.assert.string(
+      intercept,
+      `Expected "intercept" to be a string, got ${intercept}`
+    );
+
+    if (!this.#interceptMap.has(intercept)) {
+      throw new lazy.error.NoSuchInterceptError(
+        `Network intercept with id ${intercept} not found`
+      );
+    }
+
+    this.#interceptMap.delete(intercept);
+  }
+
   #getContextInfo(browsingContext) {
     return {
       contextId: browsingContext.id,
