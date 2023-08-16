@@ -20,6 +20,9 @@ std::vector<T>     nsTArray<T>
 ``insert()``       ``AppendElements()``
 ``emplace_back()`` ``EmplaceBack()``
 ``clear()``        ``Clear()`` or ``ClearAndRetainStorage()``
+``data()``         ``Elements()``
+``at()``           ``ElementAt()``
+``back()``         ``LastElement()``
 ================== ==================================================
 
 Rust Bindings
