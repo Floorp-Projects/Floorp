@@ -281,7 +281,6 @@ SheetLoadData::SheetLoadData(
       mTitle(aTitle),
       mEncoding(nullptr),
       mURI(aURI),
-      mLineNumber(1),
       mSheet(aSheet),
       mPendingChildren(0),
       mSyncLoad(aSyncLoad == SyncLoad::Yes),
@@ -321,7 +320,6 @@ SheetLoadData::SheetLoadData(css::Loader* aLoader, nsIURI* aURI,
     : mLoader(aLoader),
       mEncoding(nullptr),
       mURI(aURI),
-      mLineNumber(1),
       mSheet(aSheet),
       mParentData(aParentData),
       mPendingChildren(0),
@@ -363,7 +361,6 @@ SheetLoadData::SheetLoadData(
     : mLoader(aLoader),
       mEncoding(nullptr),
       mURI(aURI),
-      mLineNumber(1),
       mSheet(aSheet),
       mPendingChildren(0),
       mSyncLoad(aSyncLoad == SyncLoad::Yes),
@@ -1518,7 +1515,7 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
   // Some cases, like inline style and UA stylesheets, need to be parsed
   // synchronously. The former may trigger child loads, the latter must not.
   if (aLoadData.mSyncLoad || aAllowAsync == AllowAsyncParse::No) {
-    sheet->ParseSheetSync(this, aBytes, &aLoadData, aLoadData.mLineNumber);
+    sheet->ParseSheetSync(this, aBytes, &aLoadData);
     aLoadData.mIsBeingParsed = false;
 
     bool noPendingChildren = aLoadData.mPendingChildren == 0;
@@ -1669,7 +1666,7 @@ void Loader::MaybeNotifyPreloadUsed(SheetLoadData& aData) {
 }
 
 Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
-    const SheetInfo& aInfo, const nsAString& aBuffer, uint32_t aLineNumber,
+    const SheetInfo& aInfo, const nsAString& aBuffer,
     nsICSSLoaderObserver* aObserver) {
   LOG(("css::Loader::LoadInlineStyle"));
   MOZ_ASSERT(aInfo.mContent);
@@ -1752,8 +1749,6 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
       aInfo.mContent, isAlternate, matched, StylePreloadKind::None, aObserver,
       principal, aInfo.mReferrerInfo, aInfo.mNonce);
   MOZ_ASSERT(data->GetRequestingNode() == aInfo.mContent);
-  data->mLineNumber = aLineNumber;
-
   if (isSheetFromCache) {
     MOZ_ASSERT(sheet->IsComplete());
     MOZ_ASSERT(sheet->GetOwnerNode() == aInfo.mContent);

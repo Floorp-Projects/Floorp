@@ -80,7 +80,6 @@ impl StylesheetContents {
         stylesheet_loader: Option<&dyn StylesheetLoader>,
         error_reporter: Option<&dyn ParseErrorReporter>,
         quirks_mode: QuirksMode,
-        line_number_offset: u32,
         use_counters: Option<&UseCounters>,
         allow_import_rules: AllowImportRules,
         sanitization_data: Option<&mut SanitizationData>,
@@ -93,7 +92,6 @@ impl StylesheetContents {
             stylesheet_loader,
             error_reporter,
             quirks_mode,
-            line_number_offset,
             use_counters,
             allow_import_rules,
             sanitization_data,
@@ -384,7 +382,6 @@ impl Stylesheet {
         url_data: UrlExtraData,
         stylesheet_loader: Option<&dyn StylesheetLoader>,
         error_reporter: Option<&dyn ParseErrorReporter>,
-        line_number_offset: u32,
         allow_import_rules: AllowImportRules,
     ) {
         // FIXME: Consider adding use counters to Servo?
@@ -396,7 +393,6 @@ impl Stylesheet {
             stylesheet_loader,
             error_reporter,
             existing.contents.quirks_mode,
-            line_number_offset,
             /* use_counters = */ None,
             allow_import_rules,
             /* sanitization_data = */ None,
@@ -420,12 +416,11 @@ impl Stylesheet {
         stylesheet_loader: Option<&dyn StylesheetLoader>,
         error_reporter: Option<&dyn ParseErrorReporter>,
         quirks_mode: QuirksMode,
-        line_number_offset: u32,
         use_counters: Option<&UseCounters>,
         allow_import_rules: AllowImportRules,
         mut sanitization_data: Option<&mut SanitizationData>,
     ) -> (Namespaces, Vec<CssRule>, Option<String>, Option<String>) {
-        let mut input = ParserInput::new_with_line_number_offset(css, line_number_offset);
+        let mut input = ParserInput::new(css);
         let mut input = Parser::new(&mut input);
 
         let context = ParserContext::new(
@@ -502,7 +497,6 @@ impl Stylesheet {
         stylesheet_loader: Option<&dyn StylesheetLoader>,
         error_reporter: Option<&dyn ParseErrorReporter>,
         quirks_mode: QuirksMode,
-        line_number_offset: u32,
         allow_import_rules: AllowImportRules,
     ) -> Self {
         // FIXME: Consider adding use counters to Servo?
@@ -514,7 +508,6 @@ impl Stylesheet {
             stylesheet_loader,
             error_reporter,
             quirks_mode,
-            line_number_offset,
             /* use_counters = */ None,
             allow_import_rules,
             /* sanitized_output = */ None,

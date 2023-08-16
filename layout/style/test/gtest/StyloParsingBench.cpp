@@ -44,7 +44,7 @@ static void ServoParsingBench(const StyleUseCounters* aCounters) {
   for (int i = 0; i < PARSING_REPETITIONS; i++) {
     RefPtr<StyleStylesheetContents> stylesheet =
         Servo_StyleSheet_FromUTF8Bytes(
-            nullptr, nullptr, nullptr, &cssStr, eAuthorSheetFeatures, data, 0,
+            nullptr, nullptr, nullptr, &cssStr, eAuthorSheetFeatures, data,
             eCompatibility_FullStandards, nullptr, aCounters,
             StyleAllowImportRules::Yes, StyleSanitizationKind::None, nullptr)
             .Consume();

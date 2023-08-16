@@ -113,9 +113,6 @@ class SheetLoadData final
   // URI we're loading.  Null for inline or constructable sheets.
   nsCOMPtr<nsIURI> mURI;
 
-  // Should be 1 for non-inline sheets.
-  uint32_t mLineNumber;
-
   // The sheet we're loading data for
   const RefPtr<StyleSheet> mSheet;
 
