@@ -36,6 +36,7 @@ dependencies {
     implementation project(':concept-menu')
     implementation project(':browser-menu2')
     implementation project(':support-base')
+    implementation project(':ui-colors')
     implementation project(':ui-icons')
 
     testImplementation project(":support-test")

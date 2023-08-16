@@ -18,6 +18,7 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import mozilla.components.support.utils.DrawableUtils
 import mozilla.components.ui.tabcounter.databinding.MozacUiTabcounterLayoutBinding
@@ -34,12 +35,15 @@ class TabCounter @JvmOverloads constructor(
     private var counterBox: ImageView
     private var counterText: TextView
     private var counterRoot: FrameLayout
+    private var counterMask: ImageView
 
     init {
         binding = MozacUiTabcounterLayoutBinding.inflate(LayoutInflater.from(context), this)
         counterBox = binding.counterBox
         counterText = binding.counterText
         counterRoot = binding.counterRoot
+        counterMask = binding.counterMask
+
         setCount(INTERNAL_COUNT)
 
         context.obtainStyledAttributes(attrs, R.styleable.TabCounter, defStyle, 0).apply {
@@ -50,6 +54,8 @@ class TabCounter @JvmOverloads constructor(
             counterColor?.let {
                 setColor(it)
             }
+
+            clipChildren = false
 
             recycle()
         }
@@ -95,6 +101,15 @@ class TabCounter @JvmOverloads constructor(
         }
         // Trigger animations.
         animationSet.start()
+    }
+
+    /**
+     * Toggles the visibility of the mask overlay on the counter
+     *
+     * @param showMask [Boolean] used to determine whether to show or hide the mask.
+     */
+    fun toggleCounterMask(showMask: Boolean) {
+        counterMask.isVisible = showMask
     }
 
     fun setCount(count: Int) {

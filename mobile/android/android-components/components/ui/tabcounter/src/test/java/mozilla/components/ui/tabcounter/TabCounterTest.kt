@@ -6,6 +6,7 @@ package mozilla.components.ui.tabcounter
 
 import android.content.res.ColorStateList
 import android.view.LayoutInflater
+import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -58,5 +59,12 @@ class TabCounterTest {
 
         tabCounter.setColor(colorStateList)
         assertEquals(binding.counterText.textColors, colorStateList)
+    }
+
+    @Test
+    fun `Toggling the counterMask will set the mask to visible`() {
+        assertEquals(binding.counterMask.visibility, View.GONE)
+        tabCounter.toggleCounterMask(true)
+        assertEquals(binding.counterMask.visibility, View.VISIBLE)
     }
 }

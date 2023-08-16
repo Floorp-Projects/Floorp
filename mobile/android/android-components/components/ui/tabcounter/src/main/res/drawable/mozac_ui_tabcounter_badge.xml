@@ -1,0 +1,15 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <size android:height="20dp" android:width="20dp" />
+            <solid android:color="@color/photonPurple60" />
+            <stroke android:color="@color/mozac_ui_icons_fill" android:width="1.5dp" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/mozac_ic_private_mode_12"
+        android:gravity="center" />
+</layer-list>

@@ -13,7 +13,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true">
+        android:layout_centerVertical="true"
+        android:clipChildren="false">
 
         <ImageView
             android:id="@+id/counter_box"
@@ -21,6 +22,7 @@
             android:layout_height="@dimen/mozac_tab_counter_box_width_height"
             android:contentDescription="@string/mozac_tab_counter_content_description"
             android:importantForAccessibility="no"
+            android:layout_gravity="center"
             app:srcCompat="@drawable/mozac_ui_tabcounter_box" />
 
         <TextView
@@ -34,5 +36,15 @@
             android:textSize="12sp"
             android:textStyle="bold"
             tools:text="16" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/counter_mask"
+            app:srcCompat="@drawable/mozac_ui_tabcounter_badge"
+            android:translationX="8dp"
+            android:translationY="-8dp"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_gravity="top|end"
+            android:visibility="gone" />
     </FrameLayout>
 </merge>

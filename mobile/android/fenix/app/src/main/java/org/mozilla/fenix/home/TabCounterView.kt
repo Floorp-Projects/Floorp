@@ -20,6 +20,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabstray.Page
 
 /**
@@ -82,13 +83,18 @@ class TabCounterView(
      * browsing mode.
      */
     fun update(browserState: BrowserState) {
-        val tabCount = if (browsingModeManager.mode.isPrivate) {
+        val isPrivate = browsingModeManager.mode.isPrivate
+        val tabCount = if (isPrivate) {
             browserState.privateTabs.size
         } else {
             browserState.normalTabs.size
         }
 
         tabCounter.setCountWithAnimation(tabCount)
+
+        if (context.settings().feltPrivateBrowsingEnabled) {
+            tabCounter.toggleCounterMask(isPrivate)
+        }
     }
 
     /**

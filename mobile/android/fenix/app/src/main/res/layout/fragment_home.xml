@@ -178,6 +178,7 @@
             android:id="@+id/tab_button"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:clipChildren="false"
             app:layout_constraintTop_toTopOf="@id/bottom_bar"
             app:layout_constraintBottom_toBottomOf="@id/bottom_bar"
             app:layout_constraintEnd_toStartOf="@+id/menuButton"

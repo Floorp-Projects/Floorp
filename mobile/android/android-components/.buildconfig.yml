@@ -2165,6 +2165,7 @@ projects:
     - support-test
     - support-utils
     - tooling-lint
+    - ui-colors
     - ui-icons
   ui-widgets:
     description: The standard set of Mozilla widgets.
