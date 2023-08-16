@@ -74,6 +74,11 @@ shopping-highlight-shipping = Shipping
 shopping-highlight-competitiveness = Competitiveness
 shopping-highlight-packaging = Packaging
 
+## Strings for show more card
+
+shopping-show-more-button = Show more
+shopping-show-less-button = Show less
+
 ## Strings for the settings card
 
 shopping-settings-label =
