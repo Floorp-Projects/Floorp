@@ -57,7 +57,6 @@ static const int kMaxLogLineSize = 1024 - 60;
 namespace rtc {
 
 bool LogMessage::aec_debug_ = false;
-uint32_t LogMessage::aec_debug_size_ = 4*1024*1024;
 std::string LogMessage::aec_filename_base_;
 
 void LogMessage::set_aec_debug(bool enable) {

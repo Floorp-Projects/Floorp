@@ -591,9 +591,7 @@ class LogMessage {
 
   // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
   static void set_aec_debug(bool enable);
-  static void set_aec_debug_size(uint32_t size) { aec_debug_size_ = size; }
   static bool aec_debug() { return aec_debug_; }
-  static uint32_t aec_debug_size() { return aec_debug_size_; }
   static std::string aec_debug_filename();
   static void set_aec_debug_filename(const char* filename);
 
@@ -654,7 +652,6 @@ class LogMessage {
   rtc::StringBuilder print_stream_;
 
   static bool aec_debug_;
-  static uint32_t aec_debug_size_;
   static std::string aec_filename_base_;
 };
 

@@ -38,8 +38,6 @@ class LogSinkImpl : public rtc::LogSink {
 static mozilla::StaticAutoPtr<LogSinkImpl> sSink;
 
 void GetWebRtcLogPrefs() {
-  rtc::LogMessage::set_aec_debug_size(
-      mozilla::Preferences::GetUint("media.webrtc.debug.aec_dump_max_size"));
 }
 
 mozilla::LogLevel CheckOverrides() {
