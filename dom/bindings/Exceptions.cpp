@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Exceptions.h"
 
+#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberOneOrigin
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "jsapi.h"
@@ -518,7 +519,7 @@ int32_t JSStackFrame::GetColumnNumber(JSContext* aCx) {
     return 0;
   }
 
-  uint32_t col;
+  JS::TaggedColumnNumberOneOrigin col;
   bool canCache = false, useCachedValue = false;
   GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameColumn, mColNoInitialized,
                       &canCache, &useCachedValue, &col);
@@ -528,11 +529,11 @@ int32_t JSStackFrame::GetColumnNumber(JSContext* aCx) {
   }
 
   if (canCache) {
-    mColNo = col;
+    mColNo = col.oneOriginValue();
     mColNoInitialized = true;
   }
 
-  return col;
+  return col.oneOriginValue();
 }
 
 NS_IMETHODIMP
