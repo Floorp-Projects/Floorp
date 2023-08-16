@@ -26,7 +26,6 @@ include protocol PFileSystemRequest;
 include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
 include protocol PHttpBackgroundChannel;
-include protocol PIPCClientCerts;
 include protocol PIdleScheduler;
 include protocol PMediaTransport;
 include protocol PRemoteWorker;
@@ -41,14 +40,12 @@ include protocol PLockManager;
 include protocol PMIDIManager;
 include protocol PMIDIPort;
 include protocol PQuota;
-include protocol PSelectTLSClientAuthCert;
 include protocol PServiceWorker;
 include protocol PServiceWorkerContainer;
 include protocol PServiceWorkerManager;
 include protocol PServiceWorkerRegistration;
 include protocol PWebAuthnTransaction;
 include protocol PUDPSocket;
-include protocol PVerifySSLServerCert;
 include protocol PVsync;
 include protocol PRemoteDecoderManager;
 include protocol PWebSocketConnection;
@@ -65,7 +62,6 @@ include PBackgroundSharedTypes;
 include PBackgroundIDBSharedTypes;
 include PFileSystemParams;
 include ProtocolTypes;
-include PSMIPCTypes;
 include RemoteWorkerTypes;
 include MIDITypes;
 
@@ -109,7 +105,6 @@ sync protocol PBackground
   manages PGamepadEventChannel;
   manages PGamepadTestChannel;
   manages PHttpBackgroundChannel;
-  manages PIPCClientCerts;
   manages PIdleScheduler;
   manages PLockManager;
   manages PRemoteWorker;
@@ -121,7 +116,6 @@ sync protocol PBackground
   manages PMessagePort;
   manages PCameras;
   manages PQuota;
-  manages PSelectTLSClientAuthCert;
   manages PServiceWorker;
   manages PServiceWorkerContainer;
   manages PServiceWorkerManager;
@@ -129,7 +123,6 @@ sync protocol PBackground
   manages PWebAuthnTransaction;
   manages PWebSocketConnection;
   manages PUDPSocket;
-  manages PVerifySSLServerCert;
   manages PVsync;
   manages PFetch;
 
@@ -281,24 +274,6 @@ parent:
 
   async PIdleScheduler();
 
-  async PSelectTLSClientAuthCert(nsCString aHostName,
-                                 OriginAttributes aOriginAttributes,
-                                 int32_t aPort,
-                                 uint32_t aProviderFlags,
-                                 uint32_t aProviderTlsFlags,
-                                 ByteArray aServerCertBytes,
-                                 ByteArray[] aCANames);
-
-  async PVerifySSLServerCert(ByteArray[] aPeerCertChain,
-                             nsCString aHostName,
-                             int32_t aPort,
-                             OriginAttributes aOriginAttributes,
-                             ByteArray? aStapledOCSPResponse,
-                             ByteArray? aSctsFromTLSExtension,
-                             DelegatedCredentialInfoArg? aDcInfo,
-                             uint32_t aProviderFlags,
-                             uint32_t aCertVerifierFlags);
-
   async EnsureRDDProcessAndCreateBridge()
       returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
 
@@ -308,8 +283,6 @@ parent:
   async PWebSocketConnection(uint32_t aListenerId);
 
   async PLockManager(nsIPrincipal aPrincipalInfo, nsID aClientId);
-
-  async PIPCClientCerts();
 
   async PFetch();
 

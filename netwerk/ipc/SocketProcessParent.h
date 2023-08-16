@@ -79,14 +79,10 @@ class SocketProcessParent final
   mozilla::ipc::IPCResult RecvInitBackground(
       Endpoint<PBackgroundStarterParent>&& aEndpoint);
 
-  already_AddRefed<PAltServiceParent> AllocPAltServiceParent();
+  mozilla::ipc::IPCResult RecvInitSocketBackground(
+      Endpoint<PSocketProcessBackgroundParent>&& aEndpoint);
 
-  mozilla::ipc::IPCResult RecvFindIPCClientCertObjects(
-      nsTArray<IPCClientCertObject>* aObjects);
-  mozilla::ipc::IPCResult RecvIPCClientCertSign(ByteArray aCert,
-                                                ByteArray aData,
-                                                ByteArray aParams,
-                                                ByteArray* aSignature);
+  already_AddRefed<PAltServiceParent> AllocPAltServiceParent();
 
   already_AddRefed<PProxyConfigLookupParent> AllocPProxyConfigLookupParent(
       nsIURI* aURI, const uint32_t& aProxyResolveFlags);

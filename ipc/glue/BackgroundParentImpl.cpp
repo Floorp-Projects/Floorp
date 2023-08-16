@@ -67,9 +67,6 @@
 #include "mozilla/net/HttpBackgroundChannelParent.h"
 #include "mozilla/net/HttpConnectionMgrParent.h"
 #include "mozilla/net/WebSocketConnectionParent.h"
-#include "mozilla/psm/IPCClientCertsParent.h"
-#include "mozilla/psm/SelectTLSClientAuthCertParent.h"
-#include "mozilla/psm/VerifySSLServerCertParent.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIPrincipal.h"
 #include "nsProxyRelease.h"
@@ -731,66 +728,6 @@ bool BackgroundParentImpl::DeallocPUDPSocketParent(PUDPSocketParent* actor) {
   return true;
 }
 
-already_AddRefed<mozilla::psm::PVerifySSLServerCertParent>
-BackgroundParentImpl::AllocPVerifySSLServerCertParent(
-    const nsTArray<ByteArray>& aPeerCertChain, const nsACString& aHostName,
-    const int32_t& aPort, const OriginAttributes& aOriginAttributes,
-    const Maybe<ByteArray>& aStapledOCSPResponse,
-    const Maybe<ByteArray>& aSctsFromTLSExtension,
-    const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
-    const uint32_t& aProviderFlags, const uint32_t& aCertVerifierFlags) {
-  RefPtr<mozilla::psm::VerifySSLServerCertParent> parent =
-      new mozilla::psm::VerifySSLServerCertParent();
-  return parent.forget();
-}
-
-mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPVerifySSLServerCertConstructor(
-    PVerifySSLServerCertParent* aActor, nsTArray<ByteArray>&& aPeerCertChain,
-    const nsACString& aHostName, const int32_t& aPort,
-    const OriginAttributes& aOriginAttributes,
-    const Maybe<ByteArray>& aStapledOCSPResponse,
-    const Maybe<ByteArray>& aSctsFromTLSExtension,
-    const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
-    const uint32_t& aProviderFlags, const uint32_t& aCertVerifierFlags) {
-  mozilla::psm::VerifySSLServerCertParent* authCert =
-      static_cast<mozilla::psm::VerifySSLServerCertParent*>(aActor);
-  if (!authCert->Dispatch(std::move(aPeerCertChain), aHostName, aPort,
-                          aOriginAttributes, aStapledOCSPResponse,
-                          aSctsFromTLSExtension, aDcInfo, aProviderFlags,
-                          aCertVerifierFlags)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
-already_AddRefed<mozilla::psm::PSelectTLSClientAuthCertParent>
-BackgroundParentImpl::AllocPSelectTLSClientAuthCertParent(
-    const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
-    const int32_t& aPort, const uint32_t& aProviderFlags,
-    const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
-    const nsTArray<ByteArray>& aCANames) {
-  RefPtr<mozilla::psm::SelectTLSClientAuthCertParent> parent =
-      new mozilla::psm::SelectTLSClientAuthCertParent();
-  return parent.forget();
-}
-
-mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPSelectTLSClientAuthCertConstructor(
-    PSelectTLSClientAuthCertParent* actor, const nsACString& aHostName,
-    const OriginAttributes& aOriginAttributes, const int32_t& aPort,
-    const uint32_t& aProviderFlags, const uint32_t& aProviderTlsFlags,
-    const ByteArray& aServerCertBytes, nsTArray<ByteArray>&& aCANames) {
-  mozilla::psm::SelectTLSClientAuthCertParent* selectTLSClientAuthCertParent =
-      static_cast<mozilla::psm::SelectTLSClientAuthCertParent*>(actor);
-  if (!selectTLSClientAuthCertParent->Dispatch(
-          aHostName, aOriginAttributes, aPort, aProviderFlags,
-          aProviderTlsFlags, aServerCertBytes, std::move(aCANames))) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
 mozilla::dom::PBroadcastChannelParent*
 BackgroundParentImpl::AllocPBroadcastChannelParent(
     const PrincipalInfo& aPrincipalInfo, const nsACString& aOrigin,
@@ -963,21 +900,6 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPMessagePortConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
-}
-
-already_AddRefed<psm::PIPCClientCertsParent>
-BackgroundParentImpl::AllocPIPCClientCertsParent() {
-  // This should only be called in the parent process with the socket process
-  // as the child process, not any content processes, hence the check that the
-  // child ID be 0.
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(mozilla::ipc::BackgroundParent::GetChildID(this) == 0);
-  if (!XRE_IsParentProcess() ||
-      mozilla::ipc::BackgroundParent::GetChildID(this) != 0) {
-    return nullptr;
-  }
-  RefPtr<psm::IPCClientCertsParent> result = new psm::IPCClientCertsParent();
-  return result.forget();
 }
 
 bool BackgroundParentImpl::DeallocPMessagePortParent(

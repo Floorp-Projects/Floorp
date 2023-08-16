@@ -15,13 +15,9 @@
 #include "SSLServerCertVerification.h"
 #include "nsNSSIOLayer.h"
 #include "nsISocketProvider.h"
-#include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
 
 extern mozilla::LazyLogModule gPIPNSSLog;
-
-using mozilla::ipc::AssertIsOnBackgroundThread;
-using mozilla::ipc::IsOnBackgroundThread;
 
 using namespace mozilla::pkix;
 
@@ -35,8 +31,6 @@ void VerifySSLServerCertParent::OnVerifiedSSLServerCert(
     uint16_t aCertificateTransparencyStatus, uint8_t aEVStatus, bool aSucceeded,
     PRErrorCode aFinalError, uint32_t aOverridableErrorCategory,
     bool aIsBuiltCertChainRootBuiltInRoot, bool aMadeOCSPRequests) {
-  AssertIsOnBackgroundThread();
-
   if (!CanSend()) {
     return;
   }
@@ -49,7 +43,8 @@ void VerifySSLServerCertParent::OnVerifiedSSLServerCert(
     Unused << SendOnVerifiedSSLServerCertFailure(
         aFinalError, aOverridableErrorCategory, aMadeOCSPRequests);
   }
-  Unused << Send__delete__(this);
+
+  Close();
 }
 
 namespace {
@@ -134,9 +129,8 @@ bool VerifySSLServerCertParent::Dispatch(
     const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
     const uint32_t& aProviderFlags, const uint32_t& aCertVerifierFlags) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("VerifySSLServerCertParent::Dispatch"));
-  AssertIsOnBackgroundThread();
 
-  mBackgroundThread = NS_GetCurrentThread();
+  mBackgroundThread = GetCurrentSerialEventTarget();
 
   nsTArray<nsTArray<uint8_t>> peerCertBytes;
   for (auto& certBytes : aPeerCertChain) {

@@ -17,6 +17,7 @@ include protocol PTRRService;
 include protocol PProxyConfigLookup;
 include protocol PNativeDNSResolverOverride;
 include protocol PProxyAutoConfig;
+include protocol PSocketProcessBackground;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 include protocol PSandboxTesting;
@@ -25,7 +26,6 @@ include protocol PSandboxTesting;
 include MemoryReportTypes;
 include NeckoChannelParams;
 include PrefsTypes;
-include PSMIPCTypes;
 
 include "mozilla/ipc/ByteBufUtils.h";
 
@@ -122,6 +122,7 @@ parent:
                             uint64_t aExtraSizeData,
                             nsCString aExtraStringData);
   async InitBackground(Endpoint<PBackgroundStarterParent> aEndpoint);
+  async InitSocketBackground(Endpoint<PSocketProcessBackgroundParent> aEndpoint);
   async PAltService();
   async PProxyConfigLookup(nullable nsIURI aUri, uint32_t aFlags);
   async CachePushCheck(nullable nsIURI aPushedURL,

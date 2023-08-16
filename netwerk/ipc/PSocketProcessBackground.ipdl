@@ -1,0 +1,53 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PVerifySSLServerCert;
+include protocol PSelectTLSClientAuthCert;
+include protocol PIPCClientCerts;
+
+include PSMIPCTypes;
+
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+
+namespace mozilla {
+namespace net {
+
+/**
+  * PSocketProcessBackground is the top level IPC protocol between
+  * a background task queue in the socket process and the parent process.
+  * We use this to create several IPC protocols between the socket process
+  * and the parent process.
+  */
+sync protocol PSocketProcessBackground
+{
+parent:
+  async InitVerifySSLServerCert(
+    Endpoint<PVerifySSLServerCertParent> aEndpoint,
+    ByteArray[] aPeerCertChain,
+    nsCString aHostName,
+    int32_t aPort,
+    OriginAttributes aOriginAttributes,
+    ByteArray? aStapledOCSPResponse,
+    ByteArray? aSctsFromTLSExtension,
+    DelegatedCredentialInfoArg? aDcInfo,
+    uint32_t aProviderFlags,
+    uint32_t aCertVerifierFlags);
+
+  async InitSelectTLSClientAuthCert(
+    Endpoint<PSelectTLSClientAuthCertParent> aEndpoint,
+    nsCString aHostName,
+    OriginAttributes aOriginAttributes,
+    int32_t aPort,
+    uint32_t aProviderFlags,
+    uint32_t aProviderTlsFlags,
+    ByteArray aServerCertBytes,
+    ByteArray[] aCANames);
+
+  async InitIPCClientCerts(Endpoint<PIPCClientCertsParent> aEndpoint);
+};
+
+} // namespace net
+} // namespace mozilla
