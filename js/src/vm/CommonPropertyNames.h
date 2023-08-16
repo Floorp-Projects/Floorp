@@ -159,7 +159,7 @@
   MACRO_(elementType, "elementType")                                           \
   MACRO_(else_, "else")                                                        \
   MACRO0(empty_, "")                                                           \
-  MACRO_(emptyRegExp, "(?:)")                                                  \
+  MACRO_(emptyRegExp_, "(?:)")                                                 \
   MACRO_(encodeURI, "encodeURI")                                               \
   MACRO_(encodeURIComponent, "encodeURIComponent")                             \
   MACRO_(endRange, "endRange")                                                 \
@@ -383,7 +383,7 @@
   MACRO_(NaN, "NaN")                                                           \
   MACRO_(nanosecond, "nanosecond")                                             \
   MACRO_(nanoseconds, "nanoseconds")                                           \
-  MACRO_(NegativeInfinity, "-Infinity")                                        \
+  MACRO_(NegativeInfinity_, "-Infinity")                                       \
   MACRO_(new_, "new")                                                          \
   MACRO_(next, "next")                                                         \
   MACRO_(nextMethod, "nextMethod")                                             \
