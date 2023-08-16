@@ -52,6 +52,7 @@
 #include "jit/SharedICRegisters.h"
 #include "jit/VMFunctions.h"
 #include "jit/WarpSnapshot.h"
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter}CallArgs, JSJitMethodCallArgsTraits, JSJitInfo
 #include "js/friend/DOMProxy.h"  // JS::ExpandoAndGeneration
 #include "js/RegExpFlags.h"      // JS::RegExpFlag
@@ -7272,7 +7273,7 @@ bool CodeGenerator::generateBody() {
 #ifdef JS_JITSPEW
     const char* filename = nullptr;
     size_t lineNumber = 0;
-    unsigned columnNumber = 0;
+    JS::LimitedColumnNumberZeroOrigin columnNumber;
     if (current->mir()->info().script()) {
       filename = current->mir()->info().script()->filename();
       if (current->mir()->pc()) {
@@ -7282,12 +7283,14 @@ bool CodeGenerator::generateBody() {
     } else {
 #  ifdef DEBUG
       lineNumber = current->mir()->lineno();
-      columnNumber = current->mir()->columnIndex();
+      columnNumber =
+          JS::LimitedColumnNumberZeroOrigin(current->mir()->columnIndex());
 #  endif
     }
     JitSpew(JitSpew_Codegen, "--------------------------------");
     JitSpew(JitSpew_Codegen, "# block%zu %s:%zu:%u%s:", i,
-            filename ? filename : "?", lineNumber, columnNumber,
+            filename ? filename : "?", lineNumber,
+            columnNumber.zeroOriginValue(),
             current->mir()->isLoopHeader() ? " (loop header)" : "");
 #endif
 
