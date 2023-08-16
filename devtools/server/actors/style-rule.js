@@ -78,6 +78,7 @@ class StyleRuleActor extends Actor {
     this._declarations = [];
 
     this._pendingDeclarationChanges = [];
+    this._failedToGetRuleText = false;
 
     if (CSSRule.isInstance(item)) {
       this.type = item.type;
@@ -695,22 +696,35 @@ class StyleRuleActor extends Actor {
    */
   async getAuthoredCssText(skipCache = false) {
     if (!this.canSetRuleText || !this.#isRuleSupported()) {
-      return Promise.resolve("");
+      return "";
     }
 
-    if (typeof this.authoredText === "string" && !skipCache) {
-      return Promise.resolve(this.authoredText);
+    if (!skipCache) {
+      if (this._failedToGetRuleText) {
+        return "";
+      }
+      if (typeof this.authoredText === "string") {
+        return this.authoredText;
+      }
     }
 
-    const resourceId =
-      this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-        this._parentSheet
+    try {
+      const resourceId =
+        this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+          this._parentSheet
+        );
+      const cssText = await this.pageStyle.styleSheetsManager.getText(
+        resourceId
       );
-    const cssText = await this.pageStyle.styleSheetsManager.getText(resourceId);
-    const { text } = getRuleText(cssText, this.line, this.column);
-
-    // Cache the result on the rule actor to avoid parsing again next time
-    this.authoredText = text;
+      const { text } = getRuleText(cssText, this.line, this.column);
+      // Cache the result on the rule actor to avoid parsing again next time
+      this._failedToGetRuleText = false;
+      this.authoredText = text;
+    } catch (e) {
+      this._failedToGetRuleText = true;
+      this.authoredText = undefined;
+      return "";
+    }
     return this.authoredText;
   }
 
