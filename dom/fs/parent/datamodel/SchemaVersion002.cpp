@@ -7,12 +7,15 @@
 #include "SchemaVersion002.h"
 
 #include "FileSystemFileManager.h"
+#include "FileSystemHashSource.h"
+#include "FileSystemHashStorageFunction.h"
 #include "ResultStatement.h"
 #include "StartedTransaction.h"
 #include "fs/FileSystemConstants.h"
 #include "mozStorageHelper.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "nsID.h"
 
 namespace mozilla::dom::fs {
 
@@ -280,6 +283,205 @@ nsresult CreateEntryNamesView(ResultConnection& aConn) {
       ";"_ns);
 }
 
+nsresult FixEntryIds(const ResultConnection& aConnection,
+                     const EntryId& aRootEntry) {
+  const nsLiteralCString calculateHashesQuery =
+      "CREATE TEMPORARY TABLE EntryMigrationTable AS "
+      "WITH RECURSIVE "
+      "rehashMap( depth, isFile, handle, parent, name, hash ) AS ( "
+      "SELECT 0, isFile, handle, parent, name, hashEntry( :rootEntry, name ) "
+      "FROM EntryNames WHERE parent = :rootEntry UNION SELECT "
+      "1 + depth, EntryNames.isFile, EntryNames.handle, EntryNames.parent, "
+      "EntryNames.name, hashEntry( rehashMap.hash, EntryNames.name ) "
+      "FROM rehashMap, EntryNames WHERE rehashMap.handle = EntryNames.parent ) "
+      "SELECT depth, isFile, handle, parent, name, hash FROM rehashMap "
+      ";"_ns;
+
+  const nsLiteralCString createIndexByDepthQuery =
+      "CREATE INDEX indexOnDepth ON EntryMigrationTable ( depth ); "_ns;
+
+  // To avoid constraint violation, new entries are inserted under a temporary
+  // parent.
+
+  const nsLiteralCString insertTemporaryParentEntry =
+      "INSERT INTO Entries ( handle, parent ) "
+      "VALUES ( :tempParent, :rootEntry ) ;"_ns;
+
+  const nsLiteralCString flagTemporaryParentAsDir =
+      "INSERT INTO Directories ( handle, name ) "
+      "VALUES ( :tempParent, 'temp' ) ;"_ns;
+
+  const nsLiteralCString insertNewEntriesQuery =
+      "INSERT INTO Entries ( handle, parent ) "
+      "SELECT hash, :tempParent FROM EntryMigrationTable WHERE hash != handle "
+      ";"_ns;
+
+  const nsLiteralCString insertNewDirectoriesQuery =
+      "INSERT INTO Directories ( handle, name ) "
+      "SELECT hash, name FROM EntryMigrationTable "
+      "WHERE isFile = 0 AND hash != handle "
+      "ORDER BY depth "
+      ";"_ns;
+
+  const nsLiteralCString insertNewFilesQuery =
+      "INSERT INTO Files ( handle, type, name ) "
+      "SELECT EntryMigrationTable.hash, Files.type, EntryMigrationTable.name "
+      "FROM EntryMigrationTable INNER JOIN Files USING (handle) "
+      "WHERE EntryMigrationTable.isFile = 1 AND hash != handle "
+      ";"_ns;
+
+  const nsLiteralCString updateFileMappingsQuery =
+      "UPDATE FileIds SET handle = hash "
+      "FROM ( SELECT handle, hash FROM EntryMigrationTable WHERE hash != "
+      "handle ) "
+      "AS replacement WHERE FileIds.handle = replacement.handle "
+      ";"_ns;
+
+  const nsLiteralCString updateMainFilesQuery =
+      "UPDATE MainFiles SET handle = hash "
+      "FROM ( SELECT handle, hash FROM EntryMigrationTable WHERE hash != "
+      "handle ) "
+      "AS replacement WHERE MainFiles.handle = replacement.handle "
+      ";"_ns;
+
+  // Now fix the parents.
+  const nsLiteralCString updateEntryMappingsQuery =
+      "UPDATE Entries SET parent = hash "
+      "FROM ( SELECT Lhs.hash AS handle, Rhs.hash AS hash, Lhs.depth AS depth "
+      "FROM EntryMigrationTable AS Lhs "
+      "INNER JOIN EntryMigrationTable AS Rhs "
+      "ON Rhs.handle = Lhs.parent ORDER BY depth ) AS replacement "
+      "WHERE Entries.handle = replacement.handle "
+      "AND Entries.parent = :tempParent "
+      ";"_ns;
+
+  const nsLiteralCString cleanupOldEntriesQuery =
+      "DELETE FROM Entries WHERE handle IN "
+      "( SELECT handle FROM EntryMigrationTable WHERE hash != handle ) "
+      ";"_ns;
+
+  const nsLiteralCString cleanupTemporaryParent =
+      "DELETE FROM Entries WHERE handle = :tempParent ;"_ns;
+
+  const nsLiteralCString dropIndexByDepthQuery =
+      "DROP INDEX indexOnDepth ; "_ns;
+
+  // Index is automatically deleted
+  const nsLiteralCString cleanupTemporaries =
+      "DROP TABLE EntryMigrationTable ;"_ns;
+
+  EntryId tempParent(nsCString(nsID::GenerateUUID().ToString().get()));
+
+  nsCOMPtr<mozIStorageFunction> rehashFunction =
+      new data::FileSystemHashStorageFunction();
+  QM_TRY(MOZ_TO_RESULT(aConnection->CreateFunction("hashEntry"_ns,
+                                                   /* number of arguments */ 2,
+                                                   rehashFunction)));
+  auto finallyRemoveFunction = MakeScopeExit([&aConnection]() {
+    QM_WARNONLY_TRY(MOZ_TO_RESULT(aConnection->RemoveFunction("hashEntry"_ns)));
+  });
+
+  // We need this to make sure the old entries get removed
+  QM_TRY(MOZ_TO_RESULT(
+      aConnection->ExecuteSimpleSQL("PRAGMA foreign_keys = ON;"_ns)));
+
+  QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(aConnection));
+
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, calculateHashesQuery));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("rootEntry"_ns, aRootEntry)));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  QM_TRY(QM_TO_RESULT(aConnection->ExecuteSimpleSQL(createIndexByDepthQuery)));
+
+  {
+    QM_TRY_UNWRAP(
+        ResultStatement stmt,
+        ResultStatement::Create(aConnection, insertTemporaryParentEntry));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("tempParent"_ns, tempParent)));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("rootEntry"_ns, aRootEntry)));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(
+        ResultStatement stmt,
+        ResultStatement::Create(aConnection, flagTemporaryParentAsDir));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("tempParent"_ns, tempParent)));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, insertNewEntriesQuery));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("tempParent"_ns, tempParent)));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(
+        ResultStatement stmt,
+        ResultStatement::Create(aConnection, insertNewDirectoriesQuery));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, insertNewFilesQuery));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(
+        ResultStatement stmt,
+        ResultStatement::Create(aConnection, updateFileMappingsQuery));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, updateMainFilesQuery));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(
+        ResultStatement stmt,
+        ResultStatement::Create(aConnection, updateEntryMappingsQuery));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("tempParent"_ns, tempParent)));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, cleanupOldEntriesQuery));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, cleanupTemporaryParent));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("tempParent"_ns, tempParent)));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  QM_TRY(QM_TO_RESULT(aConnection->ExecuteSimpleSQL(dropIndexByDepthQuery)));
+
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, cleanupTemporaries));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  QM_TRY(QM_TO_RESULT(transaction.Commit()));
+
+  QM_WARNONLY_TRY(QM_TO_RESULT(aConnection->ExecuteSimpleSQL("VACUUM;"_ns)));
+
+  return NS_OK;
+}
+
 }  // namespace
 
 Result<DatabaseVersion, QMResult> SchemaVersion002::InitializeConnection(
@@ -363,6 +565,47 @@ Result<DatabaseVersion, QMResult> SchemaVersion002::InitializeConnection(
 
     QM_TRY_UNWRAP(usagesTableRefsFilesTable, UsagesTableRefsFilesTable());
     MOZ_ASSERT(!usagesTableRefsFilesTable);
+  }
+
+  // In schema version 001, entryId was unique but not necessarily related to
+  // a path. For schema 002, we have to fix all entryIds to be derived from
+  // the underlying path.
+  auto OneTimeRehashingDone = [&aConn]() -> Result<bool, QMResult> {
+    const nsLiteralCString query =
+        "SELECT EXISTS (SELECT 1 FROM sqlite_master "
+        "WHERE type='table' AND name='RehashedFrom001to002' ) ;"_ns;
+
+    QM_TRY_UNWRAP(ResultStatement stmt, ResultStatement::Create(aConn, query));
+
+    return stmt.YesOrNoQuery();
+  };
+
+  QM_TRY_UNWRAP(auto oneTimeRehashingDone, OneTimeRehashingDone());
+
+  if (!oneTimeRehashingDone) {
+    const nsLiteralCString findRootEntry =
+        "SELECT handle FROM Entries WHERE parent IS NULL ;"_ns;
+
+    EntryId rootId;
+    {
+      QM_TRY_UNWRAP(ResultStatement stmt,
+                    ResultStatement::Create(aConn, findRootEntry));
+
+      QM_TRY_UNWRAP(DebugOnly<bool> moreResults, stmt.ExecuteStep());
+      MOZ_ASSERT(moreResults);
+
+      QM_TRY_UNWRAP(rootId, stmt.GetEntryIdByColumn(/* Column */ 0u));
+    }
+
+    MOZ_ASSERT(!rootId.IsEmpty());
+
+    QM_TRY(QM_TO_RESULT(FixEntryIds(aConn, rootId)));
+
+    QM_TRY(QM_TO_RESULT(aConn->ExecuteSimpleSQL(
+        "CREATE TABLE RehashedFrom001to002 (id INTEGER PRIMARY KEY);"_ns)));
+
+    QM_TRY_UNWRAP(DebugOnly<bool> isDoneNow, OneTimeRehashingDone());
+    MOZ_ASSERT(isDoneNow);
   }
 
   QM_TRY(QM_TO_RESULT(aConn->ExecuteSimpleSQL("PRAGMA foreign_keys = ON;"_ns)));
