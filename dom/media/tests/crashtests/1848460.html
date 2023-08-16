@@ -1,0 +1,17 @@
+<script id="worker" type="javascript/worker">
+self.onmessage = async function(e) {
+  let a = new ArrayBuffer(12583)
+  let b = new DataView(a)
+  await VideoDecoder.isConfigSupported({
+    "codec": "7󠎢ﷺ۹.9",
+    "description": b,
+  })
+}
+</script>
+<script>
+window.addEventListener("load", async () => {
+  const blob = new Blob([document.querySelector('#worker').textContent], { type: "text/javascript" })
+  const worker = new Worker(window.URL.createObjectURL(blob))
+  worker.postMessage([], [])
+})
+</script>
