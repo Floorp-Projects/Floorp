@@ -596,8 +596,8 @@ bool ParseContext::hasUsedName(const UsedNameTracker& usedNames,
 bool ParseContext::hasUsedFunctionSpecialName(const UsedNameTracker& usedNames,
                                               TaggedParserAtomIndex name) {
   MOZ_ASSERT(name == TaggedParserAtomIndex::WellKnown::arguments() ||
-             name == TaggedParserAtomIndex::WellKnown::dotThis() ||
-             name == TaggedParserAtomIndex::WellKnown::dotNewTarget());
+             name == TaggedParserAtomIndex::WellKnown::dot_this_() ||
+             name == TaggedParserAtomIndex::WellKnown::dot_newTarget_());
   return hasUsedName(usedNames, name) ||
          functionBox()->bindingsAccessedDynamically();
 }
@@ -614,7 +614,7 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
   // '.this' to be bound. Class field initializers implicitly read `.this`.
   // Therefore we unconditionally declare `.this` in all class constructors.
   FunctionBox* funbox = functionBox();
-  auto dotThis = TaggedParserAtomIndex::WellKnown::dotThis();
+  auto dotThis = TaggedParserAtomIndex::WellKnown::dot_this_();
 
   bool declareThis;
   if (canSkipLazyClosedOverBindings) {
@@ -708,7 +708,7 @@ bool ParseContext::declareNewTarget(const UsedNameTracker& usedNames,
   }
 
   FunctionBox* funbox = functionBox();
-  auto dotNewTarget = TaggedParserAtomIndex::WellKnown::dotNewTarget();
+  auto dotNewTarget = TaggedParserAtomIndex::WellKnown::dot_newTarget_();
 
   bool declareNewTarget;
   if (canSkipLazyClosedOverBindings) {
@@ -735,7 +735,7 @@ bool ParseContext::declareDotGeneratorName() {
   // The special '.generator' binding must be on the function scope, and must
   // be marked closed-over, as generators expect to find it on the CallObject.
   ParseContext::Scope& funScope = functionScope();
-  auto dotGenerator = TaggedParserAtomIndex::WellKnown::dotGenerator();
+  auto dotGenerator = TaggedParserAtomIndex::WellKnown::dot_generator_();
   AddDeclaredNamePtr p = funScope.lookupDeclaredNameForAdd(dotGenerator);
   if (!p) {
     if (!funScope.addDeclaredName(this, p, dotGenerator, DeclarationKind::Var,
@@ -754,7 +754,7 @@ bool ParseContext::declareTopLevelDotGeneratorName() {
       sc()->isModuleContext(),
       "Tried to declare top level dot generator in a non-module context.");
   ParseContext::Scope& modScope = varScope();
-  auto dotGenerator = TaggedParserAtomIndex::WellKnown::dotGenerator();
+  auto dotGenerator = TaggedParserAtomIndex::WellKnown::dot_generator_();
   AddDeclaredNamePtr p = modScope.lookupDeclaredNameForAdd(dotGenerator);
   return p ||
          modScope.addDeclaredName(this, p, dotGenerator, DeclarationKind::Var,

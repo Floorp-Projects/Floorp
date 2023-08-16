@@ -598,9 +598,9 @@ JSScript* FunctionScope::script() const {
 /* static */
 bool FunctionScope::isSpecialName(frontend::TaggedParserAtomIndex name) {
   return name == frontend::TaggedParserAtomIndex::WellKnown::arguments() ||
-         name == frontend::TaggedParserAtomIndex::WellKnown::dotThis() ||
-         name == frontend::TaggedParserAtomIndex::WellKnown::dotNewTarget() ||
-         name == frontend::TaggedParserAtomIndex::WellKnown::dotGenerator();
+         name == frontend::TaggedParserAtomIndex::WellKnown::dot_this_() ||
+         name == frontend::TaggedParserAtomIndex::WellKnown::dot_newTarget_() ||
+         name == frontend::TaggedParserAtomIndex::WellKnown::dot_generator_();
 }
 
 /* static */

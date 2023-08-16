@@ -661,19 +661,20 @@ WithEnvironmentObject* WithEnvironmentObject::createNonSyntactic(
 }
 
 static inline bool IsUnscopableDotName(JSContext* cx, HandleId id) {
-  return id.isAtom(cx->names().dotThis) || id.isAtom(cx->names().dotNewTarget);
+  return id.isAtom(cx->names().dot_this_) ||
+         id.isAtom(cx->names().dot_newTarget_);
 }
 
 #ifdef DEBUG
 static bool IsInternalDotName(JSContext* cx, HandleId id) {
-  return id.isAtom(cx->names().dotThis) ||
-         id.isAtom(cx->names().dotGenerator) ||
-         id.isAtom(cx->names().dotInitializers) ||
-         id.isAtom(cx->names().dotFieldKeys) ||
-         id.isAtom(cx->names().dotStaticInitializers) ||
-         id.isAtom(cx->names().dotStaticFieldKeys) ||
-         id.isAtom(cx->names().dotArgs) ||
-         id.isAtom(cx->names().dotNewTarget) ||
+  return id.isAtom(cx->names().dot_this_) ||
+         id.isAtom(cx->names().dot_generator_) ||
+         id.isAtom(cx->names().dot_initializers_) ||
+         id.isAtom(cx->names().dot_fieldKeys_) ||
+         id.isAtom(cx->names().dot_staticInitializers_) ||
+         id.isAtom(cx->names().dot_staticFieldKeys_) ||
+         id.isAtom(cx->names().dot_args_) ||
+         id.isAtom(cx->names().dot_newTarget_) ||
          id.isAtom(cx->names().starNamespaceStar);
 }
 #endif
@@ -1839,7 +1840,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     return id == NameToId(cx->names().arguments);
   }
   static bool isThis(JSContext* cx, jsid id) {
-    return id == NameToId(cx->names().dotThis);
+    return id == NameToId(cx->names().dot_this_);
   }
 
   static bool isFunctionEnvironment(const JSObject& env) {
@@ -2309,7 +2310,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       }
     }
     if (isMissingThisBinding(*env)) {
-      if (!props.append(NameToId(cx->names().dotThis))) {
+      if (!props.append(NameToId(cx->names().dot_this_))) {
         return false;
       }
     }
@@ -3441,7 +3442,7 @@ static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
     }
 
     for (Rooted<BindingIter> bi(cx, BindingIter(script)); bi; bi++) {
-      if (bi.name() != cx->names().dotThis) {
+      if (bi.name() != cx->names().dot_this_) {
         continue;
       }
 

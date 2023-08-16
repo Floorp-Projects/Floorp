@@ -204,7 +204,7 @@ static AbstractGeneratorObject* GetGeneratorObjectForCall(JSContext* cx,
                                                           CallObject& callObj) {
   // The ".generator" binding is always present and always "aliased".
   mozilla::Maybe<PropertyInfo> prop =
-      callObj.lookup(cx, cx->names().dotGenerator);
+      callObj.lookup(cx, cx->names().dot_generator_);
   if (prop.isNothing()) {
     return nullptr;
   }
@@ -226,7 +226,7 @@ AbstractGeneratorObject* js::GetGeneratorObjectForFrame(
     ModuleEnvironmentObject* moduleEnv =
         frame.script()->module()->environment();
     mozilla::Maybe<PropertyInfo> prop =
-        moduleEnv->lookup(cx, cx->names().dotGenerator);
+        moduleEnv->lookup(cx, cx->names().dot_generator_);
     Value genValue = moduleEnv->getSlot(prop->slot());
     return genValue.isObject()
                ? &genValue.toObject().as<AbstractGeneratorObject>()

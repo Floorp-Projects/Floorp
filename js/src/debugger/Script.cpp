@@ -594,7 +594,7 @@ static bool IsGeneratorSlotInitialization(JSScript* script, size_t offset,
   }
 
   PropertyName* name = EnvironmentCoordinateNameSlow(script, pc);
-  return name == cx->names().dotGenerator;
+  return name == cx->names().dot_generator_;
 }
 
 static bool EnsureBreakpointIsAllowed(JSContext* cx, JSScript* script,

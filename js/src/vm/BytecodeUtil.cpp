@@ -2301,10 +2301,10 @@ bool ExpressionDecompiler::init() {
 bool ExpressionDecompiler::write(const char* s) { return sprinter.put(s); }
 
 bool ExpressionDecompiler::write(JSString* str) {
-  if (str == cx->names().dotThis) {
+  if (str == cx->names().dot_this_) {
     return write("this");
   }
-  if (str == cx->names().dotNewTarget) {
+  if (str == cx->names().dot_newTarget_) {
     return write("new.target");
   }
   return sprinter.putString(str);

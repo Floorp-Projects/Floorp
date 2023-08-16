@@ -1550,7 +1550,8 @@ static Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
                               allBindingsClosedOver || bi.closedOver());
     switch (bi.kind()) {
       case BindingKind::Synthetic:
-        if (bi.name() == TaggedParserAtomIndex::WellKnown::dotPrivateBrand()) {
+        if (bi.name() ==
+            TaggedParserAtomIndex::WellKnown::dot_privateBrand_()) {
           MOZ_ASSERT(privateBrand.empty());
           if (!privateBrand.append(binding)) {
             return Nothing();
@@ -1609,7 +1610,7 @@ static Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
   // if `.privateBrand` is first in the scope, it will be stored there.
   MOZ_ASSERT_IF(!privateBrand.empty(),
                 GetScopeDataTrailingNames(bindings)[0].name() ==
-                    TaggedParserAtomIndex::WellKnown::dotPrivateBrand());
+                    TaggedParserAtomIndex::WellKnown::dot_privateBrand_());
 
   return Some(bindings);
 }
@@ -1923,7 +1924,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   moduleNode->setBody(&stmtList->as<ListNode>());
 
   if (pc_->isAsync()) {
-    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotGenerator())) {
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_generator_())) {
       return null();
     }
 
@@ -2048,19 +2049,19 @@ PerHandlerParser<ParseHandler>::newInternalDotName(TaggedParserAtomIndex name) {
 template <class ParseHandler>
 typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newThisName() {
-  return newInternalDotName(TaggedParserAtomIndex::WellKnown::dotThis());
+  return newInternalDotName(TaggedParserAtomIndex::WellKnown::dot_this_());
 }
 
 template <class ParseHandler>
 typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newNewTargetName() {
-  return newInternalDotName(TaggedParserAtomIndex::WellKnown::dotNewTarget());
+  return newInternalDotName(TaggedParserAtomIndex::WellKnown::dot_newTarget_());
 }
 
 template <class ParseHandler>
 typename ParseHandler::NameNodeType
 PerHandlerParser<ParseHandler>::newDotGeneratorName() {
-  return newInternalDotName(TaggedParserAtomIndex::WellKnown::dotGenerator());
+  return newInternalDotName(TaggedParserAtomIndex::WellKnown::dot_generator_());
 }
 
 template <class ParseHandler>
@@ -3498,7 +3499,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
 
   if (kind == FunctionSyntaxKind::ClassConstructor ||
       kind == FunctionSyntaxKind::DerivedClassConstructor) {
-    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotInitializers())) {
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_initializers_())) {
       return false;
     }
   }
@@ -8017,7 +8018,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       return false;
     }
 
-    if (!noteDeclaredName(TaggedParserAtomIndex::WellKnown::dotInitializers(),
+    if (!noteDeclaredName(TaggedParserAtomIndex::WellKnown::dot_initializers_(),
                           DeclarationKind::Let, pos())) {
       return false;
     }
@@ -8109,7 +8110,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
       return false;
     }
 
-    if (!noteDeclaredName(TaggedParserAtomIndex::WellKnown::dotInitializers(),
+    if (!noteDeclaredName(TaggedParserAtomIndex::WellKnown::dot_initializers_(),
                           DeclarationKind::Let, pos())) {
       return false;
     }
@@ -8301,22 +8302,23 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         // `noteUsedName` when parsing the constructor, except that at that
         // time, we don't necessarily know if the class has a private brand.
         if (!noteDeclaredName(
-                TaggedParserAtomIndex::WellKnown::dotPrivateBrand(),
+                TaggedParserAtomIndex::WellKnown::dot_privateBrand_(),
                 DeclarationKind::Synthetic, namePos, ClosedOver::Yes)) {
           return null();
         }
       }
 
       if (classInitializedMembers.instanceFieldKeys > 0) {
-        if (!noteDeclaredName(TaggedParserAtomIndex::WellKnown::dotFieldKeys(),
-                              DeclarationKind::Synthetic, namePos)) {
+        if (!noteDeclaredName(
+                TaggedParserAtomIndex::WellKnown::dot_fieldKeys_(),
+                DeclarationKind::Synthetic, namePos)) {
           return null();
         }
       }
 
       if (classInitializedMembers.staticFields > 0) {
         if (!noteDeclaredName(
-                TaggedParserAtomIndex::WellKnown::dotStaticInitializers(),
+                TaggedParserAtomIndex::WellKnown::dot_staticInitializers_(),
                 DeclarationKind::Synthetic, namePos)) {
           return null();
         }
@@ -8324,7 +8326,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
 
       if (classInitializedMembers.staticFieldKeys > 0) {
         if (!noteDeclaredName(
-                TaggedParserAtomIndex::WellKnown::dotStaticFieldKeys(),
+                TaggedParserAtomIndex::WellKnown::dot_staticFieldKeys_(),
                 DeclarationKind::Synthetic, namePos)) {
           return null();
         }
@@ -8506,7 +8508,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
     // Synthesize the equivalent to `function f(...args)`
     funbox->setHasRest();
     if (!notePositionalFormalParameter(
-            funNode, TaggedParserAtomIndex::WellKnown::dotArgs(),
+            funNode, TaggedParserAtomIndex::WellKnown::dot_args_(),
             synthesizedBodyPos.begin,
             /* disallowDuplicateParams = */ false,
             /* duplicatedParam = */ nullptr)) {
@@ -8524,17 +8526,17 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
     return null();
   }
 
-  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotThis())) {
+  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_this_())) {
     return null();
   }
 
-  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotInitializers())) {
+  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_initializers_())) {
     return null();
   }
 
   if (hasHeritage == HasHeritage::Yes) {
     // |super()| implicitly reads |new.target|.
-    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotNewTarget())) {
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_newTarget_())) {
       return null();
     }
 
@@ -8555,11 +8557,11 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
     }
 
     NameNodeType argsNameNode = newName(
-        TaggedParserAtomIndex::WellKnown::dotArgs(), synthesizedBodyPos);
+        TaggedParserAtomIndex::WellKnown::dot_args_(), synthesizedBodyPos);
     if (!argsNameNode) {
       return null();
     }
-    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotArgs())) {
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_args_())) {
       return null();
     }
 
@@ -8935,10 +8937,10 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     NameNodeType fieldKeysName;
     if (isStatic) {
       fieldKeysName = newInternalDotName(
-          TaggedParserAtomIndex::WellKnown::dotStaticFieldKeys());
+          TaggedParserAtomIndex::WellKnown::dot_staticFieldKeys_());
     } else {
-      fieldKeysName =
-          newInternalDotName(TaggedParserAtomIndex::WellKnown::dotFieldKeys());
+      fieldKeysName = newInternalDotName(
+          TaggedParserAtomIndex::WellKnown::dot_fieldKeys_());
     }
     if (!fieldKeysName) {
       return null();
@@ -11083,7 +11085,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         }
 
         if (!noteUsedName(
-                TaggedParserAtomIndex::WellKnown::dotInitializers())) {
+                TaggedParserAtomIndex::WellKnown::dot_initializers_())) {
           return null();
         }
       } else {
@@ -11223,7 +11225,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberSuperCall(
   }
 
   // |super()| implicitly reads |new.target|.
-  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dotNewTarget())) {
+  if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_newTarget_())) {
     return null();
   }
 

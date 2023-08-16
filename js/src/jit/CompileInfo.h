@@ -114,7 +114,7 @@ class CompileInfo {
     if (script->isDerivedClassConstructor()) {
       MOZ_ASSERT(script->functionHasThisBinding());
       for (BindingIter bi(script); bi; bi++) {
-        if (bi.name() != runtime->names().dotThis) {
+        if (bi.name() != runtime->names().dot_this_) {
           continue;
         }
         BindingLocation loc = bi.location();
