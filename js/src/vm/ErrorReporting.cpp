@@ -14,15 +14,14 @@
 
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "js/CharacterEncoding.h"      // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"           // JS::ColumnNumberZeroOrigin
-#include "js/ErrorReport.h"            // JSErrorBase
-#include "js/friend/ErrorMessages.h"   // js::GetErrorMessage, JSMSG_*
-#include "js/Printf.h"                 // JS_vsmprintf
-#include "js/Warnings.h"               // JS::WarningReporter
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin, JS::TaggedColumnNumberZeroOrigin
+#include "js/ErrorReport.h"           // JSErrorBase
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/Printf.h"                // JS_vsmprintf
+#include "js/Warnings.h"              // JS::WarningReporter
 #include "vm/FrameIter.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
-#include "vm/SavedStacks.h"  // FixupMaybeWASMColumnForDisplay
 
 using namespace js;
 
@@ -197,9 +196,9 @@ static void PopulateReportBlame(JSContext* cx, JSErrorReport* report) {
   if (iter.hasScript()) {
     report->sourceId = iter.script()->scriptSource()->id();
   }
-  uint32_t column;
+  JS::TaggedColumnNumberZeroOrigin column;
   report->lineno = iter.computeLine(&column);
-  report->column = FixupMaybeWASMColumnForDisplay(column);
+  report->column = column.oneOriginValue();
   report->isMuted = iter.mutedErrors();
 }
 
