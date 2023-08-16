@@ -335,8 +335,6 @@ struct MutableWrappedPtrOperations<SavedStacks::LocationValue, Wrapper>
 JS::UniqueChars BuildUTF8StackString(JSContext* cx, JSPrincipals* principals,
                                      HandleObject stack);
 
-uint32_t FixupMaybeWASMColumnForDisplay(uint32_t column);
-
 js::SavedFrame* UnwrapSavedFrame(JSContext* cx, JSPrincipals* principals,
                                  HandleObject obj,
                                  JS::SavedFrameSelfHosted selfHosted,
