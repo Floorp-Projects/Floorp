@@ -352,7 +352,7 @@ class DebuggerSourceGetStartColumnMatcher {
 
   ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
-    return ss->startColumn();
+    return ss->startColumn().zeroOriginValue();
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
     return JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberZeroOrigin;
@@ -623,7 +623,7 @@ static JSScript* ReparseSource(JSContext* cx, Handle<ScriptSourceObject*> sso) {
   JS::CompileOptions options(cx);
   options.setHideScriptFromDebugger(true);
   options.setFileAndLine(ss->filename(), ss->startLine());
-  options.setColumn(ss->startColumn());
+  options.setColumn(ss->startColumn().zeroOriginValue());
 
   UncompressedSourceCache::AutoHoldEntry holder;
 
