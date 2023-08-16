@@ -1604,7 +1604,7 @@ void Gecko_ReportUnexpectedCSSError(
   }
   nsDependentCSubstring sourceValue(source, sourceLen);
   nsDependentCSubstring selectorsValue(selectors, selectorsLen);
-  reporter.OutputError(sourceValue, selectorsValue, lineNumber, colNumber,
+  reporter.OutputError(sourceValue, selectorsValue, lineNumber + 1, colNumber,
                        aURI);
 }
 
