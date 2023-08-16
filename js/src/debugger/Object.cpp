@@ -1925,7 +1925,7 @@ bool DebuggerObject::getErrorColumnNumber(JSContext* cx,
     return true;
   }
 
-  result.setNumber(report->column);
+  result.setNumber(report->column.oneOriginValue());
   return true;
 }
 

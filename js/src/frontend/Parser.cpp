@@ -43,8 +43,8 @@
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/TokenStream.h"  // IsKeyword, ReservedWordTokenKind, ReservedWordToCharZ, DeprecatedContent, *TokenStream*, CharBuffer, TokenKindToDesc
 #include "irregexp/RegExpAPI.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin
-#include "js/ErrorReport.h"           // JSErrorBase
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
+#include "js/ErrorReport.h"   // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
 #include "js/RegExpFlags.h"     // JS::RegExpFlags
@@ -478,8 +478,8 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
   if (!notes->addNoteASCII(this->fc_, getFilename().c_str(), 0, line,
-                           column.oneOriginValue(), GetErrorMessage, nullptr,
-                           noteNumber, lineNumber, columnNumber)) {
+                           JS::ColumnNumberOneOrigin(column), GetErrorMessage,
+                           nullptr, noteNumber, lineNumber, columnNumber)) {
     return;
   }
 
@@ -520,8 +520,9 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclarationHelper(
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
   if (!notes->addNoteASCII(this->fc_, getFilename().c_str(), 0, line,
-                           column.oneOriginValue(), GetErrorMessage, nullptr,
-                           noteErrorNumber, lineNumber, columnNumber)) {
+                           JS::ColumnNumberOneOrigin(column), GetErrorMessage,
+                           nullptr, noteErrorNumber, lineNumber,
+                           columnNumber)) {
     return;
   }
 
