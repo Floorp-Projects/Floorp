@@ -480,7 +480,7 @@
   MACRO_(scripts, "scripts")                                                   \
   MACRO_(second, "second")                                                     \
   MACRO_(seconds, "seconds")                                                   \
-  MACRO_(selfHosted, "self-hosted")                                            \
+  MACRO_(self_hosted_, "self-hosted")                                          \
   MACRO_(sensitivity, "sensitivity")                                           \
   MACRO_(set, "set")                                                           \
   IF_DECORATORS(MACRO_(setter, "setter"))                                      \
