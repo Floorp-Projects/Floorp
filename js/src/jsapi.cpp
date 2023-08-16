@@ -42,7 +42,7 @@
 #include "jit/JitSpewer.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable
 #include "js/CharacterEncoding.h"
-#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
+#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
 #include "js/CompileOptions.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Conversions.h"
@@ -4524,7 +4524,8 @@ const char* AutoFilename::get() const {
 }
 
 JS_PUBLIC_API bool DescribeScriptedCaller(JSContext* cx, AutoFilename* filename,
-                                          uint32_t* lineno, uint32_t* column) {
+                                          uint32_t* lineno,
+                                          JS::ColumnNumberZeroOrigin* column) {
   if (filename) {
     filename->reset();
   }
@@ -4532,7 +4533,7 @@ JS_PUBLIC_API bool DescribeScriptedCaller(JSContext* cx, AutoFilename* filename,
     *lineno = 0;
   }
   if (column) {
-    *column = 0;
+    *column = JS::ColumnNumberZeroOrigin::zero();
   }
 
   if (!cx->compartment()) {
@@ -4569,12 +4570,12 @@ JS_PUBLIC_API bool DescribeScriptedCaller(JSContext* cx, AutoFilename* filename,
     JS::TaggedColumnNumberZeroOrigin columnNumber;
     *lineno = i.computeLine(&columnNumber);
     if (column) {
-      *column = columnNumber.zeroOriginValue();
+      *column = JS::ColumnNumberZeroOrigin(columnNumber.zeroOriginValue());
     }
   } else if (column) {
     JS::TaggedColumnNumberZeroOrigin columnNumber;
     i.computeLine(&columnNumber);
-    *column = columnNumber.zeroOriginValue();
+    *column = JS::ColumnNumberZeroOrigin(columnNumber.zeroOriginValue());
   }
 
   return true;
