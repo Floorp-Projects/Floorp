@@ -1287,7 +1287,7 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
   } else {
-    sepstr = cx->names().comma;
+    sepstr = cx->names().comma_;
   }
 
   // Steps 5-8 (When the length is zero, directly return the empty string).

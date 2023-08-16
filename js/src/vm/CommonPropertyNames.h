@@ -90,7 +90,7 @@
   MACRO_(collation, "collation")                                               \
   MACRO_(collections, "collections")                                           \
   MACRO_(columnNumber, "columnNumber")                                         \
-  MACRO1(comma, ",")                                                           \
+  MACRO1(comma_, ",")                                                          \
   MACRO_(compact, "compact")                                                   \
   MACRO_(compactDisplay, "compactDisplay")                                     \
   MACRO_(compare, "compare")                                                   \
