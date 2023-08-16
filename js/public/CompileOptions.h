@@ -454,9 +454,9 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
   // POD options.
 
   // Line number of the first character (1-origin).
-  unsigned lineno = 1;
+  uint32_t lineno = 1;
   // Column number of the first character in UTF-16 code units (0-origin).
-  unsigned column = 0;
+  uint32_t column = 0;
 
   // The offset within the ScriptSource's full uncompressed text of the first
   // character we're presenting for compilation with this CompileOptions.
@@ -601,12 +601,12 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setLine(unsigned l) {
+  CompileOptions& setLine(uint32_t l) {
     lineno = l;
     return *this;
   }
 
-  CompileOptions& setFileAndLine(const char* f, unsigned l) {
+  CompileOptions& setFileAndLine(const char* f, uint32_t l) {
     filename_ = JS::ConstUTF8CharsZ(f);
     lineno = l;
     return *this;
@@ -622,7 +622,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setColumn(unsigned c) {
+  CompileOptions& setColumn(uint32_t c) {
     column = c;
     return *this;
   }
@@ -678,7 +678,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   }
 
   CompileOptions& setIntroductionInfo(const char* introducerFn,
-                                      const char* intro, unsigned line,
+                                      const char* intro, uint32_t line,
                                       uint32_t offset) {
     introducerFilename_ = JS::ConstUTF8CharsZ(introducerFn);
     introductionType = intro;
@@ -787,7 +787,7 @@ class JS_PUBLIC_API ReadOnlyDecodeOptions {
   // See `TransitiveCompileOptions::introductionType` field for details.
   const char* introductionType = nullptr;
 
-  unsigned introductionLineno = 0;
+  uint32_t introductionLineno = 0;
   uint32_t introductionOffset = 0;
 
  protected:
