@@ -13,7 +13,7 @@
 
 #include "js/Array.h"  // JS::GetArrayLength
 #include "js/CompilationAndEvaluation.h"
-#include "js/ColumnNumber.h"          // JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
 #include "js/ContextOptions.h"        // JS::ContextOptionsRef
 #include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -728,8 +728,8 @@ nsresult ModuleLoaderBase::HandleResolveFailure(
   }
 
   if (!JS::CreateError(aCx, JSEXN_TYPEERR, nullptr, filename, aLineNumber,
-                       aColumnNumber.oneOriginValue(), nullptr, string,
-                       JS::NothingHandleValue, aErrorOut)) {
+                       JS::ColumnNumberOneOrigin(aColumnNumber), nullptr,
+                       string, JS::NothingHandleValue, aErrorOut)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

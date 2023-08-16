@@ -585,7 +585,7 @@ JSErrorReport* js::ErrorObject::getOrCreateErrorReport(JSContext* cx) {
   // Coordinates.
   report.sourceId = sourceId();
   report.lineno = lineNumber();
-  report.column = columnNumber();
+  report.column = JS::ColumnNumberOneOrigin(columnNumber());
 
   // Message. Note that |new Error()| will result in an undefined |message|
   // slot, so we need to explicitly substitute the empty string in that case.

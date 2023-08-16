@@ -178,7 +178,8 @@ bool ClonedErrorHolder::WriteStructuredClone(JSContext* aCx,
   return JS_WriteUint32Pair(aWriter, SCTAG_DOM_CLONED_ERROR_OBJECT, 0) &&
          WriteStringPair(aWriter, mName, mMessage) &&
          WriteStringPair(aWriter, mFilename, mSourceLine) &&
-         JS_WriteUint32Pair(aWriter, mLineNumber, mColumn) &&
+         JS_WriteUint32Pair(aWriter, mLineNumber,
+                            *mColumn.addressOfValueForTranscode()) &&
          JS_WriteUint32Pair(aWriter, mTokenOffset, mErrorNumber) &&
          JS_WriteUint32Pair(aWriter, uint32_t(mType), uint32_t(mExnType)) &&
          JS_WriteUint32Pair(aWriter, mCode, uint32_t(mResult)) &&
@@ -193,7 +194,8 @@ bool ClonedErrorHolder::Init(JSContext* aCx, JSStructuredCloneReader* aReader) {
   uint32_t type, exnType, result, code;
   if (!(ReadStringPair(aReader, mName, mMessage) &&
         ReadStringPair(aReader, mFilename, mSourceLine) &&
-        JS_ReadUint32Pair(aReader, &mLineNumber, &mColumn) &&
+        JS_ReadUint32Pair(aReader, &mLineNumber,
+                          mColumn.addressOfValueForTranscode()) &&
         JS_ReadUint32Pair(aReader, &mTokenOffset, &mErrorNumber) &&
         JS_ReadUint32Pair(aReader, &type, &exnType) &&
         JS_ReadUint32Pair(aReader, &code, &result) &&
