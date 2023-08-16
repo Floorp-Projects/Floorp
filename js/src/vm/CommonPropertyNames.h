@@ -503,7 +503,7 @@
   MACRO_(SpeciesConstructor, "SpeciesConstructor")                             \
   MACRO_(stack, "stack")                                                       \
   MACRO1(star, "*")                                                            \
-  MACRO_(starNamespaceStar, "*namespace*")                                     \
+  MACRO_(star_namespace_star_, "*namespace*")                                  \
   MACRO_(start, "start")                                                       \
   MACRO_(startRange, "startRange")                                             \
   MACRO_(startTimestamp, "startTimestamp")                                     \
