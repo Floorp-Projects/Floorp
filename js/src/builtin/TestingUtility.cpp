@@ -10,6 +10,7 @@
 
 #include "jsapi.h"                 // JS_NewPlainObject, JS_WrapValue
 #include "js/CharacterEncoding.h"  // JS_EncodeStringToUTF8
+#include "js/ColumnNumber.h"       // JS::ColumnNumberZeroOrigin
 #include "js/CompileOptions.h"     // JS::CompileOptions
 #include "js/Conversions.h"  // JS::ToBoolean, JS::ToString, JS::ToUint32, JS::ToInt32
 #include "js/PropertyAndElement.h"  // JS_GetProperty, JS_DefineProperty
@@ -84,7 +85,7 @@ bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
     if (!JS::ToInt32(cx, v, &c)) {
       return false;
     }
-    options.setColumn(c);
+    options.setColumn(JS::ColumnNumberZeroOrigin(c));
   }
 
   if (!JS_GetProperty(cx, opts, "sourceIsLazy", &v)) {

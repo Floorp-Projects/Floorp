@@ -15,7 +15,9 @@
 #include "prsystem.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/Array.h"  // JS::GetArrayLength
+#include "js/Array.h"         // JS::GetArrayLength
+#include "js/ColumnNumber.h"  // #include "js/CompilationAndEvaluation.h"
+
 #include "js/CompilationAndEvaluation.h"
 #include "js/ContextOptions.h"        // JS::ContextOptionsRef
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -2027,7 +2029,8 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   if (aRequest->GetScriptLoadContext()->mIsInline &&
       aRequest->GetScriptLoadContext()->GetParserCreated() ==
           FROM_PARSER_NETWORK) {
-    aOptions->setColumn(aRequest->GetScriptLoadContext()->mColumnNo);
+    aOptions->setColumn(JS::ColumnNumberZeroOrigin(
+        aRequest->GetScriptLoadContext()->mColumnNo));
   }
   aOptions->setIsRunOnce(true);
   aOptions->setNoScriptRval(true);
