@@ -31,13 +31,15 @@ var ParentUtils = {
   },
 
   _getRecords(collectionName) {
-    return this.getFormAutofillActor().receiveMessage({
-      name: "FormAutofill:GetRecords",
-      data: {
-        searchString: "",
-        collectionName,
-      },
-    });
+    return this.getFormAutofillActor()
+      .receiveMessage({
+        name: "FormAutofill:GetRecords",
+        data: {
+          searchString: "",
+          collectionName,
+        },
+      })
+      .then(result => result.records);
   },
 
   async _storageChangeObserved({

@@ -650,7 +650,9 @@ function emulateMessageToBrowser(name, data) {
 
 function getRecords(data) {
   info(`expecting record retrievals: ${data.collectionName}`);
-  return emulateMessageToBrowser("FormAutofill:GetRecords", data);
+  return emulateMessageToBrowser("FormAutofill:GetRecords", data).then(
+    result => result.records
+  );
 }
 
 function getAddresses() {

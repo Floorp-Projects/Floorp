@@ -6,6 +6,8 @@
  * Form Autofill content process module.
  */
 
+import { GenericAutocompleteItem } from "resource://gre/modules/FillHelpers.sys.mjs";
+
 /* eslint-disable no-use-before-define */
 
 const Cm = Components.manager;
@@ -19,7 +21,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   FormAutofillContent: "resource://autofill/FormAutofillContent.sys.mjs",
+  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+  SignUpFormRuleset: "resource://gre/modules/SignUpFormRuleset.sys.mjs",
 });
 
 const autocompleteController = Cc[
@@ -200,7 +205,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
       };
 
       pendingSearchResult = this._getRecords(activeInput, data).then(
-        records => {
+        ({ records, externalEntries }) => {
           if (this.forceStop) {
             return null;
           }
@@ -211,13 +216,28 @@ AutofillProfileAutoCompleteSearch.prototype = {
           let handler = lazy.FormAutofillContent.activeHandler;
           let isSecure = lazy.InsecurePasswordUtils.isFormSecure(handler.form);
 
-          return new AutocompleteResult(
+          const result = new AutocompleteResult(
             searchString,
             activeFieldDetail.fieldName,
             allFieldNames,
             adaptedRecords,
             { isSecure, isInputAutofilled }
           );
+
+          result.externalEntries.push(
+            ...externalEntries.map(
+              entry =>
+                new GenericAutocompleteItem(
+                  entry.icon,
+                  entry.title,
+                  entry.subtitle,
+                  entry.fillMessageName,
+                  entry.fillMessageData
+                )
+            )
+          );
+
+          return result;
         }
       );
     }
@@ -248,6 +268,34 @@ AutofillProfileAutoCompleteSearch.prototype = {
         ProfileAutocomplete.lastProfileAutoCompleteResult = null;
       }
     });
+  },
+
+  getScenarioName(input) {
+    if (!input) {
+      return "";
+    }
+
+    // Running simple heuristics first, because running the SignUpFormRuleset is expensive
+    if (
+      !(
+        lazy.LoginHelper.isInferredEmailField(input) ||
+        lazy.LoginHelper.isInferredUsernameField(input)
+      )
+    ) {
+      return "";
+    }
+
+    const formRoot = lazy.FormLikeFactory.findRootForField(input);
+
+    if (!HTMLFormElement.isInstance(formRoot)) {
+      return "";
+    }
+
+    const threshold = lazy.LoginHelper.signupDetectionConfidenceThreshold;
+    const { rules, type } = lazy.SignUpFormRuleset;
+    const results = rules.against(formRoot);
+    const score = results.get(formRoot).scoreFor(type);
+    return score > threshold ? "SignUpFormScenario" : "";
   },
 
   /**
@@ -281,7 +329,10 @@ AutofillProfileAutoCompleteSearch.prototype = {
     }
 
     let actor = getActorFromWindow(input.ownerGlobal);
-    return actor.sendQuery("FormAutofill:GetRecords", data);
+    return actor.sendQuery("FormAutofill:GetRecords", {
+      scenarioName: this.getScenarioName(input),
+      ...data,
+    });
   },
 };
 
@@ -345,6 +396,44 @@ export const ProfileAutocomplete = {
     }
   },
 
+  fillRequestId: 0,
+
+  async sendFillRequestToFormAutofillParent(input, comment) {
+    if (!comment) {
+      return false;
+    }
+
+    if (!input || input != autocompleteController?.input.focusedInput) {
+      return false;
+    }
+
+    const { fillMessageName, fillMessageData } = JSON.parse(comment ?? "{}");
+    if (!fillMessageName) {
+      return false;
+    }
+
+    this.fillRequestId++;
+    const fillRequestId = this.fillRequestId;
+    const actor = getActorFromWindow(input.ownerGlobal, "FormAutofill");
+    const value = await actor.sendQuery(fillMessageName, fillMessageData ?? {});
+
+    // skip fill if another fill operation started during await
+    if (fillRequestId != this.fillRequestId) {
+      return false;
+    }
+
+    if (typeof value !== "string") {
+      return false;
+    }
+
+    // If AutoFillParent returned a string to fill, we must do it here because
+    // nsAutoCompleteController.cpp already finished it's work before we finished await.
+    input.setUserInput(value);
+    input.select(value.length, value.length);
+
+    return true;
+  },
+
   _getSelectedIndex(contentWindow) {
     let actor = getActorFromWindow(contentWindow, "AutoComplete");
     if (!actor) {
@@ -363,18 +452,24 @@ export const ProfileAutocomplete = {
     }
 
     let selectedIndex = this._getSelectedIndex(focusedInput.ownerGlobal);
+    const validIndex =
+      selectedIndex >= 0 &&
+      selectedIndex < this.lastProfileAutoCompleteResult.matchCount;
+    const comment = validIndex
+      ? this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex)
+      : null;
+
     if (
       selectedIndex == -1 ||
       !this.lastProfileAutoCompleteResult ||
       this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) !=
         "autofill-profile"
     ) {
+      await this.sendFillRequestToFormAutofillParent(focusedInput, comment);
       return;
     }
 
-    let profile = JSON.parse(
-      this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex)
-    );
+    let profile = JSON.parse(comment);
 
     await lazy.FormAutofillContent.activeHandler.autofillFormFields(profile);
   },

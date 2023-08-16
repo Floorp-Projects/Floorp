@@ -166,7 +166,7 @@ const observer = {
       case "autocomplete-did-enter-text": {
         let input = subject.QueryInterface(Ci.nsIAutoCompleteInput);
         let { selectedIndex } = input.popup;
-        if (selectedIndex < 0) {
+        if (selectedIndex < 0 || selectedIndex >= input.controller.matchCount) {
           break;
         }
 
