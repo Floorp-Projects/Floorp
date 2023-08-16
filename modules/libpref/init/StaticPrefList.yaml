@@ -1644,11 +1644,6 @@
   value: false
   mirror: always
 
-- name: browser.tabs.remote.desktopbehavior
-  type: bool
-  value: false
-  mirror: always
-
 - name: browser.tabs.remote.force-paint
   type: bool
   value: true
