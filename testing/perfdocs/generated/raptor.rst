@@ -8459,8 +8459,9 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: Network Team
 
+   * **alert change type**: absolute
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange
-   * **alert threshold**: 2.0
+   * **alert threshold**: 10.0
    * **apps**: firefox
    * **browser cycles**: 3
    * **cold**: true
