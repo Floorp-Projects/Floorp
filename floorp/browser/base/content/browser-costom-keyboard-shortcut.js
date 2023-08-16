@@ -13,7 +13,7 @@ const keyboradShortcutConfig = JSON.parse(Services.prefs.getStringPref(
 
 const buildShortCutkeyFunctions = {
     init() {
-        if (keyboradShortcutConfig.length === 0 && !CustomKeyboardShortcutUtils.SHORTCUT_KEY_AND_ACTION_ENABLED_PREF) {
+        if (keyboradShortcutConfig.length === 0 && CustomKeyboardShortcutUtils.SHORTCUT_KEY_AND_ACTION_ENABLED_PREF) {
             return;
         }
 
@@ -34,9 +34,7 @@ const buildShortCutkeyFunctions = {
             return;
         }
 
-        let keyElement
-
-        keyElement = window.MozXULElement.parseXULToFragment(`
+        let keyElement = window.MozXULElement.parseXULToFragment(`
             <key id="${name}" class="floorpCustomShortcutKey"
                  modifiers="${modifiers}"
                  key="${key}"
@@ -44,7 +42,14 @@ const buildShortCutkeyFunctions = {
              />
          `);
         document.getElementById("mainKeyset").appendChild(keyElement);
-    }
+    },
+
+    removeAlreadyExistShortCutkeys() {        
+        let mainKeyset = document.getElementById("mainKeyset");
+        while (mainKeyset.firstChild) {
+            mainKeyset.firstChild.remove();
+        }
+    },
 }
 
 buildShortCutkeyFunctions.init();

@@ -20,16 +20,7 @@ export let keyboradShortcutActions = {
     */
 
     // Tab actions
-    openNewTab: [`gBrowser.addTab(Services.prefs.getStringPref(
-      "browser.startup.homepage"
-      ), {
-       skipAnimation: true,
-       inBackground: false,
-       triggeringPrincipal:
-         Services.scriptSecurityManager.getSystemPrincipal(),
-     })`,
-     "open-new-tab"
-    ],
+    openNewTab: ["BrowserOpenTab()","open-new-tab"],
     closeTab: ["BrowserCloseTabOrWindow()", "close-tab"],
     openNewWindow: ["OpenBrowserWindow()", "open-new-window"],
     openNewPrivateWindow: ["OpenBrowserWindow({private: true})", "open-new-private-window"],
@@ -119,12 +110,29 @@ export const keyboradShortcutFunctions = {
   preferencesFunctions: {
     getKeyForShortcutAction(actionName) {
       let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
-      let keyState = keysState.find(keyState => keyState[actionName]);
-      if (!keyState) {
-        return null;
+      let exsitKey = keysState.find(keyState => keyState.actionName === actionName);
+      if (exsitKey) {
+        return exsitKey;
       }
-      return keyState[actionName];
+      return null;
     },
+    
+    getAllExsitKeys() {
+      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
+      return keysState;
+    },
+
+    getActionNameByKey(key, modifiers) {
+      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
+      let result = []
+      for (let keyState of keysState) {
+        if (keyState.key === key && keyState.modifiers === modifiers) {
+          result.push(keyState.actionName)
+        }
+      }
+      return result
+    },
+
     addKeyForShortcutAction(actionName, key, modifiers) {
       let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
       let keyState = {
@@ -133,7 +141,21 @@ export const keyboradShortcutFunctions = {
           modifiers: modifiers ? modifiers : "",
       };
       keysState.push(keyState);
+
+      if (keyboradShortcutFunctions.preferencesFunctions.getKeyForShortcutAction(actionName)) {
+        return;
+      }
       Services.prefs.setStringPref(SHORTCUT_KEY_AND_ACTION_PREF, JSON.stringify(keysState));
+    },
+
+    removeAllKeyboradShortcut() {
+      Services.prefs.clearUserPref(SHORTCUT_KEY_AND_ACTION_PREF);
+    },
+
+    removeKeyboradShortcut(actionName, key, modifiers) {
+      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
+      let newKeysState = keysState.filter(keyState => { return !(keyState.actionName === actionName && keyState.key === key && keyState.modifiers === modifiers) });
+      Services.prefs.setStringPref(SHORTCUT_KEY_AND_ACTION_PREF, JSON.stringify(newKeysState));
     }
   }
 }
