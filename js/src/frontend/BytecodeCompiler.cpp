@@ -1573,7 +1573,7 @@ static bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
   JS::CompileOptions options(cx);
   options.setMutedErrors(lazy->mutedErrors())
       .setFileAndLine(lazy->filename(), lazy->lineno())
-      .setColumn(lazy->column())
+      .setColumn(lazy->column().zeroOriginValue())
       .setScriptSourceOffset(lazy->sourceStart())
       .setNoScriptRval(false)
       .setSelfHostingMode(false)

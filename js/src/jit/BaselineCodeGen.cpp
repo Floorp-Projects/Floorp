@@ -201,10 +201,12 @@ MethodStatus BaselineCompiler::compile() {
 
   Rooted<JSScript*> script(cx, handler.script());
   JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%u:%u (%p)",
-          script->filename(), script->lineno(), script->column(), script.get());
+          script->filename(), script->lineno(),
+          script->column().zeroOriginValue(), script.get());
 
   JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%u:%u",
-          script->filename(), script->lineno(), script->column());
+          script->filename(), script->lineno(),
+          script->column().zeroOriginValue());
 
   AutoIncrementalTimer timer(cx->realm()->timers.baselineCompileTime);
 
@@ -285,7 +287,7 @@ MethodStatus BaselineCompiler::compile() {
   JitSpew(JitSpew_BaselineScripts,
           "Created BaselineScript %p (raw %p) for %s:%u:%u",
           (void*)baselineScript.get(), (void*)code->raw(), script->filename(),
-          script->lineno(), script->column());
+          script->lineno(), script->column().zeroOriginValue());
 
   baselineScript->copyRetAddrEntries(handler.retAddrEntries().begin());
   baselineScript->copyOSREntries(handler.osrEntries().begin());
@@ -310,8 +312,8 @@ MethodStatus BaselineCompiler::compile() {
   {
     JitSpew(JitSpew_Profiling,
             "Added JitcodeGlobalEntry for baseline script %s:%u:%u (%p)",
-            script->filename(), script->lineno(), script->column(),
-            baselineScript.get());
+            script->filename(), script->lineno(),
+            script->column().zeroOriginValue(), baselineScript.get());
 
     // Generate profiling string.
     UniqueChars str = GeckoProfilerRuntime::allocProfileString(cx, script);

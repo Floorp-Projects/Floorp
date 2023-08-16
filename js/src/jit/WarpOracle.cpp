@@ -137,8 +137,8 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   JitSpew(JitSpew_IonScripts,
           "Warp %s script %s:%u:%u (%p) (warmup-counter=%" PRIu32 ",%s%s)",
           mode, outerScript_->filename(), outerScript_->lineno(),
-          outerScript_->column(), static_cast<JSScript*>(outerScript_),
-          outerScript_->getWarmUpCount(),
+          outerScript_->column().zeroOriginValue(),
+          static_cast<JSScript*>(outerScript_), outerScript_->getWarmUpCount(),
           outerScript_->isGenerator() ? " isGenerator" : "",
           outerScript_->isAsync() ? " isAsync" : "");
 #endif
@@ -735,7 +735,7 @@ static void LineNumberAndColumn(HandleScript script, BytecodeLocation loc,
   *line = PCToLineNumber(script, loc.toRawBytecode(), column);
 #else
   *line = script->lineno();
-  *column = script->column();
+  *column = script->column().zeroOriginValue();
 #endif
 }
 

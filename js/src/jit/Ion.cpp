@@ -1670,7 +1670,8 @@ static AbortReason IonCompile(JSContext* cx, HandleScript script,
     JitSpew(JitSpew_IonSyncLogs,
             "Can't log script %s:%u:%u"
             ". (Compiled on background thread.)",
-            script->filename(), script->lineno(), script->column());
+            script->filename(), script->lineno(),
+            script->column().zeroOriginValue());
 
     IonCompileTask* task = alloc->new_<IonCompileTask>(cx, *mirGen, snapshot);
     if (!task) {
@@ -1786,7 +1787,7 @@ static bool ScriptIsTooLarge(JSContext* cx, JSScript* script) {
     JitSpew(JitSpew_IonAbort,
             "Script too large (%zu bytes) (%zu locals/args) @ %s:%u:%u",
             script->length(), numLocalsAndArgs, script->filename(),
-            script->lineno(), script->column());
+            script->lineno(), script->column().zeroOriginValue());
     return true;
   }
 
@@ -1831,7 +1832,8 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
 
   if (!CanIonCompileScript(cx, script)) {
     JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%u:%u",
-            script->filename(), script->lineno(), script->column());
+            script->filename(), script->lineno(),
+            script->column().zeroOriginValue());
     return Method_CantCompile;
   }
 
@@ -2096,8 +2098,9 @@ static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
   JitSpew(JitSpew_BaselineOSR,
           "WarmUpCounter for %s:%u:%u reached %d at pc %p, trying to switch to "
           "Ion!",
-          script->filename(), script->lineno(), script->column(),
-          (int)script->getWarmUpCount(), (void*)pc);
+          script->filename(), script->lineno(),
+          script->column().zeroOriginValue(), (int)script->getWarmUpCount(),
+          (void*)pc);
 
   MethodStatus stat;
   if (isLoopHead) {
@@ -2291,8 +2294,8 @@ static void InvalidateActivation(JS::GCContext* gcx,
         JitSpew(JitSpew_IonInvalidate,
                 "#%zu %s JS frame @ %p, %s:%u:%u (fun: %p, script: %p, pc %p)",
                 frameno, type, frame.fp(), script->maybeForwardedFilename(),
-                script->lineno(), script->column(), frame.maybeCallee(), script,
-                frame.resumePCinCurrentFrame());
+                script->lineno(), script->column().zeroOriginValue(),
+                frame.maybeCallee(), script, frame.resumePCinCurrentFrame());
         break;
       }
       case FrameType::BaselineStub:
@@ -2466,7 +2469,7 @@ void jit::Invalidate(JSContext* cx, const RecompileInfoVector& invalid,
 
     JitSpew(JitSpew_IonInvalidate, " Invalidate %s:%u:%u, IonScript %p",
             info.script()->filename(), info.script()->lineno(),
-            info.script()->column(), ionScript);
+            info.script()->column().zeroOriginValue(), ionScript);
 
     // Keep the ion script alive during the invalidation and flag this
     // ionScript as being invalidated.  This increment is removed by the
@@ -2552,8 +2555,8 @@ void jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses,
     }
 
     // Construct the descriptive string.
-    UniqueChars buf =
-        JS_smprintf("%s:%u:%u", filename, script->lineno(), script->column());
+    UniqueChars buf = JS_smprintf("%s:%u:%u", filename, script->lineno(),
+                                  script->column().zeroOriginValue());
 
     // Ignore the event on allocation failure.
     if (buf) {
@@ -2587,7 +2590,8 @@ void jit::FinishInvalidation(JS::GCContext* gcx, JSScript* script) {
 
 void jit::ForbidCompilation(JSContext* cx, JSScript* script) {
   JitSpew(JitSpew_IonAbort, "Disabling Ion compilation of script %s:%u:%u",
-          script->filename(), script->lineno(), script->column());
+          script->filename(), script->lineno(),
+          script->column().zeroOriginValue());
 
   CancelOffThreadIonCompile(script);
 
