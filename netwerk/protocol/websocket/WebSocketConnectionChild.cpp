@@ -8,7 +8,7 @@
 #include "WebSocketConnectionChild.h"
 
 #include "WebSocketConnection.h"
-#include "mozilla/net/SocketProcessbackgroundChild.h"
+#include "mozilla/net/SocketProcessBackgroundChild.h"
 #include "nsISerializable.h"
 #include "nsITLSSocketControl.h"
 #include "nsITransportSecurityInfo.h"

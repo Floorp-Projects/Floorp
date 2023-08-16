@@ -18,7 +18,6 @@
 #include "mozilla/FOGIPC.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/CrashReporterClient.h"
-#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/net/AltSvcTransactionChild.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
@@ -169,9 +168,6 @@ bool SocketProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   if (NS_FAILED(NS_InitMinimalXPCOM())) {
     return false;
   }
-
-  BackgroundChild::Startup();
-  BackgroundChild::InitSocketStarter(this);
 
   InitSocketBackground();
 

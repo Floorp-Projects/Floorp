@@ -248,16 +248,6 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvObserveHttpActivity(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult SocketProcessParent::RecvInitBackground(
-    Endpoint<PBackgroundStarterParent>&& aEndpoint) {
-  LOG(("SocketProcessParent::RecvInitBackground\n"));
-  if (!ipc::BackgroundParent::AllocStarter(nullptr, std::move(aEndpoint))) {
-    return IPC_FAIL(this, "BackgroundParent::Alloc failed");
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult SocketProcessParent::RecvInitSocketBackground(
     Endpoint<PSocketProcessBackgroundParent>&& aEndpoint) {
   if (!aEndpoint.IsValid()) {
