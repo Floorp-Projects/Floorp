@@ -479,8 +479,6 @@ class PageStyleActor extends Actor {
       });
     }
 
-    this._expandRules(rules);
-
     return {
       matched,
       rules: [...rules],
@@ -896,21 +894,6 @@ class PageStyleActor extends Actor {
     }
 
     return entries;
-  }
-
-  /**
-   * Expand a set of rules to include all parent rules.
-   */
-  _expandRules(ruleSet) {
-    // Sets include new items in their iteration
-    for (const rule of ruleSet) {
-      if (rule.rawRule.parentRule) {
-        const parent = this._styleRef(rule.rawRule.parentRule);
-        if (!ruleSet.has(parent)) {
-          ruleSet.add(parent);
-        }
-      }
-    }
   }
 
   /**
