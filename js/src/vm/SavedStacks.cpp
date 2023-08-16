@@ -1988,14 +1988,6 @@ UniqueChars BuildUTF8StackString(JSContext* cx, JSPrincipals* principals,
   return JS_EncodeStringToUTF8(cx, stackStr);
 }
 
-uint32_t FixupMaybeWASMColumnForDisplay(uint32_t column) {
-  if (column & JS::TaggedColumnNumberZeroOrigin::WasmFunctionTag) {
-    return JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberOneOrigin;
-  }
-
-  return JSErrorBase::fromZeroOriginToOneOrigin(column);
-}
-
 } /* namespace js */
 
 namespace JS {
