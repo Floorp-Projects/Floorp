@@ -49,6 +49,11 @@ urlbar:
           did not fall into any of these categories, this will be `unknown`. If
           search mode is not active, this will be an empty string.
         type: string
+      search_engine_default_id:
+        description: >
+          The telemetry id of the search engine.
+          Reflects `search.engine.default.engine_id`.
+        type: string
       n_chars:
         description: >
           The length of string used for the search. It includes whitespaces.
@@ -178,6 +183,11 @@ urlbar:
           did not fall into any of these categories, this will be `unknown`. If
           search mode is not active, this will be an empty string.
         type: string
+      search_engine_default_id:
+        description: >
+          The telemetry id of the search engine.
+          Reflects `search.engine.default.engine_id`.
+        type: string
       n_chars:
         description: >
           The length of string used for the search. It includes whitespaces.
@@ -258,6 +268,11 @@ urlbar:
           `restart`, `screenshot`, `settings`, `themes`, `update` and
           `viewsource`. Otherwise, an empty string is returned.
         type: string
+      selected_position:
+        description: >
+          The 1-based index of the result the user selected. If user searched
+          without selection, 0 will be recorded.
+        type: quantity
       provider:
         description: >
           The name of the `UrlbarProvider` that provided the selected result.
@@ -405,6 +420,11 @@ urlbar:
           `search_engine`, and `tabs`. If search mode is active but the source
           did not fall into any of these categories, this will be `unknown`. If
           search mode is not active, this will be an empty string.
+        type: string
+      search_engine_default_id:
+        description: >
+          The telemetry id of the search engine.
+          Reflects `search.engine.default.engine_id`.
         type: string
       n_chars:
         description: >
