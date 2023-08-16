@@ -18,7 +18,7 @@
 #include "debugger/Script.h"           // for DebuggerScript
 #include "frontend/FrontendContext.h"  // for AutoReportFrontendContext
 #include "gc/Tracer.h"        // for TraceManuallyBarrieredCrossCompartmentEdge
-#include "js/ColumnNumber.h"  // JS::WasmFunctionIndex
+#include "js/ColumnNumber.h"  // JS::WasmFunctionIndex, JS::ColumnNumberZeroOrigin
 #include "js/CompilationAndEvaluation.h"  // for Compile
 #include "js/ErrorReport.h"  // for JS_ReportErrorASCII,  JS_ReportErrorNumberASCII
 #include "js/experimental/TypedData.h"  // for JS_NewUint8Array
@@ -623,7 +623,7 @@ static JSScript* ReparseSource(JSContext* cx, Handle<ScriptSourceObject*> sso) {
   JS::CompileOptions options(cx);
   options.setHideScriptFromDebugger(true);
   options.setFileAndLine(ss->filename(), ss->startLine());
-  options.setColumn(ss->startColumn().zeroOriginValue());
+  options.setColumn(JS::ColumnNumberZeroOrigin(ss->startColumn()));
 
   UncompressedSourceCache::AutoHoldEntry holder;
 
