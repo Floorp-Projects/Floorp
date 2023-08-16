@@ -3581,6 +3581,9 @@ class Document : public nsINode,
 
   void MaybeWarnAboutZoom();
 
+  // https://drafts.csswg.org/cssom-view/#evaluate-media-queries-and-report-changes
+  void EvaluateMediaQueriesAndReportChanges(bool aRecurse);
+
   // ParentNode
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount();
