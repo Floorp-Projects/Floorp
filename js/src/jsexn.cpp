@@ -28,6 +28,7 @@
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "js/CharacterEncoding.h"      // JS::UTF8Chars, JS::ConstUTF8CharsZ
 #include "js/Class.h"
+#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberZeroOrigin
 #include "js/Conversions.h"
 #include "js/ErrorReport.h"             // JS::PrintError
 #include "js/Exception.h"               // JS::ExceptionStack
@@ -674,8 +675,7 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
     ownedReport.filename = JS::ConstUTF8CharsZ(filename.get());
     ownedReport.sourceId = frame->getSourceId();
     ownedReport.lineno = frame->getLine();
-    // Follow FixupMaybeWASMColumnForDisplay and set column to 1 for WASM.
-    ownedReport.column = frame->isWasm() ? 1 : frame->getColumn();
+    ownedReport.column = frame->getColumn().oneOriginValue();
     ownedReport.isMuted = frame->getMutedErrors();
   } else {
     // XXXbz this assumes the stack we have right now is still
@@ -683,11 +683,11 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
     NonBuiltinFrameIter iter(cx, cx->realm()->principals());
     if (!iter.done()) {
       ownedReport.filename = JS::ConstUTF8CharsZ(iter.filename());
-      uint32_t column;
+      JS::TaggedColumnNumberZeroOrigin column;
       ownedReport.sourceId =
           iter.hasScript() ? iter.script()->scriptSource()->id() : 0;
       ownedReport.lineno = iter.computeLine(&column);
-      ownedReport.column = FixupMaybeWASMColumnForDisplay(column);
+      ownedReport.column = column.oneOriginValue();
       ownedReport.isMuted = iter.mutedErrors();
     }
   }

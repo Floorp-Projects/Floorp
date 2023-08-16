@@ -19,7 +19,7 @@
 #include "gc/GCContext.h"
 #include "gc/HashUtil.h"
 #include "js/CharacterEncoding.h"
-#include "js/ColumnNumber.h"  // JS::WasmFunctionIndex, JS::TaggedColumnNumberZeroOrigin, JS::TaggedColumnNumberOneOrigin
+#include "js/ColumnNumber.h"  // JS::WasmFunctionIndex, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberZeroOrigin, JS::TaggedColumnNumberOneOrigin
 #include "js/ErrorReport.h"   // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyAndElement.h"    // JS_DefineProperty, JS_GetProperty
@@ -173,9 +173,10 @@ void LiveSavedFrameCache::findWithoutInvalidation(
 }
 
 struct MOZ_STACK_CLASS SavedFrame::Lookup {
-  Lookup(JSAtom* source, uint32_t sourceId, uint32_t line, uint32_t column,
-         JSAtom* functionDisplayName, JSAtom* asyncCause, SavedFrame* parent,
-         JSPrincipals* principals, bool mutedErrors,
+  Lookup(JSAtom* source, uint32_t sourceId, uint32_t line,
+         JS::TaggedColumnNumberOneOrigin column, JSAtom* functionDisplayName,
+         JSAtom* asyncCause, SavedFrame* parent, JSPrincipals* principals,
+         bool mutedErrors,
          const Maybe<LiveSavedFrameCache::FramePtr>& framePtr = Nothing(),
          jsbytecode* pc = nullptr, Activation* activation = nullptr)
       : source(source),
@@ -193,7 +194,7 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
     MOZ_ASSERT(source);
     MOZ_ASSERT_IF(framePtr.isSome(), activation);
     if (js::SupportDifferentialTesting()) {
-      this->column = 0;
+      this->column = JS::TaggedColumnNumberOneOrigin::forDifferentialTesting();
     }
   }
 
@@ -219,8 +220,8 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
   // Line number (1-origin).
   uint32_t line;
 
-  // Columm number in UTF-16 code units (1-origin).
-  uint32_t column;
+  // Columm number in UTF-16 code units.
+  JS::TaggedColumnNumberOneOrigin column;
 
   JSAtom* functionDisplayName;
   JSAtom* asyncCause;
@@ -256,7 +257,7 @@ class WrappedPtrOperations<SavedFrame::Lookup, Wrapper> {
   JSAtom* source() { return value().source; }
   uint32_t sourceId() { return value().sourceId; }
   uint32_t line() { return value().line; }
-  uint32_t column() { return value().column; }
+  JS::TaggedColumnNumberOneOrigin column() { return value().column; }
   JSAtom* functionDisplayName() { return value().functionDisplayName; }
   JSAtom* asyncCause() { return value().asyncCause; }
   SavedFrame* parent() { return value().parent; }
@@ -313,7 +314,7 @@ HashNumber SavedFrame::HashPolicy::calculateHash(const Lookup& lookup,
   // Assume that we can take line mod 2^32 without losing anything of
   // interest.  If that assumption changes, we'll just need to start with 0
   // and add another overload of AddToHash with more arguments.
-  return AddToHash(lookup.line, lookup.column, lookup.source,
+  return AddToHash(lookup.line, lookup.column.rawValue(), lookup.source,
                    lookup.functionDisplayName, lookup.asyncCause,
                    lookup.mutedErrors, parentHash,
                    JSPrincipalsPtrHasher::hash(lookup.principals));
@@ -446,9 +447,9 @@ uint32_t SavedFrame::getLine() {
   return v.toPrivateUint32();
 }
 
-uint32_t SavedFrame::getColumn() {
+JS::TaggedColumnNumberOneOrigin SavedFrame::getColumn() {
   const Value& v = getReservedSlot(JSSLOT_COLUMN);
-  return v.toPrivateUint32();
+  return JS::TaggedColumnNumberOneOrigin::fromRaw(v.toPrivateUint32());
 }
 
 JSAtom* SavedFrame::getFunctionDisplayName() {
@@ -503,11 +504,11 @@ void SavedFrame::initLine(uint32_t line) {
   initReservedSlot(JSSLOT_LINE, PrivateUint32Value(line));
 }
 
-void SavedFrame::initColumn(uint32_t column) {
+void SavedFrame::initColumn(JS::TaggedColumnNumberOneOrigin column) {
   if (js::SupportDifferentialTesting()) {
-    column = 0;
+    column = JS::TaggedColumnNumberOneOrigin::forDifferentialTesting();
   }
-  initReservedSlot(JSSLOT_COLUMN, PrivateUint32Value(column));
+  initReservedSlot(JSSLOT_COLUMN, PrivateUint32Value(column.rawValue()));
 }
 
 void SavedFrame::initPrincipalsAndMutedErrors(JSPrincipals* principals,
@@ -591,13 +592,10 @@ bool SavedFrame::isSelfHosted(JSContext* cx) {
   return source == cx->names().self_hosted_;
 }
 
-bool SavedFrame::isWasm() {
-  return bool(getColumn() & JS::TaggedColumnNumberOneOrigin::WasmFunctionTag);
-}
+bool SavedFrame::isWasm() { return getColumn().isWasmFunctionIndex(); }
 
 uint32_t SavedFrame::wasmFuncIndex() {
-  MOZ_ASSERT(isWasm());
-  return getColumn() & ~JS::TaggedColumnNumberOneOrigin::WasmFunctionTag;
+  return getColumn().toWasmFunctionIndex().value();
 }
 
 uint32_t SavedFrame::wasmBytecodeOffset() {
@@ -845,7 +843,7 @@ JS_PUBLIC_API SavedFrameResult GetSavedFrameColumn(
     *columnp = 0;
     return SavedFrameResult::AccessDenied;
   }
-  *columnp = frame->getColumn();
+  *columnp = frame->getColumn().rawValue();
   return SavedFrameResult::Ok;
 }
 
@@ -1002,7 +1000,8 @@ static bool FormatStackFrameColumn(js::StringBuffer& sb,
     return sb.append("0x") && sb.append(cstr, cstrlen);
   }
 
-  return NumberValueToStringBuffer(NumberValue(frame->getColumn()), sb);
+  return NumberValueToStringBuffer(
+      NumberValue(frame->getColumn().oneOriginValue()), sb);
 }
 
 static bool FormatSpiderMonkeyStackFrame(JSContext* cx, js::StringBuffer& sb,
@@ -1852,10 +1851,9 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
       return false;
     }
 
-    // See WasmFrameIter::computeLine() comment.
-    uint32_t column = 0;
+    JS::TaggedColumnNumberZeroOrigin column;
     locationp.setLine(iter.computeLine(&column));
-    locationp.setColumn(column);
+    locationp.setColumn(JS::TaggedColumnNumberOneOrigin(column));
     return true;
   }
 
@@ -1880,9 +1878,11 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
     uint32_t column;
     uint32_t line = PCToLineNumber(script, pc, &column);
 
-    // Make the column 1-based. See comment above.
     PCKey key(script, pc);
-    LocationValue value(source, sourceId, line, column + 1);
+    LocationValue value(
+        source, sourceId, line,
+        JS::TaggedColumnNumberOneOrigin(JS::LimitedColumnNumberOneOrigin(
+            JS::LimitedColumnNumberZeroOrigin(column))));
     if (!pcLocationMap.add(p, key, value)) {
       ReportOutOfMemory(cx);
       return false;
@@ -2069,12 +2069,13 @@ JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
     auto principals =
         js::ReconstructedSavedFramePrincipals::getSingleton(ubiFrame.get());
 
-    if (!stackChain.emplaceBack(source, ubiFrame.get().sourceId(),
-                                ubiFrame.get().line(), ubiFrame.get().column(),
-                                functionDisplayName,
-                                /* asyncCause */ nullptr,
-                                /* parent */ nullptr, principals,
-                                /* mutedErrors */ true)) {
+    if (!stackChain.emplaceBack(
+            source, ubiFrame.get().sourceId(), ubiFrame.get().line(),
+            JS::TaggedColumnNumberOneOrigin::fromRaw(ubiFrame.get().column()),
+            functionDisplayName,
+            /* asyncCause */ nullptr,
+            /* parent */ nullptr, principals,
+            /* mutedErrors */ true)) {
       ReportOutOfMemory(cx);
       return false;
     }

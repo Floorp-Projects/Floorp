@@ -19,7 +19,7 @@
 #include "wasm/WasmFrameIter.h"
 
 #include "jit/JitFrames.h"
-#include "js/ColumnNumber.h"  // JS::WasmFunctionIndex, JS::TaggedColumnNumberOneOrigin
+#include "js/ColumnNumber.h"  // JS::WasmFunctionIndex, LimitedColumnNumberZeroOrigin, JS::TaggedColumnNumberZeroOrigin, JS::TaggedColumnNumberOneOrigin
 #include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/JSContext.h"
 #include "wasm/WasmDebugFrame.h"
@@ -284,19 +284,23 @@ uint32_t WasmFrameIter::funcIndex() const {
   return codeRange_->funcIndex();
 }
 
-unsigned WasmFrameIter::computeLine(uint32_t* column) const {
+unsigned WasmFrameIter::computeLine(
+    JS::TaggedColumnNumberZeroOrigin* column) const {
   if (instance()->isAsmJS()) {
     if (column) {
-      *column = JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberOneOrigin;
+      *column =
+          JS::TaggedColumnNumberZeroOrigin(JS::LimitedColumnNumberZeroOrigin(
+              JS::WasmFunctionIndex::
+                  DefaultBinarySourceColumnNumberZeroOrigin));
     }
     return lineOrBytecode_;
   }
 
   MOZ_ASSERT(!(codeRange_->funcIndex() &
-               JS::TaggedColumnNumberOneOrigin::WasmFunctionTag));
+               JS::TaggedColumnNumberZeroOrigin::WasmFunctionTag));
   if (column) {
-    *column = codeRange_->funcIndex() |
-              JS::TaggedColumnNumberOneOrigin::WasmFunctionTag;
+    *column = JS::TaggedColumnNumberZeroOrigin(
+        JS::WasmFunctionIndex(codeRange_->funcIndex()));
   }
   return lineOrBytecode_;
 }

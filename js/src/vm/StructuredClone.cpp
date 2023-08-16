@@ -45,6 +45,7 @@
 #include "builtin/MapObject.h"
 #include "js/Array.h"        // JS::GetArrayLength, JS::IsArrayObject
 #include "js/ArrayBuffer.h"  // JS::{ArrayBufferHasData,DetachArrayBuffer,IsArrayBufferObject,New{,Mapped}ArrayBufferWithContents,ReleaseMappedArrayBufferContents}
+#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberOneOrigin
 #include "js/Date.h"
 #include "js/experimental/TypedData.h"  // JS_NewDataView, JS_New{{Ui,I}nt{8,16,32},Float{32,64},Uint8Clamped,Big{Ui,I}nt64}ArrayWithBuffer
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
@@ -1798,7 +1799,7 @@ bool JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj) {
     return false;
   }
 
-  val = NumberValue(savedFrame->getColumn());
+  val = NumberValue(*savedFrame->getColumn().addressOfValueForTranscode());
   if (!writePrimitive(val)) {
     return false;
   }
@@ -3463,16 +3464,14 @@ JSObject* JSStructuredCloneReader::readSavedFrameHeader(
 
   savedFrame->initSource(&source.toString()->asAtom());
 
-  RootedValue lineVal(context());
   uint32_t line;
   if (!readUint32(&line)) {
     return nullptr;
   }
   savedFrame->initLine(line);
 
-  RootedValue columnVal(context());
-  uint32_t column;
-  if (!readUint32(&column)) {
+  JS::TaggedColumnNumberOneOrigin column;
+  if (!readUint32(column.addressOfValueForTranscode())) {
     return nullptr;
   }
   savedFrame->initColumn(column);
