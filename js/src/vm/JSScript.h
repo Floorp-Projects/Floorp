@@ -2209,7 +2209,7 @@ struct ScriptAndCounts {
 };
 
 extern JS::UniqueChars FormatIntroducedFilename(const char* filename,
-                                                unsigned lineno,
+                                                uint32_t lineno,
                                                 const char* introducer);
 
 struct GSNCache;
@@ -2250,7 +2250,7 @@ extern unsigned PCToLineNumber(
  */
 extern void DescribeScriptedCallerForCompilation(
     JSContext* cx, MutableHandleScript maybeScript, const char** file,
-    unsigned* linenop, uint32_t* pcOffset, bool* mutedErrors);
+    uint32_t* linenop, uint32_t* pcOffset, bool* mutedErrors);
 
 /*
  * Like DescribeScriptedCallerForCompilation, but this function avoids looking
@@ -2258,7 +2258,7 @@ extern void DescribeScriptedCallerForCompilation(
  */
 extern void DescribeScriptedCallerForDirectEval(
     JSContext* cx, HandleScript script, jsbytecode* pc, const char** file,
-    unsigned* linenop, uint32_t* pcOffset, bool* mutedErrors);
+    uint32_t* linenop, uint32_t* pcOffset, bool* mutedErrors);
 
 bool CheckCompileOptionsMatch(const JS::ReadOnlyCompileOptions& options,
                               js::ImmutableScriptFlags flags);
