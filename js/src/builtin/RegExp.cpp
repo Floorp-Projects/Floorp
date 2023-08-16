@@ -875,7 +875,7 @@ bool js::regexp_multiline(JSContext* cx, unsigned argc, JS::Value* vp) {
 static bool regexp_source(JSContext* cx, unsigned argc, JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   // Step 3.a. Return "(?:)" for %RegExp.prototype%.
-  RootedValue fallback(cx, StringValue(cx->names().emptyRegExp));
+  RootedValue fallback(cx, StringValue(cx->names().emptyRegExp_));
   return RegExpGetter(
       cx, args, "source",
       [cx, args](RegExpObject* unwrapped) {

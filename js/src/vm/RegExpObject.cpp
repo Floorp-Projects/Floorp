@@ -438,7 +438,7 @@ static bool EscapeRegExpPattern(StringBuffer& sb, const CharT* oldChars,
 JSLinearString* js::EscapeRegExpPattern(JSContext* cx, Handle<JSAtom*> src) {
   // Step 2.
   if (src->length() == 0) {
-    return cx->names().emptyRegExp;
+    return cx->names().emptyRegExp_;
   }
 
   // We may never need to use |sb|. Start using it lazily.

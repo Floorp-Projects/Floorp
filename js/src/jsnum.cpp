@@ -1243,7 +1243,7 @@ static bool num_toFixed(JSContext* cx, unsigned argc, Value* vp) {
       return true;
     }
 
-    args.rval().setString(cx->names().NegativeInfinity);
+    args.rval().setString(cx->names().NegativeInfinity_);
     return true;
   }
 
@@ -1315,7 +1315,7 @@ static bool num_toExponential(JSContext* cx, unsigned argc, Value* vp) {
       return true;
     }
 
-    args.rval().setString(cx->names().NegativeInfinity);
+    args.rval().setString(cx->names().NegativeInfinity_);
     return true;
   }
 
@@ -1378,7 +1378,7 @@ static bool num_toPrecision(JSContext* cx, unsigned argc, Value* vp) {
       return true;
     }
 
-    args.rval().setString(cx->names().NegativeInfinity);
+    args.rval().setString(cx->names().NegativeInfinity_);
     return true;
   }
 
