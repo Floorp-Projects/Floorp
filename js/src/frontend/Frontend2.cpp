@@ -30,7 +30,7 @@
 #include "frontend/TokenStream.h"       // TokenStreamAnyChars
 #include "irregexp/RegExpAPI.h"         // irregexp::CheckPatternSyntax
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ, JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"          // JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin, JS::LimitedColumnNumberZeroOrigin
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCAPI.h"                 // JS::AutoCheckCannotGC
 #include "js/HeapAPI.h"               // JS::GCCellPtr
@@ -493,7 +493,8 @@ bool ConvertScriptStencil(JSContext* cx, FrontendContext* fc,
   scriptExtra.extent.toStringStart = smooshScript.extent.to_string_start;
   scriptExtra.extent.toStringEnd = smooshScript.extent.to_string_end;
   scriptExtra.extent.lineno = smooshScript.extent.lineno;
-  scriptExtra.extent.column = smooshScript.extent.column;
+  scriptExtra.extent.column =
+      JS::LimitedColumnNumberZeroOrigin(smooshScript.extent.column);
 
   if (isFunction) {
     if (smooshScript.fun_name.IsSome()) {

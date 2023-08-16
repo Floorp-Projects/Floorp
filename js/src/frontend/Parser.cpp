@@ -375,7 +375,8 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   MOZ_ASSERT(checkOptionsCalled_);
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(
-      /* len = */ 0, options().lineno, options().column);
+      /* len = */ 0, options().lineno,
+      JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options().column));
   Directives directives(options().forceStrictMode());
   GlobalSharedContext globalsc(this->fc_, ScopeKind::Global, options(),
                                directives, extent);

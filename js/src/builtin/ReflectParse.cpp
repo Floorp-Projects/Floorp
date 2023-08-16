@@ -3764,8 +3764,9 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     ModuleBuilder builder(&fc, &parser);
 
     uint32_t len = chars.length();
-    SourceExtent extent =
-        SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
+    SourceExtent extent = SourceExtent::makeGlobalExtent(
+        len, options.lineno,
+        JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options.column));
     ModuleSharedContext modulesc(&fc, options, builder, extent);
     pn = parser.moduleBody(&modulesc);
     if (!pn) {
