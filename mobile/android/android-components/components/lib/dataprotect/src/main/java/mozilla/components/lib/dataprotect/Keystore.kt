@@ -8,10 +8,12 @@ import android.annotation.TargetApi
 import android.os.Build.VERSION_CODES.M
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import mozilla.components.support.base.log.logger.Logger
 import java.security.GeneralSecurityException
 import java.security.InvalidKeyException
 import java.security.Key
 import java.security.KeyStore
+import java.security.UnrecoverableKeyException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -151,14 +153,20 @@ open class Keystore(
     manual: Boolean = false,
     internal val wrapper: KeyStoreWrapper = KeyStoreWrapper(),
 ) {
+    private val logger = Logger("Keystore")
+
     init {
         if (!manual and !available()) {
             generateKey()
         }
     }
 
-    private fun getKey(): SecretKey? =
+    private fun getKey(): SecretKey? = try {
         wrapper.getKeyFor(label) as? SecretKey?
+    } catch (e: UnrecoverableKeyException) {
+        logger.error("Failed to get key", e)
+        null
+    }
 
     /**
      * Determines if the managed key is available for use.  Consumers can use this to
