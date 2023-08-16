@@ -551,6 +551,12 @@ this.tabs = class extends ExtensionAPIPersistent {
           return tab.capture(context, zoom, options);
         },
 
+        async detectLanguage(tabId) {
+          const tab = await promiseTabWhenReady(tabId);
+          const results = await tab.queryContent("DetectLanguage", {});
+          return results[0];
+        },
+
         async executeScript(tabId, details) {
           const tab = await promiseTabWhenReady(tabId);
 

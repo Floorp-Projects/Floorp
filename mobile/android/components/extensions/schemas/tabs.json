@@ -851,7 +851,6 @@
       },
       {
         "name": "detectLanguage",
-        "unsupported": true,
         "type": "function",
         "description": "Detects the primary language of the content in a tab.",
         "async": "callback",

@@ -774,7 +774,6 @@ module.exports = {
         "browser/components/extensions/test/browser/browser_ext_tabs_attention.js",
         "browser/components/extensions/test/browser/browser_ext_tabs_containerIsolation.js",
         "browser/components/extensions/test/browser/browser_ext_tabs_create.js",
-        "browser/components/extensions/test/browser/browser_ext_tabs_detectLanguage.js",
         "browser/components/extensions/test/browser/browser_ext_tabs_discard.js",
         "browser/components/extensions/test/browser/browser_ext_tabs_discard_reversed.js",
         "browser/components/extensions/test/browser/browser_ext_tabs_discarded.js",
