@@ -19,6 +19,7 @@
 #include "wasm/WasmFrameIter.h"
 
 #include "jit/JitFrames.h"
+#include "js/ColumnNumber.h"  // JS::WasmFunctionIndex, JS::TaggedColumnNumberOneOrigin
 #include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/JSContext.h"
 #include "wasm/WasmDebugFrame.h"
@@ -286,26 +287,16 @@ uint32_t WasmFrameIter::funcIndex() const {
 unsigned WasmFrameIter::computeLine(uint32_t* column) const {
   if (instance()->isAsmJS()) {
     if (column) {
-      *column = 1;
+      *column = JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberOneOrigin;
     }
     return lineOrBytecode_;
   }
 
-  // As a terrible hack to avoid changing the tons of places that pass around
-  // (url, line, column) tuples to instead passing around a Variant that
-  // stores a (url, func-index, bytecode-offset) tuple for wasm frames,
-  // wasm stuffs its tuple into the existing (url, line, column) tuple,
-  // tagging the high bit of the column to indicate "this is a wasm frame".
-  // When knowing clients see this bit, they shall render the tuple
-  // (url, line, column|bit) as "url:wasm-function[column]:0xline" according
-  // to the WebAssembly Web API's Developer-Facing Display Conventions.
-  //   https://webassembly.github.io/spec/web-api/index.html#conventions
-  // The wasm bytecode offset continues to be passed as the JS line to avoid
-  // breaking existing devtools code written when this used to be the case.
-
-  MOZ_ASSERT(!(codeRange_->funcIndex() & ColumnBit));
+  MOZ_ASSERT(!(codeRange_->funcIndex() &
+               JS::TaggedColumnNumberOneOrigin::WasmFunctionTag));
   if (column) {
-    *column = codeRange_->funcIndex() | ColumnBit;
+    *column = codeRange_->funcIndex() |
+              JS::TaggedColumnNumberOneOrigin::WasmFunctionTag;
   }
   return lineOrBytecode_;
 }

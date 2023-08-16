@@ -222,16 +222,6 @@ class FrontendContext;
 
 namespace frontend {
 
-// Saturate column number at a limit that can be represented in various parts of
-// the engine. Source locations beyond this point will report at the limit
-// column instead.
-//
-// See:
-//  - TokenStreamAnyChars::checkOptions
-//  - ColSpan::isRepresentable
-//  - WasmFrameIter::computeLine
-static constexpr uint32_t ColumnLimit = std::numeric_limits<int32_t>::max() / 2;
-
 // True if str is a keyword.
 bool IsKeyword(TaggedParserAtomIndex atom);
 
