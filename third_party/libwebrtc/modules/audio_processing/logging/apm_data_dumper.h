@@ -26,7 +26,6 @@
 #if WEBRTC_APM_DEBUG_DUMP == 1
 #include "common_audio/wav_file.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
 #include "rtc_base/string_utils.h"
 #endif
 
@@ -101,7 +100,6 @@ class ApmDataDumper {
   void InitiateNewSetOfRecordings() {
 #if WEBRTC_APM_DEBUG_DUMP == 1
     ++recording_set_index_;
-    debug_written_ = 0;
 #endif
   }
 
@@ -371,12 +369,6 @@ class ApmDataDumper {
       WavWriter* file = GetWavFile(name, sample_rate_hz, num_channels,
                                    WavFile::SampleFormat::kFloat);
       file->WriteSamples(v, v_length);
-      // Cheat and use aec_near as a stand-in for "size of the largest file"
-      // in the dump.  We're looking to limit the total time, and that's a
-      // reasonable stand-in.
-      if (strcmp(name.data(), "aec_near") == 0) {
-       updateDebugWritten(v_length * sizeof(float));
-      }
     }
 #endif
   }
@@ -413,16 +405,6 @@ class ApmDataDumper {
                         int sample_rate_hz,
                         int num_channels,
                         WavFile::SampleFormat format);
-
-  uint32_t debug_written_ = 0;
-
-  void updateDebugWritten(uint32_t amount) {
-    debug_written_ += amount;
-    if (debug_written_ >= rtc::LogMessage::aec_debug_size()) {
-      SetActivated(false);
-    }
-  }
-
 #endif
 };
 

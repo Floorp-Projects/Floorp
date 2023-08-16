@@ -52,8 +52,7 @@ std::string FormFileName(absl::string_view output_dir,
 
 #if WEBRTC_APM_DEBUG_DUMP == 1
 ApmDataDumper::ApmDataDumper(int instance_index)
-    : instance_index_(instance_index)
-    , debug_written_(0) {}
+    : instance_index_(instance_index) {}
 #else
 ApmDataDumper::ApmDataDumper(int instance_index) {}
 #endif
