@@ -37,19 +37,13 @@ class WakeLockListener final : public nsIDOMMozWakeLockListener {
                             const nsAString& state) override;
 
  private:
-  WakeLockListener();
   ~WakeLockListener() = default;
-
-  bool EnsureDBusConnection();
 
   static mozilla::StaticRefPtr<WakeLockListener> sSingleton;
 
-#ifdef MOZ_ENABLE_DBUS
-  RefPtr<DBusConnection> mConnection;
-#endif
   // Map of topic names to |WakeLockTopic|s.
   // We assume a small, finite-sized set of topics.
-  nsClassHashtable<nsStringHashKey, WakeLockTopic> mTopics;
+  nsClassHashtable<nsStringHashKey, RefPtr<WakeLockTopic>> mTopics;
 };
 
 #endif  // __WakeLockListener_h__

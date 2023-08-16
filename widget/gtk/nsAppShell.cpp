@@ -291,7 +291,6 @@ void nsAppShell::StopDBusListening() {
 nsresult nsAppShell::Init() {
   mozilla::hal::Init();
 
-#ifdef MOZ_ENABLE_DBUS
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIPowerManagerService> powerManagerService =
         do_GetService(POWERMANAGERSERVICE_CONTRACTID);
@@ -304,9 +303,10 @@ nsresult nsAppShell::Init() {
           "Failed to retrieve PowerManagerService, wakelocks will be broken!");
     }
 
+#ifdef MOZ_ENABLE_DBUS
     StartDBusListening();
-  }
 #endif
+  }
 
   if (!sPollFunc) {
     sPollFunc = g_main_context_get_poll_func(nullptr);
