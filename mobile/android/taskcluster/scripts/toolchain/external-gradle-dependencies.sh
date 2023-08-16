@@ -18,9 +18,16 @@ WORKING_DIR="$REPO_ROOT_DIR/$1"
 shift
 GRADLE_COMMANDS="$@"
 
+: WORKSPACE ${WORKSPACE:=/builds/worker/workspace}
 NEXUS_PREFIX='http://localhost:8081/nexus/content/repositories'
 REPOS="-PgoogleRepo=$NEXUS_PREFIX/google/ -PcentralRepo=$NEXUS_PREFIX/central/"
 GRADLE_ARGS="--parallel $REPOS -Pcoverage"
+
+# override the default org.gradle.jvmargs to add more heap space
+GRADLE_USER_HOME="${WORKSPACE}/gradle-home"
+mkdir -p "${GRADLE_USER_HOME}"
+export GRADLE_USER_HOME
+echo "org.gradle.jvmargs=-Xmx16g -Xms2g -XX:MaxMetaspaceSize=6g -XX:+HeapDumpOnOutOfMemoryError -XX:+UseParallelGC" > "${GRADLE_USER_HOME}/gradle.properties"
 
 pushd "$WORKING_DIR"
 
