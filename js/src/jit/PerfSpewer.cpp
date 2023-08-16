@@ -67,6 +67,7 @@ pid_t gettid_pthread() {
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberOffset
 #include "js/JitCodeAPI.h"
 #include "js/Printf.h"
 #include "vm/BytecodeUtil.h"
@@ -154,9 +155,10 @@ static void WriteToJitDumpFile(const void* addr, uint32_t size,
 }
 
 static void WriteJitDumpDebugEntry(uint64_t addr, const char* filename,
-                                   uint32_t lineno, uint32_t colno,
+                                   uint32_t lineno,
+                                   JS::LimitedColumnNumberZeroOrigin colno,
                                    AutoLockPerfSpewer& lock) {
-  JitDumpDebugEntry entry = {addr, lineno, colno};
+  JitDumpDebugEntry entry = {addr, lineno, colno.zeroOriginValue()};
   WriteToJitDumpFile(&entry, sizeof(entry), lock);
   WriteToJitDumpFile(filename, strlen(filename) + 1, lock);
 }
@@ -791,7 +793,8 @@ void PerfSpewer::saveJitCodeIRInfo(JitCode* code,
       }
       uint64_t addr = uint64_t(code->raw()) + entry.offset;
       uint64_t lineno = i + 1;
-      WriteJitDumpDebugEntry(addr, scriptFilename.get(), lineno, 0, lock);
+      WriteJitDumpDebugEntry(addr, scriptFilename.get(), lineno,
+                             JS::LimitedColumnNumberZeroOrigin::zero(), lock);
     }
 #endif
 
@@ -863,7 +866,7 @@ void BaselinePerfSpewer::saveJitCodeSourceInfo(
 #endif
 
   uint32_t lineno = script->lineno();
-  uint32_t colno = script->column();
+  JS::LimitedColumnNumberZeroOrigin colno = script->column();
   uint64_t offset = 0;
   for (SrcNoteIterator iter(script->notes()); !iter.atEnd(); ++iter) {
     const auto* sn = *iter;
@@ -872,12 +875,12 @@ void BaselinePerfSpewer::saveJitCodeSourceInfo(
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
       lineno = SrcNote::SetLine::getLine(sn, script->lineno());
-      colno = 0;
+      colno = JS::LimitedColumnNumberZeroOrigin::zero();
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
-      colno = 0;
+      colno = JS::LimitedColumnNumberZeroOrigin::zero();
     } else if (type == SrcNoteType::ColSpan) {
-      colno += SrcNote::ColSpan::getSpan(sn);
+      colno += JS::ColumnNumberOffset(SrcNote::ColSpan::getSpan(sn));
     } else {
       continue;
     }
@@ -891,7 +894,7 @@ void BaselinePerfSpewer::saveJitCodeSourceInfo(
             CreateProfilerSourceEntry(profilerRecord, lock)) {
       srcInfo->offset = offset;
       srcInfo->lineno = lineno;
-      srcInfo->colno = colno;
+      srcInfo->colno = colno.zeroOriginValue();
       srcInfo->filename = JS_smprintf("%s", filename);
     }
 
@@ -959,7 +962,8 @@ void IonPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
 #ifdef JS_ION_PERF
     if (perfProfiling) {
       WriteJitDumpDebugEntry(uint64_t(code->raw()) + entry.offset, filename,
-                             lineno, colno, lock);
+                             lineno, JS::LimitedColumnNumberZeroOrigin(colno),
+                             lock);
     }
 #endif
   }
@@ -977,11 +981,11 @@ static UniqueChars GetFunctionDesc(const char* tierName, JSContext* cx,
   if (stubName) {
     return JS_smprintf("%s: %s : %s (%s:%u:%u)", tierName, stubName,
                        funName ? funName.get() : "*", script->filename(),
-                       script->lineno(), script->column());
+                       script->lineno(), script->column().zeroOriginValue());
   }
   return JS_smprintf("%s: %s (%s:%u:%u)", tierName,
                      funName ? funName.get() : "*", script->filename(),
-                     script->lineno(), script->column());
+                     script->lineno(), script->column().zeroOriginValue());
 }
 
 void PerfSpewer::saveDebugInfo(JSScript* script, JitCode* code,

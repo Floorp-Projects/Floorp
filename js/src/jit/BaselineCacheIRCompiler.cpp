@@ -2573,7 +2573,7 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
     JitSpew(JitSpew_BaselineICFallback,
             "Tried attaching identical stub for (%s:%u:%u)",
             outerScript->filename(), outerScript->lineno(),
-            outerScript->column());
+            outerScript->column().zeroOriginValue());
     return ICAttachResult::DuplicateStub;
   }
 

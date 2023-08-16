@@ -374,7 +374,7 @@ bool DebuggerScript::CallData::getStartLine() {
 
 bool DebuggerScript::CallData::getStartColumn() {
   args.rval().setNumber(referent.get().match(
-      [](BaseScript*& s) { return s->column(); },
+      [](BaseScript*& s) { return s->column().zeroOriginValue(); },
       [](WasmInstanceObject*&) {
         return JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberZeroOrigin;
       }));

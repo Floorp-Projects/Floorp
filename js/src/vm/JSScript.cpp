@@ -46,6 +46,7 @@
 #include "jit/JitOptions.h"
 #include "jit/JitRuntime.h"
 #include "js/CharacterEncoding.h"  // JS_EncodeStringToUTF8
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberOffset
 #include "js/CompileOptions.h"
 #include "js/experimental/SourceHook.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -2736,8 +2737,8 @@ unsigned js::PCToLineNumber(JSScript* script, jsbytecode* pc,
     return 0;
   }
 
-  return PCToLineNumber(script->lineno(), script->column(), script->notes(),
-                        script->code(), pc, columnp);
+  return PCToLineNumber(script->lineno(), script->column().zeroOriginValue(),
+                        script->notes(), script->code(), pc, columnp);
 }
 
 jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
@@ -3403,7 +3404,7 @@ bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
     }
 
     json.property("lineno", script->lineno());
-    json.property("column", script->column());
+    json.property("column", script->column().zeroOriginValue());
 
     json.beginListProperty("immutableFlags");
     DumpImmutableScriptFlags(json, script->immutableFlags());
@@ -3507,7 +3508,7 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
 
   unsigned offset = 0;
   unsigned lineno = script->lineno();
-  unsigned column = script->column();
+  JS::LimitedColumnNumberZeroOrigin column = script->column();
   SrcNote* notes = script->notes();
   for (SrcNoteIterator iter(notes); !iter.atEnd(); ++iter) {
     const auto* sn = *iter;
@@ -3517,7 +3518,7 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
     SrcNoteType type = sn->type();
     const char* name = sn->name();
     if (!sp->jsprintf("%3u: %4u %6u %5u [%4u] %-10s", unsigned(sn - notes),
-                      lineno, column, offset, delta, name)) {
+                      lineno, column.zeroOriginValue(), offset, delta, name)) {
       return false;
     }
 
@@ -3534,7 +3535,7 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
         if (!sp->jsprintf(" colspan %u", colspan)) {
           return false;
         }
-        column += colspan;
+        column += JS::ColumnNumberOffset(colspan);
         break;
       }
 
@@ -3543,12 +3544,12 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
         if (!sp->jsprintf(" lineno %u", lineno)) {
           return false;
         }
-        column = 0;
+        column = JS::LimitedColumnNumberZeroOrigin::zero();
         break;
 
       case SrcNoteType::NewLine:
         ++lineno;
-        column = 0;
+        column = JS::LimitedColumnNumberZeroOrigin::zero();
         break;
 
       default:
@@ -3689,7 +3690,8 @@ bool JSScript::dumpGCThings(JSContext* cx, JS::Handle<JSScript*> script,
 
         if (fun->hasBaseScript()) {
           BaseScript* script = fun->baseScript();
-          if (!sp->jsprintf(" @ %u:%u\n", script->lineno(), script->column())) {
+          if (!sp->jsprintf(" @ %u:%u\n", script->lineno(),
+                            script->column().zeroOriginValue())) {
             return false;
           }
         } else {
