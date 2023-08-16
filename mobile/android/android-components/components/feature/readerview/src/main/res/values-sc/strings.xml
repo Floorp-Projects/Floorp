@@ -9,6 +9,9 @@
     <!-- Accessible description for the font option -->
     <string name="mozac_feature_readerview_serif_font_desc">Tipografia Serif</string>
 
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Mìnima sa mannària de sa tipografia</string>
+
     <!-- Accessible description for increasing the font size -->
     <string name="mozac_feature_readerview_font_size_increase_desc">Cresche sa mannària de sa tipografia</string>
     <!-- Color option for the background -->

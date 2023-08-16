@@ -63,8 +63,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Aberi in s’ischeda privada imbeniente cun unu tocu ebbia.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Aberi s’ischeda privada imbeniente cun unu tocu ebbia.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Agiunghe a s’ischermu printzipale</string>
@@ -78,9 +76,6 @@
     <string name="open_in_app_cfr_positive_button_text">Bae a sa cunfiguratzione</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Iscarta</string>
-
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Iscarta</string>
 
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Leghe àteru subra de s’amparu totale contra is testimòngios</string>
@@ -117,6 +112,9 @@
     <string name="home_screen_shortcut_open_new_tab_2">Ischeda noa</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Ischeda privada noa</string>
+
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Curtzadòrgiu pro is craes</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -235,22 +233,25 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">Non permitas</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Boles ammustrare cussìgios de chirca in is sessiones privadas?</string>
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Chirca %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Chirca deretu dae sa barra de indiritzos</string>
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Cunfiguratzione de chirca</string>
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Custa borta, chirca cun:</string>
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Custa borta, chirca cun:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Motore de chirca %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Iscoberi sa personalizatzione de sa pàgina printzipale. Is ischedas reghentes, sinnalibros e resurtados de chirca ant a èssere ammustrados inoghe.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Ti donamus su benebènnidu a un’internet mègius</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Prus colores. Una mègius riservadesa. Su matessi impinnu de pònnere is persones prima de is profitos.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Cumintza</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
@@ -266,6 +267,19 @@
     <string name="onboarding_home_enable_notifications_positive_button">Sighi</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Immoe nono</string>
+
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Cunfigura comente navigadore predefinidu</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Immoe nono</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Identìfica·ti</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Immoe nono</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Ativa is notìficas</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Immoe nono</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -284,6 +298,10 @@
     <string name="preferences_category_general">Generale</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Informatziones</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Seletziona·nde unu</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts">Gesti is curtzadòrgios de chirca</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Motore de chirca predefinidu</string>
     <!-- Preference for settings related to Search -->
@@ -316,17 +334,21 @@
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction">Ismenguada de is avisos de testimòngios</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Ismèngua is avisos de testimòngios</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">Disativadu</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Ativu</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Disativadu pro custu situ</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Annulla</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Ativu pro custu situ</string>
 
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Situ non cumpatìbile</string>
+    <string name="reduce_cookie_banner_unsupported_site">Situ non cumpatìbile</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Boles ativare s’ismèngua de is avisos de testimòngios pro %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -335,11 +357,7 @@
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s at a limpiare is testimòngios de custu situ e at a atualizare sa pàgina. Sa limpiesa de totu is testimòngios ti diat pòdere serrare sa sessione o isboidare is carrellos de s’ispesa.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Immoe nono</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Permite</string>
 
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Ativu</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Disativadu</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -412,6 +430,7 @@
     <string name="preferences_open_links_in_apps">Aberi is ligòngios in is aplicatziones</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Gestore de iscarrigamentos esternu</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Cumplementos</string>
     <!-- Preference for notifications -->
@@ -468,11 +487,11 @@
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">%s clàssicu</string>
     <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title">Editzione limitada</string>
+    <string name="wallpaper_limited_edition_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Editzione limitada</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more">Sa colletzione noa de boghes indipendentes. %s</string>
+    <string name="wallpaper_limited_edition_description_with_learn_more" moz:RemovedIn="118" tools:ignore="UnusedResources">Sa colletzione noa de boghes indipendentes. %s</string>
     <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description">Sa colletzione noa de boghes indipendentes.</string>
+    <string name="wallpaper_limited_edition_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Sa colletzione noa de boghes indipendentes.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Proa un’istrichiddu de colore</string>
 
@@ -488,7 +507,6 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Su cumplementu est giai installadu</string>
 
-    <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincroniza immoe</string>
     <!-- Preference category for sync -->
@@ -617,13 +635,6 @@
     <string name="open_all_warning_confirm">Ischedas abertas</string>
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Annulla</string>
-
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d situ</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sitos</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Ischedas serradas de reghente</string>
@@ -922,8 +933,6 @@
     <string name="phone_feature_blocked_by_android">Blocadu dae Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Etzetziones</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Ativu</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Disativadu</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1008,7 +1017,7 @@
     <string name="share_button_content_description">Cumpartzi</string>
     <!-- Text for the Save to PDF feature in the share menu -->
     <string name="share_save_to_pdf">Sarva comente PDF</string>
-    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <!-- Text for error message when generating a PDF file Text. -->
     <string name="unable_to_save_to_pdf_error">Impossìbile generare su PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Imbia a su dispositivu</string>
@@ -1211,16 +1220,10 @@
     <string name="etp_settings">Cunfiguratzione de protetzione</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Amparu megioradu contra sa sighidura</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Nàviga chene sighiduras</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Ampara is datos tuos. %s amparat dae is sighidores prus currentes chi sighint su chi ses faghende in lìnia.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Àteras informatziones</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Istàndard (predefinidu)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Echilìbriu intre amparu e rendimentu. Is pàginas s’ant a carrigare cun normalidade.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Restrinta</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

@@ -51,11 +51,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">დამატებით…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> იყენებს უსაფრთხოების დებულებას სახელწოდებით HTTP Strict Transport Security (HSTS), ეს კი ნიშნავს, რომ <b>%2$s</b> მას მხოლოდ უსაფრთხო შეერთებით შეიძლება დაუკავშირდეს. გამონაკლისს ვერ დაამატებთ ამ საიტისთვის.
-    ]]></string>
-
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> იყენებს უსაფრთხოების დებულებას სახელწოდებით HTTP Strict Transport Security (HSTS), ეს კი ნიშნავს, რომ <b>%2$s</b> მას მხოლოდ უსაფრთხო შეერთებით შეიძლება დაუკავშირდეს. გამონაკლისს ვერ დაამატებთ ამ საიტისთვის. </label>
     ]]></string>
@@ -123,7 +118,7 @@
     <string name="mozac_browser_errorpages_port_blocked_title">პორტი შეზღუდულია უსაფრთხოების მიზნით</string>
 
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
-    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>მოთხოვნილ მისამართში მითითებულია პორტი (მაგ., <q>mozilla.org:80</q> ანუ პორტი 80 mozilla.org საიტზე) რომელიც, ჩვეულებრივ <em>სხვა მიზნით</em> გამოიყენება ხოლმე და არა ვებგვერდების მოსანახულებლად. თქვენი უსაფრთხოებისთვის, ბრაუზერმა ეს მოთხოვნა გააუქმა.</p>]]></string>
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>მოთხოვნილ მისამართში მითითებულია პორტი (მაგ., <q>mozilla.org:80</q> ანუ პორტი 80 mozilla.org საიტზე) რომელიც, ჩვეულებრივ <em>სხვა მიზნით</em> გამოიყენება ხოლმე და არა ვებგვერდების მოსანახულებლად. თქვენი უსაფრთხოებისთვის ბრაუზერმა ეს მოთხოვნა გააუქმა.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">კავშირი განულდა</string>
@@ -270,7 +265,7 @@
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">უსაფრთხო საიტი მიუწვდომელია</string>
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
-    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[თქვენ ჩართული გაქვთ მხოლოდ-HTTPS-რეჟიმი მაღალი უსაფრთხოებისთვის, მაგრამ <em>%1$s</em> არაა წარმოდგენილი დაცული HTTPS-ვერსიით.]]></string>
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[თქვენ ჩართული გაქვთ მხოლოდ-HTTPS-რეჟიმი მაღალი უსაფრთხოებისთვის მაგრამ <em>%1$s</em> არაა წარმოდგენილი დაცული HTTPS-ვერსიით.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">გადასვლა HTTP-საიტზე</string>
 </resources>

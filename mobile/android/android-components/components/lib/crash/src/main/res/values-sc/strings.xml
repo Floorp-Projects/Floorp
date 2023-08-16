@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_dialog_title">%1$s at tentu unu problema e est faddidu.</string>
+
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_crash_dialog_checkbox">Imbia s’informe de faddina a %1$s</string>
 
@@ -13,6 +16,9 @@
     <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_lib_crash_channel">Faddinas</string>
 
+    <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_background_process_notification_title">Ddoe est istada una faddina in %1$s.</string>
+
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">Sinnala</string>
 
@@ -21,6 +27,9 @@
 
     <!-- Label of notification showing that the crash handling service is gathering the crash data. -->
     <string name="mozac_lib_gathering_crash_data_in_progress">Regollende datos de sa faddina</string>
+
+    <!-- Label of notification showing that the telemetry service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_telemetry_in_progress">Si sunt regollende is datos de telemetria de sa faddina</string>
 
     <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
     <string name="mozac_lib_crash_activity_title">Informes de faddinas</string>
