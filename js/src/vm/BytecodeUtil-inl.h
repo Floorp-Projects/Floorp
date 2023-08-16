@@ -10,6 +10,7 @@
 #include "vm/BytecodeUtil.h"
 
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberOffset
 #include "vm/JSScript.h"
 
 namespace js {
@@ -118,7 +119,7 @@ class BytecodeRangeWithPosition : private BytecodeRange {
       : BytecodeRange(cx, script),
         initialLine(script->lineno()),
         lineno(script->lineno()),
-        column(script->column().zeroOriginValue()),
+        column(script->column()),
         sn(script->notes()),
         snpc(script->code()),
         isEntryPoint(false),
@@ -163,7 +164,7 @@ class BytecodeRangeWithPosition : private BytecodeRange {
   }
 
   uint32_t frontLineNumber() const { return lineno; }
-  uint32_t frontColumnNumber() const { return column; }
+  JS::LimitedColumnNumberZeroOrigin frontColumnNumber() const { return column; }
 
   // Entry points are restricted to bytecode offsets that have an
   // explicit mention in the line table.  This restriction avoids a
@@ -202,16 +203,16 @@ class BytecodeRangeWithPosition : private BytecodeRange {
       SrcNoteType type = sn->type();
       if (type == SrcNoteType::ColSpan) {
         ptrdiff_t colspan = SrcNote::ColSpan::getSpan(sn);
-        MOZ_ASSERT(ptrdiff_t(column) + colspan >= 0);
-        column += colspan;
+        MOZ_ASSERT(ptrdiff_t(column.zeroOriginValue()) + colspan >= 0);
+        column += JS::ColumnNumberOffset(colspan);
         lastLinePC = snpc;
       } else if (type == SrcNoteType::SetLine) {
         lineno = SrcNote::SetLine::getLine(sn, initialLine);
-        column = 0;
+        column = JS::LimitedColumnNumberZeroOrigin::zero();
         lastLinePC = snpc;
       } else if (type == SrcNoteType::NewLine) {
         lineno++;
-        column = 0;
+        column = JS::LimitedColumnNumberZeroOrigin::zero();
         lastLinePC = snpc;
       } else if (type == SrcNoteType::Breakpoint) {
         isBreakpoint = true;
@@ -231,8 +232,8 @@ class BytecodeRangeWithPosition : private BytecodeRange {
   // Line number (1-origin).
   uint32_t lineno;
 
-  // Column number in UTF-16 code units (0-origin).
-  uint32_t column;
+  // Column number in UTF-16 code units.
+  JS::LimitedColumnNumberZeroOrigin column;
 
   const SrcNote* sn;
   jsbytecode* snpc;
