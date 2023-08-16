@@ -733,11 +733,11 @@ bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
 
   if (index.isWellKnownAtomId()) {
     switch (index.toWellKnownAtomId()) {
-      case WellKnownAtomId::ArrayBufferSpecies:
-      case WellKnownAtomId::ArraySpecies:
-      case WellKnownAtomId::ArrayValues:
-      case WellKnownAtomId::RegExpFlagsGetter:
-      case WellKnownAtomId::RegExpToString: {
+      case WellKnownAtomId::dollar_ArrayBufferSpecies_:
+      case WellKnownAtomId::dollar_ArraySpecies_:
+      case WellKnownAtomId::dollar_ArrayValues_:
+      case WellKnownAtomId::dollar_RegExpFlagsGetter_:
+      case WellKnownAtomId::dollar_RegExpToString_: {
 #ifdef DEBUG
         const auto& info = GetWellKnownAtomInfo(index.toWellKnownAtomId());
         MOZ_ASSERT(info.content[0] ==

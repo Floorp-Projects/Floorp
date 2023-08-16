@@ -591,7 +591,7 @@ bool js::MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
 /* static */
 bool ArgumentsObject::getArgumentsIterator(JSContext* cx,
                                            MutableHandleValue val) {
-  Handle<PropertyName*> shName = cx->names().ArrayValues;
+  Handle<PropertyName*> shName = cx->names().dollar_ArrayValues_;
   Rooted<JSAtom*> name(cx, cx->names().values);
   return GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, 0,
                                              val);

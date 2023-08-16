@@ -1032,7 +1032,7 @@ static MOZ_ALWAYS_INLINE bool IsArraySpecies(JSContext* cx,
     return false;
   }
 
-  return IsSelfHostedFunctionWithName(getter, cx->names().ArraySpecies);
+  return IsSelfHostedFunctionWithName(getter, cx->names().dollar_ArraySpecies_);
 }
 
 static bool ArraySpeciesCreate(JSContext* cx, HandleObject origArray,
@@ -5375,7 +5375,8 @@ void js::ArraySpeciesLookup::initialize(JSContext* cx) {
     return;
   }
   JSFunction* speciesFun = &speciesGetter->as<JSFunction>();
-  if (!IsSelfHostedFunctionWithName(speciesFun, cx->names().ArraySpecies)) {
+  if (!IsSelfHostedFunctionWithName(speciesFun,
+                                    cx->names().dollar_ArraySpecies_)) {
     return;
   }
 

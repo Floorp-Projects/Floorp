@@ -5590,7 +5590,8 @@ static bool IsArrayPrototypeOptimizable(JSContext* cx, ArrayObject* arr,
   }
 
   *iterFun = &iterVal.toObject().as<JSFunction>();
-  return IsSelfHostedFunctionWithName(*iterFun, cx->names().ArrayValues);
+  return IsSelfHostedFunctionWithName(*iterFun,
+                                      cx->names().dollar_ArrayValues_);
 }
 
 static bool IsArrayIteratorPrototypeOptimizable(JSContext* cx,
