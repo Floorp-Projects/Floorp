@@ -36,6 +36,9 @@ class SocketProcessBackgroundParent final
       const int32_t& aPort, const uint32_t& aProviderFlags,
       const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
       nsTArray<ByteArray>&& aCANames);
+  mozilla::ipc::IPCResult RecvInitWebSocketConnection(
+      Endpoint<PWebSocketConnectionParent>&& aEndpoint,
+      const uint32_t& aListenerId);
 
   void ActorDestroy(ActorDestroyReason aReason) override;
 

@@ -7,7 +7,6 @@
 #include "WebSocketLog.h"
 #include "WebSocketConnectionParent.h"
 
-#include "nsIHttpChannelInternal.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsSerializationHelper.h"
 #include "nsThreadUtils.h"
@@ -103,6 +102,10 @@ void WebSocketConnectionParent::ActorDestroy(ActorDestroyReason aWhy) {
       listener->OnError(NS_ERROR_FAILURE);
     }
   }
+  mBackgroundThread->Dispatch(NS_NewRunnableFunction(
+      "WebSocketConnectionParent::DefereredDestroy", [self = RefPtr{this}]() {
+        LOG(("WebSocketConnectionParent::DefereredDestroy"));
+      }));
 };
 
 nsresult WebSocketConnectionParent::Init(
@@ -123,7 +126,9 @@ void WebSocketConnectionParent::Close() {
 
   mClosed = true;
 
-  auto task = [self = RefPtr{this}]() { Unused << self->Send__delete__(self); };
+  auto task = [self = RefPtr{this}]() {
+    self->PWebSocketConnectionParent::Close();
+  };
 
   if (mBackgroundThread->IsOnCurrentThread()) {
     task();
