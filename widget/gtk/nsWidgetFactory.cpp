@@ -64,7 +64,5 @@ void nsWidgetGtk2ModuleDtor() {
   KeymapWrapper::Shutdown();
   nsGTKToolkit::Shutdown();
   nsAppShellShutdown();
-#ifdef MOZ_ENABLE_DBUS
   WakeLockListener::Shutdown();
-#endif
 }
