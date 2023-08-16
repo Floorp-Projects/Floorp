@@ -199,7 +199,6 @@ class EventListenerManager final : public EventListenerManagerBase {
     EventListenerManager* mListenerManager;
     EventListenerHolder mListener;
     RefPtr<nsAtom> mTypeAtom;
-    EventMessage mEventMessage;
     bool mAllEvents;
     EventListenerFlags mFlags;
   };
@@ -207,7 +206,6 @@ class EventListenerManager final : public EventListenerManagerBase {
   struct Listener {
     RefPtr<ListenerSignalFollower> mSignalFollower;
     EventListenerHolder mListener;
-    EventMessage mEventMessage;
 
     enum ListenerType : uint8_t {
       // No listener.
@@ -235,8 +233,7 @@ class EventListenerManager final : public EventListenerManagerBase {
     }
 
     Listener()
-        : mEventMessage(eVoidEvent),
-          mListenerType(eNoListener),
+        : mListenerType(eNoListener),
           mListenerIsHandler(false),
           mHandlerIsString(false),
           mAllEvents(false),
@@ -245,13 +242,11 @@ class EventListenerManager final : public EventListenerManagerBase {
     Listener(Listener&& aOther)
         : mSignalFollower(std::move(aOther.mSignalFollower)),
           mListener(std::move(aOther.mListener)),
-          mEventMessage(aOther.mEventMessage),
           mListenerType(aOther.mListenerType),
           mListenerIsHandler(aOther.mListenerIsHandler),
           mHandlerIsString(aOther.mHandlerIsString),
           mAllEvents(aOther.mAllEvents),
           mEnabled(aOther.mEnabled) {
-      aOther.mEventMessage = eVoidEvent;
       aOther.mListenerType = eNoListener;
       aOther.mListenerIsHandler = false;
       aOther.mHandlerIsString = false;
@@ -666,9 +661,9 @@ class EventListenerManager final : public EventListenerManagerBase {
                                     const TypedEventHandler& aHandler,
                                     bool aPermitUntrustedEvents);
 
-  bool IsDeviceType(EventMessage aEventMessage);
-  void EnableDevice(EventMessage aEventMessage);
-  void DisableDevice(EventMessage aEventMessage);
+  bool IsDeviceType(nsAtom* aTypeAtom);
+  void EnableDevice(nsAtom* aTypeAtom);
+  void DisableDevice(nsAtom* aTypeAtom);
 
   bool HasListenersForInternal(nsAtom* aEventNameWithOn,
                                bool aIgnoreSystemGroup) const;
@@ -714,7 +709,7 @@ class EventListenerManager final : public EventListenerManagerBase {
 
  private:
   already_AddRefed<nsPIDOMWindowInner> WindowFromListener(
-      Listener* aListener, bool aItemInShadowTree);
+      Listener* aListener, nsAtom* aTypeAtom, bool aItemInShadowTree);
 
  protected:
   /**
@@ -740,7 +735,6 @@ class EventListenerManager final : public EventListenerManagerBase {
                                 bool aHandler = false, bool aAllEvents = false,
                                 dom::AbortSignal* aSignal = nullptr);
   void RemoveEventListenerInternal(EventListenerHolder aListener,
-                                   EventMessage aEventMessage,
                                    nsAtom* aUserType,
                                    const EventListenerFlags& aFlags,
                                    bool aAllEvents = false);
