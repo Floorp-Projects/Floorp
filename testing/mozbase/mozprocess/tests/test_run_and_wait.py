@@ -16,6 +16,7 @@ def kill(proc):
         proc.send_signal(signal.CTRL_BREAK_EVENT)
     else:
         os.killpg(proc.pid, signal.SIGKILL)
+    proc.wait()
 
 
 class ProcTestSimpleRunAndWait(proctest.ProcTest):
