@@ -464,7 +464,6 @@
   MACRO_(reject, "reject")                                                     \
   MACRO_(rejected, "rejected")                                                 \
   MACRO_(relatedYear, "relatedYear")                                           \
-  MACRO_(RelativeTimeFormatFormat, "Intl_RelativeTimeFormat_Format")           \
   MACRO_(relativeTo, "relativeTo")                                             \
   MACRO_(RequireObjectCoercible, "RequireObjectCoercible")                     \
   MACRO_(resolve, "resolve")                                                   \
@@ -501,7 +500,6 @@
   MACRO_(source, "source")                                                     \
   MACRO_(SpeciesConstructor, "SpeciesConstructor")                             \
   MACRO_(stack, "stack")                                                       \
-  MACRO1(star, "*")                                                            \
   MACRO_(star_namespace_star_, "*namespace*")                                  \
   MACRO_(start, "start")                                                       \
   MACRO_(startRange, "startRange")                                             \
@@ -518,7 +516,6 @@
   MACRO_(super, "super")                                                       \
   MACRO_(switch_, "switch")                                                    \
   MACRO_(symmetricDifference, "symmetricDifference")                           \
-  MACRO_(Symbol_iterator_fun, "[Symbol.iterator]")                             \
   MACRO_(target, "target")                                                     \
   MACRO_(test, "test")                                                         \
   MACRO_(then, "then")                                                         \
