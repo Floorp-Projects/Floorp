@@ -133,7 +133,8 @@ class Highlight final : public nsISupports, public nsWrapperCache {
   }
 
   /**
-   * @brief This mirrors the `size` property in JS world (_not_ exposed via webIDL)
+   * @brief This mirrors the `size` property in JS world (_not_ exposed via
+   * webIDL)
    */
   uint32_t Size() const { return mRanges.Length(); }
 
