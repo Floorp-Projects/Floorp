@@ -107,7 +107,9 @@ async function checkEventsForNode(test, inspector) {
     const header = headers[i];
     const type = header.querySelector(".event-tooltip-event-type");
     const filename = header.querySelector(".event-tooltip-filename");
-    const attributes = header.querySelectorAll(".event-tooltip-attributes");
+    const attributes = Array.from(
+      header.querySelectorAll(".event-tooltip-attributes")
+    );
     const contentBox = header.nextElementSibling;
 
     info("Looking for " + type.textContent);
@@ -119,19 +121,11 @@ async function checkEventsForNode(test, inspector) {
       "filename matches for " + cssSelector
     );
 
-    is(
-      attributes.length,
-      expected[i].attributes.length,
-      "we have the correct number of attributes"
+    Assert.deepEqual(
+      attributes.map(el => el.textContent),
+      expected[i].attributes,
+      `we have the expected attributes for "${cssSelector}"`
     );
-
-    for (let j = 0; j < expected[i].attributes.length; j++) {
-      is(
-        attributes[j].textContent,
-        expected[i].attributes[j],
-        "attribute[" + j + "] matches for " + cssSelector
-      );
-    }
 
     is(
       header.classList.contains("content-expanded"),
@@ -192,6 +186,75 @@ async function checkEventsForNode(test, inspector) {
   const tooltipHidden = tooltip.once("hidden");
   tooltip.hide();
   await tooltipHidden;
+}
+
+/**
+ * This should be kept in sync with the content of the window load event listener callback
+ * content in doc_markup_events_jquery.html.
+ */
+function getDocMarkupEventsJQueryLoadHandlerText() {
+  return `
+          () => {
+            const handler1 = function liveDivDblClick() {
+              alert(1);
+            };
+            const handler2 = function liveDivDragStart() {
+              alert(2);
+            };
+            const handler3 = function liveDivDragLeave() {
+              alert(3);
+            };
+            const handler4 = function liveDivDragEnd() {
+              alert(4);
+            };
+            const handler5 = function liveDivDrop() {
+              alert(5);
+            };
+            const handler6 = function liveDivDragOver() {
+              alert(6);
+            };
+            const handler7 = function divClick1() {
+              alert(7);
+            };
+            const handler8 = function divClick2() {
+              alert(8);
+            };
+            const handler9 = function divKeyDown() {
+              alert(9);
+            };
+            const handler10 = function divDragOut() {
+              alert(10);
+            };
+
+            if ($("#livediv").live) {
+              $("#livediv").live("dblclick", handler1);
+              $("#livediv").live("dragstart", handler2);
+            }
+
+            if ($("#livediv").delegate) {
+              $(document).delegate("#livediv", "dragleave", handler3);
+              $(document).delegate("#livediv", "dragend", handler4);
+            }
+
+            if ($("#livediv").on) {
+              $(document).on("drop", "#livediv", handler5);
+              $(document).on("dragover", "#livediv", handler6);
+              $(document).on("dragout", "#livediv:xxxxx", handler10);
+            }
+
+            const div = $("div")[0];
+            $(div).click(handler7);
+            $(div).click(handler8);
+            $(div).keydown(handler9);
+
+            class MyClass {
+              constructor() {
+                $(document).on("click", '#inclassboundeventdiv', this.onClick.bind(this));
+              }
+              onClick() { alert(11); }
+            }
+            new MyClass();
+          }`;
 }
 
 /**
