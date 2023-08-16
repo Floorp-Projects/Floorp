@@ -114,15 +114,16 @@ add_task(async function () {
   await waitForPaused(dbg);
 
   findElement(dbg, "frame", 2).focus();
-  await clickElement(dbg, "frame", 2);
+  clickElement(dbg, "frame", 2);
+  await waitForPaused(dbg);
+  await waitForSelectedSource(dbg, "doc-event-handler.html");
 
   // Hover over the token to launch preview popup
   await tryHovering(dbg, 5, 8, "popup");
 
   info("Wait for top level node to expand and child nodes to load");
-  await waitForElementWithSelector(
-    dbg,
-    ".preview-popup .node:first-of-type .arrow.expanded"
+  await waitUntil(
+    () => dbg.win.document.querySelectorAll(".preview-popup .node").length > 1
   );
 
   // Click the first inspector button to view node in inspector
