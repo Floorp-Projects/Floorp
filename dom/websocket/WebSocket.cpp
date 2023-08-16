@@ -8,6 +8,7 @@
 #include "mozilla/dom/WebSocketBinding.h"
 #include "mozilla/net/WebSocketChannel.h"
 
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/Atomics.h"
@@ -1371,7 +1372,8 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 
-    uint32_t lineno, column;
+    uint32_t lineno;
+    JS::ColumnNumberZeroOrigin column;
     JS::AutoFilename file;
     if (!JS::DescribeScriptedCaller(aGlobal.Context(), &file, &lineno,
                                     &column)) {
@@ -1381,7 +1383,8 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     RefPtr<InitRunnable> runnable = new InitRunnable(
         workerPrivate, webSocketImpl,
         workerPrivate->GlobalScope()->GetClientInfo(), !!aTransportProvider,
-        aUrl, protocolArray, nsDependentCString(file.get()), lineno, column);
+        aUrl, protocolArray, nsDependentCString(file.get()), lineno,
+        column.zeroOriginValue());
     runnable->Dispatch(Canceling, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -1608,12 +1611,13 @@ nsresult WebSocketImpl::Init(JSContext* aCx, bool aIsSecure,
   } else {
     MOZ_ASSERT(aCx);
 
-    uint32_t lineno, column;
+    uint32_t lineno;
+    JS::ColumnNumberZeroOrigin column;
     JS::AutoFilename file;
     if (JS::DescribeScriptedCaller(aCx, &file, &lineno, &column)) {
       mScriptFile = file.get();
       mScriptLine = lineno;
-      mScriptColumn = column;
+      mScriptColumn = column.zeroOriginValue();
     }
   }
 
