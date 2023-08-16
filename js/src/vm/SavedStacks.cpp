@@ -829,7 +829,7 @@ JS_PUBLIC_API SavedFrameResult GetSavedFrameLine(
 
 JS_PUBLIC_API SavedFrameResult GetSavedFrameColumn(
     JSContext* cx, JSPrincipals* principals, HandleObject savedFrame,
-    uint32_t* columnp,
+    JS::TaggedColumnNumberOneOrigin* columnp,
     SavedFrameSelfHosted selfHosted /* = SavedFrameSelfHosted::Include */) {
   js::AssertHeapIsIdle();
   CHECK_THREAD(cx);
@@ -840,10 +840,10 @@ JS_PUBLIC_API SavedFrameResult GetSavedFrameColumn(
   Rooted<js::SavedFrame*> frame(cx, UnwrapSavedFrame(cx, principals, savedFrame,
                                                      selfHosted, skippedAsync));
   if (!frame) {
-    *columnp = 0;
+    *columnp = JS::TaggedColumnNumberOneOrigin();
     return SavedFrameResult::AccessDenied;
   }
-  *columnp = frame->getColumn().rawValue();
+  *columnp = frame->getColumn();
   return SavedFrameResult::Ok;
 }
 
@@ -1225,10 +1225,10 @@ bool SavedFrame::lineProperty(JSContext* cx, unsigned argc, Value* vp) {
 bool SavedFrame::columnProperty(JSContext* cx, unsigned argc, Value* vp) {
   THIS_SAVEDFRAME(cx, argc, vp, "(get column)", args, frame);
   JSPrincipals* principals = cx->realm()->principals();
-  uint32_t column;
+  JS::TaggedColumnNumberOneOrigin column;
   if (JS::GetSavedFrameColumn(cx, principals, frame, &column) ==
       JS::SavedFrameResult::Ok) {
-    args.rval().setNumber(column);
+    args.rval().setNumber(column.oneOriginValue());
   } else {
     args.rval().setNull();
   }

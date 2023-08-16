@@ -61,10 +61,10 @@ DEF_TEST(DeserializedStackFrameUbiStackFrames, {
             JS::GetSavedFrameLine(cx, principals, savedFrame, &frameLine));
   EXPECT_EQ(line, frameLine);
 
-  uint32_t frameColumn;
+  JS::TaggedColumnNumberOneOrigin frameColumn;
   ASSERT_EQ(JS::SavedFrameResult::Ok,
             JS::GetSavedFrameColumn(cx, principals, savedFrame, &frameColumn));
-  EXPECT_EQ(column.oneOriginValue(), frameColumn);
+  EXPECT_EQ(column, frameColumn);
 
   JS::Rooted<JSObject*> parent(cx);
   ASSERT_EQ(JS::SavedFrameResult::Ok,
