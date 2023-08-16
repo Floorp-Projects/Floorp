@@ -5005,6 +5005,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void debugAssertObjectHasClass(Register obj, Register scratch,
                                  const JSClass* clasp);
 
+  void debugAssertGCThingIsTenured(Register ptr, Register temp);
+
   void branchArrayIsNotPacked(Register array, Register temp1, Register temp2,
                               Label* label);
 

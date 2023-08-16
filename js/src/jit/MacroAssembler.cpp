@@ -6413,6 +6413,15 @@ void MacroAssembler::debugAssertObjectHasClass(Register obj, Register scratch,
 #endif
 }
 
+void MacroAssembler::debugAssertGCThingIsTenured(Register ptr, Register temp) {
+#ifdef DEBUG
+  Label done;
+  branchPtrInNurseryChunk(Assembler::NotEqual, ptr, temp, &done);
+  assumeUnreachable("Expected a tenured pointer");
+  bind(&done);
+#endif
+}
+
 void MacroAssembler::branchArrayIsNotPacked(Register array, Register temp1,
                                             Register temp2, Label* label) {
   loadPtr(Address(array, NativeObject::offsetOfElements()), temp1);
