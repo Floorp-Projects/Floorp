@@ -756,9 +756,6 @@ pref("print.prefer_system_dialog", false);
 // Print/Preview Shrink-To-Fit won't shrink below 20% for text-ish documents.
 pref("print.shrink-to-fit.scale-limit-percent", 20);
 
-// Whether we should display simplify page checkbox on print preview UI
-pref("print.use_simplify_page", false);
-
 // Whether or not to force the Page Setup submenu of the File menu to shown
 pref("print.show_page_setup_menu", false);
 
