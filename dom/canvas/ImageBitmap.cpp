@@ -590,7 +590,8 @@ static already_AddRefed<SourceSurface> GetSurfaceFromElement(
     const ImageBitmapOptions& aOptions, gfxAlphaType* aAlphaType,
     ErrorResult& aRv) {
   uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
-                   nsLayoutUtils::SFE_ORIENTATION_FROM_IMAGE;
+                   nsLayoutUtils::SFE_ORIENTATION_FROM_IMAGE |
+                   nsLayoutUtils::SFE_EXACT_SIZE_SURFACE;
 
   // by default surfaces have premultiplied alpha
   // attempt to get non premultiplied if required
@@ -930,9 +931,11 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateFromOffscreenCanvas(
     ErrorResult& aRv) {
   // Check write-only mode.
   bool writeOnly = aOffscreenCanvas.IsWriteOnly();
+  uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
+                   nsLayoutUtils::SFE_EXACT_SIZE_SURFACE;
 
-  SurfaceFromElementResult res = nsLayoutUtils::SurfaceFromOffscreenCanvas(
-      &aOffscreenCanvas, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE);
+  SurfaceFromElementResult res =
+      nsLayoutUtils::SurfaceFromOffscreenCanvas(&aOffscreenCanvas, flags);
 
   RefPtr<SourceSurface> surface = res.GetSourceSurface();
 
@@ -1238,7 +1241,8 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
     return nullptr;
   }
 
-  uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE;
+  uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
+                   nsLayoutUtils::SFE_EXACT_SIZE_SURFACE;
 
   // by default surfaces have premultiplied alpha
   // attempt to get non premultiplied if required
