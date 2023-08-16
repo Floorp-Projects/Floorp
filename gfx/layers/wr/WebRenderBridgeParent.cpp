@@ -152,9 +152,7 @@ void gfx_wr_clear_crash_annotation(mozilla::wr::CrashAnnotation aAnnotation) {
 }
 }
 
-namespace mozilla {
-
-namespace layers {
+namespace mozilla::layers {
 
 using namespace mozilla::gfx;
 
@@ -167,7 +165,7 @@ class ScheduleObserveLayersUpdate : public wr::NotificationHandler {
   ScheduleObserveLayersUpdate(RefPtr<CompositorBridgeParentBase> aBridge,
                               LayersId aLayersId, LayersObserverEpoch aEpoch,
                               bool aIsActive)
-      : mBridge(aBridge),
+      : mBridge(std::move(aBridge)),
         mLayersId(aLayersId),
         mObserverEpoch(aEpoch),
         mIsActive(aIsActive) {}
@@ -1931,10 +1929,12 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(true);
   txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
-  txn.Notify(
-      wr::Checkpoint::SceneBuilt,
-      MakeUnique<ScheduleObserveLayersUpdate>(
-          mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch, false));
+  if (ShouldParentObserveEpoch()) {
+    txn.Notify(wr::Checkpoint::SceneBuilt,
+               MakeUnique<ScheduleObserveLayersUpdate>(
+                   mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch,
+                   false));
+  }
   mApi->SendTransaction(txn);
 
   // Schedule generate frame to clean up Pipeline
@@ -2900,5 +2900,4 @@ WebRenderBridgeParentRef::~WebRenderBridgeParentRef() {
   MOZ_ASSERT(!mWebRenderBridge);
 }
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
