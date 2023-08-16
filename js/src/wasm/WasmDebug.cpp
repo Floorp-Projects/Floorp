@@ -93,8 +93,8 @@ bool DebugState::getAllColumnOffsets(Vector<ExprLoc>* offsets) {
   return true;
 }
 
-bool DebugState::getOffsetLocation(uint32_t offset, size_t* lineno,
-                                   size_t* column) {
+bool DebugState::getOffsetLocation(uint32_t offset, uint32_t* lineno,
+                                   uint32_t* column) {
   if (!SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset)) {
     return false;
   }
