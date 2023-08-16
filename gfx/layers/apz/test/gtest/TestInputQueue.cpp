@@ -41,8 +41,8 @@ TEST_F(APZCTreeManagerTester, WheelInterruptedByMouseDrag) {
   apzc->AdvanceAnimationsUntilEnd();
 
   // Check that it scrolled
-  ParentLayerPoint scroll =
-      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+  ParentLayerPoint scroll = apzc->GetCurrentAsyncScrollOffset(
+      AsyncPanZoomController::eForEventHandling);
   EXPECT_EQ(scroll.x, 0);
   EXPECT_EQ(scroll.y, 10);  // We scrolled 1 "line" or 10 pixels
 }

@@ -63,10 +63,11 @@ TEST_F(APZCSnappingTesterMock, Bug1265510) {
   // Advance in 5ms increments until we've scrolled by 70px. At this point, the
   // closest snap point is y=100, and the inner frame should be under the mouse
   // cursor.
-  while (outer
-             ->GetCurrentAsyncScrollOffset(
-                 AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting)
-             .y < 70) {
+  while (
+      outer
+          ->GetCurrentAsyncScrollOffset(
+              AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling)
+          .y < 70) {
     mcc->AdvanceByMillis(5);
     outer->AdvanceAnimations(mcc->GetSampleTime());
   }
@@ -82,7 +83,7 @@ TEST_F(APZCSnappingTesterMock, Bug1265510) {
       0.0f,
       inner
           ->GetCurrentAsyncScrollOffset(
-              AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting)
+              AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling)
           .y);
 
   // However, the outer frame should also continue to the snap point, otherwise
@@ -93,7 +94,7 @@ TEST_F(APZCSnappingTesterMock, Bug1265510) {
       100.0f,
       outer
           ->GetCurrentAsyncScrollOffset(
-              AsyncPanZoomController::AsyncTransformConsumer::eForHitTesting)
+              AsyncPanZoomController::AsyncTransformConsumer::eForEventHandling)
           .y);
 }
 
@@ -217,10 +218,10 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithZeroVelocity) {
   apzc->AdvanceAnimationsUntilEnd();
   // The snapped position should be 30 rather than 100 because it's the nearest
   // snap point.
-  EXPECT_EQ(
-      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
-          .y,
-      30);
+  EXPECT_EQ(apzc->GetCurrentAsyncScrollOffset(
+                    AsyncPanZoomController::eForEventHandling)
+                .y,
+            30);
 }
 
 // Smililar to above SnapOnPanEndWithZeroVelocity but with positive velocity so
@@ -298,9 +299,9 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithPositiveVelocity) {
   apzc->AssertStateIsSmoothMsdScroll();
 
   apzc->AdvanceAnimationsUntilEnd();
-  EXPECT_EQ(
-      apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting)
-          .y,
-      100);
+  EXPECT_EQ(apzc->GetCurrentAsyncScrollOffset(
+                    AsyncPanZoomController::eForEventHandling)
+                .y,
+            100);
 }
 #endif

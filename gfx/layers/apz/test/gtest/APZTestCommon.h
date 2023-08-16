@@ -432,10 +432,10 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
     bool ret = AdvanceAnimations(mcc->GetSampleTime());
     if (aOutTransform) {
       *aOutTransform =
-          GetCurrentAsyncTransform(AsyncPanZoomController::eForHitTesting);
+          GetCurrentAsyncTransform(AsyncPanZoomController::eForEventHandling);
     }
     aScrollOffset =
-        GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting);
+        GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForEventHandling);
     return ret;
   }
 
