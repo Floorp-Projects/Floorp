@@ -7808,7 +7808,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     }
 
     if (handler_.isPrivateName(propName)) {
-      if (propAtom == TaggedParserAtomIndex::WellKnown::hashConstructor()) {
+      if (propAtom == TaggedParserAtomIndex::WellKnown::hash_constructor_()) {
         errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
         return false;
       }
@@ -8039,7 +8039,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
   Maybe<FunctionNodeType> initializerIfPrivate = Nothing();
   if (handler_.isPrivateName(propName)) {
-    if (propAtom == TaggedParserAtomIndex::WellKnown::hashConstructor()) {
+    if (propAtom == TaggedParserAtomIndex::WellKnown::hash_constructor_()) {
       // #constructor is an invalid private name.
       errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
       return false;

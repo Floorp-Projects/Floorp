@@ -248,7 +248,7 @@
   MACRO_(h24, "h24")                                                           \
   MACRO_(Handle, "Handle")                                                     \
   MACRO_(has, "has")                                                           \
-  MACRO_(hashConstructor, "#constructor")                                      \
+  MACRO_(hash_constructor_, "#constructor")                                    \
   MACRO_(hasIndices, "hasIndices")                                             \
   MACRO_(hasOwn, "hasOwn")                                                     \
   MACRO_(hasOwnProperty, "hasOwnProperty")                                     \
