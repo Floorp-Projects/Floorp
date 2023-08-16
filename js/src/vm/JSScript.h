@@ -2233,12 +2233,14 @@ void maybeSpewScriptFinalWarmUpCount(JSScript* script);
 
 namespace js {
 
-extern unsigned PCToLineNumber(JSScript* script, jsbytecode* pc,
-                               unsigned* columnp = nullptr);
+extern unsigned PCToLineNumber(
+    JSScript* script, jsbytecode* pc,
+    JS::LimitedColumnNumberZeroOrigin* columnp = nullptr);
 
-extern unsigned PCToLineNumber(unsigned startLine, unsigned startCol,
-                               SrcNote* notes, jsbytecode* code, jsbytecode* pc,
-                               unsigned* columnp = nullptr);
+extern unsigned PCToLineNumber(
+    unsigned startLine, JS::LimitedColumnNumberZeroOrigin startCol,
+    SrcNote* notes, jsbytecode* code, jsbytecode* pc,
+    JS::LimitedColumnNumberZeroOrigin* columnp = nullptr);
 
 /*
  * This function returns the file and line number of the script currently

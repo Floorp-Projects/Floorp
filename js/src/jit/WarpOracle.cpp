@@ -22,6 +22,7 @@
 #include "jit/TrialInlining.h"
 #include "jit/TypeData.h"
 #include "jit/WarpBuilder.h"
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin
 #include "util/DifferentialTesting.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/BytecodeIterator.h"
@@ -730,12 +731,13 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
 }
 
 static void LineNumberAndColumn(HandleScript script, BytecodeLocation loc,
-                                unsigned* line, unsigned* column) {
+                                unsigned* line,
+                                JS::LimitedColumnNumberZeroOrigin* column) {
 #ifdef DEBUG
   *line = PCToLineNumber(script, loc.toRawBytecode(), column);
 #else
   *line = script->lineno();
-  *column = script->column().zeroOriginValue();
+  *column = script->column();
 #endif
 }
 
@@ -773,7 +775,8 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   fallbackStub->clearUsedByTranspiler();
 
   if (firstStub == fallbackStub) {
-    [[maybe_unused]] unsigned line, column;
+    [[maybe_unused]] unsigned line;
+    [[maybe_unused]] JS::LimitedColumnNumberZeroOrigin column;
     LineNumberAndColumn(script_, loc, &line, &column);
 
     // No optimized stubs.
@@ -781,7 +784,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
             "fallback stub (entered-count: %" PRIu32
             ") for JSOp::%s @ %s:%u:%u",
             fallbackStub->enteredCount(), CodeName(loc.getOp()),
-            script_->filename(), line, column);
+            script_->filename(), line, column.zeroOriginValue());
 
     // If the fallback stub was used but there's no optimized stub, use an IC.
     if (fallbackStub->enteredCount() != 0) {
@@ -800,11 +803,13 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   // Don't transpile if this IC ever encountered a case where it had
   // no stub to attach.
   if (fallbackStub->state().hasFailures()) {
-    [[maybe_unused]] unsigned line, column;
+    [[maybe_unused]] unsigned line;
+    [[maybe_unused]] JS::LimitedColumnNumberZeroOrigin column;
     LineNumberAndColumn(script_, loc, &line, &column);
 
     JitSpew(JitSpew_WarpTranspiler, "Failed to attach for JSOp::%s @ %s:%u:%u",
-            CodeName(loc.getOp()), script_->filename(), line, column);
+            CodeName(loc.getOp()), script_->filename(), line,
+            column.zeroOriginValue());
     return Ok();
   }
 
@@ -835,12 +840,14 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
       }
     }
 
-    [[maybe_unused]] unsigned line, column;
+    [[maybe_unused]] unsigned line;
+    [[maybe_unused]] JS::LimitedColumnNumberZeroOrigin column;
     LineNumberAndColumn(script_, loc, &line, &column);
 
     JitSpew(JitSpew_WarpTranspiler,
             "multiple active stubs for JSOp::%s @ %s:%u:%u",
-            CodeName(loc.getOp()), script_->filename(), line, column);
+            CodeName(loc.getOp()), script_->filename(), line,
+            column.zeroOriginValue());
     return Ok();
   }
 
@@ -855,7 +862,8 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     reader.skip(opInfo.argLength);
 
     if (!opInfo.transpile) {
-      [[maybe_unused]] unsigned line, column;
+      [[maybe_unused]] unsigned line;
+      [[maybe_unused]] JS::LimitedColumnNumberZeroOrigin column;
       LineNumberAndColumn(script_, loc, &line, &column);
 
       MOZ_ASSERT(
@@ -866,7 +874,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
       JitSpew(JitSpew_WarpTranspiler,
               "unsupported CacheIR opcode %s for JSOp::%s @ %s:%u:%u",
               CacheIROpNames[size_t(op)], CodeName(loc.getOp()),
-              script_->filename(), line, column);
+              script_->filename(), line, column.zeroOriginValue());
       return Ok();
     }
 
