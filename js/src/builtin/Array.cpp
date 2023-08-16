@@ -1265,7 +1265,7 @@ bool js::array_join(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (detector.foundCycle()) {
-    args.rval().setString(cx->names().empty);
+    args.rval().setString(cx->names().empty_);
     return true;
   }
 
@@ -1392,7 +1392,7 @@ static bool array_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
 
   // Avoid calling into self-hosted code if the array is empty.
   if (obj->is<ArrayObject>() && obj->as<ArrayObject>().length() == 0) {
-    args.rval().setString(cx->names().empty);
+    args.rval().setString(cx->names().empty_);
     return true;
   }
 
@@ -1402,7 +1402,7 @@ static bool array_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (detector.foundCycle()) {
-    args.rval().setString(cx->names().empty);
+    args.rval().setString(cx->names().empty_);
     return true;
   }
 

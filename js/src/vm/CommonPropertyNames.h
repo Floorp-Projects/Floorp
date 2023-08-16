@@ -156,7 +156,7 @@
   MACRO_(element, "element")                                                   \
   MACRO_(elementType, "elementType")                                           \
   MACRO_(else_, "else")                                                        \
-  MACRO0(empty, "")                                                            \
+  MACRO0(empty_, "")                                                           \
   MACRO_(emptyRegExp, "(?:)")                                                  \
   MACRO_(encodeURI, "encodeURI")                                               \
   MACRO_(encodeURIComponent, "encodeURIComponent")                             \

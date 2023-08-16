@@ -899,7 +899,7 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
     filename =
         JS_NewStringCopyUTF8Z(cx, JS::ConstUTF8CharsZ(chars, strlen(chars)));
   } else {
-    filename = cx->names().empty;
+    filename = cx->names().empty_;
   }
   if (!filename) {
     return;

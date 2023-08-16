@@ -3763,7 +3763,7 @@ bool CacheIRCompiler::emitLoadFunctionNameResult(ObjOperandId objId) {
     return false;
   }
 
-  masm.loadFunctionName(obj, scratch, ImmGCPtr(cx_->names().empty),
+  masm.loadFunctionName(obj, scratch, ImmGCPtr(cx_->names().empty_),
                         failure->label());
 
   masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());

@@ -3644,7 +3644,7 @@ void frontend::DumpTaggedParserAtomIndex(js::JSONPrinter& json,
     json.property("tag", "WellKnown");
     auto index = taggedIndex.toWellKnownAtomId();
     switch (index) {
-      case WellKnownAtomId::empty:
+      case WellKnownAtomId::empty_:
         json.property("atom", "");
         break;
 
@@ -3722,7 +3722,7 @@ void frontend::DumpTaggedParserAtomIndexNoQuote(
   if (taggedIndex.isWellKnownAtomId()) {
     auto index = taggedIndex.toWellKnownAtomId();
     switch (index) {
-      case WellKnownAtomId::empty:
+      case WellKnownAtomId::empty_:
         out.put("#<zero-length name>");
         break;
 

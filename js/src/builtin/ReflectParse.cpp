@@ -1385,7 +1385,7 @@ class ASTSerializer {
   DebugOnly<uint32_t> lineno;
 
   Value unrootedAtomContents(JSAtom* atom) {
-    return StringValue(atom ? atom : cx->names().empty);
+    return StringValue(atom ? atom : cx->names().empty_);
   }
 
   BinaryOperator binop(ParseNodeKind kind);

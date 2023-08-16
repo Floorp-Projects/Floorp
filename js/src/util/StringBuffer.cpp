@@ -122,7 +122,7 @@ JSLinearString* JSStringBuilder::finishString() {
 
   size_t len = length();
   if (len == 0) {
-    return maybeCx_->names().empty;
+    return maybeCx_->names().empty_;
   }
 
   if (MOZ_UNLIKELY(!JSString::validateLength(maybeCx_, len))) {
@@ -143,7 +143,7 @@ JSAtom* StringBuffer::finishAtom() {
 
   size_t len = length();
   if (len == 0) {
-    return maybeCx_->names().empty;
+    return maybeCx_->names().empty_;
   }
 
   if (isLatin1()) {

@@ -14,7 +14,7 @@
 
 inline JSString* js::ErrorObject::fileName(JSContext* cx) const {
   Value val = getReservedSlot(FILENAME_SLOT);
-  return val.isString() ? val.toString() : cx->names().empty;
+  return val.isString() ? val.toString() : cx->names().empty_;
 }
 
 inline uint32_t js::ErrorObject::sourceId() const {

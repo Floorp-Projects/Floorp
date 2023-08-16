@@ -117,7 +117,7 @@ inline JSAtom* JSFunction::infallibleGetUnresolvedName(JSContext* cx) {
     return name;
   }
 
-  return cx->names().empty;
+  return cx->names().empty_;
 }
 
 /* static */ inline bool JSFunction::getAllocKindForThis(

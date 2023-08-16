@@ -267,7 +267,7 @@ JSAtom* WasmFrameIter::functionDisplayAtom() const {
   JSAtom* atom = instance()->getFuncDisplayAtom(cx, codeRange_->funcIndex());
   if (!atom) {
     cx->clearPendingException();
-    return cx->names().empty;
+    return cx->names().empty_;
   }
 
   return atom;

@@ -2232,7 +2232,7 @@ void CreateDependentString::generate(MacroAssembler& masm,
 
   // Zero length matches use the empty string.
   masm.branchTest32(Assembler::NonZero, temp1_, temp1_, &nonEmpty);
-  masm.movePtr(ImmGCPtr(names.empty), string_);
+  masm.movePtr(ImmGCPtr(names.empty_), string_);
   masm.jump(&done);
 
   masm.bind(&nonEmpty);
@@ -8564,7 +8564,7 @@ void CodeGenerator::visitFunctionName(LFunctionName* lir) {
   Label bail;
 
   const JSAtomState& names = gen->runtime->names();
-  masm.loadFunctionName(function, output, ImmGCPtr(names.empty), &bail);
+  masm.loadFunctionName(function, output, ImmGCPtr(names.empty_), &bail);
 
   bailoutFrom(&bail, lir->snapshot());
 }
@@ -11618,7 +11618,7 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   // Zero length, return emptystring.
   masm.branchTest32(Assembler::NonZero, length, length, &nonZero);
   const JSAtomState& names = gen->runtime->names();
-  masm.movePtr(ImmGCPtr(names.empty), output);
+  masm.movePtr(ImmGCPtr(names.empty_), output);
   masm.jump(done);
 
   // Substring from 0..|str.length|, return str.
@@ -12058,7 +12058,7 @@ void CodeGenerator::visitCharAtMaybeOutOfBounds(LCharAtMaybeOutOfBounds* lir) {
 
   // Return the empty string for out-of-bounds access.
   const JSAtomState& names = gen->runtime->names();
-  masm.movePtr(ImmGCPtr(names.empty), output);
+  masm.movePtr(ImmGCPtr(names.empty_), output);
 
   masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
                             temp0, oolFromCharCode->rejoin());
@@ -13614,7 +13614,7 @@ void CodeGenerator::visitArrayJoin(LArrayJoin* lir) {
     Label notEmpty;
     masm.branch32(Assembler::NotEqual, length, Imm32(0), &notEmpty);
     const JSAtomState& names = gen->runtime->names();
-    masm.movePtr(ImmGCPtr(names.empty), output);
+    masm.movePtr(ImmGCPtr(names.empty_), output);
     masm.jump(&skipCall);
 
     masm.bind(&notEmpty);

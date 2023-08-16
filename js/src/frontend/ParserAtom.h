@@ -186,7 +186,7 @@ class TaggedParserAtomIndex {
 #undef METHOD_
 
     static constexpr TaggedParserAtomIndex empty() {
-      return TaggedParserAtomIndex(WellKnownAtomId::empty);
+      return TaggedParserAtomIndex(WellKnownAtomId::empty_);
     }
   };
 
@@ -232,7 +232,7 @@ class TaggedParserAtomIndex {
 #undef METHOD_
 
     static constexpr uint32_t empty() {
-      return uint32_t(WellKnownAtomId::empty) | WellKnownTag | WellKnownSubTag;
+      return uint32_t(WellKnownAtomId::empty_) | WellKnownTag | WellKnownSubTag;
     }
   };
 
