@@ -7,10 +7,15 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   notifyNavigationStarted:
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NetworkListener:
     "chrome://remote/content/shared/listeners/NetworkListener.sys.mjs",
+  parseURLPattern:
+    "chrome://remote/content/shared/webdriver/URLPattern.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
@@ -94,6 +99,7 @@ const InitiatorType = {
   Preflight: "preflight",
   Script: "script",
 };
+
 /**
  * @typedef {object} Initiator
  * @property {InitiatorType} type
@@ -101,6 +107,24 @@ const InitiatorType = {
  * @property {number=} lineNumber
  * @property {string=} request
  * @property {StackTrace=} stackTrace
+ */
+
+/**
+ * Enum of intercept phases.
+ *
+ * @readonly
+ * @enum {InterceptPhase}
+ */
+const InterceptPhase = {
+  AuthRequired: "authRequired",
+  BeforeRequestSent: "beforeRequestSent",
+  ResponseStarted: "responseStarted",
+};
+
+/**
+ * @typedef {object} InterceptProperties
+ * @property {Array<InterceptPhase>} phases
+ * @property {Array<URLPattern>} urlPatterns
  */
 
 /**
@@ -170,6 +194,26 @@ const InitiatorType = {
  * @property {ResponseData} response
  */
 
+/**
+ * @typedef {object} URLPatternPattern
+ * @property {'pattern'} type
+ * @property {string=} protocol
+ * @property {string=} hostname
+ * @property {string=} port
+ * @property {string=} pathname
+ * @property {string=} search
+ */
+
+/**
+ * @typedef {object} URLPatternString
+ * @property {'string'} type
+ * @property {string} pattern
+ */
+
+/**
+ * @typedef {(URLPatternPattern|URLPatternString)} URLPattern
+ */
+
 /* eslint-disable jsdoc/valid-types */
 /**
  * Parameters for the ResponseCompleted event
@@ -179,11 +223,15 @@ const InitiatorType = {
 /* eslint-enable jsdoc/valid-types */
 
 class NetworkModule extends Module {
+  #interceptMap;
   #networkListener;
   #subscribedEvents;
 
   constructor(messageHandler) {
     super(messageHandler);
+
+    // Map of intercept id to InterceptProperties
+    this.#interceptMap = new Map();
 
     // Set of event names which have active subscriptions
     this.#subscribedEvents = new Set();
@@ -200,7 +248,76 @@ class NetworkModule extends Module {
     this.#networkListener.off("response-started", this.#onResponseEvent);
     this.#networkListener.destroy();
 
+    this.#interceptMap = null;
     this.#subscribedEvents = null;
+  }
+
+  /**
+   * Adds a network intercept, which allows to intercept and modify network
+   * requests and responses.
+   *
+   * The network intercept will be created for the provided phases
+   * (InterceptPhase) and for specific url patterns. When a network event
+   * corresponding to an intercept phase has a URL which matches any url pattern
+   * of any intercept, the request will be suspended.
+   *
+   * @param {object=} options
+   * @param {Array<InterceptPhase>} options.phases
+   *     The phases where this intercept should be checked.
+   * @param {Array<URLPattern>=} options.urlPatterns
+   *     The URL patterns for this intercept. Optional, defaults to empty array.
+   *
+   * @returns {object}
+   *     An object with the following property:
+   *     - intercept {string} The unique id of the network intercept.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   */
+  addIntercept(options = {}) {
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1845345.
+    this.assertExperimentalCommandsEnabled("network.addIntercept");
+
+    const { phases, urlPatterns = [] } = options;
+
+    lazy.assert.array(
+      phases,
+      `Expected "phases" to be an array, got ${phases}`
+    );
+
+    if (!options.phases.length) {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected "phases" to contain at least one phase, got an empty array`
+      );
+    }
+
+    const supportedInterceptPhases = Object.values(InterceptPhase);
+    for (const phase of phases) {
+      if (!supportedInterceptPhases.includes(phase)) {
+        throw new lazy.error.InvalidArgumentError(
+          `Expected "phases" values to be one of ${supportedInterceptPhases}, got ${phase}`
+        );
+      }
+    }
+
+    lazy.assert.array(
+      urlPatterns,
+      `Expected "urlPatterns" to be an array, got ${urlPatterns}`
+    );
+
+    const parsedPatterns = urlPatterns.map(urlPattern =>
+      lazy.parseURLPattern(urlPattern)
+    );
+
+    const interceptId = lazy.generateUUID();
+    this.#interceptMap.set(interceptId, {
+      phases,
+      urlPatterns: parsedPatterns,
+    });
+
+    return {
+      intercept: interceptId,
+    };
   }
 
   #getContextInfo(browsingContext) {
