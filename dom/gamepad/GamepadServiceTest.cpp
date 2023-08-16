@@ -26,6 +26,12 @@ namespace mozilla::dom {
  * backends.
  */
 
+constexpr uint32_t kMaxButtons = 20;
+constexpr uint32_t kMaxAxes = 10;
+constexpr uint32_t kMaxHaptics = 2;
+constexpr uint32_t kMaxLightIndicator = 2;
+constexpr uint32_t kMaxTouchEvents = 4;
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(GamepadServiceTest, DOMEventTargetHelper,
                                    mWindow)
 
@@ -102,6 +108,13 @@ already_AddRefed<Promise> GamepadServiceTest::AddGamepad(
     const nsAString& aID, GamepadMappingType aMapping, GamepadHand aHand,
     uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics,
     uint32_t aNumLightIndicator, uint32_t aNumTouchEvents, ErrorResult& aRv) {
+  if (aNumButtons > kMaxButtons || aNumAxes > kMaxAxes ||
+      aNumHaptics > kMaxHaptics || aNumLightIndicator > kMaxLightIndicator ||
+      aNumTouchEvents > kMaxTouchEvents) {
+    aRv.ThrowNotSupportedError("exceeded maximum hardware dimensions");
+    return nullptr;
+  }
+
   if (mShuttingDown) {
     aRv.ThrowInvalidStateError("Shutting down");
     return nullptr;
