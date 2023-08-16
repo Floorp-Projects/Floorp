@@ -46,9 +46,6 @@ bool SocketProcessBridgeChild::Create(
   }
 
   sSocketProcessBridgeChild->mSocketProcessPid = aEndpoint.OtherPid();
-
-  mozilla::ipc::BackgroundChild::InitSocketBridgeStarter(
-      sSocketProcessBridgeChild);
   return true;
 }
 

@@ -4,15 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBackgroundStarter;
+include protocol PBackgroundDataBridge;
+include protocol PMediaTransport;
 
 namespace mozilla {
 namespace net {
 
 /**
-  * PSocketProcessBridge is the IPC protocol between content process and
-  * socket process. This protocol allows socket process to send data to
-  * content process bypassing parent process.
+  * PSocketProcessBridge is the IPC protocol between the main thread in
+  * the content process and the main thread in the socket process.
+  * We use this to create PBackgroundDataBridge and PMediaTransport protocols
+  * between content process and socket process.
   * Once created, PSocketProcessBridgeChild is the actor that lives in
   * content process and PSocketProcessBridgeParent lives in
   * socket process.
@@ -20,11 +22,19 @@ namespace net {
 [NeedsOtherPid]
 sync protocol PSocketProcessBridge
 {
-
 parent:
-  async InitBackground(Endpoint<PBackgroundStarterParent> aEndpoint);
-both:
-  async Test();
+  /**
+    * For setting up PBackgroundDataBridge protocol, we use this message to
+    * create a background task queue and the BackgroundDataBridgeParent actor in
+    * socket process.
+    */
+  async InitBackgroundDataBridge(Endpoint<PBackgroundDataBridgeParent> aEndpoint,
+                                 uint64_t aChannelID);
+
+  /**
+    * Similar to the above, this message is for PMediaTransport.
+    */
+  async InitMediaTransport(Endpoint<PMediaTransportParent> aEndpoint);
 };
 
 }

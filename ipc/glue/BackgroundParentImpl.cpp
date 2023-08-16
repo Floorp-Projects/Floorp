@@ -29,7 +29,6 @@
 #include "mozilla/dom/MIDIManagerParent.h"
 #include "mozilla/dom/MIDIPlatformService.h"
 #include "mozilla/dom/MIDIPortParent.h"
-#include "mozilla/dom/MediaTransportParent.h"
 #include "mozilla/dom/MessagePortParent.h"
 #include "mozilla/dom/PGamepadEventChannelParent.h"
 #include "mozilla/dom/PGamepadTestChannelParent.h"
@@ -135,17 +134,6 @@ BackgroundParentImpl::~BackgroundParentImpl() {
 void BackgroundParentImpl::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
-}
-
-already_AddRefed<net::PBackgroundDataBridgeParent>
-BackgroundParentImpl::AllocPBackgroundDataBridgeParent(
-    const uint64_t& aChannelID) {
-  MOZ_ASSERT(XRE_IsSocketProcess(), "Should be in socket process");
-  AssertIsOnBackgroundThread();
-
-  RefPtr<net::BackgroundDataBridgeParent> actor =
-      new net::BackgroundDataBridgeParent(aChannelID);
-  return actor.forget();
 }
 
 BackgroundParentImpl::PBackgroundTestParent*
@@ -1456,22 +1444,6 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvRemoveEndpoint(
       }));
 
   return IPC_OK();
-}
-
-dom::PMediaTransportParent* BackgroundParentImpl::AllocPMediaTransportParent() {
-#ifdef MOZ_WEBRTC
-  return new MediaTransportParent;
-#else
-  return nullptr;
-#endif
-}
-
-bool BackgroundParentImpl::DeallocPMediaTransportParent(
-    dom::PMediaTransportParent* aActor) {
-#ifdef MOZ_WEBRTC
-  delete aActor;
-#endif
-  return true;
 }
 
 already_AddRefed<dom::locks::PLockManagerParent>

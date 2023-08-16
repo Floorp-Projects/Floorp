@@ -198,11 +198,6 @@ class BackgroundChildImpl : public PBackgroundChild {
 
   virtual bool DeallocPEndpointForReportChild(
       PEndpointForReportChild* aActor) override;
-
-  virtual dom::PMediaTransportChild* AllocPMediaTransportChild() override;
-
-  virtual bool DeallocPMediaTransportChild(
-      dom::PMediaTransportChild* aActor) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final {

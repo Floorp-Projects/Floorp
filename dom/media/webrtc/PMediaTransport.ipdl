@@ -28,13 +28,8 @@ using mozilla::net::NrIceStunAddrArray from "mozilla/net/PStunAddrsParams.h";
 namespace mozilla {
 namespace dom {
 
-[ManualDealloc]
 async protocol PMediaTransport {
-  manager PBackground;
-
 parent:
-  async __delete__();
-
 #ifdef MOZ_WEBRTC
   async GetIceLog(nsCString pattern) returns (WebrtcGlobalLog loglines);
   async ClearIceLog();
