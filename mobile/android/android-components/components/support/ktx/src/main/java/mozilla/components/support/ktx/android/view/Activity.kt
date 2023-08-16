@@ -8,6 +8,7 @@ import android.app.Activity
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import android.view.View
+import android.view.WindowManager
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewCompat.onApplyWindowInsets
@@ -16,7 +17,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import mozilla.components.support.base.log.logger.Logger
 
 /**
- * Attempts to enter immersive mode - fullscreen with the status bar and navigation buttons hidden.
+ * Attempts to enter immersive mode - fullscreen with the status bar and navigation buttons hidden,
+ * expending itself into the notch area for devices running API 28+.
  * This will automatically register and use an
  * - an inset listener: [View.OnApplyWindowInsetsListener] on API 30+ or
  * - a system visibility listener: [View.OnSystemUiVisibilityChangeListener] for below APIs.
@@ -31,9 +33,15 @@ fun Activity.enterToImmersiveMode() {
 
 @VisibleForTesting
 internal fun Activity.setAsImmersive() {
-    if (SDK_INT >= VERSION_CODES.R) {
-        window.setDecorFitsSystemWindows(false)
+    if (SDK_INT >= VERSION_CODES.P) {
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+        )
+        window.attributes.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
     }
+
     window.getWindowInsetsController().apply {
         hide(WindowInsetsCompat.Type.systemBars())
         systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -63,9 +71,12 @@ internal fun Activity.enableImmersiveModeRestore() {
 fun Activity.exitImmersiveMode() {
     ViewCompat.setOnApplyWindowInsetsListener(window.decorView, null)
 
-    if (SDK_INT >= VERSION_CODES.R) {
-        window.setDecorFitsSystemWindows(true)
+    if (SDK_INT >= VERSION_CODES.P) {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+        window.attributes.layoutInDisplayCutoutMode =
+            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
     }
+
     window.getWindowInsetsController().apply {
         show(WindowInsetsCompat.Type.systemBars())
     }

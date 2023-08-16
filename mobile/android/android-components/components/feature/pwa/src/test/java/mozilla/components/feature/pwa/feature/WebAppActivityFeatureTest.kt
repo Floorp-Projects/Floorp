@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo
 import android.os.Looper.getMainLooper
 import android.view.View
 import android.view.Window
+import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import mozilla.components.browser.icons.BrowserIcons
@@ -34,6 +35,8 @@ class WebAppActivityFeatureTest {
 
     @Mock private lateinit var decorView: View
 
+    @Mock private lateinit var layoutParams: WindowManager.LayoutParams
+
     @Mock private lateinit var icons: BrowserIcons
 
     @Before
@@ -42,6 +45,7 @@ class WebAppActivityFeatureTest {
 
         `when`(activity.window).thenReturn(window)
         `when`(window.decorView).thenReturn(decorView)
+        `when`(window.attributes).thenReturn(layoutParams)
         `when`(icons.loadIcon(any())).thenReturn(CompletableDeferred(mock<Icon>()))
     }
 

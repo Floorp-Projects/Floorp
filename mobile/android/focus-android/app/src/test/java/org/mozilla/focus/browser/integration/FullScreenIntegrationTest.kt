@@ -130,8 +130,11 @@ internal class FullScreenIntegrationTest {
         val decorView: View = mock()
         val activityWindow: Window = mock()
         val activity: Activity = mock()
+        val layoutParams: WindowManager.LayoutParams = mock()
         doReturn(activityWindow).`when`(activity).window
         doReturn(decorView).`when`(activityWindow).decorView
+        doReturn(layoutParams).`when`(activityWindow).attributes
+
         val integration = FullScreenIntegration(
             activity,
             mock(),
@@ -158,8 +161,10 @@ internal class FullScreenIntegrationTest {
         val decorView: View = mock()
         val activityWindow: Window = mock()
         val activity: Activity = mock()
+        val layoutParams: WindowManager.LayoutParams = mock()
         doReturn(activityWindow).`when`(activity).window
         doReturn(decorView).`when`(activityWindow).decorView
+        doReturn(layoutParams).`when`(activityWindow).attributes
         val integration = FullScreenIntegration(
             activity,
             mock(),
