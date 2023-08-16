@@ -20,71 +20,120 @@ const keyboradShortcutConfig = JSON.parse(Services.prefs.getStringPref(
   ""
 ));
 
-const CONTAINER_ICONS = new Set([
-  "briefcase",
-  "cart",
-  "circle",
-  "dollar",
-  "fence",
-  "fingerprint",
-  "gift",
-  "vacation",
-  "food",
-  "fruit",
-  "pet",
-  "tree",
-  "chill",
-]);
+const allActions = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.getInfoFunctions.getkeyboradShortcutActions();
+let pressedKeys = [];
+let isTracking = false;
 
 function setTitle() {
     let winElem = document.documentElement;
-      document.l10n.setAttributes(winElem, "workspace-customize");
+      document.l10n.setAttributes(winElem, "shortcutkey-customize");
  }
  setTitle();
   
   function onLoad() {
-    const workspaces = Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",");
-
-    const workspaceSelect = document.getElementById("workspacesPopup");
-    const workspaceNameLabel = document.getElementById("workspaceName");
-    for (let i = 0; i < workspaces.length; i++) {
-      const workspace = workspaces[i].replace(/-/g, " ");
-
+    const actionsPopup = document.getElementById("actionsPopup");
+    const shortcutKeyName = document.getElementById("selectedActionName");
+    for (let i = 0; i < allActions.length; i++) {
+      const action = allActions[i];
       const element = window.MozXULElement.parseXULToFragment(`
-        <menuitem label="${workspace}" value="${workspace}"></menuitem>
+        <menuitem data-l10n-id="${CustomKeyboardShortcutUtils.keyboradShortcutFunctions.getInfoFunctions.getFluentLocalization(action)}" value="${action}"></menuitem>
       `);
-
-        workspaceSelect.appendChild(element);
+      actionsPopup.appendChild(element);
     }
-    if(window.arguments != undefined) {
-      workspaceNameLabel.value = window.arguments[0].workspaceName;
+    if(window.arguments[0] != undefined) {
+      shortcutKeyName.value = window.arguments[0].actionName;
     } else {
-      workspaceNameLabel.value = defaultWorkspaceName;
+      shortcutKeyName.value = allActions[0];
     }
 
-    //icon
-    const iconSelect = document.getElementById("workspacesIconSelectPopup");
-    const iconNameLabel = document.getElementById("iconName");
+    // Get input keys
+    const keyListInput = document.getElementById("keyList");
+    const l10n = new Localization(["browser/floorp.ftl"], true);
+    keyListInput.placeholder = l10n.formatValueSync("shortcutkey-customize-key-list-placeholder");
 
-    for (let icon of CONTAINER_ICONS) {
-      const element = window.MozXULElement.parseXULToFragment(`
-        <menuitem value="${icon}" data-l10n-id="workspace-icon-${icon}"
-                  style="list-style-image: url(chrome://browser/skin/workspace-icons/${icon}.svg);">
-        </menuitem>
-      `);
+    document.getElementById("startButton").addEventListener("click", () => {
+      if (!isTracking) {
+        isTracking = true;
+        pressedKeys.length = 0;
+        document.addEventListener("keydown", handleKeyDown);
+      }
+    });
 
-      iconSelect.appendChild(element);
-    }
-    iconNameLabel.value = "fingerprint";
+    document.getElementById("endButton").addEventListener("click", () => {
+      if (isTracking) {
+        isTracking = false;
+        document.removeEventListener("keydown", handleKeyDown);
+      }
+    });
 
     document.addEventListener("dialogaccept", setPref);
   }
-  
-  
-  function setPref() {
-    const workspaceNameLabel = document.getElementById("workspaceName").value.replace(/\s+/g, "-")
-    const iconNameLabel = document.getElementById("iconName").value;
 
-    // Return object with workspace name and icon name
-    Services.obs.notifyObservers({ name: workspaceNameLabel, icon: iconNameLabel }, "addIconToWorkspace");
+  function handleKeyDown(event) {
+    if (isTracking && !pressedKeys.includes(event.key) && checkInputKeyCanUse(event.key)) {
+      pressedKeys.push(event.key);
+      displayPressedKeys();
+    }
+  }
+
+  function displayPressedKeys() {
+    const keyListInput = document.getElementById("keyList");
+    keyListInput.value = pressedKeys.join(", ");
+  }
+
+  function checkInputKeyCanUse(key) {
+    // separate key and modifiers
+      const modifiersList = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.modifiersListFunctions.getModifiersList();
+      const cannotUseModifiers = CustomKeyboardShortcutUtils.cannotUseModifiers;
+      const keyListInput = document.getElementById("keyList").value.split(", ");
+
+      let regex = /^[0-9a-zA-Z]*$/;
+
+      if (modifiersList.includes(key)) {
+        return true;
+      } else if (regex.test(key) && !cannotUseModifiers.includes(key) && key.length == 1 && !keyListInput.includes(key) && !keyIsInputed()) {
+        return true;
+      } 
+      return false;
+  }
+
+  function keyIsInputed() {
+    const keyListInput = document.getElementById("keyList").value.split(", ");
+    for(inputedKey of keyListInput) {
+      if (inputedKey.length === 1) {
+        console.log("key is already used. Modify key is allowed only");
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function separateKeyAndModifiers(keyList) {
+    let keys = [];
+    let modifiers = [];
+
+    const modifiersList = CustomKeyboardShortcutUtils.modifiersListFunctions.getModifiersList();
+    let regex = /^[0-9a-zA-Z]*$/;
+    for (let i = 0; i < keyList.length; i++) {
+      const key = keyList[i];
+      if (modifiersList.includes(key)) {
+        modifiers.push(key);
+      } else if (regex.test(key)) {
+        keys.push(key);
+      } else {
+        console.info("Invalid key");
+      }
+    }
+    return [ keys, modifiers ];
+  }
+
+  function setPref() {
+    const shortcutKeyName = document.getElementById("selectedActionName").value;
+    const keyListInput = separateKeyAndModifiers(document.getElementById("keyList").value.split(", "));
+
+    if (!keyListInput[0].length) {
+      return;
+    }
+
+    CustomKeyboardShortcutUtils.keyboradShortcutFunctions.preferencesFunctions.addKeyForShortcutAction(shortcutKeyName, keyListInput[0], keyListInput[1]);
   }

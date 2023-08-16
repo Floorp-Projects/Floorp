@@ -50,6 +50,11 @@ const buildShortCutkeyFunctions = {
             mainKeyset.firstChild.remove();
         }
     },
+
+    rebuildShortCutkeyFunctions() {
+        buildShortCutkeyFunctions.removeAlreadyExistShortCutkeys();
+        buildShortCutkeyFunctions.init();
+    },
 }
 
 buildShortCutkeyFunctions.init();

@@ -104,35 +104,56 @@ export let keyboradShortcutActions = {
     reverseSidebarPosition: ["SidebarUI.reversePosition()", "reverse-sidebar"],
     hideSidebar: ["SidebarUI.hide()", "hide-sidebar"],
     toggleSidebar: ["SidebarUI.toggle()", "toggle-sidebar"],
+
+    // Workspaces actions
+
+    // Developer actions
+    
 }
+
+export const modifiersList = {
+    Alt: ["Alt", "VK_ALT"],
+    Control: ["Control", "VK_CONTROL"],
+    Shift: ["Shift", "VK_SHIFT"],
+    Tab: ["Tab", "VK_TAB"],
+
+    // Arrow keys
+    ArrowLeft: ["ArrowLeft", "VK_LEFT"],
+    ArrowUp: ["ArrowUp", "VK_UP"],
+    ArrowRight: ["ArrowRight", "VK_RIGHT"],
+    ArrowDown: ["ArrowDown", "VK_DOWN"],
+
+    // F num keys
+    F1: ["F1", "VK_F1"],
+    F2: ["F2", "VK_F2"],
+    F3: ["F3", "VK_F3"],
+    F4: ["F4", "VK_F4"],
+    F5: ["F5", "VK_F5"],
+    F6: ["F6", "VK_F6"],
+    F7: ["F7", "VK_F7"],
+    F8: ["F8", "VK_F8"],
+    F9: ["F9", "VK_F9"],
+    F10: ["F10", "VK_F10"],
+    F11: ["F11", "VK_F11"],
+    F12: ["F12", "VK_F12"],
+    F13: ["F13", "VK_F13"],
+    F14: ["F14", "VK_F14"],
+    F15: ["F15", "VK_F15"],
+    F16: ["F16", "VK_F16"],
+    F17: ["F17", "VK_F17"],
+    F18: ["F18", "VK_F18"],
+    F19: ["F19", "VK_F19"],
+    F20: ["F20", "VK_F20"],
+    F21: ["F21", "VK_F21"],
+    F22: ["F22", "VK_F22"],
+    F23: ["F23", "VK_F23"],
+    F24: ["F24", "VK_F24"],
+}
+
+export const cannotUseModifiers = ["Zenkaku", "Hankaku", "NumLock", "Delete", "Insert", "Alphanumeric", "Unidentified", "NonConvert"]
 
 export const keyboradShortcutFunctions = {
   preferencesFunctions: {
-    getKeyForShortcutAction(actionName) {
-      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
-      let exsitKey = keysState.find(keyState => keyState.actionName === actionName);
-      if (exsitKey) {
-        return exsitKey;
-      }
-      return null;
-    },
-    
-    getAllExsitKeys() {
-      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
-      return keysState;
-    },
-
-    getActionNameByKey(key, modifiers) {
-      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
-      let result = []
-      for (let keyState of keysState) {
-        if (keyState.key === key && keyState.modifiers === modifiers) {
-          result.push(keyState.actionName)
-        }
-      }
-      return result
-    },
-
     addKeyForShortcutAction(actionName, key, modifiers) {
       let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
       let keyState = {
@@ -157,5 +178,98 @@ export const keyboradShortcutFunctions = {
       let newKeysState = keysState.filter(keyState => { return !(keyState.actionName === actionName && keyState.key === key && keyState.modifiers === modifiers) });
       Services.prefs.setStringPref(SHORTCUT_KEY_AND_ACTION_PREF, JSON.stringify(newKeysState));
     }
-  }
+  },
+
+  getInfoFunctions: {
+    getkeyboradShortcutActions() {
+      let result = [];
+      for (let actionName in keyboradShortcutActions) {
+        result.push(actionName);
+      }
+      return result;
+    },
+
+    getKeyForShortcutAction(actionName) {
+      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
+      let exsitKey = keysState.find(keyState => keyState.actionName === actionName);
+      if (exsitKey) {
+        return exsitKey;
+      }
+      return null;
+    },
+    
+    getAllExsitKeys() {
+      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
+      return keysState;
+    },
+    
+    getAllExsitActionsName() {
+      let result = [];
+      let configs = keyboradShortcutFunctions.preferencesFunctions.getAllExsitKeys();
+      for (let config of configs) {
+        result.push(config.actionName);
+      }
+      return result;
+    },
+
+    getFluentLocalization(actionName) {
+      return `floorp-custom-actions-${keyboradShortcutActions[actionName][1]}`;
+    },
+
+    getActionNameByKey(key, modifiers) {
+      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
+      let result = []
+      for (let keyState of keysState) {
+        if (keyState.key === key && keyState.modifiers === modifiers) {
+          result.push(keyState.actionName)
+        }
+      }
+      return result
+    },
+  },
+
+  modifiersListFunctions: {
+    getModifiersList() {
+      let result = [];
+      for (let modifier in modifiersList) {
+        result.push(modifier);
+      }
+      return result;
+    },
+
+    getKeyIsModifier(key) {
+      let modifiersList = keyboradShortcutFunctions.modifiersListFunctions.getModifiersList();
+      return modifiersList.includes(key);
+    }
+  },
+
+  openDialog(actionN) {
+    let parentWindow = Services.wm.getMostRecentWindow("navigator:browser");
+
+    let object = undefined;
+    if (actionN) {
+      object = { actionName: actionN };
+    }
+
+    if (
+      parentWindow?.document.documentURI ==
+      "chrome://browser/content/hiddenWindowMac.xhtml"
+    ) {
+      parentWindow = null;
+    }
+    if (parentWindow?.gDialogBox) {
+      parentWindow.gDialogBox.open(
+        "chrome://browser/content/preferences/dialogs/manage-keyboard-shortcut.xhtml",
+        object
+      );
+    } else {
+      Services.ww.openWindow(
+        parentWindow,
+        "chrome://browser/content/preferences/dialogs/manage-keyboard-shortcut.xhtml",
+        null,
+        "chrome,titlebar,dialog,centerscreen,modal",
+        object
+      );
+    }
+  },
 }
