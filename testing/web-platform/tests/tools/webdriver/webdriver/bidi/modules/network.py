@@ -56,3 +56,8 @@ class Network(BidiModule):
     def _add_intercept(self, result: Mapping[str, Any]) -> Any:
         assert result["intercept"] is not None
         return result["intercept"]
+
+    @command
+    def remove_intercept(self, intercept: str) -> Mapping[str, Any]:
+        params: MutableMapping[str, Any] = { "intercept": intercept }
+        return params
