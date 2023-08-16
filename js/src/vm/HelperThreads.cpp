@@ -636,7 +636,7 @@ static void ReportDecodeFailure(JS::FrontendContext* fc) {
   js::ErrorMetadata metadata;
   metadata.filename = JS::ConstUTF8CharsZ("<unknown>");
   metadata.lineNumber = 0;
-  metadata.columnNumber = JS::ColumnNumberZeroOrigin::zero();
+  metadata.columnNumber = 0;
   metadata.lineLength = 0;
   metadata.tokenOffset = 0;
   metadata.isMuted = false;

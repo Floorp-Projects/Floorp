@@ -34,9 +34,8 @@
 #include "frontend/Parser.h"
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
-#include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberZeroOrigin
-#include "js/ErrorReport.h"   // JSErrorBase
+#include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ
+#include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_smprintf
 #include "js/RegExpFlags.h"           // JS::RegExpFlags
@@ -454,8 +453,7 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
 
 bool TokenStreamAnyChars::checkOptions() {
   // Constrain starting columns to where they will saturate.
-  if (options().column.zeroOriginValue() >
-      JS::LimitedColumnNumberZeroOrigin::Limit) {
+  if (options().column > ColumnLimit) {
     reportErrorNoOffset(JSMSG_BAD_COLUMN_NUMBER);
     return false;
   }
@@ -592,7 +590,7 @@ static MOZ_ALWAYS_INLINE void RetractPointerToCodePointBoundary(
 }
 
 template <typename Unit>
-JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumn(
+uint32_t TokenStreamAnyChars::computePartialColumn(
     const LineToken lineToken, const uint32_t offset,
     const SourceUnits<Unit>& sourceUnits) const {
   lineToken.assertConsistentOffset(offset);
@@ -602,7 +600,7 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumn(
 
   if constexpr (std::is_same_v<Unit, char16_t>) {
     // Column number is in UTF-16 code units.
-    return JS::ColumnNumberZeroOrigin(offsetInLine);
+    return offsetInLine;
   }
 
   return computePartialColumnForUTF8(lineToken, offset, start, offsetInLine,
@@ -610,7 +608,7 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumn(
 }
 
 template <typename Unit>
-JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
+uint32_t TokenStreamAnyChars::computePartialColumnForUTF8(
     const LineToken lineToken, const uint32_t offset, const uint32_t start,
     const uint32_t offsetInLine, const SourceUnits<Unit>& sourceUnits) const {
   const uint32_t line = lineNumber(lineToken);
@@ -621,15 +619,14 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
     lineOfLastColumnComputation_ = line;
     lastChunkVectorForLine_ = nullptr;
     lastOffsetOfComputedColumn_ = start;
-    lastComputedColumn_ = JS::ColumnNumberZeroOrigin::zero();
+    lastComputedColumn_ = 0;
   }
 
   // Compute and return the final column number from a partial offset/column,
   // using the last-cached offset/column if they're more optimal.
-  auto ColumnFromPartial = [this, offset, &sourceUnits](
-                               uint32_t partialOffset,
-                               JS::ColumnNumberZeroOrigin partialCols,
-                               UnitsType unitsType) {
+  auto ColumnFromPartial = [this, offset, &sourceUnits](uint32_t partialOffset,
+                                                        uint32_t partialCols,
+                                                        UnitsType unitsType) {
     MOZ_ASSERT(partialOffset <= offset);
 
     // If the last lookup on this line was closer to |offset|, use it.
@@ -649,10 +646,10 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
       MOZ_ASSERT(unicode::CountUTF16CodeUnits(begin, end) == offsetDelta,
                  "guaranteed-single-units also guarantee pointer distance "
                  "equals UTF-16 code unit count");
-      partialCols += JS::ColumnNumberOffset(offsetDelta);
+      partialCols += offsetDelta;
     } else {
-      partialCols += JS::ColumnNumberOffset(
-          AssertedCast<uint32_t>(unicode::CountUTF16CodeUnits(begin, end)));
+      partialCols +=
+          AssertedCast<uint32_t>(unicode::CountUTF16CodeUnits(begin, end));
     }
 
     this->lastOffsetOfComputedColumn_ = partialOffset;
@@ -677,15 +674,13 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
     // not *always* worst-case.)
     UnitsType unitsType;
     if (lastChunkVectorForLine_ && lastChunkVectorForLine_->length() > 0) {
-      MOZ_ASSERT((*lastChunkVectorForLine_)[0].column() ==
-                 JS::ColumnNumberZeroOrigin::zero());
+      MOZ_ASSERT((*lastChunkVectorForLine_)[0].column() == 0);
       unitsType = (*lastChunkVectorForLine_)[0].unitsType();
     } else {
       unitsType = UnitsType::PossiblyMultiUnit;
     }
 
-    return ColumnFromPartial(start, JS::ColumnNumberZeroOrigin::zero(),
-                             unitsType);
+    return ColumnFromPartial(start, 0, unitsType);
   }
 
   // If this line has no chunk vector yet, insert one in the hash map.  (The
@@ -698,8 +693,7 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
       if (!longLineColumnInfo_.add(ptr, line, Vector<ChunkInfo>(fc))) {
         // In case of OOM, just count columns from the start of the line.
         fc->recoverFromOutOfMemory();
-        return ColumnFromPartial(start, JS::ColumnNumberZeroOrigin::zero(),
-                                 UnitsType::PossiblyMultiUnit);
+        return ColumnFromPartial(start, 0, UnitsType::PossiblyMultiUnit);
       }
     }
 
@@ -734,7 +728,7 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
   };
 
   uint32_t partialOffset;
-  JS::ColumnNumberZeroOrigin partialColumn;
+  uint32_t partialColumn;
   UnitsType unitsType;
 
   auto entriesLen = AssertedCast<uint32_t>(lastChunkVectorForLine_->length());
@@ -762,7 +756,7 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
       partialColumn = (*lastChunkVectorForLine_)[entriesLen - 1].column();
     } else {
       partialOffset = start;
-      partialColumn = JS::ColumnNumberZeroOrigin::zero();
+      partialColumn = 0;
     }
 
     if (!lastChunkVectorForLine_->reserve(chunkIndex + 1)) {
@@ -777,8 +771,8 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
     // The vector always begins with the column of the line start, i.e. zero,
     // with chunk units pessimally assumed not single-unit.
     if (entriesLen == 0) {
-      lastChunkVectorForLine_->infallibleAppend(ChunkInfo(
-          JS::ColumnNumberZeroOrigin::zero(), UnitsType::PossiblyMultiUnit));
+      lastChunkVectorForLine_->infallibleAppend(
+          ChunkInfo(0, UnitsType::PossiblyMultiUnit));
       entriesLen++;
     }
 
@@ -813,7 +807,7 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
       }
 
       partialOffset += numUnits;
-      partialColumn += JS::ColumnNumberOffset(numUTF16CodeUnits);
+      partialColumn += numUTF16CodeUnits;
 
       lastChunkVectorForLine_->infallibleEmplaceBack(
           partialColumn, UnitsType::PossiblyMultiUnit);
@@ -828,32 +822,37 @@ JS::ColumnNumberZeroOrigin TokenStreamAnyChars::computePartialColumnForUTF8(
 }
 
 template <typename Unit, class AnyCharsAccess>
-JS::LimitedColumnNumberZeroOrigin
-GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
+uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
     LineToken lineToken, uint32_t offset) const {
   lineToken.assertConsistentOffset(offset);
 
   const TokenStreamAnyChars& anyChars = anyCharsAccess();
 
-  JS::ColumnNumberZeroOrigin column =
+  uint32_t column =
       anyChars.computePartialColumn(lineToken, offset, this->sourceUnits);
 
   if (lineToken.isFirstLine()) {
-    if (column.zeroOriginValue() > JS::LimitedColumnNumberZeroOrigin::Limit) {
-      return JS::LimitedColumnNumberZeroOrigin::limit();
+    if (column > ColumnLimit) {
+      return ColumnLimit;
     }
 
-    uint32_t firstLineOffset = anyChars.options_.column.zeroOriginValue();
-    column += JS::ColumnNumberOffset(firstLineOffset);
+    static_assert(uint32_t(ColumnLimit + ColumnLimit) > ColumnLimit,
+                  "Adding ColumnLimit should not overflow");
+
+    uint32_t firstLineOffset = anyChars.options_.column;
+    column += firstLineOffset;
   }
 
-  return JS::LimitedColumnNumberZeroOrigin::fromUnlimited(column);
+  if (column > ColumnLimit) {
+    return ColumnLimit;
+  }
+
+  return column;
 }
 
 template <typename Unit, class AnyCharsAccess>
 void GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeLineAndColumn(
-    uint32_t offset, uint32_t* line,
-    JS::LimitedColumnNumberZeroOrigin* column) const {
+    uint32_t offset, uint32_t* line, uint32_t* column) const {
   const TokenStreamAnyChars& anyChars = anyCharsAccess();
 
   auto lineToken = anyChars.lineToken(offset);
@@ -912,14 +911,14 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
 
     ptr[-1] = '\0';
 
-    uint32_t line;
-    JS::LimitedColumnNumberZeroOrigin column;
+    uint32_t line, column;
     computeLineAndColumn(offset, &line, &column);
 
+    column = JSErrorBase::fromZeroOriginToOneOrigin(column);
+
     if (!notes->addNoteASCII(anyChars.fc, anyChars.getFilename().c_str(), 0,
-                             line, JS::ColumnNumberOneOrigin(column),
-                             GetErrorMessage, nullptr, JSMSG_BAD_CODE_UNITS,
-                             badUnitsStr)) {
+                             line, column, GetErrorMessage, nullptr,
+                             JSMSG_BAD_CODE_UNITS, badUnitsStr)) {
       break;
     }
 
@@ -1460,7 +1459,7 @@ void TokenStreamAnyChars::computeErrorMetadataNoOffset(
   err->isMuted = mutedErrors;
   err->filename = filename_;
   err->lineNumber = 0;
-  err->columnNumber = JS::ColumnNumberZeroOrigin::zero();
+  err->columnNumber = 0;
 
   MOZ_ASSERT(err->lineOfContext == nullptr);
 }
@@ -1479,11 +1478,7 @@ bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
                                maybeCx->realm()->principals());
       if (!iter.done() && iter.filename()) {
         err->filename = JS::ConstUTF8CharsZ(iter.filename());
-        JS::TaggedColumnNumberZeroOrigin columnNumber;
-        err->lineNumber = iter.computeLine(&columnNumber);
-        // NOTE: Wasm frame cannot appear here.
-        err->columnNumber =
-            JS::ColumnNumberZeroOrigin(columnNumber.toLimitedColumnNumber());
+        err->lineNumber = iter.computeLine(&err->columnNumber);
         return false;
       }
     }

@@ -26,7 +26,6 @@
 #include "gc/Tracer.h"                // JS::TraceRoot
 #include "js/AllocPolicy.h"           // ReportOutOfMemory
 #include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"          // JS::ColumnNumberZeroOrigin
 #include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCVector.h"              // JS::GCVector
@@ -1056,7 +1055,7 @@ void JSONSyntaxParseHandler<CharT>::reportError(const char* msg,
   metadata.isMuted = false;
   metadata.filename = JS::ConstUTF8CharsZ("");
   metadata.lineNumber = 0;
-  metadata.columnNumber = JS::ColumnNumberZeroOrigin::zero();
+  metadata.columnNumber = 0;
 
   ReportJSONSyntaxError(fc, std::move(metadata), JSMSG_JSON_BAD_PARSE, msg,
                         lineString, columnString);

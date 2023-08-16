@@ -16,7 +16,6 @@
 
 #include "jsapi.h"
 #include "js/CallAndConstruct.h"  // JS::Call, JS::Construct, JS::IsCallable
-#include "js/ColumnNumber.h"      // JS::ColumnNumberZeroOrigin
 #include "js/experimental/TypedData.h"  // JS_GetTypedArrayLength
 #include "js/friend/WindowProxy.h"      // js::IsWindowProxy
 #include "js/friend/XrayJitInfo.h"      // JS::XrayJitInfo
@@ -218,15 +217,14 @@ bool ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type,
     return false;
   }
   AutoFilename filename;
-  uint32_t line = 0;
-  JS::ColumnNumberZeroOrigin column;
+  unsigned line = 0, column = 0;
   DescribeScriptedCaller(cx, &filename, &line, &column);
 
   // Warn to the terminal for the logs.
   NS_WARNING(
       nsPrintfCString("Silently denied access to property %s: %s (@%s:%u:%u)",
                       NS_LossyConvertUTF16toASCII(propertyName).get(), reason,
-                      filename.get(), line, column.zeroOriginValue())
+                      filename.get(), line, column)
           .get());
 
   // If this isn't the first warning on this topic for this global, we've
@@ -273,8 +271,7 @@ bool ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type,
   nsString filenameStr(NS_ConvertASCIItoUTF16(filename.get()));
   nsresult rv = errorObject->InitWithWindowID(
       NS_ConvertASCIItoUTF16(errorMessage.ref()), filenameStr, u""_ns, line,
-      column.zeroOriginValue(), nsIScriptError::warningFlag, "XPConnect",
-      windowId);
+      column, nsIScriptError::warningFlag, "XPConnect", windowId);
   NS_ENSURE_SUCCESS(rv, true);
   rv = consoleService->LogMessage(errorObject);
   NS_ENSURE_SUCCESS(rv, true);

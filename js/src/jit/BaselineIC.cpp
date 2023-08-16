@@ -158,10 +158,9 @@ void FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...) {
     JitSpew(
         JitSpew_BaselineICFallback,
         "Fallback hit for (%s:%u:%u) (pc=%zu,line=%u,uses=%u,stubs=%zu): %s",
-        script->filename(), script->lineno(),
-        script->column().zeroOriginValue(), script->pcToOffset(pc),
-        PCToLineNumber(script, pc), script->getWarmUpCount(),
-        stub->numOptimizedStubs(), fmtbuf);
+        script->filename(), script->lineno(), script->column(),
+        script->pcToOffset(pc), PCToLineNumber(script, pc),
+        script->getWarmUpCount(), stub->numOptimizedStubs(), fmtbuf);
   }
 }
 #endif  // JS_JITSPEW

@@ -10,7 +10,6 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include "js/Array.h"  // JS::NewArrayObject
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin, JS::TaggedColumnNumberOneOrigin
 #include "js/Debug.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/TypeDecls.h"
@@ -325,8 +324,7 @@ bool HeapSnapshot::saveStackFrame(const protobuf::StackFrame& frame,
   uint32_t line = data.line();
 
   if (!data.has_column()) return false;
-  JS::TaggedColumnNumberOneOrigin column(
-      JS::LimitedColumnNumberOneOrigin(data.column()));
+  uint32_t column = data.column();
 
   if (!data.has_issystem()) return false;
   bool isSystem = data.issystem();
@@ -1101,7 +1099,7 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter {
 
     data->set_id(id);
     data->set_line(frame.line());
-    data->set_column(frame.column().oneOriginValue());
+    data->set_column(frame.column());
     data->set_issystem(frame.isSystem());
     data->set_isselfhosted(frame.isSelfHosted(cx));
 

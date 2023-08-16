@@ -61,7 +61,6 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"       // JS::ColumnNumberZeroOrigin
 #include "js/TypeDecls.h"          // JS::MutableHandle (fwd)
 
 namespace js {
@@ -455,9 +454,9 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
   // POD options.
 
   // Line number of the first character (1-origin).
-  uint32_t lineno = 1;
-  // Column number of the first character in UTF-16 code units.
-  JS::ColumnNumberZeroOrigin column;
+  unsigned lineno = 1;
+  // Column number of the first character in UTF-16 code units (0-origin).
+  unsigned column = 0;
 
   // The offset within the ScriptSource's full uncompressed text of the first
   // character we're presenting for compilation with this CompileOptions.
@@ -491,7 +490,7 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
     this->TransitiveCompileOptions::dumpWith(print);
 #  define PrintFields_(Name) print(#Name, Name)
     PrintFields_(lineno);
-    print("column", column.zeroOriginValue());
+    PrintFields_(column);
     PrintFields_(scriptSourceOffset);
     PrintFields_(isRunOnce);
     PrintFields_(noScriptRval);
@@ -602,12 +601,12 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setLine(uint32_t l) {
+  CompileOptions& setLine(unsigned l) {
     lineno = l;
     return *this;
   }
 
-  CompileOptions& setFileAndLine(const char* f, uint32_t l) {
+  CompileOptions& setFileAndLine(const char* f, unsigned l) {
     filename_ = JS::ConstUTF8CharsZ(f);
     lineno = l;
     return *this;
@@ -623,7 +622,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setColumn(JS::ColumnNumberZeroOrigin c) {
+  CompileOptions& setColumn(unsigned c) {
     column = c;
     return *this;
   }
@@ -679,7 +678,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   }
 
   CompileOptions& setIntroductionInfo(const char* introducerFn,
-                                      const char* intro, uint32_t line,
+                                      const char* intro, unsigned line,
                                       uint32_t offset) {
     introducerFilename_ = JS::ConstUTF8CharsZ(introducerFn);
     introductionType = intro;
@@ -788,7 +787,7 @@ class JS_PUBLIC_API ReadOnlyDecodeOptions {
   // See `TransitiveCompileOptions::introductionType` field for details.
   const char* introductionType = nullptr;
 
-  uint32_t introductionLineno = 0;
+  unsigned introductionLineno = 0;
   uint32_t introductionOffset = 0;
 
  protected:

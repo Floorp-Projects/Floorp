@@ -21,7 +21,6 @@
 #include "frontend/ScriptIndex.h"       // ScriptIndex
 #include "frontend/TypedIndex.h"        // TypedIndex
 #include "js/AllocPolicy.h"             // SystemAllocPolicy
-#include "js/ColumnNumber.h"            // JS::ColumnNumberZeroOrigin
 #include "js/RefCounted.h"              // AtomicRefCounted
 #include "js/RegExpFlags.h"             // JS::RegExpFlags
 #include "js/RootingAPI.h"              // Handle
@@ -612,11 +611,11 @@ class StencilModuleEntry {
   // Line number (1-origin).
   uint32_t lineno = 0;
 
-  // Column number in UTF-16 code units.
-  JS::ColumnNumberZeroOrigin column;
+  // Column number in UTF-16 code units (0-origin).
+  uint32_t column = 0;
 
  private:
-  StencilModuleEntry(uint32_t lineno, JS::ColumnNumberZeroOrigin column)
+  StencilModuleEntry(uint32_t lineno, uint32_t column)
       : lineno(lineno), column(column) {}
 
  public:
@@ -660,8 +659,7 @@ class StencilModuleEntry {
   }
 
   static StencilModuleEntry requestedModule(
-      MaybeModuleRequestIndex moduleRequest, uint32_t lineno,
-      JS::ColumnNumberZeroOrigin column) {
+      MaybeModuleRequestIndex moduleRequest, uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(moduleRequest.isSome());
     StencilModuleEntry entry(lineno, column);
     entry.moduleRequest = moduleRequest;
@@ -671,8 +669,7 @@ class StencilModuleEntry {
   static StencilModuleEntry importEntry(MaybeModuleRequestIndex moduleRequest,
                                         TaggedParserAtomIndex localName,
                                         TaggedParserAtomIndex importName,
-                                        uint32_t lineno,
-                                        JS::ColumnNumberZeroOrigin column) {
+                                        uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(moduleRequest.isSome());
     MOZ_ASSERT(localName && importName);
     StencilModuleEntry entry(lineno, column);
@@ -684,7 +681,7 @@ class StencilModuleEntry {
 
   static StencilModuleEntry importNamespaceEntry(
       MaybeModuleRequestIndex moduleRequest, TaggedParserAtomIndex localName,
-      uint32_t lineno, JS::ColumnNumberZeroOrigin column) {
+      uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(moduleRequest.isSome());
     MOZ_ASSERT(localName);
     StencilModuleEntry entry(lineno, column);
@@ -695,8 +692,7 @@ class StencilModuleEntry {
 
   static StencilModuleEntry exportAsEntry(TaggedParserAtomIndex localName,
                                           TaggedParserAtomIndex exportName,
-                                          uint32_t lineno,
-                                          JS::ColumnNumberZeroOrigin column) {
+                                          uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(localName && exportName);
     StencilModuleEntry entry(lineno, column);
     entry.localName = localName;
@@ -706,8 +702,7 @@ class StencilModuleEntry {
 
   static StencilModuleEntry exportFromEntry(
       MaybeModuleRequestIndex moduleRequest, TaggedParserAtomIndex importName,
-      TaggedParserAtomIndex exportName, uint32_t lineno,
-      JS::ColumnNumberZeroOrigin column) {
+      TaggedParserAtomIndex exportName, uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(moduleRequest.isSome());
     MOZ_ASSERT(importName && exportName);
     StencilModuleEntry entry(lineno, column);
@@ -719,7 +714,7 @@ class StencilModuleEntry {
 
   static StencilModuleEntry exportNamespaceFromEntry(
       MaybeModuleRequestIndex moduleRequest, TaggedParserAtomIndex exportName,
-      uint32_t lineno, JS::ColumnNumberZeroOrigin column) {
+      uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(moduleRequest.isSome());
     MOZ_ASSERT(exportName);
     StencilModuleEntry entry(lineno, column);
@@ -729,8 +724,7 @@ class StencilModuleEntry {
   }
 
   static StencilModuleEntry exportBatchFromEntry(
-      MaybeModuleRequestIndex moduleRequest, uint32_t lineno,
-      JS::ColumnNumberZeroOrigin column) {
+      MaybeModuleRequestIndex moduleRequest, uint32_t lineno, uint32_t column) {
     MOZ_ASSERT(moduleRequest.isSome());
     StencilModuleEntry entry(lineno, column);
     entry.moduleRequest = MaybeModuleRequestIndex(moduleRequest);

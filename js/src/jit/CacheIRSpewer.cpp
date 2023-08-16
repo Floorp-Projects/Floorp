@@ -16,8 +16,7 @@
 #  include "jsapi.h"
 #  include "jsmath.h"
 
-#  include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin
-#  include "js/ScalarType.h"    // js::Scalar::Type
+#  include "js/ScalarType.h"  // js::Scalar::Type
 #  include "util/GetPidProvider.h"
 #  include "util/Text.h"
 #  include "vm/JSFunction.h"
@@ -341,9 +340,9 @@ void CacheIRSpewer::beginCache(const IRGenerator& gen) {
   j.property("file", filename ? filename : "null");
   j.property("mode", int(gen.mode_));
   if (jsbytecode* pc = gen.pc_) {
-    JS::LimitedColumnNumberZeroOrigin column;
+    unsigned column;
     j.property("line", PCToLineNumber(gen.script_, pc, &column));
-    j.property("column", column.zeroOriginValue());
+    j.property("column", column);
     j.formatProperty("pc", "%p", pc);
   }
 }

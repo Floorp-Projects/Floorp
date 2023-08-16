@@ -8,7 +8,6 @@
 
 #include "JSOracleParent.h"
 #include "js/CallAndConstruct.h"  // JS::Call
-#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberOneOrigin, JS::ColumnNumberOneOrigin
 #include "js/CharacterEncoding.h"
 #include "js/Object.h"              // JS::GetClass
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById, JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_SetProperty, JS_SetPropertyById, JS::IdVector
@@ -1597,7 +1596,7 @@ void ChromeUtils::CreateError(const GlobalObject& aGlobal,
   {
     JS::Rooted<JSString*> fileName(cx, JS_GetEmptyString(cx));
     uint32_t line = 0;
-    JS::TaggedColumnNumberOneOrigin column;
+    uint32_t column = 0;
 
     Maybe<JSAutoRealm> ar;
     JS::Rooted<JSObject*> stack(cx);
@@ -1627,9 +1626,8 @@ void ChromeUtils::CreateError(const GlobalObject& aGlobal,
     }
 
     JS::Rooted<JS::Value> err(cx);
-    if (!JS::CreateError(cx, JSEXN_ERR, stack, fileName, line,
-                         JS::ColumnNumberOneOrigin(column.oneOriginValue()),
-                         nullptr, message, JS::NothingHandleValue, &err)) {
+    if (!JS::CreateError(cx, JSEXN_ERR, stack, fileName, line, column, nullptr,
+                         message, JS::NothingHandleValue, &err)) {
       return;
     }
 

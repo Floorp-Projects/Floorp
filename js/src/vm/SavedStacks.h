@@ -11,7 +11,6 @@
 #include "mozilla/FastBernoulliTrial.h"
 #include "mozilla/Maybe.h"
 
-#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberOneOrigin
 #include "js/HashTable.h"
 #include "js/Stack.h"
 #include "vm/SavedFrame.h"
@@ -248,9 +247,9 @@ class SavedStacks {
 
  public:
   struct LocationValue {
-    LocationValue() : source(nullptr), sourceId(0), line(0) {}
+    LocationValue() : source(nullptr), sourceId(0), line(0), column(0) {}
     LocationValue(JSAtom* source, uint32_t sourceId, size_t line,
-                  JS::TaggedColumnNumberOneOrigin column)
+                  uint32_t column)
         : source(source), sourceId(sourceId), line(line), column(column) {}
 
     void trace(JSTracer* trc) {
@@ -270,8 +269,8 @@ class SavedStacks {
     // Line number (1-origin).
     size_t line;
 
-    // Column number in UTF-16 code units.
-    JS::TaggedColumnNumberOneOrigin column;
+    // Column number in UTF-16 code units (1-origin).
+    uint32_t column;
   };
 
  private:
@@ -310,7 +309,7 @@ struct WrappedPtrOperations<SavedStacks::LocationValue, Wrapper> {
   JSAtom* source() const { return loc().source; }
   uint32_t sourceId() const { return loc().sourceId; }
   size_t line() const { return loc().line; }
-  JS::TaggedColumnNumberOneOrigin column() const { return loc().column; }
+  uint32_t column() const { return loc().column; }
 
  private:
   const SavedStacks::LocationValue& loc() const {
@@ -324,7 +323,7 @@ struct MutableWrappedPtrOperations<SavedStacks::LocationValue, Wrapper>
   void setSource(JSAtom* v) { loc().source = v; }
   void setSourceId(uint32_t v) { loc().sourceId = v; }
   void setLine(size_t v) { loc().line = v; }
-  void setColumn(JS::TaggedColumnNumberOneOrigin v) { loc().column = v; }
+  void setColumn(uint32_t v) { loc().column = v; }
 
  private:
   SavedStacks::LocationValue& loc() {
@@ -334,6 +333,8 @@ struct MutableWrappedPtrOperations<SavedStacks::LocationValue, Wrapper>
 
 JS::UniqueChars BuildUTF8StackString(JSContext* cx, JSPrincipals* principals,
                                      HandleObject stack);
+
+uint32_t FixupMaybeWASMColumnForDisplay(uint32_t column);
 
 js::SavedFrame* UnwrapSavedFrame(JSContext* cx, JSPrincipals* principals,
                                  HandleObject obj,

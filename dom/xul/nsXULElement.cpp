@@ -1803,8 +1803,7 @@ static void CheckErrorsAndWarnings(JS::FrontendContext* aFc,
       NS_WARNING(
           nsPrintfCString(
               "Had compilation error in ScriptCompileTask: %s at %s:%u:%u",
-              message, filename, report->lineno,
-              report->column.oneOriginValue())
+              message, filename, report->lineno, report->column)
               .get());
     }
 
@@ -1838,7 +1837,7 @@ static void CheckErrorsAndWarnings(JS::FrontendContext* aFc,
     NS_WARNING(
         nsPrintfCString(
             "Had compilation warning in ScriptCompileTask: %s at %s:%u:%u",
-            message, filename, report->lineno, report->column.oneOriginValue())
+            message, filename, report->lineno, report->column)
             .get());
   }
 }

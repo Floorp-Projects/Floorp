@@ -19,17 +19,16 @@
 #include "ds/Sort.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
 #include "frontend/FrontendContext.h"   // js::AutoReportFrontendContext
-#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
-#include "js/Context.h"            // js::AssertHeapIsIdle
-#include "js/ErrorReport.h"        // JSErrorBase
-#include "js/RootingAPI.h"         // JS::MutableHandle
-#include "js/Value.h"              // JS::Value
-#include "vm/EnvironmentObject.h"  // js::ModuleEnvironmentObject
-#include "vm/JSAtomUtils.h"        // AtomizeString
-#include "vm/JSContext.h"          // CHECK_THREAD, JSContext
-#include "vm/JSObject.h"           // JSObject
-#include "vm/List.h"               // ListObject
-#include "vm/Runtime.h"            // JSRuntime
+#include "js/Context.h"                 // js::AssertHeapIsIdle
+#include "js/ErrorReport.h"             // JSErrorBase
+#include "js/RootingAPI.h"              // JS::MutableHandle
+#include "js/Value.h"                   // JS::Value
+#include "vm/EnvironmentObject.h"       // js::ModuleEnvironmentObject
+#include "vm/JSAtomUtils.h"             // AtomizeString
+#include "vm/JSContext.h"               // CHECK_THREAD, JSContext
+#include "vm/JSObject.h"                // JSObject
+#include "vm/List.h"                    // ListObject
+#include "vm/Runtime.h"                 // JSRuntime
 
 #include "vm/JSAtomUtils-inl.h"  // AtomToId
 #include "vm/JSContext-inl.h"    // JSContext::{c,releaseC}heck
@@ -197,7 +196,7 @@ JS_PUBLIC_API JSString* JS::GetRequestedModuleSpecifier(
 
 JS_PUBLIC_API void JS::GetRequestedModuleSourcePos(
     JSContext* cx, Handle<JSObject*> moduleRecord, uint32_t index,
-    uint32_t* lineNumber, JS::ColumnNumberZeroOrigin* columnNumber) {
+    uint32_t* lineNumber, uint32_t* columnNumber) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(moduleRecord);
@@ -856,10 +855,11 @@ static ModuleNamespaceObject* ModuleNamespaceCreate(
   return ns;
 }
 
+// column is 0-origin.
 static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
                                  Handle<Value> resolution, bool isDirectImport,
                                  Handle<JSAtom*> name, uint32_t line,
-                                 JS::ColumnNumberZeroOrigin column) {
+                                 uint32_t column) {
   MOZ_ASSERT(line != 0);
 
   bool isAmbiguous = resolution == StringValue(cx->names().ambiguous);
@@ -907,8 +907,8 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
 
   RootedValue error(cx);
   if (!JS::CreateError(cx, JSEXN_SYNTAXERR, nullptr, filename, line,
-                       JS::ColumnNumberOneOrigin(column), nullptr, message,
-                       JS::NothingHandleValue, &error)) {
+                       JSErrorBase::fromZeroOriginToOneOrigin(column), nullptr,
+                       message, JS::NothingHandleValue, &error)) {
     return;
   }
 

@@ -306,7 +306,7 @@ void CodeGeneratorShared::dumpNativeToBytecodeEntries() {
   InlineScriptTree* topTree = gen->outerInfo().inlineScriptTree();
   JitSpewStart(JitSpew_Profiling, "Native To Bytecode Entries for %s:%u:%u\n",
                topTree->script()->filename(), topTree->script()->lineno(),
-               topTree->script()->column().zeroOriginValue());
+               topTree->script()->column());
   for (unsigned i = 0; i < nativeToBytecodeList_.length(); i++) {
     dumpNativeToBytecodeEntry(i);
   }
@@ -332,12 +332,11 @@ void CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx) {
       JitSpew_Profiling, "    %08zx [+%-6u] => %-6ld [%-4u] {%-10s} (%s:%u:%u",
       ref.nativeOffset.offset(), nativeDelta, (long)(ref.pc - script->code()),
       pcDelta, CodeName(JSOp(*ref.pc)), script->filename(), script->lineno(),
-      script->column().zeroOriginValue());
+      script->column());
 
   for (tree = tree->caller(); tree; tree = tree->caller()) {
     JitSpewCont(JitSpew_Profiling, " <= %s:%u:%u", tree->script()->filename(),
-                tree->script()->lineno(),
-                tree->script()->column().zeroOriginValue());
+                tree->script()->lineno(), tree->script()->column());
   }
   JitSpewCont(JitSpew_Profiling, ")");
   JitSpewFin(JitSpew_Profiling);

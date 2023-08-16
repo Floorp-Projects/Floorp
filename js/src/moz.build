@@ -132,7 +132,6 @@ EXPORTS.js += [
     "../public/CallNonGenericMethod.h",
     "../public/CharacterEncoding.h",
     "../public/Class.h",
-    "../public/ColumnNumber.h",
     "../public/ComparisonOperators.h",
     "../public/CompilationAndEvaluation.h",
     "../public/CompileOptions.h",

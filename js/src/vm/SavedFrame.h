@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 
 #include "gc/Policy.h"
-#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberOneOrigin
 #include "js/GCHashTable.h"
 #include "js/Principals.h"
 #include "js/UbiNode.h"
@@ -51,8 +50,8 @@ class SavedFrame : public NativeObject {
   uint32_t getSourceId();
   // Line number (1-origin).
   uint32_t getLine();
-  // Column number in UTF-16 code units.
-  JS::TaggedColumnNumberOneOrigin getColumn();
+  // Column number in UTF-16 code units (1-origin).
+  uint32_t getColumn();
   JSAtom* getFunctionDisplayName();
   JSAtom* getAsyncCause();
   SavedFrame* getParent() const;
@@ -124,7 +123,7 @@ class SavedFrame : public NativeObject {
   void initSource(JSAtom* source);
   void initSourceId(uint32_t id);
   void initLine(uint32_t line);
-  void initColumn(JS::TaggedColumnNumberOneOrigin column);
+  void initColumn(uint32_t column);
   void initFunctionDisplayName(JSAtom* maybeName);
   void initAsyncCause(JSAtom* maybeCause);
   void initParent(SavedFrame* maybeParent);
@@ -261,9 +260,7 @@ class ConcreteStackFrame<SavedFrame> : public BaseStackFrame {
 
   StackFrame parent() const override { return get().getParent(); }
   uint32_t line() const override { return get().getLine(); }
-  JS::TaggedColumnNumberOneOrigin column() const override {
-    return get().getColumn();
-  }
+  uint32_t column() const override { return get().getColumn(); }
 
   AtomOrTwoByteChars source() const override {
     auto source = get().getSource();

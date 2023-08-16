@@ -239,7 +239,7 @@ void WorkletNodeEngine::SendProcessorError(AudioNodeTrack* aTrack,
     xpc::ErrorReport::ErrorReportToMessageString(jsReport.report(),
                                                  details.mMessage);
     details.mLineno = jsReport.report()->lineno;
-    details.mColno = jsReport.report()->column.oneOriginValue();
+    details.mColno = jsReport.report()->column;
     MOZ_ASSERT(!jsReport.report()->isMuted);
 
     SendErrorToMainThread(aTrack, details);

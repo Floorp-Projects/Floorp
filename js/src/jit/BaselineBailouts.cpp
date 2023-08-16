@@ -477,8 +477,7 @@ bool BaselineStackBuilder::initFrame() {
   }
 
   JitSpew(JitSpew_BaselineBailouts, "      Unpacking %s:%u:%u",
-          script_->filename(), script_->lineno(),
-          script_->column().zeroOriginValue());
+          script_->filename(), script_->lineno(), script_->column());
   JitSpew(JitSpew_BaselineBailouts, "      [BASELINE-JS FRAME]");
 
   // Write the previous frame pointer value. For the outermost frame we reuse
@@ -1495,7 +1494,7 @@ bool BaselineStackBuilder::buildOneFrame() {
           "      Resuming %s pc offset %d (op %s) (line %u) of %s:%u:%u",
           resumeAfter() ? "after" : "at", (int)pcOff, CodeName(op_),
           PCToLineNumber(script_, pc()), script_->filename(), script_->lineno(),
-          script_->column().zeroOriginValue());
+          script_->column());
   JitSpew(JitSpew_BaselineBailouts, "      Bailout kind: %s",
           BailoutKindString(bailoutKind()));
 #endif
@@ -1581,8 +1580,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   JitSpew(JitSpew_BaselineBailouts,
           "Bailing to baseline %s:%u:%u (IonScript=%p) (FrameType=%d)",
           iter.script()->filename(), iter.script()->lineno(),
-          iter.script()->column().zeroOriginValue(), (void*)iter.ionScript(),
-          (int)prevFrameType);
+          iter.script()->column(), (void*)iter.ionScript(), (int)prevFrameType);
 
   if (excInfo) {
     if (excInfo->catchingException()) {
@@ -1627,7 +1625,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
   if (iter.maybeCallee()) {
     JitSpew(JitSpew_BaselineBailouts, "  Callee function (%s:%u:%u)",
             iter.script()->filename(), iter.script()->lineno(),
-            iter.script()->column().zeroOriginValue());
+            iter.script()->column());
   } else {
     JitSpew(JitSpew_BaselineBailouts, "  No callee!");
   }
@@ -1731,9 +1729,9 @@ static void HandleLexicalCheckFailure(JSContext* cx, HandleScript outerScript,
                                       HandleScript innerScript) {
   JitSpew(JitSpew_IonBailouts,
           "Lexical check failure %s:%u:%u, inlined into %s:%u:%u",
-          innerScript->filename(), innerScript->lineno(),
-          innerScript->column().zeroOriginValue(), outerScript->filename(),
-          outerScript->lineno(), outerScript->column().zeroOriginValue());
+          innerScript->filename(), innerScript->lineno(), innerScript->column(),
+          outerScript->filename(), outerScript->lineno(),
+          outerScript->column());
 
   if (!innerScript->failedLexicalCheck()) {
     innerScript->setFailedLexicalCheck();
@@ -1960,10 +1958,9 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
   JitSpew(JitSpew_BaselineBailouts,
           "  Restored outerScript=(%s:%u:%u,%u) innerScript=(%s:%u:%u,%u) "
           "(bailoutKind=%u)",
-          outerScript->filename(), outerScript->lineno(),
-          outerScript->column().zeroOriginValue(),
+          outerScript->filename(), outerScript->lineno(), outerScript->column(),
           outerScript->getWarmUpCount(), innerScript->filename(),
-          innerScript->lineno(), innerScript->column().zeroOriginValue(),
+          innerScript->lineno(), innerScript->column(),
           innerScript->getWarmUpCount(), (unsigned)bailoutKind);
 
   BailoutAction action = BailoutAction::InvalidateImmediately;

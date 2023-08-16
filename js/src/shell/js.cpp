@@ -3895,7 +3895,7 @@ static bool CopyErrorReportToObject(JSContext* cx, JSErrorReport* report,
     return false;
   }
 
-  RootedValue columnVal(cx, Int32Value(report->column.oneOriginValue()));
+  RootedValue columnVal(cx, Int32Value(report->column));
   if (!DefineDataProperty(cx, obj, cx->names().columnNumber, columnVal)) {
     return false;
   }
@@ -4144,7 +4144,7 @@ static bool EvalInContext(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   JS::AutoFilename filename;
-  uint32_t lineno;
+  unsigned lineno;
 
   DescribeScriptedCaller(cx, &filename, &lineno);
   {

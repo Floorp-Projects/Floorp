@@ -19,7 +19,6 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
-#include "js/ColumnNumber.h"          // JS::LimitedColumnNumberZeroOrigin
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/PropertyAndElement.h"    // JS_DefineFunction
@@ -726,8 +725,8 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
 
   dst.setObject(*loc);
 
-  uint32_t startLineNum, endLineNum;
-  JS::LimitedColumnNumberZeroOrigin startColumnIndex, endColumnIndex;
+  uint32_t startLineNum, startColumnIndex;
+  uint32_t endLineNum, endColumnIndex;
   parser->tokenStream.computeLineAndColumn(pos->begin, &startLineNum,
                                            &startColumnIndex);
   parser->tokenStream.computeLineAndColumn(pos->end, &endLineNum,
@@ -744,7 +743,7 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
   if (!defineProperty(to, "line", val)) {
     return false;
   }
-  val.setNumber(startColumnIndex.zeroOriginValue());
+  val.setNumber(startColumnIndex);
   if (!defineProperty(to, "column", val)) {
     return false;
   }
@@ -760,7 +759,7 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
   if (!defineProperty(to, "line", val)) {
     return false;
   }
-  val.setNumber(endColumnIndex.zeroOriginValue());
+  val.setNumber(endColumnIndex);
   if (!defineProperty(to, "column", val)) {
     return false;
   }
@@ -3764,9 +3763,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     ModuleBuilder builder(&fc, &parser);
 
     uint32_t len = chars.length();
-    SourceExtent extent = SourceExtent::makeGlobalExtent(
-        len, options.lineno,
-        JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options.column));
+    SourceExtent extent =
+        SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
     ModuleSharedContext modulesc(&fc, options, builder, extent);
     pn = parser.moduleBody(&modulesc);
     if (!pn) {

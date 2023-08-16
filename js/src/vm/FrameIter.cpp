@@ -16,11 +16,10 @@
 #include "jit/BaselineFrame.h"   // js::jit::BaselineFrame
 #include "jit/JitFrames.h"       // js::jit::EnsureUnwoundJitExitFrame
 #include "jit/JSJitFrameIter.h"  // js::jit::{FrameType,InlineFrameIterator,JSJitFrameIter,MaybeReadFallback,SnapshotIterator}
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::TaggedColumnNumberZeroOrigin
-#include "js/GCAPI.h"              // JS::AutoSuppressGCAnalysis
-#include "js/Principals.h"         // JSSubsumesOp
-#include "js/RootingAPI.h"         // JS::Rooted
-#include "vm/Activation.h"         // js::Activation{,Iterator}
+#include "js/GCAPI.h"            // JS::AutoSuppressGCAnalysis
+#include "js/Principals.h"       // JSSubsumesOp
+#include "js/RootingAPI.h"       // JS::Rooted
+#include "vm/Activation.h"       // js::Activation{,Iterator}
 #include "vm/EnvironmentObject.h"  // js::CallObject
 #include "vm/JitActivation.h"      // js::jit::JitActivation
 #include "vm/JSContext.h"          // JSContext
@@ -619,8 +618,7 @@ const char16_t* FrameIter::displayURL() const {
   MOZ_CRASH("Unexpected state");
 }
 
-unsigned FrameIter::computeLine(
-    JS::TaggedColumnNumberZeroOrigin* column) const {
+unsigned FrameIter::computeLine(uint32_t* column) const {
   switch (data_.state_) {
     case DONE:
       break;
@@ -629,12 +627,7 @@ unsigned FrameIter::computeLine(
       if (isWasm()) {
         return wasmFrame().computeLine(column);
       }
-      JS::LimitedColumnNumberZeroOrigin columnNumber;
-      unsigned lineNumber = PCToLineNumber(script(), pc(), &columnNumber);
-      if (column) {
-        *column = JS::TaggedColumnNumberZeroOrigin(columnNumber);
-      }
-      return lineNumber;
+      return PCToLineNumber(script(), pc(), column);
   }
 
   MOZ_CRASH("Unexpected state");

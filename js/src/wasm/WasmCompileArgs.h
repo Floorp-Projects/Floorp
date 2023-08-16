@@ -111,7 +111,7 @@ struct FeatureArgs {
 struct ScriptedCaller {
   UniqueChars filename;  // UTF-8 encoded
   bool filenameIsURL;
-  uint32_t line;
+  unsigned line;
 
   ScriptedCaller() : filenameIsURL(false), line(0) {}
 };

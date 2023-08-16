@@ -13,7 +13,6 @@
 
 #include "js/Array.h"  // JS::GetArrayLength
 #include "js/CompilationAndEvaluation.h"
-#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
 #include "js/ContextOptions.h"        // JS::ContextOptionsRef
 #include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -223,8 +222,7 @@ JSString* ModuleLoaderBase::ImportMetaResolveImpl(
     if (result.isErr()) {
       JS::Rooted<JS::Value> error(aCx);
       nsresult rv = loader->HandleResolveFailure(
-          aCx, script, specifier, result.unwrapErr(), 0,
-          JS::ColumnNumberZeroOrigin::zero(), &error);
+          aCx, script, specifier, result.unwrapErr(), 0, 0, &error);
       if (NS_FAILED(rv)) {
         JS_ReportOutOfMemory(aCx);
         return nullptr;
@@ -319,8 +317,7 @@ bool ModuleLoaderBase::HostImportModuleDynamically(
   if (result.isErr()) {
     JS::Rooted<JS::Value> error(aCx);
     nsresult rv = loader->HandleResolveFailure(
-        aCx, script, specifier, result.unwrapErr(), 0,
-        JS::ColumnNumberZeroOrigin::zero(), &error);
+        aCx, script, specifier, result.unwrapErr(), 0, 0, &error);
     if (NS_FAILED(rv)) {
       JS_ReportOutOfMemory(aCx);
       return false;
@@ -702,8 +699,7 @@ nsresult ModuleLoaderBase::GetResolveFailureMessage(ResolveError aError,
 
 nsresult ModuleLoaderBase::HandleResolveFailure(
     JSContext* aCx, LoadedScript* aScript, const nsAString& aSpecifier,
-    ResolveError aError, uint32_t aLineNumber,
-    JS::ColumnNumberZeroOrigin aColumnNumber,
+    ResolveError aError, uint32_t aLineNumber, uint32_t aColumnNumber,
     JS::MutableHandle<JS::Value> aErrorOut) {
   JS::Rooted<JSString*> filename(aCx);
   if (aScript) {
@@ -728,8 +724,8 @@ nsresult ModuleLoaderBase::HandleResolveFailure(
   }
 
   if (!JS::CreateError(aCx, JSEXN_TYPEERR, nullptr, filename, aLineNumber,
-                       JS::ColumnNumberOneOrigin(aColumnNumber), nullptr,
-                       string, JS::NothingHandleValue, aErrorOut)) {
+                       JSErrorBase::fromZeroOriginToOneOrigin(aColumnNumber),
+                       nullptr, string, JS::NothingHandleValue, aErrorOut)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -824,7 +820,7 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
     auto result = loader->ResolveModuleSpecifier(ms, specifier);
     if (result.isErr()) {
       uint32_t lineNumber = 0;
-      JS::ColumnNumberZeroOrigin columnNumber;
+      uint32_t columnNumber = 0;
       JS::GetRequestedModuleSourcePos(cx, moduleRecord, i, &lineNumber,
                                       &columnNumber);
 

@@ -71,7 +71,6 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsILoadInfo.h"
-#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"
@@ -532,8 +531,8 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
   if (reportViolation) {
     JS::AutoFilename scriptFilename;
     nsAutoString fileName;
-    uint32_t lineNum = 0;
-    JS::ColumnNumberZeroOrigin columnNum;
+    unsigned lineNum = 0;
+    unsigned columnNum = 0;
     if (JS::DescribeScriptedCaller(cx, &scriptFilename, &lineNum, &columnNum)) {
       if (const char* file = scriptFilename.get()) {
         CopyUTF8toUTF16(nsDependentCString(file), fileName);
@@ -555,7 +554,7 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     csp->LogViolationDetails(violationType,
                              nullptr,  // triggering element
                              cspEventListener, fileName, scriptSample, lineNum,
-                             columnNum.zeroOriginValue(), u""_ns, u""_ns);
+                             columnNum, u""_ns, u""_ns);
   }
 
   return evalOK;
