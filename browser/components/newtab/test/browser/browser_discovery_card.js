@@ -32,13 +32,13 @@ test_newtab({
       "[data-section-id='topstories'] .ds-card-link"
     ).length;
     is(found, 1, "there should be 1 topstory card");
-    let cardHostname = content.document.querySelector(
+    let cardPublisher = content.document.querySelector(
       "[data-section-id='topstories'] .source"
     ).innerText;
     is(
-      cardHostname,
-      "bbc.com",
-      `Card hostname is ${cardHostname} instead of bbc.com`
+      cardPublisher,
+      "bbc",
+      `Card publisher is ${cardPublisher} instead of bbc`
     );
   },
 });
