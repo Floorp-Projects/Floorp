@@ -21,8 +21,7 @@ class ScreenDetails;
 }  // namespace dom
 }  // namespace mozilla
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 class ScreenManager final : public nsIScreenManager {
  public:
@@ -62,7 +61,6 @@ class ScreenManager final : public nsIScreenManager {
   UniquePtr<Helper> mHelper;
 };
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget
 
 #endif  // mozilla_widget_ScreenManager_h

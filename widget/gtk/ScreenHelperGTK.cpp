@@ -42,31 +42,19 @@ static LazyLogModule sScreenLog("WidgetScreen");
 
 using GdkMonitor = struct _GdkMonitor;
 
-class ScreenGetter {
- public:
-  ScreenGetter() = default;
-  virtual ~ScreenGetter() = default;
-
-  virtual void Init() {}
-  virtual void RefreshScreens() {}
-  virtual RefPtr<widget::Screen> GetScreenForWindow(nsWindow* aWindow) {
-    return nullptr;
-  }
-};
-
-class ScreenGetterGtk final : public ScreenGetter {
+class ScreenGetterGtk final {
  public:
   ScreenGetterGtk() = default;
   ~ScreenGetterGtk();
 
-  void Init() final;
+  void Init();
 
 #ifdef MOZ_X11
   Atom NetWorkareaAtom() { return mNetWorkareaAtom; }
 #endif
 
   // For internal use from signal callback functions
-  void RefreshScreens() final;
+  void RefreshScreens();
 
  private:
   GdkWindow* mRootWindow = nullptr;
@@ -75,54 +63,53 @@ class ScreenGetterGtk final : public ScreenGetter {
 #endif
 };
 
-struct MonitorConfig;
+static GdkMonitor* GdkDisplayGetMonitor(GdkDisplay* aDisplay, int aMonitorNum) {
+  static auto s_gdk_display_get_monitor = (GdkMonitor * (*)(GdkDisplay*, int))
+      dlsym(RTLD_DEFAULT, "gdk_display_get_monitor");
+  if (!s_gdk_display_get_monitor) {
+    return nullptr;
+  }
+  return s_gdk_display_get_monitor(aDisplay, aMonitorNum);
+}
 
-#ifdef MOZ_WAYLAND
-class ScreenGetterWayland final : public ScreenGetter {
- public:
-  ScreenGetterWayland() = default;
-  ~ScreenGetterWayland() { MozClearPointer(mRegistry, wl_registry_destroy); }
+RefPtr<Screen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
+  LOG_SCREEN("GetScreenForWindow() [%p]", aWindow);
 
-  void Init();
+  static auto s_gdk_display_get_monitor_at_window =
+      (GdkMonitor * (*)(GdkDisplay*, GdkWindow*))
+          dlsym(RTLD_DEFAULT, "gdk_display_get_monitor_at_window");
 
-  MonitorConfig* AddMonitorConfig(int aId);
-  bool RemoveMonitorConfig(int aId);
-  already_AddRefed<Screen> MakeScreenWayland(gint aMonitor);
+  if (!s_gdk_display_get_monitor_at_window) {
+    LOG_SCREEN("  failed, missing Gtk helpers");
+    return nullptr;
+  }
 
-  RefPtr<widget::Screen> GetScreenForWindow(nsWindow* aWindow);
+  GdkWindow* gdkWindow = gtk_widget_get_window(aWindow->GetGtkWidget());
+  if (!gdkWindow) {
+    LOG_SCREEN("  failed, can't get GdkWindow");
+    return nullptr;
+  }
 
-  // For internal use from signal callback functions
-  void RefreshScreens();
+  GdkDisplay* display = gdk_display_get_default();
+  GdkMonitor* monitor = s_gdk_display_get_monitor_at_window(display, gdkWindow);
+  if (!monitor) {
+    LOG_SCREEN("  failed, can't get monitor for GdkWindow");
+    return nullptr;
+  }
 
- private:
-  int GetMonitorForWindow(nsWindow* aWindow);
-  bool MonitorUsesNonIntegerScale(int aMonitor);
+  int index = -1;
+  while (GdkMonitor* m = GdkDisplayGetMonitor(display, ++index)) {
+    if (m == monitor) {
+      return ScreenManager::GetSingleton().CurrentScreenList().SafeElementAt(
+          index);
+    }
+  }
 
- private:
-  wl_registry* mRegistry = nullptr;
-  // We use UniquePtr<> here to ensure that MonitorConfig is heap-allocated
-  // so it's not invalidated by any change to mMonitors that could happen in the
-  // meantime.
-  AutoTArray<UniquePtr<MonitorConfig>, 4> mMonitors;
-  AutoTArray<RefPtr<Screen>, 4> mScreenList;
-};
-#endif
+  LOG_SCREEN("  Couldn't find monitor %p", monitor);
+  return nullptr;
+}
 
-static UniquePtr<ScreenGetter> gScreenGetter;
-struct MonitorConfig {
-  int id = 0;
-  int x = 0;
-  int y = 0;
-  int width_mm = 0;
-  int height_mm = 0;
-  int width = 0;
-  int height = 0;
-  int scale = 0;
-  int refresh = 0;
-  int transform = 0;
-
-  explicit MonitorConfig(int aId) : id(aId) {}
-};
+static UniquePtr<ScreenGetterGtk> gScreenGetter;
 
 static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
   LOG_SCREEN("Received monitors-changed event");
@@ -221,8 +208,6 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
 
   gint refreshRate = [&] {
     // Since gtk 3.22
-    static auto s_gdk_display_get_monitor = (GdkMonitor * (*)(GdkDisplay*, int))
-        dlsym(RTLD_DEFAULT, "gdk_display_get_monitor");
     static auto s_gdk_monitor_get_refresh_rate = (int (*)(GdkMonitor*))dlsym(
         RTLD_DEFAULT, "gdk_monitor_get_refresh_rate");
 
@@ -230,7 +215,7 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
       return 0;
     }
     GdkMonitor* monitor =
-        s_gdk_display_get_monitor(gdk_display_get_default(), aMonitorNum);
+        GdkDisplayGetMonitor(gdk_display_get_default(), aMonitorNum);
     if (!monitor) {
       return 0;
     }
@@ -299,307 +284,13 @@ void ScreenGetterGtk::RefreshScreens() {
   ScreenManager::Refresh(std::move(screenList));
 }
 
-#ifdef MOZ_WAYLAND
-static void output_handle_geometry(void* data, struct wl_output* wl_output,
-                                   int x, int y, int physical_width,
-                                   int physical_height, int subpixel,
-                                   const char* make, const char* model,
-                                   int32_t transform) {
-  auto* monitor = static_cast<MonitorConfig*>(data);
-  LOG_SCREEN(
-      "wl_output: geometry position %d %d physical size %d %d, subpixel %d, "
-      "transform %d",
-      x, y, physical_width, physical_height, subpixel, transform);
-  monitor->x = x;
-  monitor->y = y;
-  monitor->width_mm = physical_width;
-  monitor->height_mm = physical_height;
-  monitor->transform = transform;
-}
-
-static void output_handle_done(void* data, struct wl_output* wl_output) {
-  LOG_SCREEN("done");
-  gScreenGetter->RefreshScreens();
-}
-
-static void output_handle_scale(void* data, struct wl_output* wl_output,
-                                int32_t scale) {
-  auto* monitor = static_cast<MonitorConfig*>(data);
-  LOG_SCREEN("wl_output: scale %d", scale);
-  monitor->scale = scale;
-}
-
-static void output_handle_mode(void* data, struct wl_output* wl_output,
-                               uint32_t flags, int width, int height,
-                               int refresh) {
-  auto* monitor = static_cast<MonitorConfig*>(data);
-  LOG_SCREEN("wl_output: mode output size %d x %d refresh %d", width, height,
-             refresh);
-
-  if ((flags & WL_OUTPUT_MODE_CURRENT) == 0) return;
-
-  monitor->refresh = NSToIntRound(refresh / 1000.0f);
-  monitor->width = width;
-  monitor->height = height;
-}
-
-static const struct wl_output_listener output_listener = {
-    output_handle_geometry,
-    output_handle_mode,
-    output_handle_done,
-    output_handle_scale,
-};
-
-static void screen_registry_handler(void* data, wl_registry* registry,
-                                    uint32_t id, const char* interface,
-                                    uint32_t version) {
-  auto* getter = static_cast<ScreenGetterWayland*>(data);
-  if (strcmp(interface, "wl_output") == 0 && version > 1) {
-    auto* output =
-        WaylandRegistryBind<wl_output>(registry, id, &wl_output_interface, 2);
-    wl_output_add_listener(output, &output_listener,
-                           getter->AddMonitorConfig(id));
-  }
-}
-
-static void screen_registry_remover(void* data, struct wl_registry* registry,
-                                    uint32_t id) {
-  auto* getter = static_cast<ScreenGetterWayland*>(data);
-  if (getter->RemoveMonitorConfig(id)) {
-    getter->RefreshScreens();
-  }
-  /* TODO: the object needs to be destroyed here, we're leaking */
-}
-
-static const struct wl_registry_listener screen_registry_listener = {
-    screen_registry_handler, screen_registry_remover};
-
-void ScreenGetterWayland::Init() {
-  MOZ_ASSERT(GdkIsWaylandDisplay());
-  LOG_SCREEN("ScreenGetterWayland created");
-  wl_display* display = WaylandDisplayGetWLDisplay();
-  mRegistry = wl_display_get_registry(display);
-  wl_registry_add_listener((wl_registry*)mRegistry, &screen_registry_listener,
-                           this);
-  wl_display_roundtrip(display);
-  wl_display_roundtrip(display);
-}
-
-MonitorConfig* ScreenGetterWayland::AddMonitorConfig(int aId) {
-  LOG_SCREEN("Add Monitor ID %d num %d", aId, (int)(mMonitors.Length() - 1));
-  UniquePtr<MonitorConfig> monitor = MakeUnique<MonitorConfig>(aId);
-  mMonitors.AppendElement(std::move(monitor));
-  return mMonitors.LastElement().get();
-}
-
-bool ScreenGetterWayland::RemoveMonitorConfig(int aId) {
-  for (unsigned int i = 0; i < mMonitors.Length(); i++) {
-    if (mMonitors[i]->id == aId) {
-      LOG_SCREEN("Remove Monitor ID %d num %d", aId, i);
-      mMonitors.RemoveElementAt(i);
-      return true;
-    }
-  }
-  return false;
-}
-
-static bool GdkMonitorGetWorkarea(GdkMonitor* monitor, GdkRectangle* workarea) {
-  static auto s_gdk_monitor_get_workarea =
-      (void (*)(GdkMonitor*, GdkRectangle*))dlsym(RTLD_DEFAULT,
-                                                  "gdk_monitor_get_workarea");
-  if (!s_gdk_monitor_get_workarea) {
-    return false;
-  }
-
-  s_gdk_monitor_get_workarea(monitor, workarea);
-  return true;
-}
-
-already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
-  MonitorConfig* monitor = mMonitors[aMonitor].get();
-
-  // On GNOME/Mutter we use results from wl_output directly
-  LayoutDeviceIntRect rect(monitor->x, monitor->y, monitor->width,
-                           monitor->height);
-
-  uint32_t pixelDepth = GetGTKPixelDepth();
-
-  // Use per-monitor scaling factor in gtk/wayland, or 1.0 otherwise.
-  DesktopToLayoutDeviceScale contentsScale(monitor->scale);
-
-  CSSToLayoutDeviceScale defaultCssScale(monitor->scale);
-
-  float dpi = 96.0f;
-  gint heightMM = monitor->height_mm;
-  if (heightMM > 0) {
-    dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
-  }
-
-  bool defaultIsLandscape;
-  if (monitor->transform == WL_OUTPUT_TRANSFORM_90 ||
-      monitor->transform == WL_OUTPUT_TRANSFORM_270) {
-    defaultIsLandscape = rect.width < rect.height;
-  } else {
-    defaultIsLandscape = rect.width >= rect.height;
-  }
-
-  hal::ScreenOrientation orientation;
-  Screen::OrientationAngle angle;
-  // transform is counter-clockwise, but Screen Orientation API is clockwise.
-  switch (monitor->transform) {
-    case WL_OUTPUT_TRANSFORM_NORMAL:
-      orientation = defaultIsLandscape
-                        ? hal::ScreenOrientation::LandscapePrimary
-                        : hal::ScreenOrientation::PortraitPrimary;
-      angle = 0;
-      break;
-    case WL_OUTPUT_TRANSFORM_90:
-      orientation = defaultIsLandscape
-                        ? hal::ScreenOrientation::PortraitPrimary
-                        : hal::ScreenOrientation::LandscapeSecondary;
-      angle = 270;
-      break;
-    case WL_OUTPUT_TRANSFORM_180:
-      orientation = defaultIsLandscape
-                        ? hal::ScreenOrientation::LandscapeSecondary
-                        : hal::ScreenOrientation::PortraitSecondary;
-      angle = 180;
-      break;
-    case WL_OUTPUT_TRANSFORM_270:
-      orientation = defaultIsLandscape
-                        ? hal::ScreenOrientation::PortraitSecondary
-                        : hal::ScreenOrientation::LandscapePrimary;
-      angle = 90;
-      break;
-    default:
-      // WL_OUTPUT_TRANSFORM_FLIPPED_* is ignore since this is unused on normal
-      // situation.
-      orientation = hal::ScreenOrientation::None;
-      angle = 0;
-      break;
-  }
-
-  LOG_SCREEN(
-      "Monitor %d [%d %d -> %d x %d depth %d content scale %f css scale %f "
-      "DPI %f, refresh %d, orientation %u, angle %u]",
-      aMonitor, rect.x, rect.y, rect.width, rect.height, pixelDepth,
-      contentsScale.scale, defaultCssScale.scale, dpi, monitor->refresh,
-      static_cast<uint32_t>(orientation), angle);
-
-  // We report zero screen shift on Wayland. All popups positions are relative
-  // to toplevel and we can't get toplevel position from Wayland compositor.
-  rect.x = rect.y = 0;
-  return MakeAndAddRef<Screen>(
-      rect, rect, pixelDepth, pixelDepth, monitor->refresh, contentsScale,
-      defaultCssScale, dpi, Screen::IsPseudoDisplay::No, orientation, angle);
-}
-
-void ScreenGetterWayland::RefreshScreens() {
-  LOG_SCREEN("ScreenGetterWayland::RefreshScreens()");
-  AutoTArray<RefPtr<Screen>, 4> managerScreenList;
-
-  mScreenList.Clear();
-  const gint numScreens = mMonitors.Length();
-  LOG_SCREEN("Wayland reports %d monitors", numScreens);
-  for (gint i = 0; i < numScreens; i++) {
-    RefPtr<Screen> screen = MakeScreenWayland(i);
-    mScreenList.AppendElement(screen);
-    managerScreenList.AppendElement(screen);
-  }
-
-  ScreenManager::Refresh(std::move(managerScreenList));
-}
-
-int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
-  LOG_SCREEN("GetMonitorForWindow() [%p]", aWindow);
-
-  static auto s_gdk_display_get_monitor_at_window =
-      (GdkMonitor * (*)(GdkDisplay*, GdkWindow*))
-          dlsym(RTLD_DEFAULT, "gdk_display_get_monitor_at_window");
-
-  if (!s_gdk_display_get_monitor_at_window) {
-    LOG_SCREEN("  failed, missing Gtk helpers");
-    return -1;
-  }
-
-  GdkWindow* gdkWindow = gtk_widget_get_window(aWindow->GetGtkWidget());
-  if (!gdkWindow) {
-    LOG_SCREEN("  failed, can't get GdkWindow");
-    return -1;
-  }
-
-  GdkMonitor* monitor =
-      s_gdk_display_get_monitor_at_window(gdk_display_get_default(), gdkWindow);
-  if (!monitor) {
-    LOG_SCREEN("  failed, can't get monitor for GdkWindow");
-    return -1;
-  }
-
-  GdkRectangle workArea;
-  if (!GdkMonitorGetWorkarea(monitor, &workArea)) {
-    LOG_SCREEN("  failed, can't get work area");
-    return -1;
-  }
-
-  for (unsigned int i = 0; i < mMonitors.Length(); i++) {
-    // Although Gtk/Mutter is very creative in reporting various screens sizes
-    // we can rely on Gtk work area start position to match wl_output.
-    if (mMonitors[i]->x == workArea.x && mMonitors[i]->y == workArea.y) {
-      LOG_SCREEN(" monitor %d work area [%d, %d] -> (%d x %d) scale %d", i,
-                 mMonitors[i]->x, mMonitors[i]->y, mMonitors[i]->width,
-                 mMonitors[i]->height, mMonitors[i]->scale);
-      return i;
-    }
-  }
-
-  return -1;
-}
-
-RefPtr<widget::Screen> ScreenGetterWayland::GetScreenForWindow(
-    nsWindow* aWindow) {
-  if (mMonitors.IsEmpty()) {
-    return nullptr;
-  }
-
-  int monitor = GetMonitorForWindow(aWindow);
-  if (monitor < 0) {
-    return nullptr;
-  }
-
-  if (mMonitors.Length() != mScreenList.Length()) {
-    // Gtk list of GtkScreens are out of sync with our monitor list.
-    // Try to refresh it now.
-    RefreshScreens();
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT((unsigned)monitor < mScreenList.Length(),
-                        "We're missing screen?");
-  return mScreenList[monitor];
-}
-#endif
-
-RefPtr<widget::Screen> ScreenHelperGTK::GetScreenForWindow(nsWindow* aWindow) {
-  return gScreenGetter->GetScreenForWindow(aWindow);
-}
-
 gint ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum) {
   GdkScreen* screen = gdk_screen_get_default();
   return gdk_screen_get_monitor_scale_factor(screen, aMonitorNum);
 }
 
 ScreenHelperGTK::ScreenHelperGTK() {
-#ifdef MOZ_WAYLAND
-  // Use ScreenGetterWayland on Gnome/Mutter only. It uses additional wl_output
-  // to track screen size changes (which are wrongly reported by mutter)
-  // and causes issues on Sway (Bug 1730476).
-  // https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/3941
-  if (GdkIsWaylandDisplay() && IsGnomeDesktopEnvironment()) {
-    gScreenGetter = MakeUnique<ScreenGetterWayland>();
-  }
-#endif
-  if (!gScreenGetter) {
-    gScreenGetter = MakeUnique<ScreenGetterGtk>();
-  }
+  gScreenGetter = MakeUnique<ScreenGetterGtk>();
   gScreenGetter->Init();
 }
 
