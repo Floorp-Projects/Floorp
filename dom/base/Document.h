@@ -4048,6 +4048,10 @@ class Document : public nsINode,
 
   nsIPermissionDelegateHandler* PermDelegateHandler();
 
+  // Returns whether this is a top-level about:blank page without an opener
+  // (and thus not accessible by content).
+  bool IsContentInaccessibleAboutBlank() const;
+
   // CSS prefers-color-scheme media feature for this document.
   enum class IgnoreRFP { No, Yes };
   ColorScheme PreferredColorScheme(IgnoreRFP = IgnoreRFP::No) const;
