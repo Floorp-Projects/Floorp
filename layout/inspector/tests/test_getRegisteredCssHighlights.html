@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test InspectorUtils.getRegisteredCssHighlights</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<code>InspectorUtils.getRegisteredCssHighlights</code>
+
+<script>
+"use strict";
+
+/** Test for InspectorUtils.getRegisteredCssHighlights **/
+
+const { Assert } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/Assert.sys.mjs"
+);
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
+const codeEl = document.querySelector("code");
+const range = new Range();
+range.setStart(codeEl.firstChild, 10);
+range.setEnd(codeEl.firstChild, 20);
+const searchHighlight = new Highlight(range);
+CSS.highlights.set("search", searchHighlight);
+
+Assert.deepEqual(
+  InspectorUtils.getRegisteredCssHighlights(document),
+  ["search"],
+  `Got registered "search" highlight`
+);
+
+CSS.highlights.set("filter", new Highlight());
+
+Assert.deepEqual(
+  InspectorUtils.getRegisteredCssHighlights(document),
+  ["search", "filter"],
+  `Got new registered "filter" highlight and previous one`
+);
+
+Assert.deepEqual(
+  InspectorUtils.getRegisteredCssHighlights(document, true),
+  ["search"],
+  "Only got registered active highlights when passing activeOnly"
+);
+
+CSS.highlights.clear();
+
+is(
+  InspectorUtils.getRegisteredCssHighlights(document).length,
+  0,
+  "Empty array returned when no highlights are registered"
+);
+is(
+  InspectorUtils.getRegisteredCssHighlights(document, true).length,
+  0,
+  "Empty array returned when passing activeOnly and no highlights are registered"
+);
+
+</script>
+</pre>
+</body>
+</html>

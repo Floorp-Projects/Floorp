@@ -79,6 +79,7 @@ namespace InspectorUtils {
   Element? containingBlockOf(Element element);
 
   [NewObject] NodeList getOverflowingChildrenOfElement(Element element);
+  sequence<DOMString> getRegisteredCssHighlights(Document document, optional boolean activeOnly = false);
 };
 
 dictionary SupportsOptions {
