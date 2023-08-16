@@ -238,31 +238,23 @@ const BASE_MESSAGES = () => [
           },
         },
         {
-          id: "UPGRADE_IMPORT_SETTINGS",
+          id: "UPGRADE_IMPORT_SETTINGS_EMBEDDED",
           content: {
+            tiles: { type: "migration-wizard" },
             position: "split",
             split_narrow_bkg_position: "-42px",
             image_alt_text: {
               string_id: "mr2022-onboarding-import-image-alt",
             },
-            progress_bar: "true",
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
-            logo: {},
-            title: {
-              string_id: "mr2022-onboarding-import-header",
+            progress_bar: true,
+            hide_secondary_section: "responsive",
+            migrate_start: {
+              action: {},
             },
-            subtitle: {
-              string_id: "mr2022-onboarding-import-subtitle",
-            },
-            primary_button: {
-              label: {
-                string_id:
-                  "mr2022-onboarding-import-primary-button-label-no-attribution",
-              },
+            migrate_close: {
               action: {
-                type: "SHOW_MIGRATION_WIZARD",
-                data: {},
                 navigate: true,
               },
             },
@@ -1188,7 +1180,9 @@ const OnboardingMessageProvider = {
 
     //If a user has Firefox as default remove import screen
     if (!needDefault) {
-      removeScreens(screen => screen.id?.startsWith("UPGRADE_IMPORT_SETTINGS"));
+      removeScreens(screen =>
+        screen.id?.startsWith("UPGRADE_IMPORT_SETTINGS_EMBEDDED")
+      );
     }
 
     // If already pinned, convert "pin" screen to "welcome" with desired action.
