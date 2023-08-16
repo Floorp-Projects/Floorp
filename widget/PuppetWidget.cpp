@@ -997,13 +997,6 @@ void PuppetWidget::OnMemoryPressure(layers::MemoryPressureReason aWhy) {
 bool PuppetWidget::NeedsPaint() {
   // e10s popups are handled by the parent process, so never should be painted
   // here
-  if (XRE_IsContentProcess() &&
-      StaticPrefs::browser_tabs_remote_desktopbehavior() &&
-      mWindowType == WindowType::Popup) {
-    NS_WARNING("Trying to paint an e10s popup in the child process!");
-    return false;
-  }
-
   return mVisible;
 }
 
