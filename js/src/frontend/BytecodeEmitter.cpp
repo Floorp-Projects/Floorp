@@ -622,7 +622,7 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
 
   if (colspan != JS::ColumnNumberOffset::zero()) {
     if (!newSrcNote2(SrcNoteType::ColSpan,
-                     SrcNote::ColSpan::toOperand(colspan.value()))) {
+                     SrcNote::ColSpan::toOperand(colspan))) {
       return false;
     }
     bytecodeSection().setLastColumn(columnIndex, offset);

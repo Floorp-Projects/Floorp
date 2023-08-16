@@ -2719,9 +2719,7 @@ unsigned js::PCToLineNumber(unsigned startLine,
       lineno++;
       column = JS::LimitedColumnNumberZeroOrigin::zero();
     } else if (type == SrcNoteType::ColSpan) {
-      ptrdiff_t colspan = SrcNote::ColSpan::getSpan(sn);
-      MOZ_ASSERT(ptrdiff_t(column.zeroOriginValue()) + colspan >= 0);
-      column += JS::ColumnNumberOffset(colspan);
+      column += SrcNote::ColSpan::getSpan(sn);
     }
   }
 
@@ -3533,11 +3531,11 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
         break;
 
       case SrcNoteType::ColSpan: {
-        uint32_t colspan = SrcNote::ColSpan::getSpan(sn);
-        if (!sp->jsprintf(" colspan %u", colspan)) {
+        JS::ColumnNumberOffset colspan = SrcNote::ColSpan::getSpan(sn);
+        if (!sp->jsprintf(" colspan %u", colspan.value())) {
           return false;
         }
-        column += JS::ColumnNumberOffset(colspan);
+        column += colspan;
         break;
       }
 
