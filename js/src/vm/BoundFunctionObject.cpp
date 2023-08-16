@@ -253,7 +253,7 @@ static MOZ_ALWAYS_INLINE JSAtom* ComputeNameValue(
       targetName = targetNameRoot;
     }
     if (!targetName.isString()) {
-      return cx->names().boundWithSpace;
+      return cx->names().boundWithSpace_;
     }
     name = targetName.toString();
   }

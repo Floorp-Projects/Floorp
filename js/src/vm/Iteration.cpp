@@ -2142,7 +2142,7 @@ NativeObject* GlobalObject::getOrCreateIteratorHelperPrototype(
     JSContext* cx, Handle<GlobalObject*> global) {
   return MaybeNativeObject(getOrCreateBuiltinProto(
       cx, global, ProtoKind::IteratorHelperProto,
-      cx->names().IteratorHelper.toHandle(),
+      cx->names().Iterator_Helper_.toHandle(),
       initObjectIteratorProto<ProtoKind::IteratorHelperProto,
                               &IteratorHelperPrototypeClass,
                               iterator_helper_methods>));

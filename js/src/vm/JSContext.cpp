@@ -278,7 +278,7 @@ void JSContext::onOutOfMemory() {
     return;
   }
 
-  RootedValue oomMessage(this, StringValue(names().outOfMemory));
+  RootedValue oomMessage(this, StringValue(names().out_of_memory_));
   setPendingException(oomMessage, nullptr);
   MOZ_ASSERT(status == JS::ExceptionStatus::Throwing);
   status = JS::ExceptionStatus::OutOfMemory;
@@ -1075,7 +1075,7 @@ void JSContext::setRuntime(JSRuntime* rt) {
 
 #if defined(NIGHTLY_BUILD)
 static bool IsOutOfMemoryException(JSContext* cx, const Value& v) {
-  return v == StringValue(cx->names().outOfMemory);
+  return v == StringValue(cx->names().out_of_memory_);
 }
 #endif
 
