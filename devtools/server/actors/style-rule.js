@@ -122,18 +122,26 @@ class StyleRuleActor extends Actor {
   // True if this rule supports as-authored styles, meaning that the
   // rule text can be rewritten using setRuleText.
   get canSetRuleText() {
-    return (
-      this.type === ELEMENT_STYLE ||
-      (this._parentSheet &&
-        // If a rule has been modified via CSSOM, then we should fall
-        // back to non-authored editing.
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1224121
-        !InspectorUtils.hasRulesModifiedByCSSOM(this._parentSheet) &&
-        // Special case about:PreferenceStyleSheet, as it is generated on
-        // the fly and the URI is not registered with the about:handler
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
-        this._parentSheet.href !== "about:PreferenceStyleSheet")
-    );
+    if (this.type === ELEMENT_STYLE) {
+      // Element styles are always editable.
+      return true;
+    }
+    if (!this._parentSheet) {
+      return false;
+    }
+    if (InspectorUtils.hasRulesModifiedByCSSOM(this._parentSheet)) {
+      // If a rule has been modified via CSSOM, then we should fall back to
+      // non-authored editing.
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1224121
+      return false;
+    }
+    if (this._parentSheet.href === "about:PreferenceStyleSheet") {
+      // Special case about:PreferenceStyleSheet, as it is generated on the
+      // fly and the URI is not registered with the about: protocol handler
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
+      return false;
+    }
+    return true;
   }
 
   /**
