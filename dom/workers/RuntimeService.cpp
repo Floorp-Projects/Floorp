@@ -21,6 +21,7 @@
 #include <algorithm>
 #include "mozilla/ipc/BackgroundChild.h"
 #include "GeckoProfiler.h"
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin
 #include "js/experimental/CTypes.h"  // JS::CTypesActivityType, JS::SetCTypesActivityCallback
 #include "jsfriendapi.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -518,7 +519,7 @@ bool ContentSecurityPolicyAllows(JSContext* aCx, JS::RuntimeCode aKind,
   if (reportViolation) {
     nsString fileName;
     uint32_t lineNum = 0;
-    uint32_t columnNum = 0;
+    JS::ColumnNumberZeroOrigin columnNum;
 
     JS::AutoFilename file;
     if (JS::DescribeScriptedCaller(aCx, &file, &lineNum, &columnNum) &&
@@ -530,7 +531,8 @@ bool ContentSecurityPolicyAllows(JSContext* aCx, JS::RuntimeCode aKind,
 
     RefPtr<LogViolationDetailsRunnable> runnable =
         new LogViolationDetailsRunnable(worker, violationType, fileName,
-                                        lineNum, columnNum, scriptSample);
+                                        lineNum, columnNum.zeroOriginValue(),
+                                        scriptSample);
 
     ErrorResult rv;
     runnable->Dispatch(Killing, rv);

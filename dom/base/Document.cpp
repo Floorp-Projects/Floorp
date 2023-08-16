@@ -4323,9 +4323,7 @@ void Document::NoteScriptTrackingStatus(const nsACString& aURL,
 
 bool Document::IsScriptTracking(JSContext* aCx) const {
   JS::AutoFilename filename;
-  uint32_t line = 0;
-  uint32_t column = 0;
-  if (!JS::DescribeScriptedCaller(aCx, &filename, &line, &column)) {
+  if (!JS::DescribeScriptedCaller(aCx, &filename)) {
     return false;
   }
   return mTrackingScripts.Contains(nsDependentCString(filename.get()));

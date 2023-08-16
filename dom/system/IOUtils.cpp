@@ -10,6 +10,7 @@
 
 #include "ErrorList.h"
 #include "js/ArrayBuffer.h"
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin
 #include "js/JSON.h"
 #include "js/Utility.h"
 #include "js/experimental/TypedData.h"
@@ -290,7 +291,7 @@ static bool AssertParentProcessWithCallerLocationImpl(GlobalObject& aGlobal,
 
   JS::AutoFilename scriptFilename;
   uint32_t lineNo = 0;
-  uint32_t colNo = 0;
+  JS::ColumnNumberZeroOrigin colNo;
 
   NS_ENSURE_TRUE(
       JS::DescribeScriptedCaller(cx, &scriptFilename, &lineNo, &colNo), false);
@@ -298,7 +299,7 @@ static bool AssertParentProcessWithCallerLocationImpl(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(scriptFilename.get(), false);
 
   reason.AppendPrintf(" Called from %s:%d:%d.", scriptFilename.get(), lineNo,
-                      colNo);
+                      colNo.zeroOriginValue());
   return false;
 }
 
