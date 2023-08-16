@@ -2089,9 +2089,6 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   StoreWasOpened(true);
   mListener = listener;
 
-  // add ourselves to the load group.
-  if (mLoadGroup) mLoadGroup->AddRequest(this, nullptr);
-
   if (mCanceled) {
     // We may have been canceled already, either by on-modify-request
     // listeners or by load group observers; in that case, don't create IPDL
@@ -2192,6 +2189,20 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   }
   SetTopLevelContentWindowId(contentWindowId);
 
+  if (browserChild && !browserChild->IPCOpen()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ContentChild* cc = static_cast<ContentChild*>(gNeckoChild->Manager());
+  if (cc->IsShuttingDown()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // add ourselves to the load group.
+  if (mLoadGroup) {
+    mLoadGroup->AddRequest(this, nullptr);
+  }
+
   HttpChannelOpenArgs openArgs;
   // No access to HttpChannelOpenArgs members, but they each have a
   // function with the struct name that returns a ref.
@@ -2267,15 +2278,6 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   LOG(("HttpChannelChild::ContinueAsyncOpen this=%p gid=%" PRIu64
        " browser id=%" PRIx64,
        this, mChannelId, mBrowserId));
-
-  if (browserChild && !browserChild->IPCOpen()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ContentChild* cc = static_cast<ContentChild*>(gNeckoChild->Manager());
-  if (cc->IsShuttingDown()) {
-    return NS_ERROR_FAILURE;
-  }
 
   openArgs.launchServiceWorkerStart() = mLaunchServiceWorkerStart;
   openArgs.launchServiceWorkerEnd() = mLaunchServiceWorkerEnd;
