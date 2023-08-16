@@ -8,6 +8,8 @@
 
 #ifdef MOZ_X11
 #  include <gdk/gdkx.h>
+#  include <X11/Xlib.h>
+#  include "X11UndefineNone.h"
 #endif /* MOZ_X11 */
 #ifdef MOZ_WAYLAND
 #  include <gdk/gdkwayland.h>
@@ -23,6 +25,8 @@
 #include "nsTArray.h"
 #include "nsWindow.h"
 
+struct wl_registry;
+
 #ifdef MOZ_WAYLAND
 #  include "nsWaylandDisplay.h"
 #endif
@@ -37,6 +41,72 @@ static LazyLogModule sScreenLog("WidgetScreen");
 #endif /* MOZ_LOGGING */
 
 using GdkMonitor = struct _GdkMonitor;
+
+class ScreenGetter {
+ public:
+  ScreenGetter() = default;
+  virtual ~ScreenGetter() = default;
+
+  virtual void Init() {}
+  virtual void RefreshScreens() {}
+  virtual RefPtr<widget::Screen> GetScreenForWindow(nsWindow* aWindow) {
+    return nullptr;
+  }
+};
+
+class ScreenGetterGtk final : public ScreenGetter {
+ public:
+  ScreenGetterGtk() = default;
+  ~ScreenGetterGtk();
+
+  void Init() final;
+
+#ifdef MOZ_X11
+  Atom NetWorkareaAtom() { return mNetWorkareaAtom; }
+#endif
+
+  // For internal use from signal callback functions
+  void RefreshScreens() final;
+
+ private:
+  GdkWindow* mRootWindow = nullptr;
+#ifdef MOZ_X11
+  Atom mNetWorkareaAtom = 0;
+#endif
+};
+
+struct MonitorConfig;
+
+#ifdef MOZ_WAYLAND
+class ScreenGetterWayland final : public ScreenGetter {
+ public:
+  ScreenGetterWayland() = default;
+  ~ScreenGetterWayland() { MozClearPointer(mRegistry, wl_registry_destroy); }
+
+  void Init();
+
+  MonitorConfig* AddMonitorConfig(int aId);
+  bool RemoveMonitorConfig(int aId);
+  already_AddRefed<Screen> MakeScreenWayland(gint aMonitor);
+
+  RefPtr<widget::Screen> GetScreenForWindow(nsWindow* aWindow);
+
+  // For internal use from signal callback functions
+  void RefreshScreens();
+
+ private:
+  int GetMonitorForWindow(nsWindow* aWindow);
+  bool MonitorUsesNonIntegerScale(int aMonitor);
+
+ private:
+  wl_registry* mRegistry = nullptr;
+  // We use UniquePtr<> here to ensure that MonitorConfig is heap-allocated
+  // so it's not invalidated by any change to mMonitors that could happen in the
+  // meantime.
+  AutoTArray<UniquePtr<MonitorConfig>, 4> mMonitors;
+  AutoTArray<RefPtr<Screen>, 4> mScreenList;
+};
+#endif
 
 static UniquePtr<ScreenGetter> gScreenGetter;
 struct MonitorConfig {
@@ -86,15 +156,6 @@ static GdkFilterReturn root_window_event_filter(GdkXEvent* aGdkXEvent,
 #endif
 
   return GDK_FILTER_CONTINUE;
-}
-
-ScreenGetterGtk::ScreenGetterGtk()
-    : mRootWindow(nullptr)
-#ifdef MOZ_X11
-      ,
-      mNetWorkareaAtom(0)
-#endif
-{
 }
 
 void ScreenGetterGtk::Init() {
@@ -340,12 +401,6 @@ bool ScreenGetterWayland::RemoveMonitorConfig(int aId) {
     }
   }
   return false;
-}
-
-ScreenGetterWayland::ScreenGetterWayland() = default;
-
-ScreenGetterWayland::~ScreenGetterWayland() {
-  MozClearPointer(mRegistry, wl_registry_destroy);
 }
 
 static bool GdkMonitorGetWorkarea(GdkMonitor* monitor, GdkRectangle* workarea) {
