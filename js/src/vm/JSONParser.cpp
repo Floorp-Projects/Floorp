@@ -681,7 +681,7 @@ inline bool JSONFullParseHandlerAnyChar::objectPropertyName(
     // supports the former semantics, so if this parse attempt is for
     // |eval|, return true (without reporting an error) to indicate the
     // JSON parse attempt was unsuccessful.
-    if (id == NameToId(cx->names().proto)) {
+    if (id == NameToId(cx->names().proto_)) {
       *isProtoInEval = true;
       return true;
     }

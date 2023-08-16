@@ -1988,7 +1988,7 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
 
   // Don't support "__proto__". This lets us take advantage of the
   // hasNonWritableOrAccessorPropExclProto optimization below.
-  if (MOZ_UNLIKELY(!obj->isExtensible() || key.isAtom(cx->names().proto))) {
+  if (MOZ_UNLIKELY(!obj->isExtensible() || key.isAtom(cx->names().proto_))) {
     return true;
   }
 

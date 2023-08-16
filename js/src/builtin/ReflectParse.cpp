@@ -3367,7 +3367,7 @@ bool ASTSerializer::objectPattern(ListNode* obj, MutableHandleValue dst) {
     RootedValue key(cx);
     ParseNode* target;
     if (propdef->isKind(ParseNodeKind::MutateProto)) {
-      RootedValue pname(cx, StringValue(cx->names().proto));
+      RootedValue pname(cx, StringValue(cx->names().proto_));
       if (!builder.literal(pname, &propdef->pn_pos, &key)) {
         return false;
       }

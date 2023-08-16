@@ -449,7 +449,7 @@
   MACRO_(promise, "promise")                                                   \
   MACRO_(propertyIsEnumerable, "propertyIsEnumerable")                         \
   MACRO_(protected_, "protected")                                              \
-  MACRO_(proto, "__proto__")                                                   \
+  MACRO_(proto_, "__proto__")                                                  \
   MACRO_(prototype, "prototype")                                               \
   MACRO_(proxy, "proxy")                                                       \
   MACRO_(public_, "public")                                                    \
