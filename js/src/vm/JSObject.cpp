@@ -2331,7 +2331,7 @@ bool JS::OrdinaryToPrimitive(JSContext* cx, HandleObject obj, JSType hint,
         if (fun->maybeNative() == obj_toString &&
             !MaybeHasInterestingSymbolProperty(
                 cx, obj, cx->wellKnownSymbols().toStringTag)) {
-          vp.setString(cx->names().objectObject);
+          vp.setString(cx->names().object_Object_);
           return true;
         }
         if (!js::Call(cx, vp, obj, vp)) {
