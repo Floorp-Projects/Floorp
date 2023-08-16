@@ -27,6 +27,7 @@
 
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
+import { FirefoxRelayTelemetry } from "resource://gre/modules/FirefoxRelayTelemetry.mjs";
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
 
@@ -38,6 +39,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillPreferences:
     "resource://autofill/FormAutofillPreferences.sys.mjs",
   FormAutofillPrompter: "resource://autofill/FormAutofillPrompter.sys.mjs",
+  FirefoxRelay: "resource://gre/modules/FirefoxRelay.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
@@ -304,7 +307,17 @@ export class FormAutofillParent extends JSWindowActorParent {
         break;
       }
       case "FormAutofill:GetRecords": {
-        return FormAutofillParent._getRecords(data);
+        const relayPromise = lazy.FirefoxRelay.autocompleteItemsAsync({
+          formOrigin: this.formOrigin,
+          scenarioName: data.scenarioName,
+          hasInput: !!data.searchString?.length,
+        });
+        const recordsPromise = FormAutofillParent._getRecords(data);
+        const [records, externalEntries] = await Promise.all([
+          recordsPromise,
+          relayPromise,
+        ]);
+        return { records, externalEntries };
       }
       case "FormAutofill:OnFormSubmit": {
         this.notifyMessageObservers("onFormSubmitted", data);
@@ -373,9 +386,44 @@ export class FormAutofillParent extends JSWindowActorParent {
         );
         break;
       }
+      case "PasswordManager:offerRelayIntegration": {
+        FirefoxRelayTelemetry.recordRelayOfferedEvent(
+          "clicked",
+          data.telemetry.flowId,
+          data.telemetry.scenarioName
+        );
+        return this.#offerRelayIntegration();
+      }
+      case "PasswordManager:generateRelayUsername": {
+        FirefoxRelayTelemetry.recordRelayUsernameFilledEvent(
+          "clicked",
+          data.telemetry.flowId
+        );
+        return this.#generateRelayUsername();
+      }
     }
 
     return undefined;
+  }
+
+  get formOrigin() {
+    return lazy.LoginHelper.getLoginOrigin(
+      this.manager.documentPrincipal?.originNoSuffix
+    );
+  }
+
+  getRootBrowser() {
+    return this.browsingContext.topFrameElement;
+  }
+
+  async #offerRelayIntegration() {
+    const browser = this.getRootBrowser();
+    return lazy.FirefoxRelay.offerRelayIntegration(browser, this.formOrigin);
+  }
+
+  async #generateRelayUsername() {
+    const browser = this.getRootBrowser();
+    return lazy.FirefoxRelay.generateUsername(browser, this.formOrigin);
   }
 
   notifyMessageObservers(callbackName, data) {

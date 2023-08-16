@@ -36,9 +36,11 @@ function sendFormAutofillMessage(name, data) {
 }
 
 async function removeAutofillRecords() {
-  let addresses = await sendFormAutofillMessage("FormAutofill:GetRecords", {
-    collectionName: "addresses",
-  });
+  let addresses = (
+    await sendFormAutofillMessage("FormAutofill:GetRecords", {
+      collectionName: "addresses",
+    })
+  ).records;
   if (addresses.length) {
     let observePromise = TestUtils.topicObserved(
       "formautofill-storage-changed"
@@ -48,9 +50,11 @@ async function removeAutofillRecords() {
     });
     await observePromise;
   }
-  let creditCards = await sendFormAutofillMessage("FormAutofill:GetRecords", {
-    collectionName: "creditCards",
-  });
+  let creditCards = (
+    await sendFormAutofillMessage("FormAutofill:GetRecords", {
+      collectionName: "creditCards",
+    })
+  ).records;
   if (creditCards.length) {
     let observePromise = TestUtils.topicObserved(
       "formautofill-storage-changed"
@@ -1346,7 +1350,7 @@ add_task(async function test_creditCardsSaved() {
           data: { collectionName: "creditCards" },
         })
       )
-      .resolves([creditcard])
+      .resolves({ records: [creditcard] })
       .callThrough();
 
     is(
