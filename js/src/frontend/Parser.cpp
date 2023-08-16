@@ -3829,14 +3829,14 @@ static inline bool IsUseStrictDirective(const TokenPos& pos,
                                         TaggedParserAtomIndex atom) {
   // the length of "use strict", including quotation.
   static constexpr size_t useStrictLength = 12;
-  return atom == TaggedParserAtomIndex::WellKnown::useStrict() &&
+  return atom == TaggedParserAtomIndex::WellKnown::use_strict_() &&
          pos.begin + useStrictLength == pos.end;
 }
 static inline bool IsUseAsmDirective(const TokenPos& pos,
                                      TaggedParserAtomIndex atom) {
   // the length of "use asm", including quotation.
   static constexpr size_t useAsmLength = 9;
-  return atom == TaggedParserAtomIndex::WellKnown::useAsm() &&
+  return atom == TaggedParserAtomIndex::WellKnown::use_asm_() &&
          pos.begin + useAsmLength == pos.end;
 }
 
@@ -9652,7 +9652,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
     case TokenKind::String:
       if (!canHaveDirectives &&
           anyChars.currentToken().atom() ==
-              TaggedParserAtomIndex::WellKnown::useAsm()) {
+              TaggedParserAtomIndex::WellKnown::use_asm_()) {
         if (!warning(JSMSG_USE_ASM_DIRECTIVE_FAIL)) {
           return null();
         }
