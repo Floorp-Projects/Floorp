@@ -24,6 +24,7 @@
 #include "js/CallNonGenericMethod.h"
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
 #include "js/Class.h"
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberZeroOrigin
 #include "js/Conversions.h"
 #include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -258,14 +259,16 @@ static ErrorObject* CreateErrorObject(JSContext* cx, const CallArgs& args,
     return nullptr;
   }
 
-  uint32_t lineNumber, columnNumber = 0;
+  uint32_t lineNumber;
+  JS::ColumnNumberOneOrigin columnNumber;
   if (!hasOptions && args.length() > messageArg + 2) {
     if (!ToUint32(cx, args[messageArg + 2], &lineNumber)) {
       return nullptr;
     }
   } else {
-    lineNumber = iter.done() ? 0 : iter.computeLine(&columnNumber);
-    columnNumber = FixupMaybeWASMColumnForDisplay(columnNumber);
+    JS::TaggedColumnNumberZeroOrigin tmp;
+    lineNumber = iter.done() ? 0 : iter.computeLine(&tmp);
+    columnNumber = JS::ColumnNumberOneOrigin(tmp.oneOriginValue());
   }
 
   RootedObject stack(cx);
@@ -274,7 +277,8 @@ static ErrorObject* CreateErrorObject(JSContext* cx, const CallArgs& args,
   }
 
   return ErrorObject::create(cx, exnType, stack, fileName, sourceId, lineNumber,
-                             columnNumber, nullptr, message, cause, proto);
+                             columnNumber.oneOriginValue(), nullptr, message,
+                             cause, proto);
 }
 
 static bool Error(JSContext* cx, unsigned argc, Value* vp) {
