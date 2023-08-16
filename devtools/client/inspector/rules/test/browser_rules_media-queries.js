@@ -21,8 +21,8 @@ add_task(async function () {
   is(elementStyle.rules[0].title, inline, "check rule 0 title");
   is(
     elementStyle.rules[1].title,
-    constructed,
-    "check constracted sheet rule title"
+    constructed + ":1",
+    "check constructed sheet rule title"
   );
   is(elementStyle.rules[2].title, inline + ":9", "check rule 2 title");
   is(elementStyle.rules[3].title, inline + ":2", "check rule 3 title");
