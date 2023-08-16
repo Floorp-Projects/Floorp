@@ -43,7 +43,7 @@
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/TokenStream.h"  // IsKeyword, ReservedWordTokenKind, ReservedWordToCharZ, DeprecatedContent, *TokenStream*, CharBuffer, TokenKindToDesc
 #include "irregexp/RegExpAPI.h"
-#include "js/ColumnNumber.h"          // JS::LimitedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin
 #include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
@@ -11553,9 +11553,9 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     // Verify that the Regexp will syntax parse when the time comes to
     // instantiate it. If we have already done a syntax parse, we can
     // skip this.
-    if (!irregexp::CheckPatternSyntax(this->alloc_, this->fc_->stackLimit(),
-                                      anyChars, range, flags, Some(line),
-                                      Some(column.zeroOriginValue()))) {
+    if (!irregexp::CheckPatternSyntax(
+            this->alloc_, this->fc_->stackLimit(), anyChars, range, flags,
+            Some(line), Some(JS::ColumnNumberZeroOrigin(column)))) {
       return nullptr;
     }
   }
@@ -11598,7 +11598,7 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
   if (!irregexp::CheckPatternSyntax(this->alloc_, this->fc_->stackLimit(),
                                     anyChars, source, flags, Some(line),
-                                    Some(column.zeroOriginValue()))) {
+                                    Some(JS::ColumnNumberZeroOrigin(column)))) {
     return null();
   }
 
