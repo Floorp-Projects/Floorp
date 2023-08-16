@@ -8,6 +8,7 @@
 // would like.
 
 #include "DevTools.h"
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin, JS::TaggedColumnNumberOneOrigin
 #include "js/SavedFrameAPI.h"
 #include "js/TypeDecls.h"
 #include "mozilla/devtools/DeserializedNode.h"
@@ -23,7 +24,8 @@ struct MockDeserializedStackFrame : public DeserializedStackFrame {
 DEF_TEST(DeserializedStackFrameUbiStackFrames, {
   StackFrameId id = uint64_t(1) << 42;
   uint32_t line = 1337;
-  uint32_t column = 9;  // 3 space tabs!?
+  JS::TaggedColumnNumberOneOrigin column(
+      JS::LimitedColumnNumberOneOrigin(9));  // 3 space tabs!?
   const char16_t* source = u"my-javascript-file.js";
   const char16_t* functionDisplayName = u"myFunctionName";
 
@@ -62,7 +64,7 @@ DEF_TEST(DeserializedStackFrameUbiStackFrames, {
   uint32_t frameColumn;
   ASSERT_EQ(JS::SavedFrameResult::Ok,
             JS::GetSavedFrameColumn(cx, principals, savedFrame, &frameColumn));
-  EXPECT_EQ(column, frameColumn);
+  EXPECT_EQ(column.oneOriginValue(), frameColumn);
 
   JS::Rooted<JSObject*> parent(cx);
   ASSERT_EQ(JS::SavedFrameResult::Ok,
