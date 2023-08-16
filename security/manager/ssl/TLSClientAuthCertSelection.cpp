@@ -27,9 +27,8 @@
 #include "TLSClientAuthCertSelection.h"
 #include "cert_storage/src/cert_storage.h"
 #include "mozilla/Logging.h"
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/Endpoint.h"
+#include "mozilla/net/SocketProcessBackgroundChild.h"
 #include "mozilla/psm/SelectTLSClientAuthCertChild.h"
 #include "mozilla/psm/SelectTLSClientAuthCertParent.h"
 #include "nsArray.h"
@@ -750,15 +749,30 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
              hostname(std::move(hostname)),
              originAttributes(std::move(originAttributes)), port, providerFlags,
              providerTlsFlags, serverCertBytes(std::move(serverCertBytes)),
-             caNamesBytes(std::move(caNamesBytes))]() {
-              mozilla::ipc::PBackgroundChild* actorChild =
-                  mozilla::ipc::BackgroundChild::
-                      GetOrCreateForSocketParentBridgeForCurrentThread();
-              if (actorChild) {
-                Unused << actorChild->SendPSelectTLSClientAuthCertConstructor(
-                    selectClientAuthCertificate, hostname, originAttributes,
-                    port, providerFlags, providerTlsFlags,
-                    ByteArray(serverCertBytes), caNamesBytes);
+             caNamesBytes(std::move(caNamesBytes))]() mutable {
+              ipc::Endpoint<PSelectTLSClientAuthCertParent> parentEndpoint;
+              ipc::Endpoint<PSelectTLSClientAuthCertChild> childEndpoint;
+              PSelectTLSClientAuthCert::CreateEndpoints(&parentEndpoint,
+                                                        &childEndpoint);
+              if (NS_FAILED(net::SocketProcessBackgroundChild::WithActor(
+                      "SendInitSelectTLSClientAuthCert",
+                      [endpoint = std::move(parentEndpoint),
+                       hostname(std::move(hostname)),
+                       originAttributes(std::move(originAttributes)), port,
+                       providerFlags, providerTlsFlags,
+                       serverCertBytes(std::move(serverCertBytes)),
+                       caNamesBytes(std::move(caNamesBytes))](
+                          net::SocketProcessBackgroundChild* aActor) mutable {
+                        Unused << aActor->SendInitSelectTLSClientAuthCert(
+                            std::move(endpoint), hostname, originAttributes,
+                            port, providerFlags, providerTlsFlags,
+                            ByteArray(serverCertBytes), caNamesBytes);
+                      }))) {
+                return;
+              }
+
+              if (!childEndpoint.Bind(selectClientAuthCertificate)) {
+                return;
               }
             }));
     info->SetPendingSelectClientAuthCertificate(
@@ -780,9 +794,6 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
   return SECWouldBlock;
 }
 
-using mozilla::ipc::AssertIsOnBackgroundThread;
-using mozilla::ipc::IsOnBackgroundThread;
-
 // Helper continuation for when a client authentication certificate has been
 // selected in the parent process and the information needs to be sent to the
 // socket process.
@@ -792,13 +803,13 @@ class RemoteClientAuthCertificateSelected
   explicit RemoteClientAuthCertificateSelected(
       SelectTLSClientAuthCertParent* selectTLSClientAuthCertParent)
       : mSelectTLSClientAuthCertParent(selectTLSClientAuthCertParent),
-        mEventTarget(NS_GetCurrentThread()) {}
+        mEventTarget(GetCurrentSerialEventTarget()) {}
 
   NS_IMETHOD Run() override;
 
  private:
   RefPtr<SelectTLSClientAuthCertParent> mSelectTLSClientAuthCertParent;
-  nsCOMPtr<nsIEventTarget> mEventTarget;
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
 };
 
 NS_IMETHODIMP
@@ -875,8 +886,6 @@ bool SelectTLSClientAuthCertParent::Dispatch(
 void SelectTLSClientAuthCertParent::TLSClientAuthCertSelected(
     const nsTArray<uint8_t>& aSelectedCertBytes,
     nsTArray<nsTArray<uint8_t>>&& aSelectedCertChainBytes) {
-  AssertIsOnBackgroundThread();
-
   if (!CanSend()) {
     return;
   }
@@ -888,7 +897,7 @@ void SelectTLSClientAuthCertParent::TLSClientAuthCertSelected(
 
   Unused << SendTLSClientAuthCertSelected(aSelectedCertBytes,
                                           selectedCertChainBytes);
-  Unused << Send__delete__(this);
+  Close();
 }
 
 void SelectTLSClientAuthCertParent::ActorDestroy(

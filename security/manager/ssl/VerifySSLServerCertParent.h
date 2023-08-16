@@ -51,7 +51,7 @@ class VerifySSLServerCertParent : public PVerifySSLServerCertParent {
   // PVerifySSLServerCertParent
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  nsCOMPtr<nsIEventTarget> mBackgroundThread;
+  nsCOMPtr<nsISerialEventTarget> mBackgroundThread;
 };
 
 }  // namespace psm

@@ -11,7 +11,6 @@
 #include "nsNSSIOLayer.h"
 
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla::psm {
 
