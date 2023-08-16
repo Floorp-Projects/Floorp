@@ -8151,8 +8151,7 @@ bool BytecodeEmitter::emitCallOrNew(CallNode* callNode, ValueUsage valueUsage) {
         TaggedParserAtomIndex::WellKnown::allowContentIterWithNext()) {
       return emitSelfHostedAllowContentIterWithNext(callNode);
     }
-    if (calleeName ==
-            TaggedParserAtomIndex::WellKnown::defineDataPropertyIntrinsic() &&
+    if (calleeName == TaggedParserAtomIndex::WellKnown::DefineDataProperty() &&
         argsList->count() == 3) {
       return emitSelfHostedDefineDataProperty(callNode);
     }
