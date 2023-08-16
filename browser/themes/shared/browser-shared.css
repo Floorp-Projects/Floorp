@@ -217,20 +217,19 @@ toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
 
 /* Bookmarks toolbar only-on-new-tab mode */
 
-:root[BookmarksToolbarOverlapsBrowser] {
-  --bookmarks-toolbar-height: max(28px, 2em);
+:root {
+  --bookmarks-toolbar-overlapping-browser-height: max(28px, 2em);
 }
 
 :root[BookmarksToolbarOverlapsBrowser] #PersonalToolbar {
-  height: var(--bookmarks-toolbar-height);
+  height: var(--bookmarks-toolbar-overlapping-browser-height);
 }
 
 :root[BookmarksToolbarOverlapsBrowser] #navigator-toolbox-background {
   /* Overlap the content area by the height of the bookmarks toolbar so that
      temporarily showing the toolbar for new tabs doesn't resize the content
      area for all tabs. */
-  margin-bottom: calc(-1 * var(--bookmarks-toolbar-height));
-  z-index: 1;
+  margin-bottom: calc(-1 * var(--bookmarks-toolbar-overlapping-browser-height));
 }
 
 :root[BookmarksToolbarOverlapsBrowser] .newTabBrowserPanel,
@@ -239,7 +238,7 @@ toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
      new tab page and sidebar contents. We do not put this padding on #browser
      as that would resize the content area for all tabs including background
      tabs, which is what we explicitly want to avoid doing here. */
-  padding-top: var(--bookmarks-toolbar-height);
+  padding-top: var(--bookmarks-toolbar-overlapping-browser-height);
 }
 
 /* Bookmarks toolbar empty message */
