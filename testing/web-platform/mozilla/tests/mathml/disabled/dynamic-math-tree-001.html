@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1173199
+-->
+<head>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div id="testnodes"><span>hi</span> there <!-- mon ami --></div>
+<script type="application/javascript">
+  const mathmlNS = "http://www.w3.org/1998/Math/MathML";
+  let t = document.getElementById('testnodes');
+
+  test(function() {
+    t.innerHTML = null;
+    t.appendChild(document.createElementNS(mathmlNS, "math:math"));
+    assert_equals(t.firstChild.namespaceURI, mathmlNS);
+    t.firstChild.textContent = "<foo>";
+    assert_equals(t.innerHTML, "<math:math>&lt;foo&gt;</math:math>");
+  }, "Writing '<foo>' element in a dynamically created MathML element.");
+
+  test(function() {
+    t.innerHTML = null;
+    t.appendChild(document.createElementNS(mathmlNS, "math"));
+    assert_equals(t.firstChild.namespaceURI, mathmlNS);
+    t.firstChild.appendChild(document.createElementNS(mathmlNS, "script"));
+    assert_equals(t.firstChild.firstChild.namespaceURI, mathmlNS);
+    t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+    assert_equals(t.innerHTML,
+                  '<math><script>1&amp;2&lt;3&gt;4&nbsp;\u003C/script></math>');
+  }, "Writing '<script>' element in a dynamically created MathML element.");
+
+  test(function() {
+    t.innerHTML = null;
+    t.appendChild(document.createElementNS(mathmlNS, "math"));
+    assert_equals(t.firstChild.namespaceURI, mathmlNS);
+    t.firstChild.appendChild(document.createElementNS(mathmlNS, "style"));
+    assert_equals(t.firstChild.firstChild.namespaceURI, mathmlNS);
+    t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+    assert_equals(t.innerHTML,
+                  '<math><style>1&amp;2&lt;3&gt;4&nbsp;\u003C/style></math>');
+  }, "Writing '<style>' element in a dynamically created MathML element.");
+</script>
+</body>
+</html>
