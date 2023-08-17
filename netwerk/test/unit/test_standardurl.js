@@ -508,14 +508,14 @@ add_test(function test_filterWhitespace() {
     "http://example.com/path/to%20the/file.ext?query#hash"
   );
 
-  // These setters should escape \r\n\t, not filter them.
+  // These setters should filter \r\n\t.
   url = stringToURL("http://test.com/path?query#hash");
   url = url.mutate().setFilePath("pa\r\n\tth").finalize();
-  Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
+  Assert.equal(url.spec, "http://test.com/path?query#hash");
   url = url.mutate().setQuery("que\r\n\try").finalize();
-  Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
+  Assert.equal(url.spec, "http://test.com/path?query#hash");
   url = url.mutate().setRef("ha\r\n\tsh").finalize();
-  Assert.equal(url.spec, "http://test.com/pa%0D%0A%09th?query#hash");
+  Assert.equal(url.spec, "http://test.com/path?query#hash");
   url = url
     .mutate()
     .QueryInterface(Ci.nsIURLMutator)
@@ -709,6 +709,14 @@ add_test(function test_ipv4Normalize() {
 add_test(function test_invalidHostChars() {
   var url = stringToURL("http://example.org/");
   for (let i = 0; i <= 0x20; i++) {
+    // These characters get filtered.
+    if (
+      String.fromCharCode(i) == "\r" ||
+      String.fromCharCode(i) == "\n" ||
+      String.fromCharCode(i) == "\t"
+    ) {
+      continue;
+    }
     Assert.throws(
       () => {
         url = url

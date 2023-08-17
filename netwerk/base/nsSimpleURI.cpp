@@ -347,7 +347,7 @@ nsSimpleURI::GetHostPort(nsACString& result) {
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsSimpleURI::SetHostPort(const nsACString& result) {
+nsresult nsSimpleURI::SetHostPort(const nsACString& aValue) {
   return NS_ERROR_FAILURE;
 }
 
