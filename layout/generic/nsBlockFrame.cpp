@@ -3761,6 +3761,18 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
     return;
   }
 
+  // If the previous frame was a page-break-frame, then preemptively push this
+  // frame to the next page.
+  // This is primarily important for the placeholders for abspos frames, which
+  // measure as zero height and then would be placed on this page.
+  if (aState.ContentBSize() != NS_UNCONSTRAINEDSIZE) {
+    const nsIFrame* const prev = frame->GetPrevSibling();
+    if (prev && prev->IsPageBreakFrame()) {
+      PushTruncatedLine(aState, aLine, aKeepReflowGoing);
+      return;
+    }
+  }
+
   // Prepare the block reflow engine
   nsBlockReflowContext brc(aState.mPresContext, aState.mReflowInput);
 
