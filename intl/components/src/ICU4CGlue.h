@@ -41,7 +41,8 @@ static inline CharType* AssertNullTerminatedString(Span<CharType> aSpan) {
   MOZ_ASSERT(*(aSpan.data() + aSpan.size()) == '\0');
 
   // Also ensure there aren't any other NUL characters within the string.
-  MOZ_ASSERT(std::char_traits<CharType>::length(aSpan.data()) == aSpan.size());
+  MOZ_ASSERT(std::char_traits<std::remove_const_t<CharType>>::length(
+                 aSpan.data()) == aSpan.size());
 
   return aSpan.data();
 }
