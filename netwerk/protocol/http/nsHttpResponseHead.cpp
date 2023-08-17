@@ -8,6 +8,7 @@
 #include "HttpLog.h"
 
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 #include "nsHttpResponseHead.h"
 #include "nsIHttpHeaderVisitor.h"
@@ -351,19 +352,18 @@ void nsHttpResponseHead::AssignDefaultStatusText() {
   net_GetDefaultStatusTextForCode(mStatus, mStatusText);
 }
 
-void nsHttpResponseHead::ParseStatusLine(const nsACString& line) {
+nsresult nsHttpResponseHead::ParseStatusLine(const nsACString& line) {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
-  ParseStatusLine_locked(line);
+  return ParseStatusLine_locked(line);
 }
 
-void nsHttpResponseHead::ParseStatusLine_locked(const nsACString& line) {
+nsresult nsHttpResponseHead::ParseStatusLine_locked(const nsACString& line) {
   //
   // Parse Status-Line:: HTTP-Version SP Status-Code SP Reason-Phrase CRLF
   //
 
   const char* start = line.BeginReading();
   const char* end = line.EndReading();
-  const char* p = start;
 
   // HTTP-Version
   ParseVersion(start);
@@ -373,9 +373,38 @@ void nsHttpResponseHead::ParseStatusLine_locked(const nsACString& line) {
   if ((mVersion == HttpVersion::v0_9) || (index == -1)) {
     mStatus = 200;
     AssignDefaultStatusText();
+  } else if (StaticPrefs::network_http_strict_response_status_line_parsing()) {
+    // Status-Code: all ASCII digits after any whitespace
+    const char* p = start + index + 1;
+    while (p < end && NS_IsHTTPWhitespace(*p)) ++p;
+    if (p == end || !mozilla::IsAsciiDigit(*p)) {
+      return NS_ERROR_FAILURE;
+    }
+    const char* codeStart = p;
+    while (p < end && mozilla::IsAsciiDigit(*p)) ++p;
+
+    // Only accept 3 digits (including all leading zeros)
+    // Also if next char isn't whitespace, fail (ie, code is 0x2)
+    if (p - codeStart > 3 || (p < end && !NS_IsHTTPWhitespace(*p))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // At this point the code is between 0 and 999 inclusive
+    nsDependentCSubstring strCode(codeStart, p - codeStart);
+    nsresult rv;
+    mStatus = strCode.ToInteger(&rv);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Reason-Phrase: whatever remains after any whitespace (even empty)
+    while (p < end && NS_IsHTTPWhitespace(*p)) ++p;
+    if (p != end) {
+      mStatusText = nsDependentCSubstring(p, end - p);
+    }
   } else {
     // Status-Code
-    p += index + 1;
+    const char* p = start + index + 1;
     mStatus = (uint16_t)atoi(p);
     if (mStatus == 0) {
       LOG(("mal-formed response status; assuming status = 200\n"));
@@ -394,6 +423,7 @@ void nsHttpResponseHead::ParseStatusLine_locked(const nsACString& line) {
 
   LOG1(("Have status line [version=%u status=%u statusText=%s]\n",
         unsigned(mVersion), unsigned(mStatus), mStatusText.get()));
+  return NS_OK;
 }
 
 nsresult nsHttpResponseHead::ParseHeaderLine(const nsACString& line) {
