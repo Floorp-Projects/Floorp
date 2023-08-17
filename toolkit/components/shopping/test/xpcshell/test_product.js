@@ -50,9 +50,6 @@ const API_POLL = "http://example.com/poll/poll_analysis_response.json";
 const API_NEEDS_ANALYSIS =
   "http://example.com/poll/needs_analysis_response.json";
 
-// Start with OHTTP disabled.
-disableOHTTP();
-
 const TEST_AID =
   "1ALhiNLkZ2yR4al5lcP1Npbtlpl5toDfKRgJOATjeieAL6i5Dul99l9+ZTiIWyybUzGysChAdrOA6BWrMqr0EvjoymiH3veZ++XuOvJnC0y1NB/IQQtUzlYEO028XqVUJWJeJte47nPhnK2pSm2QhbdeKbxEnauKAty1cFQeEaBUP7LkvUgxh1GDzflwcVfuKcgMr7hOM3NzjYR2RN3vhmT385Ps4wUj--cv2ucc+1nozldFrl--i9GYyjuHYFFi+EgXXZ3ZsA==";
 
