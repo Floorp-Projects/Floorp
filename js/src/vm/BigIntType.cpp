@@ -2250,8 +2250,7 @@ BigInt* BigInt::lshByAbsolute(JSContext* cx, HandleBigInt x, HandleBigInt y) {
   }
 
   if (y->digitLength() > 1 || y->digit(0) > MaxBitLength) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_BIGINT_TOO_LARGE);
+    ReportOversizedAllocation(cx, JSMSG_BIGINT_TOO_LARGE);
     if (js::SupportDifferentialTesting()) {
       fprintf(stderr, "ReportOutOfMemory called\n");
     }
