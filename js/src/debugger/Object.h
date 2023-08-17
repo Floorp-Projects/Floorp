@@ -145,9 +145,6 @@ class DebuggerObject : public NativeObject {
                                               Handle<DebuggerObject*> object,
                                               HandleValue value,
                                               MutableHandleValue result);
-  [[nodiscard]] static bool makeDebuggeeNativeFunction(
-      JSContext* cx, Handle<DebuggerObject*> object, HandleValue value,
-      MutableHandleValue result);
   [[nodiscard]] static bool isSameNative(JSContext* cx,
                                          Handle<DebuggerObject*> object,
                                          HandleValue value,

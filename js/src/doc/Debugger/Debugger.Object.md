@@ -465,13 +465,6 @@ referent as viewed from a particular compartment. Given a
 `Debugger.Object` instance that presents <i>o</i> as it would be seen
 by code in <i>d</i>'s compartment.
 
-### `makeDebuggeeNativeFunction(value)`
-If <i>value</i> is a native function in the debugger's compartment, create
-an equivalent function for the same native in the debuggee's realm, and
-return a `Debugger.Object` instance for the new function.  The new function
-can be accessed by code in the debuggee without going through a cross
-compartment wrapper.
-
 ### `isSameNative(value)`
 If <i>value</i> is a native function in the debugger's compartment, return
 whether the referent is a native function for the same C++ native.
