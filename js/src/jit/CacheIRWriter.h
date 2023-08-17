@@ -473,7 +473,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
       slotIndex += argc;
     }
     MOZ_ASSERT(slotIndex >= 0);
-    MOZ_ASSERT(slotIndex <= UINT8_MAX);
+    MOZ_RELEASE_ASSERT(slotIndex <= UINT8_MAX);
     return loadArgumentFixedSlot_(slotIndex);
   }
 
