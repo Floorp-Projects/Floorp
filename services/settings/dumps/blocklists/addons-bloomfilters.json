@@ -3,6 +3,94 @@
     {
       "stash": {
         "blocked": [
+          "{4e023032-b2c9-46f1-a459-6eaa627a7d7e}:1.22.301",
+          "{4e023032-b2c9-46f1-a459-6eaa627a7d7e}:1.22.1006"
+        ],
+        "unblocked": []
+      },
+      "schema": 1692210975980,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1692275711103,
+      "id": "e92a253b-f7ad-4559-bceb-ce9103a158a4",
+      "last_modified": 1692275774370
+    },
+    {
+      "stash": {
+        "blocked": [
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.21.1403",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.18.1308",
+          "ClearURLs@cqdgh.net:1.26.1",
+          "admins@agorganizer:0.2.0",
+          "{ad0d925d-88f8-47f1-85ea-8463569e756e}:3.0.8",
+          "admins@agorganizer:0.1.2",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.18.1049",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.21.1402",
+          "{bb8f9609-8b36-4f8d-8a61-996fa6bd486b}:4.1.57",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.8.26.1728",
+          "admins@agorganizer:0.1.9",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.9.30.1001",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.27.1428",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.14.1817",
+          "admins@agorganizer:0.5.0",
+          "admins@agorganizer:0.1.7",
+          "{20f4ba48-29dc-4f7e-815d-ee80f015bd16}:3.6.17",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.19.1913",
+          "admins@agorganizer:0.4.0",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.21.1407",
+          "admins@agorganizer:0.1.6",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.9.7.1508",
+          "{a6e85ac7-b189-47da-a127-289a1e2579dc}:4.1.56",
+          "enhancerforyoutube-updated@maximerf.addons.mozilla.org:2.0.117.12",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.8.26.1733",
+          "admins@agorganizer:0.1.0",
+          "admins@agorganizer:0.1.1",
+          "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.27.1242",
+          "enhancerforyoutube-updated@maximerf.addons.mozilla.org:2.0.117.11",
+          "{a19c59c4-1874-44d3-8e8c-194de6e5d529}:3.15.2",
+          "admins@agorganizer:0.1.8",
+          "admins@agorganizer:0.1.5",
+          "admins@agorganizer:0.3.0",
+          "admins@agorganizer:0.1.3",
+          "{626aa86a-8a5a-4cc6-b76c-f4862fc6153c}:3.12",
+          "nested-tab-groups@LCS:5.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1692196662087,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1692210911477,
+      "id": "26405f17-8f3b-4094-ba22-d87ae6d34c04",
+      "last_modified": 1692210975875
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{a09924c5-b883-49c3-8498-2669056ff050}:1.3.16"
+        ],
+        "unblocked": []
+      },
+      "schema": 1692016575686,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1692038111169,
+      "id": "196ae4f6-1899-4395-8d56-3b817d1d9471",
+      "last_modified": 1692038172459
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{7c43c81c-c721-4b67-becd-1050f493a5a3}:2.8.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1692012897279,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1692016511048,
+      "id": "0508a284-b44f-469f-988b-030fef7f4134",
+      "last_modified": 1692016575597
+    },
+    {
+      "stash": {
+        "blocked": [
           "{ccfde610-0cd9-4a4b-b03e-362aec492239}:0.0.1",
           "{8401194a-ebdb-4b6c-8129-40537084bc6f}:1.0.9",
           "{ccfde610-0cd9-4a4b-b03e-362aec492239}:0.0.2"
@@ -31,5 +119,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1690828579402
+  "timestamp": 1692275774370
 }
