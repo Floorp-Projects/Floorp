@@ -21,7 +21,6 @@ import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createBookmarkItem
-import org.mozilla.fenix.helpers.MockBrowserDataHelper.createHistoryItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createTabItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.setCustomSearchEngine
 import org.mozilla.fenix.helpers.SearchDispatcher
@@ -672,6 +671,7 @@ class ComposeSearchTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun verifySearchTabsWithOpenTabsTest() {
         val firstPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 1)
@@ -778,36 +778,6 @@ class ComposeSearchTest {
             verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
             clickClearButton()
             verifySearchBarPlaceholder("Search history")
-        }
-    }
-
-    @Test
-    fun verifySearchHistoryWithBrowsingDataTest() {
-        val firstPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 1)
-        val secondPageUrl = TestAssetHelper.getGenericAsset(searchMockServer, 2)
-
-        createHistoryItem(firstPageUrl.url.toString())
-        createHistoryItem(secondPageUrl.url.toString())
-
-        navigationToolbar {
-        }.clickUrlbar {
-            clickSearchSelectorButton()
-            selectTemporarySearchMethod(searchEngineName = "History")
-            typeSearch(searchTerm = "Mozilla")
-            verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
-            clickClearButton()
-            typeSearch(searchTerm = "generic")
-            verifyTypedToolbarText("generic")
-            verifySearchEngineSuggestionResults(
-                rule = activityTestRule,
-                searchSuggestions = arrayOf(
-                    firstPageUrl.url.toString(),
-                    secondPageUrl.url.toString(),
-                ),
-                searchTerm = "generic",
-            )
-        }.clickSearchSuggestion(firstPageUrl.url.toString()) {
-            verifyUrl(firstPageUrl.url.toString())
         }
     }
 }

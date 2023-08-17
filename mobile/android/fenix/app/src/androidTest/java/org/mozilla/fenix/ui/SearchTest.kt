@@ -10,6 +10,7 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.Espresso.pressBack
+import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assume.assumeTrue
@@ -18,11 +19,14 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.PackageName.ANDROID_SETTINGS
 import org.mozilla.fenix.helpers.Constants.searchEngineCodes
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
+import org.mozilla.fenix.helpers.MockBrowserDataHelper.createHistoryItem
+import org.mozilla.fenix.helpers.MockBrowserDataHelper.createTabItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.setCustomSearchEngine
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -34,6 +38,7 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.runWithCondition
 import org.mozilla.fenix.helpers.TestHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
@@ -623,6 +628,79 @@ class SearchTest {
             } catch (e: AssertionError) {
                 openSearchGroup(queryString)
                 verifyHistoryItemExists(shouldExist = true, item = searchEngineCodes["DuckDuckGo"]!!)
+            }
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun verifySearchHistoryWithBrowsingDataTest() {
+        val firstPageUrl = getGenericAsset(searchMockServer, 1)
+        val secondPageUrl = getGenericAsset(searchMockServer, 2)
+
+        createHistoryItem(firstPageUrl.url.toString())
+        createHistoryItem(secondPageUrl.url.toString())
+
+        navigationToolbar {
+        }.clickUrlbar {
+            clickSearchSelectorButton()
+            selectTemporarySearchMethod(searchEngineName = "History")
+            typeSearch(searchTerm = "Mozilla")
+            verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
+            clickClearButton()
+            typeSearch(searchTerm = "generic")
+            verifyTypedToolbarText("generic")
+            verifySearchEngineSuggestionResults(
+                rule = activityTestRule,
+                searchSuggestions = arrayOf(
+                    firstPageUrl.url.toString(),
+                    secondPageUrl.url.toString(),
+                ),
+                searchTerm = "generic",
+            )
+        }.clickSearchSuggestion(firstPageUrl.url.toString()) {
+            verifyUrl(firstPageUrl.url.toString())
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun verifySearchTabsWithOpenTabsTest() {
+        runWithCondition(
+            // This test will run only on Beta and RC builds
+            // The new composable tabs tray is only available in Nightly and Debug.
+            activityTestRule.activity.components.core.engine.version.releaseChannel == EngineReleaseChannel.RELEASE ||
+                activityTestRule.activity.components.core.engine.version.releaseChannel == EngineReleaseChannel.BETA,
+        ) {
+            val firstPageUrl = getGenericAsset(searchMockServer, 1)
+            val secondPageUrl = getGenericAsset(searchMockServer, 2)
+
+            createTabItem(firstPageUrl.url.toString())
+            createTabItem(secondPageUrl.url.toString())
+
+            navigationToolbar {
+            }.clickUrlbar {
+                clickSearchSelectorButton()
+                selectTemporarySearchMethod(searchEngineName = "Tabs")
+                typeSearch(searchTerm = "Mozilla")
+                verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
+                clickClearButton()
+                typeSearch(searchTerm = "generic")
+                verifyTypedToolbarText("generic")
+                verifySearchEngineSuggestionResults(
+                    rule = activityTestRule,
+                    searchSuggestions = arrayOf(
+                        "Firefox Suggest",
+                        firstPageUrl.url.toString(),
+                        secondPageUrl.url.toString(),
+                    ),
+                    searchTerm = "generic",
+                )
+            }.clickSearchSuggestion(firstPageUrl.url.toString()) {
+                verifyTabCounter("2")
+            }.openTabDrawer {
+                verifyOpenTabsOrder(position = 1, title = firstPageUrl.url.toString())
+                verifyOpenTabsOrder(position = 2, title = secondPageUrl.url.toString())
             }
         }
     }
