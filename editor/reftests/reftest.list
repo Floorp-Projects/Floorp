@@ -155,5 +155,3 @@ fuzzy-if(Android,0-1,0-1) needs-focus == 1443902-3.html 1443902-3-ref.html
 fuzzy-if(Android,0-1,0-1) needs-focus == 1443902-4.html 1443902-4-ref.html
 == exec-command-indent-ws.html exec-command-indent-ws-ref.html
 needs-focus == inline-table-editor-position-after-updating-table-size-from-input-event-listener.html inline-table-editor-position-after-updating-table-size-from-input-event-listener-ref.html
-needs-focus != caret-rtl-text-in-ltr-input.html caret-rtl-text-in-ltr-input-notref.html
-needs-focus != caret-rtl-text-in-ltr-input.html caret-rtl-text-in-ltr-input-notref-2.html
