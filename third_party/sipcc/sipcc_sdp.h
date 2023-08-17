@@ -559,7 +559,7 @@ typedef enum sdp_srtp_crypto_suite_t_ {
 #define SDP_MAX_LONG_STRING_LEN 4096 /* Max len for long SDP strings */
 #define SDP_MAX_STRING_LEN      256  /* Max len for SDP string       */
 #define SDP_MAX_SHORT_STRING_LEN      12  /* Max len for a short SDP string  */
-#define SDP_MAX_PAYLOAD_TYPES   23  /* Max payload types in m= line */
+#define SDP_MAX_PAYLOAD_TYPES   30  /* Max payload types in m= line */
 #define SDP_TOKEN_LEN           2   /* Len of <token>=              */
 #define SDP_CURRENT_VERSION     0   /* Current default SDP version  */
 #define SDP_MAX_PORT_PARAMS     4   /* Max m= port params - x/x/x/x */
