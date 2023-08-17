@@ -50,11 +50,12 @@ class SVGTransformList;
 
 struct AttrAtomArray {
   AtomArray mArray;
-  bool mMayContainDuplicates = false;
-  void RemoveDuplicates() {
-    if (mMayContainDuplicates) {
-      DoRemoveDuplicates();
+  mutable bool mMayContainDuplicates = false;
+  UniquePtr<AttrAtomArray> CreateDeduplicatedCopyIfDifferent() const {
+    if (!mMayContainDuplicates) {
+      return nullptr;
     }
+    return CreateDeduplicatedCopyIfDifferentImpl();
   }
   AttrAtomArray Clone() const {
     return {mArray.Clone(), mMayContainDuplicates};
@@ -68,7 +69,7 @@ struct AttrAtomArray {
   }
 
  private:
-  void DoRemoveDuplicates();
+  UniquePtr<AttrAtomArray> CreateDeduplicatedCopyIfDifferentImpl() const;
 };
 
 namespace dom {
@@ -223,6 +224,8 @@ class nsAttrValue {
   void SetToSerialized(const nsAttrValue& aValue);
 
   void SwapValueWith(nsAttrValue& aOther);
+
+  void RemoveDuplicatesFromAtomArray();
 
   void ToString(nsAString& aResult) const;
   inline void ToString(mozilla::dom::DOMString& aResult) const;
