@@ -54,6 +54,9 @@ shopping-message-bar-warning-product-not-available-title = Product is not availa
 shopping-message-bar-warning-product-not-available-message = If you see that this product is back in stock, report it to us and we’ll work on updating the analysis.
 shopping-message-bar-warning-product-not-available-button = Report this product is back in stock
 
+shopping-message-bar-thanks-for-reporting-title = Thanks for reporting!
+shopping-message-bar-thanks-for-reporting-message = We should have an updated analysis within 24 hours. Please check back.
+
 shopping-message-bar-warning-product-not-available-reported-title = Analysis coming soon
 shopping-message-bar-warning-product-not-available-reported-message = An updated analysis should be ready within 24 hours. Please check back.
 

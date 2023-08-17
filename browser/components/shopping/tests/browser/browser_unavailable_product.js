@@ -7,7 +7,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
  * Tests that the correct shopping-message-bar component appears if a product was marked as unavailable.
  * Only settings should be visible.
  */
-add_task(async function test_unavailable_product_reported() {
+add_task(async function test_unavailable_product() {
   await BrowserTestUtils.withNewTab(
     {
       url: "about:shoppingsidebar",
@@ -25,13 +25,38 @@ add_task(async function test_unavailable_product_reported() {
           shoppingContainer.data = Cu.cloneInto(mockData, content);
           await shoppingContainer.updateComplete;
 
-          ok(
-            shoppingContainer.shoppingMessageBarEl,
-            "Got shopping-message-bar element"
+          let productNotAvailableMessageBar =
+            shoppingContainer.shoppingMessageBarEl;
+
+          ok(productNotAvailableMessageBar, "Got shopping-message-bar element");
+          is(
+            productNotAvailableMessageBar?.getAttribute("type"),
+            "product-not-available",
+            "shopping-message-bar type should be correct"
           );
+
+          let productAvailableBtn =
+            productNotAvailableMessageBar?.productAvailableBtnEl;
+
+          ok(productAvailableBtn, "Got report product available button");
+
+          let thanksForReportMessageBarVisible =
+            ContentTaskUtils.waitForCondition(() => {
+              return (
+                !!shoppingContainer.shoppingMessageBarEl &&
+                ContentTaskUtils.is_visible(
+                  shoppingContainer.shoppingMessageBarEl
+                )
+              );
+            }, "Waiting for shopping-message-bar to be visible");
+
+          productAvailableBtn.click();
+
+          await thanksForReportMessageBarVisible;
+
           is(
             shoppingContainer.shoppingMessageBarEl?.getAttribute("type"),
-            "product-not-available",
+            "thanks-for-reporting",
             "shopping-message-bar type should be correct"
           );
         }
