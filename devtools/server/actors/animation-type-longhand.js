@@ -69,6 +69,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "font-synthesis-weight",
       "font-synthesis-style",
       "font-synthesis-small-caps",
+      "font-synthesis-position",
       "font-variant-alternates",
       "font-variant-caps",
       "font-variant-east-asian",
