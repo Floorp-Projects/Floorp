@@ -32,8 +32,8 @@ class AuthenticatorAttestationResponse final : public AuthenticatorResponse {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  void GetAttestationObject(JSContext* aCx,
-                            JS::MutableHandle<JSObject*> aRetVal);
+  void GetAttestationObject(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
+                            ErrorResult& aRv);
 
   nsresult SetAttestationObject(CryptoBuffer& aBuffer);
 
