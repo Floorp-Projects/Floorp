@@ -22,20 +22,24 @@
     margin-right: 10px;
   }
   
-  #category-lepton>.category-icon {
+  #category-lepton > .category-icon {
     list-style-image: url("chrome://mozapps/skin/extensions/category-themes.svg")
   }
   
-  #category-design>.category-icon {
+  #category-design > .category-icon {
     list-style-image: url("chrome://browser/skin/customize.svg") !important;
   }
 
-  #category-BSB>.category-icon {
+  #category-BSB > .category-icon {
     list-style-image: url("chrome://browser/skin/sidebars.svg") !important;
   }
   
-  #category-Downloads>.category-icon {
+  #category-Downloads > .category-icon {
     list-style-image: url("chrome://browser/skin/downloads/downloads.svg") !important;
+  }
+
+  #category-CSK > .category-icon {
+    list-style-image: url("chrome://browser/skin/lepton/select-all-on.svg") !important;
   }
 
   #communityDesc {

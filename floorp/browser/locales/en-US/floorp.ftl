@@ -936,6 +936,10 @@ welcomet-finish-setup = Start Browsing the Web
 
 ############################################################# Custom Shortcutkey ###############################################################
 
+category-CSK =
+ .label = Custom Shortcutkey
+ .tooltiptext = Custom Shortcutkey
+category-CSK-title = Custom Shortcutkey
 shortcutkey-customize = 
  .title = Custom Shortcutkey
 select-shortcutkeyAction = Select Shortcutkey Action
