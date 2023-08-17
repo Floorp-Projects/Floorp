@@ -21,7 +21,7 @@ GRADLE_COMMANDS="$@"
 : WORKSPACE ${WORKSPACE:=/builds/worker/workspace}
 NEXUS_PREFIX='http://localhost:8081/nexus/content/repositories'
 REPOS="-PgoogleRepo=$NEXUS_PREFIX/google/ -PcentralRepo=$NEXUS_PREFIX/central/"
-GRADLE_ARGS="--parallel $REPOS -Pcoverage"
+GRADLE_ARGS="$REPOS -Pcoverage"
 
 # override the default org.gradle.jvmargs to add more heap space
 GRADLE_USER_HOME="${WORKSPACE}/gradle-home"
