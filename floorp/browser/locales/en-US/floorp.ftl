@@ -575,6 +575,9 @@ CSK-reset-label = Reset Custom Shortcut Keys
 CSK-reset-button = Reset Custom Shortcut Keys
 CSK-manage-title = Manage Custom Shortcut Keys
 
+CSK-restore-default = Keyboard Shortcuts
+CSK-restore-default-description = Restore these settings to the default. Your current settings will be lost.
+
 floorp-custom-actions-tab-action = Tab Actions
 floorp-custom-actions-page-action = Page Actions
 floorp-custom-actions-visible-action = Visible Actions
@@ -1046,6 +1049,8 @@ floorp-custom-actions-open-task-manager = Open task manager
   .label = Open { -brand-short-name }'s task manager
 floorp-custom-actions-open-home-page = Open { -brand-short-name }'s home page
   .label = Open { -brand-short-name }'s home page
+floorp-custom-actions-open-addons-manager = Open addons manager
+  .label = Open addons manager
 floorp-custom-actions-forget-history = Forget history
   .label = Forget history
 floorp-custom-actions-quick-forget-history = Quick forget history

@@ -136,7 +136,7 @@ const gWorkspacesPane = {
       }
 
       async function restoreWorkspaces(i) {
-        let l10n = new Localization(["browser/floorp.ftl"], true);
+        let l10n = new Localization(["browser/floorp.ftl", "branding/brand.ftl"], true);
         const prompts = Services.prompt;
         const check = {
           value: false

@@ -37,6 +37,23 @@ const gCSKPane = {
     }
 
     const utils = CustomKeyboardShortcutUtils.keyboradShortcutFunctions;
+    const restoreDefaultButton = document.getElementById("reset-CSK-button");
+
+    async function restoreDefault() {
+      let l10n = new Localization(["browser/floorp.ftl"], true);
+      const prompts = Services.prompt;
+      const check = {
+        value: false
+      };
+      const flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_OK + prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL;
+      let result = prompts.confirmEx(null, l10n.formatValueSync("CSK-restore-default"), l10n.formatValueSync("CSK-restore-default-description"), flags, "", null, "", null, check);
+      if (result == 0) {
+        utils.removeAllKeyboradShortcut();
+      }
+    };
+
+    restoreDefaultButton.addEventListener("click", restoreDefault);
+
     const allActionType = utils.getInfoFunctions.getAllActionType();
 
     function buildCustomShortcutkeyPreferences() {
