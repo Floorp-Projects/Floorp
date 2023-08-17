@@ -200,10 +200,8 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC(av_strerror,
           AV_FUNC_AVUTIL_58 | AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60)
   AV_FUNC(av_get_sample_fmt_name, AV_FUNC_AVUTIL_ALL)
-  AV_FUNC(av_dict_set, AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58 |
-                           AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60)
-  AV_FUNC(av_dict_free, AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58 |
-                            AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60)
+  AV_FUNC(av_dict_set, AV_FUNC_AVUTIL_ALL)
+  AV_FUNC(av_dict_free, AV_FUNC_AVUTIL_ALL)
 
 #ifdef MOZ_WIDGET_GTK
   AV_FUNC_OPTION_SILENT(avcodec_get_hw_config,
