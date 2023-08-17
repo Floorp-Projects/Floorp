@@ -676,7 +676,7 @@ class LcovFileRewriter(object):
                     # encoded with the stdout encoding.
                     sys.stdout.buffer.write(
                         (
-                            "Error: %s.\nCouldn't find source info for %s, removing record"
+                            "Error: %s.\nCouldn't find source info for %s, removing record\n"
                             % (e, url)
                         ).encode(sys.stdout.encoding, errors="replace")
                     )
