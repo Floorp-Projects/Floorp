@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import mozilla.components.support.ktx.android.content.isScreenReaderEnabled
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -45,6 +47,8 @@ data class LinkTextState(
  * @param text The complete text.
  * @param linkTextState The clickable part of the text.
  * @param style [TextStyle] applied to the text.
+ * @param linkTextColor [Color] applied to the clickable part of the text.
+ * @param linkTextDecoration [TextDecoration] applied to the clickable part of the text.
  */
 @Composable
 fun LinkText(
@@ -54,6 +58,8 @@ fun LinkText(
         textAlign = TextAlign.Center,
         color = FirefoxTheme.colors.textSecondary,
     ),
+    linkTextColor: Color = FirefoxTheme.colors.textAccent,
+    linkTextDecoration: TextDecoration? = null,
 ) {
     val context = LocalContext.current
     val annotatedString = buildAnnotatedString {
@@ -63,7 +69,10 @@ fun LinkText(
         append(text)
 
         addStyle(
-            style = SpanStyle(color = FirefoxTheme.colors.textAccent),
+            style = SpanStyle(
+                color = linkTextColor,
+                textDecoration = linkTextDecoration,
+            ),
             start = startIndex,
             end = endIndex,
         )
@@ -145,6 +154,27 @@ private fun LinkTextStyledPreview() {
                 text = "This is clickable text, in a different style",
                 linkTextState = state,
                 style = FirefoxTheme.typography.headline5,
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun LinkTextClickStyledPreview() {
+    val state = LinkTextState(
+        text = "clickable text",
+        url = "www.mozilla.com",
+        onClick = {},
+    )
+    FirefoxTheme {
+        Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
+            LinkText(
+                text = "This is clickable text, with underlined text",
+                linkTextState = state,
+                style = FirefoxTheme.typography.headline5,
+                linkTextColor = FirefoxTheme.colors.textOnColorSecondary,
+                linkTextDecoration = TextDecoration.Underline,
             )
         }
     }
