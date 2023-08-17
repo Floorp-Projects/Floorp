@@ -10,6 +10,7 @@
 class nsParserBase : public nsISupports {
  public:
   NS_IMETHOD_(bool) IsParserEnabled() { return true; }
+  NS_IMETHOD_(bool) IsParserClosed() { return false; }
 };
 
 #endif  // nsParserBase_h_

@@ -106,6 +106,12 @@ class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
   NS_IMETHOD_(bool) IsParserEnabled() override;
 
   /**
+   * Query whether the parser is closed (i.e. document.closed() is called) or
+   * not.
+   */
+  NS_IMETHOD_(bool) IsParserClosed() override;
+
+  /**
    * Query whether the parser thinks it's done with parsing.
    */
   NS_IMETHOD_(bool) IsComplete() override;
