@@ -118,7 +118,8 @@ extern "C" bool FOG_TooLateToSend(void) {
 // This allows us to pass the configurable maximum ping limit (in pings per
 // minute) to Rust. Default value is 15.
 extern "C" uint32_t FOG_MaxPingLimit(void) {
-  return NimbusFeatures::GetInt("glean"_ns, "gleanMaxPingsPerMinute"_ns, 15);
+  return NimbusFeatures::GetInt("gleanInternalSdk"_ns,
+                                "gleanMaxPingsPerMinute"_ns, 15);
 }
 
 NS_IMETHODIMP
@@ -128,7 +129,8 @@ FOG::InitializeFOG(const nsACString& aDataPathOverride,
   gInitializeCalled = true;
   RunOnShutdown(
       [&] {
-        if (NimbusFeatures::GetBool("glean"_ns, "finalInactive"_ns, false)) {
+        if (NimbusFeatures::GetBool("gleanInternalSdk"_ns, "finalInactive"_ns,
+                                    false)) {
           glean::impl::fog_internal_glean_handle_client_inactive();
         }
       },
