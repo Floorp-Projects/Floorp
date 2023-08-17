@@ -1919,6 +1919,8 @@
     <string name="search_add_custom_engine_suggest_url_label">Arama önerisi API’si (isteğe bağlı)</string>
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">Arama önerisi API URL’si</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Sorgunun yerine “%s” yazın. Örnek:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Kaydet</string>
 
