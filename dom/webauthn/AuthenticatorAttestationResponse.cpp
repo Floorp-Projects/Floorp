@@ -51,15 +51,11 @@ JSObject* AuthenticatorAttestationResponse::WrapObject(
 }
 
 void AuthenticatorAttestationResponse::GetAttestationObject(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
   if (!mAttestationObjectCachedObj) {
     mAttestationObjectCachedObj = mAttestationObject.ToArrayBuffer(aCx);
-    if (!mAttestationObjectCachedObj) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
   }
-  aValue.set(mAttestationObjectCachedObj);
+  aRetVal.set(mAttestationObjectCachedObj);
 }
 
 nsresult AuthenticatorAttestationResponse::SetAttestationObject(

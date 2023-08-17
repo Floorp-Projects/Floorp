@@ -32,8 +32,7 @@ class PublicKeyCredential final : public Credential {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  void GetRawId(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
-                ErrorResult& aRv);
+  void GetRawId(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal);
 
   already_AddRefed<AuthenticatorResponse> Response() const;
 
