@@ -15,9 +15,6 @@ const gCSKPane = {
   init() {
    // const l10n = new Localization(["browser/floorp.ftl"], true);
    this._pane = document.getElementById("panCSK");
-   document.getElementById("backtogeneral-CSK").addEventListener("command", function () {
-      gotoPref("general")
-    });
 
     const needreboot = document.getElementsByClassName("needreboot");
     for (let i = 0; i < needreboot.length; i++) {
