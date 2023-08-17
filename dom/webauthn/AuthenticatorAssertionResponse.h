@@ -32,18 +32,16 @@ class AuthenticatorAssertionResponse final : public AuthenticatorResponse {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  void GetAuthenticatorData(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
-                            ErrorResult& aRv);
+  void GetAuthenticatorData(JSContext* aCx,
+                            JS::MutableHandle<JSObject*> aRetVal);
 
   nsresult SetAuthenticatorData(CryptoBuffer& aBuffer);
 
-  void GetSignature(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
-                    ErrorResult& aRv);
+  void GetSignature(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal);
 
   nsresult SetSignature(CryptoBuffer& aBuffer);
 
-  void GetUserHandle(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
-                     ErrorResult& aRv);
+  void GetUserHandle(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal);
 
   nsresult SetUserHandle(CryptoBuffer& aUserHandle);
 

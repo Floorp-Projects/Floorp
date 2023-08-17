@@ -34,15 +34,11 @@ AuthenticatorResponse::~AuthenticatorResponse() {
 nsISupports* AuthenticatorResponse::GetParentObject() const { return mParent; }
 
 void AuthenticatorResponse::GetClientDataJSON(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
   if (!mClientDataJSONCachedObj) {
     mClientDataJSONCachedObj = mClientDataJSON.ToArrayBuffer(aCx);
-    if (!mClientDataJSONCachedObj) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
   }
-  aValue.set(mClientDataJSONCachedObj);
+  aRetVal.set(mClientDataJSONCachedObj);
 }
 
 nsresult AuthenticatorResponse::SetClientDataJSON(CryptoBuffer& aBuffer) {

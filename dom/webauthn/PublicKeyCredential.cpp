@@ -58,16 +58,11 @@ JSObject* PublicKeyCredential::WrapObject(JSContext* aCx,
 }
 
 void PublicKeyCredential::GetRawId(JSContext* aCx,
-                                   JS::MutableHandle<JSObject*> aValue,
-                                   ErrorResult& aRv) {
+                                   JS::MutableHandle<JSObject*> aRetVal) {
   if (!mRawIdCachedObj) {
     mRawIdCachedObj = mRawId.ToArrayBuffer(aCx);
-    if (!mRawIdCachedObj) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
   }
-  aValue.set(mRawIdCachedObj);
+  aRetVal.set(mRawIdCachedObj);
 }
 
 already_AddRefed<AuthenticatorResponse> PublicKeyCredential::Response() const {

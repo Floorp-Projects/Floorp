@@ -55,15 +55,11 @@ JSObject* AuthenticatorAssertionResponse::WrapObject(
 }
 
 void AuthenticatorAssertionResponse::GetAuthenticatorData(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
   if (!mAuthenticatorDataCachedObj) {
     mAuthenticatorDataCachedObj = mAuthenticatorData.ToArrayBuffer(aCx);
-    if (!mAuthenticatorDataCachedObj) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
   }
-  aValue.set(mAuthenticatorDataCachedObj);
+  aRetVal.set(mAuthenticatorDataCachedObj);
 }
 
 nsresult AuthenticatorAssertionResponse::SetAuthenticatorData(
@@ -75,15 +71,11 @@ nsresult AuthenticatorAssertionResponse::SetAuthenticatorData(
 }
 
 void AuthenticatorAssertionResponse::GetSignature(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
   if (!mSignatureCachedObj) {
     mSignatureCachedObj = mSignature.ToArrayBuffer(aCx);
-    if (!mSignatureCachedObj) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
   }
-  aValue.set(mSignatureCachedObj);
+  aRetVal.set(mSignatureCachedObj);
 }
 
 nsresult AuthenticatorAssertionResponse::SetSignature(CryptoBuffer& aBuffer) {
@@ -94,21 +86,17 @@ nsresult AuthenticatorAssertionResponse::SetSignature(CryptoBuffer& aBuffer) {
 }
 
 void AuthenticatorAssertionResponse::GetUserHandle(
-    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+    JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) {
   // Per
   // https://w3c.github.io/webauthn/#ref-for-dom-authenticatorassertionresponse-userhandle%E2%91%A0
   // this should return null if the handle is unset.
   if (mUserHandle.IsEmpty()) {
-    aValue.set(nullptr);
+    aRetVal.set(nullptr);
   } else {
     if (!mUserHandleCachedObj) {
       mUserHandleCachedObj = mUserHandle.ToArrayBuffer(aCx);
-      if (!mUserHandleCachedObj) {
-        aRv.NoteJSContextException(aCx);
-        return;
-      }
     }
-    aValue.set(mUserHandleCachedObj);
+    aRetVal.set(mUserHandleCachedObj);
   }
 }
 
