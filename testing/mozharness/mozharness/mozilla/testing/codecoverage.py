@@ -301,7 +301,10 @@ class CodeCoverageMixin(SingleTestMixin):
         from codecoverage.lcov_rewriter import LcovFileRewriter
 
         jsvm_files = [os.path.join(jsvm_dir, e) for e in os.listdir(jsvm_dir)]
-        rewriter = LcovFileRewriter(os.path.join(self.grcov_dir, "chrome-map.json"))
+        appdir = self.config.get("appdir", "dist/bin/browser/")
+        rewriter = LcovFileRewriter(
+            os.path.join(self.grcov_dir, "chrome-map.json"), appdir
+        )
         rewriter.rewrite_files(jsvm_files, jsvm_output_file, "")
 
         # Run grcov on the zipped .gcno and .gcda files.
