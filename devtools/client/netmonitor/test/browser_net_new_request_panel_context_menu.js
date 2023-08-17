@@ -39,6 +39,7 @@ add_task(async function () {
       value: "bar",
     },
     { name: "baz", value: "42" },
+    { name: "valueWithEqualSign", value: "hijk=123=mnop" },
     { name: "type", value: "urlencoded" },
   ];
 
@@ -97,7 +98,7 @@ add_task(async function () {
   );
   is(
     urlParametersValues.length,
-    3,
+    4,
     "The URL Parameters length in the form should match the request we clicked"
   );
 

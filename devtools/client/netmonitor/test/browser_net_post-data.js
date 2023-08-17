@@ -43,7 +43,8 @@ add_task(async function () {
     getDisplayedRequests(store.getState()),
     getSortedRequests(store.getState())[0],
     "POST",
-    SIMPLE_SJS + "?foo=bar&baz=42&type=urlencoded",
+    SIMPLE_SJS +
+      "?foo=bar&baz=42&valueWithEqualSign=hijk=123=mnop&type=urlencoded",
     {
       status: 200,
       statusText: "Och Aye",
@@ -134,8 +135,8 @@ add_task(async function () {
       checkVisibility("request");
       is(
         labels.length,
-        2,
-        "There should be 2 param values displayed in this tabpanel."
+        4,
+        "There should be 4 param values displayed in this tabpanel."
       );
       is(
         labels[0].textContent,
@@ -156,6 +157,26 @@ add_task(async function () {
         values[1].textContent,
         `"123"`,
         "The second post param value was incorrect."
+      );
+      is(
+        labels[2].textContent,
+        "valueWithEqualSign",
+        "The third post param name was incorrect."
+      );
+      is(
+        values[2].textContent,
+        `"xyz=abc=123"`,
+        "The third post param value was incorrect."
+      );
+      is(
+        labels[3].textContent,
+        "valueWithAmpersand",
+        "The fourth post param name was incorrect."
+      );
+      is(
+        values[3].textContent,
+        `"abcd&1234"`,
+        "The fourth post param value was incorrect."
       );
     } else {
       checkVisibility("request editor");

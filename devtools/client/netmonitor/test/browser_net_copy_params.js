@@ -34,7 +34,7 @@ add_task(async function () {
   await testCopyUrlParamsHidden(2, false);
   await testCopyUrlParams(2, "a=b");
   await testCopyPostDataHidden(2, false);
-  await testCopyPostData(2, "foo=bar");
+  await testCopyPostData(2, "foo=bar=123=xyz");
 
   await testCopyUrlParamsHidden(3, false);
   await testCopyUrlParams(3, "a");

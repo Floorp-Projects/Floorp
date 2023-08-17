@@ -50,8 +50,8 @@ add_task(async function () {
     monitor,
     requestListItems[2],
     "?foo",
-    "bar",
-    "?foo=bar",
+    "bar=123=xyz",
+    "?foo=bar=123=xyz",
     1
   );
   await testRequestWithFormattedView(

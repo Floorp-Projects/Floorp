@@ -363,10 +363,14 @@ function parseFormData(sections) {
     .replace(/^&/, "")
     .split("&")
     .map(e => {
-      const param = e.split("=");
+      const firstEqualSignIndex = e.indexOf("=");
+      const paramName =
+        firstEqualSignIndex !== -1 ? e.slice(0, firstEqualSignIndex) : e;
+      const paramValue =
+        firstEqualSignIndex !== -1 ? e.slice(firstEqualSignIndex + 1) : "";
       return {
-        name: param[0] ? getUnicodeUrlPath(param[0]) : "",
-        value: param[1] ? getUnicodeUrlPath(param[1]) : "",
+        name: paramName ? getUnicodeUrlPath(paramName) : "",
+        value: paramValue ? getUnicodeUrlPath(paramValue) : "",
       };
     });
 }
