@@ -872,6 +872,10 @@ html {
   align-self: center;
   margin-inline: auto 12px;
 }
+.onboardingContainer .screen[pos=center].addons-picker .addon-container .rating {
+  font-size: 0.75em;
+  color: var(--in-content-icon-color);
+}
 .onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary {
   background: none;
   text-decoration: underline;

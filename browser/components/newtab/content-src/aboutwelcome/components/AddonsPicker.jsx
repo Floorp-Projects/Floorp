@@ -31,7 +31,7 @@ export const AddonsPicker = props => {
   return (
     <div className={"addons-picker-container"}>
       {content.tiles.data.map(
-        ({ id, install_label, name, type, description, icon }, index) =>
+        ({ id, install_label, name, type, description, icon, rating }, index) =>
           name ? (
             <div key={id} className="addon-container">
               <div className="rtamo-icon">
@@ -48,6 +48,11 @@ export const AddonsPicker = props => {
                 <Localized text={name}>
                   <div className="addon-title" />
                 </Localized>
+                {rating ? (
+                  <div className="rating">
+                    <moz-five-star rating={rating} />
+                  </div>
+                ) : null}
                 <Localized text={description}>
                   <div className="addon-description" />
                 </Localized>
