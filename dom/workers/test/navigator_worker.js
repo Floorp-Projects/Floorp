@@ -8,6 +8,7 @@ var supportedProps = [
   "appCodeName",
   "appName",
   "appVersion",
+  { name: "globalPrivacyControl", isNightly: true },
   "platform",
   "product",
   "userAgent",
