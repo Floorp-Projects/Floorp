@@ -1637,7 +1637,7 @@ package org.mozilla.geckoview {
     field public final boolean deletedProductReported;
     field @Nullable public final String grade;
     field @Nullable public final GeckoSession.ReviewAnalysis.Highlight highlights;
-    field public final int lastAnalysisTime;
+    field public final long lastAnalysisTime;
     field public final boolean needsAnalysis;
     field @Nullable public final String productId;
   }

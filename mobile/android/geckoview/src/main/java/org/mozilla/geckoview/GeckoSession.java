@@ -3548,7 +3548,7 @@ public class GeckoSession {
     @Nullable public final Highlight highlights;
 
     /** Time since the last analysis was performed. */
-    public final int lastAnalysisTime;
+    public final long lastAnalysisTime;
 
     /** Boolean indicating if reported that this product has been deleted. */
     public final boolean deletedProductReported;
@@ -3567,7 +3567,7 @@ public class GeckoSession {
       } else {
         highlights = new Highlight(message.getBundle("highlights"));
       }
-      lastAnalysisTime = message.getInt("last_analysis_time");
+      lastAnalysisTime = message.getLong("last_analysis_time");
       deletedProductReported = message.getBoolean("deleted_product_reported");
       deletedProduct = message.getBoolean("deleted_product");
     }
