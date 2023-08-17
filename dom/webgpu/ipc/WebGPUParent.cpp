@@ -664,6 +664,31 @@ ipc::IPCResult WebGPUParent::RecvQueueSubmit(
   return IPC_OK();
 }
 
+struct OnSubmittedWorkDoneRequest {
+  RefPtr<WebGPUParent> mParent;
+  WebGPUParent::QueueOnSubmittedWorkDoneResolver mResolver;
+};
+
+void OnSubmittedWorkDoneCallback(uint8_t* userdata) {
+  auto req = std::unique_ptr<OnSubmittedWorkDoneRequest>(
+      reinterpret_cast<OnSubmittedWorkDoneRequest*>(userdata));
+  if (req->mParent->CanSend()) {
+    req->mResolver(void_t());
+  }
+}
+
+ipc::IPCResult WebGPUParent::RecvQueueOnSubmittedWorkDone(
+    RawId aQueueId, std::function<void(mozilla::void_t)>&& aResolver) {
+  std::unique_ptr<OnSubmittedWorkDoneRequest> request(
+      new OnSubmittedWorkDoneRequest{this, std::move(aResolver)});
+
+  ffi::WGPUSubmittedWorkDoneClosureC callback = {
+      &OnSubmittedWorkDoneCallback,
+      reinterpret_cast<uint8_t*>(request.release())};
+  ffi::wgpu_server_on_submitted_work_done(mContext.get(), aQueueId, callback);
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvQueueWriteAction(
     RawId aQueueId, RawId aDeviceId, const ipc::ByteBuf& aByteBuf,
     ipc::UnsafeSharedMemoryHandle&& aShmem) {

@@ -1134,6 +1134,16 @@ void WebGPUChild::DeviceCreateSwapChain(
   SendDeviceCreateSwapChain(aSelfId, queueId, aRgbDesc, bufferIds, aOwnerId);
 }
 
+void WebGPUChild::QueueOnSubmittedWorkDone(
+    const RawId aSelfId, const RefPtr<dom::Promise>& aPromise) {
+  SendQueueOnSubmittedWorkDone(aSelfId)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [aPromise]() { aPromise->MaybeResolveWithUndefined(); },
+      [aPromise](const ipc::ResponseRejectReason& aReason) {
+        aPromise->MaybeRejectWithNotSupportedError("IPC error");
+      });
+}
+
 void WebGPUChild::SwapChainPresent(RawId aTextureId,
                                    const RemoteTextureId& aRemoteTextureId,
                                    const RemoteTextureOwnerId& aOwnerId) {

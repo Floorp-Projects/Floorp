@@ -1076,8 +1076,8 @@ dictionary GPUQueueDescriptor
 interface GPUQueue {
     undefined submit(sequence<GPUCommandBuffer> buffers);
 
-    //TODO:
-    //Promise<undefined> onSubmittedWorkDone();
+    [NewObject]
+    Promise<undefined> onSubmittedWorkDone();
 
     [Throws]
     undefined writeBuffer(
