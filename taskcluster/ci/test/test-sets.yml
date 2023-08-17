@@ -418,7 +418,6 @@ macosx64-talos:
     # - talos-h1 # too long to unpack profile- Bug 1442893
 
 macosx1300-64-qr-tests:
-    - browsertime-tp6-essential
     - browsertime-benchmark
 
 # Android
