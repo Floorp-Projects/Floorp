@@ -144,6 +144,10 @@ pref("floorp.browser.workspaces.disabledBySystem", true);
 //タブバーの背景色
 pref("floorp.titlebar.favicon.color", false);
 
+// カスタムショートカットキー
+pref("floorp.custom.shortcutkeysAndActions", "[]");
+pref("floorp.custom.shortcutkeysAndActions.enabled", true);
+
 // [実験] 新しいタブのオーバーライド
 pref("floorp.newtab.overrides.newtaburl", "");
 

@@ -85,7 +85,7 @@ async function resetPreferences() {
   const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
 
   if (!FileUtilsPath.exists()) {
-    console.log("user.js does not exist");
+    console.warn("user.js does not exist");
     const path = PathUtils.join(PROFILE_DIR, "user.js");
     const encoder = new TextEncoder("UTF-8");
     const data = encoder.encode("fake data");

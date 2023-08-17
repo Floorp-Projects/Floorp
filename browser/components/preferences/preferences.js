@@ -223,6 +223,7 @@ function init_all() {
   register_module("paneDownloads", gDownloads);
   register_module("paneUserjs", gUserjsPane);
   register_module("paneWorkspaces", gWorkspacesPane);
+  register_module("paneCSK", gCSKPane);
   register_module("paneContainers", gContainersPane);
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
     // Set hidden based on previous load's hidden value.
