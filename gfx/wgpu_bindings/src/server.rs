@@ -339,7 +339,7 @@ pub unsafe extern "C" fn wgpu_server_buffer_map(
         callback,
     };
     // All errors are also exposed to the mapping callback, so we handle them there and ignore
-    // the the returned value of buffer_map_async.
+    // the returned value of buffer_map_async.
     let _ = gfx_select!(buffer_id => global.buffer_map_async(
         buffer_id,
         start .. start + size,
