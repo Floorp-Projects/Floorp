@@ -845,6 +845,17 @@ def test_category_expansion(
                 "Revision=revision&newProject=try&newRevision=revision\n"
             ),
         ),
+        (
+            {"perfcompare_beta": True},
+            [9, 2, 2, 10, 2, 1],
+            2,
+            (
+                "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
+                "here once the tests are complete (ensure you select the right framework): "
+                "https://beta--mozilla-perfcompare.netlify.app/#/compare-results?"
+                "revs=revision,revision&repos=try,try\n"
+            ),
+        ),
     ],
 )
 @pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")
