@@ -49,6 +49,7 @@ task-defaults:
         retry-exit-status:
             - 1     # Test failures (which actually catch any gradle failure)
             - 17    # Download errors
+            - 42    # Hangs
     worker-type: b-android-xlarge
 
 tasks:

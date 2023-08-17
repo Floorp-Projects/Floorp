@@ -48,7 +48,17 @@ if [[ $WORKING_DIR == ${ANDROID_COMPONENTS_DIR}* ]]; then
   done
 fi
 
-./gradlew $GRADLE_ARGS $GRADLE_COMMANDS
+# gradle occasionally hangs, so run a watchdog that'll exit after 30min
+(
+sleep 30m
+exit 42
+) &
+
+./gradlew $GRADLE_ARGS $GRADLE_COMMANDS &
+# wait for either the watchdog or gradle process to exit
+wait -n %1 %2
+# if gradle finished in time, kill the watchdog, no longer necessary
+kill %1 || :
 
 . "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/external-gradle-dependencies/after.sh"
 
