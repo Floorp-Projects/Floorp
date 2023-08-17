@@ -9,35 +9,11 @@
 
 using namespace mozilla;
 
-WinRemoteMessageSender::WinRemoteMessageSender(const char* aCommandLine)
-    : mData({static_cast<DWORD>(WinRemoteMessageVersion::CommandLineOnly)}),
-      mUtf8Buffer(aCommandLine) {
-  mUtf8Buffer.Append('\0');
-
-  char* mutableBuffer;
-  mData.cbData = mUtf8Buffer.GetMutableData(&mutableBuffer);
-  mData.lpData = mutableBuffer;
-}
-
-WinRemoteMessageSender::WinRemoteMessageSender(const char* aCommandLine,
-                                               const char* aWorkingDir)
-    : mData({static_cast<DWORD>(
-          WinRemoteMessageVersion::CommandLineAndWorkingDir)}),
-      mUtf8Buffer(aCommandLine) {
-  mUtf8Buffer.Append('\0');
-  mUtf8Buffer.Append(aWorkingDir);
-  mUtf8Buffer.Append('\0');
-
-  char* mutableBuffer;
-  mData.cbData = mUtf8Buffer.GetMutableData(&mutableBuffer);
-  mData.lpData = mutableBuffer;
-}
-
 WinRemoteMessageSender::WinRemoteMessageSender(const wchar_t* aCommandLine,
                                                const wchar_t* aWorkingDir)
     : mData({static_cast<DWORD>(
-          WinRemoteMessageVersion::CommandLineAndWorkingDirInUtf16)}),
-      mUtf16Buffer(aCommandLine) {
+          WinRemoteMessageVersion::CommandLineAndWorkingDirInUtf16)}) {
+  mUtf16Buffer.Append(aCommandLine);
   mUtf16Buffer.Append(u'\0');
   mUtf16Buffer.Append(aWorkingDir);
   mUtf16Buffer.Append(u'\0');
@@ -48,31 +24,6 @@ WinRemoteMessageSender::WinRemoteMessageSender(const wchar_t* aCommandLine,
 }
 
 COPYDATASTRUCT* WinRemoteMessageSender::CopyData() { return &mData; }
-
-nsresult WinRemoteMessageReceiver::ParseV0(const nsACString& aBuffer) {
-  CommandLineParserWin<char> parser;
-  parser.HandleCommandLine(aBuffer);
-
-  mCommandLine = new nsCommandLine();
-  return mCommandLine->Init(parser.Argc(), parser.Argv(), nullptr,
-                            nsICommandLine::STATE_REMOTE_AUTO);
-}
-
-nsresult WinRemoteMessageReceiver::ParseV1(const nsACString& aBuffer) {
-  CommandLineParserWin<char> parser;
-  size_t cch = parser.HandleCommandLine(aBuffer);
-  ++cch;  // skip a null char
-
-  nsCOMPtr<nsIFile> workingDir;
-  if (cch < aBuffer.Length()) {
-    NS_NewLocalFile(NS_ConvertUTF8toUTF16(Substring(aBuffer, cch)), false,
-                    getter_AddRefs(workingDir));
-  }
-
-  mCommandLine = new nsCommandLine();
-  return mCommandLine->Init(parser.Argc(), parser.Argv(), workingDir,
-                            nsICommandLine::STATE_REMOTE_AUTO);
-}
 
 nsresult WinRemoteMessageReceiver::ParseV2(const nsAString& aBuffer) {
   CommandLineParserWin<char16_t> parser;
@@ -103,12 +54,6 @@ nsresult WinRemoteMessageReceiver::ParseV2(const nsAString& aBuffer) {
 
 nsresult WinRemoteMessageReceiver::Parse(const COPYDATASTRUCT* aMessageData) {
   switch (static_cast<WinRemoteMessageVersion>(aMessageData->dwData)) {
-    case WinRemoteMessageVersion::CommandLineOnly:
-      return ParseV0(nsDependentCSubstring(
-          reinterpret_cast<char*>(aMessageData->lpData), aMessageData->cbData));
-    case WinRemoteMessageVersion::CommandLineAndWorkingDir:
-      return ParseV1(nsDependentCSubstring(
-          reinterpret_cast<char*>(aMessageData->lpData), aMessageData->cbData));
     case WinRemoteMessageVersion::CommandLineAndWorkingDirInUtf16:
       return ParseV2(nsDependentSubstring(
           reinterpret_cast<char16_t*>(aMessageData->lpData),
