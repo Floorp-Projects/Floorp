@@ -249,6 +249,63 @@ Bug 1535584 - Restore UpdateCodecFrameSize to vp9_impl.cc; r=bwc
 
 Differential Revision: https://phabricator.services.mozilla.com/D23713
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0898f9cfe09273e1d86c38abdd576cdf273009f0
+
+Bug 1846850 - remove mozilla-added IsGUIThread asserts from libwebrtc. r=ng,webrtc-reviewers
+
+These were added in Bug 1060738 but no longer seem to add value based
+on crash stats.
+
+Differential Revision: https://phabricator.services.mozilla.com/D185222
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5e6f94c1b7c4491bdab454e24dfdb93eb75f80ca
+
+Bug 1846858 - revert changes to libwebrtc's deprecated/session_info.cc since we don't build it. r=ng,webrtc-reviewers
+
+Differential Revision: https://phabricator.services.mozilla.com/D185224
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4836114af07e38525d319b0a2f59f2fd618b7a3b
+
+Bug 1847257 - revert an unneccesary change in libwebrtc's window_capturer_x11.cc r=karlt,webrtc-reviewers
+
+This small change we've been carrying to when ProcessPendingXEvents is called
+in WindowCapturerLinux::Capture should not be necessary.
+
+Differential Revision: https://phabricator.services.mozilla.com/D185449
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9633cb1dde33ecbab435012c4ae1456a4ae79a42
+
+Bug 1847984 - remove mozilla-specific null FILE* checks in apm_data_dumper.h r=ng,webrtc-reviewers
+
+Since upstream commit 4bc60452f7 ApmDataDumper::GetRawFile does a release
+assert if FILE* is null so our mozilla-specific mods to check for valid
+FILE pointers are no longer needed.
+
+Differential Revision: https://phabricator.services.mozilla.com/D185838
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/53ecaeda76c3613b90d3a1c3348f0d903a054821
+
+Bug 1848045 - removing mozilla output directory handling code from apm_data_dumper. r=ng,webrtc-reviewers
+
+Upstream added the capability to set the output directory in commit 4bc60452f7 so
+we can revert to using upstream's version instead of ours.
+
+Differential Revision: https://phabricator.services.mozilla.com/D185863
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/48217906ac982e129b5eedf07e90904396c31ed4
+
+Bug 1847833 - remove aec log output size limiting code from libwebrtc's apm_data_dumper. r=ng,webrtc-reviewers
+
+Differential Revision: https://phabricator.services.mozilla.com/D185930
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7622e6dddeec583e5839b5432d436d85c356f6c3
+
+Bug 1847833 - aec_debug_size_, aec_debug_size(), set_aec_debug_size(uint32_t size) are no longer used. r=ng,webrtc-reviewers
+
+Differential Revision: https://phabricator.services.mozilla.com/D185931
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/525d71640bb7be400040131a5b1a16652c881a0f
+
+Bug 1850146 - remove unnecessary libwebrtc changes in jvm_android.cc. r?dbaker!
+
+After landing Bug 1826428 to remove jvm_android.cc from the build and
+giving time for that to simmer for a while with no known effects, we
+can remove our modifications.
+
+Differential Revision: https://phabricator.services.mozilla.com/D186855
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fc01107426c3adebb169f19efba72a91be19f613
 ---
  api/rtp_headers.cc                            |   3 +-
  api/rtp_headers.h                             |  17 +-
@@ -257,19 +314,15 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0898f9cfe09273e1d
  call/video_receive_stream.h                   |   2 +
  modules/audio_coding/acm2/acm_receiver.h      |  12 +-
  modules/audio_coding/neteq/dtmf_buffer.cc     |   6 +-
- .../logging/apm_data_dumper.cc                |  23 ++-
- .../logging/apm_data_dumper.h                 |  68 +++++--
  modules/desktop_capture/desktop_capturer.h    |   1 +
  .../desktop_capture/fake_desktop_capturer.cc  |   4 +-
  .../linux/x11/mouse_cursor_monitor_x11.cc     |   4 +-
  .../linux/x11/screen_capturer_x11.cc          |   2 +-
- .../linux/x11/window_capturer_x11.cc          |  12 +-
+ .../linux/x11/window_capturer_x11.cc          |   9 +
  .../linux/x11/window_capturer_x11.h           |   4 +
  .../desktop_capture/linux/x11/x_error_trap.cc |  68 ++++---
  .../desktop_capture/linux/x11/x_error_trap.h  |  29 ++-
- .../mouse_cursor_monitor_win.cc               |   4 +
- .../win/screen_capture_utils.cc               |   3 +-
- .../win/screen_capturer_win_gdi.cc            |   1 +
+ .../win/screen_capture_utils.cc               |   2 +-
  modules/rtp_rtcp/source/rtcp_sender.cc        |   2 +-
  .../rtp_rtcp/source/rtp_header_extensions.cc  |  39 ++++
  .../rtp_rtcp/source/rtp_header_extensions.h   |  15 ++
@@ -277,7 +330,6 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0898f9cfe09273e1d
  .../rtp_rtcp/source/rtp_packet_unittest.cc    |  30 +++
  modules/rtp_rtcp/source/rtp_rtcp_config.h     |   2 +
  modules/rtp_rtcp/source/rtp_sender.cc         |   4 +
- modules/utility/source/jvm_android.cc         |  28 ++-
  modules/video_capture/device_info_impl.cc     |   2 +-
  modules/video_capture/device_info_impl.h      |   1 +
  .../video_capture/linux/device_info_v4l2.cc   | 179 +++++++++++++++++-
@@ -288,14 +340,13 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0898f9cfe09273e1d
  modules/video_capture/video_capture_impl.h    |   6 +-
  .../codecs/vp9/libvpx_vp9_encoder.cc          |  52 +++++
  .../codecs/vp9/libvpx_vp9_encoder.h           |   4 +
- .../video_coding/deprecated/session_info.cc   |  32 +++-
  rtc_base/BUILD.gn                             |   6 +
- rtc_base/logging.cc                           |  17 +-
- rtc_base/logging.h                            |  14 ++
+ rtc_base/logging.cc                           |  21 +-
+ rtc_base/logging.h                            |   9 +
  test/fuzzers/rtp_packet_fuzzer.cc             |   5 +
  test/vcm_capturer.cc                          |   2 +-
  webrtc.gni                                    |   2 +-
- 45 files changed, 693 insertions(+), 126 deletions(-)
+ 39 files changed, 572 insertions(+), 86 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
 index 0573e54684..40d4690397 100644
@@ -445,232 +496,6 @@ index 9f78aca6e2..115bfcf97b 100644
      return kInvalidSampleRate;
    }
    max_extrapolation_samples_ = 7 * fs_hz / 100;
-diff --git a/modules/audio_processing/logging/apm_data_dumper.cc b/modules/audio_processing/logging/apm_data_dumper.cc
-index 65d2167d37..a15321ad48 100644
---- a/modules/audio_processing/logging/apm_data_dumper.cc
-+++ b/modules/audio_processing/logging/apm_data_dumper.cc
-@@ -35,14 +35,20 @@ std::string FormFileName(absl::string_view output_dir,
-                          int instance_index,
-                          int reinit_index,
-                          absl::string_view suffix) {
--  char buf[1024];
--  rtc::SimpleStringBuilder ss(buf);
--  if (!output_dir.empty()) {
--    ss << output_dir;
--    if (output_dir.back() != kPathDelimiter) {
--      ss << kPathDelimiter;
--    }
-+#ifdef WEBRTC_WIN
-+  char sep = '\\';
-+#else
-+  char sep = '/';
-+#endif
-+
-+  std::stringstream ss;
-+  std::string base = rtc::LogMessage::aec_debug_filename();
-+  ss << base;
-+
-+  if (base.length() && base.back() != sep) {
-+    ss << sep;
-   }
-+
-   ss << name << "_" << instance_index << "-" << reinit_index << suffix;
-   return ss.str();
- }
-@@ -52,7 +58,8 @@ std::string FormFileName(absl::string_view output_dir,
- 
- #if WEBRTC_APM_DEBUG_DUMP == 1
- ApmDataDumper::ApmDataDumper(int instance_index)
--    : instance_index_(instance_index) {}
-+    : instance_index_(instance_index)
-+    , debug_written_(0) {}
- #else
- ApmDataDumper::ApmDataDumper(int instance_index) {}
- #endif
-diff --git a/modules/audio_processing/logging/apm_data_dumper.h b/modules/audio_processing/logging/apm_data_dumper.h
-index 4ab6baad83..84759b4055 100644
---- a/modules/audio_processing/logging/apm_data_dumper.h
-+++ b/modules/audio_processing/logging/apm_data_dumper.h
-@@ -26,6 +26,7 @@
- #if WEBRTC_APM_DEBUG_DUMP == 1
- #include "common_audio/wav_file.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/logging.h"
- #include "rtc_base/string_utils.h"
- #endif
- 
-@@ -41,7 +42,7 @@ namespace webrtc {
- // Functor used to use as a custom deleter in the map of file pointers to raw
- // files.
- struct RawFileCloseFunctor {
--  void operator()(FILE* f) const { fclose(f); }
-+  void operator()(FILE* f) const { if (f) fclose(f); }
- };
- #endif
- 
-@@ -100,6 +101,7 @@ class ApmDataDumper {
-   void InitiateNewSetOfRecordings() {
- #if WEBRTC_APM_DEBUG_DUMP == 1
-     ++recording_set_index_;
-+    debug_written_ = 0;
- #endif
-   }
- 
-@@ -114,7 +116,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(&v, sizeof(v), 1, file);
-+      if (file) {
-+        fwrite(&v, sizeof(v), 1, file);
-+      }
-     }
- #endif
-   }
-@@ -129,7 +133,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(v, sizeof(v[0]), v_length, file);
-+      if (file) {
-+        fwrite(v, sizeof(v[0]), v_length, file);
-+      }
-     }
- #endif
-   }
-@@ -156,7 +162,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(&v, sizeof(v), 1, file);
-+      if (file) {
-+        fwrite(&v, sizeof(v), 1, file);
-+      }
-     }
- #endif
-   }
-@@ -171,7 +179,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(v, sizeof(v[0]), v_length, file);
-+      if (file) {
-+        fwrite(v, sizeof(v[0]), v_length, file);
-+      }
-     }
- #endif
-   }
-@@ -210,9 +220,11 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      for (size_t k = 0; k < v_length; ++k) {
--        int16_t value = static_cast<int16_t>(v[k]);
--        fwrite(&value, sizeof(value), 1, file);
-+      if (file) {
-+        for (size_t k = 0; k < v_length; ++k) {
-+          int16_t value = static_cast<int16_t>(v[k]);
-+          fwrite(&value, sizeof(value), 1, file);
-+        }
-       }
-     }
- #endif
-@@ -240,7 +252,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(&v, sizeof(v), 1, file);
-+      if (file) {
-+        fwrite(&v, sizeof(v), 1, file);
-+      }
-     }
- #endif
-   }
-@@ -255,7 +269,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(v, sizeof(v[0]), v_length, file);
-+      if (file) {
-+        fwrite(v, sizeof(v[0]), v_length, file);
-+      }
-     }
- #endif
-   }
-@@ -282,7 +298,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(&v, sizeof(v), 1, file);
-+      if (file) {
-+        fwrite(&v, sizeof(v), 1, file);
-+      }
-     }
- #endif
-   }
-@@ -297,7 +315,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(v, sizeof(v[0]), v_length, file);
-+      if (file) {
-+        fwrite(v, sizeof(v[0]), v_length, file);
-+      }
-     }
- #endif
-   }
-@@ -311,7 +331,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(&v, sizeof(v), 1, file);
-+      if (file) {
-+        fwrite(&v, sizeof(v), 1, file);
-+      }
-     }
- #endif
-   }
-@@ -326,7 +348,9 @@ class ApmDataDumper {
- 
-     if (recording_activated_) {
-       FILE* file = GetRawFile(name);
--      fwrite(v, sizeof(v[0]), v_length, file);
-+      if (file) {
-+        fwrite(v, sizeof(v[0]), v_length, file);
-+      }
-     }
- #endif
-   }
-@@ -369,6 +393,12 @@ class ApmDataDumper {
-       WavWriter* file = GetWavFile(name, sample_rate_hz, num_channels,
-                                    WavFile::SampleFormat::kFloat);
-       file->WriteSamples(v, v_length);
-+      // Cheat and use aec_near as a stand-in for "size of the largest file"
-+      // in the dump.  We're looking to limit the total time, and that's a
-+      // reasonable stand-in.
-+      if (strcmp(name.data(), "aec_near") == 0) {
-+       updateDebugWritten(v_length * sizeof(float));
-+      }
-     }
- #endif
-   }
-@@ -405,6 +435,16 @@ class ApmDataDumper {
-                         int sample_rate_hz,
-                         int num_channels,
-                         WavFile::SampleFormat format);
-+
-+  uint32_t debug_written_ = 0;
-+
-+  void updateDebugWritten(uint32_t amount) {
-+    debug_written_ += amount;
-+    if (debug_written_ >= rtc::LogMessage::aec_debug_size()) {
-+      SetActivated(false);
-+    }
-+  }
-+
- #endif
- };
- 
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
 index fd884f13ff..f39852b58e 100644
 --- a/modules/desktop_capture/desktop_capturer.h
@@ -741,7 +566,7 @@ index d5dcd7af86..fa6334e8ba 100644
    }
  
 diff --git a/modules/desktop_capture/linux/x11/window_capturer_x11.cc b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-index b55f7e8fa9..2e17d44c0a 100644
+index b55f7e8fa9..2b1392ced0 100644
 --- a/modules/desktop_capture/linux/x11/window_capturer_x11.cc
 +++ b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
 @@ -57,6 +57,7 @@ bool WindowCapturerX11::GetSourceList(SourceList* sources) {
@@ -752,24 +577,7 @@ index b55f7e8fa9..2e17d44c0a 100644
      if (this->GetWindowTitle(window, &w.title)) {
        sources->push_back(w);
      }
-@@ -140,6 +141,7 @@ void WindowCapturerX11::Start(Callback* callback) {
- 
- void WindowCapturerX11::CaptureFrame() {
-   TRACE_EVENT0("webrtc", "WindowCapturerX11::CaptureFrame");
-+  x_display_->ProcessPendingXEvents();
- 
-   if (!x_server_pixel_buffer_.IsWindowValid()) {
-     RTC_LOG(LS_ERROR) << "The window is no longer valid.";
-@@ -147,8 +149,6 @@ void WindowCapturerX11::CaptureFrame() {
-     return;
-   }
- 
--  x_display_->ProcessPendingXEvents();
--
-   if (!has_composite_extension_) {
-     // Without the Xcomposite extension we capture when the whole window is
-     // visible on screen and not covered by any other window. This is not
-@@ -237,6 +237,14 @@ bool WindowCapturerX11::GetWindowTitle(::Window window, std::string* title) {
+@@ -237,6 +238,14 @@ bool WindowCapturerX11::GetWindowTitle(::Window window, std::string* title) {
    return result;
  }
  
@@ -952,37 +760,8 @@ index 1f21ab969c..df7e86bf03 100644
  };
  
  }  // namespace webrtc
-diff --git a/modules/desktop_capture/mouse_cursor_monitor_win.cc b/modules/desktop_capture/mouse_cursor_monitor_win.cc
-index c892d59955..aa2347423c 100644
---- a/modules/desktop_capture/mouse_cursor_monitor_win.cc
-+++ b/modules/desktop_capture/mouse_cursor_monitor_win.cc
-@@ -88,6 +88,7 @@ MouseCursorMonitorWin::~MouseCursorMonitorWin() {
- void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
-   RTC_DCHECK(!callback_);
-   RTC_DCHECK(callback);
-+  RTC_DCHECK(IsGUIThread(false));
- 
-   callback_ = callback;
-   mode_ = mode;
-@@ -96,6 +97,8 @@ void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
- }
- 
- void MouseCursorMonitorWin::Capture() {
-+// TODO: Bug 1666266. Commented out to pass new tests added in bug 1634044.
-+//  RTC_DCHECK(IsGUIThread(false));
-   RTC_DCHECK(callback_);
- 
-   CURSORINFO cursor_info;
-@@ -168,6 +171,7 @@ void MouseCursorMonitorWin::Capture() {
- }
- 
- DesktopRect MouseCursorMonitorWin::GetScreenRect() {
-+  RTC_DCHECK(IsGUIThread(false));
-   RTC_DCHECK_NE(screen_, kInvalidScreenId);
-   if (screen_ == kFullDesktopScreenId) {
-     return DesktopRect::MakeXYWH(GetSystemMetrics(SM_XVIRTUALSCREEN),
 diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 3745e9cba5..5409417a88 100644
+index 3745e9cba5..f68cfb94c1 100644
 --- a/modules/desktop_capture/win/screen_capture_utils.cc
 +++ b/modules/desktop_capture/win/screen_capture_utils.cc
 @@ -52,7 +52,7 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
@@ -994,26 +773,6 @@ index 3745e9cba5..5409417a88 100644
      if (device_names) {
        device_names->push_back(rtc::ToUtf8(device.DeviceName));
      }
-@@ -170,6 +170,7 @@ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
- 
- DesktopRect GetScreenRect(const DesktopCapturer::SourceId screen,
-                           const std::wstring& device_key) {
-+  RTC_DCHECK(IsGUIThread(false));
-   if (screen == kFullDesktopScreenId) {
-     return GetFullscreenRect();
-   }
-diff --git a/modules/desktop_capture/win/screen_capturer_win_gdi.cc b/modules/desktop_capture/win/screen_capturer_win_gdi.cc
-index 4d07b6b92f..2a81fb5184 100644
---- a/modules/desktop_capture/win/screen_capturer_win_gdi.cc
-+++ b/modules/desktop_capture/win/screen_capturer_win_gdi.cc
-@@ -186,6 +186,7 @@ void ScreenCapturerWinGdi::PrepareCaptureResources() {
- }
- 
- bool ScreenCapturerWinGdi::CaptureImage() {
-+  RTC_DCHECK(IsGUIThread(false));
-   DesktopRect screen_rect =
-       GetScreenRect(current_screen_id_, current_device_key_);
-   if (screen_rect.is_empty()) {
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
 index 75f403d6fa..c62c65506a 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
@@ -1194,59 +953,6 @@ index 8c0b2dda0a..a60d742dd4 100644
    }
    RTC_CHECK_NOTREACHED();
  }
-diff --git a/modules/utility/source/jvm_android.cc b/modules/utility/source/jvm_android.cc
-index ee9930bcaa..39ef12f428 100644
---- a/modules/utility/source/jvm_android.cc
-+++ b/modules/utility/source/jvm_android.cc
-@@ -18,6 +18,16 @@
- #include "rtc_base/logging.h"
- #include "rtc_base/platform_thread.h"
- 
-+namespace mozilla {
-+namespace jni {
-+jclass GetClassRef(JNIEnv* aEnv, const char* aClassName);
-+}
-+}
-+
-+#define TAG "JVM"
-+#define ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
-+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
-+
- namespace webrtc {
- 
- JVM* g_jvm;
-@@ -40,14 +50,11 @@ struct {
- void LoadClasses(JNIEnv* jni) {
-   RTC_LOG(LS_INFO) << "LoadClasses:";
-   for (auto& c : loaded_classes) {
--    jclass localRef = FindClass(jni, c.name);
--    RTC_LOG(LS_INFO) << "name: " << c.name;
--    CHECK_EXCEPTION(jni) << "Error during FindClass: " << c.name;
--    RTC_CHECK(localRef) << c.name;
--    jclass globalRef = reinterpret_cast<jclass>(jni->NewGlobalRef(localRef));
--    CHECK_EXCEPTION(jni) << "Error during NewGlobalRef: " << c.name;
--    RTC_CHECK(globalRef) << c.name;
--    c.clazz = globalRef;
-+    ALOGD("name: %s", c.name);
-+    jclass clsRef = mozilla::jni::GetClassRef(jni, c.name);
-+    RTC_CHECK(clsRef) << c.name;
-+    c.clazz = static_cast<jclass>(jni->NewGlobalRef(clsRef));
-+    jni->DeleteLocalRef(clsRef);
-   }
- }
- 
-@@ -216,8 +223,9 @@ std::string JNIEnvironment::JavaToStdString(const jstring& j_string) {
- 
- // static
- void JVM::Initialize(JavaVM* jvm) {
--  RTC_LOG(LS_INFO) << "JVM::Initialize";
--  RTC_CHECK(!g_jvm);
-+  if (g_jvm) {
-+    return;
-+  }
-   g_jvm = new JVM(jvm);
- }
- 
 diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
 index ff32a78580..7cccdb51a7 100644
 --- a/modules/video_capture/device_info_impl.cc
@@ -1853,74 +1559,6 @@ index 0474e7bc17..1953923f81 100644
  
    std::unique_ptr<ScalableVideoController> svc_controller_;
    absl::optional<ScalabilityMode> scalability_mode_;
-diff --git a/modules/video_coding/deprecated/session_info.cc b/modules/video_coding/deprecated/session_info.cc
-index b15dc0a9ff..837dccaeb6 100644
---- a/modules/video_coding/deprecated/session_info.cc
-+++ b/modules/video_coding/deprecated/session_info.cc
-@@ -210,16 +210,26 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
-   if (h264 && h264->packetization_type == kH264StapA) {
-     size_t required_length = 0;
-     const uint8_t* nalu_ptr = packet_buffer + kH264NALHeaderLengthInBytes;
--    while (nalu_ptr < packet_buffer + packet.sizeBytes) {
-+    // Must check that incoming data length doesn't extend past end of buffer.
-+    // We allow for 100 bytes of expansion due to startcodes being longer than
-+    // length fields.
-+    while (nalu_ptr + kLengthFieldLength <= packet_buffer + packet.sizeBytes) {
-       size_t length = BufferToUWord16(nalu_ptr);
--      required_length +=
-+      if (nalu_ptr + kLengthFieldLength + length <= packet_buffer + packet.sizeBytes) {
-+        required_length +=
-           length + (packet.insertStartCode ? kH264StartCodeLengthBytes : 0);
--      nalu_ptr += kLengthFieldLength + length;
-+        nalu_ptr += kLengthFieldLength + length;
-+      } else {
-+        // Something is very wrong!
-+        RTC_LOG(LS_ERROR) << "Failed to insert packet due to corrupt H264 STAP-A";
-+        return 0;
-+      }
-     }
-     ShiftSubsequentPackets(packet_it, required_length);
-     nalu_ptr = packet_buffer + kH264NALHeaderLengthInBytes;
-     uint8_t* frame_buffer_ptr = frame_buffer + offset;
--    while (nalu_ptr < packet_buffer + packet.sizeBytes) {
-+    // we already know we won't go past end-of-buffer
-+    while (nalu_ptr + kLengthFieldLength <= packet_buffer + packet.sizeBytes) {
-       size_t length = BufferToUWord16(nalu_ptr);
-       nalu_ptr += kLengthFieldLength;
-       frame_buffer_ptr += Insert(nalu_ptr, length, packet.insertStartCode,
-@@ -447,12 +457,23 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
-     return -2;
- 
-   if (packet.codec() == kVideoCodecH264) {
--    frame_type_ = packet.video_header.frame_type;
-+    // H.264 can have leading or trailing non-VCL (Video Coding Layer)
-+    // NALUs, such as SPS/PPS/SEI and others.  Also, the RTP marker bit is
-+    // not reliable for the last packet of a frame (RFC 6184 5.1 - "Decoders
-+    // [] MUST NOT rely on this property"), so allow out-of-order packets to
-+    // update the first and last seq# range.  Also mark as a key frame if
-+    // any packet is of that type.
-+    if (frame_type_ != VideoFrameType::kVideoFrameKey) {
-+      frame_type_ = packet.video_header.frame_type;
-+    }
-     if (packet.is_first_packet_in_frame() &&
-         (first_packet_seq_num_ == -1 ||
-          IsNewerSequenceNumber(first_packet_seq_num_, packet.seqNum))) {
-       first_packet_seq_num_ = packet.seqNum;
-     }
-+    // Note: the code does *not* currently handle the Marker bit being totally
-+    // absent from a frame.  It does not, however, depend on it being on the last
-+    // packet of the 'frame'/'session'.
-     if (packet.markerBit &&
-         (last_packet_seq_num_ == -1 ||
-          IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_))) {
-@@ -499,7 +520,6 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
- 
-   size_t returnLength = InsertBuffer(frame_buffer, packet_list_it);
-   UpdateCompleteSession();
--
-   return static_cast<int>(returnLength);
- }
- 
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
 index cbbf359ecb..1909c0ece0 100644
 --- a/rtc_base/BUILD.gn
@@ -1939,7 +1577,7 @@ index cbbf359ecb..1909c0ece0 100644
      # Dependency on chromium's logging (in //base).
      deps += [ "//base" ]
 diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index 61a3c667ba..19f3211b3b 100644
+index 61a3c667ba..ad2303735e 100644
 --- a/rtc_base/logging.cc
 +++ b/rtc_base/logging.cc
 @@ -44,6 +44,7 @@ static const int kMaxLogLineSize = 1024 - 60;
@@ -1950,13 +1588,12 @@ index 61a3c667ba..19f3211b3b 100644
  #include "rtc_base/checks.h"
  #include "rtc_base/platform_thread_types.h"
  #include "rtc_base/string_encode.h"
-@@ -54,6 +55,20 @@ static const int kMaxLogLineSize = 1024 - 60;
+@@ -54,6 +55,24 @@ static const int kMaxLogLineSize = 1024 - 60;
  #include "rtc_base/time_utils.h"
  
  namespace rtc {
 +
 +bool LogMessage::aec_debug_ = false;
-+uint32_t LogMessage::aec_debug_size_ = 4*1024*1024;
 +std::string LogMessage::aec_filename_base_;
 +
 +void LogMessage::set_aec_debug(bool enable) {
@@ -1968,10 +1605,15 @@ index 61a3c667ba..19f3211b3b 100644
 +  return aec_filename_base_;
 +}
 +
++void LogMessage::set_aec_debug_filename(const char* filename) {
++  aec_filename_base_ = filename;
++  webrtc::ApmDataDumper::SetOutputDirectory(aec_filename_base_);
++}
++
  namespace {
  
  // By default, release builds don't log, debug builds at info level
-@@ -114,7 +129,7 @@ std::string LogLineRef::DefaultLogLine() const {
+@@ -114,7 +133,7 @@ std::string LogLineRef::DefaultLogLine() const {
  // LogMessage
  /////////////////////////////////////////////////////////////////////////////
  
@@ -1981,33 +1623,28 @@ index 61a3c667ba..19f3211b3b 100644
  // The list of logging streams currently configured.
  // Note: we explicitly do not clean this up, because of the uncertain ordering
 diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index d59b9a0ef7..34a3b6a1a8 100644
+index d59b9a0ef7..73a8bf7454 100644
 --- a/rtc_base/logging.h
 +++ b/rtc_base/logging.h
-@@ -581,6 +581,16 @@ class LogMessage {
+@@ -581,6 +581,12 @@ class LogMessage {
    }
  #endif  // RTC_LOG_ENABLED()
  
 +  // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
 +  static void set_aec_debug(bool enable);
-+  static void set_aec_debug_size(uint32_t size) { aec_debug_size_ = size; }
 +  static bool aec_debug() { return aec_debug_; }
-+  static uint32_t aec_debug_size() { return aec_debug_size_; }
 +  static std::string aec_debug_filename();
-+  static void set_aec_debug_filename(const char* filename) {
-+    aec_filename_base_ = filename;
-+  }
++  static void set_aec_debug_filename(const char* filename);
 +
   private:
    friend class LogMessageForTesting;
  
-@@ -636,6 +646,10 @@ class LogMessage {
+@@ -636,6 +642,9 @@ class LogMessage {
  
    // The stringbuilder that buffers the formatted message before output
    rtc::StringBuilder print_stream_;
 +
 +  static bool aec_debug_;
-+  static uint32_t aec_debug_size_;
 +  static std::string aec_filename_base_;
  };
  

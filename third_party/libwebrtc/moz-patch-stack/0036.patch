@@ -1,32 +1,41 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 1 Dec 2020 09:36:00 -0500
-Subject: Bug 1654112 - Disable creating av1 encoder and decoder. r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Wed, 10 Feb 2021 12:24:00 -0800
+Subject: Bug 1654112 - Use newer thread run callback, and adapt
+ PlatformUIThread; r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D130089
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ef548d7758c7de6e78d38af299c2296bf9d20ec9
+Differential Revision: https://phabricator.services.mozilla.com/D107879
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a8e2565bd68b66c40be4827b
 ---
- media/engine/internal_decoder_factory.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ rtc_base/platform_thread.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/media/engine/internal_decoder_factory.cc b/media/engine/internal_decoder_factory.cc
-index e761fd60c8..001c666313 100644
---- a/media/engine/internal_decoder_factory.cc
-+++ b/media/engine/internal_decoder_factory.cc
-@@ -49,12 +49,14 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
-   for (const SdpVideoFormat& h264_format : SupportedH264DecoderCodecs())
-     formats.push_back(h264_format);
+diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
+index befd61849d..5b7c6884fe 100644
+--- a/rtc_base/platform_thread.h
++++ b/rtc_base/platform_thread.h
+@@ -21,8 +21,13 @@
+ #include "absl/types/optional.h"
+ #include "rtc_base/platform_thread_types.h"
  
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-   if (kDav1dIsIncluded) {
-     formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
-     formats.push_back(SdpVideoFormat(
-         cricket::kAv1CodecName,
-         {{kAV1FmtpProfile, AV1ProfileToString(AV1Profile::kProfile1).data()}}));
-   }
-+#endif
++#include "rtc_base/deprecated/recursive_critical_section.h"
++
+ namespace rtc {
  
-   return formats;
- }
++// Bug 1691641
++class PlatformUIThread;
++
+ enum class ThreadPriority {
+   kLow = 1,
+   kNormal,
+@@ -113,6 +118,8 @@ class PlatformThread final {
+ 
+   absl::optional<Handle> handle_;
+   bool joinable_ = false;
++  // Bug 1691641
++  friend PlatformUIThread;
+ };
+ 
+ }  // namespace rtc
 -- 
 2.34.1
 

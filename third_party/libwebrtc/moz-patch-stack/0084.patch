@@ -1,25 +1,58 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Tue, 4 Apr 2023 16:34:00 -0500
-Subject: Bug 1822194 - (fix-3b51cd328e) - Add missing designated initializer
- that gcc is sad about.
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Tue, 6 Jun 2023 16:37:00 -0700
+Subject: Bug 1833237 - (fix-f0be3bee1f) remove reference to
+ portal:pipewire_base;r?pehrsons
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf19320c0804e9aee1a3eb4bf
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8ff886a4d366b4be35b329d1ef733a6df542067c
 ---
- modules/audio_processing/audio_processing_impl.cc | 1 +
- 1 file changed, 1 insertion(+)
+ modules/video_capture/BUILD.gn                      | 4 ++++
+ modules/video_capture/linux/device_info_pipewire.cc | 3 ++-
+ modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
-index c80cc76a3d..c304453388 100644
---- a/modules/audio_processing/audio_processing_impl.cc
-+++ b/modules/audio_processing/audio_processing_impl.cc
-@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
-                   },
-               .adaptive_digital_controller =
-                   {
-+                      .enabled = false,
-                       .headroom_db = static_cast<float>(headroom_db.Get()),
-                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
-                       .initial_gain_db =
+diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
+index f675143451..65468cecd7 100644
+--- a/modules/video_capture/BUILD.gn
++++ b/modules/video_capture/BUILD.gn
+@@ -100,6 +100,10 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+           "../../media:rtc_media_base",
+           "../portal",
+         ]
++        if (build_with_mozilla) {
++          configs -= [ "../portal:pipewire_base" ]
++          public_deps = [ "//third_party/pipewire" ]
++        }
+       }
+     }
+     if (is_win) {
+diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
+index 1dee78f5ee..2cb6161514 100644
+--- a/modules/video_capture/linux/device_info_pipewire.cc
++++ b/modules/video_capture/linux/device_info_pipewire.cc
+@@ -47,7 +47,8 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
+                                           char* deviceUniqueIdUTF8,
+                                           uint32_t deviceUniqueIdUTF8Length,
+                                           char* productUniqueIdUTF8,
+-                                          uint32_t productUniqueIdUTF8Length) {
++                                          uint32_t productUniqueIdUTF8Length,
++                                          pid_t* pid) {
+   if (deviceNumber >= NumberOfDevices())
+     return -1;
+ 
+diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
+index a006c85d1b..724717be5e 100644
+--- a/modules/video_capture/linux/device_info_pipewire.h
++++ b/modules/video_capture/linux/device_info_pipewire.h
+@@ -29,7 +29,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
+                         char* deviceUniqueIdUTF8,
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8 = nullptr,
+-                        uint32_t productUniqueIdUTF8Length = 0) override;
++                        uint32_t productUniqueIdUTF8Length = 0,
++                        pid_t* pid = 0) override;
+   /*
+    * Fills the membervariable _captureCapabilities with capabilites for the
+    * given device name.
 -- 
 2.34.1
 

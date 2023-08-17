@@ -1,77 +1,38 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Fri, 10 Mar 2023 09:21:00 +0000
-Subject: Bug 1819035 - get EGL display based on the used platform in the
- browser r=webrtc-reviewers,ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 17 May 2023 08:25:00 +0000
+Subject: Bug 1830945 - Do not lock in VideoCaptureDS::{Start|Stop}Capture.
+ r=padenot
 
-Because of a possible misconfiguration or a possible driver issue it
-might happen that the browser will use a different driver on X11 and
-end up using yet another one for wayland/gbm, which might lead to not
-working screen sharing in the better case, but also to a crash in the
-other driver (Nvidia). This adds a check for platform the browser runs
-on, if it's XWayland or Wayland and based on that query EGL display for
-that specific platform, rather than going for the Wayland one only.
+Unclear what they are guarding.
 
-Differential Revision: https://phabricator.services.mozilla.com/D171858
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c8606497de1f461a6352456e0e511c2ae498d526
+Differential Revision: https://phabricator.services.mozilla.com/D178279
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fcd48e81c9c2cb68ea2cb3d44b3574281be2154e
 ---
- .../linux/wayland/egl_dmabuf.cc               | 30 +++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+ modules/video_capture/windows/video_capture_ds.cc | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
-index b529077c6d..6a019c64b4 100644
---- a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
-+++ b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
-@@ -13,6 +13,7 @@
- #include <asm/ioctl.h>
- #include <dlfcn.h>
- #include <fcntl.h>
-+#include <gdk/gdk.h>
- #include <libdrm/drm_fourcc.h>
- #include <linux/types.h>
- #include <spa/param/video/format-utils.h>
-@@ -217,6 +218,26 @@ static void CloseLibrary(void* library) {
-   }
+diff --git a/modules/video_capture/windows/video_capture_ds.cc b/modules/video_capture/windows/video_capture_ds.cc
+index 8695f76245..b13ac074f8 100644
+--- a/modules/video_capture/windows/video_capture_ds.cc
++++ b/modules/video_capture/windows/video_capture_ds.cc
+@@ -122,8 +122,6 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
  }
  
-+static bool IsWaylandDisplay() {
-+  static auto sGdkWaylandDisplayGetType =
-+    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_type");
-+  if (!sGdkWaylandDisplayGetType) {
-+    return false;
-+  }
-+  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
-+                                      sGdkWaylandDisplayGetType()));
-+}
-+
-+static bool IsX11Display() {
-+  static auto sGdkX11DisplayGetType =
-+    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_x11_display_get_type");
-+  if (!sGdkX11DisplayGetType) {
-+    return false;
-+  }
-+  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
-+                                      sGdkX11DisplayGetType()));
-+}
-+
- static void* g_lib_egl = nullptr;
+ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
+-  MutexLock lock(&api_lock_);
+-
+   if (capability != _requestedCapability) {
+     DisconnectGraph();
  
- RTC_NO_SANITIZE("cfi-icall")
-@@ -362,8 +383,13 @@ EglDmaBuf::EglDmaBuf() {
-     return;
-   }
+@@ -146,8 +144,6 @@ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
+ }
  
--  egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
--                                       (void*)EGL_DEFAULT_DISPLAY, nullptr);
-+  if (IsWaylandDisplay()) {
-+    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
-+                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
-+  } else if (IsX11Display()) {
-+    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
-+                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
-+  }
- 
-   if (egl_.display == EGL_NO_DISPLAY) {
-     RTC_LOG(LS_ERROR) << "Failed to obtain default EGL display: "
+ int32_t VideoCaptureDS::StopCapture() {
+-  MutexLock lock(&api_lock_);
+-
+   HRESULT hr = _mediaControl->StopWhenReady();
+   if (FAILED(hr)) {
+     RTC_LOG(LS_INFO) << "Failed to stop the capture graph. " << hr;
 -- 
 2.34.1
 

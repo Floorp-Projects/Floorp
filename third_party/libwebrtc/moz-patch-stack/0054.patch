@@ -1,208 +1,91 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 2 Nov 2021 14:35:00 +0000
-Subject: Bug 1729455 - Add to stats the local receive time for receiving video
- Sender Reports. r=ng
+From: Landry Breuil <landry@openbsd.org>
+Date: Wed, 22 Dec 2021 00:09:00 +0000
+Subject: Bug 1654448 - P2 - readd partial support for BSD to webrtc
+ build;r=mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D125712
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99267b6d193fbcb3e4c845c5e80770424d6d06e2
+only OpenBSD/amd64 is supported for now
+
+Depends on D134432
+
+Differential Revision: https://phabricator.services.mozilla.com/D134433
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0300b32b7de70fb8976dc82d7d3bb3adb9685857
 ---
- call/video_receive_stream.h                  |  3 ++-
- modules/rtp_rtcp/source/rtcp_receiver.cc     |  6 ++++--
- modules/rtp_rtcp/source/rtcp_receiver.h      |  3 ++-
- modules/rtp_rtcp/source/rtp_rtcp_impl.cc     | 10 +++++-----
- modules/rtp_rtcp/source/rtp_rtcp_impl.h      |  3 ++-
- modules/rtp_rtcp/source/rtp_rtcp_impl2.cc    | 10 +++++-----
- modules/rtp_rtcp/source/rtp_rtcp_impl2.h     |  3 ++-
- modules/rtp_rtcp/source/rtp_rtcp_interface.h |  5 +++--
- video/rtp_video_stream_receiver2.cc          |  5 +++--
- video/rtp_video_stream_receiver2.h           |  3 ++-
- video/video_receive_stream2.cc               |  3 ++-
- 11 files changed, 32 insertions(+), 22 deletions(-)
+ BUILD.gn                                       | 3 +++
+ modules/video_capture/BUILD.gn                 | 2 +-
+ modules/video_capture/linux/device_info_v4l2.h | 2 ++
+ rtc_base/platform_thread_types.cc              | 4 +++-
+ webrtc.gni                                     | 2 +-
+ 5 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index e2c0a3ba7e..4c2dec81e9 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -148,10 +148,11 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-     RtcpPacketTypeCounter rtcp_packet_type_counts;
-     absl::optional<RtpReceiveStats> rtx_rtp_stats;
+diff --git a/BUILD.gn b/BUILD.gn
+index 605a27624a..871588bbc0 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -216,6 +216,9 @@ config("common_inherited_config") {
+   if (is_linux || is_chromeos) {
+     defines += [ "WEBRTC_LINUX" ]
+   }
++  if (is_bsd) {
++    defines += [ "WEBRTC_BSD" ]
++  }
+   if (is_mac) {
+     defines += [ "WEBRTC_MAC" ]
+   }
+diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
+index aff496cc01..f675143451 100644
+--- a/modules/video_capture/BUILD.gn
++++ b/modules/video_capture/BUILD.gn
+@@ -69,7 +69,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+       "video_capture_options.h",
+     ]
  
--    // Mozilla modification: Init these three.
-+    // Mozilla modification: Init these.
-     uint32_t rtcp_sender_packets_sent = 0;
-     uint32_t rtcp_sender_octets_sent = 0;
-     int64_t rtcp_sender_ntp_timestamp_ms = 0;
-+    int64_t rtcp_sender_remote_ntp_timestamp_ms = 0;
+-    if (is_linux || is_chromeos) {
++    if (is_linux || is_bsd || is_chromeos) {
+       sources += [
+         "linux/device_info_linux.cc",
+         "linux/device_info_v4l2.cc",
+diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
+index e3c2395f49..119cb07ab8 100644
+--- a/modules/video_capture/linux/device_info_v4l2.h
++++ b/modules/video_capture/linux/device_info_v4l2.h
+@@ -16,7 +16,9 @@
+ #include "modules/video_capture/device_info_impl.h"
  
-     // Timing frame info: all important timestamps for a full lifetime of a
-     // single 'timing frame'.
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index cd901d9675..95b64ab804 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -375,11 +375,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
+ #include "rtc_base/platform_thread.h"
++#ifdef WEBRTC_LINUX
+ #include <sys/inotify.h>
++#endif
  
- void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
-                                         uint32_t* octet_count,
--                                        int64_t* ntp_timestamp_ms) const {
-+                                        int64_t* ntp_timestamp_ms,
-+                                        int64_t* remote_ntp_timestamp_ms) const {
-   MutexLock lock(&rtcp_receiver_lock_);
-   *packet_count = remote_sender_packet_count_;
-   *octet_count = remote_sender_octet_count_;
--  *ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
-+  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
-+  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
+ struct v4l2_capability;
+ 
+diff --git a/rtc_base/platform_thread_types.cc b/rtc_base/platform_thread_types.cc
+index d64ea689bb..c3c6955a7b 100644
+--- a/rtc_base/platform_thread_types.cc
++++ b/rtc_base/platform_thread_types.cc
+@@ -50,7 +50,9 @@ PlatformThreadId CurrentThreadId() {
+   return static_cast<PlatformThreadId>(pthread_self());
+ #else
+   // Default implementation for nacl and solaris.
+-  return reinterpret_cast<PlatformThreadId>(pthread_self());
++  // WEBRTC_BSD: pthread_t is a pointer, so cannot be casted to pid_t
++  //             (aka int32_t) on 64-bit archs. Required on OpenBSD.
++  return reinterpret_cast<long>(pthread_self());
+ #endif
+ #endif  // defined(WEBRTC_POSIX)
  }
+diff --git a/webrtc.gni b/webrtc.gni
+index 72677752e1..772d29b0ad 100644
+--- a/webrtc.gni
++++ b/webrtc.gni
+@@ -340,7 +340,7 @@ rtc_opus_dir = "//third_party/opus"
  
- std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index 3f0fb3458f..973a1788f5 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.h
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -119,7 +119,8 @@ class RTCPReceiver final {
-   // Get received sender packet and octet counts
-   void RemoteRTCPSenderInfo(uint32_t* packet_count,
-                             uint32_t* octet_count,
--                            int64_t* ntp_timestamp_ms) const;
-+                            int64_t* ntp_timestamp_ms,
-+                            int64_t* remote_ntp_timestamp_ms) const;
+ # Desktop capturer is supported only on Windows, OSX and Linux.
+ rtc_desktop_capture_supported =
+-    (is_win && current_os != "winuwp") || is_mac ||
++    (is_win && current_os != "winuwp") || is_mac || is_bsd ||
+     ((is_linux || is_chromeos) && (rtc_use_x11_extensions || rtc_use_pipewire))
  
-   absl::optional<TimeDelta> AverageRtt() const;
-   absl::optional<TimeDelta> LastRtt() const;
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 33ba1e79ce..82ab8ab528 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -501,11 +501,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
- }
- 
- // Received RTCP report.
--void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                             uint32_t* octet_count,
--                                             int64_t* ntp_timestamp_ms) const {
--  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count,
--                                             ntp_timestamp_ms);
-+void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(
-+    uint32_t* packet_count, uint32_t* octet_count, int64_t* ntp_timestamp_ms,
-+    int64_t* remote_ntp_timestamp_ms) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(
-+      packet_count, octet_count, ntp_timestamp_ms, remote_ntp_timestamp_ms);
- }
- 
- std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index 434d6365b7..6fe1f931d5 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-@@ -184,7 +184,8 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
- 
-   void RemoteRTCPSenderInfo(uint32_t* packet_count,
-                             uint32_t* octet_count,
--                            int64_t* ntp_timestamp_ms) const override;
-+                            int64_t* ntp_timestamp_ms,
-+                            int64_t* remote_ntp_timestamp_ms) const override;
- 
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 87496c167a..3ff3704c60 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -483,11 +483,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
- }
- 
- // Received RTCP report.
--void ModuleRtpRtcpImpl2::RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                             uint32_t* octet_count,
--                                             int64_t* ntp_timestamp_ms) const {
--  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count,
--                                             ntp_timestamp_ms);
-+void ModuleRtpRtcpImpl2::RemoteRTCPSenderInfo(
-+    uint32_t* packet_count, uint32_t* octet_count, int64_t* ntp_timestamp_ms,
-+    int64_t* remote_ntp_timestamp_ms) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(
-+      packet_count, octet_count, ntp_timestamp_ms, remote_ntp_timestamp_ms);
- }
- 
- std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index ed4b09d485..a929860848 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-@@ -196,7 +196,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
- 
-   void RemoteRTCPSenderInfo(uint32_t* packet_count,
-                             uint32_t* octet_count,
--                            int64_t* ntp_timestamp_ms) const override;
-+                            int64_t* ntp_timestamp_ms,
-+                            int64_t* remote_ntp_timestamp_ms) const override;
- 
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 49ebadd25a..5880988529 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -398,10 +398,11 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
-       StreamDataCounters* rtx_counters) const = 0;
- 
- 
--  // Returns packet count, octet count, and timestamp from RTCP sender report.
-+  // Returns packet count, octet count, and timestamps from RTCP sender report.
-   virtual void RemoteRTCPSenderInfo(uint32_t* packet_count,
-                                     uint32_t* octet_count,
--                                    int64_t* ntp_timestamp_ms) const = 0;
-+                                    int64_t* ntp_timestamp_ms,
-+                                    int64_t* remote_ntp_timestamp_ms) const = 0;
-   // A snapshot of Report Blocks with additional data of interest to statistics.
-   // Within this list, the sender-source SSRC pair is unique and per-pair the
-   // ReportBlockData represents the latest Report Block that was received for
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index a9e6579092..59ecbb3ab1 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -1056,9 +1056,10 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
- // seem to be any support for these stats right now. So, we hack this in.
- void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
-     uint32_t* packet_count, uint32_t* octet_count,
--    int64_t* ntp_timestamp_ms) const {
-+    int64_t* ntp_timestamp_ms, int64_t* remote_ntp_timestamp_ms) const {
-   RTC_DCHECK_RUN_ON(&worker_task_checker_);
--  rtp_rtcp_->RemoteRTCPSenderInfo(packet_count, octet_count, ntp_timestamp_ms);
-+  rtp_rtcp_->RemoteRTCPSenderInfo(packet_count, octet_count, ntp_timestamp_ms,
-+                                  remote_ntp_timestamp_ms);
- }
- 
- void RtpVideoStreamReceiver2::ManageFrame(
-diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index 53378e9e9b..dc9cea422d 100644
---- a/video/rtp_video_stream_receiver2.h
-+++ b/video/rtp_video_stream_receiver2.h
-@@ -210,7 +210,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
-   // stats at all, and even on the most recent libwebrtc code there does not
-   // seem to be any support for these stats right now. So, we hack this in.
-   void RemoteRTCPSenderInfo(uint32_t* packet_count, uint32_t* octet_count,
--                            int64_t* ntp_timestamp_ms) const;
-+                            int64_t* ntp_timestamp_ms,
-+                            int64_t* remote_ntp_timestamp_ms) const;
- 
-  private:
-   // Implements RtpVideoFrameReceiver.
-diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index a24060c867..999a5d9e4d 100644
---- a/video/video_receive_stream2.cc
-+++ b/video/video_receive_stream2.cc
-@@ -580,7 +580,8 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
-   // seem to be any support for these stats right now. So, we hack this in.
-   rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
-       &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
--      &stats.rtcp_sender_ntp_timestamp_ms);
-+      &stats.rtcp_sender_ntp_timestamp_ms,
-+      &stats.rtcp_sender_remote_ntp_timestamp_ms);
- 
-   return stats;
- }
+ ###############################################################################
 -- 
 2.34.1
 

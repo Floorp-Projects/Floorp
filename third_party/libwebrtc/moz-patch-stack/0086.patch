@@ -1,177 +1,32 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 20 Apr 2023 14:52:00 -0500
-Subject: Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
+From: Jan-Ivar Bruaroey <jib@mozilla.com>
+Date: Wed, 28 Jun 2023 20:45:00 -0400
+Subject: Bug 1839451 - (fix-0f43da2248) Keep mozilla's
+ RTCPReceiver::RemoteRTCPSenderInfo function working.
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c115a6ffd07fab042bc5f086
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/154c9cdb386d0f50c5e1549270e1af6ab4969602
 ---
- rtc_base/BUILD.gn | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ modules/rtp_rtcp/source/rtcp_receiver.cc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index dbf4486de9..86eb42e6e4 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -1157,6 +1157,7 @@ if (!build_with_chromium) {
+diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
+index 95b64ab804..c8ebb2c49d 100644
+--- a/modules/rtp_rtcp/source/rtcp_receiver.cc
++++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
+@@ -378,10 +378,10 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
+                                         int64_t* ntp_timestamp_ms,
+                                         int64_t* remote_ntp_timestamp_ms) const {
+   MutexLock lock(&rtcp_receiver_lock_);
+-  *packet_count = remote_sender_packet_count_;
+-  *octet_count = remote_sender_octet_count_;
+-  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
+-  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
++  *packet_count = remote_sender_.packets_sent;
++  *octet_count = remote_sender_.bytes_sent;
++  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
++  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
  }
  
- rtc_library("network") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "network.cc",
-@@ -1195,16 +1196,20 @@ rtc_library("network") {
-     deps += [ ":win32" ]
-   }
- }
-+}
- 
- rtc_library("socket_address_pair") {
-+if (!build_with_mozilla) {
-   sources = [
-     "socket_address_pair.cc",
-     "socket_address_pair.h",
-   ]
-   deps = [ ":socket_address" ]
- }
-+}
- 
- rtc_library("net_helper") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "net_helper.cc",
-@@ -1213,8 +1218,10 @@ rtc_library("net_helper") {
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-   deps = [ "system:rtc_export" ]
- }
-+}
- 
- rtc_library("socket_adapters") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "socket_adapters.cc",
-@@ -1234,6 +1241,7 @@ rtc_library("socket_adapters") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("network_route") {
-   sources = [
-@@ -1248,6 +1256,7 @@ rtc_library("network_route") {
- }
- 
- rtc_library("async_tcp_socket") {
-+if (!build_with_mozilla) {
-   sources = [
-     "async_tcp_socket.cc",
-     "async_tcp_socket.h",
-@@ -1266,8 +1275,10 @@ rtc_library("async_tcp_socket") {
-     "third_party/sigslot",
-   ]
- }
-+}
- 
- rtc_library("async_udp_socket") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "async_udp_socket.cc",
-@@ -1289,8 +1300,10 @@ rtc_library("async_udp_socket") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
-+}
- 
- rtc_library("async_packet_socket") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "async_packet_socket.cc",
-@@ -1308,6 +1321,7 @@ rtc_library("async_packet_socket") {
-     "third_party/sigslot",
-   ]
- }
-+}
- 
- rtc_library("mdns_responder_interface") {
-   sources = [ "mdns_responder_interface.h" ]
-@@ -1320,6 +1334,7 @@ rtc_library("dscp") {
- }
- 
- rtc_library("proxy_info") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "proxy_info.cc",
-@@ -1330,6 +1345,7 @@ rtc_library("proxy_info") {
-     ":socket_address",
-   ]
- }
-+}
- 
- rtc_library("file_rotating_stream") {
-   sources = [
-@@ -1358,6 +1374,7 @@ rtc_library("data_rate_limiter") {
- }
- 
- rtc_library("unique_id_generator") {
-+if (!build_with_mozilla) {
-   sources = [
-     "unique_id_generator.cc",
-     "unique_id_generator.h",
-@@ -1372,6 +1389,7 @@ rtc_library("unique_id_generator") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("crc32") {
-   sources = [
-@@ -1399,6 +1417,7 @@ rtc_library("stream") {
- }
- 
- rtc_library("rtc_certificate_generator") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "rtc_certificate_generator.cc",
-@@ -1416,8 +1435,10 @@ rtc_library("rtc_certificate_generator") {
-     "//third_party/abseil-cpp/absl/types:optional",
-   ]
- }
-+}
- 
- rtc_library("ssl") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "helpers.cc",
-@@ -1516,6 +1537,7 @@ rtc_library("ssl") {
-     deps += [ ":win32" ]
-   }
- }
-+}
- 
- rtc_library("crypt_string") {
-   sources = [
-@@ -1525,6 +1547,7 @@ rtc_library("crypt_string") {
- }
- 
- rtc_library("http_common") {
-+if (!build_with_mozilla) {
-   sources = [
-     "http_common.cc",
-     "http_common.h",
-@@ -1541,6 +1564,7 @@ rtc_library("http_common") {
- 
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_source_set("gtest_prod") {
-   sources = [ "gtest_prod_util.h" ]
+ std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
 -- 
 2.34.1
 

@@ -16,7 +16,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8d832e832ffe51324
  1 file changed, 13 insertions(+)
 
 diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index 34a3b6a1a8..48ab6d7deb 100644
+index 73a8bf7454..a980fb4ad3 100644
 --- a/rtc_base/logging.h
 +++ b/rtc_base/logging.h
 @@ -48,6 +48,14 @@
@@ -34,7 +34,7 @@ index 34a3b6a1a8..48ab6d7deb 100644
  #include <errno.h>
  
  #include <atomic>
-@@ -769,4 +777,9 @@ inline const char* AdaptString(const std::string& str) {
+@@ -764,4 +772,9 @@ inline const char* AdaptString(const std::string& str) {
  
  }  // namespace rtc
  
