@@ -1,27 +1,25 @@
-From: James Willcox <snorp@snorp.net>
-Date: Fri, 18 Sep 2020 22:29:00 +0000
-Subject: Bug 1553459 - Migrate to AndroidX r=geckoview-reviewers,agi
+From: Jan-Ivar Bruaroey <jib@mozilla.com>
+Date: Fri, 18 Aug 2023 13:26:37 -0500
+Subject: Bug 1701809: Close dev/video* driver file descriptors after camera
+ access on linux. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D90711
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf8917364050fc7d981b190cdc1db5ab57357f9b
+Differential Revision: https://phabricator.services.mozilla.com/D110589
 ---
- sdk/android/src/java/org/webrtc/GlGenericDrawer.java | 3 ---
- 1 file changed, 3 deletions(-)
+ modules/video_capture/linux/device_info_v4l2.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/sdk/android/src/java/org/webrtc/GlGenericDrawer.java b/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
-index b70a3728b9..34144e2f75 100644
---- a/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
-+++ b/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
-@@ -14,9 +14,6 @@ import android.opengl.GLES11Ext;
- import android.opengl.GLES20;
- import androidx.annotation.Nullable;
- import java.nio.FloatBuffer;
--import org.webrtc.GlShader;
--import org.webrtc.GlUtil;
--import org.webrtc.RendererCommon;
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index cd0ba6e3df..c5d33ff9a4 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -330,6 +330,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
+     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
+       // skip devices without video capture capability
+       if (!IsVideoCaptureDevice(&cap)) {
++        close(fd);
+         continue;
+       }
  
- /**
-  * Helper class to implement an instance of RendererCommon.GlDrawer that can accept multiple input
 -- 
 2.34.1
 

@@ -1,56 +1,81 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 5 Sep 2022 13:56:00 +0000
-Subject: Bug 1786502 - Lock access to DeviceInfo devicechange callbacks.
- r=webrtc-reviewers,jib
+Date: Mon, 12 Dec 2022 15:47:00 +0000
+Subject: Bug 1451394 - Expose mac camera capture backend in .gn and switch it
+ to gecko libyuv. r=webrtc-reviewers,mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D155365
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e826dfadfe1264c59d9b13e3c17d6f75a40f5c33
+Differential Revision: https://phabricator.services.mozilla.com/D163682
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b0658888969395dca938597783c8a377b9bea209
 ---
- modules/video_capture/video_capture.h | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ BUILD.gn     | 4 ++++
+ sdk/BUILD.gn | 6 ++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 58485f28e9..04203033b0 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -16,6 +16,8 @@
- #include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
-+#include "rtc_base/synchronization/mutex.h"
-+#include "rtc_base/thread_annotations.h"
- #include <set>
+diff --git a/BUILD.gn b/BUILD.gn
+index 871588bbc0..d492d83400 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -588,6 +588,10 @@ if (!build_with_chromium) {
+       ]
+     }
  
- #if defined(ANDROID)
-@@ -40,15 +42,18 @@ class VideoCaptureModule : public rtc::RefCountInterface {
-     virtual uint32_t NumberOfDevices() = 0;
-     virtual int32_t Refresh() = 0;
-     virtual void DeviceChange() {
-+      MutexLock lock(&_inputCallbacksMutex);
-       for (auto inputCallBack : _inputCallBacks) {
-         inputCallBack->OnDeviceChange();
++    if (build_with_mozilla && is_mac) {
++      deps += [ "sdk:videocapture_objc" ]
++    }
++
+     if (rtc_enable_protobuf) {
+       deps += [ "logging:rtc_event_log_proto" ]
+     }
+diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
+index ff89b21721..bef4521dc6 100644
+--- a/sdk/BUILD.gn
++++ b/sdk/BUILD.gn
+@@ -461,6 +461,7 @@ if (is_ios || is_mac) {
        }
      }
-     virtual void RegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
-+      MutexLock lock(&_inputCallbacksMutex);
-       _inputCallBacks.insert(callBack);
+ 
++    if (!build_with_mozilla) {
+     rtc_library("videosource_objc") {
+       sources = [
+         "objc/api/peerconnection/RTCVideoSource+Private.h",
+@@ -490,6 +491,7 @@ if (is_ios || is_mac) {
+         ":used_from_extension",
+       ]
+     }
++    }
+ 
+     rtc_library("videoframebuffer_objc") {
+       visibility = [ "*" ]
+@@ -522,6 +524,7 @@ if (is_ios || is_mac) {
+       ]
      }
  
-     virtual void DeRegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
-+      MutexLock lock(&_inputCallbacksMutex);
-       auto it = _inputCallBacks.find(callBack);
-       if (it != _inputCallBacks.end()) {
-         _inputCallBacks.erase(it);
-@@ -102,7 +107,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
++    if (!build_with_mozilla) {
+     rtc_library("opengl_objc") {
+       sources = [
+         "objc/components/renderer/opengl/RTCDefaultShader.h",
+@@ -674,6 +677,7 @@ if (is_ios || is_mac) {
+         ":videoframebuffer_objc",
+       ]
+     }
++    }
  
-     virtual ~DeviceInfo() {}
-    private:
--    std::set<VideoInputFeedBack*> _inputCallBacks;
-+    Mutex _inputCallbacksMutex;
-+    std::set<VideoInputFeedBack*> _inputCallBacks RTC_GUARDED_BY(_inputCallbacksMutex);
-   };
+     rtc_library("videocapture_objc") {
+       visibility = [ "*" ]
+@@ -702,6 +706,7 @@ if (is_ios || is_mac) {
+       ]
+     }
  
-   //   Register capture data callback
++    if (!build_with_mozilla) {
+     rtc_library("videocodec_objc") {
+       visibility = [ "*" ]
+       configs += [ "..:no_global_constructors" ]
+@@ -1753,5 +1758,6 @@ if (is_ios || is_mac) {
+         "VideoToolbox.framework",
+       ]
+     }
++    }
+   }
+ }
 -- 
 2.34.1
 

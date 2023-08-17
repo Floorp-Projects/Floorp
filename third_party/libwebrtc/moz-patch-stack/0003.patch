@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e0
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index 19f3211b3b..5b5acca835 100644
+index ad2303735e..9c2d3b0a39 100644
 --- a/rtc_base/logging.cc
 +++ b/rtc_base/logging.cc
-@@ -271,8 +271,8 @@ void LogMessage::LogTimestamps(bool on) {
+@@ -275,8 +275,8 @@ void LogMessage::LogTimestamps(bool on) {
  }
  
  void LogMessage::LogToDebug(LoggingSeverity min_sev) {
@@ -22,7 +22,7 @@ index 19f3211b3b..5b5acca835 100644
    UpdateMinLogSeverity();
  }
  
-@@ -456,6 +456,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
+@@ -460,6 +460,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
  
  // static
  bool LogMessage::IsNoop(LoggingSeverity severity) {

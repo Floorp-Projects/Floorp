@@ -1,57 +1,61 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 18 Feb 2021 17:23:00 -0800
-Subject: Bug 1654112 - fix device_info_ds pid and Windows constants includes;
- r=pehrsons
+From: Michael Froman <mfroman@mozilla.com>
+Date: Tue, 15 Jun 2021 12:18:00 -0500
+Subject: Bug 1654112 - suppress android lint warnings for WrongConstant in 2
+ libwebrtc java files. r=ng
 
-Upstreaming bug 1697385
-
-Differential Revision: https://phabricator.services.mozilla.com/D107899
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/24809d566449907edea49ea47528065ad0f76910
+Differential Revision: https://phabricator.services.mozilla.com/D118050
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69a3a9fe9af34219880afe772
 ---
- modules/video_capture/windows/device_info_ds.cc | 3 ++-
- modules/video_capture/windows/device_info_ds.h  | 6 +++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ .../java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java    | 5 +++++
+ sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java  | 5 +++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 9d22f42f4d..f6927281f3 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -172,7 +172,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
-                                     char* deviceUniqueIdUTF8,
-                                     uint32_t deviceUniqueIdUTF8Length,
-                                     char* productUniqueIdUTF8,
--                                    uint32_t productUniqueIdUTF8Length) {
-+                                    uint32_t productUniqueIdUTF8Length,
-+                                    pid_t* pid) {
-   MutexLock lock(&_apiLock);
-   const int32_t result = GetDeviceInfo(
-       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
-diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
-index ed2a726d6f..e6dfaed366 100644
---- a/modules/video_capture/windows/device_info_ds.h
-+++ b/modules/video_capture/windows/device_info_ds.h
-@@ -12,8 +12,11 @@
- #define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
+diff --git a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
+index 0472114297..afd3d429af 100644
+--- a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
++++ b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
+@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
+ import static android.media.AudioManager.MODE_NORMAL;
+ import static android.media.AudioManager.MODE_RINGTONE;
  
- #include <dshow.h>
-+#include <Ks.h>
-+#include <dbt.h>
++import android.annotation.SuppressLint;
+ import android.content.Context;
+ import android.content.pm.PackageManager;
+ import android.media.AudioDeviceInfo;
+@@ -247,6 +248,10 @@ public final class WebRtcAudioUtils {
+     }
+   }
  
- #include "modules/video_capture/device_info_impl.h"
-+#include "modules/video_capture/video_capture.h"
- #include "modules/video_capture/video_capture_impl.h"
++  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
++  // listed in the docs here:
++  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
++  @SuppressLint("WrongConstant")
+   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
+     if (Build.VERSION.SDK_INT < 23) {
+       return;
+diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+index 7894659926..7b4b809ab1 100644
+--- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
++++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
+ import static android.media.AudioManager.MODE_NORMAL;
+ import static android.media.AudioManager.MODE_RINGTONE;
  
- namespace webrtc {
-@@ -47,7 +50,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
-                         char* deviceUniqueIdUTF8,
-                         uint32_t deviceUniqueIdUTF8Length,
-                         char* productUniqueIdUTF8,
--                        uint32_t productUniqueIdUTF8Length) override;
-+                        uint32_t productUniqueIdUTF8Length,
-+                        pid_t* pid) override;
++import android.annotation.SuppressLint;
+ import android.annotation.TargetApi;
+ import android.content.Context;
+ import android.content.pm.PackageManager;
+@@ -229,6 +230,10 @@ final class WebRtcAudioUtils {
+     }
+   }
  
-   /*
-    * Display OS /capture device specific settings dialog
++  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
++  // listed in the docs here:
++  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
++  @SuppressLint("WrongConstant")
+   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
+     if (Build.VERSION.SDK_INT < 23) {
+       return;
 -- 
 2.34.1
 
