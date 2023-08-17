@@ -116,7 +116,9 @@ export const modifiersList = {
     Control: ["Control", "VK_CONTROL"],
     Shift: ["Shift", "VK_SHIFT"],
     Tab: ["Tab", "VK_TAB"],
+}
 
+export const keyCodesList = {
     // Arrow keys
     ArrowLeft: ["ArrowLeft", "VK_LEFT"],
     ArrowUp: ["ArrowUp", "VK_UP"],
@@ -154,16 +156,17 @@ export const cannotUseModifiers = ["Zenkaku", "Hankaku", "NumLock", "Delete", "I
 
 export const keyboradShortcutFunctions = {
   preferencesFunctions: {
-    addKeyForShortcutAction(actionName, key, modifiers) {
+    addKeyForShortcutAction(actionName, key, keyCode, modifiers) {
       let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
       let keyState = {
           actionName,
-          key,
+          key : key ? key : "",
+          keyCode : keyCode ? keyCode : "",
           modifiers: modifiers ? modifiers : "",
       };
       keysState.push(keyState);
 
-      if (keyboradShortcutFunctions.preferencesFunctions.getKeyForShortcutAction(actionName)) {
+      if (keyboradShortcutFunctions.getInfoFunctions.getKeyForShortcutAction(actionName)) {
         return;
       }
       Services.prefs.setStringPref(SHORTCUT_KEY_AND_ACTION_PREF, JSON.stringify(keysState));
@@ -173,9 +176,9 @@ export const keyboradShortcutFunctions = {
       Services.prefs.clearUserPref(SHORTCUT_KEY_AND_ACTION_PREF);
     },
 
-    removeKeyboradShortcut(actionName, key, modifiers) {
+    removeKeyboradShortcut(actionName, key, keyCode, modifiers) {
       let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
-      let newKeysState = keysState.filter(keyState => { return !(keyState.actionName === actionName && keyState.key === key && keyState.modifiers === modifiers) });
+      let newKeysState = keysState.filter(keyState => { return !(keyState.actionName === actionName && keyState.key === key && keyState.keyCode === keyCode && keyState.modifiers === modifiers) });
       Services.prefs.setStringPref(SHORTCUT_KEY_AND_ACTION_PREF, JSON.stringify(newKeysState));
     }
   },
@@ -216,11 +219,11 @@ export const keyboradShortcutFunctions = {
       return `floorp-custom-actions-${keyboradShortcutActions[actionName][1]}`;
     },
 
-    getActionNameByKey(key, modifiers) {
+    getActionNameByKey(key, keyCode, modifiers) {
       let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
       let result = []
       for (let keyState of keysState) {
-        if (keyState.key === key && keyState.modifiers === modifiers) {
+        if (keyState.key === key && keyState.keyCode === keyCode && keyState.modifiers === modifiers) {
           result.push(keyState.actionName)
         }
       }
@@ -237,9 +240,36 @@ export const keyboradShortcutFunctions = {
       return result;
     },
 
-    getKeyIsModifier(key) {
+    // Not recommended to use
+    getKeyIsModifier(key, keyCode) {
       let modifiersList = keyboradShortcutFunctions.modifiersListFunctions.getModifiersList();
-      return modifiersList.includes(key);
+      return modifiersList.includes(key) || modifiersList.includes(keyCode);
+    },
+
+    // Not recommended to use
+    conversionToXULModifiers(modifiers) {
+      let result = [];
+      for (let modifier of modifiers) {
+        result.push(modifiersList[modifier][1]);
+      }
+      return result;
+    }
+  },
+
+  keyCodesListFunctions: {
+    getKeyCodesList() {
+      let result = [];
+      for (let keyCode in keyCodesList) {
+        result.push(keyCode);
+      }
+      return result;
+    },
+
+    conversionToXULKeyCode(keyCode) {
+      if (!keyCodesList[keyCode]) {
+        return null;
+      }
+      return keyCodesList[keyCode][1];
     }
   },
 

@@ -53,6 +53,7 @@ function setTitle() {
 
     document.getElementById("startButton").addEventListener("click", () => {
       if (!isTracking) {
+        document.getElementById("keyList").value = "";
         isTracking = true;
         pressedKeys.length = 0;
         document.addEventListener("keydown", handleKeyDown);
@@ -84,14 +85,17 @@ function setTitle() {
   function checkInputKeyCanUse(key) {
     // separate key and modifiers
       const modifiersList = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.modifiersListFunctions.getModifiersList();
+      const keyCodeList = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.keyCodesListFunctions.getKeyCodesList();
       const cannotUseModifiers = CustomKeyboardShortcutUtils.cannotUseModifiers;
       const keyListInput = document.getElementById("keyList").value.split(", ");
 
       let regex = /^[0-9a-zA-Z]*$/;
 
-      if (modifiersList.includes(key)) {
+      if (modifiersList.includes(key) && !keyCodeIsInputed()) {
         return true;
-      } else if (regex.test(key) && !cannotUseModifiers.includes(key) && key.length == 1 && !keyListInput.includes(key) && !keyIsInputed()) {
+      } else if (keyCodeList.includes(key) && !keyIsInputed() && !keyCodeIsInputed()) {
+        return true;
+      } else if (regex.test(key) && !cannotUseModifiers.includes(key) && key.length == 1 && !keyListInput.includes(key) && !keyIsInputed() && !keyCodeIsInputed()) {
         return true;
       } 
       return false;
@@ -101,7 +105,20 @@ function setTitle() {
     const keyListInput = document.getElementById("keyList").value.split(", ");
     for(inputedKey of keyListInput) {
       if (inputedKey.length === 1) {
-        console.log("key is already used. Modify key is allowed only");
+        console.log("key is already used. Modify key is allowed only.");
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function keyCodeIsInputed() {
+    const keyListInput = document.getElementById("keyList").value.split(", ");
+    const keyCodeList = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.keyCodesListFunctions.getKeyCodesList();
+
+    for(inputedKey of keyListInput) {
+     if (keyCodeList.includes(inputedKey)) {
+        console.log("keyCode is already used. Cannot add key anymore.");
         return true;
       }
     }
@@ -109,31 +126,46 @@ function setTitle() {
   }
 
   function separateKeyAndModifiers(keyList) {
-    let keys = [];
+    let KeyResult = "";
+    let keyCodeResult = "";
     let modifiers = [];
-
-    const modifiersList = CustomKeyboardShortcutUtils.modifiersListFunctions.getModifiersList();
+    const keyCodeList = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.keyCodesListFunctions.getKeyCodesList();
+    const modifiersList = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.modifiersListFunctions.getModifiersList();
     let regex = /^[0-9a-zA-Z]*$/;
+
     for (let i = 0; i < keyList.length; i++) {
       const key = keyList[i];
       if (modifiersList.includes(key)) {
         modifiers.push(key);
+      } else if (keyCodeList.includes(key)) {
+        keyCodeResult = key;
       } else if (regex.test(key)) {
-        keys.push(key);
+        KeyResult = key;
       } else {
         console.info("Invalid key");
       }
     }
-    return [ keys, modifiers ];
+    return [ KeyResult, keyCodeResult, modifiers ];
   }
 
   function setPref() {
     const shortcutKeyName = document.getElementById("selectedActionName").value;
     const keyListInput = separateKeyAndModifiers(document.getElementById("keyList").value.split(", "));
 
-    if (!keyListInput[0].length) {
+    let keyCodeResult = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.keyCodesListFunctions.conversionToXULKeyCode(keyListInput[1]) ? CustomKeyboardShortcutUtils.keyboradShortcutFunctions.keyCodesListFunctions.conversionToXULKeyCode(keyListInput[1]) : "";
+    let modifiersResult = "";
+    // keyListInput[2] have to be String
+    for (let i = 0; i < keyListInput[2].length; i++) {
+      if(i === 0) {
+        modifiersResult = keyListInput[2][i].toLowerCase();
+      } else {
+        modifiersResult += ", " + keyListInput[2][i].toLowerCase();
+      }
+    }
+
+    if (!keyListInput[0].length && !keyListInput[1].length) {
       return;
     }
 
-    CustomKeyboardShortcutUtils.keyboradShortcutFunctions.preferencesFunctions.addKeyForShortcutAction(shortcutKeyName, keyListInput[0], keyListInput[1]);
+    CustomKeyboardShortcutUtils.keyboradShortcutFunctions.preferencesFunctions.addKeyForShortcutAction(shortcutKeyName, keyListInput[0].toLowerCase(), keyCodeResult, modifiersResult);
   }

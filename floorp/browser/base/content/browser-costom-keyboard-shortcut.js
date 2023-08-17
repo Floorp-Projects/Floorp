@@ -13,22 +13,32 @@ const keyboradShortcutConfig = JSON.parse(Services.prefs.getStringPref(
 
 const buildShortCutkeyFunctions = {
     init() {
+        const keyboradShortcutConfig = JSON.parse(Services.prefs.getStringPref(
+            CustomKeyboardShortcutUtils.SHORTCUT_KEY_AND_ACTION_PREF,
+            ""
+        ));
+
         if (keyboradShortcutConfig.length === 0 && CustomKeyboardShortcutUtils.SHORTCUT_KEY_AND_ACTION_ENABLED_PREF) {
             return;
         }
 
         for (let shortcutObj of keyboradShortcutConfig) {
+            console.log(shortcutObj);
             let name = shortcutObj.actionName;
             let key = shortcutObj.key;
-            let modifiers = shortcutObj.modifiers ? shortcutObj.modifiers : "";
-
-            if (key && name) {
-                buildShortCutkeyFunctions.buildShortCutkeyFunction(name, key, modifiers);
+            let keyCode = shortcutObj.keyCode;
+            let modifiers = shortcutObj.modifiers;
+            
+            if (key && name || keyCode && name) {
+                console.log("buildShortCutkeyFunction: " + name + " " + key + " " + keyCode + " " + modifiers);
+                buildShortCutkeyFunctions.buildShortCutkeyFunction(name, key, keyCode, modifiers);
+            } else {
+                console.error("Invalid shortcut key config: " + shortcutObj);
             }
         }
     },
 
-    buildShortCutkeyFunction(name, key, modifiers) {
+    buildShortCutkeyFunction(name, key, keyCode, modifiers) {
         let functionCode = CustomKeyboardShortcutUtils.keyboradShortcutActions[name][0];
         if (!functionCode) {
             return;
@@ -41,6 +51,15 @@ const buildShortCutkeyFunctions = {
                  oncommand="${functionCode}"
              />
          `);
+
+        if (keyCode) {
+          keyElement = window.MozXULElement.parseXULToFragment(`
+           <key id="${name}" class="floorpCustomShortcutKey"
+                oncommand="${functionCode}"
+                keycode="${keyCode}"
+             />`);
+        }
+
         document.getElementById("mainKeyset").appendChild(keyElement);
     },
 
@@ -50,11 +69,6 @@ const buildShortCutkeyFunctions = {
             mainKeyset.firstChild.remove();
         }
     },
-
-    rebuildShortCutkeyFunctions() {
-        buildShortCutkeyFunctions.removeAlreadyExistShortCutkeys();
-        buildShortCutkeyFunctions.init();
-    },
-}
+};
 
 buildShortCutkeyFunctions.init();
