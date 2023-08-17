@@ -1096,21 +1096,34 @@ pictureinpicture:
       description: Duration of PiP first time toggle display in days before switching to PiP icon toggle
 
 glean:
-  description: "The Glean data collection SDK within Firefox Desktop"
+  description: "The Glean data-control-plane feature within Firefox Desktop for controlling metric configuration"
   owner: glean-team@mozilla.com
   hasExposure: false
   variables:
-    finalInactive:
-      type: "boolean"
-      description: "Enables FOG early shutdown pings when true"
     newtabPingEnabled:
       type: "boolean"
       fallbackPref: "browser.newtabpage.ping.enabled"
       description: "Whether to submit the 'newtab' ping"
     gleanMetricConfiguration:
       type: json
-      description: >-
+      description: |
         A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric.
+        This variable is intended for interacting with the Glean data-control-plane via the Server Knobs functionality
+        to remotely configure metrics to be enabled or disabled.
+       
+gleanInternalSdk:
+  description: "The Glean internal SDK feature intended only for internal Glean Team use"
+  hasExposure: false
+  variables:
+    finalInactive:
+      type: "boolean"
+      description: "Enables FOG early shutdown pings when true"
+    gleanMetricConfiguration:
+      type: json
+      description: |
+        A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric.
+        This is not for public use! For data-control-plane use, please refer to the Glean documentation and use the
+        `gleanMetricConfiguration` found in the `glean` feature for this.
     gleanMaxPingsPerMinute:
       type: int
       description: >-
