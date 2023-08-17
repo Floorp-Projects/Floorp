@@ -288,7 +288,7 @@ MediaResult WMFVideoMFTManager::InitInternal() {
     attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
                     WMFDecoderModule::GetNumDecoderThreads());
     bool lowLatency = StaticPrefs::media_wmf_low_latency_enabled();
-    if (mLowLatency || lowLatency) {
+    if (mLowLatency && lowLatency) {
       hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
       if (SUCCEEDED(hr)) {
         LOG("Enabling Low Latency Mode");
