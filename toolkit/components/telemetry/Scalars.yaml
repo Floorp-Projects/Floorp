@@ -9039,6 +9039,61 @@ contextual.services.quicksuggest:
     record_in_processes:
       - main
 
+shopping:
+  nimbus_disabled:
+    bug_numbers:
+      - 1847231
+    description: >
+      Indicates if Nimbus has disabled the use of the shopping component.
+      This scalar is mirroring the Glean metric named
+      shopping.settings.nimbus_disabled_shopping, which is defined in
+      toolkit/components/shopping/metrics.yaml.
+    expires: "122"
+    kind: boolean
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  component_opted_out:
+    bug_numbers:
+      - 1847231
+    description: >
+      Indicates if the user has opted out of using the shopping component.
+      Set during shopping component init and updated when changed in browser.
+      This scalar is mirroring the Glean metric named
+      shopping.settings.component_opted_out, which is defined in
+      toolkit/components/shopping/metrics.yaml.
+    expires: "122"
+    kind: boolean
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  has_onboarded:
+    bug_numbers:
+      - 1847231
+    description: >
+      Indicates if the user has completed the Shopping product Onboarding
+      experience. Set during shopping component init and updated when changed
+      in browser. This scalar is mirroring the Glean metric named
+      shopping.settings.has_onboarded, which is defined in
+      toolkit/components/shopping/metrics.yaml.
+    expires: "122"
+    kind: boolean
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 power:
   cpu_time_bogus_values:
     bug_numbers:
