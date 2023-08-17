@@ -883,7 +883,13 @@ class TopSitesFeed {
     const searchShortcutsExperiment = prefValues[SEARCH_SHORTCUTS_EXPERIMENT];
     // We must wait for search services to initialize in order to access default
     // search engine properties without triggering a synchronous initialization
-    await Services.search.init();
+    try {
+      await Services.search.init();
+    } catch {
+      // We continue anyway because we want the user to see their sponsored,
+      // saved, or visited shortcut tiles even if search engines are not
+      // available.
+    }
 
     // Get all frecent sites from history.
     let frecent = [];

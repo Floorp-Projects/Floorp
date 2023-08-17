@@ -280,6 +280,17 @@ describe("Top Sites Feed", () => {
       feed.refreshDefaults("https://foo.com");
     });
 
+    describe("search service failure", () => {
+      it("should show recently top site tiles", async () => {
+        sandbox
+          .stub(global.Services.search, "init")
+          .rejects(new Error("Simulating search init failure"));
+
+        const result = await feed.getLinksWithDefaults();
+        assert.ok(result);
+      });
+    });
+
     describe("general", () => {
       it("should get the links from NewTabUtils", async () => {
         const result = await feed.getLinksWithDefaults();
@@ -1619,6 +1630,18 @@ describe("Top Sites Feed", () => {
         .callsFake((site, index) => {
           fakeNewTabUtils.pinnedLinks.links[index] = site;
         });
+    });
+
+    it("should not show search shortcuts if search service failed", async () => {
+      sandbox
+        .stub(global.Services.search, "getAppProvidedEngines")
+        .rejects(new Error("Simulating search init failure"));
+
+      let result = await feed._maybeInsertSearchShortcuts(
+        fakeNewTabUtils.pinnedLinks.links
+      );
+
+      assert.notOk(result);
     });
 
     it("should properly disable search improvements if the pref is off", async () => {
