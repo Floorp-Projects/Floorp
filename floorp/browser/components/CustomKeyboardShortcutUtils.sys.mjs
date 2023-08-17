@@ -11,104 +11,104 @@ export const EXPORTED_SYMBOLS = ["CustomKeyboardShortcutUtils"];
 export const SHORTCUT_KEY_AND_ACTION_PREF = "floorp.custom.shortcutkeysAndActions";
 export const SHORTCUT_KEY_AND_ACTION_ENABLED_PREF = "floorp.custom.shortcutkeysAndActions.enabled";
 
-export let keyboradShortcutActions = {
+export const keyboradShortcutActions = {
 
     /* these are the actions that can be triggered by keyboard shortcuts.
      * the first element of each array is the code that will be executed.
      * the second element is use for Fluent localization.
+     * 3rd is the type of action. You can use it to filter actions or get all actions of a type.
      * If you want to add a new action, you need to add it here.
     */
 
-    // Tab actions
-    openNewTab: ["BrowserOpenTab()","open-new-tab"],
-    closeTab: ["BrowserCloseTabOrWindow()", "close-tab"],
-    openNewWindow: ["OpenBrowserWindow()", "open-new-window"],
-    openNewPrivateWindow: ["OpenBrowserWindow({private: true})", "open-new-private-window"],
-    closeWindow: ["BrowserTryToCloseWindow()", "close-window"],
-    restoreLastTab: ["undoCloseTab()", "restore-last-session"],
-    restoreLastWindow: ["undoCloseWindow()", "restore-last-window"],
-    showNextTab: ["gBrowser.tabContainer.advanceSelectedTab(1, true)", "show-next-tab"],
-    showPreviousTab: ["gBrowser.tabContainer.advanceSelectedTab(-1, true)", "show-previous-tab"],
-    showAllTabsPanel: ["gTabsPanel.showAllTabsPanel()", "show-all-tabs-panel"],
+    // manage actions
+    openNewTab: ["BrowserOpenTab()","open-new-tab", "tab-action"],
+    closeTab: ["BrowserCloseTabOrWindow()", "close-tab", "tab-action"],
+    openNewWindow: ["OpenBrowserWindow()", "open-new-window", "tab-action"],
+    openNewPrivateWindow: ["OpenBrowserWindow({private: true})", "open-new-private-window", "tab-action"],
+    closeWindow: ["BrowserTryToCloseWindow()", "close-window", "tab-action"],
+    restoreLastTab: ["undoCloseTab()", "restore-last-session", "tab-action"],
+    restoreLastWindow: ["undoCloseWindow()", "restore-last-window", "tab-action"],
+    showNextTab: ["gBrowser.tabContainer.advanceSelectedTab(1, true)", "show-next-tab", "tab-action"],
+    showPreviousTab: ["gBrowser.tabContainer.advanceSelectedTab(-1, true)", "show-previous-tab", "tab-action"],
+    showAllTabsPanel: ["gTabsPanel.showAllTabsPanel()", "show-all-tabs-panel", "tab-action"],
 
     // Page actions
-    sendWithMail: ["MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser)", "send-with-mail"],
-    savePage: ["saveBrowser(gBrowser.selectedBrowser)", "save-page"],
-    printPage: ["PrintUtils.startPrintWindow(gBrowser.selectedBrowser.browsingContext)", "print-page"],
-    muteCurrentTab: ["gBrowser.toggleMuteAudioOnMultiSelectedTabs(gBrowser.selectedTab)", "mute-current-tab"],
-    showSourceOfPage: ["BrowserViewSource(window.gBrowser.selectedBrowser)", "show-source-of-page"],
-    showPageInfo: ["BrowserPageInfo()", "show-page-info"],
+    sendWithMail: ["MailIntegration.sendLinkForBrowser(gBrowser.selectedBrowser)", "send-with-mail", "page-action"],
+    savePage: ["saveBrowser(gBrowser.selectedBrowser)", "save-page", "page-action"],
+    printPage: ["PrintUtils.startPrintWindow(gBrowser.selectedBrowser.browsingContext)", "print-page", "page-action"],
+    muteCurrentTab: ["gBrowser.toggleMuteAudioOnMultiSelectedTabs(gBrowser.selectedTab)", "mute-current-tab", "page-action"],
+    showSourceOfPage: ["BrowserViewSource(window.gBrowser.selectedBrowser)", "show-source-of-page", "page-action"],
+    showPageInfo: ["BrowserPageInfo()", "show-page-info", "page-action"],
 
     // Visible actions
-    zoomIn: ["FullZoom.enlarge()", "zoom-in"],
-    zoomOut: ["FullZoom.reduce()", "zoom-out"],
-    resetZoom: ["FullZoom.reset()", "reset-zoom"],
+    zoomIn: ["FullZoom.enlarge()", "zoom-in", "visible-action"],
+    zoomOut: ["FullZoom.reduce()", "zoom-out", "visible-action"],
+    resetZoom: ["FullZoom.reset()", "reset-zoom", "visible-action"],
 
     // History actions
-    back: ["BrowserBack()", "back"],
-    forward: ["BrowserForward()", "forward"],
-    stop: ["BrowserStop()", "stop"],
-    reload: ["BrowserReload()", "reload"],
-    forceReload: ["BrowserReloadSkipCache()", "force-reload"],
+    back: ["BrowserBack()", "back", "history-action"],
+    forward: ["BrowserForward()", "forward", "history-action"],
+    stop: ["BrowserStop()", "stop", "history-action"],
+    reload: ["BrowserReload()", "reload", "history-action"],
+    forceReload: ["BrowserReloadSkipCache()", "force-reload", "history-action"],
 
     // search actions
-    searchInThisPage: ["gLazyFindCommand('onFindCommand')", "search-in-this-page"],
-    showNextSearchResult: ["gLazyFindCommand('onFindAgainCommand', false)", "show-next-search-result"],
-    showPreviousSearchResult: ["gLazyFindCommand('onFindAgainCommand', true)", "show-previous-search-result"],
-    searchTheWeb: ["BrowserSearch.webSearch()", "search-the-web"],
+    searchInThisPage: ["gLazyFindCommand('onFindCommand')", "search-in-this-page", "search-action"],
+    showNextSearchResult: ["gLazyFindCommand('onFindAgainCommand', false)", "show-next-search-result", "search-action"],
+    showPreviousSearchResult: ["gLazyFindCommand('onFindAgainCommand', true)", "show-previous-search-result", "search-action"],
+    searchTheWeb: ["BrowserSearch.webSearch()", "search-the-web", "search-action"],
 
     // Tools actions
-    openMigrationWizard: ["MigrationUtils.showMigrationWizard(window, { entrypoint: MigrationUtils.MIGRATION_ENTRYPOINTS.FILE_MENU })", "open-migration-wizard"],
-    quitFromApplication: ["goQuitApplication()", "quit-from-application"],
-    enterIntoCustomizeMode: ["gCustomizeMode.enter()", "enter-into-customize-mode"],
-    enterIntoOfflineMode: ["BrowserOffline.toggleOfflineStatus()", "enter-into-offline-mode"],
-    openScreenCapture: ["ScreenshotsUtils.notify(window, 'shortcut')", "open-screen-capture"],
+    openMigrationWizard: ["MigrationUtils.showMigrationWizard(window, { entrypoint: MigrationUtils.MIGRATION_ENTRYPOINTS.FILE_MENU })", "open-migration-wizard", "tools-action"],
+    quitFromApplication: ["goQuitApplication()", "quit-from-application", "tools-action"],
+    enterIntoCustomizeMode: ["gCustomizeMode.enter()", "enter-into-customize-mode", "tools-action"],
+    enterIntoOfflineMode: ["BrowserOffline.toggleOfflineStatus()", "enter-into-offline-mode", "tools-action"],
+    openScreenCapture: ["ScreenshotsUtils.notify(window, 'shortcut')", "open-screen-capture", "tools-action"],
 
     // PIP actions
-    showPIP: ["PictureInPicture.onCommand()", "show-pip"],
+    showPIP: ["PictureInPicture.onCommand()", "show-pip", "pip-action"],
 
     // Bookmark actions
-    bookmarkThisPage: ["gContextMenu.bookmarkThisPage()", "bookmark-this-page"],
-    openBookmarksSidebar: ["toggleSidebar('viewBookmarksSidebar')", "open-bookmarks-sidebar"],
-    openBookmarkAddTool: ["PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueCurrentPages)", "open-bookmark-add-tool"],
-    openBookmarksManager: ["PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks')", "open-bookmarks-manager"],
-    toggleBookmarkToolbar: ["BookmarkingUI.toggleBookmarksToolbar('bookmark-tools')", "toggle-bookmark-toolbar"],
+    bookmarkThisPage: ["gContextMenu.bookmarkThisPage()", "bookmark-this-page", "bookmark-action"],
+    openBookmarksSidebar: ["toggleSidebar('viewBookmarksSidebar')", "open-bookmarks-sidebar", "bookmark-action"],
+    openBookmarkAddTool: ["PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueCurrentPages)", "open-bookmark-add-tool", "bookmark-action"],
+    openBookmarksManager: ["PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks')", "open-bookmarks-manager", "bookmark-action"],
+    toggleBookmarkToolbar: ["BookmarkingUI.toggleBookmarksToolbar('bookmark-tools')", "toggle-bookmark-toolbar", "bookmark-action"],
 
     // Open Page actions
-    openGeneralPreferences: ["openPreferences()", "open-general-preferences"],
-    openPrivacyPreferences: ["openPreferences('panePrivacy')", "open-privacy-preferences"],
-    openWorkspacesPreferences: ["openPreferences('paneWorkspaces')", "open-workspaces-preferences"],
-    openContainersPreferences: ["openPreferences('paneContainers')", "open-containers-preferences"],
-    openSearchPreferences: ["openPreferences('paneSearch')", "open-search-preferences"],
-    openSyncPreferences: ["openPreferences('paneSync')", "open-sync-preferences"],
-    openTaskManager: ["switchToTabHavingURI('about:processes', true)", "open-task-manager"],
-    openAddonsManager: ["BrowserOpenAddonsMgr()", "open-addons-manager"],
-    openHomePage: ["BrowserHome()", "open-home-page"],
+    openGeneralPreferences: ["openPreferences()", "open-general-preferences", "open-page-action"],
+    openPrivacyPreferences: ["openPreferences('panePrivacy')", "open-privacy-preferences", "open-page-action"],
+    openWorkspacesPreferences: ["openPreferences('paneWorkspaces')", "open-workspaces-preferences", "open-page-action"],
+    openContainersPreferences: ["openPreferences('paneContainers')", "open-containers-preferences", "open-page-action"],
+    openSearchPreferences: ["openPreferences('paneSearch')", "open-search-preferences", "open-page-action"],
+    openSyncPreferences: ["openPreferences('paneSync')", "open-sync-preferences", "open-page-action"],
+    openTaskManager: ["switchToTabHavingURI('about:processes', true)", "open-task-manager", "open-page-action"],
+    openAddonsManager: ["BrowserOpenAddonsMgr()", "open-addons-manager", "open-page-action"],
+    openHomePage: ["BrowserHome()", "open-home-page", "open-page-action"],
 
     // History actions
-    forgetHistory: ["Sanitizer.showUI(window)", "forget-history"],
-    quickForgetHistory: ["PlacesUtils.history.clear(true)", "quick-forget-history"],
-    clearRecentHistory: ["BrowserTryToCloseWindow()", "clear-recent-history"],
-    restoreLastSession: ["SessionStore.restoreLastSession()", "restore-last-session"],
-    searchHistory: ["PlacesCommandHook.searchHistory()", "search-history"],
-    manageHistory: ["PlacesCommandHook.showPlacesOrganizer('History')", "manage-history"],
+    forgetHistory: ["Sanitizer.showUI(window)", "forget-history", "history-action"],
+    quickForgetHistory: ["PlacesUtils.history.clear(true)", "quick-forget-history", "history-action"],
+    clearRecentHistory: ["BrowserTryToCloseWindow()", "clear-recent-history", "history-action"],
+    restoreLastSession: ["SessionStore.restoreLastSession()", "restore-last-session", "history-action"],
+    searchHistory: ["PlacesCommandHook.searchHistory()", "search-history", "history-action"],
+    manageHistory: ["PlacesCommandHook.showPlacesOrganizer('History')", "manage-history", "history-action"],
 
     // Downloads actions
-    openDownloads: ["DownloadsPanel.showDownloadsHistory()", "open-downloads"],
+    openDownloads: ["DownloadsPanel.showDownloadsHistory()", "open-downloads", "downloads-action"],
 
     // Sidebar actions
-    toggleBMS: ["bmsController.controllFunctions.changeVisibleWenpanel()", "show-bsm"],
-    showBookmarkSidebar: ["SidebarUI.show('viewBookmarksSidebar')", "show-bookmark-sidebar"],
-    showHistorySidebar: ["SidebarUI.show('viewHistorySidebar')", "show-history-sidebar"],
-    showSyncedTabsSidebar: ["SidebarUI.show('viewTabsSidebar')", "show-synced-tabs-sidebar"],
-    reverseSidebarPosition: ["SidebarUI.reversePosition()", "reverse-sidebar"],
-    hideSidebar: ["SidebarUI.hide()", "hide-sidebar"],
-    toggleSidebar: ["SidebarUI.toggle()", "toggle-sidebar"],
+    showBookmarkSidebar: ["SidebarUI.show('viewBookmarksSidebar')", "show-bookmark-sidebar", "sidebar-action"],
+    showHistorySidebar: ["SidebarUI.show('viewHistorySidebar')", "show-history-sidebar", "sidebar-action"],
+    showSyncedTabsSidebar: ["SidebarUI.show('viewTabsSidebar')", "show-synced-tabs-sidebar", "sidebar-action"],
+    reverseSidebarPosition: ["SidebarUI.reversePosition()", "reverse-sidebar", "sidebar-action"],
+    hideSidebar: ["SidebarUI.hide()", "hide-sidebar", "sidebar-action"],
+    toggleSidebar: ["SidebarUI.toggle()", "toggle-sidebar", "sidebar-action"],
 
-    // Workspaces actions
+    // BMS actions
+    toggleBMS: ["bmsController.controllFunctions.changeVisibleWenpanel()", "show-bsm", "bms-action"],
 
     // Developer actions
-    
 }
 
 export const modifiersList = {
@@ -117,6 +117,8 @@ export const modifiersList = {
     Shift: ["Shift", "VK_SHIFT"],
     Tab: ["Tab", "VK_TAB"],
 }
+
+export const cannotUseModifiers = ["Zenkaku", "Hankaku", "NumLock", "Delete", "Insert", "Alphanumeric", "Unidentified", "NonConvert"]
 
 export const keyCodesList = {
     // Arrow keys
@@ -152,8 +154,6 @@ export const keyCodesList = {
     F24: ["F24", "VK_F24"],
 }
 
-export const cannotUseModifiers = ["Zenkaku", "Hankaku", "NumLock", "Delete", "Insert", "Alphanumeric", "Unidentified", "NonConvert"]
-
 export const keyboradShortcutFunctions = {
   preferencesFunctions: {
     addKeyForShortcutAction(actionName, key, keyCode, modifiers) {
@@ -184,10 +184,42 @@ export const keyboradShortcutFunctions = {
   },
 
   getInfoFunctions: {
+    getAllActionType() {
+      let result = [];
+      for (let actionName in keyboradShortcutActions) {
+        if (!result.includes(keyboradShortcutActions[actionName][2])) {
+          result.push(keyboradShortcutActions[actionName][2]);
+        }
+      }
+      return result;
+    },
+
+    getTypeLocalization(type) {
+      return `floorp-custom-actions-${type}`;
+    },
+
+    getkeyboradShortcutActionsByType(type) {
+      let result = [];
+      for (let actionName in keyboradShortcutActions) {
+        if (keyboradShortcutActions[actionName][2] === type) {
+          result.push(actionName);
+        }
+      }
+      return result;
+    },
+
     getkeyboradShortcutActions() {
       let result = [];
       for (let actionName in keyboradShortcutActions) {
         result.push(actionName);
+      }
+      return result;
+    },
+
+    getAllActionLocalizations() {
+      let result = [];
+      for (let actionName in keyboradShortcutActions) {
+        result.push(keyboradShortcutFunctions.getInfoFunctions.getFluentLocalization(actionName));
       }
       return result;
     },
@@ -216,6 +248,10 @@ export const keyboradShortcutFunctions = {
     },
 
     getFluentLocalization(actionName) {
+      if (!keyboradShortcutActions[actionName]) {
+        console.error(`actionName(${actionName}) is not exsit`);
+        return null;
+      }
       return `floorp-custom-actions-${keyboradShortcutActions[actionName][1]}`;
     },
 

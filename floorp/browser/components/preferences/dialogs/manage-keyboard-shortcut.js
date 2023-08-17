@@ -105,7 +105,7 @@ function setTitle() {
     const keyListInput = document.getElementById("keyList").value.split(", ");
     for(inputedKey of keyListInput) {
       if (inputedKey.length === 1) {
-        console.log("key is already used. Modify key is allowed only.");
+        console.warn("key is already used. Modify key is allowed only.");
         return true;
       }
     }
@@ -118,7 +118,7 @@ function setTitle() {
 
     for(inputedKey of keyListInput) {
      if (keyCodeList.includes(inputedKey)) {
-        console.log("keyCode is already used. Cannot add key anymore.");
+        console.warn("keyCode is already used. Cannot add key anymore.");
         return true;
       }
     }

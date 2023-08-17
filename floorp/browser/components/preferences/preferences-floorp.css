@@ -733,3 +733,12 @@
   .addonRecommend-label-box {
     width: -moz-available;
   }
+
+  .csks-content-box {
+    border-top: solid 1px gray;
+    margin: 15px 0px;
+  }
+
+  .csks-box-item {
+    margin: 10px 0px;
+  }

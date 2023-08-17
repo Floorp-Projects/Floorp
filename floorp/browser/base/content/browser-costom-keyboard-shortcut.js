@@ -23,14 +23,12 @@ const buildShortCutkeyFunctions = {
         }
 
         for (let shortcutObj of keyboradShortcutConfig) {
-            console.log(shortcutObj);
             let name = shortcutObj.actionName;
             let key = shortcutObj.key;
             let keyCode = shortcutObj.keyCode;
             let modifiers = shortcutObj.modifiers;
             
             if (key && name || keyCode && name) {
-                console.log("buildShortCutkeyFunction: " + name + " " + key + " " + keyCode + " " + modifiers);
                 buildShortCutkeyFunctions.buildShortCutkeyFunction(name, key, keyCode, modifiers);
             } else {
                 console.error("Invalid shortcut key config: " + shortcutObj);
