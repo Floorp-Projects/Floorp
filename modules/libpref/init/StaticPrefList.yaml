@@ -10105,6 +10105,12 @@
     value: false
     mirror: always
 
+# Configure all decoders to use low-latency mode.
+-   name: media.low-latency-decoding.force-enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 #ifdef MOZ_WMF
 
 -   name: media.wmf.enabled
