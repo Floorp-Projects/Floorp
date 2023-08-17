@@ -410,7 +410,7 @@ void nsHtml5TreeOperation::SetHTMLElementAttributes(
     nsHtml5String val = aAttributes->getValueNoBoundsCheck(i);
     nsAtom* klass = val.MaybeAsAtom();
     if (klass) {
-      aElement->SetSingleClassFromParser(klass);
+      aElement->SetClassAttrFromParser(klass);
     } else {
       nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
       nsAtom* prefix = aAttributes->getPrefixNoBoundsCheck(i);
@@ -545,7 +545,7 @@ nsIContent* nsHtml5TreeOperation::CreateSVGElement(
     nsHtml5String val = aAttributes->getValueNoBoundsCheck(i);
     nsAtom* klass = val.MaybeAsAtom();
     if (klass) {
-      newContent->SetSingleClassFromParser(klass);
+      newContent->SetClassAttrFromParser(klass);
     } else {
       nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
       nsAtom* prefix = aAttributes->getPrefixNoBoundsCheck(i);
@@ -593,7 +593,7 @@ nsIContent* nsHtml5TreeOperation::CreateMathMLElement(
     nsHtml5String val = aAttributes->getValueNoBoundsCheck(i);
     nsAtom* klass = val.MaybeAsAtom();
     if (klass) {
-      newContent->SetSingleClassFromParser(klass);
+      newContent->SetClassAttrFromParser(klass);
     } else {
       nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
       nsAtom* prefix = aAttributes->getPrefixNoBoundsCheck(i);

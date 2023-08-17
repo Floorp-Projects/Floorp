@@ -293,6 +293,7 @@ class nsAttrValue {
 
   void ParseAtom(const nsAString& aValue);
   void ParseAtomArray(const nsAString& aValue);
+  void ParseAtomArray(nsAtom* aValue);
   void ParseStringOrAtom(const nsAString& aValue);
 
   /**
