@@ -2930,7 +2930,7 @@ nsresult nsStandardURL::SetFilePath(const nsACString& input) {
     return SetPathQueryRef(str);
   }
 
-  if (filepath && *filepath) {
+  if (!str.IsEmpty()) {
     nsAutoCString spec;
     uint32_t dirPos, basePos, extPos;
     int32_t dirLen, baseLen, extLen;
@@ -3032,7 +3032,7 @@ nsresult nsStandardURL::SetQueryWithEncoding(const nsACString& input,
 
   InvalidateCache();
 
-  if (!query || !*query) {
+  if (flat.IsEmpty()) {
     // remove existing query
     if (mQuery.mLen >= 0) {
       // remove query and leading '?'
