@@ -2733,6 +2733,7 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
       bool syntheticUpper = false;
 
       if (mStyle.variantSubSuper != NS_FONT_VARIANT_POSITION_NORMAL &&
+          mStyle.useSyntheticPosition &&
           (aTextRun->GetShapingState() ==
                gfxTextRun::eShapingState_ForceFallbackFeature ||
            !matchedFont->SupportsSubSuperscript(mStyle.variantSubSuper, aString,
