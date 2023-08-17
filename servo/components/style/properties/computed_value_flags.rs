@@ -97,8 +97,8 @@ bitflags! {
         /// Whether there are author-specified rules for `font-synthesis-style`.
         const HAS_AUTHOR_SPECIFIED_FONT_SYNTHESIS_STYLE = 1 << 18;
 
-        // (There's also font-synthesis-small-caps, but we don't currently need to
-        // keep track of that.)
+        // (There's also font-synthesis-small-caps and font-synthesis-position,
+        // but we don't currently need to keep track of those.)
 
         /// Whether there are author-specified rules for `letter-spacing`.
         const HAS_AUTHOR_SPECIFIED_LETTER_SPACING = 1 << 19;
