@@ -46,7 +46,7 @@ class AudioConfig {
     // The maximum number of channels a channel map can represent.
     static constexpr uint32_t MAX_CHANNELS = 32;
 
-    typedef uint32_t ChannelMap;
+    using ChannelMap = uint32_t;
 
     ChannelLayout() : mChannelMap(UNKNOWN_MAP), mValid(false) {}
     explicit ChannelLayout(uint32_t aChannels)

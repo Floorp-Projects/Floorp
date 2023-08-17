@@ -8,7 +8,7 @@
 
 namespace mozilla {
 
-typedef AudioConfig::ChannelLayout ChannelLayout;
+using ChannelLayout = AudioConfig::ChannelLayout;
 
 /**
  * AudioConfig::ChannelLayout

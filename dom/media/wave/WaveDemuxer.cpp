@@ -154,9 +154,9 @@ bool WAVTrackDemuxer::Init() {
   mInfo->mRate = mSamplesPerSecond;
   mInfo->mChannels = mChannels;
   mInfo->mBitDepth = mFmtChunk.ValidBitsPerSamples();
-  mInfo->mProfile = AssertedCast<int8_t>(mFmtChunk.WaveFormat() & 0x00FF);
+  mInfo->mProfile = AssertedCast<uint8_t>(mFmtChunk.WaveFormat() & 0x00FF);
   mInfo->mExtendedProfile =
-      AssertedCast<int8_t>(mFmtChunk.WaveFormat() & 0xFF00 >> 8);
+      AssertedCast<uint8_t>(mFmtChunk.WaveFormat() & 0xFF00 >> 8);
   mInfo->mMimeType = "audio/wave; codecs=";
   mInfo->mMimeType.AppendInt(mFmtChunk.WaveFormat());
   mInfo->mDuration = Duration();
