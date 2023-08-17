@@ -40,3 +40,19 @@ add_task(async function test_shopping_setting_update() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_giffted_settings_metrics() {
+  const snapshot = Services.telemetry.getSnapshotForScalars();
+
+  Assert.equal(
+    Glean.shoppingSettings.componentOptedOut.testGetValue(),
+    snapshot.parent["shopping.component_opted_out"],
+    "Component Opted Out metric should have the same value when GiFFTed"
+  );
+
+  Assert.equal(
+    Glean.shoppingSettings.hasOnboarded.testGetValue(),
+    snapshot.parent["shopping.has_onboarded"],
+    "Component Opted Out metric should have the same value when GiFFTed"
+  );
+});
