@@ -67,6 +67,7 @@ add_task(async function test_aboutwelcome_addonspicker() {
               install_label: "Add to Firefox",
               icon: "",
               type: "extension",
+              rating: "5",
               description: "An efficient wide-spectrum content blocker.",
               source_id: "ADD_EXTENSION_BUTTON",
               action: {
@@ -83,6 +84,7 @@ add_task(async function test_aboutwelcome_addonspicker() {
               install_label: "Add to Firefox",
               icon: "",
               type: "extension",
+              rating: "3.5",
               description: "Show tabs like a tree.",
               source_id: "ADD_EXTENSION_BUTTON",
               action: {
