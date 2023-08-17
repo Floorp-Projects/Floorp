@@ -765,7 +765,7 @@ class AwesomeBarViewTest {
     }
 
     @Test
-    fun `GIVEN unified search feature is enabled WHEN configuring providers THEN don't add the engine suggestions provider`() {
+    fun `GIVEN unified search feature is enabled WHEN configuring providers THEN add the engine suggestions provider`() {
         val settings: Settings = mockk(relaxed = true) {
             every { showUnifiedSearchFeature } returns true
         }
@@ -776,7 +776,7 @@ class AwesomeBarViewTest {
 
         val result = awesomeBarView.getProvidersToAdd(state)
 
-        assertEquals(0, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
+        assertEquals(1, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
     }
 
     @Test
@@ -834,7 +834,7 @@ class AwesomeBarViewTest {
     }
 
     @Test
-    fun `GIVEN a search from the default engine with no suggestions asked WHEN configuring providers THEN don't add any provider`() {
+    fun `GIVEN a search from the default engine with no suggestions asked WHEN configuring providers THEN add any provider`() {
         val settings: Settings = mockk(relaxed = true) {
             every { showUnifiedSearchFeature } returns true
         }
@@ -862,7 +862,7 @@ class AwesomeBarViewTest {
         assertEquals(0, result.filterIsInstance<SearchSuggestionProvider>().size)
         assertEquals(0, result.filterIsInstance<SyncedTabsStorageSuggestionProvider>().size)
         assertEquals(0, result.filterIsInstance<SessionSuggestionProvider>().size)
-        assertEquals(0, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
+        assertEquals(1, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
     }
 
     @Test
