@@ -129,6 +129,7 @@ class TLSTransportLayer final : public nsISocketTransport,
   };
 
   virtual ~TLSTransportLayer();
+  bool DispatchRelease();
 
   nsISocketTransport* Transport() { return mSocketTransport; }
 
