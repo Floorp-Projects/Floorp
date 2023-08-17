@@ -338,18 +338,28 @@
             id="globalPrivacyControlLearnMoreLink"
             support-page="global-privacy-control" />
       </hbox>
-      <label>
-        <label class="tail-with-learn-more" data-l10n-id="do-not-track-description" id="doNotTrackDesc"></label>
-      <html:a is="moz-support-link"
-              class="learnMore"
-              data-l10n-id="do-not-track-learn-more"
-              support-page="how-do-i-turn-do-not-track-feature"
-      />
-      </label>
-      <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
-        <radio value="true" data-l10n-id="do-not-track-option-always"/>
-        <radio value="false" data-l10n-id="do-not-track-option-default-content-blocking-known"/>
-      </radiogroup>
+      <vbox id="legacyDoNotTrackBox">
+        <label>
+          <label class="tail-with-learn-more" data-l10n-id="do-not-track-description" id="doNotTrackDesc"></label>
+        <html:a is="moz-support-link"
+                class="learnMore"
+                support-page="how-do-i-turn-do-not-track-feature"
+        />
+        </label>
+        <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
+          <radio value="true" data-l10n-id="do-not-track-option-always"/>
+          <radio value="false" data-l10n-id="do-not-track-option-default-content-blocking-known"/>
+        </radiogroup>
+      </vbox>
+      <hbox id="doNotTrackBox" flex="1" align="center">
+        <checkbox id="doNotTrackCheckbox"
+                class="tail-with-learn-more"
+                preference="privacy.donottrackheader.enabled"
+                data-l10n-id="do-not-track-description2" />
+        <html:a is="moz-support-link"
+            id="doNotTrackLearnMoreLink"
+            support-page="how-do-i-turn-do-not-track-feature" />
+      </hbox>
     </vbox>
   </vbox>
 </groupbox>
