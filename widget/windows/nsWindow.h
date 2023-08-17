@@ -714,6 +714,17 @@ class nsWindow final : public nsBaseWidget {
   static bool sIsInMouseCapture;
   static bool sIsRestoringSession;
 
+  // Message postponement hack. See the definition-site of
+  // WndProcUrgentInvocation::sDepth for details.
+  struct MOZ_STACK_CLASS WndProcUrgentInvocation {
+    struct Marker {
+      Marker() { ++sDepth; }
+      ~Marker() { --sDepth; }
+    };
+    inline static bool IsActive() { return sDepth > 0; }
+    static size_t sDepth;
+  };
+
   // Hook Data Members for Dropdowns. sProcessHook Tells the
   // hook methods whether they should be processing the hook
   // messages.
