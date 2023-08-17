@@ -484,6 +484,26 @@ void nsAttrValue::SwapValueWith(nsAttrValue& aOther) {
   mBits = tmp;
 }
 
+void nsAttrValue::RemoveDuplicatesFromAtomArray() {
+  if (Type() != eAtomArray) {
+    return;
+  }
+
+  const AttrAtomArray* currentAtomArray = GetMiscContainer()->mValue.mAtomArray;
+  UniquePtr<AttrAtomArray> deduplicatedAtomArray =
+      currentAtomArray->CreateDeduplicatedCopyIfDifferent();
+
+  if (!deduplicatedAtomArray) {
+    // No duplicates found. Leave this value unchanged.
+    return;
+  }
+
+  // We found duplicates and need to swap out our MiscContainer's mAtomArray.
+  MiscContainer* cont = GetMiscContainer();
+  delete cont->mValue.mAtomArray;
+  cont->mValue.mAtomArray = deduplicatedAtomArray.release();
+}
+
 void nsAttrValue::ToString(nsAString& aResult) const {
   MiscContainer* cont = nullptr;
   if (BaseType() == eOtherBase) {
@@ -687,7 +707,8 @@ void nsAttrValue::GetEnumString(nsAString& aResult, bool aRealTag) const {
   MOZ_ASSERT_UNREACHABLE("couldn't find value in EnumTable");
 }
 
-void AttrAtomArray::DoRemoveDuplicates() {
+UniquePtr<AttrAtomArray> AttrAtomArray::CreateDeduplicatedCopyIfDifferentImpl()
+    const {
   MOZ_ASSERT(mMayContainDuplicates);
 
   bool usingHashTable = false;
@@ -710,16 +731,32 @@ void AttrAtomArray::DoRemoveDuplicates() {
   };
 
   size_t len = mArray.Length();
+  UniquePtr<AttrAtomArray> deduplicatedArray;
   for (size_t i = 0; i < len; ++i) {
     if (!CheckDuplicate(i)) {
+      if (deduplicatedArray) {
+        deduplicatedArray->mArray.AppendElement(mArray[i]);
+      }
       continue;
     }
-    mArray.RemoveElementAt(i);
-    --i;
-    --len;
+    // We've found a duplicate!
+    if (!deduplicatedArray) {
+      // Allocate the deduplicated copy and copy the preceding elements into it.
+      deduplicatedArray = MakeUnique<AttrAtomArray>();
+      deduplicatedArray->mMayContainDuplicates = false;
+      deduplicatedArray->mArray.SetCapacity(len - 1);
+      for (size_t indexToCopy = 0; indexToCopy < i; indexToCopy++) {
+        deduplicatedArray->mArray.AppendElement(mArray[indexToCopy]);
+      }
+    }
   }
 
-  mMayContainDuplicates = false;
+  if (!deduplicatedArray) {
+    // This AttrAtomArray doesn't contain any duplicates, cache this information
+    // for future invocations.
+    mMayContainDuplicates = false;
+  }
+  return deduplicatedArray;
 }
 
 uint32_t nsAttrValue::GetAtomCount() const {
