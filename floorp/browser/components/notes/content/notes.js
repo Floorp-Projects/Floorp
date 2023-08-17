@@ -18,11 +18,13 @@ document.addEventListener('DOMContentLoaded', function(){
 
   //Clear using pref first
   Services.prefs.clearUserPref("floorp.browser.note.memos.using");
+  memoInput.value = "";
+  memoTitleInput.value = "";
 
   memoTitleInput.placeholder = l10n.formatValueSync("memo-title-input-placeholder");
   memoInput.placeholder = l10n.formatValueSync("memo-input-placeholder");
 
-  let memos = Services.prefs.getStringPref("floorp.browser.note.memos"); 
+  let memos = Services.prefs.getStringPref("floorp.browser.note.memos");
   if (memos !== "") {
     memos = JSON.parse(memos);
     showMemos();
@@ -45,8 +47,7 @@ document.addEventListener('DOMContentLoaded', function(){
   
   window.addEventListener('offline', (e)=>{
     whenBrowserIsOffline();
-  })  
-
+  })
 
   function showMemos() {
     memoList.innerHTML = "";
@@ -56,15 +57,29 @@ document.addEventListener('DOMContentLoaded', function(){
       li.textContent = memos.titles[i];
       memoList.appendChild(li);
     }
+    updateSelectedItem(returnNoteID());
     memoListItemClick();
   }
 
   function setNoteID(id) {
     Services.prefs.setIntPref("floorp.browser.note.memos.using", id);
+    updateSelectedItem(id);
   }
 
   function returnNoteID() {
     return Services.prefs.getIntPref("floorp.browser.note.memos.using");
+  }
+
+  function updateSelectedItem(id) {
+    const oldSelectedItem = document.querySelector(".memo-list-item.selected, #memo-add.selected");
+    if (oldSelectedItem != null) oldSelectedItem.classList.remove("selected");
+    if (id != -1) {
+      const newSelectedItem = document.querySelector(`.memo-list-item:nth-child(${id + 1})`);
+      if (newSelectedItem != null) newSelectedItem.classList.add("selected");
+    } else {
+      const memoNewButton = document.querySelector("#memo-add");
+      memoNewButton.classList.add("selected");
+    }
   }
 
   // メモリストのアイテムをクリックしたときの処理
@@ -89,6 +104,7 @@ document.addEventListener('DOMContentLoaded', function(){
     memoInput.value = "";
     memoTitleInput.value = "";
     hideMarkDownPreview();
+    setNoteID(-1);
     showMemos();
   }
 
