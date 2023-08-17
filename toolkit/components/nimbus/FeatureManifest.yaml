@@ -902,6 +902,17 @@ featureCallout:
     path: "browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json"
   variables: {}
 
+fullPageTranslation:
+  description: This feature opens a popup panel to offer to translate a page.
+  owner: gtatum@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    boolean:
+      description: Set to true to enable the translations feature
+      type: boolean
+      setPref: browser.translations.enable
+
 # fxms-message-* placeholder feature ids
 #
 # https://docs.google.com/spreadsheets/d/119YbeKStLL0Fg2QkK-yN93mrtD1rlneGZGTl_jAwtyw/edit#gid=1903378504
