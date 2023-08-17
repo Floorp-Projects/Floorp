@@ -43,7 +43,6 @@ nsFont::MaxDifference nsFont::CalcDifference(const nsFont& aOther) const {
       (synthesisWeight != aOther.synthesisWeight) ||
       (synthesisStyle != aOther.synthesisStyle) ||
       (synthesisSmallCaps != aOther.synthesisSmallCaps) ||
-      (synthesisPosition != aOther.synthesisPosition) ||
       (fontFeatureSettings != aOther.fontFeatureSettings) ||
       (fontVariationSettings != aOther.fontVariationSettings) ||
       (languageOverride != aOther.languageOverride) ||

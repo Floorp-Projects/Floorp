@@ -123,18 +123,6 @@ ${helpers.predefined_type(
 )}
 
 ${helpers.predefined_type(
-    "font-synthesis-position",
-    "FontSynthesis",
-    engines="gecko",
-    initial_value="computed::FontSynthesis::Auto",
-    initial_specified_value="specified::FontSynthesis::Auto",
-    gecko_ffi_name="mFont.synthesisPosition",
-    animation_value_type="discrete",
-    spec="https://drafts.csswg.org/css-fonts-4/#font-synthesis-position",
-    affects="layout",
-)}
-
-${helpers.predefined_type(
     "font-stretch",
     "FontStretch",
     engines="gecko servo-2013 servo-2020",

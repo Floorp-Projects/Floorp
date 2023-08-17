@@ -99,7 +99,7 @@ struct gfxFontStyle {
                gfxFloat aSize, const FontSizeAdjust& aSizeAdjust,
                bool aSystemFont, bool aPrinterFont, bool aWeightSynthesis,
                bool aStyleSynthesis, bool aSmallCapsSynthesis,
-               bool aPositionSynthesis, uint32_t aLanguageOverride);
+               uint32_t aLanguageOverride);
   // Features are composed of (1) features from style rules (2) features
   // from feature settings rules and (3) family-specific features.  (1) and
   // (3) are guaranteed to be mutually exclusive
@@ -191,11 +191,10 @@ struct gfxFontStyle {
   // Used to imitate -webkit-font-smoothing: antialiased
   bool useGrayscaleAntialiasing : 1;
 
-  // Whether synthetic styles are allowed (required, in the case of position)
+  // Whether synthetic styles are allowed
   bool allowSyntheticWeight : 1;
   bool allowSyntheticStyle : 1;
   bool allowSyntheticSmallCaps : 1;
-  bool useSyntheticPosition : 1;
 
   // some variant features require fallback which complicates the shaping
   // code, so set up a bool to indicate when shaping with fallback is needed
@@ -239,8 +238,6 @@ struct gfxFontStyle {
            (variantSubSuper == other.variantSubSuper) &&
            (allowSyntheticWeight == other.allowSyntheticWeight) &&
            (allowSyntheticStyle == other.allowSyntheticStyle) &&
-           (allowSyntheticSmallCaps == other.allowSyntheticSmallCaps) &&
-           (useSyntheticPosition == other.useSyntheticPosition) &&
            (systemFont == other.systemFont) &&
            (printerFont == other.printerFont) &&
            (useGrayscaleAntialiasing == other.useGrayscaleAntialiasing) &&

@@ -463,10 +463,10 @@
 <%helpers:shorthand name="font-synthesis"
                     engines="gecko"
                     flags="SHORTHAND_IN_GETCS"
-                    sub_properties="font-synthesis-weight font-synthesis-style font-synthesis-small-caps font-synthesis-position"
+                    sub_properties="font-synthesis-weight font-synthesis-style font-synthesis-small-caps"
                     derive_value_info="False"
                     spec="https://drafts.csswg.org/css-fonts-3/#propdef-font-variant">
-    <% sub_properties = ["weight", "style", "small_caps", "position"] %>
+    <% sub_properties = ["weight", "style", "small_caps"] %>
 
     use crate::values::specified::FontSynthesis;
 
