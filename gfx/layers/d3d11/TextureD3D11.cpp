@@ -510,7 +510,6 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
   D3D11_SUBRESOURCE_DATA uploadData;
   D3D11_SUBRESOURCE_DATA* uploadDataPtr = nullptr;
   RefPtr<DataSourceSurface> srcSurf;
-  DataSourceSurface::MappedSurface sourceMap;
 
   if (aSurface) {
     srcSurf = aSurface->GetDataSurface();
@@ -521,14 +520,13 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
       return nullptr;
     }
 
+    DataSourceSurface::MappedSurface sourceMap;
     if (!srcSurf->Map(DataSourceSurface::READ, &sourceMap)) {
       gfxCriticalError()
           << "Failed to map source surface for D3D11TextureData::Create";
       return nullptr;
     }
-  }
 
-  if (srcSurf && !DeviceManagerDx::Get()->HasCrashyInitData()) {
     uploadData.pSysMem = sourceMap.mData;
     uploadData.SysMemPitch = sourceMap.mStride;
     uploadData.SysMemSlicePitch = 0;  // unused
@@ -554,18 +552,6 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
                       << "texture11: " << texture11
                       << " Code: " << gfx::hexa(hr);
       return nullptr;
-    }
-
-    if (srcSurf && DeviceManagerDx::Get()->HasCrashyInitData()) {
-      D3D11_BOX box;
-      box.front = box.top = box.left = 0;
-      box.back = 1;
-      box.right = aSize.width;
-      box.bottom = aSize.height;
-      RefPtr<ID3D11DeviceContext> ctx;
-      device->GetImmediateContext(getter_AddRefs(ctx));
-      ctx->UpdateSubresource(texture11, 0, &box, sourceMap.mData,
-                             sourceMap.mStride, 0);
     }
   }
 
