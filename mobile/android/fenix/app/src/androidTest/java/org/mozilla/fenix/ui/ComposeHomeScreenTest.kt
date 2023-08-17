@@ -14,7 +14,6 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.Constants.POCKET_RECOMMENDED_STORIES_UTM_PARAM
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -31,7 +30,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class ComposeHomeScreenTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
-    private lateinit var firstPocketStoryPublisher: String
 
     @get:Rule(order = 0)
     val activityTestRule =
@@ -161,114 +159,6 @@ class ComposeHomeScreenTest {
         }.enterURLAndEnterToBrowser(genericPage.url) {
         }.goToHomescreen {
             verifyJumpBackInMessage(activityTestRule)
-        }
-    }
-
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252509
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
-    @Test
-    fun verifyPocketSectionTest() {
-        activityTestRule.activityRule.applySettingsExceptions {
-            it.isRecentTabsFeatureEnabled = false
-            it.isRecentlyVisitedFeatureEnabled = false
-        }
-
-        homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
-            verifyThoughtProvokingStories(true)
-            scrollToPocketProvokingStories()
-            verifyPocketRecommendedStoriesItems()
-            // Sponsored Pocket stories are only advertised for a limited time.
-            // See also known issue https://bugzilla.mozilla.org/show_bug.cgi?id=1828629
-            // verifyPocketSponsoredStoriesItems(2, 8)
-            verifyDiscoverMoreStoriesButton()
-            verifyStoriesByTopic(true)
-            verifyPoweredByPocket()
-        }.openThreeDotMenu {
-        }.openCustomizeHome {
-            clickPocketButton()
-        }.goBackToHomeScreen {
-            verifyThoughtProvokingStories(false)
-            verifyStoriesByTopic(false)
-        }
-    }
-
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252513
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
-    @Test
-    fun openPocketStoryItemTest() {
-        activityTestRule.activityRule.applySettingsExceptions {
-            it.isRecentTabsFeatureEnabled = false
-            it.isRecentlyVisitedFeatureEnabled = false
-        }
-
-        homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
-            verifyThoughtProvokingStories(true)
-            scrollToPocketProvokingStories()
-            firstPocketStoryPublisher = getProvokingStoryPublisher(1)
-        }.clickPocketStoryItem(firstPocketStoryPublisher, 1) {
-            verifyUrl(POCKET_RECOMMENDED_STORIES_UTM_PARAM)
-        }
-    }
-
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252514
-    @Test
-    fun pocketDiscoverMoreButtonTest() {
-        activityTestRule.activityRule.applySettingsExceptions {
-            it.isRecentTabsFeatureEnabled = false
-            it.isRecentlyVisitedFeatureEnabled = false
-        }
-
-        homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
-            scrollToPocketProvokingStories()
-            verifyDiscoverMoreStoriesButton()
-        }.clickPocketDiscoverMoreButton {
-            verifyUrl("getpocket.com/explore")
-        }
-    }
-
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252515
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
-    @Test
-    fun selectPocketStoriesByTopicTest() {
-        activityTestRule.activityRule.applySettingsExceptions {
-            it.isRecentTabsFeatureEnabled = false
-            it.isRecentlyVisitedFeatureEnabled = false
-        }
-
-        homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
-            verifyStoriesByTopicItemState(activityTestRule, false, 1)
-            clickStoriesByTopicItem(activityTestRule, 1)
-            verifyStoriesByTopicItemState(activityTestRule, true, 1)
-        }
-    }
-
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252516
-    @Test
-    fun pocketLearnMoreButtonTest() {
-        activityTestRule.activityRule.applySettingsExceptions {
-            it.isRecentTabsFeatureEnabled = false
-            it.isRecentlyVisitedFeatureEnabled = false
-        }
-
-        homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
-            verifyPoweredByPocket()
-        }.clickPocketLearnMoreLink(activityTestRule) {
-            verifyUrl("mozilla.org/en-US/firefox/pocket")
         }
     }
 
