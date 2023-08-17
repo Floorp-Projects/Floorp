@@ -203,7 +203,7 @@ class ScreenshotTest : BaseSessionTest() {
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
     fun capturePixelsWhileSessionDeactivated() {
-        // TODO: Bug 1673955
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
         val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
 

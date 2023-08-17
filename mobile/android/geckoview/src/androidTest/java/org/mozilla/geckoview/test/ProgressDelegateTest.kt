@@ -448,7 +448,7 @@ class ProgressDelegateTest : BaseSessionTest() {
     @WithDisplay(width = 400, height = 400)
     @Test
     fun saveAndRestoreStateNewSession() {
-        // TODO: Bug 1648158
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
         val helloUri = createTestUrl(HELLO_HTML_PATH)
         val startUri = createTestUrl(SAVE_STATE_PATH)
@@ -496,9 +496,9 @@ class ProgressDelegateTest : BaseSessionTest() {
     @WithDisplay(width = 400, height = 400)
     @Test
     fun saveAndRestoreState() {
-        // TODO: Bug 1648158
         // Bug 1662035 - disable to reduce intermittent failures
         assumeThat(sessionRule.env.isX86, equalTo(false))
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
         val startUri = createTestUrl(SAVE_STATE_PATH)
         val savedState = collectState(startUri)
@@ -532,7 +532,7 @@ class ProgressDelegateTest : BaseSessionTest() {
     @WithDisplay(width = 400, height = 400)
     @Test
     fun flushSessionState() {
-        // TODO: Bug 1648158
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
         val startUri = createTestUrl(SAVE_STATE_PATH)
         mainSession.loadUri(startUri)
@@ -568,7 +568,7 @@ class ProgressDelegateTest : BaseSessionTest() {
     @NullDelegate(GeckoSession.HistoryDelegate::class)
     @Test
     fun noHistoryDelegateOnSessionStateChange() {
-        // TODO: Bug 1648158
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
