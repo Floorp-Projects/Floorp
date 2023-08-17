@@ -61,7 +61,7 @@
         const urlencoded = "application/x-www-form-urlencoded";
         await post("baz", "?a", urlencoded, '{ "foo": "bar" }');
         await post("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
-        await post("baz", "?a=b", urlencoded, "?foo=bar");
+        await post("baz", "?a=b", urlencoded, "?foo=bar=123=xyz");
         await post("baz", "?a", undefined, '{ "foo": "bar" }');
         await post("baz", "?a=b", undefined, '{ "foo": "bar" }');
         await post("baz", "?a=b", undefined, "?foo=bar");

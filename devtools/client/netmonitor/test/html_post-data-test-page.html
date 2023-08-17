@@ -38,7 +38,7 @@
 
           let data = "";
           for (const i in message) {
-            data += "&" + i + "=" + message[i];
+            data += "&" + i + "=" + encodeURIComponent(message[i]);
           }
 
           xhr.onreadystatechange = function() {
@@ -70,10 +70,10 @@
 
       async function performRequests() {
         const url = "sjs_simple-test-server.sjs";
-        const url1 = url + "?foo=bar&baz=42&type=urlencoded";
+        const url1 = url + "?foo=bar&baz=42&valueWithEqualSign=hijk=123=mnop&type=urlencoded";
         const url2 = url + "?foo=bar&baz=42&type=multipart";
 
-        await post(url1, { foo: "bar", baz: 123 });
+        await post(url1, { foo: "bar", baz: 123, valueWithEqualSign: "xyz=abc=123", valueWithAmpersand: "abcd&1234" });
         await form(url2, "form-name");
       }
     </script>
