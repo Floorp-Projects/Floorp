@@ -49,7 +49,7 @@ class gfxConfigManager {
         mIsNightly(false),
         mIsEarlyBetaOrEarlier(false),
         mSafeMode(false),
-        mIsWin10OrLater(false) {}
+        mIsWin11OrLater(false) {}
 
   void Init();
 
@@ -109,7 +109,6 @@ class gfxConfigManager {
   bool mIsNightly;
   bool mIsEarlyBetaOrEarlier;
   bool mSafeMode;
-  bool mIsWin10OrLater;
   bool mIsWin11OrLater;
 };
 

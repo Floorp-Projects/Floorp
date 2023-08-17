@@ -60,7 +60,6 @@ void gfxConfigManager::Init() {
 #ifdef XP_WIN
   DeviceManagerDx::Get()->CheckHardwareStretchingSupport(mHwStretchingSupport);
   mScaledResolution = HasScaledResolution();
-  mIsWin10OrLater = IsWin10OrLater();
   mIsWin11OrLater = IsWin11OrLater();
   mWrCompositorDCompRequired = true;
 #else
@@ -262,19 +261,12 @@ void gfxConfigManager::ConfigureWebRender() {
                                  "FEATURE_FAILURE_DCOMP_PREF_DISABLED"_ns);
   }
 
-  if (!mIsWin10OrLater) {
-    // XXX relax win version to windows 8.
-    mFeatureWrDComp->Disable(FeatureStatus::Unavailable,
-                             "Requires Windows 10 or later",
-                             "FEATURE_FAILURE_DCOMP_NOT_WIN10"_ns);
-  }
-
   if (!mFeatureGPUProcess->IsEnabled()) {
     mFeatureWrDComp->Disable(FeatureStatus::Unavailable, "Requires GPU process",
                              "FEATURE_FAILURE_NO_GPU_PROCESS"_ns);
   }
 
-  if (mIsWin10OrLater && !mIsWin11OrLater) {
+  if (!mIsWin11OrLater) {
     // Disable DirectComposition for NVIDIA users on Windows 10 with high/mixed
     // refresh rate monitors due to rendering artifacts. (See bug 1638709.)
     nsAutoString adapterVendorID;
