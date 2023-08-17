@@ -878,11 +878,11 @@ class Element : public FragmentOrElement {
                               bool* aHasListeners, bool* aOldValueSet);
 
   /**
-   * Sets the class attribute to a value that contains no whitespace.
+   * Sets the class attribute.
    * Assumes that we are not notifying and that the attribute hasn't been
    * set previously.
    */
-  nsresult SetSingleClassFromParser(nsAtom* aSingleClassName);
+  nsresult SetClassAttrFromParser(nsAtom* aValue);
 
   // aParsedValue receives the old value of the attribute. That's useful if
   // either the input or output value of aParsedValue is StoresOwnData.
