@@ -28,7 +28,6 @@ shopping.settings:
       - fx-desktop-shopping-eng@mozilla.com
     send_in_pings:
       - metrics
-    telemetry_mirror: SHOPPING_NIMBUS_DISABLED
 
   component_opted_out:
     type: boolean
@@ -48,7 +47,6 @@ shopping.settings:
       - fx-desktop-shopping-eng@mozilla.com
     send_in_pings:
       - metrics
-    telemetry_mirror: SHOPPING_COMPONENT_OPTED_OUT
 
   has_onboarded:
     type: boolean
@@ -69,4 +67,3 @@ shopping.settings:
       - fx-desktop-shopping-eng@mozilla.com
     send_in_pings:
       - metrics
-    telemetry_mirror: SHOPPING_HAS_ONBOARDED
