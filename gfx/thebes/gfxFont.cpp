@@ -4590,7 +4590,6 @@ gfxFontStyle::gfxFontStyle()
       allowSyntheticWeight(true),
       allowSyntheticStyle(true),
       allowSyntheticSmallCaps(true),
-      useSyntheticPosition(true),
       noFallbackVariantFeatures(true) {}
 
 gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
@@ -4599,7 +4598,6 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
                            bool aPrinterFont, bool aAllowWeightSynthesis,
                            bool aAllowStyleSynthesis,
                            bool aAllowSmallCapsSynthesis,
-                           bool aUsePositionSynthesis,
                            uint32_t aLanguageOverride)
     : size(aSize),
       baselineOffset(0.0f),
@@ -4616,7 +4614,6 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
       allowSyntheticWeight(aAllowWeightSynthesis),
       allowSyntheticStyle(aAllowStyleSynthesis),
       allowSyntheticSmallCaps(aAllowSmallCapsSynthesis),
-      useSyntheticPosition(aUsePositionSynthesis),
       noFallbackVariantFeatures(true) {
   MOZ_ASSERT(!std::isnan(size));
 
