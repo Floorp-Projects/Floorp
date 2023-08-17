@@ -12619,12 +12619,6 @@
   value: true
   mirror: always
 
-  # If true, will be more strict with status code parsing
-- name: network.http.strict_response_status_line_parsing
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
   # If true, remove the resumption token when 0RTT failed.
 - name: network.http.remove_resumption_token_when_early_data_failed
   type: RelaxedAtomicBool
