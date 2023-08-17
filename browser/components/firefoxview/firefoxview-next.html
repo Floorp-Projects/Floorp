@@ -89,26 +89,24 @@
       >
       </fxview-category-button>
     </fxview-category-navigation>
-    <main id="pages">
-      <div class="main-container">
-        <named-deck>
-          <view-overview name="overview">
-            <div>
-              <view-opentabs slot="opentabs"></view-opentabs>
-            </div>
-            <div>
-              <view-recentlyclosed slot="recentlyclosed"></view-recentlyclosed>
-            </div>
-            <div>
-              <view-syncedtabs slot="syncedtabs"></view-syncedtabs>
-            </div>
-          </view-overview>
-          <view-history name="history"></view-history>
-          <view-opentabs name="opentabs"></view-opentabs>
-          <view-recentlyclosed name="recentlyclosed"></view-recentlyclosed>
-          <view-syncedtabs name="syncedtabs"></view-syncedtabs>
-        </named-deck>
-      </div>
+    <main id="pages" role="application" data-l10n-id="firefoxview-page-label">
+      <named-deck>
+        <view-overview name="overview">
+          <div>
+            <view-opentabs slot="opentabs"></view-opentabs>
+          </div>
+          <div>
+            <view-recentlyclosed slot="recentlyclosed"></view-recentlyclosed>
+          </div>
+          <div>
+            <view-syncedtabs slot="syncedtabs"></view-syncedtabs>
+          </div>
+        </view-overview>
+        <view-history name="history"></view-history>
+        <view-opentabs name="opentabs"></view-opentabs>
+        <view-recentlyclosed name="recentlyclosed"></view-recentlyclosed>
+        <view-syncedtabs name="syncedtabs"></view-syncedtabs>
+      </named-deck>
     </main>
     <script src="chrome://browser/content/firefoxview/firefoxview-next.mjs"></script>
   </body>
