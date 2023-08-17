@@ -50,7 +50,7 @@ add_task(async function () {
   );
   is(
     tabpanel.querySelector(".status").childNodes[1].textContent,
-    "", // HTTP/2 and 3 send no status text, only a code
+    "OK",
     "The status summary value is incorrect."
   );
   // Version
@@ -139,7 +139,7 @@ add_task(async function () {
 
   const responseHeadersText = rawHeadersElements[0].textContent;
   const rawResponseHeaderFirstLine = responseHeadersText.split(/\r\n|\n|\r/)[0];
-  is(rawResponseHeaderFirstLine, "HTTP/3 200 "); // H2/3 send no status text
+  is(rawResponseHeaderFirstLine, "HTTP/3 200 OK");
 
   info("Assert the content of the protocol column");
   const target = document.querySelectorAll(".request-list-item")[0];

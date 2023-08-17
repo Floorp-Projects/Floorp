@@ -848,8 +848,7 @@ InterceptedHttpChannel::SynthesizeStatus(uint16_t aStatus,
   statusLine.AppendLiteral(" ");
   statusLine.Append(aReason);
 
-  NS_ENSURE_SUCCESS(mSynthesizedResponseHead->ParseStatusLine(statusLine),
-                    NS_ERROR_FAILURE);
+  mSynthesizedResponseHead->ParseStatusLine(statusLine);
   return NS_OK;
 }
 
