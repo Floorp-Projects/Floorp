@@ -8,10 +8,12 @@ import android.annotation.TargetApi
 import android.os.Build.VERSION_CODES.M
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import mozilla.components.support.base.log.logger.Logger
 import java.security.GeneralSecurityException
 import java.security.InvalidKeyException
 import java.security.Key
 import java.security.KeyStore
+import java.security.UnrecoverableKeyException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -42,6 +44,7 @@ internal const val CIPHER_NONCE_LEN = 12
 @TargetApi(M)
 open class KeyStoreWrapper {
     private var keystore: KeyStore? = null
+    private val logger = Logger("KeyStoreWrapper")
 
     /**
      * Retrieves the underlying KeyStore, loading it if necessary.
@@ -68,10 +71,13 @@ open class KeyStoreWrapper {
      * @return The key for the given label, or `null` if not present
      * @throws InvalidKeyException If there is a Key but it is not a SecretKey
      * @throws NoSuchAlgorithmException If the recovery algorithm is not supported
-     * @throws UnrecoverableKeyException If the key could not be recovered for some reason
      */
-    open fun getKeyFor(label: String): Key? =
+    open fun getKeyFor(label: String): Key? = try {
         loadKeyStore().getKey(label, null)
+    } catch (e: UnrecoverableKeyException) {
+        logger.error("Failed to get key", e)
+        null
+    }
 
     /**
      * Creates a SecretKey for the given label.
