@@ -19,6 +19,12 @@ class OpenTypeGLYF : public Table {
   explicit OpenTypeGLYF(Font *font, uint32_t tag)
       : Table(font, tag, tag), maxp(NULL) { }
 
+  ~OpenTypeGLYF() {
+    for (auto* p : fixed_bboxes) {
+      delete[] p;
+    }
+  }
+
   bool Parse(const uint8_t *data, size_t length);
   bool Serialize(OTSStream *out);
 
@@ -36,9 +42,16 @@ class OpenTypeGLYF : public Table {
 
   bool ParseFlagsForSimpleGlyph(Buffer &glyph,
                                 uint32_t num_flags,
+                                std::vector<uint8_t>& flags,
                                 uint32_t *flag_index,
                                 uint32_t *coordinates_length);
-  bool ParseSimpleGlyph(Buffer &glyph, int16_t num_contours);
+  bool ParseSimpleGlyph(Buffer &glyph,
+                        unsigned gid,
+                        int16_t num_contours,
+                        int16_t& xmin,
+                        int16_t& ymin,
+                        int16_t& xmax,
+                        int16_t& ymax);
   bool ParseCompositeGlyph(
       Buffer &glyph,
       ComponentPointCount* component_point_count);
@@ -59,6 +72,8 @@ class OpenTypeGLYF : public Table {
   OpenTypeMAXP* maxp;
 
   std::vector<std::pair<const uint8_t*, size_t> > iov;
+
+  std::vector<uint8_t*> fixed_bboxes;
 };
 
 }  // namespace ots
