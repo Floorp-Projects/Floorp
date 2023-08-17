@@ -10,7 +10,7 @@ pub(crate) struct GetNextAssertion;
 impl RequestCtap2 for GetNextAssertion {
     type Output = GetAssertionResponse;
 
-    fn command() -> Command {
+    fn command(&self) -> Command {
         Command::GetNextAssertion
     }
 

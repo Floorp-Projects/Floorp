@@ -169,7 +169,6 @@ pub(crate) fn do_credential_list_filtering_ctap2<Dev: FidoDevice>(
             },
             GetAssertionExtensions::default(),
             None,
-            None,
         );
         silent_assert.set_pin_uv_auth_param(pin_uv_auth_token.clone())?;
         let res = dev.send_msg(&silent_assert);

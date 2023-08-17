@@ -41,7 +41,7 @@ enum QueueAction {
     InteractiveManagement {
         timeout: u64,
         status: Sender<crate::StatusUpdate>,
-        callback: StateCallback<crate::Result<crate::ResetResult>>,
+        callback: StateCallback<crate::Result<crate::ManageResult>>,
     },
 }
 
@@ -207,7 +207,7 @@ impl AuthenticatorTransport for Manager {
         &mut self,
         timeout: u64,
         status: Sender<crate::StatusUpdate>,
-        callback: StateCallback<crate::Result<crate::ResetResult>>,
+        callback: StateCallback<crate::Result<crate::ManageResult>>,
     ) -> Result<(), AuthenticatorError> {
         Ok(self.tx.send(QueueAction::InteractiveManagement {
             timeout,

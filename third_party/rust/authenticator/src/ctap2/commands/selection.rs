@@ -9,7 +9,7 @@ pub struct Selection {}
 impl RequestCtap2 for Selection {
     type Output = ();
 
-    fn command() -> Command {
+    fn command(&self) -> Command {
         Command::Selection
     }
 

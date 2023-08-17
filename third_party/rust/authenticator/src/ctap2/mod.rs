@@ -7,20 +7,28 @@ pub mod server;
 pub(crate) mod utils;
 
 use crate::authenticatorservice::{RegisterArgs, SignArgs};
-
 use crate::crypto::COSEAlgorithm;
-
 use crate::ctap2::client_data::ClientDataHash;
+use crate::ctap2::commands::authenticator_config::{
+    AuthConfigCommand, AuthConfigResult, AuthenticatorConfig,
+};
+use crate::ctap2::commands::bio_enrollment::{
+    BioEnrollment, BioEnrollmentCommand, BioEnrollmentResult, FingerprintSensorInfo,
+};
 use crate::ctap2::commands::client_pin::{
     ChangeExistingPin, Pin, PinError, PinUvAuthTokenPermission, SetNewPin,
 };
+use crate::ctap2::commands::credential_management::{
+    CredManagementCommand, CredentialList, CredentialListEntry, CredentialManagement,
+    CredentialManagementResult, CredentialRpListEntry,
+};
 use crate::ctap2::commands::get_assertion::{GetAssertion, GetAssertionOptions};
 use crate::ctap2::commands::make_credentials::{
-    dummy_make_credentials_cmd, MakeCredentials, MakeCredentialsOptions, MakeCredentialsResult,
+    dummy_make_credentials_cmd, MakeCredentials, MakeCredentialsOptions,
 };
 use crate::ctap2::commands::reset::Reset;
 use crate::ctap2::commands::{
-    repackage_pin_errors, CommandError, PinUvAuthCommand, PinUvAuthResult, Request, StatusCode,
+    repackage_pin_errors, CommandError, PinUvAuthCommand, PinUvAuthResult, RequestCtap2, StatusCode,
 };
 use crate::ctap2::preflight::{
     do_credential_list_filtering_ctap1, do_credential_list_filtering_ctap2,
@@ -30,15 +38,27 @@ use crate::ctap2::server::{
 };
 use crate::errors::{AuthenticatorError, UnsupportedOption};
 use crate::statecallback::StateCallback;
+use crate::status_update::{send_status, BioEnrollmentCmd, CredManagementCmd, InteractiveUpdate};
 use crate::transport::device_selector::{Device, DeviceSelectorEvent};
-
-use crate::status_update::send_status;
 use crate::transport::{errors::HIDError, hid::HIDDevice, FidoDevice, FidoDeviceIO, FidoProtocol};
-
-use crate::{RegisterResult, SignResult, StatusPinUv, StatusUpdate};
+use crate::{ManageResult, ResetResult, StatusPinUv, StatusUpdate};
 use std::sync::mpsc::{channel, RecvError, Sender};
 use std::thread;
 use std::time::Duration;
+
+use self::commands::get_info::AuthenticatorVersion;
+
+macro_rules! unwrap_option {
+    ($item: expr, $callback: expr) => {
+        match $item {
+            Some(r) => r,
+            None => {
+                $callback.call(Err(AuthenticatorError::Platform));
+                return false;
+            }
+        }
+    };
+}
 
 macro_rules! unwrap_result {
     ($item: expr, $callback: expr) => {
@@ -47,6 +67,72 @@ macro_rules! unwrap_result {
             Err(e) => {
                 $callback.call(Err(e.into()));
                 return false;
+            }
+        }
+    };
+}
+
+macro_rules! handle_errors {
+    ($error: expr, $status: expr, $callback: expr, $pin_uv_auth_result: expr, $skip_uv: expr) => {
+        let mut _dummy_skip_puap = false;
+        handle_errors!(
+            $error,
+            $status,
+            $callback,
+            $pin_uv_auth_result,
+            $skip_uv,
+            _dummy_skip_puap
+        )
+    };
+    ($error: expr, $status: expr, $callback: expr, $pin_uv_auth_result: expr, $skip_uv: expr, $skip_puap: expr) => {
+        match $error {
+            HIDError::Command(CommandError::StatusCode(StatusCode::ChannelBusy, _)) => {
+                // Channel busy. Client SHOULD retry the request after a short delay.
+                thread::sleep(Duration::from_millis(100));
+                continue;
+            }
+            HIDError::Command(CommandError::StatusCode(StatusCode::OperationDenied, _))
+            | HIDError::Command(CommandError::StatusCode(StatusCode::PinAuthInvalid, _))
+                if matches!($pin_uv_auth_result, PinUvAuthResult::UsingInternalUv) =>
+            {
+                // This should only happen for CTAP2.0 tokens that use internal UV and failed
+                // (e.g. wrong fingerprint used), while doing GetAssertion or MakeCredentials.
+                send_status(
+                    &$status,
+                    StatusUpdate::PinUvError(StatusPinUv::InvalidUv(None)),
+                );
+                $skip_puap = false;
+                continue;
+            }
+            HIDError::Command(CommandError::StatusCode(StatusCode::PinRequired, _))
+                if matches!($pin_uv_auth_result, PinUvAuthResult::UsingInternalUv) =>
+            {
+                // This should only happen for CTAP2.0 tokens that use internal UV and failed
+                // repeatedly, so that we have to fall back to PINs
+                $skip_uv = true;
+                $skip_puap = false;
+                continue;
+            }
+            HIDError::Command(CommandError::StatusCode(StatusCode::UvBlocked, _))
+                if matches!(
+                    $pin_uv_auth_result,
+                    PinUvAuthResult::SuccessGetPinUvAuthTokenUsingUvWithPermissions(..)
+                ) =>
+            {
+                // This should only happen for CTAP2.1 tokens that use internal UV and failed
+                // repeatedly, so that we have to fall back to PINs
+                $skip_uv = true;
+                $skip_puap = false;
+                continue;
+            }
+            HIDError::Command(CommandError::StatusCode(StatusCode::CredentialExcluded, _)) => {
+                $callback.call(Err(AuthenticatorError::CredentialExcluded));
+                break;
+            }
+            e => {
+                warn!("error happened: {e}");
+                $callback.call(Err(AuthenticatorError::HIDError(e)));
+                break;
             }
         }
     };
@@ -85,13 +171,14 @@ fn ask_user_for_pin<U>(
 /// Try to fetch PinUvAuthToken from the device and derive from it PinUvAuthParam.
 /// Prefer UV, fallback to PIN.
 /// Prefer newer pinUvAuth-methods, if supported by the device.
-fn get_pin_uv_auth_param<Dev: FidoDevice, T: PinUvAuthCommand + Request<V>, V>(
+fn get_pin_uv_auth_param<Dev: FidoDevice, T: PinUvAuthCommand + RequestCtap2>(
     cmd: &mut T,
     dev: &mut Dev,
     permission: PinUvAuthTokenPermission,
     skip_uv: bool,
     uv_req: UserVerificationRequirement,
     alive: &dyn Fn() -> bool,
+    pin: &Option<Pin>,
 ) -> Result<PinUvAuthResult, AuthenticatorError> {
     // CTAP 2.1 is very specific that the request should either include pinUvAuthParam
     // OR uv=true, but not both at the same time. We now have to decide which (if either)
@@ -150,11 +237,7 @@ fn get_pin_uv_auth_param<Dev: FidoDevice, T: PinUvAuthCommand + Request<V>, V>(
         if !skip_uv && supports_uv {
             // CTAP 2.1 - UV
             let pin_auth_token = dev
-                .get_pin_uv_auth_token_using_uv_with_permissions(
-                    permission,
-                    cmd.get_rp().id(),
-                    alive,
-                )
+                .get_pin_uv_auth_token_using_uv_with_permissions(permission, cmd.get_rp_id(), alive)
                 .map_err(|e| repackage_pin_errors(dev, e))?;
             cmd.set_pin_uv_auth_param(Some(pin_auth_token.clone()))?;
             Ok(PinUvAuthResult::SuccessGetPinUvAuthTokenUsingUvWithPermissions(pin_auth_token))
@@ -166,9 +249,9 @@ fn get_pin_uv_auth_param<Dev: FidoDevice, T: PinUvAuthCommand + Request<V>, V>(
             // `pin_configured`.
             let pin_auth_token = dev
                 .get_pin_uv_auth_token_using_pin_with_permissions(
-                    cmd.pin(),
+                    pin,
                     permission,
-                    cmd.get_rp().id(),
+                    cmd.get_rp_id(),
                     alive,
                 )
                 .map_err(|e| repackage_pin_errors(dev, e))?;
@@ -177,7 +260,7 @@ fn get_pin_uv_auth_param<Dev: FidoDevice, T: PinUvAuthCommand + Request<V>, V>(
         }
     } else {
         // CTAP 2.0 fallback
-        if !skip_uv && supports_uv && cmd.pin().is_none() {
+        if !skip_uv && supports_uv && pin.is_none() {
             // If the device supports internal user-verification (e.g. fingerprints),
             // skip PIN-stuff
 
@@ -192,7 +275,7 @@ fn get_pin_uv_auth_param<Dev: FidoDevice, T: PinUvAuthCommand + Request<V>, V>(
         }
 
         let pin_auth_token = dev
-            .get_pin_token(cmd.pin(), alive)
+            .get_pin_token(pin, alive)
             .map_err(|e| repackage_pin_errors(dev, e))?;
         cmd.set_pin_uv_auth_param(Some(pin_auth_token.clone()))?;
         Ok(PinUvAuthResult::SuccessGetPinToken(pin_auth_token))
@@ -207,7 +290,8 @@ fn get_pin_uv_auth_param<Dev: FidoDevice, T: PinUvAuthCommand + Request<V>, V>(
 /// the device, Err() otherwise.
 /// Handles asking the user for a PIN, if needed and sending StatusUpdates
 /// regarding PIN and UV usage.
-fn determine_puap_if_needed<Dev: FidoDevice, T: PinUvAuthCommand + Request<V>, U, V>(
+#[allow(clippy::too_many_arguments)]
+fn determine_puap_if_needed<Dev: FidoDevice, T: PinUvAuthCommand + RequestCtap2, U>(
     cmd: &mut T,
     dev: &mut Dev,
     mut skip_uv: bool,
@@ -216,18 +300,19 @@ fn determine_puap_if_needed<Dev: FidoDevice, T: PinUvAuthCommand + Request<V>, U
     status: &Sender<StatusUpdate>,
     callback: &StateCallback<crate::Result<U>>,
     alive: &dyn Fn() -> bool,
+    pin: &mut Option<Pin>,
 ) -> Result<PinUvAuthResult, ()> {
     while alive() {
         debug!("-----------------------------------------------------------------");
         debug!("Getting pinUvAuthParam");
-        match get_pin_uv_auth_param(cmd, dev, permission, skip_uv, uv_req, alive) {
+        match get_pin_uv_auth_param(cmd, dev, permission, skip_uv, uv_req, alive, pin) {
             Ok(r) => {
                 return Ok(r);
             }
 
             Err(AuthenticatorError::PinError(PinError::PinRequired)) => {
-                if let Ok(pin) = ask_user_for_pin(false, None, status, callback) {
-                    cmd.set_pin(Some(pin));
+                if let Ok(new_pin) = ask_user_for_pin(false, None, status, callback) {
+                    *pin = Some(new_pin);
                     skip_uv = true;
                     continue;
                 } else {
@@ -235,8 +320,8 @@ fn determine_puap_if_needed<Dev: FidoDevice, T: PinUvAuthCommand + Request<V>, U
                 }
             }
             Err(AuthenticatorError::PinError(PinError::InvalidPin(retries))) => {
-                if let Ok(pin) = ask_user_for_pin(true, retries, status, callback) {
-                    cmd.set_pin(Some(pin));
+                if let Ok(new_pin) = ask_user_for_pin(true, retries, status, callback) {
+                    *pin = Some(new_pin);
                     continue;
                 } else {
                     return Err(());
@@ -311,15 +396,6 @@ pub fn register<Dev: FidoDevice>(
                 return false;
             }
         };
-        // Check if extensions have been requested that are not supported by the device
-        if let Some(true) = args.extensions.hmac_secret {
-            if !info.supports_hmac_secret() {
-                callback.call(Err(AuthenticatorError::UnsupportedOption(
-                    UnsupportedOption::HmacSecret,
-                )));
-                return false;
-            }
-        }
 
         // Set options based on the arguments and the device info.
         // The user verification option will be set in `determine_puap_if_needed`.
@@ -367,10 +443,10 @@ pub fn register<Dev: FidoDevice>(
         args.exclude_list,
         options,
         args.extensions,
-        args.pin,
     );
 
     let mut skip_uv = false;
+    let mut pin = args.pin;
     while alive() {
         // Requesting both because pre-flighting (credential list filtering)
         // can potentially send GetAssertion-commands
@@ -386,6 +462,7 @@ pub fn register<Dev: FidoDevice>(
             &status,
             &callback,
             alive,
+            &mut pin,
         ) {
             Ok(r) => r,
             Err(()) => {
@@ -434,53 +511,12 @@ pub fn register<Dev: FidoDevice>(
         send_status(&status, crate::StatusUpdate::PresenceRequired);
         let resp = dev.send_msg_cancellable(&makecred, alive);
         match resp {
-            Ok(MakeCredentialsResult(attestation)) => {
-                callback.call(Ok(RegisterResult::CTAP2(attestation)));
+            Ok(result) => {
+                callback.call(Ok(result));
                 return true;
             }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::ChannelBusy, _))) => {
-                // Channel busy. Client SHOULD retry the request after a short delay.
-                thread::sleep(Duration::from_millis(100));
-                continue;
-            }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::PinAuthInvalid, _)))
-                if matches!(pin_uv_auth_result, PinUvAuthResult::UsingInternalUv) =>
-            {
-                // This should only happen for CTAP2.0 tokens that use internal UV and
-                // failed (e.g. wrong fingerprint used), while doing MakeCredentials
-                send_status(
-                    &status,
-                    StatusUpdate::PinUvError(StatusPinUv::InvalidUv(None)),
-                );
-                continue;
-            }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::PinRequired, _)))
-                if matches!(pin_uv_auth_result, PinUvAuthResult::UsingInternalUv) =>
-            {
-                // This should only happen for CTAP2.0 tokens that use internal UV and failed
-                // repeatedly, so that we have to fall back to PINs
-                skip_uv = true;
-                continue;
-            }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::UvBlocked, _)))
-                if matches!(
-                    pin_uv_auth_result,
-                    PinUvAuthResult::SuccessGetPinUvAuthTokenUsingUvWithPermissions(..)
-                ) =>
-            {
-                // This should only happen for CTAP2.1 tokens that use internal UV and failed
-                // repeatedly, so that we have to fall back to PINs
-                skip_uv = true;
-                continue;
-            }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::CredentialExcluded, _))) => {
-                callback.call(Err(AuthenticatorError::CredentialExcluded));
-                return false;
-            }
             Err(e) => {
-                warn!("error happened: {e}");
-                callback.call(Err(AuthenticatorError::HIDError(e)));
-                return false;
+                handle_errors!(e, status, callback, pin_uv_auth_result, skip_uv);
             }
         }
     }
@@ -494,22 +530,7 @@ pub fn sign<Dev: FidoDevice>(
     callback: StateCallback<crate::Result<crate::SignResult>>,
     alive: &dyn Fn() -> bool,
 ) -> bool {
-    if dev.get_protocol() == FidoProtocol::CTAP2 {
-        let info = match dev.get_authenticator_info() {
-            Some(info) => info,
-            None => {
-                callback.call(Err(HIDError::DeviceNotInitialized.into()));
-                return false;
-            }
-        };
-        // Check if extensions have been requested that are not supported by the device
-        if args.extensions.hmac_secret.is_some() && !info.supports_hmac_secret() {
-            callback.call(Err(AuthenticatorError::UnsupportedOption(
-                UnsupportedOption::HmacSecret,
-            )));
-            return false;
-        }
-    } else {
+    if dev.get_protocol() == FidoProtocol::CTAP1 {
         // Check that the request can be processed by a CTAP1 device.
         // See CTAP 2.1 Section 10.3. Some additional checks are performed in
         // GetAssertion::RequestCtap1
@@ -540,11 +561,11 @@ pub fn sign<Dev: FidoDevice>(
             user_verification: None,
         },
         args.extensions,
-        args.pin,
         args.alternate_rp_id,
     );
 
     let mut skip_uv = false;
+    let mut pin = args.pin;
     while alive() {
         let pin_uv_auth_result = match determine_puap_if_needed(
             &mut get_assertion,
@@ -555,6 +576,7 @@ pub fn sign<Dev: FidoDevice>(
             &status,
             &callback,
             alive,
+            &mut pin,
         ) {
             Ok(r) => r,
             Err(()) => {
@@ -636,61 +658,23 @@ pub fn sign<Dev: FidoDevice>(
             }
         }
         match resp {
-            Ok(assertions) => {
-                callback.call(Ok(SignResult::CTAP2(assertions)));
+            Ok(result) => {
+                callback.call(Ok(result));
                 return true;
             }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::ChannelBusy, _))) => {
-                // Channel busy. Client SHOULD retry the request after a short delay.
-                thread::sleep(Duration::from_millis(100));
-                continue;
-            }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::OperationDenied, _)))
-                if matches!(pin_uv_auth_result, PinUvAuthResult::UsingInternalUv) =>
-            {
-                // This should only happen for CTAP2.0 tokens that use internal UV and failed
-                // (e.g. wrong fingerprint used), while doing GetAssertion
-                // Yes, this is a different error code than for MakeCredential.
-                send_status(
-                    &status,
-                    StatusUpdate::PinUvError(StatusPinUv::InvalidUv(None)),
-                );
-                continue;
-            }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::PinRequired, _)))
-                if matches!(pin_uv_auth_result, PinUvAuthResult::UsingInternalUv) =>
-            {
-                // This should only happen for CTAP2.0 tokens that use internal UV and failed
-                // repeatedly, so that we have to fall back to PINs
-                skip_uv = true;
-                continue;
-            }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::UvBlocked, _)))
-                if matches!(
-                    pin_uv_auth_result,
-                    PinUvAuthResult::SuccessGetPinUvAuthTokenUsingUvWithPermissions(..)
-                ) =>
-            {
-                // This should only happen for CTAP2.1 tokens that use internal UV and failed
-                // repeatedly, so that we have to fall back to PINs
-                skip_uv = true;
-                continue;
-            }
             Err(e) => {
-                warn!("error happened: {e}");
-                callback.call(Err(AuthenticatorError::HIDError(e)));
-                return false;
+                handle_errors!(e, status, callback, pin_uv_auth_result, skip_uv);
             }
         }
     }
     false
 }
 
-pub(crate) fn reset_helper(
+pub(crate) fn reset_helper<T: From<ResetResult>>(
     dev: &mut Device,
     selector: Sender<DeviceSelectorEvent>,
     status: Sender<crate::StatusUpdate>,
-    callback: StateCallback<crate::Result<crate::ResetResult>>,
+    callback: StateCallback<crate::Result<T>>,
     keep_alive: &dyn Fn() -> bool,
 ) {
     let reset = Reset {};
@@ -710,7 +694,7 @@ pub(crate) fn reset_helper(
     }
 
     match resp {
-        Ok(()) => callback.call(Ok(())),
+        Ok(()) => callback.call(Ok(T::from(()))),
         Err(HIDError::DeviceNotSupported) | Err(HIDError::UnsupportedCommand) => {}
         Err(HIDError::Command(CommandError::StatusCode(StatusCode::ChannelBusy, _))) => {}
         Err(e) => {
@@ -720,12 +704,12 @@ pub(crate) fn reset_helper(
     }
 }
 
-pub(crate) fn set_or_change_pin_helper(
+pub(crate) fn set_or_change_pin_helper<T: From<()>>(
     dev: &mut Device,
     mut current_pin: Option<Pin>,
     new_pin: Pin,
     status: Sender<crate::StatusUpdate>,
-    callback: StateCallback<crate::Result<crate::ResetResult>>,
+    callback: StateCallback<crate::Result<T>>,
     alive: &dyn Fn() -> bool,
 ) {
     let mut shared_secret = match dev.establish_shared_secret(alive) {
@@ -809,5 +793,642 @@ pub(crate) fn set_or_change_pin_helper(
     };
     // the callback is expecting `Result<(), AuthenticatorError>`, but `ChangeExistingPin`
     // and `SetNewPin` return the default `ClientPinResponse` on success. Just discard it.
-    callback.call(res.map(|_| ()));
+    callback.call(res.map(|_| T::from(())));
+}
+
+pub(crate) fn bio_enrollment(
+    dev: &mut Device,
+    puat_result: Option<PinUvAuthResult>,
+    command: BioEnrollmentCmd,
+    status: Sender<crate::StatusUpdate>,
+    callback: StateCallback<crate::Result<crate::ManageResult>>,
+    alive: &dyn Fn() -> bool,
+) -> bool {
+    let authinfo = match dev.get_authenticator_info() {
+        Some(i) => i,
+        None => {
+            callback.call(Err(HIDError::DeviceNotInitialized.into()));
+            return false;
+        }
+    };
+
+    if authinfo.options.bio_enroll.is_none()
+        && authinfo.options.user_verification_mgmt_preview.is_none()
+    {
+        callback.call(Err(AuthenticatorError::HIDError(
+            HIDError::UnsupportedCommand,
+        )));
+        return false;
+    }
+
+    let use_legacy_preview = authinfo.options.bio_enroll.is_none();
+
+    // We are not allowed to request the BE-permission using UV, so we have to skip UV
+    let mut skip_uv = authinfo.options.uv_bio_enroll != Some(true);
+    // Currently not used, but if we want, we can just set the value here.
+    let timeout = None;
+
+    let mut bio_cmd = match &command {
+        BioEnrollmentCmd::StartNewEnrollment(_name) => BioEnrollment::new(
+            BioEnrollmentCommand::EnrollBegin(timeout),
+            use_legacy_preview,
+        ),
+        BioEnrollmentCmd::DeleteEnrollment(id) => BioEnrollment::new(
+            BioEnrollmentCommand::RemoveEnrollment(id.clone()),
+            use_legacy_preview,
+        ),
+        BioEnrollmentCmd::ChangeName(id, name) => BioEnrollment::new(
+            BioEnrollmentCommand::SetFriendlyName((id.clone(), name.clone())),
+            use_legacy_preview,
+        ),
+        BioEnrollmentCmd::GetEnrollments => BioEnrollment::new(
+            BioEnrollmentCommand::EnumerateEnrollments,
+            use_legacy_preview,
+        ),
+        BioEnrollmentCmd::GetFingerprintSensorInfo => BioEnrollment::new(
+            BioEnrollmentCommand::GetFingerprintSensorInfo,
+            use_legacy_preview,
+        ),
+    };
+
+    let mut skip_puap = false;
+    let mut pin_uv_auth_result = puat_result
+        .clone()
+        .unwrap_or(PinUvAuthResult::NoAuthRequired);
+    match puat_result {
+        Some(PinUvAuthResult::SuccessGetPinToken(t))
+        | Some(PinUvAuthResult::SuccessGetPinUvAuthTokenUsingUvWithPermissions(t))
+        | Some(PinUvAuthResult::SuccessGetPinUvAuthTokenUsingPinWithPermissions(t)) => {
+            skip_puap = true;
+            unwrap_result!(bio_cmd.set_pin_uv_auth_param(Some(t)), callback);
+        }
+        _ => {}
+    }
+    let mut pin = None;
+    while alive() {
+        if !skip_puap {
+            pin_uv_auth_result = match determine_puap_if_needed(
+                &mut bio_cmd,
+                dev,
+                skip_uv,
+                PinUvAuthTokenPermission::BioEnrollment,
+                UserVerificationRequirement::Preferred,
+                &status,
+                &callback,
+                alive,
+                &mut pin,
+            ) {
+                Ok(r) => r,
+                Err(()) => {
+                    return false;
+                }
+            };
+        }
+
+        debug!("------------------------------------------------------------------");
+        debug!("{bio_cmd:?} using {pin_uv_auth_result:?}");
+        debug!("------------------------------------------------------------------");
+
+        let resp = dev.send_cbor_cancellable(&bio_cmd, alive);
+        match resp {
+            Ok(result) => {
+                skip_puap = true;
+                match bio_cmd.subcommand {
+                    BioEnrollmentCommand::EnrollBegin(..)
+                    | BioEnrollmentCommand::EnrollCaptureNextSample(..) => {
+                        let template_id =
+                            if let BioEnrollmentCommand::EnrollCaptureNextSample((id, ..)) =
+                                bio_cmd.subcommand
+                            {
+                                id
+                            } else {
+                                unwrap_option!(result.template_id, callback)
+                            };
+                        let last_enroll_sample_status =
+                            unwrap_option!(result.last_enroll_sample_status, callback);
+                        let remaining_samples = unwrap_option!(result.remaining_samples, callback);
+
+                        send_status(
+                            &status,
+                            StatusUpdate::InteractiveManagement(
+                                InteractiveUpdate::BioEnrollmentUpdate((
+                                    BioEnrollmentResult::SampleStatus(
+                                        last_enroll_sample_status,
+                                        remaining_samples,
+                                    ),
+                                    Some(pin_uv_auth_result.clone()),
+                                )),
+                            ),
+                        );
+
+                        if remaining_samples == 0 {
+                            if let BioEnrollmentCmd::StartNewEnrollment(Some(ref name)) = command {
+                                bio_cmd.subcommand = BioEnrollmentCommand::SetFriendlyName((
+                                    template_id.to_vec(),
+                                    name.clone(),
+                                ));
+                                // We have to regenerate PUAP here. PUAT hasn't changed, but the content
+                                // of the command has changed, and that is part of the PUAP-calculation
+                                unwrap_result!(
+                                    bio_cmd.set_pin_uv_auth_param(
+                                        pin_uv_auth_result.get_pin_uv_auth_token()
+                                    ),
+                                    callback
+                                );
+                                continue;
+                            } else {
+                                let auth_info =
+                                    unwrap_option!(dev.refresh_authenticator_info(), callback);
+                                send_status(
+                                    &status,
+                                    StatusUpdate::InteractiveManagement(
+                                        InteractiveUpdate::BioEnrollmentUpdate((
+                                            BioEnrollmentResult::AddSuccess(auth_info.clone()),
+                                            Some(pin_uv_auth_result),
+                                        )),
+                                    ),
+                                );
+                                return true;
+                            }
+                        } else {
+                            bio_cmd.subcommand = BioEnrollmentCommand::EnrollCaptureNextSample((
+                                template_id,
+                                timeout,
+                            ));
+                            // We have to regenerate PUAP here. PUAT hasn't changed, but the content
+                            // of the command has changed, and that is part of the PUAP-calculation
+                            unwrap_result!(
+                                bio_cmd.set_pin_uv_auth_param(
+                                    pin_uv_auth_result.get_pin_uv_auth_token()
+                                ),
+                                callback
+                            );
+                            continue;
+                        }
+                    }
+                    BioEnrollmentCommand::EnumerateEnrollments => {
+                        let list = result.template_infos.iter().map(|x| x.into()).collect();
+                        send_status(
+                            &status,
+                            StatusUpdate::InteractiveManagement(
+                                InteractiveUpdate::BioEnrollmentUpdate((
+                                    BioEnrollmentResult::EnrollmentList(list),
+                                    Some(pin_uv_auth_result),
+                                )),
+                            ),
+                        );
+                        return true;
+                    }
+                    BioEnrollmentCommand::SetFriendlyName(_) => {
+                        send_status(
+                            &status,
+                            StatusUpdate::InteractiveManagement(
+                                InteractiveUpdate::BioEnrollmentUpdate((
+                                    BioEnrollmentResult::UpdateSuccess,
+                                    Some(pin_uv_auth_result),
+                                )),
+                            ),
+                        );
+                        return true;
+                    }
+                    BioEnrollmentCommand::RemoveEnrollment(_) => {
+                        let auth_info = unwrap_option!(dev.refresh_authenticator_info(), callback);
+                        send_status(
+                            &status,
+                            StatusUpdate::InteractiveManagement(
+                                InteractiveUpdate::BioEnrollmentUpdate((
+                                    BioEnrollmentResult::DeleteSucess(auth_info.clone()),
+                                    Some(pin_uv_auth_result),
+                                )),
+                            ),
+                        );
+                        return true;
+                    }
+                    BioEnrollmentCommand::CancelCurrentEnrollment => {
+                        callback.call(Ok(ManageResult::Success));
+                        return true;
+                    }
+                    BioEnrollmentCommand::GetFingerprintSensorInfo => {
+                        let fingerprint_kind = unwrap_option!(result.fingerprint_kind, callback);
+                        let max_capture_samples_required_for_enroll = unwrap_option!(
+                            result.max_capture_samples_required_for_enroll,
+                            callback
+                        );
+                        // FIDO_2_1_PRE-devices do not report this field. So we leave it optional.
+                        let max_template_friendly_name = result.max_template_friendly_name;
+                        send_status(
+                            &status,
+                            StatusUpdate::InteractiveManagement(
+                                InteractiveUpdate::BioEnrollmentUpdate((
+                                    BioEnrollmentResult::FingerprintSensorInfo(
+                                        FingerprintSensorInfo {
+                                            fingerprint_kind,
+                                            max_capture_samples_required_for_enroll,
+                                            max_template_friendly_name,
+                                        },
+                                    ),
+                                    Some(pin_uv_auth_result),
+                                )),
+                            ),
+                        );
+                        return true;
+                    }
+                };
+            }
+            Err(e) => {
+                handle_errors!(e, status, callback, pin_uv_auth_result, skip_uv, skip_puap);
+            }
+        }
+    }
+    false
+}
+
+pub(crate) fn credential_management(
+    dev: &mut Device,
+    puat_result: Option<PinUvAuthResult>,
+    command: CredManagementCmd,
+    status: Sender<crate::StatusUpdate>,
+    callback: StateCallback<crate::Result<crate::ManageResult>>,
+    alive: &dyn Fn() -> bool,
+) -> bool {
+    let mut skip_uv = false;
+    let authinfo = match dev.get_authenticator_info() {
+        Some(i) => i.clone(),
+        None => {
+            callback.call(Err(HIDError::DeviceNotInitialized.into()));
+            return false;
+        }
+    };
+
+    if authinfo.options.cred_mgmt != Some(true)
+        && authinfo.options.credential_mgmt_preview != Some(true)
+    {
+        callback.call(Err(AuthenticatorError::HIDError(
+            HIDError::UnsupportedCommand,
+        )));
+        return false;
+    }
+
+    let use_legacy_preview = authinfo.options.cred_mgmt != Some(true);
+
+    // FIDO_2_1_PRE-devices do not support UpdateUserInformation.
+    if use_legacy_preview
+        && !authinfo.versions.contains(&AuthenticatorVersion::FIDO_2_1)
+        && matches!(command, CredManagementCmd::UpdateUserInformation(..))
+    {
+        callback.call(Err(AuthenticatorError::HIDError(
+            HIDError::UnsupportedCommand,
+        )));
+        return false;
+    }
+
+    // If puap is provided, we can skip puap-determination (i.e. PIN entry)
+    let mut cred_management = match command {
+        CredManagementCmd::GetCredentials => {
+            CredentialManagement::new(CredManagementCommand::GetCredsMetadata, use_legacy_preview)
+        }
+        CredManagementCmd::DeleteCredential(cred_id) => CredentialManagement::new(
+            CredManagementCommand::DeleteCredential(cred_id),
+            use_legacy_preview,
+        ),
+        CredManagementCmd::UpdateUserInformation(cred_id, user) => CredentialManagement::new(
+            CredManagementCommand::UpdateUserInformation((cred_id, user)),
+            use_legacy_preview,
+        ),
+    };
+    let mut credential_result = CredentialList::new();
+    let mut remaining_rps = 0;
+    let mut remaining_cred_ids = 0;
+    let mut current_rp = 0;
+    let mut skip_puap = false;
+    let mut pin_uv_auth_result = puat_result
+        .clone()
+        .unwrap_or(PinUvAuthResult::NoAuthRequired);
+    match puat_result {
+        Some(PinUvAuthResult::SuccessGetPinToken(t))
+        | Some(PinUvAuthResult::SuccessGetPinUvAuthTokenUsingUvWithPermissions(t))
+        | Some(PinUvAuthResult::SuccessGetPinUvAuthTokenUsingPinWithPermissions(t)) => {
+            skip_puap = true;
+            unwrap_result!(cred_management.set_pin_uv_auth_param(Some(t)), callback);
+        }
+        _ => {}
+    }
+    let mut pin = None;
+    while alive() {
+        if !skip_puap {
+            pin_uv_auth_result = match determine_puap_if_needed(
+                &mut cred_management,
+                dev,
+                skip_uv,
+                PinUvAuthTokenPermission::CredentialManagement,
+                UserVerificationRequirement::Preferred,
+                &status,
+                &callback,
+                alive,
+                &mut pin,
+            ) {
+                Ok(r) => r,
+                Err(()) => {
+                    return false;
+                }
+            };
+        }
+
+        debug!("------------------------------------------------------------------");
+        debug!("{cred_management:?} using {pin_uv_auth_result:?}");
+        debug!("------------------------------------------------------------------");
+
+        let resp = dev.send_cbor_cancellable(&cred_management, alive);
+        match resp {
+            Ok(result) => {
+                skip_puap = true;
+                match cred_management.subcommand {
+                    CredManagementCommand::GetCredsMetadata => {
+                        let existing_resident_credentials_count =
+                            unwrap_option!(result.existing_resident_credentials_count, callback);
+                        let max_possible_remaining_resident_credentials_count = unwrap_option!(
+                            result.max_possible_remaining_resident_credentials_count,
+                            callback
+                        );
+                        credential_result.existing_resident_credentials_count =
+                            existing_resident_credentials_count;
+                        credential_result.max_possible_remaining_resident_credentials_count =
+                            max_possible_remaining_resident_credentials_count;
+                        if existing_resident_credentials_count > 0 {
+                            cred_management.subcommand = CredManagementCommand::EnumerateRPsBegin;
+                            // We have to regenerate PUAP here. PUAT hasn't changed, but the content
+                            // of the command has changed, and that is part of the PUAP-calculation
+                            unwrap_result!(
+                                cred_management.set_pin_uv_auth_param(
+                                    pin_uv_auth_result.get_pin_uv_auth_token()
+                                ),
+                                callback
+                            );
+                            continue;
+                        } else {
+                            // This token doesn't have any resident keys, but its not an error,
+                            // so we send an empty list.
+                            send_status(
+                                &status,
+                                StatusUpdate::InteractiveManagement(
+                                    InteractiveUpdate::CredentialManagementUpdate((
+                                        CredentialManagementResult::CredentialList(
+                                            credential_result,
+                                        ),
+                                        Some(pin_uv_auth_result),
+                                    )),
+                                ),
+                            );
+                            return true;
+                        }
+                    }
+                    CredManagementCommand::EnumerateRPsBegin
+                    | CredManagementCommand::EnumerateRPsGetNextRP => {
+                        if matches!(
+                            cred_management.subcommand,
+                            CredManagementCommand::EnumerateRPsBegin
+                        ) {
+                            let total_rps = unwrap_option!(result.total_rps, callback);
+                            if total_rps == 0 {
+                                // This token doesn't have any RPs, but its not an error,
+                                // so we return an Ok with an empty list.
+                                send_status(
+                                    &status,
+                                    StatusUpdate::InteractiveManagement(
+                                        InteractiveUpdate::CredentialManagementUpdate((
+                                            CredentialManagementResult::CredentialList(
+                                                credential_result,
+                                            ),
+                                            Some(pin_uv_auth_result),
+                                        )),
+                                    ),
+                                );
+                                return true;
+                            }
+                            remaining_rps = total_rps - 1;
+                        } else {
+                            remaining_rps -= 1;
+                        }
+
+                        let rp = unwrap_option!(result.rp, callback);
+                        let rp_id_hash = unwrap_option!(result.rp_id_hash, callback);
+                        let rp_res = CredentialRpListEntry {
+                            rp,
+                            rp_id_hash,
+                            credentials: vec![],
+                        };
+                        credential_result.credential_list.push(rp_res);
+                        if remaining_rps > 0 {
+                            cred_management.subcommand =
+                                CredManagementCommand::EnumerateRPsGetNextRP;
+                        } else {
+                            // We have queried all RPs, now start querying the corresponding credentials for each RP
+                            cred_management.subcommand =
+                                CredManagementCommand::EnumerateCredentialsBegin(
+                                    credential_result.credential_list[0].rp_id_hash.clone(),
+                                );
+                        }
+                        // We have to regenerate PUAP here. PUAT hasn't changed, but the content
+                        // of the command has changed, and that is part of the PUAP-calculation
+                        unwrap_result!(
+                            cred_management
+                                .set_pin_uv_auth_param(pin_uv_auth_result.get_pin_uv_auth_token()),
+                            callback
+                        );
+                        continue;
+                    }
+                    CredManagementCommand::EnumerateCredentialsBegin(..)
+                    | CredManagementCommand::EnumerateCredentialsGetNextCredential => {
+                        let user = unwrap_option!(result.user, callback);
+                        let credential_id = unwrap_option!(result.credential_id, callback);
+                        let public_key = unwrap_option!(result.public_key, callback);
+                        let cred_protect = unwrap_option!(result.cred_protect, callback);
+                        let large_blob_key = result.large_blob_key;
+
+                        if matches!(
+                            cred_management.subcommand,
+                            CredManagementCommand::EnumerateCredentialsBegin(..)
+                        ) {
+                            remaining_cred_ids =
+                                unwrap_option!(result.total_credentials, callback) - 1;
+                        } else {
+                            remaining_cred_ids -= 1;
+                        }
+                        // We might have to change the global variable, but need the unmodified below
+                        let current_rp_backup = current_rp;
+                        let mut we_are_done = false;
+                        if remaining_cred_ids > 0 {
+                            cred_management.subcommand =
+                                CredManagementCommand::EnumerateCredentialsGetNextCredential;
+                        } else {
+                            current_rp += 1;
+                            // We have all credentials from this RP. Starting with the next RP.
+                            if current_rp < credential_result.credential_list.len() {
+                                cred_management.subcommand =
+                                    CredManagementCommand::EnumerateCredentialsBegin(
+                                        credential_result.credential_list[current_rp]
+                                            .rp_id_hash
+                                            .clone(),
+                                    );
+                                // We have to regenerate PUAP here. PUAT hasn't changed, but the content
+                                // of the command has changed, and that is part of the PUAP-calculation
+                                unwrap_result!(
+                                    cred_management.set_pin_uv_auth_param(
+                                        pin_uv_auth_result.get_pin_uv_auth_token()
+                                    ),
+                                    callback
+                                );
+                            } else {
+                                // Finally done iterating over all RPs and their Credentials
+                                we_are_done = true;
+                            }
+                        }
+                        let key = CredentialListEntry {
+                            user,
+                            credential_id,
+                            public_key,
+                            cred_protect,
+                            large_blob_key,
+                        };
+                        credential_result.credential_list[current_rp_backup]
+                            .credentials
+                            .push(key);
+                        if we_are_done {
+                            send_status(
+                                &status,
+                                StatusUpdate::InteractiveManagement(
+                                    InteractiveUpdate::CredentialManagementUpdate((
+                                        CredentialManagementResult::CredentialList(
+                                            credential_result,
+                                        ),
+                                        Some(pin_uv_auth_result),
+                                    )),
+                                ),
+                            );
+                            return true;
+                        } else {
+                            continue;
+                        }
+                    }
+                    CredManagementCommand::DeleteCredential(_) => {
+                        send_status(
+                            &status,
+                            StatusUpdate::InteractiveManagement(
+                                InteractiveUpdate::CredentialManagementUpdate((
+                                    CredentialManagementResult::DeleteSucess,
+                                    Some(pin_uv_auth_result),
+                                )),
+                            ),
+                        );
+                        return true;
+                    }
+                    CredManagementCommand::UpdateUserInformation(_) => {
+                        send_status(
+                            &status,
+                            StatusUpdate::InteractiveManagement(
+                                InteractiveUpdate::CredentialManagementUpdate((
+                                    CredentialManagementResult::UpdateSuccess,
+                                    Some(pin_uv_auth_result),
+                                )),
+                            ),
+                        );
+                        return true;
+                    }
+                };
+            }
+            Err(e) => {
+                handle_errors!(e, status, callback, pin_uv_auth_result, skip_uv, skip_puap);
+            }
+        }
+    }
+    false
+}
+
+pub(crate) fn configure_authenticator(
+    dev: &mut Device,
+    puat_result: Option<PinUvAuthResult>,
+    cfg_subcommand: AuthConfigCommand,
+    status: Sender<crate::StatusUpdate>,
+    callback: StateCallback<crate::Result<crate::ManageResult>>,
+    alive: &dyn Fn() -> bool,
+) -> bool {
+    let mut authcfg = AuthenticatorConfig::new(cfg_subcommand);
+    let mut skip_uv = false;
+    let authinfo = match dev.get_authenticator_info() {
+        Some(i) => i.clone(),
+        None => {
+            callback.call(Err(HIDError::DeviceNotInitialized.into()));
+            return false;
+        }
+    };
+
+    if authinfo.options.authnr_cfg != Some(true) {
+        callback.call(Err(AuthenticatorError::HIDError(
+            HIDError::UnsupportedCommand,
+        )));
+        return false;
+    }
+
+    let mut skip_puap = false;
+    let mut pin_uv_auth_result = puat_result
+        .clone()
+        .unwrap_or(PinUvAuthResult::NoAuthRequired);
+    match puat_result {
+        Some(PinUvAuthResult::SuccessGetPinToken(t))
+        | Some(PinUvAuthResult::SuccessGetPinUvAuthTokenUsingUvWithPermissions(t))
+        | Some(PinUvAuthResult::SuccessGetPinUvAuthTokenUsingPinWithPermissions(t)) => {
+            skip_puap = true;
+            unwrap_result!(authcfg.set_pin_uv_auth_param(Some(t)), callback);
+        }
+        _ => {}
+    }
+    let mut pin = None;
+    while alive() {
+        // We can use the AuthenticatorConfiguration-command only in two cases:
+        // 1. The device also supports the uv_acfg-permission (otherwise we can't establish a PUAP)
+        // 2. The device is NOT protected by PIN/UV (yet). This allows organizations to configure
+        //    the token, before handing them out.
+        // If authinfo.options.uv_acfg is not supported, this will return UnauthorizedPermission
+        if !skip_puap {
+            pin_uv_auth_result = match determine_puap_if_needed(
+                &mut authcfg,
+                dev,
+                skip_uv,
+                PinUvAuthTokenPermission::AuthenticatorConfiguration,
+                UserVerificationRequirement::Preferred,
+                &status,
+                &callback,
+                alive,
+                &mut pin,
+            ) {
+                Ok(r) => r,
+                Err(()) => {
+                    return false;
+                }
+            };
+        }
+
+        debug!("------------------------------------------------------------------");
+        debug!("{authcfg:?} using {pin_uv_auth_result:?}");
+        debug!("------------------------------------------------------------------");
+
+        let resp = dev.send_cbor_cancellable(&authcfg, alive);
+        match resp {
+            Ok(()) => {
+                let auth_info = unwrap_option!(dev.refresh_authenticator_info(), callback);
+                send_status(
+                    &status,
+                    StatusUpdate::InteractiveManagement(InteractiveUpdate::AuthConfigUpdate((
+                        AuthConfigResult::Success(auth_info.clone()),
+                        Some(pin_uv_auth_result),
+                    ))),
+                );
+                return true;
+            }
+            Err(e) => {
+                handle_errors!(e, status, callback, pin_uv_auth_result, skip_uv);
+            }
+        }
+    }
+    false
 }

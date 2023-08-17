@@ -1,5 +1,6 @@
 use crate::crypto::COSEAlgorithm;
 use crate::{errors::AuthenticatorError, AuthenticatorTransports, KeyHandle};
+use base64::Engine;
 use serde::de::MapAccess;
 use serde::{
     de::{Error as SerdeError, Visitor},
@@ -16,7 +17,7 @@ pub struct RpIdHash(pub [u8; 32]);
 
 impl fmt::Debug for RpIdHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let value = base64::encode_config(self.0, base64::URL_SAFE_NO_PAD);
+        let value = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(self.0);
         write!(f, "RpIdHash({value})")
     }
 }
@@ -39,8 +40,7 @@ impl RpIdHash {
     }
 }
 
-#[derive(Debug, Serialize, Clone, Default)]
-#[cfg_attr(test, derive(Deserialize))]
+#[derive(Debug, Serialize, Clone, Default, Deserialize, PartialEq, Eq)]
 pub struct RelyingParty {
     // TODO(baloo): spec is wrong !!!!111
     //              https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#commands
@@ -209,9 +209,11 @@ impl From<AuthenticatorTransports> for Vec<Transport> {
     }
 }
 
+pub type PublicKeyCredentialId = Vec<u8>;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PublicKeyCredentialDescriptor {
-    pub id: Vec<u8>,
+    pub id: PublicKeyCredentialId,
     pub transports: Vec<Transport>,
 }
 

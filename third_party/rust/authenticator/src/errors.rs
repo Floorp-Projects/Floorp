@@ -14,7 +14,6 @@ use std::sync::mpsc;
 #[derive(Debug)]
 pub enum UnsupportedOption {
     EmptyAllowList,
-    HmacSecret,
     MaxPinLength,
     PubCredParams,
     ResidentKey,

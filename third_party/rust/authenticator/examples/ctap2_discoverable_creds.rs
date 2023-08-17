@@ -10,7 +10,7 @@ use authenticator::{
         ResidentKeyRequirement, Transport, User, UserVerificationRequirement,
     },
     statecallback::StateCallback,
-    Pin, RegisterResult, SignResult, StatusPinUv, StatusUpdate,
+    Pin, StatusPinUv, StatusUpdate,
 };
 use getopts::Options;
 use sha2::{Digest, Sha256};
@@ -154,8 +154,7 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
             .recv()
             .expect("Problem receiving, unable to continue");
         match register_result {
-            Ok(RegisterResult::CTAP1(_, _)) => panic!("Requested CTAP2, but got CTAP1 results!"),
-            Ok(RegisterResult::CTAP2(a)) => {
+            Ok(a) => {
                 println!("Ok!");
                 attestation_object = a;
                 break;
@@ -320,8 +319,7 @@ fn main() {
             .expect("Problem receiving, unable to continue");
 
         match sign_result {
-            Ok(SignResult::CTAP1(..)) => panic!("Requested CTAP2, but got CTAP1 sign results!"),
-            Ok(SignResult::CTAP2(assertion_object)) => {
+            Ok(assertion_object) => {
                 println!("Assertion Object: {assertion_object:?}");
                 println!("-----------------------------------------------------------------");
                 println!("Found credentials:");
