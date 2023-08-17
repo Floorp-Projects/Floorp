@@ -168,6 +168,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC_OPTION(av_rdft_init, AV_FUNC_AVCODEC_ALL)
   AV_FUNC_OPTION(av_rdft_calc, AV_FUNC_AVCODEC_ALL)
   AV_FUNC_OPTION(av_rdft_end, AV_FUNC_AVCODEC_ALL)
+  AV_FUNC(avcodec_descriptor_get, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(av_log_set_level, AV_FUNC_AVUTIL_ALL)
   AV_FUNC(av_malloc, AV_FUNC_AVUTIL_ALL)
   AV_FUNC(av_freep, AV_FUNC_AVUTIL_ALL)
@@ -198,10 +199,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                      AV_FUNC_AVUTIL_58)
   AV_FUNC(av_strerror,
           AV_FUNC_AVUTIL_58 | AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60)
-  AV_FUNC(avcodec_descriptor_get, AV_FUNC_53 | AV_FUNC_55 | AV_FUNC_56 |
-                                      AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 |
-                                      AV_FUNC_60)
-  AV_FUNC(av_get_sample_fmt_name, AV_FUNC_AVUTIL_ALL);
+  AV_FUNC(av_get_sample_fmt_name, AV_FUNC_AVUTIL_ALL)
   AV_FUNC(av_dict_set, AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58 |
                            AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60)
   AV_FUNC(av_dict_free, AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58 |
