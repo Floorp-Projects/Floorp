@@ -801,8 +801,10 @@ static inline auto FindUnicodeExtensionType(JSLinearString* unicodeExtension,
                                             UnicodeKey key) {
   JS::AutoCheckCannotGC nogc;
   return unicodeExtension->hasLatin1Chars()
-             ? FindUnicodeExtensionType(unicodeExtension->latin1Chars(nogc),
-                                        unicodeExtension->length(), key)
+             ? FindUnicodeExtensionType(
+                   reinterpret_cast<const char*>(
+                       unicodeExtension->latin1Chars(nogc)),
+                   unicodeExtension->length(), key)
              : FindUnicodeExtensionType(unicodeExtension->twoByteChars(nogc),
                                         unicodeExtension->length(), key);
 }
@@ -919,7 +921,9 @@ static BaseNamePartsResult BaseNameParts(const CharT* baseName, size_t length) {
 static inline auto BaseNameParts(JSLinearString* baseName) {
   JS::AutoCheckCannotGC nogc;
   return baseName->hasLatin1Chars()
-             ? BaseNameParts(baseName->latin1Chars(nogc), baseName->length())
+             ? BaseNameParts(
+                   reinterpret_cast<const char*>(baseName->latin1Chars(nogc)),
+                   baseName->length())
              : BaseNameParts(baseName->twoByteChars(nogc), baseName->length());
 }
 
