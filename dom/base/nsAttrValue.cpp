@@ -277,23 +277,13 @@ void nsAttrValue::SetTo(const nsAttrValue& aOther) {
       cont->mValue.mColor = otherCont->mValue.mColor;
       break;
     }
+    case eAtomArray:
     case eShadowParts:
     case eCSSDeclaration: {
       MOZ_CRASH("These should be refcounted!");
     }
     case eURL: {
       NS_ADDREF(cont->mValue.mURL = otherCont->mValue.mURL);
-      break;
-    }
-    case eAtomArray: {
-      if (!EnsureEmptyAtomArray()) {
-        Reset();
-        return;
-      }
-      // XXX(Bug 1631371) Check if this should use a fallible operation as it
-      // pretended earlier.
-      *GetAtomArrayValue() = otherCont->mValue.mAtomArray->Clone();
-
       break;
     }
     case eDoubleValue: {
@@ -498,10 +488,30 @@ void nsAttrValue::RemoveDuplicatesFromAtomArray() {
     return;
   }
 
-  // We found duplicates and need to swap out our MiscContainer's mAtomArray.
-  MiscContainer* cont = GetMiscContainer();
-  delete cont->mValue.mAtomArray;
+  // We found duplicates. Wrap the new atom array into a fresh MiscContainer,
+  // and copy over the existing container's string or atom.
+
+  MiscContainer* oldCont = GetMiscContainer();
+  MOZ_ASSERT(oldCont->IsRefCounted());
+
+  uintptr_t stringBits = 0;
+  bool isString = false;
+  if (void* otherPtr = oldCont->GetStringOrAtomPtr(isString)) {
+    stringBits = oldCont->mStringBits;
+    if (isString) {
+      static_cast<nsStringBuffer*>(otherPtr)->AddRef();
+    } else {
+      static_cast<nsAtom*>(otherPtr)->AddRef();
+    }
+  }
+
+  MiscContainer* cont = EnsureEmptyMiscContainer();
+  MOZ_ASSERT(cont->mValue.mRefCount == 0);
   cont->mValue.mAtomArray = deduplicatedAtomArray.release();
+  cont->mType = eAtomArray;
+  NS_ADDREF(cont);
+  MOZ_ASSERT(cont->mValue.mRefCount == 1);
+  cont->SetStringBitsMainThread(stringBits);
 }
 
 void nsAttrValue::ToString(nsAString& aResult) const {
@@ -1180,12 +1190,12 @@ bool nsAttrValue::Contains(nsAtom* aValue,
     }
     default: {
       if (Type() == eAtomArray) {
-        AttrAtomArray* array = GetAtomArrayValue();
+        const AttrAtomArray* array = GetAtomArrayValue();
         if (aCaseSensitive == eCaseMatters) {
           return array->mArray.Contains(aValue);
         }
 
-        for (RefPtr<nsAtom>& cur : array->mArray) {
+        for (const RefPtr<nsAtom>& cur : array->mArray) {
           // For performance reasons, don't do a full on unicode case
           // insensitive string comparison. This is only used for quirks mode
           // anyway.
@@ -1214,7 +1224,7 @@ bool nsAttrValue::Contains(const nsAString& aValue) const {
     }
     default: {
       if (Type() == eAtomArray) {
-        AttrAtomArray* array = GetAtomArrayValue();
+        const AttrAtomArray* array = GetAtomArrayValue();
         return array->mArray.Contains(aValue, AtomArrayStringComparator());
       }
     }
@@ -1278,11 +1288,7 @@ void nsAttrValue::ParseAtomArray(const nsAString& aValue) {
     return;
   }
 
-  if (!EnsureEmptyAtomArray()) {
-    return;
-  }
-
-  AttrAtomArray* array = GetAtomArrayValue();
+  AttrAtomArray* array = new AttrAtomArray;
 
   // XXX(Bug 1631371) Check if this should use a fallible operation as it
   // pretended earlier.
@@ -1308,6 +1314,13 @@ void nsAttrValue::ParseAtomArray(const nsAString& aValue) {
       ++iter;
     }
   }
+
+  MiscContainer* cont = EnsureEmptyMiscContainer();
+  MOZ_ASSERT(cont->mValue.mRefCount == 0);
+  cont->mValue.mAtomArray = array;
+  cont->mType = eAtomArray;
+  NS_ADDREF(cont);
+  MOZ_ASSERT(cont->mValue.mRefCount == 1);
 
   SetMiscAtomOrString(&aValue);
 }
@@ -1927,6 +1940,8 @@ MiscContainer* nsAttrValue::ClearMiscContainer() {
           break;
         }
         case eAtomArray: {
+          MOZ_ASSERT(cont->mValue.mRefCount == 1);
+          cont->Release();
           delete cont->mValue.mAtomArray;
           break;
         }
@@ -1955,20 +1970,6 @@ MiscContainer* nsAttrValue::EnsureEmptyMiscContainer() {
   }
 
   return cont;
-}
-
-bool nsAttrValue::EnsureEmptyAtomArray() {
-  if (Type() == eAtomArray) {
-    ResetMiscAtomOrString();
-    GetAtomArrayValue()->Clear();
-    return true;
-  }
-
-  MiscContainer* cont = EnsureEmptyMiscContainer();
-  cont->mValue.mAtomArray = new AttrAtomArray;
-  cont->mType = eAtomArray;
-
-  return true;
 }
 
 already_AddRefed<nsStringBuffer> nsAttrValue::GetStringBuffer(

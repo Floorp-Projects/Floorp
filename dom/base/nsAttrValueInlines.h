@@ -44,7 +44,7 @@ struct MiscContainer final {
         uint32_t mEnumValue;
         mozilla::DeclarationBlock* mCSSDeclaration;
         nsIURI* mURL;
-        mozilla::AttrAtomArray* mAtomArray;
+        const mozilla::AttrAtomArray* mAtomArray;
         const mozilla::ShadowParts* mShadowParts;
         const mozilla::SVGAnimatedIntegerPair* mSVGAnimatedIntegerPair;
         const mozilla::SVGAnimatedLength* mSVGLength;
@@ -120,7 +120,8 @@ struct MiscContainer final {
     // Nothing stops us from refcounting (and sharing) other types of
     // MiscContainer (except eDoubleValue types) but there's no compelling
     // reason to.
-    return mType == nsAttrValue::eCSSDeclaration ||
+    return mType == nsAttrValue::eAtomArray ||
+           mType == nsAttrValue::eCSSDeclaration ||
            mType == nsAttrValue::eShadowParts;
   }
 
@@ -166,7 +167,7 @@ inline double nsAttrValue::GetPercentValue() const {
   return GetMiscContainer()->mDoubleValue / 100.0f;
 }
 
-inline mozilla::AttrAtomArray* nsAttrValue::GetAtomArrayValue() const {
+inline const mozilla::AttrAtomArray* nsAttrValue::GetAtomArrayValue() const {
   MOZ_ASSERT(Type() == eAtomArray, "wrong type");
   return GetMiscContainer()->mValue.mAtomArray;
 }
