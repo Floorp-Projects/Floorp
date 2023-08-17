@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import os
 from glob import glob
@@ -19,11 +19,11 @@ TEMPLATES = {
     "mpl2_license": """
     This Source Code Form is subject to the terms of the Mozilla Public
     License, v. 2.0. If a copy of the MPL was not distributed with this
-    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
     """.strip().splitlines(),
     "public_domain_license": """
     Any copyright is dedicated to the public domain.
-    http://creativecommons.org/publicdomain/zero/1.0/
+    https://creativecommons.org/publicdomain/zero/1.0/
     """.strip().splitlines(),
 }
 license_list = os.path.join(here, "valid-licenses.txt")
