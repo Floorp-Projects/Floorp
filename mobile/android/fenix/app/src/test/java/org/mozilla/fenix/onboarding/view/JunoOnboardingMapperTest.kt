@@ -45,6 +45,8 @@ class JunoOnboardingMapperTest {
             onSignInSkipClick = {},
             onNotificationPermissionButtonClick = {},
             onNotificationPermissionSkipClick = {},
+            onAddFirefoxWidgetClick = {},
+            onAddFirefoxWidgetSkipClick = {},
         )
 
         assertEquals(expected, actual)
@@ -78,6 +80,8 @@ class JunoOnboardingMapperTest {
             onSignInSkipClick = unitLambda,
             onNotificationPermissionButtonClick = {},
             onNotificationPermissionSkipClick = {},
+            onAddFirefoxWidgetClick = {},
+            onAddFirefoxWidgetSkipClick = {},
         )
 
         assertEquals(expected, actual)
@@ -111,6 +115,48 @@ class JunoOnboardingMapperTest {
             onSignInSkipClick = {},
             onNotificationPermissionButtonClick = unitLambda,
             onNotificationPermissionSkipClick = unitLambda,
+            onAddFirefoxWidgetClick = {},
+            onAddFirefoxWidgetSkipClick = {},
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `GIVEN an add search widget page WHEN mapToOnboardingPageState is called THEN creates the expected OnboardingPageState`() {
+        val expected = OnboardingPageState(
+            imageRes = R.drawable.ic_onboarding_search_widget,
+            title = "add search widget title",
+            description = "add search widget body with link text",
+            linkTextState = LinkTextState(
+                text = "link text",
+                url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+                onClick = stringLambda,
+            ),
+            primaryButton = Action("add search widget primary button text", unitLambda),
+            secondaryButton = Action("add search widget secondary button text", unitLambda),
+        )
+
+        val onboardingPageUiData = OnboardingPageUiData(
+            type = OnboardingPageUiData.Type.ADD_SEARCH_WIDGET,
+            imageRes = R.drawable.ic_onboarding_search_widget,
+            title = "add search widget title",
+            description = "add search widget body with link text",
+            linkText = "link text",
+            primaryButtonLabel = "add search widget primary button text",
+            secondaryButtonLabel = "add search widget secondary button text",
+        )
+        val actual = mapToOnboardingPageState(
+            onboardingPageUiData = onboardingPageUiData,
+            onMakeFirefoxDefaultClick = {},
+            onMakeFirefoxDefaultSkipClick = {},
+            onPrivacyPolicyClick = stringLambda,
+            onSignInButtonClick = {},
+            onSignInSkipClick = {},
+            onNotificationPermissionButtonClick = {},
+            onNotificationPermissionSkipClick = {},
+            onAddFirefoxWidgetClick = unitLambda,
+            onAddFirefoxWidgetSkipClick = unitLambda,
         )
 
         assertEquals(expected, actual)

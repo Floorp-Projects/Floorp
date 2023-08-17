@@ -19,6 +19,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
@@ -30,12 +32,15 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.onboarding.JunoOnboardingTelemetryRecorder
+import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -50,11 +55,13 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onNotificationPermissionButtonClick Invoked when positive button on notification page is
  * clicked.
  * @param onSkipNotificationClick Invoked when negative button on notification page is clicked.
+ * @param onAddFirefoxWidgetClick Invoked when positive button on add search widget page is clicked.
+ * @param onSkipFirefoxWidgetClick Invoked when negative button on add search widget page is clicked.
  * @param onFinish Invoked when the onboarding is completed.
  * @param onImpression Invoked when a page in the pager is displayed.
  */
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 fun JunoOnboardingScreen(
     pagesToDisplay: List<OnboardingPageUiData>,
     onMakeFirefoxDefaultClick: () -> Unit,
@@ -64,6 +71,8 @@ fun JunoOnboardingScreen(
     onSkipSignInClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
     onSkipNotificationClick: () -> Unit,
+    onAddFirefoxWidgetClick: () -> Unit,
+    onSkipFirefoxWidgetClick: () -> Unit,
     onFinish: (pageType: OnboardingPageUiData) -> Unit,
     onImpression: (pageType: OnboardingPageUiData) -> Unit,
 ) {
@@ -71,6 +80,9 @@ fun JunoOnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { pagesToDisplay.size })
     val isSignedIn: State<Boolean?> = components.backgroundServices.syncStore
         .observeAsComposableState { it.account != null }
+    val telemetryRecorder by lazy { JunoOnboardingTelemetryRecorder() }
+    val widgetPinnedFlow: StateFlow<Boolean> = WidgetPinnedState.isPinned
+    val isWidgetPinnedState by widgetPinnedFlow.collectAsState()
 
     BackHandler(enabled = pagerState.currentPage > 0) {
         coroutineScope.launch {
@@ -97,6 +109,16 @@ fun JunoOnboardingScreen(
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
             onImpression(pagesToDisplay[page])
+        }
+    }
+
+    LaunchedEffect(isWidgetPinnedState) {
+        if (isWidgetPinnedState) {
+            scrollToNextPageOrDismiss()
+            telemetryRecorder.onAddSearchWidgetClick(
+                pagesToDisplay.telemetrySequenceId(),
+                pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.ADD_SEARCH_WIDGET),
+            )
         }
     }
 
@@ -130,6 +152,17 @@ fun JunoOnboardingScreen(
             scrollToNextPageOrDismiss()
             onSkipNotificationClick()
         },
+        onAddFirefoxWidgetClick = {
+            if (isWidgetPinnedState) {
+                scrollToNextPageOrDismiss()
+            } else {
+                onAddFirefoxWidgetClick()
+            }
+        },
+        onSkipFirefoxWidgetClick = {
+            scrollToNextPageOrDismiss()
+            onSkipFirefoxWidgetClick()
+        },
     )
 }
 
@@ -145,6 +178,8 @@ private fun JunoOnboardingContent(
     onSignInSkipClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
     onNotificationPermissionSkipClick: () -> Unit,
+    onAddFirefoxWidgetClick: () -> Unit,
+    onSkipFirefoxWidgetClick: () -> Unit,
 ) {
     val nestedScrollConnection = remember { DisableForwardSwipeNestedScrollConnection(pagerState) }
 
@@ -171,6 +206,8 @@ private fun JunoOnboardingContent(
                 onSignInSkipClick = onSignInSkipClick,
                 onNotificationPermissionButtonClick = onNotificationPermissionButtonClick,
                 onNotificationPermissionSkipClick = onNotificationPermissionSkipClick,
+                onAddFirefoxWidgetClick = onAddFirefoxWidgetClick,
+                onAddFirefoxWidgetSkipClick = onSkipFirefoxWidgetClick,
             )
             OnboardingPage(pageState = onboardingPageState)
         }
@@ -225,6 +262,8 @@ private fun JunoOnboardingScreenPreview() {
             onSignInSkipClick = {},
             onNotificationPermissionButtonClick = {},
             onNotificationPermissionSkipClick = {},
+            onAddFirefoxWidgetClick = {},
+            onSkipFirefoxWidgetClick = {},
         )
     }
 }

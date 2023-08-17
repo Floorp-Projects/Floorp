@@ -23,6 +23,15 @@ features:
               primary-button-label: juno_onboarding_default_browser_positive_button
               secondary-button-label: juno_onboarding_default_browser_negative_button
 
+            add-search-widget:
+              card-type: add-search-widget
+              title: juno_onboarding_add_search_widget_title
+              body: juno_onboarding_add_search_widget_description
+              image-res: ic_onboarding_search_widget
+              ordering: 15
+              primary-button-label: juno_onboarding_add_search_widget_positive_button
+              secondary-button-label: juno_onboarding_add_search_widget_negative_button
+
             sync-sign-in:
               card-type: sync-sign-in
               title: juno_onboarding_sign_in_title
@@ -108,3 +117,5 @@ enums:
         description: Allows user to sync with a Firefox account.
       notification-permission:
         description: Allows user to enable notification permission.
+      add-search-widget:
+        description: Allows user to add search widget to homescreen.

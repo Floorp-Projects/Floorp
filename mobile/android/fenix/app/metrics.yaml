@@ -1318,6 +1318,105 @@ onboarding:
     metadata:
       tags:
         - Onboarding
+  add_search_widget_card:
+    type: event
+    description: |
+      User viewed juno onboarding add search widget card.
+    extra_keys:
+      element_type:
+        type: string
+        description: |
+          Type of element that was viewed.
+      action:
+        type: string
+        description: |
+          Type of action taken by the user.
+      sequence_position:
+        type: string
+        description: |
+          Position of the onboarding card in the onboarding flow.
+      sequence_id:
+        type: string
+        description: |
+          Identifier for the sequence.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848960
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3310
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 126
+    metadata:
+      tags:
+        - Onboarding
+  add_search_widget:
+    type: event
+    description: |
+      User tapped on Add Firefox Widget in juno onboarding.
+    extra_keys:
+      element_type:
+        type: string
+        description: |
+          Type of element that was viewed.
+      action:
+        type: string
+        description: |
+          Type of action taken by the user.
+      sequence_position:
+        type: string
+        description: |
+          Position of the onboarding card in the onboarding flow.
+      sequence_id:
+        type: string
+        description: |
+          Identifier for the sequence.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848960
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3310
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 126
+    metadata:
+      tags:
+        - Onboarding
+  skip_add_search_widget:
+    type: event
+    description: |
+      User tapped on skip add search widget button in juno onboarding.
+    extra_keys:
+      element_type:
+        type: string
+        description: |
+          Type of element that was viewed.
+      action:
+        type: string
+        description: |
+          Type of action taken by the user.
+      sequence_position:
+        type: string
+        description: |
+          Position of the onboarding card in the onboarding flow.
+      sequence_id:
+        type: string
+        description: |
+          Identifier for the sequence.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848960
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/3310
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 126
+    metadata:
+      tags:
+        - Onboarding
   privacy_policy:
     type: event
     description: |
