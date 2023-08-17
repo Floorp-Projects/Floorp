@@ -32,6 +32,7 @@ export class ShoppingContainer extends MozLitElement {
     recommendationData: { type: Object },
     isOffline: { type: Boolean },
     analysisEvent: { type: Object },
+    userReportedAvailable: { type: Boolean },
   };
 
   static get queries() {
@@ -56,6 +57,7 @@ export class ShoppingContainer extends MozLitElement {
     window.document.addEventListener("Update", this);
     window.document.addEventListener("NewAnalysisRequested", this);
     window.document.addEventListener("ReAnalysisRequested", this);
+    window.document.addEventListener("ReportedProductAvailable", this);
 
     window.dispatchEvent(
       new CustomEvent("ContentReady", {
@@ -101,6 +103,9 @@ export class ShoppingContainer extends MozLitElement {
           })
         );
         break;
+      case "ReportedProductAvailable":
+        this.userReportedAvailable = true;
+        break;
     }
   }
 
@@ -145,9 +150,13 @@ export class ShoppingContainer extends MozLitElement {
     }
 
     if (this.data.deleted_product) {
-      return html`<shopping-message-bar
-        type="product-not-available"
-      ></shopping-message-bar>`;
+      return this.userReportedAvailable
+        ? html`<shopping-message-bar
+            type="thanks-for-reporting"
+          ></shopping-message-bar>`
+        : html`<shopping-message-bar
+            type="product-not-available"
+          ></shopping-message-bar>`;
     }
 
     if (this.data.needs_analysis) {

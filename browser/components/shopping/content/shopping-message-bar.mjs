@@ -12,6 +12,7 @@ class ShoppingMessageBar extends MozLitElement {
     ["generic-error", this.getGenericErrorTemplate()],
     ["not-enough-reviews", this.getNotEnoughReviewsTemplate()],
     ["product-not-available", this.getProductNotAvailableTemplate()],
+    ["thanks-for-reporting", this.getThanksForReportingTemplate()],
     [
       "product-not-available-reported",
       this.getProductNotAvailableReportedTemplate(),
@@ -27,12 +28,22 @@ class ShoppingMessageBar extends MozLitElement {
   static get queries() {
     return {
       reAnalysisLinkEl: "#message-bar-reanalysis-link",
+      productAvailableBtnEl: "#message-bar-report-product-available-btn",
     };
   }
 
   onClickAnalysisLink() {
     this.dispatchEvent(
       new CustomEvent("ReAnalysisRequested", {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  onClickProductAvailable() {
+    this.dispatchEvent(
+      new CustomEvent("ReportedProductAvailable", {
         bubbles: true,
         composed: true,
       })
@@ -98,9 +109,25 @@ class ShoppingMessageBar extends MozLitElement {
           data-l10n-id="shopping-message-bar-warning-product-not-available-message"
         ></span>
         <button
+          id="message-bar-report-product-available-btn"
           class="small-button"
           data-l10n-id="shopping-message-bar-warning-product-not-available-button"
+          @click=${this.onClickProductAvailable}
         ></button>
+      </article>
+    </message-bar>`;
+  }
+
+  getThanksForReportingTemplate() {
+    return html` <message-bar>
+      <article id="message-bar-container" aria-labelledby="header">
+        <strong
+          id="header"
+          data-l10n-id="shopping-message-bar-thanks-for-reporting-title"
+        ></strong>
+        <span
+          data-l10n-id="shopping-message-bar-thanks-for-reporting-message"
+        ></span>
       </article>
     </message-bar>`;
   }
