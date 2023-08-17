@@ -517,10 +517,10 @@ class AudioInfo : public TrackInfo {
   uint32_t mBitDepth;
 
   // Codec profile.
-  int8_t mProfile;
+  uint8_t mProfile;
 
   // Extended codec profile.
-  int8_t mExtendedProfile;
+  uint8_t mExtendedProfile;
 
   AudioCodecSpecificVariant mCodecSpecificConfig{NoCodecSpecificData{}};
 };
