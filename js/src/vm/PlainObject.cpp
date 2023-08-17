@@ -241,14 +241,15 @@ enum class KeysKind { UniqueNames, Unknown };
 template <KeysKind Kind>
 static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
                                                  IdValuePair* properties,
-                                                 size_t nproperties) {
+                                                 size_t nproperties,
+                                                 NewObjectKind newKind) {
   auto& cache = cx->realm()->newPlainObjectWithPropsCache;
 
   // If we recently created an object with these properties, we can use that
   // Shape directly.
   if (SharedShape* shape = cache.lookup(properties, nproperties)) {
     Rooted<SharedShape*> shapeRoot(cx, shape);
-    PlainObject* obj = PlainObject::createWithShape(cx, shapeRoot);
+    PlainObject* obj = PlainObject::createWithShape(cx, shapeRoot, newKind);
     if (!obj) {
       return nullptr;
     }
@@ -260,7 +261,8 @@ static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
   }
 
   gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
-  Rooted<PlainObject*> obj(cx, NewPlainObjectWithAllocKind(cx, allocKind));
+  Rooted<PlainObject*> obj(cx,
+                           NewPlainObjectWithAllocKind(cx, allocKind, newKind));
   if (!obj) {
     return nullptr;
   }
@@ -321,14 +323,16 @@ static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
 
 PlainObject* js::NewPlainObjectWithUniqueNames(JSContext* cx,
                                                IdValuePair* properties,
-                                               size_t nproperties) {
-  return NewPlainObjectWithProperties<KeysKind::UniqueNames>(cx, properties,
-                                                             nproperties);
+                                               size_t nproperties,
+                                               NewObjectKind newKind) {
+  return NewPlainObjectWithProperties<KeysKind::UniqueNames>(
+      cx, properties, nproperties, newKind);
 }
 
 PlainObject* js::NewPlainObjectWithMaybeDuplicateKeys(JSContext* cx,
                                                       IdValuePair* properties,
-                                                      size_t nproperties) {
+                                                      size_t nproperties,
+                                                      NewObjectKind newKind) {
   return NewPlainObjectWithProperties<KeysKind::Unknown>(cx, properties,
-                                                         nproperties);
+                                                         nproperties, newKind);
 }

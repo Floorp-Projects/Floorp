@@ -585,13 +585,55 @@ void JSONTokenizer<CharT, ParserT, StringBuilderT>::getTextPosition(
   *line = row;
 }
 
+JSONFullParseHandlerAnyChar::JSONFullParseHandlerAnyChar(JSContext* cx)
+    : cx(cx), freeElements(cx), freeProperties(cx) {
+  JS::AddGCNurseryCollectionCallback(cx, &NurseryCollectionCallback, this);
+}
+
+JSONFullParseHandlerAnyChar::JSONFullParseHandlerAnyChar(
+    JSONFullParseHandlerAnyChar&& other) noexcept
+    : cx(other.cx),
+      v(other.v),
+      parseType(other.parseType),
+      freeElements(std::move(other.freeElements)),
+      freeProperties(std::move(other.freeProperties)) {
+  JS::AddGCNurseryCollectionCallback(cx, &NurseryCollectionCallback, this);
+}
+
 JSONFullParseHandlerAnyChar::~JSONFullParseHandlerAnyChar() {
+  JS::RemoveGCNurseryCollectionCallback(cx, &NurseryCollectionCallback, this);
+
   for (size_t i = 0; i < freeElements.length(); i++) {
     js_delete(freeElements[i]);
   }
 
   for (size_t i = 0; i < freeProperties.length(); i++) {
     js_delete(freeProperties[i]);
+  }
+}
+
+/* static */
+void JSONFullParseHandlerAnyChar::NurseryCollectionCallback(
+    JSContext* cx, JS::GCNurseryProgress progress, JS::GCReason reason,
+    void* data) {
+  auto* handler = static_cast<JSONFullParseHandlerAnyChar*>(data);
+
+  // Switch to allocating in the tenured heap if we trigger more than one
+  // nursery collection.
+  //
+  // JSON parsing allocates from the leaves of the tree upwards (unlike
+  // structured clone deserialization which works from the root
+  // downwards). Because of this it doesn't necessarily make sense to stop
+  // nursery allocation after the first collection as this doesn't doom the
+  // whole data structure to being tenured. We don't know ahead of time how big
+  // the resulting data structure will be but after two nursery collections then
+  // at least half of it will end up tenured.
+
+  if (progress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END) {
+    handler->nurseryCollectionCount++;
+    if (handler->nurseryCollectionCount == 2) {
+      handler->gcHeap = gc::Heap::Tenured;
+    }
   }
 }
 
@@ -628,9 +670,13 @@ template <typename CharT>
 template <JSONStringType ST>
 inline bool JSONFullParseHandler<CharT>::setStringValue(CharPtr start,
                                                         size_t length) {
-  JSLinearString* str = (ST == JSONStringType::PropertyName)
-                            ? AtomizeChars(cx, start.get(), length)
-                            : NewStringCopyN<CanGC>(cx, start.get(), length);
+  JSString* str;
+  if constexpr (ST == JSONStringType::PropertyName) {
+    str = AtomizeChars(cx, start.get(), length);
+  } else {
+    str = NewStringCopyN<CanGC>(cx, start.get(), length, gcHeap);
+  }
+
   if (!str) {
     return false;
   }
@@ -642,9 +688,13 @@ template <typename CharT>
 template <JSONStringType ST>
 inline bool JSONFullParseHandler<CharT>::setStringValue(
     StringBuilder& builder) {
-  JSLinearString* str = (ST == JSONStringType::PropertyName)
-                            ? builder.buffer.finishAtom()
-                            : builder.buffer.finishString();
+  JSString* str;
+  if constexpr (ST == JSONStringType::PropertyName) {
+    str = builder.buffer.finishAtom();
+  } else {
+    str = builder.buffer.finishString(gcHeap);
+  }
+
   if (!str) {
     return false;
   }
@@ -707,8 +757,12 @@ inline bool JSONFullParseHandlerAnyChar::finishObject(
     PropertyVector* properties) {
   MOZ_ASSERT(properties == &stack.back().properties());
 
-  JSObject* obj = NewPlainObjectWithMaybeDuplicateKeys(cx, properties->begin(),
-                                                       properties->length());
+  NewObjectKind newKind = GenericObject;
+  if (gcHeap == gc::Heap::Tenured) {
+    newKind = TenuredObject;
+  }
+  JSObject* obj = NewPlainObjectWithMaybeDuplicateKeys(
+      cx, properties->begin(), properties->length(), newKind);
   if (!obj) {
     return false;
   }
@@ -752,8 +806,12 @@ inline bool JSONFullParseHandlerAnyChar::finishArray(
     ElementVector* elements) {
   MOZ_ASSERT(elements == &stack.back().elements());
 
+  NewObjectKind newKind = GenericObject;
+  if (gcHeap == gc::Heap::Tenured) {
+    newKind = TenuredObject;
+  }
   ArrayObject* obj =
-      NewDenseCopiedArray(cx, elements->length(), elements->begin());
+      NewDenseCopiedArray(cx, elements->length(), elements->begin(), newKind);
   if (!obj) {
     return false;
   }
