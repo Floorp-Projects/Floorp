@@ -570,7 +570,7 @@ where
 {
     type Output = <T as ClientPINSubCommand>::Output;
 
-    fn command() -> Command {
+    fn command(&self) -> Command {
         Command::ClientPin
     }
 

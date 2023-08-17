@@ -5,28 +5,26 @@
 use crate::authenticatorservice::{RegisterArgs, SignArgs};
 use crate::consts::PARAMETER_SIZE;
 
-use crate::ctap2;
 use crate::ctap2::client_data::ClientDataHash;
 use crate::ctap2::commands::client_pin::Pin;
 use crate::ctap2::commands::get_assertion::GetAssertionResult;
 use crate::ctap2::commands::make_credentials::MakeCredentialsResult;
-
 use crate::ctap2::server::{
     PublicKeyCredentialDescriptor, RelyingParty, RelyingPartyWrapper, ResidentKeyRequirement,
     RpIdHash, UserVerificationRequirement,
 };
 use crate::errors::{self, AuthenticatorError};
 use crate::statecallback::StateCallback;
-use crate::status_update::send_status;
+use crate::status_update::{send_status, InteractiveUpdate};
 use crate::transport::device_selector::{
     BlinkResult, Device, DeviceBuildParameters, DeviceCommand, DeviceSelectorEvent,
 };
 use crate::transport::platform::transaction::Transaction;
 use crate::transport::{hid::HIDDevice, FidoDevice, FidoProtocol};
 use crate::u2fprotocol::{u2f_init_device, u2f_is_keyhandle_valid, u2f_register, u2f_sign};
+use crate::ctap2;
 use crate::{
-    AuthenticatorTransports, InteractiveRequest, KeyHandle, RegisterFlags, RegisterResult,
-    SignFlags, SignResult,
+    AuthenticatorTransports, InteractiveRequest, KeyHandle, ManageResult, RegisterFlags, SignFlags,
 };
 use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
 use std::thread;
@@ -444,16 +442,11 @@ impl StateMachine {
                     } else if let Ok(bytes) = u2f_register(dev, challenge.as_ref(), &application) {
                         let mut rp_id_hash: RpIdHash = RpIdHash([0u8; 32]);
                         rp_id_hash.0.copy_from_slice(&application);
-                        let result = match MakeCredentialsResult::from_ctap1(&bytes, &rp_id_hash) {
-                            Ok(MakeCredentialsResult(att_obj)) => att_obj,
-                            Err(_) => {
-                                callback.call(Err(errors::AuthenticatorError::U2FToken(
-                                    errors::U2FTokenError::Unknown,
-                                )));
-                                break;
-                            }
-                        };
-                        callback.call(Ok(RegisterResult::CTAP2(result)));
+                        callback.call(
+                            MakeCredentialsResult::from_ctap1(&bytes, &rp_id_hash).map_err(|_| {
+                                errors::AuthenticatorError::U2FToken(errors::U2FTokenError::Unknown)
+                            }),
+                        );
                         break;
                     }
 
@@ -576,7 +569,7 @@ impl StateMachine {
                                         break 'outer;
                                     }
                                 };
-                                callback.call(Ok(SignResult::CTAP2(result)));
+                                callback.call(Ok(result));
                                 break 'outer;
                             }
                         }
@@ -603,7 +596,7 @@ impl StateMachine {
         &mut self,
         timeout: u64,
         status: Sender<crate::StatusUpdate>,
-        callback: StateCallback<crate::Result<crate::ResetResult>>,
+        callback: StateCallback<crate::Result<crate::ManageResult>>,
     ) {
         // Abort any prior register/sign calls.
         self.cancel();
@@ -627,13 +620,16 @@ impl StateMachine {
                 let (tx, rx) = channel();
                 send_status(
                     &status,
-                    crate::StatusUpdate::InteractiveManagement((
-                        tx,
-                        dev.get_authenticator_info().cloned(),
+                    crate::StatusUpdate::InteractiveManagement(InteractiveUpdate::StartManagement(
+                        (tx, dev.get_authenticator_info().cloned()),
                     )),
                 );
                 while alive() {
                     match rx.recv_timeout(Duration::from_millis(400)) {
+                        Ok(InteractiveRequest::Quit) => {
+                            callback.call(Ok(ManageResult::Success));
+                            break;
+                        }
                         Ok(InteractiveRequest::Reset) => {
                             ctap2::reset_helper(
                                 &mut dev,
@@ -662,6 +658,39 @@ impl StateMachine {
                                 callback.clone(),
                                 alive,
                             );
+                        }
+                        Ok(InteractiveRequest::ChangeConfig(authcfg, puat)) => {
+                            ctap2::configure_authenticator(
+                                &mut dev,
+                                puat,
+                                authcfg,
+                                status.clone(),
+                                callback.clone(),
+                                alive,
+                            );
+                            continue;
+                        }
+                        Ok(InteractiveRequest::CredentialManagement(cred_management, puat)) => {
+                            ctap2::credential_management(
+                                &mut dev,
+                                puat,
+                                cred_management,
+                                status.clone(),
+                                callback.clone(),
+                                alive,
+                            );
+                            continue;
+                        }
+                        Ok(InteractiveRequest::BioEnrollment(bio_enrollment, puat)) => {
+                            ctap2::bio_enrollment(
+                                &mut dev,
+                                puat,
+                                bio_enrollment,
+                                status.clone(),
+                                callback.clone(),
+                                alive,
+                            );
+                            continue;
                         }
                         Err(RecvTimeoutError::Timeout) => {
                             if !alive() {

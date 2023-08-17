@@ -18,7 +18,7 @@ use authenticator::ctap2::{
         make_credentials::{MakeCredentials, MakeCredentialsResult},
         reset::Reset,
         selection::Selection,
-        Request, RequestCtap1, RequestCtap2, StatusCode,
+        RequestCtap1, RequestCtap2, StatusCode,
     },
     preflight::CheckKeyHandle,
     server::{PublicKeyCredentialDescriptor, RelyingParty, RelyingPartyWrapper, User},
@@ -80,10 +80,14 @@ impl TestTokenCredential {
             ..Default::default()
         });
 
-        let mut data = auth_data.to_vec().or(Err(HIDError::DeviceError))?;
+        let mut data = match serde_cbor::value::to_value(&auth_data) {
+            Ok(serde_cbor::value::Value::Bytes(data)) => data,
+            _ => return Err(HIDError::DeviceError),
+        };
         data.extend_from_slice(client_data_hash.as_ref());
         let signature =
             ecdsa_p256_sha256_sign_raw(&self.privkey, &data).or(Err(HIDError::DeviceError))?;
+
         Ok(GetAssertionResponse {
             credentials,
             auth_data,
@@ -228,7 +232,7 @@ impl FidoDevice for TestToken {
 }
 
 impl FidoDeviceIO for TestToken {
-    fn send_msg_cancellable<Out, Req: Request<Out>>(
+    fn send_msg_cancellable<Out, Req: RequestCtap1<Output = Out> + RequestCtap2<Output = Out>>(
         &mut self,
         msg: &Req,
         keep_alive: &dyn Fn() -> bool,
@@ -524,20 +528,26 @@ impl VirtualFidoDevice for TestToken {
             extensions: Extension::default(),
         };
 
-        let mut data = auth_data.to_vec().unwrap();
+        let mut data = match serde_cbor::value::to_value(&auth_data) {
+            Ok(serde_cbor::value::Value::Bytes(data)) => data,
+            _ => return Err(HIDError::DeviceError),
+        };
         data.extend_from_slice(req.client_data_hash.as_ref());
-        let sig = ecdsa_p256_sha256_sign_raw(&private, &data).unwrap();
 
-        let att_statement = AttestationStatement::Packed(AttestationStatementPacked {
+        let sig = ecdsa_p256_sha256_sign_raw(&private, &data).or(Err(HIDError::DeviceError))?;
+
+        let att_stmt = AttestationStatement::Packed(AttestationStatementPacked {
             alg: COSEAlgorithm::ES256,
             sig: sig.as_slice().into(),
             attestation_cert: vec![],
         });
 
-        let result = MakeCredentialsResult(AttestationObject {
-            auth_data,
-            att_statement,
-        });
+        let result = MakeCredentialsResult {
+            att_obj: AttestationObject {
+                auth_data,
+                att_stmt,
+            },
+        };
         Ok(result)
     }
 

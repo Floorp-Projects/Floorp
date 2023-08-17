@@ -1,5 +1,6 @@
 use super::commands::CommandError;
 use crate::transport::errors::HIDError;
+use base64::Engine;
 use serde::de::{self, Deserializer, Error as SerdeError, MapAccess, Visitor};
 use serde::ser::SerializeMap;
 use serde::{Deserialize, Serialize, Serializer};
@@ -180,7 +181,7 @@ pub struct Challenge(pub String);
 
 impl Challenge {
     pub fn new(input: Vec<u8>) -> Self {
-        let value = base64::encode_config(input, base64::URL_SAFE_NO_PAD);
+        let value = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(input);
         Challenge(value)
     }
 }

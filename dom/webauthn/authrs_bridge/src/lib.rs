@@ -10,7 +10,6 @@ extern crate xpcom;
 
 use authenticator::{
     authenticatorservice::{RegisterArgs, SignArgs},
-    ctap2::attestation::AttestationStatement,
     ctap2::commands::get_info::AuthenticatorVersion,
     ctap2::server::{
         PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
@@ -96,8 +95,8 @@ impl CtapRegisterResult {
     xpcom_method!(get_attestation_object => GetAttestationObject() -> ThinVec<u8>);
     fn get_attestation_object(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
-        if let Ok(RegisterResult::CTAP2(attestation)) = &self.result {
-            if let Ok(encoded_att_obj) = serde_cbor::to_vec(&attestation) {
+        if let Ok(make_cred_res) = &self.result {
+            if let Ok(encoded_att_obj) = serde_cbor::to_vec(&make_cred_res.att_obj) {
                 out.extend_from_slice(&encoded_att_obj);
                 return Ok(out);
             }
@@ -108,8 +107,8 @@ impl CtapRegisterResult {
     xpcom_method!(get_credential_id => GetCredentialId() -> ThinVec<u8>);
     fn get_credential_id(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
-        if let Ok(RegisterResult::CTAP2(attestation)) = &self.result {
-            if let Some(credential_data) = &attestation.auth_data.credential_data {
+        if let Ok(make_cred_res) = &self.result {
+            if let Some(credential_data) = &make_cred_res.att_obj.auth_data.credential_data {
                 out.extend(credential_data.credential_id.clone());
                 return Ok(out);
             }
@@ -158,10 +157,12 @@ impl CtapSignResult {
     fn get_authenticator_data(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
         if let Ok(assertion) = &self.result {
-            if let Ok(encoded_auth_data) = assertion.auth_data.to_vec() {
-                out.extend_from_slice(&encoded_auth_data);
-                return Ok(out);
-            }
+            let data = match serde_cbor::value::to_value(&assertion.auth_data) {
+                Ok(serde_cbor::value::Value::Bytes(data)) => data,
+                _ => return Err(NS_ERROR_FAILURE),
+            };
+            out.extend_from_slice(&data);
+            return Ok(out);
         }
         Err(NS_ERROR_FAILURE)
     }
@@ -273,7 +274,7 @@ impl Controller {
                 CtapSignResult::allocate(InitCtapSignResult { result: Err(e) })
                     .query_interface::<nsICtapSignResult>(),
             ),
-            Ok(SignResult::CTAP2(assertion_vec)) => {
+            Ok(assertion_vec) => {
                 for assertion in assertion_vec.0 {
                     assertions.push(
                         CtapSignResult::allocate(InitCtapSignResult {
@@ -283,7 +284,6 @@ impl Controller {
                     );
                 }
             }
-            _ => return Err(NS_ERROR_NOT_IMPLEMENTED), // SignResult::CTAP1 shouldn't happen.
         }
 
         unsafe {
@@ -379,8 +379,8 @@ fn status_callback(
                 // These should never happen.
                 warn!("STATUS: Got unexpected StatusPinUv-error.");
             }
-            Ok(StatusUpdate::InteractiveManagement((_, auth_info))) => {
-                debug!("STATUS: interactive management: {:?}", auth_info);
+            Ok(StatusUpdate::InteractiveManagement(_)) => {
+                debug!("STATUS: interactive management");
             }
             Err(RecvError) => {
                 debug!("STATUS: end");
@@ -585,17 +585,13 @@ impl AuthrsTransport {
         let state_callback = StateCallback::<Result<RegisterResult, AuthenticatorError>>::new(
             Box::new(move |result| {
                 let result = match result {
-                    Ok(RegisterResult::CTAP1(..)) => Err(AuthenticatorError::VersionMismatch(
-                        "AuthrsTransport::MakeCredential",
-                        2,
-                    )),
-                    Ok(RegisterResult::CTAP2(mut attestation_object)) => {
+                    Ok(mut make_cred_res) => {
                         // Tokens always provide attestation, but the user may have asked we not
                         // include the attestation statement in the response.
                         if none_attestation {
-                            attestation_object.att_statement = AttestationStatement::None;
+                            make_cred_res.att_obj.anonymize();
                         }
-                        Ok(RegisterResult::CTAP2(attestation_object))
+                        Ok(make_cred_res)
                     }
                     Err(e @ AuthenticatorError::CredentialExcluded) => {
                         let notification_str = make_prompt(
@@ -722,11 +718,7 @@ impl AuthrsTransport {
         let state_callback =
             StateCallback::<Result<SignResult, AuthenticatorError>>::new(Box::new(move |result| {
                 let result = match result {
-                    Ok(SignResult::CTAP1(..)) => Err(AuthenticatorError::VersionMismatch(
-                        "AuthrsTransport::GetAssertion",
-                        2,
-                    )),
-                    Ok(SignResult::CTAP2(mut assertion_object)) => {
+                    Ok(mut assertion_object) => {
                         // In CTAP 2.0, but not CTAP 2.1, the assertion object's credential field
                         // "May be omitted if the allowList has exactly one Credential." If we had
                         // a unique allowed credential, then copy its descriptor to the output.
@@ -737,7 +729,7 @@ impl AuthrsTransport {
                                 }
                             }
                         }
-                        Ok(SignResult::CTAP2(assertion_object))
+                        Ok(assertion_object)
                     }
                     Err(e) => Err(e),
                 };

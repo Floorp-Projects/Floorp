@@ -12,7 +12,7 @@ use crate::ctap2::commands::make_credentials::{
 };
 use crate::ctap2::commands::reset::Reset;
 use crate::ctap2::commands::selection::Selection;
-use crate::ctap2::commands::{CommandError, Request, RequestCtap1, RequestCtap2, StatusCode};
+use crate::ctap2::commands::{CommandError, RequestCtap1, RequestCtap2, StatusCode};
 use crate::ctap2::preflight::CheckKeyHandle;
 use crate::transport::device_selector::BlinkResult;
 use crate::transport::errors::HIDError;
@@ -78,7 +78,10 @@ pub enum FidoProtocol {
 }
 
 pub trait FidoDeviceIO {
-    fn send_msg<Out, Req: Request<Out>>(&mut self, msg: &Req) -> Result<Out, HIDError> {
+    fn send_msg<Out, Req: RequestCtap1<Output = Out> + RequestCtap2<Output = Out>>(
+        &mut self,
+        msg: &Req,
+    ) -> Result<Out, HIDError> {
         self.send_msg_cancellable(msg, &|| true)
     }
 
@@ -90,7 +93,7 @@ pub trait FidoDeviceIO {
         self.send_ctap1_cancellable(msg, &|| true)
     }
 
-    fn send_msg_cancellable<Out, Req: Request<Out>>(
+    fn send_msg_cancellable<Out, Req: RequestCtap1<Output = Out> + RequestCtap2<Output = Out>>(
         &mut self,
         msg: &Req,
         keep_alive: &dyn Fn() -> bool,
@@ -122,6 +125,14 @@ where
     fn should_try_ctap2(&self) -> bool;
     fn get_authenticator_info(&self) -> Option<&AuthenticatorInfo>;
     fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo);
+    fn refresh_authenticator_info(&mut self) -> Option<&AuthenticatorInfo> {
+        let command = GetInfo::default();
+        if let Ok(info) = self.send_cbor(&command) {
+            debug!("Refreshed authenticator info: {:?}", info);
+            self.set_authenticator_info(info);
+        }
+        self.get_authenticator_info()
+    }
 
     // `get_protocol()` indicates whether we're using CTAP1 or CTAP2.
     // Prior to initializing the device, `get_protocol()` should return CTAP2 unless

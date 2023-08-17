@@ -1,7 +1,6 @@
-use super::server::RelyingPartyWrapper;
 use crate::crypto::{CryptoError, PinUvAuthParam, PinUvAuthToken};
 use crate::ctap2::commands::client_pin::{
-    ClientPinResponse, GetPinRetries, GetUvRetries, Pin, PinError,
+    ClientPinResponse, GetPinRetries, GetUvRetries, PinError,
 };
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::ctap2::server::UserVerificationRequirement;
@@ -13,7 +12,10 @@ use serde_json as json;
 use std::error::Error as StdErrorT;
 use std::fmt;
 
+pub mod authenticator_config;
+pub mod bio_enrollment;
 pub mod client_pin;
+pub mod credential_management;
 pub mod get_assertion;
 pub mod get_info;
 pub mod get_next_assertion;
@@ -21,14 +23,6 @@ pub mod get_version;
 pub mod make_credentials;
 pub mod reset;
 pub mod selection;
-
-pub trait Request<T>
-where
-    Self: fmt::Debug,
-    Self: RequestCtap1<Output = T>,
-    Self: RequestCtap2<Output = T>,
-{
-}
 
 /// Retryable wraps an error type and may ask manager to retry sending a
 /// command, this is useful for ctap1 where token will reply with "condition not
@@ -82,7 +76,7 @@ pub trait RequestCtap1: fmt::Debug {
 pub trait RequestCtap2: fmt::Debug {
     type Output;
 
-    fn command() -> Command;
+    fn command(&self) -> Command;
 
     fn wire_format(&self) -> Result<Vec<u8>, HIDError>;
 
@@ -99,7 +93,7 @@ pub trait RequestCtap2: fmt::Debug {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum PinUvAuthResult {
+pub enum PinUvAuthResult {
     /// Request is CTAP1 and does not need PinUvAuth
     RequestIsCtap1,
     /// Device is not capable of CTAP2
@@ -139,16 +133,13 @@ impl PinUvAuthResult {
 
 /// Helper-trait to determine pin_uv_auth_param from PIN or UV.
 pub(crate) trait PinUvAuthCommand: RequestCtap2 {
-    fn pin(&self) -> &Option<Pin>;
-    fn set_pin(&mut self, pin: Option<Pin>);
     fn set_pin_uv_auth_param(
         &mut self,
         pin_uv_auth_token: Option<PinUvAuthToken>,
     ) -> Result<(), AuthenticatorError>;
     fn get_pin_uv_auth_param(&self) -> Option<&PinUvAuthParam>;
     fn set_uv_option(&mut self, uv: Option<bool>);
-    fn get_uv_option(&mut self) -> Option<bool>;
-    fn get_rp(&self) -> &RelyingPartyWrapper;
+    fn get_rp_id(&self) -> Option<&String>;
     fn can_skip_user_verification(
         &mut self,
         info: &AuthenticatorInfo,
@@ -211,22 +202,12 @@ pub enum Command {
     ClientPin = 0x06,
     Reset = 0x07,
     GetNextAssertion = 0x08,
+    BioEnrollment = 0x09,
+    CredentialManagement = 0x0A,
     Selection = 0x0B,
-}
-
-impl Command {
-    #[cfg(test)]
-    pub fn from_u8(v: u8) -> Option<Command> {
-        match v {
-            0x01 => Some(Command::MakeCredentials),
-            0x02 => Some(Command::GetAssertion),
-            0x04 => Some(Command::GetInfo),
-            0x06 => Some(Command::ClientPin),
-            0x07 => Some(Command::Reset),
-            0x08 => Some(Command::GetNextAssertion),
-            _ => None,
-        }
-    }
+    AuthenticatorConfig = 0x0D,
+    BioEnrollmentPreview = 0x40,
+    CredentialManagementPreview = 0x41,
 }
 
 #[derive(Debug)]

@@ -1,13 +1,44 @@
 use super::Pin;
-use crate::ctap2::commands::get_info::AuthenticatorInfo;
+use crate::{
+    ctap2::{
+        commands::{
+            authenticator_config::{AuthConfigCommand, AuthConfigResult},
+            bio_enrollment::BioTemplateId,
+            get_info::AuthenticatorInfo,
+            PinUvAuthResult,
+        },
+        server::{PublicKeyCredentialDescriptor, User},
+    },
+    BioEnrollmentResult, CredentialManagementResult,
+};
 use serde::{Deserialize, Serialize as DeriveSer, Serializer};
 use std::sync::mpsc::Sender;
 
 #[derive(Debug, Deserialize, DeriveSer)]
+pub enum CredManagementCmd {
+    GetCredentials,
+    DeleteCredential(PublicKeyCredentialDescriptor),
+    UpdateUserInformation(PublicKeyCredentialDescriptor, User),
+}
+
+#[derive(Debug, Deserialize, DeriveSer)]
+pub enum BioEnrollmentCmd {
+    GetFingerprintSensorInfo,
+    GetEnrollments,
+    StartNewEnrollment(Option<String>),
+    DeleteEnrollment(BioTemplateId),
+    ChangeName(BioTemplateId, String),
+}
+
+#[derive(Debug)]
 pub enum InteractiveRequest {
+    Quit,
     Reset,
     ChangePIN(Pin, Pin),
     SetPIN(Pin),
+    ChangeConfig(AuthConfigCommand, Option<PinUvAuthResult>),
+    CredentialManagement(CredManagementCmd, Option<PinUvAuthResult>),
+    BioEnrollment(BioEnrollmentCmd, Option<PinUvAuthResult>),
 }
 
 // Simply ignoring the Sender when serializing
@@ -54,6 +85,16 @@ pub enum StatusPinUv {
 }
 
 #[derive(Debug)]
+pub enum InteractiveUpdate {
+    StartManagement((Sender<InteractiveRequest>, Option<AuthenticatorInfo>)),
+    // We provide the already determined PUAT to be able to issue more requests without
+    // forcing the user to enter another PIN.
+    BioEnrollmentUpdate((BioEnrollmentResult, Option<PinUvAuthResult>)),
+    CredentialManagementUpdate((CredentialManagementResult, Option<PinUvAuthResult>)),
+    AuthConfigUpdate((AuthConfigResult, Option<PinUvAuthResult>)),
+}
+
+#[derive(Debug)]
 pub enum StatusUpdate {
     /// We're waiting for the user to touch their token
     PresenceRequired,
@@ -63,7 +104,7 @@ pub enum StatusUpdate {
     /// Sent, if multiple devices are found and the user has to select one
     SelectDeviceNotice,
     /// Sent when a token was selected for interactive management
-    InteractiveManagement((Sender<InteractiveRequest>, Option<AuthenticatorInfo>)),
+    InteractiveManagement(InteractiveUpdate),
 }
 
 pub(crate) fn send_status(status: &Sender<StatusUpdate>, msg: StatusUpdate) {

@@ -9,7 +9,7 @@ pub struct Reset {}
 impl RequestCtap2 for Reset {
     type Output = ();
 
-    fn command() -> Command {
+    fn command(&self) -> Command {
         Command::Reset
     }
 
