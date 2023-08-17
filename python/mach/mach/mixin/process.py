@@ -187,9 +187,7 @@ class ProcessExecutionMixin(LoggingMixin):
             ensure_exit_code = 0
 
         if status != ensure_exit_code:
-            raise Exception(
-                "Process executed with non-0 exit code %d: %s" % (status, args)
-            )
+            raise Exception(f"Process executed with non-0 exit code {status}: {args}")
 
         return status
 
