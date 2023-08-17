@@ -203,6 +203,11 @@ export async function runBackgroundTask(commandLine) {
   let registeredRestartFound =
     -1 !== commandLine.findFlag("registered-restart", false);
 
+  // Modify Glean metrics for a successful registered restart.
+  if (registeredRestartFound) {
+    Glean.backgroundUpdate.registeredRestartSuccess.set(true);
+  }
+
   // Help debugging.  This is a pared down version of
   // `dataProviders.application` in `Troubleshoot.sys.mjs`.  When adding to this
   // debugging data, try to follow the form from that module.
@@ -459,6 +464,8 @@ export async function runBackgroundTask(commandLine) {
         .createInstance(Ci.nsIUpdateProcessor)
         .registerApplicationRestartWithLaunchArgs(["-registered-restart"]);
       lazy.log.debug(`${SLUG}: register application restart succeeded`);
+      // Report an attempted registered restart.
+      Glean.backgroundUpdate.registeredRestartAttempted.set(true);
     } catch (e) {
       lazy.log.error(
         `${SLUG}: caught exception; failed to register application restart`,
