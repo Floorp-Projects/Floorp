@@ -785,6 +785,15 @@ pub unsafe extern "C" fn wgpu_server_queue_submit(
     }
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_server_on_submitted_work_done(
+    global: &Global,
+    self_id: id::QueueId,
+    callback: wgc::device::queue::SubmittedWorkDoneClosureC,
+) {
+    gfx_select!(self_id => global.queue_on_submitted_work_done(self_id, wgc::device::queue::SubmittedWorkDoneClosure::from_c(callback))).unwrap();
+}
+
 /// # Safety
 ///
 /// This function is unsafe as there is no guarantee that the given pointer is

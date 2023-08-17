@@ -17,6 +17,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/OffscreenCanvas.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebGLTexelConversions.h"
 #include "mozilla/dom/WebGLTypes.h"
 #include "nsLayoutUtils.h"
@@ -43,6 +44,16 @@ void Queue::Submit(
   }
 
   mBridge->SendQueueSubmit(mId, mParent->mId, list);
+}
+
+already_AddRefed<dom::Promise> Queue::OnSubmittedWorkDone(ErrorResult& aRv) {
+  RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  mBridge->QueueOnSubmittedWorkDone(mId, promise);
+
+  return promise.forget();
 }
 
 // Get the base address and length of part of a `BufferSource`.

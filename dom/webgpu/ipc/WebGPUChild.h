@@ -106,6 +106,10 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
                              size_t maxBufferCount,
                              const layers::RemoteTextureOwnerId& aOwnerId);
+
+  void QueueOnSubmittedWorkDone(const RawId aSelfId,
+                                const RefPtr<dom::Promise>& aPromise);
+
   void SwapChainPresent(RawId aTextureId,
                         const RemoteTextureId& aRemoteTextureId,
                         const RemoteTextureOwnerId& aOwnerId);

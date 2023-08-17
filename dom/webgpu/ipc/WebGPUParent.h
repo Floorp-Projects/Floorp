@@ -59,6 +59,8 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvRenderBundleDestroy(RawId aBundleId);
   ipc::IPCResult RecvQueueSubmit(RawId aQueueId, RawId aDeviceId,
                                  const nsTArray<RawId>& aCommandBuffers);
+  ipc::IPCResult RecvQueueOnSubmittedWorkDone(
+      RawId aQueueId, std::function<void(mozilla::void_t)>&& aResolver);
   ipc::IPCResult RecvQueueWriteAction(RawId aQueueId, RawId aDeviceId,
                                       const ipc::ByteBuf& aByteBuf,
                                       ipc::UnsafeSharedMemoryHandle&& aShmem);
