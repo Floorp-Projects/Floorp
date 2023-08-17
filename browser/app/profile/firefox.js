@@ -2375,6 +2375,12 @@ pref("browser.toolbars.bookmarks.visibility", "newtab");
 // bookmarks toolbar contextmenu.
 pref("browser.toolbars.bookmarks.showOtherBookmarks", true);
 
+
+// Felt Privacy pref to control simplified private browsing UI
+pref("browser.privatebrowsing.felt-privacy-v1", false);
+// Visiblity of the bookmarks toolbar in PBM (currently only applies if felt-privacy-v1 is true)
+pref("browser.toolbars.bookmarks.showInPrivateBrowsing", false);
+
 // Prefs to control the Firefox Account toolbar menu.
 // This pref will surface existing Firefox Account information
 // as a button next to the hamburger menu. It allows

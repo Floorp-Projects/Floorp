@@ -108,6 +108,7 @@ const extraBrowserTestPaths = [
   "browser/base/content/test/plugins/",
   "browser/base/content/test/popupNotifications/",
   "browser/base/content/test/popups/",
+  "browser/base/content/test/privateBrowsing/",
   "browser/base/content/test/protectionsUI/",
   "browser/base/content/test/referrer/",
   "browser/base/content/test/sanitize/",

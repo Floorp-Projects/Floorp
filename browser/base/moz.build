@@ -43,6 +43,7 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/plugins/browser.ini",
     "content/test/popupNotifications/browser.ini",
     "content/test/popups/browser.ini",
+    "content/test/privateBrowsing/browser.ini",
     "content/test/protectionsUI/browser.ini",
     "content/test/referrer/browser.ini",
     "content/test/sanitize/browser.ini",
