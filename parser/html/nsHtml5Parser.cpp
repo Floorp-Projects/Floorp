@@ -148,6 +148,9 @@ NS_IMETHODIMP_(bool)
 nsHtml5Parser::IsParserEnabled() { return !mBlocked; }
 
 NS_IMETHODIMP_(bool)
+nsHtml5Parser::IsParserClosed() { return mDocumentClosed; }
+
+NS_IMETHODIMP_(bool)
 nsHtml5Parser::IsComplete() { return mExecutor->IsComplete(); }
 
 NS_IMETHODIMP
