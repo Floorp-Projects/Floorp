@@ -1456,7 +1456,7 @@ class WebExtensionTest : BaseSessionTest() {
     // - verifies that the messages are received when restoring the tab in a fresh session
     @Test
     fun testRestoringExtensionPagePreservesMessages() {
-        // TODO: Bug 1648158
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         val extension = sessionRule.waitForResult(
@@ -2997,9 +2997,6 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun testMozAddonManagerDisabledByDefault() {
-        // TODO: Bug 1673954
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         // Assert the expected precondition (the pref to be set to false by default).
         val geckoPrefs = sessionRule.getPrefs(
             "extensions.webapi.enabled",
@@ -3021,7 +3018,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun testMozAddonManagerCanBeEnabledByPref() {
-        // TODO: Bug 1673954
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         mainSession.loadUri("https://example.com")

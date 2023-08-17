@@ -250,7 +250,7 @@ class HistoryDelegateTest : BaseSessionTest() {
     }
 
     @Test fun onHistoryStateChangeSavingState() {
-        // TODO: Bug 1648158
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         // This is a smaller version of the above test, in the hopes to minimize race conditions

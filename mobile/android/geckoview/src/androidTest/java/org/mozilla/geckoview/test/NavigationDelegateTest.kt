@@ -249,7 +249,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadUnknownHost() {
-        // TODO: Bug 1673954
+        // TODO: Bug 1849060
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         testLoadExpectError(
@@ -261,9 +261,6 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     // External loads should not have access to privileged protocols
     @Test fun loadExternalDenied() {
-        // TODO: Bug 1673954
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         testLoadExpectError(
             TestLoader()
                 .uri("file:///")
@@ -311,7 +308,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadUntrusted() {
-        // TODO: Bug 1673954
+        // TODO: Bug 1849060
         assumeThat(sessionRule.env.isFission, equalTo(false))
         val host = if (sessionRule.env.isAutomation) {
             "expired.example.com"
@@ -1050,7 +1047,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingPhishing() {
-        // TODO: Bug 1673954
+        // TODO: Bug 1849060
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
@@ -1085,7 +1082,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingMalware() {
-        // TODO: Bug 1673954
+        // TODO: Bug 1849060
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         val malwareUri = "https://www.itisatrap.org/firefox/its-an-attack.html"
@@ -1119,7 +1116,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingUnwanted() {
-        // TODO: Bug 1673954
+        // TODO: Bug 1849060
         assumeThat(sessionRule.env.isFission, equalTo(false))
         val unwantedUri = "https://www.itisatrap.org/firefox/unwanted.html"
         val category = ContentBlocking.SafeBrowsing.UNWANTED
@@ -1152,7 +1149,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingHarmful() {
-        // TODO: Bug 1673954
+        // TODO: Bug 1849060
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         val harmfulUri = "https://www.itisatrap.org/firefox/harmful.html"
@@ -2720,7 +2717,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun purgeHistory() {
-        // TODO: Bug 1648158
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
@@ -3052,7 +3049,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun goBackFromHistory() {
-        // TODO: Bug 1673954
+        // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         mainSession.loadTestPath(HELLO_HTML_PATH)
