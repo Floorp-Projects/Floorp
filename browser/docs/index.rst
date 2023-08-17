@@ -31,3 +31,4 @@ This is the nascent documentation of the Firefox front-end code.
    components/storybook/docs/README.reusable-widgets.stories
    components/storybook/docs/README.other-widgets.stories
    components/storybook/docs/README.lit-guide.stories
+   components/storybook/docs/README.xul-and-html.stories
