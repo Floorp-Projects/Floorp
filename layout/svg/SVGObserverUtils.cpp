@@ -460,12 +460,12 @@ class SVGRenderingObserverProperty : public SVGIDRenderingObserver {
  public:
   NS_DECL_ISUPPORTS
 
-  SVGRenderingObserverProperty(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
-                               bool aReferenceImage,
-                               uint32_t aFlags = OBSERVE_ATTRIBUTE_CHANGES |
-                                                 OBSERVE_CONTENT_CHANGES)
+  SVGRenderingObserverProperty(
+      URLAndReferrerInfo* aURI, nsIFrame* aFrame, bool aReferenceImage,
+      uint32_t aFlags = OBSERVE_ATTRIBUTE_CHANGES | OBSERVE_CONTENT_CHANGES,
+      TargetIsValidCallback aTargetIsValidCallback = nullptr)
       : SVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage,
-                               aFlags),
+                               aFlags, aTargetIsValidCallback),
         mFrameReference(aFrame) {}
 
  protected:
@@ -499,12 +499,17 @@ void SVGRenderingObserverProperty::OnRenderingChange() {
   }
 }
 
+static bool IsSVGGeometryElement(const Element& aObserved) {
+  return aObserved.IsSVGGeometryElement();
+}
+
 class SVGTextPathObserver final : public SVGRenderingObserverProperty {
  public:
   SVGTextPathObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
                       bool aReferenceImage)
       : SVGRenderingObserverProperty(aURI, aFrame, aReferenceImage,
-                                     OBSERVE_ATTRIBUTE_CHANGES) {}
+                                     OBSERVE_ATTRIBUTE_CHANGES,
+                                     IsSVGGeometryElement) {}
 
  protected:
   void OnRenderingChange() override;
@@ -554,7 +559,8 @@ class SVGMPathObserver final : public SVGIDRenderingObserver {
 
   SVGMPathObserver(URLAndReferrerInfo* aURI, SVGMPathElement* aElement)
       : SVGIDRenderingObserver(aURI, aElement, /* aReferenceImage = */ false,
-                               OBSERVE_ATTRIBUTE_CHANGES) {}
+                               OBSERVE_ATTRIBUTE_CHANGES,
+                               IsSVGGeometryElement) {}
 
  protected:
   virtual ~SVGMPathObserver() = default;  // non-public
