@@ -69,8 +69,10 @@ av_dict_set
 av_dict_set_int
 av_dirname
 av_div_q
+#ifndef MOZ_FFVPX_AUDIOONLY
 av_dynamic_hdr_plus_from_t35
 av_dynamic_hdr_plus_create_side_data
+#endif
 av_dynarray2_add
 av_dynarray_add
 av_dynarray_add_nofree
