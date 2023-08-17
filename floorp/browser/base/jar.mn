@@ -22,7 +22,7 @@ browser.jar:
   content/browser/browser-rest-mode.js          (content/browser-rest-mode.js)
   content/browser/browser-chromeCSS.js          (content/browser-chromeCSS.js)
   content/browser/browser-context-menu.js       (content/browser-context-menu.js)
-  content/browser/browser-costom-keyboard-shortcut.js  (content/browser-costom-keyboard-shortcut.js)
+  content/browser/browser-costom-keyboard-shortcut.js  (content/browser-custom-keyboard-shortcut.js)
   content/browser/browser-workspace.js          (content/browser-workspace.js)
   content/browser/browser-verticaltabs.css      (content/browser-verticaltabs.css)
   content/browser/browser-verticaltabs.js       (content/browser-verticaltabs.js)
