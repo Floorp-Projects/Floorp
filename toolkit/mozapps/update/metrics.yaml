@@ -205,6 +205,39 @@ background_update:
     send_in_pings:
       - background-update
 
+  registered_restart_attempted:
+    type: boolean
+    description: >
+      True if the background update task successfully registered a restart.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847099
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847099#c3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
+  registered_restart_success:
+    type: boolean
+    description: >
+      True if the background update task successfully restarted after
+      a registered restart.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847099
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1847099#c3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+
   exit_code_success:
     type: boolean
     description: >
