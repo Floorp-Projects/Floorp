@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Tests for Publickey-Credentials-Get Feature Policy for W3C Web Authentication</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>Tests for Publickey-Credentials-Get Feature Policy for W3C Web Authentication</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1460986">Mozilla Bug 1460986</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    var gSameCredId;
+    var gCrossCredId;
+
+    const CROSS_DOMAIN = "example.org";
+
+    function compare(a, b) {
+      if (a.length != b.length) return false;
+      for (let i = 0; i < a.length; i += 1) {
+        if (a[i] !== b[i]) return false;
+      }
+      return true;
+    }
+
+    function arrivingHereIsGood(aResult) {
+      ok(true, "Good result! Received a: " + aResult);
+    }
+
+    function arrivingHereIsBad(aResult) {
+      ok(false, "Bad result! Received a: " + aResult);
+    }
+
+    function expectNotAllowedError(aResult) {
+      ok(aResult == "NotAllowedError", "Expecting a NotAllowedError, got " + aResult);
+    }
+
+    function expectSameCredId(aResult) {
+      ok(compare(aResult, gSameCredId), "Expecting credential for " + document.domain);
+    }
+
+    function expectCrossCredId(aResult) {
+      ok(compare(aResult, gCrossCredId), "Expecting credential for " + CROSS_DOMAIN);
+    }
+
+    function getAssertion(id) {
+        let chall = new Uint8Array(16);
+        this.content.window.crypto.getRandomValues(chall);
+
+        let options = {
+          challenge: chall,
+          allowCredentials: [ { type: "public-key", id } ],
+        };
+
+        return this.content.window.navigator.credentials.get({publicKey: options})
+          .then(res => Promise.resolve(new Uint8Array(res.rawId)))
+          .catch(e => Promise.reject(e.name));
+    }
+
+    add_task(async function setup() {
+      let authenticatorId = await addVirtualAuthenticator();
+      gSameCredId = await addCredential(authenticatorId, document.domain).then(id => base64ToBytesUrlSafe(id));
+      gCrossCredId = await addCredential(authenticatorId, CROSS_DOMAIN).then(id => base64ToBytesUrlSafe(id));
+    });
+
+    add_task(async function test_same_origin_iframe_allow() {
+      let iframe = document.createElement("iframe");
+      iframe.setAttribute("src", "https://" + document.domain + "/tests/dom/webauthn/tests/empty.html");
+      document.body.appendChild(iframe);
+      await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+
+      ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe allows publickey-credentials-get");
+
+      // We should be able to assert a credential in a same-origin iframe by default.
+      await SpecialPowers.spawn(iframe, [gSameCredId], getAssertion)
+          .then(expectSameCredId)
+          .catch(expectNotAllowedError);
+    });
+
+    add_task(async function test_same_origin_iframe_deny() {
+      let iframe = document.createElement("iframe");
+      iframe.setAttribute("src", "https://" + document.domain + "/tests/dom/webauthn/tests/empty.html");
+      iframe.setAttribute("allow", "publickey-credentials-get 'none'");
+      document.body.appendChild(iframe);
+      await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+
+      ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(!iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe does not allow publickey-credentials-get");
+
+      // We should not be able to assert a credential in a same-origin iframe if
+      // the iframe does not allow publickey-credentials-get.
+      await SpecialPowers.spawn(iframe, [gSameCredId], getAssertion)
+          .then(arrivingHereIsBad)
+          .catch(expectNotAllowedError);
+    });
+
+    add_task(async function test_cross_origin_iframe_allow() {
+      let iframe = document.createElement("iframe");
+      iframe.setAttribute("src", "https://" + CROSS_DOMAIN + "/tests/dom/webauthn/tests/empty.html");
+      iframe.setAttribute("allow", "publickey-credentials-get https://" + CROSS_DOMAIN);
+      document.body.appendChild(iframe);
+      await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+
+      ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe allows publickey-credentials-get");
+
+      // We should be able to assert a credential in a cross-origin iframe if
+      // the iframe allows publickey-credentials-get.
+      await SpecialPowers.spawn(iframe, [gCrossCredId], getAssertion)
+          .then(expectCrossCredId)
+          .catch(arrivingHereIsBad);
+    });
+
+    add_task(async function test_cross_origin_iframe_deny() {
+      let iframe = document.createElement("iframe");
+      iframe.setAttribute("src", "https://" + CROSS_DOMAIN + "/tests/dom/webauthn/tests/empty.html");
+      document.body.appendChild(iframe);
+      await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+
+      ok("featurePolicy" in iframe, "we have iframe.featurePolicy");
+      ok(!iframe.featurePolicy.allowsFeature("publickey-credentials-get"), "iframe does not allow publickey-credentials-get");
+
+      // We should not be able to assert a credential in a cross-origin iframe if
+      // the iframe does not allow publickey-credentials-get.
+      await SpecialPowers.spawn(iframe, [gCrossCredId], getAssertion)
+          .then(arrivingHereIsBad)
+          .catch(expectNotAllowedError);
+    });
+  </script>
+
+</body>
+</html>
