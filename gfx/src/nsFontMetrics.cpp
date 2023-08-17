@@ -130,6 +130,7 @@ nsFontMetrics::nsFontMetrics(const nsFont& aFont, const Params& aParams,
                      aFont.synthesisWeight == StyleFontSynthesis::Auto,
                      aFont.synthesisStyle == StyleFontSynthesis::Auto,
                      aFont.synthesisSmallCaps == StyleFontSynthesis::Auto,
+                     aFont.synthesisPosition == StyleFontSynthesis::Auto,
                      aFont.languageOverride);
 
   aFont.AddFontFeaturesToStyle(&style, mOrientation == eVertical);
