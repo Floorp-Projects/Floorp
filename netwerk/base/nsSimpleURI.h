@@ -58,7 +58,7 @@ class nsSimpleURI : public nsIURI, public nsISerializable, public nsISizeOf {
   virtual nsresult Clone(nsIURI** result);
   virtual nsresult SetSpecInternal(const nsACString& aSpec,
                                    bool aStripWhitespace = false);
-  virtual nsresult SetScheme(const nsACString& scheme);
+  virtual nsresult SetScheme(const nsACString& input);
   virtual nsresult SetUserPass(const nsACString& input);
   nsresult SetUsername(const nsACString& input);
   virtual nsresult SetPassword(const nsACString& input);

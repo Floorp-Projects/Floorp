@@ -8,6 +8,7 @@
 #include "URLMainThread.h"
 #include "URLWorker.h"
 
+#include "nsASCIIMask.h"
 #include "MainThreadUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/URLBinding.h"
@@ -315,6 +316,7 @@ void URL::SetPort(const nsAString& aPort) {
 
   // nsIURI uses -1 as default value.
   if (!portStr.IsEmpty()) {
+    portStr.StripTaggedASCII(ASCIIMask::MaskCRLFTab());
     port = portStr.ToInteger(&rv);
     if (NS_FAILED(rv)) {
       return;
