@@ -48,7 +48,7 @@ unsafe fn get_class_or_part_from_attr(attr: &structs::nsAttrValue) -> Class {
             structs::nsAttrValue_ValueType_eAtomArray
         );
         // NOTE: Bindgen doesn't deal with AutoTArray, so cast it below.
-        let attr_array: *mut _ = *(*container)
+        let attr_array: *const _ = *(*container)
             .__bindgen_anon_1
             .mValue
             .as_ref()
