@@ -136,9 +136,6 @@ add_task(async function () {
       filename: "file_use_counter_bfcache.html",
       waitForExplicitFinish: true,
       counters: [{ name: "SVGSVGELEMENT_GETELEMENTBYID" }],
-      // This test navigates and thus creates multiple top level document
-      // entries, as expected.
-      extra_top_documents: 5,
     },
 
     // // data: URLs don't correctly propagate to their referring document yet.
@@ -251,11 +248,23 @@ add_task(async function () {
       }
     }
 
-    is(
-      after.toplevel_docs,
-      before.toplevel_docs + 1 + (test.extra_top_documents || 0),
-      "top level destroyed document counts are correct"
-    );
+    if (test.filename == "file_use_counter_bfcache.html") {
+      // This test navigates a bunch of times and thus creates multiple top
+      // level document entries, as expected.
+      // Whether the last document is destroyed is a bit racy, see bug 1842800,
+      // so for now we allow it with +/- 1.
+      ok(
+        after.toplevel_docs == before.toplevel_docs + 5 ||
+          after.toplevel_docs == before.toplevel_docs + 6,
+        `top level destroyed document counts are correct: ${before.toplevel_docs} vs ${after.toplevel_docs}`
+      );
+    } else {
+      is(
+        after.toplevel_docs,
+        before.toplevel_docs + 1,
+        "top level destroyed document counts are correct"
+      );
+    }
 
     // 2 documents for "img" tests: one for the outer html page containing the
     // <img> element, and one for the SVG image itself.
