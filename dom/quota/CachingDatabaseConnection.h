@@ -67,7 +67,7 @@ class CachingDatabaseConnection {
   class LazyStatement;
 
   void AssertIsOnConnectionThread() const {
-#ifdef CACHING_DB_CONNECTION_CHECK_THREAD_OWNERSHIP
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
     mOwningThread->AssertOwnership("CachingDatabaseConnection not thread-safe");
 #endif
   }
@@ -125,7 +125,7 @@ class CachingDatabaseConnection {
   void Close();
 
  private:
-#ifdef CACHING_DB_CONNECTION_CHECK_THREAD_OWNERSHIP
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
   LazyInitializedOnce<const nsAutoOwningThread> mOwningThread;
 #endif
 
