@@ -208,7 +208,6 @@ struct MOZ_STACK_CLASS DebuggerObject::CallData {
   bool executeInGlobalWithBindingsMethod();
   bool createSource();
   bool makeDebuggeeValueMethod();
-  bool makeDebuggeeNativeFunctionMethod();
   bool isSameNativeMethod();
   bool isNativeGetterWithJitInfo();
   bool unsafeDereferenceMethod();
@@ -1324,16 +1323,6 @@ bool DebuggerObject::CallData::makeDebuggeeValueMethod() {
   return DebuggerObject::makeDebuggeeValue(cx, object, args[0], args.rval());
 }
 
-bool DebuggerObject::CallData::makeDebuggeeNativeFunctionMethod() {
-  if (!args.requireAtLeast(
-          cx, "Debugger.Object.prototype.makeDebuggeeNativeFunction", 1)) {
-    return false;
-  }
-
-  return DebuggerObject::makeDebuggeeNativeFunction(cx, object, args[0],
-                                                    args.rval());
-}
-
 bool DebuggerObject::CallData::isSameNativeMethod() {
   if (!args.requireAtLeast(cx, "Debugger.Object.prototype.isSameNative", 1)) {
     return false;
@@ -1535,8 +1524,6 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
                 executeInGlobalWithBindingsMethod, 2),
     JS_DEBUG_FN("createSource", createSource, 1),
     JS_DEBUG_FN("makeDebuggeeValue", makeDebuggeeValueMethod, 1),
-    JS_DEBUG_FN("makeDebuggeeNativeFunction", makeDebuggeeNativeFunctionMethod,
-                1),
     JS_DEBUG_FN("isSameNative", isSameNativeMethod, 1),
     JS_DEBUG_FN("isNativeGetterWithJitInfo", isNativeGetterWithJitInfo, 1),
     JS_DEBUG_FN("unsafeDereference", unsafeDereferenceMethod, 0),
@@ -2538,50 +2525,6 @@ static JSFunction* EnsureNativeFunction(const Value& value,
   }
 
   return fun;
-}
-
-/* static */
-bool DebuggerObject::makeDebuggeeNativeFunction(JSContext* cx,
-                                                Handle<DebuggerObject*> object,
-                                                HandleValue value,
-                                                MutableHandleValue result) {
-  RootedObject referent(cx, object->referent());
-  Debugger* dbg = object->owner();
-
-  // The logic below doesn't work with extended functions, so do not allow them.
-  RootedFunction fun(cx, EnsureNativeFunction(value,
-                                              /* allowExtended */ false));
-  if (!fun) {
-    JS_ReportErrorASCII(cx, "Need native function");
-    return false;
-  }
-
-  RootedValue newValue(cx);
-  {
-    Maybe<AutoRealm> ar;
-    EnterDebuggeeObjectRealm(cx, ar, referent);
-
-    unsigned nargs = fun->nargs();
-    Rooted<JSAtom*> name(cx, fun->displayAtom());
-    if (name) {
-      cx->markAtom(name);
-    }
-    JSFunction* newFun = NewNativeFunction(cx, fun->native(), nargs, name);
-    if (!newFun) {
-      return false;
-    }
-
-    newValue.setObject(*newFun);
-  }
-
-  // Back in the debugger's compartment, produce a new Debugger.Object
-  // instance referring to the wrapped argument.
-  if (!dbg->wrapDebuggeeValue(cx, &newValue)) {
-    return false;
-  }
-
-  result.set(newValue);
-  return true;
 }
 
 static JSAtom* MaybeGetSelfHostedFunctionName(const Value& v) {
