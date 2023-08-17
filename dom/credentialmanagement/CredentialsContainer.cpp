@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Credential.h"
 #include "mozilla/dom/CredentialsContainer.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/IdentityCredential.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -145,7 +146,10 @@ already_AddRefed<Promise> CredentialsContainer::Get(
 
   if (aOptions.mPublicKey.WasPassed() &&
       StaticPrefs::security_webauth_webauthn()) {
-    if (!IsSameOriginWithAncestors(mParent) || !IsInActiveTab(mParent)) {
+    MOZ_ASSERT(mParent);
+    if (!FeaturePolicyUtils::IsFeatureAllowed(
+            mParent->GetExtantDoc(), u"publickey-credentials-get"_ns) ||
+        !IsInActiveTab(mParent)) {
       return CreateAndRejectWithNotAllowed(mParent, aRv);
     }
 
