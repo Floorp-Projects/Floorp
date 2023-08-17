@@ -30,6 +30,16 @@ pub const MAX_BUFFER_SIZE: wgt::BufferAddress = 1u64 << 30u64;
 // Mesa has issues with height/depth that don't fit in a 16 bits signed integers.
 const MAX_TEXTURE_EXTENT: u32 = std::i16::MAX as u32;
 
+fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
+    wgt::Limits {
+        max_buffer_size: limits.max_buffer_size.min(MAX_BUFFER_SIZE),
+        max_texture_dimension_1d: limits.max_texture_dimension_1d.min(MAX_TEXTURE_EXTENT),
+        max_texture_dimension_2d: limits.max_texture_dimension_2d.min(MAX_TEXTURE_EXTENT),
+        max_texture_dimension_3d: limits.max_texture_dimension_3d.min(MAX_TEXTURE_EXTENT),
+        .. limits
+    }
+}
+
 // hide wgc's global in private
 pub struct Global(wgc::global::Global<IdentityRecyclerFactory>);
 
@@ -131,7 +141,7 @@ pub unsafe extern "C" fn wgpu_server_adapter_pack_info(
 
             let info = AdapterInformation {
                 id,
-                limits: gfx_select!(id => global.adapter_limits(id)).unwrap(),
+                limits: restrict_limits(gfx_select!(id => global.adapter_limits(id)).unwrap()),
                 features: gfx_select!(id => global.adapter_features(id)).unwrap(),
                 name,
                 vendor,
