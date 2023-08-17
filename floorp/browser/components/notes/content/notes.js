@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const oldSelectedItem = document.querySelector(".memo-list-item.selected, #memo-add.selected");
     if (oldSelectedItem != null) oldSelectedItem.classList.remove("selected");
     if (id != -1) {
-      const newSelectedItem = document.querySelector(".memo-list-item:nth-child(" + (id + 1) + ")");
+      const newSelectedItem = document.querySelector(`.memo-list-item:nth-child(${id + 1})`);
       if (newSelectedItem != null) newSelectedItem.classList.add("selected");
     } else {
       const memoNewButton = document.querySelector("#memo-add");
