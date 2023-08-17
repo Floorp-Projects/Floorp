@@ -491,8 +491,6 @@ class PeerConnectionImpl final
 
   bool IsClosed() const;
 
-  void OnRtcpPacketReceived(MediaPacket aPacket);
-
   // called when DTLS connects; we only need this once
   nsresult OnAlpnNegotiated(bool aPrivacyRequested);
 

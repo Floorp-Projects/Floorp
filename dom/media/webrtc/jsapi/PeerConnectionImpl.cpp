@@ -1999,14 +1999,6 @@ PeerConnectionImpl::SetPeerIdentity(const nsAString& aPeerIdentity) {
   return NS_OK;
 }
 
-void PeerConnectionImpl::OnRtcpPacketReceived(MediaPacket aPacket) {
-  MOZ_ASSERT(mCall->mCallThread->IsOnCurrentThread());
-  MOZ_ASSERT(mCall->Call());
-
-  mCall->Call()->Receiver()->DeliverRtcpPacket(
-      rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()));
-}
-
 nsresult PeerConnectionImpl::OnAlpnNegotiated(bool aPrivacyRequested) {
   PC_AUTO_ENTER_API_CALL(false);
   MOZ_DIAGNOSTIC_ASSERT(!mRequestedPrivacy ||
@@ -4451,7 +4443,10 @@ already_AddRefed<dom::RTCRtpTransceiver> PeerConnectionImpl::CreateTransceiver(
             NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
         ctx->GetSharedWebrtcState());
     mRtcpReceiveListener = mSignalHandler->RtcpReceiveEvent().Connect(
-        mCall->mCallThread, this, &PeerConnectionImpl::OnRtcpPacketReceived);
+        mCall->mCallThread, [call = mCall](MediaPacket aPacket) {
+          call->Call()->Receiver()->DeliverRtcpPacket(
+              rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()));
+        });
   }
 
   if (aAddTrackMagic) {
