@@ -2513,14 +2513,13 @@ bool DebuggerObject::makeDebuggeeValue(JSContext* cx,
   return true;
 }
 
-static JSFunction* EnsureNativeFunction(const Value& value,
-                                        bool allowExtended = true) {
+static JSFunction* EnsureNativeFunction(const Value& value) {
   if (!value.isObject() || !value.toObject().is<JSFunction>()) {
     return nullptr;
   }
 
   JSFunction* fun = &value.toObject().as<JSFunction>();
-  if (!fun->isNativeFun() || (fun->isExtended() && !allowExtended)) {
+  if (!fun->isNativeFun()) {
     return nullptr;
   }
 
