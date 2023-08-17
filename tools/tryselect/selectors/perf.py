@@ -44,6 +44,7 @@ PERFHERDER_BASE_URL = (
     "https://treeherder.mozilla.org/perfherder/"
     "compare?originalProject=try&originalRevision=%s&newProject=try&newRevision=%s"
 )
+PERFCOMPARE_BASE_URL = "https://beta--mozilla-perfcompare.netlify.app/#/compare-results?revs=%s,%s&repos=try,try"
 TREEHERDER_TRY_BASE_URL = "https://treeherder.mozilla.org/jobs?repo=try&revision=%s"
 TREEHERDER_ALERT_TASKS_URL = (
     "https://treeherder.mozilla.org/api/performance/alertsummary-tasks/?id=%s"
@@ -306,6 +307,14 @@ class PerfParser(CompareParser):
                 "help": "Set the extra args "
                 "(e.x, --extra-args verbose post-startup-delay=1)",
                 "metavar": "",
+            },
+        ],
+        [
+            ["--perfcompare-beta"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Use PerfCompare Beta instead of CompareView.",
             },
         ],
     ]
@@ -1367,6 +1376,13 @@ class PerfParser(CompareParser):
         )
 
 
+def get_compare_url(revisions, perfcompare_beta=False):
+    """Setup the comparison link."""
+    if perfcompare_beta:
+        return PERFCOMPARE_BASE_URL % revisions
+    return PERFHERDER_BASE_URL % revisions
+
+
 def run(**kwargs):
     if (
         kwargs.get("browsertime_upload_apk") is not None
@@ -1397,7 +1413,9 @@ def run(**kwargs):
 
     # Provide link to perfherder for comparisons now
     if not kwargs.get("single_run", False):
-        perfcompare_url = PERFHERDER_BASE_URL % revisions
+        perfcompare_url = get_compare_url(
+            revisions, perfcompare_beta=kwargs.get("perfcompare_beta", False)
+        )
         original_try_url = TREEHERDER_TRY_BASE_URL % revisions[0]
         local_change_try_url = TREEHERDER_TRY_BASE_URL % revisions[1]
         print(
