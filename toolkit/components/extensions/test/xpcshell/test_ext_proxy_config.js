@@ -25,7 +25,7 @@ AddonTestUtils.createAppInfo(
 // non-local connections if this domain is registered.
 AddonTestUtils.createHttpServer({ hosts: ["pac.example.com"] });
 
-add_task(async function setup() {
+add_setup(async function () {
   // Bug 1646182: Force ExtensionPermissions to run in rkv mode, the legacy
   // storage mode will run in xpcshell-legacy-ep.ini
   await ExtensionPermissions._uninit();
@@ -42,6 +42,12 @@ add_task(async function setup() {
 });
 
 add_task(async function test_browser_settings() {
+  // TODO bug 1725981: proxy.settings is not supported on Android.
+  if (AppConstants.platform === "android") {
+    info("proxy.settings not supported on Android; skipping");
+    return;
+  }
+
   const proxySvc = Ci.nsIProtocolProxyService;
 
   // Create an object to hold the values to which we will initialize the prefs.
@@ -117,11 +123,6 @@ add_task(async function test_browser_settings() {
   }
 
   async function testProxy(config, expectedPrefs, expectedConfig = config) {
-    // proxy.settings is not supported on Android.
-    if (AppConstants.platform === "android") {
-      return Promise.resolve();
-    }
-
     let proxyConfig = {
       proxyType: "none",
       autoConfigUrl: "",
@@ -517,6 +518,11 @@ add_task(async function test_bad_value_proxy_config() {
 
 // Verify proxy prefs are unset on permission removal.
 add_task(async function test_proxy_settings_permissions() {
+  // TODO bug 1725981: proxy.settings is not supported on Android.
+  if (AppConstants.platform === "android") {
+    info("proxy.settings not supported on Android; skipping");
+    return;
+  }
   async function background() {
     const permObj = { permissions: ["proxy"] };
     browser.test.onMessage.addListener(async (msg, value) => {
