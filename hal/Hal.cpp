@@ -417,6 +417,12 @@ const char* ProcessPriorityToString(ProcessPriority aPriority) {
   }
 }
 
+UniquePtr<hal::PerformanceHintSession> CreatePerformanceHintSession(
+    const nsTArray<PlatformThreadHandle>& aThreads,
+    mozilla::TimeDuration aTargetWorkDuration) {
+  return hal_impl::CreatePerformanceHintSession(aThreads, aTargetWorkDuration);
+}
+
 void Init() {
   MOZ_ASSERT(!sInitialized);
 
