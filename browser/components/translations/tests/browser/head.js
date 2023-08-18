@@ -169,6 +169,17 @@ async function clickSettingsMenuItemByL10nId(l10nId) {
 }
 
 /**
+ * Simulates the effect of clicking the always-offer-translations menuitem.
+ * Requires that the settings menu of the translations panel is open,
+ * otherwise the test will fail.
+ */
+async function clickAlwaysOfferTranslations() {
+  await clickSettingsMenuItemByL10nId(
+    "translations-panel-settings-always-offer-translation"
+  );
+}
+
+/**
  * Simulates the effect of clicking the always-translate-language menuitem.
  * Requires that the settings menu of the translations panel is open,
  * otherwise the test will fail.
