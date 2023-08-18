@@ -307,6 +307,17 @@ class Panel {
     TranslationsTelemetry.logEventToConsole("onTranslateButton");
   }
 
+  static onAlwaysOfferTranslations(toggledOn) {
+    Glean.translationsPanel.alwaysOfferTranslations.record({
+      flow_id: TranslationsTelemetry.getOrCreateFlowId(),
+      first_interaction: Panel.isFirstUserInteraction(),
+      toggled_on: toggledOn,
+    });
+    TranslationsTelemetry.logEventToConsole(
+      `[${toggledOn ? "✔" : "x"}] onAlwaysOfferTranslations`
+    );
+  }
+
   static onAlwaysTranslateLanguage(langTag, toggledOn) {
     Glean.translationsPanel.alwaysTranslateLanguage.record({
       flow_id: TranslationsTelemetry.getOrCreateFlowId(),

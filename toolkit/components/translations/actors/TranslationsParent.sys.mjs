@@ -2248,12 +2248,18 @@ export class TranslationsParent extends JSWindowActorParent {
   /**
    * Toggle the automatically popup pref, which will either
    * enable or disable translations being offered to the user.
+   *
+   * @returns {boolean}
+   *  True if offering translations was enabled by this call.
+   *  False if offering translations was disabled by this call.
    */
   static toggleAutomaticallyPopupPref() {
+    const prefValueBeforeToggle = lazy.automaticallyPopupPref;
     Services.prefs.setBoolPref(
       "browser.translations.automaticallyPopup",
-      !lazy.automaticallyPopupPref
+      !prefValueBeforeToggle
     );
+    return !prefValueBeforeToggle;
   }
 
   /**
