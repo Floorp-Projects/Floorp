@@ -35,8 +35,7 @@ var urls = [
     "application/octet-stream",
     "foobar",
   ],
-  // Bug 781693
-  ["data:text/plain;base64;x=y,dGVzdA==", "text/plain", "test"],
+  ["data:text/plain;base64;x=y,dGVzdA==", "text/plain", "dGVzdA=="],
   ["data:text/plain;x=y;base64,dGVzdA==", "text/plain", "test"],
   ["data:text/plain;x=y;base64,", "text/plain", ""],
   ["data:  ;charset=x   ;  base64,WA", "text/plain", "X", "x"],
