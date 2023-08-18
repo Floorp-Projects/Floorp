@@ -578,7 +578,7 @@ CSK-manage-title = Manage Custom Shortcut Keys
 CSK-remove-shortcutkey = Remove Shortcut Key
 CSK-remove-shortcutkey-description = Are you sure you want to remove this shortcut key?
 
-CSK-restore-default = Keyboard Shortcuts
+CSK-restore-default = Restore Default
 CSK-restore-default-description = Restore these settings to the default. Your current settings will be lost.
 
 ### Exsit shortcut key: "S", "shift"
@@ -587,7 +587,6 @@ CSK-keyborad-shortcut-info = Exsit shortcut key:
 floorp-custom-actions-tab-action = Tab Actions
 floorp-custom-actions-page-action = Page Actions
 floorp-custom-actions-visible-action = Visible Actions
-floorp-custom-actions-history-action = History Actions
 floorp-custom-actions-search-action = Search Actions
 floorp-custom-actions-tools-action = Tools Actions
 floorp-custom-actions-bookmark-action = Bookmark Actions
