@@ -40,7 +40,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   await openTranslationsSettingsMenuViaTranslationsButton();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
-  await toggleAlwaysTranslateLanguage();
+  await clickAlwaysTranslateLanguage();
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
 
   await assertTranslationsButton(
@@ -107,7 +107,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   await openTranslationsSettingsMenuViaTranslationsButton();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
-  await toggleAlwaysTranslateLanguage();
+  await clickAlwaysTranslateLanguage();
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
 
   await assertTranslationsButton(
@@ -207,7 +207,7 @@ add_task(
     await openTranslationsSettingsMenuViaTranslationsButton();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
-    await toggleAlwaysTranslateLanguage();
+    await clickAlwaysTranslateLanguage();
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
 
     await assertTranslationsButton(
@@ -231,7 +231,7 @@ add_task(
         "removing the document language from the alwaysTranslateLanguages pref"
     );
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
-    await toggleAlwaysTranslateLanguage();
+    await clickAlwaysTranslateLanguage();
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
 
     await assertTranslationsButton(
@@ -294,7 +294,7 @@ add_task(
     await openTranslationsSettingsMenuViaTranslationsButton();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
-    await toggleAlwaysTranslateLanguage();
+    await clickAlwaysTranslateLanguage();
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
 
     await assertTranslationsButton(
@@ -392,7 +392,7 @@ add_task(
     await openTranslationsSettingsMenuViaTranslationsButton();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
-    await toggleAlwaysTranslateLanguage();
+    await clickAlwaysTranslateLanguage();
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
 
     await assertTranslationsButton(

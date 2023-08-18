@@ -34,7 +34,7 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
   await openTranslationsSettingsMenuViaTranslationsButton();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
-  await toggleAlwaysTranslateLanguage();
+  await clickAlwaysTranslateLanguage();
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
 
   await assertTranslationsButton(
