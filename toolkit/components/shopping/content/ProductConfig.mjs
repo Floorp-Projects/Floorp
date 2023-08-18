@@ -3,20 +3,19 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Really const but needs to be overridable for tests.
-let ANALYSIS_API = "https://staging.trustwerty.com/api/v1/fx/analysis";
+let ANALYSIS_API = "https://trustwerty.com/api/v1/fx/analysis";
 const ANALYSIS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/analysis_response.schema.json";
 const ANALYSIS_REQUEST_SCHEMA =
   "chrome://global/content/shopping/analysis_request.schema.json";
 
 // Really const but needs to be overridable for tests.
-let RECOMMENDATIONS_API =
-  "https://staging-affiliates.fakespot.io/v1/fx/sp_search";
+let RECOMMENDATIONS_API = "https://a.fakespot.com/v1/fx/sp_search";
 const RECOMMENDATIONS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/recommendations_response.schema.json";
 const RECOMMENDATIONS_REQUEST_SCHEMA =
   "chrome://global/content/shopping/recommendations_request.schema.json";
-const ATTRIBUTION_API = "https://staging-partner-ads.fakespot.io";
+const ATTRIBUTION_API = "https://pe.fakespot.com/api/v1/fx/events";
 const ATTRIBUTION_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/attribution_response.schema.json";
 const ATTRIBUTION_REQUEST_SCHEMA =
