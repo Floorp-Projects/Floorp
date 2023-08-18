@@ -232,6 +232,12 @@ modal.DialogObserver = class {
             const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
             const window = lazy.TabManager.getWindowForTab(tab);
 
+            // Do not send the event if the curBrowser is specified,
+            // and it's different from prompt browser.
+            if (curBrowser && contentBrowser !== curBrowser.contentBrowser) {
+              continue;
+            }
+
             this.callbacks.forEach(callback =>
               callback(
                 modal.ACTION_OPENED,
