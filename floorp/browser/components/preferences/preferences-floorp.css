@@ -739,16 +739,21 @@
   }
 
   .csks-content-box {
-    margin: 15px 0px;
+    padding: 12px 16px;
+    background: var(--card-background) !important;
+    box-shadow: var(--card-shadow) !important;
+    border-radius: 4px !important;
+    border: 0 !important;
+    margin: 10px 0px;
   }
 
   .csks-box-item {
-    padding: 10px 0px 5px 0px;
+    padding: 10px 0px 0px 0px;
   }
 
   .csks-box-item {
     border-top: solid 1px gray;
-    margin: 10px 0px 5px 0px;
+    margin: 20px 0px 0px 0px;
   }
     
   .csks-box-item-label {
