@@ -53,6 +53,12 @@ const tabbarDisplayStyleFunctions = {
           #titlebar {
             appearance: none !important;
           }
+          #TabsToolbar #workspace-button[label] > .toolbarbutton-icon,
+          #TabsToolbar #firefox-view-button[flex] > .toolbarbutton-icon {
+            height: 16px !important;
+            width: 16px !important;
+            padding: 0px !important;
+          }
         `;
         document.querySelector("head").appendChild(tabbarContents.modifyCSS);
         tabbarDisplayStyleFunctions.setWorkspaceLabelToNavbar();
@@ -69,6 +75,15 @@ const tabbarDisplayStyleFunctions = {
         tabbarContents.modifyCSS.textContent = `
           #toolbar-menubar > .titlebar-buttonbox-container {
             display: none !important;
+          }
+          #titlebar {
+            appearance: none !important;
+          }
+          #TabsToolbar #workspace-button[label] > .toolbarbutton-icon,
+          #TabsToolbar #firefox-view-button > .toolbarbutton-icon {
+            height: 16px !important;
+            width: 16px !important;
+            padding: 0px !important;
           }
         `;
         document.querySelector("head").appendChild(tabbarContents.modifyCSS);
