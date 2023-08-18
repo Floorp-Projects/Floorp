@@ -152,6 +152,7 @@ class EventListenerManagerBase {
   }
 
   EventMessage mNoListenerForEvents[3];
+  uint16_t mMayHaveDOMActivateEventListener : 1;
   uint16_t mMayHavePaintEventListener : 1;
   uint16_t mMayHaveMutationListeners : 1;
   uint16_t mMayHaveCapturingListeners : 1;
@@ -165,7 +166,7 @@ class EventListenerManagerBase {
   uint16_t mClearingListeners : 1;
   uint16_t mIsMainThreadELM : 1;
   uint16_t mMayHaveListenersForUntrustedEvents : 1;
-  // 3 unused flags.
+  // 2 unused flags.
 };
 
 /*
@@ -534,6 +535,10 @@ class EventListenerManager final : public EventListenerManagerBase {
                               bool aEnabled);
 
   uint32_t GetIdentifierForEvent(nsAtom* aEvent);
+
+  bool MayHaveDOMActivateListeners() const {
+    return mMayHaveDOMActivateEventListener;
+  }
 
   /**
    * Returns true if there may be a paint event listener registered,

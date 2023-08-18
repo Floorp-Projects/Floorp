@@ -445,6 +445,22 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   /**
    * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a DOMActivate event listener.
+   */
+  void SetHasDOMActivateEventListeners() {
+    mMayHaveDOMActivateEventListeners = true;
+  }
+
+  /**
+   * Call this to check whether some node (this window, its document,
+   * or content in that document) has a DOMActivate event listener.
+   */
+  bool HasDOMActivateEventListeners() const {
+    return mMayHaveDOMActivateEventListeners;
+  }
+
+  /**
+   * Call this to indicate that some node (this window, its document,
    * or content in that document) has a paint event listener.
    */
   void SetHasPaintEventListeners() { mMayHavePaintEventListener = true; }
@@ -679,6 +695,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   bool mIsDocumentLoaded;
   bool mIsHandlingResizeEvent;
+  bool mMayHaveDOMActivateEventListeners;
   bool mMayHavePaintEventListener;
   bool mMayHaveTouchEventListener;
   bool mMayHaveSelectionChangeEventListener;

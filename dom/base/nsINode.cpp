@@ -3450,6 +3450,9 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
       EventListenerManager* elm = aNode->GetExistingListenerManager();
       if (elm) {
         window->SetMutationListeners(elm->MutationListenerBits());
+        if (elm->MayHaveDOMActivateListeners()) {
+          window->SetHasDOMActivateEventListeners();
+        }
         if (elm->MayHavePaintEventListener()) {
           window->SetHasPaintEventListeners();
         }
