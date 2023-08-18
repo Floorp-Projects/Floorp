@@ -58,6 +58,8 @@ const tabbarDisplayStyleFunctions = {
             height: 16px !important;
             width: 16px !important;
             padding: 0px !important;
+            margin: 0px !important;
+            margin-inline-start: 7px !important;
           }
         `;
         document.querySelector("head").appendChild(tabbarContents.modifyCSS);
