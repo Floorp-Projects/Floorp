@@ -36,9 +36,16 @@ class CreateURLRunnable : public WorkerMainThreadRunnable {
 
     nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
 
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+        mWorkerPrivate->CookieJarSettings();
+
+    nsAutoString partKey;
+    cookieJarSettings->GetPartitionKey(partKey);
+
     nsAutoCString url;
     nsresult rv = BlobURLProtocolHandler::AddDataEntry(
-        mBlobImpl, principal, Some(mWorkerPrivate->AgentClusterId()), url);
+        mBlobImpl, principal, Some(mWorkerPrivate->AgentClusterId()),
+        NS_ConvertUTF16toUTF8(partKey), url);
 
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to add data entry for the blob!");
@@ -66,9 +73,15 @@ class RevokeURLRunnable : public WorkerMainThreadRunnable {
 
     NS_ConvertUTF16toUTF8 url(mURL);
 
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+        mWorkerPrivate->CookieJarSettings();
+
+    nsAutoString partKey;
+    cookieJarSettings->GetPartitionKey(partKey);
+
     BlobURLProtocolHandler::RemoveDataEntry(
         url, mWorkerPrivate->GetPrincipal(),
-        Some(mWorkerPrivate->AgentClusterId()));
+        Some(mWorkerPrivate->AgentClusterId()), NS_ConvertUTF16toUTF8(partKey));
     return true;
   }
 };
