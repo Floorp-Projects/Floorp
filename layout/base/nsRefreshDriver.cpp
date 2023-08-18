@@ -38,7 +38,6 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DisplayPortUtils.h"
-#include "mozilla/Hal.h"
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/PresShell.h"
@@ -630,10 +629,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     // longer tick this timer.
     mVsyncObserver->Shutdown();
     mVsyncObserver = nullptr;
-
-    if (mClosePerfSessionTimer) {
-      mClosePerfSessionTimer->Cancel();
-    }
   }
 
   bool ShouldGiveNonVsyncTasksMoreTime() {
@@ -784,12 +779,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     mProcessedVsync = true;
   }
 
-  TimeDuration GetPerformanceHintTarget() {
-    // Estimate that we want to the tick to complete in at most half of the
-    // vsync period. This is fairly arbitrary and can be tweaked later.
-    return GetTimerRate() / int64_t(2);
-  }
-
   void TickRefreshDriver(VsyncId aId, TimeStamp aVsyncTimestamp) {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -797,14 +786,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
     TimeStamp tickStart = TimeStamp::Now();
 
-    const TimeDuration previousRate = mVsyncRate;
-    const TimeDuration rate = GetTimerRate();
-
-    if (mPerformanceHintSession && rate != previousRate) {
-      mPerformanceHintSession->UpdateTargetWorkDuration(
-          GetPerformanceHintTarget());
-    }
-
+    TimeDuration rate = GetTimerRate();
     if (TimeDuration::FromMilliseconds(nsRefreshDriver::DefaultInterval() / 2) >
         rate) {
       sMostRecentHighRateVsync = tickStart;
@@ -827,10 +809,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     RunRefreshDrivers(aId, aVsyncTimestamp);
 
     TimeStamp tickEnd = TimeStamp::Now();
-
-    if (mPerformanceHintSession) {
-      mPerformanceHintSession->ReportActualWorkDuration(tickEnd - tickStart);
-    }
 
     // Re-read mLastTickStart in case there was a nested tick inside this
     // tick.
@@ -891,35 +869,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       OnTimerStart();
     }
     mIsTicking = true;
-
-    static bool canUsePerformanceHintSession = true;
-    if (canUsePerformanceHintSession) {
-      if (mClosePerfSessionTimer) {
-        mClosePerfSessionTimer->Cancel();
-      }
-
-      // While the timer is active create a PerformanceHintSession for the main
-      // thread and stylo threads in the content process.  We can only do so
-      // when using a single vsync source for the process, otherwise these
-      // threads may be performing work for multiple VsyncRefreshDriverTimers
-      // and we will misreport the duration.
-      if (XRE_IsContentProcess() && !mPerformanceHintSession && mVsyncChild) {
-        nsTArray<PlatformThreadHandle> threads;
-        Servo_ThreadPool_GetThreadHandles(&threads);
-#ifdef XP_WIN
-        threads.AppendElement(GetCurrentThread());
-#else
-        threads.AppendElement(pthread_self());
-#endif
-
-        mPerformanceHintSession = hal::CreatePerformanceHintSession(
-            threads, GetPerformanceHintTarget());
-
-        // Avoid repeatedly attempting to create a session if it is not
-        // supported.
-        canUsePerformanceHintSession = mPerformanceHintSession != nullptr;
-      }
-    }
   }
 
   void StopTimer() override {
@@ -931,25 +880,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       mVsyncChild->RemoveChildRefreshTimer(mVsyncObserver);
     }
     mIsTicking = false;
-
-    if (mPerformanceHintSession) {
-      if (!mClosePerfSessionTimer) {
-        mClosePerfSessionTimer = NS_NewTimer();
-      }
-      // If the timer is not restarted within 5 seconds then close the
-      // PerformanceHintSession. This is a balance between wanting to close the
-      // session promptly when timer is inactive to save power, but equally not
-      // wanting to repeatedly create and destroy sessions nor cause frequent
-      // wakeups by the timer repeatedly firing.
-      mClosePerfSessionTimer->InitWithNamedFuncCallback(
-          [](nsITimer* aTimer, void* aClosure) {
-            VsyncRefreshDriverTimer* self =
-                static_cast<VsyncRefreshDriverTimer*>(aClosure);
-            self->mPerformanceHintSession.reset();
-          },
-          this, 5000, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
-          "VsyncRefreshDriverTimer::mClosePerfSessionTimer");
-    }
   }
 
  public:
@@ -1007,12 +937,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   // The timestamp is effectively mLastProcessedTick + some duration.
   TimeStamp mSuspendVsyncPriorityTicksUntil;
   bool mProcessedVsync;
-
-  UniquePtr<hal::PerformanceHintSession> mPerformanceHintSession;
-  // Used to wait a certain amount of time after the refresh driver timer is
-  // stopped before closing the PerformanceHintSession if the timer has not
-  // been restarted.
-  RefPtr<nsITimer> mClosePerfSessionTimer;
 };  // VsyncRefreshDriverTimer
 
 /**
