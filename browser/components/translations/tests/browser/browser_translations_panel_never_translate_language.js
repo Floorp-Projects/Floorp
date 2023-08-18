@@ -40,7 +40,7 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
   await openTranslationsSettingsMenuViaTranslationsButton();
 
   await assertIsNeverTranslateLanguage("es", { checked: false });
-  await toggleNeverTranslateLanguage();
+  await clickNeverTranslateLanguage();
   await assertIsNeverTranslateLanguage("es", { checked: true });
 
   info(
@@ -169,7 +169,7 @@ add_task(
     await openTranslationsSettingsMenuViaTranslationsButton();
 
     await assertIsNeverTranslateLanguage("es", { checked: false });
-    await toggleNeverTranslateLanguage();
+    await clickNeverTranslateLanguage();
     await assertIsNeverTranslateLanguage("es", { checked: true });
 
     info(
@@ -236,7 +236,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateLanguage("es", { checked: false });
 
-    await toggleAlwaysTranslateLanguage();
+    await clickAlwaysTranslateLanguage();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateLanguage("es", { checked: false });
@@ -274,7 +274,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateLanguage("es", { checked: false });
 
-    await toggleNeverTranslateLanguage();
+    await clickNeverTranslateLanguage();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateLanguage("es", { checked: true });

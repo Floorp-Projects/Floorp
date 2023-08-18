@@ -32,7 +32,7 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
   });
 
   await openTranslationsSettingsMenuViaTranslationsButton();
-  await toggleAlwaysTranslateLanguage();
+  await clickAlwaysTranslateLanguage();
 
   await assertTranslationsButton(
     { button: true, circleArrows: true, locale: false, icon: true },

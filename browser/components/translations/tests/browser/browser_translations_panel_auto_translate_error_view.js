@@ -46,7 +46,7 @@ add_task(
     await openTranslationsSettingsMenuViaTranslationsButton();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
-    await toggleAlwaysTranslateLanguage();
+    await clickAlwaysTranslateLanguage();
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
 
     await assertTranslationsButton(
