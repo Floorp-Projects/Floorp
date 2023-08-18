@@ -3,9 +3,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// import { CustomKeyboardShortcutUtils } from "resource:///modules/CustomKeyboardShortcutUtils.sys.mjs";
-// const CustomKeyboardShortcutUtils = ChromeUtils.importESModule("resource:///modules/CustomKeyboardShortcutUtils.sys.mjs");
-  
+/**
+ * This module exports an object containing keyboard shortcut actions that can be triggered by the user.
+ * Each action is represented by an array with three elements:
+ * 1. The code that will be executed when the action is triggered.
+ * 2. A string used for Fluent localization.
+ * 3. The type of action, which can be used to filter actions or get all actions of a type.
+ * The module also exports constants for the preference keys used to store the keyboard shortcuts and whether they are enabled.
+ *
+ *  @module CustomKeyboardShortcutUtils
+ * 
+ *  @example Importing the module
+ *  import { CustomKeyboardShortcutUtils } from "resource:///modules/CustomKeyboardShortcutUtils.sys.mjs";
+ *  const CustomKeyboardShortcutUtils = ChromeUtils.importESModule("resource:///modules/CustomKeyboardShortcutUtils.sys.mjs");
+ * 
+ *  @example Getting all actions of a type
+ *  const allActionType = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.getInfoFunctions.getAllActionType();
+ *  console.log(allActionType);
+ *  Codes output: ["tab-action", "page-action", "visible-action", "history-action", "search-action", "tools-action", "pip-action", "bookmark-action", "open-page-action", "history-action", "downloads-action", "sidebar-action", "bms-action"]
+ * 
+ *
+ * @typedef {object} ShortcutAction
+ * @property {string} code - The code that will be executed when the action is triggered.
+ * @property {string} localizationKey - A string used for Fluent localization.
+ * @property {string} type - The type of action, which can be used to filter actions or get all actions of a type.
+ *
+ * @typedef {object} KeyboardShortcutActions
+ * @typedef {object} CustomKeyboardShortcutUtils
+ * @property {string[]} EXPORTED_SYMBOLS - The exported symbols of the module.
+ * @property {string} SHORTCUT_KEY_AND_ACTION_PREF - The preference key used to store the keyboard shortcuts and actions.
+ * @property {string} SHORTCUT_KEY_AND_ACTION_ENABLED_PREF - The preference key used to store whether the keyboard shortcuts and actions are enabled.
+ * @property {KeyboardShortcutActions} keyboradShortcutActions - The object containing all the keyboard shortcut actions.
+ */
 
 export const EXPORTED_SYMBOLS = ["CustomKeyboardShortcutUtils"];
 export const SHORTCUT_KEY_AND_ACTION_PREF = "floorp.custom.shortcutkeysAndActions";
@@ -13,7 +42,8 @@ export const SHORTCUT_KEY_AND_ACTION_ENABLED_PREF = "floorp.custom.shortcutkeysA
 
 export const keyboradShortcutActions = {
 
-    /* these are the actions that can be triggered by keyboard shortcuts.
+    /*
+     * these are the actions that can be triggered by keyboard shortcuts.
      * the first element of each array is the code that will be executed.
      * the second element is use for Fluent localization.
      * 3rd is the type of action. You can use it to filter actions or get all actions of a type.
