@@ -739,10 +739,31 @@
   }
 
   .csks-content-box {
-    border-top: solid 1px gray;
     margin: 15px 0px;
   }
 
   .csks-box-item {
-    margin: 10px 0px;
+    padding: 10px 0px 5px 0px;
+  }
+
+  .csks-box-item {
+    border-top: solid 1px gray;
+    margin: 10px 0px 5px 0px;
+  }
+    
+  .csks-box-item-label {
+    font-weight: bold;
+  }
+  
+  .indent.tip-caption.csks-box-item-description {
+    font-weight: bold;
+  }
+
+  .csks-box-title {
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .csks-box-item-description::before {
+    display: none;
   }

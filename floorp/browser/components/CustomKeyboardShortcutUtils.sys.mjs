@@ -206,11 +206,16 @@ export const keyboradShortcutFunctions = {
       Services.prefs.clearUserPref(SHORTCUT_KEY_AND_ACTION_PREF);
     },
 
-    removeKeyboradShortcut(actionName, key, keyCode, modifiers) {
+    removeKeyboradShortcutByAllNames(actionName, key, keyCode, modifiers) {
       let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
       let newKeysState = keysState.filter(keyState => { return !(keyState.actionName === actionName && keyState.key === key && keyState.keyCode === keyCode && keyState.modifiers === modifiers) });
       Services.prefs.setStringPref(SHORTCUT_KEY_AND_ACTION_PREF, JSON.stringify(newKeysState));
-    }
+    },
+    removeKeyboradShortcutByActionName(actionName) {
+      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
+      let newKeysState = keysState.filter(keyState => { return !(keyState.actionName === actionName) });
+      Services.prefs.setStringPref(SHORTCUT_KEY_AND_ACTION_PREF, JSON.stringify(newKeysState));
+    },
   },
 
   getInfoFunctions: {
@@ -270,12 +275,30 @@ export const keyboradShortcutFunctions = {
     
     getAllExsitActionsName() {
       let result = [];
-      let configs = keyboradShortcutFunctions.preferencesFunctions.getAllExsitKeys();
+      let configs = keyboradShortcutFunctions.getInfoFunctions.getAllExsitKeys();
       for (let config of configs) {
         result.push(config.actionName);
       }
       return result;
     },
+
+    actionIsExsit(actionName) {
+      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
+      let exsitKey = keysState.find(keyState => keyState.actionName === actionName);
+      if (exsitKey) {
+        return true;
+      }
+      return false;
+    },
+
+    getActionKey(actionName) {
+      let keysState = JSON.parse(Services.prefs.getStringPref(SHORTCUT_KEY_AND_ACTION_PREF));
+      let exsitKey = keysState.find(keyState => keyState.actionName === actionName);
+      if (exsitKey) {
+        return exsitKey;
+      }
+      return null;
+    },   
 
     getFluentLocalization(actionName) {
       if (!keyboradShortcutActions[actionName]) {

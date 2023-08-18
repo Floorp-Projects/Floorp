@@ -48,9 +48,30 @@ const gCSKPane = {
       const flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_OK + prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL;
       let result = prompts.confirmEx(null, l10n.formatValueSync("CSK-restore-default"), l10n.formatValueSync("CSK-restore-default-description"), flags, "", null, "", null, check);
       if (result == 0) {
-        utils.removeAllKeyboradShortcut();
+        utils.preferencesFunctions.removeAllKeyboradShortcut();
       }
     };
+
+    async function removeShortcutKey(actionName){
+      let l10n = new Localization(["browser/floorp.ftl"], true);
+      const prompts = Services.prompt;
+      const check = {
+        value: false
+      };
+      const flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_OK + prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL;
+      let result = prompts.confirmEx(null, l10n.formatValueSync("CSK-remove-shortcutkey"), l10n.formatValueSync("CSK-remove-shortcutkey-description"), flags, "", null, "", null, check);
+      if (result == 0) {
+        utils.preferencesFunctions.removeKeyboradShortcutByActionName(actionName);
+
+        const removeButton = document.querySelector(`.csks-remove-button[value="${actionName}"]`);
+        const button = document.querySelector(`.csks-button[value="${actionName}"]`);
+        const descriptionItem = document.querySelector(`.csks-box-item-description[value="${actionName}"]`);
+        button.setAttribute("disabled", "false");
+        removeButton.setAttribute("hidden", "true");
+        descriptionItem.remove();
+        window.location.reload();
+      }
+    }
 
     restoreDefaultButton.addEventListener("click", restoreDefault);
 
@@ -70,24 +91,52 @@ const gCSKPane = {
         shortcutkeyPreferences.appendChild(box);         
 
         for (actionName of actions) {
-          (function (action) {
+          (async function (action) {
             const actionL10nId = utils.getInfoFunctions.getFluentLocalization(action);
             const parentBox = document.getElementById(`${type}`);
-        
+            const CSKIsExist = utils.getInfoFunctions.actionIsExsit(action);
+            let l10n = new Localization(["browser/floorp.ftl"], true);
+ 
             const boxItem = window.MozXULElement.parseXULToFragment(`
-              <hbox class="csks-box-item">
-                <label class="csks-box-item-label" data-l10n-id="${actionL10nId}"/>
+              <hbox class="csks-box-item" id="${action}">
+                <label class="csks-box-item-label" value="${action}" data-l10n-id="${actionL10nId}"/>
                 <spacer flex="1"/> 
+                <button class="csks-remove-button" value="${action}" label="Remove Action" hidden="${!CSKIsExist}"/>
                 <button class="csks-button" value="${action}" label="Customize Action"/>
               </hbox>
             `);
             parentBox.appendChild(boxItem);
-        
-            // add event listener
-            const button = document.querySelector(`.csks-button[value="${action}"]`);
-            button.addEventListener("click", function () {
-              CustomKeyboardShortcutUtils.keyboradShortcutFunctions.openDialog(action);
-            });
+
+            if (CSKIsExist) {
+              const keyboradShortcutObj = utils.getInfoFunctions.getActionKey(action);
+              const key = keyboradShortcutObj.key ? keyboradShortcutObj.key : keyboradShortcutObj.keycode;
+              const modifiers = keyboradShortcutObj.modifiers ? keyboradShortcutObj.modifiers : undefined;
+
+              // Disable button if the keyborad shortcut is exist
+              const button = document.querySelector(`.csks-button[value="${action}"]`);
+              button.setAttribute("disabled", "true");
+
+              // Add keyborad shortcut info
+              const boxItem = document.querySelector(`.csks-box-item[id="${action}"]`);
+              const keyboradShortcutInfo = window.MozXULElement.parseXULToFragment(`
+                <description value="${action}" class="indent tip-caption csks-box-item-description">
+                  ${l10n.formatValueSync("CSK-keyborad-shortcut-info")} "${key}" , "${modifiers}"
+                </description>
+              `);
+              boxItem.after(keyboradShortcutInfo);
+
+              // Add remove button event listener
+              const removeButton = document.querySelector(`.csks-remove-button[value="${action}"]`);
+              removeButton.addEventListener("click", function () {
+                removeShortcutKey(action);
+              });
+            } else {
+              // add event listener
+              const button = document.querySelector(`.csks-button[value="${action}"]`);
+              button.addEventListener("click", function () {
+                CustomKeyboardShortcutUtils.keyboradShortcutFunctions.openDialog(action);
+              });
+            }
           })(actionName);
         }
       }
