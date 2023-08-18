@@ -324,7 +324,7 @@ jobs:
 
 ##################################################################### Deployments #######################################################################################################
   Deployments:
-    needs: [get-display-version, get-buildid, get-inside-version, linux-x86_64-gen-update-xml, win-x86_64-gen-update-xml]
+    needs: [get-display-version, get-buildid, get-inside-version, linux-x86_64-gen-update-xml, win-x86_64-gen-update-xml, create-mac-universal-artifact]
     runs-on: ubuntu-latest
     environment:
       name: Deploy-to-stable-release
