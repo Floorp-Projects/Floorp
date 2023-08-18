@@ -739,7 +739,13 @@ var TranslationsPanel = new (class {
     const neverTranslateMenuItems = panel.ownerDocument.querySelectorAll(
       ".never-translate-language-menuitem"
     );
+    const alwaysOfferTranslationsMenuItems =
+      panel.ownerDocument.querySelectorAll(
+        ".always-offer-translations-menuitem"
+      );
 
+    const alwaysOfferTranslations =
+      TranslationsParent.shouldAlwaysOfferTranslations();
     const alwaysTranslateLanguage =
       TranslationsParent.shouldAlwaysTranslateLanguage(docLangTag);
     const neverTranslateLanguage =
@@ -749,6 +755,12 @@ var TranslationsPanel = new (class {
       !isDocLangTagSupported ||
       docLangTag === new Intl.Locale(Services.locale.appLocaleAsBCP47).language;
 
+    for (const menuitem of alwaysOfferTranslationsMenuItems) {
+      menuitem.setAttribute(
+        "checked",
+        alwaysOfferTranslations ? "true" : "false"
+      );
+    }
     for (const menuitem of alwaysTranslateMenuItems) {
       menuitem.setAttribute(
         "checked",
@@ -1344,6 +1356,13 @@ var TranslationsPanel = new (class {
       .onAlwaysTranslateLanguage(docLangTag, toggledOn);
     this.#updateSettingsMenuLanguageCheckboxStates();
     await this.#doPageAction(pageAction);
+  }
+
+  /**
+   * Toggle offering translations.
+   */
+  async onAlwaysOfferTranslations() {
+    TranslationsParent.toggleAutomaticallyPopupPref();
   }
 
   /**

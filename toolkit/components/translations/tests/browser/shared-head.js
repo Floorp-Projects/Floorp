@@ -487,7 +487,7 @@ async function loadTestPage({
   BrowserTestUtils.loadURIString(tab.linkedBrowser, page);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  if (autoOffer) {
+  if (autoOffer && TranslationsParent.shouldAlwaysOfferTranslations()) {
     info("Waiting for the popup to be automatically shown.");
     await waitForCondition(() => {
       const panel = document.getElementById("translations-panel");
