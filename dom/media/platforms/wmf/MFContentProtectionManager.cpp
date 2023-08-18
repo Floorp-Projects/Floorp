@@ -80,7 +80,9 @@ HRESULT MFContentProtectionManager::BeginEnableContent(
     return HRESULT_FROM_WIN32(ERROR_INVALID_IMAGE_HASH);
   }
 
-  MOZ_ASSERT(mCDMProxy);
+  if (!mCDMProxy) {
+    return MF_E_SHUTDOWN;
+  }
   RETURN_IF_FAILED(
       mCDMProxy->SetContentEnabler(unknownObject.Get(), asyncResult.Get()));
 
@@ -167,6 +169,13 @@ HRESULT MFContentProtectionManager::SetPMPServer(
   ScopedHString serverKey{L"Windows.Media.Protection.MediaProtectionPMPServer"};
   RETURN_IF_FAILED(serverMap->Insert(serverKey.Get(), aPMPServer, &replaced));
   return S_OK;
+}
+
+void MFContentProtectionManager::Shutdown() {
+  if (mCDMProxy) {
+    mCDMProxy->Shutdown();
+    mCDMProxy = nullptr;
+  }
 }
 
 #undef LOG

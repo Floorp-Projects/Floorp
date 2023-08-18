@@ -71,6 +71,8 @@ class MFCDMParent final : public PMFCDMParent {
 
   already_AddRefed<MFCDMProxy> GetMFCDMProxy();
 
+  void ShutdownCDM();
+
   void Destroy();
 
  private:

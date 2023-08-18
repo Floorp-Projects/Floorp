@@ -99,6 +99,12 @@ void MFMediaEngineParent::DestroyEngineIfExists(
     mMediaSource->ShutdownTaskQueue();
     mMediaSource = nullptr;
   }
+#ifdef MOZ_WMF_CDM
+  if (mContentProtectionManager) {
+    mContentProtectionManager->Shutdown();
+    mContentProtectionManager = nullptr;
+  }
+#endif
   if (mMediaEngine) {
     mMediaEngine->Shutdown();
     mMediaEngine = nullptr;
@@ -112,11 +118,6 @@ void MFMediaEngineParent::DestroyEngineIfExists(
   if (aError) {
     Unused << SendNotifyError(*aError);
   }
-#ifdef MOZ_WMF_CDM
-  if (mContentProtectionManager) {
-    mContentProtectionManager = nullptr;
-  }
-#endif
 }
 
 void MFMediaEngineParent::CreateMediaEngine() {
