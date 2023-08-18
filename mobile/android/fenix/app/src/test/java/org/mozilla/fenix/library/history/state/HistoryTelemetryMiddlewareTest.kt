@@ -12,6 +12,7 @@ import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryFragmentAction
 import org.mozilla.fenix.library.history.HistoryFragmentState
@@ -107,5 +108,17 @@ class HistoryTelemetryMiddlewareTest {
         store.dispatch(HistoryFragmentAction.DeleteTimeRange(null)).joinBlocking()
 
         assertNotNull(GleanHistory.removedAll.testGetValue())
+    }
+
+    @Test
+    fun `GIVEN recently closed is requested to be entered THEN telemetry recorded`() {
+        val store = HistoryFragmentStore(
+            initialState = HistoryFragmentState.initial,
+            middleware = listOf(middleware),
+        )
+
+        store.dispatch(HistoryFragmentAction.EnterRecentlyClosed).joinBlocking()
+
+        assertNotNull(Events.recentlyClosedTabsOpened.testGetValue())
     }
 }

@@ -185,6 +185,30 @@ class HistoryFragmentStoreTest {
         assertTrue(store.state.mode.selectedItems.contains(historyItem))
     }
 
+    @Test
+    fun `GIVEN mode is editing WHEN back pressed THEN mode becomes normal`() {
+        val store = HistoryFragmentStore(
+            emptyDefaultState().copy(
+                mode = HistoryFragmentState.Mode.Editing(
+                    setOf(),
+                ),
+            ),
+        )
+
+        store.dispatch(HistoryFragmentAction.BackPressed).joinBlocking()
+
+        assertEquals(HistoryFragmentState.Mode.Normal, store.state.mode)
+    }
+
+    @Test
+    fun `GIVEN mode is not editing WHEN back pressed THEN does not change`() {
+        val store = HistoryFragmentStore(emptyDefaultState().copy(mode = HistoryFragmentState.Mode.Syncing))
+
+        store.dispatch(HistoryFragmentAction.BackPressed).joinBlocking()
+
+        assertEquals(HistoryFragmentState.Mode.Syncing, store.state.mode)
+    }
+
     private fun emptyDefaultState(): HistoryFragmentState = HistoryFragmentState(
         items = listOf(),
         mode = HistoryFragmentState.Mode.Normal,

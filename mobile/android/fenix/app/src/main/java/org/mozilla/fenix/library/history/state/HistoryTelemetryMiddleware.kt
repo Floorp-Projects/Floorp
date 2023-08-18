@@ -7,6 +7,7 @@ package org.mozilla.fenix.library.history.state
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryFragmentAction
 import org.mozilla.fenix.library.history.HistoryFragmentState
@@ -30,6 +31,9 @@ class HistoryTelemetryMiddleware(
         val currentState = context.state
         next(action)
         when (action) {
+            is HistoryFragmentAction.EnterRecentlyClosed -> {
+                Events.recentlyClosedTabsOpened.record(NoExtras())
+            }
             is HistoryFragmentAction.HistoryItemClicked -> {
                 if (currentState.mode.selectedItems.isEmpty()) {
                     when (val item = action.item) {

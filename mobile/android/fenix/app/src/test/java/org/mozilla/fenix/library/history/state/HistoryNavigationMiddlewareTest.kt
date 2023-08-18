@@ -5,6 +5,7 @@
 package org.mozilla.fenix.library.history.state
 
 import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.any
@@ -17,8 +18,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.verify
+import org.mozilla.fenix.R
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryFragmentAction
+import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentState
 import org.mozilla.fenix.library.history.HistoryFragmentStore
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
@@ -39,6 +42,7 @@ class HistoryNavigationMiddlewareTest {
                     openedInBrowser = true
                 }
             },
+            onBackPressed = { },
             scope = this,
         )
         val store =
@@ -62,6 +66,7 @@ class HistoryNavigationMiddlewareTest {
                     openedInBrowser = true
                 }
             },
+            onBackPressed = { },
             scope = this,
         )
         val state = HistoryFragmentState.initial.copy(
@@ -85,6 +90,7 @@ class HistoryNavigationMiddlewareTest {
         val middleware = HistoryNavigationMiddleware(
             navController = navController,
             openToBrowser = { },
+            onBackPressed = { },
             scope = this,
         )
         val store =
@@ -97,5 +103,69 @@ class HistoryNavigationMiddlewareTest {
             directions = any(),
             navOptions = any(),
         )
+    }
+
+    @Test
+    fun `WHEN recently closed is requested to be entered THEN nav controller navigates to it`() = runTest {
+        val navController = mock<NavController>()
+        val middleware = HistoryNavigationMiddleware(
+            navController = navController,
+            openToBrowser = { },
+            onBackPressed = { },
+            scope = this,
+        )
+        val store =
+            HistoryFragmentStore(HistoryFragmentState.initial, middleware = listOf(middleware))
+
+        store.dispatch(HistoryFragmentAction.EnterRecentlyClosed).joinBlocking()
+        advanceUntilIdle()
+
+        verify(navController).navigate(
+            HistoryFragmentDirections.actionGlobalRecentlyClosed(),
+            NavOptions.Builder().setPopUpTo(R.id.recentlyClosedFragment, true).build(),
+        )
+    }
+
+    @Test
+    fun `GIVEN mode is editing WHEN back pressed THEN no navigation happens`() = runTest {
+        var onBackPressed = false
+        val middleware = HistoryNavigationMiddleware(
+            navController = mock(),
+            openToBrowser = { },
+            onBackPressed = { onBackPressed = true },
+            scope = this,
+        )
+        val store =
+            HistoryFragmentStore(
+                HistoryFragmentState.initial.copy(
+                    mode = HistoryFragmentState.Mode.Editing(
+                        setOf(),
+                    ),
+                ),
+                middleware = listOf(middleware),
+            )
+
+        store.dispatch(HistoryFragmentAction.BackPressed).joinBlocking()
+        advanceUntilIdle()
+
+        assertFalse(onBackPressed)
+    }
+
+    @Test
+    fun `GIVEN mode is not editing WHEN back pressed THEN onBackPressed callback invoked`() = runTest {
+        var onBackPressed = false
+        val middleware = HistoryNavigationMiddleware(
+            navController = mock(),
+            openToBrowser = { },
+            onBackPressed = { onBackPressed = true },
+            scope = this,
+        )
+        val store =
+            HistoryFragmentStore(HistoryFragmentState.initial, middleware = listOf(middleware))
+
+        store.dispatch(HistoryFragmentAction.BackPressed).joinBlocking()
+        advanceUntilIdle()
+
+        assertTrue(onBackPressed)
     }
 }

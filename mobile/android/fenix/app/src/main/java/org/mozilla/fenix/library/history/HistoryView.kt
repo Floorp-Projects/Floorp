@@ -99,7 +99,7 @@ class HistoryView(
         val last = layoutManager.findLastVisibleItemPosition() + 1
         historyAdapter.notifyItemRangeChanged(first, last - first)
 
-        if (state.mode::class != oldMode::class) {
+        if (state.mode::class != oldMode::class && !FeatureFlags.historyFragmentLibStateRefactor) {
             interactor.onModeSwitched()
         }
 
@@ -135,7 +135,11 @@ class HistoryView(
 
         with(binding.recentlyClosedNavEmpty) {
             recentlyClosedNav.setOnClickListener {
-                interactor.onRecentlyClosedClicked()
+                if (FeatureFlags.historyFragmentLibStateRefactor) {
+                    store.dispatch(HistoryFragmentAction.EnterRecentlyClosed)
+                } else {
+                    interactor.onRecentlyClosedClicked()
+                }
             }
             val numRecentTabs = recentlyClosedNav.context.components.core.store.state.closedTabs.size
             recentlyClosedTabsDescription.text = String.format(

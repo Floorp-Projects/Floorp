@@ -63,6 +63,7 @@ import org.mozilla.fenix.library.history.state.HistoryNavigationMiddleware
 import org.mozilla.fenix.library.history.state.HistoryStorageMiddleware
 import org.mozilla.fenix.library.history.state.HistorySyncMiddleware
 import org.mozilla.fenix.library.history.state.HistoryTelemetryMiddleware
+import org.mozilla.fenix.library.history.state.bindings.MenuBinding
 import org.mozilla.fenix.library.history.state.bindings.PendingDeletionBinding
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.utils.allowUndo
@@ -95,6 +96,13 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         PendingDeletionBinding(requireContext().components.appStore, historyView)
     }
 
+    private val menuBinding by lazy {
+        MenuBinding(
+            store = historyStore,
+            invalidateOptionsMenu = { activity?.invalidateOptionsMenu() },
+        )
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -110,6 +118,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                         HistoryNavigationMiddleware(
                             navController = findNavController(),
                             openToBrowser = ::openItem,
+                            onBackPressed = requireActivity().onBackPressedDispatcher::onBackPressed,
                         ),
                         HistoryTelemetryMiddleware(
                             isInPrivateMode = requireComponents.appStore.state.mode == Mode.Private,
@@ -263,10 +272,12 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
 
     private fun startStateBindings() {
         pendingDeletionBinding.start()
+        menuBinding.start()
     }
 
     private fun stopStateBindings() {
         pendingDeletionBinding.stop()
+        menuBinding.stop()
     }
 
     private fun updateDeleteMenuItemView(isEnabled: Boolean) {
@@ -414,8 +425,12 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
         }
     }
 
-    override fun onBackPressed(): Boolean {
-        return historyView.onBackPressed()
+    override fun onBackPressed() = if (FeatureFlags.historyFragmentLibStateRefactor) {
+        // The state needs to be updated accordingly if Edit mode is active
+        historyStore.dispatch(HistoryFragmentAction.BackPressed)
+        true
+    } else {
+        historyView.onBackPressed()
     }
 
     override fun onDestroyView() {

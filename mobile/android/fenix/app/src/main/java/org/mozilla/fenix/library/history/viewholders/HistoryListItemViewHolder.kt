@@ -33,7 +33,11 @@ class HistoryListItemViewHolder(
 
     init {
         binding.recentlyClosedNavEmpty.recentlyClosedNav.setOnClickListener {
-            historyInteractor.onRecentlyClosedClicked()
+            if (FeatureFlags.historyFragmentLibStateRefactor) {
+                store.dispatch(HistoryFragmentAction.EnterRecentlyClosed)
+            } else {
+                historyInteractor.onRecentlyClosedClicked()
+            }
         }
 
         binding.historyLayout.overflowView.apply {
