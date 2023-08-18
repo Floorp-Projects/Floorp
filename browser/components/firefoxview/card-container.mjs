@@ -61,6 +61,18 @@ class CardContainer extends MozLitElement {
     if (this.preserveCollapseState) {
       Services.prefs.setBoolPref(this.openStatePref, this.isExpanded);
     }
+    if (!this.isExpanded && this.shortPageName) {
+      // Record telemetry
+      Services.telemetry.recordEvent(
+        "firefoxview_next",
+        "card_collapsed",
+        "card_container",
+        null,
+        {
+          data_type: this.shortPageName,
+        }
+      );
+    }
   }
 
   render() {

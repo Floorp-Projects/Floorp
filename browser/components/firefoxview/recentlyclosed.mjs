@@ -27,13 +27,14 @@ class RecentlyClosedTabsInView extends ViewPage {
     super();
     this.boundObserve = (...args) => this.observe(...args);
     this.fullyUpdated = false;
-    this.maxTabsLength = this.overview ? 5 : 25;
+    this.maxTabsLength = this.recentBrowsing ? 5 : 25;
     this.recentlyClosedTabs = [];
   }
 
   static queries = {
     cardEl: "card-container",
     emptyState: "fxview-empty-state",
+    tabList: "fxview-tab-list",
   };
 
   observe(subject, topic, data) {
@@ -153,11 +154,49 @@ class RecentlyClosedTabsInView extends ViewPage {
   onReopenTab(e) {
     const closedId = parseInt(e.originalTarget.closedId, 10);
     lazy.SessionStore.undoCloseById(closedId);
+
+    // Record telemetry
+    let tabClosedAt = parseInt(e.originalTarget.time);
+    const position =
+      Array.from(this.tabList.rowEls).indexOf(e.originalTarget) + 1;
+
+    let now = Date.now();
+    let deltaSeconds = (now - tabClosedAt) / 1000;
+    Services.telemetry.recordEvent(
+      "firefoxview_next",
+      "recently_closed",
+      "tabs",
+      null,
+      {
+        position: position.toString(),
+        delta: deltaSeconds.toString(),
+        page: this.recentBrowsing ? "recentbrowsing" : "recentlyclosed",
+      }
+    );
   }
 
   onDismissTab(e) {
     const closedId = parseInt(e.originalTarget.closedId, 10);
     lazy.SessionStore.forgetClosedTabById(closedId);
+
+    // Record telemetry
+    let tabClosedAt = parseInt(e.originalTarget.time);
+    const position =
+      Array.from(this.tabList.rowEls).indexOf(e.originalTarget) + 1;
+
+    let now = Date.now();
+    let deltaSeconds = (now - tabClosedAt) / 1000;
+    Services.telemetry.recordEvent(
+      "firefoxview_next",
+      "dismiss_closed_tab",
+      "tabs",
+      null,
+      {
+        position: position.toString(),
+        delta: deltaSeconds.toString(),
+        page: this.recentBrowsing ? "recentbrowsing" : "recentlyclosed",
+      }
+    );
   }
 
   willUpdate() {
@@ -201,7 +240,7 @@ class RecentlyClosedTabsInView extends ViewPage {
         .descriptionLabels=${descriptionLabels}
         .descriptionLink=${descriptionLink}
         class="empty-state recentlyclosed"
-        ?isInnerCard=${this.overview}
+        ?isInnerCard=${this.recentBrowsing}
         ?isSelectedTab=${this.selectedTab}
         mainImageUrl="chrome://browser/content/firefoxview/recentlyclosed-empty.svg"
       >
@@ -210,7 +249,7 @@ class RecentlyClosedTabsInView extends ViewPage {
   }
 
   render() {
-    if (!this.selectedTab && !this.overview) {
+    if (!this.selectedTab && !this.recentBrowsing) {
       return null;
     }
     return html`
@@ -226,11 +265,11 @@ class RecentlyClosedTabsInView extends ViewPage {
       </div>
       <div class=${classMap({ "cards-container": this.selectedTab })}>
         <card-container
-          shortPageName="recentlyclosed"
-          ?showViewAll=${this.overview && this.recentlyClosedTabs.length}
-          ?preserveCollapseState=${this.overview ? true : null}
+          shortPageName=${this.recentBrowsing ? "recentlyclosed" : null}
+          ?showViewAll=${this.recentBrowsing && this.recentlyClosedTabs.length}
+          ?preserveCollapseState=${this.recentBrowsing ? true : null}
           ?hideHeader=${this.selectedTab}
-          ?hidden=${!this.recentlyClosedTabs.length && !this.overview}
+          ?hidden=${!this.recentlyClosedTabs.length && !this.recentBrowsing}
         >
           <h3
             slot="header"
@@ -245,7 +284,7 @@ class RecentlyClosedTabsInView extends ViewPage {
             @fxview-tab-list-secondary-action=${this.onDismissTab}
             @fxview-tab-list-primary-action=${this.onReopenTab}
           ></fxview-tab-list>
-          ${this.overview
+          ${this.recentBrowsing
             ? html`
                 <div slot="main" ?hidden=${this.recentlyClosedTabs.length}>
                   ${this.emptyMessageTemplate()}

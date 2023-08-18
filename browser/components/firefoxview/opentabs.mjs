@@ -76,11 +76,11 @@ class OpenTabsInView extends ViewPage {
   }
 
   render() {
-    if (!this.selectedTab && !this.overview) {
+    if (!this.selectedTab && !this.recentBrowsing) {
       return null;
     }
-    if (this.overview) {
-      return this.getOverviewTemplate();
+    if (this.recentBrowsing) {
+      return this.getRecentBrowsingTemplate();
     }
     const { window: currentWindow } =
       window.browsingContext.embedderWindowGlobal.browsingContext;
@@ -151,19 +151,19 @@ class OpenTabsInView extends ViewPage {
   }
 
   /**
-   * Render a template for the overview page, which shows a single list of
+   * Render a template for the 'Recent browsing' page, which shows a single list of
    * recently accessed tabs, rather than a list of tabs per window.
    *
    * @returns {TemplateResult}
-   *   The overview template.
+   *   The recent browsing template.
    */
-  getOverviewTemplate() {
+  getRecentBrowsingTemplate() {
     const tabs = Array.from(this.windows.values())
       .flat()
       .sort((a, b) => b.lastAccessed - a.lastAccessed);
     return html`<view-opentabs-card
       .tabs=${tabs}
-      .overview=${true}
+      .recentBrowsing=${true}
     ></view-opentabs-card>`;
   }
 
@@ -196,7 +196,7 @@ class OpenTabsInView extends ViewPage {
         break;
     }
     this.requestUpdate();
-    if (!this.overview) {
+    if (!this.recentBrowsing) {
       const selector = `view-opentabs-card[data-inner-id="${win.windowGlobalChild.innerWindowId}"]`;
       this.shadowRoot.querySelector(selector)?.requestUpdate();
     }
@@ -241,7 +241,7 @@ class OpenTabsInViewCard extends ViewPage {
     showMore: { type: Boolean },
     tabs: { type: Array },
     title: { type: String },
-    overview: { type: Boolean },
+    recentBrowsing: { type: Boolean },
   };
   static MAX_TABS_FOR_COMPACT_HEIGHT = 7;
 
@@ -250,7 +250,7 @@ class OpenTabsInViewCard extends ViewPage {
     this.showMore = false;
     this.tabs = [];
     this.title = "";
-    this.overview = false;
+    this.recentBrowsing = false;
   }
 
   static queries = {
@@ -286,7 +286,7 @@ class OpenTabsInViewCard extends ViewPage {
   }
 
   getMaxTabsLength() {
-    if (this.overview) {
+    if (this.recentBrowsing) {
       return 5;
     } else if (this.classList.contains("height-limited") && !this.showMore) {
       return OpenTabsInViewCard.MAX_TABS_FOR_COMPACT_HEIGHT;
@@ -301,11 +301,11 @@ class OpenTabsInViewCard extends ViewPage {
         href="chrome://browser/content/firefoxview/firefoxview-next.css"
       />
       <card-container
-        ?preserveCollapseState=${this.overview}
-        shortPageName="opentabs"
-        ?showViewAll=${this.overview}
+        ?preserveCollapseState=${this.recentBrowsing}
+        shortPageName=${this.recentBrowsing ? "opentabs" : null}
+        ?showViewAll=${this.recentBrowsing}
       >
-        ${this.overview
+        ${this.recentBrowsing
           ? html`<h3
               slot="header"
               data-l10n-id=${"firefoxview-opentabs-header"}
@@ -323,7 +323,7 @@ class OpenTabsInViewCard extends ViewPage {
             >${this.panelListTemplate()}</fxview-tab-list
           >
         </div>
-        ${!this.overview
+        ${!this.recentBrowsing
           ? html` <div
               @click=${() => (this.showMore = !this.showMore)}
               data-l10n-id="${this.showMore

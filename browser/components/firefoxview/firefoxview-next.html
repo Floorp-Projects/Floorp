@@ -25,7 +25,7 @@
     />
     <script
       type="module"
-      src="chrome://browser/content/firefoxview/overview.mjs"
+      src="chrome://browser/content/firefoxview/recentbrowsing.mjs"
     ></script>
     <script
       type="module"
@@ -56,7 +56,7 @@
       <fxview-category-button
         class="category"
         slot="category-button"
-        name="overview"
+        name="recentbrowsing"
         data-l10n-id="firefoxview-overview-nav"
       >
       </fxview-category-button>
@@ -91,7 +91,7 @@
     </fxview-category-navigation>
     <main id="pages" role="application" data-l10n-id="firefoxview-page-label">
       <named-deck>
-        <view-overview name="overview">
+        <view-recentbrowsing name="recentbrowsing">
           <div>
             <view-opentabs slot="opentabs"></view-opentabs>
           </div>
@@ -101,7 +101,7 @@
           <div>
             <view-syncedtabs slot="syncedtabs"></view-syncedtabs>
           </div>
-        </view-overview>
+        </view-recentbrowsing>
         <view-history name="history"></view-history>
         <view-opentabs name="opentabs"></view-opentabs>
         <view-recentlyclosed name="recentlyclosed"></view-recentlyclosed>

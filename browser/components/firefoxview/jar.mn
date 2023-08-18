@@ -15,7 +15,7 @@ browser.jar:
     content/browser/firefoxview/view-opentabs.css
     content/browser/firefoxview/syncedtabs.mjs
     content/browser/firefoxview/view-syncedtabs.css
-    content/browser/firefoxview/overview.mjs
+    content/browser/firefoxview/recentbrowsing.mjs
     content/browser/firefoxview/firefoxview.css
     content/browser/firefoxview/firefoxview-next.css
     content/browser/firefoxview/fxview-category-button.css
@@ -36,7 +36,7 @@ browser.jar:
     content/browser/firefoxview/recently-closed-empty.svg (content/recently-closed-empty.svg)
     content/browser/firefoxview/category-history.svg (content/category-history.svg)
     content/browser/firefoxview/category-opentabs.svg (content/category-opentabs.svg)
-    content/browser/firefoxview/category-overview.svg (content/category-overview.svg)
+    content/browser/firefoxview/category-recentbrowsing.svg (content/category-recentbrowsing.svg)
     content/browser/firefoxview/category-recentlyclosed.svg (content/category-recentlyclosed.svg)
     content/browser/firefoxview/category-syncedtabs.svg (content/category-syncedtabs.svg)
     content/browser/firefoxview/recentlyclosed-empty.svg (content/recentlyclosed-empty.svg)

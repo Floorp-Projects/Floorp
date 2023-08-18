@@ -3926,6 +3926,76 @@ firefoxview:
     expiry_version: "never"
     release_channel_collection: opt-out
 
+firefoxview_next:
+  recently_closed:
+    objects: ["tabs"]
+    description: >
+      Recorded when a recently closed tab is clicked
+    extra_keys:
+      delta: Time since the tab was closed
+      position: The position of the tab in the recently closed tab list (starting at 1)
+      page: The short page name where the recently closed tab was clicked
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1842616
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  dismiss_closed_tab:
+    objects: ["tabs"]
+    description: >
+      Recorded when a recently closed tab is dismissed
+    extra_keys:
+      delta: Time since the tab was closed to when dismissed
+      position: The position of the tab in the recently closed tab list (starting at 1)
+      page: The short page name where the recently closed tab was dismissed
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1842616
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  card_collapsed:
+    objects: ["card_container"]
+    description: >
+      Recorded when a card-container is collapsed
+    extra_keys:
+      data_type: The type of data being collapsed in a card on the 'Recent browsing' page
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1842616
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  change_page:
+    objects: ["navigation"]
+    description: >
+      Recorded when the page/view is changed in Firefox View
+    extra_keys:
+      page: The short page name that the user is navigating to
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1842616
+    expiry_version: "never"
+    release_channel_collection: opt-out
+
 search:
   engine:
     objects: ["change_default", "change_private"]

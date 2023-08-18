@@ -34,7 +34,7 @@ class SyncedTabsInView extends ViewPage {
     this.errorState = null;
     this._id = Math.floor(Math.random() * 10e6);
     this.currentSyncedTabs = [];
-    if (this.overview) {
+    if (this.recentBrowsing) {
       this.maxTabsLength = 6; // 5 tabs plus the device row
     } else {
       // Setting maxTabsLength to -1 for no max
@@ -226,7 +226,7 @@ class SyncedTabsInView extends ViewPage {
         .descriptionLink=${ifDefined(descriptionLink)}
         class="empty-state synced-tabs"
         ?isSelectedTab=${this.selectedTab}
-        ?isInnerCard=${this.overview}
+        ?isInnerCard=${this.recentBrowsing}
         mainImageUrl="${ifDefined(mainImageUrl)}"
         headerIconUrl="${ifDefined(headerIconUrl)}"
         id="empty-container"
@@ -295,14 +295,16 @@ class SyncedTabsInView extends ViewPage {
   }
 
   noDeviceTabsTemplate(deviceName, deviceType) {
-    if (this.overview) {
+    if (this.recentBrowsing) {
       return html` ${this.deviceTemplate(deviceName, deviceType, [])}
         <div
           class="blackbox notabs"
           data-l10n-id="firefoxview-syncedtabs-device-notabs"
         ></div>`;
     }
-    return html`<card-container shortPageName="syncedtabs">
+    return html`<card-container
+      shortPageName=${this.recentBrowsing ? "syncedtabs" : null}
+    >
       <h3 slot="header">
         <span class="icon ${deviceType}" role="presentation"></span>
         ${deviceName}
@@ -317,7 +319,7 @@ class SyncedTabsInView extends ViewPage {
 
   deviceTemplate(deviceName, deviceType, tabs) {
     let tabItems = this.getTabItems(tabs);
-    if (this.overview) {
+    if (this.recentBrowsing) {
       /* Insert device at the beginning of the tabs array */
       let icon;
       switch (deviceType) {
@@ -337,7 +339,7 @@ class SyncedTabsInView extends ViewPage {
       });
     }
     return html`${when(
-        !this.overview,
+        !this.recentBrowsing,
         () => html`<h3 slot="header">
           <span class="icon ${deviceType}" role="presentation"></span>
           ${deviceName}
@@ -353,7 +355,7 @@ class SyncedTabsInView extends ViewPage {
         @fxview-tab-list-secondary-action=${this.onContextMenu}
       >
         ${when(
-          this.overview,
+          this.recentBrowsing,
           () => html`<h3 slot="header">
             <span class="icon ${deviceType}" role="presentation"></span>
             ${deviceName}
@@ -390,7 +392,7 @@ class SyncedTabsInView extends ViewPage {
 
     for (let id in renderInfo) {
       if (renderInfo[id].tabs.length) {
-        if (this.overview) {
+        if (this.recentBrowsing) {
           renderArray.push(
             this.deviceTemplate(
               renderInfo[id].name,
@@ -400,7 +402,8 @@ class SyncedTabsInView extends ViewPage {
           );
         } else {
           renderArray.push(
-            html`<card-container shortPageName="syncedtabs"
+            html`<card-container
+              shortPageName=${this.recentBrowsing ? "syncedtabs" : null}
               >${this.deviceTemplate(
                 renderInfo[id].name,
                 renderInfo[id].deviceType,
@@ -462,7 +465,7 @@ class SyncedTabsInView extends ViewPage {
       rel="stylesheet"
       href="chrome://browser/content/firefoxview/firefoxview-next.css"
     />`);
-    if (!this.overview) {
+    if (!this.recentBrowsing) {
       renderArray.push(html`<div class="sticky-container bottom-fade">
         <h2
           class="page-header"
@@ -471,7 +474,7 @@ class SyncedTabsInView extends ViewPage {
       </div>`);
     }
 
-    if (this.overview) {
+    if (this.recentBrowsing) {
       renderArray.push(
         html`<card-container
           preserveCollapseState
@@ -482,7 +485,7 @@ class SyncedTabsInView extends ViewPage {
           <h3
             slot="header"
             data-l10n-id="firefoxview-synced-tabs-header"
-            class="overview-header"
+            class="recentbrowsing-header"
           ></h3>
           <div slot="main">${this.generateCardContent()}</div>
         </card-container>`
