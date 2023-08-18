@@ -3300,16 +3300,32 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
       if (mouseEvent->IsLeftClickEvent()) {
         if (!mouseEvent->IsControl() && !mouseEvent->IsMeta() &&
             !mouseEvent->IsAlt() && !mouseEvent->IsShift()) {
-          // The default action is simply to dispatch DOMActivate
-          nsEventStatus status = nsEventStatus_eIgnore;
-          // DOMActivate event should be trusted since the activation is
-          // actually occurred even if the cause is an untrusted click event.
-          InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
-          actEvent.mDetail = 1;
-
-          rv = EventDispatcher::Dispatch(this, aVisitor.mPresContext, &actEvent,
-                                         nullptr, &status);
-          if (NS_SUCCEEDED(rv)) {
+          if (OwnerDoc()->MayHaveDOMActivateListeners()) {
+            // The default action is simply to dispatch DOMActivate.
+            // But dispatch that only if needed.
+            nsEventStatus status = nsEventStatus_eIgnore;
+            // DOMActivate event should be trusted since the activation is
+            // actually occurred even if the cause is an untrusted click event.
+            InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
+            actEvent.mDetail = 1;
+            rv = EventDispatcher::Dispatch(this, aVisitor.mPresContext,
+                                           &actEvent, nullptr, &status);
+            if (NS_SUCCEEDED(rv)) {
+              aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+            }
+          } else {
+            if (nsCOMPtr<nsIURI> absURI = GetHrefURI()) {
+              // If you modify this code, tweak also the code handling
+              // eLegacyDOMActivate.
+              nsAutoString target;
+              GetLinkTarget(target);
+              nsContentUtils::TriggerLink(this, absURI, target,
+                                          /* click */ true,
+                                          mouseEvent->IsTrusted());
+            }
+            // Since we didn't dispatch DOMActivate because there were no
+            // listeners, do still set mEventStatus as if it was dispatched
+            // successfully.
             aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
           }
         }
@@ -3323,6 +3339,8 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
       break;
     }
     case eLegacyDOMActivate: {
+      // If you modify this code, tweak also the code handling
+      // eMouseClick.
       if (aVisitor.mEvent->mOriginalTarget == this) {
         if (nsCOMPtr<nsIURI> absURI = GetHrefURI()) {
           nsAutoString target;

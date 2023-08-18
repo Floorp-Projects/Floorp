@@ -121,7 +121,8 @@ class ListenerMapEntryComparator {
 uint32_t EventListenerManager::sMainThreadCreatedCount = 0;
 
 EventListenerManagerBase::EventListenerManagerBase()
-    : mMayHavePaintEventListener(false),
+    : mMayHaveDOMActivateEventListener(false),
+      mMayHavePaintEventListener(false),
       mMayHaveMutationListeners(false),
       mMayHaveCapturingListeners(false),
       mMayHaveSystemGroupListeners(false),
@@ -343,6 +344,12 @@ void EventListenerManager::AddEventListenerInternal(
         mMayHavePaintEventListener = true;
         if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
           window->SetHasPaintEventListeners();
+        }
+        break;
+      case eLegacyDOMActivate:
+        mMayHaveDOMActivateEventListener = true;
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          window->SetHasDOMActivateEventListeners();
         }
         break;
       case eLegacySubtreeModified:

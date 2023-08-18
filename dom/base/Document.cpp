@@ -18755,6 +18755,15 @@ void Document::ClearOOPChildrenLoading() {
   }
 }
 
+bool Document::MayHaveDOMActivateListeners() const {
+  if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
+    return inner->HasDOMActivateEventListeners();
+  }
+
+  // If we can't get information from the window object, default to true.
+  return true;
+}
+
 HighlightRegistry& Document::HighlightRegistry() {
   if (!mHighlightRegistry) {
     mHighlightRegistry = MakeRefPtr<class HighlightRegistry>(this);
