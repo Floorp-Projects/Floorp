@@ -24,12 +24,11 @@
 template <class T>
 class nsPtrHashKey : public PLDHashEntryHdr {
  public:
-  typedef T* KeyType;
-  typedef const T* KeyTypePointer;
+  using KeyType = T*;
+  using KeyTypePointer = const T*;
 
   explicit nsPtrHashKey(const T* aKey) : mKey(const_cast<T*>(aKey)) {}
-  nsPtrHashKey(nsPtrHashKey<T>&& aToMove)
-      : PLDHashEntryHdr(std::move(aToMove)), mKey(std::move(aToMove.mKey)) {}
+  nsPtrHashKey(nsPtrHashKey&& aToMove) = default;
   ~nsPtrHashKey() = default;
 
   KeyType GetKey() const { return mKey; }
@@ -45,6 +44,6 @@ class nsPtrHashKey : public PLDHashEntryHdr {
   T* MOZ_NON_OWNING_REF mKey;
 };
 
-typedef nsPtrHashKey<const void> nsVoidPtrHashKey;
+using nsVoidPtrHashKey = nsPtrHashKey<const void>;
 
 #endif  // nsPointerHashKeys_h

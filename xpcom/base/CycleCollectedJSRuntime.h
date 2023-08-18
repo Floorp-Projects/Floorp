@@ -456,8 +456,7 @@ class CycleCollectedJSRuntime {
   JSHolderMap mJSHolders;
   Maybe<JSHolderMap::Iter> mHolderIter;
 
-  typedef nsTHashMap<nsFuncPtrHashKey<DeferredFinalizeFunction>, void*>
-      DeferredFinalizerTable;
+  using DeferredFinalizerTable = nsTHashMap<DeferredFinalizeFunction, void*>;
   DeferredFinalizerTable mDeferredFinalizerTable;
 
   RefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
