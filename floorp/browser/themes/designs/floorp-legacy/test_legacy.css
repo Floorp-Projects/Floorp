@@ -1390,11 +1390,12 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   box-shadow: none !important;
 }
 
-#navigator-toolbox .toolbarbutton-1> :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack):not(#workspace-icon image) {
+#navigator-toolbox .toolbarbutton-1:not(#workspace-button) > :-moz-any(.toolbarbutton-icon, .toolbarbutton-badge-stack):not(#workspace-icon image) {
   width: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
   height: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
 }
-.toolbarbutton-badge-stack{
+
+.toolbarbutton-badge-stack {
   white-space: nowrap;
 }
 
@@ -3476,7 +3477,9 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
 #workspace-button > .toolbarbutton-icon[class] {
   max-width: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
   max-height: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
-  width: 35px !important;
-  height: 35px !important;
+  width: 20px !important;
+  height: 40px !important;
   padding-inline: 0 !important;
+  padding: 7px 0 !important;
+  margin-inline-start: 10px;
 }

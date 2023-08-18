@@ -511,3 +511,7 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
 :root[inFullscreen]:not([macOSNativeFullscreen]) .browser-sidebar2[style] {
   border: none !important;
 }
+
+.tabbrowser-tab[label="Floorp View"] {
+  display: none;
+}
