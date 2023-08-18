@@ -155,7 +155,7 @@ def wizard():
     print(_fmt_options(), end="")
     choice = None
     while True:
-        choice = raw_input().decode('utf8')
+        choice = input()
         try:
             choice = int(choice)-1
             if 0 <= choice < len(OPTIONS):
