@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -38,6 +39,7 @@ import org.mozilla.fenix.compose.ClickableSubstringLink
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.SecondaryButton
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
@@ -61,7 +63,7 @@ fun ProductAnalysis(
     productAnalysis: AnalysisPresent,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
-    onReviewGradeLearnMoreClick: () -> Unit,
+    onReviewGradeLearnMoreClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -324,7 +326,7 @@ private fun SettingsCard(
 @Composable
 private fun ReviewQualityInfo(
     modifier: Modifier = Modifier,
-    onLearnMoreClick: () -> Unit,
+    onLearnMoreClick: (String) -> Unit,
 ) {
     Column(
         modifier = modifier,
@@ -342,13 +344,22 @@ private fun ReviewQualityInfo(
         val link = stringResource(R.string.review_quality_check_info_learn_more_link)
         val text = stringResource(R.string.review_quality_check_info_learn_more, link)
         val linkStartIndex = text.indexOf(link)
+        val context = LocalContext.current
         val linkEndIndex = linkStartIndex + link.length
         ClickableSubstringLink(
             text = text,
             textStyle = FirefoxTheme.typography.body2,
             clickableStartIndex = linkStartIndex,
             clickableEndIndex = linkEndIndex,
-            onClick = onLearnMoreClick,
+            onClick = {
+                onLearnMoreClick(
+                    // Placeholder Sumo page
+                    SupportUtils.getSumoURLForTopic(
+                        context,
+                        SupportUtils.SumoTopic.HELP,
+                    ),
+                )
+            },
         )
 
         Text(

@@ -23,6 +23,11 @@ sealed interface ReviewQualityCheckAction : Action {
     sealed interface PreferencesMiddlewareAction : ReviewQualityCheckAction
 
     /**
+     * Actions related to navigation events.
+     */
+    sealed interface NavigationMiddlewareAction : ReviewQualityCheckAction
+
+    /**
      * Actions related to network requests.
      */
     sealed interface NetworkAction : ReviewQualityCheckAction
@@ -69,4 +74,9 @@ sealed interface ReviewQualityCheckAction : Action {
      * Triggered when the user retries to fetch product analysis after a failure.
      */
     object RetryProductAnalysis : NetworkAction
+
+    /**
+     * Triggered when opening a link from the review quality check feature.
+     */
+    data class OpenLink(val link: ReviewQualityCheckState.LinkType) : NavigationMiddlewareAction
 }

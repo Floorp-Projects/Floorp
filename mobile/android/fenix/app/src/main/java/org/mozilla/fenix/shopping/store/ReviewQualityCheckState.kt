@@ -101,6 +101,21 @@ sealed interface ReviewQualityCheckState : State {
     }
 
     /**
+     * Types of links that can be opened from the review quality check feature.
+     */
+    sealed class LinkType {
+        /**
+         * Opens a link to analyze a product.
+         */
+        data class AnalyzeLink(val url: String) : LinkType()
+
+        /**
+         * Opens an external "Learn more" link.
+         */
+        data class ExternalLink(val url: String) : LinkType()
+    }
+
+    /**
      * The state of the recommended product.
      */
     sealed interface RecommendedProductState {
