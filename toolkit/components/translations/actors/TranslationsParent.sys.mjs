@@ -2147,6 +2147,13 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * The pref for if we can always offer a translation when it's available.
+   */
+  static shouldAlwaysOfferTranslations() {
+    return lazy.automaticallyPopupPref;
+  }
+
+  /**
    * Returns true if the given language tag is present in the always-translate
    * languages preference, otherwise false.
    *
@@ -2236,6 +2243,17 @@ export class TranslationsParent extends JSWindowActorParent {
     this.#addLangTagToPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
     this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
     return true;
+  }
+
+  /**
+   * Toggle the automatically popup pref, which will either
+   * enable or disable translations being offered to the user.
+   */
+  static toggleAutomaticallyPopupPref() {
+    Services.prefs.setBoolPref(
+      "browser.translations.automaticallyPopup",
+      !lazy.automaticallyPopupPref
+    );
   }
 
   /**

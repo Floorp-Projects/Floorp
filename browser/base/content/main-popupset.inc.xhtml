@@ -640,6 +640,12 @@
   <menupopup id="translations-panel-settings-menupopup"
              onpopupshown="TranslationsPanel.handleSettingsPopupShownEvent()"
              onpopuphidden="TranslationsPanel.handleSettingsPopupHiddenEvent()">
+    <menuitem class="always-offer-translations-menuitem"
+              data-l10n-id="translations-panel-settings-always-offer-translation"
+              type="checkbox"
+              checked="false"
+              autocheck="false"
+              oncommand="TranslationsPanel.onAlwaysOfferTranslations()"/>
     <menuitem class="always-translate-language-menuitem"
               data-l10n-id="translations-panel-settings-always-translate-unknown-language"
               type="checkbox"

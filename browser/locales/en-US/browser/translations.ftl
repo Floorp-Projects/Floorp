@@ -43,6 +43,8 @@ translations-panel-settings-always-translate-language =
   .label = Always translate { $language }
 translations-panel-settings-always-translate-unknown-language =
   .label = Always translate this language
+translations-panel-settings-always-offer-translation =
+  .label = Always offer to translate
 
 # Text displayed for the option to never translate a given language
 # Variables:
