@@ -106,7 +106,7 @@ void MFMediaEngineParent::DestroyEngineIfExists(
   }
 #endif
   if (mMediaEngine) {
-    mMediaEngine->Shutdown();
+    LOG_IF_FAILED(mMediaEngine->Shutdown());
     mMediaEngine = nullptr;
   }
   mMediaEngineEventListener.DisconnectIfExists();
