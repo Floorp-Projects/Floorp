@@ -247,6 +247,7 @@
 #  include "mozilla/CodeCoverageHandler.h"
 #endif
 
+#include "GMPProcessChild.h"
 #include "SafeMode.h"
 
 #ifdef MOZ_BACKGROUNDTASKS
@@ -6036,6 +6037,8 @@ bool XRE_UseNativeEventProcessing() {
 #  endif  // defined(XP_WIN)
     }
 #endif  // defined(XP_MACOSX) || defined(XP_WIN)
+    case GeckoProcessType_GMPlugin:
+      return mozilla::gmp::GMPProcessChild::UseNativeEventProcessing();
     case GeckoProcessType_Content:
       return StaticPrefs::dom_ipc_useNativeEventProcessing_content();
     default:

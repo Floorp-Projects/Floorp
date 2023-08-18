@@ -87,6 +87,8 @@ class GMPParent final
   GMPState State() const;
   nsCOMPtr<nsISerialEventTarget> GMPEventTarget();
 
+  void OnPreferenceChange(const mozilla::dom::Pref& aPref);
+
   // A GMP can either be a single instance shared across all NodeIds (like
   // in the OpenH264 case), or we can require a new plugin instance for every
   // NodeIds running the plugin (as in the EME plugin case).

@@ -21,11 +21,18 @@ class GMPProcessChild final : public mozilla::ipc::ProcessChild {
   using ProcessChild::ProcessChild;
   ~GMPProcessChild();
 
+  static void InitStatics(int aArgc, char* aArgv[]);
+  static bool UseNativeEventProcessing() { return sUseNativeEventProcessing; }
+  static bool UseXPCOM() { return sUseXpcom; }
+
   bool Init(int aArgc, char* aArgv[]) override;
   void CleanUp() override;
 
  private:
   const RefPtr<GMPChild> mPlugin = new GMPChild;
+
+  static bool sUseXpcom;
+  static bool sUseNativeEventProcessing;
 };
 
 }  // namespace mozilla::gmp
