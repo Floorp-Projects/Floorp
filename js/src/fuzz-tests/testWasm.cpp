@@ -41,8 +41,9 @@ static int testWasmInit(int* argc, char*** argv) {
   }
 
   JS::ContextOptionsRef(gCx)
-#define WASM_FEATURE(NAME, LOWER_NAME, STAGE, ...) \
-  .setWasm##NAME(STAGE != WasmFeatureStage::Experimental)
+#define WASM_FEATURE(NAME, LOWER_NAME, STAGE, COMPILE_PRED, COMPILER_PRED, \
+                     FLAG_PRED, FLAG_FORCE_ON, FLAG_FUZZ_ON, SHELL, PREF)  \
+  .setWasm##NAME(FLAG_FUZZ_ON)
       JS_FOR_WASM_FEATURES(WASM_FEATURE)
 #undef WASM_FEATURE
           ;
