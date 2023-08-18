@@ -423,8 +423,6 @@
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Annulearje</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Stipe oanfreegje</string>
-    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Oanfraach ferstjoere</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Stipe oanfreegje foar dizze side?</string>
@@ -614,11 +612,17 @@
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Klassike %s</string>
     <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title">Beheinde edysje</string>
+    <string name="wallpaper_limited_edition_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Beheinde edysje</string>
+    <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
+    <string name="wallpaper_artist_series_title">Keunstnersearje</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more">De nije kolleksje Independent Voices. %s</string>
+    <string name="wallpaper_limited_edition_description_with_learn_more" moz:RemovedIn="118" tools:ignore="UnusedResources">De nije kolleksje Independent Voices. %s</string>
+    <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description_with_learn_more">De kolleksje Independent Voices. %s</string>
     <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description">De nije kolleksje Independent Voices.</string>
+    <string name="wallpaper_limited_edition_description" moz:RemovedIn="118" tools:ignore="UnusedResources">De nije kolleksje Independent Voices.</string>
+    <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description">De kolleksje Independent Voices.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Probearje in bytsje kleur</string>
     <!-- Wallpaper onboarding dialog body text. -->
@@ -1204,7 +1208,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Slute</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">Kin net ôfdrukke</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Kin net ôfdrukke</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">Kin dizze side net ôfdrukke</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Ofdrukke</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
@@ -1407,60 +1413,60 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Wolkom by in better ynternet</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Wolkom by in better ynternet</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">In browser dy’t boud is foar minsken, net foar winst.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">In browser dy’t boud is foar minsken, net foar winst.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Gean troch wêr’t jo bleaun wiene</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Gean troch wêr’t jo bleaun wiene</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Syngronisearje ljepblêden en wachtwurden op ferskate apparaten foar maklik wikseljen tusken skermen.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Syngronisearje ljepblêden en wachtwurden op ferskate apparaten foar maklik wikseljen tusken skermen.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Oanmelde</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Oanmelde</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Syngronisaasje is ynskeakele</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Standert privacybeskerming</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Standert privacybeskerming</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s soarget der automatysk foar dat bedriuwen jo net stikem folgje op ynternet.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s soarget der automatysk foar dat bedriuwen jo net stikem folgje op ynternet.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Mei Totale cookiebeskerming om foar te kommen dat trackers cookies brûke om jo stikem op it ynternet te folgjen.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Mei Totale cookiebeskerming om foar te kommen dat trackers cookies brûke om jo stikem op it ynternet te folgjen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standert (standert)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Standert (standert)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Balansearre foar privacy en prestaasjes. Siden lade normaal.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Balansearre foar privacy en prestaasjes. Siden lade normaal.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Strang</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Strang</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Blokkearret mear trackers, sadat siden rapper laden wurde, mar guon funksjonaliteit op in side wurket mooglik net.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Blokkearret mear trackers, sadat siden rapper laden wurde, mar guon funksjonaliteit op in side wurket mooglik net.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Kies jo arkbalkepleatsing</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Kies jo arkbalkepleatsing</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Hâld him ûnderoan, of ferpleats him nei boppe.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Hâld him ûnderoan, of ferpleats him nei boppe.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Jo beheare jo gegevens</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Jo beheare jo gegevens</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox jout jo kontrôle oer wat jo online diele en wat jo mei ús diele.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox jout jo kontrôle oer wat jo online diele en wat jo mei ús diele.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Lês ús privacyferklearring</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Lês ús privacyferklearring</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Klear om in geweldich ynternet te iepenjen?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Klear om in geweldich ynternet te iepenjen?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Begjinne mei sneupen</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Begjinne mei sneupen</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Kies jo tema</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Kies jo tema</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Sparje jo batterij en jo eagen mei de donkere modus.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Sparje jo batterij en jo eagen mei de donkere modus.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automatysk</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Automatysk</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Past him oan jo apparaatynstellingen oan</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Past him oan jo apparaatynstellingen oan</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Donker tema</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Donker tema</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Ljocht tema</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Ljocht tema</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Ljepblêden ferstjoerd!</string>
@@ -1902,6 +1908,10 @@
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Details oanpaste sykmasine</string>
 
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API foar syksuggestjes (opsjoneel)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">API-URL foar syksuggestje</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Bewarje</string>
 

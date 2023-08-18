@@ -1216,7 +1216,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Ignorer</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">Kan ikke å skrive ut</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Kan ikke å skrive ut</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">Kan ikke å skrive ut denne siden</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Skriv ut</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
@@ -1418,65 +1420,65 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Velkommen til et bedre internett</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Velkommen til et bedre internett</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">En nettleser bygget for mennesker, ikke profitt.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">En nettleser bygget for mennesker, ikke profitt.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Fortsett der du sluttet</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Fortsett der du sluttet</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Synkroniser faner og passord på tvers av enheter for sømløs bytte av skjerm.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Synkroniser faner og passord på tvers av enheter for sømløs bytte av skjerm.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Logg inn</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Logg inn</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synkroniseringen er på</string>
 
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Personvernsbeskyttelse som standard</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Personvernsbeskyttelse som standard</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s stopper selskaper automatisk fra å spore aktivitetene dine på nettet i det skjulte.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s stopper selskaper automatisk fra å spore aktivitetene dine på nettet i det skjulte.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Total beskyttelse mot infokapsler stopper sporere fra å bruke infokapsler for å forfølge deg på tvers av nettsteder.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Total beskyttelse mot infokapsler stopper sporere fra å bruke infokapsler for å forfølge deg på tvers av nettsteder.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standard (standard)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Standard (standard)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Balansert mellom personvern og ytelse. Sider lastes normalt.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Balansert mellom personvern og ytelse. Sider lastes normalt.</string>
 
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Streng</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Streng</string>
 
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Blokkerer flere sporings-mekanismer. Sider lastes inn raskere, men enkelte sider fungerer kanskje ikke.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Blokkerer flere sporings-mekanismer. Sider lastes inn raskere, men enkelte sider fungerer kanskje ikke.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Velg plassering for verktøylinjen</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Velg plassering for verktøylinjen</string>
 
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Behold den på bunnen, eller flytt den til toppen.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Behold den på bunnen, eller flytt den til toppen.</string>
 
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Du kontrollerer dine data</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Du kontrollerer dine data</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox gir deg kontroll over hva du deler på nettet og hva du deler med oss.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox gir deg kontroll over hva du deler på nettet og hva du deler med oss.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Les personvernmerknaden vår</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Les personvernmerknaden vår</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Klar til å oppdage et fantastisk internett?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Klar til å oppdage et fantastisk internett?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Start nettlesingen</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Start nettlesingen</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Velg tema</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Velg tema</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Spar litt batteri og dine øyne med mørk modus.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Spar litt batteri og dine øyne med mørk modus.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automatisk</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Automatisk</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Tilpasser seg til din enhets innstillinger</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Tilpasser seg til din enhets innstillinger</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Mørkt tema</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Mørkt tema</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Lyst tema</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Lyst tema</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Faner sendt!</string>
