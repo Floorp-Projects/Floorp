@@ -35,6 +35,11 @@ struct nsKeyClass<nsAtom*> {
   using type = nsWeakAtomHashKey;
 };
 
+template <typename Ret, typename... Args>
+struct nsKeyClass<Ret (*)(Args...)> {
+  using type = nsFuncPtrHashKey<Ret (*)(Args...)>;
+};
+
 template <>
 struct nsKeyClass<nsCString> {
   using type = nsCStringHashKey;
