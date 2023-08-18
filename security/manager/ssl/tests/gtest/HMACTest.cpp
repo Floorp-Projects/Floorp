@@ -13,10 +13,12 @@ const unsigned char kTestInput[] = "what do ya want for nothing?";
 
 struct HMACTestCase {
   SECOidTag hashAlg;
-  std::string expectedOutput;
+  std::basic_string<uint8_t> expectedOutput;
 };
 
-#define EXPECTED_RESULT(val) std::string(val, sizeof(val) - 1)
+#define EXPECTED_RESULT(val)                                        \
+  std::basic_string<uint8_t>(reinterpret_cast<const uint8_t*>(val), \
+                             sizeof(val) - 1)
 
 static const HMACTestCase HMACTestCases[] = {
     {
