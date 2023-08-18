@@ -318,7 +318,7 @@ class HistoryInView extends ViewPage {
             </h3>
             <fxview-tab-list
               slot="main"
-              class="history"
+              class="with-context-menu"
               dateTimeFormat="dateTime"
               hasPopup="menu"
               maxTabsLength=${this.maxTabsLength}
