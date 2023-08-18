@@ -8,7 +8,7 @@ import os
 import re
 
 import taskcluster_urls
-from taskgraph.util.taskcluster import get_root_url, get_task_definition, send_email
+from taskgraph.util.taskcluster import get_root_url, get_task_definition
 
 from gecko_taskgraph.actions.registry import register_callback_action
 from gecko_taskgraph.actions.util import create_tasks, fetch_graph_and_labels
@@ -150,6 +150,25 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
         for key in task_def["payload"]["env"].keys():
             payload["env"][key] = task_def["payload"]["env"].get(key, "")
 
+        # add notification
+        email = input.get("notify")
+        # no point sending to a noreply address!
+        if email and email != "noreply@noreply.mozilla.org":
+            info = {
+                "url": taskcluster_urls.ui(
+                    get_root_url(False), "tasks/${status.taskId}/connect"
+                ),
+                "label": label,
+                "revision": parameters["head_rev"],
+                "repo": parameters["head_repository"],
+            }
+            task_def.setdefault("extra", {}).setdefault("notify", {})["email"] = {
+                "subject": EMAIL_SUBJECT.format(**info),
+                "content": EMAIL_CONTENT.format(**info),
+                "link": {"text": "Connect", "href": info["url"]},
+            }
+            task_def["routes"].append(f"notify.email.{email}.on-pending")
+
         return task
 
     # Create the task and any of its dependencies. This uses a new taskGroupId to avoid
@@ -166,27 +185,4 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
     )
 
     taskId = label_to_taskid[label]
-    logger.info(f"Created interactive task {taskId}; sending notification")
-
-    if input and "notify" in input:
-        email = input["notify"]
-        # no point sending to a noreply address!
-        if email == "noreply@noreply.mozilla.org":
-            return
-
-        info = {
-            "url": taskcluster_urls.ui(get_root_url(False), f"tasks/{taskId}/connect"),
-            "label": label,
-            "revision": parameters["head_rev"],
-            "repo": parameters["head_repository"],
-        }
-        send_email(
-            email,
-            subject=EMAIL_SUBJECT.format(**info),
-            content=EMAIL_CONTENT.format(**info),
-            link={
-                "text": "Connect",
-                "href": info["url"],
-            },
-            use_proxy=True,
-        )
+    logger.info(f"Created interactive task {taskId}")
