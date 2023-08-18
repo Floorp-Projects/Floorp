@@ -52,15 +52,15 @@ namespace adts {
 // Q        16            CRC if protection absent is 0
 class FrameHeader {
  public:
-  uint32_t mFrameLength;
-  uint32_t mSampleRate;
-  uint32_t mSamples;
-  uint32_t mChannels;
-  uint8_t mObjectType;
-  uint8_t mSamplingIndex;
-  uint8_t mChannelConfig;
-  uint8_t mNumAACFrames;
-  bool mHaveCrc;
+  uint32_t mFrameLength{};
+  uint32_t mSampleRate{};
+  uint32_t mSamples{};
+  uint32_t mChannels{};
+  uint8_t mObjectType{};
+  uint8_t mSamplingIndex{};
+  uint8_t mChannelConfig{};
+  uint8_t mNumAACFrames{};
+  bool mHaveCrc{};
 
   // Returns whether aPtr matches a valid ADTS header sync marker
   static bool MatchesSync(const uint8_t* aPtr) {
@@ -286,8 +286,7 @@ already_AddRefed<MediaTrackDemuxer> ADTSDemuxer::GetTrackDemuxer(
 
 bool ADTSDemuxer::IsSeekable() const {
   int64_t length = mSource->GetLength();
-  if (length > -1) return true;
-  return false;
+  return length > -1;
 }
 
 // ADTSTrackDemuxer
@@ -389,7 +388,9 @@ TimeUnit ADTSTrackDemuxer::FastSeek(const TimeUnit& aTime) {
     mOffset = firstFrameOffset;
   } else if (AverageFrameLength() > 0) {
     mOffset =
-        firstFrameOffset + FrameIndexFromTime(aTime) * AverageFrameLength();
+        firstFrameOffset +
+        AssertedCast<uint64_t>(AssertedCast<double>(FrameIndexFromTime(aTime)) *
+                               AverageFrameLength());
   }
 
   const int64_t streamLength = StreamLength();
@@ -490,7 +491,9 @@ ADTSTrackDemuxer::SkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold) {
       SkipFailureHolder(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, 0), __func__);
 }
 
-int64_t ADTSTrackDemuxer::GetResourceOffset() const { return mOffset; }
+int64_t ADTSTrackDemuxer::GetResourceOffset() const {
+  return AssertedCast<int64_t>(mOffset);
+}
 
 media::TimeIntervals ADTSTrackDemuxer::GetBuffered() {
   auto duration = Duration();
@@ -516,8 +519,11 @@ TimeUnit ADTSTrackDemuxer::Duration() const {
     // stream.
     return TimeUnit::FromInfinity();
   }
-  const int64_t firstFrameOffset = mParser->FirstFrame().Offset();
-  int64_t numFrames = (streamLen - firstFrameOffset) / AverageFrameLength();
+  const int64_t firstFrameOffset =
+      AssertedCast<int64_t>(mParser->FirstFrame().Offset());
+  int64_t numFrames =
+      AssertedCast<int64_t>(AssertedCast<double>(streamLen - firstFrameOffset) /
+                            AverageFrameLength());
   return Duration(numFrames);
 }
 
@@ -551,7 +557,8 @@ const adts::Frame& ADTSTrackDemuxer::FindNextFrame(
 
   // Check whether we've found a valid ADTS frame.
   while (!foundFrame) {
-    if ((read = Read(buffer, frameHeaderOffset, BUFFER_SIZE)) == 0) {
+    if ((read = Read(buffer, AssertedCast<int64_t>(frameHeaderOffset),
+                     BUFFER_SIZE)) == 0) {
       ADTSLOG("FindNext() EOS without a frame");
       break;
     }
@@ -570,7 +577,8 @@ const adts::Frame& ADTSTrackDemuxer::FindNextFrame(
       // header.
       uint64_t nextFrameHeaderOffset =
           currentFrame.Offset() + currentFrame.Length();
-      uint32_t read = Read(buffer, nextFrameHeaderOffset, 2);
+      uint32_t read =
+          Read(buffer, AssertedCast<int64_t>(nextFrameHeaderOffset), 2);
       if (read != 2 || !adts::FrameHeader::MatchesSync(buffer)) {
         frameHeaderOffset = currentFrame.Offset() + 1;
         mParser->Reset();
@@ -638,7 +646,7 @@ already_AddRefed<MediaRawData> ADTSTrackDemuxer::GetNextFrame(
           aFrame.PayloadLength());
   if (!aFrame.IsValid()) return nullptr;
 
-  const int64_t offset = aFrame.PayloadOffset();
+  const int64_t offset = AssertedCast<int64_t>(aFrame.PayloadOffset());
   const uint32_t length = aFrame.PayloadLength();
 
   RefPtr<MediaRawData> frame = new MediaRawData();
@@ -650,7 +658,8 @@ already_AddRefed<MediaRawData> ADTSTrackDemuxer::GetNextFrame(
     return nullptr;
   }
 
-  const uint32_t read = Read(frameWriter->Data(), offset, length);
+  const uint32_t read =
+      Read(frameWriter->Data(), offset, AssertedCast<int32_t>(length));
   if (read != length) {
     ADTSLOG("GetNext() Exit read=%u frame->Size()=%zu", read, frame->Size());
     return nullptr;
@@ -699,11 +708,13 @@ already_AddRefed<MediaRawData> ADTSTrackDemuxer::GetNextFrame(
 }
 
 int64_t ADTSTrackDemuxer::FrameIndexFromOffset(uint64_t aOffset) const {
-  uint64_t frameIndex = 0;
+  int64_t frameIndex = 0;
 
   if (AverageFrameLength() > 0) {
-    frameIndex =
-        (aOffset - mParser->FirstFrame().Offset()) / AverageFrameLength();
+    frameIndex = AssertedCast<int64_t>(
+        AssertedCast<double>(aOffset - mParser->FirstFrame().Offset()) /
+        AverageFrameLength());
+    MOZ_ASSERT(frameIndex >= 0);
   }
 
   ADTSLOGV("FrameIndexFromOffset(%" PRId64 ") -> %" PRId64, aOffset,
@@ -714,7 +725,9 @@ int64_t ADTSTrackDemuxer::FrameIndexFromOffset(uint64_t aOffset) const {
 int64_t ADTSTrackDemuxer::FrameIndexFromTime(const TimeUnit& aTime) const {
   int64_t frameIndex = 0;
   if (mSamplesPerSecond > 0 && mSamplesPerFrame > 0) {
-    frameIndex = aTime.ToSeconds() * mSamplesPerSecond / mSamplesPerFrame - 1;
+    frameIndex = AssertedCast<int64_t>(aTime.ToSeconds() * mSamplesPerSecond /
+                                       mSamplesPerFrame) -
+                 1;
   }
 
   ADTSLOGV("FrameIndexFromOffset(%fs) -> %" PRId64, aTime.ToSeconds(),
@@ -757,7 +770,7 @@ uint32_t ADTSTrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
   if (mInfo && streamLen > 0) {
     int64_t max = streamLen > aOffset ? streamLen - aOffset : 0;
     // Prevent blocking reads after successful initialization.
-    aSize = std::min<int64_t>(aSize, max);
+    aSize = std::min<int32_t>(aSize, AssertedCast<int32_t>(max));
   }
 
   uint32_t read = 0;
@@ -770,7 +783,8 @@ uint32_t ADTSTrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset,
 
 double ADTSTrackDemuxer::AverageFrameLength() const {
   if (mNumParsedFrames) {
-    return static_cast<double>(mTotalFrameLen) / mNumParsedFrames;
+    return AssertedCast<double>(mTotalFrameLen) /
+           AssertedCast<double>(mNumParsedFrames);
   }
 
   return 0.0;
