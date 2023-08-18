@@ -77,10 +77,14 @@ class InactiveCssTooltipHelper {
     const { fixId, msgId, property, display, learnMoreURL } = data;
     const { doc } = tooltip;
 
-    const documentURL =
-      learnMoreURL || `https://developer.mozilla.org/docs/Web/CSS/${property}`;
+    const documentUrl = new URL(
+      learnMoreURL || `https://developer.mozilla.org/docs/Web/CSS/${property}`
+    );
     this._currentTooltip = tooltip;
-    this._currentUrl = `${documentURL}?utm_source=devtools&utm_medium=inspector-inactive-css`;
+    const { searchParams } = documentUrl;
+    searchParams.append("utm_source", "devtools");
+    searchParams.append("utm_medium", "inspector-inactive-css");
+    this._currentUrl = documentUrl.toString();
 
     const templateNode = doc.createElementNS(XHTML_NS, "template");
 
