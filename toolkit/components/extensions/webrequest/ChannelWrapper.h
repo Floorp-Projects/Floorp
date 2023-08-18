@@ -21,6 +21,7 @@
 #include "mozilla/WeakPtr.h"
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "nsAtomHashKeys.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIChannel.h"
@@ -29,7 +30,6 @@
 #include "nsIStreamListener.h"
 #include "nsIRemoteTab.h"
 #include "nsIThreadRetargetableStreamListener.h"
-#include "nsPointerHashKeys.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsWrapperCache.h"
@@ -320,7 +320,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   bool mSuspended = false;
   bool mResponseStarted = false;
 
-  nsInterfaceHashtable<nsPtrHashKey<const nsAtom>, nsIRemoteTab> mAddonEntries;
+  nsInterfaceHashtable<nsAtomHashKey, nsIRemoteTab> mAddonEntries;
 
   // The text for the "Extension Suspend" marker, set from the Suspend method
   // when called for the first time and then cleared on the Resume method.

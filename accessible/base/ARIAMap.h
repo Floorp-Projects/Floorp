@@ -319,7 +319,7 @@ class AttrIterator {
   dom::Element* mElement;
 
   bool mIteratingDefaults;
-  nsTHashSet<nsRefPtrHashKey<nsAtom>> mOverriddenAttrs;
+  nsTHashSet<RefPtr<nsAtom>> mOverriddenAttrs;
 
   const AttrArray* mAttrs;
   uint32_t mAttrIdx;

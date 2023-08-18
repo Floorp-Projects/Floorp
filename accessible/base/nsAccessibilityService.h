@@ -13,6 +13,7 @@
 #include "mozilla/a11y/SelectionManager.h"
 #include "mozilla/Preferences.h"
 
+#include "nsAtomHashKeys.h"
 #include "nsIContent.h"
 #include "nsIObserver.h"
 #include "nsIAccessibleEvent.h"
@@ -69,14 +70,14 @@ struct MarkupAttrInfo {
 };
 
 struct MarkupMapInfo {
-  const nsStaticAtom* const tag;
+  nsStaticAtom* const tag;
   New_Accessible* new_func;
   a11y::role role;
   MarkupAttrInfo attrs[4];
 };
 
 struct XULMarkupMapInfo {
-  const nsStaticAtom* const tag;
+  nsStaticAtom* const tag;
   New_Accessible* new_func;
 };
 
@@ -381,8 +382,8 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    */
   static uint32_t gConsumers;
 
-  using MarkupMap = nsTHashMap<nsPtrHashKey<const nsAtom>,
-                               const mozilla::a11y::MarkupMapInfo*>;
+  // Can be weak because all atoms are known static
+  using MarkupMap = nsTHashMap<nsAtom*, const mozilla::a11y::MarkupMapInfo*>;
   MarkupMap mHTMLMarkupMap;
   MarkupMap mMathMLMarkupMap;
 
@@ -403,8 +404,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   const mozilla::a11y::MarkupMapInfo* GetMarkupMapInfoFor(
       mozilla::a11y::Accessible* aAcc) const;
 
-  nsTHashMap<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*>
-      mXULMarkupMap;
+  nsTHashMap<nsAtom*, const mozilla::a11y::XULMarkupMapInfo*> mXULMarkupMap;
 
   friend nsAccessibilityService* GetAccService();
   friend nsAccessibilityService* GetOrCreateAccService(uint32_t);

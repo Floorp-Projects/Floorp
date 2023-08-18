@@ -64,13 +64,13 @@ already_AddRefed<Highlight> Highlight::Constructor(
 }
 
 void Highlight::AddToHighlightRegistry(HighlightRegistry& aHighlightRegistry,
-                                       const nsAtom& aHighlightName) {
+                                       nsAtom& aHighlightName) {
   mHighlightRegistries.LookupOrInsert(&aHighlightRegistry)
       .Insert(&aHighlightName);
 }
 
 void Highlight::RemoveFromHighlightRegistry(
-    HighlightRegistry& aHighlightRegistry, const nsAtom& aHighlightName) {
+    HighlightRegistry& aHighlightRegistry, nsAtom& aHighlightName) {
   if (auto entry = mHighlightRegistries.Lookup(&aHighlightRegistry)) {
     auto& highlightNames = entry.Data();
     highlightNames.Remove(&aHighlightName);

@@ -46,6 +46,7 @@ EXPORTS += [
     "nsArrayEnumerator.h",
     "nsArrayUtils.h",
     "nsAtom.h",
+    "nsAtomHashKeys.h",
     "nsBaseHashtable.h",
     "nsCharSeparatedTokenizer.h",
     "nsCheapSets.h",

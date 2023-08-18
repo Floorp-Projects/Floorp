@@ -70,7 +70,7 @@ void TimelineManager::UpdateTimelines(Element* aElement,
 
 template <typename TimelineType>
 static already_AddRefed<TimelineType> PopExistingTimeline(
-    const nsAtom* aName, TimelineCollection<TimelineType>* aCollection) {
+    nsAtom* aName, TimelineCollection<TimelineType>* aCollection) {
   if (!aCollection) {
     return nullptr;
   }

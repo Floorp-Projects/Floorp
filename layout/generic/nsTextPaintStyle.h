@@ -11,7 +11,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/Span.h"
 
-#include "nsAtom.h"
+#include "nsAtomHashKeys.h"
 #include "nsISelectionController.h"
 #include "nsTHashMap.h"
 
@@ -119,7 +119,7 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
   nscolor mSelectionTextColor;
   nscolor mSelectionBGColor;
   RefPtr<ComputedStyle> mSelectionPseudoStyle;
-  nsTHashMap<RefPtr<const nsAtom>, RefPtr<ComputedStyle>>
+  nsTHashMap<RefPtr<nsAtom>, RefPtr<ComputedStyle>>
       mCustomHighlightPseudoStyles;
 
   // Common data

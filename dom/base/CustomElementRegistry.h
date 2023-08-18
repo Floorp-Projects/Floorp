@@ -22,6 +22,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsTHashSet.h"
+#include "nsAtomHashKeys.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -493,18 +494,16 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
   void UpgradeCandidates(nsAtom* aKey, CustomElementDefinition* aDefinition,
                          ErrorResult& aRv);
 
-  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, CustomElementDefinition>
-      DefinitionMap;
-  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>,
-                            CustomElementCreationCallback>
-      ElementCreationCallbackMap;
-  typedef nsClassHashtable<nsRefPtrHashKey<nsAtom>,
-                           nsTHashSet<RefPtr<nsIWeakReference>>>
-      CandidateMap;
-  typedef JS::GCHashMap<JS::Heap<JSObject*>, RefPtr<nsAtom>,
-                        js::StableCellHasher<JS::Heap<JSObject*>>,
-                        js::SystemAllocPolicy>
-      ConstructorMap;
+  using DefinitionMap =
+      nsRefPtrHashtable<nsAtomHashKey, CustomElementDefinition>;
+  using ElementCreationCallbackMap =
+      nsRefPtrHashtable<nsAtomHashKey, CustomElementCreationCallback>;
+  using CandidateMap =
+      nsClassHashtable<nsAtomHashKey, nsTHashSet<RefPtr<nsIWeakReference>>>;
+  using ConstructorMap =
+      JS::GCHashMap<JS::Heap<JSObject*>, RefPtr<nsAtom>,
+                    js::StableCellHasher<JS::Heap<JSObject*>>,
+                    js::SystemAllocPolicy>;
 
   // Hashtable for custom element definitions in web components.
   // Custom prototypes are stored in the compartment where definition was
@@ -521,8 +520,7 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
   // mCustomDefinitions again to get definitions.
   ConstructorMap mConstructors;
 
-  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, Promise>
-      WhenDefinedPromiseMap;
+  using WhenDefinedPromiseMap = nsRefPtrHashtable<nsAtomHashKey, Promise>;
   WhenDefinedPromiseMap mWhenDefinedPromiseMap;
 
   // The "upgrade candidates map" from the web components spec. Maps from a

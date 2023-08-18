@@ -19,6 +19,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCycleCollectionParticipant.h"  // NS_DECL_CYCLE_*
 #include "nsIContent.h"                    // base class
+#include "nsAtomHashKeys.h"
 #include "nsIHTMLCollection.h"
 #include "nsIWeakReferenceUtils.h"
 
@@ -230,7 +231,7 @@ class FragmentOrElement : public nsIContent {
      * Explicitly set attr-elements, see
      * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
      */
-    nsTHashMap<nsRefPtrHashKey<nsAtom>, nsWeakPtr> mExplicitlySetAttrElements;
+    nsTHashMap<RefPtr<nsAtom>, nsWeakPtr> mExplicitlySetAttrElements;
   };
 
   class nsDOMSlots : public nsIContent::nsContentSlots {

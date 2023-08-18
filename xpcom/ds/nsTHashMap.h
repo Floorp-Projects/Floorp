@@ -13,6 +13,7 @@
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
+#include "nsAtomHashKeys.h"
 #include "nsHashtablesFwd.h"
 #include <type_traits>
 
@@ -27,6 +28,11 @@ struct nsKeyClass<
 template <typename KeyType>
 struct nsKeyClass<KeyType*> {
   using type = nsPtrHashKey<KeyType>;
+};
+
+template <>
+struct nsKeyClass<nsAtom*> {
+  using type = nsWeakAtomHashKey;
 };
 
 template <>
@@ -55,6 +61,11 @@ struct nsKeyClass<nsCOMPtr<nsISupports>> {
 template <typename T>
 struct nsKeyClass<RefPtr<T>> {
   using type = nsRefPtrHashKey<T>;
+};
+
+template <>
+struct nsKeyClass<RefPtr<nsAtom>> {
+  using type = nsAtomHashKey;
 };
 
 template <>

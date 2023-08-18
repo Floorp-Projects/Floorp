@@ -10,7 +10,6 @@
 #include "mozilla/a11y/AccGroupInfo.h"
 #include "mozilla/Variant.h"
 #include "nsTHashMap.h"
-#include "nsAtom.h"
 #include "nsStringFwd.h"
 #include "mozilla/gfx/Matrix.h"
 
@@ -72,7 +71,7 @@ class AccAttributes {
               RefPtr<AccAttributes>, uint64_t, UniquePtr<AccGroupInfo>,
               UniquePtr<gfx::Matrix4x4>, nsTArray<uint64_t>>;
   static_assert(sizeof(AttrValueType) <= 16);
-  using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
+  using AtomVariantMap = nsTHashMap<RefPtr<nsAtom>, AttrValueType>;
 
  protected:
   ~AccAttributes() = default;

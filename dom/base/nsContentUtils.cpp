@@ -218,7 +218,7 @@
 #include "nsAboutProtocolUtils.h"
 #include "nsAlgorithm.h"
 #include "nsArrayUtils.h"
-#include "nsAtom.h"
+#include "nsAtomHashKeys.h"
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
@@ -426,11 +426,10 @@ nsIPrincipal* nsContentUtils::sSystemPrincipal;
 nsIPrincipal* nsContentUtils::sNullSubjectPrincipal;
 nsIIOService* nsContentUtils::sIOService;
 nsIConsoleService* nsContentUtils::sConsoleService;
-nsTHashMap<nsRefPtrHashKey<nsAtom>, EventNameMapping>*
-    nsContentUtils::sAtomEventTable = nullptr;
-nsTHashMap<nsStringHashKey, EventNameMapping>*
-    nsContentUtils::sStringEventTable = nullptr;
-nsTArray<RefPtr<nsAtom>>* nsContentUtils::sUserDefinedEvents = nullptr;
+
+static nsTHashMap<RefPtr<nsAtom>, EventNameMapping>* sAtomEventTable;
+static nsTHashMap<nsStringHashKey, EventNameMapping>* sStringEventTable;
+static nsTArray<RefPtr<nsAtom>>* sUserDefinedEvents;
 nsIStringBundleService* nsContentUtils::sStringBundleService;
 
 static StaticRefPtr<nsIStringBundle>
@@ -985,8 +984,8 @@ bool nsContentUtils::InitializeEventTable() {
 #undef EVENT
       {nullptr}};
 
-  sAtomEventTable = new nsTHashMap<nsRefPtrHashKey<nsAtom>, EventNameMapping>(
-      ArrayLength(eventArray));
+  sAtomEventTable =
+      new nsTHashMap<RefPtr<nsAtom>, EventNameMapping>(ArrayLength(eventArray));
   sStringEventTable = new nsTHashMap<nsStringHashKey, EventNameMapping>(
       ArrayLength(eventArray));
   sUserDefinedEvents = new nsTArray<RefPtr<nsAtom>>(64);

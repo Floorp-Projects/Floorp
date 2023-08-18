@@ -1196,7 +1196,7 @@ struct StyleScrollTimeline {
   // elements.
   void SetInitialValues() {}
 
-  const nsAtom* GetName() const { return mName._0.AsAtom(); }
+  nsAtom* GetName() const { return mName._0.AsAtom(); }
   StyleScrollAxis GetAxis() const { return mAxis; }
 
   bool operator==(const StyleScrollTimeline& aOther) const {
@@ -1220,7 +1220,7 @@ struct StyleViewTimeline {
   // elements.
   void SetInitialValues() {}
 
-  const nsAtom* GetName() const { return mName._0.AsAtom(); }
+  nsAtom* GetName() const { return mName._0.AsAtom(); }
   StyleScrollAxis GetAxis() const { return mAxis; }
   const StyleViewTimelineInset& GetInset() const { return mInset; }
 

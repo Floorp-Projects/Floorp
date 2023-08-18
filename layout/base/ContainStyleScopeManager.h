@@ -7,8 +7,7 @@
 #ifndef ContainStyleScopeManager_h_
 #define ContainStyleScopeManager_h_
 
-#include "mozilla/dom/Element.h"
-#include "nsTHashMap.h"
+#include "nsClassHashtable.h"
 #include "nsTHashSet.h"
 #include "nsQuoteList.h"
 #include "nsCounterManager.h"
@@ -18,6 +17,10 @@ class nsIContent;
 class nsAtom;
 
 namespace mozilla {
+
+namespace dom {
+class Element;
+}
 
 class ContainStyleScopeManager;
 
@@ -128,7 +131,7 @@ class ContainStyleScopeManager {
  private:
   ContainStyleScope mRootScope;
   nsClassHashtable<nsPtrHashKey<nsIContent>, ContainStyleScope> mScopes;
-  nsTHashSet<nsRefPtrHashKey<nsAtom>> mDirtyCounters;
+  nsTHashSet<RefPtr<nsAtom>> mDirtyCounters;
 };
 
 }  // namespace mozilla

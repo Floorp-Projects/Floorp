@@ -6,7 +6,7 @@
 #ifndef nsHTMLTags_h___
 #define nsHTMLTags_h___
 
-#include "nsAtom.h"
+#include "nsAtomHashKeys.h"
 #include "nsString.h"
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"
@@ -42,7 +42,8 @@ enum nsHTMLTag {
 class nsHTMLTags {
  public:
   using TagStringHash = nsTHashMap<nsStringHashKey, nsHTMLTag>;
-  using TagAtomHash = nsTHashMap<nsPtrHashKey<nsAtom>, nsHTMLTag>;
+  // Can be weak, because we know these are always static, see AddRefTable.
+  using TagAtomHash = nsTHashMap<nsAtom*, nsHTMLTag>;
 
   static nsresult AddRefTable(void);
   static void ReleaseTable(void);
