@@ -33,8 +33,9 @@ static const JSClass* getGlobalClass() {
 static JSObject* jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals) {
   /* Create the global object. */
   JS::RealmOptions options;
-  options.creationOptions().setWeakRefsEnabled(
-      JS::WeakRefSpecifier::EnabledWithCleanupSome);
+  options.creationOptions()
+      .setWeakRefsEnabled(JS::WeakRefSpecifier::EnabledWithCleanupSome)
+      .setSharedMemoryAndAtomicsEnabled(true);
   return JS_NewGlobalObject(cx, getGlobalClass(), principals,
                             JS::FireOnNewGlobalHook, options);
 }
