@@ -16,6 +16,7 @@ const kAllowedPrefs = new Set([
   "browser.contentblocking.report.show_mobile_app",
 
   "browser.shopping.experience2023.optedIn",
+  "browser.shopping.experience2023.active",
 
   "narrate.rate",
   "narrate.voice",
