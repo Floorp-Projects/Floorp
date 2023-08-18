@@ -3534,11 +3534,15 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsUnderHiddenEmbedderElement>,
   if (!shell) {
     return;
   }
-
   const bool newValue = IsUnderHiddenEmbedderElement();
   if (NS_WARN_IF(aOldValue == newValue)) {
     return;
   }
+
+  if (auto* bc = BrowserChild::GetFrom(shell)) {
+    bc->UpdateVisibility();
+  }
+
   if (PresShell* presShell = shell->GetPresShell()) {
     presShell->SetIsUnderHiddenEmbedderElement(newValue);
   }
