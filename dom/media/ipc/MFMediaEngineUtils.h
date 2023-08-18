@@ -28,6 +28,16 @@ using MFMediaEngineError = MF_MEDIA_ENGINE_ERR;
             ("%s:%d, " msg, __FILE__, __LINE__, ##__VA_ARGS__)); \
   } while (false)
 
+#ifndef LOG_IF_FAILED
+#  define LOG_IF_FAILED(x)                              \
+    do {                                                \
+      HRESULT rv = x;                                   \
+      if (MOZ_UNLIKELY(FAILED(rv))) {                   \
+        LOG_AND_WARNING("(" #x ") failed, rv=%lx", rv); \
+      }                                                 \
+    } while (false)
+#endif
+
 #ifndef RETURN_IF_FAILED
 #  define RETURN_IF_FAILED(x)                           \
     do {                                                \
@@ -67,7 +77,13 @@ using MFMediaEngineError = MF_MEDIA_ENGINE_ERR;
       IMFShutdown* pShutdown = nullptr;                                      \
       HRESULT rv = class->QueryInterface(IID_PPV_ARGS(&pShutdown));          \
       if (SUCCEEDED(rv)) {                                                   \
-        pShutdown->Shutdown();                                               \
+        rv = pShutdown->Shutdown();                                          \
+        if (FAILED(rv)) {                                                    \
+          LOG_AND_WARNING(#class " failed to shutdown, rv=%lx", rv);         \
+        } else {                                                             \
+          MOZ_LOG(gMFMediaEngineLog, LogLevel::Verbose,                      \
+                  ((#class " shutdowned successfully")));                    \
+        }                                                                    \
         pShutdown->Release();                                                \
       } else {                                                               \
         LOG_AND_WARNING(#class " doesn't support IMFShutdown?, rv=%lx", rv); \

@@ -114,6 +114,7 @@ MFCDMSession::MFCDMSession(IMFContentDecryptionModuleSession* aSession,
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(aManagerThread);
   MOZ_COUNT_CTOR(MFCDMSession);
+  LOG("MFCDMSession created");
   mKeyMessageListener = aCallback->KeyMessageEvent().Connect(
       mManagerThread, this, &MFCDMSession::OnSessionKeyMessage);
   mKeyChangeListener = aCallback->KeyChangeEvent().Connect(
@@ -122,6 +123,7 @@ MFCDMSession::MFCDMSession(IMFContentDecryptionModuleSession* aSession,
 
 MFCDMSession::~MFCDMSession() {
   MOZ_COUNT_DTOR(MFCDMSession);
+  LOG("MFCDMSession destroyed");
   // TODO : maybe disconnect them in `Close()`?
   mKeyChangeListener.DisconnectIfExists();
   mKeyMessageListener.DisconnectIfExists();
