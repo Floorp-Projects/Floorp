@@ -19,6 +19,7 @@ export var Preferences = {
       ["panePrivacy", clearRecentHistoryDialog],
       ["panePrivacy", certManager],
       ["panePrivacy", deviceManager],
+      ["panePrivacy", DNTDialog],
       ["paneSync"],
     ];
 
@@ -120,6 +121,23 @@ async function cacheGroup(aBrowser) {
     [],
     async function () {
       content.document.getElementById("cacheGroup").scrollIntoView();
+    }
+  );
+}
+
+async function DNTDialog(aBrowser) {
+  return aBrowser.ownerGlobal.SpecialPowers.spawn(
+    aBrowser,
+    [],
+    async function () {
+      const button = content.document.getElementById("doNotTrackSettings");
+      if (!button) {
+        return {
+          todo: "The dialog may have exited before we could click the button",
+        };
+      }
+      button.click();
+      return undefined;
     }
   );
 }
