@@ -106,10 +106,11 @@ That command looks like:
     # Finds the common ancestor between our top fast-forward commit and
     # mozilla-central using:
     #    ancestor($MOZ_TOP_FF, central)
+    MOZ_OLD_CENTRAL=`hg id --id --rev "ancestor($MOZ_TOP_FF, central)"`
     # Using that ancestor and $MOZ_TOP_FF as a range, find the commit _after_
     # the the common commit using limit(range, 1, 1) which gives the first
     # commit of the range, offset by one commit.
-    MOZ_BOTTOM_FF=`hg id --id --rev "limit(ancestor($MOZ_TOP_FF, central)::$MOZ_TOP_FF, 1, 1)"`
+    MOZ_BOTTOM_FF=`hg id --id --rev "limit($MOZ_OLD_CENTRAL::$MOZ_TOP_FF, 1, 1)"`
   fi
   if [ "x" == "x$MOZ_BOTTOM_FF" ]; then
     echo "No value found for the bottom commit of the fast-forward commit stack."
@@ -146,6 +147,7 @@ That command looks like:
   # us to resume
   echo $"export MOZ_BOTTOM_FF=$MOZ_BOTTOM_FF
 export MOZ_TOP_FF=$MOZ_TOP_FF
+export MOZ_OLD_CENTRAL=$MOZ_OLD_CENTRAL
 export MOZ_NEW_CENTRAL=$MOZ_NEW_CENTRAL
 export MOZ_BOOKMARK=$MOZ_BOOKMARK
 " > $STATE_DIR/rebase_resume_state
@@ -232,8 +234,35 @@ done
 
 rm $STATE_DIR/rebase_resume_state
 
+# This is blank in case no changes have been made in third_party/libwebrtc
+# since the previous rebase (or original elm reset).
+PATCH_STACK_FIXUP=""
+
+echo "Checking for new mercurial changes in third_party/libwebrtc"
+FIXUP_INSTRUCTIONS=$"
+Mercurial changes in third_party/libwebrtc since the last rebase have been
+detected (using the verify_vendoring.sh script).  Running the following
+commands should remedy the situation:
+
+  ./mach python $SCRIPT_DIR/extract-for-git.py $MOZ_OLD_CENTRAL::$MOZ_NEW_CENTRAL
+  mv mailbox.patch $MOZ_LIBWEBRTC_SRC
+  (cd $MOZ_LIBWEBRTC_SRC && \\
+   git am mailbox.patch)
+  bash $SCRIPT_DIR/verify_vendoring.sh
+
+When verify_vendoring.sh is successful, run the following in bash:
+  (source $SCRIPT_DIR/use_config_env.sh ;
+   ./mach python $SCRIPT_DIR/save_patch_stack.py \\
+    --repo-path $MOZ_LIBWEBRTC_SRC \\
+    --target-branch-head $MOZ_TARGET_UPSTREAM_BRANCH_HEAD  \\
+    --separate-commit-bug-number $MOZ_FASTFORWARD_BUG )
+"
+bash $SCRIPT_DIR/verify_vendoring.sh &> $LOG_DIR/log-verify.txt || PATCH_STACK_FIXUP="$FIXUP_INSTRUCTIONS"
+echo "Done checking for new mercurial changes in third_party/libwebrtc"
+
 REMAINING_STEPS=$"
 The rebase process is complete.  The following steps must be completed manually:
+$PATCH_STACK_FIXUP
   ./mach bootstrap --application=browser --no-system-changes
   ./mach build
   hg push -r tip --force
