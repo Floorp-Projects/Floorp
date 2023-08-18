@@ -7,6 +7,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
@@ -95,8 +96,9 @@ modal.findPrompt = function (context) {
 /**
  * Observer for modal and tab modal dialogs.
  *
- * @param {function(): browser.Context} curBrowserFn
- *     Function that returns the current |browser.Context|.
+ * @param {Function} curBrowserFn
+ *     Function that returns the current |browser.Context| or undefined.
+ *     If undefined is returned, execute the callback for the events from all contexts.
  *
  * @returns {modal.DialogObserver}
  *     Returns instance of the DialogObserver class.
@@ -157,8 +159,7 @@ modal.DialogObserver = class {
   observe(subject, topic) {
     lazy.logger.trace(`Received observer notification ${topic}`);
 
-    const curBrowser = this._curBrowserFn();
-
+    let curBrowser = this._curBrowserFn();
     switch (topic) {
       // This topic is only used by the old-style content modal dialogs like
       // alert, confirm, and prompt. It can be removed when only the new
@@ -177,29 +178,42 @@ modal.DialogObserver = class {
         break;
 
       case "common-dialog-loaded":
-        const modalType = subject.Dialog.args.modalType;
-
-        if (
-          modalType === Services.prompt.MODAL_TYPE_TAB ||
-          modalType === Services.prompt.MODAL_TYPE_CONTENT
-        ) {
-          // Find the container of the dialog in the parent document, and ensure
-          // it is a descendant of the same container as the current browser.
-          const container = curBrowser.contentBrowser.closest(
-            ".browserSidebarContainer"
-          );
-          if (!container.contains(subject.docShell.chromeEventHandler)) {
+        if (curBrowser) {
+          if (
+            !this.#hasCommonDialog(
+              curBrowser.contentBrowser,
+              curBrowser.window,
+              subject
+            )
+          ) {
             return;
           }
-        } else if (
-          subject.ownerGlobal != curBrowser.window &&
-          subject.opener?.ownerGlobal != curBrowser.window
-        ) {
-          return;
+        } else {
+          const chromeWin = subject.opener
+            ? subject.opener.ownerGlobal
+            : subject.ownerGlobal;
+
+          for (const tab of lazy.TabManager.getTabsForWindow(chromeWin)) {
+            const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
+            const window = lazy.TabManager.getWindowForTab(tab);
+
+            if (this.#hasCommonDialog(contentBrowser, window, subject)) {
+              curBrowser = {
+                contentBrowser,
+                window,
+              };
+
+              break;
+            }
+          }
         }
 
         this.callbacks.forEach(callback =>
-          callback(modal.ACTION_OPENED, subject)
+          callback(
+            modal.ACTION_OPENED,
+            new modal.Dialog(() => curBrowser, subject),
+            curBrowser.contentBrowser
+          )
         );
         break;
 
@@ -211,9 +225,27 @@ modal.DialogObserver = class {
         for (let win of Services.wm.getEnumerator(null)) {
           const prompt = win.prompts().find(item => item.id == subject.id);
           if (prompt) {
+            const tabBrowser = lazy.TabManager.getTabBrowser(win);
+            // Since on Android we always have only one tab we can just check
+            // the selected tab.
+            const tab = tabBrowser.selectedTab;
+            const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
+            const window = lazy.TabManager.getWindowForTab(tab);
+
             this.callbacks.forEach(callback =>
-              callback(modal.ACTION_OPENED, prompt)
+              callback(
+                modal.ACTION_OPENED,
+                new modal.Dialog(
+                  () => ({
+                    contentBrowser,
+                    window,
+                  }),
+                  prompt
+                ),
+                contentBrowser
+              )
             );
+
             return;
           }
         }
@@ -261,6 +293,22 @@ modal.DialogObserver = class {
 
       this.add(dialogClosed);
     });
+  }
+
+  #hasCommonDialog(contentBrowser, window, prompt) {
+    const modalType = prompt.Dialog.args.modalType;
+    if (
+      modalType === Services.prompt.MODAL_TYPE_TAB ||
+      modalType === Services.prompt.MODAL_TYPE_CONTENT
+    ) {
+      // Find the container of the dialog in the parent document, and ensure
+      // it is a descendant of the same container as the content browser.
+      const container = contentBrowser.closest(".browserSidebarContainer");
+
+      return container.contains(prompt.docShell.chromeEventHandler);
+    }
+
+    return prompt.ownerGlobal == window || prompt.opener?.ownerGlobal == window;
   }
 };
 
@@ -313,6 +361,10 @@ modal.Dialog = class {
       return win.Dialog;
     }
     return this.curBrowser_.getTabModal();
+  }
+
+  get promptType() {
+    return this.args.promptType;
   }
 
   get ui() {

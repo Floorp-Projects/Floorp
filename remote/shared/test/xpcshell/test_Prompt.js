@@ -24,9 +24,17 @@ const mockModalDialog = {
   },
 };
 
+const mockContentBrowser = {};
+
 const mockCurBrowser = {
   window: chromeWindow,
+  contentBrowser: mockContentBrowser,
 };
+
+const mockDialogObject = new modal.Dialog(
+  () => mockCurBrowser,
+  mockModalDialog
+);
 
 add_task(function test_addCallback() {
   let observer = new modal.DialogObserver(() => mockCurBrowser);
@@ -79,9 +87,14 @@ add_task(function test_registerDialogClosedEventHandler() {
 add_task(function test_handleCallbackOpenModalDialog() {
   let observer = new modal.DialogObserver(() => mockCurBrowser);
 
-  observer.add((action, dialog) => {
+  observer.add((action, dialog, contentBrowser) => {
     equal(action, modal.ACTION_OPENED, "'opened' action has been passed");
-    equal(dialog, mockModalDialog, "dialog has been passed");
+    equal(
+      dialog.curBrowser_,
+      mockDialogObject.curBrowser_,
+      "dialog has been passed"
+    );
+    equal(contentBrowser, mockContentBrowser, "contentBrowser has been passed");
   });
   observer.observe(mockModalDialog, "common-dialog-loaded");
 });

@@ -206,7 +206,7 @@ GeckoDriver.prototype.handleModalDialog = function (action, dialog) {
   }
 
   if (action === lazy.modal.ACTION_OPENED) {
-    this.dialog = new lazy.modal.Dialog(() => this.curBrowser, dialog);
+    this.dialog = dialog;
     this.getActor().notifyDialogOpened();
   } else if (action === lazy.modal.ACTION_CLOSED) {
     this.dialog = null;

@@ -306,6 +306,20 @@ export var TabManager = {
     return tabBrowser.getTabForBrowser(browser);
   },
 
+  /**
+   * Retrieve the list of tabs for a given window.
+   *
+   * @param {ChromeWindow} win
+   *     Window whose <code>tabs</code> need to be returned.
+   *
+   * @returns {Array<Tab>}
+   *     The list of tabs. Will return an empty list if tab browser is not available.
+   */
+  getTabsForWindow(win) {
+    const tabBrowser = this.getTabBrowser(win);
+    return tabBrowser ? tabBrowser.tabs : [];
+  },
+
   getWindowForTab(tab) {
     // `.linkedBrowser.ownerGlobal` works both with Firefox Desktop and Mobile.
     // Other accessors (eg `.ownerGlobal` or `.browser.ownerGlobal`) fail on one

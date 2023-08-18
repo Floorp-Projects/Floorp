@@ -21,6 +21,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
   ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
+  PromptListener:
+    "chrome://remote/content/shared/listeners/PromptListener.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   waitForInitialNavigationCompleted:
     "chrome://remote/content/shared/Navigate.sys.mjs",
@@ -108,6 +110,7 @@ const WaitCondition = {
 
 class BrowsingContextModule extends Module {
   #contextListener;
+  #promptListener;
   #subscribedEvents;
 
   /**
@@ -119,9 +122,13 @@ class BrowsingContextModule extends Module {
   constructor(messageHandler) {
     super(messageHandler);
 
-    // Create the console-api listener and listen on "message" events.
+    // Create the browsing context listener and listen to "attached" events.
     this.#contextListener = new lazy.BrowsingContextListener();
     this.#contextListener.on("attached", this.#onContextAttached);
+
+    // Create the prompt listener and listen to "opened" events.
+    this.#promptListener = new lazy.PromptListener();
+    this.#promptListener.on("opened", this.#onPromptOpened);
 
     // Set of event names which have active subscriptions.
     this.#subscribedEvents = new Set();
@@ -602,7 +609,7 @@ class BrowsingContextModule extends Module {
     };
 
     if (dialog && dialog.isOpen) {
-      switch (dialog.args.promptType) {
+      switch (dialog.promptType) {
         case UserPromptType.alert: {
           await closePrompt(() => dialog.accept());
           return;
@@ -1174,6 +1181,28 @@ class BrowsingContextModule extends Module {
     }
   };
 
+  #onPromptOpened = async (eventName, data) => {
+    const { contentBrowser, prompt } = data;
+    const contextId = lazy.TabManager.getIdForBrowser(contentBrowser);
+    // This event is emitted from the parent process but for a given browsing
+    // context. Set the event's contextInfo to the message handler corresponding
+    // to this browsing context.
+    const contextInfo = {
+      contextId,
+      type: lazy.WindowGlobalMessageHandler.type,
+    };
+
+    this.emitEvent(
+      "browsingContext.userPromptOpened",
+      {
+        context: contextId,
+        type: prompt.promptType,
+        message: await prompt.getText(),
+      },
+      contextInfo
+    );
+  };
+
   #startListeningLocationChanged() {
     if (!this.#subscribedEvents.has("browsingContext.fragmentNavigated")) {
       this.messageHandler.navigationManager.on(
@@ -1204,6 +1233,11 @@ class BrowsingContextModule extends Module {
         this.#subscribedEvents.add(event);
         break;
       }
+      case "browsingContext.userPromptOpened": {
+        this.#promptListener.startListening();
+        this.#subscribedEvents.add(event);
+        break;
+      }
     }
   }
 
@@ -1216,6 +1250,11 @@ class BrowsingContextModule extends Module {
       }
       case "browsingContext.fragmentNavigated": {
         this.#stopListeningLocationChanged();
+        this.#subscribedEvents.delete(event);
+        break;
+      }
+      case "browsingContext.userPromptOpened": {
+        this.#promptListener.stopListening();
         this.#subscribedEvents.delete(event);
         break;
       }
@@ -1257,6 +1296,7 @@ class BrowsingContextModule extends Module {
       "browsingContext.domContentLoaded",
       "browsingContext.fragmentNavigated",
       "browsingContext.load",
+      "browsingContext.userPromptOpened",
     ];
   }
 }
