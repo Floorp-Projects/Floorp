@@ -2720,7 +2720,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInitBlobURLs(
 
     BlobURLProtocolHandler::AddDataEntry(
         registration.url(), registration.principal(),
-        registration.agentClusterId(), registration.partitionKey(), blobImpl);
+        registration.agentClusterId(), blobImpl);
     // If we have received an already-revoked blobURL, we have to keep it alive
     // for a while (see BlobURLProtocolHandler) in order to support pending
     // operations such as navigation, download and so on.
@@ -3291,12 +3291,12 @@ ContentChild::RecvNotifyPushSubscriptionModifiedObservers(
 
 mozilla::ipc::IPCResult ContentChild::RecvBlobURLRegistration(
     const nsCString& aURI, const IPCBlob& aBlob, nsIPrincipal* aPrincipal,
-    const Maybe<nsID>& aAgentClusterId, const nsCString& aPartitionKey) {
+    const Maybe<nsID>& aAgentClusterId) {
   RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aBlob);
   MOZ_ASSERT(blobImpl);
 
   BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, aAgentClusterId,
-                                       aPartitionKey, blobImpl);
+                                       blobImpl);
   return IPC_OK();
 }
 

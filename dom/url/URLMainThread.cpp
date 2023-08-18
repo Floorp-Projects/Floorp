@@ -13,7 +13,6 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "mozilla/dom/Document.h"
 
 namespace mozilla::dom {
 
@@ -28,21 +27,12 @@ void URLMainThread::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
     return;
   }
 
-  nsAutoString partKey;
-  nsCOMPtr<nsPIDOMWindowInner> owner = do_QueryInterface(global);
-  if (Document* doc = owner->GetExtantDoc()) {
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings = doc->CookieJarSettings();
-
-    cookieJarSettings->GetPartitionKey(partKey);
-  }
-
   nsCOMPtr<nsIPrincipal> principal =
       nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   nsAutoCString url;
-  aRv = BlobURLProtocolHandler::AddDataEntry(
-      aBlob.Impl(), principal, global->GetAgentClusterId(),
-      NS_ConvertUTF16toUTF8(partKey), url);
+  aRv = BlobURLProtocolHandler::AddDataEntry(aBlob.Impl(), principal,
+                                             global->GetAgentClusterId(), url);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -63,21 +53,12 @@ void URLMainThread::CreateObjectURL(const GlobalObject& aGlobal,
     return;
   }
 
-  nsAutoString partKey;
-  nsCOMPtr<nsPIDOMWindowInner> owner = do_QueryInterface(global);
-  if (Document* doc = owner->GetExtantDoc()) {
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings = doc->CookieJarSettings();
-
-    cookieJarSettings->GetPartitionKey(partKey);
-  }
-
   nsCOMPtr<nsIPrincipal> principal =
       nsContentUtils::ObjectPrincipal(aGlobal.Get());
 
   nsAutoCString url;
-  aRv = BlobURLProtocolHandler::AddDataEntry(
-      &aSource, principal, global->GetAgentClusterId(),
-      NS_ConvertUTF16toUTF8(partKey), url);
+  aRv = BlobURLProtocolHandler::AddDataEntry(&aSource, principal,
+                                             global->GetAgentClusterId(), url);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -101,19 +82,11 @@ void URLMainThread::RevokeObjectURL(const GlobalObject& aGlobal,
     return;
   }
 
-  nsAutoString partKey;
-  nsCOMPtr<nsPIDOMWindowInner> owner = do_QueryInterface(global);
-  if (Document* doc = owner->GetExtantDoc()) {
-    nsCOMPtr<nsICookieJarSettings> cookieJarSettings = doc->CookieJarSettings();
-
-    cookieJarSettings->GetPartitionKey(partKey);
-  }
-
   NS_LossyConvertUTF16toASCII asciiurl(aURL);
 
   if (BlobURLProtocolHandler::RemoveDataEntry(
           asciiurl, nsContentUtils::ObjectPrincipal(aGlobal.Get()),
-          global->GetAgentClusterId(), NS_ConvertUTF16toUTF8(partKey))) {
+          global->GetAgentClusterId())) {
     global->UnregisterHostObjectURI(asciiurl);
   }
 }

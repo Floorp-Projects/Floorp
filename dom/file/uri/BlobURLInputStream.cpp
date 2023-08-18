@@ -389,12 +389,6 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
     agentClusterId = clientInfo->AgentClusterId();
   }
 
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
-
-  nsAutoString partKey;
-  cookieJarSettings->GetPartitionKey(partKey);
-
   if (XRE_IsParentProcess() || !BlobURLSchemeIsHTTPOrHTTPS(mBlobURLSpec)) {
     RefPtr<BlobImpl> blobImpl;
 
@@ -404,7 +398,7 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
             mBlobURLSpec, getter_AddRefs(blobImpl), loadingPrincipal,
             triggeringPrincipal, loadInfo->GetOriginAttributes(),
             loadInfo->GetInnerWindowID(), agentClusterId,
-            NS_ConvertUTF16toUTF8(partKey), true /* AlsoIfRevoked */)) {
+            true /* AlsoIfRevoked */)) {
       NS_WARNING("Failed to get data entry principal. URL revoked?");
       return;
     }
@@ -434,10 +428,10 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
   cleanupOnEarlyExit.release();
 
   contentChild
-      ->SendBlobURLDataRequest(
-          mBlobURLSpec, triggeringPrincipal, loadingPrincipal,
-          loadInfo->GetOriginAttributes(), loadInfo->GetInnerWindowID(),
-          agentClusterId, NS_ConvertUTF16toUTF8(partKey))
+      ->SendBlobURLDataRequest(mBlobURLSpec, triggeringPrincipal,
+                               loadingPrincipal,
+                               loadInfo->GetOriginAttributes(),
+                               loadInfo->GetInnerWindowID(), agentClusterId)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self](const BlobURLDataRequestResult& aResult) {

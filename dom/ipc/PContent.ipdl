@@ -279,7 +279,6 @@ struct BlobURLRegistrationData
   IPCBlob blob;
   nullable nsIPrincipal principal;
   nsID? agentClusterId;
-  nsCString partitionKey;
   bool revoked;
 };
 
@@ -869,7 +868,7 @@ child:
 
     async BlobURLRegistration(nsCString aURI, IPCBlob aBlob,
                               nullable nsIPrincipal aPrincipal,
-                              nsID? aAgentClusterId, nsCString aPartitionKey);
+                              nsID? aAgentClusterId);
 
     async BlobURLUnregistration(nsCString aURI);
 
@@ -1613,7 +1612,7 @@ parent:
 
      async StoreAndBroadcastBlobURLRegistration(nsCString url, IPCBlob blob,
                                                 nullable nsIPrincipal principal,
-                                                nsID? aAgentClusterId, nsCString aPartitionKey);
+                                                nsID? aAgentClusterId);
 
      async UnstoreAndBroadcastBlobURLUnregistration(nsCString url, nullable nsIPrincipal principal);
 
@@ -1817,8 +1816,7 @@ parent:
                              nullable nsIPrincipal aLoadingPrincipal,
                              OriginAttributes aOriginAttributes,
                              uint64_t aInnerWindowId,
-                             nsID? aAgentClusterId,
-                             nsCString aPartitionKey)
+                             nsID? aAgentClusterId)
       returns (BlobURLDataRequestResult aResult);
 
     async SetActiveSessionHistoryEntry(MaybeDiscardedBrowsingContext context,
