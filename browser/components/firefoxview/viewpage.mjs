@@ -21,14 +21,14 @@ export class ViewPage extends MozLitElement {
   static get properties() {
     return {
       selectedTab: { type: Boolean },
-      overview: { type: Boolean },
+      recentBrowsing: { type: Boolean },
     };
   }
 
   constructor() {
     super();
     this.selectedTab = false;
-    this.overview = Boolean(this.closest("VIEW-OVERVIEW"));
+    this.recentBrowsing = Boolean(this.closest("VIEW-RECENTBROWSING"));
   }
 
   connectedCallback() {

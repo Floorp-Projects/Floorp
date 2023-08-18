@@ -5,10 +5,10 @@
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { ViewPage } from "./viewpage.mjs";
 
-class OverviewInView extends ViewPage {
+class RecentBrowsingInView extends ViewPage {
   constructor() {
     super();
-    this.pageType = "overview";
+    this.pageType = "recentbrowsing";
   }
 
   connectedCallback() {
@@ -32,4 +32,4 @@ class OverviewInView extends ViewPage {
     `;
   }
 }
-customElements.define("view-overview", OverviewInView);
+customElements.define("view-recentbrowsing", RecentBrowsingInView);

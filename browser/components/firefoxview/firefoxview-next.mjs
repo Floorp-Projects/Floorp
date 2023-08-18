@@ -11,8 +11,8 @@ function onHashChange() {
 function changePage(page) {
   let navigation = document.querySelector("fxview-category-navigation");
   if (page && !pageList.includes(page)) {
-    page = "overview";
-    document.location.hash = "overview";
+    page = "recentbrowsing";
+    document.location.hash = "recentbrowsing";
   }
   document.querySelector("named-deck").selectedViewName = page || pageList[0];
   navigation.currentCategory = page || pageList[0];
@@ -22,9 +22,21 @@ function changePage(page) {
     );
     (currentCategoryButton || navigation.categoryButtons[0]).focus();
   }
+
+  // Record telemetry
+  Services.telemetry.recordEvent(
+    "firefoxview_next",
+    "change_page",
+    "navigation",
+    null,
+    {
+      page: navigation.currentCategory,
+    }
+  );
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
+  Services.telemetry.setEventRecordingEnabled("firefoxview_next", true);
   let navigation = document.querySelector("fxview-category-navigation");
   for (const item of navigation.categoryButtons) {
     pageList.push(item.getAttribute("name"));

@@ -7,6 +7,18 @@ ChromeUtils.defineESModuleGetters(globalThis, {
 
 const FXVIEW_NEXT_ENABLED_PREF = "browser.tabs.firefox-view-next";
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
+const RECENTLY_CLOSED_EVENT = [
+  ["firefoxview_next", "recently_closed", "tabs", undefined],
+];
+const DISMISS_CLOSED_TAB_EVENT = [
+  ["firefoxview_next", "dismiss_closed_tab", "tabs", undefined],
+];
+const CHANGE_PAGE_EVENT = [
+  ["firefoxview_next", "change_page", "navigation", undefined],
+];
+const CARD_COLLAPSED_EVENT = [
+  ["firefoxview_next", "card_collapsed", "card_container", undefined],
+];
 
 function isElInViewport(element) {
   const boundingRect = element.getBoundingClientRect();
@@ -49,17 +61,6 @@ async function dismiss_tab(itemElem, document) {
   await closedObjectsChangePromise;
 }
 
-function navigateToRecentlyClosed(document) {
-  // Navigate to Recently closed tabs page/view
-  const navigation = document.querySelector("fxview-category-navigation");
-  let recentlyClosedNavButton = Array.from(navigation.categoryButtons).find(
-    categoryButton => {
-      return categoryButton.name === "recentlyclosed";
-    }
-  );
-  recentlyClosedNavButton.buttonEl.click();
-}
-
 async function prepareClosedTabs() {
   const newWin = await BrowserTestUtils.openNewBrowserWindow();
   await open_then_close(URLs[0]);
@@ -70,6 +71,90 @@ async function prepareClosedTabs() {
     info("Cleaning up after prepareClosedTabs");
     await promiseAllButPrimaryWindowClosed();
   };
+}
+
+async function recentlyClosedTelemetry() {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      return events && events.length >= 1;
+    },
+    "Waiting for recently_closed firefoxview_next telemetry event.",
+    200,
+    100
+  );
+
+  TelemetryTestUtils.assertEvents(
+    RECENTLY_CLOSED_EVENT,
+    { category: "firefoxview_next" },
+    { clear: true, process: "parent" }
+  );
+}
+
+async function recentlyClosedDismissTelemetry() {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      return events && events.length >= 1;
+    },
+    "Waiting for dismiss_closed_tab firefoxview_next telemetry event.",
+    200,
+    100
+  );
+
+  TelemetryTestUtils.assertEvents(
+    DISMISS_CLOSED_TAB_EVENT,
+    { category: "firefoxview_next" },
+    { clear: true, process: "parent" }
+  );
+}
+
+async function navigationTelemetry() {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      return events && events.length >= 1;
+    },
+    "Waiting for change_page firefoxview_next telemetry event.",
+    200,
+    100
+  );
+
+  TelemetryTestUtils.assertEvents(
+    CHANGE_PAGE_EVENT,
+    { category: "firefoxview_next" },
+    { clear: true, process: "parent" }
+  );
+}
+
+async function cardCollapsedTelemetry() {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        false
+      ).parent;
+      return events && events.length >= 1;
+    },
+    "Waiting for card_collapsed firefoxview_next telemetry event.",
+    200,
+    100
+  );
+
+  TelemetryTestUtils.assertEvents(
+    CARD_COLLAPSED_EVENT,
+    { category: "firefoxview_next" },
+    { clear: true, process: "parent" }
+  );
 }
 
 add_setup(async () => {
@@ -92,8 +177,9 @@ add_task(async function test_list_ordering() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
-
-    navigateToRecentlyClosed(document);
+    await clearAllParentTelemetryEvents();
+    navigateToCategory(document, "recentlyclosed");
+    await navigationTelemetry();
 
     let recentlyClosedComponent = document.querySelector(
       "view-recentlyclosed:not([slot=recentlyclosed])"
@@ -137,7 +223,7 @@ add_task(async function test_list_ordering() {
   await cleanup();
 });
 
-add_task(async function test_list_updates() {
+add_task(async function test_collapse_card() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
     SessionStore.getClosedTabCount(window),
@@ -150,7 +236,61 @@ add_task(async function test_list_updates() {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
 
-    navigateToRecentlyClosed(document);
+    let recentlyClosedComponent = document.querySelector(
+      "view-recentlyclosed[slot=recentlyclosed]"
+    );
+    let cardContainer = recentlyClosedComponent.cardEl;
+    is(
+      cardContainer.isExpanded,
+      true,
+      "The card-container is expanded initially"
+    );
+    await clearAllParentTelemetryEvents();
+    // Click the summary to collapse the details disclosure
+    await EventUtils.synthesizeMouseAtCenter(
+      cardContainer.summaryEl,
+      {},
+      content
+    );
+    is(
+      cardContainer.detailsEl.hasAttribute("open"),
+      false,
+      "The card-container is collapsed"
+    );
+    await cardCollapsedTelemetry();
+    // Click the summary again to expand the details disclosure
+    await EventUtils.synthesizeMouseAtCenter(
+      cardContainer.summaryEl,
+      {},
+      content
+    );
+    is(
+      cardContainer.detailsEl.hasAttribute("open"),
+      true,
+      "The card-container is expanded"
+    );
+
+    // clean up extra tabs
+    while (gBrowser.tabs.length > 1) {
+      BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
+    }
+  });
+  await cleanup();
+});
+
+add_task(async function test_list_updates() {
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  is(
+    SessionStore.getClosedTabCount(window),
+    0,
+    "Closed tab count after purging session history"
+  );
+
+  let cleanup = await prepareClosedTabs();
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview-next");
+    navigateToCategory(document, "recentlyclosed");
 
     let recentlyClosedComponent = document.querySelector(
       "view-recentlyclosed:not([slot=recentlyclosed])"
@@ -176,8 +316,11 @@ add_task(async function test_list_updates() {
     let promiseClosedObjectsChanged = TestUtils.topicObserved(
       "sessionstore-closed-objects-changed"
     );
-    SessionStore.undoCloseById(tabList[0].closedId);
+    await clearAllParentTelemetryEvents();
+    await EventUtils.synthesizeMouseAtCenter(tabList[0].mainEl, {}, content);
     await promiseClosedObjectsChanged;
+    await recentlyClosedTelemetry();
+
     await openFirefoxView(window);
     tabList = cardMainSlotNode.rowEls;
     is(tabList.length, 2, "Two tabs are shown in the list.");
@@ -185,8 +328,10 @@ add_task(async function test_list_updates() {
     promiseClosedObjectsChanged = TestUtils.topicObserved(
       "sessionstore-closed-objects-changed"
     );
-    SessionStore.forgetClosedTab(window, 0);
+    await clearAllParentTelemetryEvents();
+    await EventUtils.synthesizeMouseAtCenter(tabList[0].mainEl, {}, content);
     await promiseClosedObjectsChanged;
+    await recentlyClosedTelemetry();
     await openFirefoxView(window);
     tabList = cardMainSlotNode.rowEls;
     is(tabList.length, 1, "One tab is shown in the list.");
@@ -215,7 +360,7 @@ add_task(async function test_dismiss_tab() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
-    navigateToRecentlyClosed(document);
+    navigateToCategory(document, "recentlyclosed");
 
     let recentlyClosedComponent = document.querySelector(
       "view-recentlyclosed:not([slot=recentlyclosed])"
@@ -232,10 +377,12 @@ add_task(async function test_dismiss_tab() {
     let tabList = cardMainSlotNode.rowEls;
 
     info("calling dismiss_tab");
+    await clearAllParentTelemetryEvents();
     await dismiss_tab(tabList[0], document);
     info("waiting for list re-render");
     await recentlyClosedComponent.getUpdateComplete();
     info("check results");
+    await recentlyClosedDismissTelemetry();
     Assert.equal(SessionStore.getClosedTabCountForWindow(window), 2);
     tabList = cardMainSlotNode.rowEls;
 
@@ -258,7 +405,7 @@ add_task(async function test_dismiss_tab() {
   await cleanup();
 });
 
-add_task(async function test_emoty_states() {
+add_task(async function test_empty_states() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
     SessionStore.getClosedTabCountForWindow(window),
@@ -269,7 +416,7 @@ add_task(async function test_emoty_states() {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
 
-    navigateToRecentlyClosed(document);
+    navigateToCategory(document, "recentlyclosed");
     let recentlyClosedComponent = document.querySelector(
       "view-recentlyclosed:not([slot=recentlyclosed])"
     );

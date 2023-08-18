@@ -83,8 +83,8 @@ body {
   font-weight: 400;
 }
 
-fxview-category-button[name="overview"]::part(icon) {
-  background-image: url("chrome://browser/content/firefoxview/category-overview.svg");
+fxview-category-button[name="recentbrowsing"]::part(icon) {
+  background-image: url("chrome://browser/content/firefoxview/category-recentbrowsing.svg");
 }
 fxview-category-button[name="opentabs"]::part(icon) {
   background-image: url("chrome://browser/content/firefoxview/category-opentabs.svg");
