@@ -590,8 +590,8 @@ pref("toolkit.autocomplete.richBoundaryCutoff", 200);
 pref("toolkit.scrollbox.scrollIncrement", 20);
 pref("toolkit.scrollbox.clickToScroll.scrollDelay", 150);
 
-pref("toolkit.shopping.ohttpConfigURL", "https://stage.ohttp-gateway.nonprod.webservices.mozgcp.net/ohttp-configs");
-pref("toolkit.shopping.ohttpRelayURL", "https://mozilla-ohttp-dev.fastly-edge.com/");
+pref("toolkit.shopping.ohttpConfigURL", "https://prod.ohttp-gateway.prod.webservices.mozgcp.net/ohttp-configs");
+pref("toolkit.shopping.ohttpRelayURL", "https://mozilla-ohttp-fakespot.fastly-edge.com/");
 
 // Controls logging for Sqlite.sys.mjs.
 pref("toolkit.sqlitejsm.loglevel", "Error");
