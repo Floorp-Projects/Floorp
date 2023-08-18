@@ -11,6 +11,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "nsAtomHashKeys.h"
 #include "nsTHashMap.h"
 
 class nsAtom;
@@ -28,8 +29,7 @@ class TimelineCollection final
     : public LinkedListElement<TimelineCollection<TimelineType>> {
  public:
   using SelfType = TimelineCollection<TimelineType>;
-  using TimelineMap =
-      nsTHashMap<nsRefPtrHashKey<const nsAtom>, RefPtr<TimelineType>>;
+  using TimelineMap = nsTHashMap<RefPtr<nsAtom>, RefPtr<TimelineType>>;
 
   TimelineCollection(dom::Element& aElement, PseudoStyleType aPseudoType)
       : mElement(aElement), mPseudo(aPseudoType) {
@@ -38,11 +38,11 @@ class TimelineCollection final
 
   ~TimelineCollection();
 
-  already_AddRefed<TimelineType> Lookup(const nsAtom* aName) const {
+  already_AddRefed<TimelineType> Lookup(nsAtom* aName) const {
     return mTimelines.Get(aName).forget();
   }
 
-  already_AddRefed<TimelineType> Extract(const nsAtom* aName) {
+  already_AddRefed<TimelineType> Extract(nsAtom* aName) {
     Maybe<RefPtr<TimelineType>> timeline = mTimelines.Extract(aName);
     return timeline ? timeline->forget() : nullptr;
   }

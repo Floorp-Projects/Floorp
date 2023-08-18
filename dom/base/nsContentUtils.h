@@ -43,7 +43,6 @@
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/Point.h"
 #include "nsCOMPtr.h"
-#include "nsHashtablesFwd.h"
 #include "nsIContentPolicy.h"
 #include "nsINode.h"
 #include "nsIScriptError.h"
@@ -118,16 +117,12 @@ class nsParser;
 class nsPIWindowRoot;
 class nsPresContext;
 class nsStringBuffer;
-class nsStringHashKey;
 class nsTextFragment;
 class nsView;
 class nsWrapperCache;
 
 struct JSContext;
 struct nsPoint;
-
-template <class T>
-class nsRefPtrHashKey;
 
 namespace IPC {
 class Message;
@@ -3528,10 +3523,6 @@ class nsContentUtils {
   static nsIIOService* sIOService;
 
   static nsIConsoleService* sConsoleService;
-
-  static nsTHashMap<nsRefPtrHashKey<nsAtom>, EventNameMapping>* sAtomEventTable;
-  static nsTHashMap<nsStringHashKey, EventNameMapping>* sStringEventTable;
-  static nsTArray<RefPtr<nsAtom>>* sUserDefinedEvents;
 
   static nsIStringBundleService* sStringBundleService;
   class nsContentUtilsReporter;

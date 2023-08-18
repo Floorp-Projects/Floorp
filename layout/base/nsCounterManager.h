@@ -344,7 +344,7 @@ class nsCounterManager {
 
  private:
   mozilla::ContainStyleScope* mScope;
-  nsClassHashtable<nsRefPtrHashKey<nsAtom>, nsCounterList> mNames;
+  nsClassHashtable<nsAtomHashKey, nsCounterList> mNames;
 };
 
 #endif /* nsCounterManager_h_ */

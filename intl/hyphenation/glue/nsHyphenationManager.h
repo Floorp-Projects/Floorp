@@ -9,10 +9,10 @@
 #include "base/shared_memory.h"
 #include "mozilla/Omnijar.h"
 #include "nsHashKeys.h"
+#include "nsAtomHashKeys.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIObserver.h"
 #include "nsRefPtrHashtable.h"
-
 class nsHyphenator;
 class nsAtom;
 class nsIURI;
@@ -45,9 +45,9 @@ class nsHyphenationManager : public nsIObserver {
   void LoadPatternListFromDir(nsIFile* aDir);
   void LoadAliases();
 
-  nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, nsAtom> mHyphAliases;
-  nsInterfaceHashtable<nsRefPtrHashKey<nsAtom>, nsIURI> mPatternFiles;
-  nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, nsHyphenator> mHyphenators;
+  nsRefPtrHashtable<nsAtomHashKey, nsAtom> mHyphAliases;
+  nsInterfaceHashtable<nsAtomHashKey, nsIURI> mPatternFiles;
+  nsRefPtrHashtable<nsAtomHashKey, nsHyphenator> mHyphenators;
 
   static nsHyphenationManager* sInstance;
 };

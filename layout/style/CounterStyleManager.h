@@ -6,7 +6,6 @@
 #ifndef mozilla_CounterStyleManager_h_
 #define mozilla_CounterStyleManager_h_
 
-#include "nsAtom.h"
 #include "nsGkAtoms.h"
 #include "nsStringFwd.h"
 #include "nsTHashMap.h"
@@ -347,7 +346,7 @@ class CounterStyleManager final {
   void DestroyCounterStyle(CounterStyle* aCounterStyle);
 
   nsPresContext* mPresContext;
-  nsTHashMap<nsRefPtrHashKey<nsAtom>, CounterStyle*> mStyles;
+  nsTHashMap<RefPtr<nsAtom>, CounterStyle*> mStyles;
   nsTArray<CounterStyle*> mRetiredStyles;
 };
 

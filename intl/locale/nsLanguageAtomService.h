@@ -13,7 +13,7 @@
 
 #include "mozilla/NotNull.h"
 #include "nsCOMPtr.h"
-#include "nsAtom.h"
+#include "nsAtomHashKeys.h"
 #include "nsTHashMap.h"
 
 namespace mozilla {
@@ -54,7 +54,7 @@ class nsLanguageAtomService final {
   nsStaticAtom* GetUncachedLanguageGroup(nsAtom* aLanguage) const;
 
  private:
-  nsTHashMap<nsRefPtrHashKey<nsAtom>, nsStaticAtom*> mLangToGroup;
+  nsTHashMap<RefPtr<nsAtom>, nsStaticAtom*> mLangToGroup;
   RefPtr<nsAtom> mLocaleLanguage;
 };
 

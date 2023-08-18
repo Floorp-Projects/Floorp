@@ -8,8 +8,6 @@
 #define nsNameSpaceManager_h___
 
 #include "nsTHashMap.h"
-#include "nsHashKeys.h"
-#include "nsAtom.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 
@@ -73,8 +71,8 @@ class nsNameSpaceManager final {
                                 const int32_t aNameSpaceID);
   ~nsNameSpaceManager() = default;
 
-  nsTHashMap<nsRefPtrHashKey<nsAtom>, int32_t> mURIToIDTable;
-  nsTHashMap<nsRefPtrHashKey<nsAtom>, int32_t> mDisabledURIToIDTable;
+  nsTHashMap<RefPtr<nsAtom>, int32_t> mURIToIDTable;
+  nsTHashMap<RefPtr<nsAtom>, int32_t> mDisabledURIToIDTable;
   nsTArray<RefPtr<nsAtom>> mURIArray;
 
   static mozilla::StaticRefPtr<nsNameSpaceManager> sInstance;

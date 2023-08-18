@@ -21,6 +21,7 @@
 #include "nsPointerHashKeys.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTHashSet.h"
+#include "nsAtomHashKeys.h"
 
 class nsIChannel;
 class nsIObserverService;
@@ -74,7 +75,7 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
   static RefPtr<extensions::WebExtensionPolicyCore> GetCoreByHost(
       const nsACString& aHost);
 
-  WebExtensionPolicy* GetByID(const nsAtom* aAddonId) {
+  WebExtensionPolicy* GetByID(nsAtom* aAddonId) {
     return mExtensions.GetWeak(aAddonId);
   }
 
@@ -126,7 +127,8 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
   void UpdateRestrictedDomains();
   void UpdateQuarantinedDomains();
 
-  nsRefPtrHashtable<nsPtrHashKey<const nsAtom>, WebExtensionPolicy> mExtensions;
+  // The WebExtensionPolicy object keeps the key alive.
+  nsRefPtrHashtable<nsWeakAtomHashKey, WebExtensionPolicy> mExtensions;
 
   nsRefPtrHashtable<nsPtrHashKey<const extensions::DocumentObserver>,
                     extensions::DocumentObserver>

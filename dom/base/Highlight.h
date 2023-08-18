@@ -12,7 +12,7 @@
 #include "mozilla/dom/HighlightBinding.h"
 
 #include "nsCycleCollectionParticipant.h"
-#include "nsHashKeys.h"
+#include "nsAtomHashKeys.h"
 #include "nsTHashSet.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
@@ -80,13 +80,13 @@ class Highlight final : public nsISupports, public nsWrapperCache {
    * the name has to be provided as well.
    */
   void AddToHighlightRegistry(HighlightRegistry& aHighlightRegistry,
-                              const nsAtom& aHighlightName);
+                              nsAtom& aHighlightName);
 
   /**
    * @brief Removes `this` from `aHighlightRegistry`.
    */
   void RemoveFromHighlightRegistry(HighlightRegistry& aHighlightRegistry,
-                                   const nsAtom& aHighlightName);
+                                   nsAtom& aHighlightName);
 
   /**
    * @brief Creates a Highlight Selection using the given ranges.
@@ -204,8 +204,7 @@ class Highlight final : public nsISupports, public nsWrapperCache {
    * Note: Storing `HighlightRegistry` as raw pointer is safe here
    * because it unregisters itself from `this` when it is destroyed/CC'd
    */
-  nsTHashMap<nsPtrHashKey<HighlightRegistry>,
-             nsTHashSet<nsRefPtrHashKey<const nsAtom>>>
+  nsTHashMap<nsPtrHashKey<HighlightRegistry>, nsTHashSet<RefPtr<nsAtom>>>
       mHighlightRegistries;
 };
 

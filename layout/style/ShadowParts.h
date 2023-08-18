@@ -7,7 +7,7 @@
 #ifndef mozilla_ShadowParts_h
 #define mozilla_ShadowParts_h
 
-#include "nsAtom.h"
+#include "nsAtomHashKeys.h"
 #include "nsTHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -38,8 +38,8 @@ class ShadowParts final {
 
   // TODO(emilio): If the two hashtables take a lot of memory we should consider
   // just using an nsTArray<Pair<>> or something.
-  nsClassHashtable<nsRefPtrHashKey<nsAtom>, PartList> mMappings;
-  nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, nsAtom> mReverseMappings;
+  nsClassHashtable<nsAtomHashKey, PartList> mMappings;
+  nsRefPtrHashtable<nsAtomHashKey, nsAtom> mReverseMappings;
 };
 
 }  // namespace mozilla

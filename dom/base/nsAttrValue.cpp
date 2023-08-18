@@ -15,7 +15,7 @@
 
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
-#include "nsAtom.h"
+#include "nsAtomHashKeys.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/AttributeStyles.h"
 #include "mozilla/BloomFilter.h"
@@ -53,7 +53,7 @@ struct AtomArrayCache {
   // MiscContainer. The MiscContainer removes itself from the cache when
   // the last reference to it is dropped, and the atom is kept alive by
   // the MiscContainer.
-  using MapType = nsTHashMap<nsPtrHashKey<nsAtom>, MiscContainer*>;
+  using MapType = nsTHashMap<nsAtom*, MiscContainer*>;
 
   static MiscContainer* Lookup(nsAtom* aValue) {
     if (auto* instance = GetInstance()) {
@@ -822,7 +822,7 @@ UniquePtr<AttrAtomArray> AttrAtomArray::CreateDeduplicatedCopyIfDifferentImpl()
 
   bool usingHashTable = false;
   BitBloomFilter<8, nsAtom> filter;
-  nsTHashSet<nsPtrHashKey<nsAtom>> hash;
+  nsTHashSet<nsAtom*> hash;
 
   auto CheckDuplicate = [&](size_t i) {
     nsAtom* atom = mArray[i];
