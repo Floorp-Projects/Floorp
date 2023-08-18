@@ -232,6 +232,7 @@ export class ShoppingContainer extends MozLitElement {
             id="close-button"
             class="ghost-button"
             data-l10n-id="shopping-close-button"
+            @click=${this.handleClick}
           ></button>
         </div>
         <div id="content" aria-busy=${!this.data}>
@@ -260,6 +261,10 @@ export class ShoppingContainer extends MozLitElement {
       content = this.getContentTemplate();
     }
     return this.renderContainer(content, hideSettings);
+  }
+
+  handleClick() {
+    RPMSetPref("browser.shopping.experience2023.active", false);
   }
 }
 
