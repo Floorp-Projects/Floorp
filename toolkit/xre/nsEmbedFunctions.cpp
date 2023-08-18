@@ -518,6 +518,11 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
       uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
       break;
     case GeckoProcessType_GMPlugin:
+      gmp::GMPProcessChild::InitStatics(aArgc, aArgv);
+      uiLoopType = gmp::GMPProcessChild::UseXPCOM()
+                       ? MessageLoop::TYPE_MOZILLA_CHILD
+                       : MessageLoop::TYPE_DEFAULT;
+      break;
     case GeckoProcessType_RemoteSandboxBroker:
       uiLoopType = MessageLoop::TYPE_DEFAULT;
       break;

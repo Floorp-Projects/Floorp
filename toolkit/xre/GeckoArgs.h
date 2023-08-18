@@ -131,6 +131,10 @@ static CommandLineArg<bool> sSafeMode{"-safeMode", "safemode"};
 static CommandLineArg<bool> sIsForBrowser{"-isForBrowser", "isforbrowser"};
 static CommandLineArg<bool> sNotForBrowser{"-notForBrowser", "notforbrowser"};
 
+static CommandLineArg<const char*> sPluginPath{"-pluginPath", "pluginpath"};
+static CommandLineArg<bool> sPluginNativeEvent{"-pluginNativeEvent",
+                                               "pluginnativeevent"};
+
 #if defined(XP_WIN)
 #  if defined(MOZ_SANDBOX)
 static CommandLineArg<bool> sWin32kLockedDown{"-win32kLockedDown",

@@ -29,8 +29,9 @@ class GMPChild : public PGMPChild {
 
   GMPChild();
 
-  bool Init(const nsAString& aPluginPath,
+  bool Init(const nsAString& aPluginPath, const char* aParentBuildID,
             mozilla::ipc::UntypedEndpoint&& aEndpoint);
+  void Shutdown();
   MessageLoop* GMPMessageLoop();
 
   // Main thread only.
@@ -47,6 +48,8 @@ class GMPChild : public PGMPChild {
   virtual ~GMPChild();
 
   bool GetUTF8LibPath(nsACString& aOutLibPath);
+
+  bool GetPluginName(nsACString& aPluginName) const;
 
   mozilla::ipc::IPCResult RecvProvideStorageId(const nsCString& aStorageId);
 
@@ -74,6 +77,8 @@ class GMPChild : public PGMPChild {
 
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<mozilla::PProfilerChild>&& aEndpoint);
+
+  mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& aPref);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;

@@ -30,6 +30,7 @@ class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
 
   bool CanShutdown() override { return true; }
   const std::string& GetPluginFilePath() { return mGMPPath; }
+  bool UseXPCOM() const { return mUseXpcom; }
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // Init static members on the main thread
@@ -62,6 +63,9 @@ class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
 
   std::string mGMPPath;
   nsCOMPtr<nsIRunnable> mDeletedCallback;
+
+  // Whether or not XPCOM is enabled in the GMP process.
+  bool mUseXpcom;
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // Indicates whether we'll start the Mac GMP sandbox during
