@@ -8,10 +8,13 @@
 
 #include "TimeUnits.h"
 #include "VideoUtils.h"
+#include "mozilla/Logging.h"
 #include "mozilla/UniquePtr.h"
 #include <inttypes.h>
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
+#define LOG(msg, ...) \
+  MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, msg, ##__VA_ARGS__)
 #define ADTSLOG(msg, ...) \
   DDMOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, msg, ##__VA_ARGS__)
 #define ADTSLOGV(msg, ...) \
@@ -93,9 +96,15 @@ class FrameHeader {
         (p[3] & 0x03) << 11 | (p[4] & 0xFF) << 3 | (p[5] & 0xE0) >> 5);
     mNumAACFrames = (p[6] & 0x03) + 1;
 
-    static const uint32_t SAMPLE_RATES[16] = {96000, 88200, 64000, 48000, 44100,
-                                              32000, 24000, 22050, 16000, 12000,
-                                              11025, 8000,  7350};
+    static const uint32_t SAMPLE_RATES[] = {96000, 88200, 64000, 48000, 44100,
+                                            32000, 24000, 22050, 16000, 12000,
+                                            11025, 8000,  7350};
+    if (mSamplingIndex >= ArrayLength(SAMPLE_RATES)) {
+      LOG(("ADTS: Init() failure: invalid sample-rate index value: %" PRIu32
+           ".",
+           mSamplingIndex));
+      return false;
+    }
     mSampleRate = SAMPLE_RATES[mSamplingIndex];
 
     MOZ_ASSERT(mChannelConfig < 8);
