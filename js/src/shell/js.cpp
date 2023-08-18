@@ -11494,7 +11494,7 @@ bool InitOptionParser(OptionParser& op) {
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2") ||
 #define WASM_FEATURE(NAME, LOWER_NAME, STAGE, COMPILE_PRED, COMPILER_PRED, \
-                     FLAG_PRED, FLAG_FORCE_ON, SHELL, ...)                 \
+                     FLAG_PRED, FLAG_FORCE_ON, FLAG_FUZZ_ON, SHELL, ...)   \
   !op.addBoolOption('\0', "no-wasm-" SHELL,                                \
                     STAGE == WasmFeatureStage::Experimental                \
                         ? "No-op."                                         \
@@ -12148,7 +12148,7 @@ bool SetContextWasmOptions(JSContext* cx, const OptionParser& op) {
   }
 
 #define WASM_FEATURE(NAME, LOWER_NAME, STAGE, COMPILE_PRED, COMPILER_PRED, \
-                     FLAG_PRED, FLAG_FORCE_ON, SHELL, ...)                 \
+                     FLAG_PRED, FLAG_FORCE_ON, FLAG_FUZZ_ON, SHELL, ...)   \
   if (STAGE == WasmFeatureStage::Experimental) {                           \
     enableWasm##NAME = op.getBoolOption("wasm-" SHELL);                    \
   } else {                                                                 \
@@ -12190,7 +12190,7 @@ bool SetContextWasmOptions(JSContext* cx, const OptionParser& op) {
   // Also the following are to be propagated.
   const char* to_propagate[] = {
 #  define WASM_FEATURE(NAME, LOWER_NAME, STAGE, COMPILE_PRED, COMPILER_PRED, \
-                       FLAG_PRED, FLAG_FORCE_ON, SHELL, ...)                 \
+                       FLAG_PRED, FLAG_FORCE_ON, FLAG_FUZZ_ON, SHELL, ...)   \
     STAGE == WasmFeatureStage::Experimental ? "--wasm-" SHELL                \
                                             : "--no-wasm-" SHELL,
       JS_FOR_WASM_FEATURES(WASM_FEATURE)
