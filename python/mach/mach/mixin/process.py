@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from mozbuild import shellutil
 from mozprocess.processhandler import ProcessHandlerMixin
 
 from .logging import LoggingMixin
@@ -107,7 +108,12 @@ class ProcessExecutionMixin(LoggingMixin):
         """
         args = self._normalize_command(args, require_unix_environment)
 
-        self.log(logging.INFO, "new_process", {"args": " ".join(args)}, "{args}")
+        self.log(
+            logging.INFO,
+            "new_process",
+            {"args": " ".join(shellutil.quote(arg) for arg in args)},
+            "{args}",
+        )
 
         def handleLine(line):
             # Converts str to unicode on Python 2 and bytes to str on Python 3.
