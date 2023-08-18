@@ -23,7 +23,7 @@ namespace mozilla {
 class MFCDMProxy {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFCDMProxy);
 
-  explicit MFCDMProxy(IMFContentDecryptionModule* aCDM);
+  MFCDMProxy(IMFContentDecryptionModule* aCDM, uint64_t aCDMParentId);
 
  public:
   // Return a IMediaProtectionPMPServer from the existing CDM.
@@ -47,6 +47,8 @@ class MFCDMProxy {
   // because they are in bad state.
   void OnHardwareContextReset();
 
+  void Shutdown();
+
   // TODO : set last key id in order to let CDM use the key IDs information to
   // perform some optimization.
 
@@ -61,6 +63,8 @@ class MFCDMProxy {
       mInputTrustAuthorities;
 
   Microsoft::WRL::ComPtr<IMFTrustedInput> mTrustedInput;
+
+  const uint64_t mCDMParentId;
 
   // TODO : need some events? (Eg. significant playback, error, hardware context
   // reset)

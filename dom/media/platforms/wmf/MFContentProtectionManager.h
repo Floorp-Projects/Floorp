@@ -33,6 +33,8 @@ class MFContentProtectionManager
 
   HRESULT RuntimeClassInitialize();
 
+  void Shutdown();
+
   // IMFContentProtectionManager.
   IFACEMETHODIMP BeginEnableContent(IMFActivate* aEnablerActivate,
                                     IMFTopology* aTopology,

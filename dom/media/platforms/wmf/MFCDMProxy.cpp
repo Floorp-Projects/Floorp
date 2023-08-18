@@ -4,6 +4,7 @@
 
 #include "MFCDMProxy.h"
 
+#include "MFCDMParent.h"
 #include "MFMediaEngineUtils.h"
 
 namespace mozilla {
@@ -14,11 +15,14 @@ using Microsoft::WRL::ComPtr;
   MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug, \
           ("MFCDMProxy=%p, " msg, this, ##__VA_ARGS__))
 
-MFCDMProxy::MFCDMProxy(IMFContentDecryptionModule* aCDM) : mCDM(aCDM) {
-  LOG("MFCDMProxy created");
+MFCDMProxy::MFCDMProxy(IMFContentDecryptionModule* aCDM, uint64_t aCDMParentId)
+    : mCDM(aCDM), mCDMParentId(aCDMParentId) {
+  LOG("MFCDMProxy created, created by %" PRId64 " MFCDMParent", mCDMParentId);
 }
 
-MFCDMProxy::~MFCDMProxy() {
+MFCDMProxy::~MFCDMProxy() { LOG("MFCDMProxy destroyed"); }
+
+void MFCDMProxy::Shutdown() {
   if (mTrustedInput) {
     mTrustedInput = nullptr;
   }
@@ -26,11 +30,11 @@ MFCDMProxy::~MFCDMProxy() {
     SHUTDOWN_IF_POSSIBLE(inputAuthorities.second);
   }
   mInputTrustAuthorities.clear();
-  if (mCDM) {
-    SHUTDOWN_IF_POSSIBLE(mCDM);
-    mCDM = nullptr;
+  if (auto* parent = MFCDMParent::GetCDMById(mCDMParentId)) {
+    parent->ShutdownCDM();
   }
-  LOG("MFCDMProxy destroyed");
+  mCDM = nullptr;
+  LOG("MFCDMProxy Shutdowned");
 }
 
 HRESULT MFCDMProxy::GetPMPServer(REFIID aRiid, LPVOID* aPMPServerOut) {
