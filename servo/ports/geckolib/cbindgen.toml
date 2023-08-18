@@ -57,6 +57,8 @@ derive_neq = true
 # These depend on the build.
 "target_pointer_width = 32" = "SERVO_32_BITS"
 "target_pointer_width = 64" = "HAVE_64BIT_BUILD"
+"unix" = "XP_UNIX"
+"windows" = "XP_WIN"
 
 [macro_expansion]
 bitflags = true
@@ -335,6 +337,8 @@ renaming_overrides_prefixing = true
 "FontPaletteValueSet" = "gfx::FontPaletteValueSet"
 "PaletteValues" = "gfx::FontPaletteValueSet::PaletteValues"
 "ThinVec" = "nsTArray"
+"RawPthread" = "pthread_t"
+"RawHandle" = "void*"
 
 [export.body]
 "CSSPixelLength" = """

@@ -14,6 +14,18 @@ use gecko_profiler;
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use rayon;
 use std::{io, thread};
+#[cfg(unix)]
+use std::os::unix::thread::{JoinHandleExt, RawPthread};
+#[cfg(windows)]
+use std::os::windows::{io::AsRawHandle, prelude::RawHandle};
+use thin_vec::ThinVec;
+
+/// Platform-specific handle to a thread.
+#[cfg(unix)]
+pub type PlatformThreadHandle = RawPthread;
+/// Platform-specific handle to a thread.
+#[cfg(windows)]
+pub type PlatformThreadHandle = RawHandle;
 
 /// Global style data
 pub struct GlobalStyleData {
@@ -108,6 +120,22 @@ impl StyleThreadPool {
     /// for shutdown().
     pub fn pool(&self) -> RwLockReadGuard<Option<rayon::ThreadPool>> {
         self.style_thread_pool.read()
+    }
+
+    /// Returns a list of the pool's platform-specific thread handles.
+    pub fn get_thread_handles(handles: &mut ThinVec<PlatformThreadHandle>) {
+        // Force the lazy initialization of STYLE_THREAD_POOL so that the threads get spawned and
+        // their join handles are added to STYLE_THREAD_JOIN_HANDLES.
+        lazy_static::initialize(&STYLE_THREAD_POOL);
+
+        for join_handle in STYLE_THREAD_JOIN_HANDLES.lock().iter() {
+            #[cfg(unix)]
+            let handle = join_handle.as_pthread_t();
+            #[cfg(windows)]
+            let handle = join_handle.as_raw_handle();
+
+            handles.push(handle);
+        }
     }
 }
 
