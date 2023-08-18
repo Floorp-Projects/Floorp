@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Blob URL Partitioning Test</title>
+  </head>
+  <body>
+    <script>
+        onmessage = e => {
+
+        fetch(e.data)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error();
+                }
+                return response.text();
+            })
+            .then(text => {
+                parent.postMessage(text, "*");
+            })
+            .catch(error => {
+                parent.postMessage("error", "*");
+            });
+        };
+    </script>
+  </body>
+</html>
