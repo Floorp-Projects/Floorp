@@ -33,6 +33,9 @@ impl Config for SpiderMonkeyConfig {
     fn reference_types_enabled(&self) -> bool {
         true
     }
+    fn relaxed_simd_enabled(&self) -> bool {
+        true
+    }
     fn exceptions_enabled(&self) -> bool {
         true
     }
@@ -43,6 +46,9 @@ impl Config for SpiderMonkeyConfig {
         true
     }
     fn tail_call_enabled(&self) -> bool {
+        true
+    }
+    fn threads_enabled(&self) -> bool {
         true
     }
 }
