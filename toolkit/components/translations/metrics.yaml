@@ -410,6 +410,27 @@ translations.panel:
       - translations-telemetry-alerts@mozilla.com
     expires: 122
 
+  always_offer_translations:
+    type: event
+    description: >
+      Triggers when the always-offer-translations menuitem is invoked in the translations panel seeings.
+    extra_keys:
+      flow_id: *flow_id
+      first_interaction: *first_interaction
+      toggled_on:
+        type: boolean
+        description: >
+          - Whether the setting was toggled on or off.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1842646
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1842646
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - translations-telemetry-alerts@mozilla.com
+    expires: 122
+
   always_translate_language:
     type: event
     description: >
