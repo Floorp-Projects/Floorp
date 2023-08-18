@@ -192,7 +192,8 @@ nsresult nsDataHandler::ParsePathWithoutRef(const nsACString& aPath,
     if (aMimeType) {
       parsed->Serialize(*aMimeType);
     }
-    if (parsed->IsBase64()) {
+    if (parsed->IsBase64() &&
+        !StaticPrefs::network_url_strict_data_url_base64_placement()) {
       aIsBase64 = true;
     }
   } else {

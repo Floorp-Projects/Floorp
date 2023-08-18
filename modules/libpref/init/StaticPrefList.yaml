@@ -12248,6 +12248,12 @@
   value: false
   mirror: always
 
+  # If true, will be more strict with status code parsing
+- name: network.url.strict_data_url_base64_placement
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Force remapping of remote port numbers to allow reaching local testing
 # servers or port forwarders listening on non-standard ports.  Note that
 # this is not changing the origin URL in the addressbar, only internally
