@@ -345,6 +345,9 @@ void MFCDMParent::Destroy() {
   }
   ShutdownCDM();
   mFactory = nullptr;
+  for (auto& iter : mSessions) {
+    iter.second->Close();
+  }
   mSessions.clear();
   mIPDLSelfRef = nullptr;
 }
