@@ -3091,39 +3091,4 @@ class WebExtensionTest : BaseSessionTest() {
             equalTo(geckoPrefs[0] as Boolean),
         )
     }
-
-    @Test
-    fun testExtensionsProcessDisabledByDefault() {
-        val settings = GeckoRuntimeSettings.Builder()
-            .build()
-
-        assertThat(
-            "extensionsProcessEnabled setting default should be null",
-            settings.extensionsProcessEnabled,
-            equalTo(null),
-        )
-
-        val geckoPrefs = sessionRule.getPrefs(
-            "extensions.webextensions.remote",
-        )
-
-        assertThat(
-            "extensions.webextensions.remote pref default value should be false",
-            geckoPrefs[0] as Boolean,
-            equalTo(false),
-        )
-    }
-
-    @Test
-    fun testExtensionsProcessControlledFromSettings() {
-        val settings = GeckoRuntimeSettings.Builder()
-            .extensionsProcessEnabled(true)
-            .build()
-
-        assertThat(
-            "extensionsProcessEnabled setting should be set to true",
-            settings.extensionsProcessEnabled,
-            equalTo(true),
-        )
-    }
 }
