@@ -60,6 +60,9 @@
     <string name="key_javascript_enabled">javascript_enabled</string>
     <item type="bool" name="javascript_enabled_default">true</item>
 
+    <string name="key_extensions_process_enabled">extensions_process_enabled</string>
+    <item type="bool" name="extensions_process_enabled_default">false</item>
+
     <string name="key_remote_debugging">remote_debugging</string>
     <item type="bool" name="remote_debugging_default">true</item>
 

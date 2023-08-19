@@ -109,6 +109,10 @@ public abstract class RuntimeSettings implements Parcelable {
       return mIsSet;
     }
 
+    public boolean hasDefault() {
+      return true;
+    }
+
     public void reset() {
       mValue = defaultValue;
       mIsSet = false;
@@ -125,6 +129,48 @@ public abstract class RuntimeSettings implements Parcelable {
       } else {
         throw new UnsupportedOperationException("Unhandled pref type for " + name);
       }
+    }
+  }
+
+  /**
+   * Used to handle pref-based settings that should not have a default value, so that they will be
+   * controlled by GeckoView only when they are set.
+   *
+   * <p>When no value is set for a PrefWithoutDefault, its value on the GeckoView side is expected
+   * to be null, and the value set on the Gecko side to stay set to the either the prefs file
+   * included in the GeckoView build, or the user prefs file created by the xpcshell and mochitest
+   * test harness.
+   */
+  /* package */ class PrefWithoutDefault<T> extends Pref<T> {
+    public PrefWithoutDefault(@NonNull final String name) {
+      super(name, null);
+    }
+
+    public boolean hasDefault() {
+      return false;
+    }
+
+    public @Nullable T get() {
+      if (!isSet()) {
+        return null;
+      }
+      return super.get();
+    }
+
+    public void commit() {
+      if (!isSet()) {
+        // Only add to the bundle prefs and
+        // propagate to Gecko when explicitly set.
+        return;
+      }
+      super.commit();
+    }
+
+    private void addToBundle(final GeckoBundle bundle) {
+      if (!isSet()) {
+        return;
+      }
+      super.addToBundle(bundle);
     }
   }
 
@@ -231,7 +277,15 @@ public abstract class RuntimeSettings implements Parcelable {
    */
   /* package */ void commitResetPrefs() {
     final ArrayList<String> names = new ArrayList<String>();
-    forAllPrefs(pref -> names.add(pref.name));
+    forAllPrefs(
+        pref -> {
+          // Do not reset prefs that don't have a default value
+          // and are not set.
+          if (!pref.hasDefault() && !pref.isSet()) {
+            return;
+          }
+          names.add(pref.name);
+        });
 
     final GeckoBundle data = new GeckoBundle(1);
     data.putStringArray("names", names);
@@ -257,10 +311,21 @@ public abstract class RuntimeSettings implements Parcelable {
   @SuppressWarnings("checkstyle:javadocmethod")
   public void readFromParcel(final @NonNull Parcel source) {
     for (final Pref<?> pref : mPrefs) {
-      // We know this is safe.
-      @SuppressWarnings("unchecked")
-      final Pref<Object> uncheckedPref = (Pref<Object>) pref;
-      uncheckedPref.commit(source.readValue(getClass().getClassLoader()));
+      if (pref.hasDefault()) {
+        // We know this is safe.
+        @SuppressWarnings("unchecked")
+        final Pref<Object> uncheckedPref = (Pref<Object>) pref;
+        uncheckedPref.commit(source.readValue(getClass().getClassLoader()));
+      } else {
+        // Don't commit PrefWithoutDefault instances where the value read
+        // from the Parcel is null.
+        @SuppressWarnings("unchecked")
+        final PrefWithoutDefault<Object> uncheckedPref = (PrefWithoutDefault<Object>) pref;
+        final Object sourceValue = source.readValue(getClass().getClassLoader());
+        if (sourceValue != null) {
+          uncheckedPref.commit(sourceValue);
+        }
+      }
     }
   }
 }

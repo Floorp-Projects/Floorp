@@ -650,6 +650,17 @@ public class GeckoViewActivity extends AppCompatActivity
         }
       };
 
+  private final BooleanSetting mExtensionsProcessEnabled =
+      new BooleanSetting(
+          R.string.key_extensions_process_enabled,
+          R.bool.extensions_process_enabled_default,
+          /* reloadCurrentSession */ true) {
+        @Override
+        public void setValue(final GeckoRuntimeSettings settings, final Boolean value) {
+          settings.setExtensionsProcessEnabled(value);
+        }
+      };
+
   private final BooleanSetting mTrackingProtection =
       new BooleanSetting(R.string.key_tracking_protection, R.bool.tracking_protection_default) {
         @Override
@@ -831,6 +842,7 @@ public class GeckoViewActivity extends AppCompatActivity
           .preferredColorScheme(mPreferredColorScheme.value())
           .telemetryDelegate(new ExampleTelemetryDelegate())
           .javaScriptEnabled(mJavascriptEnabled.value())
+          .extensionsProcessEnabled(mExtensionsProcessEnabled.value())
           .aboutConfigEnabled(true);
 
       sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
