@@ -4,23 +4,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*---------------------------------------------------------------- Context Menu ----------------------------------------------------------------*/
-let checkItems = []
-let contextMenuObserver = new MutationObserver(contextMenuObserverFunc)
-function addContextBox(id,l10n,insert,runFunction,checkID,checkedFunction){
-  let contextMenu = document.createXULElement("menuitem");
-  contextMenu.setAttribute("data-l10n-id",l10n);
-  contextMenu.id = id;
-  contextMenu.setAttribute("oncommand",runFunction);
 
-  document.getElementById("contentAreaContextMenu").insertBefore(contextMenu,document.getElementById(insert));
-  contextMenuObserver.observe(document.getElementById(checkID), {attributes:true})
-  checkItems.push(checkedFunction)
+let checkItems = [];
+let contextMenuObserver = new MutationObserver(contextMenuObserverFunc);
+
+function addContextBox(id, l10n, insert, runFunction, checkID, checkedFunction) {
+  const contextMenu = document.createXULElement("menuitem");
+  contextMenu.setAttribute("data-l10n-id", l10n);
+  contextMenu.id = id;
+  contextMenu.setAttribute("oncommand", runFunction);
+
+  const contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
+  contentAreaContextMenu.insertBefore(contextMenu, document.getElementById(insert));
+
+  contextMenuObserver.observe(document.getElementById(checkID), { attributes: true });
+  checkItems.push(checkedFunction);
 
   contextMenuObserverFunc();
 }
 
-function contextMenuObserverFunc(){
-  for(const elem of checkItems) elem()
+function contextMenuObserverFunc() {
+  for (const elem of checkItems) {
+    elem();
+  }
 }
 
 /********************* Share mode *********************************/
@@ -33,15 +39,15 @@ let addElem = window.MozXULElement.parseXULToFragment(`
 `);
 beforeElem.after(addElem);
 
-function addOrRemoveShareModeCSS(){
-  let CSSexist = document.getElementById("sharemode");
+function addOrRemoveShareModeCSS() {
+  const cssExist = document.getElementById("sharemode");
 
-  if(CSSexist == null){
-    let CSS = document.createElement("style");
-    CSS.id = "sharemode";
-    CSS.innerText = "@import url(chrome://browser/skin/options/sharemode.css)";
-    document.head.appendChild(CSS);
+  if (!cssExist) {
+    const css = document.createElement("style");
+    css.id = "sharemode";
+    css.textContent = "@import url(chrome://browser/skin/options/sharemode.css);";
+    document.head.appendChild(css);
   } else {
-    document.getElementById("sharemode").remove();
+    cssExist.remove();
   }
 }

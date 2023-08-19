@@ -23,29 +23,26 @@ Preferences.addAll([
   { id: "floorp.browser.workspace.showWorkspaceName", type: "bool" },
 ])
 
-function coventToDateAndTime(timestamp) {
-  let date = new Date(timestamp);
-  let dateStr = date.toLocaleDateString();
-  let timeStr = date.toLocaleTimeString();
-  return dateStr + " " + timeStr;
+function convertToDateAndTime(timestamp) {
+  const date = new Date(timestamp);
+  const dateStr = date.toLocaleDateString();
+  const timeStr = date.toLocaleTimeString();
+  return `${dateStr} ${timeStr}`;
 }
 
-async function resetWorkspaces () {
-  let l10n = new Localization(["browser/floorp.ftl"], true);
+async function resetWorkspaces() {
+  const l10n = new Localization(["browser/floorp.ftl"], true);
   const prompts = Services.prompt;
-  const check = {
-    value: false
-  };
+  const check = { value: false };
   const flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_OK + prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL;
-  let result = prompts.confirmEx(null, l10n.formatValueSync("workspaces-reset-service-title"), l10n.formatValueSync("workspaces-reset-warning"), flags, "", null, "", null, check);
+  const result = prompts.confirmEx(null, l10n.formatValueSync("workspaces-reset-service-title"), l10n.formatValueSync("workspaces-reset-warning"), flags, "", null, "", null, check);
   if (result == 0) {
-    Promise.all([
+    await Promise.all([
       Services.prefs.clearUserPref("floorp.browser.workspace.all"),
       Services.prefs.clearUserPref("floorp.browser.workspace.current"),
       Services.prefs.clearUserPref("floorp.browser.workspace.tabs.state")
-    ]).then(() => {
-      Services.obs.notifyObservers([], "floorp-restart-browser");
-    });
+    ]);
+    Services.obs.notifyObservers([], "floorp-restart-browser");
   }
 }
 
@@ -53,13 +50,13 @@ const gWorkspacesPane = {
   _pane: null,
   init() {
     this._pane = document.getElementById("paneWorkspaces");
-    document.getElementById("backtogeneral-workspaces").addEventListener("command", function () {
+    document.getElementById("backtogeneral-workspaces").addEventListener("command", () => {
       gotoPref("general")
     });
 
     const needreboot = document.getElementsByClassName("needreboot");
     for (let i = 0; i < needreboot.length; i++) {
-      needreboot[i].addEventListener("click", function () {
+      needreboot[i].addEventListener("click", () => {
         if (!Services.prefs.getBoolPref("floorp.enable.auto.restart", false)) {
           (async () => {
             let userConfirm = await confirmRestartPrompt(null)
@@ -70,14 +67,14 @@ const gWorkspacesPane = {
             }
           })()
         } else {
-          window.setTimeout(function () {
+          window.setTimeout(() => {
             Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
           }, 500);
         }
       });
     }
 
-    document.getElementById("manageWorkspace-button").addEventListener("command", function () {
+    document.getElementById("manageWorkspace-button").addEventListener("command", () => {
       gSubDialog.open(
         "chrome://browser/content/preferences/dialogs/manageWorkspace.xhtml",
       );
@@ -117,39 +114,36 @@ const gWorkspacesPane = {
      `);
 
       function insetElement() {
-        let parentElemnt = document.getElementById("workspaces-backup-list");
-        if (parentElemnt !== null) {
-          parentElemnt.appendChild(element);
-          applyFunctions();
-        } else {
-          setTimeout(insetElement, 100);
-        }
-      }
+       const parentElement = document.getElementById("workspaces-backup-list");
+       if (parentElement) {
+         parentElement.appendChild(element);
+         applyFunctions();
+       } else {
+         setTimeout(insertElement, 100);
+       }
+     }
       
-      function applyFunctions() {
-        let targets = document.getElementsByClassName("restore-workspaces-button");
-        for (let i = 0; i < targets.length; i++) {
-          targets[i].onclick = function () {
-            restoreWorkspaces(targets[i].getAttribute("linenum"));
-          }
-        }
-      }
+     function applyFunctions() {
+       const targets = document.getElementsByClassName("restore-workspaces-button");
+       for (const target of targets) {
+         target.onclick = () => {
+           restoreWorkspaces(target.getAttribute("linenum"));
+         };
+       }
+     }
 
-      async function restoreWorkspaces(i) {
-        let l10n = new Localization(["browser/floorp.ftl", "branding/brand.ftl"], true);
-        const prompts = Services.prompt;
-        const check = {
-          value: false
-        };
-        const flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_OK + prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL;
-        let result = prompts.confirmEx(null, l10n.formatValueSync("workspaces-restore-service-title"), l10n.formatValueSync("workspaces-restore-warning"), flags, "", null, "", null, check);
-        if (result == 0) {
-          Services.obs.notifyObservers({lineNum:i}, 'backupWorkspace');
-          window.setTimeout(function () {
-            Services.obs.notifyObservers([], "floorp-restart-browser");
-          }, 4000);
-        }
+     async function restoreWorkspaces(i) {
+      const l10n = new Localization(["browser/floorp.ftl", "branding/brand.ftl"], true);
+      const prompts = Services.prompt;
+      const check = { value: false };
+      const flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_OK + prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL;
+      const result = prompts.confirmEx(null, l10n.formatValueSync("workspaces-restore-service-title"), l10n.formatValueSync("workspaces-restore-warning"), flags, "", null, "", null, check);
+      if (result == 0) {
+        Services.obs.notifyObservers({lineNum: i}, 'backupWorkspace');
+        await new Promise(resolve => setTimeout(resolve, 4000));
+        Services.obs.notifyObservers([], "floorp-restart-browser");
       }
+    }
       insetElement();
     }
   },  

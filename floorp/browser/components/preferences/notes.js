@@ -12,59 +12,55 @@ const gNotesPane = {
   _pane: null,
   init() {
     this._pane = document.getElementById("paneNotes");
-    document.getElementById("backtogeneral__").addEventListener("command", function () {
-      gotoPref("general")
+    document.getElementById("backtogeneral__").addEventListener("command", () => {
+      gotoPref("general");
     });
     getAllBackupedNotes().then(content => {
-      for (let i = 0; i < Object.keys(content.data).length; i++) {
-        let elem = window.MozXULElement.parseXULToFragment(`
-              <richlistitem>
-                <label value="${coventToDateAndTime(Number(Object.keys(content.data)[i]))}" class="backup-date"/>
-                <button class="restore-button" id="${Object.keys(content.data)[i]}" data-l10n-id="restore-button"/>
-              </richlistitem>
-            `);
+      const keys = Object.keys(content.data);
+      for (let i = 0; i < keys.length; i++) {
+        const elem = window.MozXULElement.parseXULToFragment(`
+          <richlistitem>
+            <label value="${convertToDateAndTime(Number(keys[i]))}" class="backup-date"/>
+            <button class="restore-button" id="${keys[i]}" data-l10n-id="restore-button"/>
+          </richlistitem>
+        `);
         document.getElementById("backup-list").appendChild(elem);
-        let elems = document.getElementsByClassName("restore-button");
-        for (let i = 0; i < elems.length; i++) {
-          elems[i].onclick = function () {
-            restoreNote(elems[i].id);
-          }
+        const elems = document.getElementsByClassName("restore-button");
+        for (let j = 0; j < elems.length; j++) {
+          elems[j].onclick = () => {
+            restoreNote(elems[j].id);
+          };
         }
       }
     });
   },
 };
 //convert timestamp to date and time
-function coventToDateAndTime(timestamp) {
-  let date = new Date(timestamp);
-  let dateStr = date.toLocaleDateString();
-  let timeStr = date.toLocaleTimeString();
-  return dateStr + " " + timeStr;
+function convertToDateAndTime(timestamp) {
+  const date = new Date(timestamp);
+  const dateStr = date.toLocaleDateString();
+  const timeStr = date.toLocaleTimeString();
+  return `${dateStr} ${timeStr}`;
 }
 
 function getAllBackupedNotes() {
   const filePath = OS.Path.join(OS.Constants.Path.profileDir, "floorp_notes_backup.json");
-  let content = OS.File.read(filePath, {
-    encoding: "utf-8"
-  });
-  content = content.then(content => {
-    content = content.slice(0, -1);
-    content = content + "}}";
-    return JSON.parse(content);
-  })
-  return content;
+  return OS.File.read(filePath, { encoding: "utf-8" })
+    .then(content => {
+      content = content.slice(0, -1) + "}}";
+      return JSON.parse(content);
+    });
 }
+
 async function restoreNote(timestamp) {
-  let l10n = new Localization(["browser/floorp.ftl"], true);
+  const l10n = new Localization(["browser/floorp.ftl"], true);
   const prompts = Services.prompt;
-  const check = {
-    value: false
-  };
+  const check = { value: false };
   const flags = prompts.BUTTON_POS_0 * prompts.BUTTON_TITLE_OK + prompts.BUTTON_POS_1 * prompts.BUTTON_TITLE_CANCEL;
-  let result = prompts.confirmEx(null, l10n.formatValueSync("restore-from-backup-prompt-title"), `${l10n.formatValueSync("restore-from-this-backup")}\n${l10n.formatValueSync("backuped-time")}: ${coventToDateAndTime(Number(timestamp))}`, flags, "", null, "", null, check);
+  const result = prompts.confirmEx(null, l10n.formatValueSync("restore-from-backup-prompt-title"), `${l10n.formatValueSync("restore-from-this-backup")}\n${l10n.formatValueSync("backuped-time")}: ${convertToDateAndTime(Number(timestamp))}`, flags, "", null, "", null, check);
   if (result == 0) {
-    let content = await getAllBackupedNotes();
-    let note = `{${content.data[timestamp]}}`;
+    const content = await getAllBackupedNotes();
+    const note = `{${content.data[timestamp]}}`;
     Services.prefs.setCharPref("floorp.browser.note.memos", note);
   }
 }

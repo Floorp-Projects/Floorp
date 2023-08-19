@@ -65,38 +65,32 @@ const gUserjsPane = {
 
 
 async function setUserJSWithURL(url) {
-  try{userjs.remove(false);} catch(e) {}
-  fetch(url)
-    .then(response => response.text())
-    .then(async data => {
-      const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-      const userjs = PathUtils.join(PROFILE_DIR, "user.js");
-      const encoder = new TextEncoder("UTF-8");
-      const writeData = encoder.encode(data);
-
-      await IOUtils.write(userjs, writeData);
-      Services.obs.notifyObservers([], "floorp-restart-browser");
-    });
+  try {
+    const userjsPath = PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "user.js");
+    await OS.File.remove(userjsPath);
+  } catch (e) {
+    // ignore error if user.js doesn't exist
+  }
+  const response = await fetch(url);
+  const data = await response.text();
+  const userjsPath = PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "user.js");
+  const encoder = new TextEncoder("UTF-8");
+  const writeData = encoder.encode(data);
+  await OS.File.writeAtomic(userjsPath, writeData);
+  Services.obs.notifyObservers([], "floorp-restart-browser");
 }
 
-
 async function resetPreferences() {
-  const FileUtilsPath = FileUtils.getFile("ProfD", ["user.js"]);
-  const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-
-  if (!FileUtilsPath.exists()) {
+  const userjsPath = PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "user.js");
+  if (!await OS.File.exists(userjsPath)) {
     console.warn("user.js does not exist");
-    const path = PathUtils.join(PROFILE_DIR, "user.js");
     const encoder = new TextEncoder("UTF-8");
     const data = encoder.encode("fake data");
-    await IOUtils.write(path, data);
+    await OS.File.writeAtomic(userjsPath, data);
   }
-
   const decoder = new TextDecoder("UTF-8");
-  const path = PathUtils.join(PROFILE_DIR, "user.js");
-  let read = await IOUtils.read(path);
-  let inputStream = decoder.decode(read);
-
+  const read = await OS.File.read(userjsPath);
+  const inputStream = decoder.decode(read);
   const prefPattern = /user_pref\("([^"]+)",\s*(true|false|\d+|"[^"]*")\);/g;
   let match;
   while ((match = prefPattern.exec(inputStream)) !== null) {
@@ -111,5 +105,4 @@ async function resetPreferences() {
       });
     }
   }
-
 }

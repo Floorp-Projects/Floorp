@@ -19,7 +19,7 @@ switch (BROWSER_CHROME_SYSTEM_COLOR){
      break;
 }
 
- Services.prefs.addObserver("floorp.chrome.theme.mode", function(){
+ Services.prefs.addObserver("floorp.chrome.theme.mode", () => {
     const BROWSER_CHROME_SYSTEM_COLOR = Services.prefs.getIntPref("floorp.chrome.theme.mode");
       switch(BROWSER_CHROME_SYSTEM_COLOR){
         case 1:
@@ -97,7 +97,7 @@ const backupFloorpNotes = async () => {
   const txtEncoded = new TextEncoder().encode(`${jsonToStr},`);
 
   Services.prefs.setCharPref(FLOORP_NOTES_LATEST_BACKUP_TIME_PREF, time);
-  
+
   if (!(await OS.File.exists(filePath))) {
     await OS.File.writeAtomic(filePath, new TextEncoder().encode(`{"data":{`));
   }
@@ -113,29 +113,29 @@ if(Services.prefs.getCharPref(FLOORP_NOTES_PREF) != ""){
 
 function getAllBackupedNotes() {
   const filePath = OS.Path.join(OS.Constants.Path.profileDir, "floorp_notes_backup.json");
-  let content = OS.File.read(filePath, {
-    encoding: "utf-8"
-  });
-  content = content.then(content => {
-    content = content.slice(0, -1);
-    content = content + "}}";
-    return JSON.parse(content);
-  })
+  const content = OS.File.read(filePath, { encoding: "utf-8" })
+    .then(content => {
+      content = content.slice(0, -1) + "}}";
+      return JSON.parse(content);
+    });
   return content;
 }
 
 //Backup Limit is 10.
 getAllBackupedNotes().then(content => {
- if(Object.keys(content.data).length > 9){
-  let keys = Object.keys(content.data);
-  let sortedKeys = keys.sort((a, b) => b - a);
-  let deleteKeys = sortedKeys.slice(9);
-  deleteKeys.forEach((key) => {
-    delete content.data[key];
-  })
-  let jsonToStr = JSON.stringify(content).slice(0, -2);
-  jsonToStr = jsonToStr + ",";
-  let filePath = OS.Path.join(OS.Constants.Path.profileDir, "floorp_notes_backup.json");
-  OS.File.writeAtomic(filePath, new TextEncoder().encode(jsonToStr));
- }
-})
+  const backupLimit = 10;
+  const dataKeys = Object.keys(content.data);
+
+  if (dataKeys.length > backupLimit) {
+    const sortedKeys = dataKeys.sort((a, b) => b - a);
+    const deleteKeys = sortedKeys.slice(backupLimit);
+
+    deleteKeys.forEach(key => {
+      delete content.data[key];
+    });
+
+    let jsonToStr = JSON.stringify(content).slice(0, -2) + ",";
+    const filePath = OS.Path.join(OS.Constants.Path.profileDir, "floorp_notes_backup.json");
+    OS.File.writeAtomic(filePath, new TextEncoder().encode(jsonToStr));
+  }
+});
