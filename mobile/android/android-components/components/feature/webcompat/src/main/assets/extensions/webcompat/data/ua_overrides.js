@@ -1317,6 +1317,44 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1849018 - UA override for carefirst.com
+     * Webcompat issue #125341 - https://webcompat.com/issues/125341
+     *
+     * The site is showing "Application Blocked" message
+     * for Firefox UA.
+     */
+    id: "bug1849018",
+    platform: "all",
+    domain: "carefirst.com",
+    bug: "1849018",
+    config: {
+      matches: ["*://*.carefirst.com/myaccount*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1849029 - UA override for publi24.ro
+     * Webcompat issue #124958 - https://webcompat.com/issues/124958
+     *
+     * The site is adding "desktop" class instead of "mobile"
+     * for Firefox on Android and it breaks the filter button.
+     */
+    id: "bug1849029",
+    platform: "android",
+    domain: "publi24.ro",
+    bug: "1849029",
+    config: {
+      matches: ["*://*.publi24.ro/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
 ];
 
 module.exports = AVAILABLE_UA_OVERRIDES;
