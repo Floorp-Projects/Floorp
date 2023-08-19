@@ -67,5 +67,9 @@
         app:key="@string/key_javascript_enabled"
         app:title="Javascript Enabled"
         app:defaultValue="@bool/javascript_enabled_default"/>
+    <SwitchPreferenceCompat
+        app:key="@string/key_extensions_process_enabled"
+        app:title="Extensions Process Enabled"
+        app:defaultValue="@bool/extensions_process_enabled_default"/>
 
 </PreferenceScreen>
