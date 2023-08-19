@@ -95,7 +95,6 @@ const gCSKPane = {
             const actionL10nId = utils.getInfoFunctions.getFluentLocalization(action);
             const parentBox = document.getElementById(`${type}`);
             const CSKIsExist = utils.getInfoFunctions.actionIsExsit(action);
-            let l10n = new Localization(["browser/floorp.ftl"], true);
  
             const boxItem = window.MozXULElement.parseXULToFragment(`
               <hbox class="csks-box-item" id="${action}">
@@ -120,10 +119,17 @@ const gCSKPane = {
               const boxItem = document.querySelector(`.csks-box-item[id="${action}"]`);
               const keyboradShortcutInfo = window.MozXULElement.parseXULToFragment(`
                 <description value="${action}" class="indent tip-caption csks-box-item-description">
-                  ${l10n.formatValueSync("CSK-keyborad-shortcut-info")} "${key}" , "${modifiers}"
                 </description>
               `);
               boxItem.after(keyboradShortcutInfo);
+
+              // add l10n
+              const descriptionItem = document.querySelector(`.csks-box-item-description[value="${action}"]`);
+              document.l10n.setAttributes(
+                descriptionItem,
+                "CSK-keyborad-shortcut-info",
+                { key, modifiers }
+              );
 
               // Add remove button event listener
               const removeButton = document.querySelector(`.csks-remove-button[value="${action}"]`);
