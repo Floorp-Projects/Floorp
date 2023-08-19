@@ -717,7 +717,7 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter, U aRounder) const {
     return ToLength();
   }
   if (IsPercentage() && AsPercentage()._0 == 0.0f) {
-    return 0.0f;
+    return 0;
   }
   nscoord basis = aPercentageGetter();
   if (IsPercentage()) {
