@@ -582,7 +582,7 @@ CSK-restore-default = Restore Default
 CSK-restore-default-description = Restore these settings to the default. Your current settings will be lost.
 
 ### Exsit shortcut key: "S", "shift"
-CSK-keyborad-shortcut-info = Exsit shortcut key:
+CSK-keyborad-shortcut-info = Exist shortcut key: { $key } & { $modifiers }.
 
 floorp-custom-actions-tab-action = Tab Actions
 floorp-custom-actions-page-action = Page Actions
