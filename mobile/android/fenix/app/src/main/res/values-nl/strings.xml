@@ -1925,6 +1925,8 @@
     <string name="search_add_custom_engine_suggest_url_label">API voor zoeksuggesties (optioneel)</string>
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">API-URL voor zoeksuggestie</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Vervang de zoekopdracht door ‘%s’. Voorbeeld:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Opslaan</string>
 
