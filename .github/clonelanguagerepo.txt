@@ -12,6 +12,7 @@
  hg clone https://hg.mozilla.org/l10n-central/id
  hg clone https://hg.mozilla.org/l10n-central/it
  hg clone https://hg.mozilla.org/l10n-central/ja
+ hg clone https://hg.mozilla.org/l10n-central/ja-JP-mac
  hg clone https://hg.mozilla.org/l10n-central/ko
  hg clone https://hg.mozilla.org/l10n-central/lt
  hg clone https://hg.mozilla.org/l10n-central/nl
