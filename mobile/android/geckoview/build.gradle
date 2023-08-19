@@ -398,6 +398,7 @@ android.libraryVariants.all { variant ->
 apply plugin: 'maven-publish'
 
 version = getVersionNumber()
+println("GeckoView version = " + version)
 group = 'org.mozilla.geckoview'
 
 def getArtifactId() {
