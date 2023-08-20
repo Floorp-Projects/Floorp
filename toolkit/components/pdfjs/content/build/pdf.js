@@ -944,7 +944,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.10.80',
+    apiVersion: '3.10.86',
     data,
     password,
     disableAutoFetch,
@@ -1050,7 +1050,17 @@ class PDFDocumentLoadingTask {
   }
   async destroy() {
     this.destroyed = true;
-    await this._transport?.destroy();
+    try {
+      if (this._worker?.port) {
+        this._worker._pendingDestroy = true;
+      }
+      await this._transport?.destroy();
+    } catch (ex) {
+      if (this._worker?.port) {
+        delete this._worker._pendingDestroy;
+      }
+      throw ex;
+    }
     this._transport = null;
     if (this._worker) {
       this._worker.destroy();
@@ -1662,9 +1672,6 @@ class PDFWorker {
     port = null,
     verbosity = (0, _util.getVerbosityLevel)()
   } = {}) {
-    if (port && PDFWorker.#workerPorts.has(port)) {
-      throw new Error("Cannot use more than one PDFWorker per port.");
-    }
     this.name = name;
     this.destroyed = false;
     this.verbosity = verbosity;
@@ -1673,6 +1680,9 @@ class PDFWorker {
     this._webWorker = null;
     this._messageHandler = null;
     if (port) {
+      if (PDFWorker.#workerPorts.has(port)) {
+        throw new Error("Cannot use more than one PDFWorker per port.");
+      }
       PDFWorker.#workerPorts.set(port, this);
       this._initializeFromPort(port);
       return;
@@ -1804,13 +1814,7 @@ class PDFWorker {
     }
   }
   static fromPort(params) {
-    if (!params?.port) {
-      throw new Error("PDFWorker.fromPort - invalid method signature.");
-    }
-    if (this.#workerPorts.has(params.port)) {
-      return this.#workerPorts.get(params.port);
-    }
-    return new PDFWorker(params);
+    throw new Error("Not implemented: fromPort");
   }
   static get workerSrc() {
     if (_worker_options.GlobalWorkerOptions.workerSrc) {
@@ -2590,9 +2594,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.10.80';
+const version = '3.10.86';
 exports.version = version;
-const build = '690b87389';
+const build = 'c72cb5436';
 exports.build = build;
 
 /***/ }),
@@ -15028,8 +15032,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.10.80';
-const pdfjsBuild = '690b87389';
+const pdfjsVersion = '3.10.86';
+const pdfjsBuild = 'c72cb5436';
 })();
 
 /******/ 	return __webpack_exports__;
