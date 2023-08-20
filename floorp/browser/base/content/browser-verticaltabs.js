@@ -7,35 +7,40 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 function setVerticalTabs() {
   if (Services.prefs.getIntPref("floorp.tabbar.style") == 2) {
     Services.prefs.setBoolPref("floorp.browser.tabs.verticaltab", true);
-    window.setTimeout(function () {
-      let verticalTabs = document.querySelector(".toolbar-items")
+    window.setTimeout(() => {
+      const verticalTabs = document.querySelector(".toolbar-items");
       verticalTabs.id = "toolbar-items-verticaltabs";
-
-      let sidebarBox = document.getElementById("sidebar-box");
+  
+      const sidebarBox = document.getElementById("sidebar-box");
       //sidebarBox.style.setProperty("overflow-y", "scroll", "important")
-
+  
       //init vertical tabs
       sidebarBox.insertBefore(verticalTabs, sidebarBox.firstChild);
-      let tabBrowserArrowScrollBox = document.getElementById("tabbrowser-arrowscrollbox");
+      const tabBrowserArrowScrollBox = document.getElementById("tabbrowser-arrowscrollbox");
       verticalTabs.setAttribute("align", "start");
       tabBrowserArrowScrollBox.setAttribute("orient", "vertical");
       tabBrowserArrowScrollBox.removeAttribute("overflowing");
-      tabBrowserArrowScrollBox.removeAttribute("scrolledtostart")
+      tabBrowserArrowScrollBox.removeAttribute("scrolledtostart");
       tabBrowserArrowScrollBox.disabled = true;
       document.getElementById("tabbrowser-tabs").setAttribute("orient", "vertical");
       tabBrowserArrowScrollBox.shadowRoot.querySelector(`[part="scrollbox"]`).setAttribute("orient", "vertical");
-
+  
       //move menubar
       document.getElementById("titlebar").before(document.getElementById("toolbar-menubar"));
-      if (sidebarBox.getAttribute("hidden") == "true") {
+      if (sidebarBox.getAttribute("hidden") === "true") {
         SidebarUI.toggle();
       }
     }, 500);
 
-    function checkBrowserIsStartup () {
-      let list = Services.wm.getEnumerator("navigator:browser");
-      while (list.hasMoreElements()) { if (list.getNext() != window) {return;} }
-
+    function checkBrowserIsStartup() {
+      const browserWindows = Services.wm.getEnumerator("navigator:browser");
+    
+      while (browserWindows.hasMoreElements()) {
+        if (browserWindows.getNext() !== window) {
+          return;
+        }
+      }
+    
       SessionStore.promiseInitialized.then(() => {
         window.setTimeout(setWorkspaceLabel, 1500);
         window.setTimeout(setWorkspaceLabel, 3000);
@@ -44,15 +49,14 @@ function setVerticalTabs() {
     checkBrowserIsStartup();
 
     function setWorkspaceLabel() {
-      //move workspace button
-      let workspaceButton = document.getElementById("workspace-button");
-      let customizeTarget = document.getElementById("nav-bar-customization-target");
-
-      if (workspaceButton == null) {
+      const workspaceButton = document.getElementById("workspace-button");
+      const customizeTarget = document.getElementById("nav-bar-customization-target");
+    
+      if (!workspaceButton) {
         console.error("Workspace button not found");
         return;
       }
-
+    
       customizeTarget.before(workspaceButton);
     }
 
@@ -104,8 +108,8 @@ function setVerticalTabs() {
 
       //move workspace button
       function moveToDefaultSpace() {
-        let workspaceButton = document.getElementById("workspace-button");
-        if (workspaceButton == null) {
+        const workspaceButton = document.getElementById("workspace-button");
+        if (!workspaceButton) {
           console.error("Workspace button not found");
           return;
         }

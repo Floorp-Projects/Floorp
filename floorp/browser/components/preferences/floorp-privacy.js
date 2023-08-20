@@ -5,18 +5,18 @@ Preferences.addAll([
   { id: "media.peerconnection.enabled", type: "bool"},
 ]);
 
-const addonStatus = async (addonID, className) => {
-    const addon = await AddonManager.getAddonByID(addonID);
-    if (addon !== null) {
-      const addontag = document.createElement("style");
-      addontag.setAttribute("id", className);
-      addontag.innerText = `
-        .${className} {
-          display: none !important;
-        }`;
-      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", addontag);
-    }
-  };
+const addonStatus = async(addonID, className) => {
+  const addon = await AddonManager.getAddonByID(addonID);
+  if (addon !== null) {
+    const addontag = document.createElement("style");
+    addontag.id = className;
+    addontag.innerText = `
+      .${className} {
+        display: none !important;
+      }`;
+    document.head.insertAdjacentElement("beforeend", addontag);
+  }
+};
   
   addonStatus("uBlock0@raymondhill.net", "uBlockOrigin");
   
