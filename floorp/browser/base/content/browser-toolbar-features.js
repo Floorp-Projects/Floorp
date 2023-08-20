@@ -105,7 +105,7 @@ function checkBrowserLangForToolTipText() {
   const options = { year: "numeric", month: "numeric", day: "numeric" };
   const locale = navigator.language.split("-");
   if (locale[0] === "ja") {
-    return `${year}年(令和${JPYear}年) ` + now.toLocaleDateString("ja-JP", options);
+    return `${year}年(令和${JPYear}年) ${now.toLocaleDateString("ja-JP", options)}`;
   } else {
     return now.toLocaleDateString();
   }
@@ -120,8 +120,8 @@ function setNowTime() {
   });
   const timeString = timeFormat.format(now);
   const clock = document.getElementById("toolbarItemClock");
-  clock?.setAttribute("label", checkBrowserLangForLabel() + " " + timeString);
-  clock?.setAttribute("tooltiptext", checkBrowserLangForToolTipText() + " " + timeString);
+  clock?.setAttribute("label", `${checkBrowserLangForLabel()} ${timeString}`);
+  clock?.setAttribute("tooltiptext", `${checkBrowserLangForToolTipText()} ${timeString}`);
 }
 
 if (Services.prefs.getBoolPref("floorp.browser.clock.enabled")) {
