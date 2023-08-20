@@ -55,35 +55,41 @@ document.getElementById("toolbarItemsMenuSeparator").after(contextMenu);
 
 //observe menuitem
 function changeStatusbarVisibility() {
-    let checked = document.getElementById("toggle_statusBar").getAttribute("checked") == "true";
+    const toggleStatusbar = document.getElementById("toggle_statusBar");
+    const checked = toggleStatusbar.checked;
     Services.prefs.setBoolPref("browser.display.statusbar", checked);
 }
 
 function showStatusbar() {
-    let statuspanel_label = document.getElementById("statuspanel-label");
-    //remove CSS
-    document.getElementById("statusBarCSS")?.remove();
+    const statuspanelLabel = document.getElementById("statuspanel-label");
+    const statusBarCSS = document.getElementById("statusBarCSS");
+  
+    if (statusBarCSS) {
+      statusBarCSS.remove();
+    }
+  
+    const statusText = document.getElementById("status-text");
+    statusText.appendChild(statuspanelLabel);
+  
+    statuspanelLabel.style.display = displayStatusbar;
+  }
 
-    //move statustext to statusbar
-    document.getElementById("status-text").appendChild(statuspanel_label);
-
-    //add CSS
-    statuspanel_label.setAttribute("style", displayStatusbar);
-}
-
-function hideStatusbar() {
-    let statuspanel_label = document.getElementById("statuspanel-label");
-    let Tag = document.createElement("style");
-    Tag.setAttribute("id", "statusBarCSS");
-    Tag.innerText = hideedStatusBar;
-    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", Tag);
-
-    //revert statustext to statuspanel
-    document.getElementById("statuspanel").appendChild(statuspanel_label);
-
-    //remove CSS
-    statuspanel_label.removeAttribute("style");
-}
+  function hideStatusbar() {
+    const statuspanelLabel = document.getElementById("statuspanel-label");
+    const statusBarCSS = document.getElementById("statusBarCSS");
+  
+    if (!statusBarCSS) {
+      const tag = document.createElement("style");
+      tag.setAttribute("id", "statusBarCSS");
+      tag.textContent = hideedStatusBar;
+      document.head.appendChild(tag);
+    }
+  
+    const statuspanel = document.getElementById("statuspanel");
+    statuspanel.appendChild(statuspanelLabel);
+  
+    statuspanelLabel.removeAttribute("style");
+  }
 
 {
     let checked = Services.prefs.getBoolPref("browser.display.statusbar", false);
@@ -93,7 +99,7 @@ function hideStatusbar() {
     } else {
         hideStatusbar();
     }
-    Services.prefs.addObserver("browser.display.statusbar", function() {
+    Services.prefs.addObserver("browser.display.statusbar", () => {
         let checked = Services.prefs.getBoolPref("browser.display.statusbar", false);
         document.getElementById("toggle_statusBar").setAttribute("checked", String(checked));
         if (checked) {
@@ -106,7 +112,7 @@ function hideStatusbar() {
     let statuspanel = document.getElementById("statuspanel");
     let statusText = document.getElementById("status-text");
     let observer;
-    let onPrefChanged = function () {
+    let onPrefChanged = () => {
         observer?.disconnect();
         statusText.style.visibility = "";
         if (Services.prefs.getBoolPref("browser.display.statusbar", false)) {

@@ -8,10 +8,14 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 function setBrowserDesign() {
-  document.getElementById("browserdesgin")?.remove();
-  let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface");
-  let updateNumber = (new Date()).getTime();
-  const ThemeCSS = {
+  const browserDesign = document.getElementById("browserdesgin");
+  if (browserDesign) {
+    browserDesign.remove();
+  }
+
+  const floorpInterfaceNum = Services.prefs.getIntPref("floorp.browser.user.interface");
+  const updateNumber = new Date().getTime();
+  const themeCSS = {
     ProtonfixUI: `@import url(chrome://browser/skin/protonfix/protonfix.css?${updateNumber});`,
     LeptonUI: `@import url(chrome://browser/skin/lepton/leptonChrome.css?${updateNumber}); @import url(chrome://browser/skin/lepton/leptonContent.css?${updateNumber});`,
     LeptonUIMultitab: `@import url(chrome://browser/skin/lepton/photonChrome-multitab.css?${updateNumber});
@@ -19,42 +23,50 @@ function setBrowserDesign() {
     fluentUI: `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`,
     gnomeUI: `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
     FluerialUI: `@import url(chrome://browser/skin/floorplegacy/test_legacy.css?${updateNumber});`,
-    FluerialUIMultitab:`@import url(chrome://browser/skin/floorplegacy/test_legacy.css?${updateNumber});
-                        @import url(chrome://browser/skin/floorplegacy/test_legacy_multitab.css);`
-  }
-  var Tag = document.createElement('style');
-  Tag.setAttribute("id", "browserdesgin");
-  switch (floorpinterfacenum) {
-    //ProtonUI 
+    FluerialUIMultitab: `@import url(chrome://browser/skin/floorplegacy/test_legacy.css?${updateNumber}); @import url(chrome://browser/skin/floorplegacy/test_legacy_multitab.css);`
+  };
+
+  const tag = document.createElement('style');
+  tag.setAttribute("id", "browserdesgin");
+
+  switch (floorpInterfaceNum) {
     case 1:
       break;
     case 3:
-      Tag.innerText = ThemeCSS.LeptonUI;
+      tag.innerText = themeCSS.LeptonUI;
       break;
-     //4 is deleted at v11.0.0 because it is MaterialUI.
     case 5:
-      if (AppConstants.platform != "linux") Tag.innerText = ThemeCSS.fluentUI;
+      if (AppConstants.platform !== "linux") {
+        tag.innerText = themeCSS.fluentUI;
+      }
       break;
     case 6:
-      if (AppConstants.platform == "linux") Tag.innerText = ThemeCSS.gnomeUI;
+      if (AppConstants.platform == "linux") {
+        tag.innerText = themeCSS.gnomeUI;
+      }
       break;
-    case 8: 
-      Tag.innerText = Services.prefs.getBoolPref("floorp.enable.multitab", false) ? ThemeCSS.FluerialUIMultitab : ThemeCSS.FluerialUI;
+    case 8:
+      const enableMultitab = Services.prefs.getBoolPref("floorp.enable.multitab", false);
+      tag.innerText = enableMultitab ? themeCSS.FluerialUIMultitab : themeCSS.FluerialUI;
       break;
   }
-  document.head.appendChild(Tag);
-  // re-calculate urlbar height
-  setTimeout(function () {
+
+  document.head.appendChild(tag);
+
+  // recalculate sidebar width
+  setTimeout(() => {
     gURLBar._updateLayoutBreakoutDimensions();
   }, 100);
-  setTimeout(function () {
+
+  setTimeout(() => {
     gURLBar._updateLayoutBreakoutDimensions();
   }, 500);
-  setTimeout(function () {
+
+  setTimeout(() => {
     setMultirowTabMaxHeight();
   }, 1000);
 
-  if (floorpinterfacenum == 3) {
+  if (floorpInterfaceNum == 3) {
     loadStyleSheetWithNsStyleSheetService("chrome://browser/skin/lepton/leptonContent.css");
   } else {
     unloadStyleSheetWithNsStyleSheetService("chrome://browser/skin/lepton/leptonContent.css");
