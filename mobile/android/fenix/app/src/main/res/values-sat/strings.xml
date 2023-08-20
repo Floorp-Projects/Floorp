@@ -1219,7 +1219,9 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">ᱵᱚᱸᱫ</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">ᱪᱷᱟᱯᱟ ᱵᱟᱭ ᱜᱟᱱ ᱞᱮᱱᱟ</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">ᱪᱷᱟᱯᱟ ᱵᱟᱭ ᱜᱟᱱ ᱞᱮᱱᱟ</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">ᱱᱚᱶᱟ ᱥᱟᱦᱴᱟ ᱪᱷᱟᱯᱟ ᱵᱟᱭ ᱜᱟᱱᱚᱜ ᱠᱟᱱᱟ</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">ᱪᱷᱟᱯᱟ</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
@@ -1423,61 +1425,61 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">ᱢᱤᱫᱴᱟᱝ ᱵᱮᱥ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱨᱮ ᱟᱢᱟᱜ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱢᱤᱫᱴᱟᱝ ᱵᱮᱥ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱨᱮ ᱟᱢᱟᱜ ᱥᱟᱹᱜᱩᱱ ᱫᱟᱨᱟᱢ</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">ᱦᱚᱲ ᱠᱚ ᱞᱟᱹᱜᱤᱫ, ᱵᱤᱱ ᱞᱟᱵᱷ ᱨᱮᱭᱟᱜ ᱢᱤᱫᱴᱟᱝ ᱵᱽᱨᱟᱣᱡᱚᱨ ᱾</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱦᱚᱲ ᱠᱚ ᱞᱟᱹᱜᱤᱫ, ᱵᱤᱱ ᱞᱟᱵᱷ ᱨᱮᱭᱟᱜ ᱢᱤᱫᱴᱟᱝ ᱵᱽᱨᱟᱣᱡᱚᱨ ᱾</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">ᱪᱟᱞᱟᱜ ᱢᱮ ᱡᱟᱦᱟᱸ ᱨᱮ ᱢᱟᱲᱟᱝ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟᱢ</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱪᱟᱞᱟᱜ ᱢᱮ ᱡᱟᱦᱟᱸ ᱨᱮ ᱢᱟᱲᱟᱝ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟᱢ</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">ᱟᱨᱟᱢ ᱛᱮ ᱯᱚᱨᱫᱟ ᱠᱚ ᱩᱪᱟᱹᱲ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱫᱷᱚᱱ ᱥᱟᱨᱟ ᱨᱮ ᱴᱮᱵᱽ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱠᱚᱨᱮ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ ᱾</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱟᱨᱟᱢ ᱛᱮ ᱯᱚᱨᱫᱟ ᱠᱚ ᱩᱪᱟᱹᱲ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱫᱷᱚᱱ ᱥᱟᱨᱟ ᱨᱮ ᱴᱮᱵᱽ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱠᱚᱨᱮ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ ᱾</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ᱥᱭᱝᱠ ᱪᱟᱹᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱱᱤᱥᱚᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱱᱤᱥᱚᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s ᱫᱚ ᱵᱟᱦᱨᱮ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱣᱮᱵᱽ ᱨᱮ ᱟᱢ ᱯᱟᱸᱡᱟ ᱠᱚ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s ᱫᱚ ᱵᱟᱦᱨᱮ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱣᱮᱵᱽ ᱨᱮ ᱟᱢ ᱯᱟᱸᱡᱟ ᱠᱚ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱠᱩᱠᱤ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱟᱹᱲ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱢᱩᱴ ᱠᱩᱠᱤ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱫᱮᱠᱷᱟᱣᱜ ᱠᱟᱱᱟ ᱾</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱠᱩᱠᱤ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱟᱹᱲ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱢᱩᱴ ᱠᱩᱠᱤ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱫᱮᱠᱷᱟᱣᱜ ᱠᱟᱱᱟ ᱾</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">ᱵᱮᱥᱟᱜ (ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱵᱮᱥᱟᱜ (ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">ᱯᱨᱟᱭᱣᱮᱥᱭ ᱟᱨ ᱯᱚᱨᱯᱷᱚᱨᱢᱮᱱᱥ ᱞᱟᱹᱜᱤᱫ ᱥᱚᱢᱟᱱ ᱾ ᱥᱟᱦᱴᱟ ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱞᱟᱫᱮᱜᱼᱟ ᱾</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱯᱨᱟᱭᱣᱮᱥᱭ ᱟᱨ ᱯᱚᱨᱯᱷᱚᱨᱢᱮᱱᱥ ᱞᱟᱹᱜᱤᱫ ᱥᱚᱢᱟᱱ ᱾ ᱥᱟᱦᱴᱟ ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱞᱟᱫᱮᱜᱼᱟ ᱾</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">ᱱᱤᱦᱟᱹᱛ</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱱᱤᱦᱟᱹᱛ</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚᱱ ᱞᱳᱰ ᱞᱟᱹᱜᱤᱫ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱞᱚᱠ ᱠᱚᱣᱟᱭ, ᱦᱮᱞᱮ ᱥᱟᱦᱴᱟ ᱞᱳᱰ ᱨᱮ ᱰᱤᱜᱟᱹᱣ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚᱱ ᱞᱳᱰ ᱞᱟᱹᱜᱤᱫ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱞᱚᱠ ᱠᱚᱣᱟᱭ, ᱦᱮᱞᱮ ᱥᱟᱦᱴᱟ ᱞᱳᱰ ᱨᱮ ᱰᱤᱜᱟᱹᱣ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">ᱟᱢᱟᱜ ᱴᱩᱞᱵᱟᱨ ᱯᱞᱮᱥᱢᱮᱱᱴ ᱨᱟᱠᱟᱵᱽ ᱛᱟᱢ</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱴᱩᱞᱵᱟᱨ ᱯᱞᱮᱥᱢᱮᱱᱴ ᱨᱟᱠᱟᱵᱽ ᱛᱟᱢ</string>
 
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">ᱞᱟᱛᱟᱨ ᱨᱮ ᱫᱚᱦᱚᱭ ᱢᱮ, ᱵᱟᱝᱠᱷᱟᱱ ᱪᱮᱛᱟᱱ ᱥᱮᱫ ᱩᱪᱟᱹᱲ ᱢᱮ ᱾</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱞᱟᱛᱟᱨ ᱨᱮ ᱫᱚᱦᱚᱭ ᱢᱮ, ᱵᱟᱝᱠᱷᱟᱱ ᱪᱮᱛᱟᱱ ᱥᱮᱫ ᱩᱪᱟᱹᱲ ᱢᱮ ᱾</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱢᱟᱜ ᱠᱚᱵᱚᱡᱽ ᱨᱮ ᱛᱟᱦᱮᱱ ᱟ</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱟᱢᱟᱜ ᱠᱚᱵᱚᱡᱽ ᱨᱮ ᱛᱟᱦᱮᱱ ᱟ</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox ᱴᱷᱮᱱ ᱡᱟᱦᱱᱟᱜ ᱜᱮ ᱟᱢ ᱚᱱᱞᱟᱭᱤᱱ ᱦᱟᱹᱴᱤᱧ ᱮᱫᱟᱢ ᱟᱨ ᱟᱢ ᱟᱞᱮ ᱥᱟᱶ ᱪᱮᱫ ᱮᱢ ᱦᱟᱹᱴᱤᱧ ᱮᱫᱟᱢ ᱚᱱᱟ ᱨᱮᱭᱟᱜ ᱠᱚᱵᱚᱡᱽ ᱮᱢᱟᱢ ᱠᱟᱱᱟᱭ ᱾</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox ᱴᱷᱮᱱ ᱡᱟᱦᱱᱟᱜ ᱜᱮ ᱟᱢ ᱚᱱᱞᱟᱭᱤᱱ ᱦᱟᱹᱴᱤᱧ ᱮᱫᱟᱢ ᱟᱨ ᱟᱢ ᱟᱞᱮ ᱥᱟᱶ ᱪᱮᱫ ᱮᱢ ᱦᱟᱹᱴᱤᱧ ᱮᱫᱟᱢ ᱚᱱᱟ ᱨᱮᱭᱟᱜ ᱠᱚᱵᱚᱡᱽ ᱮᱢᱟᱢ ᱠᱟᱱᱟᱭ ᱾</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">ᱟᱞᱮᱭᱟᱜ ᱱᱤᱥᱚᱱ ᱱᱚᱴᱤᱥ ᱯᱟᱲᱦᱟᱣ ᱯᱮ</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱟᱞᱮᱭᱟᱜ ᱱᱤᱥᱚᱱ ᱱᱚᱴᱤᱥ ᱯᱟᱲᱦᱟᱣ ᱯᱮ</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">ᱟᱹᱰᱤ ᱱᱟᱯᱟᱭ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱠᱷᱩᱞᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱥᱚᱡᱽ ᱜᱮᱭᱟᱢ ᱥᱮ ?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱟᱹᱰᱤ ᱱᱟᱯᱟᱭ ᱤᱱᱴᱚᱨᱱᱮᱴ ᱠᱷᱩᱞᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱥᱚᱡᱽ ᱜᱮᱭᱟᱢ ᱥᱮ ?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱮᱦᱚᱵᱽ ᱢᱮ</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱮᱦᱚᱵᱽ ᱢᱮ</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">ᱩᱭᱦᱟᱹᱨ ᱵᱟᱪᱷᱟᱣ ᱛᱟᱢ</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱩᱭᱦᱟᱹᱨ ᱵᱟᱪᱷᱟᱣ ᱛᱟᱢ</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱵᱮᱴᱨᱭ ᱵᱚᱪᱚᱛ ᱢᱮ ᱟᱨ ᱟᱢᱟᱜ ᱢᱮᱫ ᱵᱟᱧᱪᱟᱣ ᱛᱟᱢ ᱧᱩᱛ ᱩᱭᱦᱟᱹᱨ ᱪᱟᱹᱞᱩ ᱠᱟᱛᱮ ᱾</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱵᱮᱴᱨᱭ ᱵᱚᱪᱚᱛ ᱢᱮ ᱟᱨ ᱟᱢᱟᱜ ᱢᱮᱫ ᱵᱟᱧᱪᱟᱣ ᱛᱟᱢ ᱧᱩᱛ ᱩᱭᱦᱟᱹᱨ ᱪᱟᱹᱞᱩ ᱠᱟᱛᱮ ᱾</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">ᱟᱡ ᱛᱮ</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱟᱡ ᱛᱮ</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱦᱟᱛᱟᱣ ᱟᱭ</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱦᱟᱛᱟᱣ ᱟᱭ</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">ᱧᱩᱛ ᱩᱭᱦᱟᱹᱨ</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱧᱩᱛ ᱩᱭᱦᱟᱹᱨ</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">ᱢᱟᱨᱥᱟᱞ ᱩᱭᱦᱟᱹᱨ</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱢᱟᱨᱥᱟᱞ ᱩᱭᱦᱟᱹᱨ</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">ᱴᱮᱵᱽ ᱠᱚ ᱠᱩᱞ ᱦᱩᱭᱮᱱᱟ!</string>
