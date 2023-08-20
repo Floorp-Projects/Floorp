@@ -184,6 +184,7 @@ jobs:
           done
 
     - name: Build 🔨
+      continue-on-error: true
       run: |
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
@@ -193,11 +194,24 @@ jobs:
         Xvfb :2 -screen 0 1024x768x24 &
         export DISPLAY=:2
 
-        export WORKDIR=`pwd`
-        echo "Current Workdir: $WORKDIR"
         ./mach build
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+
+    - name: Retry Build if 1st build is failed 🔨
+      if: failure()
+      run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
+        rm -rf ./l10n-central/.git
+
+        Xvfb :2 -screen 0 1024x768x24 &
+        export DISPLAY=:2
+
+        ./mach build
+      env:
+          GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
     - name: Package 1 - mach 🎁
       run: |

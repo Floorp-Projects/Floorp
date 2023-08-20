@@ -226,7 +226,18 @@ jobs:
           done
 
     - name: Build 🔨
+      continue-on-error: true
+      run: |
+        if [[ -n $GHA_MOZ_BUILD_DATE ]];then
+          export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
+        fi
 
+        ./mach build
+      env:
+        GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
+        
+    - name: Retry Build if 1st build is failed 🔨
+      if: failure()
       run: |
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
