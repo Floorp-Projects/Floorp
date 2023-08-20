@@ -9589,8 +9589,12 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
   nsRect r;
 
   // For SVG elements without associated CSS layout box, the used value for
-  // content-box, padding-box, border-box and margin-box is fill-box.
+  // content-box and padding-box is fill-box and for
+  // border-box and margin-box is stroke-box.
   switch (aGeometryBox) {
+    case StyleGeometryBox::NoBox:
+    case StyleGeometryBox::BorderBox:
+    case StyleGeometryBox::MarginBox:
     case StyleGeometryBox::StrokeBox: {
       // XXX Bug 1299876
       // The size of stroke-box is not correct if this graphic element has
@@ -9611,11 +9615,8 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
       r = nsLayoutUtils::ComputeSVGViewBox(viewportElement);
       break;
     }
-    case StyleGeometryBox::NoBox:
-    case StyleGeometryBox::BorderBox:
     case StyleGeometryBox::ContentBox:
     case StyleGeometryBox::PaddingBox:
-    case StyleGeometryBox::MarginBox:
     case StyleGeometryBox::FillBox: {
       gfxRect bbox =
           SVGUtils::GetBBox(aFrame, SVGUtils::eBBoxIncludeFillGeometry);
