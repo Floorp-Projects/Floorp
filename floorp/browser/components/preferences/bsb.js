@@ -134,8 +134,18 @@ var gBSBPane = {
             <label flex="1" class="bsb_label"></label>
           </hbox>
           <hbox class="container-buttons">
-            <button class="BMS-Up">↑</button>
-            <button class="BMS-Down">↓</button>
+            <button class="BMS-Up">
+              <hbox class="box-inherit button-box" align="center" pack="center" flex="1" anonid="button-box">
+                <image class="button-icon"/>
+                <label class="button-text" value="↑"/>
+              </hbox>
+            </button>
+            <button class="BMS-Down">
+              <hbox class="box-inherit button-box" align="center" pack="center" flex="1" anonid="button-box">
+                <image class="button-icon"/>
+                <label class="button-text" value="↓"/>
+              </hbox>
+            </button>
             <button class="BMS-Edit"></button>
             <button class="BMS-Remove"></button>
           </hbox>
