@@ -6,18 +6,24 @@
 
 #include "FileSystemContentTypeGuess.h"
 
+#include "ErrorList.h"
+#include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/mime_guess_ffi_generated.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsString.h"
 
 namespace mozilla::dom::fs {
 
-ContentType FileSystemContentTypeGuess::FromPath(const Name& aPath) {
+Result<ContentType, QMResult> FileSystemContentTypeGuess::FromPath(
+    const Name& aPath) {
   NS_ConvertUTF16toUTF8 path(aPath);
   ContentType contentType;
-  mimeGuessFromPath(&path, &contentType);
+  nsresult rv = mimeGuessFromPath(&path, &contentType);
 
-  if (contentType.IsEmpty()) {
-    return VoidCString();
+  // QM_TRY is too verbose.
+  if (NS_FAILED(rv)) {
+    return Err(QMResult(rv));
   }
 
   return contentType;

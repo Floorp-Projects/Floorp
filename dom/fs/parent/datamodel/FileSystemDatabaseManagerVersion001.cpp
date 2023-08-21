@@ -6,6 +6,7 @@
 
 #include "FileSystemDatabaseManagerVersion001.h"
 
+#include "ErrorList.h"
 #include "FileSystemContentTypeGuess.h"
 #include "FileSystemDataManager.h"
 #include "FileSystemFileManager.h"
@@ -24,6 +25,7 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "nsString.h"
 
 namespace mozilla::dom {
 
@@ -663,7 +665,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
   QM_TRY_INSPECT(const EntryId& entryId, GetEntryId(aHandle));
   MOZ_ASSERT(!entryId.IsEmpty());
 
-  const ContentType type = FileSystemContentTypeGuess::FromPath(name);
+  const ContentType type = DetermineContentType(name);
 
   QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(mConnection));
 
@@ -929,7 +931,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
   QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(mConnection));
 
   if (isFile) {
-    const ContentType type = FileSystemContentTypeGuess::FromPath(aNewName);
+    const ContentType type = DetermineContentType(aNewName);
     QM_TRY(
         QM_TO_RESULT(PerformRenameFile(mConnection, aHandle, aNewName, type)));
   } else {
@@ -996,7 +998,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
   }
 
   if (isFile) {
-    const ContentType type = FileSystemContentTypeGuess::FromPath(newName);
+    const ContentType type = DetermineContentType(newName);
     QM_TRY(
         QM_TO_RESULT(PerformRenameFile(mConnection, aHandle, newName, type)));
   } else {
@@ -1533,6 +1535,32 @@ nsresult GetFileAttributes(const FileSystemConnection& aConnection,
 void TryRemoveDuringIdleMaintenance(
     const nsTArray<FileId>& /* aItemToRemove */) {
   // Not implemented
+}
+
+ContentType DetermineContentType(const Name& aName) {
+  QM_TRY_UNWRAP(
+      auto typeResult,
+      QM_OR_ELSE_LOG_VERBOSE(
+          FileSystemContentTypeGuess::FromPath(aName),
+          ([](const auto& aRv) -> Result<ContentType, QMResult> {
+            const nsresult rv = ToNSResult(aRv);
+            switch (rv) {
+              case NS_ERROR_FAILURE: /* There is an unknown new extension. */
+                return ContentType(""_ns); /* We clear the old extension. */
+
+              case NS_ERROR_INVALID_ARG: /* The name is garbled. */
+                [[fallthrough]];
+              case NS_ERROR_NOT_AVAILABLE: /* There is no extension. */
+                return VoidCString();      /* We keep the old extension. */
+
+              default:
+                MOZ_ASSERT_UNREACHABLE("Should never get here!");
+                return Err(aRv);
+            }
+          })),
+      ContentType(""_ns));
+
+  return typeResult;
 }
 
 }  // namespace fs::data

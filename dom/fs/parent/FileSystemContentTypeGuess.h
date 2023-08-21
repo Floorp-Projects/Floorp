@@ -7,13 +7,15 @@
 #ifndef DOM_FS_PARENT_FILESYSTEMCONTENTTYPEGUESS_H_
 #define DOM_FS_PARENT_FILESYSTEMCONTENTTYPEGUESS_H_
 
+#include "mozilla/Result.h"
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
 #include "nsStringFwd.h"
 
 namespace mozilla::dom::fs {
 
 struct FileSystemContentTypeGuess {
-  static ContentType FromPath(const Name& aPath);
+  static Result<ContentType, QMResult> FromPath(const Name& aPath);
 };
 
 }  // namespace mozilla::dom::fs

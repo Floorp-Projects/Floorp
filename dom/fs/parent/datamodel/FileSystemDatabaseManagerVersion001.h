@@ -200,6 +200,8 @@ nsresult GetFileAttributes(const FileSystemConnection& aConnection,
 
 void TryRemoveDuringIdleMaintenance(const nsTArray<FileId>& aItemToRemove);
 
+ContentType DetermineContentType(const Name& aName);
+
 }  // namespace data
 }  // namespace mozilla::dom::fs
 
