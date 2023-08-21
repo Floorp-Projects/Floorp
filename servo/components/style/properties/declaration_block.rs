@@ -15,9 +15,9 @@ use crate::applicable_declarations::CascadePriority;
 use crate::context::QuirksMode;
 use crate::custom_properties::{self, CustomPropertiesBuilder};
 use crate::error_reporting::{ContextualParseError, ParseErrorReporter};
-use crate::media_queries::Device;
 use crate::parser::ParserContext;
 use crate::properties::animated_properties::{AnimationValue, AnimationValueMap};
+use crate::stylist::Stylist;
 use crate::rule_tree::CascadeLevel;
 use crate::selector_map::PrecomputedHashSet;
 use crate::selector_parser::SelectorImpl;
@@ -845,7 +845,7 @@ impl PropertyDeclarationBlock {
         dest: &mut CssStringWriter,
         computed_values: Option<&ComputedValues>,
         custom_properties_block: Option<&PropertyDeclarationBlock>,
-        device: &Device,
+        stylist: &Stylist,
     ) -> fmt::Result {
         if let Ok(shorthand) = property.as_shorthand() {
             return self.shorthand_to_css(shorthand, dest);
@@ -864,7 +864,7 @@ impl PropertyDeclarationBlock {
             if let Some(block) = custom_properties_block {
                 // FIXME(emilio): This is not super-efficient here, and all this
                 // feels like a hack anyway...
-                block.cascade_custom_properties(cv.custom_properties(), device)
+                block.cascade_custom_properties(cv.custom_properties(), stylist)
             } else {
                 cv.custom_properties().cloned()
             }
@@ -888,7 +888,7 @@ impl PropertyDeclarationBlock {
                         computed_values.writing_mode,
                         custom_properties.as_ref(),
                         QuirksMode::NoQuirks,
-                        device,
+                        stylist.device(),
                         &mut Default::default(),
                     )
                     .to_css(dest)
@@ -935,7 +935,7 @@ impl PropertyDeclarationBlock {
         &self,
         context: &Context,
     ) -> Option<Arc<crate::custom_properties::CustomPropertiesMap>> {
-        self.cascade_custom_properties(context.style().custom_properties(), context.device())
+        self.cascade_custom_properties(context.style().custom_properties(), context.style().stylist.unwrap())
     }
 
     /// Returns a custom properties map which is the result of cascading custom
@@ -944,9 +944,9 @@ impl PropertyDeclarationBlock {
     fn cascade_custom_properties(
         &self,
         inherited_custom_properties: Option<&Arc<crate::custom_properties::CustomPropertiesMap>>,
-        device: &Device,
+        stylist: &Stylist,
     ) -> Option<Arc<crate::custom_properties::CustomPropertiesMap>> {
-        let mut builder = CustomPropertiesBuilder::new(inherited_custom_properties, device);
+        let mut builder = CustomPropertiesBuilder::new(inherited_custom_properties, stylist.device());
 
         for declaration in self.normal_declaration_iter() {
             if let PropertyDeclaration::Custom(ref declaration) = *declaration {

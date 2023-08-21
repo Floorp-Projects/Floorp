@@ -697,7 +697,7 @@ pub extern "C" fn Servo_AnimationValue_Serialize(
             buffer,
             None,
             None, /* No extra custom properties */
-            &data.stylist.device(),
+            &data.stylist,
         );
     debug_assert!(rv.is_ok());
 }
@@ -4135,7 +4135,7 @@ fn get_pseudo_style(
     }
 
     Some(style.unwrap_or_else(|| {
-        StyleBuilder::for_inheritance(stylist.device(), Some(styles.primary()), Some(pseudo))
+        StyleBuilder::for_inheritance(stylist.device(), Some(stylist), Some(styles.primary()), Some(pseudo))
             .build()
     }))
 }
@@ -4154,7 +4154,7 @@ pub unsafe extern "C" fn Servo_ComputedValues_Inherit(
     debug_assert!(pseudo.is_anon_box());
 
     let mut style =
-        StyleBuilder::for_inheritance(data.stylist.device(), parent_style_context, Some(&pseudo));
+        StyleBuilder::for_inheritance(data.stylist.device(), Some(&data.stylist), parent_style_context, Some(&pseudo));
 
     if for_text {
         StyleAdjuster::new(&mut style).adjust_for_text();
@@ -4601,7 +4601,7 @@ pub extern "C" fn Servo_DeclarationBlock_SerializeOneValue(
         buffer,
         computed_values,
         custom_properties,
-        &data.stylist.device(),
+        &data.stylist,
     );
     debug_assert!(rv.is_ok());
 }
@@ -5937,7 +5937,7 @@ fn create_context_for_animation<'a>(
     container_size_query: ContainerSizeQuery<'a>,
 ) -> Context<'a> {
     Context::new_for_animation(
-        StyleBuilder::for_animation(per_doc_data.stylist.device(), style, parent_style),
+        StyleBuilder::for_animation(per_doc_data.stylist.device(), Some(&per_doc_data.stylist), style, parent_style),
         for_smil_animation,
         per_doc_data.stylist.quirks_mode(),
         rule_cache_conditions,
