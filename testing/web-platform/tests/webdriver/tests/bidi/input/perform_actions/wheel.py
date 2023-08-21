@@ -10,14 +10,14 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.mark.parametrize("delta_x, delta_y", [(0, 10), (5, 0), (5, 10)])
-async def test_wheel_scroll(
+async def test_scroll_not_scrollable(
     bidi_session, setup_wheel_test, top_context, get_element, delta_x, delta_y
 ):
     actions = Actions()
 
-    outer = await get_element("#outer")
+    target = await get_element("#not-scrollable")
     actions.add_wheel().scroll(
-        x=0, y=0, delta_x=delta_x, delta_y=delta_y, origin=get_element_origin(outer)
+        x=0, y=0, delta_x=delta_x, delta_y=delta_y, origin=get_element_origin(target)
     )
 
     await bidi_session.input.perform_actions(
@@ -27,37 +27,14 @@ async def test_wheel_scroll(
 
     assert len(events) == 1
     assert events[0]["type"] == "wheel"
-    assert events[0]["deltaX"] >= delta_x
-    assert events[0]["deltaY"] >= delta_y
+    assert events[0]["deltaX"] == delta_x
+    assert events[0]["deltaY"] == delta_y
     assert events[0]["deltaZ"] == 0
-    assert events[0]["target"] == "outer"
+    assert events[0]["target"] == "not-scrollable-content"
 
 
 @pytest.mark.parametrize("delta_x, delta_y", [(0, 10), (5, 0), (5, 10)])
-async def test_wheel_scroll_iframe(
-    bidi_session, setup_wheel_test, top_context, get_element, delta_x, delta_y
-):
-    actions = Actions()
-
-    subframe = await get_element("#subframe")
-    actions.add_wheel().scroll(
-        x=0, y=0, delta_x=delta_x, delta_y=delta_y, origin=get_element_origin(subframe)
-    )
-
-    await bidi_session.input.perform_actions(
-        actions=actions, context=top_context["context"]
-    )
-    events = await get_events(bidi_session, top_context["context"])
-    assert len(events) == 1
-    assert events[0]["type"] == "wheel"
-    assert events[0]["deltaX"] >= delta_x
-    assert events[0]["deltaY"] >= delta_y
-    assert events[0]["deltaZ"] == 0
-    assert events[0]["target"] == "iframeContent"
-
-
-@pytest.mark.parametrize("delta_x, delta_y", [(0, 10), (5, 0), (5, 10)])
-async def test_wheel_scroll_overflow(
+async def test_scroll_scrollable_overflow(
     bidi_session, setup_wheel_test, top_context, get_element, delta_x, delta_y
 ):
     actions = Actions()
@@ -78,15 +55,38 @@ async def test_wheel_scroll_overflow(
     events = await get_events(bidi_session, top_context["context"])
     assert len(events) == 1
     assert events[0]["type"] == "wheel"
-    assert events[0]["deltaX"] >= delta_x
-    assert events[0]["deltaY"] >= delta_y
+    assert events[0]["deltaX"] == delta_x
+    assert events[0]["deltaY"] == delta_y
     assert events[0]["deltaZ"] == 0
-    assert events[0]["target"] == "scrollContent"
+    assert events[0]["target"] == "scrollable-content"
+
+
+@pytest.mark.parametrize("delta_x, delta_y", [(0, 10), (5, 0), (5, 10)])
+async def test_scroll_iframe(
+    bidi_session, setup_wheel_test, top_context, get_element, delta_x, delta_y
+):
+    actions = Actions()
+
+    target = await get_element("#iframe")
+    actions.add_wheel().scroll(
+        x=0, y=0, delta_x=delta_x, delta_y=delta_y, origin=get_element_origin(target)
+    )
+
+    await bidi_session.input.perform_actions(
+        actions=actions, context=top_context["context"]
+    )
+    events = await get_events(bidi_session, top_context["context"])
+    assert len(events) == 1
+    assert events[0]["type"] == "wheel"
+    assert events[0]["deltaX"] == delta_x
+    assert events[0]["deltaY"] == delta_y
+    assert events[0]["deltaZ"] == 0
+    assert events[0]["target"] == "iframeContent"
 
 
 @pytest.mark.parametrize("mode", ["open", "closed"])
 @pytest.mark.parametrize("nested", [False, True], ids=["outer", "inner"])
-async def test_wheel_scroll_shadow_tree(
+async def test_scroll_shadow_tree(
     bidi_session, top_context, get_test_page, mode, nested
 ):
     await bidi_session.browsing_context.navigate(
