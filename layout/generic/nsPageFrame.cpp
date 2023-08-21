@@ -550,20 +550,46 @@ static gfx::Matrix4x4 ComputePagesPerSheetAndPageSizeTransform(
   nsSharedPageData* pd = pageFrame->GetSharedPageData();
   const auto* ppsInfo = pd->PagesPerSheetInfo();
 
+  const nsContainerFrame* const parentFrame = pageFrame->GetParent();
+  MOZ_ASSERT(parentFrame->IsPrintedSheetFrame(),
+             "Parent of nsPageFrame should be PrintedSheetFrame");
+  const auto* sheetFrame = static_cast<const PrintedSheetFrame*>(parentFrame);
+
+  const double rotation =
+      pageFrame->GetPageOrientationRotation(pageFrame->GetSharedPageData());
+
   gfx::Matrix4x4 transform;
 
   if (ppsInfo->mNumPages == 1) {
+    if (rotation != 0.0) {
+      const nsSize sheetSize = sheetFrame->GetSizeForChildren();
+      const bool sheetIsPortrait = sheetSize.width < sheetSize.height;
+      const bool rotatingClockwise = rotation > 0.0;
+
+      // rotation point:
+      int32_t x, y;
+      if (rotatingClockwise != sheetIsPortrait) {
+        // rotating portrait clockwise, or landscape counterclockwise
+        x = y = std::min(sheetSize.width, sheetSize.height) / 2;
+      } else {
+        // rotating portrait counterclockwise, or landscape clockwise
+        x = y = std::max(sheetSize.width, sheetSize.height) / 2;
+      }
+
+      transform = gfx::Matrix4x4::Translation(
+          NSAppUnitsToFloatPixels(x, aAppUnitsPerPixel),
+          NSAppUnitsToFloatPixels(y, aAppUnitsPerPixel), 0);
+      transform.RotateZ(rotation);
+      transform.PreTranslate(NSAppUnitsToFloatPixels(-x, aAppUnitsPerPixel),
+                             NSAppUnitsToFloatPixels(-y, aAppUnitsPerPixel), 0);
+    }
+
     float scale = pageFrame->ComputeSinglePPSPageSizeScale(contentPageSize);
-    transform = gfx::Matrix4x4::Scaling(scale, scale, 1);
+    transform.PreScale(scale, scale, 1);
     return transform;
   }
 
   // The multiple pages-per-sheet case.
-
-  const nsContainerFrame* const parentFrame = pageFrame->GetParent();
-  MOZ_ASSERT(parentFrame->IsPrintedSheetFrame(),
-             "Parent of nsPageFrame should be PrintedSheetFrame");
-  auto* sheetFrame = static_cast<const PrintedSheetFrame*>(parentFrame);
 
   // Begin with the translation of the page to its pages-per-sheet grid "cell"
   // (the grid origin accounts for the sheet's unwriteable margins):
@@ -604,47 +630,46 @@ static gfx::Matrix4x4 ComputePagesPerSheetAndPageSizeTransform(
   transform.PreTranslate(dx, dy, 0.0f);
   transform.PreScale(scale, scale, 1.0f);
 
-  // Apply 'page-orientation' to any applicable pages:
-  if (StaticPrefs::layout_css_page_orientation_enabled()) {
-    const StylePageOrientation& orientation =
-        pageFrame->PageContentFrame()->StylePage()->mPageOrientation;
+  // Apply 'page-orientation' rotation, if applicable:
+  if (rotation != 0.0) {
+    // We've already translated and scaled the page to fit the cell, ignoring
+    // rotation. Here we rotate the page around its center and, if necessary,
+    // also scale it to fit it to its cell for its orientation change.
 
-    double angle = 0.0;
-    if (orientation == StylePageOrientation::RotateLeft) {
-      angle = -M_PI / 2.0;
-    } else if (orientation == StylePageOrientation::RotateRight) {
-      angle = M_PI / 2.0;
-    }
-
-    if (angle != 0.0) {
-      float cellRatio = float(sheetFrame->GetGridCellWidth()) /
-                        float(sheetFrame->GetGridCellHeight());
+    float fitScale = 1.0f;
+    if (MOZ_LIKELY(cellWidth != cellHeight &&
+                   contentPageSize.width != contentPageSize.height)) {
+      // If neither the cell nor the page are square, the scale must change.
+      float cellRatio = float(cellWidth) / float(cellHeight);
       float pageRatio =
           float(contentPageSize.width) / float(contentPageSize.height);
-      // To fit into the available space on a sheet, a page typically needs to
-      // be scaled. If rotated 90 degrees, the scale will be different (assuming
-      // the page size is rectangular, not square). This variable flags whether
-      // the scale at the default rotation is the smaller of the two scales.
-      bool isSmallerOfRotatedScales = floor(cellRatio) != floor(pageRatio);
-      float fitScale = cellRatio;
-      if (isSmallerOfRotatedScales != bool(floor(fitScale))) {
-        fitScale = 1.0f / cellRatio;
+      const bool orientationWillMatchAfterRotation =
+          floor(cellRatio) != floor(pageRatio);
+      if (cellRatio > 1.0f) {
+        cellRatio = 1.0f / cellRatio;  // normalize
       }
-
-      transform.PreTranslate(
-          NSAppUnitsToFloatPixels(contentPageSize.width / 2, aAppUnitsPerPixel),
-          NSAppUnitsToFloatPixels(contentPageSize.height / 2,
-                                  aAppUnitsPerPixel),
-          0);
-      transform.PreScale(fitScale, fitScale, 1.0f);
-      transform.RotateZ(angle);
-      transform.PreTranslate(
-          NSAppUnitsToFloatPixels(-contentPageSize.width / 2,
-                                  aAppUnitsPerPixel),
-          NSAppUnitsToFloatPixels(-contentPageSize.height / 2,
-                                  aAppUnitsPerPixel),
-          0);
+      if (pageRatio > 1.0f) {
+        pageRatio = 1.0f / pageRatio;  // normalize
+      }
+      fitScale = std::max(cellRatio, pageRatio);
+      if (orientationWillMatchAfterRotation) {
+        // Scale up, not down
+        fitScale = 1.0f / fitScale;
+      }
     }
+
+    transform.PreTranslate(
+        NSAppUnitsToFloatPixels(contentPageSize.width / 2, aAppUnitsPerPixel),
+        NSAppUnitsToFloatPixels(contentPageSize.height / 2, aAppUnitsPerPixel),
+        0);
+    if (MOZ_LIKELY(fitScale != 1.0f)) {
+      transform.PreScale(fitScale, fitScale, 1.0f);
+    }
+    transform.RotateZ(rotation);
+    transform.PreTranslate(
+        NSAppUnitsToFloatPixels(-contentPageSize.width / 2, aAppUnitsPerPixel),
+        NSAppUnitsToFloatPixels(-contentPageSize.height / 2, aAppUnitsPerPixel),
+        0);
   }
 
   return transform;
@@ -734,7 +759,7 @@ float nsPageFrame::ComputeSinglePPSPageSizeScale(
   // content uses "@page {size: ...}" to specify a page size for the content.
   float scale = 1.0f;
 
-  const nsSize sheetSize = sheet->GetPrecomputedSheetSize();
+  const nsSize sheetSize = sheet->GetSizeForChildren();
   nscoord contentPageHeight = aContentPageSize.height;
   // Scale down if the target is too wide.
   if (aContentPageSize.width > sheetSize.width) {
@@ -749,6 +774,32 @@ float nsPageFrame::ComputeSinglePPSPageSizeScale(
       scale <= 1.0f,
       "Page-size mismatches should only have caused us to scale down, not up.");
   return scale;
+}
+
+double nsPageFrame::GetPageOrientationRotation(nsSharedPageData* aPD) const {
+  if (!StaticPrefs::layout_css_page_orientation_enabled()) {
+    return 0.0;
+  }
+
+  if (aPD->PagesPerSheetInfo()->mNumPages == 1 && !PresContext()->IsScreen() &&
+      aPD->mPrintSettings->GetOutputFormat() !=
+          nsIPrintSettings::kOutputFormatPDF) {
+    // In the single page-per-sheet case we rotate the page by essentially
+    // rotating the entire sheet. But we can't do that when the output device
+    // doesn't support mixed sheet orientations.
+    return 0.0;
+  }
+
+  const StylePageOrientation& orientation =
+      PageContentFrame()->StylePage()->mPageOrientation;
+
+  if (orientation == StylePageOrientation::RotateLeft) {
+    return -M_PI / 2.0;
+  }
+  if (orientation == StylePageOrientation::RotateRight) {
+    return M_PI / 2.0;
+  }
+  return 0.0;
 }
 
 nsIFrame* nsPageFrame::FirstContinuation() const {
