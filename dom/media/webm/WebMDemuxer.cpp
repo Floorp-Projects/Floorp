@@ -17,7 +17,6 @@
 #include "gfxUtils.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/SharedThreadPool.h"
-#include "mozilla/StaticPrefs_media.h"
 #include "MediaDataDemuxer.h"
 #include "nsAutoRef.h"
 #include "NesteggPacketHolder.h"
@@ -382,28 +381,9 @@ nsresult WebMDemuxer::ReadMetadata() {
       uint64_t duration = 0;
       r = nestegg_duration(context, &duration);
       if (!r) {
-        // It's technically possible to have duration be > INT64_MAX here.
-        // When that's the case, use a lower resolution TimeUnit
-        if (duration <= std::numeric_limits<int64_t>::max()) {
-          mInfo.mVideo.mDuration =
-              TimeUnit::FromNanoseconds(AssertedCast<int64_t>(duration));
-        } else {
-          mInfo.mVideo.mDuration =
-              TimeUnit(AssertedCast<int64_t>(duration / 1000), USECS_PER_S);
-        }
-      } else {
-        mInfo.mVideo.mDuration = TimeUnit::FromInfinity();
-        mInfo.mVideo.mIsLive = true;
+        mInfo.mVideo.mDuration = TimeUnit::FromNanoseconds(duration);
       }
-
-      mInfo.mVideo.mIsLive |=
-          StaticPrefs::media_low_latency_decoding_force_enabled();
-
-      WEBM_DEBUG("WebM video track duration: %s\n",
-                 mInfo.mVideo.mDuration.IsValid()
-                     ? mInfo.mVideo.mDuration.ToString().get()
-                     : "live");
-
+      WEBM_DEBUG("stream duration: %lf\n", mInfo.mVideo.mDuration.ToSeconds());
       mInfo.mVideo.mCrypto = GetTrackCrypto(TrackInfo::kVideoTrack, track);
       if (mInfo.mVideo.mCrypto.IsEncrypted()) {
         MOZ_ASSERT(mInfo.mVideo.mCrypto.mCryptoScheme == CryptoScheme::Cenc,
@@ -488,27 +468,10 @@ nsresult WebMDemuxer::ReadMetadata() {
       uint64_t duration = 0;
       r = nestegg_duration(context, &duration);
       if (!r) {
-        // It's technically possible to have duration be > INT64_MAX here.
-        // When that's the case, use a lower resolution TimeUnit
-        if (duration <= std::numeric_limits<int64_t>::max()) {
-          mInfo.mAudio.mDuration =
-              TimeUnit::FromNanoseconds(AssertedCast<int64_t>(duration));
-        } else {
-          mInfo.mAudio.mDuration =
-              TimeUnit(AssertedCast<int64_t>(duration / 1000), USECS_PER_S);
-        }
-      } else {
-        mInfo.mAudio.mDuration = TimeUnit::FromInfinity();
-        mInfo.mAudio.mIsLive = true;
+        mInfo.mAudio.mDuration = TimeUnit::FromNanoseconds(duration);
+        WEBM_DEBUG("audio track duration: %lf",
+                   mInfo.mAudio.mDuration.ToSeconds());
       }
-
-      mInfo.mAudio.mIsLive |=
-          StaticPrefs::media_low_latency_decoding_force_enabled();
-
-      WEBM_DEBUG("WebM audio track duration: %s\n",
-                 mInfo.mAudio.mDuration.IsValid()
-                     ? mInfo.mAudio.mDuration.ToString().get()
-                     : "live");
       mInfo.mAudio.mCrypto = GetTrackCrypto(TrackInfo::kAudioTrack, track);
       if (mInfo.mAudio.mCrypto.IsEncrypted()) {
         MOZ_ASSERT(mInfo.mAudio.mCrypto.mCryptoScheme == CryptoScheme::Cenc,
