@@ -37,24 +37,6 @@
       "last_modified": 1692154623708
     },
     {
-      "schema": 1691743681420,
-      "derHash": "DtVnGu6WFs3norGz3SOYtuEeWR2pdEki2MMtF/Z8ypM=",
-      "subject": "CN=TWCA Secure SSL Certification Authority,OU=Secure SSL Sub-CA,O=TAIWAN-CA,C=TW",
-      "subjectDN": "MG8xCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExGjAYBgNVBAsTEVNlY3VyZSBTU0wgU3ViLUNBMTAwLgYDVQQDEydUV0NBIFNlY3VyZSBTU0wgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ecec9266ff245492e1a172585358e3e67c817179645c78b040729531a2ce40cc",
-        "size": 2032,
-        "filename": "UF3fknYIk07Cq2Y0ayIdVanP0UaBIGpSIs6_eA0d_e0=.pem",
-        "location": "security-state-staging/intermediates/92beeb38-0a3f-4c91-85a1-0747906a534f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "UF3fknYIk07Cq2Y0ayIdVanP0UaBIGpSIs6/eA0d/e0=",
-      "crlite_enrolled": false,
-      "id": "afa677b2-2744-4891-aa66-0e302ea96f30",
-      "last_modified": 1691744223786
-    },
-    {
       "schema": 1691462897692,
       "derHash": "hz8LqA46wiJlbf0EFYzBXCkn1C1dBfAd7kpH60OpFt8=",
       "subject": "CN=Sectigo Public Server Authentication CA DV E36,O=Sectigo Limited,C=GB",
@@ -28891,5 +28873,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1692154623711
+  "timestamp": 1692284223687
 }
