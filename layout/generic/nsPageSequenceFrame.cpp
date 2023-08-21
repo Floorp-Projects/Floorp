@@ -344,7 +344,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     // frame, we need to call this:
     sheet->ClaimPageFrameFromPrevInFlow();
 
-    const nsSize sheetSize = sheet->ComputeSheetSize(aPresContext);
+    const nsSize sheetSize = sheet->PrecomputeSheetSize(aPresContext);
 
     // Reflow the sheet
     ReflowInput kidReflowInput(
@@ -372,7 +372,7 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
     FinishReflowChild(kidFrame, aPresContext, kidReflowOutput, &kidReflowInput,
                       x, y, ReflowChildFlags::Default);
     MOZ_ASSERT(kidFrame->GetSize() == sheetSize,
-               "PrintedSheetFrame::ComputeSheetSize() gave the wrong size!");
+               "PrintedSheetFrame::PrecomputeSheetSize gave the wrong size!");
     y += kidReflowOutput.Height();
     y += pageCSSMargin.bottom;
 
