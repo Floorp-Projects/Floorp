@@ -3,6 +3,20 @@
     {
       "stash": {
         "blocked": [
+          "{4e023032-b2c9-46f1-a459-6eaa627a7d7e}:1.22.301",
+          "{4e023032-b2c9-46f1-a459-6eaa627a7d7e}:1.22.1006"
+        ],
+        "unblocked": []
+      },
+      "schema": 1692210975980,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1692275711103,
+      "id": "e92a253b-f7ad-4559-bceb-ce9103a158a4",
+      "last_modified": 1692275774370
+    },
+    {
+      "stash": {
+        "blocked": [
           "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.21.1403",
           "db4ef720-0692-11ec-9cfe-bacbbe07b880-prod@whatfix.com:2021.10.18.1308",
           "ClearURLs@cqdgh.net:1.26.1",
@@ -105,5 +119,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1692210975875
+  "timestamp": 1692275774370
 }
