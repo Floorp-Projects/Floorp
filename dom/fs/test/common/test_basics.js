@@ -307,7 +307,7 @@ exported_symbols.testContentTypeChangesOnFileMove = async function () {
   const testParams = {
     "testFile.json": "application/json",
     testFile: oldType,
-    "testFile.äüö": oldType,
+    "testFile.äüö": "",
   };
 
   for (const [aName, aType] of Object.entries(testParams)) {

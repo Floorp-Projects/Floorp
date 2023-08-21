@@ -511,7 +511,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::RenameEntry(
   FileSystemChildMetadata newDesignation(parentId, aNewName);
 
   if (isFile) {
-    const ContentType type = FileSystemContentTypeGuess::FromPath(aNewName);
+    const ContentType type = DetermineContentType(aNewName);
     QM_TRY(
         QM_TO_RESULT(RehashFile(mConnection, entryId, newDesignation, type)));
   } else {
@@ -554,8 +554,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::MoveEntry(
                                        aNewDesignation, isFile)));
 
   if (isFile) {
-    const ContentType type =
-        FileSystemContentTypeGuess::FromPath(aNewDesignation.childName());
+    const ContentType type = DetermineContentType(aNewDesignation.childName());
     QM_TRY(
         QM_TO_RESULT(RehashFile(mConnection, entryId, aNewDesignation, type)));
   } else {
