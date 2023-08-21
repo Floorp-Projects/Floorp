@@ -64,6 +64,7 @@ if (Services.prefs.getBoolPref("floorp.browser.native.downloadbar.enabled", true
       background: var(--toolbar-bgcolor);
       display: flex !important;
       width: auto !important;
+      flex-direction: initial;
     }
     #downloadsPanel-blockedSubview, #downloadsPanel-mainView {
       padding: 0 !important;

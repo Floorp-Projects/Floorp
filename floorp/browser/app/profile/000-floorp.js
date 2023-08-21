@@ -125,7 +125,7 @@ pref("floorp.browser.tabs.openNewTabPosition", -1);
 pref("floorp.browser.native.verticaltabs.enabled", false);
 pref("floorp.verticaltab.hover.enabled", false);
 
-//ネイティブ実装ダウンロードバー
+// Chrome 形式のダウンローダー
 pref("floorp.browser.native.downloadbar.enabled", false);
 
 //ワークスペース
