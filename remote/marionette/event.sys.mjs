@@ -157,6 +157,20 @@ event.synthesizeTouchAtPoint = function (left, top, opts, win) {
  *     Window object.
  */
 event.synthesizeWheelAtPoint = function (left, top, opts, win) {
+  const dpr = win.devicePixelRatio;
+
+  // All delta properties expect the value in device pixels while the
+  // WebDriver specification uses CSS pixels.
+  if (typeof opts.deltaX !== "undefined") {
+    opts.deltaX *= dpr;
+  }
+  if (typeof opts.deltaY !== "undefined") {
+    opts.deltaY *= dpr;
+  }
+  if (typeof opts.deltaZ !== "undefined") {
+    opts.deltaZ *= dpr;
+  }
+
   return _getEventUtils(win).synthesizeWheelAtPoint(left, top, opts, win);
 };
 
