@@ -682,7 +682,7 @@ class TestRunnerManager(threading.Thread):
         status = file_result.status
 
         if self.browser.check_crash(test.id) and status != "CRASH":
-            if test.test_type == "crashtest" or status == "EXTERNAL-TIMEOUT":
+            if test.test_type in ["crashtest", "wdspec"] or status == "EXTERNAL-TIMEOUT":
                 self.logger.info("Found a crash dump file; changing status to CRASH")
                 status = "CRASH"
             else:
