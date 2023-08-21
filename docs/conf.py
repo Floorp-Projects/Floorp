@@ -21,7 +21,7 @@ EXTRA_PATHS = (
     "testing/mozbase/manifestparser",
     "testing/mozbase/mozfile",
     "testing/mozbase/mozprocess",
-    "testing/mozbase/moznetwork/moznetwork",
+    "testing/mozbase/moznetwork",
     "third_party/python/jsmin",
     "third_party/python/which",
     "docs/_addons",

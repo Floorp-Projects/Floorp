@@ -21,6 +21,6 @@ Example usage:
 
 """
 
-from .moznetwork import get_ip
+from .moznetwork import NetworkError, get_ip
 
-__all__ = ["get_ip"]
+__all__ = ["get_ip", "NetworkError"]
