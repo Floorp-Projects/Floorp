@@ -268,9 +268,6 @@ exported_symbols.testContentTypeChangesOnFileMove = async function () {
   const oldType = "text/plain";
   const subdir = await root.getDirectoryHandle("subdir", allowCreate);
 
-  const testName = "testFile.json";
-  const testType = "application/json";
-
   const fileHandle = await root.getFileHandle(oldName, allowCreate);
 
   async function checkMove(newName, newType) {
@@ -282,25 +279,40 @@ exported_symbols.testContentTypeChangesOnFileMove = async function () {
     }
   }
 
-  // No name change
-  await checkMove(oldName, oldType);
-  await fileHandle.move(subdir);
-  await checkMove(oldName, oldType);
-  await fileHandle.move(root, oldName);
-  await checkMove(oldName, oldType);
-
-  // With name change
-
-  async function testMoveCall(...combo) {
-    await fileHandle.move(...combo);
-    await checkMove(testName, testType);
+  async function restoreTest() {
     await fileHandle.move(root, oldName);
     await checkMove(oldName, oldType);
   }
 
-  await testMoveCall(subdir, testName);
-  await testMoveCall(root, testName);
-  await testMoveCall(testName);
+  // No name change
+  await checkMove(oldName, oldType);
+  await fileHandle.move(subdir);
+  await checkMove(oldName, oldType);
+  await restoreTest();
+
+  // With name change
+
+  async function testMoveWithParams(testName, testType) {
+    async function testFileMoveCall(...combo) {
+      await fileHandle.move(...combo);
+      await checkMove(testName, testType);
+      await restoreTest();
+    }
+
+    await testFileMoveCall(subdir, testName);
+    await testFileMoveCall(root, testName);
+    await testFileMoveCall(testName);
+  }
+
+  const testParams = {
+    "testFile.json": "application/json",
+    testFile: oldType,
+    "testFile.äüö": oldType,
+  };
+
+  for (const [aName, aType] of Object.entries(testParams)) {
+    await testMoveWithParams(aName, aType);
+  }
 };
 
 exported_symbols.testContentTypeChangesOnDirMove = async function () {
