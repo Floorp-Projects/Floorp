@@ -41,7 +41,7 @@ async function testToggle(key, modifiers) {
 }
 
 async function testToggleDockedToolbox(tab, key, modifiers) {
-  const toolbox = await gDevTools.getToolboxForTab(tab);
+  const toolbox = gDevTools.getToolboxForTab(tab);
 
   isnot(
     toolbox.hostType,
@@ -63,7 +63,7 @@ async function testToggleDockedToolbox(tab, key, modifiers) {
 }
 
 async function testToggleDetachedToolbox(tab, key, modifiers) {
-  const toolbox = await gDevTools.getToolboxForTab(tab);
+  const toolbox = gDevTools.getToolboxForTab(tab);
 
   info("change the toolbox hostType to WINDOW");
 

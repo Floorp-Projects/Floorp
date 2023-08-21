@@ -37,7 +37,7 @@ async function waitForAllRequestsFinished(
   minExpectedRequests,
   maxExpectedRequests
 ) {
-  let toolbox = await getToolbox();
+  let toolbox = getToolbox();
   let window = toolbox.getCurrentPanel().panelWin;
 
   return new Promise(resolve => {

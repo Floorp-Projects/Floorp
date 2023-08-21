@@ -34,7 +34,7 @@ this.openMemoryPanel = async function (tab) {
  */
 this.closeMemoryPanel = async function (tab) {
   info("Closing memory panel.");
-  const toolbox = await gDevTools.getToolboxForTab(tab);
+  const toolbox = gDevTools.getToolboxForTab(tab);
   await toolbox.destroy();
   info("Closed memory panel successfully.");
 };

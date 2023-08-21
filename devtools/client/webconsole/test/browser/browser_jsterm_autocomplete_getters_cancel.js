@@ -22,7 +22,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
   let tooltip = await setInputValueForGetterConfirmDialog(
     toolbox,

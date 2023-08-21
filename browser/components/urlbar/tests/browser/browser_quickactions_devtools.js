@@ -148,7 +148,7 @@ add_task(async function test_inspector() {
       () => DevToolsShim.hasToolboxForTab(gBrowser.selectedTab),
       "Wait for opening inspector for current selected tab"
     );
-    const toolbox = await DevToolsShim.getToolboxForTab(gBrowser.selectedTab);
+    const toolbox = DevToolsShim.getToolboxForTab(gBrowser.selectedTab);
     await BrowserTestUtils.waitForCondition(
       () => toolbox.getPanel("inspector"),
       "Wait until the inspector is ready"

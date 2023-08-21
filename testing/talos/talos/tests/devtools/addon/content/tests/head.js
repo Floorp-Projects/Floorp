@@ -75,7 +75,7 @@ function getActiveTab() {
 }
 exports.getActiveTab = getActiveTab;
 
-exports.getToolbox = async function () {
+exports.getToolbox = function () {
   let tab = getActiveTab();
   return gDevTools.getToolboxForTab(tab);
 };
@@ -148,7 +148,7 @@ exports.openToolbox = openToolbox;
 
 exports.closeToolbox = async function () {
   let tab = getActiveTab();
-  let toolbox = await gDevTools.getToolboxForTab(tab);
+  let toolbox = gDevTools.getToolboxForTab(tab);
   await toolbox.target.client.waitForRequestsToSettle();
   await gDevTools.closeToolboxForTab(tab);
 };

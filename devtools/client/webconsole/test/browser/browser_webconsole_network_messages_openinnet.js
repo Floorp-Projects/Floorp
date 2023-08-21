@@ -33,7 +33,7 @@ add_task(async function task() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const currentTab = gBrowser.selectedTab;
-  const toolbox = await gDevTools.getToolboxForTab(currentTab);
+  const toolbox = gDevTools.getToolboxForTab(currentTab);
 
   const documentUrl = TEST_PATH + TEST_FILE;
   await navigateTo(documentUrl);

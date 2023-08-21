@@ -49,7 +49,7 @@ add_task(async function () {
 
   info("Pause in Debugger");
   await openDebugger();
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolboxForTab(gBrowser.selectedTab);
   const dbg = createDebuggerContext(toolbox);
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.pauseInDebugger();

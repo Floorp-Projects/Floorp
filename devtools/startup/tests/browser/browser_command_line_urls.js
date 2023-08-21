@@ -44,28 +44,19 @@ add_task(async function ignoredUrls() {
 
 /**
  * With DevTools closed, but DevToolsStartup "initialized",
- * the url will be opened via view-source
+ * the url will be ignored
  */
 add_task(async function openingWithDevToolsClosed() {
   const url = URL_ROOT + "command-line.html:5:2";
 
-  const newTabOpened = BrowserTestUtils.waitForNewTab(gBrowser);
-  sendUrlViaCommandLine(url);
-  const newTab = await newTabOpened;
-  is(
-    newTab.linkedBrowser.documentURI.spec,
-    "view-source:" + URL_ROOT + "command-line.html"
-  );
+  const tabCount = gBrowser.tabs.length;
+  const ignoredUrl = sendUrlViaCommandLine(url);
+  ok(ignoredUrl, "The url is ignored when no devtools are opened");
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
-    const selection = content.getSelection();
-    Assert.equal(
-      selection.toString(),
-      "  <title>Command line test page</title>",
-      "The 5th line is selected in view-source"
-    );
-  });
-  await gBrowser.removeTab(newTab);
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 1000));
+
+  is(tabCount, gBrowser.tabs.length);
 });
 
 /**
@@ -156,4 +147,8 @@ function sendUrlViaCommandLine(url) {
     Ci.nsICommandLine.STATE_REMOTE_EXPLICIT
   );
   startup.handle(cmdLine);
+
+  // Return true if DevToolsStartup ignored the url
+  // and let it be in the command line object.
+  return cmdLine.findFlag("url", false) != -1;
 }

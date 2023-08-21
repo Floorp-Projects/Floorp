@@ -14,7 +14,7 @@ add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
   info("Opening Debugger and enabling map scopes");
   await openDebugger();

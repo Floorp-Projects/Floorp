@@ -28,8 +28,8 @@ const checkServerConnectionCount = async function (browser, expected, msg) {
   is(conns.length || 0, expected, "Server connection count: " + msg);
 };
 
-const checkToolbox = async function (tab, location) {
-  const toolbox = await gDevTools.getToolboxForTab(tab);
+const checkToolbox = function (tab, location) {
+  const toolbox = gDevTools.getToolboxForTab(tab);
   ok(!!toolbox, `Toolbox exists ${location}`);
 };
 
@@ -67,7 +67,7 @@ addRDMTask(
           "2: One for each tab (starting tab plus the one we opened)"
         );
       }
-      await checkToolbox(tab, "outside RDM");
+      checkToolbox(tab, "outside RDM");
       const { ui } = await openRDM(tab);
       if (tabsInDifferentProcesses) {
         // 2: RDM UI adds an extra connection, 1 + 1 = 2
@@ -84,7 +84,7 @@ addRDMTask(
           "3: RDM UI uses an extra connection"
         );
       }
-      await checkToolbox(tab, "after opening RDM");
+      checkToolbox(tab, "after opening RDM");
       await closeRDM(tab);
       if (tabsInDifferentProcesses) {
         // 1: RDM UI closed, return to previous connection count
@@ -101,7 +101,7 @@ addRDMTask(
           "2: RDM UI closed, return to previous connection count"
         );
       }
-      await checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
+      checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
       await toolbox.destroy();
       // 0: All DevTools usage closed
       await checkServerConnectionCount(
@@ -142,7 +142,7 @@ addRDMTask(
           "3: One for each tab (starting tab plus the one we opened)"
         );
       }
-      await checkToolbox(tab, ui.getViewportBrowser(), "inside RDM");
+      checkToolbox(tab, ui.getViewportBrowser(), "inside RDM");
       await closeRDM(tab);
       if (tabsInDifferentProcesses) {
         // 1: RDM UI closed, one less connection
@@ -159,7 +159,7 @@ addRDMTask(
           "2: RDM UI closed, one less connection"
         );
       }
-      await checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
+      checkToolbox(tab, tab.linkedBrowser, "after closing RDM");
       await toolbox.destroy();
       // 0: All DevTools usage closed
       await checkServerConnectionCount(

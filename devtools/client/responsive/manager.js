@@ -145,12 +145,9 @@ class ResponsiveUIManager {
   /**
    * Record all telemetry probes related to RDM opening.
    */
-  async recordTelemetryOpen(window, tab, options) {
+  recordTelemetryOpen(window, tab, options) {
     // Track whether a toolbox was opened before RDM was opened.
-    let toolbox;
-    if (gDevTools.hasToolboxForTab(tab)) {
-      toolbox = await gDevTools.getToolboxForTab(tab);
-    }
+    const toolbox = gDevTools.getToolboxForTab(tab);
     const hostType = toolbox ? toolbox.hostType : "none";
     const hasToolbox = !!toolbox;
 
@@ -214,11 +211,8 @@ class ResponsiveUIManager {
     }
   }
 
-  async recordTelemetryClose(window, tab) {
-    let toolbox;
-    if (gDevTools.hasToolboxForTab(tab)) {
-      toolbox = await gDevTools.getToolboxForTab(tab);
-    }
+  recordTelemetryClose(window, tab) {
+    const toolbox = gDevTools.getToolboxForTab(tab);
 
     const hostType = toolbox ? toolbox.hostType : "none";
 

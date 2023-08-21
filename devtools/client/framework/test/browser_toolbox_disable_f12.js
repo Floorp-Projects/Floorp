@@ -66,7 +66,7 @@ const assertToolboxCloses = async function (tab, { shortcut, shouldClose }) {
     is(res, "TIMEOUT", "No toolbox-destroyed event received");
   }
   is(
-    !(await gDevTools.getToolboxForTab(tab)),
+    !gDevTools.getToolboxForTab(tab),
     shouldClose,
     `Toolbox was ${shouldClose ? "" : "not "}closed for the test tab`
   );
@@ -95,7 +95,7 @@ const assertToolboxOpens = async function (tab, { shortcut, shouldOpen }) {
     is(res, "TIMEOUT", "No toolbox-ready event received");
   }
   is(
-    !!(await gDevTools.getToolboxForTab(tab)),
+    !!gDevTools.getToolboxForTab(tab),
     shouldOpen,
     `Toolbox was ${shouldOpen ? "" : "not "}opened for the test tab`
   );
