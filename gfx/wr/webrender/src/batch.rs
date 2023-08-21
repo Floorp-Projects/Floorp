@@ -3386,9 +3386,6 @@ impl BrushBatchParameters {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ClipMaskInstanceList {
-    pub prim_instances: Vec<PrimitiveInstanceData>,
-    pub prim_instances_with_scissor: FastHashMap<DeviceIntRect, Vec<PrimitiveInstanceData>>,
-
     pub mask_instances_fast: Vec<MaskInstance>,
     pub mask_instances_slow: Vec<MaskInstance>,
 
@@ -3402,8 +3399,6 @@ pub struct ClipMaskInstanceList {
 impl ClipMaskInstanceList {
     pub fn new() -> Self {
         ClipMaskInstanceList {
-            prim_instances: Vec::new(),
-            prim_instances_with_scissor: FastHashMap::default(),
             mask_instances_fast: Vec::new(),
             mask_instances_slow: Vec::new(),
             mask_instances_fast_with_scissor: FastHashMap::default(),

@@ -31,7 +31,7 @@ use crate::render_target::RenderTargetKind;
 use crate::render_task_graph::{RenderTaskId};
 use crate::render_task_cache::RenderTaskCacheKeyKind;
 use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskParent};
-use crate::render_task::{RenderTaskKind, RenderTask};
+use crate::render_task::{RenderTaskKind, RenderTask, SubPass, MaskSubPass};
 use crate::renderer::{GpuBufferBuilder, GpuBufferAddress};
 use crate::segment::{EdgeAaSegmentMask, SegmentBuilder};
 use crate::space::SpaceMapper;
@@ -2061,6 +2061,15 @@ fn add_segment(
                 RenderTargetKind::Color,
             ),
         ));
+
+        let masks = MaskSubPass {
+            clip_node_range: prim_instance.vis.clip_chain.clips_range,
+        };
+
+        let task = frame_state.rg_builder.get_task_mut(task_id);
+        task.add_sub_pass(SubPass::Masks {
+            masks,
+        });
 
         frame_state.surface_builder.add_child_render_task(
             task_id,

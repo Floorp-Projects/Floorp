@@ -68,7 +68,7 @@ use crate::frame_builder::Frame;
 use glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
-use crate::gpu_types::{ScalingInstance, SvgFilterInstance, CopyInstance};
+use crate::gpu_types::{ScalingInstance, SvgFilterInstance, CopyInstance, PrimitiveInstanceData};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, CompositorTransform};
 use crate::internal_types::{TextureSource, TextureCacheCategory, FrameId};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -2171,10 +2171,11 @@ impl Renderer {
         self.device.reset_read_target();
     }
 
-    fn handle_clips(
+    fn handle_prims(
         &mut self,
         draw_target: &DrawTarget,
-        masks: &ClipMaskInstanceList,
+        prim_instances: &[PrimitiveInstanceData],
+        prim_instances_with_scissor: &FastHashMap<DeviceIntRect, Vec<PrimitiveInstanceData>>,
         projection: &default::Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
@@ -2183,7 +2184,7 @@ impl Renderer {
         {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_INDIRECT_PRIM);
 
-            if !masks.prim_instances.is_empty() {
+            if !prim_instances.is_empty() {
                 self.set_blend(false, FramebufferKind::Other);
 
                 self.shaders.borrow_mut().ps_quad_textured.bind(
@@ -2195,14 +2196,14 @@ impl Renderer {
                 );
 
                 self.draw_instanced_batch(
-                    &masks.prim_instances,
+                    prim_instances,
                     VertexArrayKind::Primitive,
                     &BatchTextures::empty(),
                     stats,
                 );
             }
 
-            if !masks.prim_instances_with_scissor.is_empty() {
+            if !prim_instances_with_scissor.is_empty() {
                 self.set_blend(true, FramebufferKind::Other);
                 self.device.set_blend_mode_premultiplied_alpha();
                 self.device.enable_scissor();
@@ -2215,7 +2216,7 @@ impl Renderer {
                     &mut self.profile,
                 );
 
-                for (scissor_rect, prim_instances) in &masks.prim_instances_with_scissor {
+                for (scissor_rect, prim_instances) in prim_instances_with_scissor {
                     self.device.set_scissor_rect(draw_target.to_framebuffer_rect(*scissor_rect));
 
                     self.draw_instanced_batch(
@@ -2229,6 +2230,16 @@ impl Renderer {
                 self.device.disable_scissor();
             }
         }
+    }
+
+    fn handle_clips(
+        &mut self,
+        draw_target: &DrawTarget,
+        masks: &ClipMaskInstanceList,
+        projection: &default::Transform3D<f32>,
+        stats: &mut RendererStats,
+    ) {
+        self.device.disable_depth_write();
 
         {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_INDIRECT_MASK);
@@ -3617,10 +3628,18 @@ impl Renderer {
             );
         }
 
-        if !target.clip_masks.prim_instances.is_empty() || !target.clip_masks.prim_instances_with_scissor.is_empty() {
+        self.handle_prims(
+            &draw_target,
+            &target.prim_instances,
+            &target.prim_instances_with_scissor,
+            projection,
+            stats,
+        );
+
+        for clip_masks in &target.clip_masks {
             self.handle_clips(
                 &draw_target,
-                &target.clip_masks,
+                clip_masks,
                 projection,
                 stats,
             );
@@ -3918,12 +3937,14 @@ impl Renderer {
                 stats,
             );
 
-            self.handle_clips(
-                &draw_target,
-                &target.clip_masks,
-                projection,
-                stats,
-            );
+            for clip_masks in &target.clip_masks {
+                self.handle_clips(
+                    &draw_target,
+                    clip_masks,
+                    projection,
+                    stats,
+                );
+            }
         }
 
         self.gpu_profiler.finish_sampler(alpha_sampler);

@@ -866,10 +866,25 @@ pub type TaskDependencies = SmallVec<[RenderTaskId;2]>;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct MaskSubPass {
+    pub clip_node_range: ClipNodeRange,
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum SubPass {
+    Masks {
+        masks: MaskSubPass,
+    },
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTask {
     pub location: RenderTaskLocation,
     pub children: TaskDependencies,
     pub kind: RenderTaskKind,
+    pub sub_pass: Option<SubPass>,
 
     // TODO(gw): These fields and perhaps others can become private once the
     //           frame_graph / render_task source files are unified / cleaned up.
@@ -901,6 +916,7 @@ impl RenderTask {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
+            sub_pass: None,
         }
     }
 
@@ -940,6 +956,7 @@ impl RenderTask {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
+            sub_pass: None,
         }
     }
 
@@ -958,6 +975,7 @@ impl RenderTask {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
+            sub_pass: None,
         }
     }
 
@@ -1458,6 +1476,14 @@ impl RenderTask {
         }
 
         task_id
+    }
+
+    pub fn add_sub_pass(
+        &mut self,
+        sub_pass: SubPass,
+    ) {
+        assert!(self.sub_pass.is_none(), "multiple sub-passes are not supported for now");
+        self.sub_pass = Some(sub_pass);
     }
 
     pub fn uv_rect_kind(&self) -> UvRectKind {
