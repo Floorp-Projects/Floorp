@@ -261,7 +261,7 @@ exported_symbols.testFileType = async function () {
   );
 };
 
-exported_symbols.testContentTypeChangesOnMove = async function () {
+exported_symbols.testContentTypeChangesOnFileMove = async function () {
   const allowCreate = { create: true };
   const root = await navigator.storage.getDirectory();
   const oldName = "testFile.txt";
@@ -301,6 +301,58 @@ exported_symbols.testContentTypeChangesOnMove = async function () {
   await testMoveCall(subdir, testName);
   await testMoveCall(root, testName);
   await testMoveCall(testName);
+};
+
+exported_symbols.testContentTypeChangesOnDirMove = async function () {
+  const allowCreate = { create: true };
+  const root = await navigator.storage.getDirectory();
+  const oldName = "testFile.txt";
+  const oldType = "text/plain";
+  const subDirOrig = await root.getDirectoryHandle("subDirOrig", allowCreate);
+  const subDirOther = await root.getDirectoryHandle("subDirOther", allowCreate);
+  const subSubDir = await subDirOrig.getDirectoryHandle(
+    "subSubDir",
+    allowCreate
+  );
+
+  const testName = "testFile.json";
+  const testType = "application/json";
+
+  async function checkMove(newName, newType) {
+    const fileHandle = await subSubDir.getFileHandle(newName, allowCreate);
+
+    Assert.equal(fileHandle.name, newName, "Has filename changed?");
+    {
+      const fileObject = await fileHandle.getFile();
+      Assert.equal(fileObject.name, newName, "Is the fileobject renamed?");
+      Assert.equal(fileObject.type, newType, "Is the fileobject type updated?");
+    }
+  }
+
+  async function restoreTest() {
+    await subSubDir.move(subDirOrig, "subSubDir");
+    await checkMove(oldName, oldType);
+  }
+
+  await checkMove(oldName, oldType);
+
+  // No name change
+  await subSubDir.move(subDirOther, "other");
+  await checkMove(oldName, oldType);
+  await restoreTest();
+
+  // With name change
+
+  async function testDirMoveCall(...combo) {
+    await subSubDir.move(...combo);
+    await checkMove(testName, testType);
+    await restoreTest();
+  }
+
+  await testDirMoveCall(subDirOther);
+  await testDirMoveCall(subDirOther, testName);
+  await testDirMoveCall(subDirOrig, testName);
+  await testDirMoveCall(subDirOrig);
 };
 
 for (const [key, value] of Object.entries(exported_symbols)) {
