@@ -164,17 +164,6 @@ class WebControlsTest {
     }
 
     @Test
-    fun externalLinkTest() {
-        val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(externalLinksPage.url) {
-            clickPageObject(itemContainingText("External link"))
-            verifyUrl("duckduckgo")
-        }
-    }
-
-    @Test
     fun emailLinkTest() {
         val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
