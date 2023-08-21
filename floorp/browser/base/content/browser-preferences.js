@@ -80,7 +80,7 @@ const GENERAL_USERAGENT_OVERRIDE_PREF = "general.useragent.override";
 
 
 // backup Floorp Notes Pref
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+var { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const FLOORP_NOTES_PREF = "floorp.browser.note.memos";
 const FLOORP_NOTES_LATEST_BACKUP_TIME_PREF = "floorp.browser.note.backup.latest.time";
