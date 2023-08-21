@@ -80,10 +80,19 @@ nsresult RehashFile(const FileSystemConnection& aConnection,
       "VALUES ( :newId, :newParent ) "
       ";"_ns;
 
-  const nsLiteralCString insertNewFileQuery =
+  const nsLiteralCString insertNewFileAndTypeQuery =
       "INSERT INTO Files ( handle, type, name ) "
       "VALUES ( :newId, :type, :newName ) "
       ";"_ns;
+
+  const nsLiteralCString insertNewFileKeepTypeQuery =
+      "INSERT INTO Files ( handle, type, name ) "
+      "SELECT :newId, type, :newName FROM Files "
+      "WHERE handle = :oldId ;"_ns;
+
+  const auto& insertNewFileQuery = aNewType.IsVoid()
+                                       ? insertNewFileKeepTypeQuery
+                                       : insertNewFileAndTypeQuery;
 
   const nsLiteralCString updateFileMappingsQuery =
       "UPDATE FileIds SET handle = :newId WHERE handle = :handle ;"_ns;
@@ -109,7 +118,11 @@ nsresult RehashFile(const FileSystemConnection& aConnection,
     QM_TRY_UNWRAP(ResultStatement stmt,
                   ResultStatement::Create(aConnection, insertNewFileQuery));
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("newId"_ns, newId)));
-    QM_TRY(QM_TO_RESULT(stmt.BindContentTypeByName("type"_ns, aNewType)));
+    if (aNewType.IsVoid()) {
+      QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("oldId"_ns, aEntryId)));
+    } else {
+      QM_TRY(QM_TO_RESULT(stmt.BindContentTypeByName("type"_ns, aNewType)));
+    }
     QM_TRY(QM_TO_RESULT(
         stmt.BindNameByName("newName"_ns, aNewDesignation.childName())));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
