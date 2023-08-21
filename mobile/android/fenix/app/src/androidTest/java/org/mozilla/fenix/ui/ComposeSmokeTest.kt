@@ -87,34 +87,6 @@ class ComposeSmokeTest {
         mockWebServer.shutdown()
     }
 
-    /* Verifies the nav bar:
-     - opening a web page
-     - the existence of nav bar items
-     - editing the url bar
-     - the tab drawer button
-     - opening a new search and dismissing the nav bar
-     */
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
-    @Test
-    fun verifyBasicNavigationToolbarFunctionality() {
-        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        homeScreen {
-            navigationToolbar {
-            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                mDevice.waitForIdle()
-                verifyNavURLBarItems()
-            }.openNavigationToolbar {
-            }.goBackToWebsite {
-            }.openComposeTabDrawer(activityTestRule) {
-                verifyNormalTabsList()
-            }.openNewTab {
-            }.dismissSearchBar {
-                verifyHomeScreen()
-            }
-        }
-    }
-
     // Device or AVD requires a Google Services Android OS installation with Play Store installed
     // Verifies the Open in app button when an app is installed
     @Test
@@ -205,23 +177,6 @@ class ComposeSmokeTest {
                 sharedUrlsString,
                 "$firstWebsiteTitle, $secondWebsiteTitle",
             )
-        }
-    }
-
-    @Test
-    fun emptyTabsTrayViewPrivateBrowsingTest() {
-        homeScreen {
-        }.openComposeTabDrawer(activityTestRule) {
-        }.toggleToPrivateTabs {
-            verifyNormalBrowsingButtonIsSelected(false)
-            verifyPrivateBrowsingButtonIsSelected(true)
-            verifySyncedTabsButtonIsSelected(false)
-            verifyNoOpenTabsInPrivateBrowsing()
-            verifyFab()
-            verifyThreeDotButton()
-        }.openThreeDotMenu {
-            verifyTabSettingsButton()
-            verifyRecentlyClosedTabsButton()
         }
     }
 
@@ -424,18 +379,6 @@ class ComposeSmokeTest {
             mDevice.waitForIdle()
         }.goToHomescreen {
             verifyHomeScreen()
-        }
-    }
-
-    @Test
-    fun tabsSettingsMenuItemsTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openTabsSubMenu {
-            verifyTabViewOptions()
-            verifyCloseTabsOptions()
-            verifyMoveOldTabsToInactiveOptions()
         }
     }
 }

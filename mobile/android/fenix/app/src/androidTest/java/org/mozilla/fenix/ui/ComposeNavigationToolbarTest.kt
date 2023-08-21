@@ -224,6 +224,7 @@ class ComposeNavigationToolbarTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun verifySecurePageSecuritySubMenuTest() {
         val defaultWebPage = "https://mozilla-mobile.github.io/testapp/loginForm"
@@ -238,6 +239,7 @@ class ComposeNavigationToolbarTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun verifyInsecurePageSecuritySubMenuTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

@@ -267,6 +267,7 @@ class ComposeTabbedBrowsingTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun closePrivateTabsNotificationTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -317,6 +318,23 @@ class ComposeTabbedBrowsingTest {
             verifyPrivateBrowsingButtonIsSelected(false)
             verifySyncedTabsButtonIsSelected(false)
             verifyNoOpenTabsInNormalBrowsing()
+            verifyFab()
+            verifyThreeDotButton()
+        }.openThreeDotMenu {
+            verifyTabSettingsButton()
+            verifyRecentlyClosedTabsButton()
+        }
+    }
+
+    @Test
+    fun emptyTabsTrayViewPrivateBrowsingTest() {
+        homeScreen {
+        }.openComposeTabDrawer(composeTestRule) {
+        }.toggleToPrivateTabs {
+            verifyNormalBrowsingButtonIsSelected(false)
+            verifyPrivateBrowsingButtonIsSelected(true)
+            verifySyncedTabsButtonIsSelected(false)
+            verifyNoOpenTabsInPrivateBrowsing()
             verifyFab()
             verifyThreeDotButton()
         }.openThreeDotMenu {
