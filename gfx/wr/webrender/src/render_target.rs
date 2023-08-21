@@ -16,7 +16,7 @@ use crate::frame_builder::{FrameGlobalResources};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress};
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator, TransformPaletteId, MaskInstance};
-use crate::gpu_types::{ZBufferId, QuadSegment};
+use crate::gpu_types::{ZBufferId, QuadSegment, PrimitiveInstanceData};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
 use crate::prepare::write_prim_blocks;
@@ -27,8 +27,8 @@ use crate::prim_store::gradient::{
 };
 use crate::renderer::{GpuBufferBuilder};
 use crate::render_backend::DataStores;
-use crate::render_task::{RenderTaskKind, RenderTaskAddress, PrimTask};
-use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
+use crate::render_task::{RenderTaskKind, RenderTaskAddress, SubPass};
+use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo, MaskSubPass};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
 use crate::resource_cache::ResourceCache;
 use crate::spatial_tree::{SpatialNodeIndex};
@@ -233,7 +233,10 @@ pub struct ColorRenderTarget {
     pub resolve_ops: Vec<ResolveOp>,
     pub clear_color: Option<ColorF>,
 
-    pub clip_masks: ClipMaskInstanceList,
+    pub prim_instances: Vec<PrimitiveInstanceData>,
+    pub prim_instances_with_scissor: FastHashMap<DeviceIntRect, Vec<PrimitiveInstanceData>>,
+
+    pub clip_masks: Vec<ClipMaskInstanceList>,
 }
 
 impl RenderTarget for ColorRenderTarget {
@@ -256,7 +259,9 @@ impl RenderTarget for ColorRenderTarget {
             used_rect,
             resolve_ops: Vec::new(),
             clear_color: Some(ColorF::TRANSPARENT),
-            clip_masks: ClipMaskInstanceList::new(),
+            prim_instances: Vec::new(),
+            prim_instances_with_scissor: FastHashMap::default(),
+            clip_masks: Vec::new(),
         }
     }
 
@@ -368,10 +373,6 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::Prim(ref info) => {
                 let render_task_address = task_id.into();
                 let target_rect = task.get_target_rect();
-                let content_rect = DeviceRect::new(
-                    info.content_origin,
-                    info.content_origin + target_rect.size().to_f32(),
-                );
 
                 add_quad_to_batch(
                     render_task_address,
@@ -385,31 +386,14 @@ impl RenderTarget for ColorRenderTarget {
                     render_tasks,
                     |_, instance| {
                         if info.prim_needs_scissor_rect {
-                            self.clip_masks
-                                .prim_instances_with_scissor
+                            self.prim_instances_with_scissor
                                 .entry(target_rect)
                                 .or_insert(Vec::new())
                                 .push(instance);
                         } else {
-                            self.clip_masks
-                                .prim_instances
-                                .push(instance);
+                            self.prim_instances.push(instance);
                         }
                     }
-                );
-
-                build_mask_tasks(
-                    info,
-                    render_task_address,
-                    target_rect,
-                    content_rect,
-                    ctx.clip_store,
-                    ctx.data_stores,
-                    ctx.spatial_tree,
-                    gpu_buffer_builder,
-                    transforms,
-                    render_tasks,
-                    &mut self.clip_masks,
                 );
             }
             RenderTaskKind::VerticalBlur(..) => {
@@ -479,6 +463,16 @@ impl RenderTarget for ColorRenderTarget {
             #[cfg(test)]
             RenderTaskKind::Test(..) => {}
         }
+
+        build_sub_pass(
+            task_id,
+            task,
+            gpu_buffer_builder,
+            render_tasks,
+            transforms,
+            ctx,
+            &mut self.clip_masks,
+        );
     }
 
     fn needs_depth(&self) -> bool {
@@ -503,7 +497,7 @@ pub struct AlphaRenderTarget {
     pub zero_clears: Vec<RenderTaskId>,
     pub one_clears: Vec<RenderTaskId>,
     pub texture_id: CacheTextureId,
-    pub clip_masks: ClipMaskInstanceList,
+    pub clip_masks: Vec<ClipMaskInstanceList>,
 }
 
 impl RenderTarget for AlphaRenderTarget {
@@ -521,7 +515,7 @@ impl RenderTarget for AlphaRenderTarget {
             zero_clears: Vec::new(),
             one_clears: Vec::new(),
             texture_id,
-            clip_masks: ClipMaskInstanceList::new(),
+            clip_masks: Vec::new(),
         }
     }
 
@@ -559,32 +553,11 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: should not be added to alpha target!");
             }
-            RenderTaskKind::Prim(ref info) => {
-                let render_task_address = task_id.into();
-                let target_rect = task.get_target_rect();
-                let content_rect = DeviceRect::new(
-                    info.content_origin,
-                    info.content_origin + target_rect.size().to_f32(),
-                );
-
+            RenderTaskKind::Prim(..) => {
                 // TODO(gw): Could likely be more efficient by choosing to clear to 0 or 1
                 //           based on the clip chain, or even skipping clear and masking the
                 //           prim region with blend disabled.
                 self.one_clears.push(task_id);
-
-                build_mask_tasks(
-                    info,
-                    render_task_address,
-                    target_rect,
-                    content_rect,
-                    ctx.clip_store,
-                    ctx.data_stores,
-                    ctx.spatial_tree,
-                    gpu_buffer_builder,
-                    transforms,
-                    render_tasks,
-                    &mut self.clip_masks,
-                );
             }
             RenderTaskKind::VerticalBlur(..) => {
                 self.zero_clears.push(task_id);
@@ -651,6 +624,16 @@ impl RenderTarget for AlphaRenderTarget {
             #[cfg(test)]
             RenderTaskKind::Test(..) => {}
         }
+
+        build_sub_pass(
+            task_id,
+            task,
+            gpu_buffer_builder,
+            render_tasks,
+            transforms,
+            ctx,
+            &mut self.clip_masks,
+        );
     }
 
     fn needs_depth(&self) -> bool {
@@ -971,10 +954,12 @@ pub struct LineDecorationJob {
 }
 
 fn build_mask_tasks(
-    info: &PrimTask,
+    info: &MaskSubPass,
     render_task_address: RenderTaskAddress,
     target_rect: DeviceIntRect,
     content_rect: DeviceRect,
+    device_pixel_scale: DevicePixelScale,
+    raster_spatial_node_index: SpatialNodeIndex,
     clip_store: &ClipStore,
     data_stores: &DataStores,
     spatial_tree: &SpatialTree,
@@ -983,7 +968,7 @@ fn build_mask_tasks(
     render_tasks: &RenderTaskGraph,
     results: &mut ClipMaskInstanceList,
 ) {
-    let task_world_rect = content_rect / info.device_pixel_scale;
+    let task_world_rect = content_rect / device_pixel_scale;
 
     for i in 0 .. info.clip_node_range.count {
         let clip_instance = clip_store.get_instance_from_range(&info.clip_node_range, i);
@@ -991,7 +976,7 @@ fn build_mask_tasks(
 
         let is_same_coord_system = spatial_tree.is_matching_coord_system(
             clip_node.item.spatial_node_index,
-            info.raster_spatial_node_index,
+            raster_spatial_node_index,
         );
 
         let clip_needs_scissor_rect = !is_same_coord_system;
@@ -1003,7 +988,7 @@ fn build_mask_tasks(
 
         let clip_transform_id = transforms.get_id(
             clip_node.item.spatial_node_index,
-            info.raster_spatial_node_index,
+            raster_spatial_node_index,
             spatial_tree,
         );
 
@@ -1011,7 +996,7 @@ fn build_mask_tasks(
         // pixel covered by the primitive. For 2d cases, this will be exact. For complex
         // perspective cases, it will be a conservative estimate.
         let mapper = SpaceMapper::new_with_target(
-            info.raster_spatial_node_index,
+            raster_spatial_node_index,
             clip_node.item.spatial_node_index,
             task_world_rect,
             spatial_tree,
@@ -1175,5 +1160,59 @@ fn build_mask_tasks(
                 }
             }
         );
+    }
+}
+
+fn build_sub_pass(
+    task_id: RenderTaskId,
+    task: &RenderTask,
+    gpu_buffer_builder: &mut GpuBufferBuilder,
+    render_tasks: &RenderTaskGraph,
+    transforms: &mut TransformPalette,
+    ctx: &RenderTargetContext,
+    output: &mut Vec<ClipMaskInstanceList>,
+) {
+    if let Some(ref sub_pass) = task.sub_pass {
+        match sub_pass {
+            SubPass::Masks { ref masks } => {
+                let render_task_address = task_id.into();
+                let target_rect = task.get_target_rect();
+
+                let (device_pixel_scale, content_origin, raster_spatial_node_index) = match task.kind {
+                    RenderTaskKind::Picture(ref info) => {
+                        (info.device_pixel_scale, info.content_origin, info.raster_spatial_node_index)
+                    }
+                    RenderTaskKind::Prim(ref info) => {
+                        (info.device_pixel_scale, info.content_origin, info.raster_spatial_node_index)
+                    }
+                    _ => panic!("unexpected: {}", task.kind.as_str()),
+                };
+
+                let content_rect = DeviceRect::new(
+                    content_origin,
+                    content_origin + target_rect.size().to_f32(),
+                );
+
+                let mut clip_masks = ClipMaskInstanceList::new();
+
+                build_mask_tasks(
+                    masks,
+                    render_task_address,
+                    target_rect,
+                    content_rect,
+                    device_pixel_scale,
+                    raster_spatial_node_index,
+                    ctx.clip_store,
+                    ctx.data_stores,
+                    ctx.spatial_tree,
+                    gpu_buffer_builder,
+                    transforms,
+                    render_tasks,
+                    &mut clip_masks,
+                );
+
+                output.push(clip_masks);
+            }
+        }
     }
 }
