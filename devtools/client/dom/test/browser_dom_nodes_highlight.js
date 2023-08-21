@@ -12,7 +12,7 @@ add_task(async function () {
   info("Test DOM panel node highlight started");
 
   const { panel, tab } = await addTestTab(TEST_PAGE_URL);
-  const toolbox = await gDevTools.getToolboxForTab(tab);
+  const toolbox = gDevTools.getToolboxForTab(tab);
   const highlighter = toolbox.getHighlighter();
 
   const tests = [

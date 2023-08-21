@@ -656,7 +656,7 @@ async function _watchForToolboxReload(
 ) {
   const tab = gBrowser.getTabForBrowser(browser);
 
-  const toolbox = await gDevTools.getToolboxForTab(tab);
+  const toolbox = gDevTools.getToolboxForTab(tab);
 
   if (!toolbox) {
     // No toolbox to wait for
@@ -957,8 +957,8 @@ async function openInspectorForURL(url, hostType) {
   return { tab, inspector, toolbox, highlighterTestFront };
 }
 
-async function getActiveInspector() {
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+function getActiveInspector() {
+  const toolbox = gDevTools.getToolboxForTab(gBrowser.selectedTab);
   return toolbox.getPanel("inspector");
 }
 
@@ -1177,10 +1177,8 @@ function loadHelperScript(filePath) {
 async function openToolboxForTab(tab, toolId, hostType) {
   info("Opening the toolbox");
 
-  let toolbox;
-
   // Check if the toolbox is already loaded.
-  toolbox = await gDevTools.getToolboxForTab(tab);
+  let toolbox = gDevTools.getToolboxForTab(tab);
   if (toolbox) {
     if (!toolId || (toolId && toolbox.getPanel(toolId))) {
       info("Toolbox is already opened");

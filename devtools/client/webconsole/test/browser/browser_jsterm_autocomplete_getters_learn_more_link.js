@@ -28,7 +28,7 @@ const DOC_URL =
 
 add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
   const tooltip = await setInputValueForGetterConfirmDialog(
     toolbox,

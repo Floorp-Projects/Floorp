@@ -120,7 +120,7 @@ function reloadTab(tabX) {
 }
 
 async function destroyTab(tabX) {
-  const toolbox = await gDevTools.getToolboxForTab(tabX.tab);
+  const toolbox = gDevTools.getToolboxForTab(tabX.tab);
 
   let onceDestroyed;
   if (toolbox) {

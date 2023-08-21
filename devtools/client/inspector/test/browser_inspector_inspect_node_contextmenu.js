@@ -97,7 +97,7 @@ async function testContextMenuWithinFrame({ selector, nodeFrontGetter }) {
   await clickOnInspectMenuItem(selector);
 
   info("Checking inspector state.");
-  const inspector = await getActiveInspector();
+  const inspector = getActiveInspector();
   const nodeFront = await nodeFrontGetter(inspector);
 
   is(
@@ -115,7 +115,7 @@ async function testContextMenuWithinFrame({ selector, nodeFrontGetter }) {
  *                 the frame picker
  */
 async function changeToolboxToFrame(frameUrl, expectedFramesCount) {
-  const { toolbox } = await getActiveInspector();
+  const { toolbox } = getActiveInspector();
 
   const btn = toolbox.doc.getElementById("command-button-frames");
   const panel = toolbox.doc.getElementById("command-button-frames-panel");

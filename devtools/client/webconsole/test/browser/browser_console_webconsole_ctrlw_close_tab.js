@@ -14,7 +14,7 @@ add_task(async function () {
 
   let hud = await openNewTabAndConsole(TEST_URI);
 
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
   const tabClosed = once(gBrowser.tabContainer, "TabClose");
   tabClosed.then(() => info("tab closed"));

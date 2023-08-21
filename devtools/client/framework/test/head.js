@@ -26,7 +26,7 @@ async function getSupportedToolIds(tab) {
   let shouldDestroyToolbox = false;
 
   // Get the toolbox for this tab, or create one if needed.
-  let toolbox = await gDevTools.getToolboxForTab(tab);
+  let toolbox = gDevTools.getToolboxForTab(tab);
   if (!toolbox) {
     toolbox = await gDevTools.showToolboxForTab(tab);
     shouldDestroyToolbox = true;

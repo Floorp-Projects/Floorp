@@ -84,8 +84,8 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
    * of there
    */
   // used by browser-sets.inc, command
-  async toggleToolboxCommand(gBrowser, startTime) {
-    const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  toggleToolboxCommand(gBrowser, startTime) {
+    const toolbox = gDevTools.getToolboxForTab(gBrowser.selectedTab);
 
     // If a toolbox exists, using toggle from the Main window :
     // - should close a docked toolbox
@@ -210,7 +210,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     }
 
     const tab = win.gBrowser.selectedTab;
-    const toolbox = await gDevTools.getToolboxForTab(tab);
+    const toolbox = gDevTools.getToolboxForTab(tab);
     const toolDefinition = gDevTools.getToolDefinition(toolId);
 
     if (
@@ -278,14 +278,11 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     // Otherwise implement all other key shortcuts individually here
     switch (key.id) {
       case "toggleToolbox":
-        await gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
+        gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
         break;
       case "toggleToolboxF12":
         if (Services.prefs.getBoolPref(DEVTOOLS_F12_ENABLED_PREF, true)) {
-          await gDevToolsBrowser.toggleToolboxCommand(
-            window.gBrowser,
-            startTime
-          );
+          gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
         }
         break;
       case "browserToolbox":
@@ -303,9 +300,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         });
         break;
       case "javascriptTracingToggle":
-        const toolbox = await gDevTools.getToolboxForTab(
-          window.gBrowser.selectedTab
-        );
+        const toolbox = gDevTools.getToolboxForTab(window.gBrowser.selectedTab);
         if (!toolbox) {
           break;
         }

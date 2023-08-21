@@ -19,7 +19,7 @@ add_task(async function () {
 
   await Promise.all([tabAdded, styleEditorLoaded]);
 
-  const toolbox = await gDevTools.getToolboxForTab(tab);
+  const toolbox = gDevTools.getToolboxForTab(tab);
   const panel = toolbox.getPanel("styleeditor");
   const { panelWindow } = panel;
 

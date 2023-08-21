@@ -69,14 +69,14 @@ add_task(async function openDebuggerFromDialog() {
 
   info("Wait for the toolbox to appear and have the debugger initialized");
   await waitFor(async () => {
-    const tb = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+    const tb = gDevTools.getToolboxForTab(gBrowser.selectedTab);
     if (tb) {
       await tb.getPanelWhenReady("jsdebugger");
       return true;
     }
     return false;
   });
-  const toolbox = await gDevTools.getToolboxForTab(gBrowser.selectedTab);
+  const toolbox = gDevTools.getToolboxForTab(gBrowser.selectedTab);
   ok(toolbox, "Got a toolbox");
   const dbg = createDebuggerContext(toolbox);
 

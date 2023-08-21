@@ -66,7 +66,7 @@ add_task(async function () {
     nestedSameProcessFrameBC,
     "#in-nested_same_process_frame"
   );
-  await checkSelectedNode("in-nested_same_process_frame");
+  checkSelectedNode("in-nested_same_process_frame");
 
   info("Retrieve the browsing context for same_process_frame");
   const sameProcessFrameBC = await SpecialPowers.spawn(
@@ -81,7 +81,7 @@ add_task(async function () {
     sameProcessFrameBC,
     "#in-same_process_frame"
   );
-  await checkSelectedNode("in-same_process_frame");
+  checkSelectedNode("in-same_process_frame");
 
   info("Retrieve the browsing context for nested_remote_frame");
   const nestedRemoteFrameBC = await SpecialPowers.spawn(
@@ -100,14 +100,14 @@ add_task(async function () {
     nestedRemoteFrameBC,
     "#in-nested_remote_frame"
   );
-  await checkSelectedNode("in-nested_remote_frame");
+  checkSelectedNode("in-nested_remote_frame");
 });
 
 /**
  * Check the id of currently selected node front in the inspector.
  */
-async function checkSelectedNode(id) {
-  const inspector = await getActiveInspector();
+function checkSelectedNode(id) {
+  const inspector = getActiveInspector();
   is(
     inspector.selection.nodeFront.id,
     id,

@@ -29,7 +29,7 @@ async function testToolboxInitialization(tab, inspector, toolbox) {
   await toolbox.destroy();
 
   ok(true, "'destroyed' notification received.");
-  const toolboxForTab = await gDevTools.getToolboxForTab(tab);
+  const toolboxForTab = gDevTools.getToolboxForTab(tab);
   ok(!toolboxForTab, "Toolbox destroyed.");
 }
 

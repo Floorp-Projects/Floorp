@@ -53,7 +53,7 @@ async function testToolboxInitialization(tab) {
   await toolbox.destroy();
 
   ok(true, "'destroyed' notification received.");
-  const toolboxForTab = await gDevTools.getToolboxForTab(tab);
+  const toolboxForTab = gDevTools.getToolboxForTab(tab);
   ok(!toolboxForTab, "Toolbox destroyed.");
 }
 
@@ -69,7 +69,7 @@ async function testContextMenuInitialization() {
 async function testContextMenuInspectorAlreadyOpen() {
   info("Changing node by clicking on 'Inspect Element' context menu item");
 
-  const inspector = await getActiveInspector();
+  const inspector = getActiveInspector();
   ok(inspector, "Inspector is active");
 
   await clickOnInspectMenuItem("#closing");
@@ -81,7 +81,7 @@ async function testContextMenuInspectorAlreadyOpen() {
 
 async function testMarkupView(selector, inspector) {
   if (!inspector) {
-    inspector = await getActiveInspector();
+    inspector = getActiveInspector();
   }
   const nodeFront = await getNodeFront(selector, inspector);
   try {
@@ -98,7 +98,7 @@ async function testMarkupView(selector, inspector) {
 
 async function testBreadcrumbs(selector, inspector) {
   if (!inspector) {
-    inspector = await getActiveInspector();
+    inspector = getActiveInspector();
   }
   const nodeFront = await getNodeFront(selector, inspector);
 
