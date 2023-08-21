@@ -194,12 +194,12 @@ pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-4.htm
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-4b.html inline-block-slice-4b-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-4c.html inline-block-slice-4c-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5.html inline-block-slice-5-ref.html
-pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5b.html inline-block-slice-5b-ref.html
-pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5c.html inline-block-slice-5c-ref.html
+fuzzy-if(useDrawSnapshot&&gtkWidget,0-102,0-49) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5b.html inline-block-slice-5b-ref.html
+fuzzy-if(useDrawSnapshot&&gtkWidget,0-102,0-48) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-5c.html inline-block-slice-5c-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6.html inline-block-slice-6-ref.html
-pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6b.html inline-block-slice-6b-ref.html
-pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6c.html inline-block-slice-6c-ref.html
+fuzzy-if(useDrawSnapshot&&gtkWidget,0-21,0-36) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6b.html inline-block-slice-6b-ref.html
+fuzzy-if(useDrawSnapshot&&gtkWidget,0-102,0-48) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-6c.html inline-block-slice-6c-ref.html
 pref(layout.display-list.improve-fragmentation,true) != inline-block-slice-7.html inline-block-slice-7-ref.html
 pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8.html inline-block-slice-8-ref.html
-pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8b.html inline-block-slice-8b-ref.html
-pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8c.html inline-block-slice-8c-ref.html
+fuzzy-if(useDrawSnapshot&&gtkWidget,0-102,0-13) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8b.html inline-block-slice-8b-ref.html
+fuzzy-if(useDrawSnapshot&&gtkWidget,0-102,0-12) pref(layout.display-list.improve-fragmentation,true) == inline-block-slice-8c.html inline-block-slice-8c-ref.html

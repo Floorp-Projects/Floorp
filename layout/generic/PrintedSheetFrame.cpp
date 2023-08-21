@@ -10,8 +10,10 @@
 
 #include <tuple>
 
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsPageContentFrame.h"
 #include "nsPageFrame.h"
 #include "nsPageSequenceFrame.h"
 
@@ -64,6 +66,19 @@ static bool TagIfSkippedByCustomRange(nsPageFrame* aPageFrame, int32_t aPageNum,
 
 void PrintedSheetFrame::ClaimPageFrameFromPrevInFlow() {
   MoveOverflowToChildList();
+  if (!GetPrevContinuation()) {
+    // The first page content frame of each document will not yet have its page
+    // style set yet. This is because normally page style is set either from
+    // the previous page content frame, or using the new page name when named
+    // pages cause a page break in block reflow. Ensure that, for the first
+    // page, it is set here so that all nsPageContentFrames have their page
+    // style set before reflow.
+    auto* firstChild = PrincipalChildList().FirstChild();
+    MOZ_ASSERT(firstChild && firstChild->IsPageFrame(),
+               "PrintedSheetFrame only has nsPageFrame children");
+    auto* pageFrame = static_cast<nsPageFrame*>(firstChild);
+    pageFrame->PageContentFrame()->EnsurePageName();
+  }
 }
 
 void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
@@ -80,6 +95,24 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
 
   const WritingMode wm = aReflowInput.GetWritingMode();
 
+  // See the comments for GetSizeForChildren.
+  // Note that nsPageFrame::ComputeSinglePPSPageSizeScale depends on this value
+  // and is currently called while reflowing a single nsPageFrame child (i.e.
+  // before we've finished reflowing ourself). Ideally our children wouldn't be
+  // accessing our dimensions until after we've finished reflowing ourself -
+  // see bug 1835782.
+  mSizeForChildren =
+      nsSize(aReflowInput.AvailableISize(), aReflowInput.AvailableBSize());
+  if (mPD->PagesPerSheetInfo()->mNumPages == 1) {
+    auto* firstChild = PrincipalChildList().FirstChild();
+    MOZ_ASSERT(firstChild && firstChild->IsPageFrame(),
+               "PrintedSheetFrame only has nsPageFrame children");
+    if (static_cast<nsPageFrame*>(firstChild)
+            ->GetPageOrientationRotation(mPD) != 0.0) {
+      std::swap(mSizeForChildren.width, mSizeForChildren.height);
+    }
+  }
+
   // Count the number of pages that are displayed on this sheet (i.e. how many
   // child frames we end up laying out, excluding any pages that are skipped
   // due to not being in the user's page-range selection).
@@ -89,8 +122,7 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   const uint32_t desiredPagesPerSheet = mPD->PagesPerSheetInfo()->mNumPages;
 
   if (desiredPagesPerSheet > 1) {
-    ComputePagesPerSheetGridMetrics(
-        nsSize(aReflowInput.AvailableISize(), aReflowInput.AvailableBSize()));
+    ComputePagesPerSheetGridMetrics(mSizeForChildren);
   }
 
   // NOTE: I'm intentionally *not* using a range-based 'for' loop here, since
@@ -225,13 +257,68 @@ void PrintedSheetFrame::Reflow(nsPresContext* aPresContext,
   FinishAndStoreOverflow(&aReflowOutput);
 }
 
-nsSize PrintedSheetFrame::PrecomputeSheetSize(
-    const nsPresContext* aPresContext) {
-  mPrecomputedSize = aPresContext->GetPageSize();
-  if (mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
-    std::swap(mPrecomputedSize.width, mPrecomputedSize.height);
+nsSize PrintedSheetFrame::ComputeSheetSize(const nsPresContext* aPresContext) {
+  // We use the user selected page (sheet) dimensions, and default to the
+  // orientation as specified by the user.
+  nsSize sheetSize = aPresContext->GetPageSize();
+
+  // Don't waste cycles changing the orientation of a square.
+  if (sheetSize.width == sheetSize.height) {
+    return sheetSize;
   }
-  return mPrecomputedSize;
+
+  if (!StaticPrefs::layout_css_page_orientation_enabled()) {
+    if (mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+      std::swap(sheetSize.width, sheetSize.height);
+    }
+    return sheetSize;
+  }
+
+  auto* firstChild = PrincipalChildList().FirstChild();
+  MOZ_ASSERT(firstChild->IsPageFrame(),
+             "PrintedSheetFrame only has nsPageFrame children");
+  auto* sheetsFirstPageFrame = static_cast<nsPageFrame*>(firstChild);
+
+  nsSize pageSize = sheetsFirstPageFrame->ComputePageSize();
+
+  // Don't waste cycles changing the orientation of a square.
+  if (pageSize.width == pageSize.height) {
+    return sheetSize;
+  }
+
+  const bool pageIsRotated =
+      sheetsFirstPageFrame->GetPageOrientationRotation(mPD) != 0.0;
+
+  if (pageIsRotated && pageSize.width == pageSize.height) {
+    // Straighforward rotation without needing sheet orientation optimization.
+    std::swap(sheetSize.width, sheetSize.height);
+    return sheetSize;
+  }
+
+  // Try to orient the sheet optimally based on the physical orientation of the
+  // first/sole page on the sheet. (In the multiple pages-per-sheet case, the
+  // first page is the only one that exists at this point in the code, so it is
+  // the only one we can reason about. Any other pages may, or may not, have
+  // the same physical orientation.)
+
+  if (pageIsRotated) {
+    // Fix up for its physical orientation:
+    std::swap(pageSize.width, pageSize.height);
+  }
+
+  const bool pageIsPortrait = pageSize.width < pageSize.height;
+  const bool sheetIsPortrait = sheetSize.width < sheetSize.height;
+
+  // Switch the sheet orientation if the page orientation is different, or
+  // if we need to switch it because the number of pages-per-sheet demands
+  // orthogonal sheet layout, but not if both are true since then we'd
+  // actually need to double switch.
+  if ((sheetIsPortrait != pageIsPortrait) !=
+      mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+    std::swap(sheetSize.width, sheetSize.height);
+  }
+
+  return sheetSize;
 }
 
 void PrintedSheetFrame::ComputePagesPerSheetGridMetrics(
