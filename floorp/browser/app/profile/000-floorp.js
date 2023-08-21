@@ -138,6 +138,7 @@ pref("floorp.browser.workspace.excludePinnedTabs", false);
 pref("floorp.browser.workspace.info", "[]");
 pref("floorp.browser.workspace.manageOnBMS", false);
 pref("floorp.browser.workspace.showWorkspaceName", true);
+pref("floorp.browser.workspace.backuped", false);
 //temp
 pref("floorp.browser.workspaces.disabledBySystem", true);
 

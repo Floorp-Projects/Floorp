@@ -20,6 +20,7 @@ const WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF =
 const WORKSPACE_EXCLUDED_PINNED_TABS_PREF =
   "floorp.browser.workspace.excludePinnedTabs";
 const WORKSPACE_INFO_PREF = "floorp.browser.workspace.info";
+const WORKSPACE_BACKUPED_PREF = "floorp.browser.workspace.backuped";
 const l10n = new Localization(["browser/floorp.ftl"], true);
 const defaultWorkspaceName = Services.prefs
   .getStringPref(WORKSPACE_ALL_PREF)
@@ -209,12 +210,8 @@ const workspaceFunctions = {
             Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
           );
         }
-      } else {
-
-        // NOTE: If you want to Floorp Workspaces to userChrome.js file, Please use this code.(But, It's not working.)
-         
-        // Remove Comment out and Delete this comment out. it will work.
-        /*
+      } else if (Services.prefs.getBoolPref(WORKSPACE_BACKUPED_PREF, false)) {
+        console.info("Backuped workspace found. Restoring...");
         let tabsStates = JSON.parse(
           Services.prefs.getStringPref(WORKSPACE_TABS_PREF)
         );
@@ -262,7 +259,7 @@ const workspaceFunctions = {
             );
           }
         }
-        */
+        Services.prefs.setBoolPref(WORKSPACE_BACKUPED_PREF, false);
       }
 
       const toolbarButtonEle = window.MozXULElement.parseXULToFragment(`
@@ -1387,6 +1384,8 @@ const workspaceFunctions = {
       if (typeof lineNum === "object") {
         lineNum = lineNum.wrappedJSObject.lineNum;
       }
+
+      Services.prefs.setStringPref(WORKSPACE_BACKUPED_PREF, true);
 
       //hide all elements
       let tagElem = document.createElement("style");
