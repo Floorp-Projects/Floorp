@@ -412,6 +412,8 @@ floorp-lepton-enable-disabled_menu-hide =
 
 floorp-lepton-disable-userChrome-icon =
     .label = Disable Lepton's context menu and panel menu icons
+floorp-lepton-disable-userChrome-menu-icon =
+    .label = Disable Lepton's context menu icons
 
 positon-preferences = Position adjustments
 

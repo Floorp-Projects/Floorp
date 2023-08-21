@@ -42,6 +42,7 @@ Preferences.addAll([
    { id: "userChrome.hidden.bookmarkbar_label",           type : "bool"},
    { id: "userChrome.hidden.disabled_menu",               type : "bool"},
    { id: "userChrome.icon.disabled",                      type : "bool"},
+   { id: "userChrome.icon.menu",                          type : "bool"},
 
    { id: "userChrome.centered.tab",                       type : "bool"},
    { id: "userChrome.centered.tab.label",                 type : "bool"},
