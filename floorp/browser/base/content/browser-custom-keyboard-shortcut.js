@@ -1,9 +1,10 @@
+/* eslint-disable no-undef */
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let CustomKeyboardShortcutUtils = ChromeUtils.importESModule("resource:///modules/CustomKeyboardShortcutUtils.sys.mjs");
+const CustomKeyboardShortcutUtils = ChromeUtils.importESModule("resource:///modules/CustomKeyboardShortcutUtils.sys.mjs");
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const keyboradShortcutConfig = JSON.parse(Services.prefs.getStringPref(
@@ -33,6 +34,13 @@ const buildShortCutkeyFunctions = {
             } else {
                 console.error("Invalid shortcut key config: " + shortcutObj);
             }
+        }
+
+        if(Services.prefs.getBoolPref(CustomKeyboardShortcutUtils.SHORTCUT_KEY_DISABLE_FX_DEFAULT_SCKEY_PREF, false)) {
+            SessionStore.promiseInitialized.then(() => {
+                buildShortCutkeyFunctions.disableAllCustomKeyShortcut();
+                console.info("Remove already exist shortcut keys");
+            });
         }
     },
 
@@ -67,6 +75,36 @@ const buildShortCutkeyFunctions = {
             mainKeyset.firstChild.remove();
         }
     },
+
+    disableAllCustomKeyShortcut() {
+        let keyElems = document.querySelector("#mainKeyset").childNodes;
+        for (let keyElem of keyElems) {
+           if (!keyElem.classList.contains("floorpCustomShortcutKey")) {
+               keyElem.setAttribute("disabled", "true");
+           }
+        }
+    },
+    
+    disableAllCustomKeyShortcutElemets() {
+        let keyElems = document.querySelectorAll(".floorpCustomShortcutKey");
+        for (let keyElem of keyElems) {
+            keyElem.disabled = true;
+        }
+    },
+
+    enableAllCustomKeyShortcutElemets() {
+        let keyElems = document.querySelectorAll(".floorpCustomShortcutKey");
+        for (let keyElem of keyElems) {
+            keyElem.disabled = false;
+        }
+    },
+
+    removeCustomKeyShortcutElemets() {
+        let keyElems = document.querySelectorAll(".floorpCustomShortcutKey");
+        for (let keyElem of keyElems) {
+            keyElem.remove();
+        }
+    }
 };
 
 buildShortCutkeyFunctions.init();

@@ -569,6 +569,12 @@ workspace-icon-chill =
 # CSK
 floorp-CSK-title = Custom Shortcut Keys
 floorp-CSK-description = Customize the shortcut keys of { -brand-short-name }. Floorp provides more 80 shortcut keys. Reboot { -brand-short-name } to apply these settings.
+disable-fx-actions =
+ .label = Disable Firefox's default shortcut keys
+customize-Action =
+ .label = Customize Action
+remove-Action =
+ .label = Remove Action
 CSK-reset-title = Reset Custom Shortcut Keys
 CSK-reset-description = Reset the shortcut keys of { -brand-short-name } to the default settings.
 CSK-reset-label = Reset Custom Shortcut Keys

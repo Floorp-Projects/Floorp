@@ -147,6 +147,7 @@ pref("floorp.titlebar.favicon.color", false);
 // カスタムショートカットキー
 pref("floorp.custom.shortcutkeysAndActions", "[]");
 pref("floorp.custom.shortcutkeysAndActions.enabled", true);
+pref("floorp.custom.shortcutkeysAndActions.remove.fx.actions", false);
 
 // [実験] 新しいタブのオーバーライド
 pref("floorp.newtab.overrides.newtaburl", "");

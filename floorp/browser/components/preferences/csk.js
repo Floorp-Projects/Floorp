@@ -9,6 +9,10 @@ const CustomKeyboardShortcutUtils = ChromeUtils.importESModule("resource:///modu
 XPCOMUtils.defineLazyGetter(this, "L10n", () => {
   return new Localization(["branding/brand.ftl", "browser/floorp", ]);
 });
+
+Preferences.addAll([
+  { id: "floorp.custom.shortcutkeysAndActions.remove.fx.actions", type: "bool" },
+])
  
 const gCSKPane = {
   _pane: null,
@@ -100,8 +104,8 @@ const gCSKPane = {
               <hbox class="csks-box-item" id="${action}">
                 <label class="csks-box-item-label" value="${action}" data-l10n-id="${actionL10nId}"/>
                 <spacer flex="1"/> 
-                <button class="csks-remove-button" value="${action}" label="Remove Action" hidden="${!CSKIsExist}"/>
-                <button class="csks-button" value="${action}" label="Customize Action"/>
+                <button class="csks-remove-button" value="${action}" data-l10n-id="remove-Action" hidden="${!CSKIsExist}"/>
+                <button class="csks-button" value="${action}" data-l10n-id="customize-Action"/>
               </hbox>
             `);
             parentBox.appendChild(boxItem);
