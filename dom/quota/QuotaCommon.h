@@ -959,7 +959,7 @@ struct IpcFailCustomRetVal {
  * telemetry. For that reason, the expression shouldn't contain nested QM_TRY
  * macro uses.
  */
-#define QM_OR_ELSE_LOG_VERBOSE(...) QM_OR_ELSE_REPORT(Log, __VA_ARGS__)
+#define QM_OR_ELSE_LOG_VERBOSE(...) QM_OR_ELSE_REPORT(Verbose, __VA_ARGS__)
 
 namespace mozilla::dom::quota {
 
