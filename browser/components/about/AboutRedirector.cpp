@@ -119,11 +119,6 @@ static const RedirEntry kRedirMap[] = {
     // creation
     {"home", "about:blank", ACTIVITY_STREAM_FLAGS},
     {"newtab", "chrome://browser/content/blanktab.html", ACTIVITY_STREAM_FLAGS},
-    {"welcome", "about:blank",
-     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
-         nsIAboutModule::URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS |
-         nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-         nsIAboutModule::ALLOW_SCRIPT},
     {"messagepreview",
      "chrome://browser/content/messagepreview/messagepreview.html",
      nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
