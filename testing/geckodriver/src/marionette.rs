@@ -22,9 +22,10 @@ use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, CredentialParameters as MarionetteCredentialParameters,
     Keys as MarionetteKeys, Locator as MarionetteLocator, NewWindow as MarionetteNewWindow,
     PrintMargins as MarionettePrintMargins, PrintOrientation as MarionettePrintOrientation,
-    PrintPage as MarionettePrintPage, PrintParameters as MarionettePrintParameters,
-    ScreenshotOptions, Script as MarionetteScript, Selector as MarionetteSelector,
-    Url as MarionetteUrl, UserVerificationParameters as MarionetteUserVerificationParameters,
+    PrintPage as MarionettePrintPage, PrintPageRange as MarionettePrintPageRange,
+    PrintParameters as MarionettePrintParameters, ScreenshotOptions, Script as MarionetteScript,
+    Selector as MarionetteSelector, Url as MarionetteUrl,
+    UserVerificationParameters as MarionetteUserVerificationParameters,
     WebAuthnProtocol as MarionetteWebAuthnProtocol, WindowRect as MarionetteWindowRect,
 };
 use mozdevice::AndroidStorageInput;
@@ -61,8 +62,9 @@ use webdriver::command::{
     ActionsParameters, AddCookieParameters, AuthenticatorParameters, AuthenticatorTransport,
     GetNamedCookieParameters, GetParameters, JavascriptCommandParameters, LocatorParameters,
     NewSessionParameters, NewWindowParameters, PrintMargins, PrintOrientation, PrintPage,
-    PrintParameters, SendKeysParameters, SwitchToFrameParameters, SwitchToWindowParameters,
-    TimeoutsParameters, UserVerificationParameters, WebAuthnProtocol, WindowRectParameters,
+    PrintPageRange, PrintParameters, SendKeysParameters, SwitchToFrameParameters,
+    SwitchToWindowParameters, TimeoutsParameters, UserVerificationParameters, WebAuthnProtocol,
+    WindowRectParameters,
 };
 use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{
@@ -1467,7 +1469,11 @@ impl ToMarionette<MarionettePrintParameters> for PrintParameters {
             background: self.background,
             page: self.page.to_marionette()?,
             margin: self.margin.to_marionette()?,
-            page_ranges: self.page_ranges.clone(),
+            page_ranges: self
+                .page_ranges
+                .iter()
+                .map(|x| x.to_marionette())
+                .collect::<WebDriverResult<Vec<_>>>()?,
             shrink_to_fit: self.shrink_to_fit,
         })
     }
@@ -1487,6 +1493,15 @@ impl ToMarionette<MarionettePrintPage> for PrintPage {
         Ok(MarionettePrintPage {
             width: self.width,
             height: self.height,
+        })
+    }
+}
+
+impl ToMarionette<MarionettePrintPageRange> for PrintPageRange {
+    fn to_marionette(&self) -> WebDriverResult<MarionettePrintPageRange> {
+        Ok(match self {
+            PrintPageRange::Integer(num) => MarionettePrintPageRange::Integer(*num),
+            PrintPageRange::Range(range) => MarionettePrintPageRange::Range(range.clone()),
         })
     }
 }
