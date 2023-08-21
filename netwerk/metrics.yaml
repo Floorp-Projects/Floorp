@@ -205,7 +205,7 @@ networking:
     bucket_count: 100
     histogram_type: exponential
     description: >
-     The download throughput for http/1.1 requests larger than 10MB. Measured in megabits per second, Mbps.
+     The download throughput for  http/1.0, http/1.1 requests larger than 10MB. Measured in megabits per second, Mbps.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1846798
     data_reviews:
@@ -216,7 +216,7 @@ networking:
       - necko@mozilla.com
       - acreskey@mozilla.com
     expires: never
-    telemetry_mirror: NETWORKING_HTTP_1_DOWNLOAD_THROUGHPUT
+    telemetry_mirror: NETWORKING_DOWNLOAD_THROUGHPUT_HTTP_1
 
   http_2_download_throughput:
     type: custom_distribution
@@ -237,7 +237,7 @@ networking:
       - necko@mozilla.com
       - acreskey@mozilla.com
     expires: never
-    telemetry_mirror: NETWORKING_HTTP_2_DOWNLOAD_THROUGHPUT
+    telemetry_mirror: NETWORKING_DOWNLOAD_THROUGHPUT_HTTP_2
 
   http_3_download_throughput:
     type: custom_distribution
@@ -258,4 +258,4 @@ networking:
       - necko@mozilla.com
       - acreskey@mozilla.com
     expires: never
-    telemetry_mirror: NETWORKING_HTTP_3_DOWNLOAD_THROUGHPUT
+    telemetry_mirror: NETWORKING_DOWNLOAD_THROUGHPUT_HTTP_3
