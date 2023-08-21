@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
@@ -48,7 +47,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class SmokeTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
-    private val customMenuItem = "TestMenuItem"
     private lateinit var browserStore: BrowserStore
 
     @get:Rule(order = 0)
@@ -84,34 +82,6 @@ class SmokeTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-    }
-
-    /* Verifies the nav bar:
-     - opening a web page
-     - the existence of nav bar items
-     - editing the url bar
-     - the tab drawer button
-     - opening a new search and dismissing the nav bar
-     */
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
-    @Test
-    fun verifyBasicNavigationToolbarFunctionality() {
-        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        homeScreen {
-            navigationToolbar {
-            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                mDevice.waitForIdle()
-                verifyNavURLBarItems()
-            }.openNavigationToolbar {
-            }.goBackToWebsite {
-            }.openTabDrawer {
-                verifyExistingTabList()
-            }.openNewTab {
-            }.dismissSearchBar {
-                verifyHomeScreen()
-            }
-        }
     }
 
     // Device or AVD requires a Google Services Android OS installation with Play Store installed
@@ -204,21 +174,6 @@ class SmokeTest {
                 sharedUrlsString,
                 "$firstWebsiteTitle, $secondWebsiteTitle",
             )
-        }
-    }
-
-    @Test
-    fun emptyTabsTrayViewPrivateBrowsingTest() {
-        navigationToolbar {
-        }.openTabTray {
-        }.toggleToPrivateTabs() {
-            verifyNormalBrowsingButtonIsSelected(false)
-            verifyPrivateBrowsingButtonIsSelected(true)
-            verifySyncedTabsButtonIsSelected(false)
-            verifyNoOpenTabsInPrivateBrowsing()
-            verifyPrivateBrowsingNewTabButton()
-            verifyTabTrayOverflowMenu(true)
-            verifyEmptyTabsTrayMenuButtons()
         }
     }
 
@@ -420,18 +375,6 @@ class SmokeTest {
             mDevice.waitForIdle()
         }.goToHomescreen {
             verifyHomeScreen()
-        }
-    }
-
-    @Test
-    fun tabsSettingsMenuItemsTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openTabsSubMenu {
-            verifyTabViewOptions()
-            verifyCloseTabsOptions()
-            verifyMoveOldTabsToInactiveOptions()
         }
     }
 }

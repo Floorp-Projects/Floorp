@@ -152,7 +152,6 @@ class LoginsTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun openWebsiteForSavedLoginTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
@@ -462,6 +461,7 @@ class LoginsTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun verifyNeverSaveLoginOptionTest() {
         val loginPage = TestAssetHelper.getSaveLoginAsset(mockWebServer)

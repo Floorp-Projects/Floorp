@@ -12,6 +12,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
@@ -90,6 +91,7 @@ class HomeScreenTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1364362
+    @SmokeTest
     @Test
     fun verifyJumpBackInSectionTest() {
         activityTestRule.activityRule.applySettingsExceptions {

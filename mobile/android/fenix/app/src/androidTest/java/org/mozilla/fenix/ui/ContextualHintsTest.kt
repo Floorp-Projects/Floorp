@@ -10,7 +10,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
-import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -50,7 +49,6 @@ class ContextualHintsTest {
         mockWebServer.shutdown()
     }
 
-    @SmokeTest
     @Test
     fun openTotalCookieProtectionLearnMoreLinkTest() {
         val genericPage = getGenericAsset(mockWebServer, 1)
@@ -63,7 +61,6 @@ class ContextualHintsTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun dismissTotalCookieProtectionHintTest() {
         val genericPage = getGenericAsset(mockWebServer, 1)

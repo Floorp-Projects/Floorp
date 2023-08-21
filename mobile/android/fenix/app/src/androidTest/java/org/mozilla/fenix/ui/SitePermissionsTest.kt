@@ -286,6 +286,7 @@ class SitePermissionsTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun allowLocationPermissionsTest() {
         mockLocationUpdatesRule.setMockLocation()
@@ -300,6 +301,7 @@ class SitePermissionsTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun blockLocationPermissionsTest() {
         navigationToolbar {

@@ -256,6 +256,7 @@ class TabbedBrowsingTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun closePrivateTabsNotificationTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -307,6 +308,21 @@ class TabbedBrowsingTest {
             verifySyncedTabsButtonIsSelected(false)
             verifyNoOpenTabsInNormalBrowsing()
             verifyNormalBrowsingNewTabButton()
+            verifyTabTrayOverflowMenu(true)
+            verifyEmptyTabsTrayMenuButtons()
+        }
+    }
+
+    @Test
+    fun emptyTabsTrayViewPrivateBrowsingTest() {
+        navigationToolbar {
+        }.openTabTray {
+        }.toggleToPrivateTabs {
+            verifyNormalBrowsingButtonIsSelected(false)
+            verifyPrivateBrowsingButtonIsSelected(true)
+            verifySyncedTabsButtonIsSelected(false)
+            verifyNoOpenTabsInPrivateBrowsing()
+            verifyPrivateBrowsingNewTabButton()
             verifyTabTrayOverflowMenu(true)
             verifyEmptyTabsTrayMenuButtons()
         }

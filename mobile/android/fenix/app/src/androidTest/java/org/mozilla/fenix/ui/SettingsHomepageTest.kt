@@ -230,9 +230,8 @@ class SettingsHomepageTest {
         }
     }
 
-    @SmokeTest
-    @Test
     @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/26559")
+    @Test
     fun setWallpaperTest() {
         val wallpapers = listOf(
             "Wallpaper Item: amethyst",

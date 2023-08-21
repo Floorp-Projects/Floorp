@@ -85,6 +85,7 @@ class SettingsAdvancedTest {
     }
 
     // Assumes Youtube is installed and enabled
+    @SmokeTest
     @Test
     fun neverOpenLinkInAppTest() {
         val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
@@ -198,7 +199,6 @@ class SettingsAdvancedTest {
     }
 
     // Assumes Youtube is installed and enabled
-    @SmokeTest
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppCancelTest() {
         val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
@@ -232,7 +232,6 @@ class SettingsAdvancedTest {
     }
 
     // Assumes Youtube is installed and enabled
-    @SmokeTest
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppOpenTest() {
         val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)

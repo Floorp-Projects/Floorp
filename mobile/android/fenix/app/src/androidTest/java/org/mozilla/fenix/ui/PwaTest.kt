@@ -8,7 +8,6 @@ import androidx.core.net.toUri
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.Constants.PackageName.GMAIL_APP
 import org.mozilla.fenix.helpers.Constants.PackageName.PHONE_APP
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -92,7 +91,6 @@ class PwaTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun appLikeExperiencePWATest() {
         navigationToolbar {
