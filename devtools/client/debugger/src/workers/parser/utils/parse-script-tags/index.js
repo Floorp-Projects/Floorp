@@ -9,6 +9,7 @@ import * as types from "@babel/types";
 import * as babelParser from "@babel/parser";
 
 import {
+  generateWhitespace,
   getCandidateScriptLocations,
   parseScripts as customParseScripts,
   parseScriptTags as customParseScriptTags,
@@ -53,6 +54,7 @@ function parseScriptTags(source, parser = parseScript) {
 export default parseScriptTags;
 export {
   extractScriptTags,
+  generateWhitespace,
   getCandidateScriptLocations,
   parseScript,
   parseScripts,
