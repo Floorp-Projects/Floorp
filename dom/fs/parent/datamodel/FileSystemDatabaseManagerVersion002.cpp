@@ -183,8 +183,10 @@ nsresult RehashDirectory(const FileSystemConnection& aConnection,
       ";"_ns;
 
   const nsLiteralCString insertNewFilesQuery =
-      "INSERT INTO Files ( handle, name ) "
-      "SELECT hash, name FROM ParentChildHash WHERE isFile = 1 "
+      "INSERT INTO Files ( handle, type, name ) "
+      "SELECT ParentChildHash.hash, Files.type, ParentChildHash.name "
+      "FROM ParentChildHash INNER JOIN Files USING (handle) "
+      "WHERE ParentChildHash.isFile = 1 "
       ";"_ns;
 
   const nsLiteralCString updateFileMappingsQuery =
