@@ -9,9 +9,9 @@
 use crate::computed_value_flags::ComputedValueFlags;
 use crate::dom::TElement;
 use crate::logical_geometry::{LogicalSize, WritingMode};
-use crate::media_queries::Device;
 use crate::parser::ParserContext;
 use crate::properties::ComputedValues;
+use crate::stylist::Stylist;
 use crate::queries::condition::KleeneValue;
 use crate::queries::feature::{AllowsRanges, Evaluator, FeatureFlags, QueryFeatureDescription};
 use crate::queries::values::Orientation;
@@ -252,7 +252,7 @@ impl ContainerCondition {
     /// Tries to match a container query condition for a given element.
     pub(crate) fn matches<E>(
         &self,
-        device: &Device,
+        stylist: &Stylist,
         element: E,
         originating_element_style: Option<&ComputedValues>,
         invalidation_flags: &mut ComputedValueFlags,
@@ -268,7 +268,8 @@ impl ContainerCondition {
         // Set up the lookup for the container in question, as the condition may be using container query lengths.
         let size_query_container_lookup = ContainerSizeQuery::for_option_element(container, None);
         Context::for_container_query_evaluation(
-            device,
+            stylist.device(),
+            Some(stylist),
             info,
             size_query_container_lookup,
             |context| {
