@@ -113,10 +113,6 @@ nrappkit copyright:
 #include "nsDebug.h"
 #include "nsNetUtil.h"
 
-#ifdef XP_WIN
-#  include "mozilla/WindowsVersion.h"
-#endif
-
 #if defined(MOZILLA_INTERNAL_API)
 // csi_platform.h deep in nrappkit defines LOG_INFO and LOG_WARNING
 #  ifdef LOG_INFO
@@ -582,52 +578,6 @@ int NrSocket::create(nr_transport_addr* addr) {
               naddr.raw.family, PR_GetError());
         ABORT(R_INTERNAL);
       }
-#ifdef XP_WIN
-      if (!mozilla::IsWin8OrLater()) {
-        // Increase default send and receive buffer sizes on <= Win7 to be able
-        // to receive and send an unpaced HD (>= 720p = 1280x720 - I Frame ~ 21K
-        // size) stream without losing packets. Manual testing showed that 100K
-        // buffer size was not enough and the packet loss dis-appeared with 256K
-        // buffer size. See bug 1252769 for future improvements of this.
-        PRSize min_buffer_size = 256 * 1024;
-        PRSocketOptionData opt_rcvbuf;
-        opt_rcvbuf.option = PR_SockOpt_RecvBufferSize;
-        if ((status = PR_GetSocketOption(fd_, &opt_rcvbuf)) == PR_SUCCESS) {
-          if (opt_rcvbuf.value.recv_buffer_size < min_buffer_size) {
-            opt_rcvbuf.value.recv_buffer_size = min_buffer_size;
-            if ((status = PR_SetSocketOption(fd_, &opt_rcvbuf)) != PR_SUCCESS) {
-              r_log(LOG_GENERIC, LOG_CRIT,
-                    "Couldn't set socket receive buffer size: %d", status);
-            }
-          } else {
-            r_log(LOG_GENERIC, LOG_INFO,
-                  "Socket receive buffer size is already: %d",
-                  opt_rcvbuf.value.recv_buffer_size);
-          }
-        } else {
-          r_log(LOG_GENERIC, LOG_CRIT,
-                "Couldn't get socket receive buffer size: %d", status);
-        }
-        PRSocketOptionData opt_sndbuf;
-        opt_sndbuf.option = PR_SockOpt_SendBufferSize;
-        if ((status = PR_GetSocketOption(fd_, &opt_sndbuf)) == PR_SUCCESS) {
-          if (opt_sndbuf.value.recv_buffer_size < min_buffer_size) {
-            opt_sndbuf.value.recv_buffer_size = min_buffer_size;
-            if ((status = PR_SetSocketOption(fd_, &opt_sndbuf)) != PR_SUCCESS) {
-              r_log(LOG_GENERIC, LOG_CRIT,
-                    "Couldn't set socket send buffer size: %d", status);
-            }
-          } else {
-            r_log(LOG_GENERIC, LOG_INFO,
-                  "Socket send buffer size is already: %d",
-                  opt_sndbuf.value.recv_buffer_size);
-          }
-        } else {
-          r_log(LOG_GENERIC, LOG_CRIT,
-                "Couldn't get socket send buffer size: %d", status);
-        }
-      }
-#endif
       break;
     case IPPROTO_TCP:
       // TODO: Rewrite this to use WebrtcTcpSocket.
@@ -1490,17 +1440,6 @@ void NrUdpSocketIpc::create_i(const nsACString& host, const uint16_t port) {
     return;
   }
 
-#ifdef XP_WIN
-  if (!mozilla::IsWin8OrLater()) {
-    // Increase default receive and send buffer size on <= Win7 to be able to
-    // receive and send an unpaced HD (>= 720p = 1280x720 - I Frame ~ 21K size)
-    // stream without losing packets.
-    // Manual testing showed that 100K buffer size was not enough and the
-    // packet loss dis-appeared with 256K buffer size.
-    // See bug 1252769 for future improvements of this.
-    minBuffSize = 256 * 1024;
-  }
-#endif
   // XXX bug 1126232 - don't use null Principal!
   if (NS_FAILED(socket_child_->Bind(proxy, nullptr, host, port,
                                     /* addressReuse = */ false,
