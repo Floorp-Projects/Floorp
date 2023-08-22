@@ -61,24 +61,15 @@ class MOZ_STACK_CLASS TransformReferenceBox final {
  public:
   typedef nscoord (TransformReferenceBox::*DimensionGetter)();
 
-  explicit TransformReferenceBox()
-      : mFrame(nullptr),
-        mX(0),
-        mY(0),
-        mWidth(0),
-        mHeight(0),
-        mIsCached(false) {}
+  TransformReferenceBox() = default;
 
-  explicit TransformReferenceBox(const nsIFrame* aFrame)
-      : mFrame(aFrame), mX(0), mY(0), mWidth(0), mHeight(0), mIsCached(false) {
+  explicit TransformReferenceBox(const nsIFrame* aFrame) : mFrame(aFrame) {
     MOZ_ASSERT(mFrame);
   }
 
-  explicit TransformReferenceBox(const nsIFrame* aFrame,
-                                 const nsRect& aFallbackDimensions)
-      : mX(0), mY(0), mWidth(0), mHeight(0) {
+  TransformReferenceBox(const nsIFrame* aFrame,
+                        const nsRect& aFallbackDimensions) {
     mFrame = aFrame;
-    mIsCached = false;
     if (!mFrame) {
       Init(aFallbackDimensions);
     }
@@ -89,7 +80,11 @@ class MOZ_STACK_CLASS TransformReferenceBox final {
     mFrame = aFrame;
   }
 
-  void Init(const nsRect& aDimensions);
+  void Init(const nsRect& aDimensions) {
+    MOZ_ASSERT(!mFrame && !mIsCached);
+    mBox = aDimensions;
+    mIsCached = true;
+  }
 
   /**
    * The offset of the reference box from the nsIFrame's TopLeft(). This
@@ -99,11 +94,11 @@ class MOZ_STACK_CLASS TransformReferenceBox final {
    */
   nscoord X() {
     EnsureDimensionsAreCached();
-    return mX;
+    return mBox.X();
   }
   nscoord Y() {
     EnsureDimensionsAreCached();
-    return mY;
+    return mBox.Y();
   }
 
   /**
@@ -111,11 +106,11 @@ class MOZ_STACK_CLASS TransformReferenceBox final {
    */
   nscoord Width() {
     EnsureDimensionsAreCached();
-    return mWidth;
+    return mBox.Width();
   }
   nscoord Height() {
     EnsureDimensionsAreCached();
-    return mHeight;
+    return mBox.Height();
   }
 
   bool IsEmpty() { return !mFrame; }
@@ -128,9 +123,9 @@ class MOZ_STACK_CLASS TransformReferenceBox final {
 
   void EnsureDimensionsAreCached();
 
-  const nsIFrame* mFrame;
-  nscoord mX, mY, mWidth, mHeight;
-  bool mIsCached;
+  const nsIFrame* mFrame = nullptr;
+  nsRect mBox;
+  bool mIsCached = false;
 };
 
 float ProcessTranslatePart(
