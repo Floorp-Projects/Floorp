@@ -317,8 +317,7 @@ p {
 
 .info p {
   margin-top: 0;
-  font-size: 15px;
-  line-height: 25px;
+  line-height: 1.67;
 }
 
 .info #info-title:not([hidden]) + p {
