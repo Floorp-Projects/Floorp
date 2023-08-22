@@ -4015,7 +4015,7 @@ void nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   nsRect rect = GetInnerRect() + ToReferenceFrame();
   nsPresContext* pc = mFrame->PresContext();
   if (IsThemedOutline()) {
-    rect.Inflate(mFrame->StyleOutline()->mOutlineOffset.ToAppUnits());
+    rect.Inflate(mFrame->StyleOutline()->EffectiveOffsetFor(rect));
     pc->Theme()->DrawWidgetBackground(aCtx, mFrame,
                                       StyleAppearance::FocusOutline, rect,
                                       GetPaintRect(aBuilder, aCtx));
@@ -4044,7 +4044,7 @@ bool nsDisplayOutline::CreateWebRenderCommands(
   nsPresContext* pc = mFrame->PresContext();
   nsRect rect = GetInnerRect() + ToReferenceFrame();
   if (IsThemedOutline()) {
-    rect.Inflate(mFrame->StyleOutline()->mOutlineOffset.ToAppUnits());
+    rect.Inflate(mFrame->StyleOutline()->EffectiveOffsetFor(rect));
     return pc->Theme()->CreateWebRenderCommandsForWidget(
         aBuilder, aResources, aSc, aManager, mFrame,
         StyleAppearance::FocusOutline, rect);
