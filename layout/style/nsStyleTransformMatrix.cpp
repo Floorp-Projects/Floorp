@@ -73,9 +73,26 @@ static nsRect GetSVGBox(const nsIFrame* aFrame) {
         return computeViewBox();
       }
       [[fallthrough]];
-    case StyleTransformBox::StrokeBox:
-      // TODO: Implement this in the following patches.
-      return {};
+    case StyleTransformBox::StrokeBox: {
+      // We are using SVGUtils::PathExtentsToMaxStrokeExtents() to compute the
+      // bbox contribution for stroke box (if it doesn't have simple bounds),
+      // so the |strokeBox| here may be larger than the author's expectation.
+      // Using Moz2D to compute the tighter bounding box is another way but it
+      // has some potential issues (see SVGGeometryFrame::GetBBoxContribution()
+      // for more details), and its result depends on the drawing backend. So
+      // for now we still rely on our default calcuclation for SVG geometry
+      // frame reflow code. At least this works for the shape elements which
+      // have simple bounds.
+      // FIXME: Bug 1849054. We may have to update
+      // SVGGeometryFrame::GetBBoxContribution() to get tighter stroke bounds.
+      nsRect strokeBox = nsLayoutUtils::ComputeGeometryBox(
+          const_cast<nsIFrame*>(aFrame), StyleGeometryBox::StrokeBox);
+      // The |nsIFrame::mRect| includes markers, so we have to compute the
+      // offsets without markers.
+      return nsRect{strokeBox.x - aFrame->GetPosition().x,
+                    strokeBox.y - aFrame->GetPosition().y, strokeBox.width,
+                    strokeBox.height};
+    }
     case StyleTransformBox::ViewBox:
       return computeViewBox();
   }
