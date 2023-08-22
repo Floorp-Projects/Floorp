@@ -3573,14 +3573,6 @@
   value: 2
   mirror: always
 
-# Is support for decoding external (non-inline) classic or module DOM scripts
-# (i.e. anything but workers) as UTF-8, then directly compiling without
-# inflating to UTF-16, enabled?
-- name: dom.script_loader.external_scripts.utf8_parsing.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Enable  speculative off main thread parsing of external scripts as
 # soon as they are fetched.
 - name: dom.script_loader.external_scripts.speculative_omt_parse.enabled
@@ -4684,13 +4676,6 @@
 - name: dom.worker.canceling.timeoutMilliseconds
   type: RelaxedAtomicUint32
   value: 30000    # 30 seconds
-  mirror: always
-
-# Is support for compiling DOM worker scripts directly from UTF-8 (without ever
-# inflating to UTF-16) enabled?
-- name: dom.worker.script_loader.utf8_parsing.enabled
-  type: RelaxedAtomicBool
-  value: true
   mirror: always
 
 - name: dom.worker.use_medium_high_event_queue
