@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>Test for Bug 556645</title>
+  <title>Test for Bug 556645 and Bug 1848196</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -8,43 +8,66 @@
 <body>
 <script>
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(runTest);
+SimpleTest.waitForFocus(async () => {
+  const object = document.createElement("object");
+  object.setAttribute("type", "text/html");
+  object.setAttribute("width", "200");
+  object.setAttribute("height", "200");
+  document.body.appendChild(object);
+  const promiseLoadObject = new Promise(resolve => {
+    object.addEventListener("load", resolve, {once: true});
+  });
+  object.setAttribute("data", "object_bug556645.html");
+  await promiseLoadObject;
+  runTest(object);
+  object.remove();
 
-function runTest()
+  const embed = document.createElement("embed");
+  embed.setAttribute("type", "text/html");
+  embed.setAttribute("width", "200");
+  embed.setAttribute("height", "200");
+  document.body.appendChild(embed);
+  const promiseLoadEmbed = new Promise(resolve => {
+    embed.addEventListener("load", resolve, {once: true});
+  });
+  embed.setAttribute("src", "object_bug556645.html");
+  await promiseLoadEmbed;
+  runTest(embed);
+  embed.remove();
+
+  SimpleTest.finish();
+});
+
+function runTest(aObjectOrEmbed)
 {
-  var obj = document.getElementById("obj");
-  var childDoc = obj.contentDocument;
-  var body = childDoc.body;
-  is(document.activeElement, document.body, "focus in parent before");
-  is(childDoc.activeElement, body, "focus in child before");
+  const desc = `<${aObjectOrEmbed.tagName.toLowerCase()}>`;
+  const childDoc = aObjectOrEmbed.contentDocument || aObjectOrEmbed.getSVGDocument();
+  const body = childDoc.body;
+  is(document.activeElement, document.body, `${desc}: focus in parent before`);
+  is(childDoc.activeElement, body, `${desc}: focus in child before`);
 
-  var button = childDoc.getElementsByTagName("button")[0];
+  const button = childDoc.querySelector("button");
   button.focus();
   childDoc.defaultView.focus();
-  is(document.activeElement, obj, "focus in parent after focus()");
-  is(childDoc.activeElement, button, "focus in child after focus()");
+  is(document.activeElement, aObjectOrEmbed, `${desc}: focus in parent after focus()`);
+  is(childDoc.activeElement, button, `${desc}: focus in child after focus()`);
 
   button.blur();
-  var pbutton = document.getElementById("pbutton");
+  const pbutton = document.getElementById("pbutton");
   pbutton.focus();
 
   synthesizeKey("KEY_Tab");
-  is(document.activeElement, obj, "focus in parent after tab");
-  is(childDoc.activeElement, childDoc.documentElement, "focus in child after tab");
+  is(document.activeElement, aObjectOrEmbed, `${desc}: focus in parent after tab`);
+  is(childDoc.activeElement, childDoc.documentElement, `${desc}: focus in child after tab`);
 
   synthesizeKey("KEY_Tab");
-  is(document.activeElement, obj, "focus in parent after tab 2");
-  is(childDoc.activeElement, button, "focus in child after tab 2");
-
-  SimpleTest.finish();
+  is(document.activeElement, aObjectOrEmbed, `${desc}: focus in parent after tab 2`);
+  is(childDoc.activeElement, button, `${desc}: focus in child after tab 2`);
 }
 
 </script>
 
 <button id="pbutton">Parent</button>
-<object id="obj" type="text/html"
-        data="object_bug556645.html"
-        width="200" height="200"></object>
 
 </body>
 </html>
