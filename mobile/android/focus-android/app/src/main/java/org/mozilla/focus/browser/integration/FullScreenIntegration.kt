@@ -7,12 +7,14 @@ package org.mozilla.focus.browser.integration
 import android.app.Activity
 import android.os.Build
 import android.view.View
-import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
+import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.feature.prompts.dialog.FullScreenNotification
+import mozilla.components.feature.prompts.dialog.FullScreenNotificationDialog
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -26,6 +28,7 @@ import org.mozilla.focus.ext.hide
 import org.mozilla.focus.ext.showAsFixed
 import org.mozilla.focus.utils.Settings
 
+@Suppress("LongParameterList")
 class FullScreenIntegration(
     val activity: Activity,
     val store: BrowserStore,
@@ -35,6 +38,7 @@ class FullScreenIntegration(
     private val toolbarView: BrowserToolbar,
     private val statusBar: View,
     private val engineView: EngineView,
+    private val parentFragmentManager: FragmentManager,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     @VisibleForTesting
     internal var feature = FullScreenFeature(
@@ -54,14 +58,16 @@ class FullScreenIntegration(
     }
 
     @VisibleForTesting
-    internal fun fullScreenChanged(enabled: Boolean) {
+    internal fun fullScreenChanged(
+        enabled: Boolean,
+        fullScreenNotification: FullScreenNotification =
+            FullScreenNotificationDialog(R.layout.dialog_full_screen_notification),
+    ) {
         if (enabled) {
             enterBrowserFullscreen()
             statusBar.isVisible = false
 
-            Toast
-                .makeText(activity, R.string.full_screen_notification, Toast.LENGTH_SHORT)
-                .show()
+            fullScreenNotification.show(parentFragmentManager)
 
             switchToImmersiveMode()
         } else {
