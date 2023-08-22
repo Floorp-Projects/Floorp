@@ -6,7 +6,7 @@
 //!
 //! [images]: https://drafts.csswg.org/css-images/#image-values
 
-use crate::color::{mix::ColorInterpolationMethod, ColorSpace};
+use crate::color::mix::ColorInterpolationMethod;
 use crate::custom_properties;
 use crate::values::generics::position::PositionComponent;
 use crate::values::generics::Optional;
@@ -159,6 +159,18 @@ impl<I: style_traits::ToCss, R: style_traits::ToCss> ToCss for GenericImageSetIt
 pub use self::GenericImageSet as ImageSet;
 pub use self::GenericImageSetItem as ImageSetItem;
 
+bitflags! {
+    /// State flags stored on each variant of a Gradient.
+    #[derive(Clone, Copy, Default, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[repr(C)]
+    pub struct GradientFlags: u8 {
+        /// Set if this is a repeating gradient.
+        const REPEATING = 1 << 0;
+        /// Set if the color interpolation method matches the default for the items.
+        const HAS_DEFAULT_COLOR_INTERPOLATION_METHOD = 1 << 1;
+    }
+}
+
 /// A CSS gradient.
 /// <https://drafts.csswg.org/css-images/#gradients>
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
@@ -181,8 +193,8 @@ pub enum GenericGradient<
         color_interpolation_method: ColorInterpolationMethod,
         /// The color stops and interpolation hints.
         items: crate::OwnedSlice<GenericGradientItem<Color, LengthPercentage>>,
-        /// True if this is a repeating gradient.
-        repeating: bool,
+        /// State flags for the gradient.
+        flags: GradientFlags,
         /// Compatibility mode.
         compat_mode: GradientCompatMode,
     },
@@ -196,8 +208,8 @@ pub enum GenericGradient<
         color_interpolation_method: ColorInterpolationMethod,
         /// The color stops and interpolation hints.
         items: crate::OwnedSlice<GenericGradientItem<Color, LengthPercentage>>,
-        /// True if this is a repeating gradient.
-        repeating: bool,
+        /// State flags for the gradient.
+        flags: GradientFlags,
         /// Compatibility mode.
         compat_mode: GradientCompatMode,
     },
@@ -211,8 +223,8 @@ pub enum GenericGradient<
         color_interpolation_method: ColorInterpolationMethod,
         /// The color stops and interpolation hints.
         items: crate::OwnedSlice<GenericGradientItem<Color, AngleOrPercentage>>,
-        /// True if this is a repeating gradient.
-        repeating: bool,
+        /// State flags for the gradient.
+        flags: GradientFlags,
     },
 }
 
@@ -463,18 +475,22 @@ where
     where
         W: Write,
     {
-        let (compat_mode, repeating) = match *self {
+        let (compat_mode, repeating, has_default_color_interpolation_method) = match *self {
             Gradient::Linear {
-                compat_mode,
-                repeating,
-                ..
-            } => (compat_mode, repeating),
+                compat_mode, flags, ..
+            } |
             Gradient::Radial {
+                compat_mode, flags, ..
+            } => (
                 compat_mode,
-                repeating,
-                ..
-            } => (compat_mode, repeating),
-            Gradient::Conic { repeating, .. } => (GradientCompatMode::Modern, repeating),
+                flags.contains(GradientFlags::REPEATING),
+                flags.contains(GradientFlags::HAS_DEFAULT_COLOR_INTERPOLATION_METHOD),
+            ),
+            Gradient::Conic { flags, .. } => (
+                GradientCompatMode::Modern,
+                flags.contains(GradientFlags::REPEATING),
+                flags.contains(GradientFlags::HAS_DEFAULT_COLOR_INTERPOLATION_METHOD),
+            ),
         };
 
         match compat_mode {
@@ -501,7 +517,7 @@ where
                     direction.to_css(dest, compat_mode)?;
                     skip_comma = false;
                 }
-                if !matches!(color_interpolation_method.space, ColorSpace::Srgb) {
+                if !has_default_color_interpolation_method {
                     if !skip_comma {
                         dest.write_char(' ')?;
                     }
@@ -553,16 +569,15 @@ where
                         shape.to_css(dest)?;
                     }
                 }
-                let omit_color_interpolation_method =
-                    matches!(color_interpolation_method.space, ColorSpace::Srgb);
-                if !omit_color_interpolation_method {
+                if !has_default_color_interpolation_method {
                     if !omit_shape || !omit_position {
                         dest.write_char(' ')?;
                     }
                     color_interpolation_method.to_css(dest)?;
                 }
 
-                let mut skip_comma = omit_shape && omit_position && omit_color_interpolation_method;
+                let mut skip_comma =
+                    omit_shape && omit_position && has_default_color_interpolation_method;
                 for item in &**items {
                     if !skip_comma {
                         dest.write_str(", ")?;
@@ -574,6 +589,7 @@ where
             Gradient::Conic {
                 ref angle,
                 ref position,
+                ref color_interpolation_method,
                 ref items,
                 ..
             } => {
@@ -591,7 +607,14 @@ where
                     dest.write_str("at ")?;
                     position.to_css(dest)?;
                 }
-                let mut skip_comma = omit_angle && omit_position;
+                if !has_default_color_interpolation_method {
+                    if !omit_angle || !omit_position {
+                        dest.write_char(' ')?;
+                    }
+                    color_interpolation_method.to_css(dest)?;
+                }
+                let mut skip_comma =
+                    omit_angle && omit_position && has_default_color_interpolation_method;
                 for item in &**items {
                     if !skip_comma {
                         dest.write_str(", ")?;

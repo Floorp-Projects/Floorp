@@ -769,7 +769,7 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
       mGradient->IsLinear() &&
       (mLineStart.x == mLineEnd.x) != (mLineStart.y == mLineEnd.y) &&
       aRepeatSize.width == aDest.width && aRepeatSize.height == aDest.height &&
-      !mGradient->AsLinear().repeating && !aSrc.IsEmpty() && !cellContainsFill;
+      !(mGradient->Repeating()) && !aSrc.IsEmpty() && !cellContainsFill;
 
   gfxMatrix matrix;
   if (forceRepeatToCoverTiles) {
@@ -819,7 +819,7 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
   // Eliminate negative-position stops if the gradient is radial.
   double firstStop = mStops[0].mPosition;
   if (mGradient->IsRadial() && firstStop < 0.0) {
-    if (mGradient->AsRadial().repeating) {
+    if (mGradient->AsRadial().flags & StyleGradientFlags::REPEATING) {
       // Choose an instance of the repeated pattern that gives us all positive
       // stop-offsets.
       double lastStop = mStops[mStops.Length() - 1].mPosition;
@@ -872,7 +872,8 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
     MOZ_ASSERT(firstStop >= 0.0, "Failed to fix stop offsets");
   }
 
-  if (mGradient->IsRadial() && !mGradient->AsRadial().repeating) {
+  if (mGradient->IsRadial() &&
+      !(mGradient->AsRadial().flags & StyleGradientFlags::REPEATING)) {
     // Direct2D can only handle a particular class of radial gradients because
     // of the way the it specifies gradients. Setting firstStop to 0, when we
     // can, will help us stay on the fast path. Currently we don't do this
