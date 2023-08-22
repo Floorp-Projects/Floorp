@@ -515,3 +515,12 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
 .tabbrowser-tab[label="Floorp View"] {
   display: none;
 }
+
+#profile-switcher-browser { 
+  min-width: 25em !important;
+  min-height: 35em !important;
+}
+
+#profile-manager {
+  list-style-image: url("chrome://browser/skin/fxa/avatar-color.svg");
+}

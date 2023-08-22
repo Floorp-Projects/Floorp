@@ -10,6 +10,7 @@ DIRS += [
     "calendar",
     "search",
     "preferences",
+    "profile-manager",
     "notes",
     "welcome",
     "tabsleep",

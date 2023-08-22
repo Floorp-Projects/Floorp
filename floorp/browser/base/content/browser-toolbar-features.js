@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -67,6 +68,38 @@ async function switchSidebarPositionButton() {
 
 switchSidebarPositionButton();
 
+async function openPopup() {
+  const widgetId = "profile-manager";
+  const widget = CustomizableUI.getWidget(widgetId);
+  if (widget && widget.type !== "custom") {
+    return;
+  }
+  const l10n = new Localization(["browser/floorp.ftl"]);
+  const l10nText = await l10n.formatValue("floorp-profile-manager");
+  CustomizableUI.createWidget({
+    id: widgetId,
+    type: "button",
+    label: l10nText,
+    tooltiptext: l10nText,
+    onCreated(aNode) {
+      aNode.setAttribute("type", "menu");
+      const popup = window.MozXULElement.parseXULToFragment(`
+        <menupopup id="profile-manager-popup" position="after_start" style="--panel-padding: 0 !important;">
+          <browser id="profile-switcher-browser" src="about:profile-manager" flex="1" type="content" disablehistory="true" disableglobalhistory="true" context="profile-popup-contextmenu" />
+        </menupopup>
+      `);
+      aNode.style = "--panel-padding: 0 !important;";
+      aNode.appendChild(popup);
+    },
+    onCommand() {
+      const popup = document.getElementById("profile-manager-popup");
+      popup.openPopup(document.getElementById("profile-manager-popup"), "after_start", 0, 0, false, false);
+    }
+  });
+}
+
+openPopup();
+
 /**************************************** clock ****************************************/
 
 
@@ -93,9 +126,9 @@ function checkBrowserLangForLabel() {
   const locale = navigator.language.split("-");
   if (locale[0] === "ja") {
     return now.toLocaleDateString("ja-JP", options);
-  } else {
+  } 
     return now.toLocaleDateString();
-  }
+  
 }
 
 function checkBrowserLangForToolTipText() {
@@ -106,9 +139,9 @@ function checkBrowserLangForToolTipText() {
   const locale = navigator.language.split("-");
   if (locale[0] === "ja") {
     return `${year}年(令和${JPYear}年) ${now.toLocaleDateString("ja-JP", options)}`;
-  } else {
+  } 
     return now.toLocaleDateString();
-  }
+  
 }
 
 function setNowTime() {

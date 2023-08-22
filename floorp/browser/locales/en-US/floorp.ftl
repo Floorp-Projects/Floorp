@@ -413,7 +413,7 @@ floorp-lepton-enable-disabled_menu-hide =
 floorp-lepton-disable-userChrome-icon =
     .label = Disable Lepton's context menu and panel menu icons
 floorp-lepton-disable-userChrome-menu-icon =
-    .label = Disable Lepton's context menu icons
+    .label = Enable Lepton's context menu icons
 
 positon-preferences = Position adjustments
 
@@ -1092,3 +1092,16 @@ floorp-custom-actions-hide-sidebar = Hide sidebar
   .label = Hide sidebar
 floorp-custom-actions-toggle-sidebar = Toggle sidebar
   .label = Toggle sidebar
+
+
+##################################################################### Profile Switcher ###############################################################
+
+floorp-open-profile-with-new-instance = Launch
+ .tooltiptext = Launch { -brand-short-name } with this profile
+floorp-profiles-in-use = Profile used by another application
+floorp-profiles-title = Profiles
+floorp-profiles-create = Create Profile
+floorp-profile-manager = Profile Manager
+ .label = Profile Manager
+ .tooltiptext = Open Profile Manager
+ 
