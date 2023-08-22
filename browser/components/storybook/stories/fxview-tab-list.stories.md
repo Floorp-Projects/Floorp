@@ -75,12 +75,15 @@ You'll need to pass along some of the following properties:
 * `maxTabsLength` (**Optional**): The max number of tabs you want to display in the tabs list. The default value will be `25` if no max value is given. You may use any negative number such as `-1` to indicate no max.
 * `tabItems` (**Required**): An array of tab data such as History nodes, Bookmark nodes, Synced Tabs, etc.
     * The component is expecting to receive the following properties within each `tabItems` object (you may need to do some normalizing for this). If you just pass a title and an icon, it creates a header row that is not clickable.
+        * `closedId` (**Optional**) - For a closed tab, this ID is used by SessionStore to retrieve the tab data for forgetting/re-opening the tab.
         * `icon` (**Required**) - The location string for the favicon. Will fallback to default favicon if none is found.
         * `primaryL10nId` (**Optional**) - The l10n id to be used for the primary action element. This fluent string should ONLY define a `.title` attribute to describe the link element in each row.
         * `primaryL10nArgs` (**Optional**) - The l10n args you can optionally pass for the primary action element
         * `secondaryL10nId` (**Optional**) -  The l10n id to be used for the secondary action button. This fluent string should ONLY define a `.title` attribute to describe the secondary button in each row.
         * `secondaryL10nArgs` (**Optional**) - The l10n args you can optionally pass for the secondary action button
         * `tabElement` (**Optional**) - The MozTabbrowserTab element for the tab item.
+        * `sourceClosedId` (**Optional**) - The closedId of the closed window the tab is from if applicable.
+        * `sourceWindowId` (**Optional**) - The SessionStore id of the window the tab is from if applicable.
         * `tabid` (**Optional**) - Optional property expected for Recently Closed tab data
         * `time` (**Optional**) - The time in milliseconds for expected last interaction with the tab (Ex: `lastUsed` for SyncedTabs tabs, `closedAt` for RecentlyClosed tabs, etc.)
         * `title` (**Required**) - The title for the tab

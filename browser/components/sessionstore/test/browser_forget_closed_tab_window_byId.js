@@ -82,7 +82,9 @@ add_task(async function closeAndForgetTabs() {
 
   Assert.throws(
     () => {
-      SessionStore.forgetClosedTabById(closedTabs[0].closedId, false);
+      SessionStore.forgetClosedTabById(closedTabs[0].closedId, {
+        includePrivate: false,
+      });
     },
     /Invalid closedId/,
     "forgetClosedWindowById should throw an exception when trying to match a closedId from a private window in non-private windows"
