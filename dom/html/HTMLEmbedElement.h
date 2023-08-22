@@ -41,6 +41,8 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
   bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
 
+  int32_t TabIndexDefault() override;
+
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,
                       nsIPrincipal* aMaybeScriptedPrincipal,
