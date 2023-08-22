@@ -11,10 +11,9 @@ const TEST_PAGE =
 const NEXT_PAGE = "http://mochi.test:8888/browser/dom/ipc/tests/";
 const JS_URI = "javascript:void(document.title = 'foo')";
 
-async function test_navigation(nextPage, cancelContentJSPref, shouldCancel) {
+async function test_navigation(nextPage, shouldCancel) {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["dom.ipc.cancel_content_js_when_navigating", cancelContentJSPref],
       ["dom.max_script_run_time", 20],
       // Force a single process so that the navigation will complete in the same
       // process as the previous page which is running the long-running script.
@@ -40,11 +39,7 @@ async function test_navigation(nextPage, cancelContentJSPref, shouldCancel) {
     content.dispatchEvent(new content.Event("StartLongLoop"));
   });
 
-  info(
-    `navigating to ${nextPage} with cancel content JS ${
-      cancelContentJSPref ? "enabled" : "disabled"
-    }`
-  );
+  info(`navigating to ${nextPage}`);
   const nextPageLoaded = BrowserTestUtils.waitForContentEvent(
     tab.linkedBrowser,
     "DOMTitleChanged"
@@ -66,7 +61,5 @@ async function test_navigation(nextPage, cancelContentJSPref, shouldCancel) {
   BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async () => test_navigation(NEXT_PAGE, true, true));
-add_task(async () => test_navigation(NEXT_PAGE, false, false));
-add_task(async () => test_navigation(JS_URI, true, false));
-add_task(async () => test_navigation(JS_URI, false, false));
+add_task(async () => test_navigation(NEXT_PAGE, true));
+add_task(async () => test_navigation(JS_URI, false));
