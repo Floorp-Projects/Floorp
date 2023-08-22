@@ -242,16 +242,10 @@ class ScriptLoadRequest
     mScriptData.reset();
   }
 
-  bool IsUTF8ParsingEnabled();
-
   void SetTextSource() {
     MOZ_ASSERT(IsUnknownDataType());
     mDataType = DataType::eTextSource;
-    if (IsUTF8ParsingEnabled()) {
-      mScriptData.emplace(VariantType<ScriptTextBuffer<Utf8Unit>>());
-    } else {
-      mScriptData.emplace(VariantType<ScriptTextBuffer<char16_t>>());
-    }
+    mScriptData.emplace(VariantType<ScriptTextBuffer<Utf8Unit>>());
   }
 
   // Use a vector backed by the JS allocator for script text so that contents
