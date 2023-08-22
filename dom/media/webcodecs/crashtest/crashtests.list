@@ -1,0 +1,7 @@
+[DEFAULT]
+subsuite = media
+tags = webcodecs
+prefs =
+  dom.media.webcodecs.enabled=true
+
+load 1849271.html

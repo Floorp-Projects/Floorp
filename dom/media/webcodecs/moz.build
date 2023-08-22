@@ -8,6 +8,7 @@ with Files("*"):
     BUG_COMPONENT = ("Core", "Audio/Video: Web Codecs")
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+CRASHTEST_MANIFESTS += ["crashtest/crashtests.list"]
 
 # For mozilla/layers/ImageBridgeChild.h
 LOCAL_INCLUDES += [
