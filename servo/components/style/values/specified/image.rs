@@ -11,10 +11,11 @@ use crate::color::mix::ColorInterpolationMethod;
 use crate::custom_properties::SpecifiedValue;
 use crate::parser::{Parse, ParserContext};
 use crate::stylesheets::CorsMode;
-use crate::values::generics::image::PaintWorklet;
+use crate::values::generics::color::ColorMixFlags;
 use crate::values::generics::image::{
     self as generic, Circle, Ellipse, GradientCompatMode, ShapeExtent,
 };
+use crate::values::generics::image::{GradientFlags, PaintWorklet};
 use crate::values::generics::position::Position as GenericPosition;
 use crate::values::generics::NonNegative;
 use crate::values::specified::position::{HorizontalPositionKeyword, VerticalPositionKeyword};
@@ -77,6 +78,41 @@ pub type ImageSet = generic::ImageSet<Image, Resolution>;
 pub type ImageSetItem = generic::ImageSetItem<Image, Resolution>;
 
 type LengthPercentageItemList = crate::OwnedSlice<generic::GradientItem<Color, LengthPercentage>>;
+
+impl Color {
+    fn has_modern_syntax(&self) -> bool {
+        match self {
+            Self::Absolute(absolute) => !absolute.color.is_legacy_syntax(),
+            Self::ColorMix(mix) => {
+                if mix.flags.contains(ColorMixFlags::RESULT_IN_MODERN_SYNTAX) {
+                    true
+                } else {
+                    mix.left.has_modern_syntax() || mix.right.has_modern_syntax()
+                }
+            },
+            Self::LightDark(ld) => ld.light.has_modern_syntax() || ld.dark.has_modern_syntax(),
+
+            // The default is that this color doesn't have any modern syntax.
+            _ => false,
+        }
+    }
+}
+
+fn default_color_interpolation_method<T>(
+    items: &[generic::GradientItem<Color, T>],
+) -> ColorInterpolationMethod {
+    let has_modern_syntax_item = items.iter().any(|item| match item {
+        generic::GenericGradientItem::SimpleColorStop(color) => color.has_modern_syntax(),
+        generic::GenericGradientItem::ComplexColorStop { color, .. } => color.has_modern_syntax(),
+        generic::GenericGradientItem::InterpolationHint(_) => false,
+    });
+
+    if has_modern_syntax_item {
+        ColorInterpolationMethod::oklab()
+    } else {
+        ColorInterpolationMethod::srgb()
+    }
+}
 
 #[cfg(feature = "gecko")]
 fn cross_fade_enabled() -> bool {
@@ -671,7 +707,8 @@ impl Gradient {
                     direction,
                     color_interpolation_method: ColorInterpolationMethod::srgb(),
                     items,
-                    repeating: false,
+                    // Legacy gradients always use srgb as a default.
+                    flags: generic::GradientFlags::HAS_DEFAULT_COLOR_INTERPOLATION_METHOD,
                     compat_mode: GradientCompatMode::Modern,
                 }
             },
@@ -700,7 +737,8 @@ impl Gradient {
                     position,
                     color_interpolation_method: ColorInterpolationMethod::srgb(),
                     items,
-                    repeating: false,
+                    // Legacy gradients always use srgb as a default.
+                    flags: generic::GradientFlags::HAS_DEFAULT_COLOR_INTERPOLATION_METHOD,
                     compat_mode: GradientCompatMode::Modern,
                 }
             },
@@ -832,6 +870,9 @@ impl Gradient {
         repeating: bool,
         mut compat_mode: GradientCompatMode,
     ) -> Result<Self, ParseError<'i>> {
+        let mut flags = GradientFlags::empty();
+        flags.set(GradientFlags::REPEATING, repeating);
+
         let mut color_interpolation_method =
             Self::try_parse_color_interpolation_method(context, input);
 
@@ -850,12 +891,12 @@ impl Gradient {
 
         let items = Gradient::parse_stops(context, input)?;
 
-        let color_interpolation_method = color_interpolation_method.unwrap_or_else(|| {
-            // TODO(tlouw): Check whether any of the stops are in a non legacy syntax, in which
-            // case we should default to lab() and not srgb().
-            // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1839837
-            ColorInterpolationMethod::srgb()
-        });
+        let default = default_color_interpolation_method(&items);
+        let color_interpolation_method = color_interpolation_method.unwrap_or(default);
+        flags.set(
+            GradientFlags::HAS_DEFAULT_COLOR_INTERPOLATION_METHOD,
+            default == color_interpolation_method,
+        );
 
         let direction = direction.unwrap_or(match compat_mode {
             GradientCompatMode::Modern => LineDirection::Vertical(VerticalPositionKeyword::Bottom),
@@ -866,7 +907,7 @@ impl Gradient {
             direction,
             color_interpolation_method,
             items,
-            repeating,
+            flags,
             compat_mode,
         })
     }
@@ -878,6 +919,9 @@ impl Gradient {
         repeating: bool,
         compat_mode: GradientCompatMode,
     ) -> Result<Self, ParseError<'i>> {
+        let mut flags = GradientFlags::empty();
+        flags.set(GradientFlags::REPEATING, repeating);
+
         let mut color_interpolation_method =
             Self::try_parse_color_interpolation_method(context, input);
 
@@ -919,19 +963,19 @@ impl Gradient {
 
         let items = Gradient::parse_stops(context, input)?;
 
-        let color_interpolation_method = color_interpolation_method.unwrap_or_else(|| {
-            // TODO(tlouw): Check whether any of the stops are in a non legacy syntax, in which
-            // case we should default to lab() and not srgb().
-            // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1839837
-            ColorInterpolationMethod::srgb()
-        });
+        let default = default_color_interpolation_method(&items);
+        let color_interpolation_method = color_interpolation_method.unwrap_or(default);
+        flags.set(
+            GradientFlags::HAS_DEFAULT_COLOR_INTERPOLATION_METHOD,
+            default == color_interpolation_method,
+        );
 
         Ok(Gradient::Radial {
             shape,
             position,
             color_interpolation_method,
             items,
-            repeating,
+            flags,
             compat_mode,
         })
     }
@@ -942,6 +986,9 @@ impl Gradient {
         input: &mut Parser<'i, 't>,
         repeating: bool,
     ) -> Result<Self, ParseError<'i>> {
+        let mut flags = GradientFlags::empty();
+        flags.set(GradientFlags::REPEATING, repeating);
+
         let mut color_interpolation_method =
             Self::try_parse_color_interpolation_method(context, input);
 
@@ -979,19 +1026,19 @@ impl Gradient {
             return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
         }
 
-        let color_interpolation_method = color_interpolation_method.unwrap_or_else(|| {
-            // TODO(tlouw): Check whether any of the stops are in a non legacy syntax, in which
-            // case we should default to lab() and not srgb().
-            // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1839837
-            ColorInterpolationMethod::srgb()
-        });
+        let default = default_color_interpolation_method(&items);
+        let color_interpolation_method = color_interpolation_method.unwrap_or(default);
+        flags.set(
+            GradientFlags::HAS_DEFAULT_COLOR_INTERPOLATION_METHOD,
+            default == color_interpolation_method,
+        );
 
         Ok(Gradient::Conic {
             angle,
             position,
             color_interpolation_method,
             items,
-            repeating,
+            flags,
         })
     }
 }
