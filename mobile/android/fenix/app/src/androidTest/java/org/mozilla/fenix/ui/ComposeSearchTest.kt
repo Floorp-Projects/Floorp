@@ -666,7 +666,7 @@ class ComposeSearchTest {
             clickSearchSelectorButton()
             selectTemporarySearchMethod(searchEngineName = "Tabs")
             typeSearch(searchTerm = "Mozilla")
-            verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
+            verifySuggestionsAreNotDisplayed(rule = activityTestRule, "Mozilla")
             clickClearButton()
             verifySearchBarPlaceholder("Search tabs")
         }
@@ -686,7 +686,7 @@ class ComposeSearchTest {
             clickSearchSelectorButton()
             selectTemporarySearchMethod(searchEngineName = "Tabs")
             typeSearch(searchTerm = "Mozilla")
-            verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
+            verifySuggestionsAreNotDisplayed(rule = activityTestRule, "Mozilla")
             clickClearButton()
             typeSearch(searchTerm = "generic")
             verifyTypedToolbarText("generic")
@@ -725,7 +725,7 @@ class ComposeSearchTest {
         }.clickSearchSelectorButton {
             selectTemporarySearchMethod("Bookmarks")
             typeSearch("test")
-            verifyNoSuggestionsAreDisplayed(activityTestRule, "test")
+            verifySuggestionsAreNotDisplayed(activityTestRule, "test")
         }
     }
 
@@ -752,7 +752,7 @@ class ComposeSearchTest {
         }.dismissSearchBar {
         }.openSearch {
             typeSearch("mozilla ")
-            verifyNoSuggestionsAreDisplayed(activityTestRule, "Test1", "Test2")
+            verifySuggestionsAreNotDisplayed(activityTestRule, "Test1", "Test2")
         }
     }
 
@@ -776,7 +776,7 @@ class ComposeSearchTest {
             clickSearchSelectorButton()
             selectTemporarySearchMethod(searchEngineName = "History")
             typeSearch(searchTerm = "Mozilla")
-            verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
+            verifySuggestionsAreNotDisplayed(rule = activityTestRule, "Mozilla")
             clickClearButton()
             verifySearchBarPlaceholder("Search history")
         }

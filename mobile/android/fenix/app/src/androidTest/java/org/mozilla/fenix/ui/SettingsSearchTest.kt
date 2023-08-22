@@ -160,7 +160,7 @@ class SettingsSearchTest {
         homeScreen {
         }.openSearch {
             typeSearch("test")
-            verifyNoSuggestionsAreDisplayed(
+            verifySuggestionsAreNotDisplayed(
                 activityTestRule,
                 "Firefox Suggest",
                 websiteURL,
@@ -188,7 +188,7 @@ class SettingsSearchTest {
         homeScreen {
         }.openSearch {
             typeSearch("test")
-            verifyNoSuggestionsAreDisplayed(
+            verifySuggestionsAreNotDisplayed(
                 activityTestRule,
                 "Firefox Suggest",
                 website.title,
@@ -426,7 +426,7 @@ class SettingsSearchTest {
         }.goBack {
         }.openSearch {
             typeSearch("mozilla")
-            verifyNoSuggestionsAreDisplayed(activityTestRule, "mozilla firefox")
+            verifySuggestionsAreNotDisplayed(activityTestRule, "mozilla firefox")
         }
     }
 
@@ -439,7 +439,7 @@ class SettingsSearchTest {
             typeSearch("mozilla")
             verifyAllowSuggestionsInPrivateModeDialog()
             denySuggestionsInPrivateMode()
-            verifyNoSuggestionsAreDisplayed(activityTestRule, "mozilla firefox")
+            verifySuggestionsAreNotDisplayed(activityTestRule, "mozilla firefox")
         }
     }
 
@@ -466,7 +466,7 @@ class SettingsSearchTest {
         }.goBack {
         }.openSearch {
             typeSearch("mozilla")
-            verifyNoSuggestionsAreDisplayed(activityTestRule, "mozilla firefox")
+            verifySuggestionsAreNotDisplayed(activityTestRule, "mozilla firefox")
         }
     }
 

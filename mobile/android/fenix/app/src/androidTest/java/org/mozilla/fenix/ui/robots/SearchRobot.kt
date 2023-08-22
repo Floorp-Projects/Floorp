@@ -7,6 +7,7 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.compose.ui.test.assertAny
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -117,7 +118,7 @@ class SearchRobot {
         }
     }
 
-    fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, vararg searchSuggestions: String) {
+    fun verifySuggestionsAreNotDisplayed(rule: ComposeTestRule, vararg searchSuggestions: String) {
         rule.waitForIdle()
         for (searchSuggestion in searchSuggestions) {
             rule.onAllNodesWithTag("mozac.awesomebar.suggestions")
@@ -127,6 +128,9 @@ class SearchRobot {
                 )
         }
     }
+
+    fun verifySearchSuggestionsCount(rule: ComposeTestRule, numberOfSuggestions: Int) =
+        rule.onAllNodesWithTag("mozac.awesomebar.suggestion").assertCountEquals(numberOfSuggestions)
 
     fun verifyAllowSuggestionsInPrivateModeDialog() {
         assertTrue(

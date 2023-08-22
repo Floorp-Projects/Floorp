@@ -20,11 +20,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.Constants.PackageName.ANDROID_SETTINGS
 import org.mozilla.fenix.helpers.Constants.searchEngineCodes
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
+import org.mozilla.fenix.helpers.MockBrowserDataHelper.createBookmarkItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createHistoryItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createTabItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.setCustomSearchEngine
@@ -647,7 +649,7 @@ class SearchTest {
             clickSearchSelectorButton()
             selectTemporarySearchMethod(searchEngineName = "History")
             typeSearch(searchTerm = "Mozilla")
-            verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
+            verifySuggestionsAreNotDisplayed(rule = activityTestRule, "Mozilla")
             clickClearButton()
             typeSearch(searchTerm = "generic")
             verifyTypedToolbarText("generic")
@@ -684,7 +686,7 @@ class SearchTest {
                 clickSearchSelectorButton()
                 selectTemporarySearchMethod(searchEngineName = "Tabs")
                 typeSearch(searchTerm = "Mozilla")
-                verifyNoSuggestionsAreDisplayed(rule = activityTestRule, "Mozilla")
+                verifySuggestionsAreNotDisplayed(rule = activityTestRule, "Mozilla")
                 clickClearButton()
                 typeSearch(searchTerm = "generic")
                 verifyTypedToolbarText("generic")
@@ -703,6 +705,52 @@ class SearchTest {
                 verifyOpenTabsOrder(position = 1, title = firstPageUrl.url.toString())
                 verifyOpenTabsOrder(position = 2, title = secondPageUrl.url.toString())
             }
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun searchHistoryNotRememberedInPrivateBrowsingTest() {
+        appContext.settings().shouldShowSearchSuggestionsInPrivate = true
+
+        val firstPageUrl = getGenericAsset(searchMockServer, 1)
+        val searchEngineName = "TestSearchEngine"
+
+        setCustomSearchEngine(searchMockServer, searchEngineName)
+        createBookmarkItem(firstPageUrl.url.toString(), firstPageUrl.title, 1u)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.clickUrlbar {
+        }.submitQuery("test page 1") {
+        }.goToHomescreen {
+        }.togglePrivateBrowsingMode()
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.clickUrlbar {
+        }.submitQuery("test page 2") {
+        }.openNavigationToolbar {
+        }.clickUrlbar {
+            typeSearch(searchTerm = "test page")
+            verifySearchEngineSuggestionResults(
+                rule = activityTestRule,
+                searchSuggestions = arrayOf(
+                    "TestSearchEngine search",
+                    "test page 1",
+                    "Firefox Suggest",
+                    firstPageUrl.url.toString(),
+                ),
+                searchTerm = "test page 1",
+            )
+            // 2 search engine suggestions and 2 browser suggestions (1 history, 1 bookmark)
+            verifySearchSuggestionsCount(activityTestRule, numberOfSuggestions = 4)
+            verifySuggestionsAreNotDisplayed(
+                activityTestRule,
+                searchSuggestions = arrayOf(
+                    "test page 2",
+                ),
+            )
         }
     }
 }
