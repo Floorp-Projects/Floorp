@@ -515,6 +515,7 @@ class Longhand(Property):
                 "MathDepth",
                 "MozScriptMinSize",
                 "MozScriptSizeMultiplier",
+                "TransformBox",
                 "TextDecorationSkipInk",
                 "NonNegativeNumber",
                 "OffsetRotate",

@@ -13,6 +13,7 @@ use crate::Zero;
 use euclid::default::{Transform3D, Vector3D};
 
 pub use crate::values::generics::transform::TransformStyle;
+pub use crate::values::specified::transform::TransformBox;
 
 /// A single operation in a computed CSS `transform`
 pub type TransformOperation =

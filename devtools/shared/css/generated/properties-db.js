@@ -11894,11 +11894,13 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "border-box",
+      "content-box",
       "fill-box",
       "inherit",
       "initial",
       "revert",
       "revert-layer",
+      "stroke-box",
       "unset",
       "view-box"
     ]

@@ -35,6 +35,49 @@ pub type TransformOrigin = generic::TransformOrigin<
     Length,
 >;
 
+#[cfg(feature = "gecko")]
+fn all_transform_boxes_are_enabled(_context: &ParserContext) -> bool {
+    static_prefs::pref!("layout.css.transform-box-content-stroke.enabled")
+}
+
+#[cfg(feature = "servo")]
+fn all_transform_boxes_are_enabled(_context: &ParserContext) -> bool {
+    false
+}
+
+/// The specified value of `transform-box`.
+/// https://drafts.csswg.org/css-transforms-1/#transform-box
+// Note: Once we ship everything, we can drop this and just use single_keyword for tranform-box.
+#[allow(missing_docs)]
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Copy,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum TransformBox {
+    #[parse(condition = "all_transform_boxes_are_enabled")]
+    ContentBox,
+    BorderBox,
+    FillBox,
+    #[parse(condition = "all_transform_boxes_are_enabled")]
+    StrokeBox,
+    ViewBox,
+}
+
 impl TransformOrigin {
     /// Returns the initial specified value for `transform-origin`.
     #[inline]

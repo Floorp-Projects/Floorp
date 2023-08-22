@@ -33,8 +33,8 @@ CSSPoint MotionPathUtils::ComputeAnchorPointAdjustment(const nsIFrame& aFrame) {
   }
 
   auto transformBox = aFrame.StyleDisplay()->mTransformBox;
-  if (transformBox == StyleGeometryBox::ViewBox ||
-      transformBox == StyleGeometryBox::BorderBox) {
+  if (transformBox == StyleTransformBox::ViewBox ||
+      transformBox == StyleTransformBox::BorderBox) {
     return {};
   }
 

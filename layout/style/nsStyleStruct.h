@@ -1300,7 +1300,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
 
   mozilla::StyleBackfaceVisibility mBackfaceVisibility;
   mozilla::StyleTransformStyle mTransformStyle;
-  mozilla::StyleGeometryBox mTransformBox;
+  mozilla::StyleTransformBox mTransformBox;
 
   mozilla::StyleTransform mTransform;
   mozilla::StyleRotate mRotate;
