@@ -95,11 +95,11 @@
     <string name="mozac_browser_errorpages_connection_failure_title">قادر به برقراری اتصال نیست</string>
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
-      <ul>
-        <li>سایت می‌تواند موقتاً در دسترس نباشد یا خیلی شلوغ باشد. چند لحظهٔ دیگر دوباره تلاش کنید.</li>
-        <li>اگر نمی‌توانید هیچ صفحه‌ای را باز کنید، اتّصال دادهٔ دستگاه یا وای‌فای خود را بررسی کنید.</li> 
-      </ul>
-    ]]></string>
+ <ul>
+ <li>ممکن است پایگاه موقتاً در دسترس نباشد یا خیلی شلوغ باشد. چند لحظهٔ دیگر دوباره تلاش کنید.</li>
+ <li>اگر نمی‌توانید هیچ صفحه‌ای را باز کنید، اتّصال دادهٔ افزاره یا وای‌فای خود را بررسی کنید.</li> 
+ </ul>
+  ]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">جواب غیرمنتظره از کارساز</string>
@@ -182,7 +182,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">اتصال اینترنت در دسترس نیست</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
-    <string name="mozac_browser_errorpages_no_internet_message">اتصال شبکهٔ خود را بررسی کنید یا در چند لحظهٔ بار کردن دوبارهٔ صفحه را امتحان کنید.</string>
+    <string name="mozac_browser_errorpages_no_internet_message">اتصال شبکهٔ خود را بررسی کنید یا پس از چند لحظه، بار کردن دوبارهٔ صفحه را بیازمایید.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">بار کردن دوباره</string>
 
