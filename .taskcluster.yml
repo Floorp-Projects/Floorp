@@ -219,7 +219,7 @@ tasks:
                                 ACTION_CALLBACK: '${action.cb_name}'
 
                   cache:
-                      "${trustDomain}-level-${repository.level}-checkouts-sparse-v3": /builds/worker/checkouts
+                      "${trustDomain}-level-${repository.level}-checkouts-sparse-v4": /builds/worker/checkouts
 
                   features:
                       taskclusterProxy: true
@@ -227,7 +227,7 @@ tasks:
 
                   # Note: This task is built server side without the context or tooling that
                   # exist in tree so we must hard code the hash
-                  image: 'mozillareleases/gecko_decision:4.0.0@sha256:9f69fe08c28e3cb3cc296451f0a2735df6e25d0e3c877ea735ef1b7f0b345b06'
+                  image: 'mozillareleases/gecko_decision:4.1.0@sha256:ea73900129328095da4fb033697690d538a08d935298fef4d5fa4aae80273bce'
 
                   maxRunTime: 3600
 
