@@ -110,25 +110,33 @@ void OggDemuxer::SandboxDestroy::operator()(rlbox_sandbox_ogg* sandbox) {
 // (https://www.whatwg.org/specs/web-apps/current-
 // work/multipage/embedded-content.html#dom-audiotrack-kind) &
 // (http://wiki.xiph.org/SkeletonHeaders)
-const nsString OggDemuxer::GetKind(const nsCString& aRole) {
+nsString OggDemuxer::GetKind(const nsCString& aRole) {
   if (aRole.Find("audio/main") != -1 || aRole.Find("video/main") != -1) {
     return u"main"_ns;
-  } else if (aRole.Find("audio/alternate") != -1 ||
-             aRole.Find("video/alternate") != -1) {
+  }
+  if (aRole.Find("audio/alternate") != -1 ||
+      aRole.Find("video/alternate") != -1) {
     return u"alternative"_ns;
-  } else if (aRole.Find("audio/audiodesc") != -1) {
+  }
+  if (aRole.Find("audio/audiodesc") != -1) {
     return u"descriptions"_ns;
-  } else if (aRole.Find("audio/described") != -1) {
+  }
+  if (aRole.Find("audio/described") != -1) {
     return u"main-desc"_ns;
-  } else if (aRole.Find("audio/dub") != -1) {
+  }
+  if (aRole.Find("audio/dub") != -1) {
     return u"translation"_ns;
-  } else if (aRole.Find("audio/commentary") != -1) {
+  }
+  if (aRole.Find("audio/commentary") != -1) {
     return u"commentary"_ns;
-  } else if (aRole.Find("video/sign") != -1) {
+  }
+  if (aRole.Find("video/sign") != -1) {
     return u"sign"_ns;
-  } else if (aRole.Find("video/captioned") != -1) {
+  }
+  if (aRole.Find("video/captioned") != -1) {
     return u"captions"_ns;
-  } else if (aRole.Find("video/subtitled") != -1) {
+  }
+  if (aRole.Find("video/subtitled") != -1) {
     return u"subtitles"_ns;
   }
   return u""_ns;
@@ -248,7 +256,7 @@ OggCodecState* OggDemuxer::GetTrackCodecState(
     case TrackInfo::kVideoTrack:
       return mTheoraState;
     default:
-      return 0;
+      return nullptr;
   }
 }
 
@@ -470,7 +478,7 @@ nsresult OggDemuxer::ReadMetadata() {
   nsTArray<OggCodecState*> bitstreams;
   nsTArray<uint32_t> serials;
 
-  for (uint32_t i = 0; i < ArrayLength(tracks); i++) {
+  for (auto& track : tracks) {
     tainted_ogg<ogg_page*> page = mSandbox->malloc_in_sandbox<ogg_page>();
     if (!page) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -479,7 +487,7 @@ nsresult OggDemuxer::ReadMetadata() {
 
     bool readAllBOS = false;
     while (!readAllBOS) {
-      if (!ReadOggPage(tracks[i], page.to_opaque())) {
+      if (!ReadOggPage(track, page.to_opaque())) {
         // Some kind of error...
         OGG_DEBUG("OggDemuxer::ReadOggPage failed? leaving ReadMetadata...");
         return NS_ERROR_FAILURE;
@@ -508,7 +516,7 @@ nsresult OggDemuxer::ReadMetadata() {
         bitstreams.AppendElement(codecState);
         serials.AppendElement(serial);
       }
-      if (NS_FAILED(DemuxOggPage(tracks[i], page.to_opaque()))) {
+      if (NS_FAILED(DemuxOggPage(track, page.to_opaque()))) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -596,6 +604,7 @@ nsresult OggDemuxer::ReadMetadata() {
       }
     }
     if (mInfo.mMetadataDuration.isNothing()) {
+      OGG_DEBUG("Couldn't determine OGG file duration.");
       mInfo.mMetadataDuration.emplace(TimeUnit::FromInfinity());
     }
     if (HasAudio()) {
@@ -841,12 +850,7 @@ nsresult OggDemuxer::DemuxOggPage(TrackInfo::TrackType aType,
   return NS_OK;
 }
 
-bool OggDemuxer::IsSeekable() const {
-  if (mIsChained) {
-    return false;
-  }
-  return true;
-}
+bool OggDemuxer::IsSeekable() const { return !mIsChained; }
 
 UniquePtr<EncryptionInfo> OggDemuxer::GetCrypto() { return nullptr; }
 
@@ -954,7 +958,8 @@ TimeIntervals OggDemuxer::GetBuffered(TrackInfo::TrackType aType) {
                    startOffset, endOffset, page, discard);
       if (pageSyncResult == PAGE_SYNC_ERROR) {
         return TimeIntervals::Invalid();
-      } else if (pageSyncResult == PAGE_SYNC_END_OF_RANGE) {
+      }
+      if (pageSyncResult == PAGE_SYNC_END_OF_RANGE) {
         // Hit the end of range without reading a page, give up trying to
         // find a start time for this buffered range, skip onto the next one.
         break;
@@ -1371,7 +1376,7 @@ OggDemuxer::PageSyncResult OggDemuxer::PageSync(
             result > (aEndOffset - aOffset) || result < 0) {
           failedSkippedBytesVerify = true;
         } else {
-          aSkippedBytes = result;
+          aSkippedBytes = AssertedCast<int>(result);
         }
       });
       if (failedSkippedBytesVerify) {
@@ -1414,10 +1419,8 @@ RefPtr<OggTrackDemuxer::SeekPromise> OggTrackDemuxer::Seek(
     mQueuedSample = sample;
 
     return SeekPromise::CreateAndResolve(seekTime, __func__);
-  } else {
-    return SeekPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
-                                        __func__);
   }
+  return SeekPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR, __func__);
 }
 
 RefPtr<MediaRawData> OggTrackDemuxer::NextSample() {
@@ -1524,9 +1527,8 @@ RefPtr<OggTrackDemuxer::SamplesPromise> OggTrackDemuxer::GetSamples(
   if (samples->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
-  } else {
-    return SamplesPromise::CreateAndResolve(samples, __func__);
   }
+  return SamplesPromise::CreateAndResolve(samples, __func__);
 }
 
 void OggTrackDemuxer::Reset() {
@@ -1552,11 +1554,9 @@ OggTrackDemuxer::SkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold) {
     OGG_DEBUG("next sample: %f (parsed: %d)", sample->mTime.ToSeconds(),
               parsed);
     return SkipAccessPointPromise::CreateAndResolve(parsed, __func__);
-  } else {
-    SkipFailureHolder failure(NS_ERROR_DOM_MEDIA_END_OF_STREAM, parsed);
-    return SkipAccessPointPromise::CreateAndReject(std::move(failure),
-                                                   __func__);
   }
+  SkipFailureHolder failure(NS_ERROR_DOM_MEDIA_END_OF_STREAM, parsed);
+  return SkipAccessPointPromise::CreateAndReject(std::move(failure), __func__);
 }
 
 TimeIntervals OggTrackDemuxer::GetBuffered() {
@@ -1618,7 +1618,7 @@ struct nsDemuxerAutoOggSyncState {
     mSandbox.free_in_sandbox(mState);
   }
   rlbox_sandbox_ogg& mSandbox;
-  tainted_ogg<ogg_sync_state*> mState;
+  tainted_ogg<ogg_sync_state*> mState{};
 };
 
 TimeUnit OggDemuxer::RangeEndTime(TrackInfo::TrackType aType,
@@ -1809,7 +1809,7 @@ nsresult OggDemuxer::GetSeekRanges(TrackInfo::TrackType aType,
   NS_ENSURE_SUCCESS(res, res);
 
   for (uint32_t index = 0; index < cached.Length(); index++) {
-    auto& range = cached[index];
+    const auto& range = cached[index];
     TimeUnit startTime = TimeUnit::Invalid();
     TimeUnit endTime = TimeUnit::Invalid();
     if (NS_FAILED(Reset(aType))) {

@@ -169,7 +169,7 @@ class OggDemuxer : public MediaDataDemuxer,
 
   nsresult Reset(TrackInfo::TrackType aType);
 
-  static const nsString GetKind(const nsCString& aRole);
+  static nsString GetKind(const nsCString& aRole);
   static void InitTrack(MessageField* aMsgInfo, TrackInfo* aInfo, bool aEnable);
 
   // Really private!
@@ -307,7 +307,7 @@ class OggDemuxer : public MediaDataDemuxer,
   bool HasVideo() const;
   bool HasAudio() const;
   bool HasSkeleton() const {
-    return mSkeletonState != 0 && mSkeletonState->mActive;
+    return mSkeletonState != nullptr && mSkeletonState->mActive;
   }
   bool HaveStartTime() const;
   bool HaveStartTime(TrackInfo::TrackType aType);
