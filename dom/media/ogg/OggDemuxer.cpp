@@ -587,7 +587,7 @@ nsresult OggDemuxer::ReadMetadata() {
 
       TimeUnit endTime = RangeEndTime(TrackInfo::kAudioTrack, length);
 
-      if (endTime.IsValid()) {
+      if (endTime.IsValid() && endTime.IsPositive()) {
         mInfo.mUnadjustedMetadataEndTime.emplace(endTime);
         mInfo.mMetadataDuration.emplace(endTime -
                                         mStartTime.refOr(TimeUnit::Zero()));
