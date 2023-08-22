@@ -1074,6 +1074,9 @@ add_task(async function testFPPCustomCheckBox() {
     ],
   });
 
+  // Clear glean before testing.
+  Services.fog.testResetFOG();
+
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   let doc = gBrowser.contentDocument;
 
@@ -1097,7 +1100,7 @@ add_task(async function testFPPCustomCheckBox() {
   menu.selectedItem = alwaysMenuItem;
   alwaysMenuItem.click();
 
-  // Verify the pref states.
+  // Verify the pref states and the telemetry.
   is(
     Services.prefs.getBoolPref(FPP_PREF),
     true,
@@ -1110,11 +1113,15 @@ add_task(async function testFPPCustomCheckBox() {
     `${FPP_PBM_PREF} has been set to true`
   );
 
+  let events = Glean.privacyUiFppClick.menu.testGetValue();
+  is(events.length, 1, "The event length is correct");
+  is(events[0].extra.value, "always", "The extra field is correct.");
+
   // Click the private-only option on the FPP drop down.
   menu.selectedItem = privateMenuItem;
   privateMenuItem.click();
 
-  // Verify the pref states.
+  // Verify the pref states and the telemetry.
   is(
     Services.prefs.getBoolPref(FPP_PREF),
     false,
@@ -1127,10 +1134,14 @@ add_task(async function testFPPCustomCheckBox() {
     `${FPP_PBM_PREF} has been set to true`
   );
 
+  events = Glean.privacyUiFppClick.menu.testGetValue();
+  is(events.length, 2, "The event length is correct");
+  is(events[1].extra.value, "private", "The extra field is correct.");
+
   // Uncheck the checkbox
   fppCheckbox.click();
 
-  // Verify the pref states.
+  // Verify the pref states and the telemetry.
   is(
     Services.prefs.getBoolPref(FPP_PREF),
     false,
@@ -1144,10 +1155,14 @@ add_task(async function testFPPCustomCheckBox() {
   );
   is(menu.disabled, true, "The menu is disabled as the checkbox is unchecked");
 
+  events = Glean.privacyUiFppClick.checkbox.testGetValue();
+  is(events.length, 1, "The event length is correct");
+  is(events[0].extra.checked, "false", "The extra field is correct.");
+
   // Check the checkbox again.
   fppCheckbox.click();
 
-  // Verify the pref states.
+  // Verify the pref states and telemetry.
   is(
     Services.prefs.getBoolPref(FPP_PREF),
     false,
@@ -1160,6 +1175,10 @@ add_task(async function testFPPCustomCheckBox() {
     `${FPP_PBM_PREF} has been set to true`
   );
   is(menu.disabled, false, "The menu is enabled as the checkbox is checked");
+
+  events = Glean.privacyUiFppClick.checkbox.testGetValue();
+  is(events.length, 2, "The event length is correct");
+  is(events[1].extra.checked, "true", "The extra field is correct.");
 
   gBrowser.removeCurrentTab();
 });

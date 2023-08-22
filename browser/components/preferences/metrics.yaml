@@ -1,0 +1,53 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Firefox :: Settings UI'
+
+privacy.ui.fpp.click:
+  checkbox:
+    type: event
+    description: >
+      User interaction by click events on fingerprinting protection checkbox in
+      the ETP Custom subpanel.
+    bugs:
+      - https://bugzilla.mozilla.org/1841097
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841097#c8
+    notification_emails:
+      - tom@mozilla.com
+      - tschuster@mozilla.com
+      - tihuang@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never
+    extra_keys:
+      checked:
+        description: The checked state of the fingerprinting protection checkbox
+        type: boolean
+    telemetry_mirror: PrivacyUiFpp_Click_Checkbox
+  menu:
+    type: event
+    description: >
+      User interaction by click events on fingerprinting protection menulist in
+      the ETP Custom subpanel.
+    bugs:
+      - https://bugzilla.mozilla.org/1841097
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841097#c8
+    notification_emails:
+      - tom@mozilla.com
+      - tschuster@mozilla.com
+      - tihuang@mozilla.com
+      - seceng-telemetry@mozilla.com
+    expires: never
+    extra_keys:
+      value:
+        description: The value of the clicked menu item of the menulist.
+        type: string
+    telemetry_mirror: PrivacyUiFpp_Click_Menu
