@@ -116,12 +116,29 @@ class ContentIteratorBase {
   friend void ImplCycleCollectionUnlink(ContentIteratorBase<T>&);
 };
 
+// Each concrete class of ContentIteratorBase<RefPtr<nsINode>> may be owned by
+// another class which may be owned by JS.  Therefore, all of them should be in
+// the cycle collection.  However, we cannot make non-refcountable classes only
+// with the macros.  So, we need to make them cycle collectable without the
+// macros.
 template <typename NodeType>
-void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
-                                 ContentIteratorBase<NodeType>&, const char*,
-                                 uint32_t aFlags = 0);
+void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                                 ContentIteratorBase<NodeType>& aField,
+                                 const char* aName, uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(aCallback, aField.mCurNode, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mFirst, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mLast, aName, aFlags);
+  ImplCycleCollectionTraverse(aCallback, aField.mClosestCommonInclusiveAncestor,
+                              aName, aFlags);
+}
+
 template <typename NodeType>
-void ImplCycleCollectionUnlink(ContentIteratorBase<NodeType>&);
+void ImplCycleCollectionUnlink(ContentIteratorBase<NodeType>& aField) {
+  ImplCycleCollectionUnlink(aField.mCurNode);
+  ImplCycleCollectionUnlink(aField.mFirst);
+  ImplCycleCollectionUnlink(aField.mLast);
+  ImplCycleCollectionUnlink(aField.mClosestCommonInclusiveAncestor);
+}
 
 using SafeContentIteratorBase = ContentIteratorBase<RefPtr<nsINode>>;
 using UnsafeContentIteratorBase = ContentIteratorBase<nsINode*>;
