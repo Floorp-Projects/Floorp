@@ -33,6 +33,7 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 ChromeUtils.defineESModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
+  TabStateFlusher: "resource:///modules/sessionstore/TabStateFlusher.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -59,6 +60,7 @@ const URLs = [
   "https://www.example.com/",
   "https://example.net/",
   "https://example.org/",
+  "about:robots",
 ];
 
 const syncedTabsData1 = [

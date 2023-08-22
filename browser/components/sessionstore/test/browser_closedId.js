@@ -89,7 +89,7 @@ add_task(async function test_closedId_order() {
   // If this fails, that means one of the closedId's in the stubbed data in this test needs to be updated
   // to reflect what the initial closedId is when a new tab is open and closed (which may change as more tests
   // for session store are added here). You can manually verify a change to stubbed data by commenting out
-  // this._resetClosedIds in SessionStore.sys.mjs temporarily and then the "Each tab has a unique closedId" case should fail.
+  // this._resetClosedTabsIds in SessionStore.sys.mjs temporarily and then the "Each tab has a unique closedId" case should fail.
   is(initialClosedId, 0, "Initial closedId is 0");
 
   await openAndCloseTab(window, "about:robots"); // closedId should be higher than the ones we just restored.
