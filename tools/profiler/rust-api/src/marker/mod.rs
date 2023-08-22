@@ -127,7 +127,6 @@ pub use schema::MarkerSchema;
 use crate::gecko_bindings::{bindings, profiling_categories::ProfilingCategoryPair};
 use crate::json_writer::JSONWriter;
 use crate::marker::deserializer_tags_state::get_or_insert_deserializer_tag;
-use crate::marker::options::MarkerOptions;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::os::raw::c_char;
 
