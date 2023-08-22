@@ -355,12 +355,14 @@
       }
       /* Background */
       .top-site-outer,
+      .ds-card-grid .ds-card,
       #searchSubmit,
       button.icon,
       button.close-button {
         transition: background 1.5s var(--animation-easing-function);
       }
       .top-site-outer:hover,
+      .ds-card-grid .ds-card:hover,
       #searchSubmit:hover,
       button.icon:hover,
       button.close-button:hover {
