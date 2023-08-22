@@ -3773,8 +3773,8 @@ var gCSSProperties = {
     domProp: "transformBox",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: ["border-box"],
-    other_values: ["fill-box", "view-box"],
+    initial_values: ["view-box"],
+    other_values: ["fill-box", "border-box"],
     invalid_values: ["content-box", "padding-box", "stroke-box", "margin-box"],
   },
   "transform-origin": {

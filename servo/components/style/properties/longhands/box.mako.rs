@@ -449,7 +449,7 @@ ${helpers.single_keyword(
 
 ${helpers.single_keyword(
     "transform-box",
-    "border-box fill-box view-box",
+    "view-box border-box fill-box",
     engines="gecko",
     gecko_enum_prefix="StyleGeometryBox",
     spec="https://drafts.csswg.org/css-transforms/#transform-box",
