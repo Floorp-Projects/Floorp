@@ -2573,6 +2573,29 @@ security.ui.protectionspopup:
     products:
       - firefox
 
+privacy.ui.fpp:
+  click:
+    objects: [
+      "checkbox",
+      "menu",
+    ]
+    bug_numbers:
+      - 1841097
+    description: >
+      User interaction by click events on fingerprinting protection checkbox in
+      the ETP Custom subpanel.
+    expiry_version: never
+    notification_emails:
+      - tom@mozilla.com
+      - tschuster@mozilla.com
+      - tihuang@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - all
+    products:
+      - firefox
+
 uptake.remotecontent.result:
   uptake:
     description: >

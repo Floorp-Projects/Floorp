@@ -883,6 +883,8 @@ var gPrivacyPane = {
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
 
+    Services.telemetry.setEventRecordingEnabled("privacy.ui.fpp", true);
+
     Services.telemetry.setEventRecordingEnabled("pwmgr", true);
 
     Preferences.get("privacy.trackingprotection.enabled").on(
@@ -1208,13 +1210,17 @@ var gPrivacyPane = {
     setEventListener(
       "contentBlockingFingerprintingProtectionCheckbox",
       "command",
-      this.fingerprintingProtectionWritePrefs
+      e => {
+        const extra = { checked: e.target.checked };
+        Glean.privacyUiFppClick.checkbox.record(extra);
+        this.fingerprintingProtectionWritePrefs();
+      }
     );
-    setEventListener(
-      "fingerprintingProtectionMenu",
-      "command",
-      this.fingerprintingProtectionWritePrefs
-    );
+    setEventListener("fingerprintingProtectionMenu", "command", e => {
+      const extra = { value: e.target.value };
+      Glean.privacyUiFppClick.menu.record(extra);
+      this.fingerprintingProtectionWritePrefs();
+    });
     setEventListener("standardArrow", "command", this.toggleExpansion);
     setEventListener("strictArrow", "command", this.toggleExpansion);
     setEventListener("customArrow", "command", this.toggleExpansion);

@@ -44,6 +44,7 @@ firefox_desktop_metrics = [
     "browser/components/newtab/metrics.yaml",
     "browser/components/search/metrics.yaml",
     "browser/components/urlbar/metrics.yaml",
+    "browser/components/preferences/metrics.yaml",
     "browser/modules/metrics.yaml",
     "toolkit/components/crashes/metrics.yaml",
     "toolkit/components/nimbus/metrics.yaml",

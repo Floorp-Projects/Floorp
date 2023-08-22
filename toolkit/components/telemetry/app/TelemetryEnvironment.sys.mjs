@@ -340,6 +340,8 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["places.history.enabled", { what: RECORD_PREF_VALUE }],
   ["privacy.firstparty.isolate", { what: RECORD_PREF_VALUE }],
   ["privacy.resistFingerprinting", { what: RECORD_PREF_VALUE }],
+  ["privacy.fingerprintingProtection", { what: RECORD_PREF_VALUE }],
+  ["privacy.fingerprintingProtection.pbmode", { what: RECORD_PREF_VALUE }],
   ["privacy.trackingprotection.enabled", { what: RECORD_PREF_VALUE }],
   ["privacy.donottrackheader.enabled", { what: RECORD_PREF_VALUE }],
   ["security.enterprise_roots.auto-enabled", { what: RECORD_PREF_VALUE }],
