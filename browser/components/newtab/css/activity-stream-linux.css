@@ -3583,7 +3583,6 @@ main.has-snippet {
 .ds-card .ds-card-link:focus {
   border: 0;
   outline: 0;
-  box-shadow: 0 0 0 3px var(--newtab-primary-action-background-dimmed), 0 0 0 1px var(--newtab-primary-action-background);
   transition: none;
 }
 .ds-card .meta {
