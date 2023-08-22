@@ -71,10 +71,6 @@ function parseScripts(locations, parser) {
   return locations.map(parser);
 }
 
-function generateWhitespace(length) {
-  return Array.from(new Array(length + 1)).join(" ");
-}
-
 function calcLineAndColumn(source, index) {
   const lines = source.substring(0, index).split(newLines);
   const line = lines.length;
@@ -92,7 +88,8 @@ function adjustForLineAndColumn(fullSource, location) {
     line,
     column,
     // prepend whitespace for scripts that do not start on the first column
-    source: generateWhitespace(column) + location.source,
+    // NOTE: `column` is 1-based
+    source: " ".repeat(column - 1) + location.source,
   });
 }
 
@@ -132,9 +129,4 @@ function parseScriptTags(source, parser) {
 }
 
 export default parseScriptTags;
-export {
-  generateWhitespace,
-  getCandidateScriptLocations,
-  parseScripts,
-  parseScriptTags,
-};
+export { getCandidateScriptLocations, parseScripts, parseScriptTags };
