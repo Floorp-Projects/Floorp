@@ -21,6 +21,8 @@ const CONTENT_BLOCKING_PREFS = [
   "privacy.firstparty.isolate",
   "privacy.trackingprotection.emailtracking.enabled",
   "privacy.trackingprotection.emailtracking.pbmode.enabled",
+  "privacy.fingerprintingProtection",
+  "privacy.fingerprintingProtection.pbmode",
 ];
 
 const PREF_URLBAR_QUICKSUGGEST_BLOCKLIST =
@@ -91,6 +93,10 @@ Preferences.addAll([
     id: "privacy.trackingprotection.emailtracking.pbmode.enabled",
     type: "bool",
   },
+
+  // Fingerprinting Protection
+  { id: "privacy.fingerprintingProtection", type: "bool" },
+  { id: "privacy.fingerprintingProtection.pbmode", type: "bool" },
 
   // Social tracking
   { id: "privacy.trackingprotection.socialtracking.enabled", type: "bool" },
@@ -873,6 +879,7 @@ var gPrivacyPane = {
 
     this._showCustomBlockList();
     this.trackingProtectionReadPrefs();
+    this.fingerprintingProtectionReadPrefs();
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
 
@@ -1197,6 +1204,16 @@ var gPrivacyPane = {
       "trackingProtectionMenu",
       "command",
       this.trackingProtectionWritePrefs
+    );
+    setEventListener(
+      "contentBlockingFingerprintingProtectionCheckbox",
+      "command",
+      this.fingerprintingProtectionWritePrefs
+    );
+    setEventListener(
+      "fingerprintingProtectionMenu",
+      "command",
+      this.fingerprintingProtectionWritePrefs
     );
     setEventListener("standardArrow", "command", this.toggleExpansion);
     setEventListener("strictArrow", "command", this.toggleExpansion);
@@ -1589,6 +1606,32 @@ var gPrivacyPane = {
   },
 
   /**
+   * Selects the right item of the Fingerprinting Protection menulist and
+   * checkbox.
+   */
+  fingerprintingProtectionReadPrefs() {
+    let enabledPref = Preferences.get("privacy.fingerprintingProtection");
+    let pbmPref = Preferences.get("privacy.fingerprintingProtection.pbmode");
+    let fppMenu = document.getElementById("fingerprintingProtectionMenu");
+    let fppCheckbox = document.getElementById(
+      "contentBlockingFingerprintingProtectionCheckbox"
+    );
+
+    // Global enable takes precedence over enabled in Private Browsing.
+    if (enabledPref.value) {
+      fppMenu.value = "always";
+      fppCheckbox.checked = true;
+    } else if (pbmPref.value) {
+      fppMenu.value = "private";
+      fppCheckbox.checked = true;
+    } else {
+      fppMenu.value = "never";
+      fppCheckbox.checked = false;
+    }
+    fppMenu.disabled = !fppCheckbox.checked;
+  },
+
+  /**
    * Selects the right items of the new Cookies & Site Data UI.
    */
   networkCookieBehaviorReadPrefs() {
@@ -1696,6 +1739,43 @@ var gPrivacyPane = {
         if (stpCookiePref.value) {
           stpPref.value = false;
         }
+        break;
+    }
+  },
+
+  fingerprintingProtectionWritePrefs() {
+    let enabledPref = Preferences.get("privacy.fingerprintingProtection");
+    let pbmPref = Preferences.get("privacy.fingerprintingProtection.pbmode");
+    let fppMenu = document.getElementById("fingerprintingProtectionMenu");
+    let fppCheckbox = document.getElementById(
+      "contentBlockingFingerprintingProtectionCheckbox"
+    );
+
+    let value;
+    if (fppCheckbox.checked) {
+      if (fppMenu.value == "never") {
+        fppMenu.value = "private";
+      }
+      value = fppMenu.value;
+    } else {
+      fppMenu.value = "never";
+      value = "never";
+    }
+
+    fppMenu.disabled = !fppCheckbox.checked;
+
+    switch (value) {
+      case "always":
+        enabledPref.value = true;
+        pbmPref.value = true;
+        break;
+      case "private":
+        enabledPref.value = false;
+        pbmPref.value = true;
+        break;
+      case "never":
+        enabledPref.value = false;
+        pbmPref.value = false;
         break;
     }
   },

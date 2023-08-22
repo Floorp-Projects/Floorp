@@ -31,6 +31,8 @@ const PRIVACY_PAGE = "about:preferences#privacy";
 const ISOLATE_UI_PREF =
   "browser.contentblocking.reject-and-isolate-cookies.preferences.ui.enabled";
 const FPI_PREF = "privacy.firstparty.isolate";
+const FPP_PREF = "privacy.fingerprintingProtection";
+const FPP_PBM_PREF = "privacy.fingerprintingProtection.pbmode";
 
 const { EnterprisePolicyTesting, PoliciesPrefTracker } =
   ChromeUtils.importESModule(
@@ -105,6 +107,7 @@ add_task(async function testContentBlockingMainCategory() {
   let checkboxes = [
     "#contentBlockingTrackingProtectionCheckbox",
     "#contentBlockingBlockCookiesCheckbox",
+    "#contentBlockingFingerprintingProtectionCheckbox",
   ];
 
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
@@ -1056,6 +1059,107 @@ add_task(async function testTPMenuForEmailTP() {
     true,
     `${EMAIL_TP_PBM_PREF} has been set to true`
   );
+
+  gBrowser.removeCurrentTab();
+});
+
+// Ensure the FPP checkbox in ETP custom works properly.
+add_task(async function testFPPCustomCheckBox() {
+  // Set the FPP prefs to the default state.
+  SpecialPowers.pushPrefEnv({
+    set: [
+      [FPP_PREF, false],
+      [FPP_PBM_PREF, true],
+      [CAT_PREF, "custom"],
+    ],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let doc = gBrowser.contentDocument;
+
+  let fppCheckbox = doc.querySelector(
+    "#contentBlockingFingerprintingProtectionCheckbox"
+  );
+
+  // Verify the default state of the FPP checkbox.
+  ok(fppCheckbox, "FPP checkbox exists");
+  is(fppCheckbox.getAttribute("checked"), "true", "FPP checkbox is checked");
+
+  let menu = doc.querySelector("#fingerprintingProtectionMenu");
+  let alwaysMenuItem = doc.querySelector(
+    "#fingerprintingProtectionMenu > menupopup > menuitem[value=always]"
+  );
+  let privateMenuItem = doc.querySelector(
+    "#fingerprintingProtectionMenu > menupopup > menuitem[value=private]"
+  );
+
+  // Click the always option on the FPP drop down.
+  menu.selectedItem = alwaysMenuItem;
+  alwaysMenuItem.click();
+
+  // Verify the pref states.
+  is(
+    Services.prefs.getBoolPref(FPP_PREF),
+    true,
+    `${FPP_PREF} has been set to true`
+  );
+
+  is(
+    Services.prefs.getBoolPref(FPP_PBM_PREF),
+    true,
+    `${FPP_PBM_PREF} has been set to true`
+  );
+
+  // Click the private-only option on the FPP drop down.
+  menu.selectedItem = privateMenuItem;
+  privateMenuItem.click();
+
+  // Verify the pref states.
+  is(
+    Services.prefs.getBoolPref(FPP_PREF),
+    false,
+    `${FPP_PREF} has been set to true`
+  );
+
+  is(
+    Services.prefs.getBoolPref(FPP_PBM_PREF),
+    true,
+    `${FPP_PBM_PREF} has been set to true`
+  );
+
+  // Uncheck the checkbox
+  fppCheckbox.click();
+
+  // Verify the pref states.
+  is(
+    Services.prefs.getBoolPref(FPP_PREF),
+    false,
+    `${FPP_PREF} has been set to true`
+  );
+
+  is(
+    Services.prefs.getBoolPref(FPP_PBM_PREF),
+    false,
+    `${FPP_PBM_PREF} has been set to true`
+  );
+  is(menu.disabled, true, "The menu is disabled as the checkbox is unchecked");
+
+  // Check the checkbox again.
+  fppCheckbox.click();
+
+  // Verify the pref states.
+  is(
+    Services.prefs.getBoolPref(FPP_PREF),
+    false,
+    `${FPP_PREF} has been set to true`
+  );
+
+  is(
+    Services.prefs.getBoolPref(FPP_PBM_PREF),
+    true,
+    `${FPP_PBM_PREF} has been set to true`
+  );
+  is(menu.disabled, false, "The menu is enabled as the checkbox is checked");
 
   gBrowser.removeCurrentTab();
 });

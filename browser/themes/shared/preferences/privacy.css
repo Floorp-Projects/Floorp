@@ -264,7 +264,8 @@
 }
 
 #blockCookiesMenu,
-#trackingProtectionMenu {
+#trackingProtectionMenu,
+#fingerprintingProtectionMenu {
   margin: 0;
 }
 
