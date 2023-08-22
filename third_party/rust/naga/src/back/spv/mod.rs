@@ -466,7 +466,6 @@ enum CachedConstant {
         ty: LookupType,
         constituent_ids: Vec<Word>,
     },
-    ZeroValue(Word),
 }
 
 #[derive(Clone)]
