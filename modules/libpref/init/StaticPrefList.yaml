@@ -1818,12 +1818,6 @@
 # Prefs starting with "canvas."
 #---------------------------------------------------------------------------
 
-# Add support for canvas path objects
-- name: canvas.path.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: canvas.capturestream.enabled
   type: bool
   value: true

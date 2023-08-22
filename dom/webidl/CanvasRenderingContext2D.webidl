@@ -402,9 +402,7 @@ interface TextMetrics {
   readonly attribute double ideographicBaseline;
 };
 
-[Pref="canvas.path.enabled",
- Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread",
- Exposed=(Window,Worker)]
+[Exposed=(Window,Worker)]
 interface Path2D
 {
   constructor();
