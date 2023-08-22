@@ -1,5 +1,3 @@
-defaults pref(canvas.filters.enabled,true)
-
 == default-color.html ref.html
 == drop-shadow.html ref.html
 == drop-shadow-transformed.html ref.html
