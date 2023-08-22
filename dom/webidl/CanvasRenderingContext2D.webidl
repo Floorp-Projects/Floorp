@@ -243,7 +243,7 @@ interface mixin CanvasDrawPath {
 };
 
 interface mixin CanvasUserInterface {
-  [Pref="canvas.focusring.enabled", Throws] undefined drawFocusIfNeeded(Element element);
+  [Throws] undefined drawFocusIfNeeded(Element element);
 // NOT IMPLEMENTED  undefined scrollPathIntoView();
 // NOT IMPLEMENTED  undefined scrollPathIntoView(Path path);
 };
