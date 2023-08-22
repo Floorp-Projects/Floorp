@@ -1,0 +1,27 @@
+<html class="reftest-wait">
+  <script>
+    var cfg = {
+      codec: "vp8",
+      colorSpace: { primaries: "bt709" },
+    };
+    var decoder = new VideoDecoder({
+      output: () => {},
+      error: e => {
+        document.documentElement.removeAttribute("class");
+      },
+    });
+    decoder.configure(cfg);
+    try {
+      decoder.decode(
+        new EncodedVideoChunk({
+          type: "key",
+          timestamp: 0,
+          duration: 10,
+          data: new Uint8Array(10),
+        })
+      );
+    } catch (e) {
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+</html>

@@ -300,16 +300,16 @@ static Result<UniquePtr<TrackInfo>, nsresult> CreateVideoInfo(
 
   if (aConfig.mColorSpace.isSome()) {
     const VideoColorSpaceInternal& colorSpace(aConfig.mColorSpace.value());
-    if (!colorSpace.mFullRange.isSome()) {
+    if (colorSpace.mFullRange.isSome()) {
       vi->mColorRange = ToColorRange(colorSpace.mFullRange.value());
     }
-    if (!colorSpace.mMatrix.isSome()) {
+    if (colorSpace.mMatrix.isSome()) {
       vi->mColorSpace.emplace(ToColorSpace(colorSpace.mMatrix.value()));
     }
-    if (!colorSpace.mPrimaries.isSome()) {
+    if (colorSpace.mPrimaries.isSome()) {
       vi->mColorPrimaries.emplace(ToPrimaries(colorSpace.mPrimaries.value()));
     }
-    if (!colorSpace.mTransfer.isSome()) {
+    if (colorSpace.mTransfer.isSome()) {
       vi->mTransferFunction.emplace(
           ToTransferFunction(colorSpace.mTransfer.value()));
     }
