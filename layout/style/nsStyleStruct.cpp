@@ -2175,7 +2175,7 @@ nsStyleDisplay::nsStyleDisplay()
                       StyleScrollSnapStrictness::None},
       mBackfaceVisibility(StyleBackfaceVisibility::Visible),
       mTransformStyle(StyleTransformStyle::Flat),
-      mTransformBox(StyleGeometryBox::ViewBox),
+      mTransformBox(StyleTransformBox::ViewBox),
       mRotate(StyleRotate::None()),
       mTranslate(StyleTranslate::None()),
       mScale(StyleScale::None()),

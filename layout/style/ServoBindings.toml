@@ -517,6 +517,7 @@ cbindgen-types = [
     { gecko = "StyleGenericPerspective", servo = "crate::values::generics::box_::Perspective" },
     { gecko = "StyleZIndex", servo = "crate::values::computed::ZIndex" },
     { gecko = "StyleGenericZIndex", servo = "crate::values::generics::position::ZIndex" },
+    { gecko = "StyleTransformBox", servo = "crate::values::computed::TransformBox" },
     { gecko = "StyleTransformOrigin", servo = "crate::values::computed::TransformOrigin" },
     { gecko = "StyleTransformStyle", servo = "crate::values::computed::TransformStyle" },
     { gecko = "StyleGenericBorderRadius", servo = "crate::values::generics::border::BorderRadius" },

@@ -97,7 +97,7 @@ pub use self::text::{TextAlignKeyword, TextDecorationLine, TextOverflow, WordSpa
 pub use self::text::{TextDecorationLength, TextDecorationSkipInk, TextJustify, TextTransform};
 pub use self::time::Time;
 pub use self::transform::{Rotate, Scale, Transform};
-pub use self::transform::{TransformOrigin, TransformStyle, Translate};
+pub use self::transform::{TransformBox, TransformOrigin, TransformStyle, Translate};
 #[cfg(feature = "gecko")]
 pub use self::ui::CursorImage;
 pub use self::ui::{BoolInteger, Cursor, UserSelect};

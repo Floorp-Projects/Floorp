@@ -45,10 +45,17 @@ void TransformReferenceBox::EnsureDimensionsAreCached() {
 
   MOZ_ASSERT(mFrame);
 
+  const auto box = mFrame->StyleDisplay()->mTransformBox;
+  if (box == StyleTransformBox::ContentBox ||
+      box == StyleTransformBox::StrokeBox) {
+    // TODO: Implement this in the following patches.
+    return;
+  }
+
   mIsCached = true;
 
   if (mFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
-    if (mFrame->StyleDisplay()->mTransformBox == StyleGeometryBox::FillBox) {
+    if (box == StyleTransformBox::FillBox) {
       // Percentages in transforms resolve against the SVG bbox, and the
       // transform is relative to the top-left of the SVG bbox.
       nsRect bboxInAppUnits = nsLayoutUtils::ComputeGeometryBox(
@@ -63,11 +70,9 @@ void TransformReferenceBox::EnsureDimensionsAreCached() {
       mHeight = bboxInAppUnits.height;
     } else {
       // The value 'border-box' is treated as 'view-box' for SVG content.
-      MOZ_ASSERT(
-          mFrame->StyleDisplay()->mTransformBox == StyleGeometryBox::ViewBox ||
-              mFrame->StyleDisplay()->mTransformBox ==
-                  StyleGeometryBox::BorderBox,
-          "Unexpected value for 'transform-box'");
+      MOZ_ASSERT(box == StyleTransformBox::ViewBox ||
+                     box == StyleTransformBox::BorderBox,
+                 "Unexpected value for 'transform-box'");
       // Percentages in transforms resolve against the width/height of the
       // nearest viewport (or its viewBox if one is applied), and the
       // transform is relative to {0,0} in current user space.
