@@ -18,9 +18,9 @@ origin:
   url: "https://cgit.freedesktop.org/drm/libdrm/"
   license: MIT
 
-  release: 0e2c7d05712d65903a9b77fb9f960ddff43bac64
+  release: 4de32c86096c09b0ad8aa18d6fd4536159d2c0cd (2023-07-26T08:26:05.000+00:00).
 
-  revision: 0e2c7d05712d65903a9b77fb9f960ddff43bac64
+  revision: 4de32c86096c09b0ad8aa18d6fd4536159d2c0cd
   # The codebase does not provide a LICENSE file!
   # https://docs.mesa3d.org/license.html#license-copyright-information
   # license-file: LICENSE

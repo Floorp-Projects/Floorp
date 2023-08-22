@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 #ifndef DRM_MAX_MINOR
-#define DRM_MAX_MINOR   16
+#define DRM_MAX_MINOR   64
 #endif
 
 #if defined(__linux__)
@@ -79,18 +79,18 @@ extern "C" {
 #ifdef __OpenBSD__
 #define DRM_DIR_NAME  "/dev"
 #define DRM_PRIMARY_MINOR_NAME  "drm"
-#define DRM_CONTROL_MINOR_NAME  "drmC"
+#define DRM_CONTROL_MINOR_NAME  "drmC" /* deprecated */
 #define DRM_RENDER_MINOR_NAME   "drmR"
 #else
 #define DRM_DIR_NAME  "/dev/dri"
 #define DRM_PRIMARY_MINOR_NAME  "card"
-#define DRM_CONTROL_MINOR_NAME  "controlD"
+#define DRM_CONTROL_MINOR_NAME  "controlD" /* deprecated */
 #define DRM_RENDER_MINOR_NAME   "renderD"
 #define DRM_PROC_NAME "/proc/dri/" /* For backward Linux compatibility */
 #endif
 
 #define DRM_DEV_NAME          "%s/" DRM_PRIMARY_MINOR_NAME "%d"
-#define DRM_CONTROL_DEV_NAME  "%s/" DRM_CONTROL_MINOR_NAME "%d"
+#define DRM_CONTROL_DEV_NAME  "%s/" DRM_CONTROL_MINOR_NAME "%d" /* deprecated */
 #define DRM_RENDER_DEV_NAME   "%s/" DRM_RENDER_MINOR_NAME  "%d"
 
 #define DRM_NODE_NAME_MAX \
@@ -596,14 +596,14 @@ extern int           drmAvailable(void);
 extern int           drmOpen(const char *name, const char *busid);
 
 #define DRM_NODE_PRIMARY 0
-#define DRM_NODE_CONTROL 1
+#define DRM_NODE_CONTROL 1 /* deprecated: never returned */
 #define DRM_NODE_RENDER  2
 #define DRM_NODE_MAX     3
 
 extern int           drmOpenWithType(const char *name, const char *busid,
                                      int type);
 
-extern int           drmOpenControl(int minor);
+extern int           drmOpenControl(int minor); /* deprecated: always fails */
 extern int           drmOpenRender(int minor);
 extern int           drmClose(int fd);
 extern drmVersionPtr drmGetVersion(int fd);
@@ -808,7 +808,7 @@ extern int drmHandleEvent(int fd, drmEventContextPtr evctx);
 extern char *drmGetDeviceNameFromFd(int fd);
 
 /* Improved version of drmGetDeviceNameFromFd which attributes for any type of
- * device/node - card, control or renderD.
+ * device/node - card or renderD.
  */
 extern char *drmGetDeviceNameFromFd2(int fd);
 extern int drmGetNodeTypeFromFd(int fd);
