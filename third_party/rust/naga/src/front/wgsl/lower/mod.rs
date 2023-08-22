@@ -1937,10 +1937,7 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
 
                             let (_, arrayed) = ctx.image_data(image, image_span)?;
                             let array_index = arrayed
-                                .then(|| {
-                                    args.min_args += 1;
-                                    self.expression(args.next()?, ctx.reborrow())
-                                })
+                                .then(|| self.expression(args.next()?, ctx.reborrow()))
                                 .transpose()?;
 
                             let value = self.expression(args.next()?, ctx.reborrow())?;
@@ -1971,10 +1968,7 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
 
                             let (class, arrayed) = ctx.image_data(image, image_span)?;
                             let array_index = arrayed
-                                .then(|| {
-                                    args.min_args += 1;
-                                    self.expression(args.next()?, ctx.reborrow())
-                                })
+                                .then(|| self.expression(args.next()?, ctx.reborrow()))
                                 .transpose()?;
 
                             let level = class

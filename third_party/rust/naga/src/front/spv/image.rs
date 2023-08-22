@@ -1,4 +1,4 @@
-use crate::arena::{Handle, UniqueArena};
+use crate::arena::{Arena, Handle, UniqueArena};
 
 use super::{Error, LookupExpression, LookupHelper as _};
 
@@ -689,20 +689,11 @@ impl<I: Iterator<Item = u32>> super::Frontend<I> {
             image: image_lexp.handle,
             query: crate::ImageQuery::Size { level },
         };
-
-        let result_type_handle = self.lookup_type.lookup(result_type_id)?.handle;
-        let maybe_scalar_kind = ctx.type_arena[result_type_handle].inner.scalar_kind();
-
-        let expr = if maybe_scalar_kind == Some(crate::ScalarKind::Sint) {
-            crate::Expression::As {
-                expr: ctx.expressions.append(expr, self.span_from_with_op(start)),
-                kind: crate::ScalarKind::Sint,
-                convert: Some(4),
-            }
-        } else {
-            expr
+        let expr = crate::Expression::As {
+            expr: ctx.expressions.append(expr, self.span_from_with_op(start)),
+            kind: crate::ScalarKind::Sint,
+            convert: Some(4),
         };
-
         self.lookup_expression.insert(
             result_id,
             LookupExpression {
@@ -711,14 +702,13 @@ impl<I: Iterator<Item = u32>> super::Frontend<I> {
                 block_id,
             },
         );
-
         Ok(())
     }
 
     pub(super) fn parse_image_query_other(
         &mut self,
         query: crate::ImageQuery,
-        ctx: &mut super::BlockContext,
+        expressions: &mut Arena<crate::Expression>,
         block_id: spirv::Word,
     ) -> Result<(), Error> {
         let start = self.data_offset;
@@ -734,29 +724,19 @@ impl<I: Iterator<Item = u32>> super::Frontend<I> {
             image: image_lexp.handle,
             query,
         };
-
-        let result_type_handle = self.lookup_type.lookup(result_type_id)?.handle;
-        let maybe_scalar_kind = ctx.type_arena[result_type_handle].inner.scalar_kind();
-
-        let expr = if maybe_scalar_kind == Some(crate::ScalarKind::Sint) {
-            crate::Expression::As {
-                expr: ctx.expressions.append(expr, self.span_from_with_op(start)),
-                kind: crate::ScalarKind::Sint,
-                convert: Some(4),
-            }
-        } else {
-            expr
+        let expr = crate::Expression::As {
+            expr: expressions.append(expr, self.span_from_with_op(start)),
+            kind: crate::ScalarKind::Sint,
+            convert: Some(4),
         };
-
         self.lookup_expression.insert(
             result_id,
             LookupExpression {
-                handle: ctx.expressions.append(expr, self.span_from_with_op(start)),
+                handle: expressions.append(expr, self.span_from_with_op(start)),
                 type_id: result_type_id,
                 block_id,
             },
         );
-
         Ok(())
     }
 }

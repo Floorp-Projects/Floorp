@@ -2695,11 +2695,19 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                 }
                 Op::ImageQueryLevels => {
                     inst.expect(4)?;
-                    self.parse_image_query_other(crate::ImageQuery::NumLevels, ctx, block_id)?;
+                    self.parse_image_query_other(
+                        crate::ImageQuery::NumLevels,
+                        ctx.expressions,
+                        block_id,
+                    )?;
                 }
                 Op::ImageQuerySamples => {
                     inst.expect(4)?;
-                    self.parse_image_query_other(crate::ImageQuery::NumSamples, ctx, block_id)?;
+                    self.parse_image_query_other(
+                        crate::ImageQuery::NumSamples,
+                        ctx.expressions,
+                        block_id,
+                    )?;
                 }
                 // other ops
                 Op::Select => {
