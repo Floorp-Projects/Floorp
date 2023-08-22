@@ -64,7 +64,8 @@ static UniquePtr<UserSpaceMetrics> UserSpaceMetricsForFrame(nsIFrame* aFrame) {
 void FilterInstance::PaintFilteredFrame(
     nsIFrame* aFilteredFrame, Span<const StyleFilter> aFilterChain,
     gfxContext* aCtx, const SVGFilterPaintCallback& aPaintCallback,
-    const nsRegion* aDirtyArea, imgDrawingParams& aImgParams, float aOpacity) {
+    const nsRegion* aDirtyArea, imgDrawingParams& aImgParams, float aOpacity,
+    const gfxRect* aOverrideBBox) {
   UniquePtr<UserSpaceMetrics> metrics =
       UserSpaceMetricsForFrame(aFilteredFrame);
 
@@ -89,7 +90,7 @@ void FilterInstance::PaintFilteredFrame(
   FilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
                           *metrics, aFilterChain, /* InputIsTainted */ true,
                           aPaintCallback, scaleMatrixInDevUnits, aDirtyArea,
-                          nullptr, nullptr, nullptr);
+                          nullptr, nullptr, aOverrideBBox);
   if (instance.IsInitialized()) {
     // Pull scale vector out of aCtx's transform, put all scale factors, which
     // includes css and css-to-dev-px scale, into scaleMatrixInDevUnits.

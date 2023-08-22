@@ -725,9 +725,14 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
                              : aTransform,
                          aImgParams);
     };
+    // If we're masking a userSpaceOnUse mask we may need to include the
+    // stroke too. Err on the side of caution and include it always.
+    gfxRect bbox = GetBBox(aFrame, SVGUtils::eUseFrameBoundsForOuterSVG |
+                                       SVGUtils::eBBoxIncludeFillGeometry |
+                                       SVGUtils::eBBoxIncludeStroke);
     FilterInstance::PaintFilteredFrame(
         aFrame, aFrame->StyleEffects()->mFilters.AsSpan(), target, callback,
-        nullptr, aImgParams);
+        nullptr, aImgParams, 1.0f, &bbox);
   } else {
     svgFrame->PaintSVG(*target, aTransform, aImgParams);
   }
