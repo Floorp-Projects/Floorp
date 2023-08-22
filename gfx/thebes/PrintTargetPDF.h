@@ -21,7 +21,6 @@ class PrintTargetPDF final : public PrintTarget {
   static already_AddRefed<PrintTargetPDF> CreateOrNull(
       nsIOutputStream* aStream, const IntSize& aSizeInPoints);
 
-  nsresult BeginPage(const IntSize& aSizeInPoints) override;
   nsresult EndPage() override;
   void Finish() override;
 
