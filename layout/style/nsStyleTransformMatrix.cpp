@@ -53,8 +53,6 @@ static nsRect GetSVGBox(const nsIFrame* aFrame) {
   // https://drafts.csswg.org/css-transforms-1/#transform-box
   switch (aFrame->StyleDisplay()->mTransformBox) {
     case StyleTransformBox::ContentBox:
-      // TODO: Implement this in the following patches.
-      return {};
     case StyleTransformBox::FillBox: {
       // Percentages in transforms resolve against the SVG bbox, and the
       // transform is relative to the top-left of the SVG bbox.
@@ -106,7 +104,7 @@ void TransformReferenceBox::EnsureDimensionsAreCached() {
   switch (mFrame->StyleDisplay()->mTransformBox) {
     case StyleTransformBox::FillBox:
     case StyleTransformBox::ContentBox: {
-      // TODO: Implement this in the following patches.
+      mBox = mFrame->GetContentRectRelativeToSelf();
       return;
     }
     case StyleTransformBox::StrokeBox:

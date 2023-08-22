@@ -6084,13 +6084,13 @@ Point3D nsDisplayTransform::GetDeltaToTransformOrigin(
   CSSPoint origin = nsStyleTransformMatrix::Convert2DPosition(
       transformOrigin.horizontal, transformOrigin.vertical, aRefBox);
 
-  if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
-    // SVG frames (unlike other frames) have a reference box that can be (and
-    // typically is) offset from the TopLeft() of the frame. We need to account
-    // for that here.
-    origin.x += CSSPixel::FromAppUnits(aRefBox.X());
-    origin.y += CSSPixel::FromAppUnits(aRefBox.Y());
-  }
+  // Note:
+  // 1. SVG frames have a reference box that can be (and typically is) offset
+  //    from the TopLeft() of the frame. We need to account for that here.
+  // 2. If we are using transform-box:content-box in CSS layout, we have the
+  //    offset from TopLeft() of the frame as well.
+  origin.x += CSSPixel::FromAppUnits(aRefBox.X());
+  origin.y += CSSPixel::FromAppUnits(aRefBox.Y());
 
   float scale = AppUnitsPerCSSPixel() / float(aAppUnitsPerPixel);
   float z = transformOrigin.depth._0;
