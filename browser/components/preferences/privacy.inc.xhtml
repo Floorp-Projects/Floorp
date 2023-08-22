@@ -294,9 +294,23 @@
                   <checkbox id="contentBlockingFingerprintersCheckbox"
                             class="content-blocking-checkbox" flex="1"
                             preference="privacy.trackingprotection.fingerprinting.enabled"
-                            data-l10n-id="content-blocking-fingerprinters-label"
+                            data-l10n-id="content-blocking-known-fingerprinters-label"
                             aria-describedby="contentBlockingCustomDesc"/>
                 </hbox>
+                <hbox class="custom-option">
+                    <checkbox id="contentBlockingFingerprintingProtectionCheckbox"
+                              class="content-blocking-checkbox" flex="1"
+                              data-l10n-id="content-blocking-suspected-fingerprinters-label"
+                              aria-describedby="contentBlockingCustomDesc"/>
+                    <vbox>
+                      <menulist id="fingerprintingProtectionMenu">
+                        <menupopup>
+                          <menuitem data-l10n-id="content-blocking-option-private" value="private"/>
+                          <menuitem data-l10n-id="content-blocking-tracking-protection-option-all-windows" value="always"/>
+                        </menupopup>
+                      </menulist>
+                    </vbox>
+                  </hbox>
               <html:div class="content-blocking-warning info-box-container reload-tabs" hidden="true">
                 <html:div class="content-blocking-reload-desc-container">
                   <html:div class="info-icon-container">

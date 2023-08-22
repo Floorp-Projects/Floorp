@@ -1278,7 +1278,7 @@ content-blocking-tracking-protection-option-all-windows =
   .label = In all windows
   .accesskey = A
 content-blocking-option-private =
-  .label = Only in Private Windows
+  .label = Only in private windows
   .accesskey = p
 content-blocking-tracking-protection-change-block-list = Change block list
 
@@ -1296,9 +1296,17 @@ content-blocking-cryptominers-label =
 
 # Browser fingerprinting is a method of tracking users by the configuration and settings information (their "digital fingerprint")
 # that is visible to websites they browse, rather than traditional tracking methods such as IP addresses and unique cookies.
-content-blocking-fingerprinters-label =
-  .label = Fingerprinters
-  .accesskey = F
+#
+# The known fingerprinters are those that are known for collecting browser fingerprints from user devices.
+content-blocking-known-fingerprinters-label =
+  .label = Known fingerprinters
+  .accesskey = K
+
+# The suspected fingerprinters are those that we are uncertain about browser fingerprinting activities. But they could
+# possibly acquire browser fingerprints because of the behavior on accessing APIs that expose browser fingerprints.
+content-blocking-suspected-fingerprinters-label =
+  .label = Suspected fingerprinters
+  .accesskey = S
 
 ## Privacy Section - Tracking
 
