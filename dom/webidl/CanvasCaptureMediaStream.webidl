@@ -10,8 +10,7 @@
  * W3C liability, trademark and document use rules apply.
  */
 
-[Pref="canvas.capturestream.enabled",
- Exposed=Window]
+[Exposed=Window]
 interface CanvasCaptureMediaStream : MediaStream {
     readonly attribute HTMLCanvasElement canvas;
     undefined requestFrame();

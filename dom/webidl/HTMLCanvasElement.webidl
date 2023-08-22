@@ -42,7 +42,7 @@ partial interface HTMLCanvasElement {
 
            attribute PrintCallback? mozPrintCallback;
 
-  [Throws, Pref="canvas.capturestream.enabled", NeedsSubjectPrincipal]
+  [Throws, NeedsSubjectPrincipal]
   CanvasCaptureMediaStream captureStream(optional double frameRate);
 };
 
