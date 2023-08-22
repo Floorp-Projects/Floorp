@@ -209,7 +209,7 @@ interface mixin CanvasShadowStyles {
 };
 
 interface mixin CanvasFilters {
-  [Pref="canvas.filters.enabled", SetterThrows]
+  [SetterThrows]
   attribute UTF8String filter; // (default empty string = no filter)
 };
 

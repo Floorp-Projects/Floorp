@@ -1818,12 +1818,6 @@
 # Prefs starting with "canvas."
 #---------------------------------------------------------------------------
 
-# Is support for CanvasRenderingContext2D.filter enabled?
-- name: canvas.filters.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Is support for CanvasRenderingContext2D's createConicGradient API enabled?
 - name: canvas.createConicGradient.enabled
   type: RelaxedAtomicBool
