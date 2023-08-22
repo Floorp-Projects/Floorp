@@ -2821,11 +2821,6 @@
   value: true
   mirror: always
 
-- name: dom.ipc.cancel_content_js_when_navigating
-  type: bool
-  value: true
-  mirror: always
-
 # How often to check for CPOW timeouts (ms). CPOWs are only timed
 # out by the hang monitor.
 - name: dom.ipc.cpow.timeout
