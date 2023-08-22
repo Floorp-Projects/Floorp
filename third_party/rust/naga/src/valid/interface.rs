@@ -33,6 +33,8 @@ pub enum GlobalVariableError {
     ),
     #[error("Initializer doesn't match the variable type")]
     InitializerType,
+    #[error("Storage address space doesn't support write-only access")]
+    StorageAddressSpaceWriteOnlyNotSupported,
 }
 
 #[derive(Clone, Debug, thiserror::Error)]
@@ -407,7 +409,12 @@ impl super::Validator {
             // A binding array is (mostly) supposed to behave the same as a
             // series of individually bound resources, so we can (mostly)
             // validate a `binding_array<T>` as if it were just a plain `T`.
-            crate::TypeInner::BindingArray { base, .. } => base,
+            crate::TypeInner::BindingArray { base, .. } => match var.space {
+                crate::AddressSpace::Storage { .. }
+                | crate::AddressSpace::Uniform
+                | crate::AddressSpace::Handle => base,
+                _ => return Err(GlobalVariableError::InvalidUsage(var.space)),
+            },
             _ => var.ty,
         };
         let type_info = &self.types[inner_ty.index()];
@@ -416,7 +423,7 @@ impl super::Validator {
             crate::AddressSpace::Function => {
                 return Err(GlobalVariableError::InvalidUsage(var.space))
             }
-            crate::AddressSpace::Storage { .. } => {
+            crate::AddressSpace::Storage { access } => {
                 if let Err((ty_handle, disalignment)) = type_info.storage_layout {
                     if self.flags.contains(super::ValidationFlags::STRUCT_LAYOUTS) {
                         return Err(GlobalVariableError::Alignment(
@@ -425,6 +432,9 @@ impl super::Validator {
                             disalignment,
                         ));
                     }
+                }
+                if access == crate::StorageAccess::STORE {
+                    return Err(GlobalVariableError::StorageAddressSpaceWriteOnlyNotSupported);
                 }
                 (TypeFlags::DATA | TypeFlags::HOST_SHAREABLE, true)
             }
