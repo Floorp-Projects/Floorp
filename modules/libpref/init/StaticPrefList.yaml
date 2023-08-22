@@ -1829,12 +1829,6 @@
   value: true
   mirror: always
 
-# Provide ability to turn on support for canvas focus rings.
-- name: canvas.focusring.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for CanvasRenderingContext2D's createConicGradient API enabled?
 - name: canvas.createConicGradient.enabled
   type: RelaxedAtomicBool
