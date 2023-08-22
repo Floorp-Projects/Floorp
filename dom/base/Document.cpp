@@ -6304,8 +6304,10 @@ void Document::ChangeContentEditableCount(Element* aElement, int32_t aChange) {
 
   mContentEditableCount += aChange;
 
-  nsContentUtils::AddScriptRunner(
-      new DeferredContentEditableCountChangeEvent(this, aElement));
+  if (aElement) {
+    nsContentUtils::AddScriptRunner(
+        new DeferredContentEditableCountChangeEvent(this, aElement));
+  }
 }
 
 void Document::DeferredContentEditableCountChange(Element* aElement) {
