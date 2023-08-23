@@ -186,10 +186,10 @@
 }
 @supports -moz-bool-pref("userContent.player.icon") {
   #controlsContainer .fullscreenButton {
-    background-image: url("chrome://browser/skin/lepton/enter-fullscreen.svg") !important;
+    background-image: url("../icons/enter-fullscreen.svg") !important;
   }
   #controlsContainer .fullscreenButton[fullscreened] {
-    background-image: url("chrome://browser/skin/lepton/exit-fullscreen.svg") !important;
+    background-image: url("../icons/exit-fullscreen.svg") !important;
   }
 }
 @supports -moz-bool-pref("userContent.player.noaudio") {
@@ -296,10 +296,10 @@
       --uc-menu-background-position: right;
     }
     .context-menu-item span[data-l10n-id="newtab-menu-pin"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/pin-tab.svg");
+      --menuitem-image: url("../icons/pin-tab.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-unpin"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/unpin-tab.svg");
+      --menuitem-image: url("../icons/unpin-tab.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-edit-topsites"] {
       --menuitem-image: url("chrome://global/skin/icons/edit.svg");
@@ -311,17 +311,17 @@
       --menuitem-image: url("chrome://browser/skin/bookmark-hollow.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-save-to-pocket"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/pocket-outline.svg");
+      --menuitem-image: url("../icons/pocket-outline.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-open-file"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/fluid.svg");
+      --menuitem-image: url("../icons/fluid.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-show-file"] {
       --menuitem-image: url("chrome://global/skin/icons/folder.svg");
     }
     @supports -moz-bool-pref("userChrome.icon.library") {
       .context-menu-item span[data-l10n-id="newtab-menu-show-file"] {
-        --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+        --menuitem-image: url("../icons/folder.svg");
       }
     }
     .context-menu-item span[data-l10n-id="newtab-menu-open-new-window"] {
@@ -334,7 +334,7 @@
       --menuitem-image: url("chrome://global/skin/icons/delete.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-delete-history"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/eraser.svg");
+      --menuitem-image: url("../icons/eraser.svg");
     }
   }
   /** Activity Stream - Web Site Icon: full size ******************************/
@@ -490,6 +490,16 @@
       padding-top: 0 !important;
     }
   }
+  /** Activity Stream - Hide Firefox's logo ***********************************/
+  @supports -moz-bool-pref("userContent.newTab.background_image") {
+    body {
+      background-image: var(--uc-newTab-wallpaper, url("../icons/Forest-trees-sunset-art-picture_3840x2160.jpg"));
+      background-size: cover; /* or auto auto */
+      background-repeat: no-repeat;
+      background-position: right top;
+      background-attachment: fixed;
+    }
+  }
 }
 /** Error Page - Restore illustrations ****************************************/
 @supports -moz-bool-pref("userContent.page.illustration") {
@@ -526,12 +536,12 @@
   @-moz-document url-prefix("about:neterror?e=connectionFailure"), url-prefix("about:neterror?e=netInterrupt"), url-prefix("about:neterror?e=netReset"), url-prefix("about:neterror?e=netTimeout"), url-prefix("about:neterror?e=netOffline"), url-prefix("about:restartrequired"), url("chrome://browser/content/aboutRestartRequired.xhtml")
   {
     :root {
-      --uc-error-llustration: url(chrome://browser/skin/lepton/error-connection-failure.svg);
+      --uc-error-llustration: url(../icons/error-connection-failure.svg);
     }
   }
   @-moz-document url-prefix("about:neterror?e=dnsNotFound") {
     :root {
-      --uc-error-llustration: url(chrome://browser/skin/lepton/error-server-not-found.svg);
+      --uc-error-llustration: url(../icons/error-server-not-found.svg);
     }
   }
   @-moz-document url-prefix("about:neterror?e=blockedByPolicy"), url-prefix("about:neterror?e=deniedPortAccess"), url-prefix("about:neterror?e=malformedURI") {
@@ -541,7 +551,7 @@
   }
   @-moz-document url-prefix("about:neterror?e=clockSkewError"), url-prefix("about:neterror?e=nssFailure") {
     :root {
-      --uc-error-llustration: url(chrome://browser/skin/lepton/blue-berror.svg);
+      --uc-error-llustration: url(../icons/blue-berror.svg);
     }
     #errorPageContainer,
     .neterror > .container {
@@ -551,7 +561,7 @@
   @-moz-document url("about:sessionrestore"), url("chrome://browser/content/aboutSessionRestore.xhtml")
   {
     :root {
-      --uc-error-llustration: url(chrome://browser/skin/lepton/error-session-restore.svg);
+      --uc-error-llustration: url(../icons/error-session-restore.svg);
     }
   }
   @-moz-document url-prefix("about:neterror?e=fileNotFound") {
@@ -583,13 +593,13 @@
   {
     @media (min-width: 970px) {
       .title {
-        background-image: url("chrome://browser/skin/lepton/welcome-back.svg") !important;
+        background-image: url("../icons/welcome-back.svg") !important;
       }
     }
   }
   @-moz-document url-prefix("about:preferences") {
     #no-results-message::after {
-      content: url("chrome://browser/skin/lepton/no-search-results.svg");
+      content: url("../icons/no-search-results.svg");
       width: 380px;
       height: 293px;
       margin-top: 64px;
@@ -751,6 +761,75 @@
       :host,
       :root {
         --uc-warning-icon-bgcolor: var(--in-content-page-color);
+      }
+    }
+    /*= Menu color #477 ==========================================================*/
+    @media (-moz-windows-non-native-menus) {
+      :root {
+        /* Override some menu color variables for light browser themes. */
+        --menuitem-hover-background-color: #e0e0e6;
+        --menu-background-color: #f9f9fb;
+        --menu-color: #15141a;
+        --menuitem-disabled-hover-background-color: rgba(224, 224, 230, 0.4);
+        --menu-disabled-color: rgba(21, 20, 26, 0.4);
+        --menu-border-color: #cfcfd8;
+        --menu-icon-opacity: 0.7;
+        /* Declare menu colors for dark themes, but don't override anything yet. */
+        --dark-menuitem-hover-background-color: #52525e;
+        --dark-menu-background-color: #2b2a33;
+        --dark-menu-color: #fbfbfe;
+        --dark-menuitem-disabled-hover-background-color: rgba(82, 82, 94, 0.4);
+        --dark-menu-disabled-color: rgba(251, 251, 254, 0.4);
+        --dark-menu-border-color: #5b5b66;
+        --dark-menu-icon-opacity: 1;
+      }
+      /* Override the menu color variables for dark browser themes. */
+    }
+    @media (-moz-windows-non-native-menus) and (-moz-toolbar-prefers-color-scheme: dark),
+      (-moz-windows-non-native-menus) and (prefers-color-scheme: dark) {
+      :root {
+        --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
+        --menu-background-color: var(--dark-menu-background-color);
+        --menu-color: var(--dark-menu-color);
+        --menuitem-disabled-hover-background-color: var(--dark-menuitem-disabled-hover-background-color);
+        --menu-disabled-color: var(--dark-menu-disabled-color);
+        --menu-border-color: var(--dark-menu-border-color);
+        --menu-icon-opacity: var(--dark-menu-icon-opacity);
+      }
+    }
+    @supports -moz-bool-pref("userChrome.theme.non_native_menu") {
+      @media (-moz-gtk-csd-available) {
+        :root {
+          /* Override some menu color variables for light browser themes. */
+          --menuitem-hover-background-color: #e0e0e6;
+          --menu-background-color: #f9f9fb;
+          --menu-color: #15141a;
+          --menuitem-disabled-hover-background-color: rgba(224, 224, 230, 0.4);
+          --menu-disabled-color: rgba(21, 20, 26, 0.4);
+          --menu-border-color: #cfcfd8;
+          --menu-icon-opacity: 0.7;
+          /* Declare menu colors for dark themes, but don't override anything yet. */
+          --dark-menuitem-hover-background-color: #52525e;
+          --dark-menu-background-color: #2b2a33;
+          --dark-menu-color: #fbfbfe;
+          --dark-menuitem-disabled-hover-background-color: rgba(82, 82, 94, 0.4);
+          --dark-menu-disabled-color: rgba(251, 251, 254, 0.4);
+          --dark-menu-border-color: #5b5b66;
+          --dark-menu-icon-opacity: 1;
+        }
+        /* Override the menu color variables for dark browser themes. */
+      }
+      @media (-moz-gtk-csd-available) and (-moz-toolbar-prefers-color-scheme: dark),
+        (-moz-gtk-csd-available) and (prefers-color-scheme: dark) {
+        :root {
+          --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
+          --menu-background-color: var(--dark-menu-background-color);
+          --menu-color: var(--dark-menu-color);
+          --menuitem-disabled-hover-background-color: var(--dark-menuitem-disabled-hover-background-color);
+          --menu-disabled-color: var(--dark-menu-disabled-color);
+          --menu-border-color: var(--dark-menu-border-color);
+          --menu-icon-opacity: var(--dark-menu-icon-opacity);
+        }
       }
     }
     @supports -moz-bool-pref("userContent.page.proton_color.dark_blue_accent") {
@@ -1066,7 +1145,7 @@
       .DevHub-Navigation-Logo > .Logo::before {
         -moz-context-properties: fill !important;
         fill: var(--in-content-primary-button-background) !important;
-        background-image: url("chrome://browser/skin/lepton/addons-logo.svg") !important;
+        background-image: url("../icons/addons-logo.svg") !important;
       }
       .DevHub-Navigation,
       .DevHub-submit-addon,
@@ -1691,11 +1770,34 @@
         box-shadow: 0 0 0 3px color-mix(in srgb, var(--in-content-primary-button-background-hover) 80%, transparent) !important;
       }
     }
+    @supports -moz-bool-pref("userContent.page.dark_mode.pdf") {
+      @-moz-document unobservable-document() {
+        @-moz-document regexp("^(?!.*\\.pdf\\?n).*") {
+          #outerContainer {
+            --sidebaritem-bg-color: #38383d;
+            --uc-pdf-dark-filter: grayscale(10%) invert(90%);
+          }
+          #sidebarContainer > #sidebarContent > #thumbnailView .thumbnailImage {
+            filter: var(--uc-pdf-dark-filter);
+            box-shadow: 0 0 0 1px hsla(0deg, 0%, 100%, 0.5), 0 2px 8px hsla(0deg, 0%, 100%, 0.3) !important;
+          }
+          #viewerContainer > #viewer > .page > .canvasWrapper > canvas {
+            filter: var(--uc-pdf-dark-filter);
+          }
+        }
+      }
+    }
   }
 }
 /** Fully Proton Mode *********************************************************/
 @supports -moz-bool-pref("userContent.page.proton") {
   /*= Common contents ==========================================================*/ /*= abouts' common ===========================================================*/
+  @-moz-document url-prefix("about:"), url-prefix("chrome://pippki/content/"), url-prefix("chrome://browser/content/")
+  {
+    xul|treecols {
+      border-bottom-color: var(--in-content-box-border-color) !important;
+    }
+  }
   @-moz-document url-prefix("about:plugins"), url-prefix("about:cache"), url-prefix("about:checkerboard"), url-prefix("about:sync-log"), url-prefix("about:memory"), regexp("^(((jar:)?file:///)|(chrome://)).*/$")
   {
     /* Base */
@@ -1893,7 +1995,14 @@
       outline: 2px solid var(--in-content-focus-outline-color) !important;
       outline-offset: -1px !important; /* Prevents antialiasing around the corners */
     }
-    input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
+    input:is(
+        [type="email"],
+        [type="tel"],
+        [type="text"],
+        [type="password"],
+        [type="url"],
+        [type="number"]
+      ):-moz-ui-invalid,
     textarea:-moz-ui-invalid {
       border-color: transparent !important;
       outline: 2px solid var(--in-content-border-invalid) !important;
@@ -1929,7 +2038,14 @@
   @supports -moz-bool-pref("userContent.page.field_border") {
     @media (prefers-reduced-motion: no-preference) {
       @-moz-document url-prefix("about:") {
-        html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):not(#newtab-search-text):hover,
+        html|input:is(
+            [type="email"],
+            [type="tel"],
+            [type="text"],
+            [type="password"],
+            [type="url"],
+            [type="number"]
+          ):not(#newtab-search-text):hover,
         html|textarea:hover,
         xul|search-textbox:hover {
           border-color: var(--in-content-focus-outline-color) !important;
@@ -2059,6 +2175,22 @@
       height: 48px;
     }
   }
+  @-moz-document url-prefix("about:preferences") {
+    #handlersView > richlistitem:hover,
+    #translations-manage-install-list > .translations-manage-language:hover {
+      background-color: var(--in-content-item-hover);
+      color: var(--in-content-item-hover-text);
+    }
+    #handlersView > richlistitem[selected="true"],
+    #translations-manage-install-list > .translations-manage-language[selected="true"] {
+      background-color: var(--in-content-item-selected);
+      color: var(--in-content-item-selected-text);
+    }
+    #handlersView > richlistitem:nth-child(even):not([selected="true"], :hover),
+    #translations-manage-install-list > .translations-manage-language:nth-child(even):not([selected="true"], :hover) {
+      background-color: var(--in-content-box-background-odd);
+    }
+  }
   /*= chrome://browser/content/places/places.xhtml =============================*/
   @-moz-document url("chrome://browser/content/places/places.xhtml")
   {
@@ -2073,14 +2205,14 @@
       #editBMPanel_folderMenuList:not([selectedGuid="toolbar_____"], [selectedGuid="menu________"]),
       #editBMPanel_folderMenuList .folder-icon:not([id]),
       .downloadIconShow > .button-box > .button-icon {
-        list-style-image: url("chrome://browser/skin/lepton/folder.svg") !important;
+        list-style-image: url("../icons/folder.svg") !important;
       }
       /* Standard Folder - Open */
       :-moz-any(#PlacesToolbar, #BMB_bookmarksPopup, #bookmarksMenu)
         .bookmark-item[container="true"]:not([query="true"], [tagContainer], [dayContainer])[open="true"],
       :-moz-any(#bookmarks-view, #historyTree, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(title, container, open) {
-        list-style-image: url("chrome://browser/skin/lepton/folder-open.svg") !important;
+        list-style-image: url("../icons/folder-open.svg") !important;
       }
       /*= Other Folder - Inbox Icon ================================================*/
       /* on Menus */
@@ -2093,7 +2225,7 @@
         treechildren::-moz-tree-image(container, queryFolder_unfiled_____),
       #editBMPanel_unfiledRootItem,
       #editBMPanel_folderMenuList[selectedGuid="unfiled_____"] {
-        list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg") !important;
+        list-style-image: url("../icons/mail-inbox-all.svg") !important;
       }
       /* Other Folder - Open */
       #PlacesToolbar #OtherBookmarks[open="true"],
@@ -2103,7 +2235,7 @@
         treechildren::-moz-tree-image(container, open, OrganizerQuery_UnfiledBookmarks),
       :-moz-any(#bookmarks-view, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(container, open, queryFolder_unfiled_____) {
-        list-style-image: url("chrome://browser/skin/lepton/mail-inbox.svg") !important;
+        list-style-image: url("../icons/mail-inbox.svg") !important;
       }
       /*= Default Icon - Override ===================================================*/
       /* https://github.com/mozilla/gecko-dev/blob/master/browser/themes/shared/places/tree-icons.css */
@@ -2155,14 +2287,14 @@
         treechildren::-moz-tree-image(title, query, open, dayContainer),
       :-moz-any(#historyTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(query, open, OrganizerQuery_history____v) {
-        list-style-image: url("chrome://browser/skin/lepton/history-reverse.svg") !important;
+        list-style-image: url("../icons/history-reverse.svg") !important;
       }
       /* Tag */
       :-moz-any(#PlacesToolbar, #BMB_bookmarksPopup, #bookmarksMenu)
         .bookmark-item[container="true"][tagContainer="true"][open="true"],
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(title, query, open, tagContainer),
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(query, open, OrganizerQuery_tags_______v) {
-        list-style-image: url("chrome://browser/skin/lepton/tag-open.svg") !important;
+        list-style-image: url("../icons/tag-open.svg") !important;
       }
       /* Bookmark */
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(query, open, OrganizerQuery_allbms_____v) {
@@ -2173,12 +2305,12 @@
       #bookmarksMenuPopup #bookmarksToolbarFolderMenu[open="true"],
       :-moz-any(#bookmarks-view, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(container, open, queryFolder_toolbar_____) {
-        list-style-image: url("chrome://browser/skin/lepton/bookmarksToolbar-open.svg") !important;
+        list-style-image: url("../icons/bookmarksToolbar-open.svg") !important;
       }
       /* Bookmark Menu */
       :-moz-any(#bookmarks-view, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(container, open, queryFolder_menu________) {
-        list-style-image: url("chrome://browser/skin/lepton/bookmarksMenu-open.svg") !important; /* or bookmarksMenu-open2.svg" */
+        list-style-image: url("../icons/bookmarksMenu-open.svg") !important; /* or bookmarksMenu-open2.svg" */
       }
       /*= Menubar - Icons ==========================================================*/
       #organizeButton,
@@ -2195,10 +2327,10 @@
         list-style-image: url("chrome://global/skin/icons/settings.svg") !important;
       }
       #viewMenu {
-        list-style-image: url("chrome://browser/skin/lepton/sort.svg") !important;
+        list-style-image: url("../icons/sort.svg") !important;
       }
       #maintenanceButton {
-        list-style-image: url("chrome://browser/skin/lepton/import-export.svg") !important;
+        list-style-image: url("../icons/import-export.svg") !important;
       }
       #clearDownloadsButton {
         list-style-image: url("chrome://global/skin/icons/delete.svg") !important;
@@ -2759,7 +2891,7 @@
             outline: 2px solid var(--focus-outline-color, -moz-accent-color) !important;
           }
         }
-        @media (prefers-contrast) {
+        @media (-moz-gtk-csd-available) and (prefers-contrast) {
           menuitem[type="checkbox"]:not([disabled="true"]) > .menu-iconic-left > .menu-iconic-icon {
             /* color will set the border-color on the check due to how HCM works for in-content pages. */
             color: var(--checkbox-checked-border-color, color-mix(in srgb, AccentColor 4%, Field)) !important;
@@ -2884,7 +3016,15 @@
 @supports -moz-bool-pref("userChrome.rounding.square_field") {
   @-moz-document url-prefix("about:"), regexp("^chrome://\\w+/content/.*.xhtml$")
   {
-    input:is([type="color"], [type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]),
+    input:is(
+        [type="color"],
+        [type="email"],
+        [type="tel"],
+        [type="text"],
+        [type="password"],
+        [type="url"],
+        [type="number"]
+      ),
     textarea,
     select,
     menulist,
@@ -3049,7 +3189,7 @@
         :not(menu, #ContentSelectDropdown)
           > menupopup:not(.in-menulist)
           > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-          list-style-image: var(--menuitem-image, url("chrome://browser/skin/lepton/blank.svg")) !important;
+          list-style-image: var(--menuitem-image, url("../icons/blank.svg")) !important;
         }
       }
       /* Padding */
@@ -3071,13 +3211,71 @@
         background-position: var(--uc-menu-background-position) var(--context-menu-background-padding) center !important;
         padding-inline-start: var(--context-menu-background-padding) !important;
       }
+      /* Padding - Non Native */
+      @media (-moz-os-version: windows-win7) and (-moz-windows-non-native-menus),
+        (-moz-os-version: windows-win8) and (-moz-windows-non-native-menus),
+        (-moz-os-version: windows-win10) and (-moz-windows-non-native-menus),
+        (-moz-platform: windows) and (-moz-windows-non-native-menus),
+        (-moz-gtk-csd-available) and (-moz-windows-non-native-menus) {
+        :root {
+          --context-menu-background-padding: 1em;
+          --context-menu-text-padding-default: 24px;
+          --context-menu-text-padding: var(--context-menu-text-padding-default);
+          --menu-background-padding-default: calc(
+            var(--context-menu-background-padding) + var(--context-menu-text-padding)
+          );
+          --bookmark-menu-icon-align-padding: 0px;
+        }
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+        menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+          > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          padding-inline-start: var(--menu-background-padding-default) !important;
+          margin-left: 0 !important;
+        }
+      }
+      @media (-moz-os-version: windows-win7),
+        (-moz-os-version: windows-win8),
+        (-moz-os-version: windows-win10),
+        (-moz-platform: windows),
+        (-moz-gtk-csd-available) {
+        @supports -moz-bool-pref("userChrome.theme.non_native_menu") {
+          @media (-moz-os-version: windows-win7) and (-moz-gtk-csd-available),
+            (-moz-os-version: windows-win8) and (-moz-gtk-csd-available),
+            (-moz-os-version: windows-win10) and (-moz-gtk-csd-available),
+            (-moz-platform: windows) and (-moz-gtk-csd-available),
+            (-moz-gtk-csd-available) and (-moz-gtk-csd-available) {
+            :root {
+              --context-menu-background-padding: 1em;
+              --context-menu-text-padding-default: 24px;
+              --context-menu-text-padding: var(--context-menu-text-padding-default);
+              --menu-background-padding-default: calc(
+                var(--context-menu-background-padding) + var(--context-menu-text-padding)
+              );
+              --bookmark-menu-icon-align-padding: 0px;
+            }
+            menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+              menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+            menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+              menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+            menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+              > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+            menupopup:is(#viewMenuPopup, #maintenanceButtonPopup)
+              > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+              padding-inline-start: var(--menu-background-padding-default) !important;
+              margin-left: 0 !important;
+            }
+          }
+        }
+      }
       /* Padding - Windows */
       @media (-moz-os-version: windows-win7),
-        (-moz-platform: windows-win7),
         (-moz-os-version: windows-win8),
-        (-moz-platform: windows-win8),
         (-moz-os-version: windows-win10),
-        (-moz-platform: windows-win10) {
+        (-moz-platform: windows) {
         :root {
           --bookmark-menu-icon-text-padding: calc(
             var(--context-menu-text-padding) + var(--arrowpanel-menuitem-padding-inline)
@@ -3086,129 +3284,131 @@
             var(--arrowpanel-menuitem-padding-inline) + var(--bookmark-menu-icon-align-padding)
           );
         }
-        @media (-moz-windows-non-native-menus) {
-          :root {
-            --context-menu-background-padding: 1em;
-            --context-menu-text-padding: 24px;
-            --menu-background-padding-default: calc(
-              var(--context-menu-background-padding) + var(--context-menu-text-padding)
-            );
-            --bookmark-menu-icon-align-padding: 0px;
-          }
-        }
-        @media not (-moz-windows-non-native-menus) {
-          :root {
-            --context-menu-text-padding: calc(1.45em + 8px);
-            --bookmark-menu-icon-align-padding: calc((1.45em - 16px) / 2 + 1px);
-          }
-          @media (-moz-os-version: windows-win7), (-moz-platform: windows-win7) {
-            :root {
-              --context-menu-background-padding-default: 2px;
-            }
-            @media (not (-moz-windows-non-native-menus)) and (-moz-windows-classic) {
-              :root {
-                --context-menu-background-padding-default: -0.5px;
-              }
-            }
-          }
-          @media (-moz-os-version: windows-win8), (-moz-platform: windows-win8) {
-            :root {
-              --context-menu-background-padding-default: 3px;
-            }
-          }
-          @media (-moz-os-version: windows-win10), (-moz-platform: windows-win10) {
-            :root {
-              --context-menu-background-padding: 3px;
-              --menu-background-padding-default: 0px;
-            }
-            @supports -moz-bool-pref("userChrome.compatibility.os.win11") {
-              :root {
-                --context-menu-background-padding: 5px;
-              }
-              #main-menubar {
-                --context-menu-background-padding: calc(5px + ((1.45em - 16px) / 2));
-              }
-              menuitem:is([type="checkbox"], [type="radio"]) {
-                --menu-padding: 0px;
-              }
-              menuitem[checked="true"] {
-                --context-menu-background-padding: 0px;
-              }
-              menuitem[checked="true"] > .menu-iconic-left {
-                transform: translateX(2px);
-              }
-            }
-            menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic > .menu-iconic-left,
-            menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menuitem-iconic > .menu-iconic-left,
-            menupopup:not([placespopup="true"]) .menu-iconic > .menu-iconic-left,
-            menupopup:not([placespopup="true"]) .menuitem-iconic > .menu-iconic-left {
-              appearance: none !important;
-              padding-block: 0 !important;
-              padding-inline-start: 5px !important;
-              margin-inline-end: 8px !important;
-            }
-            @supports -moz-bool-pref("userChrome.compatibility.os.win11") {
-              menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic > .menu-iconic-left,
-              menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menuitem-iconic > .menu-iconic-left,
-              menupopup:not([placespopup="true"]) .menu-iconic > .menu-iconic-left,
-              menupopup:not([placespopup="true"]) .menuitem-iconic > .menu-iconic-left {
-                box-sizing: content-box;
-              }
-            }
-            menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-accel,
-            menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic-accel,
-            menupopup:not([placespopup="true"]) .menu-accel,
-            menupopup:not([placespopup="true"]) .menu-iconic-accel {
-              box-sizing: content-box;
-              min-height: 16px;
-            }
-            menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-accel,
-            menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic-accel,
-            menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-text,
-            menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic-text,
-            menupopup:not([placespopup="true"]) .menu-accel,
-            menupopup:not([placespopup="true"]) .menu-iconic-accel,
-            menupopup:not([placespopup="true"]) .menu-text,
-            menupopup:not([placespopup="true"]) .menu-iconic-text {
-              padding-block: 0 !important;
-            }
-          }
+      }
+      @media (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) {
+        :root {
+          --context-menu-text-padding: calc(1.45em + 8px);
+          --bookmark-menu-icon-align-padding: calc((1.45em - 16px) / 2 + 1px);
         }
       }
-      @media (-moz-os-version: windows-win7),
-        (-moz-platform: windows-win7),
-        (-moz-os-version: windows-win8),
-        (-moz-platform: windows-win8),
-        (-moz-os-version: windows-win10),
-        (-moz-platform: windows-win10) {
-        @media not (-moz-windows-non-native-menus) {
-          menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-            menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-          menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-            menu:not(.menu-iconic, .in-menulist, [checked="true"]),
-          menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
-            > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-          menupopup:is(#viewMenuPopup, #maintenanceButtonPopup)
-            > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-            background-position: left var(--context-menu-background-padding) center !important;
-            padding-inline-start: 0 !important;
-          }
-        }
-        @media (-moz-windows-non-native-menus) {
-          menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-            menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-          menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
-            menu:not(.menu-iconic, .in-menulist, [checked="true"]),
-          menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
-            > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
-          menupopup:is(#viewMenuPopup, #maintenanceButtonPopup)
-            > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-            padding-inline-start: var(--menu-background-padding-default) !important;
-            margin-left: 0 !important;
-          }
+      @media (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win7),
+        (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win7),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win7),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win7),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win7),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win7),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win7),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win7) {
+        :root {
+          --context-menu-background-padding-default: 2px;
         }
       }
-      /* Padding - Linux */
+      @media (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win7) and (-moz-windows-classic),
+        (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win7) and (-moz-windows-classic),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win7) and (-moz-windows-classic),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win7) and (-moz-windows-classic),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win7) and (-moz-windows-classic),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win7) and (-moz-windows-classic),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win7) and (-moz-windows-classic),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win7) and (-moz-windows-classic) {
+        :root {
+          --context-menu-background-padding-default: -0.5px;
+        }
+      }
+      @media (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win8),
+        (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win8),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win8),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win8),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win8),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win8),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win8),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win8) {
+        :root {
+          --context-menu-background-padding-default: 3px;
+        }
+      }
+      @media (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win10),
+        (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win10),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win10),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win10),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win10),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win10),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) and (-moz-os-version: windows-win10),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) and (-moz-platform: windows-win10) {
+        :root {
+          --context-menu-background-padding: 3px;
+          --menu-background-padding-default: 0px;
+        }
+        @supports -moz-bool-pref("userChrome.compatibility.os.win11") {
+          :root {
+            --context-menu-background-padding: 5px;
+          }
+          #main-menubar {
+            --context-menu-background-padding: calc(5px + ((1.45em - 16px) / 2));
+          }
+          menuitem:is([type="checkbox"], [type="radio"]) {
+            --menu-padding: 0px;
+          }
+          menuitem[checked="true"] {
+            --context-menu-background-padding: 0px;
+          }
+          menuitem[checked="true"] > .menu-iconic-left {
+            transform: translateX(2px);
+          }
+        }
+        menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic > .menu-iconic-left,
+        menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menuitem-iconic > .menu-iconic-left,
+        menupopup:not([placespopup="true"]) .menu-iconic > .menu-iconic-left,
+        menupopup:not([placespopup="true"]) .menuitem-iconic > .menu-iconic-left {
+          appearance: none !important;
+          padding-block: 0 !important;
+          padding-inline-start: 5px !important;
+          margin-inline-end: 8px !important;
+        }
+        @supports -moz-bool-pref("userChrome.compatibility.os.win11") {
+          menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic > .menu-iconic-left,
+          menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menuitem-iconic > .menu-iconic-left,
+          menupopup:not([placespopup="true"]) .menu-iconic > .menu-iconic-left,
+          menupopup:not([placespopup="true"]) .menuitem-iconic > .menu-iconic-left {
+            box-sizing: content-box;
+          }
+        }
+        menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-accel,
+        menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic-accel,
+        menupopup:not([placespopup="true"]) .menu-accel,
+        menupopup:not([placespopup="true"]) .menu-iconic-accel {
+          box-sizing: content-box;
+          min-height: 16px;
+        }
+        menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-accel,
+        menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic-accel,
+        menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-text,
+        menupopup:is(#historyMenuPopup, #bookmarksMenuPopup) .menu-iconic-text,
+        menupopup:not([placespopup="true"]) .menu-accel,
+        menupopup:not([placespopup="true"]) .menu-iconic-accel,
+        menupopup:not([placespopup="true"]) .menu-text,
+        menupopup:not([placespopup="true"]) .menu-iconic-text {
+          padding-block: 0 !important;
+        }
+      }
+      @media (-moz-os-version: windows-win7) and (not (-moz-windows-non-native-menus)),
+        (-moz-os-version: windows-win8) and (not (-moz-windows-non-native-menus)),
+        (-moz-os-version: windows-win10) and (not (-moz-windows-non-native-menus)),
+        (-moz-platform: windows) and (not (-moz-windows-non-native-menus)) {
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#placesContext, #placesColumnsContext, #downloadsContextMenu)
+          menu:not(.menu-iconic, .in-menulist, [checked="true"]),
+        menupopup:is(#organizeButtonPopup, #maintenanceButtonPopup)
+          > menuitem:not(.menuitem-iconic, .bookmark-item, .in-menulist, [checked="true"]),
+        menupopup:is(#viewMenuPopup, #maintenanceButtonPopup) > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
+          background-position: left var(--context-menu-background-padding) center !important;
+          padding-inline-start: 0 !important;
+        }
+      } /* Padding - Linux */
       @media (-moz-gtk-csd-available) {
         :root {
           --context-menu-background-padding-default: 6px;
@@ -3273,52 +3473,52 @@
           --menuitem-image: url("chrome://global/skin/media/play-fill.svg");
         }
         .downloadUnblockMenuItem {
-          --menuitem-image: url("chrome://browser/skin/lepton/checkmark-circle.svg");
+          --menuitem-image: url("../icons/checkmark-circle.svg");
         }
         .downloadUseSystemDefaultMenuItem {
-          --menuitem-image: url("chrome://browser/skin/open.svg");
+          --menuitem-image: url("../icons/toolbarButton-upload.svg");
         }
         .downloadAlwaysUseSystemDefaultMenuItem {
           /* checkbox */
-          --menuitem-image: url("chrome://browser/skin/lepton/folder-globe.svg");
+          --menuitem-image: url("../icons/folder-globe.svg");
         }
         .downloadAlwaysOpenSimilarFilesMenuItem {
           /* checkbox */
-          --menuitem-image: url("chrome://browser/skin/lepton/fluid.svg");
+          --menuitem-image: url("../icons/fluid.svg");
         }
         .downloadShowMenuItem {
           --menuitem-image: url("chrome://global/skin/icons/folder.svg");
         }
         @supports -moz-bool-pref("userChrome.icon.library") {
           .downloadShowMenuItem {
-            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+            --menuitem-image: url("../icons/folder.svg");
           }
         }
         #downloadsContextMenu > menuitem.downloadOpenReferrerMenuItem,
         #downloadsContextMenu > menuitem[command="downloadsCmd_openReferrer"] {
-          --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
+          --menuitem-image: url("../icons/link-square.svg");
         }
         #downloadsContextMenu > menuitem.downloadCopyLocationMenuItem,
         #downloadsContextMenu > menuitem[command="downloadsCmd_copyLocation"] {
-          --menuitem-image: url("chrome://browser/skin/lepton/link.svg");
+          --menuitem-image: url("../icons/link.svg");
         }
         .downloadDeleteFileMenuItem {
           --menuitem-image: url("chrome://global/skin/icons/delete.svg");
         }
         .downloadRemoveFromHistoryMenuItem {
-          --menuitem-image: url("chrome://browser/skin/lepton/eraser.svg");
+          --menuitem-image: url("../icons/eraser.svg");
         }
         #downloadsContextMenu > menuitem[command="downloadsCmd_clearList"],
         #downloadsContextMenu > menuitem[command="downloadsCmd_clearDownloads"] {
-          --menuitem-image: url("chrome://browser/skin/lepton/broom.svg");
+          --menuitem-image: url("../icons/broom.svg");
         }
         /*= placeContext =============================================================*/
         #placesContext_open {
-          --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
+          --menuitem-image: url("../icons/link-square.svg");
         }
         #placesContext_openBookmarkContainer\:tabs,
         #placesContext_openBookmarkLinks\:tabs {
-          --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
+          --menuitem-image: url("../icons/movetowindow-16.svg");
         }
         #placesContext_open\:newtab,
         #placesContext_openContainer\:tabs,
@@ -3326,7 +3526,7 @@
           --menuitem-image: url("chrome://browser/skin/new-tab.svg");
         }
         #placesContext_open\:newcontainertab {
-          --menuitem-image: url("chrome://browser/skin/lepton/container-openin-16.svg");
+          --menuitem-image: url("../icons/container-openin-16.svg");
         }
         #placesContext_open\:newwindow {
           --menuitem-image: url("chrome://browser/skin/window.svg");
@@ -3346,16 +3546,16 @@
           --menuitem-image: url("chrome://global/skin/icons/delete.svg");
         }
         #placesContext_deleteHost {
-          --menuitem-image: url("chrome://browser/skin/lepton/eye-hide.svg");
+          --menuitem-image: url("../icons/eye-hide.svg");
         }
         #placesContext_sortBy\:name {
-          --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
+          --menuitem-image: url("../icons/text-sort-ascending.svg");
         }
         #placesContext_cut {
           --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
         }
         #placesContext_copy {
-          --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
+          --menuitem-image: url("../icons/edit-copy.svg");
         }
         #placesContext_paste_group {
           --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
@@ -3370,11 +3570,11 @@
         @supports -moz-bool-pref("userChrome.icon.library") {
           #placesContext_showInFolder,
           #placesContext_new\:folder {
-            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+            --menuitem-image: url("../icons/folder.svg");
           }
         }
         #placesContext_new\:separator {
-          --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
+          --menuitem-image: url("../icons/vertical-line.svg");
         }
         #placesContext_paste {
           --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
@@ -3384,13 +3584,13 @@
         }
         #show-other-bookmarks_PersonalToolbar {
           /* checkbox */
-          --menuitem-image: url("chrome://browser/skin/lepton/star-line-horizontal.svg");
+          --menuitem-image: url("../icons/star-line-horizontal.svg");
         }
         #placesContext_showAllBookmarks {
           --menuitem-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
         }
         .openintabs-menuitem {
-          --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
+          --menuitem-image: url("../icons/movetowindow-16.svg");
         }
       }
       @supports -moz-bool-pref("userChrome.icon.global_menu") {
@@ -3403,20 +3603,25 @@
         }
         @supports -moz-bool-pref("userChrome.icon.library") {
           #newfolder {
-            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
+            --menuitem-image: url("../icons/folder.svg");
           }
         }
         #newseparator {
-          --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
+          --menuitem-image: url("../icons/vertical-line.svg");
         }
         #orgUndo {
-          --menuitem-image: url("chrome://browser/skin/lepton/undo.svg");
+          --menuitem-image: url("../icons/undo.svg");
+        }
+        @supports -moz-bool-pref("userChrome.icon.menu.full") {
+          #orgRedo {
+            --menuitem-image: url("../icons/redo.svg");
+          }
         }
         #orgCut {
           --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
         }
         #orgCopy {
-          --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
+          --menuitem-image: url("../icons/edit-copy.svg");
         }
         #orgPaste {
           --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
@@ -3425,7 +3630,7 @@
           --menuitem-image: url("chrome://global/skin/icons/delete.svg");
         }
         #orgSelectAll {
-          --menuitem-image: url("chrome://browser/skin/lepton/select-all-on.svg");
+          --menuitem-image: url("../icons/select-all-on.svg");
         }
         #orgClose {
           --menuitem-image: url("chrome://global/skin/icons/close.svg");
@@ -3435,17 +3640,22 @@
           --menuitem-image: url("chrome://global/skin/icons/columnpicker.svg");
         }
         #viewSort {
-          --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
+          --menuitem-image: url("../icons/text-sort-ascending.svg");
         }
         /*= maintenanceButtonPopup ===================================================*/
         #backupBookmarks {
-          --menuitem-image: url("chrome://devtools/skin/images/datastore.svg");
+          --menuitem-image: url("../icons/datastore.svg");
+        }
+        @supports -moz-bool-pref("userChrome.icon.menu.full") {
+          #fileRestoreMenu {
+            --menuitem-image: url("../icons/datarestore.svg");
+          }
         }
         #fileImport {
-          --menuitem-image: url("chrome://browser/skin/lepton/toolbarButton-download.svg");
+          --menuitem-image: url("../icons/toolbarButton-download.svg");
         }
         #fileExport {
-          --menuitem-image: url("chrome://browser/skin/open.svg");
+          --menuitem-image: url("../icons/toolbarButton-upload.svg");
         }
         #browserImport {
           --menuitem-image: url("chrome://browser/skin/import.svg");
@@ -3455,10 +3665,10 @@
     @-moz-document url-prefix("about:addons") {
       @supports -moz-bool-pref("userChrome.icon.context_menu") {
         button[role="menuitem"] {
-          background-image: var(--icon, url("chrome://browser/skin/lepton/blank.svg")); /* Don't use !important. because of [checked] */
+          background-image: var(--icon, url("../icons/blank.svg")); /* Don't use !important. because of [checked] */
         }
         panel-item[action="check-for-updates"] {
-          --icon: url("chrome://browser/skin/lepton/refresh-cw.svg");
+          --icon: url("../icons/refresh-cw.svg");
         }
         panel-item[action="view-recent-updates"] {
           --icon: url("chrome://global/skin/icons/info.svg");
@@ -3467,7 +3677,7 @@
           --icon: url("chrome://devtools/skin/images/import.svg");
         }
         panel-item[action="debug-addons"] {
-          --icon: url("chrome://browser/skin/lepton/bug.svg");
+          --icon: url("../icons/bug.svg");
         }
         panel-item[action="set-update-automatically"] {
           --icon: url("chrome://devtools/skin/images/profiler-stopwatch.svg");

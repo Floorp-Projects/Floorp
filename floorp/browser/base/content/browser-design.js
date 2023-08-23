@@ -124,7 +124,7 @@ function setLeptonUI() {
   Services.prefs.setBoolPref("userChrome.tab.static_separator.selected_accent", false);
   Services.prefs.setBoolPref("userChrome.tab.bar_separator",             false);
   
-  Services.prefs.setBoolPref("userChrome.tab.newtab_button_like_tab",    false);
+  Services.prefs.setBoolPref("userChrome.tab.newtab_button_like_tab",     true);
   Services.prefs.setBoolPref("userChrome.tab.newtab_button_smaller",     false);
   Services.prefs.setBoolPref("userChrome.tab.newtab_button_proton",      false);
   
