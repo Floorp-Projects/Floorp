@@ -16,6 +16,7 @@ import com.android.build.OutputFile
 import groovy.json.JsonOutput
 import org.gradle.internal.logging.text.StyledTextOutput.Style
 import org.gradle.internal.logging.text.StyledTextOutputFactory
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 import static org.gradle.api.tasks.testing.TestResult.ResultType
 
@@ -471,7 +472,7 @@ nimbus {
     experimenterManifest = ".experimenter.yaml"
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+tasks.withType(KotlinCompile).configureEach {
     kotlinOptions {
         freeCompilerArgs += [
                 "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",

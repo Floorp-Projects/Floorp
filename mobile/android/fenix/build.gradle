@@ -1,3 +1,7 @@
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
@@ -162,7 +166,7 @@ allprojects {
         }
     }
 
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    tasks.withType(KotlinCompile).configureEach {
         kotlinOptions.jvmTarget = "17"
         kotlinOptions.allWarningsAsErrors = true
         kotlinOptions.freeCompilerArgs += [
@@ -193,7 +197,7 @@ detekt {
     }
 }
 
-tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach() {
+tasks.withType(Detekt).configureEach() {
     autoCorrect = true
 
     exclude "**/test/**"
@@ -204,7 +208,7 @@ tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach() {
 }
 
 // Apply same path exclusions as for the main task
-tasks.withType(io.gitlab.arturbosch.detekt.DetektCreateBaselineTask).configureEach() {
+tasks.withType(DetektCreateBaselineTask).configureEach() {
     exclude "**/test/**"
     exclude "**/androidTest/**"
     exclude "**/build/**"
@@ -243,7 +247,7 @@ task ktlintFormat(type: JavaExec, group: "formatting") {
     jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
 }
 
-tasks.withType(io.gitlab.arturbosch.detekt.Detekt.class).configureEach {
+tasks.withType(Detekt.class).configureEach {
     exclude("**/resources/**")
     exclude("**/tmp/**")
 }

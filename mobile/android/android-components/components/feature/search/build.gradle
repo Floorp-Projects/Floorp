@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -33,7 +35,7 @@ android {
     namespace 'mozilla.components.feature.search'
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+tasks.withType(KotlinCompile).all {
     kotlinOptions.freeCompilerArgs += [
         "-opt-in=kotlinx.coroutines.FlowPreview",
         "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
@@ -61,11 +63,11 @@ dependencies {
     testImplementation ComponentsDependencies.testing_coroutines
 }
 
-tasks.register("updateAdsExtensionVersion", org.gradle.api.tasks.Copy) { task ->
+tasks.register("updateAdsExtensionVersion", Copy) { task ->
     updateExtensionVersion(task, 'src/main/assets/extensions/ads')
 }
 
-tasks.register("updateCookiesExtensionVersion", org.gradle.api.tasks.Copy) { task ->
+tasks.register("updateCookiesExtensionVersion", Copy) { task ->
     updateExtensionVersion(task, 'src/main/assets/extensions/search')
 }
 

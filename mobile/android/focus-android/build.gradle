@@ -1,3 +1,6 @@
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
@@ -64,7 +67,7 @@ detekt {
     }
 }
 
-tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach() {
+tasks.withType(Detekt).configureEach() {
     autoCorrect = true
 
     exclude "**/test/**"
@@ -75,7 +78,7 @@ tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach() {
 }
 
 // Apply same path exclusions as for the main task
-tasks.withType(io.gitlab.arturbosch.detekt.DetektCreateBaselineTask).configureEach() {
+tasks.withType(DetektCreateBaselineTask).configureEach() {
     exclude "**/test/**"
     exclude "**/androidTest/**"
     exclude "**/build/**"

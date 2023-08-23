@@ -11,6 +11,7 @@ apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 
 import com.android.build.OutputFile
 import groovy.json.JsonOutput
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -167,7 +168,7 @@ android {
     namespace 'org.mozilla.focus'
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+tasks.withType(KotlinCompile).all {
         kotlinOptions {
             allWarningsAsErrors = true
             freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
