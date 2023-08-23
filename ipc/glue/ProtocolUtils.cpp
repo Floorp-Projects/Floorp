@@ -67,9 +67,18 @@ IPCResult IPCResult::FailImpl(NotNull<IProtocol*> actor, const char* where,
   actor->GetIPCChannel()->Listener()->ProcessingError(
       HasResultCodes::MsgProcessingError, errorMsg.get());
 
-  MOZ_ASSERT_UNLESS_FUZZING(false,
-                            "Please ensure to IPC_FAIL only when in an "
-                            "unrecoverable, unexpected state.");
+#if defined(DEBUG) && !defined(FUZZING)
+  // We do not expect IPC_FAIL to ever happen in normal operations. If this
+  // happens in DEBUG, we most likely see some behavior during a test we should
+  // really investigate.
+  nsPrintfCString crashMsg(
+      "Use IPC_FAIL only in an "
+      "unrecoverable, unexpected state: %s",
+      errorMsg.get());
+  // We already leak the same information potentially on child process failures
+  // even in release, and here we are only in DEBUG.
+  MOZ_CRASH_UNSAFE(crashMsg.get());
+#endif
 
   return IPCResult(false);
 }
