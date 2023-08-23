@@ -18,7 +18,7 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
       return [];
     }
     const mapKey = this.getStartOfDayTimestamp(this.#todaysDate);
-    return this.cachedHistory.has(mapKey) ? this.cachedHistory.get(mapKey) : [];
+    return this.cachedHistory.get(mapKey) ?? [];
   }
 
   get visitsFromYesterday() {
@@ -26,7 +26,7 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
       return [];
     }
     const mapKey = this.getStartOfDayTimestamp(this.#yesterdaysDate);
-    return this.cachedHistory.has(mapKey) ? this.cachedHistory.get(mapKey) : [];
+    return this.cachedHistory.get(mapKey) ?? [];
   }
 
   /**
@@ -68,8 +68,8 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
     for (const [time, visits] of this.cachedHistory.entries()) {
       const date = new Date(time);
       if (
-        this.#isSameDate(date, this.#yesterdaysDate) ||
-        this.#isSameMonth(date, this.#todaysDate)
+        this.#isSameMonth(date, this.#todaysDate) ||
+        this.#isSameDate(date, this.#yesterdaysDate)
       ) {
         continue;
       }
@@ -77,8 +77,9 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
       if (month !== previousMonth) {
         visitsPerMonth.push(visits);
       } else {
-        visitsPerMonth[visitsPerMonth.length - 1] =
-          visitsPerMonth[visitsPerMonth.length - 1].concat(visits);
+        visitsPerMonth[visitsPerMonth.length - 1] = visitsPerMonth
+          .at(-1)
+          .concat(visits);
       }
       previousMonth = month;
     }
@@ -127,7 +128,13 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
     if (!visit) {
       return;
     }
-    if (this.cachedHistoryOptions.sortBy === "date") {
+    if (
+      this.cachedHistoryOptions.sortBy === "date" &&
+      (this.#todaysDate == null ||
+        (visit.date.getTime() > this.#todaysDate.getTime() &&
+          !this.#isSameDate(visit.date, this.#todaysDate)))
+    ) {
+      // If today's date has passed (or is null), it should be updated now.
       this.#setTodaysDate();
     }
   }

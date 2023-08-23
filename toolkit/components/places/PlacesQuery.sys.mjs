@@ -22,8 +22,6 @@ const BULK_PLACES_EVENTS_THRESHOLD = 50;
  *
  * @property {Date} date
  *   When this page was visited.
- * @property {number} frecency
- *   The page's frecency score.
  * @property {number} id
  *   Visit ID from the database.
  * @property {string} title
@@ -52,8 +50,8 @@ export class PlacesQuery {
   cachedHistory = null;
   /** @type {object} */
   cachedHistoryOptions = null;
-  /** @type {Map<CacheKey, { [baseUrl: string]: { [title: string]: HistoryVisit[] } }>} */
-  #cachedBaseUrls = null;
+  /** @type {Map<string, Set<HistoryVisit>>} */
+  #cachedHistoryPerUrl = null;
   /** @type {function(PlacesEvent[])} */
   #historyListener = null;
   /** @type {function(HistoryVisit[])} */
@@ -99,7 +97,7 @@ export class PlacesQuery {
   initializeCache(options = this.cachedHistoryOptions) {
     this.cachedHistory = new Map();
     this.cachedHistoryOptions = options;
-    this.#cachedBaseUrls = new Map();
+    this.#cachedHistoryPerUrl = new Map();
   }
 
   /**
@@ -130,73 +128,13 @@ export class PlacesQuery {
       LIMIT ${limit > 0 ? limit : -1}`;
     const rows = await db.executeCached(sql);
     for (const row of rows) {
-      const visit = {
+      this.appendToCache({
         date: lazy.PlacesUtils.toDate(row.getResultByName("visit_date")),
-        frecency: row.getResultByName("frecency"),
         id: row.getResultByName("id"),
         title: row.getResultByName("title"),
         url: row.getResultByName("url"),
-      };
-      if (this.#maybeCacheBaseUrlForVisit(visit)) {
-        this.appendToCache(visit);
-      }
+      });
     }
-  }
-
-  /**
-   * Check whether this visit is a duplicate entry in the container it belongs
-   * in. For the purposes of this API, duplicates are defined as visits having
-   * the same "base" URL (URL without query (?) or fragment (#)) and document
-   * title.
-   *
-   * If this visit is not a duplicate entry, it is cached for future reference.
-   *
-   * @param {HistoryVisit} visit
-   *   The visit to check.
-   * @returns {boolean}
-   *   `true` if there was no duplicate entry and this visit was cached.
-   *   `false` if there was a duplicate entry and this visit was not cached.
-   */
-  #maybeCacheBaseUrlForVisit(visit) {
-    const mapKey = this.#getMapKeyForVisit(visit);
-    let container = this.#cachedBaseUrls.get(mapKey);
-    if (!container) {
-      container = {};
-      this.#cachedBaseUrls.set(mapKey, container);
-    }
-    const baseUrl = this.#getBaseUrl(visit.url);
-    if (!Object.hasOwn(container, baseUrl)) {
-      container[baseUrl] = {};
-    }
-    const title = visit.title ?? visit.url;
-    // Get a list of visits for this combination of base URL + title.
-    const visits = container[baseUrl][title];
-    if (!visits?.length) {
-      container[baseUrl][title] = [visit];
-      return true;
-    }
-    // There is an existing duplicate visit. Replace it with this one, if it
-    // has a higher frecency score...
-    const existingVisit = visits[visits.length - 1];
-    if (visit.frecency > existingVisit.frecency) {
-      const historyContainer = this.#getContainerForVisit(existingVisit);
-      historyContainer.splice(historyContainer.indexOf(existingVisit), 1);
-      visits.push(visit);
-      return true;
-    }
-    // ...otherwise, place it "behind" the existing visit.
-    const insertionPoint = lazy.BinarySearch.insertionIndexOf(
-      (a, b) => a.frecency - b.frecency,
-      visits,
-      visit
-    );
-    visits.splice(insertionPoint, 0, visit);
-    return false;
-  }
-
-  #getBaseUrl(urlString) {
-    const uri = Services.io.newURI(urlString);
-    return uri.prePath + uri.filePath;
   }
 
   /**
@@ -207,6 +145,7 @@ export class PlacesQuery {
    */
   appendToCache(visit) {
     this.#getContainerForVisit(visit).push(visit);
+    this.#insertIntoCachedHistoryPerUrl(visit);
   }
 
   /**
@@ -228,6 +167,22 @@ export class PlacesQuery {
       );
     }
     container.splice(insertionPoint, 0, visit);
+    this.#insertIntoCachedHistoryPerUrl(visit);
+  }
+
+  /**
+   * Insert a visit into the url-keyed history cache.
+   *
+   * @param {HistoryVisit} visit
+   *   The visit to insert.
+   */
+  #insertIntoCachedHistoryPerUrl(visit) {
+    const container = this.#cachedHistoryPerUrl.get(visit.url);
+    if (container) {
+      container.add(visit);
+    } else {
+      this.#cachedHistoryPerUrl.set(visit.url, new Set().add(visit));
+    }
   }
 
   /**
@@ -279,7 +234,7 @@ export class PlacesQuery {
   close() {
     this.cachedHistory = null;
     this.cachedHistoryOptions = null;
-    this.#cachedBaseUrls = null;
+    this.#cachedHistoryPerUrl = null;
     PlacesObservers.removeListener(
       ["page-removed", "page-visited", "history-cleared", "page-title-changed"],
       this.#historyListener
@@ -343,16 +298,12 @@ export class PlacesQuery {
     }
     const visit = {
       date: new Date(event.visitTime),
-      frecency: event.frecency,
       id: event.visitId,
       title: event.lastKnownTitle,
       url: event.url,
     };
-    if (this.#maybeCacheBaseUrlForVisit(visit)) {
-      this.insertSortedIntoCache(visit);
-      return visit;
-    }
-    return null;
+    this.insertSortedIntoCache(visit);
+    return visit;
   }
 
   /**
@@ -362,52 +313,13 @@ export class PlacesQuery {
    *   The event.
    */
   handlePageTitleChanged(event) {
-    const visitsToReinsert = [];
-    this.#cachedBaseUrls.forEach(baseUrlMap => {
-      const titleMap = baseUrlMap[this.#getBaseUrl(event.url)];
-      if (titleMap == null) {
-        // No visits match base URL, nothing to update from this container.
-        return;
-      }
-      const entriesToUpdate = Object.entries(titleMap).filter(([, visits]) =>
-        visits.some(v => v.url === event.url)
-      );
-      for (const [title, visits] of entriesToUpdate) {
-        // The last visit has the highest frecency, i.e. it is the "winning"
-        // visit out of others with the same base URL + title, and therefore is
-        // the visit that is currently displayed in history.
-
-        // Since some visits will be updated to have a new title, they will be
-        // moved out of its old container, and thus, the "winning" visit may
-        // change. In that case, we need to update history accordingly.
-        const originalLastVisit = visits[visits.length - 1];
-        const visitsToKeep = [];
-        visits.forEach(visit => {
-          if (visit.url === event.url) {
-            visit.title = event.title;
-            visitsToReinsert.push(visit);
-          } else {
-            visitsToKeep.push(visit);
-          }
-        });
-        const newLastVisit = visitsToKeep[visitsToKeep.length - 1];
-        if (newLastVisit !== originalLastVisit) {
-          const container = this.#getContainerForVisit(originalLastVisit);
-          container.splice(container.indexOf(originalLastVisit), 1);
-          if (newLastVisit != null) {
-            // No need to run the visit through maybeCacheBaseUrlForVisit().
-            // Updating titleMap[title] implicitly caches it in the right place.
-            this.insertSortedIntoCache(newLastVisit);
-          }
-        }
-        titleMap[title] = visitsToKeep;
-      }
-      for (const visit of visitsToReinsert) {
-        if (this.#maybeCacheBaseUrlForVisit(visit)) {
-          this.insertSortedIntoCache(visit);
-        }
-      }
-    });
+    const visits = this.#cachedHistoryPerUrl.get(event.url);
+    if (visits == null) {
+      return;
+    }
+    for (const visit of visits) {
+      visit.title = event.title;
+    }
   }
 
   /**
