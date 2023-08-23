@@ -20,6 +20,7 @@ sed -i -e 's/^Version: .*/Version: '"$fullversion"'/' README.nss
 
 prune=(
     .git-copy
+    .github
     .gitignore
     CMakeLists.txt
     ChangeLog

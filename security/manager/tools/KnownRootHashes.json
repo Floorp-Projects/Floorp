@@ -1267,7 +1267,37 @@
       "label": "BJCA_Global_Root_CA1",
       "binNumber": 252,
       "sha256Fingerprint": "84lviP58CognZqf6atJ0n7V6fz6Y+3acH6ewnCxE1a4="
+    },
+    {
+      "label": "Sectigo_Public_Server_Authentication_Root_R46",
+      "binNumber": 253,
+      "sha256Fingerprint": "e7ZHpirurIi/JXqlItAf/qOV4KtFxz+T9lZU7DjyWgY="
+    },
+    {
+      "label": "Sectigo_Public_Server_Authentication_Root_E46",
+      "binNumber": 254,
+      "sha256Fingerprint": "yQ8m8PsbQBiyIidRm1yitT4spbO+XPGO/hvvRzgMU4M="
+    },
+    {
+      "label": "SSL_com_TLS_RSA_Root_CA_2022",
+      "binNumber": 255,
+      "sha256Fingerprint": "j699Liy0cJu44LM2Zr91pd1Ftd5ID46o1L/mvrwX8u0="
+    },
+    {
+      "label": "SSL_com_TLS_ECC_Root_CA_2022",
+      "binNumber": 256,
+      "sha256Fingerprint": "wy/9n0b5NtFsNnOZCVlDS5rWCq+7nnzzNlTxRMwboUM="
+    },
+    {
+      "label": "Atos_TrustedRoot_Root_CA_RSA_TLS_2021",
+      "binNumber": 257,
+      "sha256Fingerprint": "gakIjqWfs2TFSKb4VVkJm28EBe+/GOUyTsn0V7oAES8="
+    },
+    {
+      "label": "Atos_TrustedRoot_Root_CA_ECC_TLS_2021",
+      "binNumber": 258,
+      "sha256Fingerprint": "svrlPhTM16uSEgZHAa4nnB2JiPrLd1+ooAiRTmY5iKg="
     }
   ],
-  "maxBin": 252
+  "maxBin": 258
 }
