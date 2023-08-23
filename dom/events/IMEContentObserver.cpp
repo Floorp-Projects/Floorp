@@ -123,19 +123,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IMEContentObserver)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IMEContentObserver)
 
-IMEContentObserver::IMEContentObserver()
-    : mESM(nullptr),
-      mIMENotificationRequests(nullptr),
-      mSendingNotification(NOTIFY_IME_OF_NOTHING),
-      mIsObserving(false),
-      mIMEHasFocus(false),
-      mNeedsToNotifyIMEOfFocusSet(false),
-      mNeedsToNotifyIMEOfTextChange(false),
-      mNeedsToNotifyIMEOfSelectionChange(false),
-      mNeedsToNotifyIMEOfPositionChange(false),
-      mNeedsToNotifyIMEOfCompositionEventHandled(false),
-      mIsHandlingQueryContentEvent(false) {
+IMEContentObserver::IMEContentObserver() {
 #ifdef DEBUG
+  // TODO: Make this test as GTest.
   mTextChangeData.Test();
 #endif
 }
@@ -275,7 +265,9 @@ bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
             mRootElement ? mRootElement->GetFirstChild() : nullptr)) {
       mTextControlValueLength = ContentEventHandler::GetNativeTextLength(*text);
     }
+    mIsTextControl = true;
   } else if (const nsRange* selRange = mSelection->GetRangeAt(0)) {
+    MOZ_ASSERT(!mIsTextControl);
     if (NS_WARN_IF(!selRange->GetStartContainer())) {
       return false;
     }
@@ -284,6 +276,7 @@ bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
     mRootElement = Element::FromNodeOrNull(
         startContainer->GetSelectionRootContent(presShell));
   } else {
+    MOZ_ASSERT(!mIsTextControl);
     nsCOMPtr<nsINode> editableNode = mEditableNode;
     mRootElement = Element::FromNodeOrNull(
         editableNode->GetSelectionRootContent(presShell));
@@ -869,13 +862,24 @@ void IMEContentObserver::CharacterDataChanged(
              "CharacterDataWillChange()");
 
   uint32_t offset = 0;
-  // get offsets of change and fire notification
-  nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
-      RawNodePosition(mRootElement, 0u),
-      RawNodePosition(aContent, aInfo.mChangeStart), mRootElement, &offset,
-      LINE_BREAK_TYPE_NATIVE);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+  if (mIsTextControl) {
+    // If we're observing a text control, mRootElement is the anonymous <div>
+    // element which has only one text node and/or invisible <br> element.
+    // TextEditor assumes this structure when it handles editing commands.
+    // Therefore, it's safe to assume same things here.
+    MOZ_ASSERT(mRootElement->GetFirstChild() == aContent);
+    if (aInfo.mChangeStart) {
+      offset = ContentEventHandler::GetNativeTextLength(*aContent->AsText(), 0,
+                                                        aInfo.mChangeStart);
+    }
+  } else {
+    nsresult rv = ContentEventHandler::GetFlatTextLengthInRange(
+        RawNodePosition(mRootElement, 0u),
+        RawNodePosition(aContent, aInfo.mChangeStart), mRootElement, &offset,
+        LINE_BREAK_TYPE_NATIVE);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
   }
 
   uint32_t newLength = ContentEventHandler::GetNativeTextLength(
