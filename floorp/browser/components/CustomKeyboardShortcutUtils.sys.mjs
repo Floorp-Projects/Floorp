@@ -152,12 +152,6 @@ export const modifiersList = {
 export const cannotUseModifiers = ["Zenkaku", "Hankaku", "NumLock", "Delete", "Insert", "Alphanumeric", "Unidentified", "NonConvert"]
 
 export const keyCodesList = {
-    // Arrow keys
-    ArrowLeft: ["ArrowLeft", "VK_LEFT"],
-    ArrowUp: ["ArrowUp", "VK_UP"],
-    ArrowRight: ["ArrowRight", "VK_RIGHT"],
-    ArrowDown: ["ArrowDown", "VK_DOWN"],
-
     // F num keys
     F1: ["F1", "VK_F1"],
     F2: ["F2", "VK_F2"],

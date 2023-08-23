@@ -112,7 +112,7 @@ const gCSKPane = {
 
             if (CSKIsExist) {
               const keyboradShortcutObj = utils.getInfoFunctions.getActionKey(action);
-              const key = keyboradShortcutObj.key ? keyboradShortcutObj.key : keyboradShortcutObj.keycode;
+              const key = keyboradShortcutObj.key;
               const modifiers = keyboradShortcutObj.modifiers ? keyboradShortcutObj.modifiers : undefined;
 
               // Disable button if the keyborad shortcut is exist
@@ -128,12 +128,21 @@ const gCSKPane = {
               boxItem.after(keyboradShortcutInfo);
 
               // add l10n
-              const descriptionItem = document.querySelector(`.csks-box-item-description[value="${action}"]`);
-              document.l10n.setAttributes(
-                descriptionItem,
-                "CSK-keyborad-shortcut-info",
-                { key, modifiers }
-              );
+              if(!keyboradShortcutObj.keyCode || keyboradShortcutObj.keyCode === ""){
+                const descriptionItem = document.querySelector(`.csks-box-item-description[value="${action}"]`);
+                document.l10n.setAttributes(
+                  descriptionItem,
+                  "CSK-keyborad-shortcut-info",
+                  { key, modifiers }
+                );  
+              } else {
+                const descriptionItem = document.querySelector(`.csks-box-item-description[value="${action}"]`);
+                document.l10n.setAttributes(
+                  descriptionItem,
+                  "CSK-keyborad-shortcut-info-with-keycode",
+                  { key: keyboradShortcutObj.keyCode }
+                );
+              }
 
               // Add remove button event listener
               const removeButton = document.querySelector(`.csks-remove-button[value="${action}"]`);

@@ -570,7 +570,7 @@ workspace-icon-chill =
 
 # CSK
 floorp-CSK-title = Custom Shortcut Keys
-floorp-CSK-description = Customize the shortcut keys of { -brand-short-name }. Floorp provides more 80 shortcut keys. Reboot { -brand-short-name } to apply these settings.
+floorp-CSK-description = Customize the shortcut keys of { -brand-short-name }. Floorp provides more 80 shortcut keys. Reboot { -brand-short-name } to apply these settings. Duplicates do not work.
 disable-fx-actions =
  .label = Disable Firefox's default shortcut keys
 customize-Action =
@@ -591,6 +591,7 @@ CSK-restore-default-description = Restore these settings to the default. Your cu
 
 ### Exsit shortcut key: "S", "shift"
 CSK-keyborad-shortcut-info = Exist shortcut key: { $key } & { $modifiers }.
+CSK-keyborad-shortcut-info-with-keycode = Exist shortcut key: { $key }.
 
 floorp-custom-actions-tab-action = Tab Actions
 floorp-custom-actions-page-action = Page Actions
@@ -963,7 +964,7 @@ shortcutkey-customize-key-list-placeholder = Input key list
 shortcut-key-label = Key for shortcut
 start-input-button-listen = Start listening
 end-input-button-listen = Stop listening
-shortcut-key-description = Click "Start listening" and press the key you want to use as a shortcut key. Multiple keys can be used.
+shortcut-key-description = Click "Start listening" and press the key you want to use as a shortcut key. Multiple keys can be used. Duplicate other action keys are not working.
 
 floorp-custom-actions-open-new-tab = Open a new tab
   .label = Open a new tab
