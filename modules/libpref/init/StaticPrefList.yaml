@@ -13307,11 +13307,6 @@
   value: false
   mirror: always
 
-- name: privacy.partition.bloburl_per_partition_key
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 - name: privacy.window.name.update.enabled
   type: bool
   value: true
