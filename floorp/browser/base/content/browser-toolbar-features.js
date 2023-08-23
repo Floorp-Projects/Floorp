@@ -21,10 +21,8 @@ async function UCTFirst() {
     label: l10nText,
     tooltiptext: l10nText,
     onCreated(aNode) {
-      const icon = aNode.querySelector(".toolbarbutton-icon:not(stack > .toolbarbutton-icon)");
-      if (icon) {
-        icon.remove();
-      }
+      const fragment = window.MozXULElement.parseXULToFragment(`<stack xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="toolbarbutton-badge-stack"><image class="toolbarbutton-icon" label="閉じたタブを開く"/><html:label xmlns:html="http://www.w3.org/1999/xhtml" class="toolbarbutton-badge" ></html:label></stack>`);
+      aNode.appendChild(fragment);
     },
     onCommand() {
       undoCloseTab();

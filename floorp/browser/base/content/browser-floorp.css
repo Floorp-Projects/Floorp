@@ -303,7 +303,7 @@ min-width: 0px !important;
 }
 
 #undo-closed-tab {
-  list-style-image: url("chrome://browser/skin/undo-closed-tab.svg");
+  list-style-image: url("chrome://global/skin/icons/undo.svg");
 }
 
 #sidebar-reverse-position-toolbar {
