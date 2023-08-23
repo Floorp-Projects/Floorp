@@ -1,19 +1,17 @@
 <!DOCTYPE HTML>
-<html>
-<head>
-  <title>Reftests with caret drawing</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="/tests/SimpleTest/EventUtils.js"></script>
-  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <style>
-    iframe {
-      border: none;
-      width: 600px;
-      height: 400px;
-    }
-  </style>
-<script type="text/javascript">
+<title>Reftests with caret drawing</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<style>
+  iframe {
+    border: none;
+    width: 600px;
+    height: 400px;
+  }
+</style>
+<script>
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestLongerTimeout(3);
@@ -28,11 +26,12 @@ function callbackTestIframe(iframe)
 
   var result = iframes[0];
   var reference = iframes[1];
-
+  const shouldBeEqual = true;
   // Using assertSnapshots is important to get the data-URIs of failing tests
   // dumped into the log in a format that reftest-analyzer.xhtml can process. 
-  var passed = assertSnapshots(result.snapshot, reference.snapshot, true,
-                               null /*no fuzz*/, result.src, reference.src);
+  var passed = assertSnapshots(result.snapshot, reference.snapshot,
+                               shouldBeEqual, null /*no fuzz*/, result.src,
+                               reference.src);
 
   // Remove the iframes if the test was successful
   if (passed) {
@@ -232,7 +231,6 @@ var tests = [
     function() {SpecialPowers.pushPrefEnv({'set': [['layout.css.overflow-clip-box.enabled', true]]}, nextTest);} ,
     [ 'bug966992-1.html' , 'bug966992-1-ref.html' ] ,
     [ 'bug966992-2.html' , 'bug966992-2-ref.html' ] ,
-    [ 'bug966992-3.html' , 'bug966992-3-ref.html' ] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.css.overflow-clip-box.enabled']]}, nextTest);} ,
     [ 'bug989012-1.html' , 'bug989012-1-ref.html' ] ,
     [ 'bug989012-2.html' , 'bug989012-2-ref.html' ] ,
@@ -463,7 +461,5 @@ async function runTests() {
 SimpleTest.waitForFocus(runTests);
 
 </script>
-</head>
 <body>
 </body>
-</html>
