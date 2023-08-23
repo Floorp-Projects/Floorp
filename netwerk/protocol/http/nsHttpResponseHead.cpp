@@ -378,7 +378,7 @@ nsresult nsHttpResponseHead::ParseStatusLine_locked(const nsACString& line) {
     const char* p = start + index + 1;
     while (p < end && NS_IsHTTPWhitespace(*p)) ++p;
     if (p == end || !mozilla::IsAsciiDigit(*p)) {
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_PARSING_HTTP_STATUS_LINE;
     }
     const char* codeStart = p;
     while (p < end && mozilla::IsAsciiDigit(*p)) ++p;
@@ -386,7 +386,7 @@ nsresult nsHttpResponseHead::ParseStatusLine_locked(const nsACString& line) {
     // Only accept 3 digits (including all leading zeros)
     // Also if next char isn't whitespace, fail (ie, code is 0x2)
     if (p - codeStart > 3 || (p < end && !NS_IsHTTPWhitespace(*p))) {
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_PARSING_HTTP_STATUS_LINE;
     }
 
     // At this point the code is between 0 and 999 inclusive
@@ -394,7 +394,7 @@ nsresult nsHttpResponseHead::ParseStatusLine_locked(const nsACString& line) {
     nsresult rv;
     mStatus = strCode.ToInteger(&rv);
     if (NS_FAILED(rv)) {
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_PARSING_HTTP_STATUS_LINE;
     }
 
     // Reason-Phrase: whatever remains after any whitespace (even empty)

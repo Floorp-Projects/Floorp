@@ -107,7 +107,8 @@ TEST(TestHttpResponseHead, bug1687903)
                        &usingStrictParsing);
   }
 
-  nsresult expectation = usingStrictParsing ? NS_ERROR_FAILURE : NS_OK;
+  nsresult expectation =
+      usingStrictParsing ? NS_ERROR_PARSING_HTTP_STATUS_LINE : NS_OK;
 
   ASSERT_EQ(expectation, head.ParseStatusLine("HTTP/1.1 "_ns));
   ASSERT_EQ(expectation, head.ParseStatusLine("HTTP/1.1 BLAH"_ns));
