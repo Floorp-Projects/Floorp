@@ -9,6 +9,12 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
+let synthesizedMouseEventsTestPrefs = [
+  // Touch activation duration must be set to a large value to ensure the test
+  // fails if touch synthesized mouse event dispatch is delayed.
+  ["ui.touch_activation.duration_ms", 90000]
+];
+
 var subtests = [
   // Sanity test to synthesize a mouse click
   {"file": "helper_click.html?dtc=false"},
@@ -68,6 +74,10 @@ var subtests = [
   {"file": "helper_bug1756814.html", "prefs": [
     ["ui.useOverlayScrollbars", 0]
   ]},
+  {"file": "helper_touch_synthesized_mouseevents.html?scrollable=true",
+    "prefs": synthesizedMouseEventsTestPrefs},
+  {"file": "helper_touch_synthesized_mouseevents.html?scrollable=false",
+    "prefs": synthesizedMouseEventsTestPrefs},
 ];
 
 // Android, mac, and linux (at least in our automation) do not have scrollbar buttons.
