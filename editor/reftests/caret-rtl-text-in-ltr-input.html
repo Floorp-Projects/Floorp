@@ -1,0 +1,10 @@
+<!doctype html>
+<meta charset="utf-8">
+<input type=text value="الخير" autofocus>
+<script>
+onload = () => {
+  let input = document.querySelector("input");
+  input.selectionStart = input.selectionEnd = input.value.length;
+  input.focus();
+}
+</script>
