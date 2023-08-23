@@ -244,7 +244,8 @@ void MockCubebStream::Destroy() {
   // This provides an extra STOPPED state callback as with audioipc.
   // It also ensures that this stream is removed from MockCubeb::mLiveStreams.
   Stop();
-  MockCubeb::AsMock(context)->StreamDestroy(AsCubebStream());
+  mDestroyed = true;
+  MockCubeb::AsMock(context)->StreamDestroy(this);
 }
 
 int MockCubebStream::RegisterDeviceChangedCallback(
@@ -257,11 +258,14 @@ int MockCubebStream::RegisterDeviceChangedCallback(
 }
 
 cubeb_stream* MockCubebStream::AsCubebStream() {
+  MOZ_ASSERT(!mDestroyed);
   return reinterpret_cast<cubeb_stream*>(this);
 }
 
 MockCubebStream* MockCubebStream::AsMock(cubeb_stream* aStream) {
-  return reinterpret_cast<MockCubebStream*>(aStream);
+  auto* mockStream = reinterpret_cast<MockCubebStream*>(aStream);
+  MOZ_ASSERT(!mockStream->mDestroyed);
+  return mockStream;
 }
 
 cubeb_devid MockCubebStream::GetInputDeviceID() const { return mInputDeviceID; }
@@ -591,9 +595,8 @@ int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
   return CUBEB_OK;
 }
 
-void MockCubeb::StreamDestroy(cubeb_stream* aStream) {
-  RefPtr<SmartMockCubebStream> mockStream =
-      dont_AddRef(MockCubebStream::AsMock(aStream)->mSelf);
+void MockCubeb::StreamDestroy(MockCubebStream* aStream) {
+  RefPtr<SmartMockCubebStream> mockStream = dont_AddRef(aStream->mSelf);
   mStreamDestroyEvent.Notify(mockStream);
 }
 
