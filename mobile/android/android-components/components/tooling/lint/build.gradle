@@ -45,7 +45,5 @@ tasks.register("assembleAndroidTest") {
 }
 
 tasks.withType(KotlinCompile).configureEach {
-  kotlinOptions {
-    jvmTarget = "17"
-  }
+  kotlinOptions.jvmTarget = "17"
 }

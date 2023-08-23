@@ -169,13 +169,13 @@ android {
 }
 
 tasks.withType(KotlinCompile).all {
-        kotlinOptions {
-            allWarningsAsErrors = true
-            freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
-            freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
-            freeCompilerArgs += "-Xjvm-default=all"
-            jvmTarget = '11'
-        }
+    kotlinOptions.allWarningsAsErrors = true
+    kotlinOptions.freeCompilerArgs += [
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-opt-in=kotlin.RequiresOptIn",
+            "-Xjvm-default=all"
+    ]
+    kotlinOptions.jvmTarget = '11'
 }
 
 // -------------------------------------------------------------------------------------------------

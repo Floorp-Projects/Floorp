@@ -35,9 +35,7 @@ android {
 }
 
 tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions {
-        freeCompilerArgs += "-Xjvm-default=all"
-    }
+    kotlinOptions.freeCompilerArgs += "-Xjvm-default=all"
 }
 
 dependencies {
