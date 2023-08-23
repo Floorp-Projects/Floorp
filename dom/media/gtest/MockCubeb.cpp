@@ -237,10 +237,11 @@ int MockCubebStream::Stop() {
 uint64_t MockCubebStream::Position() { return mPosition; }
 
 void MockCubebStream::Destroy() {
-  // Dispatch an extra STOPPED state change as produced with audioipc.
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1801190#c1
-  NotifyState(CUBEB_STATE_STOPPED);
-
+  // Stop() even if cubeb_stream_stop() has already been called, as with
+  // audioipc.  https://bugzilla.mozilla.org/show_bug.cgi?id=1801190#c1
+  // This provides an extra STOPPED state callback as with audioipc.
+  // It also ensures that this stream is removed from MockCubeb::mLiveStreams.
+  Stop();
   MockCubeb::AsMock(context)->StreamDestroy(AsCubebStream());
 }
 
@@ -410,7 +411,11 @@ void MockCubebStream::NotifyState(cubeb_state aState) {
 
 MockCubeb::MockCubeb() : ops(&mock_ops) {}
 
-MockCubeb::~MockCubeb() { MOZ_ASSERT(!mFakeAudioThread); };
+MockCubeb::~MockCubeb() {
+  auto streams = mLiveStreams.Lock();
+  MOZ_ASSERT(streams->IsEmpty());
+  MOZ_ASSERT(!mFakeAudioThread);
+};
 
 cubeb* MockCubeb::AsCubebContext() { return reinterpret_cast<cubeb*>(this); }
 
