@@ -115,7 +115,6 @@ modal.DialogObserver = class {
     Services.obs.addObserver(this, "common-dialog-loaded");
     Services.obs.addObserver(this, "domwindowopened");
     Services.obs.addObserver(this, "geckoview-prompt-show");
-    Services.obs.addObserver(this, "tabmodal-dialog-loaded");
 
     // Register event listener for all already open windows
     for (let win of Services.wm.getEnumerator(null)) {
@@ -127,7 +126,6 @@ modal.DialogObserver = class {
     Services.obs.removeObserver(this, "common-dialog-loaded");
     Services.obs.removeObserver(this, "domwindowopened");
     Services.obs.removeObserver(this, "geckoview-prompt-show");
-    Services.obs.removeObserver(this, "tabmodal-dialog-loaded");
 
     // Unregister event listener for all open windows
     for (let win of Services.wm.getEnumerator(null)) {
@@ -161,22 +159,6 @@ modal.DialogObserver = class {
 
     let curBrowser = this._curBrowserFn();
     switch (topic) {
-      // This topic is only used by the old-style content modal dialogs like
-      // alert, confirm, and prompt. It can be removed when only the new
-      // subdialog based content modals remain. Those will be made default in
-      // Firefox 89, and this case is deprecated.
-      case "tabmodal-dialog-loaded":
-        const container = curBrowser.contentBrowser.closest(
-          ".browserSidebarContainer"
-        );
-        if (!container.contains(subject)) {
-          return;
-        }
-        this.callbacks.forEach(callback =>
-          callback(modal.ACTION_OPENED, subject)
-        );
-        break;
-
       case "common-dialog-loaded":
         if (curBrowser) {
           if (

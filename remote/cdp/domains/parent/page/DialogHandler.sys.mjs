@@ -32,13 +32,11 @@ export class DialogHandler {
     this._browser = browser;
 
     this._onCommonDialogLoaded = this._onCommonDialogLoaded.bind(this);
-    this._onTabDialogLoaded = this._onTabDialogLoaded.bind(this);
 
     Services.obs.addObserver(
       this._onCommonDialogLoaded,
       "common-dialog-loaded"
     );
-    Services.obs.addObserver(this._onTabDialogLoaded, "tabmodal-dialog-loaded");
   }
 
   destructor() {
@@ -48,10 +46,6 @@ export class DialogHandler {
     Services.obs.removeObserver(
       this._onCommonDialogLoaded,
       "common-dialog-loaded"
-    );
-    Services.obs.removeObserver(
-      this._onTabDialogLoaded,
-      "tabmodal-dialog-loaded"
     );
   }
 
@@ -116,22 +110,6 @@ export class DialogHandler {
     }
 
     this._dialog = dialogWindow.Dialog;
-    const message = this._dialog.args.text;
-    const type = this._getDialogType();
-
-    this.emit("dialog-loaded", { message, type });
-  }
-
-  _onTabDialogLoaded(promptContainer) {
-    const prompts = this._browser.tabModalPromptBox.listPrompts();
-    const prompt = prompts.find(p => p.ui.promptContainer === promptContainer);
-
-    if (!prompt) {
-      // The dialog is not for the current tab.
-      return;
-    }
-
-    this._dialog = prompt;
     const message = this._dialog.args.text;
     const type = this._getDialogType();
 
