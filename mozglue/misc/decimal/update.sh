@@ -55,6 +55,7 @@ patch -p4 < comparison-with-nan.patch
 patch -p4 < mfbt-abi-markers.patch
 patch -p4 < to-moz-dependencies.patch
 patch -p4 < add-doubleconversion-impl.patch
+patch -p4 < moz-constexpr-decimal.patch
 # The following is disabled. See
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1208357#c7
 #patch -p4 < fix-wshadow-warnings.patch
