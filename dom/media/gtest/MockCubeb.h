@@ -290,13 +290,23 @@ class SmartMockCubebStream
 // backend, but is also controllable by the test code to decide what the backend
 // should do, depending on what is being tested.
 class MockCubeb {
+  // This needs to have the exact same memory layout as a real cubeb backend.
+  // It's very important for the `ops` member to be the very first member of
+  // the class, and for MockCubeb to not have any virtual members (to avoid
+  // having a vtable), so that AsMock() returns a pointer to this that can be
+  // used as a cubeb backend.
+  const cubeb_ops* ops;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MockCubeb);
+
  public:
   MockCubeb();
-  ~MockCubeb();
   // Cubeb backend implementation
   // This allows passing this class as a cubeb* instance.
+  // cubeb_destroy(context) should eventually be called on the return value
+  // iff this method is called.
   cubeb* AsCubebContext();
   static MockCubeb* AsMock(cubeb* aContext);
+  void Destroy();
   // Fill in the collection parameter with all devices of aType.
   int EnumerateDevices(cubeb_device_type aType,
                        cubeb_device_collection* aCollection);
@@ -389,11 +399,7 @@ class MockCubeb {
   void ThreadFunction();
 
  private:
-  // This needs to have the exact same memory layout as a real cubeb backend.
-  // It's very important for this `ops` member to be the very first member of
-  // the class, and to not have any virtual members (to avoid having a
-  // vtable).
-  const cubeb_ops* ops;
+  ~MockCubeb();
   // The callback to call when the device list has been changed.
   cubeb_device_collection_changed_callback
       mInputDeviceCollectionChangeCallback = nullptr;
@@ -413,6 +419,8 @@ class MockCubeb {
   // Whether the audio thread is forced, i.e., whether it remains active even
   // with no live streams.
   Atomic<bool> mForcedAudioThread{false};
+  Atomic<bool> mHasCubebContext{false};
+  Atomic<bool> mDestroyed{false};
   MozPromiseHolder<ForcedAudioThreadPromise> mForcedAudioThreadPromise;
   // Our input and output devices.
   nsTArray<cubeb_device_info> mInputDevices;
