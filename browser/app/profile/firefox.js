@@ -1857,7 +1857,7 @@ pref("browser.translation.neverForLanguages", "");
 
 // Enable Firefox translations powered by the Bergamot translations
 // engine https://browser.mt/.
-pref("browser.translations.enable", true);
+pref("browser.translations.enable", false);
 
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
