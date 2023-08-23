@@ -7,16 +7,18 @@
 #include "mozilla/css/StreamLoader.h"
 
 #include "mozilla/Encoding.h"
+#include "mozilla/TaskQueue.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
+#include "nsIThreadRetargetableRequest.h"
+#include "nsIStreamTransportService.h"
+#include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
 
 #include <limits>
 
-using namespace mozilla;
-
-namespace mozilla {
-namespace css {
+namespace mozilla::css {
 
 StreamLoader::StreamLoader(SheetLoadData& aSheetLoadData)
     : mSheetLoadData(&aSheetLoadData), mStatus(NS_OK) {}
@@ -27,7 +29,8 @@ StreamLoader::~StreamLoader() {
 #endif
 }
 
-NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener)
+NS_IMPL_ISUPPORTS(StreamLoader, nsIStreamListener,
+                  nsIThreadRetargetableStreamListener)
 
 /* nsIRequestObserver implementation */
 NS_IMETHODIMP
@@ -52,8 +55,18 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
       }
     }
   }
+  if (nsCOMPtr<nsIThreadRetargetableRequest> rr = do_QueryInterface(aRequest)) {
+    nsCOMPtr<nsIEventTarget> sts =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    RefPtr queue =
+        TaskQueue::Create(sts.forget(), "css::StreamLoader Delivery Queue");
+    rr->RetargetDeliveryTo(queue);
+  }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+StreamLoader::CheckListenerChain() { return NS_OK; }
 
 NS_IMETHODIMP
 StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
@@ -194,5 +207,4 @@ nsresult StreamLoader::WriteSegmentFun(nsIInputStream*, void* aClosure,
   return NS_OK;
 }
 
-}  // namespace css
-}  // namespace mozilla
+}  // namespace mozilla::css

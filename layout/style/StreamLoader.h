@@ -8,20 +8,22 @@
 #define mozilla_css_StreamLoader_h
 
 #include "nsIStreamListener.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsString.h"
 #include "mozilla/css/SheetLoadData.h"
 #include "mozilla/Assertions.h"
 
 class nsIInputStream;
 
-namespace mozilla {
-namespace css {
+namespace mozilla::css {
 
-class StreamLoader : public nsIStreamListener {
+class StreamLoader : public nsIStreamListener,
+                     public nsIThreadRetargetableStreamListener {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   explicit StreamLoader(SheetLoadData&);
 
@@ -58,7 +60,6 @@ class StreamLoader : public nsIStreamListener {
 #endif
 };
 
-}  // namespace css
-}  // namespace mozilla
+}  // namespace mozilla::css
 
 #endif  // mozilla_css_StreamLoader_h
