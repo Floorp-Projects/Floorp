@@ -254,7 +254,7 @@ android {
     namespace 'org.mozilla.fenix'
 }
 
-android.applicationVariants.all { variant ->
+android.applicationVariants.configureEach { variant ->
 
 // -------------------------------------------------------------------------------------------------
 // Generate version codes for builds
@@ -709,7 +709,7 @@ if (project.hasProperty("coverage")) {
         toolVersion = Versions.jacoco
     }
 
-    android.applicationVariants.all { variant ->
+    android.applicationVariants.configureEach { variant ->
         tasks.register("jacoco${variant.name.capitalize()}TestReport", JacocoReport) {
             dependsOn "test${variant.name.capitalize()}UnitTest"
 
@@ -847,7 +847,7 @@ if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
     apply from: "../${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
 }
 
-android.applicationVariants.all { variant ->
+android.applicationVariants.configureEach { variant ->
     tasks.register("apkSize${variant.name.capitalize()}", ApkSizeTask) {
         variantName = variant.name
         apks = variant.outputs.collect { output -> output.outputFile.name }

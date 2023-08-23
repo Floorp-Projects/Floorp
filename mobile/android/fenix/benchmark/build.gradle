@@ -46,7 +46,7 @@ android {
  * and that's applied to the app module. Since there are no other uses of the glean plugin in the
  * benchmark module, we do this manually here.
  */
-configurations.all {
+configurations.configureEach {
     resolutionStrategy.capabilitiesResolution.withCapability("org.mozilla.telemetry:glean-native") {
         def toBeSelected = candidates.find { it.id instanceof ModuleComponentIdentifier && it.id.module.contains('geckoview') }
         if (toBeSelected != null) {

@@ -35,7 +35,7 @@ android {
     namespace 'mozilla.components.lib.state'
 }
 
-tasks.withType(KotlinCompile).all {
+tasks.withType(KotlinCompile).configureEach {
     kotlinOptions.freeCompilerArgs += [
         "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
     ]

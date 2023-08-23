@@ -168,7 +168,7 @@ android {
     namespace 'org.mozilla.focus'
 }
 
-tasks.withType(KotlinCompile).all {
+tasks.withType(KotlinCompile).configureEach {
     kotlinOptions.allWarningsAsErrors = true
     kotlinOptions.freeCompilerArgs += [
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
@@ -355,7 +355,7 @@ dependencies {
 //  Dynamically set versionCode (See tools/build/versionCode.gradle
 // -------------------------------------------------------------------------------------------------
 
-android.applicationVariants.all { variant ->
+android.applicationVariants.configureEach { variant ->
     def buildType = variant.buildType.name
 
     println("----------------------------------------------")
@@ -411,7 +411,7 @@ android.applicationVariants.all { variant ->
 // MLS: Read token from local file if it exists (Only release builds)
 // -------------------------------------------------------------------------------------------------
 
-android.applicationVariants.all {
+android.applicationVariants.configureEach {
     print("MLS token: ")
     try {
         def token = new File("${rootDir}/.mls_token").text.trim()
@@ -427,7 +427,7 @@ android.applicationVariants.all {
 // Adjust: Read token from local file if it exists (Only release builds)
 // -------------------------------------------------------------------------------------------------
 
-android.applicationVariants.all { variant ->
+android.applicationVariants.configureEach { variant ->
     def variantName = variant.getName()
 
     print("Adjust token: ")
@@ -456,7 +456,7 @@ android.applicationVariants.all { variant ->
 // Sentry: Read token from local file if it exists (Only release builds)
 // -------------------------------------------------------------------------------------------------
 
-android.applicationVariants.all {
+android.applicationVariants.configureEach {
     print("Sentry token: ")
     try {
         def token = new File("${rootDir}/.sentry_token").text.trim()
@@ -518,7 +518,7 @@ def getEnabledLocales() {
 // -------------------------------------------------------------------------------------------------
 
 print("Nimbus endpoint: ")
-android.applicationVariants.all { variant ->
+android.applicationVariants.configureEach { variant ->
     def variantName = variant.getName()
 
     if (!variantName.contains("Debug")) {
@@ -590,7 +590,7 @@ if (project.hasProperty("coverage")) {
         jacoco.excludes = ['jdk.internal.*']
     }
 
-    android.applicationVariants.all { variant ->
+    android.applicationVariants.configureEach { variant ->
         task "jacoco${variant.name.capitalize()}TestReport"(type: JacocoReport,
                 dependsOn: ["test${variant.name.capitalize()}UnitTest"]) {
 
