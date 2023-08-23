@@ -29,7 +29,7 @@ module.exports = {
   },
   extends: ["prettier", "plugin:jest/recommended"],
   parserOptions: {
-    ecmaVersion: 2016,
+    ecmaVersion: "latest",
     sourceType: "module",
     ecmaFeatures: { jsx: true },
 

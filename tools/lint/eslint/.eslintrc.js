@@ -15,6 +15,8 @@ module.exports = {
   },
   parser: "espree",
   parserOptions: {
+    // This should match with the minimum node version that the ESLint CI
+    // process uses (check the linux64-node toolchain).
     ecmaVersion: 12,
   },
 
