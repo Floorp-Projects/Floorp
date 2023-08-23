@@ -210,7 +210,7 @@ void PreloadService::PreloadScript(
     uint64_t aEarlyHintPreloaderId) {
   mDocument->ScriptLoader()->PreloadURI(
       aURI, aCharset, aType, aCrossOrigin, aNonce, aIntegrity, aScriptFromHead,
-      false, false, false, true, PreloadReferrerPolicy(aReferrerPolicy),
+      false, false, true, PreloadReferrerPolicy(aReferrerPolicy),
       aEarlyHintPreloaderId);
 }
 

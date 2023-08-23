@@ -1091,7 +1091,8 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
   if (request->GetScriptLoadContext()->IsDeferredScript()) {
     // We don't want to run this yet.
     // If we come here, the script is a parser-created script and it has
-    // the defer attribute but not the async attribute. Since a
+    // the defer attribute but not the async attribute OR it is a module
+    // script without the async attribute. Since a
     // a parser-inserted script is being run, we came here by the parser
     // running the script, which means the parser is still alive and the
     // parse is ongoing.
@@ -3544,12 +3545,14 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   }
 }
 
-void ScriptLoader::PreloadURI(
-    nsIURI* aURI, const nsAString& aCharset, const nsAString& aType,
-    const nsAString& aCrossOrigin, const nsAString& aNonce,
-    const nsAString& aIntegrity, bool aScriptFromHead, bool aAsync, bool aDefer,
-    bool aNoModule, bool aLinkPreload, const ReferrerPolicy aReferrerPolicy,
-    uint64_t aEarlyHintPreloaderId) {
+void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
+                              const nsAString& aType,
+                              const nsAString& aCrossOrigin,
+                              const nsAString& aNonce,
+                              const nsAString& aIntegrity, bool aScriptFromHead,
+                              bool aAsync, bool aDefer, bool aLinkPreload,
+                              const ReferrerPolicy aReferrerPolicy,
+                              uint64_t aEarlyHintPreloaderId) {
   NS_ENSURE_TRUE_VOID(mDocument);
   // Check to see if scripts has been turned off.
   if (!mEnabled || !mDocument->IsScriptEnabled()) {
@@ -3557,11 +3560,6 @@ void ScriptLoader::PreloadURI(
   }
 
   ScriptKind scriptKind = ScriptKind::eClassic;
-
-  // Don't load nomodule scripts.
-  if (aNoModule) {
-    return;
-  }
 
   static const char kASCIIWhitespace[] = "\t\n\f\r ";
 
