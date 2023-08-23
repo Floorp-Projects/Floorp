@@ -18,7 +18,7 @@ The HTTP cache is usually queried by the networking stack when browsing the web.
 
 The HTTP cache lives in the parent process, and so any read and write operations need to be initiated in the parent process. Thankfully, however, the HTTP cache accepts data using `nsIOutputStream` and serves it using `nsIInputStream`. We can send `nsIInputStream` over the message manager, and convert an `nsIInputStream` into an `nsIOutputStream`, so we have everything we need to efficiently communicate with the "privileged about content process" to save and retrieve page data.
 
-The official documentation for the HTTP cache [can be found here](https://developer.mozilla.org/en-US/docs/Mozilla/HTTP_cache).
+The official documentation for the HTTP cache [can be found here](https://firefox-source-docs.mozilla.org/networking/cache2/doc.html).
 
 ### `AboutHomeStartupCache`
 
