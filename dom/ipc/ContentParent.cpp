@@ -3293,8 +3293,8 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     nsTArray<BlobURLRegistrationData> registrations;
     BlobURLProtocolHandler::ForEachBlobURL(
         [&](BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
-            const Maybe<nsID>& aAgentClusterId, const nsCString& aPartitionKey,
-            const nsACString& aURI, bool aRevoked) {
+            const Maybe<nsID>& aAgentClusterId, const nsACString& aURI,
+            bool aRevoked) {
           // We send all moz-extension Blob URL's to all content processes
           // because content scripts mean that a moz-extension can live in any
           // process. Same thing for system principal Blob URLs. Content Blob
@@ -3312,8 +3312,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
           }
 
           registrations.AppendElement(BlobURLRegistrationData(
-              nsCString(aURI), ipcBlob, aPrincipal, aAgentClusterId,
-              nsCString(aPartitionKey), aRevoked));
+              nsCString(aURI), ipcBlob, aPrincipal, aAgentClusterId, aRevoked));
 
           rv = TransmitPermissionsForPrincipal(aPrincipal);
           Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -6164,8 +6163,7 @@ ContentParent::RecvNotifyPushSubscriptionModifiedObservers(
 /* static */
 void ContentParent::BroadcastBlobURLRegistration(
     const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
-    const Maybe<nsID>& aAgentClusterId, const nsCString& aPartitionKey,
-    ContentParent* aIgnoreThisCP) {
+    const Maybe<nsID>& aAgentClusterId, ContentParent* aIgnoreThisCP) {
   uint64_t originHash = ComputeLoadedOriginHash(aPrincipal);
 
   bool toBeSent =
@@ -6191,7 +6189,7 @@ void ContentParent::BroadcastBlobURLRegistration(
       }
 
       Unused << cp->SendBlobURLRegistration(uri, ipcBlob, aPrincipal,
-                                            aAgentClusterId, aPartitionKey);
+                                            aAgentClusterId);
     }
   }
 }
@@ -6217,7 +6215,7 @@ void ContentParent::BroadcastBlobURLUnregistration(
 
 mozilla::ipc::IPCResult ContentParent::RecvStoreAndBroadcastBlobURLRegistration(
     const nsACString& aURI, const IPCBlob& aBlob, nsIPrincipal* aPrincipal,
-    const Maybe<nsID>& aAgentClusterId, const nsCString& aPartitionKey) {
+    const Maybe<nsID>& aAgentClusterId) {
   if (!aPrincipal) {
     return IPC_FAIL(this, "No principal");
   }
@@ -6231,9 +6229,9 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreAndBroadcastBlobURLRegistration(
   }
 
   BlobURLProtocolHandler::AddDataEntry(aURI, aPrincipal, aAgentClusterId,
-                                       aPartitionKey, blobImpl);
+                                       blobImpl);
   BroadcastBlobURLRegistration(aURI, blobImpl, aPrincipal, aAgentClusterId,
-                               aPartitionKey, this);
+                               this);
 
   // We want to store this blobURL, so we can unregister it if the child
   // crashes.
@@ -6480,8 +6478,8 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
     nsTArray<BlobURLRegistrationData> registrations;
     BlobURLProtocolHandler::ForEachBlobURL(
         [&](BlobImpl* aBlobImpl, nsIPrincipal* aBlobPrincipal,
-            const Maybe<nsID>& aAgentClusterId, const nsCString& aPartitionKey,
-            const nsACString& aURI, bool aRevoked) {
+            const Maybe<nsID>& aAgentClusterId, const nsACString& aURI,
+            bool aRevoked) {
           // This check uses `ComputeLoadedOriginHash` to compare, rather than
           // doing the more accurate `Equals` check, as it needs to match the
           // behaviour of the logic to broadcast new registrations.
@@ -6495,9 +6493,9 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
             return false;
           }
 
-          registrations.AppendElement(BlobURLRegistrationData(
-              nsCString(aURI), ipcBlob, aBlobPrincipal, aAgentClusterId,
-              nsCString(aPartitionKey), aRevoked));
+          registrations.AppendElement(
+              BlobURLRegistrationData(nsCString(aURI), ipcBlob, aBlobPrincipal,
+                                      aAgentClusterId, aRevoked));
 
           rv = TransmitPermissionsForPrincipal(aBlobPrincipal);
           Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -7751,7 +7749,7 @@ mozilla::ipc::IPCResult ContentParent::RecvBlobURLDataRequest(
     const nsACString& aBlobURL, nsIPrincipal* aTriggeringPrincipal,
     nsIPrincipal* aLoadingPrincipal, const OriginAttributes& aOriginAttributes,
     uint64_t aInnerWindowId, const Maybe<nsID>& aAgentClusterId,
-    const nsCString& aPartitionKey, BlobURLDataRequestResolver&& aResolver) {
+    BlobURLDataRequestResolver&& aResolver) {
   RefPtr<BlobImpl> blobImpl;
 
   // Since revoked blobs are also retrieved, it is possible that the blob no
@@ -7759,7 +7757,7 @@ mozilla::ipc::IPCResult ContentParent::RecvBlobURLDataRequest(
   if (!BlobURLProtocolHandler::GetDataEntry(
           aBlobURL, getter_AddRefs(blobImpl), aLoadingPrincipal,
           aTriggeringPrincipal, aOriginAttributes, aInnerWindowId,
-          aAgentClusterId, aPartitionKey, true /* AlsoIfRevoked */)) {
+          aAgentClusterId, true /* AlsoIfRevoked */)) {
     aResolver(NS_ERROR_DOM_BAD_URI);
     return IPC_OK();
   }
