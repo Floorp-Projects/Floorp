@@ -385,7 +385,11 @@ function isSignup(scenarioName) {
 
 class RelayOffered {
   async *autocompleteItemsAsync(_origin, scenarioName, hasInput) {
-    if (!hasInput && isSignup(scenarioName)) {
+    if (
+      !hasInput &&
+      isSignup(scenarioName) &&
+      !Services.prefs.prefIsLocked("signon.firefoxRelay.feature")
+    ) {
       const isUserEligible = lazy.NimbusFeatures[
         "password-autocomplete"
       ].getVariable("firefoxRelayIntegration");
