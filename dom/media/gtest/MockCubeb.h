@@ -248,6 +248,7 @@ class MockCubebStream {
   std::atomic_bool mFastMode{false};
   std::atomic_bool mForceErrorState{false};
   std::atomic_bool mForceDeviceChanged{false};
+  std::atomic_bool mDestroyed{false};
   std::atomic<uint64_t> mPosition{0};
   AudioGenerator<AudioDataValue> mAudioGenerator;
   AudioVerifier<AudioDataValue> mAudioVerifier;
@@ -367,7 +368,7 @@ class MockCubeb {
                  cubeb_data_callback aDataCallback,
                  cubeb_state_callback aStateCallback, void* aUserPtr);
 
-  void StreamDestroy(cubeb_stream* aStream);
+  void StreamDestroy(MockCubebStream* aStream);
 
   void GoFaster();
   void DontGoFaster();
