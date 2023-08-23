@@ -355,6 +355,7 @@ def test(command_context, what, extra_args, **log_args):
     * A directory containing tests
     * A test suite name
     * An alias to a test suite name (codes used on TreeHerder)
+    * path to a test manifest
 
     When paths or directories are given, they are first resolved to test
     files known to the build system.
