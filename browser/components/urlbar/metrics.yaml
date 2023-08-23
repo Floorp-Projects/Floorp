@@ -556,7 +556,7 @@ urlbar:
     send_in_pings:
       - events
 
-  pref_quicksuggest_data_collection:
+  pref_suggest_data_collection:
     lifetime: application
     type: boolean
     description: >
@@ -566,6 +566,7 @@ urlbar:
       `browser.urlbar.quicksuggest.dataCollection.enabled` pref.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849726
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
     data_sensitivity:
@@ -576,7 +577,7 @@ urlbar:
     send_in_pings:
       - events
 
-  pref_quicksuggest_nonsponsored:
+  pref_suggest_nonsponsored:
     lifetime: application
     type: boolean
     description: >
@@ -585,6 +586,7 @@ urlbar:
       `browser.urlbar.suggest.quicksuggest.nonsponsored` pref.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849726
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
     data_sensitivity:
@@ -595,7 +597,7 @@ urlbar:
     send_in_pings:
       - events
 
-  pref_quicksuggest_sponsored:
+  pref_suggest_sponsored:
     lifetime: application
     type: boolean
     description: >
@@ -604,6 +606,7 @@ urlbar:
       `browser.urlbar.suggest.quicksuggest.sponsored` pref.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849726
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847855
     data_sensitivity:

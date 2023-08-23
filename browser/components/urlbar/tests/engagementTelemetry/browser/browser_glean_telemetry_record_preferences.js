@@ -37,15 +37,15 @@ add_task(async function prefMaxRichResults() {
 add_task(async function boolPref() {
   const testData = [
     {
-      green: "prefQuicksuggestDataCollection",
+      green: "prefSuggestDataCollection",
       pref: "quicksuggest.dataCollection.enabled",
     },
     {
-      green: "prefQuicksuggestNonsponsored",
+      green: "prefSuggestNonsponsored",
       pref: "suggest.quicksuggest.nonsponsored",
     },
     {
-      green: "prefQuicksuggestSponsored",
+      green: "prefSuggestSponsored",
       pref: "suggest.quicksuggest.sponsored",
     },
     {
