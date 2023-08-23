@@ -80,8 +80,6 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
     return static_cast<ModuleLoader*>(aLoader);
   }
 
-  void AsyncExecuteInlineModule(ModuleLoadRequest* aRequest);
-
  private:
   const Kind mKind;
 };

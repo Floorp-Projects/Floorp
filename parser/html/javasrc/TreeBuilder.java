@@ -6048,7 +6048,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     @SuppressWarnings("unchecked") public void loadState(
             TreeBuilderState<T> snapshot)
             throws SAXException {
-        // CPPONLY: mCurrentHtmlScriptCannotDocumentWriteOrBlock = false;
+        // CPPONLY: mCurrentHtmlScriptIsAsyncOrDefer = false;
         StackNode<T>[] stackCopy = snapshot.getStack();
         int stackLen = snapshot.getStackLength();
         StackNode<T>[] listCopy = snapshot.getListOfActiveFormattingElements();
