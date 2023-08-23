@@ -526,7 +526,8 @@ TEST_F(TestDeviceInputTrack, NonNativeErrorCallback) {
                   sourceId, AudioInputSource::EventListener::State::Error));
   EXPECT_CALL(*listener,
               AudioStateCallback(
-                  sourceId, AudioInputSource::EventListener::State::Stopped));
+                  sourceId, AudioInputSource::EventListener::State::Stopped))
+      .Times(2);
 
   // Launch and start an audio stream.
   DispatchFunction([&] {
@@ -547,11 +548,6 @@ TEST_F(TestDeviceInputTrack, NonNativeErrorCallback) {
   // Force an error in the MockCubeb.
   DispatchFunction([&] { stream->ForceError(); });
   WaitFor(stream->ErrorForcedEvent());
-
-  // Make sure the stream has been stopped by the error-state's backgroud thread
-  // task, to avoid getting a stopped state callback by `track->StopAudio`
-  // below.
-  WaitFor(stream->ErrorStoppedEvent());
 
   // Stop and destroy the stream.
   DispatchFunction([&] { track->StopAudio(); });

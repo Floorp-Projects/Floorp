@@ -199,7 +199,6 @@ class MockCubebStream {
   MediaEventSource<std::tuple<uint64_t, float, uint32_t>>&
   OutputVerificationEvent();
   MediaEventSource<void>& ErrorForcedEvent();
-  MediaEventSource<void>& ErrorStoppedEvent();
   MediaEventSource<void>& DeviceChangeForcedEvent();
 
   void Process10Ms();
@@ -210,7 +209,7 @@ class MockCubebStream {
   SmartMockCubebStream* const mSelf;
 
  private:
-  void NotifyStateChanged(cubeb_state aState);
+  void NotifyState(cubeb_state aState);
 
   // Monitor used to block start until mFrozenStart is false.
   Monitor mFrozenStartMonitor MOZ_UNANNOTATED;
@@ -257,7 +256,6 @@ class MockCubebStream {
   MediaEventProducer<std::tuple<uint64_t, float, uint32_t>>
       mOutputVerificationEvent;
   MediaEventProducer<void> mErrorForcedEvent;
-  MediaEventProducer<void> mErrorStoppedEvent;
   MediaEventProducer<void> mDeviceChangedForcedEvent;
   // The recorded data, copied from the output_buffer of the callback.
   // Interleaved.
@@ -377,7 +375,7 @@ class MockCubeb {
 
   // MockCubeb specific API
   void StartStream(MockCubebStream* aStream);
-  int StopStream(MockCubebStream* aStream);
+  void StopStream(MockCubebStream* aStream);
 
   // Simulates the audio thread. The thread is created at Start and destroyed
   // at Stop. At next StreamStart a new thread is created.
