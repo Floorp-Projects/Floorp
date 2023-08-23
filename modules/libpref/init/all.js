@@ -3642,7 +3642,7 @@ pref("browser.translations.useHTML", false);
 // required.
 pref("browser.translations.autoTranslate", false);
 // Automatically popup an offer to translate on sites.
-pref("browser.translations.automaticallyPopup", true);
+pref("browser.translations.automaticallyPopup", false);
 // Simulate the behavior of using a device that does not support the translations engine.
 // Requires restart.
 pref("browser.translations.simulateUnsupportedEngine", false);
