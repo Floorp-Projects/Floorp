@@ -6,6 +6,7 @@
 #ifndef WEBGL_TRANSFORM_FEEDBACK_H_
 #define WEBGL_TRANSFORM_FEEDBACK_H_
 
+#include "WebGLContext.h"
 #include "WebGLObjectModel.h"
 
 namespace mozilla {
