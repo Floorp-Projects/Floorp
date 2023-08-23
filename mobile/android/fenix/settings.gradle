@@ -30,10 +30,10 @@ gradle.projectsLoaded { ->
     // Disables A-C tests and lint when building Fenix.
     gradle.allprojects { project ->
         if (project.projectDir.absolutePath.contains("/android-components/")) {
-            project.tasks.withType(Test) {
+            project.tasks.withType(Test).configureEach {
                 enabled = false
             }
-            project.tasks.whenTaskAdded { task ->
+            project.tasks.configureEach { task ->
                 if (task.name.contains("lint")) {
                     task.enabled = false
                 }
