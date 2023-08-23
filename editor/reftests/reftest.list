@@ -68,7 +68,7 @@ skip-if(Android) needs-focus != spellcheck-textarea-attr-dynamic-override-inheri
 skip-if(Android) needs-focus != spellcheck-textarea-property-dynamic-override.html spellcheck-textarea-ref.html
 skip-if(Android) needs-focus != spellcheck-textarea-property-dynamic-override-inherit.html spellcheck-textarea-ref.html
 needs-focus == caret_on_focus.html caret_on_focus-ref.html
-needs-focus fails-if(useDrawSnapshot) != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html
+needs-focus fails-if(useDrawSnapshot) != caret_on_textarea_lastline.html caret_on_textarea_lastline-ref.html # drawSnapshot doesn't draw the caret
 fuzzy-if(Android,0-1,0-1) needs-focus == input-text-onfocus-reframe.html input-text-onfocus-reframe-ref.html
 fuzzy(0-5,0-1) needs-focus == input-text-notheme-onfocus-reframe.html input-text-notheme-onfocus-reframe-ref.html
 needs-focus == caret_after_reframe.html caret_after_reframe-ref.html
@@ -155,5 +155,5 @@ fuzzy-if(Android,0-1,0-1) needs-focus == 1443902-3.html 1443902-3-ref.html
 fuzzy-if(Android,0-1,0-1) needs-focus == 1443902-4.html 1443902-4-ref.html
 == exec-command-indent-ws.html exec-command-indent-ws-ref.html
 needs-focus == inline-table-editor-position-after-updating-table-size-from-input-event-listener.html inline-table-editor-position-after-updating-table-size-from-input-event-listener-ref.html
-needs-focus != caret-rtl-text-in-ltr-input.html caret-rtl-text-in-ltr-input-notref.html
-needs-focus != caret-rtl-text-in-ltr-input.html caret-rtl-text-in-ltr-input-notref-2.html
+needs-focus fails-if(useDrawSnapshot) != caret-rtl-text-in-ltr-input.html caret-rtl-text-in-ltr-input-notref.html # drawSnapshot doesn't draw the caret
+needs-focus fails-if(useDrawSnapshot) != caret-rtl-text-in-ltr-input.html caret-rtl-text-in-ltr-input-notref-2.html # drawSnapshot doesn't draw the caret
