@@ -20,6 +20,14 @@ class TestWindowless(MarionetteTestCase):
 
         super(TestWindowless, self).tearDown()
 
+    def wait_for_first_window(self):
+        wait = Wait(
+            self.marionette,
+            ignored_exceptions=errors.NoSuchWindowException,
+            timeout=5,
+        )
+        return wait.until(lambda _: self.marionette.window_handles)
+
     def test_last_chrome_window_can_be_closed(self):
         with self.marionette.using_context("chrome"):
             handles = self.marionette.chrome_window_handles
@@ -42,15 +50,11 @@ class TestWindowless(MarionetteTestCase):
 
         self.marionette.restart(silent=True)
         with self.assertRaises(errors.TimeoutException):
-            wait = Wait(
-                self.marionette,
-                ignored_exceptions=errors.NoSuchWindowException,
-                timeout=5,
-            )
-            wait.until(lambda _: self.marionette.window_handles)
+            self.wait_for_first_window()
 
         # After a normal restart a browser window will be opened again
         self.marionette.restart(in_app=True)
-        handles = self.marionette.window_handles
+        handles = self.wait_for_first_window()
+
         self.assertGreater(len(handles), 0)
         self.marionette.switch_to_window(handles[0])
