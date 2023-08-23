@@ -617,8 +617,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline {
     return false;
   }
 
-  nsSize EffectiveOffsetFor(const nsRect& aRect) const;
-
  protected:
   // The actual value of outline-width is the computed value (an absolute
   // length, forced to zero when outline-style is none) rounded to device

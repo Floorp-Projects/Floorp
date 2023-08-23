@@ -962,10 +962,9 @@ nsCSSRendering::CreateBorderRendererForNonThemedOutline(
     return Nothing();
   }
 
+  const nscoord offset = ourOutline->mOutlineOffset.ToAppUnits();
   nsRect innerRect = aInnerRect;
-
-  const nsSize effectiveOffset = ourOutline->EffectiveOffsetFor(innerRect);
-  innerRect.Inflate(effectiveOffset);
+  innerRect.Inflate(offset);
 
   // If the dirty rect is completely inside the border area (e.g., only the
   // content is being painted), then we can skip out now
@@ -976,7 +975,7 @@ nsCSSRendering::CreateBorderRendererForNonThemedOutline(
     return Nothing();
   }
 
-  const nscoord width = ourOutline->GetOutlineWidth();
+  nscoord width = ourOutline->GetOutlineWidth();
 
   StyleBorderStyle outlineStyle;
   // Themed outlines are handled by our callers, if supported.
@@ -1010,13 +1009,10 @@ nsCSSRendering::CreateBorderRendererForNonThemedOutline(
     RectCornerRadii innerRadii;
     ComputePixelRadii(twipsRadii, oneDevPixel, &innerRadii);
 
-    const auto devPxOffset = LayoutDeviceSize::FromAppUnits(
-        effectiveOffset, aPresContext->AppUnitsPerDevPixel());
-
-    const Float widths[4] = {outlineWidths[0] + devPxOffset.Height(),
-                             outlineWidths[1] + devPxOffset.Width(),
-                             outlineWidths[2] + devPxOffset.Height(),
-                             outlineWidths[3] + devPxOffset.Width()};
+    Float devPixelOffset = aPresContext->AppUnitsToFloatDevPixels(offset);
+    const Float widths[4] = {
+        outlineWidths[0] + devPixelOffset, outlineWidths[1] + devPixelOffset,
+        outlineWidths[2] + devPixelOffset, outlineWidths[3] + devPixelOffset};
     nsCSSBorderRenderer::ComputeOuterRadii(innerRadii, widths, &outlineRadii);
   }
 
