@@ -719,7 +719,7 @@ export class Page extends Domain {
    */
   _onDialogLoaded(e, data) {
     const { message, type } = data;
-    // XXX: We rely on the tabmodal-dialog-loaded event (see DialogHandler.jsm)
+    // XXX: We rely on the common-dialog-loaded event (see DialogHandler.jsm)
     // which is inconsistent with the name "javascriptDialogOpening".
     // For correctness we should rely on an event fired _before_ the prompt is
     // visible, such as DOMWillOpenModalDialog. However the payload of this
