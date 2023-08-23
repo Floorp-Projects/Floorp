@@ -304,14 +304,6 @@ Other Options
    to clobber and continue with the build instead of asking the user to
    manually clobber and exiting.
 
-``ac_add_options --enable-crashreporter``
-   This enables the machinery that allows Firefox to write out a
-   `minidump <https://docs.microsoft.com/en-us/windows/desktop/Debug/minidump-files>`__
-   files when crashing as well as the tools to process and submit crash
-   reports to Mozilla. After enabling the crash reporter in your local
-   build, you will need to run mach with the --enable-crash-reporter
-   (note the extra dash) to enable it at runtime, like so:
-   ``./mach run --enable-crash-reporter``
 ``ac_add_options --enable-warnings-as-errors``
    This makes compiler warnings into errors which fail the build. This
    can be useful since certain warnings coincide with reviewbot lints

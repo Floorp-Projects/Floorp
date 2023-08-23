@@ -16,8 +16,6 @@ fi
 
 mk_add_options AUTOCLOBBER=1
 
-ac_add_options --enable-crashreporter
-
 ac_add_options --enable-js-shell
 
 . "$topsrcdir/build/mozconfig.automation"
