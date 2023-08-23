@@ -41,12 +41,6 @@ namespace blink {
 
 namespace DecimalPrivate {
 
-static int const ExponentMax = 1023;
-static int const ExponentMin = -1023;
-static int const Precision = 18;
-
-static const uint64_t MaxCoefficient = UINT64_C(0xDE0B6B3A763FFFF); // 999999999999999999 == 18 9's
-
 // This class handles Decimal special values.
 class SpecialValueHandler {
     STACK_ALLOCATED();
@@ -230,43 +224,6 @@ static uint64_t scaleUp(uint64_t x, int n)
 
 using namespace DecimalPrivate;
 
-Decimal::EncodedData::EncodedData(Sign sign, FormatClass formatClass)
-    : m_coefficient(0)
-    , m_exponent(0)
-    , m_formatClass(formatClass)
-    , m_sign(sign)
-{
-}
-
-Decimal::EncodedData::EncodedData(Sign sign, int exponent, uint64_t coefficient)
-    : m_formatClass(coefficient ? ClassNormal : ClassZero)
-    , m_sign(sign)
-{
-    if (exponent >= ExponentMin && exponent <= ExponentMax) {
-        while (coefficient > MaxCoefficient) {
-            coefficient /= 10;
-            ++exponent;
-        }
-    }
-
-    if (exponent > ExponentMax) {
-        m_coefficient = 0;
-        m_exponent = 0;
-        m_formatClass = ClassInfinity;
-        return;
-    }
-
-    if (exponent < ExponentMin) {
-        m_coefficient = 0;
-        m_exponent = 0;
-        m_formatClass = ClassZero;
-        return;
-    }
-
-    m_coefficient = coefficient;
-    m_exponent = static_cast<int16_t>(exponent);
-}
-
 bool Decimal::EncodedData::operator==(const EncodedData& another) const
 {
     return m_sign == another.m_sign
@@ -275,15 +232,12 @@ bool Decimal::EncodedData::operator==(const EncodedData& another) const
         && m_coefficient == another.m_coefficient;
 }
 
+
 Decimal::Decimal(int32_t i32)
-    : m_data(i32 < 0 ? Negative : Positive, 0, i32 < 0 ? static_cast<uint64_t>(-static_cast<int64_t>(i32)) : static_cast<uint64_t>(i32))
-{
-}
+    : Decimal(DecimalLiteral{i32}) {}
 
 Decimal::Decimal(Sign sign, int exponent, uint64_t coefficient)
-    : m_data(sign, coefficient ? exponent : 0, coefficient)
-{
-}
+    : m_data(sign, coefficient ? exponent : 0, coefficient) {}
 
 Decimal::Decimal(const EncodedData& data)
     : m_data(data)
