@@ -138,9 +138,10 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation() {
 
     void operator()(const opMarkAsBroken& aOperation) {}
 
-    void operator()(const opRunScript& aOperation) {}
+    void operator()(const opRunScriptThatMayDocumentWriteOrBlock& aOperation) {}
 
-    void operator()(const opRunScriptAsyncDefer& aOperation) {}
+    void operator()(
+        const opRunScriptThatCannotDocumentWriteOrBlock& aOperation) {}
 
     void operator()(const opPreventScriptExecution& aOperation) {}
 
@@ -913,7 +914,8 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return aOperation.mResult;
     }
 
-    nsresult operator()(const opRunScript& aOperation) {
+    nsresult operator()(
+        const opRunScriptThatMayDocumentWriteOrBlock& aOperation) {
       nsIContent* node = *(aOperation.mElement);
       nsAHtml5TreeBuilderState* snapshot = aOperation.mBuilderState;
       if (snapshot) {
@@ -924,8 +926,9 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return NS_OK;
     }
 
-    nsresult operator()(const opRunScriptAsyncDefer& aOperation) {
-      mBuilder->RunScript(*(aOperation.mElement));
+    nsresult operator()(
+        const opRunScriptThatCannotDocumentWriteOrBlock& aOperation) {
+      mBuilder->RunScript(*(aOperation.mElement), false);
       return NS_OK;
     }
 

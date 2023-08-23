@@ -285,22 +285,23 @@ struct opMarkAsBroken {
   explicit opMarkAsBroken(nsresult aResult) : mResult(aResult){};
 };
 
-struct opRunScript {
+struct opRunScriptThatMayDocumentWriteOrBlock {
   nsIContent** mElement;
   nsAHtml5TreeBuilderState* mBuilderState;
   int32_t mLineNumber;
 
-  explicit opRunScript(nsIContentHandle* aElement,
-                       nsAHtml5TreeBuilderState* aBuilderState)
+  explicit opRunScriptThatMayDocumentWriteOrBlock(
+      nsIContentHandle* aElement, nsAHtml5TreeBuilderState* aBuilderState)
       : mBuilderState(aBuilderState), mLineNumber(0) {
     mElement = static_cast<nsIContent**>(aElement);
   };
 };
 
-struct opRunScriptAsyncDefer {
+struct opRunScriptThatCannotDocumentWriteOrBlock {
   nsIContent** mElement;
 
-  explicit opRunScriptAsyncDefer(nsIContentHandle* aElement) {
+  explicit opRunScriptThatCannotDocumentWriteOrBlock(
+      nsIContentHandle* aElement) {
     mElement = static_cast<nsIContent**>(aElement);
   };
 };
@@ -493,11 +494,12 @@ typedef mozilla::Variant<
     opAppendCommentToDocument, opAppendDoctypeToDocument,
     opGetDocumentFragmentForTemplate, opGetFosterParent,
     // Gecko-specific on-pop ops
-    opMarkAsBroken, opRunScript, opRunScriptAsyncDefer,
-    opPreventScriptExecution, opDoneAddingChildren, opDoneCreatingElement,
-    opUpdateCharsetSource, opCharsetSwitchTo, opUpdateStyleSheet,
-    opProcessOfflineManifest, opMarkMalformedIfScript, opStreamEnded,
-    opSetStyleLineNumber, opSetScriptLineAndColumnNumberAndFreeze, opSvgLoad,
+    opMarkAsBroken, opRunScriptThatMayDocumentWriteOrBlock,
+    opRunScriptThatCannotDocumentWriteOrBlock, opPreventScriptExecution,
+    opDoneAddingChildren, opDoneCreatingElement, opUpdateCharsetSource,
+    opCharsetSwitchTo, opUpdateStyleSheet, opProcessOfflineManifest,
+    opMarkMalformedIfScript, opStreamEnded, opSetStyleLineNumber,
+    opSetScriptLineAndColumnNumberAndFreeze, opSvgLoad,
     opMaybeComplainAboutCharset, opMaybeComplainAboutDeepTree, opAddClass,
     opAddViewSourceHref, opAddViewSourceBase, opAddErrorType, opAddLineNumberId,
     opStartLayout, opEnableEncodingMenu>
@@ -609,16 +611,19 @@ class nsHtml5TreeOperation final {
     mOperation = aOperation;
   }
 
-  inline bool IsRunScript() { return mOperation.is<opRunScript>(); }
+  inline bool IsRunScriptThatMayDocumentWriteOrBlock() {
+    return mOperation.is<opRunScriptThatMayDocumentWriteOrBlock>();
+  }
 
   inline bool IsMarkAsBroken() { return mOperation.is<opMarkAsBroken>(); }
 
   inline void SetSnapshot(nsAHtml5TreeBuilderState* aSnapshot, int32_t aLine) {
-    NS_ASSERTION(
-        IsRunScript(),
+    MOZ_ASSERT(
+        IsRunScriptThatMayDocumentWriteOrBlock(),
         "Setting a snapshot for a tree operation other than eTreeOpRunScript!");
     MOZ_ASSERT(aSnapshot, "Initialized tree op with null snapshot.");
-    opRunScript data = mOperation.as<opRunScript>();
+    opRunScriptThatMayDocumentWriteOrBlock data =
+        mOperation.as<opRunScriptThatMayDocumentWriteOrBlock>();
     data.mBuilderState = aSnapshot;
     data.mLineNumber = aLine;
     mOperation = mozilla::AsVariant(data);
