@@ -24,6 +24,8 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadPictureSource,
   eSpeculativeLoadScript,
   eSpeculativeLoadScriptFromHead,
+  eSpeculativeLoadNoModuleScript,
+  eSpeculativeLoadNoModuleScriptFromHead,
   eSpeculativeLoadStyle,
   eSpeculativeLoadManifest,
   eSpeculativeLoadSetDocumentCharset,
@@ -169,11 +171,17 @@ class nsHtml5SpeculativeLoad {
                          nsHtml5String aMedia, nsHtml5String aNonce,
                          nsHtml5String aIntegrity,
                          nsHtml5String aReferrerPolicy, bool aParserInHead,
-                         bool aAsync, bool aDefer, bool aLinkPreload) {
+                         bool aAsync, bool aDefer, bool aNoModule,
+                         bool aLinkPreload) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
-    mOpCode =
-        aParserInHead ? eSpeculativeLoadScriptFromHead : eSpeculativeLoadScript;
+    if (aNoModule) {
+      mOpCode = aParserInHead ? eSpeculativeLoadNoModuleScriptFromHead
+                              : eSpeculativeLoadNoModuleScript;
+    } else {
+      mOpCode = aParserInHead ? eSpeculativeLoadScriptFromHead
+                              : eSpeculativeLoadScript;
+    }
     aUrl.ToString(mUrlOrSizes);
     aCharset.ToString(mCharsetOrSrcset);
     aType.ToString(

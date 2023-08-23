@@ -23,18 +23,7 @@ int32_t mHandlesUsed;
 nsTArray<mozilla::UniquePtr<nsIContent*[]>> mOldHandles;
 nsHtml5TreeOpStage* mSpeculativeLoadStage;
 nsresult mBroken;
-// Controls whether the current HTML script goes through the more complex
-// path that accommodates the possibility of the script becoming a
-// parser-blocking script and the possibility of the script inserting
-// content into this parse using document.write (as it is observable from
-// the Web).
-//
-// Notably, in some cases scripts that do NOT NEED the more complex path
-// BREAK the parse if they incorrectly go onto the complex path as their
-// other handling doesn't necessarily take care of the responsibilities
-// associated with the more complex path. See comments in
-// `nsHtml5TreeBuilder::createElement` in the CppSupplement for details.
-bool mCurrentHtmlScriptCannotDocumentWriteOrBlock;
+bool mCurrentHtmlScriptIsAsyncOrDefer;
 bool mPreventScriptExecution;
 /**
  * Whether to actually generate speculative load operations that actually
@@ -117,7 +106,7 @@ void StartPlainText();
 
 void StartPlainTextBody();
 
-bool HasScriptThatMayDocumentWriteOrBlock();
+bool HasScript();
 
 void SetOpSink(nsAHtml5TreeOpSink* aOpSink) { mOpSink = aOpSink; }
 
