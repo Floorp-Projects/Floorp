@@ -2986,6 +2986,8 @@ var gPrivacyPane = {
     );
     document.getElementById("globalPrivacyControlBox").hidden =
       !gpcEnabledPrefValue;
+    document.getElementById("doNotTrackBox").hidden = !gpcEnabledPrefValue;
+    document.getElementById("legacyDoNotTrackBox").hidden = gpcEnabledPrefValue;
   },
 
   /**
