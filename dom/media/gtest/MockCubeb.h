@@ -201,7 +201,8 @@ class MockCubebStream {
   MediaEventSource<void>& ErrorForcedEvent();
   MediaEventSource<void>& DeviceChangeForcedEvent();
 
-  void Process10Ms();
+  enum class KeepProcessing { No, Yes };
+  KeepProcessing Process10Ms();
 
  public:
   const bool mHasInput;
@@ -216,7 +217,8 @@ class MockCubebStream {
   // Whether this stream should wait for an explicit start request before
   // starting. Protected by FrozenStartMonitor.
   bool mFrozenStart;
-  // Signal to the audio thread that stream is stopped.
+  // Used to abort a frozen start if cubeb_stream_start() is called currently
+  // with a blocked cubeb_stream_start() call.
   std::atomic_bool mStreamStop{true};
   // Whether or not the output-side of this stream (what is written from the
   // callback output buffer) is recorded in an internal buffer. The data is then

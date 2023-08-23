@@ -9,6 +9,8 @@
 
 namespace mozilla {
 
+using KeepProcessing = MockCubebStream::KeepProcessing;
+
 void PrintDevice(cubeb_device_info aInfo) {
   printf(
       "id: %zu\n"
@@ -339,11 +341,7 @@ MediaEventSource<void>& MockCubebStream::DeviceChangeForcedEvent() {
   return mDeviceChangedForcedEvent;
 }
 
-void MockCubebStream::Process10Ms() {
-  if (mStreamStop) {
-    return;
-  }
-
+KeepProcessing MockCubebStream::Process10Ms() {
   uint32_t rate = mHasOutput ? mOutputParams.rate : mInputParams.rate;
   const long nrFrames =
       static_cast<long>(static_cast<float>(rate * 10) * mDriftFactor) /
@@ -373,22 +371,13 @@ void MockCubebStream::Process10Ms() {
 
   if (outframes < nrFrames) {
     NotifyState(CUBEB_STATE_DRAINED);
-    mStreamStop = true;
-    return;
+    return KeepProcessing::No;
   }
   if (mForceErrorState) {
     mForceErrorState = false;
-    // Let the audio thread (this thread!) run to completion before
-    // being released, by joining and deleting on another thread.
-    NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-        __func__, [cubeb = MockCubeb::AsMock(context), this,
-                   self = RefPtr<SmartMockCubebStream>(mSelf)] {
-          cubeb->StopStream(this);
-        }));
     NotifyState(CUBEB_STATE_ERROR);
     mErrorForcedEvent.Notify();
-    mStreamStop = true;
-    return;
+    return KeepProcessing::No;
   }
   if (mForceDeviceChanged) {
     mForceDeviceChanged = false;
@@ -402,6 +391,7 @@ void MockCubebStream::Process10Ms() {
           mDeviceChangedForcedEvent.Notify();
         }));
   }
+  return KeepProcessing::Yes;
 }
 
 void MockCubebStream::NotifyState(cubeb_state aState) {
@@ -654,8 +644,12 @@ void MockCubeb::ThreadFunction() {
     {
       auto streams = mLiveStreams.Lock();
       for (auto& stream : *streams) {
-        stream->Process10Ms();
+        auto keepProcessing = stream->Process10Ms();
+        if (keepProcessing == KeepProcessing::No) {
+          stream = nullptr;
+        }
       }
+      streams->RemoveElementsBy([](const auto& stream) { return !stream; });
       MOZ_ASSERT(mFakeAudioThread);
       if (streams->IsEmpty() && !mForcedAudioThread) {
         NS_DispatchBackgroundTask(NS_NewRunnableFunction(
