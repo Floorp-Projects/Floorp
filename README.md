@@ -47,7 +47,7 @@
 
 ### 💻 Supported Operating Systems & Requirements
 
-Floorp Browser is available for Windows, macOS and Linux. You can install it by running the installer or by extracting the archive.
+Floorp Browser is available for Windows, macOS, and Linux. You can install it by running the installer or by extracting the archive.
 
 #### Windows
 
@@ -63,7 +63,8 @@ winget install Ablaze.Floorp
 ```
 Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
-**Floorp get Certum Open Source Code Signing Certificate. Official Floorp installer is signed by "Open Source Developer, Ryosuke Asano". Daylight build installer is not signed.**
+**Floorp has obtained a Certum Open Source Code Signing Certificate. The official Floorp installer is signed by "Open Source Developer, Ryosuke Asano". However, the installer for the Daylight build is not signed.**
+
 
 #### macOS
 
@@ -71,11 +72,11 @@ Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
 - x86_64 CPU & ARM64 CPU architecture. Floorp provides a Universal build for both architectures.
 
-**After Floorp 11.0.0, Floorp gets Apple Notarization & Certification. You can install Floorp without warning. It also has an auto-update system included**
+**After version 11.0.0, Floorp has obtained Apple Notarization & Certification. This means that you can install Floorp without any warning messages. Additionally, Floorp now includes an auto-update system.**
 
 #### Linux
 
-- Debian-based distributions (Ubuntu, Linux Mint, etc.) & Arch-based distributions (Manjaro, etc.) are supported.
+- Debian-based distributions (such as Ubuntu and Linux Mint) and Arch-based distributions (such as Manjaro) are supported.
 
 - x86_64 & AAarch64 CPU architecture.
 
@@ -105,11 +106,11 @@ You can download the latest version of Floorp Browser from the official website:
 
 [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/)
 
-- Floorp's name is a registered trademark of Floorp's developer. & Floorp's logo is protected by Copyright.
+- Floorp's name is a registered trademark of Floorp's developer, and Floorp's logo is protected by copyright
 
 - Floorp Browser is based on Mozilla Firefox. Floorp Browser is not affiliated with Mozilla & Mozilla Firefox.
 
-- Floorp uses Mozilla Firefox's source code & other open-source projects. See [Floorp License Notices](#📄-Floorp-License-Notices-📄)
+- Floorp uses Mozilla Firefox's source code and other open-source projects. See [Floorp License Notices](#📄-Floorp-License-Notices-📄)
 
 ### 📧 Contact
 
@@ -131,11 +132,11 @@ You can download the latest version of Floorp Browser from the official website:
 
 ### 🧰 Writing Code
 
-- We welcome contributions from everyone. First of all, you need to fork this repository and clone it to your local machine.
+- We welcome contributions from everyone. First, you need to fork this repository and clone it to your local machine.
 
 - You can use any IDE or text editor you want. We recommend using [Visual Studio Code](https://code.visualstudio.com/).
 
-- We use "JavaScript", "XHTML" & "CSS" for writing code. If you want to know about these languages, please see the following links.
+- We use "JavaScript", "XHTML", and "CSS" for writing code. If you would like to learn more about these languages, please refer to the following links.
 
     - [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
@@ -143,7 +144,7 @@ You can download the latest version of Floorp Browser from the official website:
 
     - [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS)
 
-- Firefox uses legacy technologies. Mozilla call it "XUL". If you want to know about XUL, please see the following links.
+- Firefox uses legacy technologies, which Mozilla calls "XUL". If you would like to learn more about XUL, please refer to the following link.
 
     - [XUL](https://www.xul.fr/en-xml-xul.php)
 
@@ -155,11 +156,11 @@ You can download the latest version of Floorp Browser from the official website:
 
     - [Searchfox](https://searchfox.org/)
 
-- If you want to build Floorp Browser, please see the [Building](#building) section.
+- If you would like to build Floorp Browser, please refer to the [Building](#building) section.
 
 ### 📝 Translating
 
-- We want to support as many languages as possible. If you want to translate Floorp Browser, please clone [l10n-central](https://github.com/Floorp-Projects/l10n-Central) repository.
+- We want to support as many languages as possible. If you want to translate Floorp Browser, please clone the [l10n-central](https://github.com/Floorp-Projects/l10n-Central) repository.
 
 - Floorp's language file is located in: `browser/browser/floorp.ftl`
 
@@ -218,9 +219,9 @@ $ ./mach run
 
 ## 📄 Floorp License Notices 📄
 
-Floorp uses some open source projects. Below is the list of open-source projects used in Floorp.
+Floorp utilizes various open-source projects. Below is a comprehensive list of the open-source projects used in Floorp.
 
-Some of the listed software is not included in Floorp itself, but is downloaded from the Internet. Also listed are add-ons that Floorp recommends installing.
+Please note that while some of the software listed below is not included in Floorp itself, it is instead downloaded from the internet. Additionally, Floorp provides a list of recommended add-ons for users to install.
 
 ### 🦊 Mozilla Firefox
 
@@ -272,7 +273,7 @@ Notice: Floorp is not based on Waterfox. The structure is a reference and has no
 - [MIT](floorp/browser/base/content/browser-chromeCSS.js)
 - Author: Griever
 
-NOTICE: If you are "userChromeCSS Loader" developer, please contact us. We add the site of your name.
+Notice: if you are a developer of "userChromeCSS Loader", please contact us so that we can add your name and website to the list.
 
 ### 📦 userChromeJS Loader
 
@@ -280,7 +281,7 @@ NOTICE: If you are "userChromeCSS Loader" developer, please contact us. We add t
 - [Mozilla Public License 2.0](https://github.com/xiaoxiaoflood/firefox-scripts/blob/master/LICENSE)
 - Author: [Alice0775](https://github.com/Alice0775/), Endor8, TroudhuK, Izheil, Merci-chao, [xiaoxiaoflood](https://github.com/xiaoxiaoflood/)
 
-Notice: If you are "userChromeJS Loader" developer & doesn't list your name, please contact us. We add the site of your name.
+Notice: If you are a developer of "userChromeJS Loader" and your name is not listed, please contact us so that we can add your name and website to the list.
 
 ### 📦 Paxmod
 
@@ -288,7 +289,7 @@ Notice: If you are "userChromeJS Loader" developer & doesn't list your name, ple
 - [MIT](https://github.com/numirias/paxmod/blob/master/LICENSE)
 - Author: [numirias](https://github.com/numirias/)
 
-Notice: Paxmod is used for reference material and multi-level tab implementation of vertical tabs.
+Notice: Paxmod is used as reference material and for the multi-level tab implementation of vertical tabs.
 
 ### 📦 showdown
 
@@ -296,7 +297,7 @@ Notice: Paxmod is used for reference material and multi-level tab implementation
 - [MIT](https://github.com/showdownjs/showdown/blob/master/LICENSE)
 - Author: [SyntaxRules](https://github.com/SyntaxRules)
 
-Notice: If you are "showdown" developer & doesn't list your name, please contact us. We add the site of your name.
+Notice: If you are a developer of "showdown" and your name is not listed, please contact us so that we can add your name and website to the list.
 
 ### 📄 Betterfox
 
@@ -304,7 +305,7 @@ Notice: If you are "showdown" developer & doesn't list your name, please contact
 - [MIT](https://github.com/yokoffing/Betterfox/blob/main/LICENSE)
 - Author: [yokoffing](https://github.com/yokoffing)
 
-Notice: Betterfox is not included in Floorp itself, but is downloaded from the Internet.
+Notice: Betterfox is not included in Floorp itself, but is instead downloaded from the internet.
 
 
 ## Repository View Counter
