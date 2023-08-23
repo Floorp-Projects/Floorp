@@ -202,9 +202,6 @@ pref("extensions.getAddons.showPane", false);
 pref("app.normandy.api_url", "");
 pref("app.normandy.enabled", true);
 
-//backdropfilterを既定で有効化します。
-pref("layout.css.backdrop-filter.enabled", true);
-
 //SVG avif jxl 画像ファイルをの互換性向上または、既定で開けるように
 pref("svg.context-properties.content.enabled", true, locked);
 pref("image.avif.enabled", true, locked);
@@ -222,9 +219,6 @@ pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist
 
 //Pocket機能を無効化*/
 pref("extensions.pocket.enabled", false);
-
-//コンテンツセキュリティポリシー(CSP)の有効化
-pref("security.csp.enable", true);
 
 //クラッシュレポートを無効化
 pref("breakpad.reportURL", "", locked);
@@ -259,21 +253,8 @@ pref("browser.discovery.enabled", false);
 //クラッシュレポートの自動送信無効
 pref("browser.crashReports.unsubmittedCheck.autoSubmit2", false);
 
-// CPUのコア数を偽装し、正しい値をウェブサイトに返さないようにします。
-pref("dom.maxHardwareConcurrency",	2);
-
-//Mozillaが提供する位置特定型検索エンジンを使用しない。位置情報がより保護されます。
-pref("browser.search.geoSpecificDefaults", false);
-
 //http 通信時、Floorp は絶対にhttp:// をURLバーから隠しません
 pref("browser.urlbar.trimURLs", false);
-
-//「既定でオンを推奨」フィンガープリント対策の一環。
-//参考：https://www.torproject.org/projects/torbrowser/design/#fingerprinting-defenses
-pref("dom.network.enabled", false);
-
-// webRTCは完全に無効化しません。Brave・Safari では、既定で無効化されています。
-pref("media.peerconnection.enabled", true);
 
 //WebRTC が有効な場合、Floorp はできるだけ、IPアドレスを秘匿するよう動作します。
 pref("media.peerconnection.ice.default_address_only", true);
@@ -287,7 +268,7 @@ pref("trailhead.firstrun.branches", "", locked);
 pref("extensions.webcompat-reporter.enabled", false);
 
 pref("browser.startup.page", 3);//自動復元
-pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように]
+pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように
 pref("general.config.obscure_value", 0);
 
 // https://developer.mozilla.org/docs/Web/API/Navigator/share
