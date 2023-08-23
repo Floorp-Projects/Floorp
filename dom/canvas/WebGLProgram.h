@@ -16,7 +16,6 @@
 #include "mozilla/WeakPtr.h"
 
 #include "CacheInvalidator.h"
-#include "WebGLContext.h"
 #include "WebGLObjectModel.h"
 
 namespace mozilla {
