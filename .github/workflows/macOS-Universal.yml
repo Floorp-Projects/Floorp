@@ -135,12 +135,12 @@ jobs:
         sudo apt update
         sudo apt upgrade -y
 
-        cp ./.github/mozconfig_darwin_pgo_base mozconfig
+        cp ./.github/workflows/src/mac/shared/mozconfig_darwin_pgo_base mozconfig
 
         if [[ $GHA_ARCH == 'x86_64' ]];then
-          cat ./.github/workflows/src/mac/x86_64-optimize-base >> mozconfig
+          cat ./.github/workflows/src/mac/x86_64/x86_64-optimize-base >> mozconfig
         else
-          cat ./.github/workflows/src/mac/aarch64-optimize-base >> mozconfig
+          cat ./.github/workflows/src/mac/aarch64/aarch64-optimize-base >> mozconfig
         fi
 
         echo 'mozconfig: **********************'

@@ -20,6 +20,10 @@ on:
         description: generate profile for PGO.
         type: boolean
         default: false
+      fast_build:
+        description: Not optimize build. (faster build)
+        type: boolean
+        default: false
       aarch64:
         description: enable aarch64 build
         type: boolean
@@ -136,9 +140,9 @@ jobs:
         mkdir -p ~/win-cross
 
         if [[ $GHA_aarch64 != 'true' ]];then
-          cp ./.github/mozconfig_win_x86_64_pgo_base mozconfig
+          cp ./.github/workflows/src/windows/x86_64/mozconfig_win_x86_64_pgo_base mozconfig
         else
-          cp ./.github/mozconfig_win_aarch64_pgo_base mozconfig
+          cp ./.github/workflows/src/windows/aarch64/mozconfig_win_aarch64_pgo_base mozconfig
         fi
 
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then

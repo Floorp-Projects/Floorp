@@ -118,8 +118,8 @@ jobs:
         os.system("sudo apt update")
         os.system("sudo apt install xvfb")
 
-        shutil.copyfile("./.github/mozconfig_linux_base","./mozconfig")
-        # os.system("cp ./.github/mozconfig_linux_base ./mozconfig")
+        shutil.copyfile("./.github/workflows/src/linux/shared/mozconfig_linux_base","./mozconfig")
+        # os.system("cp ./.github/workflows/src/linux/shared/mozconfig_linux_base ./mozconfig")
         if MOZ_BUILD_DATE != "":
           os.system("export MOZ_BUILD_DATE="+MOZ_BUILD_DATE)
 
