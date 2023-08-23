@@ -3966,7 +3966,21 @@ toolbar#nav-bar {
 
         def finish(self):
             if self.shutdownLeaks:
-                self.harness.countfail += self.shutdownLeaks.process()
+                numFailures, errorMessages = self.shutdownLeaks.process()
+                self.harness.countfail += numFailures
+                for message in errorMessages:
+                    message = {
+                        "action": "test_end",
+                        "status": "FAIL",
+                        "expected": "PASS",
+                        "thread": None,
+                        "pid": None,
+                        "source": "mochitest",
+                        "time": int(time.time()) * 1000,
+                        "test": message["test"],
+                        "message": message["msg"],
+                    }
+                    self.harness.message_logger.process_message(message)
 
             if self.lsanLeaks:
                 self.harness.countfail += self.lsanLeaks.process()

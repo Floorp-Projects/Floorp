@@ -116,11 +116,15 @@ class ShutdownLeaks(object):
                 % (self.numDomWindowCreatedLogsSeen, self.numDomWindowDestroyedLogsSeen)
             )
 
+        errors = []
         for test in self._parseLeakingTests():
             for url, count in self._zipLeakedWindows(test["leakedWindows"]):
-                self.logger.error(
-                    "TEST-UNEXPECTED-FAIL | %s | leaked %d window(s) until shutdown "
-                    "[url = %s]" % (test["fileName"], count, url)
+                errors.append(
+                    {
+                        "test": test["fileName"],
+                        "msg": "leaked %d window(s) until shutdown [url = %s]"
+                        % (count, url),
+                    }
                 )
                 failures += 1
 
@@ -131,9 +135,12 @@ class ShutdownLeaks(object):
                 )
 
             if test["leakedDocShells"]:
-                self.logger.error(
-                    "TEST-UNEXPECTED-FAIL | %s | leaked %d docShell(s) until "
-                    "shutdown" % (test["fileName"], len(test["leakedDocShells"]))
+                errors.append(
+                    {
+                        "test": test["fileName"],
+                        "msg": "leaked %d docShell(s) until shutdown"
+                        % (len(test["leakedDocShells"])),
+                    }
                 )
                 failures += 1
                 self.logger.info(
@@ -165,7 +172,7 @@ class ShutdownLeaks(object):
                     % (test["fileName"], test["hiddenDocShellsCount"])
                 )
 
-        return failures
+        return failures, errors
 
     def _logWindow(self, line, created):
         pid = self._parseValue(line, "pid")
