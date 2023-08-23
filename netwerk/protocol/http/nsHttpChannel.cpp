@@ -7395,6 +7395,31 @@ static nsLiteralCString ContentTypeToTelemetryLabel(nsHttpChannel* aChannel) {
   return "other"_ns;
 }
 
+nsresult nsHttpChannel::LogConsoleError(const char* aTag) {
+  nsCOMPtr<nsIConsoleService> console(
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  NS_ENSURE_TRUE(console, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = LoadInfo();
+  NS_ENSURE_TRUE(console, NS_ERROR_OUT_OF_MEMORY);
+  uint64_t innerWindowID = loadInfo->GetInnerWindowID();
+
+  nsAutoString errorText;
+  nsresult rv = nsContentUtils::GetLocalizedString(
+      nsContentUtils::eNECKO_PROPERTIES, aTag, errorText);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  NS_ENSURE_TRUE(error, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = error->InitWithSourceURI(errorText, mURI, u""_ns, 0, 0,
+                                nsIScriptError::errorFlag,
+                                "Invalid HTTP Status Lines"_ns, innerWindowID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  console->LogMessage(error);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
   AUTO_PROFILER_LABEL("nsHttpChannel::OnStopRequest", NETWORK);
@@ -7407,6 +7432,10 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
 
   MOZ_ASSERT(NS_IsMainThread(),
              "OnStopRequest should only be called from the main thread");
+
+  if (mStatus == NS_ERROR_PARSING_HTTP_STATUS_LINE) {
+    Unused << LogConsoleError("InvalidHTTPResponseStatusLine");
+  }
 
   if (WRONG_RACING_RESPONSE_SOURCE(request)) {
     return NS_OK;
