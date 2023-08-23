@@ -62,7 +62,7 @@
   flex-grow: 1;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 16px;
+  gap: 8px 12px;
   margin-inline-start: 24px;
 }
 
@@ -105,6 +105,22 @@
 
 .heading {
   font-weight: 600;
+}
+
+/* MozMessageBar message style */
+
+.message {
+  margin-inline-end: 4px;
+}
+
+/* MozMessageBar link style */
+
+.link {
+  display: inline-block;
+}
+
+.link ::slotted(a) {
+  margin-inline-end: 4px;
 }
 
 /* MozMessageBar actions style */

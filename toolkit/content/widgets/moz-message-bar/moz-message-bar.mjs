@@ -121,8 +121,12 @@ export default class MozMessageBar extends MozLitElement {
             ${this.iconTemplate()}
             <div class="text-content">
               ${this.headingTemplate()}
-              <span class="message">${ifDefined(this.message)}</span>
-              <slot name="support-link"></slot>
+              <div>
+                <span class="message">${ifDefined(this.message)}</span>
+                <span class="link">
+                  <slot name="support-link"></slot>
+                </span>
+              </div>
             </div>
           </div>
           <span class="actions">
