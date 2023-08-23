@@ -7617,6 +7617,9 @@ typename ParseHandler::ListNodeType
 GeneralParser<ParseHandler, Unit>::decoratorList(YieldHandling yieldHandling) {
   ListNodeType decorators =
       handler_.newList(ParseNodeKind::DecoratorList, pos());
+  if (!decorators) {
+    return null();
+  }
 
   // Build a decorator list element. At each entry point to this loop we have
   // already consumed the |@| token
@@ -7654,12 +7657,18 @@ GeneralParser<ParseHandler, Unit>::decoratorList(YieldHandling yieldHandling) {
 
       // Handle DecoratorMemberExpression
       decorator = handler_.newName(name, pos());
+      if (!decorator) {
+        return null();
+      }
 
       // Ok, this DecoratorMemberExpression is actually a list of
       // Identifiers separated by `.`
       if (tt == TokenKind::Dot) {
         ListNodeType ids =
             handler_.newList(ParseNodeKind::DecoratorList, pos());
+        if (!ids) {
+          return null();
+        }
         handler_.addList(ids, decorator);
         for (;;) {
           if (!tokenStream.getToken(&tt)) {
@@ -7673,6 +7682,9 @@ GeneralParser<ParseHandler, Unit>::decoratorList(YieldHandling yieldHandling) {
           }
           TaggedParserAtomIndex name = anyChars.currentName();
           Node id = handler_.newName(name, pos());
+          if (!id) {
+            return null();
+          }
           handler_.addList(ids, id);
 
           if (!tokenStream.getToken(&tt)) {
@@ -7695,7 +7707,9 @@ GeneralParser<ParseHandler, Unit>::decoratorList(YieldHandling yieldHandling) {
         }
         decorator = handler_.newCall(decorator, args,
                                      isSpread ? JSOp::SpreadCall : JSOp::Call);
-
+        if (!decorator) {
+          return null();
+        }
         if (!tokenStream.getToken(&tt)) {
           return null();
         }
