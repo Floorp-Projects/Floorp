@@ -96,6 +96,10 @@ export class MDNSuggestions extends BaseFeature {
       return null;
     }
 
+    // Set `is_top_pick` on the suggestion to tell the provider to set
+    // best-match related properties on the result.
+    suggestion.is_top_pick = true;
+
     const url = new URL(suggestion.url);
     url.searchParams.set("utm_medium", "firefox-desktop");
     url.searchParams.set("utm_source", "firefox-suggest");
