@@ -794,6 +794,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   nsresult TriggerNetwork();
   void CancelNetworkRequest(nsresult aStatus);
 
+  nsresult LogConsoleError(const char* aTag);
+
   void SetHTTPSSVCRecord(already_AddRefed<nsIDNSHTTPSSVCRecord>&& aRecord);
 
   // Timer used to delay the network request, or to trigger the network

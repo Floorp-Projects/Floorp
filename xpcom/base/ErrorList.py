@@ -344,6 +344,8 @@ with modules["NETWORK"]:
     errors["NS_ERROR_NON_LOCAL_CONNECTION_REFUSED"] = FAILURE(88)
     # Connection to a sts host without a hsts header.
     errors["NS_ERROR_BAD_HSTS_CERT"] = FAILURE(89)
+    # Error parsing the status line of an HTTP response
+    errors["NS_ERROR_PARSING_HTTP_STATUS_LINE"] = FAILURE(90)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??
