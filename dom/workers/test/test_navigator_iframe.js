@@ -60,5 +60,6 @@ var { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
 );
 var isNightly = AppConstants.NIGHTLY_BUILD;
 var isRelease = AppConstants.RELEASE_OR_BETA;
+var isAndroid = AppConstants.platform == "android";
 
-worker.postMessage({ isNightly, isRelease });
+worker.postMessage({ isNightly, isRelease, isAndroid });

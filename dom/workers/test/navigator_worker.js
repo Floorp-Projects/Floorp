@@ -8,6 +8,7 @@ var supportedProps = [
   "appCodeName",
   "appName",
   "appVersion",
+  { name: "globalPrivacyControl", isNightly: true, isAndroid: false },
   "platform",
   "product",
   "userAgent",
@@ -43,7 +44,8 @@ function startTest(channelData) {
     if (
       prop.nightly === !channelData.isNightly ||
       prop.release === !channelData.isRelease ||
-      prop.isSecureContext === !isSecureContext
+      prop.isSecureContext === !isSecureContext ||
+      prop.isAndroid === !channelData.isAndroid
     ) {
       interfaceMap[prop.name] = false;
       continue;
