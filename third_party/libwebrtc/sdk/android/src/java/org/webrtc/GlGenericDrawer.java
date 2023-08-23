@@ -14,6 +14,9 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import androidx.annotation.Nullable;
 import java.nio.FloatBuffer;
+import org.webrtc.GlShader;
+import org.webrtc.GlUtil;
+import org.webrtc.RendererCommon;
 
 /**
  * Helper class to implement an instance of RendererCommon.GlDrawer that can accept multiple input
