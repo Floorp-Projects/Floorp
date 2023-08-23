@@ -185,9 +185,7 @@ android {
         animationsDisabled = true
     }
 
-    flavorDimensions "engine"
-
-    flavorDimensions "product"
+    flavorDimensions.add("product")
 
     productFlavors {
         fenix {

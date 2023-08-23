@@ -103,7 +103,7 @@ android {
         kotlinCompilerExtensionVersion = Versions.compose_compiler
     }
 
-    flavorDimensions "product"
+    flavorDimensions.add("product")
 
     productFlavors {
         // In most countries we are Firefox Focus - but in some we need to be Firefox Klar
