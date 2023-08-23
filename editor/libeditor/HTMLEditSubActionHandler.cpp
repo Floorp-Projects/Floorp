@@ -903,6 +903,36 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
     return NS_OK;
   }
 
+  // XXX I think that we should not insert a <br> element if we're for a web
+  // content.  Probably, this is required only by chrome editors such as
+  // the mail composer of Thunderbird and the composer of SeaMonkey.
+
+  const RefPtr<Element> bodyOrDocumentElement = GetRoot();
+  if (!bodyOrDocumentElement) {
+    return NS_OK;
+  }
+
+  // Skip adding the padding <br> element for empty editor if body
+  // is read-only.
+  if (!HTMLEditUtils::IsSimplyEditableNode(*bodyOrDocumentElement)) {
+    return NS_OK;
+  }
+
+  // Now we've got the body element. Iterate over the body element's children,
+  // looking for editable content. If no editable content is found, insert the
+  // padding <br> element.
+  EditorType editorType = GetEditorType();
+  bool isRootEditable =
+      EditorUtils::IsEditableContent(*bodyOrDocumentElement, editorType);
+  for (nsIContent* child = bodyOrDocumentElement->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    if (EditorUtils::IsPaddingBRElementForEmptyEditor(*child) ||
+        !isRootEditable || EditorUtils::IsEditableContent(*child, editorType) ||
+        HTMLEditUtils::IsBlockElement(*child)) {
+      return NS_OK;
+    }
+  }
+
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eCreatePaddingBRElementForEmptyEditor,
@@ -913,34 +943,6 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
-  ignoredError.SuppressException();
-
-  RefPtr<Element> rootElement = GetRoot();
-  if (!rootElement) {
-    return NS_OK;
-  }
-
-  // Now we've got the body element. Iterate over the body element's children,
-  // looking for editable content. If no editable content is found, insert the
-  // padding <br> element.
-  EditorType editorType = GetEditorType();
-  bool isRootEditable =
-      EditorUtils::IsEditableContent(*rootElement, editorType);
-  for (nsIContent* rootChild = rootElement->GetFirstChild(); rootChild;
-       rootChild = rootChild->GetNextSibling()) {
-    if (EditorUtils::IsPaddingBRElementForEmptyEditor(*rootChild) ||
-        !isRootEditable ||
-        EditorUtils::IsEditableContent(*rootChild, editorType) ||
-        HTMLEditUtils::IsBlockElement(*rootChild)) {
-      return NS_OK;
-    }
-  }
-
-  // Skip adding the padding <br> element for empty editor if body
-  // is read-only.
-  if (IsHTMLEditor() && !HTMLEditUtils::IsSimplyEditableNode(*rootElement)) {
-    return NS_OK;
-  }
 
   // Create a br.
   RefPtr<Element> newBRElement = CreateHTMLContent(nsGkAtoms::br);
@@ -959,8 +961,8 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
 
   // Put the node in the document.
   Result<CreateElementResult, nsresult> insertBRElementResult =
-      InsertNodeWithTransaction<Element>(*newBRElement,
-                                         EditorDOMPoint(rootElement, 0u));
+      InsertNodeWithTransaction<Element>(
+          *newBRElement, EditorDOMPoint(bodyOrDocumentElement, 0u));
   if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
     NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
     return insertBRElementResult.unwrapErr();
@@ -968,7 +970,7 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
 
   // Set selection.
   insertBRElementResult.inspect().IgnoreCaretPointSuggestion();
-  nsresult rv = CollapseSelectionToStartOf(*rootElement);
+  nsresult rv = CollapseSelectionToStartOf(*bodyOrDocumentElement);
   if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
     NS_WARNING(
         "EditorBase::CollapseSelectionToStartOf() caused destroying the "
