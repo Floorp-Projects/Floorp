@@ -137,7 +137,9 @@ void AddDevices(MockCubeb* mock, uint32_t device_count,
   }
 }
 
-void cubeb_mock_destroy(cubeb* context) { delete MockCubeb::AsMock(context); }
+void cubeb_mock_destroy(cubeb* context) {
+  MockCubeb::AsMock(context)->Destroy();
+}
 
 MockCubebStream::MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
                                  cubeb_stream_params* aInputStreamParams,
@@ -405,16 +407,30 @@ void MockCubebStream::NotifyState(cubeb_state aState) {
 
 MockCubeb::MockCubeb() : ops(&mock_ops) {}
 
-MockCubeb::~MockCubeb() {
-  auto streams = mLiveStreams.Lock();
-  MOZ_ASSERT(streams->IsEmpty());
-  MOZ_ASSERT(!mFakeAudioThread);
-};
+MockCubeb::~MockCubeb() { MOZ_ASSERT(!mFakeAudioThread); };
 
-cubeb* MockCubeb::AsCubebContext() { return reinterpret_cast<cubeb*>(this); }
+void MockCubeb::Destroy() {
+  MOZ_ASSERT(mHasCubebContext);
+  {
+    auto streams = mLiveStreams.Lock();
+    MOZ_ASSERT(streams->IsEmpty());
+  }
+  mDestroyed = true;
+  Release();
+}
+
+cubeb* MockCubeb::AsCubebContext() {
+  MOZ_ASSERT(!mDestroyed);
+  if (mHasCubebContext.compareExchange(false, true)) {
+    AddRef();
+  }
+  return reinterpret_cast<cubeb*>(this);
+}
 
 MockCubeb* MockCubeb::AsMock(cubeb* aContext) {
-  return reinterpret_cast<MockCubeb*>(aContext);
+  auto* mockCubeb = reinterpret_cast<MockCubeb*>(aContext);
+  MOZ_ASSERT(!mockCubeb->mDestroyed);
+  return mockCubeb;
 }
 
 int MockCubeb::EnumerateDevices(cubeb_device_type aType,
@@ -623,6 +639,7 @@ void MockCubeb::StartStream(MockCubebStream* aStream) {
     streams->AppendElement(aStream->mSelf);
   }
   if (!mFakeAudioThread) {
+    AddRef();  // released when the thread exits
     mFakeAudioThread = WrapUnique(new std::thread(ThreadFunction_s, this));
   }
 }
@@ -665,6 +682,7 @@ void MockCubeb::ThreadFunction() {
     std::this_thread::sleep_for(
         std::chrono::microseconds(mFastMode ? 0 : 10 * PR_USEC_PER_MSEC));
   }
+  Release();
 }
 
 }  // namespace mozilla
