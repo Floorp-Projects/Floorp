@@ -1098,10 +1098,9 @@ floorp-custom-actions-toggle-sidebar = Toggle sidebar
 
 floorp-open-profile-with-new-instance = Launch
  .tooltiptext = Launch { -brand-short-name } with this profile
-floorp-profiles-in-use = Profile used by another application
+floorp-profiles-in-use = This profile is in use.
 floorp-profiles-title = Profiles
 floorp-profiles-create = Create Profile
 floorp-profile-manager = Profile Manager
  .label = Profile Manager
  .tooltiptext = Open Profile Manager
- 

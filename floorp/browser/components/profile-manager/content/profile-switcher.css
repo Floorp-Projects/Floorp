@@ -11,6 +11,11 @@
 html { 
     background: var(--in-content-page-background) !important;
     padding: 10px;
+    overflow: hidden;
+}
+
+body {
+    overflow: hidden;
 }
 
 .profile {
@@ -58,4 +63,15 @@ html {
 
 #owned-header {
     display: flex;
+    overflow: hidden;
+}
+
+#profiles {
+    overflow: scroll;
+    height: 85vh;
+}
+
+#owned {
+    display: flex;
+    flex-direction: column;
 }

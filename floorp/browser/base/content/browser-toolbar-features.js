@@ -68,7 +68,7 @@ async function switchSidebarPositionButton() {
 
 switchSidebarPositionButton();
 
-async function openPopup() {
+async function profileManager() {
   const widgetId = "profile-manager";
   const widget = CustomizableUI.getWidget(widgetId);
   if (widget && widget.type !== "custom") {
@@ -98,7 +98,9 @@ async function openPopup() {
   });
 }
 
-openPopup();
+if(Services.prefs.getBoolPref("floorp.browser.profile-manager.enabled", false)) {
+  profileManager();
+}
 
 /**************************************** clock ****************************************/
 
