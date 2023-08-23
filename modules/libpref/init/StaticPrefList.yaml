@@ -2706,14 +2706,6 @@
   value: false
   mirror: always
 
-# <img loading="lazy">
-#
-# See https://github.com/whatwg/html/pull/3752
-- name: dom.image-lazy-loading.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # The root margin for image lazy loading, defined as four (value, percentage)
 # pairs.
 - name: dom.image-lazy-loading.root-margin.top

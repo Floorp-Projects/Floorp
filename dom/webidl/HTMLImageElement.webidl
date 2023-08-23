@@ -41,7 +41,7 @@ interface HTMLImageElement : HTMLElement {
            attribute unsigned long height;
            [CEReactions, SetterThrows]
            attribute DOMString decoding;
-           [CEReactions, SetterThrows, Pref="dom.image-lazy-loading.enabled"]
+           [CEReactions, SetterThrows]
            attribute DOMString loading;
   readonly attribute unsigned long naturalWidth;
   readonly attribute unsigned long naturalHeight;
