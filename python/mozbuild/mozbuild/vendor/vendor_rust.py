@@ -946,4 +946,15 @@ a pull request upstream to ignore those files when publishing.""".format(
                     size=cumulative_added_size
                 ),
             )
+        if "MOZ_AUTOMATION" in os.environ:
+            changed = self.repository.get_changed_files(mode="staged")
+            for file in changed:
+                self.log(
+                    logging.ERROR,
+                    "vendor-change",
+                    {"file": file},
+                    "File was modified by vendor: {file}",
+                )
+            if changed:
+                return False
         return True
