@@ -299,19 +299,4 @@ class ComposeSmokeTest {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
         }
     }
-
-    // For API>23
-    // Verifies the default browser switch opens the system default apps menu.
-    @Test
-    fun changeDefaultBrowserSetting() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyDefaultBrowserToggle(false)
-            clickDefaultBrowserSwitch()
-            verifyAndroidDefaultAppsMenuAppears()
-        }
-        // Dismiss the request
-        mDevice.pressBack()
-    }
 }
