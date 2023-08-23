@@ -93,7 +93,7 @@ function setTitle() {
 
       if (modifiersList.includes(key) && !keyCodeIsInputed()) {
         return true;
-      } else if (keyCodeList.includes(key) && !keyIsInputed() && !keyCodeIsInputed()) {
+      } else if (keyCodeList.includes(key) && !keyIsInputed() && !keyCodeIsInputed() && !modifierIsInputed()) {
         return true;
       } else if (regex.test(key) && !cannotUseModifiers.includes(key) && key.length == 1 && !keyListInput.includes(key) && !keyIsInputed() && !keyCodeIsInputed()) {
         return true;
@@ -105,7 +105,19 @@ function setTitle() {
     const keyListInput = document.getElementById("keyList").value.split(", ");
     for(inputedKey of keyListInput) {
       if (inputedKey.length === 1) {
-        console.warn("key is already used. Modify key is allowed only.");
+        console.warn("key is already used. Modifier key is allowed only.");
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function modifierIsInputed() {
+    const keyListInput = document.getElementById("keyList").value.split(", ");
+    const modifiersList = CustomKeyboardShortcutUtils.keyboradShortcutFunctions.modifiersListFunctions.getModifiersList();
+    for(inputedKey of keyListInput) {
+      if (modifiersList.includes(inputedKey)) {
+        console.warn("modifier is already used. Modifier is allowed only.");
         return true;
       }
     }
