@@ -136,7 +136,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/search_add_custom_engine_suggest_string_example"
+                android:text="@string/search_add_custom_engine_suggest_string_example_2"
                 app:lineHeight="18sp"
                 android:labelFor="@id/edit_search_string"
                 android:textColor="@android:color/tertiary_text_dark"/>
