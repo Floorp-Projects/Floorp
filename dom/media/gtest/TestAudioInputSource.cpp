@@ -201,7 +201,8 @@ TEST(TestAudioInputSource, ErrorCallback)
                   sourceId, AudioInputSource::EventListener::State::Error));
   EXPECT_CALL(*listener,
               AudioStateCallback(
-                  sourceId, AudioInputSource::EventListener::State::Stopped));
+                  sourceId, AudioInputSource::EventListener::State::Stopped))
+      .Times(2);
 
   RefPtr<AudioInputSource> ais = MakeRefPtr<AudioInputSource>(
       std::move(listener), sourceId, deviceId, channels, true, testPrincipal,
@@ -218,9 +219,6 @@ TEST(TestAudioInputSource, ErrorCallback)
 
   DispatchFunction([&] { stream->ForceError(); });
   WaitFor(stream->ErrorForcedEvent());
-  // Make sure the stream has been stopped by the error-state's backgroud thread
-  // task, to avoid getting a stopped state callback by `ais->Stop` below.
-  WaitFor(stream->ErrorStoppedEvent());
 
   DispatchFunction([&] { ais->Stop(); });
   Unused << WaitFor(cubeb->StreamDestroyEvent());
