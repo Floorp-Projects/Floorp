@@ -787,6 +787,11 @@ class MOZ_STACK_CLASS NativeKey final {
 
   static MSG sLastKeyMSG;
 
+  // Set to non-zero if we receive a WM_KEYDOWN message which introduces only
+  // a high surrogate.  Then, it'll be cleared when next keydown or char message
+  // is received.
+  static char16_t sPendingHighSurrogate;
+
   static bool IsEmptyMSG(const MSG& aMSG) {
     return !memcmp(&aMSG, &sEmptyMSG, sizeof(MSG));
   }

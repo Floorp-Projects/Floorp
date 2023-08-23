@@ -2444,7 +2444,7 @@ function runConsumingKeydownBeforeCompositionTests()
   window.removeEventListener("keyup", handler, false);
 }
 
-function runKeyTests()
+async function runKeyTests()
 {
   var description = "runKeyTests(): ";
   const kModifiers =
@@ -2636,6 +2636,127 @@ function runKeyTests()
                 { type: "keyup",    key: "abc",           code: "KeyX", keyCode: KeyboardEvent.DOM_VK_A, charCode: 0,                   defaultPrevented: false });
   is(input.value, "abc",
      description + "input.value should be \"abc\"");
+
+  // Emulates pressing and releasing a key which introduces a surrogate pair.
+  async function test_press_and_release_surrogate_pair_key(
+    aTestPerSurrogateKeyPress,
+    aTestIllFormedUTF16KeyValue = false
+  ) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.event.keypress.dispatch_once_per_surrogate_pair", !aTestPerSurrogateKeyPress],
+        ["dom.event.keypress.key.allow_lone_surrogate", aTestIllFormedUTF16KeyValue],
+      ],
+    });
+
+    const settingDescription =
+      `aTestPerSurrogateKeyPress=${aTestPerSurrogateKeyPress}, aTestIllFormedUTF16KeyValue=${aTestIllFormedUTF16KeyValue}`;
+    const allowIllFormedUTF16 = aTestPerSurrogateKeyPress && aTestIllFormedUTF16KeyValue;
+    const keySurrogatePair = new KeyboardEvent("", { key: "\uD842\uDFB7", code: "KeyA", keyCode: KeyboardEvent.DOM_VK_A });
+
+    input.value = "";
+    reset();
+    doDefaultKeydown = TIP.keydown(keySurrogatePair);
+    doDefaultKeyup = TIP.keyup(keySurrogatePair);
+
+    is(
+      doDefaultKeydown,
+      TIP.KEYPRESS_IS_CONSUMED,
+      `${
+        description
+      }TIP.keydown(keySurrogatePair), ${
+        settingDescription
+      }, should return 0x02 because the keypress event should be consumed by the input element`
+    );
+    is(
+      doDefaultKeyup,
+      true,
+      `${description}TIP.keyup(keySurrogatePair) should return true`
+    );
+    is(
+      events.length,
+      aTestPerSurrogateKeyPress ? 4 : 3,
+      `${description}TIP.keydown(keySurrogatePair), ${
+        settingDescription
+      }, should cause keydown, keypress${
+        aTestPerSurrogateKeyPress ? ", keypress" : ""
+      } and keyup event`
+    );
+    checkKeyAttrs(
+      `${description}TIP.keydown(keySurrogatePair), ${settingDescription}`,
+      events[0],
+      {
+        type: "keydown",
+        key: "\uD842\uDFB7",
+        code: "KeyA",
+        keyCode: KeyboardEvent.DOM_VK_A,
+        charCode: 0,
+      }
+    );
+    if (aTestPerSurrogateKeyPress) {
+      checkKeyAttrs(
+        `${description}TIP.keydown(keySurrogatePair), ${settingDescription}`,
+        events[1],
+        {
+          type: "keypress",
+          key: allowIllFormedUTF16
+            ? "\uD842"
+            : "\uD842\uDFB7", // First keypress should have the surrogate pair
+          code: "KeyA",
+          keyCode: 0,
+          charCode: "\uD842\uDFB7".charCodeAt(0),
+          defaultPrevented: true,
+        }
+      );
+      checkKeyAttrs(
+        `${description}TIP.keydown(keySurrogatePair), ${settingDescription}`,
+        events[2],
+        {
+          type: "keypress",
+          key: allowIllFormedUTF16
+            ? "\uDFB7"
+            : "", // But the following keypress should have empty string, instead
+          code: "KeyA",
+          keyCode: 0,
+          charCode: "\uD842\uDFB7".charCodeAt(1),
+          defaultPrevented: true,
+        }
+      );
+    } else {
+      checkKeyAttrs(
+        `${description}TIP.keydown(keySurrogatePair), ${settingDescription}`,
+        events[1],
+        {
+          type: "keypress",
+          key: "\uD842\uDFB7",
+          code: "KeyA",
+          keyCode: 0,
+          charCode: 0x20BB7,
+          defaultPrevented: true,
+        }
+      );
+    }
+    checkKeyAttrs(
+      `${description}TIP.keyup(keySurrogatePair), ${settingDescription}`,
+      events[aTestPerSurrogateKeyPress ? 3 : 2],
+      {
+        type: "keyup",
+        key: "\uD842\uDFB7",
+        code: "KeyA",
+        keyCode: KeyboardEvent.DOM_VK_A,
+        charCode: 0,
+      }
+    );
+    is(
+      input.value,
+      "\uD842\uDFB7",
+      `${description}${settingDescription}, input.value should be the surrogate pair`
+    );
+  };
+
+  await test_press_and_release_surrogate_pair_key(true, true);
+  await test_press_and_release_surrogate_pair_key(true, false);
+  await test_press_and_release_surrogate_pair_key(false);
 
   // If KEY_FORCE_PRINTABLE_KEY is specified, registered key names can be a printable key which inputs the specified value.
   input.value = "";
@@ -4730,7 +4851,7 @@ async function runTests()
   runCompositionTests();
   runCompositionWithKeyEventTests();
   runConsumingKeydownBeforeCompositionTests();
-  runKeyTests();
+  await runKeyTests();
   runErrorTests();
   runCommitCompositionTests();
   await runCallbackTests(false);

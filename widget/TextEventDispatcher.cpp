@@ -11,6 +11,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "nsCharTraits.h"
 #include "nsIFrame.h"
 #include "nsIWidget.h"
 #include "nsPIDOMWindow.h"
@@ -637,7 +638,60 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
       // eKeyPress events are dispatched for every character.
       // So, each key value of eKeyPress events should be a character.
       if (ch) {
-        keyEvent.mKeyValue.Assign(ch);
+        if (!IS_SURROGATE(ch)) {
+          keyEvent.mKeyValue.Assign(ch);
+        } else {
+          const bool isHighSurrogateFollowedByLowSurrogate =
+              aIndexOfKeypress + 1 < keyEvent.mKeyValue.Length() &&
+              NS_IS_HIGH_SURROGATE(ch) &&
+              NS_IS_LOW_SURROGATE(keyEvent.mKeyValue[aIndexOfKeypress + 1]);
+          const bool isLowSurrogateFollowingHighSurrogate =
+              !isHighSurrogateFollowedByLowSurrogate && aIndexOfKeypress > 0 &&
+              NS_IS_LOW_SURROGATE(ch) &&
+              NS_IS_HIGH_SURROGATE(keyEvent.mKeyValue[aIndexOfKeypress - 1]);
+          NS_WARNING_ASSERTION(isHighSurrogateFollowedByLowSurrogate ||
+                                   isLowSurrogateFollowingHighSurrogate,
+                               "Lone surrogate input should not happen");
+          if (StaticPrefs::
+                  dom_event_keypress_dispatch_once_per_surrogate_pair()) {
+            if (isHighSurrogateFollowedByLowSurrogate) {
+              keyEvent.mKeyValue.Assign(
+                  keyEvent.mKeyValue.BeginReading() + aIndexOfKeypress, 2);
+              keyEvent.SetCharCode(
+                  SURROGATE_TO_UCS4(ch, keyEvent.mKeyValue[1]));
+            } else if (isLowSurrogateFollowingHighSurrogate) {
+              // Although not dispatching eKeyPress event (because it's already
+              // dispatched for the low surrogate above), the caller should
+              // treat that this dispatched eKeyPress event normally so that
+              // return true here.
+              return true;
+            }
+            // Do not expose ill-formed UTF-16 string because it's a
+            // problematic for Rust-running-as-wasm for example.
+            else {
+              keyEvent.mKeyValue.Truncate();
+            }
+          } else if (!StaticPrefs::
+                         dom_event_keypress_key_allow_lone_surrogate()) {
+            // If it's a high surrogate followed by a low surrogate, we should
+            // expose the surrogate pair with .key value.
+            if (isHighSurrogateFollowedByLowSurrogate) {
+              keyEvent.mKeyValue.Assign(
+                  keyEvent.mKeyValue.BeginReading() + aIndexOfKeypress, 2);
+            }
+            // Do not expose low surrogate which should be handled by the
+            // preceding keypress event.  And also do not expose ill-formed
+            // UTF-16 because it's a problematic for Rust-running-as-wasm for
+            // example.
+            else {
+              keyEvent.mKeyValue.Truncate();
+            }
+          } else {
+            // Here is a path for traditional behavior. We set `.key` to
+            // high-surrogate and low-surrogate separately.
+            keyEvent.mKeyValue.Assign(ch);
+          }
+        }
       } else {
         keyEvent.mKeyValue.Truncate();
       }
