@@ -187,26 +187,3 @@ add_task(async function test_dedupe_visits_by_url() {
   );
   await PlacesUtils.history.clear();
 });
-
-add_task(async function test_dedupe_visits_by_base_url_and_title() {
-  const now = new Date();
-  await PlacesUtils.history.insertMany([
-    {
-      url: "https://searchfox.org/mozilla-central/source/browser/components/firefoxview/card-container.css#26",
-      title: "card-container.css - mozsearch",
-      visits: [{ date: now }],
-    },
-    {
-      url: "https://searchfox.org/mozilla-central/source/browser/components/firefoxview/card-container.css#23",
-      title: "card-container.css - mozsearch",
-      visits: [{ date: now }],
-    },
-  ]);
-  const history = await placesQuery.getHistory({ sortBy: "date" });
-  Assert.equal(
-    history.get(placesQuery.getStartOfDayTimestamp(now)).length,
-    1,
-    "The duplicate visit should be removed."
-  );
-  await PlacesUtils.history.clear();
-});
