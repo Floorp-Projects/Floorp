@@ -1,3 +1,4 @@
+import com.android.build.api.variant.FilterConfiguration
 import org.apache.tools.ant.util.StringUtils
 
 plugins {
@@ -12,7 +13,6 @@ apply plugin: 'jacoco'
 apply plugin: 'androidx.navigation.safeargs.kotlin'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 
-import com.android.build.OutputFile
 import groovy.json.JsonOutput
 import org.gradle.internal.logging.text.StyledTextOutput.Style
 import org.gradle.internal.logging.text.StyledTextOutputFactory
@@ -277,7 +277,7 @@ android.applicationVariants.configureEach { variant ->
 
         variant.outputs.each { output ->
             def isMozillaOnline = project.hasProperty("mozillaOnline") || gradle.hasProperty("localProperties.mozillaOnline")
-            def abi = output.getFilter(OutputFile.ABI)
+            def abi = output.getFilter(FilterConfiguration.FilterType.ABI.name())
             // If it is a Mozilla Online build, use a unified version code of armeabi-v7a
             def arch = (isMozillaOnline) ? "armeabi-v7a" : abi
             // We use the same version code generator, that we inherited from Fennec, across all channels - even on
@@ -711,8 +711,8 @@ if (project.hasProperty("coverage")) {
             dependsOn "test${variant.name.capitalize()}UnitTest"
 
             reports {
-                xml.enabled = true
-                html.enabled = true
+                xml.enabled  true
+                html.enabled  true
             }
 
             def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
@@ -748,7 +748,7 @@ tasks.register('printVariants') {
     doLast {
         def variants = android.applicationVariants.collect { variant -> [
             apks: variant.outputs.collect { output -> [
-                abi: output.getFilter(com.android.build.VariantOutput.FilterType.ABI),
+                abi: output.getFilter(FilterConfiguration.FilterType.ABI.name()),
                 fileName: output.outputFile.name
             ]},
             build_type: variant.buildType.name,

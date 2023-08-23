@@ -9,7 +9,7 @@ apply plugin: 'jacoco'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 
-import com.android.build.OutputFile
+import com.android.build.api.variant.FilterConfiguration
 import groovy.json.JsonOutput
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -377,7 +377,7 @@ android.applicationVariants.configureEach { variant ->
         // with ARM compatibility mode.
 
         variant.outputs.each { output ->
-            def abi = output.getFilter(OutputFile.ABI)
+            def abi = output.getFilter(FilterConfiguration.FilterType.ABI.name())
             // We use the same version code generator, that we inherited from Fennec, across all channels - even on
             // channels that never shipped a Fennec build.
 
@@ -635,7 +635,7 @@ tasks.register('printVariants') {
     doLast {
         def variants = android.applicationVariants.collect { variant -> [
             apks: variant.outputs.collect { output -> [
-                abi: output.getFilter(com.android.build.VariantOutput.FilterType.ABI),
+                abi: output.getFilter(FilterConfiguration.FilterType.ABI.name()),
                 fileName: output.outputFile.name
             ]},
             build_type: variant.buildType.name,
