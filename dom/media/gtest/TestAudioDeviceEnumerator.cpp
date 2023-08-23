@@ -78,9 +78,10 @@ void TestEnumeration(MockCubeb* aMock, uint32_t aExpectedDeviceCount,
 #ifndef ANDROID
 TEST(CubebDeviceEnumerator, EnumerateSimple)
 {
-  // It looks like we're leaking this object, but in fact it will be freed by
-  // gecko sometime later: `cubeb_destroy` is called when layout statics are
-  // shutdown and we cast back to a MockCubeb* and call the dtor.
+  // It looks like we're leaking this object, but in fact it will be owned by
+  // CubebUtils: `cubeb_destroy()` is called when `ForceSetCubebContext()` is
+  // called again or when layout statics are shutdown, and we cast back to a
+  // MockCubeb* and call the dtor.
   MockCubeb* mock = new MockCubeb();
   mozilla::CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
 
