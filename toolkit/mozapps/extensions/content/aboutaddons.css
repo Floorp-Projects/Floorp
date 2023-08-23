@@ -869,7 +869,7 @@ section:not(:empty) ~ #empty-addons-message {
   }
 
   .main-search::before {
-    content: "Floorp Extensions";
+    content: "Extensions";
     font-size: 23px;
     font-weight: 600;
     position: absolute !important;
