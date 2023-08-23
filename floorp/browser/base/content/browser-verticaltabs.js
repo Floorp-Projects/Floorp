@@ -53,7 +53,7 @@ function setVerticalTabs() {
       const customizeTarget = document.getElementById("nav-bar-customization-target");
     
       if (!workspaceButton) {
-        console.error("Workspace button not found");
+        console.info("Workspace button not found");
         return;
       }
     
