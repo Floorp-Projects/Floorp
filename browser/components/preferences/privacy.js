@@ -3040,8 +3040,8 @@ var gPrivacyPane = {
     document.getElementById("passwordExceptions").disabled = !prefValue;
     document.getElementById("generatePasswords").disabled = !prefValue;
     document.getElementById("passwordAutofillCheckbox").disabled = !prefValue;
-    document.getElementById("relayIntegration").disabled = !prefValue;
-
+    document.getElementById("relayIntegration").disabled =
+      !prefValue || Services.prefs.prefIsLocked("signon.firefoxRelay.feature");
     // don't override pref value in UI
     return undefined;
   },

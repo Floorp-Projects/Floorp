@@ -229,3 +229,23 @@ add_task(async function toggleRememberSignon() {
   );
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function testLockedRelayPreference() {
+  // Locking relay preference should disable checkbox
+  Services.prefs.lockPref("signon.firefoxRelay.feature");
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:preferences#privacy",
+    },
+    async function (browser) {
+      const doc = browser.contentDocument;
+      const relayCheckbox = doc.getElementById("relayIntegration");
+
+      Assert.ok(relayCheckbox.disabled, "Relay checkbox should be disabled");
+    }
+  );
+
+  Services.prefs.unlockPref("signon.firefoxRelay.feature");
+});
