@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
 <meta charset="utf-8">
-<title>CSS Text — NARROW NO-BREAK SPACE after atomic inline</title>
-<meta name=assert content="There is no soft wrap opportunity between an atomic inline and a preceeding NARROW NO-BREAK SPACE">
+<title>CSS Text — ZERO WIDTH NO-BREAK SPACE before atomic inline</title>
+<meta name=assert content="There is no soft wrap opportunity between an atomic inline and a preceeding ZERO WIDTH NO-BREAK SPACE">
 <link rel=help href="https://www.w3.org/TR/css-text-3/#line-break-details">
 <link rel=match href="../../reference/ref-filled-green-100px-square.xht">
 <link rel=author title="Florian Rivoal" href="https://florian.rivoal.net">
@@ -22,4 +22,4 @@ span {
 
 <p>Test passes if there is a filled green square and <strong>no red</strong>.
 
-<div>A&#8239;<span>B</span></div>
+<div>A&#xFEFF;<span>B</span></div>
