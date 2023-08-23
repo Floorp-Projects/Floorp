@@ -9880,16 +9880,17 @@ static void ComputeAndIncludeOutlineArea(nsIFrame* aFrame,
                                   innerRect);
   }
 
-  const nscoord offset = outline->mOutlineOffset.ToAppUnits();
   nsRect outerRect(innerRect);
+  outerRect.Inflate(outline->EffectiveOffsetFor(outerRect));
+
   if (outline->mOutlineStyle.IsAuto()) {
     nsPresContext* pc = aFrame->PresContext();
-    outerRect.Inflate(offset);
+
     pc->Theme()->GetWidgetOverflow(pc->DeviceContext(), aFrame,
                                    StyleAppearance::FocusOutline, &outerRect);
   } else {
-    nscoord width = outline->GetOutlineWidth();
-    outerRect.Inflate(width + offset);
+    const nscoord width = outline->GetOutlineWidth();
+    outerRect.Inflate(width);
   }
 
   nsRect& vo = aOverflowAreas.InkOverflow();
