@@ -542,7 +542,7 @@ android.applicationVariants.configureEach { variant ->
 def generatedLocaleListDir = 'src/main/java/org/mozilla/focus/generated'
 def generatedLocaleListFilename = 'LocalesList.kt'
 
-task generateLocaleList {
+tasks.register('generateLocaleList') {
     doLast {
         def dir = file(generatedLocaleListDir)
         dir.mkdir()
@@ -590,9 +590,9 @@ if (project.hasProperty("coverage")) {
     }
 
     android.applicationVariants.configureEach { variant ->
-        task "jacoco${variant.name.capitalize()}TestReport"(type: JacocoReport,
-                dependsOn: ["test${variant.name.capitalize()}UnitTest"]) {
+        tasks.register("jacoco${variant.name.capitalize()}TestReport", JacocoReport) {
 
+            dependsOn(["test${variant.name.capitalize()}UnitTest"])
             reports {
                 html.enabled true
                 xml.enabled true

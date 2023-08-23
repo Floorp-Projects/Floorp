@@ -239,7 +239,7 @@ tasks.register('ktlint', JavaExec) {
     args "app/src/**/*.kt", "!**/build/**/*.kt", "--baseline=ktlint-baseline.xml"
 }
 
-task ktlintFormat(type: JavaExec, group: "formatting") {
+tasks.register('ktlintFormat', JavaExec) {
     description = "Fix Kotlin code style deviations."
     classpath = configurations.ktlint
     mainClass.set("com.pinterest.ktlint.Main")
