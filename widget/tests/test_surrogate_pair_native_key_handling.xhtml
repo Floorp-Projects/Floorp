@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window id="window1" title="Test handling of native key input for surrogate pairs"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForFocus(async () => {
+      function promiseSynthesizeNativeKey(
+        aNativeKeyCode,
+        aChars,
+      ) {
+        return new Promise(resolve => {
+          synthesizeNativeKey(
+            KEYBOARD_LAYOUT_EN_US,
+            aNativeKeyCode,
+            {},
+            aChars,
+            aChars,
+            resolve
+          );
+        });
+      }
+      function getEventData(aEvent) {
+        return `{ type: "${aEvent.type}", key: "${aEvent.key}", code: "${
+          aEvent.code
+        }", keyCode: 0x${
+          aEvent.keyCode.toString(16).toUpperCase()
+        }, charCode: 0x${aEvent.charCode.toString(16).toUpperCase()} }`;
+      }
+      function getEventArrayData(aEvents) {
+        if (!aEvents.length) {
+          return "[]";
+        }
+        let result = "[\n";
+        for (const e of aEvents) {
+          result += `  ${getEventData(e)}\n`;
+        }
+        return result + "]";
+      }
+      let events = [];
+      function onKey(aEvent) {
+        events.push(aEvent);
+      }
+      window.addEventListener("keydown", onKey);
+      window.addEventListener("keypress", onKey);
+      window.addEventListener("keyup", onKey);
+
+      async function runTests(
+        aTestPerSurrogateKeyPress,
+        aTestIllFormedUTF16KeyValue = false
+      ) {
+        await SpecialPowers.pushPrefEnv({
+          set: [
+            ["dom.event.keypress.dispatch_once_per_surrogate_pair", !aTestPerSurrogateKeyPress],
+            ["dom.event.keypress.key.allow_lone_surrogate", aTestIllFormedUTF16KeyValue],
+          ],
+        });
+        const settingDescription =
+          `aTestPerSurrogateKeyPress=${
+            aTestPerSurrogateKeyPress
+          }, aTestIllFormedUTF16KeyValue=${aTestIllFormedUTF16KeyValue}`;
+        const allowIllFormedUTF16 =
+          aTestPerSurrogateKeyPress && aTestIllFormedUTF16KeyValue;
+
+        // If the keyboard layout has a key to introduce a surrogate pair,
+        // one set of WM_KEYDOWN and WM_KEYUP are generated and it's translated
+        // to two WM_CHARs.
+        await (async function test_one_key_press() {
+          events = [];
+          await promiseSynthesizeNativeKey(WIN_VK_A, "\uD83E\uDD14");
+          const keyCodeA = "A".charCodeAt(0);
+          is(
+            getEventArrayData(events),
+            getEventArrayData(
+              // eslint-disable-next-line no-nested-ternary
+              aTestPerSurrogateKeyPress
+                ? (
+                  allowIllFormedUTF16
+                    ? [
+                        { type: "keydown",  key: "\uD83E\uDD14", code: "KeyA", keyCode: keyCodeA, charCode: 0 },
+                        { type: "keypress", key: "\uD83E",       code: "KeyA", keyCode: 0,        charCode: 0xD83E },
+                        { type: "keypress", key: "\uDD14",       code: "KeyA", keyCode: 0,        charCode: 0xDD14 },
+                        { type: "keyup",    key: "a",            code: "KeyA", keyCode: keyCodeA, charCode: 0 }, // Cannot set .key properly without a hack
+                      ]
+                    : [
+                        { type: "keydown",  key: "\uD83E\uDD14", code: "KeyA", keyCode: keyCodeA, charCode: 0 },
+                        { type: "keypress", key: "\uD83E\uDD14", code: "KeyA", keyCode: 0,        charCode: 0xD83E },
+                        { type: "keypress", key: "",             code: "KeyA", keyCode: 0,        charCode: 0xDD14 },
+                        { type: "keyup",    key: "a",            code: "KeyA", keyCode: keyCodeA, charCode: 0 }, // Cannot set .key properly without a hack
+                      ]
+                  )
+                : [
+                    { type: "keydown",  key: "\uD83E\uDD14", code: "KeyA", keyCode: keyCodeA, charCode: 0 },
+                    { type: "keypress", key: "\uD83E\uDD14", code: "KeyA", keyCode: 0,        charCode: 0x1F914 },
+                    { type: "keyup",    key: "a",            code: "KeyA", keyCode: keyCodeA, charCode: 0 }, // Cannot set .key properly without a hack
+                  ]
+            ),
+            `test_one_key_press(${
+              settingDescription
+            }): Typing surrogate pair should cause one set of keydown and keyup events with ${
+              aTestPerSurrogateKeyPress ? "2 keypress events" : "a keypress event"
+            }`
+          );
+        })();
+
+        // If a surrogate pair is sent with SendInput API, 2 sets of keyboard
+        // events are generated.  E.g., Emojis in the touch keyboard on Win10 or
+        // later.
+        await (async function test_send_input() {
+          events = [];
+          // Virtual keycode for the WM_KEYDOWN/WM_KEYUP is VK_PACKET.
+          await promiseSynthesizeNativeKey(WIN_VK_PACKET, "\uD83E");
+          await promiseSynthesizeNativeKey(WIN_VK_PACKET, "\uDD14");
+          // WM_KEYDOWN, WM_CHAR and WM_KEYUP for the high surrogate input
+          // shouldn't cause DOM events.
+          is(
+            getEventArrayData(events),
+            getEventArrayData(
+              // eslint-disable-next-line no-nested-ternary
+              aTestPerSurrogateKeyPress
+                ? (
+                  allowIllFormedUTF16
+                    ? [
+                        { type: "keydown",  key: "\uD83E\uDD14", code: "", keyCode: 0, charCode: 0 },
+                        { type: "keypress", key: "\uD83E",       code: "", keyCode: 0, charCode: 0xD83E },
+                        { type: "keypress", key: "\uDD14",       code: "", keyCode: 0, charCode: 0xDD14 },
+                        { type: "keyup",    key: "",             code: "", keyCode: 0, charCode: 0 }, // Cannot set .key properly without a hack
+                      ]
+                    : [
+                        { type: "keydown",  key: "\uD83E\uDD14", code: "", keyCode: 0, charCode: 0 },
+                        { type: "keypress", key: "\uD83E\uDD14", code: "", keyCode: 0, charCode: 0xD83E },
+                        { type: "keypress", key: "",             code: "", keyCode: 0, charCode: 0xDD14 },
+                        { type: "keyup",    key: "",             code: "", keyCode: 0, charCode: 0 }, // Cannot set .key properly without a hack
+                      ]
+                  )
+                : [
+                    { type: "keydown",  key: "\uD83E\uDD14", code: "", keyCode: 0, charCode: 0 },
+                    { type: "keypress", key: "\uD83E\uDD14", code: "", keyCode: 0, charCode: 0x1F914 },
+                    { type: "keyup",    key: "",             code: "", keyCode: 0, charCode: 0 }, // Cannot set .key properly without a hack
+                  ]
+            ),
+            `test_send_input(${
+              settingDescription
+            }): Inputting surrogate pair should cause one set of keydown and keyup events ${
+              aTestPerSurrogateKeyPress ? "2 keypress events" : "a keypress event"
+            }`
+          );
+        })();
+      }
+
+      await runTests(true, true);
+      await runTests(true, false);
+      await runTests(false);
+
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keypress", onKey);
+      window.removeEventListener("keyup", onKey);
+
+      SimpleTest.finish();
+    });
+  ]]></script>
+
+</window>

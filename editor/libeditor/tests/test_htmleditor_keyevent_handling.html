@@ -29,7 +29,7 @@ const kIsMac = navigator.platform.includes("Mac");
 const kIsWin = navigator.platform.includes("Win");
 const kIsLinux = navigator.platform.includes("Linux") || navigator.platform.includes("SunOS");
 
-function runTests() {
+async function runTests() {
   document.execCommand("stylewithcss", false, "true");
   document.execCommand("defaultParagraphSeparator", false, "div");
 
@@ -83,8 +83,13 @@ function runTests() {
   SpecialPowers.addSystemEventListener(window, "keypress", listener, false);
 
   // eslint-disable-next-line complexity
-  function doTest(aElement, aDescription,
-                  aIsReadonly, aIsTabbable, aIsPlaintext) {
+  async function doTest(
+    aElement,
+    aDescription,
+    aIsReadonly,
+    aIsTabbable,
+    aIsPlaintext
+  ) {
     function reset(aText) {
       capturingPhase.fired = false;
       capturingPhase.prevented = false;
@@ -560,50 +565,193 @@ function runTests() {
            : "Mozilla <br>";
        })(),
        aDescription + "typed \"Mozilla \"");
+
+    // typing non-BMP character:
+    async function test_typing_surrogate_pair(
+      aTestPerSurrogateKeyPress,
+      aTestIllFormedUTF16KeyValue = false
+    ) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["dom.event.keypress.dispatch_once_per_surrogate_pair", !aTestPerSurrogateKeyPress],
+          ["dom.event.keypress.key.allow_lone_surrogate", aTestIllFormedUTF16KeyValue],
+        ],
+      });
+      reset("");
+      let events = [];
+      function pushIntoEvents(aEvent) {
+        events.push(aEvent);
+      }
+      function getEventData(aKeyboardEventOrInputEvent) {
+        if (!aKeyboardEventOrInputEvent) {
+          return "{}";
+        }
+        switch (aKeyboardEventOrInputEvent.type) {
+          case "keydown":
+          case "keypress":
+          case "keyup":
+            return `{ type: "${aKeyboardEventOrInputEvent.type}", key="${
+              aKeyboardEventOrInputEvent.key
+            }", charCode=0x${
+              aKeyboardEventOrInputEvent.charCode.toString(16).toUpperCase()
+            } }`;
+          default:
+            return `{ type: "${aKeyboardEventOrInputEvent.type}", inputType="${
+              aKeyboardEventOrInputEvent.inputType
+            }", data="${aKeyboardEventOrInputEvent.data}" }`;
+        }
+      }
+      function getEventArrayData(aEvents) {
+        if (!aEvents.length) {
+          return "[]";
+        }
+        let result = "[\n";
+        for (const e of aEvents) {
+          result += `  ${getEventData(e)}\n`;
+        }
+        return result + "]";
+      }
+      aElement.addEventListener("keydown", pushIntoEvents);
+      aElement.addEventListener("keypress", pushIntoEvents);
+      aElement.addEventListener("keyup", pushIntoEvents);
+      aElement.addEventListener("beforeinput", pushIntoEvents);
+      aElement.addEventListener("input", pushIntoEvents);
+      synthesizeKey("\uD842\uDFB7");
+      aElement.removeEventListener("keydown", pushIntoEvents);
+      aElement.removeEventListener("keypress", pushIntoEvents);
+      aElement.removeEventListener("keyup", pushIntoEvents);
+      aElement.removeEventListener("beforeinput", pushIntoEvents);
+      aElement.removeEventListener("input", pushIntoEvents);
+      const settingDescription =
+        `aTestPerSurrogateKeyPress=${
+          aTestPerSurrogateKeyPress
+        }, aTestIllFormedUTF16KeyValue=${aTestIllFormedUTF16KeyValue}`;
+      const allowIllFormedUTF16 =
+        aTestPerSurrogateKeyPress && aTestIllFormedUTF16KeyValue;
+
+      check(`${aDescription}, ${settingDescription}a surrogate pair`, true, true, !aIsReadonly);
+      is(
+        aElement.textContent,
+        !aIsReadonly ? "\uD842\uDFB7" : "",
+        `${aDescription}, ${settingDescription}, The typed surrogate pair should've been inserted`
+      );
+      if (aIsReadonly) {
+        is(
+          getEventArrayData(events),
+          getEventArrayData(
+            aTestPerSurrogateKeyPress
+              ? (
+                allowIllFormedUTF16
+                ? [
+                    { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                    { type: "keypress",    key:  "\uD842",       charCode: 0xD842 },
+                    { type: "keypress",    key:  "\uDFB7",       charCode: 0xDFB7 },
+                    { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                  ]
+                : [
+                    { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                    { type: "keypress",    key:  "\uD842\uDFB7", charCode: 0xD842 },
+                    { type: "keypress",    key:  "",             charCode: 0xDFB7 },
+                    { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                  ]
+                )
+              : [
+                  { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                  { type: "keypress",    key:  "\uD842\uDFB7", charCode: 0x20BB7 },
+                  { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                ]
+          ),
+          `${aDescription}, ${
+            settingDescription
+          }, Typing a surrogate pair in readonly editor should not cause input events`
+        );
+      } else {
+        is(
+          getEventArrayData(events),
+          getEventArrayData(
+            aTestPerSurrogateKeyPress
+              ? (
+                allowIllFormedUTF16
+                ? [
+                    { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                    { type: "keypress",    key:  "\uD842",       charCode: 0xD842 },
+                    { type: "beforeinput", data: "\uD842",       inputType: "insertText" },
+                    { type: "input",       data: "\uD842",       inputType: "insertText" },
+                    { type: "keypress",    key:  "\uDFB7",       charCode: 0xDFB7 },
+                    { type: "beforeinput", data: "\uDFB7",       inputType: "insertText" },
+                    { type: "input",       data: "\uDFB7",       inputType: "insertText" },
+                    { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                  ]
+                : [
+                    { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                    { type: "keypress",    key:  "\uD842\uDFB7", charCode: 0xD842 },
+                    { type: "beforeinput", data: "\uD842\uDFB7", inputType: "insertText" },
+                    { type: "input",       data: "\uD842\uDFB7", inputType: "insertText" },
+                    { type: "keypress",    key:  "",             charCode: 0xDFB7 },
+                    { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                  ]
+                )
+              : [
+                  { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                  { type: "keypress",    key:  "\uD842\uDFB7", charCode: 0x20BB7 },
+                  { type: "beforeinput", data: "\uD842\uDFB7", inputType: "insertText" },
+                  { type: "input",       data: "\uD842\uDFB7", inputType: "insertText" },
+                  { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                ]
+          ),
+          `${aDescription}, ${
+            settingDescription
+          }, Typing a surrogate pair in editor should cause input events`
+        );
+      }
+    }
+    await test_typing_surrogate_pair(true, true);
+    await test_typing_surrogate_pair(true, false);
+    await test_typing_surrogate_pair(false);
   }
 
-  doTest(htmlEditor, "contenteditable=\"true\"", false, true, false);
+  await doTest(htmlEditor, "contenteditable=\"true\"", false, true, false);
 
   const nsIEditor = SpecialPowers.Ci.nsIEditor;
   var editor = SpecialPowers.wrap(window).docShell.editor;
   var flags = editor.flags;
   // readonly
   editor.flags = flags | nsIEditor.eEditorReadonlyMask;
-  doTest(htmlEditor, "readonly HTML editor", true, true, false);
+  await doTest(htmlEditor, "readonly HTML editor", true, true, false);
 
   // non-tabbable
   editor.flags = flags & ~(nsIEditor.eEditorAllowInteraction);
-  doTest(htmlEditor, "non-tabbable HTML editor", false, false, false);
+  await doTest(htmlEditor, "non-tabbable HTML editor", false, false, false);
 
   // readonly and non-tabbable
   editor.flags =
     (flags | nsIEditor.eEditorReadonlyMask) &
       ~(nsIEditor.eEditorAllowInteraction);
-  doTest(htmlEditor, "readonly and non-tabbable HTML editor",
+  await doTest(htmlEditor, "readonly and non-tabbable HTML editor",
          true, false, false);
 
   // plaintext
   editor.flags = flags | nsIEditor.eEditorPlaintextMask;
-  doTest(htmlEditor, "HTML editor but plaintext mode", false, true, true);
+  await doTest(htmlEditor, "HTML editor but plaintext mode", false, true, true);
 
   // plaintext and non-tabbable
   editor.flags = (flags | nsIEditor.eEditorPlaintextMask) &
                  ~(nsIEditor.eEditorAllowInteraction);
-  doTest(htmlEditor, "non-tabbable HTML editor but plaintext mode",
+  await doTest(htmlEditor, "non-tabbable HTML editor but plaintext mode",
          false, false, true);
 
 
   // readonly and plaintext
   editor.flags = flags | nsIEditor.eEditorPlaintextMask |
                          nsIEditor.eEditorReadonlyMask;
-  doTest(htmlEditor, "readonly HTML editor but plaintext mode",
+  await doTest(htmlEditor, "readonly HTML editor but plaintext mode",
          true, true, true);
 
   // readonly, plaintext and non-tabbable
   editor.flags = (flags | nsIEditor.eEditorPlaintextMask |
                           nsIEditor.eEditorReadonlyMask) &
                  ~(nsIEditor.eEditorAllowInteraction);
-  doTest(htmlEditor, "readonly and non-tabbable HTML editor but plaintext mode",
+  await doTest(htmlEditor, "readonly and non-tabbable HTML editor but plaintext mode",
          true, false, true);
 
   SpecialPowers.removeSystemEventListener(window, "keypress", listener, true);

@@ -31,7 +31,7 @@ const kIsMac = navigator.platform.includes("Mac");
 const kIsWin = navigator.platform.includes("Win");
 const kIsLinux = navigator.platform.includes("Linux");
 
-function runTests() {
+async function runTests() {
   var fm = SpecialPowers.Services.focus;
 
   var capturingPhase = { fired: false, prevented: false };
@@ -85,7 +85,7 @@ function runTests() {
   SpecialPowers.addSystemEventListener(parentElement, "keypress", listener,
                                        false);
 
-  function doTest(aElement, aDescription, aIsSingleLine, aIsReadonly) {
+  async function doTest(aElement, aDescription, aIsSingleLine, aIsReadonly) {
     function reset(aText) {
       capturingPhase.fired = false;
       capturingPhase.prevented = false;
@@ -293,22 +293,169 @@ function runTests() {
     check(aDescription + "' '", true, true, !aIsReadonly);
     is(aElement.value, !aIsReadonly ? "Mozilla " : "",
        aDescription + "typed \"Mozilla \"");
+
+    // typing non-BMP character:
+    async function test_typing_surrogate_pair(
+      aTestPerSurrogateKeyPress,
+      aTestIllFormedUTF16KeyValue = false
+    ) {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["dom.event.keypress.dispatch_once_per_surrogate_pair", !aTestPerSurrogateKeyPress],
+          ["dom.event.keypress.key.allow_lone_surrogate", aTestIllFormedUTF16KeyValue],
+        ],
+      });
+      reset("");
+      let events = [];
+      function pushIntoEvents(aEvent) {
+        events.push(aEvent);
+      }
+      function getEventData(aKeyboardEventOrInputEvent) {
+        if (!aKeyboardEventOrInputEvent) {
+          return "{}";
+        }
+        switch (aKeyboardEventOrInputEvent.type) {
+          case "keydown":
+          case "keypress":
+          case "keyup":
+            return `{ type: "${aKeyboardEventOrInputEvent.type}", key="${
+              aKeyboardEventOrInputEvent.key
+            }", charCode=0x${
+              aKeyboardEventOrInputEvent.charCode.toString(16).toUpperCase()
+            } }`;
+          default:
+            return `{ type: "${aKeyboardEventOrInputEvent.type}", inputType="${
+              aKeyboardEventOrInputEvent.inputType
+            }", data="${aKeyboardEventOrInputEvent.data}" }`;
+        }
+      }
+      function getEventArrayData(aEvents) {
+        if (!aEvents.length) {
+          return "[]";
+        }
+        let result = "[\n";
+        for (const e of aEvents) {
+          result += `  ${getEventData(e)}\n`;
+        }
+        return result + "]";
+      }
+      aElement.addEventListener("keydown", pushIntoEvents);
+      aElement.addEventListener("keypress", pushIntoEvents);
+      aElement.addEventListener("keyup", pushIntoEvents);
+      aElement.addEventListener("beforeinput", pushIntoEvents);
+      aElement.addEventListener("input", pushIntoEvents);
+      synthesizeKey("\uD842\uDFB7");
+      aElement.removeEventListener("keydown", pushIntoEvents);
+      aElement.removeEventListener("keypress", pushIntoEvents);
+      aElement.removeEventListener("keyup", pushIntoEvents);
+      aElement.removeEventListener("beforeinput", pushIntoEvents);
+      aElement.removeEventListener("input", pushIntoEvents);
+      const settingDescription =
+        `aTestPerSurrogateKeyPress=${
+          aTestPerSurrogateKeyPress
+        }, aTestIllFormedUTF16KeyValue=${aTestIllFormedUTF16KeyValue}`;
+      const allowIllFormedUTF16 =
+        aTestPerSurrogateKeyPress && aTestIllFormedUTF16KeyValue;
+
+      check(`${aDescription}, ${settingDescription}a surrogate pair`, true, true, !aIsReadonly);
+      is(
+        aElement.value,
+        !aIsReadonly ? "\uD842\uDFB7" : "",
+        `${aDescription}, ${
+          settingDescription
+        }, The typed surrogate pair should've been inserted`
+      );
+      if (aIsReadonly) {
+        is(
+          getEventArrayData(events),
+          getEventArrayData(
+            // eslint-disable-next-line no-nested-ternary
+            aTestPerSurrogateKeyPress
+              ? (
+                allowIllFormedUTF16
+                  ? [
+                      { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                      { type: "keypress",    key:  "\uD842",       charCode: 0xD842 },
+                      { type: "keypress",    key:  "\uDFB7",       charCode: 0xDFB7 },
+                      { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                    ]
+                  : [
+                      { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                      { type: "keypress",    key:  "\uD842\uDFB7", charCode: 0xD842 },
+                      { type: "keypress",    key:  "",             charCode: 0xDFB7 },
+                      { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                    ]
+                 )
+              : [
+                  { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                  { type: "keypress",    key:  "\uD842\uDFB7", charCode: 0x20BB7 },
+                  { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                ]
+          ),
+          `${aDescription}, ${
+            settingDescription
+          }, Typing a surrogate pair in readonly editor should not cause input events`
+        );
+      } else {
+        is(
+          getEventArrayData(events),
+          getEventArrayData(
+            // eslint-disable-next-line no-nested-ternary
+            aTestPerSurrogateKeyPress
+              ? (
+                allowIllFormedUTF16
+                  ? [
+                      { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                      { type: "keypress",    key:  "\uD842",       charCode: 0xD842 },
+                      { type: "beforeinput", data: "\uD842",       inputType: "insertText" },
+                      { type: "input",       data: "\uD842",       inputType: "insertText" },
+                      { type: "keypress",    key:  "\uDFB7",       charCode: 0xDFB7 },
+                      { type: "beforeinput", data: "\uDFB7",       inputType: "insertText" },
+                      { type: "input",       data: "\uDFB7",       inputType: "insertText" },
+                      { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                    ]
+                  : [
+                      { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                      { type: "keypress",    key:  "\uD842\uDFB7", charCode: 0xD842 },
+                      { type: "beforeinput", data: "\uD842\uDFB7", inputType: "insertText" },
+                      { type: "input",       data: "\uD842\uDFB7", inputType: "insertText" },
+                      { type: "keypress",    key:  "",             charCode: 0xDFB7 },
+                      { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                    ]
+                )
+              : [
+                  { type: "keydown",     key:  "\uD842\uDFB7", charCode: 0 },
+                  { type: "keypress",    key:  "\uD842\uDFB7", charCode: 0x20BB7 },
+                  { type: "beforeinput", data: "\uD842\uDFB7", inputType: "insertText" },
+                  { type: "input",       data: "\uD842\uDFB7", inputType: "insertText" },
+                  { type: "keyup",       key:  "\uD842\uDFB7", charCode: 0 },
+                ]
+          ),
+          `${aDescription}, ${
+            settingDescription
+          }, Typing a surrogate pair in editor should cause input events`
+        );
+      }
+    }
+    await test_typing_surrogate_pair(true, true);
+    await test_typing_surrogate_pair(true, false);
+    await test_typing_surrogate_pair(false);
   }
 
-  doTest(inputField, "<input type=\"text\">", true, false);
+  await doTest(inputField, "<input type=\"text\">", true, false);
 
   inputField.setAttribute("readonly", "readonly");
-  doTest(inputField, "<input type=\"text\" readonly>", true, true);
+  await doTest(inputField, "<input type=\"text\" readonly>", true, true);
 
-  doTest(passwordField, "<input type=\"password\">", true, false);
+  await doTest(passwordField, "<input type=\"password\">", true, false);
 
   passwordField.setAttribute("readonly", "readonly");
-  doTest(passwordField, "<input type=\"password\" readonly>", true, true);
+  await doTest(passwordField, "<input type=\"password\" readonly>", true, true);
 
-  doTest(textarea, "<textarea>", false, false);
+  await doTest(textarea, "<textarea>", false, false);
 
   textarea.setAttribute("readonly", "readonly");
-  doTest(textarea, "<textarea readonly>", false, true);
+  await doTest(textarea, "<textarea readonly>", false, true);
 
   SpecialPowers.removeSystemEventListener(parentElement, "keypress", listener,
                                           true);

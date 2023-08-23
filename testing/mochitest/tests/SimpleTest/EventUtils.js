@@ -452,8 +452,25 @@ function sendChar(aChar, aWindow) {
  * key state on US keyboard layout.
  */
 function sendString(aStr, aWindow) {
-  for (var i = 0; i < aStr.length; ++i) {
-    sendChar(aStr.charAt(i), aWindow);
+  for (let i = 0; i < aStr.length; ++i) {
+    // Do not split a surrogate pair to call synthesizeKey.  Dispatching two
+    // sets of keydown and keyup caused by two calls of synthesizeKey is not
+    // good behavior.  It could happen due to a bug, but a surrogate pair should
+    // be introduced with one key press operation.  Therefore, calling it with
+    // a surrogate pair is the right thing.
+    // Note that TextEventDispatcher will consider whether a surrogate pair
+    // should cause one or two keypress events automatically.  Therefore, we
+    // don't need to check the related prefs here.
+    if (
+      (aStr.charCodeAt(i) & 0xfc00) == 0xd800 &&
+      i + 1 < aStr.length &&
+      (aStr.charCodeAt(i + 1) & 0xfc00) == 0xdc00
+    ) {
+      sendChar(aStr.substring(i, i + 2));
+      i++;
+    } else {
+      sendChar(aStr.charAt(i), aWindow);
+    }
   }
 }
 
