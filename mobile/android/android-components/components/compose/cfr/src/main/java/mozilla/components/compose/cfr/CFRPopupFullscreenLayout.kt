@@ -35,6 +35,7 @@ import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.DOWN
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.UP
+import mozilla.components.compose.cfr.CFRPopup.PopupAlignment.BODY_CENTERED_IN_SCREEN
 import mozilla.components.compose.cfr.CFRPopup.PopupAlignment.BODY_TO_ANCHOR_CENTER
 import mozilla.components.compose.cfr.CFRPopup.PopupAlignment.BODY_TO_ANCHOR_START
 import mozilla.components.compose.cfr.CFRPopup.PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR
@@ -180,7 +181,11 @@ internal class CFRPopupFullscreenLayout(
                     dismiss()
                     onDismiss(true)
                 },
-                popupWidth = properties.popupWidth,
+                popupWidth = if (shouldCenterPopup(LocalConfiguration.current.screenWidthDp.dp.toPx())) {
+                    (LocalConfiguration.current.screenWidthDp - 2 * CFRPopup.DEFAULT_HORIZONTAL_VIEWPORT_MARGIN_DP).dp
+                } else {
+                    properties.popupWidth
+                },
                 text = text,
                 action = action,
             )
@@ -229,6 +234,18 @@ internal class CFRPopupFullscreenLayout(
     }
 
     /**
+     * Whether or not the popup body should be centered in the screen, this is only true if the screen does not
+     * allow the popup to be centered at its maximum width.
+     */
+    private fun shouldCenterPopup(
+        screenWidth: Int,
+    ): Boolean {
+        val maximumPopupWidth = properties.popupWidth.toPx() +
+            2 * CFRPopup.DEFAULT_HORIZONTAL_VIEWPORT_MARGIN_DP.dp.toPx()
+        return properties.popupAlignment == BODY_CENTERED_IN_SCREEN && maximumPopupWidth > screenWidth
+    }
+
+    /**
      * Compute the x-coordinates for the absolute start and end position of the popup, including any padding.
      * This assumes anchoring is indicated with an arrow to the horizontal middle of the anchor with the popup's
      * body potentially extending to the `start` of the arrow indicator.
@@ -247,34 +264,64 @@ internal class CFRPopupFullscreenLayout(
         layoutDirection: Int,
     ): PopupHorizontalBounds {
         val arrowIndicatorHalfWidth = arrowIndicatorWidth.value / 2
+
+        return if (layoutDirection == View.LAYOUT_DIRECTION_LTR) {
+            computeHorizontalBoundsLTR(
+                anchorStart = Pixels(anchorMiddleXCoord.value - arrowIndicatorHalfWidth),
+                screenWidth = screenWidth,
+            )
+        } else {
+            computeHorizontalBoundsRTL(
+                anchorStart = Pixels(anchorMiddleXCoord.value + arrowIndicatorHalfWidth),
+                screenWidth = screenWidth,
+            )
+        }
+    }
+
+    private fun computeHorizontalBoundsLTR(
+        anchorStart: Pixels,
+        screenWidth: Pixels,
+    ): PopupHorizontalBounds {
         val popupPadding = Pixels(CFRPopup.DEFAULT_EXTRA_HORIZONTAL_PADDING.dp.toPx())
         val leftInsets = Pixels(getLeftInsets())
         val popupWidth = Pixels(properties.popupWidth.toPx())
+        val viewportMargin =
+            CFRPopup.DEFAULT_HORIZONTAL_VIEWPORT_MARGIN_DP.dpToPx(anchor.resources.displayMetrics)
+        var startCoord = when (properties.popupAlignment) {
+            BODY_TO_ANCHOR_START -> {
+                Pixels(anchor.x.roundToInt() + leftInsets.value)
+            }
 
-        return if (layoutDirection == View.LAYOUT_DIRECTION_LTR) {
-            var startCoord = when (properties.popupAlignment) {
-                BODY_TO_ANCHOR_START -> {
-                    Pixels(anchor.x.roundToInt() + leftInsets.value)
-                }
-                BODY_TO_ANCHOR_CENTER -> {
+            BODY_TO_ANCHOR_CENTER -> {
+                Pixels(
+                    anchor.x.roundToInt()
+                        .plus((anchor.width - popupWidth.value) / 2)
+                        .plus(leftInsets.value),
+                )
+            }
+
+            INDICATOR_CENTERED_IN_ANCHOR,
+            BODY_CENTERED_IN_SCREEN,
+            -> {
+                if (shouldCenterPopup(screenWidth.value)) {
+                    Pixels(viewportMargin + leftInsets.value)
+                } else {
                     Pixels(
-                        anchor.x.roundToInt()
-                            .plus((anchor.width - popupWidth.value) / 2)
-                            .plus(leftInsets.value),
-                    )
-                }
-                INDICATOR_CENTERED_IN_ANCHOR -> {
-                    // Push the popup as far to the start as needed including any needed paddings.
-                    Pixels(
-                        (anchorMiddleXCoord.value - arrowIndicatorHalfWidth)
+                        (anchorStart.value)
                             .minus(properties.indicatorArrowStartOffset.toPx())
                             .coerceAtLeast(leftInsets.value),
                     )
                 }
             }
+        }
 
-            val endCoord = when (properties.popupAlignment) {
-                INDICATOR_CENTERED_IN_ANCHOR -> {
+        val endCoord = when (properties.popupAlignment) {
+            BODY_CENTERED_IN_SCREEN,
+            INDICATOR_CENTERED_IN_ANCHOR,
+            -> {
+                if (shouldCenterPopup(screenWidth.value)) {
+                    Pixels(screenWidth.value - viewportMargin)
+                } else {
                     var maybeEndCoord = Pixels(
                         startCoord.value
                             .plus(popupWidth.value)
@@ -290,50 +337,74 @@ internal class CFRPopupFullscreenLayout(
                                 .minus(endCoordOverflow)
                                 .coerceAtLeast(leftInsets.value),
                         )
-                        maybeEndCoord = Pixels(maybeEndCoord.value.coerceAtMost(screenWidth.value + leftInsets.value))
+                        maybeEndCoord =
+                            Pixels(maybeEndCoord.value.coerceAtMost(screenWidth.value + leftInsets.value))
                     }
                     maybeEndCoord
                 }
-                else -> {
-                    Pixels(
-                        startCoord.value
-                            .plus(popupWidth.value)
-                            .plus(popupPadding.value)
-                            .coerceAtMost(screenWidth.value + leftInsets.value),
-                    )
-                }
             }
 
-            PopupHorizontalBounds(
-                startCoord = startCoord,
-                endCoord = endCoord,
-            )
-        } else {
-            var startCoord = when (properties.popupAlignment) {
-                BODY_TO_ANCHOR_START -> {
-                    Pixels(anchor.x.roundToInt() + anchor.width + leftInsets.value)
-                }
-                BODY_TO_ANCHOR_CENTER -> {
-                    val anchorEndCoord = anchor.x.roundToInt() + anchor.width
-                    Pixels(
-                        anchorEndCoord
-                            .minus((anchor.width - popupWidth.value) / 2)
-                            .plus(leftInsets.value),
-                    )
-                }
-                INDICATOR_CENTERED_IN_ANCHOR -> {
+            else -> {
+                Pixels(
+                    startCoord.value
+                        .plus(popupWidth.value)
+                        .plus(popupPadding.value)
+                        .coerceAtMost(screenWidth.value + leftInsets.value),
+                )
+            }
+        }
+
+        return PopupHorizontalBounds(
+            startCoord = startCoord,
+            endCoord = endCoord,
+        )
+    }
+
+    private fun computeHorizontalBoundsRTL(
+        anchorStart: Pixels,
+        screenWidth: Pixels,
+    ): PopupHorizontalBounds {
+        val popupPadding = Pixels(CFRPopup.DEFAULT_EXTRA_HORIZONTAL_PADDING.dp.toPx())
+        val leftInsets = Pixels(getLeftInsets())
+        val popupWidth = Pixels(properties.popupWidth.toPx())
+        val viewportMargin =
+            CFRPopup.DEFAULT_HORIZONTAL_VIEWPORT_MARGIN_DP.dpToPx(anchor.resources.displayMetrics)
+        var startCoord = when (properties.popupAlignment) {
+            BODY_TO_ANCHOR_START -> {
+                Pixels(anchor.x.roundToInt() + anchor.width + leftInsets.value)
+            }
+            BODY_TO_ANCHOR_CENTER -> {
+                val anchorEndCoord = anchor.x.roundToInt() + anchor.width
+                Pixels(
+                    anchorEndCoord
+                        .minus((anchor.width - popupWidth.value) / 2)
+                        .plus(leftInsets.value),
+                )
+            }
+
+            BODY_CENTERED_IN_SCREEN,
+            INDICATOR_CENTERED_IN_ANCHOR,
+            -> {
+                if (shouldCenterPopup(screenWidth.value)) {
+                    Pixels(screenWidth.value - viewportMargin)
+                } else {
                     Pixels(
                         // Push the popup as far to the start (in RTL) as possible.
-                        anchorMiddleXCoord.value
-                            .plus(arrowIndicatorHalfWidth)
+                        anchorStart.value
                             .plus(properties.indicatorArrowStartOffset.toPx())
                             .coerceAtMost(screenWidth.value + leftInsets.value),
                     )
                 }
             }
+        }
 
-            val endCoord = when (properties.popupAlignment) {
-                INDICATOR_CENTERED_IN_ANCHOR -> {
+        val endCoord = when (properties.popupAlignment) {
+            BODY_CENTERED_IN_SCREEN,
+            INDICATOR_CENTERED_IN_ANCHOR,
+            -> {
+                if (shouldCenterPopup(screenWidth.value)) {
+                    Pixels(viewportMargin - leftInsets.value)
+                } else {
                     var maybeEndCoord = Pixels(
                         startCoord.value
                             .minus(popupWidth.value)
@@ -349,22 +420,24 @@ internal class CFRPopupFullscreenLayout(
                                 .plus(endCoordOverflow.absoluteValue)
                                 .coerceAtMost(screenWidth.value + leftInsets.value),
                         )
-                        maybeEndCoord = Pixels(maybeEndCoord.value.coerceAtLeast(leftInsets.value))
+                        maybeEndCoord =
+                            Pixels(maybeEndCoord.value.coerceAtLeast(leftInsets.value))
                     }
                     maybeEndCoord
                 }
-                else -> {
-                    Pixels(
-                        startCoord.value
-                            .minus(popupWidth.value)
-                            .minus(popupPadding.value)
-                            .coerceAtLeast(leftInsets.value),
-                    )
-                }
             }
 
-            PopupHorizontalBounds(startCoord, endCoord)
+            else -> {
+                Pixels(
+                    startCoord.value
+                        .minus(popupWidth.value)
+                        .minus(popupPadding.value)
+                        .coerceAtLeast(leftInsets.value),
+                )
+            }
         }
+
+        return PopupHorizontalBounds(startCoord, endCoord)
     }
 
     /**
@@ -385,7 +458,9 @@ internal class CFRPopupFullscreenLayout(
             BODY_TO_ANCHOR_START,
             BODY_TO_ANCHOR_CENTER,
             -> Pixels(properties.indicatorArrowStartOffset.toPx())
-            INDICATOR_CENTERED_IN_ANCHOR -> {
+            BODY_CENTERED_IN_SCREEN,
+            INDICATOR_CENTERED_IN_ANCHOR,
+            -> {
                 val arrowIndicatorHalfWidth = arrowIndicatorWidth.value / 2
                 if (LocalConfiguration.current.layoutDirection == View.LAYOUT_DIRECTION_LTR) {
                     Pixels(anchorMiddleXCoord.value - arrowIndicatorHalfWidth - popupStartCoord.value)

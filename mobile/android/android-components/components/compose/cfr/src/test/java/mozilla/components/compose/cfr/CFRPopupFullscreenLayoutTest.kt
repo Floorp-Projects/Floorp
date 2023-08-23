@@ -436,4 +436,92 @@ class CFRPopupFullscreenLayoutTest {
         assertEquals(700, result.startCoord.value)
         assertEquals(290, result.endCoord.value)
     }
+
+    @Test
+    fun `GIVEN LTR direction and popup is larger than viewport width WHEN computing popup bounds for CENTERED_IN_SCREEN alignment THEN return the correct horizontal bounds`() {
+        val anchor = spy(View(testContext))
+        doReturn(400).`when`(anchor).width
+        doReturn(200f).`when`(anchor).x
+        val properties = CFRPopupProperties(
+            popupWidth = 500.dp,
+            popupAlignment = PopupAlignment.BODY_CENTERED_IN_SCREEN,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(400),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(500),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+        )
+
+        assertEquals(16, result.startCoord.value)
+        // The screen width minus the viewport margin
+        assertEquals(484, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN LTR direction and popup fits inside the viewport WHEN computing popup bounds for CENTERED_IN_SCREEN alignment THEN the horizontal bounds are calculated for BODY_TO_ANCHOR_CENTER alignment`() {
+        val anchor = View(testContext)
+        val properties = CFRPopupProperties(
+            popupWidth = 400.dp,
+            popupAlignment = PopupAlignment.BODY_CENTERED_IN_SCREEN,
+            indicatorArrowStartOffset = 0.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(200),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+        )
+
+        assertEquals(190, result.startCoord.value)
+        assertEquals(600, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN RTL direction and popup is larger than viewport width WHEN computing popup bounds for CENTERED_IN_SCREEN alignment THEN return the correct horizontal bounds`() {
+        val anchor = spy(View(testContext))
+        doReturn(400).`when`(anchor).width
+        doReturn(200f).`when`(anchor).x
+        val properties = CFRPopupProperties(
+            popupWidth = 500.dp,
+            popupAlignment = PopupAlignment.BODY_CENTERED_IN_SCREEN,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(400),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(500),
+            layoutDirection = View.LAYOUT_DIRECTION_RTL,
+        )
+
+        // The screen width minus the viewport margin
+        assertEquals(484, result.startCoord.value)
+        assertEquals(16, result.endCoord.value)
+    }
+
+    @Test
+    fun `GIVEN RTL direction and popup fits inside the viewport WHEN computing popup bounds for CENTERED_IN_SCREEN alignment THEN the horizontal bounds are calculated for BODY_TO_ANCHOR_CENTER alignment`() {
+        val anchor = View(testContext)
+        val properties = CFRPopupProperties(
+            popupWidth = 400.dp,
+            popupAlignment = PopupAlignment.BODY_CENTERED_IN_SCREEN,
+            indicatorArrowStartOffset = 0.dp,
+        )
+        val popupView = CFRPopupFullscreenLayout(anchor, properties, mock(), { }, { })
+
+        val result = popupView.computePopupHorizontalBounds(
+            anchorMiddleXCoord = Pixels(700),
+            arrowIndicatorWidth = Pixels(20),
+            screenWidth = Pixels(1000),
+            layoutDirection = View.LAYOUT_DIRECTION_RTL,
+        )
+
+        assertEquals(710, result.startCoord.value)
+        assertEquals(300, result.endCoord.value)
+    }
 }
