@@ -30,6 +30,8 @@ const TOGGLE_MESSAGES_TRUNCATION_TITLE = L10N.getStr(
 );
 const CONNECTION_CLOSED_TEXT = L10N.getStr("netmonitor.ws.connection.closed");
 const {
+  CHANNEL_TYPE,
+  WEB_SOCKET_OPCODE,
   MESSAGE_HEADERS,
 } = require("resource://devtools/client/netmonitor/src/constants.js");
 const Actions = require("resource://devtools/client/netmonitor/src/actions/index.js");
@@ -68,6 +70,7 @@ class MessageListContent extends Component {
       isClosed: PropTypes.bool.isRequired,
       closedConnectionDetails: PropTypes.object,
       channelId: PropTypes.number,
+      channelType: PropTypes.string,
       onSelectMessageDelta: PropTypes.func.isRequired,
     };
   }
@@ -208,9 +211,12 @@ class MessageListContent extends Component {
 
   onContextMenu(evt, item) {
     evt.preventDefault();
-    const { connector } = this.props;
+    const { connector, channelType } = this.props;
     this.contextMenu = new MessageListContextMenu({
       connector,
+      showBinaryOptions:
+        channelType === CHANNEL_TYPE.WEB_SOCKET &&
+        item.opCode === WEB_SOCKET_OPCODE.BINARY,
     });
     this.contextMenu.open(evt, item);
   }
@@ -390,6 +396,7 @@ module.exports = connect(
     columns: state.messages.columns,
     isClosed: isCurrentChannelClosed(state),
     closedConnectionDetails: getClosedConnectionDetails(state),
+    channelType: state.messages.currentChannelType,
   }),
   dispatch => ({
     selectMessage: item => dispatch(Actions.selectMessage(item)),

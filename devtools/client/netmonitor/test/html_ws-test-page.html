@@ -48,8 +48,10 @@
         })
       }
 
-      function sendData(payload) {
-        ws.send(payload);
+      function sendData(payload, asBinary = false) {
+        ws.send(
+          asBinary ? Uint8Array.from(payload, c => c.charCodeAt(0)) : payload
+        );
       }
     </script>
   </body>
