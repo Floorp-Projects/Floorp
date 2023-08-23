@@ -19,12 +19,12 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <Beta>]"
  */
-#define NSSUTIL_VERSION "3.92"
+#define NSSUTIL_VERSION "3.93 Beta"
 #define NSSUTIL_VMAJOR 3
-#define NSSUTIL_VMINOR 92
+#define NSSUTIL_VMINOR 93
 #define NSSUTIL_VPATCH 0
 #define NSSUTIL_VBUILD 0
-#define NSSUTIL_BETA PR_FALSE
+#define NSSUTIL_BETA PR_TRUE
 
 SEC_BEGIN_PROTOS
 
