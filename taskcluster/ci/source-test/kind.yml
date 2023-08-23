@@ -36,6 +36,5 @@ jobs-from:
     - wpt-metadata.yml
 
 job-defaults:
-    use-system-python: false
     attributes:
         retrigger: true
