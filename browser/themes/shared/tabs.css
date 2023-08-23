@@ -66,17 +66,6 @@ toolbar[brighttext] {
   }
 }
 
-#tabbrowser-tabs,
-#tabbrowser-arrowscrollbox,
-#tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] {
-  min-height: var(--tab-min-height);
-}
-
-.tab-background,
-.tab-stack {
-  min-height: inherit;
-}
-
 .tabbrowser-tab {
   appearance: none;
   background-color: transparent;
@@ -94,7 +83,6 @@ toolbar[brighttext] {
   /* Needed to avoid clipping the tab-background shadow, which has a 4px blur
    * (we only have 2px padding in the inline direction) */
   overflow-clip-margin: 2px;
-  min-height: var(--tab-min-height);
 
   &[pinned] {
     flex-shrink: 0;
@@ -444,6 +432,7 @@ toolbar[brighttext] {
 .tab-background {
   border-radius: var(--tab-border-radius);
   margin-block: var(--tab-block-margin);
+  min-height: var(--tab-min-height);
 }
 
 /* Selected tab and tab hover */
