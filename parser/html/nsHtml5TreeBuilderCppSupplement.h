@@ -183,8 +183,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
         if (nsGkAtoms::img == aName) {
           nsHtml5String loading =
               aAttributes->getValue(nsHtml5AttributeName::ATTR_LOADING);
-          if (!mozilla::StaticPrefs::dom_image_lazy_loading_enabled() ||
-              !loading.LowerCaseEqualsASCII("lazy")) {
+          if (!loading.LowerCaseEqualsASCII("lazy")) {
             nsHtml5String url =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_SRC);
             nsHtml5String srcset =
