@@ -86,7 +86,8 @@ const alreadySignedUpRegex = /already|bereits|schon|ya tienes cuenta/i;
 const editProfile = /edit/i;
 
 function createRuleset(coeffs, biases) {
-  let elementToSelectors;
+  let descendantsCache;
+  let surroundingNodesCache;
 
   /**
    * Check document characteristics
@@ -315,9 +316,6 @@ function createRuleset(coeffs, biases) {
       "title",
     ]);
   }
-  /**
-   * ELEMENT HAS PREDICATE MATCHING X FUNCTIONS
-   */
   function elementHasPredicateMatchingDescendant(element, selector, predicate) {
     const matchingElements = getElementDescendants(element, selector);
     return matchingElements.some(predicate);
@@ -388,26 +386,26 @@ function createRuleset(coeffs, biases) {
     if (previousElem && previousElem.tagName == "LABEL") {
       return checkValueAgainstRegex(previousElem.innerText, regexExp);
     }
-    let closestElem = closestElementAbove(element, "label");
+    let closestElem = closestElementPreceding(element, "label");
     return closestElem
       ? checkValueAgainstRegex(closestElem.innerText, regexExp)
       : false;
   }
   function getElementDescendants(element, selector) {
     const selectorToDescendants = setDefault(
-      elementToSelectors,
+      descendantsCache,
       element,
       () => new Map()
     );
 
-    return setDefault(
-      selectorToDescendants, // prettier-ignore
-      selector,
-      () => Array.from(element.querySelectorAll(selector))
+    return setDefault(selectorToDescendants, selector, () =>
+      Array.from(element.querySelectorAll(selector))
     );
   }
+
   function clearCache() {
-    elementToSelectors = new WeakMap();
+    descendantsCache = new WeakMap();
+    surroundingNodesCache = new WeakMap();
   }
   function closestHeaderMatchesPredicate(element, predicate) {
     return (
@@ -416,47 +414,59 @@ function createRuleset(coeffs, biases) {
     );
   }
   function closestHeaderAboveMatchesPredicate(element, predicate) {
-    let closestHeader = closestElementAbove(element, "h1,h2,h3,h4,h5,h6");
+    let closestHeader = closestElementPreceding(element, "h1,h2,h3,h4,h5,h6");
 
     if (closestHeader !== null) {
       if (predicate(closestHeader)) {
         return true;
       }
     }
-    closestHeader = closestElementAbove(
+    closestHeader = closestElementPreceding(
       element,
       "div[class*=heading],div[class*=header],div[class*=title],header"
     );
     return closestHeader ? predicate(closestHeader) : false;
   }
-  function closestElementAbove(element, selector) {
-    let elements = Array.from(
-      getElementDescendants(element.ownerDocument, selector)
+  function closestElementPreceding(element, selector) {
+    return getSurroundingNodes(element, selector).precedingNode;
+  }
+  function closestElementFollowing(element, selector) {
+    return getSurroundingNodes(element, selector).followingNode;
+  }
+  function getSurroundingNodes(element, selector) {
+    const selectorToSurroundingNodes = setDefault(
+      surroundingNodesCache,
+      element,
+      () => new Map()
     );
-    for (let i = elements.length - 1; i >= 0; --i) {
+
+    return setDefault(selectorToSurroundingNodes, selector, () => {
+      let elements = getElementDescendants(element.ownerDocument, selector);
+      let followingIndex = closestFollowingNodeIndex(elements, element);
+      let precedingIndex = followingIndex - 1;
+      let preceding = precedingIndex < 0 ? null : elements[precedingIndex];
+      let following =
+        followingIndex == elements.length ? null : elements[followingIndex];
+      return { precedingNode: preceding, followingNode: following };
+    });
+  }
+  function closestFollowingNodeIndex(elements, element) {
+    let low = 0;
+    let high = elements.length;
+    while (low < high) {
+      let i = (low + high) >>> 1;
       if (
         element.compareDocumentPosition(elements[i]) &
         Node.DOCUMENT_POSITION_PRECEDING
       ) {
-        return elements[i];
+        low = i + 1;
+      } else {
+        high = i;
       }
     }
-    return null;
+    return low;
   }
-  function closestElementFollowing(element, selector) {
-    let elements = Array.from(
-      getElementDescendants(element.ownerDocument, selector)
-    );
-    for (let i = 0; i < elements.length; ++i) {
-      if (
-        element.compareDocumentPosition(elements[i]) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-      ) {
-        return elements[i];
-      }
-    }
-    return null;
-  }
+
   function checkValueAgainstAllRegex(value, regexExp = []) {
     return regexExp.every(reg => checkValueAgainstRegex(value, reg));
   }
