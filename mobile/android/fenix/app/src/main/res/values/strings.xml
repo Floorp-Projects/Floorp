@@ -360,6 +360,8 @@
     <string name="preferences_default_search_engine">Default search engine</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Search</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Search engines</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Address bar</string>
     <!-- Preference link to rating Fenix on the Play Store -->

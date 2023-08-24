@@ -70,7 +70,7 @@ class SettingsSubMenuSearchRobot {
     }
 
     fun verifySearchEnginesSectionHeader() {
-        onView(withText("Search Engines")).check(matches(isDisplayed()))
+        onView(withText("Search engines")).check(matches(isDisplayed()))
     }
 
     fun verifyDefaultSearchEngineHeader() {

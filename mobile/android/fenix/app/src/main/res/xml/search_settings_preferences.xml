@@ -5,7 +5,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory
-        android:title="Search Engines"
+        android:title="@string/preferences_search_engines"
         android:selectable="false"
         app:iconSpaceReserved="false"
         android:layout="@layout/preference_category_no_icon_style">
