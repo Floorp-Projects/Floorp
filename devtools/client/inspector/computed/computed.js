@@ -53,7 +53,6 @@ const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
 const FILTER_CHANGED_TIMEOUT = 150;
-const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
  * Helper for long-running processes that should yield occasionally to
@@ -1027,7 +1026,7 @@ class PropertyView {
 
     // Build the container element
     this.onMatchedToggle = this.onMatchedToggle.bind(this);
-    this.element = doc.createElementNS(HTML_NS, "li");
+    this.element = doc.createElement("li");
     this.element.className = this.propertyHeaderClassName;
     this.element.addEventListener(
       "dblclick",
@@ -1050,11 +1049,11 @@ class PropertyView {
     this.shortcuts.on("Return", this.onMatchedToggle);
     this.shortcuts.on("Space", this.onMatchedToggle);
 
-    const nameContainer = doc.createElementNS(HTML_NS, "span");
+    const nameContainer = doc.createElement("span");
     nameContainer.className = "computed-property-name-container";
 
     // Build the twisty expand/collapse
-    this.matchedExpander = doc.createElementNS(HTML_NS, "div");
+    this.matchedExpander = doc.createElement("div");
     this.matchedExpander.className = "computed-expander theme-twisty";
     this.matchedExpander.setAttribute("role", "button");
     this.matchedExpander.setAttribute(
@@ -1068,7 +1067,7 @@ class PropertyView {
     );
 
     // Build the style name element
-    const nameNode = doc.createElementNS(HTML_NS, "span");
+    const nameNode = doc.createElement("span");
     nameNode.classList.add("computed-property-name", "theme-fg-color3");
 
     // Give it a heading role for screen readers.
@@ -1086,18 +1085,18 @@ class PropertyView {
     nameNode.addEventListener("click", focusElement, baseEventListenerConfig);
 
     // Build the style name ":" separator
-    const nameSeparator = doc.createElementNS(HTML_NS, "span");
+    const nameSeparator = doc.createElement("span");
     nameSeparator.classList.add("visually-hidden");
     nameSeparator.textContent = ": ";
     nameNode.appendChild(nameSeparator);
 
     nameContainer.appendChild(nameNode);
 
-    const valueContainer = doc.createElementNS(HTML_NS, "span");
+    const valueContainer = doc.createElement("span");
     valueContainer.className = "computed-property-value-container";
 
     // Build the style value element
-    this.valueNode = doc.createElementNS(HTML_NS, "span");
+    this.valueNode = doc.createElement("span");
     this.valueNode.classList.add("computed-property-value", "theme-fg-color1");
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
@@ -1111,12 +1110,12 @@ class PropertyView {
     );
 
     // Build the style value ";" separator
-    const valueSeparator = doc.createElementNS(HTML_NS, "span");
+    const valueSeparator = doc.createElement("span");
     valueSeparator.classList.add("visually-hidden");
     valueSeparator.textContent = ";";
 
     // Build the matched selectors container
-    this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "div");
+    this.matchedSelectorsContainer = doc.createElement("div");
     this.matchedSelectorsContainer.classList.add("matchedselectors");
 
     valueContainer.append(this.valueNode, valueSeparator);
