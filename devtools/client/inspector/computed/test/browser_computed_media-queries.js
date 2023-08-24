@@ -21,8 +21,7 @@ add_task(async function () {
 
 function checkPropertyView(view) {
   const propertyView = new PropertyView(view, "width");
-  propertyView.buildMain();
-  propertyView.buildSelectorContainer();
+  propertyView.createElements();
   propertyView.matchedExpanded = true;
 
   return propertyView.refreshMatchedSelectors().then(() => {
