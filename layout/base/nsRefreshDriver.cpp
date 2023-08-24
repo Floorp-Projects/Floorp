@@ -1597,6 +1597,9 @@ void nsRefreshDriver::EvaluateMediaQueriesAndReportChanges() {
     return;
   }
   mMightNeedMediaQueryListenerUpdate = false;
+  if (!mPresContext) {
+    return;
+  }
   AUTO_PROFILER_LABEL_RELEVANT_FOR_JS(
       "Evaluate media queries and report changes", LAYOUT);
   RefPtr<Document> doc = mPresContext->Document();
