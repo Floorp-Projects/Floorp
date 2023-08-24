@@ -104,6 +104,12 @@ function patch(win) {
   } else {
     console.warn('Paxmod: arrowscrollbox not found')
   }
+  let TabsToolbar = win.document.querySelector('#TabsToolbar')
+  if (TabsToolbar) {
+    TabsToolbar.setAttribute('multibar', 'true');
+  } else {
+    console.warn('Paxmod: TabsToolbar not found')
+  }
 }
 
 function unpatch(win) {
@@ -125,6 +131,12 @@ function unpatch(win) {
     arrowscrollbox.addEventListener('wheel', arrowscrollbox.on_wheel)
   } else {
     console.warn('Paxmod: arrowscrollbox not found')
+  }
+  let TabsToolbar = win.document.querySelector('#TabsToolbar')
+  if (TabsToolbar) {
+    TabsToolbar.removeAttribute('multibar');
+  } else {
+    console.warn('Paxmod: TabsToolbar not found')
   }
 }
 
