@@ -411,22 +411,11 @@ CssComputedView.prototype = {
       };
     }
 
-    // Walk up the nodes to find out where node is
-    let propertyView;
-    let propertyContent;
-    let parent = node;
-    while (parent.parentNode) {
-      if (parent.classList.contains("computed-property-view")) {
-        propertyView = parent;
-        break;
-      }
-      if (parent.classList.contains("computed-property-content")) {
-        propertyContent = parent;
-        break;
-      }
-      parent = parent.parentNode;
-    }
-    if (!propertyView && !propertyContent) {
+    const propertyView = node.closest(".computed-property-view");
+    const propertyMatchedSelectors = node.closest(".matchedselectors");
+    const parent = propertyMatchedSelectors || propertyView;
+
+    if (!parent) {
       return null;
     }
 
@@ -435,7 +424,35 @@ CssComputedView.prototype = {
     // Get the property and value for a node that's a property name or value
     const isHref =
       classes.contains("theme-link") && !classes.contains("computed-link");
-    if (
+
+    if (classes.contains("computed-font-family")) {
+      if (propertyMatchedSelectors) {
+        const view = propertyMatchedSelectors.closest("li");
+        value = {
+          property: view.querySelector(".computed-property-name").firstChild
+            .textContent,
+          value: node.parentNode.textContent,
+        };
+      } else if (propertyView) {
+        value = {
+          property: parent.querySelector(".computed-property-name").firstChild
+            .textContent,
+          value: node.parentNode.textContent,
+        };
+      } else {
+        return null;
+      }
+    } else if (
+      propertyMatchedSelectors &&
+      (classes.contains("computed-other-property-value") || isHref)
+    ) {
+      const view = propertyMatchedSelectors.closest("li");
+      value = {
+        property: view.querySelector(".computed-property-name").firstChild
+          .textContent,
+        value: node.textContent,
+      };
+    } else if (
       propertyView &&
       (classes.contains("computed-property-name") ||
         classes.contains("computed-property-value") ||
@@ -446,35 +463,6 @@ CssComputedView.prototype = {
           .textContent,
         value: parent.querySelector(".computed-property-value").textContent,
       };
-    }
-    if (
-      propertyContent &&
-      (classes.contains("computed-other-property-value") || isHref)
-    ) {
-      const view = propertyContent.previousSibling;
-      value = {
-        property: view.querySelector(".computed-property-name").firstChild
-          .textContent,
-        value: node.textContent,
-      };
-    }
-    if (classes.contains("computed-font-family")) {
-      if (propertyView) {
-        value = {
-          property: parent.querySelector(".computed-property-name").firstChild
-            .textContent,
-          value: node.parentNode.textContent,
-        };
-      } else if (propertyContent) {
-        const view = propertyContent.previousSibling;
-        value = {
-          property: view.querySelector(".computed-property-name").firstChild
-            .textContent,
-          value: node.parentNode.textContent,
-        };
-      } else {
-        return null;
-      }
     }
 
     // Get the type
@@ -518,7 +506,7 @@ CssComputedView.prototype = {
           onItem: propertyName => {
             // Per-item callback.
             const propView = new PropertyView(this, propertyName);
-            fragment.append(...propView.createElements());
+            fragment.append(propView.createListItemElement());
 
             if (propView.visible) {
               this.numVisibleProperties++;
@@ -1029,39 +1017,18 @@ class PropertyView {
   }
 
   /**
-   * Returns the className that should be assigned to the propertyView content
-   * container.
-   *
-   * @return {String}
-   */
-  get propertyContentClassName() {
-    return this.visible
-      ? "computed-property-content"
-      : "computed-property-hidden";
-  }
-
-  /**
    * Create DOM elements for a property
    *
-   * @return {Array<Element>}
+   * @return {Element} The <li> element
    */
-  createElements() {
-    return [this.#buildMain(), this.#buildSelectorContainer()];
-  }
-
-  /**
-   * Build the markup for on computed style
-   *
-   * @return {Element}
-   */
-  #buildMain() {
+  createListItemElement() {
     const doc = this.tree.styleDocument;
     const baseEventListenerConfig = { signal: this.#abortController.signal };
 
     // Build the container element
     this.onMatchedToggle = this.onMatchedToggle.bind(this);
-    this.element = doc.createElementNS(HTML_NS, "div");
-    this.element.setAttribute("class", this.propertyHeaderClassName);
+    this.element = doc.createElementNS(HTML_NS, "li");
+    this.element.className = this.propertyHeaderClassName;
     this.element.addEventListener(
       "dblclick",
       this.onMatchedToggle,
@@ -1085,7 +1052,6 @@ class PropertyView {
 
     const nameContainer = doc.createElementNS(HTML_NS, "span");
     nameContainer.className = "computed-property-name-container";
-    this.element.appendChild(nameContainer);
 
     // Build the twisty expand/collapse
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
@@ -1100,7 +1066,6 @@ class PropertyView {
       this.onMatchedToggle,
       baseEventListenerConfig
     );
-    nameContainer.appendChild(this.matchedExpander);
 
     // Build the style name element
     const nameNode = doc.createElementNS(HTML_NS, "span");
@@ -1130,7 +1095,6 @@ class PropertyView {
 
     const valueContainer = doc.createElementNS(HTML_NS, "span");
     valueContainer.className = "computed-property-value-container";
-    this.element.appendChild(valueContainer);
 
     // Build the style value element
     this.valueNode = doc.createElementNS(HTML_NS, "span");
@@ -1151,29 +1115,29 @@ class PropertyView {
     valueSeparator.classList.add("visually-hidden");
     valueSeparator.textContent = ";";
 
-    valueContainer.appendChild(this.valueNode);
-    valueContainer.appendChild(valueSeparator);
-
-    return this.element;
-  }
-
-  #buildSelectorContainer() {
-    const doc = this.tree.styleDocument;
-    const element = doc.createElementNS(HTML_NS, "div");
-    element.setAttribute("class", this.propertyContentClassName);
+    // Build the matched selectors container
     this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "div");
     this.matchedSelectorsContainer.classList.add("matchedselectors");
-    element.appendChild(this.matchedSelectorsContainer);
 
-    return element;
+    valueContainer.append(this.valueNode, valueSeparator);
+    this.element.append(
+      this.matchedExpander,
+      nameContainer,
+      valueContainer,
+      this.matchedSelectorsContainer
+    );
+
+    return this.element;
   }
 
   /**
    * Refresh the panel's CSS property value.
    */
   refresh() {
-    this.element.className = this.propertyHeaderClassName;
-    this.element.nextElementSibling.className = this.propertyContentClassName;
+    const className = this.propertyHeaderClassName;
+    if (this.element.className !== className) {
+      this.element.className = className;
+    }
 
     if (this.#prevViewedElement !== this.tree._viewedElement) {
       this.#matchedSelectorViews = null;
