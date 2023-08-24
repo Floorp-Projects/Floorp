@@ -77,13 +77,13 @@ add_task(async function test() {
         aInfo
       ) {
         doomTasks.push(
-          new Promise(resolve1 => {
+          new Promise(resolve => {
             Services.cache2
               .diskCacheStorage(aInfo, false)
               .asyncDoomURI(aURI, aIdEnhance, {
                 onCacheEntryDoomed() {
                   info("doomed");
-                  resolve1();
+                  resolve();
                 },
               });
           })
