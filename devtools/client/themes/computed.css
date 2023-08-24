@@ -73,12 +73,12 @@
   user-select: text;
   overflow-y: auto;
   overflow-x: hidden;
-  list-style: none;
-  margin: 0;
-  padding: 0;
+  flex: auto;
+  border-top: 1px solid var(--theme-splitter-color);
+  margin-top: -1px;
 }
 
-#computed-property-container > :nth-child(2n of .computed-property-view) {
+.row-striped {
   background: var(--row-striped-background);
 }
 
@@ -136,17 +136,8 @@
   outline: 0 !important;
 }
 
-.matchedselectors {
-  width: 100%;
-  padding-inline-start: 12px;
-
-  /*
-   * Matched selectors element is always created, but is empty until the arrow is expanded.
-   * We only want the margin to appear when the matched selectors are visible.
-   */
-  &:not(:empty) {
-    margin-block-start: 4px;
-  }
+.computed-property-content {
+  padding-inline-start: 17px;
 }
 
 /* Bug 1360238 - getSelection displays an extra "\n" on multiple sibling block elements.

@@ -65,7 +65,8 @@ add_task(async function () {
 
 async function getPropertyViewWithSelectors(view, property) {
   const propertyView = new PropertyView(view, property);
-  propertyView.createElements();
+  propertyView.buildMain();
+  propertyView.buildSelectorContainer();
   propertyView.matchedExpanded = true;
 
   await propertyView.refreshMatchedSelectors();
