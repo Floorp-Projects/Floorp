@@ -39,7 +39,7 @@ IvfFileWriter::IvfFileWriter(FileWrapper file, size_t byte_limit)
       last_timestamp_(-1),
       using_capture_timestamps_(false),
       file_(std::move(file)) {
-  RTC_DCHECK(byte_limit == 0 || webrtc::kIvfHeaderSize <= byte_limit)
+  RTC_DCHECK(byte_limit == 0 || kIvfHeaderSize <= byte_limit)
       << "The byte_limit is too low, not even the header will fit.";
 }
 
@@ -59,7 +59,7 @@ bool IvfFileWriter::WriteHeader() {
     return false;
   }
 
-  uint8_t ivf_header[webrtc::kIvfHeaderSize] = {0};
+  uint8_t ivf_header[kIvfHeaderSize] = {0};
   ivf_header[0] = 'D';
   ivf_header[1] = 'K';
   ivf_header[2] = 'I';
@@ -113,13 +113,13 @@ bool IvfFileWriter::WriteHeader() {
                                           static_cast<uint32_t>(num_frames_));
   ByteWriter<uint32_t>::WriteLittleEndian(&ivf_header[28], 0);  // Reserved.
 
-  if (!file_.Write(ivf_header, webrtc::kIvfHeaderSize)) {
+  if (!file_.Write(ivf_header, kIvfHeaderSize)) {
     RTC_LOG(LS_ERROR) << "Unable to write IVF header for ivf output file.";
     return false;
   }
 
-  if (bytes_written_ < webrtc::kIvfHeaderSize) {
-    bytes_written_ = webrtc::kIvfHeaderSize;
+  if (bytes_written_ < kIvfHeaderSize) {
+    bytes_written_ = kIvfHeaderSize;
   }
 
   return true;
