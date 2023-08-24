@@ -9,11 +9,11 @@ buildscript {
         }
 
         gradlePluginPortal()
+    }
 
-        dependencies {
-            classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
-            classpath ComponentsDependencies.plugin_serialization
-        }
+    dependencies {
+        classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+        classpath  ComponentsDependencies.plugin_serialization
     }
 }
 

@@ -7,11 +7,11 @@ buildscript {
         maven {
             url "https://maven.mozilla.org/maven2"
         }
+    }
 
-        dependencies {
-            classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
-            classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
-        }
+    dependencies {
+        classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
+        classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
     }
 }
 
