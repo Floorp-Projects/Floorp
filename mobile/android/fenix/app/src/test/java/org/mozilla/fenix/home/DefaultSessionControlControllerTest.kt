@@ -442,7 +442,7 @@ class DefaultSessionControlControllerTest {
                 startLoading = true,
             )
         }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -470,7 +470,7 @@ class DefaultSessionControlControllerTest {
                 startLoading = true,
             )
         }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -514,7 +514,7 @@ class DefaultSessionControlControllerTest {
                 startLoading = true,
             )
         }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -563,7 +563,7 @@ class DefaultSessionControlControllerTest {
             )
         }
         verify { controller.submitTopSitesImpressionPing(topSite, position) }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -677,7 +677,7 @@ class DefaultSessionControlControllerTest {
                 startLoading = true,
             )
         }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -715,7 +715,7 @@ class DefaultSessionControlControllerTest {
                 startLoading = true,
             )
         }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -765,7 +765,10 @@ class DefaultSessionControlControllerTest {
         )
         val controller = spyk(createController())
 
-        every { controller.getAvailableSearchEngines() } returns listOf(googleSearchEngine, duckDuckGoSearchEngine)
+        every { controller.getAvailableSearchEngines() } returns listOf(
+            googleSearchEngine,
+            duckDuckGoSearchEngine,
+        )
 
         try {
             mockkStatic("mozilla.components.browser.state.state.SearchStateKt")
@@ -815,7 +818,7 @@ class DefaultSessionControlControllerTest {
                 startLoading = true,
             )
         }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -853,7 +856,7 @@ class DefaultSessionControlControllerTest {
                 startLoading = true,
             )
         }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -891,7 +894,7 @@ class DefaultSessionControlControllerTest {
                 startLoading = true,
             )
         }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -929,7 +932,7 @@ class DefaultSessionControlControllerTest {
                 startLoading = true,
             )
         }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test
@@ -966,7 +969,7 @@ class DefaultSessionControlControllerTest {
             )
         }
         verify { controller.submitTopSitesImpressionPing(topSite, position) }
-        verify { activity.openToBrowser(BrowserDirection.FromHome) }
+        verify { navController.navigate(R.id.browserFragment) }
     }
 
     @Test

@@ -394,11 +394,10 @@ class DefaultSessionControlController(
             if (settings.openNextTabInDesktopMode) {
                 activity.handleRequestDesktopMode(tabId)
             }
-            activity.openToBrowser(BrowserDirection.FromHome)
         } else {
             selectTabUseCase.invoke(existingTabForUrl.id)
-            navController.navigate(R.id.browserFragment)
         }
+        navController.navigate(R.id.browserFragment)
     }
 
     @VisibleForTesting
