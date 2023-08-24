@@ -381,7 +381,7 @@ function test_connect_permission() {
     .openInputStream(0, 0, 0)
     .QueryInterface(Ci.nsIAsyncInputStream);
   client1AsyncInput.asyncWait(
-    function (aStream) {
+    function () {
       info("called test_connect_permission's client1's onInputStreamReady");
       log += "1";
 
@@ -405,7 +405,7 @@ function test_connect_permission() {
         .openInputStream(0, 0, 0)
         .QueryInterface(Ci.nsIAsyncInputStream);
       client2AsyncInput.asyncWait(
-        function (aStream) {
+        function () {
           info("called test_connect_permission's client2's onInputStreamReady");
           log += "2";
 
