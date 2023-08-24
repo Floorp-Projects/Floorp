@@ -29,8 +29,7 @@ async function testMatchedSelectors(view, inspector) {
   );
 
   const propertyView = new PropertyView(view, "color");
-  propertyView.buildMain();
-  propertyView.buildSelectorContainer();
+  propertyView.createElements();
   propertyView.matchedExpanded = true;
 
   await propertyView.refreshMatchedSelectors();
