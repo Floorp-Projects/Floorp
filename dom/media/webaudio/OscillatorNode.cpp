@@ -179,10 +179,9 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
       mDetuneRatio = fdlibm_exp2(detune / 1200.);
     }
     float finalFrequency = frequency * mDetuneRatio;
-    float signalPeriod = mSource->mSampleRate / finalFrequency;
     mRecomputeParameters = false;
 
-    mPhaseIncrement = 2 * M_PI / signalPeriod;
+    mPhaseIncrement = 2 * M_PI * finalFrequency / mSource->mSampleRate;
 
     if (finalFrequency != mFinalFrequency) {
       mFinalFrequency = finalFrequency;
