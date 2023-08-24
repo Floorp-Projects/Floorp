@@ -78,8 +78,16 @@
   margin-top: -1px;
 }
 
-.row-striped {
+#computed-property-container > :nth-child(2n of .computed-property-view) {
   background: var(--row-striped-background);
+
+  /*
+   * The matched selectors element is a sibling of .computed-property-view, but we need to
+   * make it appear like it's "inside" it and want to apply the same background color.
+   */
+  & + .computed-property-content {
+    background: var(--row-striped-background);
+  }
 }
 
 .computed-property-hidden {

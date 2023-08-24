@@ -286,9 +286,6 @@ CssComputedView.prototype = {
   // Holds the ID of the panelRefresh timeout.
   _panelRefreshTimeout: null,
 
-  // Toggle for zebra striping
-  _darkStripe: true,
-
   // Number of visible properties
   numVisibleProperties: 0,
 
@@ -597,9 +594,6 @@ CssComputedView.prototype = {
 
         // Reset visible property count
         this.numVisibleProperties = 0;
-
-        // Reset zebra striping.
-        this._darkStripe = true;
 
         return new Promise((resolve, reject) => {
           this._refreshProcess = new UpdateProcess(
@@ -1031,13 +1025,7 @@ class PropertyView {
    * @return {String}
    */
   get propertyHeaderClassName() {
-    if (this.visible) {
-      const isDark = (this.tree._darkStripe = !this.tree._darkStripe);
-      return isDark
-        ? "computed-property-view row-striped"
-        : "computed-property-view";
-    }
-    return "computed-property-hidden";
+    return this.visible ? "computed-property-view" : "computed-property-hidden";
   }
 
   /**
@@ -1047,13 +1035,9 @@ class PropertyView {
    * @return {String}
    */
   get propertyContentClassName() {
-    if (this.visible) {
-      const isDark = this.tree._darkStripe;
-      return isDark
-        ? "computed-property-content row-striped"
-        : "computed-property-content";
-    }
-    return "computed-property-hidden";
+    return this.visible
+      ? "computed-property-content"
+      : "computed-property-hidden";
   }
 
   /**
