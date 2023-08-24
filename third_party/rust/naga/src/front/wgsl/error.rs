@@ -168,7 +168,6 @@ pub enum Error<'a> {
     InvalidIdentifierUnderscore(Span),
     ReservedIdentifierPrefix(Span),
     UnknownAddressSpace(Span),
-    RepeatedAttribute(Span),
     UnknownAttribute(Span),
     UnknownBuiltin(Span),
     UnknownAccess(Span),
@@ -429,11 +428,6 @@ impl<'a> Error<'a> {
             Error::UnknownAddressSpace(bad_span) => ParseError {
                 message: format!("unknown address space: '{}'", &source[bad_span]),
                 labels: vec![(bad_span, "unknown address space".into())],
-                notes: vec![],
-            },
-            Error::RepeatedAttribute(bad_span) => ParseError {
-                message: format!("repeated attribute: '{}'", &source[bad_span]),
-                labels: vec![(bad_span, "repated attribute".into())],
                 notes: vec![],
             },
             Error::UnknownAttribute(bad_span) => ParseError {

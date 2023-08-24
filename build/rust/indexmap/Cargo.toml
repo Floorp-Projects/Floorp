@@ -9,7 +9,3 @@ path = "lib.rs"
 
 [dependencies.indexmap]
 version = "1.9.3"
-
-[features]
-serde = ["indexmap/serde"]
-std = ["indexmap/std"]

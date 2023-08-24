@@ -228,7 +228,8 @@ impl super::Instance {
         if cfg!(target_os = "macos") {
             // VK_EXT_metal_surface
             extensions.push(ext::MetalSurface::name());
-            extensions.push(ash::vk::KhrPortabilityEnumerationFn::name());
+            extensions
+                .push(CStr::from_bytes_with_nul(b"VK_KHR_portability_enumeration\0").unwrap());
         }
 
         if flags.contains(crate::InstanceFlags::DEBUG) {
@@ -656,15 +657,6 @@ impl crate::Instance<super::Api> for super::Instance {
         #[cfg(not(target_os = "android"))]
         let android_sdk_version = 0;
 
-        let mut flags = vk::InstanceCreateFlags::empty();
-
-        // Avoid VUID-VkInstanceCreateInfo-flags-06559: Only ask the instance to
-        // enumerate incomplete Vulkan implementations (which we need on Mac) if
-        // we managed to find the extension that provides the flag.
-        if extensions.contains(&ash::vk::KhrPortabilityEnumerationFn::name()) {
-            flags |= vk::InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR;
-        }
-
         let vk_instance = {
             let str_pointers = layers
                 .iter()
@@ -675,8 +667,11 @@ impl crate::Instance<super::Api> for super::Instance {
                 })
                 .collect::<Vec<_>>();
 
+            const VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR: u32 = 0x00000001;
             let create_info = vk::InstanceCreateInfo::builder()
-                .flags(flags)
+                .flags(vk::InstanceCreateFlags::from_raw(
+                    VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
+                ))
                 .application_info(&app_info)
                 .enabled_layer_names(&str_pointers[..layers.len()])
                 .enabled_extension_names(&str_pointers[layers.len()..]);
