@@ -233,6 +233,8 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">Non permitas</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">Boles ammustrare cussìgios de chirca in is sessiones privadas?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s at a cumpartzire totu su chi iscrias in sa barra de indiritzu cun su motore de chirca predefinidu.</string>
     <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Chirca %s</string>
     <!-- Search engine suggestion description text -->
@@ -302,6 +304,10 @@
     <string name="preferences_category_select_default_search_engine">Seletziona·nde unu</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts">Gesti is curtzadòrgios de chirca</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">Modìfica is motores visìbiles in su menù de chirca</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu">Motores visìbiles in su menù de chirca</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Motore de chirca predefinidu</string>
     <!-- Preference for settings related to Search -->
@@ -635,6 +641,13 @@
     <string name="open_all_warning_confirm">Ischedas abertas</string>
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Annulla</string>
+
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d pàgina</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d pàginas</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Ischedas serradas de reghente</string>
@@ -1058,6 +1071,9 @@
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Prova sa navigatzione privada</string>
 
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Faghe sa prima chirca</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Colletzione cantzellada</string>
@@ -1158,33 +1174,33 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Ti donamus su benebènnidu a un’internet mègius</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Ti donamus su benebènnidu a un’internet mègius</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Identìfica·ti</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Identìfica·ti</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sincronizatzione ativa</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Amparu de riservadesa predefinidu</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Amparu de riservadesa predefinidu</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Istàndard (predefinidu)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Istàndard (predefinidu)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Echilìbriu intre amparu e rendimentu. Is pàginas s’ant a carrigare cun normalidade.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Echilìbriu intre amparu e rendimentu. Is pàginas s’ant a carrigare cun normalidade.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Restrinta</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Restrinta</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Controllas is datos tuos</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Controllas is datos tuos</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Cumintza a navigare</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Cumintza a navigare</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Sèbera unu tema</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Sèbera unu tema</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automàticu</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Automàticu</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Tema iscuru</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Tema iscuru</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Tema craru</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Tema craru</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Ischedas imbiadas.</string>
@@ -1516,6 +1532,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Agiunghe unu motore de chirca</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description">Agiunghe unu motore de chirca nou</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Modìfica motore de chirca</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1529,14 +1547,30 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Àteru</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label">Nòmine</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Nòmine</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2">Nòmine de su motore de chirca</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Cadena de chirca</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2">URL de impreare in sa chirca</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Sostitui sa chirca cun «%s». Esempru: \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detàllios de su motore de chirca personalizadu</string>
+
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">API pro is cussìgios de chirca (optzionale)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">URL de s’API pro is cussìgios de chirca</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Sostitui sa chirca cun “%s”.
+Esempru: \nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button">Sarva</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Inserta su nòmine de su motore de chirca</string>

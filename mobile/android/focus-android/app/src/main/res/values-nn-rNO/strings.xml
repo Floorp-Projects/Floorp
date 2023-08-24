@@ -54,7 +54,7 @@
     <string name="menu_remove_from_shortcuts">Fjern frå snarvegar</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Kva er nytt</string>
+    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">Kva er nytt</string>
     <string name="menu_settings">Innstillingar</string>
     <string name="menu_about">Om</string>
     <string name="menu_help">Hjelp</string>
@@ -951,7 +951,7 @@
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">Fjern</string>
     <!-- Button to remove all websites from the exception list -->
-    <string name="preference_exceptions_remove_all_button_label">Fjern alle nettsider</string>
+    <string name="preference_exceptions_remove_all_button_label">Fjern alle nettstadar</string>
 
     <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
     <string name="preference_block_cookies_title">Blokker infokapslar</string>
