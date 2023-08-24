@@ -18,14 +18,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -37,7 +34,6 @@ import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.compose.button.SecondaryButton
-import org.mozilla.fenix.compose.ext.thenConditional
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -63,15 +59,12 @@ private const val IMAGE_HEIGHT_RATIO_SMALL = 0.28f
  * @param modifier The modifier to be applied to the Composable.
  * @param onDismiss Invoked when the user clicks the close button. This defaults to null. When null,
  * it doesn't show the close button.
- * @param imageResContentScale The [ContentScale] for the [OnboardingPageState.imageRes].
  */
 @Composable
-@Suppress("LongMethod")
 fun OnboardingPage(
     pageState: OnboardingPageState,
     modifier: Modifier = Modifier,
     onDismiss: (() -> Unit)? = null,
-    imageResContentScale: ContentScale = ContentScale.Fit,
 ) {
     BoxWithConstraints(
         modifier = Modifier
@@ -109,12 +102,7 @@ fun OnboardingPage(
                 Image(
                     painter = painterResource(id = pageState.imageRes),
                     contentDescription = null,
-                    contentScale = imageResContentScale,
-                    modifier = Modifier
-                        .height(imageHeight(boxWithConstraintsScope))
-                        .thenConditional(Modifier.clip(MaterialTheme.shapes.medium)) {
-                            imageResContentScale == ContentScale.Crop
-                        },
+                    modifier = Modifier.height(imageHeight(boxWithConstraintsScope)),
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))

@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.onboarding.view
 
-import androidx.compose.ui.layout.ContentScale
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -31,7 +30,6 @@ class JunoOnboardingMapperTest {
         val onboardingPageUiData = OnboardingPageUiData(
             type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
             imageRes = R.drawable.ic_onboarding_welcome,
-            imageResContentScale = ContentScale.Fit,
             title = "default browser title",
             description = "default browser body with link text",
             linkText = "link text",
@@ -65,7 +63,6 @@ class JunoOnboardingMapperTest {
         val onboardingPageUiData = OnboardingPageUiData(
             type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
             imageRes = R.drawable.ic_onboarding_sync,
-            imageResContentScale = ContentScale.Fit,
             title = "sync title",
             description = "sync body",
             linkText = null,
@@ -99,7 +96,6 @@ class JunoOnboardingMapperTest {
         val onboardingPageUiData = OnboardingPageUiData(
             type = OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
             imageRes = R.drawable.ic_notification_permission,
-            imageResContentScale = ContentScale.Fit,
             title = "notification title",
             description = "notification body",
             linkText = null,

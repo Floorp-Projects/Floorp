@@ -81,10 +81,6 @@ objects:
         description: The resource id of the image to be displayed.
         # This should never be defaulted.
         default: ic_onboarding_welcome
-      image-is-illustration:
-        type: Boolean
-        description: True if the image type is an illustration.
-        default: true
       ordering:
         type: Int
         description: Used to sequence the cards.

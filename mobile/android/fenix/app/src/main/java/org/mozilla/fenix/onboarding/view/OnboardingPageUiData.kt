@@ -5,7 +5,6 @@
 package org.mozilla.fenix.onboarding.view
 
 import androidx.annotation.DrawableRes
-import androidx.compose.ui.layout.ContentScale
 import org.mozilla.fenix.nimbus.OnboardingCardData
 
 /**
@@ -14,7 +13,6 @@ import org.mozilla.fenix.nimbus.OnboardingCardData
 data class OnboardingPageUiData(
     val type: Type,
     @DrawableRes val imageRes: Int,
-    val imageResContentScale: ContentScale,
     val title: String,
     val description: String,
     val linkText: String? = null,

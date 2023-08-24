@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.onboarding.view
 
-import androidx.compose.ui.layout.ContentScale
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -36,7 +35,6 @@ class JunoOnboardingMapperTest {
 private val defaultBrowserPageUiData = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
     imageRes = R.drawable.ic_onboarding_welcome,
-    imageResContentScale = ContentScale.Fit,
     title = "default browser title",
     description = "default browser body with link text",
     linkText = "link text",
@@ -46,7 +44,6 @@ private val defaultBrowserPageUiData = OnboardingPageUiData(
 private val syncPageUiData = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
     imageRes = R.drawable.ic_onboarding_sync,
-    imageResContentScale = ContentScale.Fit,
     title = "sync title",
     description = "sync body",
     primaryButtonLabel = "sync primary button text",
@@ -55,7 +52,6 @@ private val syncPageUiData = OnboardingPageUiData(
 private val notificationPageUiData = OnboardingPageUiData(
     type = OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
     imageRes = R.drawable.ic_notification_permission,
-    imageResContentScale = ContentScale.Crop,
     title = "notification title",
     description = "notification body",
     primaryButtonLabel = "notification primary button text",
@@ -65,7 +61,6 @@ private val notificationPageUiData = OnboardingPageUiData(
 private val defaultBrowserCardData = OnboardingCardData(
     cardType = OnboardingCardType.DEFAULT_BROWSER,
     imageRes = R.drawable.ic_onboarding_welcome,
-    imageIsIllustration = true,
     title = StringHolder(null, "default browser title"),
     body = StringHolder(null, "default browser body with link text"),
     linkText = StringHolder(null, "link text"),
@@ -76,7 +71,6 @@ private val defaultBrowserCardData = OnboardingCardData(
 private val syncCardData = OnboardingCardData(
     cardType = OnboardingCardType.SYNC_SIGN_IN,
     imageRes = R.drawable.ic_onboarding_sync,
-    imageIsIllustration = true,
     title = StringHolder(null, "sync title"),
     body = StringHolder(null, "sync body"),
     primaryButtonLabel = StringHolder(null, "sync primary button text"),
@@ -86,7 +80,6 @@ private val syncCardData = OnboardingCardData(
 private val notificationCardData = OnboardingCardData(
     cardType = OnboardingCardType.NOTIFICATION_PERMISSION,
     imageRes = R.drawable.ic_notification_permission,
-    imageIsIllustration = false,
     title = StringHolder(null, "notification title"),
     body = StringHolder(null, "notification body"),
     primaryButtonLabel = StringHolder(null, "notification primary button text"),
