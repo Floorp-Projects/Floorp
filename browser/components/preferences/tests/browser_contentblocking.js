@@ -91,6 +91,8 @@ add_task(async function testContentBlockingMainCategory() {
     ],
     [ISOLATE_UI_PREF, true],
     [FPI_PREF, false],
+    [FPP_PREF, false],
+    [FPP_PBM_PREF, true],
   ];
 
   for (let pref of prefs) {
