@@ -286,6 +286,9 @@ CssComputedView.prototype = {
   // Holds the ID of the panelRefresh timeout.
   _panelRefreshTimeout: null,
 
+  // Toggle for zebra striping
+  _darkStripe: true,
+
   // Number of visible properties
   numVisibleProperties: 0,
 
@@ -411,11 +414,22 @@ CssComputedView.prototype = {
       };
     }
 
-    const propertyView = node.closest(".computed-property-view");
-    const propertyMatchedSelectors = node.closest(".matchedselectors");
-    const parent = propertyMatchedSelectors || propertyView;
-
-    if (!parent) {
+    // Walk up the nodes to find out where node is
+    let propertyView;
+    let propertyContent;
+    let parent = node;
+    while (parent.parentNode) {
+      if (parent.classList.contains("computed-property-view")) {
+        propertyView = parent;
+        break;
+      }
+      if (parent.classList.contains("computed-property-content")) {
+        propertyContent = parent;
+        break;
+      }
+      parent = parent.parentNode;
+    }
+    if (!propertyView && !propertyContent) {
       return null;
     }
 
@@ -424,35 +438,7 @@ CssComputedView.prototype = {
     // Get the property and value for a node that's a property name or value
     const isHref =
       classes.contains("theme-link") && !classes.contains("computed-link");
-
-    if (classes.contains("computed-font-family")) {
-      if (propertyMatchedSelectors) {
-        const view = propertyMatchedSelectors.closest("li");
-        value = {
-          property: view.querySelector(".computed-property-name").firstChild
-            .textContent,
-          value: node.parentNode.textContent,
-        };
-      } else if (propertyView) {
-        value = {
-          property: parent.querySelector(".computed-property-name").firstChild
-            .textContent,
-          value: node.parentNode.textContent,
-        };
-      } else {
-        return null;
-      }
-    } else if (
-      propertyMatchedSelectors &&
-      (classes.contains("computed-other-property-value") || isHref)
-    ) {
-      const view = propertyMatchedSelectors.closest("li");
-      value = {
-        property: view.querySelector(".computed-property-name").firstChild
-          .textContent,
-        value: node.textContent,
-      };
-    } else if (
+    if (
       propertyView &&
       (classes.contains("computed-property-name") ||
         classes.contains("computed-property-value") ||
@@ -463,6 +449,35 @@ CssComputedView.prototype = {
           .textContent,
         value: parent.querySelector(".computed-property-value").textContent,
       };
+    }
+    if (
+      propertyContent &&
+      (classes.contains("computed-other-property-value") || isHref)
+    ) {
+      const view = propertyContent.previousSibling;
+      value = {
+        property: view.querySelector(".computed-property-name").firstChild
+          .textContent,
+        value: node.textContent,
+      };
+    }
+    if (classes.contains("computed-font-family")) {
+      if (propertyView) {
+        value = {
+          property: parent.querySelector(".computed-property-name").firstChild
+            .textContent,
+          value: node.parentNode.textContent,
+        };
+      } else if (propertyContent) {
+        const view = propertyContent.previousSibling;
+        value = {
+          property: view.querySelector(".computed-property-name").firstChild
+            .textContent,
+          value: node.parentNode.textContent,
+        };
+      } else {
+        return null;
+      }
     }
 
     // Get the type
@@ -506,7 +521,8 @@ CssComputedView.prototype = {
           onItem: propertyName => {
             // Per-item callback.
             const propView = new PropertyView(this, propertyName);
-            fragment.append(propView.createListItemElement());
+            fragment.appendChild(propView.buildMain());
+            fragment.appendChild(propView.buildSelectorContainer());
 
             if (propView.visible) {
               this.numVisibleProperties++;
@@ -582,6 +598,9 @@ CssComputedView.prototype = {
 
         // Reset visible property count
         this.numVisibleProperties = 0;
+
+        // Reset zebra striping.
+        this._darkStripe = true;
 
         return new Promise((resolve, reject) => {
           this._refreshProcess = new UpdateProcess(
@@ -908,55 +927,49 @@ PropertyInfo.prototype = {
 
 /**
  * A container to give easy access to property data from the template engine.
+ *
+ * @param {CssComputedView} tree
+ *        The CssComputedView instance we are working with.
+ * @param {String} name
+ *        The CSS property name for which this PropertyView
+ *        instance will render the rules.
  */
-class PropertyView {
-  /* @param {CssComputedView} tree
-   *        The CssComputedView instance we are working with.
-   * @param {String} name
-   *        The CSS property name for which this PropertyView
-   *        instance will render the rules.
-   */
+function PropertyView(tree, name) {
+  this.tree = tree;
+  this.name = name;
 
-  constructor(tree, name) {
-    this.tree = tree;
-    this.name = name;
+  this.link = "https://developer.mozilla.org/docs/Web/CSS/" + name;
 
-    this.link = "https://developer.mozilla.org/docs/Web/CSS/" + name;
+  this._propertyInfo = new PropertyInfo(tree, name);
+}
 
-    this.#propertyInfo = new PropertyInfo(tree, name);
-    const win = this.tree.styleWindow;
-    this.#abortController = new win.AbortController();
-  }
-
+PropertyView.prototype = {
   // The parent element which contains the open attribute
-  element = null;
+  element: null,
 
   // Property header node
-  propertyHeader = null;
+  propertyHeader: null,
+
+  // Destination for property names
+  nameNode: null,
 
   // Destination for property values
-  valueNode = null;
+  valueNode: null,
 
   // Are matched rules expanded?
-  matchedExpanded = false;
+  matchedExpanded: false,
 
   // Matched selector container
-  matchedSelectorsContainer = null;
+  matchedSelectorsContainer: null,
 
   // Matched selector expando
-  matchedExpander = null;
-
-  // AbortController for event listeners
-  #abortController = null;
+  matchedExpander: null,
 
   // Cache for matched selector views
-  #matchedSelectorViews = null;
+  _matchedSelectorViews: null,
 
   // The previously selected element used for the selector view caches
-  #prevViewedElement = null;
-
-  // PropertyInfo
-  #propertyInfo = null;
+  _prevViewedElement: null,
 
   /**
    * Get the computed style for the current property.
@@ -966,21 +979,21 @@ class PropertyView {
    */
   get value() {
     return this.propertyInfo.value;
-  }
+  },
 
   /**
    * An easy way to access the CssPropertyInfo behind this PropertyView.
    */
   get propertyInfo() {
-    return this.#propertyInfo;
-  }
+    return this._propertyInfo;
+  },
 
   /**
    * Does the property have any matched selectors?
    */
   get hasMatchedSelectors() {
     return this.tree.matchedProperties.has(this.name);
-  }
+  },
 
   /**
    * Should this property be visible?
@@ -1005,7 +1018,7 @@ class PropertyView {
     }
 
     return this.propertyInfo.isSupported;
-  }
+  },
 
   /**
    * Returns the className that should be assigned to the propertyView.
@@ -1013,27 +1026,44 @@ class PropertyView {
    * @return {String}
    */
   get propertyHeaderClassName() {
-    return this.visible ? "computed-property-view" : "computed-property-hidden";
-  }
+    if (this.visible) {
+      const isDark = (this.tree._darkStripe = !this.tree._darkStripe);
+      return isDark
+        ? "computed-property-view row-striped"
+        : "computed-property-view";
+    }
+    return "computed-property-hidden";
+  },
 
   /**
-   * Create DOM elements for a property
+   * Returns the className that should be assigned to the propertyView content
+   * container.
    *
-   * @return {Element} The <li> element
+   * @return {String}
    */
-  createListItemElement() {
+  get propertyContentClassName() {
+    if (this.visible) {
+      const isDark = this.tree._darkStripe;
+      return isDark
+        ? "computed-property-content row-striped"
+        : "computed-property-content";
+    }
+    return "computed-property-hidden";
+  },
+
+  /**
+   * Build the markup for on computed style
+   *
+   * @return {Element}
+   */
+  buildMain() {
     const doc = this.tree.styleDocument;
-    const baseEventListenerConfig = { signal: this.#abortController.signal };
 
     // Build the container element
     this.onMatchedToggle = this.onMatchedToggle.bind(this);
-    this.element = doc.createElementNS(HTML_NS, "li");
-    this.element.className = this.propertyHeaderClassName;
-    this.element.addEventListener(
-      "dblclick",
-      this.onMatchedToggle,
-      baseEventListenerConfig
-    );
+    this.element = doc.createElementNS(HTML_NS, "div");
+    this.element.setAttribute("class", this.propertyHeaderClassName);
+    this.element.addEventListener("dblclick", this.onMatchedToggle);
 
     // Make it keyboard navigable
     this.element.setAttribute("tabindex", "0");
@@ -1052,6 +1082,7 @@ class PropertyView {
 
     const nameContainer = doc.createElementNS(HTML_NS, "span");
     nameContainer.className = "computed-property-name-container";
+    this.element.appendChild(nameContainer);
 
     // Build the twisty expand/collapse
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
@@ -1061,40 +1092,38 @@ class PropertyView {
       "aria-label",
       STYLE_INSPECTOR_L10N.getStr("rule.twistyExpand.label")
     );
-    this.matchedExpander.addEventListener(
-      "click",
-      this.onMatchedToggle,
-      baseEventListenerConfig
-    );
+    this.matchedExpander.addEventListener("click", this.onMatchedToggle);
+    nameContainer.appendChild(this.matchedExpander);
 
     // Build the style name element
-    const nameNode = doc.createElementNS(HTML_NS, "span");
-    nameNode.classList.add("computed-property-name", "theme-fg-color3");
+    this.nameNode = doc.createElementNS(HTML_NS, "span");
+    this.nameNode.classList.add("computed-property-name", "theme-fg-color3");
 
     // Give it a heading role for screen readers.
-    nameNode.setAttribute("role", "heading");
+    this.nameNode.setAttribute("role", "heading");
 
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
-    nameNode.setAttribute("tabindex", "");
+    this.nameNode.setAttribute("tabindex", "");
     // Avoid english text (css properties) from being altered
     // by RTL mode
-    nameNode.setAttribute("dir", "ltr");
-    nameNode.textContent = nameNode.title = this.name;
+    this.nameNode.setAttribute("dir", "ltr");
+    this.nameNode.textContent = this.nameNode.title = this.name;
     // Make it hand over the focus to the container
-    const focusElement = () => this.element.focus();
-    nameNode.addEventListener("click", focusElement, baseEventListenerConfig);
+    this.onFocus = () => this.element.focus();
+    this.nameNode.addEventListener("click", this.onFocus);
 
     // Build the style name ":" separator
     const nameSeparator = doc.createElementNS(HTML_NS, "span");
     nameSeparator.classList.add("visually-hidden");
     nameSeparator.textContent = ": ";
-    nameNode.appendChild(nameSeparator);
+    this.nameNode.appendChild(nameSeparator);
 
-    nameContainer.appendChild(nameNode);
+    nameContainer.appendChild(this.nameNode);
 
     const valueContainer = doc.createElementNS(HTML_NS, "span");
     valueContainer.className = "computed-property-value-container";
+    this.element.appendChild(valueContainer);
 
     // Build the style value element
     this.valueNode = doc.createElementNS(HTML_NS, "span");
@@ -1104,44 +1133,40 @@ class PropertyView {
     this.valueNode.setAttribute("tabindex", "");
     this.valueNode.setAttribute("dir", "ltr");
     // Make it hand over the focus to the container
-    this.valueNode.addEventListener(
-      "click",
-      focusElement,
-      baseEventListenerConfig
-    );
+    this.valueNode.addEventListener("click", this.onFocus);
 
     // Build the style value ";" separator
     const valueSeparator = doc.createElementNS(HTML_NS, "span");
     valueSeparator.classList.add("visually-hidden");
     valueSeparator.textContent = ";";
 
-    // Build the matched selectors container
-    this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "div");
-    this.matchedSelectorsContainer.classList.add("matchedselectors");
-
-    valueContainer.append(this.valueNode, valueSeparator);
-    this.element.append(
-      this.matchedExpander,
-      nameContainer,
-      valueContainer,
-      this.matchedSelectorsContainer
-    );
+    valueContainer.appendChild(this.valueNode);
+    valueContainer.appendChild(valueSeparator);
 
     return this.element;
-  }
+  },
+
+  buildSelectorContainer() {
+    const doc = this.tree.styleDocument;
+    const element = doc.createElementNS(HTML_NS, "div");
+    element.setAttribute("class", this.propertyContentClassName);
+    this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "div");
+    this.matchedSelectorsContainer.classList.add("matchedselectors");
+    element.appendChild(this.matchedSelectorsContainer);
+
+    return element;
+  },
 
   /**
    * Refresh the panel's CSS property value.
    */
   refresh() {
-    const className = this.propertyHeaderClassName;
-    if (this.element.className !== className) {
-      this.element.className = className;
-    }
+    this.element.className = this.propertyHeaderClassName;
+    this.element.nextElementSibling.className = this.propertyContentClassName;
 
-    if (this.#prevViewedElement !== this.tree._viewedElement) {
-      this.#matchedSelectorViews = null;
-      this.#prevViewedElement = this.tree._viewedElement;
+    if (this._prevViewedElement !== this.tree._viewedElement) {
+      this._matchedSelectorViews = null;
+      this._prevViewedElement = this.tree._viewedElement;
     }
 
     if (!this.tree._viewedElement || !this.visible) {
@@ -1174,7 +1199,7 @@ class PropertyView {
     this.valueNode.appendChild(frag);
 
     this.refreshMatchedSelectors();
-  }
+  },
 
   /**
    * Refresh the panel matched rules.
@@ -1199,7 +1224,7 @@ class PropertyView {
 
           this._matchedSelectorResponse = matched;
 
-          this.#buildMatchedSelectors();
+          this._buildMatchedSelectors();
           this.matchedExpander.setAttribute("open", "");
           this.matchedExpander.setAttribute(
             "aria-label",
@@ -1218,13 +1243,13 @@ class PropertyView {
     );
     this.tree.inspector.emit("computed-view-property-collapsed");
     return Promise.resolve(undefined);
-  }
+  },
 
   get matchedSelectors() {
     return this._matchedSelectorResponse;
-  }
+  },
 
-  #buildMatchedSelectors() {
+  _buildMatchedSelectors() {
     const frag = this.element.ownerDocument.createDocumentFragment();
 
     for (const selector of this.matchedSelectorViews) {
@@ -1276,22 +1301,22 @@ class PropertyView {
 
     this.matchedSelectorsContainer.innerHTML = "";
     this.matchedSelectorsContainer.appendChild(frag);
-  }
+  },
 
   /**
    * Provide access to the matched SelectorViews that we are currently
    * displaying.
    */
   get matchedSelectorViews() {
-    if (!this.#matchedSelectorViews) {
-      this.#matchedSelectorViews = [];
+    if (!this._matchedSelectorViews) {
+      this._matchedSelectorViews = [];
       this._matchedSelectorResponse.forEach(selectorInfo => {
         const selectorView = new SelectorView(this.tree, selectorInfo);
-        this.#matchedSelectorViews.push(selectorView);
+        this._matchedSelectorViews.push(selectorView);
       }, this);
     }
-    return this.#matchedSelectorViews;
-  }
+    return this._matchedSelectorViews;
+  },
 
   /**
    * The action when a user expands matched selectors.
@@ -1307,36 +1332,39 @@ class PropertyView {
     this.matchedExpanded = !this.matchedExpanded;
     this.refreshMatchedSelectors();
     event.preventDefault();
-  }
+  },
 
   /**
    * The action when a user clicks on the MDN help link for a property.
    */
   mdnLinkClick(event) {
     openContentLink(this.link);
-  }
+  },
 
   /**
    * Destroy this property view, removing event listeners
    */
   destroy() {
-    if (this.#matchedSelectorViews) {
-      for (const view of this.#matchedSelectorViews) {
+    if (this._matchedSelectorViews) {
+      for (const view of this._matchedSelectorViews) {
         view.destroy();
       }
     }
 
-    if (this.#abortController) {
-      this.#abortController.abort();
-      this.#abortController = null;
-    }
-
+    this.element.removeEventListener("dblclick", this.onMatchedToggle);
     this.shortcuts.destroy();
     this.element = null;
+
+    this.matchedExpander.removeEventListener("click", this.onMatchedToggle);
     this.matchedExpander = null;
+
+    this.nameNode.removeEventListener("click", this.onFocus);
+    this.nameNode = null;
+
+    this.valueNode.removeEventListener("click", this.onFocus);
     this.valueNode = null;
-  }
-}
+  },
+};
 
 /**
  * A container to give us easy access to display data from a CssRule

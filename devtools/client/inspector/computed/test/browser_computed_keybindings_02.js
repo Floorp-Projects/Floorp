@@ -51,7 +51,7 @@ add_task(async function () {
 
   info("Verify the 2nd style has been expanded");
   const secondStyleSelectors = view.styleDocument.querySelectorAll(
-    ".computed-property-view .matchedselectors"
+    ".computed-property-content .matchedselectors"
   )[1];
   ok(!!secondStyleSelectors.childNodes.length, "Matched selectors expanded");
 
@@ -63,7 +63,7 @@ add_task(async function () {
 
   info("Verify the 1st style has been expanded too");
   const firstStyleSelectors = view.styleDocument.querySelectorAll(
-    ".computed-property-view .matchedselectors"
+    ".computed-property-content .matchedselectors"
   )[0];
   ok(!!firstStyleSelectors.childNodes.length, "Matched selectors expanded");
 });

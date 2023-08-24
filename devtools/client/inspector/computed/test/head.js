@@ -61,7 +61,7 @@ function getComputedViewProperty(view, name) {
 function getComputedViewPropertyView(view, name) {
   let propView;
   for (const propertyView of view.propertyViews) {
-    if (propertyView.propertyInfo.name === name) {
+    if (propertyView._propertyInfo.name === name) {
       propView = propertyView;
       break;
     }
@@ -70,11 +70,12 @@ function getComputedViewPropertyView(view, name) {
 }
 
 /**
- * Get a reference to the matched rules element for a given property name in
+ * Get a reference to the computed-property-content element for a given property name in
  * the computed-view.
- * A matched rule element is inside the property element (<li>) itself
+ * A computed-property-content element always follows (nextSibling) the property itself
  * and is only shown when the twisty icon is expanded on the property.
- * It contains matched rules, with selectors, properties, values and stylesheet links.
+ * A computed-property-content element contains matched rules, with selectors,
+ * properties, values and stylesheet links
  *
  * @param {CssComputedView} view
  *        The instance of the computed view panel
@@ -85,15 +86,14 @@ function getComputedViewPropertyView(view, name) {
  */
 var getComputedViewMatchedRules = async function (view, name) {
   let expander;
-  let matchedRulesEl;
+  let propertyContent;
   for (const property of view.styleDocument.querySelectorAll(
     "#computed-container .computed-property-view"
   )) {
     const nameSpan = property.querySelector(".computed-property-name");
     if (nameSpan.firstChild.textContent === name) {
       expander = property.querySelector(".computed-expandable");
-      matchedRulesEl = property.querySelector(".matchedselectors");
-
+      propertyContent = property.nextSibling;
       break;
     }
   }
@@ -107,7 +107,7 @@ var getComputedViewMatchedRules = async function (view, name) {
     await waitFor(() => expander.hasAttribute("open"));
   }
 
-  return matchedRulesEl;
+  return propertyContent;
 };
 
 /**
