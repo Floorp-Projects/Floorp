@@ -103,6 +103,14 @@ const gLoggingPresets = {
     },
     profilerPreset: "media",
   },
+  webgpu: {
+    modules:
+      "wgpu_core::*:5,wgpu_hal::*:5,wgpu_types::*:5,naga::*:5,wgpu_bindings::*:5,WebGPU:5",
+    l10nIds: {
+      label: "about-logging-preset-webgpu-label",
+      description: "about-logging-preset-webgpu-description",
+    },
+  },
   custom: {
     modules: "",
     l10nIds: {
