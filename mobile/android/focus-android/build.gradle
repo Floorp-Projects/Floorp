@@ -126,7 +126,7 @@ dependencies {
 tasks.register('ktlint', JavaExec) {
     description = "Check Kotlin code style."
     classpath = configurations.ktlint
-    main = "com.pinterest.ktlint.Main"
+    mainClass.set("com.pinterest.ktlint.Main")
     args "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
 }
 
