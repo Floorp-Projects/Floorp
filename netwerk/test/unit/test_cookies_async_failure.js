@@ -47,7 +47,7 @@ add_task(async () => {
 
   // Get the cookie file and the backup file.
   Assert.ok(!do_get_cookie_file(profile).exists());
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 
   // Create a cookie object for testing.
   let now = Date.now() * 1000;
@@ -74,13 +74,13 @@ add_task(async () => {
   Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
 });
 
-function do_get_backup_file(profile) {
+function do_get_backup_file() {
   let file = profile.clone();
   file.append("cookies.sqlite.bak");
   return file;
 }
 
-function do_get_rebuild_backup_file(profile) {
+function do_get_rebuild_backup_file() {
   let file = profile.clone();
   file.append("cookies.sqlite.bak-rebuild");
   return file;
@@ -191,8 +191,8 @@ async function run_test_1() {
 
   // Check that the original database was renamed, and that it contains the
   // original cookie.
-  Assert.ok(do_get_backup_file(profile).exists());
-  let backupdb = Services.storage.openDatabase(do_get_backup_file(profile));
+  Assert.ok(do_get_backup_file().exists());
+  let backupdb = Services.storage.openDatabase(do_get_backup_file());
   Assert.equal(do_count_cookies_in_db(backupdb, "foo.com"), 1);
   backupdb.close();
 
@@ -210,9 +210,9 @@ async function run_test_1() {
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
-  do_get_backup_file(profile).remove(false);
+  do_get_backup_file().remove(false);
   Assert.ok(!do_get_cookie_file(profile).exists());
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 }
 
 async function run_test_2() {
@@ -228,7 +228,7 @@ async function run_test_2() {
     });
 
     for (let i = 0; i < 3000; ++i) {
-      let uri = NetUtil.newURI("http://" + i + ".com/");
+      uri = NetUtil.newURI("http://" + i + ".com/");
       Services.cookies.setCookieStringFromHttp(
         uri,
         "oh=hai; max-age=1000",
@@ -248,7 +248,7 @@ async function run_test_2() {
 
   // At this point, the database connection should be open. Ensure that it
   // succeeded.
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 
   // Recreate a new database since it was corrupted
   Assert.equal(Services.cookies.countCookiesFromHost("0.com"), 0);
@@ -258,8 +258,8 @@ async function run_test_2() {
   await promise_close_profile();
 
   // Check that the original database was renamed.
-  Assert.ok(do_get_backup_file(profile).exists());
-  Assert.equal(do_get_backup_file(profile).fileSize, size);
+  Assert.ok(do_get_backup_file().exists());
+  Assert.equal(do_get_backup_file().fileSize, size);
   let db = Services.storage.openDatabase(do_get_cookie_file(profile));
   db.close();
 
@@ -272,9 +272,9 @@ async function run_test_2() {
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
-  do_get_backup_file(profile).remove(false);
+  do_get_backup_file().remove(false);
   Assert.ok(!do_get_cookie_file(profile).exists());
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 }
 
 async function run_test_3() {
@@ -324,7 +324,7 @@ async function run_test_3() {
 
   // At this point, the database connection should be open. Ensure that it
   // succeeded.
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 
   // Recreate a new database since it was corrupted
   Assert.equal(Services.cookies.countCookiesFromHost("hither.com"), 0);
@@ -339,16 +339,16 @@ async function run_test_3() {
   db.close();
 
   // Check that the original database was renamed.
-  Assert.ok(do_get_backup_file(profile).exists());
-  Assert.equal(do_get_backup_file(profile).fileSize, size);
+  Assert.ok(do_get_backup_file().exists());
+  Assert.equal(do_get_backup_file().fileSize, size);
 
   // Rename it back, and try loading the entire database synchronously.
-  do_get_backup_file(profile).moveTo(null, "cookies.sqlite");
+  do_get_backup_file().moveTo(null, "cookies.sqlite");
   do_load_profile();
 
   // At this point, the database connection should be open. Ensure that it
   // succeeded.
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 
   // Synchronously read in everything.
   Assert.equal(do_count_cookies(), 0);
@@ -361,14 +361,14 @@ async function run_test_3() {
   db.close();
 
   // Check that the original database was renamed.
-  Assert.ok(do_get_backup_file(profile).exists());
-  Assert.equal(do_get_backup_file(profile).fileSize, size);
+  Assert.ok(do_get_backup_file().exists());
+  Assert.equal(do_get_backup_file().fileSize, size);
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
-  do_get_backup_file(profile).remove(false);
+  do_get_backup_file().remove(false);
   Assert.ok(!do_get_cookie_file(profile).exists());
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 }
 
 async function run_test_4() {
@@ -382,7 +382,7 @@ async function run_test_4() {
       contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
     });
     for (let i = 0; i < 3000; ++i) {
-      let uri = NetUtil.newURI("http://" + i + ".com/");
+      uri = NetUtil.newURI("http://" + i + ".com/");
       Services.cookies.setCookieStringFromHttp(
         uri,
         "oh=hai; max-age=1000",
@@ -402,7 +402,7 @@ async function run_test_4() {
 
   // At this point, the database connection should be open. Ensure that it
   // succeeded.
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 
   // Recreate a new database since it was corrupted
   Assert.equal(Services.cookies.countCookiesFromHost("0.com"), 0);
@@ -422,8 +422,8 @@ async function run_test_4() {
   await promise_close_profile();
 
   // Check that the original database was renamed.
-  Assert.ok(do_get_backup_file(profile).exists());
-  Assert.equal(do_get_backup_file(profile).fileSize, size);
+  Assert.ok(do_get_backup_file().exists());
+  Assert.equal(do_get_backup_file().fileSize, size);
 
   // Load the profile, and check that it contains the new cookie.
   do_load_profile();
@@ -435,9 +435,9 @@ async function run_test_4() {
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
-  do_get_backup_file(profile).remove(false);
+  do_get_backup_file().remove(false);
   Assert.ok(!do_get_cookie_file(profile).exists());
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 }
 
 async function run_test_5() {
@@ -456,7 +456,7 @@ async function run_test_5() {
       channel
     );
     for (let i = 0; i < 3000; ++i) {
-      let uri = NetUtil.newURI("http://" + i + ".com/");
+      uri = NetUtil.newURI("http://" + i + ".com/");
       Services.cookies.setCookieStringFromHttp(
         uri,
         "oh=hai; max-age=1000",
@@ -476,15 +476,15 @@ async function run_test_5() {
 
   // At this point, the database connection should be open. Ensure that it
   // succeeded.
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 
   // Recreate a new database since it was corrupted
   Assert.equal(Services.cookies.countCookiesFromHost("bar.com"), 0);
   Assert.equal(Services.cookies.countCookiesFromHost("0.com"), 0);
   Assert.equal(do_count_cookies(), 0);
-  Assert.ok(do_get_backup_file(profile).exists());
-  Assert.equal(do_get_backup_file(profile).fileSize, size);
-  Assert.ok(!do_get_rebuild_backup_file(profile).exists());
+  Assert.ok(do_get_backup_file().exists());
+  Assert.equal(do_get_backup_file().fileSize, size);
+  Assert.ok(!do_get_rebuild_backup_file().exists());
 
   // Open a database connection, and write a row that will trigger a constraint
   // violation.
@@ -495,8 +495,8 @@ async function run_test_5() {
   db.close();
 
   // Check that the original backup and the database itself are gone.
-  Assert.ok(do_get_backup_file(profile).exists());
-  Assert.equal(do_get_backup_file(profile).fileSize, size);
+  Assert.ok(do_get_backup_file().exists());
+  Assert.equal(do_get_backup_file().fileSize, size);
 
   Assert.equal(Services.cookies.countCookiesFromHost("bar.com"), 0);
   Assert.equal(Services.cookies.countCookiesFromHost("0.com"), 0);
@@ -508,7 +508,7 @@ async function run_test_5() {
 
   // Clean up.
   do_get_cookie_file(profile).remove(false);
-  do_get_backup_file(profile).remove(false);
+  do_get_backup_file().remove(false);
   Assert.ok(!do_get_cookie_file(profile).exists());
-  Assert.ok(!do_get_backup_file(profile).exists());
+  Assert.ok(!do_get_backup_file().exists());
 }

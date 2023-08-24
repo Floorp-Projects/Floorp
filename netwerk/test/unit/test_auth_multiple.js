@@ -396,7 +396,7 @@ add_task(async function test_ntlm_first() {
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   let [req, buf] = await new Promise(resolve => {
     chan.asyncOpen(
-      new ChannelListener((req, buf) => resolve([req, buf]), null)
+      new ChannelListener((request, buffer) => resolve([request, buffer]), null)
     );
   });
   Assert.equal(buf, "OK");
@@ -415,7 +415,7 @@ add_task(async function test_basic_first() {
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   let [req, buf] = await new Promise(resolve => {
     chan.asyncOpen(
-      new ChannelListener((req, buf) => resolve([req, buf]), null)
+      new ChannelListener((request, buffer) => resolve([request, buffer]), null)
     );
   });
   Assert.equal(buf, "success");
@@ -434,7 +434,7 @@ add_task(async function test_digest_first() {
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   let [req, buf] = await new Promise(resolve => {
     chan.asyncOpen(
-      new ChannelListener((req, buf) => resolve([req, buf]), null)
+      new ChannelListener((request, buffer) => resolve([request, buffer]), null)
     );
   });
   Assert.equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
@@ -456,7 +456,7 @@ add_task(async function test_choose_most_secure() {
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   let [req, buf] = await new Promise(resolve => {
     chan.asyncOpen(
-      new ChannelListener((req, buf) => resolve([req, buf]), null)
+      new ChannelListener((request, buffer) => resolve([request, buffer]), null)
     );
   });
   Assert.equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
