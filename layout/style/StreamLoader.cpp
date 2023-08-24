@@ -62,6 +62,19 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
         TaskQueue::Create(sts.forget(), "css::StreamLoader Delivery Queue");
     rr->RetargetDeliveryTo(queue);
   }
+
+  mSheetLoadData->mExpirationTime = [&] {
+    auto info = nsContentUtils::GetSubresourceCacheValidationInfo(
+        aRequest, mSheetLoadData->mURI);
+
+    // For now, we never cache entries that we have to revalidate, or whose
+    // channel don't support caching.
+    if (info.mMustRevalidate || !info.mExpirationTime) {
+      return nsContentUtils::SecondsFromPRTime(PR_Now()) - 1;
+    }
+    return *info.mExpirationTime;
+  }();
+
   return NS_OK;
 }
 
@@ -81,8 +94,7 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   {
     // Hold the nsStringBuffer for the bytes from the stack to ensure release
     // no matter which return branch is taken.
-    nsCString bytes(mBytes);
-    mBytes.Truncate();
+    nsCString bytes = std::move(mBytes);
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
@@ -119,26 +131,15 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     }
 
     if (validated == bytes.Length()) {
-      // Either this is UTF-8 and all valid, or it's not UTF-8 but is an
-      // empty string. This assumes that an empty string in any encoding
-      // decodes to empty string, which seems like a plausible assumption.
-      utf8String.Assign(bytes);
+      // Either this is UTF-8 and all valid, or it's not UTF-8 but is an empty
+      // string. This assumes that an empty string in any encoding decodes to
+      // empty string, which seems like a plausible assumption.
+      utf8String = std::move(bytes);
     } else {
       rv = encoding->DecodeWithoutBOMHandling(bytes, utf8String, validated);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }  // run destructor for `bytes`
-
-  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(
-      aRequest, mSheetLoadData->mURI);
-
-  // For now, we never cache entries that we have to revalidate, or whose
-  // channel don't support caching.
-  if (!info.mExpirationTime || info.mMustRevalidate) {
-    info.mExpirationTime =
-        Some(nsContentUtils::SecondsFromPRTime(PR_Now()) - 1);
-  }
-  mSheetLoadData->mExpirationTime = *info.mExpirationTime;
 
   // For reasons I don't understand, factoring the below lines into
   // a method on SheetLoadData resulted in a linker error. Hence,
