@@ -960,13 +960,7 @@ impl<'a, A: HalApi> RenderPassInfo<'a, A> {
 
             (is_depth_read_only, is_stencil_read_only) = at.depth_stencil_read_only(ds_aspects)?;
 
-            let usage = if is_depth_read_only
-                && is_stencil_read_only
-                && device
-                    .downlevel
-                    .flags
-                    .contains(wgt::DownlevelFlags::READ_ONLY_DEPTH_STENCIL)
-            {
+            let usage = if is_depth_read_only && is_stencil_read_only {
                 hal::TextureUses::DEPTH_STENCIL_READ | hal::TextureUses::RESOURCE
             } else {
                 hal::TextureUses::DEPTH_STENCIL_WRITE
@@ -1727,16 +1721,9 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         depth_max,
                     } => {
                         let scope = PassErrorScope::SetViewport;
-                        if rect.x < 0.0
-                            || rect.y < 0.0
-                            || rect.w <= 0.0
-                            || rect.h <= 0.0
-                            || rect.x + rect.w > info.extent.width as f32
-                            || rect.y + rect.h > info.extent.height as f32
-                        {
-                            return Err(RenderCommandError::InvalidViewportRect(
-                                *rect,
-                                info.extent,
+                        if rect.w <= 0.0 || rect.h <= 0.0 {
+                            return Err(RenderCommandError::InvalidViewportDimension(
+                                rect.w, rect.h,
                             ))
                             .map_pass_err(scope);
                         }

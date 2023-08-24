@@ -1435,12 +1435,17 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         closure: SubmittedWorkDoneClosure,
     ) -> Result<(), InvalidQueue> {
         //TODO: flush pending writes
-        let hub = A::hub(self);
-        let mut token = Token::root();
-        let (device_guard, mut token) = hub.devices.read(&mut token);
-        match device_guard.get(queue_id) {
-            Ok(device) => device.lock_life(&mut token).add_work_done_closure(closure),
-            Err(_) => return Err(InvalidQueue),
+        let closure_opt = {
+            let hub = A::hub(self);
+            let mut token = Token::root();
+            let (device_guard, mut token) = hub.devices.read(&mut token);
+            match device_guard.get(queue_id) {
+                Ok(device) => device.lock_life(&mut token).add_work_done_closure(closure),
+                Err(_) => return Err(InvalidQueue),
+            }
+        };
+        if let Some(closure) = closure_opt {
+            closure.call();
         }
         Ok(())
     }
