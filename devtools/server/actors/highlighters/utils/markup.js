@@ -275,7 +275,13 @@ CanvasFrameAnonymousContentHelper.prototype = {
       }
     }
 
-    const link = this.anonymousContentDocument.createElement("link");
+    // Use createElementNS to make sure this is an HTML element.
+    // Document.createElement's behavior is different between SVG and HTML
+    // documents, see bug 1850007.
+    const link = this.anonymousContentDocument.createElementNS(
+      XHTML_NS,
+      "link"
+    );
     link.href = STYLESHEET_URI;
     link.rel = "stylesheet";
     this._content.root.appendChild(link);
