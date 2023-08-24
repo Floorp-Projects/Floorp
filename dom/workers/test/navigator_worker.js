@@ -42,7 +42,7 @@ function startTest(channelData) {
     }
 
     if (
-      prop.nightly === !channelData.isNightly ||
+      prop.isNightly === !channelData.isNightly ||
       prop.release === !channelData.isRelease ||
       prop.isSecureContext === !isSecureContext ||
       prop.isAndroid === !channelData.isAndroid
