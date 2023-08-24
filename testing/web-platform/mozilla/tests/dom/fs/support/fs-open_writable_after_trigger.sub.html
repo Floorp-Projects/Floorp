@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<title>Child context test(s)</title>
+<head>
+  <script src="/resources/testharness.js"></script>
+  <script src="testHelpers.js"></script>
+</head>
+<body>
+  <div id="log"></div>
+  <script>
+    const channel = new BroadcastChannel("Coordinate writables");
+
+    let triggered = false;
+
+    channel.onmessage = e => {
+      if ("Create writable in the second window" === e.data) {
+        triggered = true;
+      }
+    };
+
+    channel.postMessage("Second window ready!");
+
+    promise_test(async t => {
+      try {
+        const maxWaitMs = 2000;
+        await waitUntil(() => { return triggered; }, maxWaitMs);
+        assert_true(triggered, "Did we receive a trigger?");
+
+        const dir = await navigator.storage.getDirectory();
+        const opts = { create: true };
+        const file = await dir.getFileHandle('funky-file-handle', opts);
+        let writable = await file.createWritable({});
+        t.add_cleanup(async () => { await writable.close(); });
+        assert_true(!!writable, "Did we receive a writable?");
+
+        channel.postMessage("Success");
+      } catch(err) {
+        channel.postMessage(err.message);
+
+        throw err;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<title>Child context test(s)</title>
+<head>
+  <script src="/resources/testharness.js"></script>
+</head>
+<body>
+  <div id="log"></div>
+  <script>
+    window.addEventListener('load', async () => {
+      const dir = await navigator.storage.getDirectory();
+      const opts = { create: true };
+      const file = await dir.getFileHandle('funky-file-handle', opts);
+      const writable = await file.createWritable({});
+
+      window.close();
+    });
+  </script>
+</body>
+</html>
