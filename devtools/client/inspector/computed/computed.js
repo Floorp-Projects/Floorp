@@ -942,6 +942,8 @@ class PropertyView {
     this.link = "https://developer.mozilla.org/docs/Web/CSS/" + name;
 
     this.#propertyInfo = new PropertyInfo(tree, name);
+    const win = this.tree.styleWindow;
+    this.#abortController = new win.AbortController();
   }
 
   // The parent element which contains the open attribute
@@ -949,9 +951,6 @@ class PropertyView {
 
   // Property header node
   propertyHeader = null;
-
-  // Destination for property names
-  nameNode = null;
 
   // Destination for property values
   valueNode = null;
@@ -964,6 +963,9 @@ class PropertyView {
 
   // Matched selector expando
   matchedExpander = null;
+
+  // AbortController for event listeners
+  #abortController = null;
 
   // Cache for matched selector views
   #matchedSelectorViews = null;
@@ -1070,12 +1072,17 @@ class PropertyView {
    */
   #buildMain() {
     const doc = this.tree.styleDocument;
+    const baseEventListenerConfig = { signal: this.#abortController.signal };
 
     // Build the container element
     this.onMatchedToggle = this.onMatchedToggle.bind(this);
     this.element = doc.createElementNS(HTML_NS, "div");
     this.element.setAttribute("class", this.propertyHeaderClassName);
-    this.element.addEventListener("dblclick", this.onMatchedToggle);
+    this.element.addEventListener(
+      "dblclick",
+      this.onMatchedToggle,
+      baseEventListenerConfig
+    );
 
     // Make it keyboard navigable
     this.element.setAttribute("tabindex", "0");
@@ -1104,34 +1111,38 @@ class PropertyView {
       "aria-label",
       STYLE_INSPECTOR_L10N.getStr("rule.twistyExpand.label")
     );
-    this.matchedExpander.addEventListener("click", this.onMatchedToggle);
+    this.matchedExpander.addEventListener(
+      "click",
+      this.onMatchedToggle,
+      baseEventListenerConfig
+    );
     nameContainer.appendChild(this.matchedExpander);
 
     // Build the style name element
-    this.nameNode = doc.createElementNS(HTML_NS, "span");
-    this.nameNode.classList.add("computed-property-name", "theme-fg-color3");
+    const nameNode = doc.createElementNS(HTML_NS, "span");
+    nameNode.classList.add("computed-property-name", "theme-fg-color3");
 
     // Give it a heading role for screen readers.
-    this.nameNode.setAttribute("role", "heading");
+    nameNode.setAttribute("role", "heading");
 
     // Reset its tabindex attribute otherwise, if an ellipsis is applied
     // it will be reachable via TABing
-    this.nameNode.setAttribute("tabindex", "");
+    nameNode.setAttribute("tabindex", "");
     // Avoid english text (css properties) from being altered
     // by RTL mode
-    this.nameNode.setAttribute("dir", "ltr");
-    this.nameNode.textContent = this.nameNode.title = this.name;
+    nameNode.setAttribute("dir", "ltr");
+    nameNode.textContent = nameNode.title = this.name;
     // Make it hand over the focus to the container
-    this.onFocus = () => this.element.focus();
-    this.nameNode.addEventListener("click", this.onFocus);
+    const focusElement = () => this.element.focus();
+    nameNode.addEventListener("click", focusElement, baseEventListenerConfig);
 
     // Build the style name ":" separator
     const nameSeparator = doc.createElementNS(HTML_NS, "span");
     nameSeparator.classList.add("visually-hidden");
     nameSeparator.textContent = ": ";
-    this.nameNode.appendChild(nameSeparator);
+    nameNode.appendChild(nameSeparator);
 
-    nameContainer.appendChild(this.nameNode);
+    nameContainer.appendChild(nameNode);
 
     const valueContainer = doc.createElementNS(HTML_NS, "span");
     valueContainer.className = "computed-property-value-container";
@@ -1145,7 +1156,11 @@ class PropertyView {
     this.valueNode.setAttribute("tabindex", "");
     this.valueNode.setAttribute("dir", "ltr");
     // Make it hand over the focus to the container
-    this.valueNode.addEventListener("click", this.onFocus);
+    this.valueNode.addEventListener(
+      "click",
+      focusElement,
+      baseEventListenerConfig
+    );
 
     // Build the style value ";" separator
     const valueSeparator = doc.createElementNS(HTML_NS, "span");
@@ -1363,17 +1378,14 @@ class PropertyView {
       }
     }
 
-    this.element.removeEventListener("dblclick", this.onMatchedToggle);
+    if (this.#abortController) {
+      this.#abortController.abort();
+      this.#abortController = null;
+    }
+
     this.shortcuts.destroy();
     this.element = null;
-
-    this.matchedExpander.removeEventListener("click", this.onMatchedToggle);
     this.matchedExpander = null;
-
-    this.nameNode.removeEventListener("click", this.onFocus);
-    this.nameNode = null;
-
-    this.valueNode.removeEventListener("click", this.onFocus);
     this.valueNode = null;
   }
 }
