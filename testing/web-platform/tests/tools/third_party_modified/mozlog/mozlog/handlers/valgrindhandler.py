@@ -31,7 +31,7 @@ class ValgrindFilter(object):
     ==60741==    by 0x63AEF65: PR_Calloc (prmem.c:443)
     ==60741==    by 0x69F236E: PORT_ZAlloc_Util (secport.c:117)
     ==60741==    by 0x69F1336: SECITEM_AllocItem_Util (secitem.c:28)
-    ==60741==    by 0xA04280B: ffi_call_unix64 (in /builds/slave/m-in-l64-valgrind-000000000000/objdir/toolkit/library/libxul.so) # noqa
+    ==60741==    by 0xA04280B: ffi_call_unix64 (in /builds/worker/m-in-l64-valgrind-000000000000/objdir/toolkit/library/libxul.so) # noqa
     ==60741==    by 0xA042443: ffi_call (ffi64.c:485)
 
     For each such error, this class extracts most or all of the first (error
