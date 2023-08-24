@@ -521,8 +521,7 @@ CssComputedView.prototype = {
           onItem: propertyName => {
             // Per-item callback.
             const propView = new PropertyView(this, propertyName);
-            fragment.appendChild(propView.buildMain());
-            fragment.appendChild(propView.buildSelectorContainer());
+            fragment.append(...propView.createElements());
 
             if (propView.visible) {
               this.numVisibleProperties++;
@@ -927,49 +926,53 @@ PropertyInfo.prototype = {
 
 /**
  * A container to give easy access to property data from the template engine.
- *
- * @param {CssComputedView} tree
- *        The CssComputedView instance we are working with.
- * @param {String} name
- *        The CSS property name for which this PropertyView
- *        instance will render the rules.
  */
-function PropertyView(tree, name) {
-  this.tree = tree;
-  this.name = name;
+class PropertyView {
+  /* @param {CssComputedView} tree
+   *        The CssComputedView instance we are working with.
+   * @param {String} name
+   *        The CSS property name for which this PropertyView
+   *        instance will render the rules.
+   */
 
-  this.link = "https://developer.mozilla.org/docs/Web/CSS/" + name;
+  constructor(tree, name) {
+    this.tree = tree;
+    this.name = name;
 
-  this._propertyInfo = new PropertyInfo(tree, name);
-}
+    this.link = "https://developer.mozilla.org/docs/Web/CSS/" + name;
 
-PropertyView.prototype = {
+    this.#propertyInfo = new PropertyInfo(tree, name);
+  }
+
   // The parent element which contains the open attribute
-  element: null,
+  element = null;
 
   // Property header node
-  propertyHeader: null,
+  propertyHeader = null;
 
   // Destination for property names
-  nameNode: null,
+  nameNode = null;
 
   // Destination for property values
-  valueNode: null,
+  valueNode = null;
 
   // Are matched rules expanded?
-  matchedExpanded: false,
+  matchedExpanded = false;
 
   // Matched selector container
-  matchedSelectorsContainer: null,
+  matchedSelectorsContainer = null;
 
   // Matched selector expando
-  matchedExpander: null,
+  matchedExpander = null;
 
   // Cache for matched selector views
-  _matchedSelectorViews: null,
+  #matchedSelectorViews = null;
 
   // The previously selected element used for the selector view caches
-  _prevViewedElement: null,
+  #prevViewedElement = null;
+
+  // PropertyInfo
+  #propertyInfo = null;
 
   /**
    * Get the computed style for the current property.
@@ -979,21 +982,21 @@ PropertyView.prototype = {
    */
   get value() {
     return this.propertyInfo.value;
-  },
+  }
 
   /**
    * An easy way to access the CssPropertyInfo behind this PropertyView.
    */
   get propertyInfo() {
-    return this._propertyInfo;
-  },
+    return this.#propertyInfo;
+  }
 
   /**
    * Does the property have any matched selectors?
    */
   get hasMatchedSelectors() {
     return this.tree.matchedProperties.has(this.name);
-  },
+  }
 
   /**
    * Should this property be visible?
@@ -1018,7 +1021,7 @@ PropertyView.prototype = {
     }
 
     return this.propertyInfo.isSupported;
-  },
+  }
 
   /**
    * Returns the className that should be assigned to the propertyView.
@@ -1033,7 +1036,7 @@ PropertyView.prototype = {
         : "computed-property-view";
     }
     return "computed-property-hidden";
-  },
+  }
 
   /**
    * Returns the className that should be assigned to the propertyView content
@@ -1049,14 +1052,23 @@ PropertyView.prototype = {
         : "computed-property-content";
     }
     return "computed-property-hidden";
-  },
+  }
+
+  /**
+   * Create DOM elements for a property
+   *
+   * @return {Array<Element>}
+   */
+  createElements() {
+    return [this.#buildMain(), this.#buildSelectorContainer()];
+  }
 
   /**
    * Build the markup for on computed style
    *
    * @return {Element}
    */
-  buildMain() {
+  #buildMain() {
     const doc = this.tree.styleDocument;
 
     // Build the container element
@@ -1144,9 +1156,9 @@ PropertyView.prototype = {
     valueContainer.appendChild(valueSeparator);
 
     return this.element;
-  },
+  }
 
-  buildSelectorContainer() {
+  #buildSelectorContainer() {
     const doc = this.tree.styleDocument;
     const element = doc.createElementNS(HTML_NS, "div");
     element.setAttribute("class", this.propertyContentClassName);
@@ -1155,7 +1167,7 @@ PropertyView.prototype = {
     element.appendChild(this.matchedSelectorsContainer);
 
     return element;
-  },
+  }
 
   /**
    * Refresh the panel's CSS property value.
@@ -1164,9 +1176,9 @@ PropertyView.prototype = {
     this.element.className = this.propertyHeaderClassName;
     this.element.nextElementSibling.className = this.propertyContentClassName;
 
-    if (this._prevViewedElement !== this.tree._viewedElement) {
-      this._matchedSelectorViews = null;
-      this._prevViewedElement = this.tree._viewedElement;
+    if (this.#prevViewedElement !== this.tree._viewedElement) {
+      this.#matchedSelectorViews = null;
+      this.#prevViewedElement = this.tree._viewedElement;
     }
 
     if (!this.tree._viewedElement || !this.visible) {
@@ -1199,7 +1211,7 @@ PropertyView.prototype = {
     this.valueNode.appendChild(frag);
 
     this.refreshMatchedSelectors();
-  },
+  }
 
   /**
    * Refresh the panel matched rules.
@@ -1224,7 +1236,7 @@ PropertyView.prototype = {
 
           this._matchedSelectorResponse = matched;
 
-          this._buildMatchedSelectors();
+          this.#buildMatchedSelectors();
           this.matchedExpander.setAttribute("open", "");
           this.matchedExpander.setAttribute(
             "aria-label",
@@ -1243,13 +1255,13 @@ PropertyView.prototype = {
     );
     this.tree.inspector.emit("computed-view-property-collapsed");
     return Promise.resolve(undefined);
-  },
+  }
 
   get matchedSelectors() {
     return this._matchedSelectorResponse;
-  },
+  }
 
-  _buildMatchedSelectors() {
+  #buildMatchedSelectors() {
     const frag = this.element.ownerDocument.createDocumentFragment();
 
     for (const selector of this.matchedSelectorViews) {
@@ -1301,22 +1313,22 @@ PropertyView.prototype = {
 
     this.matchedSelectorsContainer.innerHTML = "";
     this.matchedSelectorsContainer.appendChild(frag);
-  },
+  }
 
   /**
    * Provide access to the matched SelectorViews that we are currently
    * displaying.
    */
   get matchedSelectorViews() {
-    if (!this._matchedSelectorViews) {
-      this._matchedSelectorViews = [];
+    if (!this.#matchedSelectorViews) {
+      this.#matchedSelectorViews = [];
       this._matchedSelectorResponse.forEach(selectorInfo => {
         const selectorView = new SelectorView(this.tree, selectorInfo);
-        this._matchedSelectorViews.push(selectorView);
+        this.#matchedSelectorViews.push(selectorView);
       }, this);
     }
-    return this._matchedSelectorViews;
-  },
+    return this.#matchedSelectorViews;
+  }
 
   /**
    * The action when a user expands matched selectors.
@@ -1332,21 +1344,21 @@ PropertyView.prototype = {
     this.matchedExpanded = !this.matchedExpanded;
     this.refreshMatchedSelectors();
     event.preventDefault();
-  },
+  }
 
   /**
    * The action when a user clicks on the MDN help link for a property.
    */
   mdnLinkClick(event) {
     openContentLink(this.link);
-  },
+  }
 
   /**
    * Destroy this property view, removing event listeners
    */
   destroy() {
-    if (this._matchedSelectorViews) {
-      for (const view of this._matchedSelectorViews) {
+    if (this.#matchedSelectorViews) {
+      for (const view of this.#matchedSelectorViews) {
         view.destroy();
       }
     }
@@ -1363,8 +1375,8 @@ PropertyView.prototype = {
 
     this.valueNode.removeEventListener("click", this.onFocus);
     this.valueNode = null;
-  },
-};
+  }
+}
 
 /**
  * A container to give us easy access to display data from a CssRule
