@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1692715688843,
+      "derHash": "xulqF0VwcJnwInlHL6KKmbrkR9d1EeGehrrzBHZRwes=",
+      "subject": "CN=TWCA Secure SSL Certification Authority,OU=Secure SSL Sub-CA,O=TAIWAN-CA,C=TW",
+      "subjectDN": "MG8xCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExGjAYBgNVBAsTEVNlY3VyZSBTU0wgU3ViLUNBMTAwLgYDVQQDEydUV0NBIFNlY3VyZSBTU0wgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1102f22c76cebba017a34d47a919c003600a2fe0525dae669f48d49f619dea57",
+        "size": 2085,
+        "filename": "0ypLOVQVk99vHTj2x0rvkv-Dq5vQXLD6szOPfHlmXIE=.pem",
+        "location": "security-state-staging/intermediates/2b385c86-6fdd-4e4e-8d73-0bf5864afd50.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0ypLOVQVk99vHTj2x0rvkv+Dq5vQXLD6szOPfHlmXIE=",
+      "crlite_enrolled": false,
+      "id": "0f1ed81c-66c3-428c-b5d5-f9c8a4a3f5bb",
+      "last_modified": 1692716223578
+    },
+    {
       "schema": 1692154077124,
       "derHash": "ZSPDTx6Hmt12A8sgSKiYpeLwxsS1EsDSJ4K4XUOuM3E=",
       "subject": "CN=DigiCert Global Root G2,OU=www.digicert.com,O=DigiCert Inc,C=US",
@@ -28873,5 +28891,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1692284223687
+  "timestamp": 1692716223578
 }
