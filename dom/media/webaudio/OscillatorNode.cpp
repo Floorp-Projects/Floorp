@@ -181,13 +181,13 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     float finalFrequency = frequency * mDetuneRatio;
     mRecomputeParameters = false;
 
-    mPhaseIncrement = 2 * M_PI * finalFrequency / mSource->mSampleRate;
-
-    if (finalFrequency != mFinalFrequency) {
-      mFinalFrequency = finalFrequency;
-      return true;
+    if (finalFrequency == mFinalFrequency) {
+      return false;
     }
-    return false;
+
+    mFinalFrequency = finalFrequency;
+    mPhaseIncrement = 2 * M_PI * finalFrequency / mSource->mSampleRate;
+    return true;
   }
 
   void FillBounds(float* output, TrackTime ticks, uint32_t& start,
