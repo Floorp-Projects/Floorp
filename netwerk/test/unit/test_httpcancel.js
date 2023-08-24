@@ -248,8 +248,8 @@ function cancel_middle(metadata, response) {
     cancelDuringOnDataListener.receivedSomeData = resolve;
   });
   p.then(() => {
-    let str2 = "b".repeat(128 * 1024);
-    response.write(str2, str2.length);
+    let str1 = "b".repeat(128 * 1024);
+    response.write(str1, str1.length);
     response.finish();
   });
 }

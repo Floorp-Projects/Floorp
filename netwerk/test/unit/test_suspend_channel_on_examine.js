@@ -20,6 +20,8 @@ function onExamineListener(callback) {
   obs.addObserver(
     {
       observe(subject, topic, data) {
+        var obs = Cc["@mozilla.org/observer-service;1"].getService();
+        obs = obs.QueryInterface(Ci.nsIObserverService);
         obs.removeObserver(this, "http-on-examine-response");
         callback(subject.QueryInterface(Ci.nsIHttpChannel));
       },
@@ -28,9 +30,9 @@ function onExamineListener(callback) {
   );
 }
 
-function startChannelRequest(uri, flags, callback) {
+function startChannelRequest(baseUrl, flags, callback) {
   var chan = NetUtil.newChannel({
-    uri,
+    uri: baseUrl,
     loadUsingSystemPrincipal: true,
   });
   chan.asyncOpen(new ChannelListener(callback, null, flags));
