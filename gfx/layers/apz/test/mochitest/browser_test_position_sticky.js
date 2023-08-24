@@ -55,6 +55,12 @@ add_task(async () => {
 
       // Reduce the scrollbar width from the sticky area.
       stickyRect.width -= w.value;
+
+      // Reduce the rect a bit vertically to avoid antialiasing and overscroll
+      // artifacts.
+      stickyRect.height -= 2;
+      stickyRect.x += 1;
+
       return {
         rect: stickyRect,
         scrollbarWidth: w.value,

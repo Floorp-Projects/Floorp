@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1369072
 <div id="content" style="display: none">
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
@@ -29,6 +29,11 @@ SimpleTest.waitForFocus(runTests, window);
 function ok()
 {
   window.opener.ok.apply(window.opener, arguments);
+}
+
+function info()
+{
+  window.opener.info.apply(window.opener, arguments);
 }
 
 function is()
@@ -89,23 +94,38 @@ async function runTests()
   {
     await resetScroll();
 
-    return new Promise(resolve => {
-      // Wait scroll event
-      function onScroll() {
-        SimpleTest.executeSoon(resolve);
-      }
-      window.addEventListener("scroll", onScroll, { once: true });
-      iframe.contentWindow.addEventListener("scroll", onScroll, { once: true });
+    function promiseScrollOnWindow(win) {
+      is(win.document.documentElement.scrollTop, 0, "Reset didn't work?");
+      is(win.document.documentElement.scrollLeft, 0, "Reset didn't work?");
 
-      if (aVertical) {
-        synthesizeKey("KEY_ArrowDown");
-      } else {
-        synthesizeKey("KEY_ArrowRight");
-      }
-    });
+      return new Promise(resolve => {
+        win.addEventListener("scroll", function listener() {
+          // FIXME(bug 1674687): The first scroll might be fractional (and
+          // scrollTop / Left will round down to zero until bug 1674687 is
+          // fixed). So make sure we've scrolled at least a pixel before
+          // resolving. This can be removed once bug 1674687 is fixed.
+          if (win.document.documentElement.scrollLeft || win.document.documentElement.scrollTop) {
+            win.removeEventListener("scroll", listener);
+            SimpleTest.executeSoon(resolve);
+          }
+        });
+      });
+    }
+
+    let promise = Promise.race([
+      promiseScrollOnWindow(window),
+      promiseScrollOnWindow(iframe.contentWindow),
+    ]);
+
+    if (aVertical) {
+      synthesizeKey("KEY_ArrowDown");
+    } else {
+      synthesizeKey("KEY_ArrowRight");
+    }
+    return promise;
   }
 
-  // When iframe element has focus and the iframe document isn't scrollable, the parent document should be scrolled instead.
+  info("When iframe element has focus and the iframe document isn't scrollable, the parent document should be scrolled instead.");
   document.body.focus();
   iframe.focus();
   await tryToScrollWithKey(true);
@@ -114,7 +134,7 @@ async function runTests()
   ok(document.documentElement.scrollLeft > 0, "ArrowRight keydown event at the iframe whose content is not scrollable should cause scrolling the parent document");
   await resetScroll();
 
-  // When iframe element has focus and the iframe document scrollable, the parent document shouldn't be scrolled.
+  info("When iframe element has focus and the iframe document scrollable, the parent document shouldn't be scrolled.");
   document.body.focus();
   div.style.height = "1000px";
   div.style.width = "1000px";
@@ -127,7 +147,7 @@ async function runTests()
   ok(iframe.contentDocument.documentElement.scrollLeft > 0, "ArrowRight keydown event at the iframe whose content is scrollable should cause scrolling the iframe document");
   await resetScroll();
 
-  // If iframe document cannot scroll to specific direction, parent document should be scrolled instead.
+  info("If iframe document cannot scroll to specific direction, parent document should be scrolled instead.");
   div.style.height = "1px";
   div.style.width = "1000px";
   iframe.focus();
@@ -148,7 +168,7 @@ async function runTests()
   ok(document.documentElement.scrollLeft > 0, "ArrowRight keydown event at the iframe whose content is scrollable only vertically should cause scrolling the parent document");
   await resetScroll();
 
-  // Hidden iframe shouldn't consume keyboard events if it was not scrollable.
+  info("Hidden iframe shouldn't consume keyboard events if it was not scrollable.");
   document.body.focus();
   anchor.focus();
   iframe.style.display = "none";
