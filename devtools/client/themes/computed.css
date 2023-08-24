@@ -73,21 +73,13 @@
   user-select: text;
   overflow-y: auto;
   overflow-x: hidden;
-  flex: auto;
-  border-top: 1px solid var(--theme-splitter-color);
-  margin-top: -1px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 #computed-property-container > :nth-child(2n of .computed-property-view) {
   background: var(--row-striped-background);
-
-  /*
-   * The matched selectors element is a sibling of .computed-property-view, but we need to
-   * make it appear like it's "inside" it and want to apply the same background color.
-   */
-  & + .computed-property-content {
-    background: var(--row-striped-background);
-  }
 }
 
 .computed-property-hidden {
@@ -144,8 +136,17 @@
   outline: 0 !important;
 }
 
-.computed-property-content {
-  padding-inline-start: 17px;
+.matchedselectors {
+  width: 100%;
+  padding-inline-start: 12px;
+
+  /*
+   * Matched selectors element is always created, but is empty until the arrow is expanded.
+   * We only want the margin to appear when the matched selectors are visible.
+   */
+  &:not(:empty) {
+    margin-block-start: 4px;
+  }
 }
 
 /* Bug 1360238 - getSelection displays an extra "\n" on multiple sibling block elements.
