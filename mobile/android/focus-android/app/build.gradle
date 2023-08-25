@@ -174,7 +174,7 @@ tasks.withType(KotlinCompile).configureEach {
             "-opt-in=kotlin.RequiresOptIn",
             "-Xjvm-default=all"
     ]
-    kotlinOptions.jvmTarget = '11'
+    kotlinOptions.jvmTarget = '17'
 }
 
 // -------------------------------------------------------------------------------------------------
