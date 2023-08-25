@@ -23,7 +23,7 @@ registerCleanupFunction(async () => {
  */
 function promiseObserverNotification(topic, matchFunc) {
   return new Promise((resolve, reject) => {
-    Services.obs.addObserver(function observe(subject, topic, data) {
+    Services.obs.addObserver(function observe(subject, topic1, data) {
       let matches = typeof matchFunc != "function" || matchFunc(subject, data);
       if (!matches) {
         return;

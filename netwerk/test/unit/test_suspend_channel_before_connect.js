@@ -43,8 +43,6 @@ var requestListenerObserver = {
     ) {
       var chan = subject.QueryInterface(Ci.nsIHttpChannel);
       chan.suspend();
-      var obs = Cc["@mozilla.org/observer-service;1"].getService();
-      obs = obs.QueryInterface(Ci.nsIObserverService);
       obs.removeObserver(this, "http-on-modify-request");
 
       // Timers are bad, but we need to wait to see that we are not trying to

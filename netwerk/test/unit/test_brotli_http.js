@@ -29,8 +29,8 @@ add_task(async function check_brotli() {
     let [, buff] = await new Promise(resolve => {
       chan.asyncOpen(
         new ChannelListener(
-          (req, buff) => {
-            resolve([req, buff]);
+          (req, buff1) => {
+            resolve([req, buff1]);
           },
           null,
           CL_IGNORE_CL
@@ -109,7 +109,7 @@ add_task(
       });
       chan.asyncOpen(
         new ChannelListener(
-          (req, buff) => resolve({ req, buff }),
+          (req1, buff1) => resolve({ req: req1, buff: buff1 }),
           null,
           CL_ALLOW_UNKNOWN_CL
         )
