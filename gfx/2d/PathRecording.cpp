@@ -277,7 +277,7 @@ void PathBuilderRecording::Arc(const Point& aOrigin, float aRadius,
 
 already_AddRefed<Path> PathBuilderRecording::Finish() {
   return MakeAndAddRef<PathRecording>(mBackendType, std::move(mPathOps),
-                                      mFillRule, mBeginPoint, mCurrentPoint);
+                                      mFillRule, mCurrentPoint, mBeginPoint);
 }
 
 PathRecording::PathRecording(BackendType aBackend, PathOps&& aOps,
