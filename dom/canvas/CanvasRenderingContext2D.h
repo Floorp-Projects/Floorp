@@ -779,6 +779,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     return CurrentState().font;
   }
 
+  bool GetEffectiveWillReadFrequently() const;
+
   // Member vars
   int32_t mWidth, mHeight;
 
