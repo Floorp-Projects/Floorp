@@ -1153,7 +1153,7 @@ static int GetOpusDeltaGP(ogg_packet* packet) {
     return nframes * opus_packet_get_samples_per_frame(packet->packet, 48000);
   }
   NS_WARNING("Invalid Opus packet.");
-  return nframes;
+  return 0;
 }
 
 TimeUnit OpusState::PacketDuration(ogg_packet* aPacket) {
