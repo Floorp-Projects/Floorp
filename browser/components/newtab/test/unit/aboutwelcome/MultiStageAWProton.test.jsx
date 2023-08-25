@@ -278,6 +278,25 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.ok(wrapper.exists());
       assert.equal(wrapper.find("[layout='inline']").exists(), true);
     });
+
+    it("should render an inline image with alt text and height property", async () => {
+      const SCREEN_PROPS = {
+        content: {
+          inline_image: {
+            url: "https://example.com/test.svg",
+            height: "auto",
+            alt_text: "test alt text",
+          },
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      const imageEl = wrapper.find(".inline-image img");
+      assert.equal(imageEl.exists(), true);
+      assert.propertyVal(imageEl.prop("style"), "height", "auto");
+      const altTextCointainer = wrapper.find(".sr-only");
+      assert.equal(altTextCointainer.contains("test alt text"), true);
+    });
   });
 
   describe("AboutWelcomeDefaults for proton", () => {

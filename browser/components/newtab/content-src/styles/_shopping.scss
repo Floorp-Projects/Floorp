@@ -5,12 +5,26 @@
 .onboardingContainer.shopping .screen[pos='split'] {
   height: auto;
 
+  // reset box-shadow
+  &::before {
+    content: none;
+  }
+
   .section-main {
     width: auto;
     margin: 0 auto;
+    height: auto;
 
     .main-content {
       border-radius: 0;
+
+      .inline-image {
+        margin-bottom: 26px;
+      }
+
+      &.no-steps {
+        padding: 16px 0 36px;
+      }
 
       .welcome-text h1 {
         width: auto;
