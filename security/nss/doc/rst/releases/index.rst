@@ -8,6 +8,7 @@ Releases
    :glob:
    :hidden:
 
+   nss_3_93.rst
    nss_3_92.rst
    nss_3_91_0.rst
    nss_3_90_0.rst
@@ -56,7 +57,7 @@ Releases
 
 .. note::
 
-   **NSS 3.92.0** is the latest version of NSS.
+   **NSS 3.93.0** is the latest version of NSS.
    Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_91_0_release_notes`
 
    **NSS 3.90.0 (ESR)** is the latest version of NSS.
@@ -64,15 +65,8 @@ Releases
 
 .. container::
 
-   Changes in 3.92 included in this release:
+   Changes in 3.93 included in this release:
 
-   - Bug 1822935 - Set nssckbi version number to 2.62.
-   - Bug 1833270 - Add 4 Atos TrustedRoot Root CA certificates to NSS.
-   - Bug 1839992 - Add 4 SSL.com Root CA certificates.
-   - Bug 1840429 - Add Sectigo E46 and R46 Root CA certificates.
-   - Bug 1840437 - Add LAWtrust Root CA2 (4096).
-   - Bug 1822936 - Remove E-Tugra Certification Authority root. 
-   - Bug 1827224 - Remove Camerfirma Chambers of Commerce Root.
-   - Bug 1840505 - Remove Hongkong Post Root CA 1.
-   - Bug 1842928 - Remove E-Tugra Global Root CA ECC v3 and RSA v3.
-   - Bug 1842937 - Avoid redefining BYTE_ORDER on hppa Linux.
+   - Bug 1849471 - Update zlib in NSS to 1.3.
+   - Bug 1848183 - softoken: iterate hashUpdate calls for long inputs.
+   - Bug 1813401 - regenerate NameConstraints test certificates.
