@@ -25,6 +25,8 @@ exclude: true
 - Added [`getExperimentDelegate`][118.9] and [`setExperimentDelegate`][118.10] to the GeckoSession allow GeckoView to get and set the experiment delegate for the session. Default is to use the runtime delegate.
 - ⚠️ Deprecated [`onGetNimbusFeature`][115.5] by 122, please use `ExperimentDelegate.onGetExperimentFeature` instead.
 - Added [`GeckoRuntimeSettings.Builder.extensionsProcessEnabled`][118.11] for setting whether extensions process is enabled. ([bug 1843926]({{bugzilla}}1843926))
+- Added [`ExtensionProcessDelegate`][118.12] to allow GeckoView to notify disabling of the extension process spawning due to excessive crash/kill. ([bug 1819737]({{bugzilla}}1819737))
+- Added [`enableExtensionProcessSpawning`][118.13] for enabling the extension process spawning
 
 [118.1]: {{javadoc_uri}}/ExperimentDelegate.html
 [118.2]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_BLOCKLISTED
@@ -37,6 +39,8 @@ exclude: true
 [118.9]: {{javadoc_uri}}/GeckoSession.html#getExperimentDelegate()
 [118.10]: {{javadoc_uri}}/GeckoSession.html#setExperimentDelegate(org.mozilla.geckoview.ExperimentDelegate)
 [118.11]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#extensionsProcessEnabled(Boolean)
+[118.12]: {{javadoc_uri}}/WebExtensionController.ExtensionProcessDelegate.html
+[118.13]: {{javadoc_uri}}/WebExtensionController.html#enableExtensionProcessSpawning
 
 ## v116
 - Added [`GeckoSession.didPrintPageContent`][116.1] to included extra print status for a standard print and new `GeckoPrintException.ERROR_NO_PRINT_DELEGATE`
@@ -1417,4 +1421,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 5743799f9da8509cfb6546e154f0e2d7989edc72
+[api-version]: 1b85a4f582547bb6ca01fad7bc36344a3179b28f
