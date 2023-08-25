@@ -4,6 +4,7 @@
 
 <!-- Privacy panel -->
 
+<script src="chrome://browser/content/preferences/floorp-privacy.js"/>
 <script src="chrome://browser/content/preferences/privacy.js"/>
 <stringbundle id="signonBundle" src="chrome://passwordmgr/locale/passwordmgr.properties"/>
 <html:template id="template-panePrivacy">
@@ -343,6 +344,56 @@
       </radiogroup>
     </vbox>
   </vbox>
+</groupbox>
+
+<groupbox id="blockmoretrackers" data-category="panePrivacy" hidden="true">
+   <label><html:h2 data-l10n-id="block-more-tracker"/></label>
+   <description  data-l10n-id="block-tracker"/>
+
+   <vbox class="uBlockOrigin ContentBlockBox">
+     <html:h3 class="uBlockOrigin addonRecommend-header" data-l10n-id="uBlock-Origin"/>
+     <hbox class="addonRecommend-box">
+      <image id="uBlockOriginImg" class="addonRecommend-img" style="background-image: url('https://addons.mozilla.org/user-media/addon_icons/607/607454-64.png');"/>
+      <vbox class="addonRecommend-label-box">
+        <description id="AddonRecommend" data-l10n-id="about-uboori"/>
+        <label class="AMO-Link" id="AMO-UO" is="text-link" href="https://addons.mozilla.org/ja/firefox/addon/ublock-origin/" data-l10n-id="view-at-AMO"/>
+      </vbox>
+     </hbox>
+   </vbox>
+
+   <vbox class="FacebookContainer ContentBlockBox">
+    <html:h3 class="FacebookContainer addonRecommend-header" data-l10n-id="Facebook-Container"/>
+    <hbox class="addonRecommend-box">
+      <image id="FacebookContainerImg" class="addonRecommend-img" style="background-image: url('https://addons.mozilla.org/user-media/addon_icons/954/954390-64.png');"/>
+      <vbox class="addonRecommend-label-box">
+       <description id="AddonRecommend" data-l10n-id="about-Facebook-Container"/>
+       <label class="AMO-Link" is="text-link" href="https://addons.mozilla.org/firefox/addon/facebook-container/" data-l10n-id="view-at-AMO"></label>
+      </vbox>
+     </hbox>
+   </vbox>
+ </groupbox>
+
+ <groupbox id="fingerprint" data-category="panePrivacy" hidden="true">
+  <label><html:h2 data-l10n-id="fingerprint-header"/></label>
+  <description class="indent tip-caption" data-l10n-id="block-fingerprint"/>
+  <hbox>
+    <description data-l10n-id="enable-firefox-fingerprint-protections"></description>
+    <checkbox preference="privacy.resistFingerprinting"/>
+    <label class="learnMore" is="text-link" href="https://support.mozilla.org/kb/firefox-protection-against-fingerprinting" data-l10n-id="do-not-track-learn-more"></label>
+  </hbox>
+  <description class="indent tip-caption" data-l10n-id="about-firefox-fingerprint-protection"/>
+  <checkbox preference="privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts"
+            id="fingerprintProtection" data-l10n-id="html5-canvas-prompt-settings"/>
+      <description class="indent tip-caption"
+                   id="fingerprintDiscription" data-l10n-id="canvas-prompt"/>
+  <checkbox preference="webgl.disabled"
+            id="webgl" data-l10n-id="disable-webgl"/>
+      <description class="indent tip-caption"
+                   id="webgldiscription" data-l10n-id="about-webgl"/>
+  <checkbox preference="media.peerconnection.enabled"
+            id="wertc" data-l10n-id="WebRTC"/>
+      <description class="indent tip-caption"
+                   id="webrtcDiscription" data-l10n-id="WebRTC-connection"/>
 </groupbox>
 
 <!-- Site Data -->

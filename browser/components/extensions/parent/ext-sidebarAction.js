@@ -52,6 +52,27 @@ this.sidebarAction = class extends ExtensionAPI {
     };
     this.globals = Object.create(this.defaults);
 
+
+/****************************************** Floorp ************************************************************************************/
+
+    let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+    let prefObj = JSON.parse(Services.prefs.getStringPref("floorp.extensions.webextensions.sidebar-action"));
+
+    const keys = Object.keys(this.defaults.icon);
+    const lastKey = keys[keys.length - 1];
+    const lastURL = this.defaults.icon[lastKey];
+
+    if (!prefObj.data[extension.id]) {
+      prefObj.data[extension.id] = {
+        title: this.defaults.title,
+        panel: this.defaults.panel,
+        icon: lastURL,
+      }
+    }
+    Services.prefs.setStringPref("floorp.extensions.webextensions.sidebar-action", JSON.stringify(prefObj));
+
+/**************************************************************************************************************************************/
+
     this.tabContext = new TabContext(target => {
       let window = target.ownerGlobal;
       if (target === window) {

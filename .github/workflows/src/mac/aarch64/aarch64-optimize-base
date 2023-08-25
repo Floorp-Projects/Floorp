@@ -1,0 +1,4 @@
+ac_add_options --target=aarch64-apple-darwin
+ac_add_options --enable-optimize="-O3 -mcpu=apple-m1 -w"
+
+export RUSTFLAGS="-Ctarget-cpu=apple-m1"

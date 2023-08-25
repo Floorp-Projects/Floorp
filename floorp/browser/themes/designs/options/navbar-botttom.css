@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#urlbar {
+  transform: scale(1, -1) !important;
+}
+
+#urlbar-container {
+  transform: scale(1, -1) !important;
+}
+
+#toolbar-menubar[autohide="true"] > .titlebar-buttonbox-container, #TabsToolbar > .titlebar-buttonbox-container {
+  top: auto !important;
+  right: auto !important;
+  height: auto !important;
+  position: unset !important;
+}
+
+#nav-bar {
+  border-inline: 0 !important;
+  border-inline-style: none !important;
+  border-right-width: 0 !important;
+}
+
+.tabbrowser-tab{
+  z-index: 0 !important;
+}
+
+:root[inFullscreen]:not([macOSNativeFullscreen]) :is(#nav-bar) {
+  display: none !important;
+}

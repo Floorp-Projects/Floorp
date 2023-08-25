@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<script src="chrome://browser/content/preferences/notes.js"/>
+
+<html:template id="template-paneNotes">
+
+## Go main preference pane button.
+<hbox class="container-header-links" data-category="paneNotes" hidden="true">
+    <button id="backtogeneral__" class="back-button" data-l10n-id="containers-back-button2">
+      <hbox class="box-inherit button-box" align="center" pack="center" flex="1" anonid="button-box">
+        <image class="button-icon"/>
+        <label class="button-text"/>
+      </hbox>
+    </button>
+</hbox>
+
+<groupbox data-category="paneNotes" hidden="true">
+  <vbox class="contentPane">
+    <html:h1 data-l10n-id="floorp-notes"/>
+    <html:h2 data-l10n-id="restore-from-backup"/>
+    <description class="indent tip-caption" data-l10n-id="about-notes-backup-tips"/>
+  </vbox>
+
+  <richlistbox id="backup-list" flex="1" class="backup-list">
+    <richlistitem>
+      <label id="backuped-time-label" class="backuped-time-label" data-l10n-id="backuped-time"/>
+    </richlistitem>
+  </richlistbox>
+</groupbox>
+
+</html:template>

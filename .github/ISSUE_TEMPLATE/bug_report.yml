@@ -1,0 +1,79 @@
+name: "\U0001F41B Bug report"
+description: Please post any bugs you find while using Floorp here
+labels: [bug]
+title: '[Bug] '
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        Be sure to follow the template below.
+        We are students and engineers, and we have limited time to develop to the best of our ability.
+        Please describe your Issue correctly and concisely.
+        
+        Please do not create an Issue for anything other than a bug or feature request, and contact [support.ablaze.one](https://support.ablaze.one/) .
+
+        NOTE: Don't send Feature Requests here. Please send them to [Discussions](https://github.com/Floorp-Projects/Floorp/discussions/new?category=feature-request) .
+        
+        For Japanese: 日本人の場合は、日本語で書いても構いません。
+
+  - type: checkboxes
+    attributes:
+      label: Attention!
+      description: |
+        **Windows 7/8.1 or lower does NOT support Floorp!**
+        Please check this box only if you understand this.
+      options:
+        - label: I undertand that Floorp is NOT supported on Windows 7/8.1 or lower.
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+
+  - type: input
+    attributes:
+      label: OS Info
+      description: As detailed as possible
+      placeholder: e.g. Windows 11 22H2
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Floorp Version
+      placeholder: e.g. 10.1.2
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.

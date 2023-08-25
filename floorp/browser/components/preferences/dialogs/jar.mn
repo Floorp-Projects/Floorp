@@ -1,0 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+   content/browser/preferences/dialogs/customURLs.xhtml
+   content/browser/preferences/dialogs/customURLs.js
+   content/browser/preferences/dialogs/manage-keyboard-shortcut.xhtml
+   content/browser/preferences/dialogs/manage-keyboard-shortcut.js
+   content/browser/preferences/dialogs/manage-keyboard-shortcut.css
+   content/browser/preferences/dialogs/manageWorkspace.xhtml
+   content/browser/preferences/dialogs/manageWorkspace.js
+   content/browser/preferences/dialogs/manageWorkspace.css

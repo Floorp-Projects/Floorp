@@ -1,0 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+name: "(A) ⚒ Windows build"
+
+on:
+  workflow_dispatch:
+    inputs:
+      profgen:
+        type: boolean
+        description: generate profile for PGO
+        required: true
+      aarch64:
+        type: boolean
+        description: Build aarch64; does NOT comportable with pgo
+        required: true
+
+run-name: ${{fromJSON('["[normal]","[profgen]"]')[inputs.profgen]}} Windows ${{fromJson('["x86_64","aarch64"]')[inputs.aarch64]}} build
+jobs:
+  windows-build:
+    name: win-${{fromJson('["no_pgo","pgo"]')[inputs.profgen]}}-x86_64
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      profgen: ${{inputs.profgen}}
+      aarch64: ${{inputs.aarch64}}

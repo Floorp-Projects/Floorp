@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+%  content browser %content/browser/ contentaccessible=yes
+
+  content/browser/browser-UI-custom.js          (content/browser-UI-custom.js)
+  content/browser/browser-manager-sidebar.js    (content/browser-manager-sidebar.js)
+  content/browser/browser-overrides.js          (content/browser-overrides.js)
+  content/browser/browser-design.js             (content/browser-design.js)
+  content/browser/browser-downloadbar.js        (content/browser-downloadbar.js)
+  content/browser/browser-favicon-color.js      (content/browser-favicon-color.js)
+  content/browser/browser-statusbar.js          (content/browser-statusbar.js)
+  content/browser/browser-tabbar.js             (content/browser-tabbar.js)
+  content/browser/browser-preferences.js        (content/browser-preferences.js)
+  content/browser/browser-command.js            (content/browser-command.js)
+  content/browser/browser-toolbar-features.js   (content/browser-toolbar-features.js)
+  content/browser/browser-floorp.css            (content/browser-floorp.css)
+  content/browser/browser-pinned-tabs-title.js  (content/browser-pinned-tabs-title.js)
+  content/browser/browser-rest-mode.js          (content/browser-rest-mode.js)
+  content/browser/browser-chromeCSS.js          (content/browser-chromeCSS.js)
+  content/browser/browser-context-menu.js       (content/browser-context-menu.js)
+  content/browser/browser-custom-keyboard-shortcut.js  (content/browser-custom-keyboard-shortcut.js)
+  content/browser/browser-workspace.js          (content/browser-workspace.js)
+  content/browser/browser-verticaltabs.css      (content/browser-verticaltabs.css)
+  content/browser/browser-verticaltabs.js       (content/browser-verticaltabs.js)
+  content/browser/ua_data.js                    (content/ua_data.js)
+
+# extension list
+  content/browser/BMS-extension-needs-white-bg.txt  (sidebar-extension/BMS-extension-needs-white-bg.txt)

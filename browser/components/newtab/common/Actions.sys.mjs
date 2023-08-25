@@ -126,6 +126,7 @@ for (const type of [
   "SETTINGS_CLOSE",
   "SETTINGS_OPEN",
   "SET_PREF",
+  "GET_IMAGE",
   "SHOW_DOWNLOAD_FILE",
   "SHOW_FIREFOX_ACCOUNTS",
   "SHOW_PERSONALIZE",
@@ -378,6 +379,11 @@ function SetPref(name, value, importContext = globalImportContext) {
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
+function GetImageSend(path, importContext = globalImportContext) {
+  const action = { type: actionTypes.GET_IMAGE, data: { path } };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
 function WebExtEvent(type, data, importContext = globalImportContext) {
   if (!data || !data.source) {
     throw new Error(
@@ -400,6 +406,7 @@ export const actionCreators = {
   OnlyToMain,
   AlsoToPreloaded,
   SetPref,
+  GetImageSend,
   WebExtEvent,
   DiscoveryStreamImpressionStats,
   DiscoveryStreamLoadedContent,

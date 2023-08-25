@@ -1,0 +1,19 @@
+ac_add_options --with-app-name=floorp
+ac_add_options --with-app-basename=Floorp
+ac_add_options --disable-crashreporter
+ac_add_options --enable-proxy-bypass-protection
+ac_add_options --enable-unverified-updates
+ac_add_options --enable-update-channel=release
+ac_add_options --with-mozilla-api-keyfile="$PWD/floorp/apis/api-mozilla-key"
+ac_add_options --with-google-location-service-api-keyfile="$PWD/floorp/apis/api-google-location-service-key"
+ac_add_options --with-google-safebrowsing-api-keyfile="$PWD/floorp/apis/api-google-safe-browsing-key"
+ac_add_options --enable-bootstrap
+ac_add_options --with-l10n-base="$PWD/l10n-central/l10n-central"
+ac_add_options --enable-linker=lld
+ac_add_options --enable-optimize="-O3"
+ac_add_options --enable-lto
+export RUSTC_OPT_LEVEL=2
+export MOZ_INCLUDE_SOURCE_INFO=1
+MOZ_REQUIRE_SIGNING=
+MOZ_DATA_REPORTING=
+MOZ_TELEMETRY_REPORTING=

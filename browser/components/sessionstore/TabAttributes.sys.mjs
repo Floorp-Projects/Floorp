@@ -13,6 +13,7 @@ const ATTRIBUTES_TO_SKIP = new Set([
   "muted",
   "pending",
   "skipbackgroundnotify",
+  "floorp-workspace",
 ]);
 
 // A set of tab attributes to persist. We will read a given list of tab

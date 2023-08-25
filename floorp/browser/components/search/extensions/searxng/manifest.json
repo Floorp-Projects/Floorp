@@ -1,0 +1,27 @@
+{
+    "name": "SearXNG",
+    "description": "SearXNG is a privacy-respecting metasearch engine.",
+    "manifest_version": 2,
+    "version": "1.2",
+    "applications": {
+      "gecko": {
+        "id": "searxng@search.mozilla.org"
+      }
+    },
+    "hidden": true,
+    "icons": {
+      "16": "favicon.png"
+    },
+    "web_accessible_resources": [
+      "favicon.png"
+    ],
+    "chrome_settings_overrides": {
+      "search_provider": {
+        "name": "SearXNG",
+        "keyword": "@searxng, @searx, @sx",
+        "search_url": "https://searx.thegpm.org/search?q={searchTerms}",
+        "favicon_url": "favicon.png",
+        "suggest_url": "https://searx.thegpm.org/autocompleter?q={searchTerms}"
+      }
+    }
+  }

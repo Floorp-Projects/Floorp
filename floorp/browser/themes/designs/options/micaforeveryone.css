@@ -1,0 +1,17 @@
+  #main-window
+  {
+    background-color: transparent !important;
+    appearance: -moz-win-borderless-glass  !important;
+  }
+    #main-window #navigator-toolbox
+  {
+    background-color: transparent !important;
+  }
+    #main-window .titlebar-buttonbox
+  {
+    opacity: 0.1 !important;
+  }
+    #main-window .titlebar-min
+  {
+    border-bottom-left-radius: 9px !important;
+  }

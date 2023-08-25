@@ -1,0 +1,159 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+name: "(U) 🧰 User-Agent Scrape"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 15 * * *'
+
+jobs:
+  linux:
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
+
+    name: Linux
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Clone User-Agent_Scraper 🧬
+      uses: actions/checkout@v3
+      with:
+        repository: Floorp-Projects/User-Agent_Scraper
+        path: User-Agent_Scraper
+
+    - name: Setup 🪛
+      run: |
+        cd User-Agent_Scraper
+        sudo apt update
+        sudo apt install nodejs npm xvfb
+        npm install
+
+    - name: Install browsers 🌐
+      run: |
+        cd ~
+
+        # Firefox
+        aria2c -o firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-US"
+        tar -xvf firefox.tar.bz2
+        rm firefox.tar.bz2
+
+        # Chrome
+        aria2c -o chrome.deb "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+        mkdir chrome_tmp
+        cd chrome_tmp
+        ar vx ../chrome.deb
+        tar -xvf data.tar.xz
+        mv ./opt/google/chrome ../chrome
+        cd ../
+        rm -rf chrome_tmp
+        rm chrome.deb
+
+        # Edge
+        aria2c -o msedge.deb "https://go.microsoft.com/fwlink?linkid=2149051&brand=M102"
+        mkdir msedge_tmp
+        cd msedge_tmp
+        ar vx ../msedge.deb
+        tar -xvf data.tar.xz
+        mv ./opt/microsoft/msedge ../msedge
+        cd ../
+        rm -rf msedge_tmp
+        rm msedge.deb
+
+    - name: Scrape
+      id: scrape
+      run: |
+        cd User-Agent_Scraper
+
+        Xvfb :2 -screen 0 1024x768x24 &
+        export DISPLAY=:2
+
+        # Firefox
+        npm run --silent start ~/firefox/firefox > user_agent.txt
+        export firefox_stable_ua=`cat user_agent.txt`
+        echo $firefox_stable_ua
+
+        # Chrome
+        ~/chrome/chrome &
+        sleep 5
+        pkill -KILL -f chrome
+        sleep 5
+        npm run --silent start ~/chrome/chrome > user_agent.txt
+        export chrome_stable_ua=`cat user_agent.txt`
+        echo $chrome_stable_ua
+
+        # Edge
+        npm run --silent start ~/msedge/msedge > user_agent.txt
+        export msedge_stable_ua=`cat user_agent.txt`
+        echo $msedge_stable_ua
+
+        echo "firefox_stable_ua=${firefox_stable_ua}" >> $GITHUB_OUTPUT
+        echo "chrome_stable_ua=${chrome_stable_ua}" >> $GITHUB_OUTPUT
+        echo "msedge_stable_ua=${msedge_stable_ua}" >> $GITHUB_OUTPUT
+
+    outputs:
+      firefox_stable_ua: ${{ steps.scrape.outputs.firefox_stable_ua }}
+      chrome_stable_ua: ${{ steps.scrape.outputs.chrome_stable_ua }}
+      msedge_stable_ua: ${{ steps.scrape.outputs.msedge_stable_ua }}
+
+  output:
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
+    needs: [linux]
+
+    name: Generate JSONP
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Generate
+      run: |
+        firefox_stable_ua_jsonp_text=(
+        'const FIREFOX_STABLE_UA = {'
+        "  \"win\": \"$(echo "${{ needs.linux.outputs.firefox_stable_ua }}" | sed "s/X11; Linux x86_64/Windows NT 10.0; Win64; x64/")\","
+        '  "linux": "${{ needs.linux.outputs.firefox_stable_ua }}",'
+        "  \"mac\": \"$(echo "${{ needs.linux.outputs.firefox_stable_ua }}" | sed "s/X11; Linux x86_64/Macintosh; Intel Mac OS X 10.15/")\","
+        '};'
+        )
+        for line in "${firefox_stable_ua_jsonp_text[@]}" ; do echo $line >> ~/ua_data.js ; done
+
+        chrome_stable_ua_jsonp_text=(
+        'const CHROME_STABLE_UA = {'
+        "  \"win\": \"$(echo "${{ needs.linux.outputs.chrome_stable_ua }}" | sed "s/X11; Linux x86_64/Windows NT 10.0; Win64; x64/")\","
+        '  "linux": "${{ needs.linux.outputs.chrome_stable_ua }}",'
+        "  \"mac\": \"$(echo "${{ needs.linux.outputs.chrome_stable_ua }}" | sed "s/X11; Linux x86_64/Macintosh; Intel Mac OS X 10_15_7/")\","
+        '};'
+        )
+        for line in "${chrome_stable_ua_jsonp_text[@]}" ; do echo $line >> ~/ua_data.js ; done
+
+        msedge_stable_ua_jsonp_text=(
+        'const MSEDGE_STABLE_UA = {'
+        "  \"win\": \"$(echo "${{ needs.linux.outputs.msedge_stable_ua }}" | sed "s/X11; Linux x86_64/Windows NT 10.0; Win64; x64/")\","
+        '  "linux": "${{ needs.linux.outputs.msedge_stable_ua }}",'
+        "  \"mac\": \"$(echo "${{ needs.linux.outputs.msedge_stable_ua }}" | sed "s/X11; Linux x86_64/Macintosh; Intel Mac OS X 10_15_7/")\","
+        '};'
+        )
+        for line in "${msedge_stable_ua_jsonp_text[@]}" ; do echo $line >> ~/ua_data.js ; done
+
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: ua_data
+        path: ~/ua_data.js
+
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+
+    - name: Commit & Push
+      run: |
+        cp ~/ua_data.js floorp/browser/extensions/webextensions/floorp-system/shared/ua_data.js
+        cp ~/ua_data.js floorp/browser/base/content/ua_data.js
+        if [ "$(git diff HEAD)" != "" ]; then
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "[FB] Floorp System | Update User-Agent"
+          git push origin
+        fi

@@ -1,0 +1,120 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * The result of a successful asynchronous operation.
+ */
+[scriptable, builtinclass, uuid(08B4CF29-3D65-4E79-B522-A694C322ED07)]
+interface nsINativeOSFileResult: nsISupports
+{
+  /**
+   * The actual value produced by the operation.
+   *
+   * Actual type of this value depends on the options passed to the
+   * operation.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval result;
+
+  /**
+   * Delay between when the operation was requested on the main thread and
+   * when the operation was started off main thread.
+   */
+  readonly attribute double dispatchDurationMS;
+
+  /**
+   * Duration of the off main thread execution.
+   */
+  readonly attribute double executionDurationMS;
+};
+
+/**
+ * A callback invoked in case of success.
+ */
+[scriptable, function, uuid(2C1922CA-CA1B-4099-8B61-EC23CFF49412)]
+interface nsINativeOSFileSuccessCallback: nsISupports
+{
+  void complete(in nsINativeOSFileResult result);
+};
+
+/**
+ * A callback invoked in case of error.
+ */
+[scriptable, function, uuid(F612E0FC-6736-4D24-AA50-FD661B3B40B6)]
+interface nsINativeOSFileErrorCallback: nsISupports
+{
+  /**
+   * @param operation The name of the failed operation. Provided to aid
+   * debugging only, may change without notice.
+   * @param OSstatus The OS status of the operation (errno under Unix,
+   * GetLastError under Windows).
+   */
+  void complete(in ACString operation, in long OSstatus);
+};
+
+/**
+ * A service providing native implementations of some of the features
+ * of OS.File.
+ */
+[scriptable, builtinclass, uuid(913362AD-1526-4623-9E6B-A2EB08AFBBB9)]
+interface nsINativeOSFileInternalsService: nsISupports
+{
+  /**
+   * Implementation of OS.File.read
+   *
+   * @param path The absolute path to the file to read.
+   * @param options An object that may contain some of the following fields
+   * - {number} bytes The maximal number of bytes to read.
+   * - {string} encoding If provided, return the result as a string, decoded
+   *   using this encoding. Otherwise, pass the result as an ArrayBuffer.
+   *   Invalid encodings cause onError to be called with the platform-specific
+   *   "invalid argument" constant.
+   * - {string} compression Unimplemented at the moment.
+   * @param onSuccess The success callback.
+   * @param onError The error callback.
+   */
+  [implicit_jscontext]
+  void read(in AString path, in jsval options,
+            in nsINativeOSFileSuccessCallback onSuccess,
+            in nsINativeOSFileErrorCallback onError);
+
+  /**
+   * Implementation of OS.File.writeAtomic
+   *
+   * @param path the absolute path of the file to write to.
+   * @param buffer the data as an array buffer to be written to the file.
+   * @param options An object that may contain the following fields
+   * - {number} bytes If provided, the number of bytes written is equal to this.
+   *   The default value is the size of the |buffer|.
+   * - {string} tmpPath If provided and not null, first write to this path, and
+   *   move to |path| after writing.
+   * - {string} backupPath if provided, backup file at |path| to this path
+   *   before overwriting it.
+   * - {bool} flush if provided and true, flush the contents of the buffer after
+   *   writing. This is slower, but safer.
+   * - {bool} noOverwrite if provided and true, do not write if a file already
+   *   exists at |path|.
+   * @param onSuccess The success callback.
+   * @param onError The error callback.
+   */
+  [implicit_jscontext]
+  void writeAtomic(in AString path,
+                   in jsval buffer,
+                   in jsval options,
+                   in nsINativeOSFileSuccessCallback onSuccess,
+                   in nsINativeOSFileErrorCallback onError);
+
+};
+
+
+%{ C++
+
+#define NATIVE_OSFILE_INTERNALS_SERVICE_CID {0x63A69303,0x8A64,0x45A9,{0x84, 0x8C, 0xD4, 0xE2, 0x79, 0x27, 0x94, 0xE6}}
+#define NATIVE_OSFILE_INTERNALS_SERVICE_CONTRACTID "@mozilla.org/toolkit/osfile/native-internals;1"
+
+%}
