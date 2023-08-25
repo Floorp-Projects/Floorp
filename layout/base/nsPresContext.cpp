@@ -246,6 +246,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mElementsRestyled(0),
       mFramesConstructed(0),
       mFramesReflowed(0),
+      mAnimationTriggeredRestyles(0),
       mInterruptChecksToSkip(0),
       mNextFrameRateMultiplier(0),
       mViewportScrollStyles(StyleOverflow::Auto, StyleOverflow::Auto),

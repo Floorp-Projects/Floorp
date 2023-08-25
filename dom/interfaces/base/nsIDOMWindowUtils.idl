@@ -2004,6 +2004,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute unsigned long long framesReflowed;
 
   /**
+   * Number of restyles triggered by animations.
+   */
+  readonly attribute unsigned long long animationTriggeredRestyles;
+
+  /**
    * Indicates whether the current frame's refresh driver has a pending tick,
    * as reported by nsRefreshDriver::HasPendingTick.
    *
