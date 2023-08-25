@@ -3,14 +3,35 @@
 
 "use strict";
 
-add_task(async function test_fullscreen_display_none() {
+function checkWarningState(aWarningElement, aExpectedState, aMsg) {
+  ["hidden", "ontop", "onscreen"].forEach(state => {
+    is(
+      aWarningElement.hasAttribute(state),
+      state == aExpectedState,
+      `${aMsg} - check ${state} attribute.`
+    );
+  });
+}
+
+async function waitForWarningState(aWarningElement, aExpectedState) {
+  await BrowserTestUtils.waitForAttribute(aExpectedState, aWarningElement, "");
+  checkWarningState(
+    aWarningElement,
+    aExpectedState,
+    `Wait for ${aExpectedState} state`
+  );
+}
+
+add_setup(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["full-screen-api.enabled", true],
       ["full-screen-api.allow-trusted-requests-only", false],
     ],
   });
+});
 
+add_task(async function test_fullscreen_display_none() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -30,11 +51,13 @@ add_task(async function test_fullscreen_display_none() {
     },
     async function (browser) {
       let warning = document.getElementById("fullscreen-warning");
-      let warningShownPromise = BrowserTestUtils.waitForAttribute(
-        "onscreen",
+      checkWarningState(
         warning,
-        "true"
+        "hidden",
+        "Should not show full screen warning initially"
       );
+
+      let warningShownPromise = waitForWarningState(warning, "onscreen");
       // Enter fullscreen
       await SpecialPowers.spawn(browser, [], async () => {
         let frame = content.document.querySelector("iframe");
@@ -54,39 +77,33 @@ add_task(async function test_fullscreen_display_none() {
       );
       document.getElementById("fullscreen-exit-button").click();
       await exitFullscreenPromise;
+
+      checkWarningState(
+        warning,
+        "hidden",
+        "Should hide fullscreen warning after exiting fullscreen"
+      );
     }
   );
 });
 
 add_task(async function test_fullscreen_pointerlock_conflict() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["full-screen-api.enabled", true],
-      ["full-screen-api.allow-trusted-requests-only", false],
-    ],
-  });
-
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     let fsWarning = document.getElementById("fullscreen-warning");
     let plWarning = document.getElementById("pointerlock-warning");
 
-    is(
-      fsWarning.getAttribute("onscreen"),
-      null,
-      "Should not show full screen warning initially."
-    );
-    is(
-      plWarning.getAttribute("onscreen"),
-      null,
-      "Should not show pointer lock warning initially."
-    );
-
-    let fsWarningShownPromise = BrowserTestUtils.waitForAttribute(
-      "onscreen",
+    checkWarningState(
       fsWarning,
-      "true"
+      "hidden",
+      "Should not show full screen warning initially"
+    );
+    checkWarningState(
+      plWarning,
+      "hidden",
+      "Should not show pointer lock warning initially"
     );
 
+    let fsWarningShownPromise = waitForWarningState(fsWarning, "onscreen");
     info("Entering full screen and pointer lock.");
     await SpecialPowers.spawn(browser, [], async () => {
       await content.document.body.requestFullscreen();
@@ -94,15 +111,10 @@ add_task(async function test_fullscreen_pointerlock_conflict() {
     });
 
     await fsWarningShownPromise;
-    is(
-      fsWarning.getAttribute("onscreen"),
-      "true",
-      "Should show full screen warning."
-    );
-    is(
-      plWarning.getAttribute("onscreen"),
-      null,
-      "Should not show pointer lock warning."
+    checkWarningState(
+      plWarning,
+      "hidden",
+      "Should not show pointer lock warning"
     );
 
     info("Exiting pointerlock");
@@ -110,18 +122,159 @@ add_task(async function test_fullscreen_pointerlock_conflict() {
       await content.document.exitPointerLock();
     });
 
-    is(
-      fsWarning.getAttribute("onscreen"),
-      "true",
-      "Should still show full screen warning."
+    checkWarningState(
+      fsWarning,
+      "onscreen",
+      "Should still show full screen warning"
     );
-    is(
-      plWarning.getAttribute("onscreen"),
-      null,
-      "Should not show pointer lock warning."
+    checkWarningState(
+      plWarning,
+      "hidden",
+      "Should not show pointer lock warning"
     );
 
     // Cleanup
+    info("Exiting fullscreen");
     await document.exitFullscreen();
   });
+});
+
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1821884
+add_task(async function test_reshow_fullscreen_notification() {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    let newWin = await BrowserTestUtils.openNewBrowserWindow();
+    let fsWarning = document.getElementById("fullscreen-warning");
+
+    info("Entering full screen and wait for the fullscreen warning to appear.");
+    await SimpleTest.promiseFocus(window);
+    await Promise.all([
+      waitForWarningState(fsWarning, "onscreen"),
+      BrowserTestUtils.waitForEvent(fsWarning, "transitionend"),
+      SpecialPowers.spawn(browser, [], async () => {
+        content.document.body.requestFullscreen();
+      }),
+    ]);
+
+    info(
+      "Switch focus away from the fullscreen window, the fullscreen warning should still hide automatically."
+    );
+    await Promise.all([
+      waitForWarningState(fsWarning, "hidden"),
+      SimpleTest.promiseFocus(newWin),
+    ]);
+
+    info(
+      "Switch focus back to the fullscreen window, the fullscreen warning should show again."
+    );
+    await Promise.all([
+      waitForWarningState(fsWarning, "onscreen"),
+      SimpleTest.promiseFocus(window),
+    ]);
+
+    info("Wait for fullscreen warning timed out.");
+    await waitForWarningState(fsWarning, "hidden");
+
+    info("The fullscreen warning should not show again.");
+    await SimpleTest.promiseFocus(newWin);
+    await SimpleTest.promiseFocus(window);
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    });
+    checkWarningState(
+      fsWarning,
+      "hidden",
+      "The fullscreen warning should not show."
+    );
+
+    info("Close new browser window.");
+    await BrowserTestUtils.closeWindow(newWin);
+
+    info("Exit fullscreen.");
+    await document.exitFullscreen();
+  });
+});
+
+add_task(async function test_fullscreen_reappear() {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    let fsWarning = document.getElementById("fullscreen-warning");
+
+    info("Entering full screen and wait for the fullscreen warning to appear.");
+    await Promise.all([
+      waitForWarningState(fsWarning, "onscreen"),
+      SpecialPowers.spawn(browser, [], async () => {
+        content.document.body.requestFullscreen();
+      }),
+    ]);
+
+    info("Wait for fullscreen warning timed out.");
+    await waitForWarningState(fsWarning, "hidden");
+
+    info("Move mouse to the top of screen.");
+    await Promise.all([
+      waitForWarningState(fsWarning, "ontop"),
+      EventUtils.synthesizeMouse(document.documentElement, 100, 0, {
+        type: "mousemove",
+      }),
+    ]);
+
+    info("Wait for fullscreen warning timed out again.");
+    await waitForWarningState(fsWarning, "hidden");
+
+    info("Exit fullscreen.");
+    await document.exitFullscreen();
+  });
+});
+
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1847901
+add_task(async function test_fullscreen_warning_disabled() {
+  // Disable fullscreen warning
+  await SpecialPowers.pushPrefEnv({
+    set: [["full-screen-api.warning.timeout", 0]],
+  });
+
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    let newWin = await BrowserTestUtils.openNewBrowserWindow();
+    let fsWarning = document.getElementById("fullscreen-warning");
+    let mut = new MutationObserver(mutations => {
+      ok(false, `${mutations[0].attributeName} attribute should not change`);
+    });
+    mut.observe(fsWarning, {
+      attributeFilter: ["hidden", "onscreen", "ontop"],
+    });
+
+    info("Entering full screen.");
+    await SimpleTest.promiseFocus(window);
+    await SpecialPowers.spawn(browser, [], async () => {
+      return content.document.body.requestFullscreen();
+    });
+    // Wait a bit to ensure no state change.
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    });
+
+    info("The fullscreen warning should still not show after switching focus.");
+    await SimpleTest.promiseFocus(newWin);
+    await SimpleTest.promiseFocus(window);
+    // Wait a bit to ensure no state change.
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    });
+
+    mut.disconnect();
+
+    info("Close new browser window.");
+    await BrowserTestUtils.closeWindow(newWin);
+
+    info("Exit fullscreen.");
+    await document.exitFullscreen();
+  });
+
+  // Revert the setting to avoid affecting subsequent tests.
+  await SpecialPowers.popPrefEnv();
 });

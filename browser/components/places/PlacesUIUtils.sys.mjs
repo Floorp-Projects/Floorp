@@ -11,6 +11,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CLIENT_NOT_CONFIGURED: "resource://services-sync/constants.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.sys.mjs",
@@ -1189,7 +1190,7 @@ export var PlacesUIUtils = {
 
   shouldShowTabsFromOtherComputersMenuitem() {
     let weaveOK =
-      lazy.Weave.Status.checkSetup() != lazy.Weave.CLIENT_NOT_CONFIGURED &&
+      lazy.Weave.Status.checkSetup() != lazy.CLIENT_NOT_CONFIGURED &&
       lazy.Weave.Svc.Prefs.get("firstSync", "") != "notReady";
     return weaveOK;
   },

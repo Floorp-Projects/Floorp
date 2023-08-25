@@ -333,9 +333,11 @@ class GlobalHelperThreadState {
 
   GCParallelTaskList& gcParallelWorklist() { return gcParallelWorklist_; }
 
-  size_t getGCParallelThreadCount() const { return gcParallelThreadCount; }
+  size_t getGCParallelThreadCount(const AutoLockHelperThreadState& lock) const {
+    return gcParallelThreadCount;
+  }
   void setGCParallelThreadCount(size_t count,
-                                const AutoLockHelperThreadState&) {
+                                const AutoLockHelperThreadState& lock) {
     MOZ_ASSERT(count >= 1);
     MOZ_ASSERT(count <= threadCount);
     gcParallelThreadCount = count;

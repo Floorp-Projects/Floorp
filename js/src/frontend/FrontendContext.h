@@ -135,7 +135,10 @@ class FrontendContext {
 
   enum class Warning { Suppress, Report };
 
-  void convertToRuntimeError(JSContext* cx, Warning warning = Warning::Report);
+  // Returns false if the error cannot be converted (such as due to OOM). An
+  // error might still be reported to the given JSContext. Returns true
+  // otherwise.
+  bool convertToRuntimeError(JSContext* cx, Warning warning = Warning::Report);
 
   void linkWithJSContext(JSContext* cx);
 
@@ -202,9 +205,10 @@ class MOZ_STACK_CLASS AutoReportFrontendContext : public FrontendContext {
 
   void clearAutoReport() { cx_ = nullptr; }
 
-  void convertToRuntimeErrorAndClear() {
-    convertToRuntimeError(cx_, warning_);
+  bool convertToRuntimeErrorAndClear() {
+    bool result = convertToRuntimeError(cx_, warning_);
     cx_ = nullptr;
+    return result;
   }
 };
 

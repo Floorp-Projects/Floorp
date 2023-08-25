@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 const MULTIPAGE_IFRAME_URL = HAR_EXAMPLE_URL + "html_har_multipage_iframe.html";
 const MULTIPAGE_PAGE_URL = HAR_EXAMPLE_URL + "html_har_multipage_page.html";
 

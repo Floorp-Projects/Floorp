@@ -464,8 +464,17 @@ GeckoDriver.prototype.newSession = async function (cmd) {
         const browsingContext = this.curBrowser.contentBrowser.browsingContext;
         this.currentSession.contentBrowsingContext = browsingContext;
 
+        // Bug 1838381 - Only use a longer unload timeout for desktop, because
+        // on Android only the initial document is loaded, and loading a
+        // specific page during startup doesn't succeed.
+        const options = {};
+        if (!lazy.AppInfo.isAndroid) {
+          options.unloadTimeout = 5000;
+        }
+
         await lazy.waitForInitialNavigationCompleted(
-          browsingContext.webProgress
+          browsingContext.webProgress,
+          options
         );
 
         this.curBrowser.contentBrowser.focus();

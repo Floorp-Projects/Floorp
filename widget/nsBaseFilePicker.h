@@ -55,6 +55,8 @@ class nsBaseFilePicker : public nsIFilePicker {
   virtual void InitNative(nsIWidget* aParent, const nsAString& aTitle) = 0;
   virtual nsresult Show(nsIFilePicker::ResultCode* _retval) = 0;
 
+  virtual nsresult ResolveSpecialDirectory(const nsAString& aSpecialDirectory);
+
   bool mAddToRecentDocs;
   nsCOMPtr<nsIFile> mDisplayDirectory;
   nsString mDisplaySpecialDirectory;

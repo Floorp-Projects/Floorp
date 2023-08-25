@@ -88,8 +88,8 @@ load 475193-1.html
 load 475302-1.svg
 load 477935-1.html
 load 478128-1.svg
-load 478511-1.svg
-load 483439-1.svg
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 478511-1.svg
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 483439-1.svg
 load 492186-1.svg
 load 508247-1.svg
 load 512890-1.svg
@@ -221,7 +221,7 @@ load 1467552-1.html
 load 1474982.html
 load conditional-outer-svg-nondirty-reflow-assert.xhtml
 load extref-test-1.xhtml
-pref(widget.windows.window_occlusion_tracking.enabled,false) load blob-merging-and-retained-display-list.html # Bug 1819154
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) pref(widget.windows.window_occlusion_tracking.enabled,false) load blob-merging-and-retained-display-list.html # Bug 1819154
 load empty-blob-merging.html
 load grouping-empty-bounds.html
 load 1480275.html
@@ -240,13 +240,13 @@ load 1539318-1.svg
 load 1548985-1.html
 load 1548985-2.svg
 load 1555851.html
-pref(widget.windows.window_occlusion_tracking.enabled,false) load invalidation-of-opacity-0.html # Bug 1819154
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) pref(widget.windows.window_occlusion_tracking.enabled,false) load invalidation-of-opacity-0.html # Bug 1819154
 load 1563779.html
 load 1600855.html
 load 1601824.html
 load 1605223-1.html
 load 1609663.html
-skip-if(Android) load 1671950.html # No print-preview support on android
+skip-if(Android|/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 1671950.html # No print-preview support on android
 load 1678947.html
 load 1693032.html
 load 1696505.html

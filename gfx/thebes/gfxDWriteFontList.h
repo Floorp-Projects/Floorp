@@ -392,8 +392,8 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
                               bool aNeedFullnamePostscriptNames)
       MOZ_REQUIRES(mLock) override;
 
-  bool ReadFaceNames(mozilla::fontlist::Family* aFamily,
-                     mozilla::fontlist::Face* aFace, nsCString& aPSName,
+  bool ReadFaceNames(const mozilla::fontlist::Family* aFamily,
+                     const mozilla::fontlist::Face* aFace, nsCString& aPSName,
                      nsCString& aFullName) override;
 
   void GetFacesInitDataForFamily(

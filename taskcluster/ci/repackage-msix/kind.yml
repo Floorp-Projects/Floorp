@@ -52,6 +52,7 @@ job-template:
         toolchain:
             - linux64-msix-packaging
     msix:
+        vendor: Mozilla
         channel:
             by-shipping-product:
                 devedition: aurora

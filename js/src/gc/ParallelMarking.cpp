@@ -103,6 +103,10 @@ bool ParallelMarker::markOneColor(MarkColor color, SliceBudget& sliceBudget) {
   {
     AutoLockHelperThreadState lock;
 
+    // There should always be enough parallel tasks to run our marking work.
+    MOZ_RELEASE_ASSERT(HelperThreadState().getGCParallelThreadCount(lock) >=
+                       workerCount());
+
     for (size_t i = 0; i < workerCount(); i++) {
       gc->startTask(*tasks[i], lock);
     }

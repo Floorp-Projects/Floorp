@@ -230,7 +230,7 @@ TEST_F(VideoFrameConverterTest, BlackOnDisableCreated) {
   EXPECT_EQ(frame0.width(), 640);
   EXPECT_EQ(frame0.height(), 480);
   EXPECT_TRUE(IsFrameBlack(frame0));
-  EXPECT_GT(conversionTime0 - now, TimeDuration::FromSeconds(0));
+  EXPECT_GE(conversionTime0 - now, TimeDuration::FromSeconds(0));
   // The second frame was created by the same-frame timer (after 1s).
   const auto& [frame1, conversionTime1] = frames[1];
   EXPECT_EQ(frame1.width(), 640);

@@ -19,13 +19,13 @@ load 1306476.html
 load 1348381.html
 load 1367930_1.html
 load 1367930_2.html
-asserts-if(Android,0-1) pref(browser.link.open_newwindow,2) load 1429507_1.html # window.open() in tab doesn't work for crashtest in e10s, this opens a new window instead
-asserts-if(Android,0-1) pref(browser.link.open_newwindow,2) load 1429507_2.html # window.open() in tab doesn't work for crashtest in e10s, this opens a new window instead
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) asserts-if(Android,0-1) pref(browser.link.open_newwindow,2) load 1429507_1.html # window.open() in tab doesn't work for crashtest in e10s, this opens a new window instead
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) asserts-if(Android,0-1) pref(browser.link.open_newwindow,2) load 1429507_2.html # window.open() in tab doesn't work for crashtest in e10s, this opens a new window instead
 load 1443212.html
-asserts-if(Android,0-2) load 1453030.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) asserts-if(Android,0-2) load 1453030.html
 load 1468451.html
-skip-if(Android) load 1490700.html # No screenshare on Android
-load 1505957.html
+skip-if(Android|/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 1490700.html # No screenshare on Android
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 1505957.html
 load 1509442.html
 load 1511130.html
 load 1510848.html

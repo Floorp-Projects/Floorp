@@ -336,9 +336,17 @@ NS_IMETHODIMP nsBaseFilePicker::SetDisplaySpecialDirectory(
     return NS_OK;
   }
 
-  return NS_GetSpecialDirectory(
-      NS_ConvertUTF16toUTF8(mDisplaySpecialDirectory).get(),
-      getter_AddRefs(mDisplayDirectory));
+  return ResolveSpecialDirectory(aDirectory);
+}
+
+nsresult nsBaseFilePicker::ResolveSpecialDirectory(
+    const nsAString& aSpecialDirectory) {
+  // Only perform special-directory name resolution in the parent process.
+  // (Subclasses of `nsBaseFilePicker` used in other processes must override
+  // this function.)
+  MOZ_ASSERT(XRE_IsParentProcess());
+  return NS_GetSpecialDirectory(NS_ConvertUTF16toUTF8(aSpecialDirectory).get(),
+                                getter_AddRefs(mDisplayDirectory));
 }
 
 // Get the display special directory

@@ -11,7 +11,7 @@ load 334735-1.html
 load 345576-1.html
 load 345629-1.html
 load 348462-1.html
-load 348462-2.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 348462-2.html
 load 366643.html
 load 369688-1.html
 load 369947-1.html
@@ -22,7 +22,7 @@ load 377232-1.xhtml
 load 377461-1.xhtml
 load 383473-1.html
 load 383872-1.svg
-load 385228-1.svg
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 385228-1.svg
 skip load 385228-2.svg  # bug 523255 / bug 385228
 load 385289-1.xhtml
 load 385417-1.html
@@ -65,7 +65,7 @@ load 423110-1.xhtml
 load 423270-1.html
 load 428633.html
 load 429899-1.html
-load 441360.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 441360.html
 load 445711.html
 load 463307-1.html
 load 467703-1.xhtml
@@ -96,7 +96,7 @@ load 633453-1.html
 load 662467-1.html
 load 665218.html
 load 675550-1.html
-load 686190-1.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 686190-1.html
 load 691330.svg
 load 691581-1.html
 load 693143-1.html
@@ -157,8 +157,8 @@ load 1242822.html
 load 1248222.html
 load 1278305.html
 load 1308394.html
-skip-if(geckoview) load 1317403-1.html # bug 1331533, 1630774
-skip-if(geckoview) load 1325159-1.html # bug 1630774
+skip-if(geckoview|/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 1317403-1.html # bug 1331533, 1630774
+skip-if(geckoview|/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 1325159-1.html # bug 1630774
 skip-if(geckoview) load 1331683.html # bug 1630774
 skip-if(Android) pref(dom.disable_open_during_load,false) load 1343666.html
 load 1346601-1.html
@@ -200,7 +200,7 @@ skip-if(AddressSanitizer) load 1652750-deep-scene-stack.html
 load 1651882.html
 skip-if(Android&&swgl) load 1678938-1.html
 load 1679477-1.html
-skip-if(Android) pref(dom.disable_open_during_load,false) load 1685009-1.html
+skip-if(Android|/^Windows\x20NT\x206\.1/.test(http.oscpu)) pref(dom.disable_open_during_load,false) load 1685009-1.html
 load 1694783-1.html
 load 1695782-1.html
 load 1699013.html

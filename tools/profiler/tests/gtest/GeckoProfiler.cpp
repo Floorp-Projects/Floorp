@@ -33,6 +33,10 @@
 #  include <mach/thread_act.h>
 #endif
 
+#ifdef XP_WIN
+#include "mozilla/WindowsVersion.h"
+#endif
+
 #ifdef MOZ_GECKO_PROFILER
 
 #  include "GeckoProfiler.h"
@@ -4315,6 +4319,13 @@ static std::string_view GetFeatureName(uint32_t feature) {
 
 TEST(GeckoProfiler, FeatureCombinations)
 {
+  // Bug 1845606
+  #ifdef XP_WIN
+  if (!IsWin8OrLater()) {
+    return;
+  }
+  #endif
+
   const char* filters[] = {"*"};
 
   // List of features to test. Every combination of up to 3 of them will be
@@ -4683,6 +4694,13 @@ TEST(GeckoProfiler, CPUUsage)
 
 TEST(GeckoProfiler, AllThreads)
 {
+  // Bug 1845606
+  #ifdef XP_WIN
+  if (!IsWin8OrLater()) {
+    return;
+  }
+  #endif
+
   profiler_init_main_thread_id();
   ASSERT_TRUE(profiler_is_main_thread())
   << "This test assumes it runs on the main thread";

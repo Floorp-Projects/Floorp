@@ -319,8 +319,41 @@ static PRDescIdentity sTLSTransportLayerIdentity;
 static PRIOMethods sTLSTransportLayerMethods;
 static PRIOMethods* sTLSTransportLayerMethodsPtr = nullptr;
 
+bool TLSTransportLayer::DispatchRelease() {
+  if (OnSocketThread()) {
+    return false;
+  }
+
+  gSocketTransportService->Dispatch(
+      NewNonOwningRunnableMethod("net::TLSTransportLayer::Release", this,
+                                 &TLSTransportLayer::Release),
+      NS_DISPATCH_NORMAL);
+
+  return true;
+}
+
 NS_IMPL_ADDREF(TLSTransportLayer)
-NS_IMPL_RELEASE(TLSTransportLayer)
+NS_IMETHODIMP_(MozExternalRefCountType)
+TLSTransportLayer::Release() {
+  nsrefcnt count = mRefCnt - 1;
+  if (DispatchRelease()) {
+    // Redispatched to the socket thread.
+    return count;
+  }
+
+  MOZ_ASSERT(0 != mRefCnt, "dup release");
+  count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "TLSTransportLayer");
+
+  if (0 == count) {
+    mRefCnt = 1;
+    delete (this);
+    return 0;
+  }
+
+  return count;
+}
+
 NS_INTERFACE_MAP_BEGIN(TLSTransportLayer)
   NS_INTERFACE_MAP_ENTRY(nsISocketTransport)
   NS_INTERFACE_MAP_ENTRY(nsITransport)

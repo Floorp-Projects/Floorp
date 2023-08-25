@@ -149,9 +149,9 @@ load 705996-2.html
 load 707622-1.html
 load 710098-1.html
 load 711864-1.html
-pref(font.size.inflation.minTwips,120) load 750147.html
-load 759249-1.html
-load 759249-2.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) pref(font.size.inflation.minTwips,120) load 750147.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 759249-1.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) load 759249-2.html
 load 814713.html
 load 862624.html
 load 897883-1.html

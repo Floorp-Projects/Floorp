@@ -212,9 +212,12 @@ linux2204-wayland-tests:
 
 windows-7-tests:
     - cppunit
+    - crashtest
+    - gtest
     - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-browser-media
+    - mochitest-media
     - xpcshell
 
 windows32-2009-tests:

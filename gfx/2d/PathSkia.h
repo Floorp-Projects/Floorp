@@ -95,8 +95,6 @@ class PathSkia : public Path {
                    const Matrix& aTransform, SkPath& aFillPath,
                    const Maybe<Rect>& aClipRect = Nothing()) const;
 
-  bool IsEmpty() const override;
-
  private:
   friend class DrawTargetSkia;
 

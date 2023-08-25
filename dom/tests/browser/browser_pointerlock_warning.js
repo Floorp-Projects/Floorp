@@ -15,6 +15,25 @@ const FRAME_TEST_URL =
   encodeURI(BODY_URL) +
   '"></iframe></body>';
 
+function checkWarningState(aWarningElement, aExpectedState, aMsg) {
+  ["hidden", "ontop", "onscreen"].forEach(state => {
+    is(
+      aWarningElement.hasAttribute(state),
+      state == aExpectedState,
+      `${aMsg} - check ${state} attribute.`
+    );
+  });
+}
+
+async function waitForWarningState(aWarningElement, aExpectedState) {
+  await BrowserTestUtils.waitForAttribute(aExpectedState, aWarningElement, "");
+  checkWarningState(
+    aWarningElement,
+    aExpectedState,
+    `Wait for ${aExpectedState} state`
+  );
+}
+
 // Make sure the pointerlock warning is shown and exited with the escape key
 add_task(async function show_pointerlock_warning_escape() {
   let urls = [TEST_URL, FRAME_TEST_URL];
@@ -24,11 +43,7 @@ add_task(async function show_pointerlock_warning_escape() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
     let warning = document.getElementById("pointerlock-warning");
-    let warningShownPromise = BrowserTestUtils.waitForAttribute(
-      "onscreen",
-      warning,
-      "true"
-    );
+    let warningShownPromise = waitForWarningState(warning, "onscreen");
 
     let expectedWarningText;
 
@@ -49,11 +64,7 @@ add_task(async function show_pointerlock_warning_escape() {
 
     ok(true, "Pointerlock warning shown");
 
-    let warningHiddenPromise = BrowserTestUtils.waitForAttribute(
-      "hidden",
-      warning,
-      ""
-    );
+    let warningHiddenPromise = waitForWarningState(warning, "hidden");
 
     await BrowserTestUtils.waitForCondition(
       () => warning.innerText == expectedWarningText,

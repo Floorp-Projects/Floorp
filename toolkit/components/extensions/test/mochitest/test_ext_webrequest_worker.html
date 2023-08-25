@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head_webrequest.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+let tabId;
+
+let extensionData = {
+  manifest: {
+    permissions: ["webRequest", "webRequestBlocking", "<all_urls>", "tabs"],
+  },
+  background() {
+    browser.webRequest.onBeforeRequest.addListener(details => {
+      if (details.url.endsWith("/favicon.ico")) {
+        // We don't care about favicon.ico in this test. It is hard to control
+        // whether the request happens.
+        browser.test.log(`Ignoring favicon request: ${details.url}`);
+        return;
+      }
+      browser.test.sendMessage("onBeforeRequest", details);
+    }, {urls: ["<all_urls>"]}, ["blocking"]);
+
+    let tab;
+    browser.tabs.onCreated.addListener(newTab => {
+      tab = newTab;
+      browser.test.sendMessage("tab-created", tab.id);
+    });
+
+    browser.test.onMessage.addListener(async (msg) => {
+      if (msg === "close-tab") {
+        await browser.tabs.remove(tab.id);
+        browser.test.sendMessage("tab-closed");
+      }
+    });
+  },
+};
+
+let expected = {
+  "file_simple_webrequest_worker.html?topframe=true": {
+    type: "main_frame",
+    toplevel: true,
+    origin: "test_ext_webrequest_worker.html",
+    tabId: true,
+    parentFrameId: -1,
+  },
+  "file_simple_iframe_worker.html": {
+    type: "sub_frame",
+    toplevel: false,
+    origin: "file_simple_webrequest_worker.html?topframe=true",
+    tabId: true,
+    parentFrameId: 0,
+  },
+  "file_simple_toplevel.txt": {
+    type: "xmlhttprequest",
+    toplevel: true,
+    origin: "file_simple_webrequest_worker.html?topframe=true",
+    tabId: true,
+    parentFrameId: -1,
+  },
+  "file_simple_iframe.txt": {
+    type: "xmlhttprequest",
+    toplevel: false,
+    origin: "file_simple_iframe_worker.html",
+    tabId: true,
+    parentFrameId: 0,
+  },
+  "file_simple_worker.txt": {
+    type: "xmlhttprequest",
+    toplevel: true,
+    origin: "file_simple_worker.js",
+    tabId: true,
+    parentFrameId: -1,
+  },
+  "file_simple_iframe_worker.txt": {
+    type: "xmlhttprequest",
+    toplevel: false,
+    origin: "file_simple_worker.js?iniframe=true",
+    tabId: true,
+    parentFrameId: 0,
+  },
+  "file_simple_sharedworker.txt": {
+    type: "xmlhttprequest",
+    toplevel: undefined,
+    origin: "file_simple_sharedworker.js",
+    tabId: false,
+    parentFrameId: -1,
+  },
+  "file_simple_iframe_sharedworker.txt": {
+    type: "xmlhttprequest",
+    toplevel: undefined,
+    origin: "file_simple_sharedworker.js?iniframe=true",
+    tabId: false,
+    parentFrameId: -1,
+  },
+  "file_simple_worker.js": {
+    type: "script",
+    toplevel: true,
+    origin: "file_simple_webrequest_worker.html?topframe=true",
+    tabId: true,
+    parentFrameId: -1,
+  },
+  "file_simple_sharedworker.js": {
+    type: "script",
+    toplevel: undefined,
+    origin: "file_simple_webrequest_worker.html?topframe=true",
+    tabId: false,
+    parentFrameId: -1,
+  },
+  "file_simple_worker.js?iniframe=true": {
+    type: "script",
+    toplevel: false,
+    origin: "file_simple_iframe_worker.html",
+    tabId: true,
+    parentFrameId: 0,
+  },
+  "file_simple_sharedworker.js?iniframe=true": {
+    type: "script",
+    toplevel: undefined,
+    origin: "file_simple_iframe_worker.html",
+    tabId: false,
+    parentFrameId: -1,
+  },
+
+
+};
+
+function checkDetails(details) {
+  let filename = details.url.split("/").pop();
+  ok(filename in expected, `Should be expecting a request for ${filename}`);
+  let expect = expected[filename];
+  is(expect.type, details.type, `${details.type} type matches`);
+  const originUrlSuffix = details.originUrl?.split("/").pop();
+  ok(expect.origin === originUrlSuffix || originUrlSuffix.startsWith(expect.origin), `origin url is correct`);
+  is(details.parentFrameId, expect.parentFrameId, "parentFrameId matches");
+  is(expect.tabId ? tabId : -1, details.tabId, "tabId matches");
+  // TODO: When expect.toplevel is "undefined", the details.frameId is supposed
+  // to be -1.
+  // details in https://phabricator.services.mozilla.com/D182705#inline-1030548.
+  if (expect.toplevel === undefined || expect.toplevel) {
+    is(details.frameId, 0, "expect zero frameId");
+  } else {
+    ok(details.frameId > 0, "expect non-zero frameId");
+  }
+  return filename;
+}
+
+add_task(async function test_webRequest_worker() {
+  await SpecialPowers.spawnChrome([], async () => {
+    Services.cache2.clear();
+  });
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  let a = addLink(`file_simple_webrequest_worker.html?topframe=true`);
+  a.click();
+  tabId = await extension.awaitMessage("tab-created");
+  info(`Get created tab(${tabId}`);
+
+  let remaining = new Set(Object.keys(expected));
+  let totalExpectedCount = remaining.size;
+  let currentExpectedCount = 0;
+  while (remaining.size !== 0) {
+    info(`Waiting for request ${currentExpectedCount + 1} out of ${totalExpectedCount}`);
+    info(`Expecting one of: ${Array.from(remaining)}`);
+    let details = await extension.awaitMessage("onBeforeRequest");
+    info(`Checking details for request: ${JSON.stringify(details)}`);
+    let filename = checkDetails(details);
+    ok(remaining.delete(filename), `Got only one request for ${filename}`);
+    currentExpectedCount = currentExpectedCount + 1;
+  }
+
+  extension.sendMessage("close-tab");
+  await extension.awaitMessage("tab-closed");
+  await extension.unload();
+});
+
+</script>
+</head>
+<body>
+<div id="test">Sample text</div>
+
+</body>
+</html>

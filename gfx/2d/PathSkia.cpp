@@ -7,7 +7,6 @@
 #include "PathSkia.h"
 #include "HelpersSkia.h"
 #include "PathHelpers.h"
-#include "mozilla/UniquePtr.h"
 #include "skia/include/core/SkPathUtils.h"
 #include "skia/src/core/SkGeometry.h"
 
@@ -271,11 +270,4 @@ Maybe<Rect> PathSkia::AsRect() const {
   }
   return Nothing();
 }
-
-bool PathSkia::IsEmpty() const {
-  // Move/Close/Done segments are not included in the mask so as long as any
-  // flag is set, we know that the path is non-empty.
-  return mPath.getSegmentMasks() == 0;
-}
-
 }  // namespace mozilla::gfx

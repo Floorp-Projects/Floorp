@@ -729,14 +729,18 @@ items from that key's value."
 
         # print its contents
         content = self.read_from_file(abs_mozconfig_path, error_level=FATAL)
+
+        extra_content = self.config.get("extra_mozconfig_content")
+        if extra_content:
+            content += "\n".join(extra_content)
+
         self.info("mozconfig content:")
         self.info(content)
 
         # finally, copy the mozconfig to a path that 'mach build' expects it to
         # be
-        self.copyfile(
-            abs_mozconfig_path, os.path.join(dirs["abs_src_dir"], ".mozconfig")
-        )
+        with open(os.path.join(dirs["abs_src_dir"], ".mozconfig"), "w") as fh:
+            fh.write(content)
 
     def _run_tooltool(self):
         env = self.query_build_env()

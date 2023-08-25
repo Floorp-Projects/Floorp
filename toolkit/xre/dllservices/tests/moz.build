@@ -6,6 +6,7 @@
 
 GeckoCppUnitTests(
     [
+        "TestDllBlocklistAssumptions",
         "TestDllInterceptor",
         "TestIATPatcher",
         "TestMMPolicy",

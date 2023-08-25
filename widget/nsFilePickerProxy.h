@@ -64,6 +64,7 @@ class nsFilePickerProxy : public nsBaseFilePicker,
   ~nsFilePickerProxy();
   void InitNative(nsIWidget*, const nsAString&) override;
   nsresult Show(nsIFilePicker::ResultCode* aReturn) override;
+  nsresult ResolveSpecialDirectory(const nsAString& aSpecialDirectory) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

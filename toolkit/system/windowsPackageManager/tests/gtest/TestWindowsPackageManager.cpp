@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsWindowsPackageManager.h"
 #include "nsServiceManagerUtils.h"
 
@@ -12,6 +13,10 @@ using namespace mozilla::toolkit::system;
 
 TEST(WindowsPackageManager, TestWithMatches)
 {
+  if (!mozilla::IsWin10OrLater()) {
+    return;
+  }
+
   nsCOMPtr<nsIWindowsPackageManager> wpm(
       do_GetService("@mozilla.org/windows-package-manager;1"));
   nsTArray<nsString> prefixes, packages;
@@ -25,6 +30,10 @@ TEST(WindowsPackageManager, TestWithMatches)
 
 TEST(WindowsPackageManager, TestWithoutMatches)
 {
+  if (!mozilla::IsWin10OrLater()) {
+    return;
+  }
+
   nsCOMPtr<nsIWindowsPackageManager> wpm(
       do_GetService("@mozilla.org/windows-package-manager;1"));
   nsTArray<nsString> prefixes, packages;

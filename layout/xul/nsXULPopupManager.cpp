@@ -287,7 +287,8 @@ nsXULPopupManager* nsXULPopupManager::GetInstance() {
 }
 
 bool nsXULPopupManager::RollupTooltips() {
-  return RollupInternal(RollupKind::Tooltip, {}, nullptr);
+  const RollupOptions options{0, FlushViews::Yes, nullptr, AllowAnimations::No};
+  return RollupInternal(RollupKind::Tooltip, options, nullptr);
 }
 
 bool nsXULPopupManager::Rollup(const RollupOptions& aOptions,
