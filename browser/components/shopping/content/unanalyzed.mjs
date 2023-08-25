@@ -48,7 +48,7 @@ class UnanalyzedProductCard extends MozLitElement {
             id="unanalyzed-product-analysis-link"
             data-l10n-id="shopping-unanalyzed-product-analyze-link"
             target="_blank"
-            href="https://staging.fakespot.com/analyze?url=${this.productURL}"
+            href="https://fakespot.com/analyze?url=${this.productURL}"
             @click=${this.onClickAnalysisLink}
           ></a>
         </div>
