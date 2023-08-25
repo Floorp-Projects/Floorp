@@ -8,7 +8,6 @@ import signal
 import subprocess
 from collections import namedtuple
 
-import six
 from mozboot.util import get_tools_dir
 from mozfile import which
 from mozlint import result
@@ -48,15 +47,17 @@ def parse_issues(config, output, paths):
     line_no = 0
     diff = ""
     for line in output:
-        line = six.ensure_text(line)
-        match = diff_line.match(line)
+        processed_line = (
+            line.decode("utf-8", "replace") if isinstance(line, bytes) else line
+        )
+        match = diff_line.match(processed_line)
         if match:
             if diff:
                 issues.append(RustfmtDiff(file, line_no, diff.rstrip("\n")))
                 diff = ""
             file, line_no = match.groups()
         else:
-            diff += line + "\n"
+            diff += processed_line + "\n"
     # the algorithm above will always skip adding the last issue
     issues.append(RustfmtDiff(file, line_no, diff))
     file = os.path.normcase(os.path.normpath(file))

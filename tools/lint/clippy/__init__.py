@@ -9,7 +9,6 @@ import signal
 import subprocess
 import sys
 
-import six
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
 from mozprocess import ProcessHandler
@@ -22,7 +21,7 @@ def in_sorted_list(l, x):
 
 def handle_clippy_msg(config, line, log, base_path, files):
     try:
-        detail = json.loads(six.ensure_text(line))
+        detail = json.loads(line)
         if "message" in detail:
             p = detail["target"]["src_path"]
             detail = detail["message"]
