@@ -602,8 +602,10 @@ nsIContent* ContentIteratorBase<NodeType>::GetNextSibling(nsINode* aNode) {
   // XXX This is a hack to preserve previous behaviour: This should be fixed
   // in bug 1404916. If we were positioned on anonymous content, move to
   // the first child of our parent.
-  if (parent->GetLastChild() && parent->GetLastChild() != aNode) {
-    return parent->GetFirstChild();
+  if (aNode->IsRootOfNativeAnonymousSubtree()) {
+    if (nsIContent* first = parent->GetFirstChild()) {
+      return first;
+    }
   }
 
   return ContentIteratorBase::GetNextSibling(parent);
@@ -629,8 +631,10 @@ nsIContent* ContentIteratorBase<NodeType>::GetPrevSibling(nsINode* aNode) {
   // XXX This is a hack to preserve previous behaviour: This should be fixed
   // in bug 1404916. If we were positioned on anonymous content, move to
   // the last child of our parent.
-  if (parent->GetFirstChild() && parent->GetFirstChild() != aNode) {
-    return parent->GetLastChild();
+  if (aNode->IsRootOfNativeAnonymousSubtree()) {
+    if (nsIContent* last = parent->GetLastChild()) {
+      return last;
+    }
   }
 
   return ContentIteratorBase::GetPrevSibling(parent);
