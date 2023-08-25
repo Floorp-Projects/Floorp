@@ -94,7 +94,7 @@ private fun Header() {
         Spacer(modifier = Modifier.width(10.dp))
 
         Text(
-            text = stringResource(R.string.review_quality_check),
+            text = stringResource(R.string.review_quality_check_feature_name),
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.headline6,
         )

@@ -39,6 +39,7 @@ import org.mozilla.fenix.compose.ClickableSubstringLink
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.SecondaryButton
+import org.mozilla.fenix.compose.parseHtml
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
@@ -89,17 +90,10 @@ fun ProductAnalysis(
                 highlights = productAnalysis.highlights,
                 modifier = Modifier.fillMaxWidth(),
             )
-
-            Text(
-                text = stringResource(R.string.review_quality_check_highlights_caption),
-                color = FirefoxTheme.colors.textPrimary,
-                style = FirefoxTheme.typography.caption,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
         }
 
         ReviewQualityCheckExpandableCard(
-            title = stringResource(id = R.string.review_quality_check_info_title),
+            title = stringResource(id = R.string.review_quality_check_explanation_title),
             modifier = Modifier.fillMaxWidth(),
         ) {
             ReviewQualityInfo(
@@ -332,19 +326,27 @@ private fun ReviewQualityInfo(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
+        val adjustedGradingText =
+            stringResource(id = R.string.review_quality_check_explanation_body_adjusted_grading)
         // Any and all text formatting (bullets, inline substring bolding, etc.) will be handled as
         // follow-up when the copy is finalized.
         // Bug 1848219
         Text(
-            text = stringResource(id = R.string.review_quality_check_info_overview),
+            text = stringResource(
+                id = R.string.review_quality_check_explanation_body_reliability,
+                stringResource(R.string.shopping_product_name),
+            ),
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.body2,
         )
 
-        val link = stringResource(R.string.review_quality_check_info_learn_more_link)
+        val link = stringResource(
+            id = R.string.review_quality_check_info_learn_more_link,
+            stringResource(R.string.shopping_product_name),
+        )
         val text = stringResource(R.string.review_quality_check_info_learn_more, link)
-        val linkStartIndex = text.indexOf(link)
         val context = LocalContext.current
+        val linkStartIndex = text.indexOf(link)
         val linkEndIndex = linkStartIndex + link.length
         ClickableSubstringLink(
             text = text,
@@ -360,12 +362,6 @@ private fun ReviewQualityInfo(
                     ),
                 )
             },
-        )
-
-        Text(
-            text = stringResource(id = R.string.review_quality_check_info_review_grade_header),
-            color = FirefoxTheme.colors.textPrimary,
-            style = FirefoxTheme.typography.body2,
         )
 
         ReviewGradingScaleInfo(
@@ -390,6 +386,12 @@ private fun ReviewQualityInfo(
             ),
             info = stringResource(id = R.string.review_quality_check_info_grade_info_DF),
             modifier = Modifier.fillMaxWidth(),
+        )
+
+        Text(
+            text = remember(adjustedGradingText) { parseHtml(adjustedGradingText) },
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.body2,
         )
     }
 }

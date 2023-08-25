@@ -13,6 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
@@ -44,7 +47,21 @@ fun ColumnScope.ReviewQualityCheckContextualOnboarding(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = stringResource(R.string.review_quality_check_contextual_onboarding_description),
+            text = createDescriptionString(),
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.body2,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = stringResource(
+                id = R.string.review_quality_check_contextual_onboarding_learn_more,
+                stringResource(id = R.string.shopping_product_name),
+                stringResource(id = R.string.review_quality_check_contextual_onboarding_learn_more_link),
+            ),
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.body2,
             textAlign = TextAlign.Center,
@@ -70,10 +87,44 @@ fun ColumnScope.ReviewQualityCheckContextualOnboarding(
     Spacer(modifier = Modifier.height(8.dp))
 
     Text(
-        text = stringResource(R.string.review_quality_check_contextual_onboarding_caption),
+        text = stringResource(
+            R.string.review_quality_check_contextual_onboarding_caption,
+            stringResource(R.string.shopping_product_name),
+            stringResource(id = R.string.review_quality_check_contextual_onboarding_privacy_policy),
+            stringResource(id = R.string.review_quality_check_contextual_onboarding_terms_use),
+        ),
         color = FirefoxTheme.colors.textPrimary,
         style = FirefoxTheme.typography.caption,
         textAlign = TextAlign.Center,
         modifier = Modifier.align(Alignment.CenterHorizontally),
     )
+}
+
+@Composable
+private fun createDescriptionString(
+    retailers: List<Int> = listOf(
+        R.string.review_quality_check_retailer_name_amazon,
+        R.string.review_quality_check_retailer_name_bestbuy,
+        R.string.review_quality_check_retailer_name_walmart,
+    ),
+) = buildAnnotatedString {
+    val description = stringResource(
+        id = R.string.review_quality_check_contextual_onboarding_description,
+        stringResource(retailers[0]),
+        stringResource(R.string.app_name),
+        stringResource(retailers[1]),
+        stringResource(retailers[2]),
+    )
+    append(description)
+
+    retailers.forEach {
+        val retailer = stringResource(id = it)
+        val start = description.indexOf(retailer)
+
+        addStyle(
+            style = SpanStyle(fontWeight = FontWeight.Bold),
+            start = start,
+            end = start + retailer.length,
+        )
+    }
 }
