@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>TransferToImageBitmap</title>
+</head>
+
+<body>
+  <div id="description"></div>
+  <div id="console"></div>
+  <script id='myWorker' type='text/worker'>
+  self.onmessage = function(e) {
+      var canvas = new OffscreenCanvas(128, 128);
+      var gl = canvas.getContext("webgl2");
+      gl.clearColor(1.0, 1.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      var image = canvas.transferToImageBitmap();
+
+      self.postMessage({ bitmap: image },
+                       [ image ]);
+  };
+  </script>
+  <script>
+    var blob = new Blob([document.getElementById('myWorker').textContent]);
+    var worker = new Worker(URL.createObjectURL(blob));
+    worker.onmessage = function (msg) {
+      try { worker.postMessage('Start worker'); } catch (e) { }
+    };
+
+    try { worker.postMessage('Start worker'); } catch (e) { }
+  </script>
+</body>
+
+</html>
