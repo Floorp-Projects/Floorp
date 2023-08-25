@@ -1750,3 +1750,14 @@ backgroundUpdate:
         directory can be written.
       type: boolean
       fallbackPref: app.update.background.allowUpdatesForUnelevatedInstallations
+
+bookmarks:
+  description: Prefs to control aspects of the bookmarks system.
+  owner: omc@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    enableBookmarksToolbar:
+      type: string
+      setPref: browser.toolbars.bookmarks.visibility
+      description: If the bookmarks toolbar should never, always, or only show on newtab.
