@@ -324,17 +324,13 @@ class SessionControlAdapter(
             is PocketCategoriesViewHolder,
             is PocketRecommendationsHeaderViewHolder,
             is PocketStoriesViewHolder,
+            is TopSitesViewHolder,
             -> {
                 // no op
                 // This previously called "composeView.disposeComposition" which would have the
                 // entire Composable destroyed and recreated when this View is scrolled off or on screen again.
                 // This View already listens and maps store updates. Avoid creating and binding new Views.
                 // The composition will live until the ViewTreeLifecycleOwner to which it's attached to is destroyed.
-            }
-            is TopSitesViewHolder -> {
-                // Dispose the underlying composition immediately.
-                // This ViewHolder can be removed / re-added and we need it to show a fresh new composition.
-                holder.composeView.disposeComposition()
             }
             is CollectionViewHolder -> {
                 // Dispose the underlying composition immediately.

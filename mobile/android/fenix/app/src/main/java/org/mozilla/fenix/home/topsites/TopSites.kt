@@ -384,8 +384,13 @@ private fun FaviconBitmap(topSite: TopSite.Provided) {
     }
 
     when (val uiState = faviconBitmapUiState) {
-        is FaviconBitmapUiState.Loading, FaviconBitmapUiState.Error -> FaviconDefault(topSite.url)
         is FaviconBitmapUiState.Data -> FaviconImage(BitmapPainter(uiState.imageBitmap))
+        is FaviconBitmapUiState.Error -> FaviconDefault(topSite.url)
+        is FaviconBitmapUiState.Loading -> {
+            // no-op
+            // Don't update the icon while loading else the top site icon could have a 'flashing' effect
+            // caused by the 'place holder letter' icon being immediately updated with the desired bitmap.
+        }
     }
 }
 
