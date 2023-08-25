@@ -3126,4 +3126,42 @@ class WebExtensionTest : BaseSessionTest() {
             equalTo(true),
         )
     }
+
+    fun extensionProcessCrash() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "extensions.webextensions.remote" to true,
+                "dom.ipc.keepProcessesAlive.extension" to 1,
+                "xpinstall.signatures.required" to false,
+            ),
+        )
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny>? {
+                return GeckoResult.allow()
+            }
+        })
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+            WebExtensionController.ExtensionProcessDelegate::class,
+            { delegate -> controller.setExtensionProcessDelegate(delegate) },
+            { controller.setExtensionProcessDelegate(null) },
+            object : WebExtensionController.ExtensionProcessDelegate {
+                @AssertCalled(count = 1)
+                override fun onDisabledProcessSpawning() {}
+            },
+        )
+
+        val borderify = sessionRule.waitForResult(
+            controller.install("resource://android/assets/web_extensions/borderify.xpi"),
+        )
+
+        val list = extensionsMap(sessionRule.waitForResult(controller.list()))
+        assertTrue(list.containsKey(borderify.id))
+
+        mainSession.loadUri("about:crashextensions")
+
+        sessionRule.waitForResult(controller.uninstall(borderify))
+    }
 }

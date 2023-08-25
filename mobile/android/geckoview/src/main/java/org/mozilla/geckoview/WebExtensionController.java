@@ -33,6 +33,7 @@ public class WebExtensionController {
   private static final String LOGTAG = "WebExtension";
 
   private AddonManagerDelegate mAddonManagerDelegate;
+  private ExtensionProcessDelegate mExtensionProcessDelegate;
   private DebuggerDelegate mDebuggerDelegate;
   private PromptDelegate mPromptDelegate;
   private final WebExtension.Listener<WebExtension.TabDelegate> mListener;
@@ -393,6 +394,13 @@ public class WebExtensionController {
     default void onInstalled(final @NonNull WebExtension extension) {}
   }
 
+  /** This delegate is used to notify of extension process state changes. */
+  public interface ExtensionProcessDelegate {
+    /** Called when extension process spawning has been disabled. */
+    @UiThread
+    default void onDisabledProcessSpawning() {}
+  }
+
   /**
    * @return the current {@link PromptDelegate} instance.
    * @see PromptDelegate
@@ -486,6 +494,42 @@ public class WebExtensionController {
     }
 
     mAddonManagerDelegate = delegate;
+  }
+
+  /**
+   * Set the {@link ExtensionProcessDelegate} for this instance. This delegate will be used to
+   * notify when the state of the extension process has changed.
+   *
+   * @param delegate the extension process delegate
+   * @see ExtensionProcessDelegate
+   */
+  @UiThread
+  public void setExtensionProcessDelegate(final @Nullable ExtensionProcessDelegate delegate) {
+    if (delegate == null && mExtensionProcessDelegate != null) {
+      EventDispatcher.getInstance()
+          .unregisterUiThreadListener(
+              mInternals, "GeckoView:WebExtension:OnDisabledProcessSpawning");
+    } else if (delegate != null && mExtensionProcessDelegate == null) {
+      EventDispatcher.getInstance()
+          .registerUiThreadListener(mInternals, "GeckoView:WebExtension:OnDisabledProcessSpawning");
+    }
+
+    mExtensionProcessDelegate = delegate;
+  }
+
+  /**
+   * Enable extension process spawning.
+   *
+   * <p>Extension process spawning can be disabled when the extension process has been killed or
+   * crashed beyond the threshold set for Gecko. This method can be called to reset the threshold
+   * count and allow the spawning again. If the threshold is reached again, {@link
+   * ExtensionProcessDelegate#onDisabledProcessSpawning()} will still be called.
+   *
+   * @see ExtensionProcessDelegate#onDisabledProcessSpawning()
+   */
+  @AnyThread
+  public void enableExtensionProcessSpawning() {
+    EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:EnableProcessSpawning", null);
   }
 
   private static class InstallCanceller implements GeckoResult.CancellationDelegate {
@@ -860,6 +904,9 @@ public class WebExtensionController {
     } else if ("GeckoView:WebExtension:OnInstalled".equals(event)) {
       onInstalled(bundle);
       return;
+    } else if ("GeckoView:WebExtension:OnDisabledProcessSpawning".equals(event)) {
+      onDisabledProcessSpawning();
+      return;
     }
 
     extensionFromBundle(bundle)
@@ -1131,6 +1178,15 @@ public class WebExtensionController {
     final GeckoBundle extensionBundle = bundle.getBundle("extension");
     final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
     mAddonManagerDelegate.onInstalled(extension);
+  }
+
+  private void onDisabledProcessSpawning() {
+    if (mExtensionProcessDelegate == null) {
+      Log.e(LOGTAG, "no extension process delegate registered");
+      return;
+    }
+
+    mExtensionProcessDelegate.onDisabledProcessSpawning();
   }
 
   @SuppressLint("WrongThread") // for .toGeckoBundle
