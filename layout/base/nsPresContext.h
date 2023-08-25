@@ -850,9 +850,13 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   void ConstructedFrame() { ++mFramesConstructed; }
   void ReflowedFrame() { ++mFramesReflowed; }
+  void TriggeredAnimationRestyle() { ++mAnimationTriggeredRestyles; }
 
-  uint64_t FramesConstructedCount() { return mFramesConstructed; }
-  uint64_t FramesReflowedCount() { return mFramesReflowed; }
+  uint64_t FramesConstructedCount() const { return mFramesConstructed; }
+  uint64_t FramesReflowedCount() const { return mFramesReflowed; }
+  uint64_t AnimationTriggeredRestylesCount() const {
+    return mAnimationTriggeredRestyles;
+  }
 
   static nscoord GetBorderWidthForKeyword(unsigned int aBorderWidthKeyword) {
     // This table maps border-width enums 'thin', 'medium', 'thick'
@@ -1225,6 +1229,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   uint64_t mElementsRestyled;
   uint64_t mFramesConstructed;
   uint64_t mFramesReflowed;
+  uint64_t mAnimationTriggeredRestyles;
 
   mozilla::TimeStamp mReflowStartTime;
 
