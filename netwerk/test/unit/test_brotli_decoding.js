@@ -61,7 +61,7 @@ add_task(async function test_http2() {
   });
   equal(req.status, Cr.NS_OK);
   equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 404);
-  await server.registerPathHandler("/test", (req, resp) => {
+  await server.registerPathHandler("/test", (req1, resp) => {
     resp.writeHead(200, {
       "content-type": "text/html; charset=utf-8",
       "content-encoding": "br",

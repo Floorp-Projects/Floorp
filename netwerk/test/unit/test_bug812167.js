@@ -85,8 +85,8 @@ function check_response(
       // Do the request again and check the server handler is called appropriately
       var chan = make_channel(path);
       chan.asyncOpen(
-        new ChannelListener(function (request, buffer) {
-          Assert.equal(buffer, responseBody);
+        new ChannelListener(function (request1, buffer1) {
+          Assert.equal(buffer1, responseBody);
 
           if (expectedExpiration) {
             // Handler had to be called second time

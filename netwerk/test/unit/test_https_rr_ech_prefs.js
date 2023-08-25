@@ -54,7 +54,7 @@ function checkResult(inRecord, noHttp2, noHttp3, result) {
 //   There are two records: one has a echConfig and the other doesn't.
 // We want to test if the record with echConfig is preferred.
 add_task(async function testEchConfigEnabled() {
-  let trrServer = new TRRServer();
+  trrServer = new TRRServer();
   await trrServer.start();
 
   Services.prefs.setIntPref("network.trr.mode", 3);
@@ -152,7 +152,7 @@ add_task(async function testEchConfigEnabled() {
 add_task(async function testTwoRecordsHaveEchConfig() {
   Services.dns.clearCache(true);
 
-  let trrServer = new TRRServer();
+  trrServer = new TRRServer();
   await trrServer.start();
 
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
@@ -251,7 +251,7 @@ add_task(async function testTwoRecordsHaveEchConfig() {
 add_task(async function testTwoRecordsHaveEchConfig1() {
   Services.dns.clearCache(true);
 
-  let trrServer = new TRRServer();
+  trrServer = new TRRServer();
   await trrServer.start();
 
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
@@ -357,7 +357,7 @@ add_task(async function testTwoRecordsHaveEchConfig1() {
 add_task(async function testOneRecordsHasEchConfig() {
   Services.dns.clearCache(true);
 
-  let trrServer = new TRRServer();
+  trrServer = new TRRServer();
   await trrServer.start();
 
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
@@ -451,7 +451,7 @@ add_task(async function testOneRecordsHasEchConfig() {
 add_task(async function testHttp3AndHttp2Pref() {
   Services.dns.clearCache(true);
 
-  let trrServer = new TRRServer();
+  trrServer = new TRRServer();
   await trrServer.start();
 
   Services.prefs.setBoolPref("network.http.http3.enable", false);

@@ -719,7 +719,7 @@ function do_tests(whichRFC) {
         // Allow following tests to run by catching exception from do_check_eq()
         try {
           Assert.equal(e.result, expectedDt);
-        } catch (e) {}
+        } catch (e1) {}
       }
       continue;
     }
@@ -756,7 +756,7 @@ function do_tests(whichRFC) {
         // Allow following tests to run by catching exception from do_check_eq()
         try {
           Assert.equal(e.result, expectedFn);
-        } catch (e) {}
+        } catch (e1) {}
       }
       continue;
     }

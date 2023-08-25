@@ -174,36 +174,36 @@ function* do_run_test() {
 
   // Populate it with more cookies.
   for (let i = 60; i < 80; ++i) {
-    let cookie = new Cookie(
-      "oh" + i,
-      "hai",
-      "foo.com",
-      "/",
-      futureExpiry,
-      now,
-      now + i,
-      false,
-      false,
-      false
+    schema2db.insertCookie(
+      new Cookie(
+        "oh" + i,
+        "hai",
+        "foo.com",
+        "/",
+        futureExpiry,
+        now,
+        now + i,
+        false,
+        false,
+        false
+      )
     );
-
-    schema2db.insertCookie(cookie);
   }
   for (let i = 80; i < 100; ++i) {
-    let cookie = new Cookie(
-      "oh" + i,
-      "hai",
-      "cat.com",
-      "/",
-      futureExpiry,
-      now,
-      now + i,
-      false,
-      false,
-      false
+    schema2db.insertCookie(
+      new Cookie(
+        "oh" + i,
+        "hai",
+        "cat.com",
+        "/",
+        futureExpiry,
+        now,
+        now + i,
+        false,
+        false,
+        false
+      )
     );
-
-    schema2db.insertCookie(cookie);
   }
 
   // Attempt to add a cookie with the same (name, host, path) values as another
