@@ -171,7 +171,7 @@ export class ProtonScreen extends React.PureComponent {
   renderTitle({ title, title_logo }) {
     return title_logo ? (
       <div className="inline-icon-container">
-        {this.renderLogo(title_logo)}
+        {this.renderPicture(title_logo)}
         <Localized text={title}>
           <h1 id="mainContentHeader" />
         </Localized>
@@ -183,13 +183,14 @@ export class ProtonScreen extends React.PureComponent {
     );
   }
 
-  renderLogo({
+  renderPicture({
     imageURL = "chrome://branding/content/about-logo.svg",
     darkModeImageURL,
     reducedMotionImageURL,
     darkModeReducedMotionImageURL,
     alt = "",
     height,
+    className = "logo-container",
   }) {
     function getLoadingStrategy() {
       for (let url of [
@@ -206,7 +207,7 @@ export class ProtonScreen extends React.PureComponent {
     }
 
     return (
-      <picture className="logo-container">
+      <picture className={className}>
         {darkModeReducedMotionImageURL ? (
           <source
             srcSet={darkModeReducedMotionImageURL}
@@ -478,7 +479,7 @@ export class ProtonScreen extends React.PureComponent {
                 : {}
             }
           >
-            {content.logo ? this.renderLogo(content.logo) : null}
+            {content.logo ? this.renderPicture(content.logo) : null}
 
             {isRtamo ? (
               <div className="rtamo-icon">
@@ -526,6 +527,15 @@ export class ProtonScreen extends React.PureComponent {
                   handleAction={this.props.handleAction}
                 />
               ) : null}
+              {content.inline_image
+                ? this.renderPicture({
+                    imageURL: content.inline_image.url,
+                    darkModeImageURL: content.inline_image.darkModeImageURL,
+                    height: content.inline_image.height,
+                    alt: content.inline_image.alt_text,
+                    className: "inline-image",
+                  })
+                : null}
               {content.legal_paragraph ? (
                 <LegalParagraph
                   content={content}

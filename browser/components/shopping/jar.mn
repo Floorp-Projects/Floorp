@@ -27,4 +27,4 @@ browser.jar:
     content/browser/shopping/unanalyzed.mjs (content/unanalyzed.mjs)
     content/browser/shopping/recommended-ad.css (content/recommended-ad.css)
     content/browser/shopping/recommended-ad.mjs (content/recommended-ad.mjs)
-    
+    content/browser/shopping/assets/ (content/assets/*)

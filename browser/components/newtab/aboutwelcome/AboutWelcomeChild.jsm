@@ -403,6 +403,10 @@ const OPTIN_DEFAULT = {
             },
           },
         },
+        inline_image: {
+          url: "chrome://browser/content/shopping/assets/temp-fakespot-rating.svg",
+          height: "auto",
+        },
         info_text: {
           raw: "Review quality check is available when you shop on Amazon, Best Buy, and Walmart.",
         },
