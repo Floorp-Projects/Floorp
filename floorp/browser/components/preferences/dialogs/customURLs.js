@@ -6,7 +6,7 @@
 const { ContextualIdentityService } = ChromeUtils.import(
   "resource://gre/modules/ContextualIdentityService.jsm"
 );
-let { BrowserManagerSidebar } = ChromeUtils.import("resource:///modules/BrowserManagerSidebar.jsm")
+let { BrowserManagerSidebar } = ChromeUtils.importESModule("resource:///modules/BrowserManagerSidebar.sys.mjs")
 function setTitle() {
   let params = window.arguments[0] || {};
   let winElem = document.documentElement;
@@ -33,7 +33,7 @@ function onLoad() {
   }
   newPanel = params.new
   panelId = params.id
-  if (!newPanel) Services.obs.notifyObservers({ eventType: "mouseOver", id: `BSB-${panelId}` }, "obs-panel-re")
+  if (!newPanel) {Services.obs.notifyObservers({ eventType: "mouseOver", id: `BSB-${panelId}` }, "obs-panel-re")}
   let panelUserAgent = newPanel ? false : bsbObject.data[panelId].userAgent ?? false
   let panelWidth = newPanel ? 0 : bsbObject.data[panelId].width ?? 0
 
@@ -90,7 +90,7 @@ function onLoad() {
     menuitem.setAttribute("label", containerName);
     container_list.appendChild(menuitem);
   }
-  if (container_label === -1) container_label = document.getElementById("browserBundle").getString("userContextNone.label")
+  if (container_label === -1) {container_label = document.getElementById("browserBundle").getString("userContextNone.label")}
   container_list.parentElement.setAttribute("label", container_label)
 
 
@@ -118,9 +118,7 @@ function encodeObjectURL(text) {
   var remove_whitespace = /^\s+/
   var box_value = text
   box_value = box_value.replace(remove_whitespace, ""); / * Removing whitespace from the beginning of a line * /
-  if (box_value == "") {
-
-  }
+  if (box_value == "") { /* empty */ }
   else if (!box_value.startsWith("http://") && !box_value.startsWith("https://")) {
     / * Checks if url in the sidebar contains https in the beginning of a line * /
     if (!box_value.startsWith("file://") && !box_value.startsWith("resource://") && !box_value.startsWith("about:") && !box_value.startsWith("jar:") && !box_value.startsWith("about:") && !box_value.startsWith("chrome://") && !box_value.startsWith("moz-extension://")) {
@@ -143,13 +141,13 @@ function setPref() {
     dataObject.url = document.querySelector("#pageSelect").value
   } else {
     dataObject.url = encodeObjectURL(url)
-    if (container != 0) dataObject.usercontext = container
-    if (userAgent != 0) dataObject.userAgent = userAgent
+    if (container != 0) {dataObject.usercontext = container}
+    if (userAgent != 0) {dataObject.userAgent = userAgent}
   }
-  if (width != 0) dataObject.width = width
+  if (width != 0) {dataObject.width = width}
 
   bsbObject.data[panelId] = dataObject
-  if (newPanel) bsbObject.index.push(panelId)
+  if (newPanel) {bsbObject.index.push(panelId)}
 
   Services.prefs.setStringPref("floorp.browser.sidebar2.data", JSON.stringify(bsbObject))
 }
@@ -163,5 +161,5 @@ function setBox() {
 }
 
 function onunload() {
-  if (!newPanel) Services.obs.notifyObservers({ eventType: "mouseOut", id: `BSB-${panelId}` }, "obs-panel-re")
+  if (!newPanel) {Services.obs.notifyObservers({ eventType: "mouseOut", id: `BSB-${panelId}` }, "obs-panel-re")}
 }

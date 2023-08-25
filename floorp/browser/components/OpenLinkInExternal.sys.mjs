@@ -3,33 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = [];
+export const EXPORTED_SYMBOLS = [];
 
-const { FileUtils } = ChromeUtils.import(
-    "resource://gre/modules/FileUtils.jsm"
-);
-const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-);
-const { ExtensionCommon } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionCommon.jsm"
-);
-const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
-);
-const { Subprocess } = ChromeUtils.import(
-    "resource://gre/modules/Subprocess.jsm"
-);
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
+import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs"
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs"
+import { Subprocess } from "resource://gre/modules/Subprocess.sys.mjs"
+import { DesktopFileParser } from "resource:///modules/DesktopFileParser.sys.mjs"
+import { EscapeShell } from "resource:///modules/EscapeShell.sys.mjs"
+
+// Migration from JSM to ES Module in the future.
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const platform = AppConstants.platform;
+const L10N = new Localization(["browser/floorp.ftl"]);
+
+// TODO: Use Services.env rather than getService().eslintmozilla/use-services.
 const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
-);
-const L10N = new Localization(["browser/floorp.ftl"]);
-const { DesktopFileParser } = ChromeUtils.import(
-    "resource:///modules/DesktopFileParser.jsm"
-);
-const { EscapeShell } = ChromeUtils.import(
-    "resource:///modules/EscapeShell.jsm"
 );
 
 function getBrowsersOnWindows() {
@@ -55,8 +46,8 @@ function getBrowsersOnWindows() {
         }
         for (let i = 0; i < key.childCount; i++) {
             let keyname = key.getChildName(i);
-            if (keyname == "IEXPLORE.EXE") continue;
-            if (browsers.filter(browser => browser.keyName === keyname).length >= 1) continue;
+            if (keyname == "IEXPLORE.EXE") {continue;}
+            if (browsers.filter(browser => browser.keyName === keyname).length >= 1) {continue;}
 
             let keyBrowserName = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
                 Ci.nsIWindowsRegKey
@@ -133,17 +124,17 @@ function getBrowsersOnWindows() {
                 name: browserName,
                 keyName: keyname,
                 path: browserPath,
-                fileAssociations: fileAssociations,
-                urlAssociations: urlAssociations,
+                fileAssociations,
+                urlAssociations,
             });
         }
         key.close();
     }
     return browsers.sort((a, b) => {
-        if (a["name"] < b["name"]) {
+        if (a.name < b.name) {
             return -1;
         }
-        if (a["name"] > b["name"]) {
+        if (a.name > b.name) {
             return 1;
         }
         return 0;
@@ -163,8 +154,8 @@ function getDefaultBrowserOnWindows(protocol, browsers = null) {
         Ci.nsIWindowsRegKey.ACCESS_READ
     );
     let regValue = key.readStringValue("ProgID");
-    let targets = browsers.filter(browser => browser["urlAssociations"][protocol] === regValue);
-    if (targets.length === 0) return null;
+    let targets = browsers.filter(browser => browser.urlAssociations[protocol] === regValue);
+    if (targets.length === 0) {return null;}
     return targets[0];
 }
 
@@ -189,7 +180,7 @@ async function getBrowsersOnLinux() {
     for (let checkDir of checkDirs) {
         let applications_dir_path = PathUtils.join(checkDir, "applications");
         let dir = FileUtils.File(applications_dir_path);
-        if (!dir.exists()) continue;
+        if (!dir.exists()) {continue;}
         let desktopFiles = [];
         let dir_entries = dir.directoryEntries;
         while (dir_entries.hasMoreElements()) {
@@ -201,19 +192,18 @@ async function getBrowsersOnLinux() {
         for (let desktopFile of desktopFiles) {
             if (desktopFilesInfo.filter(desktopFileInfo => desktopFileInfo.filename === desktopFile.leafName).length === 0) {
                 let desktopFileInfo = {};
-                desktopFileInfo["filename"] = desktopFile.leafName;
+                desktopFileInfo.filename = desktopFile.leafName;
                 try {
-                    desktopFileInfo["fileInfo"] = 
-                        await DesktopFileParser.parseFromPath(desktopFile.path);
+                    desktopFileInfo.fileInfo =                     await DesktopFileParser.parseFromPath(desktopFile.path);
                 } catch (e) {
                     console.log(`Failed to load ${desktopFile.path}`);
                     console.error(e);
                     continue;
                 }
-                if (!desktopFileInfo["fileInfo"]["Desktop Entry"]) continue;
-                if (!desktopFileInfo["fileInfo"]["Desktop Entry"]["Exec"]) continue;
-                if (!desktopFileInfo["fileInfo"]["Desktop Entry"]["Name"]) continue;
-                let mimetypes = desktopFileInfo["fileInfo"]["Desktop Entry"]["MimeType"];
+                if (!desktopFileInfo.fileInfo["Desktop Entry"]) {continue;}
+                if (!desktopFileInfo.fileInfo["Desktop Entry"].Exec) {continue;}
+                if (!desktopFileInfo.fileInfo["Desktop Entry"].Name) {continue;}
+                let mimetypes = desktopFileInfo.fileInfo["Desktop Entry"].MimeType;
                 if (mimetypes &&
                     (
                         mimetypes.split(";").includes("x-scheme-handler/http") ||
@@ -226,10 +216,10 @@ async function getBrowsersOnLinux() {
         }
     }
     return desktopFilesInfo.sort((a, b) => {
-        if (a["filename"] < b["filename"]) {
+        if (a.filename < b.filename) {
             return -1;
         }
-        if (a["filename"] > b["filename"]) {
+        if (a.filename > b.filename) {
             return 1;
         }
         return 0;
@@ -257,18 +247,18 @@ async function getDefaultBrowserOnLinux(protocol, desktopFilesInfo = null) {
         console.error(e);
         return null;
     }
-    if (output === "") return null;
+    if (output === "") {return null;}
     let filename = output.replace(/\n$/, "");
     let targets = desktopFilesInfo.filter(desktopFileInfo => desktopFileInfo.filename === filename);
-    if (targets.length === 0) return null;
+    if (targets.length === 0) {return null;}
     return targets[0];
 }
 
 async function OpenLinkInExternal(url) {
     let userSelectedBrowserId = Services.prefs.getStringPref("floorp.openLinkInExternal.browserId", "");
     let protocol;
-    if (url.startsWith("http")) protocol = "http";
-    if (url.startsWith("https")) protocol = "https";
+    if (url.startsWith("http")) {protocol = "http";}
+    if (url.startsWith("https")) {protocol = "https";}
     if (platform === "linux") {
         let desktopFilesInfo = await getBrowsersOnLinux();
         let browser;
@@ -298,11 +288,11 @@ async function OpenLinkInExternal(url) {
         }
         // Flatpak version will be launched that does not work properly.
         // To avoid data corruption, do not launch it.
-        if (browser["fileInfo"]["Desktop Entry"]["Exec"].startsWith("/usr/bin/flatpak")) {
+        if (browser.fileInfo["Desktop Entry"].Exec.startsWith("/usr/bin/flatpak")) {
             return;
         }
         let shellscript = "#!/bin/sh\n";
-        shellscript += browser["fileInfo"]["Desktop Entry"]["Exec"].replace(
+        shellscript += browser.fileInfo["Desktop Entry"].Exec.replace(
             "%u",
             EscapeShell(url)
         );
@@ -341,7 +331,7 @@ async function OpenLinkInExternal(url) {
             }
             browser = targets[0];
         }
-        let browserPath = browser["path"];
+        let browserPath = browser.path;
         const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
         process.init(FileUtils.File(browserPath));
         process.runAsync([url], 1);
@@ -409,22 +399,22 @@ let documentObserver = {
                         for (let desktopFileInfo of desktopFilesInfo) {
                             // Flatpak version will be launched that does not work properly.
                             // To avoid data corruption, do not display them in the list.
-                            if (desktopFileInfo["fileInfo"]["Desktop Entry"]["Exec"].startsWith("/usr/bin/flatpak")) {
+                            if (desktopFileInfo.fileInfo["Desktop Entry"].Exec.startsWith("/usr/bin/flatpak")) {
                                 continue;
                             }
                             browsers.push({
                                 name: DesktopFileParser.getCurrentLanguageNameProperty(desktopFileInfo),
-                                id: desktopFileInfo["filename"].replace(/\.desktop$/, ""),
-                                tooltiptext: desktopFileInfo["fileInfo"]["Desktop Entry"]["Exec"]
+                                id: desktopFileInfo.filename.replace(/\.desktop$/, ""),
+                                tooltiptext: desktopFileInfo.fileInfo["Desktop Entry"].Exec
                             });
                         }
                     } else if (platform === "win") {
                         let startMenusInternet = getBrowsersOnWindows();
                         for (let startMenuInternet of startMenusInternet) {
                             browsers.push({
-                                name: startMenuInternet["name"],
-                                id: startMenuInternet["keyName"],
-                                tooltiptext: startMenuInternet["path"],
+                                name: startMenuInternet.name,
+                                id: startMenuInternet.keyName,
+                                tooltiptext: startMenuInternet.path,
                             });
                         }
                     }

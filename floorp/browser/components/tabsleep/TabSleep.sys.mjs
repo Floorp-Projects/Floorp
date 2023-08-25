@@ -3,19 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = [];
+export const EXPORTED_SYMBOLS = [];
 
-const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-);
+import { clearInterval, setInterval } from "resource://gre/modules/Timer.sys.mjs"
+import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs"
 
-const { clearInterval, setInterval } = ChromeUtils.import(
-    "resource://gre/modules/Timer.jsm"
-);
-
-const { ExtensionCommon } = ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionCommon.sys.mjs"
-);
+// Migration from JSM to ES Module in the future.
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const L10N = new Localization(["browser/floorp.ftl"]);
 
@@ -104,20 +98,20 @@ function tabObserve(callback) {
                     callback({
                         type: "TabStateChange",
                         target: nativeTab,
-                        status: status,
+                        status,
                     });
                 }
             }
         },
         onLocationChange(browser, webProgress, request, locationURI, flags) {
             if (webProgress.isTopLevel) {
-                let status = webProgress.isLoadingDocument ? "loading" : "complete";
+             // let status = webProgress.isLoadingDocument ? "loading" : "complete";
                 let nativeTab = browser.ownerGlobal.gBrowser.getTabForBrowser(browser);
                 if (nativeTab) {
                     callback({
                         type: "TabLocationChange",
                         target: nativeTab,
-                        locationURI: locationURI,
+                        locationURI,
                     });
                 }
             }
@@ -198,7 +192,7 @@ function tabObserve(callback) {
     Services.wm.addListener(windowListener);
 
     return {
-        disconnect: function() {
+        disconnect() {
             Services.wm.removeListener(windowListener);
             for (let domwindow of Services.wm.getEnumerator("navigator:browser")) {
                 domwindow.removeEventListener("TabAttrModified", listener);
@@ -226,7 +220,7 @@ let isEnabled = false;
 let isTestMode = false;
 
 function enableTabSleep() {
-    if (tabSleepEnabled) return;
+    if (tabSleepEnabled) {return;}
     tabSleepEnabled = true;
     let tabs = getAllTabs();
     tabObserve_ = tabObserve(function(event) {
@@ -304,17 +298,17 @@ function enableTabSleep() {
             .split(",")
             .map(host => host.trim());
         for (let nativeTab of tabs) {
-            if (nativeTab.isTabSleepExcludeTab) continue;
-            if (nativeTab.selected) continue;
-            if (nativeTab.multiselected) continue;
-            if (nativeTab.pinned) continue;
-            if (nativeTab.attention) continue;
-            if (nativeTab.soundPlaying) continue;
-            if (!nativeTab.linkedPanel) continue;
-            if (nativeTab.getAttribute("busy") === "true") continue;
+            if (nativeTab.isTabSleepExcludeTab) {continue;}
+            if (nativeTab.selected) {continue;}
+            if (nativeTab.multiselected) {continue;}
+            if (nativeTab.pinned) {continue;}
+            if (nativeTab.attention) {continue;}
+            if (nativeTab.soundPlaying) {continue;}
+            if (!nativeTab.linkedPanel) {continue;}
+            if (nativeTab.getAttribute("busy") === "true") {continue;}
 
             try {
-                if (excludeHosts.includes(nativeTab.linkedBrowser.documentURI.hostPort)) continue;
+                if (excludeHosts.includes(nativeTab.linkedBrowser.documentURI.hostPort)) {continue;}
             } catch (e) {
                 if (e.result != Cr.NS_ERROR_FAILURE) {
                     throw e;
@@ -327,7 +321,7 @@ function enableTabSleep() {
                     target = false;
                 }
             }
-            if (!target) continue;
+            if (!target) {continue;}
             if (
                 (currentTime - nativeTab.lastAccessed) > (TAB_TIMEOUT_MINUTES * 60 * 1000) &&
                 (
@@ -350,7 +344,7 @@ function enableTabSleep() {
 }
 
 function disableTabSleep() {
-    if (!tabSleepEnabled) return;
+    if (!tabSleepEnabled) {return;}
     tabSleepEnabled = false;
     tabObserve_?.disconnect();
     tabObserve_ = null;
@@ -398,7 +392,7 @@ let documentObserver = {
             !seenDocuments.has(doc)
         ) {
             seenDocuments.add(doc);
-            if (!isEnabled) return;
+            if (!isEnabled) {return;}
             let window_ = doc.defaultView;
             let document_ = window_.document;
             let uriObj = Services.io.newURI(window_.location.href);

@@ -3,13 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = [];
+export const EXPORTED_SYMBOLS = [];
 
-const { ActorManagerParent } = ChromeUtils.importESModule(
-    "resource://gre/modules/ActorManagerParent.sys.mjs"
-);
+import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs"
 
-let JSWINDOWACTORS = {
+export let JSWINDOWACTORS = {
     AboutCalendar: {
         parent: {
             esModuleURI: "resource:///actors/AboutCalendarParent.sys.mjs",

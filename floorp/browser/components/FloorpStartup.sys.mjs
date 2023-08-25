@@ -3,40 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["isFirstRun","isUpdated","isMainBrowser"];
+export const EXPORTED_SYMBOLS = ["isFirstRun","isUpdated","isMainBrowser"];
 
 /*
 Scripts written here are executed only once at browser startup.
 */
 
-const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-);
-const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
-);
-const { OS } = ChromeUtils.import(
-    "resource://gre/modules/osfile.jsm"
-);
-const { setTimeout, setInterval, clearTimeout, clearInterval } = ChromeUtils.import(
-    "resource://gre/modules/Timer.jsm"
-);
-const { FileUtils } = ChromeUtils.import(
-    "resource://gre/modules/FileUtils.jsm"
-);
-const env = Cc["@mozilla.org/process/environment;1"].getService(
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
+import { CustomizableUI } from "resource:///modules/CustomizableUI.sys.mjs";
+
+// Will be removed in the future. Use OS.File instead of FileUtils or IOUtils.
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+// Migration from JSM to ES Module in the future.
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+// Use Services.env rather than getService().
+export const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
-);
-const { CustomizableUI } = ChromeUtils.import(
-    "resource:///modules/CustomizableUI.jsm"
 );
 
 // Check information about startup.
-let isFirstRun = false;
-let isUpdated = false;
+export let isFirstRun = false;
+export let isUpdated = false;
+
 {
     isFirstRun =
-        !Boolean(Services.prefs.getStringPref("browser.startup.homepage_override.mstone", null));
+        !Services.prefs.getStringPref("browser.startup.homepage_override.mstone", null);
 
     let nowVersion = AppConstants.MOZ_APP_VERSION_DISPLAY;
     let oldVersionPref = Services.prefs.getStringPref("floorp.startup.oldVersion", null);
@@ -65,14 +59,14 @@ const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
 }
 
 
-async function onFinalUIStartup() {
+export async function onFinalUIStartup() {
     Services.obs.removeObserver(onFinalUIStartup, "final-ui-startup");
-    let { BrowserManagerSidebar } = ChromeUtils.import("resource:///modules/BrowserManagerSidebar.jsm");
+    let { BrowserManagerSidebar } = ChromeUtils.importESModule("resource:///modules/BrowserManagerSidebar.sys.mjs");
     BrowserManagerSidebar.prefsUpdate();
 
     IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
         .then((data) => {
-            if(!data) IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
+            if(!data) {IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))}
         })
 
     // Write CSS.
@@ -177,12 +171,12 @@ if (isMainBrowser) {
 if (isMainBrowser) {
     // Load actors
     try {
-        ChromeUtils.import("resource:///modules/FloorpActors.jsm");
+        ChromeUtils.importESModule("resource:///modules/FloorpActors.sys.mjs");
     } catch (e) { console.error(e) }
 
     // Load Tab Sleep feature
     try {
-        ChromeUtils.import("resource:///modules/TabSleep.jsm");
+        ChromeUtils.importESModule("resource:///modules/TabSleep.sys.mjs");
     } catch (e) { console.error(e) }
 
     // Load OpenLinkInExternal feature
@@ -194,7 +188,7 @@ if (isMainBrowser) {
         }
         if (AppConstants.platform === "win" || AppConstants.platform === "linux") {
             if (Services.prefs.getBoolPref("floorp.openLinkInExternal.enabled", false)) {
-                ChromeUtils.import("resource:///modules/OpenLinkInExternal.jsm");
+                ChromeUtils.importESModule("resource:///modules/OpenLinkInExternal.sys.mjs");
             }
         }
     } catch (e) { console.error(e) }
@@ -202,7 +196,7 @@ if (isMainBrowser) {
     // Load PortableUpdate feature
     try {
         if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
-            ChromeUtils.import("resource:///modules/PortableUpdate.jsm");
+            ChromeUtils.importESModule("resource:///modules/PortableUpdate.sys.mjs");
         }
     } catch (e) { console.error(e) }
 }

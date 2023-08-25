@@ -1,15 +1,16 @@
+/* eslint-disable no-undef */
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["BrowserManagerSidebar"];
+export const EXPORTED_SYMBOLS = ["BrowserManagerSidebar"];
 
-const { Services } = ChromeUtils.import(
+export const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
 );
 
-let BrowserManagerSidebar = {
+export let BrowserManagerSidebar = {
     STATIC_SIDEBAR_DATA:{
         "floorp//bmt":{
             "url":"chrome://browser/content/places/places.xhtml",
@@ -109,7 +110,7 @@ let BrowserManagerSidebar = {
             fetch(icon_url)
               .then(async(response) => {
                 if (response.status !== 200) {
-                  throw `${response.status} ${response.statusText}`;
+                  throw new Error(`${response.status} ${response.statusText}`);
                 }
         
                 let reader = new FileReader();
@@ -125,9 +126,9 @@ let BrowserManagerSidebar = {
         
                 if (icon_data_url === "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWIAAYAAAwAABQABggWTzwAAAABJRU5ErkJggg==") {
                   // Yandex will return a 1px size icon with status code 200 if the icon is not available. If it matches a specific Data URL, it will be considered as a failure to acquire, and this process will be aborted.
-                  throw "Yandex 404"
+                  throw new Error("Yandex returns 404. (1px size icon)");
                 }
-                if(elem.style.getPropertyValue("--BMSIcon") != icon_data_url)elem.style.setProperty("--BMSIcon",`url(${icon_data_url})`)
+                if(elem.style.getPropertyValue("--BMSIcon") != icon_data_url){elem.style.setProperty("--BMSIcon",`url(${icon_data_url})`)}
               })
               .catch(reject => {
                 elem.style.removeProperty("--BMSIcon");
@@ -139,15 +140,15 @@ let BrowserManagerSidebar = {
             fetch(addon_base_url + "/manifest.json")
               .then(async(response) => {
                 if (response.status !== 200) {
-                  throw `${response.status} ${response.statusText}`;
+                  throw new Error(`${response.status} ${response.statusText}`);
                 }
         
                 let addon_manifest = await response.json();
         
-                let addon_icon_path = addon_manifest["icons"][
-                  Math.max(...Object.keys(addon_manifest["icons"]))
+                let addon_icon_path = addon_manifest.icons[
+                  Math.max(...Object.keys(addon_manifest.icons))
                 ];
-                if (addon_icon_path === undefined) throw "Icon not found.";
+                if (addon_icon_path === undefined){ throw new Error("Icon not found." + addon_manifest.icons)}
 
                 let addon_icon_url = addon_icon_path.startsWith("/") ?
                   `${addon_base_url}${addon_icon_path}` :
@@ -191,7 +192,7 @@ let BrowserManagerSidebar = {
         let addonUUID = JSON.parse(Services.prefs.getStringPref("extensions.webextensions.uuids"))
         let manifestJSON = await (await fetch(`moz-extension://${addonUUID[addonId]}/manifest.json`)).json()
         let toURL = manifestJSON.sidebar_action.default_panel
-        if(!toURL.startsWith("./")) toURL = "./" + toURL
+        if(!toURL.startsWith("./")) {toURL = "./" + toURL}
         return (new URL(toURL ,`moz-extension://${addonUUID[addonId]}/`)).href 
     },
     addPanel(url,uc){
@@ -199,8 +200,8 @@ let BrowserManagerSidebar = {
         let updateNumberDate = new Date()
         let updateNumber = `w${updateNumberDate.getFullYear()}${updateNumberDate.getMonth()}${updateNumberDate.getDate()}${updateNumberDate.getHours()}${updateNumberDate.getMinutes()}${updateNumberDate.getSeconds()}`
         let object = { "new": true, "id": updateNumber }
-        if (url != "") object.url = url
-        if (uc != "") object.userContext = uc
+        if (url != "") {object.url = url}
+        if (uc != "") {object.userContext = uc}
         if (
             parentWindow?.document.documentURI ==
             "chrome://browser/content/hiddenWindowMac.xhtml"

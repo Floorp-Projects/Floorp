@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -6,7 +7,7 @@
 /* import-globals-from preferences.js */
 
 var { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-let { BrowserManagerSidebar } = ChromeUtils.import("resource:///modules/BrowserManagerSidebar.jsm")
+let { BrowserManagerSidebar } = ChromeUtils.importESModule("resource:///modules/BrowserManagerSidebar.sys.mjs")
 XPCOMUtils.defineLazyGetter(this, "L10n", () => {
   return new Localization([
     "branding/brand.ftl",
@@ -36,10 +37,10 @@ var gBSBPane = {
     }
   },
   mouseOver(id) {
-    Services.obs.notifyObservers({ eventType: "mouseOver", id: id }, "obs-panel-re")
+    Services.obs.notifyObservers({ eventType: "mouseOver", id }, "obs-panel-re")
   },
   mouseOut(id) {
-    Services.obs.notifyObservers({ eventType: "mouseOut", id: id }, "obs-panel-re")
+    Services.obs.notifyObservers({ eventType: "mouseOut", id }, "obs-panel-re")
   },
 
   deleteWebpanel(id) { 

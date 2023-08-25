@@ -10,5 +10,5 @@ DIRS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "TabSleep.jsm",
+    "TabSleep.sys.mjs",
 ]

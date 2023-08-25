@@ -11,7 +11,7 @@
 
  let {
     BrowserManagerSidebar
-  } = ChromeUtils.import("resource:///modules/BrowserManagerSidebar.jsm")
+  } = ChromeUtils.importESModule("resource:///modules/BrowserManagerSidebar.sys.mjs")
   var {
     Services
   } = ChromeUtils.import("resource://gre/modules/Services.jsm")

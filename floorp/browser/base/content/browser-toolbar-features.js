@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { CustomizableUI } = ChromeUtils.import("resource:///modules/CustomizableUI.jsm");
+const { CustomizableUI } = ChromeUtils.importESModule("resource:///modules/CustomizableUI.sys.mjs");
 const { SessionStore } = ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm")
 
 async function UCTFirst() {
@@ -28,7 +28,7 @@ async function UCTFirst() {
       undoCloseTab();
     }
   });
-  if (ChromeUtils.import("resource:///modules/FloorpStartup.jsm").isFirstRun) {
+  if (ChromeUtils.importESModule("resource:///modules/FloorpStartup.sys.mjs").isFirstRun) {
     CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR, -1);
   }
 }
@@ -56,7 +56,7 @@ async function switchSidebarPositionButton() {
       SidebarUI.reversePosition();
     }
   });
-  if (ChromeUtils.import("resource:///modules/FloorpStartup.jsm").isFirstRun) {
+  if (ChromeUtils.importESModule("resource:///modules/FloorpStartup.sys.mjs").isFirstRun) {
     CustomizableUI.addWidgetToArea("sidebar-button", CustomizableUI.AREA_NAVBAR, 3);
     CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR, 4);
   }

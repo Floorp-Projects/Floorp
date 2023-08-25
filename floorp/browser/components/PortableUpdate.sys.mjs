@@ -3,17 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = [];
+export const EXPORTED_SYMBOLS = [];
 
-const { ExtensionParent } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionParent.jsm"
-);
-const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
-);
-const { Services } = ChromeUtils.import(
-    "resource://gre/modules/Services.jsm"
-);
+import { ExtensionParent } from "resource://gre/modules/ExtensionParent.sys.mjs"
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs"
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs"
+
+// Migration from JSM to ES Module in the future.
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const L10N = new Localization(["browser/floorp.ftl"]);
 const ZipReader = Components.Constructor(
     "@mozilla.org/libjar/zip-reader;1",
@@ -23,14 +21,11 @@ const ZipReader = Components.Constructor(
 const AlertsService = Cc["@mozilla.org/alerts-service;1"].getService(
     Ci.nsIAlertsService
 );
-const { FileUtils } = ChromeUtils.import(
-    "resource://gre/modules/FileUtils.jsm"
-);
 
 const API_BASE_URL = "https://floorp-update.ablaze.one";
 
 const platformInfo = ExtensionParent.PlatformInfo;
-const isWin = platformInfo["os"] === "win";
+const isWin = platformInfo.os === "win";
 const displayVersion = AppConstants.MOZ_APP_VERSION_DISPLAY;
 
 const appDirPath = Services.dirsvc.get("XREExeF", Ci.nsIFile).parent.path;
@@ -47,24 +42,24 @@ const portableUpdateUtils = {
             fetch(url)
                 .then(res => {
                     if (res.status !== 200){
-                        throw `${res.status} ${res.statusText}`;
+                        throw new Error`${res.status} ${res.statusText}`;
                     }
                     return res.json();
                 })
                 .then(data => {
                     let platformKeyName = 
-                        platformInfo["os"] === "mac" ?
+                        platformInfo.os === "mac" ?
                             "mac" :
-                            `${platformInfo["os"]}-${platformInfo["arch"]}`;
+                            `${platformInfo.os}-${platformInfo.arch}`;
                     resolve(data[platformKeyName]);
                 })
                 .catch(reject);
         });
-        let isUpdateFound = data["version"] !== displayVersion;
+        let isUpdateFound = data.version !== displayVersion;
         return {
             isLatest: !isUpdateFound,
             url: isUpdateFound ?
-                    data["url"] :
+                    data.url :
                     null
         }
     },
@@ -115,7 +110,7 @@ const portableUpdateUtils = {
             fetch(url)
                 .then(res => {
                     if (res.status !== 200){
-                        throw `${res.status} ${res.statusText}`;
+                        throw new Error`${res.status} ${res.statusText}`;
                     }
                     return res.arrayBuffer();
                 })
@@ -149,7 +144,7 @@ const portableUpdateUtils = {
                     { allowEmpty: false, allowCurrentDir: false, allowParentDir: false }
                 );
             } catch (e) {
-                throw "!!! Zip Slip detected !!!";
+                throw console.error("!!! Zip Slip detected !!!");
             }
             let path = PathUtils.joinRelative(
                 updateTmpDirPath,
@@ -197,7 +192,7 @@ const portableUpdateUtils = {
     }
 
     let updateInfo = await portableUpdateUtils.checkUpdate();
-    if (!updateInfo["isLatest"]) {
+    if (!updateInfo.isLatest) {
         console.log("Update found.");
         AlertsService.showAlertNotification(
             "chrome://browser/skin/updater/link-48.png",
@@ -209,7 +204,7 @@ const portableUpdateUtils = {
         );
 
         try {
-            await portableUpdateUtils.downloadUpdate(updateInfo["url"]);
+            await portableUpdateUtils.downloadUpdate(updateInfo.url);
         } catch (e) {
             console.error(e);
             AlertsService.showAlertNotification(
