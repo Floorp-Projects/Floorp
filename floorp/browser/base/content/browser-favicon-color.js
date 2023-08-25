@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -69,9 +70,9 @@
       const mostFrequentColor = `rgb(${mostFrequentRed}, ${mostFrequentGreen}, ${mostFrequentBlue})`;
 
       resolve({
-        colors: colors,
-        averageColor: averageColor,
-        mostFrequentColor: mostFrequentColor
+        colors,
+        averageColor,
+        mostFrequentColor
       });
     };
 
@@ -136,11 +137,11 @@ function setFaviconColorToTitlebar() {
 
 function enableFaviconColorToTitlebar() {
   setFaviconColorToTitlebar();
-  gBrowser.tabContainer.addEventListener("TabSelect", setFaviconColorToTitlebar, false);
-  gBrowser.tabContainer.addEventListener("TabMove", setFaviconColorToTitlebar, false);
-  gBrowser.tabContainer.addEventListener("TabAttrModified", setFaviconColorToTitlebar, false);
-  gBrowser.tabContainer.addEventListener("TabClose", setFaviconColorToTitlebar, false);
-  gBrowser.tabContainer.addEventListener("TabOpen", setFaviconColorToTitlebar, false);
+  gBrowser.tabContainer.addEventListener("TabSelect", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.addEventListener("TabMove", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.addEventListener("TabAttrModified", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.addEventListener("TabClose", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.addEventListener("TabOpen", setFaviconColorToTitlebar);
 }
 
 function disableFaviconColorToTitlebar() {
@@ -149,11 +150,11 @@ function disableFaviconColorToTitlebar() {
     elems[i].remove();
   }
 
-  gBrowser.tabContainer.removeEventListener("TabSelect", setFaviconColorToTitlebar, false);
-  gBrowser.tabContainer.removeEventListener("TabMove", setFaviconColorToTitlebar, false);
-  gBrowser.tabContainer.removeEventListener("TabAttrModified", setFaviconColorToTitlebar, false);
-  gBrowser.tabContainer.removeEventListener("TabClose", setFaviconColorToTitlebar, false);
-  gBrowser.tabContainer.removeEventListener("TabOpen", setFaviconColorToTitlebar, false);
+  gBrowser.tabContainer.removeEventListener("TabSelect", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.removeEventListener("TabMove", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.removeEventListener("TabAttrModified", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.removeEventListener("TabClose", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.removeEventListener("TabOpen", setFaviconColorToTitlebar);
 }
 
 if (Services.prefs.getBoolPref("floorp.titlebar.favicon.color", true)) {
@@ -167,5 +168,5 @@ if (Services.prefs.getBoolPref("floorp.titlebar.favicon.color", true)) {
     } else {
       disableFaviconColorToTitlebar();
     }
-  }, false);
+  });
 }

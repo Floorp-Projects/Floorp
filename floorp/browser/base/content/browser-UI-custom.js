@@ -10,8 +10,8 @@ const UICustomPrefHandler = function(pref, callback) {
   let prefValue = Services.prefs.getBoolPref(pref, false);
   try {
     callback({
-      pref: pref,
-      prefValue: prefValue,
+      pref,
+      prefValue,
       reason: "init",
     });
   } catch (e) { console.error(e) }
@@ -19,8 +19,8 @@ const UICustomPrefHandler = function(pref, callback) {
     let prefValue = Services.prefs.getBoolPref(pref, false);
     try {
       callback({
-        pref: pref,
-        prefValue: prefValue,
+        pref,
+        prefValue,
         reason: "changed",
       });
     } catch (e) { console.error(e) }
@@ -78,8 +78,7 @@ UICustomPrefHandler("floorp.bookmarks.fakestatus.mode", function(event) {
       document.getElementById("fullscreen-and-pointerlock-wrapper")
         .after(document.getElementById("PersonalToolbar"));
     }, event.reason === "init" ? 250 : 1);
-  } else {
-    if (event.reason === "changed") {
+  } else if (event.reason === "changed") {
       //Fix for the bug that bookmarksbar is on the navigation toolbar when the pref is cahaned to false
       if (!Services.prefs.getBoolPref("floorp.navbar.bottom", false)) {
         document.getElementById("navigator-toolbox")
@@ -88,7 +87,6 @@ UICustomPrefHandler("floorp.bookmarks.fakestatus.mode", function(event) {
       document.getElementById("navigator-toolbox")
         .appendChild(document.getElementById("PersonalToolbar"));
     }
-  }
 });
 
 UICustomPrefHandler("floorp.search.top.mode", function(event) {
@@ -187,7 +185,7 @@ if (!Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
 /*------------------------------------------- verticaltab -------------------------------------------*/
 
 UICustomPrefHandler("floorp.verticaltab.hover.enabled", function(event) {
-  if(Services.prefs.getIntPref("floorp.tabbar.style", false) != 2) return;
+  if(Services.prefs.getIntPref("floorp.tabbar.style", false) != 2) {return;}
    if (event.prefValue) {
      var Tag = document.createElement("style");
      Tag.innerText = `@import url(chrome://browser/skin/options/native-verticaltab-hover.css)`;

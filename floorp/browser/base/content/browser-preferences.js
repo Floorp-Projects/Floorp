@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -53,13 +54,13 @@ const GENERAL_USERAGENT_OVERRIDE_PREF = "general.useragent.override";
         Services.prefs.clearUserPref(GENERAL_USERAGENT_OVERRIDE_PREF);
         break;
       case 1:
-        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, CHROME_STABLE_UA["win"]);
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, CHROME_STABLE_UA.win);
         break;
       case 2:
-        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, CHROME_STABLE_UA["mac"]);
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, CHROME_STABLE_UA.mac);
         break;
       case 3:
-        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, CHROME_STABLE_UA["linux"]);
+        Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, CHROME_STABLE_UA.linux);
         break;
       case 4:
         Services.prefs.setStringPref(GENERAL_USERAGENT_OVERRIDE_PREF, "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/110.0.5481.83 Mobile/15E148 Safari/604.1");

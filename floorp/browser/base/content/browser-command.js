@@ -24,25 +24,25 @@ Services.obs.addObserver(restartbrowser, "floorp-restart-browser");
 
 /******************************************** StyleSheetService (userContent.css) ******************************/
 
-const sss = Components.classes["@mozilla.org/content/style-sheet-service;1"]
-          .getService(Components.interfaces.nsIStyleSheetService);
+const sss = Cc["@mozilla.org/content/style-sheet-service;1"]
+          .getService(Ci.nsIStyleSheetService);
 const ios = Cc["@mozilla.org/network/io-service;1"]
-          .getService(Components.interfaces.nsIIOService);
+          .getService(Ci.nsIIOService);
 
 function loadStyleSheetWithNsStyleSheetService(styleSheetURL) {
-  const uri = ios.newURI(styleSheetURL, null, null);
+  const uri = ios.newURI(styleSheetURL);
   sss.loadAndRegisterSheet(uri, sss.USER_SHEET);
 }
 
 function checkProvidedStyleSheetLoaded(styleSheetURL) {
-  const uri = ios.newURI(styleSheetURL, null, null);
+  const uri = ios.newURI(styleSheetURL);
   if (!sss.sheetRegistered(uri, sss.USER_SHEET)) {
     sss.loadAndRegisterSheet(uri, sss.USER_SHEET);
   }
 }
 
 function unloadStyleSheetWithNsStyleSheetService(styleSheetURL) {
-  const uri = ios.newURI(styleSheetURL, null, null);
+  const uri = ios.newURI(styleSheetURL);
   sss.unregisterSheet(uri, sss.USER_SHEET);
 }
 
