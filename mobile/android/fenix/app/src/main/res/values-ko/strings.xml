@@ -385,6 +385,8 @@
     <string name="preferences_default_search_engine">기본 검색 엔진</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">검색</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">검색 엔진</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">주소 표시줄</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1397,13 +1399,17 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d개 탭</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">방문 기록 및 사이트 데이터</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">방문 기록 및 사이트 데이터</string>
 
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">방문 기록</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 주소</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">쿠키</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">쿠키</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">쿠키 및 사이트 데이터</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">대부분 웹 사이트 자동 로그아웃</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1461,61 +1467,61 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">더 나은 인터넷에 오신 것을 환영합니다</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">더 나은 인터넷에 오신 것을 환영합니다</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">이익이 아닌 사람을 위해 만들어진 브라우저.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">이익이 아닌 사람을 위해 만들어진 브라우저.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">중단한 부분부터 다시 시작하세요</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">중단한 부분부터 다시 시작하세요</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">원활한 화면 전환을 위해 여러 기기에서 탭과 비밀번호를 동기화합니다.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">원활한 화면 전환을 위해 여러 기기에서 탭과 비밀번호를 동기화합니다.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">로그인</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">로그인</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">동기화 켜짐</string>
 
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">기본적으로 사생활을 보호합니다</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">기본적으로 사생활을 보호합니다</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s는 회사가 웹에서 사용자를 몰래 따라 다니는 것을 자동으로 중지합니다.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s는 회사가 웹에서 사용자를 몰래 따라 다니는 것을 자동으로 중지합니다.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">전체 쿠키 보호 기능을 통해 추적기가 쿠키를 사용하여 사이트에서 사용자를 스토킹하는 것을 방지합니다.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">전체 쿠키 보호 기능을 통해 추적기가 쿠키를 사용하여 사이트에서 사용자를 스토킹하는 것을 방지합니다.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">표준 (기본값)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">표준 (기본값)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">개인 정보 보호와 성능사이의 균형이 잡혀 있습니다. 페이지가 정상적으로 로드됩니다.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">개인 정보 보호와 성능사이의 균형이 잡혀 있습니다. 페이지가 정상적으로 로드됩니다.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">엄격</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">엄격</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">더 많은 추적기를 차단하여 페이지가 더 빨리 로드되지만, 일부 페이지의 기능이 손상될 수 있습니다.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">더 많은 추적기를 차단하여 페이지가 더 빨리 로드되지만, 일부 페이지의 기능이 손상될 수 있습니다.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">도구 모음 위치 선택</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">도구 모음 위치 선택</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">아래쪽에 두거나 위쪽으로 이동하세요.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">아래쪽에 두거나 위쪽으로 이동하세요.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">사용자가 자신의 데이터를 제어</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">사용자가 자신의 데이터를 제어</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox를 사용하면 무엇을 온라인에서 공유하고 우리와 공유할지 사용자가 제어할 수 있습니다.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox를 사용하면 무엇을 온라인에서 공유하고 우리와 공유할지 사용자가 제어할 수 있습니다.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">개인정보처리방침 읽기</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">개인정보처리방침 읽기</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">놀라운 인터넷을 열 준비가 되셨습니까?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">놀라운 인터넷을 열 준비가 되셨습니까?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">탐색 시작</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">탐색 시작</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">테마 선택</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">테마 선택</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">어두운 모드를 활성화하여 배터리를 절약하고 시력을 보호하세요.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">어두운 모드를 활성화하여 배터리를 절약하고 시력을 보호하세요.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">자동</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">자동</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">사용자 기기 설정을 따름</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">사용자 기기 설정을 따름</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">어두운 테마</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">어두운 테마</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">밝은 테마</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">밝은 테마</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">탭 보냄!</string>
@@ -1966,7 +1972,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">검색 제안 API URL</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">쿼리를 “%s”로 대체합니다. 예:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">쿼리를 “%s”로 대체합니다. 예:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">쿼리를 “%s”로 대체합니다. 예:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">저장</string>
 

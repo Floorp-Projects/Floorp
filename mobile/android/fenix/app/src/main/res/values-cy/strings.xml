@@ -375,6 +375,8 @@
     <string name="preferences_default_search_engine">Peiriant chwilio rhagosodedig</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Chwilio</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Peiriannau chwilio</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Bar cyfeiriad</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1355,12 +1357,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Hanes pori a data gwefan</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Hanes pori a data gwefan</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Hanes pori</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d cyfeiriad</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Cwcis</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Cwcis</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Cwcis a data gwefan</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Byddwch wedi eich allgofnodi o’r mwyafrif o wefannau</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1914,7 +1920,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">URL API awgrymiadau chwilio</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Amnewid yr ymholiad gyda “%s”. Enghraifft:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Amnewid yr ymholiad gyda “%s”. Enghraifft:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Disodli ymholiad gyda &quot;%s&quot;. Enghraifft:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Cadw</string>
 

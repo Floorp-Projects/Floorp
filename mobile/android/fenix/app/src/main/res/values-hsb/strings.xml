@@ -375,6 +375,8 @@
     <string name="preferences_default_search_engine">Standardna pytawa</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Pytać</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Pytawy</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Adresowe polo</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1360,12 +1362,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Rajtarki: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Přehladowanska historija a sydłowe daty</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Přehladowanska historija a sydłowe daty</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Přehladowanska historija</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Adresy: %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Placki</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Placki</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Placki a sydłowe daty</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Wotzjewiće so wot najwjace sydłow</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1421,61 +1427,61 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Witajće k lěpšemu internetej</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Witajće k lěpšemu internetej</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Wobhladowak za ludźi, nic za dobytk.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">Wobhladowak za ludźi, nic za dobytk.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Čińće tam dale, hdźež sće přestał</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Čińće tam dale, hdźež sće přestał</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Synchronizujće rajtarki a hesła přez graty za bjezposrědnju wuměnu wobrazowki.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Synchronizujće rajtarki a hesła přez graty za bjezposrědnju wuměnu wobrazowki.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Přizjewić</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Přizjewić</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchronizacija je zmóžnjena</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Škit priwatnosće po standardźe</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Škit priwatnosće po standardźe</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s awtomatisce zadźěwa tomu, zo předewzaća wam skradźu po webje slěduja.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s awtomatisce zadźěwa tomu, zo předewzaća wam skradźu po webje slěduja.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Z dospołnym plackowym škitom, zo byšće tomu zadźěwał, zo přesćěhowaki placki wužiwaja, zo bychu was přez sydła přesćěhowali.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Z dospołnym plackowym škitom, zo byšće tomu zadźěwał, zo přesćěhowaki placki wužiwaja, zo bychu was přez sydła přesćěhowali.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standard</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Standard</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Wuwaženy za priwatnosć a wukon. Strony so normalnje začitaja.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Wuwaženy za priwatnosć a wukon. Strony so normalnje začitaja.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Striktny</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Striktny</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Blokuje dalše přesćěhowaki, zo bychu so strony spěšnišo začitali, ale někotre strony snano korektnje njefunguja.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Blokuje dalše přesćěhowaki, zo bychu so strony spěšnišo začitali, ale někotre strony snano korektnje njefunguja.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Wubjerće poziciju za swoju symbolowu lajstu</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Wubjerće poziciju za swoju symbolowu lajstu</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Deleka wostajić abo horje přesunyć.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Deleka wostajić abo horje přesunyć.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Kontrolujeće swoje daty</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Kontrolujeće swoje daty</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox wam kontrolu wo tym da, što online dźěliće a što z nami.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox wam kontrolu wo tym da, što online dźěliće a što z nami.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Čitajće naš zdźělenku priwatnosće</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Čitajće naš zdźělenku priwatnosće</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Sće hotowy wobdźiwajomny internet wotkryć?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Sće hotowy wobdźiwajomny internet wotkryć?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Přehladowanje započeć</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Přehladowanje započeć</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Wubjerće swoju drastu</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Wubjerće swoju drastu</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Zmóžńće ćmowy modus, zo byšće swoju bateriju a swoje woči šonował.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Zmóžńće ćmowy modus, zo byšće swoju bateriju a swoje woči šonował.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Awtomatiski</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Awtomatiski</string>
 
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Přiměrja so wašim gratowym nastajenjam</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Přiměrja so wašim gratowym nastajenjam</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Ćmowa drasta</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Ćmowa drasta</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Swětła drasta</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Swětła drasta</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Rajtarki wotpósłane!</string>
@@ -1923,7 +1929,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">URL za API za pytanske namjety</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Wuměńće wotprašowanje z “%s”. Na přikład:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Wuměńće wotprašowanje z “%s”. Na přikład:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Wuměńće wotprašowanje z “%s”. Na přikład:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Składować</string>
 

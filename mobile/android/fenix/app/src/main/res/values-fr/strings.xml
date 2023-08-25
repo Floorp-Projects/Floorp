@@ -381,6 +381,8 @@
     <string name="preferences_default_search_engine">Moteur de recherche par défaut</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Recherche</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Moteurs de recherche</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Barre d’adresse</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1385,12 +1387,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d onglets</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Historique de navigation et données de sites</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Historique de navigation et données de sites</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Historique de navigation</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adresses web</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Cookies</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Cookies</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Cookies et données de sites</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Vous serez déconnecté·e de la plupart des sites</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1447,61 +1453,61 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Bienvenue dans un meilleur Internet</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Bienvenue dans un meilleur Internet</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Un navigateur conçu pour les gens, pas pour l’argent.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">Un navigateur conçu pour les gens, pas pour l’argent.</string>
 
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Reprenez là où vous en étiez</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Reprenez là où vous en étiez</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Synchronisez onglets et mots de passe entre vos appareils pour passer d’un écran à l’autre sans accroc.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Synchronisez onglets et mots de passe entre vos appareils pour passer d’un écran à l’autre sans accroc.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Connexion</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Connexion</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Synchronisation activée</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Protection de la vie privée par défaut</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Protection de la vie privée par défaut</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s empêche automatiquement les entreprises de vous suivre secrètement sur le Web.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s empêche automatiquement les entreprises de vous suivre secrètement sur le Web.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">La protection totale contre les cookies incluse empêche les traqueurs d’utiliser des cookies pour vous pister de site en site.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">La protection totale contre les cookies incluse empêche les traqueurs d’utiliser des cookies pour vous pister de site en site.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standard (par défaut)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Standard (par défaut)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Équilibré entre protection et performances. Les pages se chargent normalement.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Équilibré entre protection et performances. Les pages se chargent normalement.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Strict</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Strict</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Bloque davantage de traqueurs, accélérant le chargement des pages, mais quelques dysfonctionnements peuvent s’ensuivre.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Bloque davantage de traqueurs, accélérant le chargement des pages, mais quelques dysfonctionnements peuvent s’ensuivre.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Choisissez l’emplacement de votre barre d’outils</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Choisissez l’emplacement de votre barre d’outils</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Conservez-la en bas ou déplacez-la en haut.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Conservez-la en bas ou déplacez-la en haut.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Vous gardez le contrôle de vos données</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Vous gardez le contrôle de vos données</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox vous donne le contrôle de ce que vous partagez en ligne et de ce que vous partagez avec nous.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox vous donne le contrôle de ce que vous partagez en ligne et de ce que vous partagez avec nous.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Consulter notre politique de confidentialité</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Consulter notre politique de confidentialité</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">On part découvrir un Internet incroyable ?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">On part découvrir un Internet incroyable ?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Commencer la navigation</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Commencer la navigation</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Choisissez votre thème</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Choisissez votre thème</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Économisez la batterie et votre vue grâce au mode sombre.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Économisez la batterie et votre vue grâce au mode sombre.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automatique</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Automatique</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">S’adapte aux paramètres de votre appareil</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">S’adapte aux paramètres de votre appareil</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Thème sombre</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Thème sombre</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Thème clair</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Thème clair</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Onglets envoyés !</string>
@@ -1945,7 +1951,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">URL de l’API de suggestions de recherche</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Remplacez la requête par « %s ». Exemple :\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Remplacez la requête par « %s ». Exemple :\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Remplacez la requête par « %s ». Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Enregistrer</string>
 

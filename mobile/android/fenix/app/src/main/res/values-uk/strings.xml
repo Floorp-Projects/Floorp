@@ -381,6 +381,8 @@
     <string name="preferences_default_search_engine">Типовий засіб пошуку</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Пошук</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Засоби пошуку</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Панель адреси</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1365,13 +1367,17 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Вкладок: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Історія перегляду і дані сайтів</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Історія перегляду і дані сайтів</string>
 
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Історія перегляду</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Адрес: %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Куки</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Куки</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Куки і дані сайтів</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Ви вийдете з більшості сайтів</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1426,63 +1432,63 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Ласкаво просимо до кращого інтернету</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Ласкаво просимо до кращого інтернету</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Браузер, створений для людей, а не для прибутку.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">Браузер, створений для людей, а не для прибутку.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Продовжуйте звідти, де зупинилися</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Продовжуйте звідти, де зупинилися</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Синхронізуйте вкладки та паролі на всіх пристроях для плавного перемикання між ними.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Синхронізуйте вкладки та паролі на всіх пристроях для плавного перемикання між ними.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Увійти</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Увійти</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Синхронізація увімкнена</string>
 
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Типовий захист приватності</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Типовий захист приватності</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s автоматично блокує таємне стеження компаній за вами в інтернеті.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s автоматично блокує таємне стеження компаній за вами в інтернеті.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Функція повний захист кук не дає змогу елементам стеження переслідувати вас на різних сайтах за допомогою кук.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Функція повний захист кук не дає змогу елементам стеження переслідувати вас на різних сайтах за допомогою кук.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Стандартний (типово)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Стандартний (типово)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Баланс приватності та швидкодії. Сторінки завантажуються нормально.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Баланс приватності та швидкодії. Сторінки завантажуються нормально.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Надійний</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Надійний</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Блокує більше стеження, тому сторінки завантажуються швидше, однак можливі порушення їх роботи.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Блокує більше стеження, тому сторінки завантажуються швидше, однак можливі порушення їх роботи.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Оберіть розташування панелі інструментів</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Оберіть розташування панелі інструментів</string>
 
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Залиште її внизу або перемістіть угору.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Залиште її внизу або перемістіть угору.</string>
 
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Ви контролюєте свої дані</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Ви контролюєте свої дані</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox надає вам контроль над тим, чим ви ділитесь в інтернеті та з нами.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox надає вам контроль над тим, чим ви ділитесь в інтернеті та з нами.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Повідомлення про приватність</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Повідомлення про приватність</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Готові відкрити дивовижний інтернет?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Готові відкрити дивовижний інтернет?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Почати перегляд</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Почати перегляд</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Оберіть тему</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Оберіть тему</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Заощадьте заряд акумулятора і збережіть свої очі з темним режимом.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Заощадьте заряд акумулятора і збережіть свої очі з темним режимом.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Автоматично</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Автоматично</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Пристосовується до налаштувань пристрою</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Пристосовується до налаштувань пристрою</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Темна тема</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Темна тема</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Світла тема</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Світла тема</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Вкладки надіслано!</string>
@@ -1930,7 +1936,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">URL-адреса API пошукових пропозицій</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Замініть запит на “%s”. Наприклад:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Замініть запит на “%s”. Наприклад:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Замініть запит на “%s”. Наприклад:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Зберегти</string>
 

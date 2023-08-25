@@ -379,6 +379,8 @@
     <string name="preferences_default_search_engine">Alapértelmezett keresőszolgáltatás</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Keresés</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Keresőszolgáltatások</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Címsáv</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1364,12 +1366,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d lap</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Böngészési előzmények és oldaladatok</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Böngészési előzmények és oldaladatok</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Böngészési előzmények</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d cím</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Sütik</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Sütik</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Sütik és oldaladatok</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">A legtöbb webhelyről ki lesz jelentkeztetve</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1427,60 +1433,60 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Üdvözöljük egy jobb interneten</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Üdvözöljük egy jobb interneten</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Egy böngésző az emberekért, nem a haszonért.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">Egy böngésző az emberekért, nem a haszonért.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Folytassa ott, ahol abbahagyta</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Folytassa ott, ahol abbahagyta</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Szinkronizálja a lapokat és a jelszavakat az eszközök között a zökkenőmentes képernyőváltás érdekében.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Szinkronizálja a lapokat és a jelszavakat az eszközök között a zökkenőmentes képernyőváltás érdekében.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Bejelentkezés</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Bejelentkezés</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">A Sync be van kapcsolva</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Adatvédelem alapértelmezetten</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Adatvédelem alapértelmezetten</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">A %1$s automatikusan megakadályozza, hogy a cégek titokban kövessék Önt a weben.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">A %1$s automatikusan megakadályozza, hogy a cégek titokban kövessék Önt a weben.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Bemutatkozik a Teljes sütivédelem, amely megakadályozza, hogy a nyomkövetők arra használhassák a sütiket, hogy kövessék a webhelyek között.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Bemutatkozik a Teljes sütivédelem, amely megakadályozza, hogy a nyomkövetők arra használhassák a sütiket, hogy kövessék a webhelyek között.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Normál (alapértelmezett)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Normál (alapértelmezett)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Kiegyensúlyozott adatvédelem és teljesítmény. Az oldalak normálisan fognak betölteni.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Kiegyensúlyozott adatvédelem és teljesítmény. Az oldalak normálisan fognak betölteni.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Szigorú</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Szigorú</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Több nyomkövetőt blokkol, így az oldalak gyorsabban töltenek be, de egyes oldalfunkciók meghibásodhatnak.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Több nyomkövetőt blokkol, így az oldalak gyorsabban töltenek be, de egyes oldalfunkciók meghibásodhatnak.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Válassza ki az eszköztár elhelyezését</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Válassza ki az eszköztár elhelyezését</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Tartsa továbbra is lent, vagy vigye a tetejére.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Tartsa továbbra is lent, vagy vigye a tetejére.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Ön irányítja az adatait</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Ön irányítja az adatait</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">A Firefox irányítást ad afelett, hogy mit oszt meg online, és mit oszt meg velünk.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">A Firefox irányítást ad afelett, hogy mit oszt meg online, és mit oszt meg velünk.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Olvassa el az adatvédelmi nyilatkozatunkat</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Olvassa el az adatvédelmi nyilatkozatunkat</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Készen áll, hogy egy csodálatos internetet nyisson ki?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Készen áll, hogy egy csodálatos internetet nyisson ki?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Böngészés megkezdése</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Böngészés megkezdése</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Válassza ki a témát</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Válassza ki a témát</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Spóroljon az akkumulátorral és kímélje a szemét a sötét móddal.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Spóroljon az akkumulátorral és kímélje a szemét a sötét móddal.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automatikus</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Automatikus</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Alkalmazkodik az eszköz beállításaihoz</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Alkalmazkodik az eszköz beállításaihoz</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Sötét téma</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Sötét téma</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Világos téma</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Világos téma</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Lapok elküldve.</string>
@@ -1928,7 +1934,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">Keresési javaslati API webcíme</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Cserélje a lekérdezést erre: „%s”. Példa:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Cserélje a lekérdezést erre: „%s”. Példa:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Cserélje a lekérdezést erre: „%s”. Példa:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Mentés</string>
 

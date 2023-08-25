@@ -380,6 +380,8 @@
     <string name="preferences_default_search_engine">Hekaha mongu’eha ypykuéva</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Heka</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Hekaha mongu’eha</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Kundaharape renda</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1382,12 +1384,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tendayke</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Kundahára rembiasakue ha tenda mba’ekuaarã</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Kundahára rembiasakue ha tenda mba’ekuaarã</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Kundaha rembiasakue</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d kundaharape</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Kookie</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Kookie</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Kookie ha tenda mba’ekuaarã</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Oñembotýta tembiapo heta tendápe</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1445,61 +1451,61 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Eg̃uahẽporãite ñanduti iporãvévape</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Eg̃uahẽporãite ñanduti iporãvévape</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Kundahára heñóiva tapichápe g̃uarã, ndaha’éi virurã.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">Kundahára heñóiva tapichápe g̃uarã, ndaha’éi virurã.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Eku’ejey eheja haguégui</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Eku’ejey eheja haguégui</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Embojuehe tendayke ha ñe’ẽñemi mba’e’oka pa’ũme emoambue hag̃ua mba’erechaha oso’ỹre.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Embojuehe tendayke ha ñe’ẽñemi mba’e’oka pa’ũme emoambue hag̃ua mba’erechaha oso’ỹre.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Eñepyrũ tembiapo</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Eñepyrũ tembiapo</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync oñemyandýma</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Omo’ã ñemigua ijeheguiete</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Omo’ã ñemigua ijeheguiete</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s ojoko ijehegui umi atyguasúpe ani ohapykueho ñanduti rupive kañyhápe.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s ojoko ijehegui umi atyguasúpe ani ohapykueho ñanduti rupive kañyhápe.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Ñemo’ãmbaite kookie rovake omboyke tapykuehohápe oipurúvo kookie nde rapykueho hag̃ua ñandutípe.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Ñemo’ãmbaite kookie rovake omboyke tapykuehohápe oipurúvo kookie nde rapykueho hag̃ua ñandutípe.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Ypyguaite (ijypygua)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Ypyguaite (ijypygua)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Imbytéva ñemo’ã ha tembiapokuépe g̃uarã. Umi kuatiarogue henyhẽta hekoitépe.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Imbytéva ñemo’ã ha tembiapokuépe g̃uarã. Umi kuatiarogue henyhẽta hekoitépe.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Mbaretépe</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Mbaretépe</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Ejoko tapykuehoha kuatiarogue henyhẽ pya’évape g̃uarã, hákatu ojavykuaáva peteĩva kuatiarogue rembiapoite.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Ejoko tapykuehoha kuatiarogue henyhẽ pya’évape g̃uarã, hákatu ojavykuaáva peteĩva kuatiarogue rembiapoite.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Eiporavo tembipuru renda oĩha</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Eiporavo tembipuru renda oĩha</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Ereko yvy gotyo térã emogu’e yvate gotyo.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Ereko yvy gotyo térã emogu’e yvate gotyo.</string>
 
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Ehechameme ne mba’ekuaarã</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Ehechameme ne mba’ekuaarã</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox ome’ẽ ndéve pokatu emoherakuãva ñandutípe rehe ha emoherakuãva orendive avei.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox ome’ẽ ndéve pokatu emoherakuãva ñandutípe rehe ha emoherakuãva orendive avei.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Emoñe’ẽ ore marandu’i ñemigua</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Emoñe’ẽ ore marandu’i ñemigua</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">¿Embojurujakuaáma ñanduti oikoitéva?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">¿Embojurujakuaáma ñanduti oikoitéva?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Eñepyrũ eikundaha</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Eñepyrũ eikundaha</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Eiporavo ne téma</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Eiporavo ne téma</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Eipuru’ive batería ha emombytu’u nde resa iñypytũvévape.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Eipuru’ive batería ha emombytu’u nde resa iñypytũvévape.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">ijeheguietéva</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">ijeheguietéva</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Ojokupyty ñemboheko ne mba’e’oka rehe</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Ojokupyty ñemboheko ne mba’e’oka rehe</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Téma ypytũva</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Téma ypytũva</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Téma hesakãva</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Téma hesakãva</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">¡Tendayke mondopyre!</string>
@@ -1957,7 +1963,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">API URL ñemoñe’ẽ jehekarã</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Emyengovia porandu “%s” ndive. Techapyrã:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Emyengovia porandu “%s” ndive. Techapyrã:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Emyengovia porandu “%s” ndive. Techapyrã:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Ñongatu</string>
 
