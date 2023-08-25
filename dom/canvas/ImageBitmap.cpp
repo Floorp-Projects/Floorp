@@ -647,7 +647,7 @@ ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
 
   StaticMutexAutoLock lock(sShutdownMutex);
   if (!sShutdownObserver &&
-      !AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+      !AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown)) {
     sShutdownObserver = new ImageBitmapShutdownObserver();
   }
   if (sShutdownObserver) {
