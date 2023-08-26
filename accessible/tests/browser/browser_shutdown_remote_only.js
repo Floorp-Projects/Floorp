@@ -5,9 +5,6 @@
 "use strict";
 
 add_task(async function () {
-  // Making sure that the e10s is enabled on Windows for testing.
-  await setE10sPrefs();
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -51,9 +48,6 @@ add_task(async function () {
         true,
         "Accessibility service is shutdown in content process correctly."
       );
-
-      // Unsetting e10s related preferences.
-      await unsetE10sPrefs();
     }
   );
 });
