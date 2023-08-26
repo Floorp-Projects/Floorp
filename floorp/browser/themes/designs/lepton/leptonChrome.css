@@ -13622,7 +13622,7 @@
       list-style-image: url("chrome://browser/skin/lepton/refresh-cw.svg");
     }
     #openprofiledir {
-      list-style-image: url("chrome://browser/skin/lepton//folder.svg");
+      list-style-image: url("chrome://browser/skin/lepton/folder.svg");
     }
   }
   @supports -moz-bool-pref("userChrome.icon.menu") {
