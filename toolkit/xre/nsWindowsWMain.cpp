@@ -15,10 +15,8 @@
 
 #include "mozilla/Char16.h"
 #include "nsUTF8Utils.h"
-#include "nsWindowsHelpers.h"
 
 #include <windows.h>
-#include <versionhelpers.h>
 
 #ifdef __MINGW32__
 
@@ -114,20 +112,6 @@ static void FreeAllocStrings(int argc, char** argv) {
 }
 
 int wmain(int argc, WCHAR** argv) {
-  // In Windows 7 32-bit, user32.dll must be mapped to the same virtual
-  // address in all processes.  Otherwise, win32k's user-mode callback causes
-  // crash.  Since we delayload user32.dll, if our code or injected code
-  // reserves the user32 address before user32.dll is loaded, it is loaded
-  // to a new address and we crash.  To mitigate this problem, we explicitly
-  // load user32.dll as early as possible. See bug 1730033 for details.
-  if (!IsWindows8OrGreater()) {
-    SYSTEM_INFO sysInfo;
-    ::GetNativeSystemInfo(&sysInfo);
-    if (sysInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
-      LoadLibrarySystem32(L"user32.dll");
-    }
-  }
-
   SanitizeEnvironmentVariables();
   SetDllDirectoryW(L"");
 
