@@ -10,7 +10,6 @@
 #include "crashreporter.h"
 
 #include <windows.h>
-#include <versionhelpers.h>
 #include <commctrl.h>
 #include <richedit.h>
 #include <shellapi.h>
@@ -25,9 +24,6 @@
 
 #define SUBMIT_REPORT_VALUE L"SubmitCrashReport"
 #define INCLUDE_URL_VALUE L"IncludeURL"
-
-#define SENDURL_ORIGINAL L"https://crash-reports.mozilla.com/submit"
-#define SENDURL_XPSP2 L"https://crash-reports-xpsp2.mozilla.com/submit"
 
 #define WM_UPLOADCOMPLETE WM_APP
 
@@ -1039,35 +1035,10 @@ void UIShowDefaultUI() {
              MB_OK | MB_ICONSTOP);
 }
 
-static bool CanUseMainCrashReportServer() {
-  // Any NT from 6.0 and above is fine.
-  if (IsWindowsVersionOrGreater(6, 0, 0)) {
-    return true;
-  }
-
-  // On NT 5 servers, we need Server 2003 SP2.
-  if (IsWindowsServer()) {
-    return IsWindowsVersionOrGreater(5, 2, 2);
-  }
-
-  // Otherwise we have an NT 5 client.
-  // We need exactly XP SP3 (version 5.1 SP3 but not version 5.2).
-  return (IsWindowsVersionOrGreater(5, 1, 3) &&
-          !IsWindowsVersionOrGreater(5, 2, 0));
-}
-
 bool UIShowCrashUI(const StringTable& files, const Json::Value& queryParameters,
                    const string& sendURL, const vector<string>& restartArgs) {
   gSendData.hDlg = nullptr;
   gSendData.sendURL = UTF8ToWide(sendURL);
-
-  // Older Windows don't support the crash report server's crypto.
-  // This is a hack to use an alternate server.
-  if (!CanUseMainCrashReportServer() &&
-      gSendData.sendURL.find(SENDURL_ORIGINAL) == 0) {
-    gSendData.sendURL.replace(0, ARRAYSIZE(SENDURL_ORIGINAL) - 1,
-                              SENDURL_XPSP2);
-  }
 
   for (StringTable::const_iterator i = files.begin(); i != files.end(); i++) {
     gSendData.files[UTF8ToWide(i->first)] = UTF8ToWide(i->second);
