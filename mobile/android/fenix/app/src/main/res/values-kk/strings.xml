@@ -374,6 +374,8 @@
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Іздеу</string>
 
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Іздеу жүйелері</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Адрес жолағы</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1349,12 +1351,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d бет</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Шолу тарихы және сайт деректері</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Шолу тарихы және сайт деректері</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Шолу тарихы</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d адрес</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Cookies файлдары</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Cookies файлдары</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Cookies файлдары және сайт деректері</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Сіз сайттардың көбінен шығасыз</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1410,61 +1416,61 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Жақсырақ интернетке қош келдіңіз</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Жақсырақ интернетке қош келдіңіз</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Табыс үшін емес, адамдар үшін жасалған браузер.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">Табыс үшін емес, адамдар үшін жасалған браузер.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Жұмысты қалдырған жерінен жалғастырыңыз</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Жұмысты қалдырған жерінен жалғастырыңыз</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Экранды оңай ауыстыру үшін беттер мен парольдерді құрылғылар арасында синхрондаңыз.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Экранды оңай ауыстыру үшін беттер мен парольдерді құрылғылар арасында синхрондаңыз.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Кіру</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Кіру</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Синхрондау іске қосулы</string>
 
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Үнсіз келісім бойынша жекелікті қорғау</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Үнсіз келісім бойынша жекелікті қорғау</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s компанияларды интернетте сізді жасырын түрде бақылауын автоматты түрде тоқтатады.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s компанияларды интернетте сізді жасырын түрде бақылауын автоматты түрде тоқтатады.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Трекерлерге cookie файлдарын пайдаланып, сізді сайттар арасында бақылауға жол бермеу үшін Толық қорғанысты ұсынады.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Трекерлерге cookie файлдарын пайдаланып, сізді сайттар арасында бақылауға жол бермеу үшін Толық қорғанысты ұсынады.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Стандартты (бастапқы)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Стандартты (бастапқы)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Жекелік және өнімділік теңгерімі. Беттер әдеттегідей жүктеледі.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Жекелік және өнімділік теңгерімі. Беттер әдеттегідей жүктеледі.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Қатаң</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Қатаң</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Беттерді тезірек жүктеу үшін көбірек трекерлерді блоктайды, бірақ кейбір беттер функционалдылығы бұзылуы мүмкін.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Беттерді тезірек жүктеу үшін көбірек трекерлерді блоктайды, бірақ кейбір беттер функционалдылығы бұзылуы мүмкін.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Құралдар панелінің орналасуын таңдау</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Құралдар панелінің орналасуын таңдау</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Оны төменгі жағында ұстаңыз немесе жоғарғы жағына жылжытыңыз.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Оны төменгі жағында ұстаңыз немесе жоғарғы жағына жылжытыңыз.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Өз деректеріңізді өзіңіз басқарасыз</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Өз деректеріңізді өзіңіз басқарасыз</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox сіз желіде және бізбен немен бөлісетіңізді басқаруды өз қолыңызға береді.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox сіз желіде және бізбен немен бөлісетіңізді басқаруды өз қолыңызға береді.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Біздің жекелік ескертуімізді оқыңыз</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Біздің жекелік ескертуімізді оқыңыз</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Ғажайып интернетті ашуға дайынсыз ба?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Ғажайып интернетті ашуға дайынсыз ба?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Шолуды бастау</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Шолуды бастау</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Теманы таңдау</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Теманы таңдау</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Күңгірт режимді көмегімен батареяны және көздің көру қабілетін үнемдеңіз.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Күңгірт режимді көмегімен батареяны және көздің көру қабілетін үнемдеңіз.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Автоматты түрде</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Автоматты түрде</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Құрылғы параметрлеріне бейімделеді</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Құрылғы параметрлеріне бейімделеді</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Күңгірт тема</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Күңгірт тема</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Ашық түсті тема</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Ашық түсті тема</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Беттер жіберілді</string>
@@ -1913,7 +1919,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">Іздеу ұсыныстарының API URL адресі</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Сұранымды &quot;%s&quot; мәнімен алмастырыңыз. Мысалы\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Сұранымды &quot;%s&quot; мәнімен алмастырыңыз. Мысалы\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Сұранымды &quot;%s&quot; мәнімен алмастырыңыз. Мысалы\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Сақтау</string>
 

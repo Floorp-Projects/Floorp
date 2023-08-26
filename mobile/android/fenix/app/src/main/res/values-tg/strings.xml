@@ -379,6 +379,8 @@
     <string name="preferences_default_search_engine">Низоми ҷустуҷӯии пешфарз</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Ҷустуҷӯ</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Низомҳои ҷустуҷӯӣ</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Навори нишонӣ</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1364,13 +1366,17 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d варақа</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Таърихи тамошокунӣ ва маълумоти сомонаҳо</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Таърихи тамошокунӣ ва маълумоти сомонаҳо</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Таърихи тамошо</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d нишонӣ</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Кукиҳо</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Кукиҳо</string>
 
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Кукиҳо ва иттилооти сомона</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Шумо аз аксари сомонаҳо мебароед</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1428,60 +1434,60 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Хуш омадед ба Интернети беҳтар</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Хуш омадед ба Интернети беҳтар</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Браузере, ки барои мардум, на барои даромад сохта шудааст.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">Браузере, ки барои мардум, на барои даромад сохта шудааст.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Ба он ҷое, ки шумо ба қарибӣ тамошо кардаед, баргардонед</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Ба он ҷое, ки шумо ба қарибӣ тамошо кардаед, баргардонед</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Барои гузариши бехалал байни экранҳои дастгоҳҳои худ, варақаҳо ва ниҳонвожаҳоро ҳамоҳанг созед.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Барои гузариши бехалал байни экранҳои дастгоҳҳои худ, варақаҳо ва ниҳонвожаҳоро ҳамоҳанг созед.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Ворид шудан</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Ворид шудан</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Ҳамоҳангсозӣ фаъол аст</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Муҳофизати махфият ба таври пешфарз кор мекунад</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Муҳофизати махфият ба таври пешфарз кор мекунад</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">«%1$s» маъракаҳоеро, ки шуморо дар атрофи Интернет пинҳонӣ пайгирӣ мекунанд, ба таври худкор қатъ мекунад.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">«%1$s» маъракаҳоеро, ки шуморо дар атрофи Интернет пинҳонӣ пайгирӣ мекунанд, ба таври худкор қатъ мекунад.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Хусусияти «Муҳофизати пурра аз кукиҳо» васоити пайгириро аз истифодаи кукиҳо қатъ мекунад, то ки онҳо шуморо дар шабака ба таври пинҳонӣ пайгирӣ накунанд.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Хусусияти «Муҳофизати пурра аз кукиҳо» васоити пайгириро аз истифодаи кукиҳо қатъ мекунад, то ки онҳо шуморо дар шабака ба таври пинҳонӣ пайгирӣ накунанд.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Стандартӣ (пешфарз)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Стандартӣ (пешфарз)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Мутаносиб барои махфият ва самаранокӣ. Саҳифаҳо ба таври муқаррар бор карда мешаванд.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Мутаносиб барои махфият ва самаранокӣ. Саҳифаҳо ба таври муқаррар бор карда мешаванд.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Ҷиддӣ</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Ҷиддӣ</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Васоити пайгирии бештарро қатъ мекунад, то ки саҳифаҳо тезтар кушода шаванд, аммо баъзеи функсияҳои саҳифа метавонанд вайрон шаванд.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Васоити пайгирии бештарро қатъ мекунад, то ки саҳифаҳо тезтар кушода шаванд, аммо баъзеи функсияҳои саҳифа метавонанд вайрон шаванд.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Ҷойгиркунии навори абзорҳои худро интихоб кунед</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Ҷойгиркунии навори абзорҳои худро интихоб кунед</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Онро дар поён нигоҳ доред ё ба боло ҳаракат кунед.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Онро дар поён нигоҳ доред ё ба боло ҳаракат кунед.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Шумо маълумоти худро идора мекунед</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Шумо маълумоти худро идора мекунед</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Браузери «Firefox» имкон медиҳад, ки шумо тавонед он чизҳоеро, ки дар онлайн ва бо мо мубодила мекунед, мустақилона идора намоед.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Браузери «Firefox» имкон медиҳад, ки шумо тавонед он чизҳоеро, ки дар онлайн ва бо мо мубодила мекунед, мустақилона идора намоед.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Огоҳномаи махфияти моро хонед</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Огоҳномаи махфияти моро хонед</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Шумо барои боз кардани Интернети ҳайратангез омода ҳастед?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Шумо барои боз кардани Интернети ҳайратангез омода ҳастед?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Оғоз кардани тамошокунӣ</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Оғоз кардани тамошокунӣ</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Мавзуи худро интихоб кунед</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Мавзуи худро интихоб кунед</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Ба воситаи реҷаи торик барқи батареяро сарфа кунед ва биноии худро ҳифз намоед.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Ба воситаи реҷаи торик барқи батареяро сарфа кунед ва биноии худро ҳифз намоед.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Худкор</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Худкор</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Ба танзимоти дастгоҳи шумо мутобиқат мекунад</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Ба танзимоти дастгоҳи шумо мутобиқат мекунад</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Мавзуи торик</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Мавзуи торик</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Мавзуи равшан</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Мавзуи равшан</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Варақаҳо фиристода шуданд!</string>
@@ -1925,7 +1931,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">Нишонии URL-и API-и пешниҳоди ҷустуҷӯ</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Дархостро ба қимати «%s» иваз намоед. Барои мисол:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Дархостро ба қимати «%s» иваз намоед. Барои мисол:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Дархостро ба қимати «%s» иваз намоед. Барои мисол:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Нигоҳ доштан</string>
 
