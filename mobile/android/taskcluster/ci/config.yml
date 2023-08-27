@@ -70,6 +70,7 @@ treeherder:
         feature-customtabs: feature-customtabs
         feature-downloads: feature-downloads
         feature-findinpage: feature-findinpage
+        feature-fxsuggest: feature-fxsuggest
         feature-intent: feature-intent
         feature-logins: feature-logins
         feature-media: feature-media

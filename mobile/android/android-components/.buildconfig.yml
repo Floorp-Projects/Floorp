@@ -779,6 +779,28 @@ projects:
     - support-utils
     - tooling-lint
     - ui-icons
+  feature-fxsuggest:
+    description: A component for accessing Firefox Suggest search suggestions.
+    path: components/feature/fxsuggest
+    publish: true
+    upstream_dependencies:
+    - browser-errorpages
+    - browser-state
+    - concept-awesomebar
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - concept-toolbar
+    - feature-session
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
+    - support-ktx
+    - support-test
+    - support-utils
+    - tooling-lint
+    - ui-icons
   feature-intent:
     description: Combining various feature components for intent processing.
     path: components/feature/intent
