@@ -1096,10 +1096,10 @@ floorp-custom-actions-hide-sidebar = Hide sidebar
   .label = Hide sidebar
 floorp-custom-actions-toggle-sidebar = Toggle sidebar
   .label = Toggle sidebar
-floorp-custom-actions-open-previous-workspace = Open next workspace
-  .label = Open next workspace
-floorp-custom-actions-open-next-workspace = Open previous workspace
+floorp-custom-actions-open-previous-workspace = Open previous workspace
   .label = Open previous workspace
+floorp-custom-actions-open-next-workspace = Open next workspace
+  .label = Open next workspace
 
 
 ##################################################################### Profile Switcher ###############################################################
