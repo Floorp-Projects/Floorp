@@ -12,7 +12,7 @@
     <string name="content_description_private_browsing_button">i-Enable ang private browsing</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">i-Disable ang private browsing</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Pangitaa o ibutang ang address</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Ang imong abri nga tabs makita dinhi.</string>
@@ -50,11 +50,6 @@
        Mga tinuohan bahin sa private browsing
      </string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Dugang ug shortcut pag-abri ug mga private tab gikan sa imong Home screen.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Dugang ug shortcut</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Salamat na lang</string>
 
@@ -162,6 +157,8 @@
     <string name="browser_menu_add">i-Add</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">i-Edit</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">i-Customize ang homepage</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Home screen</string>
@@ -189,7 +186,7 @@
     <string name="search_suggestions_onboarding_title">i-Allow ang search suggestions sulod sa private sessions?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">Ang %s magbutyag sa tanan nimo gitype sulod sa address bar gamit imong default nga search engine. </string>
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Pangitaon %1$s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Pangitaa pinaagi sa address bar</string>
@@ -282,7 +279,6 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Ang add-on na-install na</string>
 
-    <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sync na karon</string>
     <!-- Preference category for sync -->

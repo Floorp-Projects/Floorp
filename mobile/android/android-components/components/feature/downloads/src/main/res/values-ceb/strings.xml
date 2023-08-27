@@ -44,4 +44,11 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Dili ka-abli sa %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Permission access sa files ug media kinahanglan para madownload ang mga file. Adto sa Android settings, tap ang permissions, ug tap allow.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">I-cancel ang mga private downloads?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">I-cancel ang mga downloads</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Magpabilin sa private browsing</string>
 </resources>

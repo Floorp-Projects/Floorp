@@ -375,6 +375,8 @@
     <string name="preferences_default_search_engine">ᱢᱩᱞ ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">ᱥᱮᱸᱫᱽᱨᱟ</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">ᱴᱷᱤᱠᱟᱹᱱᱟ ᱦᱩᱨᱠᱟᱹᱬ</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -1365,12 +1367,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ᱴᱮᱵᱽ ᱠᱚ</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱱᱟᱜᱟᱢ ᱟᱨ ᱥᱟᱭᱤᱴ ᱰᱟᱴᱟ</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱱᱟᱜᱟᱢ ᱟᱨ ᱥᱟᱭᱤᱴ ᱰᱟᱴᱟ</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">ᱱᱟᱜᱟᱢ ᱯᱟᱱᱛᱮ</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ᱴᱷᱤᱠᱬᱟᱹ ᱠᱚ</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">ᱠᱩᱠᱤᱡ ᱠᱚ</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">ᱠᱩᱠᱤᱡ ᱠᱚ</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">ᱠᱩᱠᱤᱡᱽ ᱟᱨ ᱥᱟᱭᱤᱴ ᱰᱟᱴᱟ</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">ᱟᱢ ᱫᱚ ᱰᱷᱮᱨ ᱜᱟᱱ ᱥᱟᱭᱤᱴ ᱠᱷᱚᱱ ᱵᱟᱦᱨᱮ ᱩᱲᱩᱠ ᱢᱤᱭᱟ ᱠᱚ</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1925,7 +1931,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">ᱥᱚᱞᱟᱦ ᱥᱮᱸᱫᱽᱨᱟ API URL</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">ᱯᱟᱱᱛᱮ ᱫᱚ “%s” ᱥᱟᱞᱟᱜ ᱛᱮ ᱵᱚᱫᱚᱞ ᱢᱮ ᱾ ᱫᱟᱹᱭᱠᱟᱹ ᱺ \nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">ᱯᱟᱱᱛᱮ ᱫᱚ “%s” ᱥᱟᱞᱟᱜ ᱛᱮ ᱵᱚᱫᱚᱞ ᱢᱮ ᱾ ᱫᱟᱹᱭᱠᱟᱹ ᱺ \nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">ᱯᱟᱱᱛᱮ ᱫᱚ “%s” ᱥᱟᱞᱟᱜ ᱛᱮ ᱵᱚᱫᱚᱞ ᱢᱮ ᱾ ᱫᱟᱹᱭᱠᱟᱹ ᱺ \nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
 
