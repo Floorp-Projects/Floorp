@@ -136,6 +136,7 @@ pref("floorp.browser.workspace.tab.enabled",true);
 pref("floorp.browser.workspace.closePopupAfterClick", false);
 pref("floorp.browser.workspace.excludePinnedTabs", false);
 pref("floorp.browser.workspace.info", "[]");
+pref("floorp.browser.workspace.changeWorkspaceWithDefaultKey", true);
 pref("floorp.browser.workspace.manageOnBMS", false);
 pref("floorp.browser.workspace.showWorkspaceName", true);
 pref("floorp.browser.workspace.backuped", false);

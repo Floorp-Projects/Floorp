@@ -21,6 +21,7 @@ const WORKSPACE_EXCLUDED_PINNED_TABS_PREF =
   "floorp.browser.workspace.excludePinnedTabs";
 const WORKSPACE_INFO_PREF = "floorp.browser.workspace.info";
 const WORKSPACE_BACKUPED_PREF = "floorp.browser.workspace.backuped";
+const WORKSPACE_CHANGE_WORKSPACE_WITH_DEFAULT_KEY_PREF = "floorp.browser.workspace.changeWorkspaceWithDefaultKey";
 const l10n = new Localization(["browser/floorp.ftl"], true);
 const defaultWorkspaceName = Services.prefs
   .getStringPref(WORKSPACE_ALL_PREF)
@@ -178,10 +179,12 @@ const workspaceFunctions = {
 
     keyboradEventListeners: {
       handle_keydown(event) {
+       if(Services.prefs.getBoolPref(WORKSPACE_CHANGE_WORKSPACE_WITH_DEFAULT_KEY_PREF)) {
         if (event.shiftKey && event.key === "ArrowUp") {
           workspaceFunctions.manageWorkspaceFunctions.changeWorkspaceToBeforeNext();
         } else if (event.shiftKey && event.key === "ArrowDown") {
           workspaceFunctions.manageWorkspaceFunctions.changeWorkspaceToAfterNext();
+        }
         }
       },
     },
