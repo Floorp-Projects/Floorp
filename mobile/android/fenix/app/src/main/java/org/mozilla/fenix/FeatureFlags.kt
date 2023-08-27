@@ -74,4 +74,9 @@ object FeatureFlags {
      * Preference to fully enable translations is pref_key_enable_translations.
      */
     val translations = Config.channel.isDebug
+
+    /**
+     * Allows users to enable Firefox Suggest.
+     */
+    val fxSuggest = Config.channel.isDebug
 }

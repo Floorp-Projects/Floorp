@@ -25,6 +25,7 @@ import mozilla.components.feature.awesomebar.provider.SearchEngineSuggestionProv
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchTermSuggestionsProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
+import mozilla.components.feature.fxsuggest.FxSuggestSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.syncedtabs.DeviceIndicators
@@ -56,6 +57,7 @@ class AwesomeBarView(
     private val engineForSpeculativeConnects: Engine?
     private val defaultHistoryStorageProvider: HistoryStorageSuggestionProvider
     private val defaultCombinedHistoryProvider: CombinedHistorySuggestionProvider
+    private val fxSuggestProvider: FxSuggestSuggestionProvider?
     private val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
     private val defaultSearchSuggestionProvider: SearchSuggestionProvider
     private val defaultSearchActionProvider: SearchActionProvider
@@ -137,6 +139,18 @@ class AwesomeBarView(
                 showEditSuggestion = false,
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
             )
+
+        fxSuggestProvider = if (activity.settings().enableFxSuggest) {
+            FxSuggestSuggestionProvider(
+                resources = activity.resources,
+                loadUrlUseCase = loadUrlUseCase,
+                includeSponsoredSuggestions = activity.settings().showSponsoredSuggestions,
+                includeNonSponsoredSuggestions = activity.settings().showNonSponsoredSuggestions,
+                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
+            )
+        } else {
+            null
+        }
 
         val searchBitmap = getDrawable(activity, R.drawable.ic_search)!!.apply {
             colorFilter = createBlendModeColorFilterCompat(primaryTextColor, SRC_IN)
@@ -319,6 +333,8 @@ class AwesomeBarView(
         }
 
         providersToAdd.add(searchEngineSuggestionProvider)
+
+        fxSuggestProvider?.let { providersToAdd.add(it) }
 
         return providersToAdd
     }

@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import androidx.core.content.edit
 import androidx.navigation.fragment.findNavController
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
@@ -69,6 +70,26 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isVisible = FeatureFlags.translations
             isChecked = context.settings().enableTranslations
             onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_fxsuggest).apply {
+            isVisible = FeatureFlags.fxSuggest
+            isChecked = context.settings().enableFxSuggest
+            onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener {
+                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    val newBooleanValue = newValue as? Boolean ?: return false
+                    val ingestionScheduler = requireContext().components.fxSuggest.ingestionScheduler
+                    if (newBooleanValue) {
+                        ingestionScheduler.startPeriodicIngestion()
+                    } else {
+                        ingestionScheduler.stopPeriodicIngestion()
+                    }
+                    requireContext().settings().preferences.edit {
+                        putBoolean(preference.key, newBooleanValue)
+                    }
+                    return true
+                }
+            }
         }
 
         // for performance reasons, this is only available in Nightly or Debug builds

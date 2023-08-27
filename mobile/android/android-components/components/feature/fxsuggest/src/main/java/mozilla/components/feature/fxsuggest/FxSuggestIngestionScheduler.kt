@@ -31,9 +31,6 @@ class FxSuggestIngestionScheduler(
     /**
      * Schedules a periodic background task to ingest new suggestions. Does nothing if the task is
      * already scheduled.
-     *
-     * Your main activity's [onCreate][android.app.Activity.onCreate] method should call this
-     * method.
      */
     fun startPeriodicIngestion() {
         logger.info("Scheduling periodic ingestion for new suggestions")

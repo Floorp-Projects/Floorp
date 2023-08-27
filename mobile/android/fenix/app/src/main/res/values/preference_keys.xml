@@ -76,6 +76,7 @@
     <string name="pref_key_nimbus_last_fetch" translatable="false">pref_key_nimbus_last_fetch</string>
     <string name="pref_key_home_blocklist">pref_key_home_blocklist</string>
     <string name="pref_key_hidden_engines_restored" translatable="false">pref_key_hidden_engines_restored</string>
+    <string name="pref_key_enable_fxsuggest" translatable="false">pref_key_fxsuggest_enabled</string>
 
     <!-- Data Choices -->
     <string name="pref_key_telemetry" translatable="false">pref_key_telemetry</string>
@@ -113,6 +114,8 @@
     <string name="pref_key_show_search_suggestions_in_private_onboarding" translatable="false">pref_key_show_search_suggestions_in_privateonboarding</string>
     <string name="pref_key_show_voice_search" translatable="false">pref_key_show_voice_search</string>
     <string name="pref_key_enable_autocomplete_urls" translatable="false">pref_key_enable_domain_autocomplete</string>
+    <string name="pref_key_show_sponsored_suggestions" translatable="false">pref_key_show_sponsored_suggestions</string>
+    <string name="pref_key_show_nonsponsored_suggestions" translatable="false">pref_key_show_nonsponsored_suggestions</string>
 
     <!-- Site Permissions Settings -->
     <string name="pref_key_site_permissions_description" translatable="false">pref_key_site_permissions_description</string>

@@ -43,6 +43,7 @@ import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.feature.autofill.AutofillUseCases
+import mozilla.components.feature.fxsuggest.GlobalFxSuggestDependencyProvider
 import mozilla.components.feature.search.ext.buildSearchUrl
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
 import mozilla.components.feature.top.sites.TopSitesFrecencyConfig
@@ -282,6 +283,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         startMetricsIfEnabled()
         setupPush()
 
+        GlobalFxSuggestDependencyProvider.initialize(components.fxSuggest.storage)
+
         visibilityLifecycleCallback = VisibilityLifecycleCallback(getSystemService())
         registerActivityLifecycleCallbacks(visibilityLifecycleCallback)
         registerActivityLifecycleCallbacks(MarkersActivityLifecycleCallbacks(components.core.engine))
@@ -365,6 +368,14 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         components.core.historyMetadataService.cleanup(
                             System.currentTimeMillis() - Core.HISTORY_METADATA_MAX_AGE_IN_MS,
                         )
+
+                        // If Firefox Suggest is enabled, register a worker to periodically ingest
+                        // new search suggestions. The worker requires us to have called
+                        // `GlobalFxSuggestDependencyProvider.initialize`, which we did before
+                        // scheduling these tasks.
+                        if (settings().enableFxSuggest) {
+                            components.fxSuggest.ingestionScheduler.startPeriodicIngestion()
+                        }
                     }
                 }
                 // Account manager initialization needs to happen on the main thread.

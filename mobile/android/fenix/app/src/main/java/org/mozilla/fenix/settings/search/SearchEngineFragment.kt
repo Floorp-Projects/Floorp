@@ -38,10 +38,17 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
         requirePreference<SwitchPreference>(R.string.pref_key_show_search_engine_shortcuts).apply {
             isVisible = !context.settings().showUnifiedSearchFeature
         }
+        requirePreference<SwitchPreference>(R.string.pref_key_show_sponsored_suggestions).apply {
+            isVisible = context.settings().enableFxSuggest
+        }
+        requirePreference<SwitchPreference>(R.string.pref_key_show_nonsponsored_suggestions).apply {
+            isVisible = context.settings().enableFxSuggest
+        }
 
         view?.hideKeyboard()
     }
 
+    @Suppress("LongMethod")
     override fun onResume() {
         super.onResume()
         view?.hideKeyboard()
@@ -99,6 +106,24 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
                 isChecked = context.settings().shouldShowVoiceSearch
             }
 
+        val showSponsoredSuggestionsPreference =
+            requirePreference<SwitchPreference>(R.string.pref_key_show_sponsored_suggestions).apply {
+                isChecked = context.settings().showSponsoredSuggestions
+                summary = getString(
+                    R.string.preferences_show_sponsored_suggestions_summary,
+                    getString(R.string.app_name),
+                )
+            }
+
+        val showNonSponsoredSuggestionsPreference =
+            requirePreference<SwitchPreference>(R.string.pref_key_show_nonsponsored_suggestions).apply {
+                isChecked = context.settings().showNonSponsoredSuggestions
+                title = getString(
+                    R.string.preferences_show_nonsponsored_suggestions,
+                    getString(R.string.app_name),
+                )
+            }
+
         searchSuggestionsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
         showSearchShortcuts.onPreferenceChangeListener = SharedPreferenceUpdater()
         showHistorySuggestions.onPreferenceChangeListener = SharedPreferenceUpdater()
@@ -125,6 +150,9 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
             }
             true
         }
+
+        showSponsoredSuggestionsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showNonSponsoredSuggestionsPreference.onPreferenceChangeListener = SharedPreferenceUpdater()
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {

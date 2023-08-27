@@ -72,5 +72,15 @@
             android:layout="@layout/checkbox_left_preference"
             android:title="@string/preferences_show_search_suggestions_in_private"
             app:iconSpaceReserved="false" />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:key="@string/pref_key_show_nonsponsored_suggestions"
+            android:title="@string/preferences_show_nonsponsored_suggestions"
+            android:summary="@string/preferences_show_nonsponsored_suggestions_summary" />
+        <SwitchPreference
+            app:iconSpaceReserved="false"
+            android:key="@string/pref_key_show_sponsored_suggestions"
+            android:title="@string/preferences_show_sponsored_suggestions"
+            android:summary="@string/preferences_show_sponsored_suggestions_summary" />
     </PreferenceCategory>
 </PreferenceScreen>

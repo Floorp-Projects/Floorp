@@ -1863,4 +1863,34 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_hidden_engines_restored),
         default = false,
     )
+
+    /**
+     * Indicates if Firefox Suggest is enabled.
+     */
+    var enableFxSuggest by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_fxsuggest),
+        default = { FxNimbus.features.fxSuggest.value().enabled },
+        featureFlag = FeatureFlags.fxSuggest,
+    )
+
+    /**
+     * Indicates if the user has chosen to show sponsored search suggestions in the awesomebar.
+     * The default value is computed lazily, and based on whether Firefox Suggest is enabled.
+     */
+    var showSponsoredSuggestions by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_show_sponsored_suggestions),
+        default = { enableFxSuggest },
+        featureFlag = FeatureFlags.fxSuggest,
+    )
+
+    /**
+     * Indicates if the user has chosen to show search suggestions for web content in the
+     * awesomebar. The default value is computed lazily, and based on whether Firefox Suggest
+     * is enabled.
+     */
+    var showNonSponsoredSuggestions by lazyFeatureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_show_nonsponsored_suggestions),
+        default = { enableFxSuggest },
+        featureFlag = FeatureFlags.fxSuggest,
+    )
 }

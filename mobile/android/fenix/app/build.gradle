@@ -517,6 +517,7 @@ dependencies {
     implementation project(':feature-contextmenu')
     implementation project(':feature-customtabs')
     implementation project(':feature-downloads')
+    implementation project(':feature-fxsuggest')
     implementation project(':feature-intent')
     implementation project(':feature-media')
     implementation project(':feature-prompts')

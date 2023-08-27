@@ -35,6 +35,7 @@ projects:
     - feature-customtabs
     - feature-downloads
     - feature-findinpage
+    - feature-fxsuggest
     - feature-intent
     - feature-logins
     - feature-media

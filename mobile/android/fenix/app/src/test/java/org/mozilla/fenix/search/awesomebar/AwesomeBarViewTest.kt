@@ -24,6 +24,7 @@ import mozilla.components.feature.awesomebar.provider.SearchEngineSuggestionProv
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchTermSuggestionsProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
+import mozilla.components.feature.fxsuggest.FxSuggestSuggestionProvider
 import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.junit.After
@@ -65,6 +66,7 @@ class AwesomeBarViewTest {
         every { any<Activity>().components.backgroundServices.syncedTabsStorage } returns mockk()
         every { any<Activity>().components.core.store.state.search } returns mockk(relaxed = true)
         every { any<Activity>().components.core.store.state.search } returns mockk(relaxed = true)
+        every { any<Activity>().settings() } returns mockk(relaxed = true)
         every { any<Activity>().getColorFromAttr(any()) } returns 0
         every { AwesomeBarView.Companion.getDrawable(any(), any()) } returns mockk<VectorDrawable>(relaxed = true) {
             every { intrinsicWidth } returns 10
@@ -1043,6 +1045,46 @@ class AwesomeBarViewTest {
         val result = awesomeBarView.getProvidersToAdd(state)
 
         assertEquals(1, result.filterIsInstance<SearchTermSuggestionsProvider>().size)
+    }
+
+    @Test
+    fun `GIVEN Firefox Suggest is enabled WHEN the view is created THEN configure the Firefox Suggest suggestion provider`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { enableFxSuggest } returns true
+        }
+        every { activity.settings() } returns settings
+        val awesomeBarView = AwesomeBarView(
+            activity = activity,
+            interactor = mockk(),
+            view = mockk(),
+            fromHomeFragment = false,
+        )
+        val state = getSearchProviderState()
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val fxSuggestProvider = result.firstOrNull { it is FxSuggestSuggestionProvider }
+        assertNotNull(fxSuggestProvider)
+    }
+
+    @Test
+    fun `GIVEN Firefox Suggest is disabled WHEN the view is created THEN don't configure the Firefox Suggest suggestion provider`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { enableFxSuggest } returns false
+        }
+        every { activity.settings() } returns settings
+        val awesomeBarView = AwesomeBarView(
+            activity = activity,
+            interactor = mockk(),
+            view = mockk(),
+            fromHomeFragment = false,
+        )
+        val state = getSearchProviderState()
+
+        val result = awesomeBarView.getProvidersToAdd(state)
+
+        val fxSuggestProvider = result.firstOrNull { it is FxSuggestSuggestionProvider }
+        assertNull(fxSuggestProvider)
     }
 }
 
