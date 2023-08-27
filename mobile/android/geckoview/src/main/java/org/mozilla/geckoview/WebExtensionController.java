@@ -28,6 +28,7 @@ import org.mozilla.gecko.MultiMap;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.geckoview.WebExtension.InstallException;
 
 public class WebExtensionController {
   private static final String LOGTAG = "WebExtension";
@@ -392,6 +393,16 @@ public class WebExtensionController {
      */
     @UiThread
     default void onInstalled(final @NonNull WebExtension extension) {}
+
+    /**
+     * Called whenever an error happened when installing a WebExtension.
+     *
+     * @param extension {@link WebExtension} which failed to be installed.
+     * @param installException {@link InstallException} indicates which type of error happened.
+     */
+    @UiThread
+    default void onInstallationFailed(
+        final @Nullable WebExtension extension, final @NonNull InstallException installException) {}
   }
 
   /** This delegate is used to notify of extension process state changes. */
@@ -478,6 +489,7 @@ public class WebExtensionController {
               "GeckoView:WebExtension:OnUninstalling",
               "GeckoView:WebExtension:OnUninstalled",
               "GeckoView:WebExtension:OnInstalling",
+              "GeckoView:WebExtension:OnInstallationFailed",
               "GeckoView:WebExtension:OnInstalled");
     } else if (delegate != null && mAddonManagerDelegate == null) {
       EventDispatcher.getInstance()
@@ -490,6 +502,7 @@ public class WebExtensionController {
               "GeckoView:WebExtension:OnUninstalling",
               "GeckoView:WebExtension:OnUninstalled",
               "GeckoView:WebExtension:OnInstalling",
+              "GeckoView:WebExtension:OnInstallationFailed",
               "GeckoView:WebExtension:OnInstalled");
     }
 
@@ -907,6 +920,9 @@ public class WebExtensionController {
     } else if ("GeckoView:WebExtension:OnDisabledProcessSpawning".equals(event)) {
       onDisabledProcessSpawning();
       return;
+    } else if ("GeckoView:WebExtension:OnInstallationFailed".equals(event)) {
+      onInstallationFailed(bundle);
+      return;
     }
 
     extensionFromBundle(bundle)
@@ -1090,6 +1106,24 @@ public class WebExtensionController {
               response.putBoolean("allow", AllowOrDeny.ALLOW.equals(allowOrDeny));
               return response;
             }));
+  }
+
+  private void onInstallationFailed(final GeckoBundle bundle) {
+    if (mAddonManagerDelegate == null) {
+      Log.e(LOGTAG, "no AddonManager delegate registered");
+      return;
+    }
+
+    final int errorCode = bundle.getInt("error");
+    final GeckoBundle extensionBundle = bundle.getBundle("extension");
+    WebExtension extension = null;
+    final String extensionName = bundle.getString("addonName");
+
+    if (extensionBundle != null) {
+      extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
+    }
+    mAddonManagerDelegate.onInstallationFailed(
+        extension, new InstallException(errorCode, extensionName));
   }
 
   private void onDisabling(final GeckoBundle bundle) {
