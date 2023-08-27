@@ -305,6 +305,9 @@
         <action
             android:id="@+id/action_browserFragment_to_reviewQualityCheckDialogFragment"
             app:destination="@id/reviewQualityCheckFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_translationsDialogFragment"
+            app:destination="@id/translationsDialogFragment" />
     </fragment>
 
     <fragment
@@ -418,6 +421,10 @@
     <dialog
         android:id="@+id/reviewQualityCheckFragment"
         android:name="org.mozilla.fenix.shopping.ReviewQualityCheckFragment"/>
+
+    <dialog
+        android:id="@+id/translationsDialogFragment"
+        android:name="org.mozilla.fenix.translations.TranslationsDialogFragment"/>
 
     <fragment
         android:id="@+id/savedLoginsAuthFragment"

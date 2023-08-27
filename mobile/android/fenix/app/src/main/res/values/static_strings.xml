@@ -118,4 +118,10 @@
     <string name="review_quality_check_retailer_name_amazon">Amazon</string>
     <string name="review_quality_check_retailer_name_bestbuy">Best Buy</string>
     <string name="review_quality_check_retailer_name_walmart">Walmart</string>
+
+    <string name="translations_bottom_sheet_title">Translate this page?</string>
+    <string name="translations_bottom_sheet_translate_from">Translate from</string>
+    <string name="translations_bottom_sheet_translate_to">Translate to</string>
+    <string name="translations_bottom_sheet_negative_button">Not now</string>
+    <string name="translations_bottom_sheet_positive_button">Translate</string>
 </resources>

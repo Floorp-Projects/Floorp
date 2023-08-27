@@ -73,6 +73,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private var readerModeAvailable = false
     private var reviewQualityCheckAvailable = false
+    private var translationsAvailable = false
+
     private var pwaOnboardingObserver: PwaOnboardingObserver? = null
 
     private var forwardAction: BrowserToolbar.TwoStateButton? = null
@@ -151,6 +153,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
         browserToolbarView.view.addPageAction(readerModeAction)
 
+        initTranslationsAction(context)
         initReviewQualityCheck(context, view)
 
         thumbnailsFeature.set(
@@ -205,9 +208,11 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 view = view,
             )
         }
+
         if (!context.settings().shouldUseCookieBanner && !context.settings().userOptOutOfReEngageCookieBannerDialog) {
             observeCookieBannerHandlingState(context.components.core.store)
         }
+
         standardSnackbarErrorBinding.set(
             feature = StandardSnackbarErrorBinding(
                 requireActivity(),
@@ -216,6 +221,33 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             owner = viewLifecycleOwner,
             view = binding.root,
         )
+    }
+
+    private fun initTranslationsAction(context: Context) {
+        if (!context.settings().enableTranslations) {
+            return
+        }
+
+        val translationsAction =
+            BrowserToolbar.ToggleButton(
+                image = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_translate_24,
+                )!!,
+                imageSelected =
+                AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_translate_24,
+                )!!,
+                contentDescription = "",
+                contentDescriptionSelected = "",
+                visible = {
+                    translationsAvailable || context.settings().enableTranslations
+                },
+                listener = { browserToolbarInteractor.onTranslationsButtonClicked() },
+            )
+
+        browserToolbarView.view.addPageAction(translationsAction)
     }
 
     private fun initReviewQualityCheck(context: Context, view: View) {

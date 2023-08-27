@@ -401,6 +401,15 @@ class DefaultBrowserToolbarControllerTest {
         assertFalse(activity.settings().shouldShowReviewQualityCheckCFR)
     }
 
+    fun handleTranslationsButtonClick() {
+        val controller = createController()
+        controller.handleTranslationsButtonClick()
+
+        verify {
+            navController.navigate(BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment())
+        }
+    }
+
     private fun createController(
         activity: HomeActivity = this.activity,
         customTabSessionId: String? = null,

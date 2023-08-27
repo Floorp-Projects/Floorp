@@ -63,6 +63,11 @@ interface BrowserToolbarController {
      * @see [BrowserToolbarInteractor.onShoppingCfrDismiss]
      */
     fun handleShoppingCfrDismiss()
+
+    /**
+     * @see [BrowserToolbarInteractor.onTranslationsButtonClicked]
+     */
+    fun handleTranslationsButtonClick()
 }
 
 @Suppress("LongParameterList")
@@ -211,6 +216,12 @@ class DefaultBrowserToolbarController(
 
     override fun handleShoppingCfrDismiss() {
         updateShoppingCfrSettings()
+    }
+
+    override fun handleTranslationsButtonClick() {
+        navController.navigate(
+            BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(),
+        )
     }
 
     companion object {
