@@ -139,7 +139,9 @@ export const keyboradShortcutActions = {
     // BMS actions
     toggleBMS: ["bmsController.controllFunctions.changeVisibleWenpanel()", "show-bsm", "bms-action"],
 
-    // Developer actions
+    // Workspace actions
+    openNextWorkspace: ["workspaceFunctions.manageWorkspaceFunctions.changeWorkspaceToBeforeNext();", "open-next-workspace", "workspace-action"],
+    openPreviousWorkspace: ["workspaceFunctions.manageWorkspaceFunctions.changeWorkspaceToAfterNext();", "open-previous-workspace", "workspace-action"],
 }
 
 export const modifiersList = {

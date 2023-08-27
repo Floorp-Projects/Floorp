@@ -526,6 +526,8 @@ manage-workspace-on-bms-option =
 
 show-workspace-name-option =
     .label = Show Workspace Name on Tab Bar's Workspace Button
+change-workspace-with-default-key-option =
+    .label = Change Workspace with ↑ and ↓ keys with SHIFT.
 
 workspaces-manage-title = Manage Workspaces
 workspaces-manage-description = Manage your Workspaces. Change workspace icon.
@@ -605,6 +607,7 @@ floorp-custom-actions-pip-action = Picture-in-Picture Actions
 floorp-custom-actions-downloads-action = Downloads Actions
 floorp-custom-actions-sidebar-action = Sidebar Actions
 floorp-custom-actions-bms-action = Browser Manager Sidebar Actions
+floorp-custom-actions-workspace-action = Workspaces Actions
 
 ## Mouse Gesture
 mouse-gesture = Mouse Gestures
@@ -1093,6 +1096,10 @@ floorp-custom-actions-hide-sidebar = Hide sidebar
   .label = Hide sidebar
 floorp-custom-actions-toggle-sidebar = Toggle sidebar
   .label = Toggle sidebar
+floorp-custom-actions-open-previous-workspace = Open next workspace
+  .label = Open next workspace
+floorp-custom-actions-open-next-workspace = Open previous workspace
+  .label = Open previous workspace
 
 
 ##################################################################### Profile Switcher ###############################################################
