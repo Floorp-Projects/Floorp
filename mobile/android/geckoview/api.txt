@@ -2364,6 +2364,7 @@ package org.mozilla.geckoview {
   public static class WebExtension.InstallException extends Exception {
     ctor protected InstallException();
     field public final int code;
+    field @Nullable public final String extensionName;
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.InstallException.Codes {
@@ -2512,6 +2513,7 @@ package org.mozilla.geckoview {
     method @UiThread default public void onDisabling(@NonNull WebExtension);
     method @UiThread default public void onEnabled(@NonNull WebExtension);
     method @UiThread default public void onEnabling(@NonNull WebExtension);
+    method @UiThread default public void onInstallationFailed(@Nullable WebExtension, @NonNull WebExtension.InstallException);
     method @UiThread default public void onInstalled(@NonNull WebExtension);
     method @UiThread default public void onInstalling(@NonNull WebExtension);
     method @UiThread default public void onUninstalled(@NonNull WebExtension);

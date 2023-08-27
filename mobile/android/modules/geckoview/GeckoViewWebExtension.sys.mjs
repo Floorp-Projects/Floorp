@@ -529,7 +529,46 @@ class ExtensionPromptObserver {
   }
 }
 
+class AddonInstallObserver {
+  constructor() {
+    Services.obs.addObserver(this, "addon-install-failed");
+  }
+
+  async onInstallationFailed(aAddon, aAddonName, aError) {
+    // aAddon could be null if we have a network error where we can't download the xpi file.
+    let extension = null;
+    if (aAddon !== null) {
+      extension = await exportExtension(
+        aAddon,
+        aAddon.userPermissions,
+        /* aSourceURI */ null
+      );
+    }
+
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:WebExtension:OnInstallationFailed",
+      extension,
+      addonName: aAddonName,
+      error: aError,
+    });
+  }
+
+  observe(aSubject, aTopic, aData) {
+    debug`observe ${aTopic}`;
+    switch (aTopic) {
+      case "addon-install-failed": {
+        aSubject.wrappedJSObject.installs.forEach(install => {
+          const { addon, error, name: addonName } = install;
+          this.onInstallationFailed(addon, addonName, error);
+        });
+        break;
+      }
+    }
+  }
+}
+
 new ExtensionPromptObserver();
+new AddonInstallObserver();
 
 class AddonManagerListener {
   constructor() {
