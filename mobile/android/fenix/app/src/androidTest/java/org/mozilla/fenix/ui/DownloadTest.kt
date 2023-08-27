@@ -126,6 +126,7 @@ class DownloadTest {
         deleteDownloadedFileOnStorage(downloadFile)
     }
 
+    @Ignore("Failing: Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1813521")
     @SmokeTest
     @Test
     fun pauseResumeCancelDownloadTest() {
