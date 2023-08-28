@@ -212,12 +212,6 @@ module.exports = {
       ],
     },
     {
-      files: ["netwerk/test/mochitests/**", "netwerk/test/unit*/**"],
-      rules: {
-        "no-shadow": "warn",
-      },
-    },
-    {
       // Bug 877389 - Gradually migrate from Cu.reportError to console.error.
       // Enable these as we fix more areas.
       files: [

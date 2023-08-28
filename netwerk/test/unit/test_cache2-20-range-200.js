@@ -9,7 +9,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "200m1", "200part1a-", function (entry) {
+    new OpenCallback(NEW, "200m1", "200part1a-", function () {
       // Open normally but wait for validation from the server
       asyncOpenCacheEntry(
         "http://r200/",
@@ -23,8 +23,8 @@ function run_test() {
             NEW | WAITFORWRITE | RECREATE,
             "200m2",
             "200part1b--part2b",
-            function (entry) {
-              entry.setValid();
+            function (entry1) {
+              entry1.setValid();
             }
           ).onCacheEntryAvailable(entry, true, Cr.NS_OK);
         })

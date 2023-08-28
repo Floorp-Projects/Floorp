@@ -361,7 +361,7 @@ function trrQueryHandler(req, resp, url) {
     resp.end("Unexpected method");
   }
 
-  function processRequest(req, resp, payload) {
+  function processRequest(req1, resp1, payload) {
     let dnsQuery = global.dnsPacket.decode(payload);
     let domain = dnsQuery.questions[0].name;
     let type = dnsQuery.questions[0].type;
@@ -387,24 +387,24 @@ function trrQueryHandler(req, resp, url) {
       additionals: response.additionals || [],
     });
 
-    let writeResponse = (resp, buf, context) => {
+    let writeResponse = (resp2, buf2, context) => {
       try {
         if (context.error) {
           // If the error is a valid HTTP response number just write it out.
           if (context.error < 600) {
-            resp.writeHead(context.error);
-            resp.end("Intentional error");
+            resp2.writeHead(context.error);
+            resp2.end("Intentional error");
             return;
           }
 
           // Bigger error means force close the session
-          req.stream.session.close();
+          req1.stream.session.close();
           return;
         }
-        resp.setHeader("Content-Length", buf.length);
-        resp.writeHead(200, { "Content-Type": "application/dns-message" });
-        resp.write(buf);
-        resp.end("");
+        resp2.setHeader("Content-Length", buf2.length);
+        resp2.writeHead(200, { "Content-Type": "application/dns-message" });
+        resp2.write(buf2);
+        resp2.end("");
       } catch (e) {}
     };
 
@@ -417,12 +417,12 @@ function trrQueryHandler(req, resp, url) {
           writeResponse(arg[0], arg[1], arg[2]);
         },
         response.delay,
-        [resp, buf, response]
+        [resp1, buf, response]
       );
       return;
     }
 
-    writeResponse(resp, buf, response);
+    writeResponse(resp1, buf, response);
   }
 }
 

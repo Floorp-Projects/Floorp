@@ -260,7 +260,7 @@ add_task(async function test_ntlm() {
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   let [req, buf] = await new Promise(resolve => {
     chan.asyncOpen(
-      new ChannelListener((req, buf) => resolve([req, buf]), null)
+      new ChannelListener((req1, buf1) => resolve([req1, buf1]), null)
     );
   });
   Assert.ok(buf);

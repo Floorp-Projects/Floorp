@@ -102,8 +102,8 @@ add_task(
         mainThread,
         defaultOriginAttributes
       );
-      let [, , inStatus] = await listener;
-      Assert.equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
+      let [, , inStatus1] = await listener;
+      Assert.equal(inStatus1, Cr.NS_ERROR_UNKNOWN_HOST);
     } else {
       Assert.throws(
         () => {

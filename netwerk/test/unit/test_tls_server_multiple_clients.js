@@ -42,8 +42,8 @@ function startServer(cert) {
 
       input.asyncWait(
         {
-          onInputStreamReady(input) {
-            NetUtil.asyncCopy(input, output);
+          onInputStreamReady(input1) {
+            NetUtil.asyncCopy(input1, output);
           },
         },
         0,
@@ -86,17 +86,17 @@ function startClient(port) {
   let outputDeferred = PromiseUtils.defer();
 
   let handler = {
-    onTransportStatus(transport, status) {
+    onTransportStatus(transport1, status) {
       if (status === Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
         output.asyncWait(handler, 0, 0, Services.tm.currentThread);
       }
     },
 
-    onInputStreamReady(input) {
+    onInputStreamReady(input1) {
       try {
-        let data = NetUtil.readInputStreamToString(input, input.available());
+        let data = NetUtil.readInputStreamToString(input1, input1.available());
         equal(data, "HELLO", "Echoed data received");
-        input.close();
+        input1.close();
         output.close();
         inputDeferred.resolve();
       } catch (e) {
@@ -104,9 +104,9 @@ function startClient(port) {
       }
     },
 
-    onOutputStreamReady(output) {
+    onOutputStreamReady(output1) {
       try {
-        output.write("HELLO", 5);
+        output1.write("HELLO", 5);
         info("Output to server written");
         outputDeferred.resolve();
         input = transport.openInputStream(0, 0, 0);

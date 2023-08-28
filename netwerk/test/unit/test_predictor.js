@@ -492,9 +492,9 @@ function continue_test_origin() {
         origin_attributes
       );
       do_timeout(0, () => {
-        var origin = extract_origin(sruri);
-        if (!preconns.includes(origin)) {
-          preconns.push(origin);
+        var origin1 = extract_origin(sruri);
+        if (!preconns.includes(origin1)) {
+          preconns.push(origin1);
         }
 
         sruri = newURI(subresources[2]);
@@ -505,9 +505,9 @@ function continue_test_origin() {
           origin_attributes
         );
         do_timeout(0, () => {
-          var origin = extract_origin(sruri);
-          if (!preconns.includes(origin)) {
-            preconns.push(origin);
+          var origin2 = extract_origin(sruri);
+          if (!preconns.includes(origin2)) {
+            preconns.push(origin2);
           }
 
           var loaduri = newURI("http://localhost:4444/anotherpage.html");
@@ -708,9 +708,9 @@ function test_visitor_doom() {
         console.debug("asyncDoomURI", aURI.spec);
         let doomTask = Promise.all(
           storages.map(storage => {
-            return new Promise(resolve => {
+            return new Promise(resolve1 => {
               storage.asyncDoomURI(aURI, aIdEnhance, {
-                onCacheEntryDoomed: resolve,
+                onCacheEntryDoomed: resolve1,
               });
             });
           })

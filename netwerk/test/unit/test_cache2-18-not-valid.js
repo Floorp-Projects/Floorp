@@ -11,21 +11,21 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW | DOOMED, "v1m", "v1d", function (entry) {
+    new OpenCallback(NEW | DOOMED, "v1m", "v1d", function () {
       // Open for rewrite (don't validate), write different meta and data
       asyncOpenCacheEntry(
         "http://nv/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NOTVALID | RECREATE, "v2m", "v2d", function (entry) {
+        new OpenCallback(NOTVALID | RECREATE, "v2m", "v2d", function () {
           // And check...
           asyncOpenCacheEntry(
             "http://nv/",
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             null,
-            new OpenCallback(NORMAL, "v2m", "v2d", function (entry) {
+            new OpenCallback(NORMAL, "v2m", "v2d", function () {
               finish_cache2_test();
             })
           );

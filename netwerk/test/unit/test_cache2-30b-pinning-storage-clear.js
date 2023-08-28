@@ -11,7 +11,7 @@ function run_test() {
     "pin",
     Ci.nsICacheStorage.OPEN_TRUNCATE,
     lci,
-    new OpenCallback(NEW | WAITFORWRITE, "a1m", "a1d", function (entry) {
+    new OpenCallback(NEW | WAITFORWRITE, "a1m", "a1d", function () {
       // Now clear the disk storage, that should leave the pinned  entry in the cache
       var diskStorage = getCacheStorage("disk", lci);
       diskStorage.asyncEvictStorage(null);
@@ -22,7 +22,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         lci,
-        new OpenCallback(NORMAL, "a1m", "a1d", function (entry) {
+        new OpenCallback(NORMAL, "a1m", "a1d", function () {
           // Now clear the pinning storage, entry should be gone
           var pinningStorage = getCacheStorage("pin", lci);
           pinningStorage.asyncEvictStorage(null);
@@ -32,7 +32,7 @@ function run_test() {
             "disk",
             Ci.nsICacheStorage.OPEN_NORMALLY,
             lci,
-            new OpenCallback(NEW, "", "", function (entry) {
+            new OpenCallback(NEW, "", "", function () {
               finish_cache2_test();
             })
           );

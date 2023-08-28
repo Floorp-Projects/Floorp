@@ -65,7 +65,7 @@ function check_doom2(status) {
     "disk",
     Ci.nsICacheStorage.OPEN_TRUNCATE,
     null,
-    function (status, entry) {
+    function (stat, entry) {
       write_entry2(entry, entry.openOutputStream(0, -1));
     }
   );

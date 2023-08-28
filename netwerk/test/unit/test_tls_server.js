@@ -91,8 +91,8 @@ function startServer(
 
       input.asyncWait(
         {
-          onInputStreamReady(input) {
-            NetUtil.asyncCopy(input, output);
+          onInputStreamReady(input1) {
+            NetUtil.asyncCopy(input1, output);
           },
         },
         0,
@@ -144,17 +144,17 @@ function startClient(port, sendClientCert, expectingAlert, tlsVersion) {
   let outputDeferred = PromiseUtils.defer();
 
   let handler = {
-    onTransportStatus(transport, status) {
+    onTransportStatus(transport1, status) {
       if (status === Ci.nsISocketTransport.STATUS_CONNECTED_TO) {
         output.asyncWait(handler, 0, 0, Services.tm.currentThread);
       }
     },
 
-    onInputStreamReady(input) {
+    onInputStreamReady(input1) {
       try {
-        let data = NetUtil.readInputStreamToString(input, input.available());
+        let data = NetUtil.readInputStreamToString(input1, input1.available());
         equal(data, "HELLO", "Echoed data received");
-        input.close();
+        input1.close();
         output.close();
         ok(!expectingAlert, "No cert alert expected");
         inputDeferred.resolve();
@@ -166,7 +166,7 @@ function startClient(port, sendClientCert, expectingAlert, tlsVersion) {
             errorCode == SSL_ERROR_BAD_CERT_ALERT
           ) {
             info("Got bad cert alert as expected for tls 1.2");
-            input.close();
+            input1.close();
             output.close();
             inputDeferred.resolve();
             return;
@@ -176,7 +176,7 @@ function startClient(port, sendClientCert, expectingAlert, tlsVersion) {
             errorCode == SSL_ERROR_RX_CERTIFICATE_REQUIRED_ALERT
           ) {
             info("Got cert required alert as expected for tls 1.3");
-            input.close();
+            input1.close();
             output.close();
             inputDeferred.resolve();
             return;
@@ -186,9 +186,9 @@ function startClient(port, sendClientCert, expectingAlert, tlsVersion) {
       }
     },
 
-    onOutputStreamReady(output) {
+    onOutputStreamReady(output1) {
       try {
-        output.write("HELLO", 5);
+        output1.write("HELLO", 5);
         info("Output to server written");
         outputDeferred.resolve();
         input = transport.openInputStream(0, 0, 0);
