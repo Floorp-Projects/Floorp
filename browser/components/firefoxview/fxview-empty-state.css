@@ -19,6 +19,11 @@
   justify-content: center;
 }
 
+.image-container {
+  min-width: 150px;
+  text-align: center;
+}
+
 .image {
   -moz-context-properties: fill, stroke, fill-opacity;
   fill: var(--fxview-background-color-secondary);
