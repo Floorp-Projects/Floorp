@@ -78,10 +78,6 @@ var createHttpServer = (...args) => {
   return AddonTestUtils.createHttpServer(...args);
 };
 
-if (AppConstants.platform === "android") {
-  Services.io.offline = true;
-}
-
 // Some tests load non-moz-extension:-URLs in their extension document. When
 // extensions run in-process (extensions.webextensions.remote set to false),
 // that fails.
