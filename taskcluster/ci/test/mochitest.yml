@@ -211,10 +211,7 @@ mochitest-a11y:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     default: []
-            1proc:
-                by-test-platform:
-                    .*wayland.*: []
-                    default: built-projects
+            1proc: built-projects
             editor-legacy-direction:
                 by-test-platform:
                     linux1804-64-qr/debug: ['mozilla-central']
