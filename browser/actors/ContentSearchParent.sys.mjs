@@ -100,7 +100,6 @@ export let ContentSearch = {
   init() {
     if (!this.initialized) {
       Services.obs.addObserver(this, "browser-search-engine-modified");
-      Services.obs.addObserver(this, "browser-search-service");
       Services.obs.addObserver(this, "shutdown-leaks-before-check");
       lazy.UrlbarPrefs.addObserver(this);
 
@@ -140,7 +139,6 @@ export let ContentSearch = {
     }
 
     Services.obs.removeObserver(this, "browser-search-engine-modified");
-    Services.obs.removeObserver(this, "browser-search-service");
     Services.obs.removeObserver(this, "shutdown-leaks-before-check");
 
     this._eventQueue.length = 0;
@@ -150,11 +148,6 @@ export let ContentSearch = {
 
   observe(subj, topic, data) {
     switch (topic) {
-      case "browser-search-service":
-        if (data != "init-complete") {
-          break;
-        }
-      // fall through
       case "browser-search-engine-modified":
         this._eventQueue.push({
           type: "Observe",
