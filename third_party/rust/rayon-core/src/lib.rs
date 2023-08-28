@@ -99,10 +99,10 @@ pub use self::registry::ThreadBuilder;
 pub use self::scope::{in_place_scope, scope, Scope};
 pub use self::scope::{in_place_scope_fifo, scope_fifo, ScopeFifo};
 pub use self::spawn::{spawn, spawn_fifo};
-pub use self::thread_pool::current_thread_has_pending_tasks;
-pub use self::thread_pool::current_thread_index;
-pub use self::thread_pool::ThreadPool;
-pub use self::thread_pool::{yield_local, yield_now, Yield};
+pub use self::thread_pool::{
+    clean_up_use_current_thread, current_thread_has_pending_tasks, current_thread_index,
+    yield_local, yield_now, ThreadPool, Yield,
+};
 
 use self::registry::{CustomSpawn, DefaultSpawn, ThreadSpawn};
 
@@ -175,6 +175,9 @@ pub struct ThreadPoolBuilder<S = DefaultSpawn> {
     /// If RAYON_NUM_THREADS is invalid or zero will use the default.
     num_threads: usize,
 
+    /// The thread we're building *from* will also be part of the pool.
+    use_current_thread: bool,
+
     /// Custom closure, if any, to handle a panic that we cannot propagate
     /// anywhere else.
     panic_handler: Option<Box<PanicHandler>>,
@@ -228,6 +231,7 @@ impl Default for ThreadPoolBuilder {
     fn default() -> Self {
         ThreadPoolBuilder {
             num_threads: 0,
+            use_current_thread: false,
             panic_handler: None,
             get_thread_name: None,
             stack_size: None,
@@ -445,6 +449,7 @@ impl<S> ThreadPoolBuilder<S> {
             spawn_handler: CustomSpawn::new(spawn),
             // ..self
             num_threads: self.num_threads,
+            use_current_thread: self.use_current_thread,
             panic_handler: self.panic_handler,
             get_thread_name: self.get_thread_name,
             stack_size: self.stack_size,
@@ -529,6 +534,34 @@ impl<S> ThreadPoolBuilder<S> {
     /// be preferred.
     pub fn num_threads(mut self, num_threads: usize) -> Self {
         self.num_threads = num_threads;
+        self
+    }
+
+    /// Use the current thread as one of the threads in the pool.
+    ///
+    /// The current thread is guaranteed to be at index 0, and since the thread is not managed by
+    /// rayon, the spawn and exit handlers do not run for that thread.
+    ///
+    /// Note that the current thread won't run the main work-stealing loop, so jobs spawned into
+    /// the thread-pool will generally not be picked up automatically by this thread unless you
+    /// yield to rayon in some way, like via [`yield_now()`], [`yield_local()`], [`scope()`], or
+    /// [`clean_up_use_current_thread()`].
+    ///
+    /// # Panics
+    ///
+    /// This function won't panic itself, but [`ThreadPoolBuilder::build()`] will panic if you've
+    /// called this function and the current thread is already part of another [`ThreadPool`].
+    ///
+    /// # Cleaning up a local thread-pool
+    ///
+    /// In order to properly clean-up the worker thread state, for local thread-pools you should
+    /// call [`clean_up_use_current_thread()`] from the same thread that built the thread-pool.
+    /// See that function's documentation for more details.
+    ///
+    /// This call is not required, but without it the registry will leak even if the pool is
+    /// otherwise terminated.
+    pub fn use_current_thread(mut self) -> Self {
+        self.use_current_thread = true;
         self
     }
 
@@ -771,6 +804,7 @@ impl<S> fmt::Debug for ThreadPoolBuilder<S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let ThreadPoolBuilder {
             ref num_threads,
+            ref use_current_thread,
             ref get_thread_name,
             ref panic_handler,
             ref stack_size,
@@ -795,6 +829,7 @@ impl<S> fmt::Debug for ThreadPoolBuilder<S> {
 
         f.debug_struct("ThreadPoolBuilder")
             .field("num_threads", num_threads)
+            .field("use_current_thread", use_current_thread)
             .field("get_thread_name", &get_thread_name)
             .field("panic_handler", &panic_handler)
             .field("stack_size", &stack_size)
