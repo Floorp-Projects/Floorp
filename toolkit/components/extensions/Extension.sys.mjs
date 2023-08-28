@@ -717,6 +717,11 @@ export var ExtensionProcessCrashObserver = {
         if (pp.remoteType === "extension") {
           this.currentProcessChildID = childID;
           Glean.extensions.processEvent.created.add(1);
+          if (this._isAndroid) {
+            Glean.extensions.processEvent[
+              this.appInForeground ? "created_fg" : "created_bg"
+            ].add(1);
+          }
         }
         break;
       }
@@ -746,6 +751,11 @@ export var ExtensionProcessCrashObserver = {
         const { appInForeground } = this;
         this.lastCrashedProcessChildID = childID;
         Glean.extensions.processEvent.crashed.add(1);
+        if (this._isAndroid) {
+          Glean.extensions.processEvent[
+            appInForeground ? "crashed_fg" : "crashed_bg"
+          ].add(1);
+        }
         Management.emit("extension-process-crash", {
           childID,
           appInForeground,
