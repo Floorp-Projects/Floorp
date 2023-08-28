@@ -14,6 +14,13 @@ const keyboradShortcutConfig = JSON.parse(Services.prefs.getStringPref(
 
 const buildShortCutkeyFunctions = {
     init() {
+        if(Services.prefs.getBoolPref(CustomKeyboardShortcutUtils.SHORTCUT_KEY_DISABLE_FX_DEFAULT_SCKEY_PREF, false)) {
+            SessionStore.promiseInitialized.then(() => {
+                buildShortCutkeyFunctions.disableAllCustomKeyShortcut();
+                console.info("Remove already exist shortcut keys");
+            });
+        }
+
         const keyboradShortcutConfig = JSON.parse(Services.prefs.getStringPref(
             CustomKeyboardShortcutUtils.SHORTCUT_KEY_AND_ACTION_PREF,
             ""
@@ -34,13 +41,6 @@ const buildShortCutkeyFunctions = {
             } else {
                 console.error("Invalid shortcut key config: " + shortcutObj);
             }
-        }
-
-        if(Services.prefs.getBoolPref(CustomKeyboardShortcutUtils.SHORTCUT_KEY_DISABLE_FX_DEFAULT_SCKEY_PREF, false)) {
-            SessionStore.promiseInitialized.then(() => {
-                buildShortCutkeyFunctions.disableAllCustomKeyShortcut();
-                console.info("Remove already exist shortcut keys");
-            });
         }
     },
 

@@ -164,6 +164,7 @@ function setProtonFixUI() {
   Services.prefs.setBoolPref("userChrome.tab.bottom_rounded_corner",     false);
   
   Services.prefs.setBoolPref("userChrome.tab.photon_like_contextline",   false);
+  Services.prefs.setBoolPref("userChrome.rounding.square_tab",           false);
 
   setBrowserDesign();
 }
