@@ -1343,12 +1343,12 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">පටිති %d</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">පිරික්සුම් ඉතිහාසය හා අඩවි දත්ත</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">පිරික්සුම් ඉතිහාසය හා අඩවි දත්ත</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">ලිපින %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">දත්තකඩ</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">දත්තකඩ</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">ඔබව බොහෝ අඩවි වලින් නික්මවෙනු ඇත</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1405,62 +1405,62 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">නව්‍ය අන්තර්ජාලයකට පිළිගනිමු</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">නව්‍ය අන්තර්ජාලයකට පිළිගනිමු</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">ලාභයට නොව මිනිසුන්ට තැනූ අතිරික්සුවකි.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">ලාභයට නොව මිනිසුන්ට තැනූ අතිරික්සුවකි.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">ඔබ නතර කළ තැනින් අරඹන්න</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">ඔබ නතර කළ තැනින් අරඹන්න</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">බාධාවකින් තොරව තිර අතර මාරු වීමට උපාංගවල පටිති හා මුරපද සමමුහූර්ත කරන්න.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">බාධාවකින් තොරව තිර අතර මාරු වීමට උපාංගවල පටිති හා මුරපද සමමුහූර්ත කරන්න.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">පිවිසෙන්න</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">පිවිසෙන්න</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">සමමුහූර්තය සක්‍රියයි</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">පෙරනිමි පෞද්ගලිකත්‍ව රැකවරණය</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">පෙරනිමි පෞද්ගලිකත්‍ව රැකවරණය</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s මගින් අන්තර්ජාලය පුරා ඔබව රහසිගතව ලුහුබඳින සමාගම් ස්වයංක්‍රීයව නවත්වයි.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s මගින් අන්තර්ජාලය පුරා ඔබව රහසිගතව ලුහුබඳින සමාගම් ස්වයංක්‍රීයව නවත්වයි.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">පූර්ණ දත්තකඩ රැකවරණය මගින් වියමන පුරා දත්තකඩ භාවිතයෙන් ඔබ පසුපස හඹා එන ලුහුබඳින්නන් නවත්වයි.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">පූර්ණ දත්තකඩ රැකවරණය මගින් වියමන පුරා දත්තකඩ භාවිතයෙන් ඔබ පසුපස හඹා එන ලුහුබඳින්නන් නවත්වයි.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">සම්මත (පෙරනිමි)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">සම්මත (පෙරනිමි)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">ආරක්‍ෂාව හා කාර්ය සාධනය අතර සංතුලිතයි. පිටු සාමාන්‍ය ලෙස පූරණය වේ.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">ආරක්‍ෂාව හා කාර්ය සාධනය අතර සංතුලිතයි. පිටු සාමාන්‍ය ලෙස පූරණය වේ.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">දැඩි</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">දැඩි</string>
 
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">බොහෝ දැන්වීම් අවහිර කරන විට පිටු වේගයෙන් පූරණය වේ, නමුත් ඇතැම් පිටු හරිහැටි ක්‍රියා නොකරනු ඇත.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">බොහෝ දැන්වීම් අවහිර කරන විට පිටු වේගයෙන් පූරණය වේ, නමුත් ඇතැම් පිටු හරිහැටි ක්‍රියා නොකරනු ඇත.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">මෙවලම් තීරුව ස්ථානගත කරන්න</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">මෙවලම් තීරුව ස්ථානගත කරන්න</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">එය පතුලේ තබා ගන්න, හෝ මුදුනට ගෙන යන්න.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">එය පතුලේ තබා ගන්න, හෝ මුදුනට ගෙන යන්න.</string>
 
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">ඔබ ඔබගේ දත්ත පාලනය කරයි</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">ඔබ ඔබගේ දත්ත පාලනය කරයි</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">ඔබ මාර්ගගතව බෙදා ගන්නා දෑ සහ ඔබ අප සමඟ බෙදා ගන්නා දෑ පහසුවෙන් පාලනය කිරීමට ෆයර්ෆොක්ස් ඉඩ සලසයි.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">ඔබ මාර්ගගතව බෙදා ගන්නා දෑ සහ ඔබ අප සමඟ බෙදා ගන්නා දෑ පහසුවෙන් පාලනය කිරීමට ෆයර්ෆොක්ස් ඉඩ සලසයි.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">අපගේ රහස්‍යතා දැන්වීම කියවන්න</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">අපගේ රහස්‍යතා දැන්වීම කියවන්න</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">විස්මජනක අන්තර්ජාලයක් දැකීමට සූදානම්ද?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">විස්මජනක අන්තර්ජාලයක් දැකීමට සූදානම්ද?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">පිරික්සුම අරඹන්න</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">පිරික්සුම අරඹන්න</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">ඔබගේ තේමාව තෝරන්න</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">ඔබගේ තේමාව තෝරන්න</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">අඳුරු ප්‍රකාරය සමඟ විදුලිකෝෂය මෙන්ම ඔබගේ නෙත් සුරකින්න.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">අඳුරු ප්‍රකාරය සමඟ විදුලිකෝෂය මෙන්ම ඔබගේ නෙත් සුරකින්න.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">ස්වයංක්‍රීය</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">ස්වයංක්‍රීය</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">ඔබගේ උපාංගයේ සැකසුම් වලට අනුගත වේ</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">ඔබගේ උපාංගයේ සැකසුම් වලට අනුගත වේ</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">අඳුරු තේමාව</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">අඳුරු තේමාව</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">දීප්ත තේමාව</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">දීප්ත තේමාව</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">පටිත්ත යැවිණි!</string>
@@ -1529,9 +1529,9 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">නොගිය අඩවිවල දත්තකඩ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_3">සියළු තෙවන පාර්ශ්ව දත්තකඩ (අඩවි කැඩීමට හේතු වේ)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">සමස්ත තෙවන පාර්ශ්ව දත්තකඩ (අඩවි කැඩීමට හේතු වේ)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_4">සියළු දත්තකඩ (අඩවි කැඩීමට හේතු වේ)</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">සමස්ත දත්තකඩ (අඩවි කැඩීමට හේතු වේ)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">හරස්-අඩවි දත්තකඩ හුදකලාව</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
@@ -1893,7 +1893,7 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">සෙවුම් යෝජනා යෙ.ක්‍ර.මු. ඒ.ස.නි.</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">“%s” සමඟ විමසුම ප්‍රතිස්ථාපනය කරන්න. නිදසුන:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">“%s” සමඟ විමසුම ප්‍රතිස්ථාපනය කරන්න. නිදසුන:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">සුරකින්න</string>
 
@@ -1928,7 +1928,7 @@
     <!-- Label to clear site data -->
     <string name="clear_site_data">දත්තකඩ හා අඩවි දත්ත මකන්න</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
-    <string name="confirm_clear_site_data"><![CDATA[<b>%s</b> අඩවිය සඳහා සියළු දත්තකඩ හා වෙනත් දත්ත හිස් කිරීමට වුවමනා ද?]]></string>
+    <string name="confirm_clear_site_data"><![CDATA[<b>%s</b> අඩවිය සඳහා සමස්ත දත්තකඩ හා වෙනත් දත්ත හිස් කිරීමට වුවමනා ද?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">ඔබට සියළුම අඩවි සඳහා සියළු අවසර හිස් කිරීමට වුවමනා ද?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
