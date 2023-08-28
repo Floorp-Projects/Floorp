@@ -15,7 +15,7 @@ diff --git a/src/bootstrap/dist.rs b/src/bootstrap/dist.rs
 index 3cb0eccd324..a3b8154c024 100644
 --- a/src/bootstrap/dist.rs
 +++ b/src/bootstrap/dist.rs
-@@ -905,6 +905,30 @@ fn run(self, builder: &Builder<'_>) -> GeneratedTarball {
+@@ -905,6 +905,31 @@ fn run(self, builder: &Builder<'_>) -> GeneratedTarball {
              builder.copy(&builder.src.join(file), &dst_src.join(file));
          }
  
@@ -37,6 +37,7 @@ index 3cb0eccd324..a3b8154c024 100644
 +
 +        let mut cmd = Command::new(&builder.initial_cargo);
 +        cmd.arg("vendor").arg(dst_vendor).current_dir(&dst_libsysroot);
++        cmd.env("RUSTC_BOOTSTRAP", "1");
 +        builder.info("Dist src");
 +        let _time = timeit(builder);
 +        builder.run(&mut cmd);
