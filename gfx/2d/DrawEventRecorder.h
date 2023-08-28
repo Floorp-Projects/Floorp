@@ -11,7 +11,6 @@
 #include "RecordedEvent.h"
 #include "RecordingTypes.h"
 
-#include <unordered_set>
 #include <unordered_map>
 #include <functional>
 #include <vector>
@@ -37,16 +36,15 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   }
   virtual void FlushItem(IntRect) {}
   void DetachResources() {
-    std::unordered_set<ScaledFont*> fonts;
-    fonts.swap(mStoredFonts);
-    std::for_each(fonts.begin(), fonts.end(), [this](auto font) {
+    nsTHashSet<ScaledFont*> fonts = std::move(mStoredFonts);
+    for (const auto& font : fonts) {
       font->RemoveUserData(reinterpret_cast<UserDataKey*>(this));
-    });
+    }
 
     // SourceSurfaces can be deleted off the main thread, so we use
     // ThreadSafeWeakPtrs to allow for this. RemoveUserData is thread safe.
-    std::unordered_map<void*, ThreadSafeWeakPtr<SourceSurface>> surfaces;
-    surfaces.swap(mStoredSurfaces);
+    std::unordered_map<void*, ThreadSafeWeakPtr<SourceSurface>> surfaces =
+        std::move(mStoredSurfaces);
     std::for_each(surfaces.begin(), surfaces.end(), [this](auto surfacePair) {
       RefPtr<SourceSurface> strongRef(surfacePair.second);
       if (strongRef) {
@@ -60,8 +58,8 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   }
 
   void ClearResources() {
-    mStoredObjects.clear();
-    mStoredFontData.clear();
+    mStoredObjects.Clear();
+    mStoredFontData.Clear();
     mScaledFonts.clear();
   }
 
@@ -76,7 +74,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
 
   void AddStoredObject(const ReferencePtr aObject) {
     ProcessPendingDeletions();
-    mStoredObjects.insert(aObject);
+    mStoredObjects.Insert(aObject);
   }
 
   /**
@@ -87,12 +85,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
    */
   bool TryAddStoredObject(const ReferencePtr aObject) {
     ProcessPendingDeletions();
-    if (mStoredObjects.find(aObject) != mStoredObjects.end()) {
-      return false;
-    }
-
-    mStoredObjects.insert(aObject);
-    return true;
+    return mStoredObjects.EnsureInserted(aObject);
   }
 
   void AddPendingDeletion(std::function<void()>&& aPendingDeletion) {
@@ -101,7 +94,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   }
 
   void RemoveStoredObject(const ReferencePtr aObject) {
-    mStoredObjects.erase(aObject);
+    mStoredObjects.Remove(aObject);
   }
 
   /**
@@ -121,12 +114,12 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   void DecrementUnscaledFontRefCount(const ReferencePtr aUnscaledFont);
 
   void AddScaledFont(ScaledFont* aFont) {
-    if (mStoredFonts.insert(aFont).second && WantsExternalFonts()) {
+    if (mStoredFonts.EnsureInserted(aFont) && WantsExternalFonts()) {
       mScaledFonts.push_back(aFont);
     }
   }
 
-  void RemoveScaledFont(ScaledFont* aFont) { mStoredFonts.erase(aFont); }
+  void RemoveScaledFont(ScaledFont* aFont) { mStoredFonts.Remove(aFont); }
 
   void AddSourceSurface(SourceSurface* aSurface) {
     mStoredSurfaces.emplace(aSurface, aSurface);
@@ -140,16 +133,16 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   // Only used within debug assertions.
   bool HasStoredObject(const ReferencePtr aObject) {
     ProcessPendingDeletions();
-    return mStoredObjects.find(aObject) != mStoredObjects.end();
+    return mStoredObjects.Contains(aObject);
   }
 #endif
 
   void AddStoredFontData(const uint64_t aFontDataKey) {
-    mStoredFontData.insert(aFontDataKey);
+    mStoredFontData.Insert(aFontDataKey);
   }
 
   bool HasStoredFontData(const uint64_t aFontDataKey) {
-    return mStoredFontData.find(aFontDataKey) != mStoredFontData.end();
+    return mStoredFontData.Contains(aFontDataKey);
   }
 
   bool WantsExternalFonts() const { return mExternalFonts; }
@@ -191,7 +184,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
 
   virtual void Flush() = 0;
 
-  std::unordered_set<const void*> mStoredObjects;
+  nsTHashSet<const void*> mStoredObjects;
 
   using PendingDeletionsVector = std::vector<std::function<void()>>;
   DataMutex<PendingDeletionsVector> mPendingDeletions{
@@ -205,8 +198,8 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   // on the translation side, it will be recreated.
   std::unordered_map<const void*, int32_t> mUnscaledFontRefs;
 
-  std::unordered_set<uint64_t> mStoredFontData;
-  std::unordered_set<ScaledFont*> mStoredFonts;
+  nsTHashSet<uint64_t> mStoredFontData;
+  nsTHashSet<ScaledFont*> mStoredFonts;
   std::vector<RefPtr<ScaledFont>> mScaledFonts;
 
   // SourceSurfaces can get deleted off the main thread, so we hold a map of the
