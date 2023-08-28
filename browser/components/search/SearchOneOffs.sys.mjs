@@ -365,11 +365,7 @@ export class SearchOneOffs {
   observe(aEngine, aTopic, aData) {
     // For the "browser-search-service" topic, we only need to invalidate
     // the cache on initialization complete or when the engines are reloaded.
-    if (
-      aTopic != "browser-search-service" ||
-      aData == "init-complete" ||
-      aData == "engines-reloaded"
-    ) {
+    if (aTopic != "browser-search-service" || aData == "engines-reloaded") {
       // Make sure the engine list was updated.
       this.invalidateCache();
     }
