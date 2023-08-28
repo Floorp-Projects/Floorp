@@ -39,7 +39,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/video/call_stats2.cc",
     "/third_party/libwebrtc/video/encoder_rtcp_feedback.cc",
     "/third_party/libwebrtc/video/quality_limitation_reason_tracker.cc",
-    "/third_party/libwebrtc/video/quality_threshold.cc",
     "/third_party/libwebrtc/video/receive_statistics_proxy.cc",
     "/third_party/libwebrtc/video/report_block_stats.cc",
     "/third_party/libwebrtc/video/rtp_streams_synchronizer2.cc",
