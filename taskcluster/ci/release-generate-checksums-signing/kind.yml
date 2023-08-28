@@ -2,14 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 kind-dependencies:
     - release-generate-checksums
 
 transforms:
-    - gecko_taskgraph.transforms.release_generate_checksums_signing:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.release_generate_checksums_signing
+    - gecko_taskgraph.transforms.task
 
-job-template:
-    shipping-phase: promote
+jobs:
+    release-generate-checksums-signing:
+        from-deps: {}
+        shipping-phase: promote
