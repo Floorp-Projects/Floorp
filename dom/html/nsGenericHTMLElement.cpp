@@ -425,22 +425,6 @@ void nsGenericHTMLElement::UpdateEditableState(bool aNotify) {
   nsStyledElement::UpdateEditableState(aNotify);
 }
 
-ElementState nsGenericHTMLElement::IntrinsicState() const {
-  ElementState state = nsGenericHTMLElementBase::IntrinsicState();
-
-  if (GetDirectionality() == eDir_RTL) {
-    state |= ElementState::RTL;
-    state &= ~ElementState::LTR;
-  } else {  // at least for HTML, directionality is exclusively LTR or RTL
-    NS_ASSERTION(GetDirectionality() == eDir_LTR,
-                 "HTML element's directionality must be either RTL or LTR");
-    state |= ElementState::LTR;
-    state &= ~ElementState::RTL;
-  }
-
-  return state;
-}
-
 nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
                                           nsINode& aParent) {
   nsresult rv = nsGenericHTMLElementBase::BindToTree(aContext, aParent);
@@ -735,9 +719,6 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       // This needs to happen after we update our internal "dir" attribute
       // state but before we call SetDirectionalityOnDescendants.
       bool recomputeDirectionality = false;
-      // We don't want to have to keep getting the "dir" attribute in
-      // IntrinsicState, so we manually recompute our dir-related event states
-      // here and send the relevant update notifications.
       ElementState dirStates;
       if (aValue && aValue->Type() == nsAttrValue::eEnum) {
         SetHasValidDir();

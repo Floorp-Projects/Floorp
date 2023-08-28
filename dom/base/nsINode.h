@@ -155,25 +155,17 @@ enum : uint32_t {
   // Set if the node has the accesskey attribute set.
   NODE_HAS_ACCESSKEY = NODE_FLAG_BIT(8),
 
-  // Set if the node has right-to-left directionality
-  NODE_HAS_DIRECTION_RTL = NODE_FLAG_BIT(9),
-
-  // Set if the node has left-to-right directionality
-  NODE_HAS_DIRECTION_LTR = NODE_FLAG_BIT(10),
-
-  NODE_ALL_DIRECTION_FLAGS = NODE_HAS_DIRECTION_LTR | NODE_HAS_DIRECTION_RTL,
-
-  NODE_HAS_BEEN_IN_UA_WIDGET = NODE_FLAG_BIT(11),
+  NODE_HAS_BEEN_IN_UA_WIDGET = NODE_FLAG_BIT(9),
 
   // Set if the node has a nonce value and a header delivered CSP.
-  NODE_HAS_NONCE_AND_HEADER_CSP = NODE_FLAG_BIT(12),
+  NODE_HAS_NONCE_AND_HEADER_CSP = NODE_FLAG_BIT(10),
 
-  NODE_KEEPS_DOMARENA = NODE_FLAG_BIT(13),
+  NODE_KEEPS_DOMARENA = NODE_FLAG_BIT(11),
 
-  NODE_MAY_HAVE_ELEMENT_CHILDREN = NODE_FLAG_BIT(14),
+  NODE_MAY_HAVE_ELEMENT_CHILDREN = NODE_FLAG_BIT(12),
 
   // Remaining bits are node type specific.
-  NODE_TYPE_SPECIFIC_BITS_OFFSET = 15
+  NODE_TYPE_SPECIFIC_BITS_OFFSET = 13
 };
 
 // Flags for selectors that persist to the DOM node.

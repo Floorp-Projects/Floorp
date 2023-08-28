@@ -483,38 +483,26 @@ class Element : public FragmentOrElement {
                                               int32_t aModType) const;
 
   inline Directionality GetDirectionality() const {
-    if (HasFlag(NODE_HAS_DIRECTION_RTL)) {
+    ElementState state = State();
+    if (state.HasState(ElementState::RTL)) {
       return eDir_RTL;
     }
-
-    if (HasFlag(NODE_HAS_DIRECTION_LTR)) {
+    if (state.HasState(ElementState::LTR)) {
       return eDir_LTR;
     }
-
     return eDir_NotSet;
   }
 
   inline void SetDirectionality(Directionality aDir, bool aNotify) {
-    UnsetFlags(NODE_ALL_DIRECTION_FLAGS);
-    if (!aNotify) {
-      RemoveStatesSilently(ElementState::DIR_STATES);
-    }
-
+    auto oldState = mState;
+    RemoveStatesSilently(ElementState::DIR_STATES);
     switch (aDir) {
-      case (eDir_RTL):
-        SetFlags(NODE_HAS_DIRECTION_RTL);
-        if (!aNotify) {
-          AddStatesSilently(ElementState::RTL);
-        }
+      case eDir_RTL:
+        AddStatesSilently(ElementState::RTL);
         break;
-
-      case (eDir_LTR):
-        SetFlags(NODE_HAS_DIRECTION_LTR);
-        if (!aNotify) {
-          AddStatesSilently(ElementState::LTR);
-        }
+      case eDir_LTR:
+        AddStatesSilently(ElementState::LTR);
         break;
-
       default:
         break;
     }
@@ -525,7 +513,7 @@ class Element : public FragmentOrElement {
      * for some elements.
      */
     if (aNotify) {
-      UpdateState(true);
+      NotifyStateChange(oldState ^ mState);
     }
   }
 

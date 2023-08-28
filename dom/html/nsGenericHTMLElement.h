@@ -58,7 +58,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     NS_ASSERTION(mNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
                  "Unexpected namespace");
     AddStatesSilently(mozilla::dom::ElementState::LTR);
-    SetFlags(NODE_HAS_DIRECTION_LTR);
   }
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(nsGenericHTMLElement,
@@ -359,8 +358,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   void Compact() { mAttrs.Compact(); }
 
   void UpdateEditableState(bool aNotify) override;
-
-  mozilla::dom::ElementState IntrinsicState() const override;
 
   // Helper for setting our editable flag and notifying
   void DoSetEditableFlag(bool aEditable, bool aNotify) {

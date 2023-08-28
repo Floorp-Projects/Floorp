@@ -157,6 +157,7 @@ bitflags! {
         const EXTERNALLY_MANAGED_STATES =
             Self::MANUALLY_MANAGED_STATES.bits |
             Self::DIR_ATTR_STATES.bits |
+            Self::DIR_STATES.bits |
             Self::DISABLED_STATES.bits |
             Self::REQUIRED_STATES.bits |
             Self::ACTIVE.bits |
