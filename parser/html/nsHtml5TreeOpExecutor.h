@@ -246,6 +246,7 @@ class nsHtml5TreeOpExecutor final
   void PreloadScript(const nsAString& aURL, const nsAString& aCharset,
                      const nsAString& aType, const nsAString& aCrossOrigin,
                      const nsAString& aMedia, const nsAString& aNonce,
+                     const nsAString& aFetchPriority,
                      const nsAString& aIntegrity,
                      ReferrerPolicy aReferrerPolicy, bool aScriptFromHead,
                      bool aAsync, bool aDefer, bool aNoModule,
