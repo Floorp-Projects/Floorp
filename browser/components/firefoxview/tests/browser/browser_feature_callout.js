@@ -219,7 +219,7 @@ add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
   const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   testMessage.message.content.screens[0].anchors[0].arrow_position = "start";
   testMessage.message.content.screens[0].anchors[0].selector =
-    "span.brand-feature-name";
+    "span.brand-icon";
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
   await BrowserTestUtils.withNewTab(
     {

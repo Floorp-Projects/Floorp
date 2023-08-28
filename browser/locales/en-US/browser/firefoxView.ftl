@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-toolbar-button-firefox-view-2 =
+toolbar-button-firefox-view =
   .label = { -firefoxview-brand-name }
-  .tooltiptext = View recent browsing across windows and devices
+  .tooltiptext = { -firefoxview-brand-name }
 
 menu-tools-firefox-view =
   .label = { -firefoxview-brand-name }
