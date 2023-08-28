@@ -17,4 +17,6 @@ skip-if = '''
 
 ['test_docload_shutdown.html']
 skip-if = '''
-  os == 'mac' '''  # bug 1456997
+  os == 'mac'
+  display == 'wayland'
+'''  # mac: bug 1456997, wayland: bug 1850412
