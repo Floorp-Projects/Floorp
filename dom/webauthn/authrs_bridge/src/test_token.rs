@@ -265,8 +265,16 @@ impl FidoDeviceIO for TestToken {
 }
 
 impl VirtualFidoDevice for TestToken {
-    fn check_key_handle(&self, _req: &CheckKeyHandle) -> Result<(), HIDError> {
-        Err(HIDError::UnsupportedCommand)
+    fn check_key_handle(&self, req: &CheckKeyHandle) -> Result<(), HIDError> {
+        let credlist = self.credentials.borrow();
+        let req_rp_hash = req.rp.hash();
+        let eligible_cred_iter = credlist.iter().filter(|x| x.rp.hash() == req_rp_hash);
+        for credential in eligible_cred_iter {
+            if req.key_handle == credential.id {
+                return Ok(());
+            }
+        }
+        Err(HIDError::DeviceError)
     }
 
     fn client_pin(&self, req: &ClientPIN) -> Result<ClientPinResponse, HIDError> {
