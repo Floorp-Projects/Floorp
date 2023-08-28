@@ -114,7 +114,11 @@ add_task(async function test_ExtensionProcessCrashObserver() {
   info("Expect the same childID to have been notified as a Management event");
   Assert.deepEqual(
     await promiseExtensionProcessCrashNotified,
-    { childID: currentProcessChildID },
+    {
+      childID: currentProcessChildID,
+      // This boolean flag is expected to be always true on Desktop builds.
+      appInForeground: true,
+    },
     "Got the expected childID notified as part of the extension-process-crash Management event"
   );
 
