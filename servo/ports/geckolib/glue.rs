@@ -7890,11 +7890,18 @@ pub extern "C" fn Servo_RegisterCustomProperty(
         }
     }
 
-    per_doc_data.stylist.custom_property_script_registry_mut().register(name, PropertyRegistration {
-        syntax,
-        inherits,
-        initial_value,
-    });
+    per_doc_data
+        .stylist
+        .custom_property_script_registry_mut()
+        .register(
+            name,
+            PropertyRegistration {
+                syntax,
+                inherits,
+                initial_value,
+                url_data: url_data.clone(),
+            },
+        );
 
     SuccessfullyRegistered
 }

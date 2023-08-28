@@ -6,6 +6,7 @@
 
 use crate::Atom;
 use crate::selector_map::PrecomputedHashMap;
+use crate::stylesheets::UrlExtraData;
 use super::syntax::Descriptor;
 use super::rule::InitialValue;
 
@@ -20,6 +21,8 @@ pub struct PropertyRegistration {
     /// The initial value. Only missing for universal syntax.
     #[ignore_malloc_size_of = "Arc"]
     pub initial_value: Option<InitialValue>,
+    /// The url data is used to parse the property at computed value-time.
+    pub url_data: UrlExtraData,
 }
 
 /// The script registry of custom properties.
