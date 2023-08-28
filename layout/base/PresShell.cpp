@@ -2134,7 +2134,9 @@ void PresShell::FireResizeEventSync() {
   nsEventStatus status = nsEventStatus_eIgnore;
 
   if (RefPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow()) {
-    EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
+    // MOZ_KnownLive due to bug 1506441
+    EventDispatcher::Dispatch(MOZ_KnownLive(nsGlobalWindowOuter::Cast(window)),
+                              mPresContext, &event, nullptr, &status);
   }
 }
 
