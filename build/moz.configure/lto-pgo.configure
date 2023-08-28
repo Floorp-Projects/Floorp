@@ -324,11 +324,11 @@ def lto(
     # binary size growth while still getting good performance.
     # (For hot functions, PGO will put a multiplier on this limit.)
     if target.os == "WINNT":
-        ldflags.append("-mllvm:-import-instr-limit=30")
+        ldflags.append("-mllvm:-import-instr-limit=10")
     elif target.os == "OSX":
-        ldflags.append("-Wl,-mllvm,-import-instr-limit=30")
+        ldflags.append("-Wl,-mllvm,-import-instr-limit=10")
     elif c_compiler.type == "clang":
-        ldflags.append("-Wl,-plugin-opt=-import-instr-limit=30")
+        ldflags.append("-Wl,-plugin-opt=-import-instr-limit=10")
 
     # If we're using the new pass manager, we can also enable the new PM
     # during LTO. Further we can use the resulting size savings to increase
