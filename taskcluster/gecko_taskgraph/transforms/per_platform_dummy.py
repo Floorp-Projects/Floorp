@@ -6,6 +6,7 @@ Transform the repackage task into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_primary_dependency
 
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 
@@ -16,9 +17,9 @@ transforms = TransformSequence()
 def one_task_per_product_and_platform(config, jobs):
     unique_products_and_platforms = set()
     for job in jobs:
-        dep_task = job["primary-dependency"]
-        if "primary-dependency" in job:
-            del job["primary-dependency"]
+        dep_task = get_primary_dependency(config, job)
+        assert dep_task
+
         product = dep_task.attributes.get("shipping_product")
         platform = dep_task.attributes.get("build_platform")
         if (product, platform) not in unique_products_and_platforms:
@@ -29,5 +30,7 @@ def one_task_per_product_and_platform(config, jobs):
             attributes.update(job.get("attributes", {}))
             job["attributes"] = attributes
             job["name"] = f"{product}-{platform}"
+            job["shipping-product"] = product
+            del job["dependencies"]
             yield job
             unique_products_and_platforms.add((product, platform))
