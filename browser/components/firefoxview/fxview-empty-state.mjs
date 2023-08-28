@@ -64,8 +64,10 @@ class FxviewEmptyState extends MozLitElement {
          this.isInnerCard
        }" id="card-container">
          <div slot="main" class=${this.isSelectedTab ? "selectedTab" : null}>
-           <img class="image" role="presentation" alt="" ?hidden=${!this
-             .mainImageUrl} src=${this.mainImageUrl}/>
+           <div class="image-container">
+             <img class="image" role="presentation" alt="" ?hidden=${!this
+               .mainImageUrl} src=${this.mainImageUrl}/>
+           </div>
            <div class="main">
              <h2
                id="header"
