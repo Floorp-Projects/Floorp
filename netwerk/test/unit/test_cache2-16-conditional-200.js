@@ -9,13 +9,13 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW, "21m", "21d", function (entry) {
+    new OpenCallback(NEW, "21m", "21d", function () {
       asyncOpenCacheEntry(
         "http://200/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        new OpenCallback(NORMAL, "21m", "21d", function (entry) {
+        new OpenCallback(NORMAL, "21m", "21d", function () {
           // Open normally but wait for validation from the server
           asyncOpenCacheEntry(
             "http://200/",

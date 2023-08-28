@@ -36,9 +36,9 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         null,
-        function (status, entry) {
-          Assert.equal(status, Cr.NS_OK);
-          var oStr2 = entry.openOutputStream(0, data.length);
+        function (status1, entry1) {
+          Assert.equal(status1, Cr.NS_OK);
+          var oStr2 = entry1.openOutputStream(0, data.length);
           do_check_throws_nsIException(
             () => oStr2.write(data, data.length),
             "NS_ERROR_OUT_OF_MEMORY"

@@ -13,13 +13,13 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     Services.loadContextInfo.private,
-    new OpenCallback(NEW, "p1m", "p1d", function (entry) {
+    new OpenCallback(NEW, "p1m", "p1d", function () {
       asyncOpenCacheEntry(
         "http://p1/",
         "disk",
         Ci.nsICacheStorage.OPEN_NORMALLY,
         Services.loadContextInfo.private,
-        new OpenCallback(NORMAL, "p1m", "p1d", function (entry) {
+        new OpenCallback(NORMAL, "p1m", "p1d", function () {
           // Check it's there
           syncWithCacheIOThread(function () {
             var storage = getCacheStorage(

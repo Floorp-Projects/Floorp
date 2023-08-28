@@ -9,7 +9,7 @@ function run_test() {
     "disk",
     Ci.nsICacheStorage.OPEN_NORMALLY,
     null,
-    new OpenCallback(NEW | DONTFILL, "a1m", "a1d", function (entry) {
+    new OpenCallback(NEW | DONTFILL, "a1m", "a1d", function () {
       var bypassed = false;
 
       // Open and bypass
@@ -18,7 +18,7 @@ function run_test() {
         "disk",
         Ci.nsICacheStorage.OPEN_BYPASS_IF_BUSY,
         null,
-        new OpenCallback(NOTFOUND, "", "", function (entry) {
+        new OpenCallback(NOTFOUND, "", "", function () {
           Assert.ok(!bypassed);
           bypassed = true;
         })

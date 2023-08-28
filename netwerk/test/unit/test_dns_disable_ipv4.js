@@ -14,8 +14,8 @@ const defaultOriginAttributes = {};
 add_task(async function test_none() {
   let [, inRecord] = await new Promise(resolve => {
     let listener = {
-      onLookupComplete(inRequest, inRecord, inStatus) {
-        resolve([inRequest, inRecord, inStatus]);
+      onLookupComplete(inRequest, inRecord1, inStatus) {
+        resolve([inRequest, inRecord1, inStatus]);
       },
       QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
     };
@@ -45,8 +45,8 @@ add_task(async function test_some() {
   gOverride.addIPOverride("example.org", "::1:2:3");
   let [, inRecord] = await new Promise(resolve => {
     let listener = {
-      onLookupComplete(inRequest, inRecord, inStatus) {
-        resolve([inRequest, inRecord, inStatus]);
+      onLookupComplete(inRequest, inRecord1, inStatus) {
+        resolve([inRequest, inRecord1, inStatus]);
       },
       QueryInterface: ChromeUtils.generateQI(["nsIDNSListener"]),
     };

@@ -51,8 +51,8 @@ function checkRequest(request, data, context) {
     get_device_entry_count(
       "disk",
       Services.loadContextInfo.private,
-      function (count) {
-        Assert.equal(count, 1);
+      function (count1) {
+        Assert.equal(count1, 1);
         httpserver.stop(do_test_finished);
       }
     );

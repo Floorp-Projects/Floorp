@@ -38,7 +38,7 @@ add_task(async () => {
     contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   });
   for (let i = 0; i < CMAX; ++i) {
-    let uri = NetUtil.newURI("http://" + i + ".com/");
+    uri = NetUtil.newURI("http://" + i + ".com/");
     Services.cookies.setCookieStringFromHttp(
       uri,
       "oh=hai; max-age=1000",

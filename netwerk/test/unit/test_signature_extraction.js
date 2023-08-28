@@ -52,12 +52,12 @@ function getTempFile(leafName) {
 function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
   return new Promise((resolve, reject) => {
     aSaver.observer = {
-      onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget) {
+      onTargetChange: function BFSO_onSaveComplete(saver, aTarget) {
         if (aOnTargetChangeFn) {
           aOnTargetChangeFn(aTarget);
         }
       },
-      onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus) {
+      onSaveComplete: function BFSO_onSaveComplete(saver, aStatus) {
         if (Components.isSuccessCode(aStatus)) {
           resolve();
         } else {

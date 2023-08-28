@@ -352,11 +352,11 @@ add_task(async function setup() {
   processId = await NodeServer.fork();
   await NodeServer.execute(processId, `serverPort = ${server_port}`);
   await NodeServer.execute(processId, http2ProxyCode);
-  let proxy = await NodeServer.execute(
+  let newProxy = await NodeServer.execute(
     processId,
     `http2ProxyCode.startNewProxy()`
   );
-  proxy_port = proxy.port;
+  proxy_port = newProxy.port;
   Assert.notEqual(proxy_port, null);
 
   Services.prefs.setStringPref(

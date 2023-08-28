@@ -83,7 +83,7 @@ add_task(async function test_slow_upload() {
         let { req, buff } = await new Promise(resolve => {
           chan.asyncOpen(
             new ChannelListener(
-              (req, buff) => resolve({ req, buff }),
+              (req1, buff1) => resolve({ req: req1, buff: buff1 }),
               null,
               CL_ALLOW_UNKNOWN_CL
             )

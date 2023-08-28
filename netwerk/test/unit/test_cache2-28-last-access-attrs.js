@@ -29,11 +29,11 @@ function run_test() {
           "disk",
           Ci.nsICacheStorage.OPEN_NORMALLY,
           null,
-          new OpenCallback(NORMAL, "m", "d", function (entry) {
+          new OpenCallback(NORMAL, "m", "d", function (entry1) {
             var secondOpen = NowSeconds();
-            Assert.equal(entry.fetchCount, 2);
-            do_check_time(entry.lastFetched, firstOpen, secondOpen);
-            do_check_time(entry.lastModified, timeStart, firstOpen);
+            Assert.equal(entry1.fetchCount, 2);
+            do_check_time(entry1.lastFetched, firstOpen, secondOpen);
+            do_check_time(entry1.lastModified, timeStart, firstOpen);
 
             finish_cache2_test();
           })
