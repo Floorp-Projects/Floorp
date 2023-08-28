@@ -10,13 +10,13 @@ use authenticator::{
     crypto::COSEAlgorithm,
     ctap2::server::{
         PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
-        ResidentKeyRequirement, Transport, User, UserVerificationRequirement,
+        RelyingPartyWrapper, ResidentKeyRequirement, Transport, User, UserVerificationRequirement,
     },
     statecallback::StateCallback,
     Pin, StatusPinUv, StatusUpdate,
 };
 use getopts::Options;
-use sha2::{Digest, Sha256};
+use rand::{thread_rng, RngCore};
 use std::sync::mpsc::{channel, RecvError};
 use std::{env, thread};
 
@@ -31,13 +31,20 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let program = args[0].clone();
 
+    let rp_id = "example.com".to_string();
+    let app_id = "https://fido.example.com/myApp".to_string();
+
     let mut opts = Options::new();
-    opts.optflag("x", "no-u2f-usb-hid", "do not enable u2f-usb-hid platforms");
     opts.optflag("h", "help", "print this help menu").optopt(
         "t",
         "timeout",
         "timeout in seconds",
         "SEC",
+    );
+    opts.optflag(
+        "a",
+        "app_id",
+        &format!("Using App ID {app_id} from origin 'https://{rp_id}'"),
     );
     opts.optflag("s", "hmac_secret", "With hmac-secret");
     opts.optflag("h", "help", "print this help menu");
@@ -53,10 +60,7 @@ fn main() {
 
     let mut manager =
         AuthenticatorService::new().expect("The auth service should initialize safely");
-
-    if !matches.opt_present("no-u2f-usb-hid") {
-        manager.add_u2f_usb_hid_platform_transports();
-    }
+    manager.add_u2f_usb_hid_platform_transports();
 
     let fallback = matches.opt_present("fallback");
 
@@ -73,14 +77,8 @@ fn main() {
     };
 
     println!("Asking a security key to register now...");
-    let challenge_str = format!(
-        "{}{}",
-        r#"{"challenge": "1vQ9mxionq0ngCnjD-wTsv1zUSrGRtFqG2xP09SbZ70","#,
-        r#" "version": "U2F_V2", "appId": "http://example.com"}"#
-    );
-    let mut challenge = Sha256::new();
-    challenge.update(challenge_str.as_bytes());
-    let chall_bytes: [u8; 32] = challenge.finalize().into();
+    let mut chall_bytes = [0u8; 32];
+    thread_rng().fill_bytes(&mut chall_bytes);
 
     let (status_tx, status_rx) = channel::<StatusUpdate>();
     thread::spawn(move || loop {
@@ -143,19 +141,22 @@ fn main() {
 
     let user = User {
         id: "user_id".as_bytes().to_vec(),
-        icon: None,
         name: Some("A. User".to_string()),
         display_name: None,
     };
-    let origin = "https://example.com".to_string();
+    // If we're testing AppID support, then register with an RP ID that isn't valid for the origin.
+    let relying_party = RelyingParty {
+        id: if matches.opt_present("app_id") {
+            app_id.clone()
+        } else {
+            rp_id.clone()
+        },
+        name: None,
+    };
     let ctap_args = RegisterArgs {
         client_data_hash: chall_bytes,
-        relying_party: RelyingParty {
-            id: "example.com".to_string(),
-            name: None,
-            icon: None,
-        },
-        origin: origin.clone(),
+        relying_party,
+        origin: format!("https://{rp_id}"),
         user,
         pub_cred_params: vec![
             PublicKeyCredentialParameters {
@@ -228,10 +229,11 @@ fn main() {
         allow_list = Vec::new();
     }
 
+    let alternate_rp_id = matches.opt_present("app_id").then(|| app_id.clone());
     let ctap_args = SignArgs {
         client_data_hash: chall_bytes,
-        origin,
-        relying_party_id: "example.com".to_string(),
+        origin: format!("https://{rp_id}"),
+        relying_party_id: rp_id,
         allow_list,
         user_verification_req: UserVerificationRequirement::Preferred,
         user_presence_req: true,
@@ -250,7 +252,7 @@ fn main() {
             },
         },
         pin: None,
-        alternate_rp_id: None,
+        alternate_rp_id: alternate_rp_id.clone(),
         use_ctap1_fallback: fallback,
     };
 
@@ -272,6 +274,13 @@ fn main() {
         match sign_result {
             Ok(assertion_object) => {
                 println!("Assertion Object: {assertion_object:?}");
+                if let Some(alt_rp_id) = alternate_rp_id {
+                    assert_eq!(
+                        assertion_object.0[0].auth_data.rp_id_hash,
+                        RelyingPartyWrapper::from(alt_rp_id.as_str()).hash()
+                    );
+                    println!("Used AppID");
+                }
                 println!("Done.");
                 break;
             }

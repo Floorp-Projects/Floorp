@@ -32,9 +32,10 @@ use crate::ctap2::commands::{
 };
 use crate::ctap2::preflight::{
     do_credential_list_filtering_ctap1, do_credential_list_filtering_ctap2,
+    silently_discover_credentials,
 };
 use crate::ctap2::server::{
-    RelyingParty, RelyingPartyWrapper, ResidentKeyRequirement, UserVerificationRequirement,
+    RelyingPartyWrapper, ResidentKeyRequirement, UserVerificationRequirement,
 };
 use crate::errors::{AuthenticatorError, UnsupportedOption};
 use crate::statecallback::StateCallback;
@@ -138,12 +139,11 @@ macro_rules! handle_errors {
     };
 }
 
-fn ask_user_for_pin<U>(
+fn ask_user_for_pin(
     was_invalid: bool,
     retries: Option<u8>,
     status: &Sender<StatusUpdate>,
-    callback: &StateCallback<crate::Result<U>>,
-) -> Result<Pin, ()> {
+) -> Result<Pin, AuthenticatorError> {
     info!("PIN Error that requires user interaction detected. Sending it back and waiting for a reply");
     let (tx, rx) = channel();
     if was_invalid {
@@ -162,8 +162,7 @@ fn ask_user_for_pin<U>(
         Err(RecvError) => {
             // recv() can only fail, if the other side is dropping the Sender.
             info!("Callback dropped the channel. Aborting.");
-            callback.call(Err(AuthenticatorError::CancelledByUser));
-            Err(())
+            Err(AuthenticatorError::CancelledByUser)
         }
     }
 }
@@ -291,17 +290,16 @@ fn get_pin_uv_auth_param<Dev: FidoDevice, T: PinUvAuthCommand + RequestCtap2>(
 /// Handles asking the user for a PIN, if needed and sending StatusUpdates
 /// regarding PIN and UV usage.
 #[allow(clippy::too_many_arguments)]
-fn determine_puap_if_needed<Dev: FidoDevice, T: PinUvAuthCommand + RequestCtap2, U>(
+fn determine_puap_if_needed<Dev: FidoDevice, T: PinUvAuthCommand + RequestCtap2>(
     cmd: &mut T,
     dev: &mut Dev,
     mut skip_uv: bool,
     permission: PinUvAuthTokenPermission,
     uv_req: UserVerificationRequirement,
     status: &Sender<StatusUpdate>,
-    callback: &StateCallback<crate::Result<U>>,
     alive: &dyn Fn() -> bool,
     pin: &mut Option<Pin>,
-) -> Result<PinUvAuthResult, ()> {
+) -> Result<PinUvAuthResult, AuthenticatorError> {
     while alive() {
         debug!("-----------------------------------------------------------------");
         debug!("Getting pinUvAuthParam");
@@ -311,21 +309,15 @@ fn determine_puap_if_needed<Dev: FidoDevice, T: PinUvAuthCommand + RequestCtap2,
             }
 
             Err(AuthenticatorError::PinError(PinError::PinRequired)) => {
-                if let Ok(new_pin) = ask_user_for_pin(false, None, status, callback) {
-                    *pin = Some(new_pin);
-                    skip_uv = true;
-                    continue;
-                } else {
-                    return Err(());
-                }
+                let new_pin = ask_user_for_pin(false, None, status)?;
+                *pin = Some(new_pin);
+                skip_uv = true;
+                continue;
             }
             Err(AuthenticatorError::PinError(PinError::InvalidPin(retries))) => {
-                if let Ok(new_pin) = ask_user_for_pin(true, retries, status, callback) {
-                    *pin = Some(new_pin);
-                    continue;
-                } else {
-                    return Err(());
-                }
+                let new_pin = ask_user_for_pin(true, retries, status)?;
+                *pin = Some(new_pin);
+                continue;
             }
             Err(AuthenticatorError::PinError(PinError::InvalidUv(retries))) => {
                 if retries == Some(0) {
@@ -342,20 +334,17 @@ fn determine_puap_if_needed<Dev: FidoDevice, T: PinUvAuthCommand + RequestCtap2,
                     StatusUpdate::PinUvError(StatusPinUv::PinAuthBlocked),
                 );
                 error!("Error when determining pinAuth: {:?}", e);
-                callback.call(Err(e));
-                return Err(());
+                return Err(e);
             }
             Err(e @ AuthenticatorError::PinError(PinError::PinBlocked)) => {
                 send_status(status, StatusUpdate::PinUvError(StatusPinUv::PinBlocked));
                 error!("Error when determining pinAuth: {:?}", e);
-                callback.call(Err(e));
-                return Err(());
+                return Err(e);
             }
             Err(e @ AuthenticatorError::PinError(PinError::PinNotSet)) => {
                 send_status(status, StatusUpdate::PinUvError(StatusPinUv::PinNotSet));
                 error!("Error when determining pinAuth: {:?}", e);
-                callback.call(Err(e));
-                return Err(());
+                return Err(e);
             }
             Err(AuthenticatorError::PinError(PinError::UvBlocked)) => {
                 skip_uv = true;
@@ -371,12 +360,11 @@ fn determine_puap_if_needed<Dev: FidoDevice, T: PinUvAuthCommand + RequestCtap2,
             }
             Err(e) => {
                 error!("Error when determining pinAuth: {:?}", e);
-                callback.call(Err(e));
-                return Err(());
+                return Err(e);
             }
         }
     }
-    Err(())
+    Err(AuthenticatorError::CancelledByUser)
 }
 
 pub fn register<Dev: FidoDevice>(
@@ -453,23 +441,19 @@ pub fn register<Dev: FidoDevice>(
         let permissions =
             PinUvAuthTokenPermission::MakeCredential | PinUvAuthTokenPermission::GetAssertion;
 
-        let pin_uv_auth_result = match determine_puap_if_needed(
-            &mut makecred,
-            dev,
-            skip_uv,
-            permissions,
-            args.user_verification_req,
-            &status,
-            &callback,
-            alive,
-            &mut pin,
-        ) {
-            Ok(r) => r,
-            Err(()) => {
-                break;
-            }
-        };
-
+        let pin_uv_auth_result = unwrap_result!(
+            determine_puap_if_needed(
+                &mut makecred,
+                dev,
+                skip_uv,
+                permissions,
+                args.user_verification_req,
+                &status,
+                alive,
+                &mut pin,
+            ),
+            callback
+        );
         // Do "pre-flight": Filter the exclude-list
         if dev.get_protocol() == FidoProtocol::CTAP2 {
             makecred.exclude_list = unwrap_result!(
@@ -548,42 +532,53 @@ pub fn sign<Dev: FidoDevice>(
         }
     }
 
+    let mut allow_list = args.allow_list;
+    let mut rp_id = args.relying_party_id;
+    let client_data_hash = ClientDataHash(args.client_data_hash);
+    if let Some(alt_rp_id) = args.alternate_rp_id {
+        if !allow_list.is_empty() {
+            // Try to silently discover U2F credentials that require the FIDO App ID extension. If
+            // any are found, we should use the alternate RP ID instead of the provided RP ID.
+            let silent_creds = silently_discover_credentials(
+                dev,
+                &allow_list,
+                &RelyingPartyWrapper::from(alt_rp_id.as_str()),
+                &client_data_hash,
+            );
+            if !silent_creds.is_empty() {
+                allow_list = silent_creds;
+                rp_id = alt_rp_id;
+            }
+        }
+    }
+
     let mut get_assertion = GetAssertion::new(
-        ClientDataHash(args.client_data_hash),
-        RelyingPartyWrapper::Data(RelyingParty {
-            id: args.relying_party_id,
-            name: None,
-            icon: None,
-        }),
-        args.allow_list,
+        client_data_hash,
+        RelyingPartyWrapper::from(rp_id.as_str()),
+        allow_list,
         GetAssertionOptions {
             user_presence: Some(args.user_presence_req),
             user_verification: None,
         },
         args.extensions,
-        args.alternate_rp_id,
     );
 
     let mut skip_uv = false;
     let mut pin = args.pin;
     while alive() {
-        let pin_uv_auth_result = match determine_puap_if_needed(
-            &mut get_assertion,
-            dev,
-            skip_uv,
-            PinUvAuthTokenPermission::GetAssertion,
-            args.user_verification_req,
-            &status,
-            &callback,
-            alive,
-            &mut pin,
-        ) {
-            Ok(r) => r,
-            Err(()) => {
-                return false;
-            }
-        };
-
+        let pin_uv_auth_result = unwrap_result!(
+            determine_puap_if_needed(
+                &mut get_assertion,
+                dev,
+                skip_uv,
+                PinUvAuthTokenPermission::GetAssertion,
+                args.user_verification_req,
+                &status,
+                alive,
+                &mut pin,
+            ),
+            callback
+        );
         // Third, use the shared secret in the extensions, if requested
         if let Some(extension) = get_assertion.extensions.hmac_secret.as_mut() {
             if let Some(secret) = dev.get_shared_secret() {
@@ -644,19 +639,7 @@ pub fn sign<Dev: FidoDevice>(
         debug!("{get_assertion:?} using {pin_uv_auth_result:?}");
         debug!("------------------------------------------------------------------");
         send_status(&status, crate::StatusUpdate::PresenceRequired);
-        let mut resp = dev.send_msg_cancellable(&get_assertion, alive);
-        if resp.is_err() {
-            // Retry with a different RP ID if one was supplied. This is intended to be
-            // used with the AppID provided in the WebAuthn FIDO AppID extension.
-            if let Some(alternate_rp_id) = get_assertion.alternate_rp_id {
-                get_assertion.rp = RelyingPartyWrapper::Data(RelyingParty {
-                    id: alternate_rp_id,
-                    ..Default::default()
-                });
-                get_assertion.alternate_rp_id = None;
-                resp = dev.send_msg_cancellable(&get_assertion, alive);
-            }
-        }
+        let resp = dev.send_msg_cancellable(&get_assertion, alive);
         match resp {
             Ok(result) => {
                 callback.call(Ok(result));
@@ -753,9 +736,10 @@ pub(crate) fn set_or_change_pin_helper<T: From<()>>(
             // that wrong PIN all the time. So we `take()` it, and only test it once.
             // If that PIN is wrong, we fall back to the "ask_user_for_pin"-method.
             let curr_pin = match current_pin.take() {
-                None => match ask_user_for_pin(was_invalid, retries, &status, &callback) {
+                None => match ask_user_for_pin(was_invalid, retries, &status) {
                     Ok(pin) => pin,
-                    _ => {
+                    Err(e) => {
+                        callback.call(Err(e));
                         return;
                     }
                 },
@@ -867,22 +851,19 @@ pub(crate) fn bio_enrollment(
     let mut pin = None;
     while alive() {
         if !skip_puap {
-            pin_uv_auth_result = match determine_puap_if_needed(
-                &mut bio_cmd,
-                dev,
-                skip_uv,
-                PinUvAuthTokenPermission::BioEnrollment,
-                UserVerificationRequirement::Preferred,
-                &status,
-                &callback,
-                alive,
-                &mut pin,
-            ) {
-                Ok(r) => r,
-                Err(()) => {
-                    return false;
-                }
-            };
+            pin_uv_auth_result = unwrap_result!(
+                determine_puap_if_needed(
+                    &mut bio_cmd,
+                    dev,
+                    skip_uv,
+                    PinUvAuthTokenPermission::BioEnrollment,
+                    UserVerificationRequirement::Preferred,
+                    &status,
+                    alive,
+                    &mut pin,
+                ),
+                callback
+            );
         }
 
         debug!("------------------------------------------------------------------");
@@ -1116,22 +1097,19 @@ pub(crate) fn credential_management(
     let mut pin = None;
     while alive() {
         if !skip_puap {
-            pin_uv_auth_result = match determine_puap_if_needed(
-                &mut cred_management,
-                dev,
-                skip_uv,
-                PinUvAuthTokenPermission::CredentialManagement,
-                UserVerificationRequirement::Preferred,
-                &status,
-                &callback,
-                alive,
-                &mut pin,
-            ) {
-                Ok(r) => r,
-                Err(()) => {
-                    return false;
-                }
-            };
+            pin_uv_auth_result = unwrap_result!(
+                determine_puap_if_needed(
+                    &mut cred_management,
+                    dev,
+                    skip_uv,
+                    PinUvAuthTokenPermission::CredentialManagement,
+                    UserVerificationRequirement::Preferred,
+                    &status,
+                    alive,
+                    &mut pin,
+                ),
+                callback
+            );
         }
 
         debug!("------------------------------------------------------------------");
@@ -1390,22 +1368,19 @@ pub(crate) fn configure_authenticator(
         //    the token, before handing them out.
         // If authinfo.options.uv_acfg is not supported, this will return UnauthorizedPermission
         if !skip_puap {
-            pin_uv_auth_result = match determine_puap_if_needed(
-                &mut authcfg,
-                dev,
-                skip_uv,
-                PinUvAuthTokenPermission::AuthenticatorConfiguration,
-                UserVerificationRequirement::Preferred,
-                &status,
-                &callback,
-                alive,
-                &mut pin,
-            ) {
-                Ok(r) => r,
-                Err(()) => {
-                    return false;
-                }
-            };
+            pin_uv_auth_result = unwrap_result!(
+                determine_puap_if_needed(
+                    &mut authcfg,
+                    dev,
+                    skip_uv,
+                    PinUvAuthTokenPermission::AuthenticatorConfiguration,
+                    UserVerificationRequirement::Preferred,
+                    &status,
+                    alive,
+                    &mut pin,
+                ),
+                callback
+            );
         }
 
         debug!("------------------------------------------------------------------");

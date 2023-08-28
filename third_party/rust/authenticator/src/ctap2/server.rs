@@ -49,8 +49,6 @@ pub struct RelyingParty {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub icon: Option<String>,
 }
 
 // Note: This enum is provided to make old CTAP1/U2F API work. This should be deprecated at some point
@@ -60,6 +58,15 @@ pub enum RelyingPartyWrapper {
     // CTAP1 hash can be derived from full object, see RelyingParty::hash below,
     // but very old backends might still provide application IDs.
     Hash(RpIdHash),
+}
+
+impl From<&str> for RelyingPartyWrapper {
+    fn from(rp_id: &str) -> Self {
+        Self::Data(RelyingParty {
+            id: rp_id.to_string(),
+            name: None,
+        })
+    }
 }
 
 impl RelyingPartyWrapper {
@@ -92,8 +99,6 @@ impl RelyingPartyWrapper {
 pub struct User {
     #[serde(with = "serde_bytes")]
     pub id: Vec<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub icon: Option<String>, // This has been removed from Webauthn-2
     pub name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", rename = "displayName")]
     pub display_name: Option<String>,
@@ -330,13 +335,24 @@ mod test {
         COSEAlgorithm, PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
         Transport, User,
     };
+    use serde_cbor::from_slice;
 
+    fn create_user() -> User {
+        User {
+            id: vec![
+                0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x30,
+                0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x30, 0x82,
+                0x01, 0x93, 0x30, 0x82,
+            ],
+            name: Some(String::from("johnpsmith@example.com")),
+            display_name: Some(String::from("John P. Smith")),
+        }
+    }
     #[test]
     fn serialize_rp() {
         let rp = RelyingParty {
             id: String::from("Acme"),
             name: None,
-            icon: None,
         };
 
         let payload = ser::to_vec(&rp).unwrap();
@@ -353,24 +369,56 @@ mod test {
     }
 
     #[test]
+    fn test_deserialize_user() {
+        // This includes an obsolete "icon" field to test that deserialization
+        // ignores it.
+        let input = vec![
+            0xa4, // map(4)
+            0x62, // text(2)
+            0x69, 0x64, // "id"
+            0x58, 0x20, // bytes(32)
+            0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, // userid
+            0x02, 0x01, 0x02, 0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, // ...
+            0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x30, 0x82, 0x01, 0x93, // ...
+            0x30, 0x82, // ...
+            0x64, // text(4)
+            0x69, 0x63, 0x6f, 0x6e, // "icon"
+            0x78, 0x2b, // text(43)
+            0x68, 0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f, 0x70,
+            0x69, // "https://pics.example.com/00/p/aBjjjpqPb.png"
+            0x63, 0x73, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, // ...
+            0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x30, 0x30, 0x2f, 0x70, 0x2f, // ...
+            0x61, 0x42, 0x6a, 0x6a, 0x6a, 0x70, 0x71, 0x50, 0x62, 0x2e, // ...
+            0x70, 0x6e, 0x67, // ...
+            0x64, // text(4)
+            0x6e, 0x61, 0x6d, 0x65, // "name"
+            0x76, // text(22)
+            0x6a, 0x6f, 0x68, 0x6e, 0x70, 0x73, 0x6d, 0x69, 0x74,
+            0x68, // "johnpsmith@example.com"
+            0x40, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, // ...
+            0x6f, 0x6d, // ...
+            0x6b, // text(11)
+            0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x4e, 0x61, 0x6d, // "displayName"
+            0x65, // ...
+            0x6d, // text(13)
+            0x4a, 0x6f, 0x68, 0x6e, 0x20, 0x50, 0x2e, 0x20, 0x53, 0x6d, // "John P. Smith"
+            0x69, 0x74, 0x68, // ...
+        ];
+        let expected = create_user();
+        let actual: User = from_slice(&input).unwrap();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
     fn serialize_user() {
-        let user = User {
-            id: vec![
-                0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x30,
-                0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x30, 0x82,
-                0x01, 0x93, 0x30, 0x82,
-            ],
-            icon: Some(String::from("https://pics.example.com/00/p/aBjjjpqPb.png")),
-            name: Some(String::from("johnpsmith@example.com")),
-            display_name: Some(String::from("John P. Smith")),
-        };
+        let user = create_user();
 
         let payload = ser::to_vec(&user).unwrap();
         println!("payload = {payload:?}");
         assert_eq!(
             payload,
             vec![
-                0xa4, // map(4)
+                0xa3, // map(3)
                 0x62, // text(2)
                 0x69, 0x64, // "id"
                 0x58, 0x20, // bytes(32)
@@ -378,15 +426,6 @@ mod test {
                 0x02, 0x01, 0x02, 0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, // ...
                 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x30, 0x82, 0x01, 0x93, // ...
                 0x30, 0x82, // ...
-                0x64, // text(4)
-                0x69, 0x63, 0x6f, 0x6e, // "icon"
-                0x78, 0x2b, // text(43)
-                0x68, 0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f, 0x70,
-                0x69, // "https://pics.example.com/00/p/aBjjjpqPb.png"
-                0x63, 0x73, 0x2e, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, // ...
-                0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x30, 0x30, 0x2f, 0x70, 0x2f, // ...
-                0x61, 0x42, 0x6a, 0x6a, 0x6a, 0x70, 0x71, 0x50, 0x62, 0x2e, // ...
-                0x70, 0x6e, 0x67, // ...
                 0x64, // text(4)
                 0x6e, 0x61, 0x6d, 0x65, // "name"
                 0x76, // text(22)
@@ -405,14 +444,13 @@ mod test {
     }
 
     #[test]
-    fn serialize_user_noicon_nodisplayname() {
+    fn serialize_user_nodisplayname() {
         let user = User {
             id: vec![
                 0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x30,
                 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x30, 0x82,
                 0x01, 0x93, 0x30, 0x82,
             ],
-            icon: None,
             name: Some(String::from("johnpsmith@example.com")),
             display_name: None,
         };

@@ -25,7 +25,6 @@ fn main() {
     let program = args[0].clone();
 
     let mut opts = Options::new();
-    opts.optflag("x", "no-u2f-usb-hid", "do not enable u2f-usb-hid platforms");
     opts.optflag("h", "help", "print this help menu").optopt(
         "t",
         "timeout",
@@ -44,10 +43,7 @@ fn main() {
 
     let mut manager = AuthenticatorService::new()
         .expect("The auth service should initialize safely");
-
-    if !matches.opt_present("no-u2f-usb-hid") {
-        manager.add_u2f_usb_hid_platform_transports();
-    }
+    manager.add_u2f_usb_hid_platform_transports();
 
     let timeout_ms = match matches.opt_get_default::<u64>("timeout", 25) {
         Ok(timeout_s) => {

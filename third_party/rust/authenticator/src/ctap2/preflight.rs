@@ -1,13 +1,13 @@
 use super::client_data::ClientDataHash;
 use super::commands::get_assertion::{GetAssertion, GetAssertionOptions};
-use super::commands::{CommandError, PinUvAuthCommand, RequestCtap1, Retryable, StatusCode};
+use super::commands::{PinUvAuthCommand, RequestCtap1, Retryable};
 use crate::authenticatorservice::GetAssertionExtensions;
 use crate::consts::{PARAMETER_SIZE, U2F_AUTHENTICATE, U2F_CHECK_IS_REGISTERED};
 use crate::crypto::PinUvAuthToken;
 use crate::ctap2::server::{PublicKeyCredentialDescriptor, RelyingPartyWrapper};
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
-use crate::transport::{FidoDevice, VirtualFidoDevice};
+use crate::transport::{FidoDevice, FidoProtocol, VirtualFidoDevice};
 use crate::u2ftypes::CTAP1RequestAPDU;
 use sha2::{Digest, Sha256};
 
@@ -18,9 +18,9 @@ use sha2::{Digest, Sha256};
 /// if this token is already registered or not.
 #[derive(Debug)]
 pub struct CheckKeyHandle<'assertion> {
-    pub(crate) key_handle: &'assertion [u8],
-    pub(crate) client_data_hash: &'assertion [u8],
-    pub(crate) rp: &'assertion RelyingPartyWrapper,
+    pub key_handle: &'assertion [u8],
+    pub client_data_hash: &'assertion [u8],
+    pub rp: &'assertion RelyingPartyWrapper,
 }
 
 impl<'assertion> RequestCtap1 for CheckKeyHandle<'assertion> {
@@ -144,11 +144,6 @@ pub(crate) fn do_credential_list_filtering_ctap2<Dev: FidoDevice>(
         }
     }
 
-    // Step 1.2: Return early, if we only have one chunk anyways
-    if cred_list.len() <= chunk_size {
-        return Ok(cred_list);
-    }
-
     let chunked_list = cred_list.chunks(chunk_size);
 
     // Step 2: If we have more than one chunk: Loop over all, doing GetAssertion
@@ -160,19 +155,13 @@ pub(crate) fn do_credential_list_filtering_ctap2<Dev: FidoDevice>(
             rp.clone(),
             chunk.to_vec(),
             GetAssertionOptions {
-                user_verification: if pin_uv_auth_token.is_some() {
-                    None
-                } else {
-                    Some(false)
-                },
+                user_verification: None, // defaults to Some(false) if puap is absent
                 user_presence: Some(false),
             },
             GetAssertionExtensions::default(),
-            None,
         );
         silent_assert.set_pin_uv_auth_param(pin_uv_auth_token.clone())?;
-        let res = dev.send_msg(&silent_assert);
-        match res {
+        match dev.send_msg(&silent_assert) {
             Ok(response) => {
                 // This chunk contains a key_handle that is already known to the device.
                 // Filter out all credentials the device returned. Those are valid.
@@ -185,12 +174,11 @@ pub(crate) fn do_credential_list_filtering_ctap2<Dev: FidoDevice>(
                 final_list = credential_ids;
                 break;
             }
-            Err(HIDError::Command(CommandError::StatusCode(StatusCode::NoCredentials, _))) => {
+            Err(_) => {
                 // No-op: Go to next chunk.
-            }
-            Err(e) => {
-                // Some unexpected error
-                return Err(e.into());
+                // NOTE: while we expect a StatusCode::NoCredentials error here, some tokens return
+                // other values.
+                continue;
             }
         }
     }
@@ -199,4 +187,22 @@ pub(crate) fn do_credential_list_filtering_ctap2<Dev: FidoDevice>(
     //         Send it as a normal Request and expect a "CredentialExcluded"-error in case of
     //         MakeCredential or a Success in case of GetAssertion
     Ok(final_list)
+}
+
+pub(crate) fn silently_discover_credentials<Dev: FidoDevice>(
+    dev: &mut Dev,
+    cred_list: &[PublicKeyCredentialDescriptor],
+    rp: &RelyingPartyWrapper,
+    client_data_hash: &ClientDataHash,
+) -> Vec<PublicKeyCredentialDescriptor> {
+    if dev.get_protocol() == FidoProtocol::CTAP2 {
+        if let Ok(cred_list) = do_credential_list_filtering_ctap2(dev, cred_list, rp, None) {
+            return cred_list;
+        }
+    } else if let Some(key_handle) =
+        do_credential_list_filtering_ctap1(dev, cred_list, rp, client_data_hash)
+    {
+        return vec![key_handle];
+    }
+    vec![]
 }
