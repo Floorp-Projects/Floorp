@@ -3408,7 +3408,7 @@ void CanvasRenderingContext2D::Arc(double aX, double aY, double aR,
     return aError.ThrowIndexSizeError("Negative radius");
   }
   if (aStartAngle == aEndAngle) {
-    mPathPruned = true;
+    LineTo(aX + aR * cos(aStartAngle), aY + aR * sin(aStartAngle));
     return;
   }
 
@@ -3634,10 +3634,6 @@ void CanvasRenderingContext2D::Ellipse(double aX, double aY, double aRadiusX,
                                        ErrorResult& aError) {
   if (aRadiusX < 0.0 || aRadiusY < 0.0) {
     return aError.ThrowIndexSizeError("Negative radius");
-  }
-  if (aStartAngle == aEndAngle) {
-    mPathPruned = true;
-    return;
   }
 
   EnsureWritablePath();
@@ -6567,7 +6563,7 @@ void CanvasPath::Arc(double aX, double aY, double aRadius, double aStartAngle,
     return aError.ThrowIndexSizeError("Negative radius");
   }
   if (aStartAngle == aEndAngle) {
-    mPruned = true;
+    LineTo(aX + aRadius * cos(aStartAngle), aY + aRadius * sin(aStartAngle));
     return;
   }
 
@@ -6585,10 +6581,6 @@ void CanvasPath::Ellipse(double x, double y, double radiusX, double radiusY,
                          bool anticlockwise, ErrorResult& aError) {
   if (radiusX < 0.0 || radiusY < 0.0) {
     return aError.ThrowIndexSizeError("Negative radius");
-  }
-  if (startAngle == endAngle) {
-    mPruned = true;
-    return;
   }
 
   EnsurePathBuilder();
