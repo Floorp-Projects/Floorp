@@ -9,7 +9,7 @@
 use super::{
     registry::PropertyRegistration,
     syntax::{Descriptor, ParsedDescriptor},
-    value::ComputedValue,
+    value::{AllowComputationallyDependent, ComputedValue},
 };
 use crate::custom_properties::{Name as CustomPropertyName, SpecifiedValue};
 use crate::error_reporting::ContextualParseError;
@@ -239,7 +239,12 @@ impl PropertyRuleData {
             return Err(ToRegistrationError::InitialValueNotComputationallyIndependent);
         }
 
-        match ComputedValue::parse(&mut input, syntax, url_data) {
+        match ComputedValue::parse(
+            &mut input,
+            syntax,
+            url_data,
+            AllowComputationallyDependent::No,
+        ) {
             Ok(_) => {},
             Err(_) => return Err(ToRegistrationError::InvalidInitialValue),
         }

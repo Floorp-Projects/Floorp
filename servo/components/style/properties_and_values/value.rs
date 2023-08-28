@@ -74,6 +74,7 @@ impl ComputedValue {
         mut input: &mut CSSParser<'i, 't>,
         syntax: &Descriptor,
         url_data: &UrlExtraData,
+        allow_computationally_dependent: AllowComputationallyDependent,
     ) -> Result<Self, StyleParseError<'i>> {
         if syntax.is_universal() {
             return Ok(Self::Universal(ComputedPropertyValue::parse(&mut input)?));
@@ -83,7 +84,7 @@ impl ComputedValue {
         let mut has_multiplier = false;
         {
             let mut parser = Parser::new(syntax, &mut values, &mut has_multiplier);
-            parser.parse(&mut input, url_data)?;
+            parser.parse(&mut input, url_data, allow_computationally_dependent)?;
         }
         Ok(if has_multiplier {
             Self::List(ArcSlice::from_iter(values.into_iter()))
@@ -91,6 +92,17 @@ impl ComputedValue {
             Self::Component(values[0].clone())
         })
     }
+}
+
+/// Whether the computed value parsing should allow computationaly dependent values like 3em or
+/// var(-foo).
+///
+/// https://drafts.css-houdini.org/css-properties-values-api-1/#computationally-independent
+pub enum AllowComputationallyDependent {
+    /// Only computationally independent values are allowed.
+    No,
+    /// Computationally independent and dependent values are allowed.
+    Yes,
 }
 
 type SmallComponentVec = SmallVec<[ValueComponent; 1]>;
@@ -118,12 +130,18 @@ impl<'a> Parser<'a> {
         &mut self,
         input: &mut CSSParser<'i, 't>,
         url_data: &UrlExtraData,
+        allow_computationally_dependent: AllowComputationallyDependent,
     ) -> Result<(), StyleParseError<'i>> {
+        use self::AllowComputationallyDependent::*;
+        let parsing_mode = match allow_computationally_dependent {
+            No => ParsingMode::DISALLOW_FONT_RELATIVE,
+            Yes => ParsingMode::DEFAULT,
+        };
         let ref context = ParserContext::new(
             Origin::Author,
             url_data,
             Some(CssRuleType::Style),
-            ParsingMode::DISALLOW_FONT_RELATIVE,
+            parsing_mode,
             QuirksMode::NoQuirks,
             /* namespaces = */ Default::default(),
             None,
