@@ -97,7 +97,9 @@ pub enum CorsMode {
 /// We use this packed representation rather than an enum so that
 /// `from_ptr_ref` can work.
 #[cfg(feature = "gecko")]
-#[derive(PartialEq)]
+// Although deriving MallocSizeOf means it always returns 0, that is fine because UrlExtraData
+// objects are reference-counted.
+#[derive(MallocSizeOf, PartialEq)]
 #[repr(C)]
 pub struct UrlExtraData(usize);
 

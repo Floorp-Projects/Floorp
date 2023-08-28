@@ -277,6 +277,7 @@ impl PropertyRuleData {
             syntax: syntax.descriptor().clone(),
             inherits: *inherits == Inherits::True,
             initial_value: self.initial_value.clone(),
+            url_data: url_data.clone(),
         })
     }
 }
