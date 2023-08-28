@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.10.86';
+    const workerVersion = '3.10.109';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -4141,9 +4141,6 @@ class PDFDocument {
       const partName = (0, _util.stringToPDFString)(field.get("T"));
       name = name === "" ? partName : `${name}.${partName}`;
     }
-    if (!field.has("Kids") && field.has("T") && /\[\d+\]$/.test(name)) {
-      name = name.substring(0, name.lastIndexOf("["));
-    }
     if (!promises.has(name)) {
       promises.set(name, []);
     }
@@ -4730,30 +4727,7 @@ class Annotation {
     this.color = getRgbColor(color);
   }
   setLineEndings(lineEndings) {
-    this.lineEndings = ["None", "None"];
-    if (Array.isArray(lineEndings) && lineEndings.length === 2) {
-      for (let i = 0; i < 2; i++) {
-        const obj = lineEndings[i];
-        if (obj instanceof _primitives.Name) {
-          switch (obj.name) {
-            case "None":
-              continue;
-            case "Square":
-            case "Circle":
-            case "Diamond":
-            case "OpenArrow":
-            case "ClosedArrow":
-            case "Butt":
-            case "ROpenArrow":
-            case "RClosedArrow":
-            case "Slash":
-              this.lineEndings[i] = obj.name;
-              continue;
-          }
-        }
-        (0, _util.warn)(`Ignoring invalid lineEnding: ${obj}`);
-      }
-    }
+    throw new Error("Not implemented: setLineEndings");
   }
   setRotation(mk, dict) {
     this.rotation = 0;
@@ -5281,9 +5255,6 @@ class WidgetAnnotation extends Annotation {
     data.annotationType = _util.AnnotationType.WIDGET;
     if (data.fieldName === undefined) {
       data.fieldName = this._constructFieldName(dict);
-    }
-    if (data.fieldName && /\[\d+\]$/.test(data.fieldName) && !dict.has("Kids") && dict.has("T")) {
-      data.baseFieldName = data.fieldName.substring(0, data.fieldName.lastIndexOf("["));
     }
     if (data.actions === undefined) {
       data.actions = (0, _core_utils.collectActions)(xref, dict, _util.AnnotationActionEventType);
@@ -6240,6 +6211,9 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       this._streams.push(this.uncheckedAppearance);
     }
     this._fallbackFontDict = this.fallbackFontDict;
+    if (this.data.defaultFieldValue === null) {
+      this.data.defaultFieldValue = "Off";
+    }
   }
   _processRadioButton(params) {
     this.data.fieldValue = this.data.buttonValue = null;
@@ -6278,6 +6252,9 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       this._streams.push(this.uncheckedAppearance);
     }
     this._fallbackFontDict = this.fallbackFontDict;
+    if (this.data.defaultFieldValue === null) {
+      this.data.defaultFieldValue = "Off";
+    }
   }
   _processPushButton(params) {
     if (!params.dict.has("A") && !params.dict.has("AA") && !this.data.alternativeText) {
@@ -6811,8 +6788,6 @@ class LineAnnotation extends MarkupAnnotation {
     this.data.hasOwnCanvas = this.data.noRotate;
     const lineCoordinates = dict.getArray("L");
     this.data.lineCoordinates = _util.Util.normalizeRect(lineCoordinates);
-    this.setLineEndings(dict.getArray("LE"));
-    this.data.lineEndings = this.lineEndings;
     if (!this.appearance) {
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
       const strokeAlpha = dict.get("CA");
@@ -6938,10 +6913,6 @@ class PolylineAnnotation extends MarkupAnnotation {
     this.data.annotationType = _util.AnnotationType.POLYLINE;
     this.data.hasOwnCanvas = this.data.noRotate;
     this.data.vertices = [];
-    if (!(this instanceof PolygonAnnotation)) {
-      this.setLineEndings(dict.getArray("LE"));
-      this.data.lineEndings = this.lineEndings;
-    }
     const rawVertices = dict.getArray("Vertices");
     if (!Array.isArray(rawVertices)) {
       return;
@@ -57830,8 +57801,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.10.86';
-const pdfjsBuild = 'c72cb5436';
+const pdfjsVersion = '3.10.109';
+const pdfjsBuild = '598421b11';
 })();
 
 /******/ 	return __webpack_exports__;

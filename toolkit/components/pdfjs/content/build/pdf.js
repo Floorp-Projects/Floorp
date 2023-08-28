@@ -944,7 +944,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.10.86',
+    apiVersion: '3.10.109',
     data,
     password,
     disableAutoFetch,
@@ -1666,7 +1666,7 @@ const PDFWorkerUtil = {
 exports.PDFWorkerUtil = PDFWorkerUtil;
 ;
 class PDFWorker {
-  static #workerPorts = new WeakMap();
+  static #workerPorts;
   constructor({
     name = null,
     port = null,
@@ -1679,14 +1679,6 @@ class PDFWorker {
     this._port = null;
     this._webWorker = null;
     this._messageHandler = null;
-    if (port) {
-      if (PDFWorker.#workerPorts.has(port)) {
-        throw new Error("Cannot use more than one PDFWorker per port.");
-      }
-      PDFWorker.#workerPorts.set(port, this);
-      this._initializeFromPort(port);
-      return;
-    }
     this._initialize();
   }
   get promise() {
@@ -1699,13 +1691,7 @@ class PDFWorker {
     return this._messageHandler;
   }
   _initializeFromPort(port) {
-    this._port = port;
-    this._messageHandler = new _message_handler.MessageHandler("main", "worker", port);
-    this._messageHandler.on("ready", function () {});
-    this._readyCapability.resolve();
-    this._messageHandler.send("configure", {
-      verbosity: this.verbosity
-    });
+    throw new Error("Not implemented: _initializeFromPort");
   }
   _initialize() {
     if (!PDFWorkerUtil.isWorkerDisabled && !PDFWorker._mainThreadWorkerMessageHandler) {
@@ -1806,7 +1792,7 @@ class PDFWorker {
       this._webWorker.terminate();
       this._webWorker = null;
     }
-    PDFWorker.#workerPorts.delete(this._port);
+    PDFWorker.#workerPorts?.delete(this._port);
     this._port = null;
     if (this._messageHandler) {
       this._messageHandler.destroy();
@@ -2594,9 +2580,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.10.86';
+const version = '3.10.109';
 exports.version = version;
-const build = 'c72cb5436';
+const build = '598421b11';
 exports.build = build;
 
 /***/ }),
@@ -11199,11 +11185,7 @@ class AnnotationElement {
         event.target.title = event.detail.userName;
       },
       readonly: event => {
-        if (event.detail.readonly) {
-          event.target.setAttribute("readonly", "");
-        } else {
-          event.target.removeAttribute("readonly");
-        }
+        event.target.disabled = event.detail.readonly;
       },
       required: event => {
         this._setRequired(event.target, event.detail.required);
@@ -11858,7 +11840,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
       GetElementsByNameSet.add(element);
       element.setAttribute("data-element-id", id);
       element.disabled = this.data.readOnly;
-      element.name = this.data.baseFieldName || this.data.fieldName;
+      element.name = this.data.fieldName;
       element.tabIndex = DEFAULT_TAB_INDEX;
       this._setRequired(element, this.data.required);
       if (maxLen) {
@@ -12132,7 +12114,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
     element.disabled = data.readOnly;
     this._setRequired(element, this.data.required);
     element.type = "checkbox";
-    element.name = data.baseFieldName || data.fieldName;
+    element.name = data.fieldName;
     if (value) {
       element.setAttribute("checked", true);
     }
@@ -12206,7 +12188,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
     element.disabled = data.readOnly;
     this._setRequired(element, this.data.required);
     element.type = "radio";
-    element.name = data.baseFieldName || data.fieldName;
+    element.name = data.fieldName;
     if (value) {
       element.setAttribute("checked", true);
     }
@@ -12296,7 +12278,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     selectElement.setAttribute("data-element-id", id);
     selectElement.disabled = this.data.readOnly;
     this._setRequired(selectElement, this.data.required);
-    selectElement.name = this.data.baseFieldName || this.data.fieldName;
+    selectElement.name = this.data.fieldName;
     selectElement.tabIndex = DEFAULT_TAB_INDEX;
     let addAnEmptyEntry = this.data.combo && this.data.options.length > 0;
     if (!this.data.combo) {
@@ -14396,7 +14378,20 @@ class StampEditor extends _editor.AnnotationEditor {
       bitmapFile: item.getAsFile()
     });
   }
+  #getBitmapFetched(data, fromId = false) {
+    if (!data) {
+      this.remove();
+      return;
+    }
+    this.#bitmap = data.bitmap;
+    if (!fromId) {
+      this.#bitmapId = data.id;
+      this.#isSvg = data.isSvg;
+    }
+    this.#createCanvas();
+  }
   #getBitmapDone() {
+    this.#bitmapPromise = null;
     this._uiManager.enableWaiting(false);
     if (this.#canvas) {
       this.div.focus();
@@ -14405,52 +14400,21 @@ class StampEditor extends _editor.AnnotationEditor {
   #getBitmap() {
     if (this.#bitmapId) {
       this._uiManager.enableWaiting(true);
-      this._uiManager.imageManager.getFromId(this.#bitmapId).then(data => {
-        if (!data) {
-          this.remove();
-          return;
-        }
-        this.#bitmap = data.bitmap;
-        this.#createCanvas();
-      }).finally(() => this.#getBitmapDone());
+      this._uiManager.imageManager.getFromId(this.#bitmapId).then(data => this.#getBitmapFetched(data, true)).finally(() => this.#getBitmapDone());
       return;
     }
     if (this.#bitmapUrl) {
       const url = this.#bitmapUrl;
       this.#bitmapUrl = null;
       this._uiManager.enableWaiting(true);
-      this.#bitmapPromise = this._uiManager.imageManager.getFromUrl(url).then(data => {
-        this.#bitmapPromise = null;
-        if (!data) {
-          this.remove();
-          return;
-        }
-        ({
-          bitmap: this.#bitmap,
-          id: this.#bitmapId,
-          isSvg: this.#isSvg
-        } = data);
-        this.#createCanvas();
-      }).finally(() => this.#getBitmapDone());
+      this.#bitmapPromise = this._uiManager.imageManager.getFromUrl(url).then(data => this.#getBitmapFetched(data)).finally(() => this.#getBitmapDone());
       return;
     }
     if (this.#bitmapFile) {
       const file = this.#bitmapFile;
       this.#bitmapFile = null;
       this._uiManager.enableWaiting(true);
-      this.#bitmapPromise = this._uiManager.imageManager.getFromFile(file).then(data => {
-        this.#bitmapPromise = null;
-        if (!data) {
-          this.remove();
-          return;
-        }
-        ({
-          bitmap: this.#bitmap,
-          id: this.#bitmapId,
-          isSvg: this.#isSvg
-        } = data);
-        this.#createCanvas();
-      }).finally(() => this.#getBitmapDone());
+      this.#bitmapPromise = this._uiManager.imageManager.getFromFile(file).then(data => this.#getBitmapFetched(data)).finally(() => this.#getBitmapDone());
       return;
     }
     const input = document.createElement("input");
@@ -14458,27 +14422,16 @@ class StampEditor extends _editor.AnnotationEditor {
     input.accept = StampEditor.supportedTypesStr;
     this.#bitmapPromise = new Promise(resolve => {
       input.addEventListener("change", async () => {
-        this.#bitmapPromise = null;
         if (!input.files || input.files.length === 0) {
           this.remove();
         } else {
           this._uiManager.enableWaiting(true);
           const data = await this._uiManager.imageManager.getFromFile(input.files[0]);
-          if (!data) {
-            this.remove();
-            return;
-          }
-          ({
-            bitmap: this.#bitmap,
-            id: this.#bitmapId,
-            isSvg: this.#isSvg
-          } = data);
-          this.#createCanvas();
+          this.#getBitmapFetched(data);
         }
         resolve();
       });
       input.addEventListener("cancel", () => {
-        this.#bitmapPromise = null;
         this.remove();
         resolve();
       });
@@ -14519,7 +14472,7 @@ class StampEditor extends _editor.AnnotationEditor {
     this.div.focus();
   }
   isEmpty() {
-    return this.#bitmapPromise === null && this.#bitmap === null && this.#bitmapUrl === null;
+    return !(this.#bitmapPromise || this.#bitmap || this.#bitmapUrl || this.#bitmapFile);
   }
   get isResizable() {
     return true;
@@ -15032,8 +14985,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.10.86';
-const pdfjsBuild = 'c72cb5436';
+const pdfjsVersion = '3.10.109';
+const pdfjsBuild = '598421b11';
 })();
 
 /******/ 	return __webpack_exports__;
