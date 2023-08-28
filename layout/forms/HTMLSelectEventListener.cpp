@@ -278,8 +278,8 @@ void HTMLSelectEventListener::Detach() {
             if (!element->IsCombobox() ||
                 !element->GetPrimaryFrame(FlushType::Frames)) {
               nsContentUtils::DispatchChromeEvent(
-                  element->OwnerDoc(), ToSupports(element.get()),
-                  u"mozhidedropdown"_ns, CanBubble::eYes, Cancelable::eNo);
+                  element->OwnerDoc(), element, u"mozhidedropdown"_ns,
+                  CanBubble::eYes, Cancelable::eNo);
             }
           }));
     }
@@ -383,7 +383,7 @@ void HTMLSelectEventListener::FireOnInputAndOnChange() {
                        "Failed to dispatch input event");
 
   // Dispatch the change event.
-  nsContentUtils::DispatchTrustedEvent(element->OwnerDoc(), ToSupports(element),
+  nsContentUtils::DispatchTrustedEvent(element->OwnerDoc(), element,
                                        u"change"_ns, CanBubble::eYes,
                                        Cancelable::eNo);
 }
@@ -397,8 +397,7 @@ static void FireDropDownEvent(HTMLSelectElement* aElement, bool aShow,
     }
     return u"mozhidedropdown"_ns;
   }();
-  nsContentUtils::DispatchChromeEvent(aElement->OwnerDoc(),
-                                      ToSupports(aElement), eventName,
+  nsContentUtils::DispatchChromeEvent(aElement->OwnerDoc(), aElement, eventName,
                                       CanBubble::eYes, Cancelable::eNo);
 }
 

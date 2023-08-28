@@ -468,8 +468,8 @@ void HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName) {
   if (!doc) {
     return;
   }
-  nsContentUtils::DispatchTrustedEvent(doc, static_cast<nsIContent*>(this),
-                                       aName, CanBubble::eNo, Cancelable::eNo);
+  nsContentUtils::DispatchTrustedEvent(doc, this, aName, CanBubble::eNo,
+                                       Cancelable::eNo);
 }
 
 void HTMLTrackElement::CancelChannelAndListener() {

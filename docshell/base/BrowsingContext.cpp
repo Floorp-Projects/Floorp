@@ -3022,7 +3022,8 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsActiveBrowserWindowInternal>,
           // the context is the top of a sub-tree of in-process
           // contexts.
           nsContentUtils::DispatchEventOnlyToChrome(
-              doc, win, isActivateEvent ? u"activate"_ns : u"deactivate"_ns,
+              doc, nsGlobalWindowInner::Cast(win),
+              isActivateEvent ? u"activate"_ns : u"deactivate"_ns,
               CanBubble::eYes, Cancelable::eYes, nullptr);
         }
       }

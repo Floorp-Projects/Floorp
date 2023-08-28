@@ -235,9 +235,9 @@ bool ClientWebGLContext::DispatchEvent(const nsAString& eventName) const {
   bool useDefaultHandler = true;
 
   if (mCanvasElement) {
-    nsContentUtils::DispatchTrustedEvent(
-        mCanvasElement->OwnerDoc(), static_cast<nsIContent*>(mCanvasElement),
-        eventName, kCanBubble, kIsCancelable, &useDefaultHandler);
+    nsContentUtils::DispatchTrustedEvent(mCanvasElement->OwnerDoc(),
+                                         mCanvasElement, eventName, kCanBubble,
+                                         kIsCancelable, &useDefaultHandler);
   } else if (mOffscreenCanvas) {
     // OffscreenCanvas case
     RefPtr<dom::Event> event =

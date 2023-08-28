@@ -4575,12 +4575,12 @@ EventMessage nsContentUtils::GetEventMessageAndAtomForListener(
   return msg;
 }
 
-static nsresult GetEventAndTarget(Document* aDoc, nsISupports* aTarget,
+static nsresult GetEventAndTarget(Document* aDoc, EventTarget* aTarget,
                                   const nsAString& aEventName,
                                   CanBubble aCanBubble, Cancelable aCancelable,
                                   Composed aComposed, Trusted aTrusted,
                                   Event** aEvent, EventTarget** aTargetOut) {
-  nsCOMPtr<EventTarget> target(do_QueryInterface(aTarget));
+  nsCOMPtr<EventTarget> target(aTarget);
   NS_ENSURE_TRUE(aDoc && target, NS_ERROR_INVALID_ARG);
 
   ErrorResult err;
@@ -4602,7 +4602,7 @@ static nsresult GetEventAndTarget(Document* aDoc, nsISupports* aTarget,
 
 // static
 nsresult nsContentUtils::DispatchTrustedEvent(
-    Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
+    Document* aDoc, EventTarget* aTarget, const nsAString& aEventName,
     CanBubble aCanBubble, Cancelable aCancelable, Composed aComposed,
     bool* aDefaultAction) {
   MOZ_ASSERT(!aEventName.EqualsLiteral("input") &&
@@ -4614,14 +4614,14 @@ nsresult nsContentUtils::DispatchTrustedEvent(
 
 // static
 nsresult nsContentUtils::DispatchUntrustedEvent(
-    Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
+    Document* aDoc, EventTarget* aTarget, const nsAString& aEventName,
     CanBubble aCanBubble, Cancelable aCancelable, bool* aDefaultAction) {
   return DispatchEvent(aDoc, aTarget, aEventName, aCanBubble, aCancelable,
                        Composed::eDefault, Trusted::eNo, aDefaultAction);
 }
 
 // static
-nsresult nsContentUtils::DispatchEvent(Document* aDoc, nsISupports* aTarget,
+nsresult nsContentUtils::DispatchEvent(Document* aDoc, EventTarget* aTarget,
                                        const nsAString& aEventName,
                                        CanBubble aCanBubble,
                                        Cancelable aCancelable,
@@ -4646,7 +4646,7 @@ nsresult nsContentUtils::DispatchEvent(Document* aDoc, nsISupports* aTarget,
 }
 
 // static
-nsresult nsContentUtils::DispatchEvent(Document* aDoc, nsISupports* aTarget,
+nsresult nsContentUtils::DispatchEvent(Document* aDoc, EventTarget* aTarget,
                                        WidgetEvent& aEvent,
                                        EventMessage aEventMessage,
                                        CanBubble aCanBubble,
@@ -4656,7 +4656,7 @@ nsresult nsContentUtils::DispatchEvent(Document* aDoc, nsISupports* aTarget,
   MOZ_ASSERT_IF(aOnlyChromeDispatch == ChromeOnlyDispatch::eYes,
                 aTrusted == Trusted::eYes);
 
-  nsCOMPtr<EventTarget> target(do_QueryInterface(aTarget));
+  nsCOMPtr<EventTarget> target(aTarget);
 
   aEvent.mSpecifiedEventType = GetEventTypeFromMessage(aEventMessage);
   aEvent.SetDefaultComposed();
@@ -4846,7 +4846,7 @@ nsresult nsContentUtils::DispatchInputEvent(
 }
 
 nsresult nsContentUtils::DispatchChromeEvent(
-    Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
+    Document* aDoc, EventTarget* aTarget, const nsAString& aEventName,
     CanBubble aCanBubble, Cancelable aCancelable, bool* aDefaultAction) {
   RefPtr<Event> event;
   nsCOMPtr<EventTarget> target;
@@ -4901,7 +4901,7 @@ void nsContentUtils::RequestFrameFocus(Element& aFrameElement, bool aCanRaise,
 }
 
 nsresult nsContentUtils::DispatchEventOnlyToChrome(
-    Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
+    Document* aDoc, EventTarget* aTarget, const nsAString& aEventName,
     CanBubble aCanBubble, Cancelable aCancelable, Composed aComposed,
     bool* aDefaultAction) {
   return DispatchEvent(aDoc, aTarget, aEventName, aCanBubble, aCancelable,

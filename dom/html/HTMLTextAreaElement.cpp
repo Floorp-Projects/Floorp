@@ -472,9 +472,8 @@ void HTMLTextAreaElement::FireChangeEventIfNeeded() {
 
   // Dispatch the change event.
   mFocusedValue = value;
-  nsContentUtils::DispatchTrustedEvent(
-      OwnerDoc(), static_cast<nsIContent*>(this), u"change"_ns, CanBubble::eYes,
-      Cancelable::eNo);
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(), this, u"change"_ns,
+                                       CanBubble::eYes, Cancelable::eNo);
 }
 
 nsresult HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {

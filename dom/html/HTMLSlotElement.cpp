@@ -354,9 +354,8 @@ void HTMLSlotElement::EnqueueSlotChangeEvent() {
 }
 
 void HTMLSlotElement::FireSlotChangeEvent() {
-  nsContentUtils::DispatchTrustedEvent(
-      OwnerDoc(), static_cast<nsIContent*>(this), u"slotchange"_ns,
-      CanBubble::eYes, Cancelable::eNo);
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(), this, u"slotchange"_ns,
+                                       CanBubble::eYes, Cancelable::eNo);
 }
 
 void HTMLSlotElement::RemoveManuallyAssignedNode(nsIContent& aNode) {

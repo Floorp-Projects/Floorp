@@ -2610,9 +2610,8 @@ void nsGlobalWindowOuter::DispatchDOMWindowCreated() {
   }
 
   // Fire DOMWindowCreated at chrome event listeners
-  nsContentUtils::DispatchChromeEvent(mDoc, ToSupports(mDoc),
-                                      u"DOMWindowCreated"_ns, CanBubble::eYes,
-                                      Cancelable::eNo);
+  nsContentUtils::DispatchChromeEvent(mDoc, mDoc, u"DOMWindowCreated"_ns,
+                                      CanBubble::eYes, Cancelable::eNo);
 
   nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
@@ -3857,11 +3856,11 @@ bool nsGlobalWindowOuter::DispatchCustomEvent(
   bool defaultActionEnabled = true;
 
   if (aChromeOnlyDispatch == ChromeOnlyDispatch::eYes) {
-    nsContentUtils::DispatchEventOnlyToChrome(
-        mDoc, ToSupports(this), aEventName, CanBubble::eYes, Cancelable::eYes,
-        &defaultActionEnabled);
+    nsContentUtils::DispatchEventOnlyToChrome(mDoc, this, aEventName,
+                                              CanBubble::eYes, Cancelable::eYes,
+                                              &defaultActionEnabled);
   } else {
-    nsContentUtils::DispatchTrustedEvent(mDoc, ToSupports(this), aEventName,
+    nsContentUtils::DispatchTrustedEvent(mDoc, this, aEventName,
                                          CanBubble::eYes, Cancelable::eYes,
                                          &defaultActionEnabled);
   }

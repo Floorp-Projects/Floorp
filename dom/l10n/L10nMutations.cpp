@@ -286,8 +286,8 @@ void L10nMutations::MaybeFirePendingTranslationsFinished() {
     doc->UnblockOnload(false);
   }
   nsContentUtils::DispatchEventOnlyToChrome(
-      doc, ToSupports(doc), u"L10nMutationsFinished"_ns, CanBubble::eNo,
-      Cancelable::eNo, Composed::eNo, nullptr);
+      doc, doc, u"L10nMutationsFinished"_ns, CanBubble::eNo, Cancelable::eNo,
+      Composed::eNo, nullptr);
 }
 
 void L10nMutations::Disconnect() {
