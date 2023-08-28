@@ -76,6 +76,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
       case "PolledRequestMade":
         this.updateContent({ isPolledRequest: true });
         break;
+      case "ShoppingTelemetryEvent":
+        this.submitShoppingEvent(event.detail);
+        break;
     }
   }
 
@@ -221,5 +224,24 @@ export class ShoppingSidebarChild extends RemotePageChild {
       detail: Cu.cloneInto(detail, win),
     });
     win.document.dispatchEvent(evt);
+  }
+
+  /**
+   * Helper to handle telemetry events.
+   *
+   * @param {string} message
+   *        Which Glean event to record too.
+   */
+  submitShoppingEvent(message) {
+    // We are currently working through an actor to record Glean events and
+    // this function is where we will direct a custom actor event into the
+    // correct Glean event. However, this is an unpleasant solution and one
+    // that should not be replicated. Please reference bug 1848708 for more
+    // detail about why.
+    switch (message) {
+      case "reanalyzeClicked":
+        Glean.shopping.surfaceReanalyzeClicked.record();
+        break;
+    }
   }
 }
