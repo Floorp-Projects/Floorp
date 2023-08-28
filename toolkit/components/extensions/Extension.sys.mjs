@@ -666,18 +666,11 @@ export var ExtensionProcessCrashObserver = {
   lastCrashedProcessChildID: undefined,
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-  _appInForeground: true,
-  _isAndroid: AppConstants.platform === "android",
-
   init() {
     if (!this.initialized) {
       Services.obs.addObserver(this, "ipc:content-created");
       Services.obs.addObserver(this, "process-type-set");
       Services.obs.addObserver(this, "ipc:content-shutdown");
-      if (this._isAndroid) {
-        Services.obs.addObserver(this, "application-foreground");
-        Services.obs.addObserver(this, "application-background");
-      }
       this.initialized = true;
     }
   },
@@ -688,10 +681,6 @@ export var ExtensionProcessCrashObserver = {
         Services.obs.removeObserver(this, "ipc:content-created");
         Services.obs.removeObserver(this, "process-type-set");
         Services.obs.removeObserver(this, "ipc:content-shutdown");
-        if (this._isAndroid) {
-          Services.obs.removeObserver(this, "application-foreground");
-          Services.obs.removeObserver(this, "application-background");
-        }
       } catch (err) {
         // Removing the observer may fail if they are not registered anymore,
         // this shouldn't happen in practice, but let's still log the error
@@ -705,11 +694,6 @@ export var ExtensionProcessCrashObserver = {
   observe(subject, topic, data) {
     let childID = data;
     switch (topic) {
-      case "application-foreground":
-      // Intentional fall-through
-      case "application-background":
-        this._appInForeground = topic === "application-foreground";
-        break;
       case "process-type-set":
       // Intentional fall-through
       case "ipc:content-created": {
@@ -717,11 +701,6 @@ export var ExtensionProcessCrashObserver = {
         if (pp.remoteType === "extension") {
           this.currentProcessChildID = childID;
           Glean.extensions.processEvent.created.add(1);
-          if (this._isAndroid) {
-            Glean.extensions.processEvent[
-              this.appInForeground ? "created_fg" : "created_bg"
-            ].add(1);
-          }
         }
         break;
       }
@@ -748,27 +727,12 @@ export var ExtensionProcessCrashObserver = {
           return;
         }
 
-        const { appInForeground } = this;
         this.lastCrashedProcessChildID = childID;
         Glean.extensions.processEvent.crashed.add(1);
-        if (this._isAndroid) {
-          Glean.extensions.processEvent[
-            appInForeground ? "crashed_fg" : "crashed_bg"
-          ].add(1);
-        }
-        Management.emit("extension-process-crash", {
-          childID,
-          appInForeground,
-        });
+        Management.emit("extension-process-crash", { childID });
         break;
       }
     }
-  },
-
-  get appInForeground() {
-    // Only account for application in the background for
-    // android builds.
-    return this._isAndroid ? this._appInForeground : true;
   },
 };
 
