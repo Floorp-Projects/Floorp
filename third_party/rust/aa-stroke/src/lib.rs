@@ -519,6 +519,10 @@ fn dot(a: Vector, b: Vector) -> f32 {
     a.x * b.x + a.y * b.y
 }
 
+fn cross(a: Vector, b: Vector) -> f32 {
+    return a.x * b.y - a.y * b.x;
+}
+
 /* Finds the intersection of two lines each defined by a point and a normal.
 From "Example 2: Find the intersection of two lines" of
 "The Pleasures of "Perp Dot" Products"
@@ -578,30 +582,62 @@ fn join_line(
                     if dest.aa {
                         let ramp_start = pt + s1_normal * (offset + 1.);
                         let ramp_end = pt + s2_normal * (offset + 1.);
+
+                        // The following diagram is inspired by the DoLimitedMiter code
+                        // from WpfGfx. Their math doesn't make sense to me so
+                        // there's an original derivation from jgilbert below:
+                        //
+                        //              offset point
+                        //           --*----------------------  offset line
+                        //          | *
+                        //          |*
+                        //          * clip point
+                        //         *|s       a          spine
+                        //        *-- offset  ................
+                        //         q| point   .
+                        //          |         .
+                        //          |         .
+                        //          |         .
+                        //          |  - r -  .        -------
+                        //          |         .       |
+                        //          |         .       |
+                        //
+                        // b = a/2
+                        // r/(q+r) = cos b => q + r = r/cos b => q = r/cos b - r
+                        // q/s = sin b/cos b => s = q cos b/sin b
+                        // s = (r/cos b - r) * cos b/sin b = (r - r cos b)/sin b
+                        // sub in r = 1
+                        // s = (1 - cos b)/sin b
+                        //
+                        // rearrange so that we don't have denominator of 0 when b = 0 (parallel lines)
+                        // this prevents numerical instability in that case
+                        //
+                        // (1 - cos b)/sin b => (1 - cos b)(1 + cos b)/(sin b * (1 + cos b))
+                        //                   => (1 - cos^2 b) / (sin b * (1 + cos b)
+                        //                   => sin^2 b / sin b * (1 + cos b)
+                        //                   => sin b / (1 + cos b)
+
                         let mid = bisect(s1_normal, s2_normal);
-                        let ramp_intersection = intersection + mid;
 
-                        let ramp_s1 = line_intersection(ramp_start, s1_normal, ramp_intersection, flip(mid));
-                        let ramp_s2 = line_intersection(ramp_end, s2_normal, ramp_intersection, flip(mid));
+                        // cross = sin, dot = cos
+                        let s = cross(mid, s1_normal)/(1. + dot(s1_normal, mid));
 
-                        if let Some(ramp_s1) = ramp_s1 {
-                            dest.ramp(intersection.x, intersection.y,
-                                ramp_s1.x, ramp_s1.y,
-                                ramp_start.x, ramp_start.y,
-                                pt.x + s1_normal.x * offset, pt.y + s1_normal.y * offset,
-                            );
-                        }
-                        if let Some(ramp_s2) = ramp_s2 {
-                            dest.ramp(pt.x + s2_normal.x * offset, pt.y + s2_normal.y * offset,
-                                ramp_end.x, ramp_end.y,
-                                ramp_s2.x, ramp_s2.y,
-                                intersection.x, intersection.y);
-                            if let Some(ramp_s1) = ramp_s1 {
-                                dest.tri_ramp(ramp_s1.x, ramp_s1.y, ramp_s2.x, ramp_s2.y, intersection.x, intersection.y);
-                            }
-                        }
+                        let ramp_s1 = intersection + s1_normal * 1. + unperp(s1_normal) * s;
+                        let ramp_s2 = intersection + s2_normal * 1. + unperp(s2_normal) * s;
 
-                        // we'll want to intersect the ramps and put a flat cap on the end
+                        dest.ramp(intersection.x, intersection.y,
+                            ramp_s1.x, ramp_s1.y,
+                            ramp_start.x, ramp_start.y,
+                            pt.x + s1_normal.x * offset, pt.y + s1_normal.y * offset,
+                        );
+                        dest.ramp(pt.x + s2_normal.x * offset, pt.y + s2_normal.y * offset,
+                            ramp_end.x, ramp_end.y,
+                            ramp_s2.x, ramp_s2.y,
+                            intersection.x, intersection.y);
+
+                        // put a flat cap on the end
+                        dest.tri_ramp(ramp_s1.x, ramp_s1.y, ramp_s2.x, ramp_s2.y, intersection.x, intersection.y);
+
                         dest.quad(pt.x + s1_normal.x * offset, pt.y + s1_normal.y * offset,
                             intersection.x, intersection.y,
                             pt.x + s2_normal.x * offset, pt.y + s2_normal.y * offset,
@@ -949,6 +985,48 @@ fn parallel_line_join() {
         stroker.line_to(Point::new(19.062500, 72.125000));
         stroker.close();
         stroker.finish();
+    }
+}
+
+#[test]
+fn degenerate_miter_join() {
+    // from https://bugzilla.mozilla.org/show_bug.cgi?id=1841020
+    let mut stroker = Stroker::new(&StrokeStyle{
+        cap: LineCap::Square,
+        join: LineJoin::Miter,
+        width: 1.0,
+        ..Default::default()});
+
+    stroker.move_to(Point::new(-204.48355, 528.4429), false);
+    stroker.line_to(Point::new(-203.89037, 529.0532));
+    stroker.line_to(Point::new(-202.58539, 530.396,));
+    stroker.line_to(Point::new(-201.2804, 531.73883,));
+    stroker.line_to(Point::new(-200.68721, 532.3492,));
+
+    let result = stroker.finish();
+    // make sure none of the verticies are wildly out of place
+    for v in result {
+        assert!(v.y >= 527.);
+    }
+
+    let mut stroker = Stroker::new(&StrokeStyle{
+        cap: LineCap::Square,
+        join: LineJoin::Miter,
+        width: 40.0,
+        ..Default::default()});
+
+    fn distance_from_line(p1: Point, p2: Point, x: Point)  -> f32 {
+        ((p2.x - p1.x)*(p1.y - x.y) - (p1.x - x.x)*(p2.y - p1.y)).abs() /
+          ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt()
+    }
+    let start = Point::new(512., 599.);
+    let end = Point::new(513.51666, 597.47736);
+    stroker.move_to(start, false);
+    stroker.line_to(Point::new(512.3874, 598.6111));
+    stroker.line_to_capped(end);
+    let result = stroker.finish();
+    for v in result {
+        assert!(dbg!(distance_from_line(start, end, Point::new(v.x, v.y))) <= 21.);
     }
 }
 
