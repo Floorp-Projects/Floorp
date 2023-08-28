@@ -466,7 +466,7 @@ function sendString(aStr, aWindow) {
       i + 1 < aStr.length &&
       (aStr.charCodeAt(i + 1) & 0xfc00) == 0xdc00
     ) {
-      sendChar(aStr.substring(i, i + 2));
+      sendChar(aStr.substring(i, i + 2), aWindow);
       i++;
     } else {
       sendChar(aStr.charAt(i), aWindow);
