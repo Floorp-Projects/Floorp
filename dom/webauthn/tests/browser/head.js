@@ -42,6 +42,49 @@ function add_virtual_authenticator(autoremove = true) {
   return id;
 }
 
+async function addCredential(authenticatorId, rpId) {
+  let keyPair = await crypto.subtle.generateKey(
+    {
+      name: "ECDSA",
+      namedCurve: "P-256",
+    },
+    true,
+    ["sign"]
+  );
+
+  let credId = new Uint8Array(32);
+  crypto.getRandomValues(credId);
+  credId = bytesToBase64UrlSafe(credId);
+
+  let privateKey = await crypto.subtle
+    .exportKey("pkcs8", keyPair.privateKey)
+    .then(privateKey => bytesToBase64UrlSafe(privateKey));
+
+  let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
+    Ci.nsIWebAuthnTransport
+  );
+
+  webauthnTransport.addCredential(
+    authenticatorId,
+    credId,
+    true, // resident key
+    rpId,
+    privateKey,
+    "VGVzdCBVc2Vy", // "Test User"
+    0 // sign count
+  );
+
+  return credId;
+}
+
+async function removeCredential(authenticatorId, credId) {
+  let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
+    Ci.nsIWebAuthnTransport
+  );
+
+  webauthnTransport.removeCredential(authenticatorId, credId);
+}
+
 function memcmp(x, y) {
   let xb = new Uint8Array(x);
   let yb = new Uint8Array(y);
