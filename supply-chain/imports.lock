@@ -371,6 +371,13 @@ user-id = 3618
 user-login = "dtolnay"
 user-name = "David Tolnay"
 
+[[publisher.proc-macro2]]
+version = "1.0.66"
+when = "2023-07-16"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.quote]]
 version = "1.0.28"
 when = "2023-05-25"

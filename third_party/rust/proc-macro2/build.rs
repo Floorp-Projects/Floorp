@@ -35,7 +35,7 @@
 //     1.57+.
 
 use std::env;
-use std::process::{self, Command};
+use std::process::Command;
 use std::str;
 use std::u32;
 
@@ -47,11 +47,6 @@ fn main() {
         nightly: false,
     });
 
-    if version.minor < 31 {
-        eprintln!("Minimum supported rustc version is 1.31");
-        process::exit(1);
-    }
-
     let docs_rs = env::var_os("DOCS_RS").is_some();
     let semver_exempt = cfg!(procmacro2_semver_exempt) || docs_rs;
     if semver_exempt {
@@ -61,38 +56,6 @@ fn main() {
 
     if semver_exempt || cfg!(feature = "span-locations") {
         println!("cargo:rustc-cfg=span_locations");
-    }
-
-    if version.minor < 32 {
-        println!("cargo:rustc-cfg=no_libprocmacro_unwind_safe");
-    }
-
-    if version.minor < 34 {
-        println!("cargo:rustc-cfg=no_try_from");
-    }
-
-    if version.minor < 39 {
-        println!("cargo:rustc-cfg=no_bind_by_move_pattern_guard");
-    }
-
-    if version.minor < 44 {
-        println!("cargo:rustc-cfg=no_lexerror_display");
-    }
-
-    if version.minor < 45 {
-        println!("cargo:rustc-cfg=no_hygiene");
-    }
-
-    if version.minor < 47 {
-        println!("cargo:rustc-cfg=no_ident_new_raw");
-    }
-
-    if version.minor < 54 {
-        println!("cargo:rustc-cfg=no_literal_from_str");
-    }
-
-    if version.minor < 55 {
-        println!("cargo:rustc-cfg=no_group_open_close");
     }
 
     if version.minor < 57 {
@@ -111,10 +74,7 @@ fn main() {
         println!("cargo:rustc-cfg=wrap_proc_macro");
     }
 
-    if version.nightly
-        && feature_allowed("proc_macro_span")
-        && feature_allowed("proc_macro_span_shrink")
-    {
+    if version.nightly && feature_allowed("proc_macro_span") {
         println!("cargo:rustc-cfg=proc_macro_span");
     }
 
