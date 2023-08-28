@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test auxclick works when general.autoScroll is off</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+
+<body style="height: 110vh;">
+  <button id="target">button</button>
+</body>
+<script>
+  SimpleTest.waitForExplicitFinish();
+  function test() {
+    const target = document.getElementById("target");
+    target.addEventListener('auxclick', (e) => {
+      ok(true, "auxclick should work");
+      SimpleTest.finish();
+    });
+
+    synthesizeMouseAtCenter(target, { type: "mousedown", button: 1 });
+    synthesizeMouseAtCenter(target, { type: "mouseup", button: 1 });
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["general.autoScroll", false],
+  ]}, function() {
+    SimpleTest.waitForFocus(function() {
+      test();
+    });
+  });
+</script>
