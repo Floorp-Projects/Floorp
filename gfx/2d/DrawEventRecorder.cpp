@@ -71,13 +71,13 @@ void DrawEventRecorderPrivate::RecordSourceSurfaceDestruction(void* aSurface) {
 
 void DrawEventRecorderPrivate::DecrementUnscaledFontRefCount(
     const ReferencePtr aUnscaledFont) {
-  auto element = mUnscaledFontRefs.find(aUnscaledFont);
-  MOZ_DIAGNOSTIC_ASSERT(element != mUnscaledFontRefs.end(),
+  auto element = mUnscaledFontRefs.Lookup(aUnscaledFont);
+  MOZ_DIAGNOSTIC_ASSERT(element,
                         "DecrementUnscaledFontRefCount calls should balance "
                         "with IncrementUnscaledFontRefCount calls");
-  if (--(element->second) <= 0) {
+  if (--element.Data() <= 0) {
     RecordEvent(RecordedUnscaledFontDestruction(aUnscaledFont));
-    mUnscaledFontRefs.erase(aUnscaledFont);
+    element.Remove();
   }
 }
 
