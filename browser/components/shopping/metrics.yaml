@@ -70,3 +70,25 @@ shopping.settings:
     send_in_pings:
       - metrics
     telemetry_mirror: SHOPPING_HAS_ONBOARDED
+
+shopping:
+  surface_reanalyze_clicked:
+    type: event
+    description: |
+      The user clicked to REanalyze reviews in the shopping side bar. This
+      metric does not contain any information about the product the user is
+      viewing or any displayed trusted deals.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848870
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848870
+    data_sensitivity:
+      - interaction
+    expires: 122
+    send_in_pings:
+      - events
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    no_lint:
+      - COMMON_PREFIX
