@@ -115,6 +115,7 @@ add_task(async function () {
 
   findElement(dbg, "frame", 2).focus();
   clickElement(dbg, "frame", 2);
+  await waitForPaused(dbg);
   await waitForSelectedSource(dbg, "doc-event-handler.html");
 
   // Hover over the token to launch preview popup
