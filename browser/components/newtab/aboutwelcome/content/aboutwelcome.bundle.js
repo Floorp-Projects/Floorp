@@ -1720,7 +1720,7 @@ function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setSc
       console.error(error);
       setLangPackInstallPhase("installation-error");
     });
-  }, [negotiatedLanguage]);
+  }, [negotiatedLanguage, screen]);
   const [languageFilteredScreens, setLanguageFilteredScreens] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(screens);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function filterScreen() {
     // Remove the language screen if it exists (already removed for no live
@@ -1734,7 +1734,7 @@ function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setSc
     } else {
       setLanguageFilteredScreens(screens);
     }
-  }, [screens, negotiatedLanguage]);
+  }, [appAndSystemLocaleInfo === null || appAndSystemLocaleInfo === void 0 ? void 0 : appAndSystemLocaleInfo.matchType, languageMismatchScreenIndex, negotiatedLanguage, screen, screenIndex, screens, setScreenIndex]);
   return {
     negotiatedLanguage,
     langPackInstallPhase,
@@ -1770,7 +1770,7 @@ function LanguageSwitcher(props) {
         });
       });
     }
-  }, [isAwaitingLangpack, langPackInstallPhase]);
+  }, [handleAction, isAwaitingLangpack, langPackInstallPhase, negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.requestSystemLocales]);
   let showWaitingScreen = false;
   let showPreloadingScreen = false;
   let showReadyScreen = false;
