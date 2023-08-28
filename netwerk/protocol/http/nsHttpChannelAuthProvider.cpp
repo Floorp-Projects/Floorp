@@ -501,9 +501,7 @@ class MOZ_STACK_CLASS ChallengeParser final : Tokenizer {
         if (!result.IsEmpty()) {
           return Some(result);
         }
-      } else if (t.Equals(Token::Char(',')) && !inQuote &&
-                 StaticPrefs::
-                     network_auth_allow_multiple_challenges_same_line()) {
+      } else if (t.Equals(Token::Char(',')) && !inQuote) {
         // Sometimes we get multiple challenges separated by a comma.
         // This is not great, as it's slightly ambiguous. We check if something
         // is a new challenge by matching agains <param_name> =
@@ -1240,56 +1238,6 @@ void nsHttpChannelAuthProvider::GetIdentityFromURI(uint32_t authFlags,
   }
 }
 
-static void OldParseRealm(const nsACString& aChallenge, nsACString& realm) {
-  //
-  // From RFC2617 section 1.2, the realm value is defined as such:
-  //
-  //    realm       = "realm" "=" realm-value
-  //    realm-value = quoted-string
-  //
-  // but, we'll accept anything after the the "=" up to the first space, or
-  // end-of-line, if the string is not quoted.
-  //
-
-  const nsCString& flat = PromiseFlatCString(aChallenge);
-  const char* challenge = flat.get();
-
-  const char* p = nsCRT::strcasestr(challenge, "realm=");
-  if (p) {
-    bool has_quote = false;
-    p += 6;
-    if (*p == '"') {
-      has_quote = true;
-      p++;
-    }
-
-    const char* end;
-    if (has_quote) {
-      end = p;
-      while (*end) {
-        if (*end == '\\') {
-          // escaped character, store that one instead if not zero
-          if (!*++end) break;
-        } else if (*end == '\"') {
-          // end of string
-          break;
-        }
-
-        realm.Append(*end);
-        ++end;
-      }
-    } else {
-      // realm given without quotes
-      end = strchr(p, ' ');
-      if (end) {
-        realm.Assign(p, end - p);
-      } else {
-        realm.Assign(p);
-      }
-    }
-  }
-}
-
 void nsHttpChannelAuthProvider::ParseRealm(const nsACString& aChallenge,
                                            nsACString& realm) {
   //
@@ -1301,11 +1249,6 @@ void nsHttpChannelAuthProvider::ParseRealm(const nsACString& aChallenge,
   // but, we'll accept anything after the the "=" up to the first space, or
   // end-of-line, if the string is not quoted.
   //
-
-  if (!StaticPrefs::network_auth_use_new_parse_realm()) {
-    OldParseRealm(aChallenge, realm);
-    return;
-  }
 
   Tokenizer t(aChallenge);
 
