@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "authenticator"
-version = "0.4.0-alpha.19"
+version = "0.4.0-alpha.20"
 authors = [
     "J.C. Jones <jc@mozilla.com>",
     "Tim Taubert <ttaubert@mozilla.com>",
@@ -92,18 +92,6 @@ version = "1.0"
 [dependencies.sha2]
 version = "^0.10.0"
 
-[dependencies.tokio]
-version = "1.17"
-features = [
-    "macros",
-    "rt-multi-thread",
-]
-optional = true
-
-[dependencies.warp]
-version = "0.3.2"
-optional = true
-
 [dev-dependencies.assert_matches]
 version = "1.2"
 
@@ -133,11 +121,6 @@ crypto_openssl = [
 ]
 default = ["crypto_nss"]
 gecko = ["nss-gk-api/gecko"]
-webdriver = [
-    "bytes",
-    "warp",
-    "tokio",
-]
 
 [target."cfg(target_os = \"freebsd\")".dependencies.devd-rs]
 version = "0.3"

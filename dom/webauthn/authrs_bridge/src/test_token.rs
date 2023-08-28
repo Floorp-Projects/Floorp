@@ -673,7 +673,6 @@ impl TestTokenManager {
         let rp = RelyingParty {
             id: rp_id,
             name: None,
-            icon: None,
         };
         token.insert_credential(
             id,

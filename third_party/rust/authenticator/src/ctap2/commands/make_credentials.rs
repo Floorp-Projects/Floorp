@@ -563,13 +563,11 @@ pub mod test {
             RelyingPartyWrapper::Data(RelyingParty {
                 id: String::from("example.com"),
                 name: Some(String::from("Acme")),
-                icon: None,
             }),
             Some(User {
                 id: base64::engine::general_purpose::URL_SAFE
                     .decode("MIIBkzCCATigAwIBAjCCAZMwggE4oAMCAQIwggGTMII=")
                     .unwrap(),
-                icon: Some("https://pics.example.com/00/p/aBjjjpqPb.png".to_string()),
                 name: Some(String::from("johnpsmith@example.com")),
                 display_name: Some(String::from("John P. Smith")),
             }),
@@ -621,13 +619,11 @@ pub mod test {
             RelyingPartyWrapper::Data(RelyingParty {
                 id: String::from("example.com"),
                 name: Some(String::from("Acme")),
-                icon: None,
             }),
             Some(User {
                 id: base64::engine::general_purpose::URL_SAFE
                     .decode("MIIBkzCCATigAwIBAjCCAZMwggE4oAMCAQIwggGTMII=")
                     .unwrap(),
-                icon: Some("https://pics.example.com/00/p/aBjjjpqPb.png".to_string()),
                 name: Some(String::from("johnpsmith@example.com")),
                 display_name: Some(String::from("John P. Smith")),
             }),
@@ -837,7 +833,7 @@ pub mod test {
     ];
 
     #[rustfmt::skip]
-    pub const MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP2: [u8; 260] = [
+    pub const MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP2: [u8; 210] = [
         // NOTE: This has been taken from CTAP2.0 spec, but the clientDataHash has been replaced
         //       to be able to operate with known values for CollectedClientData (spec doesn't say
         //       what values led to the provided example hash (see client_data.rs))
@@ -858,20 +854,13 @@ pub mod test {
               0x64, // text(4)
                 0x41, 0x63, 0x6d, 0x65, // "Acme"
           0x03, // unsigned(3) - user
-          0xa4, // map(4)
+          0xa3, // map(3)
             0x62, // text(2)
               0x69, 0x64, // "id"
             0x58, 0x20, // bytes(32)
               0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, // userid
               0x30, 0x82, 0x01, 0x93, 0x30, 0x82, 0x01, 0x38, 0xa0, 0x03, 0x02, 0x01, 0x02, // ...
               0x30, 0x82, 0x01, 0x93, 0x30, 0x82, // ...
-            0x64, // text(4)
-              0x69, 0x63, 0x6f, 0x6e, // "icon"
-            0x78, 0x2b, // text(43)
-              0x68, 0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, // "https://pics.example.com/00/p/aBjjjpqPb.png"
-              0x2f, 0x70, 0x69, 0x63, 0x73, 0x2e, 0x65, 0x78, // ..
-              0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x30, 0x30, 0x2f, 0x70, // ..
-              0x2f, 0x61, 0x42, 0x6a, 0x6a, 0x6a, 0x70, 0x71, 0x50, 0x62, 0x2e, 0x70, 0x6e, 0x67, // ..
             0x64, // text(4)
               0x6e, 0x61, 0x6d, 0x65, // "name"
             0x76, // text(22)

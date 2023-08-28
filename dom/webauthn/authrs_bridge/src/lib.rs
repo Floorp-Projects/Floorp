@@ -542,12 +542,10 @@ impl AuthrsTransport {
             relying_party: RelyingParty {
                 id: relying_party_id.to_string(),
                 name: None,
-                icon: None,
             },
             origin: origin.to_string(),
             user: User {
                 id: user_id.to_vec(),
-                icon: None,
                 name: Some(user_name.to_string()),
                 display_name: None,
             },
