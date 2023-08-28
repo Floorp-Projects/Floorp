@@ -5893,9 +5893,7 @@ void nsHTMLScrollFrame::FireScrollEvent() {
       presContext->RefreshDriver()->MostRecentRefresh());
   if (mIsRoot) {
     if (RefPtr<Document> doc = content->GetUncomposedDoc()) {
-      // TODO: Bug 1506441
-      EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(doc)), presContext,
-                                &event, nullptr, &status);
+      EventDispatcher::Dispatch(doc, presContext, &event, nullptr, &status);
     }
   } else {
     // scroll events fired at elements don't bubble (although scroll events
@@ -7180,9 +7178,7 @@ void nsHTMLScrollFrame::FireScrolledAreaEvent() {
 
   event.mArea = mScrolledFrame->ScrollableOverflowRectRelativeToParent();
   if (RefPtr<Document> doc = content->GetUncomposedDoc()) {
-    // TODO: Bug 1506441
-    EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(doc)), presContext,
-                              &event, nullptr);
+    EventDispatcher::Dispatch(doc, presContext, &event, nullptr);
   }
 }
 

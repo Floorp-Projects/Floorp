@@ -318,7 +318,7 @@ void HTMLFormElement::RequestSubmit(nsGenericHTMLElement* aSubmitter,
 
 void HTMLFormElement::Reset() {
   InternalFormEvent event(true, eFormReset);
-  EventDispatcher::Dispatch(static_cast<nsIContent*>(this), nullptr, &event);
+  EventDispatcher::Dispatch(this, nullptr, &event);
 }
 
 bool HTMLFormElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -1040,9 +1040,7 @@ nsresult HTMLFormElement::ConstructEntryList(FormData* aFormData) {
       FormDataEvent::Constructor(this, u"formdata"_ns, init);
   event->SetTrusted(true);
 
-  // TODO: Bug 1506441
-  EventDispatcher::DispatchDOMEvent(MOZ_KnownLive(ToSupports(this)), nullptr,
-                                    event, nullptr, nullptr);
+  EventDispatcher::DispatchDOMEvent(this, nullptr, event, nullptr, nullptr);
 
   return NS_OK;
 }

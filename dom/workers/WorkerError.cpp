@@ -352,10 +352,8 @@ void WorkerErrorReport::ReportError(
             ErrorEvent::Constructor(aTarget, u"error"_ns, init);
         event->SetTrusted(true);
 
-        // TODO: Bug 1506441
         if (NS_FAILED(EventDispatcher::DispatchDOMEvent(
-                MOZ_KnownLive(ToSupports(globalScope)), nullptr, event, nullptr,
-                &status))) {
+                globalScope, nullptr, event, nullptr, &status))) {
           NS_WARNING("Failed to dispatch worker thread error event!");
           status = nsEventStatus_eIgnore;
         }
