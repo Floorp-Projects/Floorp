@@ -2820,7 +2820,7 @@ pref("browser.firefox-view.feature-tour", "{\"screen\":\"FIREFOX_VIEW_SPOTLIGHT\
 // Number of times the user visited about:firefoxview
 pref("browser.firefox-view.view-count", 0);
 // Maximum number of rows to show on the "History" page.
-pref("browser.firefox-view.max-history-rows", 500);
+pref("browser.firefox-view.max-history-rows", 300);
 
 // If the user has seen the pdf.js feature tour this value reflects the tour
 // message id, the id of the last screen they saw, and whether they completed the tour
