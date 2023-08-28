@@ -29,6 +29,7 @@ def chunk_partners(config, jobs):
             dep_job = job["primary-dependency"]
         else:
             dep_job = get_primary_dependency(config, job)
+            assert dep_job
 
         build_platform = dep_job.attributes["build_platform"]
         repack_id = dep_job.task.get("extra", {}).get("repack_id")
