@@ -62,7 +62,7 @@ use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, SurfaceInfo
 use crate::picture_graph::PictureGraph;
 use crate::prim_store::{PrimitiveInstance};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
-use crate::prim_store::{InternablePrimitive, PictureIndex, SegmentInstanceIndex};
+use crate::prim_store::{InternablePrimitive, PictureIndex};
 use crate::prim_store::{PolygonKey};
 use crate::prim_store::backdrop::{BackdropCapture, BackdropRender};
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
@@ -2973,7 +2973,6 @@ impl<'a> SceneBuilder<'a> {
                             PrimitiveInstanceKind::Picture {
                                 data_handle: shadow_prim_data_handle,
                                 pic_index: shadow_pic_index,
-                                segment_instance_index: SegmentInstanceIndex::INVALID,
                             },
                             self.clip_tree_builder.build_for_picture(clip_node_id),
                         );
@@ -4114,7 +4113,6 @@ fn create_prim_instance(
         PrimitiveInstanceKind::Picture {
             data_handle,
             pic_index,
-            segment_instance_index: SegmentInstanceIndex::INVALID,
         },
         clip_tree_builder.build_for_picture(
             clip_node_id,

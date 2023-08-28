@@ -27,6 +27,12 @@ void main(void) {
         v_flags.x = 1;
     }
 #endif
+
+    if ((info.quad_flags & QF_SAMPLE_AS_MASK) != 0) {
+        v_flags.z = 1;
+    } else {
+        v_flags.z = 0;
+    }
 }
 #endif
 
@@ -44,6 +50,9 @@ void main(void) {
     if (v_flags.y != 0) {
         vec2 uv = clamp(v_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
         vec4 texel = TEX_SAMPLE(sColor0, uv);
+        if (v_flags.z != 0) {
+            texel = texel.rrrr;
+        }
         color *= texel;
     }
 
@@ -53,7 +62,12 @@ void main(void) {
 #if defined(SWGL_DRAW_SPAN)
 void swgl_drawSpanRGBA8() {
     if (v_flags.y != 0) {
-        swgl_commitTextureLinearColorRGBA8(sColor0, v_uv, v_uv_sample_bounds, v_color);
+        if (v_flags.z != 0) {
+            // Fall back to fragment shader as we don't specialize for mask yet. Perhaps
+            // we can use an existing swgl commit or add a new one though?
+        } else {
+            swgl_commitTextureLinearColorRGBA8(sColor0, v_uv, v_uv_sample_bounds, v_color);
+        }
     } else {
         swgl_commitSolidRGBA8(v_color);
     }

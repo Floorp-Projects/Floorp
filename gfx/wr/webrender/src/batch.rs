@@ -24,7 +24,7 @@ use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
 use crate::prim_store::{VECS_PER_SEGMENT, PrimitiveInstanceIndex};
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
-use crate::render_task::{RenderTaskAddress, RenderTaskKind};
+use crate::render_task::{RenderTaskAddress, RenderTaskKind, SubPass};
 use crate::renderer::{BlendMode, ShaderColorMode};
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferBuilder, GpuBufferAddress};
 use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest};
@@ -1440,7 +1440,7 @@ impl BatchBuilder {
                     specific_resource_address,
                 );
             }
-            PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
+            PrimitiveInstanceKind::Picture { pic_index, .. } => {
                 let picture = &ctx.prim_store.pictures[pic_index.0];
                 let blend_mode = BlendMode::PremultipliedAlpha;
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
@@ -1501,6 +1501,14 @@ impl BatchBuilder {
                             && !is_anti_aliased;
 
                         let pic_task_id = picture.primary_render_task_id.unwrap();
+
+                        let pic_task = &render_tasks[pic_task_id];
+                        match pic_task.sub_pass {
+                            Some(SubPass::Masks { .. }) => {
+                                is_opaque = false;
+                            }
+                            None => {}
+                        }
 
                         match raster_config.composite_mode {
                             PictureCompositeMode::TileCache { .. } => {
@@ -2093,18 +2101,6 @@ impl BatchBuilder {
                                             uv_rect_address,
                                         );
 
-                                        let is_segmented =
-                                            segment_instance_index != SegmentInstanceIndex::INVALID &&
-                                            segment_instance_index != SegmentInstanceIndex::UNUSED;
-
-                                        let (prim_cache_address, segments) = if is_segmented {
-                                            let segment_instance = &ctx.scratch.segment_instances[segment_instance_index];
-                                            let segments = Some(&ctx.scratch.segments[segment_instance.segments_range]);
-                                            (gpu_cache.get_address(&segment_instance.gpu_cache_handle), segments)
-                                        } else {
-                                            (prim_cache_address, None)
-                                        };
-
                                         let prim_header = PrimitiveHeader {
                                             specific_prim_address: prim_cache_address,
                                             ..prim_header
@@ -2123,7 +2119,7 @@ impl BatchBuilder {
                                         };
 
                                         self.add_segmented_prim_to_batch(
-                                            segments,
+                                            None,
                                             opacity,
                                             &batch_params,
                                             blend_mode,
