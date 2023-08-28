@@ -11660,6 +11660,13 @@
   value: false
   mirror: always
 
+# Indicates whether the `fetchpriority` attribute for elements which support it
+# (e.g. `<script>`) is enabled.
+- name: network.fetchpriority.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Enables `<link rel="preconnect">` tag and `Link: rel=preconnect` response header
 # handling.
 - name: network.preconnect
