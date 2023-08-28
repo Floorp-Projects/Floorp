@@ -15,7 +15,6 @@ use crate::scoped_tls::ScopedTLS;
 use crate::traversal::{DomTraversal, PerLevelTraversalData, PreTraverseToken};
 use rayon;
 use std::collections::VecDeque;
-use std::mem;
 use time;
 
 #[cfg(feature = "servo")]
@@ -106,17 +105,19 @@ where
     //     ThreadLocalStyleContext on the main thread. If the main thread
     //     ThreadLocalStyleContext has not released its TLS borrow by that point,
     //     we'll panic on double-borrow.
-    let mut scoped_tls = pool.map(ScopedTLS::<ThreadLocalStyleContext<E>>::new);
-    let mut tlc = ThreadLocalStyleContext::new();
-    let mut context = StyleContext {
-        shared: traversal.shared_context(),
-        thread_local: &mut tlc,
-    };
-
+    let mut scoped_tls = ScopedTLS::<ThreadLocalStyleContext<E>>::new(pool);
     // Process the nodes breadth-first. This helps keep similar traversal characteristics for the
     // style sharing cache.
     let work_unit_max = work_unit_max();
     with_pool_in_place_scope(work_unit_max, pool, |maybe_scope| {
+        let mut tlc = scoped_tls.ensure(parallel::create_thread_local_context);
+        let mut context = StyleContext {
+            shared: traversal.shared_context(),
+            thread_local: &mut tlc,
+        };
+
+        debug_assert_eq!(scoped_tls.current_thread_index(), 0, "Main thread should be the first thread");
+
         let mut discovered = VecDeque::with_capacity(work_unit_max * 2);
         discovered.push_back(unsafe { SendNode::new(root.as_node()) });
         parallel::style_trees(
@@ -124,23 +125,19 @@ where
             discovered,
             root.as_node().opaque(),
             work_unit_max,
-            static_prefs::pref!("layout.css.stylo-local-work-queue.in-main-thread") as usize,
             PerLevelTraversalData { current_dom_depth: root.depth() },
             maybe_scope,
             traversal,
-            scoped_tls.as_ref(),
+            &scoped_tls,
         );
     });
 
     // Collect statistics from thread-locals if requested.
     if dump_stats || report_stats {
-        let mut aggregate = mem::replace(&mut context.thread_local.statistics, Default::default());
-        let parallel = pool.is_some();
-        if let Some(ref mut tls) = scoped_tls {
-            for slot in tls.slots() {
-                if let Some(cx) = slot.get_mut() {
-                    aggregate += cx.statistics.clone();
-                }
+        let mut aggregate = PerThreadTraversalStatistics::default();
+        for slot in scoped_tls.slots() {
+            if let Some(cx) = slot.get_mut() {
+                aggregate += cx.statistics.clone();
             }
         }
 
@@ -149,6 +146,7 @@ where
         }
         // dump statistics to stdout if requested
         if dump_stats {
+            let parallel = pool.is_some();
             let stats =
                 TraversalStatistics::new(aggregate, traversal, parallel, start_time.unwrap());
             if stats.is_large {

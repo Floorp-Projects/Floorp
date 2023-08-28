@@ -112,6 +112,9 @@ impl StyleThreadPool {
         while let Some(join_handle) = STYLE_THREAD_JOIN_HANDLES.lock().pop() {
             let _ = join_handle.join();
         }
+
+        // Clean up the current thread too.
+        rayon_core::clean_up_use_current_thread();
     }
 
     /// Returns a reference to the thread pool.
@@ -172,11 +175,14 @@ lazy_static! {
         };
 
         let num_threads = cmp::min(num_threads, STYLO_MAX_THREADS);
-        let (pool, num_threads) = if num_threads < 1 {
+        // Since the main-thread is also part of the pool, having one thread or less doesn't make
+        // sense.
+        let (pool, num_threads) = if num_threads <= 1 {
             (None, None)
         } else {
             let workers = rayon::ThreadPoolBuilder::new()
                 .spawn_handler(thread_spawn)
+                .use_current_thread()
                 .num_threads(num_threads)
                 .thread_name(thread_name)
                 .start_handler(thread_startup)

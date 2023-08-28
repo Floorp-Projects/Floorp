@@ -20,7 +20,7 @@ use std::ops::DerefMut;
 /// Note that the cleanup is done on the thread that owns the scoped TLS, thus
 /// the Send bound.
 pub struct ScopedTLS<'scope, T: Send> {
-    pool: &'scope rayon::ThreadPool,
+    pool: Option<&'scope rayon::ThreadPool>,
     slots: [RefCell<Option<T>>; STYLO_MAX_THREADS],
 }
 
@@ -31,23 +31,29 @@ unsafe impl<'scope, T: Send> Sync for ScopedTLS<'scope, T> {}
 impl<'scope, T: Send> ScopedTLS<'scope, T> {
     /// Create a new scoped TLS that will last as long as this rayon threadpool
     /// reference.
-    pub fn new(pool: &'scope rayon::ThreadPool) -> Self {
-        debug_assert!(pool.current_num_threads() <= STYLO_MAX_THREADS);
+    pub fn new(pool: Option<&'scope rayon::ThreadPool>) -> Self {
+        debug_assert!(pool.map_or(true, |p| p.current_num_threads() <= STYLO_MAX_THREADS));
         ScopedTLS {
             pool,
             slots: Default::default(),
         }
     }
 
+    /// Returns the index corresponding to the calling thread in the thread pool.
+    #[inline]
+    pub fn current_thread_index(&self) -> usize {
+        self.pool.map_or(0, |p| p.current_thread_index().unwrap())
+    }
+
     /// Return an immutable reference to the `Option<T>` that this thread owns.
     pub fn borrow(&self) -> Ref<Option<T>> {
-        let idx = self.pool.current_thread_index().unwrap();
+        let idx = self.current_thread_index();
         self.slots[idx].borrow()
     }
 
     /// Return a mutable reference to the `Option<T>` that this thread owns.
     pub fn borrow_mut(&self) -> RefMut<Option<T>> {
-        let idx = self.pool.current_thread_index().unwrap();
+        let idx = self.current_thread_index();
         self.slots[idx].borrow_mut()
     }
 

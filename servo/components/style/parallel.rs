@@ -54,7 +54,7 @@ pub const STACK_SAFETY_MARGIN_KB: usize = 168;
 /// out of line so we don't allocate stack space for the entire struct
 /// in the caller.
 #[inline(never)]
-fn create_thread_local_context<'scope, E>(slot: &mut Option<ThreadLocalStyleContext<E>>)
+pub (crate) fn create_thread_local_context<'scope, E>(slot: &mut Option<ThreadLocalStyleContext<E>>)
 where
     E: TElement + 'scope,
 {
@@ -86,11 +86,10 @@ fn distribute_one_chunk<'a, 'scope, E, D>(
             items,
             traversal_root,
             work_unit_max,
-            static_prefs::pref!("layout.css.stylo-local-work-queue.in-worker") as usize,
             traversal_data,
             Some(scope),
             traversal,
-            Some(tls),
+            tls,
         );
     })
 }
@@ -139,15 +138,20 @@ pub fn style_trees<'a, 'scope, E, D>(
     mut discovered: VecDeque<SendNode<E::ConcreteNode>>,
     traversal_root: OpaqueNode,
     work_unit_max: usize,
-    local_queue_size: usize,
     mut traversal_data: PerLevelTraversalData,
     scope: Option<&'a rayon::ScopeFifo<'scope>>,
     traversal: &'scope D,
-    tls: Option<&'scope ScopedTLS<'scope, ThreadLocalStyleContext<E>>>,
+    tls: &'scope ScopedTLS<'scope, ThreadLocalStyleContext<E>>,
 ) where
     E: TElement + 'scope,
     D: DomTraversal<E>,
 {
+    let local_queue_size = if tls.current_thread_index() == 0 {
+        static_prefs::pref!("layout.css.stylo-local-work-queue.in-main-thread")
+    } else {
+        static_prefs::pref!("layout.css.stylo-local-work-queue.in-worker")
+    } as usize;
+
     let mut nodes_remaining_at_current_depth = discovered.len();
     while let Some(node) = discovered.pop_front() {
         let mut children_to_process = 0isize;
@@ -178,7 +182,7 @@ pub fn style_trees<'a, 'scope, E, D>(
                 traversal_data_copy,
                 scope.unwrap(),
                 traversal,
-                tls.unwrap(),
+                tls,
             );
         }
 
