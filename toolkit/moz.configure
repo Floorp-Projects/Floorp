@@ -2475,7 +2475,6 @@ def wasm_sandboxing_libraries():
         "hunspell",
         "expat",
         "woff2",
-        "soundtouch",
     )
 
 

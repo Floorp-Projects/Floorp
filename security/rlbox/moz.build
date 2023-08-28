@@ -100,27 +100,6 @@ if CONFIG["MOZ_WASM_SANDBOXING_WOFF2"]:
     WASM_SOURCES += ["/modules/woff2/" + s for s in woff2_sources]
     LOCAL_INCLUDES += ["/modules/woff2/include"]
 
-if CONFIG["MOZ_WASM_SANDBOXING_SOUNDTOUCH"]:
-    include("/media/libsoundtouch/src/sources.mozbuild")
-    WASM_SOURCES += ["/media/libsoundtouch/src/" + s for s in soundtouch_sources]
-
-    # Only enable SIMD if Float32 is supported
-    if CONFIG["MOZ_SAMPLE_TYPE_FLOAT32"]:
-        WASM_DEFINES["MOZ_SAMPLE_TYPE_FLOAT32"] = 1
-
-        # Enable SoundTouch SSE optimized intrinsics
-        WASM_SOURCES += ["/media/libsoundtouch/src/sse_optimized.cpp"]
-        WASM_DEFINES["SOUNDTOUCH_ALLOW_SSE"] = 1
-
-        # Enables SIMD-everywhere to map SSE intrinsics to WASMSIMD intrinsics
-        WASM_DEFINES["SOUNDTOUCH_WASM_SIMD"] = 1
-        WASM_DEFINES["SIMDE_ENABLE_NATIVE_ALIASES"] = 1
-
-    for k, v in soundtouch_defines:
-        WASM_DEFINES[k] = v
-
-    LOCAL_INCLUDES += ["/media/libsoundtouch"]
-
 # Ideally we'd also list rlbox.wasm.h as an output, but that would put the
 # generation in export rather than pre-compile, and we prefer the latter.
 GeneratedFile(
