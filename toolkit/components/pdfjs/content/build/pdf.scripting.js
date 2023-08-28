@@ -3417,7 +3417,7 @@ class Doc extends _pdf_object.PDFObject {
   removeWeblinks() {}
   replacePages() {}
   resetForm(aFields = null) {
-    if (aFields && typeof aFields === "object") {
+    if (aFields && typeof aFields === "object" && !Array.isArray(aFields)) {
       aFields = aFields.aFields;
     }
     if (aFields && !Array.isArray(aFields)) {
@@ -4250,8 +4250,8 @@ Object.defineProperty(exports, "initSandbox", ({
   }
 }));
 var _initialization = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.10.86';
-const pdfjsBuild = 'c72cb5436';
+const pdfjsVersion = '3.10.109';
+const pdfjsBuild = '598421b11';
 })();
 
 /******/ 	return __webpack_exports__;
