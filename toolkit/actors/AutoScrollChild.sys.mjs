@@ -376,7 +376,10 @@ export class AutoScrollChild extends JSWindowActorChild {
         }
       // fallthrough
       case "mouseup":
-        if (this._scrollable) {
+        if (
+          this._scrollable &&
+          Services.prefs.getBoolPref("general.autoscroll", false)
+        ) {
           // Middle mouse click event shouldn't be fired in web content for
           // compatibility with Chrome.
           event.preventClickEvent();
