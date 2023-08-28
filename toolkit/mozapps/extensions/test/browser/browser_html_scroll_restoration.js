@@ -136,10 +136,10 @@ add_task(async function test_scroll_restoration() {
   // the first load, so we only need to wait once, at the start of the test.
   await win.document.querySelector("recommended-addon-list").cardsReady;
 
-  // Force scrollbar to appear, by adding enough space at the top and left.
-  win.document.body.style.paddingTop = "200vh";
-  win.document.body.style.paddingLeft = "100vw";
-  win.document.body.style.width = "200vw";
+  // Force scrollbar to appear, by adding enough space around the content.
+  win.document.body.style.paddingBlock = "100vh";
+  win.document.body.style.paddingInline = "100vw";
+  win.document.body.style.width = "300vw";
 
   checkScrollOffset(win, { top: 0, left: 0 }, "initial page load");
 
@@ -219,5 +219,7 @@ add_task(async function test_scroll_restoration() {
   await switchToView(win, "list", "theme");
   checkScrollOffset(win, { top: 0, left: 0 }, "initial theme list");
 
+  let tabClosed = BrowserTestUtils.waitForTabClosing(gBrowser.selectedTab);
   await closeView(win);
+  await tabClosed;
 });
