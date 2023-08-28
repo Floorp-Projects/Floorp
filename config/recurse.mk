@@ -211,7 +211,7 @@ endif
 
 ifdef MOZ_USING_WASM_SANDBOXING
 security/rlbox/pre-compile: config/external/wasm2c_sandbox_compiler/host
-dom/media/ogg/target-objects extensions/spellcheck/hunspell/glue/target-objects gfx/thebes/target-objects parser/expat/target-objects parser/htmlparser/target-objects gfx/ots/src/target-objects: security/rlbox/pre-compile
+dom/media/ogg/target-objects extensions/spellcheck/hunspell/glue/target-objects gfx/thebes/target-objects parser/expat/target-objects parser/htmlparser/target-objects gfx/ots/src/target-objects dom/media/target-objects dom/media/mediasink/target-objects: security/rlbox/pre-compile
 endif
 
 # Most things are built during compile (target/host), but some things happen during export
