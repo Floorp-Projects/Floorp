@@ -14,18 +14,18 @@ import org.mozilla.fenix.settings.SupportUtils
  */
 internal fun Collection<OnboardingCardData>.toPageUiData(
     showNotificationPage: Boolean,
-    canShowAddWidgetPage: Boolean,
+    showAddWidgetPage: Boolean,
 ): List<OnboardingPageUiData> =
     filter {
         when (it.cardType) {
             OnboardingCardType.NOTIFICATION_PERMISSION -> {
-                showNotificationPage
+                it.enabled && showNotificationPage
             }
             OnboardingCardType.ADD_SEARCH_WIDGET -> {
-                canShowAddWidgetPage
+                it.enabled && showAddWidgetPage
             }
             else -> {
-                true
+                it.enabled
             }
         }
     }.sortedBy { it.ordering }

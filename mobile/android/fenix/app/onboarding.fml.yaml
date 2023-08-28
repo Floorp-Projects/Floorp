@@ -25,6 +25,7 @@ features:
 
             add-search-widget:
               card-type: add-search-widget
+              enabled: false
               title: juno_onboarding_add_search_widget_title
               body: juno_onboarding_add_search_widget_description
               image-res: ic_onboarding_search_widget
@@ -68,6 +69,10 @@ objects:
         description: The type of the card.
         # This should never be defaulted.
         default: default-browser
+      enabled:
+        type: Boolean
+        description: If true, this card is shown to the user.
+        default: true
       title:
         type: Text
         description: The title text displayed to the user.
