@@ -441,6 +441,7 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::RadialGradient(..) |
             RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::TileComposite(..) |
+            RenderTaskKind::Empty(..) |
             RenderTaskKind::LineDecoration(..) => {
                 panic!("Should not be added to color target!");
             }
@@ -550,10 +551,11 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::RadialGradient(..) |
             RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::TileComposite(..) |
+            RenderTaskKind::Prim(..) |
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: should not be added to alpha target!");
             }
-            RenderTaskKind::Prim(..) => {
+            RenderTaskKind::Empty(..) => {
                 // TODO(gw): Could likely be more efficient by choosing to clear to 0 or 1
                 //           based on the clip chain, or even skipping clear and masking the
                 //           prim region with blend disabled.
@@ -789,6 +791,7 @@ impl TextureCacheRenderTarget {
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::TileComposite(..) |
+            RenderTaskKind::Empty(..) |
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: unexpected task kind for texture cache target");
             }
@@ -1070,7 +1073,7 @@ fn build_mask_tasks(
                         render_task_address,
                         clip_transform_id,
                         clip_prim_address,
-                        quad_flags,
+                        quad_flags | QuadFlags::SAMPLE_AS_MASK,
                         EdgeAaSegmentMask::empty(),
                         0,
                         tile.task_id,
@@ -1180,6 +1183,9 @@ fn build_sub_pass(
 
                 let (device_pixel_scale, content_origin, raster_spatial_node_index) = match task.kind {
                     RenderTaskKind::Picture(ref info) => {
+                        (info.device_pixel_scale, info.content_origin, info.raster_spatial_node_index)
+                    }
+                    RenderTaskKind::Empty(ref info) => {
                         (info.device_pixel_scale, info.content_origin, info.raster_spatial_node_index)
                     }
                     RenderTaskKind::Prim(ref info) => {

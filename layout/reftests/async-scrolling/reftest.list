@@ -5,7 +5,7 @@ skip-if(!asyncPan) == bg-fixed-cover-3.html bg-fixed-cover-3-ref.html
 skip-if(!asyncPan) == bg-fixed-child.html bg-fixed-child-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-1.html bg-fixed-child-clip-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-2.html bg-fixed-child-clip-ref.html
-skip-if(!asyncPan) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
+skip-if(!asyncPan) fuzzy(0-1,0-87) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
 skip-if(!asyncPan) == bg-fixed-in-opacity.html bg-fixed-in-opacity-ref.html
 # Passing the test below without WebRender would require implementing CSS filters in the Gecko compositor.
 skip-if(!asyncPan) fuzzy-if(gtkWidget,0-1,0-87) fuzzy-if(!gtkWidget,0-1,0-3951) == bg-fixed-in-css-filter.html bg-fixed-in-css-filter-ref.html # bug 1454794 for webrender fuzziness

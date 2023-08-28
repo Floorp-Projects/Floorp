@@ -1,0 +1,18 @@
+# Verify that a complex clip mask on a stacking content with a blur filter is correctly
+# handled, since the downscaled target size may differ from the picture content
+---
+root:
+  items:
+  - type: clip
+    id: 2
+    complex:
+      - rect: [100, 100, 100, 100]
+        radius: 32
+  - type: stacking-context
+    bounds: [100, 100, 100, 100]
+    filters: blur(8, 8)
+    clip-chain: [2]
+    items:
+      - type: rect
+        bounds: [ 0, 0, 100, 100 ]
+        color: [0, 255, 0]

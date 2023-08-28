@@ -16,7 +16,7 @@ fuzzy(1,1) == shadow-huge.yaml shadow-huge-ref.yaml
 == decorations.yaml decorations-ref.yaml
 skip_on(android,device) fuzzy(1,3692) fuzzy-if(platform(swgl),3,13540) == decorations-suite.yaml decorations-suite.png  # Fails on Pixel2
 == 1658.yaml 1658-ref.yaml
-fuzzy(2,405) fuzzy-if(platform(swgl),2,1508) == split-batch.yaml split-batch-ref.yaml
+fuzzy(2,405) fuzzy-if(platform(swgl),2,1510) == split-batch.yaml split-batch-ref.yaml
 # Next 3 tests affected by bug 1548099 on Android
 skip_on(android) == shadow-red.yaml shadow-red-ref.yaml
 skip_on(android) fuzzy(1,999) fuzzy-if(platform(swgl),2,1324) == shadow-grey.yaml shadow-grey-ref.yaml

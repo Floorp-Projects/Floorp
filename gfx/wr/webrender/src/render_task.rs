@@ -175,6 +175,14 @@ pub struct ClipRegionTask {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct EmptyTask {
+    pub content_origin: DevicePoint,
+    pub device_pixel_scale: DevicePixelScale,
+    pub raster_spatial_node_index: SpatialNodeIndex,
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimTask {
     pub device_pixel_scale: DevicePixelScale,
     pub content_origin: DevicePoint,
@@ -186,7 +194,6 @@ pub struct PrimTask {
     pub quad_flags: QuadFlags,
     pub clip_node_range: ClipNodeRange,
     pub prim_needs_scissor_rect: bool,
-    pub render_target_kind: RenderTargetKind,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -364,6 +371,7 @@ pub enum RenderTaskKind {
     SvgFilter(SvgFilterTask),
     TileComposite(TileCompositeTask),
     Prim(PrimTask),
+    Empty(EmptyTask),
     #[cfg(test)]
     Test(RenderTargetKind),
 }
@@ -414,6 +422,7 @@ impl RenderTaskKind {
             RenderTaskKind::SvgFilter(..) => "SvgFilter",
             RenderTaskKind::TileComposite(..) => "TileComposite",
             RenderTaskKind::Prim(..) => "Prim",
+            RenderTaskKind::Empty(..) => "Empty",
             #[cfg(test)]
             RenderTaskKind::Test(..) => "Test",
         }
@@ -432,16 +441,14 @@ impl RenderTaskKind {
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::TileComposite(..) |
+            RenderTaskKind::Prim(..) |
             RenderTaskKind::SvgFilter(..) => {
                 RenderTargetKind::Color
             }
 
-            RenderTaskKind::Prim(ref task_info) => {
-                task_info.render_target_kind
-            }
-
             RenderTaskKind::ClipRegion(..) |
-            RenderTaskKind::CacheMask(..) => {
+            RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::Empty(..) => {
                 RenderTargetKind::Alpha
             }
 
@@ -519,7 +526,6 @@ impl RenderTaskKind {
         quad_flags: QuadFlags,
         clip_node_range: ClipNodeRange,
         prim_needs_scissor_rect: bool,
-        render_target_kind: RenderTargetKind,
     ) -> Self {
         RenderTaskKind::Prim(PrimTask {
             prim_spatial_node_index,
@@ -532,7 +538,6 @@ impl RenderTaskKind {
             quad_flags,
             clip_node_range,
             prim_needs_scissor_rect,
-            render_target_kind,
         })
     }
 
@@ -715,6 +720,15 @@ impl RenderTaskKind {
                 ]
             }
             RenderTaskKind::Prim(ref task) => {
+                [
+                    // NOTE: This must match the render task data format for Picture tasks currently
+                    task.device_pixel_scale.0,
+                    task.content_origin.x,
+                    task.content_origin.y,
+                    0.0,
+                ]
+            }
+            RenderTaskKind::Empty(ref task) => {
                 [
                     // NOTE: This must match the render task data format for Picture tasks currently
                     task.device_pixel_scale.0,

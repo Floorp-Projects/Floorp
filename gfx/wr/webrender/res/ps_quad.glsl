@@ -28,6 +28,8 @@ varying highp vec2 v_uv;
 #define QF_IS_OPAQUE            1
 #define QF_APPLY_DEVICE_CLIP    2
 #define QF_IGNORE_DEVICE_SCALE  4
+#define QF_USE_AA_SEGMENTS      8
+#define QF_SAMPLE_AS_MASK       16
 
 #define INVALID_SEGMENT_INDEX   0xff
 
@@ -42,6 +44,7 @@ struct PrimitiveInfo {
     RectWithEndpoint local_clip_rect;
 
     int edge_flags;
+    int quad_flags;
 };
 
 struct QuadSegment {
@@ -292,7 +295,8 @@ PrimitiveInfo ps_quad_main(void) {
         vi.local_pos,
         prim.bounds,
         prim.clip,
-        qi.edge_flags
+        qi.edge_flags,
+        qi.quad_flags
     );
 }
 #endif

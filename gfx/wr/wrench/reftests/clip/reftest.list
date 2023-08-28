@@ -8,7 +8,7 @@ fuzzy(1,4) == clip-corner-overlap.yaml clip-corner-overlap-ref.yaml
 == fixed-position-clipping.yaml fixed-position-clipping-ref.yaml
 platform(linux,mac) == segmentation-with-other-coordinate-system-clip.yaml segmentation-with-other-coordinate-system-clip.png
 == segmentation-across-rotation.yaml segmentation-across-rotation-ref.yaml
-skip_on(android,device) fuzzy(1,2) == color_targets(3) alpha_targets(1) stacking-context-clip.yaml stacking-context-clip-ref.yaml
+skip_on(android,device) fuzzy(1,2) == color_targets(3) alpha_targets(0) stacking-context-clip.yaml stacking-context-clip-ref.yaml
 == snapping.yaml snapping-ref.yaml
 fuzzy(198,1055) == clip-and-filter-with-rotation.yaml clip-and-filter-with-rotation-ref.yaml
 == clipped-occlusion.yaml clipped-occlusion-ref.yaml
@@ -20,3 +20,4 @@ fuzzy(128,707) == clip-filter-raster-root.yaml clip-filter-raster-root-ref.yaml
 == raster-roots-tiled-mask.yaml raster-roots-tiled-mask-ref.yaml
 platform(linux,mac) == inverted-ellipse.yaml inverted-ellipse.png
 platform(linux,mac) == clip-2d-z-rotations.yaml clip-2d-z-rotations.png
+platform(linux,mac) == sc-mask-with-blur.yaml sc-mask-with-blur.png

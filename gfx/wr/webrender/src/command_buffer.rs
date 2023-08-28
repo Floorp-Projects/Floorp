@@ -82,6 +82,9 @@ bitflags! {
 
         /// If true, use segments for drawing the AA edges, to allow inner section to be opaque
         const USE_AA_SEGMENTS = 1 << 3;
+
+        /// If true, apply texture sample as mask
+        const SAMPLE_AS_MASK = 1 << 4;
     }
 }
 
