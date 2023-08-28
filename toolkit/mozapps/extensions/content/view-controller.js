@@ -152,6 +152,9 @@ var gViewController = {
       return;
     }
 
+    ScrollOffsets.save();
+    ScrollOffsets.setView(state.historyEntryId);
+
     this.currentViewId = state.view;
     this.isLoading = true;
 
@@ -168,9 +171,6 @@ var gViewController = {
 
     // Clear and append the fragment
     if (fragment) {
-      ScrollOffsets.save();
-      ScrollOffsets.setView(state.historyEntryId);
-
       this.container.textContent = "";
       this.container.append(fragment);
 
@@ -180,8 +180,11 @@ var gViewController = {
       // within one tick, so wait a frame before restoring scroll offsets.
       await new Promise(resolve => {
         window.requestAnimationFrame(() => {
-          ScrollOffsets.restore();
-          resolve();
+          // Double requestAnimationFrame in case we reflow.
+          window.requestAnimationFrame(() => {
+            ScrollOffsets.restore();
+            resolve();
+          });
         });
       });
     } else {
