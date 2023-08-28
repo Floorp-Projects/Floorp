@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 kind-dependencies:
     - build
@@ -11,32 +11,35 @@ only-for-build-platforms:
     - win64-shippable/opt
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.fxrecord:transforms
-    - gecko_taskgraph.transforms.release_notifications:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.fxrecord
+    - gecko_taskgraph.transforms.release_notifications
+    - gecko_taskgraph.transforms.task
 
-job-template:
-    name: notify-fxrecord-failure
-    description: "Desktop Startup Visual Metrics"
-    run-on-projects:
-        - "mozilla-central"
-    worker-type: performance-hardware/gecko-t-fxrecorder
-    worker:
-        implementation: generic-worker
-        max-run-time: 1800
-        os: windows
-        command: ["C:\\fxrecorder\\fxrecorder.exe --config C:\\fxrecorder\\fxrecord.toml record"]
-    treeherder:
-        symbol: fxrec(1st)
-        tier: 2
-        kind: other
-    notifications:
-        status-types:
-            - "on-failed"
-            - "on-exception"
-        subject: fxrecord run failed
-        message: fxrecord run failed
-        emails:
-            - "barret@mozilla.com"
-            - "perftest-alerts@mozilla.com"
+jobs:
+    fxrecord:
+        name: notify-fxrecord-failure
+        description: "Desktop Startup Visual Metrics"
+        from-deps: {}
+        run-on-projects:
+            - "mozilla-central"
+        worker-type: performance-hardware/gecko-t-fxrecorder
+        worker:
+            implementation: generic-worker
+            max-run-time: 1800
+            os: windows
+            command: ["C:\\fxrecorder\\fxrecorder.exe --config C:\\fxrecorder\\fxrecord.toml record"]
+        treeherder:
+            symbol: fxrec(1st)
+            tier: 2
+            kind: other
+        notifications:
+            status-types:
+                - "on-failed"
+                - "on-exception"
+            subject: fxrecord run failed
+            message: fxrecord run failed
+            emails:
+                - "barret@mozilla.com"
+                - "perftest-alerts@mozilla.com"
