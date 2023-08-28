@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "encoding_rs"
-version = "0.8.32"
+version = "0.8.33"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "A Gecko-oriented implementation of the Encoding Standard"
 homepage = "https://docs.rs/encoding_rs/"
@@ -40,9 +40,8 @@ lto = true
 version = "1.0"
 
 [dependencies.packed_simd]
-version = "0.3.4"
+version = "0.3.9"
 optional = true
-package = "packed_simd_2"
 
 [dependencies.serde]
 version = "1.0"
