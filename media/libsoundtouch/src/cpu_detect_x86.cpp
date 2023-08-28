@@ -70,10 +70,18 @@ void disableExtensions(uint dwDisableMask)
 /// Checks which instruction set extensions are supported by the CPU.
 uint detectCPUextensions(void)
 {
+/// If building for RLBox, we enable the SSE code that will be
+/// translated to WASMSIMD with SIMD-everywhere.
+#if defined(SOUNDTOUCH_WASM_SIMD)
+    uint res = 0;
+    res = res | SUPPORT_SSE;
+    res = res | SUPPORT_SSE2;
+    return res & ~_dwDisabledISA;
+
 /// If building for a 64bit system (no Itanium) and the user wants optimizations.
 /// Return the OR of SUPPORT_{MMX,SSE,SSE2}. 11001 or 0x19.
 /// Keep the _dwDisabledISA test (2 more operations, could be eliminated).
-#if ((defined(__GNUC__) && defined(__x86_64__)) \
+#elif ((defined(__GNUC__) && defined(__x86_64__)) \
     || defined(_M_X64))  \
     && defined(SOUNDTOUCH_ALLOW_X86_OPTIMIZATIONS)
     return 0x19 & ~_dwDisabledISA;

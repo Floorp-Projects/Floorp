@@ -1,7 +1,7 @@
 diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
 --- /src/cpu_detect_x86.cpp
 +++ /src/cpu_detect_x86.cpp
-@@ -44,9 +44,8 @@
+@@ -37,9 +37,8 @@
  
  
  #if defined(SOUNDTOUCH_ALLOW_X86_OPTIMIZATIONS)
@@ -13,7 +13,27 @@ diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
         #include "cpuid.h"
     #elif defined(_M_IX86)
         // windows non-gcc
-@@ -97,18 +96,7 @@
+@@ -71,10 +70,18 @@
+ /// Checks which instruction set extensions are supported by the CPU.
+ uint detectCPUextensions(void)
+ {
++/// If building for RLBox, we enable the SSE code that will be
++/// translated to WASMSIMD with SIMD-everywhere.
++#if defined(SOUNDTOUCH_WASM_SIMD)
++    uint res = 0;
++    res = res | SUPPORT_SSE;
++    res = res | SUPPORT_SSE2;
++    return res & ~_dwDisabledISA;
++
+ /// If building for a 64bit system (no Itanium) and the user wants optimizations.
+ /// Return the OR of SUPPORT_{MMX,SSE,SSE2}. 11001 or 0x19.
+ /// Keep the _dwDisabledISA test (2 more operations, could be eliminated).
+-#if ((defined(__GNUC__) && defined(__x86_64__)) \
++#elif ((defined(__GNUC__) && defined(__x86_64__)) \
+     || defined(_M_X64))  \
+     && defined(SOUNDTOUCH_ALLOW_X86_OPTIMIZATIONS)
+     return 0x19 & ~_dwDisabledISA;
+@@ -89,18 +96,7 @@
   
      uint res = 0;
   
@@ -33,7 +53,7 @@ diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
      // Window / VS version of cpuid. Notice that Visual Studio 2005 or later required 
      // for __cpuid intrinsic support.
      int reg[4] = {-1};
-@@ -121,7 +109,19 @@
+@@ -113,7 +109,19 @@
      if ((unsigned int)reg[3] & bit_MMX)  res = res | SUPPORT_MMX;
      if ((unsigned int)reg[3] & bit_SSE)  res = res | SUPPORT_SSE;
      if ((unsigned int)reg[3] & bit_SSE2) res = res | SUPPORT_SSE2;
@@ -134,3 +154,21 @@ diff -u /src/AAFilter.cpp /src/AAFilter.cpp
  
  // define this to save AA filter coefficients to a file
  
+
+diff -u /src/sse_optimized.cpp /src/sse_optimized.cpp
+--- /src/sse_optimized.cpp
++++ /src_patched/sse_optimized.cpp
+@@ -60,7 +60,13 @@
+ //////////////////////////////////////////////////////////////////////////////
+ 
+ #include "TDStretch.h"
++
++#ifdef SOUNDTOUCH_WASM_SIMD
++#include "simde/x86/avx2.h"
++#else
+ #include <xmmintrin.h>
++#endif
++
+ #include <math.h>
+ 
+ // Calculates cross correlation of two buffers
