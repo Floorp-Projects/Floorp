@@ -60,7 +60,13 @@ using namespace soundtouch;
 //////////////////////////////////////////////////////////////////////////////
 
 #include "TDStretch.h"
+
+#ifdef SOUNDTOUCH_WASM_SIMD
+#include "simde/x86/avx2.h"
+#else
 #include <xmmintrin.h>
+#endif
+
 #include <math.h>
 
 // Calculates cross correlation of two buffers
