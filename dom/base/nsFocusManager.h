@@ -470,8 +470,8 @@ class nsFocusManager final : public nsIFocusManager,
    */
   MOZ_CAN_RUN_SCRIPT void SendFocusOrBlurEvent(
       mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
-      Document* aDocument, nsISupports* aTarget, bool aWindowRaised,
-      bool aIsRefocus = false,
+      Document* aDocument, mozilla::dom::EventTarget* aTarget,
+      bool aWindowRaised, bool aIsRefocus = false,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
   /**
    * Fire a focus or blur event at aTarget.
@@ -483,7 +483,8 @@ class nsFocusManager final : public nsIFocusManager,
    */
   MOZ_CAN_RUN_SCRIPT void FireFocusOrBlurEvent(
       mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
-      nsISupports* aTarget, bool aWindowRaised, bool aIsRefocus = false,
+      mozilla::dom::EventTarget* aTarget, bool aWindowRaised,
+      bool aIsRefocus = false,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
 
   /**
@@ -505,7 +506,8 @@ class nsFocusManager final : public nsIFocusManager,
    */
   MOZ_CAN_RUN_SCRIPT void FireFocusInOrOutEvent(
       mozilla::EventMessage aEventMessage, mozilla::PresShell* aPresShell,
-      nsISupports* aTarget, nsPIDOMWindowOuter* aCurrentFocusedWindow,
+      mozilla::dom::EventTarget* aTarget,
+      nsPIDOMWindowOuter* aCurrentFocusedWindow,
       nsIContent* aCurrentFocusedContent,
       mozilla::dom::EventTarget* aRelatedTarget = nullptr);
 
