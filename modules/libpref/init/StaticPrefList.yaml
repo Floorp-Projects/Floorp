@@ -11190,18 +11190,6 @@
   value: true
   mirror: always
 
-# Whether to use new implementation of ParseReasm
-- name: network.auth.use_new_parse_realm
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Whether to use new implementation of ParseReasm
-- name: network.auth.allow_multiple_challenges_same_line
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether to use challenges in the most secure order. See bug 650091.
 - name: network.auth.choose_most_secure_challenge
   type: RelaxedAtomicBool
