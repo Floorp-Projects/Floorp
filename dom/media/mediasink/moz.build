@@ -17,7 +17,6 @@ EXPORTS += [
 ]
 
 LOCAL_INCLUDES += [
-    "!/security/rlbox",
     "/dom/media",
 ]
 
