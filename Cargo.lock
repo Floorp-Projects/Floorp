@@ -5196,6 +5196,7 @@ dependencies = [
  "parking_lot",
  "precomputed-hash",
  "rayon",
+ "rayon-core",
  "regex",
  "selectors",
  "serde",
