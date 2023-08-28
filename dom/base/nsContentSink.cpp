@@ -950,8 +950,7 @@ void nsContentSink::NotifyDocElementCreated(Document* aDoc) {
   observerService->NotifyObservers(ToSupports(aDoc),
                                    "document-element-inserted", u"");
 
-  nsContentUtils::DispatchChromeEvent(aDoc, ToSupports(aDoc),
-                                      u"DOMDocElementInserted"_ns,
+  nsContentUtils::DispatchChromeEvent(aDoc, aDoc, u"DOMDocElementInserted"_ns,
                                       CanBubble::eYes, Cancelable::eNo);
 }
 

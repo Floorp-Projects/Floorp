@@ -5016,8 +5016,8 @@ void nsGlobalWindowInner::FireOfflineStatusEventIfChanged() {
   } else {
     name.AssignLiteral("online");
   }
-  nsContentUtils::DispatchTrustedEvent(mDoc, static_cast<EventTarget*>(this),
-                                       name, CanBubble::eNo, Cancelable::eNo);
+  nsContentUtils::DispatchTrustedEvent(mDoc, this, name, CanBubble::eNo,
+                                       Cancelable::eNo);
 }
 
 nsGlobalWindowInner::SlowScriptResponse

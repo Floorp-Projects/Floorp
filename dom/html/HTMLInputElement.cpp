@@ -248,9 +248,9 @@ class DispatchChangeEventCallback final : public GetFilesCallback {
     nsresult rv = nsContentUtils::DispatchInputEvent(inputElement);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch input event");
 
-    rv = nsContentUtils::DispatchTrustedEvent(
-        mInputElement->OwnerDoc(), static_cast<Element*>(mInputElement.get()),
-        u"change"_ns, CanBubble::eYes, Cancelable::eNo);
+    rv = nsContentUtils::DispatchTrustedEvent(mInputElement->OwnerDoc(),
+                                              mInputElement, u"change"_ns,
+                                              CanBubble::eYes, Cancelable::eNo);
 
     return rv;
   }
@@ -451,8 +451,8 @@ HTMLInputElement::nsFilePickerShownCallback::Done(
   if (aResult == nsIFilePicker::returnCancel) {
     RefPtr<HTMLInputElement> inputElement(mInput);
     return nsContentUtils::DispatchTrustedEvent(
-        inputElement->OwnerDoc(), static_cast<Element*>(inputElement.get()),
-        u"cancel"_ns, CanBubble::eYes, Cancelable::eNo);
+        inputElement->OwnerDoc(), inputElement, u"cancel"_ns, CanBubble::eYes,
+        Cancelable::eNo);
   }
 
   mInput->OwnerDoc()->NotifyUserGestureActivation();
@@ -6851,8 +6851,8 @@ void HTMLInputElement::SetRevealPassword(bool aValue) {
   // revealing the saved passwords.
   bool defaultAction = true;
   nsContentUtils::DispatchEventOnlyToChrome(
-      doc, ToSupports(this), u"MozWillToggleReveal"_ns, CanBubble::eYes,
-      Cancelable::eYes, &defaultAction);
+      doc, this, u"MozWillToggleReveal"_ns, CanBubble::eYes, Cancelable::eYes,
+      &defaultAction);
   if (NS_WARN_IF(!defaultAction)) {
     return;
   }

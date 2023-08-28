@@ -283,9 +283,9 @@ nsFileControlFrame::DnDListener::HandleEvent(Event* aEvent) {
           nsContentUtils::DispatchInputEvent(inputElement);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "Failed to dispatch input event");
-      nsContentUtils::DispatchTrustedEvent(
-          inputElement->OwnerDoc(), static_cast<nsINode*>(inputElement),
-          u"change"_ns, CanBubble::eYes, Cancelable::eNo);
+      nsContentUtils::DispatchTrustedEvent(inputElement->OwnerDoc(),
+                                           inputElement, u"change"_ns,
+                                           CanBubble::eYes, Cancelable::eNo);
     }
   }
 

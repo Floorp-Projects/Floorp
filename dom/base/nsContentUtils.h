@@ -1472,8 +1472,7 @@ class nsContentUtils {
    * DispatchInputEvent() instead.
    *
    * @param aDoc           The document which will be used to create the event.
-   * @param aTarget        The target of the event, should be QIable to
-   *                       EventTarget.
+   * @param aTarget        The target of the event.
    * @param aEventName     The name of the event.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
@@ -1483,7 +1482,8 @@ class nsContentUtils {
    */
   // TODO: annotate with `MOZ_CAN_RUN_SCRIPT`
   // (https://bugzilla.mozilla.org/show_bug.cgi?id=1625902).
-  static nsresult DispatchTrustedEvent(Document* aDoc, nsISupports* aTarget,
+  static nsresult DispatchTrustedEvent(Document* aDoc,
+                                       mozilla::dom::EventTarget* aTarget,
                                        const nsAString& aEventName, CanBubble,
                                        Cancelable,
                                        Composed aComposed = Composed::eDefault,
@@ -1491,7 +1491,8 @@ class nsContentUtils {
 
   // TODO: annotate with `MOZ_CAN_RUN_SCRIPT`
   // (https://bugzilla.mozilla.org/show_bug.cgi?id=1625902).
-  static nsresult DispatchTrustedEvent(Document* aDoc, nsISupports* aTarget,
+  static nsresult DispatchTrustedEvent(Document* aDoc,
+                                       mozilla::dom::EventTarget* aTarget,
                                        const nsAString& aEventName,
                                        CanBubble aCanBubble,
                                        Cancelable aCancelable,
@@ -1504,8 +1505,7 @@ class nsContentUtils {
   /**
    * This method creates and dispatches a trusted event using an event message.
    * @param aDoc           The document which will be used to create the event.
-   * @param aTarget        The target of the event, should be QIable to
-   *                       EventTarget.
+   * @param aTarget        The target of the event.
    * @param aEventMessage  The event message.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
@@ -1514,8 +1514,8 @@ class nsContentUtils {
    */
   template <class WidgetEventType>
   static nsresult DispatchTrustedEvent(
-      Document* aDoc, nsISupports* aTarget, EventMessage aEventMessage,
-      CanBubble aCanBubble, Cancelable aCancelable,
+      Document* aDoc, mozilla::dom::EventTarget* aTarget,
+      EventMessage aEventMessage, CanBubble aCanBubble, Cancelable aCancelable,
       bool* aDefaultAction = nullptr,
       ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo) {
     WidgetEventType event(true, aEventMessage);
@@ -1567,15 +1567,15 @@ class nsContentUtils {
    * Works only with events which can be created by calling
    * Document::CreateEvent() with parameter "Events".
    * @param aDoc           The document which will be used to create the event.
-   * @param aTarget        The target of the event, should be QIable to
-   *                       EventTarget.
+   * @param aTarget        The target of the event.
    * @param aEventName     The name of the event.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
    * @param aDefaultAction Set to true if default action should be taken,
    *                       see EventTarget::DispatchEvent.
    */
-  static nsresult DispatchUntrustedEvent(Document* aDoc, nsISupports* aTarget,
+  static nsresult DispatchUntrustedEvent(Document* aDoc,
+                                         mozilla::dom::EventTarget* aTarget,
                                          const nsAString& aEventName, CanBubble,
                                          Cancelable,
                                          bool* aDefaultAction = nullptr);
@@ -1584,8 +1584,7 @@ class nsContentUtils {
    * This method creates and dispatches a untrusted event using an event
    * message.
    * @param aDoc           The document which will be used to create the event.
-   * @param aTarget        The target of the event, should be QIable to
-   *                       EventTarget.
+   * @param aTarget        The target of the event.
    * @param aEventMessage  The event message.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
@@ -1594,8 +1593,8 @@ class nsContentUtils {
    */
   template <class WidgetEventType>
   static nsresult DispatchUntrustedEvent(
-      Document* aDoc, nsISupports* aTarget, EventMessage aEventMessage,
-      CanBubble aCanBubble, Cancelable aCancelable,
+      Document* aDoc, mozilla::dom::EventTarget* aTarget,
+      EventMessage aEventMessage, CanBubble aCanBubble, Cancelable aCancelable,
       bool* aDefaultAction = nullptr,
       ChromeOnlyDispatch aOnlyChromeDispatch = ChromeOnlyDispatch::eNo) {
     WidgetEventType event(false, aEventMessage);
@@ -1623,7 +1622,8 @@ class nsContentUtils {
    * @param aDefaultAction Set to true if default action should be taken,
    *                       see EventTarget::DispatchEvent.
    */
-  static nsresult DispatchChromeEvent(Document* aDoc, nsISupports* aTarget,
+  static nsresult DispatchChromeEvent(Document* aDoc,
+                                      mozilla::dom::EventTarget* aTarget,
                                       const nsAString& aEventName, CanBubble,
                                       Cancelable,
                                       bool* aDefaultAction = nullptr);
@@ -1646,8 +1646,7 @@ class nsContentUtils {
    * Works only with events which can be created by calling
    * Document::CreateEvent() with parameter "Events".
    * @param aDoc           The document which will be used to create the event.
-   * @param aTarget        The target of the event, should be QIable to
-   *                       EventTarget.
+   * @param aTarget        The target of the event.
    * @param aEventName     The name of the event.
    * @param aCanBubble     Whether the event can bubble.
    * @param aCancelable    Is the event cancelable.
@@ -1656,13 +1655,16 @@ class nsContentUtils {
    *                       see EventTarget::DispatchEvent.
    */
   static nsresult DispatchEventOnlyToChrome(
-      Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
-      CanBubble, Cancelable, Composed aComposed = Composed::eDefault,
-      bool* aDefaultAction = nullptr);
+      Document* aDoc, mozilla::dom::EventTarget* aTarget,
+      const nsAString& aEventName, CanBubble, Cancelable,
+      Composed aComposed = Composed::eDefault, bool* aDefaultAction = nullptr);
 
-  static nsresult DispatchEventOnlyToChrome(
-      Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
-      CanBubble aCanBubble, Cancelable aCancelable, bool* aDefaultAction) {
+  static nsresult DispatchEventOnlyToChrome(Document* aDoc,
+                                            mozilla::dom::EventTarget* aTarget,
+                                            const nsAString& aEventName,
+                                            CanBubble aCanBubble,
+                                            Cancelable aCancelable,
+                                            bool* aDefaultAction) {
     return DispatchEventOnlyToChrome(aDoc, aTarget, aEventName, aCanBubble,
                                      aCancelable, Composed::eDefault,
                                      aDefaultAction);
@@ -3476,15 +3478,16 @@ class nsContentUtils {
 
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DispatchEvent(
-      Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
-      CanBubble, Cancelable, Composed, Trusted, bool* aDefaultAction = nullptr,
+      Document* aDoc, mozilla::dom::EventTarget* aTarget,
+      const nsAString& aEventName, CanBubble, Cancelable, Composed, Trusted,
+      bool* aDefaultAction = nullptr,
       ChromeOnlyDispatch = ChromeOnlyDispatch::eNo);
 
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DispatchEvent(
-      Document* aDoc, nsISupports* aTarget, mozilla::WidgetEvent& aWidgetEvent,
-      EventMessage aEventMessage, CanBubble, Cancelable, Trusted,
-      bool* aDefaultAction = nullptr,
+      Document* aDoc, mozilla::dom::EventTarget* aTarget,
+      mozilla::WidgetEvent& aWidgetEvent, EventMessage aEventMessage, CanBubble,
+      Cancelable, Trusted, bool* aDefaultAction = nullptr,
       ChromeOnlyDispatch = ChromeOnlyDispatch::eNo);
 
   static void InitializeModifierStrings();

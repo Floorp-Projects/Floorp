@@ -10,6 +10,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIPrintSettings.h"
 
 namespace mozilla::dom {
@@ -30,8 +31,9 @@ class AutoPrintEventDispatcher {
   MOZ_CAN_RUN_SCRIPT void DispatchEvent(bool aBefore) {
     for (auto& doc : mDocuments) {
       nsContentUtils::DispatchTrustedEvent(
-          doc, doc->GetWindow(), aBefore ? u"beforeprint"_ns : u"afterprint"_ns,
-          CanBubble::eNo, Cancelable::eNo, nullptr);
+          doc, nsGlobalWindowOuter::Cast(doc->GetWindow()),
+          aBefore ? u"beforeprint"_ns : u"afterprint"_ns, CanBubble::eNo,
+          Cancelable::eNo, nullptr);
       if (RefPtr<nsPresContext> presContext = doc->GetPresContext()) {
         presContext->EmulateMedium(aBefore ? nsGkAtoms::print : nullptr);
         // Ensure media query listeners fire.
