@@ -52,6 +52,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/fec_private_tables_bursty.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/fec_private_tables_random.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_header_reader_writer.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_header_reader_writer2.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_sender.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/forward_error_correction.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/forward_error_correction_internal.cc",
