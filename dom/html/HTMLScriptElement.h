@@ -7,9 +7,11 @@
 #ifndef mozilla_dom_HTMLScriptElement_h
 #define mozilla_dom_HTMLScriptElement_h
 
+#include "mozilla/dom/FetchPriority.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ScriptElement.h"
+#include "nsStringFwd.h"
 
 namespace mozilla::dom {
 
@@ -34,6 +36,7 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
   virtual void GetScriptCharset(nsAString& charset) override;
   virtual void FreezeExecutionAttrs(const Document* aOwnerDoc) override;
   virtual CORSMode GetCORSMode() const override;
+  virtual FetchPriority GetFetchPriority() const override;
   virtual mozilla::dom::ReferrerPolicy GetReferrerPolicy() override;
 
   // nsIContent
@@ -128,6 +131,15 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
     GetEnumAttr(nsGkAtoms::referrerpolicy, "", aReferrerPolicy);
   }
 
+  void GetFetchPriority(nsAString& aFetchPriority) const;
+
+  void SetFetchPriority(const nsAString& aFetchPriority) {
+    SetHTMLAttr(nsGkAtoms::fetchpriority, aFetchPriority);
+  }
+
+  // <https://html.spec.whatwg.org/#fetch-priority-attribute>.
+  static FetchPriority ToFetchPriority(const nsAString& aValue);
+
   [[nodiscard]] static bool Supports(const GlobalObject& aGlobal,
                                      const nsAString& aType);
 
@@ -144,6 +156,9 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
 
   // ScriptElement
   virtual bool HasScriptContent() override;
+
+ private:
+  static void ParseFetchPriority(const nsAString& aValue, nsAttrValue& aResult);
 };
 
 }  // namespace mozilla::dom

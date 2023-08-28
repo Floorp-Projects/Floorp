@@ -6,7 +6,10 @@
 
 #include "ErrorList.h"
 #include "nsError.h"
+#include "nsHtml5AttributeName.h"
+#include "nsHtml5String.h"
 #include "nsNetUtil.h"
+#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -250,6 +253,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_CROSSORIGIN);
             nsHtml5String nonce =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_NONCE);
+            nsHtml5String fetchPriority =
+                aAttributes->getValue(nsHtml5AttributeName::ATTR_FETCHPRIORITY);
             nsHtml5String integrity =
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
             nsHtml5String referrerPolicy = aAttributes->getValue(
@@ -262,8 +267,9 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 aAttributes->contains(nsHtml5AttributeName::ATTR_NOMODULE);
             mSpeculativeLoadQueue.AppendElement()->InitScript(
                 url, charset, type, crossOrigin, /* aMedia = */ nullptr, nonce,
-                integrity, referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
-                async, defer, noModule, false);
+                fetchPriority, integrity, referrerPolicy,
+                mode == nsHtml5TreeBuilder::IN_HEAD, async, defer, noModule,
+                false);
             mCurrentHtmlScriptIsAsyncOrDefer = async || defer;
           }
         } else if (nsGkAtoms::link == aName) {
@@ -330,8 +336,17 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 if (as.LowerCaseEqualsASCII("script")) {
                   nsHtml5String type =
                       aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
+
+                  // Bug 1839315: get the attribute's value instead.
+                  // Use the empty string and rely on the
+                  // "invalid value default" state being used later.
+                  // Compared to using a non-empty string, this doesn't
+                  // require calling `Release()` for the string.
+                  nsHtml5String fetchPriority = nsHtml5String::EmptyString();
+
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
-                      url, charset, type, crossOrigin, media, nonce, integrity,
+                      url, charset, type, crossOrigin, media, nonce,
+                      /* aFetchPriority */ fetchPriority, integrity,
                       referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
                       false, false, false, true);
                 } else if (as.LowerCaseEqualsASCII("style")) {
@@ -381,8 +396,17 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       nsHtml5AttributeName::ATTR_INTEGRITY);
                   nsHtml5String referrerPolicy = aAttributes->getValue(
                       nsHtml5AttributeName::ATTR_REFERRERPOLICY);
+
+                  // Bug 1839315: get the attribute's value instead.
+                  // Use the empty string and rely on the
+                  // "invalid value default" state being used later.
+                  // Compared to using a non-empty string, this doesn't
+                  // require calling `Release()` for the string.
+                  nsHtml5String fetchPriority = nsHtml5String::EmptyString();
+
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
-                      url, charset, type, crossOrigin, media, nonce, integrity,
+                      url, charset, type, crossOrigin, media, nonce,
+                      /* aFetchPriority */ fetchPriority, integrity,
                       referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
                       false, false, false, true);
                 }
@@ -481,10 +505,20 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
             nsHtml5String referrerPolicy = aAttributes->getValue(
                 nsHtml5AttributeName::ATTR_REFERRERPOLICY);
+
+            // Bug 1847712: SVG's `<script>` element doesn't support
+            // `fetchpriority` yet.
+            // Use the empty string and rely on the
+            // "invalid value default" state being used later.
+            // Compared to using a non-empty string, this doesn't
+            // require calling `Release()` for the string.
+            nsHtml5String fetchPriority = nsHtml5String::EmptyString();
+
             mSpeculativeLoadQueue.AppendElement()->InitScript(
                 url, nullptr, type, crossOrigin, /* aMedia = */ nullptr, nonce,
-                integrity, referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
-                false, false, false, false);
+                fetchPriority, integrity, referrerPolicy,
+                mode == nsHtml5TreeBuilder::IN_HEAD, false, false, false,
+                false);
           }
         } else if (nsGkAtoms::style == aName) {
           mImportScanner.Start();
