@@ -29,6 +29,7 @@ release_generate_checksums_signing_schema = Schema(
 
 transforms = TransformSequence()
 
+
 @transforms.add
 def remote_name(config, jobs):
     for job in jobs:
