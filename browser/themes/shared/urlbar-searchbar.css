@@ -752,18 +752,18 @@
   flex: 1 auto;
 }
 
-#search-container[cui-areatype="panel"] {
+.widget-overflow-list > #search-container {
   margin: var(--arrowpanel-menuitem-margin);
   width: auto;
-}
 
-#search-container[cui-areatype="panel"] > #searchbar:-moz-lwtheme {
-  /* Theme authors usually only consider contrast against the toolbar when
-     picking a border color for the search bar. Since the search bar can be
-     dragged into the overflow panel, we need to show a high-contrast border
-     around the searchbar in case the searchbar and panel background are the
-     same color. */
-  border-color: var(--panel-separator-color);
+  & > #searchbar:-moz-lwtheme {
+    /* Theme authors usually only consider contrast against the toolbar when
+       picking a border color for the search bar. Since the search bar can be
+       dragged into the overflow panel, we need to show a high-contrast border
+       around the searchbar in case the searchbar and panel background are the
+       same color. */
+    border-color: var(--panel-separator-color);
+  }
 }
 
 .search-go-button {
