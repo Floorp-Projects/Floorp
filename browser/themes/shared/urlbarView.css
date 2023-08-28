@@ -356,22 +356,24 @@
 
   /* Labeled result menu button */
 
-  .urlbarView-results:not([wrap]) > .urlbarView-row > &:not(:empty) {
-    display: inline-flex;
-    align-items: center;
-    border-radius: var(--urlbarView-result-button-size);
-    padding-inline: 8px 26px;
-    background-position-x: right 4px;
-    font-size: var(--urlbarView-small-font-size);
+  .urlbarView-row > &:not(:empty) {
+    .urlbarView-results:not([wrap]) > & {
+      display: inline-flex;
+      align-items: center;
+      border-radius: var(--urlbarView-result-button-size);
+      padding-inline: 8px 26px;
+      background-position-x: right 4px;
+      font-size: var(--urlbarView-small-font-size);
 
-    &:-moz-locale-dir(rtl) {
-      background-position-x: left 4px;
+      &:-moz-locale-dir(rtl) {
+        background-position-x: left 4px;
+      }
     }
-  }
 
-  .urlbarView-results[wrap] > .urlbarView-row > &:not(:empty) {
-    /* Hide the label in narrow windows. */
-    font-size: 0;
+    .urlbarView-results[wrap] > & {
+      /* Hide the label in narrow windows. */
+      font-size: 0;
+    }
   }
 }
 
@@ -436,12 +438,20 @@
     margin-top: 4px;
   }
 
-  & > .urlbarView-row-inner {
+  > .urlbarView-row-inner {
     min-height: 32px;
-
     /* Add space between the tip title (and the rest of row-inner) and its
        button. */
     margin-inline-end: 1.8em;
+
+    > .urlbarView-no-wrap > .urlbarView-title-separator,
+    > .urlbarView-url {
+      display: none;
+    }
+
+    > .urlbarView-no-wrap > .urlbarView-title {
+      white-space: normal;
+    }
   }
 
   &:not([tip-type=dismissalAcknowledgment]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
@@ -450,15 +460,6 @@
     margin-inline-end: 12px;
     flex-basis: 24px;
     flex-grow:  0;
-  }
-
-  & > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
-  & > .urlbarView-row-inner > .urlbarView-url {
-    display: none;
-  }
-
-  & > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title {
-    white-space: normal;
   }
 
   &[tip-type=dismissalAcknowledgment] {
