@@ -110,7 +110,7 @@ export function useLanguageSwitcher(
           }
         );
     },
-    [negotiatedLanguage]
+    [negotiatedLanguage, screen]
   );
 
   const [languageFilteredScreens, setLanguageFilteredScreens] =
@@ -134,7 +134,15 @@ export function useLanguageSwitcher(
         setLanguageFilteredScreens(screens);
       }
     },
-    [screens, negotiatedLanguage]
+    [
+      appAndSystemLocaleInfo?.matchType,
+      languageMismatchScreenIndex,
+      negotiatedLanguage,
+      screen,
+      screenIndex,
+      screens,
+      setScreenIndex,
+    ]
   );
 
   return {
@@ -172,7 +180,12 @@ export function LanguageSwitcher(props) {
         );
       });
     }
-  }, [isAwaitingLangpack, langPackInstallPhase]);
+  }, [
+    handleAction,
+    isAwaitingLangpack,
+    langPackInstallPhase,
+    negotiatedLanguage?.requestSystemLocales,
+  ]);
 
   let showWaitingScreen = false;
   let showPreloadingScreen = false;
