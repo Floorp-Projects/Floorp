@@ -21,16 +21,14 @@ server.registerPathHandler("/dummy", (request, response) => {
 });
 
 add_setup(() => {
-  // NOTE: This prevents a test failure when this test file is executed
-  // in Android builds, under the GeckoView TestRunnner, and the
-  // extensions running in the child extension process, See Bug 1844825.
-  //
-  // TODO(Bug 1845576): remove this workaround if we removed from head.js the
-  // code that is setting Services.io.offline in Android builds.
-  if (AppConstants.platform == "android" && Services.io.offline) {
-    info("Services.io.offline is set to true, flipping it to false");
-    Services.io.offline = false;
-  }
+  // NOTE: Services.io.offline shouldn't be set to offline,
+  // otherwise we would hit an unexpected behavior when
+  // the extension worker tries to fetch from an
+  // http url or cache an http url response, see Bug 1845317.
+  Assert.ok(
+    !Services.io.offline,
+    "Services.io.offline should not be set to true while running this test"
+  );
 });
 
 add_task(async function test_cache_api_http_resource_allowed() {
