@@ -27,6 +27,28 @@ add_task(async function test_shopping_reanalysis_event() {
   Assert.equal(events[0].name, "surface_reanalyze_clicked");
 });
 
+add_task(async function test_shopping_UI_chevron_clicks() {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await clickSettingsChevronButton(browser, MOCK_ANALYZED_PRODUCT_RESPONSE);
+    }
+  );
+
+  await Services.fog.testFlushAllChildren();
+  var events = Glean.shopping.surfaceExpandSettings.testGetValue();
+
+  Assert.greater(events.length, 0);
+  Assert.equal(events[0].category, "shopping");
+  Assert.equal(events[0].name, "surface_expand_settings");
+});
+
 function clickReAnalyzeLink(browser, data) {
   return SpecialPowers.spawn(browser, [data], async mockData => {
     let shoppingContainer =
@@ -39,6 +61,37 @@ function clickReAnalyzeLink(browser, data) {
 
     await shoppingMessageBar.onClickAnalysisLink();
 
+    return "clicked";
+  });
+}
+
+function clickSettingsChevronButton(browser, data) {
+  // waitForCondition relies on setTimeout, can cause intermittent test
+  // failures. Unfortunately, there is not yet a DOM Mutation observer
+  // equivalent in a utility that's available in the content process.
+
+  return SpecialPowers.spawn(browser, [data], async mockData => {
+    let shoppingContainer =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    shoppingContainer.data = Cu.cloneInto(mockData, content);
+
+    await shoppingContainer.updateComplete;
+    let shoppingSettings = shoppingContainer.settingsEl;
+    await shoppingSettings.updateComplete;
+    let shoppingCard =
+      shoppingSettings.shadowRoot.querySelector("shopping-card");
+    await shoppingCard.updateComplete;
+
+    let detailsEl = shoppingCard.detailsEl;
+    await detailsEl.updateComplete;
+
+    await ContentTaskUtils.waitForCondition(() =>
+      detailsEl.querySelector(".chevron-icon")
+    );
+
+    let chevron = detailsEl.querySelector(".chevron-icon");
+
+    chevron.click();
     return "clicked";
   });
 }

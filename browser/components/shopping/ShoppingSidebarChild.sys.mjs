@@ -229,8 +229,10 @@ export class ShoppingSidebarChild extends RemotePageChild {
   /**
    * Helper to handle telemetry events.
    *
-   * @param {string} message
-   *        Which Glean event to record too.
+   * @param {string | Array} message
+   *        Which Glean event to record too. If an array is used, the first
+   *        element should be the message and the second the additional detail
+   *        to record.
    */
   submitShoppingEvent(message) {
     // We are currently working through an actor to record Glean events and
@@ -238,7 +240,20 @@ export class ShoppingSidebarChild extends RemotePageChild {
     // correct Glean event. However, this is an unpleasant solution and one
     // that should not be replicated. Please reference bug 1848708 for more
     // detail about why.
+    let details;
+    if (Array.isArray(message)) {
+      details = message[1];
+      message = message[0];
+    }
     switch (message) {
+      case "shopping-settings-label":
+        Glean.shopping.surfaceSettingsExpandClicked.record({ action: details });
+        break;
+      case "shopping-analysis-explainer-label":
+        Glean.shopping.surfaceShowQualityExplainerClicked.record({
+          action: details,
+        });
+        break;
       case "reanalyzeClicked":
         Glean.shopping.surfaceReanalyzeClicked.record();
         break;
