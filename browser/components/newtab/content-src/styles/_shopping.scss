@@ -12,8 +12,8 @@
 
   .section-main {
     width: auto;
-    margin: 0 auto;
     height: auto;
+    margin: 0 auto;
 
     .main-content {
       border-radius: 0;
@@ -26,9 +26,20 @@
         padding: 16px 0 36px;
       }
 
-      .welcome-text h1 {
-        width: auto;
+      .welcome-text {
         text-align: start;
+
+        h1 {
+          font-size: 1.37em;
+          width: auto;
+          font-weight: 400;
+          line-height: 1.5;
+        }
+
+        h2,
+        .cta-paragraph {
+          font-size: 0.8em;
+        }
       }
 
       .action-buttons {
