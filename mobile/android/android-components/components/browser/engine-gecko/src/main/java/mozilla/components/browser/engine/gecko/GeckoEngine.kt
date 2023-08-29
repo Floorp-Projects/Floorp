@@ -372,7 +372,10 @@ class GeckoEngine(
             }
 
             override fun onInstalled(extension: org.mozilla.geckoview.WebExtension) {
-                webExtensionDelegate.onInstalled(GeckoWebExtension(extension, runtime))
+                val installedExtension = GeckoWebExtension(extension, runtime)
+                webExtensionDelegate.onInstalled(installedExtension)
+                installedExtension.registerActionHandler(webExtensionActionHandler)
+                installedExtension.registerTabHandler(webExtensionTabHandler, defaultSettings)
             }
         }
 
