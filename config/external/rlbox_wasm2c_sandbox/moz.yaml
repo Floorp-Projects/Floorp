@@ -9,8 +9,8 @@ origin:
   description: rlbox integration for the wasm2c sandboxed code
   url: https://github.com/PLSysSec/rlbox_wasm2c_sandbox/tree/upstream-wasm2c
 
-  release: 7e4ff0ebca2c7644a297bfe51a53b9904f0999b2 (2023-04-13T05:07:28Z).
-  revision: 7e4ff0ebca2c7644a297bfe51a53b9904f0999b2
+  release: 0938ae96c5467bdf2210cf21be47ae576cbcc3cd (2023-08-29T00:00:41Z).
+  revision: 0938ae96c5467bdf2210cf21be47ae576cbcc3cd
 
   license: MIT
   license-file: LICENSE
