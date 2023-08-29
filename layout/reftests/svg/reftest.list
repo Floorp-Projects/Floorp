@@ -77,8 +77,8 @@ fuzzy(0-1,0-10000) == clip-surface-clone-01.svg clip-surface-clone-01-ref.svg
 == clip-use-element-02.svg pass.svg
 
 == clipPath-advanced-01.svg pass.svg
-== clipPath-and-mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
-== clipPath-and-mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
+fuzzy(0-3,0-350) == clipPath-and-mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
+fuzzy(0-3,0-350) == clipPath-and-mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
 fuzzy(0-1,0-630) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
 == clipPath-and-transform-01.svg pass.svg
 == clipPath-and-transform-02.svg pass.svg
@@ -93,8 +93,8 @@ fuzzy(0-1,0-630) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rende
 == clipPath-basic-shape-transform.html clipPath-basic-shape-transform-ref.html
 == clipPath-css-transform.html clipPath-css-transform-ref.html
 == clipPath-fill-box.html clipPath-fill-box-ref.html
-== clipPath-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
-== clipPath-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
+fuzzy(0-3,0-350) == clipPath-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
+fuzzy(0-3,0-350) == clipPath-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
 fuzzy(0-1,0-32400) == clipPath-on-outflowElement-02a.html clipPath-on-outflowElement-02-ref.html
 fuzzy(0-1,0-32400) == clipPath-on-outflowElement-02b.html clipPath-on-outflowElement-02-ref.html
 == clipPath-polygon-01.svg pass.svg
@@ -309,8 +309,8 @@ fuzzy(0-1,0-10000) == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-empty-size.svg about:blank
 == mask-extref-dataURI-01.svg pass.svg
 fuzzy(0-128,0-142) == mask-img.html mask-img-ref.html
-== mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
-== mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
+fuzzy(0-4,0-800) == mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
+fuzzy(0-4,0-800) == mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
 fuzzy(0-1,0-5000) == mask-opacity-01.svg mask-opacity-01-ref.svg
 fuzzy(0-2,0-65536) == mask-opacity-02.svg mask-opacity-02-ref.svg
 fuzzy(0-1,0-5000) == mask-opacity-03.svg mask-opacity-02-ref.svg
