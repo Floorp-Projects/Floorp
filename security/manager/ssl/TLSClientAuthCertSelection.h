@@ -91,24 +91,21 @@ class SelectClientAuthCertificate : public mozilla::Runnable {
       ClientAuthInfo&& info, mozilla::UniqueCERTCertificate&& serverCert,
       nsTArray<nsTArray<uint8_t>>&& caNames,
       mozilla::UniqueCERTCertList&& potentialClientCertificates,
-      ClientAuthCertificateSelectedBase* continuation, uint64_t browserId)
+      ClientAuthCertificateSelectedBase* continuation)
       : Runnable("SelectClientAuthCertificate"),
         mInfo(std::move(info)),
         mServerCert(std::move(serverCert)),
         mCANames(std::move(caNames)),
         mPotentialClientCertificates(std::move(potentialClientCertificates)),
-        mContinuation(continuation),
-        mBrowserId(browserId) {}
+        mContinuation(continuation) {}
 
   NS_IMETHOD Run() override;
-
-  const ClientAuthInfo& Info() { return mInfo; }
-  void DispatchContinuation(nsTArray<uint8_t>&& selectedCertBytes);
 
  private:
   mozilla::pkix::Result BuildChainForCertificate(
       nsTArray<uint8_t>& certBytes,
       nsTArray<nsTArray<uint8_t>>& certChainBytes);
+  void DoSelectClientAuthCertificate();
 
   ClientAuthInfo mInfo;
   mozilla::UniqueCERTCertificate mServerCert;
@@ -117,9 +114,7 @@ class SelectClientAuthCertificate : public mozilla::Runnable {
   RefPtr<ClientAuthCertificateSelectedBase> mContinuation;
 
   nsTArray<nsTArray<uint8_t>> mEnterpriseCertificates;
-
-  uint64_t mBrowserId;
-  nsCOMPtr<nsIInterfaceRequestor> mSecurityCallbacks;
+  nsTArray<uint8_t> mSelectedCertBytes;
 };
 
 #endif  // SECURITY_MANAGER_SSL_TLSCLIENTAUTHCERTSELECTION_H_

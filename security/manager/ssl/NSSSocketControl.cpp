@@ -47,8 +47,7 @@ NSSSocketControl::NSSSocketControl(const nsCString& aHostName, int32_t aPort,
       mSocketCreationTimestamp(TimeStamp::Now()),
       mPlaintextBytesRead(0),
       mClaimed(!(providerFlags & nsISocketProvider::IS_SPECULATIVE_CONNECTION)),
-      mPendingSelectClientAuthCertificate(nullptr),
-      mBrowserId(0) {}
+      mPendingSelectClientAuthCertificate(nullptr) {}
 
 NS_IMETHODIMP
 NSSSocketControl::GetKEAUsed(int16_t* aKea) {
@@ -697,20 +696,5 @@ void NSSSocketControl::SetPreliminaryHandshakeInfo(
 NS_IMETHODIMP NSSSocketControl::Claim() {
   COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   mClaimed = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP NSSSocketControl::SetBrowserId(uint64_t browserId) {
-  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
-  mBrowserId = browserId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP NSSSocketControl::GetBrowserId(uint64_t* browserId) {
-  COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
-  if (!browserId) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *browserId = mBrowserId;
   return NS_OK;
 }
