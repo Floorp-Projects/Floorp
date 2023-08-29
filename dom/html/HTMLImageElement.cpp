@@ -341,7 +341,8 @@ void HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 
   bool forceReload = false;
 
-  if (aName == nsGkAtoms::loading && !mLoading) {
+  if (aName == nsGkAtoms::loading &&
+      !ImageState().HasState(ElementState::LOADING)) {
     if (aValue && Loading(aValue->GetEnumValue()) == Loading::Lazy) {
       SetLazyLoading();
     } else if (aOldValue &&
