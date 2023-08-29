@@ -262,14 +262,16 @@ async function getAddonMessageInfo(addon) {
   if (addon.blocklistState === STATE_BLOCKED) {
     return {
       linkUrl: await addon.getBlocklistURL(),
-      messageId: "details-notification-blocked",
+      linkId: "details-notification-blocked-link",
+      messageId: "details-notification-blocked2",
       messageArgs: { name },
       type: "error",
     };
   } else if (isDisabledUnsigned(addon)) {
     return {
       linkUrl: SUPPORT_URL + "unsigned-addons",
-      messageId: "details-notification-unsigned-and-disabled",
+      linkId: "details-notification-unsigned-and-disabled-link",
+      messageId: "details-notification-unsigned-and-disabled2",
       messageArgs: { name },
       type: "error",
     };
@@ -279,27 +281,29 @@ async function getAddonMessageInfo(addon) {
       addon.blocklistState !== STATE_SOFTBLOCKED)
   ) {
     return {
-      messageId: "details-notification-incompatible",
+      messageId: "details-notification-incompatible2",
       messageArgs: { name, version: Services.appinfo.version },
       type: "warning",
     };
   } else if (!isCorrectlySigned(addon)) {
     return {
       linkUrl: SUPPORT_URL + "unsigned-addons",
-      messageId: "details-notification-unsigned",
+      linkId: "details-notification-unsigned-link",
+      messageId: "details-notification-unsigned2",
       messageArgs: { name },
       type: "warning",
     };
   } else if (addon.blocklistState === STATE_SOFTBLOCKED) {
     return {
       linkUrl: await addon.getBlocklistURL(),
-      messageId: "details-notification-softblocked",
+      linkId: "details-notification-softblocked-link",
+      messageId: "details-notification-softblocked2",
       messageArgs: { name },
       type: "warning",
     };
   } else if (addon.isGMPlugin && !addon.isInstalled && addon.isActive) {
     return {
-      messageId: "details-notification-gmp-pending",
+      messageId: "details-notification-gmp-pending2",
       messageArgs: { name },
       type: "warning",
     };
@@ -2802,6 +2806,7 @@ class AddonCard extends HTMLElement {
 
     const {
       linkUrl,
+      linkId,
       messageId,
       messageArgs,
       type = "",
@@ -2809,18 +2814,17 @@ class AddonCard extends HTMLElement {
 
     if (messageId) {
       document.l10n.pauseObserving();
-      document.l10n.setAttributes(
-        messageBar.querySelector("span"),
-        messageId,
-        messageArgs
-      );
+      document.l10n.setAttributes(messageBar, messageId, messageArgs);
+      messageBar.setAttribute("data-l10n-attrs", "message");
 
       const link = messageBar.querySelector("button");
       if (linkUrl) {
-        document.l10n.setAttributes(link, `${messageId}-link`);
+        document.l10n.setAttributes(link, linkId);
         link.setAttribute("url", linkUrl);
+        link.setAttribute("slot", "actions");
         link.hidden = false;
       } else {
+        link.removeAttribute("slot");
         link.hidden = true;
       }
 
