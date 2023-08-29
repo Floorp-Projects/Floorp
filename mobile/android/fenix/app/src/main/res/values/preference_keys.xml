@@ -276,6 +276,8 @@
     <string name="pref_key_should_show_home_onboarding_dialog" translatable="false">pref_key_should_show_home_onboarding_dialog</string>
     <!-- A value  of `true` means the total cookie protection popup has not been shown yet -->
     <string name="pref_key_should_show_total_cookie_protection_popup" translatable="false">pref_key_should_show_total_cookie_protection_popup</string>
+    <!-- A value  of `true` means the erase action popup has not been shown yet -->
+    <string name="pref_key_should_show_erase_action_popup" translatable="false">pref_key_should_show_erase_action_popup</string>
 
     <string name="pref_key_debug_settings" translatable="false">pref_key_debug_settings</string>
 

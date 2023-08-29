@@ -87,6 +87,11 @@
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Learn about Total Cookie Protection</string>
 
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Tap here to start a fresh private session. Delete your history, cookies  — everything.</string>
+
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Camera access needed. Go to Android settings, tap permissions, and tap allow.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->

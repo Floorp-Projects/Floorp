@@ -136,12 +136,41 @@ class BrowserToolbarCFRPresenterTest {
     }
 
     @Test
-    fun `GIVEN the TCP CFR should not be shown WHEN the feature starts THEN don't observe the store for updates`() {
+    fun `GIVEN the Erase CFR should be shown WHEN in private mode and the current tab is fully loaded THEN the Erase CFR is only shown once`() {
+        val tab = createTab(url = "", private = true)
+
+        val browserStore = createBrowserStore(
+            tab = tab,
+            selectedTabId = tab.id,
+        )
+
+        val presenter = createPresenterThatShowsCFRs(
+            browserStore = browserStore,
+            settings = mockk {
+                every { shouldShowEraseActionCFR } returns true
+            },
+            isPrivate = true,
+        )
+
+        presenter.start()
+
+        assertNotNull(presenter.scope)
+
+        browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 99)).joinBlocking()
+        browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
+        browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
+        browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
+        verify { presenter.showEraseCfr() }
+    }
+
+    @Test
+    fun `GIVEN no CFR shown WHEN the feature starts THEN don't observe the store for updates`() {
         val presenter = createPresenter(
             settings = mockk {
                 every { shouldShowTotalCookieProtectionCFR } returns false
                 every { shouldShowCookieBannerReEngagementDialog() } returns false
                 every { shouldShowReviewQualityCheckCFR } returns false
+                every { shouldShowEraseActionCFR } returns false
             },
         )
 
@@ -152,15 +181,15 @@ class BrowserToolbarCFRPresenterTest {
 
     @Test
     fun `GIVEN the store is observed for updates WHEN the presenter is stopped THEN stop observing the store`() {
-        val tcpScope: CoroutineScope = mockk {
+        val scope: CoroutineScope = mockk {
             every { cancel() } just Runs
         }
         val presenter = createPresenter()
-        presenter.scope = tcpScope
+        presenter.scope = scope
 
         presenter.stop()
 
-        verify { tcpScope.cancel() }
+        verify { scope.cancel() }
     }
 
     @Test
@@ -203,6 +232,7 @@ class BrowserToolbarCFRPresenterTest {
                 every { shouldShowTotalCookieProtectionCFR } returns false
                 every { shouldShowReviewQualityCheckCFR } returns true
                 every { reviewQualityCheckOptInTimeInMillis } returns System.currentTimeMillis()
+                every { shouldShowEraseActionCFR } returns false
             },
         )
         every { presenter.showShoppingCFR(any()) } just Runs
@@ -225,35 +255,6 @@ class BrowserToolbarCFRPresenterTest {
     }
 
     @Test
-    fun `GIVEN review quality CFR was previously displayed WHEN starting the presenter THEN don't observe the store`() {
-        val settings = mockk<Settings> {
-            every { shouldShowReviewQualityCheckCFR } returns false
-            every { shouldShowTotalCookieProtectionCFR } returns false
-        }
-        val presenter = createPresenter(settings = settings)
-
-        presenter.start()
-
-        assertNull(presenter.scope)
-    }
-
-    @Test
-    fun `GIVEN review quality feature is not enabled WHEN starting the presenter THEN don't observe the store`() {
-        val presenter = createPresenter(
-            settings = mockk {
-                every { shouldShowTotalCookieProtectionCFR } returns false
-            },
-            shoppingExperienceFeature = mockk {
-                every { isEnabled } returns false
-            },
-        )
-
-        presenter.start()
-
-        assertNull(presenter.scope)
-    }
-
-    @Test
     fun `GIVEN the user opted in the shopping feature AND the opted in shopping CFR should be shown WHEN the tab is not loading THEN the CFR is shown`() {
         val tab = createTab(url = "")
         val browserStore = createBrowserStore(
@@ -265,6 +266,7 @@ class BrowserToolbarCFRPresenterTest {
             settings = mockk {
                 every { shouldShowTotalCookieProtectionCFR } returns false
                 every { shouldShowReviewQualityCheckCFR } returns true
+                every { shouldShowEraseActionCFR } returns false
                 every { reviewQualityCheckOptInTimeInMillis } returns System.currentTimeMillis() - Settings.TWO_DAYS_MS
             },
             browserStore = browserStore,
@@ -299,12 +301,15 @@ class BrowserToolbarCFRPresenterTest {
             every { shouldShowTotalCookieProtectionCFR } returns true
             every { shouldShowCookieBannerReEngagementDialog() } returns false
             every { shouldShowReviewQualityCheckCFR } returns false
+            every { shouldShowEraseActionCFR } returns false
         },
         toolbar: BrowserToolbar = mockk(),
+        isPrivate: Boolean = false,
         sessionId: String? = null,
-    ) = spyk(createPresenter(context, anchor, browserStore, settings, toolbar, sessionId)) {
+    ) = spyk(createPresenter(context, anchor, browserStore, settings, toolbar, sessionId, isPrivate)) {
         every { showTcpCfr() } just Runs
         every { showShoppingCFR(any()) } just Runs
+        every { showEraseCfr() } just Runs
     }
 
     /**
@@ -322,13 +327,16 @@ class BrowserToolbarCFRPresenterTest {
         settings: Settings = mockk(relaxed = true) {
             every { shouldShowTotalCookieProtectionCFR } returns true
             every { shouldShowCookieBannerReEngagementDialog() } returns false
+            every { shouldShowEraseActionCFR } returns true
             every { shouldShowReviewQualityCheckCFR } returns true
         },
         toolbar: BrowserToolbar = mockk {
             every { findViewById<View>(R.id.mozac_browser_toolbar_security_indicator) } returns anchor
             every { findViewById<View>(R.id.mozac_browser_toolbar_page_actions) } returns anchor
+            every { findViewById<View>(R.id.mozac_browser_toolbar_navigation_actions) } returns anchor
         },
         sessionId: String? = null,
+        isPrivate: Boolean = false,
         shoppingExperienceFeature: ShoppingExperienceFeature = mockk {
             every { isEnabled } returns true
         },
@@ -339,6 +347,7 @@ class BrowserToolbarCFRPresenterTest {
             settings = settings,
             toolbar = toolbar,
             sessionId = sessionId,
+            isPrivate = isPrivate,
             shoppingExperienceFeature = shoppingExperienceFeature,
         ),
     )

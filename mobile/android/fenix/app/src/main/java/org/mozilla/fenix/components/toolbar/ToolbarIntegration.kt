@@ -99,6 +99,7 @@ class DefaultToolbarIntegration(
         browserStore = context.components.core.store,
         settings = context.settings(),
         toolbar = toolbar,
+        isPrivate = isPrivate,
         sessionId = sessionId,
     )
 

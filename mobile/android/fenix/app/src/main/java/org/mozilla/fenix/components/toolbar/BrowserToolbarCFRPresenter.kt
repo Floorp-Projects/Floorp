@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.transformWhile
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -66,6 +67,7 @@ class BrowserToolbarCFRPresenter(
     private val browserStore: BrowserStore,
     private val settings: Settings,
     private val toolbar: BrowserToolbar,
+    private val isPrivate: Boolean,
     private val sessionId: String? = null,
     private val shoppingExperienceFeature: ShoppingExperienceFeature = DefaultShoppingExperienceFeature(
         context.settings(),
@@ -111,6 +113,25 @@ class BrowserToolbarCFRPresenter(
                 }
             }
 
+            ToolbarCFR.ERASE -> {
+                scope = browserStore.flowScoped { flow ->
+                    flow
+                        .mapNotNull { it.findCustomTabOrSelectedTab(sessionId) }
+                        .filter { it.content.private }
+                        .map { it.content.progress }
+                        // The "transformWhile" below ensures that the 100% progress is only collected once.
+                        .transformWhile { progress ->
+                            emit(progress)
+                            progress != 100
+                        }
+                        .filter { it == 100 }
+                        .collect {
+                            scope?.cancel()
+                            showEraseCfr()
+                        }
+                }
+            }
+
             ToolbarCFR.NONE -> {
                 // no-op
             }
@@ -118,6 +139,10 @@ class BrowserToolbarCFRPresenter(
     }
 
     private fun getCFRToShow(): ToolbarCFR = when {
+        settings.shouldShowEraseActionCFR && isPrivate -> {
+            ToolbarCFR.ERASE
+        }
+
         settings.shouldShowTotalCookieProtectionCFR && (
             !settings.shouldShowCookieBannerReEngagementDialog() ||
                 settings.openTabsCount >= CFR_MINIMUM_NUMBER_OPENED_TABS
@@ -142,6 +167,48 @@ class BrowserToolbarCFRPresenter(
      */
     fun stop() {
         scope?.cancel()
+    }
+
+    @VisibleForTesting
+    internal fun showEraseCfr() {
+        CFRPopup(
+            anchor = toolbar.findViewById(
+                R.id.mozac_browser_toolbar_navigation_actions,
+            ),
+            properties = CFRPopupProperties(
+                popupAlignment = INDICATOR_CENTERED_IN_ANCHOR,
+                popupBodyColors = listOf(
+                    getColor(context, R.color.fx_mobile_layer_color_gradient_end),
+                    getColor(context, R.color.fx_mobile_layer_color_gradient_start),
+                ),
+                popupVerticalOffset = CFR_TO_ANCHOR_VERTICAL_PADDING.dp,
+                dismissButtonColor = getColor(context, R.color.fx_mobile_icon_color_oncolor),
+                indicatorDirection = if (settings.toolbarPosition == ToolbarPosition.TOP) {
+                    CFRPopup.IndicatorDirection.UP
+                } else {
+                    CFRPopup.IndicatorDirection.DOWN
+                },
+            ),
+            onDismiss = {
+                when (it) {
+                    true -> TrackingProtection.tcpCfrExplicitDismissal.record(NoExtras())
+                    false -> TrackingProtection.tcpCfrImplicitDismissal.record(NoExtras())
+                }
+            },
+            text = {
+                FirefoxTheme {
+                    Text(
+                        text = context.getString(R.string.erase_action_cfr_message),
+                        color = FirefoxTheme.colors.textOnColorPrimary,
+                        style = FirefoxTheme.typography.body2,
+                    )
+                }
+            },
+        ).run {
+            settings.shouldShowEraseActionCFR = false
+            popup = this
+            show()
+        }
     }
 
     @VisibleForTesting
@@ -257,5 +324,5 @@ class BrowserToolbarCFRPresenter(
  * The CFR to be shown in the toolbar.
  */
 private enum class ToolbarCFR {
-    TCP, SHOPPING, SHOPPING_OPTED_IN, NONE
+    TCP, SHOPPING, SHOPPING_OPTED_IN, ERASE, NONE
 }

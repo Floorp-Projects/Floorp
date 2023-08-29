@@ -29,7 +29,7 @@ interface BrowserToolbarInteractor {
     fun onHomeButtonClicked()
 
     /**
-     * Deletase all tabs and navigates to the Home screen. Called when a user taps on the erase button.
+     * Deletes all tabs and navigates to the Home screen. Called when a user taps on the erase button.
      */
     fun onEraseButtonClicked()
 }

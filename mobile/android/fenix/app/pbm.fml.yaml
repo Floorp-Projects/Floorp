@@ -13,7 +13,7 @@ features:
     defaults:
       - channel: developer
         value:
-          felt-privacy-enabled: true
+          felt-privacy-enabled: false
       - channel: nightly
         value:
           felt-privacy-enabled: false
