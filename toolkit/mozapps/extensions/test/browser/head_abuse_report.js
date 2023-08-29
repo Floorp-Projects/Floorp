@@ -365,16 +365,28 @@ const AbuseReportTestUtils = {
 
   async assertFluentStrings(containerEl) {
     // Make sure all localized elements have defined Fluent strings.
-    const localizedEls = Array.from(
+    let localizedEls = Array.from(
       containerEl.querySelectorAll("[data-l10n-id]")
     );
+    if (containerEl.getAttribute("data-l10n-id")) {
+      localizedEls.push(containerEl);
+    }
     ok(localizedEls.length, "Got localized elements");
     for (let el of localizedEls) {
       const l10nId = el.getAttribute("data-l10n-id");
-      await TestUtils.waitForCondition(
-        () => el.textContent !== "",
-        `Element with Fluent id '${l10nId}' should not be empty`
-      );
+      const l10nAttrs = el.getAttribute("data-l10n-attrs");
+      if (!l10nAttrs) {
+        await TestUtils.waitForCondition(
+          () => el.textContent !== "",
+          `Element with Fluent id '${l10nId}' should not be empty`
+        );
+      } else {
+        await TestUtils.waitForCondition(
+          () => el.message !== "",
+          `Message attribute of the element with Fluent id '${l10nId}' 
+          should not be empty`
+        );
+      }
     }
   },
 
