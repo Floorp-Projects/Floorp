@@ -201,6 +201,9 @@ void gfxPlatformGtk::InitDmabufConfig() {
 
   if (StaticPrefs::widget_dmabuf_force_enabled_AtStartup()) {
     feature.UserForceEnable("Force enabled by pref");
+  } else if (!StaticPrefs::widget_dmabuf_enabled_AtStartup()) {
+    feature.UserDisable("Force disable by pref",
+                        "FEATURE_FAILURE_USER_FORCE_DISABLED"_ns);
   }
 
   if (!gfxVars::UseEGL()) {

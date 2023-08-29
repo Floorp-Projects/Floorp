@@ -15377,6 +15377,12 @@
 #endif
 
 #ifdef MOZ_WIDGET_GTK
+# Whether to use DMABuf backend.
+- name: widget.dmabuf.enabled
+  type: bool
+  value: true
+  mirror: once
+
 # Whether to override the DMABuf blocklist.
 - name: widget.dmabuf.force-enabled
   type: bool
