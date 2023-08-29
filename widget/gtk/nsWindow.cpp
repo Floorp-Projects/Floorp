@@ -518,7 +518,7 @@ void nsWindow::MaybeDispatchResized() {
                           << mBounds << " size state " << mSizeMode;
     }
 
-    if (mWindowType == WindowType::TopLevel) {
+    if (IsTopLevelWindowType()) {
       UpdateTopLevelOpaqueRegion();
     }
 
@@ -6308,7 +6308,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // Only use for toplevel windows for now, see bug 1619246.
   if (GdkIsWaylandDisplay() &&
       StaticPrefs::widget_wayland_vsync_enabled_AtStartup() &&
-      mWindowType == WindowType::TopLevel) {
+      IsTopLevelWindowType()) {
     mWaylandVsyncSource = new WaylandVsyncSource(this);
     mWaylandVsyncDispatcher = new VsyncDispatcher(mWaylandVsyncSource);
     LOG_VSYNC("  created WaylandVsyncSource");
@@ -6538,7 +6538,7 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
 #define COMPOSITOR_PAUSE_TIMEOUT (1000)
 
 void nsWindow::PauseCompositorFlickering() {
-  bool pauseCompositor = (mWindowType == WindowType::TopLevel) &&
+  bool pauseCompositor = IsTopLevelWindowType() &&
                          mCompositorState == COMPOSITOR_ENABLED &&
                          mCompositorWidgetDelegate && !mIsDestroyed;
   if (!pauseCompositor) {
@@ -9809,7 +9809,7 @@ bool nsWindow::ApplyEnterLeaveMutterWorkaround() {
 }
 
 void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
-  if (mWindowType != WindowType::TopLevel) {
+  if (!IsTopLevelWindowType()) {
     return;
   }
 
