@@ -24,6 +24,22 @@ impl ColorComponents {
     }
 }
 
+impl std::ops::Mul for ColorComponents {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self(self.0 * rhs.0, self.1 * rhs.1, self.2 * rhs.2)
+    }
+}
+
+impl std::ops::Div for ColorComponents {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        Self(self.0 / rhs.0, self.1 / rhs.1, self.2 / rhs.2)
+    }
+}
+
 /// A color space representation in the CSS specification.
 ///
 /// https://drafts.csswg.org/css-color-4/#typedef-color-space
@@ -406,12 +422,12 @@ impl AbsoluteColor {
             },
 
             (Lab, Lch) | (Oklab, Oklch) => {
-                let lch = convert::lab_to_lch(&self.components);
+                let lch = convert::orthogonal_to_polar(&self.components);
                 return Self::new(color_space, lch.0, lch.1, lch.2, self.alpha);
             },
 
             (Lch, Lab) | (Oklch, Oklab) => {
-                let lab = convert::lch_to_lab(&self.components);
+                let lab = convert::polar_to_orthogonal(&self.components);
                 return Self::new(color_space, lab.0, lab.1, lab.2, self.alpha);
             },
 
@@ -495,7 +511,12 @@ impl ToCss for AbsoluteColor {
             ColorSpace::Srgb if self.flags.contains(ColorFlags::IS_LEGACY_SRGB) => {
                 // The "none" keyword is not supported in the rgb/rgba legacy syntax.
                 cssparser::ToCss::to_css(
-                    &cssparser::RgbaLegacy::from_floats(self.components.0, self.components.1, self.components.2, self.alpha),
+                    &cssparser::RgbaLegacy::from_floats(
+                        self.components.0,
+                        self.components.1,
+                        self.components.2,
+                        self.alpha,
+                    ),
                     dest,
                 )
             },
