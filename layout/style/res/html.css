@@ -642,15 +642,6 @@ img::before {
   unicode-bidi: isolate;
 }
 
-object:-moz-broken > *|* {
-  /*
-    Inherit in the object's alignment so that if we aren't aligned explicitly
-    we'll end up in the right place vertically.  See bug 36997.  Note that this
-    is not !important because we _might_ be aligned explicitly.
-  */
-  vertical-align: inherit;
-}
-
 img[usemap], object[usemap] {
   color: blue;
 }
