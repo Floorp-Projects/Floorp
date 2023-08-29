@@ -270,3 +270,27 @@ jobs:
         fetches:
             fetch:
                 - symbol-scrapers
+    win-gfx:
+        description: Extract symbols from closed-source Windows graphics drivers
+        attributes:
+            build_platform: windows-graphics
+        index:
+            product: system-symbols
+            job-name: win-gfx
+            type: generic
+        worker:
+            artifacts:
+                - name: public/build
+                  type: directory
+                  path: /builds/worker/artifacts/
+            docker-image: {in-tree: system-symbols-win-gfx}
+            max-run-time: 14400
+        run:
+            using: run-task
+            command: >-
+                ./run.sh
+        treeherder:
+            symbol: sys-symbols-win-gfx
+        fetches:
+            fetch:
+                - symbol-scrapers
