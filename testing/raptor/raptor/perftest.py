@@ -16,7 +16,6 @@ import traceback
 from abc import ABCMeta, abstractmethod
 
 import mozinfo
-import mozprocess
 import mozproxy.utils as mpu
 import mozversion
 import six
@@ -839,14 +838,14 @@ class PerftestDesktop(Perftest):
                     browser_version = plist.get("CFBundleShortVersionString")
                 elif "linux" in self.config["platform"]:
                     command = [self.config["binary"], "--version"]
-                    proc = mozprocess.ProcessHandler(command)
-                    proc.run(timeout=10, outputTimeout=10)
-                    proc.wait()
+                    proc = subprocess.run(
+                        command, timeout=10, capture_output=True, text=True
+                    )
 
-                    bmeta = proc.output
+                    bmeta = proc.stdout.split("\n")
                     meta_re = re.compile(r"([A-z\s]+)\s+([\w.]*)")
                     if len(bmeta) != 0:
-                        match = meta_re.match(bmeta[0].decode("utf-8"))
+                        match = meta_re.match(bmeta[0])
                         if match:
                             browser_name = self.config["app"]
                             browser_version = match.group(2)
