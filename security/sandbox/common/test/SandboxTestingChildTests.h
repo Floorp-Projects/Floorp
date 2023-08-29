@@ -509,7 +509,13 @@ void RunTestsContent(SandboxTestingChild* child) {
     }
   }
 #    endif  // MOZ_X11
-#  endif    // XP_LINUX
+
+  child->ErrnoTest("realpath localtime"_ns, true, [] {
+    char buf[PATH_MAX];
+    return realpath("/etc/localtime", buf) ? 0 : -1;
+  });
+
+#  endif  // XP_LINUX
 
 #  ifdef XP_MACOSX
   RunMacTestLaunchProcess(child, EPERM);
