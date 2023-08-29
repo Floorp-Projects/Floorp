@@ -177,7 +177,7 @@ class SyncedTabsInView extends ViewPage {
     "sync-tabs-disabled": {
       header: "firefoxview-syncedtabs-synctabs-header",
       description: "firefoxview-syncedtabs-synctabs-description",
-      checkboxLabel: "firefoxview-syncedtabs-synctabs-checkbox",
+      buttonLabel: "firefoxview-tabpickup-synctabs-primarybutton",
     },
   };
 
@@ -187,7 +187,6 @@ class SyncedTabsInView extends ViewPage {
       description,
       descriptionLink,
       buttonLabel,
-      checkboxLabel,
       headerIconUrl,
       mainImageUrl;
     let descriptionArray;
@@ -212,7 +211,6 @@ class SyncedTabsInView extends ViewPage {
       header = this.actionMappings[action].header;
       description = this.actionMappings[action].description;
       buttonLabel = this.actionMappings[action].buttonLabel;
-      checkboxLabel = this.actionMappings[action].checkboxLabel;
       descriptionLink = this.actionMappings[action].descriptionLink;
       mainImageUrl =
         "chrome://browser/content/firefoxview/synced-tabs-error.svg";
@@ -224,10 +222,11 @@ class SyncedTabsInView extends ViewPage {
         headerLabel=${header}
         .descriptionLabels=${descriptionArray}
         .descriptionLink=${ifDefined(descriptionLink)}
-        class="empty-state synced-tabs"
+        class="empty-state synced-tabs error"
         ?isSelectedTab=${this.selectedTab}
         ?isInnerCard=${this.recentBrowsing}
         mainImageUrl="${ifDefined(mainImageUrl)}"
+        ?errorGrayscale=${error}
         headerIconUrl="${ifDefined(headerIconUrl)}"
         id="empty-container"
       >
@@ -240,13 +239,6 @@ class SyncedTabsInView extends ViewPage {
           @click=${this.handleEvent}
           aria-details="empty-container"
         ></button>
-        <div slot="primary-action"
-          ?hidden=${!checkboxLabel} >
-          <label>
-            <input type="checkbox" @change=${this.handleEvent}></input>
-            <span data-l10n-id="${ifDefined(checkboxLabel)}"></span>
-          </label>
-        </div>
       </fxview-empty-state>
     `;
   }
@@ -479,7 +471,8 @@ class SyncedTabsInView extends ViewPage {
         html`<card-container
           preserveCollapseState
           shortPageName="syncedtabs"
-          ?showViewAll=${this._currentSetupStateIndex == 4}
+          ?showViewAll=${this._currentSetupStateIndex == 4 &&
+          this.currentSyncedTabs.length}
         >
           >
           <h3

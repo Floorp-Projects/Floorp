@@ -13,6 +13,7 @@
   flex-direction: column;
   text-align: center;
   gap: 22px;
+  height: 264px;
 }
 
 [slot="main"].selectedTab .header {
@@ -33,7 +34,7 @@
 .header {
   margin-block: 0;
   font-size: 1.46rem;
-  font-weight: 400;
+  font-weight: 300;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -58,7 +59,7 @@
 
 .description {
   color: var(--text-color-deemphasized);
-  margin-block: 4px 0;
+  margin-block: 4px 15px;
 }
 
 .description.secondary {
@@ -67,4 +68,11 @@
 
 .main a {
   color: var(--fxview-primary-action-background);
+}
+
+img.greyscale {
+  filter: grayscale(100%);
+  @media not (prefers-contrast) {
+    opacity: 0.5;
+  }
 }

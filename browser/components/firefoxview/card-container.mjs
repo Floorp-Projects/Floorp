@@ -14,6 +14,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  *
  * @property {string} sectionLabel - The aria-label used for the section landmark if the header is hidden with hideHeader
  * @property {boolean} hideHeader - Optional property given if the card container should not display a header
+ * @property {boolean} isEmptyState - Optional property given if the card is used within an empty state
  * @property {boolean} isInnerCard - Optional property given if the card a nested card within another card and given a border rather than box-shadow
  * @property {boolean} preserveCollapseState - Whether or not the expanded/collapsed state should persist
  * @property {string} shortPageName - Page name that the 'View all' link will navigate to and the preserveCollapseState pref will use
@@ -29,6 +30,7 @@ class CardContainer extends MozLitElement {
     sectionLabel: { type: String },
     hideHeader: { type: Boolean },
     isExpanded: { type: Boolean },
+    isEmptyState: { type: Boolean },
     isInnerCard: { type: Boolean },
     preserveCollapseState: { type: Boolean },
     shortPageName: { type: String },
@@ -86,7 +88,11 @@ class CardContainer extends MozLitElement {
         aria-label=${ifDefined(this.sectionLabel)}
       >
         <details
-          class=${classMap({ "card-container": true, inner: this.isInnerCard })}
+          class=${classMap({
+            "card-container": true,
+            inner: this.isInnerCard,
+            "empty-state": this.isEmptyState && !this.isInnerCard,
+          })}
           ?open=${this.isExpanded}
           @toggle=${this.onToggleContainer}
         >

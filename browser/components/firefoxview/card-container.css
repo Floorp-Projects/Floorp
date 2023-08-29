@@ -104,6 +104,8 @@
 }
 
 ::slotted([slot=header]) {
+  display: flex;
+  align-items: center;
   margin: 0;
   font-size: 1.13em;
   font-weight: 600;
@@ -134,4 +136,10 @@
   border: 1px solid var(--fxview-border);
   box-shadow: none;
   margin-block: 8px 0;
+}
+
+details.empty-state {
+  box-shadow: none;
+  border: 1px solid var(--fxview-border);
+  border-radius: 8px;
 }

@@ -20,6 +20,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {Array} descriptionLabels - (Required) An array of l10n ids for the secondary description text for the empty/error state
  * @property {object} descriptionLink - (Optional) An object describing the l10n name and url needed within a description label
  * @property {string} mainImageUrl - (Optional) The chrome:// url for the main image of the empty/error state
+ * @property {string} errorGrayscale - (Optional) The image should be shown in gray scale
  */
 class FxviewEmptyState extends MozLitElement {
   constructor() {
@@ -35,6 +36,7 @@ class FxviewEmptyState extends MozLitElement {
     descriptionLabels: { type: Array },
     desciptionLink: { type: Object },
     mainImageUrl: { type: String },
+    errorGrayscale: { type: Boolean },
   };
 
   static queries = {
@@ -62,11 +64,17 @@ class FxviewEmptyState extends MozLitElement {
        />
        <card-container hideHeader="true" exportparts="image" ?isInnerCard="${
          this.isInnerCard
-       }" id="card-container">
+       }" id="card-container" isEmptyState="true">
          <div slot="main" class=${this.isSelectedTab ? "selectedTab" : null}>
            <div class="image-container">
-             <img class="image" role="presentation" alt="" ?hidden=${!this
-               .mainImageUrl} src=${this.mainImageUrl}/>
+             <img class=${classMap({
+               image: true,
+               greyscale: this.errorGrayscale,
+             })}
+              role="presentation"
+              alt=""
+              ?hidden=${!this.mainImageUrl}
+                       src=${this.mainImageUrl}/>
            </div>
            <div class="main">
              <h2

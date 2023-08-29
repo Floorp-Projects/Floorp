@@ -35,6 +35,7 @@ h2 {
 
 .notabs {
   margin-top: 15px;
+  color: var(--fxview-text-secondary-color);
 }
 
 .blackbox {
