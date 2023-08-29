@@ -62,7 +62,7 @@ async function testHelper(connectURL, expectedURL) {
 }
 
 async function openRequireClientCert() {
-  gClientAuthDialogs.chooseCertificateCalled = false;
+  gClientAuthDialogService.chooseCertificateCalled = false;
   await testHelper(
     "https://requireclientcert.example.com:443",
     "https://requireclientcert.example.com/"
@@ -70,7 +70,7 @@ async function openRequireClientCert() {
 }
 
 async function openRequireClientCert2() {
-  gClientAuthDialogs.chooseCertificateCalled = false;
+  gClientAuthDialogService.chooseCertificateCalled = false;
   await testHelper(
     "https://requireclientcert-2.example.com:443",
     "https://requireclientcert-2.example.com/"
@@ -124,7 +124,7 @@ const gClientAuthRememberService = {
   QueryInterface: ChromeUtils.generateQI(["nsIClientAuthRememberService"]),
 };
 
-const gClientAuthDialogs = {
+const gClientAuthDialogService = {
   _chooseCertificateCalled: false,
 
   get chooseCertificateCalled() {
@@ -135,22 +135,12 @@ const gClientAuthDialogs = {
     this._chooseCertificateCalled = value;
   },
 
-  chooseCertificate(
-    hostname,
-    port,
-    organization,
-    issuerOrg,
-    certList,
-    selectedIndex,
-    rememberClientAuthCertificate
-  ) {
-    rememberClientAuthCertificate.value = true;
+  chooseCertificate(hostname, certArray, loadContext, callback) {
     this.chooseCertificateCalled = true;
-    selectedIndex.value = 0;
-    return true;
+    callback.certificateChosen(certArray[0], true);
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIClientAuthDialogs]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIClientAuthDialogService]),
 };
 
 add_task(async function testRememberedDecisionsUI() {
@@ -252,9 +242,9 @@ add_task(async function testRememberedDecisionsUI() {
 });
 
 add_task(async function testDeletingRememberedDecisions() {
-  let clientAuthDialogsCID = MockRegistrar.register(
-    "@mozilla.org/nsClientAuthDialogs;1",
-    gClientAuthDialogs
+  let clientAuthDialogServiceCID = MockRegistrar.register(
+    "@mozilla.org/security/ClientAuthDialogService;1",
+    gClientAuthDialogService
   );
   let cars = Cc["@mozilla.org/security/clientAuthRememberService;1"].getService(
     Ci.nsIClientAuthRememberService
@@ -262,19 +252,19 @@ add_task(async function testDeletingRememberedDecisions() {
 
   await openRequireClientCert();
   Assert.ok(
-    gClientAuthDialogs.chooseCertificateCalled,
+    gClientAuthDialogService.chooseCertificateCalled,
     "chooseCertificate should have been called if visiting 'requireclientcert.example.com' for the first time"
   );
 
   await openRequireClientCert();
   Assert.ok(
-    !gClientAuthDialogs.chooseCertificateCalled,
+    !gClientAuthDialogService.chooseCertificateCalled,
     "chooseCertificate should not have been called if visiting 'requireclientcert.example.com' for the second time"
   );
 
   await openRequireClientCert2();
   Assert.ok(
-    gClientAuthDialogs.chooseCertificateCalled,
+    gClientAuthDialogService.chooseCertificateCalled,
     "chooseCertificate should have been called if visiting 'requireclientcert-2.example.com' for the first time"
   );
 
@@ -283,15 +273,15 @@ add_task(async function testDeletingRememberedDecisions() {
 
   await openRequireClientCert();
   Assert.ok(
-    gClientAuthDialogs.chooseCertificateCalled,
+    gClientAuthDialogService.chooseCertificateCalled,
     "chooseCertificate should have been called after removing all remembered decisions for 'requireclientcert.example.com'"
   );
 
   await openRequireClientCert2();
   Assert.ok(
-    !gClientAuthDialogs.chooseCertificateCalled,
+    !gClientAuthDialogService.chooseCertificateCalled,
     "chooseCertificate should not have been called if visiting 'requireclientcert-2.example.com' for the second time"
   );
 
-  MockRegistrar.unregister(clientAuthDialogsCID);
+  MockRegistrar.unregister(clientAuthDialogServiceCID);
 });
