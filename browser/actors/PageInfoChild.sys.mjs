@@ -181,7 +181,7 @@ export class PageInfoChild extends JSWindowActorChild {
     // One swi^H^H^Hif-else to rule them all.
     if (content.HTMLImageElement.isInstance(elem)) {
       addMedia(
-        elem.src,
+        elem.currentSrc,
         "img",
         elem.getAttribute("alt"),
         elem,
