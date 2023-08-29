@@ -18,62 +18,114 @@ const { AbuseReporter } = ChromeUtils.importESModule(
 // Message Bars definitions.
 const ABUSE_REPORT_MESSAGE_BARS = {
   // Idle message-bar (used while the submission is still ongoing).
-  submitting: { id: "submitting", actions: ["cancel"] },
+  submitting: {
+    actions: ["cancel"],
+    l10n: {
+      id: "abuse-report-messagebar-submitting2",
+      actionIds: {
+        cancel: "abuse-report-messagebar-action-cancel",
+      },
+    },
+  },
   // Submitted report message-bar.
   submitted: {
-    id: "submitted",
-    actionAddonTypeSuffix: true,
     actions: ["remove", "keep"],
     dismissable: true,
+    l10n: {
+      id: "abuse-report-messagebar-submitted2",
+      actionIdsPerAddonType: {
+        extension: {
+          remove: "abuse-report-messagebar-action-remove-extension",
+          keep: "abuse-report-messagebar-action-keep-extension",
+        },
+        sitepermission: {
+          remove: "abuse-report-messagebar-action-remove-sitepermission",
+          keep: "abuse-report-messagebar-action-keep-sitepermission",
+        },
+        theme: {
+          remove: "abuse-report-messagebar-action-remove-theme",
+          keep: "abuse-report-messagebar-action-keep-theme",
+        },
+      },
+    },
   },
   // Submitted report message-bar (with no remove actions).
   "submitted-no-remove-action": {
-    id: "submitted-noremove",
     dismissable: true,
+    l10n: { id: "abuse-report-messagebar-submitted-noremove2" },
   },
   // Submitted report and remove addon message-bar.
   "submitted-and-removed": {
-    id: "removed",
-    addonTypeSuffix: true,
     dismissable: true,
+    l10n: {
+      idsPerAddonType: {
+        extension: "abuse-report-messagebar-removed-extension2",
+        sitepermission: "abuse-report-messagebar-removed-sitepermission2",
+        theme: "abuse-report-messagebar-removed-theme2",
+      },
+    },
   },
   // The "aborted report" message bar is rendered as a generic informative one,
   // because aborting a report is triggered by a user choice.
   ERROR_ABORTED_SUBMIT: {
-    id: "aborted",
     type: "info",
     dismissable: true,
+    l10n: { id: "abuse-report-messagebar-aborted2" },
   },
   // Errors message bars.
   ERROR_ADDON_NOTFOUND: {
-    id: "error",
     type: "error",
     dismissable: true,
+    l10n: { id: "abuse-report-messagebar-error2" },
   },
   ERROR_CLIENT: {
-    id: "error",
     type: "error",
     dismissable: true,
+    l10n: { id: "abuse-report-messagebar-error2" },
   },
   ERROR_NETWORK: {
-    id: "error",
     actions: ["retry", "cancel"],
     type: "error",
+    l10n: {
+      id: "abuse-report-messagebar-error2",
+      actionIds: {
+        retry: "abuse-report-messagebar-action-retry",
+        cancel: "abuse-report-messagebar-action-cancel",
+      },
+    },
   },
   ERROR_RECENT_SUBMIT: {
-    id: "error-recent-submit",
     actions: ["retry", "cancel"],
     type: "error",
+    l10n: {
+      id: "abuse-report-messagebar-error-recent-submit2",
+      actionIds: {
+        retry: "abuse-report-messagebar-action-retry",
+        cancel: "abuse-report-messagebar-action-cancel",
+      },
+    },
   },
   ERROR_SERVER: {
-    id: "error",
     actions: ["retry", "cancel"],
     type: "error",
+    l10n: {
+      id: "abuse-report-messagebar-error2",
+      actionIds: {
+        retry: "abuse-report-messagebar-action-retry",
+        cancel: "abuse-report-messagebar-action-cancel",
+      },
+    },
   },
   ERROR_UNKNOWN: {
-    id: "error",
     actions: ["retry", "cancel"],
     type: "error",
+    l10n: {
+      id: "abuse-report-messagebar-error2",
+      actionIds: {
+        retry: "abuse-report-messagebar-action-retry",
+        cancel: "abuse-report-messagebar-action-cancel",
+      },
+    },
   },
 };
 
@@ -137,40 +189,39 @@ function createReportMessageBar(
   { addonId, addonName, addonType },
   { onclose, onaction } = {}
 ) {
-  const getMessageL10n = id => `abuse-report-messagebar-${id}`;
-  const getActionL10n = action => getMessageL10n(`action-${action}`);
-
   const barInfo = ABUSE_REPORT_MESSAGE_BARS[definitionId];
   if (!barInfo) {
     throw new Error(`message-bar definition not found: ${definitionId}`);
   }
-  const { id, dismissable, actions, type } = barInfo;
-
-  const messagebar = document.createElement("moz-message-bar");
+  const { dismissable, actions, type, l10n } = barInfo;
 
   // TODO(Bug 1789718): Remove after the deprecated XPIProvider-based
   // implementation is also removed.
   const mappingAddonType =
     addonType === "sitepermission-deprecated" ? "sitepermission" : addonType;
 
-  document.l10n.setAttributes(
-    messagebar,
-    getMessageL10n(
-      barInfo.addonTypeSuffix ? `${id}-${mappingAddonType}2` : `${id}2`
-    ),
-    { "addon-name": addonName || addonId }
-  );
+  const getMessageL10n = () => {
+    return l10n.idsPerAddonType
+      ? l10n.idsPerAddonType[mappingAddonType]
+      : l10n.id;
+  };
+  const getActionL10n = action => {
+    return l10n.actionIdsPerAddonType
+      ? l10n.actionIdsPerAddonType[mappingAddonType][action]
+      : l10n.actionIds[action];
+  };
+
+  const messagebar = document.createElement("moz-message-bar");
+
+  document.l10n.setAttributes(messagebar, getMessageL10n(), {
+    "addon-name": addonName || addonId,
+  });
   messagebar.setAttribute("data-l10n-attrs", "message");
 
   actions?.forEach(action => {
-    // Some of the message bars require a different per addonType
-    // Fluent id for their actions.
-    const actionId = barInfo.actionAddonTypeSuffix
-      ? `${action}-${mappingAddonType}`
-      : action;
     const buttonEl = document.createElement("button");
     buttonEl.addEventListener("click", () => onaction && onaction(action));
-    document.l10n.setAttributes(buttonEl, getActionL10n(actionId));
+    document.l10n.setAttributes(buttonEl, getActionL10n(action));
     buttonEl.setAttribute("slot", "actions");
     messagebar.appendChild(buttonEl);
   });
