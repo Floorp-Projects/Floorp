@@ -377,7 +377,7 @@ const OPTIN_DEFAULT = {
           action: {
             type: "OPEN_URL",
             data: {
-              args: "https://www.mozilla.org/privacy/firefox/",
+              args: "https://www.fakespot.com/privacy-policy",
               where: "tab",
             },
           },
@@ -386,7 +386,7 @@ const OPTIN_DEFAULT = {
           action: {
             type: "OPEN_URL",
             data: {
-              args: "https://www.mozilla.org/about/legal/terms/firefox/",
+              args: "https://www.fakespot.com/terms",
               where: "tab",
             },
           },
