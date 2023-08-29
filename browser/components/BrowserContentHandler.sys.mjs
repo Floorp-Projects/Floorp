@@ -399,8 +399,10 @@ nsBrowserContentHandler.prototype = {
 
   /* nsICommandLineHandler */
   handle: function bch_handle(cmdLine) {
-    if (cmdLine.handleFlag("kiosk", false) ||
-        cmdLine.handleFlagWithParam("kiosk-monitor", false)) {
+    if (
+      cmdLine.handleFlag("kiosk", false) ||
+      cmdLine.handleFlagWithParam("kiosk-monitor", false)
+    ) {
       gKiosk = true;
     }
     if (cmdLine.handleFlag("disable-pinch", false)) {
@@ -633,7 +635,8 @@ nsBrowserContentHandler.prototype = {
     info +=
       "  --first-startup    Run post-install actions before opening a new window.\n";
     info += "  --kiosk            Start the browser in kiosk mode.\n";
-    info += "  --kiosk-monitor <num> Place kiosk browser window on given monitor.\n";
+    info +=
+      "  --kiosk-monitor <num> Place kiosk browser window on given monitor.\n";
     info +=
       "  --disable-pinch    Disable touch-screen and touch-pad pinch gestures.\n";
     return info;
