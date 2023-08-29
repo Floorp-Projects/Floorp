@@ -774,11 +774,6 @@ ElementState HTMLTextAreaElement::IntrinsicState() const {
       state |= ElementState::USER_VALID;
     }
   }
-
-  if (IsValueEmpty() && HasAttr(nsGkAtoms::placeholder)) {
-    state |= ElementState::PLACEHOLDER_SHOWN;
-  }
-
   return state;
 }
 
@@ -919,6 +914,7 @@ void HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (nsTextControlFrame* f = do_QueryFrame(GetPrimaryFrame())) {
         f->PlaceholderChanged(aOldValue, aValue);
       }
+      UpdatePlaceholderShownState();
     } else if (aName == nsGkAtoms::dir && aValue &&
                aValue->Equals(nsGkAtoms::_auto, eIgnoreCase)) {
       SetDirectionFromValue(aNotify);
@@ -1120,6 +1116,15 @@ void HTMLTextAreaElement::InitializeKeyboardEventListeners() {
   mState->InitializeKeyboardEventListeners();
 }
 
+void HTMLTextAreaElement::UpdatePlaceholderShownState() {
+  const bool shown = IsValueEmpty() && HasAttr(nsGkAtoms::placeholder);
+  if (shown) {
+    AddStates(ElementState::PLACEHOLDER_SHOWN);
+  } else {
+    RemoveStates(ElementState::PLACEHOLDER_SHOWN);
+  }
+}
+
 void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
                                          bool aNewValueEmpty,
                                          const nsAString* aKnownNewValue) {
@@ -1127,11 +1132,13 @@ void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
     mLastValueChangeWasInteractive = aKind == ValueChangeKind::UserInteraction;
   }
 
-  const bool emptyBefore = IsValueEmpty();
-  if (aNewValueEmpty) {
-    AddStates(ElementState::VALUE_EMPTY);
-  } else {
-    RemoveStates(ElementState::VALUE_EMPTY);
+  if (aNewValueEmpty != IsValueEmpty()) {
+    if (aNewValueEmpty) {
+      AddStates(ElementState::VALUE_EMPTY);
+    } else {
+      RemoveStates(ElementState::VALUE_EMPTY);
+    }
+    UpdatePlaceholderShownState();
   }
 
   // Update the validity state
@@ -1144,8 +1151,7 @@ void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
     SetDirectionFromValue(true, aKnownNewValue);
   }
 
-  if (validBefore != IsValid() ||
-      (emptyBefore != IsValueEmpty() && HasAttr(nsGkAtoms::placeholder))) {
+  if (validBefore != IsValid()) {
     UpdateState(true);
   }
 }

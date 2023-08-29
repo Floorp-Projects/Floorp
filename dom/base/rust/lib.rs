@@ -178,7 +178,8 @@ bitflags! {
             Self::TOPMOST_MODAL.bits |
             Self::REVEALED.bits |
             Self::VALUE_EMPTY.bits |
-            Self::INCREMENT_SCRIPT_LEVEL.bits;
+            Self::INCREMENT_SCRIPT_LEVEL.bits |
+            Self::PLACEHOLDER_SHOWN.bits;
 
         const INTRINSIC_STATES = !Self::EXTERNALLY_MANAGED_STATES.bits;
     }
