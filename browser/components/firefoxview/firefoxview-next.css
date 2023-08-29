@@ -23,6 +23,7 @@
 
   --fxview-sidebar-width: 286px;
   --fxview-margin-top: 72px;
+  --fxview-card-padding-inline: 4px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -115,6 +116,13 @@ fxview-tab-list.with-context-menu::part(secondary-button) {
 }
 
 .sticky-container.bottom-fade {
+  /*
+   * padding-inline is doubled to allow for the negative margin below to offset the
+   * container so that the box-shadows on the cards are hidden as they pass underneath.
+   */
+  padding-inline: calc(var(--fxview-card-padding-inline) * 2);
+  margin: 0 calc(var(--fxview-card-padding-inline) * -1);
+
   background:
   linear-gradient(
     to bottom,
@@ -129,7 +137,7 @@ fxview-tab-list.with-context-menu::part(secondary-button) {
 }
 
 .cards-container {
-  padding-inline: 4px;
+  padding-inline: var(--fxview-card-padding-inline);
 }
 
 /* This should be supported within panel-{item,list} rather than modifying it */
