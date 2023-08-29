@@ -8,11 +8,15 @@
 #define mozilla_dom_ScriptLoadContext_h
 
 #include "js/AllocPolicy.h"
+#include "js/CompileOptions.h"  // JS::OwningCompileOptions
+#include "js/experimental/JSStencil.h"  // JS::FrontendContext, JS::Stencil, JS::InstantiationStorage
 #include "js/RootingAPI.h"
 #include "js/SourceText.h"
+#include "js/Transcoding.h"  // JS::TranscodeResult
 #include "js/TypeDecls.h"
 #include "js/loader/LoadContextBase.h"
 #include "js/loader/ScriptKind.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CORSMode.h"
@@ -20,9 +24,12 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MaybeOneOf.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/PreloaderBase.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+#include "mozilla/TaskController.h"  // mozilla::Task
+#include "mozilla/Utf8.h"            // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 #include "nsCOMPtr.h"
@@ -30,10 +37,7 @@
 #include "nsIScriptElement.h"
 
 class nsICacheInfoChannel;
-
-namespace JS {
-class OffThreadToken;
-}  // namespace JS
+struct JSContext;
 
 namespace mozilla::dom {
 
@@ -75,6 +79,71 @@ class Element;
  *
  */
 
+class OffThreadCompilationCompleteRunnable;
+
+// Base class for the off-thread compile or off-thread decode tasks.
+class CompileOrDecodeTask : public mozilla::Task {
+ protected:
+  explicit CompileOrDecodeTask(
+      OffThreadCompilationCompleteRunnable* aCompleteRunnable);
+  virtual ~CompileOrDecodeTask();
+
+  nsresult InitFrontendContext();
+
+  void DidRunTask(const MutexAutoLock& aProofOfLock,
+                  RefPtr<JS::Stencil>&& aStencil);
+
+  bool IsCancelled(const MutexAutoLock& aProofOfLock) const {
+    return !mCompleteRunnable;
+  }
+
+ public:
+  // Returns the result of the compilation or decode if it was successful.
+  // Returns nullptr otherwise, and sets pending exception on JSContext.
+  //
+  // aInstantiationStorage receives the storage allocated off main thread
+  // on successful case.
+  already_AddRefed<JS::Stencil> StealResult(
+      JSContext* aCx, JS::InstantiationStorage* aInstantiationStorage);
+
+  // Cancel the task.
+  // If the task is already running, this waits for the task to finish.
+  void Cancel();
+
+ protected:
+  static constexpr size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
+
+  // This mutex is locked during running the task or cancelling task.
+  mozilla::Mutex mMutex;
+
+  // The result of decode task, to distinguish throwing case and decode error.
+  JS::TranscodeResult mResult = JS::TranscodeResult::Ok;
+
+  // An option used to compile the code, or the equivalent for decode.
+  // This holds the filename pointed by errors reported to JS::FrontendContext.
+  JS::OwningCompileOptions mOptions;
+
+  // Owning-pointer for the context associated with the script compilation.
+  //
+  // The context is allocated on main thread in InitFrontendContext method,
+  // and is freed on any thread in the destructor.
+  JS::FrontendContext* mFrontendContext = nullptr;
+
+  // The pointed OffThreadCompilationCompleteRunnable is kept alive by
+  // ScriptLoadContext::mRunnable.
+  //
+  // This shouldn't be RefPtr, given this task can be freed off main thread.
+  //
+  // If this task is cancelled before running, this field is cleared.
+  OffThreadCompilationCompleteRunnable* mCompleteRunnable;
+
+ private:
+  // The result of the compilation or decode.
+  RefPtr<JS::Stencil> mStencil;
+
+  JS::InstantiationStorage mInstantiationStorage;
+};
+
 class ScriptLoadContext : public JS::loader::LoadContextBase,
                           public PreloaderBase {
  protected:
@@ -94,10 +163,6 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   bool IsPreload() const;
 
   bool CompileStarted() const;
-
-  JS::OffThreadToken** OffThreadTokenPtr() {
-    return mOffThreadToken ? &mOffThreadToken : nullptr;
-  }
 
   bool IsTracking() const { return mIsTracking; }
   void SetIsTracking() {
@@ -154,6 +219,11 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
 
   void MaybeCancelOffThreadScript();
 
+  // Finish the off-main-thread compilation and return the result, or
+  // convert the compilation error to runtime error.
+  already_AddRefed<JS::Stencil> StealOffThreadResult(
+      JSContext* aCx, JS::InstantiationStorage* aInstantiationStorage);
+
   ScriptMode mScriptMode;  // Whether this is a blocking, defer or async script.
   bool mScriptFromHead;    // Synchronous head script block loading of other non
                            // js/css content.
@@ -170,9 +240,12 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   bool mWasCompiledOMT;   // True if the script has been compiled off main
                           // thread.
 
-  // Off-thread parsing token. Set at the start of off-thread parsing and
-  // cleared when the result of the parse is used.
-  JS::OffThreadToken* mOffThreadToken;
+  // Task that performs off-thread compilation or off-thread decode.
+  // This field is used to take the result of the task, or cancel the task.
+  //
+  // Set to non-null on the task creation, and set to null when taking the
+  // result or cancelling the task.
+  RefPtr<CompileOrDecodeTask> mCompileOrDecodeTask;
 
   // Runnable that is dispatched to the main thread when off-thread compilation
   // completes.

@@ -89,6 +89,11 @@ struct InstantiationStorage {
 
   ~InstantiationStorage();
 
+  void operator=(InstantiationStorage&& other) {
+    gcOutput_ = other.gcOutput_;
+    other.gcOutput_ = nullptr;
+  }
+
  private:
   InstantiationStorage(const InstantiationStorage& other) = delete;
   void operator=(const InstantiationStorage& aOther) = delete;
