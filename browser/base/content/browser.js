@@ -7501,6 +7501,28 @@ var WebAuthnPromptHelper = {
   },
 
   observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "fullscreen-nav-toolbox":
+        // Prevent the navigation toolbox from being hidden while a WebAuthn
+        // prompt is visible.
+        if (aData == "hidden" && this._tid != 0) {
+          FullScreen.showNavToolbox();
+        }
+        return;
+      case "fullscreen-painted":
+        // Prevent DOM elements from going fullscreen while a WebAuthn
+        // prompt is shown.
+        if (this._tid != 0) {
+          FullScreen.exitDomFullScreen();
+        }
+        return;
+      case this._topic:
+        break;
+      default:
+        return;
+    }
+    // aTopic is equal to this._topic
+
     let data = JSON.parse(aData);
 
     // If we receive a cancel, it might be a WebAuthn prompt starting in another
@@ -7760,6 +7782,24 @@ var WebAuthnPromptHelper = {
     options = {}
   ) {
     this.reset();
+    this._tid = tid;
+
+    // We need to prevent some fullscreen transitions while WebAuthn prompts
+    // are shown. The `fullscreen-painted` topic is notified when DOM elements
+    // go fullscreen.
+    Services.obs.addObserver(this, "fullscreen-painted");
+
+    // The `fullscreen-nav-toolbox` topic is notified when the nav toolbox is
+    // hidden.
+    Services.obs.addObserver(this, "fullscreen-nav-toolbox");
+
+    // Ensure that no DOM elements are already fullscreen.
+    FullScreen.exitDomFullScreen();
+
+    // Ensure that the nav toolbox is being shown.
+    if (window.fullScreen) {
+      FullScreen.showNavToolbox();
+    }
 
     let brandShortName = document
       .getElementById("bundle_brand")
@@ -7774,12 +7814,13 @@ var WebAuthnPromptHelper = {
     options.persistent = true;
     options.eventCallback = event => {
       if (event == "removed") {
+        Services.obs.removeObserver(this, "fullscreen-painted");
+        Services.obs.removeObserver(this, "fullscreen-nav-toolbox");
         this._current = null;
         this._tid = 0;
       }
     };
 
-    this._tid = tid;
     this._current = PopupNotifications.show(
       gBrowser.selectedBrowser,
       `webauthn-prompt-${id}`,
