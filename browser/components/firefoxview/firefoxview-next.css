@@ -12,6 +12,7 @@
   --fxview-element-background-hover: color-mix(in srgb, var(--fxview-background-color) 90%, currentColor);
   --fxview-element-background-active: color-mix(in srgb, var(--fxview-background-color) 80%, currentColor);
   --fxview-text-primary-color: var(--newtab-text-primary-color, var(--in-content-page-color));
+  --fxview-text-secondary-color: color-mix(in srgb, currentColor 70%, transparent);
   --fxview-text-color-hover: var(--newtab-text-primary-color);
   --fxview-primary-action-background: var(--newtab-primary-action-background, #0061e0);
   --fxview-border: var(--fc-border-light, #CFCFD8);
@@ -162,4 +163,8 @@ fxview-category-navigation {
 fxview-category-navigation h1 {
   font-size: 1.6em;
   font-weight: 700;
+}
+
+fxview-empty-state:not([isSelectedTab]) button[slot="primary-action"] {
+  margin-inline-start: 0;
 }
