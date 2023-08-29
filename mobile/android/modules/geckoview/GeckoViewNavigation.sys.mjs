@@ -576,6 +576,16 @@ export class GeckoViewNavigation extends GeckoViewModule {
     };
   }
 
+  async isProductURL(aLocationURI) {
+    if (AppConstants.NIGHTLY_BUILD) {
+      if (lazy.isProductURL(aLocationURI)) {
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:OnProductUrl",
+        });
+      }
+    }
+  }
+
   // WebProgress event handler.
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
     debug`onLocationChange`;
@@ -633,14 +643,6 @@ export class GeckoViewNavigation extends GeckoViewModule {
       }
     }
 
-    if (AppConstants.NIGHTLY_BUILD) {
-      if (lazy.isProductURL(aLocationURI)) {
-        this.eventDispatcher.sendRequest({
-          type: "GeckoView:OnProductUrl",
-        });
-      }
-    }
-
     const message = {
       type: "GeckoView:LocationChange",
       uri: fixedURI.displaySpec,
@@ -651,6 +653,8 @@ export class GeckoViewNavigation extends GeckoViewModule {
     };
 
     this.eventDispatcher.sendRequest(message);
+
+    this.isProductURL(aLocationURI);
   }
 }
 
