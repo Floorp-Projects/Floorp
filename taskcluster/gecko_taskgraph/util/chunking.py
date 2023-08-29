@@ -42,6 +42,7 @@ def guess_mozinfo_from_task(task, repo=""):
         A dict that can be used as a mozinfo replacement.
     """
     setting = task["test-setting"]
+    runtime_keys = setting["runtime"].keys()
     arch = setting["platform"]["arch"]
     p_os = setting["platform"]["os"]
 
@@ -50,7 +51,6 @@ def guess_mozinfo_from_task(task, repo=""):
         "bits": 32 if "32" in arch else 64,
         "ccov": setting["build"].get("ccov", False),
         "debug": setting["build"]["type"] in ("debug", "debug-isolated-process"),
-        "headless": "-headless" in task["test-name"],
         "tsan": setting["build"].get("tsan", False),
         "nightly_build": repo in ["mozilla-central", "autoland", "try", ""],  # trunk
     }
@@ -104,23 +104,24 @@ def guess_mozinfo_from_task(task, repo=""):
             break
 
     for variant in TEST_VARIANTS:
-        tag = TEST_VARIANTS[variant]["suffix"]
-        value = variant in setting["runtime"].keys()
+        tag = TEST_VARIANTS[variant].get("mozinfo", "")
+        if tag == "":
+            continue
 
-        if tag == "1proc":
-            tag = "e10s"
+        value = variant in runtime_keys
+
+        if variant == "1proc":
             value = not value
-        if tag == "fis":
-            tag = "fission"
+        elif "fission" in variant:
             value = any(
-                "1proc" not in key or "no-fission" not in key
-                for key in setting["runtime"].keys()
+                "1proc" not in key or "no-fission" not in key for key in runtime_keys
             )
-        if tag == "xorigin":
-            value = any("xorigin" in key for key in setting["runtime"].keys())
+            if "no-fission" not in variant:
+                value = not value
+        elif tag == "xorigin":
+            value = any("xorigin" in key for key in runtime_keys)
 
         info[tag] = value
-
     return info
 
 
