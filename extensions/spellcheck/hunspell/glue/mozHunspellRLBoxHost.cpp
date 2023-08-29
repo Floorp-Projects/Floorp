@@ -39,7 +39,7 @@ Result<Ok, nsresult> mozHunspellFileMgrHost::Open(
   return Ok();
 }
 
-Result<Ok, nsresult> mozHunspellFileMgrHost::ReadLine(nsCString& aLine) {
+Result<Ok, nsresult> mozHunspellFileMgrHost::ReadLine(nsACString& aLine) {
   if (!mStream) {
     return Err(NS_ERROR_NOT_INITIALIZED);
   }
@@ -67,15 +67,8 @@ Result<int64_t, nsresult> mozHunspellFileMgrHost::GetSize(
   return ret;
 }
 
-bool mozHunspellFileMgrHost::GetLine(std::string& aResult) {
-  nsAutoCString line;
-  auto res = ReadLine(line);
-  if (res.isErr()) {
-    return false;
-  }
-
-  aResult.assign(line.BeginReading(), line.Length());
-  return true;
+bool mozHunspellFileMgrHost::GetLine(nsACString& aResult) {
+  return !ReadLine(aResult).isErr();
 }
 
 /* static */
@@ -159,20 +152,20 @@ tainted_hunspell<bool> mozHunspellCallbacks::GetLine(
     tainted_hunspell<char**> t_aLinePtr) {
   mozHunspellFileMgrHost& inst =
       mozHunspellCallbacks::GetMozHunspellFileMgrHost(t_aFd);
-  std::string line;
+  nsAutoCString line;
   bool ok = inst.GetLine(line);
   // If the getline fails, return a null which is "graceful" failure
   if (ok) {
     // Copy the line into the sandbox. This memory is eventually freed by
     // hunspell.
-    size_t size = line.size() + 1;
+    size_t size = line.Length() + 1;
     tainted_hunspell<char*> t_line = aSandbox.malloc_in_sandbox<char>(size);
 
     if (t_line == nullptr) {
       // If malloc fails, we should go to "graceful" failure path
       ok = false;
     } else {
-      rlbox::memcpy(aSandbox, t_line, line.c_str(), size);
+      rlbox::memcpy(aSandbox, t_line, line.get(), size);
     }
     *t_aLinePtr = t_line;
   } else {
