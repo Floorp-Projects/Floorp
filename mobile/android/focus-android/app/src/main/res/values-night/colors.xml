@@ -104,7 +104,6 @@
     <color name="settings_background">@color/photonInk05</color>
     <color name="preference_learn_more_link">@color/accentBright</color>
     <color name="selected_search_engine">@color/accentBright</color>
-    <color name="settings_whats_new">@color/accentBright</color>
 
     <color name="colorSettingsTint">@color/photonGrey10</color>
     <color name="colorAccentSettings">@color/accentBright</color>
