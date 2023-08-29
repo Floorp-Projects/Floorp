@@ -751,14 +751,13 @@ class Element : public FragmentOrElement {
   // Also need to allow Link to call UpdateLinkState.
   friend class Link;
 
-  void NotifyStateChange(ElementState aStates);
-
-  void NotifyStyleStateChange(ElementState aStates);
-
   // Style state computed from element's state and style locks.
   ElementState StyleStateFromLocks() const;
 
  protected:
+  void NotifyStateChange(ElementState aStates);
+  void NotifyStyleStateChange(ElementState aStates);
+
   // Methods for the ESM, nsGlobalWindow, focus manager and Document to
   // manage state bits.
   // These will handle setting up script blockers when they notify, so no need

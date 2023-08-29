@@ -11,9 +11,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Meter)
 
 namespace mozilla::dom {
 
-const double HTMLMeterElement::kDefaultValue = 0.0;
-const double HTMLMeterElement::kDefaultMin = 0.0;
-const double HTMLMeterElement::kDefaultMax = 1.0;
+static const double kDefaultValue = 0.0;
+static const double kDefaultMin = 0.0;
+static const double kDefaultMax = 1.0;
 
 HTMLMeterElement::HTMLMeterElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
@@ -23,28 +23,46 @@ HTMLMeterElement::~HTMLMeterElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLMeterElement)
 
-ElementState HTMLMeterElement::IntrinsicState() const {
-  ElementState state = nsGenericHTMLElement::IntrinsicState();
-
-  state |= GetOptimumState();
-
-  return state;
+static bool IsInterestingAttr(int32_t aNamespaceID, nsAtom* aAttribute) {
+  if (aNamespaceID != kNameSpaceID_None) {
+    return false;
+  }
+  return aAttribute == nsGkAtoms::value || aAttribute == nsGkAtoms::max ||
+         aAttribute == nsGkAtoms::min || aAttribute == nsGkAtoms::low ||
+         aAttribute == nsGkAtoms::high || aAttribute == nsGkAtoms::optimum;
 }
 
 bool HTMLMeterElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsIPrincipal* aMaybeScriptedPrincipal,
                                       nsAttrValue& aResult) {
-  if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::value || aAttribute == nsGkAtoms::max ||
-        aAttribute == nsGkAtoms::min || aAttribute == nsGkAtoms::low ||
-        aAttribute == nsGkAtoms::high || aAttribute == nsGkAtoms::optimum) {
-      return aResult.ParseDoubleValue(aValue);
-    }
+  if (IsInterestingAttr(aNamespaceID, aAttribute)) {
+    return aResult.ParseDoubleValue(aValue);
   }
-
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                               aMaybeScriptedPrincipal, aResult);
+}
+
+void HTMLMeterElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                    const nsAttrValue* aValue,
+                                    const nsAttrValue* aOldValue,
+                                    nsIPrincipal* aSubjectPrincipal,
+                                    bool aNotify) {
+  if (IsInterestingAttr(aNameSpaceID, aName)) {
+    UpdateOptimumState(aNotify);
+  }
+  nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue, aOldValue,
+                                     aSubjectPrincipal, aNotify);
+}
+
+void HTMLMeterElement::UpdateOptimumState(bool aNotify) {
+  const auto oldState = State();
+  RemoveStatesSilently(ElementState::METER_OPTIMUM_STATES);
+  AddStatesSilently(GetOptimumState());
+  const auto newState = State();
+  if (aNotify && oldState != newState) {
+    NotifyStateChange(oldState ^ newState);
+  }
 }
 
 /*
