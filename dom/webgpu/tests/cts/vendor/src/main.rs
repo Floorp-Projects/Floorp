@@ -123,8 +123,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
         let child = gecko_ckt.child(join_path(["testing", "web-platform", "mozilla", "tests"]));
         ensure!(
             child.is_dir(),
-            "WPT tests dir ({}) does not appear to exist",
-            child,
+            "WPT tests dir ({child}) does not appear to exist"
         );
         child
     };
@@ -370,8 +369,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
                 ensure!(
                     boilerplate.contains(expected_wpt_script_tag),
                     "failed to find expected `script` tag for `wpt.js` \
-                    ({:?}); did something change upstream?",
-                    expected_wpt_script_tag
+                    ({expected_wpt_script_tag:?}); did something change upstream?",
                 );
                 boilerplate.replacen(
                     expected_wpt_script_tag,
@@ -396,7 +394,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
                 "one or more test case lines failed to parse, fix it and try again"
             );
         };
-        log::trace!("\"original\" HTML boilerplate:\n\n{}", cts_boilerplate);
+        log::trace!("\"original\" HTML boilerplate:\n\n{cts_boilerplate}");
 
         ensure!(
             !cts_cases.is_empty(),
