@@ -43,6 +43,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
             "foo": {
                 "description": "foo variant",
                 "suffix": "foo",
+                "mozinfo": "foo",
                 "component": "foo bar",
                 "expiration": "never",
                 "merge": {
@@ -56,6 +57,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
             "bar": {
                 "description": "bar variant",
                 "suffix": "bar",
+                "mozinfo": "bar",
                 "component": "foo bar",
                 "expiration": "never",
                 "when": {
