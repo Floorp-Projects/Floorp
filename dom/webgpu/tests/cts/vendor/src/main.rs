@@ -357,6 +357,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
                         }
                     );
                 }
+
                 // NOTE: Adding `_mozilla` is necessary because [that's how it's mounted][source].
                 //
                 // [source]: https://searchfox.org/mozilla-central/rev/cd2121e7d83af1b421c95e8c923db70e692dab5f/testing/web-platform/mozilla/README#1-4]
@@ -371,11 +372,37 @@ fn run(args: CliArgs) -> miette::Result<()> {
                     "failed to find expected `script` tag for `wpt.js` \
                     ({expected_wpt_script_tag:?}); did something change upstream?",
                 );
-                boilerplate.replacen(
+                let mut boilerplate = boilerplate.replacen(
                     expected_wpt_script_tag,
                     "<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>",
                     1,
-                )
+                );
+
+                log::info!(
+                    "  …adding long timeouts to WPT boilerplate to reduce timeout failures…"
+                );
+                let timeout_insert_idx = {
+                    let meta_charset_utf8 = "\n<meta charset=utf-8>\n";
+                    let meta_charset_utf8_idx =
+                        boilerplate.find(meta_charset_utf8).ok_or_else(|| {
+                            miette!(
+                                "could not find {meta_charset_utf8:?} in document; did something \
+                                change upstream?"
+                            )
+                        })?;
+                    meta_charset_utf8_idx + meta_charset_utf8.len()
+                };
+                boilerplate.insert_str(
+                    timeout_insert_idx,
+                    concat!(
+                        r#"<meta name="timeout" content="long">"#,
+                        " <!-- TODO: narrow to only where it's needed, see ",
+                        "https://bugzilla.mozilla.org/show_bug.cgi?id=1850537",
+                        " -->\n"
+                    ),
+                );
+
+                boilerplate
             };
 
             log::info!("  …parsing test variants in {cts_https_html_path}…");
