@@ -944,7 +944,11 @@ export class ContextMenuChild extends JSWindowActorChild {
         currentSrc: context.target.currentSrc,
         width: context.target.width,
         height: context.target.height,
-        imageText: context.target.title || context.target.alt,
+        imageText: this.contentWindow.ImageDocument.isInstance(
+          context.target.ownerDocument
+        )
+          ? undefined
+          : context.target.title || context.target.alt,
       };
       const { SVGAnimatedLength } = context.target.ownerGlobal;
       if (SVGAnimatedLength.isInstance(context.imageInfo.height)) {
