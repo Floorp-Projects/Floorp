@@ -21,6 +21,7 @@ FINAL_TARGET_FILES.content += [
 ]
 
 modules = [
+    "content/ContentTaskUtils.sys.mjs",
     "content/MockColorPicker.sys.mjs",
     "content/MockFilePicker.sys.mjs",
     "content/MockPermissionPrompt.sys.mjs",
