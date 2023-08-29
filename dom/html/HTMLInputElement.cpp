@@ -1362,6 +1362,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (nsTextControlFrame* f = do_QueryFrame(GetPrimaryFrame())) {
         f->PlaceholderChanged(aOldValue, aValue);
       }
+      UpdatePlaceholderShownState();
     }
 
     if (CreatesDateTimeWidget()) {
@@ -4386,6 +4387,8 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
     }
   }
 
+  // Whether placeholder applies might have changed.
+  UpdatePlaceholderShownState();
   // https://html.spec.whatwg.org/#input-type-change
   switch (GetValueMode()) {
     case VALUE_MODE_DEFAULT:
@@ -6095,11 +6098,6 @@ ElementState HTMLInputElement::IntrinsicState() const {
     }
   }
 
-  if (IsValueEmpty() && PlaceholderApplies() &&
-      HasAttr(nsGkAtoms::placeholder)) {
-    state |= ElementState::PLACEHOLDER_SHOWN;
-  }
-
   return state;
 }
 
@@ -6804,6 +6802,16 @@ void HTMLInputElement::InitializeKeyboardEventListeners() {
   }
 }
 
+void HTMLInputElement::UpdatePlaceholderShownState() {
+  const bool shown =
+      IsValueEmpty() && PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder);
+  if (shown) {
+    AddStates(ElementState::PLACEHOLDER_SHOWN);
+  } else {
+    RemoveStates(ElementState::PLACEHOLDER_SHOWN);
+  }
+}
+
 void HTMLInputElement::OnValueChanged(ValueChangeKind aKind,
                                       bool aNewValueEmpty,
                                       const nsAString* aKnownNewValue) {
@@ -6812,10 +6820,13 @@ void HTMLInputElement::OnValueChanged(ValueChangeKind aKind,
     mLastValueChangeWasInteractive = aKind == ValueChangeKind::UserInteraction;
   }
 
-  if (aNewValueEmpty) {
-    AddStates(ElementState::VALUE_EMPTY);
-  } else {
-    RemoveStates(ElementState::VALUE_EMPTY);
+  if (aNewValueEmpty != IsValueEmpty()) {
+    if (aNewValueEmpty) {
+      AddStates(ElementState::VALUE_EMPTY);
+    } else {
+      RemoveStates(ElementState::VALUE_EMPTY);
+    }
+    UpdatePlaceholderShownState();
   }
 
   UpdateAllValidityStates(true);
@@ -6823,9 +6834,6 @@ void HTMLInputElement::OnValueChanged(ValueChangeKind aKind,
   if (HasDirAuto()) {
     SetDirectionFromValue(true, aKnownNewValue);
   }
-
-  // :placeholder-shown pseudo-class may change when the value changes.
-  UpdateState(true);
 }
 
 bool HTMLInputElement::HasCachedSelection() {
