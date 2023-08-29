@@ -30,9 +30,6 @@ HTMLEmbedElement::HTMLEmbedElement(
     : nsGenericHTMLElement(std::move(aNodeInfo)) {
   RegisterActivityObserver();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
-
-  // By default we're in the loading state
-  AddStatesSilently(ElementState::LOADING);
 }
 
 HTMLEmbedElement::~HTMLEmbedElement() {

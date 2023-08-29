@@ -1348,14 +1348,9 @@ CSSIntSize nsImageLoadingContent::GetWidthHeightForImage() {
 
 ElementState nsImageLoadingContent::ImageState() const {
   ElementState states;
-
   if (mBroken) {
     states |= ElementState::BROKEN;
   }
-  if (mLoading) {
-    states |= ElementState::LOADING;
-  }
-
   return states;
 }
 
