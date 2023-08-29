@@ -213,7 +213,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_compose_ui_tooling
     implementation ComponentsDependencies.androidx_compose_foundation
     implementation ComponentsDependencies.androidx_compose_material
-    implementation FocusDependencies.androidx_compose_runtime_livedata
+    implementation ComponentsDependencies.androidx_compose_runtime_livedata
     implementation ComponentsDependencies.androidx_constraintlayout
     implementation FocusDependencies.androidx_constraint_layout_compose
     implementation ComponentsDependencies.androidx_core_ktx

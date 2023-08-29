@@ -19,7 +19,6 @@ object FocusVersions {
     }
 
     object AndroidX {
-        const val compose = "1.4.3"
         const val constraint_layout_compose = "1.0.1"
         const val preference = "1.2.0"
         const val splashscreen = "1.0.1"
@@ -45,7 +44,6 @@ object FocusVersions {
 }
 
 object FocusDependencies {
-    const val androidx_compose_runtime_livedata = "androidx.compose.runtime:runtime-livedata:${FocusVersions.AndroidX.compose}"
     const val androidx_constraint_layout_compose =
         "androidx.constraintlayout:constraintlayout-compose:${FocusVersions.AndroidX.constraint_layout_compose}"
 
