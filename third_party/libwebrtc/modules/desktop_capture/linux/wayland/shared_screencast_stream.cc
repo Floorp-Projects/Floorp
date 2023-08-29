@@ -28,6 +28,13 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/time_utils.h"
 
+// Wrapper for gfxVars::UseDMABuf() as we can't include gfxVars here.
+// We don't want to use dmabuf of known broken systems.
+// See FEATURE_DMABUF for details.
+namespace mozilla::gfx {
+bool IsDMABufEnabled();
+}
+
 namespace webrtc {
 
 const int kBytesPerPixel = 4;
@@ -294,7 +301,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
   that->modifier_ =
       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
   std::vector<const spa_pod*> params;
-  const int buffer_types = has_modifier
+  const int buffer_types = has_modifier && mozilla::gfx::IsDMABufEnabled()
                                ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
                                : (1 << SPA_DATA_MemFd);
 
