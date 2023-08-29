@@ -634,6 +634,10 @@ void WebRenderLayerManager::ClearCachedResources() {
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardImages();
   mStateManager.ClearCachedResources();
+  CompositorBridgeChild* compositorBridge = GetCompositorBridgeChild();
+  if (compositorBridge) {
+    compositorBridge->ClearCachedResources();
+  }
   WrBridge()->EndClearCachedResources();
 }
 

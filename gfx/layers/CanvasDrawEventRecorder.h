@@ -14,6 +14,9 @@
 namespace mozilla {
 namespace layers {
 
+static const uint8_t kCheckpointEventType = -1;
+static const uint8_t kDropBufferEventType = -2;
+
 class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
  public:
   /**
@@ -56,6 +59,14 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
   CanvasEventRingBuffer() {}
 
   /**
+   * Initializes the shared memory used for the ringbuffer and footers.
+   * @param aOtherPid process ID to share the handles to
+   * @param aReadHandle handle to the shared memory for the buffer
+   */
+  bool InitBuffer(base::ProcessId aOtherPid,
+                  ipc::SharedMemoryBasic::Handle* aReadHandle);
+
+  /**
    * Initialize the write side of a CanvasEventRingBuffer returning handles to
    * the shared memory for the buffer and the two semaphores for waiting in the
    * reader and the writer.
@@ -87,9 +98,19 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
                   CrossProcessSemaphoreHandle aWriterSem,
                   UniquePtr<ReaderServices> aReaderServices);
 
+  /**
+   * Set a new buffer to resume after we have been stopped by the writer.
+   *
+   * @param aReadHandle handle to the shared memory for the buffer
+   * @returns true if initialization succeeds
+   */
+  bool SetNewBuffer(ipc::SharedMemoryBasic::Handle aReadHandle);
+
+  bool IsValid() const { return mSharedMemory; }
+
   bool good() const final { return mGood; }
 
-  bool WriterFailed() const { return mWrite->state == State::Failed; }
+  bool WriterFailed() const { return mWrite && mWrite->state == State::Failed; }
 
   void SetIsBad() final {
     mGood = false;
@@ -143,6 +164,12 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
   bool WaitForCheckpoint(uint32_t aCheckpoint);
 
   /**
+   * Switch to a different sized buffer.
+   */
+  bool SwitchBuffer(base::ProcessId aOtherPid,
+                    ipc::SharedMemoryBasic::Handle* aHandle);
+
+  /**
    * Used to send data back to the writer. This is done through the same shared
    * memory so the writer must wait and read the response after it has submitted
    * the event that uses this.
@@ -161,6 +188,8 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
    * @param aSize the number of chars to read
    */
   void ReturnRead(char* aOut, size_t aSize);
+
+  bool UsingLargeStream() { return mLargeStream; }
 
  protected:
   bool WaitForAndRecalculateAvailableSpace() final;
@@ -220,6 +249,8 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
 
   uint32_t WaitForBytesToRead();
 
+  uint32_t StreamSize();
+
   RefPtr<ipc::SharedMemoryBasic> mSharedMemory;
   UniquePtr<CrossProcessSemaphore> mReaderSemaphore;
   UniquePtr<CrossProcessSemaphore> mWriterSemaphore;
@@ -230,6 +261,7 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
   WriteFooter* mWrite = nullptr;
   ReadFooter* mRead = nullptr;
   bool mGood = false;
+  bool mLargeStream = true;
 };
 
 class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate {
@@ -273,6 +305,13 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate {
    */
   bool WaitForCheckpoint(uint32_t aCheckpoint) {
     return mOutputStream.WaitForCheckpoint(aCheckpoint);
+  }
+
+  bool UsingLargeStream() { return mOutputStream.UsingLargeStream(); }
+
+  bool SwitchBuffer(base::ProcessId aOtherPid,
+                    ipc::SharedMemoryBasic::Handle* aHandle) {
+    return mOutputStream.SwitchBuffer(aOtherPid, aHandle);
   }
 
  private:
