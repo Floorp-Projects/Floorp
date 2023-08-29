@@ -241,6 +241,7 @@ async function test_minimize_make() {
 
   // Close window and wait for main window to be focused again.
   let windowBackPromise = waitForWindowActive(window, true);
+  await BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.closeWindow(win);
   await windowBackPromise;
 }
@@ -271,6 +272,7 @@ async function test_minimize_get() {
 
   // Close window and wait for main window to be focused again.
   let windowBackPromise = waitForWindowActive(window, true);
+  await BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.closeWindow(win);
   await windowBackPromise;
 }
