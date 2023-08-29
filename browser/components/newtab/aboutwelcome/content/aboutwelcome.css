@@ -481,8 +481,8 @@
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main {
   width: auto;
-  margin: 0 auto;
   height: auto;
+  margin: 0 auto;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content {
   border-radius: 0;
@@ -493,9 +493,18 @@
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content.no-steps {
   padding: 16px 0 36px;
 }
-.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text h1 {
-  width: auto;
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text {
   text-align: start;
+}
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text h1 {
+  font-size: 1.37em;
+  width: auto;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text h2,
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text .cta-paragraph {
+  font-size: 0.8em;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .primary,
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .secondary {

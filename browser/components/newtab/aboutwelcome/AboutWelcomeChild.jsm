@@ -345,14 +345,26 @@ const OPTIN_DEFAULT = {
   id: "FAKESPOT_OPTIN_DEFAULT",
   template: "multistage",
   backdrop: "transparent",
-  transitions: true,
   screens: [
     {
       id: "FS_OPT_IN",
       content: {
         position: "split",
         title: { string_id: "shopping-onboarding-headline" },
-        subtitle: `Not all reviews are created equal. To help you find real reviews, from real people, Firefox can use AI technology to analyze this product’s reviews.`,
+        subtitle: `See how reliable product reviews are on Amazon before you buy. Review checker is built right into Firefox — and it works on Walmart and Best Buy, too.`,
+        cta_paragraph: {
+          text: {
+            string_id: "shopping-onboarding-body",
+            string_name: "learn-more-link",
+          },
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://www.support.mozilla.org",
+              where: "tab",
+            },
+          },
+        },
         legal_paragraph: {
           text: {
             // fluent ids required to render copy
@@ -380,7 +392,7 @@ const OPTIN_DEFAULT = {
           },
         },
         primary_button: {
-          label: "Analyze Reviews",
+          label: { string_id: "shopping-onboarding-opt-in-button" },
           action: {
             type: "SET_PREF",
             data: {
@@ -392,7 +404,9 @@ const OPTIN_DEFAULT = {
           },
         },
         secondary_button: {
-          label: "Not Now",
+          label: {
+            string_id: "shopping-onboarding-not-now-button",
+          },
           action: {
             type: "SET_PREF",
             data: {
@@ -406,9 +420,6 @@ const OPTIN_DEFAULT = {
         inline_image: {
           url: "chrome://browser/content/shopping/assets/temp-fakespot-rating.svg",
           height: "auto",
-        },
-        info_text: {
-          raw: "Review quality check is available when you shop on Amazon, Best Buy, and Walmart.",
         },
       },
     },

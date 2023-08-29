@@ -145,6 +145,13 @@ shopping-unanalyzed-product-analyze-link = Analyze reviews
 
 ## Onboarding message strings.
 
-shopping-onboarding-headline = Shop based on <b>real</b> reviews
-# Future localization note - "Yes, try it" will need to be directly referenced when the button is added to fluent so it maintains parity with this copy
-shopping-onboarding-opt-in-privacy-policy-and-terms-of-use = By selecting “Yes, try it” you agree to the <a data-l10n-name="privacy_policy">privacy policy</a> and <a data-l10n-name="terms_of_use">terms of use</a> of { -fakespot-brand-name }, a { -vendor-short-name } company.
+shopping-onboarding-headline = Try our trusted guide to product reviews
+
+## The "by" in "Fakespot by Mozilla" presents localization challenges.
+## Once the term is updated in Bug 1847307, we can update its use
+## here. (filed under Bug 1850432)
+
+shopping-onboarding-body = Using the power of { -fakespot-brand-name } by { -vendor-short-name }, we help you avoid biased and inauthentic reviews. Our AI model is always improving to protect you as you shop. <a data-l10n-name="learn-more-link">Learn more</a>
+shopping-onboarding-opt-in-privacy-policy-and-terms-of-use = By selecting “{ shopping-onboarding-opt-in-button }“ you agree to { -fakespot-brand-name } by { -vendor-short-name }’s <a data-l10n-name="privacy_policy">privacy policy</a> and <a data-l10n-name="terms_of_use">terms of use.</a>
+shopping-onboarding-opt-in-button = Yes, try it
+shopping-onboarding-not-now-button = Not now
