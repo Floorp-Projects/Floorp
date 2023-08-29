@@ -13669,7 +13669,7 @@ if (
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.linear-easing-function.enabled")) {
+{
   let linear_function_other_values = [
     "linear(0, 1)",
     "linear(0 0% 50%, 1 50% 100%)",
