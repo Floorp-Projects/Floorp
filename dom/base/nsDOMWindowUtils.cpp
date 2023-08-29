@@ -3097,7 +3097,7 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
       layers::TouchActionHelper::GetAllowedTouchBehaviorForFrame(
           element->GetPrimaryFrame());
 
-  uint32_t flags = layers::DISABLE_ZOOM_OUT;
+  uint32_t flags = layers::DISABLE_ZOOM_OUT | layers::ZOOM_TO_FOCUSED_INPUT;
   if (!Preferences::GetBool("formhelper.autozoom") ||
       Preferences::GetBool("formhelper.autozoom.force-disable.test-only",
                            /* aFallback = */ false) ||
@@ -3139,8 +3139,6 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     // Do not zoom on empty bounds. Bail out.
     return NS_OK;
   }
-
-  bounds.Inflate(15.0f, 0.0f);
 
   bool waitForRefresh = false;
   for (nsIScrollableFrame* scrollAncestor :

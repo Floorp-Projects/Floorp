@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta name="viewport" content="width=device-width">
+<style>
+iframe {
+  position: absolute;
+  width: 1600px;
+  height: 2000px;
+  top: 200px;
+  left: 100px;
+}
+</style>
+<iframe src="zoom-to-focus-input-subframe.html"></iframe>
+<script>
+document.addEventListener('MozReftestInvalidate', async () => {
+  const transformEndPromise = new Promise(resolve => {
+    SpecialPowers.Services.obs.addObserver(function observer() {
+      SpecialPowers.Services.obs.removeObserver(observer, "APZ:TransformEnd");
+      resolve();
+    }, "APZ:TransformEnd");
+  });
+
+  const iframe = document.querySelector("iframe");
+  const input = iframe.contentDocument.querySelector("input");
+  input.focus();
+  SpecialPowers.DOMWindowUtils.zoomToFocusedInput();
+
+  await transformEndPromise;
+
+  document.documentElement.classList.remove('reftest-wait');
+});
+</script>
+</html>
