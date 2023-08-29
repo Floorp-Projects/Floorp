@@ -771,22 +771,42 @@ class GlobalWarnings extends MessageBarStackElement {
       this.removeWarning();
     }
     if (!this.globalWarning) {
-      this.globalWarning = document.createElement("message-bar");
+      this.globalWarning = document.createElement("moz-message-bar");
       this.globalWarning.setAttribute("warning-type", type);
-      let textContainer = document.createElement("span");
-      document.l10n.setAttributes(textContainer, `extensions-warning-${type}`);
-      this.globalWarning.appendChild(textContainer);
+      let { messageId, buttonId } = this.getGlobalWarningL10nIds(type);
+      document.l10n.setAttributes(this.globalWarning, messageId);
+      this.globalWarning.setAttribute("data-l10n-attrs", "message");
       if (opts && opts.action) {
         let button = document.createElement("button");
-        document.l10n.setAttributes(
-          button,
-          `extensions-warning-${type}-button`
-        );
+        document.l10n.setAttributes(button, buttonId);
         button.setAttribute("action", type);
+        button.setAttribute("slot", "actions");
         this.globalWarning.appendChild(button);
       }
       this.appendChild(this.globalWarning);
     }
+  }
+
+  getGlobalWarningL10nIds(type) {
+    const WARNING_TYPE_TO_L10NID_MAPPING = {
+      "safe-mode": {
+        messageId: "extensions-warning-safe-mode2",
+      },
+      "update-security": {
+        messageId: "extensions-warning-update-security2",
+        buttonId: "extensions-warning-update-security-button",
+      },
+      "check-compatibility": {
+        messageId: "extensions-warning-check-compatibility2",
+        buttonId: "extensions-warning-check-compatibility-button",
+      },
+      "imported-addons": {
+        messageId: "extensions-warning-imported-addons2",
+        buttonId: "extensions-warning-imported-addons-button",
+      },
+    };
+
+    return WARNING_TYPE_TO_L10NID_MAPPING[type];
   }
 
   removeWarning() {

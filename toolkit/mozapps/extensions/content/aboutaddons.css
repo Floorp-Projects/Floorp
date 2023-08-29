@@ -168,7 +168,7 @@ search-addons > search-textbox {
 
 /* Plugins aren't yet disabled by safemode (bug 342333),
    so don't show that warning when viewing plugins. */
-#page-header[current-param="plugin"] message-bar[warning-type="safe-mode"] {
+#page-header[current-param="plugin"] moz-message-bar[warning-type="safe-mode"] {
   display: none;
 }
 
