@@ -141,7 +141,6 @@ jsreftest:
             default:
                 by-test-platform:
                     android.*/.*: []
-                    .*wayland.*: []
                     default: built-projects
     virtualization: virtual
 
