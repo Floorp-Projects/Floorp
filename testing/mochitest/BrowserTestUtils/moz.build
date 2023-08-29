@@ -12,5 +12,4 @@ TESTING_JS_MODULES += [
     "ContentEventListenerChild.sys.mjs",
     "ContentEventListenerParent.sys.mjs",
     "ContentTask.sys.mjs",
-    "ContentTaskUtils.sys.mjs",
 ]
