@@ -154,12 +154,7 @@ export class GeckoViewContent extends GeckoViewModule {
         break;
       }
       case "GeckoView:ZoomToInput":
-        // For ZoomToInput we just need to send the message to the current focused one.
-        const actor =
-          Services.focus.focusedContentBrowsingContext.currentWindowGlobal.getActor(
-            "GeckoViewContent"
-          );
-        actor.sendAsyncMessage(aEvent, aData);
+        this.sendToAllChildren(aEvent, aData);
         break;
       case "GeckoView:ScrollBy":
         // Unclear if that actually works with oop iframes?
