@@ -111,8 +111,8 @@ menulist > menupopup > :is(menuitem, menucaption, menu) {
   margin-bottom: 0;
   margin-inline-start: 6px;
   margin-inline-end: 0;
-  width: 1ex;
-  height: 1ex;
+  width: 2ex;
+  height: 2ex;
   /* These next two rules are needed to prevent inheritance and thus ugliness */
   list-style-image: none;
   appearance: auto;

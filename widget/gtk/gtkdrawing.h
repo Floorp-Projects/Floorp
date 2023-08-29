@@ -229,8 +229,6 @@ enum WidgetNodeType : int {
   MOZ_GTK_TREEVIEW_EXPANDER,
   /* Paints the background of menus, context menus. */
   MOZ_GTK_MENUPOPUP,
-  /* Paints the arrow of menuitems that contain submenus */
-  MOZ_GTK_MENUARROW,
   /* Menubar for -moz-headerbar colors */
   MOZ_GTK_MENUBAR,
   /* Paints an arrow in a toolbar button. flags is a GtkArrowType. */
