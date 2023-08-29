@@ -458,6 +458,10 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   policy->AddDir(rdonly, "/run/host/local-fonts");
   policy->AddDir(rdonly, "/var/cache/fontconfig");
 
+  // Bug 1848615
+  policy->AddPath(rdonly, "/usr");
+  policy->AddPath(rdonly, "/nix");
+
   AddLdconfigPaths(policy);
   AddLdLibraryEnvPaths(policy);
 
