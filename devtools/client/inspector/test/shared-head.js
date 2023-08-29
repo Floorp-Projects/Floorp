@@ -841,8 +841,7 @@ async function waitUntilVisitedState(tab, selectors) {
       tab.linkedBrowser,
       selectors,
       args => {
-        // ElementState::VISITED
-        const ELEMENT_STATE_VISITED = 1 << 18;
+        const ELEMENT_STATE_VISITED = 1 << 19;
 
         for (const selector of args) {
           const target =

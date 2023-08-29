@@ -513,11 +513,17 @@ static bool StateChangeMayAffectFrame(const Element& aElement,
     return false;
   }
 
-  if (!brokenChanged) {
+  const bool loadingChanged = aStates.HasState(ElementState::LOADING);
+  if (!brokenChanged && !loadingChanged) {
     return false;
   }
 
   if (aElement.IsHTMLElement(nsGkAtoms::img)) {
+    if (!brokenChanged) {
+      // Loading state doesn't affect <img>, see
+      // `nsImageFrame::ImageFrameTypeForElement`.
+      return false;
+    }
     const bool needsImageFrame =
         nsImageFrame::ImageFrameTypeFor(aElement, *aFrame.Style()) !=
         nsImageFrame::ImageFrameType::None;
@@ -529,7 +535,7 @@ static bool StateChangeMayAffectFrame(const Element& aElement,
     return false;
   }
 
-  return brokenChanged;
+  return brokenChanged || loadingChanged;
 }
 
 /**
