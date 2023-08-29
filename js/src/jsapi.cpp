@@ -2042,13 +2042,13 @@ JS_PUBLIC_API bool JS::PropertySpecNameToPermanentId(JSContext* cx,
   return true;
 }
 
-JS_PUBLIC_API bool JS::ObjectToCompletePropertyDescriptor(
-    JSContext* cx, HandleObject obj, HandleValue descObj,
+JS_PUBLIC_API bool JS::ToCompletePropertyDescriptor(
+    JSContext* cx, HandleValue descriptor,
     MutableHandle<PropertyDescriptor> desc) {
-  // |obj| can be in a different compartment here. The caller is responsible
-  // for wrapping it (see JS_WrapPropertyDescriptor).
-  cx->check(descObj);
-  if (!ToPropertyDescriptor(cx, descObj, true, desc)) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(descriptor);
+  if (!ToPropertyDescriptor(cx, descriptor, /* checkAccessors */ true, desc)) {
     return false;
   }
   CompletePropertyDescriptor(desc);
