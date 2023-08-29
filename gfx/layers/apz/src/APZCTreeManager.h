@@ -565,6 +565,37 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   ParentLayerToScreenMatrix4x4 GetApzcToGeckoTransform(
       const AsyncPanZoomController* aApzc,
       const AsyncTransformComponents& aComponents) const;
+
+  /*
+   * A common utility function used for GetApzcToGeckoTransform and
+   * GetOopifApzcToRootContentApzcTransform.
+   *
+   * NOTE: The matrix returned by this function can NOT be used to convert
+   * metrics in |aStartApzc| to |aStopApzc|. If you want the conversion matrix,
+   * you will have to use either GetApzcToGeckoTransform or
+   * GetOopifApzcToRootContentApzcTransform.
+   */
+  ParentLayerToParentLayerMatrix4x4 GetApzcToApzcTransform(
+      const AsyncPanZoomController* aStartApzc,
+      const AsyncPanZoomController* aStopApzc,
+      const AsyncTransformComponents& aComponents) const;
+
+  /*
+   * Returns the transform matrix from |aApzc| to the root content APZC of
+   * |aApzc|.
+   * |aApzc| must be the root APZC of an out-of-process iframe.
+   */
+  ParentLayerToParentLayerMatrix4x4 GetOopifApzcToRootContentApzcTransform(
+      AsyncPanZoomController* aApzc) const;
+
+  /**
+   * Convert the given |aRect| in the document coordinates of |aApzc| to the top
+   * level document coordinates.
+   * |aApzc| must be an in-process root APZC.
+   */
+  CSSRect ConvertRectInApzcToRoot(AsyncPanZoomController* aApzc,
+                                  const CSSRect& aRect) const;
+
   ScreenPoint GetCurrentMousePosition() const;
   void SetCurrentMousePosition(const ScreenPoint& aNewPos);
 
