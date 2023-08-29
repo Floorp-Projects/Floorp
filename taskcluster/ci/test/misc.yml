@@ -33,10 +33,7 @@ telemetry-tests-client:
     description: "Telemetry tests client run"
     suite: telemetry-tests-client
     treeherder-symbol: tt(c)
-    run-on-projects:
-        by-test-platform:
-            .*wayland.*: []
-            default: built-projects
+    run-on-projects: built-projects
     max-run-time: 1200
     tier: default
     mozharness:
