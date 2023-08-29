@@ -269,7 +269,7 @@ where
     let mut declarations = SmallVec::<[(&_, CascadePriority); 32]>::new();
     let mut referenced_properties = LonghandIdSet::default();
     let custom_properties = {
-        let mut builder = CustomPropertiesBuilder::new(inherited_style.custom_properties(), device);
+        let mut builder = CustomPropertiesBuilder::new(inherited_style.custom_properties(), stylist);
 
         for (declaration, priority) in iter {
             declarations.push((declaration, priority));
