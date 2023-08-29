@@ -12,7 +12,6 @@
   --background-term-f: #D51235;
   --in-content-box-border-color: rgba(0, 0, 0, 0.15);
   --inner-border: 1px solid var(--in-content-box-border-color);
-  --letter-grade-height: 1.5rem;
   --letter-grade-width: 1.5rem;
   --letter-grade-term-inline-padding: 0.25rem;
 }
@@ -22,11 +21,9 @@
   color: #000;
   display: flex;
   font-weight: 600;
-  height: var(--letter-grade-height);
   line-height: 150%;
   margin: 0;
-  overflow: hidden;
-  width: max-content;
+  overflow-wrap: anywhere;
 }
 
 #letter-grade-term {
