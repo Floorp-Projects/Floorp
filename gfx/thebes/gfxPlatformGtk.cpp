@@ -187,10 +187,6 @@ void gfxPlatformGtk::InitDmabufConfig() {
   FeatureState& feature = gfxConfig::GetFeature(Feature::DMABUF);
   feature.EnableByDefault();
 
-  if (StaticPrefs::widget_dmabuf_force_enabled_AtStartup()) {
-    feature.UserForceEnable("Force enabled by pref");
-  }
-
   nsCString failureId;
   int32_t status;
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -201,6 +197,10 @@ void gfxPlatformGtk::InitDmabufConfig() {
   } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
     feature.Disable(FeatureStatus::Blocklisted, "Blocklisted by gfxInfo",
                     failureId);
+  }
+
+  if (StaticPrefs::widget_dmabuf_force_enabled_AtStartup()) {
+    feature.UserForceEnable("Force enabled by pref");
   }
 
   if (!gfxVars::UseEGL()) {
