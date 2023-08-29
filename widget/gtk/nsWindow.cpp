@@ -1155,7 +1155,7 @@ void nsWindow::RemovePopupFromHierarchyList() {
 bool nsWindow::WaylandPopupRemoveNegativePosition(int* aX, int* aY) {
   // https://gitlab.gnome.org/GNOME/gtk/-/issues/4071 applies to temporary
   // windows only
-  GdkWindow* window = gtk_widget_get_window(mShell);
+  GdkWindow* window = GetToplevelGdkWindow();
   if (!window || gdk_window_get_window_type(window) != GDK_WINDOW_TEMP) {
     return false;
   }
@@ -2669,7 +2669,7 @@ void nsWindow::WaylandPopupMovePlain(int aX, int aY) {
   // gdk_window_move() sets position_method to POSITION_METHOD_MOVE_RESIZE
   // so we'll use plain move when popup is shown.
   if (!gtk_widget_get_mapped(mShell)) {
-    GdkWindow* window = gtk_widget_get_window(mShell);
+    GdkWindow* window = GetToplevelGdkWindow();
     if (window) {
       gdk_window_move(window, aX, aY);
     }
@@ -2882,7 +2882,7 @@ void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
   LOG("nsWindow::GetWorkspaceID()\n");
 
   // Get the gdk window for this widget.
-  GdkWindow* gdk_window = gtk_widget_get_window(mShell);
+  GdkWindow* gdk_window = GetToplevelGdkWindow();
   if (!gdk_window) {
     LOG("  missing Gdk window, quit.");
     return;
@@ -2928,7 +2928,7 @@ void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
 
 #ifdef MOZ_X11
   // Get the gdk window for this widget.
-  GdkWindow* gdk_window = gtk_widget_get_window(mShell);
+  GdkWindow* gdk_window = GetToplevelGdkWindow();
   if (!gdk_window) {
     LOG("  failed to get GdkWindow, quit.");
     return;
@@ -2986,7 +2986,7 @@ void nsWindow::SetUserTimeAndStartupTokenForActivatedWindow() {
     // approximation ... using the timestamp of the remote command
     // being received as a guess for the timestamp of the user event
     // that triggered it.
-    gdk_window_focus(gtk_widget_get_window(mShell), timestamp);
+    gdk_window_focus(GetToplevelGdkWindow(), timestamp);
   }
 
   // If we used the startup ID, that already contains the focus timestamp;
@@ -3092,7 +3092,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
       !gtk_widget_has_focus(toplevelWidget)) {
     if (gtk_widget_get_visible(mShell)) {
       LOG("  toplevel is not focused");
-      gdk_window_show_unraised(gtk_widget_get_window(mShell));
+      gdk_window_show_unraised(GetToplevelGdkWindow());
       // Unset the urgency hint if possible.
       SetUrgencyHint(mShell, false);
     }
@@ -4649,9 +4649,8 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
 
   // Check to see if the event is within our window's resize region
   if (auto edge = CheckResizerEdge(refPoint)) {
-    gdk_window_begin_resize_drag(gtk_widget_get_window(mShell), *edge,
-                                 aEvent->button, aEvent->x_root, aEvent->y_root,
-                                 aEvent->time);
+    gdk_window_begin_resize_drag(GetToplevelGdkWindow(), *edge, aEvent->button,
+                                 aEvent->x_root, aEvent->y_root, aEvent->time);
     return;
   }
 
@@ -6039,8 +6038,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       // WM_TAKE_FOCUS, focus is requested on the parent window.
       if (GdkIsX11Display()) {
         gtk_widget_realize(mShell);
-        gdk_window_add_filter(gtk_widget_get_window(mShell),
-                              popup_take_focus_filter, nullptr);
+        gdk_window_add_filter(GetToplevelGdkWindow(), popup_take_focus_filter,
+                              nullptr);
       }
 #endif
     }
@@ -6216,8 +6215,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   if (mDrawToContainer) {
     // Also label mShell toplevel window,
     // property_notify_event_cb callback also needs to find its way home
-    g_object_set_data(G_OBJECT(gtk_widget_get_window(mShell)), "nsWindow",
-                      this);
+    g_object_set_data(G_OBJECT(GetToplevelGdkWindow()), "nsWindow", this);
   }
 
   g_object_set_data(G_OBJECT(mContainer), "nsWindow", this);
@@ -6360,7 +6358,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 }
 
 void nsWindow::RefreshWindowClass(void) {
-  GdkWindow* gdkWindow = gtk_widget_get_window(mShell);
+  GdkWindow* gdkWindow = GetToplevelGdkWindow();
   if (!gdkWindow) {
     return;
   }
@@ -6833,8 +6831,7 @@ gint nsWindow::GetInputRegionMarginInGdkCoords() {
 void nsWindow::SetInputRegion(const InputRegion& aInputRegion) {
   mInputRegion = aInputRegion;
 
-  GdkWindow* window =
-      mDrawToContainer ? gtk_widget_get_window(mShell) : mGdkWindow;
+  GdkWindow* window = mDrawToContainer ? GetToplevelGdkWindow() : mGdkWindow;
   if (!window) {
     return;
   }
@@ -6910,8 +6907,7 @@ void nsWindow::UpdateTopLevelOpaqueRegion(void) {
     return;
   }
 
-  GdkWindow* window =
-      mDrawToContainer ? gtk_widget_get_window(mShell) : mGdkWindow;
+  GdkWindow* window = mDrawToContainer ? GetToplevelGdkWindow() : mGdkWindow;
   if (!window) {
     return;
   }
@@ -7415,7 +7411,7 @@ void nsWindow::KioskLockOnMonitor() {
   }
 
   LOG("nsWindow::KioskLockOnMonitor() locked on %d\n", monitor);
-  sGdkWindowFullscreenOnMonitor(gtk_widget_get_window(mShell), monitor);
+  sGdkWindowFullscreenOnMonitor(GetToplevelGdkWindow(), monitor);
 }
 
 static bool IsFullscreenSupported(GtkWidget* aShell) {
@@ -7481,7 +7477,7 @@ void nsWindow::SetWindowDecoration(BorderStyle aStyle) {
 
   // We can't use mGdkWindow directly here as it can be
   // derived from mContainer which is not a top-level GdkWindow.
-  GdkWindow* window = gtk_widget_get_window(mShell);
+  GdkWindow* window = GetToplevelGdkWindow();
 
   // Sawfish, metacity, and presumably other window managers get
   // confused if we change the window decorations while the window
@@ -8892,8 +8888,7 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
 
     // Label mShell toplevel window so property_notify_event_cb callback
     // can find its way home.
-    g_object_set_data(G_OBJECT(gtk_widget_get_window(mShell)), "nsWindow",
-                      this);
+    g_object_set_data(G_OBJECT(GetToplevelGdkWindow()), "nsWindow", this);
 
     if (AreBoundsSane()) {
       GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
@@ -9480,7 +9475,7 @@ void nsWindow::SetProgress(unsigned long progressPercent) {
 
   progressPercent = MIN(progressPercent, 100);
 
-  set_window_hint_cardinal(GDK_WINDOW_XID(gtk_widget_get_window(mShell)),
+  set_window_hint_cardinal(GDK_WINDOW_XID(GetToplevelGdkWindow()),
                            PROGRESS_HINT, progressPercent);
 #endif  // MOZ_X11
 }
@@ -9493,7 +9488,7 @@ void nsWindow::SetCompositorHint(WindowComposeRequest aState) {
 
   gulong value = aState;
   GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
-  gdk_property_change(gtk_widget_get_window(mShell),
+  gdk_property_change(GetToplevelGdkWindow(),
                       gdk_atom_intern("_NET_WM_BYPASS_COMPOSITOR", FALSE),
                       cardinal_atom,
                       32,  // format
