@@ -17,16 +17,6 @@ use style_traits::{ParseError, StyleParseErrorKind};
 /// A specified timing function.
 pub type TimingFunction = GenericTimingFunction<Integer, Number, PiecewiseLinearFunction>;
 
-#[cfg(feature = "gecko")]
-fn linear_timing_function_enabled() -> bool {
-    static_prefs::pref!("layout.css.linear-easing-function.enabled")
-}
-
-#[cfg(feature = "servo")]
-fn linear_timing_function_enabled() -> bool {
-    false
-}
-
 impl Parse for TimingFunction {
     fn parse<'i, 't>(
         context: &ParserContext,
@@ -108,9 +98,6 @@ impl TimingFunction {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        if !linear_timing_function_enabled() {
-            return Err(input.new_custom_error(StyleParseErrorKind::ExperimentalProperty));
-        }
         let mut builder = PiecewiseLinearFunctionBuilder::default();
         let mut num_specified_stops = 0;
         // Closely follows `parse_comma_separated`, but can generate multiple entries for one comma-separated entry.
