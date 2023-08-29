@@ -283,7 +283,8 @@ shortcuts-duplicate = Duplicate shortcut
 # String displayed when a keyboard shortcut is already assigned to more than one add-on
 # Variables:
 #   $shortcut (string) - Shortcut string for the add-on
-shortcuts-duplicate-warning-message = { $shortcut } is being used as a shortcut in more than one case. Duplicate shortcuts may cause unexpected behavior.
+shortcuts-duplicate-warning-message2 =
+    .message = { $shortcut } is being used as a shortcut in more than one case. Duplicate shortcuts may cause unexpected behavior.
 
 # String displayed when a keyboard shortcut is already used by another add-on
 # Variables:

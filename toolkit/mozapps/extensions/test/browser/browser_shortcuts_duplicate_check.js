@@ -68,7 +68,7 @@ add_task(async function testDuplicateShortcutsWarnings() {
   let win = await loadShortcutsView();
   let doc = win.document;
 
-  let warningBars = doc.querySelectorAll("message-bar");
+  let warningBars = doc.querySelectorAll("moz-message-bar");
   // Ensure warning messages are shown for each duplicate shorctut.
   is(
     warningBars.length,
@@ -79,12 +79,13 @@ add_task(async function testDuplicateShortcutsWarnings() {
   // Ensure warning messages are correct with correct shortcuts.
   let count = 1;
   for (let warning of warningBars) {
-    let warningMsg = warning.querySelector("span");
-    let l10nAttrs = doc.l10n.getAttributes(warningMsg);
+    let l10nAttrs = doc.l10n.getAttributes(warning);
+    await TestUtils.waitForCondition(() => warning.message !== "");
+    ok(warning.message !== "", "Warning message attribute is set");
     is(
       l10nAttrs.id,
-      "shortcuts-duplicate-warning-message",
-      "Warning message is shown"
+      "shortcuts-duplicate-warning-message2",
+      "Warning message l10nId is correct"
     );
     Assert.deepEqual(
       l10nAttrs.args,
@@ -97,12 +98,12 @@ add_task(async function testDuplicateShortcutsWarnings() {
   ["Shift+Alt+1", "Shift+Alt+2"].forEach((shortcut, index) => {
     // Ensure warning messages are correct with correct shortcuts.
     let warning = warningBars[index];
-    let warningMsg = warning.querySelector("span");
-    let l10nAttrs = doc.l10n.getAttributes(warningMsg);
+    let l10nAttrs = doc.l10n.getAttributes(warning);
+    ok(warning.message !== "", "Warning message attribute is set");
     is(
       l10nAttrs.id,
-      "shortcuts-duplicate-warning-message",
-      "Warning message is shown"
+      "shortcuts-duplicate-warning-message2",
+      "Warning message l10nId is correct"
     );
     Assert.deepEqual(
       l10nAttrs.args,
