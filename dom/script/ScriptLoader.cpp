@@ -1673,8 +1673,6 @@ void CompileOrDecodeTask::DidRunTask(const MutexAutoLock& aProofOfLock,
 
   LogRunnable::Run run(runnable);
 
-  runnable->RecordStopTime();
-
   OffThreadCompilationCompleteRunnable::Dispatch(runnable.forget());
 }
 
@@ -1942,6 +1940,8 @@ OffThreadCompilationCompleteRunnable::Run() {
     // Request has been cancelled by MaybeCancelOffThreadScript.
     return NS_OK;
   }
+
+  RecordStopTime();
 
   if (profiler_is_active()) {
     ProfilerString8View scriptSourceString;
