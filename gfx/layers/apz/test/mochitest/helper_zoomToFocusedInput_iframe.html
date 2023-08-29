@@ -15,49 +15,71 @@
 <div style="height: 1000px;">ABC</div>
 <script type="application/javascript">
 async function test() {
-  let utils = SpecialPowers.getDOMWindowUtils(window);
-
   let iframe = document.querySelector("iframe");
-  let textarea = iframe.contentDocument.querySelector("textarea");
-  for (let i = 0; i < 20; i++) {
-    textarea.value += "foo\n";
-  }
-
-  let win = iframe.contentWindow;
-
   iframe.focus();
-  textarea.focus();
 
-  await waitToClearOutAnyPotentialScrolls(win);
+  await SpecialPowers.spawn(iframe, [], async () => {
+    let textarea = content.document.querySelector("textarea");
+    for (let i = 0; i < 20; i++) {
+      textarea.value += "foo\n";
+    }
+    textarea.focus();
+  });
 
-  textarea.setSelectionRange(0, 0);
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await content.wrappedJSObject.waitToClearOutAnyPotentialScrolls(content.window);
+  });
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    let textarea = content.document.querySelector("textarea");
+    textarea.setSelectionRange(0, 0);
+  });
+
   window.scrollTo(0, 0);
-  await waitToClearOutAnyPotentialScrolls(win);
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await content.wrappedJSObject.waitToClearOutAnyPotentialScrolls(content.window);
+  });
   is(0, window.scrollY, "scroll position is reset");
 
   let transformEndPromise = promiseTransformEnd();
-  utils.zoomToFocusedInput();
+  await SpecialPowers.spawn(iframe, [], async () => {
+    SpecialPowers.DOMWindowUtils.zoomToFocusedInput();
+  });
   await promiseApzFlushedRepaints();
 
   ok(window.scrollY > 0, "scroll position isn't top");
-  ok(iframe.contentWindow.scrollY > 0, "scroll position into iframe isn't top");
+  let iframeWindowScrollY = await SpecialPowers.spawn(iframe, [], () => {
+    return content.window.scrollY;
+  });
+  ok(iframeWindowScrollY > 0, "scroll position into iframe isn't top");
   let prevPosY = window.scrollY;
 
   await transformEndPromise;
   await promiseApzFlushedRepaints();
 
   window.scrollTo(0, 0);
-  await waitToClearOutAnyPotentialScrolls(win);
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await content.wrappedJSObject.waitToClearOutAnyPotentialScrolls(content.window);
+  });
   is(0, window.scrollY, "scroll position is reset");
 
-  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  SpecialPowers.spawn(iframe, [], async () => {
+    let textarea = content.document.querySelector("textarea");
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  });
+
   transformEndPromise = promiseTransformEnd();
-  utils.zoomToFocusedInput();
+  await SpecialPowers.spawn(iframe, [], async () => {
+    SpecialPowers.DOMWindowUtils.zoomToFocusedInput();
+  });
   await transformEndPromise;
   await promiseApzFlushedRepaints();
 
   ok(window.scrollY > 0, "scroll position isn't top");
-  ok(iframe.contentWindow.scrollY > 0, "scroll position into iframe isn't top");
+  iframeWindowScrollY = await SpecialPowers.spawn(iframe, [], () => {
+    return content.window.scrollY;
+  });
+  ok(iframeWindowScrollY > 0, "scroll position into iframe isn't top");
   ok(prevPosY < window.scrollY,
      "scroll position is different from first line of textarea");
 }
