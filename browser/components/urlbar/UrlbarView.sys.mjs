@@ -1850,17 +1850,16 @@ export class UrlbarView {
       title.removeAttribute("isurl");
     }
 
+    item.toggleAttribute("has-action", actionSetter);
     if (actionSetter) {
       actionSetter();
       item._originalActionSetter = actionSetter;
-      item.setAttribute("has-action", "true");
     } else {
       item._originalActionSetter = () => {
         this.#removeElementL10n(action);
         action.textContent = "";
       };
       item._originalActionSetter();
-      item.removeAttribute("has-action");
     }
 
     if (!title.hasAttribute("isurl")) {
