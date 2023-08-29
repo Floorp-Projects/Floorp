@@ -444,8 +444,8 @@ export class AsyncTabSwitcher {
         this.noteSpinnerDisplayed();
       }
       this.spinnerTab = showTab;
-      this.tabbrowser.tabpanels.setAttribute("pendingpaint", "true");
-      this.spinnerTab.linkedBrowser.setAttribute("pendingpaint", "true");
+      this.tabbrowser.tabpanels.toggleAttribute("pendingpaint", true);
+      this.spinnerTab.linkedBrowser.toggleAttribute("pendingpaint", true);
     }
 
     // Switch to the tab we've decided to make visible.

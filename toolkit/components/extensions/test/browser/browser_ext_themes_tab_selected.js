@@ -21,9 +21,7 @@ add_task(async function test_tab_background_color_property() {
 
   info("Checking selected tab color");
 
-  let openTab = document.querySelector(
-    ".tabbrowser-tab[visuallyselected=true]"
-  );
+  let openTab = document.querySelector(".tabbrowser-tab[visuallyselected]");
   let openTabBackground = openTab.querySelector(".tab-background");
 
   let selectedTab = await BrowserTestUtils.openNewForegroundTab(

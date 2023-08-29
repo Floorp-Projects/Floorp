@@ -31,9 +31,7 @@ add_task(async function test_support_tab_loading_filling() {
 
   info("Checking selected tab loading indicator colors");
 
-  let selectedTab = document.querySelector(
-    ".tabbrowser-tab[visuallyselected=true]"
-  );
+  let selectedTab = document.querySelector(".tabbrowser-tab[visuallyselected]");
 
   selectedTab.setAttribute("busy", "true");
   selectedTab.setAttribute("progress", "true");

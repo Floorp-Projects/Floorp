@@ -153,18 +153,18 @@ panelview:not([visible]) {
 }
 
 @supports not -moz-bool-pref("browser.tabs.tabmanager.enabled") {
-  #tabbrowser-tabs:not([overflow="true"], [hashiddentabs]) ~ #alltabs-button {
+  #tabbrowser-tabs:not([overflow], [hashiddentabs]) ~ #alltabs-button {
     display: none;
   }
-  #tabbrowser-tabs:not([overflow="true"])[using-closing-tabs-spacer] ~ #alltabs-button {
+  #tabbrowser-tabs:not([overflow])[using-closing-tabs-spacer] ~ #alltabs-button {
     /* temporary space to keep a tab's close button under the cursor */
     display: flex;
     visibility: hidden;
   }
 }
 
-#tabbrowser-tabs[hasadjacentnewtabbutton]:not([overflow="true"]) ~ #new-tab-button,
-#tabbrowser-tabs[overflow="true"] > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
+#tabbrowser-tabs[hasadjacentnewtabbutton]:not([overflow]) ~ #new-tab-button,
+#tabbrowser-tabs[overflow] > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
 #tabbrowser-tabs:not([hasadjacentnewtabbutton]) > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
 #TabsToolbar[customizing="true"] #tabs-newtab-button {
   display: none;
