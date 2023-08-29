@@ -1,3 +1,4 @@
 [DEFAULT]
-skip-if = '''
-  os = "win"'''
+skip-if = [
+  "os = 'win'",
+]

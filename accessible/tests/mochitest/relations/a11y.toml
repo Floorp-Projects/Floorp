@@ -2,8 +2,9 @@
 support-files = "!/accessible/tests/mochitest/*.js"
 
 ['test_embeds.xhtml']
-skip-if = '''
-  os == 'linux' && !debug '''  # bug 1411145
+skip-if = [
+  "os == 'linux' && !debug",  # bug 1411145
+]
 
 ['test_general.html']
 

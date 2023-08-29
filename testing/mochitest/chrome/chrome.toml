@@ -1,6 +1,7 @@
 [DEFAULT]
-skip-if = '''
-  os == 'android''''
+skip-if = [
+  "os == 'android'",
+]
 support-files = "test-dir/test-file"
 
 ['test_chromeGetTestFile.xhtml']
@@ -8,8 +9,9 @@ support-files = "test-dir/test-file"
 ['test_sample.xhtml']
 
 ['test_sanityEventUtils.xhtml']
-fail-if = '''
-  headless'''  # Bug 1678303
+fail-if = [
+  "headless", # Bug 1678303
+]
 
 ['test_sanityException.xhtml']
 

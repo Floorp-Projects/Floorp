@@ -1,9 +1,11 @@
 [DEFAULT]
 
 ['browser_baselinecoverage.js']
-run-if = '''
-  ccov && verify'''
+run-if = [
+  "ccov && verify",
+]
 
 ['browser_baselinecoverage_browser-chrome.js']
-run-if = '''
-  ccov && verify'''
+run-if = [
+  "ccov && verify",
+]

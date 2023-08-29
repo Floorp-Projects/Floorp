@@ -20,8 +20,9 @@ support-files = [
 ['test_list.html']
 
 ['test_markup.html']
-skip-if = '''
-  win11_2009 && debug '''  # Bug 1296784
+skip-if = [
+  "win11_2009 && debug",  # Bug 1296784
+]
 
 ['test_svg.html']
 

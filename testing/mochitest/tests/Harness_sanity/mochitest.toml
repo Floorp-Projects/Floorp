@@ -38,9 +38,10 @@ skip-if = true #depends on fix for bug 1048446
 ['test_sanity.html']
 
 ['test_sanityEventUtils.html']
-skip-if = '''
-  verify && (os == 'win')
-  fission && xorigin'''  # bug 688052  # Bug 1716411 - New fission platform triage
+skip-if = [
+  "verify && (os == 'win')", # bug 688052
+  "fission && xorigin", # Bug 1716411 - New fission platform triage
+]
 
 ['test_sanityException.html']
 
@@ -52,8 +53,9 @@ skip-if = '''
 support-files = "empty.js"
 
 ['test_sanityRegisteredServiceWorker2.html']
-skip-if = '''
-  verify'''
+skip-if = [
+  "verify",
+]
 support-files = "empty.js"
 
 ['test_sanitySimpletest.html']
