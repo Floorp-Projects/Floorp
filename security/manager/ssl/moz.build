@@ -22,7 +22,7 @@ XPIDL_SOURCES += [
     "nsICertOverrideService.idl",
     "nsICertStorage.idl",
     "nsICertTree.idl",
-    "nsIClientAuthDialogs.idl",
+    "nsIClientAuthDialogService.idl",
     "nsIClientAuthRememberService.idl",
     "nsIContentSignatureVerifier.idl",
     "nsICryptoHash.idl",
@@ -56,6 +56,7 @@ XPCOM_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES.psm += [
+    "ClientAuthDialogService.sys.mjs",
     "DER.sys.mjs",
     "RemoteSecuritySettings.sys.mjs",
     "X509.sys.mjs",

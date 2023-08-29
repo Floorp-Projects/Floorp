@@ -35,7 +35,8 @@ class SelectTLSClientAuthCertParent : public PSelectTLSClientAuthCertParent {
                 const uint32_t& aProviderFlags,
                 const uint32_t& aProviderTlsFlags,
                 const ByteArray& aServerCertBytes,
-                nsTArray<ByteArray>&& aCANames);
+                nsTArray<ByteArray>&& aCANames,
+                const uint64_t& aBrowsingContextID);
 
   void TLSClientAuthCertSelected(
       const nsTArray<uint8_t>& aSelectedCertBytes,

@@ -13,49 +13,34 @@ const { parse, pemToDER } = ChromeUtils.importESModule(
 /**
  * @file Implements the functionality of clientauthask.xhtml: a dialog that allows
  *       a user pick a client certificate for TLS client authentication.
- * @param {string} window.arguments.0
- *           The hostname of the server requesting client authentication.
- * @param {string} window.arguments.1
- *           The Organization of the server cert.
- * @param {string} window.arguments.2
- *           The Organization of the issuer of the server cert.
- * @param {number} window.arguments.3
- *           The port of the server.
- * @param {nsISupports} window.arguments.4
- *           List of certificates the user can choose from, queryable to
- *           nsIArray<nsIX509Cert>.
- * @param {nsISupports} window.arguments.5
- *           Object to set the return values of calling the dialog on, queryable
- *           to the underlying type of ClientAuthAskReturnValues.
+ * @param {object} window.arguments.0
+ *           An Object with the properties:
+ *              {String} hostname
+ *                 The hostname of the server requesting client authentication.
+ *              {Array<nsIX509Cert>} certArray
+ *                 Array of certificates the user can choose from
+ *              {Object} retVal
+ *                 Object to set the return values of calling the dialog on.
+ *                 See ClientAuthAskReturnValues.
  */
 
 /**
  * @typedef ClientAuthAskReturnValues
- * @type {nsIWritablePropertyBag2}
- * @property {boolean} certChosen
- *           Set to true if the user chose a cert and accepted the dialog, false
- *           otherwise.
- * @property {boolean} rememberSelection
+ * @type {object}
+ * @property {nsIX509Cert} cert
+ *           The certificate, if chosen. null otherwise.
+ * @property {boolean} rememberDecision
  *           Set to true if the user wanted their cert selection to be
  *           remembered, false otherwise.
- * @property {number} selectedIndex
- *           The index the chosen cert is at for the given cert list. Undefined
- *           value if |certChosen| is not true.
  */
 
 /**
- * The pippki <stringbundle> element.
- *
- * @type {stringbundle}
- * @see {@link toolkit/content/widgets/stringbundle.js}
- */
-var bundle;
-/**
  * The array of certs the user can choose from.
  *
- * @type {nsIArray<nsIX509Cert>}
+ * @type {Array<nsIX509Cert>}
  */
 var certArray;
+
 /**
  * The checkbox storing whether the user wants to remember the selected cert.
  *
@@ -64,40 +49,25 @@ var certArray;
 var rememberBox;
 
 async function onLoad() {
-  bundle = document.getElementById("pippki_bundle");
   let rememberSetting = Services.prefs.getBoolPref(
     "security.remember_cert_checkbox_default_setting"
   );
-
   rememberBox = document.getElementById("rememberBox");
-  rememberBox.label = bundle.getString("clientAuthRemember");
   rememberBox.checked = rememberSetting;
 
-  let hostname = window.arguments[0];
-  let org = window.arguments[1];
-  let issuerOrg = window.arguments[2];
-  let port = window.arguments[3];
-  let formattedOrg = bundle.getFormattedString("clientAuthMessage1", [org]);
-  let formattedIssuerOrg = bundle.getFormattedString("clientAuthMessage2", [
-    issuerOrg,
-  ]);
-  let formattedHostnameAndPort = bundle.getFormattedString(
-    "clientAuthHostnameAndPort",
-    [hostname, port.toString()]
+  certArray = window.arguments[0].certArray;
+
+  document.l10n.setAttributes(
+    document.getElementById("clientAuthSiteIdentification"),
+    "client-auth-site-identification",
+    { hostname: window.arguments[0].hostname }
   );
-  setText("hostname", formattedHostnameAndPort);
-  setText("organization", formattedOrg);
-  setText("issuer", formattedIssuerOrg);
 
   let selectElement = document.getElementById("nicknames");
-  certArray = window.arguments[4].QueryInterface(Ci.nsIArray);
   for (let i = 0; i < certArray.length; i++) {
     let menuItemNode = document.createXULElement("menuitem");
-    let cert = certArray.queryElementAt(i, Ci.nsIX509Cert);
-    let nickAndSerial = bundle.getFormattedString("clientAuthNickAndSerial", [
-      cert.displayName,
-      cert.serialNumber,
-    ]);
+    let cert = certArray[i];
+    let nickAndSerial = `${cert.displayName} [${cert.serialNumber}]`;
     menuItemNode.setAttribute("value", i);
     menuItemNode.setAttribute("label", nickAndSerial); // This is displayed.
     selectElement.menupopup.appendChild(menuItemNode);
@@ -121,42 +91,56 @@ async function onLoad() {
  */
 async function setDetails() {
   let index = parseInt(document.getElementById("nicknames").value);
-  let cert = certArray.queryElementAt(index, Ci.nsIX509Cert);
-
+  let cert = certArray[index];
+  document.l10n.setAttributes(
+    document.getElementById("clientAuthCertDetailsIssuedTo"),
+    "client-auth-cert-details-issued-to",
+    { issuedTo: cert.subjectName }
+  );
+  document.l10n.setAttributes(
+    document.getElementById("clientAuthCertDetailsSerialNumber"),
+    "client-auth-cert-details-serial-number",
+    { serialNumber: cert.serialNumber }
+  );
   const formatter = new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "long",
   });
-  let detailLines = [
-    bundle.getFormattedString("clientAuthIssuedTo", [cert.subjectName]),
-    bundle.getFormattedString("clientAuthSerial", [cert.serialNumber]),
-    bundle.getFormattedString("clientAuthValidityPeriod", [
-      formatter.format(new Date(cert.validity.notBefore / 1000)),
-      formatter.format(new Date(cert.validity.notAfter / 1000)),
-    ]),
-  ];
+  document.l10n.setAttributes(
+    document.getElementById("clientAuthCertDetailsValidityPeriod"),
+    "client-auth-cert-details-validity-period",
+    {
+      notBefore: formatter.format(new Date(cert.validity.notBefore / 1000)),
+      notAfter: formatter.format(new Date(cert.validity.notAfter / 1000)),
+    }
+  );
   let parsedCert = await parse(pemToDER(cert.getBase64DERString()));
   let keyUsages = parsedCert.ext.keyUsages;
   if (keyUsages && keyUsages.purposes.length) {
-    detailLines.push(
-      bundle.getFormattedString("clientAuthKeyUsages", [keyUsages.purposes])
+    document.l10n.setAttributes(
+      document.getElementById("clientAuthCertDetailsKeyUsages"),
+      "client-auth-cert-details-key-usages",
+      { keyUsages: keyUsages.purposes.join(", ") }
     );
   }
   let emailAddresses = cert.getEmailAddresses();
   if (emailAddresses.length) {
-    let joinedAddresses = emailAddresses.join(", ");
-    detailLines.push(
-      bundle.getFormattedString("clientAuthEmailAddresses", [joinedAddresses])
+    document.l10n.setAttributes(
+      document.getElementById("clientAuthCertDetailsEmailAddresses"),
+      "client-auth-cert-details-email-addresses",
+      { emailAddresses: emailAddresses.join(", ") }
     );
   }
-  detailLines.push(
-    bundle.getFormattedString("clientAuthIssuedBy", [cert.issuerName])
+  document.l10n.setAttributes(
+    document.getElementById("clientAuthCertDetailsIssuedBy"),
+    "client-auth-cert-details-issued-by",
+    { issuedBy: cert.issuerName }
   );
-  detailLines.push(
-    bundle.getFormattedString("clientAuthStoredOn", [cert.tokenName])
+  document.l10n.setAttributes(
+    document.getElementById("clientAuthCertDetailsStoredOn"),
+    "client-auth-cert-details-stored-on",
+    { storedOn: cert.tokenName }
   );
-
-  document.getElementById("details").value = detailLines.join("\n");
 }
 
 async function onCertSelected() {
@@ -164,15 +148,15 @@ async function onCertSelected() {
 }
 
 function doOK() {
-  let retVals = window.arguments[5].QueryInterface(Ci.nsIWritablePropertyBag2);
-  retVals.setPropertyAsBool("certChosen", true);
+  let { retVals } = window.arguments[0];
   let index = parseInt(document.getElementById("nicknames").value);
-  retVals.setPropertyAsUint32("selectedIndex", index);
-  retVals.setPropertyAsBool("rememberSelection", rememberBox.checked);
+  let cert = certArray[index];
+  retVals.cert = cert;
+  retVals.rememberDecision = rememberBox.checked;
 }
 
 function doCancel() {
-  let retVals = window.arguments[5].QueryInterface(Ci.nsIWritablePropertyBag2);
-  retVals.setPropertyAsBool("certChosen", false);
-  retVals.setPropertyAsBool("rememberSelection", rememberBox.checked);
+  let { retVals } = window.arguments[0];
+  retVals.cert = null;
+  retVals.rememberDecision = rememberBox.checked;
 }

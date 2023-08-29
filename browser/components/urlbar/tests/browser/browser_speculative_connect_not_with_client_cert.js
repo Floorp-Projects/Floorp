@@ -21,34 +21,28 @@ let handshakeDone = false;
 let expectingChooseCertificate = false;
 let chooseCertificateCalled = false;
 
-const clientAuthDialogs = {
-  chooseCertificate(
-    hostname,
-    port,
-    organization,
-    issuerOrg,
-    certList,
-    selectedIndex,
-    rememberClientAuthCertificate
-  ) {
+const clientAuthDialogService = {
+  chooseCertificate(hostname, certArray, loadContext, callback) {
     ok(
       expectingChooseCertificate,
       `${
         expectingChooseCertificate ? "" : "not "
       }expecting chooseCertificate to be called`
     );
-    is(certList.length, 1, "should have only one client certificate available");
-    selectedIndex.value = 0;
-    rememberClientAuthCertificate.value = false;
+    is(
+      certArray.length,
+      1,
+      "should have only one client certificate available"
+    );
     ok(
       !chooseCertificateCalled,
       "chooseCertificate should only be called once"
     );
     chooseCertificateCalled = true;
-    return true;
+    callback.certificateChosen(certArray[0], false);
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIClientAuthDialogs"]),
+  QueryInterface: ChromeUtils.generateQI(["nsIClientAuthDialogService"]),
 };
 
 /**
@@ -164,9 +158,9 @@ add_setup(async function () {
     ],
   });
 
-  let clientAuthDialogsCID = MockRegistrar.register(
-    "@mozilla.org/nsClientAuthDialogs;1",
-    clientAuthDialogs
+  let clientAuthDialogServiceCID = MockRegistrar.register(
+    "@mozilla.org/security/ClientAuthDialogService;1",
+    clientAuthDialogService
   );
 
   let cert = getTestServerCertificate();
@@ -191,7 +185,7 @@ add_setup(async function () {
 
   registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
-    MockRegistrar.unregister(clientAuthDialogsCID);
+    MockRegistrar.unregister(clientAuthDialogServiceCID);
     certOverrideService.clearValidityOverride("localhost", server.port, {});
   });
 });

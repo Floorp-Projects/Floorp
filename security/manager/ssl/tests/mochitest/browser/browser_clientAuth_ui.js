@@ -32,27 +32,17 @@ var cert;
  *            2. The return value nsIWritablePropertyBag2 passed to the dialog.
  */
 function openClientAuthDialog(cert) {
-  let certList = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-  certList.appendElement(cert);
-
-  let returnVals = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
-    Ci.nsIWritablePropertyBag2
-  );
+  let certArray = [cert];
+  let retVals = { cert: undefined, rememberDecision: undefined };
   let win = window.openDialog(
     "chrome://pippki/content/clientauthask.xhtml",
     "",
     "",
-    TEST_HOSTNAME,
-    TEST_ORG,
-    TEST_ISSUER_ORG,
-    TEST_PORT,
-    certList,
-    returnVals
+    { hostname: TEST_HOSTNAME, certArray, retVals }
   );
-  return TestUtils.topicObserved("cert-dialog-loaded").then(() => [
-    win,
-    returnVals,
-  ]);
+  return TestUtils.topicObserved("cert-dialog-loaded").then(() => {
+    return { win, retVals };
+  });
 }
 
 /**
@@ -65,62 +55,46 @@ function openClientAuthDialog(cert) {
  * @param {string} notAfter
  *        The formatted notAfter date of mochitest.client.
  */
-function checkDialogContents(win, notBefore, notAfter) {
-  is(
-    win.document.getElementById("hostname").textContent,
-    `${TEST_HOSTNAME}:${TEST_PORT}`,
-    "Actual and expected hostname and port should be equal"
+async function checkDialogContents(win, notBefore, notAfter) {
+  await TestUtils.waitForCondition(() => {
+    return win.document
+      .getElementById("clientAuthSiteIdentification")
+      .textContent.includes(`${TEST_HOSTNAME}`);
+  });
+  let nicknames = win.document.getElementById("nicknames");
+  await TestUtils.waitForCondition(() => {
+    return nicknames.label == "Mochitest client [03]";
+  });
+  await TestUtils.waitForCondition(() => {
+    return nicknames.itemCount == 1;
+  });
+  let subject = win.document.getElementById("clientAuthCertDetailsIssuedTo");
+  await TestUtils.waitForCondition(() => {
+    return subject.textContent == "Issued to: CN=Mochitest client";
+  });
+  let serialNum = win.document.getElementById(
+    "clientAuthCertDetailsSerialNumber"
   );
-  is(
-    win.document.getElementById("organization").textContent,
-    `Organization: “${TEST_ORG}”`,
-    "Actual and expected organization should be equal"
+  await TestUtils.waitForCondition(() => {
+    return serialNum.textContent == "Serial number: 03";
+  });
+  let validity = win.document.getElementById(
+    "clientAuthCertDetailsValidityPeriod"
   );
-  is(
-    win.document.getElementById("issuer").textContent,
-    `Issued Under: “${TEST_ISSUER_ORG}”`,
-    "Actual and expected issuer organization should be equal"
-  );
-
-  is(
-    win.document.getElementById("nicknames").label,
-    "Mochitest client [03]",
-    "Actual and expected selected cert nickname and serial should be equal"
-  );
-  is(
-    win.document.getElementById("nicknames").itemCount,
-    1,
-    "correct number of items"
-  );
-
-  let [subject, serialNum, validity, issuer, tokenName] = win.document
-    .getElementById("details")
-    .value.split("\n");
-  is(
-    subject,
-    "Issued to: CN=Mochitest client",
-    "Actual and expected subject should be equal"
-  );
-  is(
-    serialNum,
-    "Serial number: 03",
-    "Actual and expected serial number should be equal"
-  );
-  is(
-    validity,
-    `Valid from ${notBefore} to ${notAfter}`,
-    "Actual and expected validity should be equal"
-  );
-  is(
-    issuer,
-    "Issued by: OU=Profile Guided Optimization,O=Mozilla Testing,CN=Temporary Certificate Authority",
-    "Actual and expected issuer should be equal"
-  );
-  is(
-    tokenName,
-    "Stored on: Software Security Device",
-    "Actual and expected token name should be equal"
-  );
+  await TestUtils.waitForCondition(() => {
+    return validity.textContent == `Valid from ${notBefore} to ${notAfter}`;
+  });
+  let issuer = win.document.getElementById("clientAuthCertDetailsIssuedBy");
+  await TestUtils.waitForCondition(() => {
+    return (
+      issuer.textContent ==
+      "Issued by: OU=Profile Guided Optimization,O=Mozilla Testing,CN=Temporary Certificate Authority"
+    );
+  });
+  let tokenName = win.document.getElementById("clientAuthCertDetailsStoredOn");
+  await TestUtils.waitForCondition(() => {
+    return tokenName.textContent == "Stored on: Software Security Device";
+  });
 }
 
 function findCertByCommonName(commonName) {
@@ -144,8 +118,8 @@ add_task(async function testContents() {
     dateStyle: "medium",
     timeStyle: "long",
   });
-  let [win] = await openClientAuthDialog(cert);
-  checkDialogContents(
+  let { win } = await openClientAuthDialog(cert);
+  await checkDialogContents(
     win,
     formatter.format(new Date(cert.validity.notBefore / 1000)),
     formatter.format(new Date(cert.validity.notAfter / 1000))
@@ -155,41 +129,33 @@ add_task(async function testContents() {
 
 // Test that the right values are returned when the dialog is accepted.
 add_task(async function testAcceptDialogReturnValues() {
-  let [win, retVals] = await openClientAuthDialog(cert);
+  let { win, retVals } = await openClientAuthDialog(cert);
   win.document.getElementById("rememberBox").checked = true;
   info("Accepting dialog");
   win.document.getElementById("certAuthAsk").acceptDialog();
   await BrowserTestUtils.windowClosed(win);
 
+  is(retVals.cert, cert, "cert should be returned as chosen cert");
   ok(
-    retVals.get("certChosen"),
-    "Return value should signal user chose a certificate"
-  );
-  is(
-    retVals.get("selectedIndex"),
-    0,
-    "0 should be returned as the selected index"
-  );
-  ok(
-    retVals.get("rememberSelection"),
+    retVals.rememberDecision,
     "Return value should signal 'Remember this decision' checkbox was checked"
   );
 });
 
 // Test that the right values are returned when the dialog is canceled.
 add_task(async function testCancelDialogReturnValues() {
-  let [win, retVals] = await openClientAuthDialog(cert);
+  let { win, retVals } = await openClientAuthDialog(cert);
   win.document.getElementById("rememberBox").checked = false;
   info("Canceling dialog");
   win.document.getElementById("certAuthAsk").cancelDialog();
   await BrowserTestUtils.windowClosed(win);
 
   ok(
-    !retVals.get("certChosen"),
+    !retVals.cert,
     "Return value should signal user did not choose a certificate"
   );
   ok(
-    !retVals.get("rememberSelection"),
+    !retVals.rememberDecision,
     "Return value should signal 'Remember this decision' checkbox was unchecked"
   );
 });
