@@ -198,7 +198,7 @@ nsresult nsIDNService::IDNA2008StringPrep(const nsAString& input,
   }
 
   bool hasError = flag == eStringPrepForDNS
-                      ? info.HasErrors() && !info.HasInvalidHyphen()
+                      ? info.HasErrorsIgnoringInvalidHyphen()
                       : info.HasErrors();
 
   if (hasError) {
