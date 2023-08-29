@@ -332,17 +332,16 @@ ChromeUtils.defineESModuleGetters(this, {
   }
 
   function createDuplicateWarningBar(shortcut) {
-    let messagebar = document.createElement("message-bar");
+    let messagebar = document.createElement("moz-message-bar");
     messagebar.setAttribute("type", "warning");
 
-    let message = document.createElement("span");
     document.l10n.setAttributes(
-      message,
-      "shortcuts-duplicate-warning-message",
+      messagebar,
+      "shortcuts-duplicate-warning-message2",
       { shortcut }
     );
+    messagebar.setAttribute("data-l10n-attrs", "message");
 
-    messagebar.append(message);
     return messagebar;
   }
 
