@@ -10,6 +10,7 @@ const KINDS = [
   "loop",
   "try",
   "catch",
+  "delegate",
   "if",
   "else",
 ]
@@ -40,6 +41,9 @@ function generateBlock(kind, contents) {
     }
     case "catch": {
       return `try\ncatch_all\n${contents}end\n`
+    }
+    case "delegate": {
+      return `try\n${contents}\ndelegate 0\n`
     }
     case "if": {
       return `i32.const 0\nif\n${contents}end\n`
