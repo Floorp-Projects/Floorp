@@ -109,6 +109,10 @@ body > main > details {
   .brand-logo > .brand-feature-name {
     display: none;
   }
+
+  #logo-container {
+    padding: 0;
+  }
 }
 
 @media (max-width: 65rem) {
@@ -134,22 +138,12 @@ body > main > details {
 
 .brand-logo {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   font-size: 1.75em;
   white-space: nowrap;
 }
 
-.brand-logo > .brand-icon {
-  display: inline-block;
-  background: url("chrome://branding/content/about-logo.png") no-repeat center;
-  background-size: 32px;
-  min-width: 40px;
-  height: 32px;
-}
-
 .brand-logo > .brand-feature-name {
-  margin-inline-start: 8px;
   flex: 1 1 auto;
   font-weight: 600;
 }
