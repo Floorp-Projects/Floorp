@@ -2016,6 +2016,7 @@ class PromptFeatureTest {
                 store = store,
                 tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
+                creditCardValidationDelegate = mock(),
                 isCreditCardAutofillEnabled = { false },
             ) {},
         )
@@ -2051,6 +2052,45 @@ class PromptFeatureTest {
                 store = store,
                 tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
+                creditCardValidationDelegate = null,
+                isCreditCardAutofillEnabled = { true },
+            ) {},
+        )
+        val session = tab()!!
+
+        feature.handleDialogsRequest(promptRequest, session)
+
+        store.waitUntilIdle()
+
+        verify(feature).dismissDialogRequest(promptRequest, session)
+    }
+
+    @Test
+    fun `GIVEN prompt request credit card is invalid WHEN SaveCreditCard request is handled THEN dismiss SaveCreditCard`() {
+        val invalidMonth = ""
+        val invalidYear = ""
+        val creditCardEntry = CreditCardEntry(
+            guid = "1",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = invalidMonth,
+            expiryYear = invalidYear,
+            cardType = "",
+        )
+        val promptRequest = spy(
+            PromptRequest.SaveCreditCard(
+                creditCard = creditCardEntry,
+                onConfirm = {},
+                onDismiss = {},
+            ),
+        )
+        val feature = spy(
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+                creditCardValidationDelegate = mock(),
                 isCreditCardAutofillEnabled = { true },
             ) {},
         )

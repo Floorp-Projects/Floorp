@@ -674,7 +674,9 @@ class PromptFeature private constructor(
         // Requests that are handled with dialogs
         val dialog = when (promptRequest) {
             is SaveCreditCard -> {
-                if (!isCreditCardAutofillEnabled.invoke() || creditCardValidationDelegate == null) {
+                if (!isCreditCardAutofillEnabled.invoke() || creditCardValidationDelegate == null ||
+                    !promptRequest.creditCard.isValid
+                ) {
                     dismissDialogRequest(promptRequest, session)
 
                     if (creditCardValidationDelegate == null) {
