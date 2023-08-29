@@ -113,15 +113,15 @@ void ModuleRtpRtcpImpl::Process() {
     // `process_rtt` first.
     if (process_rtt && rtt_stats_ != nullptr &&
         rtcp_receiver_.LastReceivedReportBlockMs() > last_rtt_process_time_) {
-      int64_t max_rtt_ms = 0;
+      TimeDelta max_rtt = TimeDelta::Zero();
       for (const auto& block : rtcp_receiver_.GetLatestReportBlockData()) {
-        if (block.last_rtt_ms() > max_rtt_ms) {
-          max_rtt_ms = block.last_rtt_ms();
+        if (block.last_rtt() > max_rtt) {
+          max_rtt = block.last_rtt();
         }
       }
       // Report the rtt.
-      if (max_rtt_ms > 0) {
-        rtt_stats_->OnRttUpdate(max_rtt_ms);
+      if (max_rtt > TimeDelta::Zero()) {
+        rtt_stats_->OnRttUpdate(max_rtt.ms());
       }
     }
 
@@ -350,7 +350,7 @@ bool ModuleRtpRtcpImpl::OnSendingRtpFrame(uint32_t timestamp,
   return true;
 }
 
-bool ModuleRtpRtcpImpl::TrySendPacket(RtpPacketToSend* packet,
+bool ModuleRtpRtcpImpl::TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
                                       const PacedPacketInfo& pacing_info) {
   RTC_DCHECK(rtp_sender_);
   // TODO(sprang): Consider if we can remove this check.
@@ -372,7 +372,7 @@ bool ModuleRtpRtcpImpl::TrySendPacket(RtpPacketToSend* packet,
       rtp_sender_->sequencer_.Sequence(*packet);
     }
   }
-  rtp_sender_->packet_sender.SendPacket(packet, pacing_info);
+  rtp_sender_->packet_sender.SendPacket(packet.get(), pacing_info);
   return true;
 }
 
@@ -464,18 +464,15 @@ int32_t ModuleRtpRtcpImpl::SetCNAME(absl::string_view c_name) {
   return rtcp_sender_.SetCNAME(c_name);
 }
 
-// Get RoundTripTime.
-int32_t ModuleRtpRtcpImpl::RTT(const uint32_t remote_ssrc,
-                               int64_t* rtt,
-                               int64_t* avg_rtt,
-                               int64_t* min_rtt,
-                               int64_t* max_rtt) const {
-  int32_t ret = rtcp_receiver_.RTT(remote_ssrc, rtt, avg_rtt, min_rtt, max_rtt);
-  if (rtt && *rtt == 0) {
-    // Try to get RTT from RtcpRttStats class.
-    *rtt = rtt_ms();
+absl::optional<TimeDelta> ModuleRtpRtcpImpl::LastRtt() const {
+  absl::optional<TimeDelta> rtt = rtcp_receiver_.LastRtt();
+  if (!rtt.has_value()) {
+    MutexLock lock(&mutex_rtt_);
+    if (rtt_ms_ > 0) {
+      rtt = TimeDelta::Millis(rtt_ms_);
+    }
   }
-  return ret;
+  return rtt;
 }
 
 int64_t ModuleRtpRtcpImpl::ExpectedRetransmissionTimeMs() const {
@@ -485,10 +482,8 @@ int64_t ModuleRtpRtcpImpl::ExpectedRetransmissionTimeMs() const {
   }
   // No rtt available (`kRtpRtcpRttProcessTimeMs` not yet passed?), so try to
   // poll avg_rtt_ms directly from rtcp receiver.
-  if (rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), nullptr,
-                         &expected_retransmission_time_ms, nullptr,
-                         nullptr) == 0) {
-    return expected_retransmission_time_ms;
+  if (absl::optional<TimeDelta> rtt = rtcp_receiver_.AverageRtt()) {
+    return rtt->ms();
   }
   return kDefaultExpectedRetransmissionTimeMs;
 }
@@ -604,7 +599,9 @@ bool ModuleRtpRtcpImpl::TimeToSendFullNackList(int64_t now) const {
   // Use RTT from RtcpRttStats class if provided.
   int64_t rtt = rtt_ms();
   if (rtt == 0) {
-    rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), NULL, &rtt, NULL, NULL);
+    if (absl::optional<TimeDelta> average_rtt = rtcp_receiver_.AverageRtt()) {
+      rtt = average_rtt->ms();
+    }
   }
 
   const int64_t kStartUpRttMs = 100;
@@ -675,7 +672,9 @@ void ModuleRtpRtcpImpl::OnReceivedNack(
   // Use RTT from RtcpRttStats class if provided.
   int64_t rtt = rtt_ms();
   if (rtt == 0) {
-    rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), NULL, &rtt, NULL, NULL);
+    if (absl::optional<TimeDelta> average_rtt = rtcp_receiver_.AverageRtt()) {
+      rtt = average_rtt->ms();
+    }
   }
   rtp_sender_->packet_generator.OnReceivedNack(nack_sequence_numbers, rtt);
 }

@@ -320,7 +320,7 @@ bool ModuleRtpRtcpImpl2::OnSendingRtpFrame(uint32_t timestamp,
   return true;
 }
 
-bool ModuleRtpRtcpImpl2::TrySendPacket(RtpPacketToSend* packet,
+bool ModuleRtpRtcpImpl2::TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
                                        const PacedPacketInfo& pacing_info) {
   RTC_DCHECK(rtp_sender_);
   RTC_DCHECK_RUN_ON(&rtp_sender_->sequencing_checker);
@@ -340,8 +340,13 @@ bool ModuleRtpRtcpImpl2::TrySendPacket(RtpPacketToSend* packet,
     rtp_sender_->sequencer.Sequence(*packet);
   }
 
-  rtp_sender_->packet_sender.SendPacket(packet, pacing_info);
+  rtp_sender_->packet_sender.SendPacket(std::move(packet), pacing_info);
   return true;
+}
+
+void ModuleRtpRtcpImpl2::OnBatchComplete() {
+  RTC_DCHECK(rtp_sender_);
+  rtp_sender_->packet_sender.OnBatchComplete();
 }
 
 void ModuleRtpRtcpImpl2::SetFecProtectionParams(
@@ -441,21 +446,15 @@ int32_t ModuleRtpRtcpImpl2::SetCNAME(absl::string_view c_name) {
   return rtcp_sender_.SetCNAME(c_name);
 }
 
-// TODO(tommi): Check if `avg_rtt_ms`, `min_rtt_ms`, `max_rtt_ms` params are
-// actually used in practice (some callers ask for it but don't use it). It
-// could be that only `rtt` is needed and if so, then the fast path could be to
-// just call rtt_ms() and rely on the calculation being done periodically.
-int32_t ModuleRtpRtcpImpl2::RTT(const uint32_t remote_ssrc,
-                                int64_t* rtt,
-                                int64_t* avg_rtt,
-                                int64_t* min_rtt,
-                                int64_t* max_rtt) const {
-  int32_t ret = rtcp_receiver_.RTT(remote_ssrc, rtt, avg_rtt, min_rtt, max_rtt);
-  if (rtt && *rtt == 0) {
-    // Try to get RTT from RtcpRttStats class.
-    *rtt = rtt_ms();
+absl::optional<TimeDelta> ModuleRtpRtcpImpl2::LastRtt() const {
+  absl::optional<TimeDelta> rtt = rtcp_receiver_.LastRtt();
+  if (!rtt.has_value()) {
+    MutexLock lock(&mutex_rtt_);
+    if (rtt_ms_ > 0) {
+      rtt = TimeDelta::Millis(rtt_ms_);
+    }
   }
-  return ret;
+  return rtt;
 }
 
 int64_t ModuleRtpRtcpImpl2::ExpectedRetransmissionTimeMs() const {
@@ -465,10 +464,8 @@ int64_t ModuleRtpRtcpImpl2::ExpectedRetransmissionTimeMs() const {
   }
   // No rtt available (`kRttUpdateInterval` not yet passed?), so try to
   // poll avg_rtt_ms directly from rtcp receiver.
-  if (rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), nullptr,
-                         &expected_retransmission_time_ms, nullptr,
-                         nullptr) == 0) {
-    return expected_retransmission_time_ms;
+  if (absl::optional<TimeDelta> rtt = rtcp_receiver_.AverageRtt()) {
+    return rtt->ms();
   }
   return kDefaultExpectedRetransmissionTimeMs;
 }
@@ -589,7 +586,9 @@ bool ModuleRtpRtcpImpl2::TimeToSendFullNackList(int64_t now) const {
   // Use RTT from RtcpRttStats class if provided.
   int64_t rtt = rtt_ms();
   if (rtt == 0) {
-    rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), NULL, &rtt, NULL, NULL);
+    if (absl::optional<TimeDelta> average_rtt = rtcp_receiver_.AverageRtt()) {
+      rtt = average_rtt->ms();
+    }
   }
 
   const int64_t kStartUpRttMs = 100;
@@ -663,7 +662,9 @@ void ModuleRtpRtcpImpl2::OnReceivedNack(
   // Use RTT from RtcpRttStats class if provided.
   int64_t rtt = rtt_ms();
   if (rtt == 0) {
-    rtcp_receiver_.RTT(rtcp_receiver_.RemoteSSRC(), NULL, &rtt, NULL, NULL);
+    if (absl::optional<TimeDelta> average_rtt = rtcp_receiver_.AverageRtt()) {
+      rtt = average_rtt->ms();
+    }
   }
   rtp_sender_->packet_generator.OnReceivedNack(nack_sequence_numbers, rtt);
 }

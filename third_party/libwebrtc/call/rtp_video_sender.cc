@@ -191,7 +191,6 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
     const RtpSenderObservers& observers,
     int rtcp_report_interval_ms,
     Transport* send_transport,
-    RtcpBandwidthObserver* bandwidth_callback,
     RtpTransportControllerSendInterface* transport,
     const std::map<uint32_t, RtpState>& suspended_ssrcs,
     RtcEventLog* event_log,
@@ -212,7 +211,7 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
   configuration.intra_frame_callback = observers.intra_frame_callback;
   configuration.rtcp_loss_notification_observer =
       observers.rtcp_loss_notification_observer;
-  configuration.bandwidth_callback = bandwidth_callback;
+  configuration.network_link_rtcp_observer = transport->GetRtcpObserver();
   configuration.network_state_estimate_observer =
       transport->network_state_estimate_observer();
   configuration.transport_feedback_callback =
@@ -235,6 +234,8 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
   configuration.extmap_allow_mixed = rtp_config.extmap_allow_mixed;
   configuration.rtcp_report_interval_ms = rtcp_report_interval_ms;
   configuration.field_trials = &trials;
+  configuration.enable_send_packet_batching =
+      rtp_config.enable_send_packet_batching;
 
   std::vector<RtpStreamSender> rtp_streams;
 
@@ -388,7 +389,6 @@ RtpVideoSender::RtpVideoSender(
                                           observers,
                                           rtcp_report_interval_ms,
                                           send_transport,
-                                          transport->GetBandwidthObserver(),
                                           transport,
                                           suspended_ssrcs,
                                           event_log,
@@ -696,15 +696,15 @@ bool RtpVideoSender::NackEnabled() const {
   return nack_enabled;
 }
 
-uint32_t RtpVideoSender::GetPacketizationOverheadRate() const {
-  uint32_t packetization_overhead_bps = 0;
+DataRate RtpVideoSender::GetPostEncodeOverhead() const {
+  DataRate post_encode_overhead = DataRate::Zero();
   for (size_t i = 0; i < rtp_streams_.size(); ++i) {
     if (rtp_streams_[i].rtp_rtcp->SendingMedia()) {
-      packetization_overhead_bps +=
-          rtp_streams_[i].sender_video->PacketizationOverheadBps();
+      post_encode_overhead +=
+          rtp_streams_[i].sender_video->PostEncodeOverhead();
     }
   }
-  return packetization_overhead_bps;
+  return post_encode_overhead;
 }
 
 void RtpVideoSender::DeliverRtcp(const uint8_t* packet, size_t length) {
@@ -863,13 +863,13 @@ void RtpVideoSender::OnBitrateUpdated(BitrateAllocationUpdate update,
     // since `fec_allowed_` may be toggled back on at any moment.
   }
 
-  // Subtract packetization overhead from the encoder target. If target rate
+  // Subtract post encode overhead from the encoder target. If target rate
   // is really low, cap the overhead at 50%. This also avoids the case where
   // `encoder_target_rate_bps_` is 0 due to encoder pause event while the
   // packetization rate is positive since packets are still flowing.
-  uint32_t packetization_rate_bps =
-      std::min(GetPacketizationOverheadRate(), encoder_target_rate_bps_ / 2);
-  encoder_target_rate_bps_ -= packetization_rate_bps;
+  uint32_t post_encode_overhead_bps = std::min(
+      GetPostEncodeOverhead().bps<uint32_t>(), encoder_target_rate_bps_ / 2);
+  encoder_target_rate_bps_ -= post_encode_overhead_bps;
 
   loss_mask_vector_.clear();
 
@@ -889,7 +889,7 @@ void RtpVideoSender::OnBitrateUpdated(BitrateAllocationUpdate update,
   }
   const uint32_t media_rate = encoder_target_rate_bps_ +
                               encoder_overhead_rate_bps +
-                              packetization_rate_bps;
+                              post_encode_overhead_bps;
   RTC_DCHECK_GE(update.target_bitrate, DataRate::BitsPerSec(media_rate));
   // `protection_bitrate_bps_` includes overhead.
   protection_bitrate_bps_ = update.target_bitrate.bps() - media_rate;
@@ -923,14 +923,14 @@ int RtpVideoSender::ProtectionRequest(const FecProtectionParams* delta_params,
   *sent_nack_rate_bps = 0;
   *sent_fec_rate_bps = 0;
   for (const RtpStreamSender& stream : rtp_streams_) {
-      stream.rtp_rtcp->SetFecProtectionParams(*delta_params, *key_params);
+    stream.rtp_rtcp->SetFecProtectionParams(*delta_params, *key_params);
 
-      auto send_bitrate = stream.rtp_rtcp->GetSendRates();
-      *sent_video_rate_bps += send_bitrate[RtpPacketMediaType::kVideo].bps();
-      *sent_fec_rate_bps +=
-          send_bitrate[RtpPacketMediaType::kForwardErrorCorrection].bps();
-      *sent_nack_rate_bps +=
-          send_bitrate[RtpPacketMediaType::kRetransmission].bps();
+    auto send_bitrate = stream.rtp_rtcp->GetSendRates();
+    *sent_video_rate_bps += send_bitrate[RtpPacketMediaType::kVideo].bps();
+    *sent_fec_rate_bps +=
+        send_bitrate[RtpPacketMediaType::kForwardErrorCorrection].bps();
+    *sent_nack_rate_bps +=
+        send_bitrate[RtpPacketMediaType::kRetransmission].bps();
   }
   return 0;
 }

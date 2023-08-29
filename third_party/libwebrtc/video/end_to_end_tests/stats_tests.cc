@@ -516,42 +516,39 @@ TEST_F(StatsEndToEndTest, MAYBE_ContentTypeSwitches) {
 
   VideoEncoderConfig encoder_config_with_screenshare;
 
-  SendTask(
-      task_queue(), [this, &test, &send_config, &recv_config,
-                     &encoder_config_with_screenshare]() {
-        CreateSenderCall(send_config);
-        CreateReceiverCall(recv_config);
-        CreateReceiveTransport(test.GetReceiveTransportConfig(), &test);
-        CreateSendTransport(test.GetReceiveTransportConfig(), &test);
+  SendTask(task_queue(), [this, &test, &send_config, &recv_config,
+                          &encoder_config_with_screenshare]() {
+    CreateSenderCall(send_config);
+    CreateReceiverCall(recv_config);
+    CreateReceiveTransport(test.GetReceiveTransportConfig(), &test);
+    CreateSendTransport(test.GetReceiveTransportConfig(), &test);
 
-        receiver_call_->SignalChannelNetworkState(MediaType::VIDEO, kNetworkUp);
-        CreateSendConfig(1, 0, 0);
-        CreateMatchingReceiveConfigs();
+    receiver_call_->SignalChannelNetworkState(MediaType::VIDEO, kNetworkUp);
+    CreateSendConfig(1, 0, 0);
+    CreateMatchingReceiveConfigs();
 
-        // Modify send and receive configs.
-        GetVideoSendConfig()->rtp.nack.rtp_history_ms =
-            test::VideoTestConstants::kNackRtpHistoryMs;
-        video_receive_configs_[0].rtp.nack.rtp_history_ms =
-            test::VideoTestConstants::kNackRtpHistoryMs;
-        video_receive_configs_[0].renderer = &test;
-        // RTT needed for RemoteNtpTimeEstimator for the receive stream.
-        video_receive_configs_[0].rtp.rtcp_xr.receiver_reference_time_report =
-            true;
-        // Start with realtime video.
-        GetVideoEncoderConfig()->content_type =
-            VideoEncoderConfig::ContentType::kRealtimeVideo;
-        // Encoder config for the second part of the test uses screenshare.
-        encoder_config_with_screenshare = GetVideoEncoderConfig()->Copy();
-        encoder_config_with_screenshare.content_type =
-            VideoEncoderConfig::ContentType::kScreen;
+    // Modify send and receive configs.
+    GetVideoSendConfig()->rtp.nack.rtp_history_ms =
+        test::VideoTestConstants::kNackRtpHistoryMs;
+    video_receive_configs_[0].rtp.nack.rtp_history_ms =
+        test::VideoTestConstants::kNackRtpHistoryMs;
+    video_receive_configs_[0].renderer = &test;
+    // RTT needed for RemoteNtpTimeEstimator for the receive stream.
+    video_receive_configs_[0].rtp.rtcp_xr.receiver_reference_time_report = true;
+    // Start with realtime video.
+    GetVideoEncoderConfig()->content_type =
+        VideoEncoderConfig::ContentType::kRealtimeVideo;
+    // Encoder config for the second part of the test uses screenshare.
+    encoder_config_with_screenshare = GetVideoEncoderConfig()->Copy();
+    encoder_config_with_screenshare.content_type =
+        VideoEncoderConfig::ContentType::kScreen;
 
-        CreateVideoStreams();
-        CreateFrameGeneratorCapturer(
-            test::VideoTestConstants::kDefaultFramerate,
-            test::VideoTestConstants::kDefaultWidth,
-            test::VideoTestConstants::kDefaultHeight);
-        Start();
-      });
+    CreateVideoStreams();
+    CreateFrameGeneratorCapturer(test::VideoTestConstants::kDefaultFramerate,
+                                 test::VideoTestConstants::kDefaultWidth,
+                                 test::VideoTestConstants::kDefaultHeight);
+    Start();
+  });
 
   test.PerformTest();
 

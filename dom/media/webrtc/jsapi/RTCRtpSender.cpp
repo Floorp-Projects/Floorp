@@ -269,7 +269,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                     RTCStatsTimestamp::FromNtp(
                         pipeline->GetTimestampMaker(),
                         webrtc::Timestamp::Micros(
-                            aRtcpData.report_block_timestamp_utc_us()) +
+                            aRtcpData.report_block_timestamp_utc().us()) +
                             webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970))
                         .ToDom());
                 aRemote.mId.Construct(remoteId);
@@ -280,14 +280,13 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                     kind);  // mediaType is the old name for kind.
                 aRemote.mLocalId.Construct(localId);
                 if (base_seq) {
-                  if (aRtcpData.report_block()
-                          .extended_highest_sequence_number < *base_seq) {
+                  if (aRtcpData.extended_highest_sequence_number() <
+                      *base_seq) {
                     aRemote.mPacketsReceived.Construct(0);
                   } else {
                     aRemote.mPacketsReceived.Construct(
-                        aRtcpData.report_block()
-                            .extended_highest_sequence_number -
-                        aRtcpData.report_block().packets_lost - *base_seq + 1);
+                        aRtcpData.extended_highest_sequence_number() -
+                        aRtcpData.cumulative_lost() - *base_seq + 1);
                   }
                 }
               };
@@ -340,8 +339,8 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
               if (const auto remoteSsrc = aConduit->GetRemoteSSRC();
                   remoteSsrc) {
                 for (auto& data : audioStats->report_block_datas) {
-                  if (data.report_block().source_ssrc == ssrc &&
-                      data.report_block().sender_ssrc == *remoteSsrc) {
+                  if (data.source_ssrc() == ssrc &&
+                      data.sender_ssrc() == *remoteSsrc) {
                     reportBlockData.emplace(data);
                     break;
                   }
@@ -363,7 +362,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
               }
               remote.mFractionLost.Construct(audioStats->fraction_lost);
               remote.mTotalRoundTripTime.Construct(
-                  double(aReportBlockData.sum_rtt_ms()) / 1000);
+                  double(aReportBlockData.sum_rtts().ms()) / 1000);
               remote.mRoundTripTimeMeasurements.Construct(
                   aReportBlockData.num_rtts());
               if (!report->mRemoteInboundRtpStreamStats.AppendElement(
@@ -447,20 +446,18 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                   *streamStats->report_block_data;
               RTCRemoteInboundRtpStreamStats remote;
               remote.mJitter.Construct(
-                  static_cast<double>(rtcpReportData.report_block().jitter) /
+                  static_cast<double>(rtcpReportData.jitter()) /
                   webrtc::kVideoPayloadTypeFrequency);
-              remote.mPacketsLost.Construct(
-                  rtcpReportData.report_block().packets_lost);
+              remote.mPacketsLost.Construct(rtcpReportData.cumulative_lost());
               if (rtcpReportData.has_rtt()) {
                 remote.mRoundTripTime.Construct(
-                    static_cast<double>(rtcpReportData.last_rtt_ms()) / 1000.0);
+                    static_cast<double>(rtcpReportData.last_rtt().ms()) / 1000.0);
               }
               constructCommonRemoteInboundRtpStats(remote, rtcpReportData);
               remote.mTotalRoundTripTime.Construct(
-                  streamStats->report_block_data->sum_rtt_ms() / 1000.0);
+                  streamStats->report_block_data->sum_rtts().ms() / 1000.0);
               remote.mFractionLost.Construct(
-                  static_cast<float>(
-                      rtcpReportData.report_block().fraction_lost) /
+                  static_cast<float>(rtcpReportData.fraction_lost_raw()) /
                   (1 << 8));
               remote.mRoundTripTimeMeasurements.Construct(
                   streamStats->report_block_data->num_rtts());

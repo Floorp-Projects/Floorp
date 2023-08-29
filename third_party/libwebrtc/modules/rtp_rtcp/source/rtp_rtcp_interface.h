@@ -69,9 +69,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // Called when the receiver sends a loss notification.
     RtcpLossNotificationObserver* rtcp_loss_notification_observer = nullptr;
 
-    // Called when we receive a changed estimate from the receiver of out
-    // stream.
-    RtcpBandwidthObserver* bandwidth_callback = nullptr;
+    // Called when receive an RTCP message related to the link in general, e.g.
+    // bandwidth estimation related message.
+    NetworkLinkRtcpObserver* network_link_rtcp_observer = nullptr;
 
     // Called when we receive a RTCP bye or timeout
     RtcpEventObserver* rtcp_event_observer = nullptr;
@@ -151,6 +151,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // not negotiated. If the RID and Repaired RID extensions are not
     // registered, the RID will not be sent.
     std::string rid;
+
+    // Enables send packet batching from the egress RTP sender.
+    bool enable_send_packet_batching = false;
   };
 
   // Stats for RTCP sender reports (SR) for a specific SSRC.
@@ -317,8 +320,12 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // Try to send the provided packet. Returns true iff packet matches any of
   // the SSRCs for this module (media/rtx/fec etc) and was forwarded to the
   // transport.
-  virtual bool TrySendPacket(RtpPacketToSend* packet,
+  virtual bool TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
                              const PacedPacketInfo& pacing_info) = 0;
+
+  // Notifies that a batch of packet sends is completed. The implementation can
+  // use this to optimize packet sending.
+  virtual void OnBatchComplete() = 0;
 
   // Update the FEC protection parameters to use for delta- and key-frames.
   // Only used when deferred FEC is active.
@@ -375,12 +382,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   virtual int32_t SetCNAME(absl::string_view cname) = 0;
 
   // Returns current RTT (round-trip time) estimate.
-  // Returns -1 on failure else 0.
-  virtual int32_t RTT(uint32_t remote_ssrc,
-                      int64_t* rtt,
-                      int64_t* avg_rtt,
-                      int64_t* min_rtt,
-                      int64_t* max_rtt) const = 0;
+  virtual absl::optional<TimeDelta> LastRtt() const = 0;
 
   // Returns the estimated RTT, with fallback to a default value.
   virtual int64_t ExpectedRetransmissionTimeMs() const = 0;

@@ -401,8 +401,7 @@ WEBRTC_RTCSTATS_IMPL(RTCRtpStreamStats, RTCStats, "rtp",
     &kind,
     &track_id,
     &transport_id,
-    &codec_id,
-    &media_type)
+    &codec_id)
 // clang-format on
 
 RTCRtpStreamStats::RTCRtpStreamStats(std::string id, Timestamp timestamp)
@@ -411,8 +410,7 @@ RTCRtpStreamStats::RTCRtpStreamStats(std::string id, Timestamp timestamp)
       kind("kind"),
       track_id("trackId"),
       transport_id("transportId"),
-      codec_id("codecId"),
-      media_type("mediaType") {}
+      codec_id("codecId") {}
 
 RTCRtpStreamStats::RTCRtpStreamStats(const RTCRtpStreamStats& other) = default;
 
@@ -466,6 +464,8 @@ WEBRTC_RTCSTATS_IMPL(
     &fec_packets_discarded,
     &bytes_received,
     &header_bytes_received,
+    &retransmitted_packets_received,
+    &retransmitted_bytes_received,
     &last_packet_received_timestamp,
     &jitter_buffer_delay,
     &jitter_buffer_target_delay,
@@ -528,6 +528,8 @@ RTCInboundRtpStreamStats::RTCInboundRtpStreamStats(std::string id,
       fec_packets_discarded("fecPacketsDiscarded"),
       bytes_received("bytesReceived"),
       header_bytes_received("headerBytesReceived"),
+      retransmitted_packets_received("retransmittedPacketsReceived"),
+      retransmitted_bytes_received("retransmittedBytesReceived"),
       last_packet_received_timestamp("lastPacketReceivedTimestamp"),
       jitter_buffer_delay("jitterBufferDelay"),
       jitter_buffer_target_delay("jitterBufferTargetDelay"),

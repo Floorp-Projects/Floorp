@@ -260,9 +260,6 @@ class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
   // Handles adapter creation on configuration changes.
   void MaybeReconfigureAdapters(bool was_zero_hertz_enabled) RTC_RUN_ON(queue_);
 
-  // Called to report on constraint UMAs.
-  void MaybeReportFrameRateConstraintUmas() RTC_RUN_ON(queue_);
-
   Clock* const clock_;
   TaskQueueBase* const queue_;
 
@@ -673,7 +670,6 @@ void FrameCadenceAdapterImpl::OnFrame(const VideoFrame& frame) {
                                                    std::memory_order_relaxed);
     OnFrameOnMainQueue(post_time, frames_scheduled_for_processing,
                        std::move(frame));
-    MaybeReportFrameRateConstraintUmas();
   }));
 }
 
@@ -734,60 +730,6 @@ void FrameCadenceAdapterImpl::MaybeReconfigureAdapters(
     if (was_zero_hertz_enabled)
       zero_hertz_adapter_ = absl::nullopt;
     current_adapter_mode_ = &passthrough_adapter_.value();
-  }
-}
-
-void FrameCadenceAdapterImpl::MaybeReportFrameRateConstraintUmas() {
-  RTC_DCHECK_RUN_ON(queue_);
-  if (has_reported_screenshare_frame_rate_umas_)
-    return;
-  has_reported_screenshare_frame_rate_umas_ = true;
-  if (!zero_hertz_params_.has_value())
-    return;
-  RTC_HISTOGRAM_BOOLEAN("WebRTC.Screenshare.FrameRateConstraints.Exists",
-                        source_constraints_.has_value());
-  if (!source_constraints_.has_value())
-    return;
-  RTC_HISTOGRAM_BOOLEAN("WebRTC.Screenshare.FrameRateConstraints.Min.Exists",
-                        source_constraints_->min_fps.has_value());
-  if (source_constraints_->min_fps.has_value()) {
-    RTC_HISTOGRAM_COUNTS_100(
-        "WebRTC.Screenshare.FrameRateConstraints.Min.Value",
-        source_constraints_->min_fps.value());
-  }
-  RTC_HISTOGRAM_BOOLEAN("WebRTC.Screenshare.FrameRateConstraints.Max.Exists",
-                        source_constraints_->max_fps.has_value());
-  if (source_constraints_->max_fps.has_value()) {
-    RTC_HISTOGRAM_COUNTS_100(
-        "WebRTC.Screenshare.FrameRateConstraints.Max.Value",
-        source_constraints_->max_fps.value());
-  }
-  if (!source_constraints_->min_fps.has_value()) {
-    if (source_constraints_->max_fps.has_value()) {
-      RTC_HISTOGRAM_COUNTS_100(
-          "WebRTC.Screenshare.FrameRateConstraints.MinUnset.Max",
-          source_constraints_->max_fps.value());
-    }
-  } else if (source_constraints_->max_fps.has_value()) {
-    if (source_constraints_->min_fps.value() <
-        source_constraints_->max_fps.value()) {
-      RTC_HISTOGRAM_COUNTS_100(
-          "WebRTC.Screenshare.FrameRateConstraints.MinLessThanMax.Min",
-          source_constraints_->min_fps.value());
-      RTC_HISTOGRAM_COUNTS_100(
-          "WebRTC.Screenshare.FrameRateConstraints.MinLessThanMax.Max",
-          source_constraints_->max_fps.value());
-    }
-    // Multi-dimensional histogram for min and max FPS making it possible to
-    // uncover min and max combinations. See
-    // https://chromium.googlesource.com/chromium/src.git/+/HEAD/tools/metrics/histograms/README.md#multidimensional-histograms
-    constexpr int kMaxBucketCount =
-        60 * /*max min_fps=*/60 + /*max max_fps=*/60 - 1;
-    RTC_HISTOGRAM_ENUMERATION_SPARSE(
-        "WebRTC.Screenshare.FrameRateConstraints.60MinPlusMaxMinusOne",
-        source_constraints_->min_fps.value() * 60 +
-            source_constraints_->max_fps.value() - 1,
-        /*boundary=*/kMaxBucketCount);
   }
 }
 

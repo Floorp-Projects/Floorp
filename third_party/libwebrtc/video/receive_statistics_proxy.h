@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef VIDEO_RECEIVE_STATISTICS_PROXY2_H_
-#define VIDEO_RECEIVE_STATISTICS_PROXY2_H_
+#ifndef VIDEO_RECEIVE_STATISTICS_PROXY_H_
+#define VIDEO_RECEIVE_STATISTICS_PROXY_H_
 
 #include <map>
 #include <memory>
@@ -24,7 +24,6 @@
 #include "api/video_codecs/video_decoder.h"
 #include "call/video_receive_stream.h"
 #include "modules/include/module_common_types.h"
-#include "modules/video_coding/include/video_coding_defines.h"
 #include "rtc_base/numerics/histogram_percentile_counter.h"
 #include "rtc_base/numerics/moving_max_counter.h"
 #include "rtc_base/numerics/sample_counter.h"
@@ -32,9 +31,9 @@
 #include "rtc_base/rate_tracker.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
-#include "video/quality_threshold.h"
 #include "video/stats_counter.h"
 #include "video/video_quality_observer2.h"
+#include "video/video_stream_buffer_controller.h"
 
 namespace webrtc {
 
@@ -45,7 +44,7 @@ namespace internal {
 // Declared in video_receive_stream2.h.
 struct VideoFrameMetaData;
 
-class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
+class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
                                public RtcpCnameCallback,
                                public RtcpPacketTypeCounterObserver {
  public:
@@ -85,13 +84,13 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   // Indicates video stream has been paused (no incoming packets).
   void OnStreamInactive();
 
-  // Overrides VCMReceiveStatisticsCallback.
+  // Implements VideoStreamBufferControllerStatsObserver.
   void OnCompleteFrame(bool is_keyframe,
                        size_t size_bytes,
                        VideoContentType content_type) override;
   void OnDroppedFrames(uint32_t frames_dropped) override;
   void OnDiscardedPackets(uint32_t packets_discarded) override;
-  void OnFrameBufferTimingsUpdated(int max_decode_ms,
+  void OnFrameBufferTimingsUpdated(int estimated_max_decode_time_ms,
                                    int current_delay_ms,
                                    int target_delay_ms,
                                    int jitter_buffer_ms,
@@ -100,10 +99,10 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
 
   void OnTimingFrameInfoUpdated(const TimingFrameInfo& info) override;
 
-  // Overrides RtcpCnameCallback.
+  // Implements RtcpCnameCallback.
   void OnCname(uint32_t ssrc, absl::string_view cname) override;
 
-  // Overrides RtcpPacketTypeCounterObserver.
+  // Implements RtcpPacketTypeCounterObserver.
   void RtcpPacketTypesCounterUpdated(
       uint32_t ssrc,
       const RtcpPacketTypeCounter& packet_counter) override;
@@ -143,8 +142,6 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
     rtc::HistogramPercentileCounter interframe_delay_percentiles;
   };
 
-  void QualitySample(Timestamp now);
-
   // Removes info about old frames and then updates the framerate.
   void UpdateFramerate(int64_t now_ms) const;
 
@@ -154,14 +151,6 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   Clock* const clock_;
   const int64_t start_ms_;
 
-  int64_t last_sample_time_ RTC_GUARDED_BY(main_thread_);
-
-  QualityThreshold fps_threshold_ RTC_GUARDED_BY(main_thread_);
-  QualityThreshold qp_threshold_ RTC_GUARDED_BY(main_thread_);
-  QualityThreshold variance_threshold_ RTC_GUARDED_BY(main_thread_);
-  rtc::SampleCounter qp_sample_ RTC_GUARDED_BY(main_thread_);
-  int num_bad_states_ RTC_GUARDED_BY(main_thread_);
-  int num_certain_states_ RTC_GUARDED_BY(main_thread_);
   // Note: The `stats_.rtp_stats` member is not used or populated by this class.
   mutable VideoReceiveStreamInterface::Stats stats_
       RTC_GUARDED_BY(main_thread_);
@@ -176,7 +165,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   rtc::SampleCounter jitter_buffer_delay_counter_ RTC_GUARDED_BY(main_thread_);
   rtc::SampleCounter target_delay_counter_ RTC_GUARDED_BY(main_thread_);
   rtc::SampleCounter current_delay_counter_ RTC_GUARDED_BY(main_thread_);
-  rtc::SampleCounter delay_counter_ RTC_GUARDED_BY(main_thread_);
+  rtc::SampleCounter oneway_delay_counter_ RTC_GUARDED_BY(main_thread_);
   std::unique_ptr<VideoQualityObserver> video_quality_observer_
       RTC_GUARDED_BY(main_thread_);
   mutable rtc::MovingMaxCounter<int> interframe_delay_max_moving_
@@ -220,4 +209,4 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
 
 }  // namespace internal
 }  // namespace webrtc
-#endif  // VIDEO_RECEIVE_STATISTICS_PROXY2_H_
+#endif  // VIDEO_RECEIVE_STATISTICS_PROXY_H_

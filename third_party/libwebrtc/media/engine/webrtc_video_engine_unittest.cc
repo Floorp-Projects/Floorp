@@ -938,6 +938,7 @@ TEST_F(WebRtcVideoEngineTest, SendsFeedbackAfterUnsignaledRtxPacket) {
   ASSERT_TRUE(channel->SetRecvParameters(parameters));
   channel->SetInterface(&network);
   channel->AsVideoReceiveChannel()->OnReadyToSend(true);
+  channel->AsVideoReceiveChannel()->SetReceive(true);
 
   // Inject a RTX packet.
   webrtc::RtpHeaderExtensionMap extension_map(parameters.extensions);
@@ -972,6 +973,7 @@ TEST_F(WebRtcVideoEngineTest, UpdatesUnsignaledRtxSsrcAndRecoversPayload) {
   cricket::VideoRecvParameters parameters;
   parameters.codecs = supported_codecs;
   ASSERT_TRUE(channel->SetRecvParameters(parameters));
+  channel->AsVideoReceiveChannel()->SetReceive(true);
 
   // Receive a normal payload packet. It is not a complete frame since the
   // marker bit is not set.
@@ -1152,9 +1154,7 @@ TEST_F(WebRtcVideoEngineTest,
   ASSERT_EQ(0u, encoder_factory_->encoders().size());
 }
 
-TEST_F(WebRtcVideoEngineTest, SimulcastEnabledForH264BehindFieldTrial) {
-  webrtc::test::ScopedKeyValueConfig override_field_trials(
-      field_trials_, "WebRTC-H264Simulcast/Enabled/");
+TEST_F(WebRtcVideoEngineTest, SimulcastEnabledForH264) {
   AddSupportedVideoCodecType("H264");
 
   std::unique_ptr<VideoMediaChannel> channel(engine_.CreateMediaChannel(
@@ -1630,6 +1630,7 @@ class WebRtcVideoChannelEncodedFrameCallbackTest : public ::testing::Test {
     cricket::VideoRecvParameters parameters;
     parameters.codecs = engine_.recv_codecs();
     channel_->SetRecvParameters(parameters);
+    receive_channel_->SetReceive(true);
   }
 
   ~WebRtcVideoChannelEncodedFrameCallbackTest() override {
@@ -1741,6 +1742,31 @@ TEST_F(WebRtcVideoChannelEncodedFrameCallbackTest,
   receive_channel_->RemoveRecvStream(kSsrc + 1);
 }
 
+TEST_F(WebRtcVideoChannelEncodedFrameCallbackTest, DoesNotDecodeWhenDisabled) {
+  testing::MockFunction<void(const webrtc::RecordableEncodedFrame&)> callback;
+  EXPECT_CALL(callback, Call);
+  EXPECT_TRUE(channel_->AddRecvStream(
+      cricket::StreamParams::CreateLegacy(kSsrc), /*is_default_stream=*/true));
+  channel_->SetRecordableEncodedFrameCallback(/*ssrc=*/0,
+                                              callback.AsStdFunction());
+  EXPECT_TRUE(channel_->SetSink(kSsrc, &renderer_));
+  receive_channel_->SetReceive(false);
+  DeliverKeyFrame(kSsrc);
+  time_controller_.AdvanceTime(kFrameDuration);
+  EXPECT_EQ(renderer_.num_rendered_frames(), 0);
+
+  receive_channel_->SetReceive(true);
+  DeliverKeyFrame(kSsrc);
+  time_controller_.AdvanceTime(kFrameDuration);
+  EXPECT_EQ(renderer_.num_rendered_frames(), 1);
+
+  receive_channel_->SetReceive(false);
+  DeliverKeyFrame(kSsrc);
+  time_controller_.AdvanceTime(kFrameDuration);
+  EXPECT_EQ(renderer_.num_rendered_frames(), 1);
+  receive_channel_->RemoveRecvStream(kSsrc);
+}
+
 class WebRtcVideoChannelBaseTest : public ::testing::Test {
  protected:
   WebRtcVideoChannelBaseTest()
@@ -1783,6 +1809,7 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
     receive_channel_ =
         std::make_unique<VideoMediaReceiveChannel>(channel_.get());
     send_channel_->OnReadyToSend(true);
+    receive_channel_->SetReceive(true);
     EXPECT_TRUE(channel_.get() != NULL);
     network_interface_.SetDestination(channel_.get());
     channel_->SetInterface(&network_interface_);
@@ -2632,6 +2659,7 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
     receive_channel_ =
         std::make_unique<cricket::VideoMediaReceiveChannel>(channel_.get());
     send_channel_->OnReadyToSend(true);
+    receive_channel_->SetReceive(true);
     last_ssrc_ = 123;
     send_parameters_.codecs = engine_.send_codecs();
     recv_parameters_.codecs = engine_.recv_codecs();
@@ -5900,11 +5928,9 @@ TEST_F(WebRtcVideoChannelTest, GetAggregatedStatsReportForSubStreams) {
   EXPECT_EQ(sender.total_packet_send_delay,
             2 * substream.rtp_stats.transmitted.total_packet_delay);
   EXPECT_EQ(sender.packets_lost,
-            2 * substream.report_block_data->report_block().packets_lost);
-  EXPECT_EQ(sender.fraction_lost,
-            static_cast<float>(
-                substream.report_block_data->report_block().fraction_lost) /
-                (1 << 8));
+            2 * substream.report_block_data->cumulative_lost());
+  EXPECT_FLOAT_EQ(sender.fraction_lost,
+                  substream.report_block_data->fraction_lost());
   EXPECT_EQ(sender.rtt_ms, 0);
   EXPECT_EQ(sender.codec_name, DefaultCodec().name);
   EXPECT_EQ(sender.codec_payload_type, DefaultCodec().id);
@@ -6026,11 +6052,9 @@ TEST_F(WebRtcVideoChannelTest, GetPerLayerStatsReportForSubStreams) {
   EXPECT_EQ(sender.retransmitted_packets_sent,
             substream.rtp_stats.retransmitted.packets);
   EXPECT_EQ(sender.packets_lost,
-            substream.report_block_data->report_block().packets_lost);
-  EXPECT_EQ(sender.fraction_lost,
-            static_cast<float>(
-                substream.report_block_data->report_block().fraction_lost) /
-                (1 << 8));
+            substream.report_block_data->cumulative_lost());
+  EXPECT_FLOAT_EQ(sender.fraction_lost,
+                  substream.report_block_data->fraction_lost());
   EXPECT_EQ(sender.rtt_ms, 0);
   EXPECT_EQ(sender.codec_name, DefaultCodec().name);
   EXPECT_EQ(sender.codec_payload_type, DefaultCodec().id);
@@ -6548,6 +6572,10 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   stats.total_assembly_time = webrtc::TimeDelta::Millis(4);
   stats.frames_assembled_from_multiple_packets = 2;
   stats.power_efficient_decoder = true;
+  webrtc::RtpReceiveStats rtx_stats;
+  rtx_stats.packet_counter.packets = 5;
+  rtx_stats.packet_counter.payload_bytes = 23;
+  stats.rtx_rtp_stats = rtx_stats;
   stream->SetStats(stats);
 
   cricket::VideoMediaSendInfo send_info;
@@ -6586,6 +6614,10 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   EXPECT_EQ(stats.frames_assembled_from_multiple_packets,
             receive_info.receivers[0].frames_assembled_from_multiple_packets);
   EXPECT_TRUE(receive_info.receivers[0].power_efficient_decoder);
+  EXPECT_EQ(stats.rtx_rtp_stats->packet_counter.packets,
+            receive_info.receivers[0].retransmitted_packets_received);
+  EXPECT_EQ(stats.rtx_rtp_stats->packet_counter.payload_bytes,
+            receive_info.receivers[0].retransmitted_bytes_received);
 }
 
 TEST_F(WebRtcVideoChannelTest,
@@ -9447,6 +9479,7 @@ class WebRtcVideoChannelSimulcastTest : public ::testing::Test {
     receive_channel_ =
         std::make_unique<VideoMediaReceiveChannel>(channel_.get());
     send_channel_->OnReadyToSend(true);
+    receive_channel_->SetReceive(true);
     last_ssrc_ = 123;
   }
 

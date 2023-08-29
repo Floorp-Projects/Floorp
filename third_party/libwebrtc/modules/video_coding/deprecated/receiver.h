@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_RECEIVER_H_
-#define MODULES_VIDEO_CODING_RECEIVER_H_
+#ifndef MODULES_VIDEO_CODING_DEPRECATED_RECEIVER_H_
+#define MODULES_VIDEO_CODING_DEPRECATED_RECEIVER_H_
 
 #include <memory>
 #include <vector>
@@ -18,7 +18,6 @@
 #include "modules/video_coding/deprecated/event_wrapper.h"
 #include "modules/video_coding/deprecated/jitter_buffer.h"
 #include "modules/video_coding/deprecated/packet.h"
-#include "modules/video_coding/include/video_coding.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/timing/timing.h"
 
@@ -66,4 +65,4 @@ class VCMReceiver {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_RECEIVER_H_
+#endif  // MODULES_VIDEO_CODING_DEPRECATED_RECEIVER_H_

@@ -41,6 +41,7 @@ using ::testing::Field;
 using ::testing::Gt;
 using ::testing::Le;
 using ::testing::NiceMock;
+using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::Return;
 using ::testing::SaveArg;
@@ -194,10 +195,8 @@ TEST_F(PacketRouterTest, PadsOnLastActiveMediaStream) {
   EXPECT_CALL(rtp_1, SupportsPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_1, SupportsRtxPayloadPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_1, TrySendPacket).WillRepeatedly(Return(false));
-  EXPECT_CALL(
-      rtp_1,
-      TrySendPacket(
-          ::testing::Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc1)), _))
+  EXPECT_CALL(rtp_1, TrySendPacket(
+                         Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc1)), _))
       .WillRepeatedly(Return(true));
 
   NiceMock<MockRtpRtcpInterface> rtp_2;
@@ -205,10 +204,8 @@ TEST_F(PacketRouterTest, PadsOnLastActiveMediaStream) {
   EXPECT_CALL(rtp_2, SupportsPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_2, SupportsRtxPayloadPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_2, TrySendPacket).WillRepeatedly(Return(false));
-  EXPECT_CALL(
-      rtp_2,
-      TrySendPacket(
-          ::testing::Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc2)), _))
+  EXPECT_CALL(rtp_2, TrySendPacket(
+                         Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc2)), _))
       .WillRepeatedly(Return(true));
 
   // Third module is sending media, but does not support rtx.
@@ -217,10 +214,8 @@ TEST_F(PacketRouterTest, PadsOnLastActiveMediaStream) {
   EXPECT_CALL(rtp_3, SupportsPadding).WillRepeatedly(Return(true));
   EXPECT_CALL(rtp_3, SupportsRtxPayloadPadding).WillRepeatedly(Return(false));
   EXPECT_CALL(rtp_3, TrySendPacket).WillRepeatedly(Return(false));
-  EXPECT_CALL(
-      rtp_3,
-      TrySendPacket(
-          ::testing::Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc3)), _))
+  EXPECT_CALL(rtp_3, TrySendPacket(
+                         Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc3)), _))
       .WillRepeatedly(Return(true));
 
   packet_router_.AddSendRtpModule(&rtp_1, false);
@@ -257,6 +252,7 @@ TEST_F(PacketRouterTest, PadsOnLastActiveMediaStream) {
 
   // If the last active module is removed, and no module sends media before
   // the next padding request, and arbitrary module will be selected.
+  packet_router_.OnBatchComplete();
   packet_router_.RemoveSendRtpModule(&rtp_2);
 
   // Send on and then remove all remaining modules.
@@ -306,6 +302,7 @@ TEST_F(PacketRouterTest, AllocatesTransportSequenceNumbers) {
               packet_router.CurrentTransportSequenceNumber());
   }
 
+  packet_router.OnBatchComplete();
   packet_router.RemoveSendRtpModule(&rtp_1);
 }
 
@@ -346,12 +343,12 @@ TEST_F(PacketRouterTest, SendPacketWithoutTransportSequenceNumbers) {
   EXPECT_CALL(
       rtp_1,
       TrySendPacket(
-          Property(&RtpPacketToSend::HasExtension<TransportSequenceNumber>,
-                   false),
+          Pointee(Property(
+              &RtpPacketToSend::HasExtension<TransportSequenceNumber>, false)),
           _))
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
-
+  packet_router_.OnBatchComplete();
   packet_router_.RemoveSendRtpModule(&rtp_1);
 }
 
@@ -375,10 +372,10 @@ TEST_F(PacketRouterTest, SendPacketAssignsTransportSequenceNumbers) {
   EXPECT_TRUE(packet->ReserveExtension<TransportSequenceNumber>());
   EXPECT_CALL(
       rtp_1,
-      TrySendPacket(
-          Property(&RtpPacketToSend::GetExtension<TransportSequenceNumber>,
-                   transport_sequence_number),
-          _))
+      TrySendPacket(Pointee(Property(
+                        &RtpPacketToSend::GetExtension<TransportSequenceNumber>,
+                        transport_sequence_number)),
+                    _))
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
@@ -388,13 +385,14 @@ TEST_F(PacketRouterTest, SendPacketAssignsTransportSequenceNumbers) {
 
   EXPECT_CALL(
       rtp_2,
-      TrySendPacket(
-          Property(&RtpPacketToSend::GetExtension<TransportSequenceNumber>,
-                   transport_sequence_number),
-          _))
+      TrySendPacket(Pointee(Property(
+                        &RtpPacketToSend::GetExtension<TransportSequenceNumber>,
+                        transport_sequence_number)),
+                    _))
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
+  packet_router_.OnBatchComplete();
   packet_router_.RemoveSendRtpModule(&rtp_1);
   packet_router_.RemoveSendRtpModule(&rtp_2);
 }
@@ -413,10 +411,11 @@ TEST_F(PacketRouterTest, DoesNotIncrementTransportSequenceNumberOnSendFailure) {
   auto packet = BuildRtpPacket(kSsrc);
   EXPECT_TRUE(packet->ReserveExtension<TransportSequenceNumber>());
   EXPECT_CALL(
-      rtp, TrySendPacket(
-               Property(&RtpPacketToSend::GetExtension<TransportSequenceNumber>,
-                        kStartTransportSequenceNumber),
-               _))
+      rtp,
+      TrySendPacket(Pointee(Property(
+                        &RtpPacketToSend::GetExtension<TransportSequenceNumber>,
+                        kStartTransportSequenceNumber)),
+                    _))
       .WillOnce(Return(false));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
@@ -426,13 +425,15 @@ TEST_F(PacketRouterTest, DoesNotIncrementTransportSequenceNumberOnSendFailure) {
   EXPECT_TRUE(packet->ReserveExtension<TransportSequenceNumber>());
 
   EXPECT_CALL(
-      rtp, TrySendPacket(
-               Property(&RtpPacketToSend::GetExtension<TransportSequenceNumber>,
-                        kStartTransportSequenceNumber),
-               _))
+      rtp,
+      TrySendPacket(Pointee(Property(
+                        &RtpPacketToSend::GetExtension<TransportSequenceNumber>,
+                        kStartTransportSequenceNumber)),
+                    _))
       .WillOnce(Return(true));
   packet_router_.SendPacket(std::move(packet), PacedPacketInfo());
 
+  packet_router_.OnBatchComplete();
   packet_router_.RemoveSendRtpModule(&rtp);
 }
 
@@ -498,6 +499,24 @@ TEST_F(PacketRouterTest, ReportsRtxSsrc) {
   packet_router_.RemoveSendRtpModule(&rtp_2);
 }
 
+TEST_F(PacketRouterTest, RoutesBatchCompleteToActiveModules) {
+  NiceMock<MockRtpRtcpInterface> rtp_1;
+  NiceMock<MockRtpRtcpInterface> rtp_2;
+  constexpr uint32_t kSsrc1 = 4711;
+  constexpr uint32_t kSsrc2 = 1234;
+  ON_CALL(rtp_1, SSRC).WillByDefault(Return(kSsrc1));
+  ON_CALL(rtp_2, SSRC).WillByDefault(Return(kSsrc2));
+  packet_router_.AddSendRtpModule(&rtp_1, false);
+  packet_router_.AddSendRtpModule(&rtp_2, false);
+  EXPECT_CALL(rtp_1, TrySendPacket).WillOnce(Return(true));
+  packet_router_.SendPacket(BuildRtpPacket(kSsrc1), PacedPacketInfo());
+  EXPECT_CALL(rtp_1, OnBatchComplete);
+  EXPECT_CALL(rtp_2, OnBatchComplete).Times(0);
+  packet_router_.OnBatchComplete();
+  packet_router_.RemoveSendRtpModule(&rtp_1);
+  packet_router_.RemoveSendRtpModule(&rtp_2);
+}
+
 #if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
 using PacketRouterDeathTest = PacketRouterTest;
 TEST_F(PacketRouterDeathTest, DoubleRegistrationOfSendModuleDisallowed) {
@@ -522,18 +541,24 @@ TEST_F(PacketRouterDeathTest, DoubleRegistrationOfReceiveModuleDisallowed) {
   packet_router_.RemoveReceiveRtpModule(&module);
 }
 
-TEST_F(PacketRouterDeathTest, RemovalOfNeverAddedSendModuleDisallowed) {
-  NiceMock<MockRtpRtcpInterface> module;
-
-  EXPECT_DEATH(packet_router_.RemoveSendRtpModule(&module), "");
-}
-
 TEST_F(PacketRouterDeathTest, RemovalOfNeverAddedReceiveModuleDisallowed) {
   NiceMock<MockRtpRtcpInterface> module;
 
   EXPECT_DEATH(packet_router_.RemoveReceiveRtpModule(&module), "");
 }
 #endif  // RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
+
+TEST_F(PacketRouterTest, RemovalOfNeverAddedSendModuleIgnored) {
+  NiceMock<MockRtpRtcpInterface> module;
+  packet_router_.RemoveSendRtpModule(&module);
+}
+
+TEST_F(PacketRouterTest, DuplicateRemovalOfSendModuleIgnored) {
+  NiceMock<MockRtpRtcpInterface> module;
+  packet_router_.AddSendRtpModule(&module, false);
+  packet_router_.RemoveSendRtpModule(&module);
+  packet_router_.RemoveSendRtpModule(&module);
+}
 
 TEST(PacketRouterRembTest, ChangeSendRtpModuleChangeRembSender) {
   rtc::ScopedFakeClock clock;

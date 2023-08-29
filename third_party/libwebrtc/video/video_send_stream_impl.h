@@ -156,8 +156,6 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   double encoder_bitrate_priority_ RTC_GUARDED_BY(thread_checker_);
 
   VideoStreamEncoderInterface* const video_stream_encoder_;
-
-  RtcpBandwidthObserver* const bandwidth_observer_;
   RtpVideoSenderInterface* const rtp_video_sender_;
 
   ScopedTaskSafety worker_queue_safety_;

@@ -117,6 +117,7 @@ rtc_library("rtp_rtcp_format") {
     "../../api/audio_codecs:audio_codecs_api",
     "../../api/transport:network_control",
     "../../api/transport/rtp:dependency_descriptor",
+    "../../api/units:data_rate",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
     "../../api/video:video_frame",
@@ -171,6 +172,8 @@ rtc_library("rtp_rtcp") {
     "source/fec_private_tables_random.h",
     "source/flexfec_header_reader_writer.cc",
     "source/flexfec_header_reader_writer.h",
+    "source/flexfec_header_reader_writer2.cc",
+    "source/flexfec_header_reader_writer2.h",
     "source/flexfec_receiver.cc",
     "source/flexfec_sender.cc",
     "source/forward_error_correction.cc",
@@ -477,14 +480,18 @@ rtc_library("fec_test_helper") {
 rtc_library("mock_rtp_rtcp") {
   testonly = true
   public = [
+    "mocks/mock_network_link_rtcp_observer.h",
     "mocks/mock_recovered_packet_receiver.h",
-    "mocks/mock_rtcp_bandwidth_observer.h",
     "mocks/mock_rtcp_rtt_stats.h",
     "mocks/mock_rtp_rtcp.h",
   ]
   deps = [
     ":rtp_rtcp",
     ":rtp_rtcp_format",
+    "../../api:array_view",
+    "../../api/units:data_rate",
+    "../../api/units:time_delta",
+    "../../api/units:timestamp",
     "../../api/video:video_bitrate_allocation",
     "../../rtc_base:checks",
     "../../test:test_support",
@@ -546,6 +553,7 @@ if (rtc_include_tests) {
       "source/byte_io_unittest.cc",
       "source/capture_clock_offset_updater_unittest.cc",
       "source/fec_private_tables_bursty_unittest.cc",
+      "source/flexfec_header_reader_writer2_unittest.cc",
       "source/flexfec_header_reader_writer_unittest.cc",
       "source/flexfec_receiver_unittest.cc",
       "source/flexfec_sender_unittest.cc",

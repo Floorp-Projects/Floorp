@@ -1,54 +1,41 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 18:06:00 +0000
-Subject: Bug 1831824 - libwebrtc: In PacketSequencer set timestamps of rtx
- padding packets when there is no last packet. r=webrtc-reviewers,dbaker
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
+ released on itself. r=pehrsons,webrtc-reviewers
 
-Prior to this patch timestamps are not adjusted when they are 0, and they are 0
-when the packet sequencer has not yet seen a media packet. Code and comments in
-PacketSequencer and RTPSender::GeneratePadding make it clear that rtx padding
-packets are allowed prior to seeing a media packet, and therefore the 0
-timestamp case has to be handled.
-
-For rtx the padding packets do not need to have the same timestamp as any media
-packets, like plain padding packets do -- because they can only be part of a media
-frame, so a media packet has to be known.
-
-With this patch both rtp timestamps and capture timestamps are set to current
-time when sequencing rtx padding packets without having seen a media packet.
-
-This fixes a DCHECK failure in TransmissionOffset::Write.
-
-Differential Revision: https://phabricator.services.mozilla.com/D177306
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b0339fd77c82c4c54e5aacaeef66d739b1643827
+Differential Revision: https://phabricator.services.mozilla.com/D181699
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
 ---
- modules/rtp_rtcp/source/packet_sequencer.cc | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/modules/rtp_rtcp/source/packet_sequencer.cc b/modules/rtp_rtcp/source/packet_sequencer.cc
-index 55edd768a8..acc2e87aa3 100644
---- a/modules/rtp_rtcp/source/packet_sequencer.cc
-+++ b/modules/rtp_rtcp/source/packet_sequencer.cc
-@@ -118,8 +118,18 @@ void PacketSequencer::PopulatePaddingFields(RtpPacketToSend& packet) {
-     return;
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+index 5a68019a8b..fb133ff73a 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+@@ -17,6 +17,7 @@
+ #include "api/task_queue/task_queue_factory.h"
+ #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
+ #include "rtc_base/checks.h"
++#include "rtc_base/event.h"
+ 
+ namespace webrtc {
+ namespace {
+@@ -223,6 +224,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
+     MutexLock lock(&sender_lock_);
+     sender_ = nullptr;
    }
++  // Wait until all pending tasks are executed, to ensure that the last ref
++  // standing is not on the transformation queue.
++  rtc::Event flush;
++  transformation_queue_->PostTask([this, &flush]() {
++    RTC_DCHECK_RUN_ON(transformation_queue_.get());
++    flush.Set();
++  });
++  flush.Wait(rtc::Event::kForever);
+ }
  
--  packet.SetTimestamp(last_rtp_timestamp_);
--  packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
-+  if (last_timestamp_time_ms_ > 0) {
-+    RTC_DCHECK_GT(last_rtp_timestamp_, 0);
-+    RTC_DCHECK_GT(last_capture_time_ms_, 0);
-+    packet.SetTimestamp(last_rtp_timestamp_);
-+    packet.set_capture_time(Timestamp::Millis(last_capture_time_ms_));
-+  } else {
-+    // No media packet has been sent yet so timestamps are not known. Set them
-+    // now as they will be needed when serializing the packet later on.
-+    auto now = clock_->CurrentTime();
-+    packet.SetTimestamp(now.ms() * kTimestampTicksPerMs);
-+    packet.set_capture_time(now);
-+  }
- 
-   // Only change the timestamp of padding packets sent over RTX.
-   // Padding only packets over RTP has to be sent as part of a media
+ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
 -- 
 2.34.1
 

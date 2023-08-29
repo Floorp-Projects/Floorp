@@ -99,11 +99,14 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
                  rtc::ArrayView<const uint8_t> payload,
                  RTPVideoHeader video_header,
                  absl::optional<int64_t> expected_retransmission_time_ms);
+  // `encoder_output_size` is the size of the video frame as it came out of the
+  // video encoder, excluding any additional overhead.
   bool SendVideo(int payload_type,
                  absl::optional<VideoCodecType> codec_type,
                  uint32_t rtp_timestamp,
                  int64_t capture_time_ms,
                  rtc::ArrayView<const uint8_t> payload,
+                 size_t encoder_output_size,
                  RTPVideoHeader video_header,
                  absl::optional<int64_t> expected_retransmission_time_ms,
                  std::vector<uint32_t> csrcs) override;
@@ -138,12 +141,13 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   void SetVideoLayersAllocationAfterTransformation(
       VideoLayersAllocation allocation) override;
 
-  // Returns the current packetization overhead rate, in bps. Note that this is
-  // the payload overhead, eg the VP8 payload headers, not the RTP headers
-  // or extension/
+  // Returns the current post encode overhead rate, in bps. Note that this is
+  // the payload overhead, eg the VP8 payload headers and any other added
+  // metadata added by transforms. It does not include the RTP headers or
+  // extensions.
   // TODO(sprang): Consider moving this to RtpSenderEgress so it's in the same
   // place as the other rate stats.
-  uint32_t PacketizationOverheadBps() const;
+  DataRate PostEncodeOverhead() const;
 
  protected:
   static uint8_t GetTemporalId(const RTPVideoHeader& header);
@@ -183,7 +187,7 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
 
   void LogAndSendToNetwork(
       std::vector<std::unique_ptr<RtpPacketToSend>> packets,
-      size_t unpacketized_payload_size);
+      size_t encoder_output_size);
 
   bool red_enabled() const { return red_payload_type_.has_value(); }
 
@@ -231,7 +235,7 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   const size_t fec_overhead_bytes_;  // Per packet max FEC overhead.
 
   mutable Mutex stats_mutex_;
-  RateStatistics packetization_overhead_bitrate_ RTC_GUARDED_BY(stats_mutex_);
+  RateStatistics post_encode_overhead_bitrate_ RTC_GUARDED_BY(stats_mutex_);
 
   std::map<int, TemporalLayerStats> frame_stats_by_temporal_layer_
       RTC_GUARDED_BY(stats_mutex_);

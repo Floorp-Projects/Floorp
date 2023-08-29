@@ -421,6 +421,14 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
       static_cast<uint64_t>(media_receiver_info.payload_bytes_received);
   inbound_stats->header_bytes_received = static_cast<uint64_t>(
       media_receiver_info.header_and_padding_bytes_received);
+  if (media_receiver_info.retransmitted_bytes_received.has_value()) {
+    inbound_stats->retransmitted_bytes_received =
+        *media_receiver_info.retransmitted_bytes_received;
+  }
+  if (media_receiver_info.retransmitted_packets_received.has_value()) {
+    inbound_stats->retransmitted_packets_received =
+        *media_receiver_info.retransmitted_packets_received;
+  }
   inbound_stats->packets_lost =
       static_cast<int32_t>(media_receiver_info.packets_lost);
   inbound_stats->jitter_buffer_delay =
@@ -455,7 +463,6 @@ std::unique_ptr<RTCInboundRtpStreamStats> CreateInboundAudioStreamStats(
                                                 inbound_audio.get());
   inbound_audio->transport_id = transport_id;
   inbound_audio->mid = mid;
-  inbound_audio->media_type = "audio";
   inbound_audio->kind = "audio";
   if (voice_receiver_info.codec_payload_type.has_value()) {
     auto codec_param_it = voice_media_info.receive_codecs.find(
@@ -601,7 +608,6 @@ CreateInboundRTPStreamStatsFromVideoReceiverInfo(
                                                 inbound_video.get());
   inbound_video->transport_id = transport_id;
   inbound_video->mid = mid;
-  inbound_video->media_type = "video";
   inbound_video->kind = "video";
   if (video_receiver_info.codec_payload_type.has_value()) {
     auto codec_param_it = video_media_info.receive_codecs.find(
@@ -729,7 +735,6 @@ CreateOutboundRTPStreamStatsFromVoiceSenderInfo(
                                                outbound_audio.get());
   outbound_audio->transport_id = transport_id;
   outbound_audio->mid = mid;
-  outbound_audio->media_type = "audio";
   outbound_audio->kind = "audio";
   if (voice_sender_info.target_bitrate.has_value() &&
       *voice_sender_info.target_bitrate > 0) {
@@ -766,7 +771,6 @@ CreateOutboundRTPStreamStatsFromVideoSenderInfo(
                                                outbound_video.get());
   outbound_video->transport_id = transport_id;
   outbound_video->mid = mid;
-  outbound_video->media_type = "video";
   outbound_video->kind = "video";
   if (video_sender_info.codec_payload_type.has_value()) {
     auto codec_param_it = video_media_info.send_codecs.find(
@@ -841,35 +845,31 @@ CreateOutboundRTPStreamStatsFromVideoSenderInfo(
 std::unique_ptr<RTCRemoteInboundRtpStreamStats>
 ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
     const std::string& transport_id,
-    const ReportBlockData& report_block_data,
+    const ReportBlockData& report_block,
     cricket::MediaType media_type,
     const std::map<std::string, RTCOutboundRtpStreamStats*>& outbound_rtps,
     const RTCStatsReport& report) {
-  const auto& report_block = report_block_data.report_block();
   // RTCStats' timestamp generally refers to when the metric was sampled, but
   // for "remote-[outbound/inbound]-rtp" it refers to the local time when the
   // Report Block was received.
   auto remote_inbound = std::make_unique<RTCRemoteInboundRtpStreamStats>(
-      RTCRemoteInboundRtpStreamStatsIdFromSourceSsrc(media_type,
-                                                     report_block.source_ssrc),
-      report_block_data.report_block_timestamp_utc());
-  remote_inbound->ssrc = report_block.source_ssrc;
+      RTCRemoteInboundRtpStreamStatsIdFromSourceSsrc(
+          media_type, report_block.source_ssrc()),
+      report_block.report_block_timestamp_utc());
+  remote_inbound->ssrc = report_block.source_ssrc();
   remote_inbound->kind =
       media_type == cricket::MEDIA_TYPE_AUDIO ? "audio" : "video";
-  remote_inbound->packets_lost = report_block.packets_lost;
-  remote_inbound->fraction_lost =
-      static_cast<double>(report_block.fraction_lost) / (1 << 8);
-  if (report_block_data.num_rtts() > 0) {
-    remote_inbound->round_trip_time =
-        report_block_data.last_rtt().seconds<double>();
+  remote_inbound->packets_lost = report_block.cumulative_lost();
+  remote_inbound->fraction_lost = report_block.fraction_lost();
+  if (report_block.num_rtts() > 0) {
+    remote_inbound->round_trip_time = report_block.last_rtt().seconds<double>();
   }
   remote_inbound->total_round_trip_time =
-      report_block_data.sum_rtts().seconds<double>();
-  remote_inbound->round_trip_time_measurements =
-      report_block_data.num_rtts();
+      report_block.sum_rtts().seconds<double>();
+  remote_inbound->round_trip_time_measurements = report_block.num_rtts();
 
   std::string local_id = RTCOutboundRtpStreamStatsIDFromSSRC(
-      transport_id, media_type, report_block.source_ssrc);
+      transport_id, media_type, report_block.source_ssrc());
   // Look up local stat from `outbound_rtps` where the pointers are non-const.
   auto local_id_it = outbound_rtps.find(local_id);
   if (local_id_it != outbound_rtps.end()) {
@@ -900,11 +900,8 @@ ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
       remote_inbound->codec_id = *outbound_rtp.codec_id;
       const auto& codec = codec_from_id->cast_to<RTCCodecStats>();
       if (codec.clock_rate.is_defined()) {
-        // The Report Block jitter is expressed in RTP timestamp units
-        // (https://tools.ietf.org/html/rfc3550#section-6.4.1). To convert this
-        // to seconds we divide by the codec's clock rate.
         remote_inbound->jitter =
-            static_cast<double>(report_block.jitter) / *codec.clock_rate;
+            report_block.jitter(*codec.clock_rate).seconds<double>();
       }
     }
   }

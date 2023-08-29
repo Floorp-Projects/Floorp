@@ -66,31 +66,6 @@ class VCMReceiveCallback {
   virtual ~VCMReceiveCallback() {}
 };
 
-// Callback class used for informing the user of the incoming bit rate and frame
-// rate.
-class VCMReceiveStatisticsCallback {
- public:
-  virtual void OnCompleteFrame(bool is_keyframe,
-                               size_t size_bytes,
-                               VideoContentType content_type) = 0;
-
-  virtual void OnDroppedFrames(uint32_t frames_dropped) = 0;
-
-  virtual void OnDiscardedPackets(uint32_t packets_discarded) = 0;
-
-  virtual void OnFrameBufferTimingsUpdated(int max_decode_ms,
-                                           int current_delay_ms,
-                                           int target_delay_ms,
-                                           int jitter_buffer_ms,
-                                           int min_playout_delay_ms,
-                                           int render_delay_ms) = 0;
-
-  virtual void OnTimingFrameInfoUpdated(const TimingFrameInfo& info) = 0;
-
- protected:
-  virtual ~VCMReceiveStatisticsCallback() {}
-};
-
 // Callback class used for telling the user about what frame type needed to
 // continue decoding.
 // Typically a key frame when the stream has been corrupted in some way.

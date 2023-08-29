@@ -161,7 +161,7 @@ class RtpVideoSender : public RtpVideoSenderInterface,
   void ConfigureProtection();
   void ConfigureSsrcs(const std::map<uint32_t, RtpState>& suspended_ssrcs);
   bool NackEnabled() const;
-  uint32_t GetPacketizationOverheadRate() const;
+  DataRate GetPostEncodeOverhead() const;
   DataRate CalculateOverheadRate(DataRate data_rate,
                                  DataSize packet_size,
                                  DataSize overhead_per_packet,

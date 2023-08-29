@@ -34,6 +34,7 @@
 #include "modules/pacing/packet_router.h"
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/pacing/task_queue_paced_sender.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/task_queue.h"
@@ -46,7 +47,7 @@ class RtcEventLog;
 
 class RtpTransportControllerSend final
     : public RtpTransportControllerSendInterface,
-      public RtcpBandwidthObserver,
+      public NetworkLinkRtcpObserver,
       public TransportFeedbackObserver,
       public NetworkStateEstimateObserver {
  public:
@@ -90,7 +91,7 @@ class RtpTransportControllerSend final
   void OnNetworkRouteChanged(absl::string_view transport_name,
                              const rtc::NetworkRoute& network_route) override;
   void OnNetworkAvailability(bool network_available) override;
-  RtcpBandwidthObserver* GetBandwidthObserver() override;
+  NetworkLinkRtcpObserver* GetRtcpObserver() override;
   int64_t GetPacerQueuingDelayMs() const override;
   absl::optional<Timestamp> GetFirstPacketTime() const override;
   void EnablePeriodicAlrProbing(bool enable) override;
@@ -107,15 +108,17 @@ class RtpTransportControllerSend final
   void IncludeOverheadInPacedSender() override;
   void EnsureStarted() override;
 
-  // Implements RtcpBandwidthObserver interface
-  void OnReceivedEstimatedBitrate(uint32_t bitrate) override;
-  void OnReceivedRtcpReceiverReport(const ReportBlockList& report_blocks,
-                                    int64_t rtt,
-                                    int64_t now_ms) override;
+  // Implements NetworkLinkRtcpObserver interface
+  void OnReceiverEstimatedMaxBitrate(Timestamp receive_time,
+                                     DataRate bitrate) override;
+  void OnReport(Timestamp receive_time,
+                rtc::ArrayView<const ReportBlockData> report_blocks) override;
+  void OnRttUpdate(Timestamp receive_time, TimeDelta rtt) override;
+  void OnTransportFeedback(Timestamp receive_time,
+                           const rtcp::TransportFeedback& feedback) override;
 
   // Implements TransportFeedbackObserver interface
   void OnAddPacket(const RtpPacketSendInfo& packet_info) override;
-  void OnTransportFeedback(const rtcp::TransportFeedback& feedback) override;
 
   // Implements NetworkStateEstimateObserver interface
   void OnRemoteNetworkEstimate(NetworkStateEstimate estimate) override;
@@ -133,16 +136,13 @@ class RtpTransportControllerSend final
                              const rtc::NetworkRoute& new_route) const;
   void UpdateBitrateConstraints(const BitrateConstraints& updated);
   void UpdateStreamsConfig() RTC_RUN_ON(sequence_checker_);
-  void OnReceivedRtcpReceiverReportBlocks(const ReportBlockList& report_blocks,
-                                          int64_t now_ms)
-      RTC_RUN_ON(sequence_checker_);
   void PostUpdates(NetworkControlUpdate update) RTC_RUN_ON(sequence_checker_);
   void UpdateControlState() RTC_RUN_ON(sequence_checker_);
   void UpdateCongestedState() RTC_RUN_ON(sequence_checker_);
   absl::optional<bool> GetCongestedStateUpdate() const
       RTC_RUN_ON(sequence_checker_);
-  void ProcessSentPacket(const rtc::SentPacket& sent_packet,
-                         bool posted_to_worker) RTC_RUN_ON(sequence_checker_);
+  void ProcessSentPacket(const rtc::SentPacket& sent_packet)
+      RTC_RUN_ON(sequence_checker_);
   void ProcessSentPacketUpdates(NetworkControlUpdate updates)
       RTC_RUN_ON(sequence_checker_);
 
@@ -179,7 +179,11 @@ class RtpTransportControllerSend final
 
   TimeDelta process_interval_ RTC_GUARDED_BY(sequence_checker_);
 
-  std::map<uint32_t, RTCPReportBlock> last_report_blocks_
+  struct LossReport {
+    uint32_t extended_highest_sequence_number = 0;
+    int cumulative_lost = 0;
+  };
+  std::map<uint32_t, LossReport> last_report_blocks_
       RTC_GUARDED_BY(sequence_checker_);
   Timestamp last_report_block_time_ RTC_GUARDED_BY(sequence_checker_);
 

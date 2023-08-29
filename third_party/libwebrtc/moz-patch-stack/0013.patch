@@ -1,45 +1,32 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 19 Sep 2018 15:06:00 -0400
-Subject: Bug 1376873 - Fix up rotation in video_capture_impl.cc; r=pehrsons
+From: Jed Davis <jld@mozilla.com>
+Date: Sun, 17 Nov 2019 03:40:00 +0000
+Subject: Bug 1545504 - Strengthen bounds check in WebRTC PhysicalSocketServer.
+ r=jesup
 
-This fixes a bug in the upstream code introduced when they removed the
-ConvertToI420 helper method from webrtc_libyuv.cc. The buffer size is
-passed into libyuv::ConvertI420 incorrectly when rotation is applied, which
-causes bad rendering and instabilities.
+PhysicalSocketServer isn't currently used by Mozilla's WebRTC
+integration, but just in case, let's make sure that this array index is
+bounds-checked in actual use, not just in debug builds (which tend to
+never see realistic test conditions).
 
-Differential Revision: https://phabricator.services.mozilla.com/D7478
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c56cb66f86518dfb046c642ebeb07cf51c23a3cb
+Differential Revision: https://phabricator.services.mozilla.com/D52745
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2b079067648bfe0d064a334bf19bdcc233e26b6e
 ---
- modules/video_capture/video_capture_impl.cc | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ rtc_base/physical_socket_server.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index d5ec4daae1..5dbc5e4e27 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -208,12 +208,21 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
-   }
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index 33ea941808..2dfdd9a5df 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -1431,7 +1431,7 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
+         int fd = pdispatcher->GetDescriptor();
+         // "select"ing a file descriptor that is equal to or larger than
+         // FD_SETSIZE will result in undefined behavior.
+-        RTC_DCHECK_LT(fd, FD_SETSIZE);
++        RTC_CHECK_LT(fd, FD_SETSIZE);
+         if (fd > fdmax)
+           fdmax = fd;
  
-+  int dst_width = buffer->width();
-+  int dst_height = buffer->height();
-+
-+  // LibYuv expects pre-rotation_mode values for dst.
-+  // Stride values should correspond to the destination values.
-+  if (rotation_mode == libyuv::kRotate90 || rotation_mode == libyuv::kRotate270) {
-+    std::swap(dst_width, dst_height);
-+  }
-+
-   const int conversionResult = libyuv::ConvertToI420(
-       videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
-       buffer.get()->StrideY(), buffer.get()->MutableDataU(),
-       buffer.get()->StrideU(), buffer.get()->MutableDataV(),
-       buffer.get()->StrideV(), 0, 0,  // No Cropping
--      width, height, target_width, target_height, rotation_mode,
-+      width, height, dst_width, dst_height, rotation_mode,
-       ConvertVideoType(frameInfo.videoType));
-   if (conversionResult != 0) {
-     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
 -- 
 2.34.1
 

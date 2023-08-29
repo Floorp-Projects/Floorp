@@ -41,6 +41,9 @@ class RateLimiter;
 class RtcEventLog;
 class RtpPacketToSend;
 
+// Maximum amount of padding in RFC 3550 is 255 bytes.
+constexpr size_t kMaxPaddingLength = 255;
+
 class RTPSender {
  public:
   RTPSender(const RtpRtcpInterface::Configuration& config,

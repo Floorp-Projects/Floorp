@@ -261,7 +261,7 @@ void FakeEncoder::SetRatesLocked(const RateControlParameters& parameters) {
           uint32_t bitrate = current_rate_settings_.bitrate.GetBitrate(
               spatial_idx, temporal_idx);
           bitrate = static_cast<uint32_t>(
-              (bitrate * int64_t{max_target_bitrate_kbps_}) /
+              (bitrate* int64_t{max_target_bitrate_kbps_}) /
               allocated_bitrate_kbps);
           current_rate_settings_.bitrate.SetBitrate(spatial_idx, temporal_idx,
                                                     bitrate);

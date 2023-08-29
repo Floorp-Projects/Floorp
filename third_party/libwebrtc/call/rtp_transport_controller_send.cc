@@ -354,7 +354,7 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
     rtp_sender->OnNetworkAvailability(network_available);
   }
 }
-RtcpBandwidthObserver* RtpTransportControllerSend::GetBandwidthObserver() {
+NetworkLinkRtcpObserver* RtpTransportControllerSend::GetRtcpObserver() {
   return this;
 }
 int64_t RtpTransportControllerSend::GetPacerQueuingDelayMs() const {
@@ -372,25 +372,24 @@ void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
 }
 void RtpTransportControllerSend::OnSentPacket(
     const rtc::SentPacket& sent_packet) {
-  // Normally called on the network thread !
-  // TODO(bugs.webrtc.org/137439): Clarify other thread contexts calling in, and
-  // simplify task posting logic when the combined network/worker project
+  // Normally called on the network thread!
+  // TODO(crbug.com/1373439): Clarify other thread contexts calling in,
+  // and simplify task posting logic when the combined network/worker project
   // launches.
   if (TaskQueueBase::Current() != task_queue_) {
     task_queue_->PostTask(SafeTask(safety_.flag(), [this, sent_packet]() {
       RTC_DCHECK_RUN_ON(&sequence_checker_);
-      ProcessSentPacket(sent_packet, /*posted_to_worker=*/true);
+      ProcessSentPacket(sent_packet);
     }));
     return;
   }
 
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  ProcessSentPacket(sent_packet, /*posted_to_worker=*/false);
+  ProcessSentPacket(sent_packet);
 }
 
 void RtpTransportControllerSend::ProcessSentPacket(
-    const rtc::SentPacket& sent_packet,
-    bool posted_to_worker) {
+    const rtc::SentPacket& sent_packet) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   absl::optional<SentPacket> packet_msg =
       transport_feedback_adapter_.ProcessSentPacket(sent_packet);
@@ -403,24 +402,7 @@ void RtpTransportControllerSend::ProcessSentPacket(
     control_update = controller_->OnSentPacket(*packet_msg);
   if (!congestion_update && !control_update.has_updates())
     return;
-  if (posted_to_worker) {
-    ProcessSentPacketUpdates(std::move(control_update));
-  } else {
-    // TODO(bugs.webrtc.org/137439): Aim to remove downstream locks to permit
-    // removing this PostTask.
-    // At least in test situations (and possibly in production environments), we
-    // may get here synchronously with locks taken in PacketRouter::SendPacket.
-    // Because the pacer may at times synchronously re-enter
-    // PacketRouter::SendPacket, we need to break the chain here and PostTask to
-    // get out of the lock. In testing, having updates to process happens pretty
-    // rarely so we do not usually get here.
-    task_queue_->PostTask(
-        SafeTask(safety_.flag(),
-                 [this, control_update = std::move(control_update)]() mutable {
-                   RTC_DCHECK_RUN_ON(&sequence_checker_);
-                   ProcessSentPacketUpdates(std::move(control_update));
-                 }));
-  }
+  ProcessSentPacketUpdates(std::move(control_update));
 }
 
 // RTC_RUN_ON(task_queue_)
@@ -525,24 +507,23 @@ void RtpTransportControllerSend::EnsureStarted() {
   }
 }
 
-void RtpTransportControllerSend::OnReceivedEstimatedBitrate(uint32_t bitrate) {
+void RtpTransportControllerSend::OnReceiverEstimatedMaxBitrate(
+    Timestamp receive_time,
+    DataRate bitrate) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   RemoteBitrateReport msg;
-  msg.receive_time = Timestamp::Millis(clock_->TimeInMilliseconds());
-  msg.bandwidth = DataRate::BitsPerSec(bitrate);
+  msg.receive_time = receive_time;
+  msg.bandwidth = bitrate;
   if (controller_)
     PostUpdates(controller_->OnRemoteBitrateReport(msg));
 }
 
-void RtpTransportControllerSend::OnReceivedRtcpReceiverReport(
-    const ReportBlockList& report_blocks,
-    int64_t rtt_ms,
-    int64_t now_ms) {
+void RtpTransportControllerSend::OnRttUpdate(Timestamp receive_time,
+                                             TimeDelta rtt) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  OnReceivedRtcpReceiverReportBlocks(report_blocks, now_ms);
   RoundTripTimeUpdate report;
-  report.receive_time = Timestamp::Millis(now_ms);
-  report.round_trip_time = TimeDelta::Millis(rtt_ms);
+  report.receive_time = receive_time;
+  report.round_trip_time = rtt.RoundTo(TimeDelta::Millis(1));
   report.smoothed = false;
   if (controller_ && !report.round_trip_time.IsZero())
     PostUpdates(controller_->OnRoundTripTimeUpdate(report));
@@ -558,13 +539,13 @@ void RtpTransportControllerSend::OnAddPacket(
 }
 
 void RtpTransportControllerSend::OnTransportFeedback(
+    Timestamp receive_time,
     const rtcp::TransportFeedback& feedback) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  auto feedback_time = Timestamp::Millis(clock_->TimeInMilliseconds());
   feedback_demuxer_.OnTransportFeedback(feedback);
   absl::optional<TransportPacketsFeedback> feedback_msg =
       transport_feedback_adapter_.ProcessTransportFeedback(feedback,
-                                                           feedback_time);
+                                                           receive_time);
   if (feedback_msg) {
     if (controller_)
       PostUpdates(controller_->OnTransportPacketsFeedback(*feedback_msg));
@@ -676,9 +657,9 @@ void RtpTransportControllerSend::PostUpdates(NetworkControlUpdate update) {
   }
 }
 
-void RtpTransportControllerSend::OnReceivedRtcpReceiverReportBlocks(
-    const ReportBlockList& report_blocks,
-    int64_t now_ms) {
+void RtpTransportControllerSend::OnReport(
+    Timestamp receive_time,
+    rtc::ArrayView<const ReportBlockData> report_blocks) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   if (report_blocks.empty())
     return;
@@ -687,16 +668,19 @@ void RtpTransportControllerSend::OnReceivedRtcpReceiverReportBlocks(
   int total_packets_delta = 0;
 
   // Compute the packet loss from all report blocks.
-  for (const RTCPReportBlock& report_block : report_blocks) {
-    auto it = last_report_blocks_.find(report_block.source_ssrc);
-    if (it != last_report_blocks_.end()) {
-      auto number_of_packets = report_block.extended_highest_sequence_number -
-                               it->second.extended_highest_sequence_number;
-      total_packets_delta += number_of_packets;
-      auto lost_delta = report_block.packets_lost - it->second.packets_lost;
-      total_packets_lost_delta += lost_delta;
+  for (const ReportBlockData& report_block : report_blocks) {
+    auto [it, inserted] =
+        last_report_blocks_.try_emplace(report_block.source_ssrc());
+    LossReport& last_loss_report = it->second;
+    if (!inserted) {
+      total_packets_delta += report_block.extended_highest_sequence_number() -
+                             last_loss_report.extended_highest_sequence_number;
+      total_packets_lost_delta +=
+          report_block.cumulative_lost() - last_loss_report.cumulative_lost;
     }
-    last_report_blocks_[report_block.source_ssrc] = report_block;
+    last_loss_report.extended_highest_sequence_number =
+        report_block.extended_highest_sequence_number();
+    last_loss_report.cumulative_lost = report_block.cumulative_lost();
   }
   // Can only compute delta if there has been previous blocks to compare to. If
   // not, total_packets_delta will be unchanged and there's nothing more to do.
@@ -709,16 +693,15 @@ void RtpTransportControllerSend::OnReceivedRtcpReceiverReportBlocks(
 
   if (packets_received_delta < 1)
     return;
-  Timestamp now = Timestamp::Millis(now_ms);
   TransportLossReport msg;
   msg.packets_lost_delta = total_packets_lost_delta;
   msg.packets_received_delta = packets_received_delta;
-  msg.receive_time = now;
+  msg.receive_time = receive_time;
   msg.start_time = last_report_block_time_;
-  msg.end_time = now;
+  msg.end_time = receive_time;
   if (controller_)
     PostUpdates(controller_->OnTransportLossReport(msg));
-  last_report_block_time_ = now;
+  last_report_block_time_ = receive_time;
 }
 
 }  // namespace webrtc

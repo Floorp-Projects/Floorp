@@ -195,7 +195,7 @@ Updated when a RTCP packet is sent, `RTCPSender::ComputeCompoundRTCPPacket`.
 
 [VideoReceiveStream]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/video_receive_stream.h
 [VideoReceiveStream::Stats]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/call/video_receive_stream.h?q=VideoReceiveStream::Stats
-[ReceiveStatisticsProxy]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/video/receive_statistics_proxy2.h
+[ReceiveStatisticsProxy]: https://source.chromium.org/chromium/chromium/src/+/main:third_party/webrtc/video/receive_statistics_proxy.h
 [rtcinboundrtpstreamstats-keyframesdecoded]: https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-keyframesdecoded
 [rtcinboundrtpstreamstats-jitterbufferdelay]: https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferdelay
 [rtcinboundrtpstreamstats-jitterbufferemittedcount]: https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-jitterbufferemittedcount

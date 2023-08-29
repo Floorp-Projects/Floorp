@@ -879,9 +879,25 @@ TEST_F(NetworkTest, TestConvertIfAddrsNotRunning) {
   memset(&list, 0, sizeof(list));
   list.ifa_name = const_cast<char*>("test_iface");
   sockaddr ifa_addr;
+  ifa_addr.sa_family = AF_UNSPEC;
   sockaddr ifa_netmask;
   list.ifa_addr = &ifa_addr;
   list.ifa_netmask = &ifa_netmask;
+
+  std::vector<std::unique_ptr<Network>> result;
+  PhysicalSocketServer socket_server;
+  BasicNetworkManager manager(&socket_server);
+  manager.StartUpdating();
+  CallConvertIfAddrs(manager, &list, true, &result);
+  EXPECT_TRUE(result.empty());
+}
+
+TEST_F(NetworkTest, TestConvertIfAddrsGetsNullAddr) {
+  ifaddrs list;
+  memset(&list, 0, sizeof(list));
+  list.ifa_name = const_cast<char*>("test_iface");
+  list.ifa_addr = nullptr;
+  list.ifa_netmask = nullptr;
 
   std::vector<std::unique_ptr<Network>> result;
   PhysicalSocketServer socket_server;

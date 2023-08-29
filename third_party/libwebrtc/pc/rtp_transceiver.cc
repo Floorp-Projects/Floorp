@@ -10,18 +10,22 @@
 
 #include "pc/rtp_transceiver.h"
 
-#include <algorithm>
+#include <stdint.h>
+
 #include <iterator>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
-#include "api/peer_connection_interface.h"
+#include "api/audio_codecs/audio_codec_pair_id.h"
+#include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
 #include "api/sequence_checker.h"
 #include "media/base/codec.h"
+#include "media/base/media_channel_impl.h"
 #include "media/base/media_constants.h"
 #include "media/base/media_engine.h"
 #include "pc/channel.h"
@@ -230,6 +234,13 @@ RTCError RtpTransceiver::CreateChannel(
         if (!media_receive_channel) {
           return;
         }
+        // Note that this is safe because both sending and
+        // receiving channels will be deleted at the same time.
+        media_send_channel->SetSsrcListChangedCallback(
+            [receive_channel = media_receive_channel.get()](
+                const std::set<uint32_t>& choices) {
+              receive_channel->ChooseReceiverReportSsrc(choices);
+            });
 
         new_channel = std::make_unique<cricket::VoiceChannel>(
             context()->worker_thread(), context()->network_thread(),
@@ -278,6 +289,13 @@ RTCError RtpTransceiver::CreateChannel(
         if (!media_receive_channel) {
           return;
         }
+        // Note that this is safe because both sending and
+        // receiving channels will be deleted at the same time.
+        media_send_channel->SetSsrcListChangedCallback(
+            [receive_channel = media_receive_channel.get()](
+                const std::set<uint32_t>& choices) {
+              receive_channel->ChooseReceiverReportSsrc(choices);
+            });
 
         new_channel = std::make_unique<cricket::VideoChannel>(
             context()->worker_thread(), context()->network_thread(),

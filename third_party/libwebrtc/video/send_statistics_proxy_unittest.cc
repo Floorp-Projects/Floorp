@@ -169,15 +169,13 @@ class SendStatisticsProxyTest : public ::testing::Test {
       EXPECT_EQ(a.report_block_data.has_value(),
                 b.report_block_data.has_value());
       if (a.report_block_data.has_value()) {
-        const RTCPReportBlock& a_rtcp_stats =
-            a.report_block_data->report_block();
-        const RTCPReportBlock& b_rtcp_stats =
-            b.report_block_data->report_block();
-        EXPECT_EQ(a_rtcp_stats.fraction_lost, b_rtcp_stats.fraction_lost);
-        EXPECT_EQ(a_rtcp_stats.packets_lost, b_rtcp_stats.packets_lost);
-        EXPECT_EQ(a_rtcp_stats.extended_highest_sequence_number,
-                  b_rtcp_stats.extended_highest_sequence_number);
-        EXPECT_EQ(a_rtcp_stats.jitter, b_rtcp_stats.jitter);
+        EXPECT_EQ(a.report_block_data->fraction_lost_raw(),
+                  b.report_block_data->fraction_lost_raw());
+        EXPECT_EQ(a.report_block_data->cumulative_lost(),
+                  b.report_block_data->cumulative_lost());
+        EXPECT_EQ(a.report_block_data->extended_highest_sequence_number(),
+                  b.report_block_data->extended_highest_sequence_number());
+        EXPECT_EQ(a.report_block_data->jitter(), b.report_block_data->jitter());
       }
     }
   }

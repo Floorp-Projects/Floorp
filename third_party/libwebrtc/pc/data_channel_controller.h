@@ -94,13 +94,13 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // At some point in time, a data channel has existed.
   bool HasUsedDataChannels() const;
 
-  void OnSctpDataChannelClosed(SctpDataChannel* channel);
-
  protected:
   rtc::Thread* network_thread() const;
   rtc::Thread* signaling_thread() const;
 
  private:
+  void OnSctpDataChannelClosed(SctpDataChannel* channel);
+
   // Creates a new SctpDataChannel object on the network thread.
   RTCErrorOr<rtc::scoped_refptr<SctpDataChannel>> CreateDataChannel(
       const std::string& label,
@@ -143,7 +143,13 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   SctpSidAllocator sid_allocator_ RTC_GUARDED_BY(network_thread());
   std::vector<rtc::scoped_refptr<SctpDataChannel>> sctp_data_channels_n_
       RTC_GUARDED_BY(network_thread());
-  bool has_used_data_channels_ RTC_GUARDED_BY(signaling_thread()) = false;
+  enum class DataChannelUsage : uint8_t {
+    kNeverUsed = 0,
+    kHaveBeenUsed,
+    kInUse
+  };
+  DataChannelUsage channel_usage_ RTC_GUARDED_BY(signaling_thread()) =
+      DataChannelUsage::kNeverUsed;
 
   // Owning PeerConnection.
   PeerConnectionInternal* const pc_;

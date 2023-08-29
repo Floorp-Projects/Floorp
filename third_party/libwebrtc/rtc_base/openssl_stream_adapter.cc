@@ -1057,9 +1057,7 @@ SSL_CTX* OpenSSLStreamAdapter::SetupSSLContext() {
     return nullptr;
   }
 
-#if !defined(NDEBUG)
   SSL_CTX_set_info_callback(ctx, OpenSSLAdapter::SSLInfoCallback);
-#endif
 
   int mode = SSL_VERIFY_PEER;
   if (GetClientAuthEnabled()) {
