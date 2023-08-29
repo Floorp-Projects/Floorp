@@ -197,15 +197,19 @@ nsresult nsIDNService::IDNA2008StringPrep(const nsAString& input,
     return NS_OK;
   }
 
-  bool hasError = flag == eStringPrepForDNS
-                      ? info.HasErrorsIgnoringInvalidHyphen()
-                      : info.HasErrors();
-
-  if (hasError) {
-    if (flag == eStringPrepForDNS) {
-      output.Truncate();
+  if (flag == eStringPrepForDNS) {
+    // We ignore errors if the result is empty, or if the errors were just
+    // invalid hyphens (not punycode-decoding failure or invalid chars).
+    if (!output.IsEmpty()) {
+      if (info.HasErrorsIgnoringInvalidHyphen()) {
+        output.Truncate();
+        rv = NS_ERROR_MALFORMED_URI;
+      }
     }
-    rv = NS_ERROR_MALFORMED_URI;
+  } else {
+    if (info.HasErrors()) {
+      rv = NS_ERROR_MALFORMED_URI;
+    }
   }
 
   return rv;
