@@ -3878,7 +3878,7 @@ class TaarMessageBar extends HTMLElement {
     if (this.childElementCount == 0 && !this.hidden) {
       this.appendChild(importTemplate("taar-notice"));
       this.addEventListener("click", this);
-      this.messageBar = this.querySelector("message-bar");
+      this.messageBar = this.querySelector("moz-message-bar");
       this.messageBar.addEventListener("message-bar:user-dismissed", this);
     }
   }
