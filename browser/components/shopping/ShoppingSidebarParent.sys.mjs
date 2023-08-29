@@ -31,18 +31,14 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
     if (event.button > 0) {
       return;
     }
-    this.toggleAllSidebars("urlBar");
+    this.toggleAllSidebars();
   }
 
   /**
    * Toggles opening or closing all Shopping sidebars.
    * Sets the active pref value for all windows to respond to.
-   * params:
-   *
-   *  @param {string?} source
-   *  Optional value, describes where the call came from.
    */
-  static toggleAllSidebars(source) {
+  static toggleAllSidebars() {
     let activeState = Services.prefs.getBoolPref(
       ShoppingSidebarParent.SHOPPING_ACTIVE_PREF
     );
@@ -50,13 +46,5 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
       ShoppingSidebarParent.SHOPPING_ACTIVE_PREF,
       !activeState
     );
-    if (source == "urlBar") {
-      if (activeState) {
-        Glean.shopping.surfaceClosed.record({ source: "addressBarIcon" });
-        Glean.shopping.addressBarIconClicked.record({ state: "closed" });
-      } else {
-        Glean.shopping.addressBarIconClicked.record({ state: "opened" });
-      }
-    }
   }
 }
