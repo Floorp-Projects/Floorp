@@ -2690,7 +2690,7 @@ diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_proces
              uint32_t fast_fail_code =
                  static_cast<uint32_t>
                  (raw_exception->exception_record.exception_information[0]);
-+            char fast_fail_buff[11] = {};
++            char fast_fail_buff[13] = {};
 +            const char* fast_fail_string = FastFailToString(fast_fail_code);
 +            if (!fast_fail_string) {
 +              snprintf(fast_fail_buff, sizeof(fast_fail_buff), "%#010x",
