@@ -49,7 +49,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun PagerIndicator(
     pagerState: PagerState,
-    pageCount: Int,
     modifier: Modifier = Modifier,
     activeColor: Color = FirefoxTheme.colors.indicatorActive,
     inactiveColor: Color = FirefoxTheme.colors.indicatorInactive,
@@ -68,7 +67,7 @@ fun PagerIndicator(
                 { it == pagerState.currentPage }
             }
 
-        repeat(pageCount) {
+        repeat(pagerState.pageCount) {
             Box(
                 modifier = Modifier
                     .size(6.dp)
@@ -104,8 +103,7 @@ private fun PagerIndicatorPreview() {
             Spacer(modifier = Modifier.height(8.dp))
 
             PagerIndicator(
-                pagerState = rememberPagerState(1),
-                pageCount = 3,
+                pagerState = rememberPagerState(1, pageCount = { 3 }),
                 activeColor = FirefoxTheme.colors.actionPrimary,
                 inactiveColor = FirefoxTheme.colors.actionSecondary,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -122,8 +120,7 @@ private fun PagerIndicatorPreview() {
             Spacer(modifier = Modifier.height(8.dp))
 
             PagerIndicator(
-                pagerState = rememberPagerState(1),
-                pageCount = 3,
+                pagerState = rememberPagerState(1, pageCount = { 3 }),
                 activeColor = FirefoxTheme.colors.actionPrimary,
                 inactiveColor = FirefoxTheme.colors.actionSecondary,
                 leaveTrail = true,
@@ -141,8 +138,7 @@ private fun PagerIndicatorPreview() {
             Spacer(modifier = Modifier.height(8.dp))
 
             PagerIndicator(
-                pagerState = rememberPagerState(1),
-                pageCount = 3,
+                pagerState = rememberPagerState(1, pageCount = { 3 }),
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }

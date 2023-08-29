@@ -138,7 +138,8 @@ fun TabsTray(
         .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
     val selectedPage = tabsTrayStore
         .observeAsComposableState { state -> state.selectedPage }.value ?: Page.NormalTabs
-    val pagerState = rememberPagerState(initialPage = selectedPage.ordinal)
+    val pagerState =
+        rememberPagerState(initialPage = selectedPage.ordinal, pageCount = { Page.values().size })
     val isInMultiSelectMode = multiselectMode is TabsTrayState.Mode.Select
 
     val shapeModifier = if (isInMultiSelectMode) {
@@ -185,7 +186,6 @@ fun TabsTray(
 
         Box(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(
-                pageCount = Page.values().size,
                 modifier = Modifier.fillMaxSize(),
                 state = pagerState,
                 beyondBoundsPageCount = 2,

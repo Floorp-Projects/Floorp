@@ -68,7 +68,7 @@ fun JunoOnboardingScreen(
     onImpression: (pageType: OnboardingPageUiData) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(pageCount = { pagesToDisplay.size })
     val isSignedIn: State<Boolean?> = components.backgroundServices.syncStore
         .observeAsComposableState { it.account != null }
 
@@ -155,7 +155,6 @@ private fun JunoOnboardingContent(
             .navigationBarsPadding(),
     ) {
         HorizontalPager(
-            pageCount = pagesToDisplay.size,
             state = pagerState,
             key = { pagesToDisplay[it].type },
             modifier = Modifier
@@ -178,7 +177,6 @@ private fun JunoOnboardingContent(
 
         PagerIndicator(
             pagerState = pagerState,
-            pageCount = pagesToDisplay.size,
             activeColor = FirefoxTheme.colors.actionPrimary,
             inactiveColor = FirefoxTheme.colors.actionSecondary,
             leaveTrail = true,
@@ -213,10 +211,13 @@ private class DisableForwardSwipeNestedScrollConnection(
 @LightDarkPreview
 @Composable
 private fun JunoOnboardingScreenPreview() {
+    val pageCount = defaultPreviewPages().size
     FirefoxTheme {
         JunoOnboardingContent(
             pagesToDisplay = defaultPreviewPages(),
-            pagerState = PagerState(0),
+            pagerState = rememberPagerState(initialPage = 0) {
+                pageCount
+            },
             onMakeFirefoxDefaultClick = {},
             onMakeFirefoxDefaultSkipClick = {},
             onPrivacyPolicyClick = {},

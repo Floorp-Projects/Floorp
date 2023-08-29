@@ -105,15 +105,15 @@ fun TopSites(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val pagerState = rememberPagerState()
-        val pageCount = ceil((topSites.size.toDouble() / TOP_SITES_PER_PAGE)).toInt()
+        val pagerState = rememberPagerState(
+            pageCount = { ceil((topSites.size.toDouble() / TOP_SITES_PER_PAGE)).toInt() },
+        )
 
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
             HorizontalPager(
-                pageCount = pageCount,
                 state = pagerState,
             ) { page ->
                 Column {
@@ -150,12 +150,11 @@ fun TopSites(
             }
         }
 
-        if (pageCount > 1) {
+        if (pagerState.pageCount > 1) {
             Spacer(modifier = Modifier.height(8.dp))
 
             PagerIndicator(
                 pagerState = pagerState,
-                pageCount = pageCount,
                 modifier = Modifier.padding(horizontal = 16.dp),
                 spacing = 4.dp,
             )
