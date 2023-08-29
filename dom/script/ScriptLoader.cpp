@@ -1503,38 +1503,48 @@ nsresult ScriptLoader::CompileOffThreadOrProcessRequest(
   return ProcessRequest(aRequest);
 }
 
-class OffThreadCompilationCompleteRunnable : public Runnable {
-  nsMainThreadPtrHandle<ScriptLoadRequest> mRequest;
-  nsMainThreadPtrHandle<ScriptLoader> mLoader;
-  nsCOMPtr<nsISerialEventTarget> mEventTarget;
-  TimeStamp mStartTime;
-  TimeStamp mStopTime;
+namespace {
 
+class OffThreadCompilationCompleteTask : public Task {
  public:
-  OffThreadCompilationCompleteRunnable(ScriptLoadRequest* aRequest,
-                                       ScriptLoader* aLoader)
-      : Runnable("dom::OffThreadCompilationCompleteRunnable"),
-        mRequest(
-            new nsMainThreadPtrHolder<ScriptLoadRequest>("mRequest", aRequest)),
-        mLoader(new nsMainThreadPtrHolder<ScriptLoader>("mLoader", aLoader)) {
+  OffThreadCompilationCompleteTask(ScriptLoadRequest* aRequest,
+                                   ScriptLoader* aLoader)
+      : Task(Kind::MainThreadOnly, EventQueuePriority::Normal),
+        mRequest(aRequest),
+        mLoader(aLoader) {
     MOZ_ASSERT(NS_IsMainThread());
-    if (DocGroup* docGroup = aLoader->GetDocGroup()) {
-      mEventTarget = docGroup->EventTargetFor(TaskCategory::Other);
-    }
   }
 
   void RecordStartTime() { mStartTime = TimeStamp::Now(); }
   void RecordStopTime() { mStopTime = TimeStamp::Now(); }
 
-  static void Dispatch(
-      already_AddRefed<OffThreadCompilationCompleteRunnable>&& aSelf) {
-    RefPtr<OffThreadCompilationCompleteRunnable> self = aSelf;
-    nsCOMPtr<nsISerialEventTarget> eventTarget = self->mEventTarget;
-    eventTarget->Dispatch(self.forget());
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  bool GetName(nsACString& aName) override {
+    aName.AssignLiteral("dom::OffThreadCompilationCompleteTask");
+    return true;
   }
+#endif
 
-  NS_DECL_NSIRUNNABLE
+  bool Run() override;
+
+ private:
+  // NOTE:
+  // These fields are main-thread only, and this task shouldn't be freed off
+  // main thread.
+  //
+  // This is guaranteed by not having off-thread tasks which depends on this
+  // task, because otherwise the off-thread task's mDependencies can be the
+  // last reference, which results in freeing this task off main thread.
+  //
+  // If such task is added, these fields must be moved to separate storage.
+  RefPtr<ScriptLoadRequest> mRequest;
+  RefPtr<ScriptLoader> mLoader;
+
+  TimeStamp mStartTime;
+  TimeStamp mStopTime;
 };
+
+} /* anonymous namespace */
 
 nsresult ScriptLoader::AttemptOffThreadScriptCompile(
     ScriptLoadRequest* aRequest, bool* aCouldCompileOut) {
@@ -1598,21 +1608,25 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
     }
   }
 
-  RefPtr<OffThreadCompilationCompleteRunnable> runnable =
-      new OffThreadCompilationCompleteRunnable(aRequest, this);
-
-  LogRunnable::LogDispatch(runnable);
-
-  runnable->RecordStartTime();
-
-  rv = StartOffThreadCompilation(cx, aRequest, options, runnable);
+  RefPtr<CompileOrDecodeTask> compileOrDecodeTask;
+  rv = CreateOffThreadTask(cx, aRequest, options,
+                           getter_AddRefs(compileOrDecodeTask));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aRequest->GetScriptLoadContext()->mRunnable = runnable;
+  RefPtr<OffThreadCompilationCompleteTask> completeTask =
+      new OffThreadCompilationCompleteTask(aRequest, this);
+
+  completeTask->RecordStartTime();
+
+  aRequest->GetScriptLoadContext()->mCompileOrDecodeTask = compileOrDecodeTask;
+  completeTask->AddDependency(compileOrDecodeTask);
+
+  TaskController::Get()->AddTask(compileOrDecodeTask.forget());
+  TaskController::Get()->AddTask(completeTask.forget());
 
   aRequest->GetScriptLoadContext()->BlockOnload(mDocument);
 
-  // Once the compilation is finished, the runnable will be dispatched to
+  // Once the compilation is finished, the completeTask will be run on
   // the main thread to call ScriptLoader::ProcessOffThreadRequest for the
   // request.
   aRequest->mState = ScriptLoadRequest::State::Compiling;
@@ -1633,25 +1647,22 @@ nsresult ScriptLoader::AttemptOffThreadScriptCompile(
   return NS_OK;
 }
 
-CompileOrDecodeTask::CompileOrDecodeTask(
-    OffThreadCompilationCompleteRunnable* aCompleteRunnable)
+CompileOrDecodeTask::CompileOrDecodeTask()
     : Task(Kind::OffMainThreadOnly, EventQueuePriority::Normal),
       mMutex("CompileOrDecodeTask"),
-      mOptions(JS::OwningCompileOptions::ForFrontendContext()),
-      mCompleteRunnable(aCompleteRunnable) {}
+      mOptions(JS::OwningCompileOptions::ForFrontendContext()) {}
 
 CompileOrDecodeTask::~CompileOrDecodeTask() {
   if (mFrontendContext) {
     JS::DestroyFrontendContext(mFrontendContext);
     mFrontendContext = nullptr;
   }
-  MOZ_ASSERT(!mCompleteRunnable);
 }
 
 nsresult CompileOrDecodeTask::InitFrontendContext() {
   mFrontendContext = JS::NewFrontendContext();
   if (!mFrontendContext) {
-    mCompleteRunnable = nullptr;
+    mIsCancelled = true;
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
@@ -1667,13 +1678,6 @@ void CompileOrDecodeTask::DidRunTask(const MutexAutoLock& aProofOfLock,
   }
 
   mStencil = std::move(aStencil);
-
-  RefPtr<OffThreadCompilationCompleteRunnable> runnable = mCompleteRunnable;
-  mCompleteRunnable = nullptr;
-
-  LogRunnable::Run run(runnable);
-
-  OffThreadCompilationCompleteRunnable::Dispatch(runnable.forget());
 }
 
 already_AddRefed<JS::Stencil> CompileOrDecodeTask::StealResult(
@@ -1715,7 +1719,7 @@ void CompileOrDecodeTask::Cancel() {
 
   MutexAutoLock lock(mMutex);
 
-  mCompleteRunnable = nullptr;
+  mIsCancelled = true;
 }
 
 enum class CompilationTarget { Script, Module };
@@ -1723,16 +1727,16 @@ enum class CompilationTarget { Script, Module };
 template <CompilationTarget target>
 class ScriptOrModuleCompileTask final : public CompileOrDecodeTask {
  public:
-  ScriptOrModuleCompileTask(ScriptLoader::MaybeSourceText&& aMaybeSource,
-                            OffThreadCompilationCompleteRunnable* aRunnable)
-      : CompileOrDecodeTask(aRunnable), mMaybeSource(std::move(aMaybeSource)) {}
+  explicit ScriptOrModuleCompileTask(
+      ScriptLoader::MaybeSourceText&& aMaybeSource)
+      : CompileOrDecodeTask(), mMaybeSource(std::move(aMaybeSource)) {}
 
   nsresult Init(JS::CompileOptions& aOptions) {
     nsresult rv = InitFrontendContext();
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mOptions.copy(mFrontendContext, aOptions)) {
-      mCompleteRunnable = nullptr;
+      mIsCancelled = true;
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -1791,16 +1795,15 @@ using ModuleCompileTask =
 
 class ScriptDecodeTask final : public CompileOrDecodeTask {
  public:
-  ScriptDecodeTask(const JS::TranscodeRange& aRange,
-                   OffThreadCompilationCompleteRunnable* aRunnable)
-      : CompileOrDecodeTask(aRunnable), mRange(aRange) {}
+  explicit ScriptDecodeTask(const JS::TranscodeRange& aRange)
+      : CompileOrDecodeTask(), mRange(aRange) {}
 
   nsresult Init(JS::DecodeOptions& aOptions) {
     nsresult rv = InitFrontendContext();
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mDecodeOptions.copy(mFrontendContext, aOptions)) {
-      mCompleteRunnable = nullptr;
+      mIsCancelled = true;
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -1849,20 +1852,18 @@ class ScriptDecodeTask final : public CompileOrDecodeTask {
   JS::TranscodeRange mRange;
 };
 
-nsresult ScriptLoader::StartOffThreadCompilation(
+nsresult ScriptLoader::CreateOffThreadTask(
     JSContext* aCx, ScriptLoadRequest* aRequest, JS::CompileOptions& aOptions,
-    OffThreadCompilationCompleteRunnable* aRunnable) {
+    CompileOrDecodeTask** aCompileOrDecodeTask) {
   if (aRequest->IsBytecode()) {
     JS::DecodeOptions decodeOptions(aOptions);
     JS::TranscodeRange range(
         aRequest->mScriptBytecode.begin() + aRequest->mBytecodeOffset,
         aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset);
-    RefPtr<ScriptDecodeTask> decodeTask =
-        new ScriptDecodeTask(range, aRunnable);
+    RefPtr<ScriptDecodeTask> decodeTask = new ScriptDecodeTask(range);
     nsresult rv = decodeTask->Init(decodeOptions);
     NS_ENSURE_SUCCESS(rv, rv);
-    aRequest->GetScriptLoadContext()->mCompileOrDecodeTask = decodeTask;
-    TaskController::Get()->AddTask(decodeTask.forget());
+    decodeTask.forget(aCompileOrDecodeTask);
     return NS_OK;
   }
 
@@ -1886,11 +1887,10 @@ nsresult ScriptLoader::StartOffThreadCompilation(
 
   if (aRequest->IsModuleRequest()) {
     RefPtr<ModuleCompileTask> compileTask =
-        new ModuleCompileTask(std::move(maybeSource), aRunnable);
+        new ModuleCompileTask(std::move(maybeSource));
     rv = compileTask->Init(aOptions);
     NS_ENSURE_SUCCESS(rv, rv);
-    aRequest->GetScriptLoadContext()->mCompileOrDecodeTask = compileTask;
-    TaskController::Get()->AddTask(compileTask.forget());
+    compileTask.forget(aCompileOrDecodeTask);
     return NS_OK;
   }
 
@@ -1917,28 +1917,21 @@ nsresult ScriptLoader::StartOffThreadCompilation(
   }
 
   RefPtr<ScriptCompileTask> compileTask =
-      new ScriptCompileTask(std::move(maybeSource), aRunnable);
+      new ScriptCompileTask(std::move(maybeSource));
   rv = compileTask->Init(aOptions);
   NS_ENSURE_SUCCESS(rv, rv);
-  aRequest->GetScriptLoadContext()->mCompileOrDecodeTask = compileTask;
-  TaskController::Get()->AddTask(compileTask.forget());
+  compileTask.forget(aCompileOrDecodeTask);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-OffThreadCompilationCompleteRunnable::Run() {
+bool OffThreadCompilationCompleteTask::Run() {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<ScriptLoadContext> context = mRequest->GetScriptLoadContext();
-  MOZ_ASSERT_IF(context->mRunnable, context->mRunnable == this);
-
-  // Clear the pointer to the runnable. The final reference will be released
-  // when this method returns.
-  context->mRunnable = nullptr;
 
   if (!context->mCompileOrDecodeTask) {
     // Request has been cancelled by MaybeCancelOffThreadScript.
-    return NS_OK;
+    return true;
   }
 
   RecordStopTime();
@@ -1959,11 +1952,11 @@ OffThreadCompilationCompleteRunnable::Run() {
                          profilerLabelString);
   }
 
-  nsresult rv = mLoader->ProcessOffThreadRequest(mRequest);
+  (void)mLoader->ProcessOffThreadRequest(mRequest);
 
   mRequest = nullptr;
   mLoader = nullptr;
-  return rv;
+  return true;
 }
 
 nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {

@@ -73,19 +73,15 @@ class Element;
  *
  * In addition to describing how the ScriptLoadRequest will be loaded by the
  * DOM ScriptLoader, the ScriptLoadContext contains fields that facilitate
- * those custom behaviors, including support for offthread parsing, pointers
- * to runnables (for cancellation and cleanup if a script is parsed offthread)
- * and preload element specific controls.
+ * those custom behaviors, including support for offthread parsing and preload
+ * element specific controls.
  *
  */
-
-class OffThreadCompilationCompleteRunnable;
 
 // Base class for the off-thread compile or off-thread decode tasks.
 class CompileOrDecodeTask : public mozilla::Task {
  protected:
-  explicit CompileOrDecodeTask(
-      OffThreadCompilationCompleteRunnable* aCompleteRunnable);
+  CompileOrDecodeTask();
   virtual ~CompileOrDecodeTask();
 
   nsresult InitFrontendContext();
@@ -94,7 +90,7 @@ class CompileOrDecodeTask : public mozilla::Task {
                   RefPtr<JS::Stencil>&& aStencil);
 
   bool IsCancelled(const MutexAutoLock& aProofOfLock) const {
-    return !mCompleteRunnable;
+    return mIsCancelled;
   }
 
  public:
@@ -129,13 +125,7 @@ class CompileOrDecodeTask : public mozilla::Task {
   // and is freed on any thread in the destructor.
   JS::FrontendContext* mFrontendContext = nullptr;
 
-  // The pointed OffThreadCompilationCompleteRunnable is kept alive by
-  // ScriptLoadContext::mRunnable.
-  //
-  // This shouldn't be RefPtr, given this task can be freed off main thread.
-  //
-  // If this task is cancelled before running, this field is cleared.
-  OffThreadCompilationCompleteRunnable* mCompleteRunnable;
+  bool mIsCancelled = false;
 
  private:
   // The result of the compilation or decode.
@@ -246,10 +236,6 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   // Set to non-null on the task creation, and set to null when taking the
   // result or cancelling the task.
   RefPtr<CompileOrDecodeTask> mCompileOrDecodeTask;
-
-  // Runnable that is dispatched to the main thread when off-thread compilation
-  // completes.
-  RefPtr<Runnable> mRunnable;
 
   uint32_t mLineNo;
   uint32_t mColumnNo;
