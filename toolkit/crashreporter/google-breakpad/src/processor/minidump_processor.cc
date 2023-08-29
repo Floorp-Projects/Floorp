@@ -1153,7 +1153,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
           {
             uint32_t type = (exception_flags >> 29) & 0x7ULL;
             uint32_t flavor = (exception_flags >> 26) & 0x7ULL;
-            char flavor_string[4] = {};
+            char flavor_string[6] = {};
             switch (type) {
               case MD_MAC_EXC_RESOURCE_TYPE_CPU:
                 reason.append("RESOURCE_TYPE_CPU / ");
@@ -1614,7 +1614,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, uint64_t *address) {
             uint32_t fast_fail_code =
                 static_cast<uint32_t>
                 (raw_exception->exception_record.exception_information[0]);
-            char fast_fail_buff[11] = {};
+            char fast_fail_buff[13] = {};
             const char* fast_fail_string = FastFailToString(fast_fail_code);
             if (!fast_fail_string) {
               snprintf(fast_fail_buff, sizeof(fast_fail_buff), "%#010x",
