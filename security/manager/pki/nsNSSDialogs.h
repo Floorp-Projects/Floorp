@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsICertificateDialogs.h"
+#include "nsIClientAuthDialogs.h"
 #include "nsIStringBundle.h"
 #include "nsITokenPasswordDialogs.h"
 
@@ -20,11 +21,13 @@
   }
 
 class nsNSSDialogs : public nsICertificateDialogs,
+                     public nsIClientAuthDialogs,
                      public nsITokenPasswordDialogs {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITOKENPASSWORDDIALOGS
   NS_DECL_NSICERTIFICATEDIALOGS
+  NS_DECL_NSICLIENTAUTHDIALOGS
   nsNSSDialogs();
 
   nsresult Init();

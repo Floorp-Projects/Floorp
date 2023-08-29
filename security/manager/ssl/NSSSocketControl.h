@@ -71,8 +71,6 @@ class NSSSocketControl final : public CommonSocketControl {
   NS_IMETHOD SetHandshakeCallbackListener(
       nsITlsHandshakeCallbackListener* callback) override;
   NS_IMETHOD Claim() override;
-  NS_IMETHOD SetBrowserId(uint64_t browserId) override;
-  NS_IMETHOD GetBrowserId(uint64_t* browserId) override;
 
   PRStatus CloseSocketAndDestroy();
 
@@ -337,8 +335,6 @@ class NSSSocketControl final : public CommonSocketControl {
   RefPtr<mozilla::psm::SharedSSLState> mOwningSharedRef;
 
   nsCOMPtr<nsITlsHandshakeCallbackListener> mTlsHandshakeCallback;
-
-  uint64_t mBrowserId;
 };
 
 #endif  // NSSSocketControl_h

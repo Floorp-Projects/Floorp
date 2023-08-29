@@ -24,22 +24,28 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 let chooseCertificateCalled = false;
 
-const clientAuthDialogService = {
-  chooseCertificate(hostname, certArray, loadContext, callback) {
-    is(
-      certArray.length,
-      1,
-      "should have only one client certificate available"
-    );
+const clientAuthDialogs = {
+  chooseCertificate(
+    hostname,
+    port,
+    organization,
+    issuerOrg,
+    certList,
+    selectedIndex,
+    rememberClientAuthCertificate
+  ) {
+    is(certList.length, 1, "should have only one client certificate available");
+    selectedIndex.value = 0;
+    rememberClientAuthCertificate.value = false;
     ok(
       !chooseCertificateCalled,
       "chooseCertificate should only be called once"
     );
     chooseCertificateCalled = true;
-    callback.certificateChosen(certArray[0], false);
+    return true;
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsIClientAuthDialogService"]),
+  QueryInterface: ChromeUtils.generateQI(["nsIClientAuthDialogs"]),
 };
 
 add_setup(async function () {
@@ -51,12 +57,12 @@ add_setup(async function () {
       ["security.default_personal_cert", "Ask Every Time"],
     ],
   });
-  let clientAuthDialogServiceCID = MockRegistrar.register(
-    "@mozilla.org/security/ClientAuthDialogService;1",
-    clientAuthDialogService
+  let clientAuthDialogsCID = MockRegistrar.register(
+    "@mozilla.org/nsClientAuthDialogs;1",
+    clientAuthDialogs
   );
   registerCleanupFunction(async function () {
-    MockRegistrar.unregister(clientAuthDialogServiceCID);
+    MockRegistrar.unregister(clientAuthDialogsCID);
   });
 });
 

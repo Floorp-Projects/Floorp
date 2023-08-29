@@ -27,7 +27,6 @@
 #include "TLSClientAuthCertSelection.h"
 #include "cert_storage/src/cert_storage.h"
 #include "mozilla/Logging.h"
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -36,7 +35,7 @@
 #include "nsArray.h"
 #include "nsArrayUtils.h"
 #include "nsNSSComponent.h"
-#include "nsIClientAuthDialogService.h"
+#include "nsIClientAuthDialogs.h"
 #include "nsIMutableArray.h"
 #include "nsINSSComponent.h"
 #include "NSSCertDBTrustDomain.h"
@@ -408,20 +407,28 @@ ClientAuthCertificateSelected::Run() {
   return NS_OK;
 }
 
-void SelectClientAuthCertificate::DispatchContinuation(
-    nsTArray<uint8_t>&& selectedCertBytes) {
-  nsTArray<nsTArray<uint8_t>> selectedCertChainBytes;
-  if (BuildChainForCertificate(selectedCertBytes, selectedCertChainBytes) !=
-      pkix::Success) {
-    selectedCertChainBytes.Clear();
+NS_IMETHODIMP
+SelectClientAuthCertificate::Run() {
+  DoSelectClientAuthCertificate();
+  if (mSelectedCertBytes.Length() > 0) {
+    nsTArray<nsTArray<uint8_t>> selectedCertChainBytes;
+    if (BuildChainForCertificate(mSelectedCertBytes, selectedCertChainBytes) !=
+        pkix::Success) {
+      selectedCertChainBytes.Clear();
+    }
+    mContinuation->SetSelectedClientAuthData(std::move(mSelectedCertBytes),
+                                             std::move(selectedCertChainBytes));
   }
-  mContinuation->SetSelectedClientAuthData(std::move(selectedCertBytes),
-                                           std::move(selectedCertChainBytes));
-  nsCOMPtr<nsIEventTarget> socketThread(
-      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID));
-  if (socketThread) {
-    (void)socketThread->Dispatch(mContinuation, NS_DISPATCH_NORMAL);
+  nsCOMPtr<nsIEventTarget> socketThread =
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
+  if (NS_WARN_IF(!socketThread)) {
+    return NS_ERROR_FAILURE;
   }
+  nsresult rv = socketThread->Dispatch(mContinuation, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 // Helper function to build a certificate chain from the given certificate to a
@@ -467,88 +474,32 @@ mozilla::pkix::Result SelectClientAuthCertificate::BuildChainForCertificate(
   return mozilla::pkix::Result::ERROR_UNKNOWN_ISSUER;
 }
 
-class ClientAuthDialogCallback : public nsIClientAuthDialogCallback {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICLIENTAUTHDIALOGCALLBACK
-
-  ClientAuthDialogCallback(
-      SelectClientAuthCertificate* selectClientAuthCertificate,
-      nsIClientAuthRememberService* clientAuthRememberService)
-      : mSelectClientAuthCertificate(selectClientAuthCertificate),
-        mClientAuthRememberService(clientAuthRememberService) {}
-
- private:
-  virtual ~ClientAuthDialogCallback() = default;
-
-  RefPtr<SelectClientAuthCertificate> mSelectClientAuthCertificate;
-  nsCOMPtr<nsIClientAuthRememberService> mClientAuthRememberService;
-};
-
-NS_IMPL_ISUPPORTS(ClientAuthDialogCallback, nsIClientAuthDialogCallback)
-
-NS_IMETHODIMP
-ClientAuthDialogCallback::CertificateChosen(nsIX509Cert* cert,
-                                            bool rememberDecision) {
-  MOZ_ASSERT(mSelectClientAuthCertificate);
-  if (!mSelectClientAuthCertificate) {
-    return NS_ERROR_FAILURE;
-  }
-  if (mClientAuthRememberService && rememberDecision) {
-    const ClientAuthInfo& info = mSelectClientAuthCertificate->Info();
-    (void)mClientAuthRememberService->RememberDecision(
-        info.HostName(), info.OriginAttributesRef(), cert);
-  }
-  nsTArray<uint8_t> selectedCertBytes;
-  if (cert) {
-    nsresult rv = cert->GetRawDER(selectedCertBytes);
-    if (NS_FAILED(rv)) {
-      selectedCertBytes.Clear();
-      mSelectClientAuthCertificate->DispatchContinuation(
-          std::move(selectedCertBytes));
-      return rv;
-    }
-  }
-  mSelectClientAuthCertificate->DispatchContinuation(
-      std::move(selectedCertBytes));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SelectClientAuthCertificate::Run() {
+void SelectClientAuthCertificate::DoSelectClientAuthCertificate() {
   // We check the value of a pref, so this should only be run on the main
   // thread.
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsTArray<uint8_t> selectedCertBytes;
-
   nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
-  if (!component) {
-    DispatchContinuation(std::move(selectedCertBytes));
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!component)) {
+    return;
   }
   nsresult rv = component->GetEnterpriseIntermediates(mEnterpriseCertificates);
-  if (NS_FAILED(rv)) {
-    DispatchContinuation(std::move(selectedCertBytes));
-    return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
   }
   nsTArray<nsTArray<uint8_t>> enterpriseRoots;
   rv = component->GetEnterpriseRoots(enterpriseRoots);
-  if (NS_FAILED(rv)) {
-    DispatchContinuation(std::move(selectedCertBytes));
-    return rv;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
   }
   mEnterpriseCertificates.AppendElements(std::move(enterpriseRoots));
 
-  rv = CheckForSmartCardChanges();
-  if (NS_FAILED(rv)) {
-    DispatchContinuation(std::move(selectedCertBytes));
-    return rv;
+  if (NS_WARN_IF(NS_FAILED(CheckForSmartCardChanges()))) {
+    return;
   }
 
   if (!mPotentialClientCertificates) {
-    DispatchContinuation(std::move(selectedCertBytes));
-    return NS_OK;
+    return;
   }
 
   CERTCertListNode* n = CERT_LIST_HEAD(mPotentialClientCertificates);
@@ -574,8 +525,7 @@ SelectClientAuthCertificate::Run() {
   if (CERT_LIST_EMPTY(mPotentialClientCertificates)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("no client certificates available after filtering by CA"));
-    DispatchContinuation(std::move(selectedCertBytes));
-    return NS_OK;
+    return;
   }
 
   // find valid user cert and key pair
@@ -595,10 +545,9 @@ SelectClientAuthCertificate::Run() {
           }
         } else {
           // this is a good cert to present
-          selectedCertBytes.AppendElements(node->cert->derCert.data,
-                                           node->cert->derCert.len);
-          DispatchContinuation(std::move(selectedCertBytes));
-          return NS_OK;
+          mSelectedCertBytes.AppendElements(node->cert->derCert.data,
+                                            node->cert->derCert.len);
+          return;
         }
       }
       if (PR_GetError() == SEC_ERROR_BAD_PASSWORD) {
@@ -608,11 +557,10 @@ SelectClientAuthCertificate::Run() {
     }
 
     if (lowPrioNonrepCert) {
-      selectedCertBytes.AppendElements(lowPrioNonrepCert->derCert.data,
-                                       lowPrioNonrepCert->derCert.len);
+      mSelectedCertBytes.AppendElements(lowPrioNonrepCert->derCert.data,
+                                        lowPrioNonrepCert->derCert.len);
     }
-    DispatchContinuation(std::move(selectedCertBytes));
-    return NS_OK;
+    return;
   }
 
   // Not Auto => ask
@@ -627,72 +575,95 @@ SelectClientAuthCertificate::Run() {
   if (cars) {
     nsCString rememberedDBKey;
     bool found;
-    rv = cars->HasRememberedDecision(hostname, mInfo.OriginAttributesRef(),
-                                     rememberedDBKey, &found);
-    if (NS_FAILED(rv)) {
-      DispatchContinuation(std::move(selectedCertBytes));
-      return rv;
+    nsresult rv = cars->HasRememberedDecision(
+        hostname, mInfo.OriginAttributesRef(), rememberedDBKey, &found);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
     }
     if (found) {
       // An empty dbKey indicates that the user chose not to use a certificate
       // and chose to remember this decision
       if (rememberedDBKey.IsEmpty()) {
-        DispatchContinuation(std::move(selectedCertBytes));
-        return NS_OK;
+        return;
       }
       nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
-      if (!certdb) {
-        DispatchContinuation(std::move(selectedCertBytes));
-        return NS_OK;
+      if (NS_WARN_IF(!certdb)) {
+        return;
       }
       nsCOMPtr<nsIX509Cert> foundCert;
-      rv = certdb->FindCertByDBKey(rememberedDBKey, getter_AddRefs(foundCert));
-      if (NS_FAILED(rv)) {
-        DispatchContinuation(std::move(selectedCertBytes));
-        return rv;
+      nsresult rv =
+          certdb->FindCertByDBKey(rememberedDBKey, getter_AddRefs(foundCert));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
       }
       if (foundCert) {
-        rv = foundCert->GetRawDER(selectedCertBytes);
-        if (NS_FAILED(rv)) {
-          selectedCertBytes.Clear();
-          DispatchContinuation(std::move(selectedCertBytes));
-          return rv;
-        }
-        DispatchContinuation(std::move(selectedCertBytes));
-        return NS_OK;
+        Unused << NS_WARN_IF(
+            NS_FAILED(foundCert->GetRawDER(mSelectedCertBytes)));
+        return;
       }
     }
   }
 
   // ask the user to select a certificate
-  nsTArray<RefPtr<nsIX509Cert>> certArray;
+  nsCOMPtr<nsIClientAuthDialogs> dialogs;
+  UniquePORTString corg(CERT_GetOrgName(&mServerCert->subject));
+  nsAutoCString org(corg.get());
+
+  UniquePORTString cissuer(CERT_GetOrgName(&mServerCert->issuer));
+  nsAutoCString issuer(cissuer.get());
+
+  nsCOMPtr<nsIMutableArray> certArray = nsArrayBase::Create();
+  if (NS_WARN_IF(!certArray)) {
+    return;
+  }
+
   for (CERTCertListNode* node = CERT_LIST_HEAD(mPotentialClientCertificates);
        !CERT_LIST_END(node, mPotentialClientCertificates);
        node = CERT_LIST_NEXT(node)) {
-    RefPtr<nsIX509Cert> tempCert(new nsNSSCertificate(node->cert));
-    certArray.AppendElement(tempCert);
+    nsCOMPtr<nsIX509Cert> tempCert = new nsNSSCertificate(node->cert);
+    nsresult rv = certArray->AppendElement(tempCert);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
   }
 
-  nsCOMPtr<nsIClientAuthDialogService> clientAuthDialogService(
-      do_GetService(NS_CLIENTAUTHDIALOGSERVICE_CONTRACTID));
-  if (!clientAuthDialogService) {
-    DispatchContinuation(std::move(selectedCertBytes));
-    return NS_ERROR_FAILURE;
+  // Throw up the client auth dialog and get back the index of the selected
+  // cert
+  rv = getNSSDialogs(getter_AddRefs(dialogs), NS_GET_IID(nsIClientAuthDialogs),
+                     NS_CLIENTAUTHDIALOGS_CONTRACTID);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
   }
-  nsCOMPtr<nsILoadContext> loadContext = nullptr;
-  if (mBrowserId != 0) {
-    loadContext =
-        mozilla::dom::BrowsingContext::GetCurrentTopByBrowserId(mBrowserId);
+
+  uint32_t selectedIndex = 0;
+  bool certChosen = false;
+
+  // even if the user has canceled, we want to remember that, to avoid
+  // repeating prompts
+  bool wantRemember = false;
+  rv =
+      dialogs->ChooseCertificate(hostname, mInfo.Port(), org, issuer, certArray,
+                                 &selectedIndex, &wantRemember, &certChosen);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
   }
-  RefPtr<nsIClientAuthDialogCallback> callback(
-      new ClientAuthDialogCallback(this, cars));
-  rv = clientAuthDialogService->ChooseCertificate(hostname, certArray,
-                                                  loadContext, callback);
-  if (NS_FAILED(rv)) {
-    DispatchContinuation(std::move(selectedCertBytes));
-    return rv;
+
+  nsCOMPtr<nsIX509Cert> selectedCert;
+  if (certChosen) {
+    selectedCert = do_QueryElementAt(certArray, selectedIndex);
+    if (NS_WARN_IF(!selectedCert)) {
+      return;
+    }
+    if (NS_WARN_IF(NS_FAILED(selectedCert->GetRawDER(mSelectedCertBytes)))) {
+      return;
+    }
   }
-  return NS_OK;
+
+  if (cars && wantRemember) {
+    rv = cars->RememberDecision(hostname, mInfo.OriginAttributesRef(),
+                                selectedCert);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+  }
 }
 
 SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
@@ -733,12 +704,6 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
   UniqueCERTCertificate serverCert(SSL_PeerCertificate(socket));
   if (!serverCert) {
     PR_SetError(SSL_ERROR_NO_CERTIFICATE, 0);
-    return SECFailure;
-  }
-
-  uint64_t browserId;
-  if (NS_FAILED(info->GetBrowserId(&browserId))) {
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
     return SECFailure;
   }
 
@@ -785,7 +750,7 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
              hostname(std::move(hostname)),
              originAttributes(std::move(originAttributes)), port, providerFlags,
              providerTlsFlags, serverCertBytes(std::move(serverCertBytes)),
-             caNamesBytes(std::move(caNamesBytes)), browserId(browserId)]() {
+             caNamesBytes(std::move(caNamesBytes))]() {
               mozilla::ipc::PBackgroundChild* actorChild =
                   mozilla::ipc::BackgroundChild::
                       GetOrCreateForSocketParentBridgeForCurrentThread();
@@ -793,7 +758,7 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
                 Unused << actorChild->SendPSelectTLSClientAuthCertConstructor(
                     selectClientAuthCertificate, hostname, originAttributes,
                     port, providerFlags, providerTlsFlags,
-                    ByteArray(serverCertBytes), caNamesBytes, browserId);
+                    ByteArray(serverCertBytes), caNamesBytes);
               }
             }));
     info->SetPendingSelectClientAuthCertificate(
@@ -805,7 +770,7 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
     nsCOMPtr<nsIRunnable> selectClientAuthCertificate(
         new SelectClientAuthCertificate(
             std::move(authInfo), std::move(serverCert), std::move(caNames),
-            std::move(potentialClientCertificates), continuation, browserId));
+            std::move(potentialClientCertificates), continuation));
     info->SetPendingSelectClientAuthCertificate(
         std::move(selectClientAuthCertificate));
   }
@@ -864,7 +829,7 @@ bool SelectTLSClientAuthCertParent::Dispatch(
     const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
     const int32_t& aPort, const uint32_t& aProviderFlags,
     const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
-    nsTArray<ByteArray>&& aCANames, const uint64_t& aBrowserId) {
+    nsTArray<ByteArray>&& aCANames) {
   RefPtr<ClientAuthCertificateSelectedBase> continuation(
       new RemoteClientAuthCertificateSelected(this));
   ClientAuthInfo authInfo(aHostName, aOriginAttributes, aPort, aProviderFlags,
@@ -879,8 +844,8 @@ bool SelectTLSClientAuthCertParent::Dispatch(
   nsresult rv = socketThread->Dispatch(NS_NewRunnableFunction(
       "SelectTLSClientAuthCertParent::Dispatch",
       [authInfo(std::move(authInfo)), continuation(std::move(continuation)),
-       serverCertBytes(aServerCertBytes), caNames(std::move(aCANames)),
-       browserId(aBrowserId)]() mutable {
+       serverCertBytes(aServerCertBytes),
+       caNames(std::move(aCANames))]() mutable {
         SECItem serverCertItem{
             siBuffer,
             const_cast<uint8_t*>(serverCertBytes.data().Elements()),
@@ -901,7 +866,7 @@ bool SelectTLSClientAuthCertParent::Dispatch(
             new SelectClientAuthCertificate(
                 std::move(authInfo), std::move(serverCert),
                 std::move(caNamesArray), std::move(potentialClientCertificates),
-                continuation, browserId));
+                continuation));
         Unused << NS_DispatchToMainThread(selectClientAuthCertificate);
       }));
   return NS_SUCCEEDED(rv);

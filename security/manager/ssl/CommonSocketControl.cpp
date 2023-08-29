@@ -523,11 +523,3 @@ CommonSocketControl::AsyncGetSecurityInfo(JSContext* aCx,
 }
 
 NS_IMETHODIMP CommonSocketControl::Claim() { return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP CommonSocketControl::SetBrowserId(uint64_t) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CommonSocketControl::GetBrowserId(uint64_t*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}

@@ -560,13 +560,6 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
   // take ownership of the transaction
   mTransaction = trans;
 
-  nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
-  if (NS_SUCCEEDED(mSocketTransport->GetTlsSocketControl(
-          getter_AddRefs(tlsSocketControl))) &&
-      tlsSocketControl) {
-    tlsSocketControl->SetBrowserId(mTransaction->BrowserId());
-  }
-
   MOZ_ASSERT(!mIdleMonitoring, "Activating a connection with an Idle Monitor");
   mIdleMonitoring = false;
 

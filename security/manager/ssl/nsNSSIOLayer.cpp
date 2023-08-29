@@ -42,6 +42,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsClientAuthRemember.h"
 #include "nsContentUtils.h"
+#include "nsIClientAuthDialogs.h"
 #include "nsISocketProvider.h"
 #include "nsISocketTransport.h"
 #include "nsIWebProgressListener.h"
