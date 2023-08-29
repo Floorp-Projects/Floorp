@@ -46,9 +46,10 @@ support-files = [
 
 ['test_focus_autocomplete.xhtml']
 # Disabled on Linux and Windows due to frequent failures - bug 695019, bug 890795
-skip-if = '''
-  os == 'win'
-  os == 'linux' '''
+skip-if = [
+  "os == 'win'",
+  "os == 'linux'",
+]
 
 ['test_focus_canvas.html']
 
@@ -96,12 +97,14 @@ skip-if = true
 ['test_scroll_caret.xhtml']
 
 ['test_selection.html']
-skip-if = '''
-  os == 'mac' '''
+skip-if = [
+  "os == 'mac'",
+]
 
 ['test_selection.xhtml']
-skip-if = '''
-  os == 'mac' '''
+skip-if = [
+  "os == 'mac'",
+]
 
 ['test_selection_aria.html']
 
@@ -120,5 +123,6 @@ skip-if = '''
 ['test_tree.xhtml']
 
 ['test_valuechange.html']
-skip-if = '''
-  os == 'mac' '''
+skip-if = [
+  "os == 'mac'",
+]

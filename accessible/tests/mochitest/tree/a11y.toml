@@ -85,9 +85,10 @@ skip-if = true # Bug 561508
 ['test_tabbox.xhtml']
 
 ['test_tabbrowser.xhtml']
-skip-if = '''
-  os == 'linux' && debug
-  os == 'win' && ccov '''  # Bug 1389365 || Bug 1423218
+skip-if = [
+  "os == 'linux' && debug", # Bug 1389365
+  "os == 'win' && ccov", # Bug 1423218
+]
 
 ['test_table.html']
 

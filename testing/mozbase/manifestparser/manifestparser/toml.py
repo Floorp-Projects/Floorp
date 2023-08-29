@@ -4,6 +4,7 @@
 
 import io
 import os
+import re
 
 from tomlkit import parse
 from tomlkit.exceptions import ParseError
@@ -48,6 +49,7 @@ def read_toml(
     else:
         filename = "unknown"
     contents = fp.read()
+    inline_comment_rx = re.compile(r"\s#.*$")
 
     # Use tomlkit to parse the file contents
     try:
@@ -66,14 +68,25 @@ def read_toml(
                 else:
                     val = "false"
             elif isinstance(val, Array):
-                new_val = ""
+                new_vals = ""
                 for v in val:
-                    if len(new_val) > 0:
-                        new_val += os.linesep
-                    new_val += str(v)
-                val = new_val
+                    if len(new_vals) > 0:
+                        new_vals += os.linesep
+                    new_val = str(v).strip()  # coerce to str
+                    comment_found = inline_comment_rx.search(new_val)
+                    if comment_found:
+                        new_val = new_val[0 : comment_found.span()[0]]
+                    if " = " in new_val:
+                        raise Exception(
+                            f"Should not assign in {key} condition for {section}"
+                        )
+                    new_vals += new_val
+                val = new_vals
             else:
                 val = str(val).strip()  # coerce to str
+                comment_found = inline_comment_rx.search(val)
+                if comment_found:
+                    val = val[0 : comment_found.span()[0]]
                 if " = " in val:
                     raise Exception(
                         f"Should not assign in {key} condition for {section}"
