@@ -90,8 +90,6 @@ shopping:
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
-    no_lint:
-      - COMMON_PREFIX
 
   surface_show_quality_explainer_clicked:
     type: event
@@ -117,8 +115,6 @@ shopping:
           explainer card.
           Possible values are `expanded` and `collapsed`.
         type: string    
-    no_lint:
-      - COMMON_PREFIX
 
   surface_settings_expand_clicked:
     type: event
@@ -142,8 +138,6 @@ shopping:
           Whether the button was used to expand or collapse the settings card.
           Possible values are `expanded` and `collapsed`.
         type: string
-    no_lint:
-      - COMMON_PREFIX
 
   surface_closed:
     type: event
@@ -168,5 +162,24 @@ shopping:
           sidebar was closed with the close button or the icon in the 
           address bar.
         type: string
-    no_lint:
-      - COMMON_PREFIX
+
+  address_bar_icon_clicked:
+    type: event
+    description: |
+      The Shopping product Address Bar Icon was clicked by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_sensitivity:
+      - interaction
+    expires: never
+    notification_emails:
+      - pmcmanis@mozilla.com
+    send_in_pings:
+      - events
+    extra_keys:
+      action:
+        description: >
+          Whether the icon was used to 'open' or 'close' the Shopping sidebar.
+        type: string
