@@ -265,13 +265,6 @@ export class ShoppingContainer extends MozLitElement {
 
   handleClick() {
     RPMSetPref("browser.shopping.experience2023.active", false);
-    this.dispatchEvent(
-      new CustomEvent("ShoppingTelemetryEvent", {
-        composed: true,
-        bubbles: true,
-        detail: ["surfaceClosed", "closeButton"],
-      })
-    );
   }
 }
 
