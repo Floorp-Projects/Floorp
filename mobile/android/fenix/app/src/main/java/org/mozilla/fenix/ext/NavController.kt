@@ -68,7 +68,7 @@ fun NavController.navigateWithBreadcrumb(
  */
 @SuppressLint("RestrictedApi")
 fun NavController.hasTopDestination(fragmentClassName: String): Boolean {
-    return this.currentBackStackEntry?.destination?.displayName?.contains(
+    return this.backQueue.lastOrNull()?.destination?.displayName?.contains(
         fragmentClassName,
         true,
     ) == true

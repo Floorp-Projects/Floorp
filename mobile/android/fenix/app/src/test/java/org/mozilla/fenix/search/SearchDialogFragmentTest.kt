@@ -50,14 +50,14 @@ internal class SearchDialogFragmentTest {
 
     @Test
     fun `GIVEN this is the only visible fragment WHEN asking for the previous destination THEN return null`() {
-        every { navController.currentBackStack.value } returns ArrayDeque(listOf(getDestination(fragmentName)))
+        every { navController.backQueue } returns ArrayDeque(listOf(getDestination(fragmentName)))
 
         assertNull(fragment.getPreviousDestination())
     }
 
     @Test
     fun `GIVEN this and FragmentB on top of this are visible WHEN asking for the previous destination THEN return null`() {
-        every { navController.currentBackStack.value } returns ArrayDeque(
+        every { navController.backQueue } returns ArrayDeque(
             listOf(
                 getDestination(fragmentName),
                 getDestination("FragmentB"),
@@ -70,7 +70,7 @@ internal class SearchDialogFragmentTest {
     @Test
     fun `GIVEN FragmentA, this and FragmentB are visible WHEN asking for the previous destination THEN return FragmentA`() {
         val fragmentADestination = getDestination("FragmentA")
-        every { navController.currentBackStack.value } returns ArrayDeque(
+        every { navController.backQueue } returns ArrayDeque(
             listOf(
                 fragmentADestination,
                 getDestination(fragmentName),
@@ -84,7 +84,7 @@ internal class SearchDialogFragmentTest {
     @Test
     fun `GIVEN FragmentA and this on top of it are visible WHEN asking for the previous destination THEN return FragmentA`() {
         val fragmentADestination = getDestination("FragmentA")
-        every { navController.currentBackStack.value } returns ArrayDeque(
+        every { navController.backQueue } returns ArrayDeque(
             listOf(
                 fragmentADestination,
                 getDestination(fragmentName),
