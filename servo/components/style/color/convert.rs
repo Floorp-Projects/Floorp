@@ -13,13 +13,9 @@
 //! with the `euclid` library.
 
 use crate::color::ColorComponents;
-use std::f32::consts::PI;
 
 type Transform = euclid::default::Transform3D<f32>;
 type Vector = euclid::default::Vector3D<f32>;
-
-const RAD_PER_DEG: f32 = PI / 180.0;
-const DEG_PER_RAD: f32 = 180.0 / PI;
 
 /// Normalize hue into [0, 360).
 #[inline]
@@ -51,26 +47,24 @@ fn rgb_to_hue_min_max(red: f32, green: f32, blue: f32) -> (f32, f32, f32) {
     (hue, min, max)
 }
 
-/// Convert a hue value into red, green, blue components.
-#[inline]
-fn hue_to_rgb(t1: f32, t2: f32, hue: f32) -> f32 {
-    let hue = normalize_hue(hue);
-
-    if hue * 6.0 < 360.0 {
-        t1 + (t2 - t1) * hue / 60.0
-    } else if hue * 2.0 < 360.0 {
-        t2
-    } else if hue * 3.0 < 720.0 {
-        t1 + (t2 - t1) * (240.0 - hue) / 60.0
-    } else {
-        t1
-    }
-}
-
 /// Convert from HSL notation to RGB notation.
 /// https://drafts.csswg.org/css-color-4/#hsl-to-rgb
 #[inline]
 pub fn hsl_to_rgb(from: &ColorComponents) -> ColorComponents {
+    fn hue_to_rgb(t1: f32, t2: f32, hue: f32) -> f32 {
+        let hue = normalize_hue(hue);
+
+        if hue * 6.0 < 360.0 {
+            t1 + (t2 - t1) * hue / 60.0
+        } else if hue * 2.0 < 360.0 {
+            t2
+        } else if hue * 3.0 < 720.0 {
+            t1 + (t2 - t1) * (240.0 - hue) / 60.0
+        } else {
+            t1
+        }
+    }
+
     let ColorComponents(hue, saturation, lightness) = *from;
 
     let t2 = if lightness <= 0.5 {
@@ -139,26 +133,29 @@ pub fn rgb_to_hwb(from: &ColorComponents) -> ColorComponents {
     ColorComponents(hue, whiteness, blackness)
 }
 
-/// Convert from Lab to Lch. This calculation works for both Lab and Olab.
+/// Convert from the rectangular orthogonal to the cylindrical polar coordinate
+/// system. This is used to convert (ok)lab to (ok)lch.
 /// <https://drafts.csswg.org/css-color-4/#color-conversion-code>
 #[inline]
-pub fn lab_to_lch(from: &ColorComponents) -> ColorComponents {
+pub fn orthogonal_to_polar(from: &ColorComponents) -> ColorComponents {
     let ColorComponents(lightness, a, b) = *from;
 
-    let hue = normalize_hue(b.atan2(a) * 180.0 / PI);
-    let chroma = (a.powf(2.0) + b.powf(2.0)).sqrt();
+    let hue = normalize_hue(b.atan2(a).to_degrees());
+    let chroma = (a * a + b * b).sqrt();
 
     ColorComponents(lightness, chroma, hue)
 }
 
-/// Convert from Lch to Lab. This calculation works for both Lch and Oklch.
+/// Convert from the cylindrical polar to the rectangular orthogonal coordinate
+/// system. This is used to convert (ok)lch to (ok)lab.
 /// <https://drafts.csswg.org/css-color-4/#color-conversion-code>
 #[inline]
-pub fn lch_to_lab(from: &ColorComponents) -> ColorComponents {
+pub fn polar_to_orthogonal(from: &ColorComponents) -> ColorComponents {
     let ColorComponents(lightness, chroma, hue) = *from;
 
-    let a = chroma * (hue * PI / 180.0).cos();
-    let b = chroma * (hue * PI / 180.0).sin();
+    let hue = hue.to_radians();
+    let a = chroma * hue.cos();
+    let b = chroma * hue.sin();
 
     ColorComponents(lightness, a, b)
 }
@@ -201,11 +198,22 @@ pub enum WhitePoint {
     D65,
 }
 
+impl WhitePoint {
+    const fn values(&self) -> ColorComponents {
+        // <https://drafts.csswg.org/css-color-4/#color-conversion-code>
+        match self {
+            // [0.3457 / 0.3585, 1.00000, (1.0 - 0.3457 - 0.3585) / 0.3585]
+            WhitePoint::D50 => ColorComponents(0.9642956764295677, 1.0, 0.8251046025104602),
+            // [0.3127 / 0.3290, 1.00000, (1.0 - 0.3127 - 0.3290) / 0.3290]
+            WhitePoint::D65 => ColorComponents(0.9504559270516716, 1.0, 1.0890577507598784),
+        }
+    }
+}
+
 fn convert_white_point(from: WhitePoint, to: WhitePoint, components: &mut ColorComponents) {
     match (from, to) {
         (WhitePoint::D50, WhitePoint::D65) => *components = xyz_d50_to_xyz_d65(components),
         (WhitePoint::D65, WhitePoint::D50) => *components = xyz_d65_to_xyz_d50(components),
-
         _ => {},
     }
 }
@@ -668,7 +676,6 @@ pub struct Lab;
 impl Lab {
     const KAPPA: f32 = 24389.0 / 27.0;
     const EPSILON: f32 = 216.0 / 24389.0;
-    const WHITE: ColorComponents = ColorComponents(0.96422, 1.0, 0.82521);
 }
 
 impl ColorSpaceConversion for Lab {
@@ -684,54 +691,55 @@ impl ColorSpaceConversion for Lab {
     /// [1]: https://drafts.csswg.org/css-color/#lab-to-predefined
     /// [2]: https://drafts.csswg.org/css-color/#color-conversion-code
     fn to_xyz(from: &ColorComponents) -> ColorComponents {
-        let f1 = (from.0 + 16.0) / 116.0;
-        let f0 = (from.1 / 500.0) + f1;
-        let f2 = f1 - from.2 / 200.0;
+        let ColorComponents(lightness, a, b) = *from;
 
-        let x = if f0.powf(3.0) > Self::EPSILON {
-            f0.powf(3.)
+        let f1 = (lightness + 16.0) / 116.0;
+        let f0 = f1 + a / 500.0;
+        let f2 = f1 - b / 200.0;
+
+        let f0_cubed = f0 * f0 * f0;
+        let x = if f0_cubed > Self::EPSILON {
+            f0_cubed
         } else {
             (116.0 * f0 - 16.0) / Self::KAPPA
         };
-        let y = if from.0 > Self::KAPPA * Self::EPSILON {
-            ((from.0 + 16.0) / 116.0).powf(3.0)
+
+        let y = if lightness > Self::KAPPA * Self::EPSILON {
+            let v = (lightness + 16.0) / 116.0;
+            v * v * v
         } else {
-            from.0 / Self::KAPPA
+            lightness / Self::KAPPA
         };
-        let z = if f2.powf(3.0) > Self::EPSILON {
-            f2.powf(3.0)
+
+        let f2_cubed = f2 * f2 * f2;
+        let z = if f2_cubed > Self::EPSILON {
+            f2_cubed
         } else {
             (116.0 * f2 - 16.0) / Self::KAPPA
         };
 
-        ColorComponents(x * Self::WHITE.0, y * Self::WHITE.1, z * Self::WHITE.2)
+        ColorComponents(x, y, z) * Self::WHITE_POINT.values()
     }
 
-    /// Convert an XYZ colour to LAB as specified in [1] and [2].
+    /// Convert an XYZ color to LAB as specified in [1] and [2].
     ///
     /// [1]: https://drafts.csswg.org/css-color/#rgb-to-lab
     /// [2]: https://drafts.csswg.org/css-color/#color-conversion-code
     fn from_xyz(from: &ColorComponents) -> ColorComponents {
-        macro_rules! compute_f {
-            ($value:expr) => {{
-                if $value > Self::EPSILON {
-                    $value.cbrt()
-                } else {
-                    (Self::KAPPA * $value + 16.0) / 116.0
-                }
-            }};
-        }
+        let adapted = *from / Self::WHITE_POINT.values();
 
         // 4. Convert D50-adapted XYZ to Lab.
-        let f = [
-            compute_f!(from.0 / Self::WHITE.0),
-            compute_f!(from.1 / Self::WHITE.1),
-            compute_f!(from.2 / Self::WHITE.2),
-        ];
+        let ColorComponents(f0, f1, f2) = adapted.map(|v| {
+            if v > Self::EPSILON {
+                v.cbrt()
+            } else {
+                (Self::KAPPA * v + 16.0) / 116.0
+            }
+        });
 
-        let lightness = 116.0 * f[1] - 16.0;
-        let a = 500.0 * (f[0] - f[1]);
-        let b = 200.0 * (f[1] - f[2]);
+        let lightness = 116.0 * f1 - 16.0;
+        let a = 500.0 * (f0 - f1);
+        let b = 200.0 * (f1 - f2);
 
         ColorComponents(lightness, a, b)
     }
@@ -756,11 +764,7 @@ impl ColorSpaceConversion for Lch {
 
     fn to_xyz(from: &ColorComponents) -> ColorComponents {
         // Convert LCH to Lab first.
-        let hue = from.2 * RAD_PER_DEG;
-        let a = from.1 * hue.cos();
-        let b = from.1 * hue.sin();
-
-        let lab = ColorComponents(from.0, a, b);
+        let lab = polar_to_orthogonal(from);
 
         // Then convert the Lab to XYZ.
         Lab::to_xyz(&lab)
@@ -768,13 +772,10 @@ impl ColorSpaceConversion for Lch {
 
     fn from_xyz(from: &ColorComponents) -> ColorComponents {
         // First convert the XYZ to LAB.
-        let ColorComponents(lightness, a, b) = Lab::from_xyz(&from);
+        let lab = Lab::from_xyz(&from);
 
-        // Then conver the Lab to LCH.
-        let hue = b.atan2(a) * DEG_PER_RAD;
-        let chroma = (a * a + b * b).sqrt();
-
-        ColorComponents(lightness, chroma, hue)
+        // Then convert the Lab to LCH.
+        orthogonal_to_polar(&lab)
     }
 
     fn to_gamma_encoded(from: &ColorComponents) -> ColorComponents {
@@ -831,7 +832,7 @@ impl ColorSpaceConversion for Oklab {
 
     fn to_xyz(from: &ColorComponents) -> ColorComponents {
         let lms = transform(&from, &Self::OKLAB_TO_LMS);
-        let lms = lms.map(|v| v.powf(3.0));
+        let lms = lms.map(|v| v * v * v);
         transform(&lms, &Self::LMS_TO_XYZ)
     }
 
@@ -861,10 +862,7 @@ impl ColorSpaceConversion for Oklch {
 
     fn to_xyz(from: &ColorComponents) -> ColorComponents {
         // First convert OkLCH to Oklab.
-        let hue = from.2 * RAD_PER_DEG;
-        let a = from.1 * hue.cos();
-        let b = from.1 * hue.sin();
-        let oklab = ColorComponents(from.0, a, b);
+        let oklab = polar_to_orthogonal(from);
 
         // Then convert Oklab to XYZ.
         Oklab::to_xyz(&oklab)
@@ -872,13 +870,10 @@ impl ColorSpaceConversion for Oklch {
 
     fn from_xyz(from: &ColorComponents) -> ColorComponents {
         // First convert XYZ to Oklab.
-        let ColorComponents(lightness, a, b) = Oklab::from_xyz(&from);
+        let lab = Oklab::from_xyz(&from);
 
         // Then convert Oklab to OkLCH.
-        let hue = b.atan2(a) * DEG_PER_RAD;
-        let chroma = (a * a + b * b).sqrt();
-
-        ColorComponents(lightness, chroma, hue)
+        orthogonal_to_polar(&lab)
     }
 
     fn to_gamma_encoded(from: &ColorComponents) -> ColorComponents {
