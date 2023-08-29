@@ -419,16 +419,19 @@
             <span class="addon-description" tabindex="-1"></span>
           </div>
         </div>
-        <message-bar class="update-postponed-bar" align="center" hidden>
-          <span
-            class="description"
-            data-l10n-id="install-postponed-message"
-          ></span>
+        <moz-message-bar
+          class="update-postponed-bar"
+          data-l10n-id="install-postponed-message2"
+          data-l10n-attrs="message"
+          align="center"
+          hidden
+        >
           <button
+            slot="actions"
             action="install-postponed"
             data-l10n-id="install-postponed-button"
           ></button>
-        </message-bar>
+        </moz-message-bar>
         <moz-message-bar class="addon-card-message" align="center" hidden>
           <button action="link"></button>
         </moz-message-bar>
