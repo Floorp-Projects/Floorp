@@ -255,19 +255,17 @@ void PictureIdTest::SetupEncoder(VideoEncoderFactory* encoder_factory,
   observer_.reset(
       new PictureIdObserver(PayloadStringToCodecType(payload_name)));
 
-  SendTask(
-      task_queue(), [this, encoder_factory, payload_name]() {
-        CreateCalls();
-        CreateSendTransport(BuiltInNetworkBehaviorConfig(), observer_.get());
-        CreateSendConfig(test::VideoTestConstants::kNumSimulcastStreams, 0, 0,
-                         send_transport_.get());
-        GetVideoSendConfig()->encoder_settings.encoder_factory =
-            encoder_factory;
-        GetVideoSendConfig()->rtp.payload_name = payload_name;
-        GetVideoEncoderConfig()->codec_type =
-            PayloadStringToCodecType(payload_name);
-        SetVideoEncoderConfig(/* number_of_streams */ 1);
-      });
+  SendTask(task_queue(), [this, encoder_factory, payload_name]() {
+    CreateCalls();
+    CreateSendTransport(BuiltInNetworkBehaviorConfig(), observer_.get());
+    CreateSendConfig(test::VideoTestConstants::kNumSimulcastStreams, 0, 0,
+                     send_transport_.get());
+    GetVideoSendConfig()->encoder_settings.encoder_factory = encoder_factory;
+    GetVideoSendConfig()->rtp.payload_name = payload_name;
+    GetVideoEncoderConfig()->codec_type =
+        PayloadStringToCodecType(payload_name);
+    SetVideoEncoderConfig(/* number_of_streams */ 1);
+  });
 }
 
 void PictureIdTest::SetVideoEncoderConfig(int num_streams) {

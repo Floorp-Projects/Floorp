@@ -723,11 +723,9 @@ class RTCStatsReportVerifier {
     // hierarcy.
     if (stream.type() == RTCInboundRtpStreamStats::kType ||
         stream.type() == RTCOutboundRtpStreamStats::kType) {
-      verifier.TestMemberIsDefined(stream.media_type);
       verifier.TestMemberIsIDReference(
           stream.track_id, DEPRECATED_RTCMediaStreamTrackStats::kType);
     } else {
-      verifier.TestMemberIsUndefined(stream.media_type);
       verifier.TestMemberIsUndefined(stream.track_id);
     }
     verifier.TestMemberIsIDReference(stream.transport_id,
@@ -812,7 +810,8 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(inbound_stream.audio_level);
       verifier.TestMemberIsUndefined(inbound_stream.total_audio_energy);
       verifier.TestMemberIsUndefined(inbound_stream.total_samples_duration);
-      verifier.TestMemberIsNonNegative<int32_t>(inbound_stream.frames_received);
+      verifier.TestMemberIsNonNegative<uint32_t>(
+          inbound_stream.frames_received);
       verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.fir_count);
       verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.pli_count);
       verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.nack_count);
@@ -842,6 +841,20 @@ class RTCStatsReportVerifier {
           inbound_stream.total_samples_duration);
       verifier.TestMemberIsUndefined(inbound_stream.frames_received);
     }
+
+    // RTX stats are typically only defined for video where RTX is negotiated.
+    if (inbound_stream.kind.is_defined() && *inbound_stream.kind == "video") {
+      verifier.TestMemberIsNonNegative<uint64_t>(
+          inbound_stream.retransmitted_packets_received);
+      verifier.TestMemberIsNonNegative<uint64_t>(
+          inbound_stream.retransmitted_bytes_received);
+    } else {
+      verifier.TestMemberIsUndefined(
+          inbound_stream.retransmitted_packets_received);
+      verifier.TestMemberIsUndefined(
+          inbound_stream.retransmitted_bytes_received);
+    }
+
     // Test runtime too short to get an estimate (at least two RTCP sender
     // reports need to be received).
     verifier.MarkMemberTested(inbound_stream.estimated_playout_timestamp, true);

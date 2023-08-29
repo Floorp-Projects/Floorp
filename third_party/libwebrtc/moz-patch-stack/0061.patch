@@ -1,32 +1,27 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Fri, 8 Apr 2022 11:36:36 -0500
-Subject: Bug 1766646 - (fix-b556b08668) avoid InlinedVector method that can
- throw exception
+Date: Tue, 21 Jun 2022 11:11:09 -0500
+Subject: Bug 1773223 - Generate webrtc moz.builds for all platforms at once.
+ r=mjf,firefox-build-system-reviewers,ahochheiden
 
 ---
- api/video_codecs/video_encoder.cc | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ build_overrides/build.gni | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/api/video_codecs/video_encoder.cc b/api/video_codecs/video_encoder.cc
-index e4b44aedb3..e3d7448846 100644
---- a/api/video_codecs/video_encoder.cc
-+++ b/api/video_codecs/video_encoder.cc
-@@ -179,7 +179,15 @@ std::string VideoEncoder::EncoderInfo::ToString() const {
-   for (size_t i = 0; i < preferred_pixel_formats.size(); ++i) {
-     if (i > 0)
-       oss << ", ";
-+#if defined(WEBRTC_MOZILLA_BUILD)
-+    // This could assert, as opposed to throw using the form in the
-+    // else, but since we're in a for loop that uses .size() we can
-+    // be fairly sure that this is safe without doing a further
-+    // check to make sure 'i' is in-range.
-+    oss << VideoFrameBufferTypeToString(preferred_pixel_formats[i]);
-+#else
-     oss << VideoFrameBufferTypeToString(preferred_pixel_formats.at(i));
-+#endif
-   }
-   oss << "]";
-   if (is_qp_trusted.has_value()) {
+diff --git a/build_overrides/build.gni b/build_overrides/build.gni
+index 900367d0e1..e427ebba8e 100644
+--- a/build_overrides/build.gni
++++ b/build_overrides/build.gni
+@@ -45,6 +45,10 @@ if (host_os == "mac" || host_os == "linux") {
+   use_system_xcode = _result == 0
+ }
+ 
++use_system_xcode = false
++xcode_version = "10.15"
++mac_xcode_version = "default"
++
+ declare_args() {
+   # WebRTC doesn't depend on //base from production code but only for testing
+   # purposes. In any case, it doesn't depend on //third_party/perfetto which
 -- 
 2.34.1
 

@@ -672,7 +672,7 @@ CpuOveruseOptions VideoStreamEncoderResourceManager::GetCpuOveruseOptions()
   // This is already ensured by the only caller of this method:
   // StartResourceAdaptation().
   RTC_DCHECK(encoder_settings_.has_value());
-  CpuOveruseOptions options(field_trials_);
+  CpuOveruseOptions options;
   // Hardware accelerated encoders are assumed to be pipelined; give them
   // additional overuse time.
   if (encoder_settings_->encoder_info().is_hardware_accelerated) {
@@ -815,7 +815,8 @@ void VideoStreamEncoderResourceManager::OnQualityRampUp() {
 }
 
 bool VideoStreamEncoderResourceManager::IsSimulcastOrMultipleSpatialLayers(
-    const VideoEncoderConfig& encoder_config) {
+    const VideoEncoderConfig& encoder_config,
+    const VideoCodec& video_codec) {
   const std::vector<VideoStream>& simulcast_layers =
       encoder_config.simulcast_layers;
   if (simulcast_layers.empty()) {
@@ -824,7 +825,7 @@ bool VideoStreamEncoderResourceManager::IsSimulcastOrMultipleSpatialLayers(
 
   absl::optional<int> num_spatial_layers;
   if (simulcast_layers[0].scalability_mode.has_value() &&
-      encoder_config.number_of_streams == 1) {
+      video_codec.numberOfSimulcastStreams == 1) {
     num_spatial_layers = ScalabilityModeToNumSpatialLayers(
         *simulcast_layers[0].scalability_mode);
   }

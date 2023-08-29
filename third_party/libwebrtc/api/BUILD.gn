@@ -469,27 +469,6 @@ rtc_source_set("make_ref_counted") {
   deps = [ "../rtc_base:refcount" ]
 }
 
-rtc_source_set("video_quality_test_fixture_api") {
-  visibility = [ "*" ]
-  testonly = true
-  sources = [ "test/video_quality_test_fixture.h" ]
-  deps = [
-    ":fec_controller_api",
-    ":libjingle_peerconnection_api",
-    ":network_state_predictor_api",
-    ":rtp_parameters",
-    ":simulated_network_api",
-    "../call:fake_network",
-    "../call:rtp_interfaces",
-    "../test:test_common",
-    "../test:video_test_common",
-    "../video/config:encoder_config",
-    "transport:bitrate_settings",
-    "transport:network_control",
-    "video_codecs:video_codecs_api",
-  ]
-}
-
 rtc_source_set("video_quality_analyzer_api") {
   visibility = [ "*" ]
   testonly = true
@@ -656,20 +635,6 @@ rtc_source_set("frame_generator_api") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-rtc_library("test_dependency_factory") {
-  visibility = [ "*" ]
-  testonly = true
-  sources = [
-    "test/test_dependency_factory.cc",
-    "test/test_dependency_factory.h",
-  ]
-  deps = [
-    ":video_quality_test_fixture_api",
-    "../rtc_base:checks",
-    "../rtc_base:platform_thread_types",
-  ]
-}
-
 if (rtc_include_tests) {
   # TODO(srte): Move to network_emulation sub directory.
   rtc_library("create_network_emulation_manager") {
@@ -686,6 +651,41 @@ if (rtc_include_tests) {
   }
 
   if (!build_with_chromium) {
+    rtc_source_set("video_quality_test_fixture_api") {
+      visibility = [ "*" ]
+      testonly = true
+      sources = [ "test/video_quality_test_fixture.h" ]
+      deps = [
+        ":fec_controller_api",
+        ":libjingle_peerconnection_api",
+        ":network_state_predictor_api",
+        ":rtp_parameters",
+        ":simulated_network_api",
+        "../call:fake_network",
+        "../call:rtp_interfaces",
+        "../test:test_common",
+        "../test:video_test_common",
+        "../video/config:encoder_config",
+        "transport:bitrate_settings",
+        "transport:network_control",
+        "video_codecs:video_codecs_api",
+      ]
+    }
+
+    rtc_library("test_dependency_factory") {
+      visibility = [ "*" ]
+      testonly = true
+      sources = [
+        "test/test_dependency_factory.cc",
+        "test/test_dependency_factory.h",
+      ]
+      deps = [
+        ":video_quality_test_fixture_api",
+        "../rtc_base:checks",
+        "../rtc_base:platform_thread_types",
+      ]
+    }
+
     rtc_library("create_video_quality_test_fixture_api") {
       visibility = [ "*" ]
       testonly = true

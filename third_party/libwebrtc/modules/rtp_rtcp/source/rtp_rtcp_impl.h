@@ -132,8 +132,10 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
                          int payload_type,
                          bool force_sender_report) override;
 
-  bool TrySendPacket(RtpPacketToSend* packet,
+  bool TrySendPacket(std::unique_ptr<RtpPacketToSend> packet,
                      const PacedPacketInfo& pacing_info) override;
+
+  void OnBatchComplete() override {}
 
   void SetFecProtectionParams(const FecProtectionParams& delta_params,
                               const FecProtectionParams& key_params) override;
@@ -168,11 +170,7 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
   int32_t SetCNAME(absl::string_view c_name) override;
 
   // Get RoundTripTime.
-  int32_t RTT(uint32_t remote_ssrc,
-              int64_t* rtt,
-              int64_t* avg_rtt,
-              int64_t* min_rtt,
-              int64_t* max_rtt) const override;
+  absl::optional<TimeDelta> LastRtt() const override;
 
   int64_t ExpectedRetransmissionTimeMs() const override;
 

@@ -1,25 +1,52 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 1 Jun 2022 12:47:00 -0500
-Subject: Bug 1766646 - (fix-f137b75a4d) specify default constructor on
- config.emplace(...)
+From: Michael Froman <mfroman@mozilla.com>
+Date: Mon, 24 Oct 2022 13:00:00 -0500
+Subject: Bug 1797161 - pt1 - tweak BUILD.gn around task_queue_win usage. r?ng!
 
+Add assurance that we will not build task_queue_win.cc to avoid
+possible win32k API usage.
+
+Differential Revision: https://phabricator.services.mozilla.com/D160115
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f097eb8cbd8b7686ce306a46a4db691194fd39c1
 ---
- modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ api/task_queue/BUILD.gn | 5 +++++
+ rtc_base/BUILD.gn       | 4 ++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-index 4c0f5fc5ee..1afac9fb42 100644
---- a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-+++ b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-@@ -468,7 +468,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
-   if (!enabled.Get()) {
-     return config;
-   }
--  config.emplace();
-+  config.emplace(Config());
-   config->bandwidth_rampup_upper_bound_factor =
-       bandwidth_rampup_upper_bound_factor.Get();
-   config->rampup_acceleration_max_factor = rampup_acceleration_max_factor.Get();
+diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
+index 116a50762e..b9c50c1644 100644
+--- a/api/task_queue/BUILD.gn
++++ b/api/task_queue/BUILD.gn
+@@ -31,6 +31,11 @@ rtc_library("task_queue") {
+   ]
+ }
+ 
++# Mozilla - we want to ensure that rtc_include_tests is set to false
++# to guarantee that default_task_queue_factory is not used so we
++# know that remaining win32k code in task_queue_win.cc is not built.
++# See Bug 1797161 for more info.
++assert(!rtc_include_tests, "Mozilla - verify rtc_include_tests is off")
+ if (rtc_include_tests) {
+ rtc_library("task_queue_test") {
+   visibility = [ "*" ]
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index 6732520717..86eb42e6e4 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -701,10 +701,14 @@ if (is_mac || is_ios) {
+ if (is_win) {
+   rtc_library("rtc_task_queue_win") {
+     visibility = [ "../api/task_queue:default_task_queue_factory" ]
++# See Bug 1797161 for more info.  Remove from build until win32k
++# usage is removed.
++if (!build_with_mozilla) {
+     sources = [
+       "task_queue_win.cc",
+       "task_queue_win.h",
+     ]
++}
+     deps = [
+       ":checks",
+       ":logging",
 -- 
 2.34.1
 

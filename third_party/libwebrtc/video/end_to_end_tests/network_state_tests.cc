@@ -94,23 +94,20 @@ void NetworkStateEndToEndTest::VerifyNewVideoSendStreamsRespectNetworkState(
     Transport* transport) {
   test::VideoEncoderProxyFactory encoder_factory(encoder);
 
-  SendTask(task_queue(),
-           [this, network_to_bring_up, &encoder_factory, transport]() {
-             CreateSenderCall(Call::Config(send_event_log_.get()));
-             sender_call_->SignalChannelNetworkState(network_to_bring_up,
-                                                     kNetworkUp);
+  SendTask(task_queue(), [this, network_to_bring_up, &encoder_factory,
+                          transport]() {
+    CreateSenderCall(Call::Config(send_event_log_.get()));
+    sender_call_->SignalChannelNetworkState(network_to_bring_up, kNetworkUp);
 
-             CreateSendConfig(1, 0, 0, transport);
-             GetVideoSendConfig()->encoder_settings.encoder_factory =
-                 &encoder_factory;
-             CreateVideoStreams();
-             CreateFrameGeneratorCapturer(
-                 test::VideoTestConstants::kDefaultFramerate,
-                 test::VideoTestConstants::kDefaultWidth,
-                 test::VideoTestConstants::kDefaultHeight);
+    CreateSendConfig(1, 0, 0, transport);
+    GetVideoSendConfig()->encoder_settings.encoder_factory = &encoder_factory;
+    CreateVideoStreams();
+    CreateFrameGeneratorCapturer(test::VideoTestConstants::kDefaultFramerate,
+                                 test::VideoTestConstants::kDefaultWidth,
+                                 test::VideoTestConstants::kDefaultHeight);
 
-             Start();
-           });
+    Start();
+  });
 
   SleepMs(kSilenceTimeoutMs);
 

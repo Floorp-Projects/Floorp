@@ -1,177 +1,36 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 20 Apr 2023 14:52:00 -0500
-Subject: Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 22 Jun 2023 16:23:00 +0000
+Subject: Bug 1837918 - libwebrtc update broke the build on
+ OpenBSD;r=mjf,webrtc-reviewers
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c115a6ffd07fab042bc5f086
+Differential Revision: https://phabricator.services.mozilla.com/D181791
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2a6a838b7021bb285f9485c2ceda6ba2543e0d6f
 ---
- rtc_base/BUILD.gn | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ modules/video_capture/video_capture_options.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index e474ba8202..8f1be481ef 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -1154,6 +1154,7 @@ if (!build_with_chromium) {
- }
+diff --git a/modules/video_capture/video_capture_options.h b/modules/video_capture/video_capture_options.h
+index c90e035f37..18ec208ec5 100644
+--- a/modules/video_capture/video_capture_options.h
++++ b/modules/video_capture/video_capture_options.h
+@@ -51,7 +51,7 @@ class RTC_EXPORT VideoCaptureOptions {
  
- rtc_library("network") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "network.cc",
-@@ -1192,16 +1193,20 @@ rtc_library("network") {
-     deps += [ ":win32" ]
-   }
- }
-+}
+   void Init(Callback* callback);
  
- rtc_library("socket_address_pair") {
-+if (!build_with_mozilla) {
-   sources = [
-     "socket_address_pair.cc",
-     "socket_address_pair.h",
-   ]
-   deps = [ ":socket_address" ]
- }
-+}
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2() const { return allow_v4l2_; }
+   void set_allow_v4l2(bool allow) { allow_v4l2_ = allow; }
+ #endif
+@@ -64,7 +64,7 @@ class RTC_EXPORT VideoCaptureOptions {
+ #endif
  
- rtc_library("net_helper") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "net_helper.cc",
-@@ -1210,8 +1215,10 @@ rtc_library("net_helper") {
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-   deps = [ "system:rtc_export" ]
- }
-+}
- 
- rtc_library("socket_adapters") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "socket_adapters.cc",
-@@ -1231,6 +1238,7 @@ rtc_library("socket_adapters") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("network_route") {
-   sources = [
-@@ -1245,6 +1253,7 @@ rtc_library("network_route") {
- }
- 
- rtc_library("async_tcp_socket") {
-+if (!build_with_mozilla) {
-   sources = [
-     "async_tcp_socket.cc",
-     "async_tcp_socket.h",
-@@ -1263,8 +1272,10 @@ rtc_library("async_tcp_socket") {
-     "third_party/sigslot",
-   ]
- }
-+}
- 
- rtc_library("async_udp_socket") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "async_udp_socket.cc",
-@@ -1286,8 +1297,10 @@ rtc_library("async_udp_socket") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
-+}
- 
- rtc_library("async_packet_socket") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "async_packet_socket.cc",
-@@ -1305,6 +1318,7 @@ rtc_library("async_packet_socket") {
-     "third_party/sigslot",
-   ]
- }
-+}
- 
- rtc_library("mdns_responder_interface") {
-   sources = [ "mdns_responder_interface.h" ]
-@@ -1317,6 +1331,7 @@ rtc_library("dscp") {
- }
- 
- rtc_library("proxy_info") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "proxy_info.cc",
-@@ -1327,6 +1342,7 @@ rtc_library("proxy_info") {
-     ":socket_address",
-   ]
- }
-+}
- 
- rtc_library("file_rotating_stream") {
-   sources = [
-@@ -1355,6 +1371,7 @@ rtc_library("data_rate_limiter") {
- }
- 
- rtc_library("unique_id_generator") {
-+if (!build_with_mozilla) {
-   sources = [
-     "unique_id_generator.cc",
-     "unique_id_generator.h",
-@@ -1369,6 +1386,7 @@ rtc_library("unique_id_generator") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("crc32") {
-   sources = [
-@@ -1396,6 +1414,7 @@ rtc_library("stream") {
- }
- 
- rtc_library("rtc_certificate_generator") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "rtc_certificate_generator.cc",
-@@ -1413,8 +1432,10 @@ rtc_library("rtc_certificate_generator") {
-     "//third_party/abseil-cpp/absl/types:optional",
-   ]
- }
-+}
- 
- rtc_library("ssl") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "helpers.cc",
-@@ -1513,6 +1534,7 @@ rtc_library("ssl") {
-     deps += [ ":win32" ]
-   }
- }
-+}
- 
- rtc_library("crypt_string") {
-   sources = [
-@@ -1522,6 +1544,7 @@ rtc_library("crypt_string") {
- }
- 
- rtc_library("http_common") {
-+if (!build_with_mozilla) {
-   sources = [
-     "http_common.cc",
-     "http_common.h",
-@@ -1538,6 +1561,7 @@ rtc_library("http_common") {
- 
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_source_set("gtest_prod") {
-   sources = [ "gtest_prod_util.h" ]
+  private:
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2_ = false;
+ #endif
+ #if defined(WEBRTC_USE_PIPEWIRE)
 -- 
 2.34.1
 

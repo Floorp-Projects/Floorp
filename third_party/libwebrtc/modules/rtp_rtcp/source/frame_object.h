@@ -53,6 +53,11 @@ class RtpFrameObject : public EncodedFrame {
 
   const std::vector<uint32_t>& Csrcs() const { return csrcs_; }
 
+  void SetFirstSeqNum(uint16_t first_seq_num) {
+    first_seq_num_ = first_seq_num;
+  }
+  void SetLastSeqNum(uint16_t last_seq_num) { last_seq_num_ = last_seq_num; }
+
  private:
   // Reference for mutable access.
   rtc::scoped_refptr<EncodedImageBuffer> image_buffer_;

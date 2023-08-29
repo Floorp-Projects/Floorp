@@ -1644,35 +1644,33 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
       new_route.remote = rtc::RouteEndpoint::CreateWithNetworkId(20);
       BitrateConstraints bitrate_config;
 
-      SendTask(task_queue_,
-               [this, &new_route, &bitrate_config]() {
-                 RTC_DCHECK_RUN_ON(&task_queue_thread_);
-                 call_->GetTransportControllerSend()->OnNetworkRouteChanged(
-                     "transport", new_route);
-                 bitrate_config.start_bitrate_bps = kStartBitrateBps;
-                 call_->GetTransportControllerSend()->SetSdpBitrateParameters(
-                     bitrate_config);
-               });
+      SendTask(task_queue_, [this, &new_route, &bitrate_config]() {
+        RTC_DCHECK_RUN_ON(&task_queue_thread_);
+        call_->GetTransportControllerSend()->OnNetworkRouteChanged("transport",
+                                                                   new_route);
+        bitrate_config.start_bitrate_bps = kStartBitrateBps;
+        call_->GetTransportControllerSend()->SetSdpBitrateParameters(
+            bitrate_config);
+      });
 
       EXPECT_TRUE(Wait())
           << "Timed out while waiting for start bitrate to be exceeded.";
 
-      SendTask(
-          task_queue_, [this, &new_route, &bitrate_config]() {
-            RTC_DCHECK_RUN_ON(&task_queue_thread_);
-            bitrate_config.start_bitrate_bps = -1;
-            bitrate_config.max_bitrate_bps = kNewMaxBitrateBps;
-            call_->GetTransportControllerSend()->SetSdpBitrateParameters(
-                bitrate_config);
-            // TODO(holmer): We should set the last sent packet id here and
-            // verify that we correctly ignore any packet loss reported prior to
-            // that id.
-            new_route.local = rtc::RouteEndpoint::CreateWithNetworkId(
-                new_route.local.network_id() + 1);
-            call_->GetTransportControllerSend()->OnNetworkRouteChanged(
-                "transport", new_route);
-            EXPECT_GE(call_->GetStats().send_bandwidth_bps, kStartBitrateBps);
-          });
+      SendTask(task_queue_, [this, &new_route, &bitrate_config]() {
+        RTC_DCHECK_RUN_ON(&task_queue_thread_);
+        bitrate_config.start_bitrate_bps = -1;
+        bitrate_config.max_bitrate_bps = kNewMaxBitrateBps;
+        call_->GetTransportControllerSend()->SetSdpBitrateParameters(
+            bitrate_config);
+        // TODO(holmer): We should set the last sent packet id here and
+        // verify that we correctly ignore any packet loss reported prior to
+        // that id.
+        new_route.local = rtc::RouteEndpoint::CreateWithNetworkId(
+            new_route.local.network_id() + 1);
+        call_->GetTransportControllerSend()->OnNetworkRouteChanged("transport",
+                                                                   new_route);
+        EXPECT_GE(call_->GetStats().send_bandwidth_bps, kStartBitrateBps);
+      });
     }
 
    private:
@@ -3276,8 +3274,8 @@ class Vp9HeaderObserver : public test::SendTest {
   //      |    P_DIFF     |  R times
   //      +-+-+-+-+-+-+-+-+
   void VerifySsData(const RTPVideoHeaderVP9& vp9) const {
-    EXPECT_TRUE(vp9.ss_data_available);             // V
-    EXPECT_EQ(params_.num_spatial_layers,           // N_S + 1
+    EXPECT_TRUE(vp9.ss_data_available);    // V
+    EXPECT_EQ(params_.num_spatial_layers,  // N_S + 1
               vp9.num_spatial_layers);
     EXPECT_TRUE(vp9.spatial_layer_resolution_present);  // Y:1
 
@@ -4013,18 +4011,17 @@ TEST_F(VideoSendStreamTest, SwitchesToScreenshareAndBack) {
   auto reset_fun = [this](const VideoSendStream::Config& send_stream_config,
                           const VideoEncoderConfig& encoder_config,
                           test::BaseTest* test) {
-    SendTask(task_queue(),
-             [this, &send_stream_config, &encoder_config, &test]() {
-               Stop();
-               DestroyVideoSendStreams();
-               SetVideoSendConfig(send_stream_config);
-               SetVideoEncoderConfig(encoder_config);
-               CreateVideoSendStreams();
-               SetVideoDegradation(DegradationPreference::MAINTAIN_RESOLUTION);
-               test->OnVideoStreamsCreated(GetVideoSendStream(),
-                                           video_receive_streams_);
-               Start();
-             });
+    SendTask(task_queue(), [this, &send_stream_config, &encoder_config,
+                            &test]() {
+      Stop();
+      DestroyVideoSendStreams();
+      SetVideoSendConfig(send_stream_config);
+      SetVideoEncoderConfig(encoder_config);
+      CreateVideoSendStreams();
+      SetVideoDegradation(DegradationPreference::MAINTAIN_RESOLUTION);
+      test->OnVideoStreamsCreated(GetVideoSendStream(), video_receive_streams_);
+      Start();
+    });
   };
   ContentSwitchTest<decltype(reset_fun)> test(&reset_fun, task_queue());
   RunBaseTest(&test);

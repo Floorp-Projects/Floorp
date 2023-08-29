@@ -2530,7 +2530,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Audio) {
   RTCInboundRtpStreamStats expected_audio("ITTransportName1A1",
                                           report->timestamp());
   expected_audio.ssrc = 1;
-  expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
   expected_audio.track_identifier = "RemoteAudioTrackID";
   expected_audio.mid = "AudioMid";
@@ -2667,7 +2666,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   video_media_info.receivers[0].jitter_buffer_target_delay_seconds = 1.1;
   video_media_info.receivers[0].jitter_buffer_minimum_delay_seconds = 0.999;
   video_media_info.receivers[0].jitter_buffer_emitted_count = 13;
-
   video_media_info.receivers[0].last_packet_received_timestamp_ms =
       absl::nullopt;
   video_media_info.receivers[0].content_type = VideoContentType::UNSPECIFIED;
@@ -2676,6 +2674,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   video_media_info.receivers[0].decoder_implementation_name = "";
   video_media_info.receivers[0].min_playout_delay_ms = 50;
   video_media_info.receivers[0].power_efficient_decoder = false;
+  video_media_info.receivers[0].retransmitted_packets_received = 17;
+  video_media_info.receivers[0].retransmitted_bytes_received = 62;
 
   // Note: these two values intentionally differ,
   // only the decoded one should show up.
@@ -2700,7 +2700,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   RTCInboundRtpStreamStats expected_video("ITTransportName1V1",
                                           report->timestamp());
   expected_video.ssrc = 1;
-  expected_video.media_type = "video";
   expected_video.kind = "video";
   expected_video.track_identifier = "RemoteVideoTrackID";
   expected_video.mid = "VideoMid";
@@ -2741,6 +2740,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   expected_video.min_playout_delay = 0.05;
   expected_video.frames_per_second = 5;
   expected_video.power_efficient_decoder = false;
+  expected_video.retransmitted_packets_received = 17;
+  expected_video.retransmitted_bytes_received = 62;
 
   ASSERT_TRUE(report->Get(expected_video.id()));
   EXPECT_EQ(
@@ -2874,7 +2875,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRtpStreamStats_Audio) {
   // `expected_audio.remote_id` should be undefined.
   expected_audio.mid = "AudioMid";
   expected_audio.ssrc = 1;
-  expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
   expected_audio.track_id =
       IdForType<DEPRECATED_RTCMediaStreamTrackStats>(report.get());
@@ -2970,7 +2970,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRtpStreamStats_Video) {
   // `expected_video.remote_id` should be undefined.
   expected_video.mid = "VideoMid";
   expected_video.ssrc = 1;
-  expected_video.media_type = "video";
   expected_video.kind = "video";
   expected_video.track_id = stats_of_track_type[0]->id();
   expected_video.transport_id = "TTransportName1";
@@ -3316,7 +3315,6 @@ TEST_F(RTCStatsCollectorTest, CollectNoStreamRTCOutboundRtpStreamStats_Audio) {
   expected_audio.media_source_id = "SA50";
   expected_audio.mid = "AudioMid";
   expected_audio.ssrc = 1;
-  expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
   expected_audio.track_id =
       IdForType<DEPRECATED_RTCMediaStreamTrackStats>(report.get());
@@ -3553,8 +3551,7 @@ class RTCStatsCollectorTestWithParamKind
         for (const auto& report_block_data : report_block_datas) {
           cricket::VoiceSenderInfo sender;
           sender.local_stats.push_back(cricket::SsrcSenderInfo());
-          sender.local_stats[0].ssrc =
-              report_block_data.report_block().source_ssrc;
+          sender.local_stats[0].ssrc = report_block_data.source_ssrc();
           if (codec.has_value()) {
             sender.codec_payload_type = codec->payload_type;
             voice_media_info.send_codecs.insert(
@@ -3571,8 +3568,7 @@ class RTCStatsCollectorTestWithParamKind
         for (const auto& report_block_data : report_block_datas) {
           cricket::VideoSenderInfo sender;
           sender.local_stats.push_back(cricket::SsrcSenderInfo());
-          sender.local_stats[0].ssrc =
-              report_block_data.report_block().source_ssrc;
+          sender.local_stats[0].ssrc = report_block_data.source_ssrc();
           if (codec.has_value()) {
             sender.codec_payload_type = codec->payload_type;
             video_media_info.send_codecs.insert(

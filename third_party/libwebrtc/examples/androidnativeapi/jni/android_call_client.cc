@@ -10,9 +10,8 @@
 
 #include "examples/androidnativeapi/jni/android_call_client.h"
 
-#include <utility>
-
 #include <memory>
+#include <utility>
 
 #include "api/peer_connection_interface.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"

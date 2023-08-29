@@ -10,34 +10,30 @@
 
 #include "modules/rtp_rtcp/include/report_block_data.h"
 
+#include "rtc_base/checks.h"
+
 namespace webrtc {
 
-TimeDelta ReportBlockData::AvgRtt() const {
-  return num_rtts_ > 0 ? sum_rtt_ / num_rtts_ : TimeDelta::Zero();
+TimeDelta ReportBlockData::jitter(int rtp_clock_rate_hz) const {
+  RTC_DCHECK_GT(rtp_clock_rate_hz, 0);
+  // Conversion to TimeDelta and division are swapped to avoid conversion
+  // to/from floating point types.
+  return TimeDelta::Seconds(jitter()) / rtp_clock_rate_hz;
 }
 
 void ReportBlockData::SetReportBlock(uint32_t sender_ssrc,
                                      const rtcp::ReportBlock& report_block,
                                      Timestamp report_block_timestamp_utc) {
-  report_block_.sender_ssrc = sender_ssrc;
-  report_block_.source_ssrc = report_block.source_ssrc();
-  report_block_.fraction_lost = report_block.fraction_lost();
-  report_block_.packets_lost = report_block.cumulative_lost();
-  report_block_.extended_highest_sequence_number =
-      report_block.extended_high_seq_num();
-  report_block_.jitter = report_block.jitter();
-  report_block_.delay_since_last_sender_report =
-      report_block.delay_since_last_sr();
-  report_block_.last_sender_report_timestamp = report_block.last_sr();
-
+  sender_ssrc_ = sender_ssrc;
+  source_ssrc_ = report_block.source_ssrc();
+  fraction_lost_raw_ = report_block.fraction_lost();
+  cumulative_lost_ = report_block.cumulative_lost();
+  extended_highest_sequence_number_ = report_block.extended_high_seq_num();
+  jitter_ = report_block.jitter();
   report_block_timestamp_utc_ = report_block_timestamp_utc;
 }
 
 void ReportBlockData::AddRoundTripTimeSample(TimeDelta rtt) {
-  if (rtt > max_rtt_)
-    max_rtt_ = rtt;
-  if (num_rtts_ == 0 || rtt < min_rtt_)
-    min_rtt_ = rtt;
   last_rtt_ = rtt;
   sum_rtt_ += rtt;
   ++num_rtts_;

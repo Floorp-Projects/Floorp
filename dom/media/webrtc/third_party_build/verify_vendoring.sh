@@ -32,22 +32,33 @@ hg revert -q \
    --include "third_party/libwebrtc/README.mozilla" \
    third_party/libwebrtc
 
+ERROR_HELP=$"
+***
+There are changes detected after vendoring libwebrtc from our local copy
+of the git repo containing our patch-stack:
+$MOZ_LIBWEBRTC_SRC
+
+Typically this is due to changes made in mercurial to files residing
+under third_party/libwebrtc that have not been reflected in
+moz-libwebrtc git repo's patch-stack.
+
+Frequently using 'hg log' on the files listed with 'hg status' will give
+information on commits that need to be added to the patch-stack.  After
+identifying a commit or commit range from mercurial that should be added
+to the git patch-stack, the following commands should help remedy the
+situation:
+  ./mach python $SCRIPT_DIR/extract-for-git.py {start-commit-sha}::{end-commit-sha}
+  mv mailbox.patch $MOZ_LIBWEBRTC_SRC
+  (cd $MOZ_LIBWEBRTC_SRC && \\
+   git am mailbox.patch)
+
+After adding the new changes from mercurial to the moz-libwebrtc
+patch stack, you should re-run this command to verify vendoring:
+  bash $0
+"
 FILE_CHANGE_CNT=`hg status third_party/libwebrtc | wc -l | tr -d " "`
 if [ "x$FILE_CHANGE_CNT" != "x0" ]; then
-  echo "***"
-  echo "There are changes after vendoring - running extract-for-git.py"
-  echo "is recommended.  First, find the mercurial commit after the"
-  echo "previous fast-forward landing.  The commands you want will look"
-  echo "something like:"
-  echo "  ./mach python $SCRIPT_DIR/extract-for-git.py {after-ff-commit}::{tip-of-central}"
-  echo "  mv mailbox.patch $MOZ_LIBWEBRTC_SRC"
-  echo "  (cd $MOZ_LIBWEBRTC_SRC && \\"
-  echo "   git am mailbox.patch)"
-  echo ""
-  echo "After adding the new changes from moz-central to the moz-libwebrtc"
-  echo "patch stack, you may re-run this command to verify vendoring:"
-  echo "  bash $0"
-
+  echo "$ERROR_HELP"
   exit 1
 fi
 

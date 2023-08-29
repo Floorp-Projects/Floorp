@@ -864,7 +864,7 @@ TEST_F(JsepTransportControllerTest,
                   ->SetRemoteDescription(SdpType::kAnswer, description.get())
                   .ok());
   // The BUNDLE should be enabled, the incomplete video transport should be
-  // deleted and the states shoud be updated.
+  // deleted and the states should be updated.
   fake_video_dtls = static_cast<FakeDtlsTransport*>(
       transport_controller_->GetDtlsTransport(kVideoMid1));
   EXPECT_EQ(fake_audio_dtls, fake_video_dtls);
@@ -2699,6 +2699,32 @@ TEST_F(JsepTransportControllerTest, RollbackAndAddToDifferentBundleGroup) {
   mid3_transport = transport_controller_->GetRtpTransport(kMid3Audio);
   EXPECT_NE(mid1_transport, mid2_transport);
   EXPECT_EQ(mid2_transport, mid3_transport);
+}
+
+// Test that a bundle-only offer without rtcp-mux in the bundle-only section
+// is accepted.
+TEST_F(JsepTransportControllerTest, BundleOnlySectionDoesNotNeedRtcpMux) {
+  CreateJsepTransportController(JsepTransportController::Config());
+  cricket::ContentGroup bundle_group(cricket::GROUP_TYPE_BUNDLE);
+  bundle_group.AddContentName(kAudioMid1);
+  bundle_group.AddContentName(kVideoMid1);
+
+  auto offer = std::make_unique<cricket::SessionDescription>();
+  AddAudioSection(offer.get(), kAudioMid1, kIceUfrag1, kIcePwd1,
+                  cricket::ICEMODE_FULL, cricket::CONNECTIONROLE_ACTPASS,
+                  nullptr);
+  AddVideoSection(offer.get(), kVideoMid1, kIceUfrag1, kIcePwd1,
+                  cricket::ICEMODE_FULL, cricket::CONNECTIONROLE_ACTPASS,
+                  nullptr);
+  offer->AddGroup(bundle_group);
+
+  // Remove rtcp-mux and set bundle-only on the second content.
+  offer->contents()[1].media_description()->set_rtcp_mux(false);
+  offer->contents()[1].bundle_only = true;
+
+  EXPECT_TRUE(
+      transport_controller_->SetRemoteDescription(SdpType::kOffer, offer.get())
+          .ok());
 }
 
 }  // namespace webrtc

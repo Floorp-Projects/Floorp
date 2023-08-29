@@ -16,6 +16,7 @@
 
 #include <list>
 #include <memory>
+#include <set>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -62,6 +63,7 @@ class PacketRouter : public PacingController::PacketSender {
       uint32_t ssrc,
       rtc::ArrayView<const uint16_t> sequence_numbers) override;
   absl::optional<uint32_t> GetRtxSsrcForMedia(uint32_t ssrc) const override;
+  void OnBatchComplete() override;
 
   uint16_t CurrentTransportSequenceNumber() const;
 
@@ -107,6 +109,8 @@ class PacketRouter : public PacingController::PacketSender {
   uint64_t transport_seq_ RTC_GUARDED_BY(thread_checker_);
 
   std::vector<std::unique_ptr<RtpPacketToSend>> pending_fec_packets_
+      RTC_GUARDED_BY(thread_checker_);
+  std::set<RtpRtcpInterface*> modules_used_in_current_batch_
       RTC_GUARDED_BY(thread_checker_);
 };
 }  // namespace webrtc

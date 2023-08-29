@@ -52,6 +52,8 @@ class PacingController {
     virtual std::vector<std::unique_ptr<RtpPacketToSend>> FetchFec() = 0;
     virtual std::vector<std::unique_ptr<RtpPacketToSend>> GeneratePadding(
         DataSize size) = 0;
+    // TODO(bugs.webrtc.org/1439830): Make pure virtual once subclasses adapt.
+    virtual void OnBatchComplete() {}
 
     // TODO(bugs.webrtc.org/11340): Make pure virtual once downstream projects
     // have been updated.

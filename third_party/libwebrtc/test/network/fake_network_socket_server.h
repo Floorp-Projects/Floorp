@@ -32,7 +32,6 @@ class FakeNetworkSocketServer : public rtc::SocketServer {
   explicit FakeNetworkSocketServer(EndpointsContainer* endpoints_controller);
   ~FakeNetworkSocketServer() override;
 
-
   // rtc::SocketFactory methods:
   rtc::Socket* CreateSocket(int family, int type) override;
 

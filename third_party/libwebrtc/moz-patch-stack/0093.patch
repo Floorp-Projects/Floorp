@@ -1,71 +1,69 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 08:01:00 +0000
-Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit 6fc1ae58be.
- r=webrtc-reviewers,mjf
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Use the current TaskQueue, instead of the current
+ thread, to init this. r=pehrsons,webrtc-reviewers
 
-Upstream commit: https://webrtc.googlesource.com/src/+/6fc1ae58be7cbb61ad0431d90eb7a7dc333de2f2
-    In DeviceInfoDS check that out vars were set
+There are situations where the current thread is not set, but the current
+TaskQueue is (but not vice versa).
 
-    Bug: chromium:1441804
-    Change-Id: Id07cb61519315d77c2d7cdab1053efaaf7473e1a
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304060
-    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Reviewed-by: Per Kjellander <perkj@webrtc.org>
-    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39982}
-
-Differential Revision: https://phabricator.services.mozilla.com/D177236
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60d381b6016ae5af0181b44c6a31b41eab094793
+Differential Revision: https://phabricator.services.mozilla.com/D180736
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/62e71a2f745c4b98d5ee7ce9e6386aa1b657be9b
 ---
- modules/video_capture/windows/device_info_ds.cc    | 13 +++++++------
- modules/video_capture/windows/help_functions_ds.cc |  3 +++
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ .../rtp_video_stream_receiver_frame_transformer_delegate.cc  | 3 +--
+ .../rtp_video_stream_receiver_frame_transformer_delegate.h   | 5 ++---
+ video/rtp_video_stream_receiver2.cc                          | 2 +-
+ 3 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 299be99502..b5867923d1 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -504,9 +504,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-       }
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+index aa5c8dfa28..15a8da18ca 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+@@ -79,8 +79,7 @@ RtpVideoStreamReceiverFrameTransformerDelegate::
+     RtpVideoStreamReceiverFrameTransformerDelegate(
+         RtpVideoFrameReceiver* receiver,
+         rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+-        rtc::Thread* network_thread,
+-        uint32_t ssrc)
++        TaskQueueBase* network_thread, uint32_t ssrc)
+     : receiver_(receiver),
+       frame_transformer_(std::move(frame_transformer)),
+       network_thread_(network_thread),
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
+index 3e8257f906..5adca0634c 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
+@@ -39,8 +39,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+   RtpVideoStreamReceiverFrameTransformerDelegate(
+       RtpVideoFrameReceiver* receiver,
+       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+-      rtc::Thread* network_thread,
+-      uint32_t ssrc);
++      TaskQueueBase* network_thread, uint32_t ssrc);
  
-       if (hrVC == S_OK) {
--        LONGLONG* frameDurationList;
--        LONGLONG maxFPS;
--        long listSize;
-+        LONGLONG* frameDurationList = NULL;
-+        LONGLONG maxFPS = 0;
-+        long listSize = 0;
-         SIZE size;
-         size.cx = capability.width;
-         size.cy = capability.height;
-@@ -519,9 +519,10 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-         hrVC = videoControlConfig->GetFrameRateList(
-             outputCapturePin, tmp, size, &listSize, &frameDurationList);
+   void Init();
+   void Reset();
+@@ -65,7 +64,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+   RtpVideoFrameReceiver* receiver_ RTC_GUARDED_BY(network_sequence_checker_);
+   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_
+       RTC_GUARDED_BY(network_sequence_checker_);
+-  rtc::Thread* const network_thread_;
++  TaskQueueBase* const network_thread_;
+   const uint32_t ssrc_;
+ };
  
--        // On some odd cameras, you may get a 0 for duration.
--        // GetMaxOfFrameArray returns the lowest duration (highest FPS)
--        if (hrVC == S_OK && listSize > 0 &&
-+        // On some odd cameras, you may get a 0 for duration. Some others may
-+        // not update the out vars. GetMaxOfFrameArray returns the lowest
-+        // duration (highest FPS), or 0 if there was no list with elements.
-+        if (hrVC == S_OK &&
-             0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
-           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
-           capability.supportFrameRateControl = true;
-diff --git a/modules/video_capture/windows/help_functions_ds.cc b/modules/video_capture/windows/help_functions_ds.cc
-index b767726107..47fecfe4a1 100644
---- a/modules/video_capture/windows/help_functions_ds.cc
-+++ b/modules/video_capture/windows/help_functions_ds.cc
-@@ -21,6 +21,9 @@ namespace webrtc {
- namespace videocapturemodule {
- // This returns minimum :), which will give max frame rate...
- LONGLONG GetMaxOfFrameArray(LONGLONG* maxFps, long size) {
-+  if (!maxFps || size <= 0) {
-+    return 0;
-+  }
-   LONGLONG maxFPS = maxFps[0];
-   for (int i = 0; i < size; i++) {
-     if (maxFPS > maxFps[i])
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index b6d8af8903..e28bb302fe 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -341,7 +341,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+   if (frame_transformer) {
+     frame_transformer_delegate_ =
+         rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-            this, std::move(frame_transformer), rtc::Thread::Current(),
++            this, std::move(frame_transformer), TaskQueueBase::Current(),
+             config_.rtp.remote_ssrc);
+     frame_transformer_delegate_->Init();
+   }
 -- 
 2.34.1
 

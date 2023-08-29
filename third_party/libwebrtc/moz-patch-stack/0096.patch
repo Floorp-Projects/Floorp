@@ -1,43 +1,49 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 16 May 2023 06:37:00 +0000
-Subject: Bug 1832770 - Cherry-pick upstream libwebrtc commit 7b0d7f48fb.
- r=grulja,webrtc-reviewers,mjf
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Thu, 27 Jul 2023 09:49:00 +0000
+Subject: Bug 1841851 - WebRTC backport: PipeWire capturer: increase buffer
+ size to avoid buffer overflow r=jib,webrtc-reviewers,mjf
 
-Upstream commit:
-    PipeWire capturer: fix fcntl call when duplicating a file descriptor
+This is a simple backport of an WebRTC upstream change.
 
-    The fcntl() call has variable arguments, therefore we need to pass 0 to
-    specify there are no other arguments for this call, otherwise we might
-    end up with an argument that is random garbage.
+Upstream commit: 8fcc6df79daf1810cd4ecdb8d2ef1d361abfdc9c
 
-    Bug: webrtc:15174
-    Change-Id: I34f16a942d80913b667d8ade7eed557b0233be01
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305120
-    Reviewed-by: Alexander Cooper <alcooper@chromium.org>
-    Commit-Queue: Jan Grulich <grulja@gmail.com>
-    Cr-Commit-Position: refs/heads/main@{#40060}
-
-Differential Revision: https://phabricator.services.mozilla.com/D178009
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/47978aa145282f737fc77fcdcadc995e80e2a743
+Differential Revision: https://phabricator.services.mozilla.com/D183355
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/263be02fdeb0c3556e1da296eb18eb3d154eb99e
 ---
- .../desktop_capture/linux/wayland/shared_screencast_stream.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../linux/wayland/shared_screencast_stream.cc               | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 1eea8bfbf5..17c895088a 100644
+index 17c895088a..0102346036 100644
 --- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
 +++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -449,8 +449,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
-     PipeWireThreadLoopLock thread_loop_lock(pw_main_loop_);
+@@ -281,7 +281,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
  
-     if (fd >= 0) {
--      pw_core_ = pw_context_connect_fd(pw_context_, fcntl(fd, F_DUPFD_CLOEXEC),
--                                       nullptr, 0);
-+      pw_core_ = pw_context_connect_fd(
-+          pw_context_, fcntl(fd, F_DUPFD_CLOEXEC, 0), nullptr, 0);
-     } else {
-       pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
-     }
+   that->stream_size_ = DesktopSize(width, height);
+ 
+-  uint8_t buffer[1024] = {};
++  uint8_t buffer[2048] = {};
+   auto builder = spa_pod_builder{buffer, sizeof(buffer)};
+ 
+   // Setup buffers and meta header for new format.
+@@ -364,7 +364,7 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
+   {
+     PipeWireThreadLoopLock thread_loop_lock(that->pw_main_loop_);
+ 
+-    uint8_t buffer[2048] = {};
++    uint8_t buffer[4096] = {};
+ 
+     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
+ 
+@@ -482,7 +482,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+ 
+     pw_stream_add_listener(pw_stream_, &spa_stream_listener_,
+                            &pw_stream_events_, this);
+-    uint8_t buffer[2048] = {};
++    uint8_t buffer[4096] = {};
+ 
+     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
+ 
 -- 
 2.34.1
 

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video/receive_statistics_proxy2.h"
+#include "video/receive_statistics_proxy.h"
 
 #include <algorithm>
 #include <cmath>
@@ -30,23 +30,6 @@ namespace internal {
 namespace {
 // Periodic time interval for processing samples for `freq_offset_counter_`.
 const int64_t kFreqOffsetProcessIntervalMs = 40000;
-
-// Configuration for bad call detection.
-const int kBadCallMinRequiredSamples = 10;
-const int kMinSampleLengthMs = 990;
-const int kNumMeasurements = 10;
-const int kNumMeasurementsVariance = kNumMeasurements * 1.5;
-const float kBadFraction = 0.8f;
-// For fps:
-// Low means low enough to be bad, high means high enough to be good
-const int kLowFpsThreshold = 12;
-const int kHighFpsThreshold = 14;
-// For qp and fps variance:
-// Low means low enough to be good, high means high enough to be bad
-const int kLowQpThresholdVp8 = 60;
-const int kHighQpThresholdVp8 = 70;
-const int kLowVarianceThreshold = 1;
-const int kHighVarianceThreshold = 2;
 
 // Some metrics are reported as a maximum over this period.
 // This should be synchronized with a typical getStats polling interval in
@@ -102,21 +85,6 @@ ReceiveStatisticsProxy::ReceiveStatisticsProxy(uint32_t remote_ssrc,
                                                TaskQueueBase* worker_thread)
     : clock_(clock),
       start_ms_(clock->TimeInMilliseconds()),
-      last_sample_time_(clock->TimeInMilliseconds()),
-      fps_threshold_(kLowFpsThreshold,
-                     kHighFpsThreshold,
-                     kBadFraction,
-                     kNumMeasurements),
-      qp_threshold_(kLowQpThresholdVp8,
-                    kHighQpThresholdVp8,
-                    kBadFraction,
-                    kNumMeasurements),
-      variance_threshold_(kLowVarianceThreshold,
-                          kHighVarianceThreshold,
-                          kBadFraction,
-                          kNumMeasurementsVariance),
-      num_bad_states_(0),
-      num_certain_states_(0),
       remote_ssrc_(remote_ssrc),
       // 1000ms window, scale 1000 for ms to s.
       decode_fps_estimator_(1000, 1000),
@@ -277,7 +245,7 @@ void ReceiveStatisticsProxy::UpdateHistograms(
                                *current_delay_ms);
     log_stream << "WebRTC.Video.CurrentDelayInMs " << *current_delay_ms << '\n';
   }
-  absl::optional<int> delay_ms = delay_counter_.Avg(kMinRequiredSamples);
+  absl::optional<int> delay_ms = oneway_delay_counter_.Avg(kMinRequiredSamples);
   if (delay_ms)
     RTC_HISTOGRAM_COUNTS_10000("WebRTC.Video.OnewayDelayInMs", *delay_ms);
 
@@ -465,103 +433,9 @@ void ReceiveStatisticsProxy::UpdateHistograms(
     }
   }
 
-  if (num_certain_states_ >= kBadCallMinRequiredSamples) {
-    RTC_HISTOGRAM_PERCENTAGE("WebRTC.Video.BadCall.Any",
-                             100 * num_bad_states_ / num_certain_states_);
-  }
-  absl::optional<double> fps_fraction =
-      fps_threshold_.FractionHigh(kBadCallMinRequiredSamples);
-  if (fps_fraction) {
-    RTC_HISTOGRAM_PERCENTAGE("WebRTC.Video.BadCall.FrameRate",
-                             static_cast<int>(100 * (1 - *fps_fraction)));
-  }
-  absl::optional<double> variance_fraction =
-      variance_threshold_.FractionHigh(kBadCallMinRequiredSamples);
-  if (variance_fraction) {
-    RTC_HISTOGRAM_PERCENTAGE("WebRTC.Video.BadCall.FrameRateVariance",
-                             static_cast<int>(100 * *variance_fraction));
-  }
-  absl::optional<double> qp_fraction =
-      qp_threshold_.FractionHigh(kBadCallMinRequiredSamples);
-  if (qp_fraction) {
-    RTC_HISTOGRAM_PERCENTAGE("WebRTC.Video.BadCall.Qp",
-                             static_cast<int>(100 * *qp_fraction));
-  }
-
   RTC_LOG(LS_INFO) << log_stream.str();
   video_quality_observer_->UpdateHistograms(
       videocontenttypehelpers::IsScreenshare(last_content_type_));
-}
-
-void ReceiveStatisticsProxy::QualitySample(Timestamp now) {
-  RTC_DCHECK_RUN_ON(&main_thread_);
-
-  if (last_sample_time_ + kMinSampleLengthMs > now.ms())
-    return;
-
-  double fps =
-      render_fps_tracker_.ComputeRateForInterval(now.ms() - last_sample_time_);
-  absl::optional<int> qp = qp_sample_.Avg(1);
-
-  bool prev_fps_bad = !fps_threshold_.IsHigh().value_or(true);
-  bool prev_qp_bad = qp_threshold_.IsHigh().value_or(false);
-  bool prev_variance_bad = variance_threshold_.IsHigh().value_or(false);
-  bool prev_any_bad = prev_fps_bad || prev_qp_bad || prev_variance_bad;
-
-  fps_threshold_.AddMeasurement(static_cast<int>(fps));
-  if (qp)
-    qp_threshold_.AddMeasurement(*qp);
-  absl::optional<double> fps_variance_opt = fps_threshold_.CalculateVariance();
-  double fps_variance = fps_variance_opt.value_or(0);
-  if (fps_variance_opt) {
-    variance_threshold_.AddMeasurement(static_cast<int>(fps_variance));
-  }
-
-  bool fps_bad = !fps_threshold_.IsHigh().value_or(true);
-  bool qp_bad = qp_threshold_.IsHigh().value_or(false);
-  bool variance_bad = variance_threshold_.IsHigh().value_or(false);
-  bool any_bad = fps_bad || qp_bad || variance_bad;
-
-  if (!prev_any_bad && any_bad) {
-    RTC_LOG(LS_INFO) << "Bad call (any) start: " << now.ms();
-  } else if (prev_any_bad && !any_bad) {
-    RTC_LOG(LS_INFO) << "Bad call (any) end: " << now.ms();
-  }
-
-  if (!prev_fps_bad && fps_bad) {
-    RTC_LOG(LS_INFO) << "Bad call (fps) start: " << now.ms();
-  } else if (prev_fps_bad && !fps_bad) {
-    RTC_LOG(LS_INFO) << "Bad call (fps) end: " << now.ms();
-  }
-
-  if (!prev_qp_bad && qp_bad) {
-    RTC_LOG(LS_INFO) << "Bad call (qp) start: " << now.ms();
-  } else if (prev_qp_bad && !qp_bad) {
-    RTC_LOG(LS_INFO) << "Bad call (qp) end: " << now.ms();
-  }
-
-  if (!prev_variance_bad && variance_bad) {
-    RTC_LOG(LS_INFO) << "Bad call (variance) start: " << now.ms();
-  } else if (prev_variance_bad && !variance_bad) {
-    RTC_LOG(LS_INFO) << "Bad call (variance) end: " << now.ms();
-  }
-
-  RTC_LOG(LS_VERBOSE) << "SAMPLE: sample_length: "
-                      << (now.ms() - last_sample_time_) << " fps: " << fps
-                      << " fps_bad: " << fps_bad << " qp: " << qp.value_or(-1)
-                      << " qp_bad: " << qp_bad
-                      << " variance_bad: " << variance_bad
-                      << " fps_variance: " << fps_variance;
-
-  last_sample_time_ = now.ms();
-  qp_sample_.Reset();
-
-  if (fps_threshold_.IsHigh() || variance_threshold_.IsHigh() ||
-      qp_threshold_.IsHigh()) {
-    if (any_bad)
-      ++num_bad_states_;
-    ++num_certain_states_;
-  }
 }
 
 void ReceiveStatisticsProxy::UpdateFramerate(int64_t now_ms) const {
@@ -664,14 +538,14 @@ void ReceiveStatisticsProxy::OnDecoderInfo(
 }
 
 void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
-    int max_decode_ms,
+    int estimated_max_decode_time_ms,
     int current_delay_ms,
     int target_delay_ms,
     int jitter_buffer_ms,
     int min_playout_delay_ms,
     int render_delay_ms) {
   RTC_DCHECK_RUN_ON(&main_thread_);
-  stats_.max_decode_ms = max_decode_ms;
+  stats_.max_decode_ms = estimated_max_decode_time_ms;
   stats_.current_delay_ms = current_delay_ms;
   stats_.target_delay_ms = target_delay_ms;
   stats_.jitter_buffer_ms = jitter_buffer_ms;
@@ -680,9 +554,9 @@ void ReceiveStatisticsProxy::OnFrameBufferTimingsUpdated(
   jitter_buffer_delay_counter_.Add(jitter_buffer_ms);
   target_delay_counter_.Add(target_delay_ms);
   current_delay_counter_.Add(current_delay_ms);
-  // Network delay (rtt/2) + target_delay_ms (jitter delay + decode time +
-  // render delay).
-  delay_counter_.Add(target_delay_ms + avg_rtt_ms_ / 2);
+  // Estimated one-way delay: network delay (rtt/2) + target_delay_ms (jitter
+  // delay + decode time + render delay).
+  oneway_delay_counter_.Add(target_delay_ms + avg_rtt_ms_ / 2);
 }
 
 void ReceiveStatisticsProxy::OnUniqueFramesCounted(int num_unique_frames) {
@@ -893,8 +767,6 @@ void ReceiveStatisticsProxy::OnRenderedFrame(
       content_specific_stats->e2e_delay_counter.Add(delay_ms);
     }
   }
-
-  QualitySample(frame_meta.decode_timestamp);
 }
 
 void ReceiveStatisticsProxy::OnSyncOffsetUpdated(int64_t video_playout_ntp_ms,
@@ -983,7 +855,6 @@ void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
   last_codec_type_ = codec_type;
   if (last_codec_type_ == kVideoCodecVP8 && qp != -1) {
     qp_counters_.vp8.Add(qp);
-    qp_sample_.Add(qp);
   }
 }
 

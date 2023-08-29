@@ -1,27 +1,34 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Tue, 21 Jun 2022 11:11:09 -0500
-Subject: Bug 1773223 - Generate webrtc moz.builds for all platforms at once.
- r=mjf,firefox-build-system-reviewers,ahochheiden
+From: Michael Froman <mfroman@mozilla.com>
+Date: Mon, 24 Oct 2022 14:03:00 -0500
+Subject: Bug 1797161 - pt3 - add static_assert to ensure we don't include
+ task_queue_win.cc in Mozilla builds. r?ng!
 
+Differential Revision: https://phabricator.services.mozilla.com/D160117
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/50b15e036924203147e34ec20e2689fe4a847645
 ---
- build_overrides/build.gni | 4 ++++
- 1 file changed, 4 insertions(+)
+ rtc_base/task_queue_win.cc | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/build_overrides/build.gni b/build_overrides/build.gni
-index 34f58c7e66..bdc7df2365 100644
---- a/build_overrides/build.gni
-+++ b/build_overrides/build.gni
-@@ -42,6 +42,10 @@ if (host_os == "mac" || host_os == "linux") {
-   use_system_xcode = _result == 0
- }
+diff --git a/rtc_base/task_queue_win.cc b/rtc_base/task_queue_win.cc
+index 7e46d58e27..bf55a25c69 100644
+--- a/rtc_base/task_queue_win.cc
++++ b/rtc_base/task_queue_win.cc
+@@ -8,6 +8,15 @@
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
  
-+use_system_xcode = false
-+xcode_version = "10.15"
-+mac_xcode_version = "default"
++// Mozilla - this file should not be included in Mozilla builds until
++// win32k API usage is removed.  This was once done in Bug 1395259, but
++// the upstreaming attempt stalled.  Until win32k usage is officially
++// removed upstream, we have reverted to upstream's version of the file
++// (to reduce or elminate merge conflicts), and a static assert is
++// placed here to ensure this file isn't accidentally included in the
++// Mozilla build.
++static_assert(false, "This file should not be built, see Bug 1797161.");
 +
- declare_args() {
-   # WebRTC doesn't depend on //base from production code but only for testing
-   # purposes. In any case, it doesn't depend on //third_party/perfetto which
+ #include "rtc_base/task_queue_win.h"
+ 
+ // clang-format off
 -- 
 2.34.1
 

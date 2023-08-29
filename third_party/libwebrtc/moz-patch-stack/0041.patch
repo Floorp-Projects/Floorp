@@ -1,41 +1,38 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Wed, 10 Feb 2021 12:24:00 -0800
-Subject: Bug 1654112 - Use newer thread run callback, and adapt
- PlatformUIThread; r=pehrsons
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 25 Jun 2021 15:12:00 -0500
+Subject: Bug 1654112 - Mirror Bug 1714577 - Part 3 - Register WebRTC threads
+ with the Gecko Profiler. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D107879
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a8e2565bd68b66c40be4827b
+Differential Revision: https://phabricator.services.mozilla.com/D119412
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d881b16dd8a6813feb5ce1516c2a7ebe0270e72d
 ---
- rtc_base/platform_thread.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ rtc_base/platform_thread.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
-index befd61849d..5b7c6884fe 100644
---- a/rtc_base/platform_thread.h
-+++ b/rtc_base/platform_thread.h
-@@ -21,8 +21,13 @@
- #include "absl/types/optional.h"
- #include "rtc_base/platform_thread_types.h"
+diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
+index 556204ac89..71a9f1b224 100644
+--- a/rtc_base/platform_thread.cc
++++ b/rtc_base/platform_thread.cc
+@@ -19,6 +19,8 @@
  
-+#include "rtc_base/deprecated/recursive_critical_section.h"
+ #include "rtc_base/checks.h"
+ 
++#include "MicroGeckoProfiler.h"
 +
  namespace rtc {
+ namespace {
  
-+// Bug 1691641
-+class PlatformUIThread;
+@@ -181,6 +183,10 @@ PlatformThread PlatformThread::SpawnThread(
+       new std::function<void()>([thread_function = std::move(thread_function),
+                                  name = std::string(name), attributes] {
+         rtc::SetCurrentThreadName(name.c_str());
 +
- enum class ThreadPriority {
-   kLow = 1,
-   kNormal,
-@@ -113,6 +118,8 @@ class PlatformThread final {
- 
-   absl::optional<Handle> handle_;
-   bool joinable_ = false;
-+  // Bug 1691641
-+  friend PlatformUIThread;
- };
- 
- }  // namespace rtc
++        char stacktop;
++        AutoRegisterProfiler profiler(name.c_str(), &stacktop);
++
+         SetPriority(attributes.priority);
+         thread_function();
+       });
 -- 
 2.34.1
 

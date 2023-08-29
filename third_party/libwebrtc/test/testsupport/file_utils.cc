@@ -10,7 +10,6 @@
 
 #include "test/testsupport/file_utils.h"
 
-
 #if defined(WEBRTC_POSIX)
 #include <unistd.h>
 #endif

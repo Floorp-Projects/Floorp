@@ -249,8 +249,6 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(const cricket::VideoCodec& codec,
       trusted_rate_controller_(
           RateControlSettings::ParseFromKeyValueConfig(&trials)
               .LibvpxVp9TrustedRateController()),
-      layer_buffering_(false),
-      full_superframe_drop_(true),
       first_frame_in_picture_(true),
       ss_info_needed_(false),
       force_all_active_layers_(false),
@@ -922,18 +920,11 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
       for (size_t i = 0; i < num_spatial_layers_; ++i) {
         svc_drop_frame_.framedrop_thresh[i] = config_->rc_dropframe_thresh;
       }
-      // No buffering is needed because the highest layer is always present in
-      // all frames in CONSTRAINED_FROM_ABOVE drop mode.
-      layer_buffering_ = false;
     } else {
       // Configure encoder to drop entire superframe whenever it needs to drop
       // a layer. This mode is preferred over per-layer dropping which causes
       // quality flickering and is not compatible with RTP non-flexible mode.
-      svc_drop_frame_.framedrop_mode =
-          full_superframe_drop_ ? FULL_SUPERFRAME_DROP : CONSTRAINED_LAYER_DROP;
-      // Buffering is needed only for constrained layer drop, as it's not clear
-      // which frame is the last.
-      layer_buffering_ = !full_superframe_drop_;
+      svc_drop_frame_.framedrop_mode = FULL_SUPERFRAME_DROP;
       svc_drop_frame_.max_consec_drop = std::numeric_limits<int>::max();
       for (size_t i = 0; i < num_spatial_layers_; ++i) {
         svc_drop_frame_.framedrop_thresh[i] = config_->rc_dropframe_thresh;
@@ -1285,11 +1276,6 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
   timestamp_ += duration;
-
-  if (layer_buffering_) {
-    const bool end_of_picture = true;
-    DeliverBufferedFrame(end_of_picture);
-  }
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
@@ -1767,12 +1753,6 @@ void LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
   vpx_svc_layer_id_t layer_id = {0};
   libvpx_->codec_control(encoder_, VP9E_GET_SVC_LAYER_ID, &layer_id);
 
-  if (layer_buffering_) {
-    // Deliver buffered low spatial layer frame.
-    const bool end_of_picture = false;
-    DeliverBufferedFrame(end_of_picture);
-  }
-
   encoded_image_.SetEncodedData(EncodedImageBuffer::Create(
       static_cast<const uint8_t*>(pkt->data.frame.buf), pkt->data.frame.sz));
 
@@ -1817,11 +1797,9 @@ void LibvpxVp9Encoder::GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt) {
   libvpx_->codec_control(encoder_, VP8E_GET_LAST_QUANTIZER, &qp);
   encoded_image_.qp_ = qp;
 
-  if (!layer_buffering_) {
-    const bool end_of_picture = encoded_image_.SpatialIndex().value_or(0) + 1 ==
-                                num_active_spatial_layers_;
-    DeliverBufferedFrame(end_of_picture);
-  }
+  const bool end_of_picture = encoded_image_.SpatialIndex().value_or(0) + 1 ==
+                              num_active_spatial_layers_;
+  DeliverBufferedFrame(end_of_picture);
 }
 
 void LibvpxVp9Encoder::DeliverBufferedFrame(bool end_of_picture) {

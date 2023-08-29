@@ -11,7 +11,10 @@
 #ifndef MEDIA_ENGINE_WEBRTC_VIDEO_ENGINE_H_
 #define MEDIA_ENGINE_WEBRTC_VIDEO_ENGINE_H_
 
+#include <stddef.h>
+
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <set>
@@ -19,26 +22,54 @@
 #include <utility>
 #include <vector>
 
+#include "absl/functional/any_invocable.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "api/array_view.h"
 #include "api/call/transport.h"
+#include "api/crypto/crypto_options.h"
+#include "api/crypto/frame_decryptor_interface.h"
+#include "api/crypto/frame_encryptor_interface.h"
+#include "api/field_trials_view.h"
+#include "api/frame_transformer_interface.h"
+#include "api/rtc_error.h"
+#include "api/rtp_headers.h"
+#include "api/rtp_parameters.h"
+#include "api/rtp_sender_interface.h"
+#include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
+#include "api/task_queue/task_queue_base.h"
+#include "api/transport/bitrate_settings.h"
 #include "api/transport/field_trial_based_config.h"
+#include "api/transport/rtp/rtp_source.h"
+#include "api/video/recordable_encoded_frame.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
+#include "api/video/video_stream_encoder_settings.h"
 #include "api/video_codecs/sdp_video_format.h"
+#include "api/video_codecs/video_encoder_factory.h"
 #include "call/call.h"
 #include "call/flexfec_receive_stream.h"
+#include "call/rtp_config.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
+#include "media/base/codec.h"
+#include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
+#include "media/base/media_config.h"
 #include "media/base/media_engine.h"
+#include "media/base/stream_params.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 class VideoDecoderFactory;
@@ -128,6 +159,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   webrtc::RtpParameters GetRtpReceiveParameters(uint32_t ssrc) const override;
   webrtc::RtpParameters GetDefaultRtpReceiveParameters() const override;
   bool GetSendCodec(VideoCodec* send_codec) override;
+  void SetReceive(bool receive) override;
   bool SetSend(bool send) override;
   bool SetVideoSend(
       uint32_t ssrc,
@@ -140,7 +172,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool RemoveRecvStream(uint32_t ssrc) override;
   void ResetUnsignaledRecvStream() override;
   absl::optional<uint32_t> GetUnsignaledSsrc() const override;
-  bool SetLocalSsrc(const StreamParams& sp) override;
   void OnDemuxerCriteriaUpdatePending() override;
   void OnDemuxerCriteriaUpdateComplete() override;
   bool SetSink(uint32_t ssrc,
@@ -189,6 +220,15 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       absl::AnyInvocable<void()> callback) override {
     send_codec_changed_callback_ = std::move(callback);
   }
+
+  void SetSsrcListChangedCallback(
+      absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) override {
+    ssrc_list_changed_callback_ = std::move(callback);
+  }
+
+  // Choose one of the available SSRCs (or default if none) as the current
+  // receiver report SSRC.
+  void ChooseReceiverReportSsrc(const std::set<uint32_t>& choices) override;
 
   // Implemented for VideoMediaChannelTest.
   bool sending() const {
@@ -246,24 +286,24 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
   bool SendCodecHasLntf() const override {
     RTC_DCHECK_RUN_ON(&thread_checker_);
-    if (!send_codec_) {
+    if (!send_codec()) {
       return false;
     }
-    return HasLntf(send_codec_->codec);
+    return HasLntf(send_codec()->codec);
   }
   bool SendCodecHasNack() const override {
     RTC_DCHECK_RUN_ON(&thread_checker_);
-    if (!send_codec_) {
+    if (!send_codec()) {
       return false;
     }
-    return HasNack(send_codec_->codec);
+    return HasNack(send_codec()->codec);
   }
   absl::optional<int> SendCodecRtxTime() const override {
     RTC_DCHECK_RUN_ON(&thread_checker_);
-    if (!send_codec_) {
+    if (!send_codec()) {
       return absl::nullopt;
     }
-    return send_codec_->rtx_time;
+    return send_codec()->rtx_time;
   }
   void SetReceiverFeedbackParameters(bool lntf_enabled,
                                      bool nack_enabled,
@@ -337,8 +377,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool MaybeCreateDefaultReceiveStream(
       const webrtc::RtpPacketReceived& parsed_packet)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
-  void ReCreateDefaulReceiveStream(uint32_t ssrc,
-                                   absl::optional<uint32_t> rtx_ssrc);
+  void ReCreateDefaultReceiveStream(uint32_t ssrc,
+                                    absl::optional<uint32_t> rtx_ssrc);
   void ConfigureReceiverRtp(
       webrtc::VideoReceiveStreamInterface::Config* config,
       webrtc::FlexfecReceiveStream::Config* flexfec_config,
@@ -540,6 +580,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
     void SetLocalSsrc(uint32_t local_ssrc);
     void UpdateRtxSsrc(uint32_t ssrc);
+    void StartReceiveStream();
+    void StopReceiveStream();
 
    private:
     // Attempts to reconfigure an already existing `flexfec_stream_`, create
@@ -549,7 +591,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
     void RecreateReceiveStream();
     void CreateReceiveStream();
-    void StartReceiveStream();
 
     // Applies a new receive codecs configration to `config_`. Returns true
     // if the internal stream needs to be reconstructed, or false if no changes
@@ -575,6 +616,9 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // Start NTP time is estimated as current remote NTP time (estimated from
     // RTCP) minus the elapsed time, as soon as remote NTP time is available.
     int64_t estimated_remote_start_ntp_time_ms_ RTC_GUARDED_BY(sink_lock_);
+
+    RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker thread_checker_;
+    bool receiving_ RTC_GUARDED_BY(&thread_checker_);
   };
 
   void Construct(webrtc::Call* call, WebRtcVideoEngine* engine);
@@ -611,6 +655,21 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   void FillReceiveCodecStats(VideoMediaReceiveInfo* video_media_info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
+  // Accessor function for send_codec_. Introduced in order to ensure
+  // that a receive channel does not touch the send codec directly.
+  // Can go away once these are different classes.
+  // TODO(bugs.webrtc.org/13931): Remove this function
+  absl::optional<VideoCodecSettings>& send_codec() {
+    RTC_DCHECK(role() == MediaChannel::Role::kSend ||
+               role() == MediaChannel::Role::kBoth);
+    return send_codec_;
+  }
+  const absl::optional<VideoCodecSettings>& send_codec() const {
+    RTC_DCHECK(role() == MediaChannel::Role::kSend ||
+               role() == MediaChannel::Role::kBoth);
+    return send_codec_;
+  }
+
   webrtc::TaskQueueBase* const worker_thread_;
   webrtc::ScopedTaskSafety task_safety_;
   RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker network_thread_checker_{
@@ -619,6 +678,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
   uint32_t rtcp_receiver_report_ssrc_ RTC_GUARDED_BY(thread_checker_);
   bool sending_ RTC_GUARDED_BY(thread_checker_);
+  bool receiving_ RTC_GUARDED_BY(&thread_checker_);
   webrtc::Call* const call_;
 
   rtc::VideoSinkInterface<webrtc::VideoFrame>* default_sink_
@@ -704,9 +764,17 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   // Presence of EncoderSelector allows switching to specific encoders.
   bool allow_codec_switching_ = false;
 
+  // RTP parameters that need to be set when creating a video receive stream.
+  // Only used in Receiver mode - in Both mode, it reads those things from the
+  // codec.
+  webrtc::VideoReceiveStreamInterface::Config::Rtp rtp_config_;
+
   // Callback invoked whenever the send codec changes.
   // TODO(bugs.webrtc.org/13931): Remove again when coupling isn't needed.
   absl::AnyInvocable<void()> send_codec_changed_callback_;
+  // Callback invoked whenever the list of SSRCs changes.
+  absl::AnyInvocable<void(const std::set<uint32_t>&)>
+      ssrc_list_changed_callback_;
 };
 
 }  // namespace cricket

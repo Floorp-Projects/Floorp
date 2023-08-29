@@ -151,6 +151,12 @@
       'args': ['--nologs']
     }
   },
+  'perf-video-codec-perf-tests': {
+    'merge': {
+      'script': '//tools_webrtc/perf/process_perf_results.py',
+      'args': ['--test-suite', 'video_codec_perf_tests'],
+    },
+  },
   'quick-perf-tests': {
     '$mixin_append': {
       'args': [

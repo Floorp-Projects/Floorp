@@ -1123,9 +1123,13 @@ TEST_F(SSLStreamAdapterTestDTLSCertChain, TwoCertHandshake) {
   std::unique_ptr<rtc::SSLCertChain> peer_cert_chain =
       client_ssl_->GetPeerSSLCertChain();
   ASSERT_NE(nullptr, peer_cert_chain);
-  ASSERT_EQ(2u, peer_cert_chain->GetSize());
   EXPECT_EQ(kCERT_PEM, peer_cert_chain->Get(0).ToPEMString());
+  // TODO(bugs.webrtc.org/15153): Fix peer_cert_chain to return multiple
+  // certificates under OpenSSL. Today it only works with BoringSSL.
+#ifdef OPENSSL_IS_BORINGSSL
+  ASSERT_EQ(2u, peer_cert_chain->GetSize());
   EXPECT_EQ(kCACert, peer_cert_chain->Get(1).ToPEMString());
+#endif
 }
 
 TEST_F(SSLStreamAdapterTestDTLSCertChain, TwoCertHandshakeWithCopy) {
@@ -1135,9 +1139,13 @@ TEST_F(SSLStreamAdapterTestDTLSCertChain, TwoCertHandshakeWithCopy) {
   std::unique_ptr<rtc::SSLCertChain> peer_cert_chain =
       client_ssl_->GetPeerSSLCertChain();
   ASSERT_NE(nullptr, peer_cert_chain);
-  ASSERT_EQ(2u, peer_cert_chain->GetSize());
   EXPECT_EQ(kCERT_PEM, peer_cert_chain->Get(0).ToPEMString());
+  // TODO(bugs.webrtc.org/15153): Fix peer_cert_chain to return multiple
+  // certificates under OpenSSL. Today it only works with BoringSSL.
+#ifdef OPENSSL_IS_BORINGSSL
+  ASSERT_EQ(2u, peer_cert_chain->GetSize());
   EXPECT_EQ(kCACert, peer_cert_chain->Get(1).ToPEMString());
+#endif
 }
 
 TEST_F(SSLStreamAdapterTestDTLSCertChain, ThreeCertHandshake) {
@@ -1147,10 +1155,14 @@ TEST_F(SSLStreamAdapterTestDTLSCertChain, ThreeCertHandshake) {
   std::unique_ptr<rtc::SSLCertChain> peer_cert_chain =
       client_ssl_->GetPeerSSLCertChain();
   ASSERT_NE(nullptr, peer_cert_chain);
-  ASSERT_EQ(3u, peer_cert_chain->GetSize());
   EXPECT_EQ(kCERT_PEM, peer_cert_chain->Get(0).ToPEMString());
+  // TODO(bugs.webrtc.org/15153): Fix peer_cert_chain to return multiple
+  // certificates under OpenSSL. Today it only works with BoringSSL.
+#ifdef OPENSSL_IS_BORINGSSL
+  ASSERT_EQ(3u, peer_cert_chain->GetSize());
   EXPECT_EQ(kIntCert1, peer_cert_chain->Get(1).ToPEMString());
   EXPECT_EQ(kCACert, peer_cert_chain->Get(2).ToPEMString());
+#endif
 }
 
 // Test that closing the connection on one side updates the other side.

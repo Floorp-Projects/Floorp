@@ -233,7 +233,6 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   rtc::scoped_refptr<AudioEncoderFactory> audio_encoder_factory_;
   test::FakeVideoRenderer fake_renderer_;
 
-
  private:
   absl::optional<RtpExtension> GetRtpExtensionByUri(
       const std::string& uri) const;

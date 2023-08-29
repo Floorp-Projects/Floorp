@@ -113,7 +113,6 @@ void FakeNetworkSocket::OnPacketReceived(EmulatedIpPacket packet) {
   socket_server_->WakeUp();
 }
 
-
 rtc::SocketAddress FakeNetworkSocket::GetLocalAddress() const {
   RTC_DCHECK_RUN_ON(thread_);
   return local_addr_;
@@ -316,7 +315,6 @@ bool FakeNetworkSocketServer::Wait(webrtc::TimeDelta max_wait_duration,
 void FakeNetworkSocketServer::WakeUp() {
   wakeup_.Set();
 }
-
 
 }  // namespace test
 }  // namespace webrtc

@@ -1,40 +1,29 @@
-From: James Willcox <snorp@snorp.net>
-Date: Fri, 18 Sep 2020 22:29:00 +0000
-Subject: Bug 1553459 - Migrate to AndroidX r=geckoview-reviewers,agi
+From: Dan Minor <dminor@mozilla.com>
+Date: Fri, 13 Nov 2020 14:34:00 -0500
+Subject: Bug 1654112 - Fully quality AudioLevel::kUri in channel_send.cc. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D90711
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf8917364050fc7d981b190cdc1db5ab57357f9b
+Differential Revision: https://phabricator.services.mozilla.com/D130082
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7163801a480d607005042292ed9e4fbb892f440d
 ---
- sdk/android/src/java/org/webrtc/EglBase14Impl.java   | 1 -
- sdk/android/src/java/org/webrtc/GlGenericDrawer.java | 3 ---
- 2 files changed, 4 deletions(-)
+ audio/channel_send.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/sdk/android/src/java/org/webrtc/EglBase14Impl.java b/sdk/android/src/java/org/webrtc/EglBase14Impl.java
-index e53dda6e4c..caf45b091e 100644
---- a/sdk/android/src/java/org/webrtc/EglBase14Impl.java
-+++ b/sdk/android/src/java/org/webrtc/EglBase14Impl.java
-@@ -21,7 +21,6 @@ import android.opengl.GLException;
- import android.os.Build;
- import android.view.Surface;
- import androidx.annotation.Nullable;
--import org.webrtc.EglBase;
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index fccd58b76c..e1e44ef7e4 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -620,9 +620,9 @@ void ChannelSend::SetSendAudioLevelIndicationStatus(bool enable, int id) {
+   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+   include_audio_level_indication_.store(enable);
+   if (enable) {
+-    rtp_rtcp_->RegisterRtpHeaderExtension(AudioLevel::Uri(), id);
++    rtp_rtcp_->RegisterRtpHeaderExtension(webrtc::AudioLevel::Uri(), id);
+   } else {
+-    rtp_rtcp_->DeregisterSendRtpHeaderExtension(AudioLevel::Uri());
++    rtp_rtcp_->DeregisterSendRtpHeaderExtension(webrtc::AudioLevel::Uri());
+   }
+ }
  
- /**
-  * Holds EGL state and utility methods for handling an EGL14 EGLContext, an EGLDisplay,
-diff --git a/sdk/android/src/java/org/webrtc/GlGenericDrawer.java b/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
-index b70a3728b9..34144e2f75 100644
---- a/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
-+++ b/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
-@@ -14,9 +14,6 @@ import android.opengl.GLES11Ext;
- import android.opengl.GLES20;
- import androidx.annotation.Nullable;
- import java.nio.FloatBuffer;
--import org.webrtc.GlShader;
--import org.webrtc.GlUtil;
--import org.webrtc.RendererCommon;
- 
- /**
-  * Helper class to implement an instance of RendererCommon.GlDrawer that can accept multiple input
 -- 
 2.34.1
 

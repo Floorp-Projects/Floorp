@@ -1,34 +1,27 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 24 Feb 2023 15:01:00 +0100
-Subject: Bug 1817024 - (fix-0e2cf6cc01) Skip library
- create_peer_connection_quality_test_frame_generator. r?mjf!
+From: Byron Campen <docfaraday@gmail.com>
+Date: Fri, 7 Apr 2023 20:28:00 +0000
+Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
 
-Differential Revision: https://phabricator.services.mozilla.com/D170887
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fbbc1bf963fda30bca26ae6aac0c3459b8ebea6f
+Differential Revision: https://phabricator.services.mozilla.com/D174978
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
 ---
- api/BUILD.gn | 2 ++
- 1 file changed, 2 insertions(+)
+ video/task_queue_frame_decode_scheduler.cc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 4ca73b99f5..3ef383e1bc 100644
---- a/api/BUILD.gn
-+++ b/api/BUILD.gn
-@@ -738,6 +738,7 @@ rtc_library("create_frame_generator") {
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
- 
-+if (!build_with_mozilla) {
- rtc_library("create_peer_connection_quality_test_frame_generator") {
-   visibility = [ "*" ]
-   testonly = true
-@@ -754,6 +755,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
-+}
- 
- rtc_source_set("libjingle_logging_api") {
-   visibility = [ "*" ]
+diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
+index cd109c2932..6dd7b47f17 100644
+--- a/video/task_queue_frame_decode_scheduler.cc
++++ b/video/task_queue_frame_decode_scheduler.cc
+@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
+     uint32_t rtp,
+     FrameDecodeTiming::FrameSchedule schedule,
+     FrameReleaseCallback cb) {
+-  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
++  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
++  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
+   RTC_DCHECK(!scheduled_rtp_.has_value())
+       << "Can not schedule two frames for release at the same time.";
+   RTC_DCHECK(cb);
 -- 
 2.34.1
 

@@ -1,27 +1,31 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Fri, 7 Apr 2023 20:28:00 +0000
-Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 4 Jul 2023 08:34:00 +0000
+Subject: Bug 1839829 - WebRTC backport: PipeWire video capture - initialize
+ pw_stream raw pointer member r=webrtc-reviewers,ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D174978
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
+This is a simple backport of an WebRTC upstream change.
+
+Upstream commit: e21745a78b430ed4f2119b6342acbaa30a52b406
+
+Differential Revision: https://phabricator.services.mozilla.com/D182671
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2174ddbbb4733a8f9b9cef34d2e6c3a1ceb244d4
 ---
- video/task_queue_frame_decode_scheduler.cc | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ modules/video_capture/linux/video_capture_pipewire.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
-index cd109c2932..6dd7b47f17 100644
---- a/video/task_queue_frame_decode_scheduler.cc
-+++ b/video/task_queue_frame_decode_scheduler.cc
-@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
-     uint32_t rtp,
-     FrameDecodeTiming::FrameSchedule schedule,
-     FrameReleaseCallback cb) {
--  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-+  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
-+  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-   RTC_DCHECK(!scheduled_rtp_.has_value())
-       << "Can not schedule two frames for release at the same time.";
-   RTC_DCHECK(cb);
+diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
+index e2c8d1b168..2a58c7d3e0 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.h
++++ b/modules/video_capture/linux/video_capture_pipewire.h
+@@ -48,7 +48,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
+   VideoCaptureCapability frameInfo_;
+   bool started_;
+ 
+-  struct pw_stream* stream_;
++  struct pw_stream* stream_ = nullptr;
+   struct spa_hook stream_listener_;
+ };
+ }  // namespace videocapturemodule
 -- 
 2.34.1
 
