@@ -35,6 +35,9 @@ HTMLObjectElement::HTMLObjectElement(
 
   // <object> is always barred from constraint validation.
   SetBarredFromConstraintValidation(true);
+
+  // By default we're in the loading state
+  AddStatesSilently(ElementState::LOADING);
 }
 
 HTMLObjectElement::~HTMLObjectElement() {

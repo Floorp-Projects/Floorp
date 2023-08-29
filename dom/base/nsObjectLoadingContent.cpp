@@ -680,7 +680,7 @@ nsObjectLoadingContent::AsyncOnChannelRedirect(
 ElementState nsObjectLoadingContent::ObjectState() const {
   switch (mType) {
     case eType_Loading:
-      return {};
+      return ElementState::LOADING;
     case eType_Image:
       return ImageState();
     case eType_FakePlugin:
@@ -690,6 +690,7 @@ ElementState nsObjectLoadingContent::ObjectState() const {
       // plugins.
       ElementState states = ElementState();
       if (mLoadingSyntheticDocument) {
+        states |= ElementState::LOADING;
         states |= ImageState();
       }
       return states;
@@ -702,7 +703,7 @@ ElementState nsObjectLoadingContent::ObjectState() const {
       return ElementState::BROKEN;
   }
   MOZ_ASSERT_UNREACHABLE("unknown type?");
-  return {};
+  return ElementState::LOADING;
 }
 
 void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
