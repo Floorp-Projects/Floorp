@@ -30,9 +30,7 @@
 #include "CallbackThreadRegistry.h"
 #include "mozilla/StaticPrefs_media.h"
 
-// Use abort() instead of exception in SoundTouch.
-#define ST_NO_EXCEPTION_HANDLING 1
-#include "soundtouch/SoundTouchFactory.h"
+#include "RLBoxSoundTouch.h"
 
 namespace mozilla {
 
@@ -170,7 +168,7 @@ size_t AudioStream::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 nsresult AudioStream::EnsureTimeStretcherInitialized() {
   AssertIsOnAudioThread();
   if (!mTimeStretcher) {
-    mTimeStretcher = soundtouch::createSoundTouchObj();
+    mTimeStretcher = new RLBoxSoundTouch();
     mTimeStretcher->setSampleRate(mAudioClock.GetInputRate());
     mTimeStretcher->setChannels(mOutChannels);
     mTimeStretcher->setPitch(1.0);
@@ -407,7 +405,7 @@ void AudioStream::ShutDown() {
   // After `cubeb_stream_stop` has been called, there is no audio thread
   // anymore. We can delete the time stretcher.
   if (mTimeStretcher) {
-    soundtouch::destroySoundTouchObj(mTimeStretcher);
+    delete mTimeStretcher;
     mTimeStretcher = nullptr;
   }
 
@@ -474,24 +472,33 @@ void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
   AssertIsOnAudioThread();
   // Flush the timestretcher pipeline, if we were playing using a playback rate
   // other than 1.0.
-  if (mTimeStretcher && mTimeStretcher->numSamples()) {
-    auto* timeStretcher = mTimeStretcher;
-    aWriter.Write(
-        [timeStretcher](AudioDataValue* aPtr, uint32_t aFrames) {
-          return timeStretcher->receiveSamples(aPtr, aFrames);
-        },
-        aWriter.Available());
+  if (mTimeStretcher) {
+    // Get number of samples and based on this either receive samples or write
+    // silence.  At worst, the attacker can supply weird sound samples or
+    // result in us writing silence.
+    auto numSamples = mTimeStretcher->numSamples().unverified_safe_because(
+        "We only use this to decide whether to receive samples or write "
+        "silence.");
+    if (numSamples) {
+      RLBoxSoundTouch* timeStretcher = mTimeStretcher;
+      aWriter.Write(
+          [timeStretcher](AudioDataValue* aPtr, uint32_t aFrames) {
+            return timeStretcher->receiveSamples(aPtr, aFrames);
+          },
+          aWriter.Available());
 
-    // TODO: There might be still unprocessed samples in the stretcher.
-    // We should either remove or flush them so they won't be in the output
-    // next time we switch a playback rate other than 1.0.
-    NS_WARNING_ASSERTION(mTimeStretcher->numUnprocessedSamples() == 0,
-                         "no samples");
-  } else if (mTimeStretcher) {
-    // Don't need it anymore: playbackRate is 1.0, and the time stretcher has
-    // been flushed.
-    soundtouch::destroySoundTouchObj(mTimeStretcher);
-    mTimeStretcher = nullptr;
+      // TODO: There might be still unprocessed samples in the stretcher.
+      // We should either remove or flush them so they won't be in the output
+      // next time we switch a playback rate other than 1.0.
+      mTimeStretcher->numUnprocessedSamples().copy_and_verify([](auto samples) {
+        NS_WARNING_ASSERTION(samples == 0, "no samples");
+      });
+    } else {
+      // Don't need it anymore: playbackRate is 1.0, and the time stretcher has
+      // been flushed.
+      delete mTimeStretcher;
+      mTimeStretcher = nullptr;
+    }
   }
 
   while (aWriter.Available() > 0) {
@@ -514,7 +521,14 @@ void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
   uint32_t toPopFrames =
       ceil(aWriter.Available() * mAudioClock.GetPlaybackRate());
 
-  while (mTimeStretcher->numSamples() < aWriter.Available()) {
+  // At each iteration, get number of samples and (based on this) write from
+  // the data source or silence. At worst, if the number of samples is a lie
+  // (i.e., under attacker control) we'll either not write anything or keep
+  // writing noise. This is safe because all the memory operations within the
+  // loop (and after) are checked.
+  while (mTimeStretcher->numSamples().unverified_safe_because(
+             "Only used to decide whether to put samples.") <
+         aWriter.Available()) {
     // pop into a temp buffer, and put into the stretcher.
     AutoTArray<AudioDataValue, 1000> buf;
     auto size = CheckedUint32(mOutChannels) * toPopFrames;
@@ -629,7 +643,7 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
     // No more new data in the data source, and the drain has completed. We
     // don't need the time stretcher anymore at this point.
     if (mTimeStretcher && writer.Available()) {
-      soundtouch::destroySoundTouchObj(mTimeStretcher);
+      delete mTimeStretcher;
       mTimeStretcher = nullptr;
     }
 #ifndef XP_MACOSX

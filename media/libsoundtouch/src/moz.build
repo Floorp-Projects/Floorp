@@ -4,27 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include("sources.mozbuild")
+
 EXPORTS.soundtouch += [
     'FIFOSamplePipe.h',
+    'RLBoxSoundTouchFactory.h',
     'SoundTouch.h',
     'soundtouch_config.h',
     'SoundTouchFactory.h',
     'STTypes.h',
 ]
 
-UNIFIED_SOURCES += [
-    'AAFilter.cpp',
-    'cpu_detect_x86.cpp',
-    'FIFOSampleBuffer.cpp',
-    'FIRFilter.cpp',
-    'InterpolateCubic.cpp',
-    'InterpolateLinear.cpp',
-    'InterpolateShannon.cpp',
-    'RateTransposer.cpp',
-    'SoundTouch.cpp',
-    'SoundTouchFactory.cpp',
-    'TDStretch.cpp',
-]
+UNIFIED_SOURCES += soundtouch_sources
+
+LOCAL_INCLUDES += ["!/security/rlbox"]
 
 if CONFIG['INTEL_ARCHITECTURE']:
     if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
@@ -42,12 +35,10 @@ else:
     # Windows need alloca renamed to _alloca
     DEFINES['alloca'] = '_alloca'
 
-DEFINES['BUILDING_SOUNDTOUCH'] = 1
+for k, v in soundtouch_defines:
+    DEFINES[k] = v
 
 # We allow warnings for third-party code that can be updated from upstream.
 AllowCompilerWarnings()
 
 FINAL_LIBRARY = 'lgpllibs'
-
-# Use abort() instead of exception in SoundTouch.
-DEFINES['ST_NO_EXCEPTION_HANDLING'] = 1

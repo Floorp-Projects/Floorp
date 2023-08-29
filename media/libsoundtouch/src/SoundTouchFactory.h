@@ -9,8 +9,9 @@
 
 #include <soundtouch/STTypes.h>
 #include <soundtouch/SoundTouch.h>
+#include <soundtouch/RLBoxSoundTouchFactory.h>
 
-namespace soundtouch
+extern "C" namespace soundtouch
 {
 SOUNDTOUCH_API
 soundtouch::SoundTouch*

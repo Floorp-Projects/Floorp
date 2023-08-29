@@ -15,13 +15,10 @@
 #include "mozilla/StateMirroring.h"
 #include "nsISerialEventTarget.h"
 
-namespace soundtouch {
-class MOZ_EXPORT SoundTouch;
-}
-
 namespace mozilla {
 
 class AudioData;
+class RLBoxSoundTouch;
 
 /**
  * AudioDecoderInputTrack is used as a source for the audio decoder data, which
@@ -231,7 +228,7 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   bool mSentAllData = false;
 
   // This is used to adjust the playback rate and pitch.
-  soundtouch::SoundTouch* mTimeStretcher = nullptr;
+  RLBoxSoundTouch* mTimeStretcher = nullptr;
 
   // Buffers that would be used for the time stretching.
   AutoTArray<AudioDataValue, 2> mInterleavedBuffer;

@@ -6,7 +6,7 @@
 
 #include <soundtouch/SoundTouch.h>
 
-namespace soundtouch
+extern "C" namespace soundtouch
 {
 
 SOUNDTOUCH_API
