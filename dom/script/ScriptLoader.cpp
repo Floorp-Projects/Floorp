@@ -1525,7 +1525,40 @@ class OffThreadCompilationCompleteTask : public Task {
   }
 #endif
 
-  bool Run() override;
+  bool Run() override {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    RefPtr<ScriptLoadContext> context = mRequest->GetScriptLoadContext();
+
+    if (!context->mCompileOrDecodeTask) {
+      // Request has been cancelled by MaybeCancelOffThreadScript.
+      return true;
+    }
+
+    RecordStopTime();
+
+    if (profiler_is_active()) {
+      ProfilerString8View scriptSourceString;
+      if (mRequest->IsTextSource()) {
+        scriptSourceString = "ScriptCompileOffThread";
+      } else {
+        MOZ_ASSERT(mRequest->IsBytecode());
+        scriptSourceString = "BytecodeDecodeOffThread";
+      }
+
+      nsAutoCString profilerLabelString;
+      mRequest->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
+      PROFILER_MARKER_TEXT(scriptSourceString, JS,
+                           MarkerTiming::Interval(mStartTime, mStopTime),
+                           profilerLabelString);
+    }
+
+    (void)mLoader->ProcessOffThreadRequest(mRequest);
+
+    mRequest = nullptr;
+    mLoader = nullptr;
+    return true;
+  }
 
  private:
   // NOTE:
@@ -1922,41 +1955,6 @@ nsresult ScriptLoader::CreateOffThreadTask(
   NS_ENSURE_SUCCESS(rv, rv);
   compileTask.forget(aCompileOrDecodeTask);
   return NS_OK;
-}
-
-bool OffThreadCompilationCompleteTask::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<ScriptLoadContext> context = mRequest->GetScriptLoadContext();
-
-  if (!context->mCompileOrDecodeTask) {
-    // Request has been cancelled by MaybeCancelOffThreadScript.
-    return true;
-  }
-
-  RecordStopTime();
-
-  if (profiler_is_active()) {
-    ProfilerString8View scriptSourceString;
-    if (mRequest->IsTextSource()) {
-      scriptSourceString = "ScriptCompileOffThread";
-    } else {
-      MOZ_ASSERT(mRequest->IsBytecode());
-      scriptSourceString = "BytecodeDecodeOffThread";
-    }
-
-    nsAutoCString profilerLabelString;
-    mRequest->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
-    PROFILER_MARKER_TEXT(scriptSourceString, JS,
-                         MarkerTiming::Interval(mStartTime, mStopTime),
-                         profilerLabelString);
-  }
-
-  (void)mLoader->ProcessOffThreadRequest(mRequest);
-
-  mRequest = nullptr;
-  mLoader = nullptr;
-  return true;
 }
 
 nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
