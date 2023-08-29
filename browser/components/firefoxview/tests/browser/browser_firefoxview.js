@@ -2,6 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function about_firefoxview_smoke_test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.firefox-view-next", false]],
+  });
+
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
@@ -15,4 +19,5 @@ add_task(async function about_firefoxview_smoke_test() {
       "recently-closed-tabs-container element exists"
     );
   });
+  await SpecialPowers.popPrefEnv();
 });

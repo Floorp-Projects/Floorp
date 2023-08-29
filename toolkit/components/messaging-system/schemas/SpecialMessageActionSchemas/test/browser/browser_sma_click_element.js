@@ -58,7 +58,10 @@ let sandbox;
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.firefox-view", true]],
+    set: [
+      ["browser.tabs.firefox-view", true],
+      ["browser.tabs.firefox-view-next", false],
+    ],
   });
 
   sandbox = sinon.createSandbox();
