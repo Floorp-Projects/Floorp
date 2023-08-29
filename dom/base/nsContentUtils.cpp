@@ -4584,10 +4584,9 @@ static already_AddRefed<Event> GetEventWithTarget(
     return nullptr;
   }
 
-  ErrorResult err;
   RefPtr<Event> event =
-      aDoc->CreateEvent(u"Events"_ns, CallerType::System, err);
-  if (err.Failed()) {
+      aDoc->CreateEvent(u"Events"_ns, CallerType::System, aErrorResult);
+  if (aErrorResult.Failed()) {
     return nullptr;
   }
 
