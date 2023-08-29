@@ -32,7 +32,7 @@ class mozHunspellFileMgrHost final {
   explicit mozHunspellFileMgrHost(const nsCString& aFilename);
   ~mozHunspellFileMgrHost() = default;
 
-  bool GetLine(std::string& aResult);
+  bool GetLine(nsACString& aResult);
   int GetLineNum() const { return mLineNum; }
 
   static Result<int64_t, nsresult> GetSize(const nsCString& aFilename);
@@ -42,7 +42,7 @@ class mozHunspellFileMgrHost final {
       const nsCString& aPath, nsCOMPtr<nsIChannel>& aChannel,
       nsCOMPtr<nsIInputStream>& aStream);
 
-  mozilla::Result<mozilla::Ok, nsresult> ReadLine(nsCString& aLine);
+  mozilla::Result<mozilla::Ok, nsresult> ReadLine(nsACString& aLine);
 
   int mLineNum = 0;
   nsCOMPtr<nsIInputStream> mStream;
