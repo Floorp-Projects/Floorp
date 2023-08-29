@@ -200,11 +200,14 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   padding: var(--bookmark-block-padding) 4px;
 }
 
-#PersonalToolbar .toolbarbutton-1 {
+#PersonalToolbar {
   /* These should match the sizing of the bookmark-items in the inline axis
    * (padding and margin, respectively) */
   --toolbarbutton-inner-padding: 4px;
   --toolbarbutton-outer-padding: 2px;
+}
+
+#PersonalToolbar .toolbarbutton-1 {
   margin-block: 2px;
 }
 
@@ -262,10 +265,14 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   display: flex !important;
 }
 
-#personal-bookmarks,
 #PlacesToolbar,
 #PlacesToolbarItems {
   min-width: 0;
+}
+
+#personal-bookmarks {
+  /* Make sure there's at least space for the chevron */
+  min-width: calc(16px + 2 * var(--toolbarbutton-inner-padding) + 2 * var(--toolbarbutton-outer-padding));
 }
 
 #PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon {
