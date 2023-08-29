@@ -56,14 +56,12 @@ static nsresult ReportParseErrorNoTag(const nsString& aValue, nsAtom* aAtom,
 MathMLElement::MathMLElement(
     already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : MathMLElementBase(std::move(aNodeInfo)),
-      ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
-      mIncrementScriptLevel(false) {}
+      ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)) {}
 
 MathMLElement::MathMLElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : MathMLElementBase(std::move(aNodeInfo)),
-      ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
-      mIncrementScriptLevel(false) {}
+      ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)) {}
 
 nsresult MathMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   Link::ResetLinkState(false, Link::ElementHasHref());
@@ -609,19 +607,17 @@ nsresult MathMLElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 NS_IMPL_ELEMENT_CLONE(MathMLElement)
 
 ElementState MathMLElement::IntrinsicState() const {
-  return Link::LinkState() | MathMLElementBase::IntrinsicState() |
-         (mIncrementScriptLevel ? ElementState::INCREMENT_SCRIPT_LEVEL
-                                : ElementState());
+  return Link::LinkState() | MathMLElementBase::IntrinsicState();
 }
 
 void MathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
                                             bool aNotify) {
-  if (aIncrementScriptLevel == mIncrementScriptLevel) return;
-  mIncrementScriptLevel = aIncrementScriptLevel;
-
   NS_ASSERTION(aNotify, "We always notify!");
-
-  UpdateState(true);
+  if (aIncrementScriptLevel) {
+    AddStates(ElementState::INCREMENT_SCRIPT_LEVEL);
+  } else {
+    RemoveStates(ElementState::INCREMENT_SCRIPT_LEVEL);
+  }
 }
 
 int32_t MathMLElement::TabIndexDefault() { return IsLink() ? 0 : -1; }
