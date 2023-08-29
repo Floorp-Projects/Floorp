@@ -1668,18 +1668,6 @@ static gint moz_gtk_tab_scroll_arrow_paint(cairo_t* cr, GdkRectangle* rect,
   return MOZ_GTK_SUCCESS;
 }
 
-static gint moz_gtk_menu_arrow_paint(cairo_t* cr, GdkRectangle* rect,
-                                     GtkWidgetState* state,
-                                     GtkTextDirection direction) {
-  GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_MENUITEM, state->image_scale,
-                                           direction, state_flags);
-  gtk_render_arrow(style, cr,
-                   (direction == GTK_TEXT_DIR_LTR) ? ARROW_RIGHT : ARROW_LEFT,
-                   rect->x, rect->y, rect->width);
-  return MOZ_GTK_SUCCESS;
-}
-
 static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
                                      GdkRectangle* rect,
                                      GtkWidgetState* state) {
@@ -1912,7 +1900,6 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_SPINBUTTON:
     case MOZ_GTK_WINDOW:
     case MOZ_GTK_RESIZER:
-    case MOZ_GTK_MENUARROW:
     case MOZ_GTK_TOOLBARBUTTON_ARROW:
     case MOZ_GTK_TOOLBAR:
     case MOZ_GTK_TAB_SCROLLARROW:
@@ -2373,8 +2360,6 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
     case MOZ_GTK_TAB_SCROLLARROW:
       return moz_gtk_tab_scroll_arrow_paint(cr, rect, state,
                                             (GtkArrowType)flags, direction);
-    case MOZ_GTK_MENUARROW:
-      return moz_gtk_menu_arrow_paint(cr, rect, state, direction);
     case MOZ_GTK_TOOLBARBUTTON_ARROW:
       return moz_gtk_arrow_paint(cr, rect, state, (GtkArrowType)flags,
                                  direction);
