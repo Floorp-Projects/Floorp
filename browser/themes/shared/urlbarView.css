@@ -700,79 +700,76 @@
   flex-basis: var(--urlbarView-rich-suggestion-default-icon-size);
   flex-shrink: 0;
   flex-grow: 0;
-}
 
-.urlbarView-row[rich-suggestion][icon-size="16"] > .urlbarView-row-inner > .urlbarView-favicon {
-  width: 16px;
-  height: 16px;
-  flex-basis: 16px;
-}
+  &[icon-size="16"] {
+    width: 16px;
+    height: 16px;
+    flex-basis: 16px;
+  }
 
-.urlbarView-row[rich-suggestion][icon-size="24"] > .urlbarView-row-inner > .urlbarView-favicon {
-  width: 24px;
-  height: 24px;
-  flex-basis: 24px;
-}
+  &[icon-size="24"] {
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
+  }
 
-.urlbarView-row[rich-suggestion][icon-size="52"] > .urlbarView-row-inner > .urlbarView-favicon {
-  width: 52px;
-  height: 52px;
-  flex-basis: 52px;
-  border-radius: 2px;
+  &[icon-size="52"] {
+    width: 52px;
+    height: 52px;
+    flex-basis: 52px;
+    border-radius: 2px;
+  }
 }
 
 .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body {
   flex-grow: 1;
   flex-shrink: 1;
   min-width: 0;
+
+  > .urlbarView-row-body-top {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: start;
+
+    > .urlbarView-row-body-top-no-wrap {
+      display: flex;
+      flex-wrap: nowrap;
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: start;
+      flex-shrink: 0;
+      min-width: 0;
+
+      .urlbarView-results:not([wrap]) > & {
+        /* Limit the title (which is inside .urlbarView-row-body-top-no-wrap) to 70%
+           of the width so the URL is never completely hidden. */
+        max-width: 70%;
+      }
+    }
+  }
+
+  > .urlbarView-row-body-description {
+    max-width: 80ch;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow-y: hidden;
+
+    &:not(:empty) + .urlbarView-row-body-bottom:not(:empty) {
+      margin-block-start: 1em;
+    }
+  }
+
+  > :is(.urlbarView-row-body-description, .urlbarView-row-body-bottom) {
+    font-size: var(--urlbarView-small-font-size);
+    white-space: normal;
+  }
 }
 
-.urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top {
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: start;
-}
-
-.urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: start;
-  flex-shrink: 0;
-  min-width: 0;
-}
-
-.urlbarView-results:not([wrap]) > .urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
-  /* Limit the title (which is inside .urlbarView-row-body-top-no-wrap) to 70%
-     of the width so the URL is never completely hidden. */
-  max-width: 70%;
-}
-
-.urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description,
-.urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
-  font-size: var(--urlbarView-small-font-size);
+.urlbarView-row[rich-suggestion]:not([selected]) > .urlbarView-row-inner > .urlbarView-row-body > :is(.urlbarView-row-body-description, .urlbarView-row-body-bottom) {
   color: var(--urlbarView-secondary-text-color);
-  white-space: normal;
-}
-
-.urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description {
-  max-width: 80ch;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow-y: hidden;
-}
-
-.urlbarView-row[rich-suggestion][selected] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description,
-.urlbarView-row[rich-suggestion][selected] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
-  color: inherit;
-}
-
-.urlbarView-row[rich-suggestion] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description:not(:empty) + .urlbarView-row-body-bottom:not(:empty) {
-  margin-block-start: 1em;
 }
 
 /* Sponsored Firefox Suggest rows */
