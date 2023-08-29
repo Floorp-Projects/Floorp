@@ -294,6 +294,10 @@ ScreenHelperGTK::ScreenHelperGTK() {
   gScreenGetter->Init();
 }
 
+int ScreenHelperGTK::GetMonitorCount() {
+  return gdk_screen_get_n_monitors(gdk_screen_get_default());
+}
+
 ScreenHelperGTK::~ScreenHelperGTK() { gScreenGetter = nullptr; }
 
 }  // namespace mozilla::widget
