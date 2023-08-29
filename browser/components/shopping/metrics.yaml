@@ -144,3 +144,29 @@ shopping:
         type: string
     no_lint:
       - COMMON_PREFIX
+
+  surface_closed:
+    type: event
+    description: |
+      The user opened the settings menu of the shopping component.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849240
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+    extra_keys:
+      source:
+        description: >
+          The source of the close event. For example, whether the shopping
+          sidebar was closed with the close button or the icon in the 
+          address bar.
+        type: string
+    no_lint:
+      - COMMON_PREFIX
