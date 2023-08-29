@@ -951,9 +951,12 @@ add_task(function test_jarURI_serialization() {
 });
 
 add_task(async function round_trip_invalid_ace_label() {
-  let uri = Services.io.newURI("http://xn--xn--d--fg4n-5y45d/");
-  Assert.equal(uri.spec, "http://xn--xn--d--fg4n-5y45d/");
+  // This is well-formed punycode, but an invalid ACE label due to hyphens in
+  // positions 3 & 4 and trailing hyphen. (Punycode-decode yields "xn--d淾-")
+  let uri = Services.io.newURI("http://xn--xn--d--fg4n/");
+  Assert.equal(uri.spec, "http://xn--xn--d--fg4n/");
 
+  // Entirely invalid punycode will throw a MALFORMED error.
   Assert.throws(() => {
     uri = Services.io.newURI("http://a.b.c.XN--pokxncvks");
   }, /NS_ERROR_MALFORMED_URI/);

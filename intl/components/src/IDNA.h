@@ -92,6 +92,13 @@ class IDNA final {
       return (mErrorCode & hyphenErrors) != 0;
     }
 
+    bool HasErrorsIgnoringInvalidHyphen() const {
+      uint32_t hyphenErrors = UIDNA_ERROR_LEADING_HYPHEN |
+                              UIDNA_ERROR_TRAILING_HYPHEN |
+                              UIDNA_ERROR_HYPHEN_3_4;
+      return (mErrorCode & ~hyphenErrors) != 0;
+    }
+
    private:
     friend class IDNA;
     explicit Info(const UIDNAInfo* aUinfo) : mErrorCode(aUinfo->errors) {}
