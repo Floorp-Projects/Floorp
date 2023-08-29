@@ -35,6 +35,11 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
    */
   static bool Deactivated() { return mDeactivated; }
 
+  /**
+   * Release resources until they are next required.
+   */
+  static void ClearCachedResources();
+
   ipc::IPCResult RecvNotifyDeviceChanged();
 
   ipc::IPCResult RecvDeactivate();
@@ -136,12 +141,12 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   static const uint32_t kCacheDataSurfaceThreshold = 10;
 
   static bool mDeactivated;
+  static bool mInForeground;
 
   RefPtr<CanvasDrawEventRecorder> mRecorder;
   TextureType mTextureType = TextureType::Unknown;
   uint32_t mLastWriteLockCheckpoint = 0;
   uint32_t mTransactionsSinceGetDataSurface = kCacheDataSurfaceThreshold;
-  TimeStamp mLastNonEmptyTransaction = TimeStamp::NowLoRes();
   std::vector<RefPtr<gfx::SourceSurface>> mLastTransactionExternalSurfaces;
   bool mIsInTransaction = false;
   bool mHasOutstandingWriteLock = false;

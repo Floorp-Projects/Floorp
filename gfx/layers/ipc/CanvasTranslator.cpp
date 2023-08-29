@@ -157,6 +157,19 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
   return RecvResumeTranslation();
 }
 
+ipc::IPCResult CanvasTranslator::RecvNewBuffer(
+    ipc::SharedMemoryBasic::Handle&& aReadHandle) {
+  // We need to set the new buffer on the transaltion queue to be sure that the
+  // drop buffer event has been processed.
+  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(NS_NewRunnableFunction(
+      "CanvasTranslator SetNewBuffer",
+      [self = RefPtr(this), readHandle = std::move(aReadHandle)]() mutable {
+        self->mStream->SetNewBuffer(std::move(readHandle));
+      })));
+
+  return RecvResumeTranslation();
+}
+
 ipc::IPCResult CanvasTranslator::RecvResumeTranslation() {
   if (mDeactivated) {
     // The other side might have sent a resume message before we deactivated.
@@ -171,6 +184,9 @@ ipc::IPCResult CanvasTranslator::RecvResumeTranslation() {
 }
 
 void CanvasTranslator::StartTranslation() {
+  MOZ_RELEASE_ASSERT(mStream->IsValid(),
+                     "StartTranslation called before buffer has been set.");
+
   if (!TranslateRecording() && GetIPCChannel()->CanSend()) {
     MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
         NewRunnableMethod("CanvasTranslator::StartTranslation", this,
@@ -247,7 +263,7 @@ bool CanvasTranslator::TranslateRecording() {
   MOZ_ASSERT(CanvasThreadHolder::IsInCanvasWorker());
 
   uint8_t eventType = mStream->ReadNextEvent();
-  while (mStream->good()) {
+  while (mStream->good() && eventType != kDropBufferEventType) {
     bool success = RecordedEvent::DoWithEventFromStream(
         *mStream, static_cast<RecordedEvent::EventType>(eventType),
         [&](RecordedEvent* recordedEvent) -> bool {

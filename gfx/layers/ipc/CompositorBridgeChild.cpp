@@ -551,6 +551,10 @@ void CompositorBridgeChild::EndCanvasTransaction() {
   }
 }
 
+void CompositorBridgeChild::ClearCachedResources() {
+  CanvasChild::ClearCachedResources();
+}
+
 bool CompositorBridgeChild::AllocUnsafeShmem(size_t aSize, ipc::Shmem* aShmem) {
   ShmemAllocated(this);
   return PCompositorBridgeChild::AllocUnsafeShmem(aSize, aShmem);

@@ -63,6 +63,11 @@ class CanvasTranslator final : public gfx::InlineTranslator,
       CrossProcessSemaphoreHandle&& aWriterSem);
 
   /**
+   * New buffer to resume translation after it has been stopped by writer.
+   */
+  ipc::IPCResult RecvNewBuffer(ipc::SharedMemoryBasic::Handle&& aReadHandle);
+
+  /**
    * Used to tell the CanvasTranslator to start translating again after it has
    * stopped due to a timeout waiting for events.
    */

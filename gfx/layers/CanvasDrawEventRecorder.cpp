@@ -14,32 +14,37 @@
 namespace mozilla {
 namespace layers {
 
-static const uint8_t kCheckpointEventType = -1;
 static const uint32_t kMaxSpinCount = 200;
 
 static const TimeDuration kTimeout = TimeDuration::FromMilliseconds(100);
 static const int32_t kTimeoutRetryCount = 50;
 
 static const uint32_t kCacheLineSize = 64;
-static const uint32_t kStreamSize = 512 * 1024;
-static const uint32_t kShmemSize = kStreamSize + (2 * kCacheLineSize);
+static const uint32_t kSmallStreamSize = 64 * 1024;
+static const uint32_t kLargeStreamSize = 2048 * 1024;
 
-static_assert((static_cast<uint64_t>(UINT32_MAX) + 1) % kStreamSize == 0,
-              "kStreamSize must be a power of two.");
+static_assert((static_cast<uint64_t>(UINT32_MAX) + 1) % kSmallStreamSize == 0,
+              "kSmallStreamSize must be a power of two.");
+static_assert((static_cast<uint64_t>(UINT32_MAX) + 1) % kLargeStreamSize == 0,
+              "kLargeStreamSize must be a power of two.");
 
-bool CanvasEventRingBuffer::InitWriter(
-    base::ProcessId aOtherPid, ipc::SharedMemoryBasic::Handle* aReadHandle,
-    CrossProcessSemaphoreHandle* aReaderSem,
-    CrossProcessSemaphoreHandle* aWriterSem,
-    UniquePtr<WriterServices> aWriterServices) {
+uint32_t CanvasEventRingBuffer::StreamSize() {
+  return mLargeStream ? kLargeStreamSize : kSmallStreamSize;
+}
+
+bool CanvasEventRingBuffer::InitBuffer(
+    base::ProcessId aOtherPid, ipc::SharedMemoryBasic::Handle* aReadHandle) {
+  size_t shmemSize = StreamSize() + (2 * kCacheLineSize);
   mSharedMemory = MakeAndAddRef<ipc::SharedMemoryBasic>();
-  if (NS_WARN_IF(!mSharedMemory->Create(kShmemSize)) ||
-      NS_WARN_IF(!mSharedMemory->Map(kShmemSize))) {
+  if (NS_WARN_IF(!mSharedMemory->Create(shmemSize)) ||
+      NS_WARN_IF(!mSharedMemory->Map(shmemSize))) {
+    mGood = false;
     return false;
   }
 
   *aReadHandle = mSharedMemory->CloneHandle();
   if (NS_WARN_IF(!*aReadHandle)) {
+    mGood = false;
     return false;
   }
 
@@ -47,22 +52,35 @@ bool CanvasEventRingBuffer::InitWriter(
 
   mBuf = static_cast<char*>(mSharedMemory->memory());
   mBufPos = mBuf;
-  mAvailable = kStreamSize;
+  mAvailable = StreamSize();
 
   static_assert(sizeof(ReadFooter) <= kCacheLineSize,
                 "ReadFooter must fit in kCacheLineSize.");
-  mRead = reinterpret_cast<ReadFooter*>(mBuf + kStreamSize);
+  mRead = reinterpret_cast<ReadFooter*>(mBuf + StreamSize());
   mRead->count = 0;
   mRead->returnCount = 0;
   mRead->state = State::Processing;
 
   static_assert(sizeof(WriteFooter) <= kCacheLineSize,
                 "WriteFooter must fit in kCacheLineSize.");
-  mWrite = reinterpret_cast<WriteFooter*>(mBuf + kStreamSize + kCacheLineSize);
+  mWrite = reinterpret_cast<WriteFooter*>(mBuf + StreamSize() + kCacheLineSize);
   mWrite->count = 0;
   mWrite->returnCount = 0;
   mWrite->requiredDifference = 0;
   mWrite->state = State::Processing;
+  mOurCount = 0;
+
+  return true;
+}
+
+bool CanvasEventRingBuffer::InitWriter(
+    base::ProcessId aOtherPid, ipc::SharedMemoryBasic::Handle* aReadHandle,
+    CrossProcessSemaphoreHandle* aReaderSem,
+    CrossProcessSemaphoreHandle* aWriterSem,
+    UniquePtr<WriterServices> aWriterServices) {
+  if (!InitBuffer(aOtherPid, aReadHandle)) {
+    return false;
+  }
 
   mReaderSemaphore.reset(
       CrossProcessSemaphore::Create("SharedMemoryStreamParent", 0));
@@ -90,18 +108,10 @@ bool CanvasEventRingBuffer::InitReader(
     CrossProcessSemaphoreHandle aReaderSem,
     CrossProcessSemaphoreHandle aWriterSem,
     UniquePtr<ReaderServices> aReaderServices) {
-  mSharedMemory = MakeAndAddRef<ipc::SharedMemoryBasic>();
-  if (NS_WARN_IF(!mSharedMemory->SetHandle(
-          std::move(aReadHandle), ipc::SharedMemory::RightsReadWrite)) ||
-      NS_WARN_IF(!mSharedMemory->Map(kShmemSize))) {
+  if (!SetNewBuffer(std::move(aReadHandle))) {
     return false;
   }
 
-  mSharedMemory->CloseHandle();
-
-  mBuf = static_cast<char*>(mSharedMemory->memory());
-  mRead = reinterpret_cast<ReadFooter*>(mBuf + kStreamSize);
-  mWrite = reinterpret_cast<WriteFooter*>(mBuf + kStreamSize + kCacheLineSize);
   mReaderSemaphore.reset(CrossProcessSemaphore::Create(std::move(aReaderSem)));
   mReaderSemaphore->CloseHandle();
   mWriterSemaphore.reset(CrossProcessSemaphore::Create(std::move(aWriterSem)));
@@ -113,13 +123,37 @@ bool CanvasEventRingBuffer::InitReader(
   return true;
 }
 
+bool CanvasEventRingBuffer::SetNewBuffer(
+    ipc::SharedMemoryBasic::Handle aReadHandle) {
+  MOZ_RELEASE_ASSERT(
+      !mSharedMemory,
+      "Shared memory should have been dropped before new buffer is sent.");
+
+  size_t shmemSize = StreamSize() + (2 * kCacheLineSize);
+  mSharedMemory = MakeAndAddRef<ipc::SharedMemoryBasic>();
+  if (NS_WARN_IF(!mSharedMemory->SetHandle(
+          std::move(aReadHandle), ipc::SharedMemory::RightsReadWrite)) ||
+      NS_WARN_IF(!mSharedMemory->Map(shmemSize))) {
+    mGood = false;
+    return false;
+  }
+
+  mSharedMemory->CloseHandle();
+
+  mBuf = static_cast<char*>(mSharedMemory->memory());
+  mRead = reinterpret_cast<ReadFooter*>(mBuf + StreamSize());
+  mWrite = reinterpret_cast<WriteFooter*>(mBuf + StreamSize() + kCacheLineSize);
+  mOurCount = 0;
+  return true;
+}
+
 bool CanvasEventRingBuffer::WaitForAndRecalculateAvailableSpace() {
   if (!good()) {
     return false;
   }
 
-  uint32_t bufPos = mOurCount % kStreamSize;
-  uint32_t maxToWrite = kStreamSize - bufPos;
+  uint32_t bufPos = mOurCount % StreamSize();
+  uint32_t maxToWrite = StreamSize() - bufPos;
   mAvailable = std::min(maxToWrite, WaitForBytesToWrite());
   if (!mAvailable) {
     mBufPos = nullptr;
@@ -178,8 +212,8 @@ bool CanvasEventRingBuffer::WaitForAndRecalculateAvailableData() {
     return false;
   }
 
-  uint32_t bufPos = mOurCount % kStreamSize;
-  uint32_t maxToRead = kStreamSize - bufPos;
+  uint32_t bufPos = mOurCount % StreamSize();
+  uint32_t maxToRead = StreamSize() - bufPos;
   mAvailable = std::min(maxToRead, WaitForBytesToRead());
   if (!mAvailable) {
     SetIsBad();
@@ -342,6 +376,18 @@ uint8_t CanvasEventRingBuffer::ReadNextEvent() {
     ReadElement(*this, nextEvent);
   }
 
+  if (nextEvent == kDropBufferEventType) {
+    // Writer is switching to a different sized buffer.
+    mBuf = nullptr;
+    mBufPos = nullptr;
+    mRead = nullptr;
+    mWrite = nullptr;
+    mAvailable = 0;
+    mSharedMemory = nullptr;
+    // We always toggle between smaller and larger stream sizes.
+    mLargeStream = !mLargeStream;
+  }
+
   return nextEvent;
 }
 
@@ -352,6 +398,24 @@ uint32_t CanvasEventRingBuffer::CreateCheckpoint() {
 
 bool CanvasEventRingBuffer::WaitForCheckpoint(uint32_t aCheckpoint) {
   return WaitForReadCount(aCheckpoint, kTimeout);
+}
+
+bool CanvasEventRingBuffer::SwitchBuffer(
+    base::ProcessId aOtherPid, ipc::SharedMemoryBasic::Handle* aReadHandle) {
+  WriteElement(*this, kDropBufferEventType);
+
+  // Make sure the drop buffer event has been read before continuing. We can't
+  // write an actual checkpoint because there will be no buffer to read from.
+  WaitForCheckpoint(mOurCount);
+  mBuf = nullptr;
+  mBufPos = nullptr;
+  mRead = nullptr;
+  mWrite = nullptr;
+  mAvailable = 0;
+  mSharedMemory = nullptr;
+  // We always toggle between smaller and larger stream sizes.
+  mLargeStream = !mLargeStream;
+  return InitBuffer(aOtherPid, aReadHandle);
 }
 
 void CanvasEventRingBuffer::CheckAndSignalWriter() {
@@ -417,7 +481,7 @@ bool CanvasEventRingBuffer::WaitForReadCount(uint32_t aReadCount,
 }
 
 uint32_t CanvasEventRingBuffer::WaitForBytesToWrite() {
-  uint32_t streamFullReadCount = mOurCount - kStreamSize;
+  uint32_t streamFullReadCount = mOurCount - StreamSize();
   if (!WaitForReadCount(streamFullReadCount + 1, kTimeout)) {
     return 0;
   }
@@ -435,17 +499,17 @@ uint32_t CanvasEventRingBuffer::WaitForBytesToRead() {
 
 void CanvasEventRingBuffer::ReturnWrite(const char* aData, size_t aSize) {
   uint32_t writeCount = mRead->returnCount;
-  uint32_t bufPos = writeCount % kStreamSize;
-  uint32_t bufRemaining = kStreamSize - bufPos;
+  uint32_t bufPos = writeCount % StreamSize();
+  uint32_t bufRemaining = StreamSize() - bufPos;
   uint32_t availableToWrite =
-      std::min(bufRemaining, (mWrite->returnCount + kStreamSize - writeCount));
+      std::min(bufRemaining, (mWrite->returnCount + StreamSize() - writeCount));
   while (availableToWrite < aSize) {
     if (availableToWrite) {
       memcpy(mBuf + bufPos, aData, availableToWrite);
       writeCount += availableToWrite;
       mRead->returnCount = writeCount;
-      bufPos = writeCount % kStreamSize;
-      bufRemaining = kStreamSize - bufPos;
+      bufPos = writeCount % StreamSize();
+      bufRemaining = StreamSize() - bufPos;
       aData += availableToWrite;
       aSize -= availableToWrite;
     } else if (mReaderServices->WriterClosed()) {
@@ -453,7 +517,7 @@ void CanvasEventRingBuffer::ReturnWrite(const char* aData, size_t aSize) {
     }
 
     availableToWrite = std::min(
-        bufRemaining, (mWrite->returnCount + kStreamSize - writeCount));
+        bufRemaining, (mWrite->returnCount + StreamSize() - writeCount));
   }
 
   memcpy(mBuf + bufPos, aData, aSize);
@@ -477,8 +541,8 @@ void CanvasEventRingBuffer::ReturnRead(char* aOut, size_t aSize) {
     }
   }
 
-  uint32_t bufPos = readCount % kStreamSize;
-  uint32_t bufRemaining = kStreamSize - bufPos;
+  uint32_t bufPos = readCount % StreamSize();
+  uint32_t bufRemaining = StreamSize() - bufPos;
   uint32_t availableToRead =
       std::min(bufRemaining, (mRead->returnCount - readCount));
   while (availableToRead < aSize) {
@@ -486,8 +550,8 @@ void CanvasEventRingBuffer::ReturnRead(char* aOut, size_t aSize) {
       memcpy(aOut, mBuf + bufPos, availableToRead);
       readCount += availableToRead;
       mWrite->returnCount = readCount;
-      bufPos = readCount % kStreamSize;
-      bufRemaining = kStreamSize - bufPos;
+      bufPos = readCount % StreamSize();
+      bufRemaining = StreamSize() - bufPos;
       aOut += availableToRead;
       aSize -= availableToRead;
     } else if (mWriterServices->ReaderClosed()) {

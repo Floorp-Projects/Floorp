@@ -31,6 +31,11 @@ parent:
                        CrossProcessSemaphoreHandle aWriterSem);
 
   /**
+   * Send a new buffer to resume translation after it's been stopped by writer.
+   */
+  async NewBuffer(Handle aReadHandle);
+
+  /**
    * Used to tell the CanvasTranslator to start translating again after it has
    * stopped due to a timeout waiting for events.
    */
