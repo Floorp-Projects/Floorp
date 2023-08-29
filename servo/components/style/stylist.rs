@@ -679,6 +679,21 @@ impl Stylist {
         self.author_data_cache.take_unused();
     }
 
+    /// Returns the custom property registration for this property's name.
+    /// https://drafts.css-houdini.org/css-properties-values-api-1/#determining-registration
+    pub fn get_custom_property_registration(&self, name: &Atom) -> Option<&PropertyRegistration> {
+        if let Some(registration) = self.custom_property_script_registry().get(name) {
+            return Some(registration);
+        }
+        for (data, _) in self.iter_origins() {
+            if let Some(registration) = data.custom_property_registrations.get(name) {
+                return Some(registration);
+            }
+        }
+        None
+    }
+
+
     /// Rebuilds (if needed) the CascadeData given a sheet collection.
     pub fn rebuild_author_data<S>(
         &mut self,

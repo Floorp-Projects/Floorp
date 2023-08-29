@@ -9,6 +9,7 @@
 use crate::applicable_declarations::CascadePriority;
 use crate::media_queries::Device;
 use crate::properties::{CSSWideKeyword, CustomDeclaration, CustomDeclarationValue};
+use crate::stylist::Stylist;
 use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet, PrecomputedHasher};
 use crate::Atom;
 use cssparser::{
@@ -625,19 +626,19 @@ pub struct CustomPropertiesBuilder<'a> {
     custom_properties: Option<CustomPropertiesMap>,
     inherited: Option<&'a Arc<CustomPropertiesMap>>,
     reverted: PrecomputedHashMap<&'a Name, (CascadePriority, bool)>,
-    device: &'a Device,
+    stylist: &'a Stylist,
 }
 
 impl<'a> CustomPropertiesBuilder<'a> {
     /// Create a new builder, inheriting from a given custom properties map.
-    pub fn new(inherited: Option<&'a Arc<CustomPropertiesMap>>, device: &'a Device) -> Self {
+    pub fn new(inherited: Option<&'a Arc<CustomPropertiesMap>>, stylist: &'a Stylist) -> Self {
         Self {
             seen: PrecomputedHashSet::default(),
             reverted: Default::default(),
             may_have_cycles: false,
             custom_properties: None,
             inherited,
-            device,
+            stylist,
         }
     }
 
@@ -686,7 +687,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
                         unparsed_value,
                         map,
                         self.inherited.map(|m| &**m),
-                        &self.device,
+                        self.stylist.device(),
                     );
                     return;
                 }
@@ -777,7 +778,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
                 &mut map,
                 self.inherited.map(|m| &**m),
                 &self.seen,
-                self.device,
+                self.stylist.device(),
             );
         }
 
