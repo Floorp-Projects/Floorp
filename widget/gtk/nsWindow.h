@@ -980,6 +980,8 @@ class nsWindow final : public nsBaseWidget {
 
   void SetUserTimeAndStartupTokenForActivatedWindow();
 
+  void KioskLockOnMonitor();
+
 #ifdef MOZ_X11
   typedef enum {GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
                 GTK_WIDGET_COMPOSIDED_DISABLED = 1,
@@ -1003,6 +1005,9 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRect mLastLoggedBoundSize;
   int mLastLoggedScale = -1;
 #endif
+  // Running in kiosk mode and requested to stay on specified monitor.
+  // If monitor is removed minimize the window.
+  mozilla::Maybe<int> mKioskMonitor;
 };
 
 #endif /* __nsWindow_h__ */

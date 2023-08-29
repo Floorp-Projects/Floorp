@@ -54,6 +54,9 @@ extern nsString gAbsoluteArgv0Path;
 
 extern bool gIsGtest;
 
+extern bool gKioskMode;
+extern int gKioskMonitor;
+
 namespace mozilla {
 nsresult AppInfoConstructor(const nsID& aIID, void** aResult);
 }  // namespace mozilla
