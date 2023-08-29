@@ -260,9 +260,8 @@ async function test_playing_icon_on_hidden_tab(tab) {
       'url("chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg")',
       "The audio playing icon is shown"
     );
-    is(
-      tabContainer.getAttribute("hiddensoundplaying"),
-      "true",
+    ok(
+      tabContainer.hasAttribute("hiddensoundplaying"),
       "There are hidden audio tabs"
     );
   }

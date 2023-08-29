@@ -164,15 +164,11 @@
     }
 
     set _visuallySelected(val) {
-      if (val == (this.getAttribute("visuallyselected") == "true")) {
+      if (val == this.hasAttribute("visuallyselected")) {
         return;
       }
 
-      if (val) {
-        this.setAttribute("visuallyselected", "true");
-      } else {
-        this.removeAttribute("visuallyselected");
-      }
+      this.toggleAttribute("visuallyselected", val);
       gBrowser._tabAttrModified(this, ["visuallyselected"]);
     }
 
@@ -186,20 +182,15 @@
         this.removeAttribute("selected");
       }
 
-      // If we're non-e10s we should update the visual selection as well at the same time,
-      // *or* if we're e10s and the visually selected tab isn't changing, in which case the
-      // tab switcher code won't run and update anything else (like the before- and after-
-      // selected attributes).
-      if (
-        !gMultiProcessBrowser ||
-        (val && this.hasAttribute("visuallyselected"))
-      ) {
+      // If we're non-e10s we need to update the visual selection at the same
+      // time, otherwise AsyncTabSwitcher will take care of this.
+      if (!gMultiProcessBrowser) {
         this._visuallySelected = val;
       }
     }
 
     get pinned() {
-      return this.getAttribute("pinned") == "true";
+      return this.hasAttribute("pinned");
     }
 
     get hidden() {
@@ -208,11 +199,11 @@
     }
 
     get muted() {
-      return this.getAttribute("muted") == "true";
+      return this.hasAttribute("muted");
     }
 
     get multiselected() {
-      return this.getAttribute("multiselected") == "true";
+      return this.hasAttribute("multiselected");
     }
 
     get userContextId() {
@@ -222,15 +213,15 @@
     }
 
     get soundPlaying() {
-      return this.getAttribute("soundplaying") == "true";
+      return this.hasAttribute("soundplaying");
     }
 
     get pictureinpicture() {
-      return this.getAttribute("pictureinpicture") == "true";
+      return this.hasAttribute("pictureinpicture");
     }
 
     get activeMediaBlocked() {
-      return this.getAttribute("activemedia-blocked") == "true";
+      return this.hasAttribute("activemedia-blocked");
     }
 
     get undiscardable() {
@@ -648,7 +639,7 @@
           // "Lazy Browser" should not invoke its mute method
           browser.mute();
         }
-        this.setAttribute("muted", "true");
+        this.toggleAttribute("muted", true);
         hist.add(0 /* mute */);
       }
       this.muteReason = aMuteReason || null;

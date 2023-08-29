@@ -15,11 +15,10 @@ const TEST_PAGE = TEST_ROOT + "get_user_media.html";
  */
 function testSelected(aTab) {
   is(aTab, gBrowser.selectedTab, "Tab is gBrowser.selectedTab");
-  is(aTab.getAttribute("selected"), "true", "Tab has property 'selected'");
-  is(
-    aTab.getAttribute("visuallyselected"),
-    "true",
-    "Tab has property 'visuallyselected'"
+  ok(aTab.hasAttribute("selected"), "Tab has attribute 'selected'");
+  ok(
+    aTab.hasAttribute("visuallyselected"),
+    "Tab has attribute 'visuallyselected'"
   );
 }
 

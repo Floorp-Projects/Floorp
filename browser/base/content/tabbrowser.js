@@ -3171,7 +3171,7 @@
           if (!tab.parentNode) {
             tab._tPos = this._numPinnedTabs;
             this.tabContainer.insertBefore(tab, this.tabs[this._numPinnedTabs]);
-            tab.setAttribute("pinned", "true");
+            tab.toggleAttribute("pinned", true);
             this.tabContainer._invalidateCachedTabs();
             // Then ensure all the tab open/pinning information is sent.
             this._fireTabOpen(tab, {});
@@ -3934,8 +3934,9 @@
         aTab.hidden ||
         this._removingTabs.size >
           3 /* don't want lots of concurrent animations */ ||
-        aTab.getAttribute("fadein") !=
-          "true" /* fade-in transition hasn't been triggered yet */ ||
+        !aTab.hasAttribute(
+          "fadein"
+        ) /* fade-in transition hasn't been triggered yet */ ||
         tabWidth == 0 /* fade-in transition hasn't moved yet */
       ) {
         // We're not animating, so we can cancel the animation stopwatch.

@@ -172,7 +172,7 @@
 
       let tab = event.target ? event.target.closest("tab") : null;
 
-      if (tab.getAttribute("fadein") == "true") {
+      if (tab.hasAttribute("fadein")) {
         if (tab._fullyOpen) {
           this._updateCloseButtons();
         } else {
@@ -557,7 +557,7 @@
       // buttons, even if we aren't dragging a tab, but then
       // return to avoid drawing the drop indicator
       var pixelsToScroll = 0;
-      if (this.getAttribute("overflow") == "true") {
+      if (this.hasAttribute("overflow")) {
         switch (event.originalTarget) {
           case arrowScrollbox._scrollButtonUp:
             pixelsToScroll = arrowScrollbox.scrollIncrement * -1;
@@ -715,7 +715,7 @@
 
         if (oldTranslateX && oldTranslateX != newTranslateX && !gReduceMotion) {
           for (let tab of movingTabs) {
-            tab.setAttribute("tabdrop-samewindow", "true");
+            tab.toggleAttribute("tabdrop-samewindow", true);
             tab.style.transform = "translateX(" + newTranslateX + "px)";
             let postTransitionCleanup = () => {
               tab.removeAttribute("tabdrop-samewindow");
@@ -1142,7 +1142,7 @@
           return;
         }
 
-        this.setAttribute("overflow", "true");
+        this.toggleAttribute("overflow", true);
         this._positionPinnedTabs();
         this._updateCloseButtons();
         this._handleTabSelect(true);
@@ -1226,7 +1226,7 @@
 
     _updateCloseButtons() {
       // If we're overflowing, tabs are at their minimum widths.
-      if (this.getAttribute("overflow") == "true") {
+      if (this.hasAttribute("overflow")) {
         this.setAttribute("closebuttons", "activetab");
         return;
       }
@@ -1244,7 +1244,7 @@
 
           // The scrollbox may have started overflowing since we checked
           // overflow earlier, so check again.
-          if (this.getAttribute("overflow") == "true") {
+          if (this.hasAttribute("overflow")) {
             this.setAttribute("closebuttons", "activetab");
             return;
           }
@@ -1266,16 +1266,15 @@
     }
 
     _updateHiddenTabsStatus() {
-      if (gBrowser.visibleTabs.length < gBrowser.tabs.length) {
-        this.setAttribute("hashiddentabs", "true");
-      } else {
-        this.removeAttribute("hashiddentabs");
-      }
+      this.toggleAttribute(
+        "hashiddentabs",
+        gBrowser.visibleTabs.length < gBrowser.tabs.length
+      );
     }
 
     _handleTabSelect(aInstant) {
       let selectedTab = this.selectedItem;
-      if (this.getAttribute("overflow") == "true") {
+      if (this.hasAttribute("overflow")) {
         this.arrowScrollbox.ensureElementIsVisible(selectedTab, aInstant);
       }
 
@@ -1303,7 +1302,7 @@
         this.arrowScrollbox._scrollButtonDown
       ).width;
 
-      if (this.getAttribute("overflow") == "true") {
+      if (this.hasAttribute("overflow")) {
         // Don't need to do anything if we're in overflow mode and aren't scrolled
         // all the way to the right, or if we're closing the last tab.
         if (isEndTab || !this.arrowScrollbox._scrollButtonDown.disabled) {
@@ -1366,7 +1365,7 @@
     _expandSpacerBy(pixels) {
       let spacer = this._closingTabsSpacer;
       spacer.style.width = parseFloat(spacer.style.width) + pixels + "px";
-      this.setAttribute("using-closing-tabs-spacer", "true");
+      this.toggleAttribute("using-closing-tabs-spacer", true);
       gBrowser.addEventListener("mousemove", this);
       window.addEventListener("mouseout", this);
     }
@@ -1399,15 +1398,14 @@
       let tabs = this._getVisibleTabs();
       let numPinned = gBrowser._numPinnedTabs;
       let doPosition =
-        this.getAttribute("overflow") == "true" &&
+        this.hasAttribute("overflow") &&
         tabs.length > numPinned &&
         numPinned > 0;
 
       this.toggleAttribute("haspinnedtabs", !!numPinned);
+      this.toggleAttribute("positionpinnedtabs", doPosition);
 
       if (doPosition) {
-        this.setAttribute("positionpinnedtabs", "true");
-
         let layoutData = this._pinnedTabsLayoutCache;
         let uiDensity = document.documentElement.getAttribute("uidensity");
         if (!layoutData || layoutData.uiDensity != uiDensity) {
@@ -1440,8 +1438,6 @@
           width + "px"
         );
       } else {
-        this.removeAttribute("positionpinnedtabs");
-
         for (let i = 0; i < numPinned; i++) {
           let tab = tabs[i];
           tab.style.marginInlineStart = "";
@@ -1461,9 +1457,9 @@
       let draggedTab = event.dataTransfer.mozGetDataAt(TAB_DROP_TYPE, 0);
       let movingTabs = draggedTab._dragData.movingTabs;
 
-      if (this.getAttribute("movingtab") != "true") {
-        this.setAttribute("movingtab", "true");
-        gNavToolbox.setAttribute("movingtab", "true");
+      if (!this.hasAttribute("movingtab")) {
+        this.toggleAttribute("movingtab", true);
+        gNavToolbox.toggleAttribute("movingtab", true);
         if (!draggedTab.multiselected) {
           this.selectedItem = draggedTab;
         }
@@ -1595,7 +1591,7 @@
     }
 
     _finishAnimateTabMove() {
-      if (this.getAttribute("movingtab") != "true") {
+      if (!this.hasAttribute("movingtab")) {
         return;
       }
 
@@ -1687,7 +1683,7 @@
         let shift = (movingTabNewIndex - movingTabOldIndex) * movingTabWidth;
 
         movingTab.groupingTabsData.animate = true;
-        movingTab.setAttribute("tab-grouping", "true");
+        movingTab.toggleAttribute("tab-grouping", true);
 
         movingTab.groupingTabsData.translateX = shift;
 
@@ -1746,7 +1742,7 @@
             middleTab.groupingTabsData.translateX += movingTabWidth;
           }
 
-          middleTab.setAttribute("tab-grouping", "true");
+          middleTab.toggleAttribute("tab-grouping", true);
         }
       }
     }
@@ -1819,11 +1815,7 @@
     }
 
     _notifyBackgroundTab(aTab) {
-      if (
-        aTab.pinned ||
-        aTab.hidden ||
-        this.getAttribute("overflow") != "true"
-      ) {
+      if (aTab.pinned || aTab.hidden || !this.hasAttribute("overflow")) {
         return;
       }
 
@@ -1890,7 +1882,7 @@
             }
 
             if (!this._animateElement.hasAttribute("highlight")) {
-              this._animateElement.setAttribute("highlight", "true");
+              this._animateElement.toggleAttribute("highlight", true);
               setTimeout(
                 function (ele) {
                   ele.removeAttribute("highlight");
@@ -2008,7 +2000,7 @@
 
       this._updateCloseButtons();
 
-      if (tab.getAttribute("selected") == "true") {
+      if (tab.hasAttribute("selected")) {
         this._handleTabSelect();
       } else if (!tab.hasAttribute("skipbackgroundnotify")) {
         this._notifyBackgroundTab(tab);
@@ -2086,12 +2078,10 @@
         sib = unwrap(wrap(sib).nextElementSibling);
       } while (sib && (sib.hidden || sib.id == "alltabs-button"));
 
-      const kAttr = "hasadjacentnewtabbutton";
-      if (sib && sib.id == "new-tab-button") {
-        this.setAttribute(kAttr, "true");
-      } else {
-        this.removeAttribute(kAttr);
-      }
+      this.toggleAttribute(
+        "hasadjacentnewtabbutton",
+        sib && sib.id == "new-tab-button"
+      );
     }
 
     onWidgetAfterDOMChange(aNode, aNextNode, aContainer) {
@@ -2117,7 +2107,7 @@
       let closed = opts && opts.closed;
       if (!closed && tab.soundPlaying && tab.hidden) {
         this._hiddenSoundPlayingTabs.add(tab);
-        this.setAttribute("hiddensoundplaying", "true");
+        this.toggleAttribute("hiddensoundplaying", true);
       } else {
         this._hiddenSoundPlayingTabs.delete(tab);
         if (this._hiddenSoundPlayingTabs.size == 0) {
