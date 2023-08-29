@@ -647,6 +647,17 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">부가 기능이 이미 설치됨</string>
 
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">부가 기능이 일시적으로 비활성화됨</string>
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">하나 이상의 부가 기능이 작동을 중지하여 시스템이 불안정해졌습니다. %1$s가 부가 기능을 다시 시작하지 못했습니다.\n\n현재 세션 중에는 부가 기능이 다시 시작되지 않습니다.\n\n부가 기능을 제거하거나 비활성화하면 이 문제가 해결될 수도 있습니다.</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">부가 기능을 다시 시작해 보기</string>
+
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">부가 기능을 비활성화하고 계속</string>
+
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">계정 관리</string>
@@ -1399,7 +1410,7 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d개 탭</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">방문 기록 및 사이트 데이터</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">방문 기록 및 사이트 데이터</string>
 
     <!-- Title for the history item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_history_title">방문 기록</string>
@@ -1407,7 +1418,7 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 주소</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">쿠키</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">쿠키</string>
     <!-- Title for the cookies and site data items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_and_site_data">쿠키 및 사이트 데이터</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->

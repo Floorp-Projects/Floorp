@@ -637,6 +637,11 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Mae’r ychwanegyn eisoes wedi’i osod</string>
 
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Rhoddodd un neu fwy o ategion y gorau i weithio, gan wneud eich system yn ansefydlog. Ceisiodd %1$s ailgychwyn yr ychwanegiad(au) yn aflwyddiannus.\n\nNi fydd ychwanegion yn cael eu hailddechrau yn ystod eich sesiwn gyfredol.\n\nGallai dileu neu analluogi ychwanegion ddatrys y broblem hon.</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Ceisiwch ailgychwyn ychwanegion</string>
+
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Rheoli cyfrif</string>
@@ -1357,14 +1362,14 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Hanes pori a data gwefan</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">Hanes pori a data gwefan</string>
     <!-- Title for the history item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_history_title">Hanes pori</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d cyfeiriad</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Cwcis</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">Cwcis</string>
     <!-- Title for the cookies and site data items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_and_site_data">Cwcis a data gwefan</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->

@@ -642,6 +642,14 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">El complemento ya está instalado</string>
 
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Los complementos están deshabilitados temporalmente</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Probá reiniciar los complementos</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Continuar con los complementos deshabilitados</string>
+
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Administrar cuenta</string>
@@ -1379,14 +1387,14 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d pestañas</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118">Historial de navegación y datos del sitio</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">Historial de navegación y datos del sitio</string>
     <!-- Title for the history item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_history_title">Historial de navegación</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d direcciones</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118">Cookies</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">Cookies</string>
     <!-- Title for the cookies and site data items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_and_site_data">Cookies y datos del sitio</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1948,6 +1956,8 @@
     <string name="search_add_custom_engine_suggest_string_hint">URL de la API de sugerencias de búsqueda</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Reemplazar la consulta con “%s”. Ejemplo:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Reemplazar la consulta con “%s”. Ejemplo:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Guardar</string>
 

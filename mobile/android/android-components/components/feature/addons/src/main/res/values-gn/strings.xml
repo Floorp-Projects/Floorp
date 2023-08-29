@@ -55,7 +55,7 @@
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Ema’ẽag̃ui jepysokue jepuru ha téma ñangareko rehe</string>
     <!-- Description for native_messaging permission. -->
-    <string name="mozac_feature_addons_permissions_native_messaging_description">Embojopyru ñe’ẽmondo ambue tembipuru’i ndive</string>
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Embojopyru ñe’ẽmondo ambue tembiporu’i ndive</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Ehechauka ñemomarandu</string>
     <!-- Description for pkcs11 permission. -->
@@ -145,11 +145,11 @@
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Moĩmbaha mbohekopyahu</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_supported_checker_notification_channel">Tembipuru’i ojokupytýva rechajeyha</string>
+    <string name="mozac_feature_addons_supported_checker_notification_channel">Tembiporu’i ojokupytýva rechajeyha</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title">Tembipuru’i pyahu ojepurukuaámava</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title">Tembiporu’i pyahu ojepurukuaámava</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Tembipuru’i pyahu ojepurukuaámava</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Tembiporu’i pyahu ojepurukuaámava</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_one">Embojuaju %1$s %2$s rehe</string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->

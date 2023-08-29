@@ -13,5 +13,5 @@
     <!-- Menu option to duplicate the current tab -->
     <string name="mozac_ui_tabcounter_duplicate_tab">Tendayke ikõiva</string>
     <!-- Content description of the tab counter toolbar button -->
-    <string name="mozac_tab_counter_content_description">Pe votõ tendayke papaha tembipuru renda pegua.</string>
+    <string name="mozac_tab_counter_content_description">Pe votõ tendayke papaha tembiporu renda pegua.</string>
 </resources>

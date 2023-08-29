@@ -6,7 +6,7 @@
     <!-- Name of the "notification channel" used for displaying site controls notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_pwa_site_controls_notification_channel">Tenda ñeñangreko mba’erechaha tuichavévape</string>
     <!-- Text shown on the second row of the site controls notification. -->
-    <string name="mozac_feature_pwa_site_controls_notification_text">Eikutu embohasa hag̃ua URL ko tembipuru’ípe.</string>
+    <string name="mozac_feature_pwa_site_controls_notification_text">Eikutu embohasa hag̃ua URL ko tembiporu’ípe.</string>
     <!-- Refresh button in site controls notification. -->
     <string name="mozac_feature_pwa_site_controls_refresh">Mbopiro’y</string>
     <!-- Toast displayed when the website URL is copied. -->

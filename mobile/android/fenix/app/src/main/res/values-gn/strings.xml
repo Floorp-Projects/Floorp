@@ -62,7 +62,7 @@
     <!-- Private Browsing -->
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s omopotĩ nde jeheka ha kundahára rembiasakue tendayke ñemiguápe emboty térã esẽenguévo ko tembipuru’ígui. Kóva nande kuaukáiramo jepe ñanduti rendápe térã ne ñanduti me’ẽhárape, nombohasýi eime ñemi hag̃ua opaite tapicha oipurúva ko mba’e’oka renondépe.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s omopotĩ nde jeheka ha kundahára rembiasakue tendayke ñemiguápe emboty térã esẽenguévo ko tembiporu’ígui. Kóva nande kuaukáiramo jepe ñanduti rendápe térã ne ñanduti me’ẽhárape, nombohasýi eime ñemi hag̃ua opaite tapicha oipurúva ko mba’e’oka renondépe.</string>
     <string name="private_browsing_common_myths">
        Mombe’ugua’u kundahára ñemi rehegua
     </string>
@@ -77,7 +77,7 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. The first parameter is the name of the application.-->
-    <string name="open_in_app_cfr_info_message_2">Embohekokuaa %1$s ombojuruja hag̃ua ijehegui juajuha tembipuru’ípe.</string>
+    <string name="open_in_app_cfr_info_message_2">Embohekokuaa %1$s ombojuruja hag̃ua ijehegui juajuha tembiporu’ípe.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Eho ñembohekópe</string>
     <!-- Text for the negative action button -->
@@ -211,7 +211,7 @@
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
     <string name="browser_menu_read_close">Moñe’ẽrã rechahágui ñesẽ</string>
     <!-- Browser menu button to open the current page in an external app -->
-    <string name="browser_menu_open_app_link">Embojuruja tembipuru’i</string>
+    <string name="browser_menu_open_app_link">Embojuruja tembiporu’i</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Emboava moñe’ẽhára rechaha</string>
@@ -404,7 +404,7 @@
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Emoneĩ mba’erechaha japyhy kundaha ñemíme</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-    <string name="preferences_screenshots_in_private_mode_disclaimer">Oñemoneĩrõ, umi tendayke ñemigua ojehecháta oĩ vove heta tembipuru’i ijurujáva</string>
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Oñemoneĩrõ, umi tendayke ñemigua ojehecháta oĩ vove heta tembiporu’i ijurujáva</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Embojuaju jeike pya’eha tendayke ñemiguáre</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -489,7 +489,7 @@
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Mohendahavusu Sync momba’etepyre</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Account/Sync mba’ete moambuepyre. Esẽnguévo pe tembipuru’ígui emoambue hag̃ua…</string>
+    <string name="toast_override_fxa_sync_server_done">Account/Sync mba’ete moambuepyre. Esẽnguévo pe tembiporu’ígui emoambue hag̃ua…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Mba’ete</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -537,7 +537,7 @@
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Moĩmbajehegui URLs</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">Embojuruja juajuha tembipuru’ípe</string>
+    <string name="preferences_open_links_in_apps">Embojuruja juajuha tembiporu’ípe</string>
     <!-- Preference for open links in third party apps always open in apps option -->
     <string name="preferences_open_links_in_apps_always">Tapiaite</string>
     <!-- Preference for open links in third party apps ask before opening option -->
@@ -550,7 +550,7 @@
     <!-- Preference for enabling gecko engine logs -->
     <string name="preferences_enable_gecko_logs">Embojuruja Gecko jehaikue</string>
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
-    <string name="quit_application">Asẽma tembipuru’ígui iñambuekuaa hag̃ua…</string>
+    <string name="quit_application">Asẽma tembiporu’ígui iñambuekuaa hag̃ua…</string>
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Moĩmbaha</string>
@@ -576,7 +576,7 @@
     <string name="customize_addon_collection_user_hint">Ñembyatyha jára (puruhára ID)</string>
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Moĩmbaha aty moambuepyre. Embotyhína tembipuru’i emoambuekuaa hag̃ua…</string>
+    <string name="toast_customize_addon_collection_done">Moĩmbaha aty moambuepyre. Embotyhína tembiporu’i emoambuekuaa hag̃ua…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -885,14 +885,14 @@
     <string name="studies_learn_more">Kuaave</string>
 
     <!-- Dialog message shown after removing a study -->
-    <string name="studies_restart_app">Ko tembipuru’i oñembotýta hekopyahu hag̃ua</string>
+    <string name="studies_restart_app">Ko tembiporu’i oñembotýta hekopyahu hag̃ua</string>
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">MONEĨ</string>
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Heja</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Esẽke tembipuru’ígui iñambuekuaa hag̃ua…</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Esẽke tembiporu’ígui iñambuekuaa hag̃ua…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1267,7 +1267,7 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Kumbypyre</string>
     <!-- Share error message -->
-    <string name="share_error_snackbar">Ndaikatúi emoherakuã ko tembipuru’i ndive</string>
+    <string name="share_error_snackbar">Ndaikatúi emoherakuã ko tembiporu’i ndive</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Emondo mba’e’okápe</string>
 
@@ -1477,7 +1477,7 @@
     <!-- text for strict blocking option button description -->
     <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Ejoko tapykuehoha kuatiarogue henyhẽ pya’évape g̃uarã, hákatu ojavykuaáva peteĩva kuatiarogue rembiapoite.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Eiporavo tembipuru renda oĩha</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Eiporavo tembiporu renda oĩha</string>
     <!-- Text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Ereko yvy gotyo térã emogu’e yvate gotyo.</string>
 
@@ -1697,7 +1697,7 @@
     <string name="add_to_homescreen_text_placeholder">Jeike pya’eha réra</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description_2">Ikatu embojuaju ko ñanduti renda ne mba’e’oka mba’erechaha ñepyrũgua rehe eike hag̃ua ha eikundaha pya’eve, peteĩ tembipuru’ícharamo.</string>
+    <string name="add_to_homescreen_description_2">Ikatu embojuaju ko ñanduti renda ne mba’e’oka mba’erechaha ñepyrũgua rehe eike hag̃ua ha eikundaha pya’eve, peteĩ tembiporu’ícharamo.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Tembiapo ñepyrũ ha ñe’ẽñemi</string>
@@ -1716,7 +1716,7 @@
     <string name="preferences_android_autofill">Emyanyhẽjey ambue apps-pe</string>
 
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
-    <string name="preferences_android_autofill_description">Emoĩmba ha eñongatu puruhára réra ha ñe’ẽñemi ambue tembipuru’ípe ne mba’e’oka pegua.</string>
+    <string name="preferences_android_autofill_description">Emoĩmba ha eñongatu puruhára réra ha ñe’ẽñemi ambue tembiporu’ípe ne mba’e’oka pegua.</string>
 
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Embojuaju jeike</string>

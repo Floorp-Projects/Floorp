@@ -31,7 +31,7 @@
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Moambue</string>
     <!-- Text for context menu item to open the link in an external app. -->
-    <string name="mozac_feature_contextmenu_open_link_in_external_app">Embojuruja juajuha tembipuru’i okayguápe</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Embojuruja juajuha tembiporu’i okayguápe</string>
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">Emoherakuã email</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->

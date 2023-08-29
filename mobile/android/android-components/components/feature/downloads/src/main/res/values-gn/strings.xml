@@ -24,7 +24,7 @@
     <string name="mozac_feature_downloads_could_not_open_file">Ndaikatúi eike marandurendápe</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported1">Ndojejuhúi tembipuru’i embojuruja hag̃ua %1$s marandurenda</string>
+    <string name="mozac_feature_downloads_open_not_supported1">Ndojejuhúi tembiporu’i embojuruja hag̃ua %1$s marandurenda</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">Mombyta</string>
