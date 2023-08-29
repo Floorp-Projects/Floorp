@@ -251,6 +251,9 @@ jobs:
     system-symbols-win:
         symbol: I(system-symbols-win)
         parent: debian12-base
+    system-symbols-win-gfx:
+        symbol: I(system-symbols-win-gfx)
+        parent: debian12-base
     system-symbols-linux-scraper:
         symbol: I(system-symbols-linux)
         parent: debian12-base
