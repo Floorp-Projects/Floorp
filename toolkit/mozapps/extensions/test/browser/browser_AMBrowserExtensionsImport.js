@@ -67,8 +67,8 @@ const assertWarningShown = async (
     `expected a warning for ${expectedWarningType}`
   );
   Assert.equal(
-    messageBar.querySelector("span").getAttribute("data-l10n-id"),
-    `extensions-warning-${expectedWarningType}`,
+    messageBar.getAttribute("data-l10n-id"),
+    `extensions-warning-${expectedWarningType}2`,
     "expected correct l10n ID"
   );
   await win.document.l10n.translateElements([messageBar]);
