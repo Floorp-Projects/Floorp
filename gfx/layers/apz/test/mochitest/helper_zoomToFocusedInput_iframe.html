@@ -9,13 +9,28 @@
   </head>
 <body>
 <div style="height: 8000px;">ABC</div>
-<iframe style="height: 30em;" src="helper_iframe_textarea.html"></iframe>
+<iframe style="height: 30em;"></iframe>
 </div>
 <!-- Leave additional room below the element so it can be scrolled to the center -->
 <div style="height: 1000px;">ABC</div>
 <script type="application/javascript">
 async function test() {
+  let isCrossOrigin = (location.search == "?cross-origin");
+  let iframeURL =
+    SimpleTest.getTestFileURL("helper_iframe_textarea.html")
+  if (isCrossOrigin) {
+    iframeURL.replace(window.location.origin, "https://example.com/");
+  }
+
   let iframe = document.querySelector("iframe");
+  const iframeLoadPromise = promiseOneEvent(iframe, "load", null);
+  iframe.src = iframeURL;
+  await iframeLoadPromise;
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await content.wrappedJSObject.waitUntilApzStable();
+  });
+
   iframe.focus();
 
   await SpecialPowers.spawn(iframe, [], async () => {
