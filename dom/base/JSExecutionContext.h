@@ -8,7 +8,6 @@
 #define DOM_BASE_JSEXECUTIONCONTEXT_H_
 
 #include "js/GCVector.h"
-#include "js/OffThreadScriptCompilation.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "js/experimental/JSStencil.h"
@@ -29,6 +28,8 @@ namespace mozilla {
 union Utf8Unit;
 
 namespace dom {
+
+class ScriptLoadContext;
 
 class MOZ_STACK_CLASS JSExecutionContext final {
   // Register stack annotations for the Gecko profiler.
@@ -128,9 +129,9 @@ class MOZ_STACK_CLASS JSExecutionContext final {
   }
 
   // After getting a notification that an off-thread compile/decode finished,
-  // this function will take the result of the parser and move it to the main
-  // thread.
-  [[nodiscard]] nsresult JoinOffThread(JS::OffThreadToken** aOffThreadToken);
+  // this function will take the result of the off-thread operation and move it
+  // to the main thread.
+  [[nodiscard]] nsresult JoinOffThread(ScriptLoadContext* aContext);
 
   // Compile a script contained in a SourceText.
   nsresult Compile(JS::SourceText<char16_t>& aSrcBuf);

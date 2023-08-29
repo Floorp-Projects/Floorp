@@ -104,6 +104,8 @@ class AsyncCompileShutdownObserver final : public nsIObserver {
 // Script loader implementation
 //////////////////////////////////////////////////////////////
 
+class OffThreadCompilationCompleteRunnable;
+
 class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   class MOZ_STACK_CLASS AutoCurrentScriptUpdater {
    public:
@@ -132,6 +134,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   friend class AutoCurrentScriptUpdater;
 
  public:
+  using MaybeSourceText =
+      mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
+
   explicit ScriptLoader(Document* aDocument);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -569,14 +574,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   nsresult AttemptOffThreadScriptCompile(ScriptLoadRequest* aRequest,
                                          bool* aCouldCompileOut);
 
-  nsresult StartOffThreadCompilation(JSContext* aCx,
-                                     ScriptLoadRequest* aRequest,
-                                     JS::CompileOptions& aOptions,
-                                     Runnable* aRunnable,
-                                     JS::OffThreadToken** aTokenOut);
-
-  static void OffThreadCompilationCompleteCallback(JS::OffThreadToken* aToken,
-                                                   void* aCallbackData);
+  nsresult StartOffThreadCompilation(
+      JSContext* aCx, ScriptLoadRequest* aRequest, JS::CompileOptions& aOptions,
+      OffThreadCompilationCompleteRunnable* aRunnable);
 
   nsresult ProcessRequest(ScriptLoadRequest* aRequest);
   nsresult CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest);
@@ -677,9 +677,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   bool ShouldCompileOffThread(ScriptLoadRequest* aRequest);
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
-
-  using MaybeSourceText =
-      mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
 
   // Returns wether we should save the bytecode of this script after the
   // execution of the script.

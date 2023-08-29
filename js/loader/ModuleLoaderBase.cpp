@@ -1259,7 +1259,7 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   ModuleLoadRequest* request = aRequest->AsModuleRequest();
   MOZ_ASSERT(request->mModuleScript);
   MOZ_ASSERT_IF(request->HasScriptLoadContext(),
-                !request->GetScriptLoadContext()->mOffThreadToken);
+                !request->GetScriptLoadContext()->mCompileOrDecodeTask);
 
   ModuleScript* moduleScript = request->mModuleScript;
   if (moduleScript->HasErrorToRethrow()) {

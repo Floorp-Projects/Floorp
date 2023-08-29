@@ -13,7 +13,6 @@
 #include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileModuleScriptToStencil, JS::InstantiateModuleStencil
 #include "js/MemoryFunctions.h"
 #include "js/Modules.h"  // JS::FinishDynamicModuleImport, JS::{G,S}etModuleResolveHook, JS::Get{ModulePrivate,ModuleScript,RequestedModule{s,Specifier,SourcePos}}, JS::SetModule{DynamicImport,Metadata}Hook
-#include "js/OffThreadScriptCompilation.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "js/Realm.h"
 #include "js/SourceText.h"
@@ -150,11 +149,8 @@ nsresult ModuleLoader::CompileFetchedModule(
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleOut) {
   if (aRequest->GetScriptLoadContext()->mWasCompiledOMT) {
     JS::InstantiationStorage storage;
-    RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(
-        aCx, aRequest->GetScriptLoadContext()->mOffThreadToken, &storage);
-
-    aRequest->GetScriptLoadContext()->mOffThreadToken = nullptr;
-
+    RefPtr<JS::Stencil> stencil =
+        aRequest->GetScriptLoadContext()->StealOffThreadResult(aCx, &storage);
     if (!stencil) {
       return NS_ERROR_FAILURE;
     }
