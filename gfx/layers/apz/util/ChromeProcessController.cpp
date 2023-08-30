@@ -94,6 +94,9 @@ void ChromeProcessController::Destroy() {
 
   MOZ_ASSERT(mUIThread->IsOnCurrentThread());
   mWidget = nullptr;
+  if (mAPZEventState) {
+    mAPZEventState->Destroy();
+  }
   mAPZEventState = nullptr;
 }
 
