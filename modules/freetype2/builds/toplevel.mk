@@ -198,27 +198,22 @@ modules:
 include $(TOP_DIR)/builds/modules.mk
 
 
-# get FreeType version string, using a
-# poor man's `sed' emulation with make's built-in string functions
+# get FreeType version string using built-in string functions
 #
+hash := \#
+
 work := $(strip $(shell $(CAT) \
                   $(subst /,$(SEP),$(TOP_DIR)/include/freetype/freetype.h)))
-work := $(subst |,x,$(work))
-work := $(subst $(space),|,$(work))
-work := $(subst \#define|FREETYPE_MAJOR|,$(space),$(work))
-work := $(word 2,$(work))
-major := $(subst |,$(space),$(work))
-major := $(firstword $(major))
 
-work := $(subst \#define|FREETYPE_MINOR|,$(space),$(work))
-work := $(word 2,$(work))
-minor := $(subst |,$(space),$(work))
-minor := $(firstword $(minor))
+work := $(subst $(hash)define$(space)FREETYPE_MAJOR$(space),MAjOR=,$(work))
+work := $(subst $(hash)define$(space)FREETYPE_MINOR$(space),MInOR=,$(work))
+work := $(subst $(hash)define$(space)FREETYPE_PATCH$(space),PAtCH=,$(work))
 
-work := $(subst \#define|FREETYPE_PATCH|,$(space),$(work))
-work := $(word 2,$(work))
-patch := $(subst |,$(space),$(work))
-patch := $(firstword $(patch))
+major := $(subst MAjOR=,,$(filter MAjOR=%,$(work)))
+minor := $(subst MInOR=,,$(filter MInOR=%,$(work)))
+patch := $(subst PAtCH=,,$(filter PAtCH=%,$(work)))
+
+work :=
 
 # ifneq ($(findstring x0x,x$(patch)x),)
 #   version := $(major).$(minor)

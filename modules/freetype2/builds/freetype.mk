@@ -299,7 +299,7 @@ refdoc:
                   $(PUBLIC_DIR)/config/*.h \
                   $(PUBLIC_DIR)/cache/*.h
 	@echo Building static site...
-	cd $(DOC_DIR) && mkdocs build
+	cd $(DOC_DIR) && $(PYTHON) -m mkdocs build
 	@echo Done.
 
 # Variables for running `refdoc' with Python's `virtualenv'.  The

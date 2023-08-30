@@ -1,3 +1,269 @@
+2023-08-25  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.13.2 released.
+	==========================
+
+	Tag sources with `VER-2-13-2'.
+
+	* docs/VERSION.TXT: Add entry for version 2.13.2.
+	* docs/CHANGES: Updated.
+	* docs/release, docs/README, builds/macs/README: Updated.
+
+	* README, src/base/ftver.rc, builds/windows/vc2010/index.html,
+	builds/windows/visualc/index.html, builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/index.html, builds/wince/vc2008-ce/index.html,
+	docs/freetype-config.1: s/2.13.1/2.13.2/, s/2131/2132/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 2.
+
+	* builds/unix/configure.raw (version_info): Set to 26:1:20.
+	* CMakeLists.txt (VERSION_PATCH): Set to 2.
+
+2023-08-25  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftcalc.c (FT_MulAddFix): Simplify 32-bit rounding.
+
+2023-08-25  Werner Lemberg  <wl@gnu.org>
+
+	Fix clang warnings.
+
+	* src/cffload.c (cff_blend_doBlend): Fix type of `sum`.
+	* src/truetype/ttgxvar.c (tt_var_load_item_variation_store): Fix type of
+	  `word_delta_count`.
+
+2023-08-24  Werner Lemberg  <wl@gnu.org>
+
+	* subprojects/*.wrap: Updated.
+
+2023-08-24  Hugh McMaster  <hugh.mcmaster@outlook.com>
+
+	builds/unix/configure.raw: Use variable to specify minimum Python version.
+
+2023-08-24  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* builds/toplevel.mk: Simplify version extraction.
+
+2023-08-22  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Improve the matrix degeneracy check.
+
+	Also fixes #1251.
+
+	* src/base/ftcalc.c (FT_Matrix_Check): To avoid overflow, scale by shifting.
+	* include/freetype/internal/ftcalc.h (FT_Matrix_Check): Update description.
+
+2023-08-22  Werner Lemberg  <wl@gnu.org>
+
+	builds/toplevel.mk: Don't use `\#` in functions.
+
+	The behaviour changed in GNU make 4.3, where `#` (without the backslash)
+	would be necessary.  Using a variable instead the code works with both older
+	and newer GNU make versions.
+
+	Fixes #1252.
+
+2023-08-19  Hugh McMaster  <hugh.mcmaster@outlook.com>
+
+	builds/freetype.mk: Invoke `mkdocs` as a Python module
+
+	FreeType's `refdoc` target currently allows users to override the
+	default Python path, which is useful for testing and development.
+
+	In contrast, `mkdocs` is invoked via the default Python path.
+
+	Invoking `mkdocs` via Python's module syntax allows for greater
+	flexibility, although there is no change for the default use case.
+
+2023-08-17  Ben Wagner  <bungeman@chromium.org>
+
+	[base] Avoid UB with memcpy
+
+	`FT_NEW_ARRAY(p, 0)` sets `p` to `NULL`. `FT_Stream_ReadAt` with a
+	memory based stream uses `FT_MEM_COPY` which is `memcpy` which specifies
+	that it is undefined behavior for either the `src` or `dst` to be
+	`NULL`. Instead of forcing all callers work around calling
+	`FT_Stream_Read` when `buffer == NULL && count == 0` do the check in
+	`FT_StreamRead`. This allows any call with `count == 0` to succesfully
+	read zero bytes without UB.
+
+	* src/base/ftstream.c (FT_Stream_ReadAt): skip `FT_MEM_COPY` when
+	`count == 0`. (FT_Stream_TryRead): ditto
+
+	Fixes: #1250
+
+2023-08-12  Werner Lemberg  <wl@gnu.org>
+
+	Fix warnings in tracing messages for 32bit compilation.
+
+	Since we now require C99, use `%td` for `ptrdiff_t` and `%zu` for `size_t`.
+
+2023-08-04  Ben Wagner  <bungeman@chromium.org>
+
+	Avoid overflow in COLR bounds checks.
+
+	The values read into `base_glyphs_offset_v1` and `layer_offset_v1` may
+	be in the range 0xFFFFFFFD-0xFFFFFFFF. On systems where `unsigned long`
+	is 32 bits adding 4 to such values will wrap and pass bounds checks but
+	accessing values at such offsets will be out of bounds.
+
+	On the other hand `table_size` has already been tested to be at least
+	`COLRV1_HEADER_SIZE` (34) so it is safe to subtract 4 from it.
+
+	* src/sfnt/ttcolr.c (tt_face_load_colr): subtract 4 from `table_size`
+	instead of adding 4 to font data offsets in bounds checks
+
+	Fixes: https://crbug.com/1469348
+
+2023-08-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftobjs.c (open_face_from_buffer): Silence `maybe-uninitialized`.
+
+	We never call this function without a `driver_name` (#1245).
+
+2023-07-29  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Reduce v40 footprint.
+
+	*  src/truetype/ttgload.c (TT_HInt_Glyph, tt_loader_set_pp,
+	tt_loader_init): Refactor code.
+
+2023-07-27  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Remove Infinality for good (remaining bits).
+
+	* src/truetype/ttobjs.h: Remove remaining fields.
+	* src/truetype/ttinterp.c: Do not initialize them.
+	* include/freetype/internal/tttypes.h: Remove descriptions.
+
+2023-07-27  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Remove Infinality for good.
+
+	Remove everything `#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY`,
+	which was undefined for a while now.
+
+	* include/freetype/internal/tttypes.h: Ditto.
+	* src/truetype/truetype.c: Ditto.
+	* src/truetype/ttdriver.c: Ditto.
+	* src/truetype/ttgload.c: Ditto.
+	* src/truetype/ttinterp.c: Ditto.
+	* src/truetype/ttinterp.h: Ditto.
+	* src/truetype/ttobjs.c: Ditto.
+	* src/truetype/ttsubpix.[ch]: Remove files.
+	* src/truetype/rules.mk: Don't mention "ttsubpix.c".
+
+2023-07-21  Jouk Jansen  <joukj@hrem.nano.tudelft.nl>
+
+	* vms_make.com: Provide separate library compiled with C++.
+
+	Some types on OpenVMS x86_64 (for example, `long') have different sizes
+	depending on whether compiled with either C or C++.  In particular,
+	X-Windows applications crash if linked with the C++ version.
+
+	This patch makes `vms_make.com` create a second version of the FreeType
+	library compiled with C++ if OpenVMS is running on the x86_64 platform.
+
+2023-07-21  Jouk Jansen  <joukj@hrem.nano.tudelft.nl>
+
+	* vms_make.com: Fix typos.
+
+2023-07-21  Jouk Jansen  <joukj@hrem.nano.tudelft.nl>
+
+	* src/smooth/ftgrays.c (FT_SSE2): Fix definition for VMS.
+
+2023-07-19  Jouk Jansen  <joukj@hrem.nano.tudelft.nl>
+
+	vms_make.com: Make use of additional libraries optional.
+
+	Check whether `.olb` files are present.
+
+	Also check for the HarfBuzz library.
+
+2023-07-19  Jouk Jansen  <joukj@hrem.nano.tudelft.nl>
+
+	vms_make.com: Add `/warn=noinfo` to `CFLAGS`.
+
+	This reduces enormously the informationals while compiling on x86_64 (i.e.,
+	which `.h` file is inluded form where).
+
+2023-07-18  Ben Wagner  <bungeman@chromium.org>
+
+	[woff2] Clean up on large brotli expansion
+
+	* src/sfnt/sfwoff2.c (woff2_open_font): set error and goto cleanup
+
+	Fixes: https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=60711
+
+2023-07-16  Werner Lemberg  <wl@gnu.org>
+
+	[woff2] Avoid allocation bomb.
+
+	This is a fix for commit 85167dbd5, reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=60615
+
+	* src/sfnt/sfwoff2.c (MAX_SFNT_SIZE): New macro.
+	(woff2_open_font): Use it to limit the maximum size of an uncompressed WOFF2
+	font.
+
+2023-07-14  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Fix compiler warning.
+
+	* src/cff/cffparse.c, src/cff/cffparse.h: Make `cff_parse_fixed` a local
+	function.
+
+2023-07-14  Ben Wagner  <bungeman@chromium.org>
+
+	[woff2] Remove sfnt size guess check
+
+	In WOFF the `totalSfntSize` must be correct, however in WOFF2 this value
+	is now just a hint and a conforming implementation must not reject
+	otherwise valid data if the `totalSfntSize` turns out not to be exact.
+
+	* src/sfnt/sfwoff2.c (woff2_open_font): remove check that uncompressed
+	woff2 data would fit in the sfnt size guess.
+
+	Fixes: #1235
+
+2023-07-14  Skef Iterum  <github@skef.org>
+
+	[cff] Make blend operator work with floats in private dicts.
+
+	The CFF2 blend operator takes N default values and corresponding
+	sets of deltas and pushes N values specific to a designspace
+	location.  CFF has a floating point numeric type and the FreeType
+	blending code was not converting those into its internal 16.16
+	Fixed type format.
+
+	Fixes #1243.
+
+	* src/cff/cffparse.c (do_fixed): Handle floating point numbers.
+	Also fix scaling overflow check for integer-to-fixed conversion.
+
+	* src/cff/cffload.c (cff_blend_doBlend): Updated.
+
+2023-07-08  Hin-Tak Leung  <htl10@users.sourceforge.net>
+
+	* src/truetype/ttgload.c (TT_Hint_Glyph): More mostly cosmetic update.
+
+	This is a follow-up to commit 49c74ac02, which creates a new local variable
+	"exec = loader->exec", and shortening a lot of "loader->exec".  This commit
+	does two more such changes missed in that first commit.
+
+2023-07-06  Hugh McMaster  <hugh.mcmaster@outlook.com>
+
+	[gzip] Don't compile internal zlib development files when using system zlib.
+
+	`src/gzip/rules.mk` compiles the internal zlib sources even when using the
+	zlib development files provided by a host system.  If the internal zlib
+	development files are not present, FreeType fails to build from source.
+
+	This patch ensures the internal zlib development files are only
+	prerequisites when not using zlib development files on a host system.
+
+	* src/gzip/rules.mk (GZIP_DRV_SRCS): Define conditionally.
+
 2023-06-24  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.13.1 released.

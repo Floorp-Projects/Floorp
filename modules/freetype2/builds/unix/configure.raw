@@ -17,7 +17,7 @@ AC_CONFIG_SRCDIR([ftconfig.h.in])
 
 # Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='26:0:20'
+version_info='26:1:20'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -966,14 +966,14 @@ esac
 AX_PTHREAD([have_pthread=yes], [have_pthread=no])
 
 # Check for Python and docwriter
-
+PYTHON_MIN_VERSION=3.5
 have_py3=no
 have_docwriter=no
 PIP=pip
 
 AC_CHECK_PROGS([PYTHON], [python3 python], [missing])
 if test "x$PYTHON" != "xmissing"; then
-  AX_PROG_PYTHON_VERSION([3.5], [have_py3=yes], [])
+  AX_PROG_PYTHON_VERSION([$PYTHON_MIN_VERSION], [have_py3=yes], [])
 
   if test "x$have_py3" = "xyes"; then
     PIP="$PYTHON -m $PIP"
@@ -1162,7 +1162,7 @@ if test $have_docwriter = no; then
   `make refdoc' will fail since pip package `docwriter' is not installed.
   To install, run `$PIP install docwriter', or to use a Python
   virtual environment, run `make refdoc-venv' (requires pip package
-  `virtualenv').  These operations require Python >= 3.5.
+  `virtualenv').  These operations require Python >= $PYTHON_MIN_VERSION.
   ])
 fi
 
