@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Attributes.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/WindowsMessageLoop.h"
 #include "nsAppShell.h"
@@ -275,10 +276,10 @@ SingleNativeEventPump::AfterProcessNextEvent(nsIThreadInternal* aThread,
 // RegisterWindowMessage values
 // Native event callback message
 const wchar_t* kAppShellGeckoEventId = L"nsAppShell:EventID";
-UINT sAppShellGeckoMsgId;
+UINT sAppShellGeckoMsgId = 0x10001;  // initialize to invalid message ID
 // Taskbar button creation message
 const wchar_t* kTaskbarButtonEventId = L"TaskbarButtonCreated";
-UINT sTaskbarButtonCreatedMsg;
+UINT sTaskbarButtonCreatedMsg = 0x10002;  // initialize to invalid message ID
 
 /* static */
 UINT nsAppShell::GetTaskbarButtonCreatedMessage() {
@@ -361,8 +362,59 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
   return nsBaseAppShell::Observe(aSubject, aTopic, aData);
 }
 
-nsresult nsAppShell::InitHiddenWindow() {
+namespace {
+
+struct MOZ_STACK_CLASS WinErrorState {
+  NTSTATUS const LastNtStatus;
+  DWORD const LastError;
+
+  static NTSTATUS GetLastNtStatus() {
+    using RtlGetLastNtStatusType = NTSTATUS NTAPI (*)();
+    static const RtlGetLastNtStatusType RtlGetLastNtStatus = []() {
+      HMODULE h = ::GetModuleHandleW(L"ntdll.dll");
+      FARPROC const addr = ::GetProcAddress(h, "RtlGetLastNtStatus");
+      return reinterpret_cast<RtlGetLastNtStatusType>(addr);
+    }();
+
+    if (RtlGetLastNtStatus) {
+      return RtlGetLastNtStatus();
+    }
+
+    // paranoia: otherwise, return a bogus error code with a hopefully-
+    // recognizable value
+    union {
+      std::make_unsigned_t<NTSTATUS> value;
+      NTSTATUS status;
+    } const v = {.value = 0xE'8675309};
+    return v.status;
+  }
+
+  MOZ_NEVER_INLINE WinErrorState()
+      : LastNtStatus(GetLastNtStatus()), LastError(GetLastError()) {}
+  WinErrorState(WinErrorState const&) = default;
+  ~WinErrorState() = default;
+};
+
+}  // namespace
+
+// Collect data for bug 1571516. We don't automatically extract `GetLastError`
+// or `GetLastNtStatus` data for beta/release builds, so extract the relevant
+// error values and store them on the stack, where they can be viewed in
+// minidumps.
+//
+// We tag this function `[[clang::optnone]]` to prevent the compiler from
+// eliding those values as unused, as well as to generally simplify the
+// haruspex's task once the minidumps are in. (As this function is called at
+// most once per process, the minor performance hit is not a concern.)
+[[clang::optnone]] MOZ_NEVER_INLINE nsresult nsAppShell::InitHiddenWindow() {
+  // invoke `GetProcAddress` and `GetModuleHandleW` early, to avoid possibly
+  // contaminating the return values of `GetLastNtStatus()` or `GetLastError()`
+  { auto _unused [[maybe_unused]] = WinErrorState(); }
+
   sAppShellGeckoMsgId = ::RegisterWindowMessageW(kAppShellGeckoEventId);
+  // Diagnostic variables for post-mortem debugging of bug 1571516.
+  auto const _sAppShellGeckoMsgId [[maybe_unused]] = sAppShellGeckoMsgId;
+  auto const _rwmErr [[maybe_unused]] = WinErrorState();
   NS_ASSERTION(sAppShellGeckoMsgId,
                "Could not register hidden window event message!");
 
@@ -384,11 +436,15 @@ nsresult nsAppShell::InitHiddenWindow() {
     wc.lpszMenuName = (LPCWSTR) nullptr;
     wc.lpszClassName = kWindowClass;
     [[maybe_unused]] ATOM wcA = RegisterClassW(&wc);
+    // Diagnostic variable for post-mortem debugging of bug 1571516.
+    auto const _rcErr [[maybe_unused]] = WinErrorState();
     MOZ_DIAGNOSTIC_ASSERT(wcA, "RegisterClassW for EventWindowClass failed");
   }
 
   mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow", 0, 0, 0,
                             10, 10, HWND_MESSAGE, nullptr, module, nullptr);
+  // Diagnostic variable for post-mortem debugging of bug 1571516.
+  auto const _cwErr [[maybe_unused]] = WinErrorState();
   MOZ_DIAGNOSTIC_ASSERT(mEventWnd, "CreateWindowW for EventWindow failed");
   NS_ENSURE_STATE(mEventWnd);
 
