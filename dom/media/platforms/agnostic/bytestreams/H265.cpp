@@ -17,12 +17,29 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/Span.h"
+
+mozilla::LazyLogModule gH265("H265");
+
+#define LOG(msg, ...) MOZ_LOG(gH265, LogLevel::Debug, (msg, ##__VA_ARGS__))
+#define LOGV(msg, ...) MOZ_LOG(gH265, LogLevel::Verbose, (msg, ##__VA_ARGS__))
 
 namespace mozilla {
+
+H265NALU::H265NALU(const uint8_t* aData, uint32_t aSize) : mNALU(aData, aSize) {
+  // Per 7.3.1 NAL unit syntax
+  BitReader reader(aData, aSize);
+  Unused << reader.ReadBits(1);  // forbidden_zero_bit
+  mNalUnitType = reader.ReadBits(6);
+  mNuhLayerId = reader.ReadBits(6);
+  mNuhTemporalIdPlus1 = reader.ReadBits(3);
+  LOGV("Created H265NALU, type=%hhu, size=%u", mNalUnitType, aSize);
+}
 
 /* static */ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
     const mozilla::MediaRawData* aSample) {
   if (!aSample || aSample->Size() < 3) {
+    LOG("No sample or incorrect sample size");
     return mozilla::Err(NS_ERROR_FAILURE);
   }
   // TODO : check video mime type to ensure the sample is for HEVC
@@ -34,10 +51,12 @@ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
     const mozilla::MediaByteBuffer* aExtraData) {
   // From configurationVersion to numOfArrays, total 184 bits (23 bytes)
   if (!aExtraData || aExtraData->Length() < 23) {
+    LOG("No extra-data or incorrect extra-data size");
     return mozilla::Err(NS_ERROR_FAILURE);
   }
   const auto& byteBuffer = *aExtraData;
   if (byteBuffer[0] != 1) {
+    LOG("Version should always be 1");
     return mozilla::Err(NS_ERROR_FAILURE);
   }
   HVCCConfig hvcc;
@@ -70,8 +89,36 @@ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
   hvcc.mNumTemporalLayers = reader.ReadBits(3);
   hvcc.mTemporalIdNested = reader.ReadBits(1);
   hvcc.mLengthSizeMinusOne = reader.ReadBits(2);
-
+  const uint8_t numOfArrays = reader.ReadBits(8);
+  for (uint8_t idx = 0; idx < numOfArrays; idx++) {
+    Unused << reader.ReadBits(2);  // array_completeness + reserved
+    const uint8_t nalUnitType = reader.ReadBits(6);
+    const uint16_t numNalus = reader.ReadBits(16);
+    LOGV("nalu-type=%u, nalu-num=%u", nalUnitType, numNalus);
+    for (uint16_t nIdx = 0; nIdx < numNalus; nIdx++) {
+      const uint16_t nalUnitLength = reader.ReadBits(16);
+      uint32_t nalSize = nalUnitLength * 8;
+      if (reader.BitsLeft() < nalUnitLength * 8) {
+        return mozilla::Err(NS_ERROR_FAILURE);
+      }
+      const uint8_t* currentPtr =
+          aExtraData->Elements() + reader.BitCount() / 8;
+      H265NALU nalu(currentPtr, nalSize);
+      // ReadBits can only read at most 32 bits at a time.
+      while (nalSize > 0) {
+        uint32_t readBits = nalSize > 32 ? 32 : nalSize;
+        reader.ReadBits(readBits);
+        nalSize -= readBits;
+      }
+      MOZ_ASSERT(nalu.mNalUnitType == nalUnitType);
+      hvcc.mNALUs.AppendElement(nalu);
+    }
+  }
+  hvcc.mByteBuffer = aExtraData;
   return hvcc;
 }
+
+#undef LOG
+#undef LOGV
 
 }  // namespace mozilla

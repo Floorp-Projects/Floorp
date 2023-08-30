@@ -203,55 +203,144 @@ TEST(H264, AVCCParsingFailure)
 
 TEST(H265, HVCCParsingSuccess)
 {
-  auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
-  uint8_t hvccBytesBuffer[] = {
-      1 /* version */,
-      1 /* general_profile_space/general_tier_flag/general_profile_idc */,
-      0x60 /* general_profile_compatibility_flags 1/4 */,
-      0 /* general_profile_compatibility_flags 2/4 */,
-      0 /* general_profile_compatibility_flags 3/4 */,
-      0 /* general_profile_compatibility_flags 4/4 */,
-      0x90 /* general_constraint_indicator_flags 1/6 */,
-      0 /* general_constraint_indicator_flags 2/6 */,
-      0 /* general_constraint_indicator_flags 3/6 */,
-      0 /* general_constraint_indicator_flags 4/6 */,
-      0 /* general_constraint_indicator_flags 5/6 */,
-      0 /* general_constraint_indicator_flags 6/6 */,
-      0x5A /* general_level_idc */,
-      0 /* min_spatial_segmentation_idc 1/2 */,
-      0 /* min_spatial_segmentation_idc 2/2 */,
-      0 /* parallelismType */,
-      1 /* chroma_format_idc */,
-      0 /* bit_depth_luma_minus8 */,
-      0 /* bit_depth_chroma_minus8 */,
-      0 /* avgFrameRate 1/2 */,
-      0 /* avgFrameRate 2/2 */,
-      0x0F /* constantFrameRate/numTemporalLayers/temporalIdNested/lengthSizeMinusOne
-            */
-      ,
-      0 /* numOfArrays */,
-  };
-  extradata->AppendElements(hvccBytesBuffer, ArrayLength(hvccBytesBuffer));
-  auto rv = HVCCConfig::Parse(extradata);
-  EXPECT_TRUE(rv.isOk());
-  auto hvcc = rv.unwrap();
-  EXPECT_EQ(hvcc.mConfigurationVersion, 1);
-  EXPECT_EQ(hvcc.mGeneralProfileSpace, 0);
-  EXPECT_EQ(hvcc.mGeneralTierFlag, false);
-  EXPECT_EQ(hvcc.mGeneralProfileIdc, 1);
-  EXPECT_EQ(hvcc.mGeneralProfileCompatibilityFlags, (uint32_t)0x60000000);
-  EXPECT_EQ(hvcc.mGeneralConstraintIndicatorFlags, (uint64_t)0x900000000000);
-  EXPECT_EQ(hvcc.mGeneralLevelIdc, 0x5A);
-  EXPECT_EQ(hvcc.mMinSpatialSegmentationIdc, 0);
-  EXPECT_EQ(hvcc.mParallelismType, 0);
-  EXPECT_EQ(hvcc.mChromaFormatIdc, 1);
-  EXPECT_EQ(hvcc.mBitDepthLumaMinus8, 0);
-  EXPECT_EQ(hvcc.mBitDepthChromaMinus8, 0);
-  EXPECT_EQ(hvcc.mAvgFrameRate, 0);
-  EXPECT_EQ(hvcc.mConstantFrameRate, 0);
-  EXPECT_EQ(hvcc.mNumTemporalLayers, 1);
-  EXPECT_EQ(hvcc.mTemporalIdNested, true);
-  EXPECT_EQ(hvcc.NALUSize(), 4);
+  {
+    auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
+    uint8_t hvccBytesBuffer[] = {
+        1 /* version */,
+        1 /* general_profile_space/general_tier_flag/general_profile_idc */,
+        0x60 /* general_profile_compatibility_flags 1/4 */,
+        0 /* general_profile_compatibility_flags 2/4 */,
+        0 /* general_profile_compatibility_flags 3/4 */,
+        0 /* general_profile_compatibility_flags 4/4 */,
+        0x90 /* general_constraint_indicator_flags 1/6 */,
+        0 /* general_constraint_indicator_flags 2/6 */,
+        0 /* general_constraint_indicator_flags 3/6 */,
+        0 /* general_constraint_indicator_flags 4/6 */,
+        0 /* general_constraint_indicator_flags 5/6 */,
+        0 /* general_constraint_indicator_flags 6/6 */,
+        0x5A /* general_level_idc */,
+        0 /* min_spatial_segmentation_idc 1/2 */,
+        0 /* min_spatial_segmentation_idc 2/2 */,
+        0 /* parallelismType */,
+        1 /* chroma_format_idc */,
+        0 /* bit_depth_luma_minus8 */,
+        0 /* bit_depth_chroma_minus8 */,
+        0 /* avgFrameRate 1/2 */,
+        0 /* avgFrameRate 2/2 */,
+        0x0F /* constantFrameRate/numTemporalLayers/temporalIdNested/lengthSizeMinusOne
+              */
+        ,
+        0 /* numOfArrays */,
+    };
+    extradata->AppendElements(hvccBytesBuffer, ArrayLength(hvccBytesBuffer));
+    auto rv = HVCCConfig::Parse(extradata);
+    EXPECT_TRUE(rv.isOk());
+    auto hvcc = rv.unwrap();
+    EXPECT_EQ(hvcc.mConfigurationVersion, 1);
+    EXPECT_EQ(hvcc.mGeneralProfileSpace, 0);
+    EXPECT_EQ(hvcc.mGeneralTierFlag, false);
+    EXPECT_EQ(hvcc.mGeneralProfileIdc, 1);
+    EXPECT_EQ(hvcc.mGeneralProfileCompatibilityFlags, (uint32_t)0x60000000);
+    EXPECT_EQ(hvcc.mGeneralConstraintIndicatorFlags, (uint64_t)0x900000000000);
+    EXPECT_EQ(hvcc.mGeneralLevelIdc, 0x5A);
+    EXPECT_EQ(hvcc.mMinSpatialSegmentationIdc, 0);
+    EXPECT_EQ(hvcc.mParallelismType, 0);
+    EXPECT_EQ(hvcc.mChromaFormatIdc, 1);
+    EXPECT_EQ(hvcc.mBitDepthLumaMinus8, 0);
+    EXPECT_EQ(hvcc.mBitDepthChromaMinus8, 0);
+    EXPECT_EQ(hvcc.mAvgFrameRate, 0);
+    EXPECT_EQ(hvcc.mConstantFrameRate, 0);
+    EXPECT_EQ(hvcc.mNumTemporalLayers, 1);
+    EXPECT_EQ(hvcc.mTemporalIdNested, true);
+    EXPECT_EQ(hvcc.NALUSize(), 4);
+    EXPECT_EQ(hvcc.mNALUs.Length(), uint32_t(0));
+  }
+  {
+    // Multple NALUs
+    auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
+    uint8_t hvccBytesBuffer[] = {
+        1 /* version */,
+        1 /* general_profile_space/general_tier_flag/general_profile_idc */,
+        0x60 /* general_profile_compatibility_flags 1/4 */,
+        0 /* general_profile_compatibility_flags 2/4 */,
+        0 /* general_profile_compatibility_flags 3/4 */,
+        0 /* general_profile_compatibility_flags 4/4 */,
+        0x90 /* general_constraint_indicator_flags 1/6 */,
+        0 /* general_constraint_indicator_flags 2/6 */,
+        0 /* general_constraint_indicator_flags 3/6 */,
+        0 /* general_constraint_indicator_flags 4/6 */,
+        0 /* general_constraint_indicator_flags 5/6 */,
+        0 /* general_constraint_indicator_flags 6/6 */,
+        0x5A /* general_level_idc */,
+        0 /* min_spatial_segmentation_idc 1/2 */,
+        0 /* min_spatial_segmentation_idc 2/2 */,
+        0 /* parallelismType */,
+        1 /* chroma_format_idc */,
+        0 /* bit_depth_luma_minus8 */,
+        0 /* bit_depth_chroma_minus8 */,
+        0 /* avgFrameRate 1/2 */,
+        0 /* avgFrameRate 2/2 */,
+        0x0F /* constantFrameRate/numTemporalLayers/temporalIdNested/lengthSizeMinusOne
+              */
+        ,
+        2 /* numOfArrays */,
+        /* SPS Array */
+        0x21 /* NAL_unit_type (SPS) */,
+        0 /* numNalus 1/2 */,
+        1 /* numNalus 2/2 */,
+
+        /* SPS */
+        0 /* nalUnitLength 1/2 */,
+        8 /* nalUnitLength 2/2 (header + rsbp) */,
+        0x42 /* NALU header 1/2 */,
+        0 /* NALU header 2/2 */,
+        0 /* rbsp 1/6 */,
+        0 /* rbsp 2/6 */,
+        0 /* rbsp 3/6 */,
+        0 /* rbsp 4/6 */,
+        0 /* rbsp 5/6 */,
+        0 /* rbsp 6/6 */,
+
+        /* PPS Array */
+        0x22 /* NAL_unit_type (PPS) */,
+        0 /* numNalus 1/2 */,
+        2 /* numNalus 2/2 */,
+
+        /* PPS 1 */
+        0 /* nalUnitLength 1/2 */,
+        3 /* nalUnitLength 2/2 (header + rsbp) */,
+        0x44 /* NALU header 1/2 */,
+        0 /* NALU header 2/2 */,
+        0 /* rbsp */,
+
+        /* PPS 2 */
+        0 /* nalUnitLength 1/2 */,
+        3 /* nalUnitLength 2/2 (header + rsbp) */,
+        0x44 /* NALU header 1/2 */,
+        0 /* NALU header 2/2 */,
+        0 /* rbsp */,
+    };
+    extradata->AppendElements(hvccBytesBuffer, ArrayLength(hvccBytesBuffer));
+    auto rv = HVCCConfig::Parse(extradata);
+    EXPECT_TRUE(rv.isOk());
+    auto hvcc = rv.unwrap();
+    // Check NALU, it should contain 1 SPS and 2 PPS.
+    EXPECT_EQ(hvcc.mNALUs.Length(), uint32_t(3));
+    EXPECT_EQ(hvcc.mNALUs[0].mNalUnitType, H265NALU::NAL_TYPES::SPS_NUT);
+    EXPECT_EQ(hvcc.mNALUs[0].mNuhLayerId, 0);
+    EXPECT_EQ(hvcc.mNALUs[0].mNuhTemporalIdPlus1, 0);
+    EXPECT_EQ(hvcc.mNALUs[0].IsSPS(), true);
+
+    EXPECT_EQ(hvcc.mNALUs[1].mNalUnitType, H265NALU::NAL_TYPES::PPS_NUT);
+    EXPECT_EQ(hvcc.mNALUs[1].mNuhLayerId, 0);
+    EXPECT_EQ(hvcc.mNALUs[1].mNuhTemporalIdPlus1, 0);
+    EXPECT_EQ(hvcc.mNALUs[1].IsSPS(), false);
+
+    EXPECT_EQ(hvcc.mNALUs[2].mNalUnitType, H265NALU::NAL_TYPES::PPS_NUT);
+    EXPECT_EQ(hvcc.mNALUs[2].mNuhLayerId, 0);
+    EXPECT_EQ(hvcc.mNALUs[2].mNuhTemporalIdPlus1, 0);
+    EXPECT_EQ(hvcc.mNALUs[2].IsSPS(), false);
+  }
 }
 
 TEST(H265, HVCCParsingFailure)
