@@ -19,7 +19,7 @@ output_latency_function *
 cubeb_output_latency_load_method(int version)
 {
   output_latency_function * ol = NULL;
-  ol = (output_latency_function *)calloc(1, sizeof(output_latency_function));
+  ol = calloc(1, sizeof(output_latency_function));
 
   ol->version = version;
 
@@ -61,8 +61,6 @@ cubeb_output_latency_unload_method(output_latency_function * ol)
   free(ol);
 }
 
-extern "C" {
-
 uint32_t
 cubeb_get_output_latency(output_latency_function * ol)
 {
@@ -73,7 +71,6 @@ cubeb_get_output_latency(output_latency_function * ol)
   }
 
   return cubeb_get_output_latency_from_media_library(ol->from_lib);
-}
 }
 
 #endif // _CUBEB_OUTPUT_LATENCY_H_
