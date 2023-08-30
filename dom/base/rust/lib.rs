@@ -179,7 +179,9 @@ bitflags! {
             Self::REVEALED.bits |
             Self::VALUE_EMPTY.bits |
             Self::INCREMENT_SCRIPT_LEVEL.bits |
-            Self::PLACEHOLDER_SHOWN.bits;
+            Self::PLACEHOLDER_SHOWN.bits |
+            Self::READONLY.bits |
+            Self::READWRITE.bits;
 
         const INTRINSIC_STATES = !Self::EXTERNALLY_MANAGED_STATES.bits;
     }

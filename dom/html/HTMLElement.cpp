@@ -327,6 +327,9 @@ void HTMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       // UpdateBarredFromConstraintValidation depend on our disabled state.
       UpdateDisabledState(aNotify);
     }
+    if (aName == nsGkAtoms::readonly && !!aValue != !!aOldValue) {
+      UpdateReadOnlyState(aNotify);
+    }
     UpdateBarredFromConstraintValidation();
   }
 

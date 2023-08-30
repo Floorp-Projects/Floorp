@@ -1883,11 +1883,8 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
 
   editorFlags = newTextEditor->Flags();
 
-  // Check if the readonly attribute is set.
-  //
-  // TODO: Should probably call IsDisabled(), as it is cheaper.
-  if (mTextCtrlElement->HasAttr(nsGkAtoms::readonly) ||
-      mTextCtrlElement->HasAttr(nsGkAtoms::disabled)) {
+  // Check if the readonly/disabled attributes are set.
+  if (mTextCtrlElement->IsDisabledOrReadOnly()) {
     editorFlags |= nsIEditor::eEditorReadonlyMask;
   }
 

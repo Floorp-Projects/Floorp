@@ -418,10 +418,10 @@ void nsGenericHTMLElement::UpdateEditableState(bool aNotify) {
   // XXX Should we do this only when in a document?
   ContentEditableTristate value = GetContentEditableValue();
   if (value != eInherit) {
-    DoSetEditableFlag(!!value, aNotify);
+    SetEditableFlag(!!value);
+    UpdateReadOnlyState(aNotify);
     return;
   }
-
   nsStyledElement::UpdateEditableState(aNotify);
 }
 
@@ -486,8 +486,7 @@ void nsGenericHTMLElement::UnbindFromTree(bool aNullParent) {
   RemoveFromNameTable();
 
   if (GetContentEditableValue() == eTrue) {
-    Document* doc = GetComposedDoc();
-    if (doc) {
+    if (Document* doc = GetComposedDoc()) {
       doc->ChangeContentEditableCount(this, -1);
     }
   }
@@ -1704,9 +1703,9 @@ bool nsGenericHTMLElement::IsFormControlDefaultFocusable(
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsGenericHTMLElement(std::move(aNodeInfo)) {
-  // We should add the ElementState::ENABLED bit here as needed, but
-  // that depends on our type, which is not initialized yet.  So we
-  // have to do this in subclasses.
+  // We should add the ElementState::ENABLED bit here as needed, but that
+  // depends on our type, which is not initialized yet.  So we have to do this
+  // in subclasses. Same for a couple other bits.
 }
 
 void nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm,
@@ -2166,9 +2165,16 @@ void nsGenericHTMLFormElement::UpdateDisabledState(bool aNotify) {
     ToggleStates(changedStates, aNotify);
     if (DoesReadOnlyApply()) {
       // :disabled influences :read-only / :read-write.
-      UpdateState(aNotify);
+      UpdateReadOnlyState(aNotify);
     }
   }
+}
+
+bool nsGenericHTMLFormElement::IsReadOnlyInternal() const {
+  if (DoesReadOnlyApply()) {
+    return IsDisabled() || GetBoolAttr(nsGkAtoms::readonly);
+  }
+  return nsGenericHTMLElement::IsReadOnlyInternal();
 }
 
 void nsGenericHTMLFormElement::FieldSetDisabledChanged(bool aNotify) {
@@ -2630,14 +2636,6 @@ ElementState nsGenericHTMLFormControlElement::IntrinsicState() const {
                  "Default submit element that isn't a submit control.");
     // We are the default submit element (:default)
     state |= ElementState::DEFAULT;
-  }
-
-  // Make the text controls read-write
-  if (!state.HasState(ElementState::READWRITE) && DoesReadOnlyApply()) {
-    if (!GetBoolAttr(nsGkAtoms::readonly) && !IsDisabled()) {
-      state |= ElementState::READWRITE;
-      state &= ~ElementState::READONLY;
-    }
   }
 
   return state;

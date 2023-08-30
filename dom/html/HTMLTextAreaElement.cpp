@@ -62,12 +62,13 @@ HTMLTextAreaElement::HTMLTextAreaElement(
   AddMutationObserver(this);
 
   // Set up our default state.  By default we're enabled (since we're
-  // a control type that can be disabled but not actually disabled
-  // right now), optional, and valid.  We are NOT readwrite by default
-  // until someone calls UpdateEditableState on us, apparently!  Also
-  // by default we don't have to show validity UI and so forth.
+  // a control type that can be disabled but not actually disabled right now),
+  // optional, read-write, and valid. Also by default we don't have to show
+  // validity UI and so forth.
   AddStatesSilently(ElementState::ENABLED | ElementState::OPTIONAL_ |
-                    ElementState::VALID | ElementState::VALUE_EMPTY);
+                    ElementState::READWRITE | ElementState::VALID |
+                    ElementState::VALUE_EMPTY);
+  RemoveStatesSilently(ElementState::READONLY);
 }
 
 HTMLTextAreaElement::~HTMLTextAreaElement() {
@@ -897,6 +898,10 @@ void HTMLTextAreaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         UpdateRequiredState(!!aValue, aNotify);
       }
 
+      if (aName == nsGkAtoms::readonly && !!aValue != !!aOldValue) {
+        UpdateReadOnlyState(aNotify);
+      }
+
       UpdateValueMissingValidityState();
 
       // This *has* to be called *after* validity has changed.
@@ -948,9 +953,7 @@ nsresult HTMLTextAreaElement::CopyInnerTo(Element* aDest) {
   return NS_OK;
 }
 
-bool HTMLTextAreaElement::IsMutable() const {
-  return !HasAttr(nsGkAtoms::readonly) && !IsDisabled();
-}
+bool HTMLTextAreaElement::IsMutable() const { return !IsDisabledOrReadOnly(); }
 
 void HTMLTextAreaElement::SetCustomValidity(const nsAString& aError) {
   ConstraintValidation::SetCustomValidity(aError);
