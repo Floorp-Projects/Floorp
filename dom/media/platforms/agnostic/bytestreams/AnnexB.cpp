@@ -355,9 +355,10 @@ bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
 
 Result<mozilla::Ok, nsresult> AnnexB::ConvertSampleTo4BytesAVCC(
     mozilla::MediaRawData* aSample) {
-  MOZ_ASSERT(IsAVCC(aSample));
+  auto avcc = AVCCConfig::Parse(aSample);
+  MOZ_ASSERT(avcc.isOk());
 
-  int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
+  int nalLenSize = avcc.unwrap().NALUSize();
 
   if (nalLenSize == 4) {
     return Ok();
@@ -397,8 +398,7 @@ Result<mozilla::Ok, nsresult> AnnexB::ConvertSampleTo4BytesAVCC(
 }
 
 bool AnnexB::IsAVCC(const mozilla::MediaRawData* aSample) {
-  return aSample->Size() >= 3 && aSample->mExtraData &&
-         aSample->mExtraData->Length() >= 7 && (*aSample->mExtraData)[0] == 1;
+  return AVCCConfig::Parse(aSample).isOk();
 }
 
 bool AnnexB::IsAnnexB(const mozilla::MediaRawData* aSample) {
