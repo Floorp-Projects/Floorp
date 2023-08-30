@@ -25,6 +25,7 @@ namespace dom {
 
 class Document;
 class Element;
+struct BindContext;
 
 #define MOZILLA_DOM_LINK_IMPLEMENTATION_IID          \
   {                                                  \
@@ -54,13 +55,6 @@ class Link : public nsISupports {
   explicit Link();
 
   virtual void VisitedQueryFinished(bool aVisited);
-
-  /**
-   * @return ElementState::VISITED if this link is visited,
-   *         ElementState::UNVISTED if this link is not visited, or 0 if this
-   *         link is not actually a link.
-   */
-  ElementState LinkState() const;
 
   /**
    * @return the URI this link is for, if available.
@@ -98,6 +92,11 @@ class Link : public nsISupports {
    *        changes or false if it should not.
    */
   void ResetLinkState(bool aNotify, bool aHasHref);
+  void ResetLinkState(bool aNotify) {
+    ResetLinkState(aNotify, ElementHasHref());
+  }
+  void BindToTree(const BindContext&);
+  void UnbindFromTree() { ResetLinkState(false); }
 
   // This method nevers returns a null element.
   Element* GetElement() const { return mElement; }
@@ -109,6 +108,7 @@ class Link : public nsISupports {
   bool HasPendingLinkUpdate() const { return mHasPendingLinkUpdate; }
   void SetHasPendingLinkUpdate() { mHasPendingLinkUpdate = true; }
   void ClearHasPendingLinkUpdate() { mHasPendingLinkUpdate = false; }
+  void TriggerLinkUpdate(bool aNotify);
 
   // To ensure correct mHasPendingLinkUpdate handling, we have this method
   // similar to the one in Element. Overriders must call
@@ -124,26 +124,21 @@ class Link : public nsISupports {
 
  private:
   /**
-   * Unregisters from History so this node no longer gets notifications about
-   * changes to visitedness.
+   * Unregisters from History and the document so this node no longer gets
+   * notifications about changes to visitedness.
    */
-  void UnregisterFromHistory();
-
+  void Unregister();
+  void SetLinkState(State, bool aNotify);
   void SetHrefAttribute(nsIURI* aURI);
 
   mutable nsCOMPtr<nsIURI> mCachedURI;
 
   Element* const mElement;
 
-  // TODO(emilio): This ideally could be `State mState : 2`, but the version of
-  // gcc we build on automation with (7 as of this writing) has a useless
-  // warning about all values in the range of the enum not fitting, see
-  // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61414.
-  State mState;
   bool mNeedsRegistration : 1;
   bool mRegistered : 1;
   bool mHasPendingLinkUpdate : 1;
-  bool mHistory : 1;
+  const bool mHistory : 1;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Link, MOZILLA_DOM_LINK_IMPLEMENTATION_IID)

@@ -64,22 +64,18 @@ nsDOMTokenList* HTMLAreaElement::RelList() {
 }
 
 nsresult HTMLAreaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
-  Link::ResetLinkState(false, Link::ElementHasHref());
   nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (IsInComposedDoc()) {
-    aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
-  }
+  Link::BindToTree(aContext);
   return rv;
 }
 
 void HTMLAreaElement::UnbindFromTree(bool aNullParent) {
-  // Without removing the link state we risk a dangling pointer
-  // in the mStyledLinks hashtable
-  Link::ResetLinkState(false, Link::ElementHasHref());
-
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
+  // Without removing the link state we risk a dangling pointer in the
+  // mStyledLinks hashtable
+  Link::UnbindFromTree();
 }
 
 void HTMLAreaElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
@@ -108,10 +104,6 @@ already_AddRefed<nsIURI> HTMLAreaElement::GetHrefURI() const {
     return uri.forget();
   }
   return GetHrefURIForAnchors();
-}
-
-ElementState HTMLAreaElement::IntrinsicState() const {
-  return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
 
 void HTMLAreaElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,

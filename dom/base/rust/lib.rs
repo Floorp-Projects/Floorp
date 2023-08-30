@@ -186,7 +186,9 @@ bitflags! {
             Self::CHECKED.bits |
             Self::DEFAULT.bits |
             Self::INRANGE.bits |
-            Self::OUTOFRANGE.bits;
+            Self::OUTOFRANGE.bits |
+            Self::VISITED.bits |
+            Self::UNVISITED.bits;
 
         const INTRINSIC_STATES = !Self::EXTERNALLY_MANAGED_STATES.bits;
     }

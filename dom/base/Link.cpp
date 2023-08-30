@@ -8,6 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/SVGAElement.h"
 #include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/IHistory.h"
@@ -30,7 +31,6 @@ namespace mozilla::dom {
 
 Link::Link(Element* aElement)
     : mElement(aElement),
-      mState(State::NotLink),
       mNeedsRegistration(false),
       mRegistered(false),
       mHasPendingLinkUpdate(false),
@@ -40,7 +40,6 @@ Link::Link(Element* aElement)
 
 Link::Link()
     : mElement(nullptr),
-      mState(State::NotLink),
       mNeedsRegistration(false),
       mRegistered(false),
       mHasPendingLinkUpdate(false),
@@ -49,7 +48,7 @@ Link::Link()
 Link::~Link() {
   // !mElement is for mock_Link.
   MOZ_ASSERT(!mElement || !mElement->IsInComposedDoc());
-  UnregisterFromHistory();
+  Unregister();
 }
 
 bool Link::ElementHasHref() const {
@@ -66,70 +65,61 @@ bool Link::ElementHasHref() const {
   return false;
 }
 
+void Link::SetLinkState(State aState, bool aNotify) {
+  auto old = mElement->State();
+  switch (aState) {
+    case State::Visited:
+      mElement->AddStatesSilently(ElementState::VISITED);
+      mElement->RemoveStatesSilently(ElementState::UNVISITED);
+      break;
+    case State::Unvisited:
+      mElement->AddStatesSilently(ElementState::UNVISITED);
+      mElement->RemoveStatesSilently(ElementState::VISITED);
+      break;
+    case State::NotLink:
+      mElement->RemoveStatesSilently(ElementState::VISITED_OR_UNVISITED);
+      break;
+  }
+  if (aNotify) {
+    mElement->NotifyStateChange(old ^ mElement->State());
+  }
+}
+
+void Link::TriggerLinkUpdate(bool aNotify) {
+  if (mRegistered || !mNeedsRegistration || mHasPendingLinkUpdate ||
+      !mElement->IsInComposedDoc()) {
+    return;
+  }
+
+  // Only try and register once.
+  mNeedsRegistration = false;
+
+  nsCOMPtr<nsIURI> hrefURI = GetURI();
+
+  // Assume that we are not visited until we are told otherwise.
+  SetLinkState(State::Unvisited, aNotify);
+
+  // Make sure the href attribute has a valid link (bug 23209).
+  // If we have a good href, register with History if available.
+  if (mHistory && hrefURI) {
+    if (nsCOMPtr<IHistory> history = components::History::Service()) {
+      mRegistered = true;
+      history->RegisterVisitedCallback(hrefURI, this);
+      // And make sure we are in the document's link map.
+      mElement->GetComposedDoc()->AddStyleRelevantLink(this);
+    }
+  }
+}
+
 void Link::VisitedQueryFinished(bool aVisited) {
   MOZ_ASSERT(mRegistered, "Setting the link state of an unregistered Link!");
 
-  auto newState = aVisited ? State::Visited : State::Unvisited;
-
-  // Set our current state as appropriate.
-  mState = newState;
-
-  MOZ_ASSERT(LinkState() == ElementState::VISITED ||
-                 LinkState() == ElementState::UNVISITED,
-             "Unexpected state obtained from LinkState()!");
-
-  // Tell the element to update its visited state.
-  mElement->UpdateState(true);
-
+  SetLinkState(aVisited ? State::Visited : State::Unvisited,
+               /* aNotify = */ true);
   // Even if the state didn't actually change, we need to repaint in order for
   // the visited state not to be observable.
   nsLayoutUtils::PostRestyleEvent(GetElement(), RestyleHint::RestyleSubtree(),
                                   nsChangeHint_RepaintFrame);
-}
-
-ElementState Link::LinkState() const {
-  // We are a constant method, but we are just lazily doing things and have to
-  // track that state.  Cast away that constness!
-  //
-  // XXX(emilio): that's evil.
-  Link* self = const_cast<Link*>(this);
-
-  Element* element = self->mElement;
-
-  // If we have not yet registered for notifications and need to,
-  // due to our href changing, register now!
-  if (!mRegistered && mNeedsRegistration && element->IsInComposedDoc() &&
-      !HasPendingLinkUpdate()) {
-    // Only try and register once.
-    self->mNeedsRegistration = false;
-
-    nsCOMPtr<nsIURI> hrefURI(GetURI());
-
-    // Assume that we are not visited until we are told otherwise.
-    self->mState = State::Unvisited;
-
-    // Make sure the href attribute has a valid link (bug 23209).
-    // If we have a good href, register with History if available.
-    if (mHistory && hrefURI) {
-      if (nsCOMPtr<IHistory> history = components::History::Service()) {
-        self->mRegistered = true;
-        history->RegisterVisitedCallback(hrefURI, self);
-        // And make sure we are in the document's link map.
-        element->GetComposedDoc()->AddStyleRelevantLink(self);
-      }
-    }
-  }
-
-  // Otherwise, return our known state.
-  if (mState == State::Visited) {
-    return ElementState::VISITED;
-  }
-
-  if (mState == State::Unvisited) {
-    return ElementState::UNVISITED;
-  }
-
-  return ElementState();
 }
 
 nsIURI* Link::GetURI() const {
@@ -444,19 +434,14 @@ void Link::GetHash(nsAString& _hash) {
   }
 }
 
-void Link::ResetLinkState(bool aNotify, bool aHasHref) {
-  // If !mNeedsRegstration, then either we've never registered, or we're
-  // currently registered; in either case, we should remove ourself
-  // from the doc and the history.
-  if (!mNeedsRegistration && mState != State::NotLink) {
-    Document* doc = mElement->GetComposedDoc();
-    if (doc && (mRegistered || mState == State::Visited)) {
-      // Tell the document to forget about this link if we've registered
-      // with it before.
-      doc->ForgetLink(this);
-    }
+void Link::BindToTree(const BindContext& aContext) {
+  if (aContext.InComposedDoc()) {
+    aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
   }
+  ResetLinkState(false);
+}
 
+void Link::ResetLinkState(bool aNotify, bool aHasHref) {
   // If we have an href, we should register with the history.
   //
   // FIXME(emilio): Do we really want to allow all MathML elements to be
@@ -464,45 +449,30 @@ void Link::ResetLinkState(bool aNotify, bool aHasHref) {
   mNeedsRegistration = aHasHref;
 
   // If we've cached the URI, reset always invalidates it.
-  UnregisterFromHistory();
+  Unregister();
   mCachedURI = nullptr;
 
   // Update our state back to the default; the default state for links with an
   // href is unvisited.
-  mState = aHasHref ? State::Unvisited : State::NotLink;
-
-  // We have to be very careful here: if aNotify is false we do NOT
-  // want to call UpdateState, because that will call into LinkState()
-  // and try to start off loads, etc.  But ResetLinkState is called
-  // with aNotify false when things are in inconsistent states, so
-  // we'll get confused in that situation.  Instead, just silently
-  // update the link state on mElement. Since we might have set the
-  // link state to unvisited, make sure to update with that state if
-  // required.
-  if (aNotify) {
-    mElement->UpdateState(aNotify);
-  } else {
-    if (mState == State::Unvisited) {
-      mElement->UpdateLinkState(ElementState::UNVISITED);
-    } else {
-      mElement->UpdateLinkState(ElementState());
-    }
-  }
+  SetLinkState(aHasHref ? State::Unvisited : State::NotLink, aNotify);
+  TriggerLinkUpdate(aNotify);
 }
 
-void Link::UnregisterFromHistory() {
+void Link::Unregister() {
   // If we are not registered, we have nothing to do.
   if (!mRegistered) {
     return;
   }
 
+  MOZ_ASSERT(mHistory);
+  MOZ_ASSERT(mCachedURI, "Should unregister before invalidating the URI");
+
   // And tell History to stop tracking us.
-  if (mHistory && mCachedURI) {
-    if (nsCOMPtr<IHistory> history = components::History::Service()) {
-      history->UnregisterVisitedCallback(mCachedURI, this);
-      mRegistered = false;
-    }
+  if (nsCOMPtr<IHistory> history = components::History::Service()) {
+    history->UnregisterVisitedCallback(mCachedURI, this);
   }
+  mElement->OwnerDoc()->ForgetLink(this);
+  mRegistered = false;
 }
 
 void Link::SetHrefAttribute(nsIURI* aURI) {

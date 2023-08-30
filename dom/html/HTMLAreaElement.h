@@ -50,8 +50,6 @@ class HTMLAreaElement final : public nsGenericHTMLElement,
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  virtual ElementState IntrinsicState() const override;
-
   // WebIDL
   void GetAlt(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::alt, aValue); }
   void SetAlt(const nsAString& aAlt, ErrorResult& aError) {
