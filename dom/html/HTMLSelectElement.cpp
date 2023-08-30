@@ -90,7 +90,7 @@ SafeOptionListMutation::~SafeOptionListMutation() {
       // update validity here as needed, because by now we know our <option>s
       // are where they should be.
       mSelect->UpdateValueMissingValidityState();
-      mSelect->UpdateState(mNotify);
+      mSelect->UpdateValidityElementStates(mNotify);
     }
 #ifdef DEBUG
     mSelect->VerifyOptionsArray();
@@ -161,8 +161,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLSelectElement)
 
 void HTMLSelectElement::SetCustomValidity(const nsAString& aError) {
   ConstraintValidation::SetCustomValidity(aError);
-
-  UpdateState(true);
+  UpdateValidityElementStates(true);
 }
 
 void HTMLSelectElement::GetAutocomplete(DOMString& aValue) {
@@ -344,8 +343,7 @@ nsresult HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
       // Update the validity state in case of we've just removed the last
       // option.
       UpdateValueMissingValidityState();
-
-      UpdateState(aNotify);
+      UpdateValidityElementStates(aNotify);
     }
   }
 
@@ -681,7 +679,7 @@ void HTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
 
   UpdateSelectedOptions();
   UpdateValueMissingValidityState();
-  UpdateState(aNotify);
+  UpdateValidityElementStates(aNotify);
 }
 
 void HTMLSelectElement::FindSelectedIndex(int32_t aStartIndex, bool aNotify) {
@@ -1010,7 +1008,7 @@ bool HTMLSelectElement::SelectSomething(bool aNotify) {
       SetSelectedIndexInternal(i, aNotify);
 
       UpdateValueMissingValidityState();
-      UpdateState(aNotify);
+      UpdateValidityElementStates(aNotify);
 
       return true;
     }
@@ -1032,7 +1030,7 @@ nsresult HTMLSelectElement::BindToTree(BindContext& aContext,
   UpdateBarredFromConstraintValidation();
 
   // And now make sure our state is up to date
-  UpdateState(false);
+  UpdateValidityElementStates(false);
 
   return rv;
 }
@@ -1046,7 +1044,7 @@ void HTMLSelectElement::UnbindFromTree(bool aNullParent) {
   UpdateBarredFromConstraintValidation();
 
   // And now make sure our state is up to date
-  UpdateState(false);
+  UpdateValidityElementStates(false);
 }
 
 void HTMLSelectElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
@@ -1087,13 +1085,14 @@ void HTMLSelectElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 
       UpdateValueMissingValidityState();
       UpdateBarredFromConstraintValidation();
+      UpdateValidityElementStates(aNotify);
     } else if (aName == nsGkAtoms::required) {
       // This *has* to be called *before* UpdateValueMissingValidityState
       // because UpdateValueMissingValidityState depends on our required
       // state.
       UpdateRequiredState(!!aValue, aNotify);
-
       UpdateValueMissingValidityState();
+      UpdateValidityElementStates(aNotify);
     } else if (aName == nsGkAtoms::autocomplete) {
       // Clear the cached @autocomplete attribute and autocompleteInfo state.
       mAutocompleteAttrState = nsContentUtils::eAutocompleteAttrState_Unknown;
@@ -1142,7 +1141,7 @@ void HTMLSelectElement::DoneAddingChildren(bool aHaveNotified) {
     UpdateValueMissingValidityState();
 
     // And now make sure we update our content state too
-    UpdateState(aHaveNotified);
+    UpdateValidityElementStates(aHaveNotified);
   }
 
   mDefaultSelectionSet = true;
@@ -1229,44 +1228,45 @@ nsresult HTMLSelectElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   } else if (aVisitor.mEvent->mMessage == eBlur) {
     mCanShowInvalidUI = true;
     mCanShowValidUI = true;
-
-    UpdateState(true);
+    UpdateValidityElementStates(true);
   }
 
   return nsGenericHTMLFormControlElementWithState::PostHandleEvent(aVisitor);
 }
 
-ElementState HTMLSelectElement::IntrinsicState() const {
-  ElementState state =
-      nsGenericHTMLFormControlElementWithState::IntrinsicState();
+void HTMLSelectElement::UpdateValidityElementStates(bool aNotify) {
+  AutoStateChangeNotifier notifier(*this, aNotify);
+  RemoveStatesSilently(ElementState::VALIDITY_STATES);
+  if (!IsCandidateForConstraintValidation()) {
+    return;
+  }
 
-  if (IsCandidateForConstraintValidation()) {
-    if (IsValid()) {
-      state |= ElementState::VALID;
-    } else {
-      state |= ElementState::INVALID;
+  ElementState state;
+  if (IsValid()) {
+    state |= ElementState::VALID;
+  } else {
+    state |= ElementState::INVALID;
 
-      if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
-          (mCanShowInvalidUI && ShouldShowValidityUI())) {
-        state |= ElementState::USER_INVALID;
-      }
-    }
-
-    // :-moz-ui-valid applies if all the following are true:
-    // 1. The element is not focused, or had either :-moz-ui-valid or
-    //    :-moz-ui-invalid applying before it was focused ;
-    // 2. The element is either valid or isn't allowed to have
-    //    :-moz-ui-invalid applying ;
-    // 3. The element has already been modified or the user tried to submit the
-    //    form owner while invalid.
-    if (mCanShowValidUI && ShouldShowValidityUI() &&
-        (IsValid() ||
-         (state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
-      state |= ElementState::USER_VALID;
+    if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
+        (mCanShowInvalidUI && ShouldShowValidityUI())) {
+      state |= ElementState::USER_INVALID;
     }
   }
 
-  return state;
+  // :-moz-ui-valid applies if all the following are true:
+  // 1. The element is not focused, or had either :-moz-ui-valid or
+  //    :-moz-ui-invalid applying before it was focused ;
+  // 2. The element is either valid or isn't allowed to have
+  //    :-moz-ui-invalid applying ;
+  // 3. The element has already been modified or the user tried to submit the
+  //    form owner while invalid.
+  if (mCanShowValidUI && ShouldShowValidityUI() &&
+      (IsValid() ||
+       (state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
+    state |= ElementState::USER_VALID;
+  }
+
+  AddStatesSilently(state);
 }
 
 void HTMLSelectElement::SaveState() {
@@ -1566,7 +1566,7 @@ void HTMLSelectElement::FieldSetDisabledChanged(bool aNotify) {
 
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();
-  UpdateState(aNotify);
+  UpdateValidityElementStates(aNotify);
 }
 
 void HTMLSelectElement::SetSelectionChanged(bool aValue, bool aNotify) {
@@ -1578,9 +1578,8 @@ void HTMLSelectElement::SetSelectionChanged(bool aValue, bool aNotify) {
 
   bool previousSelectionChangedValue = mSelectionHasChanged;
   mSelectionHasChanged = aValue;
-
   if (mSelectionHasChanged != previousSelectionChangedValue) {
-    UpdateState(aNotify);
+    UpdateValidityElementStates(aNotify);
   }
 }
 

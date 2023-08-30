@@ -1214,6 +1214,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                     nsIPrincipal* aSubjectPrincipal,
                                     bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
+    bool needValidityUpdate = false;
     if (aName == nsGkAtoms::src) {
       mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
           this, aValue ? aValue->GetStringValue() : EmptyString(),
@@ -1244,6 +1245,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       // GetStepBase() depends on the `value` attribute if `min` is not present,
       // even if the value doesn't change.
       UpdateStepMismatchValidityState();
+      needValidityUpdate = true;
     }
 
     // Checked must be set no matter what type of control it is, since
@@ -1261,6 +1263,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
           DoSetChecked(!!aValue, aNotify, false);
         }
       }
+      needValidityUpdate = true;
     }
 
     if (aName == nsGkAtoms::type) {
@@ -1273,6 +1276,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       }
       if (newType != mType) {
         HandleTypeChange(newType, aNotify);
+        needValidityUpdate = true;
       }
     }
 
@@ -1282,6 +1286,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         mType == FormControlType::InputRadio && (mForm || mDoneCreating)) {
       AddedToRadioGroup();
       UpdateValueMissingValidityStateForRadio(false);
+      needValidityUpdate = true;
     }
 
     if (aName == nsGkAtoms::required || aName == nsGkAtoms::disabled ||
@@ -1310,10 +1315,13 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (aName == nsGkAtoms::readonly || aName == nsGkAtoms::disabled) {
         UpdateBarredFromConstraintValidation();
       }
+      needValidityUpdate = true;
     } else if (aName == nsGkAtoms::maxlength) {
       UpdateTooLongValidityState();
+      needValidityUpdate = true;
     } else if (aName == nsGkAtoms::minlength) {
       UpdateTooShortValidityState();
+      needValidityUpdate = true;
     } else if (aName == nsGkAtoms::pattern) {
       // Although pattern attribute only applies to single line text controls,
       // we set this flag for all input types to save having to check the type
@@ -1323,8 +1331,10 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (mDoneCreating) {
         UpdatePatternMismatchValidityState();
       }
+      needValidityUpdate = true;
     } else if (aName == nsGkAtoms::multiple) {
       UpdateTypeMismatchValidityState();
+      needValidityUpdate = true;
     } else if (aName == nsGkAtoms::max) {
       UpdateHasRange(aNotify);
       mInputType->MinMaxStepAttrChanged();
@@ -1333,6 +1343,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       // We don't assert the state of underflow during creation since
       // DoneCreatingElement sanitizes.
       UpdateRangeOverflowValidityState();
+      needValidityUpdate = true;
       MOZ_ASSERT(!mDoneCreating || mType != FormControlType::InputRange ||
                      !GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
                  "HTML5 spec does not allow underflow for type=range");
@@ -1342,6 +1353,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       // See corresponding @max comment
       UpdateRangeUnderflowValidityState();
       UpdateStepMismatchValidityState();
+      needValidityUpdate = true;
       MOZ_ASSERT(!mDoneCreating || mType != FormControlType::InputRange ||
                      !GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
                  "HTML5 spec does not allow underflow for type=range");
@@ -1349,6 +1361,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       mInputType->MinMaxStepAttrChanged();
       // See corresponding @max comment
       UpdateStepMismatchValidityState();
+      needValidityUpdate = true;
       MOZ_ASSERT(!mDoneCreating || mType != FormControlType::InputRange ||
                      !GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
                  "HTML5 spec does not allow underflow for type=range");
@@ -1361,6 +1374,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       if (mType == FormControlType::InputNumber) {
         // The validity of our value may have changed based on the locale.
         UpdateValidityState();
+        needValidityUpdate = true;
       }
     } else if (aName == nsGkAtoms::autocomplete) {
       // Clear the cached @autocomplete attribute and autocompleteInfo state.
@@ -1372,6 +1386,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         f->PlaceholderChanged(aOldValue, aValue);
       }
       UpdatePlaceholderShownState();
+      needValidityUpdate = true;
     }
 
     if (CreatesDateTimeWidget()) {
@@ -1388,6 +1403,9 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
               CanBubble::eNo, ChromeOnlyDispatch::eNo);
         }
       }
+    }
+    if (needValidityUpdate) {
+      UpdateValidityElementStates(aNotify);
     }
   }
 
@@ -2250,7 +2268,7 @@ void HTMLInputElement::UpdateValidityState() {
   // become valid/invalid. For other validity states, they will be updated when
   // .value is actually changed.
   UpdateBadInputValidityState();
-  UpdateState(true);
+  UpdateValidityElementStates(true);
 }
 
 bool HTMLInputElement::MozIsTextField(bool aExcludePassword) {
@@ -2771,9 +2789,7 @@ void HTMLInputElement::SetValueChanged(bool aValueChanged) {
   mValueChanged = aValueChanged;
   UpdateTooLongValidityState();
   UpdateTooShortValidityState();
-  // We need to do this unconditionally because the validity ui bits depend on
-  // this.
-  UpdateState(true);
+  UpdateValidityElementStates(true);
 }
 
 void HTMLInputElement::SetLastValueChangeWasInteractive(bool aWasInteractive) {
@@ -2785,7 +2801,7 @@ void HTMLInputElement::SetLastValueChangeWasInteractive(bool aWasInteractive) {
   UpdateTooLongValidityState();
   UpdateTooShortValidityState();
   if (wasValid != IsValid()) {
-    UpdateState(true);
+    UpdateValidityElementStates(true);
   }
 }
 
@@ -2806,15 +2822,11 @@ void HTMLInputElement::DoSetCheckedChanged(bool aCheckedChanged, bool aNotify) {
 }
 
 void HTMLInputElement::SetCheckedChangedInternal(bool aCheckedChanged) {
-  bool checkedChangedBefore = mCheckedChanged;
-
-  mCheckedChanged = aCheckedChanged;
-
-  // This method can't be called when we are not authorized to notify
-  // so we do not need a aNotify parameter.
-  if (checkedChangedBefore != aCheckedChanged) {
-    UpdateState(true);
+  if (mCheckedChanged == aCheckedChanged) {
+    return;
   }
+  mCheckedChanged = aCheckedChanged;
+  UpdateValidityElementStates(true);
 }
 
 void HTMLInputElement::SetChecked(bool aChecked) {
@@ -2986,8 +2998,7 @@ void HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify) {
   // UpdateState anyway.
   UpdateAllValidityStatesButNotElementState();
   UpdateIndeterminateState(aNotify);
-  // validity state still require UpdateState to be called.
-  UpdateState(aNotify);
+  UpdateValidityElementStates(aNotify);
 
   // Notify all radios in the group that value has changed, this is to let
   // radios to have the chance to update its states, e.g., :indeterminate.
@@ -3461,7 +3472,7 @@ void HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection) {
       // regardless because we need the UI to update _now_ or the user will
       // wonder why the step behavior isn't functioning.
       UpdateValidityUIBits(true);
-      UpdateState(true);
+      UpdateValidityElementStates(true);
       return;
     }
   }
@@ -3627,8 +3638,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     }
 
     UpdateValidityUIBits(aVisitor.mEvent->mMessage == eFocus);
-
-    UpdateState(true);
+    UpdateValidityElementStates(true);
   }
 
   nsresult rv = NS_OK;
@@ -4276,7 +4286,7 @@ nsresult HTMLInputElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   UpdateBarredFromConstraintValidation();
 
   // And now make sure our state is up to date
-  UpdateState(false);
+  UpdateValidityElementStates(true);
 
   if (CreatesDateTimeWidget() && IsInComposedDoc()) {
     // Construct Shadow Root so web content can be hidden in the DOM.
@@ -4325,9 +4335,8 @@ void HTMLInputElement::UnbindFromTree(bool aNullParent) {
   UpdateValueMissingValidityState();
   // We might be no longer disabled because of parent chain changed.
   UpdateBarredFromConstraintValidation();
-
   // And now make sure our state is up to date
-  UpdateState(false);
+  UpdateValidityElementStates(false);
 }
 
 /**
@@ -6062,34 +6071,38 @@ ElementState HTMLInputElement::IntrinsicState() const {
   if (mType == FormControlType::InputImage) {
     state |= nsImageLoadingContent::ImageState();
   }
+  return state;
+}
 
-  if (IsCandidateForConstraintValidation()) {
-    if (IsValid()) {
-      state |= ElementState::VALID;
-    } else {
-      state |= ElementState::INVALID;
-
-      if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
-          (mCanShowInvalidUI && ShouldShowValidityUI())) {
-        state |= ElementState::USER_INVALID;
-      }
-    }
-
-    // :-moz-ui-valid applies if all of the following conditions are true:
-    // 1. The element is not focused, or had either :-moz-ui-valid or
-    //    :-moz-ui-invalid applying before it was focused ;
-    // 2. The element is either valid or isn't allowed to have
-    //    :-moz-ui-invalid applying ;
-    // 3. The element has already been modified or the user tried to submit the
-    //    form owner while invalid.
-    if (mCanShowValidUI && ShouldShowValidityUI() &&
-        (IsValid() ||
-         (!state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
-      state |= ElementState::USER_VALID;
+void HTMLInputElement::UpdateValidityElementStates(bool aNotify) {
+  AutoStateChangeNotifier notifier(*this, aNotify);
+  RemoveStatesSilently(ElementState::VALIDITY_STATES);
+  if (!IsCandidateForConstraintValidation()) {
+    return;
+  }
+  ElementState state;
+  if (IsValid()) {
+    state |= ElementState::VALID;
+  } else {
+    state |= ElementState::INVALID;
+    if (GetValidityState(VALIDITY_STATE_CUSTOM_ERROR) ||
+        (mCanShowInvalidUI && ShouldShowValidityUI())) {
+      state |= ElementState::USER_INVALID;
     }
   }
-
-  return state;
+  // :-moz-ui-valid applies if all of the following conditions are true:
+  // 1. The element is not focused, or had either :-moz-ui-valid or
+  //    :-moz-ui-invalid applying before it was focused ;
+  // 2. The element is either valid or isn't allowed to have
+  //    :-moz-ui-invalid applying ;
+  // 3. The element has already been modified or the user tried to submit the
+  //    form owner while invalid.
+  if (mCanShowValidUI && ShouldShowValidityUI() &&
+      (IsValid() ||
+       (!state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
+    state |= ElementState::USER_VALID;
+  }
+  AddStatesSilently(state);
 }
 
 static nsTArray<OwningFileOrDirectory> RestoreFileContentData(
@@ -6540,8 +6553,7 @@ Decimal HTMLInputElement::GetStep() const {
 
 void HTMLInputElement::SetCustomValidity(const nsAString& aError) {
   ConstraintValidation::SetCustomValidity(aError);
-
-  UpdateState(true);
+  UpdateValidityElementStates(true);
 }
 
 bool HTMLInputElement::IsTooLong() {
@@ -6705,7 +6717,7 @@ void HTMLInputElement::UpdateAllValidityStates(bool aNotify) {
   bool validBefore = IsValid();
   UpdateAllValidityStatesButNotElementState();
   if (validBefore != IsValid()) {
-    UpdateState(aNotify);
+    UpdateValidityElementStates(aNotify);
   }
 }
 
@@ -6873,7 +6885,7 @@ void HTMLInputElement::FieldSetDisabledChanged(bool aNotify) {
 
   UpdateValueMissingValidityState();
   UpdateBarredFromConstraintValidation();
-  UpdateState(aNotify);
+  UpdateValidityElementStates(aNotify);
 }
 
 void HTMLInputElement::SetFilePickerFiltersFromAccept(
@@ -7115,23 +7127,15 @@ void HTMLInputElement::UpdateValidityUIBits(bool aIsFocused) {
 }
 
 void HTMLInputElement::UpdateInRange(bool aNotify) {
+  AutoStateChangeNotifier notifier(*this, aNotify);
+  RemoveStatesSilently(ElementState::INRANGE | ElementState::OUTOFRANGE);
   if (!mHasRange || !IsCandidateForConstraintValidation()) {
-    RemoveStates(ElementState::INRANGE | ElementState::OUTOFRANGE, aNotify);
     return;
   }
   bool outOfRange = GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW) ||
                     GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW);
-  auto oldState = State();
-  RemoveStatesSilently(ElementState::INRANGE | ElementState::OUTOFRANGE);
   AddStatesSilently(outOfRange ? ElementState::OUTOFRANGE
                                : ElementState::INRANGE);
-  if (!aNotify) {
-    return;
-  }
-  auto newState = State();
-  if (oldState != newState) {
-    NotifyStateChange(oldState ^ newState);
-  }
 }
 
 void HTMLInputElement::UpdateHasRange(bool aNotify) {

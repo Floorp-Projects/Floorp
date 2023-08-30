@@ -71,8 +71,6 @@ class HTMLTextAreaElement final : public TextControlElement,
 
   void FieldSetDisabledChanged(bool aNotify) override;
 
-  ElementState IntrinsicState() const override;
-
   void SetLastValueChangeWasInteractive(bool);
 
   // TextControlElement
@@ -392,6 +390,8 @@ class HTMLTextAreaElement final : public TextControlElement,
    */
   void GetSelectionRange(uint32_t* aSelectionStart, uint32_t* aSelectionEnd,
                          ErrorResult& aRv);
+
+  void UpdateValidityElementStates(bool aNotify) final;
 
  private:
   static void MapAttributesIntoRule(MappedDeclarationsBuilder&);

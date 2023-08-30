@@ -56,13 +56,9 @@ void HTMLMeterElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 }
 
 void HTMLMeterElement::UpdateOptimumState(bool aNotify) {
-  const auto oldState = State();
+  AutoStateChangeNotifier notifier(*this, aNotify);
   RemoveStatesSilently(ElementState::METER_OPTIMUM_STATES);
   AddStatesSilently(GetOptimumState());
-  const auto newState = State();
-  if (aNotify && oldState != newState) {
-    NotifyStateChange(oldState ^ newState);
-  }
 }
 
 /*

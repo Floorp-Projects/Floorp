@@ -49,6 +49,7 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   void AfterClearForm(bool aUnbindOrDelete) override;
   void FieldSetDisabledChanged(bool aNotify) override;
   void SaveState() override;
+  void UpdateValidityElementStates(bool aNotify) final;
 
   void UpdateFormOwner();
 
@@ -67,7 +68,6 @@ class HTMLElement final : public nsGenericHTMLFormElement {
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                     nsIPrincipal* aMaybeScriptedPrincipal,
                     bool aNotify) override;
-  ElementState IntrinsicState() const override;
 
   // nsGenericHTMLFormElement
   void SetFormInternal(HTMLFormElement* aForm, bool aBindToTree) override;

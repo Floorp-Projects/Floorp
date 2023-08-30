@@ -46,6 +46,8 @@ bitflags! {
         const USER_VALID = 1 << 12;
         /// <https://drafts.csswg.org/selectors-4/#user-invalid-pseudo>
         const USER_INVALID = 1 << 13;
+        /// All the validity bits at once.
+        const VALIDITY_STATES = Self::VALID.bits | Self::INVALID.bits | Self::USER_VALID.bits | Self::USER_INVALID.bits;
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-broken
         const BROKEN = 1 << 14;
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-loading
@@ -188,7 +190,8 @@ bitflags! {
             Self::INRANGE.bits |
             Self::OUTOFRANGE.bits |
             Self::VISITED.bits |
-            Self::UNVISITED.bits;
+            Self::UNVISITED.bits |
+            Self::VALIDITY_STATES.bits;
 
         const INTRINSIC_STATES = !Self::EXTERNALLY_MANAGED_STATES.bits;
     }

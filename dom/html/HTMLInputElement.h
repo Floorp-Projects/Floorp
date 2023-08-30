@@ -331,6 +331,7 @@ class HTMLInputElement final : public TextControlElement,
   // as needed.  aNotify controls whether the element state update
   // needs to notify.
   void UpdateAllValidityStates(bool aNotify);
+  void UpdateValidityElementStates(bool aNotify) final;
   MOZ_CAN_RUN_SCRIPT
   void MaybeUpdateAllValidityStates(bool aNotify) {
     // If you need to add new type which supports validationMessage, you should

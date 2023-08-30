@@ -45,8 +45,6 @@ NS_IMPL_ELEMENT_CLONE(HTMLOutputElement)
 
 void HTMLOutputElement::SetCustomValidity(const nsAString& aError) {
   ConstraintValidation::SetCustomValidity(aError);
-
-  UpdateState(true);
 }
 
 NS_IMETHODIMP
@@ -77,21 +75,6 @@ void HTMLOutputElement::DoneAddingChildren(bool aHaveNotified) {
   mIsDoneAddingChildren = true;
   // We should update DefaultValue, after parsing is done.
   DescendantsChanged();
-}
-
-nsresult HTMLOutputElement::BindToTree(BindContext& aContext,
-                                       nsINode& aParent) {
-  nsresult rv = nsGenericHTMLFormControlElement::BindToTree(aContext, aParent);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Unfortunately, we can actually end up having to change our state
-  // as a result of being bound to a tree even from the parser: we
-  // might end up a in a novalidate form, and unlike other form
-  // controls that on its own is enough to make change ui-valid state.
-  // So just go ahead and update our state now.
-  UpdateState(false);
-
-  return rv;
 }
 
 void HTMLOutputElement::GetValue(nsAString& aValue) const {

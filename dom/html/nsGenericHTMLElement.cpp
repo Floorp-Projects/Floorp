@@ -1739,7 +1739,7 @@ void nsGenericHTMLFormElement::ClearForm(bool aRemoveFromForm,
   UnsetFlags(ADDED_TO_FORM);
   SetFormInternal(nullptr, false);
   AfterClearForm(aUnbindOrDelete);
-  UpdateState(true);
+  UpdateValidityElementStates(true);
 }
 
 nsresult nsGenericHTMLFormElement::BindToTree(BindContext& aContext,
@@ -1760,7 +1760,6 @@ nsresult nsGenericHTMLFormElement::BindToTree(BindContext& aContext,
 
   // Set parent fieldset which should be used for the disabled state.
   UpdateFieldSet(false);
-
   return NS_OK;
 }
 
@@ -1781,11 +1780,6 @@ void nsGenericHTMLFormElement::UnbindFromTree(bool aNullParent) {
         } else {
           UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
         }
-      }
-
-      if (!GetFormInternal()) {
-        // Our novalidate state might have changed
-        UpdateState(false);
       }
     }
 
@@ -2100,7 +2094,8 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
   }
 
   if (form != oldForm) {
-    UpdateState(true);
+    // ui-valid / invalid depends on the form for some elements
+    UpdateValidityElementStates(true);
   }
 }
 

@@ -76,8 +76,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
 
 void HTMLButtonElement::SetCustomValidity(const nsAString& aError) {
   ConstraintValidation::SetCustomValidity(aError);
-
-  UpdateState(true);
+  UpdateValidityElementStates(true);
 }
 
 void HTMLButtonElement::UpdateBarredFromConstraintValidation() {
@@ -94,7 +93,7 @@ void HTMLButtonElement::FieldSetDisabledChanged(bool aNotify) {
   nsGenericHTMLFormControlElementWithState::FieldSetDisabledChanged(aNotify);
 
   UpdateBarredFromConstraintValidation();
-  UpdateState(aNotify);
+  UpdateValidityElementStates(aNotify);
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLButtonElement)
@@ -269,9 +268,7 @@ nsresult HTMLButtonElement::BindToTree(BindContext& aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   UpdateBarredFromConstraintValidation();
-
-  // Update our state; we may now be the default submit element
-  UpdateState(false);
+  UpdateValidityElementStates(false);
 
   return NS_OK;
 }
@@ -280,9 +277,7 @@ void HTMLButtonElement::UnbindFromTree(bool aNullParent) {
   nsGenericHTMLFormControlElementWithState::UnbindFromTree(aNullParent);
 
   UpdateBarredFromConstraintValidation();
-
-  // Update our state; we may no longer be the default submit element
-  UpdateState(false);
+  UpdateValidityElementStates(false);
 }
 
 NS_IMETHODIMP
@@ -358,6 +353,7 @@ void HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       }
 
       UpdateBarredFromConstraintValidation();
+      UpdateValidityElementStates(aNotify);
     }
   }
 
@@ -383,23 +379,20 @@ bool HTMLButtonElement::RestoreState(PresState* aState) {
   if (aState && aState->disabledSet() && !aState->disabled()) {
     SetDisabled(false, IgnoreErrors());
   }
-
   return false;
 }
 
-ElementState HTMLButtonElement::IntrinsicState() const {
-  ElementState state =
-      nsGenericHTMLFormControlElementWithState::IntrinsicState();
-
-  if (IsCandidateForConstraintValidation()) {
-    if (IsValid()) {
-      state |= ElementState::VALID | ElementState::USER_VALID;
-    } else {
-      state |= ElementState::INVALID | ElementState::USER_INVALID;
-    }
+void HTMLButtonElement::UpdateValidityElementStates(bool aNotify) {
+  AutoStateChangeNotifier notifier(*this, aNotify);
+  RemoveStatesSilently(ElementState::VALIDITY_STATES);
+  if (!IsCandidateForConstraintValidation()) {
+    return;
   }
-
-  return state;
+  if (IsValid()) {
+    AddStatesSilently(ElementState::VALID | ElementState::USER_VALID);
+  } else {
+    AddStatesSilently(ElementState::INVALID | ElementState::USER_INVALID);
+  }
 }
 
 JSObject* HTMLButtonElement::WrapNode(JSContext* aCx,

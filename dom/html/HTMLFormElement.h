@@ -80,8 +80,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool GetValueMissingState(const nsAString& aName) const override;
   void SetValueMissingState(const nsAString& aName, bool aValue) override;
 
-  ElementState IntrinsicState() const override;
-
   // EventTarget
   void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
