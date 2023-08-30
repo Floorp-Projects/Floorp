@@ -34,7 +34,7 @@ abstract class LearnMoreSwitchPreference(context: Context, attrs: AttributeSet?)
         switch.run {
             isChecked = getSwitchValue()
             setOnCheckedChangeListener { _, isChecked ->
-                onPreferenceChangeListener.onPreferenceChange(
+                onPreferenceChangeListener?.onPreferenceChange(
                     this@LearnMoreSwitchPreference,
                     isChecked,
                 )
