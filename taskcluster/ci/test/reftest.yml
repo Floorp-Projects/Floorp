@@ -111,8 +111,7 @@ jsreftest:
             windows.*\/opt: 2
             linux.*64-ccov.*/.*: 5
             linux1804-64-qr/opt: 4
-            linux1804-64-qr/debug: 5
-            linux1804-64/debug: 5
+            linux.*/debug: 5
             .*-tsan-qr/opt: 8
             macosx.*-64-ccov.*/.*: 5
             macosx.*-64(-shippable)?/opt: 2
