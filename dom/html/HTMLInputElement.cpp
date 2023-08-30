@@ -2986,11 +2986,7 @@ void HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify) {
   // Set the value
   mChecked = aChecked;
 
-  // Notify the frame
   if (IsRadioOrCheckbox()) {
-    if (nsIFrame* frame = GetPrimaryFrame()) {
-      frame->InvalidateFrameSubtree();
-    }
     SetStates(ElementState::CHECKED, aChecked, aNotify);
   }
 
