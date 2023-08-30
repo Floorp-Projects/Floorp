@@ -81,7 +81,7 @@ object Versions {
         const val preferences = "1.2.1"
         const val lifecycle = "2.7.0"
         const val media = "1.7.0"
-        const val navigation = "2.5.3"
+        const val navigation = "2.7.7"
         const val work = "2.7.1"
         const val arch = "2.2.0"
         const val uiautomator = "2.2.0"
