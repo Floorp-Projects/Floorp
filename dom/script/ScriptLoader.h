@@ -503,7 +503,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                             const Maybe<nsAutoString>& aCharsetForPreload);
 
   /**
-   * Start a load for a module script URI.
+   * Start a load for a script (module or classic) URI.
    *
    * aCharsetForPreload is only needed when this load is a preload (via
    * ScriptLoader::PreloadURI), because ScriptLoadRequest doesn't
