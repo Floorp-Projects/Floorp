@@ -11,6 +11,10 @@ interface nsIDataStorageItem;
 
 [scriptable, uuid(71b49926-fd4e-43e2-ab8d-d9b049413c0b)]
 interface nsIDataStorageManager : nsISupports {
+  // Because of its specialized nature, nsIDataStorage instances are limited to
+  // the following pre-defined set. To add a new type of data storage, add an
+  // entry to the enum and get review from someone on the security and privacy
+  // engineering team.
   cenum DataStorage : 8 {
     AlternateServices,
     ClientAuthRememberList,
@@ -20,39 +24,90 @@ interface nsIDataStorageManager : nsISupports {
   nsIDataStorage get(in nsIDataStorageManager_DataStorage dataStorage);
 };
 
+/**
+ * nsIDataStorage is a threadsafe, generic, narrow string-based hash map that
+ * persists data on disk and additionally handles private (temporary) data.
+ * The file format is portable across architectures. If used in a context where
+ * there is no profile directory, data will not be persisted.
+ *
+ * Its lifecycle is as follows:
+ * - Use nsIDataStorageManager to obtain the nsIDataStorage of a particular
+ *   purpose. Its backing file will be read on a background thread.
+ * - Should the profile directory not be available, (e.g. in xpcshell),
+ *   nsIDataStorage will not read any persistent data.
+ * - When data in the nsIDataStorage changes, those changes will be written
+ *   to the backing file on a background thread. If the program crashes or is
+ *   closed unexpectedly before the write completes, the changes may be lost.
+ *   If the changes were an update to previously stored data, the original data
+ *   may be lost as well. A checksum associated with each entry helps identify
+ *   incompletely written entries.
+ * - nsIDataStorage does not support transactions. Each entry is independent of
+ *   the others.
+ * - When an nsIDataStorage instance observes the topic "profile-before-change"
+ *   in anticipation of shutdown, no more changes will be written to the
+ *   backing file. To ensure no data is lost, users of nsIDataStorage should
+ *   not attempt to change any data after this point.
+ *   If "profile-before-change" is not observed, this happens upon observing
+ *   "xpcom-shutdown-threads".
+ * - To prevent unbounded memory and disk use, the number of entries in each
+ *   table is limited to 2048. Evictions are handled in by a modified LRU scheme
+ *   (see implementation comments).
+ * - Note that instances of nsIDataStorage have long lifetimes because they are
+ *   strong observers of events and won't go away until the observer service
+ *   does.
+ *
+ * For each key/value:
+ * - The key must have a length no more than 256.
+ * - The value have a length no more than 1024 (24 for the site security
+ *   service state).
+ *   The length limits are to prevent unbounded disk and memory usage, and
+ *   nsIDataStorage will throw/return an error if given keys or values of
+ *   excess length.
+ *   Take care when storing data containing bytes that may be 0. When read
+ *   from disk, all trailing 0 bytes from keys and values are stripped.
+ */
 [scriptable, uuid(fcbb5ec4-7134-4069-91c6-9378eff51e03)]
 interface nsIDataStorage : nsISupports {
   /**
-   * Data that is Persistent is saved on disk. Temporary and Private are not
+   * Data that is Persistent is saved on disk. Data that is Private is not
    * saved. Private is meant to only be set and accessed from private contexts.
    * It will be cleared upon observing the event "last-pb-context-exited".
    */
   cenum DataType : 8 {
     Persistent,
-    Temporary,
     Private,
   };
 
   // Given a key and a type of data, returns a value. Returns
-  // NS_ERROR_NOT_AVAILABLE if the key is not present for that type of data. If
-  // Get is called before the "data-storage-ready" event is observed, it will
-  // block.
+  // NS_ERROR_NOT_AVAILABLE if the key is not present for that type of data.
+  // This operation may block the current thread until the background task
+  // reading the backing file from disk has completed.
   ACString get(in ACString key, in nsIDataStorage_DataType type);
 
   // Give a key, value, and type of data, adds an entry as appropriate.
   // Updates existing entries.
+  // This operation may block the current thread until the background task
+  // reading the backing file from disk has completed.
   void put(in ACString key, in ACString value, in nsIDataStorage_DataType type);
 
   // Given a key and type of data, removes an entry if present.
+  // This operation may block the current thread until the background task
+  // reading the backing file from disk has completed.
   void remove(in ACString key, in nsIDataStorage_DataType type);
 
   // Removes all entries of all types of data.
+  // This operation may block the current thread until the background task
+  // reading the backing file from disk has completed.
   void clear();
 
-  // Returns true if this data storage is ready to be used.
+  // Returns true if this data storage is ready to be used. To avoid blocking
+  // when calling other nsIDataStorage functions, callers may wish to first
+  // ensure this function returns true.
   bool isReady();
 
   // Read all of the data items.
+  // This operation may block the current thread until the background task
+  // reading the backing file from disk has completed.
   Array<nsIDataStorageItem> getAll();
 };
 
