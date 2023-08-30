@@ -63,7 +63,7 @@ jobs:
                     firefox-msix-latest-ssl: msix
                     firefox-pkg-latest-ssl: pkg
                     firefox-langpack-latest-ssl: langpack
-                esr102:
+                esr115:
                     # when there is one ESR branch both sets of aliases work
                     # when there are two ESR branches ...
                     # ... these always point to the older branch
@@ -73,7 +73,8 @@ jobs:
                     firefox-esr-msix-latest-ssl: msix
                     firefox-esr-pkg-latest-ssl: pkg
                     firefox-esr-langpack-latest-ssl: langpack
-                esr115:
+                    # yamllint disable-line rule:comments-indentation
+                # esrXXX: XXX - to uncomment when we branch next ESR
                     firefox-esr-next-latest-ssl: installer-ssl
                     firefox-esr-next-latest: installer
                     firefox-esr-next-msi-latest-ssl: msi
