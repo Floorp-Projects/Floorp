@@ -1646,6 +1646,10 @@ nsresult gfxHarfBuzzShaper::SetGlyphsFromRun(gfxShapedText* aShapedText,
 
   const hb_glyph_position_t* posInfo =
       hb_buffer_get_glyph_positions(mBuffer, nullptr);
+  if (!posInfo) {
+    // Some kind of unexpected failure inside harfbuzz?
+    return NS_ERROR_UNEXPECTED;
+  }
 
   while (glyphStart < int32_t(numGlyphs)) {
     int32_t charEnd = ginfo[glyphStart].cluster;
