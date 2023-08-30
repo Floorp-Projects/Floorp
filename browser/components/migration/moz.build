@@ -46,7 +46,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     EXPORTS += [
         "nsEdgeMigrationUtils.h",
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         "nsEdgeMigrationUtils.cpp",
         "nsIEHistoryEnumerator.cpp",
     ]
@@ -67,7 +67,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "ChromeMacOSLoginCrypto.sys.mjs",
         "SafariProfileMigrator.sys.mjs",
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         "nsKeychainMigrationUtils.mm",
     ]
     XPIDL_SOURCES += [
