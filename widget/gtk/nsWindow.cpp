@@ -695,7 +695,7 @@ double nsWindow::GetDefaultScaleInternal() { return FractionalScaleFactor(); }
 DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScale() {
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
-    return DesktopToLayoutDeviceScale(GdkCeiledScaleFactor());
+    return DesktopToLayoutDeviceScale(FractionalScaleFactor());
   }
 #endif
 
@@ -7112,7 +7112,7 @@ LayoutDeviceIntRect nsWindow::GetTitlebarRect() {
 
   int height = 0;
   if (DoDrawTilebarCorners()) {
-    height = GdkCeiledScaleFactor() * TITLEBAR_HEIGHT;
+    height = std::ceil(FractionalScaleFactor() * TITLEBAR_HEIGHT);
   }
   return LayoutDeviceIntRect(0, 0, mBounds.width, height);
 }
@@ -9529,7 +9529,7 @@ static void relative_pointer_handle_relative_motion(
 
   WidgetMouseEvent event(true, eMouseMove, window, WidgetMouseEvent::eReal);
 
-  gint scale = window->GdkCeiledScaleFactor();
+  double scale = window->FractionalScaleFactor();
   event.mRefPoint = window->GetNativePointerLockCenter();
   event.mRefPoint.x += int(wl_fixed_to_double(dx_w) * scale);
   event.mRefPoint.y += int(wl_fixed_to_double(dy_w) * scale);
