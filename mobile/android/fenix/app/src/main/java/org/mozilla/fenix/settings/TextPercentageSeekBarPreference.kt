@@ -303,8 +303,8 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
         value = getPersistedInt((defaultValue as Int?)!!)
     }
 
-    override fun onGetDefaultValue(a: TypedArray?, index: Int): Any {
-        return a!!.getInt(index, 0)
+    override fun onGetDefaultValue(a: TypedArray, index: Int): Any {
+        return a.getInt(index, 0)
     }
 
     private fun setValueInternal(value: Int, notifyChanged: Boolean) {
