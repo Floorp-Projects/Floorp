@@ -156,8 +156,8 @@ impl<'z> PathBuilder<'z> {
     }
 
     /// Completes the current path
-    pub fn finish(self) -> Vec<Vertex> {
-        self.vertices
+    pub fn finish(self) -> Box<[Vertex]> {
+        self.vertices.into_boxed_slice()
     }
 
     pub fn get_output_buffer_size(&self) -> Option<usize> {
@@ -620,10 +620,14 @@ fn join_line(
                         let mid = bisect(s1_normal, s2_normal);
 
                         // cross = sin, dot = cos
-                        let s = cross(mid, s1_normal)/(1. + dot(s1_normal, mid));
+                        let cos = dot(s1_normal, mid);
+                        let s = cross(mid, s1_normal)/(1. + cos);
+
+                        // compute the intersection in a more stable way
+                        let intersection = pt + mid * (offset / cos);
 
                         let ramp_s1 = intersection + s1_normal * 1. + unperp(s1_normal) * s;
-                        let ramp_s2 = intersection + s2_normal * 1. + unperp(s2_normal) * s;
+                        let ramp_s2 = intersection + s2_normal * 1. + perp(s2_normal) * s;
 
                         dest.ramp(intersection.x, intersection.y,
                             ramp_s1.x, ramp_s1.y,
@@ -707,12 +711,16 @@ impl<'z> Stroker<'z> {
     }
 
     pub fn move_to(&mut self, pt: Point, closed_subpath: bool) {
+        //eprintln!("stroker.move_to(Point::new({}, {}), {});", pt.x, pt.y, closed_subpath);
+
         self.start_point = None;
         self.cur_pt = Some(pt);
         self.closed_subpath = closed_subpath;
     }
 
     pub fn line_to(&mut self, pt: Point) {
+        //eprintln!("stroker.line_to(Point::new({}, {}));", pt.x, pt.y);
+
         let cur_pt = self.cur_pt;
         let stroked_path = &mut self.stroked_path;
         let half_width = self.half_width;
@@ -784,6 +792,7 @@ impl<'z> Stroker<'z> {
     }
 
     pub fn curve_to(&mut self, cx1: Point, cx2: Point, pt: Point) {
+        //eprintln!("stroker.curve_to(Point::new({}, {}), Point::new({}, {}), Point::new({}, {}));", cx1.x, cx1.y, cx2.x, cx2.y, pt.x, pt.y);
         self.curve_to_internal(cx1, cx2, pt, false);
     }
 
@@ -890,7 +899,7 @@ impl<'z> Stroker<'z> {
         stroked_path
     }
 
-    pub fn finish(&mut self) -> Vec<Vertex> {
+    pub fn finish(&mut self) -> Box<[Vertex]> {
         self.get_stroked_path().finish()
     }
 }
@@ -939,7 +948,7 @@ fn butt_cap() {
     stroker.move_to(Point::new(20., 20.5), false);
     stroker.line_to_capped(Point::new(40., 20.5));
     let result = stroker.finish();
-    for v in result {
+    for v in result.iter() {
         assert!(v.y == 20.5 || v.y == 19.5 || v.y == 21.5);
     }
 }
@@ -1005,7 +1014,7 @@ fn degenerate_miter_join() {
 
     let result = stroker.finish();
     // make sure none of the verticies are wildly out of place
-    for v in result {
+    for v in result.iter() {
         assert!(v.y >= 527.);
     }
 
@@ -1025,8 +1034,41 @@ fn degenerate_miter_join() {
     stroker.line_to(Point::new(512.3874, 598.6111));
     stroker.line_to_capped(end);
     let result = stroker.finish();
-    for v in result {
-        assert!(dbg!(distance_from_line(start, end, Point::new(v.x, v.y))) <= 21.);
+    for v in result.iter() {
+        assert!(distance_from_line(start, end, Point::new(v.x, v.y)) <= 21.);
     }
+
+    // from https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+    fn minimum_distance(v: Point, w: Point, p: Point) -> f32 {
+        // Return minimum distance between line segment vw and point p
+        let l2 = (v-w).length().powi(2);  // i.e. |w-v|^2 -  avoid a sqrt
+        if l2 == 0.0 { return (p - v).length(); }   // v == w case
+        // Consider the line extending the segment, parameterized as v + t (w - v).
+        // We find projection of point p onto the line.
+        // It falls where t = [(p-v) . (w-v)] / |w-v|^2
+        // We clamp t from [0,1] to handle points outside the segment vw.
+        let t = 0_f32.max(1_f32.min(dot(p - v, w - v) / l2));
+        let projection = v + (w - v) * t;  // Projection falls on the segment
+        (p - projection).length()
+    }
+
+    let mut stroker = Stroker::new(&StrokeStyle{
+        cap: LineCap::Square,
+        join: LineJoin::Miter,
+        width: 40.0,
+        miter_limit: 10.0,
+        ..Default::default()});
+    let start = Point::new(689.3504, 434.5446);
+    let end = Point::new(671.83203, 422.61914);
+    stroker.move_to(Point::new(689.3504, 434.5446), false);
+    stroker.line_to(Point::new(681.04254, 428.8891));
+    stroker.line_to_capped(Point::new(671.83203, 422.61914));
+
+    let result = stroker.finish();
+    let max_distance = (21_f32.powi(2) * 2.).sqrt();
+    for v in result.iter() {
+        assert!(minimum_distance(start, end, Point::new(v.x, v.y)) <= max_distance);
+    }
+
 }
 
