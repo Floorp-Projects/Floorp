@@ -50,8 +50,13 @@ export class ShoppingSidebarParent extends JSWindowActorParent {
       ShoppingSidebarParent.SHOPPING_ACTIVE_PREF,
       !activeState
     );
-    if (source == "urlBar" && activeState) {
-      Glean.shopping.surfaceClosed.record({ source: "addressBarIcon" });
+    if (source == "urlBar") {
+      if (activeState) {
+        Glean.shopping.surfaceClosed.record({ source: "addressBarIcon" });
+        Glean.shopping.addressBarIconClicked.record({ action: "closed" });
+      } else {
+        Glean.shopping.addressBarIconClicked.record({ action: "opened" });
+      }
     }
   }
 }
