@@ -111,6 +111,12 @@ linux1804-64-clang-trunk-qr/opt:
         - awsy
         - browsertime-clang
 
+linux2204-64-wayland/debug:
+    build-platform: linux64/opt
+    test-sets:
+        - linux2204-wayland-tests
+        - web-platform-tests
+
 linux2204-64-wayland/opt:
     build-platform: linux64/opt
     test-sets:
