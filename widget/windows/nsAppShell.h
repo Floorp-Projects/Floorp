@@ -19,7 +19,7 @@
 /**
  * Native Win32 Application shell wrapper
  */
-class nsAppShell final : public nsBaseAppShell {
+class nsAppShell : public nsBaseAppShell {
  public:
   nsAppShell()
       : mEventWnd(nullptr),
@@ -49,7 +49,6 @@ class nsAppShell final : public nsBaseAppShell {
   static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
 
  protected:
-  nsresult InitHiddenWindow();
   HWND mEventWnd;
   bool mNativeCallbackPending;
 
