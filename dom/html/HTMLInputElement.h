@@ -326,6 +326,7 @@ class HTMLInputElement final : public TextControlElement,
   void UpdateBadInputValidityState();
   void UpdatePlaceholderShownState();
   void UpdateCheckedState(bool aNotify);
+  void UpdateIndeterminateState(bool aNotify);
   // Update all our validity states and then update our element state
   // as needed.  aNotify controls whether the element state update
   // needs to notify.
