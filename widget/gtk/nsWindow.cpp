@@ -1669,13 +1669,10 @@ void nsWindow::LogPopupHierarchy() {
 }
 #endif
 
-nsWindow* nsWindow::WaylandPopupGetTopmostWindow() {
-  nsView* view = nsView::GetViewFor(this);
-  if (view) {
-    nsView* parentView = view->GetParent();
-    if (parentView) {
-      nsIWidget* parentWidget = parentView->GetNearestWidget(nullptr);
-      if (parentWidget) {
+nsWindow* nsWindow::GetTopmostWindow() {
+  if (nsView* view = nsView::GetViewFor(this)) {
+    if (nsView* parentView = view->GetParent()) {
+      if (nsIWidget* parentWidget = parentView->GetNearestWidget(nullptr)) {
         nsWindow* parentnsWindow = static_cast<nsWindow*>(parentWidget);
         LOG("  Topmost window: %p [nsWindow]\n", parentnsWindow);
         return parentnsWindow;
@@ -1777,7 +1774,7 @@ void nsWindow::AddWindowToPopupHierarchy() {
 
   // Check if we're already in the hierarchy
   if (!IsInPopupHierarchy()) {
-    mWaylandToplevel = WaylandPopupGetTopmostWindow();
+    mWaylandToplevel = GetTopmostWindow();
     AppendPopupToHierarchyList(mWaylandToplevel);
   }
 }

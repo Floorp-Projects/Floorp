@@ -862,7 +862,7 @@ class nsWindow final : public nsBaseWidget {
                                      GdkPoint* aOffset);
   bool WaylandPopupAnchorAdjustForParentPopup(GdkRectangle* aPopupAnchor,
                                               GdkPoint* aOffset);
-  nsWindow* WaylandPopupGetTopmostWindow();
+  nsWindow* GetTopmostWindow();
   bool IsPopupInLayoutPopupChain(nsTArray<nsIWidget*>* aLayoutWidgetHierarchy,
                                  bool aMustMatchParent);
   void WaylandPopupMarkAsClosed();
