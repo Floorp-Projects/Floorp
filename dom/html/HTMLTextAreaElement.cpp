@@ -1120,12 +1120,8 @@ void HTMLTextAreaElement::InitializeKeyboardEventListeners() {
 }
 
 void HTMLTextAreaElement::UpdatePlaceholderShownState() {
-  const bool shown = IsValueEmpty() && HasAttr(nsGkAtoms::placeholder);
-  if (shown) {
-    AddStates(ElementState::PLACEHOLDER_SHOWN);
-  } else {
-    RemoveStates(ElementState::PLACEHOLDER_SHOWN);
-  }
+  SetStates(ElementState::PLACEHOLDER_SHOWN,
+            IsValueEmpty() && HasAttr(nsGkAtoms::placeholder));
 }
 
 void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
@@ -1136,11 +1132,7 @@ void HTMLTextAreaElement::OnValueChanged(ValueChangeKind aKind,
   }
 
   if (aNewValueEmpty != IsValueEmpty()) {
-    if (aNewValueEmpty) {
-      AddStates(ElementState::VALUE_EMPTY);
-    } else {
-      RemoveStates(ElementState::VALUE_EMPTY);
-    }
+    SetStates(ElementState::VALUE_EMPTY, aNewValueEmpty);
     UpdatePlaceholderShownState();
   }
 

@@ -32,7 +32,7 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
 
   using mozilla::dom::Element::GetText;
 
-  bool Selected() const { return mIsSelected; }
+  bool Selected() const { return State().HasState(ElementState::CHECKED); }
   void SetSelected(bool aValue);
 
   void SetSelectedChanged(bool aValue) { mSelectedChanged = aValue; }
@@ -63,9 +63,6 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent = true) override;
-
-  // nsIContent
-  ElementState IntrinsicState() const override;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
@@ -125,12 +122,11 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
    */
   HTMLSelectElement* GetSelect();
 
-  bool mSelectedChanged;
-  bool mIsSelected;
+  bool mSelectedChanged = false;
 
   // True only while we're under the SetOptionsSelectedByIndex call when our
   // "selected" attribute is changing and mSelectedChanged is false.
-  bool mIsInSetDefaultSelected;
+  bool mIsInSetDefaultSelected = false;
 };
 
 }  // namespace mozilla::dom

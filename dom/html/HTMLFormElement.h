@@ -57,6 +57,9 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   int32_t IndexOfContent(nsIContent* aContent);
   nsGenericHTMLFormElement* GetDefaultSubmitElement() const;
+  bool IsDefaultSubmitElement(nsGenericHTMLFormElement* aElement) const {
+    return aElement == mDefaultSubmitElement;
+  }
 
   // nsIRadioGroupContainer
   void SetCurrentRadioButton(const nsAString& aName,
@@ -205,15 +208,6 @@ class HTMLFormElement final : public nsGenericHTMLElement,
    * input control that is not disabled. aElement is expected to not be null.
    */
   bool IsLastActiveElement(const nsGenericHTMLFormElement* aElement) const;
-
-  /**
-   * Check whether a given nsGenericHTMLFormElement is the default submit
-   * element.  This is different from just comparing to
-   * GetDefaultSubmitElement() in certain situations inside an update
-   * when GetDefaultSubmitElement() might not be up to date. aElement
-   * is expected to not be null.
-   */
-  bool IsDefaultSubmitElement(const nsGenericHTMLFormElement* aElement) const;
 
   /**
    * Flag the form to know that a button or image triggered scripted form
@@ -617,6 +611,8 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
  private:
   bool IsSubmitting() const;
+
+  void SetDefaultSubmitElement(nsGenericHTMLFormElement*);
 
   NotNull<const Encoding*> GetSubmitEncoding();
 

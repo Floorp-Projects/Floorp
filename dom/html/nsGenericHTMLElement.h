@@ -1156,7 +1156,6 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   virtual ~nsGenericHTMLFormControlElement();
 
   // Element
-  mozilla::dom::ElementState IntrinsicState() const override;
   bool IsLabelable() const override;
 
   // nsGenericHTMLFormElement

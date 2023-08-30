@@ -1246,16 +1246,20 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       UpdateStepMismatchValidityState();
     }
 
-    //
     // Checked must be set no matter what type of control it is, since
     // mChecked must reflect the new value
-    if (aName == nsGkAtoms::checked && !mCheckedChanged) {
-      // Delay setting checked if we are creating this element (wait
-      // until everything is set)
-      if (!mDoneCreating) {
-        mShouldInitChecked = true;
-      } else {
-        DoSetChecked(DefaultChecked(), true, false);
+    if (aName == nsGkAtoms::checked) {
+      if (IsRadioOrCheckbox()) {
+        SetStates(ElementState::DEFAULT, !!aValue, aNotify);
+      }
+      if (!mCheckedChanged) {
+        // Delay setting checked if we are creating this element (wait
+        // until everything is set)
+        if (!mDoneCreating) {
+          mShouldInitChecked = true;
+        } else {
+          DoSetChecked(!!aValue, aNotify, false);
+        }
       }
     }
 
@@ -2231,13 +2235,7 @@ void HTMLInputElement::SetFocusState(bool aIsFocused) {
   if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
     return;
   }
-
-  ElementState focusStates = ElementState::FOCUS | ElementState::FOCUSRING;
-  if (aIsFocused) {
-    AddStates(focusStates);
-  } else {
-    RemoveStates(focusStates);
-  }
+  SetStates(ElementState::FOCUS | ElementState::FOCUSRING, aIsFocused);
 }
 
 void HTMLInputElement::UpdateValidityState() {
@@ -2952,25 +2950,26 @@ void HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
   }
 }
 
+void HTMLInputElement::UpdateCheckedState(bool aNotify) {
+  SetStates(ElementState::CHECKED, IsRadioOrCheckbox() && mChecked, aNotify);
+}
+
 void HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify) {
   // Set the value
   mChecked = aChecked;
 
   // Notify the frame
-  if (mType == FormControlType::InputCheckbox ||
-      mType == FormControlType::InputRadio) {
-    nsIFrame* frame = GetPrimaryFrame();
-    if (frame) {
+  if (IsRadioOrCheckbox()) {
+    if (nsIFrame* frame = GetPrimaryFrame()) {
       frame->InvalidateFrameSubtree();
     }
+    SetStates(ElementState::CHECKED, aChecked, aNotify);
   }
 
   // No need to update element state, since we're about to call
   // UpdateState anyway.
   UpdateAllValidityStatesButNotElementState();
-
-  // Notify the document that the CSS :checked pseudoclass for this element
-  // has changed state.
+  // :indeterminate and validity state still require UpdateState to be called.
   UpdateState(aNotify);
 
   // Notify all radios in the group that value has changed, this is to let
@@ -3350,8 +3349,7 @@ void HTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent) {
     // is small, so we should be fine here.)
     SetValueInternal(val, {ValueSetterOption::BySetUserInputAPI,
                            ValueSetterOption::SetValueChanged});
-    nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
-    if (frame) {
+    if (nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame())) {
       frame->UpdateForValueChange();
     }
     DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
@@ -3375,8 +3373,7 @@ void HTMLInputElement::SetValueOfRangeForUserEvent(
   // is small, so we should be fine here.)
   SetValueInternal(val, {ValueSetterOption::BySetUserInputAPI,
                          ValueSetterOption::SetValueChanged});
-  nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
-  if (frame) {
+  if (nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame())) {
     frame->UpdateForValueChange();
   }
 
@@ -4396,6 +4393,11 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
   UpdatePlaceholderShownState();
   // Whether readonly applies might have changed.
   UpdateReadOnlyState(aNotify);
+  UpdateCheckedState(aNotify);
+  const bool isDefault = IsRadioOrCheckbox()
+                             ? DefaultChecked()
+                             : (mForm && mForm->IsDefaultSubmitElement(this));
+  SetStates(ElementState::DEFAULT, isDefault, aNotify);
 
   // https://html.spec.whatwg.org/#input-type-change
   switch (GetValueMode()) {
@@ -4473,12 +4475,10 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
   // Update or clear our required states since we may have changed from a
   // required input type to a non-required input type or viceversa.
   if (DoesRequiredApply()) {
-    bool isRequired = HasAttr(nsGkAtoms::required);
+    const bool isRequired = HasAttr(nsGkAtoms::required);
     UpdateRequiredState(isRequired, aNotify);
-  } else if (aNotify) {
-    RemoveStates(ElementState::REQUIRED_STATES);
   } else {
-    RemoveStatesSilently(ElementState::REQUIRED_STATES);
+    RemoveStates(ElementState::REQUIRED_STATES, aNotify);
   }
 
   UpdateHasRange();
@@ -6037,35 +6037,18 @@ void HTMLInputElement::DestroyContent() {
 }
 
 ElementState HTMLInputElement::IntrinsicState() const {
-  // If you add states here, and they're type-dependent, you need to add them
-  // to the type case in AfterSetAttr.
-
+  // If you add states here, and they're type-dependent, you need to add them to
+  // HandleTypeChange.
   ElementState state =
       nsGenericHTMLFormControlElementWithState::IntrinsicState();
-  if (mType == FormControlType::InputCheckbox ||
-      mType == FormControlType::InputRadio) {
-    // Check current checked state (:checked)
-    if (mChecked) {
-      state |= ElementState::CHECKED;
-    }
-
-    // Check current indeterminate state (:indeterminate)
-    if (mType == FormControlType::InputCheckbox && mIndeterminate) {
+  // Check current indeterminate state (:indeterminate)
+  if (mType == FormControlType::InputCheckbox && mIndeterminate) {
+    state |= ElementState::INDETERMINATE;
+  } else if (mType == FormControlType::InputRadio) {
+    HTMLInputElement* selected = GetSelectedRadioButton();
+    const bool indeterminate = !selected && !mChecked;
+    if (indeterminate) {
       state |= ElementState::INDETERMINATE;
-    }
-
-    if (mType == FormControlType::InputRadio) {
-      HTMLInputElement* selected = GetSelectedRadioButton();
-      bool indeterminate = !selected && !mChecked;
-
-      if (indeterminate) {
-        state |= ElementState::INDETERMINATE;
-      }
-    }
-
-    // Check whether we are the default checked element (:default)
-    if (DefaultChecked()) {
-      state |= ElementState::DEFAULT;
     }
   } else if (mType == FormControlType::InputImage) {
     state |= nsImageLoadingContent::ImageState();
@@ -6267,7 +6250,6 @@ void HTMLInputElement::WillRemoveFromRadioGroup() {
   // longer a selected radio button
   if (mChecked) {
     container->SetCurrentRadioButton(name, nullptr);
-
     nsCOMPtr<nsIRadioVisitor> visitor = new nsRadioUpdateStateVisitor(this);
     VisitGroup(visitor);
   }
@@ -6815,13 +6797,9 @@ void HTMLInputElement::InitializeKeyboardEventListeners() {
 }
 
 void HTMLInputElement::UpdatePlaceholderShownState() {
-  const bool shown =
-      IsValueEmpty() && PlaceholderApplies() && HasAttr(nsGkAtoms::placeholder);
-  if (shown) {
-    AddStates(ElementState::PLACEHOLDER_SHOWN);
-  } else {
-    RemoveStates(ElementState::PLACEHOLDER_SHOWN);
-  }
+  SetStates(ElementState::PLACEHOLDER_SHOWN,
+            IsValueEmpty() && PlaceholderApplies() &&
+                HasAttr(nsGkAtoms::placeholder));
 }
 
 void HTMLInputElement::OnValueChanged(ValueChangeKind aKind,
@@ -6833,11 +6811,7 @@ void HTMLInputElement::OnValueChanged(ValueChangeKind aKind,
   }
 
   if (aNewValueEmpty != IsValueEmpty()) {
-    if (aNewValueEmpty) {
-      AddStates(ElementState::VALUE_EMPTY);
-    } else {
-      RemoveStates(ElementState::VALUE_EMPTY);
-    }
+    SetStates(ElementState::VALUE_EMPTY, aNewValueEmpty);
     UpdatePlaceholderShownState();
   }
 
@@ -6876,11 +6850,7 @@ void HTMLInputElement::SetRevealPassword(bool aValue) {
   if (NS_WARN_IF(!defaultAction)) {
     return;
   }
-  if (aValue) {
-    AddStates(ElementState::REVEALED);
-  } else {
-    RemoveStates(ElementState::REVEALED);
-  }
+  SetStates(ElementState::REVEALED, aValue);
 }
 
 bool HTMLInputElement::RevealPassword() const {

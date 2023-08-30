@@ -325,6 +325,7 @@ class HTMLInputElement final : public TextControlElement,
   void UpdateStepMismatchValidityState();
   void UpdateBadInputValidityState();
   void UpdatePlaceholderShownState();
+  void UpdateCheckedState(bool aNotify);
   // Update all our validity states and then update our element state
   // as needed.  aNotify controls whether the element state update
   // needs to notify.
@@ -463,6 +464,11 @@ class HTMLInputElement final : public TextControlElement,
 
   bool Checked() const { return mChecked; }
   void SetChecked(bool aChecked);
+
+  bool IsRadioOrCheckbox() const {
+    return mType == FormControlType::InputCheckbox ||
+           mType == FormControlType::InputRadio;
+  }
 
   bool Disabled() const { return GetBoolAttr(nsGkAtoms::disabled); }
 
