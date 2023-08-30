@@ -135,8 +135,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             requireContext().getString(R.string.pref_key_show_search_suggestions_in_private),
         )
 
-        preferenceManager.sharedPreferences
-            .registerOnSharedPreferenceChangeListener(this) { sharedPreferences, key ->
+        preferenceManager?.sharedPreferences
+            ?.registerOnSharedPreferenceChangeListener(this) { sharedPreferences, key ->
                 try {
                     if (key in booleanPreferenceTelemetryAllowList) {
                         val enabled = sharedPreferences.getBoolean(key, false)

@@ -27,7 +27,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
         super.onCreate(savedInstanceState)
 
         val context = requireContext()
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this) { _, key ->
+        preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(this) { _, key ->
             if (key == getPreferenceKey(R.string.pref_key_telemetry)) {
                 if (context.settings().isTelemetryEnabled) {
                     context.components.analytics.metrics.start(MetricServiceType.Data)
