@@ -126,6 +126,7 @@ struct ScrollOptions;
 class Attr;
 class BooleanOrScrollIntoViewOptions;
 class Document;
+class HTMLFormElement;
 class DOMIntersectionObserver;
 class DOMMatrixReadOnly;
 class Element;
@@ -656,11 +657,7 @@ class Element : public FragmentOrElement {
   const AttrArray& GetAttrs() const { return mAttrs; }
 
   void SetDefined(bool aSet) {
-    if (aSet) {
-      AddStates(ElementState::DEFINED);
-    } else {
-      RemoveStates(ElementState::DEFINED);
-    }
+    SetStates(ElementState::DEFINED, aSet);
   }
 
   // AccessibilityRole
@@ -749,6 +746,7 @@ class Element : public FragmentOrElement {
   friend class ::nsGlobalWindowInner;
   friend class ::nsGlobalWindowOuter;
   friend class ::nsFocusManager;
+  friend class mozilla::dom::HTMLFormElement;
 
   // Allow CusomtElementRegistry to call AddStates.
   friend class CustomElementRegistry;
@@ -768,19 +766,30 @@ class Element : public FragmentOrElement {
   // These will handle setting up script blockers when they notify, so no need
   // to do it in the callers unless desired.  States passed here must only be
   // those in EXTERNALLY_MANAGED_STATES.
-  void AddStates(ElementState aStates) {
+  void AddStates(ElementState aStates, bool aNotify = true) {
     MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(ElementState::INTRINSIC_STATES),
                "Should only be adding externally-managed states here");
     ElementState old = mState;
     AddStatesSilently(aStates);
-    NotifyStateChange(old ^ mState);
+    if (aNotify) {
+      NotifyStateChange(old ^ mState);
+    }
   }
-  void RemoveStates(ElementState aStates) {
+  void RemoveStates(ElementState aStates, bool aNotify = true) {
     MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(ElementState::INTRINSIC_STATES),
                "Should only be removing externally-managed states here");
     ElementState old = mState;
     RemoveStatesSilently(aStates);
-    NotifyStateChange(old ^ mState);
+    if (aNotify) {
+      NotifyStateChange(old ^ mState);
+    }
+  }
+  void SetStates(ElementState aStates, bool aSet, bool aNotify = true) {
+    if (aSet) {
+      AddStates(aStates, aNotify);
+    } else {
+      RemoveStates(aStates, aNotify);
+    }
   }
   void ToggleStates(ElementState aStates, bool aNotify) {
     MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(ElementState::INTRINSIC_STATES),

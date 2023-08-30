@@ -1227,7 +1227,7 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
           (*firstSubmitSlot == mDefaultSubmitElement ||
            nsContentUtils::CompareTreePosition(aChild, mDefaultSubmitElement,
                                                this) < 0)) {
-        mDefaultSubmitElement = aChild;
+        SetDefaultSubmitElement(aChild);
       }
       *firstSubmitSlot = aChild;
     }
@@ -1269,6 +1269,19 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
 nsresult HTMLFormElement::AddElementToTable(nsGenericHTMLFormElement* aChild,
                                             const nsAString& aName) {
   return mControls->AddElementToTable(aChild, aName);
+}
+
+void HTMLFormElement::SetDefaultSubmitElement(
+    nsGenericHTMLFormElement* aElement) {
+  if (mDefaultSubmitElement) {
+    // It just so happens that a radio button or an <option> can't be our
+    // default submit element, so we can just blindly remove the bit.
+    mDefaultSubmitElement->RemoveStates(ElementState::DEFAULT);
+  }
+  mDefaultSubmitElement = aElement;
+  if (mDefaultSubmitElement) {
+    mDefaultSubmitElement->AddStates(ElementState::DEFAULT);
+  }
 }
 
 nsresult HTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
@@ -1320,7 +1333,7 @@ nsresult HTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   if (aChild == mDefaultSubmitElement) {
     // Need to reset mDefaultSubmitElement.  Do this asynchronously so
     // that we're not doing it while the DOM is in flux.
-    mDefaultSubmitElement = nullptr;
+    SetDefaultSubmitElement(nullptr);
     nsContentUtils::AddScriptRunner(new RemoveElementRunnable(this));
 
     // Note that we don't need to notify on the old default submit (which is
@@ -1348,29 +1361,26 @@ void HTMLFormElement::HandleDefaultSubmitRemoval() {
     return;
   }
 
+  nsGenericHTMLFormElement* newDefaultSubmit;
   if (!mFirstSubmitNotInElements) {
-    mDefaultSubmitElement = mFirstSubmitInElements;
+    newDefaultSubmit = mFirstSubmitInElements;
   } else if (!mFirstSubmitInElements) {
-    mDefaultSubmitElement = mFirstSubmitNotInElements;
+    newDefaultSubmit = mFirstSubmitNotInElements;
   } else {
     NS_ASSERTION(mFirstSubmitInElements != mFirstSubmitNotInElements,
                  "How did that happen?");
     // Have both; use the earlier one
-    mDefaultSubmitElement =
+    newDefaultSubmit =
         nsContentUtils::CompareTreePosition(mFirstSubmitInElements,
                                             mFirstSubmitNotInElements, this) < 0
             ? mFirstSubmitInElements
             : mFirstSubmitNotInElements;
   }
+  SetDefaultSubmitElement(newDefaultSubmit);
 
   MOZ_ASSERT(mDefaultSubmitElement == mFirstSubmitInElements ||
                  mDefaultSubmitElement == mFirstSubmitNotInElements,
              "What happened here?");
-
-  // Notify about change if needed.
-  if (mDefaultSubmitElement) {
-    mDefaultSubmitElement->UpdateState(true);
-  }
 }
 
 nsresult HTMLFormElement::RemoveElementFromTableInternal(
@@ -1677,40 +1687,6 @@ nsGenericHTMLFormElement* HTMLFormElement::GetDefaultSubmitElement() const {
              "What happened here?");
 
   return mDefaultSubmitElement;
-}
-
-bool HTMLFormElement::IsDefaultSubmitElement(
-    const nsGenericHTMLFormElement* aElement) const {
-  MOZ_ASSERT(aElement, "Unexpected call");
-
-  if (aElement == mDefaultSubmitElement) {
-    // Yes, it is
-    return true;
-  }
-
-  if (mDefaultSubmitElement || (aElement != mFirstSubmitInElements &&
-                                aElement != mFirstSubmitNotInElements)) {
-    // It isn't
-    return false;
-  }
-
-  // mDefaultSubmitElement is null, but we have a non-null submit around
-  // (aElement, in fact).  figure out whether it's in fact the default submit
-  // and just hasn't been set that way yet.  Note that we can't just call
-  // HandleDefaultSubmitRemoval because we might need to notify to handle that
-  // correctly and we don't know whether that's safe right here.
-  if (!mFirstSubmitInElements || !mFirstSubmitNotInElements) {
-    // We only have one first submit; aElement has to be it
-    return true;
-  }
-
-  // We have both kinds of submits.  Check which comes first.
-  nsGenericHTMLFormElement* defaultSubmit =
-      nsContentUtils::CompareTreePosition(mFirstSubmitInElements,
-                                          mFirstSubmitNotInElements, this) < 0
-          ? mFirstSubmitInElements
-          : mFirstSubmitNotInElements;
-  return aElement == defaultSubmit;
 }
 
 bool HTMLFormElement::ImplicitSubmissionIsDisabled() const {

@@ -43,7 +43,6 @@ bool nsRadioUpdateStateVisitor::Visit(HTMLInputElement* aRadio) {
   if (aRadio == mExcludeElement) {
     return true;
   }
-
   aRadio->UpdateState(true);
   return true;
 }

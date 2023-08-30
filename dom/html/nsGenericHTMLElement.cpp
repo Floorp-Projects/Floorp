@@ -2035,10 +2035,8 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
   MOZ_ASSERT(!aBindToTree || !aFormIdElement,
              "aFormIdElement shouldn't be set if aBindToTree is true!");
 
-  bool needStateUpdate = false;
   HTMLFormElement* form = GetFormInternal();
   if (!aBindToTree) {
-    needStateUpdate = form && form->IsDefaultSubmitElement(this);
     ClearForm(true, false);
     form = nullptr;
   }
@@ -2101,7 +2099,7 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
     }
   }
 
-  if (form != oldForm || needStateUpdate) {
+  if (form != oldForm) {
     UpdateState(true);
   }
 }
@@ -2623,22 +2621,6 @@ void nsGenericHTMLFormControlElement::SetForm(HTMLFormElement* aForm) {
 void nsGenericHTMLFormControlElement::ClearForm(bool aRemoveFromForm,
                                                 bool aUnbindOrDelete) {
   nsGenericHTMLFormElement::ClearForm(aRemoveFromForm, aUnbindOrDelete);
-}
-
-ElementState nsGenericHTMLFormControlElement::IntrinsicState() const {
-  // If you add attribute-dependent states here, you need to add them to
-  // AfterSetAttr too.  And add them to AfterSetAttr for all subclasses that
-  // implement IntrinsicState() and are affected by that attribute.
-  ElementState state = nsGenericHTMLFormElement::IntrinsicState();
-
-  if (mForm && mForm->IsDefaultSubmitElement(this)) {
-    NS_ASSERTION(IsSubmitControl(),
-                 "Default submit element that isn't a submit control.");
-    // We are the default submit element (:default)
-    state |= ElementState::DEFAULT;
-  }
-
-  return state;
 }
 
 bool nsGenericHTMLFormControlElement::IsLabelable() const {
