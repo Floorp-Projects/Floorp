@@ -51,10 +51,13 @@ data class Request(
     val private: Boolean = false,
 ) {
     var referrerUrl: String? = null
+    var conservative: Boolean = false
 
     /**
      * Create a Request for Backward compatibility.
      * @property referrerUrl An optional url of the referrer.
+     * @property conservative Whether to turn off bleeding-edge network features to avoid breaking core browser
+     * functionality, defaults to false. Set to true for Mozilla services only.
      */
     constructor(
         url: String,
@@ -68,8 +71,10 @@ data class Request(
         useCaches: Boolean = true,
         private: Boolean = false,
         referrerUrl: String? = null,
+        conservative: Boolean = false,
     ) : this(url, method, headers, connectTimeout, readTimeout, body, redirect, cookiePolicy, useCaches, private) {
         this.referrerUrl = referrerUrl
+        this.conservative = conservative
     }
 
     /**

@@ -88,8 +88,7 @@ private fun Request.toWebRequest(): WebRequest = WebRequest.Builder(url)
     .addBodyFrom(this)
     .referrer(referrerUrl)
     .cacheMode(if (useCaches) CACHE_MODE_DEFAULT else CACHE_MODE_RELOAD)
-    // Turn off bleeding-edge network features to avoid breaking core browser functionality.
-    .beConservative(true)
+    .beConservative(conservative)
     .build()
 
 private fun WebRequest.Builder.addHeadersFrom(request: Request): WebRequest.Builder {
