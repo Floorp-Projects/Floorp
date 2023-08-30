@@ -39,13 +39,13 @@ interface StyleSheet {
   // If the source map URL is not found by either of these methods,
   // then this is an empty string.
   [ChromeOnly, Pure]
-  readonly attribute DOMString sourceMapURL;
+  readonly attribute UTF8String sourceMapURL;
   // The source URL for this style sheet.  If the style sheet has the
   // special "# sourceURL=" comment, then this is the URL specified
   // there.  If no such comment is found, then this is the empty
   // string.
   [ChromeOnly, Pure]
-  readonly attribute DOMString sourceURL;
+  readonly attribute UTF8String sourceURL;
   [ChromeOnly, Pure]
   readonly attribute Document? associatedDocument;
   [ChromeOnly, Pure, BinaryName="isConstructed"]

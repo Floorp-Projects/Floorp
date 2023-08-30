@@ -1940,22 +1940,22 @@ pub extern "C" fn Servo_StyleSheet_GetOrigin(sheet: &StylesheetContents) -> Orig
 #[no_mangle]
 pub extern "C" fn Servo_StyleSheet_GetSourceMapURL(
     contents: &StylesheetContents,
-    result: &mut nsAString,
+    result: &mut nsACString,
 ) {
     let url_opt = contents.source_map_url.read();
     if let Some(ref url) = *url_opt {
-        write!(result, "{}", url).unwrap();
+        result.assign(url);
     }
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleSheet_GetSourceURL(
     contents: &StylesheetContents,
-    result: &mut nsAString,
+    result: &mut nsACString,
 ) {
     let url_opt = contents.source_url.read();
     if let Some(ref url) = *url_opt {
-        write!(result, "{}", url).unwrap();
+        result.assign(url);
     }
 }
 
