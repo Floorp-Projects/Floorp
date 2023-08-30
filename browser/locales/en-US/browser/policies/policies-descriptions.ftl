@@ -122,6 +122,8 @@ policy-ExtensionUpdate = Enable or disable automatic extension updates.
 
 policy-FirefoxHome2 = Configure { -firefox-home-brand-name }.
 
+policy-FirefoxSuggest = Configure { -firefox-suggest-brand-name }.
+
 policy-GoToIntranetSiteForSingleWordEntryInAddressBar = Force direct intranet site navigation instead of searching when typing single word entries in the address bar.
 
 policy-Handlers = Configure default application handlers.
