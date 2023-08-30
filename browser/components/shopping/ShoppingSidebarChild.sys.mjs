@@ -211,6 +211,23 @@ export class ShoppingSidebarChild extends RemotePageChild {
           isPolledRequestDone,
         });
       });
+    } else {
+      let url = await this.sendQuery("GetProductURL");
+
+      // Similar to canContinue() above, check to see if things
+      // have changed while we were waiting. Bail out if the user
+      // opted in, or if the actor doesn't exist.
+      if (this._destroyed || this.canFetchAndShowData) {
+        return;
+      }
+
+      this.#productURI = Services.io.newURI(url);
+      // Send the productURI to content for Onboarding's dynamic text
+      this.sendToContent("Update", {
+        showOnboarding: true,
+        data: null,
+        productUrl: this.#productURI.spec,
+      });
     }
   }
 
