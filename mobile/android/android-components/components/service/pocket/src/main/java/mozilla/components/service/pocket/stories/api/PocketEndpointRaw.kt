@@ -33,7 +33,7 @@ internal class PocketEndpointRaw internal constructor(
      */
     @WorkerThread // synchronous request.
     private fun makeRequest(): String? {
-        val request = Request(pocketEndpointUrl)
+        val request = Request(pocketEndpointUrl, conservative = true)
         return client.fetchBodyOrNull(request)
     }
 

@@ -98,7 +98,7 @@ class ContileTopSitesProvider(
 
     private fun fetchTopSites(): List<TopSite.Provided> {
         client.fetch(
-            Request(url = endPointURL),
+            Request(url = endPointURL, conservative = true),
         ).use { response ->
             if (response.isSuccess) {
                 val responseBody = response.body.string(Charsets.UTF_8)

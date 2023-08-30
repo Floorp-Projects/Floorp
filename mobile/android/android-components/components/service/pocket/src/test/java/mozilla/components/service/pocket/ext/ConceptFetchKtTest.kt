@@ -36,7 +36,7 @@ class ConceptFetchKtTest {
         val failureResponseBody = Response.Body("failure response body)".byteInputStream())
         defaultResponse = spy(Response(TEST_URL, 200, MutableHeaders(), responseBody))
         failureResponse = spy(Response(TEST_URL, 404, MutableHeaders(), failureResponseBody))
-        testRequest = Request(TEST_URL)
+        testRequest = Request(TEST_URL, conservative = true)
 
         client = mock<Client>().also {
             whenever(it.fetch(any())).thenReturn(defaultResponse)

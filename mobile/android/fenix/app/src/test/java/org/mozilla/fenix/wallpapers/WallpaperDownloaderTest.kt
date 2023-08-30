@@ -141,5 +141,6 @@ class WallpaperDownloaderTest {
     private fun Wallpaper.generateRequest(type: String) = Request(
         url = "$remoteHost/${collection.name}/$name/$type.png",
         method = Request.Method.GET,
+        conservative = true,
     )
 }

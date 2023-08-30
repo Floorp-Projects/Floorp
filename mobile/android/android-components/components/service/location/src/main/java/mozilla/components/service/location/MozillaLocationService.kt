@@ -155,6 +155,7 @@ private fun Client.fetchRegion(regionServiceUrl: String): LocationService.Region
         body = Request.Body.fromString(EMPTY_REQUEST_BODY),
         connectTimeout = Pair(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS),
         readTimeout = Pair(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS),
+        conservative = true,
     )
 
     return try {

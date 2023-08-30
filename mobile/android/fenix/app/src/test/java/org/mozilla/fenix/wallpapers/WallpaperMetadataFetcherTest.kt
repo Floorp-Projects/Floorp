@@ -29,6 +29,7 @@ class WallpaperMetadataFetcherTest {
         url = BuildConfig.WALLPAPER_URL.substringBefore("android") +
             "metadata/v$currentJsonVersion/wallpapers.json",
         method = Request.Method.GET,
+        conservative = true,
     )
     private val mockResponse = mockk<Response>()
     private val mockClient = mockk<Client> {

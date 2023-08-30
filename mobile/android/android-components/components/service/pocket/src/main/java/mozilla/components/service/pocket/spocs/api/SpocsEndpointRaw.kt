@@ -73,6 +73,7 @@ internal class SpocsEndpointRaw internal constructor(
             method = Method.POST,
             headers = getRequestHeaders(),
             body = getDownloadStoriesRequestBody(),
+            conservative = true,
         )
         return client.fetchBodyOrNull(request)
     }
@@ -102,6 +103,7 @@ internal class SpocsEndpointRaw internal constructor(
             method = Method.DELETE,
             headers = getRequestHeaders(),
             body = getDeleteProfileRequestBody(),
+            conservative = true,
         )
 
         val response: Response? = try {

@@ -95,6 +95,7 @@ class ConceptFetchHttpUploader(
             cookiePolicy = Request.CookiePolicy.OMIT,
             body = Request.Body(data.inputStream()),
             private = usePrivateRequest,
+            conservative = true,
         )
     }
 

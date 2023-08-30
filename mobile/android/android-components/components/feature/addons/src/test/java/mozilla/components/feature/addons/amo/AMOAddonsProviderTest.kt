@@ -80,6 +80,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -147,6 +148,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}&lang=en",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -164,6 +166,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "7e8d6dc651b54ab385fb8791bf9dac/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
                 readTimeout = Pair(5, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
         Unit
@@ -419,6 +422,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -444,6 +448,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -461,6 +466,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.POPULARITY_DESC.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -478,6 +484,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.NAME.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -495,6 +502,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.NAME_DESC.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -512,6 +520,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -529,6 +538,7 @@ class AMOAddonsProviderTest {
                 url = "https://services.addons.mozilla.org/api/v4/accounts/account/mozilla/collections/" +
                     "$collectionName/addons/?page_size=$PAGE_SIZE&sort=${SortOption.DATE_ADDED_DESC.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -555,6 +565,7 @@ class AMOAddonsProviderTest {
                     "?page_size=$PAGE_SIZE" +
                     "&sort=${SortOption.POPULARITY_DESC.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 
@@ -581,6 +592,7 @@ class AMOAddonsProviderTest {
                     "?page_size=$PAGE_SIZE" +
                     "&sort=${SortOption.POPULARITY_DESC.value}",
                 readTimeout = Pair(DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
 

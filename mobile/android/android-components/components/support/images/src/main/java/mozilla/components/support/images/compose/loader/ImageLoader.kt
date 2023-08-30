@@ -146,6 +146,7 @@ private fun fetch(
         redirect = Request.Redirect.FOLLOW,
         useCaches = true,
         private = private,
+        conservative = true,
     )
 
     return try {

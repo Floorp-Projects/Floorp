@@ -73,6 +73,7 @@ class WallpaperDownloader(
         val request = Request(
             url = "$remoteHost/$remotePath",
             method = Request.Method.GET,
+            conservative = true,
         )
 
         return@withContext Result.runCatching {

@@ -133,6 +133,7 @@ object ProfilerUtils {
                 "Accept" to PROFILER_SERVER_HEADER,
             ),
             body = Request.Body.fromFile(outputFile),
+            conservative = true,
         )
         return context.components.core.client.fetch(request)
     }

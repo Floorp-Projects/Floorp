@@ -32,7 +32,7 @@ class WallpaperMetadataFetcher(
      */
     suspend fun downloadWallpaperList(): List<Wallpaper> = withContext(Dispatchers.IO) {
         Result.runCatching {
-            val request = Request(url = metadataUrl, method = Request.Method.GET)
+            val request = Request(url = metadataUrl, method = Request.Method.GET, conservative = true)
             val response = client.fetch(request)
             response.body.useBufferedReader {
                 val json = it.readText()

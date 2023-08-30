@@ -159,6 +159,7 @@ class AMOAddonsProvider(
                     "&sort=${sortOption.value}" +
                     langParam,
                 readTimeout = Pair(readTimeoutInSeconds ?: DEFAULT_READ_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS),
+                conservative = true,
             ),
         )
             .use { response ->
@@ -200,7 +201,7 @@ class AMOAddonsProvider(
         } else {
             try {
                 logger.info("Trying to fetch the icon for $addonId from the network")
-                client.fetch(Request(url = iconUrl.sanitizeURL(), useCaches = true))
+                client.fetch(Request(url = iconUrl.sanitizeURL(), useCaches = true, conservative = true))
                     .use { response ->
                         if (response.isSuccess) {
                             response.body.useStream {
