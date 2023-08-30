@@ -1174,7 +1174,7 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   }
 
   // Check the usability.
-  if (aImageElement.IntrinsicState().HasState(ElementState::BROKEN)) {
+  if (aImageElement.State().HasState(ElementState::BROKEN)) {
     aRv.ThrowInvalidStateError("The image's state is broken");
     return nullptr;
   }
@@ -1233,7 +1233,7 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   }
 
   // Check the usability.
-  if (aSVGImageElement.IntrinsicState().HasState(ElementState::BROKEN)) {
+  if (aSVGImageElement.State().HasState(ElementState::BROKEN)) {
     aRv.ThrowInvalidStateError("The SVG's state is broken");
     return nullptr;
   }
