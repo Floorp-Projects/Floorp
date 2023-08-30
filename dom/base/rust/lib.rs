@@ -50,88 +50,86 @@ bitflags! {
         const VALIDITY_STATES = Self::VALID.bits | Self::INVALID.bits | Self::USER_VALID.bits | Self::USER_INVALID.bits;
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-broken
         const BROKEN = 1 << 14;
-        /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-loading
-        const LOADING = 1 << 15;
         /// <https://html.spec.whatwg.org/multipage/#selector-required>
-        const REQUIRED = 1 << 16;
+        const REQUIRED = 1 << 15;
         /// <https://html.spec.whatwg.org/multipage/#selector-optional>
         /// We use an underscore to workaround a silly windows.h define.
-        const OPTIONAL_ = 1 << 17;
+        const OPTIONAL_ = 1 << 16;
         /// <https://html.spec.whatwg.org/multipage/#selector-defined>
-        const DEFINED = 1 << 18;
+        const DEFINED = 1 << 17;
         /// <https://html.spec.whatwg.org/multipage/#selector-visited>
-        const VISITED = 1 << 19;
+        const VISITED = 1 << 18;
         /// <https://html.spec.whatwg.org/multipage/#selector-link>
-        const UNVISITED = 1 << 20;
+        const UNVISITED = 1 << 19;
         /// <https://drafts.csswg.org/selectors-4/#the-any-link-pseudo>
         const VISITED_OR_UNVISITED = Self::VISITED.bits | Self::UNVISITED.bits;
         /// Non-standard: https://developer.mozilla.org/en-US/docs/Web/CSS/:-moz-drag-over
-        const DRAGOVER = 1 << 21;
+        const DRAGOVER = 1 << 20;
         /// <https://html.spec.whatwg.org/multipage/#selector-in-range>
-        const INRANGE = 1 << 22;
+        const INRANGE = 1 << 21;
         /// <https://html.spec.whatwg.org/multipage/#selector-out-of-range>
-        const OUTOFRANGE = 1 << 23;
+        const OUTOFRANGE = 1 << 22;
         /// <https://html.spec.whatwg.org/multipage/#selector-read-only>
-        const READONLY = 1 << 24;
+        const READONLY = 1 << 23;
         /// <https://html.spec.whatwg.org/multipage/#selector-read-write>
-        const READWRITE = 1 << 25;
+        const READWRITE = 1 << 24;
         /// <https://html.spec.whatwg.org/multipage/#selector-default>
-        const DEFAULT = 1 << 26;
+        const DEFAULT = 1 << 25;
         /// Non-standard & undocumented.
-        const OPTIMUM = 1 << 28;
+        const OPTIMUM = 1 << 26;
         /// Non-standard & undocumented.
-        const SUB_OPTIMUM = 1 << 29;
+        const SUB_OPTIMUM = 1 << 27;
         /// Non-standard & undocumented.
-        const SUB_SUB_OPTIMUM = 1 << 30;
+        const SUB_SUB_OPTIMUM = 1 << 28;
         /// All the above <meter> bits in one place.
         const METER_OPTIMUM_STATES = Self::OPTIMUM.bits | Self::SUB_OPTIMUM.bits | Self::SUB_SUB_OPTIMUM.bits;
         /// Non-standard & undocumented.
-        const INCREMENT_SCRIPT_LEVEL = 1u64 << 31;
+        const INCREMENT_SCRIPT_LEVEL = 1 << 29;
         /// <https://drafts.csswg.org/selectors-4/#the-focus-visible-pseudo>
-        const FOCUSRING = 1u64 << 32;
+        const FOCUSRING = 1 << 30;
         /// <https://drafts.csswg.org/selectors-4/#the-focus-within-pseudo>
-        const FOCUS_WITHIN = 1u64 << 33;
+        const FOCUS_WITHIN = 1u64 << 31;
         /// :dir matching; the states are used for dynamic change detection.
         /// State that elements that match :dir(ltr) are in.
-        const LTR = 1u64 << 34;
+        const LTR = 1u64 << 32;
         /// State that elements that match :dir(rtl) are in.
-        const RTL = 1u64 << 35;
+        const RTL = 1u64 << 33;
         /// State that HTML elements that have a "dir" attr are in.
-        const HAS_DIR_ATTR = 1u64 << 36;
+        const HAS_DIR_ATTR = 1u64 << 34;
         /// State that HTML elements with dir="ltr" (or something
         /// case-insensitively equal to "ltr") are in.
-        const HAS_DIR_ATTR_LTR = 1u64 << 37;
+        const HAS_DIR_ATTR_LTR = 1u64 << 35;
         /// State that HTML elements with dir="rtl" (or something
         /// case-insensitively equal to "rtl") are in.
-        const HAS_DIR_ATTR_RTL = 1u64 << 38;
+        const HAS_DIR_ATTR_RTL = 1u64 << 36;
         /// State that HTML <bdi> elements without a valid-valued "dir" attr or
         /// any HTML elements (including <bdi>) with dir="auto" (or something
         /// case-insensitively equal to "auto") are in.
-        const HAS_DIR_ATTR_LIKE_AUTO = 1u64 << 39;
+        const HAS_DIR_ATTR_LIKE_AUTO = 1u64 << 37;
         /// Non-standard & undocumented.
-        const AUTOFILL = 1u64 << 40;
+        const AUTOFILL = 1u64 << 38;
         /// Non-standard & undocumented.
-        const AUTOFILL_PREVIEW = 1u64 << 41;
+        const AUTOFILL_PREVIEW = 1u64 << 39;
         /// State for modal elements:
         /// <https://drafts.csswg.org/selectors-4/#modal-state>
-        const MODAL = 1u64 << 42;
+        const MODAL = 1u64 << 40;
         /// <https://html.spec.whatwg.org/multipage/#inert-subtrees>
-        const INERT = 1u64 << 43;
+        const INERT = 1u64 << 41;
         /// State for the topmost modal element in top layer
-        const TOPMOST_MODAL = 1u64 << 44;
+        const TOPMOST_MODAL = 1u64 << 42;
         /// Initially used for the devtools highlighter, but now somehow only
         /// used for the devtools accessibility inspector.
-        const DEVTOOLS_HIGHLIGHTED = 1u64 << 45;
+        const DEVTOOLS_HIGHLIGHTED = 1u64 << 43;
         /// Used for the devtools style editor. Probably should go away.
-        const STYLEEDITOR_TRANSITIONING = 1u64 << 46;
+        const STYLEEDITOR_TRANSITIONING = 1u64 << 44;
         /// For :-moz-value-empty (to show widgets like the reveal password
         /// button or the clear button).
-        const VALUE_EMPTY = 1u64 << 47;
+        const VALUE_EMPTY = 1u64 << 45;
         /// For :-moz-revealed.
-        const REVEALED = 1u64 << 48;
+        const REVEALED = 1u64 << 46;
         /// https://html.spec.whatwg.org/#selector-popover-open
         /// Match element's popover visibility state of showing
-        const POPOVER_OPEN = 1u64 << 49;
+        const POPOVER_OPEN = 1u64 << 47;
 
         /// Some convenience unions.
         const DIR_STATES = Self::LTR.bits | Self::RTL.bits;

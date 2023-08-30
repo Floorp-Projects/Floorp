@@ -565,7 +565,8 @@ function hasVisitedState(node) {
     return false;
   }
 
-  const ELEMENT_STATE_VISITED = 1 << 19;
+  // ElementState::VISITED
+  const ELEMENT_STATE_VISITED = 1 << 18;
 
   return (
     !!(InspectorUtils.getContentState(node) & ELEMENT_STATE_VISITED) ||
