@@ -293,7 +293,8 @@ parent:
                                  uint32_t aProviderFlags,
                                  uint32_t aProviderTlsFlags,
                                  ByteArray aServerCertBytes,
-                                 ByteArray[] aCANames);
+                                 ByteArray[] aCANames,
+                                 uint64_t aBrowserId);
 
   async PVerifySSLServerCert(ByteArray[] aPeerCertChain,
                              nsCString aHostName,

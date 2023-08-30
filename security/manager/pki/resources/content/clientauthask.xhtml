@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pippki/content/clientauthask.css" type="text/css"?>
 
 <!DOCTYPE window>
 
@@ -13,7 +14,11 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   onload="onLoad();"
 >
-  <dialog id="certAuthAsk" buttons="accept,cancel">
+  <dialog
+    id="certAuthAsk"
+    buttons="accept,cancel"
+    buttonidcancel="client-auth-send-no-certificate"
+  >
     <linkset>
       <html:link rel="localization" href="security/pippki/pippki.ftl" />
     </linkset>
@@ -31,25 +36,78 @@
     <script src="chrome://global/content/editMenuOverlay.js" />
 
     <description
-      style="font-weight: bold"
-      data-l10n-id="client-auth-site-description"
+      class="important"
+      id="clientAuthSiteIdentification"
+      data-l10n-id="client-auth-site-identification"
+      data-l10n-args='{"hostname":""}'
     ></description>
-    <description id="hostname" />
-    <description id="organization" />
-    <description id="issuer" />
 
-    <description
-      style="font-weight: bold"
-      data-l10n-id="client-auth-choose-cert"
-    ></description>
     <!-- The items in this menulist must never be sorted,
      but remain in the order filled by the application
 -->
     <menulist id="nicknames" oncommand="onCertSelected();" native="true">
       <menupopup />
     </menulist>
-    <description data-l10n-id="client-auth-cert-details"></description>
-    <html:textarea readonly="readonly" id="details" style="height: 11em" />
-    <checkbox id="rememberBox" checked="true" native="true" />
+
+    <description
+      class="important"
+      data-l10n-id="client-auth-cert-details"
+    ></description>
+
+    <description
+      id="clientAuthCertDetailsIssuedTo"
+      class="details"
+      data-l10n-id="client-auth-cert-details-issued-to"
+      data-l10n-args='{"issuedTo":""}'
+    ></description>
+
+    <description
+      id="clientAuthCertDetailsSerialNumber"
+      class="details"
+      data-l10n-id="client-auth-cert-details-serial-number"
+      data-l10n-args='{"serialNumber":""}'
+    ></description>
+
+    <description
+      id="clientAuthCertDetailsValidityPeriod"
+      class="details"
+      data-l10n-id="client-auth-cert-details-validity-period"
+      data-l10n-args='{"notBefore":"","notAfter":""}'
+    ></description>
+
+    <description
+      id="clientAuthCertDetailsKeyUsages"
+      class="details"
+      data-l10n-id="client-auth-cert-details-key-usages"
+      data-l10n-args='{"keyUsages":""}'
+    ></description>
+
+    <description
+      id="clientAuthCertDetailsEmailAddresses"
+      class="details"
+      data-l10n-id="client-auth-cert-details-email-addresses"
+      data-l10n-args='{"emailAddresses":""}'
+    ></description>
+
+    <description
+      id="clientAuthCertDetailsIssuedBy"
+      class="details"
+      data-l10n-id="client-auth-cert-details-issued-by"
+      data-l10n-args='{"issuedBy":""}'
+    ></description>
+
+    <description
+      id="clientAuthCertDetailsStoredOn"
+      class="details"
+      data-l10n-id="client-auth-cert-details-stored-on"
+      data-l10n-args='{"storedOn":""}'
+    ></description>
+
+    <checkbox
+      id="rememberBox"
+      data-l10n-id="client-auth-cert-remember-box"
+      checked="true"
+      native="true"
+    />
   </dialog>
 </window>
