@@ -20,7 +20,6 @@ object FocusVersions {
 
     object AndroidX {
         const val constraint_layout_compose = "1.0.1"
-        const val preference = "1.2.0"
         const val splashscreen = "1.0.1"
         const val transition = "1.4.1"
     }
@@ -47,7 +46,6 @@ object FocusDependencies {
     const val androidx_constraint_layout_compose =
         "androidx.constraintlayout:constraintlayout-compose:${FocusVersions.AndroidX.constraint_layout_compose}"
 
-    const val androidx_preference = "androidx.preference:preference-ktx:${FocusVersions.AndroidX.preference}"
     const val androidx_splashscreen = "androidx.core:core-splashscreen:${FocusVersions.AndroidX.splashscreen}"
     const val androidx_transition = "androidx.transition:transition:${FocusVersions.AndroidX.transition}"
 

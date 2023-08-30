@@ -221,7 +221,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_lifecycle_process
     implementation ComponentsDependencies.androidx_lifecycle_viewmodel
     implementation ComponentsDependencies.androidx_palette
-    implementation FocusDependencies.androidx_preference
+    implementation ComponentsDependencies.androidx_preferences
     implementation ComponentsDependencies.androidx_recyclerview
     implementation ComponentsDependencies.androidx_savedstate
     implementation FocusDependencies.androidx_splashscreen
