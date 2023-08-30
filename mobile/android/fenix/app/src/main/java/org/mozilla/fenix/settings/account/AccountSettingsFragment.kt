@@ -142,8 +142,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         preferenceSyncNow.apply {
             onPreferenceClickListener = getClickListenerForSyncNow()
 
-            icon = icon.mutate().apply {
-                setTint(context.getColorFromAttr(R.attr.textPrimary))
+            icon?.let {
+                icon = it.mutate().apply {
+                    setTint(context.getColorFromAttr(R.attr.textPrimary))
+                }
             }
 
             // Current sync state
