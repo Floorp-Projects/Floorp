@@ -17,8 +17,6 @@ const WORKSPACE_MANAGE_ON_BMS_PREF = "floorp.browser.workspace.manageOnBMS";
 const WORKSPACE_SHOW_WORKSPACE_NAME_PREF = "floorp.browser.workspace.showWorkspaceName";
 const WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF =
   "floorp.browser.workspace.closePopupAfterClick";
-const WORKSPACE_EXCLUDED_PINNED_TABS_PREF =
-  "floorp.browser.workspace.excludePinnedTabs";
 const WORKSPACE_INFO_PREF = "floorp.browser.workspace.info";
 const WORKSPACE_BACKUPED_PREF = "floorp.browser.workspace.backuped";
 const WORKSPACE_CHANGE_WORKSPACE_WITH_DEFAULT_KEY_PREF = "floorp.browser.workspace.changeWorkspaceWithDefaultKey";
@@ -568,9 +566,6 @@ const workspaceFunctions = {
         ?.removeAttribute("floorp-firstVisibleTab");
       let lastTab = null;
       let firstTab = null;
-      const excludePinnedTabs = Services.prefs.getBoolPref(
-        WORKSPACE_EXCLUDED_PINNED_TABS_PREF
-      );
       for (let i = 0; i < tabs.length; i++) {
         let tab = tabs[i];
         let workspace = tab.getAttribute("floorpWorkspace");
@@ -589,15 +584,6 @@ const workspaceFunctions = {
           }
         } else {
           gBrowser.hideTab(tab);
-
-          if (!excludePinnedTabs) {
-            tab.setAttribute("hidden", "true");
-            tab.style.visility = "hidden";
-            tab.style.display = "none";
-
-            tab.style.removeProperty("margin");
-            tab.style.removeProperty("margin-inline-start");
-          }
         }
 
         if (Services.prefs.getBoolPref(WORKSPACE_SHOW_WORKSPACE_NAME_PREF)) {
