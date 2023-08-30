@@ -33,6 +33,10 @@ class OpenTabsInView extends ViewPage {
     super();
     this.everyWindowCallbackId = `firefoxview-${Services.uuid.generateUUID()}`;
     this.windows = new Map();
+    this.currentWindow = this.getWindow();
+    this.isPrivateWindow = lazy.PrivateBrowsingUtils.isWindowPrivate(
+      this.currentWindow
+    );
   }
 
   connectedCallback() {
@@ -40,11 +44,7 @@ class OpenTabsInView extends ViewPage {
     lazy.EveryWindow.registerCallback(
       this.everyWindowCallbackId,
       win => {
-        if (
-          win.gBrowser &&
-          !lazy.PrivateBrowsingUtils.isWindowPrivate(win) &&
-          !win.closed
-        ) {
+        if (win.gBrowser && this._shouldShowOpenTabs(win) && !win.closed) {
           const { tabContainer } = win.gBrowser;
           tabContainer.addEventListener("TabAttrModified", this);
           tabContainer.addEventListener("TabClose", this);
@@ -56,7 +56,7 @@ class OpenTabsInView extends ViewPage {
         }
       },
       win => {
-        if (win.gBrowser && !lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
+        if (win.gBrowser && this._shouldShowOpenTabs(win)) {
           const { tabContainer } = win.gBrowser;
           tabContainer.removeEventListener("TabAttrModified", this);
           tabContainer.removeEventListener("TabClose", this);
@@ -82,13 +82,11 @@ class OpenTabsInView extends ViewPage {
     if (this.recentBrowsing) {
       return this.getRecentBrowsingTemplate();
     }
-    const { window: currentWindow } =
-      window.browsingContext.embedderWindowGlobal.browsingContext;
     let currentWindowIndex, currentWindowTabs;
     let index = 1;
     const otherWindows = [];
     this.windows.forEach((tabs, win) => {
-      if (win === currentWindow) {
+      if (win === this.currentWindow) {
         currentWindowIndex = index++;
         currentWindowTabs = tabs;
       } else {
@@ -126,7 +124,8 @@ class OpenTabsInView extends ViewPage {
               <view-opentabs-card
                 class=${cardClasses}
                 .tabs=${currentWindowTabs}
-                data-inner-id="${currentWindow.windowGlobalChild.innerWindowId}"
+                data-inner-id="${this.currentWindow.windowGlobalChild
+                  .innerWindowId}"
                 data-l10n-id="firefoxview-opentabs-current-window-header"
                 data-l10n-args="${JSON.stringify({
                   winID: currentWindowIndex,
@@ -215,12 +214,16 @@ class OpenTabsInView extends ViewPage {
     return new Map(
       Array.from(Services.wm.getEnumerator("navigator:browser"))
         .filter(
-          win =>
-            win.gBrowser &&
-            !lazy.PrivateBrowsingUtils.isWindowPrivate(win) &&
-            !win.closed
+          win => win.gBrowser && this._shouldShowOpenTabs(win) && !win.closed
         )
         .map(win => [win, [...win.gBrowser.tabs]])
+    );
+  }
+
+  _shouldShowOpenTabs(win) {
+    return (
+      win == this.currentWindow ||
+      (!this.isPrivateWindow && !lazy.PrivateBrowsingUtils.isWindowPrivate(win))
     );
   }
 }
