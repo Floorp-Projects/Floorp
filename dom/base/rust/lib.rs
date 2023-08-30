@@ -166,6 +166,7 @@ bitflags! {
             Self::ACTIVE.bits |
             Self::DEFINED.bits |
             Self::DRAGOVER.bits |
+            Self::INDETERMINATE.bits |
             Self::FOCUS.bits |
             Self::FOCUSRING.bits |
             Self::FOCUS_WITHIN.bits |
