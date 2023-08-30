@@ -1105,6 +1105,8 @@ var TranslationsPanel = new (class {
       isFirstUserInteraction = null,
     }
   ) {
+    await window.ensureCustomElements("moz-button-group");
+
     const { panel, appMenuButton } = this.elements;
     const openedFromAppMenu = target.id === appMenuButton.id;
     const { docLangTag } = await this.#getCachedDetectedLanguages();
