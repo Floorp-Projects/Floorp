@@ -157,6 +157,22 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "processCrashThreshold",
+  "extensions.webextensions.crash.threshold",
+  // The default number of times an extension process is allowed to crash
+  // within a timeframe.
+  5
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "processCrashTimeframe",
+  "extensions.webextensions.crash.timeframe",
+  // The default timeframe used to count crashes, in milliseconds.
+  30 * 1000
+);
+
 var {
   GlobalManager,
   IconDetails,
@@ -659,6 +675,7 @@ ExtensionAddonObserver.init();
  */
 export var ExtensionProcessCrashObserver = {
   initialized: false,
+  _processSpawningDisabled: false,
   // Technically there is at most one child extension process,
   // but we may need to adjust this assumption to account for more
   // than one if that ever changes in the future.
@@ -666,11 +683,18 @@ export var ExtensionProcessCrashObserver = {
   lastCrashedProcessChildID: undefined,
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
+  // Collect the timestamps of the crashes happened over the last
+  // `processCrashTimeframe` milliseconds.
+  lastCrashTimestamps: [],
+
   init() {
     if (!this.initialized) {
       Services.obs.addObserver(this, "ipc:content-created");
       Services.obs.addObserver(this, "process-type-set");
       Services.obs.addObserver(this, "ipc:content-shutdown");
+      this.logger = lazy.Log.repository.getLogger(
+        "addons.process-crash-observer"
+      );
       this.initialized = true;
     }
   },
@@ -728,11 +752,49 @@ export var ExtensionProcessCrashObserver = {
         }
 
         this.lastCrashedProcessChildID = childID;
+
+        const now = Cu.now();
+        // Filter crash timestamps older than processCrashTimeframe.
+        this.lastCrashTimestamps = this.lastCrashTimestamps.filter(
+          timestamp => now - timestamp < lazy.processCrashTimeframe
+        );
+        // Push the new timeframe.
+        this.lastCrashTimestamps.push(now);
+        // Set the flag that disable process spawning when we exceed the
+        // `processCrashThreshold`.
+        this._processSpawningDisabled =
+          this.lastCrashTimestamps.length > lazy.processCrashThreshold;
+
+        this.logger.debug(
+          `Extension process crashed ${this.lastCrashTimestamps.length} times over the last ${lazy.processCrashTimeframe}ms`
+        );
+
+        if (this.processSpawningDisabled) {
+          this.logger.warn(
+            `Extension process respawning disabled because it crashed too often in the last ${lazy.processCrashTimeframe}ms (${this.lastCrashTimestamps.length} > ${lazy.processCrashThreshold}).`
+          );
+        }
+
         Glean.extensions.processEvent.crashed.add(1);
-        Management.emit("extension-process-crash", { childID });
+        Management.emit("extension-process-crash", {
+          childID,
+          processSpawningDisabled: this.processSpawningDisabled,
+        });
         break;
       }
     }
+  },
+
+  enableProcessSpawning() {
+    const crashCounter = this.lastCrashTimestamps.length;
+    this.lastCrashTimestamps = [];
+    this.logger.debug(`reset crash counter (was ${crashCounter})`);
+    this._processSpawningDisabled = false;
+    Management.emit("extension-enable-process-spawning");
+  },
+
+  get processSpawningDisabled() {
+    return this._processSpawningDisabled;
   },
 };
 

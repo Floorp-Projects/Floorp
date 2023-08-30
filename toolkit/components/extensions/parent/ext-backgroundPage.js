@@ -341,6 +341,27 @@ class BackgroundContextOwner {
   context = null;
 
   /**
+   * @property {boolean} [canBePrimed]
+   *
+   * This property reflects whether persistent listeners can be primed. This
+   * means that `backgroundState` is `STOPPED` and the listeners haven't been
+   * primed yet. It is initially `true`, and set to `false` as soon as
+   * listeners are primed. It can become `true` again if `primeBackground` was
+   * skipped due to `shouldPrimeBackground` being `false`.
+   */
+  canBePrimed = true;
+
+  /**
+   * @property {boolean} [shouldPrimeBackground]
+   *
+   * This property controls whether we should prime listeners. Under normal
+   * conditions, this should always be `true` but when too many crashes have
+   * occurred, we might have to disable process spawning, which would lead to
+   * this property being set to `false`.
+   */
+  shouldPrimeBackground = true;
+
+  /**
    * @param {BackgroundBuilder} backgroundBuilder
    * @param {Extension} extension
    */
@@ -348,10 +369,16 @@ class BackgroundContextOwner {
     this.backgroundBuilder = backgroundBuilder;
     this.extension = extension;
     this.onExtensionProcessCrashed = this.onExtensionProcessCrashed.bind(this);
+    this.onExtensionEnableProcessSpawning =
+      this.onExtensionEnableProcessSpawning.bind(this);
 
     extension.backgroundState = BACKGROUND_STATE.STOPPED;
 
     extensions.on("extension-process-crash", this.onExtensionProcessCrashed);
+    extensions.on(
+      "extension-enable-process-spawning",
+      this.onExtensionEnableProcessSpawning
+    );
   }
 
   /**
@@ -368,6 +395,9 @@ class BackgroundContextOwner {
     }
     this.extension.backgroundState = BACKGROUND_STATE.STARTING;
     this.bgInstance = bgInstance;
+    // Often already false, except if we're waking due to a listener that was
+    // registered with isInStartup=true.
+    this.canBePrimed = false;
   }
 
   /**
@@ -463,10 +493,12 @@ class BackgroundContextOwner {
       // A crashed background page is gone until the extension restarts.
       // TODO bug 1844490: Consider priming background pages like event pages.
       // See also the end of terminateBackground().
-    } else {
+    } else if (this.shouldPrimeBackground) {
       // Prime again, so that a stopped background can always be revived when
       // needed.
       this.backgroundBuilder.primeBackground(false);
+    } else {
+      this.canBePrimed = true;
     }
   }
 
@@ -497,9 +529,21 @@ class BackgroundContextOwner {
     }
   }
 
+  onExtensionEnableProcessSpawning() {
+    if (!this.canBePrimed) {
+      return;
+    }
+
+    // Allow priming again.
+    this.shouldPrimeBackground = true;
+    this.backgroundBuilder.primeBackground(false);
+  }
+
   onExtensionProcessCrashed(eventName, data) {
     // data.childID holds the process ID of the crashed extension process.
     // For now, assume that there is only one, so clean up unconditionally.
+
+    this.shouldPrimeBackground = !data.processSpawningDisabled;
 
     // We only need to clean up if a bgInstance has been created. Without it,
     // there is only state in the parent process, not the child, and a crashed
@@ -518,6 +562,10 @@ class BackgroundContextOwner {
       this.setBgStateStopped(isAppShutdown);
     }
     extensions.off("extension-process-crash", this.onExtensionProcessCrashed);
+    extensions.off(
+      "extension-enable-process-spawning",
+      this.onExtensionEnableProcessSpawning
+    );
   }
 }
 
@@ -851,6 +899,10 @@ class BackgroundBuilder {
     };
 
     EventManager.primeListeners(extension, isInStartup);
+    // Avoid setting the flag to false when called during extension startup.
+    if (!isInStartup) {
+      this.backgroundContextOwner.canBePrimed = false;
+    }
 
     // TODO: start-background-script and background-script-event should be
     // unregistered when build() starts or when the extension shuts down.
@@ -944,10 +996,15 @@ this.backgroundPage = class extends ExtensionAPI {
       // happen if a primed listener (isInStartup) has been triggered.
       if (
         !this.backgroundBuilder ||
-        this.backgroundBuilder.backgroundContextOwner.bgInstance
+        this.backgroundBuilder.backgroundContextOwner.bgInstance ||
+        !this.backgroundBuilder.backgroundContextOwner.canBePrimed
       ) {
         return;
       }
+
+      // We either start the background page immediately, or fully prime for
+      // real.
+      this.backgroundBuilder.backgroundContextOwner.canBePrimed = false;
 
       // If there are no listeners for the extension that were persisted, we need to
       // start the event page so they can be registered.

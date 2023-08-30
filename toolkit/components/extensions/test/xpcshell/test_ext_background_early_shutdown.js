@@ -26,9 +26,8 @@ AddonTestUtils.createAppInfo(
 let { promiseRestartManager, promiseShutdownManager, promiseStartupManager } =
   AddonTestUtils;
 
-const { Management } = ChromeUtils.importESModule(
-  "resource://gre/modules/Extension.sys.mjs"
-);
+const { ExtensionProcessCrashObserver, Management } =
+  ChromeUtils.importESModule("resource://gre/modules/Extension.sys.mjs");
 
 const server = AddonTestUtils.createHttpServer({
   hosts: ["example.com"],
@@ -80,6 +79,12 @@ function crashFrame(browser) {
 // We can only crash the extension process when they are running out-of-process.
 // Otherwise we would be killing the test runner itself...
 const CAN_CRASH_EXTENSIONS = WebExtensionPolicy.useRemoteWebExtensions;
+
+add_setup(function () {
+  // Set a high threshold because this test crashes a few times on purpose and
+  // we don't want to disable process spawning.
+  Services.prefs.setIntPref("extensions.webextensions.crash.threshold", 100);
+});
 
 add_setup(
   // Crash dumps are only generated when MOZ_CRASHREPORTER is set.
@@ -575,3 +580,135 @@ add_task(async function test_crash_and_wakeup_via_persistent_listeners() {
 
   await extension.unload();
 });
+
+add_task(
+  {
+    skip_if: () => !CAN_CRASH_EXTENSIONS,
+    pref_set: [
+      ["extensions.webextensions.crash.threshold", 3],
+      // Set a long timeframe to make sure the few crashes we produce in this
+      // test will all be counted within the same timeframe.
+      ["extensions.webextensions.crash.timeframe", 60 * 1000],
+    ],
+  },
+  async function test_process_spawning_disabled_because_of_too_many_crashes() {
+    // Force-enable process spawning because that will reset the internals of
+    // the crash observer.
+    ExtensionProcessCrashObserver.enableProcessSpawning();
+    Assert.equal(
+      ExtensionProcessCrashObserver.processSpawningDisabled,
+      false,
+      "Expect process spawning to be enabled"
+    );
+
+    // Ensure that the background can start in response to a primed listener.
+    await ExtensionTestCommon.resetStartupPromises();
+    await AddonTestUtils.notifyEarlyStartup();
+
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        background: { persistent: false },
+        optional_permissions: ["tabs"],
+      },
+      background() {
+        const domreadyPromise = new Promise(resolve => {
+          window.addEventListener("load", resolve, { once: true });
+        });
+        browser.permissions.onAdded.addListener(() => {
+          browser.test.log("permissions.onAdded has fired");
+          // Wait for DOMContentLoaded to have fired before notifying the test.
+          // This guarantees that backgroundState is "running" instead of
+          // potentially "starting".
+          domreadyPromise.then(() => {
+            browser.test.sendMessage("event_fired");
+          });
+        });
+      },
+    });
+    await extension.startup();
+    function assertBackgroundState(expected, message) {
+      Assert.equal(extension.extension.backgroundState, expected, message);
+    }
+    function triggerEventInEventPage() {
+      // Trigger an event, with the expectation that the event page will wake up.
+      // As long as we are the only one to trigger the extension API event in this
+      // test, the exact event is not significant. Trigger permissions.onAdded:
+      Management.emit("change-permissions", {
+        extensionId: extension.id,
+        added: {
+          origins: [],
+          permissions: ["tabs"],
+        },
+      });
+    }
+
+    assertBackgroundState("running", "Background after extension.startup()");
+
+    // Sanity check: triggerEventInEventPage does actually trigger event_fired.
+    triggerEventInEventPage();
+    await extension.awaitMessage("event_fired");
+
+    // Crash/restart a few times to force the crash observer to disable process
+    // spawning on the crash _after_ the loop. Note that the value below should
+    // match the "threshold" pref set above.
+    const TEST_RESTART_ATTEMPTS = 3;
+    for (let i = 1; i <= TEST_RESTART_ATTEMPTS; ++i) {
+      info(
+        `Crash/restart extension background, attempt ${i}/${TEST_RESTART_ATTEMPTS}`
+      );
+
+      await crashExtensionBackground(extension);
+      assertBackgroundState("stopped", "Background state after crash");
+
+      triggerEventInEventPage();
+      await extension.awaitMessage("event_fired");
+      assertBackgroundState(
+        "running",
+        "Persistent event can wake up event page"
+      );
+    }
+
+    info("Crash one more time");
+    await crashExtensionBackground(extension);
+    Assert.ok(
+      ExtensionProcessCrashObserver.processSpawningDisabled,
+      "Expect process spawning to be disabled"
+    );
+
+    info("Trigger an event, which shouldn't wake up the event page");
+    triggerEventInEventPage();
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 100));
+    assertBackgroundState("stopped", "Background should not have started yet");
+
+    info("Enable process spawning");
+    ExtensionProcessCrashObserver.enableProcessSpawning();
+    Assert.equal(
+      ExtensionProcessCrashObserver.processSpawningDisabled,
+      false,
+      "Expect process spawning to be enabled"
+    );
+    assertBackgroundState("stopped", "Background should still be suspended");
+
+    info("Trigger an event, which should wake up the event page");
+    triggerEventInEventPage();
+    await extension.awaitMessage("event_fired");
+    assertBackgroundState("running", "Persistent event can wake up event page");
+
+    info("Crash again");
+    await crashExtensionBackground(extension);
+    assertBackgroundState("stopped", "Background state after crash");
+    Assert.equal(
+      ExtensionProcessCrashObserver.processSpawningDisabled,
+      false,
+      "Expect process spawning to be enabled"
+    );
+
+    info("Trigger an event, which should wake up the event page again");
+    triggerEventInEventPage();
+    await extension.awaitMessage("event_fired");
+    assertBackgroundState("running", "Persistent event can wake up event page");
+
+    await extension.unload();
+  }
+);
