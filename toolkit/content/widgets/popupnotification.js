@@ -95,13 +95,13 @@
         </vbox>
       </hbox>
       <hbox class="popup-notification-footer-container"></hbox>
-      <hbox class="popup-notification-button-container panel-footer">
-        <button class="popup-notification-secondary-button"/>
-        <button type="menu" class="popup-notification-dropmarker" data-l10n-id="popup-notification-more-actions-button">
+      <hbox class="panel-footer">
+        <button class="popup-notification-secondary-button panel-footer-button"/>
+        <button type="menu" class="popup-notification-dropmarker panel-footer-button" data-l10n-id="popup-notification-more-actions-button">
           <menupopup position="after_end" data-l10n-id="popup-notification-more-actions-button">
           </menupopup>
         </button>
-        <button class="popup-notification-primary-button" data-l10n-id="popup-notification-default-button"/>
+        <button class="popup-notification-primary-button panel-footer-button" data-l10n-id="popup-notification-default-button"/>
       </hbox>
       `;
     }

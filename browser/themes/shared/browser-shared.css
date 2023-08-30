@@ -494,12 +494,12 @@ menupopup::part(drop-indicator) {
   transform: translateY(50%);
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button-container,
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .panel-footer,
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-header-container {
   display: inline-flex;
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button-container {
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .panel-footer {
   float: inline-end;
   background-color: transparent;
   flex-direction: row-reverse;
