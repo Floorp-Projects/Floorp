@@ -351,7 +351,7 @@ const OPTIN_DEFAULT = {
       content: {
         position: "split",
         title: { string_id: "shopping-onboarding-headline" },
-        subtitle: `See how reliable product reviews are on Amazon before you buy. Review checker is built right into Firefox — and it works on Walmart and Best Buy, too.`,
+        subtitle: { string_id: "shopping-onboarding-dynamic-subtitle" },
         cta_paragraph: {
           text: {
             string_id: "shopping-onboarding-body",
@@ -426,7 +426,18 @@ const OPTIN_DEFAULT = {
   ],
 };
 
+let optInDynamicContent;
+
 class AboutWelcomeShoppingChild extends AboutWelcomeChild {
+  exportFunctions() {
+    let window = this.contentWindow;
+
+    Cu.exportFunction(this.AWSetProductURL.bind(this), window, {
+      defineAs: "AWSetProductURL",
+    });
+    super.exportFunctions();
+  }
+
   // TODO - Add dismiss: true to the primary CTA so it cleans up the React
   // content, which will stop being rendered on opt-in. See bug 1848429.
   AWFinish() {
@@ -445,9 +456,50 @@ class AboutWelcomeShoppingChild extends AboutWelcomeChild {
     }
   }
 
+  AWSetProductURL(productUrl) {
+    let content = JSON.parse(JSON.stringify(OPTIN_DEFAULT));
+    const [optInScreen] = content.screens;
+
+    if (productUrl) {
+      switch (
+        productUrl // Insert the productUrl into content
+      ) {
+        case "www.amazon.com":
+          optInScreen.content.subtitle.args = {
+            currentSite: "Amazon",
+            secondSite: "Walmart",
+            thirdSite: "Best Buy",
+          };
+          break;
+        case "www.walmart.com":
+          optInScreen.content.subtitle.args = {
+            currentSite: "Walmart",
+            secondSite: "Amazon",
+            thirdSite: "Best Buy",
+          };
+          break;
+        case "www.bestbuy.com":
+          optInScreen.content.subtitle.args = {
+            currentSite: "Best Buy",
+            secondSite: "Amazon",
+            thirdSite: "Walmart",
+          };
+          break;
+        default:
+          optInScreen.content.subtitle.args = {
+            currentSite: "Amazon",
+            secondSite: "Walmart",
+            thirdSite: "Best Buy",
+          };
+      }
+    }
+
+    optInDynamicContent = content;
+  }
+
   // TODO - Move messages into an ASRouter message provider. See bug 1848251.
   AWGetFeatureConfig() {
-    return Cu.cloneInto(OPTIN_DEFAULT, this.contentWindow);
+    return Cu.cloneInto(optInDynamicContent, this.contentWindow);
   }
 
   AWEnsureLangPackInstalled() {}

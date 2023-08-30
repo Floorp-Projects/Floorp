@@ -12,12 +12,16 @@ class Onboarding {
     this.OnboardingSetup = false;
 
     win.addEventListener("Update", async event => {
-      let { showOnboarding } = event.detail;
+      let { showOnboarding, productUrl } = event.detail;
       // Prepare showing opt-in message by including respective
       // assets needed to render onboarding message
-      if (showOnboarding) {
-        this.showOptInMessage();
+      if (!showOnboarding || !productUrl) {
+        return;
       }
+      let url = new URL(productUrl);
+
+      await this.win.AWSetProductURL(url.hostname);
+      this.showOptInMessage();
     });
   }
 

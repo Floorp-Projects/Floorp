@@ -18,6 +18,13 @@ add_task(async function test_showOnboarding_notOptedIn() {
       gBrowser,
     },
     async browser => {
+      // Get the actor to update the product URL, since no content will render without one
+      let actor =
+        gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getExistingActor(
+          "ShoppingSidebar"
+        );
+      actor.updateProductURL("https://example.com/product/B09TJGHL5F");
+
       await SpecialPowers.spawn(browser, [], async () => {
         let shoppingContainer = await ContentTaskUtils.waitForCondition(
           () => content.document.querySelector("shopping-container"),
@@ -55,6 +62,13 @@ add_task(async function test_hideOnboarding_optedIn() {
       gBrowser,
     },
     async browser => {
+      // Get the actor to update the product URL, since no content will render without one
+      let actor =
+        gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getExistingActor(
+          "ShoppingSidebar"
+        );
+      actor.updateProductURL("https://example.com/product/B09TJGHL5F");
+
       await SpecialPowers.spawn(browser, [], async () => {
         let shoppingContainer = await ContentTaskUtils.waitForCondition(
           () => content.document.querySelector("shopping-container"),
@@ -85,13 +99,22 @@ add_task(async function test_hideOnboarding_onClose() {
       gBrowser,
     },
     async browser => {
+      // Get the actor to update the product URL, since no content will render without one
+      let actor =
+        gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getExistingActor(
+          "ShoppingSidebar"
+        );
+      actor.updateProductURL("https://example.com/product/B09TJGHL5F");
+
       await SpecialPowers.spawn(browser, [], async () => {
         let shoppingContainer = await ContentTaskUtils.waitForCondition(
           () => content.document.querySelector("shopping-container"),
           "shopping-container"
         );
         // "Not now" button
-        let secondaryButton = shoppingContainer.querySelector(".secondary");
+        let secondaryButton = await ContentTaskUtils.waitForCondition(() =>
+          shoppingContainer.querySelector(".secondary")
+        );
 
         secondaryButton.click();
 
