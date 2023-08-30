@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.quicksettings.protections
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
@@ -40,12 +41,15 @@ import org.mozilla.fenix.utils.Settings
  * to additional tracking protection details.
  *
  * @param containerView [ViewGroup] in which this View will inflate itself.
+ * @param trackingProtectionDivider trackingProtectionDivider The divider line between tracking protection layout
+ * and other views from [QuickSettingsSheetDialogFragment].
  * @param interactor [ProtectionsInteractor] which will have delegated to all user
  * @param settings [Settings] application settings.
  * interactions.
  */
 class ProtectionsView(
     val containerView: ViewGroup,
+    private val trackingProtectionDivider: View,
     val interactor: ProtectionsInteractor,
     val settings: Settings,
 ) {
@@ -63,11 +67,21 @@ class ProtectionsView(
         binding.trackingProtectionDetails.setOnClickListener {
             interactor.onTrackingProtectionDetailsClicked()
         }
+        updateDividerVisibility()
+    }
+
+    private fun updateDividerVisibility() {
+        trackingProtectionDivider.isVisible = !(
+            !binding.trackingProtectionSwitch.isVisible &&
+                !binding.trackingProtectionDetails.isVisible &&
+                !binding.cookieBannerItem.isVisible
+            )
     }
 
     @VisibleForTesting
     internal fun updateDetailsSection(show: Boolean) {
         binding.trackingProtectionDetails.isVisible = show
+        updateDividerVisibility()
     }
 
     private fun bindTrackingProtectionInfo(isTrackingProtectionEnabled: Boolean) {

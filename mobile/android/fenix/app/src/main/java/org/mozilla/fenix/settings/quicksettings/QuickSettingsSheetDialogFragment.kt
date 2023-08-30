@@ -117,7 +117,12 @@ class QuickSettingsSheetDialogFragment : FenixDialogFragment() {
         websitePermissionsView =
             WebsitePermissionsView(binding.websitePermissionsLayout, interactor)
         protectionsView =
-            ProtectionsView(binding.trackingProtectionLayout, interactor, context.settings())
+            ProtectionsView(
+                binding.trackingProtectionLayout,
+                binding.trackingProtectionDivider,
+                interactor,
+                context.settings(),
+            )
         clearSiteDataView = ClearSiteDataView(
             context = context,
             ioScope = viewLifecycleOwner.lifecycleScope + Dispatchers.IO,

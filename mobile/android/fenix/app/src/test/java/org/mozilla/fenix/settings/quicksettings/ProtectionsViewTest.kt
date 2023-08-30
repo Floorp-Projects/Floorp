@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
+import android.view.View
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import io.mockk.MockKAnnotations
@@ -32,6 +33,7 @@ class ProtectionsViewTest {
     private lateinit var view: ProtectionsView
     private lateinit var binding: QuicksettingsProtectionsPanelBinding
     private lateinit var interactor: ProtectionsInteractor
+    private var trackingProtectionDivider: View = spyk(View(testContext))
 
     @MockK(relaxed = true)
     private lateinit var settings: Settings
@@ -40,7 +42,14 @@ class ProtectionsViewTest {
     fun setup() {
         MockKAnnotations.init(this)
         interactor = mockk(relaxed = true)
-        view = spyk(ProtectionsView(FrameLayout(testContext), interactor, settings))
+        view = spyk(
+            ProtectionsView(
+                FrameLayout(testContext),
+                trackingProtectionDivider,
+                interactor,
+                settings,
+            ),
+        )
         binding = view.binding
     }
 
@@ -159,5 +168,26 @@ class ProtectionsViewTest {
         view.updateDetailsSection(true)
 
         assertTrue(binding.trackingProtectionDetails.isVisible)
+    }
+
+    @Test
+    fun `WHEN all the views from protectionView are gone THEN tracking protection divider is gone`() {
+        val websiteUrl = "https://mozilla.org"
+        val state = ProtectionsState(
+            tab = createTab(url = websiteUrl),
+            url = websiteUrl,
+            isTrackingProtectionEnabled = false,
+            cookieBannerUIMode = CookieBannerUIMode.HIDE,
+            listTrackers = listOf(),
+            mode = ProtectionsState.Mode.Normal,
+            lastAccessedCategory = "",
+        )
+
+        every { settings.shouldShowCookieBannerUI } returns true
+        every { settings.shouldUseCookieBanner } returns true
+
+        view.update(state)
+
+        assertFalse(trackingProtectionDivider.isVisible)
     }
 }
