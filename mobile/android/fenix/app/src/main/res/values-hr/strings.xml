@@ -373,6 +373,8 @@
     <string name="preferences_default_search_engine">Standardna tražilica</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Tražilica</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Tražilice</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Traka adrese</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -630,6 +632,16 @@
     <string name="addon_not_supported_error">Dodatak nije podržan</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Dodatak je već instaliran</string>
+
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Dodaci su privremeno onemogućeni</string>
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Jedan ili više dodataka prestalo je raditi, što je vaš sustav učinilo nestabilnim. %1$s je bezuspješno pokušao ponovno pokrenuti dodatke.\n\nDodaci se neće ponovno pokrenuti tijekom vaše trenutačne sesije.\n\nUklanjanje ili onemogućavanje dodataka može riješiti ovaj problem.</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Pokušajte ponovno pokrenuti dodatke</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Nastavite s onemogućenim dodacima</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -1357,12 +1369,16 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d kartica(e)</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Povijest pregledavanja i podaci web-stranica</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">Povijest pregledavanja i podaci web-stranica</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Povijest pregledavanja</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adresa(e)</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Kolačići</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">Kolačići</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Kolačići i podaci web stranice</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Odjavit ćeš se na većini web-stranica</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1417,63 +1433,63 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Dobrodošli na bolji Internet</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Dobrodošli na bolji Internet</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Preglednik napravljen za ljude, ne za profit.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">Preglednik napravljen za ljude, ne za profit.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Nastavite tamo gdje ste stali</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Nastavite tamo gdje ste stali</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Sinkronizirajte kartice i lozinke na svim uređajima za besprijekorno prebacivanje između uređaja.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Sinkronizirajte kartice i lozinke na svim uređajima za besprijekorno prebacivanje između uređaja.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Prijavi se</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Prijavi se</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sinkronizacija je uključena</string>
 
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Zaštita privatnosti kao standard</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Zaštita privatnosti kao standard</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s automatski sprječava tvrtke da te potajno prate širom weba.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s automatski sprječava tvrtke da te potajno prate širom weba.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Sadrži potpunu zaštitu od kolačića kako bi spriječio programe za praćenje u korištenju kolačića da vas prate između web stranica.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Sadrži potpunu zaštitu od kolačića kako bi spriječio programe za praćenje u korištenju kolačića da vas prate između web stranica.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standardno (zadano)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Standardno (zadano)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Uravnotežena privatnost i performanse. Stranice se normalno učitavaju.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Uravnotežena privatnost i performanse. Stranice se normalno učitavaju.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Strogo</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Strogo</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Blokira više programa za praćenje pa se stranice učitavaju brže, ali neke funkcionalnosti stranica možda će se slomiti.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Blokira više programa za praćenje pa se stranice učitavaju brže, ali neke funkcionalnosti stranica možda će se slomiti.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Odaberi položaj alatne trake</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Odaberi položaj alatne trake</string>
 
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Držite ga na dnu ili ga premjestite na vrh.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Držite ga na dnu ili ga premjestite na vrh.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Vi kontrolirate svoje podatke</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Vi kontrolirate svoje podatke</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox vam daje kontrolu nad onim što dijelite na mreži i nad onim što dijelite s nama.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Firefox vam daje kontrolu nad onim što dijelite na mreži i nad onim što dijelite s nama.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Pročitaj naša pravila privatnosti</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Pročitaj naša pravila privatnosti</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Jeste li spremni otkriti nevjerojatan Internet?</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Jeste li spremni otkriti nevjerojatan Internet?</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Započni surfati</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Započni surfati</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Odaberi modus</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Odaberi modus</string>
 
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Štedi bateriju i zaštiti oči pomoću tamne teme.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Štedi bateriju i zaštiti oči pomoću tamne teme.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automatski</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Automatski</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Prilagođava se postavkama uređaja</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Prilagođava se postavkama uređaja</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Tamna tema</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Tamna tema</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Svijetla tema</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Svijetla tema</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Kartice su poslane!</string>
@@ -1925,7 +1941,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">URL API za prijedloge pretraživanja</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Zamijenite upit s “%s”. Na primjer:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Zamijenite upit s “%s”. Na primjer:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Zamijenite upit s “%s”. Na primjer:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Spremi</string>
 
