@@ -85,13 +85,6 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
   virtual ~nsCheckboxRadioFrame();
 
   nscoord DefaultSize();
-
-  /**
-   * Get the state of the checked attribute.
-   * @param aState set to true if the checked attribute is set,
-   * false if the checked attribute has been removed
-   */
-  void GetCurrentCheckState(bool* aState);
 };
 
 #endif
