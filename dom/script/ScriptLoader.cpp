@@ -802,15 +802,6 @@ nsresult ScriptLoader::StartLoadInternal(
       aRequest->GetScriptLoadContext()->IsLinkPreloadScript(),
       aRequest->IsModuleRequest());
 
-  if (aRequest->mEarlyHintPreloaderId) {
-    nsCOMPtr<nsIHttpChannelInternal> channelInternal =
-        do_QueryInterface(channel);
-    NS_ENSURE_TRUE(channelInternal != nullptr, NS_ERROR_FAILURE);
-
-    rv = channelInternal->SetEarlyHintPreloaderId(
-        aRequest->mEarlyHintPreloaderId);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   rv = channel->AsyncOpen(loader);
 
   if (NS_FAILED(rv)) {
