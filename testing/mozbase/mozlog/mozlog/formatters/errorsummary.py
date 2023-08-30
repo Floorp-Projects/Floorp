@@ -4,6 +4,7 @@
 
 
 import json
+import os
 from collections import defaultdict
 
 from .base import BaseFormatter
@@ -20,6 +21,10 @@ class ErrorSummaryFormatter(BaseFormatter):
             }
         )
         self.line_count = 0
+        self.dump_passing_tests = False
+
+        if os.environ.get("MOZLOG_DUMP_ALL_TESTS", False):
+            self.dump_passing_tests = True
 
     def __call__(self, data):
         rv = BaseFormatter.__call__(self, data)
@@ -95,8 +100,11 @@ class ErrorSummaryFormatter(BaseFormatter):
         if group:
             self._update_group_result(group, item)
 
-        if "expected" not in item:
+        if not self.dump_passing_tests and "expected" not in item:
             return
+
+        if item.get("expected", "") == "":
+            item["expected"] = item["status"]
 
         return self._output_test(item["test"], item["subtest"], item)
 
@@ -106,8 +114,11 @@ class ErrorSummaryFormatter(BaseFormatter):
             self._update_group_result(group, item)
             self.groups[group]["end"] = item["time"]
 
-        if "expected" not in item:
+        if not self.dump_passing_tests and "expected" not in item:
             return
+
+        if item.get("expected", "") == "":
+            item["expected"] = item["status"]
 
         return self._output_test(item["test"], None, item)
 
