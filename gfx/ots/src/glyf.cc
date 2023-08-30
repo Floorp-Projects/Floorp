@@ -10,6 +10,7 @@
 #include "head.h"
 #include "loca.h"
 #include "maxp.h"
+#include "name.h"
 
 // glyf - Glyph Data
 // http://www.microsoft.com/typography/otspec/glyf.htm
@@ -97,7 +98,8 @@ bool OpenTypeGLYF::ParseSimpleGlyph(Buffer &glyph,
                                     int16_t& xmin,
                                     int16_t& ymin,
                                     int16_t& xmax,
-                                    int16_t& ymax) {
+                                    int16_t& ymax,
+                                    bool is_tricky_font) {
   // read the end-points array
   uint16_t num_flags = 0;
   for (int i = 0; i < num_contours; ++i) {
@@ -219,26 +221,31 @@ bool OpenTypeGLYF::ParseSimpleGlyph(Buffer &glyph,
   }
 
   if (adjusted_bbox) {
-    Warning("Glyph bbox was incorrect; adjusting (glyph %u)", gid);
-    // copy the numberOfContours field
-    this->iov.push_back(std::make_pair(glyph.buffer(), 2));
-    // output a fixed-up version of the bounding box
-    uint8_t* fixed_bbox = new uint8_t[8];
-    fixed_bboxes.push_back(fixed_bbox);
-    xmin = ots_htons(xmin);
-    std::memcpy(fixed_bbox, &xmin, 2);
-    ymin = ots_htons(ymin);
-    std::memcpy(fixed_bbox + 2, &ymin, 2);
-    xmax = ots_htons(xmax);
-    std::memcpy(fixed_bbox + 4, &xmax, 2);
-    ymax = ots_htons(ymax);
-    std::memcpy(fixed_bbox + 6, &ymax, 2);
-    this->iov.push_back(std::make_pair(fixed_bbox, 8));
-    // copy the remainder of the glyph data
-    this->iov.push_back(std::make_pair(glyph.buffer() + 10, glyph.offset() - 10));
-  } else {
-    this->iov.push_back(std::make_pair(glyph.buffer(), glyph.offset()));
+    if (is_tricky_font) {
+      Warning("Glyph bbox was incorrect; NOT adjusting tricky font (glyph %u)", gid);
+    } else {
+      Warning("Glyph bbox was incorrect; adjusting (glyph %u)", gid);
+      // copy the numberOfContours field
+      this->iov.push_back(std::make_pair(glyph.buffer(), 2));
+      // output a fixed-up version of the bounding box
+      uint8_t* fixed_bbox = new uint8_t[8];
+      fixed_bboxes.push_back(fixed_bbox);
+      xmin = ots_htons(xmin);
+      std::memcpy(fixed_bbox, &xmin, 2);
+      ymin = ots_htons(ymin);
+      std::memcpy(fixed_bbox + 2, &ymin, 2);
+      xmax = ots_htons(xmax);
+      std::memcpy(fixed_bbox + 4, &xmax, 2);
+      ymax = ots_htons(ymax);
+      std::memcpy(fixed_bbox + 6, &ymax, 2);
+      this->iov.push_back(std::make_pair(fixed_bbox, 8));
+      // copy the remainder of the glyph data
+      this->iov.push_back(std::make_pair(glyph.buffer() + 10, glyph.offset() - 10));
+      return true;
+    }
   }
+
+  this->iov.push_back(std::make_pair(glyph.buffer(), glyph.offset()));
 
   return true;
 }
@@ -342,6 +349,10 @@ bool OpenTypeGLYF::Parse(const uint8_t *data, size_t length) {
     return Error("Missing maxp or loca or head table needed by glyf table");
   }
 
+  OpenTypeNAME *name = static_cast<OpenTypeNAME*>(
+      GetFont()->GetTypedTable(OTS_TAG_NAME));
+  bool is_tricky = name->IsTrickyFont();
+
   this->maxp = maxp;
 
   const unsigned num_glyphs = maxp->num_glyphs;
@@ -397,7 +408,7 @@ bool OpenTypeGLYF::Parse(const uint8_t *data, size_t length) {
       // does we will simply ignore it.
       glyph.set_offset(0);
     } else if (num_contours > 0) {
-      if (!ParseSimpleGlyph(glyph, i, num_contours, xmin, ymin, xmax, ymax)) {
+      if (!ParseSimpleGlyph(glyph, i, num_contours, xmin, ymin, xmax, ymax, is_tricky)) {
         return Error("Failed to parse glyph %d", i);
       }
     } else {
