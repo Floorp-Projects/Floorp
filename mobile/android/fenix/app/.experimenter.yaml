@@ -7,6 +7,14 @@ cookie-banners:
     sections-enabled:
       type: json
       description: This property provides a lookup table of whether or not the given section should be enabled.
+extensions-process:
+  description: A feature to rollout the extensions process.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the extensions process is enabled."
 glean:
   description: A feature that provides server-side configurations for Glean metrics (aka Server Knobs).
   hasExposure: true

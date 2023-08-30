@@ -5,6 +5,7 @@
 package org.mozilla.fenix.gecko
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.autofill.GeckoAutocompleteStorageDelegate
 import mozilla.components.browser.engine.gecko.ext.toContentBlockingSetting
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
@@ -18,6 +19,7 @@ import mozilla.components.service.sync.logins.GeckoLoginStorageDelegate
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlocking.SafeBrowsingProvider
 import org.mozilla.geckoview.GeckoRuntime
@@ -51,18 +53,7 @@ object GeckoProvider {
         loginStorage: Lazy<LoginsStorage>,
         policy: TrackingProtectionPolicy,
     ): GeckoRuntime {
-        val builder = GeckoRuntimeSettings.Builder()
-
-        val runtimeSettings = builder
-            .crashHandler(CrashHandlerService::class.java)
-            .telemetryDelegate(GeckoAdapter())
-            .experimentDelegate(NimbusExperimentDelegate())
-            .contentBlocking(policy.toContentBlockingSetting())
-            .consoleOutput(context.components.settings.enableGeckoLogs)
-            .debugLogging(Config.channel.isDebug || context.components.settings.enableGeckoLogs)
-            .aboutConfigEnabled(Config.channel.isBeta || Config.channel.isNightlyOrDebug)
-            .extensionsWebAPIEnabled(Config.channel.isBeta || Config.channel.isNightlyOrDebug)
-            .build()
+        val runtimeSettings = createRuntimeSettings(context, policy)
 
         val settings = context.components.settings
         if (!settings.shouldUseAutoSize) {
@@ -108,5 +99,23 @@ object GeckoProvider {
         )
 
         return geckoRuntime
+    }
+
+    @VisibleForTesting
+    internal fun createRuntimeSettings(
+        context: Context,
+        policy: TrackingProtectionPolicy,
+    ): GeckoRuntimeSettings {
+        return GeckoRuntimeSettings.Builder()
+            .crashHandler(CrashHandlerService::class.java)
+            .telemetryDelegate(GeckoAdapter())
+            .experimentDelegate(NimbusExperimentDelegate())
+            .contentBlocking(policy.toContentBlockingSetting())
+            .consoleOutput(context.components.settings.enableGeckoLogs)
+            .debugLogging(Config.channel.isDebug || context.components.settings.enableGeckoLogs)
+            .aboutConfigEnabled(Config.channel.isBeta || Config.channel.isNightlyOrDebug)
+            .extensionsProcessEnabled(FxNimbus.features.extensionsProcess.value().enabled)
+            .extensionsWebAPIEnabled(Config.channel.isBeta || Config.channel.isNightlyOrDebug)
+            .build()
     }
 }
