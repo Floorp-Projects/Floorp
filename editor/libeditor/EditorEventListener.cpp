@@ -643,6 +643,10 @@ nsresult EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent) {
     return rv;
   }
 
+  if (DetachedFromEditorOrDefaultPrevented(aKeyboardEvent)) {
+    return NS_OK;
+  }
+
   auto GetWidget = [&]() -> nsIWidget* {
     if (aKeyboardEvent->mWidget) {
       return aKeyboardEvent->mWidget;
@@ -661,10 +665,6 @@ nsresult EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent) {
         pc->EventStateManager()->StartHidingCursorWhileTyping(widget);
       }
     }
-  }
-
-  if (DetachedFromEditorOrDefaultPrevented(aKeyboardEvent)) {
-    return NS_OK;
   }
 
   if (!ShouldHandleNativeKeyBindings(aKeyboardEvent)) {
