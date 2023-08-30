@@ -141,4 +141,63 @@ TEST(AnnexB, AnnexBConversion)
   }
 }
 
+TEST(H264, AVCCParsingSuccess)
+{
+  auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
+  uint8_t avccBytesBuffer[] = {
+      1 /* version */,
+      0x64 /* profile (High) */,
+      0 /* profile compat (0) */,
+      40 /* level (40) */,
+      0xfc | 3 /* nal size - 1 */,
+      0xe0 /* num SPS (0) */,
+      0 /* num PPS (0) */
+  };
+  extradata->AppendElements(avccBytesBuffer, ArrayLength(avccBytesBuffer));
+  auto rv = AVCCConfig::Parse(extradata);
+  EXPECT_TRUE(rv.isOk());
+  const auto avcc = rv.unwrap();
+  EXPECT_EQ(avcc.mConfigurationVersion, 1);
+  EXPECT_EQ(avcc.mAVCProfileIndication, 0x64);
+  EXPECT_EQ(avcc.mProfileCompatibility, 0);
+  EXPECT_EQ(avcc.mAVCLevelIndication, 40);
+  EXPECT_EQ(avcc.NALUSize(), 4);
+  EXPECT_EQ(avcc.mNumSPS, 0);
+}
+
+TEST(H264, AVCCParsingFailure)
+{
+  {
+    // Incorrect version
+    auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
+    uint8_t avccBytesBuffer[] = {
+        2 /* version */,
+        0x64 /* profile (High) */,
+        0 /* profile compat (0) */,
+        40 /* level (40) */,
+        0xfc | 3 /* nal size - 1 */,
+        0xe0 /* num SPS (0) */,
+        0 /* num PPS (0) */
+    };
+    extradata->AppendElements(avccBytesBuffer, ArrayLength(avccBytesBuffer));
+    auto avcc = AVCCConfig::Parse(extradata);
+    EXPECT_TRUE(avcc.isErr());
+  }
+  {
+    // Insuffient data (lacking of PPS)
+    auto extradata = MakeRefPtr<mozilla::MediaByteBuffer>();
+    uint8_t avccBytesBuffer[] = {
+        1 /* version */,
+        0x64 /* profile (High) */,
+        0 /* profile compat (0) */,
+        40 /* level (40) */,
+        0xfc | 3 /* nal size - 1 */,
+        0xe0 /* num SPS (0) */,
+    };
+    extradata->AppendElements(avccBytesBuffer, ArrayLength(avccBytesBuffer));
+    auto avcc = AVCCConfig::Parse(extradata);
+    EXPECT_TRUE(avcc.isErr());
+  }
+}
+
 }  // namespace mozilla

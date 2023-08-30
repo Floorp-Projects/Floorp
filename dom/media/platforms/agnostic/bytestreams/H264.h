@@ -5,6 +5,7 @@
 #ifndef MP4_DEMUXER_H264_H_
 #define MP4_DEMUXER_H264_H_
 
+#include <stdint.h>
 #include "DecoderData.h"
 #include "mozilla/gfx/Types.h"
 
@@ -518,6 +519,27 @@ class H264 {
   // Decode NAL Slice payload and return true if its slice type is I slice or SI
   // slice.
   static bool DecodeISlice(const mozilla::MediaByteBuffer* aSlice);
+};
+
+// ISO/IEC 14496-15 : avcC. We only parse partial attributes, not all of them.
+struct AVCCConfig final {
+ public:
+  static Result<AVCCConfig, nsresult> Parse(
+      const mozilla::MediaRawData* aSample);
+  static Result<AVCCConfig, nsresult> Parse(
+      const mozilla::MediaByteBuffer* aExtraData);
+
+  uint8_t NALUSize() const { return mLengthSizeMinusOne + 1; }
+
+  uint8_t mConfigurationVersion;
+  uint8_t mAVCProfileIndication;
+  uint8_t mProfileCompatibility;
+  uint8_t mAVCLevelIndication;
+  uint8_t mLengthSizeMinusOne;
+  uint8_t mNumSPS;
+
+ private:
+  AVCCConfig() = default;
 };
 
 }  // namespace mozilla

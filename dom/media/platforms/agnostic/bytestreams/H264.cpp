@@ -939,13 +939,14 @@ uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
 
 /* static */ H264::FrameType H264::GetFrameType(
     const mozilla::MediaRawData* aSample) {
-  if (!AnnexB::IsAVCC(aSample)) {
+  auto avcc = AVCCConfig::Parse(aSample);
+  if (avcc.isErr()) {
     // We must have a valid AVCC frame with extradata.
     return FrameType::INVALID;
   }
   MOZ_ASSERT(aSample->Data());
 
-  int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
+  int nalLenSize = avcc.unwrap().NALUSize();
 
   BufferReader reader(aSample->Data(), aSample->Size());
 
@@ -995,7 +996,8 @@ uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
 
 /* static */ already_AddRefed<mozilla::MediaByteBuffer> H264::ExtractExtraData(
     const mozilla::MediaRawData* aSample) {
-  MOZ_ASSERT(AnnexB::IsAVCC(aSample));
+  auto avcc = AVCCConfig::Parse(aSample);
+  MOZ_ASSERT(avcc.isOk());
 
   RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
 
@@ -1008,7 +1010,7 @@ uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
   ByteWriter<BigEndian> ppsw(pps);
   int numPps = 0;
 
-  int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
+  int nalLenSize = avcc.unwrap().NALUSize();
 
   size_t sampleSize = aSample->Size();
   if (aSample->mCrypto.IsEncrypted()) {
@@ -1117,25 +1119,14 @@ uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
 }
 
 /* static */
-bool H264::HasSPS(const mozilla::MediaByteBuffer* aExtraData) {
-  return NumSPS(aExtraData) > 0;
+uint8_t H264::NumSPS(const mozilla::MediaByteBuffer* aExtraData) {
+  auto avcc = AVCCConfig::Parse(aExtraData);
+  return avcc.isErr() ? 0 : avcc.unwrap().mNumSPS;
 }
 
 /* static */
-uint8_t H264::NumSPS(const mozilla::MediaByteBuffer* aExtraData) {
-  if (!aExtraData || aExtraData->IsEmpty()) {
-    return 0;
-  }
-
-  BufferReader reader(aExtraData);
-  if (!reader.Read(5)) {
-    return 0;
-  }
-  auto res = reader.ReadU8();
-  if (res.isErr()) {
-    return 0;
-  }
-  return res.unwrap() & 0x1f;
+bool H264::HasSPS(const mozilla::MediaByteBuffer* aExtraData) {
+  return H264::NumSPS(aExtraData) > 0;
 }
 
 /* static */
@@ -1348,6 +1339,34 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
   aDestExtraData->AppendElements(c, 2);
   aDestExtraData->AppendElement((0x00 << 7) | (0x3 << 5) | H264_NAL_PPS);
   aDestExtraData->AppendElements(aPPS.Elements(), aPPS.Length());
+}
+
+/* static */ Result<AVCCConfig, nsresult> AVCCConfig::Parse(
+    const mozilla::MediaRawData* aSample) {
+  if (!aSample || aSample->Size() < 3) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+  // TODO : check video mime type to ensure the sample is AVC
+  return AVCCConfig::Parse(aSample->mExtraData);
+}
+
+/* static */ Result<AVCCConfig, nsresult> AVCCConfig::Parse(
+    const mozilla::MediaByteBuffer* aExtraData) {
+  if (!aExtraData || aExtraData->Length() < 7) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+  const auto& byteBuffer = *aExtraData;
+  if (byteBuffer[0] != 1) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+  AVCCConfig avcc;
+  avcc.mConfigurationVersion = byteBuffer[0];
+  avcc.mAVCProfileIndication = byteBuffer[1];
+  avcc.mProfileCompatibility = byteBuffer[2];
+  avcc.mAVCLevelIndication = byteBuffer[3];
+  avcc.mLengthSizeMinusOne = byteBuffer[4] & 0x3;
+  avcc.mNumSPS = byteBuffer[5] & 0x1F;
+  return avcc;
 }
 
 #undef READUE
