@@ -65,7 +65,7 @@ public class ImageResource {
    */
   public ImageResource(
       final @NonNull String src, final @Nullable String type, final @Nullable Size[] sizes) {
-    this.src = src.toLowerCase(Locale.ROOT);
+    this.src = src;
     this.type = type != null ? type.toLowerCase(Locale.ROOT) : null;
     this.sizes = sizes;
   }

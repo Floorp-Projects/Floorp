@@ -71,6 +71,14 @@ class ImageResourceTest : BaseSessionTest() {
             null,
             null,
         )
+
+        val kValidTestImage7 = TestImage(
+            "RaNdoMCasE.PnG",
+            null,
+            null,
+            null,
+            null,
+        )
     }
 
     fun verifyEqual(image: ImageResource, base: TestImage) {
@@ -137,6 +145,7 @@ class ImageResourceTest : BaseSessionTest() {
         testValidImage(kValidTestImage4)
         testValidImage(kValidTestImage5)
         testValidImage(kValidTestImage6)
+        testValidImage(kValidTestImage7)
     }
 
     @Test
