@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+html, body { margin: 0; }
+
+#scrollable {
+  height: 50vh;
+  width: 50vw;
+  background: yellow;
+  overflow: scroll;
+}
+
+#scrollabletarget {
+  height: 200vh;
+  width: 200vh;
+  background: green;
+}
+
+#scrollabletarget:active {
+  background: red;
+}
+
+#notscrollable {
+  height: 50vh;
+  width: 50vw;
+  background: green;
+}
+
+#notscrollable:active {
+  background: red;
+}
+  </style>
+</head>
+<body>
+  <div id="scrollable">
+    <div id="scrollabletarget">
+    </div>
+  </div>
+  <div id="notscrollable">
+  </div>
+</body>
+<script>
+
+const searchParams = new URLSearchParams(location.search);
+
+async function test() {
+  let activeQuery = null;
+  let targetElem = null;
+
+  switch (searchParams.get("scrollable")) {
+    case "true":
+      activeQuery = "#scrollabletarget:active"
+      targetElem = scrollabletarget
+      break;
+    case "false":
+      activeQuery = "#notscrollable:active"
+      targetElem = notscrollable;
+      break;
+    default:
+      ok(false, "Unsupported scrollable value: " + searchParams.get("scrollable"));
+      break;
+  }
+
+  // Create a promise for each of the expected mouse events that are
+  // synthesized for a tap gesture
+  let mouseEventPromises = [
+    promiseOneEvent(targetElem, "mousemove"),
+    promiseOneEvent(targetElem, "mousedown"),
+    promiseOneEvent(targetElem, "mouseup"),
+    promiseOneEvent(targetElem, "click"),
+  ];
+
+  // Perform a tap gesture
+  await synthesizeNativeTap(targetElem, 50, 50);
+
+  // Set a timeout that will fail the test if the synthesized events
+  // are not immediately dispatched.
+  let failTimeout = setTimeout(() => {
+    ok(false, "The synthesized mouse events should be emitted in a timely manner");
+  }, 45000);
+
+  // The value of ui.touch_activation.duration_ms should be set to
+  // a large value. If we did not delay sending the synthesized
+  // mouse events, this test will not timeout.
+  await Promise.all(mouseEventPromises);
+
+  clearTimeout(failTimeout);
+
+  isnot(document.querySelector(activeQuery), null,
+        "Target element should still be active due to the large activation duration");
+}
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+  </script>
+</head>
+</html>
