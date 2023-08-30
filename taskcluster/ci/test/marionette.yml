@@ -34,6 +34,7 @@ job-defaults:
                     default: []
             webrender-sw:
                 by-test-platform:
+                    .*wayland.*: []
                     .*/debug: built-projects
                     default: []
             default:
