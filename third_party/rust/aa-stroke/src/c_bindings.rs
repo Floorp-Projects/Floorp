@@ -60,14 +60,17 @@ pub extern "C" fn aa_stroke_close(s: &mut Stroker) {
 pub extern "C" fn aa_stroke_finish(s: &mut Stroker) -> VertexBuffer {
     let stroked_path = s.get_stroked_path();
     if let Some(output_buffer_size) = stroked_path.get_output_buffer_size() {
+        // if let Some(output_buffer) = stroked_path.output_buffer {
+        //     dbg!(&output_buffer[0..output_buffer_size]);
+        // }
         VertexBuffer {
             data: std::ptr::null(),
             len: output_buffer_size,
         }
     } else {
-        let result = stroked_path.finish();
-        let vb = VertexBuffer { data: result.as_ptr(), len: result.len() };
-        std::mem::forget(result);
+        let result = s.finish();
+        let len = result.len();
+        let vb = VertexBuffer { data: Box::leak(result).as_ptr(), len };
         vb
     }
 }
@@ -99,3 +102,21 @@ fn simple() {
     aa_stroke_vertex_buffer_release(vb);
     unsafe { aa_stroke_release(s) } ;
 }
+
+#[test]
+fn output_buffer() {
+    let style = StrokeStyle::default();
+    let mut output = Vec::new();
+    output.resize_with(1000, || OutputVertex{x: 0., y: 0., coverage: 0.});
+    let s = unsafe { &mut *aa_stroke_new(&style, output.as_mut_ptr(), output.len()) } ;
+    aa_stroke_move_to(s, 10., 10., false);
+    aa_stroke_line_to(s, 100., 100., false);
+    aa_stroke_line_to(s, 100., 10., true);
+
+    let vb = aa_stroke_finish(s);
+    assert_ne!(vb.len, 0);
+    assert_eq!(vb.data, std::ptr::null());
+    aa_stroke_vertex_buffer_release(vb);
+    unsafe { aa_stroke_release(s) } ;
+}
+
