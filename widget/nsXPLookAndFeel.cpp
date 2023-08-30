@@ -187,6 +187,7 @@ static const char sIntPrefs[][45] = {
     "ui.dynamicRange",
     "ui.videoDynamicRange",
     "ui.panelAnimations",
+    "ui.hideCursorWhileTyping",
 };
 
 static_assert(ArrayLength(sIntPrefs) == size_t(LookAndFeel::IntID::End),
