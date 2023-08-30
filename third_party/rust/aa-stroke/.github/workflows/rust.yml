@@ -18,3 +18,15 @@ jobs:
       run: cargo build --verbose --features=c_bindings
     - name: Run tests
       run: cargo test --verbose --features=c_bindings
+  miri:
+    name: "Miri"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Miri
+        run: |
+          rustup toolchain install nightly --component miri
+          rustup override set nightly
+          cargo miri setup
+      - name: Test with Miri
+        run: cargo miri test --lib --bins --tests --examples
