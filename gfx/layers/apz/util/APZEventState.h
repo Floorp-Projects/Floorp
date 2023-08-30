@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include "ActiveElementManager.h"
 #include "Units.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/GeckoContentControllerTypes.h"  // for APZStateChange
@@ -41,59 +42,6 @@ class ActiveElementManager;
 typedef std::function<void(uint64_t /* input block id */,
                            bool /* prevent default */)>
     ContentReceivedInputBlockCallback;
-
-struct SingleTapTargetInfo {
-  nsWeakPtr mWidget;
-  LayoutDevicePoint mPoint;
-  Modifiers mModifiers;
-  int32_t mClickCount;
-  RefPtr<nsIContent> mTouchRollup;
-
-  explicit SingleTapTargetInfo(nsWeakPtr aWidget, LayoutDevicePoint aPoint,
-                               Modifiers aModifiers, int32_t aClickCount,
-                               RefPtr<nsIContent> aTouchRollup)
-      : mWidget(std::move(aWidget)),
-        mPoint(aPoint),
-        mModifiers(aModifiers),
-        mClickCount(aClickCount),
-        mTouchRollup(std::move(aTouchRollup)) {}
-
-  SingleTapTargetInfo(SingleTapTargetInfo&&) = default;
-  SingleTapTargetInfo& operator=(SingleTapTargetInfo&&) = default;
-};
-
-class DelayedFireSingleTapEvent final : public nsITimerCallback,
-                                        public nsINamed {
- private:
-  explicit DelayedFireSingleTapEvent(Maybe<SingleTapTargetInfo>&& aTargetInfo,
-                                     const nsCOMPtr<nsITimer>& aTimer)
-      : mTargetInfo(std::move(aTargetInfo))
-        // Hold the reference count until we are called back.
-        ,
-        mTimer(aTimer) {}
-
- public:
-  NS_DECL_ISUPPORTS
-
-  static RefPtr<DelayedFireSingleTapEvent> Create(
-      Maybe<SingleTapTargetInfo>&& aTargetInfo);
-
-  NS_IMETHOD Notify(nsITimer*) override;
-
-  NS_IMETHOD GetName(nsACString& aName) override;
-
-  void PopulateTargetInfo(SingleTapTargetInfo&& aTargetInfo);
-
-  void FireSingleTapEvent();
-
-  void ClearTimer() { mTimer = nullptr; }
-
- private:
-  ~DelayedFireSingleTapEvent() = default;
-
-  Maybe<SingleTapTargetInfo> mTargetInfo;
-  nsCOMPtr<nsITimer> mTimer;
-};
 
 /**
  * A content-side component that keeps track of state for handling APZ
@@ -132,6 +80,10 @@ class APZEventState final {
                          uint64_t aInputBlockId);
   void ProcessAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg,
                              Maybe<uint64_t> aInputBlockId);
+  /**
+   * Cleanup on destroy window.
+   */
+  void Destroy();
 
  private:
   ~APZEventState();
@@ -161,13 +113,6 @@ class APZEventState final {
   // processed.
   bool mReceivedNonTouchStart;
   bool mTouchStartPrevented;
-
-  // Store pending single tap event dispatch tasks keyed on the
-  // tap gesture's input block id. In the case where multiple taps
-  // occur in quick succession, we may receive a later tap while the
-  // dispatch for an earlier tap is still pending.
-  std::unordered_map<uint64_t, RefPtr<DelayedFireSingleTapEvent>>
-      mSingleTapsPendingTargetInfo;
 
   int32_t mLastTouchIdentifier;
   nsTArray<TouchBehaviorFlags> mTouchBlockAllowedBehaviors;
