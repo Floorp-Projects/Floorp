@@ -186,6 +186,8 @@ def create_confirm_failure_tasks(task_definition, failures, level):
 
     th_dict["groupSymbol"] = th_dict["groupSymbol"] + "-cf"
     th_dict["tier"] = 3
+    th_dict["groupName"] += " (confirm failures)"
+    task_definition["metadata"]["name"] += "-cf"
 
     if repeatable_task:
         task_definition["payload"]["maxRunTime"] = 3600 * 3
