@@ -83,7 +83,7 @@ geckoview-fission:
 fission:
     description: "{description} with fission enabled"
     component: "Core::DOM: Content Processes"
-    expiration: "2023-09-01"
+    expiration: "never"
     suffix: "fis"
     mozinfo: "fission"
 
