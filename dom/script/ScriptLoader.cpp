@@ -594,9 +594,10 @@ static bool IsWebExtensionRequest(ScriptLoadRequest* aRequest) {
   return loader->GetKind() == ModuleLoader::WebExtension;
 }
 
-nsresult ScriptLoader::StartLoadInternal(
-    ScriptLoadRequest* aRequest, nsSecurityFlags securityFlags,
-    const Maybe<nsAutoString>& aCharsetForPreload) {
+static nsresult CreateChannelForScriptLoading(nsIChannel** aOutChannel,
+                                              Document* aDocument,
+                                              ScriptLoadRequest* aRequest,
+                                              nsSecurityFlags aSecurityFlags) {
   nsContentPolicyType contentPolicyType =
       ScriptLoadRequestToContentPolicyType(aRequest);
   nsCOMPtr<nsINode> context;
@@ -604,21 +605,28 @@ nsresult ScriptLoader::StartLoadInternal(
     context =
         do_QueryInterface(aRequest->GetScriptLoadContext()->GetScriptElement());
   } else {
-    context = mDocument;
+    context = aDocument;
   }
 
-  nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
-  nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
+  nsCOMPtr<nsILoadGroup> loadGroup = aDocument->GetDocumentLoadGroup();
+  nsCOMPtr<nsPIDOMWindowOuter> window = aDocument->GetWindow();
   NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
   nsIDocShell* docshell = window->GetDocShell();
   nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
 
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannelWithTriggeringPrincipal(
-      getter_AddRefs(channel), aRequest->mURI, context,
-      aRequest->TriggeringPrincipal(), securityFlags, contentPolicyType,
+  return NS_NewChannelWithTriggeringPrincipal(
+      aOutChannel, aRequest->mURI, context, aRequest->TriggeringPrincipal(),
+      aSecurityFlags, contentPolicyType,
       nullptr,  // aPerformanceStorage
       loadGroup, prompter);
+}
+
+nsresult ScriptLoader::StartLoadInternal(
+    ScriptLoadRequest* aRequest, nsSecurityFlags securityFlags,
+    const Maybe<nsAutoString>& aCharsetForPreload) {
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = CreateChannelForScriptLoading(
+      getter_AddRefs(channel), mDocument, aRequest, securityFlags);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
