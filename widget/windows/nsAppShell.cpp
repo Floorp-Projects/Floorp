@@ -361,6 +361,40 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
   return nsBaseAppShell::Observe(aSubject, aTopic, aData);
 }
 
+nsresult nsAppShell::InitHiddenWindow() {
+  sAppShellGeckoMsgId = ::RegisterWindowMessageW(kAppShellGeckoEventId);
+  NS_ASSERTION(sAppShellGeckoMsgId,
+               "Could not register hidden window event message!");
+
+  mLastNativeEventScheduled = TimeStamp::NowLoRes();
+
+  WNDCLASSW wc;
+  HINSTANCE module = GetModuleHandle(nullptr);
+
+  const wchar_t* const kWindowClass = L"nsAppShell:EventWindowClass";
+  if (!GetClassInfoW(module, kWindowClass, &wc)) {
+    wc.style = 0;
+    wc.lpfnWndProc = EventWindowProc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = module;
+    wc.hIcon = nullptr;
+    wc.hCursor = nullptr;
+    wc.hbrBackground = (HBRUSH) nullptr;
+    wc.lpszMenuName = (LPCWSTR) nullptr;
+    wc.lpszClassName = kWindowClass;
+    [[maybe_unused]] ATOM wcA = RegisterClassW(&wc);
+    MOZ_DIAGNOSTIC_ASSERT(wcA, "RegisterClassW for EventWindowClass failed");
+  }
+
+  mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow", 0, 0, 0,
+                            10, 10, HWND_MESSAGE, nullptr, module, nullptr);
+  MOZ_DIAGNOSTIC_ASSERT(mEventWnd, "CreateWindowW for EventWindow failed");
+  NS_ENSURE_STATE(mEventWnd);
+
+  return NS_OK;
+}
+
 nsresult nsAppShell::Init() {
   LSPAnnotate();
 
@@ -377,35 +411,9 @@ nsresult nsAppShell::Init() {
   // we are processing native events. Disabling this is required for win32k
   // syscall lockdown.
   if (XRE_UseNativeEventProcessing()) {
-    sAppShellGeckoMsgId = ::RegisterWindowMessageW(kAppShellGeckoEventId);
-    NS_ASSERTION(sAppShellGeckoMsgId,
-                 "Could not register hidden window event message!");
-
-    mLastNativeEventScheduled = TimeStamp::NowLoRes();
-
-    WNDCLASSW wc;
-    HINSTANCE module = GetModuleHandle(nullptr);
-
-    const wchar_t* const kWindowClass = L"nsAppShell:EventWindowClass";
-    if (!GetClassInfoW(module, kWindowClass, &wc)) {
-      wc.style = 0;
-      wc.lpfnWndProc = EventWindowProc;
-      wc.cbClsExtra = 0;
-      wc.cbWndExtra = 0;
-      wc.hInstance = module;
-      wc.hIcon = nullptr;
-      wc.hCursor = nullptr;
-      wc.hbrBackground = (HBRUSH) nullptr;
-      wc.lpszMenuName = (LPCWSTR) nullptr;
-      wc.lpszClassName = kWindowClass;
-      [[maybe_unused]] ATOM wcA = RegisterClassW(&wc);
-      MOZ_DIAGNOSTIC_ASSERT(wcA, "RegisterClassW for EventWindowClass failed");
+    if (nsresult rv = this->InitHiddenWindow(); NS_FAILED(rv)) {
+      return rv;
     }
-
-    mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow", 0, 0, 0,
-                              10, 10, HWND_MESSAGE, nullptr, module, nullptr);
-    MOZ_DIAGNOSTIC_ASSERT(mEventWnd, "CreateWindowW for EventWindow failed");
-    NS_ENSURE_STATE(mEventWnd);
   } else if (XRE_IsContentProcess() && !IsWin32kLockedDown()) {
     // We're not generally processing native events, but still using GDI and we
     // still have some internal windows, e.g. from calling CoInitializeEx.
