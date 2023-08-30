@@ -121,28 +121,6 @@ export class InfoItem extends HTMLElement {
       this.addLongHexOverflow(info);
     }
 
-    let isURL = false;
-    if (
-      typeof this.item.info === "string" &&
-      this.item.info.startsWith("http")
-    ) {
-      try {
-        new URL(this.item.info);
-        isURL = true;
-      } catch (e) {}
-    }
-
-    if (isURL) {
-      info.classList.add("url");
-      let link = document.createElement("a");
-      link.setAttribute("href", this.item.info);
-      link.setAttribute("rel", "noreferrer noopener");
-      link.setAttribute("target", "_blank");
-      link.textContent = this.item.info;
-      info.textContent = "";
-      info.appendChild(link);
-    }
-
     if (labelId === "download") {
       this.setDownloadLinkInformation(info);
     }
