@@ -17,6 +17,7 @@
 #include "mozilla/EventListenerManager.h"   // for EventListenerManager
 #include "mozilla/EventStateManager.h"      // for EventStateManager
 #include "mozilla/IMEStateManager.h"        // for IMEStateManager
+#include "mozilla/LookAndFeel.h"            // for LookAndFeel
 #include "mozilla/NativeKeyBindingsType.h"  // for NativeKeyBindingsType
 #include "mozilla/Preferences.h"            // for Preferences
 #include "mozilla/PresShell.h"              // for PresShell
@@ -641,6 +642,27 @@ nsresult EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent) {
     NS_WARNING("EditorBase::HandleKeyPressEvent() failed");
     return rv;
   }
+
+  auto GetWidget = [&]() -> nsIWidget* {
+    if (aKeyboardEvent->mWidget) {
+      return aKeyboardEvent->mWidget;
+    }
+    // If the event is created by chrome script, the widget is always nullptr.
+    nsPresContext* presContext = GetPresContext();
+    if (NS_WARN_IF(!presContext)) {
+      return nullptr;
+    }
+    return presContext->GetTextInputHandlingWidget();
+  };
+
+  if (LookAndFeel::GetInt(LookAndFeel::IntID::HideCursorWhileTyping)) {
+    if (nsPresContext* pc = GetPresContext()) {
+      if (nsIWidget* widget = GetWidget()) {
+        pc->EventStateManager()->StartHidingCursorWhileTyping(widget);
+      }
+    }
+  }
+
   if (DetachedFromEditorOrDefaultPrevented(aKeyboardEvent)) {
     return NS_OK;
   }
@@ -650,17 +672,10 @@ nsresult EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent) {
   }
 
   // Now, ask the native key bindings to handle the event.
-  nsIWidget* widget = aKeyboardEvent->mWidget;
-  // If the event is created by chrome script, the widget is always nullptr.
-  if (!widget) {
-    nsPresContext* presContext = GetPresContext();
-    if (NS_WARN_IF(!presContext)) {
-      return NS_OK;
-    }
-    widget = presContext->GetNearestWidget();
-    if (NS_WARN_IF(!widget)) {
-      return NS_OK;
-    }
+
+  nsIWidget* widget = GetWidget();
+  if (NS_WARN_IF(!widget)) {
+    return NS_OK;
   }
 
   RefPtr<Document> doc = editorBase->GetDocument();

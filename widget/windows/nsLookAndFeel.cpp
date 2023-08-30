@@ -593,6 +593,12 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::PanelAnimations:
       aResult = 1;
       break;
+    case IntID::HideCursorWhileTyping: {
+      BOOL enable = TRUE;
+      ::SystemParametersInfoW(SPI_GETMOUSEVANISH, 0, &enable, 0);
+      aResult = enable;
+      break;
+    }
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;

@@ -305,6 +305,9 @@ class LookAndFeel {
     /** Whether XUL panel animations are enabled. */
     PanelAnimations,
 
+    /* Whether we should hide the cursor while typing */
+    HideCursorWhileTyping,
+
     /*
      * Not an ID; used to define the range of valid IDs.  Must be last.
      */
