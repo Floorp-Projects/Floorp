@@ -730,9 +730,9 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
       return NS_OK;
     }
 
-    nsAutoCString sourceMapURL;
+    nsCString sourceMapURL;
     if (nsContentUtils::GetSourceMapURL(httpChannel, sourceMapURL)) {
-      mSheet->SetSourceMapURL(NS_ConvertUTF8toUTF16(sourceMapURL));
+      mSheet->SetSourceMapURL(std::move(sourceMapURL));
     }
   }
 
