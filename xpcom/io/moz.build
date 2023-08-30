@@ -51,13 +51,13 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     EXPORTS.mozilla += [
         "FileUtilsWin.h",
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         "FileUtilsWin.cpp",
         "nsLocalFileWin.cpp",
     ]
 else:
     EXPORTS += ["nsLocalFileUnix.h"]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         "nsLocalFileUnix.cpp",
     ]
 
@@ -143,7 +143,7 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    SOURCES += [
+    UNIFIED_SOURCES += [
         "CocoaFileUtils.mm",
     ]
 
