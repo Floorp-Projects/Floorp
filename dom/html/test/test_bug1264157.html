@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=535043
   <input type="number" value=11 min=0 max=10 readonly> Read-only out-of-range
 </div>
 <pre id="test">
-<script type="text/javascript">
+<script>
 
 /** Test for Bug 1264157 **/
 SimpleTest.waitForFocus(function() {
@@ -48,9 +48,9 @@ SimpleTest.waitForFocus(function() {
   let active = [].slice.call(document.querySelectorAll("input:not(:disabled):not(:read-only)"));
   let disabled = [].slice.call(document.querySelectorAll("input:disabled"));
   let readonly = [].slice.call(document.querySelectorAll("input:read-only:not(:disabled)"));
-  ok(active.length == 2, "Test is messed up: missing non-disabled/non-readonly inputs");
-  ok(disabled.length == 2, "Test is messed up: missing disabled inputs");
-  ok(readonly.length == 2, "Test is messed up: missing readonly inputs");
+  is(active.length, 2, "Test is messed up: missing non-disabled/non-readonly inputs");
+  is(disabled.length, 2, "Test is messed up: missing disabled inputs");
+  is(readonly.length, 2, "Test is messed up: missing readonly inputs");
 
   is(document.querySelectorAll("input:in-range").length, 1,
      "Wrong number of in-range elements selected.");

@@ -359,12 +359,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
 
   void UpdateEditableState(bool aNotify) override;
 
-  // Helper for setting our editable flag and notifying
-  void DoSetEditableFlag(bool aEditable, bool aNotify) {
-    SetEditableFlag(aEditable);
-    UpdateState(aNotify);
-  }
-
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,
                       nsIPrincipal* aMaybeScriptedPrincipal,
@@ -1041,6 +1035,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
    * state to decide whether our disabled flag should be toggled.
    */
   virtual void UpdateDisabledState(bool aNotify);
+  bool IsReadOnlyInternal() const final;
 
   virtual void SetFormInternal(mozilla::dom::HTMLFormElement* aForm,
                                bool aBindToTree) {}

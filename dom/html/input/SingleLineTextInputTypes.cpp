@@ -21,8 +21,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 bool SingleLineTextInputTypeBase::IsMutable() const {
-  return !mInputElement->IsDisabled() &&
-         !mInputElement->HasAttr(nsGkAtoms::readonly);
+  return !mInputElement->IsDisabledOrReadOnly();
 }
 
 bool SingleLineTextInputTypeBase::IsTooLong() const {

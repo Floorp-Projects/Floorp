@@ -1029,13 +1029,14 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo,
 
   if (!gUploadLastDir) HTMLInputElement::InitUploadLastDir();
 
-  // Set up our default state.  By default we're enabled (since we're
-  // a control type that can be disabled but not actually disabled
-  // right now), optional, and valid.  We are NOT readwrite by default
-  // until someone calls UpdateEditableState on us, apparently!  Also
-  // by default we don't have to show validity UI and so forth.
+  // Set up our default state.  By default we're enabled (since we're a control
+  // type that can be disabled but not actually disabled right now), optional,
+  // read-write, and valid. Also by default we don't have to show validity UI
+  // and so forth.
   AddStatesSilently(ElementState::ENABLED | ElementState::OPTIONAL_ |
-                    ElementState::VALID | ElementState::VALUE_EMPTY);
+                    ElementState::VALID | ElementState::VALUE_EMPTY |
+                    ElementState::READWRITE);
+  RemoveStatesSilently(ElementState::READONLY);
   UpdateApzAwareFlag();
 }
 
@@ -1293,6 +1294,10 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         // because UpdateValueMissingValidityState depends on our required
         // state.
         UpdateRequiredState(!!aValue, aNotify);
+      }
+
+      if (aName == nsGkAtoms::readonly && !!aValue != !!aOldValue) {
+        UpdateReadOnlyState(aNotify);
       }
 
       UpdateValueMissingValidityState();
@@ -4389,6 +4394,9 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
 
   // Whether placeholder applies might have changed.
   UpdatePlaceholderShownState();
+  // Whether readonly applies might have changed.
+  UpdateReadOnlyState(aNotify);
+
   // https://html.spec.whatwg.org/#input-type-change
   switch (GetValueMode()) {
     case VALUE_MODE_DEFAULT:
@@ -6394,7 +6402,7 @@ HTMLInputElement::ValueModeType HTMLInputElement::GetValueMode() const {
 
 bool HTMLInputElement::IsMutable() const {
   return !IsDisabled() &&
-         !(DoesReadOnlyApply() && HasAttr(nsGkAtoms::readonly));
+         !(DoesReadOnlyApply() && State().HasState(ElementState::READONLY));
 }
 
 bool HTMLInputElement::DoesRequiredApply() const {
@@ -6731,11 +6739,15 @@ void HTMLInputElement::UpdateAllValidityStatesButNotElementState() {
 }
 
 void HTMLInputElement::UpdateBarredFromConstraintValidation() {
+  // NOTE: readonly attribute causes an element to be barred from constraint
+  // validation even if it doesn't apply to that input type. That's rather
+  // weird, but pre-existing behavior.
   SetBarredFromConstraintValidation(
       mType == FormControlType::InputHidden ||
       mType == FormControlType::InputButton ||
-      mType == FormControlType::InputReset || HasAttr(nsGkAtoms::readonly) ||
-      HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) || IsDisabled());
+      mType == FormControlType::InputReset || IsDisabled() ||
+      HasAttr(nsGkAtoms::readonly) ||
+      HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR));
 }
 
 nsresult HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,

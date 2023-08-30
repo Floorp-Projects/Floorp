@@ -278,6 +278,11 @@ class Element : public FragmentOrElement {
    * Returns the current disabled state of the element.
    */
   bool IsDisabled() const { return State().HasState(ElementState::DISABLED); }
+  bool IsReadOnly() const { return State().HasState(ElementState::READONLY); }
+  bool IsDisabledOrReadOnly() const {
+    return State().HasAtLeastOneOfStates(ElementState::DISABLED |
+                                         ElementState::READONLY);
+  }
 
   virtual int32_t TabIndexDefault() { return -1; }
 
@@ -800,6 +805,11 @@ class Element : public FragmentOrElement {
   }
 
   void UpdateEditableState(bool aNotify) override;
+  // Makes sure that the READONLY/READWRITE flags are in sync.
+  void UpdateReadOnlyState(bool aNotify);
+  // Form controls and non-form controls should have different :read-only /
+  // :read-write behavior. This is what effectively controls it.
+  virtual bool IsReadOnlyInternal() const;
 
   /**
    * Normalizes an attribute name and returns it as a nodeinfo if an attribute

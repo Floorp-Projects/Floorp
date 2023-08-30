@@ -402,9 +402,9 @@ void ElementInternals::UpdateBarredFromConstraintValidation() {
   if (mTarget) {
     MOZ_ASSERT(mTarget->IsFormAssociatedElement());
     SetBarredFromConstraintValidation(
+        mTarget->IsDisabled() ||
         mTarget->HasAttr(nsGkAtoms::readonly) ||
-        mTarget->HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) ||
-        mTarget->IsDisabled());
+        mTarget->HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR));
   }
 }
 
