@@ -80,8 +80,8 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    override fun onPreferenceTreeClick(preference: Preference?): Boolean {
-        when (preference?.key) {
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        when (preference.key) {
             getString(R.string.pref_key_custom_sponsored_stories_parameters) ->
                 findNavController().nav(
                     R.id.secretSettingsPreference,
