@@ -62,14 +62,13 @@ bool HTMLAnchorElement::Draggable() const {
 
 nsresult HTMLAnchorElement::BindToTree(BindContext& aContext,
                                        nsINode& aParent) {
-  Link::ResetLinkState(false, Link::ElementHasHref());
-
   nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  Link::BindToTree(aContext);
+
   // Prefetch links
   if (IsInComposedDoc()) {
-    aContext.OwnerDoc().RegisterPendingLinkUpdate(this);
     TryDNSPrefetch(*this);
   }
 
@@ -83,11 +82,11 @@ void HTMLAnchorElement::UnbindFromTree(bool aNullParent) {
   // via GetURIForDNSPrefetch().
   CancelDNSPrefetch(*this);
 
-  // Without removing the link state we risk a dangling pointer
-  // in the mStyledLinks hashtable
-  Link::ResetLinkState(false, Link::ElementHasHref());
-
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
+
+  // Without removing the link state we risk a dangling pointer in the
+  // mStyledLinks hashtable
+  Link::UnbindFromTree();
 }
 
 bool HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
@@ -211,10 +210,6 @@ void HTMLAnchorElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
 
   return nsGenericHTMLElement::AfterSetAttr(
       aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
-}
-
-ElementState HTMLAnchorElement::IntrinsicState() const {
-  return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
 
 void HTMLAnchorElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,

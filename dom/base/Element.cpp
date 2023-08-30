@@ -368,12 +368,6 @@ void Element::NotifyStateChange(ElementState aStates) {
   }
 }
 
-void Element::UpdateLinkState(ElementState aState) {
-  MOZ_ASSERT(!aState.HasAtLeastOneOfStates(~ElementState::VISITED_OR_UNVISITED),
-             "Unexpected link state bits");
-  mState = (mState & ~ElementState::VISITED_OR_UNVISITED) | aState;
-}
-
 void Element::UpdateState(bool aNotify) {
   ElementState oldState = mState;
   mState =

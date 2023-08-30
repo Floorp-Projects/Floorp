@@ -64,16 +64,10 @@ MathMLElement::MathMLElement(
       ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)) {}
 
 nsresult MathMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
-  Link::ResetLinkState(false, Link::ElementHasHref());
-
   nsresult rv = MathMLElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // FIXME(emilio): Probably should be composed, this uses all the other link
-  // infrastructure.
-  if (Document* doc = aContext.GetUncomposedDoc()) {
-    doc->RegisterPendingLinkUpdate(this);
-  }
+  Link::BindToTree(aContext);
 
   // Set the bit in the document for telemetry.
   if (Document* doc = aContext.GetComposedDoc()) {
@@ -84,11 +78,10 @@ nsresult MathMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 }
 
 void MathMLElement::UnbindFromTree(bool aNullParent) {
-  // Without removing the link state we risk a dangling pointer
-  // in the mStyledLinks hashtable
-  Link::ResetLinkState(false, Link::ElementHasHref());
-
   MathMLElementBase::UnbindFromTree(aNullParent);
+  // Without removing the link state we risk a dangling pointer in the
+  // mStyledLinks hashtable
+  Link::UnbindFromTree();
 }
 
 bool MathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -605,10 +598,6 @@ nsresult MathMLElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 }
 
 NS_IMPL_ELEMENT_CLONE(MathMLElement)
-
-ElementState MathMLElement::IntrinsicState() const {
-  return Link::LinkState() | MathMLElementBase::IntrinsicState();
-}
 
 void MathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
                                             bool aNotify) {

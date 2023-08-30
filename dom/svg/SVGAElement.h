@@ -59,7 +59,6 @@ class SVGAElement final : public SVGAElementBase,
   already_AddRefed<nsIURI> GetHrefURI() const override;
   bool HasHref() const;
 
-  ElementState IntrinsicState() const override;
   virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                             const nsAttrValue* aValue,
                             const nsAttrValue* aOldValue,

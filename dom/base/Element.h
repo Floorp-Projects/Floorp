@@ -271,11 +271,6 @@ class Element : public FragmentOrElement {
   void UpdateState(bool aNotify);
 
   /**
-   * Method to update mState with link state information.  This does not notify.
-   */
-  void UpdateLinkState(ElementState aState);
-
-  /**
    * Returns the current disabled state of the element.
    */
   bool IsDisabled() const { return State().HasState(ElementState::DISABLED); }
@@ -751,7 +746,7 @@ class Element : public FragmentOrElement {
   // Allow CusomtElementRegistry to call AddStates.
   friend class CustomElementRegistry;
 
-  // Also need to allow Link to call UpdateLinkState.
+  // Allow Link to call AddStates etc.
   friend class Link;
 
   // Style state computed from element's state and style locks.

@@ -142,24 +142,17 @@ void SVGAElement::SetText(const nsAString& aText, mozilla::ErrorResult& rv) {
 // nsIContent methods
 
 nsresult SVGAElement::BindToTree(BindContext& aContext, nsINode& aParent) {
-  Link::ResetLinkState(false, Link::ElementHasHref());
-
   nsresult rv = SVGAElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (Document* doc = aContext.GetComposedDoc()) {
-    doc->RegisterPendingLinkUpdate(this);
-  }
-
+  Link::BindToTree(aContext);
   return NS_OK;
 }
 
 void SVGAElement::UnbindFromTree(bool aNullParent) {
+  SVGAElementBase::UnbindFromTree(aNullParent);
   // Without removing the link state we risk a dangling pointer
   // in the mStyledLinks hashtable
-  Link::ResetLinkState(false, Link::ElementHasHref());
-
-  SVGAElementBase::UnbindFromTree(aNullParent);
+  Link::UnbindFromTree();
 }
 
 int32_t SVGAElement::TabIndexDefault() { return 0; }
@@ -244,10 +237,6 @@ void SVGAElement::GetLinkTarget(nsAString& aTarget) {
       ownerDoc->GetBaseTarget(aTarget);
     }
   }
-}
-
-ElementState SVGAElement::IntrinsicState() const {
-  return Link::LinkState() | SVGAElementBase::IntrinsicState();
 }
 
 void SVGAElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,

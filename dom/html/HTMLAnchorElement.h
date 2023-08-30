@@ -68,8 +68,6 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  ElementState IntrinsicState() const override;
-
   // WebIDL API
 
   void GetHref(nsAString& aValue) const {
