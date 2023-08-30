@@ -244,7 +244,7 @@ RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FETCH_LOG(
         ("FetchInstance::Fetch FetchDriver::Fetch failed(0x%X)", (uint32_t)rv));
-    return FetchService::NetworkErrorResponse(rv);
+    return FetchService::NetworkErrorResponse(rv, mArgs);
   }
 
   return mPromises;
@@ -487,7 +487,27 @@ already_AddRefed<FetchService> FetchService::GetInstance() {
 }
 
 /*static*/
-RefPtr<FetchServicePromises> FetchService::NetworkErrorResponse(nsresult aRv) {
+RefPtr<FetchServicePromises> FetchService::NetworkErrorResponse(
+    nsresult aRv, const FetchArgs& aArgs) {
+  if (aArgs.is<WorkerFetchArgs>()) {
+    const WorkerFetchArgs& args = aArgs.as<WorkerFetchArgs>();
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        __func__, [aRv, actorID = args.mActorID]() mutable {
+          FETCH_LOG(
+              ("FetchService::PropagateErrorResponse runnable aError: 0x%X",
+               (uint32_t)aRv));
+          RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
+          if (actor) {
+            actor->OnResponseAvailableInternal(
+                InternalResponse::NetworkError(aRv));
+            actor->OnResponseEnd(
+                ResponseEndArgs(FetchDriverObserver::eAborted));
+          }
+        });
+    MOZ_ALWAYS_SUCCEEDS(
+        args.mEventTarget->Dispatch(r, nsIThread::DISPATCH_NORMAL));
+  }
+
   RefPtr<FetchServicePromises> promises = MakeRefPtr<FetchServicePromises>();
   promises->ResolveResponseAvailablePromise(InternalResponse::NetworkError(aRv),
                                             __func__);
@@ -588,16 +608,16 @@ RefPtr<FetchServicePromises> FetchService::Fetch(FetchArgs&& aArgs) {
                                              : "WorkerFetch"));
   if (mOffline) {
     FETCH_LOG(("FetchService::Fetch network offline"));
-    return NetworkErrorResponse(NS_ERROR_OFFLINE);
+    return NetworkErrorResponse(NS_ERROR_OFFLINE, aArgs);
   }
 
   // Create FetchInstance
   RefPtr<FetchInstance> fetch = MakeRefPtr<FetchInstance>();
 
-  // Call FetchInstance::Initialize() to get needed information for FetchDriver,
+  // Call FetchInstance::Initialize() to get needed information for FetchDriver
   nsresult rv = fetch->Initialize(std::move(aArgs));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NetworkErrorResponse(rv);
+    return NetworkErrorResponse(rv, fetch->Args());
   }
 
   // Call FetchInstance::Fetch() to start an asynchronous fetching.
@@ -615,7 +635,7 @@ RefPtr<FetchServicePromises> FetchService::Fetch(FetchArgs&& aArgs) {
         })) {
       FETCH_LOG(
           ("FetchService::Fetch entry[%p] already exists", promises.get()));
-      return NetworkErrorResponse(NS_ERROR_UNEXPECTED);
+      return NetworkErrorResponse(NS_ERROR_UNEXPECTED, fetch->Args());
     }
     FETCH_LOG(("FetchService::Fetch entry[%p] of FetchInstance[%p] added",
                promises.get(), fetch.get()));
