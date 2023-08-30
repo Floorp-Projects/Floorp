@@ -161,13 +161,6 @@ nsresult nsCheckboxRadioFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-void nsCheckboxRadioFrame::GetCurrentCheckState(bool* aState) {
-  HTMLInputElement* inputElement = HTMLInputElement::FromNode(mContent);
-  if (inputElement) {
-    *aState = inputElement->Checked();
-  }
-}
-
 nsresult nsCheckboxRadioFrame::SetFormProperty(nsAtom* aName,
                                                const nsAString& aValue) {
   return NS_OK;
