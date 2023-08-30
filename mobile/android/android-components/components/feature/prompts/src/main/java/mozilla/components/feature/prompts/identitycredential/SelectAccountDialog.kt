@@ -29,13 +29,15 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.concept.identitycredential.Account
 import mozilla.components.concept.identitycredential.Provider
 import mozilla.components.feature.prompts.R
+import mozilla.components.feature.prompts.identitycredential.previews.DialogPreviewMaterialTheme
+import mozilla.components.feature.prompts.identitycredential.previews.LightDarkPreview
 import mozilla.components.support.ktx.kotlin.base64PngToBitmap
-import mozilla.components.ui.colors.PhotonColors
 
 /**
  * A Federated Credential Management dialog for selecting an account.
  *
  * @param provider The [Provider] on which the user is logging in.
+ * @param colors The colors of the dialog.
  * @param accounts The list of available accounts for this provider.
  * @param modifier [Modifier] to be applied to the layout.
  * @param onAccountClick Invoked when the user clicks on an item.
@@ -45,6 +47,7 @@ fun SelectAccountDialog(
     provider: Provider,
     accounts: List<Account>,
     modifier: Modifier = Modifier,
+    colors: DialogColors = DialogColors.default(),
     onAccountClick: (Account) -> Unit,
 ) {
     Column(
@@ -74,14 +77,14 @@ fun SelectAccountDialog(
                 style = TextStyle(
                     fontSize = 16.sp,
                     lineHeight = 24.sp,
-                    color = PhotonColors.DarkGrey90,
+                    color = colors.title,
                     letterSpacing = 0.15.sp,
                 ),
             )
         }
 
         accounts.forEach { account ->
-            AccountItem(account = account, onClick = onAccountClick)
+            AccountItem(account = account, colors = colors, onClick = onAccountClick)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -92,11 +95,13 @@ fun SelectAccountDialog(
 private fun AccountItem(
     account: Account,
     modifier: Modifier = Modifier,
+    colors: DialogColors = DialogColors.default(),
     onClick: (Account) -> Unit,
 ) {
     IdentityCredentialItem(
         title = account.name,
         description = account.email,
+        colors = colors,
         modifier = modifier,
         onClick = { onClick(account) },
     ) {
@@ -133,27 +138,29 @@ private fun AccountItemPreview() {
 }
 
 @Composable
-@Preview
+@LightDarkPreview
 private fun SelectAccountDialogPreview() {
-    SelectAccountDialog(
-        provider = Provider(0, GOOGLE_FAVICON, "Google", "google.com"),
-        accounts = listOf(
-            Account(
-                0,
-                "user@mozilla.com",
-                "User",
-                USER_PICTURE,
+    DialogPreviewMaterialTheme {
+        SelectAccountDialog(
+            provider = Provider(0, GOOGLE_FAVICON, "Google", "google.com"),
+            accounts = listOf(
+                Account(
+                    0,
+                    "user@mozilla.com",
+                    "User",
+                    USER_PICTURE,
+                ),
+                Account(
+                    1,
+                    "user2@mozilla.com",
+                    "Google",
+                    null,
+                ),
             ),
-            Account(
-                1,
-                "user2@mozilla.com",
-                "Google",
-                null,
-            ),
-        ),
-        modifier = Modifier.background(Color.White),
-        onAccountClick = { },
-    )
+            modifier = Modifier.background(Color.White),
+            onAccountClick = { },
+        )
+    }
 }
 
 @Suppress("MaxLineLength")

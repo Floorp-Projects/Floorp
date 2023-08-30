@@ -1254,8 +1254,9 @@ class GeckoPromptDelegateTest {
         )
 
         val geckoAccount = GECKO_PROMPT_ACCOUNT_SELECTOR(0, "foo@mozilla.org", "foo", "icon")
+        val provider = GECKO_PROMPT_ACCOUNT_SELECTOR_PROVIDER("name", "domain", "favicon")
         val acAccount = geckoAccount.toAccount()
-        val geckoPrompt = geckoAccountSelectorPrompt(listOf(geckoAccount))
+        val geckoPrompt = geckoAccountSelectorPrompt(listOf(geckoAccount), provider)
         var geckoResult = promptDelegate.onSelectIdentityCredentialAccount(mock(), geckoPrompt)
 
         geckoResult.accept {
@@ -1280,7 +1281,7 @@ class GeckoPromptDelegateTest {
         }
 
         // Verifying we are handling the dismiss correctly.
-        geckoResult = promptDelegate.onSelectIdentityCredentialAccount(mock(), geckoAccountSelectorPrompt(listOf(geckoAccount)))
+        geckoResult = promptDelegate.onSelectIdentityCredentialAccount(mock(), geckoAccountSelectorPrompt(listOf(geckoAccount), provider))
         geckoResult.accept {
             onDismissWasCalled = true
         }
@@ -2012,9 +2013,11 @@ class GeckoPromptDelegateTest {
 
     private fun geckoAccountSelectorPrompt(
         accounts: List<GECKO_PROMPT_ACCOUNT_SELECTOR> = emptyList(),
+        provider: GECKO_PROMPT_ACCOUNT_SELECTOR_PROVIDER,
     ): GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt {
         val prompt: GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt = mock()
         ReflectionUtils.setField(prompt, "accounts", accounts.toTypedArray())
+        ReflectionUtils.setField(prompt, "provider", provider)
         return prompt
     }
 

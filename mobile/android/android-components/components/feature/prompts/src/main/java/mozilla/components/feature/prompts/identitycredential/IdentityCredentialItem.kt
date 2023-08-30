@@ -6,17 +6,15 @@ package mozilla.components.feature.prompts.identitycredential
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,10 +22,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mozilla.components.ui.colors.PhotonColors
+import mozilla.components.feature.prompts.identitycredential.previews.DialogPreviewMaterialTheme
+import mozilla.components.feature.prompts.identitycredential.previews.LightDarkPreview
 
 /**
- * List item used to display an IdentityCredentials item that supports clicks
+ * List item used to display an IdentityCredential item that supports clicks
  *
  * @param title the Title of the item
  * @param description The Description of the item.
@@ -41,20 +40,14 @@ internal fun IdentityCredentialItem(
     title: String,
     description: String,
     modifier: Modifier = Modifier,
+    colors: DialogColors = DialogColors.default(),
     onClick: () -> Unit,
     beforeItemContent: (@Composable () -> Unit)? = null,
 ) {
-    // Used to propagate the ripple effect to the whole row
-    val interactionSource = remember { MutableInteractionSource() }
-
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(
-                onClick = onClick,
-                interactionSource = interactionSource,
-                indication = rememberRipple(color = PhotonColors.Black),
-            )
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -66,7 +59,7 @@ internal fun IdentityCredentialItem(
                 style = TextStyle(
                     fontSize = 16.sp,
                     lineHeight = 24.sp,
-                    color = PhotonColors.DarkGrey90,
+                    color = colors.title,
                     letterSpacing = 0.15.sp,
                 ),
                 maxLines = 1,
@@ -77,7 +70,7 @@ internal fun IdentityCredentialItem(
                 style = TextStyle(
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
-                    color = PhotonColors.DarkGrey05,
+                    color = colors.description,
                     letterSpacing = 0.25.sp,
                 ),
                 maxLines = 1,
@@ -87,14 +80,16 @@ internal fun IdentityCredentialItem(
 }
 
 @Composable
-@Preview(name = "Provider with no favicon")
+@LightDarkPreview
 private fun ProviderItemPreview() {
-    IdentityCredentialItem(
-        modifier = Modifier.background(Color.White),
-        title = "Title",
-        description = "Description",
-        onClick = {},
-    )
+    DialogPreviewMaterialTheme {
+        IdentityCredentialItem(
+            modifier = Modifier.background(MaterialTheme.colors.background),
+            title = "Title",
+            description = "Description",
+            onClick = {},
+        )
+    }
 }
 
 @Composable

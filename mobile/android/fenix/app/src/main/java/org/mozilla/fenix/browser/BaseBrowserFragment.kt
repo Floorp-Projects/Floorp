@@ -76,6 +76,8 @@ import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.prompts.PromptFeature.Companion.PIN_REQUEST
 import mozilla.components.feature.prompts.address.AddressDelegate
 import mozilla.components.feature.prompts.creditcard.CreditCardDelegate
+import mozilla.components.feature.prompts.identitycredential.DialogColors
+import mozilla.components.feature.prompts.identitycredential.DialogColorsProvider
 import mozilla.components.feature.prompts.login.LoginDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.feature.readerview.ReaderViewFeature
@@ -669,12 +671,20 @@ abstract class BaseBrowserFragment :
             view = view,
         )
 
+        val colorsProvider = DialogColorsProvider {
+            DialogColors(
+                title = ThemeManager.resolveAttributeColor(attribute = R.attr.textPrimary),
+                description = ThemeManager.resolveAttributeColor(attribute = R.attr.textSecondary),
+            )
+        }
+
         promptsFeature.set(
             feature = PromptFeature(
                 activity = activity,
                 store = store,
                 customTabId = customTabSessionId,
                 fragmentManager = parentFragmentManager,
+                identityCredentialColorsProvider = colorsProvider,
                 tabsUseCases = requireComponents.useCases.tabsUseCases,
                 creditCardValidationDelegate = DefaultCreditCardValidationDelegate(
                     context.components.core.lazyAutofillStorage,

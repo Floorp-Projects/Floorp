@@ -76,6 +76,8 @@ import mozilla.components.feature.prompts.facts.emitPromptDisplayedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulAddressAutofillFormDetectedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFormDetectedFact
 import mozilla.components.feature.prompts.file.FilePicker
+import mozilla.components.feature.prompts.identitycredential.DialogColors
+import mozilla.components.feature.prompts.identitycredential.DialogColorsProvider
 import mozilla.components.feature.prompts.identitycredential.PrivacyPolicyDialogFragment
 import mozilla.components.feature.prompts.identitycredential.SelectAccountDialogFragment
 import mozilla.components.feature.prompts.identitycredential.SelectProviderDialogFragment
@@ -154,6 +156,9 @@ class PromptFeature private constructor(
     private val store: BrowserStore,
     private var customTabId: String?,
     private val fragmentManager: FragmentManager,
+    private val identityCredentialColorsProvider: DialogColorsProvider = DialogColorsProvider {
+        DialogColors.default()
+    },
     private val tabsUseCases: TabsUseCases,
     private val shareDelegate: ShareDelegate,
     private val exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
@@ -197,6 +202,7 @@ class PromptFeature private constructor(
         customTabId: String? = null,
         fragmentManager: FragmentManager,
         tabsUseCases: TabsUseCases,
+        identityCredentialColorsProvider: DialogColorsProvider = DialogColorsProvider { DialogColors.default() },
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
         creditCardValidationDelegate: CreditCardValidationDelegate? = null,
@@ -215,6 +221,7 @@ class PromptFeature private constructor(
         customTabId = customTabId,
         fragmentManager = fragmentManager,
         tabsUseCases = tabsUseCases,
+        identityCredentialColorsProvider = identityCredentialColorsProvider,
         shareDelegate = shareDelegate,
         exitFullscreenUsecase = exitFullscreenUsecase,
         creditCardValidationDelegate = creditCardValidationDelegate,
@@ -335,22 +342,27 @@ class PromptFeature private constructor(
                                 is SelectLoginPrompt -> {
                                     loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
                                 }
+
                                 is SaveLoginPrompt -> {
                                     (activePrompt?.get() as? SaveLoginDialogFragment)?.dismissAllowingStateLoss()
                                 }
+
                                 is SaveCreditCard -> {
                                     (activePrompt?.get() as? CreditCardSaveDialogFragment)?.dismissAllowingStateLoss()
                                 }
+
                                 is SelectCreditCard -> {
                                     creditCardPicker?.dismissSelectCreditCardRequest(
                                         activePromptRequest as SelectCreditCard,
                                     )
                                 }
+
                                 is SelectAddress -> {
                                     addressPicker?.dismissSelectAddressRequest(
                                         activePromptRequest as SelectAddress,
                                     )
                                 }
+
                                 is SingleChoice,
                                 is MultipleChoice,
                                 is MenuChoice,
@@ -364,6 +376,7 @@ class PromptFeature private constructor(
                                         }
                                     }
                                 }
+
                                 else -> {
                                     // no-op
                                 }
@@ -493,6 +506,7 @@ class PromptFeature private constructor(
                     emitPromptDisplayedFact(promptName = "FilePrompt")
                     filePicker.handleFileRequest(promptRequest)
                 }
+
                 is Share -> handleShareRequest(promptRequest, session)
                 is SelectCreditCard -> {
                     emitSuccessfulCreditCardAutofillFormDetectedFact()
@@ -500,18 +514,21 @@ class PromptFeature private constructor(
                         creditCardPicker?.handleSelectCreditCardRequest(promptRequest)
                     }
                 }
+
                 is SelectLoginPrompt -> {
                     emitPromptDisplayedFact(promptName = "SelectLoginPrompt")
                     if (promptRequest.logins.isNotEmpty()) {
                         loginPicker?.handleSelectLoginRequest(promptRequest)
                     }
                 }
+
                 is SelectAddress -> {
                     emitSuccessfulAddressAutofillFormDetectedFact()
                     if (isAddressAutofillEnabled() && promptRequest.addresses.isNotEmpty()) {
                         addressPicker?.handleSelectAddressRequest(promptRequest)
                     }
                 }
+
                 else -> handleDialogsRequest(promptRequest, session)
             }
         }
@@ -535,6 +552,7 @@ class PromptFeature private constructor(
                     promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
                     it.onDeny()
                 }
+
                 is Dismissible -> it.onDismiss()
                 else -> {
                     // no-op
@@ -562,6 +580,7 @@ class PromptFeature private constructor(
                     promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
                     it.onConfirm(!shouldNotShowMoreDialogs)
                 }
+
                 is SingleChoice -> it.onConfirm(value as Choice)
                 is MenuChoice -> it.onConfirm(value as Choice)
                 is BeforeUnload -> it.onLeave()
@@ -570,6 +589,7 @@ class PromptFeature private constructor(
                     promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
                     it.onAllow()
                 }
+
                 is MultipleChoice -> it.onConfirm(value as Array<Choice>)
 
                 is Authentication -> {
@@ -596,8 +616,10 @@ class PromptFeature private constructor(
                     when (buttonType) {
                         MultiButtonDialogFragment.ButtonType.POSITIVE ->
                             it.onConfirmPositiveButton(!isCheckBoxChecked)
+
                         MultiButtonDialogFragment.ButtonType.NEGATIVE ->
                             it.onConfirmNegativeButton(!isCheckBoxChecked)
+
                         MultiButtonDialogFragment.ButtonType.NEUTRAL ->
                             it.onConfirmNeutralButton(!isCheckBoxChecked)
                     }
@@ -838,6 +860,7 @@ class PromptFeature private constructor(
                     shouldDismissOnLoad = true,
                 )
             }
+
             is BeforeUnload -> {
                 val title =
                     container.getString(R.string.mozac_feature_prompt_before_unload_dialog_title)
@@ -912,6 +935,7 @@ class PromptFeature private constructor(
                     promptRequestUID = promptRequest.uid,
                     shouldDismissOnLoad = true,
                     providers = promptRequest.providers,
+                    colorsProvider = identityCredentialColorsProvider,
                 )
             }
 
@@ -922,6 +946,7 @@ class PromptFeature private constructor(
                     shouldDismissOnLoad = true,
                     accounts = promptRequest.accounts,
                     provider = promptRequest.provider,
+                    colorsProvider = identityCredentialColorsProvider,
                 )
             }
 
@@ -1015,6 +1040,7 @@ class PromptFeature private constructor(
             is PromptRequest.IdentityCredential.SelectAccount,
             is PromptRequest.IdentityCredential.PrivacyPolicy,
             -> true
+
             is Alert, is TextPrompt, is Confirm, is Repost, is Popup -> promptAbuserDetector.shouldShowMoreDialogs
         }
     }
