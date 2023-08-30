@@ -1078,6 +1078,7 @@ function runTests() {
 
     // Test chrome-only -moz-lwtheme
     test_balanced_unparseable(":-moz-lwtheme");
+    test_balanced_unparseable(":-moz-broken");
 
     test_balanced_unparseable(":-moz-tree-row(selected)");
     test_balanced_unparseable("::-moz-tree-row(selected)");
@@ -1307,8 +1308,6 @@ function runTests() {
       test_parseable(selector);
       should_serialize_to(selector, expected_serialization_when_parseable);
     }
-
-    test_parseable(":-moz-broken");
 
     run_deferred_tests();
 }

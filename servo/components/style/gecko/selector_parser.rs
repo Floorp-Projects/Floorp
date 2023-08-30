@@ -283,6 +283,10 @@ impl<'a> SelectorParser<'a> {
             return true;
         }
 
+        if matches!(*pseudo_class, NonTSPseudoClass::MozBroken) {
+            return static_prefs::pref!("layout.css.moz-broken.content.enabled")
+        }
+
         return false;
     }
 
