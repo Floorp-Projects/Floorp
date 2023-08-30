@@ -1,0 +1,43 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsILoadContext;
+interface nsIX509Cert;
+
+[scriptable, function, uuid(6b00d96d-fb8a-4c9f-9632-c9e1235befce)]
+interface nsIClientAuthDialogCallback : nsISupports
+{
+  void certificateChosen(in nsIX509Cert cert, in bool rememberDecision);
+};
+
+/**
+ * Provides UI when a server requests a TLS client authentication certificate.
+ */
+[scriptable, uuid(fa4c7520-1433-11d5-ba24-00108303b117)]
+interface nsIClientAuthDialogService : nsISupports
+{
+  /**
+   * Called when a user is asked to choose a certificate for client auth.
+   *
+   * @param hostname Hostname of the server.
+   * @param certArray Array of certificates the user can choose from.
+   * @param loadContext The nsILoadContext of the connection requesting a
+   *                    certificate. May be null, in which case the
+   *                    implementation will use the most recent window to show
+   *                    UI.
+   * @param callback The nsIClientAuthDialogCallback to call when a certificate
+   *                 has been chosen (or no certificate).
+   */
+  [must_use]
+  void chooseCertificate(in AUTF8String hostname,
+                         in Array<nsIX509Cert> certArray,
+                         in nsILoadContext loadContext,
+                         in nsIClientAuthDialogCallback callback);
+};
+
+%{C++
+#define NS_CLIENTAUTHDIALOGSERVICE_CONTRACTID "@mozilla.org/security/ClientAuthDialogService;1"
+%}

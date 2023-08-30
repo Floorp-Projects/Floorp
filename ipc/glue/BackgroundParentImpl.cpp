@@ -781,7 +781,7 @@ BackgroundParentImpl::AllocPSelectTLSClientAuthCertParent(
     const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
     const int32_t& aPort, const uint32_t& aProviderFlags,
     const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
-    const nsTArray<ByteArray>& aCANames) {
+    const nsTArray<ByteArray>& aCANames, const uint64_t& aBrowserId) {
   RefPtr<mozilla::psm::SelectTLSClientAuthCertParent> parent =
       new mozilla::psm::SelectTLSClientAuthCertParent();
   return parent.forget();
@@ -792,12 +792,14 @@ BackgroundParentImpl::RecvPSelectTLSClientAuthCertConstructor(
     PSelectTLSClientAuthCertParent* actor, const nsACString& aHostName,
     const OriginAttributes& aOriginAttributes, const int32_t& aPort,
     const uint32_t& aProviderFlags, const uint32_t& aProviderTlsFlags,
-    const ByteArray& aServerCertBytes, nsTArray<ByteArray>&& aCANames) {
+    const ByteArray& aServerCertBytes, nsTArray<ByteArray>&& aCANames,
+    const uint64_t& aBrowserId) {
   mozilla::psm::SelectTLSClientAuthCertParent* selectTLSClientAuthCertParent =
       static_cast<mozilla::psm::SelectTLSClientAuthCertParent*>(actor);
   if (!selectTLSClientAuthCertParent->Dispatch(
           aHostName, aOriginAttributes, aPort, aProviderFlags,
-          aProviderTlsFlags, aServerCertBytes, std::move(aCANames))) {
+          aProviderTlsFlags, aServerCertBytes, std::move(aCANames),
+          aBrowserId)) {
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();

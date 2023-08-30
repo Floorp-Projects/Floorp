@@ -35,8 +35,7 @@ nsNSSDialogs::nsNSSDialogs() = default;
 
 nsNSSDialogs::~nsNSSDialogs() = default;
 
-NS_IMPL_ISUPPORTS(nsNSSDialogs, nsITokenPasswordDialogs, nsICertificateDialogs,
-                  nsIClientAuthDialogs)
+NS_IMPL_ISUPPORTS(nsNSSDialogs, nsITokenPasswordDialogs, nsICertificateDialogs)
 
 nsresult nsNSSDialogs::Init() {
   nsresult rv;
@@ -150,103 +149,6 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor* ctx,
 
   *trust |= trustForSSL ? nsIX509CertDB::TRUSTED_SSL : 0;
   *trust |= trustForEmail ? nsIX509CertDB::TRUSTED_EMAIL : 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSDialogs::ChooseCertificate(const nsACString& hostname, int32_t port,
-                                const nsACString& organization,
-                                const nsACString& issuerOrg, nsIArray* certList,
-                                /*out*/ uint32_t* selectedIndex,
-                                /*out*/ bool* rememberClientAuthCertificate,
-                                /*out*/ bool* certificateChosen) {
-  NS_ENSURE_ARG_POINTER(certList);
-  NS_ENSURE_ARG_POINTER(selectedIndex);
-  NS_ENSURE_ARG_POINTER(rememberClientAuthCertificate);
-  NS_ENSURE_ARG_POINTER(certificateChosen);
-
-  *certificateChosen = false;
-  *rememberClientAuthCertificate = false;
-
-  nsCOMPtr<nsIMutableArray> argArray = nsArrayBase::Create();
-  if (!argArray) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIWritableVariant> hostnameVariant = new nsVariant();
-  nsresult rv = hostnameVariant->SetAsAUTF8String(hostname);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = argArray->AppendElement(hostnameVariant);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIWritableVariant> organizationVariant = new nsVariant();
-  rv = organizationVariant->SetAsAUTF8String(organization);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = argArray->AppendElement(organizationVariant);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIWritableVariant> issuerOrgVariant = new nsVariant();
-  rv = issuerOrgVariant->SetAsAUTF8String(issuerOrg);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = argArray->AppendElement(issuerOrgVariant);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIWritableVariant> portVariant = new nsVariant();
-  rv = portVariant->SetAsInt32(port);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = argArray->AppendElement(portVariant);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = argArray->AppendElement(certList);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIWritablePropertyBag2> retVals = new nsHashPropertyBag();
-  rv = argArray->AppendElement(retVals);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = nsNSSDialogHelper::openDialog(
-      nullptr, "chrome://pippki/content/clientauthask.xhtml", argArray);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = retVals->GetPropertyAsBool(u"rememberSelection"_ns,
-                                  rememberClientAuthCertificate);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = retVals->GetPropertyAsBool(u"certChosen"_ns, certificateChosen);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (*certificateChosen) {
-    rv = retVals->GetPropertyAsUint32(u"selectedIndex"_ns, selectedIndex);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
 
   return NS_OK;
 }

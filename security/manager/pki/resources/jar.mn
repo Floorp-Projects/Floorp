@@ -9,6 +9,7 @@ pippki.jar:
     content/pippki/certManager.xhtml           (content/certManager.xhtml)
     content/pippki/changepassword.js         (content/changepassword.js)
     content/pippki/changepassword.xhtml        (content/changepassword.xhtml)
+    content/pippki/clientauthask.css          (content/clientauthask.css)
     content/pippki/clientauthask.js          (content/clientauthask.js)
     content/pippki/clientauthask.xhtml         (content/clientauthask.xhtml)
     content/pippki/deletecert.js             (content/deletecert.js)

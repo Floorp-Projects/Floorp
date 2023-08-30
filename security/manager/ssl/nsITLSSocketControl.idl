@@ -184,4 +184,12 @@ interface nsITLSSocketControl : nsISupports {
      * Claim a speculative connection.
      */
     void claim();
+
+    /**
+     * The top-level outer content window ID (called "browserId" in networking
+     * code) associated with this connection, if any (otherwise, 0). Useful for
+     * associating this connection with a browser tab in order to show UI (e.g.
+     * the client authentication certificate selection dialog).
+     */
+    attribute uint64_t browserId;
 };

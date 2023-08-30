@@ -220,13 +220,13 @@ class BackgroundParentImpl : public PBackgroundParent {
       const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
       const int32_t& aPort, const uint32_t& aProviderFlags,
       const uint32_t& aProviderTlsFlags, const ByteArray& aServerCertBytes,
-      const nsTArray<ByteArray>& aCANames) override;
+      const nsTArray<ByteArray>& aCANames, const uint64_t& aBrowserId) override;
   virtual mozilla::ipc::IPCResult RecvPSelectTLSClientAuthCertConstructor(
       PSelectTLSClientAuthCertParent* actor, const nsACString& aHostName,
       const OriginAttributes& aOriginAttributes, const int32_t& aPort,
       const uint32_t& aProviderFlags, const uint32_t& aProviderTlsFlags,
-      const ByteArray& aServerCertBytes,
-      nsTArray<ByteArray>&& aCANames) override;
+      const ByteArray& aServerCertBytes, nsTArray<ByteArray>&& aCANames,
+      const uint64_t& aBrowserId) override;
 
   PBroadcastChannelParent* AllocPBroadcastChannelParent(
       const PrincipalInfo& aPrincipalInfo, const nsACString& aOrigin,

@@ -181,5 +181,12 @@ FuzzySocketControl::AsyncGetSecurityInfo(JSContext* aCx,
 
 NS_IMETHODIMP FuzzySocketControl::Claim() { return NS_OK; }
 
+NS_IMETHODIMP FuzzySocketControl::SetBrowserId(uint64_t) { return NS_OK; }
+
+NS_IMETHODIMP FuzzySocketControl::GetBrowserId(uint64_t*) {
+  MOZ_CRASH("Unused");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla
