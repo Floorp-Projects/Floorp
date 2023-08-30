@@ -45,30 +45,23 @@ function onLoad() {
       // getComputedStyle call is guaranteed to work after bug 1440537.
       iframe.getBoundingClientRect();
 
-      ok(img2.matches(":-moz-broken"), "should match ':-moz-broken' selector");
-
       img2.src = "https://test.invalid";
       doc.body.appendChild(img2);
       return imgListener(img2);
     }).then(() => {
       ok(true, "img2 shouldn't be loaded");
-      ok(img2.matches(":-moz-broken"), "should match ':-moz-broken' selector");
 
       // Now prepare for the next test, deny image.
       return new Promise(resolve => {
           SpecialPowers.pushPrefEnv({"set": [["permissions.default.image", 2]]}, resolve)
       });
     }).then(() => {
-      // Now image is denied, loading image will be rejected with REJECT_TYPE,
-      // which will be mapped to :-moz-broken too.
+      // Now image is denied, loading image will be rejected with REJECT_TYPE.
       img3.src = "https://example.com/tests/image/test/mochitest/shaver.png";
       doc.body.appendChild(img3);
       return imgListener(img3);
     }).then(() => {
       ok(true, "img3 shouldn't be loaded");
-
-      ok(img3.matches(":-moz-broken"), "should match ':-moz-broken' selector");
-
       SimpleTest.finish();
     }).catch((e) => {
       // Expected early return

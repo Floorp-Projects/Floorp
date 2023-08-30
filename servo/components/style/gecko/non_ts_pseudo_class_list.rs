@@ -55,7 +55,7 @@ macro_rules! apply_non_ts_list {
                 ("fullscreen", Fullscreen, FULLSCREEN, _),
                 ("modal", Modal, MODAL, _),
                 ("-moz-topmost-modal", MozTopmostModal, TOPMOST_MODAL, PSEUDO_CLASS_ENABLED_IN_UA_SHEETS),
-                ("-moz-broken", MozBroken, BROKEN, _),
+                ("-moz-broken", MozBroken, BROKEN, PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME),
                 ("-moz-has-dir-attr", MozHasDirAttr, HAS_DIR_ATTR, PSEUDO_CLASS_ENABLED_IN_UA_SHEETS),
                 ("-moz-dir-attr-ltr", MozDirAttrLTR, HAS_DIR_ATTR_LTR, PSEUDO_CLASS_ENABLED_IN_UA_SHEETS),
                 ("-moz-dir-attr-rtl", MozDirAttrRTL, HAS_DIR_ATTR_RTL, PSEUDO_CLASS_ENABLED_IN_UA_SHEETS),

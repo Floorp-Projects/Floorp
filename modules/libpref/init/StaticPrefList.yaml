@@ -9222,6 +9222,13 @@
   mirror: always
   rust: true
 
+# Whether :-moz-broken is supported in content.
+- name: layout.css.moz-broken.content.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether frame visibility tracking is enabled globally.
 - name: layout.framevisibility.enabled
   type: bool

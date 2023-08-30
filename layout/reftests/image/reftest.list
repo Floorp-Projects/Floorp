@@ -66,8 +66,8 @@ fails-if(useDrawSnapshot) == image-srcset-svg-default-2x.html image-srcset-svg-d
 == image-resize-percent-height.html image-resize-ref.html
 == image-resize-percent-width.html image-resize-ref.html
 
-== moz-broken-matching-1.html moz-broken-matching-1-ref.html
-== moz-broken-matching-lazy-load.html moz-broken-matching-1-ref.html
+pref(layout.css.moz-broken.content.enabled,true) == moz-broken-matching-1.html moz-broken-matching-1-ref.html
+pref(layout.css.moz-broken.content.enabled,true) == moz-broken-matching-lazy-load.html moz-broken-matching-1-ref.html
 
 == img-invalidation-local-transform-1.html img-invalidation-local-transform-1-ref.html
 == unknown-protocol.html unknown-protocol-ref.html
