@@ -1311,10 +1311,9 @@ class HTMLInputElement final : public TextControlElement,
    */
   void SetValue(Decimal aValue, CallerType aCallerType);
 
-  /**
-   * Update the HAS_RANGE bit field value.
-   */
-  void UpdateHasRange();
+  void UpdateHasRange(bool aNotify);
+  // Updates the :in-range / :out-of-range states.
+  void UpdateInRange(bool aNotify);
 
   /**
    * Get the step scale value for the current type.

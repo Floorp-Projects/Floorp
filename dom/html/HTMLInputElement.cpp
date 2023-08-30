@@ -1326,7 +1326,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     } else if (aName == nsGkAtoms::multiple) {
       UpdateTypeMismatchValidityState();
     } else if (aName == nsGkAtoms::max) {
-      UpdateHasRange();
+      UpdateHasRange(aNotify);
       mInputType->MinMaxStepAttrChanged();
       // Validity state must be updated *after* the UpdateValueDueToAttrChange
       // call above or else the following assert will not be valid.
@@ -1337,7 +1337,7 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                      !GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
                  "HTML5 spec does not allow underflow for type=range");
     } else if (aName == nsGkAtoms::min) {
-      UpdateHasRange();
+      UpdateHasRange(aNotify);
       mInputType->MinMaxStepAttrChanged();
       // See corresponding @max comment
       UpdateRangeUnderflowValidityState();
@@ -4344,7 +4344,7 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
   if (oldType == FormControlType::InputPassword &&
       State().HasState(ElementState::REVEALED)) {
     // Modify the state directly to avoid dispatching events.
-    RemoveStates(ElementState::REVEALED);
+    RemoveStates(ElementState::REVEALED, aNotify);
   }
 
   if (aNewType == FormControlType::InputFile ||
@@ -4481,7 +4481,7 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
     RemoveStates(ElementState::REQUIRED_STATES, aNotify);
   }
 
-  UpdateHasRange();
+  UpdateHasRange(aNotify);
 
   // Update validity states, but not element state.  We'll update
   // element state later, as part of this attribute change.
@@ -6078,15 +6078,6 @@ ElementState HTMLInputElement::IntrinsicState() const {
          (!state.HasState(ElementState::USER_INVALID) && !mCanShowInvalidUI))) {
       state |= ElementState::USER_VALID;
     }
-
-    // :in-range and :out-of-range only apply if the element currently has a
-    // range
-    if (mHasRange) {
-      state |= (GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW) ||
-                GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW))
-                   ? ElementState::OUTOFRANGE
-                   : ElementState::INRANGE;
-    }
   }
 
   return state;
@@ -6685,10 +6676,12 @@ void HTMLInputElement::UpdatePatternMismatchValidityState() {
 
 void HTMLInputElement::UpdateRangeOverflowValidityState() {
   SetValidityState(VALIDITY_STATE_RANGE_OVERFLOW, IsRangeOverflow());
+  UpdateInRange(true);
 }
 
 void HTMLInputElement::UpdateRangeUnderflowValidityState() {
   SetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW, IsRangeUnderflow());
+  UpdateInRange(true);
 }
 
 void HTMLInputElement::UpdateStepMismatchValidityState() {
@@ -6702,7 +6695,6 @@ void HTMLInputElement::UpdateBadInputValidityState() {
 void HTMLInputElement::UpdateAllValidityStates(bool aNotify) {
   bool validBefore = IsValid();
   UpdateAllValidityStatesButNotElementState();
-
   if (validBefore != IsValid()) {
     UpdateState(aNotify);
   }
@@ -6724,12 +6716,16 @@ void HTMLInputElement::UpdateBarredFromConstraintValidation() {
   // NOTE: readonly attribute causes an element to be barred from constraint
   // validation even if it doesn't apply to that input type. That's rather
   // weird, but pre-existing behavior.
+  bool wasCandidate = IsCandidateForConstraintValidation();
   SetBarredFromConstraintValidation(
       mType == FormControlType::InputHidden ||
       mType == FormControlType::InputButton ||
       mType == FormControlType::InputReset || IsDisabled() ||
       HasAttr(nsGkAtoms::readonly) ||
       HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR));
+  if (IsCandidateForConstraintValidation() != wasCandidate) {
+    UpdateInRange(true);
+  }
 }
 
 nsresult HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
@@ -7109,29 +7105,42 @@ void HTMLInputElement::UpdateValidityUIBits(bool aIsFocused) {
   }
 }
 
-void HTMLInputElement::UpdateHasRange() {
-  /*
-   * There is a range if min/max applies for the type and if the element
-   * currently have a valid min or max.
-   */
+void HTMLInputElement::UpdateInRange(bool aNotify) {
+  if (!mHasRange || !IsCandidateForConstraintValidation()) {
+    RemoveStates(ElementState::INRANGE | ElementState::OUTOFRANGE, aNotify);
+    return;
+  }
+  bool outOfRange = GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW) ||
+                    GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW);
+  auto oldState = State();
+  RemoveStatesSilently(ElementState::INRANGE | ElementState::OUTOFRANGE);
+  AddStatesSilently(outOfRange ? ElementState::OUTOFRANGE
+                               : ElementState::INRANGE);
+  if (!aNotify) {
+    return;
+  }
+  auto newState = State();
+  if (oldState != newState) {
+    NotifyStateChange(oldState ^ newState);
+  }
+}
 
-  mHasRange = false;
+void HTMLInputElement::UpdateHasRange(bool aNotify) {
+  // There is a range if min/max applies for the type and if the element
+  // currently have a valid min or max.
+  const bool newHasRange = [&] {
+    if (!DoesMinMaxApply()) {
+      return false;
+    }
+    return !GetMinimum().isNaN() || !GetMaximum().isNaN();
+  }();
 
-  if (!DoesMinMaxApply()) {
+  if (newHasRange == mHasRange) {
     return;
   }
 
-  Decimal minimum = GetMinimum();
-  if (!minimum.isNaN()) {
-    mHasRange = true;
-    return;
-  }
-
-  Decimal maximum = GetMaximum();
-  if (!maximum.isNaN()) {
-    mHasRange = true;
-    return;
-  }
+  mHasRange = newHasRange;
+  UpdateInRange(aNotify);
 }
 
 void HTMLInputElement::PickerClosed() { mPickerRunning = false; }
