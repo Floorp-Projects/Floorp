@@ -38,7 +38,8 @@ class AnnexB {
   static bool ConvertSampleToAVCC(
       mozilla::MediaRawData* aSample,
       const RefPtr<mozilla::MediaByteBuffer>& aAVCCHeader = nullptr);
-  static mozilla::Result<mozilla::Ok, nsresult> ConvertSampleTo4BytesAVCC(
+
+  static mozilla::Result<mozilla::Ok, nsresult> ConvertAVCCTo4BytesAVCC(
       mozilla::MediaRawData* aSample);
 
   // Parse an AVCC extradata and construct the Annex B sample header.
@@ -59,6 +60,11 @@ class AnnexB {
   static mozilla::Result<mozilla::Ok, nsresult> ConvertSPSOrPPS(
       mozilla::BufferReader& aReader, uint8_t aCount,
       mozilla::MediaByteBuffer* aAnnexB);
+
+  // NALU size can vary, this function converts the sample to always 4 bytes
+  // NALU.
+  static mozilla::Result<mozilla::Ok, nsresult> ConvertNALUTo4BytesNALU(
+      mozilla::MediaRawData* aSample, uint8_t aNALUSize);
 };
 
 }  // namespace mozilla
