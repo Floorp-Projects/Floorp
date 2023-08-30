@@ -5,10 +5,6 @@
 browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 
-# TST
-  skin/classic/browser/TST-dark.svg                                         (icons/TST-dark.svg)
-  skin/classic/browser/TST-light.svg                                        (icons/TST-light.svg)
-  
 # Floorp Notes
   skin/classic/browser/notes.png                                          (icons/notes.png)
   skin/classic/browser/notes-bms.svg                                      (icons/notes-bms.svg)
@@ -81,6 +77,10 @@ browser.jar:
   skin/classic/browser/lepton/leptonContent.css                             (designs/lepton/leptonContent.css)
   skin/classic/browser/lepton/photon.svg                                    (designs/lepton/photon.svg)
 
+  skin/classic/browser/lepton/toolbarButton-upload.svg                      (designs/lepton/icons/toolbarButton-upload.svg)
+  skin/classic/browser/lepton/menu-check.svg                                (designs/lepton/icons/menu-check.svg)
+  skin/classic/browser/lepton/datastore.svg                                 (designs/lepton/icons/datastore.svg)
+  skin/classic/browser/lepton/datarestore.svg                               (designs/lepton/icons/datarestore.svg)
   skin/classic/browser/lepton/add-device.svg                                (designs/lepton/icons/add-device.svg)
   skin/classic/browser/lepton/addons-logo.svg                               (designs/lepton/icons/addons-logo.svg)
   skin/classic/browser/lepton/arrow-between-down.svg                        (designs/lepton/icons/arrow-between-down.svg)
