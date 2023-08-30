@@ -65,6 +65,8 @@
 
 // radio buttons
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLButtonElement.h"
+#include "mozilla/dom/HTMLSelectElement.h"
 #include "nsIRadioVisitor.h"
 #include "RadioNodeList.h"
 
@@ -388,9 +390,6 @@ static void CollectOrphans(nsINode* aRemovalRoot,
         nsCOMPtr<nsIFormControl> fc = do_QueryInterface(node);
         MOZ_ASSERT(fc);
         fc->ClearForm(true, false);
-
-        // When a form control loses its form owner, its state can change.
-        node->UpdateState(true);
 #ifdef DEBUG
         removed = true;
 #endif
@@ -1215,7 +1214,6 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
     // unless it replaces what's in the slot.  If it _does_ replace what's in
     // the slot, it becomes the default submit if either the default submit is
     // what's in the slot or the child is earlier than the default submit.
-    nsGenericHTMLFormElement* oldDefaultSubmit = mDefaultSubmitElement;
     if (!*firstSubmitSlot ||
         (!lastElement && nsContentUtils::CompareTreePosition(
                              aChild, *firstSubmitSlot, this) < 0)) {
@@ -1236,13 +1234,6 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
                    mDefaultSubmitElement == mFirstSubmitNotInElements ||
                    !mDefaultSubmitElement,
                "What happened here?");
-
-    // Notify that the state of the previous default submit element has changed
-    // if the element which is the default submit element has changed.  The new
-    // default submit element is responsible for its own state update.
-    if (oldDefaultSubmit && oldDefaultSubmit != mDefaultSubmitElement) {
-      oldDefaultSubmit->UpdateState(aNotify);
-    }
   }
 
   // If the element is subject to constraint validaton and is invalid, we need
@@ -1342,7 +1333,7 @@ nsresult HTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
     // own notifications.
   }
 
-  // If the element was subject to constraint validaton and is invalid, we need
+  // If the element was subject to constraint validation and is invalid, we need
   // to update our internal counter.
   if (aUpdateValidity) {
     nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(aChild);
@@ -1794,30 +1785,27 @@ bool HTMLFormElement::CheckValidFormSubmission() {
 
     nsAutoScriptBlocker scriptBlocker;
 
-    for (uint32_t i = 0, length = mControls->mElements.Length(); i < length;
-         ++i) {
+    for (nsGenericHTMLFormElement* element : mControls->mElements) {
       // Input elements can trigger a form submission and we want to
       // update the style in that case.
-      if (mControls->mElements[i]->IsHTMLElement(nsGkAtoms::input) &&
-          // We don't use nsContentUtils::IsFocusedContent here, because it
-          // doesn't really do what we want for number controls: it's true
-          // for the anonymous textnode inside, but not the number control
-          // itself.  We can use the focus state, though, because that gets
-          // synced to the number control by the anonymous text control.
-          mControls->mElements[i]->State().HasState(ElementState::FOCUS)) {
-        static_cast<HTMLInputElement*>(mControls->mElements[i])
-            ->UpdateValidityUIBits(true);
+      if (auto* input = HTMLInputElement::FromNode(*element)) {
+        // We don't use nsContentUtils::IsFocusedContent here, because it
+        // doesn't really do what we want for number controls: it's true
+        // for the anonymous textnode inside, but not the number control
+        // itself.  We can use the focus state, though, because that gets
+        // synced to the number control by the anonymous text control.
+        if (input->State().HasState(ElementState::FOCUS)) {
+          input->UpdateValidityUIBits(true);
+        }
       }
-
-      mControls->mElements[i]->UpdateState(true);
+      element->UpdateValidityElementStates(true);
     }
 
     // Because of backward compatibility, <input type='image'> is not in
     // elements but can be invalid.
     // TODO: should probably be removed when bug 606491 will be fixed.
-    for (uint32_t i = 0, length = mControls->mNotInElements.Length();
-         i < length; ++i) {
-      mControls->mNotInElements[i]->UpdateState(true);
+    for (nsGenericHTMLFormElement* element : mControls->mNotInElements) {
+      element->UpdateValidityElementStates(true);
     }
   }
 
@@ -1861,7 +1849,10 @@ void HTMLFormElement::UpdateValidity(bool aElementValidity) {
     return;
   }
 
-  UpdateState(true);
+  AutoStateChangeNotifier notifier(*this, true);
+  RemoveStatesSilently(ElementState::VALID | ElementState::INVALID);
+  AddStatesSilently(mInvalidElementsCount ? ElementState::INVALID
+                                          : ElementState::VALID);
 }
 
 int32_t HTMLFormElement::IndexOfContent(nsIContent* aContent) {
@@ -1920,18 +1911,6 @@ bool HTMLFormElement::GetValueMissingState(const nsAString& aName) const {
 void HTMLFormElement::SetValueMissingState(const nsAString& aName,
                                            bool aValue) {
   RadioGroupManager::SetValueMissingState(aName, aValue);
-}
-
-ElementState HTMLFormElement::IntrinsicState() const {
-  ElementState state = nsGenericHTMLElement::IntrinsicState();
-
-  if (mInvalidElementsCount) {
-    state |= ElementState::INVALID;
-  } else {
-    state |= ElementState::VALID;
-  }
-
-  return state;
 }
 
 void HTMLFormElement::Clear() {

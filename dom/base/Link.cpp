@@ -66,7 +66,7 @@ bool Link::ElementHasHref() const {
 }
 
 void Link::SetLinkState(State aState, bool aNotify) {
-  auto old = mElement->State();
+  Element::AutoStateChangeNotifier notifier(*mElement, aNotify);
   switch (aState) {
     case State::Visited:
       mElement->AddStatesSilently(ElementState::VISITED);
@@ -79,9 +79,6 @@ void Link::SetLinkState(State aState, bool aNotify) {
     case State::NotLink:
       mElement->RemoveStatesSilently(ElementState::VISITED_OR_UNVISITED);
       break;
-  }
-  if (aNotify) {
-    mElement->NotifyStateChange(old ^ mElement->State());
   }
 }
 

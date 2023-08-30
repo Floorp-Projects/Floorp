@@ -651,9 +651,7 @@ class Element : public FragmentOrElement {
 
   const AttrArray& GetAttrs() const { return mAttrs; }
 
-  void SetDefined(bool aSet) {
-    SetStates(ElementState::DEFINED, aSet);
-  }
+  void SetDefined(bool aSet) { SetStates(ElementState::DEFINED, aSet); }
 
   // AccessibilityRole
   REFLECT_DOMSTRING_ATTR(Role, role)
@@ -727,6 +725,25 @@ class Element : public FragmentOrElement {
 
   already_AddRefed<ShadowRoot> AttachShadowInternal(ShadowRootMode,
                                                     ErrorResult& aError);
+
+  struct AutoStateChangeNotifier {
+    AutoStateChangeNotifier(Element& aElement, bool aNotify)
+        : mElement(aElement), mOldState(aElement.State()), mNotify(aNotify) {}
+    ~AutoStateChangeNotifier() {
+      if (!mNotify) {
+        return;
+      }
+      ElementState newState = mElement.State();
+      if (mOldState != newState) {
+        mElement.NotifyStateChange(mOldState ^ newState);
+      }
+    }
+
+   private:
+    Element& mElement;
+    const ElementState mOldState;
+    const bool mNotify;
+  };
 
  public:
   MOZ_CAN_RUN_SCRIPT
