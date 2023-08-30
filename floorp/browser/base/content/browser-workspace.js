@@ -587,11 +587,6 @@ const workspaceFunctions = {
             tab.setAttribute("floorp-firstVisibleTab", "true");
             firstTab = tab;
           }
-
-          if (!excludePinnedTabs) {
-            tab.style = "margin: 0px !important";
-            tab.style = "margin-inline-start: 0px !important";
-          }
         } else {
           gBrowser.hideTab(tab);
 
@@ -620,23 +615,6 @@ const workspaceFunctions = {
         }
       }
       lastTab?.setAttribute("floorp-lastVisibleTab", "true");
-
-      for(let i = 0; i < tabs.length; i++) {
-        let tab = tabs[i];
-        if(tab.getAttribute("hidden") == "false" && tab.getAttribute("pinned") == "true") {
-          document.querySelector("#tabbrowser-tabs").style = "padding; 0px !important;";
-          const elem = document.createElement("style");
-          elem.textContent = `
-            #tabbrowser-tabs {
-              padding: 0px !important;
-            }
-          `;
-          document.head.appendChild(elem);
-          break;
-        } else{
-          document.querySelector("#tabbrowser-tabs").style = "";
-        }
-      }
 
       //set workspaces icon
       const iconURL =
