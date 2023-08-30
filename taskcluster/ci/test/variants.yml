@@ -101,7 +101,7 @@ no-fission:
 xorigin:
     description: "{description} with cross-origin"
     component: "Core::DOM: Content Processes"
-    expiration: "2023-09-01"
+    expiration: "never"
     suffix: "xorig"
     mozinfo: "xorigin"
     replace:
