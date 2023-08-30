@@ -1688,6 +1688,7 @@ export var Policies = {
         "toolkit.legacyUserProfileCustomizations.stylesheets",
         "ui.",
         "widget.",
+        "xpinstall.whitelist.required",
       ];
       if (!AppConstants.MOZ_REQUIRE_SIGNING) {
         allowedPrefixes.push("xpinstall.signatures.required");
