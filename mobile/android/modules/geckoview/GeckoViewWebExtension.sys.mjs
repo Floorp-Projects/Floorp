@@ -19,6 +19,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Extension: "resource://gre/modules/Extension.sys.mjs",
   ExtensionData: "resource://gre/modules/Extension.sys.mjs",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
+  ExtensionProcessCrashObserver: "resource://gre/modules/Extension.sys.mjs",
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
   Management: "resource://gre/modules/Extension.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -705,19 +706,22 @@ class ExtensionProcessListener {
 
     switch (aEvent) {
       case "GeckoView:WebExtension:EnableProcessSpawning": {
-        //TODO: Bug 1848426 - Add ability to reset threshold counters and allow for process spawning
+        debug`Extension process crash -> re-enable process spawning`;
+        lazy.ExtensionProcessCrashObserver.enableProcessSpawning();
+        break;
       }
     }
   }
 
-  async onExtensionProcessCrash(name, { childID, disabledProcessSpawning }) {
-    debug`Extension process crash -> childID=${childID} disabledProcessSpawning=${disabledProcessSpawning}`;
+  async onExtensionProcessCrash(name, { childID, processSpawningDisabled }) {
+    debug`Extension process crash -> childID=${childID} processSpawningDisabled=${processSpawningDisabled}`;
 
-    // When an extension process has crashed too many times, Gecko will set `disabledProcessSpawning`
-    // and no longer allow the extension process spawning. We only want to send a request
-    // to the embedder when we are disabling the process spawning.
-    // If process spawning is still enabled then we short circuit and don't notify the embedder.
-    if (!disabledProcessSpawning) {
+    // When an extension process has crashed too many times, Gecko will set
+    // `processSpawningDisabled` and no longer allow the extension process
+    // spawning. We only want to send a request to the embedder when we are
+    // disabling the process spawning.  If process spawning is still enabled
+    // then we short circuit and don't notify the embedder.
+    if (!processSpawningDisabled) {
       return;
     }
 
