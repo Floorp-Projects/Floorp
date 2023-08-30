@@ -84,7 +84,12 @@ def repackage_deb(
         )
 
         _copy_plain_deb_config(template_dir, source_dir)
-        _render_deb_templates(template_dir, source_dir, build_variables)
+        _render_deb_templates(
+            template_dir,
+            source_dir,
+            build_variables,
+            exclude_file_names=["package-prefs.js"],
+        )
 
         app_name = application_ini_data["name"]
         with open(
@@ -102,6 +107,7 @@ def repackage_deb(
             fluent_localization,
             fluent_resource_loader,
         )
+        _inject_deb_prefs_file(source_dir, app_name, template_dir)
         _generate_deb_archive(
             source_dir,
             target_dir=tmpdir,
@@ -238,7 +244,7 @@ def _copy_plain_deb_config(input_template_dir, source_dir):
     plain_filenames = [
         mozpath.basename(filename)
         for filename in template_dir_filenames
-        if not filename.endswith(".in")
+        if not filename.endswith(".in") and not filename.endswith(".js")
     ]
     os.makedirs(mozpath.join(source_dir, "debian"), exist_ok=True)
 
@@ -283,6 +289,12 @@ def _inject_deb_distribution_folder(source_dir, app_name):
             mozpath.join(git_clone_dir, "desktop/deb/distribution"),
             mozpath.join(source_dir, app_name.lower(), "distribution"),
         )
+
+
+def _inject_deb_prefs_file(source_dir, app_name, template_dir):
+    src = mozpath.join(template_dir, "package-prefs.js")
+    dst = mozpath.join(source_dir, app_name.lower(), "defaults/pref")
+    shutil.copy(src, dst)
 
 
 def _inject_deb_desktop_entry_file(
