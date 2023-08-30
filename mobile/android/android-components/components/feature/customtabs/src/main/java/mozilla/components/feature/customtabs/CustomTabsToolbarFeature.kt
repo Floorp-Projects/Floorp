@@ -115,7 +115,10 @@ class CustomTabsToolbarFeature(
         }
 
         // Change the toolbar colour
-        updateToolbarColor(config.toolbarColor, config.navigationBarColor)
+        updateToolbarColor(
+            config.toolbarColor,
+            config.navigationBarColor ?: config.toolbarColor,
+        )
 
         // Add navigation close action
         if (config.showCloseButton) {
