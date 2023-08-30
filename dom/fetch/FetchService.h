@@ -110,7 +110,8 @@ class FetchService final : public nsIObserver {
 
   static already_AddRefed<FetchService> GetInstance();
 
-  static RefPtr<FetchServicePromises> NetworkErrorResponse(nsresult aRv);
+  static RefPtr<FetchServicePromises> NetworkErrorResponse(
+      nsresult aRv, const FetchArgs& aArgs = AsVariant(UnknownArgs{}));
 
   FetchService();
 
@@ -138,6 +139,8 @@ class FetchService final : public nsIObserver {
     FetchInstance() = default;
 
     nsresult Initialize(FetchArgs&& aArgs);
+
+    const FetchArgs& Args() { return mArgs; }
 
     RefPtr<FetchServicePromises> Fetch();
 
