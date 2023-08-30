@@ -22,6 +22,16 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsClipboard, ClipboardSetDataHelper)
  * releases.
  */
 
+nsClipboard::nsClipboard() {
+  java::Clipboard::StartTrackingClipboardData(
+      java::GeckoAppShell::GetApplicationContext());
+}
+
+nsClipboard::~nsClipboard() {
+  java::Clipboard::StopTrackingClipboardData(
+      java::GeckoAppShell::GetApplicationContext());
+}
+
 NS_IMETHODIMP
 nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
                                     nsIClipboardOwner* aOwner,

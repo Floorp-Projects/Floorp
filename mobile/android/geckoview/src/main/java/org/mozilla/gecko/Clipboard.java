@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
+import android.content.ClipboardManager.OnPrimaryClipChangedListener;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.os.Build;
@@ -16,6 +17,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicLong;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 public final class Clipboard {
@@ -23,6 +25,9 @@ public final class Clipboard {
   private static final String PLAINTEXT_MIME = "text/plain";
   private static final String LOGTAG = "GeckoClipboard";
   private static final int DEFAULT_BUFFER_SIZE = 8192;
+
+  private static OnPrimaryClipChangedListener sClipboardChangedListener = null;
+  private static final AtomicLong sClipboardSequenceNumber = new AtomicLong();
 
   private Clipboard() {}
 
@@ -232,5 +237,48 @@ public final class Clipboard {
     final ClipboardManager cm =
         (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
     cm.clearPrimaryClip();
+  }
+
+  /**
+   * Start monitor clipboard sequence number.
+   *
+   * @param context application context
+   */
+  @WrapForJNI(calledFrom = "gecko")
+  private static void startTrackingClipboardData(final Context context) {
+    if (sClipboardChangedListener != null) {
+      return;
+    }
+
+    sClipboardChangedListener =
+        new OnPrimaryClipChangedListener() {
+          @Override
+          public void onPrimaryClipChanged() {
+            Clipboard.sClipboardSequenceNumber.incrementAndGet();
+          }
+        };
+
+    final ClipboardManager cm =
+        (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+    cm.addPrimaryClipChangedListener(sClipboardChangedListener);
+  }
+
+  /** Stop monitor clipboard sequence number. */
+  @WrapForJNI(calledFrom = "gecko")
+  private static void stopTrackingClipboardData(final Context context) {
+    if (sClipboardChangedListener == null) {
+      return;
+    }
+
+    final ClipboardManager cm =
+        (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+    cm.removePrimaryClipChangedListener(sClipboardChangedListener);
+    sClipboardChangedListener = null;
+  }
+
+  /** Get clipboard sequence number. */
+  @WrapForJNI(calledFrom = "gecko")
+  private static long getSequenceNumber(final Context context) {
+    return sClipboardSequenceNumber.get();
   }
 }

@@ -10,10 +10,10 @@
 
 class nsClipboard final : public ClipboardSetDataHelper {
  private:
-  ~nsClipboard() = default;
+  ~nsClipboard();
 
  public:
-  nsClipboard() = default;
+  nsClipboard();
 
   NS_DECL_ISUPPORTS_INHERITED
 
