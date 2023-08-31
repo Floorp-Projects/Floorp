@@ -71,7 +71,6 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
                     nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent) override;
-  ElementState IntrinsicState() const override;
   void DestroyContent() override;
 
   NS_DECL_IMGINOTIFICATIONOBSERVER

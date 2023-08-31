@@ -62,8 +62,6 @@ class SVGImageElement final : public SVGImageElementBase,
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent) override;
 
-  ElementState IntrinsicState() const override;
-
   void DestroyContent() override;
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;

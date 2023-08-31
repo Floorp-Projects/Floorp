@@ -560,7 +560,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    * document of a state change.  These are maintained by UpdateImageState.
    */
   bool mLoading : 1;
-  bool mBroken : 1;
 
   /**
    * A hack to get animations to reset, see bug 594771. On requests

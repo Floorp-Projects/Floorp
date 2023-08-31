@@ -265,11 +265,6 @@ void SVGImageElement::UnbindFromTree(bool aNullParent) {
   SVGImageElementBase::UnbindFromTree(aNullParent);
 }
 
-ElementState SVGImageElement::IntrinsicState() const {
-  return SVGImageElementBase::IntrinsicState() |
-         nsImageLoadingContent::ImageState();
-}
-
 void SVGImageElement::DestroyContent() {
   nsImageLoadingContent::Destroy();
   SVGImageElementBase::DestroyContent();

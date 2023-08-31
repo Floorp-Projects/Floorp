@@ -78,12 +78,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   NS_DECL_NSIOBJECTLOADINGCONTENT
   NS_DECL_NSICHANNELEVENTSINK
 
-  /**
-   * Object state. This is a bitmask of NS_EVENT_STATEs epresenting the
-   * current state of the object.
-   */
-  mozilla::dom::ElementState ObjectState() const;
-
   ObjectType Type() const { return mType; }
 
   void SetIsNetworkCreated(bool aNetworkCreated) {
@@ -429,9 +423,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    *
    * @param aNotify if false, only need to update the state of our element.
    */
-  void NotifyStateChanged(ObjectType aOldType,
-                          mozilla::dom::ElementState aOldState, bool aNotify,
-                          bool aForceRestyle);
+  void NotifyStateChanged(ObjectType aOldType, bool aNotify);
 
   /**
    * Returns a ObjectType value corresponding to the type of content we would
