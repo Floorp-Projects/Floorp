@@ -103,6 +103,8 @@ nsImageLoadingContent::nsImageLoadingContent()
       mRequestGeneration(0),
       mLoadingEnabled(true),
       mLoading(false),
+      // mBroken starts out true, since an image without a URI is broken....
+      mBroken(true),
       mNewRequestsWillNeedAnimationReset(false),
       mUseUrgentStartForChannel(false),
       mLazyLoading(false),
@@ -1344,6 +1346,14 @@ CSSIntSize nsImageLoadingContent::GetWidthHeightForImage() {
   return size;
 }
 
+ElementState nsImageLoadingContent::ImageState() const {
+  ElementState states;
+  if (mBroken) {
+    states |= ElementState::BROKEN;
+  }
+  return states;
+}
+
 void nsImageLoadingContent::UpdateImageState(bool aNotify) {
   if (mStateChangerDepth > 0) {
     // Ignore this call; we'll update our state when the outermost state changer
@@ -1355,12 +1365,9 @@ void nsImageLoadingContent::UpdateImageState(bool aNotify) {
     return;
   }
 
-  Element* thisElement = AsContent()->AsElement();
+  nsIContent* thisContent = AsContent();
 
-  mLoading = false;
-
-  Element::AutoStateChangeNotifier notifier(*thisElement, aNotify);
-  thisElement->RemoveStatesSilently(ElementState::BROKEN);
+  mLoading = mBroken = false;
 
   // If we were blocked, we're broken, so are we if we don't have an image
   // request at all or the image has errored.
@@ -1368,19 +1375,21 @@ void nsImageLoadingContent::UpdateImageState(bool aNotify) {
     if (!mLazyLoading) {
       // In case of non-lazy loading, no current request means error, since we
       // weren't disabled or suppressed
-      thisElement->AddStatesSilently(ElementState::BROKEN);
+      mBroken = true;
       RejectDecodePromises(NS_ERROR_DOM_IMAGE_BROKEN);
     }
   } else {
     uint32_t currentLoadStatus;
     nsresult rv = mCurrentRequest->GetImageStatus(&currentLoadStatus);
     if (NS_FAILED(rv) || (currentLoadStatus & imgIRequest::STATUS_ERROR)) {
-      thisElement->AddStatesSilently(ElementState::BROKEN);
+      mBroken = true;
       RejectDecodePromises(NS_ERROR_DOM_IMAGE_BROKEN);
     } else if (!(currentLoadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
       mLoading = true;
     }
   }
+
+  thisContent->AsElement()->UpdateState(aNotify);
 }
 
 void nsImageLoadingContent::CancelImageRequests(bool aNotify) {

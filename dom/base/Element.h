@@ -74,7 +74,6 @@ class nsFocusManager;
 class nsGenericHTMLFormControlElementWithState;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
-class nsImageLoadingContent;
 class nsIAutoCompletePopup;
 class nsIBrowser;
 class nsIDOMXULButtonElement;
@@ -94,7 +93,6 @@ class nsIPrincipal;
 class nsIScreen;
 class nsIScrollableFrame;
 class nsIURI;
-class nsObjectLoadingContent;
 class nsPresContext;
 class nsWindowSizes;
 struct JSContext;
@@ -254,7 +252,23 @@ class Element : public FragmentOrElement {
    * Method to get the full state of this element. See dom/base/rust/lib.rs for
    * the possible bits that could be set here.
    */
-  ElementState State() const { return mState; }
+  ElementState State() const {
+    // mState is maintained by having whoever might have changed it
+    // call UpdateState() or one of the other mState mutators.
+    return mState;
+  }
+
+  /**
+   * Ask this element to update its state.  If aNotify is false, then
+   * state change notifications will not be dispatched; in that
+   * situation it is the caller's responsibility to dispatch them.
+   *
+   * In general, aNotify should only be false if we're guaranteed that
+   * the element can't have a frame no matter what its style is
+   * (e.g. if we're in the middle of adding it to the document or
+   * removing it from the document).
+   */
+  void UpdateState(bool aNotify);
 
   /**
    * Returns the current disabled state of the element.
@@ -481,7 +495,7 @@ class Element : public FragmentOrElement {
   }
 
   inline void SetDirectionality(Directionality aDir, bool aNotify) {
-    AutoStateChangeNotifier notifier(*this, aNotify);
+    auto oldState = mState;
     RemoveStatesSilently(ElementState::DIR_STATES);
     switch (aDir) {
       case eDir_RTL:
@@ -492,6 +506,15 @@ class Element : public FragmentOrElement {
         break;
       default:
         break;
+    }
+
+    /*
+     * Only call UpdateState if we need to notify, because we call
+     * SetDirectionality for every element, and UpdateState is very very slow
+     * for some elements.
+     */
+    if (aNotify) {
+      NotifyStateChange(oldState ^ mState);
     }
   }
 
@@ -677,22 +700,32 @@ class Element : public FragmentOrElement {
   REFLECT_DOMSTRING_ATTR(AriaValueText, aria_valuetext)
 
  protected:
+  /**
+   * Method to get the _intrinsic_ content state of this element.  This is the
+   * state that is independent of the element's presentation.  To get the full
+   * the possible bits that could be set here.
+   */
+  virtual ElementState IntrinsicState() const;
+
+  /**
+   * Method to add state bits.  This should be called from subclass
+   * constructors to set up our event state correctly at construction
+   * time and other places where we don't want to notify a state
+   * change.
+   */
+  void AddStatesSilently(ElementState aStates) { mState |= aStates; }
+
+  /**
+   * Method to remove state bits.  This should be called from subclass
+   * constructors to set up our event state correctly at construction
+   * time and other places where we don't want to notify a state
+   * change.
+   */
+  void RemoveStatesSilently(ElementState aStates) { mState &= ~aStates; }
+
   already_AddRefed<ShadowRoot> AttachShadowInternal(ShadowRootMode,
                                                     ErrorResult& aError);
 
- public:
-  MOZ_CAN_RUN_SCRIPT
-  nsIScrollableFrame* GetScrollFrame(nsIFrame** aStyledFrame = nullptr,
-                                     FlushType aFlushType = FlushType::Layout);
-
- private:
-  // Style state computed from element's state and style locks.
-  ElementState StyleStateFromLocks() const;
-
-  void NotifyStateChange(ElementState aStates);
-  void NotifyStyleStateChange(ElementState aStates);
-
- public:
   struct AutoStateChangeNotifier {
     AutoStateChangeNotifier(Element& aElement, bool aNotify)
         : mElement(aElement), mOldState(aElement.State()), mNotify(aNotify) {}
@@ -712,30 +745,54 @@ class Element : public FragmentOrElement {
     const bool mNotify;
   };
 
-  // Method to add state bits.  This should be called from subclass constructors
-  // to set up our event state correctly at construction time, and other places
-  // where we don't want to notify a state change, or there's an
-  // AutoStateChangeNotifier on the stack.
-  void AddStatesSilently(ElementState aStates) { mState |= aStates; }
-  // Method to remove state bits.  This should be called from subclass
-  // constructors to set up our event state correctly at construction time and
-  // other places where we don't want to notify a state change.
-  void RemoveStatesSilently(ElementState aStates) { mState &= ~aStates; }
-  // Methods to add state bits, potentially notifying. These will handle setting
-  // up script blockers when they notify, so no need to do it in the callers
-  // unless desired. States passed here must only be those in
-  // EXTERNALLY_MANAGED_STATES.
+ public:
+  MOZ_CAN_RUN_SCRIPT
+  nsIScrollableFrame* GetScrollFrame(nsIFrame** aStyledFrame = nullptr,
+                                     FlushType aFlushType = FlushType::Layout);
+
+ private:
+  // Need to allow the ESM, nsGlobalWindow, and the focus manager
+  // and Document to set our state
+  friend class mozilla::EventStateManager;
+  friend class mozilla::dom::Document;
+  friend class ::nsGlobalWindowInner;
+  friend class ::nsGlobalWindowOuter;
+  friend class ::nsFocusManager;
+  friend class mozilla::dom::HTMLFormElement;
+
+  // Allow CusomtElementRegistry to call AddStates.
+  friend class CustomElementRegistry;
+
+  // Allow Link to call AddStates etc.
+  friend class Link;
+
+  // Style state computed from element's state and style locks.
+  ElementState StyleStateFromLocks() const;
+
+ protected:
+  void NotifyStateChange(ElementState aStates);
+  void NotifyStyleStateChange(ElementState aStates);
+
+  // Methods for the ESM, nsGlobalWindow, focus manager and Document to
+  // manage state bits.
+  // These will handle setting up script blockers when they notify, so no need
+  // to do it in the callers unless desired.  States passed here must only be
+  // those in EXTERNALLY_MANAGED_STATES.
   void AddStates(ElementState aStates, bool aNotify = true) {
+    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(ElementState::INTRINSIC_STATES),
+               "Should only be adding externally-managed states here");
     ElementState old = mState;
     AddStatesSilently(aStates);
-    if (aNotify && old != mState) {
+    if (aNotify) {
       NotifyStateChange(old ^ mState);
     }
   }
   void RemoveStates(ElementState aStates, bool aNotify = true) {
+    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(ElementState::INTRINSIC_STATES),
+               "Should only be removing externally-managed states here");
     ElementState old = mState;
     RemoveStatesSilently(aStates);
-    if (aNotify && old != mState) {
+    if (aNotify) {
       NotifyStateChange(old ^ mState);
     }
   }
@@ -747,10 +804,25 @@ class Element : public FragmentOrElement {
     }
   }
   void ToggleStates(ElementState aStates, bool aNotify) {
+    MOZ_ASSERT(!aStates.HasAtLeastOneOfStates(ElementState::INTRINSIC_STATES),
+               "Should only be removing externally-managed states here");
     mState ^= aStates;
     if (aNotify) {
       NotifyStateChange(aStates);
     }
+  }
+
+ public:
+  // Public methods to manage state bits in MANUALLY_MANAGED_STATES.
+  void AddManuallyManagedStates(ElementState aStates) {
+    MOZ_ASSERT(ElementState::MANUALLY_MANAGED_STATES.HasAllStates(aStates),
+               "Should only be adding manually-managed states here");
+    AddStates(aStates);
+  }
+  void RemoveManuallyManagedStates(ElementState aStates) {
+    MOZ_ASSERT(ElementState::MANUALLY_MANAGED_STATES.HasAllStates(aStates),
+               "Should only be removing manually-managed states here");
+    RemoveStates(aStates);
   }
 
   void UpdateEditableState(bool aNotify) override;

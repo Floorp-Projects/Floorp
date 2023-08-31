@@ -32,6 +32,13 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
                "Someone messed up our nodeinfo");
   }
 
+  ElementState IntrinsicState() const override {
+    ElementState state = nsGenericHTMLElement::IntrinsicState();
+    if (mBroken) {
+      state |= ElementState::BROKEN;
+    }
+    return state;
+  }
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const final;
 
   nsresult CopyInnerTo(GeneratedImageContent* aDest) {
@@ -48,7 +55,10 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
   uint32_t Index() const { return mIndex; }
 
   // Notify this image failed to load.
-  void NotifyLoadFailed() { SetStates(ElementState::BROKEN, true); }
+  void NotifyLoadFailed() {
+    mBroken = true;
+    UpdateState(true);
+  }
 
  protected:
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
@@ -56,6 +66,7 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
  private:
   virtual ~GeneratedImageContent() = default;
   uint32_t mIndex = 0;
+  bool mBroken = false;
 };
 
 }  // namespace mozilla::dom

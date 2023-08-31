@@ -355,11 +355,32 @@ Element::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
   return NS_NOINTERFACE;
 }
 
+ElementState Element::IntrinsicState() const { return {}; }
+
 void Element::NotifyStateChange(ElementState aStates) {
-  MOZ_ASSERT(!aStates.IsEmpty());
+  if (aStates.IsEmpty()) {
+    return;
+  }
+
   if (Document* doc = GetComposedDoc()) {
     nsAutoScriptBlocker scriptBlocker;
     doc->ElementStateChanged(this, aStates);
+  }
+}
+
+void Element::UpdateState(bool aNotify) {
+  ElementState oldState = mState;
+  mState =
+      IntrinsicState() | (oldState & ElementState::EXTERNALLY_MANAGED_STATES);
+  if (aNotify) {
+    ElementState changedStates = oldState ^ mState;
+    if (!changedStates.IsEmpty()) {
+      Document* doc = GetComposedDoc();
+      if (doc) {
+        nsAutoScriptBlocker scriptBlocker;
+        doc->ElementStateChanged(this, changedStates);
+      }
+    }
   }
 }
 
@@ -2650,6 +2671,8 @@ nsresult Element::SetAttrAndNotify(
     }
   }
 
+  UpdateState(aNotify);
+
   if (aNotify) {
     // Don't pass aOldValue to AttributeChanged since it may not be reliable.
     // Callers only compute aOldValue under certain conditions which may not
@@ -2927,6 +2950,8 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
   }
 
   AfterSetAttr(aNameSpaceID, aName, nullptr, &oldValue, nullptr, aNotify);
+
+  UpdateState(aNotify);
 
   if (aNotify) {
     // We can always pass oldValue here since there is no new value which could

@@ -211,6 +211,8 @@ class HTMLInputElement final : public TextControlElement,
 
   void DestroyContent() override;
 
+  ElementState IntrinsicState() const override;
+
   void SetLastValueChangeWasInteractive(bool);
 
   // TextControlElement
