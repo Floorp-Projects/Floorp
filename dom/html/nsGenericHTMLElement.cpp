@@ -750,7 +750,9 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       // Now figure out what's changed about our dir states.
       ElementState oldDirStates = State() & ElementState::DIR_ATTR_STATES;
       ElementState changedStates = dirStates ^ oldDirStates;
-      ToggleStates(changedStates, aNotify);
+      if (!changedStates.IsEmpty()) {
+        ToggleStates(changedStates, aNotify);
+      }
       if (recomputeDirectionality) {
         dir = RecomputeDirectionality(this, aNotify);
       }
@@ -3210,14 +3212,7 @@ PopoverAttributeState nsGenericHTMLElement::GetPopoverAttributeState() const {
 }
 
 void nsGenericHTMLElement::PopoverPseudoStateUpdate(bool aOpen, bool aNotify) {
-  ElementState newPopoverState;
-  if (aOpen) {
-    newPopoverState = ElementState::POPOVER_OPEN;
-  }
-
-  ElementState oldPopoverState = State() & ElementState::POPOVER_OPEN;
-  ElementState changedState = newPopoverState ^ oldPopoverState;
-  ToggleStates(changedState, aNotify);
+  SetStates(ElementState::POPOVER_OPEN, aOpen, aNotify);
 }
 
 bool nsGenericHTMLElement::FireToggleEvent(PopoverVisibilityState aOldState,
