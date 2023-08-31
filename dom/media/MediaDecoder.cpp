@@ -126,6 +126,33 @@ void MediaDecoder::InitStatics() {
   MOZ_ASSERT(NS_IsMainThread());
   // Eagerly init gMediaDecoderLog to work around bug 1415441.
   MOZ_LOG(gMediaDecoderLog, LogLevel::Info, ("MediaDecoder::InitStatics"));
+
+#if defined(NIGHTLY_BUILD)
+  // Allow people to force a bit but try to warn them about filing bugs if audio
+  // decoding does not work on utility
+  static const bool allowLockPrefs =
+      PR_GetEnv("MOZ_DONT_LOCK_UTILITY_PLZ_FILE_A_BUG") == nullptr;
+  if (XRE_IsParentProcess() && allowLockPrefs) {
+    // Lock Utility process preferences so that people cannot opt-out of
+    // Utility process
+    Preferences::Lock("media.utility-process.enabled");
+#  if defined(MOZ_FFMPEG)
+    Preferences::Lock("media.utility-ffmpeg.enabled");
+#  endif  // defined(MOZ_FFMPEG)
+#  if defined(MOZ_FFVPX)
+    Preferences::Lock("media.utility-ffvpx.enabled");
+#  endif  // defined(MOZ_FFVPX)
+#  if defined(MOZ_WMF)
+    Preferences::Lock("media.utility-wmf.enabled");
+#  endif  // defined(MOZ_WMF)
+#  if defined(MOZ_APPLEMEDIA)
+    Preferences::Lock("media.utility-applemedia.enabled");
+#  endif  // defined(MOZ_APPLEMEDIA)
+    Preferences::Lock("media.utility-vorbis.enabled");
+    Preferences::Lock("media.utility-wav.enabled");
+    Preferences::Lock("media.utility-opus.enabled");
+  }
+#endif  // defined(NIGHTLY_BUILD)
 }
 
 NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
