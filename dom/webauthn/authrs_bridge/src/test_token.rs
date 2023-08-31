@@ -80,7 +80,10 @@ impl TestTokenCredential {
             ..Default::default()
         });
 
-        let mut data = auth_data.to_vec();
+        let mut data = match serde_cbor::value::to_value(&auth_data) {
+            Ok(serde_cbor::value::Value::Bytes(data)) => data,
+            _ => return Err(HIDError::DeviceError),
+        };
         data.extend_from_slice(client_data_hash.as_ref());
         let signature =
             ecdsa_p256_sha256_sign_raw(&self.privkey, &data).or(Err(HIDError::DeviceError))?;
@@ -533,7 +536,10 @@ impl VirtualFidoDevice for TestToken {
             extensions: Extension::default(),
         };
 
-        let mut data = auth_data.to_vec();
+        let mut data = match serde_cbor::value::to_value(&auth_data) {
+            Ok(serde_cbor::value::Value::Bytes(data)) => data,
+            _ => return Err(HIDError::DeviceError),
+        };
         data.extend_from_slice(req.client_data_hash.as_ref());
 
         let sig = ecdsa_p256_sha256_sign_raw(&private, &data).or(Err(HIDError::DeviceError))?;
