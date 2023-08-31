@@ -1508,7 +1508,6 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
   // succession, we want to make sure we scroll by a full page for
   // each click, so we use ScrollByPage().
   if (aClickAndHold && sf) {
-    nscoord distance;
     const bool isHorizontal = sb->IsHorizontal();
 
     nsIFrame* thumbFrame = mFrames.FirstChild();
@@ -1518,28 +1517,32 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
 
     nsRect thumbRect = thumbFrame->GetRect();
 
+    nscoord maxDistanceAlongTrack;
     if (isHorizontal) {
-      distance = mDestinationPoint.x - thumbRect.x - thumbRect.width / 2;
+      maxDistanceAlongTrack =
+          mDestinationPoint.x - thumbRect.x - thumbRect.width / 2;
     } else {
-      distance = mDestinationPoint.y - thumbRect.y - thumbRect.height / 2;
+      maxDistanceAlongTrack =
+          mDestinationPoint.y - thumbRect.y - thumbRect.height / 2;
     }
 
     // Convert distance along scrollbar track to amount of scrolled content.
-    distance = distance / GetThumbRatio();
+    nscoord maxDistanceToScroll = maxDistanceAlongTrack / GetThumbRatio();
 
     nsIContent* content = sb->GetContent();
     const CSSIntCoord pageLength = GetPageIncrement(content);
 
     nsPoint pos = sf->GetScrollPosition();
 
-    distance =
-        std::min(abs(distance), CSSPixel::ToAppUnits(CSSCoord(pageLength))) *
+    nscoord distanceToScroll =
+        std::min(abs(maxDistanceToScroll),
+                 CSSPixel::ToAppUnits(CSSCoord(pageLength))) *
         changeDirection;
 
     if (isHorizontal) {
-      pos.x += distance;
+      pos.x += distanceToScroll;
     } else {
-      pos.y += distance;
+      pos.y += distanceToScroll;
     }
 
     sf->ScrollTo(pos,
