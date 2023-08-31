@@ -48,7 +48,7 @@ There are four types of linters, though more may be added in the future.
 
 As seen from the example above, string and regex linters are very easy to create, but they
 should be avoided if possible. It is much better to use a context aware linter for the language you
-are trying to lint. For example, use eslint to lint JavaScript files, use flake8 to lint python
+are trying to lint. For example, use eslint to lint JavaScript files, use ruff to lint Python
 files, etc.
 
 Which brings us to the third and most interesting type of linter,
@@ -102,8 +102,8 @@ For structured_log lints the following additional keys apply:
 Example
 -------
 
-Here is an example of an external linter that shells out to the python flake8 linter,
-let's call the file ``flake8_lint.py`` (`in-tree version <https://searchfox.org/mozilla-central/source/tools/lint/python/flake8.py>`__):
+Here is an example of an external linter that shells out to the Python ruff linter,
+let's call the file ``ruff_lint.py`` (`in-tree version <https://searchfox.org/mozilla-central/source/tools/lint/python/ruff.py>`__):
 
 .. code-block:: python
 
@@ -116,63 +116,64 @@ let's call the file ``flake8_lint.py`` (`in-tree version <https://searchfox.org/
     from mozlint import result
 
 
-    FLAKE8_NOT_FOUND = """
-    Could not find flake8! Install flake8 and try again.
+    RUFF_NOT_FOUND = """
+    Could not find ruff! Install ruff and try again.
     """.strip()
 
 
-    def lint(files, config, **lintargs):
-        binary = os.environ.get('FLAKE8')
+    def lint(paths, config, **lintargs):
+        binary = which('ruff')
         if not binary:
-            binary = which('flake8')
-            if not binary:
-                print(FLAKE8_NOT_FOUND)
-                return 1
+            print(RUFF_NOT_FOUND)
+            return 1
 
-        # Flake8 allows passing in a custom format string. We use
-        # this to help mold the default flake8 format into what
-        # mozlint's Issue object expects.
-        cmdargs = [
-            binary,
-            '--format',
-            '{"path":"%(path)s","lineno":%(row)s,"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
-        ] + files
 
-        proc = subprocess.Popen(cmdargs, stdout=subprocess.PIPE, env=os.environ)
-        output = proc.communicate()[0]
+        cmd = ["ruff", "check", "--force-exclude", "--format=json"] + paths
+        output = subprocess.run(cmd, stdout=subprocess.PIPE, env=os.environ).output
 
         # all passed
         if not output:
             return []
 
+        try:
+            issues = json.loads(output)
+        except json.JSONDecodeError:
+            log.error(f"Could not parse output: {output}")
+
         results = []
-        for line in output.splitlines():
-            # res is a dict of the form specified by --format above
-            res = json.loads(line)
+        for issue in issues:
+            # convert ruff's format to mozlint's format
+            res = {
+                "path": issue["filename"],
+                "lineno": issue["location"]["row"],
+                "column": issue["location"]["column"],
+                "lineoffset": issue["end_location"]["row"] - issue["location"]["row"],
+                "message": issue["message"],
+                "rule": issue["code"],
+                "level": "error",
+            }
 
-            # parse level out of the id string
-            if 'code' in res and res['code'].startswith('W'):
-                res['level'] = 'warning'
+            if issue["fix"]:
+                res["hint"] = issue["fix"]["message"]
 
-            # result.from_linter is a convenience method that
-            # creates a Issue using a LINTER definition
-            # to populate some defaults.
             results.append(result.from_config(config, **res))
 
-        return results
+        return {"results": results, "fixed": fixed}
 
 Now here is the linter definition that would call it:
 
 .. code-block:: yaml
 
-    flake8:
-        description: Python linter
-        include: ['.']
-        extensions: ['py']
-        type: external
-        payload: py.flake8:lint
+    ruff:
+        description: Python Linter
+        include: ["."]
+        extensions: ["py"]
         support-files:
-            - '**/.flake8'
+            - "**/.ruff.toml"
+            - "**/ruff.toml"
+            - "**/pyproject.toml"
+        type: external
+        payload: py.ruff:lint
 
 Notice the payload has two parts, delimited by ':'. The first is the module
 path, which ``mozlint`` will attempt to import. The second is the object path
@@ -216,14 +217,14 @@ They should be pretty easy to write as most of the work is managed by the Mozlin
 framework. The key declaration is the ``LINTER`` variable which must match
 the linker declaration.
 
-As an example, the `Flake8 test <https://searchfox.org/mozilla-central/source/tools/lint/test/test_flake8.py>`_ looks like the following snippet:
+As an example, the `ruff test <https://searchfox.org/mozilla-central/source/tools/lint/test/test_ruff.py>`_ looks like the following snippet:
 
 .. code-block:: python
 
     import mozunit
-    LINTER = 'flake8'
+    LINTER = 'ruff'
 
-    def test_lint_single_file(lint, paths):
+    def test_lint_ruff(lint, paths):
         results = lint(paths('bad.py'))
         assert len(results) == 2
         assert results[0].rule == 'F401'
@@ -233,7 +234,8 @@ As an example, the `Flake8 test <https://searchfox.org/mozilla-central/source/to
     if __name__ == '__main__':
         mozunit.main()
 
-As always with tests, please make sure that enough positive and negative cases are covered.
+As always with tests, please make sure that enough positive and negative cases
+are covered.
 
 To run the tests:
 
@@ -299,30 +301,30 @@ complicated as pulling a whole graph of tools, plugins and their dependencies.
 Either way, to reduce the burden on users, linters should strive to provide
 automated bootstrapping of all their dependencies. To help with this,
 ``mozlint`` allows linters to define a ``setup`` config, which has the same
-path object format as an external payload. For example (`in-tree version <https://searchfox.org/mozilla-central/source/tools/lint/flake8.yml>`__):
+path object format as an external payload. For example (`in-tree version <https://searchfox.org/mozilla-central/source/tools/lint/ruff.yml>`__):
 
 .. code-block:: yaml
 
-    flake8:
+    ruff:
         description: Python linter
         include: ['.']
         extensions: ['py']
         type: external
-        payload: py.flake8:lint
-        setup: py.flake8:setup
+        payload: py.ruff:lint
+        setup: py.ruff:setup
 
 The setup function takes a single argument, the root of the repository being
-linted. In the case of ``flake8``, it might look like:
+linted. In the case of ``ruff``, it might look like:
 
 .. code-block:: python
 
     import subprocess
-    from distutils.spawn import find_executable
+    from shutil import which
 
     def setup(root, **lintargs):
         # This is a simple example. Please look at the actual source for better examples.
-        if not find_executable('flake8'):
-            subprocess.call(['pip', 'install', 'flake8'])
+        if not which("ruff"):
+            subprocess.call(["pip", "install", "ruff"])
 
 The setup function will be called implicitly before running the linter. This
 means it should return fast and not produce any output if there is no setup to
@@ -341,28 +343,28 @@ First, the job will have to be declared in Taskcluster.
 This should be done in the `mozlint Taskcluster configuration <https://searchfox.org/mozilla-central/source/taskcluster/ci/source-test/mozlint.yml>`_.
 You will need to define a symbol, how it is executed and on what kind of change.
 
-For example, for flake8, the configuration is the following:
+For example, for ruff, the configuration is the following:
 
 .. code-block:: yaml
 
-    py-flake8:
-        description: flake8 run over the gecko codebase
+    py-ruff:
+        description: run ruff over the gecko codebase
         treeherder:
-            symbol: py(f8)
+            symbol: py(ruff)
         run:
-            mach: lint -l flake8 -f treeherder -f json:/builds/worker/mozlint.json
+            mach: lint -l ruff -f treeherder -f json:/builds/worker/mozlint.json .
         when:
             files-changed:
                 - '**/*.py'
-                - '**/.flake8'
-                # moz.configure files are also Python files.
-                - '**/*.configure'
+                - '**/.ruff.toml'
 
 If the linter requires an external program, you will have to install it in the `setup script <https://searchfox.org/mozilla-central/source/taskcluster/docker/lint/system-setup.sh>`_
 and maybe install the necessary files in the `Docker configuration <https://searchfox.org/mozilla-central/source/taskcluster/docker/lint/Dockerfile>`_.
 
 .. note::
 
-    If the defect found by the linter is minor, make sure that it is run as `tier 2 <https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy#Overview_of_the_Job_Visibility_Tiers>`_.
-    This prevents the tree from closing because of a tiny issue.
-    For example, the typo detection is run as tier-2.
+    If the defect found by the linter is minor, make sure that it is logged as
+    a warning by setting `{"level": "warning"}` in the
+    :class:`~mozlint.result.Issue`. This means the defect will not cause a
+    backout if landed, but will still be surfaced by reviewbot at review time,
+    or when using `-W/--warnings` locally.
