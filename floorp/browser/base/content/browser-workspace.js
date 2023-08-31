@@ -1603,41 +1603,15 @@ const startWorkspace = function () {
   });
 };
 
-//check if workspace tab is enabled and if there is a workspace tab group
-const tabGroupAddonID = [
-  "simple-tab-groups@drive4ik",
-  "{3c078156-979c-498b-8990-85f7987dd929}",
-  "panorama-tab-groups@example.com",
-  "{60e27487-c779-464c-8698-ad481b718d5f}",
-  "{3c078156-979c-498b-8990-85f7987dd929}",
-  "treestyletab@piro.sakura.ne.jp",
-];
-
-async function checkTabGroupAddonInstalledAndStartWorkspace() {
-  const workspaceTabEnabled = Services.prefs.getBoolPref(
-    WORKSPACE_TAB_ENABLED_PREF
-  );
-  for (let i = 0; i < tabGroupAddonID.length; i++) {
-    let addon = await AddonManager.getAddonByID(tabGroupAddonID[i]);
-    if (addon === null) {
-      continue;
-    } else if (addon.isActive && workspaceTabEnabled) {
-      Services.prefs.setBoolPref(WORKSPACE_TAB_ENABLED_PREF, false);
-      return;
-    }
-  }
-  startWorkspace();
-}
-
 // If you want to enable workspaces by default, Remove these lines. "checkTabGroupAddonInstalledAndStartWorkspace();" is enough.
 const tempDisabled = "floorp.browser.workspaces.disabledBySystem";
-async function disableWorkspacesByDefaultCheck() {
+function disableWorkspacesByDefaultCheck() {
   const allWorkspaces = Services.prefs
     .getStringPref(WORKSPACE_ALL_PREF)
     .split(",");
   if (allWorkspaces.length > 1) {
     Services.prefs.setBoolPref(tempDisabled, false);
-    await checkTabGroupAddonInstalledAndStartWorkspace();
+    startWorkspace();
   } else if (tempDisabled && !Services.prefs.prefHasUserValue(tempDisabled)) {
     Services.prefs.setBoolPref(WORKSPACE_TAB_ENABLED_PREF, false);
 
@@ -1647,7 +1621,7 @@ async function disableWorkspacesByDefaultCheck() {
     });
   } else {
     Services.prefs.setBoolPref(tempDisabled, false);
-    await checkTabGroupAddonInstalledAndStartWorkspace();
+    startWorkspace();
   }
 }
 
