@@ -1153,9 +1153,8 @@ void CoreTextFontList::InitSharedFontListForPlatform() {
     AutoCFRelease<CFArrayRef> familyNames =
         CTFontManagerCopyAvailableFontFamilyNames();
     nsTArray<fontlist::Family::InitData> families;
-    families.SetCapacity(CFArrayGetCount(familyNames)
-                         + ArrayLength(kDeprecatedFontFamilies)
-    );
+    families.SetCapacity(CFArrayGetCount(familyNames) +
+                         ArrayLength(kDeprecatedFontFamilies));
     for (CFIndex i = 0; i < CFArrayGetCount(familyNames); ++i) {
       nsAutoString name16;
       CFStringRef familyName =
