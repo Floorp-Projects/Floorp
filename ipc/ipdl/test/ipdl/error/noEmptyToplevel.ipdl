@@ -1,7 +1,0 @@
-//error: top-level protocol `noEmptyToplevel' cannot be empty
-
-protocol noEmptyToplevel {
-
-    // it's an error for top-level protocols to be empty
-
-};
