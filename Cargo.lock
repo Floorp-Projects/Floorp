@@ -1212,23 +1212,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "data_storage"
-version = "0.0.1"
-dependencies = [
- "byteorder",
- "cstr",
- "firefox-on-glean",
- "log",
- "malloc_size_of_derive",
- "moz_task",
- "nserror",
- "nsstring",
- "thin-vec",
- "wr_malloc_size_of",
- "xpcom",
-]
-
-[[package]]
 name = "dbus"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2153,7 +2136,6 @@ dependencies = [
  "cubeb-sys",
  "dap_ffi",
  "data-encoding-ffi",
- "data_storage",
  "detect_win32k_conflicts",
  "dom",
  "encoding_glue",

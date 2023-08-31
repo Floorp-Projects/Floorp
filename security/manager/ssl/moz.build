@@ -105,7 +105,7 @@ UNIFIED_SOURCES += [
     "CommonSocketControl.cpp",
     "ContentSignatureVerifier.cpp",
     "CryptoTask.cpp",
-    "DataStorageManager.cpp",
+    "DataStorage.cpp",
     "EnterpriseRoots.cpp",
     "IPCClientCertsChild.cpp",
     "IPCClientCertsParent.cpp",
