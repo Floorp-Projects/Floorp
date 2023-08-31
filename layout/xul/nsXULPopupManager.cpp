@@ -2760,6 +2760,33 @@ static void AlignmentPositionToString(nsMenuPopupFrame* aFrame,
   }
 }
 
+static void PopupAlignmentToString(nsMenuPopupFrame* aFrame,
+                                   nsAString& aString) {
+  aString.Truncate();
+  int alignment = aFrame->GetPopupAlignment();
+  switch (alignment) {
+    case POPUPALIGNMENT_TOPLEFT:
+      return aString.AssignLiteral("topleft");
+    case POPUPALIGNMENT_TOPRIGHT:
+      return aString.AssignLiteral("topright");
+    case POPUPALIGNMENT_BOTTOMLEFT:
+      return aString.AssignLiteral("bottomleft");
+    case POPUPALIGNMENT_BOTTOMRIGHT:
+      return aString.AssignLiteral("bottomright");
+    case POPUPALIGNMENT_LEFTCENTER:
+      return aString.AssignLiteral("leftcenter");
+    case POPUPALIGNMENT_RIGHTCENTER:
+      return aString.AssignLiteral("rightcenter");
+    case POPUPALIGNMENT_TOPCENTER:
+      return aString.AssignLiteral("topcenter");
+    case POPUPALIGNMENT_BOTTOMCENTER:
+      return aString.AssignLiteral("bottomcenter");
+    default:
+      // Leave as an empty string.
+      break;
+  }
+}
+
 NS_IMETHODIMP
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 nsXULPopupPositionedEvent::Run() {
@@ -2796,6 +2823,7 @@ nsXULPopupPositionedEvent::Run() {
   init.mIsAnchored = popupFrame->IsAnchored();
   init.mAlignmentOffset = popupOffset;
   AlignmentPositionToString(popupFrame, init.mAlignmentPosition);
+  PopupAlignmentToString(popupFrame, init.mPopupAlignment);
   RefPtr<PopupPositionedEvent> event =
       PopupPositionedEvent::Constructor(mPopup, u"popuppositioned"_ns, init);
   event->SetTrusted(true);
