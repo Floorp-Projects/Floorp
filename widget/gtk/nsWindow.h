@@ -271,7 +271,7 @@ class nsWindow final : public nsBaseWidget {
   void OnDPIChanged();
   void OnCheckResize();
   void OnCompositedChanged();
-  void OnScaleChanged(bool aForce);
+  void OnScaleChanged(bool aNotify);
   void DispatchResized();
 
   static guint32 sLastButtonPressTime;
@@ -374,7 +374,6 @@ class nsWindow final : public nsBaseWidget {
 
   // HiDPI scale conversion
   gint GdkCeiledScaleFactor();
-  gint GetCachedCeiledScaleFactor() const;
   double FractionalScaleFactor();
 
   // To GDK
@@ -475,7 +474,8 @@ class nsWindow final : public nsBaseWidget {
 
   nsCOMPtr<nsIWidget> mParent;
   PopupType mPopupHint{};
-  mozilla::Atomic<int, mozilla::Relaxed> mWindowScaleFactor{1};
+  mozilla::Atomic<int, mozilla::Relaxed> mCeiledScaleFactor{1};
+  double mFractionalScaleFactor = 0.0;
 
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
                    nsIntRect aBoundsRect);
@@ -647,7 +647,6 @@ class nsWindow final : public nsBaseWidget {
   bool mHandleTouchEvent : 1;
   // true if this is a drag and drop feedback popup
   bool mIsDragPopup : 1;
-  bool mWindowScaleFactorChanged : 1;
   bool mCompositedScreen : 1;
   bool mIsAccelerated : 1;
   bool mWindowShouldStartDragging : 1;
