@@ -1299,6 +1299,8 @@ dom/tests/mochitest/ajax/
 dom/tests/mochitest/dom-level1-core/
 dom/tests/mochitest/dom-level2-core/
 dom/tests/mochitest/dom-level2-html/
+dom/u2f/tests/pkijs/
+dom/webauthn/cbor-cpp/
 dom/webauthn/tests/pkijs/
 dom/webgpu/tests/cts/checkout/
 editor/libeditor/tests/browserscope/lib/richtext/

@@ -6,6 +6,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/PWebAuthnTransactionParent.h"
+#include "mozilla/dom/WebAuthnCBORUtil.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -13,7 +14,6 @@
 #include "mozilla/Unused.h"
 #include "nsTextFormatter.h"
 #include "nsWindowsHelpers.h"
-#include "AuthrsBridge_ffi.h"
 #include "WebAuthnEnumStrings.h"
 #include "WebAuthnTransportIdentifiers.h"
 #include "winwebauthn/webauthn.h"
@@ -426,30 +426,21 @@ void WinWebAuthnManager::Register(
         pWebAuthNCredentialAttestation->cbAuthenticatorData);
 
     nsTArray<uint8_t> attObject;
-    attObject.AppendElements(
-        pWebAuthNCredentialAttestation->pbAttestationObject,
-        pWebAuthNCredentialAttestation->cbAttestationObject);
-
     if (winAttestation == WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE) {
-      // The anonymize flag in the nsIWebAuthnAttObj constructor causes the
-      // attestation statement to be removed during deserialization. It also
-      // causes the AAGUID to be zeroed out. If we can't deserialize the
-      // existing attestation, then we can't ensure that it is anonymized, so we
-      // act as though the user denied consent and we return NotAllowed.
-      nsCOMPtr<nsIWebAuthnAttObj> anonymizedAttObj;
-      nsresult rv = authrs_webauthn_att_obj_constructor(
-          attObject,
-          /* anonymize */ true, getter_AddRefs(anonymizedAttObj));
-      if (NS_FAILED(rv)) {
-        MaybeAbortRegister(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR);
-        return;
-      }
-      attObject.Clear();
-      rv = anonymizedAttObj->GetAttestationObject(attObject);
-      if (NS_FAILED(rv)) {
-        MaybeAbortRegister(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR);
-        return;
-      }
+      // Zero AAGuid
+      const uint8_t zeroGuid[16] = {0};
+      authenticatorData.ReplaceElementsAt(32 + 1 + 4 /*AAGuid offset*/, 16,
+                                          zeroGuid, 16);
+
+      CryptoBuffer authData;
+      authData.Assign(authenticatorData);
+      CryptoBuffer noneAttObj;
+      CBOREncodeNoneAttestationObj(authData, noneAttObj);
+      attObject.AppendElements(noneAttObj);
+    } else {
+      attObject.AppendElements(
+          pWebAuthNCredentialAttestation->pbAttestationObject,
+          pWebAuthNCredentialAttestation->cbAttestationObject);
     }
 
     nsTArray<WebAuthnExtensionResult> extensions;
