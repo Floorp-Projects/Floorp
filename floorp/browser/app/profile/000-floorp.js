@@ -210,9 +210,6 @@ pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist
 pref("extensions.blocklist.enabled", true);
 pref("services.blocklist.update_enabled",	true);
 
-// Add-On のブラックリストをFloorpが参照する際の情報漏洩削減のために、先にリンク先を指定
-pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
-
 //Pocket機能を無効化*/
 pref("extensions.pocket.enabled", false);
 
@@ -261,7 +258,6 @@ pref("extensions.webcompat-reporter.enabled", false);
 
 pref("browser.startup.page", 3);//自動復元
 pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように
-pref("general.config.obscure_value", 0);
 
 // https://developer.mozilla.org/docs/Web/API/Navigator/share
 #ifdef XP_WIN
