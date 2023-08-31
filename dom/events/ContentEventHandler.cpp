@@ -49,7 +49,7 @@
 #  undef small
 #endif  // defined(small)
 
-#if defined(XP_WIN) && !defined(NIGHTLY_BUILD)
+#if defined(XP_WIN) && !defined(EARLY_BETA_OR_EARLIER)
 #  define TRANSLATE_NEW_LINES
 #endif
 
