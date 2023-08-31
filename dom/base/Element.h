@@ -74,6 +74,7 @@ class nsFocusManager;
 class nsGenericHTMLFormControlElementWithState;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
+class nsImageLoadingContent;
 class nsIAutoCompletePopup;
 class nsIBrowser;
 class nsIDOMXULButtonElement;
@@ -93,6 +94,7 @@ class nsIPrincipal;
 class nsIScreen;
 class nsIScrollableFrame;
 class nsIURI;
+class nsObjectLoadingContent;
 class nsPresContext;
 class nsWindowSizes;
 struct JSContext;
@@ -758,6 +760,8 @@ class Element : public FragmentOrElement {
   friend class ::nsGlobalWindowInner;
   friend class ::nsGlobalWindowOuter;
   friend class ::nsFocusManager;
+  friend class ::nsImageLoadingContent;
+  friend class ::nsObjectLoadingContent;
   friend class mozilla::dom::HTMLFormElement;
 
   // Allow CusomtElementRegistry to call AddStates.

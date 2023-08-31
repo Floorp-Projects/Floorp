@@ -676,35 +676,6 @@ nsObjectLoadingContent::AsyncOnChannelRedirect(
   return NS_OK;
 }
 
-// <public>
-ElementState nsObjectLoadingContent::ObjectState() const {
-  switch (mType) {
-    case eType_Loading:
-      return {};
-    case eType_Image:
-      return ImageState();
-    case eType_FakePlugin:
-    case eType_Document: {
-      // These are OK. If documents start to load successfully, they display
-      // something, and are thus not broken in this sense. The same goes for
-      // plugins.
-      ElementState states = ElementState();
-      if (mLoadingSyntheticDocument) {
-        states |= ImageState();
-      }
-      return states;
-    }
-    case eType_Fallback:
-      // This may end up handled as TYPE_NULL or as a "special" type, as
-      // chosen by the layout.use-plugin-fallback pref.
-      return ElementState();
-    case eType_Null:
-      return ElementState::BROKEN;
-  }
-  MOZ_ASSERT_UNREACHABLE("unknown type?");
-  return {};
-}
-
 void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
                                                       nsIURI* aBaseURI,
                                                       nsIURI** aRewrittenURI) {
@@ -1300,7 +1271,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     ObjectType oldType = mType;
     mType = eType_Fallback;
     ConfigureFallback();
-    NotifyStateChanged(oldType, ObjectState(), true, false);
+    NotifyStateChanged(oldType, true);
     return NS_OK;
   }
 
@@ -1333,7 +1304,6 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
   }
 
   // Save these for NotifyStateChanged();
-  ElementState oldState = ObjectState();
   ObjectType oldType = mType;
 
   ParameterUpdateFlags stateChange = UpdateObjectParameters();
@@ -1586,7 +1556,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
   }
 
   // Notify of our final state
-  NotifyStateChanged(oldType, oldState, aNotify, false);
+  NotifyStateChanged(oldType, aNotify);
   NS_ENSURE_TRUE(mIsLoading, NS_OK);
 
   //
@@ -1625,7 +1595,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
     NS_ENSURE_TRUE(mIsLoading, NS_OK);
     CloseChannel();
     ConfigureFallback();
-    NotifyStateChanged(oldType, ObjectState(), true, false);
+    NotifyStateChanged(oldType, true);
   }
 
   return NS_OK;
@@ -1883,26 +1853,17 @@ void nsObjectLoadingContent::UnloadObject(bool aResetState) {
 }
 
 void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
-                                                ElementState aOldState,
-                                                bool aNotify,
-                                                bool aForceRestyle) {
-  LOG(("OBJLC [%p]: NotifyStateChanged: (%u, %" PRIx64 ") -> (%u, %" PRIx64 ")"
-       " (notify %i)",
-       this, aOldType, aOldState.GetInternalValue(), mType,
-       ObjectState().GetInternalValue(), aNotify));
+                                                bool aNotify) {
+  LOG(("OBJLC [%p]: NotifyStateChanged: (%u) -> (%u) (notify %i)", this,
+       aOldType, mType, aNotify));
 
-  nsCOMPtr<dom::Element> thisEl = AsContent()->AsElement();
-  MOZ_ASSERT(thisEl, "must be an element");
+  dom::Element* thisEl = AsContent()->AsElement();
+  if (mType != eType_Image) {
+    // Non-images are always not broken.
+    thisEl->RemoveStates(ElementState::BROKEN, aNotify);
+  }
 
-  // XXX(johns): A good bit of the code below replicates UpdateState(true)
-
-  // Unfortunately, we do some state changes without notifying
-  // (e.g. in Fallback when canceling image requests), so we have to
-  // manually notify object state changes.
-  thisEl->UpdateState(aForceRestyle);
-
-  if (!aNotify) {
-    // We're done here
+  if (mType == aOldType) {
     return;
   }
 
@@ -1911,21 +1872,13 @@ void nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     return;  // Nothing to do
   }
 
-  const ElementState newState = ObjectState();
-  if (newState == aOldState && mType == aOldType) {
-    return;  // Also done.
-  }
-
-  RefPtr<PresShell> presShell = doc->GetPresShell();
+  PresShell* presShell = doc->GetPresShell();
   // If there is no PresShell or it hasn't been initialized there isn't much to
   // do.
   if (!presShell || !presShell->DidInitialize()) {
     return;
   }
-
-  if (presShell && (aOldType != mType)) {
-    presShell->PostRecreateFramesFor(thisEl);
-  }
+  presShell->PostRecreateFramesFor(thisEl);
 }
 
 nsObjectLoadingContent::ObjectType nsObjectLoadingContent::GetTypeOfContent(
@@ -2200,7 +2153,6 @@ void nsObjectLoadingContent::SubdocumentIntrinsicSizeOrRatioChanged(
 }
 
 void nsObjectLoadingContent::SubdocumentImageLoadComplete(nsresult aResult) {
-  ElementState oldState = ObjectState();
   ObjectType oldType = mType;
   mLoadingSyntheticDocument = false;
 
@@ -2208,15 +2160,14 @@ void nsObjectLoadingContent::SubdocumentImageLoadComplete(nsresult aResult) {
     UnloadObject();
     mType = eType_Fallback;
     ConfigureFallback();
-    NotifyStateChanged(oldType, oldState, true, false);
+    NotifyStateChanged(oldType, true);
     return;
   }
 
   // (mChannelLoaded && mChannel) indicates this is a good state, not any sort
   // of failures.
   MOZ_DIAGNOSTIC_ASSERT_IF(mChannelLoaded && mChannel, mType == eType_Document);
-
-  NotifyStateChanged(oldType, oldState, true, true);
+  NotifyStateChanged(oldType, true);
 }
 
 void nsObjectLoadingContent::MaybeStoreCrossOriginFeaturePolicy() {
