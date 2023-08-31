@@ -9,6 +9,7 @@
 
 #include "GLContext.h"
 #include "WebGLBuffer.h"
+#include "WebGLContext.h"
 #include "WebGLTransformFeedback.h"
 #include "WebGLVertexArray.h"
 

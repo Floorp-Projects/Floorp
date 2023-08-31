@@ -11,7 +11,6 @@
 
 #include "ipc/EnumSerializer.h"
 #include "TexUnpackBlob.h"
-#include "WebGLContext.h"
 #include "WebGLTypes.h"
 
 namespace mozilla {
