@@ -6,7 +6,9 @@
 #include "SocketProcessBridgeParent.h"
 #include "SocketProcessLogging.h"
 
-#include "mozilla/dom/MediaTransportParent.h"
+#ifdef MOZ_WEBRTC
+#  include "mozilla/dom/MediaTransportParent.h"
+#endif
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "SocketProcessChild.h"
@@ -52,6 +54,7 @@ mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitBackgroundDataBridge(
   return IPC_OK();
 }
 
+#ifdef MOZ_WEBRTC
 mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitMediaTransport(
     mozilla::ipc::Endpoint<mozilla::dom::PMediaTransportParent>&& aEndpoint) {
   LOG(("SocketProcessBridgeParent::RecvInitMediaTransport\n"));
@@ -78,6 +81,7 @@ mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitMediaTransport(
       }));
   return IPC_OK();
 }
+#endif
 
 void SocketProcessBridgeParent::ActorDestroy(ActorDestroyReason aReason) {
   // See bug 1846478. We might be able to remove this dispatch.

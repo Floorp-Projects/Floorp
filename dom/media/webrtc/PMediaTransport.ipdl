@@ -29,8 +29,8 @@ namespace mozilla {
 namespace dom {
 
 async protocol PMediaTransport {
-parent:
 #ifdef MOZ_WEBRTC
+parent:
   async GetIceLog(nsCString pattern) returns (WebrtcGlobalLog loglines);
   async ClearIceLog();
   async EnterPrivateMode();
