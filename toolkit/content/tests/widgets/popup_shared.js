@@ -477,12 +477,28 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname) {
         cornerX += offsetX;
         cornerY += offsetY;
         break;
+      case "topcenter":
+        cornerX += -popuprect.width / 2 + offsetX;
+        cornerY += offsetY;
+        break;
       case "topright":
         cornerX += -popuprect.width + offsetX;
         cornerY += offsetY;
         break;
+      case "leftcenter":
+        cornerX += offsetX;
+        cornerY += -popuprect.height / 2 + offsetY;
+        break;
+      case "rightcenter":
+        cornerX += -popuprect.width + offsetX;
+        cornerY += -popuprect.height / 2 + offsetY;
+        break;
       case "bottomleft":
         cornerX += offsetX;
+        cornerY += -popuprect.height + offsetY;
+        break;
+      case "bottomcenter":
+        cornerX += -popuprect.width / 2 + offsetX;
         cornerY += -popuprect.height + offsetY;
         break;
       case "bottomright":

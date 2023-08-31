@@ -11,6 +11,11 @@ dictionary PopupPositionedEventInit : EventInit {
    * anchor node or point, accounting for any flipping that occurred.
    */
   DOMString alignmentPosition = "";
+  /**
+   * Returns the alignment position of the popup, e.g. "topcenter" for a popup
+   * whose top center is aligned with the anchor node.
+   */
+  DOMString popupAlignment = "";
   long alignmentOffset = 0;
 };
 
@@ -20,5 +25,6 @@ interface PopupPositionedEvent : Event {
 
   readonly attribute boolean isAnchored;
   readonly attribute DOMString alignmentPosition;
+  readonly attribute DOMString popupAlignment;
   readonly attribute long alignmentOffset;
 };
