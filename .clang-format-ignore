@@ -91,7 +91,6 @@ dom/media/webspeech/recognition/energy_endpointer.cc
 dom/media/webspeech/recognition/energy_endpointer.h
 dom/media/webspeech/recognition/energy_endpointer_params.cc
 dom/media/webspeech/recognition/energy_endpointer_params.h
-dom/webauthn/cbor-cpp/.*
 dom/webauthn/winwebauthn/webauthn.h
 editor/libeditor/tests/browserscope/lib/richtext/.*
 editor/libeditor/tests/browserscope/lib/richtext2/.*

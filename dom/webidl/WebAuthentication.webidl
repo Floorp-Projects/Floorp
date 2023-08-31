@@ -34,6 +34,7 @@ interface AuthenticatorResponse {
  Exposed=Window]
 interface AuthenticatorAttestationResponse : AuthenticatorResponse {
     [SameObject, Throws] readonly attribute ArrayBuffer attestationObject;
+    [Throws] ArrayBuffer                                getAuthenticatorData();
 };
 
 [SecureContext, Pref="security.webauth.webauthn",
