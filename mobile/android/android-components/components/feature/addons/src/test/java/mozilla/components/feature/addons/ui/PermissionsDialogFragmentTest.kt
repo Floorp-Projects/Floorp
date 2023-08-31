@@ -16,6 +16,7 @@ import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment.PromptsStyling
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,10 +46,12 @@ class PermissionsDialogFragmentTest {
         val permissionText = fragment.buildPermissionsText()
 
         assertTrue(titleTextView.text.contains(name))
+        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
         assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
         assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)))
         assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
 
+        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
         assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
         assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)))
         assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
@@ -122,6 +125,29 @@ class PermissionsDialogFragmentTest {
 
         assertTrue(dialogAttributes.gravity == TOP)
         assertTrue(dialogAttributes.width == ViewGroup.LayoutParams.MATCH_PARENT)
+    }
+
+    @Test
+    fun `handles add-ons without permissions`() {
+        val addon = Addon(
+            "id",
+            translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
+            permissions = emptyList(),
+        )
+        val fragment = createPermissionsDialogFragment(addon)
+
+        doReturn(testContext).`when`(fragment).requireContext()
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val name = addon.translateName(testContext)
+        val titleTextView = dialog.findViewById<TextView>(R.id.title)
+        val permissionTextView = dialog.findViewById<TextView>(R.id.permissions)
+        val permissionText = fragment.buildPermissionsText()
+
+        assertTrue(titleTextView.text.contains(name))
+        assertFalse(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
+        assertFalse(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
     }
 
     private fun createPermissionsDialogFragment(
