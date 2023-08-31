@@ -184,7 +184,10 @@ class nsSliderFrame final : public nsContainerFrame {
     nsRepeatService::GetInstance()->Start(Notify, this, mContent->OwnerDoc(),
                                           "nsSliderFrame"_ns);
   }
-  void StopRepeat() { nsRepeatService::GetInstance()->Stop(Notify, this); }
+  void StopRepeat() {
+    nsRepeatService::GetInstance()->Stop(Notify, this);
+    mCurrentClickHoldDestination = Nothing();
+  }
   void Notify();
   static void Notify(void* aData) {
     (static_cast<nsSliderFrame*>(aData))->Notify();
@@ -192,6 +195,10 @@ class nsSliderFrame final : public nsContainerFrame {
   void PageScroll(bool aClickAndHold);
 
   nsPoint mDestinationPoint;
+  // If we are in a scrollbar track click-and-hold, this is populated with
+  // the destination of the scroll started at the most recent tick of the
+  // repeat timer.
+  Maybe<nsPoint> mCurrentClickHoldDestination;
   RefPtr<nsSliderMediator> mMediator;
 
   float mRatio;
