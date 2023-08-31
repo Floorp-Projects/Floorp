@@ -79,6 +79,21 @@ def fake_loader(kind, path, config, parameters, loaded_tasks):
         yield task
 
 
+class FakeTransform:
+    transforms = []
+    params = {}
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def get(self, field, default):
+        try:
+            return getattr(self, field)
+        except AttributeError:
+            return default
+
+
 class FakeKind(Kind):
     def _get_loader(self):
         return fake_loader
@@ -89,9 +104,10 @@ class FakeKind(Kind):
 
     @staticmethod
     def create(name, extra_config, graph_config):
-        config = {
-            "transforms": [],
-        }
+        if name == "fullfake":
+            config = FakeTransform()
+        else:
+            config = {"transforms": []}
         if extra_config:
             config.update(extra_config)
         return FakeKind(name, "/fake", config, graph_config)
@@ -181,6 +197,20 @@ def run_transform():
 
     graph_config = fake_load_graph_config("/root")
     kind = FakeKind.create("fake", {}, graph_config)
+
+    def inner(xform, tasks):
+        if isinstance(tasks, dict):
+            tasks = [tasks]
+        return xform(kind.config, tasks)
+
+    return inner
+
+
+@pytest.fixture
+def run_full_config_transform():
+
+    graph_config = fake_load_graph_config("/root")
+    kind = FakeKind.create("fullfake", {}, graph_config)
 
     def inner(xform, tasks):
         if isinstance(tasks, dict):
