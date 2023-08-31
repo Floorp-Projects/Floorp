@@ -400,7 +400,7 @@ const MESSAGES = () => {
               {
                 selector: "hbox#browser",
                 arrow_position: "top-end",
-                absolute_position: { top: "45px", right: "55px" },
+                absolute_position: { top: "43px", right: "51px" },
               },
             ],
             content: {
@@ -451,7 +451,7 @@ const MESSAGES = () => {
               {
                 selector: "hbox#browser",
                 arrow_position: "top-end",
-                absolute_position: { top: "45px", right: "25px" },
+                absolute_position: { top: "43px", right: "22px" },
               },
             ],
             content: {
@@ -522,7 +522,7 @@ const MESSAGES = () => {
               {
                 selector: "hbox#browser",
                 arrow_position: "top-end",
-                absolute_position: { top: "45px", right: "55px" },
+                absolute_position: { top: "43px", right: "51px" },
               },
             ],
             content: {
@@ -573,7 +573,7 @@ const MESSAGES = () => {
               {
                 selector: "hbox#browser",
                 arrow_position: "top-end",
-                absolute_position: { top: "45px", right: "25px" },
+                absolute_position: { top: "43px", right: "22px" },
               },
             ],
             content: {

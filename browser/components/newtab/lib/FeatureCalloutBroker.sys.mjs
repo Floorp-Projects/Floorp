@@ -129,7 +129,10 @@ export class _FeatureCalloutBroker {
     // Set this to true for now so that we can't be interrupted by another
     // invocation. We'll set it to false below if it ended up not showing.
     item.showing = true;
-    item.showing = await callout.showFeatureCallout(message);
+    item.showing = await callout.showFeatureCallout(message).catch(() => {
+      item.cleanup();
+      return false;
+    });
     return item.showing;
   }
 
@@ -169,9 +172,15 @@ export class _FeatureCalloutBroker {
     }
     item.showing = true;
     // In this case, callers are not necessarily async, so we don't await.
-    callout.showFeatureCallout(message).then(showing => {
-      item.showing = showing;
-    });
+    callout
+      .showFeatureCallout(message)
+      .then(showing => {
+        item.showing = showing;
+      })
+      .catch(() => {
+        item.cleanup();
+        item.showing = false;
+      });
     /** @type {FeatureCalloutItem} */
     return item;
   }

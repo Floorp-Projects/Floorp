@@ -17,9 +17,17 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 const TRANSITION_MS = 500;
-const CONTAINER_ID = "multi-stage-message-root";
+const CONTAINER_ID = "feature-callout";
+const CONTENT_BOX_ID = "multi-stage-message-root";
 const BUNDLE_SRC =
   "resource://activity-stream/aboutwelcome/aboutwelcome.bundle.js";
+
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+  const { Logger } = ChromeUtils.importESModule(
+    "resource://messaging-system/lib/Logger.sys.mjs"
+  );
+  return new Logger("FeatureCallout");
+});
 
 /**
  * Feature Callout fetches messages relevant to a given source and displays them
@@ -71,9 +79,10 @@ export class FeatureCallout {
     this._featureTourProgress = null;
     this.currentScreen = null;
     this.renderObserver = null;
-    this.savedActiveElement = null;
+    this.savedFocus = null;
     this.ready = false;
     this._positionListenersRegistered = false;
+    this._panelConflictListenersRegistered = false;
     this.AWSetup = false;
     this.location = location;
     this.context = context;
@@ -148,6 +157,30 @@ export class FeatureCallout {
     }
   }
 
+  _addPanelConflictListeners() {
+    if (!this._panelConflictListenersRegistered) {
+      this.win.addEventListener("popupshowing", this);
+      this.win.gURLBar.controller.addQueryListener(this);
+      this._panelConflictListenersRegistered = true;
+    }
+  }
+
+  _removePanelConflictListeners() {
+    if (this._panelConflictListenersRegistered) {
+      this.win.removeEventListener("popupshowing", this);
+      this.win.gURLBar.controller.removeQueryListener(this);
+      this._panelConflictListenersRegistered = false;
+    }
+  }
+
+  /**
+   * Close the tour when the urlbar is opened in the chrome. Set up by
+   * gURLBar.controller.addQueryListener in _addPanelConflictListeners.
+   */
+  onViewOpen() {
+    this.endTour();
+  }
+
   _handlePrefChange(subject, topic, prefName) {
     switch (prefName) {
       case this.pref?.name:
@@ -200,13 +233,15 @@ export class FeatureCallout {
         return;
       }
       this.ready = false;
-      this._container?.classList.add("hidden");
+      this._container?.classList.toggle(
+        "hidden",
+        this._container?.localName !== "panel"
+      );
       this._pageEventManager?.emit({
         type: "touradvance",
         target: this._container,
       });
-      // wait for fade out transition
-      this.win.setTimeout(async () => {
+      const onFadeOut = async () => {
         // If the initial message was deployed from outside by ASRouter as a
         // result of a trigger, we can't continue it through _loadConfig, since
         // that effectively requests a message with a `featureCalloutCheck`
@@ -228,6 +263,7 @@ export class FeatureCallout {
         this._container?.remove();
         this.renderObserver?.disconnect();
         this._removePositionListeners();
+        this._removePanelConflictListeners();
         this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
         if (nextMessage) {
           const isMessageUnblocked = await lazy.ASRouter.isUnblockedMessage(
@@ -247,7 +283,15 @@ export class FeatureCallout {
         if (!rendering) {
           this.endTour();
         }
-      }, TRANSITION_MS);
+      };
+      if (this._container?.localName === "panel") {
+        this._container.addEventListener("popuphidden", onFadeOut, {
+          once: true,
+        });
+        this._container.hidePopup(true);
+      } else {
+        this.win.setTimeout(onFadeOut, TRANSITION_MS);
+      }
     }
   }
 
@@ -270,7 +314,15 @@ export class FeatureCallout {
         // Save this so that if the next focus event is re-entering the popup,
         // then we'll put the focus back here where the user left it once we exit
         // the feature callout series.
-        this.savedActiveElement = this.doc.activeElement;
+        if (this.doc.activeElement) {
+          let element = this.doc.activeElement;
+          this.savedFocus = {
+            element,
+            focusVisible: element.matches(":focus-visible"),
+          };
+        } else {
+          this.savedFocus = null;
+        }
         break;
       }
 
@@ -289,7 +341,7 @@ export class FeatureCallout {
         if (
           !focusedElement ||
           focusedElement === this.doc.body ||
-          focusedElement === this.browser ||
+          (focusedElement === this.browser && this.theme.simulateContent) ||
           this._container.contains(focusedElement)
         ) {
           this.win.AWSendEventTelemetry?.({
@@ -313,6 +365,24 @@ export class FeatureCallout {
       case "resize":
       case "toggle":
         this.win.requestAnimationFrame(() => this._positionCallout());
+        break;
+
+      case "popupshowing":
+        // If another panel is showing, close the tour.
+        if (
+          event.target !== this._container &&
+          event.target.localName === "panel" &&
+          event.target.id !== "ctrlTab-panel" &&
+          event.target.ownerGlobal === this.win
+        ) {
+          this.endTour();
+        }
+        break;
+
+      case "popuphiding":
+        if (event.target === this._container) {
+          this.endTour();
+        }
         break;
 
       case "unload":
@@ -421,11 +491,14 @@ export class FeatureCallout {
    * | "top-start"
    * | "top-center-arrow-end"
    * | "top-center-arrow-start"
-   * } ArrowPosition
+   * } HTMLArrowPosition
    *
    * @see FeatureCallout._positionCallout()
    * The position of the callout arrow relative to the callout container. Only
-   * used for HTML callouts, typically in content pages.
+   * used for HTML callouts, typically in content pages. If the position
+   * contains a dash, the value before the dash refers to which edge of the
+   * feature callout the arrow points from. The value after the dash describes
+   * where along that edge the arrow sits, with middle as the default.
    */
 
   /**
@@ -444,25 +517,32 @@ export class FeatureCallout {
 
   /**
    * @typedef {Object} AnchorConfig
-   * @property {String} [selector] CSS selector for the anchor node.
+   * @property {String} selector CSS selector for the anchor node.
    * @property {PanelPosition} [panel_position] Used to show the callout in a
    *   XUL panel. Only works in chrome documents, like the main browser window.
-   * @property {ArrowPosition} [arrow_position] Used to show the callout in an
-   *   HTML div container. Mutually exclusive with panel_position.
+   * @property {HTMLArrowPosition} [arrow_position] Used to show the callout in
+   *   an HTML div container. Mutually exclusive with panel_position.
    * @property {PositionOverride} [absolute_position] Only used for HTML
    *   callouts, i.e. when panel_position is not specified. Allows absolute
    *   positioning of the callout relative to the anchor element.
    * @property {Boolean} [hide_arrow] Whether to hide the arrow.
+   * @property {Boolean} [no_open_on_anchor] Whether to set the [open] style on
+   *   the anchor element when the callout is shown. False to set it, true to
+   *   not set it. This only works for panel callouts. Not all elements have an
+   *   [open] style. Buttons do, for example. It's usually similar to :active.
    */
 
   /**
    * @typedef {Object} Anchor
-   * @property {String} [selector]
+   * @property {String} selector
    * @property {PanelPosition} [panel_position]
-   * @property {ArrowPosition} [arrow_position]
+   * @property {HTMLArrowPosition} [arrow_position]
    * @property {PositionOverride} [absolute_position]
    * @property {Boolean} [hide_arrow]
-   * @property {Element} [element]
+   * @property {Boolean} [no_open_on_anchor]
+   * @property {Element} element The anchor node resolved from the selector.
+   * @property {String} [panel_position_string] The panel_position joined into a
+   *   string, e.g. "bottomleft topright". Passed to XULPopupElement::openPopup.
    */
 
   /**
@@ -473,10 +553,47 @@ export class FeatureCallout {
    */
   _getAnchor() {
     /** @type {AnchorConfig[]} */
-    const anchors = this.currentScreen?.anchors || [];
+    const anchors = Array.isArray(this.currentScreen?.anchors)
+      ? this.currentScreen.anchors
+      : [];
     for (let anchor of anchors) {
-      const element =
-        anchor.selector && this.doc.querySelector(anchor.selector);
+      if (!anchor || typeof anchor !== "object") {
+        lazy.log.debug(
+          `In ${this.location}: Invalid anchor config. Expected an object, got: ${anchor}`
+        );
+        continue;
+      }
+      const { selector, arrow_position, panel_position } = anchor;
+      let panel_position_string;
+      if (panel_position) {
+        panel_position_string = this._getPanelPositionString(panel_position);
+        // if the positionString doesn't match the format we expect, don't
+        // render the callout.
+        if (!panel_position_string && !arrow_position) {
+          lazy.log.debug(
+            `In ${
+              this.location
+            }: Invalid panel_position config. Expected an object with anchor_attachment and callout_attachment properties, got: ${JSON.stringify(
+              panel_position
+            )}`
+          );
+          continue;
+        }
+      }
+      if (
+        arrow_position &&
+        !this._HTMLArrowPositions.includes(arrow_position)
+      ) {
+        lazy.log.debug(
+          `In ${
+            this.location
+          }: Invalid arrow_position config. Expected one of ${JSON.stringify(
+            this._HTMLArrowPositions
+          )}, got: ${arrow_position}`
+        );
+        continue;
+      }
+      const element = selector && this.doc.querySelector(selector);
       if (!element) {
         continue; // Element doesn't exist at all.
       }
@@ -519,9 +636,104 @@ export class FeatureCallout {
           continue;
         }
       }
-      return { ...anchor, element };
+      return { ...anchor, panel_position_string, element };
     }
     return null;
+  }
+
+  /** @see PopupAttachmentPoint */
+  _popupAttachmentPoints = [
+    "topleft",
+    "topright",
+    "bottomleft",
+    "bottomright",
+    "leftcenter",
+    "rightcenter",
+    "topcenter",
+    "bottomcenter",
+  ];
+
+  /**
+   * Return a string representing the position of the panel relative to the
+   * anchor element. Passed to XULPopupElement::openPopup. The string is of the
+   * form "anchor_attachment callout_attachment".
+   *
+   * @param {PanelPosition} panelPosition
+   * @returns {String|null} A string like "bottomcenter topright", or null if
+   *   the panelPosition object is invalid.
+   */
+  _getPanelPositionString(panelPosition) {
+    const { anchor_attachment, callout_attachment } = panelPosition;
+    if (
+      !this._popupAttachmentPoints.includes(anchor_attachment) ||
+      !this._popupAttachmentPoints.includes(callout_attachment)
+    ) {
+      return null;
+    }
+    let positionString = `${anchor_attachment} ${callout_attachment}`;
+    return positionString;
+  }
+
+  /**
+   * Set/override methods on a panel element. Can be used to override methods on
+   * the custom element class, or to add additional methods.
+   *
+   * @param {MozPanel} panel The panel to set methods for
+   */
+  _setPanelMethods(panel) {
+    // This method is optionally called by MozPanel::_setSideAttribute, though
+    // it does not exist on the class.
+    panel.setArrowPosition = function setArrowPosition(event) {
+      if (!this.hasAttribute("show-arrow")) {
+        return;
+      }
+      let { alignmentPosition, alignmentOffset, popupAlignment } = event;
+      let positionParts = alignmentPosition?.match(
+        /^(before|after|start|end)_(before|after|start|end)$/
+      );
+      if (!positionParts) {
+        return;
+      }
+      // Hide the arrow if the `flip` behavior has caused the panel to
+      // offset relative to its anchor, since the arrow would no longer
+      // point at the true anchor.
+      this.classList.toggle("hidden-arrow", !!alignmentOffset);
+      let arrowPosition = "top";
+      switch (positionParts[1]) {
+        case "start":
+        case "end": {
+          // Inline arrow, i.e. arrow is on one of the left/right edges.
+          let isRTL =
+            this.ownerGlobal.getComputedStyle(this).direction == "rtl";
+          let isRight = isRTL ^ (positionParts[1] == "start");
+          let side = isRight ? "end" : "start";
+          arrowPosition = `inline-${side}`;
+          if (popupAlignment?.includes("center")) {
+            arrowPosition = `inline-${side}`;
+          } else if (positionParts[2] == "before") {
+            arrowPosition = `inline-${side}-top`;
+          } else if (positionParts[2] == "after") {
+            arrowPosition = `inline-${side}-bottom`;
+          }
+          break;
+        }
+        case "before":
+        case "after": {
+          // Block arrow, i.e. arrow is on one of the top/bottom edges.
+          let side = positionParts[1] == "before" ? "bottom" : "top";
+          arrowPosition = side;
+          if (popupAlignment?.includes("center")) {
+            arrowPosition = side;
+          } else if (positionParts[2] == "end") {
+            arrowPosition = `${side}-end`;
+          } else if (positionParts[2] == "start") {
+            arrowPosition = `${side}-start`;
+          }
+          break;
+        }
+      }
+      this.setAttribute("arrow-position", arrowPosition);
+    };
   }
 
   _createContainer() {
@@ -531,28 +743,81 @@ export class FeatureCallout {
       return false;
     }
 
+    const { autohide } = this.currentScreen.content;
+    const { panel_position_string, hide_arrow, no_open_on_anchor } = anchor;
+    const needsPanel = "MozXULElement" in this.win && !!panel_position_string;
+
+    if (this._container) {
+      if (needsPanel ^ (this._container?.localName === "panel")) {
+        this._container.remove();
+      }
+    }
+
     if (!this._container?.parentElement) {
-      this._container = this.doc.createElement("div");
-      this._container.classList.add(
-        "onboardingContainer",
-        "featureCallout",
-        "callout-arrow",
-        "hidden"
-      );
-      this._container.classList.toggle("hidden-arrow", !!anchor.hide_arrow);
+      if (needsPanel) {
+        let fragment = this.win.MozXULElement.parseXULToFragment(`<panel
+            class="panel-no-padding"
+            orient="vertical"
+            ignorekeys="true"
+            noautofocus="true"
+            flip="slide"
+            type="arrow"
+            position="${panel_position_string}"
+            ${hide_arrow ? "" : 'show-arrow=""'}
+            ${autohide ? "" : 'noautohide="true"'}
+            ${no_open_on_anchor ? 'no-open-on-anchor=""' : ""}
+          />`);
+        this._container = fragment.firstElementChild;
+        this._setPanelMethods(this._container);
+      } else {
+        this._container = this.doc.createElement("div");
+        this._container?.classList.add("hidden");
+      }
+      this._container.classList.add("featureCallout", "callout-arrow");
+      this._container.classList.toggle("hidden-arrow", !!hide_arrow);
       this._container.id = CONTAINER_ID;
-      // This value is reported as the "page" in about:welcome telemetry
-      this._container.dataset.page = this.location;
       this._container.setAttribute(
         "aria-describedby",
         `#${CONTAINER_ID} .welcome-text`
       );
       this._container.tabIndex = 0;
+      let contentBox = this.doc.createElement("div");
+      contentBox.id = CONTENT_BOX_ID;
+      contentBox.classList.add("onboardingContainer");
+      // This value is reported as the "page" in about:welcome telemetry
+      contentBox.dataset.page = this.location;
       this._applyTheme();
-      this.doc.body.prepend(this._container);
+      if (needsPanel && this.win.isChromeWindow) {
+        this.doc.getElementById("mainPopupSet").appendChild(this._container);
+      } else {
+        this.doc.body.prepend(this._container);
+      }
+      const makeArrow = classPrefix => {
+        const arrowRotationBox = this.doc.createElement("div");
+        arrowRotationBox.classList.add("arrow-box", `${classPrefix}-arrow-box`);
+        const arrow = this.doc.createElement("div");
+        arrow.classList.add("arrow", `${classPrefix}-arrow`);
+        arrowRotationBox.appendChild(arrow);
+        return arrowRotationBox;
+      };
+      this._container.appendChild(makeArrow("shadow"));
+      this._container.appendChild(contentBox);
+      this._container.appendChild(makeArrow("background"));
     }
     return this._container;
   }
+
+  /** @see HTMLArrowPosition */
+  _HTMLArrowPositions = [
+    "top",
+    "bottom",
+    "end",
+    "start",
+    "top-end",
+    "top-start",
+    "top-center-arrow-end",
+    "top-center-arrow-start",
+  ];
 
   /**
    * Set callout's position relative to parent element
@@ -566,25 +831,13 @@ export class FeatureCallout {
     }
     const parentEl = anchor.element;
     const doc = this.doc;
-    // All possible arrow positions
-    // If the position contains a dash, the value before the dash
-    // refers to which edge of the feature callout the arrow points
-    // from. The value after the dash describes where along that edge
-    // the arrow sits, with middle as the default.
-    const arrowPositions = [
-      "top",
-      "bottom",
-      "end",
-      "start",
-      "top-end",
-      "top-start",
-      "top-center-arrow-end",
-      "top-center-arrow-start",
-    ];
     const arrowPosition = anchor.arrow_position || "top";
     // Callout arrow should overlap the parent element by 5px
-    const arrowWidth = 12;
-    const arrowHeight = Math.hypot(arrowWidth, arrowWidth);
+    const squareWidth = 24;
+    const arrowWidth = Math.hypot(squareWidth, squareWidth);
+    const arrowHeight = arrowWidth / 2;
+    // If the message specifies no overlap, we move the callout away so the
+    // arrow doesn't overlap at all.
     const overlapAmount = 5;
     let overlap = overlapAmount - arrowHeight;
     // Is the document layout right to left?
@@ -605,43 +858,36 @@ export class FeatureCallout {
       Object.keys(positioners).forEach(position => {
         container.style[position] = "unset";
       });
-      arrowPositions.forEach(position => {
-        if (container.classList.contains(`arrow-${position}`)) {
-          container.classList.remove(`arrow-${position}`);
-        }
-        if (container.classList.contains(`arrow-inline-${position}`)) {
-          container.classList.remove(`arrow-inline-${position}`);
-        }
-      });
+      container.removeAttribute("arrow-position");
     };
 
-    const addArrowPositionClassToContainer = finalArrowPosition => {
-      let className;
-      switch (finalArrowPosition) {
+    const setArrowPosition = position => {
+      let val;
+      switch (position) {
         case "bottom":
-          className = "arrow-bottom";
+          val = "bottom";
           break;
         case "left":
-          className = "arrow-inline-start";
+          val = "inline-start";
           break;
         case "right":
-          className = "arrow-inline-end";
+          val = "inline-end";
           break;
         case "top-start":
         case "top-center-arrow-start":
-          className = RTL ? "arrow-top-end" : "arrow-top-start";
+          val = RTL ? "top-end" : "top-start";
           break;
         case "top-end":
         case "top-center-arrow-end":
-          className = RTL ? "arrow-top-start" : "arrow-top-end";
+          val = RTL ? "top-start" : "top-end";
           break;
         case "top":
         default:
-          className = "arrow-top";
+          val = "top";
           break;
       }
 
-      container.classList.add(className);
+      container.setAttribute("arrow-position", val);
     };
 
     const addValueToPixelValue = (value, pixelValue) => {
@@ -888,7 +1134,7 @@ export class FeatureCallout {
 
     const choosePosition = () => {
       let position = arrowPosition;
-      if (!arrowPositions.includes(position)) {
+      if (!this._HTMLArrowPositions.includes(position)) {
         // Configured arrow position is not valid
         position = null;
       }
@@ -977,11 +1223,8 @@ export class FeatureCallout {
           const containerWidth = container.getBoundingClientRect().width;
           const containerSide =
             RTL ^ position.endsWith("end")
-              ? parentRect.left +
-                parentRect.width / 2 +
-                arrowWidth * 2 -
-                containerWidth
-              : parentRect.left + parentRect.width / 2 - arrowWidth * 2;
+              ? parentRect.left + parentRect.width / 2 + 30 - containerWidth
+              : parentRect.left + parentRect.width / 2 - 30;
           const maxContainerSide =
             doc.documentElement.clientWidth - containerWidth;
           container.style.left = `${Math.min(
@@ -1001,7 +1244,7 @@ export class FeatureCallout {
     let finalPosition = choosePosition();
     if (finalPosition) {
       positioners[finalPosition].position();
-      addArrowPositionClassToContainer(finalPosition);
+      setArrowPosition(finalPosition);
     }
 
     container.classList.remove("hidden");
@@ -1066,7 +1309,7 @@ export class FeatureCallout {
 
   endTour(skipFadeOut = false) {
     // We don't want focus events that happen during teardown to affect
-    // this.savedActiveElement
+    // this.savedFocus
     this.win.removeEventListener("focus", this, {
       capture: true,
       passive: true,
@@ -1076,6 +1319,7 @@ export class FeatureCallout {
       type: "tourend",
       target: this._container,
     });
+    this._container?.removeEventListener("popuphiding", this);
     this._pageEventManager?.clear();
 
     // Delete almost everything to get this ready to show a different message.
@@ -1086,24 +1330,36 @@ export class FeatureCallout {
     this.content = null;
     this.currentScreen = null;
     // wait for fade out transition
-    this._container?.classList.add("hidden");
+    this._container?.classList.toggle(
+      "hidden",
+      this._container?.localName !== "panel"
+    );
     this._clearWindowFunctions();
-    const doEnd = () => {
+    const onFadeOut = () => {
       this._container?.remove();
       this.renderObserver?.disconnect();
       this._removePositionListeners();
+      this._removePanelConflictListeners();
       this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
       // Put the focus back to the last place the user focused outside of the
       // featureCallout windows.
-      if (this.savedActiveElement) {
-        this.savedActiveElement.focus({ focusVisible: true });
+      if (this.savedFocus) {
+        this.savedFocus.element.focus({
+          focusVisible: this.savedFocus.focusVisible,
+        });
       }
+      this.savedFocus = null;
       this._emitEvent("end");
     };
-    if (this._container) {
-      this.win.setTimeout(doEnd, skipFadeOut ? 0 : TRANSITION_MS);
+    if (this._container?.localName === "panel") {
+      this._container.addEventListener("popuphidden", onFadeOut, {
+        once: true,
+      });
+      this._container.hidePopup(!skipFadeOut);
+    } else if (this._container) {
+      this.win.setTimeout(onFadeOut, skipFadeOut ? 0 : TRANSITION_MS);
     } else {
-      doEnd();
+      onFadeOut();
     }
   }
 
@@ -1211,11 +1467,6 @@ export class FeatureCallout {
       return false;
     }
 
-    // Only add an impression if we actually have a message to impress
-    if (Object.keys(this.message).length) {
-      lazy.ASRouter.addImpression(this.message);
-    }
-
     this.currentScreen = newScreen;
     return true;
   }
@@ -1249,8 +1500,10 @@ export class FeatureCallout {
     if (container) {
       // This results in rendering the Feature Callout
       await this._addScriptsAndRender();
-      this._observeRender(container);
-      this._addPositionListeners();
+      this._observeRender(container.querySelector("#" + CONTENT_BOX_ID));
+      if (container.localName === "div") {
+        this._addPositionListeners();
+      }
       return true;
     }
     return false;
@@ -1416,25 +1669,56 @@ export class FeatureCallout {
       this.renderObserver = new this.win.MutationObserver(() => {
         // Check if the Feature Callout screen has loaded for the first time
         if (!this.ready && this._container.querySelector(".screen")) {
-          // Once the screen element is added to the DOM, wait for the
-          // animation frame after next to ensure that _positionCallout
-          // has access to the rendered screen with the correct height
-          this.win.requestAnimationFrame(() => {
-            this.win.requestAnimationFrame(() => {
-              this.ready = true;
-              this._pageEventManager?.clear();
-              this._attachPageEventListeners(
-                this.currentScreen?.content?.page_event_listeners
-              );
-              this.win.addEventListener("keypress", this, { capture: true });
-              this._positionCallout();
-              this.getInitialFocus()?.focus();
+          const onRender = () => {
+            this.ready = true;
+            this._pageEventManager?.clear();
+            this._attachPageEventListeners(
+              this.currentScreen?.content?.page_event_listeners
+            );
+            this.getInitialFocus()?.focus();
+            this.win.addEventListener("keypress", this, { capture: true });
+            if (this._container.localName === "div") {
               this.win.addEventListener("focus", this, {
                 capture: true, // get the event before retargeting
                 passive: true,
               });
+              this._positionCallout();
+            } else {
+              this._container.classList.remove("hidden");
+            }
+          };
+          if (
+            this._container.localName === "div" &&
+            this.doc.activeElement &&
+            !this.savedFocus
+          ) {
+            let element = this.doc.activeElement;
+            this.savedFocus = {
+              element,
+              focusVisible: element.matches(":focus-visible"),
+            };
+          }
+          // Once the screen element is added to the DOM, wait for the
+          // animation frame after next to ensure that _positionCallout
+          // has access to the rendered screen with the correct height
+          if (this._container.localName === "div") {
+            this.win.requestAnimationFrame(() => {
+              this.win.requestAnimationFrame(onRender);
             });
-          });
+          } else if (this._container.localName === "panel") {
+            const anchor = this._getAnchor();
+            if (!anchor) {
+              this.endTour();
+              return;
+            }
+            const position = anchor.panel_position_string;
+            this._container.addEventListener("popupshown", onRender, {
+              once: true,
+            });
+            this._container.addEventListener("popuphiding", this);
+            this._addPanelConflictListeners();
+            this._container.openPopup(anchor.element, { position });
+          }
         }
       });
     }
@@ -1452,6 +1736,10 @@ export class FeatureCallout {
     let rendering = (await this._renderCallout()) && !!this.currentScreen;
     if (!rendering) {
       this.endTour();
+    }
+
+    if (this.message.template) {
+      lazy.ASRouter.addImpression(this.message);
     }
     return rendering;
   }
