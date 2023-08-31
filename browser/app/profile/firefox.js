@@ -737,8 +737,9 @@ pref("browser.shopping.experience2023.optedIn", 0);
 // to auto-activate the sidebar for non-opted-in users up to 2 times.
 pref("browser.shopping.experience2023.active", true);
 
-// Activates the ad card in the shopping sidebar.
-// True by default, will be set to false on opt out.
+// Enables the ad / recommended product feature for the shopping sidebar.
+// If enabled, users can disable using a separate pref and visible toggle
+// (this is just the feature flag).
 pref("browser.shopping.experience2023.ads.enabled", true);
 
 // Enables the display of the Mozilla VPN banner in private browsing windows

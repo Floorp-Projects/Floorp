@@ -35,28 +35,40 @@ class ShoppingSettings extends MozLitElement {
     // TODO: for now, we will hardcode the value until a pref is made.
     this.#isRecommendationsEnabled = true;
 
+    // Whether we show recommendations at all (including offering a user
+    // control for them) is controlled via a nimbus-enabled pref.
+    let canShowRecommendationToggle = RPMGetBoolPref(
+      "browser.shopping.experience2023.ads.enabled"
+    );
+    let toggleMarkup = canShowRecommendationToggle
+      ? html`
+        <moz-toggle id="shopping-settings-recommendations-toggle" pressed=${
+          this.#isRecommendationsEnabled
+        } data-l10n-id="shopping-settings-recommendations-toggle" data-l10n-attrs="label" @toggle=${
+          this.onToggleRecommendations
+        }></moz-toggle/>`
+      : null;
+
     return html`
-        <link
+      <link
         rel="stylesheet"
         href="chrome://browser/content/shopping/settings.css"
-        />
-        <shopping-card
+      />
+      <shopping-card
         data-l10n-id="shopping-settings-label"
         data-l10n-attrs="label"
         type="accordion"
-        >
-          <div id="shopping-settings-wrapper" slot="content">
-              <moz-toggle id="shopping-settings-recommendations-toggle" pressed=${
-                this.#isRecommendationsEnabled
-              } data-l10n-id="shopping-settings-recommendations-toggle" data-l10n-attrs="label" @toggle=${
-      this.onToggleRecommendations
-    }></moz-toggle/>
-              <button id="shopping-settings-opt-out-button" data-l10n-id="shopping-settings-opt-out-button" @click=${
-                this.onDisableShopping
-              }></button>
-          </div>
-        </shopping-card>
-        `;
+      >
+        <div id="shopping-settings-wrapper" slot="content">
+          ${toggleMarkup}
+          <button
+            id="shopping-settings-opt-out-button"
+            data-l10n-id="shopping-settings-opt-out-button"
+            @click=${this.onDisableShopping}
+          ></button>
+        </div>
+      </shopping-card>
+    `;
   }
 }
 
