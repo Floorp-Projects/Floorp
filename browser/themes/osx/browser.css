@@ -299,7 +299,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   margin-block: 1px 0;
 }
 
-.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected="true"], [multiselected]) {
+.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-icon-image:not([selected], [multiselected]) {
   opacity: .9;
 }
 
@@ -311,7 +311,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   opacity: 0.9999;
 }
 
-.tab-label-container:not([selected="true"], [multiselected]) {
+.tab-label-container:not([selected], [multiselected]) {
   opacity: .7;
 }
 
@@ -320,13 +320,13 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   border: none;
 }
 .tabbrowser-tab[multiselected]:not(:-moz-lwtheme),
-.tabbrowser-tab[visuallyselected=true]:not(:-moz-lwtheme) {
+.tabbrowser-tab[visuallyselected]:not(:-moz-lwtheme) {
   /* overriding tabbox.css */
   color: hsl(240, 5%, 5%);
 }
 
 .tabbrowser-tab[multiselected],
-.tabbrowser-tab[visuallyselected=true] {
+.tabbrowser-tab[visuallyselected] {
   /* overriding tabbox.css */
   text-shadow: inherit;
 }

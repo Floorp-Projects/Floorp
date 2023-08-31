@@ -36,7 +36,7 @@ tab {
   color: -moz-DialogText;
 }
 
-tab:where([visuallyselected="true"]) {
+tab:where([visuallyselected]) {
   z-index: 1;
   margin-top: 0;
   margin-bottom: -2px;
