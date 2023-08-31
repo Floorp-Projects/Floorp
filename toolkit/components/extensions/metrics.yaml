@@ -33,18 +33,27 @@ extensions:
     expires: never
     description: |
       Counters for how many times the extension process has crashed or been created.
+      The labels with "_fg" / "_bg" suffixes are only recorded in Android builds,
+      while the "created" and "crashed" labels are recorded on both Desktop and Android
+      builds. 
     lifetime: application
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
       - https://bugzilla.mozilla.org/1830157/
+      - https://bugzilla.mozilla.org/1848223/
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1830157#c7
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848223#c4 
     data_sensitivity:
       - technical
     labels:
       - crashed
+      - crashed_bg
+      - crashed_fg
       - created
+      - created_bg
+      - created_fg
 
 extensions.apis.dnr:
 
