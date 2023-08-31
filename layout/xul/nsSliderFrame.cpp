@@ -1534,6 +1534,21 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
 
     nsPoint pos = sf->GetScrollPosition();
 
+    if (mCurrentClickHoldDestination) {
+      // We may not have arrived at the destination of the scroll from the
+      // previous repeat timer tick, some of that scroll may still be pending.
+      nsPoint pendingScroll =
+          *mCurrentClickHoldDestination - sf->GetScrollPosition();
+
+      // Scroll by one page relative to the previous destination, so that we
+      // scroll at a rate of a full page per repeat timer tick.
+      pos += pendingScroll;
+
+      // Make a corresponding adjustment to the maxium distance we can scroll,
+      // so we successfully avoid overshoot.
+      maxDistanceToScroll -= (isHorizontal ? pendingScroll.x : pendingScroll.y);
+    }
+
     nscoord distanceToScroll =
         std::min(abs(maxDistanceToScroll),
                  CSSPixel::ToAppUnits(CSSCoord(pageLength))) *
@@ -1545,6 +1560,7 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
       pos.y += distanceToScroll;
     }
 
+    mCurrentClickHoldDestination = Some(pos);
     sf->ScrollTo(pos,
                  StaticPrefs::general_smoothScroll() ? ScrollMode::SmoothMsd
                                                      : ScrollMode::Instant,
