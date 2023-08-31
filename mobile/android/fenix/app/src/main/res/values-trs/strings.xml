@@ -378,6 +378,8 @@
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Nānà\'uì\'</string>
 
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Nej sa rugûñu’ūnj nana’huî’</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Dukuán direksion</string>
 
@@ -640,6 +642,17 @@
     <string name="addon_not_supported_error">Na’hue gāchīn sa ruhuât nūtà’t</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Ngà nanun sa nutâ’t riña aga’ nan</string>
+
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Narán akuan’ riña nej sa nutâ’t </string>
+
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Na’hue gī’hiaj sun hue’ê si āgâ’t, dadin’ giyichin’ si ‘hiaj sun dā’āj nej sa nutâ’t. %1$s ginûn huin dūnayi’ìj nej sa nutâ’t sanī nu gā’hue.\n\nSê sī gā’hue nāyi’ì nej sa nutâ’t ngà sesiûn nan.\n\nGūxūn asi dūyichin’ akuan’ nej sa nutâ’t nī gi’hiaj sun hue’ê man doj.</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Ginùn huin dūnayi’ìt nej sa nutâ’t</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Gūij ne’ ñāan nùnj si yichin’ riñan nej sa nutâ’t</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -1376,12 +1389,16 @@
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d nej rakïj ñanj</string>
 
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Sa gini\'iājt ngà gaché nunt nī si datô nej sîtio</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">Sa gini\'iājt ngà gaché nunt nī si datô nej sîtio</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Nej sa gini\'iājt ngà gaché nunt</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d nej direksiûn</string>
     <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Nej kôki</string>
+    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">Nej kôki</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Nej kôki ni nej si datô sîtio</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Gānarán sēsiûn riña gà\'ì nej sîtio</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1439,62 +1456,62 @@
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Guruhuât gunumânt riña internêt ‘hiaj sun hue’ê doj nan</string>
+    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Guruhuât gunumânt riña internêt ‘hiaj sun hue’ê doj nan</string>
     <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Guendâ guìi gurugui’ sa nana’hui’ nan, sê guendâ gīrij san’ānj an huin man.</string>
+    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">Guendâ guìi gurugui’ sa nana’hui’ nan, sê guendâ gīrij san’ānj an huin man.</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Nakāj danè’ gudunâjt</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Nakāj danè’ gudunâjt</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Nāgi’hiaj nūguan’àn nej rakïj ñanj nī nej da’nga’ huì huā riña nej si āgâ’t da’ gā’hue nādunāt pāntâya.</string>
+    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Nāgi’hiaj nūguan’àn nej rakïj ñanj nī nej da’nga’ huì huā riña nej si āgâ’t da’ gā’hue nādunāt pāntâya.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Gāyi\'ì sēsiûn</string>
+    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">Gāyi\'ì sēsiûn</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Ngà nanûn Sync</string>
     <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Sa ‘na’ niñā da’ dūgumîn sò’ da’ gāchē nun huìt</string>
+    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Sa ‘na’ niñā da’ dūgumîn sò’ da’ gāchē nun huìt</string>
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">Rugûñu’ūnj %1$s narán man riña nej hue’ yīru’hue nikò’ sò’ riña web.</string>
+    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">Rugûñu’ūnj %1$s narán man riña nej hue’ yīru’hue nikò’ sò’ riña web.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Nīka nej san arán riña nej kôki da’ nāran riña nej kôki gā’hue nāga’nāj sò’ riña nej sîtio.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Nīka nej san arán riña nej kôki da’ nāran riña nej kôki gā’hue nāga’nāj sò’ riña nej sîtio.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Sa huā chre\' (dàj huaj \'naj)</string>
+    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Sa huā chre\' (dàj huaj \'naj)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Nda hue\'ê chre huaj da\' gī\hiaj sunj nī dūguminj da\’ gāchē nun huìt. Nej pâjina nī nayi\'nïn riña man dàj rû\' \'hiaj yitïn.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Nda hue\'ê chre huaj da\' gī\hiaj sunj nī dūguminj da\’ gāchē nun huìt. Nej pâjina nī nayi\'nïn riña man dàj rû\' \'hiaj yitïn.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Sa nùkuaj doj</string>
+    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">Sa nùkuaj doj</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Naran riña nej sa naga’nāj a da’ nāyi’nï̄n hìo doj riña nej pâjina, sanī huā da’āj nej suun gā’hue gāhui a’nan’.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">Naran riña nej sa naga’nāj a da’ nāyi’nï̄n hìo doj riña nej pâjina, sanī huā da’āj nej suun gā’hue gāhui a’nan’.</string>
     <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Nānà’huì’ riña ginun dukuá ‘na’ nej rasūun</string>
+    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Nānà’huì’ riña ginun dukuá ‘na’ nej rasūun</string>
     <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Dūnâj man ginùn man ne’ rīki asi dūguachîn man gān’an ne’ ràa.</string>
+    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Dūnâj man ginùn man ne’ rīki asi dūguachîn man gān’an ne’ ràa.</string>
     <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Sò’ ni’in dàj gī’hiaj sunt ngà nej si datôt</string>
+    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">Sò’ ni’in dàj gī’hiaj sunt ngà nej si datôt</string>
     <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Narikî Firefox da’ gi’nï̄nj ra’ât nej sa duyingâ’t riña aché nunt nī nej sa duyingâ’t ngà nej ñûnj.</string>
+    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Narikî Firefox da’ gi’nï̄nj ra’ât nej sa duyingâ’t riña aché nunt nī nej sa duyingâ’t ngà nej ñûnj.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Gahiā sa atāj na\'ānj ñûnj guendâ sa huìi</string>
+    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">Gahiā sa atāj na\'ānj ñûnj guendâ sa huìi</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Ngà huā yūguît da’ gāyi’ìt gī’hiaj sunt ngà ‘ngō internet nākàa bè’ej.</string>
+    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Ngà huā yūguît da’ gāyi’ìt gī’hiaj sunt ngà ‘ngō internet nākàa bè’ej.</string>
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Gāyi\'ì gāchē nunt</string>
+    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">Gāyi\'ì gāchē nunt</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Nāguī si temât</string>
+    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">Nāguī si temât</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Dūgumî dòj ña\'an arâj sun si āgâ\'t ngà rune ñant si nāchrūnt gā rūmī\' riña si āgâ\'t.</string>
+    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Dūgumî dòj ña\'an arâj sun si āgâ\'t ngà rune ñant si nāchrūnt gā rūmī\' riña si āgâ\'t.</string>
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Sa nañû ma\'an</string>
+    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Sa nañû ma\'an</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Nakāj dugui\'ij ngà daj hua riña si āgâ\'t</string>
+    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">Nakāj dugui\'ij ngà daj hua riña si āgâ\'t</string>
 
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Temâ huā rūmin\'in</string>
+    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Temâ huā rūmin\'in</string>
 
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Temâ huā yigiïn</string>
+    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">Temâ huā yigiïn</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Nej rakïj ñanj ngà gan\'ānj</string>
@@ -1954,7 +1971,9 @@
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">Si URL API atāj nùhuin sa gā’hue nāna’huì’t</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Nādunā sa nana\’huî\’t ngà “%s”. Dàj rû\':\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Nādunā sa nana\’huî\’t ngà “%s”. Dàj rû\':\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Nādunā sa gachrûnt dan ngà “%s”. Dàj rû\':\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Nā\'nïnj sà\'</string>
 
