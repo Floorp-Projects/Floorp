@@ -20,7 +20,7 @@ commit = '8d8f532d'
 
 [[repos]]
 name = 'function-references'
-commit = 'c4eef9a8'
+commit = 'd1b1033a'
 
 [[repos]]
 name = 'relaxed-simd'

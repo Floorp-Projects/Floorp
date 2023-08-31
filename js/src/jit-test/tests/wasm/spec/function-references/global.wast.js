@@ -478,40 +478,28 @@ assert_invalid(
 
 // ./test/core/global.wast:351
 assert_invalid(
-  () => instantiate(`(module (global i32 (i32.const 0)) (global i32 (global.get 0)))`),
-  `unknown global`,
-);
-
-// ./test/core/global.wast:355
-assert_invalid(
-  () => instantiate(`(module (global $$g i32 (i32.const 0)) (global i32 (global.get $$g)))`),
-  `unknown global`,
-);
-
-// ./test/core/global.wast:360
-assert_invalid(
   () => instantiate(`(module (global i32 (global.get 1)) (global i32 (i32.const 0)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:365
+// ./test/core/global.wast:356
 assert_invalid(
   () => instantiate(`(module (global (import "test" "global-i32") i32) (global i32 (global.get 2)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:370
+// ./test/core/global.wast:361
 assert_invalid(
   () => instantiate(`(module (global (import "test" "global-mut-i32") (mut i32)) (global i32 (global.get 0)))`),
   `constant expression required`,
 );
 
-// ./test/core/global.wast:375
+// ./test/core/global.wast:366
 let $3 = instantiate(`(module
   (import "spectest" "global_i32" (global i32))
 )`);
 
-// ./test/core/global.wast:378
+// ./test/core/global.wast:369
 assert_malformed(
   () => instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -526,7 +514,7 @@ assert_malformed(
   `malformed mutability`,
 );
 
-// ./test/core/global.wast:391
+// ./test/core/global.wast:382
 assert_malformed(
   () => instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -541,12 +529,12 @@ assert_malformed(
   `malformed mutability`,
 );
 
-// ./test/core/global.wast:405
+// ./test/core/global.wast:396
 let $4 = instantiate(`(module
   (global i32 (i32.const 0))
 )`);
 
-// ./test/core/global.wast:408
+// ./test/core/global.wast:399
 assert_malformed(
   () => instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -560,7 +548,7 @@ assert_malformed(
   `malformed mutability`,
 );
 
-// ./test/core/global.wast:420
+// ./test/core/global.wast:411
 assert_malformed(
   () => instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -574,13 +562,13 @@ assert_malformed(
   `malformed mutability`,
 );
 
-// ./test/core/global.wast:434
+// ./test/core/global.wast:425
 assert_invalid(
   () => instantiate(`(module (func (result i32) (global.get 0)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:439
+// ./test/core/global.wast:430
 assert_invalid(
   () => instantiate(`(module
     (global i32 (i32.const 0))
@@ -589,7 +577,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:447
+// ./test/core/global.wast:438
 assert_invalid(
   () => instantiate(`(module
     (import "spectest" "global_i32" (global i32))
@@ -598,7 +586,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:455
+// ./test/core/global.wast:446
 assert_invalid(
   () => instantiate(`(module
     (import "spectest" "global_i32" (global i32))
@@ -608,13 +596,13 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:465
+// ./test/core/global.wast:456
 assert_invalid(
   () => instantiate(`(module (func (i32.const 0) (global.set 0)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:470
+// ./test/core/global.wast:461
 assert_invalid(
   () => instantiate(`(module
     (global i32 (i32.const 0))
@@ -623,7 +611,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:478
+// ./test/core/global.wast:469
 assert_invalid(
   () => instantiate(`(module
     (import "spectest" "global_i32" (global i32))
@@ -632,7 +620,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:486
+// ./test/core/global.wast:477
 assert_invalid(
   () => instantiate(`(module
     (import "spectest" "global_i32" (global i32))
@@ -642,7 +630,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:496
+// ./test/core/global.wast:487
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -653,7 +641,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:505
+// ./test/core/global.wast:496
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -665,7 +653,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:515
+// ./test/core/global.wast:506
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -677,7 +665,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:525
+// ./test/core/global.wast:516
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -689,7 +677,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:535
+// ./test/core/global.wast:526
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -701,7 +689,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:545
+// ./test/core/global.wast:536
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -713,7 +701,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:555
+// ./test/core/global.wast:546
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -725,7 +713,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:565
+// ./test/core/global.wast:556
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -737,7 +725,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:575
+// ./test/core/global.wast:566
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -748,7 +736,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:584
+// ./test/core/global.wast:575
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -759,7 +747,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:593
+// ./test/core/global.wast:584
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -771,7 +759,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:603
+// ./test/core/global.wast:594
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -789,19 +777,19 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:622
+// ./test/core/global.wast:613
 assert_malformed(
   () => instantiate(`(global $$foo i32 (i32.const 0)) (global $$foo i32 (i32.const 0)) `),
   `duplicate global`,
 );
 
-// ./test/core/global.wast:626
+// ./test/core/global.wast:617
 assert_malformed(
   () => instantiate(`(import "" "" (global $$foo i32)) (global $$foo i32 (i32.const 0)) `),
   `duplicate global`,
 );
 
-// ./test/core/global.wast:630
+// ./test/core/global.wast:621
 assert_malformed(
   () => instantiate(`(import "" "" (global $$foo i32)) (import "" "" (global $$foo i32)) `),
   `duplicate global`,
