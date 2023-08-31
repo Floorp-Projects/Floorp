@@ -649,11 +649,6 @@ void HTMLImageElement::MaybeLoadImage(bool aAlwaysForceLoad) {
   }
 }
 
-ElementState HTMLImageElement::IntrinsicState() const {
-  return nsGenericHTMLElement::IntrinsicState() |
-         nsImageLoadingContent::ImageState();
-}
-
 void HTMLImageElement::NodeInfoChanged(Document* aOldDoc) {
   nsGenericHTMLElement::NodeInfoChanged(aOldDoc);
 

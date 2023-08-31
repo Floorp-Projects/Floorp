@@ -32,13 +32,6 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
                "Someone messed up our nodeinfo");
   }
 
-  ElementState IntrinsicState() const override {
-    ElementState state = nsGenericHTMLElement::IntrinsicState();
-    if (mBroken) {
-      state |= ElementState::BROKEN;
-    }
-    return state;
-  }
   nsresult Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const final;
 
   nsresult CopyInnerTo(GeneratedImageContent* aDest) {
@@ -56,8 +49,7 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
 
   // Notify this image failed to load.
   void NotifyLoadFailed() {
-    mBroken = true;
-    UpdateState(true);
+    SetStates(ElementState::BROKEN, true);
   }
 
  protected:
@@ -66,7 +58,6 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
  private:
   virtual ~GeneratedImageContent() = default;
   uint32_t mIndex = 0;
-  bool mBroken = false;
 };
 
 }  // namespace mozilla::dom

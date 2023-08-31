@@ -76,7 +76,6 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent) override;
 
-  ElementState IntrinsicState() const override;
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   void NodeInfoChanged(Document* aOldDoc) override;
