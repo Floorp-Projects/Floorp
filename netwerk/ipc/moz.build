@@ -70,6 +70,7 @@ SOURCES += [
 PREPROCESSED_IPDL_SOURCES += [
     "PNecko.ipdl",
     "PSocketProcess.ipdl",
+    "PSocketProcessBridge.ipdl",
 ]
 
 IPDL_SOURCES = [
@@ -82,7 +83,6 @@ IPDL_SOURCES = [
     "PProxyConfigLookup.ipdl",
     "PSimpleChannel.ipdl",
     "PSocketProcessBackground.ipdl",
-    "PSocketProcessBridge.ipdl",
 ]
 
 # needed so --disable-webrtc builds work (yes, a bit messy)

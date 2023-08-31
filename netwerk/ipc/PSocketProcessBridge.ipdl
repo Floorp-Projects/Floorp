@@ -5,7 +5,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackgroundDataBridge;
+
+#ifdef MOZ_WEBRTC
 include protocol PMediaTransport;
+#endif // MOZ_WEBRTC
+
 
 namespace mozilla {
 namespace net {
@@ -31,10 +35,13 @@ parent:
   async InitBackgroundDataBridge(Endpoint<PBackgroundDataBridgeParent> aEndpoint,
                                  uint64_t aChannelID);
 
+#ifdef MOZ_WEBRTC
   /**
     * Similar to the above, this message is for PMediaTransport.
     */
   async InitMediaTransport(Endpoint<PMediaTransportParent> aEndpoint);
+#endif // MOZ_WEBRTC
+
 };
 
 }
