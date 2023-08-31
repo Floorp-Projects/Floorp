@@ -3,17 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AuthrsTransport.h"
+#include "AuthrsBridge_ffi.h"
 #include "nsIWebAuthnController.h"
 #include "nsCOMPtr.h"
-
-namespace {
-extern "C" {
-
-// Implemented in Rust
-nsresult authrs_transport_constructor(nsIWebAuthnTransport** result);
-
-}  // extern "C"
-}  // namespace
 
 namespace mozilla::dom {
 
