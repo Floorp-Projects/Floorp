@@ -143,14 +143,7 @@ WebGLContext::WebGLContext(HostWebGLContext& host,
       mResistFingerprinting(desc.resistFingerprinting),
       mOptions(desc.options),
       mPrincipalKey(desc.principalKey),
-      mPendingContextLoss(false),
-      mMaxPerfWarnings(StaticPrefs::webgl_perf_max_warnings()),
-      mMaxAcceptableFBStatusInvals(
-          StaticPrefs::webgl_perf_max_acceptable_fb_status_invals()),
       mContextLossHandler(this),
-      mMaxWarnings(StaticPrefs::webgl_max_warnings_per_context()),
-      mAllowFBInvalidation(StaticPrefs::webgl_allow_fb_invalidation()),
-      mMsaaSamples((uint8_t)StaticPrefs::webgl_msaa_samples()),
       mRequestedSize(desc.size) {
   host.mContext = this;
   const FuncScope funcScope(*this, "<Create>");
@@ -1668,7 +1661,8 @@ void WebGLContext::ScissorRect::Apply(gl::GLContext& gl) const {
 
 ////////////////////////////////////////
 
-IndexedBufferBinding::IndexedBufferBinding() : mRangeStart(0), mRangeSize(0) {}
+IndexedBufferBinding::IndexedBufferBinding() = default;
+IndexedBufferBinding::~IndexedBufferBinding() = default;
 
 uint64_t IndexedBufferBinding::ByteCount() const {
   if (!mBufferBinding) return 0;

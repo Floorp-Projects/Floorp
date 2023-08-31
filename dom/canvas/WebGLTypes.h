@@ -1232,7 +1232,25 @@ inline constexpr std::optional<E> AsEnumCase(
   return ret;
 }
 
+// -
+
+struct BufferAndIndex final {
+  const WebGLBuffer* buffer = nullptr;
+  uint32_t id = -1;
+};
+
 }  // namespace webgl
+
+struct IndexedBufferBinding final {
+  RefPtr<WebGLBuffer> mBufferBinding;
+  uint64_t mRangeStart = 0;
+  uint64_t mRangeSize = 0;
+
+  IndexedBufferBinding();
+  ~IndexedBufferBinding();
+
+  uint64_t ByteCount() const;
+};
 
 }  // namespace mozilla
 

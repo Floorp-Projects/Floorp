@@ -8,6 +8,7 @@
 
 #include <bitset>
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -16,8 +17,8 @@
 #include "mozilla/WeakPtr.h"
 
 #include "CacheInvalidator.h"
-#include "WebGLContext.h"
 #include "WebGLObjectModel.h"
+#include "WebGLTypes.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -76,7 +77,8 @@ struct ActiveUniformValidationInfo final {
 };
 
 struct SamplerUniformInfo final {
-  const decltype(WebGLContext::mBound2DTextures)& texListForType;
+  const nsTArray<RefPtr<WebGLTexture>>& texListForType;
+  // = const decltype(WebGLContext::mBound2DTextures)&
   const webgl::TextureBaseType texBaseType;
   const bool isShadowSampler;
   Vector<uint8_t, 8> texUnits = decltype(texUnits)();

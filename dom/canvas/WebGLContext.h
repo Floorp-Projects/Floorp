@@ -169,16 +169,6 @@ struct WebGLIntOrFloat {
   }
 };
 
-struct IndexedBufferBinding {
-  RefPtr<WebGLBuffer> mBufferBinding;
-  uint64_t mRangeStart;
-  uint64_t mRangeSize;
-
-  IndexedBufferBinding();
-
-  uint64_t ByteCount() const;
-};
-
 ////////////////////////////////////
 
 namespace webgl {
@@ -193,11 +183,6 @@ class AvailabilityRunnable final : public DiscardableRunnable {
   ~AvailabilityRunnable();
 
   NS_IMETHOD Run() override;
-};
-
-struct BufferAndIndex final {
-  const WebGLBuffer* buffer = nullptr;
-  uint32_t id = -1;
 };
 
 }  // namespace webgl
@@ -304,12 +289,13 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   const uint32_t mMaxVertIdsPerDraw = StaticPrefs::webgl_max_vert_ids_per_draw();
 
   bool mIsContextLost = false;
-  Atomic<bool> mPendingContextLoss;
+  Atomic<bool> mPendingContextLoss = Atomic<bool>{false};
   webgl::ContextLossReason mPendingContextLossReason =
       webgl::ContextLossReason::None;
-  const uint32_t mMaxPerfWarnings;
+  const uint32_t mMaxPerfWarnings = StaticPrefs::webgl_perf_max_warnings();
   mutable uint64_t mNumPerfWarnings = 0;
-  const uint32_t mMaxAcceptableFBStatusInvals;
+  const uint32_t mMaxAcceptableFBStatusInvals =
+      StaticPrefs::webgl_perf_max_acceptable_fb_status_invals();
   bool mWarnOnce_DepthTexCompareFilterable = true;
 
   uint64_t mNextFenceId = 1;
@@ -1228,7 +1214,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   mutable uint64_t mDrawCallsSinceLastFlush = 0;
 
   mutable uint64_t mWarningCount = 0;
-  const uint64_t mMaxWarnings;
+  const uint64_t mMaxWarnings = StaticPrefs::webgl_max_warnings_per_context();
   bool mAlreadyWarnedAboutFakeVertexAttrib0 = false;
 
   bool ShouldGenerateWarnings() const { return mWarningCount < mMaxWarnings; }
@@ -1249,13 +1235,13 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   bool mNeedsIndexValidation = false;
   bool mBug_DrawArraysInstancedUserAttribFetchAffectedByFirst = false;
 
-  const bool mAllowFBInvalidation;
+  const bool mAllowFBInvalidation = StaticPrefs::webgl_allow_fb_invalidation();
 
   bool Has64BitTimestamps() const;
 
   // --
 
-  const uint8_t mMsaaSamples;
+  const uint8_t mMsaaSamples = static_cast<uint8_t>(StaticPrefs::webgl_msaa_samples());
   mutable uvec2 mRequestedSize;
   mutable UniquePtr<gl::MozFramebuffer> mDefaultFB;
   mutable bool mDefaultFB_IsInvalid = false;
