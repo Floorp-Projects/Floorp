@@ -10,28 +10,99 @@ To make it easier for developers to find the tests they need to run we built a p
 
 When you trigger a try run from the perf selector, two try runs will be created. One with your changes, and one without. In your console, after you trigger the try runs, you'll find a PerfCompare link that will bring you directly to a comparison of the two pushes when they have completed.
 
-The tool is built to be conservative about the number of tests to run, so if you are looking for something that is not listed, it's likely hidden behind a flag found in the ``--help``. Here's a small sample of what you'll find there which highlights the most relevant flags::
+The tool is built to be conservative about the number of tests to run, so if you are looking for something that is not listed, it's likely hidden behind a flag found in the ``--help``. Here's a list of what you'll find there::
 
     $ ./mach try perf --help
 
-        perf arguments:
-            --show-all            Show all available tasks.
-            --android             Show android test categories (disabled by default).
-            --chrome              Show tests available for Chrome-based browsers (disabled by default).
-            --safari              Show tests available for Safari (disabled by default).
-            --live-sites          Run tasks with live sites (if possible). You can also use the `live-sites` variant.
-            --profile             Run tasks with profiling (if possible). You can also use the `profiling` variant.
-            --single-run          Run tasks without a comparison
-            --variants [ [ ...]]  Select variants to display in the selector from: no-fission, bytecode-cached, live-sites, profiling, swr
-            --platforms [ [ ...]]
-                                Select specific platforms to target. Android only available with --android. Available platforms: android-a51, android,
-                                windows, linux, macosx, desktop
-            --apps [ [ ...]]      Select specific applications to target from: firefox, chrome, chromium, geckoview, fenix, chrome-m, safari
-            --clear-cache         Deletes the try_perf_revision_cache file
+    optional arguments:
+      -h, --help            show this help message and exit
+    perf arguments:
+      --show-all            Show all available tasks.
+      --android             Show android test categories (disabled by default).
+      --chrome              Show tests available for Chrome-based browsers
+                            (disabled by default).
+      --custom-car          Show tests available for Custom Chromium-as-Release
+                            (disabled by default).
+      --safari              Show tests available for Safari (disabled by default).
+      --live-sites          Run tasks with live sites (if possible). You can also
+                            use the `live-sites` variant.
+      --profile             Run tasks with profiling (if possible). You can also
+                            use the `profiling` variant.
+      --single-run          Run tasks without a comparison
+      -q QUERY, --query QUERY
+                            Query to run in either the perf-category selector, or
+                            the fuzzy selector if --show-all is provided.
+      --browsertime-upload-apk BROWSERTIME_UPLOAD_APK
+                            Path to an APK to upload. Note that this will replace
+                            the APK installed in all Android Performance tests. If
+                            the Activity, Binary Path, or Intents required change
+                            at all relative to the existing GeckoView, and Fenix
+                            tasks, then you will need to make fixes in the
+                            associated taskcluster files (e.g.
+                            taskcluster/ci/test/browsertime-mobile.yml).
+                            Alternatively, set MOZ_FIREFOX_ANDROID_APK_OUTPUT to a
+                            path to an APK, and then run the command with
+                            --browsertime-upload-apk firefox-android. This option
+                            will only copy the APK for browsertime, see
+                            --mozperftest-upload-apk to upload APKs for startup
+                            tests.
+      --mozperftest-upload-apk MOZPERFTEST_UPLOAD_APK
+                            See --browsertime-upload-apk. This option does the
+                            same thing except it's for mozperftest tests such as
+                            the startup ones. Note that those tests only exist
+                            through --show-all, as they aren't contained in any
+                            existing categories.
+      --detect-changes      Adds a task that detects performance changes using
+                            MWU.
+      --comparator COMPARATOR
+                            Either a path to a file to setup a custom comparison,
+                            or a builtin name. See the Firefox source docs for
+                            mach try perf for examples of how to build your own,
+                            along with the interface.
+      --comparator-args [ARG=VALUE [ARG=VALUE ...]]
+                            Arguments provided to the base, and new revision setup
+                            stages of the comparator.
+      --variants [ [ ...]]  Select variants to display in the selector from:
+                            fission, bytecode-cached, live-sites, profiling, swr
+      --platforms [ [ ...]]
+                            Select specific platforms to target. Android only
+                            available with --android. Available platforms:
+                            android-a51, android, windows, linux, macosx, desktop
+      --apps [ [ ...]]      Select specific applications to target from: firefox,
+                            chrome, chromium, geckoview, fenix, chrome-m, safari,
+                            custom-car
+      --clear-cache         Deletes the try_perf_revision_cache file
+      --extra-args [ [ ...]]
+                            Set the extra args (e.x, --extra-args verbose post-
+                            startup-delay=1)
+    task configuration arguments:
+      --artifact            Force artifact builds where possible.
+      --no-artifact         Disable artifact builds even if being used locally.
+      --browsertime         Use browsertime during Raptor tasks.
+      --disable-pgo         Don't run PGO builds
+      --env ENV             Set an environment variable, of the form FOO=BAR. Can
+                            be passed in multiple times.
+      --gecko-profile       Create and upload a gecko profile during talos/raptor
+                            tasks.
+      --gecko-profile-interval GECKO_PROFILE_INTERVAL
+                            How frequently to take samples (ms)
+      --gecko-profile-entries GECKO_PROFILE_ENTRIES
+                            How many samples to take with the profiler
+      --gecko-profile-features GECKO_PROFILE_FEATURES
+                            Set the features enabled for the profiler.
+      --gecko-profile-threads GECKO_PROFILE_THREADS
+                            Comma-separated list of threads to sample.
+      paths                 Run tasks containing tests under the specified
+                            path(s).
+      --rebuild [2-20]      Rebuild all selected tasks the specified number of
+                            times.
 
-        task configuration arguments:
-            --artifact            Force artifact builds where possible.
 
+
+Workflow
+--------
+
+Below, you'll find an overview of the features available in ``./mach try perf``. If you'd like to learn more about how to use this tool to enhance your developement process, see the :ref:`Standard Workflow with Mach Try Perf` page.
 
 Standard Usage
 --------------
