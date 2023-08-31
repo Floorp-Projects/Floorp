@@ -225,15 +225,8 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
   RefPtr<IExecAction> execAction;
   ENSURE(action->QueryInterface(IID_IExecAction, getter_AddRefs(execAction)));
 
-  // Register proxy instead of Firefox background task.
-  mozilla::UniquePtr<wchar_t[]> installPath = mozilla::GetFullBinaryPath();
-  if (!PathRemoveFileSpecW(installPath.get())) {
-    return E_FAIL;
-  }
-  std::wstring proxyPath(installPath.get());
-  proxyPath += L"\\default-browser-agent.exe";
-
-  BStrPtr binaryPathBStr = BStrPtr(SysAllocString(proxyPath.c_str()));
+  BStrPtr binaryPathBStr =
+      BStrPtr(SysAllocString(mozilla::GetFullBinaryPath().get()));
   ENSURE(execAction->put_Path(binaryPathBStr.get()));
 
   std::wstring taskArgs = L"do-task \"";
