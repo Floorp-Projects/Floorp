@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "AuthrsBridge_ffi.h"
 #include "mozilla/dom/WebAuthenticationBinding.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 
@@ -53,7 +54,8 @@ JSObject* AuthenticatorAttestationResponse::WrapObject(
 void AuthenticatorAttestationResponse::GetAttestationObject(
     JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
   if (!mAttestationObjectCachedObj) {
-    mAttestationObjectCachedObj = mAttestationObject.ToArrayBuffer(aCx);
+    mAttestationObjectCachedObj = ArrayBuffer::Create(
+        aCx, mAttestationObject.Length(), mAttestationObject.Elements());
     if (!mAttestationObjectCachedObj) {
       aRv.NoteJSContextException(aCx);
       return;
@@ -63,11 +65,41 @@ void AuthenticatorAttestationResponse::GetAttestationObject(
 }
 
 nsresult AuthenticatorAttestationResponse::SetAttestationObject(
-    CryptoBuffer& aBuffer) {
-  if (NS_WARN_IF(!mAttestationObject.Assign(aBuffer))) {
+    const nsTArray<uint8_t>& aBuffer) {
+  if (!mAttestationObject.Assign(aBuffer, mozilla::fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   return NS_OK;
+}
+
+void AuthenticatorAttestationResponse::GetAuthenticatorData(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+  if (!mAttestationObjectParsed) {
+    nsresult rv = authrs_webauthn_att_obj_constructor(
+        mAttestationObject, /* anonymize */ false,
+        getter_AddRefs(mAttestationObjectParsed));
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
+  }
+
+  nsTArray<uint8_t> authenticatorData;
+  nsresult rv =
+      mAttestationObjectParsed->GetAuthenticatorData(authenticatorData);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  JS::Heap<JSObject*> buffer(ArrayBuffer::Create(
+      aCx, authenticatorData.Length(), authenticatorData.Elements()));
+  if (!buffer) {
+    aRv.NoteJSContextException(aCx);
+    return;
+  }
+  aValue.set(buffer);
 }
 
 }  // namespace mozilla::dom

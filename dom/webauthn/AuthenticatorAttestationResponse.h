@@ -11,8 +11,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/AuthenticatorResponse.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/CryptoBuffer.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIWebAuthnController.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla::dom {
@@ -35,10 +35,14 @@ class AuthenticatorAttestationResponse final : public AuthenticatorResponse {
   void GetAttestationObject(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
                             ErrorResult& aRv);
 
-  nsresult SetAttestationObject(CryptoBuffer& aBuffer);
+  nsresult SetAttestationObject(const nsTArray<uint8_t>& aBuffer);
+
+  void GetAuthenticatorData(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
+                            ErrorResult& aRv);
 
  private:
-  CryptoBuffer mAttestationObject;
+  nsTArray<uint8_t> mAttestationObject;
+  nsCOMPtr<nsIWebAuthnAttObj> mAttestationObjectParsed;
   JS::Heap<JSObject*> mAttestationObjectCachedObj;
 };
 
