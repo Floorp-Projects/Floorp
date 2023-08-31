@@ -961,6 +961,10 @@ struct BaseCompiler final {
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   void callRef(const Stk& calleeRef, const FunctionCall& call,
                CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
+#  ifdef ENABLE_WASM_TAIL_CALLS
+  void returnCallRef(const Stk& calleeRef, const FunctionCall& call,
+                     const FuncType* funcType);
+#  endif
 #endif
   CodeOffset builtinCall(SymbolicAddress builtin, const FunctionCall& call);
   CodeOffset builtinInstanceMethodCall(const SymbolicAddressSignature& builtin,
@@ -1613,6 +1617,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitBrOnNull();
   [[nodiscard]] bool emitBrOnNonNull();
   [[nodiscard]] bool emitCallRef();
+  [[nodiscard]] bool emitReturnCallRef();
 #endif
 
   [[nodiscard]] bool emitAtomicCmpXchg(ValType type, Scalar::Type viewType);

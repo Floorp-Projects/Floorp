@@ -258,6 +258,8 @@ OpKind wasm::Classify(OpBytes op) {
       return OpKind::ReturnCallIndirect;
     case Op::CallRef:
       WASM_FUNCTION_REFERENCES_OP(OpKind::CallRef);
+    case Op::ReturnCallRef:
+      WASM_FUNCTION_REFERENCES_OP(OpKind::ReturnCallRef);
     case Op::Return:
     case Op::Limit:
       // Accept Limit, for use in decoding the end of a function after the body.

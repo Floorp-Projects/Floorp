@@ -5552,6 +5552,63 @@ void MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
   bind(&done);
 }
 
+#ifdef ENABLE_WASM_TAIL_CALLS
+void MacroAssembler::wasmReturnCallRef(
+    const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
+    const ReturnCallAdjustmentInfo& retCallInfo) {
+  MOZ_ASSERT(callee.which() == wasm::CalleeDesc::FuncRef);
+  const Register calleeScratch = WasmCallRefCallScratchReg0;
+  const Register calleeFnObj = WasmCallRefReg;
+
+  // Load from the function's WASM_INSTANCE_SLOT extended slot, and decide
+  // whether to take the fast path or the slow path. Register this load
+  // instruction to be source of a trap -- null pointer check.
+
+  Label fastCall;
+  Label done;
+  const Register newInstanceTemp = WasmCallRefCallScratchReg1;
+  size_t instanceSlotOffset = FunctionExtended::offsetOfExtendedSlot(
+      FunctionExtended::WASM_INSTANCE_SLOT);
+  static_assert(FunctionExtended::WASM_INSTANCE_SLOT < wasm::NullPtrGuardSize);
+  wasm::BytecodeOffset trapOffset(desc.lineOrBytecode());
+  append(wasm::Trap::NullPointerDereference,
+         wasm::TrapSite(currentOffset(), trapOffset));
+  loadPtr(Address(calleeFnObj, instanceSlotOffset), newInstanceTemp);
+  branchPtr(Assembler::Equal, InstanceReg, newInstanceTemp, &fastCall);
+
+  storePtr(InstanceReg,
+           Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall));
+  movePtr(newInstanceTemp, InstanceReg);
+  storePtr(InstanceReg,
+           Address(getStackPointer(), WasmCalleeInstanceOffsetBeforeCall));
+
+  loadWasmPinnedRegsFromInstance();
+  switchToWasmInstanceRealm(WasmCallRefCallScratchReg0,
+                            WasmCallRefCallScratchReg1);
+
+  // Get funcUncheckedCallEntry() from the function's
+  // WASM_FUNC_UNCHECKED_ENTRY_SLOT extended slot.
+  size_t uncheckedEntrySlotOffset = FunctionExtended::offsetOfExtendedSlot(
+      FunctionExtended::WASM_FUNC_UNCHECKED_ENTRY_SLOT);
+  loadPtr(Address(calleeFnObj, uncheckedEntrySlotOffset), calleeScratch);
+
+  wasm::CallSiteDesc stubDesc(desc.lineOrBytecode(),
+                              wasm::CallSiteDesc::ReturnStub);
+  wasmCollapseFrameSlow(retCallInfo, stubDesc);
+  jump(calleeScratch);
+
+  // Fast path: just load WASM_FUNC_UNCHECKED_ENTRY_SLOT value and go.
+  // The instance and pinned registers are the same as in the caller.
+
+  bind(&fastCall);
+
+  loadPtr(Address(calleeFnObj, uncheckedEntrySlotOffset), calleeScratch);
+
+  wasmCollapseFrameFast(retCallInfo);
+  jump(calleeScratch);
+}
+#endif
+
 bool MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
     wasm::RefType type) {
   MOZ_ASSERT(type.isValid());
