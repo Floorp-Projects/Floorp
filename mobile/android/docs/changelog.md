@@ -13,6 +13,9 @@ permalink: /changelog/
 * **ui-tabcounter**
   * Adds a mask overlay to the tabcounter that can be shown with `toggleCounterMask`.
 
+**feature-push**
+  * We will no longer report `RecordNotFoundException` to the `CrashReporter` as it's largely a (web) application side reason why these messages are still trying to be delivered.
+
 # 118.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v117..releases_v118)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v118/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

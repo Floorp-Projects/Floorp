@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import mozilla.appservices.push.BridgeType
 import mozilla.appservices.push.PushApiException
-import mozilla.appservices.push.PushApiException.RecordNotFoundException
 import mozilla.appservices.push.PushApiException.UaidNotRecognizedException
 import mozilla.appservices.push.PushConfiguration
 import mozilla.appservices.push.PushHttpProtocol
@@ -304,7 +303,6 @@ class AutoPushFeature(
 
     private fun exceptionHandler(onError: (PushError) -> Unit) = CoroutineExceptionHandler { _, e ->
         when (e) {
-            is RecordNotFoundException,
             is UaidNotRecognizedException,
             -> onError(PushError.Rust(e, e.message.orEmpty()))
             else -> logger.warn("Internal error occurred in AutoPushFeature.", e)
