@@ -142,57 +142,6 @@ bitflags! {
         const DISABLED_STATES = Self::DISABLED.bits | Self::ENABLED.bits;
 
         const REQUIRED_STATES = Self::REQUIRED.bits | Self::OPTIONAL_.bits;
-
-        /// Event states that can be added and removed through
-        /// Element::{Add,Remove}ManuallyManagedStates.
-        ///
-        /// Take care when manually managing state bits.  You are responsible
-        /// for setting or clearing the bit when an Element is added or removed
-        /// from a document (e.g. in BindToTree and UnbindFromTree), if that is
-        /// an appropriate thing to do for your state bit.
-        const MANUALLY_MANAGED_STATES = Self::AUTOFILL.bits | Self::AUTOFILL_PREVIEW.bits;
-
-        /// Event states that are managed externally to an element (by the
-        /// EventStateManager, or by other code).  As opposed to those in
-        /// INTRINSIC_STATES, which are are computed by the element itself
-        /// and returned from Element::IntrinsicState.
-        const EXTERNALLY_MANAGED_STATES =
-            Self::MANUALLY_MANAGED_STATES.bits |
-            Self::DIR_ATTR_STATES.bits |
-            Self::DIR_STATES.bits |
-            Self::DISABLED_STATES.bits |
-            Self::REQUIRED_STATES.bits |
-            Self::METER_OPTIMUM_STATES.bits |
-            Self::ACTIVE.bits |
-            Self::DEFINED.bits |
-            Self::DRAGOVER.bits |
-            Self::INDETERMINATE.bits |
-            Self::FOCUS.bits |
-            Self::FOCUSRING.bits |
-            Self::FOCUS_WITHIN.bits |
-            Self::FULLSCREEN.bits |
-            Self::POPOVER_OPEN.bits |
-            Self::HOVER.bits |
-            Self::URLTARGET.bits |
-            Self::MODAL.bits |
-            Self::INERT.bits |
-            Self::TOPMOST_MODAL.bits |
-            Self::REVEALED.bits |
-            Self::VALUE_EMPTY.bits |
-            Self::INCREMENT_SCRIPT_LEVEL.bits |
-            Self::PLACEHOLDER_SHOWN.bits |
-            Self::READONLY.bits |
-            Self::READWRITE.bits |
-            Self::CHECKED.bits |
-            Self::DEFAULT.bits |
-            Self::INRANGE.bits |
-            Self::OUTOFRANGE.bits |
-            Self::VISITED.bits |
-            Self::UNVISITED.bits |
-            Self::BROKEN.bits |
-            Self::VALIDITY_STATES.bits;
-
-        const INTRINSIC_STATES = !Self::EXTERNALLY_MANAGED_STATES.bits;
     }
 }
 
