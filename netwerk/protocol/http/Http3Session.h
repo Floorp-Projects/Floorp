@@ -133,7 +133,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
                 uint32_t controlFlags, nsIInterfaceRequestor* callbacks);
 
   bool IsConnected() const { return mState == CONNECTED; }
-  bool CanSendData() const {
+  bool CanSandData() const {
     return (mState == CONNECTED) || (mState == ZERORTT);
   }
   bool IsClosing() const { return (mState == CLOSING || mState == CLOSED); }
@@ -215,8 +215,6 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   uint64_t MaxDatagramSize(uint64_t aSessionId);
 
-  void SetSendOrder(Http3StreamBase* aStream, int64_t aSendOrder);
-
   void CloseWebTransportConn();
 
  private:
@@ -280,7 +278,6 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
       mStreamTransactionHash;
 
   nsRefPtrDeque<Http3StreamBase> mReadyForWrite;
-
   nsTArray<RefPtr<Http3StreamBase>> mSlowConsumersReadyForRead;
   nsRefPtrDeque<Http3StreamBase> mQueuedStreams;
 
