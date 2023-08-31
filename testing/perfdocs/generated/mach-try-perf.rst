@@ -6,11 +6,11 @@ Mach Try Perf
    :depth: 2
    :local:
 
-To make it easier for developers to find the tests they need to run we built a perf-specific try selector called `./mach try perf`. With this tool, you no longer need to remember the obfuscated platform and test names that you need to target for your tests. Instead, the new interface shows test categories along with a simplified name of the platform that they will run on.
+To make it easier for developers to find the tests they need to run we built a perf-specific try selector called ``./mach try perf``. With this tool, you no longer need to remember the obfuscated platform and test names that you need to target for your tests. Instead, the new interface shows test categories along with a simplified name of the platform that they will run on.
 
 When you trigger a try run from the perf selector, two try runs will be created. One with your changes, and one without. In your console, after you trigger the try runs, you'll find a PerfCompare link that will bring you directly to a comparison of the two pushes when they have completed.
 
-The tool is built to be conservative about the number of tests to run, so if you are looking for something that is not listed, it's likely hidden behind a flag found in the `--help`. Here's a small sample of what you'll find there which highlights the most relevant flags::
+The tool is built to be conservative about the number of tests to run, so if you are looking for something that is not listed, it's likely hidden behind a flag found in the ``--help``. Here's a small sample of what you'll find there which highlights the most relevant flags::
 
     $ ./mach try perf --help
 
@@ -36,7 +36,7 @@ The tool is built to be conservative about the number of tests to run, so if you
 Standard Usage
 --------------
 
-To use mach try perf simply call `./mach try perf`. This will open an interface for test selection like so:
+To use mach try perf simply call ``./mach try perf``. This will open an interface for test selection like so:
 
 
 .. image:: ./standard-try-perf.png
@@ -50,7 +50,7 @@ Select the categories you'd like to run, hit enter, and wait for the tool to fin
 Chrome and Android
 ------------------
 
-Android and chrome tests are disabled by default as they are often unneeded and waste our limited resources. If you need either of these, you can add `--chrome` and/or `--android` to the command like so `./mach try perf --android --chrome`:
+Android and chrome tests are disabled by default as they are often unneeded and waste our limited resources. If you need either of these, you can add ``--chrome`` and/or ``--android`` to the command like so ``./mach try perf --android --chrome``:
 
 
 .. image:: ./android-chrome-try-perf.png
@@ -62,7 +62,7 @@ Android and chrome tests are disabled by default as they are often unneeded and 
 Variants
 --------
 
-If you are looking for any variants (e.g. no-fission, bytecode-cached, live-sites), use the `--variants` options like so `./mach try perf --variants live-sites`. This will select all possible categories that could have live-sites tests.
+If you are looking for any variants (e.g. no-fission, bytecode-cached, live-sites), use the ``--variants`` options like so ``./mach try perf --variants live-sites``. This will select all possible categories that could have live-sites tests.
 
 
 .. image:: ./variants-try-perf.png
@@ -76,12 +76,12 @@ Note that it is expected that the offered categories have extra variants (such a
 Platforms
 ---------
 
-To target a particular platform you can use `--platforms` to only show categories with the given platforms.
+To target a particular platform you can use ``--platforms`` to only show categories with the given platforms.
 
 Categories
 ----------
 
-In the future, this section will be populated dynamically. If you are wondering what the categories you selected will run, you can use `--no-push` to print out a list of tasks that will run like so::
+In the future, this section will be populated dynamically. If you are wondering what the categories you selected will run, you can use ``--no-push`` to print out a list of tasks that will run like so::
 
    $ ./mach try perf --no-push
 
@@ -193,16 +193,16 @@ The following fields are available:
      * **app-restrictions**: A list of apps that the category can run.
      * **variant-restrictions**: A list of variants available for each suite.
 
-Note that setting the App/Variant-Restriction fields should be used to restrict the available apps and variants, not expand them as the suites, apps, and platforms combined already provide the largest coverage. The restrictions should be used when you know certain things definitely won't work, or will never be implemented for this category of tests. For instance, our `Resource Usage` tests only work on Firefox even though they may exist in Raptor which can run tests with Chrome.
+Note that setting the App/Variant-Restriction fields should be used to restrict the available apps and variants, not expand them as the suites, apps, and platforms combined already provide the largest coverage. The restrictions should be used when you know certain things definitely won't work, or will never be implemented for this category of tests. For instance, our ``Resource Usage`` tests only work on Firefox even though they may exist in Raptor which can run tests with Chrome.
 
 Comparators
 -----------
 
-If the standard/default push-to-try comparison is not enough, you can build your own "comparator" that can setup the base, and new revisions. The default comparator `BasePerfComparator` runs the standard mach-try-perf comparison, and there also exists a custom comparator called `BenchmarkComparator` for running custom benchmark comparisons on try (using Github PR links).
+If the standard/default push-to-try comparison is not enough, you can build your own "comparator" that can setup the base, and new revisions. The default comparator ``BasePerfComparator`` runs the standard mach-try-perf comparison, and there also exists a custom comparator called ``BenchmarkComparator`` for running custom benchmark comparisons on try (using Github PR links).
 
-If you'd like to add a custom comparator, you can either create it in a separate file and pass it in the `--comparator`, or add it to the `tools/tryselect/selectors/perfselector/perfcomparators.py` and use the name of the class as the `--comparator` argument (e.g. `--comparator BenchmarkComparator`). You can pass additional arguments to it using the `--comparator-args` option that accepts arguments in the format `NAME=VALUE`.
+If you'd like to add a custom comparator, you can either create it in a separate file and pass it in the ``--comparator``, or add it to the ``tools/tryselect/selectors/perfselector/perfcomparators.py`` and use the name of the class as the ``--comparator`` argument (e.g. ``--comparator BenchmarkComparator``). You can pass additional arguments to it using the ``--comparator-args`` option that accepts arguments in the format ``NAME=VALUE``.
 
-The custom comparator needs to be a subclass of `BasePerfComparator`, and optionally overrides its methods. See the comparators file for more information about the interface available. Here's the general interface for it (subject to change), note that the `@comparator` decorator is required when making a builtin comparator::
+The custom comparator needs to be a subclass of ``BasePerfComparator``, and optionally overrides its methods. See the comparators file for more information about the interface available. Here's the general interface for it (subject to change), note that the ``@comparator`` decorator is required when making a builtin comparator::
 
     @comparator
     class BasePerfComparator:
@@ -253,15 +253,15 @@ If you have any questions which aren't already answered below please reach out t
 
      * **How can I tell what a category or a set of selections will run?**
 
-       At the moment, you need to run your command with an additional option to see what will be run: `./mach try perf --no-push`. See the `Categories`_ section for more information about this. In the future, we plan on having an dynamically updated list for the tasks in the `Categories`_ section of this document.
+       At the moment, you need to run your command with an additional option to see what will be run: ``./mach try perf --no-push``. See the `Categories`_ section for more information about this. In the future, we plan on having an dynamically updated list for the tasks in the `Categories`_ section of this document.
 
-     * **What's the difference between `Pageload desktop`, and `Pageload desktop firefox`?**
+     * **What's the difference between ``Pageload desktop``, and ``Pageload desktop firefox``?**
 
-       If you simply ran `./mach try perf` with no additional options, then there is no difference. If you start adding additional browsers to the try run with commands like `./mach try perf --chrome`, then `Pageload desktop` will select all tests available for ALL browsers available, and `Pageload desktop firefox` will only select Firefox tests. When `--chrome` is provided, you'll also see a `Pageload desktop chrome` option.
+       If you simply ran ``./mach try perf`` with no additional options, then there is no difference. If you start adding additional browsers to the try run with commands like ``./mach try perf --chrome``, then ``Pageload desktop`` will select all tests available for ALL browsers available, and ``Pageload desktop firefox`` will only select Firefox tests. When ``--chrome`` is provided, you'll also see a ``Pageload desktop chrome`` option.
 
      * **Help! I can't find a test in any of the categories. What should I do?**
 
-       Use the option `--show-all`. This will let you select tests from the `./mach try fuzzy --full` interface directly instead of the categories. You will always be able to find your tests this way. Please be careful with your task selections though as it's easy to run far too many tests in this way!
+       Use the option ``--show-all``. This will let you select tests from the ``./mach try fuzzy --full`` interface directly instead of the categories. You will always be able to find your tests this way. Please be careful with your task selections though as it's easy to run far too many tests in this way!
 
 Future Work
 -----------
