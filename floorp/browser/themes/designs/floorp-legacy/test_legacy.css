@@ -2047,10 +2047,6 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
   opacity: 1 !important;
 }
 
-.tabbrowser-tab:-moz-any([soundplaying], [muted], [activemedia-blocked]) .tab-icon-image {
-  visibility: hidden !important;
-}
-
 .tab-icon-sound-label {
   display: none !important;
 }
