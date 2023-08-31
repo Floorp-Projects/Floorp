@@ -10,7 +10,6 @@ requestLongerTimeout(5);
 // Test pausing with mapScopes enabled and disabled
 add_task(async function () {
   const dbg = await initDebugger("doc-sourcemapped.html");
-  dbg.actions.toggleMapScopes();
 
   info("1. Pause on line 20");
   const url = "webpack3-babel6://./esmodules-cjs/input.js";
@@ -22,6 +21,7 @@ add_task(async function () {
   await waitForPaused(dbg);
 
   info("2. Hover on a token with mapScopes enabled");
+  await toggleMapScopes(dbg);
   await assertPreviewTextValue(dbg, 20, 16, {
     result: '"a-default"',
     expression: "aDefault",
@@ -29,7 +29,7 @@ add_task(async function () {
   ok(getOriginalScope(dbg) != null, "Scopes are mapped");
 
   info("3. Hover on a token with mapScopes disabled");
-  clickElement(dbg, "mapScopesCheckbox");
+  await toggleMapScopes(dbg);
   await assertPreviewTextValue(dbg, 21, 16, {
     result: "undefined",
     expression: "anAliased",
@@ -48,4 +48,10 @@ function getOriginalScope(dbg) {
   return dbg.selectors.getSelectedOriginalScope(
     dbg.selectors.getCurrentThread()
   );
+}
+
+async function toggleMapScopes(dbg) {
+  const onDispatch = waitForDispatch(dbg.store, "TOGGLE_MAP_SCOPES");
+  clickElement(dbg, "mapScopesCheckbox");
+  return onDispatch;
 }
