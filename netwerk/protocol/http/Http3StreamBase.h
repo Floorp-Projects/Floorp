@@ -56,6 +56,8 @@ class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
   ~Http3StreamBase();
 
   uint64_t mStreamId{UINT64_MAX};
+  int64_t mSendOrder{0};
+  bool mSendOrderIsSet{false};
   RefPtr<nsAHttpTransaction> mTransaction;
   RefPtr<Http3Session> mSession;
   bool mQueued{false};

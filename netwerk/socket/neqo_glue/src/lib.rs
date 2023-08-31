@@ -1329,3 +1329,18 @@ pub extern "C" fn neqo_http3conn_webtransport_max_datagram_size(
         Err(_) => NS_ERROR_UNEXPECTED,
     }
 }
+
+#[no_mangle]
+pub extern "C" fn neqo_http3conn_webtransport_set_sendorder(
+    conn: &mut NeqoHttp3Conn,
+    stream_id: u64,
+    sendorder: i64,
+) -> nsresult {
+    match conn
+        .conn
+	.webtransport_set_sendorder(StreamId::from(stream_id), sendorder)
+    {
+	Ok(()) => NS_OK,
+	Err(_) => NS_ERROR_UNEXPECTED,
+    }
+}
