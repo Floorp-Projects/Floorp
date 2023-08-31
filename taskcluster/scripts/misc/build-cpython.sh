@@ -17,15 +17,15 @@ python_src=${MOZ_FETCHES_DIR}/cpython-source
 # Make the compiler-rt available to clang.
 env UPLOAD_DIR= $GECKO_PATH/taskcluster/scripts/misc/repack-clang.sh
 
-# Setup environment
-export PATH=${clang_bindir}:${PATH}
-export CC=clang
-export CXX=clang++
-export LDFLAGS=-fuse-ld=lld
-
-# Extra setup for OSX
+# Extra setup per platform
 case `uname -s` in
     Darwin)
+        # Use taskcluster clang instead of host compiler on OSX
+        export PATH=${clang_bindir}:${PATH}
+        export CC=clang
+        export CXX=clang++
+        export LDFLAGS=-fuse-ld=lld
+
         case `uname -m` in
             aarch64)
                 macosx_version_min=11.0
@@ -48,6 +48,7 @@ case `uname -s` in
         export LDFLAGS="${LDFLAGS} -Wl,-rpath -Wl,@loader_path/../.."
         ;;
     Linux)
+        # Use host gcc on Linux
         export LDFLAGS="${LDFLAGS} -Wl,-rpath,\\\$ORIGIN/../.."
         ;;
 esac
