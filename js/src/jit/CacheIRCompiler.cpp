@@ -7238,6 +7238,11 @@ void CacheIRCompiler::emitPostBarrierShared(Register obj,
   }
   masm.branchPtrInNurseryChunk(Assembler::Equal, obj, scratch, &skipBarrier);
 
+  // Check one element cache to avoid VM call.
+  auto* lastCellAddr = cx_->runtime()->gc.addressOfLastBufferedWholeCell();
+  masm.branchPtr(Assembler::Equal, AbsoluteAddress(lastCellAddr), obj,
+                 &skipBarrier);
+
   // Call one of these, depending on maybeIndex:
   //
   //   void PostWriteBarrier(JSRuntime* rt, JSObject* obj);
