@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root {
+:root,
+:host(.anonymous-content-host) {
   /* Base tokens */
   /* Do not use base tokens directly as they don't carry any meaning. Refer to application tokens below. */
   /** Color **/
@@ -77,7 +78,8 @@
 }
 
 @media not (prefers-contrast) {
-  :root {
+  :root,
+  :host(.anonymous-content-host) {
     /* Color */
     --color-background-information: light-dark(var(--color-blue-05), var(--color-blue-80));
     --color-background-success: light-dark(var(--color-green-05), var(--color-green-80));
@@ -98,7 +100,7 @@
 
 @media (prefers-contrast) {
   :root,
-  :host {
+  :host(.anonymous-content-host) {
     /* Border */
     --border-color: var(--text-color);
     --border-interactive-color: AccentColor;
@@ -145,7 +147,7 @@
     /* Applies to Windows HCM only, by default.
        TODO(emilio): These seem rather sketchy */
     :root,
-    :host {
+    :host(.anonymous-content-host) {
       /* Border */
       --border-interactive-color: ButtonText;
       --border-interactive-color-hover: SelectedItem;

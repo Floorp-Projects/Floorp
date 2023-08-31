@@ -4,7 +4,8 @@
 
 @import url("chrome://global/skin/design-tokens-shared.css");
 
-:root {
+:root,
+:host(.anonymous-content-host) {
   /* Typography */
   /** Font size **/
   --in-content-font-body-size-base: 15px;
@@ -12,7 +13,8 @@
 }
 
 @media not (prefers-contrast) {
-  :root {
+  :root,
+  :host(.anonymous-content-host) {
     /* Border */
     --border-interactive-color: light-dark(var(--color-gray-60), var(--color-gray-50));
 

@@ -22,6 +22,8 @@ already_AddRefed<AnonymousContent> AnonymousContent::Create(Document& aDoc) {
     return nullptr;
   }
   host->SetAttr(kNameSpaceID_None, nsGkAtoms::role, u"presentation"_ns, false);
+  host->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                u"anonymous-content-host"_ns, false);
   RefPtr<ShadowRoot> root = host->AttachShadowWithoutNameChecks(
       ShadowRootMode::Closed, Element::DelegatesFocus::No);
   root->SetIsUAWidget();
