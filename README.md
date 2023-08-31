@@ -164,7 +164,7 @@ You can download the latest version of Floorp Browser from the official website:
 
 - English is the main language. If you want to translate Floorp Browser, please translate from English (en-US)
 
-- Floorp's English file is located in the [Floorp-Strings](https://github.com/Floorp-Projects/Floorp-Strings) repository
+- Floorp's English file is located in the [Floorp-Strings](https://github.com/Floorp-Projects/Floorp-Strings) repository.
 
 ### 🐛 Reporting Bugs
 
