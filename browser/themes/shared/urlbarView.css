@@ -356,8 +356,8 @@
 
   /* Labeled result menu button */
 
-  .urlbarView-row > &:not(:empty) {
-    .urlbarView-results:not([wrap]) > & {
+  &:not(:empty) {
+    .urlbarView-results:not([wrap]) > .urlbarView-row > & {
       display: inline-flex;
       align-items: center;
       border-radius: var(--urlbarView-result-button-size);
@@ -370,7 +370,7 @@
       }
     }
 
-    .urlbarView-results[wrap] > & {
+    .urlbarView-results[wrap] > .urlbarView-row > & {
       /* Hide the label in narrow windows. */
       font-size: 0;
     }
