@@ -10,10 +10,31 @@
 #include <string.h>
 #include <filesystem>
 
+#include "../ScheduledTask.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 
 // See BackgroundTask_defaultagent.sys.mjs for arguments.
 int wmain(int argc, wchar_t** argv) {
+  // Firefox deescalates process permissions, so handle task unscheduling step
+  // here instead of the Firefox Background Tasks to ensure cleanup for other
+  // users. See Bug 1710143.
+  if (!wcscmp(argv[1], L"uninstall")) {
+    if (argc < 3 || !argv[2]) {
+      return E_INVALIDARG;
+    }
+
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(hr)) {
+      return hr;
+    }
+
+    RemoveTasks(argv[2], WhichTasks::AllTasksForInstallation);
+
+    CoUninitialize();
+
+    // Background Task handles remainder of uninstall.
+  }
+
   std::vector<wchar_t> path(MAX_PATH, 0);
   DWORD charsWritten = GetModuleFileNameW(nullptr, path.data(), path.size());
 
