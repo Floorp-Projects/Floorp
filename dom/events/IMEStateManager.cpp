@@ -1581,7 +1581,15 @@ MOZ_CAN_RUN_SCRIPT static void GetActionHint(const IMEState& aState,
     }
   }
 
-  if (!aContent.IsHTMLElement(nsGkAtoms::input)) {
+  if (!aContent.IsAnyOfHTMLElements(nsGkAtoms::input, nsGkAtoms::textarea)) {
+    return;
+  }
+
+  // XXX This is old compatibility, but we might be able to remove this.
+  aContent.AsElement()->GetAttr(nsGkAtoms::moz_action_hint, aActionHint);
+
+  if (!aActionHint.IsEmpty()) {
+    ToLowerCase(aActionHint);
     return;
   }
 
