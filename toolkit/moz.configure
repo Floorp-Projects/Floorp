@@ -1555,10 +1555,11 @@ with only_when("--enable-compile-environment"):
                     c_compiler.language,
                     # The resulting binary is expected to have relative
                     # relocations, the `ptr` variable attempts to ensure
-                    # there is at least one.
+                    # there is at least one. This requires the executable
+                    # being built as position independent.
                     "int main() { return 0; }\nint (*ptr)() = main;",
                     pack_rel_relocs
-                    + ["-o", path]
+                    + ["-pie", "-o", path]
                     + (extra_toolchain_flags or [])
                     + linker_ldflags,
                     wrapper=c_compiler.wrapper,
