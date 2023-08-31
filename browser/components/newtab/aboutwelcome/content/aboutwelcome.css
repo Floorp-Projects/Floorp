@@ -645,8 +645,17 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   outline: 2px solid var(--fc-accent-color);
 }
 
+.onboardingContainer.shopping {
+  height: auto;
+}
+.onboardingContainer.shopping .outer-wrapper {
+  height: auto;
+}
+
 .onboardingContainer.shopping .screen[pos=split] {
   height: auto;
+  margin: 0 auto;
+  min-height: fit-content;
 }
 .onboardingContainer.shopping .screen[pos=split]::before {
   content: none;
