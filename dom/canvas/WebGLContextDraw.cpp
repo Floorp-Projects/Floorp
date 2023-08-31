@@ -723,7 +723,9 @@ void WebGLContext::DrawArraysInstanced(const GLenum mode, const GLint first,
 
   if (vertCount > mMaxVertIdsPerDraw) {
     ErrorOutOfMemory(
-        "Context's max vertCount is %u, but %u requested. [webgl.max-vert-ids-per-draw]", mMaxVertIdsPerDraw, vertCount);
+        "Context's max vertCount is %u, but %u requested. "
+        "[webgl.max-vert-ids-per-draw]",
+        mMaxVertIdsPerDraw, vertCount);
     return;
   }
 
@@ -1021,7 +1023,9 @@ void WebGLContext::DrawElementsInstanced(const GLenum mode,
 
   if (indexCount > mMaxVertIdsPerDraw) {
     ErrorOutOfMemory(
-        "Context's max indexCount is %u, but %u requested. [webgl.max-vert-ids-per-draw]", mMaxVertIdsPerDraw, indexCount);
+        "Context's max indexCount is %u, but %u requested. "
+        "[webgl.max-vert-ids-per-draw]",
+        mMaxVertIdsPerDraw, indexCount);
     return;
   }
 

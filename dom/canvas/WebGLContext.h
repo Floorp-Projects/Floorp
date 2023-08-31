@@ -286,7 +286,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   WebGLContextOptions mOptions;
   const uint32_t mPrincipalKey;
   Maybe<webgl::Limits> mLimits;
-  const uint32_t mMaxVertIdsPerDraw = StaticPrefs::webgl_max_vert_ids_per_draw();
+  const uint32_t mMaxVertIdsPerDraw =
+      StaticPrefs::webgl_max_vert_ids_per_draw();
 
   bool mIsContextLost = false;
   Atomic<bool> mPendingContextLoss = Atomic<bool>{false};
@@ -1241,7 +1242,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   // --
 
-  const uint8_t mMsaaSamples = static_cast<uint8_t>(StaticPrefs::webgl_msaa_samples());
+  const uint8_t mMsaaSamples =
+      static_cast<uint8_t>(StaticPrefs::webgl_msaa_samples());
   mutable uvec2 mRequestedSize;
   mutable UniquePtr<gl::MozFramebuffer> mDefaultFB;
   mutable bool mDefaultFB_IsInvalid = false;
