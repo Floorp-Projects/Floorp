@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-08-29T09:01:27.684547'
+updated_at: '2023-08-30T18:00:03.763738'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -71,10 +71,6 @@ people:
     bmo_id: 505306
     name: Andrew Osmond
     nick: aosmond
-  - &aplacitelli
-    bmo_id: 579791
-    name: Alessio Placitelli
-    nick: aplacitelli
   - &arai
     bmo_id: 310076
     name: Tooru Fujisawa
@@ -252,6 +248,10 @@ people:
     bmo_id: 637163
     name: Deian Stefan
     nick: deian
+  - &Dexter
+    bmo_id: 248036
+    name: Alessio Placitelli
+    nick: Dexter
   - &dholbert
     bmo_id: 278074
     name: Daniel Holbert
@@ -576,10 +576,6 @@ people:
     bmo_id: 505624
     name: Kershaw Chang
     nick: kershaw
-  - &kimberlythegeek
-    bmo_id: 607063
-    name: Kimberly Sereduck
-    nick: kimberlythegeek
   - &kinetik
     bmo_id: 274575
     name: Matthew Gregan
@@ -3961,13 +3957,14 @@ modules:
     name: Performance Testing
     description: >
       This module encompasses all of our performance testing projects, e.g.  Raptor,  Talos,
-      MozPerfTest, AWSY, mach try perf, etc.. See our PerfDocs for more information  on
+      MozPerfTest, AWSY, JSShell, mach try perf, etc.. See our PerfDocs for more information  on
       the owners/peers of the various components (linked below).
     includes:
       - testing/raptor/**/*
       - testing/talos/**/*
       - python/mozperftest/**/*
       - testing/awsy/**/*
+      - testing/jsshell/**/*
       - tools/lint/perfdocs/**/*
       - testing/perfdocs/**/*
       - testing/performance/**/*
@@ -3980,7 +3977,6 @@ modules:
     peers:
       - *aglavic
       - *davehunt
-      - *kimberlythegeek
       - *kshampur
     meta:
       components:
@@ -4099,7 +4095,7 @@ modules:
         owners:
           - *chutten
         peers:
-          - *aplacitelli
+          - *Dexter
           - *janerik
           - *perrymcmanis
           - *travis
@@ -4159,5 +4155,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 4eaff8b1035215ae61f15733f96d3663f85f0d61
-  export: a29150c80a29f8194c025b874f1ff0dd7e396947
+  config: e6db127e330341bf35fe787d456b248944bef4e7
+  export: 6fc9fdff3716c27347c867b266928e86119d325d
