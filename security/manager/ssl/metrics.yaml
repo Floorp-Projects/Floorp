@@ -1,0 +1,47 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: Security: PSM'
+
+data_storage:
+  entries:
+    type: labeled_counter
+    description:
+      Counts the number of entries stored in each nsIDataStorage.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840135
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840135
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: never
+    labels:
+      - AlternateServices
+      - ClientAuthRememberList
+      - SiteSecurityServiceState
+  migration:
+    type: labeled_boolean
+    description:
+      Indicates whether or not migration was successful for each nsIDataStorage.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840135
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840135
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: 124
+    labels:
+      - AlternateServices
+      - ClientAuthRememberList
+      - SiteSecurityServiceState
