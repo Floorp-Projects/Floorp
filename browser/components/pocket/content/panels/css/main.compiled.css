@@ -496,7 +496,6 @@ p {
   }
 }
 .pkt_ext_containersaved .pkt_ext_loadingspinner {
-  position: relative;
   display: inline-block;
   height: 2.5em;
   inset-inline-start: 50%;
@@ -1186,7 +1185,7 @@ p {
   border-radius: 4px;
   border: 1px solid #c3c3c3;
   overflow: hidden;
-  margin: 0;
+  margin: 0 0.2em;
   padding: 0 8px;
   background-color: #f7f7f7;
   color: #000;
@@ -1195,7 +1194,6 @@ p {
   line-height: 1.5;
   display: block;
   width: auto;
-  margin: 0 0.2em;
   float: inline-start;
 }
 

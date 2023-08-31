@@ -290,37 +290,38 @@ function Home(props) {
     status: ""
   });
   const utmParams = `utm_source=${utmSource}${utmCampaign && utmContent ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}` : ``}`;
+  const loadingRecentSaves = (0,react.useCallback)(resp => {
+    setArticlesState(prevState => ({ ...prevState,
+      status: "loading"
+    }));
+  }, []);
+  const renderRecentSaves = (0,react.useCallback)(resp => {
+    const {
+      data
+    } = resp;
+
+    if (data.status === "error") {
+      setArticlesState(prevState => ({ ...prevState,
+        status: "error"
+      }));
+      return;
+    }
+
+    setArticlesState({
+      articles: data,
+      status: "success"
+    });
+  }, []);
   (0,react.useEffect)(() => {
     if (!hideRecentSaves) {
       // We don't display the loading message until instructed. This is because cache
       // loads should be fast, so using the loading message for cache just adds loading jank.
-      messages.addMessageListener("PKT_loadingRecentSaves", function (resp) {
-        setArticlesState({
-          articles,
-          status: "loading"
-        });
-      });
-      messages.addMessageListener("PKT_renderRecentSaves", function (resp) {
-        const {
-          data
-        } = resp;
-
-        if (data.status === "error") {
-          setArticlesState({
-            articles: [],
-            status: "error"
-          });
-          return;
-        }
-
-        setArticlesState({
-          articles: data,
-          status: "success"
-        });
-      });
-    } // tell back end we're ready
-
-
+      messages.addMessageListener("PKT_loadingRecentSaves", loadingRecentSaves);
+      messages.addMessageListener("PKT_renderRecentSaves", renderRecentSaves);
+    }
+  }, [hideRecentSaves, loadingRecentSaves, renderRecentSaves]);
+  (0,react.useEffect)(() => {
+    // tell back end we're ready
     messages.sendMessage("PKT_show_home");
   }, []);
   let recentSavesSection = null;
