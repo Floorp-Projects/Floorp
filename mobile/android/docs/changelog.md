@@ -16,6 +16,9 @@ permalink: /changelog/
 **feature-push**
   * We will no longer report `RecordNotFoundException` to the `CrashReporter` as it's largely a (web) application side reason why these messages are still trying to be delivered.
 
+* **feature-awesomebar**
+ * Search engine suggestions will only be displayed if the user inputs at least 2 characters and matches the starting characters of the search engine name. [bug #1851012](https://bugzilla.mozilla.org/show_bug.cgi?id=1851012) 
+
 # 118.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v117..releases_v118)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v118/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

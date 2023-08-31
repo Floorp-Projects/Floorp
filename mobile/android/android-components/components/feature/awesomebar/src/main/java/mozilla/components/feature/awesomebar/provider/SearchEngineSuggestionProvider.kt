@@ -44,7 +44,7 @@ class SearchEngineSuggestionProvider(
         }
 
         val suggestions = searchEnginesList
-            .filter { it.name.contains(text, true) }.take(maxSuggestions)
+            .filter { it.name.startsWith(text, true) }.take(maxSuggestions)
 
         return if (suggestions.isNotEmpty()) {
             suggestions.into()
@@ -73,6 +73,6 @@ class SearchEngineSuggestionProvider(
 
     companion object {
         internal const val DEFAULT_MAX_SUGGESTIONS = 1
-        internal const val DEFAULT_CHARACTERS_THRESHOLD = 1
+        internal const val DEFAULT_CHARACTERS_THRESHOLD = 2
     }
 }

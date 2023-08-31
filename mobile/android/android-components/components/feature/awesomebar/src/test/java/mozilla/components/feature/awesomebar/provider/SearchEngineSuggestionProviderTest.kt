@@ -22,6 +22,7 @@ class SearchEngineSuggestionProviderTest {
     private val engineList = listOf(
         createSearchEngine("amazon", "https://www.amazon.org/?q={searchTerms}", mock()),
         createSearchEngine("bing", "https://www.bing.com/?q={searchTerms}", mock()),
+        createSearchEngine("bingo", "https://www.bingo.com/?q={searchTerms}", mock()),
     )
     private val testContext: Context = mock()
 
@@ -40,6 +41,7 @@ class SearchEngineSuggestionProviderTest {
 
         whenever(testContext.getString(1, "amazon")).thenReturn("Search amazon")
         whenever(testContext.getString(1, "bing")).thenReturn("Search bing")
+        whenever(testContext.getString(1, "bingo")).thenReturn("Search bingo")
     }
 
     @Test
@@ -81,10 +83,17 @@ class SearchEngineSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns a match when list contains the typed engine`() = runTest {
+    fun `WHEN input matches the beginning of the engine name THEN return the corresponding engine`() = runTest {
         val suggestions = defaultProvider.onInputChanged("am")
 
         assertEquals("Search amazon", suggestions[0].title)
+    }
+
+    @Test
+    fun `WHEN input matches not the beginning of the engine name THEN return nothing`() = runTest {
+        val suggestions = defaultProvider.onInputChanged("ma")
+
+        assertEquals(0, suggestions.size)
     }
 
     @Test
@@ -106,7 +115,7 @@ class SearchEngineSuggestionProviderTest {
     @Test
     fun `Provider limits number of returned suggestions to maxSuggestions`() = runTest {
         // this should match to both engines in list
-        val suggestions = defaultProvider.onInputChanged("n")
+        val suggestions = defaultProvider.onInputChanged("bi")
 
         assertEquals(defaultProvider.maxSuggestions, suggestions.size)
     }
