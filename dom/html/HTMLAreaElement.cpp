@@ -83,14 +83,8 @@ void HTMLAreaElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                    const nsAttrValue* aOldValue,
                                    nsIPrincipal* aSubjectPrincipal,
                                    bool aNotify) {
-  if (aNamespaceID == kNameSpaceID_None) {
-    // This must happen after the attribute is set. We will need the updated
-    // attribute value because notifying the document that content states have
-    // changed will call IntrinsicState, which will try to get updated
-    // information about the visitedness from Link.
-    if (aName == nsGkAtoms::href) {
-      Link::ResetLinkState(aNotify, !!aValue);
-    }
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::href) {
+    Link::ResetLinkState(aNotify, !!aValue);
   }
 
   return nsGenericHTMLElement::AfterSetAttr(
