@@ -48,7 +48,6 @@ include protocol PWebAuthnTransaction;
 include protocol PUDPSocket;
 include protocol PVsync;
 include protocol PRemoteDecoderManager;
-include protocol PWebSocketConnection;
 include protocol PWebTransport;
 include protocol PFetch;
 
@@ -121,7 +120,6 @@ sync protocol PBackground
   manages PServiceWorkerManager;
   manages PServiceWorkerRegistration;
   manages PWebAuthnTransaction;
-  manages PWebSocketConnection;
   manages PUDPSocket;
   manages PVsync;
   manages PFetch;
@@ -279,8 +277,6 @@ parent:
 
   async EnsureUtilityProcessAndCreateBridge(RemoteDecodeIn aLocation)
       returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
-
-  async PWebSocketConnection(uint32_t aListenerId);
 
   async PLockManager(nsIPrincipal aPrincipalInfo, nsID aClientId);
 
