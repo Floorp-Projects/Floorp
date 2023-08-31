@@ -11,7 +11,9 @@ add_task(async function () {
   await openTabAndSetupStorage(TEST_URL);
   showAllColumns(true);
 
-  await performAdd(["cookies", "http://test1.example.org"]);
+  const rowId = await performAdd(["cookies", "http://test1.example.org"]);
+  checkCookieData(rowId);
+
   await performAdd(["cookies", "http://test1.example.org"]);
   await performAdd(["cookies", "http://test1.example.org"]);
   await performAdd(["cookies", "http://test1.example.org"]);
@@ -24,7 +26,30 @@ add_task(async function () {
   ok(PrivateBrowsingUtils.isWindowPrivate(privateWindow), "window is private");
   const privateTab = await addTab(TEST_URL, { window: privateWindow });
   await openStoragePanel({ tab: privateTab });
-  await performAdd(["cookies", "http://test1.example.org"]);
+  const privateTabRowId = await performAdd([
+    "cookies",
+    "http://test1.example.org",
+  ]);
+  checkCookieData(privateTabRowId);
+
   await performAdd(["cookies", "http://test1.example.org"]);
   privateWindow.close();
 });
+
+function checkCookieData(rowId) {
+  is(getCellValue(rowId, "value"), "value", "value is correct");
+  is(getCellValue(rowId, "host"), "test1.example.org", "host is correct");
+  is(getCellValue(rowId, "path"), "/", "path is correct");
+  const actualExpiry = Math.floor(
+    new Date(getCellValue(rowId, "expires")) / 1000
+  );
+  const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
+  const time = Math.floor(new Date(getCellValue(rowId, "creationTime")) / 1000);
+  const expectedExpiry = time + ONE_DAY_IN_SECONDS;
+  is(actualExpiry, expectedExpiry, "expiry is correct");
+  is(getCellValue(rowId, "size"), "43", "size is correct");
+  is(getCellValue(rowId, "isHttpOnly"), "false", "httpOnly is not set");
+  is(getCellValue(rowId, "isSecure"), "false", "secure is not set");
+  is(getCellValue(rowId, "sameSite"), "Lax", "sameSite is Lax");
+  is(getCellValue(rowId, "hostOnly"), "true", "hostOnly is not set");
+}

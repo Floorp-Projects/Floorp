@@ -1019,6 +1019,7 @@ function sidebarParseTreeVisible(state) {
  * @param  {Array} store
  *         An array containing the path to the store to which we wish to add an
  *         item.
+ * @return {Promise} A Promise that resolves to the row id of the added item.
  */
 async function performAdd(store) {
   const storeName = store.join(" > ");
@@ -1035,7 +1036,7 @@ async function performAdd(store) {
       false,
       `performAdd called for ${storeName} but it is not supported`
     );
-    return;
+    return "";
   }
 
   const eventEdit = gUI.table.once("row-edit");
@@ -1050,6 +1051,8 @@ async function performAdd(store) {
   const value = getCellValue(rowId, key);
 
   is(rowId, value, `Row '${rowId}' was successfully added.`);
+
+  return rowId;
 }
 
 // Cell css selector that can be used to count or select cells.

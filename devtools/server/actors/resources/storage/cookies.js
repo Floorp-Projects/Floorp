@@ -331,11 +331,10 @@ class CookiesStorageActor extends BaseStorageActor {
     // We check for asciiHost instead, which is always present, and has a
     // value of "" when the host is not available.
     const domain = principal.asciiHost ? principal.host : principal.baseDomain;
-    const path = principal.filePath.startsWith("/") ? principal.filePath : "/";
 
     Services.cookies.add(
       domain,
-      path,
+      "/",
       guid, // name
       DEFAULT_VALUE, // value
       false, // isSecure
