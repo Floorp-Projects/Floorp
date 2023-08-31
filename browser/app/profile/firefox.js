@@ -733,7 +733,8 @@ pref("browser.shopping.experience2023.enabled", false);
 pref("browser.shopping.experience2023.optedIn", 0);
 
 // Activates the new experimental shopping sidebar.
-// True by default, will be set to false on opt out.
+// True by default. This is handled by ShoppingUtils.handleAutoActivateOnProduct
+// to auto-activate the sidebar for non-opted-in users up to 2 times.
 pref("browser.shopping.experience2023.active", true);
 
 // Activates the ad card in the shopping sidebar.
