@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Header from "../Header/Header";
 import ArticleList from "../ArticleList/ArticleList";
 import PopularTopics from "../PopularTopics/PopularTopics";
@@ -19,6 +19,7 @@ function Home(props) {
     utmCampaign,
     utmContent,
   } = props;
+
   const [{ articles, status }, setArticlesState] = useState({
     articles: [],
     // Can be success, loading, or error.
@@ -31,41 +32,47 @@ function Home(props) {
       : ``
   }`;
 
+  const loadingRecentSaves = useCallback(resp => {
+    setArticlesState(prevState => ({
+      ...prevState,
+      status: "loading",
+    }));
+  }, []);
+
+  const renderRecentSaves = useCallback(resp => {
+    const { data } = resp;
+
+    if (data.status === "error") {
+      setArticlesState(prevState => ({
+        ...prevState,
+        status: "error",
+      }));
+      return;
+    }
+
+    setArticlesState({
+      articles: data,
+      status: "success",
+    });
+  }, []);
+
   useEffect(() => {
     if (!hideRecentSaves) {
       // We don't display the loading message until instructed. This is because cache
       // loads should be fast, so using the loading message for cache just adds loading jank.
       panelMessaging.addMessageListener(
         "PKT_loadingRecentSaves",
-        function (resp) {
-          setArticlesState({
-            articles,
-            status: "loading",
-          });
-        }
+        loadingRecentSaves
       );
 
       panelMessaging.addMessageListener(
         "PKT_renderRecentSaves",
-        function (resp) {
-          const { data } = resp;
-
-          if (data.status === "error") {
-            setArticlesState({
-              articles: [],
-              status: "error",
-            });
-            return;
-          }
-
-          setArticlesState({
-            articles: data,
-            status: "success",
-          });
-        }
+        renderRecentSaves
       );
     }
+  }, [hideRecentSaves, loadingRecentSaves, renderRecentSaves]);
 
+  useEffect(() => {
     // tell back end we're ready
     panelMessaging.sendMessage("PKT_show_home");
   }, []);
