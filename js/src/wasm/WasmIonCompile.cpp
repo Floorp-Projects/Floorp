@@ -2403,6 +2403,28 @@ class FunctionCompiler {
     return collectCallResults(resultType, call.stackResultArea_, results);
   }
 
+#  ifdef ENABLE_WASM_TAIL_CALLS
+  [[nodiscard]] bool returnCallRef(const FuncType& funcType, MDefinition* ref,
+                                   uint32_t lineOrBytecode,
+                                   const CallCompileState& call,
+                                   DefVector* results) {
+    CalleeDesc callee = CalleeDesc::wasmFuncRef();
+
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::FuncRef);
+    ArgTypeVector args(funcType);
+
+    auto* ins = MWasmReturnCall::New(alloc(), desc, callee, call.regArgs_,
+                                     StackArgAreaSizeUnaligned(args), ref);
+    if (!ins) {
+      return false;
+    }
+    curBlock_->end(ins);
+    curBlock_ = nullptr;
+    return true;
+  }
+
+#  endif  // ENABLE_WASM_TAIL_CALLS
+
 #endif  // ENABLE_WASM_FUNCTION_REFERENCES
 
   /*********************************************** Control flow generation */
@@ -5144,6 +5166,34 @@ static bool EmitReturnCallIndirect(FunctionCompiler& f) {
     return false;
   }
   return true;
+}
+#endif
+
+#if defined(ENABLE_WASM_TAIL_CALLS) && defined(ENABLE_WASM_FUNCTION_REFERENCES)
+static bool EmitReturnCallRef(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  const FuncType* funcType;
+  MDefinition* callee;
+  DefVector args;
+  DefVector unused_values;
+
+  if (!f.iter().readReturnCallRef(&funcType, &callee, &args, &unused_values)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  CallCompileState call;
+  f.markReturnCall(&call);
+  if (!EmitCallArgs(f, *funcType, args, &call)) {
+    return false;
+  }
+
+  DefVector results;
+  return f.returnCallRef(*funcType, callee, lineOrBytecode, call, &results);
 }
 #endif
 
@@ -8155,6 +8205,16 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitCallRef(f));
+      }
+#endif
+
+#if defined(ENABLE_WASM_TAIL_CALLS) && defined(ENABLE_WASM_FUNCTION_REFERENCES)
+      case uint16_t(Op::ReturnCallRef): {
+        if (!f.moduleEnv().functionReferencesEnabled() ||
+            !f.moduleEnv().tailCallsEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitReturnCallRef(f));
       }
 #endif
 

@@ -264,6 +264,7 @@ enum class Op {
   ReturnCall = 0x12,
   ReturnCallIndirect = 0x13,
   CallRef = 0x14,
+  ReturnCallRef = 0x15,
 
   // Additional exception operators
   Delegate = 0x18,

@@ -65,6 +65,7 @@ const CallCode         = 0x10;
 const CallIndirectCode = 0x11;
 const ReturnCallCode   = 0x12;
 const ReturnCallIndirectCode = 0x13;
+const ReturnCallRefCode      = 0x15;
 const DelegateCode     = 0x18;
 const DropCode         = 0x1a;
 const SelectCode       = 0x1b;

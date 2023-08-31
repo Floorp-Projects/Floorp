@@ -166,6 +166,7 @@ enum class OpKind {
   ReturnCallIndirect,
 #  ifdef ENABLE_WASM_FUNCTION_REFERENCES
   CallRef,
+  ReturnCallRef,
 #  endif
   OldCallDirect,
   OldCallIndirect,
@@ -699,6 +700,12 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   [[nodiscard]] bool readCallRef(const FuncType** funcType, Value* callee,
                                  ValueVector* argValues);
+
+#  ifdef ENABLE_WASM_TAIL_CALLS
+  [[nodiscard]] bool readReturnCallRef(const FuncType** funcType, Value* callee,
+                                       ValueVector* argValues,
+                                       ValueVector* values);
+#  endif
 #endif
   [[nodiscard]] bool readOldCallDirect(uint32_t numFuncImports,
                                        uint32_t* funcTypeIndex,
@@ -2622,6 +2629,47 @@ inline bool OpIter<Policy>::readCallRef(const FuncType** funcType,
   }
 
   return push(ResultType::Vector((*funcType)->results()));
+}
+#endif
+
+#if defined(ENABLE_WASM_TAIL_CALLS) && defined(ENABLE_WASM_FUNCTION_REFERENCES)
+template <typename Policy>
+inline bool OpIter<Policy>::readReturnCallRef(const FuncType** funcType,
+                                              Value* callee,
+                                              ValueVector* argValues,
+                                              ValueVector* values) {
+  MOZ_ASSERT(Classify(op_) == OpKind::ReturnCallRef);
+
+  uint32_t funcTypeIndex;
+  if (!readFuncTypeIndex(&funcTypeIndex)) {
+    return false;
+  }
+
+  const TypeDef& typeDef = env_.types->type(funcTypeIndex);
+  *funcType = &typeDef.funcType();
+
+  if (!popWithType(ValType(RefType::fromTypeDef(&typeDef, true)), callee)) {
+    return false;
+  }
+
+  if (!popCallArgs((*funcType)->args(), argValues)) {
+    return false;
+  }
+
+  if (!push(ResultType::Vector((*funcType)->results()))) {
+    return false;
+  }
+
+  Control& body = controlStack_[0];
+  MOZ_ASSERT(body.kind() == LabelKind::Body);
+
+  // Pop function results as the instruction will cause a return.
+  if (!popWithType(body.resultType(), values)) {
+    return false;
+  }
+
+  afterUnconditionalBranch();
+  return true;
 }
 #endif
 

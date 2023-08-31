@@ -1639,6 +1639,20 @@ void BaseCompiler::callRef(const Stk& calleeRef, const FunctionCall& call,
   loadRef(calleeRef, RegRef(WasmCallRefReg));
   masm.wasmCallRef(desc, callee, fastCallOffset, slowCallOffset);
 }
+
+#  ifdef ENABLE_WASM_TAIL_CALLS
+void BaseCompiler::returnCallRef(const Stk& calleeRef, const FunctionCall& call,
+                                 const FuncType* funcType) {
+  CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::FuncRef);
+  CalleeDesc callee = CalleeDesc::wasmFuncRef();
+
+  loadRef(calleeRef, RegRef(WasmCallRefReg));
+  ReturnCallAdjustmentInfo retCallInfo =
+      BuildReturnCallAdjustmentInfo(this->funcType(), *funcType);
+  masm.wasmReturnCallRef(desc, callee, retCallInfo);
+}
+#  endif
+
 #endif
 
 // Precondition: sync()
@@ -5022,6 +5036,57 @@ bool BaseCompiler::emitCallRef() {
   captureCallResultRegisters(resultType);
   return pushCallResults(baselineCall, resultType, results);
 }
+
+#  ifdef ENABLE_WASM_TAIL_CALLS
+bool BaseCompiler::emitReturnCallRef() {
+  const FuncType* funcType;
+  Nothing unused_callee;
+  BaseNothingVector unused_args{};
+  BaseNothingVector unused_values{};
+  if (!iter_.readReturnCallRef(&funcType, &unused_callee, &unused_args,
+                               &unused_values)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  sync();
+
+  // Stack: ... arg1 .. argn callee
+
+  uint32_t numArgs = funcType->args().length() + 1;
+
+  ResultType resultType(ResultType::Vector(funcType->results()));
+  StackResultsLoc results;
+  if (!pushStackResultsForCall(resultType, RegPtr(ABINonArgReg0), &results)) {
+    return false;
+  }
+
+  FunctionCall baselineCall{};
+  // State and realm are restored as needed by by callRef (really by
+  // MacroAssembler::wasmCallRef).
+  beginCall(baselineCall, UseABI::Wasm, RestoreRegisterStateAndRealm::False);
+
+  if (!emitCallArgs(funcType->args(), NormalCallResults(results), &baselineCall,
+                    CalleeOnStack::True)) {
+    return false;
+  }
+
+  const Stk& callee = peek(results.count());
+  returnCallRef(callee, baselineCall, funcType);
+
+  MOZ_ASSERT(stackMapGenerator_.framePushedExcludingOutboundCallArgs.isSome());
+  stackMapGenerator_.framePushedExcludingOutboundCallArgs.reset();
+
+  popValueStackBy(numArgs);
+
+  deadCode_ = true;
+  return true;
+}
+#  endif
+
 #endif
 
 void BaseCompiler::emitRound(RoundingMode roundingMode, ValType operandType) {
@@ -9374,6 +9439,14 @@ bool BaseCompiler::emitBody() {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(emitCallRef());
+#  ifdef ENABLE_WASM_TAIL_CALLS
+      case uint16_t(Op::ReturnCallRef):
+        if (!moduleEnv_.functionReferencesEnabled() ||
+            !moduleEnv_.tailCallsEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK_NEXT(emitReturnCallRef());
+#  endif
 #endif
 
       // Locals and globals
