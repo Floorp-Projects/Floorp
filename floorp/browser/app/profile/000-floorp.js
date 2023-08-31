@@ -266,6 +266,9 @@ pref("dom.webshare.enabled", true);
 
 // 開発者ツールの位置を「右」に変更
 pref("devtools.toolbox.host", "right");
+
+// user.js
+pref("floorp.user.js.customize", "");
 /*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
 
 pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);

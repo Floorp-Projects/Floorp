@@ -138,3 +138,27 @@ getAllBackupedNotes().then(content => {
     OS.File.writeAtomic(filePath, new TextEncoder().encode(jsonToStr));
   }
 });
+
+// Apply Floorp user.js
+
+const FLOORP_USERJS_PREF = "floorp.browser.userjs";
+
+(async function applyUserJSCustomize() {
+  const pref = Services.prefs.getStringPref("floorp.user.js.customize", "");
+
+  if (pref != "") {
+      const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+      const userjs = PathUtils.join(PROFILE_DIR, "user.js");
+
+      try{userjs.remove(false);} catch(e) {}
+ 
+      fetch(pref)
+        .then(response => response.text())
+        .then(async data => {
+          const encoder = new TextEncoder("UTF-8");
+          const writeData = encoder.encode(data);
+
+          await IOUtils.write(userjs, writeData);
+        });
+  }
+})();

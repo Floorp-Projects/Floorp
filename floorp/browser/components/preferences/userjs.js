@@ -49,12 +49,14 @@ const gUserjsPane = {
             await resetPreferences();
             window.setTimeout(async function () {
               try{FileUtils.getFile("ProfD", ["user.js"]).remove(false);} catch(e) {};
+              Services.prefs.clearUserPref("floorp.user.js.customize");
               Services.obs.notifyObservers([], "floorp-restart-browser");
             }, 3000);
           } else {
             await resetPreferences();
             window.setTimeout(async function () {
               await setUserJSWithURL(url);
+              Services.prefs.setStringPref("floorp.user.js.customize", url);
             }, 3000);
           }
         }
