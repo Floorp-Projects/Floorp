@@ -759,6 +759,14 @@ void nsMenuPopupFrame::InitPositionFromAnchorAlign(const nsAString& aAnchor,
     mPopupAlignment = POPUPALIGNMENT_BOTTOMLEFT;
   else if (aAlign.EqualsLiteral("bottomright"))
     mPopupAlignment = POPUPALIGNMENT_BOTTOMRIGHT;
+  else if (aAlign.EqualsLiteral("leftcenter"))
+    mPopupAlignment = POPUPALIGNMENT_LEFTCENTER;
+  else if (aAlign.EqualsLiteral("rightcenter"))
+    mPopupAlignment = POPUPALIGNMENT_RIGHTCENTER;
+  else if (aAlign.EqualsLiteral("topcenter"))
+    mPopupAlignment = POPUPALIGNMENT_TOPCENTER;
+  else if (aAlign.EqualsLiteral("bottomcenter"))
+    mPopupAlignment = POPUPALIGNMENT_BOTTOMCENTER;
   else
     mPopupAlignment = POPUPALIGNMENT_NONE;
 
@@ -1134,6 +1142,18 @@ nsPoint nsMenuPopupFrame::AdjustPositionForAnchorAlign(
   // margins of the popup on the edge on which it is aligned.
   nsMargin margin = GetMargin();
   switch (popupAlign) {
+    case POPUPALIGNMENT_LEFTCENTER:
+      pnt.MoveBy(margin.left, -aPrefSize.height / 2);
+      break;
+    case POPUPALIGNMENT_RIGHTCENTER:
+      pnt.MoveBy(-aPrefSize.width - margin.right, -aPrefSize.height / 2);
+      break;
+    case POPUPALIGNMENT_TOPCENTER:
+      pnt.MoveBy(-aPrefSize.width / 2, margin.top);
+      break;
+    case POPUPALIGNMENT_BOTTOMCENTER:
+      pnt.MoveBy(-aPrefSize.width / 2, -aPrefSize.height - margin.bottom);
+      break;
     case POPUPALIGNMENT_TOPRIGHT:
       pnt.MoveBy(-aPrefSize.width - margin.right, margin.top);
       break;
@@ -1604,9 +1624,11 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
         const bool endAligned =
             IsDirectionRTL()
                 ? mPopupAlignment == POPUPALIGNMENT_TOPLEFT ||
-                      mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT
+                      mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT ||
+                      mPopupAlignment == POPUPALIGNMENT_LEFTCENTER
                 : mPopupAlignment == POPUPALIGNMENT_TOPRIGHT ||
-                      mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
+                      mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT ||
+                      mPopupAlignment == POPUPALIGNMENT_RIGHTCENTER;
         result.mUsedRect.width = FlipOrResize(
             result.mUsedRect.x, result.mUsedRect.width, constraintRect->x,
             constraintRect->XMost(), result.mAnchorRect.x,
@@ -1619,7 +1641,8 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
             constraintRect->YMost(), &result.mAlignmentOffset);
       } else {
         bool endAligned = mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT ||
-                          mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
+                          mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT ||
+                          mPopupAlignment == POPUPALIGNMENT_BOTTOMCENTER;
         result.mUsedRect.height = FlipOrResize(
             result.mUsedRect.y, result.mUsedRect.height, constraintRect->y,
             constraintRect->YMost(), result.mAnchorRect.y,
