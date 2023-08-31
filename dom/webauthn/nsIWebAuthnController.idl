@@ -139,9 +139,9 @@ interface nsIWebAuthnAttObj : nsISupports {
 
     readonly attribute Array<octet> authenticatorData;
 
-    // Bug 1816520
-    // readonly attribute Array<octet> publicKey
-    // readonly attribute COSEAlgorithmIdentifier publicKeyAlgorithm;
+    readonly attribute Array<octet> publicKey;
+
+    readonly attribute COSEAlgorithmIdentifier publicKeyAlgorithm;
 };
 
 // The nsICtapSignResult interface is used to construct IPDL-defined

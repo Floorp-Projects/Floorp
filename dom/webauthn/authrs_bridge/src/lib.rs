@@ -10,6 +10,7 @@ extern crate xpcom;
 
 use authenticator::{
     authenticatorservice::{RegisterArgs, SignArgs},
+    crypto::COSEKeyType,
     ctap2::attestation::AttestationObject,
     ctap2::commands::get_info::AuthenticatorVersion,
     ctap2::server::{
@@ -139,6 +140,28 @@ impl WebAuthnAttObj {
     fn get_authenticator_data(&self) -> Result<ThinVec<u8>, nsresult> {
         // TODO(https://github.com/mozilla/authenticator-rs/issues/302) use to_writer
         Ok(self.att_obj.auth_data.to_vec().into())
+    }
+
+    xpcom_method!(get_public_key => GetPublicKey() -> ThinVec<u8>);
+    fn get_public_key(&self) -> Result<ThinVec<u8>, nsresult> {
+        let Some(credential_data) = &self.att_obj.auth_data.credential_data else {
+            return Err(NS_ERROR_FAILURE);
+        };
+        // We only support encoding (some) EC2 keys in DER SPKI format.
+        let COSEKeyType::EC2(ref key) = credential_data.credential_public_key.key else {
+            return Err(NS_ERROR_NOT_AVAILABLE);
+        };
+        Ok(key.der_spki().or(Err(NS_ERROR_NOT_AVAILABLE))?.into())
+    }
+
+    xpcom_method!(get_public_key_algorithm => GetPublicKeyAlgorithm() -> i32);
+    fn get_public_key_algorithm(&self) -> Result<i32, nsresult> {
+        if let Some(credential_data) = &self.att_obj.auth_data.credential_data {
+            // safe to cast to i32 by inspection of defined values
+            Ok(credential_data.credential_public_key.alg as i32)
+        } else {
+            Err(NS_ERROR_FAILURE)
+        }
     }
 }
 
