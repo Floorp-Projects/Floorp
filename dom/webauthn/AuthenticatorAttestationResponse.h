@@ -40,6 +40,11 @@ class AuthenticatorAttestationResponse final : public AuthenticatorResponse {
   void GetAuthenticatorData(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
                             ErrorResult& aRv);
 
+  void GetPublicKey(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
+                    ErrorResult& aRv);
+
+  COSEAlgorithmIdentifier GetPublicKeyAlgorithm(ErrorResult& aRv);
+
  private:
   nsTArray<uint8_t> mAttestationObject;
   nsCOMPtr<nsIWebAuthnAttObj> mAttestationObjectParsed;

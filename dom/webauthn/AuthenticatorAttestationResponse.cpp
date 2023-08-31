@@ -102,4 +102,51 @@ void AuthenticatorAttestationResponse::GetAuthenticatorData(
   aValue.set(buffer);
 }
 
+void AuthenticatorAttestationResponse::GetPublicKey(
+    JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
+  if (!mAttestationObjectParsed) {
+    nsresult rv = authrs_webauthn_att_obj_constructor(
+        mAttestationObject, false, getter_AddRefs(mAttestationObjectParsed));
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
+  }
+
+  nsTArray<uint8_t> publicKey;
+  nsresult rv = mAttestationObjectParsed->GetPublicKey(publicKey);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      aValue.set(nullptr);
+    } else {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    }
+    return;
+  }
+
+  JS::Heap<JSObject*> buffer(
+      ArrayBuffer::Create(aCx, publicKey.Length(), publicKey.Elements()));
+  if (!buffer) {
+    aRv.NoteJSContextException(aCx);
+    return;
+  }
+  aValue.set(buffer);
+}
+
+COSEAlgorithmIdentifier AuthenticatorAttestationResponse::GetPublicKeyAlgorithm(
+    ErrorResult& aRv) {
+  if (!mAttestationObjectParsed) {
+    nsresult rv = authrs_webauthn_att_obj_constructor(
+        mAttestationObject, false, getter_AddRefs(mAttestationObjectParsed));
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return 0;
+    }
+  }
+
+  COSEAlgorithmIdentifier alg;
+  mAttestationObjectParsed->GetPublicKeyAlgorithm(&alg);
+  return alg;
+}
+
 }  // namespace mozilla::dom
