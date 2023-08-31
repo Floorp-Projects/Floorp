@@ -198,7 +198,8 @@ OS_LIBS += [
     "urlmon",
 ]
 
-if CONFIG["CC_TYPE"] == "clang-cl":
+# mingw is missing Windows toast notification definitions.
+if CONFIG["CC_TYPE"] != "gcc":
     SOURCES += [
         "ToastNotification.cpp",
         "ToastNotificationHandler.cpp",
