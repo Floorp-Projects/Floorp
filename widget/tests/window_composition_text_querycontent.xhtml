@@ -187,8 +187,8 @@ function getHTMLEditorIMESupport(aWindow)
 const kIsWin = (navigator.platform.indexOf("Win") == 0);
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 
-const kLFLen = (kIsWin && !AppConstants.NIGHTLY_BUILD) ? 2 : 1;
-const kLF = (kIsWin && !AppConstants.NIGHTLY_BUILD) ? "\r\n" : "\n";
+const kLFLen = (kIsWin && !AppConstants.EARLY_BETA_OR_EARLIER) ? 2 : 1;
+const kLF = (kIsWin && !AppConstants.EARLY_BETA_OR_EARLIER) ? "\r\n" : "\n";
 
 function checkQueryContentResult(aResult, aMessage)
 {
