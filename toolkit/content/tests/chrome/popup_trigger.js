@@ -272,8 +272,6 @@ var popupTests = [
       "topleft bottomright",
       "bottomcenter bottomright",
       "rightcenter topright",
-      "bottomcenter topcenter",
-      "rightcenter leftcenter",
     ],
     test(testname, step) {
       gExpectedTriggerNode = "notset";

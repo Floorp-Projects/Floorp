@@ -3,18 +3,47 @@
 
 "use strict";
 
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
+);
+const { FeatureCalloutMessages } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/FeatureCalloutMessages.sys.mjs"
+);
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  FeatureCallout: "resource:///modules/FeatureCallout.sys.mjs",
+  FeatureCalloutBroker:
+    "resource://activity-stream/lib/FeatureCalloutBroker.sys.mjs",
+});
+
+const calloutId = "multi-stage-message-root";
+const calloutSelector = `#${calloutId}.featureCallout`;
+const CTASelector = `#${calloutId} :is(.primary, .secondary)`;
 const PDF_TEST_URL =
   "https://example.com/browser/browser/components/newtab/test/browser/file_pdf.PDF";
+
+const waitForCalloutScreen = async (doc, screenId) => {
+  await BrowserTestUtils.waitForCondition(
+    () => doc.querySelector(`${calloutSelector}:not(.hidden) .${screenId}`),
+    `Waiting for callout screen ${screenId} to be rendered`
+  );
+};
+
+const waitForRemoved = async doc => {
+  await BrowserTestUtils.waitForCondition(
+    () => !doc.querySelector(calloutSelector),
+    "Waiting for callout to be removed"
+  );
+};
 
 async function openURLInWindow(window, url) {
   const { selectedBrowser } = window.gBrowser;
   BrowserTestUtils.loadURIString(selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
-  return selectedBrowser;
 }
 
-async function openURLInNewTab(window, ...args) {
-  return BrowserTestUtils.openNewForegroundTab(window.gBrowser, ...args);
+async function openURLInNewTab(window, url) {
+  return BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
 }
 
 const pdfMatch = sinon.match(val => {
@@ -145,18 +174,12 @@ const newtabTestMessage = {
   trigger: { id: "newtabFeatureCalloutCheck" },
 };
 
-const testMessageScreenId = testMessage.message.content.screens[0].id;
-const newtabTestMessageScreenId = newtabTestMessage.content.screens[0].id;
-
-const inChaosMode = !!parseInt(Services.env.get("MOZ_CHAOSMODE"), 16);
+const testMessageCalloutSelector = testMessage.message.content.screens[0].id;
+const newtabTestMessageCalloutSelector =
+  newtabTestMessage.content.screens[0].id;
 
 add_setup(async function () {
-  let timeoutFactor = 3;
-  // Runtime increases in chaos mode on Mac.
-  if (inChaosMode && AppConstants.platform === "macosx") {
-    timeoutFactor = 5;
-  }
-  requestLongerTimeout(timeoutFactor);
+  requestLongerTimeout(3);
 });
 
 // Test that a feature callout message can be loaded into ASRouter and displayed
@@ -354,7 +377,7 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
 
   // Test that a callout does NOT appear if another is already shown in any window.
   const showFeatureCalloutSpy = sandbox.spy(
-    FeatureCalloutBroker,
+    lazy.FeatureCalloutBroker,
     "showFeatureCallout"
   );
   const win2 = await BrowserTestUtils.openNewBrowserWindow();
@@ -389,7 +412,7 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
   );
 
   // Test that the callout advances screen and sets the tour pref
-  win1.document.querySelector(calloutCTASelector).click();
+  win1.document.querySelector(CTASelector).click();
   await BrowserTestUtils.waitForCondition(
     () =>
       Services.prefs.prefHasUserValue(TEST_MESSAGES[0].content.tour_pref_name),
@@ -415,8 +438,8 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
   );
 
   // Test that the callout is dismissed and cleans up the tour pref
-  win1.document.querySelector(calloutCTASelector).click();
-  await waitForCalloutRemoved(win1.document);
+  win1.document.querySelector(CTASelector).click();
+  await waitForRemoved(win1.document);
   ok(
     !win1.document.querySelector(calloutSelector),
     "Feature Callout is not rendered after being dismissed"
@@ -426,7 +449,7 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
     "Tour pref is cleaned up correctly"
   );
   await BrowserTestUtils.waitForCondition(
-    () => !FeatureCalloutBroker.isCalloutShowing,
+    () => !lazy.FeatureCalloutBroker.isCalloutShowing,
     "Waiting for all callouts to empty from the callout broker"
   );
 
@@ -442,9 +465,12 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
     win1.document.querySelector(calloutSelector),
     "A different Feature Callout is rendered"
   );
-  win1.document.querySelector(calloutCTASelector).click();
-  await waitForCalloutRemoved(win1.document);
-  ok(!FeatureCalloutBroker.isCalloutShowing, "No Feature Callout is shown");
+  win1.document.querySelector(CTASelector).click();
+  await waitForRemoved(win1.document);
+  ok(
+    !lazy.FeatureCalloutBroker.isCalloutShowing,
+    "No Feature Callout is shown"
+  );
 
   BrowserTestUtils.closeWindow(win1);
 
@@ -466,7 +492,7 @@ add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
   const win = await BrowserTestUtils.openNewBrowserWindow();
   await openURLInWindow(win, PDF_TEST_URL);
   const doc = win.document;
-  await waitForCalloutScreen(doc, testMessageScreenId);
+  await waitForCalloutScreen(doc, testMessageCalloutSelector);
   const container = doc.querySelector(calloutSelector);
   ok(
     container,
@@ -474,8 +500,8 @@ add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
   );
 
   // click CTA to close
-  doc.querySelector(calloutCTASelector).click();
-  await waitForCalloutRemoved(doc);
+  doc.querySelector(CTASelector).click();
+  await waitForRemoved(doc);
   ok(
     true,
     "Feature callout removed from browser chrome after clicking button configured to navigate"
@@ -500,9 +526,9 @@ add_task(
       PDF_TEST_URL
     );
     tab1.focus();
-    await waitForCalloutScreen(doc, testMessageScreenId);
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${testMessageScreenId}`),
+      doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout rendered when opening a new tab with PDF url"
     );
 
@@ -515,22 +541,22 @@ add_task(
     });
 
     ok(
-      !doc.querySelector(`.${testMessageScreenId}`),
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout removed when tab without PDF URL is navigated to"
     );
 
     const tab3 = await openURLInNewTab(win, PDF_TEST_URL);
     tab3.focus();
-    await waitForCalloutScreen(doc, testMessageScreenId);
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${testMessageScreenId}`),
+      doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout still renders when opening a new tab with PDF url after being initially rendered on another tab"
     );
 
     tab1.focus();
-    await waitForCalloutScreen(doc, testMessageScreenId);
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${testMessageScreenId}`),
+      doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout rendered on original tab after switching tabs multiple times"
     );
 
@@ -554,9 +580,9 @@ add_task(
       PDF_TEST_URL
     );
     tab1.focus();
-    await waitForCalloutScreen(doc, testMessageScreenId);
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${testMessageScreenId}`),
+      doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout rendered when opening a new tab with PDF url"
     );
 
@@ -565,10 +591,10 @@ add_task(
       win.gBrowser,
       "about:preferences"
     );
-    await waitForCalloutRemoved(doc);
+    await waitForRemoved(doc);
 
     ok(
-      !doc.querySelector(`.${testMessageScreenId}`),
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout not rendered on original tab after navigating to non pdf URL"
     );
 
@@ -592,17 +618,17 @@ add_task(
       PDF_TEST_URL
     );
     tab1.focus();
-    await waitForCalloutScreen(doc, testMessageScreenId);
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${testMessageScreenId}`),
+      doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout rendered when opening a new tab with PDF url"
     );
 
     BrowserTestUtils.removeTab(tab1);
-    await waitForCalloutRemoved(doc);
+    await waitForRemoved(doc);
 
     ok(
-      !doc.querySelector(`.${testMessageScreenId}`),
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout disappears after closing foreground tab"
     );
 
@@ -627,14 +653,14 @@ add_task(
 
     const tab1 = await BrowserTestUtils.addTab(win.gBrowser, PDF_TEST_URL);
     ok(
-      !doc.querySelector(`.${testMessageScreenId}`),
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout not rendered when opening a background tab with PDF url"
     );
 
     BrowserTestUtils.removeTab(tab1);
 
     ok(
-      !doc.querySelector(`.${testMessageScreenId}`),
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout still not rendered after closing background tab with PDF url"
     );
 
@@ -661,16 +687,16 @@ add_task(
       "about:newtab"
     );
     tab1.focus();
-    await waitForCalloutScreen(doc, newtabTestMessageScreenId);
+    await waitForCalloutScreen(doc, newtabTestMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${newtabTestMessageScreenId}`),
+      doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
       "Newtab feature callout rendered when opening a focused newtab"
     );
 
     BrowserTestUtils.removeTab(tab1);
-    await waitForCalloutRemoved(doc);
+    await waitForRemoved(tab1);
     ok(
-      !doc.querySelector(`.${newtabTestMessageScreenId}`),
+      !doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
       "Feature callout disappears after closing new tab"
     );
 
@@ -699,14 +725,14 @@ add_task(
     );
     const tab2 = await BrowserTestUtils.addTab(win.gBrowser, "about:newtab");
     ok(
-      !doc.querySelector(`.${newtabTestMessageScreenId}`),
+      !doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
       "Newtab feature callout not rendered when opening a background newtab"
     );
 
     BrowserTestUtils.removeTab(tab2);
-    await waitForCalloutRemoved(doc);
+    await waitForRemoved(tab2);
     ok(
-      !doc.querySelector(`.${newtabTestMessageScreenId}`),
+      !doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
       "Feature callout still not rendered after closing background tab"
     );
 
@@ -730,9 +756,9 @@ add_task(
     await openURLInWindow(win, "about:newtab");
     const doc = win.document;
 
-    await waitForCalloutScreen(doc, newtabTestMessageScreenId);
+    await waitForCalloutScreen(doc, newtabTestMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${newtabTestMessageScreenId}`),
+      doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
       "Newtab Feature Callout is in the browser chrome of first window when a message is available"
     );
 
@@ -740,7 +766,7 @@ add_task(
     await openURLInWindow(win2, "about:newtab");
     const doc2 = win2.document;
     ok(
-      !doc2.querySelector(`.${newtabTestMessageScreenId}`),
+      !doc2.querySelector(`.${newtabTestMessageCalloutSelector}`),
       "Newtab Feature Callout is not in the browser chrome new window when a message is available"
     );
 
@@ -769,18 +795,18 @@ add_task(
       "about:newtab"
     );
     tab1.focus();
-    await waitForCalloutScreen(doc, newtabTestMessageScreenId);
+    await waitForCalloutScreen(doc, newtabTestMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${newtabTestMessageScreenId}`),
+      doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
       "Feature callout rendered when opening a newtab"
     );
 
     BrowserTestUtils.loadURIString(win.gBrowser, PDF_TEST_URL);
     await BrowserTestUtils.waitForLocationChange(win.gBrowser, PDF_TEST_URL);
-    await waitForCalloutRemoved(doc);
+    await waitForRemoved(doc);
 
     ok(
-      !doc.querySelector(`.${testMessageScreenId}`),
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
       "Feature callout not rendered on original tab after navigating to PDF"
     );
 
@@ -808,9 +834,9 @@ add_task(
       "about:newtab"
     );
     tab1.focus();
-    await waitForCalloutScreen(doc, newtabTestMessageScreenId);
+    await waitForCalloutScreen(doc, newtabTestMessageCalloutSelector);
     ok(
-      doc.querySelector(`.${newtabTestMessageScreenId}`),
+      doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
       "Feature callout rendered when opening a newtab"
     );
 
@@ -819,10 +845,10 @@ add_task(
       PDF_TEST_URL
     );
     tab2.focus();
-    await waitForCalloutRemoved(doc);
+    await waitForRemoved(doc);
 
     ok(
-      !doc.querySelector(`.${testMessageScreenId}`),
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
       "Newtab feature callout not rendered after navigating to PDF"
     );
 
@@ -944,7 +970,7 @@ add_task(async function feature_callout_dismissed_on_escape() {
   const win = await BrowserTestUtils.openNewBrowserWindow();
   await openURLInWindow(win, PDF_TEST_URL);
   const doc = win.document;
-  await waitForCalloutScreen(doc, testMessageScreenId);
+  await waitForCalloutScreen(doc, testMessageCalloutSelector);
   const container = doc.querySelector(calloutSelector);
   ok(
     container,
@@ -956,7 +982,7 @@ add_task(async function feature_callout_dismissed_on_escape() {
 
   // Press Escape to close
   EventUtils.synthesizeKey("KEY_Escape", {}, win);
-  await waitForCalloutRemoved(doc);
+  await waitForRemoved(doc);
   ok(true, "Feature callout dismissed after pressing Escape");
 
   await BrowserTestUtils.closeWindow(win);
@@ -973,7 +999,7 @@ add_task(
     const win = await BrowserTestUtils.openNewBrowserWindow();
     await openURLInWindow(win, PDF_TEST_URL);
     const doc = win.document;
-    await waitForCalloutScreen(doc, testMessageScreenId);
+    await waitForCalloutScreen(doc, testMessageCalloutSelector);
     const container = doc.querySelector(calloutSelector);
     ok(
       container,
@@ -1013,7 +1039,7 @@ add_task(async function first_anchor_selected_is_valid() {
   const sandbox = sinon.createSandbox();
 
   const doc = win.document;
-  const featureCallout = new FeatureCallout(config);
+  const featureCallout = new lazy.FeatureCallout(config);
   const getAnchorSpy = sandbox.spy(featureCallout, "_getAnchor");
   featureCallout.showFeatureCallout(message);
   await waitForCalloutScreen(doc, message.content.screens[0].id);
@@ -1024,8 +1050,8 @@ add_task(async function first_anchor_selected_is_valid() {
     "The first anchor is selected"
   );
 
-  win.document.querySelector(calloutCTASelector).click();
-  await waitForCalloutRemoved(win.document);
+  win.document.querySelector(CTASelector).click();
+  await waitForRemoved(win.document);
   await BrowserTestUtils.closeWindow(win);
   sandbox.restore();
 });
@@ -1060,7 +1086,7 @@ add_task(async function first_anchor_selected_is_invalid() {
   ];
   const sandbox = sinon.createSandbox();
 
-  const featureCallout = new FeatureCallout(config);
+  const featureCallout = new lazy.FeatureCallout(config);
   const getAnchorSpy = sandbox.spy(featureCallout, "_getAnchor");
   featureCallout.showFeatureCallout(message);
   await waitForCalloutScreen(doc, message.content.screens[0].id);
@@ -1070,8 +1096,8 @@ add_task(async function first_anchor_selected_is_invalid() {
     "The first valid anchor (anchor 5) is selected"
   );
 
-  win.document.querySelector(calloutCTASelector).click();
-  await waitForCalloutRemoved(win.document);
+  win.document.querySelector(CTASelector).click();
+  await waitForRemoved(win.document);
   CustomizableUI.reset();
   await BrowserTestUtils.closeWindow(win);
   sandbox.restore();
