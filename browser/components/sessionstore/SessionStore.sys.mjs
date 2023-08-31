@@ -1335,7 +1335,7 @@ var SessionStoreInternal = {
       true
     );
     this._prefBranch.addObserver(
-      "sessionstore.closedTabsFromAllWindows",
+      "sessionstore.closedTabsFromClosedWindows",
       this,
       true
     );
