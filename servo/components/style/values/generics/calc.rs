@@ -511,11 +511,15 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 ref mut center,
                 ref mut max,
             } => {
-                min.negate();
-                center.negate();
-                max.negate();
+                if min <= max {
+                    min.negate();
+                    center.negate();
+                    max.negate();
 
-                mem::swap(min, max);
+                    mem::swap(min, max);
+                } else {
+                    wrap_self_in_negate(self);
+                }
             },
             CalcNode::Round {
                 ref mut value,
