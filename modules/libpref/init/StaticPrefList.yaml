@@ -15093,6 +15093,11 @@
   value: 1024
   mirror: always
 
+- name: webgl.max-vert-ids-per-draw
+  type: RelaxedAtomicUint32
+  value: 30*1000*1000
+  mirror: always
+
 - name: webgl.max-warnings-per-context
   type: RelaxedAtomicUint32
   value: 32
