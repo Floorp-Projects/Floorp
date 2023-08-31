@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 from collections import defaultdict
 
 from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
-from mozprocess import ProcessHandler
+from mozprocess import run_and_wait
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
@@ -47,7 +47,7 @@ class Benchmark(object):
         """Return the path to the benchmark relative to topsrcdir."""
 
     @abstractmethod
-    def process_line(self, line):
+    def process_line(self, proc, line):
         """Process a line of stdout from the benchmark."""
 
     @abstractmethod
@@ -113,17 +113,14 @@ class Benchmark(object):
         env = os.environ.copy()
 
         process_args = {
-            "cmd": self.command,
+            "args": self.command,
             "cwd": self.path,
-            "onFinish": self.collect_results,
-            "processOutputLine": self.process_line,
-            "stream": sys.stdout,
             "env": env,
-            "universal_newlines": True,
+            "output_line_handler": self.process_line,
         }
-        proc = ProcessHandler(**process_args)
-        proc.run()
-        return proc.wait()
+        proc = run_and_wait(**process_args)
+        self.collect_results()
+        return proc.returncode
 
 
 class RunOnceBenchmark(Benchmark):
@@ -168,7 +165,9 @@ class Ares6(Benchmark):
         self.scores[self.bench_name][score_name].append(float(score))
         return True
 
-    def process_line(self, line):
+    def process_line(self, proc, line):
+        line = line.strip("\n")
+        print(line)
         m = re.search("Running... (.+) \(.+\)", line)
         if m:
             self.bench_name = m.group(1)
@@ -216,7 +215,9 @@ class SixSpeed(RunOnceBenchmark):
         # {<bench_name>: {<score_name>: [<values>]}}
         self.scores = defaultdict(lambda: defaultdict(list))
 
-    def process_line(self, output):
+    def process_line(self, proc, output):
+        output = output.strip("\n")
+        print(output)
         m = re.search("(.+): (\d+)", output)
         if not m:
             return
@@ -246,7 +247,9 @@ class SunSpider(RunOnceBenchmark):
         # {<bench_name>: {<score_name>: [<values>]}}
         self.scores = defaultdict(lambda: defaultdict(list))
 
-    def process_line(self, output):
+    def process_line(self, proc, output):
+        output = output.strip("\n")
+        print(output)
         m = re.search("(.+): (\d+)", output)
         if not m:
             return
@@ -279,7 +282,9 @@ class WebToolingBenchmark(Benchmark):
         # {<bench_name>: {<score_name>: [<values>]}}
         self.scores = defaultdict(lambda: defaultdict(list))
 
-    def process_line(self, output):
+    def process_line(self, proc, output):
+        output = output.strip("\n")
+        print(output)
         m = re.search(" +([a-zA-Z].+): +([.0-9]+) +runs/sec", output)
         if not m:
             return
@@ -331,7 +336,9 @@ class Octane(RunOnceBenchmark):
         # {<bench_name>: {<score_name>: [<values>]}}
         self.scores = defaultdict(lambda: defaultdict(list))
 
-    def process_line(self, output):
+    def process_line(self, proc, output):
+        output = output.strip("\n")
+        print(output)
         m = re.search("(.+): (\d+)", output)
         if not m:
             return
