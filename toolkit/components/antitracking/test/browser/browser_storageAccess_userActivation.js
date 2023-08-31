@@ -40,6 +40,8 @@ async function requestStorageAccessAndExpectUserActivationActive() {
 // Callback function to check if the user activation was consumed
 async function requestStorageAccessAndExpectUserActivationConsumed() {
   SpecialPowers.wrap(document).notifyUserGestureActivation();
+  const lastUserGesture = SpecialPowers.wrap(document).lastUserGestureTimeStamp;
+
   let p = document.requestStorageAccess();
   try {
     await p;
@@ -54,8 +56,8 @@ async function requestStorageAccessAndExpectUserActivationConsumed() {
     `check has-been-user-activated on the top-level-document`
   );
   is(
-    SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
-    false,
+    SpecialPowers.wrap(document).lastUserGestureTimeStamp,
+    lastUserGesture,
     `check has-valid-transient-user-activation on the top-level-document`
   );
 
