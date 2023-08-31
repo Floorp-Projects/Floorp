@@ -42,8 +42,7 @@ const TEST_MESSAGE = {
               action: {
                 type: "CLICK_ELEMENT",
                 data: {
-                  selector:
-                    "#tab-pickup-container button.primary:not(#error-state-button)",
+                  selector: "span.brand-feature-name",
                 },
               },
             },
@@ -88,7 +87,8 @@ add_task(async function test_CLICK_ELEMENT() {
       theme: { preset: "themed-content" },
     });
     callout.showFeatureCallout();
-    const calloutSelector = "#multi-stage-message-root.featureCallout";
+    const calloutId = "feature-callout";
+    const calloutSelector = `#${calloutId}.featureCallout`;
 
     await BrowserTestUtils.waitForCondition(() => {
       return document.querySelector(

@@ -24,6 +24,7 @@ add_task(async function test_PanelTestProvider() {
     update_action: 1,
     whatsnew_panel_message: 7,
     spotlight: 3,
+    feature_callout: 1,
     pb_newtab: 2,
     toast_notification: 3,
   };

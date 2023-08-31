@@ -4,14 +4,13 @@
 
 @import 'feature-callout-theme';
 
-.onboardingContainer.featureCallout {
+#feature-callout {
   // See _feature-callout-theme.scss for the theme mixins and
   // FeatureCallout.sys.mjs for the color values
   @include light-theme;
 
   color-scheme: light;
   position: absolute;
-  transition: opacity 0.5s ease;
   z-index: 2147483647;
   outline: none;
   color: var(--fc-color);
@@ -48,13 +47,53 @@
     }
   }
 
-  &.hidden {
-    opacity: 0;
-    pointer-events: none;
+  $panel-shadow-margin: 6px;
+  $arrow-size: 24px;
+  $arrow-visible-size: math.div($arrow-size, 2);
+  $arrow-center-inset: calc(50% - $arrow-visible-size);
+  // move the arrow 1px closer to the callout to account for subpixel rounding
+  // differences, which might cause the corners of the arrow (which is actually
+  // a rotated square) to be visible.
+  $arrow-offset: 1px - $arrow-visible-size;
+  $arrow-inset: $arrow-visible-size + 6px;
+  $panel-arrow-space: $panel-shadow-margin + $arrow-visible-size - 1px;
+  $arrow-overlap-magnitude: 5px;
+  // The callout starts with its edge aligned with the edge of the anchor. But
+  // we want the arrow to align to the anchor, not the callout edge. So we need
+  // to offset the callout by the arrow size and margin, as well as the margin
+  // of the entire callout (it has margins on all sides to make room for the
+  // shadow when displayed in a panel, which would normally cut off the shadow).
+  $panel-margin-offset-magnitude: $panel-shadow-margin + $arrow-visible-size + $arrow-inset;
+
+  @at-root panel#{&} {
+    --panel-color: var(--fc-color);
+    --panel-shadow-margin: #{$panel-shadow-margin};
+    --panel-shadow: none;
   }
 
-  &,
-  & .outer-wrapper {
+  @at-root panel#{&}::part(content) {
+    width: initial;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    margin: var(--panel-shadow-margin);
+    background: none;
+    color: inherit;
+    // stylelint-disable-next-line declaration-no-important
+    overflow: visible !important;
+  }
+
+  @at-root div#{&} {
+    transition: opacity 0.5s ease;
+
+    &.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  .onboardingContainer,
+  .onboardingContainer .outer-wrapper {
     // Override the element transitions from aboutwelcome.scss
     --transition: none;
 
@@ -334,37 +373,72 @@
     }
   }
 
-  $arrow-size: 24px;
-  $arrow-inset-size: math.div($arrow-size, 2);
-  // the arrow already overlaps the callout by 12px (see above), but to account
-  // for different pixel scaling factors, we can overlap by 1px more, since the
-  // border is drawn underneath the callout (on ::after). this is either added
-  // to or subtracted from absolute coordinates, depending on the direction.
-  $arrow-overlap-inset: -$arrow-inset-size + 1px;
+  @at-root panel#{&}:is([side='top'], [side='bottom']):not(.hidden-arrow) {
+    margin-inline: -$panel-margin-offset-magnitude;
+  }
 
-  // applied to all callout arrow foreground and background
-  &.callout-arrow::before,
-  &.callout-arrow::after {
-    content: '';
+  @at-root panel#{&}:is([side='left'], [side='right']):not(.hidden-arrow) {
+    margin-block: -$panel-margin-offset-magnitude;
+  }
+
+  @at-root panel#{&}::part(content) {
+    position: relative;
+  }
+
+  // all visible callout arrow boxes. boxes are for rotating 45 degrees, arrows
+  // are for the actual arrow shape and are children of the boxes.
+  .arrow-box {
     position: absolute;
-    width: $arrow-size;
-    height: $arrow-size;
+    overflow: visible;
     transform: rotate(45deg);
     // keep the border crisp under transformation
     transform-style: preserve-3d;
   }
 
-  // the part of the arrow that appears "behind" the callout
-  &.callout-arrow::before {
-    background: transparent;
-    outline: 1px solid var(--fc-border);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 15%);
+  &:not([arrow-position]) .arrow-box,
+  &.hidden-arrow .arrow-box {
+    display: none;
+  }
+
+  // both shadow arrow and background arrow
+  .arrow {
+    width: $arrow-size;
+    height: $arrow-size;
+  }
+
+  // the arrow's shadow box
+  .shadow-arrow-box {
     z-index: -1;
   }
 
-  // the part of the arrow that appears "in front" of the callout
-  &.callout-arrow::after {
+  // the arrow's shadow
+  .shadow-arrow {
+    background: transparent;
+    outline: 1px solid var(--fc-border);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 15%);
+  }
+
+  // the 'filled' arrow box
+  .background-arrow-box {
+    z-index: 1;
+    // the background arrow technically can overlap the dismiss button. it
+    // doesn't visibly overlap it because of the clip-path rule below, but it
+    // can still be clicked. so we need to make sure it doesn't block inputs on
+    // the button. the visible part of the arrow can still catch clicks because
+    // we don't add this rule to .shadow-arrow-box.
+    pointer-events: none;
+  }
+
+  // the 'filled' arrow
+  .background-arrow {
     background-color: var(--fc-background);
+    clip-path: var(--fc-arrow-clip-path);
+  }
+
+  // top (center) arrow positioning
+  &[arrow-position='top'] .arrow-box {
+    top: $arrow-offset;
+    inset-inline-start: $arrow-center-inset;
     // the callout arrow is actually a diamond (a rotated square), with the
     // lower half invisible. the part that appears in front of the callout has
     // only a background, so that where it overlaps the callout's border, the
@@ -374,58 +448,183 @@
     // diamond would visibly overlap any callout content that happens to be in
     // the same place. so we clip it to a triangle, with a 2% extension on the
     // bottom to account for any subpixel rounding differences.
-    clip-path: polygon(100% 0, 100% 2%, 2% 100%, 0 100%, 0 0);
-    z-index: 1;
+    --fc-arrow-clip-path: polygon(100% 0, 100% 2%, 2% 100%, 0 100%, 0 0);
   }
 
-  // up arrow positioning
-  &.arrow-top::before,
-  &.arrow-top::after {
-    top: $arrow-overlap-inset;
-    inset-inline-start: calc(50% - $arrow-inset-size);
+  @at-root panel#{&}[arrow-position='top']::part(content) {
+    margin-top: $panel-arrow-space + 6px;
   }
 
-  // down arrow positioning
-  &.arrow-bottom::before,
-  &.arrow-bottom::after {
-    bottom: $arrow-overlap-inset;
-    inset-inline-start: calc(50% - $arrow-inset-size);
+  @at-root panel#{&}[arrow-position='top'] {
+    margin-top: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
   }
 
-  // end arrow positioning
-  &.arrow-inline-end::before,
-  &.arrow-inline-end::after {
-    top: calc(50% - $arrow-inset-size);
-    inset-inline-end: $arrow-overlap-inset;
+  // bottom (center) arrow positioning
+  &[arrow-position='bottom'] .arrow-box {
+    bottom: $arrow-offset;
+    inset-inline-start: $arrow-center-inset;
+    --fc-arrow-clip-path: polygon(100% 0, 98% 0, 0 98%, 0 100%, 100% 100%);
   }
 
-  // start arrow positioning
-  &.arrow-inline-start::before,
-  &.arrow-inline-start::after {
-    top: calc(50% - $arrow-inset-size);
-    inset-inline-start: $arrow-overlap-inset;
+  @at-root panel#{&}[arrow-position='bottom']::part(content) {
+    margin-bottom: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='bottom'] {
+    margin-bottom: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
+  }
+
+  // end (center) arrow positioning
+  &[arrow-position='inline-end'] .arrow-box {
+    top: $arrow-center-inset;
+    inset-inline-end: $arrow-offset;
+    --fc-arrow-clip-path: polygon(100% 0, 100% 100%, 98% 100%, 0 2%, 0 0);
+  }
+
+  @at-root panel#{&}[arrow-position='inline-end']::part(content) {
+    margin-inline-end: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='inline-end'] {
+    margin-inline-end: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
+  }
+
+  // start (center) arrow positioning
+  &[arrow-position='inline-start'] .arrow-box {
+    top: $arrow-center-inset;
+    inset-inline-start: $arrow-offset;
+    --fc-arrow-clip-path: polygon(0 100%, 100% 100%, 100% 98%, 2% 0, 0 0);
+  }
+
+  @at-root panel#{&}[arrow-position='inline-start']::part(content) {
+    margin-inline-start: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='inline-start'] {
+    margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
   }
 
   // top-end arrow positioning
-  &.arrow-top-end::before,
-  &.arrow-top-end::after {
-    top: $arrow-overlap-inset;
-    inset-inline-end: $arrow-inset-size;
+  &[arrow-position='top-end'] .arrow-box {
+    top: $arrow-offset;
+    inset-inline-end: $arrow-inset;
+    --fc-arrow-clip-path: polygon(100% 0, 100% 2%, 2% 100%, 0 100%, 0 0);
+  }
+
+  @at-root panel#{&}[arrow-position='top-end']::part(content) {
+    margin-top: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='top-end'] {
+    margin-top: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
   }
 
   // top-start arrow positioning
-  &.arrow-top-start::before,
-  &.arrow-top-start::after {
-    top: $arrow-overlap-inset;
-    inset-inline-start: $arrow-inset-size;
+  &[arrow-position='top-start'] .arrow-box {
+    top: $arrow-offset;
+    inset-inline-start: $arrow-inset;
+    --fc-arrow-clip-path: polygon(100% 0, 100% 2%, 2% 100%, 0 100%, 0 0);
   }
 
-  // hidden arrow display
-  &.hidden-arrow::before,
-  &.hidden-arrow::after {
-    display: none;
+  @at-root panel#{&}[arrow-position='top-start']::part(content) {
+    margin-top: $panel-arrow-space + 6px;
   }
 
+  @at-root panel#{&}[arrow-position='top-start'] {
+    margin-top: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
+  }
+
+  // bottom-end arrow positioning
+  &[arrow-position='bottom-end'] .arrow-box {
+    bottom: $arrow-offset;
+    inset-inline-end: $arrow-inset;
+    --fc-arrow-clip-path: polygon(100% 0, 98% 0, 0 98%, 0 100%, 100% 100%);
+  }
+
+  @at-root panel#{&}[arrow-position='bottom-end']::part(content) {
+    margin-bottom: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='bottom-end'] {
+    margin-bottom: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
+  }
+
+  // bottom-start arrow positioning
+  &[arrow-position='bottom-start'] .arrow-box {
+    bottom: $arrow-offset;
+    inset-inline-start: $arrow-inset;
+    --fc-arrow-clip-path: polygon(100% 0, 98% 0, 0 98%, 0 100%, 100% 100%);
+  }
+
+  @at-root panel#{&}[arrow-position='bottom-start']::part(content) {
+    margin-bottom: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='bottom-start'] {
+    margin-bottom: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
+  }
+
+  // inline-end-top arrow positioning
+  &[arrow-position='inline-end-top'] .arrow-box {
+    top: $arrow-inset;
+    inset-inline-end: $arrow-offset;
+    --fc-arrow-clip-path: polygon(100% 0, 100% 100%, 98% 100%, 0 2%, 0 0);
+  }
+
+  @at-root panel#{&}[arrow-position='inline-end-top']::part(content) {
+    margin-inline-end: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='inline-end-top'] {
+    margin-inline-end: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
+  }
+
+  // inline-end-bottom arrow positioning
+  &[arrow-position='inline-end-bottom'] .arrow-box {
+    bottom: $arrow-inset;
+    inset-inline-end: $arrow-offset;
+    --fc-arrow-clip-path: polygon(100% 0, 100% 100%, 98% 100%, 0 2%, 0 0);
+  }
+
+  @at-root panel#{&}[arrow-position='inline-end-bottom']::part(content) {
+    margin-inline-end: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='inline-end-bottom'] {
+    margin-inline-end: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
+  }
+
+  // inline-start-top arrow positioning
+  &[arrow-position='inline-start-top'] .arrow-box {
+    top: $arrow-inset;
+    inset-inline-start: $arrow-offset;
+    --fc-arrow-clip-path: polygon(0 100%, 100% 100%, 100% 98%, 2% 0, 0 0);
+  }
+
+  @at-root panel#{&}[arrow-position='inline-start-top']::part(content) {
+    margin-inline-start: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='inline-start-top'] {
+    margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
+  }
+
+  // inline-start-bottom arrow positioning
+  &[arrow-position='inline-start-bottom'] .arrow-box {
+    bottom: $arrow-inset;
+    inset-inline-start: $arrow-offset;
+    --fc-arrow-clip-path: polygon(0 100%, 100% 100%, 100% 98%, 2% 0, 0 0);
+  }
+
+  @at-root panel#{&}[arrow-position='inline-start-bottom']::part(content) {
+    margin-inline-start: $panel-arrow-space + 6px;
+  }
+
+  @at-root panel#{&}[arrow-position='inline-start-bottom'] {
+    margin-inline-start: calc(-1 * (var(--panel-shadow-margin) + $arrow-overlap-magnitude));
+  }
+
+  // focus outline for the callout itself
   &:focus-visible {
     .screen {
       &[pos='callout'] {
@@ -440,7 +639,7 @@
       }
     }
 
-    &.callout-arrow::before {
+    .shadow-arrow {
       outline: 2px solid var(--fc-accent-color);
     }
   }
