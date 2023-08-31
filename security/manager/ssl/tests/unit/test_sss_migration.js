@@ -9,7 +9,7 @@
 function run_test() {
   let profileDir = do_get_profile();
   let stateFile = profileDir.clone();
-  stateFile.append(SSS_STATE_FILE_NAME);
+  stateFile.append(SSS_STATE_OLD_FILE_NAME);
   // Assuming we're working with a clean slate, the file shouldn't exist
   // until we create it.
   ok(!stateFile.exists());

@@ -6,30 +6,6 @@
 // The purpose of this test is to create an empty site security service state
 // file and see that the site security service doesn't fail when reading it.
 
-var gSSService = null;
-
-function checkStateRead(aSubject, aTopic, aData) {
-  // nonexistent.example.com should never be an HSTS host
-  ok(
-    !gSSService.isSecureURI(
-      Services.io.newURI("https://nonexistent.example.com")
-    )
-  );
-  ok(
-    gSSService.isSecureURI(
-      Services.io.newURI("https://includesubdomains.preloaded.test")
-    )
-  );
-  // notexpired.example.com is an HSTS host in a different test - we
-  // want to make sure that test hasn't interfered with this one.
-  ok(
-    !gSSService.isSecureURI(
-      Services.io.newURI("https://notexpired.example.com")
-    )
-  );
-  do_test_finished();
-}
-
 function run_test() {
   let profileDir = do_get_profile();
   let stateFile = profileDir.clone();
@@ -41,10 +17,27 @@ function run_test() {
   ok(stateFile.exists());
   // Initialize nsISiteSecurityService after do_get_profile() so it
   // can read the state file.
-  Services.obs.addObserver(checkStateRead, "data-storage-ready");
-  do_test_pending();
-  gSSService = Cc["@mozilla.org/ssservice;1"].getService(
+  let siteSecurityService = Cc["@mozilla.org/ssservice;1"].getService(
     Ci.nsISiteSecurityService
   );
-  notEqual(gSSService, null);
+  notEqual(siteSecurityService, null);
+  // nsISiteSecurityService.isSecureURI blocks until the backing file has been read.
+  // nonexistent.example.com should never be an HSTS host
+  ok(
+    !siteSecurityService.isSecureURI(
+      Services.io.newURI("https://nonexistent.example.com")
+    )
+  );
+  ok(
+    siteSecurityService.isSecureURI(
+      Services.io.newURI("https://includesubdomains.preloaded.test")
+    )
+  );
+  // notexpired.example.com is an HSTS host in a different test - we
+  // want to make sure that test hasn't interfered with this one.
+  ok(
+    !siteSecurityService.isSecureURI(
+      Services.io.newURI("https://notexpired.example.com")
+    )
+  );
 }
