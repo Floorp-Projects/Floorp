@@ -71,6 +71,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   ShoppingSidebarParent: "resource:///actors/ShoppingSidebarParent.sys.mjs",
+  ShoppingUtils: "resource:///modules/ShoppingUtils.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   SiteDataManager: "resource:///modules/SiteDataManager.sys.mjs",
   SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
@@ -10107,6 +10108,11 @@ var ShoppingSidebarManager = {
       button,
       `shopping-sidebar-${this.isActive ? "close" : "open"}-button`
     );
+    if (isProduct) {
+      // This is the auto-enable behavior that toggles the `active` pref. It
+      // must be at the end of this function, or 2 sidebars could be created.
+      ShoppingUtils.handleAutoActivateOnProduct();
+    }
   },
 
   handleEvent(event) {
