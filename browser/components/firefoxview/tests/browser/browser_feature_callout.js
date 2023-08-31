@@ -192,7 +192,7 @@ add_task(async function feature_callout_closes_on_dismiss() {
   sandbox.restore();
 });
 
-add_task(async function feature_callout_arrow_class_exists() {
+add_task(async function feature_callout_arrow_position_attribute_exists() {
   const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
@@ -206,10 +206,16 @@ add_task(async function feature_callout_arrow_class_exists() {
 
       launchFeatureTourIn(browser.contentWindow);
 
-      await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
-
-      const arrowParent = document.querySelector(".callout-arrow.arrow-top");
-      ok(arrowParent, "Arrow class exists on parent container");
+      const callout = await BrowserTestUtils.waitForCondition(
+        () =>
+          document.querySelector(`${calloutSelector}[arrow-position="top"]`),
+        "Waiting for callout to render"
+      );
+      is(
+        callout.getAttribute("arrow-position"),
+        "top",
+        "Arrow position attribute exists on parent container"
+      );
     }
   );
   sandbox.restore();
@@ -231,14 +237,21 @@ add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
 
       launchFeatureTourIn(browser.contentWindow);
 
-      await BrowserTestUtils.waitForCondition(() => {
-        return document.querySelector(
-          `${calloutSelector}.arrow-inline-start:not(.hidden)`
-        );
-      });
+      const callout = await BrowserTestUtils.waitForCondition(
+        () =>
+          document.querySelector(
+            `${calloutSelector}[arrow-position="inline-start"]:not(.hidden)`
+          ),
+        "Waiting for callout to render"
+      );
+      is(
+        callout.getAttribute("arrow-position"),
+        "inline-start",
+        "Feature callout has inline-start arrow position when arrow_position is set to 'start'"
+      );
       ok(
-        true,
-        "Feature Callout arrow parent has arrow-start class when arrow direction is set to 'start'"
+        !callout.classList.contains("hidden"),
+        "Feature Callout is not hidden"
       );
     }
   );
@@ -698,15 +711,11 @@ add_task(async function feature_callout_does_not_display_arrow_if_hidden() {
 
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
 
-      ok(
+      is(
         getComputedStyle(
-          document.querySelector(".callout-arrow"),
-          ":before"
-        ).getPropertyValue("display") == "none" &&
-          getComputedStyle(
-            document.querySelector(".callout-arrow"),
-            ":after"
-          ).getPropertyValue("display") == "none",
+          document.querySelector(`${calloutSelector} .arrow-box`)
+        ).getPropertyValue("display"),
+        "none",
         "callout arrow is not visible"
       );
     }

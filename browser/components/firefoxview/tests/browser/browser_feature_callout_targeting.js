@@ -1,9 +1,5 @@
 "use strict";
 
-const { BuiltInThemes } = ChromeUtils.importESModule(
-  "resource:///modules/BuiltInThemes.sys.mjs"
-);
-
 add_task(
   async function test_firefox_view_tab_pick_up_not_signed_in_targeting() {
     ASRouter.resetMessageState();
