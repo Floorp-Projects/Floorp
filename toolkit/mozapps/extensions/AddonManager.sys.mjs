@@ -36,6 +36,7 @@ const PREF_EM_STRICT_COMPATIBILITY = "extensions.strictCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
 const PREF_SYS_ADDON_UPDATE_ENABLED = "extensions.systemAddon.update.enabled";
 const PREF_REMOTESETTINGS_DISABLED = "extensions.remoteSettings.disabled";
+const PREF_USE_REMOTE = "extensions.webextensions.remote";
 
 const PREF_MIN_WEBEXT_PLATFORM_VERSION =
   "extensions.webExtensionsMinPlatformVersion";
@@ -786,6 +787,14 @@ var AddonManagerInternal = {
       );
     }
 
+    Glean.extensions.useRemotePolicy.set(
+      WebExtensionPolicy.useRemoteWebExtensions
+    );
+    Glean.extensions.useRemotePref.set(
+      Services.prefs.getBoolPref(PREF_USE_REMOTE)
+    );
+    Services.prefs.addObserver(PREF_USE_REMOTE, this);
+
     logger.debug("Completed startup sequence");
     this.callManagerListeners("onStartup");
   },
@@ -1138,6 +1147,12 @@ var AddonManagerInternal = {
         } else {
           AMRemoteSettings.init();
         }
+        break;
+      }
+      case PREF_USE_REMOTE: {
+        Glean.extensions.useRemotePref.set(
+          Services.prefs.getBoolPref(PREF_USE_REMOTE)
+        );
         break;
       }
     }

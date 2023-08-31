@@ -11,6 +11,36 @@ $tags:
   - 'WebExtensions :: General'
 
 extensions:
+  use_remote_pref:
+    type: boolean
+    expires: never
+    lifetime: application
+    description: >
+      Corresponds to the value of `extensions.webextensions.remote` pref.
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1850351/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1850351#c2
+    data_sensitivity:
+      - technical
+
+  use_remote_policy:
+    type: boolean
+    expires: never
+    lifetime: application
+    description: >
+      Corresponds to the value of `WebExtensionPolicy.useRemoteWebExtensions`.
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1850351/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1850351#c2
+    data_sensitivity:
+      - technical
+
   startup_cache_load_time:
     type: timespan
     time_unit: millisecond
@@ -28,6 +58,7 @@ extensions:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_STARTUPCACHE_LOAD_TIME
+
   process_event:
     type: labeled_counter
     expires: never
