@@ -5292,10 +5292,14 @@ void nsWindow::OnScaleChanged(bool aNotify) {
     return;  // We'll get there again when we configure the window.
   }
   gint newCeiled = gdk_window_get_scale_factor(mGdkWindow);
-  double newFractional =
-      GdkIsWaylandDisplay()
-          ? moz_container_wayland_get_fractional_scale(mContainer)
-          : 0.0;
+  double newFractional = [&] {
+#ifdef MOZ_WAYLAND
+    if (GdkIsWaylandDisplay()) {
+      return moz_container_wayland_get_fractional_scale(mContainer);
+    }
+#endif
+    return 0.0;
+  }();
   LOG("OnScaleChanged %d, %f -> %d, %f\n", int(mCeiledScaleFactor),
       FractionalScaleFactor(), newCeiled, newFractional);
 
