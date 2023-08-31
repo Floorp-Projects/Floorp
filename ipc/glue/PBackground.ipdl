@@ -27,7 +27,6 @@ include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
 include protocol PHttpBackgroundChannel;
 include protocol PIdleScheduler;
-include protocol PMediaTransport;
 include protocol PRemoteWorker;
 include protocol PRemoteWorkerController;
 include protocol PRemoteWorkerService;
