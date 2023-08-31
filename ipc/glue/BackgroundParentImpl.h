@@ -31,9 +31,6 @@ class BackgroundParentImpl : public PBackgroundParent {
   already_AddRefed<PBackgroundIDBFactoryParent>
   AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo) override;
 
-  already_AddRefed<net::PBackgroundDataBridgeParent>
-  AllocPBackgroundDataBridgeParent(const uint64_t& aChannelID) override;
-
   mozilla::ipc::IPCResult RecvPBackgroundIDBFactoryConstructor(
       PBackgroundIDBFactoryParent* aActor,
       const LoggingInfo& aLoggingInfo) override;
@@ -397,10 +394,6 @@ class BackgroundParentImpl : public PBackgroundParent {
   mozilla::ipc::IPCResult RecvRemoveEndpoint(
       const nsAString& aGroupName, const nsACString& aEndpointURL,
       const PrincipalInfo& aPrincipalInfo) override;
-
-  dom::PMediaTransportParent* AllocPMediaTransportParent() override;
-  bool DeallocPMediaTransportParent(
-      dom::PMediaTransportParent* aActor) override;
 
   already_AddRefed<mozilla::net::PWebSocketConnectionParent>
   AllocPWebSocketConnectionParent(const uint32_t& aListenerId) override;

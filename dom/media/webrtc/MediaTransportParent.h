@@ -13,8 +13,9 @@ namespace mozilla {
 class MediaTransportParent : public dom::PMediaTransportParent {
  public:
 #ifdef MOZ_WEBRTC
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaTransportParent, override)
+
   MediaTransportParent();
-  virtual ~MediaTransportParent();
 
   mozilla::ipc::IPCResult RecvGetIceLog(const nsCString& pattern,
                                         GetIceLogResolver&& aResolve);
@@ -57,9 +58,9 @@ class MediaTransportParent : public dom::PMediaTransportParent {
                                           const double& now,
                                           GetIceStatsResolver&& aResolve);
 
-  void ActorDestroy(ActorDestroyReason aWhy);
-
  private:
+  virtual ~MediaTransportParent();
+
   // Hide the sigslot/MediaTransportHandler stuff from IPC.
   class Impl;
   std::unique_ptr<Impl> mImpl;

@@ -10,7 +10,7 @@ namespace mozilla {
 namespace net {
 
 BackgroundDataBridgeParent::BackgroundDataBridgeParent(uint64_t aChannelID)
-    : mChannelID(aChannelID), mBackgroundThread(NS_GetCurrentThread()) {
+    : mChannelID(aChannelID), mBackgroundThread(GetCurrentSerialEventTarget()) {
   if (SocketProcessChild* child = SocketProcessChild::GetSingleton()) {
     child->AddDataBridgeToMap(aChannelID, this);
   }
@@ -22,9 +22,9 @@ void BackgroundDataBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-already_AddRefed<nsIThread> BackgroundDataBridgeParent::GetBackgroundThread() {
-  nsCOMPtr<nsIThread> thread = mBackgroundThread;
-  return thread.forget();
+already_AddRefed<nsISerialEventTarget>
+BackgroundDataBridgeParent::GetBackgroundThread() {
+  return do_AddRef(mBackgroundThread);
 }
 
 void BackgroundDataBridgeParent::Destroy() {
@@ -33,7 +33,7 @@ void BackgroundDataBridgeParent::Destroy() {
       NS_NewRunnableFunction("BackgroundDataBridgeParent::Destroy",
                              [self]() {
                                if (self->CanSend()) {
-                                 Unused << self->Send__delete__(self);
+                                 self->Close();
                                }
                              }),
       NS_DISPATCH_NORMAL));
@@ -51,7 +51,7 @@ void BackgroundDataBridgeParent::OnStopRequest(
             if (self->CanSend()) {
               Unused << self->SendOnStopRequest(
                   aStatus, aTiming, aLastActiveTabOptHit, aResponseTrailers);
-              Unused << self->Send__delete__(self);
+              self->Close();
             }
           }),
       NS_DISPATCH_NORMAL));

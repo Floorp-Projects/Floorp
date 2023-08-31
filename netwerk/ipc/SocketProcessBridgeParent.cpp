@@ -6,59 +6,87 @@
 #include "SocketProcessBridgeParent.h"
 #include "SocketProcessLogging.h"
 
+#include "mozilla/dom/MediaTransportParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "SocketProcessChild.h"
+#include "mozilla/net/BackgroundDataBridgeParent.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace net {
 
-SocketProcessBridgeParent::SocketProcessBridgeParent(ProcessId aId)
-    : mId(aId), mClosed(false) {
+SocketProcessBridgeParent::SocketProcessBridgeParent(ProcessId aId) : mId(aId) {
   LOG(
       ("CONSTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent "
        "mId=%" PRIPID "\n",
        mId));
-  MOZ_COUNT_CTOR(SocketProcessBridgeParent);
 }
 
 SocketProcessBridgeParent::~SocketProcessBridgeParent() {
-  LOG(
-      ("DESTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent "
-       "mId=%" PRIPID "\n",
-       mId));
-  MOZ_COUNT_DTOR(SocketProcessBridgeParent);
+  LOG(("DESTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent\n"));
 }
 
-mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvTest() {
-  LOG(("SocketProcessBridgeParent::RecvTest\n"));
-  Unused << SendTest();
+mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitBackgroundDataBridge(
+    mozilla::ipc::Endpoint<PBackgroundDataBridgeParent>&& aEndpoint,
+    uint64_t aChannelID) {
+  LOG(("SocketProcessBridgeParent::RecvInitBackgroundDataBridge\n"));
+
+  nsCOMPtr<nsISerialEventTarget> transportQueue;
+  if (NS_FAILED(NS_CreateBackgroundTaskQueue("BackgroundDataBridge",
+                                             getter_AddRefs(transportQueue)))) {
+    return IPC_FAIL(this, "NS_CreateBackgroundTaskQueue failed");
+  }
+
+  if (!aEndpoint.IsValid()) {
+    return IPC_FAIL(this, "Invalid endpoint");
+  }
+
+  transportQueue->Dispatch(NS_NewRunnableFunction(
+      "BackgroundDataBridgeParent::Bind",
+      [endpoint = std::move(aEndpoint), aChannelID]() mutable {
+        RefPtr<net::BackgroundDataBridgeParent> actor =
+            new net::BackgroundDataBridgeParent(aChannelID);
+        endpoint.Bind(actor);
+      }));
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitBackground(
-    Endpoint<PBackgroundStarterParent>&& aEndpoint) {
-  LOG(("SocketProcessBridgeParent::RecvInitBackground mId=%" PRIPID "\n", mId));
-  if (!ipc::BackgroundParent::AllocStarter(nullptr, std::move(aEndpoint))) {
-    return IPC_FAIL(this, "BackgroundParent::Alloc failed");
+mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitMediaTransport(
+    mozilla::ipc::Endpoint<mozilla::dom::PMediaTransportParent>&& aEndpoint) {
+  LOG(("SocketProcessBridgeParent::RecvInitMediaTransport\n"));
+
+  if (!aEndpoint.IsValid()) {
+    return IPC_FAIL(this, "Invalid endpoint");
   }
 
+  if (!mMediaTransportTaskQueue) {
+    nsCOMPtr<nsISerialEventTarget> transportQueue;
+    if (NS_FAILED(NS_CreateBackgroundTaskQueue(
+            "MediaTransport", getter_AddRefs(transportQueue)))) {
+      return IPC_FAIL(this, "NS_CreateBackgroundTaskQueue failed");
+    }
+
+    mMediaTransportTaskQueue = std::move(transportQueue);
+  }
+
+  mMediaTransportTaskQueue->Dispatch(NS_NewRunnableFunction(
+      "BackgroundDataBridgeParent::Bind",
+      [endpoint = std::move(aEndpoint)]() mutable {
+        RefPtr<MediaTransportParent> actor = new MediaTransportParent();
+        endpoint.Bind(actor);
+      }));
   return IPC_OK();
 }
 
-void SocketProcessBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
-  LOG(("SocketProcessBridgeParent::ActorDestroy mId=%" PRIPID "\n", mId));
-
-  mClosed = true;
-  GetCurrentSerialEventTarget()->Dispatch(
-      NewRunnableMethod("net::SocketProcessBridgeParent::DeferredDestroy", this,
-                        &SocketProcessBridgeParent::DeferredDestroy));
-}
-
-void SocketProcessBridgeParent::DeferredDestroy() {
-  if (SocketProcessChild* child = SocketProcessChild::GetSingleton()) {
-    child->DestroySocketProcessBridgeParent(mId);
-  }
+void SocketProcessBridgeParent::ActorDestroy(ActorDestroyReason aReason) {
+  // See bug 1846478. We might be able to remove this dispatch.
+  GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+      "SocketProcessBridgeParent::ActorDestroy", [id = mId] {
+        if (SocketProcessChild* child = SocketProcessChild::GetSingleton()) {
+          child->DestroySocketProcessBridgeParent(id);
+        }
+      }));
 }
 
 }  // namespace net
