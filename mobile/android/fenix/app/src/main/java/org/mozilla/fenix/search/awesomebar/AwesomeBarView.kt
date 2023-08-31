@@ -188,7 +188,6 @@ class AwesomeBarView(
                 title = R.string.search_engine_suggestions_title,
                 description = activity.getString(R.string.search_engine_suggestions_description),
                 searchIcon = searchWithBitmap,
-                suggestionsHeader = getSearchEngineSuggestionsHeader(),
             )
 
         searchSuggestionProviderMap = HashMap()
@@ -319,7 +318,9 @@ class AwesomeBarView(
             providersToAdd.add(getLocalTabsProvider(state.searchEngineSource, true))
         }
 
-        providersToAdd.add(searchEngineSuggestionProvider)
+        if (!activity.settings().showUnifiedSearchFeature) {
+            providersToAdd.add(searchEngineSuggestionProvider)
+        }
 
         return providersToAdd
     }
