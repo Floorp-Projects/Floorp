@@ -48,9 +48,7 @@ class GeneratedImageContent final : public nsGenericHTMLElement {
   uint32_t Index() const { return mIndex; }
 
   // Notify this image failed to load.
-  void NotifyLoadFailed() {
-    SetStates(ElementState::BROKEN, true);
-  }
+  void NotifyLoadFailed() { SetStates(ElementState::BROKEN, true); }
 
  protected:
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
