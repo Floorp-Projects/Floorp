@@ -2893,7 +2893,9 @@ nsPrefBranch::AddObserverImpl(const nsACString& aDomain, nsIObserver* aObserver,
 
   mObservers.WithEntryHandle(pCallback.get(), [&](auto&& p) {
     if (p) {
-      NS_WARNING("Ignoring duplicate observer.");
+      NS_WARNING(
+          nsPrintfCString("Ignoring duplicate observer: %s", prefName.get())
+              .get());
     } else {
       // We must pass a fully qualified preference name to the callback
       // aDomain == nullptr is the only possible failure, and we trapped it with
