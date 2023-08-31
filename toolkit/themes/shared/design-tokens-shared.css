@@ -79,40 +79,20 @@
 @media not (prefers-contrast) {
   :root {
     /* Color */
-    --color-background-information: var(--color-blue-05);;
-    --color-background-success: var(--color-green-05);
-    --color-background-warning: var(--color-yellow-05);
-    --color-background-critical: var(--color-red-05);
+    --color-background-information: light-dark(var(--color-blue-05), var(--color-blue-80));
+    --color-background-success: light-dark(var(--color-green-05), var(--color-green-80));
+    --color-background-warning: light-dark(var(--color-yellow-05), var(--color-yellow-80));
+    --color-background-critical: light-dark(var(--color-red-05), var(--color-red-80));
 
     /** Icon **/
-    --icon-color: var(--color-gray-70);
-    --icon-color-information: var(--color-blue-50);
-    --icon-color-success: var(--color-green-50);
-    --icon-color-warning: var(--color-yellow-50);
-    --icon-color-critical: var(--color-red-50);
+    --icon-color: light-dark(var(--color-gray-70), var(--color-gray-05));
+    --icon-color-information: light-dark(var(--color-blue-50), var(--color-blue-30));
+    --icon-color-success: light-dark(var(--color-green-50), var(--color-green-30));
+    --icon-color-warning: light-dark(var(--color-yellow-50), var(--color-yellow-30));
+    --icon-color-critical: light-dark(var(--color-red-50), var(--color-red-30));
 
     /* Text */
-    --text-color: var(--color-gray-100);
-  }
-}
-
-@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
-  :root {
-    /* Color */
-    --color-background-information: var(--color-blue-80);
-    --color-background-success: var(--color-green-80);
-    --color-background-warning: var(--color-yellow-80);
-    --color-background-critical: var(--color-red-80);
-
-    /** Icon **/
-    --icon-color: var(--color-gray-05);
-    --icon-color-information: var(--color-blue-30);
-    --icon-color-success: var(--color-green-30);
-    --icon-color-warning: var(--color-yellow-30);
-    --icon-color-critical: var(--color-red-30);
-
-    /* Text */
-    --text-color: var(--color-gray-05);
+    --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
   }
 }
 
