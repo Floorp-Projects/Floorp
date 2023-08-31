@@ -592,7 +592,7 @@ static void fractional_scale_handle_preferred_scale(
   LOGWAYLAND("%s [%p] scale: %f\n", __func__, window.get(),
              wl_container->current_fractional_scale);
   MOZ_DIAGNOSTIC_ASSERT(window);
-  window->OnScaleChanged(/* aForce = */ true);
+  window->OnScaleChanged(/* aNotify = */ true);
 }
 
 static const struct wp_fractional_scale_v1_listener fractional_scale_listener =
@@ -827,12 +827,8 @@ double moz_container_wayland_get_fractional_scale(MozContainer* container) {
 }
 
 double moz_container_wayland_get_scale(MozContainer* container) {
-  double scale = moz_container_wayland_get_fractional_scale(container);
-  if (scale != 0.0) {
-    return scale;
-  }
   nsWindow* window = moz_container_get_nsWindow(container);
-  return window ? window->FractionalScaleFactor() : 1;
+  return window ? window->FractionalScaleFactor() : 1.0;
 }
 
 void moz_container_wayland_set_commit_to_parent(MozContainer* container) {
