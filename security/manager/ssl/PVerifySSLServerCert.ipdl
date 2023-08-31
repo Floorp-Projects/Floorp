@@ -5,16 +5,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBackground;
 include PSMIPCTypes;
+
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 namespace mozilla {
 namespace psm {
 
 protocol PVerifySSLServerCert
 {
-  manager PBackground;
-
 child:
   async OnVerifiedSSLServerCertSuccess(ByteArray[] aBuiltCertChain,
                                        uint16_t aCertTransparencyStatus,

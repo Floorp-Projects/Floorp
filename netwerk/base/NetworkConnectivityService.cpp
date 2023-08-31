@@ -4,10 +4,12 @@
 
 #include "DNSUtils.h"
 #include "NetworkConnectivityService.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsCOMPtr.h"
+#include "nsIChannel.h"
 #include "nsIOService.h"
 #include "nsICancelable.h"
 #include "xpcpublic.h"
