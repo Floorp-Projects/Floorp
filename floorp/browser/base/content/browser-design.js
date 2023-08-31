@@ -28,12 +28,13 @@ function setBrowserDesign() {
 
   const tag = document.createElement('style');
   tag.setAttribute("id", "browserdesgin");
+  const enableMultitab = Services.prefs.getIntPref("floorp.tabbar.style") == 1
 
   switch (floorpInterfaceNum) {
     case 1:
       break;
     case 3:
-      tag.innerText = themeCSS.LeptonUI;
+      tag.innerText = enableMultitab ? themeCSS.LeptonUIMultitab : themeCSS.LeptonUI;
       break;
     case 5:
       if (AppConstants.platform !== "linux") {
@@ -46,7 +47,6 @@ function setBrowserDesign() {
       }
       break;
     case 8:
-      const enableMultitab = Services.prefs.getBoolPref("floorp.enable.multitab", false);
       tag.innerText = enableMultitab ? themeCSS.FluerialUIMultitab : themeCSS.FluerialUI;
       break;
   }

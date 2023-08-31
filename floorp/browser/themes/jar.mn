@@ -71,6 +71,8 @@ browser.jar:
   skin/classic/browser/icons/welcome-image-third-option.png         (icons/welcome-image-third-option.png)
 
 # Lepton
+  skin/classic/browser/lepton/photonChrome-multitab.css                     (designs/lepton/photonChrome-multitab.css)
+  skin/classic/browser/lepton/photonContent-multitab.css                    (designs/lepton/photonContent-multitab.css)
   skin/classic/browser/lepton/leptonChrome.css                              (designs/lepton/leptonChrome.css)
   skin/classic/browser/lepton/leptonContent.css                             (designs/lepton/leptonContent.css)
   skin/classic/browser/lepton/photon.svg                                    (designs/lepton/photon.svg)
