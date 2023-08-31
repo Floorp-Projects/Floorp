@@ -34,6 +34,7 @@ import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvide
 import mozilla.components.feature.awesomebar.provider.SearchActionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
+import mozilla.components.feature.fxsuggest.FxSuggestSuggestionProvider
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.composableStore
 import mozilla.components.lib.state.ext.observeAsComposableState
@@ -190,6 +191,15 @@ private fun Suggestions(
         SearchActionProvider(components.store, components.searchUseCases.defaultSearch)
     }
 
+    val fxSuggestSuggestionProvider = remember(context) {
+        FxSuggestSuggestionProvider(
+            context.resources,
+            loadUrlUseCase = components.sessionUseCases.loadUrl,
+            includeSponsoredSuggestions = false,
+            includeNonSponsoredSuggestions = true,
+        )
+    }
+
     val searchSuggestionProvider = remember(context) {
         SearchSuggestionProvider(
             context,
@@ -216,6 +226,7 @@ private fun Suggestions(
         providers = listOf(
             sessionSuggestionProvider,
             searchActionProvider,
+            fxSuggestSuggestionProvider,
             searchSuggestionProvider,
             clipboardSuggestionProvider,
         ),

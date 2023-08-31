@@ -62,11 +62,13 @@ dependencies {
     implementation project(':compose-tabstray')
 
     implementation project(':feature-awesomebar')
+    implementation project(':feature-fxsuggest')
     implementation project(':feature-search')
     implementation project(':feature-session')
     implementation project(':feature-tabs')
 
     implementation project(':service-location')
+    implementation project(':support-rusthttp')
 
     implementation project(':ui-icons')
 

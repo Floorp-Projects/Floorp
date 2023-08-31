@@ -13,6 +13,8 @@ import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.fxsuggest.FxSuggestIngestionScheduler
+import mozilla.components.feature.fxsuggest.FxSuggestStorage
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
@@ -49,6 +51,14 @@ class Components(
     val searchUseCases by lazy { SearchUseCases(store, tabsUseCases, sessionUseCases) }
 
     val locationService by lazy { LocationService.default() }
+
+    val fxSuggestStorage: FxSuggestStorage by lazy {
+        FxSuggestStorage(context)
+    }
+
+    val fxSuggestIngestionScheduler: FxSuggestIngestionScheduler by lazy {
+        FxSuggestIngestionScheduler(context)
+    }
 }
 
 /**

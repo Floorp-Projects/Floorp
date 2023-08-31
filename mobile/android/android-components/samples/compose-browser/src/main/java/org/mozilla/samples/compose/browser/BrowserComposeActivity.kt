@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import org.mozilla.samples.compose.browser.browser.BrowserScreen
+import org.mozilla.samples.compose.browser.ext.components
 import org.mozilla.samples.compose.browser.settings.SettingsScreen
 
 /**
@@ -36,5 +37,7 @@ class BrowserComposeActivity : AppCompatActivity() {
                 }
             }
         }
+
+        components.fxSuggestIngestionScheduler.startPeriodicIngestion()
     }
 }
