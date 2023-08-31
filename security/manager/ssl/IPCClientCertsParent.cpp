@@ -7,11 +7,11 @@
 
 #include "IPCClientCertsParent.h"
 #include "ScopedNSSTypes.h"
+#include "nsNetCID.h"
 #include "nsNSSComponent.h"
 #include "nsNSSIOLayer.h"
 
 #include "mozilla/SyncRunnable.h"
-#include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla::psm {
 
@@ -81,8 +81,8 @@ mozilla::ipc::IPCResult IPCClientCertsParent::RecvFindObjects(
 
 // When the IPC client certs module needs to sign data using a key managed by
 // the parent process, it will cause this function to be called in the parent
-// process. The parent process needs to find the key corresponding to the given
-// certificate and sign the given data with the given parameters.
+// process. The parent process needs to find the key corresponding to the
+// given certificate and sign the given data with the given parameters.
 mozilla::ipc::IPCResult IPCClientCertsParent::RecvSign(ByteArray aCert,
                                                        ByteArray aData,
                                                        ByteArray aParams,

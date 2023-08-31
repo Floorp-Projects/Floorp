@@ -24,6 +24,8 @@ EXPORTS.mozilla.net += [
     "ProxyConfigLookup.h",
     "ProxyConfigLookupChild.h",
     "ProxyConfigLookupParent.h",
+    "SocketProcessBackgroundChild.h",
+    "SocketProcessBackgroundParent.h",
     "SocketProcessBridgeChild.h",
     "SocketProcessBridgeParent.h",
     "SocketProcessChild.h",
@@ -49,6 +51,8 @@ UNIFIED_SOURCES += [
     "ProxyConfigLookup.cpp",
     "ProxyConfigLookupChild.cpp",
     "ProxyConfigLookupParent.cpp",
+    "SocketProcessBackgroundChild.cpp",
+    "SocketProcessBackgroundParent.cpp",
     "SocketProcessBridgeChild.cpp",
     "SocketProcessBridgeParent.cpp",
     "SocketProcessChild.cpp",
@@ -77,6 +81,7 @@ IPDL_SOURCES = [
     "PProxyAutoConfig.ipdl",
     "PProxyConfigLookup.ipdl",
     "PSimpleChannel.ipdl",
+    "PSocketProcessBackground.ipdl",
     "PSocketProcessBridge.ipdl",
 ]
 
