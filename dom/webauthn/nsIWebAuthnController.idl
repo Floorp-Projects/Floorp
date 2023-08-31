@@ -123,9 +123,6 @@ interface nsICtapRegisterResult : nsISupports {
     // Bug 1536155
     // readonly attribute Array<AString> transports;
 
-    // Bug 1816519
-    // readonly attribute Array<octet> authenticatorData;
-
     // Bug 1816520
     // readonly attribute Array<octet> publicKey
     // readonly attribute COSEAlgorithmIdentifier publicKeyAlgorithm;
@@ -134,6 +131,18 @@ interface nsICtapRegisterResult : nsISupports {
     // readonly attribute bool hmacCreateSecret;
 };
 
+[uuid(91e41be0-ed73-4a10-b55e-3312319bfddf)]
+interface nsIWebAuthnAttObj : nsISupports {
+    // The serialied attestation object as defined in
+    // https://www.w3.org/TR/webauthn-2/#sctn-attestation
+    readonly attribute Array<octet> attestationObject;
+
+    readonly attribute Array<octet> authenticatorData;
+
+    // Bug 1816520
+    // readonly attribute Array<octet> publicKey
+    // readonly attribute COSEAlgorithmIdentifier publicKeyAlgorithm;
+};
 
 // The nsICtapSignResult interface is used to construct IPDL-defined
 // WebAuthnGetAssertionResult from either Rust or C++.
