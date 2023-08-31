@@ -61,6 +61,11 @@ void HTMLMeterElement::UpdateOptimumState(bool aNotify) {
   AddStatesSilently(GetOptimumState());
 }
 
+/*
+ * Value getters :
+ * const getters used by XPCOM methods and by IntrinsicState
+ */
+
 double HTMLMeterElement::Min() const {
   /**
    * If the attribute min is defined, the minimum is this value.

@@ -175,6 +175,11 @@ void SVGFEImageElement::UnbindFromTree(bool aNullParent) {
   SVGFEImageElementBase::UnbindFromTree(aNullParent);
 }
 
+ElementState SVGFEImageElement::IntrinsicState() const {
+  return SVGFEImageElementBase::IntrinsicState() |
+         nsImageLoadingContent::ImageState();
+}
+
 void SVGFEImageElement::DestroyContent() {
   nsImageLoadingContent::Destroy();
   SVGFEImageElementBase::DestroyContent();

@@ -4528,26 +4528,17 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
       // We're no longer an image input.  Cancel our image requests, if we have
       // any.
       CancelImageRequests(aNotify);
-      RemoveStates(ElementState::BROKEN, aNotify);
-    } else {
+    } else if (aNotify) {
       // We just got switched to be an image input; we should see whether we
       // have an image to load;
-      bool hasSrc = false;
-      if (aNotify) {
-        nsAutoString src;
-        if ((hasSrc = GetAttr(nsGkAtoms::src, src))) {
-          // Mark channel as urgent-start before load image if the image load is
-          // initiated by a user interaction.
-          mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
+      nsAutoString src;
+      if (GetAttr(nsGkAtoms::src, src)) {
+        // Mark channel as urgent-start before load image if the image load is
+        // initiated by a user interaction.
+        mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
-          LoadImage(src, false, aNotify, eImageLoadType_Normal,
-                    mSrcTriggeringPrincipal);
-        }
-      } else {
-        hasSrc = HasAttr(nsGkAtoms::src);
-      }
-      if (!hasSrc) {
-        AddStates(ElementState::BROKEN, aNotify);
+        LoadImage(src, false, aNotify, eImageLoadType_Normal,
+                  mSrcTriggeringPrincipal);
       }
     }
     // We should update our mapped attribute mapping function.
@@ -6066,6 +6057,17 @@ void HTMLInputElement::DoneCreatingElement() {
 void HTMLInputElement::DestroyContent() {
   nsImageLoadingContent::Destroy();
   TextControlElement::DestroyContent();
+}
+
+ElementState HTMLInputElement::IntrinsicState() const {
+  // If you add states here, and they're type-dependent, you need to add them to
+  // HandleTypeChange.
+  ElementState state =
+      nsGenericHTMLFormControlElementWithState::IntrinsicState();
+  if (mType == FormControlType::InputImage) {
+    state |= nsImageLoadingContent::ImageState();
+  }
+  return state;
 }
 
 void HTMLInputElement::UpdateValidityElementStates(bool aNotify) {

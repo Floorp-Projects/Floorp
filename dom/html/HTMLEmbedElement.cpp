@@ -233,6 +233,10 @@ void HTMLEmbedElement::StartObjectLoad(bool aNotify, bool aForceLoad) {
   SetIsNetworkCreated(false);
 }
 
+ElementState HTMLEmbedElement::IntrinsicState() const {
+  return nsGenericHTMLElement::IntrinsicState() | ObjectState();
+}
+
 uint32_t HTMLEmbedElement::GetCapabilities() const {
   return eSupportPlugins | eAllowPluginSkipChannel | eSupportImages |
          eSupportDocuments;
