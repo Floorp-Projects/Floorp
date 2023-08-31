@@ -33,12 +33,12 @@ tab {
   color-scheme: light;
 }
 
-tab:where([visuallyselected="true"]) {
+tab:where([visuallyselected]) {
   margin-top: 0;
   padding: 1px 6px 4px;
 }
 
-tab:where(:first-of-type[visuallyselected="true"]) {
+tab:where(:first-of-type[visuallyselected]) {
   padding-inline: 5px;
 }
 

@@ -50,7 +50,7 @@ tab:where(:last-of-type) {
   padding-inline-end: 2px;
 }
 
-tab:where([visuallyselected="true"]:not(:-moz-window-inactive)) {
+tab:where([visuallyselected]:not(:-moz-window-inactive)) {
   color: #FFF;
 }
 
