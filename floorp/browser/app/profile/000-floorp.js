@@ -182,7 +182,6 @@ pref("services.sync.prefs.sync.floorp.browser.sidebar.right", true);// サイド
 pref("services.sync.prefs.sync.floorp.browser.sidebar2.data", true);// サイドバーのデータ
 pref("services.sync.prefs.sync.floorp.optimized.verticaltab", true); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
 pref("services.sync.prefs.sync.floorp.browser.user.interface", true);// Floorp 10 系以降のインターフェーステーマ設定
-pref("services.sync.prefs.sync.floorp.browser.tabbar.settings", true);// タブの設定
 
 pref("toolkit.legacyUserProfileCustomizations.stylesheets" ,true);
 
@@ -191,9 +190,6 @@ pref("browser.preferences.moreFromMozilla", false, locked);
 //たくさん閉じようとしたときに警告
 pref("browser.tabs.warnOnClose", true);
 pref("browser.tabs.warnOnCloseOtherTabs", true);
-
-//デフォルトブラウザーのチェック無効
-pref("browser.shell.checkDefaultBrowser", false, locked);
 
 //addon推奨プロンプトを消す
 pref("extensions.getAddons.showPane", false);
@@ -256,10 +252,6 @@ pref("browser.crashReports.unsubmittedCheck.autoSubmit2", false);
 //http 通信時、Floorp は絶対にhttp:// をURLバーから隠しません
 pref("browser.urlbar.trimURLs", false);
 
-//WebRTC が有効な場合、Floorp はできるだけ、IPアドレスを秘匿するよう動作します。
-pref("media.peerconnection.ice.default_address_only", true);
-pref("media.peerconnection.ice.no_host", true);
-
 //プライバシー機能をオンにし、テレメトリー採取を無効化します。
 pref("privacy.trackingprotection.origin_telemetry.enabled", false, locked);
 pref("privacy.userContext.enabled", true);
@@ -283,7 +275,6 @@ pref("devtools.toolbox.host", "right");
 pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
 pref("datareporting.policy.dataSubmissionEnable", false, locked);
 pref("datareporting.healthreport.uploadEnabled", false, locked);
-pref("general.config.sandbox_enabled", false);
 pref("toolkit.legacyUserProfileCustomizations.script", false);
 
 /*-----------------------------------------------------------------------------以下、Photon の既定の設定-----------------------------------------------------------------------------*/
