@@ -10,8 +10,6 @@ extern crate xpcom;
 
 use authenticator::{
     authenticatorservice::{RegisterArgs, SignArgs},
-    crypto::COSEKeyType,
-    ctap2::attestation::AttestationObject,
     ctap2::commands::get_info::AuthenticatorVersion,
     ctap2::server::{
         PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
@@ -37,7 +35,7 @@ use std::sync::{Arc, Mutex};
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
     nsICredentialParameters, nsICtapRegisterArgs, nsICtapRegisterResult, nsICtapSignArgs,
-    nsICtapSignResult, nsIWebAuthnAttObj, nsIWebAuthnController, nsIWebAuthnTransport,
+    nsICtapSignResult, nsIWebAuthnController, nsIWebAuthnTransport,
 };
 use xpcom::{xpcom_method, RefPtr};
 
@@ -97,9 +95,13 @@ impl CtapRegisterResult {
     xpcom_method!(get_attestation_object => GetAttestationObject() -> ThinVec<u8>);
     fn get_attestation_object(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
-        let make_cred_res = self.result.as_ref().or(Err(NS_ERROR_FAILURE))?;
-        serde_cbor::to_writer(&mut out, &make_cred_res.att_obj).or(Err(NS_ERROR_FAILURE))?;
-        Ok(out)
+        if let Ok(make_cred_res) = &self.result {
+            if let Ok(encoded_att_obj) = serde_cbor::to_vec(&make_cred_res.att_obj) {
+                out.extend_from_slice(&encoded_att_obj);
+                return Ok(out);
+            }
+        }
+        Err(NS_ERROR_FAILURE)
     }
 
     xpcom_method!(get_credential_id => GetCredentialId() -> ThinVec<u8>);
@@ -107,7 +109,7 @@ impl CtapRegisterResult {
         let mut out = ThinVec::new();
         if let Ok(make_cred_res) = &self.result {
             if let Some(credential_data) = &make_cred_res.att_obj.auth_data.credential_data {
-                out.extend_from_slice(&credential_data.credential_id);
+                out.extend(credential_data.credential_id.clone());
                 return Ok(out);
             }
         }
@@ -119,48 +121,6 @@ impl CtapRegisterResult {
         match &self.result {
             Ok(_) => Ok(NS_OK),
             Err(e) => Ok(authrs_to_nserror(e)),
-        }
-    }
-}
-
-#[xpcom(implement(nsIWebAuthnAttObj), atomic)]
-pub struct WebAuthnAttObj {
-    att_obj: AttestationObject,
-}
-
-impl WebAuthnAttObj {
-    xpcom_method!(get_attestation_object => GetAttestationObject() -> ThinVec<u8>);
-    fn get_attestation_object(&self) -> Result<ThinVec<u8>, nsresult> {
-        let mut out = ThinVec::new();
-        serde_cbor::to_writer(&mut out, &self.att_obj).or(Err(NS_ERROR_FAILURE))?;
-        Ok(out)
-    }
-
-    xpcom_method!(get_authenticator_data => GetAuthenticatorData() -> ThinVec<u8>);
-    fn get_authenticator_data(&self) -> Result<ThinVec<u8>, nsresult> {
-        // TODO(https://github.com/mozilla/authenticator-rs/issues/302) use to_writer
-        Ok(self.att_obj.auth_data.to_vec().into())
-    }
-
-    xpcom_method!(get_public_key => GetPublicKey() -> ThinVec<u8>);
-    fn get_public_key(&self) -> Result<ThinVec<u8>, nsresult> {
-        let Some(credential_data) = &self.att_obj.auth_data.credential_data else {
-            return Err(NS_ERROR_FAILURE);
-        };
-        // We only support encoding (some) EC2 keys in DER SPKI format.
-        let COSEKeyType::EC2(ref key) = credential_data.credential_public_key.key else {
-            return Err(NS_ERROR_NOT_AVAILABLE);
-        };
-        Ok(key.der_spki().or(Err(NS_ERROR_NOT_AVAILABLE))?.into())
-    }
-
-    xpcom_method!(get_public_key_algorithm => GetPublicKeyAlgorithm() -> i32);
-    fn get_public_key_algorithm(&self) -> Result<i32, nsresult> {
-        if let Some(credential_data) = &self.att_obj.auth_data.credential_data {
-            // safe to cast to i32 by inspection of defined values
-            Ok(credential_data.credential_public_key.alg as i32)
-        } else {
-            Err(NS_ERROR_FAILURE)
         }
     }
 }
@@ -195,10 +155,16 @@ impl CtapSignResult {
 
     xpcom_method!(get_authenticator_data => GetAuthenticatorData() -> ThinVec<u8>);
     fn get_authenticator_data(&self) -> Result<ThinVec<u8>, nsresult> {
-        self.result
-            .as_ref()
-            .map(|assertion| assertion.auth_data.to_vec().into())
-            .or(Err(NS_ERROR_FAILURE))
+        let mut out = ThinVec::new();
+        if let Ok(assertion) = &self.result {
+            let data = match serde_cbor::value::to_value(&assertion.auth_data) {
+                Ok(serde_cbor::value::Value::Bytes(data)) => data,
+                _ => return Err(NS_ERROR_FAILURE),
+            };
+            out.extend_from_slice(&data);
+            return Ok(out);
+        }
+        Err(NS_ERROR_FAILURE)
     }
 
     xpcom_method!(get_user_handle => GetUserHandle() -> ThinVec<u8>);
@@ -230,7 +196,7 @@ impl CtapSignResult {
         // assertion.auth_data.rp_id_hash
         let mut out = ThinVec::new();
         if let Ok(assertion) = &self.result {
-            out.extend_from_slice(&assertion.auth_data.rp_id_hash.0);
+            out.extend(assertion.auth_data.rp_id_hash.0.clone());
             return Ok(out);
         }
         Err(NS_ERROR_FAILURE)
@@ -948,33 +914,5 @@ pub extern "C" fn authrs_transport_constructor(
     unsafe {
         RefPtr::new(wrapper.coerce::<nsIWebAuthnTransport>()).forget(&mut *result);
     }
-    NS_OK
-}
-
-#[no_mangle]
-pub extern "C" fn authrs_webauthn_att_obj_constructor(
-    att_obj_bytes: &ThinVec<u8>,
-    anonymize: bool,
-    result: *mut *const nsIWebAuthnAttObj,
-) -> nsresult {
-    if result.is_null() {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    let mut att_obj: AttestationObject = match serde_cbor::from_slice(att_obj_bytes) {
-        Ok(att_obj) => att_obj,
-        Err(_) => return NS_ERROR_INVALID_ARG,
-    };
-
-    if anonymize {
-        att_obj.anonymize();
-    }
-
-    let wrapper = WebAuthnAttObj::allocate(InitWebAuthnAttObj { att_obj });
-
-    unsafe {
-        RefPtr::new(wrapper.coerce::<nsIWebAuthnAttObj>()).forget(&mut *result);
-    }
-
     NS_OK
 }
