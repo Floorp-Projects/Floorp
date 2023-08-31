@@ -56,6 +56,11 @@ For any additional questions, please reach out to us in the `#perftest <https://
 Additional Information
 ----------------------
 
+Debugging an Alert
+==================
+
+To debug an alert in CI, use ``./mach try perf --alert <ALERT-NUMBER>`` to run the tests that alerted. After running the command, the standard workflow above still applies. See :ref:`Running Alert Tests` for more information on this.
+
 Graphs View
 ===========
 

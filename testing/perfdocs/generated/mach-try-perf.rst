@@ -118,6 +118,19 @@ To use mach try perf simply call ``./mach try perf``. This will open an interfac
 
 Select the categories you'd like to run, hit enter, and wait for the tool to finish the pushes. **Note that it can take some time to do both pushes, and you might not see logging for some time.**
 
+.. _Running Alert Tests:
+
+Running Alert Tests
+-------------------
+
+To run all the tests that triggered a given alert, use ``./mach try perf --alert <ALERT-NUMBER>``. **It's recommended to use this when working with performance alerts.** The alert number can be found in comment 0 on any alert bug `such as this one <https://bugzilla.mozilla.org/show_bug.cgi?id=1844510>`_. As seen in the image below, the alert number can be found just above the summary table.
+
+.. image:: ./comment-zero-alert-number.png
+   :alt: Comment 0 containing an alert number just above the table.
+   :scale: 50%
+   :align: center
+
+
 Chrome and Android
 ------------------
 
