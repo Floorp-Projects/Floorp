@@ -5052,9 +5052,9 @@ static void EmitPostWriteBarrier(MacroAssembler& masm, CompileRuntime* runtime,
                                       &exit, &callVM);
     } else {
       // Check one element cache to avoid VM call.
-      masm.loadPtr(AbsoluteAddress(runtime->addressOfLastBufferedWholeCell()),
-                   temp);
-      masm.branchPtr(Assembler::Equal, temp, objreg, &exit);
+      masm.branchPtr(Assembler::Equal,
+                     AbsoluteAddress(runtime->addressOfLastBufferedWholeCell()),
+                     objreg, &exit);
     }
   }
 
