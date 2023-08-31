@@ -1772,7 +1772,7 @@ export class UrlbarView {
               id: "urlbar-result-action-visit-from-your-clipboard",
             });
           };
-          title.setAttribute("isurl", "true");
+          title.toggleAttribute("is-url", true);
           break;
         }
       // fall-through
@@ -1790,43 +1790,31 @@ export class UrlbarView {
 
     this.#setRowSelectable(item, isRowSelectable);
 
-    if (result.providerName == "TabToSearch") {
-      action.toggleAttribute("slide-in", true);
-    } else {
-      action.removeAttribute("slide-in");
-    }
+    action.toggleAttribute("slide-in", result.providerName == "TabToSearch");
 
-    if (result.payload.isPinned) {
-      item.toggleAttribute("pinned", true);
-    } else {
-      item.removeAttribute("pinned");
-    }
+    item.toggleAttribute("pinned", !!result.payload.isPinned);
 
-    if (
+    let sponsored =
       result.payload.isSponsored &&
       result.type != lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
-      result.providerName != lazy.UrlbarProviderQuickSuggest.name
-    ) {
-      item.toggleAttribute("sponsored", true);
+      result.providerName != lazy.UrlbarProviderQuickSuggest.name;
+    item.toggleAttribute("sponsored", !!sponsored);
+    if (sponsored) {
       actionSetter = () => {
         this.#setElementL10n(action, {
           id: "urlbar-result-action-sponsored",
         });
       };
-    } else {
-      item.removeAttribute("sponsored");
     }
 
+    item.toggleAttribute("rich-suggestion", !!result.isRichSuggestion);
     if (result.isRichSuggestion) {
-      item.toggleAttribute("rich-suggestion", true);
       this.#updateRowForRichSuggestion(item, result);
-    } else {
-      item.removeAttribute("rich-suggestion");
     }
 
+    item.toggleAttribute("has-url", setURL);
     let url = item._elements.get("url");
     if (setURL) {
-      item.setAttribute("has-url", "true");
       this.#addTextContentWithHighlights(
         url,
         result.payload.displayUrl,
@@ -1834,20 +1822,17 @@ export class UrlbarView {
       );
       this.#updateOverflowTooltip(url, result.payload.displayUrl);
     } else {
-      item.removeAttribute("has-url");
       url.textContent = "";
       this.#updateOverflowTooltip(url, "");
     }
 
+    title.toggleAttribute("is-url", isVisitAction);
     if (isVisitAction) {
       actionSetter = () => {
         this.#setElementL10n(action, {
           id: "urlbar-result-action-visit",
         });
       };
-      title.setAttribute("isurl", "true");
-    } else {
-      title.removeAttribute("isurl");
     }
 
     item.toggleAttribute("has-action", actionSetter);
@@ -1862,7 +1847,7 @@ export class UrlbarView {
       item._originalActionSetter();
     }
 
-    if (!title.hasAttribute("isurl")) {
+    if (!title.hasAttribute("is-url")) {
       title.setAttribute("dir", "auto");
     } else {
       title.removeAttribute("dir");
