@@ -105,24 +105,26 @@ using Perm = MemoryMapping::Perm;
 using PermSet = MemoryMapping::PermSet;
 
 nsresult GetMemoryMappings(nsTArray<MemoryMapping>& aMappings, pid_t aPid) {
-  std::ifstream stream;
+  FILE* stream;
   if (aPid == 0) {
-    stream.open("/proc/self/smaps");
+    stream = fopen("/proc/self/smaps", "r");
   } else {
     std::ostringstream path;
     path << "/proc/" << aPid << "/smaps" << std::ends;
-    stream.open(path.str());
+    stream = fopen(path.str().c_str(), "r");
   }
-  if (stream.fail()) {
+  if (!stream) {
     return NS_ERROR_FAILURE;
   }
 
   MemoryMapping* current = nullptr;
-  std::string buffer;
-  while (std::getline(stream, buffer)) {
+  char* line = nullptr;
+  size_t line_size = 0;
+  char name[512];
+
+  while (getline(&line, &line_size, stream) != -1) {
     size_t start, end, offset;
     char flags[4] = "---";
-    char name[512];
 
     name[0] = 0;
 
@@ -131,8 +133,8 @@ nsresult GetMemoryMappings(nsTArray<MemoryMapping>& aMappings, pid_t aPid) {
     //
     // 1487118a7000-148711a5a000 r-xp 00000000 103:03 54004561                  /usr/lib/libc-2.27.so
     // clang-format on
-    if (sscanf(buffer.c_str(), "%zx-%zx %4c %zx %*u:%*u %*u %511s\n", &start,
-               &end, flags, &offset, name) >= 4) {
+    if (sscanf(line, "%zx-%zx %4c %zx %*u:%*u %*u %511s\n", &start, &end, flags,
+               &offset, name) >= 4) {
       PermSet perms;
       if (flags[0] == 'r') {
         perms += Perm::Read;
@@ -157,9 +159,8 @@ nsresult GetMemoryMappings(nsTArray<MemoryMapping>& aMappings, pid_t aPid) {
       continue;
     }
 
-    nsAutoCStringN<128> line(buffer.c_str());
     char* savePtr;
-    char* fieldName = strtok_r(line.BeginWriting(), ":", &savePtr);
+    char* fieldName = strtok_r(line, ":", &savePtr);
     if (!fieldName) {
       continue;
     }
@@ -183,6 +184,9 @@ nsresult GetMemoryMappings(nsTArray<MemoryMapping>& aMappings, pid_t aPid) {
       current->ValueForField(*field) = value * 1024;
     }
   }
+
+  free(line);
+  fclose(stream);
 
   return NS_OK;
 }
