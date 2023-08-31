@@ -62,6 +62,7 @@ interface nsIWebTransportSendStream : nsISupports {
   void getSendStreamStats(in nsIWebTransportStreamStatsCallback aCallback);
   readonly attribute nsIAsyncOutputStream outputStream;
   readonly attribute uint64_t streamId;
+  void setSendOrder(in int64_t aSendOrder);
 };
 
 [builtinclass, scriptable, uuid(f9ecb509-36db-4689-97d6-137639a08750)]
@@ -81,4 +82,5 @@ interface nsIWebTransportBidirectionalStream : nsISupports {
   readonly attribute nsIAsyncInputStream inputStream;
   readonly attribute nsIAsyncOutputStream outputStream;
   readonly attribute uint64_t streamId;
+  void setSendOrder(in int64_t aSendOrder);
 };

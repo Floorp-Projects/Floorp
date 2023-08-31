@@ -149,6 +149,11 @@ class NeqoHttp3Conn final {
                                                          aResult);
   }
 
+  nsresult WebTransportSetSendOrder(uint64_t aSessionId, int64_t aSendOrder) {
+    return neqo_http3conn_webtransport_set_sendorder(this, aSessionId,
+                                                     aSendOrder);
+  }
+
  private:
   NeqoHttp3Conn() = delete;
   ~NeqoHttp3Conn() = delete;

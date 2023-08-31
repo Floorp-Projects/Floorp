@@ -48,6 +48,8 @@ class Http3WebTransportStream final : public Http3StreamBase,
   }
   Http3Stream* GetHttp3Stream() override { return nullptr; }
 
+  void SetSendOrder(int64_t aSendOrder);
+
   [[nodiscard]] nsresult ReadSegments() override;
   [[nodiscard]] nsresult WriteSegments() override;
 
