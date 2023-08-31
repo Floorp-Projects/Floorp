@@ -175,18 +175,20 @@ class ReceiveStream final : public nsIWebTransportStreamCallback {
       std::function<void(uint64_t,
                          WebTransportParent::OnResetOrStopSendingCallback&&)>&&
           aStreamCallback,
-      nsCOMPtr<nsISerialEventTarget>& aSocketThread)
+      Maybe<int64_t> aSendOrder, nsCOMPtr<nsISerialEventTarget>& aSocketThread)
       : mUniResolver(aResolver),
         mStreamCallback(std::move(aStreamCallback)),
+        mSendOrder(aSendOrder),
         mSocketThread(aSocketThread) {}
   ReceiveStream(
       WebTransportParent::CreateBidirectionalStreamResolver&& aResolver,
       std::function<void(uint64_t,
                          WebTransportParent::OnResetOrStopSendingCallback&&)>&&
           aStreamCallback,
-      nsCOMPtr<nsISerialEventTarget>& aSocketThread)
+      Maybe<int64_t> aSendOrder, nsCOMPtr<nsISerialEventTarget>& aSocketThread)
       : mBiResolver(aResolver),
         mStreamCallback(std::move(aStreamCallback)),
+        mSendOrder(aSendOrder),
         mSocketThread(aSocketThread) {}
 
  private:
@@ -196,6 +198,7 @@ class ReceiveStream final : public nsIWebTransportStreamCallback {
   std::function<void(uint64_t,
                      WebTransportParent::OnResetOrStopSendingCallback&&)>
       mStreamCallback;
+  Maybe<int64_t> mSendOrder;
   nsCOMPtr<nsISerialEventTarget> mSocketThread;
 };
 
@@ -207,6 +210,9 @@ NS_IMETHODIMP ReceiveStream::OnBidirectionalStreamReady(
   LOG(("Bidirectional stream ready!"));
   MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
 
+  if (mSendOrder.isSome()) {
+    aStream->SetSendOrder(mSendOrder.value());
+  }
   RefPtr<mozilla::ipc::DataPipeSender> inputsender;
   RefPtr<mozilla::ipc::DataPipeReceiver> inputreceiver;
   nsresult rv =
@@ -283,6 +289,9 @@ ReceiveStream::OnUnidirectionalStreamReady(nsIWebTransportSendStream* aStream) {
   // We should be on the Socket Thread
   MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
 
+  if (mSendOrder.isSome()) {
+    aStream->SetSendOrder(mSendOrder.value());
+  }
   RefPtr<::mozilla::ipc::DataPipeSender> sender;
   RefPtr<::mozilla::ipc::DataPipeReceiver> receiver;
   nsresult rv = NewDataPipe(mozilla::ipc::kDefaultDataPipeCapacity,
@@ -352,7 +361,7 @@ IPCResult WebTransportParent::RecvCreateUnidirectionalStream(
                                                 std::move(aCallback));
       };
   RefPtr<ReceiveStream> callback = new ReceiveStream(
-      std::move(aResolver), std::move(streamCb), mSocketThread);
+      std::move(aResolver), std::move(streamCb), aSendOrder, mSocketThread);
   nsresult rv;
   rv = mWebTransport->CreateOutgoingUnidirectionalStream(callback);
   if (NS_FAILED(rv)) {
@@ -375,7 +384,7 @@ IPCResult WebTransportParent::RecvCreateBidirectionalStream(
                                                 std::move(aCallback));
       };
   RefPtr<ReceiveStream> callback = new ReceiveStream(
-      std::move(aResolver), std::move(streamCb), mSocketThread);
+      std::move(aResolver), std::move(streamCb), aSendOrder, mSocketThread);
   nsresult rv;
   rv = mWebTransport->CreateOutgoingBidirectionalStream(callback);
   if (NS_FAILED(rv)) {

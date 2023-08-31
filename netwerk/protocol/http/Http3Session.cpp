@@ -479,7 +479,7 @@ nsresult Http3Session::ProcessEvents() {
         break;
       }
       case Http3Event::Tag::DataWritable: {
-        MOZ_ASSERT(CanSandData());
+        MOZ_ASSERT(CanSendData());
         LOG(("Http3Session::ProcessEvents - DataWritable"));
 
         RefPtr<Http3StreamBase> stream =
@@ -1061,7 +1061,7 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
 bool Http3Session::CanReuse() {
   // TODO: we assume "pooling" is disabled here, so we don't allow this session
   // to be reused. "pooling" will be implemented in bug 1815735.
-  return CanSandData() && !(mGoawayReceived || mShouldClose) &&
+  return CanSendData() && !(mGoawayReceived || mShouldClose) &&
          !mHasWebTransportSession;
 }
 
@@ -1485,12 +1485,13 @@ nsresult Http3Session::SendData(nsIUDPSocket* socket) {
   //   3) if we still have streams ready to write call ResumeSend()(we may
   //      still have such streams because on an stream error we return earlier
   //      to let the error be handled).
+  //   4)
 
   nsresult rv = NS_OK;
   RefPtr<Http3StreamBase> stream;
 
   // Step 1)
-  while (CanSandData() && (stream = mReadyForWrite.PopFront())) {
+  while (CanSendData() && (stream = mReadyForWrite.PopFront())) {
     LOG(("Http3Session::SendData call ReadSegments from stream=%p [this=%p]",
          stream.get(), this));
 
@@ -1515,7 +1516,7 @@ nsresult Http3Session::SendData(nsIUDPSocket* socket) {
 
   if (NS_SUCCEEDED(rv)) {
     // Step 2:
-    // Call actuall network write.
+    // Call actual network write.
     rv = ProcessOutput(socket);
   }
 
@@ -1532,13 +1533,13 @@ nsresult Http3Session::SendData(nsIUDPSocket* socket) {
 void Http3Session::StreamReadyToWrite(Http3StreamBase* aStream) {
   MOZ_ASSERT(aStream);
   mReadyForWrite.Push(aStream);
-  if (CanSandData() && mConnection) {
+  if (CanSendData() && mConnection) {
     Unused << mConnection->ResumeSend();
   }
 }
 
 void Http3Session::MaybeResumeSend() {
-  if ((mReadyForWrite.GetSize() > 0) && CanSandData() && mConnection) {
+  if ((mReadyForWrite.GetSize() > 0) && CanSendData() && mConnection) {
     Unused << mConnection->ResumeSend();
   }
 }
@@ -2023,7 +2024,7 @@ bool Http3Session::JoinConnection(const nsACString& hostname, int32_t port) {
 bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
                                       bool justKidding) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  if (!mConnection || !CanSandData() || mShouldClose || mGoawayReceived) {
+  if (!mConnection || !CanSendData() || mShouldClose || mGoawayReceived) {
     return false;
   }
 
@@ -2356,7 +2357,7 @@ void Http3Session::Finish0Rtt(bool aRestart) {
 }
 
 void Http3Session::ReportHttp3Connection() {
-  if (CanSandData() && !mHttp3ConnectionReported) {
+  if (CanSendData() && !mHttp3ConnectionReported) {
     mHttp3ConnectionReported = true;
     gHttpHandler->ConnMgr()->ReportHttp3Connection(mUdpConn);
     MaybeResumeSend();
@@ -2479,6 +2480,15 @@ uint64_t Http3Session::MaxDatagramSize(uint64_t aSessionId) {
   uint64_t size = 0;
   Unused << mHttp3Connection->WebTransportMaxDatagramSize(aSessionId, &size);
   return size;
+}
+
+void Http3Session::SetSendOrder(Http3StreamBase* aStream, int64_t aSendOrder) {
+  if (!IsClosing()) {
+    nsresult rv = mHttp3Connection->WebTransportSetSendOrder(
+        aStream->StreamId(), aSendOrder);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
+  }
 }
 
 }  // namespace mozilla::net
