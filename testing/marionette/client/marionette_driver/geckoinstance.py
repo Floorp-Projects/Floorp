@@ -146,6 +146,8 @@ class GeckoInstance(object):
         "security.certerrors.mitm.priming.enabled": False,
         # Tests don't wait for the notification button security delay
         "security.notification_enable_delay": 0,
+        # Do not download intermediate certificates
+        "security.remote_settings.intermediates.enabled": False,
         # Ensure blocklist updates don't hit the network
         "services.settings.server": "data:,#remote-settings-dummy/v1",
         # Disable password capture, so that tests that include forms aren"t

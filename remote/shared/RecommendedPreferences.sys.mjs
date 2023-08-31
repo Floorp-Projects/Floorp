@@ -286,6 +286,9 @@ const COMMON_PREFERENCES = new Map([
   // Tests do not wait for the notification button security delay
   ["security.notification_enable_delay", 0],
 
+  // Do not download intermediate certificates
+  ["security.remote_settings.intermediates.enabled", false],
+
   // Ensure blocklist updates do not hit the network
   ["services.settings.server", "http://%(server)s/dummy/blocklist/"],
 
