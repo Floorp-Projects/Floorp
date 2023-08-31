@@ -675,7 +675,11 @@ ExtensionAddonObserver.init();
  */
 export var ExtensionProcessCrashObserver = {
   initialized: false,
+
+  _appInForeground: true,
+  _isAndroid: AppConstants.platform === "android",
   _processSpawningDisabled: false,
+
   // Technically there is at most one child extension process,
   // but we may need to adjust this assumption to account for more
   // than one if that ever changes in the future.
@@ -695,6 +699,10 @@ export var ExtensionProcessCrashObserver = {
       this.logger = lazy.Log.repository.getLogger(
         "addons.process-crash-observer"
       );
+      if (this._isAndroid) {
+        Services.obs.addObserver(this, "application-foreground");
+        Services.obs.addObserver(this, "application-background");
+      }
       this.initialized = true;
     }
   },
@@ -705,6 +713,10 @@ export var ExtensionProcessCrashObserver = {
         Services.obs.removeObserver(this, "ipc:content-created");
         Services.obs.removeObserver(this, "process-type-set");
         Services.obs.removeObserver(this, "ipc:content-shutdown");
+        if (this._isAndroid) {
+          Services.obs.removeObserver(this, "application-foreground");
+          Services.obs.removeObserver(this, "application-background");
+        }
       } catch (err) {
         // Removing the observer may fail if they are not registered anymore,
         // this shouldn't happen in practice, but let's still log the error
@@ -718,6 +730,11 @@ export var ExtensionProcessCrashObserver = {
   observe(subject, topic, data) {
     let childID = data;
     switch (topic) {
+      case "application-foreground":
+      // Intentional fall-through
+      case "application-background":
+        this._appInForeground = topic === "application-foreground";
+        break;
       case "process-type-set":
       // Intentional fall-through
       case "ipc:content-created": {
@@ -775,10 +792,12 @@ export var ExtensionProcessCrashObserver = {
           );
         }
 
+        const { appInForeground } = this;
         Glean.extensions.processEvent.crashed.add(1);
         Management.emit("extension-process-crash", {
           childID,
           processSpawningDisabled: this.processSpawningDisabled,
+          appInForeground,
         });
         break;
       }
@@ -791,6 +810,12 @@ export var ExtensionProcessCrashObserver = {
     this.logger.debug(`reset crash counter (was ${crashCounter})`);
     this._processSpawningDisabled = false;
     Management.emit("extension-enable-process-spawning");
+  },
+
+  get appInForeground() {
+    // Only account for application in the background for
+    // android builds.
+    return this._isAndroid ? this._appInForeground : true;
   },
 
   get processSpawningDisabled() {
