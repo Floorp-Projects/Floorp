@@ -12,11 +12,11 @@
 
 #include "mozilla/gfx/UnscaledFontMac.h"
 
-class MacOSFontEntry;
+class CTFontEntry;
 
 class gfxMacFont final : public gfxFont {
  public:
-  gfxMacFont(const RefPtr<mozilla::gfx::UnscaledFontMac>& aUnscaledFont, MacOSFontEntry* aFontEntry,
+  gfxMacFont(const RefPtr<mozilla::gfx::UnscaledFontMac>& aUnscaledFont, CTFontEntry* aFontEntry,
              const gfxFontStyle* aFontStyle);
 
   CGFontRef GetCGFontRef() const { return mCGFont; }
