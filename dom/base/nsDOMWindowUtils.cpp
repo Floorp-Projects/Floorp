@@ -4396,7 +4396,7 @@ nsDOMWindowUtils::AddManuallyManagedState(Element* aElement,
     return NS_ERROR_INVALID_ARG;
   }
 
-  aElement->AddManuallyManagedStates(state);
+  aElement->AddStates(state);
   return NS_OK;
 }
 
@@ -4412,7 +4412,7 @@ nsDOMWindowUtils::RemoveManuallyManagedState(Element* aElement,
     return NS_ERROR_INVALID_ARG;
   }
 
-  aElement->RemoveManuallyManagedStates(state);
+  aElement->RemoveStates(state);
   return NS_OK;
 }
 
