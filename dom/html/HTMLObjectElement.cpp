@@ -266,10 +266,6 @@ void HTMLObjectElement::StartObjectLoad(bool aNotify, bool aForce) {
   SetIsNetworkCreated(false);
 }
 
-ElementState HTMLObjectElement::IntrinsicState() const {
-  return nsGenericHTMLFormControlElement::IntrinsicState() | ObjectState();
-}
-
 uint32_t HTMLObjectElement::GetCapabilities() const {
   return nsObjectLoadingContent::GetCapabilities() | eFallbackIfClassIDPresent;
 }
