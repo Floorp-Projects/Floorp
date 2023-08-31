@@ -107,6 +107,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "PrintTargetCG.h",
     ]
     SOURCES += [
+        "CoreTextFontList.cpp",
         "gfxCoreTextShaper.cpp",
         "gfxMacFont.cpp",
         "gfxMacUtils.cpp",

@@ -9,13 +9,14 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_gfx.h"
 
-#include "gfxCoreTextShaper.h"
 #include <algorithm>
+
+#include "CoreTextFontList.h"
+#include "gfxCoreTextShaper.h"
 #include "gfxPlatformMac.h"
 #include "gfxContext.h"
 #include "gfxFontUtils.h"
 #include "gfxHarfBuzzShaper.h"
-#include "gfxMacPlatformFontList.h"
 #include "gfxFontConstants.h"
 #include "gfxTextRun.h"
 #include "gfxUtils.h"
@@ -33,8 +34,7 @@ struct TagEquals {
 };
 
 gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
-                       MacOSFontEntry* aFontEntry,
-                       const gfxFontStyle* aFontStyle)
+                       CTFontEntry* aFontEntry, const gfxFontStyle* aFontStyle)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle),
       mCGFont(nullptr),
       mCTFont(nullptr),
@@ -155,8 +155,8 @@ bool gfxMacFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
 
   // Currently, we don't support vertical shaping via CoreText,
   // so we ignore RequiresAATLayout if vertical is requested.
-  auto macFontEntry = static_cast<MacOSFontEntry*>(GetFontEntry());
-  if (macFontEntry->RequiresAATLayout() && !aVertical &&
+  auto ctFontEntry = static_cast<CTFontEntry*>(GetFontEntry());
+  if (ctFontEntry->RequiresAATLayout() && !aVertical &&
       StaticPrefs::gfx_font_rendering_coretext_enabled()) {
     if (!mCoreTextShaper) {
       mCoreTextShaper = MakeUnique<gfxCoreTextShaper>(this);
@@ -166,14 +166,14 @@ bool gfxMacFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                                    aShapedText)) {
       PostShapingFixup(aDrawTarget, aText, aOffset, aLength, aVertical,
                        aShapedText);
-      if (GetFontEntry()->HasTrackingTable()) {
+      if (ctFontEntry->HasTrackingTable()) {
         // Convert font size from device pixels back to CSS px
         // to use in selecting tracking value
         float trackSize = GetAdjustedSize() *
                           aShapedText->GetAppUnitsPerDevUnit() /
                           AppUnitsPerCSSPixel();
         float tracking =
-            GetFontEntry()->TrackingForCSSPx(trackSize) * mFUnitsConvFactor;
+            ctFontEntry->TrackingForCSSPx(trackSize) * mFUnitsConvFactor;
         // Applying tracking is a lot like the adjustment we do for
         // synthetic bold: we want to apply between clusters, not to
         // non-spacing glyphs within a cluster. So we can reuse that
@@ -255,7 +255,7 @@ void gfxMacFont::InitMetrics() {
   // use CG's idea of unitsPerEm, which may differ from the "true" value in
   // the head table of the font (see bug 580863)
   gfxFloat cgConvFactor;
-  if (static_cast<MacOSFontEntry*>(mFontEntry.get())->IsCFF()) {
+  if (static_cast<CTFontEntry*>(mFontEntry.get())->IsCFF()) {
     cgConvFactor = mAdjustedSize / ::CGFontGetUnitsPerEm(mCGFont);
   } else {
     cgConvFactor = mFUnitsConvFactor;
@@ -322,7 +322,7 @@ void gfxMacFont::InitMetrics() {
       delete mHarfBuzzShaper.exchange(nullptr);
       mAdjustedSize = mStyle.GetAdjustedSize(aspect);
       mFUnitsConvFactor = mAdjustedSize / upem;
-      if (static_cast<MacOSFontEntry*>(mFontEntry.get())->IsCFF()) {
+      if (static_cast<CTFontEntry*>(mFontEntry.get())->IsCFF()) {
         cgConvFactor = mAdjustedSize / ::CGFontGetUnitsPerEm(mCGFont);
       } else {
         cgConvFactor = mFUnitsConvFactor;
