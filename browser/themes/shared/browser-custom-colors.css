@@ -6,14 +6,14 @@
 
 @media not (prefers-contrast) {
   :root:not(:-moz-lwtheme) {
-    --button-primary-bgcolor: rgb(0,97,224);
-    --button-primary-hover-bgcolor: rgb(2,80,187);
-    --button-primary-active-bgcolor: rgb(5,62,148);
-    --button-primary-color: rgb(251,251,254);
-    --button-bgcolor: rgba(207,207,216,.33);
-    --button-hover-bgcolor: rgba(207,207,216,.66);
-    --button-active-bgcolor: rgb(207,207,216);
-    --button-color: rgb(21,20,26);
+    --button-primary-bgcolor: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
+    --button-primary-hover-bgcolor: light-dark(rgb(2, 80, 187), rgb(128, 235, 255));
+    --button-primary-active-bgcolor: light-dark(rgb(5, 62, 148), rgb(170, 242, 255));
+    --button-primary-color: rgb(251, 251, 254);
+    --button-bgcolor: light-dark(rgba(207, 207, 216, .33), rgb(43, 42, 51));
+    --button-hover-bgcolor: light-dark(rgba(207, 207, 216, .66), rgb(82, 82, 94));
+    --button-active-bgcolor: light-dark(rgb(207, 207, 216), rgb(91, 91, 102));
+    --button-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
 
     --focus-outline-color: var(--button-primary-bgcolor);
 
@@ -27,37 +27,45 @@
     --checkbox-checked-hover-bgcolor: var(--button-primary-hover-bgcolor);
     --checkbox-checked-active-bgcolor: var(--button-primary-active-bgcolor);
 
-    --arrowpanel-dimmed: color-mix(in srgb, currentColor 12%, transparent);
-    --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 20%, transparent);
-    --panel-shortcut-color: rgb(91,91,102);
+    --arrowpanel-dimmed: light-dark(
+      color-mix(in srgb, currentColor 12%, transparent),
+      color-mix(in srgb, currentColor 17%, transparent)
+    );
+    --arrowpanel-dimmed-further: light-dark(
+      color-mix(in srgb, currentColor 20%, transparent),
+      color-mix(in srgb, currentColor 14%, transparent)
+    );
 
-    --input-color: rgb(21,20,26);
-    --input-bgcolor: rgb(255,255,255);
-    --input-border-color: color-mix(in srgb, currentColor 41%, transparent);
+    --panel-shortcut-color: rgb(91, 91, 102);
 
-    --tab-selected-bgcolor: rgb(255,255,255);
-    --tab-icon-overlay-stroke: rgb(255,255,255);
-    --tab-icon-overlay-fill: rgb(91,91,102);
-    --toolbar-color: rgb(21,20,26);
-    --toolbar-non-lwt-bgcolor: #f9f9fb;
-    --toolbar-non-lwt-textcolor: rgb(21, 20, 26);
-    --toolbarbutton-icon-fill: rgb(91,91,102);
-    --toolbarbutton-icon-fill-attention: rgb(0,97,224);
+    --input-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
+    --input-bgcolor: light-dark(rgb(255, 255, 255), #42414d);
+    --input-border-color: light-dark(color-mix(in srgb, currentColor 41%, transparent), #8f8f9d);
 
-    --urlbar-popup-action-color: rgb(91,91,102);
-    --urlbar-popup-url-color: rgb(0,97,224);
+    --tab-selected-bgcolor: light-dark(rgb(255, 255, 255), rgb(66, 65, 77));
+    --tab-icon-overlay-stroke: light-dark(rgb(255, 255, 255), rgb(66, 65, 77));
+    --tab-icon-overlay-fill: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
+    --toolbar-color: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
+    --toolbar-non-lwt-bgcolor: light-dark(#f9f9fb, rgb(43, 42, 51));
+    --toolbar-non-lwt-textcolor: var(--toolbar-color);
+
+    --toolbarbutton-icon-fill-attention: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
+
+    --urlbar-popup-action-color: rgb(91, 91, 102);
+    --urlbar-popup-url-color: light-dark(rgb(0, 97, 224), #00ddff);
     --urlbar-icon-fill-opacity: 0.72;
+    --urlbar-box-bgcolor: light-dark(white, rgb(66, 65, 77));
 
-    --autocomplete-popup-separator-color: rgb(240,240,244);
+    --autocomplete-popup-separator-color: light-dark(rgb(240, 240, 244), rgb(82, 82, 94));
     --toolbar-field-border-color: transparent;
-    --arrowpanel-border-color: rgb(240,240,244);
-    --chrome-content-separator-color: rgb(204,204,204);
+    --arrowpanel-border-color: light-dark(rgb(240, 240, 244), rgb(82,82,94));
+    --chrome-content-separator-color: light-dark(rgb(204, 204, 204), hsl(240, 5%, 5%));
 
-    --toolbar-field-background-color: rgb(240,240,244);
-    --toolbar-field-color: rgb(21,20,26);
+    --toolbar-field-background-color: light-dark(rgb(240, 240, 244), rgb(28, 27, 34));
+    --toolbar-field-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
 
-    --autocomplete-popup-highlight-background: #e0e0e6;
-    --autocomplete-popup-highlight-color: rgb(21,20,26);
-    --autocomplete-popup-hover-background: rgb(240,240,244);
+    --autocomplete-popup-highlight-background: light-dark(#e0e0e6, rgb(43,42,51));
+    --autocomplete-popup-highlight-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
+    --autocomplete-popup-hover-background: light-dark(rgb(240, 240, 244), var(--arrowpanel-dimmed));
   }
 }
