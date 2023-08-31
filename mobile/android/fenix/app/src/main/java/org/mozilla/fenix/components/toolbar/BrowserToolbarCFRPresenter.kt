@@ -217,6 +217,7 @@ class BrowserToolbarCFRPresenter(
 
     @OptIn(ExperimentalComposeUiApi::class)
     @VisibleForTesting
+    @Suppress("LongMethod")
     internal fun showTcpCfr() {
         CFRPopup(
             anchor = toolbar.findViewById(
@@ -277,6 +278,7 @@ class BrowserToolbarCFRPresenter(
                                     ),
                                 )
                                 TrackingProtection.tcpSumoLinkClicked.record(NoExtras())
+                                settings.shouldShowTotalCookieProtectionCFR = false
                                 popup?.dismiss()
                             },
                         style = FirefoxTheme.typography.body2.copy(
@@ -315,7 +317,14 @@ class BrowserToolbarCFRPresenter(
                 dismissOnBackPress = false,
                 dismissOnClickOutside = false,
             ),
-            onDismiss = {},
+            onDismiss = {
+                when (it) {
+                    true -> {
+                        settings.shouldShowReviewQualityCheckCFR = false
+                    }
+                    false -> {}
+                }
+            },
             text = {
                 FirefoxTheme {
                     Text(
@@ -330,7 +339,6 @@ class BrowserToolbarCFRPresenter(
                 }
             },
         ).run {
-            settings.shouldShowReviewQualityCheckCFR = false
             popup = this
             show()
         }

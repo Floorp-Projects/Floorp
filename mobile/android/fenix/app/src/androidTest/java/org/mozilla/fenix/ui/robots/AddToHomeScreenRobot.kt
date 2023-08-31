@@ -27,11 +27,14 @@ import java.util.regex.Pattern
  */
 class AddToHomeScreenRobot {
 
-    fun verifyAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) = assertAddPrivateBrowsingShortcutButton(composeTestRule)
+    fun verifyAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) =
+        composeTestRule.onNodeWithTag("private.add").assertIsDisplayed()
 
-    fun verifyNoThanksPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) = assertNoThanksPrivateBrowsingShortcutButton(composeTestRule)
+    fun verifyNoThanksPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) =
+        composeTestRule.onNodeWithTag("private.cancel").assertIsDisplayed()
 
-    fun clickAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) = composeTestRule.onNodeWithTag("private.add").performClick()
+    fun clickAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) =
+        composeTestRule.onNodeWithTag("private.add").performClick()
 
     fun addShortcutName(title: String) = shortcutTextField.setText(title)
 
@@ -101,12 +104,6 @@ fun addToHomeScreen(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenR
 
 private fun addAutomaticallyButton() =
     mDevice.findObject(UiSelector().textContains("add automatically"))
-
-private fun assertAddPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) =
-    composeTestRule.onNodeWithTag("private.add").assertIsDisplayed()
-
-private fun assertNoThanksPrivateBrowsingShortcutButton(composeTestRule: ComposeTestRule) =
-    composeTestRule.onNodeWithTag("private.cancel").assertIsDisplayed()
 
 private val cancelAddToHomeScreenButton =
     itemWithResId("$packageName:id/cancel_button")

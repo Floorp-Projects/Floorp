@@ -193,7 +193,7 @@ class BrowserToolbarCFRPresenterTest {
     }
 
     @Test
-    fun `WHEN the TCP CFR is to be shown THEN instantiate a new one and remember to not show it again`() {
+    fun `WHEN the TCP CFR is to be shown THEN instantiate a new one and remember show it again unless explicitly dismissed`() {
         val settings: Settings = mockk(relaxed = true)
         val presenter = createPresenter(
             anchor = mockk(relaxed = true),
@@ -202,7 +202,7 @@ class BrowserToolbarCFRPresenterTest {
 
         presenter.showTcpCfr()
 
-        verify { settings.shouldShowTotalCookieProtectionCFR = false }
+        verify(exactly = 0) { settings.shouldShowTotalCookieProtectionCFR = false }
         assertNotNull(presenter.popup)
     }
 

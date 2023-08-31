@@ -191,6 +191,19 @@ class NavigationToolbarRobot {
             return BrowserRobot.Transition()
         }
 
+        fun enterURLAndEnterToBrowserForTCPCFR(
+            url: Uri,
+            interact: BrowserRobot.() -> Unit,
+        ): BrowserRobot.Transition {
+            openEditURLView()
+
+            awesomeBar().setText(url.toString())
+            mDevice.pressEnter()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
         fun openTabCrashReporter(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             val crashUrl = "about:crashcontent"
 

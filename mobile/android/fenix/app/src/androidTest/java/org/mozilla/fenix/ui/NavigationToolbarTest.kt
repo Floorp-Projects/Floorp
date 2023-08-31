@@ -12,16 +12,11 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
-import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
-import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
-import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import java.util.Locale
@@ -175,41 +170,6 @@ class NavigationToolbarTest {
             mDevice.waitForIdle()
         }.goToHomescreen {
             verifyHomeScreen()
-        }
-    }
-
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2260552
-    @SmokeTest
-    @Test
-    fun totalCookieProtectionLearnMoreLinkTest() {
-        activityTestRule.applySettingsExceptions {
-            it.isTCPCFREnabled = true
-        }
-
-        val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericPage.url) {
-            verifyCookiesProtectionHintIsDisplayed(true)
-            clickPageObject(itemContainingText(getStringResource(R.string.tcp_cfr_learn_more)))
-            verifyUrl("support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-android")
-        }
-    }
-
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1913589
-    @Test
-    fun totalCookieProtectionHintTest() {
-        activityTestRule.applySettingsExceptions {
-            it.isTCPCFREnabled = true
-        }
-
-        val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericPage.url) {
-            verifyCookiesProtectionHintIsDisplayed(true)
-            clickPageObject(itemWithDescription(getStringResource(R.string.mozac_cfr_dismiss_button_content_description)))
-            verifyCookiesProtectionHintIsDisplayed(false)
         }
     }
 }
