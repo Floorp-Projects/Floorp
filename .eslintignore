@@ -271,4 +271,5 @@ toolkit/components/uniffi-bindgen-gecko-js/components/generated/*
 
 # Floorp's exclusion list
 # userChrome.js
-floorp/browser/extensions/userChromejs
+floorp/browser/extensions/userChromejs/*
+floorp/browser/components/calendar/*

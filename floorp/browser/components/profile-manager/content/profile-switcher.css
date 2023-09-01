@@ -8,7 +8,7 @@
     color: var(--in-content-page-color) !important;
 }
 
-html { 
+html {
     background: var(--in-content-page-background) !important;
     padding: 10px;
     overflow: hidden;
@@ -32,7 +32,7 @@ body {
     flex: 2;
 }
 
-.name { 
+.name {
     margin-right: auto;
     flex: 2;
 }

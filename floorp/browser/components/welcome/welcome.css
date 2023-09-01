@@ -6,7 +6,7 @@
    --in-welcome-page-background: #fff linear-gradient(0deg, rgba(144, 89, 255, 30%) 0%, rgba(2, 144, 238, 30%) 100%);
    --in-welcome-page-color: #000;
    --sidebar-shadow: 10px 5px 5px #e6e6e6;
-   --sidebar-background: #fff;   
+   --sidebar-background: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -33,7 +33,7 @@ body {
     display: flex;
 }
 
-#first-welcome-box { 
+#first-welcome-box {
     flex-direction: column;
     display: flex;
     padding: 0px 100px 70px 100px;
@@ -57,7 +57,7 @@ body {
       opacity: 0;
       transform: translateY(20px);
     }
-  
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -67,7 +67,7 @@ body {
 [hidden="true"] {
   display: none !important;
 }
-  
+
 .text-link {
     height: fit-content;
     color: white;
@@ -93,7 +93,7 @@ body {
 }
 
 .welcome-big-text {
-    font-weight: bold; 
+    font-weight: bold;
     text-align: center;
 }
 
