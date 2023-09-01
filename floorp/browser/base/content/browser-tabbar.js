@@ -177,7 +177,7 @@ function setMultirowTabMaxHeight() {
   const isMultiRowTabEnabled = Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.max.enabled");
   const rowValue = Services.prefs.getIntPref("floorp.browser.tabbar.multirow.max.row");
 
-  const tabHeight = document.querySelector(".tabbrowser-tab").clientHeight;
+  const tabHeight = document.querySelector(".tabbrowser-tab:not([hidden='true'])").clientHeight;
 
   if (isMultiRowTabEnabled && Services.prefs.getIntPref("floorp.tabbar.style") == 1) {
     scrollbox.setAttribute("style", `max-height: ${tabHeight * rowValue}px !important;`);
