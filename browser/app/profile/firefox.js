@@ -742,9 +742,15 @@ pref("browser.shopping.experience2023.optedIn", 0);
 pref("browser.shopping.experience2023.active", true);
 
 // Enables the ad / recommended product feature for the shopping sidebar.
-// If enabled, users can disable using a separate pref and visible toggle
+// If enabled, users can disable the ad card using the separate pref
+// `browser.shopping.experience2023.ads.userEnabled` and visible toggle
 // (this is just the feature flag).
 pref("browser.shopping.experience2023.ads.enabled", true);
+
+// Activates the ad card in the shopping sidebar.
+// Unlike `browser.shopping.experience2023.ads.enabled`, this pref is controlled by users
+// using the visible toggle.
+pref("browser.shopping.experience2023.ads.userEnabled", true);
 
 // Enables the display of the Mozilla VPN banner in private browsing windows
 pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source=firefox-browser&utm_medium=firefox-%CHANNEL%-browser&utm_campaign=private-browsing-vpn-link");

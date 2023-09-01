@@ -13,7 +13,9 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import "chrome://global/content/elements/moz-toggle.mjs";
 
 class ShoppingSettings extends MozLitElement {
-  #isRecommendationsEnabled;
+  static properties = {
+    adsEnabledByUser: { type: Boolean },
+  };
 
   static get queries() {
     return {
@@ -23,8 +25,11 @@ class ShoppingSettings extends MozLitElement {
   }
 
   onToggleRecommendations() {
-    // TODO: we will need to hide the recommendations card here
-    this.#isRecommendationsEnabled = this.recommendationsToggleEl.pressed;
+    this.adsEnabledByUser = this.recommendationsToggleEl.pressed;
+    RPMSetPref(
+      "browser.shopping.experience2023.ads.userEnabled",
+      this.adsEnabledByUser
+    );
   }
 
   onDisableShopping() {
@@ -32,9 +37,6 @@ class ShoppingSettings extends MozLitElement {
   }
 
   render() {
-    // TODO: for now, we will hardcode the value until a pref is made.
-    this.#isRecommendationsEnabled = true;
-
     // Whether we show recommendations at all (including offering a user
     // control for them) is controlled via a nimbus-enabled pref.
     let canShowRecommendationToggle = RPMGetBoolPref(
@@ -42,11 +44,13 @@ class ShoppingSettings extends MozLitElement {
     );
     let toggleMarkup = canShowRecommendationToggle
       ? html`
-        <moz-toggle id="shopping-settings-recommendations-toggle" pressed=${
-          this.#isRecommendationsEnabled
-        } data-l10n-id="shopping-settings-recommendations-toggle" data-l10n-attrs="label" @toggle=${
-          this.onToggleRecommendations
-        }></moz-toggle/>`
+        <moz-toggle
+          id="shopping-settings-recommendations-toggle"
+          ?pressed=${this.adsEnabledByUser}
+          data-l10n-id="shopping-settings-recommendations-toggle"
+          data-l10n-attrs="label"
+          @toggle=${this.onToggleRecommendations}>
+        </moz-toggle/>`
       : null;
 
     return html`

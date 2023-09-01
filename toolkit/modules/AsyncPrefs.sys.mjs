@@ -17,6 +17,7 @@ const kAllowedPrefs = new Set([
 
   "browser.shopping.experience2023.optedIn",
   "browser.shopping.experience2023.active",
+  "browser.shopping.experience2023.ads.userEnabled",
 
   "narrate.rate",
   "narrate.voice",
