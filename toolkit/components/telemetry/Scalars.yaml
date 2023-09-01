@@ -7122,6 +7122,22 @@ policies:
     record_in_processes:
       - main
 
+urlbar.trending:
+  block:
+    bug_numbers:
+      - 1848048
+    description: >-
+      User has blocked seeing trending results.
+    expires: never
+    kind: uint
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 urlbar:
   abandonment:
     bug_numbers:
