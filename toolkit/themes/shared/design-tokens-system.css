@@ -5,7 +5,8 @@
 @import url("chrome://global/skin/design-tokens-shared.css");
 
 @media not (prefers-contrast) {
-  :root {
+  :root,
+  :host(.anonymous-content-host) {
     /* Border */
     --border-interactive-color: color-mix(in srgb, currentColor 15%, var(--color-gray-60));
 
