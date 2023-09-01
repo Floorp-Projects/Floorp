@@ -441,6 +441,10 @@ pref("browser.urlbar.weather.minKeywordLength", 0);
 // weather suggestions are turned on.
 pref("browser.urlbar.suggest.weather", true);
 
+// If `browser.urlbar.trending.featureGate` is true, this controls whether
+// trending suggestions are turned on.
+pref("browser.urlbar.suggest.trending", true);
+
 // When `browser.urlbar.bestMatch.enabled` is true, this controls whether best
 // match results are shown in the urlbar. This pref is exposed to the user in
 // the UI, and it's sticky so that its user-branch value persists regardless of

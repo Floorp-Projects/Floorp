@@ -20,11 +20,16 @@ Preferences.addAll([
   { id: "browser.urlbar.showSearchTerms.enabled", type: "bool" },
   { id: "browser.search.separatePrivateDefault", type: "bool" },
   { id: "browser.search.separatePrivateDefault.ui.enabled", type: "bool" },
+  { id: "browser.urlbar.suggest.trending", type: "bool" },
+  { id: "browser.urlbar.trending.featureGate", type: "bool" },
 ]);
 
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 const SEARCH_TYPE = "default_search";
 const SEARCH_KEY = "defaultSearch";
+
+// The name of in built engines that support trending results.
+const TRENDING_ENGINES = ["Google"];
 
 var gEngineView = null;
 
@@ -211,6 +216,8 @@ var gSearchPane = {
       "urlBarSuggestionPermanentPBLabel"
     );
     permanentPBLabel.hidden = urlbarSuggests.hidden || !permanentPB;
+
+    this._updateTrendingCheckbox();
   },
 
   _showAddEngineButton() {
@@ -222,6 +229,16 @@ var gSearchPane = {
       let addButton = document.getElementById("addEngineButton");
       addButton.hidden = false;
     }
+  },
+
+  async _updateTrendingCheckbox() {
+    let trendingBox = document.getElementById("showTrendingSuggestionsBox");
+    let trendingSupported = TRENDING_ENGINES.includes(
+      (await Services.search.getDefault()).name
+    );
+    trendingBox.hidden = !Preferences.get("browser.urlbar.trending.featureGate")
+      .value;
+    trendingBox.disabled = !trendingSupported;
   },
 
   /**
@@ -410,6 +427,7 @@ var gSearchPane = {
         if (selectedEngine.name != engine.name) {
           gSearchPane.buildDefaultEngineDropDowns();
         }
+        gSearchPane._updateSuggestionCheckboxes();
         break;
       }
       case "engine-default-private": {

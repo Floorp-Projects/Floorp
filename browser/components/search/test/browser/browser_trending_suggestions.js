@@ -31,7 +31,10 @@ add_setup(async () => {
   await SearchTestUtils.useMochitestEngines(searchExtensions);
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.suggest.searches", true]],
+    set: [
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.suggest.trending", true],
+    ],
   });
 
   SearchTestUtils.useMockIdleService();
@@ -128,6 +131,53 @@ add_task(async function test_trending_telemetry() {
 
   let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
   TelemetryTestUtils.assertKeyedScalar(scalars, "urlbar.picked.trending", 0, 1);
+});
+
+add_task(async function test_block_trending() {
+  Services.telemetry.clearScalars();
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.trending.featureGate", true],
+      ["browser.urlbar.trending.requireSearchMode", false],
+    ],
+  });
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "",
+    waitForFocus: SimpleTest.waitForFocus,
+  });
+
+  Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+  let { result: trendingResult } = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    0
+  );
+  Assert.equal(trendingResult.payload.trending, true);
+
+  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+    resultIndex: 0,
+  });
+
+  await BrowserTestUtils.waitForCondition(
+    () => UrlbarTestUtils.getResultCount(window) == 1
+  );
+  let { result: heuristicResult } = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    0
+  );
+  Assert.notEqual(heuristicResult.payload.trending, true);
+
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("parent", false, true),
+    "urlbar.trending.block",
+    1
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Escape");
+  });
+  await SpecialPowers.popPrefEnv();
 });
 
 async function check_results({
