@@ -111,7 +111,7 @@
 }
 
 .storage-access-notification-content .text-link {
-  color: LinkText;
+  color: -moz-nativehyperlinktext;
 }
 
 .storage-access-notification-content .text-link:hover {

@@ -375,7 +375,7 @@ menuitem.bookmark-item {
 
   /* Address bar results view */
   :root:not(:-moz-lwtheme) {
-    --urlbar-popup-action-color: LinkText;
+    --urlbar-popup-action-color: -moz-nativehyperlinktext;
   }
 }
 
