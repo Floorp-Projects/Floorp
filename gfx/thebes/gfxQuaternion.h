@@ -34,28 +34,6 @@ struct gfxQuaternion
     if (aMatrix[1][0] > aMatrix[0][1]) z = -z;
   }
 
-  // Convert from |direction axis, angle| pair to gfxQuaternion.
-  //
-  // Reference:
-  // https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation
-  //
-  // if the direction axis is (x, y, z) = xi + yj + zk,
-  // and the angle is |theta|, this formula can be done using
-  // an extension of Euler's formula:
-  //   q = cos(theta/2) + (xi + yj + zk)(sin(theta/2))
-  //     = cos(theta/2) +
-  //       x*sin(theta/2)i + y*sin(theta/2)j + z*sin(theta/2)k
-  // Note: aDirection should be an unit vector and
-  //       the unit of aAngle should be Radian.
-  gfxQuaternion(const mozilla::gfx::Point3D& aDirection, gfxFloat aAngle) {
-    MOZ_ASSERT(mozilla::gfx::FuzzyEqual(aDirection.Length(), 1.0f),
-               "aDirection should be an unit vector");
-    x = aDirection.x * sin(aAngle / 2.0);
-    y = aDirection.y * sin(aAngle / 2.0);
-    z = aDirection.z * sin(aAngle / 2.0);
-    w = cos(aAngle / 2.0);
-  }
-
   gfxQuaternion Slerp(const gfxQuaternion& aOther, gfxFloat aCoeff) const {
     gfxFloat dot = mozilla::clamped(DotProduct(aOther), -1.0, 1.0);
     if (dot == 1.0) {
