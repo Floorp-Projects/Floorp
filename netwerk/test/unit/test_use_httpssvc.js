@@ -182,7 +182,7 @@ add_task(async function testFallback() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("test.fallback.com", "A", {

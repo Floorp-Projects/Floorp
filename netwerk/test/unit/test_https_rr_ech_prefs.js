@@ -60,7 +60,7 @@ add_task(async function testEchConfigEnabled() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", false);
 
@@ -160,7 +160,7 @@ add_task(async function testTwoRecordsHaveEchConfig() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("test.foo.com", "HTTPS", {
@@ -259,7 +259,7 @@ add_task(async function testTwoRecordsHaveEchConfig1() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("test.foo.com", "HTTPS", {
@@ -365,7 +365,7 @@ add_task(async function testOneRecordsHasEchConfig() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("test.foo.com", "HTTPS", {
@@ -460,7 +460,7 @@ add_task(async function testHttp3AndHttp2Pref() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("test.foo.com", "HTTPS", {

@@ -88,7 +88,7 @@ async function registerDoHAnswers(host, ipv4Answers, ipv6Answers, httpsRecord) {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers(host, "HTTPS", {

@@ -99,7 +99,7 @@ add_task(async function testFallbackToTheLastRecord() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   // Only the last record is valid to use.
@@ -187,7 +187,7 @@ add_task(async function testFallbackToTheOrigin() {
   );
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   // All records are not able to use to connect, so we fallback to the origin
@@ -271,7 +271,7 @@ add_task(async function testAllRecordsFailed() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref(
     "network.dns.echconfig.fallback_to_origin_when_all_failed",
@@ -344,7 +344,7 @@ add_task(async function testFallbackToTheOrigin2() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("test.example.com", "HTTPS", {
@@ -409,7 +409,7 @@ add_task(async function testFallbackToTheOrigin3() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("vulnerable.com", "A", {
@@ -484,7 +484,7 @@ add_task(async function testResetExclusionList() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref(
     "network.dns.httpssvc.reset_exclustion_list",
@@ -570,7 +570,7 @@ add_task(async function testH3Connection() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 
@@ -630,7 +630,7 @@ add_task(async function testFastfallbackToH2() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
   // Use a short timeout to make sure the fast fallback timer will be triggered.
@@ -723,7 +723,7 @@ add_task(async function testFailedH3Connection() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setIntPref(
@@ -770,7 +770,7 @@ add_task(async function testHttp3ExcludedList() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setIntPref(
@@ -843,7 +843,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
   Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setIntPref(
@@ -979,7 +979,7 @@ add_task(async function testUpgradeNotUsingHTTPSRR() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("test.ws.com", "HTTPS", {
@@ -1050,7 +1050,7 @@ add_task(async function testFallbackToH2WithEchConfig() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setIntPref(

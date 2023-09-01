@@ -76,7 +76,7 @@ add_task(async function testRetryWithoutECH() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref(
     "network.dns.echconfig.fallback_to_origin_when_all_failed",
