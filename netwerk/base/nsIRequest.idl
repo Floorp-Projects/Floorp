@@ -241,15 +241,6 @@ interface nsIRequest : nsISupports
      */
     const long LOAD_ANONYMOUS_ALLOW_CLIENT_CERT = 1 << 5;
 
-    /**
-     * Record HTTP_PRELOAD_IMAGE_STARTREQUEST_DELAY telemetry for the delay between
-     * sending OnStartRequest from the socket thread to it being processed by the
-     * main thread.
-     * This is temporary while we collect telemetry around the value of
-     * handling OnStartRequest off the main thread.
-     */
-    const long LOAD_RECORD_START_REQUEST_DELAY = 1 << 6;
-
     /**************************************************************************
      * The following flags control the flow of data into the cache.
      */

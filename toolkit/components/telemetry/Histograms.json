@@ -17840,28 +17840,6 @@
     "kind": "boolean",
     "description": "Whether an HTTP request gets upgraded to HTTPS because HTTPS RR is presented"
   },
-  "HTTP_PRELOAD_IMAGE_STARTREQUEST_DELAY": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "expires_in_version": "120",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 50,
-    "bug_numbers": [1713489, 1796398],
-    "alert_emails": ["necko@mozilla.com", "mwoodrow@mozilla.com"],
-    "description": "Time spent waiting on the main-thread to be available to process OnStartRequest, for image preload requests"
-  },
-  "DOCUMENT_PRELOAD_IMAGE_ASYNCOPEN_DELAY": {
-    "record_in_processes": ["content"],
-    "products": ["firefox"],
-    "expires_in_version": "130",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 50,
-    "bug_numbers": [1713489, 1796398],
-    "alert_emails": ["necko@mozilla.com", "mwoodrow@mozilla.com"],
-    "description": "Time spent waiting on the main-thread to be available to run AsyncOpen, for image preload requests"
-  },
   "TEXT_RECOGNITION_API_PERFORMANCE": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
