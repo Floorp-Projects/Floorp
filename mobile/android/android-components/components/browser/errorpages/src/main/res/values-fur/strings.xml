@@ -109,7 +109,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
-    <string name="mozac_browser_errorpages_redirect_loop_title">Il re-indreçament di cheste pagjine nol funzione ben</string>
+    <string name="mozac_browser_errorpages_redirect_loop_title">Il gnûf-dirotament di cheste pagjine nol funzione ben</string>
 
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
