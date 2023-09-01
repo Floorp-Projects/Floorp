@@ -16,7 +16,7 @@ import mozilla.components.support.utils.ColorUtils.isDark
  * If the color is light enough, a light status bar with dark icons will be used.
  */
 fun Window.setStatusBarTheme(@ColorInt toolbarColor: Int) {
-    getWindowInsetsController().isAppearanceLightStatusBars =
+    createWindowInsetsController().isAppearanceLightStatusBars =
         !isDark(toolbarColor)
     statusBarColor = toolbarColor
 }
@@ -26,7 +26,7 @@ fun Window.setStatusBarTheme(@ColorInt toolbarColor: Int) {
  * If the color is light enough, a light navigation bar with dark icons will be used.
  */
 fun Window.setNavigationBarTheme(@ColorInt toolbarColor: Int) {
-    getWindowInsetsController().isAppearanceLightNavigationBars =
+    createWindowInsetsController().isAppearanceLightNavigationBars =
         !isDark(toolbarColor)
 
     if (SDK_INT >= Build.VERSION_CODES.P) {
@@ -36,8 +36,8 @@ fun Window.setNavigationBarTheme(@ColorInt toolbarColor: Int) {
 }
 
 /**
- * Retrieves a {@link WindowInsetsControllerCompat} for the top-level window decor view.
+ * Creates a {@link WindowInsetsControllerCompat} for the top-level window decor view.
  */
-fun Window.getWindowInsetsController(): WindowInsetsControllerCompat {
+fun Window.createWindowInsetsController(): WindowInsetsControllerCompat {
     return WindowInsetsControllerCompat(this, this.decorView)
 }

@@ -9,7 +9,6 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import android.view.View
 import android.view.WindowManager
-import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewCompat.onApplyWindowInsets
 import androidx.core.view.WindowInsetsCompat
@@ -18,21 +17,25 @@ import mozilla.components.support.base.log.logger.Logger
 
 /**
  * Attempts to enter immersive mode - fullscreen with the status bar and navigation buttons hidden,
- * expending itself into the notch area for devices running API 28+.
- * This will automatically register and use an
- * - an inset listener: [View.OnApplyWindowInsetsListener] on API 30+ or
- * - a system visibility listener: [View.OnSystemUiVisibilityChangeListener] for below APIs.
+ * expanding itself into the notch area for devices running API 28+.
  *
+ * This will automatically register and use an inset listener: [View.OnApplyWindowInsetsListener]
  * to restore immersive mode if interactions with various other widgets like the keyboard or dialogs
  * got the activity out of immersive mode without [exitImmersiveMode] being called.
  */
-fun Activity.enterToImmersiveMode() {
-    setAsImmersive()
-    enableImmersiveModeRestore()
-}
+fun Activity.enterImmersiveMode(
+    insetsController: WindowInsetsControllerCompat = window.createWindowInsetsController(),
+) {
+    insetsController.hideInsets()
 
-@VisibleForTesting
-internal fun Activity.setAsImmersive() {
+    ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insetsCompat ->
+        if (insetsCompat.isVisible(WindowInsetsCompat.Type.statusBars())) {
+            insetsController.hideInsets()
+        }
+        // Allow the decor view to have a chance to process the incoming WindowInsets.
+        onApplyWindowInsets(view, insetsCompat)
+    }
+
     if (SDK_INT >= VERSION_CODES.P) {
         window.setFlags(
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
@@ -41,44 +44,34 @@ internal fun Activity.setAsImmersive() {
         window.attributes.layoutInDisplayCutoutMode =
             WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
     }
+}
 
-    window.getWindowInsetsController().apply {
+private fun WindowInsetsControllerCompat.hideInsets() {
+    apply {
         hide(WindowInsetsCompat.Type.systemBars())
         systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 }
 
 /**
- * Anytime a new Window is focused like of a Dialog or of the keyboard the activity
- * will exit immersive mode.
- * This will observe such events and set again the activity to be immersive
- * the next time it gets focused.
+ * Shows the system UI windows that were hidden, thereby exiting the immersive experience.
+ * For devices running API 28+, this function also restores the application's use
+ * of the notch area of the phone to the default behavior.
+ *
+ * @param insetsController is an optional [WindowInsetsControllerCompat] object for controlling the
+ * window insets.
  */
-@VisibleForTesting
-internal fun Activity.enableImmersiveModeRestore() {
-    ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insetsCompat ->
-        if (insetsCompat.isVisible(WindowInsetsCompat.Type.statusBars())) {
-            setAsImmersive()
-        }
-        // Allow the decor view to have a chance to process the incoming WindowInsets.
-        onApplyWindowInsets(view, insetsCompat)
-    }
-}
+fun Activity.exitImmersiveMode(
+    insetsController: WindowInsetsControllerCompat = window.createWindowInsetsController(),
+) {
+    insetsController.show(WindowInsetsCompat.Type.systemBars())
 
-/**
- * Attempts to come out from immersive mode.
- */
-fun Activity.exitImmersiveMode() {
     ViewCompat.setOnApplyWindowInsetsListener(window.decorView, null)
 
     if (SDK_INT >= VERSION_CODES.P) {
         window.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
         window.attributes.layoutInDisplayCutoutMode =
             WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
-    }
-
-    window.getWindowInsetsController().apply {
-        show(WindowInsetsCompat.Type.systemBars())
     }
 }
 

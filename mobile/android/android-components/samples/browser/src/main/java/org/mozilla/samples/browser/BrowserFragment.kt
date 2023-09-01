@@ -20,7 +20,7 @@ import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.WebExtensionToolbarFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.ktx.android.view.enterToImmersiveMode
+import mozilla.components.support.ktx.android.view.enterImmersiveMode
 import mozilla.components.support.ktx.android.view.exitImmersiveMode
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.ReaderViewIntegration
@@ -111,7 +111,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 sessionId,
             ) { inFullScreen ->
                 if (inFullScreen) {
-                    activity?.enterToImmersiveMode()
+                    activity?.enterImmersiveMode()
                 } else {
                     activity?.exitImmersiveMode()
                 }

@@ -23,7 +23,7 @@ class WindowKtTest {
         activityRule.scenario.onActivity {
             it.window.setStatusBarTheme(Color.WHITE)
 
-            assertTrue(it.window.getWindowInsetsController().isAppearanceLightStatusBars)
+            assertTrue(it.window.createWindowInsetsController().isAppearanceLightStatusBars)
         }
     }
 
@@ -32,7 +32,7 @@ class WindowKtTest {
         activityRule.scenario.onActivity {
             it.window.setStatusBarTheme(Color.BLACK)
 
-            assertFalse(it.window.getWindowInsetsController().isAppearanceLightStatusBars)
+            assertFalse(it.window.createWindowInsetsController().isAppearanceLightStatusBars)
         }
     }
 
@@ -42,7 +42,7 @@ class WindowKtTest {
         activityRule.scenario.onActivity {
             it.window.setNavigationBarTheme(Color.WHITE)
 
-            assertTrue(it.window.getWindowInsetsController().isAppearanceLightNavigationBars)
+            assertTrue(it.window.createWindowInsetsController().isAppearanceLightNavigationBars)
         }
     }
 
@@ -51,7 +51,7 @@ class WindowKtTest {
         activityRule.scenario.onActivity {
             it.window.setNavigationBarTheme(Color.BLACK)
 
-            assertFalse(it.window.getWindowInsetsController().isAppearanceLightNavigationBars)
+            assertFalse(it.window.createWindowInsetsController().isAppearanceLightNavigationBars)
         }
     }
 }

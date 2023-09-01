@@ -16,7 +16,7 @@ import mozilla.components.browser.icons.extension.toIconRequest
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.ext.applyOrientation
 import mozilla.components.feature.pwa.ext.toTaskDescription
-import mozilla.components.support.ktx.android.view.enterToImmersiveMode
+import mozilla.components.support.ktx.android.view.enterImmersiveMode
 
 /**
  * Feature used to handle window effects for "standalone" and "fullscreen" web apps.
@@ -31,7 +31,7 @@ class WebAppActivityFeature(
 
     override fun onResume(owner: LifecycleOwner) {
         if (manifest.display == WebAppManifest.DisplayMode.FULLSCREEN) {
-            activity.enterToImmersiveMode()
+            activity.enterImmersiveMode()
         }
 
         activity.applyOrientation(manifest)

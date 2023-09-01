@@ -30,7 +30,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import mozilla.components.support.ktx.android.view.getWindowInsetsController
+import mozilla.components.support.ktx.android.view.createWindowInsetsController
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.StatusBarUtils
@@ -411,14 +411,14 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     private fun updateLightSystemBars() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             window.statusBarColor = getColorFromAttr(android.R.attr.statusBarColor)
-            window.getWindowInsetsController().isAppearanceLightStatusBars = true
+            window.createWindowInsetsController().isAppearanceLightStatusBars = true
         } else {
             window.statusBarColor = Color.BLACK
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // API level can display handle light navigation bar color
-            window.getWindowInsetsController().isAppearanceLightNavigationBars = true
+            window.createWindowInsetsController().isAppearanceLightNavigationBars = true
             window.navigationBarColor = ContextCompat.getColor(this, android.R.color.transparent)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -430,12 +430,12 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     private fun clearLightSystemBars() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            window.getWindowInsetsController().isAppearanceLightStatusBars = false
+            window.createWindowInsetsController().isAppearanceLightStatusBars = false
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // API level can display handle light navigation bar color
-            window.getWindowInsetsController().isAppearanceLightNavigationBars = false
+            window.createWindowInsetsController().isAppearanceLightNavigationBars = false
         }
     }
 

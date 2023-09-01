@@ -52,6 +52,10 @@ permalink: /changelog/
   * 🌟️️ Add `reanalyzeProduct` API to `EngineSession` to allow reanalyzing product from the engine. See more on [Bug 1853309](https://bugzilla.mozilla.org/show_bug.cgi?id=1853309).
   * 🌟️️ Add `requestAnalysisStatus` API to `EngineSession` to allow request product analysis status from the engine. See more on [Bug 1853309](https://bugzilla.mozilla.org/show_bug.cgi?id=1853309).
 
+* **support-ktx**
+  * ⚠️ **This is a breaking change**: the `enterToImmersiveMode()` in `Activity.kt` has been renamed to `enterImmersiveMode()`.
+  * ⚠️ **This is a breaking change**: the `getWindowInsetsController()` in `Window.kt` has been renamed to `createWindowInsetsController()`.
+
 # 118.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v117..releases_v118)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v118/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

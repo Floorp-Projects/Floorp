@@ -17,7 +17,7 @@ import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
-import mozilla.components.support.ktx.android.view.enterToImmersiveMode
+import mozilla.components.support.ktx.android.view.enterImmersiveMode
 import mozilla.components.support.ktx.android.view.exitImmersiveMode
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.disableDynamicBehavior
@@ -95,7 +95,7 @@ class FullScreenIntegration(
      */
     @VisibleForTesting
     internal fun switchToImmersiveMode() {
-        activity.enterToImmersiveMode()
+        activity.enterImmersiveMode()
     }
 
     /**
