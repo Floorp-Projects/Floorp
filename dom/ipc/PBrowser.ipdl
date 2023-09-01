@@ -55,7 +55,6 @@ using mozilla::ScreenRect from "Units.h";
 using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::layers::ZoomConstraints from "mozilla/layers/ZoomConstraints.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::GeckoContentController_TapType from "mozilla/layers/GeckoContentControllerTypes.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
@@ -598,7 +597,7 @@ parent:
     /**
      * Child informs the parent that the layer tree is already available.
      */
-    async PaintWhileInterruptingJSNoOp(LayersObserverEpoch aEpoch);
+    async PaintWhileInterruptingJSNoOp();
 
 child:
     /**
@@ -881,12 +880,8 @@ child:
      * @param aEnabled
      *        True if the child should render and upload layers, false if the
      *        child should clear layers.
-     * @param aEpoch
-     *        The layer observer epoch for this activation. This message should be
-     *        ignored if this epoch has already been observed (via
-     *        PaintWhileInterruptingJS).
      */
-    async RenderLayers(bool aEnabled, LayersObserverEpoch aEpoch);
+    async RenderLayers(bool aEnabled);
 
     /**
      * Communicates the child that we want layers to be preserved even when the

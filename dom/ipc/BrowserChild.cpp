@@ -317,7 +317,6 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mShouldSendWebProgressEventsToParent(false),
       mRenderLayers(true),
       mIsPreservingLayers(false),
-      mLayersObserverEpoch{1},
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
       mNativeWindowHandle(0),
 #endif
@@ -2470,17 +2469,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvDestroy() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
-    const bool& aEnabled, const layers::LayersObserverEpoch& aEpoch) {
-  // Since requests to change the rendering state come in from both the hang
-  // monitor channel and the PContent channel, we have an ordering problem. This
-  // code ensures that we respect the order in which the requests were made and
-  // ignore stale requests.
-  if (mLayersObserverEpoch >= aEpoch) {
-    return IPC_OK();
-  }
-  mLayersObserverEpoch = aEpoch;
-
+mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(const bool& aEnabled) {
   auto clearPaintWhileInterruptingJS = MakeScopeExit([&] {
     // We might force a paint, or we might already have painted and this is a
     // no-op. In either case, once we exit this scope, we need to alert the
@@ -2488,7 +2477,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
     // been a request to force paint. This is so that the BackgroundHangMonitor
     // for force painting can be made to wait again.
     if (aEnabled) {
-      ProcessHangMonitor::ClearPaintWhileInterruptingJS(mLayersObserverEpoch);
+      ProcessHangMonitor::ClearPaintWhileInterruptingJS();
     }
   });
 
@@ -2496,27 +2485,16 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(
     ProcessHangMonitor::MaybeStartPaintWhileInterruptingJS();
   }
 
-  if (mCompositorOptions) {
-    MOZ_ASSERT(mPuppetWidget);
-    RefPtr<WebRenderLayerManager> lm =
-        mPuppetWidget->GetWindowRenderer()->AsWebRender();
-    if (lm) {
-      // We send the current layer observer epoch to the compositor so that
-      // BrowserParent knows whether a layer update notification corresponds to
-      // the latest RecvRenderLayers request that was made.
-      lm->SetLayersObserverEpoch(mLayersObserverEpoch);
-    }
-  }
-
   mRenderLayers = aEnabled;
 
   if (aEnabled && IsVisible()) {
     // This request is a no-op.
     // In this case, we still want a MozLayerTreeReady notification to fire
-    // in the parent (so that it knows that the child has updated its epoch).
-    // PaintWhileInterruptingJSNoOp does that.
+    // in the parent, PaintWhileInterruptingJSNoOp does that.
+    // TODO(emilio): Is this still needed? Seems like the front-end should know
+    // already that we have layers.
     if (IPCOpen()) {
-      Unused << SendPaintWhileInterruptingJSNoOp(mLayersObserverEpoch);
+      Unused << SendPaintWhileInterruptingJSNoOp();
     }
     return IPC_OK();
   }
@@ -2679,11 +2657,6 @@ void BrowserChild::InitRenderingState(
     ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
     gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
     InitAPZState();
-    RefPtr<WebRenderLayerManager> lm =
-        mPuppetWidget->GetWindowRenderer()->AsWebRender();
-    if (lm) {
-      lm->SetLayersObserverEpoch(mLayersObserverEpoch);
-    }
   } else {
     NS_WARNING("Fallback to FallbackRenderer");
     mLayersConnected = Some(false);
@@ -3046,12 +3019,6 @@ void BrowserChild::ReinitRendering() {
   gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
 
   InitAPZState();
-  RefPtr<WebRenderLayerManager> lm =
-      mPuppetWidget->GetWindowRenderer()->AsWebRender();
-  if (lm) {
-    lm->SetLayersObserverEpoch(mLayersObserverEpoch);
-  }
-
   if (nsCOMPtr<Document> doc = GetTopLevelDocument()) {
     doc->NotifyLayerManagerRecreated();
   }
@@ -3246,8 +3213,7 @@ ScreenIntRect BrowserChild::GetOuterRect() {
       outerRect, PixelCastJustification::LayoutDeviceIsScreenForTabDims);
 }
 
-void BrowserChild::PaintWhileInterruptingJS(
-    const layers::LayersObserverEpoch& aEpoch) {
+void BrowserChild::PaintWhileInterruptingJS() {
   if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasWindowRenderer()) {
     // Don't bother doing anything now. Better to wait until we receive the
     // message on the PContent channel.
@@ -3256,11 +3222,10 @@ void BrowserChild::PaintWhileInterruptingJS(
 
   MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsSafeToRunScript());
   nsAutoScriptBlocker scriptBlocker;
-  RecvRenderLayers(true /* aEnabled */, aEpoch);
+  RecvRenderLayers(/* aEnabled = */ true);
 }
 
-void BrowserChild::UnloadLayersWhileInterruptingJS(
-    const layers::LayersObserverEpoch& aEpoch) {
+void BrowserChild::UnloadLayersWhileInterruptingJS() {
   if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasWindowRenderer()) {
     // Don't bother doing anything now. Better to wait until we receive the
     // message on the PContent channel.
@@ -3269,7 +3234,7 @@ void BrowserChild::UnloadLayersWhileInterruptingJS(
 
   MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsSafeToRunScript());
   nsAutoScriptBlocker scriptBlocker;
-  RecvRenderLayers(false /* aEnabled */, aEpoch);
+  RecvRenderLayers(/* aEnabled = */ false);
 }
 
 nsresult BrowserChild::CanCancelContentJS(

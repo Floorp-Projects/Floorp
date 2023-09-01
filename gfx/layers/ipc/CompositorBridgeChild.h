@@ -194,9 +194,8 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvObserveLayersUpdate(
-      const LayersId& aLayersId, const LayersObserverEpoch& aEpoch,
-      const bool& aActive);
+  mozilla::ipc::IPCResult RecvObserveLayersUpdate(const LayersId& aLayersId,
+                                                  const bool& aActive);
 
   mozilla::ipc::IPCResult RecvCompositorOptionsChanged(
       const LayersId& aLayersId, const CompositorOptions& aNewOptions);

@@ -29,7 +29,6 @@ using mozilla::wr::ExternalImageKeyPair from "mozilla/webrender/WebRenderTypes.h
 [MoveOnly] using mozilla::layers::DisplayListData from "mozilla/layers/RenderRootTypes.h";
 [MoveOnly] using mozilla::layers::MaybeTransactionData from "mozilla/layers/RenderRootTypes.h";
 using mozilla::layers::FocusTarget from "mozilla/layers/FocusTarget.h";
-using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
 
@@ -67,7 +66,6 @@ parent:
                         RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
   async ParentCommands(IdNamespace aIdNamespace, WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture) returns (bool aNeedsYFlip);
-  async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
   async ClearCachedResources();
   async ClearAnimationResources();
   async SetDefaultClearColor(uint32_t aColor);

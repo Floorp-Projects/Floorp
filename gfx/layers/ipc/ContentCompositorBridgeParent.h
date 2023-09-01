@@ -158,8 +158,7 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
       const WindowKind& aWindowKind) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
 
-  void ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch,
-                           bool aActive) override;
+  void ObserveLayersUpdate(LayersId aLayersId, bool aActive) override;
 
   bool IsRemote() const override { return true; }
 

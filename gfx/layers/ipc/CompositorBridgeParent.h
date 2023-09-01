@@ -120,9 +120,7 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
 
   mozilla::ipc::IPCResult Recv__delete__() override { return IPC_OK(); }
 
-  virtual void ObserveLayersUpdate(LayersId aLayersId,
-                                   LayersObserverEpoch aEpoch,
-                                   bool aActive) = 0;
+  virtual void ObserveLayersUpdate(LayersId aLayersId, bool aActive) = 0;
 
   // HostIPCAllocator
   base::ProcessId GetChildProcessId() override;
@@ -354,8 +352,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
       const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
 
-  void ObserveLayersUpdate(LayersId aLayersId, LayersObserverEpoch aEpoch,
-                           bool aActive) override {}
+  void ObserveLayersUpdate(LayersId aLayersId, bool aActive) override {}
 
   /**
    * This forces the is-first-paint flag to true. This is intended to

@@ -444,8 +444,8 @@ bool ContentCompositorBridgeParent::IsSameProcess() const {
   return OtherPid() == base::GetCurrentProcId();
 }
 
-void ContentCompositorBridgeParent::ObserveLayersUpdate(
-    LayersId aLayersId, LayersObserverEpoch aEpoch, bool aActive) {
+void ContentCompositorBridgeParent::ObserveLayersUpdate(LayersId aLayersId,
+                                                        bool aActive) {
   MOZ_ASSERT(aLayersId.IsValid());
 
   CompositorBridgeParent::LayerTreeState* state =
@@ -454,7 +454,7 @@ void ContentCompositorBridgeParent::ObserveLayersUpdate(
     return;
   }
 
-  Unused << state->mParent->SendObserveLayersUpdate(aLayersId, aEpoch, aActive);
+  Unused << state->mParent->SendObserveLayersUpdate(aLayersId, aActive);
 }
 
 }  // namespace mozilla::layers

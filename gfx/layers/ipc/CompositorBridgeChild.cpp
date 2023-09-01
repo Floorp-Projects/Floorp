@@ -420,8 +420,7 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvParentAsyncMessages(
 }
 
 mozilla::ipc::IPCResult CompositorBridgeChild::RecvObserveLayersUpdate(
-    const LayersId& aLayersId, const LayersObserverEpoch& aEpoch,
-    const bool& aActive) {
+    const LayersId& aLayersId, const bool& aActive) {
   // This message is sent via the window compositor, not the tab compositor -
   // however it still has a layers id.
   MOZ_ASSERT(aLayersId.IsValid());
@@ -429,7 +428,7 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvObserveLayersUpdate(
 
   if (RefPtr<dom::BrowserParent> tab =
           dom::BrowserParent::GetBrowserParentFromLayersId(aLayersId)) {
-    tab->LayerTreeUpdate(aEpoch, aActive);
+    tab->LayerTreeUpdate(aActive);
   }
   return IPC_OK();
 }

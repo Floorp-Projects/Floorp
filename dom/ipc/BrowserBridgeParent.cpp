@@ -193,9 +193,8 @@ IPCResult BrowserBridgeParent::RecvUpdateRemotePrintSettings(
   return IPC_OK();
 }
 
-IPCResult BrowserBridgeParent::RecvRenderLayers(
-    const bool& aEnabled, const layers::LayersObserverEpoch& aEpoch) {
-  Unused << mBrowserParent->SendRenderLayers(aEnabled, aEpoch);
+IPCResult BrowserBridgeParent::RecvRenderLayers(const bool& aEnabled) {
+  Unused << mBrowserParent->SendRenderLayers(aEnabled);
   return IPC_OK();
 }
 
