@@ -1518,6 +1518,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       engine: {
         type: "string",
       },
+      helpUrl: {
+        type: "string",
+      },
       icon: {
         type: "string",
       },

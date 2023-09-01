@@ -11,7 +11,7 @@
   preview/ion.ftl                                  (../components/ion/content/ion.ftl)
   preview/protections.ftl                          (../components/protections/content/protections.ftl)
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
-  preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
+  preview/enUS-searchFeatures.ftl                  (../components/urlbar/content/enUS-searchFeatures.ftl)
 #ifdef NIGHTLY_BUILD
   preview/shopping.ftl                             (../components/shopping/content/shopping.ftl)
 #endif
