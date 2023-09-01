@@ -103,6 +103,8 @@ web-platform-tests:
             - --test-type=testharness
             - --skip-implementation-status=backlog
             - --skip-implementation-status=not-implementing
+            - --skip-timeout
+            - --skip-crash
             # Because we have a separate job for them, don't run the (core)
             # webgpu/* tests in the main WPT runs. (but still run tests in dirs
             # other than webgpu/* that are tagged webgpu, e.g. canvas tests)
@@ -117,7 +119,7 @@ web-platform-tests-backlog:
     chunks:
         by-test-platform:
             android.*: 3
-            default: 1
+            default: 2
     max-run-time:
         by-test-platform:
             android.*/opt: 7200
@@ -205,6 +207,8 @@ web-platform-tests-reftest:
             - --test-type=reftest
             - --skip-implementation-status=backlog
             - --skip-implementation-status=not-implementing
+            - --skip-timeout
+            - --skip-crash
 
 web-platform-tests-webgpu:
     description: "Web platform WebGPU test run"
@@ -306,6 +310,8 @@ web-platform-tests-canvas:
             - --test-type=testharness
             - --skip-implementation-status=backlog
             - --skip-implementation-status=not-implementing
+            - --skip-timeout
+            - --skip-crash
             # Because we have a separate job for them, don't run the (core)
             # webgpu/* tests in the main WPT runs. (but still run tests in dirs
             # other than webgpu/* that are tagged webgpu, e.g. canvas tests)

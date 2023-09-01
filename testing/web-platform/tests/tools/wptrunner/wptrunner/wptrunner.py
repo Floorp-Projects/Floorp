@@ -100,6 +100,7 @@ def get_loader(test_paths, product, debug=None, run_info_extras=None, chunker_kw
                                         include_h2=h2_enabled,
                                         include_webtransport_h3=kwargs["enable_webtransport_h3"],
                                         skip_timeout=kwargs["skip_timeout"],
+                                        skip_crash=kwargs["skip_crash"],
                                         skip_implementation_status=kwargs["skip_implementation_status"],
                                         chunker_kwargs=chunker_kwargs)
     return run_info, test_loader

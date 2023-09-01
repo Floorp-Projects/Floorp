@@ -151,6 +151,15 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                 },
             ],
             [
+                ["--skip-crash"],
+                {
+                    "action": "store_true",
+                    "dest": "skip_crash",
+                    "default": False,
+                    "help": "Ignore tests that are expected status of CRASH",
+                },
+            ],
+            [
                 ["--default-exclude"],
                 {
                     "action": "store_true",
@@ -420,6 +429,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
         if c["skip_timeout"]:
             cmd.append("--skip-timeout")
+
+        if c["skip_crash"]:
+            cmd.append("--skip-crash")
+
         if c["default_exclude"]:
             cmd.append("--default-exclude")
 

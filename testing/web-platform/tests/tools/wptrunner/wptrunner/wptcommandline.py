@@ -154,6 +154,8 @@ scheme host and port.""")
                                       help="Path to json file containing a mapping {group_name: [test_ids]}")
     test_selection_group.add_argument("--skip-timeout", action="store_true",
                                       help="Skip tests that are expected to time out")
+    test_selection_group.add_argument("--skip-crash", action="store_true",
+                                      help="Skip tests that are expected to crash")
     test_selection_group.add_argument("--skip-implementation-status",
                                       action="append",
                                       choices=["not-implementing", "backlog", "implementing"],
