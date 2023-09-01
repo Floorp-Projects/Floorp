@@ -732,15 +732,20 @@ function saveMedia() {
       let cookieJarSettings = E10SUtils.deserializeCookieJarSettings(
         gDocInfo.cookieJarSettings
       );
-      saveURL(
+      internalSave(
         url,
         null,
         null,
+        null,
+        null,
+        item.mimeType,
+        false,
         titleKey,
-        false,
-        false,
+        null,
         referrerInfo,
         cookieJarSettings,
+        null,
+        false,
         null,
         gDocInfo.isContentWindowPrivate,
         gDocInfo.principal
