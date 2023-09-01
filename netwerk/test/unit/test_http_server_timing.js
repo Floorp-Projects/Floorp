@@ -8,63 +8,6 @@
 
 "use strict";
 
-class ServerCode {
-  static async startServer(port) {
-    global.http = require("http");
-    global.server = global.http.createServer((req, res) => {
-      res.setHeader("Content-Type", "text/plain");
-      res.setHeader("Content-Length", "12");
-      res.setHeader("Transfer-Encoding", "chunked");
-      res.setHeader("Trailer", "Server-Timing");
-      res.setHeader(
-        "Server-Timing",
-        "metric; dur=123.4; desc=description, metric2; dur=456.78; desc=description1"
-      );
-      res.write("data reached");
-      res.addTrailers({
-        "Server-Timing":
-          "metric3; dur=789.11; desc=description2, metric4; dur=1112.13; desc=description3",
-      });
-      res.end();
-    });
-
-    let serverPort = await new Promise(resolve => {
-      global.server.listen(0, "0.0.0.0", 2000, () => {
-        resolve(global.server.address().port);
-      });
-    });
-
-    if (process.env.MOZ_ANDROID_DATA_DIR) {
-      // When creating a server on Android we must make sure that the port
-      // is forwarded from the host machine to the emulator.
-      let adb_path = "adb";
-      if (process.env.MOZ_FETCHES_DIR) {
-        adb_path = `${process.env.MOZ_FETCHES_DIR}/android-sdk-linux/platform-tools/adb`;
-      }
-
-      await new Promise(resolve => {
-        const { exec } = require("child_process");
-        exec(
-          `${adb_path} reverse tcp:${serverPort} tcp:${serverPort}`,
-          (error, stdout, stderr) => {
-            if (error) {
-              console.log(`error: ${error.message}`);
-              return;
-            }
-            if (stderr) {
-              console.log(`stderr: ${stderr}`);
-            }
-            // console.log(`stdout: ${stdout}`);
-            resolve();
-          }
-        );
-      });
-    }
-
-    return serverPort;
-  }
-}
-
 const responseServerTiming = [
   { metric: "metric", duration: "123.4", description: "description" },
   { metric: "metric2", duration: "456.78", description: "description1" },
@@ -76,14 +19,30 @@ const trailerServerTiming = [
 
 let port;
 
+let server;
 add_task(async function setup() {
-  let processId = await NodeServer.fork();
+  server = new NodeHTTPServer();
+  await server.start();
   registerCleanupFunction(async () => {
-    await NodeServer.kill(processId);
+    await server.stop();
   });
-  await NodeServer.execute(processId, ServerCode);
-  port = await NodeServer.execute(processId, `ServerCode.startServer(0)`);
-  ok(port);
+  server.registerPathHandler("/", (req, res) => {
+    res.setHeader("Content-Type", "text/plain");
+    res.setHeader("Content-Length", "12");
+    res.setHeader("Transfer-Encoding", "chunked");
+    res.setHeader("Trailer", "Server-Timing");
+    res.setHeader(
+      "Server-Timing",
+      "metric; dur=123.4; desc=description, metric2; dur=456.78; desc=description1"
+    );
+    res.write("data reached");
+    res.addTrailers({
+      "Server-Timing":
+        "metric3; dur=789.11; desc=description2, metric4; dur=1112.13; desc=description3",
+    });
+    res.end();
+  });
+  port = server.port();
 });
 
 // Test that secure origins can use server-timing, even with plain http
