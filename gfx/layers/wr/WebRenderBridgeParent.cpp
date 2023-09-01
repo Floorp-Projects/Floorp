@@ -163,25 +163,21 @@ LazyLogModule gWebRenderBridgeParentLog("WebRenderBridgeParent");
 class ScheduleObserveLayersUpdate : public wr::NotificationHandler {
  public:
   ScheduleObserveLayersUpdate(RefPtr<CompositorBridgeParentBase> aBridge,
-                              LayersId aLayersId, LayersObserverEpoch aEpoch,
-                              bool aIsActive)
+                              LayersId aLayersId, bool aIsActive)
       : mBridge(std::move(aBridge)),
         mLayersId(aLayersId),
-        mObserverEpoch(aEpoch),
         mIsActive(aIsActive) {}
 
   void Notify(wr::Checkpoint) override {
-    CompositorThread()->Dispatch(
-        NewRunnableMethod<LayersId, LayersObserverEpoch, int>(
-            "ObserveLayersUpdate", mBridge,
-            &CompositorBridgeParentBase::ObserveLayersUpdate, mLayersId,
-            mObserverEpoch, mIsActive));
+    CompositorThread()->Dispatch(NewRunnableMethod<LayersId, int>(
+        "ObserveLayersUpdate", mBridge,
+        &CompositorBridgeParentBase::ObserveLayersUpdate, mLayersId,
+        mIsActive));
   }
 
  protected:
   RefPtr<CompositorBridgeParentBase> mBridge;
   LayersId mLayersId;
-  LayersObserverEpoch mObserverEpoch;
   bool mIsActive;
 };
 
@@ -289,8 +285,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(
       mAsyncImageManager(aImageMgr),
       mCompositorScheduler(aScheduler),
       mVsyncRate(aVsyncRate),
-      mChildLayersObserverEpoch{0},
-      mParentLayersObserverEpoch{0},
       mWrEpoch{0},
       mIdNamespace(aApi->GetNamespace()),
 #if defined(MOZ_WIDGET_ANDROID)
@@ -299,10 +293,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(
       mBlobTileSize(256),
       mSkippedCompositeReasons(wr::RenderReasons::NONE),
       mDestroyed(false),
-      mReceivedDisplayList(false),
       mIsFirstPaint(true),
-      mSkippedComposite(false),
-      mDisablingNativeCompositor(false),
       mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {
   MOZ_ASSERT(mAsyncImageManager);
   LOG("WebRenderBridgeParent::WebRenderBridgeParent() PipelineId %" PRIx64
@@ -329,16 +320,11 @@ WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId,
                                              nsCString&& aError)
     : mCompositorBridge(nullptr),
       mPipelineId(aPipelineId),
-      mChildLayersObserverEpoch{0},
-      mParentLayersObserverEpoch{0},
       mWrEpoch{0},
       mIdNamespace{0},
       mInitError(aError),
       mDestroyed(true),
-      mReceivedDisplayList(false),
       mIsFirstPaint(false),
-      mSkippedComposite(false),
-      mDisablingNativeCompositor(false),
       mPendingScrollPayloads("WebRenderBridgeParent::mPendingScrollPayloads") {
   LOG("WebRenderBridgeParent::WebRenderBridgeParent() PipelineId %" PRIx64 "",
       wr::AsUint64(mPipelineId));
@@ -1089,8 +1075,7 @@ bool WebRenderBridgeParent::SetDisplayList(
     const nsTArray<OpUpdateResource>& aResourceUpdates,
     const nsTArray<RefCountedShmem>& aSmallShmems,
     const nsTArray<ipc::Shmem>& aLargeShmems, const TimeStamp& aTxnStartTime,
-    wr::TransactionBuilder& aTxn, wr::Epoch aWrEpoch,
-    bool aObserveLayersUpdate) {
+    wr::TransactionBuilder& aTxn, wr::Epoch aWrEpoch) {
   bool success =
       UpdateResources(aResourceUpdates, aSmallShmems, aLargeShmems, aTxn);
 
@@ -1112,12 +1097,7 @@ bool WebRenderBridgeParent::SetDisplayList(
   aTxn.SetDisplayList(aWrEpoch, mPipelineId, aDLDesc, dlItems, dlCache,
                       dlSpatialTreeData);
 
-  if (aObserveLayersUpdate) {
-    aTxn.Notify(
-        wr::Checkpoint::SceneBuilt,
-        MakeUnique<ScheduleObserveLayersUpdate>(
-            mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch, true));
-  }
+  MaybeNotifyOfLayers(aTxn, true);
 
   if (!IsRootWebRenderBridgeParent()) {
     aTxn.Notify(wr::Checkpoint::SceneBuilt, MakeUnique<SceneBuiltNotification>(
@@ -1133,8 +1113,7 @@ bool WebRenderBridgeParent::SetDisplayList(
 
 bool WebRenderBridgeParent::ProcessDisplayListData(
     DisplayListData& aDisplayList, wr::Epoch aWrEpoch,
-    const TimeStamp& aTxnStartTime, bool aValidTransaction,
-    bool aObserveLayersUpdate) {
+    const TimeStamp& aTxnStartTime, bool aValidTransaction) {
   wr::TransactionBuilder txn(mApi);
   Maybe<wr::AutoTransactionSender> sender;
 
@@ -1169,14 +1148,14 @@ bool WebRenderBridgeParent::ProcessDisplayListData(
 
   if (aDisplayList.mDLItems && aDisplayList.mDLCache &&
       aDisplayList.mDLSpatialTree) {
-    success = SetDisplayList(
-                  aDisplayList.mRect, std::move(aDisplayList.mDLItems.ref()),
-                  std::move(aDisplayList.mDLCache.ref()),
-                  std::move(aDisplayList.mDLSpatialTree.ref()),
-                  aDisplayList.mDLDesc, aDisplayList.mResourceUpdates,
-                  aDisplayList.mSmallShmems, aDisplayList.mLargeShmems,
-                  aTxnStartTime, txn, aWrEpoch, aObserveLayersUpdate) &&
-              success;
+    success =
+        SetDisplayList(
+            aDisplayList.mRect, std::move(aDisplayList.mDLItems.ref()),
+            std::move(aDisplayList.mDLCache.ref()),
+            std::move(aDisplayList.mDLSpatialTree.ref()), aDisplayList.mDLDesc,
+            aDisplayList.mResourceUpdates, aDisplayList.mSmallShmems,
+            aDisplayList.mLargeShmems, aTxnStartTime, txn, aWrEpoch) &&
+        success;
   }
   return success;
 }
@@ -1226,15 +1205,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   }
 
   bool validTransaction = aDisplayList.mIdNamespace == mIdNamespace;
-  bool observeLayersUpdate = ShouldParentObserveEpoch();
-
   bool success = ProcessDisplayListData(aDisplayList, wrEpoch, aTxnStartTime,
-                                        validTransaction, observeLayersUpdate);
-
-  if (!validTransaction && observeLayersUpdate) {
-    mCompositorBridge->ObserveLayersUpdate(GetLayersId(),
-                                           mChildLayersObserverEpoch, true);
-  }
+                                        validTransaction);
 
   if (!IsRootWebRenderBridgeParent()) {
     aPayloads.AppendElement(
@@ -1294,12 +1266,7 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
     }
   }
 
-  if (ShouldParentObserveEpoch()) {
-    txn.Notify(
-        wr::Checkpoint::SceneBuilt,
-        MakeUnique<ScheduleObserveLayersUpdate>(
-            mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch, true));
-  }
+  MaybeNotifyOfLayers(txn, true);
 
   // Even when txn.IsResourceUpdatesEmpty() is true, there could be resource
   // updates. It is handled by WebRenderTextureHostWrapper. In this case
@@ -1906,13 +1873,16 @@ void WebRenderBridgeParent::ReleaseTextureOfImage(const wr::ImageKey& aKey) {
   mTextureHosts.erase(id);
 }
 
-mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetLayersObserverEpoch(
-    const LayersObserverEpoch& aChildEpoch) {
-  if (mDestroyed) {
-    return IPC_OK();
+void WebRenderBridgeParent::MaybeNotifyOfLayers(
+    wr::TransactionBuilder& aBuilder, bool aWillHaveLayers) {
+  if (mLastNotifiedHasLayers == aWillHaveLayers) {
+    return;
   }
-  mChildLayersObserverEpoch = aChildEpoch;
-  return IPC_OK();
+
+  aBuilder.Notify(wr::Checkpoint::SceneBuilt,
+                  MakeUnique<ScheduleObserveLayersUpdate>(
+                      mCompositorBridge, GetLayersId(), aWillHaveLayers));
+  mLastNotifiedHasLayers = aWillHaveLayers;
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
@@ -1929,12 +1899,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
   wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(true);
   txn.ClearDisplayList(GetNextWrEpoch(), mPipelineId);
-  if (ShouldParentObserveEpoch()) {
-    txn.Notify(wr::Checkpoint::SceneBuilt,
-               MakeUnique<ScheduleObserveLayersUpdate>(
-                   mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch,
-                   false));
-  }
+  MaybeNotifyOfLayers(txn, false);
   mApi->SendTransaction(txn);
 
   // Schedule generate frame to clean up Pipeline
@@ -2764,15 +2729,6 @@ void WebRenderBridgeParent::ClearAnimationResources() {
   mActiveAnimations.clear();
   std::queue<CompositorAnimationIdsForEpoch>().swap(
       mCompositorAnimationsToDelete);  // clear queue
-}
-
-bool WebRenderBridgeParent::ShouldParentObserveEpoch() {
-  if (mParentLayersObserverEpoch == mChildLayersObserverEpoch) {
-    return false;
-  }
-
-  mParentLayersObserverEpoch = mChildLayersObserverEpoch;
-  return true;
 }
 
 void WebRenderBridgeParent::SendAsyncMessage(

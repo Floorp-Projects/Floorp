@@ -17,7 +17,6 @@ include "mozilla/dom/BindingIPCUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
 
-using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using class mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
 using mozilla::dom::EffectsInfo from "mozilla/dom/EffectsInfo.h";
 using mozilla::ScrollAxis from "mozilla/PresShellForwards.h";
@@ -94,7 +93,7 @@ parent:
   async Show(OwnerShowInfo info);
   async ScrollbarPreferenceChanged(ScrollbarPreference pref);
   [Compress=all] async UpdateDimensions(nsIntRect rect, ScreenIntSize size);
-  async RenderLayers(bool aEnabled, LayersObserverEpoch aEpoch);
+  async RenderLayers(bool aEnabled);
 
   async UpdateEffects(EffectsInfo aEffects);
   async UpdateRemotePrintSettings(PrintData aPrintData);

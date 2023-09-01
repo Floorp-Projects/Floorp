@@ -770,7 +770,6 @@ export class AsyncTabSwitcher {
     }
 
     this.logState(`onLayersReady(${tab._tPos}, ${browser.isRemoteBrowser})`);
-
     this.assert(
       this.getTabState(tab) == this.STATE_LOADING ||
         this.getTabState(tab) == this.STATE_LOADED
@@ -799,14 +798,15 @@ export class AsyncTabSwitcher {
   // Called when we're done clearing the layers for a tab.
   onLayersCleared(browser) {
     let tab = this.tabbrowser.getTabForBrowser(browser);
-    if (tab) {
-      this.logState(`onLayersCleared(${tab._tPos})`);
-      this.assert(
-        this.getTabState(tab) == this.STATE_UNLOADING ||
-          this.getTabState(tab) == this.STATE_UNLOADED
-      );
-      this.setTabState(tab, this.STATE_UNLOADED);
+    if (!tab) {
+      return;
     }
+    this.logState(`onLayersCleared(${tab._tPos})`);
+    this.assert(
+      this.getTabState(tab) == this.STATE_UNLOADING ||
+        this.getTabState(tab) == this.STATE_UNLOADED
+    );
+    this.setTabState(tab, this.STATE_UNLOADED);
   }
 
   // Called when a tab switches from remote to non-remote. In this case
@@ -1094,15 +1094,31 @@ export class AsyncTabSwitcher {
         case "tabRemoved":
           this.onTabRemovedImpl(event.tab);
           break;
-        case "MozLayerTreeReady":
-          this.onLayersReady(event.originalTarget);
+        case "MozLayerTreeReady": {
+          let browser = event.originalTarget;
+          if (!browser.renderLayers) {
+            // By the time we handle this event, it's possible that something
+            // else has already set renderLayers to false, in which case this
+            // event is stale and we can safely ignore it.
+            return;
+          }
+          this.onLayersReady(browser);
           break;
+        }
         case "MozAfterPaint":
           this.onPaint(event);
           break;
-        case "MozLayerTreeCleared":
-          this.onLayersCleared(event.originalTarget);
+        case "MozLayerTreeCleared": {
+          let browser = event.originalTarget;
+          if (browser.renderLayers) {
+            // By the time we handle this event, it's possible that something
+            // else has already set renderLayers to true, in which case this
+            // event is stale and we can safely ignore it.
+            return;
+          }
+          this.onLayersCleared(browser);
           break;
+        }
         case "TabRemotenessChange":
           this.onRemotenessChange(event.target);
           break;

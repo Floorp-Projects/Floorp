@@ -94,8 +94,6 @@ class WebRenderLayerManager final : public WindowRenderer {
 
   bool NeedsWidgetInvalidation() override { return false; }
 
-  void SetLayersObserverEpoch(LayersObserverEpoch aEpoch);
-
   void DidComposite(TransactionId aTransactionId,
                     const mozilla::TimeStamp& aCompositeStart,
                     const mozilla::TimeStamp& aCompositeEnd);

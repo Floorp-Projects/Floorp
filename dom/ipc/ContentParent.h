@@ -555,11 +555,9 @@ class ContentParent final : public PContentParent,
   bool DeallocPURLClassifierParent(PURLClassifierParent* aActor);
 
   // Use the PHangMonitor channel to ask the child to repaint a tab.
-  void PaintTabWhileInterruptingJS(BrowserParent* aBrowserParent,
-                                   const layers::LayersObserverEpoch& aEpoch);
+  void PaintTabWhileInterruptingJS(BrowserParent*);
 
-  void UnloadLayersWhileInterruptingJS(
-      BrowserParent* aBrowserParent, const layers::LayersObserverEpoch& aEpoch);
+  void UnloadLayersWhileInterruptingJS(BrowserParent*);
 
   void CancelContentJSExecutionIfRunning(
       BrowserParent* aBrowserParent,

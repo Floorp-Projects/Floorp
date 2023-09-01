@@ -27,10 +27,6 @@ class BrowserParent;
 struct CancelContentJSOptions;
 }  // namespace dom
 
-namespace layers {
-struct LayersObserverEpoch;
-}  // namespace layers
-
 class PProcessHangMonitorParent;
 
 class ProcessHangMonitor final : public nsIObserver {
@@ -51,16 +47,13 @@ class ProcessHangMonitor final : public nsIObserver {
 
   static void ClearHang();
 
-  static void PaintWhileInterruptingJS(
-      PProcessHangMonitorParent* aParent, dom::BrowserParent* aTab,
-      const layers::LayersObserverEpoch& aEpoch);
+  static void PaintWhileInterruptingJS(PProcessHangMonitorParent* aParent,
+                                       dom::BrowserParent* aTab);
 
   static void UnloadLayersWhileInterruptingJS(
-      PProcessHangMonitorParent* aParent, dom::BrowserParent* aTab,
-      const layers::LayersObserverEpoch& aEpoch);
+      PProcessHangMonitorParent* aParent, dom::BrowserParent* aTab);
 
-  static void ClearPaintWhileInterruptingJS(
-      const layers::LayersObserverEpoch& aEpoch);
+  static void ClearPaintWhileInterruptingJS();
   static void MaybeStartPaintWhileInterruptingJS();
 
   static void CancelContentJSExecutionIfRunning(

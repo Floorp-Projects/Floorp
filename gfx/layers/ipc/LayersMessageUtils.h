@@ -90,10 +90,6 @@ struct ParamTraits<mozilla::layers::MatrixMessage> {
 };
 
 template <>
-struct ParamTraits<mozilla::layers::LayersObserverEpoch>
-    : public PlainOldDataSerializer<mozilla::layers::LayersObserverEpoch> {};
-
-template <>
 struct ParamTraits<mozilla::layers::WindowKind>
     : public ContiguousEnumSerializer<mozilla::layers::WindowKind,
                                       mozilla::layers::WindowKind::MAIN,
