@@ -46,6 +46,7 @@ module.exports = {
       true,
       {
         ignoreFunctions: [
+          "light-dark" /* Used for color-scheme dependent colors */,
           "-moz-image-rect" /* Used for cropping images */,
           "add" /* Used in mathml.css */,
         ],
