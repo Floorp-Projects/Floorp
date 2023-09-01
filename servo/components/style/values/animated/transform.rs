@@ -695,8 +695,127 @@ fn decompose_3d_matrix(mut matrix: Matrix3D) -> Result<MatrixDecomposed3D, ()> {
     })
 }
 
-/// Decompose a 2D matrix for Gecko.
-// Use the algorithm from nsStyleTransformMatrix::Decompose2DMatrix() in Gecko.
+/**
+ * The relevant section of the transitions specification:
+ * https://drafts.csswg.org/web-animations-1/#animation-types
+ * http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
+ * defers all of the details to the 2-D and 3-D transforms specifications.
+ * For the 2-D transforms specification (all that's relevant for us, right
+ * now), the relevant section is:
+ * https://drafts.csswg.org/css-transforms-1/#interpolation-of-transforms
+ * This, in turn, refers to the unmatrix program in Graphics Gems,
+ * available from http://graphicsgems.org/ , and in
+ * particular as the file GraphicsGems/gemsii/unmatrix.c
+ * in http://graphicsgems.org/AllGems.tar.gz
+ *
+ * The unmatrix reference is for general 3-D transform matrices (any of the
+ * 16 components can have any value).
+ *
+ * For CSS 2-D transforms, we have a 2-D matrix with the bottom row constant:
+ *
+ * [ A C E ]
+ * [ B D F ]
+ * [ 0 0 1 ]
+ *
+ * For that case, I believe the algorithm in unmatrix reduces to:
+ *
+ *  (1) If A * D - B * C == 0, the matrix is singular.  Fail.
+ *
+ *  (2) Set translation components (Tx and Ty) to the translation parts of
+ *      the matrix (E and F) and then ignore them for the rest of the time.
+ *      (For us, E and F each actually consist of three constants:  a
+ *      length, a multiplier for the width, and a multiplier for the
+ *      height.  This actually requires its own decomposition, but I'll
+ *      keep that separate.)
+ *
+ *  (3) Let the X scale (Sx) be sqrt(A^2 + B^2).  Then divide both A and B
+ *      by it.
+ *
+ *  (4) Let the XY shear (K) be A * C + B * D.  From C, subtract A times
+ *      the XY shear.  From D, subtract B times the XY shear.
+ *
+ *  (5) Let the Y scale (Sy) be sqrt(C^2 + D^2).  Divide C, D, and the XY
+ *      shear (K) by it.
+ *
+ *  (6) At this point, A * D - B * C is either 1 or -1.  If it is -1,
+ *      negate the XY shear (K), the X scale (Sx), and A, B, C, and D.
+ *      (Alternatively, we could negate the XY shear (K) and the Y scale
+ *      (Sy).)
+ *
+ *  (7) Let the rotation be R = atan2(B, A).
+ *
+ * Then the resulting decomposed transformation is:
+ *
+ *   translate(Tx, Ty) rotate(R) skewX(atan(K)) scale(Sx, Sy)
+ *
+ * An interesting result of this is that all of the simple transform
+ * functions (i.e., all functions other than matrix()), in isolation,
+ * decompose back to themselves except for:
+ *   'skewY(φ)', which is 'matrix(1, tan(φ), 0, 1, 0, 0)', which decomposes
+ *   to 'rotate(φ) skewX(φ) scale(sec(φ), cos(φ))' since (ignoring the
+ *   alternate sign possibilities that would get fixed in step 6):
+ *     In step 3, the X scale factor is sqrt(1+tan²(φ)) = sqrt(sec²(φ)) =
+ * sec(φ). Thus, after step 3, A = 1/sec(φ) = cos(φ) and B = tan(φ) / sec(φ) =
+ * sin(φ). In step 4, the XY shear is sin(φ). Thus, after step 4, C =
+ * -cos(φ)sin(φ) and D = 1 - sin²(φ) = cos²(φ). Thus, in step 5, the Y scale is
+ * sqrt(cos²(φ)(sin²(φ) + cos²(φ)) = cos(φ). Thus, after step 5, C = -sin(φ), D
+ * = cos(φ), and the XY shear is tan(φ). Thus, in step 6, A * D - B * C =
+ * cos²(φ) + sin²(φ) = 1. In step 7, the rotation is thus φ.
+ *
+ *   skew(θ, φ), which is matrix(1, tan(φ), tan(θ), 1, 0, 0), which decomposes
+ *   to 'rotate(φ) skewX(θ + φ) scale(sec(φ), cos(φ))' since (ignoring
+ *   the alternate sign possibilities that would get fixed in step 6):
+ *     In step 3, the X scale factor is sqrt(1+tan²(φ)) = sqrt(sec²(φ)) =
+ * sec(φ). Thus, after step 3, A = 1/sec(φ) = cos(φ) and B = tan(φ) / sec(φ) =
+ * sin(φ). In step 4, the XY shear is cos(φ)tan(θ) + sin(φ). Thus, after step 4,
+ *     C = tan(θ) - cos(φ)(cos(φ)tan(θ) + sin(φ)) = tan(θ)sin²(φ) - cos(φ)sin(φ)
+ *     D = 1 - sin(φ)(cos(φ)tan(θ) + sin(φ)) = cos²(φ) - sin(φ)cos(φ)tan(θ)
+ *     Thus, in step 5, the Y scale is sqrt(C² + D²) =
+ *     sqrt(tan²(θ)(sin⁴(φ) + sin²(φ)cos²(φ)) -
+ *          2 tan(θ)(sin³(φ)cos(φ) + sin(φ)cos³(φ)) +
+ *          (sin²(φ)cos²(φ) + cos⁴(φ))) =
+ *     sqrt(tan²(θ)sin²(φ) - 2 tan(θ)sin(φ)cos(φ) + cos²(φ)) =
+ *     cos(φ) - tan(θ)sin(φ) (taking the negative of the obvious solution so
+ *     we avoid flipping in step 6).
+ *     After step 5, C = -sin(φ) and D = cos(φ), and the XY shear is
+ *     (cos(φ)tan(θ) + sin(φ)) / (cos(φ) - tan(θ)sin(φ)) =
+ *     (dividing both numerator and denominator by cos(φ))
+ *     (tan(θ) + tan(φ)) / (1 - tan(θ)tan(φ)) = tan(θ + φ).
+ *     (See http://en.wikipedia.org/wiki/List_of_trigonometric_identities .)
+ *     Thus, in step 6, A * D - B * C = cos²(φ) + sin²(φ) = 1.
+ *     In step 7, the rotation is thus φ.
+ *
+ *     To check this result, we can multiply things back together:
+ *
+ *     [ cos(φ) -sin(φ) ] [ 1 tan(θ + φ) ] [ sec(φ)    0   ]
+ *     [ sin(φ)  cos(φ) ] [ 0      1     ] [   0    cos(φ) ]
+ *
+ *     [ cos(φ)      cos(φ)tan(θ + φ) - sin(φ) ] [ sec(φ)    0   ]
+ *     [ sin(φ)      sin(φ)tan(θ + φ) + cos(φ) ] [   0    cos(φ) ]
+ *
+ *     but since tan(θ + φ) = (tan(θ) + tan(φ)) / (1 - tan(θ)tan(φ)),
+ *     cos(φ)tan(θ + φ) - sin(φ)
+ *      = cos(φ)(tan(θ) + tan(φ)) - sin(φ) + sin(φ)tan(θ)tan(φ)
+ *      = cos(φ)tan(θ) + sin(φ) - sin(φ) + sin(φ)tan(θ)tan(φ)
+ *      = cos(φ)tan(θ) + sin(φ)tan(θ)tan(φ)
+ *      = tan(θ) (cos(φ) + sin(φ)tan(φ))
+ *      = tan(θ) sec(φ) (cos²(φ) + sin²(φ))
+ *      = tan(θ) sec(φ)
+ *     and
+ *     sin(φ)tan(θ + φ) + cos(φ)
+ *      = sin(φ)(tan(θ) + tan(φ)) + cos(φ) - cos(φ)tan(θ)tan(φ)
+ *      = tan(θ) (sin(φ) - sin(φ)) + sin(φ)tan(φ) + cos(φ)
+ *      = sec(φ) (sin²(φ) + cos²(φ))
+ *      = sec(φ)
+ *     so the above is:
+ *     [ cos(φ)  tan(θ) sec(φ) ] [ sec(φ)    0   ]
+ *     [ sin(φ)     sec(φ)     ] [   0    cos(φ) ]
+ *
+ *     [    1   tan(θ) ]
+ *     [ tan(φ)    1   ]
+ */
+
+/// Decompose a 2D matrix for Gecko. This implements the above decomposition algorithm.
 #[cfg(feature = "gecko")]
 fn decompose_2d_matrix(matrix: &Matrix3D) -> Result<MatrixDecomposed3D, ()> {
     // The index is column-major, so the equivalent transform matrix is:
