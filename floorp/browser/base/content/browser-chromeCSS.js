@@ -35,7 +35,6 @@ chrome フォルダに CSS フォルダが作成されるのでそこに .css �
 
  **** 説明終わり ****/
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -65,11 +64,12 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
     readCSS: {},
 
     getCSSFolder() {
-      return PathUtils.join(
+      let result = PathUtils.join(
         Services.prefs.getStringPref("UserCSSLoader.FOLDER", "") ||
-          PathUtils.join(OS.Constants.Path.profileDir, "chrome", "CSS"),
+          PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "chrome", "CSS"),
         "a"
       ).slice(0, -1);
+      return result;
     },
     getFocusedWindow() {
       let win = document.commandDispatcher.focusedWindow;
@@ -233,7 +233,7 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
         this.toggle(label);
       } else if (event.button == 2) {
         closeMenus(event.target);
-        this.edit(UCL.getCSSFolder + label);
+        this.edit(UCL.getCSSFolder() + label);//
       }
     },
     openFolder() {
@@ -241,7 +241,7 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
     },
     editUserCSS(aLeafName) {
       this.edit(
-        PathUtils.join(OS.Constants.Path.profileDir, "chrome", "a").slice(
+        PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "chrome", "a").slice(
           0,
           -1
         ) + aLeafName
@@ -249,6 +249,7 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
     },
     edit(aFile) {
       function openInEditor() {
+        console.log(aFile);
         try {
           const editor = Services.prefs.getStringPref(
             "view_source.editor.path"
@@ -282,7 +283,7 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
           editorPath = notepadPath;
           // check if VSCode is installed
           const vscodePath =
-            OS.Constants.Path.homeDir +
+          Services.dirsvc.get("Home", Ci.nsIFile).path +
             "\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe";
           const isVSCodeInstalled = await IOUtils.exists(vscodePath);
           if (isVSCodeInstalled) {
