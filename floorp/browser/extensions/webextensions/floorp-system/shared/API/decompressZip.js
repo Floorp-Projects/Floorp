@@ -20,12 +20,12 @@ this.decompressZip = class extends ExtensionAPI {
       "open"
     );
 
-    const { OS } = ChromeUtils.import(
-      "resource://gre/modules/osfile.jsm"
-    );
-
     const { FileUtils } = ChromeUtils.import(
       "resource://gre/modules/FileUtils.jsm"
+    );
+
+    const { PathUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/PathUtils.sys.mjs"
     );
 
     return {
@@ -44,11 +44,11 @@ this.decompressZip = class extends ExtensionAPI {
           });
           for (let entry of entries) {
             let entryPath = String(entry);
-            if (OS.Path.normalize(entryPath).startsWith("..") ||
-                OS.Path.normalize(entryPath).startsWith("/")) {
-              throw "!!! Zip Slip detected !!!";
+            if (PathUtils.normalize(entryPath).startsWith("..") ||
+              PathUtils.normalize(entryPath).startsWith("/")) {
+              throw new console.error( "!!! Zip Slip detected !!!");
             }
-            let path = OS.Path.join(
+            let path = PathUtils.join(
               targetDirPath,
               AppConstants.platform === "win" ?
                 entryPath.replaceAll("/", "\\") :
@@ -61,7 +61,6 @@ this.decompressZip = class extends ExtensionAPI {
           }
 
           zipreader.close();
-          return;
         },
       },
     };
