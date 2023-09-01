@@ -101,6 +101,10 @@
   :host {
     /* Border */
     --border-color: var(--text-color);
+    --border-interactive-color: AccentColor;
+    --border-interactive-color-hover: ButtonText;
+    --border-interactive-color-active: AccentColor;
+    --border-interactive-color-disabled: GrayText;
 
     /* Button */
     --button-background-color: ButtonFace;
@@ -120,6 +124,10 @@
     --color-background-success: var(--color-canvas);
     --color-background-warning: var(--color-canvas);
     --color-background-critical: var(--color-canvas);
+    --color-accent-primary: AccentColor;
+    /* FIXME(emilio): These seem rather sketchy */
+    --color-accent-primary-hover: ButtonText;
+    --color-accent-primary-active: ButtonText;
 
     /** Icon **/
     --icon-color: var(--text-color);
@@ -132,38 +140,22 @@
     --text-color: CanvasText;
     --text-color-deemphasized: inherit;
   }
-}
 
-@media (forced-colors) {
-  /* Applies to Windows HCM only */
-  :root,
-  :host {
-    /* Border */
-    --border-interactive-color: ButtonText;
-    --border-interactive-color-hover: SelectedItem;
-    --border-interactive-color-active: ButtonText;
-    --border-interactive-color-disabled: GrayText;
+  @media (forced-colors) {
+    /* Applies to Windows HCM only, by default.
+       TODO(emilio): These seem rather sketchy */
+    :root,
+    :host {
+      /* Border */
+      --border-interactive-color: ButtonText;
+      --border-interactive-color-hover: SelectedItem;
+      --border-interactive-color-active: ButtonText;
+      --border-interactive-color-disabled: GrayText;
 
-    /* Color */
-    --color-accent-primary: ButtonText;
-    --color-accent-primary-hover: SelectedItem;
-    --color-accent-primary-active: SelectedItem;
-  }
-}
-
-@media (forced-colors: none) and (prefers-contrast)  {
-  /* Applies to macOS "increase contrast" only */
-  :root,
-  :host {
-    /* Border */
-    --border-interactive-color: AccentColor;
-    --border-interactive-color-hover: ButtonText;
-    --border-interactive-color-active: AccentColor;
-    --border-interactive-color-disabled: GrayText;
-
-    /* Color */
-    --color-accent-primary: AccentColor;
-    --color-accent-primary-hover: ButtonText;
-    --color-accent-primary-active: ButtonText;
+      /* Color */
+      --color-accent-primary: ButtonText;
+      --color-accent-primary-hover: SelectedItem;
+      --color-accent-primary-active: SelectedItem;
+    }
   }
 }
