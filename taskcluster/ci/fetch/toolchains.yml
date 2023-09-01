@@ -16,13 +16,13 @@ binutils-2.31.1:
         strip-components: 1
         add-prefix: binutils-source/
 
-binutils-2.36.1:
-    description: binutils 2.36.1 source code
+binutils-2.41:
+    description: binutils 2.41 source code
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/binutils/binutils-2.36.1.tar.xz
-        sha256: e81d9edf373f193af428a0f256674aea62a9d74dfe93f65192d4eae030b0f3b0
-        size: 22772248
+        url: https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.xz
+        sha256: ae9a5789e23459e59606e6714723f2d3ffc31c03174191ef0d015bdf06007450
+        size: 26765692
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-binutils/3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F.key
