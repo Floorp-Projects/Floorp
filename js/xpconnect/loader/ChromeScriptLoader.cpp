@@ -14,17 +14,26 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
+#include "js/CompileOptions.h"  // JS::CompileOptions, JS::OwningCompileOptions
 #include "js/CompilationAndEvaluation.h"
-#include "js/experimental/JSStencil.h"  // JS::CompileGlobalScriptToStencil, JS::InstantiateGlobalStencil, JS::OffThreadCompileToStencil
-#include "js/SourceText.h"
+#include "js/experimental/CompileScript.h"  // JS::CompileGlobalScriptToStencil, JS::NewFrontendContext, JS::DestroyFrontendContext, JS::SetNativeStackQuota, JS::HadFrontendErrors, JS::ConvertFrontendErrorsToRuntimeErrors
+#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileGlobalScriptToStencil, JS::InstantiateGlobalStencil, JS::CompilationStorage
+#include "js/SourceText.h"              // JS::SourceText
 #include "js/Utility.h"
 
+#include "mozilla/AlreadyAddRefed.h"  // already_AddRefed
+#include "mozilla/Assertions.h"       // MOZ_ASSERT
 #include "mozilla/Attributes.h"
+#include "mozilla/EventQueue.h"  // EventQueuePriority
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/RefPtr.h"          // RefPtr
+#include "mozilla/TaskController.h"  // TaskController, Task
+#include "mozilla//Utf8.h"           // Utf8Unit
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -32,31 +41,150 @@ using namespace JS;
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class AsyncScriptCompiler final : public nsIIncrementalStreamLoaderObserver,
-                                  public Runnable {
+class AsyncScriptCompileTask final : public Task {
+ public:
+  explicit AsyncScriptCompileTask(JS::SourceText<Utf8Unit>&& aSrcBuf)
+      : Task(Kind::OffMainThreadOnly, EventQueuePriority::Normal),
+        mOptions(JS::OwningCompileOptions::ForFrontendContext()),
+        mSrcBuf(std::move(aSrcBuf)) {}
+
+  ~AsyncScriptCompileTask() {
+    if (mFrontendContext) {
+      JS::DestroyFrontendContext(mFrontendContext);
+    }
+  }
+
+  bool Init(const JS::OwningCompileOptions& aOptions) {
+    mFrontendContext = JS::NewFrontendContext();
+    if (!mFrontendContext) {
+      return false;
+    }
+
+    if (!mOptions.copy(mFrontendContext, aOptions)) {
+      return false;
+    }
+
+    return true;
+  }
+
+ private:
+  void Compile() {
+    // NOTE: The stack limit must be set from the same thread that compiles.
+    const size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
+    JS::SetNativeStackQuota(mFrontendContext, kDefaultStackQuota);
+
+    JS::CompilationStorage compileStorage;
+    mStencil = JS::CompileGlobalScriptToStencil(mFrontendContext, mOptions,
+                                                mSrcBuf, compileStorage);
+  }
+
+ public:
+  bool Run() override {
+    Compile();
+    return true;
+  }
+
+  already_AddRefed<JS::Stencil> StealStencil(JSContext* aCx) {
+    JS::FrontendContext* fc = mFrontendContext;
+    mFrontendContext = nullptr;
+
+    MOZ_ASSERT(fc);
+
+    if (JS::HadFrontendErrors(fc)) {
+      (void)JS::ConvertFrontendErrorsToRuntimeErrors(aCx, fc, mOptions);
+      JS::DestroyFrontendContext(fc);
+      return nullptr;
+    }
+
+    // Report warnings.
+    if (!JS::ConvertFrontendErrorsToRuntimeErrors(aCx, fc, mOptions)) {
+      JS::DestroyFrontendContext(fc);
+      return nullptr;
+    }
+
+    JS::DestroyFrontendContext(fc);
+
+    return mStencil.forget();
+  }
+
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  bool GetName(nsACString& aName) override {
+    aName.AssignLiteral("AsyncScriptCompileTask");
+    return true;
+  }
+#endif
+
+ private:
+  // Owning-pointer for the context associated with the script compilation.
+  //
+  // The context is allocated on main thread in Init method, and is freed on
+  // any thread in the destructor.
+  JS::FrontendContext* mFrontendContext = nullptr;
+
+  JS::OwningCompileOptions mOptions;
+
+  RefPtr<JS::Stencil> mStencil;
+
+  JS::SourceText<Utf8Unit> mSrcBuf;
+};
+
+class AsyncScriptCompiler;
+
+class AsyncScriptCompilationCompleteTask : public Task {
+ public:
+  AsyncScriptCompilationCompleteTask(AsyncScriptCompiler* aCompiler,
+                                     AsyncScriptCompileTask* aCompileTask)
+      : Task(Kind::MainThreadOnly, EventQueuePriority::Normal),
+        mCompiler(aCompiler),
+        mCompileTask(aCompileTask) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  bool GetName(nsACString& aName) override {
+    aName.AssignLiteral("AsyncScriptCompilationCompleteTask");
+    return true;
+  }
+#endif
+
+  bool Run() override;
+
+ private:
+  // NOTE:
+  // This field is main-thread only, and this task shouldn't be freed off
+  // main thread.
+  //
+  // This is guaranteed by not having off-thread tasks which depends on this
+  // task, because otherwise the off-thread task's mDependencies can be the
+  // last reference, which results in freeing this task off main thread.
+  //
+  // If such task is added, this field must be moved to separate storage.
+  RefPtr<AsyncScriptCompiler> mCompiler;
+
+  RefPtr<AsyncScriptCompileTask> mCompileTask;
+};
+
+class AsyncScriptCompiler final : public nsIIncrementalStreamLoaderObserver {
  public:
   // Note: References to this class are never held by cycle-collected objects.
   // If at any point a reference is returned to a caller, please update this
   // class to implement cycle collection.
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIINCREMENTALSTREAMLOADEROBSERVER
-  NS_DECL_NSIRUNNABLE
 
   AsyncScriptCompiler(JSContext* aCx, nsIGlobalObject* aGlobal,
                       const nsACString& aURL, Promise* aPromise)
-      : mozilla::Runnable("AsyncScriptCompiler"),
-        mOptions(aCx),
+      : mOptions(aCx),
         mURL(aURL),
         mGlobalObject(aGlobal),
         mPromise(aPromise),
-        mToken(nullptr),
         mScriptLength(0) {}
 
   [[nodiscard]] nsresult Start(JSContext* aCx,
                                const CompileScriptOptionsDictionary& aOptions,
                                nsIPrincipal* aPrincipal);
 
-  inline void SetToken(JS::OffThreadToken* aToken) { mToken = aToken; }
+  void OnCompilationComplete(AsyncScriptCompileTask* aCompileTask);
 
  protected:
   virtual ~AsyncScriptCompiler() {
@@ -70,23 +198,20 @@ class AsyncScriptCompiler final : public nsIIncrementalStreamLoaderObserver,
   void Reject(JSContext* aCx, const char* aMxg);
 
   bool StartCompile(JSContext* aCx);
+  bool StartOffThreadCompile(JS::SourceText<Utf8Unit>&& aSrcBuf);
   void FinishCompile(JSContext* aCx);
-  void Finish(JSContext* aCx, RefPtr<JS::Stencil> aStencil);
+  void Finish(JSContext* aCx, RefPtr<JS::Stencil>&& aStencil);
 
   OwningCompileOptions mOptions;
   nsCString mURL;
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
   RefPtr<Promise> mPromise;
   nsString mCharset;
-  JS::OffThreadToken* mToken;
   UniquePtr<Utf8Unit[], JS::FreePolicy> mScriptText;
   size_t mScriptLength;
 };
 
-NS_IMPL_QUERY_INTERFACE_INHERITED(AsyncScriptCompiler, Runnable,
-                                  nsIIncrementalStreamLoaderObserver)
-NS_IMPL_ADDREF_INHERITED(AsyncScriptCompiler, Runnable)
-NS_IMPL_RELEASE_INHERITED(AsyncScriptCompiler, Runnable)
+NS_IMPL_ISUPPORTS(AsyncScriptCompiler, nsIIncrementalStreamLoaderObserver)
 
 nsresult AsyncScriptCompiler::Start(
     JSContext* aCx, const CompileScriptOptionsDictionary& aOptions,
@@ -125,30 +250,23 @@ nsresult AsyncScriptCompiler::Start(
   return channel->AsyncOpen(loader);
 }
 
-static void OffThreadScriptLoaderCallback(JS::OffThreadToken* aToken,
-                                          void* aCallbackData) {
-  RefPtr<AsyncScriptCompiler> scriptCompiler =
-      dont_AddRef(static_cast<AsyncScriptCompiler*>(aCallbackData));
-
-  scriptCompiler->SetToken(aToken);
-
-  SchedulerGroup::Dispatch(TaskCategory::Other, scriptCompiler.forget());
-}
-
 bool AsyncScriptCompiler::StartCompile(JSContext* aCx) {
   JS::SourceText<Utf8Unit> srcBuf;
   if (!srcBuf.init(aCx, std::move(mScriptText), mScriptLength)) {
     return false;
   }
 
-  if (JS::CanCompileOffThread(aCx, mOptions, mScriptLength)) {
-    if (!JS::CompileToStencilOffThread(aCx, mOptions, srcBuf,
-                                       OffThreadScriptLoaderCallback,
-                                       static_cast<void*>(this))) {
+  // TODO: This uses the same heuristics and the same threshold as the
+  //       JS::CanCompileOffThread, but the heuristics needs to be updated to
+  //       reflect the change regarding the Stencil API, and also the thread
+  //       management on the consumer side (bug 1846388).
+  static constexpr size_t OffThreadMinimumTextLength = 5 * 1000;
+
+  if (StaticPrefs::javascript_options_parallel_parsing() &&
+      mScriptLength >= OffThreadMinimumTextLength) {
+    if (!StartOffThreadCompile(std::move(srcBuf))) {
       return false;
     }
-
-    NS_ADDREF(this);
     return true;
   }
 
@@ -158,35 +276,57 @@ bool AsyncScriptCompiler::StartCompile(JSContext* aCx) {
     return false;
   }
 
-  Finish(aCx, stencil);
+  Finish(aCx, std::move(stencil));
   return true;
 }
 
-NS_IMETHODIMP
-AsyncScriptCompiler::Run() {
+bool AsyncScriptCompiler::StartOffThreadCompile(
+    JS::SourceText<Utf8Unit>&& aSrcBuf) {
+  RefPtr<AsyncScriptCompileTask> compileTask =
+      new AsyncScriptCompileTask(std::move(aSrcBuf));
+
+  RefPtr<AsyncScriptCompilationCompleteTask> complationCompleteTask =
+      new AsyncScriptCompilationCompleteTask(this, compileTask.get());
+
+  if (!compileTask->Init(mOptions)) {
+    return false;
+  }
+
+  complationCompleteTask->AddDependency(compileTask.get());
+
+  TaskController::Get()->AddTask(compileTask.forget());
+  TaskController::Get()->AddTask(complationCompleteTask.forget());
+  return true;
+}
+
+bool AsyncScriptCompilationCompleteTask::Run() {
+  mCompiler->OnCompilationComplete(mCompileTask.get());
+  mCompiler = nullptr;
+  mCompileTask = nullptr;
+  return true;
+}
+
+void AsyncScriptCompiler::OnCompilationComplete(
+    AsyncScriptCompileTask* aCompileTask) {
   AutoJSAPI jsapi;
-  if (jsapi.Init(mGlobalObject)) {
-    FinishCompile(jsapi.cx());
-  } else {
-    jsapi.Init();
-    JS::CancelOffThreadToken(jsapi.cx(), mToken);
-
+  if (!jsapi.Init(mGlobalObject)) {
     mPromise->MaybeReject(NS_ERROR_FAILURE);
+    return;
   }
 
-  return NS_OK;
-}
-
-void AsyncScriptCompiler::FinishCompile(JSContext* aCx) {
-  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(aCx, mToken);
-  if (stencil) {
-    Finish(aCx, stencil);
-  } else {
-    Reject(aCx);
+  JSContext* cx = jsapi.cx();
+  RefPtr<JS::Stencil> stencil = aCompileTask->StealStencil(cx);
+  if (!stencil) {
+    Reject(cx);
+    return;
   }
+
+  Finish(cx, std::move(stencil));
+  return;
 }
 
-void AsyncScriptCompiler::Finish(JSContext* aCx, RefPtr<JS::Stencil> aStencil) {
+void AsyncScriptCompiler::Finish(JSContext* aCx,
+                                 RefPtr<JS::Stencil>&& aStencil) {
   RefPtr<PrecompiledScript> result =
       new PrecompiledScript(mGlobalObject, aStencil, mOptions);
 
