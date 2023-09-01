@@ -216,12 +216,12 @@ void WinWebAuthnManager::Register(
   DWORD winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
 
   rpInfo.pwszName = aInfo.Rp().Name().get();
-  rpInfo.pwszIcon = aInfo.Rp().Icon().get();
+  rpInfo.pwszIcon = nullptr;
 
   userInfo.cbId = static_cast<DWORD>(aInfo.User().Id().Length());
   userInfo.pbId = const_cast<unsigned char*>(aInfo.User().Id().Elements());
   userInfo.pwszName = aInfo.User().Name().get();
-  userInfo.pwszIcon = aInfo.User().Icon().get();
+  userInfo.pwszIcon = nullptr;
   userInfo.pwszDisplayName = aInfo.User().DisplayName().get();
 
   for (const auto& coseAlg : aInfo.coseAlgs()) {

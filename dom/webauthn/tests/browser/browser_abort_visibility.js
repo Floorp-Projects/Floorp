@@ -67,11 +67,10 @@ function startMakeCredentialRequest(tab) {
     const cose_alg_ECDSA_w_SHA256 = -7;
 
     let publicKey = {
-      rp: { id: content.document.domain, name: "none", icon: "none" },
+      rp: { id: content.document.domain, name: "none" },
       user: {
         id: new Uint8Array(),
         name: "none",
-        icon: "none",
         displayName: "none",
       },
       challenge: content.crypto.getRandomValues(new Uint8Array(16)),

@@ -115,8 +115,8 @@ add_task(async function() {
   }
 
   async function testMakeCredential() {
-    let rp = {id: document.domain, name: "none", icon: "none"};
-    let user = {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"};
+    let rp = {id: document.domain, name: "none"};
+    let user = {id: new Uint8Array(), name: "none", displayName: "none"};
     let param = {type: "public-key", alg: cose_alg_ECDSA_w_SHA256};
     let makeCredentialOptions = {
       rp,
@@ -131,8 +131,8 @@ add_task(async function() {
   }
 
   async function testMakeDuplicate(aCredInfo) {
-    let rp = {id: document.domain, name: "none", icon: "none"};
-    let user = {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"};
+    let rp = {id: document.domain, name: "none"};
+    let user = {id: new Uint8Array(), name: "none", displayName: "none"};
     let param = {type: "public-key", alg: cose_alg_ECDSA_w_SHA256};
     let makeCredentialOptions = {
       rp,

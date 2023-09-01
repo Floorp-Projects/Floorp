@@ -61,13 +61,11 @@ union WebAuthnExtensionResult {
 
 struct WebAuthnMakeCredentialRpInfo {
   nsString Name;
-  nsString Icon;
 };
 
 struct WebAuthnMakeCredentialUserInfo {
   uint8_t[] Id;
   nsString Name;
-  nsString Icon;
   nsString DisplayName;
 };
 

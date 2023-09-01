@@ -139,11 +139,10 @@ function promiseWebAuthnMakeCredential(
       ];
 
       let publicKey = {
-        rp: { id: content.document.domain, name: "none", icon: "none" },
+        rp: { id: content.document.domain, name: "none" },
         user: {
           id: new Uint8Array(),
           name: "none",
-          icon: "none",
           displayName: "none",
         },
         pubKeyCredParams,

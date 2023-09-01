@@ -197,12 +197,8 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
 
         GECKOBUNDLE_PUT(credentialBundle, "rpName",
                         jni::StringParam(rp.Name()));
-        GECKOBUNDLE_PUT(credentialBundle, "rpIcon",
-                        jni::StringParam(rp.Icon()));
         GECKOBUNDLE_PUT(credentialBundle, "userName",
                         jni::StringParam(user.Name()));
-        GECKOBUNDLE_PUT(credentialBundle, "userIcon",
-                        jni::StringParam(user.Icon()));
         GECKOBUNDLE_PUT(credentialBundle, "userDisplayName",
                         jni::StringParam(user.DisplayName()));
 

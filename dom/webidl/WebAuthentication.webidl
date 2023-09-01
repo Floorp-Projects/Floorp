@@ -70,7 +70,6 @@ dictionary PublicKeyCredentialCreationOptions {
 
 dictionary PublicKeyCredentialEntity {
     required DOMString    name;
-    USVString             icon;
 };
 
 dictionary PublicKeyCredentialRpEntity : PublicKeyCredentialEntity {

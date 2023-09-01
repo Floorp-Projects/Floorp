@@ -33,8 +33,8 @@
     // Start a new MakeCredential() request.
     function requestMakeCredential(signal) {
       let publicKey = {
-        rp: {id: document.domain, name: "none", icon: "none"},
-        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        rp: {id: document.domain, name: "none"},
+        user: {id: new Uint8Array(), name: "none", displayName: "none"},
         challenge: crypto.getRandomValues(new Uint8Array(16)),
         timeout: 5000, // the minimum timeout is actually 15 seconds
         pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
