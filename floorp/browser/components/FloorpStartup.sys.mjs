@@ -14,8 +14,6 @@ import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 import { CustomizableUI } from "resource:///modules/CustomizableUI.sys.mjs";
 
-// Will be removed in the future. Use OS.File instead of FileUtils or IOUtils.
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 // Migration from JSM to ES Module in the future.
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -60,16 +58,16 @@ export async function onFinalUIStartup() {
     let { BrowserManagerSidebar } = ChromeUtils.importESModule("resource:///modules/BrowserManagerSidebar.sys.mjs");
     BrowserManagerSidebar.prefsUpdate();
 
-    IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
+    IOUtils.exists(PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"))
         .then((data) => {
-            if(!data) {IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))}
+            if(!data) {IOUtils.makeDirectory(PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"))}
         })
 
     // Write CSS.
-    IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "chrome")).then((data) => {
+    IOUtils.exists(PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "chrome")).then((data) => {
         if (!data) {
-            let userChromecssPath = OS.Path.join(OS.Constants.Path.profileDir, "chrome");
-            let uccpth = OS.Path.join(userChromecssPath, 'userChrome.css')
+            let userChromecssPath = PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "chrome");
+            let uccpth = PathUtils.join(userChromecssPath, 'userChrome.css')
             IOUtils.writeUTF8(uccpth, `
 /*************************************************************************************************************************************************************************************************************************************************************
 
@@ -96,7 +94,7 @@ Quote: https://userChrome.org | https://github.com/topics/userchrome
 }
 `);
 
-            let ucconpth = OS.Path.join(userChromecssPath, 'userContent.css')
+            let ucconpth = PathUtils.join(userChromecssPath, 'userContent.css')
             IOUtils.writeUTF8(ucconpth, `
 /*************************************************************************************************************************************************************************************************************************************************************
 
