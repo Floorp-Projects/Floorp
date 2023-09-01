@@ -486,11 +486,12 @@ static constexpr struct {
     // Affects whether standins are used for the accent color.
     {"widget.non-native-theme.use-theme-accent"_ns,
      widget::ThemeChangeKind::Style},
-    // These two affect system colors on Windows.
+    // These three affect system colors on Windows.
     {"widget.windows.uwp-system-colors.enabled"_ns,
      widget::ThemeChangeKind::Style},
-    // These two affect system colors on Windows.
     {"widget.windows.uwp-system-colors.highlight-accent"_ns,
+     widget::ThemeChangeKind::Style},
+    {"widget.windows.titlebar-accent.enabled"_ns,
      widget::ThemeChangeKind::Style},
     // Affects env().
     {"layout.css.prefers-color-scheme.content-override"_ns,

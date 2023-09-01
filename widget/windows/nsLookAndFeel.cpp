@@ -17,6 +17,7 @@
 #include "mozilla/Telemetry.h"
 #include "gfxFontConstants.h"
 #include "gfxWindowsPlatform.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
