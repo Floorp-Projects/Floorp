@@ -15,7 +15,7 @@ const RECOMMENDATIONS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/recommendations_response.schema.json";
 const RECOMMENDATIONS_REQUEST_SCHEMA =
   "chrome://global/content/shopping/recommendations_request.schema.json";
-const ATTRIBUTION_API = "https://pe.fakespot.com/api/v1/fx/events";
+let ATTRIBUTION_API = "https://pe.fakespot.com/api/v1/fx/events";
 const ATTRIBUTION_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/attribution_response.schema.json";
 const ATTRIBUTION_REQUEST_SCHEMA =
@@ -44,7 +44,9 @@ if (Cu.isInAutomation) {
   ANALYSIS_API =
     "https://example.com/browser/toolkit/components/shopping/test/browser/analysis.sjs";
   RECOMMENDATIONS_API =
-    "https://example.com/browser/toolkit/components/shopping/test/browser/sp_search.sjs";
+    "https://example.com/browser/toolkit/components/shopping/test/browser/recommendations.sjs";
+  ATTRIBUTION_API =
+    "https://example.com/browser/toolkit/components/shopping/test/browser/attribution.sjs";
 }
 
 Object.freeze(ProductConfig);
