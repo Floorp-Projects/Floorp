@@ -28,6 +28,17 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.shopping.experience2023.ads.enabled",
   true
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "adsEnabledByUser",
+  "browser.shopping.experience2023.ads.userEnabled",
+  true,
+  function adsEnabledByUserChanged() {
+    for (let actor of gAllActors) {
+      actor.adsEnabledByUserChanged();
+    }
+  }
+);
 
 export class ShoppingSidebarChild extends RemotePageChild {
   constructor() {
@@ -90,11 +101,21 @@ export class ShoppingSidebarChild extends RemotePageChild {
     return lazy.adsEnabled;
   }
 
+  get userHasAdsEnabled() {
+    return lazy.adsEnabledByUser;
+  }
+
   optedInStateChanged() {
     // Force re-fetching things if needed by clearing the last product URI:
     this.#productURI = null;
     // Then let content know.
     this.updateContent();
+  }
+
+  adsEnabledByUserChanged() {
+    this.sendToContent("adsEnabledByUserChanged", {
+      adsEnabledByUser: this.userHasAdsEnabled,
+    });
   }
 
   getProductURI() {
@@ -143,6 +164,8 @@ export class ShoppingSidebarChild extends RemotePageChild {
     // Do not clear data however if an analysis was requested via a call-to-action.
     if (!isPolledRequest) {
       this.sendToContent("Update", {
+        adsEnabled: this.canFetchAndShowAd,
+        adsEnabledByUser: this.userHasAdsEnabled,
         showOnboarding: !this.canFetchAndShowData,
         data: null,
         recommendationData: null,
@@ -190,20 +213,18 @@ export class ShoppingSidebarChild extends RemotePageChild {
         isPolledRequestDone,
       });
 
-      if (!this.canFetchAndShowAd || data.error) {
+      if (data.error) {
         return;
       }
       this.#product.requestRecommendations().then(recommendationData => {
         // Check if the product URI or opt in changed while we waited.
-        if (
-          uri != this.#productURI ||
-          !this.canFetchAndShowData ||
-          !this.canFetchAndShowAd
-        ) {
+        if (uri != this.#productURI || !this.canFetchAndShowData) {
           return;
         }
 
         this.sendToContent("Update", {
+          adsEnabled: this.canFetchAndShowAd,
+          adsEnabledByUser: this.userHasAdsEnabled,
           showOnboarding: false,
           data,
           productUrl: this.#productURI.spec,

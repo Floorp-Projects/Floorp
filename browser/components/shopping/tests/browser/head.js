@@ -109,6 +109,18 @@ const MOCK_UNAVAILABLE_PRODUCT_REPORTED_RESPONSE = {
   deleted_product_reported: true,
 };
 
+const MOCK_RECOMMENDED_ADS_RESPONSE = [
+  {
+    name: "VIVO Electric 60 x 24 inch Stand Up Desk | Black Table Top, Black Frame, Height Adjustable Standing Workstation with Memory Preset Controller (DESK-KIT-1B6B)",
+    url: "www.example.com",
+    price: "249.99",
+    currency: "USD",
+    grade: "A",
+    adjusted_rating: 4.6,
+    sponsored: true,
+  },
+];
+
 function verifyAnalysisDetailsVisible(shoppingContainer) {
   ok(
     shoppingContainer.reviewReliabilityEl,
