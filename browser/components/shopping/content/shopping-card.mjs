@@ -101,13 +101,22 @@ class ShoppingCard extends MozLitElement {
     // toggle content expanded attribute
     e.target.parentElement.parentElement.attributes.expanded.value =
       this._isExpanded;
+
+    let action = this._isExpanded ? "expanded" : "collapsed";
+    this.dispatchEvent(
+      new CustomEvent("ShoppingTelemetryEvent", {
+        composed: true,
+        bubbles: true,
+        detail: ["surfaceShowMoreReviewsButtonClicked", action],
+      })
+    );
   }
 
   handleChevronButtonClick() {
     this.detailsEl.open = !this.detailsEl.open;
     // here, open represents the state, so we want the inverse for which
     // action the user is taking.
-    const buttonAction = this.detailsEl.open ? "expand" : "collapse";
+    const buttonAction = this.detailsEl.open ? "expanded" : "collapsed";
     this.recordChevronButtonGleanEvent([
       this.getAttribute("data-l10n-id"),
       buttonAction,
