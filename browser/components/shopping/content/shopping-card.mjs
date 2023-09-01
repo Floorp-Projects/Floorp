@@ -45,7 +45,8 @@ class ShoppingCard extends MozLitElement {
       }
       return html`
         <div id="label-wrapper">
-          <h2 id="header">${this.label}</h2><slot name="rating"></slot>
+          <h2 id="header">${this.label}</h2>
+          <slot name="rating"></slot>
         </div>
       `;
     }
