@@ -55,7 +55,7 @@ const portableUpdateUtils = {
                 })
                 .catch(reject);
         });
-        let isUpdateFound = data.version !== displayVersion;
+        let isUpdateFound = data.version !== displayVersion && Services.prefs.getBoolPref("floorp.portable.isUpdate");
         return {
             isLatest: !isUpdateFound,
             url: isUpdateFound ?
