@@ -249,19 +249,11 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
     },
     edit(aFile) {
       function openInEditor() {
-        console.log(aFile);
         try {
           const editor = Services.prefs.getStringPref(
             "view_source.editor.path"
           );
-          var UI = Cc[
-            "@mozilla.org/intl/scriptableunicodeconverter"
-          ].createInstance(Ci.nsIScriptableUnicodeConverter);
-          UI.charset =
-            window.navigator.platform.toLowerCase().indexOf("win") >= 0
-              ? "Shift_JIS"
-              : "UTF-8";
-          var path = UI.ConvertFromUnicode(aFile);
+          var path = AppConstants.platform == "win" ? convertUTF8ToShiftJIS(aFile) : convertShiftJISToUTF8(aFile);
           var app = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
           app.initWithPath(editor);
           var process = Cc["@mozilla.org/process/util;1"].createInstance(
@@ -269,8 +261,25 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
           );
           process.init(app);
           process.run(false, [path], 1);
-        } catch (e) {}
+        } catch (e) {
+          throw new Error(e);
+        }
       }
+
+      function convertShiftJISToUTF8(shiftJISString) {
+        const decoder = new TextDecoder('shift-jis');
+        const shiftJISBytes = new TextEncoder().encode(shiftJISString);
+        const utf8String = decoder.decode(shiftJISBytes);
+        return utf8String;
+      }
+
+      function convertUTF8ToShiftJIS(utf8String) {
+        const decoder = new TextDecoder('utf-8');
+        const utf8Bytes = new TextEncoder().encode(utf8String);
+        const shiftJISString = decoder.decode(utf8Bytes);
+        return shiftJISString;
+      }
+      
 
       let l10n = new Localization(["browser/floorp.ftl"], true);
       const editor = Services.prefs.getStringPref("view_source.editor.path");
