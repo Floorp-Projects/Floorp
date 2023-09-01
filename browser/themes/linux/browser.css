@@ -104,7 +104,7 @@ menuitem.bookmark-item {
 /* Address bar results view */
 
 :root:not(:-moz-lwtheme) {
-  --urlbar-popup-action-color: -moz-nativehyperlinktext;
+  --urlbar-popup-action-color: LinkText;
   --autocomplete-popup-highlight-background: SelectedItem;
   --autocomplete-popup-highlight-color: SelectedItemText;
 }
