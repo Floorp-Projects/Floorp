@@ -2127,15 +2127,16 @@
       const theseAttributes = ["soundplaying", "muted", "activemedia-blocked"];
       const notTheseAttributes = ["pinned", "sharing", "crashed"];
 
-      if (notTheseAttributes.some(attr => tab.hasAttribute(attr))) {
+      if (notTheseAttributes.some(attr => tab.getAttribute(attr))) {
         tab.removeAttribute("indicator-replaces-favicon");
         return;
       }
 
-      tab.toggleAttribute(
-        "indicator-replaces-favicon",
-        theseAttributes.some(attr => tab.hasAttribute(attr))
-      );
+      if (theseAttributes.some(attr => tab.getAttribute(attr))) {
+        tab.setAttribute("indicator-replaces-favicon", true);
+      } else {
+        tab.removeAttribute("indicator-replaces-favicon");
+      }
     }
   }
 
