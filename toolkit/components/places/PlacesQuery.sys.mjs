@@ -235,10 +235,17 @@ export class PlacesQuery {
     this.cachedHistory = null;
     this.cachedHistoryOptions = null;
     this.#cachedHistoryPerUrl = null;
-    PlacesObservers.removeListener(
-      ["page-removed", "page-visited", "history-cleared", "page-title-changed"],
-      this.#historyListener
-    );
+    if (this.#historyListener) {
+      PlacesObservers.removeListener(
+        [
+          "page-removed",
+          "page-visited",
+          "history-cleared",
+          "page-title-changed",
+        ],
+        this.#historyListener
+      );
+    }
     this.#historyListener = null;
     this.#historyListenerCallback = null;
   }

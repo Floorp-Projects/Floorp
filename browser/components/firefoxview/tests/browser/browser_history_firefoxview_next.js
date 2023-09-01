@@ -148,89 +148,136 @@ add_task(async function test_list_ordering() {
     );
     gBrowser.removeTab(gBrowser.selectedTab);
   });
+});
 
-  add_task(async function test_empty_states() {
-    await PlacesUtils.history.clear();
-    await withFirefoxView({}, async browser => {
-      const { document } = browser.contentWindow;
-      is(document.location.href, "about:firefoxview-next");
+add_task(async function test_empty_states() {
+  await PlacesUtils.history.clear();
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview-next");
 
-      navigateToHistory(document);
+    navigateToHistory(document);
 
-      let historyComponent = document.querySelector("view-history");
-      historyComponent.profileAge = 8;
-      await TestUtils.waitForCondition(() => historyComponent.emptyState);
-      let emptyStateCard = historyComponent.emptyState;
-      ok(
-        emptyStateCard.headerEl.textContent.includes(
-          "Get back to where you’ve been"
-        ),
-        "Initial empty state header has the expected text."
-      );
-      ok(
-        emptyStateCard.descriptionEls[0].textContent.includes(
-          "As you browse, the pages you visit will be listed here."
-        ),
-        "Initial empty state description has the expected text."
-      );
+    let historyComponent = document.querySelector("view-history");
+    historyComponent.profileAge = 8;
+    await TestUtils.waitForCondition(() => historyComponent.emptyState);
+    let emptyStateCard = historyComponent.emptyState;
+    ok(
+      emptyStateCard.headerEl.textContent.includes(
+        "Get back to where you’ve been"
+      ),
+      "Initial empty state header has the expected text."
+    );
+    ok(
+      emptyStateCard.descriptionEls[0].textContent.includes(
+        "As you browse, the pages you visit will be listed here."
+      ),
+      "Initial empty state description has the expected text."
+    );
 
-      // Test empty state when History mode is set to never remember
-      Services.prefs.setBoolPref(NEVER_REMEMBER_HISTORY_PREF, true);
-      // Manually update the history component from the test, since changing this setting
-      // in about:preferences will require a browser reload
-      historyComponent.requestUpdate();
-      await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
-      emptyStateCard = historyComponent.emptyState;
-      ok(
-        emptyStateCard.headerEl.textContent.includes("Nothing to show"),
-        "Empty state with never remember history header has the expected text."
-      );
-      ok(
-        emptyStateCard.descriptionEls[1].textContent.includes(
-          "remember your activity as you browse. To change that"
-        ),
-        "Empty state with never remember history description has the expected text."
-      );
-      // Reset History mode to Remember
-      Services.prefs.setBoolPref(NEVER_REMEMBER_HISTORY_PREF, false);
-      // Manually update the history component from the test, since changing this setting
-      // in about:preferences will require a browser reload
-      historyComponent.requestUpdate();
-      await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    // Test empty state when History mode is set to never remember
+    Services.prefs.setBoolPref(NEVER_REMEMBER_HISTORY_PREF, true);
+    // Manually update the history component from the test, since changing this setting
+    // in about:preferences will require a browser reload
+    historyComponent.requestUpdate();
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    emptyStateCard = historyComponent.emptyState;
+    ok(
+      emptyStateCard.headerEl.textContent.includes("Nothing to show"),
+      "Empty state with never remember history header has the expected text."
+    );
+    ok(
+      emptyStateCard.descriptionEls[1].textContent.includes(
+        "remember your activity as you browse. To change that"
+      ),
+      "Empty state with never remember history description has the expected text."
+    );
+    // Reset History mode to Remember
+    Services.prefs.setBoolPref(NEVER_REMEMBER_HISTORY_PREF, false);
+    // Manually update the history component from the test, since changing this setting
+    // in about:preferences will require a browser reload
+    historyComponent.requestUpdate();
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
 
-      // Test import history banner shows if profile age is 7 days or less and
-      // user hasn't already imported history from another browser
-      Services.prefs.setBoolPref(IMPORT_HISTORY_DISMISSED_PREF, false);
-      Services.prefs.setBoolPref(HAS_IMPORTED_HISTORY_PREF, true);
-      ok(!historyComponent.cards.length, "Import history banner not shown yet");
-      historyComponent.profileAge = 0;
-      await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
-      ok(
+    // Test import history banner shows if profile age is 7 days or less and
+    // user hasn't already imported history from another browser
+    Services.prefs.setBoolPref(IMPORT_HISTORY_DISMISSED_PREF, false);
+    Services.prefs.setBoolPref(HAS_IMPORTED_HISTORY_PREF, true);
+    ok(!historyComponent.cards.length, "Import history banner not shown yet");
+    historyComponent.profileAge = 0;
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    ok(
+      !historyComponent.cards.length,
+      "Import history banner still not shown yet"
+    );
+    Services.prefs.setBoolPref(HAS_IMPORTED_HISTORY_PREF, false);
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    ok(
+      historyComponent.cards[0].textContent.includes(
+        "Import history from another browser"
+      ),
+      "Import history banner is shown"
+    );
+    let importHistoryCloseButton =
+      historyComponent.cards[0].querySelector("button.close");
+    importHistoryCloseButton.click();
+    await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    ok(
+      Services.prefs.getBoolPref(IMPORT_HISTORY_DISMISSED_PREF, true) &&
         !historyComponent.cards.length,
-        "Import history banner still not shown yet"
-      );
-      Services.prefs.setBoolPref(HAS_IMPORTED_HISTORY_PREF, false);
-      await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
-      ok(
-        historyComponent.cards[0].textContent.includes(
-          "Import history from another browser"
-        ),
-        "Import history banner is shown"
-      );
-      let importHistoryCloseButton =
-        historyComponent.cards[0].querySelector("button.close");
-      importHistoryCloseButton.click();
-      await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
-      ok(
-        Services.prefs.getBoolPref(IMPORT_HISTORY_DISMISSED_PREF, true) &&
-          !historyComponent.cards.length,
-        "Import history banner has been dismissed."
-      );
-      // Reset profileAge to greater than 7 to avoid affecting other tests
-      historyComponent.profileAge = 8;
-      Services.prefs.setBoolPref(IMPORT_HISTORY_DISMISSED_PREF, false);
+      "Import history banner has been dismissed."
+    );
+    // Reset profileAge to greater than 7 to avoid affecting other tests
+    historyComponent.profileAge = 8;
+    Services.prefs.setBoolPref(IMPORT_HISTORY_DISMISSED_PREF, false);
 
-      gBrowser.removeTab(gBrowser.selectedTab);
-    });
+    gBrowser.removeTab(gBrowser.selectedTab);
+  });
+});
+
+add_task(async function test_observers_removed_when_view_is_hidden() {
+  await PlacesUtils.history.clear();
+  const NEW_TAB_URL = "https://example.com";
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    NEW_TAB_URL
+  );
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    navigateToHistory(document);
+    const historyComponent = document.querySelector("view-history");
+    historyComponent.profileAge = 8;
+    const visitList = await TestUtils.waitForCondition(() =>
+      historyComponent.cards?.[0]?.querySelector("fxview-tab-list")
+    );
+    info("The list should show a visit from the new tab.");
+    await BrowserTestUtils.waitForMutationCondition(
+      visitList,
+      { childList: true },
+      () => visitList.rowEls.length === 1
+    );
+
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+    const { date } = await PlacesUtils.history
+      .fetch(NEW_TAB_URL, {
+        includeVisits: true,
+      })
+      .then(({ visits }) => visits[0]);
+    await addHistoryItems(date);
+    is(
+      visitList.rowEls.length,
+      1,
+      "The list does not update when Firefox View is hidden."
+    );
+
+    info("The list should update when Firefox View is visible.");
+    await switchToFxViewTab(browser.ownerGlobal);
+    await BrowserTestUtils.waitForMutationCondition(
+      visitList,
+      { childList: true },
+      () => visitList.rowEls.length > 1
+    );
+
+    BrowserTestUtils.removeTab(tab);
   });
 });

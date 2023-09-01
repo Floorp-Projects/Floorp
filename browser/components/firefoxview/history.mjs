@@ -43,11 +43,7 @@ class HistoryInView extends ViewPage {
   async connectedCallback() {
     super.connectedCallback();
     await this.updateHistoryData();
-    this.placesQuery.observeHistory(newHistory => {
-      this.resetHistoryMaps();
-      this.allHistoryItems = newHistory;
-      this.lists.forEach(list => list.requestUpdate());
-    });
+    this.placesQuery.observeHistory(data => this.#updateAllHistoryItems(data));
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "importHistoryDismissedPref",
@@ -83,6 +79,25 @@ class HistoryInView extends ViewPage {
       "MigrationWizard:Close",
       this.migrationWizardDialog
     );
+  }
+
+  async #updateAllHistoryItems(allHistoryItems) {
+    if (allHistoryItems) {
+      this.allHistoryItems = allHistoryItems;
+    } else {
+      await this.updateHistoryData();
+    }
+    this.resetHistoryMaps();
+    this.lists.forEach(list => list.requestUpdate());
+  }
+
+  viewTabVisibleCallback() {
+    this.#updateAllHistoryItems();
+    this.placesQuery.observeHistory(data => this.#updateAllHistoryItems(data));
+  }
+
+  viewTabHiddenCallback() {
+    this.placesQuery.close();
   }
 
   static queries = {

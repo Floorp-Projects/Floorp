@@ -53,12 +53,10 @@ class RecentlyClosedTabsInView extends ViewPage {
     super.connectedCallback();
     this.updateRecentlyClosedTabs();
     this.addObserversIfNeeded();
-    getWindow().gBrowser.tabContainer.addEventListener("TabSelect", this);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    getWindow().gBrowser.tabContainer.removeEventListener("TabSelect", this);
     this.removeObserversIfNeeded();
   }
 
@@ -91,21 +89,15 @@ class RecentlyClosedTabsInView extends ViewPage {
   }
 
   // we observe when a tab closes but since this notification fires more frequently and on
-  // all windows, we remove the observer when another tab is selected; we check for changes
-  // to the session store once the user return to this tab.
-  handleObservers(contentDocument) {
-    if (contentDocument?.URL.split("#")[0] == "about:firefoxview-next") {
-      this.addObserversIfNeeded();
-      this.updateRecentlyClosedTabs();
-    } else {
-      this.removeObserversIfNeeded();
-    }
+  // all windows, we remove the observer when another tab is selected
+  viewTabHiddenCallback() {
+    this.removeObserversIfNeeded();
   }
 
-  handleEvent(event) {
-    if (event.type == "TabSelect") {
-      this.handleObservers(event.target.linkedBrowser.contentDocument);
-    }
+  // we check for changes to the session store once the user return to this tab.
+  viewTabVisibleCallback() {
+    this.addObserversIfNeeded();
+    this.updateRecentlyClosedTabs();
   }
 
   getTabStateValue(tab, key) {
