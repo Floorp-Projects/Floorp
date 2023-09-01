@@ -199,6 +199,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   // Read info from /proc/self/maps. We ignore most of it.
   pid_t pid = profiler_current_process_id().ToNumber();
   char path[PATH_MAX];
+  char modulePath[PATH_MAX + 1];
   SprintfLiteral(path, "/proc/%d/maps", pid);
   std::ifstream maps(path);
   std::string line;
@@ -208,7 +209,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     unsigned long end;
     char perm[6 + 1] = "";
     unsigned long offset;
-    char modulePath[PATH_MAX + 1] = "";
+    modulePath[0] = 0;
     ret = sscanf(line.c_str(),
                  "%lx-%lx %6s %lx %*s %*x %" PATH_MAX_STRING(PATH_MAX) "s\n",
                  &start, &end, perm, &offset, modulePath);
