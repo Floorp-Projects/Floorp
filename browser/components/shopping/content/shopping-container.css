@@ -42,6 +42,7 @@ body {
 #header {
   font-size: 1.3125em;
   font-weight: 600;
+  margin: 0;
 }
 
 #close-button {

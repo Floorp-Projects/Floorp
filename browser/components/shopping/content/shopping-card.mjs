@@ -34,7 +34,7 @@ class ShoppingCard extends MozLitElement {
       if (this.type === "accordion") {
         return html`
           <div id="label-wrapper">
-            <span id="header">${this.label}</span>
+            <h2 id="header">${this.label}</h2>
             <button
               tabindex="-1"
               class="icon chevron-icon ghost-button"
@@ -45,7 +45,7 @@ class ShoppingCard extends MozLitElement {
       }
       return html`
         <div id="label-wrapper">
-          <span id="header">${this.label}</span><slot name="rating"></slot>
+          <h2 id="header">${this.label}</h2><slot name="rating"></slot>
         </div>
       `;
     }
