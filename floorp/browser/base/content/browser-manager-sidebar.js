@@ -415,13 +415,9 @@ const bmsController = {
       const wibpanel_usercontext = webpandata.usercontext ?? 0;
       const webpanel_userAgent = webpandata.userAgent ?? false;
       let isWeb = true;
-      let isTST = false;
       let isFloorp = false;
       bmsController.controllFunctions.setSidebarWidth(webpanel_id);
       if (webpanelURL.startsWith("floorp//")) {
-        if (webpanelURL == "floorp//tst") {
-          isTST = true;
-        }
         isFloorp = true;
         webpanelURL = STATIC_SIDEBAR_DATA[webpanelURL].url;
         isWeb = false;
@@ -440,13 +436,8 @@ const bmsController = {
             String(webpanel_userAgent) ||
             (webpanobject?.getAttribute("usercontextid") ?? "0") !==
               String(wibpanel_usercontext))) ||
-          ((webpanobject.className.includes("isFloorp") ||
-            webpanobject.className.includes("isTST")) &&
-            isWeb) ||
-          ((webpanobject.className.includes("isFloorp") ||
-            webpanobject.className.includes("isWeb")) &&
-            isTST) ||
-          ((webpanobject.className.includes("isTST") ||
+          (webpanobject.className.includes("isFloorp")) && isWeb || ((webpanobject.className.includes("isFloorp") || webpanobject.className.includes("isWeb"))) ||
+          ((
             webpanobject.className.includes("isWeb")) &&
             isFloorp))
       ) {
@@ -455,56 +446,30 @@ const bmsController = {
       }
       if (webpanobject == null) {
         let webpanelElem = window.MozXULElement.parseXULToFragment(`
-                <browser 
-                  id="webpanel${webpanel_id}"
-                  class="webpanels${
-                    isFloorp ? " isFloorp" : isTST ? " isTST" : " isWeb"
-                  } ${
-          webpanelURL.slice(0, 9) == "extension" ? " isExtension" : ""
-        }"
-                  flex="1"
-                  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-                  disablehistory="true"
-                  disablefullscreen="true"
-                  tooltip="aHTMLTooltip"
-                  autoscroll="false"
-                  disableglobalhistory="true"
-                  messagemanagergroup="${
-                    webpanelURL.slice(0, 9) == "extension"
-                      ? "webext-browsers"
-                      : "browsers"
-                  }"
-                  autocompletepopup="PopupAutoComplete"
-                  ${
-                    isWeb
-                      ? `
-                  usercontextid="${
-                    typeof wibpanel_usercontext == "number"
-                      ? String(wibpanel_usercontext)
-                      : "0"
-                  }"
-                  changeuseragent="${webpanel_userAgent == true}"
-                  `
-                      : ""
-                  }
-                  ${
-                    isWeb || isTST
-                      ? `
-                  webextension-view-type="popup"
-                  type="content"
-                  remote="true"
-                  maychangeremoteness="true"
-                  `
-                      : ""
-                  }
-                  ${
-                    isWeb
-                      ? `context=""`
-                      : isTST
-                      ? `context="contentAreaContextMenu"`
-                      : ""
-                  }
-                   />
+              <browser 
+                id="webpanel${webpanel_id}"
+                class="webpanels${isFloorp ? " isFloorp" : " isWeb"}"
+                flex="1"
+                xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                disablehistory="true"
+                disablefullscreen="true"
+                tooltip="aHTMLTooltip"
+                autoscroll="false"
+                disableglobalhistory="true"
+                messagemanagergroup="browsers"
+                autocompletepopup="PopupAutoComplete"
+                initialBrowsingContextGroupId="40"
+              ${isWeb ? `
+                usercontextid="${(typeof wibpanel_usercontext) == "number" ? String(wibpanel_usercontext) : "0"}"
+                changeuseragent="${webpanel_userAgent == true}"
+                webextension-view-type="sidebar"
+                type="content"
+                remote="true"
+                maychangeremoteness="true"
+                context=""
+                ` : ""
+              }
+               />
                 `);
         if (webpanelURL.slice(0, 9) == "extension") {
           webpanelURL = webpanelURL.split(",")[3];
@@ -530,11 +495,11 @@ const bmsController = {
           sidebarItem.classList.add("sicon-list");
           sidebarItem.setAttribute(
             "oncommand",
-            "bmsController.eventFunctions.selectSidebarItem(e)"
+            "bmsController.eventFunctions.selectSidebarItem()"
           );
           if (BROWSER_SIDEBAR_DATA.data[elem].url.slice(0, 8) == "floorp//") {
             if (BROWSER_SIDEBAR_DATA.data[elem].url in STATIC_SIDEBAR_DATA) {
-              //0~4 - StaticModeSetter | Browser Manager, Bookmark, History, Downloads, TreeStyleTab have l10n & Delete panel
+              //0~4 - StaticModeSetter | Browser Manager, Bookmark, History, Downloads
               sidebarItem.setAttribute(
                 "data-l10n-id",
                 "show-" +

@@ -524,3 +524,7 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
 #profile-manager {
   list-style-image: url("chrome://browser/skin/fxa/avatar-color.svg");
 }
+
+#select-floorp__tst {
+  display: none;
+}

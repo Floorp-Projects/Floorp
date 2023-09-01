@@ -38,14 +38,7 @@ export let BrowserManagerSidebar = {
           "l10n":`notes-sidebar`,
           "defaultWidth":550,
           "enabled": true
-      },
-        //TST is removed from Floorp.
-        "floorp//tst":{
-            "url":"none",
-            "l10n":`TST-sidebar`,
-            "defaultWidth":415,
-            "enabled": false
-        },
+        }
     },
 
     DEFAULT_WEBPANEL:["https://translate.google.com","https://misskey.io"],
@@ -65,14 +58,12 @@ export let BrowserManagerSidebar = {
         }
         Services.prefs.getDefaultBranch(null).setStringPref("floorp.browser.sidebar2.data", JSON.stringify( defaultPref))
 
-        if(Services.prefs.prefHasUserValue("floorp.browser.sidebar2.data") && Services.prefs.getStringPref("floorp.browser.sidebar2.data").includes("floorp//tst")){
+        if(Services.prefs.prefHasUserValue("floorp.browser.sidebar2.data")){
           let prefTemp = JSON.parse( Services.prefs.getStringPref("floorp.browser.sidebar2.data"))
           let setPref = {data:{},index:[]}
           for(let elem of prefTemp.index){
-            if(prefTemp.data[elem].url != "floorp//tst"){
               setPref.data[elem] = prefTemp.data[elem]
               setPref.index.push(elem)
-            }
           }
           Services.prefs.setStringPref("floorp.browser.sidebar2.data", JSON.stringify( setPref))
         }
