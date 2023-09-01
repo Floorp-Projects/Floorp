@@ -6737,15 +6737,6 @@ bool ContentParent::DeallocPSessionStorageObserverParent(
   return mozilla::dom::DeallocPSessionStorageObserverParent(aActor);
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvDeviceReset() {
-  GPUProcessManager* pm = GPUProcessManager::Get();
-  if (pm) {
-    pm->SimulateDeviceReset();
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvBHRThreadHang(
     const HangDetails& aDetails) {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
