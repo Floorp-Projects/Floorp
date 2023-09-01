@@ -66,7 +66,11 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
     getCSSFolder() {
       let result = PathUtils.join(
         Services.prefs.getStringPref("UserCSSLoader.FOLDER", "") ||
-          PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "chrome", "CSS"),
+          PathUtils.join(
+            Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+            "chrome",
+            "CSS"
+          ),
         "a"
       ).slice(0, -1);
       return result;
@@ -180,7 +184,7 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
       if (!CSS) {
         CSS = this.readCSS[aFile] = new CSSEntry(aFile, folder);
         CSS.enabled = !decodeURIComponent(
-          Services.prefs.getStringPref("UserCSSLoader.disabled_list","")
+          Services.prefs.getStringPref("UserCSSLoader.disabled_list", "")
         ).includes(aFile);
       } else if (CSS.enabled) {
         CSS.enabled = true;
@@ -209,7 +213,7 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
       }
       menuitem.setAttribute("checked", CSS.enabled);
     },
-    selectSheet(CSS){
+    selectSheet(CSS) {
       let result;
       if (CSS.SHEET == this.AGENT_SHEET) {
         result = "AGENT_SHEET";
@@ -241,7 +245,7 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
         this.toggle(label);
       } else if (event.button == 2) {
         closeMenus(event.target);
-        this.edit(UCL.getCSSFolder() + label);//
+        this.edit(UCL.getCSSFolder() + label); //
       }
     },
     openFolder() {
@@ -249,10 +253,11 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
     },
     editUserCSS(aLeafName) {
       this.edit(
-        PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "chrome", "a").slice(
-          0,
-          -1
-        ) + aLeafName
+        PathUtils.join(
+          Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+          "chrome",
+          "a"
+        ).slice(0, -1) + aLeafName
       );
     },
     edit(aFile) {
@@ -261,7 +266,10 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
           const editor = Services.prefs.getStringPref(
             "view_source.editor.path"
           );
-          var path = AppConstants.platform == "win" ? convertUTF8ToShiftJIS(aFile) : convertShiftJISToUTF8(aFile);
+          var path =
+            AppConstants.platform == "win"
+              ? convertUTF8ToShiftJIS(aFile)
+              : convertShiftJISToUTF8(aFile);
           var app = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
           app.initWithPath(editor);
           var process = Cc["@mozilla.org/process/util;1"].createInstance(
@@ -275,19 +283,18 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
       }
 
       function convertShiftJISToUTF8(shiftJISString) {
-        const decoder = new TextDecoder('shift-jis');
+        const decoder = new TextDecoder("shift-jis");
         const shiftJISBytes = new TextEncoder().encode(shiftJISString);
         const utf8String = decoder.decode(shiftJISBytes);
         return utf8String;
       }
 
       function convertUTF8ToShiftJIS(utf8String) {
-        const decoder = new TextDecoder('utf-8');
+        const decoder = new TextDecoder("utf-8");
         const utf8Bytes = new TextEncoder().encode(utf8String);
         const shiftJISString = decoder.decode(utf8Bytes);
         return shiftJISString;
       }
-      
 
       let l10n = new Localization(["browser/floorp.ftl"], true);
       const editor = Services.prefs.getStringPref("view_source.editor.path");
@@ -300,7 +307,7 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
           editorPath = notepadPath;
           // check if VSCode is installed
           const vscodePath =
-          Services.dirsvc.get("Home", Ci.nsIFile).path +
+            Services.dirsvc.get("Home", Ci.nsIFile).path +
             "\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe";
           const isVSCodeInstalled = await IOUtils.exists(vscodePath);
           if (isVSCodeInstalled) {

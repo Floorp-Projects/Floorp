@@ -4,8 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { CustomizableUI } = ChromeUtils.importESModule("resource:///modules/CustomizableUI.sys.mjs");
-const { SessionStore } = ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm")
+const { CustomizableUI } = ChromeUtils.importESModule(
+  "resource:///modules/CustomizableUI.sys.mjs"
+);
+const { SessionStore } = ChromeUtils.import(
+  "resource:///modules/sessionstore/SessionStore.jsm"
+);
 
 async function UCTFirst() {
   const widgetId = "undo-closed-tab";
@@ -14,21 +18,27 @@ async function UCTFirst() {
     return;
   }
   const l10n = new Localization(["browser/floorp.ftl"]);
-  const l10nText = await l10n.formatValue("undo-closed-tab") ?? "Undo close tab";
+  const l10nText =
+    (await l10n.formatValue("undo-closed-tab")) ?? "Undo close tab";
   CustomizableUI.createWidget({
     id: widgetId,
     type: "button",
     label: l10nText,
     tooltiptext: l10nText,
     onCreated(aNode) {
-      const fragment = window.MozXULElement.parseXULToFragment(`<stack xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="toolbarbutton-badge-stack"><image class="toolbarbutton-icon" label="閉じたタブを開く"/><html:label xmlns:html="http://www.w3.org/1999/xhtml" class="toolbarbutton-badge" ></html:label></stack>`);
+      const fragment = window.MozXULElement.parseXULToFragment(
+        `<stack xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="toolbarbutton-badge-stack"><image class="toolbarbutton-icon" label="閉じたタブを開く"/><html:label xmlns:html="http://www.w3.org/1999/xhtml" class="toolbarbutton-badge" ></html:label></stack>`
+      );
       aNode.appendChild(fragment);
     },
     onCommand() {
       undoCloseTab();
-    }
+    },
   });
-  if (ChromeUtils.importESModule("resource:///modules/FloorpStartup.sys.mjs").isFirstRun) {
+  if (
+    ChromeUtils.importESModule("resource:///modules/FloorpStartup.sys.mjs")
+      .isFirstRun
+  ) {
     CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR, -1);
   }
 }
@@ -49,15 +59,24 @@ async function switchSidebarPositionButton() {
     label: l10nText,
     tooltiptext: l10nText,
     onCreated(aNode) {
-      const fragment = window.MozXULElement.parseXULToFragment(`<stack xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="toolbarbutton-badge-stack"><image class="toolbarbutton-icon" label="閉じたタブを開く"/><html:label xmlns:html="http://www.w3.org/1999/xhtml" class="toolbarbutton-badge" ></html:label></stack>`);
+      const fragment = window.MozXULElement.parseXULToFragment(
+        `<stack xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="toolbarbutton-badge-stack"><image class="toolbarbutton-icon" label="閉じたタブを開く"/><html:label xmlns:html="http://www.w3.org/1999/xhtml" class="toolbarbutton-badge" ></html:label></stack>`
+      );
       aNode.appendChild(fragment);
     },
     onCommand() {
       SidebarUI.reversePosition();
-    }
+    },
   });
-  if (ChromeUtils.importESModule("resource:///modules/FloorpStartup.sys.mjs").isFirstRun) {
-    CustomizableUI.addWidgetToArea("sidebar-button", CustomizableUI.AREA_NAVBAR, 3);
+  if (
+    ChromeUtils.importESModule("resource:///modules/FloorpStartup.sys.mjs")
+      .isFirstRun
+  ) {
+    CustomizableUI.addWidgetToArea(
+      "sidebar-button",
+      CustomizableUI.AREA_NAVBAR,
+      3
+    );
     CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR, 4);
   }
 }
@@ -89,20 +108,30 @@ async function profileManager() {
     },
     onCommand() {
       const popup = document.getElementById("profile-manager-popup");
-      popup.openPopup(document.getElementById("profile-manager-popup"), "after_start", 0, 0, false, false);
-    }
+      popup.openPopup(
+        document.getElementById("profile-manager-popup"),
+        "after_start",
+        0,
+        0,
+        false,
+        false
+      );
+    },
   });
 }
 
-if(Services.prefs.getBoolPref("floorp.browser.profile-manager.enabled", false)) {
+if (
+  Services.prefs.getBoolPref("floorp.browser.profile-manager.enabled", false)
+) {
   profileManager();
 }
 
 /**************************************** clock ****************************************/
 
-
-const locale = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).regionalPrefsLocales;
-const options = { month: 'short', day: 'numeric', weekday: 'short'}
+const locale = Cc["@mozilla.org/intl/ospreferences;1"].getService(
+  Ci.mozIOSPreferences
+).regionalPrefsLocales;
+const options = { month: "short", day: "numeric", weekday: "short" };
 
 function ClockFirst() {
   const id = "toolbarItemClock";
@@ -124,9 +153,8 @@ function checkBrowserLangForLabel() {
   const locale = navigator.language.split("-");
   if (locale[0] === "ja") {
     return now.toLocaleDateString("ja-JP", options);
-  } 
-    return now.toLocaleDateString();
-  
+  }
+  return now.toLocaleDateString();
 }
 
 function checkBrowserLangForToolTipText() {
@@ -136,10 +164,12 @@ function checkBrowserLangForToolTipText() {
   const options = { year: "numeric", month: "numeric", day: "numeric" };
   const locale = navigator.language.split("-");
   if (locale[0] === "ja") {
-    return `${year}年(令和${JPYear}年) ${now.toLocaleDateString("ja-JP", options)}`;
-  } 
-    return now.toLocaleDateString();
-  
+    return `${year}年(令和${JPYear}年) ${now.toLocaleDateString(
+      "ja-JP",
+      options
+    )}`;
+  }
+  return now.toLocaleDateString();
 }
 
 function setNowTime() {
@@ -152,7 +182,10 @@ function setNowTime() {
   const timeString = timeFormat.format(now);
   const clock = document.getElementById("toolbarItemClock");
   clock?.setAttribute("label", `${checkBrowserLangForLabel()} ${timeString}`);
-  clock?.setAttribute("tooltiptext", `${checkBrowserLangForToolTipText()} ${timeString}`);
+  clock?.setAttribute(
+    "tooltiptext",
+    `${checkBrowserLangForToolTipText()} ${timeString}`
+  );
 }
 
 if (Services.prefs.getBoolPref("floorp.browser.clock.enabled")) {

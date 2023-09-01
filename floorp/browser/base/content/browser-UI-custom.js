@@ -6,7 +6,7 @@
 //import utils
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const UICustomPrefHandler = function(pref, callback) {
+const UICustomPrefHandler = function (pref, callback) {
   let prefValue = Services.prefs.getBoolPref(pref, false);
   try {
     callback({
@@ -14,8 +14,10 @@ const UICustomPrefHandler = function(pref, callback) {
       prefValue,
       reason: "init",
     });
-  } catch (e) { console.error(e) }
-  Services.prefs.addObserver(pref, function() {
+  } catch (e) {
+    console.error(e);
+  }
+  Services.prefs.addObserver(pref, function () {
     let prefValue = Services.prefs.getBoolPref(pref, false);
     try {
       callback({
@@ -23,12 +25,14 @@ const UICustomPrefHandler = function(pref, callback) {
         prefValue,
         reason: "changed",
       });
-    } catch (e) { console.error(e) }
+    } catch (e) {
+      console.error(e);
+    }
   });
-}
+};
 
 // prefs
-UICustomPrefHandler("floorp.material.effect.enable", function(event) {
+UICustomPrefHandler("floorp.material.effect.enable", function (event) {
   if (event.prefValue) {
     let Tag = document.createElement("style");
     Tag.innerText = `@import url(chrome://browser/skin/options/micaforeveryone.css)`;
@@ -39,18 +43,21 @@ UICustomPrefHandler("floorp.material.effect.enable", function(event) {
   }
 });
 
-UICustomPrefHandler("floorp.Tree-type.verticaltab.optimization", function(event) {
-  if (event.prefValue) {
-    let Tag = document.createElement("style");
-    Tag.innerText = `@import url(chrome://browser/skin/options/treestyletab.css)`;
-    Tag.setAttribute("id", "floorp-optimizefortreestyletab");
-    document.head.appendChild(Tag);
-  } else {
-    document.getElementById("floorp-optimizefortreestyletab")?.remove();
+UICustomPrefHandler(
+  "floorp.Tree-type.verticaltab.optimization",
+  function (event) {
+    if (event.prefValue) {
+      let Tag = document.createElement("style");
+      Tag.innerText = `@import url(chrome://browser/skin/options/treestyletab.css)`;
+      Tag.setAttribute("id", "floorp-optimizefortreestyletab");
+      document.head.appendChild(Tag);
+    } else {
+      document.getElementById("floorp-optimizefortreestyletab")?.remove();
+    }
   }
-});
+);
 
-UICustomPrefHandler("floorp.optimized.msbutton.ope", function(event) {
+UICustomPrefHandler("floorp.optimized.msbutton.ope", function (event) {
   if (event.prefValue) {
     let Tag = document.createElement("style");
     Tag.innerText = `@import url(chrome://browser/skin/options/msbutton.css)`;
@@ -61,7 +68,7 @@ UICustomPrefHandler("floorp.optimized.msbutton.ope", function(event) {
   }
 });
 
-UICustomPrefHandler("floorp.bookmarks.bar.focus.mode", function(event) {
+UICustomPrefHandler("floorp.bookmarks.bar.focus.mode", function (event) {
   if (event.prefValue) {
     let Tag = document.createElement("style");
     Tag.innerText = `@import url(chrome://browser/skin/options/bookmarkbar_autohide.css)`;
@@ -72,24 +79,30 @@ UICustomPrefHandler("floorp.bookmarks.bar.focus.mode", function(event) {
   }
 });
 
-UICustomPrefHandler("floorp.bookmarks.fakestatus.mode", function(event) {
+UICustomPrefHandler("floorp.bookmarks.fakestatus.mode", function (event) {
   if (event.prefValue) {
-    setTimeout(function() {
-      document.getElementById("fullscreen-and-pointerlock-wrapper")
-        .after(document.getElementById("PersonalToolbar"));
-    }, event.reason === "init" ? 250 : 1);
+    setTimeout(
+      function () {
+        document
+          .getElementById("fullscreen-and-pointerlock-wrapper")
+          .after(document.getElementById("PersonalToolbar"));
+      },
+      event.reason === "init" ? 250 : 1
+    );
   } else if (event.reason === "changed") {
-      //Fix for the bug that bookmarksbar is on the navigation toolbar when the pref is cahaned to false
-      if (!Services.prefs.getBoolPref("floorp.navbar.bottom", false)) {
-        document.getElementById("navigator-toolbox")
-          .appendChild(document.getElementById("nav-bar"));
-      }
-      document.getElementById("navigator-toolbox")
-        .appendChild(document.getElementById("PersonalToolbar"));
+    //Fix for the bug that bookmarksbar is on the navigation toolbar when the pref is cahaned to false
+    if (!Services.prefs.getBoolPref("floorp.navbar.bottom", false)) {
+      document
+        .getElementById("navigator-toolbox")
+        .appendChild(document.getElementById("nav-bar"));
     }
+    document
+      .getElementById("navigator-toolbox")
+      .appendChild(document.getElementById("PersonalToolbar"));
+  }
 });
 
-UICustomPrefHandler("floorp.search.top.mode", function(event) {
+UICustomPrefHandler("floorp.search.top.mode", function (event) {
   if (event.prefValue) {
     let Tag = document.createElement("style");
     Tag.innerText = `@import url(chrome://browser/skin/options/move_page_inside_searchbar.css)`;
@@ -100,7 +113,7 @@ UICustomPrefHandler("floorp.search.top.mode", function(event) {
   }
 });
 
-UICustomPrefHandler("floorp.legacy.dlui.enable", function(event) {
+UICustomPrefHandler("floorp.legacy.dlui.enable", function (event) {
   if (event.prefValue) {
     let Tag = document.createElement("style");
     Tag.innerText = `@import url(chrome://browser/skin/options/browser-custum-dlmgr.css)`;
@@ -111,7 +124,7 @@ UICustomPrefHandler("floorp.legacy.dlui.enable", function(event) {
   }
 });
 
-UICustomPrefHandler("floorp.downloading.red.color", function(event) {
+UICustomPrefHandler("floorp.downloading.red.color", function (event) {
   if (event.prefValue) {
     let Tag = document.createElement("style");
     Tag.innerText = `@import url(chrome://browser/skin/options/downloading-redcolor.css`;
@@ -122,31 +135,36 @@ UICustomPrefHandler("floorp.downloading.red.color", function(event) {
   }
 });
 
-UICustomPrefHandler("floorp.navbar.bottom", function(event) {
+UICustomPrefHandler("floorp.navbar.bottom", function (event) {
   if (event.prefValue) {
     var Tag = document.createElement("style");
     Tag.setAttribute("id", "floorp-navvarcss");
     Tag.innerText = `@import url(chrome://browser/skin/options/navbar-botttom.css)`;
     document.head.appendChild(Tag);
-    document.getElementById("fullscreen-and-pointerlock-wrapper")
+    document
+      .getElementById("fullscreen-and-pointerlock-wrapper")
       .after(document.getElementById("nav-bar"));
   } else {
     document.getElementById("floorp-navvarcss")?.remove();
     if (event.reason === "changed") {
       //Fix for the bug that bookmarksbar is on the navigation toolbar when the pref is cahaned to false
 
-      document.getElementById("navigator-toolbox")
+      document
+        .getElementById("navigator-toolbox")
         .appendChild(document.getElementById("nav-bar"));
 
-      if (!Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
-        document.getElementById("navigator-toolbox")
+      if (
+        !Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)
+      ) {
+        document
+          .getElementById("navigator-toolbox")
           .appendChild(document.getElementById("PersonalToolbar"));
       }
     }
   }
 });
 
-UICustomPrefHandler("floorp.disable.fullscreen.notification", function(event) {
+UICustomPrefHandler("floorp.disable.fullscreen.notification", function (event) {
   if (event.prefValue) {
     var Tag = document.createElement("style");
     Tag.innerText = `@import url(chrome://browser/skin/options/disableFullScreenNotification.css)`;
@@ -157,7 +175,7 @@ UICustomPrefHandler("floorp.disable.fullscreen.notification", function(event) {
   }
 });
 
-UICustomPrefHandler("floorp.delete.browser.border", function(event) {
+UICustomPrefHandler("floorp.delete.browser.border", function (event) {
   if (event.prefValue) {
     var Tag = document.createElement("style");
     Tag.innerText = `@import url(chrome://browser/skin/options/delete-border.css)`;
@@ -184,14 +202,16 @@ if (!Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
 
 /*------------------------------------------- verticaltab -------------------------------------------*/
 
-UICustomPrefHandler("floorp.verticaltab.hover.enabled", function(event) {
-  if(Services.prefs.getIntPref("floorp.tabbar.style", false) != 2) {return;}
-   if (event.prefValue) {
-     var Tag = document.createElement("style");
-     Tag.innerText = `@import url(chrome://browser/skin/options/native-verticaltab-hover.css)`;
-     Tag.setAttribute("id", "floorp-vthover");
-     document.head.appendChild(Tag);
-   } else {
-     document.getElementById("floorp-vthover")?.remove();
-   }
+UICustomPrefHandler("floorp.verticaltab.hover.enabled", function (event) {
+  if (Services.prefs.getIntPref("floorp.tabbar.style", false) != 2) {
+    return;
+  }
+  if (event.prefValue) {
+    var Tag = document.createElement("style");
+    Tag.innerText = `@import url(chrome://browser/skin/options/native-verticaltab-hover.css)`;
+    Tag.setAttribute("id", "floorp-vthover");
+    document.head.appendChild(Tag);
+  } else {
+    document.getElementById("floorp-vthover")?.remove();
+  }
 });

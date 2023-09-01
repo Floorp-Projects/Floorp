@@ -8,16 +8,30 @@
 let checkItems = [];
 let contextMenuObserver = new MutationObserver(contextMenuObserverFunc);
 
-function addContextBox(id, l10n, insert, runFunction, checkID, checkedFunction) {
+function addContextBox(
+  id,
+  l10n,
+  insert,
+  runFunction,
+  checkID,
+  checkedFunction
+) {
   const contextMenu = document.createXULElement("menuitem");
   contextMenu.setAttribute("data-l10n-id", l10n);
   contextMenu.id = id;
   contextMenu.setAttribute("oncommand", runFunction);
 
-  const contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
-  contentAreaContextMenu.insertBefore(contextMenu, document.getElementById(insert));
+  const contentAreaContextMenu = document.getElementById(
+    "contentAreaContextMenu"
+  );
+  contentAreaContextMenu.insertBefore(
+    contextMenu,
+    document.getElementById(insert)
+  );
 
-  contextMenuObserver.observe(document.getElementById(checkID), { attributes: true });
+  contextMenuObserver.observe(document.getElementById(checkID), {
+    attributes: true,
+  });
   checkItems.push(checkedFunction);
 
   contextMenuObserverFunc();
@@ -45,7 +59,8 @@ function addOrRemoveShareModeCSS() {
   if (!cssExist) {
     const css = document.createElement("style");
     css.id = "sharemode";
-    css.textContent = "@import url(chrome://browser/skin/options/sharemode.css);";
+    css.textContent =
+      "@import url(chrome://browser/skin/options/sharemode.css);";
     document.head.appendChild(css);
   } else {
     cssExist.remove();

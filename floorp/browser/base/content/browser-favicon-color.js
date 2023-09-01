@@ -5,10 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
- function extractColorsFromBase64Image(base64Image) {
+function extractColorsFromBase64Image(base64Image) {
   if (!base64Image) {
-    return Promise.reject('No image provided');
+    return Promise.reject("No image provided");
   }
 
   const binaryData = atob(base64Image);
@@ -18,8 +17,8 @@
     byteArray[i] = binaryData.charCodeAt(i);
   }
 
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
   const img = new Image();
 
   return new Promise((resolve, reject) => {
@@ -28,7 +27,12 @@
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
 
-      const pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const pixelData = ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      ).data;
       const colors = [];
       let totalRed = 0;
       let totalGreen = 0;
@@ -42,7 +46,10 @@
         const green = pixelData[i + 1];
         const blue = pixelData[i + 2];
 
-        if (red === 255 && green === 255 && blue === 255 || red === 0 && green === 0 && blue === 0) {
+        if (
+          (red === 255 && green === 255 && blue === 255) ||
+          (red === 0 && green === 0 && blue === 0)
+        ) {
           continue;
         }
 
@@ -72,7 +79,7 @@
       resolve({
         colors,
         averageColor,
-        mostFrequentColor
+        mostFrequentColor,
       });
     };
 
@@ -97,8 +104,10 @@ function findMostFrequentValue(counts) {
 }
 
 function setFaviconColorToTitlebar() {
-  const base64Image = document.querySelector('.tab-icon-image[selected="true"]')?.src;
-  const base64ImageWithoutHeader = base64Image?.split(',')[1];
+  const base64Image = document.querySelector(
+    '.tab-icon-image[selected="true"]'
+  )?.src;
+  const base64ImageWithoutHeader = base64Image?.split(",")[1];
 
   extractColorsFromBase64Image(base64ImageWithoutHeader)
     .then(result => {
@@ -108,7 +117,8 @@ function setFaviconColorToTitlebar() {
       }
 
       let elem = document.createElement("style");
-      let textColor = result.averageColor - 0x222222 > 0xffffff / 2 ? "#000000" : "#ffffff";
+      let textColor =
+        result.averageColor - 0x222222 > 0xffffff / 2 ? "#000000" : "#ffffff";
       let CSS = `
         #navigator-toolbox:not(:-moz-lwtheme), #navigator-toolbox:-moz-lwtheme {
           background-color: ${result.averageColor} !important;
@@ -137,9 +147,15 @@ function setFaviconColorToTitlebar() {
 
 function enableFaviconColorToTitlebar() {
   setFaviconColorToTitlebar();
-  gBrowser.tabContainer.addEventListener("TabSelect", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.addEventListener(
+    "TabSelect",
+    setFaviconColorToTitlebar
+  );
   gBrowser.tabContainer.addEventListener("TabMove", setFaviconColorToTitlebar);
-  gBrowser.tabContainer.addEventListener("TabAttrModified", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.addEventListener(
+    "TabAttrModified",
+    setFaviconColorToTitlebar
+  );
   gBrowser.tabContainer.addEventListener("TabClose", setFaviconColorToTitlebar);
   gBrowser.tabContainer.addEventListener("TabOpen", setFaviconColorToTitlebar);
 }
@@ -150,11 +166,26 @@ function disableFaviconColorToTitlebar() {
     elems[i].remove();
   }
 
-  gBrowser.tabContainer.removeEventListener("TabSelect", setFaviconColorToTitlebar);
-  gBrowser.tabContainer.removeEventListener("TabMove", setFaviconColorToTitlebar);
-  gBrowser.tabContainer.removeEventListener("TabAttrModified", setFaviconColorToTitlebar);
-  gBrowser.tabContainer.removeEventListener("TabClose", setFaviconColorToTitlebar);
-  gBrowser.tabContainer.removeEventListener("TabOpen", setFaviconColorToTitlebar);
+  gBrowser.tabContainer.removeEventListener(
+    "TabSelect",
+    setFaviconColorToTitlebar
+  );
+  gBrowser.tabContainer.removeEventListener(
+    "TabMove",
+    setFaviconColorToTitlebar
+  );
+  gBrowser.tabContainer.removeEventListener(
+    "TabAttrModified",
+    setFaviconColorToTitlebar
+  );
+  gBrowser.tabContainer.removeEventListener(
+    "TabClose",
+    setFaviconColorToTitlebar
+  );
+  gBrowser.tabContainer.removeEventListener(
+    "TabOpen",
+    setFaviconColorToTitlebar
+  );
 }
 
 if (Services.prefs.getBoolPref("floorp.titlebar.favicon.color", true)) {
@@ -162,7 +193,7 @@ if (Services.prefs.getBoolPref("floorp.titlebar.favicon.color", true)) {
     enableFaviconColorToTitlebar();
   }, 1000);
 
-  Services.prefs.addObserver("floorp.titlebar.favicon.color",() => {
+  Services.prefs.addObserver("floorp.titlebar.favicon.color", () => {
     if (Services.prefs.getBoolPref("floorp.titlebar.favicon.color", true)) {
       enableFaviconColorToTitlebar();
     } else {

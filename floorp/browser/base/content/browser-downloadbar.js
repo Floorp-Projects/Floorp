@@ -3,9 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm")
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-if (Services.prefs.getBoolPref("floorp.browser.native.downloadbar.enabled", true)) {
+if (
+  Services.prefs.getBoolPref("floorp.browser.native.downloadbar.enabled", true)
+) {
   window.setTimeout(() => {
     function changeXULElementTagName(oldElementId, newTagName) {
       const oldElement = document.getElementById(oldElementId);
@@ -22,7 +24,9 @@ if (Services.prefs.getBoolPref("floorp.browser.native.downloadbar.enabled", true
       oldElement.parentNode.replaceChild(newElement, oldElement);
     }
 
-    document.getElementById("appcontent").appendChild(document.getElementById("downloadsPanel"));
+    document
+      .getElementById("appcontent")
+      .appendChild(document.getElementById("downloadsPanel"));
     document.getElementById("downloadsPanel").style.display = "block";
     document.getElementById("downloadsPanel").hidden = false;
 
@@ -127,11 +131,16 @@ if (Services.prefs.getBoolPref("floorp.browser.native.downloadbar.enabled", true
     const hideAllDownloadButtonElem = window.MozXULElement.parseXULToFragment(`
     <toolbarbutton id="hide-downloads-button" class="toolbarbutton-1" command="downloadsCmd_clearList" data-l10n-id="floorp-delete-all-downloads" />
     `);
-    const showAllDownloadTextAndButtonElem = window.MozXULElement.parseXULToFragment(`
+    const showAllDownloadTextAndButtonElem = window.MozXULElement
+      .parseXULToFragment(`
     <toolbarbutton id="show-downloads-button" class="toolbarbutton-1" oncommand="BrowserDownloadsUI();" data-l10n-id="floorp-show-all-downloads" />
     `);
 
-    document.getElementById("downloadsListBox").appendChild(showAllDownloadTextAndButtonElem);
-    document.getElementById("downloadsListBox").appendChild(hideAllDownloadButtonElem);
+    document
+      .getElementById("downloadsListBox")
+      .appendChild(showAllDownloadTextAndButtonElem);
+    document
+      .getElementById("downloadsListBox")
+      .appendChild(hideAllDownloadButtonElem);
   }, 1000);
 }

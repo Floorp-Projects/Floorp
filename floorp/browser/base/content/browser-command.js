@@ -7,27 +7,35 @@
 function OpenChromeDirectory() {
   const currProfDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
   const profileDir = currProfDir.path;
-  const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
+  const nsLocalFile = Components.Constructor(
+    "@mozilla.org/file/local;1",
+    "nsIFile",
+    "initWithPath"
+  );
   new nsLocalFile(profileDir).reveal();
 }
 
 function restartbrowser() {
   Services.obs.notifyObservers(null, "startupcache-invalidate");
 
-  const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
   env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
 
-  Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+  Services.startup.quit(
+    Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+  );
 }
 
 Services.obs.addObserver(restartbrowser, "floorp-restart-browser");
 
 /******************************************** StyleSheetService (userContent.css) ******************************/
 
-const sss = Cc["@mozilla.org/content/style-sheet-service;1"]
-          .getService(Ci.nsIStyleSheetService);
-const ios = Cc["@mozilla.org/network/io-service;1"]
-          .getService(Ci.nsIIOService);
+const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
+  Ci.nsIStyleSheetService
+);
+const ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 function loadStyleSheetWithNsStyleSheetService(styleSheetURL) {
   const uri = ios.newURI(styleSheetURL);
@@ -45,4 +53,3 @@ function unloadStyleSheetWithNsStyleSheetService(styleSheetURL) {
   const uri = ios.newURI(styleSheetURL);
   sss.unregisterSheet(uri, sss.USER_SHEET);
 }
-
