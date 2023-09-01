@@ -346,6 +346,13 @@ impl Quaternion {
             (vector.length() - 1.).abs() < 0.0001,
             "Only accept an unit direction vector to create a quaternion"
         );
+
+        // Quaternions between the range [360, 720] will treated as rotations at the other
+        // direction: [-360, 0]. And quaternions between the range [720*k, 720*(k+1)] will be
+        // treated as rotations [0, 720]. So it does not make sense to use quaternions to rotate
+        // the element more than ±360deg. Therefore, we have to make sure its range is (-360, 360).
+        let half_angle = angle.abs().rem_euclid(std::f64::consts::TAU).copysign(angle) / 2.;
+
         // Reference:
         // https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation
         //
@@ -356,10 +363,10 @@ impl Quaternion {
         //     = cos(theta/2) +
         //       x*sin(theta/2)i + y*sin(theta/2)j + z*sin(theta/2)k
         Quaternion(
-            vector.x as f64 * (angle / 2.).sin(),
-            vector.y as f64 * (angle / 2.).sin(),
-            vector.z as f64 * (angle / 2.).sin(),
-            (angle / 2.).cos(),
+            vector.x as f64 * half_angle.sin(),
+            vector.y as f64 * half_angle.sin(),
+            vector.z as f64 * half_angle.sin(),
+            half_angle.cos(),
         )
     }
 
@@ -1409,26 +1416,42 @@ impl Animate for ComputedRotate {
                 ))
             },
             (&Rotate::Rotate3D(_, ..), _) | (_, &Rotate::Rotate3D(_, ..)) => {
+                // https://drafts.csswg.org/css-transforms-2/#interpolation-of-transform-functions
+
                 let (from, to) = (self.resolve(), other.resolve());
-                let (mut fx, mut fy, mut fz, fa) =
+                // For interpolations with the primitive rotate3d(), the direction vectors of the
+                // transform functions get normalized first.
+                let (fx, fy, fz, fa) =
                     transform::get_normalized_vector_and_angle(from.0, from.1, from.2, from.3);
-                let (mut tx, mut ty, mut tz, ta) =
+                let (tx, ty, tz, ta) =
                     transform::get_normalized_vector_and_angle(to.0, to.1, to.2, to.3);
 
-                if fa == Angle::from_degrees(0.) {
-                    fx = tx;
-                    fy = ty;
-                    fz = tz;
-                } else if ta == Angle::from_degrees(0.) {
-                    tx = fx;
-                    ty = fy;
-                    tz = fz;
+                // The rotation angle gets interpolated numerically and the rotation vector of the
+                // non-zero angle is used or (0, 0, 1) if both angles are zero.
+                if fa.is_zero() || ta.is_zero() || (fx, fy, fz) == (tx, ty, tz) {
+                    let (x, y, z) = if fa.is_zero() && ta.is_zero() {
+                        (0., 0., 1.)
+                    } else if fa.is_zero() {
+                        (tx, ty, tz)
+                    } else {
+                        // ta.is_zero() or both vectors are equal.
+                        (fx, fy, fz)
+                    };
+                    return Ok(Rotate::Rotate3D(x, y, z, fa.animate(&ta, procedure)?));
                 }
 
-                if (fx, fy, fz) == (tx, ty, tz) {
-                    return Ok(Rotate::Rotate3D(fx, fy, fz, fa.animate(&ta, procedure)?));
-                }
-
+                // If the normalized vectors are not equal and both rotation angles are non-zero
+                // the transform functions get converted into 4x4 matrices first and interpolated
+                // as defined in section Interpolation of Matrices afterwards. However, per the
+                // spec issue [1], we prefer to converting the rotate3D into quaternion vectors
+                // directly, and then apply Slerp algorithm.
+                //
+                // Both ways should be identical, and converting rotate3D into quaternion vectors
+                // directly can avoid redundant math operations, e.g. the generation of the
+                // equivalent matrix3D and the unnecessary decomposition parts of translation,
+                // scale, skew, and persepctive in the matrix3D.
+                //
+                // [1] https://github.com/w3c/csswg-drafts/issues/9278
                 let fv = DirectionVector::new(fx, fy, fz);
                 let tv = DirectionVector::new(tx, ty, tz);
                 let fq = Quaternion::from_direction_and_angle(&fv, fa.radians64());
@@ -1469,14 +1492,13 @@ impl ComputeSquaredDistance for ComputedRotate {
                 let (mut tx, mut ty, mut tz, angle2) =
                     transform::get_normalized_vector_and_angle(to.0, to.1, to.2, to.3);
 
-                if angle1 == Angle::zero() {
-                    fx = tx;
-                    fy = ty;
-                    fz = tz;
-                } else if angle2 == Angle::zero() {
-                    tx = fx;
-                    ty = fy;
-                    tz = fz;
+                if angle1.is_zero() && angle2.is_zero() {
+                    (fx, fy, fz) = (0., 0., 1.);
+                    (tx, ty, tz) = (0., 0., 1.);
+                } else if angle1.is_zero() {
+                    (fx, fy, fz) = (tx, ty, tz);
+                } else if angle2.is_zero() {
+                    (tx, ty, tz) = (fx, fy, fz);
                 }
 
                 if (fx, fy, fz) == (tx, ty, tz) {
