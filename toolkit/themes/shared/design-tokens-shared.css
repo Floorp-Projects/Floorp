@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root,
-:host(.anonymous-content-host) {
+:root {
   /* Base tokens */
   /* Do not use base tokens directly as they don't carry any meaning. Refer to application tokens below. */
   /** Color **/
@@ -78,35 +77,50 @@
 }
 
 @media not (prefers-contrast) {
-  :root,
-  :host(.anonymous-content-host) {
+  :root {
     /* Color */
-    --color-background-information: light-dark(var(--color-blue-05), var(--color-blue-80));
-    --color-background-success: light-dark(var(--color-green-05), var(--color-green-80));
-    --color-background-warning: light-dark(var(--color-yellow-05), var(--color-yellow-80));
-    --color-background-critical: light-dark(var(--color-red-05), var(--color-red-80));
+    --color-background-information: var(--color-blue-05);;
+    --color-background-success: var(--color-green-05);
+    --color-background-warning: var(--color-yellow-05);
+    --color-background-critical: var(--color-red-05);
 
     /** Icon **/
-    --icon-color: light-dark(var(--color-gray-70), var(--color-gray-05));
-    --icon-color-information: light-dark(var(--color-blue-50), var(--color-blue-30));
-    --icon-color-success: light-dark(var(--color-green-50), var(--color-green-30));
-    --icon-color-warning: light-dark(var(--color-yellow-50), var(--color-yellow-30));
-    --icon-color-critical: light-dark(var(--color-red-50), var(--color-red-30));
+    --icon-color: var(--color-gray-70);
+    --icon-color-information: var(--color-blue-50);
+    --icon-color-success: var(--color-green-50);
+    --icon-color-warning: var(--color-yellow-50);
+    --icon-color-critical: var(--color-red-50);
 
     /* Text */
-    --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
+    --text-color: var(--color-gray-100);
+  }
+}
+
+@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+  :root {
+    /* Color */
+    --color-background-information: var(--color-blue-80);
+    --color-background-success: var(--color-green-80);
+    --color-background-warning: var(--color-yellow-80);
+    --color-background-critical: var(--color-red-80);
+
+    /** Icon **/
+    --icon-color: var(--color-gray-05);
+    --icon-color-information: var(--color-blue-30);
+    --icon-color-success: var(--color-green-30);
+    --icon-color-warning: var(--color-yellow-30);
+    --icon-color-critical: var(--color-red-30);
+
+    /* Text */
+    --text-color: var(--color-gray-05);
   }
 }
 
 @media (prefers-contrast) {
   :root,
-  :host(.anonymous-content-host) {
+  :host {
     /* Border */
     --border-color: var(--text-color);
-    --border-interactive-color: AccentColor;
-    --border-interactive-color-hover: ButtonText;
-    --border-interactive-color-active: AccentColor;
-    --border-interactive-color-disabled: GrayText;
 
     /* Button */
     --button-background-color: ButtonFace;
@@ -115,9 +129,9 @@
     --button-background-color-disabled: GrayText;
 
     /** Link **/
-    --link-color: LinkText;
-    --link-color-hover: LinkText;
-    --link-color-active: ActiveText;
+    --link-color: -moz-nativehyperlinktext;
+    --link-color-hover: -moz-nativehyperlinktext;
+    --link-color-active: -moz-nativehyperlinktext;
     --link-color-visited: var(--link-color);
 
     /* Color */
@@ -126,10 +140,6 @@
     --color-background-success: var(--color-canvas);
     --color-background-warning: var(--color-canvas);
     --color-background-critical: var(--color-canvas);
-    --color-accent-primary: AccentColor;
-    /* FIXME(emilio): These seem rather sketchy */
-    --color-accent-primary-hover: ButtonText;
-    --color-accent-primary-active: ButtonText;
 
     /** Icon **/
     --icon-color: var(--text-color);
@@ -142,22 +152,38 @@
     --text-color: CanvasText;
     --text-color-deemphasized: inherit;
   }
+}
 
-  @media (forced-colors) {
-    /* Applies to Windows HCM only, by default.
-       TODO(emilio): These seem rather sketchy */
-    :root,
-    :host(.anonymous-content-host) {
-      /* Border */
-      --border-interactive-color: ButtonText;
-      --border-interactive-color-hover: SelectedItem;
-      --border-interactive-color-active: ButtonText;
-      --border-interactive-color-disabled: GrayText;
+@media (forced-colors) {
+  /* Applies to Windows HCM only */
+  :root,
+  :host {
+    /* Border */
+    --border-interactive-color: ButtonText;
+    --border-interactive-color-hover: SelectedItem;
+    --border-interactive-color-active: ButtonText;
+    --border-interactive-color-disabled: GrayText;
 
-      /* Color */
-      --color-accent-primary: ButtonText;
-      --color-accent-primary-hover: SelectedItem;
-      --color-accent-primary-active: SelectedItem;
-    }
+    /* Color */
+    --color-accent-primary: ButtonText;
+    --color-accent-primary-hover: SelectedItem;
+    --color-accent-primary-active: SelectedItem;
+  }
+}
+
+@media (forced-colors: none) and (prefers-contrast)  {
+  /* Applies to macOS "increase contrast" only */
+  :root,
+  :host {
+    /* Border */
+    --border-interactive-color: AccentColor;
+    --border-interactive-color-hover: ButtonText;
+    --border-interactive-color-active: AccentColor;
+    --border-interactive-color-disabled: GrayText;
+
+    /* Color */
+    --color-accent-primary: AccentColor;
+    --color-accent-primary-hover: ButtonText;
+    --color-accent-primary-active: ButtonText;
   }
 }

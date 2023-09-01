@@ -109,7 +109,7 @@
 }
 
 #downloadsSummaryDescription {
-  color: LinkText;
+  color: -moz-nativehyperlinktext;
 }
 
 :root[lwt-popup-brighttext] #downloadsSummaryDescription {

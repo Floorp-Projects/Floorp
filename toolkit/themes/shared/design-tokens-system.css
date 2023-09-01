@@ -5,8 +5,7 @@
 @import url("chrome://global/skin/design-tokens-shared.css");
 
 @media not (prefers-contrast) {
-  :root,
-  :host(.anonymous-content-host) {
+  :root {
     /* Border */
     --border-interactive-color: color-mix(in srgb, currentColor 15%, var(--color-gray-60));
 
@@ -16,9 +15,9 @@
     --button-background-color-active: var(--button-active-bgcolor);
 
     /** Link **/
-    --link-color: LinkText;
-    --link-color-hover: LinkText;
-    --link-color-active: ActiveText;
+    --link-color: -moz-nativehyperlinktext;
+    --link-color-hover: -moz-nativehyperlinktext;
+    --link-color-active: -moz-nativehyperlinktext;
     --link-color-visited: var(--link-color);
 
     /* Color */
