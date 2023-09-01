@@ -185,26 +185,6 @@ mozilla::gfx::Point Convert2DPosition(const mozilla::LengthPercentage& aX,
                                       TransformReferenceBox& aRefBox,
                                       int32_t aAppUnitsPerDevPixel);
 
-// Shear type for decomposition.
-enum class ShearType { XY, XZ, YZ, Count };
-using ShearArray = mozilla::EnumeratedArray<ShearType, ShearType::Count, float>;
-
-/*
- * Implements the 2d transform matrix decomposition algorithm.
- */
-bool Decompose2DMatrix(const mozilla::gfx::Matrix& aMatrix,
-                       mozilla::gfx::Point3D& aScale, ShearArray& aShear,
-                       gfxQuaternion& aRotate,
-                       mozilla::gfx::Point3D& aTranslate);
-/*
- * Implements the 3d transform matrix decomposition algorithm.
- */
-bool Decompose3DMatrix(const mozilla::gfx::Matrix4x4& aMatrix,
-                       mozilla::gfx::Point3D& aScale, ShearArray& aShear,
-                       gfxQuaternion& aRotate,
-                       mozilla::gfx::Point3D& aTranslate,
-                       mozilla::gfx::Point4D& aPerspective);
-
 }  // namespace nsStyleTransformMatrix
 
 #endif
