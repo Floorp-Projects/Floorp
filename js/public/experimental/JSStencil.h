@@ -24,8 +24,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions, JS::ReadOnlyDecodeOptions
-#include "js/OffThreadScriptCompilation.h"  // JS::OffThreadCompileCallback
-#include "js/SourceText.h"                  // JS::SourceText
+#include "js/SourceText.h"   // JS::SourceText
 #include "js/Transcoding.h"  // JS::TranscodeBuffer, JS::TranscodeRange
 
 struct JS_PUBLIC_API JSContext;
@@ -33,7 +32,6 @@ class JS_PUBLIC_API JSTracer;
 
 // Underlying opaque type.
 namespace js {
-struct ParseTask;
 class FrontendContext;
 namespace frontend {
 struct CompilationStencil;
@@ -77,8 +75,6 @@ struct InstantiationStorage {
   friend JS_PUBLIC_API bool PrepareForInstantiate(
       JS::FrontendContext* fc, JS::Stencil& stencil,
       JS::InstantiationStorage& storage);
-
-  friend struct js::ParseTask;
 
  public:
   InstantiationStorage() = default;
@@ -198,8 +194,6 @@ extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
 
 namespace JS {
 
-class OffThreadToken;
-
 // Serialize the Stencil into the transcode buffer.
 extern JS_PUBLIC_API TranscodeResult EncodeStencil(JSContext* cx,
                                                    Stencil* stencil,
@@ -217,74 +211,6 @@ DecodeStencil(JS::FrontendContext* fc, const ReadOnlyDecodeOptions& options,
 // encoded as they are delazified.
 extern JS_PUBLIC_API bool StartIncrementalEncoding(JSContext* cx,
                                                    RefPtr<Stencil>&& stencil);
-
-}  // namespace JS
-
-// ************************************************************************
-//   Off-thread compilation/transcoding
-// ************************************************************************
-
-namespace JS {
-
-// Start an off-thread task to compile the source text into a JS::Stencil,
-// using the provided options.
-extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData);
-
-extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData);
-
-// Start an off-thread task to compile the module source text into a
-// JS::Stencil, using the provided options.
-extern JS_PUBLIC_API OffThreadToken* CompileModuleToStencilOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData);
-
-extern JS_PUBLIC_API OffThreadToken* CompileModuleToStencilOffThread(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData);
-
-// Start an off-thread task to decode stencil.
-//
-// The start of `buffer` and `cursor` should meet
-// IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
-// (This should be handled while encoding).
-//
-// `buffer` should be alive until the end of `FinishDecodeStencilOffThread`.
-extern JS_PUBLIC_API OffThreadToken* DecodeStencilOffThread(
-    JSContext* cx, const ReadOnlyDecodeOptions& options,
-    const TranscodeBuffer& buffer, size_t cursor,
-    OffThreadCompileCallback callback, void* callbackData);
-
-// The start of `range` should meet IsTranscodingBytecodeAligned and
-// AlignTranscodingBytecodeOffset.
-// (This should be handled while encoding).
-//
-// `range` should be alive until the end of `FinishDecodeStencilOffThread`.
-extern JS_PUBLIC_API OffThreadToken* DecodeStencilOffThread(
-    JSContext* cx, const ReadOnlyDecodeOptions& options,
-    const TranscodeRange& range, OffThreadCompileCallback callback,
-    void* callbackData);
-
-// Finish the off-thread task to compile the source text into a JS::Stencil,
-// started by JS::CompileToStencilOffThread, and return the result JS::Stencil.
-//
-// If `options.allocateInstantiationStorage` was true in
-// JS::CompileToStencilOffThread, pre-allocated JS::InstantiationStorage
-// is returned as `storage` out parameter.
-extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadStencil(
-    JSContext* cx, OffThreadToken* token,
-    InstantiationStorage* storage = nullptr);
-
-// Cancel the off-thread task to compile/decode.
-extern JS_PUBLIC_API void CancelOffThreadToken(JSContext* cx,
-                                               OffThreadToken* token);
 
 }  // namespace JS
 

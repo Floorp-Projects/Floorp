@@ -555,7 +555,6 @@ static void DeleteOffThreadJob(JSContext* cx, OffThreadJob* job) {
 }
 
 static void CancelOffThreadJobsForRuntime(JSContext* cx) {
-  CancelOffThreadParses(cx->runtime());
   ShellContext* sc = GetShellContext(cx);
   while (!sc->offThreadJobs.empty()) {
     OffThreadJob* job = sc->offThreadJobs.popCopy();

@@ -246,7 +246,6 @@ void JSRuntime::destroyRuntime() {
      * explicit canceling is needed for these.
      */
     CancelOffThreadIonCompile(this);
-    CancelOffThreadParses(this);
     CancelOffThreadDelazify(this);
     CancelOffThreadCompressions(this);
 

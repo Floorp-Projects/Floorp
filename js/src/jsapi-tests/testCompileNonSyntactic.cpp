@@ -9,7 +9,7 @@
 
 #include "js/CompilationAndEvaluation.h"  // JS::Compile
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::InstantiateOptions
-#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileToStencilOffThread, JS::FinishCompileToStencilOffThread, JS::InstantiateGlobalStencil
+#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::InstantiateGlobalStencil
 
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
@@ -19,34 +19,6 @@
 
 using namespace JS;
 using js::AutoLockMonitor;
-
-struct OffThreadTask {
-  OffThreadTask() : monitor(js::mutexid::ShellOffThreadState), token(nullptr) {}
-
-  OffThreadToken* waitUntilDone(JSContext* cx) {
-    AutoLockMonitor alm(monitor);
-    while (!token) {
-      alm.wait();
-    }
-    OffThreadToken* result = token;
-    token = nullptr;
-    return result;
-  }
-
-  void markDone(JS::OffThreadToken* tokenArg) {
-    AutoLockMonitor alm(monitor);
-    token = tokenArg;
-    alm.notify();
-  }
-
-  static void OffThreadCallback(OffThreadToken* token, void* context) {
-    auto self = static_cast<OffThreadTask*>(context);
-    self->markDone(token);
-  }
-
-  js::Monitor monitor MOZ_UNANNOTATED;
-  OffThreadToken* token;
-};
 
 BEGIN_TEST(testCompileNonsyntactic) {
   CHECK(testCompile(true));
@@ -91,24 +63,6 @@ bool testCompile(bool nonSyntactic) {
     CHECK(script);
     CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
   }
-
-  options.forceAsync = true;
-  OffThreadTask task;
-  OffThreadToken* token;
-
-  JS::SourceText<char16_t> srcBuf;
-  RefPtr<JS::Stencil> stencil;
-  CHECK(srcBuf.init(cx, src_16.data(), src_16.length(),
-                    JS::SourceOwnership::Borrowed));
-
-  CHECK(CompileToStencilOffThread(cx, options, srcBuf, task.OffThreadCallback,
-                                  &task));
-  CHECK(token = task.waitUntilDone(cx));
-  CHECK(stencil = FinishOffThreadStencil(cx, token));
-  InstantiateOptions instantiateOptions(options);
-  CHECK(script = InstantiateGlobalStencil(cx, instantiateOptions, stencil));
-  CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
-
   return true;
 }
 END_TEST(testCompileNonsyntactic);

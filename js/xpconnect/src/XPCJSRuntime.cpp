@@ -2528,10 +2528,6 @@ void JSReporter::CollectReports(WindowPaths* windowPaths,
                gStats.helperThread.stateData,
                "Memory used by HelperThreadState.");
 
-  REPORT_BYTES("explicit/js-non-window/helper-thread/parse-task"_ns, KIND_HEAP,
-               gStats.helperThread.parseTask,
-               "The memory used by ParseTasks waiting in HelperThreadState.");
-
   REPORT_BYTES(
       "explicit/js-non-window/helper-thread/ion-compile-task"_ns, KIND_HEAP,
       gStats.helperThread.ionCompileTask,

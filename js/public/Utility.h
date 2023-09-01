@@ -59,15 +59,14 @@ enum ThreadType {
   THREAD_TYPE_WASM_COMPILE_TIER1,    // 2
   THREAD_TYPE_WASM_COMPILE_TIER2,    // 3
   THREAD_TYPE_ION,                   // 4
-  THREAD_TYPE_PARSE,                 // 5
-  THREAD_TYPE_COMPRESS,              // 6
-  THREAD_TYPE_GCPARALLEL,            // 7
-  THREAD_TYPE_PROMISE_TASK,          // 8
-  THREAD_TYPE_ION_FREE,              // 9
-  THREAD_TYPE_WASM_GENERATOR_TIER2,  // 10
-  THREAD_TYPE_WORKER,                // 11
-  THREAD_TYPE_DELAZIFY,              // 12
-  THREAD_TYPE_DELAZIFY_FREE,         // 13
+  THREAD_TYPE_COMPRESS,              // 5
+  THREAD_TYPE_GCPARALLEL,            // 6
+  THREAD_TYPE_PROMISE_TASK,          // 7
+  THREAD_TYPE_ION_FREE,              // 8
+  THREAD_TYPE_WASM_GENERATOR_TIER2,  // 9
+  THREAD_TYPE_WORKER,                // 10
+  THREAD_TYPE_DELAZIFY,              // 11
+  THREAD_TYPE_DELAZIFY_FREE,         // 12
   THREAD_TYPE_MAX                    // Used to check shell function arguments
 };
 
