@@ -1008,12 +1008,8 @@ class RefTest(object):
             status = 1
 
         if status and not crashed:
-            msg = (
-                "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s"
-                % (self.lastTestSeen, status)
-            )
-            # use process_output so message is logged verbatim
-            self.log.process_output(None, msg)
+            msg = "application terminated with exit code %s" % (status)
+            self.log.shutdown_failure(group=self.lastTestSeen, message=msg)
 
         runner.cleanup()
         self.cleanup(profile.profile)

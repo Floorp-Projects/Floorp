@@ -551,6 +551,10 @@ class StructuredLogger(object):
 
         self._log_data("crash", data)
 
+    @log_action(Unicode("group", default=None), Unicode("message", default=None))
+    def shutdown_failure(self, data):
+        self._log_data("shutdown_failure", data)
+
     @log_action(
         Unicode("primary", default=None), List(Unicode, "secondary", default=None)
     )

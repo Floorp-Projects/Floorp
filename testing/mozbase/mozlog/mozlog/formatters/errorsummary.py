@@ -129,6 +129,12 @@ class ErrorSummaryFormatter(BaseFormatter):
         data = {"level": item["level"], "message": item["message"]}
         return self._output("log", data)
 
+    def shutdown_failure(self, item):
+        data = {"status": "FAIL", "test": item["group"], "message": item["message"]}
+        data["group"] = [g for g in self.groups if item["group"].endswith(g)][0]
+        self.groups[data["group"]]["status"] = "FAIL"
+        return self._output("log", data)
+
     def crash(self, item):
         data = {
             "test": item.get("test"),
