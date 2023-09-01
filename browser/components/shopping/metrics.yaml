@@ -184,3 +184,25 @@ shopping:
         description: >
           Whether the icon was used to open or close the Shopping sidebar.
         type: string
+
+  surface_show_more_reviews_button_clicked:
+    type: event
+    description: |
+      The user clicked to expand the recent reviews to see more.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849241
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849241
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+    send_in_pings:
+      - events
+    extra_keys:
+      action:
+        description: >
+          Whether the button was used to expand or collapse the more reviews
+          card.
+        type: string

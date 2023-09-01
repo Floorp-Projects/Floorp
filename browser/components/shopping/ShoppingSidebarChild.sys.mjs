@@ -277,6 +277,11 @@ export class ShoppingSidebarChild extends RemotePageChild {
       case "surfaceClosed":
         Glean.shopping.surfaceClosed.record({ source: details });
         break;
+      case "surfaceShowMoreReviewsButtonClicked":
+        Glean.shopping.surfaceShowMoreReviewsButtonClicked.record({
+          action: details,
+        });
+        break;
     }
   }
 }
