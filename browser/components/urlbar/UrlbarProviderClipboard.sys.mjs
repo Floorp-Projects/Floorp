@@ -163,4 +163,5 @@ class ProviderClipboard extends UrlbarProvider {
   }
 }
 
-export var UrlbarProviderClipboard = new ProviderClipboard();
+const UrlbarProviderClipboard = new ProviderClipboard();
+export { UrlbarProviderClipboard, CLIPBOARD_IMPRESSION_LIMIT };
