@@ -15,8 +15,8 @@ def test_query_paths(run_mach, capfd):
         "fuzzy",
         "--no-push",
         "-q",
-        "^test-linux '64-qr/debug-xpcshell-nofis-",
-        "caps/tests/unit/test_origin.js",
+        "^test-linux '64-qr/debug-mochitest-chrome-1proc-",
+        "caps/tests/mochitest/test_addonMayLoad.html",
     ]
     assert run_mach(cmd) == 0
 
@@ -27,7 +27,7 @@ def test_query_paths(run_mach, capfd):
     # with the path filtering.
     expected = """
     "tasks": [
-        "test-linux1804-64-qr/debug-xpcshell-nofis-1"
+        "test-linux1804-64-qr/debug-mochitest-chrome-1proc-1"
     ]""".lstrip()
 
     assert expected in output
