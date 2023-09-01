@@ -11,17 +11,20 @@ var { AppConstants } =  ChromeUtils.import(
 var { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs"
 );
+var WorkspaceUtils = ChromeUtils.importESModule(
+  "resource:///modules/WorkspaceUtils.sys.mjs"
+);
+
 
 XPCOMUtils.defineLazyGetter(this, "L10n", () => {
   return new Localization(["branding/brand.ftl", "browser/floorp", ]);
 });
 
 Preferences.addAll([
-  { id: "floorp.browser.workspace.closePopupAfterClick", type: "bool" },
-  { id: "floorp.browser.workspace.excludePinnedTabs", type: "bool" },
-  { id: "floorp.browser.workspace.manageOnBMS", type: "bool" },
-  { id: "floorp.browser.workspace.showWorkspaceName", type: "bool" },
-  { id: "floorp.browser.workspace.changeWorkspaceWithDefaultKey", type: "bool"},
+  { id: WorkspaceUtils.workspacesPreferences.WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF, type: "bool" },
+  { id: WorkspaceUtils.workspacesPreferences.WORKSPACE_MANAGE_ON_BMS_PREF, type: "bool" },
+  { id: WorkspaceUtils.workspacesPreferences.WORKSPACE_SHOW_WORKSPACE_NAME_PREF, type: "bool" },
+  { id: WorkspaceUtils.workspacesPreferences.WORKSPACE_CHANGE_WORKSPACE_WITH_DEFAULT_KEY_PREF, type: "bool"},
 ])
 
 function convertToDateAndTime(timestamp) {
@@ -39,9 +42,9 @@ async function resetWorkspaces() {
   const result = prompts.confirmEx(null, l10n.formatValueSync("workspaces-reset-service-title"), l10n.formatValueSync("workspaces-reset-warning"), flags, "", null, "", null, check);
   if (result == 0) {
     await Promise.all([
-      Services.prefs.clearUserPref("floorp.browser.workspace.all"),
-      Services.prefs.clearUserPref("floorp.browser.workspace.current"),
-      Services.prefs.clearUserPref("floorp.browser.workspace.tabs.state")
+      Services.prefs.clearUserPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF),
+      Services.prefs.clearUserPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF),
+      Services.prefs.clearUserPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TABS_PREF),
     ]);
     Services.obs.notifyObservers([], "floorp-restart-browser");
   }

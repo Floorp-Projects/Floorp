@@ -4,42 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { AddonManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/AddonManager.sys.mjs"
-);
-
-//use _gBrowser instead of gBrowser when startup
-const WORKSPACE_TAB_ENABLED_PREF = "floorp.browser.workspace.tab.enabled";
-const WORKSPACE_CURRENT_PREF = "floorp.browser.workspace.current";
-const WORKSPACE_ALL_PREF = "floorp.browser.workspace.all";
-const WORKSPACE_TABS_PREF = "floorp.browser.workspace.tabs.state";
-const WORKSPACE_MANAGE_ON_BMS_PREF = "floorp.browser.workspace.manageOnBMS";
-const WORKSPACE_SHOW_WORKSPACE_NAME_PREF = "floorp.browser.workspace.showWorkspaceName";
-const WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF =
-  "floorp.browser.workspace.closePopupAfterClick";
-const WORKSPACE_INFO_PREF = "floorp.browser.workspace.info";
-const WORKSPACE_BACKUPED_PREF = "floorp.browser.workspace.backuped";
-const WORKSPACE_CHANGE_WORKSPACE_WITH_DEFAULT_KEY_PREF = "floorp.browser.workspace.changeWorkspaceWithDefaultKey";
 const l10n = new Localization(["browser/floorp.ftl"], true);
-const defaultWorkspaceName = Services.prefs
-  .getStringPref(WORKSPACE_ALL_PREF)
-  .split(",")[0];
 
-const CONTAINER_ICONS = new Set([
-  "briefcase",
-  "cart",
-  "circle",
-  "dollar",
-  "fence",
-  "fingerprint",
-  "gift",
-  "vacation",
-  "food",
-  "fruit",
-  "pet",
-  "tree",
-  "chill",
-]);
+const WorkspaceUtils = ChromeUtils.importESModule(
+  "resource:///modules/WorkspaceUtils.sys.mjs"
+);
 
 const workspaceFunctions = {
   eventListeners: {
@@ -59,18 +28,18 @@ const workspaceFunctions = {
           if (!tab.hasAttribute("floorpWorkspace")) {
             tab.setAttribute(
               "floorpWorkspace",
-              Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
+              Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF)
             );
           }
           if (
             tab.getAttribute("floorpWorkspace") ==
-            Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
+            Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF)
           ) {
             lastTab = tab;
           }
           if (
             tab.getAttribute("floorpWorkspace") ==
-              Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF) &&
+              Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF) &&
             firstTab == null
           ) {
             tab.setAttribute("floorp-firstVisibleTab", "true");
@@ -97,7 +66,7 @@ const workspaceFunctions = {
           workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
 
           let currentWorkspace = Services.prefs.getStringPref(
-            WORKSPACE_CURRENT_PREF
+            WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
           );
           let count =
             workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceTabLength(
@@ -145,8 +114,8 @@ const workspaceFunctions = {
 
       handleWorkspaceTabPrefChange() {
         document.querySelector("#workspace-button").style.display =
-          Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF) ? "" : "none";
-        if (!Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF)) {
+          Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF) ? "" : "none";
+        if (!Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF)) {
           document
             .querySelector(`[floorp-firstVisibleTab]`)
             ?.removeAttribute("floorp-firstVisibleTab");
@@ -160,7 +129,7 @@ const workspaceFunctions = {
       handleWorkspaceManageOnBMSPrefChange() {
         /*
         const manageOnBMS = Services.prefs.getBoolPref(
-          WORKSPACE_MANAGE_ON_BMS_PREF
+          WorkspaceUtils.workspacesPreferences.WORKSPACE_MANAGE_ON_BMS_PREF
         );
 
         if (manageOnBMS) {
@@ -177,7 +146,7 @@ const workspaceFunctions = {
 
     keyboradEventListeners: {
       handle_keydown(event) {
-       if(Services.prefs.getBoolPref(WORKSPACE_CHANGE_WORKSPACE_WITH_DEFAULT_KEY_PREF)) {
+       if(Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CHANGE_WORKSPACE_WITH_DEFAULT_KEY_PREF)) {
         if (event.shiftKey && event.key === "ArrowUp") {
           workspaceFunctions.manageWorkspaceFunctions.changeWorkspaceToBeforeNext();
         } else if (event.shiftKey && event.key === "ArrowDown") {
@@ -191,30 +160,30 @@ const workspaceFunctions = {
   manageWorkspaceFunctions: {
     initWorkspace() {
       // First run
-      if (!Services.prefs.prefHasUserValue(WORKSPACE_CURRENT_PREF)) {
+      if (!Services.prefs.prefHasUserValue(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF)) {
         Services.prefs.setStringPref(
-          WORKSPACE_CURRENT_PREF,
+          WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF,
           l10n.formatValueSync("workspace-default")
         );
         Services.prefs.setStringPref(
-          WORKSPACE_ALL_PREF,
+          WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF,
           l10n.formatValueSync("workspace-default")
         );
       }
 
       let tabs = gBrowser.tabs;
 
-      if (Services.prefs.getStringPref(WORKSPACE_TABS_PREF) === "[]") {
+      if (Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TABS_PREF) === "[]") {
         for (let i = 0; i < tabs.length; i++) {
           tabs[i].setAttribute(
             "floorpWorkspace",
-            Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
+            Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF)
           );
         }
-      } else if (Services.prefs.getBoolPref(WORKSPACE_BACKUPED_PREF, false)) {
+      } else if (Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_BACKUPED_PREF, false)) {
         console.info("Backuped workspace found. Restoring...");
         let tabsStates = JSON.parse(
-          Services.prefs.getStringPref(WORKSPACE_TABS_PREF)
+          Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TABS_PREF)
         );
 
         let arryURLs = [];
@@ -251,16 +220,16 @@ const workspaceFunctions = {
           } else {
             tab.setAttribute(
               "floorpWorkspace",
-              Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
+              Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF)
             );
             console.info(
               `Tab ${i} has been set to workspace ${Services.prefs.getStringPref(
-                WORKSPACE_CURRENT_PREF
+                WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
               )} because of missing URL(${stateURL}).`
             );
           }
         }
-        Services.prefs.setBoolPref(WORKSPACE_BACKUPED_PREF, false);
+        Services.prefs.setBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_BACKUPED_PREF, false);
       }
 
       const toolbarButtonEle = window.MozXULElement.parseXULToFragment(`
@@ -278,13 +247,13 @@ const workspaceFunctions = {
       `);
 
       document.querySelector(".toolbar-items").before(toolbarButtonEle);
-      if (!Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF)) {
+      if (!Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF)) {
         document.querySelector("#workspace-button").style.display = "none";
       }
 
       // Add workspace menu
       let workspaceAll = Services.prefs
-        .getStringPref(WORKSPACE_ALL_PREF)
+        .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
         .split(",");
       for (let i = 0; i < workspaceAll.length; i++) {
         let label = workspaceAll[i];
@@ -300,7 +269,7 @@ const workspaceFunctions = {
 
     addNewWorkspace() {
       let allWorkspace = Services.prefs
-        .getStringPref(WORKSPACE_ALL_PREF)
+        .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
         .split(",");
       let l10n = new Localization(["browser/floorp.ftl"], true);
       let prompts = Services.prompt;
@@ -328,7 +297,7 @@ const workspaceFunctions = {
       ) {
         let label = input.value;
         let workspaceAll = Services.prefs
-          .getStringPref(WORKSPACE_ALL_PREF)
+          .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
           .split(",");
         try {
           workspaceFunctions.WorkspaceContextMenu.addWorkspaceElemToMenu(label);
@@ -342,7 +311,7 @@ const workspaceFunctions = {
           );
         }
         workspaceAll.push(label);
-        Services.prefs.setStringPref(WORKSPACE_ALL_PREF, workspaceAll);
+        Services.prefs.setStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF, workspaceAll);
       } else if (result === false) {
         /* empty */
       } else {
@@ -359,11 +328,11 @@ const workspaceFunctions = {
     deleteworkspace(workspace) {
       if (workspace !== defaultWorkspaceName) {
         let allWorkspaces = Services.prefs
-          .getCharPref(WORKSPACE_ALL_PREF)
+          .getCharPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
           .split(",");
         let index = allWorkspaces.indexOf(workspace);
         let currentWorkspace = Services.prefs.getStringPref(
-          WORKSPACE_CURRENT_PREF
+          WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
         );
 
         //move to other workspace
@@ -372,13 +341,13 @@ const workspaceFunctions = {
             allWorkspaces[0]
           );
           Services.prefs.setStringPref(
-            WORKSPACE_CURRENT_PREF,
+            WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF,
             defaultWorkspaceName
           );
           workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
         }
         allWorkspaces.splice(index, 1);
-        Services.prefs.setCharPref(WORKSPACE_ALL_PREF, allWorkspaces.join(","));
+        Services.prefs.setCharPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF, allWorkspaces.join(","));
 
         //delete workspace tabs
         let tabs = gBrowser.tabs;
@@ -424,11 +393,11 @@ const workspaceFunctions = {
       ) {
         input.value = input.value.replace(/\s+/g, "-");
         let workspaceAll = Services.prefs
-          .getStringPref(WORKSPACE_ALL_PREF)
+          .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
           .split(",");
         let index = workspaceAll.indexOf(label);
         workspaceAll[index] = input.value;
-        Services.prefs.setStringPref(WORKSPACE_ALL_PREF, workspaceAll);
+        Services.prefs.setStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF, workspaceAll);
 
         //Tabs
         let tabs = gBrowser.tabs;
@@ -456,11 +425,11 @@ const workspaceFunctions = {
         );
 
         let currentWorkspace = Services.prefs.getStringPref(
-          WORKSPACE_CURRENT_PREF
+          WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
         );
 
         if (currentWorkspace == label) {
-          Services.prefs.setStringPref(WORKSPACE_CURRENT_PREF, input.value);
+          Services.prefs.setStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF, input.value);
         }
       } else if (result === false) {
         /* empty */
@@ -490,7 +459,7 @@ const workspaceFunctions = {
     // eslint-disable-next-line no-dupe-keys
     addNewWorkspace() {
       let allWorkspace = Services.prefs
-        .getStringPref(WORKSPACE_ALL_PREF)
+        .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
         .split(",");
       let l10n = new Localization(["browser/floorp.ftl"], true);
       prompts = Services.prompt;
@@ -520,7 +489,7 @@ const workspaceFunctions = {
         label = label.replace(/\s+/g, "-");
 
         let workspaceAll = Services.prefs
-          .getStringPref(WORKSPACE_ALL_PREF)
+          .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
           .split(",");
         try {
           workspaceFunctions.WorkspaceContextMenu.addWorkspaceElemToMenu(label);
@@ -535,7 +504,7 @@ const workspaceFunctions = {
           return;
         }
         workspaceAll.push(label);
-        Services.prefs.setStringPref(WORKSPACE_ALL_PREF, workspaceAll);
+        Services.prefs.setStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF, workspaceAll);
       } else if (result === false) {
         /* empty */
       } else {
@@ -555,7 +524,7 @@ const workspaceFunctions = {
     setCurrentWorkspace() {
       let tabs = gBrowser.tabs;
       let currentWorkspace = Services.prefs.getStringPref(
-        WORKSPACE_CURRENT_PREF
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
       );
 
       document
@@ -571,7 +540,7 @@ const workspaceFunctions = {
         let workspace = tab.getAttribute("floorpWorkspace");
         if (
           workspace == currentWorkspace ||
-          !Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF)
+          !Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF)
         ) {
           gBrowser.showTab(tab);
           tab.removeAttribute("hidden");
@@ -586,7 +555,7 @@ const workspaceFunctions = {
           gBrowser.hideTab(tab);
         }
 
-        if (Services.prefs.getBoolPref(WORKSPACE_SHOW_WORKSPACE_NAME_PREF)) {
+        if (Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_SHOW_WORKSPACE_NAME_PREF)) {
           document
             .getElementById("workspace-button")
             .setAttribute("label", currentWorkspace.replace(/-/g, " "));
@@ -615,7 +584,7 @@ const workspaceFunctions = {
       let tabStateObject = [];
 
       // delete unmatched tabs
-      const allWorkspaces = Services.prefs.getStringPref(WORKSPACE_ALL_PREF);
+      const allWorkspaces = Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF);
       const allWorkspacesArray = allWorkspaces.split(",");
 
       //get all workspace tabs Workspace
@@ -625,7 +594,7 @@ const workspaceFunctions = {
         if (!allWorkspacesArray.includes(tabWorkspace)) {
           tab.setAttribute(
             "floorpWorkspace",
-            Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF)
+            Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF)
           );
           console.warn("Move default. unmatched tabs found");
         }
@@ -643,17 +612,17 @@ const workspaceFunctions = {
       }
 
       Services.prefs.setStringPref(
-        WORKSPACE_TABS_PREF,
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_TABS_PREF,
         JSON.stringify(tabStateObject)
       );
     },
 
     changeWorkspaceToAfterNext() {
       let currentWorkspace = Services.prefs.getStringPref(
-        WORKSPACE_CURRENT_PREF
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
       );
       let workspaceAll = Services.prefs
-        .getStringPref(WORKSPACE_ALL_PREF)
+        .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
         .split(",");
       let index = workspaceAll.indexOf(currentWorkspace);
       if (index == workspaceAll.length - 1) {
@@ -668,10 +637,10 @@ const workspaceFunctions = {
 
     changeWorkspaceToNext() {
       let allWorkspaces = Services.prefs
-        .getCharPref(WORKSPACE_ALL_PREF)
+        .getCharPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
         .split(",");
       let currentWorkspace = Services.prefs.getStringPref(
-        WORKSPACE_CURRENT_PREF
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
       );
       let index = allWorkspaces.indexOf(currentWorkspace);
       let nextWorkspace = allWorkspaces[index + 1] ?? allWorkspaces[0];
@@ -682,10 +651,10 @@ const workspaceFunctions = {
 
     changeWorkspaceToBeforeNext() {
       let currentWorkspace = Services.prefs.getStringPref(
-        WORKSPACE_CURRENT_PREF
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
       );
       let workspaceAll = Services.prefs
-        .getStringPref(WORKSPACE_ALL_PREF)
+        .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
         .split(",");
       let index = workspaceAll.indexOf(currentWorkspace);
       if (index == 0) {
@@ -702,7 +671,7 @@ const workspaceFunctions = {
     changeWorkspace(label) {
       let tabs = gBrowser.tabs;
 
-      Services.prefs.setStringPref(WORKSPACE_CURRENT_PREF, label);
+      Services.prefs.setStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF, label);
       if (
         !workspaceFunctions.tabFunctions.checkWorkspaceLastShowedTabAttributeExist(
           label
@@ -733,7 +702,7 @@ const workspaceFunctions = {
       workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
 
       const closeWorkspacePopupAfterClick = Services.prefs.getBoolPref(
-        WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF
       );
       if (closeWorkspacePopupAfterClick) {
         document.getElementById("workspace-button").click();
@@ -742,7 +711,7 @@ const workspaceFunctions = {
 
     checkWorkspaceTabLength(name) {
       const data = JSON.parse(
-        Services.prefs.getStringPref(WORKSPACE_TABS_PREF)
+        Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TABS_PREF)
       );
       let count = 0;
       for (let i = 0; i < data.length; i++) {
@@ -759,7 +728,7 @@ const workspaceFunctions = {
 
     checkWorkspaceInfoExist(name) {
       const data = JSON.parse(
-        Services.prefs.getStringPref(WORKSPACE_INFO_PREF)
+        Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_INFO_PREF)
       );
       for (let i = 0; i < data.length; i++) {
         const obj = data[i];
@@ -776,7 +745,7 @@ const workspaceFunctions = {
 
     rebuildWorkspaceMenu() {
       const allWorkspace = Services.prefs
-        .getStringPref(WORKSPACE_ALL_PREF)
+        .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
         .split(",");
       const workspaceMenu = document.getElementById("workspace-menu");
 
@@ -794,7 +763,7 @@ const workspaceFunctions = {
 
       //set workspaces icon
       let currentWorkspace = Services.prefs.getStringPref(
-        WORKSPACE_CURRENT_PREF
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
       );
       const iconURL =
         workspaceFunctions.iconFunctions.getWorkspaceIcon(currentWorkspace);
@@ -810,7 +779,7 @@ const workspaceFunctions = {
       }
 
       let settings = JSON.parse(
-        Services.prefs.getStringPref(WORKSPACE_INFO_PREF)
+        Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_INFO_PREF)
       );
 
       const targetWorkspaceNumber =
@@ -845,7 +814,7 @@ const workspaceFunctions = {
       }
 
       Services.prefs.setStringPref(
-        WORKSPACE_INFO_PREF,
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_INFO_PREF,
         JSON.stringify(settings)
       );
 
@@ -864,7 +833,7 @@ const workspaceFunctions = {
 
     getWorkspaceIcon(workspaceName) {
       const settings = JSON.parse(
-        Services.prefs.getStringPref(WORKSPACE_INFO_PREF)
+        Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_INFO_PREF)
       );
       const targetWorkspaceNumber =
         workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceInfoExist(
@@ -882,7 +851,7 @@ const workspaceFunctions = {
 
     deleteIcon(workspaceName) {
       const settings = JSON.parse(
-        Services.prefs.getStringPref(WORKSPACE_INFO_PREF)
+        Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_INFO_PREF)
       );
       const targetWorkspaceNumber =
         workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceInfoExist(
@@ -893,7 +862,7 @@ const workspaceFunctions = {
       }
       delete settings[targetWorkspaceNumber][workspaceName].icon;
       Services.prefs.setStringPref(
-        WORKSPACE_INFO_PREF,
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_INFO_PREF,
         JSON.stringify(settings)
       );
     },
@@ -955,7 +924,7 @@ const workspaceFunctions = {
       //add lastShowWorkspaceTab
       let currentTab = gBrowser.selectedTab;
       let currentWorkspace = Services.prefs.getStringPref(
-        WORKSPACE_CURRENT_PREF
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
       );
 
       document
@@ -1041,7 +1010,7 @@ const workspaceFunctions = {
       }
 
       let workspaceAll = Services.prefs
-        .getStringPref(WORKSPACE_ALL_PREF)
+        .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
         .split(",");
       for (let i = 0; i < workspaceAll.length; i++) {
         let workspace = workspaceAll[i];
@@ -1090,7 +1059,7 @@ const workspaceFunctions = {
       }
 
       if (
-        Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",")[0] !== label
+        Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF).split(",")[0] !== label
       ) {
         let deleteButtonElem = window.MozXULElement.parseXULToFragment(`
             <toolbarbutton id="workspace-delete" class="workspace-item-delete toolbarbutton-1"
@@ -1157,7 +1126,7 @@ const workspaceFunctions = {
 
     setMenuItemCheckCSS() {
       let currentWorkspace = Services.prefs.getStringPref(
-        WORKSPACE_CURRENT_PREF
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
       );
       document.getElementById("workspaceMenuItemCheckCSS")?.remove();
 
@@ -1321,10 +1290,10 @@ const workspaceFunctions = {
 
       let timeStamps = new Date().getTime();
       let tabsURLString = tabsURL.join(",");
-      let workspaceState = Services.prefs.getStringPref(WORKSPACE_TABS_PREF);
-      let workspaceAll = Services.prefs.getStringPref(WORKSPACE_ALL_PREF);
+      let workspaceState = Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TABS_PREF);
+      let workspaceAll = Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF);
       let currentWorkspace = Services.prefs.getStringPref(
-        WORKSPACE_CURRENT_PREF
+        WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF
       );
 
       let backupDataObject = {
@@ -1381,7 +1350,7 @@ const workspaceFunctions = {
         lineNum = lineNum.wrappedJSObject.lineNum;
       }
 
-      Services.prefs.setStringPref(WORKSPACE_BACKUPED_PREF, true);
+      Services.prefs.setStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_BACKUPED_PREF, true);
 
       //hide all elements
       let tagElem = document.createElement("style");
@@ -1433,9 +1402,9 @@ const workspaceFunctions = {
       }
 
       //restore workspace
-      Services.prefs.setStringPref(WORKSPACE_TABS_PREF, workspaceState);
-      Services.prefs.setStringPref(WORKSPACE_ALL_PREF, workspaceAll);
-      Services.prefs.setStringPref(WORKSPACE_CURRENT_PREF, currentWorkspace);
+      Services.prefs.setStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TABS_PREF, workspaceState);
+      Services.prefs.setStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF, workspaceAll);
+      Services.prefs.setStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF, currentWorkspace);
     },
   },
 };
@@ -1536,19 +1505,19 @@ const setEvenyListeners = function () {
   );
 
   Services.prefs.addObserver(
-    WORKSPACE_CURRENT_PREF,
+    WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF,
     workspaceFunctions.eventListeners.prefsEventListeners
       .handleWorkspacePrefChange
   );
   Services.prefs.addObserver(
-    WORKSPACE_TAB_ENABLED_PREF,
+    WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF,
     workspaceFunctions.eventListeners.prefsEventListeners
       .handleWorkspaceTabPrefChange
   );
 
   /*
   Services.prefs.addObserver(
-    WORKSPACE_MANAGE_ON_BMS_PREF,
+    WorkspaceUtils.workspacesPreferences.WORKSPACE_MANAGE_ON_BMS_PREF,
     workspaceFunctions.eventListeners.prefsEventListeners
        .handleWorkspaceManageOnBMSPrefChange
   );
@@ -1593,7 +1562,7 @@ const startWorkspace = function () {
       ]).then(() => {
         setEvenyListeners();
         const manageOnBMS = Services.prefs.getBoolPref(
-          WORKSPACE_MANAGE_ON_BMS_PREF
+          WorkspaceUtils.workspacesPreferences.WORKSPACE_MANAGE_ON_BMS_PREF
         );
         if (manageOnBMS) {
           workspaceFunctions.bmsWorkspaceFunctions.moveWorkspaceManagerToBMS();
@@ -1607,17 +1576,17 @@ const startWorkspace = function () {
 const tempDisabled = "floorp.browser.workspaces.disabledBySystem";
 function disableWorkspacesByDefaultCheck() {
   const allWorkspaces = Services.prefs
-    .getStringPref(WORKSPACE_ALL_PREF)
+    .getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
     .split(",");
   if (allWorkspaces.length > 1) {
     Services.prefs.setBoolPref(tempDisabled, false);
     startWorkspace();
   } else if (tempDisabled && !Services.prefs.prefHasUserValue(tempDisabled)) {
-    Services.prefs.setBoolPref(WORKSPACE_TAB_ENABLED_PREF, false);
+    Services.prefs.setBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF, false);
 
-    Services.prefs.addObserver(WORKSPACE_TAB_ENABLED_PREF, function () {
+    Services.prefs.addObserver(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF, function () {
       Services.prefs.setBoolPref(tempDisabled, false);
-      Services.prefs.removeObserver(WORKSPACE_TAB_ENABLED_PREF);
+      Services.prefs.removeObserver(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF);
     });
   } else {
     Services.prefs.setBoolPref(tempDisabled, false);
