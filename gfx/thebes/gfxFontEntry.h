@@ -68,102 +68,56 @@ typedef struct FT_MM_Var_ FT_MM_Var;
 
 class gfxCharacterMap : public gfxSparseBitSet {
  public:
-  // gfxCharacterMap instances may be shared across multiple threads via a
-  // global table managed by gfxPlatformFontList. Once a gfxCharacterMap is
-  // inserted in the global table, its mShared flag will be TRUE, and we
-  // cannot safely delete it except from gfxPlatformFontList (which will
-  // use a lock to ensure entries are removed from its table and deleted
-  // safely).
-
-  // AddRef() is pretty much standard. We don't return the refcount as our
-  // users don't care about it.
-  void AddRef() {
-    MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(gfxCharacterMap);
+  nsrefcnt AddRef() {
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
-    [[maybe_unused]] nsrefcnt count = ++mRefCnt;
-    NS_LOG_ADDREF(this, count, "gfxCharacterMap", sizeof(*this));
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "gfxCharacterMap", sizeof(*this));
+    return mRefCnt;
   }
 
-  // Custom Release(): if the object is referenced from the global shared
-  // table, and we're releasing the last *other* reference to it, then we
-  // notify the global table to consider also releasing its ref. (That may
-  // not actually happen, if another thread is racing with us and takes a
-  // new reference, or completes the release first!)
-  void Release() {
-    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
-    // We can't safely read this after we've decremented mRefCnt, so save it
-    // in a local variable here. Note that the value is never reset to false
-    // once it has been set to true (when recording the cmap in the shared
-    // table), so there's no risk of this resulting in a "false positive" when
-    // tested later. A "false negative" is possible but harmless; it would
-    // just mean we miss an opportunity to release a reference from the shared
-    // cmap table.
-    bool isShared = mShared;
-
-    // Ensure we only access mRefCnt once, for consistency if the object is
-    // being used by multiple threads.
-    [[maybe_unused]] nsrefcnt count = --mRefCnt;
-    NS_LOG_RELEASE(this, count, "gfxCharacterMap");
-
-    // If isShared was true, this object has been shared across threads. In
-    // that case, if the refcount went to 1, we notify the shared table so
-    // it can drop its reference and delete the object.
-    if (isShared) {
-      MOZ_ASSERT(count > 0);
-      if (count == 1) {
-        NotifyMaybeReleased(this);
-      }
-      return;
+  nsrefcnt Release() {
+    MOZ_ASSERT(0 != mRefCnt, "dup release");
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "gfxCharacterMap");
+    if (mRefCnt == 0) {
+      // Because we have a raw pointer in gfxPlatformFontList that we may race
+      // access with, we may not release here.
+      return NotifyMaybeReleased();
     }
-
-    // Otherwise, this object hasn't been shared and we can safely delete it
-    // as we must have been holding the only reference. (Note that if we were
-    // holding the only reference, there's no other owner who can have set
-    // mShared to true since we read it above.)
-    if (count == 0) {
-      delete this;
-    }
+    return mRefCnt;
   }
 
-  gfxCharacterMap() = default;
+  gfxCharacterMap() : mHash(0), mBuildOnTheFly(false), mShared(false) {}
 
   explicit gfxCharacterMap(const gfxSparseBitSet& aOther)
-      : gfxSparseBitSet(aOther) {}
+      : gfxSparseBitSet(aOther),
+        mHash(0),
+        mBuildOnTheFly(false),
+        mShared(false) {}
+
+  void CalcHash() { mHash = GetChecksum(); }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     return gfxSparseBitSet::SizeOfExcludingThis(aMallocSizeOf);
   }
 
   // hash of the cmap bitvector
-  uint32_t mHash = 0;
+  uint32_t mHash;
 
   // if cmap is built on the fly it's never shared
-  bool mBuildOnTheFly = false;
+  bool mBuildOnTheFly;
 
-  // Character map is shared globally. This can only be set by the thread that
-  // originally created the map, as no other thread can get a reference until
-  // it has been shared via the global table.
-  bool mShared = false;
+  // cmap is shared globally
+  bool mShared;
 
  protected:
-  friend class gfxPlatformFontList;
-
-  // Destructor should not be called except via Release().
-  // (Note that our "friend" gfxPlatformFontList also accesses this from its
-  // MaybeRemoveCmap method.)
-  ~gfxCharacterMap() = default;
-
-  nsrefcnt RefCount() const { return mRefCnt; }
-
-  void CalcHash() { mHash = GetChecksum(); }
-
-  static void NotifyMaybeReleased(gfxCharacterMap* aCmap);
+  nsrefcnt NotifyMaybeReleased();
 
   mozilla::ThreadSafeAutoRefCnt mRefCnt;
 
  private:
-  gfxCharacterMap(const gfxCharacterMap&) = delete;
-  gfxCharacterMap& operator=(const gfxCharacterMap&) = delete;
+  gfxCharacterMap(const gfxCharacterMap&);
+  gfxCharacterMap& operator=(const gfxCharacterMap&);
 };
 
 // Info on an individual font feature, for reporting available features
