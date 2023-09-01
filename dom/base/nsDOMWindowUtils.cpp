@@ -4287,10 +4287,8 @@ nsDOMWindowUtils::LeaveChaosMode() {
 
 NS_IMETHODIMP
 nsDOMWindowUtils::TriggerDeviceReset() {
-  ContentChild* cc = ContentChild::GetSingleton();
-  if (cc) {
-    cc->SendDeviceReset();
-    return NS_OK;
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   GPUProcessManager* pm = GPUProcessManager::Get();
