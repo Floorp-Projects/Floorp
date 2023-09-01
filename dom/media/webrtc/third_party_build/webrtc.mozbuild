@@ -29,7 +29,7 @@ if CONFIG['MOZ_WEBRTC']:
         DEFINES['WEBRTC_MAC'] = True
     elif CONFIG['OS_TARGET'] == 'WINNT':
         DEFINES['WEBRTC_WIN'] = True
-        DEFINES['RTC_ENABLE_WIN_WGC'] = False
+        DEFINES['RTC_ENABLE_WIN_WGC'] = True
         DEFINES['HAVE_WINSOCK2_H'] = True
     elif CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
         DEFINES['WEBRTC_BSD'] = True
