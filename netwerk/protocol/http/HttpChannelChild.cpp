@@ -361,11 +361,6 @@ void HttpChannelChild::ProcessOnStartRequest(
 #ifdef NIGHTLY_BUILD
              aUseResponseHead, aRequestHeaders, aArgs, start]() {
         TimeDuration delay = TimeStamp::Now() - start;
-        if (self->mLoadFlags & nsIRequest::LOAD_RECORD_START_REQUEST_DELAY) {
-          Telemetry::Accumulate(
-              Telemetry::HTTP_PRELOAD_IMAGE_STARTREQUEST_DELAY,
-              static_cast<uint32_t>(delay.ToMilliseconds()));
-        }
         glean::networking::http_content_onstart_delay.AccumulateRawDuration(
             delay);
 #else
