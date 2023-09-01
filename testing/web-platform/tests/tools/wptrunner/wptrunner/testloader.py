@@ -250,6 +250,7 @@ class TestLoader:
                  include_h2=True,
                  include_webtransport_h3=False,
                  skip_timeout=False,
+                 skip_crash=False,
                  skip_implementation_status=None,
                  chunker_kwargs=None):
 
@@ -266,6 +267,7 @@ class TestLoader:
         self.include_h2 = include_h2
         self.include_webtransport_h3 = include_webtransport_h3
         self.skip_timeout = skip_timeout
+        self.skip_crash = skip_crash
         self.skip_implementation_status = skip_implementation_status
 
         self.chunk_type = chunk_type
@@ -358,8 +360,12 @@ class TestLoader:
                 enabled = False
             if self.skip_timeout and test.expected() == "TIMEOUT":
                 enabled = False
-            if self.skip_implementation_status and test.implementation_status() in self.skip_implementation_status:
+            if self.skip_crash and test.expected() == "CRASH":
                 enabled = False
+            if self.skip_implementation_status and test.implementation_status() in self.skip_implementation_status:
+                # for backlog, we want to run timeout/crash:
+                if not (test.implementation_status() == "implementing" and test.expected() in ["TIMEOUT", "CRASH"]):
+                    enabled = False
             key = "enabled" if enabled else "disabled"
             tests[key][test_type].append(test)
 
