@@ -22,7 +22,7 @@
   --in-content-button-background-active: var(--fxview-element-background-active);
   --in-content-button-text-color-hover: var(--fxview-text-color-hover);
 
-  --fxview-sidebar-width: 286px;
+  --fxview-sidebar-width: 288px;
   --fxview-margin-top: 72px;
   --fxview-card-padding-inline: 4px;
 }
@@ -56,6 +56,7 @@
 
 body {
   display: grid;
+  gap: 12px;
   grid-template-columns: var(--fxview-sidebar-width) 1fr;
   background-color: var(--fxview-background-color);
   color: var(--fxview-text-primary-color);
@@ -112,7 +113,7 @@ fxview-tab-list.with-context-menu::part(secondary-button) {
 .sticky-container {
   position: sticky;
   top: 0;
-  padding-block: var(--fxview-margin-top) 42px;
+  padding-block: var(--fxview-margin-top) 33px;
   z-index: 1;
 }
 

@@ -29,12 +29,48 @@ button:hover {
   cursor: pointer;
 }
 
-button[selected] {
-  text-decoration: underline;
-  color: var(--in-content-accent-color);
+@media not (prefers-contrast) {
+  button {
+    border-inline-start: 2px solid transparent;
+    border-inline-end: none;
+    border-block: none;
+  }
+
+  button:hover,
+  button[selected]:hover {
+    background-color: var(--in-content-button-background-hover);
+    border-color: var(--in-content-button-border-color-hover);
+  }
+
+  button[selected]:hover {
+    border-inline-start-color: inherit;
+  }
+
+  button[selected],
+  button[selected]:hover {
+    border-inline-start: 2px solid;
+  }
+
+  button[selected]:not(:focus-visible) {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+
+  button[selected]:not(:hover) {
+    color: var(--in-content-accent-color);
+    background-color: color-mix(in srgb, var(--fxview-primary-action-background) 5%, transparent);
+    border-inline-start-color: var(--in-content-accent-color);
+  }
 }
 
-button:focus-visible {
+@media (prefers-color-scheme: dark) {
+  button[selected] {
+    background-color: color-mix(in srgb, var(--fxview-primary-action-background) 12%, transparent);
+  }
+}
+
+button:focus-visible,
+button[selected]:focus-visible {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-offset);
 }
@@ -65,13 +101,6 @@ button:focus-visible {
     color: SelectedItemText;
     background-color: SelectedItem;
     border-color: SelectedItem;
-  }
-}
-
-@media not (prefers-contrast) {
-  button:hover {
-    background-color: var(--in-content-button-background-hover);
-    border-color: var(--in-content-button-border-color-hover);
   }
 }
 
