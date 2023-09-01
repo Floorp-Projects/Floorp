@@ -49,7 +49,7 @@ add_task(async function testStoreIPHint() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("test.IPHint.com", "HTTPS", {
@@ -262,7 +262,7 @@ add_task(async function testIPHintWithFreshDNS() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   // To make sure NS_HTTP_REFRESH_DNS not be cleared.
   Services.prefs.setBoolPref("network.dns.disablePrefetch", true);

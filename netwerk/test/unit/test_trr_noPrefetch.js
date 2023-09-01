@@ -25,7 +25,7 @@ add_setup(async function setup() {
 
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
 

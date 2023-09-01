@@ -141,16 +141,16 @@ add_task(async function testHTTPSSVC() {
 add_task(async function test_aliasform() {
   trrServer = new TRRServer();
   await trrServer.start();
-  dump(`port = ${trrServer.port}\n`);
+  dump(`port = ${trrServer.port()}\n`);
 
   if (inChildProcess()) {
-    do_send_remote_message("mode3-port", trrServer.port);
+    do_send_remote_message("mode3-port", trrServer.port());
     await do_await_remote_message("mode3-port-done");
   } else {
     Services.prefs.setIntPref("network.trr.mode", 3);
     Services.prefs.setCharPref(
       "network.trr.uri",
-      `https://foo.example.com:${trrServer.port}/dns-query`
+      `https://foo.example.com:${trrServer.port()}/dns-query`
     );
   }
 

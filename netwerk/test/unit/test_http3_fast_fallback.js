@@ -192,7 +192,7 @@ add_task(async function testFastfallback() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 
@@ -281,7 +281,7 @@ add_task(async function testFastfallback1() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 
@@ -371,7 +371,7 @@ add_task(async function testFastfallbackWithEchConfig() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 
@@ -476,7 +476,7 @@ add_task(async function testFastfallbackWithpartialEchConfig() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 
@@ -558,7 +558,7 @@ add_task(async function testFastfallbackWithoutEchConfig() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 
@@ -629,7 +629,7 @@ add_task(async function testH3FallbackWithMultipleTransactions() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 
@@ -700,7 +700,7 @@ add_task(async function testTwoFastFallbackTimers() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 
@@ -795,7 +795,7 @@ add_task(async function testH3FastFallbackWithMultipleTransactions() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 
@@ -857,7 +857,7 @@ add_task(async function testFastfallbackToTheSameRecord() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.enable", true);
 

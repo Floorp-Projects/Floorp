@@ -72,7 +72,7 @@ add_task(async function test_trr_proxy_auth() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
 
   await trrServer.registerDoHAnswers("test.proxy.com", "A", {
@@ -106,7 +106,7 @@ add_task(async function test_trr_proxy_auth() {
         channel.notificationCallbacks = new Requestor();
         if (
           channel.URI.spec.startsWith(
-            `https://foo.example.com:${trrServer.port}/dns-query`
+            `https://foo.example.com:${trrServer.port()}/dns-query`
           )
         ) {
           authTriggered = true;

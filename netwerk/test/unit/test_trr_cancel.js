@@ -16,11 +16,11 @@ add_task(async function start_trr_server() {
     await trrServer.stop();
   });
   await trrServer.start();
-  dump(`port = ${trrServer.port}\n`);
+  dump(`port = ${trrServer.port()}\n`);
 
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
 });

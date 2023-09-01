@@ -7,15 +7,9 @@
 /* import-globals-from head_cache.js */
 /* import-globals-from head_cookies.js */
 /* import-globals-from head_channels.js */
+/* import-globals-from head_servers.js */
 
 /* globals require, __dirname, global, Buffer, process */
-
-const { NodeServer } = ChromeUtils.importESModule(
-  "resource://testing-common/httpd.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 
 /// Sets the TRR related prefs and adds the certificate we use for the HTTP2
 /// server.
@@ -247,90 +241,6 @@ class TRRDNSListener {
   }
 }
 
-/// Implements a basic HTTP2 server
-class TRRServerCode {
-  static async startServer(port) {
-    const fs = require("fs");
-    const options = {
-      key: fs.readFileSync(__dirname + "/http2-cert.key"),
-      cert: fs.readFileSync(__dirname + "/http2-cert.pem"),
-    };
-
-    const url = require("url");
-    global.path_handlers = {};
-    global.handler = (req, resp) => {
-      const path = req.headers[global.http2.constants.HTTP2_HEADER_PATH];
-      let u = url.parse(req.url, true);
-      let handler = global.path_handlers[u.pathname];
-      if (handler) {
-        handler(req, resp, u);
-        return;
-      }
-
-      // Didn't find a handler for this path.
-      let response = `<h1> 404 Path not found: ${path}</h1>`;
-      resp.setHeader("Content-Type", "text/html");
-      resp.setHeader("Content-Length", response.length);
-      resp.writeHead(404);
-      resp.end(response);
-    };
-
-    // key: string "name/type"
-    // value: array [answer1, answer2]
-    global.dns_query_answers = {};
-
-    // key: domain
-    // value: a map containing {key: type, value: number of requests}
-    global.dns_query_counts = {};
-
-    global.http2 = require("http2");
-    global.server = global.http2.createSecureServer(options, global.handler);
-
-    await global.server.listen(port);
-
-    global.dnsPacket = require(`${__dirname}/../dns-packet`);
-    global.ip = require(`${__dirname}/../node_ip`);
-
-    let serverPort = global.server.address().port;
-
-    if (process.env.MOZ_ANDROID_DATA_DIR) {
-      // When creating a server on Android we must make sure that the port
-      // is forwarded from the host machine to the emulator.
-      let adb_path = "adb";
-      if (process.env.MOZ_FETCHES_DIR) {
-        adb_path = `${process.env.MOZ_FETCHES_DIR}/android-sdk-linux/platform-tools/adb`;
-      }
-
-      await new Promise(resolve => {
-        const { exec } = require("child_process");
-        exec(
-          `${adb_path} reverse tcp:${serverPort} tcp:${serverPort}`,
-          (error, stdout, stderr) => {
-            if (error) {
-              console.log(`error: ${error.message}`);
-              return;
-            }
-            if (stderr) {
-              console.log(`stderr: ${stderr}`);
-            }
-            // console.log(`stdout: ${stdout}`);
-            resolve();
-          }
-        );
-      });
-    }
-
-    return serverPort;
-  }
-
-  static getRequestCount(domain, type) {
-    if (!global.dns_query_counts[domain]) {
-      return 0;
-    }
-    return global.dns_query_counts[domain][type] || 0;
-  }
-}
-
 /// This is the default handler for /dns-query
 /// It implements basic functionality for parsing the DoH packet, then
 /// queries global.dns_query_answers for available answers for the DNS query.
@@ -426,39 +336,35 @@ function trrQueryHandler(req, resp, url) {
   }
 }
 
+function getRequestCount(domain, type) {
+  if (!global.dns_query_counts[domain]) {
+    return 0;
+  }
+  return global.dns_query_counts[domain][type] || 0;
+}
+
 // A convenient wrapper around NodeServer
-class TRRServer {
+class TRRServer extends NodeHTTP2Server {
   /// Starts the server
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
   async start(port = 0) {
-    this.processId = await NodeServer.fork();
+    await super.start(port);
+    await this.execute(`( () => {
+      // key: string "name/type"
+      // value: array [answer1, answer2]
+      global.dns_query_answers = {};
 
-    await this.execute(TRRServerCode);
-    this.port = await this.execute(`TRRServerCode.startServer(${port})`);
+      // key: domain
+      // value: a map containing {key: type, value: number of requests}
+      global.dns_query_counts = {};
+
+      global.dnsPacket = require(\`\${__dirname}/../dns-packet\`);
+      global.ip = require(\`\${__dirname}/../node_ip\`);
+      global.http2 = require("http2");
+    })()`);
     await this.registerPathHandler("/dns-query", trrQueryHandler);
-  }
-
-  /// Executes a command in the context of the node server
-  async execute(command) {
-    return NodeServer.execute(this.processId, command);
-  }
-
-  /// Stops the server
-  async stop() {
-    if (this.processId) {
-      await NodeServer.kill(this.processId);
-      this.processId = undefined;
-    }
-  }
-
-  /// @path : string - the path on the server that we're handling. ex: /path
-  /// @handler : function(req, resp, url) - function that processes request and
-  ///     emits a response.
-  async registerPathHandler(path, handler) {
-    return this.execute(
-      `global.path_handlers["${path}"] = ${handler.toString()}`
-    );
+    await this.execute(getRequestCount);
   }
 
   /// @name : string - name we're providing answers for. eg: foo.example.com
@@ -484,9 +390,7 @@ class TRRServer {
   }
 
   async requestCount(domain, type) {
-    return this.execute(
-      `TRRServerCode.getRequestCount("${domain}", "${type}")`
-    );
+    return this.execute(`getRequestCount("${domain}", "${type}")`);
   }
 }
 

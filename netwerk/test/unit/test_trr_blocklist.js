@@ -20,12 +20,12 @@ add_task(async function checkBlocklisting() {
     await trrServer.stop();
   });
   await trrServer.start();
-  info(`port = ${trrServer.port}\n`);
+  info(`port = ${trrServer.port()}\n`);
 
   Services.dns.clearCache(true);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
 

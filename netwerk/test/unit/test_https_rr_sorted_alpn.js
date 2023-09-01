@@ -58,7 +58,7 @@ add_task(async function testSortedAlpnH3() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   Services.prefs.setBoolPref("network.http.http3.support_version1", true);
   await trrServer.registerDoHAnswers("test.alpn.com", "HTTPS", {
@@ -178,7 +178,7 @@ add_task(async function testSortedAlpnH2() {
   Services.prefs.setIntPref("network.trr.mode", 3);
   Services.prefs.setCharPref(
     "network.trr.uri",
-    `https://foo.example.com:${trrServer.port}/dns-query`
+    `https://foo.example.com:${trrServer.port()}/dns-query`
   );
   await trrServer.registerDoHAnswers("test.alpn_2.com", "HTTPS", {
     answers: [
