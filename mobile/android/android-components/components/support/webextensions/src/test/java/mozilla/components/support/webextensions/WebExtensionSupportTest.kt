@@ -859,6 +859,23 @@ class WebExtensionSupportTest {
     }
 
     @Test
+    fun `reacts to extensions process spawning disabled`() {
+        val store = BrowserStore()
+        val engine: Engine = mock()
+
+        assertFalse(store.state.showExtensionProcessDisabledPopup)
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onDisabledExtensionProcessSpawning()
+        store.waitUntilIdle()
+
+        assertTrue(store.state.showExtensionProcessDisabledPopup)
+    }
+
+    @Test
     fun `closes tabs from unsupported extensions`() {
         val store = BrowserStore(
             BrowserState(

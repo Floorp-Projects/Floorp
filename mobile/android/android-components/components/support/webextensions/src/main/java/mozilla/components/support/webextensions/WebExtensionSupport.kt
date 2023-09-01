@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.ExtensionProcessDisabledPopupAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.selector.allTabs
@@ -296,8 +297,7 @@ object WebExtensionSupport {
                 }
 
                 override fun onDisabledExtensionProcessSpawning() {
-                    // Show dialog via state change sent with new BrowserAction
-                    // https://bugzilla.mozilla.org/show_bug.cgi?id=1846979
+                    store.dispatch(ExtensionProcessDisabledPopupAction(showPopup = true))
                 }
             },
         )

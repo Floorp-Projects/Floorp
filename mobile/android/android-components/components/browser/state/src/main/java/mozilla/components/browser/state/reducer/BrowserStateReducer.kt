@@ -15,6 +15,7 @@ import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.DebugAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.ExtensionProcessDisabledPopupAction
 import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.LastAccessAction
@@ -75,6 +76,7 @@ internal object BrowserStateReducer {
             is HistoryMetadataAction -> HistoryMetadataReducer.reduce(state, action)
             is DebugAction -> DebugReducer.reduce(state, action)
             is ShoppingProductAction -> ShoppingProductStateReducer.reduce(state, action)
+            is ExtensionProcessDisabledPopupAction -> state.copy(showExtensionProcessDisabledPopup = action.showPopup)
         }
     }
 }
