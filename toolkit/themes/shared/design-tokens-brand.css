@@ -14,7 +14,7 @@
 @media not (prefers-contrast) {
   :root {
     /* Border */
-    --border-interactive-color: var(--color-gray-60);
+    --border-interactive-color: light-dark(var(--color-gray-60), var(--color-gray-50));
 
     /* Button */
     /* TODO Bug 1821203 - Gray use needs to be consolidated */
@@ -32,28 +32,16 @@
     --color-accent-primary: var(--brand-color-accent);
     --color-accent-primary-hover: var(--brand-color-accent-hover);
     --color-accent-primary-active: var(--brand-color-accent-active);
-    --brand-color-accent: var(--color-blue-50);
-    --brand-color-accent-hover: var(--color-blue-60);
-    --brand-color-accent-active: var(--color-blue-70);
-    --color-canvas: var(--color-white);
+
+    --brand-color-accent: light-dark(var(--color-blue-50), var(--color-cyan-50));
+    --brand-color-accent-hover: light-dark(var(--color-blue-60), var(--color-cyan-30));
+    --brand-color-accent-active: light-dark(var(--color-blue-70), var(--color-cyan-20));
+    --color-canvas: light-dark(var(--color-white), var(--color-gray-90));
 
     /* Text */
-    --text-color-deemphasized: color-mix(in srgb, currentColor 69%, transparent);
-  }
-}
-
-@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
-  :root {
-    /* Border */
-    --border-interactive-color: var(--color-gray-50);
-
-    /* Color */
-    --brand-color-accent: var(--color-cyan-50);
-    --brand-color-accent-hover: var(--color-cyan-30);
-    --brand-color-accent-active: var(--color-cyan-20);
-    --color-canvas: var(--color-gray-90);
-
-    /* Text */
-    --text-color-deemphasized: color-mix(in srgb, currentColor 75%, transparent);
+    --text-color-deemphasized: light-dark(
+      color-mix(in srgb, currentColor 69%, transparent),
+      color-mix(in srgb, currentColor 75%, transparent)
+    );
   }
 }
