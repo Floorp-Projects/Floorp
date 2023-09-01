@@ -10880,7 +10880,7 @@
 
 - name: media.webrtc.capture.allow-wgc
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 #endif
 
