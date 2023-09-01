@@ -6,7 +6,7 @@
 
 export const EXPORTED_SYMBOLS = ["BrowserManagerSidebar"];
 
-export const { Services } = ChromeUtils.import(
+const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
 );
 
