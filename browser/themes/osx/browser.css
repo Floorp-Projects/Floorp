@@ -175,6 +175,15 @@
 
 /* Address bar */
 
+@media not (prefers-contrast) {
+  :root:not(:-moz-lwtheme) #urlbar {
+    --urlbar-box-bgcolor: white;
+  }
+  :root[lwt-default-theme-in-dark-mode] #urlbar {
+    --urlbar-box-bgcolor: var(--toolbar-field-focus-background-color);
+  }
+}
+
 @media (prefers-contrast) {
   /* The "increase contrast" preference on macOS draws a 1px black line around
      panels, including the separate search bar. Since the Urlbar is not

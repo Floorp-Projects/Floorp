@@ -23,16 +23,6 @@
   --chrome-content-separator-color: rgba(0,0,0,.3);
 }
 
-:root[tabsintitlebar]:not(:-moz-lwtheme) {
-  background-color: ActiveCaption;
-  color: CaptionText;
-}
-
-:root[tabsintitlebar]:not(:-moz-lwtheme):-moz-window-inactive {
-  background-color: InactiveCaption;
-  color: InactiveCaptionText;
-}
-
 #menubar-items {
   flex-direction: column; /* for flex hack */
   justify-content: normal; /* align the menubar to the top also in customize mode */
@@ -105,6 +95,23 @@
   background-color: var(--toolbar-bgcolor);
   background-clip: padding-box;
   color: var(--toolbar-color);
+}
+
+/* See bug 1715990 about why we do this ourselves on HCM */
+@media (prefers-contrast) {
+  :root[tabsintitlebar]:not(:-moz-lwtheme) {
+    background-color: ActiveCaption;
+    color: CaptionText;
+  }
+
+  :root[tabsintitlebar]:not(:-moz-lwtheme):-moz-window-inactive {
+    background-color: InactiveCaption;
+    color: InactiveCaptionText;
+  }
+
+  #appcontent:not(:-moz-lwtheme) {
+    background-color: -moz-dialog;
+  }
 }
 
 #nav-bar:not([tabs-hidden="true"]) {
@@ -329,6 +336,15 @@ menuitem.bookmark-item {
 }
 
 /* Address bar */
+
+@media not (prefers-contrast) {
+  :root:not(:-moz-lwtheme) #urlbar {
+    --urlbar-box-bgcolor: white;
+  }
+  :root[lwt-default-theme-in-dark-mode] #urlbar {
+    --urlbar-box-bgcolor: var(--toolbar-field-focus-background-color);
+  }
+}
 
 #urlbar,
 #searchbar {
