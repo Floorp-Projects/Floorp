@@ -101,6 +101,10 @@ class TbplFormatter(BaseFormatter):
         return "TEST-INFO | %s: %s\n" % (data["process"], strstatus(data["exitcode"]))
 
     @output_subtests
+    def shutdown_failure(self, data):
+        return "TEST-UNEXPECTED-FAIL | %s | %s\n" % (data["group"], data["message"])
+
+    @output_subtests
     def crash(self, data):
         id = data["test"] if "test" in data else "pid: %s" % data["process"]
 
