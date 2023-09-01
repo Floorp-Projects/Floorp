@@ -198,19 +198,27 @@ const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
       }
       if (!menuitem) {
         menuitem = window.MozXULElement.parseXULToFragment(`
-				<menuitem label="${aLeafName}" id="usercssloader-${aLeafName}" type="checkbox" autocheck="false" oncommand="UCL.toggle(\'${aLeafName}\')" onclick="UCL.itemClick(event);" class="usercssloader-item ${
-          CSS.SHEET == this.AGENT_SHEET
-            ? "AGENT_SHEET"
-            : CSS.SHEET == this.AUTHOR_SHEET
-            ? "AUTHOR_SHEET"
-            : "USER_SHEET"
-        }"/>
+				<menuitem label="${aLeafName}" id="usercssloader-${aLeafName}"
+                  type="checkbox" autocheck="false"
+                  oncommand="UCL.toggle(\'${aLeafName}\')" onclick="UCL.itemClick(event);"
+                  class="usercssloader-item  ${this.selectSheet(CSS)}"/>
 				`).children[0];
         document
           .getElementById("usercssloader-menupopup")
           .appendChild(menuitem);
       }
       menuitem.setAttribute("checked", CSS.enabled);
+    },
+    selectSheet(CSS){
+      let result;
+      if (CSS.SHEET == this.AGENT_SHEET) {
+        result = "AGENT_SHEET";
+      } else if (CSS.SHEET == this.AUTHOR_SHEET) {
+        result = "AUTHOR_SHEET";
+      } else {
+        result = "USER_SHEET";
+      }
+      return result;
     },
     toggle(aLeafName) {
       var CSS = this.readCSS[aLeafName];
