@@ -304,6 +304,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // weather suggestions are turned on.
   ["suggest.weather", true],
 
+  // If `browser.urlbar.trending.featureGate` is true, this controls whether
+  // trending suggestions are turned on.
+  ["suggest.trending", true],
+
   // JSON'ed array of blocked quick suggest URL digests.
   ["quicksuggest.blockedDigests", ""],
 

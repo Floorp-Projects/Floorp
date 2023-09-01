@@ -2114,6 +2114,16 @@ export class UrlbarView {
       return null;
     }
 
+    let engineName =
+      row.result.payload.engine || Services.search.defaultEngine.name;
+
+    if (row.result.payload.trending) {
+      return {
+        id: "urlbar-group-trending",
+        args: { engine: engineName },
+      };
+    }
+
     if (
       row.result.isBestMatch &&
       row.result.providerName == lazy.UrlbarProviderQuickSuggest.name
@@ -2152,8 +2162,6 @@ export class UrlbarView {
       case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
         // Show "{ $engine } suggestions" if it's not the first label.
         if (currentLabel && row.result.payload.suggestion) {
-          let engineName =
-            row.result.payload.engine || Services.search.defaultEngine.name;
           return {
             id: "urlbar-group-search-suggestions",
             args: { engine: engineName },

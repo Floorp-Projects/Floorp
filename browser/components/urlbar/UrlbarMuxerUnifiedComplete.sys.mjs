@@ -132,11 +132,16 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
     }
 
+    // Show Top Sites above trending results.
+    let showSearchSuggestionsFirst = !(
+      lazy.UrlbarPrefs.get("suggest.trending") && !context.searchString
+    );
     // Determine the result groups to use for this sort.  In search mode with
     // an engine, show search suggestions first.
-    let rootGroup = context.searchMode?.engineName
-      ? lazy.UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true })
-      : lazy.UrlbarPrefs.resultGroups;
+    let rootGroup =
+      context.searchMode?.engineName || !showSearchSuggestionsFirst
+        ? lazy.UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst })
+        : lazy.UrlbarPrefs.resultGroups;
     lazy.logger.debug(`Groups: ${JSON.stringify(rootGroup)}`);
 
     // Fill the root group.
