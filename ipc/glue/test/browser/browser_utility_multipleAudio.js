@@ -14,7 +14,7 @@ add_setup(async function checkAudioDecodingNonUtility() {
   const isAudioDecodingNonUtilityAllowed = await SpecialPowers.getBoolPref(
     "media.allow-audio-non-utility"
   );
-  if (isNightly()) {
+  if (isNightlyOrEalyBeta()) {
     ok(
       !isAudioDecodingNonUtilityAllowed,
       "Audio decoding should not be allowed on non utility processes by default on Nightly"
@@ -38,7 +38,7 @@ add_task(async function testFailureAudioDecodingInRDD() {
 add_task(async function testFailureAudioDecodingInContent() {
   // TODO: When getting rid of audio decoding on non utility at all, this
   // should be removed
-  if (!isNightly()) {
+  if (!isNightlyOrEalyBeta()) {
     return;
   }
 
