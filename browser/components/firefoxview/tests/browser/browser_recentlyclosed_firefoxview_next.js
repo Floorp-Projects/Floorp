@@ -602,3 +602,37 @@ add_task(async function test_empty_states() {
     gBrowser.removeTab(gBrowser.selectedTab);
   });
 });
+
+add_task(async function test_observers_removed_when_view_is_hidden() {
+  clearHistory();
+
+  await open_then_close(URLs[0]);
+
+  await withFirefoxView({}, async function (browser) {
+    const { document } = browser.contentWindow;
+    navigateToCategory(document, "recentlyclosed");
+    const [listElem] = await waitForRecentlyClosedTabsList(document);
+    is(listElem.rowEls.length, 1);
+
+    const gBrowser = browser.getTabBrowser();
+    const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URLs[1]);
+    await open_then_close(URLs[2]);
+    await open_then_close(URLs[3]);
+    await open_then_close(URLs[4]);
+    is(
+      listElem.rowEls.length,
+      1,
+      "The list does not update when Firefox View is hidden."
+    );
+
+    await switchToFxViewTab(browser.ownerGlobal);
+    info("The list should update when Firefox View is visible.");
+    await BrowserTestUtils.waitForMutationCondition(
+      listElem,
+      { childList: true },
+      () => listElem.rowEls.length === 4
+    );
+
+    BrowserTestUtils.removeTab(tab);
+  });
+});

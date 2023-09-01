@@ -598,3 +598,15 @@ function navigateToCategory(document, category) {
   )[0];
   navButton.buttonEl.click();
 }
+
+/**
+ * Switch to the Firefox View tab.
+ *
+ * @param {Window} [win]
+ *   The window to use, if specified. Defaults to the global window instance.
+ * @return {Promise<MozTabbrowserTab>}
+ *   The tab switched to.
+ */
+async function switchToFxViewTab(win = window) {
+  return BrowserTestUtils.switchTab(win.gBrowser, win.FirefoxViewHandler.tab);
+}

@@ -33,9 +33,35 @@ export class ViewPage extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.ownerDocument.addEventListener("visibilitychange", this);
   }
 
-  disconnectedCallback() {}
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.ownerDocument.removeEventListener("visibilitychange", this);
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "visibilitychange":
+        if (this.ownerDocument.visibilityState === "visible") {
+          this.viewTabVisibleCallback();
+        } else {
+          this.viewTabHiddenCallback();
+        }
+        break;
+    }
+  }
+
+  /**
+   * Override this function to run a callback whenever Firefox View is visible.
+   */
+  viewTabVisibleCallback() {}
+
+  /**
+   * Override this function to run a callback whenever Firefox View is hidden.
+   */
+  viewTabHiddenCallback() {}
 
   enter() {
     this.selectedTab = true;
