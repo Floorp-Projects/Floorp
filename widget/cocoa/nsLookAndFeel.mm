@@ -176,19 +176,12 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = nsCocoaFeatures::OnMontereyOrLater() ? GetColorFromNSColor(NSColor.controlTextColor)
                                                    : NS_RGB(0xFF, 0xFF, 0xFF);
       break;
-    case ColorID::Captiontext:
     case ColorID::Menutext:
     case ColorID::Infotext:
       color = GetColorFromNSColor(NSColor.textColor);
       break;
     case ColorID::Windowtext:
       color = GetColorFromNSColor(NSColor.windowFrameTextColor);
-      break;
-    case ColorID::Activecaption:
-      color = GetColorFromNSColor(NSColor.gridColor);
-      break;
-    case ColorID::Activeborder:
-      color = GetColorFromNSColor(NSColor.keyboardFocusIndicatorColor);
       break;
     case ColorID::Appworkspace:
       color = NS_RGB(0xFF, 0xFF, 0xFF);
@@ -207,9 +200,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     case ColorID::Buttonhighlight:
       color = GetColorFromNSColor(NSColor.selectedControlColor);
-      break;
-    case ColorID::Inactivecaptiontext:
-      color = NS_RGB(0x45, 0x45, 0x45);
       break;
     case ColorID::Scrollbar:
       color = GetColorFromNSColor(NSColor.scrollBarColor);
@@ -244,8 +234,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     }
     case ColorID::Field:
     case ColorID::MozCombobox:
-    case ColorID::Inactiveborder:
-    case ColorID::Inactivecaption:
     case ColorID::MozDialog:
       color = GetColorFromNSColor(NSColor.controlBackgroundColor);
       break;
@@ -306,9 +294,24 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::Accentcolor:
       color = GetColorFromNSColor([NSColor controlAccentColor]);
       break;
+
+    case ColorID::Inactivecaption:
+    case ColorID::Activecaption: {
+      if (aScheme == ColorScheme::Light &&
+          NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast) {
+        // This has better contrast than the stand-in colors.
+        aColor = GetColorFromNSColor(NSColor.windowBackgroundColor);
+        return NS_OK;
+      }
+      [[fallthrough]];
+    }
     case ColorID::Marktext:
     case ColorID::Mark:
     case ColorID::SpellCheckerUnderline:
+    case ColorID::Captiontext:
+    case ColorID::Inactivecaptiontext:
+    case ColorID::Activeborder:
+    case ColorID::Inactiveborder:
       aColor = GetStandinForNativeColor(aID, aScheme);
       return NS_OK;
     default:

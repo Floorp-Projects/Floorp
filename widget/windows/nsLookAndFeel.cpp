@@ -795,14 +795,19 @@ auto nsLookAndFeel::ComputeTitlebarColors() -> TitlebarColors {
                            GetColorForSysColorIndex(COLOR_INACTIVEBORDER)};
 
   if (!nsUXThemeData::IsHighContrastOn()) {
-    // This is our current default light theme behavior.
-    result.mActiveLight =
-        result.mInactiveLight = {GetColorForSysColorIndex(COLOR_3DFACE),
-                                 GetColorForSysColorIndex(COLOR_WINDOWTEXT),
-                                 GetColorForSysColorIndex(COLOR_ACTIVEBORDER)};
+    // Use our non-native colors.
+    result.mActiveLight = {
+        GetStandinForNativeColor(ColorID::Activecaption, ColorScheme::Light),
+        GetStandinForNativeColor(ColorID::Captiontext, ColorScheme::Light),
+        GetStandinForNativeColor(ColorID::Activeborder, ColorScheme::Light)};
+    result.mInactiveLight = {
+        GetStandinForNativeColor(ColorID::Inactivecaption, ColorScheme::Light),
+        GetStandinForNativeColor(ColorID::Inactivecaptiontext,
+                                 ColorScheme::Light),
+        GetStandinForNativeColor(ColorID::Inactiveborder, ColorScheme::Light)};
   }
 
-  // Foreground and background taken from our dark theme.
+  // Our dark colors are always non-native.
   result.mActiveDark = {*GenericDarkColor(ColorID::Activecaption),
                         *GenericDarkColor(ColorID::Captiontext),
                         *GenericDarkColor(ColorID::Activeborder)};
@@ -852,32 +857,43 @@ auto nsLookAndFeel::ComputeTitlebarColors() -> TitlebarColors {
   result.mUseAccent =
       NS_SUCCEEDED(dwmKey->ReadIntValue(u"ColorPrevalence"_ns, &prevalence)) &&
       prevalence == 1;
-  if (result.mUseAccent) {
-    // TODO(emilio): Consider reading ColorizationColorBalance to compute a
-    // more correct border color, see [1]. Though for opaque accent colors this
-    // isn't needed.
-    //
-    // [1]:
-    // https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:ui/color/win/accent_color_observer.cc;l=42;drc=9d4eb7ed25296abba8fd525a6bdd0fdbf4bcdd9f
-    result.mActiveLight = result.mActiveDark = {
-        *result.mAccent, *result.mAccentText, *result.mAccent};
-    if (result.mAccentInactive) {
-      result.mInactiveLight = result.mInactiveDark = {
-          *result.mAccentInactive, *result.mAccentInactiveText,
-          *result.mAccentInactive};
-    } else {
-      // The 153 matches the .6 opacity from browser-aero.css, which says it
-      // was calculated to match the opacity change of Windows Explorer
-      // titlebar text change for inactive windows.
-      result.mInactiveLight = {
-          NS_ComposeColors(*result.mAccent, NS_RGBA(255, 255, 255, 153)),
-          NS_ComposeColors(*result.mAccentText, NS_RGBA(255, 255, 255, 153)),
-          NS_RGB(57, 57, 57)};
-      result.mInactiveDark = {
-          NS_ComposeColors(*result.mAccent, NS_RGBA(0, 0, 0, 153)),
-          NS_ComposeColors(*result.mAccentText, NS_RGBA(0, 0, 0, 153)),
-          NS_RGB(57, 57, 57)};
-    }
+  if (!result.mUseAccent) {
+    return result;
+  }
+
+  // TODO(emilio): Consider reading ColorizationColorBalance to compute a
+  // more correct border color, see [1]. Though for opaque accent colors this
+  // isn't needed.
+  //
+  // [1]:
+  // https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:ui/color/win/accent_color_observer.cc;l=42;drc=9d4eb7ed25296abba8fd525a6bdd0fdbf4bcdd9f
+  result.mActiveDark.mBorder = result.mActiveLight.mBorder = *result.mAccent;
+  result.mInactiveDark.mBorder = result.mInactiveLight.mBorder =
+      result.mAccentInactive.valueOr(NS_RGB(57, 57, 57));
+  if (!StaticPrefs::widget_windows_titlebar_accent_enabled()) {
+    return result;
+  }
+
+  result.mActiveLight.mBg = result.mActiveDark.mBg = *result.mAccent;
+  result.mActiveLight.mFg = result.mActiveDark.mFg = *result.mAccentText;
+  if (result.mAccentInactive) {
+    result.mInactiveLight.mBg = result.mInactiveDark.mBg =
+        *result.mAccentInactive;
+    result.mInactiveLight.mFg = result.mInactiveDark.mFg =
+        *result.mAccentInactiveText;
+  } else {
+    // The 153 matches the .6 opacity from browser-aero.css, which says it
+    // was calculated to match the opacity change of Windows Explorer
+    // titlebar text change for inactive windows.
+    result.mInactiveLight.mBg =
+        NS_ComposeColors(*result.mAccent, NS_RGBA(255, 255, 255, 153));
+    result.mInactiveLight.mFg =
+        NS_ComposeColors(*result.mAccentText, NS_RGBA(255, 255, 255, 153));
+
+    result.mInactiveDark.mBg =
+        NS_ComposeColors(*result.mAccent, NS_RGBA(0, 0, 0, 153));
+    result.mInactiveDark.mFg =
+        NS_ComposeColors(*result.mAccentText, NS_RGBA(0, 0, 0, 153));
   }
   return result;
 }
