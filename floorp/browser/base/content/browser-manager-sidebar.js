@@ -1,7 +1,3 @@
-/* eslint-disable no-restricted-globals */
-/* eslint-disable mozilla/no-compare-against-boolean-literals */
-/* eslint-disable complexity */
-/* eslint-disable no-nested-ternary */
 /* eslint-disable no-undef */
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -144,7 +140,7 @@ const bmsController = {
         fxSidebar.style.order = "5";
       }
     },
-    selectSidebarItem: () => {
+    selectSidebarItem: (event) => {
       let custom_url_id = event.target.id.replace("select-", "");
       if (bmsController.nowPage == custom_url_id) {
         bmsController.controllFunctions.changeVisibleWenpanel();
@@ -461,7 +457,7 @@ const bmsController = {
                 initialBrowsingContextGroupId="40"
               ${isWeb ? `
                 usercontextid="${(typeof wibpanel_usercontext) == "number" ? String(wibpanel_usercontext) : "0"}"
-                changeuseragent="${webpanel_userAgent == true}"
+                changeuseragent="${webpanel_userAgent ? "true" : "false"}"
                 webextension-view-type="sidebar"
                 type="content"
                 remote="true"
@@ -495,7 +491,7 @@ const bmsController = {
           sidebarItem.classList.add("sicon-list");
           sidebarItem.setAttribute(
             "oncommand",
-            "bmsController.eventFunctions.selectSidebarItem()"
+            "bmsController.eventFunctions.selectSidebarItem(event)"
           );
           if (BROWSER_SIDEBAR_DATA.data[elem].url.slice(0, 8) == "floorp//") {
             if (BROWSER_SIDEBAR_DATA.data[elem].url in STATIC_SIDEBAR_DATA) {
