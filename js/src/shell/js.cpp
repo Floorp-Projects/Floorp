@@ -6,7 +6,9 @@
 
 /* JS shell. */
 
+#include "mozilla/AlreadyAddRefed.h"  // mozilla::already_AddRefed
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF, MOZ_RELEASE_ASSERT, MOZ_CRASH
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
@@ -119,17 +121,18 @@
 #include "js/CallAndConstruct.h"  // JS::Call, JS::IsCallable, JS_CallFunction, JS_CallFunctionValue
 #include "js/CharacterEncoding.h"  // JS::StringIsASCII
 #include "js/CompilationAndEvaluation.h"
-#include "js/CompileOptions.h"
+#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::CompileOptions, JS::OwningCompileOptions, JS::DecodeOptions, JS::InstantiateOptions
 #include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Debug.h"
-#include "js/Equality.h"                   // JS::SameValue
-#include "js/ErrorReport.h"                // JS::PrintError
-#include "js/Exception.h"                  // JS::StealPendingExceptionStack
-#include "js/experimental/CodeCoverage.h"  // js::EnableCodeCoverage
-#include "js/experimental/CTypes.h"        // JS::InitCTypesClass
+#include "js/Equality.h"                    // JS::SameValue
+#include "js/ErrorReport.h"                 // JS::PrintError
+#include "js/Exception.h"                   // JS::StealPendingExceptionStack
+#include "js/experimental/CodeCoverage.h"   // js::EnableCodeCoverage
+#include "js/experimental/CompileScript.h"  // JS::NewFrontendContext, JS::DestroyFrontendContext, JS::HadFrontendErrors, JS::ConvertFrontendErrorsToRuntimeErrors, JS::CompileGlobalScriptToStencil, JS::CompileModuleScriptToStencil, JS::CompilationStorage
+#include "js/experimental/CTypes.h"         // JS::InitCTypesClass
 #include "js/experimental/Intl.h"  // JS::AddMoz{DateTimeFormat,DisplayNames}Constructor
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJitGetterInfo, JSJit{Getter,Setter}Op, JSJitInfo
-#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileToStencilOffThread, JS::FinishCompileToStencilOffThread
+#include "js/experimental/JSStencil.h"   // JS::Stencil, JS::DecodeStencil
 #include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
 #include "js/experimental/TypedData.h"   // JS_NewUint8Array
 #include "js/friend/DumpFunctions.h"     // JS::FormatStackDump
@@ -154,15 +157,15 @@
 #include "js/Realm.h"
 #include "js/RegExp.h"  // JS::ObjectIsRegExp
 #include "js/ScriptPrivate.h"
-#include "js/SourceText.h"
+#include "js/SourceText.h"  // JS::SourceText
 #include "js/StableStringChars.h"
 #include "js/Stack.h"
 #include "js/StreamConsumer.h"
 #include "js/StructuredClone.h"
 #include "js/SweepingAPI.h"
-#include "js/Transcoding.h"  // JS::TranscodeBuffer, JS::TranscodeRange
-#include "js/Warnings.h"     // JS::SetWarningReporter
-#include "js/WasmModule.h"   // JS::WasmModule
+#include "js/Transcoding.h"  // JS::TranscodeBuffer, JS::TranscodeRange, JS::IsTranscodeFailureResult
+#include "js/Warnings.h"    // JS::SetWarningReporter
+#include "js/WasmModule.h"  // JS::WasmModule
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"  // js::IsDeadProxyObject
 #include "shell/jsoptparse.h"
@@ -389,40 +392,79 @@ static void InstallCoverageSignalHandlers() {
 
 // An off-thread parse or decode job.
 class js::shell::OffThreadJob {
+  static constexpr size_t kCompileStackQuota = 128 * sizeof(size_t) * 1024;
+  static constexpr size_t kThreadStackQuota =
+      kCompileStackQuota + 128 * sizeof(size_t) * 1024;
+
   enum State {
-    RUNNING,   // Working; no token.
-    DONE,      // Finished; have token.
+    RUNNING,   // Working; no stencil.
+    DONE,      // Finished; have stencil.
     CANCELLED  // Cancelled due to error.
   };
 
  public:
-  using Source = mozilla::Variant<JS::UniqueTwoByteChars, JS::TranscodeBuffer>;
+  enum class Kind {
+    CompileScript,
+    CompileModule,
+    Decode,
+  };
 
-  OffThreadJob(ShellContext* sc, Source&& source);
+  OffThreadJob(ShellContext* sc, Kind kind, JS::SourceText<char16_t>&& srcBuf);
+  OffThreadJob(ShellContext* sc, Kind kind, JS::TranscodeBuffer&& xdrBuf);
+
   ~OffThreadJob();
 
-  void cancel();
-  void markDone(JS::OffThreadToken* newToken);
-  JS::OffThreadToken* waitUntilDone(JSContext* cx);
+  bool init(JSContext* cx, const JS::ReadOnlyCompileOptions& options);
+  bool dispatch();
 
-  char16_t* sourceChars() { return source.as<UniqueTwoByteChars>().get(); }
-  JS::TranscodeBuffer& xdrBuffer() { return source.as<JS::TranscodeBuffer>(); }
+  static void OffThreadMain(OffThreadJob* self);
+  void run();
+
+  void cancel();
+  void waitUntilDone();
+
+  already_AddRefed<JS::Stencil> stealStencil(JSContext* cx);
 
  public:
   const int32_t id;
 
  private:
-  js::Monitor& monitor;
-  State state;
-  JS::OffThreadToken* token;
-  Source source;
+  Kind kind_;
+  State state_;
+
+  JS::FrontendContext* fc_ = nullptr;
+  JS::OwningCompileOptions options_;
+
+  UniquePtr<Thread> thread_;
+
+  JS::SourceText<char16_t> srcBuf_;
+  JS::TranscodeBuffer xdrBuf_;
+
+  RefPtr<JS::Stencil> stencil_;
+
+  JS::TranscodeResult transcodeResult_ = JS::TranscodeResult::Ok;
 };
 
-static OffThreadJob* NewOffThreadJob(JSContext* cx, CompileOptions& options,
-                                     OffThreadJob::Source&& source) {
+template <typename T>
+static OffThreadJob* NewOffThreadJob(JSContext* cx, OffThreadJob::Kind kind,
+                                     JS::ReadOnlyCompileOptions& options,
+                                     T&& source) {
   ShellContext* sc = GetShellContext(cx);
-  UniquePtr<OffThreadJob> job(cx->new_<OffThreadJob>(sc, std::move(source)));
+  if (sc->isWorker) {
+    // Off-thread compilation/decode is used by main-thread, in order to improve
+    // the responsiveness.  It's not used by worker in browser, and there's not
+    // much reason to support worker here.
+    JS_ReportErrorASCII(cx, "Off-thread job is not supported in worker");
+    return nullptr;
+  }
+
+  UniquePtr<OffThreadJob> job(
+      cx->new_<OffThreadJob>(sc, kind, std::move(source)));
   if (!job) {
+    return nullptr;
+  }
+
+  if (!job->init(cx, options)) {
     return nullptr;
   }
 
@@ -512,72 +554,151 @@ static void DeleteOffThreadJob(JSContext* cx, OffThreadJob* job) {
   MOZ_CRASH("Off-thread job not found");
 }
 
-static void CancelOffThreadJobsForContext(JSContext* cx) {
-  // Parse jobs may be blocked waiting on GC.
-  gc::FinishGC(cx);
-
-  // Wait for jobs belonging to this context.
-  ShellContext* sc = GetShellContext(cx);
-  while (!sc->offThreadJobs.empty()) {
-    OffThreadJob* job = sc->offThreadJobs.popCopy();
-    job->waitUntilDone(cx);
-    js_delete(job);
-  }
-}
-
 static void CancelOffThreadJobsForRuntime(JSContext* cx) {
-  // Parse jobs may be blocked waiting on GC.
-  gc::FinishGC(cx);
-
-  // Cancel jobs belonging to this runtime.
   CancelOffThreadParses(cx->runtime());
   ShellContext* sc = GetShellContext(cx);
   while (!sc->offThreadJobs.empty()) {
-    js_delete(sc->offThreadJobs.popCopy());
+    OffThreadJob* job = sc->offThreadJobs.popCopy();
+    job->waitUntilDone();
+    js_delete(job);
   }
 }
 
 mozilla::Atomic<int32_t> gOffThreadJobSerial(1);
 
-OffThreadJob::OffThreadJob(ShellContext* sc, Source&& source)
+OffThreadJob::OffThreadJob(ShellContext* sc, Kind kind,
+                           JS::SourceText<char16_t>&& srcBuf)
     : id(gOffThreadJobSerial++),
-      monitor(sc->offThreadMonitor),
-      state(RUNNING),
-      token(nullptr),
-      source(std::move(source)) {
+      kind_(kind),
+      state_(RUNNING),
+      options_(JS::OwningCompileOptions::ForFrontendContext()),
+      srcBuf_(std::move(srcBuf)) {
   MOZ_RELEASE_ASSERT(id > 0, "Off-thread job IDs exhausted");
 }
 
-OffThreadJob::~OffThreadJob() { MOZ_ASSERT(state != RUNNING); }
-
-void OffThreadJob::cancel() {
-  MOZ_ASSERT(state == RUNNING);
-  MOZ_ASSERT(!token);
-
-  state = CANCELLED;
+OffThreadJob::OffThreadJob(ShellContext* sc, Kind kind,
+                           JS::TranscodeBuffer&& xdrBuf)
+    : id(gOffThreadJobSerial++),
+      kind_(kind),
+      state_(RUNNING),
+      options_(JS::OwningCompileOptions::ForFrontendContext()),
+      xdrBuf_(std::move(xdrBuf)) {
+  MOZ_RELEASE_ASSERT(id > 0, "Off-thread job IDs exhausted");
 }
 
-void OffThreadJob::markDone(JS::OffThreadToken* newToken) {
-  AutoLockMonitor alm(monitor);
-  MOZ_ASSERT(state == RUNNING);
-  MOZ_ASSERT(!token);
-  MOZ_ASSERT(newToken);
-
-  token = newToken;
-  state = DONE;
-  alm.notifyAll();
+OffThreadJob::~OffThreadJob() {
+  if (fc_) {
+    JS::DestroyFrontendContext(fc_);
+  }
+  MOZ_ASSERT(state_ != RUNNING);
 }
 
-JS::OffThreadToken* OffThreadJob::waitUntilDone(JSContext* cx) {
-  AutoLockMonitor alm(monitor);
-  MOZ_ASSERT(state != CANCELLED);
-
-  while (state != DONE) {
-    alm.wait();
+bool OffThreadJob::init(JSContext* cx,
+                        const JS::ReadOnlyCompileOptions& options) {
+  fc_ = JS::NewFrontendContext();
+  if (!fc_) {
+    ReportOutOfMemory(cx);
+    state_ = CANCELLED;
+    return false;
   }
 
-  MOZ_ASSERT(token);
-  return token;
+  if (!options_.copy(cx, options)) {
+    state_ = CANCELLED;
+    return false;
+  }
+
+  return true;
+}
+
+bool OffThreadJob::dispatch() {
+  thread_ =
+      js::MakeUnique<Thread>(Thread::Options().setStackSize(kThreadStackQuota));
+  if (!thread_) {
+    state_ = CANCELLED;
+    return false;
+  }
+
+  if (!thread_->init(OffThreadJob::OffThreadMain, this)) {
+    state_ = CANCELLED;
+    thread_ = nullptr;
+    return false;
+  }
+
+  return true;
+}
+
+/* static */ void OffThreadJob::OffThreadMain(OffThreadJob* self) {
+  self->run();
+}
+
+void OffThreadJob::run() {
+  MOZ_ASSERT(state_ == RUNNING);
+  MOZ_ASSERT(!stencil_);
+
+  JS::SetNativeStackQuota(fc_, kCompileStackQuota);
+
+  switch (kind_) {
+    case Kind::CompileScript: {
+      JS::CompilationStorage compileStorage;
+      stencil_ = JS::CompileGlobalScriptToStencil(fc_, options_, srcBuf_,
+                                                  compileStorage);
+      break;
+    }
+    case Kind::CompileModule: {
+      JS::CompilationStorage compileStorage;
+      stencil_ = JS::CompileModuleScriptToStencil(fc_, options_, srcBuf_,
+                                                  compileStorage);
+      break;
+    }
+    case Kind::Decode: {
+      JS::DecodeOptions decodeOptions(options_);
+      JS::TranscodeRange range(xdrBuf_.begin(), xdrBuf_.length());
+      transcodeResult_ = JS::DecodeStencil(fc_, decodeOptions, range,
+                                           getter_AddRefs(stencil_));
+      break;
+    }
+  }
+
+  state_ = DONE;
+}
+
+void OffThreadJob::cancel() {
+  MOZ_ASSERT(state_ == RUNNING);
+  MOZ_ASSERT(!stencil_);
+  MOZ_ASSERT(!thread_, "cannot cancel after starting a thread");
+
+  state_ = CANCELLED;
+}
+
+void OffThreadJob::waitUntilDone() {
+  MOZ_ASSERT(state_ != CANCELLED);
+  thread_->join();
+}
+
+already_AddRefed<JS::Stencil> OffThreadJob::stealStencil(JSContext* cx) {
+  JS::FrontendContext* fc = fc_;
+  fc_ = nullptr;
+  auto destroyFrontendContext =
+      mozilla::MakeScopeExit([&]() { JS::DestroyFrontendContext(fc); });
+
+  MOZ_ASSERT(fc);
+
+  if (JS::HadFrontendErrors(fc)) {
+    (void)JS::ConvertFrontendErrorsToRuntimeErrors(cx, fc, options_);
+    return nullptr;
+  }
+
+  if (!stencil_ && JS::IsTranscodeFailureResult(transcodeResult_)) {
+    JS_ReportErrorASCII(cx, "failed to decode cache");
+    return nullptr;
+  }
+
+  // Report warnings.
+  if (!JS::ConvertFrontendErrorsToRuntimeErrors(cx, fc, options_)) {
+    return nullptr;
+  }
+
+  return stencil_.forget();
 }
 
 struct ShellCompartmentPrivate {
@@ -2559,6 +2680,11 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
 
       JS::TranscodeResult rv =
           JS::DecodeStencil(cx, decodeOptions, range, getter_AddRefs(stencil));
+      if (JS::IsTranscodeFailureResult(rv)) {
+        JS_ReportErrorASCII(cx, "failed to decode cache");
+        return false;
+      }
+
       if (!ConvertTranscodeResultToJSException(cx, rv)) {
         return false;
       }
@@ -4230,7 +4356,6 @@ static void WorkerMain(UniquePtr<WorkerInput> input) {
   }
 
   auto guard = mozilla::MakeScopeExit([&] {
-    CancelOffThreadJobsForContext(cx);
     sc->markObservers.reset();
     JS_SetContextPrivate(cx, nullptr);
     js_delete(sc);
@@ -5877,12 +6002,6 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static void OffThreadCompileScriptCallback(JS::OffThreadToken* token,
-                                           void* callbackData) {
-  auto job = static_cast<OffThreadJob*>(callbackData);
-  job->markDone(token);
-}
-
 static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
   if (!CanUseExtraThreads()) {
     JS_ReportErrorASCII(
@@ -5956,18 +6075,19 @@ static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  OffThreadJob* job =
-      NewOffThreadJob(cx, options, OffThreadJob::Source(std::move(ownedChars)));
+  JS::SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(cx, std::move(ownedChars), length)) {
+    return false;
+  }
+
+  OffThreadJob* job = NewOffThreadJob(cx, OffThreadJob::Kind::CompileScript,
+                                      options, std::move(srcBuf));
   if (!job) {
     return false;
   }
 
-  JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, job->sourceChars(), length,
-                   JS::SourceOwnership::Borrowed) ||
-      !JS::CompileToStencilOffThread(cx, options, srcBuf,
-                                     OffThreadCompileScriptCallback, job)) {
-    job->cancel();
+  if (!job->dispatch()) {
+    ReportOutOfMemory(cx);
     DeleteOffThreadJob(cx, job);
     return false;
   }
@@ -5984,10 +6104,9 @@ static bool FinishOffThreadStencil(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JS::OffThreadToken* token = job->waitUntilDone(cx);
-  MOZ_ASSERT(token);
+  job->waitUntilDone();
 
-  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
+  RefPtr<JS::Stencil> stencil = job->stealStencil(cx);
   DeleteOffThreadJob(cx, job);
   if (!stencil) {
     return false;
@@ -6067,18 +6186,19 @@ static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
     return false;
   }
 
-  OffThreadJob* job =
-      NewOffThreadJob(cx, options, OffThreadJob::Source(std::move(ownedChars)));
+  JS::SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(cx, std::move(ownedChars), length)) {
+    return false;
+  }
+
+  OffThreadJob* job = NewOffThreadJob(cx, OffThreadJob::Kind::CompileModule,
+                                      options, std::move(srcBuf));
   if (!job) {
     return false;
   }
 
-  JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, job->sourceChars(), length,
-                   JS::SourceOwnership::Borrowed) ||
-      !JS::CompileModuleToStencilOffThread(
-          cx, options, srcBuf, OffThreadCompileScriptCallback, job)) {
-    job->cancel();
+  if (!job->dispatch()) {
+    ReportOutOfMemory(cx);
     DeleteOffThreadJob(cx, job);
     return false;
   }
@@ -6150,15 +6270,14 @@ static bool OffThreadDecodeStencil(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  OffThreadJob* job =
-      NewOffThreadJob(cx, options, OffThreadJob::Source(std::move(loadBuffer)));
+  OffThreadJob* job = NewOffThreadJob(cx, OffThreadJob::Kind::Decode, options,
+                                      std::move(loadBuffer));
   if (!job) {
     return false;
   }
 
-  if (!JS::DecodeStencilOffThread(cx, decodeOptions, job->xdrBuffer(), 0,
-                                  OffThreadCompileScriptCallback, job)) {
-    job->cancel();
+  if (!job->dispatch()) {
+    ReportOutOfMemory(cx);
     DeleteOffThreadJob(cx, job);
     return false;
   }
