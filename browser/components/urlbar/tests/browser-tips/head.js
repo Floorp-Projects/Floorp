@@ -373,9 +373,12 @@ async function awaitTip(searchString, win = window) {
     waitForFocus,
     fireInputEvent: true,
   });
-  Assert.ok(context.results.length >= 2);
+  Assert.ok(
+    context.results.length >= 2,
+    "Number of results is greater than or equal to 2"
+  );
   let result = context.results[1];
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP, "Result type");
   let element = await UrlbarTestUtils.waitForAutocompleteResultAt(win, 1);
   return [result, element];
 }
@@ -564,16 +567,16 @@ async function checkTip(win, expectedTip, closeView = true) {
     // Wait a bit for the tip to not show up.
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     await new Promise(resolve => setTimeout(resolve, 100));
-    Assert.ok(!win.gURLBar.view.isOpen);
+    Assert.ok(!win.gURLBar.view.isOpen, "View is not open");
     return;
   }
 
   // Wait for the view to open, and then check the tip result.
   await UrlbarTestUtils.promisePopupOpen(win, () => {});
   Assert.ok(true, "View opened");
-  Assert.equal(UrlbarTestUtils.getResultCount(win), 1);
+  Assert.equal(UrlbarTestUtils.getResultCount(win), 1, "Number of results");
   let result = await UrlbarTestUtils.getDetailsOfResultAt(win, 0);
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP);
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TIP, "Result type");
   let heuristic;
   let title;
   let name = Services.search.defaultEngine.name;
@@ -598,15 +601,19 @@ async function checkTip(win, expectedTip, closeView = true) {
         " To show the URL instead, visit Search, in settings.";
       break;
   }
-  Assert.equal(result.heuristic, heuristic);
-  Assert.equal(result.displayed.title, title);
+  Assert.equal(result.heuristic, heuristic, "Result is heuristic");
+  Assert.equal(result.displayed.title, title, "Title");
   Assert.equal(
     result.element.row._buttons.get("0").textContent,
     expectedTip == UrlbarProviderSearchTips.TIP_TYPE.PERSIST
       ? `Got it`
-      : `Okay, Got It`
+      : `Okay, Got It`,
+    "Button text"
   );
-  Assert.ok(!result.element.row._buttons.has("help"));
+  Assert.ok(
+    !result.element.row._buttons.has("help"),
+    "Buttons in row does not include help"
+  );
 
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
   TelemetryTestUtils.assertKeyedScalar(
