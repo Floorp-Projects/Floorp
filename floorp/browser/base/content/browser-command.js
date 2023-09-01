@@ -18,9 +18,7 @@ function OpenChromeDirectory() {
 function restartbrowser() {
   Services.obs.notifyObservers(null, "startupcache-invalidate");
 
-  const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
+  const env = Services.env;
   env.set("MOZ_DISABLE_SAFE_MODE_KEY", "1");
 
   Services.startup.quit(
@@ -35,7 +33,7 @@ Services.obs.addObserver(restartbrowser, "floorp-restart-browser");
 const sss = Cc["@mozilla.org/content/style-sheet-service;1"].getService(
   Ci.nsIStyleSheetService
 );
-const ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+const ios = Services.io;
 
 function loadStyleSheetWithNsStyleSheetService(styleSheetURL) {
   const uri = ios.newURI(styleSheetURL);

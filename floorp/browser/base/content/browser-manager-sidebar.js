@@ -530,7 +530,7 @@ const bmsController = {
           sidebarItem.classList.add("sicon-list");
           sidebarItem.setAttribute(
             "oncommand",
-            "bmsController.eventFunctions.selectSidebarItem()"
+            "bmsController.eventFunctions.selectSidebarItem(e)"
           );
           if (BROWSER_SIDEBAR_DATA.data[elem].url.slice(0, 8) == "floorp//") {
             if (BROWSER_SIDEBAR_DATA.data[elem].url in STATIC_SIDEBAR_DATA) {

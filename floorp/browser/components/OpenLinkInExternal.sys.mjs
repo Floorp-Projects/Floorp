@@ -18,10 +18,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const platform = AppConstants.platform;
 const L10N = new Localization(["browser/floorp.ftl"]);
 
-// TODO: Use Services.env rather than getService().eslintmozilla/use-services.
-const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-);
+const env = Services.env;
 
 function getBrowsersOnWindows() {
     let browsers = [];

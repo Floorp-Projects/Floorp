@@ -19,11 +19,7 @@ const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 // Migration from JSM to ES Module in the future.
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-// Use Services.env rather than getService().
-export const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-);
-
+export const env = Services.env;
 // Check information about startup.
 export let isFirstRun = false;
 export let isUpdated = false;

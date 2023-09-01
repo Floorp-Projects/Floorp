@@ -11,9 +11,7 @@ export const { FileUtils } = ChromeUtils.import(
     "resource://gre/modules/FileUtils.jsm"
 );
 
-export const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-);
+export const env = Services.env;
 
 export const DesktopFileParser = {
     async parseFromPath(path) {
