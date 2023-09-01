@@ -177,7 +177,10 @@ export class ShoppingContainer extends MozLitElement {
       // We successfully analyzed the product before, but the current analysis is outdated and can be updated
       // via a re-analysis.
       return html`
-        <shopping-message-bar type="stale"></shopping-message-bar>
+        <shopping-message-bar
+          type="stale"
+          .productUrl=${this.productUrl}
+        ></shopping-message-bar>
         ${this.getAnalysisDetailsTemplate()}
       `;
     }
