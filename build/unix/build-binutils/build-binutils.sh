@@ -2,7 +2,7 @@
 
 set -x
 
-make_flags="-j$(nproc)"
+make_flags="-j$(nproc) MAKEINFO=true"
 
 root_dir="$1"
 
