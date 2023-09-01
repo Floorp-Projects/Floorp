@@ -2309,7 +2309,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   eagerDelazificationStrategy_ = rhs.eagerDelazificationStrategy_;
 
   selfHostingMode = rhs.selfHostingMode;
-  forceAsync = rhs.forceAsync;
   discardSource = rhs.discardSource;
   sourceIsLazy = rhs.sourceIsLazy;
   allowHTMLComments = rhs.allowHTMLComments;
@@ -2319,7 +2318,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
 
   borrowBuffer = rhs.borrowBuffer;
   usePinnedBytecode = rhs.usePinnedBytecode;
-  allocateInstantiationStorage = rhs.allocateInstantiationStorage;
   deoptimizeModuleGlobalVars = rhs.deoptimizeModuleGlobalVars;
 
   prefableOptions_ = rhs.prefableOptions_;

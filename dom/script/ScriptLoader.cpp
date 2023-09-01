@@ -2272,8 +2272,6 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
 
   aOptions->borrowBuffer = true;
 
-  aOptions->allocateInstantiationStorage = true;
-
   return NS_OK;
 }
 

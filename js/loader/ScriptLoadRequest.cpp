@@ -16,7 +16,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "js/OffThreadScriptCompilation.h"
 #include "js/SourceText.h"
 
 #include "ModuleLoadRequest.h"

@@ -46,8 +46,6 @@ class ComponentLoadContext;
 }  // namespace mozilla::loader
 
 namespace JS {
-class OffThreadToken;
-
 namespace loader {
 
 using Utf8Unit = mozilla::Utf8Unit;
