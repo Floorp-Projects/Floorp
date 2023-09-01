@@ -8,21 +8,22 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 class ShoppingMessageBar extends MozLitElement {
   #MESSAGE_TYPES_RENDER_TEMPLATE_MAPPING = new Map([
-    ["stale", this.getStaleWarningTemplate()],
-    ["generic-error", this.getGenericErrorTemplate()],
-    ["not-enough-reviews", this.getNotEnoughReviewsTemplate()],
-    ["product-not-available", this.getProductNotAvailableTemplate()],
-    ["thanks-for-reporting", this.getThanksForReportingTemplate()],
+    ["stale", () => this.getStaleWarningTemplate()],
+    ["generic-error", () => this.getGenericErrorTemplate()],
+    ["not-enough-reviews", () => this.getNotEnoughReviewsTemplate()],
+    ["product-not-available", () => this.getProductNotAvailableTemplate()],
+    ["thanks-for-reporting", () => this.getThanksForReportingTemplate()],
     [
       "product-not-available-reported",
-      this.getProductNotAvailableReportedTemplate(),
+      () => this.getProductNotAvailableReportedTemplate(),
     ],
-    ["offline", this.getOfflineWarningTemplate()],
-    ["analysis-in-progress", this.getAnalysisInProgressTemplate()],
+    ["offline", () => this.getOfflineWarningTemplate()],
+    ["analysis-in-progress", () => this.getAnalysisInProgressTemplate()],
   ]);
 
   static properties = {
     type: { type: String },
+    productUrl: { type: String, reflect: true },
   };
 
   static get queries() {
@@ -58,7 +59,6 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   getStaleWarningTemplate() {
-    // TODO: Bug 1843142 - add proper stale analysis link once finalized
     return html` <message-bar type="warning">
       <article id="message-bar-container" aria-labelledby="header">
         <strong
@@ -72,7 +72,9 @@ class ShoppingMessageBar extends MozLitElement {
           id="message-bar-reanalysis-link"
           target="_blank"
           data-l10n-id="shopping-message-bar-warning-stale-analysis-link"
-          href="#"
+          href="https://fakespot.com/analyze?url=${encodeURIComponent(
+            this.productUrl
+          )}"
           @click=${this.onClickAnalysisLink}
         ></a>
       </article>
@@ -185,7 +187,7 @@ class ShoppingMessageBar extends MozLitElement {
   render() {
     let messageBarTemplate = this.#MESSAGE_TYPES_RENDER_TEMPLATE_MAPPING.get(
       this.type
-    );
+    )();
     if (messageBarTemplate) {
       return html`
         <link
