@@ -129,9 +129,9 @@
     --button-background-color-disabled: GrayText;
 
     /** Link **/
-    --link-color: -moz-nativehyperlinktext;
-    --link-color-hover: -moz-nativehyperlinktext;
-    --link-color-active: -moz-nativehyperlinktext;
+    --link-color: LinkText;
+    --link-color-hover: LinkText;
+    --link-color-active: ActiveText;
     --link-color-visited: var(--link-color);
 
     /* Color */
