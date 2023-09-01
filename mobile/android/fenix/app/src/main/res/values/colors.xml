@@ -23,6 +23,14 @@
     <color name="fx_mobile_layer_color_gradient_start">@color/photonViolet70</color>
     <!-- Tooltip -->
     <color name="fx_mobile_layer_color_gradient_end">@color/photonViolet40</color>
+    <!-- Warning background -->
+    <color name="fx_mobile_layer_color_warning" tools:ignore="UnusedResources">@color/photonYellow20</color>
+    <!-- Confirmation background -->
+    <color name="fx_mobile_layer_color_confirmation" tools:ignore="UnusedResources">@color/photonGreen20</color>
+    <!-- Error background -->
+    <color name="fx_mobile_layer_color_error" tools:ignore="UnusedResources">@color/photonRed10</color>
+    <!-- Info background -->
+    <color name="fx_mobile_layer_color_info" tools:ignore="UnusedResources">@color/photonBlue50A44</color>
 
     <!-- Action -->
     <!-- Primary button, Snackbar, Floating action button, Chip selected -->
@@ -32,7 +40,15 @@
     <!-- Filter -->
     <color name="fx_mobile_action_color_tertiary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
     <!-- Chip -->
-    <color name="fx_mobile_action_quarternary" tools:ignore="UnusedResources">@color/photonLightGrey10</color>
+    <color name="fx_mobile_action_color_quarternary" tools:ignore="UnusedResources">@color/photonLightGrey10</color>
+    <!-- Warning button -->
+    <color name="fx_mobile_action_color_warning" tools:ignore="UnusedResources">@color/photonYellow60A40</color>
+    <!-- Confirmation button -->
+    <color name="fx_mobile_action_color_confirmation" tools:ignore="UnusedResources">@color/photonGreen60</color>
+    <!-- Error button -->
+    <color name="fx_mobile_action_color_error" tools:ignore="UnusedResources">@color/photonRed30</color>
+    <!-- Info button -->
+    <color name="fx_mobile_action_color_info" tools:ignore="UnusedResources">@color/photonBlue50</color>
     <!-- Checkbox default, Radio button default -->
     <color name="fx_mobile_action_color_form_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Checkbox selected, Radio button selected -->

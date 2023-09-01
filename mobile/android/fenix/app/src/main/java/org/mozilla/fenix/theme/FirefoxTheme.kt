@@ -100,10 +100,18 @@ private val darkColorPalette = FirefoxColors(
     scrim = PhotonColors.DarkGrey90A95,
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
+    layerWarning = PhotonColors.Yellow70A77,
+    layerConfirmation = PhotonColors.Green80,
+    layerError = PhotonColors.Pink80,
+    layerInfo = PhotonColors.Blue50A80,
     actionPrimary = PhotonColors.Violet60,
     actionSecondary = PhotonColors.LightGrey30,
     actionTertiary = PhotonColors.DarkGrey10,
     actionQuarternary = PhotonColors.DarkGrey80,
+    actionWarning = PhotonColors.Yellow40A41,
+    actionConfirmation = PhotonColors.Green70,
+    actionError = PhotonColors.Pink70A69,
+    actionInfo = PhotonColors.Blue30,
     formDefault = PhotonColors.LightGrey05,
     formSelected = PhotonColors.Violet40,
     formSurface = PhotonColors.DarkGrey05,
@@ -166,10 +174,18 @@ private val lightColorPalette = FirefoxColors(
     scrim = PhotonColors.DarkGrey30A95,
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
+    layerWarning = PhotonColors.Yellow20,
+    layerConfirmation = PhotonColors.Green20,
+    layerError = PhotonColors.Red10,
+    layerInfo = PhotonColors.Blue50A44,
     actionPrimary = PhotonColors.Ink20,
     actionSecondary = PhotonColors.LightGrey30,
     actionTertiary = PhotonColors.LightGrey40,
     actionQuarternary = PhotonColors.LightGrey10,
+    actionWarning = PhotonColors.Yellow60A40,
+    actionConfirmation = PhotonColors.Green60,
+    actionError = PhotonColors.Red30,
+    actionInfo = PhotonColors.Blue50,
     formDefault = PhotonColors.DarkGrey90,
     formSelected = PhotonColors.Ink20,
     formSurface = PhotonColors.LightGrey50,
@@ -243,10 +259,18 @@ class FirefoxColors(
     scrim: Color,
     gradientStart: Color,
     gradientEnd: Color,
+    layerWarning: Color,
+    layerConfirmation: Color,
+    layerError: Color,
+    layerInfo: Color,
     actionPrimary: Color,
     actionSecondary: Color,
     actionTertiary: Color,
     actionQuarternary: Color,
+    actionWarning: Color,
+    actionConfirmation: Color,
+    actionError: Color,
+    actionInfo: Color,
     formDefault: Color,
     formSelected: Color,
     formSurface: Color,
@@ -332,6 +356,7 @@ class FirefoxColors(
     // Selected tab
     var layerAccentOpaque by mutableStateOf(layerAccentOpaque)
         private set
+
     var scrim by mutableStateOf(scrim)
         private set
 
@@ -341,6 +366,22 @@ class FirefoxColors(
 
     // Tooltip
     var gradientEnd by mutableStateOf(gradientEnd)
+        private set
+
+    // Warning background
+    var layerWarning by mutableStateOf(layerWarning)
+        private set
+
+    // Confirmation background
+    var layerConfirmation by mutableStateOf(layerConfirmation)
+        private set
+
+    // Error Background
+    var layerError by mutableStateOf(layerError)
+        private set
+
+    // Info background
+    var layerInfo by mutableStateOf(layerInfo)
         private set
 
     // Actions
@@ -359,6 +400,22 @@ class FirefoxColors(
 
     // Chip
     var actionQuarternary by mutableStateOf(actionQuarternary)
+        private set
+
+    // Warning button
+    var actionWarning by mutableStateOf(actionWarning)
+        private set
+
+    // Confirmation button
+    var actionConfirmation by mutableStateOf(actionConfirmation)
+        private set
+
+    // Error button
+    var actionError by mutableStateOf(actionError)
+        private set
+
+    // Info button
+    var actionInfo by mutableStateOf(actionInfo)
         private set
 
     // Checkbox default, Radio button default
@@ -556,10 +613,18 @@ class FirefoxColors(
         scrim = other.scrim
         gradientStart = other.gradientStart
         gradientEnd = other.gradientEnd
+        layerWarning = other.layerWarning
+        layerConfirmation = other.layerConfirmation
+        layerError = other.layerError
+        layerInfo = other.layerInfo
         actionPrimary = other.actionPrimary
         actionSecondary = other.actionSecondary
         actionTertiary = other.actionTertiary
         actionQuarternary = other.actionQuarternary
+        actionWarning = other.actionWarning
+        actionConfirmation = other.actionConfirmation
+        actionError = other.actionError
+        actionInfo = other.actionInfo
         formDefault = other.formDefault
         formSelected = other.formSelected
         formSurface = other.formSurface
@@ -625,10 +690,18 @@ class FirefoxColors(
         scrim: Color = this.scrim,
         gradientStart: Color = this.gradientStart,
         gradientEnd: Color = this.gradientEnd,
+        layerWarning: Color = this.layerWarning,
+        layerConfirmation: Color = this.layerConfirmation,
+        layerError: Color = this.layerError,
+        layerInfo: Color = this.layerInfo,
         actionPrimary: Color = this.actionPrimary,
         actionSecondary: Color = this.actionSecondary,
         actionTertiary: Color = this.actionTertiary,
         actionQuarternary: Color = this.actionQuarternary,
+        actionWarning: Color = this.actionWarning,
+        actionConfirmation: Color = this.actionConfirmation,
+        actionError: Color = this.actionError,
+        actionInfo: Color = this.actionInfo,
         formDefault: Color = this.formDefault,
         formSelected: Color = this.formSelected,
         formSurface: Color = this.formSurface,
@@ -689,10 +762,18 @@ class FirefoxColors(
         scrim = scrim,
         gradientStart = gradientStart,
         gradientEnd = gradientEnd,
+        layerWarning = layerWarning,
+        layerConfirmation = layerConfirmation,
+        layerError = layerError,
+        layerInfo = layerInfo,
         actionPrimary = actionPrimary,
         actionSecondary = actionSecondary,
         actionTertiary = actionTertiary,
         actionQuarternary = actionQuarternary,
+        actionWarning = actionWarning,
+        actionConfirmation = actionConfirmation,
+        actionError = actionError,
+        actionInfo = actionInfo,
         formDefault = formDefault,
         formSelected = formSelected,
         formSurface = formSurface,

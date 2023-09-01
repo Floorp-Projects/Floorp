@@ -22,6 +22,8 @@
 	<color name="photonBlue30">#ff00b3f4</color>
 	<color name="photonBlue40">#ff0090ed</color>
 	<color name="photonBlue50">#ff0060df</color>
+	<color name="photonBlue50A44">#700060df</color>
+	<color name="photonBlue50A80">#cc0060df</color>
 	<color name="photonBlue60">#ff0250bb</color>
 	<color name="photonBlue70">#ff054096</color>
 	<color name="photonBlue80">#ff073072</color>
@@ -48,6 +50,7 @@
 	<color name="photonPink50">#ffff298a</color>
 	<color name="photonPink60">#ffe21587</color>
 	<color name="photonPink70">#ffc60084</color>
+	<color name="photonPink70A69">#b0c60084</color>
 	<color name="photonPink80">#ff7f145b</color>
 	<color name="photonPink90">#ff50134b</color>
 
@@ -81,9 +84,12 @@
 	<color name="photonYellow20">#ffffea80</color>
 	<color name="photonYellow30">#ffffd567</color>
 	<color name="photonYellow40">#ffffbd4f</color>
+	<color name="photonYellow40A41">#69ffbd4f</color>
 	<color name="photonYellow50">#ffffa436</color>
 	<color name="photonYellow60">#ffe27f2e</color>
+	<color name="photonYellow60A40">#66e27f2e</color>
 	<color name="photonYellow70">#ffc45a27</color>
+	<color name="photonYellow70A77">#c4c45a27</color>
 	<color name="photonYellow80">#ffa7341f</color>
 	<color name="photonYellow90">#ff960e18</color>
 
