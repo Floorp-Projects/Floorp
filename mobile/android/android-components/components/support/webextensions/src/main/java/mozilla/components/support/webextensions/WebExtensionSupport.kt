@@ -294,6 +294,11 @@ object WebExtensionSupport {
                     store.dispatch(WebExtensionAction.UninstallAllWebExtensionsAction)
                     registerInstalledExtensions(store, runtime)
                 }
+
+                override fun onDisabledExtensionProcessSpawning() {
+                    // Show dialog via state change sent with new BrowserAction
+                    // https://bugzilla.mozilla.org/show_bug.cgi?id=1846979
+                }
             },
         )
     }

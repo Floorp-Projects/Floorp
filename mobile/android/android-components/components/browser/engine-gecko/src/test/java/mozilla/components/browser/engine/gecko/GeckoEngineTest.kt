@@ -1380,6 +1380,23 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `web extension delegate notified of extension process spawning disabled`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val webExtensionDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionDelegate)
+
+        val extensionProcessDelegate = argumentCaptor<WebExtensionController.ExtensionProcessDelegate>()
+        verify(webExtensionController).setExtensionProcessDelegate(extensionProcessDelegate.capture())
+
+        extensionProcessDelegate.value.onDisabledProcessSpawning()
+        verify(webExtensionDelegate).onDisabledExtensionProcessSpawning()
+    }
+
+    @Test
     fun `update web extension successfully`() {
         val runtime = mock<GeckoRuntime>()
         val extensionController: WebExtensionController = mock()

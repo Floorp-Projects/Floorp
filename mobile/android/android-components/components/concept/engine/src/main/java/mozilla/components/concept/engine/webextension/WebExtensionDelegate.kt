@@ -135,4 +135,10 @@ interface WebExtensionDelegate {
      * of installing / uninstalling extensions by the user.
      */
     fun onExtensionListUpdated() = Unit
+
+    /**
+     * Invoked when the extension process spawning has been disabled. This can occur because
+     * it has been killed or crashed too many times. A client should determine what to do next.
+     */
+    fun onDisabledExtensionProcessSpawning() = Unit
 }
