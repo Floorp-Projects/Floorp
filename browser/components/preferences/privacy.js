@@ -117,6 +117,7 @@ Preferences.addAll([
   // Location Bar
   { id: "browser.urlbar.suggest.bestmatch", type: "bool" },
   { id: "browser.urlbar.suggest.bookmark", type: "bool" },
+  { id: "browser.urlbar.suggest.clipboard", type: "bool" },
   { id: "browser.urlbar.suggest.history", type: "bool" },
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
   { id: "browser.urlbar.suggest.topsites", type: "bool" },
@@ -2567,6 +2568,10 @@ var gPrivacyPane = {
     // Show the best match checkbox container as appropriate.
     document.getElementById("firefoxSuggestBestMatchContainer").hidden =
       !UrlbarPrefs.get("bestMatchEnabled");
+
+    document.getElementById("clipboardSuggestion").hidden = !UrlbarPrefs.get(
+      "clipboard.featureGate"
+    );
 
     let container = document.getElementById("firefoxSuggestContainer");
 
