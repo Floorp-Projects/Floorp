@@ -426,20 +426,10 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   WebAuthnAuthenticatorSelection authSelection(
       residentKey, selection.mUserVerification, authenticatorAttachment);
 
-  nsString rpIcon;
-  if (aOptions.mRp.mIcon.WasPassed()) {
-    rpIcon = aOptions.mRp.mIcon.Value();
-  }
+  WebAuthnMakeCredentialRpInfo rpInfo(aOptions.mRp.mName);
 
-  nsString userIcon;
-  if (aOptions.mUser.mIcon.WasPassed()) {
-    userIcon = aOptions.mUser.mIcon.Value();
-  }
-
-  WebAuthnMakeCredentialRpInfo rpInfo(aOptions.mRp.mName, rpIcon);
-
-  WebAuthnMakeCredentialUserInfo userInfo(
-      userId, aOptions.mUser.mName, userIcon, aOptions.mUser.mDisplayName);
+  WebAuthnMakeCredentialUserInfo userInfo(userId, aOptions.mUser.mName,
+                                          aOptions.mUser.mDisplayName);
 
   BrowsingContext* context = mParent->GetBrowsingContext();
   if (!context) {

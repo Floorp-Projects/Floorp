@@ -168,7 +168,7 @@ import org.mozilla.gecko.util.GeckoBundle;
         new PublicKeyCredentialUserEntity(
             userId,
             credentialBundle.getString("userName", ""),
-            credentialBundle.getString("userIcon", ""),
+            /* deprecated userIcon field */ "",
             credentialBundle.getString("userDisplayName", ""));
 
     AttestationConveyancePreference pref = AttestationConveyancePreference.NONE;
@@ -227,7 +227,7 @@ import org.mozilla.gecko.util.GeckoBundle;
         new PublicKeyCredentialRpEntity(
             credentialBundle.getString("rpId"),
             credentialBundle.getString("rpName", ""),
-            credentialBundle.getString("rpIcon", ""));
+            /* deprecated rpIcon field */ "");
 
     final PublicKeyCredentialCreationOptions requestOptions =
         requestBuilder
