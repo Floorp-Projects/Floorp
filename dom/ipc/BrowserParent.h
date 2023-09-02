@@ -723,8 +723,6 @@ class BrowserParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvRemoteIsReadyToHandleInputEvents();
 
-  mozilla::ipc::IPCResult RecvPaintWhileInterruptingJSNoOp();
-
   mozilla::ipc::IPCResult RecvSetDimensions(mozilla::DimensionRequest aRequest,
                                             const double& aScale);
 

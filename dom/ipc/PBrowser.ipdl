@@ -594,11 +594,6 @@ parent:
      */
     async RemoteIsReadyToHandleInputEvents();
 
-    /**
-     * Child informs the parent that the layer tree is already available.
-     */
-    async PaintWhileInterruptingJSNoOp();
-
 child:
     /**
      * Parent informs the child of graphical effects that are being applied
