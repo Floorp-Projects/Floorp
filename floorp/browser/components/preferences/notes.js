@@ -18,8 +18,11 @@ const gNotesPane = {
     });
     getAllBackupedNotes().then(content => {
       for (let i = 0; i < Object.keys(content.data).length; i++) {
+        if(i > 9) {
+          document.querySelectorAll(".backup-item")[0].remove();
+        }
         let elem = window.MozXULElement.parseXULToFragment(`
-              <richlistitem>
+              <richlistitem class="backup-item">
                 <label value="${coventToDateAndTime(Number(Object.keys(content.data)[i]))}" class="backup-date"/>
                 <button class="restore-button" id="${Object.keys(content.data)[i]}" data-l10n-id="restore-button"/>
               </richlistitem>
