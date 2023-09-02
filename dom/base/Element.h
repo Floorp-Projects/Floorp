@@ -1659,6 +1659,12 @@ class Element : public FragmentOrElement {
   }
 
   /**
+   * Preallocate space in this element's attribute array for the given
+   * total number of attributes.
+   */
+  void TryReserveAttributeCount(uint32_t aAttributeCount);
+
+  /**
    * Set a content attribute via a reflecting nullable string IDL
    * attribute (e.g. a CORS attribute).  If DOMStringIsNull(aValue),
    * this will actually remove the content attribute.

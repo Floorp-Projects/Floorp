@@ -406,6 +406,7 @@ nsresult nsHtml5TreeOperation::AddAttributes(nsIContent* aNode,
 void nsHtml5TreeOperation::SetHTMLElementAttributes(
     Element* aElement, nsAtom* aName, nsHtml5HtmlAttributes* aAttributes) {
   int32_t len = aAttributes->getLength();
+  aElement->TryReserveAttributeCount((uint32_t)len);
   for (int32_t i = 0; i < len; i++) {
     nsHtml5String val = aAttributes->getValueNoBoundsCheck(i);
     nsAtom* klass = val.MaybeAsAtom();
