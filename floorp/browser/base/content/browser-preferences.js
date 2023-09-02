@@ -104,7 +104,6 @@ const GENERAL_USERAGENT_OVERRIDE_PREF = "general.useragent.override";
 }
 
 // backup Floorp Notes Pref
-var { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const FLOORP_NOTES_PREF = "floorp.browser.note.memos";
 const FLOORP_NOTES_LATEST_BACKUP_TIME_PREF =
@@ -115,22 +114,23 @@ const backupFloorpNotes = async () => {
   const time = new Date().getTime();
   const backup = { [time]: memos };
   const jsonToStr = JSON.stringify(backup).slice(1, -1);
-
-  const filePath = OS.Path.join(
-    OS.Constants.Path.profileDir,
-    "floorp_notes_backup.json"
-  );
-  const txtEncoded = new TextEncoder().encode(`${jsonToStr},`);
-
   Services.prefs.setCharPref(FLOORP_NOTES_LATEST_BACKUP_TIME_PREF, time);
 
-  if (!(await OS.File.exists(filePath))) {
-    await OS.File.writeAtomic(filePath, new TextEncoder().encode(`{"data":{`));
-  }
-
-  const valOpen = await OS.File.open(filePath, { write: true, append: true });
-  await valOpen.write(txtEncoded);
-  await valOpen.close();
+  try {
+  IOUtils.exists(PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "floorp_notes_backup.json")).then((data) => {
+    if (!data) {
+        let backupFilePath = PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "floorp_notes_backup.json");
+        IOUtils.writeUTF8(backupFilePath, `{"data":{${jsonToStr},`);
+    } else {
+        let backupFilePath = PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "floorp_notes_backup.json");
+        IOUtils.readUTF8(backupFilePath).then(
+          content => {
+            let appText = `${content}${jsonToStr},`;
+            IOUtils.writeUTF8(backupFilePath, appText);
+          });
+        }
+  });
+  } catch (e) {};
 };
 
 if (Services.prefs.getCharPref(FLOORP_NOTES_PREF) != "") {
@@ -138,11 +138,12 @@ if (Services.prefs.getCharPref(FLOORP_NOTES_PREF) != "") {
 }
 
 function getAllBackupedNotes() {
-  const filePath = OS.Path.join(
-    OS.Constants.Path.profileDir,
+  const filePath = PathUtils.join(
+    Services.dirsvc.get(
+      "ProfD", Ci.nsIFile).path,
     "floorp_notes_backup.json"
   );
-  const content = OS.File.read(filePath, { encoding: "utf-8" }).then(
+  const content = IOUtils.readUTF8(filePath).then(
     content => {
       content = content.slice(0, -1) + "}}";
       return JSON.parse(content);
@@ -165,11 +166,13 @@ getAllBackupedNotes().then(content => {
     });
 
     let jsonToStr = JSON.stringify(content).slice(0, -2) + ",";
-    const filePath = OS.Path.join(
-      OS.Constants.Path.profileDir,
-      "floorp_notes_backup.json"
-    );
-    OS.File.writeAtomic(filePath, new TextEncoder().encode(jsonToStr));
+    const filePath = PathUtils.join(
+      Services.dirsvc.get(
+        "ProfD", Ci.nsIFile
+        ).path, 
+        "floorp_notes_backup.json"
+      )
+    IOUtils.writeUTF8(filePath, jsonToStr);
   }
 });
 
