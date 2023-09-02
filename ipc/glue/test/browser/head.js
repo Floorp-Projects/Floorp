@@ -558,9 +558,10 @@ async function crashSomeUtilityActor(
   return crashSomeUtility(utilityPid, actorsCheck);
 }
 
-function isNightlyOrEalyBeta() {
-  const { AppConstants } = ChromeUtils.importESModule(
-    "resource://gre/modules/AppConstants.sys.mjs"
-  );
-  return AppConstants.NIGHTLY_BUILD || AppConstants.EARLY_BETA_OR_EARLIER;
+function versionContains(e) {
+  return Services.appinfo.platformVersion.indexOf(e) > -1;
+}
+
+function isNightly() {
+  return versionContains("a");
 }
