@@ -4,7 +4,11 @@
 
 package org.mozilla.fenix.customtabs
 
+import android.app.assist.AssistContent
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
@@ -116,5 +120,12 @@ open class ExternalAppBrowserActivity : HomeActivity() {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getExternalTabId(): String? {
         return getIntentSessionId(SafeIntent(intent))
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    override fun onProvideAssistContent(outContent: AssistContent?) {
+        super.onProvideAssistContent(outContent)
+        val currentTabUrl = getExternalTab()?.content?.url
+        outContent?.webUri = currentTabUrl?.let { Uri.parse(it) }
     }
 }
