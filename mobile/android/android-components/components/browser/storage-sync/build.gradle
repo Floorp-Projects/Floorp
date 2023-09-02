@@ -27,13 +27,13 @@ android {
 
 dependencies {
     // These dependencies are part of this module's public API.
-    api (ComponentsDependencies.mozilla_places) {
+    api (ComponentsDependencies.mozilla_appservices_places) {
         // Use our own version of the Glean dependency,
         // which might be different from the version declared by A-S.
         exclude group: 'org.mozilla.components', module: 'service-glean'
     }
 
-    api ComponentsDependencies.mozilla_remote_tabs
+    api ComponentsDependencies.mozilla_appservices_tabs
     api project(':concept-storage')
     api project(':concept-sync')
 
@@ -41,7 +41,7 @@ dependencies {
     implementation project(':support-utils')
 
     implementation ComponentsDependencies.androidx_work_runtime
-    implementation ComponentsDependencies.mozilla_sync_manager
+    implementation ComponentsDependencies.mozilla_appservices_syncmanager
 
     testImplementation project(':support-test')
 
@@ -52,11 +52,11 @@ dependencies {
     testImplementation ComponentsDependencies.androidx_work_testing
     testImplementation ComponentsDependencies.kotlin_reflect
 
-    testImplementation ComponentsDependencies.mozilla_places
-    testImplementation ComponentsDependencies.mozilla_remote_tabs
+    testImplementation ComponentsDependencies.mozilla_appservices_places
+    testImplementation ComponentsDependencies.mozilla_appservices_tabs
     testImplementation ComponentsDependencies.testing_mockwebserver
 
-    testImplementation ComponentsDependencies.mozilla_full_megazord_forUnitTests
+    testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_forUnitTests
     testImplementation ComponentsDependencies.mozilla_glean_forUnitTests
 }
 

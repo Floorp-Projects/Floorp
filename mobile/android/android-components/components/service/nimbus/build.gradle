@@ -55,7 +55,7 @@ android {
 
 dependencies {
     // These dependencies are part of this module's public API.
-    api (ComponentsDependencies.mozilla_nimbus) {
+    api (ComponentsDependencies.mozilla_appservices_nimbus) {
         // Use our own version of the Glean dependency,
         // which might be different from the version declared by A-S.
         exclude group: 'org.mozilla.components', module: 'service-glean'
@@ -69,7 +69,7 @@ dependencies {
 
     implementation ComponentsDependencies.kotlin_coroutines
 
-    implementation ComponentsDependencies.mozilla_nimbus
+    implementation ComponentsDependencies.mozilla_appservices_nimbus
 
     implementation project(':support-base')
     implementation project(':support-locale')
@@ -80,7 +80,7 @@ dependencies {
     // send crash reports to Socorro (GV).
     compileOnly project(":service-glean")
 
-    testImplementation ComponentsDependencies.mozilla_full_megazord_forUnitTests
+    testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_forUnitTests
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.androidx_test_junit
     testImplementation ComponentsDependencies.testing_mockwebserver

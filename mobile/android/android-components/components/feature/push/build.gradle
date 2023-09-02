@@ -27,7 +27,7 @@ android {
 dependencies {
     implementation project(':concept-push')
 
-    implementation ComponentsDependencies.mozilla_push
+    implementation ComponentsDependencies.mozilla_appservices_push
 
     // Remove when the MessageBus is implemented somewhere else.
     implementation project(':support-base')

@@ -35,8 +35,8 @@ dependencies {
     api project(':concept-storage')
 
     // Parts of this dependency are typealiase'd or are otherwise part of this module's public API.
-    api ComponentsDependencies.mozilla_fxa
-    implementation ComponentsDependencies.mozilla_sync_manager
+    api ComponentsDependencies.mozilla_appservices_fxaclient
+    implementation ComponentsDependencies.mozilla_appservices_syncmanager
 
     // Observable is part of public API of the FxaAccountManager.
     api project(':support-base')
@@ -58,7 +58,7 @@ dependencies {
     testImplementation ComponentsDependencies.testing_robolectric
     testImplementation ComponentsDependencies.testing_coroutines
 
-    testImplementation ComponentsDependencies.mozilla_full_megazord_forUnitTests
+    testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_forUnitTests
     testImplementation ComponentsDependencies.kotlin_reflect
 }
 

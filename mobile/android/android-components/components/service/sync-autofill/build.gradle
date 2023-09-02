@@ -26,7 +26,7 @@ android {
 }
 
 dependencies {
-    api ComponentsDependencies.mozilla_sync_autofill
+    api ComponentsDependencies.mozilla_appservices_autofill
 
     api project(':concept-storage')
     api project(':concept-sync')
@@ -42,7 +42,7 @@ dependencies {
     testImplementation ComponentsDependencies.androidx_test_junit
     testImplementation ComponentsDependencies.testing_robolectric
     testImplementation ComponentsDependencies.testing_coroutines
-    testImplementation ComponentsDependencies.mozilla_full_megazord_forUnitTests
+    testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_forUnitTests
 }
 
 apply from: '../../../android-lint.gradle'

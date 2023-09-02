@@ -31,7 +31,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 }
 
 dependencies {
-    api ComponentsDependencies.mozilla_suggest
+    api ComponentsDependencies.mozilla_appservices_suggest
 
     implementation project(':concept-awesomebar')
     implementation project(':concept-engine')
@@ -47,7 +47,7 @@ dependencies {
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.androidx_test_junit
     testImplementation ComponentsDependencies.androidx_work_testing
-    testImplementation ComponentsDependencies.mozilla_full_megazord_forUnitTests
+    testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_forUnitTests
     testImplementation ComponentsDependencies.testing_coroutines
     testImplementation ComponentsDependencies.testing_robolectric
 }
