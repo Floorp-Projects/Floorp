@@ -424,8 +424,6 @@ static NSString* GetRealFamilyName(NSFont* aFont) {
 // this information up, so hard code the logic here but confirm via
 // debug assertions that the logic is correct.
 
-const CGFloat kTextDisplayCrossover = 20.0;  // use text family below this size
-
 void gfxMacPlatformFontList::InitSystemFontNames() {
   // On Catalina+, the system font uses optical sizing rather than individual
   // faces, so we don't need to look for a separate display-sized face.
