@@ -35,6 +35,8 @@ class PathOps {
 
   bool StreamToSink(PathSink& aPathSink) const;
 
+  bool CheckedStreamToSink(PathSink& aPathSink) const;
+
   PathOps TransformedCopy(const Matrix& aTransform) const;
 
   size_t NumberOfOps() const;

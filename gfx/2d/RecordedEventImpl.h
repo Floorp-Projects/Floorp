@@ -2974,7 +2974,7 @@ inline bool RecordedPathCreation::PlayEvent(Translator* aTranslator) const {
   }
 
   RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder(mFillRule);
-  if (!mPathOps->StreamToSink(*builder)) {
+  if (!mPathOps->CheckedStreamToSink(*builder)) {
     return false;
   }
 
