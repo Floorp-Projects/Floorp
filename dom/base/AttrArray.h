@@ -181,9 +181,10 @@ class AttrArray {
   AttrArray(const AttrArray& aOther) = delete;
   AttrArray& operator=(const AttrArray& aOther) = delete;
 
- private:
   bool GrowBy(uint32_t aGrowSize);
+  bool GrowTo(uint32_t aCapacity);
 
+ private:
   // Tries to create an attribute, growing the buffer if needed, with the given
   // name and value.
   //
