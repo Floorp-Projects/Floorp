@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="200" height="200"></canvas>
+
+<script>
+const c = document.getElementById("c");
+const ctx = c.getContext("2d");
+
+ctx.translate(20, 20);
+
+ctx.beginPath();
+ctx.arc(0, 0, 15, 0, 2 * Math.PI);
+ctx.clip();
+
+ctx.beginPath();
+ctx.arc(0, 0, 10, 0, 2 * Math.PI);
+ctx.lineWidth = 2;
+ctx.globalAlpha = 0.5;
+ctx.strokeStyle = '#00ff00';
+ctx.stroke();
+
+</script>
+
+</body>
+</html>
