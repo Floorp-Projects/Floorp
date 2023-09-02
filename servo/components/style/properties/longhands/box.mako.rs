@@ -631,7 +631,6 @@ ${helpers.predefined_type(
     "ScrollbarGutter",
     "computed::ScrollbarGutter::AUTO",
     engines="gecko",
-    gecko_pref="layout.css.scrollbar-gutter.enabled",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property",
     affects="layout",
