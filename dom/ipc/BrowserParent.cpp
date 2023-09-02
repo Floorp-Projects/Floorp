@@ -3750,14 +3750,6 @@ void BrowserParent::LayerTreeUpdate(bool aActive) {
   frameElement->DispatchEvent(*event);
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvPaintWhileInterruptingJSNoOp() {
-  // We sent a PaintWhileInterruptingJS message when layers were already
-  // visible. In this case, we should act as if an update occurred even though
-  // we already have the layers.
-  LayerTreeUpdate(true);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserParent::RecvRemoteIsReadyToHandleInputEvents() {
   // When enabling input event prioritization, input events may preempt other
   // normal priority IPC messages. To prevent the input events preempt

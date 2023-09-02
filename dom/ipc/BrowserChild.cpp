@@ -2485,24 +2485,13 @@ mozilla::ipc::IPCResult BrowserChild::RecvRenderLayers(const bool& aEnabled) {
   }
 
   mRenderLayers = aEnabled;
+  const bool wasVisible = IsVisible();
 
-  if (aEnabled && IsVisible()) {
-    // This request is a no-op.
-    // In this case, we still want a MozLayerTreeReady notification to fire
-    // in the parent, PaintWhileInterruptingJSNoOp does that.
-    // TODO(emilio): Is this still needed? Seems like the front-end should know
-    // already that we have layers.
-    if (IPCOpen()) {
-      Unused << SendPaintWhileInterruptingJSNoOp();
-    }
-    return IPC_OK();
-  }
-
-  // FIXME(emilio): Probably / maybe this shouldn't be needed? See the comment
-  // in MakeVisible(), having the two separate states is not great.
   UpdateVisibility();
 
-  if (!aEnabled) {
+  // If we just became visible, try to trigger a paint as soon as possible.
+  const bool becameVisible = !wasVisible && IsVisible();
+  if (!becameVisible) {
     return IPC_OK();
   }
 
