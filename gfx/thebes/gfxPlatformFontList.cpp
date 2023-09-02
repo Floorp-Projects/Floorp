@@ -1899,63 +1899,28 @@ fontlist::Pointer gfxPlatformFontList::GetShmemCharMapLocked(
   return entry->GetCharMap();
 }
 
-// Lookup aCmap in the shared cmap set, adding if not already present.
-// This is the only way for a reference to a gfxCharacterMap to be acquired
-// by another thread than its original creator.
+// lookup cmap in the shared cmap set, adding if not already present
 already_AddRefed<gfxCharacterMap> gfxPlatformFontList::FindCharMap(
     gfxCharacterMap* aCmap) {
-  // Lock to prevent potentially racing against MaybeRemoveCmap.
   AutoLock lock(mLock);
-
-  // Find existing entry or insert a new one (which will add a reference).
   aCmap->CalcHash();
-  aCmap->mShared = true;  // Set the shared flag in preparation for adding
-                          // to the global table.
-  RefPtr cmap = mSharedCmaps.PutEntry(aCmap)->GetKey();
-
-  // If we ended up finding a different, pre-existing entry, clear the
-  // shared flag on this one so that it'll get deleted on Release().
-  if (cmap.get() != aCmap) {
-    aCmap->mShared = false;
-  }
-
-  return cmap.forget();
+  gfxCharacterMap* cmap = mSharedCmaps.PutEntry(aCmap)->GetKey();
+  cmap->mShared = true;
+  return do_AddRef(cmap);
 }
 
-// Potentially remove the charmap from the shared cmap set. This is called
-// when a user of the charmap drops a reference and the refcount goes to 1;
-// in that case, it is possible our shared set is the only remaining user
-// of the object, and we should remove it.
-// Note that aCharMap might have already been freed, so we must not try to
-// dereference it until we have checked that it's still present in our table.
-void gfxPlatformFontList::MaybeRemoveCmap(gfxCharacterMap* aCharMap) {
-  // Lock so that nobody else can get a reference via FindCharMap while we're
-  // checking here.
+// remove the cmap from the shared cmap set
+void gfxPlatformFontList::RemoveCmap(const gfxCharacterMap* aCharMap) {
   AutoLock lock(mLock);
-
-  // Skip lookups during teardown.
-  if (!mSharedCmaps.Count()) {
+  // skip lookups during teardown
+  if (mSharedCmaps.Count() == 0) {
     return;
   }
 
-  // aCharMap needs to match the entry and be the same ptr and still have a
-  // refcount of exactly 1 (i.e. we hold the only reference) before removing.
-  // If we're racing another thread, it might already have been removed, in
-  // which case GetEntry will not find it and we won't try to dereference the
-  // already-freed pointer.
+  // cmap needs to match the entry *and* be the same ptr before removing
   CharMapHashKey* found =
       mSharedCmaps.GetEntry(const_cast<gfxCharacterMap*>(aCharMap));
-  if (found && found->GetKey() == aCharMap && aCharMap->RefCount() == 1) {
-    // Forget our reference to the object that's being deleted, without
-    // calling Release() on it.
-    Unused << found->mCharMap.forget();
-
-    // Do the deletion.
-    delete aCharMap;
-
-    // Log this as a "Release" to keep leak-checking correct.
-    NS_LOG_RELEASE(aCharMap, 0, "gfxCharacterMap");
-
+  if (found && found->GetKey() == aCharMap) {
     mSharedCmaps.RemoveEntry(found);
   }
 }
