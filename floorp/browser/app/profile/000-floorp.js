@@ -280,7 +280,7 @@ pref("toolkit.legacyUserProfileCustomizations.script", false);
 //Floorp
 
 // 1 = photon, 2 = lepton, 3 = proton fix
-pref("floorp.lepton.interface", 2);
+pref("floorp.lepton.interface", 1);
 
 // ** Theme Default Options ****************************************************
 // userchrome.css usercontent.css activate
@@ -317,28 +317,28 @@ pref("layout.css.has-selector.enabled", true);
 pref("userChrome.tab.connect_to_window",          true); // Original, Photon
 pref("userChrome.tab.color_like_toolbar",         true); // Original, Photon
 
-pref("userChrome.tab.lepton_like_padding",        true); // Original
-pref("userChrome.tab.photon_like_padding",       false); // Photon
+pref("userChrome.tab.lepton_like_padding",       false); // Original
+pref("userChrome.tab.photon_like_padding",        true); // Photon
 
-pref("userChrome.tab.dynamic_separator",          true); // Original, Proton
-pref("userChrome.tab.static_separator",          false); // Photon
+pref("userChrome.tab.dynamic_separator",         false); // Original, Proton
+pref("userChrome.tab.static_separator",           true); // Photon
 pref("userChrome.tab.static_separator.selected_accent", false); // Just option
 pref("userChrome.tab.bar_separator",             false); // Just option
 
-pref("userChrome.tab.newtab_button_like_tab",     true); // Original
-pref("userChrome.tab.newtab_button_smaller",     false); // Photon
+pref("userChrome.tab.newtab_button_like_tab",    false); // Original
+pref("userChrome.tab.newtab_button_smaller",      true); // Photon
 pref("userChrome.tab.newtab_button_proton",      false); // Proton
 
-pref("userChrome.icon.panel_full",                true); // Original, Proton
-pref("userChrome.icon.panel_photon",             false); // Photon
+pref("userChrome.icon.panel_full",               false); // Original, Proton
+pref("userChrome.icon.panel_photon",              true); // Photon
 
 // Original Only
-pref("userChrome.tab.box_shadow",                 false);
-pref("userChrome.tab.bottom_rounded_corner",      true);
+pref("userChrome.tab.box_shadow",                false);
+pref("userChrome.tab.bottom_rounded_corner",     false);
 
 // Photon Only
-pref("userChrome.tab.photon_like_contextline",   false);
-pref("userChrome.rounding.square_tab",           false);
+pref("userChrome.tab.photon_like_contextline",    true);
+pref("userChrome.rounding.square_tab",            true);
 
 // == Theme Compatibility Settings =============================================
 // pref("userChrome.compatibility.accent_color",         true); // Firefox v103 Below
