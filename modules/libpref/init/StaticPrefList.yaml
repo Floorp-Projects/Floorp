@@ -9208,13 +9208,6 @@
   value: false
   mirror: always
 
-# Whether the `scrollbar-gutter` CSS property is enabled.
-- name: layout.css.scrollbar-gutter.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether supports() conditions in @import is enabled
 - name: layout.css.import-supports.enabled
   type: RelaxedAtomicBool
