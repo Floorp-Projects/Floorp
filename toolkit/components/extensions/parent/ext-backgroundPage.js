@@ -34,6 +34,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   delay => Math.min(Math.max(delay, 100), 5 * 60 * 1000)
 );
 
+// Pref used in tests to assert background page state set to
+// stopped on an extension process crash.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "disableRestartPersistentAfterCrash",
+  "extensions.background.disableRestartPersistentAfterCrash",
+  false
+);
+
 // eslint-disable-next-line mozilla/reject-importGlobalProperties
 Cu.importGlobalProperties(["DOMException"]);
 
@@ -348,6 +357,7 @@ class BackgroundContextOwner {
    * primed yet. It is initially `true`, and set to `false` as soon as
    * listeners are primed. It can become `true` again if `primeBackground` was
    * skipped due to `shouldPrimeBackground` being `false`.
+   * NOTE: this flag is set for both event pages and persistent background pages.
    */
   canBePrimed = true;
 
@@ -361,6 +371,17 @@ class BackgroundContextOwner {
    */
   shouldPrimeBackground = true;
 
+  get #hasEnteredShutdown() {
+    // This getter is just a small helper to make sure we always check for
+    // the extension shutdown being already initiated.
+    // Ordinarily the extension object is expected to be nullified from the
+    // onShutdown method, but extension.hasShutdown is set earlier and because
+    // the shutdown goes through some async steps there is a chance for other
+    // internals to be hit while the hasShutdown flag is set bug onShutdown
+    // not hit yet.
+    return this.extension.hasShutdown || Services.startup.shuttingDown;
+  }
+
   /**
    * @param {BackgroundBuilder} backgroundBuilder
    * @param {Extension} extension
@@ -369,6 +390,7 @@ class BackgroundContextOwner {
     this.backgroundBuilder = backgroundBuilder;
     this.extension = extension;
     this.onExtensionProcessCrashed = this.onExtensionProcessCrashed.bind(this);
+    this.onApplicationInForeground = this.onApplicationInForeground.bind(this);
     this.onExtensionEnableProcessSpawning =
       this.onExtensionEnableProcessSpawning.bind(this);
 
@@ -379,6 +401,11 @@ class BackgroundContextOwner {
       "extension-enable-process-spawning",
       this.onExtensionEnableProcessSpawning
     );
+    // We only defer handling extension process crashes for persistent
+    // background context.
+    if (extension.persistentBackground) {
+      extensions.on("application-foreground", this.onApplicationInForeground);
+    }
   }
 
   /**
@@ -489,10 +516,6 @@ class BackgroundContextOwner {
 
     if (this.extension.hasShutdown) {
       this.extension = null;
-    } else if (this.extension.persistentBackground) {
-      // A crashed background page is gone until the extension restarts.
-      // TODO bug 1844490: Consider priming background pages like event pages.
-      // See also the end of terminateBackground().
     } else if (this.shouldPrimeBackground) {
       // Prime again, so that a stopped background can always be revived when
       // needed.
@@ -529,7 +552,30 @@ class BackgroundContextOwner {
     }
   }
 
+  restartPersistentBackgroundAfterCrash() {
+    const { extension } = this;
+    if (
+      this.#hasEnteredShutdown ||
+      // Ignore if the background state isn't the one expected to be set
+      // after a crash.
+      extension.backgroundState !== BACKGROUND_STATE.STOPPED ||
+      // Auto-restart persistent background scripts after crash disabled by prefs.
+      disableRestartPersistentAfterCrash
+    ) {
+      return;
+    }
+
+    // Persistent background pages are re-primed from setBgStateStopped when we
+    // are hitting a crash (if the threshold was not exceeded, otherwise they
+    // are going to be re-primed from onExtensionEnableProcessSpawning).
+    extension.emit("start-background-script");
+  }
+
   onExtensionEnableProcessSpawning() {
+    if (this.#hasEnteredShutdown) {
+      return;
+    }
+
     if (!this.canBePrimed) {
       return;
     }
@@ -537,9 +583,29 @@ class BackgroundContextOwner {
     // Allow priming again.
     this.shouldPrimeBackground = true;
     this.backgroundBuilder.primeBackground(false);
+
+    if (this.extension.persistentBackground) {
+      this.restartPersistentBackgroundAfterCrash();
+    }
+  }
+
+  onApplicationInForeground(eventName, data) {
+    if (
+      this.#hasEnteredShutdown ||
+      // Past the silent crash handling threashold.
+      data.processSpawningDisabled
+    ) {
+      return;
+    }
+
+    this.restartPersistentBackgroundAfterCrash();
   }
 
   onExtensionProcessCrashed(eventName, data) {
+    if (this.#hasEnteredShutdown) {
+      return;
+    }
+
     // data.childID holds the process ID of the crashed extension process.
     // For now, assume that there is only one, so clean up unconditionally.
 
@@ -550,6 +616,15 @@ class BackgroundContextOwner {
     // extension process doesn't affect us.
     if (this.bgInstance) {
       this.setBgStateStopped();
+    }
+
+    if (this.extension.persistentBackground) {
+      // Defer to when back in foreground and/or process spawning is explicitly re-enabled.
+      if (!data.appInForeground || data.processSpawningDisabled) {
+        return;
+      }
+
+      this.restartPersistentBackgroundAfterCrash();
     }
   }
 
@@ -566,6 +641,7 @@ class BackgroundContextOwner {
       "extension-enable-process-spawning",
       this.onExtensionEnableProcessSpawning
     );
+    extensions.off("application-foreground", this.onApplicationInForeground);
   }
 }
 
@@ -888,14 +964,6 @@ class BackgroundBuilder {
       }
 
       this.backgroundContextOwner.setBgStateStopped(false);
-      if (extension.persistentBackground && this.extension) {
-        // Several unit tests are currently relying on terminateBackground() to
-        // prime listeners. This is correct for event pages, but not for
-        // persistent background pages!
-        // TODO bug 1844490: Resolve inconsistency, see persistentBackground
-        // check in setBgStateStopped.
-        this.primeBackground(false);
-      }
     };
 
     EventManager.primeListeners(extension, isInStartup);

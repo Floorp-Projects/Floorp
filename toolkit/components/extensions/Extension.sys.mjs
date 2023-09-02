@@ -734,6 +734,13 @@ export var ExtensionProcessCrashObserver = {
       // Intentional fall-through
       case "application-background":
         this._appInForeground = topic === "application-foreground";
+        if (this._appInForeground) {
+          Management.emit("application-foreground", {
+            appInForeground: this._appInForeground,
+            childID: this.currentProcessChildID,
+            processSpawningDisabled: this.processSpawningDisabled,
+          });
+        }
         break;
       case "process-type-set":
       // Intentional fall-through

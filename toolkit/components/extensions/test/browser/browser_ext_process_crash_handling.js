@@ -13,6 +13,13 @@ const { ExtensionProcessCrashObserver, Management } =
 AddonTestUtils.initMochitest(this);
 
 add_task(async function test_ExtensionProcessCrashObserver() {
+  await SpecialPowers.pushPrefEnv({
+    // This test triggers a crash and so it will be restarting all builtin
+    // extensions persistent background pages as a side effect (and that would
+    // be make this test to hit failures due to the builtin background pages
+    // still in the process of being restarted being detected as shutdown leaks).
+    set: [["extensions.background.disableRestartPersistentAfterCrash", true]],
+  });
   let mv2Extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     manifest: {
@@ -157,4 +164,6 @@ add_task(async function test_ExtensionProcessCrashObserver() {
 
   // Reset this array to prevent TV failures.
   ExtensionProcessCrashObserver.lastCrashTimestamps = [];
+
+  await SpecialPowers.popPrefEnv();
 });
