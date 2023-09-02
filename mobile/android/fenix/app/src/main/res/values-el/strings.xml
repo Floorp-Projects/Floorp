@@ -385,7 +385,7 @@
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Αναζήτηση</string>
     <!-- Preference for settings related to Search engines -->
-    <string name="preferences_search_engines"></string>
+    <string name="preferences_search_engines">Μηχανές αναζήτησης</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Γραμμή διευθύνσεων</string>
     <!-- Preference link to rating Fenix on the Play Store -->
