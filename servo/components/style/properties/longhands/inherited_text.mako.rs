@@ -412,8 +412,6 @@ ${helpers.predefined_type(
     "HyphenateCharacter",
     "computed::HyphenateCharacter::Auto",
     engines="gecko",
-    gecko_pref="layout.css.hyphenate-character.enabled",
-    has_effect_on_gecko_scrollbars=False,
     animation_value_type="discrete",
     spec="https://www.w3.org/TR/css-text-4/#hyphenate-character",
     affects="layout",
