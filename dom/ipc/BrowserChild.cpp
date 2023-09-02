@@ -1380,7 +1380,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityHandleTap(
   return RecvHandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
 }
 
-bool BrowserChild::NotifyAPZStateChange(
+void BrowserChild::NotifyAPZStateChange(
     const ViewID& aViewId,
     const layers::GeckoContentController::APZStateChange& aChange,
     const int& aArg, Maybe<uint64_t> aInputBlockId) {
@@ -1399,7 +1399,6 @@ bool BrowserChild::NotifyAPZStateChange(
     observerService->NotifyObservers(nullptr, "PanZoom:StateChange",
                                      u"PANNING");
   }
-  return true;
 }
 
 void BrowserChild::StartScrollbarDrag(

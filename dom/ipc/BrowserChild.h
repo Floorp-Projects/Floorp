@@ -572,7 +572,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId);
 
   bool UpdateFrame(const layers::RepaintRequest& aRequest);
-  bool NotifyAPZStateChange(
+  void NotifyAPZStateChange(
       const ViewID& aViewId,
       const layers::GeckoContentController_APZStateChange& aChange,
       const int& aArg, Maybe<uint64_t> aInputBlockId);
