@@ -5046,20 +5046,22 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
       nsIFrame::ReflowChildFlags::NoSizeView |
       nsIFrame::ReflowChildFlags::NoDeleteNextInFlowChild;
 
-  bool found;
-  GridItemCachedBAxisMeasurement cachedMeasurement =
-      aChild->GetProperty(GridItemCachedBAxisMeasurement::Prop(), &found);
-  if (found && cachedMeasurement.IsValidFor(aChild, aCBSize)) {
-    childSize.BSize(wm) = cachedMeasurement.BSize();
-    childSize.ISize(wm) = aChild->ISize(wm);
-    nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
-                                        LogicalPoint(wm), nsSize(), flags);
-    GRID_LOG(
-        "[perf] MeasuringReflow accepted cached value=%d, child=%p, "
-        "aCBSize.ISize=%d",
-        cachedMeasurement.BSize(), aChild,
-        aCBSize.ISize(aChild->GetWritingMode()));
-    return cachedMeasurement.BSize();
+  if (StaticPrefs::layout_css_grid_item_baxis_measurement_enabled()) {
+    bool found;
+    GridItemCachedBAxisMeasurement cachedMeasurement =
+        aChild->GetProperty(GridItemCachedBAxisMeasurement::Prop(), &found);
+    if (found && cachedMeasurement.IsValidFor(aChild, aCBSize)) {
+      childSize.BSize(wm) = cachedMeasurement.BSize();
+      childSize.ISize(wm) = aChild->ISize(wm);
+      nsContainerFrame::FinishReflowChild(aChild, pc, childSize, &childRI, wm,
+                                          LogicalPoint(wm), nsSize(), flags);
+      GRID_LOG(
+          "[perf] MeasuringReflow accepted cached value=%d, child=%p, "
+          "aCBSize.ISize=%d",
+          cachedMeasurement.BSize(), aChild,
+          aCBSize.ISize(aChild->GetWritingMode()));
+      return cachedMeasurement.BSize();
+    }
   }
 
   parent->ReflowChild(aChild, pc, childSize, childRI, wm, LogicalPoint(wm),
@@ -5070,36 +5072,39 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
   parent->RemoveProperty(nsContainerFrame::DebugReflowingWithInfiniteISize());
 #endif
 
-  bool found;
-  GridItemCachedBAxisMeasurement cachedMeasurement =
-      aChild->GetProperty(GridItemCachedBAxisMeasurement::Prop(), &found);
-  if (!found &&
-      GridItemCachedBAxisMeasurement::CanCacheMeasurement(aChild, aCBSize)) {
-    GridItemCachedBAxisMeasurement cachedMeasurement(aChild, aCBSize,
-                                                     childSize.BSize(wm));
-    aChild->SetProperty(GridItemCachedBAxisMeasurement::Prop(),
-                        cachedMeasurement);
-    GRID_LOG(
-        "[perf] MeasuringReflow created new cached value=%d, child=%p, "
-        "aCBSize.ISize=%d",
-        cachedMeasurement.BSize(), aChild,
-        aCBSize.ISize(aChild->GetWritingMode()));
-  } else if (found) {
-    if (GridItemCachedBAxisMeasurement::CanCacheMeasurement(aChild, aCBSize)) {
-      cachedMeasurement.Update(aChild, aCBSize, childSize.BSize(wm));
-      GRID_LOG(
-          "[perf] MeasuringReflow rejected but updated cached value=%d, "
-          "child=%p, aCBSize.ISize=%d",
-          cachedMeasurement.BSize(), aChild,
-          aCBSize.ISize(aChild->GetWritingMode()));
+  if (StaticPrefs::layout_css_grid_item_baxis_measurement_enabled()) {
+    bool found;
+    GridItemCachedBAxisMeasurement cachedMeasurement =
+        aChild->GetProperty(GridItemCachedBAxisMeasurement::Prop(), &found);
+    if (!found &&
+        GridItemCachedBAxisMeasurement::CanCacheMeasurement(aChild, aCBSize)) {
+      GridItemCachedBAxisMeasurement cachedMeasurement(aChild, aCBSize,
+                                                       childSize.BSize(wm));
       aChild->SetProperty(GridItemCachedBAxisMeasurement::Prop(),
                           cachedMeasurement);
-    } else {
-      aChild->RemoveProperty(GridItemCachedBAxisMeasurement::Prop());
       GRID_LOG(
-          "[perf] MeasuringReflow rejected and removed cached value, "
-          "child=%p",
-          aChild);
+          "[perf] MeasuringReflow created new cached value=%d, child=%p, "
+          "aCBSize.ISize=%d",
+          cachedMeasurement.BSize(), aChild,
+          aCBSize.ISize(aChild->GetWritingMode()));
+    } else if (found) {
+      if (GridItemCachedBAxisMeasurement::CanCacheMeasurement(aChild,
+                                                              aCBSize)) {
+        cachedMeasurement.Update(aChild, aCBSize, childSize.BSize(wm));
+        GRID_LOG(
+            "[perf] MeasuringReflow rejected but updated cached value=%d, "
+            "child=%p, aCBSize.ISize=%d",
+            cachedMeasurement.BSize(), aChild,
+            aCBSize.ISize(aChild->GetWritingMode()));
+        aChild->SetProperty(GridItemCachedBAxisMeasurement::Prop(),
+                            cachedMeasurement);
+      } else {
+        aChild->RemoveProperty(GridItemCachedBAxisMeasurement::Prop());
+        GRID_LOG(
+            "[perf] MeasuringReflow rejected and removed cached value, "
+            "child=%p",
+            aChild);
+      }
     }
   }
   return childSize.BSize(wm);
