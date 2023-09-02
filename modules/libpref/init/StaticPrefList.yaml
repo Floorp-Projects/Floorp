@@ -9980,11 +9980,11 @@
 # We do that only on nightly builds for now.
 -   name: media.allow-audio-non-utility
     type: RelaxedAtomicBool
-#if defined(NIGHTLY_BUILD) || defined(EARLY_BETA_OR_EARLIER)
+#if defined(NIGHTLY_BUILD)
     value: false
 #else
     value: true
-#endif // defined(NIGHTLY_BUILD) || defined(EARLY_BETA_OR_EARLIER)
+#endif // defined(NIGHTLY_BUILD)
     mirror: always
 
 #ifdef MOZ_OMX

@@ -19,6 +19,6 @@ add_setup(async function setup() {
 add_task(async function testAudioDecodingInUtility() {
   // TODO: When getting rid of audio decoding on non utility at all, this
   // should be removed
-  const verifyForUtility = !!isNightlyOrEalyBeta();
+  const verifyForUtility = !!isNightly();
   await runTest({ expectUtility: verifyForUtility });
 });
