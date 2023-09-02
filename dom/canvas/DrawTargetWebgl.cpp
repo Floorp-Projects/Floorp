@@ -3118,10 +3118,6 @@ already_AddRefed<TextureHandle> DrawTargetWebgl::SharedContext::DrawStrokeMask(
   mWebgl->UniformData(LOCAL_GL_FLOAT_VEC2, mSolidProgramTransform, false,
                       {(const uint8_t*)xformData, sizeof(xformData)});
 
-  // Ensure the current clip mask is ignored.
-  RefPtr<WebGLTextureJS> prevClipMask = mLastClipMask;
-  SetNoClipMask();
-
   // Draw the mask using the supplied path vertex range.
   mWebgl->DrawArrays(LOCAL_GL_TRIANGLES, GLint(aVertexRange.mOffset),
                      GLsizei(aVertexRange.mLength));
@@ -3132,7 +3128,6 @@ already_AddRefed<TextureHandle> DrawTargetWebgl::SharedContext::DrawStrokeMask(
   mDirtyViewport = true;
   mDirtyAA = true;
   mDirtyClip = true;
-  SetClipMask(prevClipMask);
 
   return handle.forget();
 }
