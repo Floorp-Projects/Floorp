@@ -799,8 +799,8 @@ HTTP load 1677518-1.html
 load 1679794.html
 load 1680406.html
 load 1681788.html
-pref(layout.css.grid-item-baxis-measurement.enabled,true) load 1682686-1.html
-pref(layout.css.grid-item-baxis-measurement.enabled,true) load 1682686-2.html
+load 1682686-1.html
+load 1682686-2.html
 HTTP load 1682882.html
 load 1683126.html
 load 1697262-1.html
