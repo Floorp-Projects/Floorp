@@ -44,17 +44,20 @@ function coventToDateAndTime(timestamp) {
 }
 
 function getAllBackupedNotes() {
-  const filePath = OS.Path.join(OS.Constants.Path.profileDir, "floorp_notes_backup.json");
-  let content = OS.File.read(filePath, {
-    encoding: "utf-8"
-  });
-  content = content.then(content => {
-    content = content.slice(0, -1);
-    content = content + "}}";
-    return JSON.parse(content);
-  })
+  const filePath = PathUtils.join(
+    Services.dirsvc.get(
+      "ProfD", Ci.nsIFile).path,
+    "floorp_notes_backup.json"
+  );
+  const content = IOUtils.readUTF8(filePath).then(
+    content => {
+      content = content.slice(0, -1) + "}}";
+      return JSON.parse(content);
+    }
+  );
   return content;
 }
+
 async function restoreNote(timestamp) {
   let l10n = new Localization(["browser/floorp.ftl"], true);
   const prompts = Services.prompt;

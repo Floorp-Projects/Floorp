@@ -12,35 +12,31 @@ this.IOFile = class extends ExtensionAPI {
 
     Cu.importGlobalProperties(["IOUtils"]);
 
-    const { OS } = ChromeUtils.import(
-      "resource://gre/modules/osfile.jsm"
-    );
-
     return {
       IOFile: {
         async createEmptyFile(path) {
           await IOUtils.writeUTF8(path, "");
         },
         async createDir(path) {
-          return OS.File.makeDir(path);
+          return IOUtils.makeDirectory(path);
         },
         async exists(path) {
-          return OS.File.exists(path);
+          return IOUtils.exists(path);
         },
         async copyFile(srcPath, destPath) {
-          return OS.File.copy(srcPath, destPath);
+          return IOUtils.copy(srcPath, destPath);
         },
         async copyDir(srcPath, destPath) {
           return IOUtils.copy(srcPath, destPath, { recursive: true });
         },
         async move(srcPath, destPath) {
-          return OS.File.move(srcPath, destPath);
+          return IOUtils.move(srcPath, destPath);
         },
         async removeFile(path) {
-          return OS.File.remove(path);
+          return IOUtils.remove(path);
         },
         async removeDir(path) {
-          return OS.File.removeDir(path, { ignoreAbsent: true });
+          return IOUtils.remove(path, { recursive: true });
         },
       },
     };
