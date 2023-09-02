@@ -63,6 +63,69 @@ bool PathOps::StreamToSink(PathSink& aPathSink) const {
   return true;
 }
 
+#define CHECKED_NEXT_PARAMS(_type)      \
+  if (nextByte + sizeof(_type) > end) { \
+    return false;                       \
+  }                                     \
+  NEXT_PARAMS(_type)
+
+bool PathOps::CheckedStreamToSink(PathSink& aPathSink) const {
+  if (mPathData.empty()) {
+    return true;
+  }
+
+  const uint8_t* nextByte = mPathData.data();
+  const uint8_t* end = nextByte + mPathData.size();
+  while (true) {
+    if (nextByte == end) {
+      break;
+    }
+
+    if (nextByte + sizeof(OpType) > end) {
+      return false;
+    }
+
+    const OpType opType = *reinterpret_cast<const OpType*>(nextByte);
+    nextByte += sizeof(OpType);
+    switch (opType) {
+      case OpType::OP_MOVETO: {
+        CHECKED_NEXT_PARAMS(Point)
+        aPathSink.MoveTo(params);
+        break;
+      }
+      case OpType::OP_LINETO: {
+        CHECKED_NEXT_PARAMS(Point)
+        aPathSink.LineTo(params);
+        break;
+      }
+      case OpType::OP_BEZIERTO: {
+        CHECKED_NEXT_PARAMS(ThreePoints)
+        aPathSink.BezierTo(params.p1, params.p2, params.p3);
+        break;
+      }
+      case OpType::OP_QUADRATICBEZIERTO: {
+        CHECKED_NEXT_PARAMS(TwoPoints)
+        aPathSink.QuadraticBezierTo(params.p1, params.p2);
+        break;
+      }
+      case OpType::OP_ARC: {
+        CHECKED_NEXT_PARAMS(ArcParams)
+        aPathSink.Arc(params.origin, params.radius, params.startAngle,
+                      params.endAngle, params.antiClockwise);
+        break;
+      }
+      case OpType::OP_CLOSE:
+        aPathSink.Close();
+        break;
+      default:
+        return false;
+    }
+  }
+
+  return true;
+}
+#undef CHECKED_NEXT_PARAMS
+
 PathOps PathOps::TransformedCopy(const Matrix& aTransform) const {
   PathOps newPathOps;
   const uint8_t* nextByte = mPathData.data();
