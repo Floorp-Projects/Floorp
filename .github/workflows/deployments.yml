@@ -134,6 +134,7 @@ jobs:
       profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
       out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
 
 ################################################################ ↑ Windows x86_64 Build ####################################################################################
 
@@ -146,6 +147,7 @@ jobs:
       mar: true
       buildjet: ${{ inputs.buildjet }}
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
 
 ################################################################ ↑ Linux x86_64 Build ####################################################################################
   Part1-linux-aarch64-build:
@@ -157,6 +159,7 @@ jobs:
       mar: true
       buildjet: ${{ inputs.buildjet }}
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
 
 ################################################ ↑ Linux AArch64 Build ################################################
 
@@ -255,6 +258,7 @@ jobs:
       build-with-profdata-and-jarlog: true
       beta: false
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+      release-note-url: ${{ inputs.release-note-url }}
     secrets:
       MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
 

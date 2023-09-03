@@ -36,6 +36,10 @@ on:
         type: boolean
         default: false
       #? buildjet cache also is, but idk how to use on sccache
+      release-note-url:
+        type: string
+        required: false
+        default: ""
     secrets:
       MACOS_CROSS_TOOLS_KEY:
         description: macOS cross tools 7z password
@@ -219,6 +223,14 @@ jobs:
             cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
             cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
           done
+
+    - name: Change Release Note URL
+      if: inputs.release-note-url
+      run: |
+        sed -i 's|https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/|$GHA_release-note-url|g' ./browser/branding/official/pref/firefox-branding.js
+        echo "$cat ./browser/branding/official/pref/firefox-branding.js"
+      env:
+        GHA_release-note-url: ${{inputs.release-note-url}}
 
     - name: Build 🔨
       run: |

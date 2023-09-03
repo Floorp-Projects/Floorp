@@ -21,9 +21,9 @@ pref("app.update.promptWaitTime", 691200);
 // wizard.
 #if MOZ_UPDATE_CHANNEL == beta
   pref("app.update.url.manual", "https://floorp.app");
-  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
-  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
-  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp-beta/");
+  pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 #else
   pref("app.update.url.manual", "https://floorp.app");
   pref("app.update.url.details", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
