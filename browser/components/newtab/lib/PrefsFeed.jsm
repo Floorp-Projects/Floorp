@@ -9,11 +9,11 @@ const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
 const { Prefs } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
+
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
@@ -239,7 +239,7 @@ class PrefsFeed {
 
   async getImage() {
     if (Services.prefs.getIntPref("browser.newtabpage.activity-stream.floorp.background.type") == 3) {
-      let tPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder", "") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"), "a").slice(0, -1)
+      let tPath = PathUtils.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder", "") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"), "a").slice(0, -1)
       let folderExists = await IOUtils.exists(tPath)
       if (folderExists) {
         let imagesPath = await IOUtils.getChildren(tPath)
@@ -253,7 +253,7 @@ class PrefsFeed {
           })
         );
         this.fetchedImages = {}
-        if (imagesPath != 0) {
+        if (imagesPath !== 0) {
           for (let elem of imagesPath) {
             if(elem.toLowerCase().match(str)) {
             let filePath = Services.io.newFileURI(FileUtils.File(elem)).asciiSpec

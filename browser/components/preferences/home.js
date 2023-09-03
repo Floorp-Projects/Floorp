@@ -20,10 +20,6 @@
  *   false = about:blank is shown
  */
 
-const { OS } = ChromeUtils.import(
-  "resource://gre/modules/osfile.jsm"
-  );
-
 Preferences.addAll([
   { id: "browser.startup.homepage", type: "wstring" },
   { id: "pref.browser.homepage.disable_button.current_page", type: "bool" },
@@ -700,7 +696,7 @@ var gHomePane = {
     .getElementById("openImagesFolder")
     .addEventListener("command", ()=>{
       let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
-    new nsLocalFile(OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"),"a").slice( 0, -1 ),).reveal();
+    new nsLocalFile(PathUtils.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"),"a").slice( 0, -1 ),).reveal();
     });
     document
     .getElementById("reloadImages")
@@ -736,7 +732,7 @@ var gHomePane = {
   
       fp.init(window, title, Ci.nsIFilePicker.modeGetFolder);
       fp.appendFilters(Ci.nsIFilePicker.filterAll);
-      fp.displayDirectory = FileUtils.File(OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"),"a").slice( 0, -1 ))
+      fp.displayDirectory = FileUtils.File(PathUtils.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"),"a").slice( 0, -1 ))
       let result = await new Promise(resolve => fp.open(resolve));
       if (result != Ci.nsIFilePicker.returnOK) {
         return;
@@ -780,7 +776,7 @@ var gHomePane = {
   },
 
   imagesFolderInputSet(){
-    let folderPath = OS.Path.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"),"a").slice( 0, -1 )
+    let folderPath = PathUtils.join(Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.folder","") || PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "newtabImages"),"a").slice( 0, -1 )
     document.querySelector("#pictureFolder").value = folderPath
     document.querySelector("#pictureFolder").style.backgroundImage = `url(moz-icon://${Services.io.newFileURI(FileUtils.File(folderPath)).asciiSpec})`
     document.querySelector("#pictureExtensions").value = Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions","")
