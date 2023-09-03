@@ -19,6 +19,12 @@ internal fun SessionState?.getTitleOrUrl(context: Context, title: String? = null
     else -> content.url
 }
 
+internal fun SessionState?.getArtistOrUrl(artist: String? = null): String = when {
+    this == null || content.private -> ""
+    artist != null -> artist
+    else -> content.url
+}
+
 @Suppress("TooGenericExceptionCaught")
 internal suspend fun SessionState?.getNonPrivateIcon(
     getArtwork: (suspend () -> Bitmap?)?,
@@ -28,12 +34,6 @@ internal suspend fun SessionState?.getNonPrivateIcon(
     getArtwork != null -> getArtwork() ?: content.icon
     else -> content.icon
 }
-
-internal val SessionState?.nonPrivateUrl
-    get() = if (this == null || content.private) "" else content.url
-
-internal val SessionState?.nonPrivateIcon: Bitmap?
-    get() = if (this == null || content.private) null else content.icon
 
 /**
  * Finds the [SessionState] (tab or custom tab) that has an active media session. Returns `null` if

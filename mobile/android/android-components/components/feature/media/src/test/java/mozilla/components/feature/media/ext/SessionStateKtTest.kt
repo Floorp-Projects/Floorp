@@ -139,62 +139,50 @@ class SessionStateKtTest {
     }
 
     @Test
-    fun `getNotPrivateUrl returns null when in private mode`() {
+    fun `getArtistOrUrl returns artist when not in private mode`() {
         val sessionState: SessionState = mock()
         val contentState: ContentState = mock()
+        val artist = "test artist"
+        val contentUrl = "content url"
+
+        whenever(sessionState.content).thenReturn(contentState)
+        whenever(contentState.private).thenReturn(false)
+        whenever(contentState.url).thenReturn(contentUrl)
+
+        val result = sessionState.getArtistOrUrl(artist)
+
+        assertEquals(result, artist)
+    }
+
+    @Test
+    fun `getArtistOrUrl returns null when in private mode`() {
+        val sessionState: SessionState = mock()
+        val contentState: ContentState = mock()
+        val artist = "test artist"
         val contentUrl = "content url"
 
         whenever(sessionState.content).thenReturn(contentState)
         whenever(contentState.private).thenReturn(true)
         whenever(contentState.url).thenReturn(contentUrl)
 
-        val result = sessionState.nonPrivateUrl
+        val result = sessionState.getArtistOrUrl(artist)
 
         assertEquals(result, "")
     }
 
     @Test
-    fun `nonPrivateUrl returns null when not in private mode`() {
+    fun `getArtistOrUrl returns url when not in private mode and no artist`() {
         val sessionState: SessionState = mock()
         val contentState: ContentState = mock()
+        val artist = null
         val contentUrl = "content url"
 
         whenever(sessionState.content).thenReturn(contentState)
         whenever(contentState.private).thenReturn(false)
         whenever(contentState.url).thenReturn(contentUrl)
 
-        val result = sessionState.nonPrivateUrl
+        val result = sessionState.getArtistOrUrl(artist)
 
         assertEquals(result, contentUrl)
-    }
-
-    @Test
-    fun `nonPrivateIcon returns null when in private mode`() {
-        val sessionState: SessionState = mock()
-        val contentState: ContentState = mock()
-        val icon: Bitmap = mock()
-
-        whenever(sessionState.content).thenReturn(contentState)
-        whenever(contentState.private).thenReturn(true)
-        whenever(contentState.icon).thenReturn(icon)
-
-        val result = sessionState.nonPrivateIcon
-
-        assertEquals(result, null)
-    }
-
-    @Test
-    fun `nonPrivateIcon returns null when not in private mode`() {
-        val sessionState: SessionState = mock()
-        val contentState: ContentState = mock()
-        val icon: Bitmap = mock()
-
-        whenever(sessionState.content).thenReturn(contentState)
-        whenever(contentState.private).thenReturn(false)
-        whenever(contentState.icon).thenReturn(icon)
-
-        val result = sessionState.nonPrivateIcon
-
-        assertEquals(result, icon)
     }
 }

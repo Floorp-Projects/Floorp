@@ -23,8 +23,9 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.mediasession.MediaSession
+import mozilla.components.feature.media.ext.getArtistOrUrl
+import mozilla.components.feature.media.ext.getNonPrivateIcon
 import mozilla.components.feature.media.ext.getTitleOrUrl
-import mozilla.components.feature.media.ext.nonPrivateUrl
 import mozilla.components.feature.media.ext.toPlaybackState
 import mozilla.components.feature.media.facts.emitNotificationPauseFact
 import mozilla.components.feature.media.facts.emitNotificationPlayFact
@@ -223,19 +224,25 @@ internal class MediaSessionServiceDelegate(
     internal fun updateMediaSession(sessionState: SessionState) {
         mediaSession.setPlaybackState(sessionState.mediaSessionState?.toPlaybackState())
         mediaSession.isActive = true
-        mediaSession.setMetadata(
-            MediaMetadataCompat.Builder()
-                .putString(
-                    MediaMetadataCompat.METADATA_KEY_TITLE,
-                    sessionState.getTitleOrUrl(context),
-                )
-                .putString(
-                    MediaMetadataCompat.METADATA_KEY_ARTIST,
-                    sessionState.nonPrivateUrl,
-                )
-                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, -1)
-                .build(),
-        )
+        notificationScope?.launch {
+            mediaSession.setMetadata(
+                MediaMetadataCompat.Builder()
+                    .putString(
+                        MediaMetadataCompat.METADATA_KEY_TITLE,
+                        sessionState.getTitleOrUrl(context, sessionState.mediaSessionState?.metadata?.title),
+                    )
+                    .putString(
+                        MediaMetadataCompat.METADATA_KEY_ARTIST,
+                        sessionState.getArtistOrUrl(sessionState.mediaSessionState?.metadata?.artist),
+                    )
+                    .putBitmap(
+                        MediaMetadataCompat.METADATA_KEY_ART,
+                        sessionState.getNonPrivateIcon(sessionState.mediaSessionState?.metadata?.getArtwork),
+                    )
+                    .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, -1)
+                    .build(),
+            )
+        }
     }
 
     @VisibleForTesting

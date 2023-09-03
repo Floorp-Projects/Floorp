@@ -8,6 +8,7 @@ import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Notification
 import android.content.BroadcastReceiver
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Build
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -21,6 +22,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.mediasession.MediaSession
+import mozilla.components.concept.engine.mediasession.MediaSession.Metadata
 import mozilla.components.concept.engine.mediasession.MediaSession.PlaybackState
 import mozilla.components.feature.media.ext.toPlaybackState
 import mozilla.components.feature.media.facts.MediaFacts
@@ -363,11 +365,22 @@ class MediaSessionServiceDelegateTest {
         verify(delegate.service).stopSelf()
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `WHEN updating the media session THEN use the values from the current media session`() {
-        val mediaTab = getMediaTab()
+        val bitmap: Bitmap = mock()
+        val getArtwork: (suspend () -> Bitmap?) = { bitmap }
+        val metadata = Metadata("title", "artist", "album", getArtwork)
+
+        val mediaTab = createTab(
+            title = "Mozilla",
+            url = "https://www.mozilla.org",
+            mediaSessionState = MediaSessionState(mock(), metadata = metadata),
+        )
+
         val delegate = MediaSessionServiceDelegate(testContext, mock(), mock(), mock(), mock())
         delegate.mediaSession = mock()
+        delegate.onCreate()
         val metadataCaptor = argumentCaptor<MediaMetadataCompat>()
         // Need to capture method arguments and manually check for equality
         val playbackStateCaptor = argumentCaptor<PlaybackStateCompat>()
@@ -402,8 +415,9 @@ class MediaSessionServiceDelegateTest {
         assertEquals(expectedPlaybackState.actions, playbackStateCaptor.value.actions)
         assertEquals(expectedPlaybackState.position, playbackStateCaptor.value.position)
         verify(delegate.mediaSession).setMetadata(metadataCaptor.capture())
-        assertEquals(mediaTab.content.title, metadataCaptor.value.bundle.getString(MediaMetadataCompat.METADATA_KEY_TITLE))
-        assertEquals(mediaTab.content.url, metadataCaptor.value.bundle.getString(MediaMetadataCompat.METADATA_KEY_ARTIST))
+        assertEquals(metadata.title, metadataCaptor.value.bundle.getString(MediaMetadataCompat.METADATA_KEY_TITLE))
+        assertEquals(metadata.artist, metadataCaptor.value.bundle.getString(MediaMetadataCompat.METADATA_KEY_ARTIST))
+        assertEquals(bitmap, metadataCaptor.value.bundle.getParcelable(MediaMetadataCompat.METADATA_KEY_ART))
         assertEquals(-1L, metadataCaptor.value.bundle.getLong(MediaMetadataCompat.METADATA_KEY_DURATION))
     }
 

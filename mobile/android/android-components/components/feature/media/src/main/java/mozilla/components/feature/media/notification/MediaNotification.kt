@@ -18,9 +18,9 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.feature.media.R
+import mozilla.components.feature.media.ext.getArtistOrUrl
 import mozilla.components.feature.media.ext.getNonPrivateIcon
 import mozilla.components.feature.media.ext.getTitleOrUrl
-import mozilla.components.feature.media.ext.nonPrivateUrl
 import mozilla.components.feature.media.service.AbstractMediaSessionService
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.utils.PendingIntentUtils
@@ -94,7 +94,7 @@ private suspend fun SessionState.toNotificationData(
     return when (mediaSessionState?.playbackState) {
         MediaSession.PlaybackState.PLAYING -> NotificationData(
             title = getTitleOrUrl(context, mediaSessionState?.metadata?.title),
-            description = nonPrivateUrl,
+            description = getArtistOrUrl(mediaSessionState?.metadata?.artist),
             icon = R.drawable.mozac_feature_media_playing,
             largeIcon = getNonPrivateIcon(mediaSessionState?.metadata?.getArtwork),
             action = NotificationCompat.Action.Builder(
@@ -116,7 +116,7 @@ private suspend fun SessionState.toNotificationData(
         )
         MediaSession.PlaybackState.PAUSED -> NotificationData(
             title = getTitleOrUrl(context, mediaSessionState?.metadata?.title),
-            description = nonPrivateUrl,
+            description = getArtistOrUrl(mediaSessionState?.metadata?.artist),
             icon = R.drawable.mozac_feature_media_paused,
             largeIcon = getNonPrivateIcon(mediaSessionState?.metadata?.getArtwork),
             action = NotificationCompat.Action.Builder(
