@@ -151,7 +151,6 @@ ${helpers.single_keyword(
         logical=logical,
         animation_value_type="discrete",
         spec="https://drafts.csswg.org/css-overflow-3/#propdef-{}".format(full_name),
-        gecko_pref="layout.css.overflow-logical.enabled" if logical else None,
         servo_restyle_damage = "reflow",
         affects="layout",
     )}
