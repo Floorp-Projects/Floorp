@@ -7694,6 +7694,13 @@ void nsCSSFrameConstructor::CharacterDataChanged(
         aSubContent, frame));
 #endif
 
+    if (frame->HasAnyStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI)) {
+      LAYOUT_PHASE_TEMP_EXIT();
+      RecreateFramesForContent(aContent, InsertionKind::Async);
+      LAYOUT_PHASE_TEMP_REENTER();
+      return;
+    }
+
     // Special check for text content that is a child of a letter frame.  If
     // this happens, we should remove the letter frame, do whatever we're
     // planning to do with this notification, then put the letter frame back.
