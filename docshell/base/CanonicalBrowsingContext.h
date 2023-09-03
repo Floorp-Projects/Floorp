@@ -202,6 +202,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
       GlobalObject& aGlobal,
       const Sequence<mozilla::OwningNonNull<BrowsingContext>>& aRoots);
 
+  // Return true if a private browsing session is active.
+  static bool IsPrivateBrowsingActive();
+
   // This function would propogate the action to its all child browsing contexts
   // in content processes.
   void UpdateMediaControlAction(const MediaControlAction& aAction);

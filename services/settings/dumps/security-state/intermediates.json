@@ -1,6 +1,222 @@
 {
   "data": [
     {
+      "schema": 1693406886101,
+      "derHash": "Obbjs4j3SVId8rNUGC60zYfUvzZDm/rwIC5Vls/CyqQ=",
+      "subject": "CN=SECOM Passport for Web EV 2.0 CA,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
+      "subjectDN": "MF8xCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENPLixMVEQuMSkwJwYDVQQDEyBTRUNPTSBQYXNzcG9ydCBmb3IgV2ViIEVWIDIuMCBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "465f2f588af159270d8a966f6dac1d5c3cc9f88a6dfde6b136c9dcffe8523052",
+        "size": 1662,
+        "filename": "Wa2FjlVfGKwvkiH0LYWh-y-ihHlaTmVQ-gqZEsR3RwY=.pem",
+        "location": "security-state-staging/intermediates/9df0a300-6455-4e1f-9aa9-bb6d2f52f0a1.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Wa2FjlVfGKwvkiH0LYWh+y+ihHlaTmVQ+gqZEsR3RwY=",
+      "crlite_enrolled": false,
+      "id": "f3a57b4b-1087-4064-afdc-fd3d8fd73b7b",
+      "last_modified": 1693407423723
+    },
+    {
+      "schema": 1693342092773,
+      "derHash": "snT+vm68cYZsM58Bitkz581oBbQ7/ebSGNwhFHFp12s=",
+      "subject": "CN=e-Szigno Online SSL CA 2017,O=Microsec Ltd.,L=Budapest,C=HU",
+      "subjectDN": "MHcxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEWMBQGA1UECgwNTWljcm9zZWMgTHRkLjEXMBUGA1UEYQwOVkFUSFUtMjM1ODQ0OTcxJDAiBgNVBAMMG2UtU3ppZ25vIE9ubGluZSBTU0wgQ0EgMjAxNw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "72bc4f35ba6c3e85f36f856880dc364ba08e1ce42b81244f1ebf53e8514a8d5f",
+        "size": 1435,
+        "filename": "G_JwHP_ydSe7pufWcUyNckBrxBbnQ6Kmqw_OFPPiQI0=.pem",
+        "location": "security-state-staging/intermediates/9cda4ca9-3689-48fd-af2c-640bd25284ff.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "G/JwHP/ydSe7pufWcUyNckBrxBbnQ6Kmqw/OFPPiQI0=",
+      "crlite_enrolled": false,
+      "id": "df7a20cf-df80-4bde-8483-7d48af559d55",
+      "last_modified": 1693342624041
+    },
+    {
+      "schema": 1693342093437,
+      "derHash": "F0TXMTT5XOkWrevub3V0LEeTaGi2TSoMFi7xMpAPDuQ=",
+      "subject": "CN=e-Szigno Class3 SSL CA 2017,O=Microsec Ltd.,L=Budapest,C=HU",
+      "subjectDN": "MHcxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEWMBQGA1UECgwNTWljcm9zZWMgTHRkLjEXMBUGA1UEYQwOVkFUSFUtMjM1ODQ0OTcxJDAiBgNVBAMMG2UtU3ppZ25vIENsYXNzMyBTU0wgQ0EgMjAxNw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "f875b715f8027d390ccd47c7e62fa9a8cb805078002c5447fead8ec98441abbd",
+        "size": 1435,
+        "filename": "69Duo3nmlQnUEvqzlU27qTDaDY9K1yN0wfdopIs9Y7s=.pem",
+        "location": "security-state-staging/intermediates/1986ba70-a9d5-4c04-9f62-2c8f532bde42.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "69Duo3nmlQnUEvqzlU27qTDaDY9K1yN0wfdopIs9Y7s=",
+      "crlite_enrolled": false,
+      "id": "0b79b1b7-45eb-4167-b5a4-52c77a4ae693",
+      "last_modified": 1693342624038
+    },
+    {
+      "schema": 1693342093097,
+      "derHash": "/Y4MjMzbuuTB8HwkjRH+u7D7PaDNDYlKioDYBKjTmn0=",
+      "subject": "CN=e-Szigno Class2 SSL CA 2017,O=Microsec Ltd.,L=Budapest,C=HU",
+      "subjectDN": "MHcxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEWMBQGA1UECgwNTWljcm9zZWMgTHRkLjEXMBUGA1UEYQwOVkFUSFUtMjM1ODQ0OTcxJDAiBgNVBAMMG2UtU3ppZ25vIENsYXNzMiBTU0wgQ0EgMjAxNw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "eb233f6d83b210e52823cdff3145fe53c2632e2cf95904c5ac6d29368eb61943",
+        "size": 1435,
+        "filename": "HGXB7TIfcoLqLINF3LJD2A9t3V4VdHjcBv6LboViQMo=.pem",
+        "location": "security-state-staging/intermediates/36fd2d27-8c24-4aee-9ba5-feccce9483d5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "HGXB7TIfcoLqLINF3LJD2A9t3V4VdHjcBv6LboViQMo=",
+      "crlite_enrolled": false,
+      "id": "c2701cd6-d220-4744-a18b-3a3b323259ee",
+      "last_modified": 1693342624035
+    },
+    {
+      "schema": 1693342092400,
+      "derHash": "akjnNKxvBnFAySitu8xEkkadQW3i08mnoZfWI3DqwOI=",
+      "subject": "CN=e-Szigno Qualified TLS CA 2018,O=Microsec Ltd.,L=Budapest,C=HU",
+      "subjectDN": "MHoxCzAJBgNVBAYTAkhVMREwDwYDVQQHDAhCdWRhcGVzdDEWMBQGA1UECgwNTWljcm9zZWMgTHRkLjEXMBUGA1UEYQwOVkFUSFUtMjM1ODQ0OTcxJzAlBgNVBAMMHmUtU3ppZ25vIFF1YWxpZmllZCBUTFMgQ0EgMjAxOA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "acb85909161220196625771f857155f74f662f21acb6efeab36c92266013233a",
+        "size": 1439,
+        "filename": "qd9EIyfp7CEtbkxafeyYAuC_8wQBWqGZflkLznwnuyc=.pem",
+        "location": "security-state-staging/intermediates/86baa78d-dbf7-44c9-b002-1a204379bad6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qd9EIyfp7CEtbkxafeyYAuC/8wQBWqGZflkLznwnuyc=",
+      "crlite_enrolled": false,
+      "id": "9cf88ec1-23c0-487b-9991-3fc43bbf71c0",
+      "last_modified": 1693342624031
+    },
+    {
+      "schema": 1693104479614,
+      "derHash": "8BBP8XJ0YI8aGKHh6r+OaKUfUAqH4u+iLstiJ2P+9M8=",
+      "subject": "CN=Gandi RSA Domain Validation Secure Server CA 3,O=Gandi,C=FR",
+      "subjectDN": "MFYxCzAJBgNVBAYTAkZSMQ4wDAYDVQQKEwVHYW5kaTE3MDUGA1UEAxMuR2FuZGkgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlY3VyZSBTZXJ2ZXIgQ0EgMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c57cc4329fa8b504ce063f97a8a15ffe28c6c989bbff9d66c2b1723fce07bf43",
+        "size": 2263,
+        "filename": "CFtSlX6OU4eENrKNiHtx6zY8UV7_SoMM63hXbHdXgjs=.pem",
+        "location": "security-state-staging/intermediates/0f4a0c2f-72a0-436a-ab5c-c6019c2d0993.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "CFtSlX6OU4eENrKNiHtx6zY8UV7/SoMM63hXbHdXgjs=",
+      "crlite_enrolled": false,
+      "id": "9c147e1e-3e85-4edb-b057-0affdeff0587",
+      "last_modified": 1693105023362
+    },
+    {
+      "schema": 1693104480201,
+      "derHash": "DZkEhRHJDhZjGpf6dm8ore7cExhiTjdUsk/WD9WkvE0=",
+      "subject": "CN=McAfee RSA Organization Validation Secure Server CA 3,O=McAfee\\, Inc.,C=US",
+      "subjectDN": "MGQxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxNY0FmZWUsIEluYy4xPjA8BgNVBAMTNU1jQWZlZSBSU0EgT3JnYW5pemF0aW9uIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQSAz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8912a3bcb18bc8d4ae518cd66260d08a84acd4e56f04810c5345f4450ae2b969",
+        "size": 2284,
+        "filename": "gg9oIaRipMX5XuQCgBVsizhbKNuS7AJ0CmZZ5o0Jdb0=.pem",
+        "location": "security-state-staging/intermediates/db48f214-40d6-42b2-a070-27fd1bbe65a7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "gg9oIaRipMX5XuQCgBVsizhbKNuS7AJ0CmZZ5o0Jdb0=",
+      "crlite_enrolled": false,
+      "id": "a6651c04-79b3-4cef-aa51-845d9c8544b7",
+      "last_modified": 1693105023359
+    },
+    {
+      "schema": 1693104479894,
+      "derHash": "+xKIZNrFbzq5PDcWkjANyjRcBP/lp/brJP5uRJs0iVA=",
+      "subject": "CN=Gandi RSA Organization Validation Secure Server CA 3,O=Gandi,C=FR",
+      "subjectDN": "MFwxCzAJBgNVBAYTAkZSMQ4wDAYDVQQKEwVHYW5kaTE9MDsGA1UEAxM0R2FuZGkgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlY3VyZSBTZXJ2ZXIgQ0EgMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d026088b09a6e613ad8b5fcca9d59a8473a0692b01cbf76e773d881242d2cc27",
+        "size": 2272,
+        "filename": "rhYwjniKVh_GqP4xzEvEzVgdmxdxg_K1YyDK64M7rT4=.pem",
+        "location": "security-state-staging/intermediates/6675899f-be87-41eb-9b0d-656394edfaea.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rhYwjniKVh/GqP4xzEvEzVgdmxdxg/K1YyDK64M7rT4=",
+      "crlite_enrolled": false,
+      "id": "67147348-c740-4048-90e8-5e6ba1027579",
+      "last_modified": 1693105023357
+    },
+    {
+      "schema": 1692910086131,
+      "derHash": "AmCeiJefxoYuoVcfO8bfbHDy/pJ3Rz5D/gTDWXxDQx0=",
+      "subject": "CN=GTS CA 1D9,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMUQ5",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d44fe24100e78a1699cb4766985db89ddd82c97eb1d2f7d5cbc6c7d0fa9bdf59",
+        "size": 1987,
+        "filename": "VhionU4ApKSODjkwxSzRGaien1cg3KhOAaTX0sEzqA4=.pem",
+        "location": "security-state-staging/intermediates/f02c6bb6-5014-4963-a200-4062712233bd.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "VhionU4ApKSODjkwxSzRGaien1cg3KhOAaTX0sEzqA4=",
+      "crlite_enrolled": false,
+      "id": "f850e310-6786-40c0-86b7-56b717fc241a",
+      "last_modified": 1692910623870
+    },
+    {
+      "schema": 1692910086775,
+      "derHash": "7bzdAWmNg+r6Hj048BezrZay2NiOdGxYARzuDvEGk5w=",
+      "subject": "CN=GTS CA 2D5,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMkQ1",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ceaac730634820c4595c9b174b9bf271cc07f2fd81a0105a5358e73c275ab68a",
+        "size": 1114,
+        "filename": "ahc0N7bGYyDMmxgBgeh3thoK90J-_LSNwxbG-EnqfU0=.pem",
+        "location": "security-state-staging/intermediates/86022f5c-03d1-41c9-91f6-6fd7edb68eb0.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ahc0N7bGYyDMmxgBgeh3thoK90J+/LSNwxbG+EnqfU0=",
+      "crlite_enrolled": false,
+      "id": "ba3f498c-afb5-4773-9d62-c76498a15062",
+      "last_modified": 1692910623867
+    },
+    {
+      "schema": 1692910087070,
+      "derHash": "9dEkFaEsB/3pO9b55ORYjgPSBZbk+KXp0hOoM2S87nE=",
+      "subject": "CN=GTS CA 2D6,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEYxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRMwEQYDVQQDEwpHVFMgQ0EgMkQ2",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4f5acb34ad2db0121e100e350ec7414b51fb7d8b4ab658accc1e30881d887d08",
+        "size": 1150,
+        "filename": "mGJygqQlaAdWTKB8W35Jg_xbYW_7zpL45PiiDd1w0qE=.pem",
+        "location": "security-state-staging/intermediates/4a0ac7d9-fa09-455a-bfca-a6ea4a6e575a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "mGJygqQlaAdWTKB8W35Jg/xbYW/7zpL45PiiDd1w0qE=",
+      "crlite_enrolled": false,
+      "id": "377d9ef0-09a3-4298-947f-880fa1460cbf",
+      "last_modified": 1692910623864
+    },
+    {
+      "schema": 1692715688843,
+      "derHash": "xulqF0VwcJnwInlHL6KKmbrkR9d1EeGehrrzBHZRwes=",
+      "subject": "CN=TWCA Secure SSL Certification Authority,OU=Secure SSL Sub-CA,O=TAIWAN-CA,C=TW",
+      "subjectDN": "MG8xCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExGjAYBgNVBAsTEVNlY3VyZSBTU0wgU3ViLUNBMTAwLgYDVQQDEydUV0NBIFNlY3VyZSBTU0wgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1102f22c76cebba017a34d47a919c003600a2fe0525dae669f48d49f619dea57",
+        "size": 2085,
+        "filename": "0ypLOVQVk99vHTj2x0rvkv-Dq5vQXLD6szOPfHlmXIE=.pem",
+        "location": "security-state-staging/intermediates/2b385c86-6fdd-4e4e-8d73-0bf5864afd50.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0ypLOVQVk99vHTj2x0rvkv+Dq5vQXLD6szOPfHlmXIE=",
+      "crlite_enrolled": false,
+      "id": "0f1ed81c-66c3-428c-b5d5-f9c8a4a3f5bb",
+      "last_modified": 1692716223578
+    },
+    {
       "schema": 1692154077124,
       "derHash": "ZSPDTx6Hmt12A8sgSKiYpeLwxsS1EsDSJ4K4XUOuM3E=",
       "subject": "CN=DigiCert Global Root G2,OU=www.digicert.com,O=DigiCert Inc,C=US",
@@ -28873,5 +29089,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1692284223687
+  "timestamp": 1693407423723
 }

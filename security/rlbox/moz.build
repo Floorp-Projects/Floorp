@@ -89,3 +89,12 @@ if CONFIG["MOZ_WASM_SANDBOXING_WOFF2"]:
     include("/modules/woff2/sources.mozbuild")
     WASM_SOURCES += ["/modules/woff2/" + s for s in woff2_sources]
     LOCAL_INCLUDES += ["/modules/woff2/include"]
+
+# Ideally we'd also list rlbox.wasm.h as an output, but that would put the
+# generation in export rather than pre-compile, and we prefer the latter.
+GeneratedFile(
+    "rlbox.wasm.c",
+    script="/config/wasm2c.py",
+    entry_point="wasm2c",
+    inputs=["!/dist/host/bin/wasm2c" + CONFIG["HOST_BIN_SUFFIX"], "!rlbox.wasm"],
+)

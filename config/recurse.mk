@@ -179,7 +179,7 @@ endif
 
 ifdef ENABLE_CLANG_PLUGIN
 # Only target rules use the clang plugin.
-$(filter %/target %/target-objects,$(filter-out config/export config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets))): build/clang-plugin/host build/clang-plugin/tests/target-objects
+$(filter %/target %/target-objects,$(filter-out config/export config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets))) security/rlbox/pre-compile: build/clang-plugin/host build/clang-plugin/tests/target-objects
 build/clang-plugin/tests/target-objects: build/clang-plugin/host
 # clang-plugin tests require js-confdefs.h on js standalone builds and mozilla-config.h on
 # other builds, because they are -include'd.
@@ -210,9 +210,8 @@ endif
 endif
 
 ifdef MOZ_USING_WASM_SANDBOXING
-security/rlbox/target-objects: config/external/wasm2c_sandbox_compiler/host
-security/rlbox/target: security/rlbox/target-objects
-dom/media/ogg/target-objects extensions/spellcheck/hunspell/glue/target-objects gfx/thebes/target-objects parser/expat/target-objects parser/htmlparser/target-objects gfx/ots/src/target-objects: security/rlbox/target-objects
+security/rlbox/pre-compile: config/external/wasm2c_sandbox_compiler/host
+dom/media/ogg/target-objects extensions/spellcheck/hunspell/glue/target-objects gfx/thebes/target-objects parser/expat/target-objects parser/htmlparser/target-objects gfx/ots/src/target-objects: security/rlbox/pre-compile
 endif
 
 # Most things are built during compile (target/host), but some things happen during export

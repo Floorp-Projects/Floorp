@@ -666,7 +666,7 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
     if (result != SBOX_ALL_OK) {
       // This may fail in the same way as Job associated processes.
       // crbug.com/480639.
-      SpawnCleanup(target);
+      target->Terminate();
       return result;
     }
   }
