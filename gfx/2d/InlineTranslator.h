@@ -99,7 +99,8 @@ class InlineTranslator : public Translator {
     mPaths.InsertOrUpdate(aRefPtr, RefPtr{aPath});
   }
 
-  void AddSourceSurface(ReferencePtr aRefPtr, SourceSurface* aSurface) final {
+  void AddSourceSurface(ReferencePtr aRefPtr,
+                        SourceSurface* aSurface) override {
     mSourceSurfaces.InsertOrUpdate(aRefPtr, RefPtr{aSurface});
   }
 

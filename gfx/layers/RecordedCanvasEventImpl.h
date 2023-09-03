@@ -355,11 +355,15 @@ inline bool RecordedGetDataForSurface::PlayCanvasEvent(
     return false;
   }
 
-  gfx::IntSize ssSize = surface->GetSize();
-  size_t dataFormatWidth = ssSize.width * BytesPerPixel(surface->GetFormat());
+  int32_t dataFormatWidth =
+      surface->GetSize().width * BytesPerPixel(surface->GetFormat());
   int32_t srcStride = map->GetStride();
+  if (dataFormatWidth > srcStride) {
+    return false;
+  }
+
   char* src = reinterpret_cast<char*>(map->GetData());
-  char* endSrc = src + (ssSize.height * srcStride);
+  char* endSrc = src + (map->GetSurface()->GetSize().height * srcStride);
   while (src < endSrc) {
     aTranslator->ReturnWrite(src, dataFormatWidth);
     src += srcStride;
