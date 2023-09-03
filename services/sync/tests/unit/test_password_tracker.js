@@ -167,6 +167,77 @@ add_task(async function test_removeAllLogins() {
       changes = await engine.getChangedIDs();
       do_check_attribute_count(changes, syncBeforeRemove ? 2 : 0);
       Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 5);
+
+      let deletedGuids = await engine._store.getAllIDs();
+      if (syncBeforeRemove) {
+        for (let guid in deletedGuids) {
+          let deletedLogin = await engine._store._getLoginFromGUID(guid);
+
+          Assert.equal(deletedLogin.hostname, null, "deleted login hostname");
+          Assert.equal(
+            deletedLogin.formActionOrigin,
+            null,
+            "deleted login formActionOrigin"
+          );
+          Assert.equal(
+            deletedLogin.formSubmitURL,
+            null,
+            "deleted login formSubmitURL"
+          );
+          Assert.equal(deletedLogin.httpRealm, null, "deleted login httpRealm");
+          Assert.equal(deletedLogin.username, null, "deleted login username");
+          Assert.equal(deletedLogin.password, null, "deleted login password");
+          Assert.equal(
+            deletedLogin.usernameField,
+            "",
+            "deleted login usernameField"
+          );
+          Assert.equal(
+            deletedLogin.passwordField,
+            "",
+            "deleted login passwordField"
+          );
+          Assert.equal(
+            deletedLogin.unknownFields,
+            null,
+            "deleted login unknownFields"
+          );
+          Assert.equal(
+            deletedLogin.timeCreated,
+            0,
+            "deleted login timeCreated"
+          );
+          Assert.equal(
+            deletedLogin.timeLastUsed,
+            0,
+            "deleted login timeLastUsed"
+          );
+          Assert.equal(deletedLogin.timesUsed, 0, "deleted login timesUsed");
+
+          // These fields are not reset when the login is removed.
+          Assert.ok(deletedLogin.guid.startsWith("GUID"), "deleted login guid");
+          Assert.equal(
+            deletedLogin.everSynced,
+            true,
+            "deleted login everSynced"
+          );
+          Assert.equal(
+            deletedLogin.syncCounter,
+            2,
+            "deleted login syncCounter"
+          );
+          Assert.ok(
+            deletedLogin.timePasswordChanged > 0,
+            "deleted login timePasswordChanged"
+          );
+        }
+      } else {
+        Assert.equal(
+          Object.keys(deletedGuids).length,
+          0,
+          "no logins remain after removeAllUserFacingLogins"
+        );
+      }
     } finally {
       _("Clean up.");
       await store.wipe();

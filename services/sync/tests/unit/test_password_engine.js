@@ -411,6 +411,33 @@ add_task(async function test_sync_outgoing() {
 
     // getAllIDs includes deleted items but skips the FxA login.
     ok((await engine._store.getAllIDs())[guid]);
+    let deletedLogin = await engine._store._getLoginFromGUID(guid);
+
+    equal(deletedLogin.hostname, null, "deleted login hostname");
+    equal(
+      deletedLogin.formActionOrigin,
+      null,
+      "deleted login formActionOrigin"
+    );
+    equal(deletedLogin.formSubmitURL, null, "deleted login formSubmitURL");
+    equal(deletedLogin.httpRealm, null, "deleted login httpRealm");
+    equal(deletedLogin.username, null, "deleted login username");
+    equal(deletedLogin.password, null, "deleted login password");
+    equal(deletedLogin.usernameField, "", "deleted login usernameField");
+    equal(deletedLogin.passwordField, "", "deleted login passwordField");
+    equal(deletedLogin.unknownFields, null, "deleted login unknownFields");
+    equal(deletedLogin.timeCreated, 0, "deleted login timeCreated");
+    equal(deletedLogin.timeLastUsed, 0, "deleted login timeLastUsed");
+    equal(deletedLogin.timesUsed, 0, "deleted login timesUsed");
+
+    // These fields are not reset when the login is removed.
+    equal(deletedLogin.guid, guid, "deleted login guid");
+    equal(deletedLogin.everSynced, true, "deleted login everSynced");
+    equal(deletedLogin.syncCounter, 0, "deleted login syncCounter");
+    ok(
+      deletedLogin.timePasswordChanged > 0,
+      "deleted login timePasswordChanged"
+    );
   } finally {
     await engine._tracker.stop();
 

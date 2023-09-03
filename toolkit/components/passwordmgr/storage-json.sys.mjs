@@ -332,11 +332,11 @@ export class LoginManagerStorage_json {
       let login = this._store.data.logins[foundIndex];
       if (!login.deleted) {
         if (fromSync) {
-          login.deleted = true;
+          this.#replaceLoginWithTombstone(login);
         } else if (login.everSynced) {
           // The login has been synced, so mark it as deleted.
-          login.deleted = true;
           this.#incrementSyncCounter(login);
+          this.#replaceLoginWithTombstone(login);
         } else {
           // The login was never synced, so just remove it from the data.
           this._store.data.logins.splice(foundIndex, 1);
@@ -429,6 +429,27 @@ export class LoginManagerStorage_json {
       oldStoredLogin,
       newLogin,
     ]);
+  }
+
+  // Replace the login with a tombstone. It has a guid and sync-related properties,
+  // but does not contain the login or password information.
+  #replaceLoginWithTombstone(login) {
+    login.deleted = true;
+
+    // Delete all fields except guid, timePasswordChanged, syncCounter
+    // and everSynced;
+    delete login.hostname;
+    delete login.httpRealm;
+    delete login.formSubmitURL;
+    delete login.usernameField;
+    delete login.passwordField;
+    delete login.encryptedUsername;
+    delete login.encryptedPassword;
+    delete login.encType;
+    delete login.timeCreated;
+    delete login.timeLastUsed;
+    delete login.timesUsed;
+    delete login.encryptedUnknownFields;
   }
 
   recordPasswordUse(login) {
@@ -733,8 +754,8 @@ export class LoginManagerStorage_json {
         removedLogins.push(login);
         if (!fullyRemove && login?.everSynced) {
           // The login has been synced, so mark it as deleted.
-          login.deleted = true;
           this.#incrementSyncCounter(login);
+          this.#replaceLoginWithTombstone(login);
           remainingLogins.push(login);
         }
       }
@@ -927,7 +948,11 @@ export class LoginManagerStorage_json {
 
     return logins
       .map((login, i) => {
+        // Deleted logins don't have any info to decrypt.
         const decryptedLogin = login.clone();
+        if (this.loginIsDeleted(login.guid)) {
+          return decryptedLogin;
+        }
 
         const [username, password, unknownFields] = plaintexts.slice(
           3 * i,
@@ -1000,6 +1025,11 @@ export class LoginManagerStorage_json {
     let result = [];
 
     for (let login of logins) {
+      if (this.loginIsDeleted(login.guid)) {
+        result.push(login);
+        continue;
+      }
+
       try {
         login.username = this._crypto.decrypt(login.username);
         login.password = this._crypto.decrypt(login.password);
