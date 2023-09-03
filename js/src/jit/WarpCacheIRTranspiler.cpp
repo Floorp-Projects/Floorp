@@ -1202,7 +1202,12 @@ bool WarpCacheIRTranspiler::emitGuardToInt32(ValOperandId inputId) {
 
 bool WarpCacheIRTranspiler::emitGuardBooleanToInt32(ValOperandId inputId,
                                                     Int32OperandId resultId) {
+  if (!emitGuardTo(inputId, MIRType::Boolean)) {
+    return false;
+  }
+
   MDefinition* input = getOperand(inputId);
+  MOZ_ASSERT(input->type() == MIRType::Boolean);
 
   auto* ins = MBooleanToInt32::New(alloc(), input);
   add(ins);
