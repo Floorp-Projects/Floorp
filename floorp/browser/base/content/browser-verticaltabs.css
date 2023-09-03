@@ -235,3 +235,16 @@
   .tabbrowser-tab[label] {
     margin-inline-start: 0px !important;
   }
+  
+  /* Lepton Injection */
+  #tabbrowser-tabs[orient="vertical"] {
+    --tab-block-margin: 4px !important;
+  }
+
+  #tabs-newtab-button[class]::before {
+    opacity: 0 !important;
+  }
+
+  #tabs-newtab-button .toolbarbutton-icon[class] {
+    padding: 0px !important;
+  }
