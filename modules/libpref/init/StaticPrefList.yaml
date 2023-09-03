@@ -8604,11 +8604,6 @@
   value: true
   mirror: always
 
-- name: layout.css.overflow-logical.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Enables support for the page-orientation  property inside of CSS @page rules.
 - name: layout.css.page-orientation.enabled
   type: RelaxedAtomicBool
