@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; object-src 'none'"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title data-l10n-id="profiles-title"></title>
+    <link
+      rel="icon"
+      type="image/png"
+      id="favicon"
+      href="chrome://branding/content/icon32.png"
+    />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/content/profile-manager/profile-switcher.css"
+      type="text/css"
+    />
+
+    <link
+      rel="stylesheet"
+      href="chrome://global/skin/in-content/common-shared.css"
+      type="text/css"
+    />
+
+    <script src="chrome://browser/content/profile-manager/profile-switcher.js" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="toolkit/about/aboutProfiles.ftl" />
+    <link rel="localization" href="browser/floorp.ftl" />
+  </head>
+  <body id="body" class="wide-container">
+
+    <div id="conflict">
+      <p data-l10n-id="profiles-conflict" />
+    </div>
+
+    <div id="owned">
+      <hbox id="owned-header">
+       <label data-l10n-id="floorp-profiles-title" id="title"/>
+       <button id="create-button" data-l10n-id="floorp-profiles-create" class="primary"></button>
+      </hbox>
+      <div id="profiles" class="tab"></div>
+      <div>
+      </div>
+    </div>
+  </body>
+</html>

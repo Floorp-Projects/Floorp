@@ -3153,6 +3153,7 @@
         let select = i == selectTab - 1;
         let tab;
         let tabWasReused = false;
+        let floorpWorkspace = tabData.floorpWorkspace ? tabData.floorpWorkspace : Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
 
         // Re-use existing selected tab if possible to avoid the overhead of
         // selecting a new tab.
@@ -3163,6 +3164,7 @@
         ) {
           tabWasReused = true;
           tab = this.selectedTab;
+          tab.setAttribute("floorpWorkspace", floorpWorkspace);
           if (!tabData.pinned) {
             this.unpinTab(tab);
           } else {
@@ -3211,6 +3213,8 @@
             skipLoad: true,
             preferredRemoteType,
           });
+
+          tab.setAttribute("floorpWorkspace", floorpWorkspace);
 
           if (select) {
             tabToSelect = tab;

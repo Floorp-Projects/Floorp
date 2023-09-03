@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<svg
+   width="680"
+   height="76.43615"
+   viewBox="0 0 680 76.43615"
+   fill="none"
+   version="1.1"
+   id="svg28"
+   sodipodi:docname="proton-fix.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs32" />
+  <sodipodi:namedview
+     id="namedview30"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="2.2078533"
+     inkscape:cx="339.92294"
+     inkscape:cy="83.565333"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg28" />
+  <rect
+     width="680"
+     height="76.436142"
+     fill="#1c1b22"
+     id="rect2"
+     x="0"
+     y="0"
+     style="stroke-width:0.911497" />
+  <rect
+     x="28"
+     y="3.5293407"
+     width="166"
+     height="28.218813"
+     rx="4"
+     fill="#42414d"
+     id="rect4"
+     style="stroke-width:0.911024" />
+  <rect
+     x="51"
+     y="14.748155"
+     width="121"
+     height="4"
+     rx="2"
+     fill="#fbfbfe"
+     id="rect6" />
+  <rect
+     x="221"
+     y="14.748155"
+     width="121"
+     height="4"
+     rx="2"
+     fill="#b8b7bb"
+     id="rect8" />
+  <rect
+     y="36.748154"
+     width="680"
+     height="39.687992"
+     fill="#2b2a33"
+     id="rect10"
+     x="0"
+     style="stroke-width:0.909305" />
+  <circle
+     cx="24"
+     cy="56.748154"
+     r="6.25"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="circle12" />
+  <circle
+     cx="60"
+     cy="56.748154"
+     r="6.25"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="circle14" />
+  <line
+     x1="663"
+     y1="62.498154"
+     x2="649"
+     y2="62.498154"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="line16" />
+  <line
+     x1="663"
+     y1="56.498154"
+     x2="649"
+     y2="56.498154"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="line18" />
+  <line
+     x1="663"
+     y1="50.498154"
+     x2="649"
+     y2="50.498154"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="line20" />
+  <rect
+     x="114"
+     y="40.748154"
+     width="488"
+     height="32"
+     rx="4"
+     fill="#1c1b22"
+     id="rect22" />
+  <circle
+     cx="130"
+     cy="56.748154"
+     r="6.25"
+     stroke="#ffffff"
+     stroke-width="1.5"
+     id="circle24" />
+  <rect
+     x="146"
+     y="54.748154"
+     width="308"
+     height="4"
+     rx="2"
+     fill="#ffffff"
+     id="rect26" />
+</svg>

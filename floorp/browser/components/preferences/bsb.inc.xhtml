@@ -1,0 +1,57 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+<script src="chrome://browser/content/preferences/bsb.js"/>
+
+<html:template id="template-paneBSB">
+
+<hbox id="bmsCategory" class="subcategory" hidden="true" data-category="paneBSB">
+    <html:h1 style="-moz-box-flex: 1;" data-l10n-id="bsb-header" />
+  </hbox>
+
+  <groupbox data-category="paneBSB" hidden="true">
+    <html:h2 id="sidebarUI" data-l10n-id="bsb-preferences"/>
+   <checkbox preference="floorp.browser.sidebar.enable"
+              id="enable-sidebar2" data-l10n-id="visible-bms"/>
+   <checkbox preference="floorp.browser.sidebar.right"
+              id="sidebarposition" data-l10n-id="view-sidebar2-right"/>
+  <hbox>
+    <description flex="1" data-l10n-id="sidebar2-global-width"/>
+    <html:input type="number" min="186" value="0" id="GlobalWidth"/>
+  </hbox>
+  <hbox>
+    <description flex="1" data-l10n-id="use-icon-provider-option"/>
+    <menulist id="useIconProvider" preference="floorp.browser.sidebar.useIconProvider">
+      <menupopup>
+        <menuitem value="google" data-l10n-id="use-icon-provider-option-google"/>
+        <menuitem value="duckduckgo" data-l10n-id="use-icon-provider-option-duckduckgo"/>
+        <menuitem value="yandex" data-l10n-id="use-icon-provider-option-yandex"/>
+        <menuitem value="hatena" data-l10n-id="use-icon-provider-option-hatena"/>
+      </menupopup>
+    </menulist>
+  </hbox>
+</groupbox>
+
+<groupbox data-category="paneBSB" hidden="true">
+  <vbox class="contentPane">
+    <html:h2 data-l10n-id="bsb-setting" style="margin-bottom: 20px;"/>
+  </vbox>
+  <vbox id="BSBBox">
+    <richlistbox id="BSBView"><richlistitem id="BSBSpace" /></richlistbox>
+  </vbox>
+
+ <vbox>
+    <hbox flex="1">
+      <button id="BSBAdd"
+              is="highlightable-button"
+              data-l10n-id="bsb-add"/>
+      <button id="BSBDefault"
+              is="highlightable-button"
+              data-l10n-id="home-restore-defaults"/>
+    </hbox>
+  </vbox>
+
+</groupbox>
+
+</html:template>

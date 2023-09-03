@@ -310,6 +310,7 @@ module.exports = {
         "toolkit/components/narrate/Narrator.jsm",
         "toolkit/components/nimbus/**",
         "toolkit/components/normandy/**",
+        "toolkit/components/osfile/**",
         "toolkit/components/passwordmgr/**",
         "toolkit/components/pdfjs/**",
         "toolkit/components/pictureinpicture/**",
@@ -611,6 +612,13 @@ module.exports = {
         "browser/components/pocket/**",
         "devtools/**",
       ],
+    },
+    {
+      // Turn off the osfile rule for osfile.
+      files: ["toolkit/components/osfile/**"],
+      rules: {
+        "mozilla/reject-osfile": "off",
+      },
     },
     {
       // Exempt files with these paths since they have to use http for full coverage

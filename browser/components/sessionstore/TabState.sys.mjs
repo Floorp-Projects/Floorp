@@ -98,6 +98,11 @@ var TabStateInternal = {
       tabData.muteReason = tab.muteReason;
     }
 
+    tabData.floorpWorkspace = tab.getAttribute("floorpWorkspace");
+    if (!tabData.floorpWorkspace) {
+      tabData.floorpWorkspace = Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
+    }
+
     tabData.searchMode = tab.ownerGlobal.gURLBar.getSearchMode(browser, true);
 
     tabData.userContextId = tab.userContextId || 0;

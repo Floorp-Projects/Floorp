@@ -1,0 +1,3 @@
+[submodule "floorp/browser/locales/en-US"]
+	path = floorp/browser/locales/en-US
+	url = https://github.com/Floorp-Projects/Floorp-Strings

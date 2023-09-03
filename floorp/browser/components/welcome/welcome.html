@@ -1,0 +1,152 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common-shared.css">
+    <link rel="stylesheet" href="chrome://browser/content/welcome/welcome.css">
+    <link rel="localization" href="browser/floorp.ftl" />
+    <link rel="localization" href="branding/brand.ftl">
+    <script src="chrome://browser/content/welcome/welcome.js"></script>
+    <meta charset="UTF-8">
+    <title data-l10n-id="welcome-to-floorp"></title>
+  </head>
+  <body>
+    <div id="main-wrapper">
+      <div id="welcome-contents-wrapper">
+        <a data-l10n-id="welcome-login-to-firefox-account" id="link-login-to-fx-account-link" href="https://accounts.firefox.com/signin?context=fx_desktop_v3&entrypoint=preferences&action=email&service=sync"></a>
+        <div id="wrapper-welcome-contents">
+          <div id="welcome-contents-box">
+            <div id="welcome-flex-box">
+
+              <div id="first-welcome-box" class="welcome-setups">
+                <img id="first-floorp-welcome-logo" src="chrome://branding/content/about-logo.svg">
+                <h1 data-l10n-id="welcome-to-floorp" id="first-floorp-welcome-big-text" class="welcome-big-text"></h1>
+                <div data-l10n-id="welcome-discribe-floorp" id="first-discribe-floorp-text"></div>
+                <button data-l10n-id="welcome-start-setup" id="first-floorp-welcome-button" class="go-next-page-button welcome-button primary"></button>
+                <a data-l10n-id="welcome-skip-to-start-browsing" id="first-skip-setup-process" href="about:home"></a>
+              </div>
+
+              <div id="import-data-welcome-box" class="welcome-setups">
+                <h1 data-l10n-id="welcome-import-data" id="import-data-floorp-welcome-big-text" class="welcome-big-text"></h1>
+                <div data-l10n-id="welcome-import-data-description" id="import-data-discribe-floorp-text"></div>
+                <button data-l10n-id="welcome-import-data-button" id="import-data-floorp-welcome-button" class="go-next-page-button welcome-button primary"></button>
+                <a data-l10n-id="welcome-import-data-skip" class="go-next-page-button" id="first-skip-setup-process" href=""></a>
+              </div>
+
+              <div id="second-select-template-box" class="welcome-setups">
+                <h1 data-l10n-id="welcome-select-preferences-template" class="welcome-big-text"></h1>
+                <div id="second-template-options-flex-box">
+                  <div class="second-template-option">
+                    <img class="second-option-icons" src="chrome://browser/skin/icons/welcome-image-first-option.png">
+                    <div class="second-template-option-text">
+                      <h2 data-l10n-id="welcome-minimum-template" class="second-template-option-title"></h2>
+                      <p data-l10n-id="welcome-enable-basic-features" class="second-template-option-description"></p>
+                    </div>
+                    <button id="apply-minimum-setting" data-l10n-id="welcome-select-button" class="template-option-button primary"></button>
+                  </div>
+                  <div class="second-template-option">
+                    <img class="second-option-icons" src="chrome://browser/skin/icons/welcome-image-second-option.png">
+                    <div class="second-template-option-text">
+                      <h2 data-l10n-id="welcome-medium-template" class="second-template-option-title"></h2>
+                      <p data-l10n-id="welcome-enable-some-features" class="second-template-option-description"></p>
+                    </div>
+                    <button id="apply-default-setting" data-l10n-id="welcome-select-button" class="template-option-button primary"></button>
+                  </div>
+                  <div class="second-template-option">
+                    <img class="second-option-icons" src="chrome://browser/skin/icons/welcome-image-third-option.png">
+                    <div class="second-template-option-text">
+                      <h2 data-l10n-id="welcome-maximum-template" class="second-template-option-title"></h2>
+                      <p data-l10n-id="welcome-enable-most-of-features" class="second-template-option-description"></p>
+                    </div>
+                    <button id="apply-maximum-setting" data-l10n-id="welcome-select-button" class="template-option-button primary"></button>
+                  </div>
+                </div>
+                <button data-l10n-id="welcome-go-next-setup" id="second-select-button" class="go-next-page-button"></button>
+              </div>
+
+              <div id="third-design-setup-box" class="welcome-setups">
+                <h1 id="third-floorp-desgin-text" class="welcome-big-text" data-l10n-id="welcome-select-browser-design"></h1>
+                <p id="floorp-desgin-description" data-l10n-id="welcome-discribe-browser-design"></p>
+                <div id="third-design-cars-options">
+                  <ul id="third-design-cards">
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/firefox-lepton-dark.jpg" width="114" height="42">
+                            </div>
+                            <span class="third-design-name" data-l10n-id="welcome-design-lepton-name"></span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/firefox-photon-dark.jpg" width="114" height="42">
+                            </div>
+                            <span class="third-design-name" data-l10n-id="welcome-design-photon-name"></span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/firefox-proton-dark.jpg" width="114" height="42">
+                            </div>
+                            <span class="third-design-name" data-l10n-id="welcome-design-ProtonFix-name"></span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/floorp-fluerial-dark.jpg" width="114" height="42">
+                            </div>
+                            <span class="third-design-name" data-l10n-id="welcome-design-floorp-fluerial-name"></span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/firefox-proton-dark.jpg" width="114" height="42">
+                            </div>
+                            <span class="third-design-name" data-l10n-id="welcome-design-firefox-proton-name"></span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <button data-l10n-id="welcome-go-next-setup" id="third-design-select-button" class="go-next-page-button design-select-button"></button>
+              </div>
+
+              <div id="last-welcome-box" class="welcome-setups">
+                <h1 data-l10n-id="welcome-finish-setup" id="last-finish-setup" class="welcome-big-text"></h1>
+                <div data-l10n-id="welcome-finish-setup-description" id="last-finish-setup-floorp-text"></div>
+                <button data-l10n-id="welcomet-finish-setup" id="exsit-setup-button" class="welcome-button primary"></button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

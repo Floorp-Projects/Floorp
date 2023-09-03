@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedija (dsb)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedija, lichotna encyklopedija"
+  },
+  "searchUrl": {
+    "message": "https://dsb.wikipedia.org/wiki/Specialne:Pytaś"
+  },
+  "searchForm": {
+    "message": "https://dsb.wikipedia.org/wiki/Specialne:Pytaś?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://dsb.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

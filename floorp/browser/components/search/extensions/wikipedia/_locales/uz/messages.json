@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Vikipediya (uz)"
+  },
+  "extensionDescription": {
+    "message": "Vikipediya, ochiq ensiklopediya"
+  },
+  "searchUrl": {
+    "message": "https://uz.wikipedia.org/wiki/Maxsus:Search"
+  },
+  "searchForm": {
+    "message": "https://uz.wikipedia.org/wiki/Maxsus:Search?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://uz.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

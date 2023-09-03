@@ -6,3 +6,41 @@ html.private .showNormal,
 html.normal .showPrivate {
   display: none !important;
 }
+
+.wordmark{
+  background-size: 20em !important;
+  width: 24rem !important;
+  margin-inline-start: 0px !important;
+}
+
+@media (-moz-platform: macos) {
+  .wordmark{
+  padding-left: 2em;
+ }
+}
+
+#search-handoff-button{
+  border-radius: 5px;
+  background-color: #5e5e5e;
+  border: solid 0.1px black;
+}
+
+#search-handoff-button .fake-textbox {
+  color: white !important;
+}
+
+body{
+  background-color: #242424 !important;
+}
+
+.promo.below-search{
+  background: #353535;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  box-shadow: 6px 3px 5px #1a1a1a;
+}
+
+.info{
+ background-color: #3f3f3f !important;
+}

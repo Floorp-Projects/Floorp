@@ -1,0 +1,26 @@
+[
+  {
+    "namespace": "decompressZip",
+    "description": "Decompress a zip file",
+    "functions": [
+      {
+        "name": "decompress",
+        "type": "function",
+        "description": "Decompress a zip file",
+        "parameters": [
+          {
+            "name": "zipPath",
+            "type": "string",
+            "description": "Zip file path"
+          },
+          {
+            "name": "targetDirPath",
+            "type": "string",
+            "description": "Target directory path"
+          }
+        ],
+        "async": true
+      }
+    ]
+  }
+]

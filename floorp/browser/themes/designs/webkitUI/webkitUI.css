@@ -1,0 +1,2268 @@
+/* Toolbox, a container for all toolbars (toolbox#navigator-toolbox):
+ * - menu bar (toolbar#toolbar-menubar)
+ * - tab bar (toolbar#TabsToolbar)
+ * - header bar (toolbar#nav-bar)
+ * - bookmark bar (toolbar#PersonalToolbar)
+ * - add-ons can add their own toolbars (toolbar) */
+
+ @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+ /* Toolbox colors */
+ #navigator-toolbox {
+	 border: 0 !important;
+	 background: none !important;
+ }
+ 
+ 
+ .toolbarbutton-icon {
+	 color: var(--gnome-toolbar-color);
+	 fill: var(--gnome-toolbar-color);
+ }
+ 
+ #nav-bar,
+ #PersonalToolbar,
+ #toolbar-menubar {
+	 border: 0 !important;
+	 color: var(--gnome-toolbar-color);
+	 background: var(--gnome-toolbar-background) !important;
+	 border-bottom: none !important;
+ }
+ 
+ #TabsToolbar {
+	 border: 0 !important;
+	 background: var(--gnome-tabstoolbar-background) !important;
+	 border-bottom: 1px solid var(--gnome-toolbar-border-color) !important;
+	 box-shadow: inset 0 1px var(--gnome-toolbar-border-color) !important;
+ }
+ 
+ findbar {
+	 border: 0 !important;
+	 background: var(--gnome-findbar-background) !important;
+	 border-bottom: 1px solid var(--gnome-toolbar-border-color) !important;
+ }
+ 
+ #nav-bar:-moz-window-inactive,
+ #PersonalToolbar:-moz-window-inactive,
+ #toolbar-menubar:-moz-window-inactive,
+ #TabsToolbar:-moz-window-inactive,
+ findbar:-moz-window-inactive {
+	 background: var(--gnome-inactive-toolbar-background) !important;
+ }
+ 
+ #navigator-toolbox:-moz-window-inactive label,
+ #navigator-toolbox:-moz-window-inactive image,
+ #downloads-indicator-anchor:-moz-window-inactive,
+ findbar:-moz-window-inactive image:not(#hack),
+ findbar:-moz-window-inactive label,
+ #viewButton:-moz-window-inactive dropmarker {
+	 opacity: 0.7 !important;
+ }
+ 
+ #toolbar-menubar:not([inactive=true]) {
+	 margin-bottom: 0 !important;
+ }
+ 
+ #PersonalToolbar {
+	 padding: 2px 4px 0 4px !important;
+	 height: 32px !important;
+ }
+ 
+ /* Overrides: Remove border below the menu bar / above the header bar */
+ #TabsToolbar:not([collapsed="true"])+#nav-bar {
+	 border-top-width: 0 !important;
+ }
+ 
+ #navigator-toolbox::after {
+	 border-bottom-width: 0 !important;
+ }
+ 
+ /* Reorder toolbars */
+ #navigator-toolbox #nav-bar,
+ findbar {
+	 order: 0;
+ }
+ 
+ #navigator-toolbox #PersonalToolbar {
+	 order: 1;
+ }
+ 
+ #navigator-toolbox #titlebar {
+	 order: 2;
+ }
+ 
+ #navigator-toolbox toolbar {
+	 order: 10;
+ }
+ 
+ #navigator-toolbox #TabsToolbar {
+	 order: 100;
+ }
+ 
+ /* Overrides: Don't shift other toolbars on tab drag and drop */
+ #TabsToolbar[movingtab] {
+	 padding-bottom: 0 !important;
+ }
+ 
+ #TabsToolbar[movingtab]>.tabbrowser-tabs {
+	 padding-bottom: 0 !important;
+	 margin-bottom: 0 !important;
+ }
+ 
+ #TabsToolbar[movingtab]+#nav-bar {
+	 margin-top: 0 !important;
+ }
+ 
+ /* bookmark-item */
+ toolbarbutton.bookmark-item {
+	 padding: 0 4px !important;
+	 margin: 0 2px !important;
+	 border-radius: 3px !important;
+	 max-height: 20px !important;
+ }
+ 
+ /* Fix reload button animation overlap with icon */
+ #reload-button:not([displaystop])>.toolbarbutton-animatable-box>.toolbarbutton-animatable-image {
+	 animation-duration: 0s !important;
+ }/* Buttons */
+@import "buttons-fixes.css";
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/* Hide buttons separator */
+#nav-bar .toolbaritem-combined-buttons separator {
+	display: none !important;
+}
+
+#appMenu-popup .toolbaritem-combined-buttons toolbarseparator {
+	border: 0 !important;
+}
+
+/* Buttons  */
+.subviewbutton.panel-subview-footer,
+.panel-footer button,
+#downloadsHistory,
+#downloadsPanel-mainView .download-state .downloadButton,
+#overflowMenu-customize-button,
+#appMenu-popup .panel-banner-item,
+#appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not(#appMenu-fxa-label),
+.subviewbutton-back,
+#context-navigation menuitem,
+.identity-popup-preferences-button:not(#hack),
+.findbar-container toolbarbutton,
+#sidebar-switcher-target,
+#viewButton,
+.close-icon:not(.tab-close-button),
+.menulist-label-box,
+.expander-down, .expander-up,
+.notification-button,
+.identity-popup-permission-remove-button,
+#identity-popup-security-expander,
+#PanelUI-panic-view-button,
+.tracking-protection-button,
+.dialog-button {
+	-moz-appearance: none !important;
+	background: var(--gnome-button-background) !important;
+	box-shadow: var(--gnome-button-box-shadow) !important;
+	border: 1px solid var(--gnome-button-border-color) !important;
+	border-bottom-color: var(--gnome-button-border-accent-color) !important;
+	border-radius: 5px !important;
+	padding: 0 4px !important;
+	height: 28px !important;
+	max-height: 28px !important;
+	min-height: 28px !important;
+	min-width: 28px !important;
+	color: var(--gnome-toolbar-color) !important;
+	transition: all 200ms;
+}
+
+/* Text buttons */
+.subviewbutton.panel-subview-footer,
+.panel-footer button,
+#downloadsHistory,
+#overflowMenu-customize-button,
+#appMenu-popup .panel-banner-item,
+#appMenu-zoomReset-button:not(#appMenu-fxa-label):not(#hack),
+#tracking-protection-preferences-button:not(#hack),
+.findbar-container toolbarbutton.findbar-button,
+.notification-button,
+#PanelUI-panic-view-button,
+.tracking-protection-button,
+.dialog-button {
+	padding: 2px 10px !important;
+	text-align: left !important;
+}
+
+.subviewbutton.panel-subview-footer label {
+	text-align: center !important;
+}
+
+/* Drop down buttons */
+#sidebar-switcher-target,
+#viewButton {
+	padding: 2px 16px !important;
+	position: relative;
+}
+#sidebar-switcher-arrow,
+#viewButton .button-menu-dropmarker { /* Arrow position, type b */
+	transform: translate(6px, 0)
+}
+.menulist-label-box {
+	padding: 2px 26px 2px 16px !important;
+	position: relative;
+}
+.menulist-label-box:after { /* Arrow position */
+	position: absolute !important;
+	right: 8px !important;
+	top: 8px !important;
+}
+.menulist-label-box:after { /* Create arrow if icon tag no exist */
+	content: "";
+}
+
+/* Hover buttons */
+.subviewbutton.panel-subview-footer:hover,
+.panel-footer button:hover,
+#downloadsHistory:hover,
+#downloadsPanel-mainView .download-state .downloadButton:hover,
+#overflowMenu-customize-button:hover,
+#appMenu-popup .panel-banner-item:hover,
+.subviewbutton-back:hover,
+#appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not(#appMenu-fxa-label):not([disabled]):hover,
+#context-navigation menuitem:not([disabled]):hover,
+.identity-popup-preferences-button:not(#hack):hover,
+.findbar-container toolbarbutton:hover,
+.findbar-closebutton .toolbarbutton-icon:hover,
+#sidebar-switcher-target:hover,
+#viewButton:hover,
+menulist:hover .menulist-label-box,
+.expander-down:hover, .expander-up:hover,
+.notification-button:hover,
+.protections-popup-footer-button:hover,
+.identity-popup-permission-remove-button:hover,
+#identity-popup-security-expander:hover,
+.tracking-protection-button:hover,
+#protections-popup-show-report-stack:hover>.protections-popup-footer-button,
+.dialog-button:hover {
+	outline: 0 !important;
+	background: var(--gnome-button-hover-background) !important;
+}
+
+/* Active buttons */
+.subviewbutton.panel-subview-footer:active,
+.panel-footer button:active,
+#downloadsHistory:active,
+#downloadsPanel-mainView .download-state .downloadButton:active,
+#overflowMenu-customize-button:active,
+#appMenu-popup .panel-banner-item:active,
+.subviewbutton-back:not(#hack):active,
+#appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not([disabled]):not(#appMenu-fxa-label):active,
+#context-navigation menuitem:active:not([disabled]),
+.identity-popup-preferences-button:not(#hack):active,
+.findbar-container toolbarbutton[checked],
+.findbar-container toolbarbutton:active,
+#sidebar-switcher-target:active, #sidebar-switcher-target.active,
+#viewButton[open],
+menulist[open] .menulist-label-box,
+.expander-down:active, .expander-up:active,
+.notification-button:active,
+.protections-popup-footer-button:not(#hack):active,
+.identity-popup-permission-remove-button:active,
+#identity-popup-security-expander:active,
+.tracking-protection-button:active,
+.dialog-button:active {
+	background: var(--gnome-button-active-background) !important;
+	box-shadow: var(--gnome-button-active-box-shadow) !important;
+	border-color: var(--gnome-button-active-border-color) !important;
+}
+
+/* Fix HTML select colour */
+menulist>menupopup>menuitem,
+menulist>menupopup>menucaption,
+menulist>menupopup>menu {
+	max-width: none;
+	color: var(--gnome-button-menulist-color) !important;
+	background: var(--gnome-button-background) !important;
+}
+menulist>menupopup>menuitem:hover,
+menulist>menupopup>menucaption,
+menulist>menupopup>menu {
+	background: var(--gnome-button-hover-background) !important;
+}
+/* Disabled buttons */
+#appMenu-popup .toolbaritem-combined-buttons toolbarbutton[disabled],
+#context-navigation menuitem[disabled],
+#webRTC-shareDevices-notification>.popup-notification-button-container>.popup-notification-primary-button[disabled] {
+	background: var(--gnome-button-disabled-background) !important;
+	border-color: var(--gnome-button-disabled-border-color) !important;
+	box-shadow: var(--gnome-button-disabled-box-shadow) !important;
+	opacity: 1 !important;
+}
+
+#nav-bar toolbarbutton:not(#urlbar-zoom-button)[disabled] image,
+#appMenu-popup .toolbaritem-combined-buttons toolbarbutton[disabled] image,
+#context-navigation menuitem[disabled] image {
+	opacity: .4 !important;
+}
+
+#appMenu-popup .toolbaritem-combined-buttons toolbarbutton[disabled]:hover {
+	background: var(--gnome-button-disabled-background) !important;
+}
+
+/* Inactive window buttons */
+.findbar-container toolbarbutton:-moz-window-inactive,
+#sidebar-switcher-target:-moz-window-inactive,
+#viewButton:-moz-window-inactive {
+	background: var(--gnome-inactive-button-background) !important;
+	box-shadow: var(--gnome-inactive-button-box-shadow) !important;
+	border-color: var(--gnome-inactive-button-border-color) !important;
+}
+
+/* Flat buttons */
+.subviewbutton-back:not(#hack),
+#TabsToolbar .toolbarbutton-1 {
+	background: transparent !important;
+	box-shadow: none !important;
+	border-color: transparent !important;
+	border-radius: 5px !important;
+}
+
+.subviewbutton-back:not(#hack):not(:active):hover,
+#protections-popup-show-report-button:not(:active):hover {
+	box-shadow: var(--gnome-button-box-shadow) !important;
+	border-color: var(--gnome-button-border-color) !important;
+	border-bottom-color: var(--gnome-button-border-accent-color) !important;
+}
+
+.close-icon:not(.tab-close-button) {
+	background: transparent !important;
+	box-shadow: none !important;
+	border: 1px solid transparent !important;
+	border-radius: 5px !important;
+	padding: 0 0 !important;
+	height: 28px !important;
+	width: 28px !important;
+	min-height: 28px !important;
+	min-width: 28px !important;
+}
+
+#TabsToolbar .toolbarbutton-1 {
+	margin: 0 0 !important;
+	padding: 0 0 !important;
+	height: 28px !important;
+	width: 32px !important;
+	min-height: 28px !important;
+	min-width: 32px !important;
+	border-radius: 0 !important;
+	transition: all 200ms;
+}
+
+#TabsToolbar .toolbarbutton-1 image {
+	margin: 0 0 !important;
+	padding: 0 0 !important;
+	height: 16px !important;
+	width: 16px !important;
+	min-height: 16px !important;
+	min-width: 16px !important;
+}
+
+.close-icon:not(.tab-close-button):hover,
+#TabsToolbar .toolbarbutton-1:not(:active):not([open]):hover {
+	outline: 0 !important;
+
+}
+
+.close-icon:not(.tab-close-button):active,
+#TabsToolbar .toolbarbutton-1:active, #TabsToolbar .toolbarbutton-1[open] {
+	outline: 0 !important;
+	background: var(--gnome-button-active-color) !important;
+}
+
+/* Circle buttons */
+#downloadsPanel-mainView .download-state .downloadButton,
+.identity-popup-permission-remove-button:not(#hack) {
+	padding: 0 0 !important;
+	height: 32px !important;
+	width: 32px !important;
+	min-height: 32px !important;
+	min-width: 32px !important;
+	border-radius: 100% !important;
+}
+
+/* Combined buttons */
+#nav-bar .toolbaritem-combined-buttons toolbarbutton:not(:last-of-type):not(#hack),
+.subviewbutton.panel-subview-footer:not(:only-of-type):not(:last-of-type),
+.panel-footer button:not(:only-of-type):not(:last-of-type),
+#appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not(:last-of-type):not(#appMenu-zoomEnlarge-button),
+#context-navigation menuitem:not(:last-of-type),
+.findbar-container toolbarbutton.findbar-find-previous,
+.findbar-button:not(:last-of-type) {
+	border-top-right-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
+	border-right-width: 0 !important;
+	margin-right: 0 !important;
+}
+
+#nav-bar .toolbaritem-combined-buttons toolbarbutton:not(:first-of-type):not(#hack),
+.subviewbutton.panel-subview-footer:not(:only-of-type):not(:first-of-type),
+.panel-footer button:not(:only-of-type):not(:first-of-type),
+#appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not(:first-of-type):not(#appMenu-fullscreen-button),
+#context-navigation menuitem:not(:first-of-type),
+.findbar-container toolbarbutton.findbar-find-previous,
+.findbar-container toolbarbutton.findbar-find-next,
+.findbar-button:not(:first-of-type) {
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
+	margin-left: 0 !important;
+}
+
+#nav-bar .toolbaritem-combined-buttons {
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+}
+
+/* Buttons with suggested action */
+#appMenu-popup .panel-banner-item[notificationid="update-restart"],
+button.popup-notification-primary-button,
+#editBookmarkPanelDoneButton,
+#tracking-action-block {
+	color: white !important;
+	background: var(--gnome-button-suggested-action-background) !important;
+	border-color: var(--gnome-button-suggested-action-border-color) !important;
+	border-bottom-color: var(--gnome-button-suggested-action-border-accent-color) !important;
+	box-shadow: var(--gnome-button-suggested-action-box-shadow) !important;
+	text-shadow: 0 -1px rgba(0, 0, 0, 0.559216) !important;
+}
+
+#appMenu-popup .panel-banner-item[notificationid="update-restart"]:hover,
+button.popup-notification-primary-button.popup-notification-button:hover,
+#editBookmarkPanelDoneButton:hover {
+	background: var(--gnome-button-suggested-action-hover-background) !important;
+}
+
+#appMenu-popup .panel-banner-item[notificationid="update-restart"]:active,
+button.popup-notification-primary-button.popup-notification-button:active,
+#editBookmarkPanelDoneButton:active {
+	background: var(--gnome-button-suggested-action-active-background) !important;
+	border-color: var(--gnome-button-suggested-action-active-border-color) !important;
+	box-shadow: var(--gnome-button-suggested-action-active-box-shadow) !important;
+	text-shadow: none !important;
+}
+
+/* Buttons with destructive action */
+#editBookmarkPanelRemoveButton,
+#PanelUI-panic-view-button {
+	color: white !important;
+	background: var(--gnome-button-destructive-action-background) !important;
+	border-color: var(--gnome-button-destructive-action-border-color) !important;
+	border-bottom-color: var(--gnome-button-destructive-action-border-accent-color) !important;
+	box-shadow: var(--gnome-button-destructive-action-box-shadow) !important;
+	text-shadow: 0 -1px rgba(0, 0, 0, 0.558275) !important;
+}
+
+#editBookmarkPanelRemoveButton:hover,
+.identity-popup-permission-remove-button:not(#hack):hover,
+#PanelUI-panic-view-button:hover {
+	background: var(--gnome-button-destructive-action-hover-background) !important;
+}
+
+#editBookmarkPanelRemoveButton:active,
+.identity-popup-permission-remove-button:not(#hack):active,
+#PanelUI-panic-view-button:active {
+	background: var(--gnome-button-destructive-action-active-background) !important;
+	border-color: var(--gnome-button-destructive-action-active-border-color) !important;
+	box-shadow: var(--gnome-button-destructive-action-active-box-shadow) !important;
+}
+
+.identity-popup-permission-remove-button:not(#hack):hover { /* Is flat */
+	border-color: var(--gnome-button-destructive-action-border-color) !important;
+	border-bottom-color: var(--gnome-button-destructive-action-border-accent-color) !important;
+	box-shadow: var(--gnome-button-destructive-action-box-shadow) !important;
+}
+.identity-popup-permission-remove-button:not(#hack):hover .button-icon {
+	filter: invert(100%) brightness(200%);
+}
+
+/* User sync menu, bigger avatar */
+#fxa-toolbar-menu-button .toolbarbutton-badge-stack {
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+#fxa-avatar-image {
+	height: 26px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	width: 26px !important;
+}
+/* Entries */
+
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/* Entries */
+#searchbar,
+#search-box,
+.findbar-textbox {
+	-moz-appearance: none !important;
+	background: var(--gnome-urlbar-background) !important;
+	border: 1px solid var(--gnome-urlbar-border-color) !important;
+	border-radius: 8px !important;
+	box-shadow: none !important;
+	color: var(--gnome-urlbar-color) !important;
+	height: 28px !important;
+	max-height: 28px !important;
+	margin: 0 !important;
+	padding: 6px !important;
+	box-sizing: border-box;
+	transition: all 100ms;
+}
+
+/* Entries focused */
+#urlbar[breakout][breakout-extend],
+#searchbar:focus-within,
+#search-box[focused],
+.findbar-textbox[focused],
+.findbar-textbox:focus {
+	outline: 2px solid var(--gnome-focused-urlbar-border-color) !important;
+	outline-offset: -2px;
+	-moz-outline-radius: 8px;
+	transition: all 100ms;
+}
+
+/* Inactive window entries */
+#searchbar:-moz-window-inactive,
+#search-box:-moz-window-inactive,
+.findbar-textbox:-moz-window-inactive {
+	background: var(--gnome-inactive-urlbar-background) !important;
+	border-color: var(--gnome-inactive-urlbar-border-color) !important;
+	color: var(--gnome-inactive-urlbar-color) !important;
+}
+
+/* Entries combined */
+.findbar-textbox:not(.minimal) {
+	border-top-right-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
+	border-right-width: 0 !important;
+}
+.findbar-textbox:not(.minimal)[focused], .findbar-textbox:not(.minimal):focus {
+	-moz-outline-radius: 8px 0 0 8px !important;
+}
+
+/* Entries fixes */
+#urlbar-container, #search-container {
+	padding: 0 !important;
+	margin: 0 3px !important;
+}
+#urlbar-input-container {
+	background: transparent !important;
+	border: 0 !important;
+}
+#urlbar, #searchbar {
+	margin: 0 3px !important;
+	padding: 0 !important;
+}
+.searchbar-textbox {
+	border: 0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	min-height: auto !important;
+}
+#searchbar > .searchbar-textbox[focused] .searchbar-search-button:not(#hack) {
+	margin: 0 !important;
+}
+/* Header bar */
+@import "headerbar-urlbar.css";
+@import "headerbar-private-urlbar.css";
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/* Headerbar */
+#nav-bar {
+	padding: 8px 16px 8px 86px !important;
+}
+
+/* Headerbar CSD colors */
+:root[tabsintitlebar] #nav-bar {
+	background: var(--gnome-headerbar-background) !important;
+	border: none !important;
+	border-bottom: none !important;
+	box-shadow: var(--gnome-headerbar-box-shadow) !important;
+}
+
+:root[tabsintitlebar] #nav-bar:-moz-window-inactive {
+	background: var(--gnome-inactive-headerbar-background) !important;
+	box-shadow: var(--gnome-inactive-headerbar-box-shadow) !important;
+}
+
+/* Headerbar buttons */
+#nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):not(.toolbarbutton-1) {
+	border: none !important;
+	box-shadow: none !important;
+	background: none !important;
+	-moz-appearance: none !important;
+	border-radius: 8px !important;
+	padding: 0 4px !important;
+	min-height: 28px !important;
+	min-width: 28px !important;
+	color: var(--gnome-toolbar-color) !important;
+	transition: background 200ms;
+}
+
+/* Hover headerbar buttons */
+#nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):not([open]):not([disabled]):not([checked]):hover {
+	outline: 0 !important;
+	background: var(--gnome-headerbar-button-hover-background) !important;
+}
+
+/* Active headerbar buttons */
+#nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):not([disabled]):not(#hack):active,
+#nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):not(.subviewbutton):not([disabled])[open],
+#nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):not([disabled])[checked] {
+	background: var(--gnome-headerbar-button-active-background) !important;
+}
+
+/* Disabled headerbar buttons */
+#nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton)[disabled] {}
+
+/* Inactive window buttons */
+#nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):-moz-window-inactive {}
+
+/* Buttons with margins */
+#nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton) {
+	margin: 0 2px !important;
+}
+
+#nav-bar #back-button:not(#hack),
+#nav-bar #forward-button:not(#hack) {
+	padding: 0 4px !important;
+	width: 34px !important;
+	min-width: 34px !important;
+}
+
+#nav-bar #forward-button:not(#hack) {
+	margin-left: 0 !important;
+}
+
+#nav-bar #back-button:not(#hack) {
+	margin-right: 1px !important;
+}
+
+/* Headerbar entries */
+#nav-bar #searchbar,
+#urlbar #urlbar-input-container {
+	-moz-appearance: none !important;
+	background: var(--gnome-urlbar-background) !important;
+	border: none !important;
+	box-shadow: none !important;
+	border-radius: 8px !important;
+	color: var(--gnome-urlbar-color) !important;
+	padding: 0 6px !important;
+	height: 32px !important;
+	max-height: 32px !important;
+	transition: box-shadow 200ms;
+}
+
+#nav-bar #searchbar:hover,
+#urlbar #urlbar-input-container:hover {
+	box-shadow: inset 0 0 0 1px var(--gnome-hover-urlbar-border-color) !important;
+	transition-duration: 100ms;
+}
+
+#urlbar[breakout][breakout-extend] #urlbar-input-container,
+#urlbar[breakout][breakout-extend] #urlbar-input-container:hover {
+	background: none !important;
+	box-shadow: none !important;
+	padding: 0 6px !important;
+}
+
+#nav-bar #searchbar:focus-within {
+	border: none !important;
+	background: var(--gnome-urlbar-background) !important;
+	box-shadow: inset 0 0 0 2px var(--gnome-focused-urlbar-highlight-color) !important;
+}
+GNOME CSD styles for headerbar on Firefox [tabsintitlebar] @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+#main-window {
+	-moz-appearance: -moz-window-titlebar !important;
+}
+
+
+/* Window buttons: at least 1 button */
+@media (-moz-gtk-csd-minimize-button),
+(-moz-gtk-csd-maximize-button),
+(-moz-gtk-csd-close-button) {
+	:root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+		padding-right: 60px !important;
+	}
+}
+
+/* Window buttons: at least 2 buttons */
+@media (-moz-gtk-csd-minimize-button) and (-moz-gtk-csd-maximize-button),
+(-moz-gtk-csd-minimize-button) and (-moz-gtk-csd-close-button),
+(-moz-gtk-csd-maximize-button) and (-moz-gtk-csd-close-button) {
+	:root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+		padding-right: 70px !important;
+	}
+}
+
+/* Window buttons: 3 buttons */
+@media (-moz-gtk-csd-minimize-button) and (-moz-gtk-csd-maximize-button) and (-moz-gtk-csd-close-button) {
+	:root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+		padding-right: 90px !important;
+	}
+}
+
+/* Fullscreen headerbar padding for 1 button */
+:root[tabsintitlebar][inFullscreen] #nav-bar {
+	padding-right: 40px !important;
+}
+
+/* Window buttons box */
+:root[tabsintitlebar]:not([inFullscreen]) #titlebar .titlebar-buttonbox-container,
+:root[tabsintitlebar]:not([inFullscreen]) #titlebar-buttonbox-container {
+	-moz-appearance: none !important;
+	padding: 0 3px 0 4px;
+	position: absolute !important;
+	left: 8px;
+	top: 15px;
+	display: block !important;
+}
+:root[tabsintitlebar][inFullscreen] #window-controls {
+	-moz-appearance: none !important;
+	padding: 0 3px 0 4px;
+	position: absolute !important;
+	left: 8px;
+	display: block !important;
+	top:10px !important;
+}
+
+
+
+/* Left window buttons */
+@media (-moz-gtk-csd-reversed-placement) {
+	:root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+		padding-right: 3px !important;
+	}
+
+	/* Window buttons box */
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox-container {
+		padding: 0 3px 0 4px;
+		left: 8px;
+		right: auto;
+	}
+
+
+	/* Remove tabsbar titlebar blank spaces */
+	:root[tabsintitlebar] #TabsToolbar .titlebar-placeholder {
+		display: none !important;
+	}
+
+	/* Prevent menubar from breaking */
+	:root[tabsintitlebar] #toolbar-menubar:not([inactive=true]) {
+		height: 30px !important;
+		margin-bottom: 8px;
+	}
+
+	/* Remove default style of titlebar */
+	:root[tabsintitlebar] #titlebar {
+		-moz-appearance: none !important;
+	}
+
+	/* Fix the issue when dragging tabs */
+	:root[tabsintitlebar] #navigator-toolbox[movingtab] #TabsToolbar {
+		padding-bottom: 0 !important;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-close,
+:root[tabsintitlebar] #titlebar #titlebar-close {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-close.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-max,
+:root[tabsintitlebar] #titlebar #titlebar-max {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-maximize.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-min,
+:root[tabsintitlebar] #titlebar #titlebar-min {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-minimize.svg") no-repeat;
+	background-size: contain;
+}
+
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-restore,
+:root[tabsintitlebar] #titlebar #titlebar-restore,
+:root[tabsintitlebar][sizemode="maximized"] #titlebar .titlebar-buttonbox .titlebar-max,
+:root[tabsintitlebar][sizemode="maximized"] #titlebar #titlebar-max {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-maximize.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-close,
+:root[tabsintitlebar] #titlebar #titlebar-close:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-close-hover-inactive.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-max,
+:root[tabsintitlebar] #titlebar #titlebar-max:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-hover-inactive.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-min,
+:root[tabsintitlebar] #titlebar #titlebar-min:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-minimize-hover-inactive.svg") no-repeat;
+	background-size: contain;
+}
+/* Windows issue #63 */
+:root[tabsintitlebar] #titlebar #titlebar-close:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-close-hover.svg") no-repeat;
+	background-size: contain;
+	transition: background-size 300ms cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+:root[tabsintitlebar] #titlebar #titlebar-max:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-hover.svg") no-repeat;
+	background-size: contain;
+	transition: background-size 300ms cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+:root[tabsintitlebar] #titlebar #titlebar-min:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-minimize-hover.svg") no-repeat;
+	background-size: contain;
+	transition: background-size 300ms cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-restore,
+:root[tabsintitlebar] #titlebar #titlebar-restore:hover,
+:root[tabsintitlebar][sizemode="maximized"] #titlebar .titlebar-buttonbox:hover .titlebar-max,
+:root[tabsintitlebar][sizemode="maximized"] #titlebar #titlebar-max:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-hover.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-close:active,
+:root[tabsintitlebar] #titlebar #titlebar-close:active {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-close-active.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-max:active,
+:root[tabsintitlebar] #titlebar #titlebar-max:active {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-active.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-min:active,
+:root[tabsintitlebar] #titlebar #titlebar-min:active {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-minimize-active.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar .titlebar-buttonbox:active .titlebar-restore,
+:root[tabsintitlebar] #titlebar #titlebar-restore:active,
+:root[tabsintitlebar][sizemode="maximized"] #titlebar .titlebar-buttonbox:active .titlebar-max:active,
+:root[tabsintitlebar][sizemode="maximized"] #titlebar #titlebar-max:active {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-active.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox .titlebar-close,
+:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-close {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox .titlebar-max,
+:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-max {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox .titlebar-min,
+:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-min {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox .titlebar-restore,
+:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-restore,
+:root[tabsintitlebar][sizemode="maximized"] #titlebar:-moz-window-inactive .titlebar-buttonbox .titlebar-max,
+:root[tabsintitlebar][sizemode="maximized"] #titlebar:-moz-window-inactive #titlebar-max {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox:hover .titlebar-close,
+:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-close:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-close-backdrop.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox:hover .titlebar-max,
+:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-max:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-backdrop.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox:hover .titlebar-min,
+:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-min:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-minimize-backdrop.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar][sizemode="maximized"] #titlebar:-moz-window-inactive .titlebar-buttonbox:hover .titlebar-max,
+:root[tabsintitlebar][sizemode="maximized"] #titlebar:-moz-window-inactive #titlebar-max:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-backdrop.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar][inFullscreen] #window-controls #restore-button {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-maximize.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar][inFullscreen] #window-controls #restore-button:hover {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-hover.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar][inFullscreen] #window-controls #restore-button:active {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-active.svg") no-repeat;
+	background-size: contain;
+}
+:root[tabsintitlebar][inFullscreen] #window-controls:-moz-window-inactive #restore-button {
+	background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop.svg") no-repeat;
+	background-size: contain;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-close,
+	:root[tabsintitlebar] #titlebar #titlebar-close {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-close-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-max,
+	:root[tabsintitlebar] #titlebar #titlebar-max {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-min,
+	:root[tabsintitlebar] #titlebar #titlebar-min {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-minimize-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar .titlebar-buttonbox .titlebar-max,
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar #titlebar-max {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-close,
+	:root[tabsintitlebar] #titlebar #titlebar-close:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-close-hover-inactive-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-max,
+	:root[tabsintitlebar] #titlebar #titlebar-max:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-hover-inactive-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-min,
+	:root[tabsintitlebar] #titlebar #titlebar-min:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-minimize-hover-inactive-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-close:hover,
+	:root[tabsintitlebar] #titlebar #titlebar-close:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-close-hover-dark.svg") no-repeat;
+		background-size: contain;
+		transition: background-size 300ms cubic-bezier(0.0, 0.0, 0.2, 1);
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-max:hover,
+	:root[tabsintitlebar] #titlebar #titlebar-max:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-hover-dark.svg") no-repeat;
+		background-size: contain;
+		transition: background-size 300ms cubic-bezier(0.0, 0.0, 0.2, 1);
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-min:hover,
+	:root[tabsintitlebar] #titlebar #titlebar-min:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-minimize-hover-dark.svg") no-repeat;
+		background-size: contain;
+		transition: background-size 300ms cubic-bezier(0.0, 0.0, 0.2, 1);
+	}
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar .titlebar-buttonbox:hover .titlebar-max,
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar #titlebar-max:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-hover-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-close:active,
+	:root[tabsintitlebar] #titlebar #titlebar-close:active {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-close-active-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-max:active,
+	:root[tabsintitlebar] #titlebar #titlebar-max:active {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-active-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar .titlebar-buttonbox:hover .titlebar-min:active,
+	:root[tabsintitlebar] #titlebar #titlebar-min:active {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-minimize-active-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar .titlebar-buttonbox:active .titlebar-max:active,
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar #titlebar-max:active {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-active-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox .titlebar-close,
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-close {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox .titlebar-max,
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-max {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox .titlebar-min,
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-min {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar:-moz-window-inactive .titlebar-buttonbox .titlebar-max,
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar:-moz-window-inactive #titlebar-max {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox:hover .titlebar-close,
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-close:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-close-backdrop-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox:hover .titlebar-max,
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-max:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-backdrop-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-buttonbox:hover .titlebar-min,
+	:root[tabsintitlebar] #titlebar:-moz-window-inactive #titlebar-min:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-minimize-backdrop-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar:-moz-window-inactive .titlebar-buttonbox:hover .titlebar-max,
+	:root[tabsintitlebar][sizemode="maximized"] #titlebar:-moz-window-inactive #titlebar-max:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-backdrop-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar][inFullscreen] #window-controls #restore-button {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-maximize-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar][inFullscreen] #window-controls #restore-button:hover {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-hover-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar][inFullscreen] #window-controls #restore-button:active {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-unmaximize-active-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	:root[tabsintitlebar][inFullscreen] #window-controls:-moz-window-inactive #restore-button {
+		background: url("chrome://browser/skin/webkitUI/titlebutton-backdrop-dark.svg") no-repeat;
+		background-size: contain;
+	}
+	}
+/* Popup menus and context menus */
+
+@import "popups-contents.css";
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/* Style menus */
+menupopup {
+	-moz-appearance: none !important;
+	background: var(--gnome-menu-background) !important;
+	border: 1px solid var(--gnome-menu-border-color) !important;
+	border-radius: 8px !important;
+	padding: 4px 0 !important;
+	color: var(--gnome-toolbar-color) !important;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+
+menupopup menupopup {
+	margin: -5px 0 0 -4px;
+}
+
+menubar>menu>menupopup {
+	border-top-left-radius: 0 !important;
+	border-top-right-radius: 0 !important;
+}
+
+menuitem,
+menupopup menu {
+	-moz-appearance: none !important;
+	padding: 4px 8px !important;
+}
+
+menuitem[type="checkbox"] image,
+menuitem[type="radio"] image {
+	visibility: visible !important;
+}
+
+menuitem[disabled="true"]:hover,
+menupopup menu[disabled="true"]:hover {
+	background: transparent !important;
+}
+
+/* Adjust popovers position, includes background colour with transparency */
+panel[type=arrow] {
+	margin-top: 9px !important;
+	max-height: 80vh !important;
+	--panel-background: var(--gnome-popover-background) !important;
+	font:inherit !important;
+}
+
+/* Style popovers */
+.panel-arrowcontent .panel-arrowcontent,
+.panel-header,
+.PanelUI-subView,
+.panel-subview-body,
+#widget-overflow-mainView,
+#protections-popup-footer,
+panelview {
+	border: 0 !important;
+	background: transparent !important;
+}
+
+.panel-arrowcontent {
+	--panel-background: var(--gnome-popover-background) !important;
+	font:inherit !important;
+	border-color: var(--gnome-popover-border-color) !important;
+	border-radius: 9px !important;
+	/* box-shadow: var(--gnome-popover-shadow) !important; */
+	padding: 12px !important;
+	color: var(--gnome-toolbar-color) !important;
+}
+
+.panel-arrow {
+	fill: var(--gnome-popover-background) !important;
+	stroke: var(--gnome-popover-border-color) !important;
+}
+
+.PanelUI-subView toolbarseparator:not([orient="vertical"]) {
+	margin: 10px 2px !important;
+}
+
+.panel-header {
+	padding: 10px 0 10px 0 !important;
+}
+
+.panel-footer {
+	background-color: transparent !important;
+	display: flex;
+	justify-content: flex-end;
+	padding-top: 0px !important;
+}
+
+.panel-footer toolbarseparator {
+	display: none !important;
+}
+
+.panel-subview-body {
+	padding: 0 !important;
+}
+
+.panel-subview-footer {
+	margin-top: 10px !important;
+}
+
+/* Style popovers menu buttons */
+.subviewbutton:not(.subviewbutton-back),
+.toolbarbutton-1,
+.protections-popup-category,
+.protections-popup-category[disabled],
+.identity-popup-content-blocking-category {
+	border-radius: 8px !important;
+	color: var(--gnome-toolbar-color) !important;
+	font: menu !important;
+	/* justify-content: inherit !important; */
+}
+
+.subviewbutton:not(.subviewbutton-back),
+.protections-popup-category,
+.identity-popup-content-blocking-category {
+	padding: 5px !important;
+}
+
+.subviewbutton[disabled],
+.toolbarbutton-1[disabled],
+.identity-popup-content-blocking-category[disabled] {
+	opacity: 0.5 !important;
+	color: var(--gnome-inactive-toolbar-color) !important;
+	background: none !important;
+}
+
+.subviewbutton[shortcut]:after {
+	opacity: 0.5 !important;
+}
+
+.subviewbutton:not([disabled]):hover,
+.toolbarbutton-1:not([disabled]):hover,
+.protections-popup-category:not([disabled]):hover,
+.identity-popup-content-blocking-category:not([disabled]):hover {
+	background: var(--gnome-popover-button-hover-background) !important;
+}
+
+/* Style popover separators */
+toolbarseparator,
+menuseparator {
+	border-color: var(--gnome-popover-separator-color) !important;
+}
+
+toolbarseparator:not([orient="vertical"]) {
+	margin: 8px 0 !important;
+}
+
+toolbarseparator[orient="vertical"] {
+	margin: 0 3px !important;
+}
+#contentAreaContextMenu menuitem image,
+#contentAreaContextMenu menu image {
+	visibility: visible !important;
+}
+/* Webchat e.g. google meet share screen display select*/
+#webRTC-selectWindow-menulist{
+	color: var(--gnome-inactive-urlbar-color) !important;
+	background: var(--gnome-button-hover-background) !important;
+	border-radius: 5px;
+}
+/* Proton right click menu*/
+@media (-moz-proton) {
+	#context-navigation>.menuitem-iconic[_moz-menuactive="true"]:not([disabled="true"])>.menu-iconic-left>.menu-iconic-icon {
+		background-color: transparent !important;
+	}
+}
+
+/* fix padding for menu items*/
+#appMenu-popup panelview,
+#PanelUI-fxa {
+	padding: 8px !important;
+}
+/* fix menu button padding and alignment*/
+#PanelUI-menu-button {
+	padding-inline-end: 0px !important;
+	padding-left: 0px !important;
+}
+/* Fix alignment of menu*/
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+	margin-inline: -20px !important;
+}
+
+/* Fix bookmarks v92 */
+menuseparator {
+	-moz-appearance: none !important;
+	padding-top: 0px !important;
+	padding-bottom: 0px !important;
+	margin-top: 3px !important;
+	margin-bottom: 2px !important;
+}
+menupopup>menuitem,
+menupopup>menu {
+	padding-block: 2px !important;
+	min-height: unset !important;
+}
+#PlacesToolbar menupopup,
+#PlacesToolbar menu:not([disabled], :active) {
+	--arrowpanel-background: transparent !important;
+	--arrowpanel-border-radius: 0px !important;
+}
+#PlacesToolbar menu:[_moz-menuactive],
+#PlacesToolbar menu:active,
+toolbarbutton.bookmark-item[open="true"] {
+	background-color: var(--gnome-button-active-background) !important;
+}
+.bookmark-item:hover {
+	background-color: var(--gnome-popover-button-hover-background) !important;
+
+}
+#PlacesToolbar menuitem:hover{
+	color: var(--gnome-button-menulist-color) !important;
+} 
+
+#PlacesToolbar menupopup[placespopup="true"] {
+    border: none !important;
+}
+#PlacesToolbar menupopup[placespopup="true"]::part(arrowscrollbox) {
+    background: transparent !important;
+}
+.menupopup-arrowscrollbox{
+	background: transparent !important;
+	border: 0 !important;
+}
+
+/* Update close button styling */
+:root[dialogroot], :host(dialog) {
+	--in-content-page-background: var(--gnome-menu-background) !important;
+  }
+  /* Cancel or secondary */
+  .dialog-button-box>button{
+	background-color: var(--gnome-button-active-background-alt) !important;
+	color: var(--gnome-button-menulist-color) !important;
+	border: 1px solid var(--gnome-button-active-background-alt-border);
+  }
+  xul|button:not([disabled="true"]):hover{
+  	background-color: var(--gnome-button-active-background-alt-hover) !important;
+	color: var(--gnome-button-menulist-color) !important;
+	border: 1px solid var(--gnome-button-active-background-alt-border);
+	border-color: var(--gnome-button-active-border-color) !important;
+  }
+  /* Quit or primary button */
+  xul|button[default]{
+	background-color: var(--gnome-button-suggested-action-background) !important;
+	color: var(--gnome-button-menulist-color) !important;
+	border-color: var(--gnome-button-suggested-action-border-color) !important;
+  }
+  xul|button[default]:not([disabled="true"]):hover{
+	background-color: var(--gnome-button-suggested-action-hover-background) !important;
+	color: var(--gnome-button-menulist-color) !important;
+	border-color: var(--gnome-button-suggested-action-border-color) !important;
+  }
+  button:focus-visible{
+	outline: 2px solid var(--theme-primary-color) !important;
+  }
+/*  checkbox */
+.checkbox-check[checked]{
+	background-color: var(--theme-primary-color) !important;
+	color: var(--theme-alt-color) !important;
+}
+  checkbox:not([disabled="true"]):hover > .checkbox-check[checked] {
+	background-color: var(--gnome-switch-active-background, color-mix(in srgb, currentColor 12.5%, var(--theme-primary-color))) !important;
+  }
+
+  /* Tabs bar  */
+
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/* Tabs bar height */
+#tabbrowser-tabs,
+#tabbrowser-tabs arrowscrollbox {
+	height: initial !important;
+	min-height: initial !important;
+}
+
+/* Fix pinned tabs height where tabs amount activates scrollbox*/
+.tabbrowser-tab {
+	min-height: var(--tab-min-height);
+	padding-inline: 2px !important;
+}
+
+
+tab>stack {
+	height: 32px !important;
+}
+
+/* Extra margin for the first and last tabs */
+.tabbrowser-tab[first-tab]:not([pinned=true]) {
+	margin-left: 8px !important;
+}
+
+.tabbrowser-tab[last-tab]:not([pinned=true]) {
+	margin-right: 8px !important;
+}
+
+#TabsToolbar .toolbar-items {
+	margin-bottom: -1px !important;
+}
+
+:root[tabsintitlebar][inFullscreen] #TabsToolbar .toolbar-items {
+	margin-bottom: 0 !important;
+}
+
+/* Remove hover effects on tab bar buttons */
+#TabsToolbar {
+	--toolbarbutton-active-background: transparent !important;
+	--toolbarbutton-hover-background: transparent !important;
+	padding: 0 0 !important;
+}
+
+/* New hover effect */
+#TabsToolbar toolbarbutton {
+	fill-opacity: .6 !important;
+}
+
+#TabsToolbar toolbarbutton:not([disabled]):hover,
+#TabsToolbar toolbarbutton[open=true] {
+	fill-opacity: 1 !important;
+}
+
+/* Remove shadow next to tab scroll buttons */
+.arrowscrollbox-overflow-start-indicator,
+.arrowscrollbox-overflow-end-indicator {
+	display: none;
+}
+
+/* Remove tab separators */
+.tabbrowser-tab::after,
+.tabbrowser-tab::before {
+	border-color: transparent !important;
+	border-image: none !important;
+}
+
+/* Space between tabs */
+.tabbrowser-tab:not([pinned=true]) {
+	margin: 0 0 !important;
+}
+
+/* Tab labels */
+tab {
+	color: var(--gnome-tabbar-tab-color) !important;
+	font-family: Cantarell, inherit;
+	font-weight: bold;
+	font-size: 1em;
+}
+
+tab:hover {
+	color: var(--gnome-tabbar-tab-hover-color) !important;
+}
+
+tab[selected] {
+	color: var(--gnome-tabbar-tab-active-color) !important;
+}
+
+tab:-moz-window-inactive {
+	color: var(--gnome-inactive-tabbar-tab-color) !important;
+}
+
+tab[selected]:-moz-window-inactive {
+	color: var(--gnome-inactive-tabbar-tab-active-color) !important;
+}
+
+/* Center all inside tab */
+.tab-content {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-top: -1px;
+	min-width: 100% !important;
+	padding: 0 10px !important;
+}
+
+/* Prevent tab icons size breaking */
+.tab-icon-image,
+.tab-icon-sound,
+.tab-throbber,
+.tab-throbber-fallback,
+.tab-close-button {
+	min-width: 16px;
+}
+
+/* Adjust tab label width */
+.tab-label-container {
+	min-width: 0 !important;
+}
+
+/* Put tab close button and icon sound to the right */
+.tab-icon-sound[soundplaying="true"],
+.tab-icon-sound[muted="true"],
+.tab-icon-sound[activemedia-blocked="true"] {
+	margin-left: auto !important;
+}
+
+.tabbrowser-tab:not([soundplaying]):not([muted]):not([activemedia-blocked]) .tab-close-button {
+	margin-left: auto !important;
+}
+
+.tab-icon-sound {
+	margin-right: 6px;
+}
+
+/* Force tab favicon to the center */
+.tab-throbber,
+.tab-throbber-fallback,
+.tabbrowser-tab:not([busy]) .tab-icon-image,
+.tabbrowser-tab:not([class*="identity-color-"]) .tab-icon-stack {
+	margin-left: auto !important;
+}
+/* separate class for multi-tab alignment*/
+.tabbrowser-tab[class*="identity-color-"]>.tab-stack>.tab-content>.tab-icon-stack {
+	margin-left:auto !important;
+}
+
+/* If tab favicon is not present, force tab label to the center */
+.tabbrowser-tab .tab-label-container {
+	margin-left: 0 !important;
+}
+
+.tabbrowser-tab:not([image]):not([busy]):not([progress]) .tab-label-container {
+	margin-left: auto !important;
+}
+
+/* If tab close button is not present, don't force favicon to the center */
+#tabbrowser-tabs[closebuttons="activetab"] .tabbrowser-tab:not([selected="true"]) .tab-throbber,
+#tabbrowser-tabs[closebuttons="activetab"] .tabbrowser-tab:not([selected="true"]) .tab-throbber-fallback,
+#tabbrowser-tabs[closebuttons="activetab"] .tabbrowser-tab:not([selected="true"]):not([busy]) .tab-icon-image,
+#tabbrowser-tabs[closebuttons="activetab"] .tabbrowser-tab:not([selected="true"]):not([image]) .tab-label-container,
+#tabbrowser-tabs[closebuttons="activetab"] .tabbrowser-tab:not([selected="true"]) .tab-icon-stack {
+	margin-left: 0 !important;
+}
+
+/* Remove tab icons */
+/* tab:not([pinned=true]) .tab-icon-image {
+	display: none;
+} */
+
+/* Close tab button */
+:root {
+	--gnome-fill-icon: red !important;
+}
+
+.close-icon {
+	height: 16px !important;
+	padding: 0 !important;
+	width: 16px !important;
+}
+
+.tab-close-button {
+	-moz-appearance: none !important;
+	border: none !important;
+	box-sizing: content-box;
+	/* Avoid deformation on flexbox */
+	border-radius: 2px;
+	list-style-image: url("../icons/window-close-symbolic.svg") !important;
+	height: 16px;
+	opacity: .3;
+	padding: 0;
+	width: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+	.tab-close-button {
+		list-style-image: url("../icons/window-close-symbolic-light.svg") !important;
+	}
+}
+
+:root:-moz-window-inactive .tab-close-button:not(#hack) {
+	opacity: .18 !important;
+}
+
+:root:not(:-moz-window-inactive) .tab-close-button:hover {
+	background-color: var(--gnome-button-hover-color) !important;
+	border: none !important;
+	opacity: 1;
+}
+
+:root:not(:-moz-window-inactive) .tab-close-button:active {
+	background-color: var(--gnome-button-active-color) !important;
+}
+
+.tab-close-button:active:not(:hover) {
+	background-image: none !important;
+	box-shadow: none !important;
+}
+
+/* Tab close button etc. positioning */
+.tab-throbber,
+.tab-icon-image,
+.tab-sharing-icon-overlay,
+.tab-icon-sound,
+.tab-close-button {
+	margin-top: 0 !important;
+}
+
+/* Remove blue line above tabs */
+.tab-line {
+	display: none;
+}
+
+/* Move container lines to the top */
+.tabbrowser-tab[usercontextid]>.tab-stack>.tab-background {
+	border-top: 3px solid var(--identity-tab-color) !important;
+}
+
+/* Remove alt colours references for multi tabs*/
+.tabbrowser-tab[usercontextid]>.tab-stack>.tab-background>.tab-context-line {
+	display: none;
+}
+
+.tabbrowser-tab[class*="identity-color-"][pinned] {
+	display:flex;
+}
+
+/* change background of tabs based on mode to not rely on theme */
+.tab-background {
+	background-color: var(--gnome-tabbar-tab-background) !important;
+	transition: all 200ms;
+}
+.tabbrowser-tab::after,
+.tabbrowser-tab::before {
+	border-color: var(--gnome-tabbar-tab-hover-background) !important;
+}
+#TabsToolbar .toolbarbutton-1 {
+	background: var(--gnome-tabbar-tab-background) !important;
+	background-color: var(--gnome-tabbar-tab-background) !important;
+}
+#TabsToolbar .toolbarbutton-1:hover {
+	background: var(--gnome-tabbar-tab-hover-background) !important;
+	background-color: var(--gnome-tabbar-tab-hover-background) !important;
+}
+/* Active tab */
+.tab-background[selected=true] {
+	background-color: var(--gnome-tabbar-tab-active-background) !important;
+	background-image: none !important;
+	border: none !important;
+	border-image: none !important;
+	margin-left: -1px !important;
+	margin-right: -1px !important;
+	box-shadow: 1px 0 var(--gnome-toolbar-border-color), 1px 0 3px rgba(0, 0, 0, 0.08),
+		-1px 0 var(--gnome-toolbar-border-color), -1px 0 3px rgba(0, 0, 0, 0.08),
+		inset 0 -1px var(--gnome-toolbar-border-color) !important;
+}
+
+.tab-background[selected=true]:-moz-window-inactive {
+	background-color: var(--gnome-inactive-tabbar-tab-active-background) !important;
+	border-image: none !important;
+}
+
+/* Tab hover */
+#TabsToolbar .tabbrowser-tab:hover>.tab-stack>.tab-background:not([selected=true]) {
+	background-color: var(--gnome-tabbar-tab-active-hover-background) !important;
+	border-image: none !important;
+	box-shadow: inset 0 1px var(--gnome-toolbar-border-color), inset 0 -1px var(--gnome-toolbar-border-color) !important;
+}
+
+/* Tabs scroll buttons hover */
+#TabsToolbar .scrollbutton-up:not([disabled]):hover,
+#TabsToolbar .scrollbutton-down:not([disabled]):hover {
+	background-color: var(--gnome-tabbar-tab-active-hover-background) !important;
+}
+
+/* Full width tabs */
+.tabbrowser-tab:not([style^="max-width"]):not([pinned]),
+.tabbrowser-tab[style^="max-width: 100px !important;"]:not([pinned]) {
+	max-width: 100% !important;
+}
+
+.tabbrowser-tab:not([style^="max-width"]):not([pinned]):not([fadein]),
+.tabbrowser-tab[style^="max-width: 100px !important;"]:not([pinned]):not([fadein]) {
+	max-width: .1px !important;
+}
+
+/* Remove blank spaces on tabs start and end */
+#TabsToolbar .titlebar-spacer {
+	display: none !important;
+}
+
+/* Remove container bottom line indicator */
+.tabbrowser-tab[usercontextid]>.tab-stack>.tab-background>.tab-bottom-line {
+	display: none;
+}
+
+/* Create new container tab indicator */
+.tabbrowser-tab[class*="identity-color-"] .tab-content::before {
+	content: "";
+	display: block;
+	background-image: var(#userContext-icons:--identity-icon);
+	background: transparent !important;
+	-moz-context-properties: fill;
+	fill: var(--identity-icon-color);
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center center;
+	min-width: 10px;
+	height: 10px;
+	margin-right: 5px;
+	margin-left: 0 !important;
+	border-radius: 100%;
+}
+
+.tabbrowser-tab[class*="identity-color-"][pinned] .tab-content::before,
+.tabbrowser-tab[class*="identity-color-"][image] .tab-content::before,
+.tabbrowser-tab[class*="identity-color-"][busy] .tab-content::before,
+.tabbrowser-tab[class*="identity-color-"][progress] .tab-content::before {
+	right: -10px;
+	top: -8px;
+	position: relative;
+	margin-right: -10px;
+}
+
+/* fix pip on small displays */
+.tab-icon-overlay[pictureinpicture] {
+	top: 3px !important;
+	inset-inline-end: 13px !important;
+	z-index: 1 !important;
+	max-width: 10px;
+	max-height: 10px;
+}
+.tab-close-button {
+	margin-inline-end: -6px !important;
+}
+
+/* fix spacing on too many tabs */
+
+.tab-icon-overlay:not([pinned], [sharing]),
+[pictureinpicture] {
+	margin-inline-end: 4px !important;
+	margin-inline-start: 4px !important;
+}
+
+/* Fix too many tabs text align */
+.tab-close-button[pinned],
+#tabbrowser-tabs[closebuttons="activetab"]>#tabbrowser-arrowscrollbox>.tabbrowser-tab>.tab-stack>.tab-content>.tab-icon-stack:not([selected="true"]){
+	margin-left: 0 !important;
+}
+.tab-close-button[pinned],
+#tabbrowser-tabs[closebuttons="activetab"]>#tabbrowser-arrowscrollbox>.tabbrowser-tab>.tab-stack>.tab-content>.tab-icon-stack[selected="true"] {
+	margin-left: auto !important;
+}
+/* Fix too many tabs scrollbox height increasing with pinned tabs #39 */
+#tabbrowser-tabs,
+#tabbrowser-tabs arrowscrollbox {
+	height: 36px !important;
+}
+/* Fix proton padding with moving tab (dragging) #45 */
+#tabbrowser-tabs[movingtab]{
+	padding-bottom:0 !important;
+	margin-bottom: 0 !important;
+}
+
+/* Fix website with no favicon centred text */
+.tabbrowser-tab:not([image]) .tab-icon-overlay:not([pinned], [sharing], [crashed]) .tab-icon-stack {
+	margin-left: 0 !important
+}
+.tabbrowser-tab:not([image]) .tab-icon-stack {
+	margin-left: 0 !important
+}
+
+/* @media (-moz-proton) { */
+	/* Firefox v89 beta tab fix */
+	.tab-background {
+		border-radius: 0 !important;
+		margin-block: 0 !important;
+		box-shadow: inset 0 1px var(--gnome-toolbar-border-color), inset 0 -1px var(--gnome-toolbar-border-color) !important;
+	}
+	/*Align personal bookmarks v89 */
+	#personal-bookmarks {
+		align-items: center !important;
+	}
+	/* fix misc spacing between tabs */
+	.tabbrowser-tab {
+		padding-inline: 0px !important;
+		
+	}
+	.tabbrowser-tab[selected="true"]>.tab-stack>.tab-background {
+		margin-left: 0px !important;
+		margin-right: 0px !important;
+	}
+	/* centre text when audio is playing */
+	.tabbrowser-tab:is([soundplaying]) .tab-label-container {
+		margin-left: 0 !important;
+		margin-right: auto !important
+	}
+	/* Centre text when tab is loading with the throbber*/
+	.tabbrowser-tab:is([busy]) .tab-icon-stack {
+		margin-left: auto !important;
+	}
+/* } */
+/* transition fade on hover to emulate safari */
+.tabbrowser-tab  > .tab-stack > .tab-background:not([selected="true"]) {
+	transition: background-color 80ms !important;
+}
+.tabbrowser-tab:hover  > .tab-stack > .tab-background:not([selected="true"]) {
+	transition: background-color 150ms ease-in !important;
+}
+
+/* close button display only on hover */
+.tabbrowser-tab:not([pinned]) .tab-close-button {
+	opacity: 0;
+	visibility: hidden !important;
+	transition: all 80ms !important;
+}
+
+.tabbrowser-tab:not([pinned]):hover .tab-close-button {
+opacity: 1;
+visibility: visible !important;
+transition: all 150ms ease-in !important;
+}
+/* Find bar  */
+
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+findbar {
+    position: relative;
+}
+
+.findbar-container {
+	padding: 6px !important;
+	display: flex;
+	justify-content: center;
+	position: relative;
+	flex-direction: row;
+	width: calc(100% - 42px);
+}
+
+hbox[anonid="findbar-textbox-wrapper"] {
+	position: absolute;
+	right: calc(50vw - 36px);
+	transform: translate(50%, 0);
+	display: flex !important;
+}
+
+.findbar-find-status, .found-matches {
+	order: -1;
+	padding: 7px 0;
+}
+.findbar-find-status {
+	padding-left: 6px;
+	flex: 1;
+}
+
+.findbar-closebutton {
+	margin: 6px 6px 6px 0 !important;
+	padding: 0 0 !important;
+	border-radius: 100px !important;
+}
+
+@media (max-width: 1100px) {
+	hbox[anonid="findbar-textbox-wrapper"] {
+		position: relative;
+		right: 0;
+		transform: none;
+	}
+	.findbar-find-status, .found-matches {
+		order: 0;
+	}
+}
+/* Scrollbars hack */
+
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+toolbarbutton#alltabs-button {
+	-moz-binding: url("scrollbars.xml#js");
+}
+
+#alltabs-button:not(#hack) {
+	list-style-image: none !important;
+	position: relative;
+}
+
+#alltabs-button:not(#hack) .toolbarbutton-icon {
+	display: none !important;
+}
+#alltabs-button:not(#hack) .toolbarbutton-badge-stack {
+	position: absolute;
+}
+
+#alltabs-button::before {
+	position: relative;
+	top: 2px;	
+	content: url("../icons/pan-down-symbolic.svg");
+}
+@media (prefers-color-scheme: dark) {
+	#alltabs-button::before {
+		filter: invert(100%) brightness(200%);
+	}
+}
+#alltabs-button:-moz-window-inactive::before {
+	opacity: 0.7 !important;
+}
+/* Removes a white flash after you open or close a tab. Affects all variants,
+ * but it's more visible on dark variants. */
+
+ @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+ /* Overrides: Change the flash color */
+ #tabbrowser-tabpanels,
+ #tabbrowser-tabpanels[pendingpaint],
+ browser {
+	 background-color: var(--gnome-browser-before-load-background) !important;
+ }
+ 
+
+
+/* Replace icons */
+
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/* Back button */
+#nav-bar #back-button .toolbarbutton-icon {
+	filter: var(--gnome-icons-hack-filter);
+	list-style-image: url("moz-icon://stock/go-previous-symbolic?size=dialog") !important;;
+}
+
+/* Forward button */
+#nav-bar #forward-button .toolbarbutton-icon {
+	filter: var(--gnome-icons-hack-filter);
+	list-style-image: url("moz-icon://stock/go-next-symbolic?size=dialog") !important;
+}
+
+/* Reload button */
+/* Glitch - animations (may be possible to fix in about:config)
+#reload-button .toolbarbutton-icon {
+	filter: var(--gnome-icons-hack-filter);
+	list-style-image: url("moz-icon://stock/view-refresh-symbolic?size=dialog") !important;
+}*/
+/* Reload button */
+/* Glitch - animations (may be possible to fix in about:config)
+#stop-button .toolbarbutton-icon {
+	filter: var(--gnome-icons-hack-filter);
+	list-style-image: url("moz-icon://stock/process-stop-symbolic?size=dialog") !important;
+}*/
+
+/* Downloads button */
+/* Glitch - it swaps to the default one anyway
+#downloads-button {
+	filter: var(--gnome-icons-hack-filter);
+	list-style-image: url("moz-icon://stock/folder-download-symbolic?size=dialog") !important;
+} */
+
+/* Downloads button */
+/* Default is ok
+#PanelUI-menu-button {
+	filter: var(--gnome-icons-hack-filter);
+	list-style-image: url("moz-icon://stock/open-menu-symbolic?size=dialog") !important;
+} */
+
+/* Popovers subview menu arrow */
+.PanelUI-subView .subviewbutton-nav::after {
+	content: "" !important;
+	filter: var(--gnome-icons-hack-filter);
+	background: url("moz-icon://stock/pan-start-symbolic?size=dialog");
+	background-size: contain;
+	height: 16px;
+	width: 16px;
+	margin-top: -2px !important;
+}
+
+/* Popovers subview back button */
+.subviewbutton-back {
+	list-style-image: url("moz-icon://stock/pan-start-symbolic?size=dialog") !important;
+}
+.subviewbutton-back .toolbarbutton-icon {
+	filter: var(--gnome-icons-hack-filter);
+}
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Variables that start with --gnome- are added by me and are assigned
+ * to elements somewhere in this code. The rest of the variables are
+ * built-in in Firefox, so you need to add an !important if you wanna
+ * override them. */
+
+:root {
+	/* Browser area before a page starts loading */
+	--gnome-browser-before-load-background: #f5f5f5;
+	--theme-primary-color: #315bef;
+	--theme-primary-color-hover: #3863ff;
+	--theme-alt-color:#fff;
+	--in-content-link-color:var(--theme-primary-color) !important;
+	--in-content-link-color-hover:var(--theme-primary-color-hover) !important;
+
+	/* Toolbars */
+	--gnome-toolbar-background: #ffffff;
+	--gnome-tabstoolbar-background: #E5E5E5;
+	--gnome-findbar-background: #f5f5f5;
+	--gnome-toolbar-color: rgb(46, 52, 54);
+	--gnome-toolbar-border-color: #fff;
+	--gnome-inactive-toolbar-color: rgba(46, 52, 54, 0.35);
+	--gnome-inactive-toolbar-background: #f6f5f4;
+	--gnome-inactive-toolbar-border-color: #dadada;
+
+	/* Sidebar */
+	--gnome-sidebar-background: #f5f5f5;
+	--gnome-inactive-sidebar-background: #f9f9f8;
+
+	/* Popups */
+	--gnome-menu-background: rgba(255, 255, 255, 0.95);
+	--gnome-menu-border-color: #cdc7c2;
+	--gnome-popover-background: rgba(255, 255, 255, 0.95);
+	--gnome-popover-border-color: #cdc7c2;
+	--gnome-popover-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
+	--gnome-popover-button-hover-background: rgba(0, 0, 0, 0.1);
+	--gnome-popover-button-active-background: rgba(0, 0, 0, 0.2);
+	--gnome-popover-separator-color: rgba(0, 0, 0, 0.1);
+
+	/* Header bar */
+	--gnome-headerbar-background: #ffffff;
+	--gnome-headerbar-border-color: #bdb7b0;
+	--gnome-headerbar-box-shadow: 0 1px rgba(255, 255, 255, 0.65) inset;
+	--gnome-inactive-headerbar-background: #f5f5f5;
+	--gnome-inactive-headerbar-border-color: #dadada;
+	--gnome-inactive-headerbar-box-shadow: 0 1px #fff inset;
+
+	/* Buttons */
+	--gnome-button-background: linear-gradient(to top, #f1f1f1 0%, #fdfdfd 95%, #fefefe 100%);
+	--gnome-button-border-color: #cdc7c2;
+	--gnome-button-border-accent-color: #b2b2b1;
+	--gnome-button-box-shadow: inset 0 1px white, 0 1px 2px rgba(0, 0, 0, 0.03);
+	--gnome-button-hover-color: rgba(0, 0, 0, 0.1);
+	--gnome-button-active-color: rgba(0, 0, 0, 0.2);
+	--gnome-button-hover-background: linear-gradient(to top, #fdfdfd 0%, #ffffff 100%);
+	--gnome-button-active-background-alt:#f0f0f4 !important;
+	--gnome-button-active-background-alt-border: #f0f0f4 !important;
+	--gnome-button-active-background-alt-hover: #ffffff !important;
+	--gnome-button-active-background: #cfcfcf;
+	--gnome-button-active-border-color: #b2b2b1;
+	--gnome-button-active-border-accent-color: #b2b2b1;
+	--gnome-button-active-box-shadow: 0 1px rgba(255, 255, 255, 0) inset;
+	--gnome-button-disabled-background: #faf9f8;
+	--gnome-button-disabled-border-color: #cdc7c2;
+	--gnome-button-disabled-box-shadow: inset 0 1px rgba(255, 255, 255, 0);
+	--gnome-inactive-button-background: #f6f5f4;
+	--gnome-inactive-button-border-color: #dadada;
+	--gnome-inactive-button-box-shadow: 0 1px rgba(255, 255, 255, 0) inset, 0 1px rgba(255, 255, 255, 0);
+	--gnome-button-suggested-action-background:#2379e2;
+	--gnome-button-suggested-action-border-color: #1b6acb;
+	--gnome-button-suggested-action-border-accent-color: #15539e;
+	--gnome-button-suggested-action-box-shadow: inset 0 1px rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.07);
+	--gnome-button-suggested-action-hover-background: #3584e4;
+	--gnome-button-suggested-action-active-background: #1961b9;
+	--gnome-button-suggested-action-active-border-color: #1b6acb;
+	--gnome-button-suggested-action-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0);
+	--gnome-button-destructive-action-background: linear-gradient(to top, #ce1921 2px, #e01b24);
+	--gnome-button-destructive-action-border-color: #b2161d;
+	--gnome-button-destructive-action-border-accent-color: #851015;
+	--gnome-button-destructive-action-box-shadow: inset 0 1px rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.07);
+	--gnome-button-destructive-action-hover-background: linear-gradient(to top, #e01b24, #e41c26 1px);
+	--gnome-button-destructive-action-active-background: #a0131a;
+	--gnome-button-destructive-action-active-border-color: #b2161d;
+	--gnome-button-destructive-action-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0);
+	--gnome-button-menulist-color:#020202;
+	--gnome-headerbar-button-hover-background: rgba(0, 0, 0, 0.1);
+	--gnome-headerbar-button-active-background: rgba(0, 0, 0, 0.15);
+
+	/* URL bar */
+	--gnome-urlbar-background: #f5f5f5;
+	--gnome-urlbar-border-color: #b6b6b3;
+	--gnome-urlbar-box-shadow: 0 3px 3px rgba(0, 0, 0, 0.08), 0 5px 8px rgba(0, 0, 0, 0.05), 0 8px 16px rgba(0, 0, 0, 0.03);
+	--gnome-urlbar-color: #020202;
+	--gnome-hover-urlbar-border-color: #e5e5e5;
+	--gnome-inactive-urlbar-background: linear-gradient(#fcfcfc, #fcfcfc);
+	--gnome-inactive-urlbar-border-color: #dadada;
+	--gnome-inactive-urlbar-box-shadow: 0 3px 5px rgba(0, 0, 0, 0.05);
+	--gnome-inactive-urlbar-color: #323232;
+	--gnome-focused-urlbar-border-color: #5683DA;
+	--gnome-focused-urlbar-highlight-color: #6592E9;
+	--gnome-private-urlbar-background: #e6c2ff;
+
+	/* Tabs */
+	--gnome-tabbar-tab-background: #E5E5E5;
+	--gnome-tabbar-tab-color: rgb(141, 144, 145);
+	--gnome-tabbar-tab-hover-background: #d5d5d5;
+	--gnome-tabbar-tab-hover-border-bottom-color: #b6b6b3;
+	--gnome-tabbar-tab-hover-color: rgb(93, 98, 99);
+	--gnome-tabbar-tab-active-background: #ffffff;
+	--gnome-tabbar-tab-active-border-bottom-color: #4a90d9;
+	--gnome-tabbar-tab-active-color: rgb(46, 52, 54);
+	--gnome-tabbar-tab-active-hover-background: #f5f5f5;
+	--gnome-inactive-tabbar-tab-color: #b3b8b9;
+	--gnome-inactive-tabbar-tab-active-background: #f5f5f5;
+	--gnome-inactive-tabbar-tab-active-border-bottom-color: var(--gnome-tabbar-tab-active-border-bottom-color);
+	--gnome-inactive-tabbar-tab-active-color: var(--gnome-inactive-tabbar-tab-color);
+
+	/* Switch */
+	--gnome-switch-background: #e1dedb;
+	--gnome-switch-border-color: #cdc7c2;
+	--gnome-switch-slider-background: linear-gradient(to bottom, white 10%, white 90%);
+	--gnome-switch-slider-border-color: #bfb8b1;
+	--gnome-switch-slider-box-shadow: inset 0 1px white, 0 1px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.07);
+	--gnome-switch-active-background: #3584e4;
+	--gnome-switch-active-border-color: #185fb4;
+	--gnome-switch-active-slider-border-color: #185fb4;
+
+	/* Dirty hacks for replaced symbolic icons, they load from
+	 * /usr/share/icons/<theme>/ and on some systems they need to be
+	 * inverted, on others they don't, adjusts the filters below to your
+	 * needs (you may also adjust icon brightness here). */
+	--gnome-convert-icon-to-symbolic-hack-filter: invert(100%) sepia(100%) grayscale(100%) brightness(200%) brightness(85%) invert(100%);
+	--gnome-icons-hack-filter: none;
+	--gnome-window-icons-hack-filter: invert(30%);
+}
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Variables that start with --gnome- are added by me and are assigned
+ * to elements somewhere in this code. The rest of the variables are
+ * built-in in Firefox, so you need to add an !important if you wanna
+ * override them. */
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		/* Browser area before a page starts loading */
+		--gnome-browser-before-load-background: #333333;
+		--theme-primary-color: #315bef !important;
+		--theme-primary-color-hover: #3863ff;
+		--theme-alt-color: #fff;
+		--in-content-link-color:var(--theme-primary-color) !important;
+		--in-content-link-color-hover:var(--theme-primary-color-hover) !important;
+
+		/* Toolbars */
+		--gnome-toolbar-background: #373737;
+		--gnome-tabstoolbar-background: #1e1e1e;
+		--gnome-findbar-background: #333333;
+		--gnome-toolbar-color: #ffffff;
+		--gnome-toolbar-border-color: #070707;
+		--gnome-inactive-toolbar-background: #313131;
+		--gnome-inactive-toolbar-border-color: #121212;
+
+		/* Sidebar */
+		--gnome-sidebar-background: #3b3b3b;
+		--gnome-inactive-sidebar-background: #3f3f3f;
+		--gnome-sidebar-color: #ffffff;
+
+		/* Popups */
+		--gnome-menu-background: rgba(51, 51, 51, 0.95);
+		--gnome-menu-border-color: #070707;
+		--gnome-popover-background: rgba(51, 51, 51, 0.95);
+		--gnome-popover-border-color: #070707;
+		--gnome-popover-shadow: 0 5px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+		--gnome-popover-button-hover-background: rgba(255, 255, 255, 0.1);
+		--gnome-popover-button-active-background: rgba(255, 255, 255, 0.15);
+		--gnome-popover-separator-color: rgba(0, 0, 0, 0.1);
+
+		/* Header bar */
+		--gnome-headerbar-background: #373737;
+		--gnome-headerbar-border-color: #070707;
+		--gnome-headerbar-box-shadow: inset 0 1px rgba(255, 255, 255, 0.15);
+		--gnome-inactive-headerbar-background: #313131;
+		--gnome-inactive-headerbar-border-color: #202020;
+		--gnome-inactive-headerbar-box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+
+		/* Buttons */
+		--gnome-button-background: linear-gradient(to top, #636363 0%, #696969 100%);
+		--gnome-button-border-color: #282828;
+		--gnome-button-border-accent-color: #282828;
+		--gnome-button-box-shadow: inset 0 1px rgba(255, 255, 255, 0.1);
+		--gnome-button-hover-color: rgba(255, 255, 255, 0.1);
+		--gnome-button-active-color: rgba(255, 255, 255, 0.2);
+		--gnome-button-hover-background: linear-gradient(to top, #707070 0%, #737373 100%);
+		--gnome-button-active-background-alt:#707070 !important;
+		--gnome-button-active-background-alt-border: #737373 !important;
+		--gnome-button-active-background-alt-hover: #9b9b9b !important;
+		--gnome-button-active-background: #464646;
+		--gnome-button-active-border-color: #1b1b1b;
+		--gnome-button-active-border-accent-color: #1b1b1b;
+		--gnome-button-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0.1);
+		--gnome-button-disabled-background: #505050;
+		--gnome-button-disabled-border-color: #323232;
+		--gnome-button-disabled-box-shadow: inset 0 1px rgba(255, 255, 255, 0.03);
+		--gnome-inactive-button-background: linear-gradient(#383838, #383838);
+		--gnome-inactive-button-border-color: #323232;
+		--gnome-inactive-button-box-shadow: inset 0 1px rgba(255, 255, 255, 0.0);
+		--gnome-button-suggested-action-background: #15539e;
+		--gnome-button-suggested-action-border-color: #0f3b71;
+		--gnome-button-suggested-action-border-accent-color: #092444;
+		--gnome-button-suggested-action-box-shadow: inset 0 1px rgba(255, 255, 255, 0.08);
+		--gnome-button-suggested-action-hover-background: #2073d8;
+		--gnome-button-suggested-action-active-background: #103e75;
+		--gnome-button-suggested-action-active-border-color: #0f3b71;
+		--gnome-button-suggested-action-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+		--gnome-button-destructive-action-background: linear-gradient(to top, #ae151c 2px, #b2161d);
+		--gnome-button-destructive-action-border-color: #851015;
+		--gnome-button-destructive-action-border-accent-color: #570b0e;
+		--gnome-button-destructive-action-box-shadow: inset 0 1px rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.07);
+		--gnome-button-destructive-action-hover-background: linear-gradient(to top, #ae151c, #b7161d 1px);
+		--gnome-button-destructive-action-active-background: #8a1116;
+		--gnome-button-destructive-action-active-border-color: #851015;
+		--gnome-button-destructive-action-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0);
+		--gnome-button-menulist-color:#fff;
+		--gnome-headerbar-button-hover-background: rgba(255, 255, 255, 0.1);
+		--gnome-headerbar-button-active-background: rgba(255, 255, 255, 0.15);
+
+		/* URL bar */
+		--gnome-urlbar-background: #464646;
+		--gnome-urlbar-border-color: #282828;
+		--gnome-urlbar-box-shadow: inset 0 0 0 1px rgba(21, 83, 158, 0);
+		--gnome-urlbar-color: #ffffff;
+		--gnome-hover-urlbar-border-color: #585858;
+		--gnome-inactive-urlbar-background: #313131;
+		--gnome-inactive-urlbar-border-color: #282828;
+		--gnome-inactive-urlbar-box-shadow: none;
+		--gnome-inactive-urlbar-color: #d6d6d6;
+		--gnome-focused-urlbar-border-color: #338CBE;
+		--gnome-focused-urlbar-highlight-color: #006EA0;
+		--gnome-private-urlbar-background: #25003e;
+
+		/* Tabs */
+		--gnome-tabbar-tab-background: #262626;
+		--gnome-tabbar-tab-color: rgb(141, 144, 145);
+		--gnome-tabbar-tab-hover-background: #2b2b2b;
+		--gnome-tabbar-tab-hover-border-bottom-color: #1b1b1b;
+		--gnome-tabbar-tab-hover-color: rgb(200, 200, 200);
+		--gnome-tabbar-tab-active-background: #373737;
+		--gnome-tabbar-tab-active-border-bottom-color: #15539e;
+		--gnome-tabbar-tab-active-color: #ffffff;
+		--gnome-tabbar-tab-active-hover-background: #313131;
+		--gnome-inactive-tabbar-tab-color: rgb(141, 144, 145);
+		--gnome-inactive-tabbar-tab-active-background: #313131;
+		--gnome-inactive-tabbar-tab-active-border-bottom-color: #15539e;
+		--gnome-inactive-tabbar-tab-active-color: rgb(141, 144, 145);
+
+		/* Switch */
+		--gnome-switch-background: #282828;
+		--gnome-switch-border-color: #1b1b1b;
+		--gnome-switch-slider-background: linear-gradient(to bottom, #3c3c3c 20%, #353535 90%);
+		--gnome-switch-slider-border-color: #111111;
+		--gnome-switch-slider-box-shadow: inset 0 1px rgba(255, 255, 255, 0.02), 0 1px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.07);
+		--gnome-switch-active-background: #15539e;
+		--gnome-switch-active-border-color: #030c17;
+		--gnome-switch-active-slider-border-color: #030c17;
+
+		/* Dirty hacks for replaced symbolic icons, they load from
+	 * /usr/share/icons/<theme>/ and on some systems they need to be
+	 * inverted, on others they don't, adjusts the filters below to your
+	 * needs (you may also adjust icon brightness here). */
+		--gnome-convert-icon-to-symbolic-hack-filter: invert(100%) sepia(100%) grayscale(100%) brightness(200%) brightness(85%);
+		--gnome-icons-hack-filter: invert(100%) sepia(100%) grayscale(100%) brightness(200%) brightness(200%);
+		/* without invert: none */
+		--gnome-window-icons-hack-filter: invert(90%);
+		/* without invert: none */
+	}
+}
+
+/* Windows specific */
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+@media screen and (-moz-windows-compositor) {
+    .titlebar-button {
+        border: none;
+        margin: 0 !important;
+        /*		padding: 3px 6px !important;
+*/
+        padding: 1px 3px !important;
+        -moz-content-properties: none !important;
+        stroke: none !important;
+    }
+
+    :root[tabsintitlebar][sizemode="maximized"] #titlebar {
+        appearance: none !important;
+    }
+
+    :root[tabsintitlebar]:not([sizemode="maximized"]) #titlebar .titlebar-buttonbox-container {
+        top: 17px !important;
+        padding: 0 3px 0 15px !important;
+       
+    }
+    :root[tabsintitlebar][inFullscreen]  #titlebar .titlebar-buttonbox-container{
+    margin-top: -34px;
+    margin-bottom: 44px !important;
+    order: 0 !important;
+    }
+
+    tab {
+        font-weight: normal !important;
+    }
+
+    :root[tabsintitlebar][sizemode="maximized"] #nav-bar-customization-target, [sizemode="maximized"] .titlebar-buttonbox-container, [sizemode="maximized"] #PanelUI-button, [sizemode="maximized"] #nav-bar-overflow-button {
+        padding-top: 10px !important;
+    }
+
+    :root[tabsintitlebar][sizemode="maximized"] .titlebar-buttonbox {
+        top: 2px;
+        left: 6px;
+    }
+
+    .titlebar-buttonbox-container, #PanelUI-button {
+        padding-top: 0;
+    }
+
+    #urlbar-input {
+        top: 5px !important;
+    }
+
+    .titlebar-close {
+        order: 0;
+    }
+
+    .titlebar-button {
+        background-color: transparent !important;
+    }
+
+    #nav-bar {
+        padding-left: 75px !important;
+    }
+    
+    .PanelUI-subView{
+        background: var(--gnome-menu-background) !important;
+    }
+}
+
+@namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/* Set theme version text in customization panel */
+#customization-footer::before {
+	content: "Firefox WhiteSur theme";
+	padding: 9px;
+}
+

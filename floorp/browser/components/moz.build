@@ -1,0 +1,28 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DIRS += [
+    "about",
+    "calendar",
+    "search",
+    "preferences",
+    "profile-manager",
+    "notes",
+    "welcome",
+    "tabsleep",
+]
+
+EXTRA_JS_MODULES += [
+    "BrowserManagerSidebar.sys.mjs",
+    "CustomKeyboardShortcutUtils.sys.mjs",
+    "DesktopFileParser.sys.mjs",
+    "EscapeShell.sys.mjs",
+    "FloorpActors.sys.mjs",
+    "FloorpStartup.sys.mjs",
+    "OpenLinkInExternal.sys.mjs",
+    "PortableUpdate.sys.mjs",
+    "WorkspaceUtils.sys.mjs",
+]

@@ -31,7 +31,7 @@
 #include <wchar.h>
 #include <windows.h>
 
-#define APP_REG_NAME_BASE L"Firefox-"
+#define APP_REG_NAME_BASE L"Floorp-"
 
 static bool IsWindowsLogonConnected() {
   WCHAR userName[UNLEN + 1];

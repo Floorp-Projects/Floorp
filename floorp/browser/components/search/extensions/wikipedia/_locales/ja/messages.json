@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (ja)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia - フリー百科事典"
+  },
+  "searchUrl": {
+    "message": "https://ja.wikipedia.org/wiki/特別:検索"
+  },
+  "searchForm": {
+    "message": "https://ja.wikipedia.org/wiki/特別:検索?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://ja.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

@@ -71,6 +71,12 @@ var gExceptionPaths = [
 
   // Localization file added programatically in featureCallout.jsm
   "resource://app/localization/en-US/browser/featureCallout.ftl",
+
+  // Will be removed in bug 1737308
+  "resource://gre/modules/lz4.js",
+  "resource://gre/modules/lz4_internal.js",
+  "resource://gre/modules/osfile.jsm",
+  "resource://gre/modules/osfile/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running

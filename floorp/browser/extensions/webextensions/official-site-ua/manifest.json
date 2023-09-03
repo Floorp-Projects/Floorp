@@ -1,0 +1,33 @@
+{
+
+  "description": "Ablaze 内部サイトや、その他の認められるサイトに Firefox の UA の上に Floorp のユーザエージェントを上書きします",
+  "manifest_version": 2,
+  "name": "official-site-ua",
+  "version": "1.1",
+  "icons": {
+    "48": "link-48.png"
+  },
+  "applications": {
+    "gecko": {
+    "id": "official-site-ua@floorp.ablaze.one"
+		}
+  },
+  "permissions": [
+    "webRequest", "webRequestBlocking", "https://ablaze.one/*", "https://floorp.ablaze.one/*", "https://support.ablaze.one/*", "https://ss1.xrea.com/menkuri.s270.xrea.com/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "experiment_apis": {
+    "BrowserInfo": {
+      "schema": "APIs/BrowserInfo.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "script": "APIs/BrowserInfo.js",
+        "paths": [["BrowserInfo"]]
+      }
+    }
+  }
+}

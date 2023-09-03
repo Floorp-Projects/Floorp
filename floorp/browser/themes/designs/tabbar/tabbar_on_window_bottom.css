@@ -1,0 +1,121 @@
+    #toolbar-menubar {
+	 order: 1;
+	}
+    #nav-bar{
+	 order: 2;
+	}
+    #PersonalToolbar{
+	 order: 3;
+	}
+
+	#TabsToolbar, #titlebar {
+	 background-color: var(--lwt-accent-color) !important;
+	}
+
+	#titlebar:-moz-lwtheme {
+        background-image: var(--lwt-additional-images) !important;
+        background-repeat: var(--lwt-background-tiling) !important;
+        background-position: var(--lwt-background-alignment) !important;
+    }
+
+	/* 仮の Window コンテナーの位置移動*/
+
+	:root:is([tabsintitlebar], [sizemode="fullscreen"]) {
+		--uc-window-control-width: 138px; /* Space reserved for window controls (Win10) */
+		/* Extra space reserved on both sides of the nav-bar to be able to drag the window */
+		--uc-window-drag-space-pre: 30px; /* left side*/
+		--uc-window-drag-space-post: 30px; /* right side*/
+	  }
+	  
+	  :root:is([tabsintitlebar][sizemode="maximized"], [sizemode="fullscreen"]) {
+		--uc-window-drag-space-pre: 0px; /* Remove pre space */
+	  }
+	  
+	  @media  (-moz-platform: windows-win7),
+			  (-moz-platform: windows-win8),
+			  (-moz-os-version: windows-win7),
+			  (-moz-os-version: windows-win8){
+		:root:is([tabsintitlebar], [sizemode="fullscreen"]) {
+		  --uc-window-control-width: 105px;
+		}
+	  }
+	  
+	  @media (-moz-gtk-csd-available) {
+		:root:is([tabsintitlebar],[sizemode="fullscreen"]) {
+		  --uc-window-control-width: 84px;
+		}
+	  }
+	  
+	  /* macOS settings are further below */
+	  .titlebar-buttonbox, #window-controls{ color: var(--toolbar-color) }
+	  :root[sizemode="fullscreen"] .titlebar-buttonbox-container{ display: none }
+	  :root[sizemode="fullscreen"] #navigator-toolbox { position: relative; }
+	  
+	  :root[sizemode="fullscreen"] #TabsToolbar > .titlebar-buttonbox-container:last-child,
+	  :root[sizemode="fullscreen"] #window-controls{
+		position: absolute;
+		display: flex;
+		top: 0;
+		right:0;
+		height: 40px;
+	  }
+	  
+	  :root[sizemode="fullscreen"] #TabsToolbar > .titlebar-buttonbox-container:last-child,
+	  :root[uidensity="compact"][sizemode="fullscreen"] #window-controls{ height: 32px }
+	  
+	  #nav-bar{
+		border-inline: var(--uc-window-drag-space-pre,0px) solid var(--toolbar-bgcolor);
+		border-inline-style: solid !important;
+		border-right-width: calc(var(--uc-window-control-width,0px) + var(--uc-window-drag-space-post,0px));
+	  }
+   
+	  @supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
+		:root:is([tabsintitlebar], [sizemode="fullscreen"]) {
+		  --uc-window-control-width: 72px;
+		}
+		:root[tabsintitlebar="true"]:not([inFullscreen]) #nav-bar{
+		  border-inline-width: calc(var(--uc-window-control-width,0px) + var(--uc-window-drag-space-post,0px)) var(--uc-window-drag-space-pre,0px)
+		}
+		:root[sizemode="fullscreen"] #TabsToolbar > .titlebar-buttonbox-container:last-child,
+		:root[sizemode="fullscreen"] #window-controls{ right: unset }
+	  }
+	
+	  #navigator-toolbox{
+		padding: 0 !important;
+	  }
+	  .titlebar-buttonbox-container{
+		position: fixed;
+		top: 0px;
+	  }
+	  #toolbar-menubar[autohide="true"] > .titlebar-buttonbox-container,
+	  #TabsToolbar > .titlebar-buttonbox-container{
+		position: fixed;
+		display: block;
+		top: 0;
+		right:0;
+		height: 40px;
+}
+@media  (-moz-platform: macos){
+	.titlebar-buttonbox{
+	  margin-top: 12px;
+	}
+  }
+/* Mac specific. You should set that font-smoothing pref to true if you are on any platform where window controls are on left */
+@supports -moz-bool-pref("layout.css.osx-font-smoothing.enabled"){
+  :root{ --uc-titlebar-padding: 0px !important }
+  .titlebar-buttonbox-container{ left:0; right: unset !important; }
+}
+
+:root[uidensity="compact"] #TabsToolbar > .titlebar-buttonbox-container{ height: 32px }
+
+#toolbar-menubar[inactive] > .titlebar-buttonbox-container{ opacity: 0 }
+
+#navigator-toolbox{ padding-top: var(--uc-titlebar-padding,0px) !important; }
+
+.titlebar-buttonbox-container > .titlebar-buttonbox{ height: 100%; }
+
+:root[inFullscreen] body > #titlebar{visibility:collapse;}
+
+#titlebar {
+  background: -moz-Dialog !important;
+}
