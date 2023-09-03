@@ -835,94 +835,9 @@ bool OSFileConstantsService::DefineOSFileConstants(
     return false;
   }
 
-  nsCOMPtr<nsIXULRuntime> runtime =
-      do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
-  if (runtime) {
-    nsAutoCString os;
-    DebugOnly<nsresult> rv = runtime->GetOS(os);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    JSString* strVersion = JS_NewStringCopyZ(aCx, os.get());
-    if (!strVersion) {
-      return false;
-    }
-
-    JS::Rooted<JS::Value> valVersion(aCx, JS::StringValue(strVersion));
-    if (!JS_SetProperty(aCx, objSys, "Name", valVersion)) {
-      return false;
-    }
-  }
-
-#if defined(DEBUG)
-  JS::Rooted<JS::Value> valDebug(aCx, JS::TrueValue());
-  if (!JS_SetProperty(aCx, objSys, "DEBUG", valDebug)) {
-    return false;
-  }
-#endif
-
-#if defined(HAVE_64BIT_BUILD)
-  JS::Rooted<JS::Value> valBits(aCx, JS::Int32Value(64));
-#else
-  JS::Rooted<JS::Value> valBits(aCx, JS::Int32Value(32));
-#endif  // defined (HAVE_64BIT_BUILD)
-  if (!JS_SetProperty(aCx, objSys, "bits", valBits)) {
-    return false;
-  }
-
   if (!JS_DefineProperty(
           aCx, objSys, "umask", mUserUmask,
           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
-    return false;
-  }
-
-  // Build OS.Constants.Path
-
-  JS::Rooted<JSObject*> objPath(aCx);
-  if (!(objPath = GetOrCreateObjectProperty(aCx, objConstants, "Path"))) {
-    return false;
-  }
-
-  // Locate libxul
-  // Note that we don't actually provide the full path, only the name of the
-  // library, which is sufficient to link to the library using js-ctypes.
-
-#if defined(XP_MACOSX)
-  // Under MacOS X, for some reason, libxul is called simply "XUL",
-  // and we need to provide the full path.
-  nsAutoString libxul;
-  libxul.Append(mPaths->libDir);
-  libxul.AppendLiteral("/XUL");
-#else
-  // On other platforms, libxul is a library "xul" with regular
-  // library prefix/suffix.
-  nsAutoString libxul;
-  libxul.AppendLiteral(MOZ_DLL_PREFIX);
-  libxul.AppendLiteral("xul");
-  libxul.AppendLiteral(MOZ_DLL_SUFFIX);
-#endif  // defined(XP_MACOSX)
-
-  if (!SetStringProperty(aCx, objPath, "libxul", libxul)) {
-    return false;
-  }
-
-  if (!SetStringProperty(aCx, objPath, "libDir", mPaths->libDir)) {
-    return false;
-  }
-
-  if (!SetStringProperty(aCx, objPath, "tmpDir", mPaths->tmpDir)) {
-    return false;
-  }
-
-  // Configure profileDir only if it is available at this stage
-  if (!mPaths->profileDir.IsVoid() &&
-      !SetStringProperty(aCx, objPath, "profileDir", mPaths->profileDir)) {
-    return false;
-  }
-
-  // Configure localProfileDir only if it is available at this stage
-  if (!mPaths->localProfileDir.IsVoid() &&
-      !SetStringProperty(aCx, objPath, "localProfileDir",
-                         mPaths->localProfileDir)) {
     return false;
   }
 
