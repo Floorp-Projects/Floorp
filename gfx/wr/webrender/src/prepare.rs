@@ -1913,13 +1913,7 @@ fn write_brush_segment_description(
                 continue;
             }
             ClipItemKind::Image { .. } => {
-                // If we encounter an image mask, bail out from segment building.
-                // It's not possible to know which parts of the primitive are affected
-                // by the mask (without inspecting the pixels). We could do something
-                // better here in the future if it ever shows up as a performance issue
-                // (for instance, at least segment based on the bounding rect of the
-                // image mask if it's non-repeating).
-                return false;
+                panic!("bug: masks not supported on old segment path");
             }
         };
 

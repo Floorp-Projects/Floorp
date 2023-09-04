@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, ImageRendering, ImageBufferKind};
+use api::{AlphaType, ClipMode, ImageBufferKind};
 use api::{FontInstanceFlags, YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF};
 use api::units::*;
 use crate::clip::{ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
@@ -27,12 +27,12 @@ use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::{RenderTaskAddress, RenderTaskKind, SubPass};
 use crate::renderer::{BlendMode, ShaderColorMode};
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferBuilder, GpuBufferAddress};
-use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest};
+use crate::resource_cache::{GlyphFetchResult, ImageProperties};
 use crate::space::SpaceMapper;
 use crate::visibility::{PrimitiveVisibilityFlags, VisibilityState};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
-use crate::util::{project_rect, MaxRect, MatrixHelpers, TransformedRectKind, ScaleOffset};
+use crate::util::{project_rect, MaxRect, TransformedRectKind, ScaleOffset};
 use crate::segment::EdgeAaSegmentMask;
 
 // Special sentinel value recognized by the shader. It is considered to be
@@ -3615,13 +3615,7 @@ impl ClipBatcher {
             // the local image bounds, rather than backwards transform the target bounds
             // as in done in write_clip_tile_vertex.
             let prim_transform_id = match clip_node.item.kind {
-                ClipItemKind::Image { .. } => {
-                    transforms.get_id(
-                        clip_node.item.spatial_node_index,
-                        root_spatial_node_index,
-                        ctx.spatial_tree,
-                    )
-                }
+                ClipItemKind::Image { .. } => { panic!("bug: old path not supported") }
                 _ => {
                     transforms.get_id(
                         root_spatial_node_index,
@@ -3641,119 +3635,8 @@ impl ClipBatcher {
             };
 
             let added_clip = match clip_node.item.kind {
-                ClipItemKind::Image { image, rect, .. } => {
-                    let request = ImageRequest {
-                        key: image,
-                        rendering: ImageRendering::Auto,
-                        tile: None,
-                    };
-
-                    let map_local_to_raster = SpaceMapper::new_with_target(
-                        root_spatial_node_index,
-                        clip_node.item.spatial_node_index,
-                        WorldRect::max_rect(),
-                        ctx.spatial_tree,
-                    );
-
-                    let mut add_image = |request: ImageRequest, tile_rect: LayoutRect, sub_rect: DeviceRect| {
-                        let cache_item = match ctx.resource_cache.get_cached_image(request) {
-                            Ok(item) => item,
-                            Err(..) => {
-                                warn!("Warnings: skip a image mask");
-                                debug!("request: {:?}", request);
-                                return;
-                            }
-                        };
-
-                        // If the clip transform is axis-aligned, we can skip any need for scissoring
-                        // by clipping the local clip rect with the backwards transformed target bounds.
-                        // If it is not axis-aligned, then we pass the local clip rect through unmodified
-                        // to the shader and also set up a scissor rect for the overall target bounds to
-                        // ensure nothing is drawn outside the target. If for some reason we can't map the
-                        // rect back to local space, we also fall back to just using a scissor rectangle.
-                        let raster_rect =
-                            sub_rect.translate(actual_rect.min.to_vector()) / surface_device_pixel_scale;
-                        let (clip_transform_id, local_rect, scissor) = match map_local_to_raster.unmap(&raster_rect) {
-                            Some(local_rect)
-                                if clip_transform_id.transform_kind() == TransformedRectKind::AxisAligned &&
-                                   !map_local_to_raster.get_transform().has_perspective_component() => {
-                                    match local_rect.intersection(&rect) {
-                                        Some(local_rect) => (clip_transform_id, local_rect, None),
-                                        None => return,
-                                    }
-                            }
-                            _ => {
-                                // If for some reason inverting the transform failed, then don't consider
-                                // the transform to be axis-aligned if it was.
-                                (clip_transform_id.override_transform_kind(TransformedRectKind::Complex),
-                                 rect,
-                                 Some(common.sub_rect
-                                    .translate(task_origin.to_vector())
-                                    .round_out()
-                                    .to_i32()))
-                            }
-                        };
-
-                        self.get_batch_list(is_first_clip)
-                            .images
-                            .entry((cache_item.texture_id, scissor))
-                            .or_insert_with(Vec::new)
-                            .push(ClipMaskInstanceImage {
-                                common: ClipMaskInstanceCommon {
-                                    sub_rect,
-                                    clip_transform_id,
-                                    ..common
-                                },
-                                resource_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
-                                tile_rect,
-                                local_rect,
-                            });
-                    };
-
-                    let clip_spatial_node = ctx.spatial_tree.get_spatial_node(clip_node.item.spatial_node_index);
-                    let clip_is_axis_aligned = clip_spatial_node.coordinate_system_id == CoordinateSystemId::root();
-
-                    if clip_instance.has_visible_tiles() {
-                        let sub_rect_bounds = actual_rect.size().into();
-
-                        for tile in clip_store.visible_mask_tiles(&clip_instance) {
-                            let tile_sub_rect = if clip_is_axis_aligned {
-                                let tile_raster_rect = map_local_to_raster
-                                    .map(&tile.tile_rect)
-                                    .expect("bug: should always map as axis-aligned");
-                                let tile_device_rect = tile_raster_rect * surface_device_pixel_scale;
-                                tile_device_rect
-                                    .translate(-actual_rect.min.to_vector())
-                                    .round_out()
-                                    .intersection(&sub_rect_bounds)
-                            } else {
-                                Some(common.sub_rect)
-                            };
-
-                            if let Some(tile_sub_rect) = tile_sub_rect {
-                                assert!(sub_rect_bounds.contains_box(&tile_sub_rect));
-                                add_image(
-                                    request.with_tile(tile.tile_offset),
-                                    tile.tile_rect,
-                                    tile_sub_rect,
-                                )
-                            }
-                        }
-                    } else {
-                        add_image(request, rect, common.sub_rect)
-                    }
-
-                    // If this is the first clip and either there is a transform or the image rect
-                    // doesn't cover the entire task, then request a clear so that pixels outside
-                    // the image boundaries will be properly initialized.
-                    if is_first_clip &&
-                        (!clip_is_axis_aligned ||
-                         !(map_local_to_raster.map(&rect).expect("bug: should always map as axis-aligned")
-                            * surface_device_pixel_scale).contains_box(&actual_rect)) {
-                        clear_to_one = true;
-                    }
-
-                    true
+                ClipItemKind::Image { .. } => {
+                    unreachable!();
                 }
                 ClipItemKind::BoxShadow { ref source }  => {
                     let task_id = source
