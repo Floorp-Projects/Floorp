@@ -31,6 +31,7 @@ private const val INTENT_MINIDUMP_PATH = "minidumpPath"
 private const val INTENT_EXTRAS_PATH = "extrasPath"
 private const val INTENT_MINIDUMP_SUCCESS = "minidumpSuccess"
 private const val INTENT_PROCESS_TYPE = "processType"
+private const val INTENT_REMOTE_TYPE = "remoteType"
 
 /**
  * Crash types that are handled by this library.
@@ -85,6 +86,7 @@ sealed class Crash {
      * @property processType The type of process the crash occurred in. Affects whether or not the crash is fatal
      *                       or whether the application can recover from it.
      * @property breadcrumbs List of breadcrumbs to send with the crash report.
+     * @property remoteType The type of child process (when available).
      */
     data class NativeCodeCrash(
         val timestamp: Long,
@@ -93,6 +95,7 @@ sealed class Crash {
         val extrasPath: String?,
         @ProcessType val processType: String?,
         val breadcrumbs: ArrayList<Breadcrumb>,
+        val remoteType: String?,
         override val uuid: String = UUID.randomUUID().toString(),
     ) : Crash() {
         override fun toBundle() = Bundle().apply {
@@ -103,6 +106,7 @@ sealed class Crash {
             putString(INTENT_PROCESS_TYPE, processType)
             putLong(INTENT_CRASH_TIMESTAMP, timestamp)
             putParcelableArrayList(INTENT_BREADCRUMBS, breadcrumbs)
+            putString(INTENT_REMOTE_TYPE, remoteType)
         }
 
         /**
@@ -143,6 +147,7 @@ sealed class Crash {
                 processType = bundle.getString(INTENT_PROCESS_TYPE, PROCESS_TYPE_MAIN),
                 breadcrumbs = bundle.getParcelableArrayListCompat(INTENT_BREADCRUMBS, Breadcrumb::class.java)
                     ?: arrayListOf(),
+                remoteType = bundle.getString(INTENT_REMOTE_TYPE, null),
                 timestamp = bundle.getLong(INTENT_CRASH_TIMESTAMP, System.currentTimeMillis()),
             )
         }

@@ -44,7 +44,15 @@ class MozillaSocorroServiceTest {
         )
         doReturn("").`when`(service).sendReport(anyLong(), any(), any(), any(), anyBoolean(), anyBoolean(), any())
 
-        val crash = Crash.NativeCodeCrash(123, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
+        val crash = Crash.NativeCodeCrash(
+            123,
+            "",
+            true,
+            "",
+            Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
+            breadcrumbs = arrayListOf(),
+            remoteType = null,
+        )
         service.report(crash)
 
         verify(service).report(crash)
@@ -126,6 +134,7 @@ class MozillaSocorroServiceTest {
                 "extras.path",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf(),
+                remoteType = null,
             )
             service.report(crash)
 
@@ -180,6 +189,7 @@ class MozillaSocorroServiceTest {
                 "test/file/66dd8af2-643c-ca11-5178-e61c6819f827",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf(),
+                remoteType = null,
             )
 
             doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
@@ -221,6 +231,7 @@ class MozillaSocorroServiceTest {
                 "test/file/test.extra",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf(),
+                remoteType = null,
             )
 
             doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
@@ -262,6 +273,7 @@ class MozillaSocorroServiceTest {
                 "test/file/66dd8af2-643c-ca11-5178-e61c6819f827.extra",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf(),
+                remoteType = null,
             )
 
             doReturn(HashMap<String, String>()).`when`(service).readExtrasFromFile(any())
@@ -310,6 +322,7 @@ class MozillaSocorroServiceTest {
                 "extras.path",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf(),
+                remoteType = null,
             )
             service.report(crash)
 
@@ -371,6 +384,7 @@ class MozillaSocorroServiceTest {
                 "extras.path",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
                 breadcrumbs = arrayListOf(),
+                remoteType = null,
             )
             service.report(crash)
 
@@ -495,7 +509,15 @@ class MozillaSocorroServiceTest {
                 ),
             )
 
-            val crash = Crash.NativeCodeCrash(123, null, true, null, Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf())
+            val crash = Crash.NativeCodeCrash(
+                123,
+                null,
+                true,
+                null,
+                Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
+                breadcrumbs = arrayListOf(),
+                remoteType = null,
+            )
             service.report(crash)
             mockWebServer.shutdown()
 
@@ -659,6 +681,7 @@ class MozillaSocorroServiceTest {
                 "extras.path",
                 processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
                 breadcrumbs = arrayListOf(),
+                remoteType = null,
             )
             val id = service.report(crash)
 

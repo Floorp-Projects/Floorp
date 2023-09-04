@@ -90,6 +90,7 @@ class SentryServiceTest {
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             breadcrumbs = breadcrumbs,
+            remoteType = null,
         )
 
         service.report(nativeCrash)
@@ -116,6 +117,7 @@ class SentryServiceTest {
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = breadcrumbs,
+            remoteType = null,
         )
 
         service.report(nativeCrash)
@@ -142,6 +144,7 @@ class SentryServiceTest {
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
             breadcrumbs = breadcrumbs,
+            remoteType = null,
         )
 
         service.report(nativeCrash)
@@ -168,6 +171,7 @@ class SentryServiceTest {
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = breadcrumbs,
+            remoteType = null,
         )
 
         val result = service.report(nativeCrash)
@@ -193,6 +197,7 @@ class SentryServiceTest {
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             breadcrumbs = breadcrumbs,
+            remoteType = null,
         )
 
         val result = service.createMessage(nativeCrash)

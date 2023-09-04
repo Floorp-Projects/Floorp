@@ -90,10 +90,12 @@ class GleanCrashReporterService(
             val startup: Boolean,
             val reason: Pings.crashReasonCodes,
             val cause: String = "os_fault",
+            val remoteType: String = "",
         ) : GleanCrashAction() {
             override fun submit() {
                 GleanCrash.uptime.setRawNanos(uptimeNanos)
                 GleanCrash.processType.set(processType)
+                GleanCrash.remoteType.set(remoteType)
                 GleanCrash.time.set(Date(timeMillis))
                 GleanCrash.startup.set(startup)
                 GleanCrash.cause.set(cause)
@@ -241,6 +243,7 @@ class GleanCrashReporterService(
             GleanCrashAction.Ping(
                 uptimeNanos = uptime(),
                 processType = "main",
+                remoteType = "",
                 timeMillis = crash.timestamp,
                 startup = false,
                 reason = Pings.crashReasonCodes.crash,
@@ -275,6 +278,7 @@ class GleanCrashReporterService(
                     Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD -> "content"
                     else -> "main"
                 },
+                remoteType = crash.remoteType ?: "",
                 timeMillis = crash.timestamp,
                 startup = false,
                 reason = Pings.crashReasonCodes.crash,

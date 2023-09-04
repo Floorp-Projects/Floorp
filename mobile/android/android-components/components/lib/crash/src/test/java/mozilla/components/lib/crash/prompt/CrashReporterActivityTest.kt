@@ -169,7 +169,8 @@ class CrashReporterActivityTest {
             true,
             "",
             Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-            arrayListOf(),
+            breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
         val scenario = coroutineContext.launchActivityWithCrash(crash)
 
@@ -194,7 +195,8 @@ class CrashReporterActivityTest {
             true,
             "",
             Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
-            arrayListOf(),
+            breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
         val scenario = coroutineContext.launchActivityWithCrash(crash)
 
@@ -219,7 +221,8 @@ class CrashReporterActivityTest {
             true,
             "",
             Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
-            arrayListOf(),
+            breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
 
         val scenario = coroutineContext.launchActivityWithCrash(crash)

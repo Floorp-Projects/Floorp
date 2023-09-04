@@ -84,6 +84,23 @@ crash:
     send_in_pings:
       - crash
 
+  remote_type:
+    type: string
+    description: >
+      Type of the child process, can be set to "web", "file" or "extension" but could also be unavailable.
+    notification_emails:
+      - crash-reporting-wg@mozilla.org
+      - stability@mozilla.org
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851518
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851518#c6
+    data_sensitivity:
+      - technical
+    expires: never
+    send_in_pings:
+      - crash
+
   time:
     type: datetime
     time_unit: minute

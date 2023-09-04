@@ -24,7 +24,8 @@ class CrashTest {
             true,
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
             Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-            arrayListOf(),
+            breadcrumbs = arrayListOf(),
+            remoteType = "web",
         )
 
         val intent = Intent()
@@ -45,6 +46,7 @@ class CrashTest {
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
             recoveredCrash.extrasPath,
         )
+        assertEquals("web", recoveredCrash.remoteType)
     }
 
     @Test
@@ -86,7 +88,15 @@ class CrashTest {
         assertTrue(
             Crash.isCrashIntent(
                 Intent().apply {
-                    val crash = Crash.NativeCodeCrash(0, "", true, "", "", arrayListOf())
+                    val crash = Crash.NativeCodeCrash(
+                        0,
+                        "",
+                        true,
+                        "",
+                        "",
+                        breadcrumbs = arrayListOf(),
+                        remoteType = null,
+                    )
                     crash.fillIn(this)
                 },
             ),

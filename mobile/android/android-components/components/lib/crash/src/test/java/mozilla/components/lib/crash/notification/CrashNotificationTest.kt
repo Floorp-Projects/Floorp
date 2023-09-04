@@ -33,6 +33,7 @@ class CrashNotificationTest {
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
 
         assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(foregroundChildNativeCrash, sdkLevel = 21))
@@ -54,6 +55,7 @@ class CrashNotificationTest {
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
 
         assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(mainProcessNativeCrash, sdkLevel = 21))
@@ -75,6 +77,7 @@ class CrashNotificationTest {
             extrasPath = "",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
             breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
 
         assertFalse(CrashNotification.shouldShowNotificationInsteadOfPrompt(backgroundChildNativeCrash, sdkLevel = 21))

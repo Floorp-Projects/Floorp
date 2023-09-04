@@ -174,6 +174,7 @@ class CrashReporterTest {
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
 
         reporter.onCrash(testContext, crash)
@@ -421,7 +422,15 @@ class CrashReporterTest {
         )
 
         reporter.submitReport(
-            Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf()),
+            Crash.NativeCodeCrash(
+                0,
+                "",
+                true,
+                "",
+                Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
+                breadcrumbs = arrayListOf(),
+                remoteType = null,
+            ),
         ).joinBlocking()
         assertTrue(nativeCrash)
     }
@@ -566,7 +575,15 @@ class CrashReporterTest {
         )
 
         reporter.submitCrashTelemetry(
-            Crash.NativeCodeCrash(0, "", true, "", Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD, arrayListOf()),
+            Crash.NativeCodeCrash(
+                0,
+                "",
+                true,
+                "",
+                Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
+                breadcrumbs = arrayListOf(),
+                remoteType = null,
+            ),
         ).joinBlocking()
         assertTrue(nativeCrash)
     }
@@ -614,6 +631,7 @@ class CrashReporterTest {
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
         reporter.onCrash(context, nativeCrash)
 
@@ -654,6 +672,7 @@ class CrashReporterTest {
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
         reporter.onCrash(context, nativeCrash)
 
@@ -682,6 +701,7 @@ class CrashReporterTest {
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
             breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
         reporter.onCrash(context, nativeCrash)
 
@@ -712,6 +732,7 @@ class CrashReporterTest {
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
         reporter.onCrash(testContext, nativeCrash)
 
@@ -743,6 +764,7 @@ class CrashReporterTest {
             "extras.path",
             processType = Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
             breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
         reporter.onCrash(testContext, nativeCrash)
 

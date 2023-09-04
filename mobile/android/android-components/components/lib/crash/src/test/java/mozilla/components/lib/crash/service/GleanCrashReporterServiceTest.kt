@@ -39,6 +39,16 @@ class GleanCrashReporterServiceTest {
         "{\"type\":\"ping\",\"uptimeNanos\":$uptime,\"processType\":\"$type\"," +
             "\"timeMillis\":$time,\"startup\":$startup,\"reason\":\"crash\"}"
 
+    private fun crashPingJsonWithRemoteType(
+        uptime: Long,
+        type: String,
+        time: Long,
+        startup: Boolean,
+        remoteType: String,
+    ): String =
+        "{\"type\":\"ping\",\"uptimeNanos\":$uptime,\"processType\":\"$type\"," +
+            "\"timeMillis\":$time,\"startup\":$startup,\"reason\":\"crash\",\"remoteType\":\"$remoteType\"}"
+
     private fun exceptionPingJson(uptime: Long, time: Long, startup: Boolean): String =
         "{\"type\":\"ping\",\"uptimeNanos\":$uptime,\"processType\":\"main\"," +
             "\"timeMillis\":$time,\"startup\":$startup,\"reason\":\"crash\",\"cause\":\"java_exception\"}"
@@ -52,7 +62,8 @@ class GleanCrashReporterServiceTest {
                 true,
                 "",
                 Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-                arrayListOf(),
+                breadcrumbs = arrayListOf(),
+                remoteType = null,
             ),
             GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY to Crash.NativeCodeCrash(
                 0,
@@ -60,7 +71,8 @@ class GleanCrashReporterServiceTest {
                 true,
                 "",
                 Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-                arrayListOf(),
+                breadcrumbs = arrayListOf(),
+                remoteType = "web",
             ),
             GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY to Crash.NativeCodeCrash(
                 0,
@@ -68,7 +80,8 @@ class GleanCrashReporterServiceTest {
                 true,
                 "",
                 Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
-                arrayListOf(),
+                breadcrumbs = arrayListOf(),
+                remoteType = null,
             ),
             GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY to Crash.UncaughtExceptionCrash(
                 0,
@@ -159,7 +172,8 @@ class GleanCrashReporterServiceTest {
                 true,
                 "",
                 Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-                arrayListOf(),
+                breadcrumbs = arrayListOf(),
+                remoteType = null,
             )
             val foregroundChildProcessNativeCodeCrash = Crash.NativeCodeCrash(
                 0,
@@ -167,7 +181,8 @@ class GleanCrashReporterServiceTest {
                 true,
                 "",
                 Crash.NativeCodeCrash.PROCESS_TYPE_FOREGROUND_CHILD,
-                arrayListOf(),
+                breadcrumbs = arrayListOf(),
+                remoteType = "web",
             )
             val backgroundChildProcessNativeCodeCrash = Crash.NativeCodeCrash(
                 0,
@@ -175,7 +190,8 @@ class GleanCrashReporterServiceTest {
                 true,
                 "",
                 Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
-                arrayListOf(),
+                breadcrumbs = arrayListOf(),
+                remoteType = null,
             )
 
             // Record some crashes
@@ -227,7 +243,7 @@ class GleanCrashReporterServiceTest {
             )
             assertEquals(
                 "element must be foreground process crash ping",
-                crashPingJson(0, "content", 0, false),
+                crashPingJsonWithRemoteType(0, "content", 0, false, "web"),
                 lines.next(),
             )
             assertEquals(
@@ -350,7 +366,8 @@ class GleanCrashReporterServiceTest {
             true,
             "",
             Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-            arrayListOf(),
+            breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
 
         service.record(crash)
@@ -382,6 +399,7 @@ class GleanCrashReporterServiceTest {
                 assertEquals("main", GleanCrash.processType.testGetValue())
                 assertEquals(false, GleanCrash.startup.testGetValue())
                 assertEquals("os_fault", GleanCrash.cause.testGetValue())
+                assertEquals("", GleanCrash.remoteType.testGetValue())
                 pingReceived = true
             }
 
@@ -415,6 +433,7 @@ class GleanCrashReporterServiceTest {
                 assertEquals("main", GleanCrash.processType.testGetValue())
                 assertEquals(false, GleanCrash.startup.testGetValue())
                 assertEquals("os_fault", GleanCrash.cause.testGetValue())
+                assertEquals("", GleanCrash.remoteType.testGetValue())
                 pingReceived = true
             }
 

@@ -32,6 +32,7 @@ class NativeCodeCrashTest {
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
         )
         intent.putExtra("minidumpSuccess", true)
+        intent.putExtra("remoteType", "web")
 
         val crash = Crash.NativeCodeCrash.fromBundle(intent.extras!!)
 
@@ -50,6 +51,7 @@ class NativeCodeCrashTest {
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.extra",
             crash.extrasPath,
         )
+        assertEquals(crash.remoteType, "web")
     }
 
     @Test
@@ -60,7 +62,8 @@ class NativeCodeCrashTest {
             true,
             "extrasPath",
             Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
-            arrayListOf(),
+            breadcrumbs = arrayListOf(),
+            remoteType = null,
         )
 
         val bundle = crash.toBundle()
