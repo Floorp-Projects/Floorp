@@ -236,9 +236,12 @@ already_AddRefed<Document> Event::GetDocument() const {
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> win =
-      do_QueryInterface(eventTarget->GetOwnerGlobal());
+  nsIGlobalObject* global = eventTarget->GetOwnerGlobal();
+  if (!global) {
+    return nullptr;
+  }
 
+  nsPIDOMWindowInner* win = global->AsInnerWindow();
   if (!win) {
     return nullptr;
   }
@@ -290,7 +293,7 @@ EventTarget* Event::GetOriginalTarget() const {
 
 EventTarget* Event::GetComposedTarget() const {
   EventTarget* et = GetOriginalTarget();
-  nsCOMPtr<nsIContent> content = do_QueryInterface(et);
+  nsIContent* content = nsIContent::FromEventTargetOrNull(et);
   if (!content) {
     return et;
   }
@@ -336,14 +339,13 @@ bool Event::Init(mozilla::dom::EventTarget* aGlobal) {
     return IsCurrentThreadRunningChromeWorker();
   }
   bool trusted = false;
-  nsCOMPtr<nsPIDOMWindowInner> w = do_QueryInterface(aGlobal);
-  if (w) {
-    nsCOMPtr<Document> d = w->GetExtantDoc();
-    if (d) {
-      trusted = nsContentUtils::IsChromeDoc(d);
-      nsPresContext* presContext = d->GetPresContext();
-      if (presContext) {
-        InitPresContextData(presContext);
+  if (aGlobal) {
+    if (nsPIDOMWindowInner* w = aGlobal->GetAsWindowInner()) {
+      if (Document* d = w->GetExtantDoc()) {
+        trusted = nsContentUtils::IsChromeDoc(d);
+        if (nsPresContext* presContext = d->GetPresContext()) {
+          InitPresContextData(presContext);
+        }
       }
     }
   }
@@ -416,8 +418,7 @@ void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
     return;
   }
   if (mEvent->mFlags.mInPassiveListener) {
-    nsCOMPtr<nsPIDOMWindowInner> win(do_QueryInterface(mOwner));
-    if (win) {
+    if (nsPIDOMWindowInner* win = mOwner->AsInnerWindow()) {
       if (Document* doc = win->GetExtantDoc()) {
         if (!doc->HasWarnedAbout(
                 Document::ePreventDefaultFromPassiveListener)) {
@@ -761,7 +762,7 @@ double Event::TimeStamp() {
       return 0.0;
     }
 
-    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(mOwner);
+    nsPIDOMWindowInner* win = mOwner->AsInnerWindow();
     if (NS_WARN_IF(!win)) {
       return 0.0;
     }
