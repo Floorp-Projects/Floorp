@@ -1166,19 +1166,7 @@ void FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
 void FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
                                                nsIPrincipal* aSubjectPrincipal,
                                                ErrorResult& aError) {
-  bool tryReuse = false;
-  if (!aTextContent.IsEmpty()) {
-    if (nsIContent* firstChild = GetFirstChild()) {
-      tryReuse = firstChild->NodeType() == TEXT_NODE &&
-                 !firstChild->GetNextSibling() &&
-                 firstChild->OwnedOnlyByTheDOMAndFrameTrees() &&
-                 !OwnerDoc()->MayHaveDOMMutationObservers() &&
-                 !nsContentUtils::HasMutationListeners(
-                     OwnerDoc(), NS_EVENT_BITS_MUTATION_ALL);
-    }
-  }
-
-  aError = nsContentUtils::SetNodeTextContent(this, aTextContent, tryReuse);
+  aError = nsContentUtils::SetNodeTextContent(this, aTextContent, false);
 }
 
 void FragmentOrElement::DestroyContent() {

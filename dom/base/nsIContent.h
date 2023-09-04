@@ -604,19 +604,13 @@ class nsIContent : public nsINode {
 
   void RemovePurple() { mRefCnt.RemovePurple(); }
 
-  // Note, currently this doesn't handle the case when frame tree has multiple
-  // references to the nsIContent object.
-  bool OwnedOnlyByTheDOMAndFrameTrees() {
-    return OwnedOnlyByTheDOMTree(GetPrimaryFrame() ? 1 : 0);
-  }
-
-  bool OwnedOnlyByTheDOMTree(uint32_t aExpectedRefs = 0) {
+  bool OwnedOnlyByTheDOMTree() {
     uint32_t rc = mRefCnt.get();
     if (GetParent()) {
       --rc;
     }
     rc -= GetChildCount();
-    return rc == aExpectedRefs;
+    return rc == 0;
   }
 
   /**
