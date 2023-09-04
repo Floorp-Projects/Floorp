@@ -278,11 +278,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  let newLogoEnabled = window.PrivateBrowsingEnableNewLogo();
-  document
-    .getElementById("about-private-browsing-logo")
-    .toggleAttribute("legacy", !newLogoEnabled);
-
   // The default info content is already in the markup, but we need to use JS to
   // set up the learn more link, since it's dynamically generated.
   const linkEl = document.getElementById("private-browsing-myths");

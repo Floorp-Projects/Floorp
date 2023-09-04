@@ -360,21 +360,6 @@ menupopup::part(drop-indicator) {
 
 /* Private browsing indicator */
 
-.private-browsing-indicator {
-  background-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
-  background-repeat: no-repeat;
-  background-size: 100% auto;
-  background-position: center;
-  width: 24px;
-  margin-inline: 7px;
-  position: relative;
-  /* Need to ensure this gets positioned on top of the position:relative #navigator-toolbox
-   * in case the dark/light themes give that item a background. */
-  z-index: 1;
-}
-
-/* New Private Browsing Indicator */
-
 #private-browsing-indicator-with-label {
   align-items: center;
   margin-inline: 7px;
@@ -386,9 +371,6 @@ menupopup::part(drop-indicator) {
   height: 16px;
 }
 
-:root:not([privatebrowsingmode=temporary]) .private-browsing-indicator,
-:root[privatebrowsingnewindicator] .private-browsing-indicator,
-:root:not([privatebrowsingnewindicator]) #private-browsing-indicator-with-label,
 :root:not([privatebrowsingmode=temporary]) #private-browsing-indicator-with-label {
   display: none;
 }

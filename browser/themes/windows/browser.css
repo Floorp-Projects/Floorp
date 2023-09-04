@@ -478,10 +478,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin-bottom: var(--tabs-navbar-shadow-size);
 }
 
-.private-browsing-indicator {
-  margin-inline: 12px;
-}
-
 #UITourTooltipButtons {
   /**
    * Override the --arrowpanel-padding so the background extends

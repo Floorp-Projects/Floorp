@@ -755,12 +755,6 @@ pref("browser.shopping.experience2023.ads.userEnabled", true);
 // Enables the display of the Mozilla VPN banner in private browsing windows
 pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source=firefox-browser&utm_medium=firefox-%CHANNEL%-browser&utm_campaign=private-browsing-vpn-link");
 
-// Enables the new private browsing indicator.
-pref("browser.privatebrowsing.enable-new-indicator", true);
-
-// Enables the new about:privatebrowsing logo.
-pref("browser.privatebrowsing.enable-new-logo", true);
-
 // Whether the user has opted-in to recommended settings for data features.
 pref("browser.dataFeatureRecommendations.enabled", false);
 
