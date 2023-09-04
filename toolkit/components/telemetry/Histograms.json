@@ -17959,6 +17959,19 @@
     "keyed": true,
     "description": "The time between navigationStart and the first contentful paint of a foreground http or https root content document, in milliseconds. The contentful paint timestamp is taken during display list building and does not include rasterization or compositing of that paint. This is collected only on page load where the main document uses or supports Early Hints preload."
   },
+  "EH_PERF_CHANNEL_COMPLETION_TIME": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "expires_in_version": "130",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1838406],
+    "keyed": true,
+    "description": "The time between AsyncOpen and OnStopRequest for Early Hints preload request."
+  },
   "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
