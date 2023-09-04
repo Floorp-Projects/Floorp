@@ -3625,7 +3625,7 @@ void Document::SetLoadedAsData(bool aLoadedAsData,
   if (aConsiderForMemoryReporting) {
     nsIGlobalObject* global = GetScopeObject();
     if (global) {
-      if (nsPIDOMWindowInner* window = global->AsInnerWindow()) {
+      if (nsPIDOMWindowInner* window = global->GetAsInnerWindow()) {
         nsGlobalWindowInner::Cast(window)
             ->RegisterDataDocumentForMemoryReporting(this);
       }
@@ -7579,7 +7579,7 @@ void Document::SetScopeObject(nsIGlobalObject* aGlobal) {
   if (aGlobal) {
     mHasHadScriptHandlingObject = true;
 
-    nsPIDOMWindowInner* window = aGlobal->AsInnerWindow();
+    nsPIDOMWindowInner* window = aGlobal->GetAsInnerWindow();
     if (!window) {
       return;
     }
@@ -18712,7 +18712,7 @@ void Document::UnregisterFromMemoryReportingForDataDocument() {
   mAddedToMemoryReportingAsDataDocument = false;
   nsIGlobalObject* global = GetScopeObject();
   if (global) {
-    if (nsPIDOMWindowInner* win = global->AsInnerWindow()) {
+    if (nsPIDOMWindowInner* win = global->GetAsInnerWindow()) {
       nsGlobalWindowInner::Cast(win)->UnregisterDataDocumentForMemoryReporting(
           this);
     }

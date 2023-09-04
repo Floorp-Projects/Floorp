@@ -673,7 +673,7 @@ MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
 
   ErrorResult rv;
   RefPtr<dom::Console> console =
-      nsGlobalWindowInner::Cast(global->AsInnerWindow())->GetConsole(cx, rv);
+      nsGlobalWindowInner::Cast(global->GetAsInnerWindow())->GetConsole(cx, rv);
   if (rv.Failed()) {
     return;
   }

@@ -241,7 +241,7 @@ already_AddRefed<Document> Event::GetDocument() const {
     return nullptr;
   }
 
-  nsPIDOMWindowInner* win = global->AsInnerWindow();
+  nsPIDOMWindowInner* win = global->GetAsInnerWindow();
   if (!win) {
     return nullptr;
   }
@@ -321,7 +321,7 @@ bool Event::ShouldIgnoreChromeEventTargetListener() const {
   if (NS_WARN_IF(!global)) {
     return false;
   }
-  nsPIDOMWindowInner* win = global->AsInnerWindow();
+  nsPIDOMWindowInner* win = global->GetAsInnerWindow();
   if (NS_WARN_IF(!win)) {
     return false;
   }
@@ -418,7 +418,7 @@ void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
     return;
   }
   if (mEvent->mFlags.mInPassiveListener) {
-    if (nsPIDOMWindowInner* win = mOwner->AsInnerWindow()) {
+    if (nsPIDOMWindowInner* win = mOwner->GetAsInnerWindow()) {
       if (Document* doc = win->GetExtantDoc()) {
         if (!doc->HasWarnedAbout(
                 Document::ePreventDefaultFromPassiveListener)) {
@@ -762,7 +762,7 @@ double Event::TimeStamp() {
       return 0.0;
     }
 
-    nsPIDOMWindowInner* win = mOwner->AsInnerWindow();
+    nsPIDOMWindowInner* win = mOwner->GetAsInnerWindow();
     if (NS_WARN_IF(!win)) {
       return 0.0;
     }

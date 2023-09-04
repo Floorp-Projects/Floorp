@@ -189,7 +189,7 @@ AutoRequestJSThreadExecution::AutoRequestJSThreadExecution(
 
     nsPIDOMWindowInner* innerWindow = nullptr;
     if (aGlobalObject) {
-      innerWindow = aGlobalObject->AsInnerWindow();
+      innerWindow = aGlobalObject->GetAsInnerWindow();
     }
 
     DocGroup* docGroup = nullptr;

@@ -40,8 +40,8 @@ already_AddRefed<Worker> Worker::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<nsIGlobalObject> globalObject =
       do_QueryInterface(aGlobal.GetAsSupports());
 
-  if (globalObject->AsInnerWindow() &&
-      !globalObject->AsInnerWindow()->IsCurrentInnerWindow()) {
+  if (globalObject->GetAsInnerWindow() &&
+      !globalObject->GetAsInnerWindow()->IsCurrentInnerWindow()) {
     aRv.ThrowInvalidStateError(
         "Cannot create worker for a going to be discarded document");
     return nullptr;

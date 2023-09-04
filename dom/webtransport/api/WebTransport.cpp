@@ -926,7 +926,7 @@ class BFCacheNotifyWTRunnable final : public WorkerProxyToMainThreadRunnable {
 
 void WebTransport::NotifyToWindow(bool aCreated) const {
   if (NS_IsMainThread()) {
-    NotifyBFCacheOnMainThread(GetParentObject()->AsInnerWindow(), aCreated);
+    NotifyBFCacheOnMainThread(GetParentObject()->GetAsInnerWindow(), aCreated);
     return;
   }
 

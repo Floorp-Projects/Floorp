@@ -54,7 +54,7 @@ namespace intl {
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
     dom::Document* doc = nullptr;
     if (aGlobal) {
-      nsPIDOMWindowInner* innerWindow = aGlobal->AsInnerWindow();
+      nsPIDOMWindowInner* innerWindow = aGlobal->GetAsInnerWindow();
       if (innerWindow) {
         doc = innerWindow->GetExtantDoc();
       }

@@ -856,7 +856,7 @@ nsFormFillController::HandleEvent(Event* aEvent) {
 
   nsIGlobalObject* global = target->GetOwnerGlobal();
   NS_ENSURE_STATE(global);
-  nsPIDOMWindowInner* inner = global->AsInnerWindow();
+  nsPIDOMWindowInner* inner = global->GetAsInnerWindow();
   NS_ENSURE_STATE(inner);
 
   if (!inner->GetBrowsingContext()->IsContent()) {

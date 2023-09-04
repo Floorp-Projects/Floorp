@@ -254,7 +254,7 @@ mozilla::StorageAccess nsIGlobalObject::GetStorageAccess() {
   return mozilla::StorageAccess::eDeny;
 }
 
-nsPIDOMWindowInner* nsIGlobalObject::AsInnerWindow() {
+nsPIDOMWindowInner* nsIGlobalObject::GetAsInnerWindow() {
   if (MOZ_LIKELY(mIsInnerWindow)) {
     return static_cast<nsPIDOMWindowInner*>(
         static_cast<nsGlobalWindowInner*>(this));

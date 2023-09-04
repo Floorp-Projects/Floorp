@@ -626,7 +626,7 @@ void DOMLocalization::ReportL10nOverlaysErrors(
               u"Unknown error happened while translating an element.");
           break;
       }
-      nsPIDOMWindowInner* innerWindow = GetParentObject()->AsInnerWindow();
+      nsPIDOMWindowInner* innerWindow = GetParentObject()->GetAsInnerWindow();
       Document* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
       if (doc) {
         nsContentUtils::ReportToConsoleNonLocalized(

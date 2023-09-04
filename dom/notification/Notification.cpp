@@ -1489,7 +1489,7 @@ NotificationPermission Notification::GetPermission(const GlobalObject& aGlobal,
 NotificationPermission Notification::GetPermission(nsIGlobalObject* aGlobal,
                                                    ErrorResult& aRv) {
   if (NS_IsMainThread()) {
-    return GetPermissionInternal(aGlobal->AsInnerWindow(), aRv);
+    return GetPermissionInternal(aGlobal->GetAsInnerWindow(), aRv);
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);

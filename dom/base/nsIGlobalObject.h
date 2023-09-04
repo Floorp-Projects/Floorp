@@ -219,7 +219,7 @@ class nsIGlobalObject : public nsISupports,
 
   // Returns a pointer to this object as an inner window if this is one or
   // nullptr otherwise.
-  nsPIDOMWindowInner* AsInnerWindow();
+  nsPIDOMWindowInner* GetAsInnerWindow();
 
   void QueueMicrotask(mozilla::dom::VoidFunction& aCallback);
 
