@@ -55,7 +55,7 @@ very diverse skills:
    testing, or other types of contributions sparks your interest please
    see the `Volunteer Opportunities
    wiki <https://contribute.mozilla.org>`_ or the `Mozilla
-   community <https://mozilla.community/>`_ site.
+   community <https://community.mozilla.org/>`_ site.
 
 Perhaps you do not know programming yet, but you want to start learning?
 There are `plenty of
