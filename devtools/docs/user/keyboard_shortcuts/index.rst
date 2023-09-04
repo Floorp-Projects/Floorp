@@ -35,7 +35,7 @@ These shortcuts work in the main browser window to open the specified tool. The 
     - :kbd:`Cmd` + :kbd:`Opt` + :kbd:`I`
     - :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`I`
 
-  * - Bring Toolbox to foreground (if the Toolbox is in a separate window and not in oreground)
+  * - Bring Toolbox to foreground (if the Toolbox is in a separate window and not in foreground)
     - :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`I` or :kbd:`F12`
     - :kbd:`Cmd` + :kbd:`Opt` + :kbd:`I` or :kbd:`F12`
     - :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`I` or :kbd:`F12`
@@ -50,7 +50,7 @@ These shortcuts work in the main browser window to open the specified tool. The 
     - :kbd:`Cmd` + :kbd:`Opt` + :kbd:`K`
     - :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`K`
 
-  * - Toggle "Pick an element from the page" (opens the Toolbox and/or focus the Inspector ab)
+  * - Toggle "Pick an element from the page" (opens the Toolbox and/or focus the Inspector tab)
     - :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`C`
     - :kbd:`Cmd` + :kbd:`Opt` + :kbd:`C`
     - :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`C`
