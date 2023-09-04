@@ -3,10 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// We're not getting battery state from system.
+// Battery API is disabled and we're migrating from DBus Glib to GIO.
+// #define USE_DBUS_GLIB 1
+
 #include "Hal.h"
 #include "HalLog.h"
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
+#ifdef USE_DBUS_GLIB
+#  include <dbus/dbus-glib.h>
+#  include <dbus/dbus-glib-lowlevel.h>
+#endif
 #include <mozilla/Attributes.h>
 #include <mozilla/dom/battery/Constants.h>
 #include "mozilla/GRefPtr.h"
@@ -48,6 +54,7 @@ class UPowerClient {
     eState_PendingDischarge
   };
 
+#ifdef USE_DBUS_GLIB
   /**
    * Update the currently tracked device.
    * @return whether everything went ok.
@@ -100,6 +107,7 @@ class UPowerClient {
 
   // The DBusGProxy for the tracked device.
   RefPtr<DBusGProxy> mTrackedDeviceProxy;
+#endif
 
   double mLevel;
   bool mCharging;
@@ -154,13 +162,16 @@ UPowerClient::UPowerClient()
       mRemainingTime(kDefaultRemainingTime) {}
 
 UPowerClient::~UPowerClient() {
+#ifdef USE_DBUS_GLIB
   NS_ASSERTION(!mDBusConnection && !mUPowerProxy && !mTrackedDevice &&
                    !mTrackedDeviceProxy,
                "The observers have not been correctly removed! "
                "(StopListening should have been called)");
+#endif
 }
 
 void UPowerClient::BeginListening() {
+#ifdef USE_DBUS_GLIB
   GUniquePtr<GError> error;
   mDBusConnection =
       dont_AddRef(dbus_g_bus_get(DBUS_BUS_SYSTEM, getter_Transfers(error)));
@@ -197,9 +208,11 @@ void UPowerClient::BeginListening() {
                           G_TYPE_INVALID);
   dbus_g_proxy_connect_signal(mUPowerProxy, "DeviceChanged",
                               G_CALLBACK(DeviceChanged), this, nullptr);
+#endif
 }
 
 void UPowerClient::StopListening() {
+#ifdef USE_DBUS_GLIB
   // If mDBusConnection isn't initialized, that means we are not really
   // listening.
   if (!mDBusConnection) {
@@ -228,8 +241,10 @@ void UPowerClient::StopListening() {
   mLevel = kDefaultLevel;
   mCharging = kDefaultCharging;
   mRemainingTime = kDefaultRemainingTime;
+#endif
 }
 
+#ifdef USE_DBUS_GLIB
 void UPowerClient::UpdateTrackedDeviceSync() {
   GType typeGPtrArray =
       dbus_g_type_get_collection("GPtrArray", DBUS_TYPE_G_OBJECT_PATH);
@@ -299,11 +314,11 @@ void UPowerClient::DeviceChanged(DBusGProxy* aProxy, const gchar* aObjectPath,
     return;
   }
 
-#if GLIB_MAJOR_VERSION >= 2 && GLIB_MINOR_VERSION >= 16
+#  if GLIB_MAJOR_VERSION >= 2 && GLIB_MINOR_VERSION >= 16
   if (g_strcmp0(aObjectPath, aListener->mTrackedDevice.get())) {
-#else
+#  else
   if (g_ascii_strcasecmp(aObjectPath, aListener->mTrackedDevice.get())) {
-#endif
+#  endif
     return;
   }
 
@@ -438,6 +453,7 @@ void UPowerClient::UpdateSavedInfo(GHashTable* aHashTable) {
     }
   }
 }
+#endif
 
 double UPowerClient::GetLevel() { return mLevel; }
 
