@@ -29,7 +29,7 @@ sudo rm -rf /usr/local/share/chrome_driver
 sudo rm -rf /usr/local/share/edge_driver
 sudo rm -rf /usr/local/share/gecko_driver
 sudo rm -rf /usr/share/java
-sudo fallocate -l 10G /home/runner/swapfile2
+sudo fallocate -l 15G /home/runner/swapfile2
 sudo chmod 600 /home/runner/swapfile2
 sudo mkswap /home/runner/swapfile2
 sudo swapon /home/runner/swapfile2
