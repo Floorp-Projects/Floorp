@@ -12,7 +12,6 @@ ${helpers.predefined_type(
     "PageSize",
     "computed::PageSize::auto()",
     engines="gecko",
-    gecko_pref="layout.css.page-size.enabled",
     initial_specified_value="specified::PageSize::auto()",
     spec="https://drafts.csswg.org/css-page-3/#page-size-prop",
     boxed=True,
