@@ -92,8 +92,7 @@ by using the GTEST_FILTER environment variable:
 Debugging with Xcode
 ~~~~~~~~~~~~~~~~~~~~
 
-See `Debugging on Mac OS
-X </en-US/docs/Mozilla/Debugging/Debugging_on_Mac_OS_X>`__ for initial
+See :ref:`Debugging On macOS` for initial
 setup. You'll likely want to create a separate scheme for running GTest
 ("Product" > "Scheme" > "New Scheme…"). In addition to GTEST_FILTER, Set
 the following environment variables:
