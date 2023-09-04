@@ -153,7 +153,7 @@ class TestToolkitMozConfigure(BaseConfigureTest):
             # Trick the sandbox into not running too much
             dep = sandbox._depends[sandbox["c_compiler"]]
             value_for_depends[(dep,)] = CompilerResult(
-                compiler="/usr/bin/mockcc", language="C", flags=[]
+                compiler="/usr/bin/mockcc", language="C", type="clang", flags=[]
             )
             dep = sandbox._depends[sandbox["readelf"]]
             value_for_depends[(dep,)] = "/usr/bin/readelf"
