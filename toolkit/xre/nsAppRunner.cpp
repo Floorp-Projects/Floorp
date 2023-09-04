@@ -3993,7 +3993,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
 #endif
   }
 
-  gKioskMode = CheckArg("kiosk");
+  gKioskMode = CheckArg("kiosk", nullptr, CheckArgFlag::None);
   const char* kioskMonitorNumber = nullptr;
   if (CheckArg("kiosk-monitor", &kioskMonitorNumber, CheckArgFlag::None)) {
     gKioskMode = true;
