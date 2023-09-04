@@ -194,9 +194,11 @@ static Atomic<int64_t> sDrawTargetWebglCount(0);
 
 DrawTargetWebgl::DrawTargetWebgl() { sDrawTargetWebglCount++; }
 
-inline void DrawTargetWebgl::SharedContext::ClearLastTexture() {
+inline void DrawTargetWebgl::SharedContext::ClearLastTexture(bool aFullClear) {
   mLastTexture = nullptr;
-  mLastClipMask = nullptr;
+  if (aFullClear) {
+    mLastClipMask = nullptr;
+  }
 }
 
 // Attempts to clear the snapshot state. If the snapshot is only referenced by
@@ -239,6 +241,7 @@ DrawTargetWebgl::~DrawTargetWebgl() {
         child->DeallocShmem(mShmem);
       }
     }
+    mSharedContext->ClearLastTexture(true);
     if (mClipMask) {
       mSharedContext->mWebgl->DeleteTexture(mClipMask);
     }
