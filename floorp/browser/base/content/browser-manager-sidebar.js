@@ -480,7 +480,6 @@ const bmsController = {
           Services.prefs.setBoolPref("floorp.browser.sidebar2.addons.window.start", true);
           Services.prefs.setStringPref("floorp.browser.sidebar2.start.url", webpanelURL);
           webpanelElem.firstChild.setAttribute("src", "chrome://browser/content/browser.xhtml");
-          console.log("addon enabled");
         } else {
           webpanelElem.firstChild.setAttribute("src", webpanelURL);
         }
@@ -754,9 +753,9 @@ const bmsController = {
   });
 
   if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){ 
-    // Browser Manager Sidebar emmmed check
-    let emmmed = Services.prefs.getStringPref("floorp.browser.sidebar2.start.url");
-    if (emmmed != "" && emmmed !== false && emmmed != undefined) {
+    // Browser Manager Sidebar embedded check
+    let embedded = Services.prefs.getStringPref("floorp.browser.sidebar2.start.url");
+    if (embedded != "" && embedded !== false && embedded != undefined) {
         if(gBrowser){
           loadBMSURI();
         } else {
@@ -765,7 +764,7 @@ const bmsController = {
       }
   
     function loadBMSURI(){
-      gBrowser.loadURI(Services.io.newURI(emmmed), {
+      gBrowser.loadURI(Services.io.newURI(embedded), {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
       document.getElementById("main-window").setAttribute("chromehidden", "toolbar", "menubar directories extrachrome");
