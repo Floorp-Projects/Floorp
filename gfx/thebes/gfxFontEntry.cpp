@@ -54,24 +54,10 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
 
-nsrefcnt gfxCharacterMap::NotifyMaybeReleased() {
-  auto* pfl = gfxPlatformFontList::PlatformFontList();
-  pfl->Lock();
-
-  // Something may have pulled our raw pointer out of gfxPlatformFontList before
-  // we were able to complete the release.
-  if (mRefCnt > 0) {
-    pfl->Unlock();
-    return mRefCnt;
-  }
-
-  if (mShared) {
-    pfl->RemoveCmap(this);
-  }
-
-  pfl->Unlock();
-  delete this;
-  return 0;
+void gfxCharacterMap::NotifyMaybeReleased(gfxCharacterMap* aCmap) {
+  // Tell gfxPlatformFontList that a charmap's refcount was decremented,
+  // so it should check whether the object is to be deleted.
+  gfxPlatformFontList::PlatformFontList()->MaybeRemoveCmap(aCmap);
 }
 
 gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace)
