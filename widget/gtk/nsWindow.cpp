@@ -8838,7 +8838,7 @@ nsresult nsWindow::SetNonClientMargins(const LayoutDeviceIntMargin& aMargins) {
 }
 
 bool nsWindow::IsAlwaysUndecoratedWindow() const {
-  if (mIsPIPWindow || mIsWaylandPanelWindow) {
+  if (mIsPIPWindow || mIsWaylandPanelWindow || gKioskMode) {
     return true;
   }
   if (mWindowType == WindowType::Dialog &&
