@@ -272,7 +272,7 @@ const bmsController = {
       );
       const selectedURL = BROWSER_SIDEBAR_DATA.data[modeValuePref].url ?? "";
       bmsController.controllFunctions.changeVisibleCommandButton(
-        selectedURL.startsWith("floorp//")
+        selectedURL.startsWith("floorp//") || Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")
       );
       for (let elem of document.getElementsByClassName("webpanels")) {
         elem.hidden = true;
@@ -477,7 +477,8 @@ const bmsController = {
           webpanelURL = webpanelURL.split(",")[3];
         }
 
-        if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){
+        if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled") && !isFloorp){
+          Services.prefs.setBoolPref("floorp.browser.sidebar2.addons.window.start", true);
           Services.prefs.setStringPref("floorp.browser.sidebar2.start.url", webpanelURL);
           webpanelElem.firstChild.setAttribute("src", "chrome://browser/content/browser.xhtml");
         } else {
@@ -765,12 +766,19 @@ const bmsController = {
       }
   
     function loadBMSURI(){
-      console.log(emmmed);
       gBrowser.loadURI(Services.io.newURI(emmmed), {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
-      document.getElementById("main-window").setAttribute("chromehidden","menubar directories extrachrome");
-      document.getElementById("TabsToolbar").setAttribute("collapsed","true");
+      document.getElementById("main-window").setAttribute("chromehidden", "toolbar", "menubar directories extrachrome");
+      document.getElementById("main-window").setAttribute("BSM-window", "true");
       Services.prefs.clearUserPref("floorp.browser.sidebar2.start.url");
+      Services.prefs.setBoolPref("floorp.browser.sidebar2.addons.window.start", false);
+
+      // Load CSS
+      const BMSSyleElement = document.createElement("style");
+      BMSSyleElement.textContent = `
+         @import url("chrome://browser/content/browser-bms-window.css");
+       `
+      document.head.appendChild(BMSSyleElement);
     }}
 })();

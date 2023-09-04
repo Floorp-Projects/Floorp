@@ -1,0 +1,32 @@
+#TabsToolbar {
+   display: none !important;
+}
+  
+#PanelUI-menu-button {
+   display: none !important;
+}
+
+#PersonalToolbar {
+   display: none !important;
+}
+
+#back-button {
+  display: inherit;
+}
+
+#forward-button {
+  display: inherit;
+}
+
+#stop-reload-button {
+  display: inherit;
+}
+
+#titlebar {
+  display: none !important;
+}
+
+#statusBar {
+  display: none !important;
+}
+

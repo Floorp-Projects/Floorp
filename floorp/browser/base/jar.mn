@@ -7,6 +7,7 @@ browser.jar:
 
   content/browser/browser-UI-custom.js          (content/browser-UI-custom.js)
   content/browser/browser-manager-sidebar.js    (content/browser-manager-sidebar.js)
+  content/browser/browser-bms-window.css        (content/browser-bms-window.css)
   content/browser/browser-overrides.js          (content/browser-overrides.js)
   content/browser/browser-design.js             (content/browser-design.js)
   content/browser/browser-downloadbar.js        (content/browser-downloadbar.js)
