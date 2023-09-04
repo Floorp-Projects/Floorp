@@ -1887,12 +1887,7 @@ function runTest() {
 }
 
 function start() {
-  if (SpecialPowers.getBoolPref("layout.css.font-loading-api.enabled")) {
-    SpecialPowers.pushPrefEnv({ set: [["layout.css.font-display.enabled", true]] },
-                              runTest);
-  } else {
-    ok(true, "CSS Font Loading API is not enabled.");
-  }
+  SpecialPowers.pushPrefEnv({ set: [["layout.css.font-display.enabled", true]] }, runTest);
 }
 
 SimpleTest.waitForExplicitFinish();
