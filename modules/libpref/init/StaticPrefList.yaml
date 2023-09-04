@@ -3015,7 +3015,7 @@
 # disabled.
 - name: dom.keyboardevent.init_key_event.enabled_in_addons
   type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
 # If this is true, keypress events for non-printable keys are dispatched only
