@@ -30,3 +30,6 @@
   display: none !important;
 }
 
+#urlbar-container {
+    display: none !important;
+}
