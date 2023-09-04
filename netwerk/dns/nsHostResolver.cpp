@@ -245,7 +245,8 @@ void nsHostResolver::ClearPendingQueue(
                        rec->mTRRSkippedReason, nullptr);
       } else {
         mozilla::net::TypeRecordResultType empty(Nothing{});
-        CompleteLookupByType(rec, NS_ERROR_ABORT, empty, 0, rec->pb);
+        CompleteLookupByType(rec, NS_ERROR_ABORT, empty, rec->mTRRSkippedReason,
+                             0, rec->pb);
       }
     }
   }
@@ -319,7 +320,8 @@ void nsHostResolver::Shutdown() {
                                  nullptr, lock);
           } else {
             mozilla::net::TypeRecordResultType empty(Nothing{});
-            CompleteLookupByTypeLocked(aRec, NS_ERROR_ABORT, empty, 0, aRec->pb,
+            CompleteLookupByTypeLocked(aRec, NS_ERROR_ABORT, empty,
+                                       aRec->mTRRSkippedReason, 0, aRec->pb,
                                        lock);
           }
         },
@@ -1584,18 +1586,7 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
     c->OnResolveHostComplete(this, rec, status);
   }
 
-  if (!addrRec->mResolving && !mShutdown) {
-    {
-      auto trrQuery = addrRec->mTRRQuery.Lock();
-      if (trrQuery.ref()) {
-        addrRec->mTrrDuration = trrQuery.ref()->Duration();
-      }
-      trrQuery.ref() = nullptr;
-    }
-    addrRec->ResolveComplete();
-
-    AddToEvictionQ(rec, aLock);
-  }
+  OnResolveComplete(rec, aLock);
 
 #ifdef DNSQUERY_AVAILABLE
   // Unless the result is from TRR, resolve again to get TTL
@@ -1623,15 +1614,17 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
 
 nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByType(
     nsHostRecord* rec, nsresult status,
-    mozilla::net::TypeRecordResultType& aResult, uint32_t aTtl, bool pb) {
+    mozilla::net::TypeRecordResultType& aResult, TRRSkippedReason aReason,
+    uint32_t aTtl, bool pb) {
   MutexAutoLock lock(mLock);
-  return CompleteLookupByTypeLocked(rec, status, aResult, aTtl, pb, lock);
+  return CompleteLookupByTypeLocked(rec, status, aResult, aReason, aTtl, pb,
+                                    lock);
 }
 
 nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByTypeLocked(
     nsHostRecord* rec, nsresult status,
-    mozilla::net::TypeRecordResultType& aResult, uint32_t aTtl, bool pb,
-    const mozilla::MutexAutoLock& aLock) {
+    mozilla::net::TypeRecordResultType& aResult, TRRSkippedReason aReason,
+    uint32_t aTtl, bool pb, const mozilla::MutexAutoLock& aLock) {
   MOZ_ASSERT(rec);
   MOZ_ASSERT(rec->pb == pb);
   MOZ_ASSERT(!rec->IsAddrRecord());
@@ -1642,14 +1635,6 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByTypeLocked(
   MOZ_ASSERT(typeRec->mResolving);
   typeRec->mResolving--;
 
-  {
-    auto lock = rec->mTRRQuery.Lock();
-    lock.ref() = nullptr;
-  }
-
-  uint32_t duration = static_cast<uint32_t>(
-      (TimeStamp::Now() - typeRec->mStart).ToMilliseconds());
-
   if (NS_FAILED(status)) {
     LOG(("nsHostResolver::CompleteLookupByType record %p [%s] status %x\n",
          typeRec.get(), typeRec->host.get(), (unsigned int)status));
@@ -1659,7 +1644,12 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByTypeLocked(
     MOZ_ASSERT(aResult.is<TypeRecordEmpty>());
     status = NS_ERROR_UNKNOWN_HOST;
     typeRec->negative = true;
-    Telemetry::Accumulate(Telemetry::DNS_BY_TYPE_FAILED_LOOKUP_TIME, duration);
+    if (aReason != TRRSkippedReason::TRR_UNSET) {
+      typeRec->RecordReason(aReason);
+    } else {
+      // Unknown failed reason.
+      typeRec->RecordReason(TRRSkippedReason::TRR_FAILED);
+    }
   } else {
     size_t recordCount = 0;
     if (aResult.is<TypeRecordTxt>()) {
@@ -1675,8 +1665,8 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByTypeLocked(
     typeRec->mResults = aResult;
     typeRec->SetExpiration(TimeStamp::NowLoRes(), aTtl, mDefaultGracePeriod);
     typeRec->negative = false;
-    Telemetry::Accumulate(Telemetry::DNS_BY_TYPE_SUCCEEDED_LOOKUP_TIME,
-                          duration);
+    typeRec->mTRRSuccess = true;
+    typeRec->RecordReason(TRRSkippedReason::TRR_OK);
   }
 
   mozilla::LinkedList<RefPtr<nsResolveHostCallback>> cbs =
@@ -1692,8 +1682,25 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByTypeLocked(
     c->OnResolveHostComplete(this, rec, status);
   }
 
-  AddToEvictionQ(rec, aLock);
+  OnResolveComplete(rec, aLock);
+
   return LOOKUP_OK;
+}
+
+void nsHostResolver::OnResolveComplete(nsHostRecord* aRec,
+                                       const mozilla::MutexAutoLock& aLock) {
+  if (!aRec->mResolving && !mShutdown) {
+    {
+      auto trrQuery = aRec->mTRRQuery.Lock();
+      if (trrQuery.ref()) {
+        aRec->mTrrDuration = trrQuery.ref()->Duration();
+      }
+      trrQuery.ref() = nullptr;
+    }
+    aRec->ResolveComplete();
+
+    AddToEvictionQ(aRec, aLock);
+  }
 }
 
 void nsHostResolver::CancelAsyncRequest(

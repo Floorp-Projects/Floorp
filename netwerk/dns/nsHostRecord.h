@@ -177,6 +177,8 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
 
   virtual void OnCompleteLookup() {}
 
+  virtual void ResolveComplete() = 0;
+
   // When the record began being valid. Used mainly for bookkeeping.
   mozilla::TimeStamp mValidStart;
 
@@ -187,6 +189,8 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   // If a record is in its grace period (and not expired), it will be used
   // but a request to refresh it will be made.
   mozilla::TimeStamp mGraceStart;
+
+  mozilla::TimeDuration mTrrDuration;
 
   mozilla::Atomic<uint32_t, mozilla::Relaxed> mTtl{0};
 
@@ -297,7 +301,6 @@ class AddrHostRecord final : public nsHostRecord {
   // Saves the skip reason of a first-attempt TRR lookup and clears
   // it to prepare for a retry attempt.
   void NotifyRetryingTrr();
-  void ResolveComplete();
 
   static DnsPriority GetPriority(nsIDNSService::DNSFlags aFlags);
 
@@ -316,9 +319,10 @@ class AddrHostRecord final : public nsHostRecord {
     StoreNative(false);
   }
 
+  void ResolveComplete() override;
+
   // When the lookups of this record started and their durations
   mozilla::TimeStamp mNativeStart;
-  mozilla::TimeDuration mTrrDuration;
   mozilla::TimeDuration mNativeDuration;
 
   // TRR was used on this record
@@ -385,13 +389,12 @@ class TypeHostRecord final : public nsHostRecord,
       nsIDNSService::DNSFlags queryFlags) const override;
   bool RefreshForNegativeResponse() const override;
 
+  void ResolveComplete() override;
+
   mozilla::net::TypeRecordResultType mResults = AsVariant(mozilla::Nothing());
   mozilla::Mutex mResultsLock MOZ_UNANNOTATED{"TypeHostRecord.mResultsLock"};
 
   mozilla::Maybe<nsCString> mOriginHost;
-
-  // When the lookups of this record started (for telemetry).
-  mozilla::TimeStamp mStart;
   bool mAllRecordsExcluded = false;
 };
 

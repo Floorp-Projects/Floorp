@@ -59,7 +59,8 @@ class TRRService : public TRRServiceBase,
                               TRR* aTrrRequest) override;
   LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
                                     mozilla::net::TypeRecordResultType&,
-                                    uint32_t, bool pb) override;
+                                    TRRSkippedReason, uint32_t,
+                                    bool pb) override;
   void AddToBlocklist(const nsACString& host, const nsACString& originSuffix,
                       bool privateBrowsing, bool aParentsToo);
   bool IsTemporarilyBlocked(const nsACString& aHost,

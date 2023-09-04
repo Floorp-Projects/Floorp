@@ -1378,7 +1378,7 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
 
 AHostResolver::LookupStatus TRRService::CompleteLookupByType(
     nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
-    uint32_t aTtl, bool aPb) {
+    mozilla::net::TRRSkippedReason aReason, uint32_t aTtl, bool aPb) {
   return LOOKUP_OK;
 }
 

@@ -40,7 +40,7 @@ class TRRQuery : public AHostResolver {
                                       TRR* aTRRRequest) override;
   virtual LookupStatus CompleteLookupByType(
       nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
-      uint32_t aTtl, bool pb) override;
+      mozilla::net::TRRSkippedReason aReason, uint32_t aTtl, bool pb) override;
   virtual nsresult GetHostRecord(const nsACString& host,
                                  const nsACString& aTrrServer, uint16_t type,
                                  nsIDNSService::DNSFlags flags, uint16_t af,
