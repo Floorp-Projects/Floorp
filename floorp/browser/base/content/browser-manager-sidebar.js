@@ -432,8 +432,7 @@ const bmsController = {
             String(webpanel_userAgent) ||
             (webpanobject?.getAttribute("usercontextid") ?? "0") !==
               String(wibpanel_usercontext))) ||
-          (webpanobject.className.includes("isFloorp")) && isWeb || ((webpanobject.className.includes("isFloorp") || webpanobject.className.includes("isWeb"))) ||
-          ((
+          ((webpanobject.className.includes("isFloorp") ||
             webpanobject.className.includes("isWeb")) &&
             isFloorp))
       ) {
