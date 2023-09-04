@@ -5482,6 +5482,18 @@
     "releaseChannelCollection": "opt-out",
     "description": "When in TRR-first mode, if TRR failed once and retried unsuccessfully, it lists the reason for the first failure, keyed by the provider."
   },
+  "TRR_RELEVANT_SKIP_REASON_TRR_FIRST_TYPE_REC": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 50,
+    "bug_numbers": [1850367],
+    "releaseChannelCollection": "opt-out",
+    "description": "When in TRR-first mode, it lists the reason we may have skipped TRR for HTTPS RR, keyed by the provider. Does not include requests that intentionally skip TRR."
+  },
   "TRR_ATTEMPT_COUNT": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox"],

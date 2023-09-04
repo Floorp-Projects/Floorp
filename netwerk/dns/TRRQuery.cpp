@@ -100,6 +100,8 @@ bool TRRQuery::SendQueries(nsTArray<RefPtr<TRR>>& aRequestsToSend) {
 }
 
 nsresult TRRQuery::DispatchLookup(TRR* pushedTRR) {
+  mTrrStart = TimeStamp::Now();
+
   if (!mRecord->IsAddrRecord()) {
     return DispatchByTypeLookup(pushedTRR);
   }
@@ -109,8 +111,6 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR) {
   if (!addrRec) {
     return NS_ERROR_UNEXPECTED;
   }
-
-  mTrrStart = TimeStamp::Now();
 
   mTrrAUsed = INIT;
   mTrrAAAAUsed = INIT;
@@ -152,7 +152,6 @@ nsresult TRRQuery::DispatchByTypeLookup(TRR* pushedTRR) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  typeRec->mStart = TimeStamp::Now();
   enum TrrType rectype;
 
   // XXX this could use a more extensible approach.
@@ -361,10 +360,12 @@ AHostResolver::LookupStatus TRRQuery::CompleteLookup(
 
 AHostResolver::LookupStatus TRRQuery::CompleteLookupByType(
     nsHostRecord* rec, nsresult status,
-    mozilla::net::TypeRecordResultType& aResult, uint32_t aTtl, bool pb) {
+    mozilla::net::TypeRecordResultType& aResult,
+    mozilla::net::TRRSkippedReason aReason, uint32_t aTtl, bool pb) {
   if (rec != mRecord) {
     LOG(("TRRQuery::CompleteLookup - Pushed record. Go to resolver"));
-    return mHostResolver->CompleteLookupByType(rec, status, aResult, aTtl, pb);
+    return mHostResolver->CompleteLookupByType(rec, status, aResult, aReason,
+                                               aTtl, pb);
   }
 
   {
@@ -372,10 +373,14 @@ AHostResolver::LookupStatus TRRQuery::CompleteLookupByType(
     mTrrByType = nullptr;
   }
 
+  // Unlike the address record, we store the duration regardless of the status.
+  mTrrDuration = TimeStamp::Now() - mTrrStart;
+
   MOZ_DIAGNOSTIC_ASSERT(!mCalledCompleteLookup,
                         "must not call CompleteLookup more than once");
   mCalledCompleteLookup = true;
-  return mHostResolver->CompleteLookupByType(rec, status, aResult, aTtl, pb);
+  return mHostResolver->CompleteLookupByType(rec, status, aResult, aReason,
+                                             aTtl, pb);
 }
 
 }  // namespace net

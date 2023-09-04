@@ -581,3 +581,18 @@ TypeHostRecord::GetTtl(uint32_t* aResult) {
   *aResult = mTtl;
   return NS_OK;
 }
+
+void TypeHostRecord::ResolveComplete() {
+  if (IsRelevantTRRSkipReason(mTRRSkippedReason)) {
+    Telemetry::Accumulate(
+        Telemetry::TRR_RELEVANT_SKIP_REASON_TRR_FIRST_TYPE_REC,
+        TRRService::ProviderKey(), static_cast<uint32_t>(mTRRSkippedReason));
+  }
+
+  uint32_t millis = static_cast<uint32_t>(mTrrDuration.ToMilliseconds());
+  if (mTRRSuccess) {
+    Telemetry::Accumulate(Telemetry::DNS_BY_TYPE_SUCCEEDED_LOOKUP_TIME, millis);
+  } else {
+    Telemetry::Accumulate(Telemetry::DNS_BY_TYPE_FAILED_LOOKUP_TIME, millis);
+  }
+}
