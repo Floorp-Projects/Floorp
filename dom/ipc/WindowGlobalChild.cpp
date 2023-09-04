@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/WindowGlobalChild.h"
+#include "nsScriptSecurityManager.h"
 
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -572,6 +573,30 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
       BrowsingContext()->BrowserId(), InnerWindowId(),
       nsContentUtils::TruncatedURLForDisplay(aDocumentURI, 1024),
       embedderInnerWindowID, BrowsingContext()->UsePrivateBrowsing());
+
+  auto isLoadableViaInternet = [](nsIURI* uri) {
+    return (uri && (net::SchemeIsHTTP(uri) || net::SchemeIsHTTPS(uri)));
+  };
+
+  if (isLoadableViaInternet(aDocumentURI)) {
+    nsCOMPtr<nsIURI> principalURI = mDocumentPrincipal->GetURI();
+    if (mDocumentPrincipal->GetIsNullPrincipal()) {
+      nsCOMPtr<nsIPrincipal> precursor =
+          mDocumentPrincipal->GetPrecursorPrincipal();
+      if (precursor) {
+        principalURI = precursor->GetURI();
+      }
+    }
+
+    if (isLoadableViaInternet(principalURI) &&
+        !nsScriptSecurityManager::SecurityCompareURIs(principalURI,
+                                                      aDocumentURI)) {
+      MOZ_DIAGNOSTIC_ASSERT(
+          false,
+          "Setting DocumentURI with a different origin than principal URI");
+    }
+  }
+
   mDocumentURI = aDocumentURI;
   SendUpdateDocumentURI(aDocumentURI);
 }
