@@ -392,7 +392,10 @@ bool DCLayerTree::MaybeUpdateDebugVisualRedrawRegions() {
   return true;
 }
 
-void DCLayerTree::CompositorBeginFrame() { mCurrentFrame++; }
+void DCLayerTree::CompositorBeginFrame() {
+  mCurrentFrame++;
+  mUsedOverlayTypesInFrame = DCompOverlayTypes::NO_OVERLAY;
+}
 
 void DCLayerTree::CompositorEndFrame() {
   auto start = TimeStamp::Now();
@@ -444,6 +447,44 @@ void DCLayerTree::CompositorEndFrame() {
       --i;  // Examine the element again, if necessary.
       --len;
     }
+  }
+
+  if (!StaticPrefs::gfx_webrender_dcomp_video_check_slow_present()) {
+    return;
+  }
+
+  // Disable video overlay if mCompositionDevice->Commit() with video overlay is
+  // too slow. It drops fps.
+
+  const auto maxCommitWaitDurationMs = 20;
+  const auto maxSlowCommitCount = 5;
+  const auto commitDurationMs =
+      static_cast<uint32_t>((end - start).ToMilliseconds());
+
+  nsPrintfCString marker("CommitWait overlay %u %ums ",
+                         (uint8_t)mUsedOverlayTypesInFrame, commitDurationMs);
+  PROFILER_MARKER_TEXT("CommitWait", GRAPHICS, {}, marker);
+
+  if (mUsedOverlayTypesInFrame != DCompOverlayTypes::NO_OVERLAY &&
+      commitDurationMs > maxCommitWaitDurationMs) {
+    mSlowCommitCount++;
+  } else {
+    mSlowCommitCount = 0;
+  }
+
+  if (mSlowCommitCount <= maxSlowCommitCount) {
+    return;
+  }
+
+  if (mUsedOverlayTypesInFrame & DCompOverlayTypes::SOFTWARE_DECODED_VIDEO) {
+    gfxCriticalNoteOnce << "Sw video swapchain present is slow";
+    RenderThread::Get()->NotifyWebRenderError(
+        wr::WebRenderError::VIDEO_SW_OVERLAY);
+  }
+  if (mUsedOverlayTypesInFrame & DCompOverlayTypes::HARDWARE_DECODED_VIDEO) {
+    gfxCriticalNoteOnce << "Hw video swapchain present is slow";
+    RenderThread::Get()->NotifyWebRenderError(
+        wr::WebRenderError::VIDEO_HW_OVERLAY);
   }
 }
 
@@ -976,6 +1017,10 @@ layers::OverlayInfo DCLayerTree::GetOverlayInfo() {
   return info;
 }
 
+void DCLayerTree::SetUsedOverlayTypeInFrame(DCompOverlayTypes aTypes) {
+  mUsedOverlayTypesInFrame |= aTypes;
+}
+
 DCSurface::DCSurface(wr::DeviceIntSize aTileSize,
                      wr::DeviceIntPoint aVirtualOffset, bool aIsVirtualSurface,
                      bool aIsOpaque, DCLayerTree* aDCLayerTree)
@@ -1129,6 +1174,11 @@ bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
     return false;
   }
 
+  const auto overlayType = mRenderTextureHost->IsSoftwareDecodedVideo()
+                               ? DCompOverlayTypes::SOFTWARE_DECODED_VIDEO
+                               : DCompOverlayTypes::HARDWARE_DECODED_VIDEO;
+  mDCLayerTree->SetUsedOverlayTypeInFrame(overlayType);
+
   mVideoSize = mRenderTextureHost->AsRenderDXGITextureHost()->GetSize(0);
 
   // When RenderTextureHost, swapChainSize or VideoSwapChain are updated,
@@ -1237,26 +1287,36 @@ void DCSurfaceVideo::PresentVideo() {
     return;
   }
 
-  const auto maxWaitDurationMs = 2.0;
+  const auto maxPresentWaitDurationMs = 2;
   const auto maxSlowPresentCount = 5;
-  const auto duration = (end - start).ToMilliseconds();
+  const auto presentDurationMs =
+      static_cast<uint32_t>((end - start).ToMilliseconds());
+  const auto overlayType = mRenderTextureHost->IsSoftwareDecodedVideo()
+                               ? DCompOverlayTypes::SOFTWARE_DECODED_VIDEO
+                               : DCompOverlayTypes::HARDWARE_DECODED_VIDEO;
 
-  if (duration > maxWaitDurationMs) {
+  nsPrintfCString marker("PresentWait overlay %u %ums ", (uint8_t)overlayType,
+                         presentDurationMs);
+  PROFILER_MARKER_TEXT("PresentWait", GRAPHICS, {}, marker);
+
+  if (presentDurationMs > maxPresentWaitDurationMs) {
     mSlowPresentCount++;
   } else {
     mSlowPresentCount = 0;
   }
 
-  if (mSlowPresentCount > maxSlowPresentCount) {
-    if (mRenderTextureHost->IsSoftwareDecodedVideo()) {
-      gfxCriticalNoteOnce << "Sw video swapchain present is slow";
-      RenderThread::Get()->NotifyWebRenderError(
-          wr::WebRenderError::VIDEO_SW_OVERLAY);
-    } else {
-      gfxCriticalNoteOnce << "Hw video swapchain present is slow";
-      RenderThread::Get()->NotifyWebRenderError(
-          wr::WebRenderError::VIDEO_HW_OVERLAY);
-    }
+  if (mSlowPresentCount <= maxSlowPresentCount) {
+    return;
+  }
+
+  if (overlayType == DCompOverlayTypes::SOFTWARE_DECODED_VIDEO) {
+    gfxCriticalNoteOnce << "Sw video swapchain present is slow";
+    RenderThread::Get()->NotifyWebRenderError(
+        wr::WebRenderError::VIDEO_SW_OVERLAY);
+  } else {
+    gfxCriticalNoteOnce << "Hw video swapchain present is slow";
+    RenderThread::Get()->NotifyWebRenderError(
+        wr::WebRenderError::VIDEO_HW_OVERLAY);
   }
 }
 

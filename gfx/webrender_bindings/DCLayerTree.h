@@ -88,6 +88,15 @@ struct ColorManagementChain {
 
 // -
 
+enum class DCompOverlayTypes : uint8_t {
+  NO_OVERLAY = 0,
+  HARDWARE_DECODED_VIDEO = 1 << 0,
+  SOFTWARE_DECODED_VIDEO = 1 << 1,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DCompOverlayTypes)
+
+// -
+
 /**
  * DCLayerTree manages direct composition layers.
  * It does not manage gecko's layers::Layer.
@@ -155,6 +164,8 @@ class DCLayerTree {
   DXGI_FORMAT GetOverlayFormatForSDR();
 
   bool SupportsSwapChainTearing();
+
+  void SetUsedOverlayTypeInFrame(DCompOverlayTypes aTypes);
 
  protected:
   bool Initialize(HWND aHwnd, nsACString& aError);
@@ -235,6 +246,9 @@ class DCLayerTree {
   static color::ColorProfileDesc QueryOutputColorProfile();
 
   mutable Maybe<color::ColorProfileDesc> mOutputColorProfile;
+
+  DCompOverlayTypes mUsedOverlayTypesInFrame = DCompOverlayTypes::NO_OVERLAY;
+  int mSlowCommitCount = 0;
 
  public:
   const color::ColorProfileDesc& OutputColorProfile() const {
