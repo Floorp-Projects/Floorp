@@ -301,7 +301,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     // Reset the current target.
     void ClearTarget() { mCurrentTarget = nullptr; }
     // Reset the last used texture to force binding next use.
-    void ClearLastTexture();
+    void ClearLastTexture(bool aFullClear = false);
 
     bool SupportsPattern(const Pattern& aPattern);
 
