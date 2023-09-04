@@ -183,6 +183,11 @@ RemoteAccessible* RemoteAccessible::RemoteParent() const {
 
 void RemoteAccessible::ApplyCache(CacheUpdateType aUpdateType,
                                   AccAttributes* aFields) {
+  if (!aFields) {
+    MOZ_ASSERT_UNREACHABLE("ApplyCache called with aFields == null");
+    return;
+  }
+
   const nsTArray<bool> relUpdatesNeeded = PreProcessRelations(aFields);
   if (auto maybeViewportCache =
           aFields->GetAttribute<nsTArray<uint64_t>>(CacheKey::Viewport)) {
