@@ -9851,11 +9851,6 @@ var FirefoxViewHandler = {
     NimbusFeatures.majorRelease2022.onUpdate(this._updateEnabledState);
     NimbusFeatures.firefoxViewNext.onUpdate(this._updateEnabledState);
 
-    if (this._enabled) {
-      this._toggleNotificationDot(
-        FirefoxViewNotificationManager.shouldNotificationDotBeShowing()
-      );
-    }
     ChromeUtils.defineESModuleGetters(this, {
       SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
     });
