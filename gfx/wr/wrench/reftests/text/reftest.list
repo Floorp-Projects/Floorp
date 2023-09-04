@@ -41,8 +41,6 @@ platform(linux) options(disable-subpixel) == border-radius.yaml border-radius-al
 platform(linux) == border-radius.yaml border-radius-subpx.png
 options(disable-aa) == transparent-no-aa.yaml transparent-no-aa-ref.yaml
 != diacritics.yaml diacritics-ref.yaml
-fuzzy(1,1) platform(linux) options(disable-subpixel) == text-masking.yaml text-masking-alpha.png
-fuzzy(1,44) platform(linux) == text-masking.yaml text-masking-subpx.png
 fuzzy(1,30) platform(linux) options(disable-subpixel) == alpha-transform.yaml alpha-transform.png
 fuzzy(1,20) platform(linux) == subpixel-rotate.yaml subpixel-rotate.png
 fuzzy(1,72) platform(linux) == subpixel-scale.yaml subpixel-scale.png
