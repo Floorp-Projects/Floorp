@@ -280,12 +280,9 @@ nsresult nsHttpHeaderArray::GetOriginalHeader(const nsHttpAtom& aHeader,
         continue;
       }
 
-      nsAutoCString hdr;
-      if (entry.headerNameOriginal.IsEmpty()) {
-        hdr = nsDependentCString(entry.header);
-      } else {
-        hdr = entry.headerNameOriginal;
-      }
+      const nsCString& hdr = entry.headerNameOriginal.IsEmpty()
+                                 ? entry.header.val()
+                                 : entry.headerNameOriginal;
 
       rv = NS_OK;
       if (NS_FAILED(aVisitor->VisitHeader(hdr, entry.value))) {
@@ -327,12 +324,9 @@ nsresult nsHttpHeaderArray::VisitHeaders(
       continue;
     }
 
-    nsAutoCString hdr;
-    if (entry.headerNameOriginal.IsEmpty()) {
-      hdr = nsDependentCString(entry.header);
-    } else {
-      hdr = entry.headerNameOriginal;
-    }
+    const nsCString& hdr = entry.headerNameOriginal.IsEmpty()
+                               ? entry.header.val()
+                               : entry.headerNameOriginal;
     rv = visitor->VisitHeader(hdr, entry.value);
     if (NS_FAILED(rv)) {
       return rv;
@@ -428,7 +422,7 @@ void nsHttpHeaderArray::Flatten(nsACString& buf, bool pruneProxyHeaders,
     }
 
     if (entry.headerNameOriginal.IsEmpty()) {
-      buf.Append(entry.header);
+      buf.Append(entry.header.val());
     } else {
       buf.Append(entry.headerNameOriginal);
     }
@@ -448,7 +442,7 @@ void nsHttpHeaderArray::FlattenOriginalHeader(nsACString& buf) {
     }
 
     if (entry.headerNameOriginal.IsEmpty()) {
-      buf.Append(entry.header);
+      buf.Append(entry.header.val());
     } else {
       buf.Append(entry.headerNameOriginal);
     }

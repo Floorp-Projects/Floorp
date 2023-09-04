@@ -95,13 +95,12 @@ void AddWindowsSSO(nsHttpChannel* channel) {
   // the entire header.
   if (!allCookies.IsEmpty()) {
     nsAutoCString cookieHeader;
-    channel->GetRequestHeader(nsDependentCString(nsHttp::Cookie), cookieHeader);
+    channel->GetRequestHeader(nsHttp::Cookie.val(), cookieHeader);
     if (!cookieHeader.IsEmpty()) {
       cookieHeader.AppendLiteral("; ");
     }
     cookieHeader.Append(NS_ConvertUTF16toUTF8(allCookies));
-    channel->SetRequestHeader(nsDependentCString(nsHttp::Cookie), cookieHeader,
-                              false);
+    channel->SetRequestHeader(nsHttp::Cookie.val(), cookieHeader, false);
   }
   if (cookieInfo) {
     FreeProofOfPossessionCookieInfoArray(cookieInfo, cookieCount);
