@@ -204,8 +204,6 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
   // gdkScaleFactor.
   gint geometryScaleFactor = gdkScaleFactor;
 
-  LayoutDeviceIntRect rect;
-
   gint refreshRate = [&] {
     // Since gtk 3.22
     static auto s_gdk_monitor_get_refresh_rate = (int (*)(GdkMonitor*))dlsym(
@@ -229,6 +227,8 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
                                 workarea.y * geometryScaleFactor,
                                 workarea.width * geometryScaleFactor,
                                 workarea.height * geometryScaleFactor);
+  LayoutDeviceIntRect rect;
+  DesktopToLayoutDeviceScale contentsScale(1.0);
   if (GdkIsX11Display()) {
     GdkRectangle monitor;
     gdk_screen_get_monitor_geometry(aScreen, aMonitorNum, &monitor);
@@ -237,19 +237,15 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
                                monitor.width * geometryScaleFactor,
                                monitor.height * geometryScaleFactor);
   } else {
+    // Don't report screen shift in Wayland, see bug 1795066.
+    availRect.MoveTo(0, 0);
     // We use Gtk workarea on Wayland as it matches our needs (Bug 1732682).
     rect = availRect;
+    // Use per-monitor scaling factor in Wayland.
+    contentsScale.scale = gdkScaleFactor;
   }
 
   uint32_t pixelDepth = GetGTKPixelDepth();
-
-  // Use per-monitor scaling factor in gtk/wayland, or 1.0 otherwise.
-  DesktopToLayoutDeviceScale contentsScale(1.0);
-#ifdef MOZ_WAYLAND
-  if (GdkIsWaylandDisplay()) {
-    contentsScale.scale = gdkScaleFactor;
-  }
-#endif
 
   CSSToLayoutDeviceScale defaultCssScale(gdkScaleFactor);
 
