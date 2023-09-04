@@ -146,7 +146,7 @@ nsresult nsHttpResponseHead::SetHeader(const nsACString& hdr,
   }
 
   nsHttpAtom atom = nsHttp::ResolveAtom(hdr);
-  if (!atom.get()) {
+  if (!atom) {
     NS_WARNING("failed to resolve atom");
     return NS_ERROR_NOT_AVAILABLE;
   }

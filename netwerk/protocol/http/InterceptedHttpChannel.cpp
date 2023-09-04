@@ -707,7 +707,7 @@ class ResetInterceptionHeaderVisitor final : public nsIHttpHeaderVisitor {
   VisitHeader(const nsACString& aHeader, const nsACString& aValue) override {
     // We skip Cookie header here, since it will be added during
     // nsHttpChannel::AsyncOpen.
-    if (aHeader.Equals(nsHttp::Cookie.val())) {
+    if (aHeader.Equals(nsHttp::Cookie)) {
       return NS_OK;
     }
     if (aValue.IsEmpty()) {
