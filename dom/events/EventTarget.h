@@ -134,16 +134,16 @@ class EventTarget : public nsISupports, public nsWrapperCache {
   virtual bool IsInnerWindow() const { return false; }
   virtual bool IsOuterWindow() const { return false; }
   virtual bool IsRootWindow() const { return false; }
-  nsPIDOMWindowInner* GetAsWindowInner();
-  const nsPIDOMWindowInner* GetAsWindowInner() const;
-  nsPIDOMWindowOuter* GetAsWindowOuter();
-  const nsPIDOMWindowOuter* GetAsWindowOuter() const;
+  nsPIDOMWindowInner* GetAsInnerWindow();
+  const nsPIDOMWindowInner* GetAsInnerWindow() const;
+  nsPIDOMWindowOuter* GetAsOuterWindow();
+  const nsPIDOMWindowOuter* GetAsOuterWindow() const;
   inline nsPIWindowRoot* GetAsWindowRoot();
   inline const nsPIWindowRoot* GetAsWindowRoot() const;
-  nsPIDOMWindowInner* AsWindowInner();
-  const nsPIDOMWindowInner* AsWindowInner() const;
-  nsPIDOMWindowOuter* AsWindowOuter();
-  const nsPIDOMWindowOuter* AsWindowOuter() const;
+  nsPIDOMWindowInner* AsInnerWindow();
+  const nsPIDOMWindowInner* AsInnerWindow() const;
+  nsPIDOMWindowOuter* AsOuterWindow();
+  const nsPIDOMWindowOuter* AsOuterWindow() const;
   inline nsPIWindowRoot* AsWindowRoot();
   inline const nsPIWindowRoot* AsWindowRoot() const;
 

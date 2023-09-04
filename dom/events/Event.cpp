@@ -340,7 +340,7 @@ bool Event::Init(mozilla::dom::EventTarget* aGlobal) {
   }
   bool trusted = false;
   if (aGlobal) {
-    if (nsPIDOMWindowInner* w = aGlobal->GetAsWindowInner()) {
+    if (nsPIDOMWindowInner* w = aGlobal->GetAsInnerWindow()) {
       if (Document* d = w->GetExtantDoc()) {
         trusted = nsContentUtils::IsChromeDoc(d);
         if (nsPresContext* presContext = d->GetPresContext()) {
@@ -843,7 +843,7 @@ void Event::SetOwner(EventTarget* aOwner) {
     return;
   }
 
-  if (nsPIDOMWindowInner* w = aOwner->GetAsWindowInner()) {
+  if (nsPIDOMWindowInner* w = aOwner->GetAsInnerWindow()) {
     mOwner = w->AsGlobal();
     return;
   }

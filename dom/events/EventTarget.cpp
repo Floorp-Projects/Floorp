@@ -195,40 +195,40 @@ Nullable<WindowProxyHolder> EventTarget::GetOwnerGlobalForBindings() {
   return WindowProxyHolder(win->GetBrowsingContext());
 }
 
-nsPIDOMWindowInner* EventTarget::GetAsWindowInner() {
+nsPIDOMWindowInner* EventTarget::GetAsInnerWindow() {
   return IsInnerWindow() ? static_cast<nsGlobalWindowInner*>(this) : nullptr;
 }
 
-const nsPIDOMWindowInner* EventTarget::GetAsWindowInner() const {
+const nsPIDOMWindowInner* EventTarget::GetAsInnerWindow() const {
   return IsInnerWindow() ? static_cast<const nsGlobalWindowInner*>(this)
                          : nullptr;
 }
 
-nsPIDOMWindowOuter* EventTarget::GetAsWindowOuter() {
+nsPIDOMWindowOuter* EventTarget::GetAsOuterWindow() {
   return IsOuterWindow() ? static_cast<nsGlobalWindowOuter*>(this) : nullptr;
 }
 
-const nsPIDOMWindowOuter* EventTarget::GetAsWindowOuter() const {
+const nsPIDOMWindowOuter* EventTarget::GetAsOuterWindow() const {
   return IsOuterWindow() ? static_cast<const nsGlobalWindowOuter*>(this)
                          : nullptr;
 }
 
-nsPIDOMWindowInner* EventTarget::AsWindowInner() {
+nsPIDOMWindowInner* EventTarget::AsInnerWindow() {
   MOZ_DIAGNOSTIC_ASSERT(IsInnerWindow());
   return static_cast<nsGlobalWindowInner*>(this);
 }
 
-const nsPIDOMWindowInner* EventTarget::AsWindowInner() const {
+const nsPIDOMWindowInner* EventTarget::AsInnerWindow() const {
   MOZ_DIAGNOSTIC_ASSERT(IsInnerWindow());
   return static_cast<const nsGlobalWindowInner*>(this);
 }
 
-nsPIDOMWindowOuter* EventTarget::AsWindowOuter() {
+nsPIDOMWindowOuter* EventTarget::AsOuterWindow() {
   MOZ_DIAGNOSTIC_ASSERT(IsOuterWindow());
   return static_cast<nsGlobalWindowOuter*>(this);
 }
 
-const nsPIDOMWindowOuter* EventTarget::AsWindowOuter() const {
+const nsPIDOMWindowOuter* EventTarget::AsOuterWindow() const {
   MOZ_DIAGNOSTIC_ASSERT(IsOuterWindow());
   return static_cast<const nsGlobalWindowOuter*>(this);
 }
