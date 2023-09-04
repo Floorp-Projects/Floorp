@@ -3853,10 +3853,7 @@ bool WarpCacheIRTranspiler::emitTypedArrayByteLengthDoubleResult(
   auto* size = MTypedArrayElementSize::New(alloc(), obj);
   add(size);
 
-  auto* sizeDouble = MToDouble::New(alloc(), size);
-  add(sizeDouble);
-
-  auto* mul = MMul::New(alloc(), lengthDouble, sizeDouble, MIRType::Double);
+  auto* mul = MMul::New(alloc(), lengthDouble, size, MIRType::Double);
   mul->setCanBeNegativeZero(false);
   add(mul);
 
@@ -4952,7 +4949,7 @@ bool WarpCacheIRTranspiler::maybeCreateThis(MDefinition* callee,
   MOZ_ASSERT(thisArg->type() == MIRType::MagicIsConstructing ||
              thisArg->isPhi());
 
-  auto* newTarget = unboxObjectInfallible(callInfo_->getNewTarget());
+  MDefinition* newTarget = callInfo_->getNewTarget();
   auto* createThis = MCreateThis::New(alloc(), callee, newTarget);
   add(createThis);
 
@@ -5313,8 +5310,7 @@ bool WarpCacheIRTranspiler::emitCallBoundScriptedFunction(
     auto* boundArgs = MLoadFixedSlot::New(
         alloc(), callee, BoundFunctionObject::firstInlineBoundArgSlot());
     add(boundArgs);
-    auto* boundArgsObj = unboxObjectInfallible(boundArgs);
-    elements = MElements::New(alloc(), boundArgsObj);
+    elements = MElements::New(alloc(), boundArgs);
     add(elements);
   }
 

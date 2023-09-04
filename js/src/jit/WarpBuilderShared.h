@@ -420,8 +420,6 @@ class WarpBuilderShared {
   MConstant* constant(const JS::Value& v);
   void pushConstant(const JS::Value& v);
 
-  MDefinition* unboxObjectInfallible(MDefinition* def);
-
   MCall* makeCall(CallInfo& callInfo, bool needsThisCheck,
                   WrappedFunction* target = nullptr, bool isDOMCall = false);
   MInstruction* makeSpreadCall(CallInfo& callInfo, bool needsThisCheck,
