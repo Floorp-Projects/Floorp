@@ -74,13 +74,15 @@ static bool IsOpaqueSafeListedSpecBreakingMIMEType(
     case OpaqueResponseMediaException::AllowSome:
       if (aContentType.EqualsLiteral(AUDIO_MP3) ||
           aContentType.EqualsLiteral(AUDIO_AAC) ||
-          aContentType.EqualsLiteral(AUDIO_AACP)) {
+          aContentType.EqualsLiteral(AUDIO_AACP) ||
+          aContentType.EqualsLiteral(MULTIPART_MIXED_REPLACE)) {
         return true;
       }
       break;
     case OpaqueResponseMediaException::AllowAll:
       if (StringBeginsWith(aContentType, "audio/"_ns) ||
-          StringBeginsWith(aContentType, "video/"_ns)) {
+          StringBeginsWith(aContentType, "video/"_ns) ||
+          aContentType.EqualsLiteral(MULTIPART_MIXED_REPLACE)) {
         return true;
       }
       break;
