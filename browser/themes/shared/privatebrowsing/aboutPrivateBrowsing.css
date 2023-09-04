@@ -58,19 +58,11 @@ p {
 }
 
 .logo {
-  /* The new private browsing logo, shown for
-  "browser.privatebrowsing.enable-new-logo" == true */
   background: url("chrome://branding/content/about-logo-private.png") no-repeat center center;
   background-size: 96px;
   display: inline-block;
   height: 96px;
   width: 96px;
-}
-
-.logo[legacy] {
-  /* The legacy private browsing logo, shown for
-  "browser.privatebrowsing.enable-new-logo" == false */
-  background-image: url("chrome://branding/content/about-logo.png");
 }
 
 @media (min-resolution: 2x) {

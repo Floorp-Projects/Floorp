@@ -8376,12 +8376,6 @@ var gPrivateBrowsingUI = {
       "privatebrowsingmode",
       PrivateBrowsingUtils.permanentPrivateBrowsing ? "permanent" : "temporary"
     );
-    // If enabled, show the new private browsing indicator with label.
-    // This will hide the old indicator.
-    docElement.toggleAttribute(
-      "privatebrowsingnewindicator",
-      NimbusFeatures.majorRelease2022.getVariable("feltPrivacyPBMNewIndicator")
-    );
 
     gBrowser.updateTitlebar();
 
