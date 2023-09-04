@@ -64,6 +64,14 @@ class InternalMutationEvent : public WidgetEvent {
 #define NS_EVENT_BITS_MUTATION_ATTRMODIFIED 0x20
 #define NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED 0x40
 
+#define NS_EVENT_BITS_MUTATION_ALL                                            \
+  (NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |                                   \
+   NS_EVENT_BITS_MUTATION_NODEINSERTED | NS_EVENT_BITS_MUTATION_NODEREMOVED | \
+   NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |                           \
+   NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT |                          \
+   NS_EVENT_BITS_MUTATION_ATTRMODIFIED |                                      \
+   NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)
+
 }  // namespace mozilla
 
 #endif  // mozilla_MutationEvent_h__

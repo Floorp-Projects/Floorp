@@ -66,14 +66,6 @@ namespace mozilla {
 using namespace dom;
 using namespace hal;
 
-static const uint32_t kAllMutationBits =
-    NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED |
-    NS_EVENT_BITS_MUTATION_NODEINSERTED | NS_EVENT_BITS_MUTATION_NODEREMOVED |
-    NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
-    NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT |
-    NS_EVENT_BITS_MUTATION_ATTRMODIFIED |
-    NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED;
-
 static uint32_t MutationBitForEventType(EventMessage aEventType) {
   switch (aEventType) {
     case eLegacySubtreeModified:
@@ -387,7 +379,7 @@ void EventListenerManager::AddEventListenerInternal(
           // on this.
           window->SetMutationListeners(
               (resolvedEventMessage == eLegacySubtreeModified)
-                  ? kAllMutationBits
+                  ? NS_EVENT_BITS_MUTATION_ALL
                   : MutationBitForEventType(resolvedEventMessage));
         }
         break;
@@ -1817,7 +1809,7 @@ uint32_t EventListenerManager::MutationListenerBits() {
       if (message >= eLegacyMutationEventFirst &&
           message <= eLegacyMutationEventLast) {
         if (message == eLegacySubtreeModified) {
-          return kAllMutationBits;
+          return NS_EVENT_BITS_MUTATION_ALL;
         }
         bits |= MutationBitForEventType(message);
       }

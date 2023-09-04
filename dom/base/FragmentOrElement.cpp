@@ -112,6 +112,10 @@
 
 #include "NodeUbiReporting.h"
 
+#ifdef ACCESSIBILITY
+#  include "nsAccessibilityService.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1166,7 +1170,20 @@ void FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
 void FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
                                                nsIPrincipal* aSubjectPrincipal,
                                                ErrorResult& aError) {
-  aError = nsContentUtils::SetNodeTextContent(this, aTextContent, false);
+  bool tryReuse = false;
+  if (!aTextContent.IsEmpty()) {
+    if (nsIContent* firstChild = GetFirstChild()) {
+      tryReuse = firstChild->NodeType() == TEXT_NODE &&
+                 !firstChild->GetNextSibling() &&
+                 firstChild->OwnedOnlyByTheDOMAndFrameTrees() &&
+                 !GetAccService() &&
+                 !OwnerDoc()->MayHaveDOMMutationObservers() &&
+                 !nsContentUtils::HasMutationListeners(
+                     OwnerDoc(), NS_EVENT_BITS_MUTATION_ALL);
+    }
+  }
+
+  aError = nsContentUtils::SetNodeTextContent(this, aTextContent, tryReuse);
 }
 
 void FragmentOrElement::DestroyContent() {
