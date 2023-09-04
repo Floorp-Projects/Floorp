@@ -176,6 +176,7 @@ extern const nsCString kHttp3Versions[];
 //-----------------------------------------------------------------------------
 
 struct nsHttpAtom;
+struct nsHttpAtomLiteral;
 
 namespace nsHttp {
 [[nodiscard]] nsresult CreateAtomTable();
@@ -261,16 +262,6 @@ TimeStamp GetLastActiveTabLoadOptimizationHit();
 void SetLastActiveTabLoadOptimizationHit(TimeStamp const& when);
 bool IsBeforeLastActiveTabLoadOptimization(TimeStamp const& when);
 
-// Declare all atoms
-//
-// The atom names and values are stored in nsHttpAtomList.h and are brought
-// to you by the magic of C preprocessing.  Add new atoms to nsHttpAtomList
-// and all support logic will be auto-generated.
-//
-#define HTTP_ATOM(_name, _value) extern nsHttpAtom _name;
-#include "nsHttpAtomList.h"
-#undef HTTP_ATOM
-
 nsCString ConvertRequestHeadToString(nsHttpRequestHead& aRequestHead,
                                      bool aHasRequestBody,
                                      bool aRequestBodyHasHeaders,
@@ -304,11 +295,13 @@ bool SendDataInChunks(const nsCString& aData, uint64_t aOffset, uint32_t aCount,
 
 }  // namespace nsHttp
 
+struct nsHttpAtomLiteral;
 struct nsHttpAtom {
   nsHttpAtom() = default;
   nsHttpAtom(const nsHttpAtom& other) = default;
 
-  operator const char*() const { return get(); }
+  explicit operator bool() const { return !_val.IsEmpty(); }
+
   const char* get() const {
     if (_val.IsEmpty()) {
       return nullptr;
@@ -328,6 +321,63 @@ struct nsHttpAtom {
   nsCString _val;
   friend nsHttpAtom nsHttp::ResolveAtom(const nsACString& s);
 };
+
+struct nsHttpAtomLiteral {
+  const char* get() const { return _data.get(); }
+  nsLiteralCString const& val() const { return _data; }
+
+  template <size_t N>
+  constexpr explicit nsHttpAtomLiteral(const char (&val)[N]) : _data(val) {}
+
+  operator nsHttpAtom() const { return nsHttpAtom(_data); }
+
+ private:
+  nsLiteralCString _data;
+};
+
+inline bool operator==(nsHttpAtomLiteral const& self,
+                       nsHttpAtomLiteral const& other) {
+  return self.get() == other.get();
+}
+inline bool operator!=(nsHttpAtomLiteral const& self,
+                       nsHttpAtomLiteral const& other) {
+  return self.get() != other.get();
+}
+
+inline bool operator==(nsHttpAtom const& self, nsHttpAtomLiteral const& other) {
+  return self.val() == other.val();
+}
+inline bool operator!=(nsHttpAtom const& self, nsHttpAtomLiteral const& other) {
+  return self.val() != other.val();
+}
+
+inline bool operator==(nsHttpAtomLiteral const& self, nsHttpAtom const& other) {
+  return self.val() == other.val();
+}
+inline bool operator!=(nsHttpAtomLiteral const& self, nsHttpAtom const& other) {
+  return self.val() != other.val();
+}
+
+inline bool operator==(nsHttpAtom const& self, nsHttpAtom const& other) {
+  return self.val() == other.val();
+}
+inline bool operator!=(nsHttpAtom const& self, nsHttpAtom const& other) {
+  return self.val() != other.val();
+}
+
+namespace nsHttp {
+
+// Declare all atoms
+//
+// The atom names and values are stored in nsHttpAtomList.h and are brought
+// to you by the magic of C preprocessing.  Add new atoms to nsHttpAtomList
+// and all support logic will be auto-generated.
+//
+#define HTTP_ATOM(_name, _value) \
+  inline constexpr nsHttpAtomLiteral _name(_value);
+#include "nsHttpAtomList.h"
+#undef HTTP_ATOM
+}  // namespace nsHttp
 
 //-----------------------------------------------------------------------------
 // utilities...
