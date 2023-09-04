@@ -1984,7 +1984,26 @@ class PointerEventData extends InputEventData {
       this.shiftKey = otherInputSource.shift || this.shiftKey;
     }
     const allButtons = Array.from(inputSource.pressed);
-    this.buttons = allButtons.reduce((a, i) => a + Math.pow(2, i), 0);
+    this.buttons = allButtons.reduce(
+      (a, i) => a + PointerEventData.getButtonFlag(i),
+      0
+    );
+  }
+
+  /**
+   * Return a flag for buttons which indicates a button is pressed.
+   *
+   * @param {integer} button - Mouse button number.
+   */
+  static getButtonFlag(button) {
+    switch (button) {
+      case 1:
+        return 4;
+      case 2:
+        return 2;
+      default:
+        return Math.pow(2, button);
+    }
   }
 }
 
@@ -2093,7 +2112,8 @@ class MultiTouchEventData extends PointerEventData {
     // anyway.
     const allButtons = Array.from(inputSource.pressed);
     this.buttons =
-      this.buttons | allButtons.reduce((a, i) => a + Math.pow(2, i), 0);
+      this.buttons |
+      allButtons.reduce((a, i) => a + PointerEventData.getButtonFlag(i), 0);
   }
 }
 
