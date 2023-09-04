@@ -17,7 +17,7 @@
 #include "base/numerics/safe_math.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
-#include "base/third_party/double_conversion/double-conversion/double-conversion.h"
+#include "double-conversion/double-conversion.h"
 
 namespace base {
 
