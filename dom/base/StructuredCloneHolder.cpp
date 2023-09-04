@@ -174,7 +174,7 @@ bool StructuredCloneCallbacksSharedArrayBuffer(JSContext* cx, bool aReceiving,
 
     nsPIDOMWindowInner* innerWindow = nullptr;
     if (global) {
-      innerWindow = global->AsInnerWindow();
+      innerWindow = global->GetAsInnerWindow();
     }
 
     DocGroup* docGroup = nullptr;

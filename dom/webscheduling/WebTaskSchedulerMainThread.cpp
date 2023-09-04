@@ -38,7 +38,7 @@ nsresult WebTaskSchedulerMainThread::SetTimeoutForDelayedTask(WebTask* aTask,
   int32_t delay = aDelay > INT32_MAX ? INT32_MAX : (int32_t)aDelay;
 
   int32_t handle;
-  return global->AsInnerWindow()->TimeoutManager().SetTimeout(
+  return global->GetAsInnerWindow()->TimeoutManager().SetTimeout(
       handler, delay, /* aIsInterval */ false,
       Timeout::Reason::eDelayedWebTaskTimeout, &handle);
 }

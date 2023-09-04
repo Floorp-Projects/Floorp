@@ -1425,7 +1425,7 @@ already_AddRefed<nsPIDOMWindowInner> EventListenerManager::WindowFromListener(
         global = callback->IncumbentGlobalOrNull();
       }
       if (global) {
-        innerWindow = global->AsInnerWindow();  // Can be nullptr
+        innerWindow = global->GetAsInnerWindow();  // Can be nullptr
       }
     } else {
       // This ensures `window.event` can be set properly for

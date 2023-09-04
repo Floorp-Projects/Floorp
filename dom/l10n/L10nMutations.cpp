@@ -299,7 +299,7 @@ Document* L10nMutations::GetDocument() const {
   if (!mDOMLocalization) {
     return nullptr;
   }
-  auto* innerWindow = mDOMLocalization->GetParentObject()->AsInnerWindow();
+  auto* innerWindow = mDOMLocalization->GetParentObject()->GetAsInnerWindow();
   if (!innerWindow) {
     return nullptr;
   }

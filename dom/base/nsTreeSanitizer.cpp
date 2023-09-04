@@ -2548,7 +2548,7 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
     ErrorResult& aRv) {
   if (StaticPrefs::dom_security_sanitizer_logging()) {
     mLogRemovals = true;
-    if (nsPIDOMWindowInner* win = aGlobal->AsInnerWindow()) {
+    if (nsPIDOMWindowInner* win = aGlobal->GetAsInnerWindow()) {
       mInnerWindowID = win->WindowID();
     }
   }

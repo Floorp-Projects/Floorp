@@ -529,7 +529,7 @@ mozilla::PresShell* PerformanceMainThread::GetPresShell() {
   if (!ownerGlobal) {
     return nullptr;
   }
-  if (Document* doc = ownerGlobal->AsInnerWindow()->GetExtantDoc()) {
+  if (Document* doc = ownerGlobal->GetAsInnerWindow()->GetExtantDoc()) {
     return doc->GetPresShell();
   }
   return nullptr;

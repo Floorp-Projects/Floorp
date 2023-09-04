@@ -100,7 +100,7 @@ SessionStoreChangeListener::HandleEvent(dom::Event* aEvent) {
     return NS_OK;
   }
 
-  nsPIDOMWindowInner* inner = global->AsInnerWindow();
+  nsPIDOMWindowInner* inner = global->GetAsInnerWindow();
   if (!inner) {
     return NS_OK;
   }

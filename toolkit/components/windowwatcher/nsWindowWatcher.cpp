@@ -502,9 +502,10 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   if (parentBC) {
     RefPtr<Element> browserElement = parentBC->Top()->GetEmbedderElement();
     if (browserElement && browserElement->GetOwnerGlobal() &&
-        browserElement->GetOwnerGlobal()->AsInnerWindow()) {
-      parentWindowOuter =
-          browserElement->GetOwnerGlobal()->AsInnerWindow()->GetOuterWindow();
+        browserElement->GetOwnerGlobal()->GetAsInnerWindow()) {
+      parentWindowOuter = browserElement->GetOwnerGlobal()
+                              ->GetAsInnerWindow()
+                              ->GetOuterWindow();
     }
 
     isFissionWindow = parentBC->UseRemoteSubframes();
