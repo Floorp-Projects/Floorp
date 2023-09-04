@@ -193,10 +193,8 @@ jobs:
     - name: Change Release Note URL
       if: inputs.release-note-url
       run: |
-        sed -i 's|https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/|$GHA_release-note-url|g' ./browser/branding/official/pref/firefox-branding.js
-        echo "$cat ./browser/branding/official/pref/firefox-branding.js"
-      env:
-        GHA_release-note-url: ${{inputs.release-note-url}}
+        sed -i 's|https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/|${{inputs.release-note-url}}|g' ./browser/branding/official/pref/firefox-branding.js
+        echo "$(cat ./browser/branding/official/pref/firefox-branding.js)"
 
     - name: Build 🔨
       continue-on-error: true
