@@ -1577,7 +1577,7 @@ with only_when("--enable-compile-environment"):
                 # Older versions of readelf don't know about DT_RELR but will
                 # still display the tag number.
                 if 0x23 in tags:
-                    needed = [l for l in dyn if l.split()[1] == "(NEEDED)"]
+                    needed = [l for l in dyn if l.split()[1:2] == ["(NEEDED)"]]
                     is_glibc = any(l.endswith("[libc.so.6]") for l in needed)
                     # The mold linker doesn't add a GLIBC_ABI_DT_RELR version
                     # dependency, which ld.so doesn't like.
