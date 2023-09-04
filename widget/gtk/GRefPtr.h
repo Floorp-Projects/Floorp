@@ -72,18 +72,6 @@ struct RefPtrTraits<GDBusNodeInfo> {
   }
 };
 
-#ifdef MOZ_ENABLE_DBUS
-template <>
-struct RefPtrTraits<DBusGConnection> {
-  static void AddRef(DBusGConnection* aObject) {
-    dbus_g_connection_ref(aObject);
-  }
-  static void Release(DBusGConnection* aObject) {
-    dbus_g_connection_unref(aObject);
-  }
-};
-#endif
-
 }  // namespace mozilla
 
 #endif
