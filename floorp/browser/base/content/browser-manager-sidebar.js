@@ -480,6 +480,7 @@ const bmsController = {
           Services.prefs.setBoolPref("floorp.browser.sidebar2.addons.window.start", true);
           Services.prefs.setStringPref("floorp.browser.sidebar2.start.url", webpanelURL);
           webpanelElem.firstChild.setAttribute("src", "chrome://browser/content/browser.xhtml");
+          console.log("addon enabled");
         } else {
           webpanelElem.firstChild.setAttribute("src", webpanelURL);
         }
@@ -490,8 +491,7 @@ const bmsController = {
         }
 
         if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){
-          Services.prefs.setStringPref("floorp.browser.sidebar2.start.url", webpanelURL);
-          webpanobject.setAttribute("src", "chrome://browser/content/browser.xhtml");
+          /* empty */
         } else {
           webpanobject.setAttribute("src", webpanelURL);
         }
