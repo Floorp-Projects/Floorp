@@ -1,5 +1,3 @@
-defaults pref(layout.css.font-loading-api.enabled,true)
-
 == dynamic-insert-1.html dynamic-insert-1-ref.html
 == dynamic-remove-1.html dynamic-remove-1-ref.html
 == ex-unit-1.html ../font-face/ex-unit-1-ref.html
