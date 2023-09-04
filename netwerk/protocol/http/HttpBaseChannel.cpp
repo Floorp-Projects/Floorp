@@ -117,32 +117,31 @@ namespace net {
 
 static bool IsHeaderBlacklistedForRedirectCopy(nsHttpAtom const& aHeader) {
   // IMPORTANT: keep this list ASCII-code sorted
-  static nsHttpAtomLiteral const* blackList[] = {
-      &nsHttp::Accept,
-      &nsHttp::Accept_Encoding,
-      &nsHttp::Accept_Language,
-      &nsHttp::Alternate_Service_Used,
-      &nsHttp::Authentication,
-      &nsHttp::Authorization,
-      &nsHttp::Connection,
-      &nsHttp::Content_Length,
-      &nsHttp::Cookie,
-      &nsHttp::Host,
-      &nsHttp::If,
-      &nsHttp::If_Match,
-      &nsHttp::If_Modified_Since,
-      &nsHttp::If_None_Match,
-      &nsHttp::If_None_Match_Any,
-      &nsHttp::If_Range,
-      &nsHttp::If_Unmodified_Since,
-      &nsHttp::Proxy_Authenticate,
-      &nsHttp::Proxy_Authorization,
-      &nsHttp::Range,
-      &nsHttp::TE,
-      &nsHttp::Transfer_Encoding,
-      &nsHttp::Upgrade,
-      &nsHttp::User_Agent,
-      &nsHttp::WWW_Authenticate};
+  static nsHttpAtom const* blackList[] = {&nsHttp::Accept,
+                                          &nsHttp::Accept_Encoding,
+                                          &nsHttp::Accept_Language,
+                                          &nsHttp::Alternate_Service_Used,
+                                          &nsHttp::Authentication,
+                                          &nsHttp::Authorization,
+                                          &nsHttp::Connection,
+                                          &nsHttp::Content_Length,
+                                          &nsHttp::Cookie,
+                                          &nsHttp::Host,
+                                          &nsHttp::If,
+                                          &nsHttp::If_Match,
+                                          &nsHttp::If_Modified_Since,
+                                          &nsHttp::If_None_Match,
+                                          &nsHttp::If_None_Match_Any,
+                                          &nsHttp::If_Range,
+                                          &nsHttp::If_Unmodified_Since,
+                                          &nsHttp::Proxy_Authenticate,
+                                          &nsHttp::Proxy_Authorization,
+                                          &nsHttp::Range,
+                                          &nsHttp::TE,
+                                          &nsHttp::Transfer_Encoding,
+                                          &nsHttp::Upgrade,
+                                          &nsHttp::User_Agent,
+                                          &nsHttp::WWW_Authenticate};
 
   class HttpAtomComparator {
     nsHttpAtom const& mTarget;
@@ -150,12 +149,6 @@ static bool IsHeaderBlacklistedForRedirectCopy(nsHttpAtom const& aHeader) {
    public:
     explicit HttpAtomComparator(nsHttpAtom const& aTarget) : mTarget(aTarget) {}
     int operator()(nsHttpAtom const* aVal) const {
-      if (mTarget == *aVal) {
-        return 0;
-      }
-      return strcmp(mTarget.get(), aVal->get());
-    }
-    int operator()(nsHttpAtomLiteral const* aVal) const {
       if (mTarget == *aVal) {
         return 0;
       }
@@ -4469,7 +4462,7 @@ void HttpBaseChannel::AddCookiesToRequest() {
 
   // If we are in the child process, we want the parent seeing any
   // cookie headers that might have been set by SetRequestHeader()
-  SetRequestHeader(nsHttp::Cookie.val(), cookie, false);
+  SetRequestHeader(nsDependentCString(nsHttp::Cookie), cookie, false);
 }
 
 /* static */

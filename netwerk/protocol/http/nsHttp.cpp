@@ -42,6 +42,13 @@ const nsCString kHttp3Versions[] = {"h3-29"_ns, "h3-30"_ns, "h3-31"_ns,
 constexpr uint64_t kWebTransportErrorCodeStart = 0x52e4a40fa8db;
 constexpr uint64_t kWebTransportErrorCodeEnd = 0x52e4a40fa9e2;
 
+// define storage for all atoms
+namespace nsHttp {
+#define HTTP_ATOM(_name, _value) nsHttpAtom _name(nsLiteralCString{_value});
+#include "nsHttpAtomList.h"
+#undef HTTP_ATOM
+}  // namespace nsHttp
+
 // find out how many atoms we have
 #define HTTP_ATOM(_name, _value) Unused_##_name,
 enum {
@@ -66,7 +73,7 @@ nsresult CreateAtomTable(
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
   // fill the table with our known atoms
-  const nsHttpAtomLiteral* atoms[] = {
+  const nsHttpAtom* atoms[] = {
 #define HTTP_ATOM(_name, _value) &(_name),
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
@@ -98,8 +105,9 @@ void DestroyAtomTable() {
 
 // this function may be called from multiple threads
 nsHttpAtom ResolveAtom(const nsACString& str) {
+  nsHttpAtom atom;
   if (str.IsEmpty()) {
-    return {};
+    return atom;
   }
 
   auto atomTable = sAtomTable.Lock();
@@ -107,28 +115,29 @@ nsHttpAtom ResolveAtom(const nsACString& str) {
   if (atomTable.ref().IsEmpty()) {
     if (sTableDestroyed) {
       NS_WARNING("ResolveAtom called during shutdown");
-      return {};
+      return atom;
     }
 
     NS_WARNING("ResolveAtom called before CreateAtomTable");
     if (NS_FAILED(CreateAtomTable(atomTable.ref()))) {
-      return {};
+      return atom;
     }
   }
 
   // Check if we already have an entry in the table
   auto* entry = atomTable.ref().GetEntry(str);
   if (entry) {
-    return nsHttpAtom(entry->GetKey());
+    atom._val = entry->GetKey();
+    return atom;
   }
 
   LOG(("Putting %s header into atom table", nsPromiseFlatCString(str).get()));
   // Put the string in the table. If it works create the atom.
   entry = atomTable.ref().PutEntry(str, fallible);
   if (entry) {
-    return nsHttpAtom(entry->GetKey());
+    atom._val = entry->GetKey();
   }
-  return {};
+  return atom;
 }
 
 //

@@ -1042,7 +1042,8 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     }
   }
 
-  rv = http->SetRequestHeader(net::nsHttp::Origin.val(), origin, false);
+  rv = http->SetRequestHeader(nsDependentCString(net::nsHttp::Origin), origin,
+                              false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make cookie-less if needed. We don't need to do anything here if the

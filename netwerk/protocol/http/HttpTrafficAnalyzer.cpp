@@ -17,7 +17,7 @@ namespace net {
 constexpr auto kInvalidCategory = "INVALID_CATEGORY"_ns;
 
 #define DEFINE_CATEGORY(_name, _idx) nsLiteralCString("Y" #_idx "_" #_name),
-static constexpr nsLiteralCString gKeyName[] = {
+static const nsCString gKeyName[] = {
 #include "HttpTrafficAnalyzer.inc"
     kInvalidCategory,
 };
