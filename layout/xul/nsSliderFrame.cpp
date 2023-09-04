@@ -1564,7 +1564,7 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
     sf->ScrollTo(pos,
                  StaticPrefs::general_smoothScroll() &&
                          StaticPrefs::general_smoothScroll_pages()
-                     ? ScrollMode::SmoothMsd
+                     ? ScrollMode::Smooth
                      : ScrollMode::Instant,
                  nullptr, scrollSnapFlags);
 

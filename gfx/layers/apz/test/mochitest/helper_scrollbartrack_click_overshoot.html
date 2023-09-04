@@ -69,13 +69,18 @@ async function test() {
   });
 }
 
-// Note: on Linux, if the gtk-primary-button-warps-slider setting
-// is enabled, this test will not exercise the codepath it intends
-// to test (the thumb will jump immediately under the cursor, causing
-// the test to pass trivially). However, the test should still not fail.
-waitUntilApzStable()
-.then(test)
-.then(subtestDone, subtestFailed);
+if (getPlatform() == "mac") {
+  ok(true, "Skipping test on Mac (bug 1851423)");
+  subtestDone();
+} else {
+  // Note: on Linux, if the gtk-primary-button-warps-slider setting
+  // is enabled, this test will not exercise the codepath it intends
+  // to test (the thumb will jump immediately under the cursor, causing
+  // the test to pass trivially). However, the test should still not fail.
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+}
 
   </script>
 </head>
