@@ -51,6 +51,18 @@ void WarpBuilderShared::pushConstant(const Value& v) {
   current->push(cst);
 }
 
+MDefinition* WarpBuilderShared::unboxObjectInfallible(MDefinition* def) {
+  if (def->type() == MIRType::Object) {
+    return def;
+  }
+
+  MOZ_ASSERT(def->type() == MIRType::Value);
+
+  auto* unbox = MUnbox::New(alloc(), def, MIRType::Object, MUnbox::Infallible);
+  current->add(unbox);
+  return unbox;
+}
+
 MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
                                    WrappedFunction* target, bool isDOMCall) {
   auto addUndefined = [this]() -> MConstant* {
@@ -73,9 +85,10 @@ MInstruction* WarpBuilderShared::makeSpreadCall(CallInfo& callInfo,
   current->add(elements);
 
   if (callInfo.constructing()) {
+    auto* newTarget = unboxObjectInfallible(callInfo.getNewTarget());
     auto* construct =
         MConstructArray::New(alloc(), target, callInfo.callee(), elements,
-                             callInfo.thisArg(), callInfo.getNewTarget());
+                             callInfo.thisArg(), newTarget);
     if (isSameRealm) {
       construct->setNotCrossRealm();
     }
