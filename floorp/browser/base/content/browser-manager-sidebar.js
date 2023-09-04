@@ -440,6 +440,12 @@ const bmsController = {
         webpanobject.remove();
         webpanobject = null;
       }
+
+      // Add-on Capability
+      if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){
+        isWeb = false;
+      }
+
       if (webpanobject == null) {
         let webpanelElem = window.MozXULElement.parseXULToFragment(`
               <browser 
@@ -471,14 +477,24 @@ const bmsController = {
           webpanelURL = webpanelURL.split(",")[3];
         }
 
-        webpanelElem.firstChild.setAttribute("src", webpanelURL);
+        if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){
+          Services.prefs.setStringPref("floorp.browser.sidebar2.start.url", webpanelURL);
+          webpanelElem.firstChild.setAttribute("src", "chrome://browser/content/browser.xhtml");
+        } else {
+          webpanelElem.firstChild.setAttribute("src", webpanelURL);
+        }
         document.getElementById("sidebar2-box").appendChild(webpanelElem);
       } else {
         if (webpanelURL.slice(0, 9) == "extension") {
           webpanelURL = webpanelURL.split(",")[3];
         }
 
-        webpanobject.setAttribute("src", webpanelURL);
+        if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){
+          Services.prefs.setStringPref("floorp.browser.sidebar2.start.url", webpanelURL);
+          webpanobject.setAttribute("src", "chrome://browser/content/browser.xhtml");
+        } else {
+          webpanobject.setAttribute("src", webpanelURL);
+        }
       }
       bmsController.controllFunctions.visiblePanelBrowserElem();
     },
@@ -736,4 +752,25 @@ const bmsController = {
   SessionStore.promiseInitialized.then(() => {
     bmsController.eventFunctions.setFlexOrder();
   });
+
+  if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){ 
+    // Browser Manager Sidebar emmmed check
+    let emmmed = Services.prefs.getStringPref("floorp.browser.sidebar2.start.url");
+    if (emmmed != "" && emmmed !== false && emmmed != undefined) {
+        if(gBrowser){
+          loadBMSURI();
+        } else {
+          window.setTimeout(loadBMSURI, 1000);
+        }
+      }
+  
+    function loadBMSURI(){
+      console.log(emmmed);
+      gBrowser.loadURI(Services.io.newURI(emmmed), {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+      document.getElementById("main-window").setAttribute("chromehidden","menubar directories extrachrome");
+      document.getElementById("TabsToolbar").setAttribute("collapsed","true");
+      Services.prefs.clearUserPref("floorp.browser.sidebar2.start.url");
+    }}
 })();
