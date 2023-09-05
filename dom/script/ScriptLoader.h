@@ -505,6 +505,9 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   static void PrepareCacheInfoChannel(nsIChannel* aChannel,
                                       ScriptLoadRequest* aRequest);
 
+  static void PrepareRequestPriorityAndRequestDependencies(
+      nsIChannel* aChannel, ScriptLoadRequest* aRequest);
+
   /**
    * Start a load for a script (module or classic) URI.
    *

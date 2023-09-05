@@ -666,6 +666,51 @@ void ScriptLoader::PrepareCacheInfoChannel(nsIChannel* aChannel,
   }
 }
 
+// static
+void ScriptLoader::PrepareRequestPriorityAndRequestDependencies(
+    nsIChannel* aChannel, ScriptLoadRequest* aRequest) {
+  if (aRequest->GetScriptLoadContext()->IsLinkPreloadScript()) {
+    // This is <link rel="preload" as="script"> or <link rel="modulepreload">
+    // initiated speculative load, put it to the group that is not blocked by
+    // leaders and doesn't block follower at the same time. Giving it a much
+    // higher priority will make this request be processed ahead of other
+    // Unblocked requests, but with the same weight as Leaders. This will make
+    // us behave similar way for both http2 and http1.
+    ScriptLoadContext::PrioritizeAsPreload(aChannel);
+    ScriptLoadContext::AddLoadBackgroundFlag(aChannel);
+  } else if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(aChannel)) {
+    if (aRequest->GetScriptLoadContext()->mScriptFromHead &&
+        aRequest->GetScriptLoadContext()->IsBlockingScript()) {
+      // synchronous head scripts block loading of most other non js/css
+      // content such as images, Leader implicitely disallows tailing
+      cos->AddClassFlags(nsIClassOfService::Leader);
+    } else if (aRequest->GetScriptLoadContext()->IsDeferredScript() &&
+               !StaticPrefs::network_http_tailing_enabled()) {
+      // Bug 1395525 and the !StaticPrefs::network_http_tailing_enabled() bit:
+      // We want to make sure that turing tailing off by the pref makes the
+      // browser behave exactly the same way as before landing the tailing
+      // patch.
+
+      // head/body deferred scripts are blocked by leaders but are not
+      // allowed tailing because they block DOMContentLoaded
+      cos->AddClassFlags(nsIClassOfService::TailForbidden);
+    } else {
+      // other scripts (=body sync or head/body async) are neither blocked
+      // nor prioritized
+      cos->AddClassFlags(nsIClassOfService::Unblocked);
+
+      if (aRequest->GetScriptLoadContext()->IsAsyncScript()) {
+        // async scripts are allowed tailing, since those and only those
+        // don't block DOMContentLoaded; this flag doesn't enforce tailing,
+        // just overweights the Unblocked flag when the channel is found
+        // to be a thrird-party tracker and thus set the Tail flag to engage
+        // tailing.
+        cos->AddClassFlags(nsIClassOfService::TailAllowed);
+      }
+    }
+  }
+}
+
 nsresult ScriptLoader::StartLoadInternal(
     ScriptLoadRequest* aRequest, nsSecurityFlags securityFlags,
     const Maybe<nsAutoString>& aCharsetForPreload) {
@@ -698,46 +743,7 @@ nsresult ScriptLoader::StartLoadInternal(
        unsigned(aRequest->GetScriptLoadContext()->mScriptMode),
        aRequest->GetScriptLoadContext()->IsTracking()));
 
-  if (aRequest->GetScriptLoadContext()->IsLinkPreloadScript()) {
-    // This is <link rel="preload" as="script"> or <link rel="modulepreload">
-    // initiated speculative load, put it to the group that is not blocked by
-    // leaders and doesn't block follower at the same time. Giving it a much
-    // higher priority will make this request be processed ahead of other
-    // Unblocked requests, but with the same weight as Leaders. This will make
-    // us behave similar way for both http2 and http1.
-    ScriptLoadContext::PrioritizeAsPreload(channel);
-    ScriptLoadContext::AddLoadBackgroundFlag(channel);
-  } else if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel)) {
-    if (aRequest->GetScriptLoadContext()->mScriptFromHead &&
-        aRequest->GetScriptLoadContext()->IsBlockingScript()) {
-      // synchronous head scripts block loading of most other non js/css
-      // content such as images, Leader implicitely disallows tailing
-      cos->AddClassFlags(nsIClassOfService::Leader);
-    } else if (aRequest->GetScriptLoadContext()->IsDeferredScript() &&
-               !StaticPrefs::network_http_tailing_enabled()) {
-      // Bug 1395525 and the !StaticPrefs::network_http_tailing_enabled() bit:
-      // We want to make sure that turing tailing off by the pref makes the
-      // browser behave exactly the same way as before landing the tailing
-      // patch.
-
-      // head/body deferred scripts are blocked by leaders but are not
-      // allowed tailing because they block DOMContentLoaded
-      cos->AddClassFlags(nsIClassOfService::TailForbidden);
-    } else {
-      // other scripts (=body sync or head/body async) are neither blocked
-      // nor prioritized
-      cos->AddClassFlags(nsIClassOfService::Unblocked);
-
-      if (aRequest->GetScriptLoadContext()->IsAsyncScript()) {
-        // async scripts are allowed tailing, since those and only those
-        // don't block DOMContentLoaded; this flag doesn't enforce tailing,
-        // just overweights the Unblocked flag when the channel is found
-        // to be a thrird-party tracker and thus set the Tail flag to engage
-        // tailing.
-        cos->AddClassFlags(nsIClassOfService::TailAllowed);
-      }
-    }
-  }
+  PrepareRequestPriorityAndRequestDependencies(channel, aRequest);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
