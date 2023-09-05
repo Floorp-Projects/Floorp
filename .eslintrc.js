@@ -72,7 +72,7 @@ module.exports = {
   // tools/lint/eslint/eslint-plugin-mozilla/lib/configs/recommended.js to
   // allow external repositories that use the plugin to pick them up as well.
   extends: ["plugin:mozilla/recommended"],
-  plugins: ["mozilla", "import"],
+  plugins: ["mozilla", "import", "json"],
   overrides: [
     {
       // All .eslintrc.js files are in the node environment, so turn that
