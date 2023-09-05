@@ -28,11 +28,13 @@ using namespace webrtc;
 using namespace videocapturemodule;
 
 static NSArray* camera_presets = @[
-  AVCaptureSessionPreset352x288, AVCaptureSessionPreset640x480, AVCaptureSessionPreset1280x720
+  AVCaptureSessionPreset352x288, AVCaptureSessionPreset640x480,
+  AVCaptureSessionPreset1280x720
 ];
 
-#define IOS_UNSUPPORTED()                                                        \
-  RTC_LOG(LS_ERROR) << __FUNCTION__ << " is not supported on the iOS platform."; \
+#define IOS_UNSUPPORTED()                                        \
+  RTC_LOG(LS_ERROR) << __FUNCTION__                              \
+                    << " is not supported on the iOS platform."; \
   return -1;
 
 VideoCaptureModule::DeviceInfo* VideoCaptureImpl::CreateDeviceInfo() {
@@ -60,7 +62,8 @@ int32_t DeviceInfoIos::Init() {
     for (NSString* preset in camera_presets) {
       BOOL support = [avDevice supportsAVCaptureSessionPreset:preset];
       if (support) {
-        VideoCaptureCapability capability = [DeviceInfoIosObjC capabilityForPreset:preset];
+        VideoCaptureCapability capability =
+            [DeviceInfoIosObjC capabilityForPreset:preset];
         capabilityVector.push_back(capability);
       }
     }
@@ -73,31 +76,36 @@ int32_t DeviceInfoIos::Init() {
     }
     std::string deviceIdCopy(deviceId);
     std::pair<std::string, VideoCaptureCapabilities> mapPair =
-        std::pair<std::string, VideoCaptureCapabilities>(deviceIdCopy, capabilityVector);
+        std::pair<std::string, VideoCaptureCapabilities>(deviceIdCopy,
+                                                         capabilityVector);
     _capabilitiesMap.insert(mapPair);
   }
 
   return 0;
 }
 
-uint32_t DeviceInfoIos::NumberOfDevices() { return [DeviceInfoIosObjC captureDeviceCount]; }
+uint32_t DeviceInfoIos::NumberOfDevices() {
+  return [DeviceInfoIosObjC captureDeviceCount];
+}
 
-int32_t DeviceInfoIos::GetDeviceName(uint32_t deviceNumber, char* deviceNameUTF8,
-                                     uint32_t deviceNameUTF8Length, char* deviceUniqueIdUTF8,
-                                     uint32_t deviceUniqueIdUTF8Length, char* productUniqueIdUTF8,
-                                     uint32_t productUniqueIdUTF8Length, pid_t* pid) {
+int32_t DeviceInfoIos::GetDeviceName(
+    uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameUTF8Length,
+    char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Length,
+    char* productUniqueIdUTF8, uint32_t productUniqueIdUTF8Length, pid_t* pid) {
   if (deviceNumber >= NumberOfDevices()) {
     return -1;
   }
 
   NSString* deviceName = [DeviceInfoIosObjC deviceNameForIndex:deviceNumber];
 
-  NSString* deviceUniqueId = [DeviceInfoIosObjC deviceUniqueIdForIndex:deviceNumber];
+  NSString* deviceUniqueId =
+      [DeviceInfoIosObjC deviceUniqueIdForIndex:deviceNumber];
 
   strncpy(deviceNameUTF8, [deviceName UTF8String], deviceNameUTF8Length);
   deviceNameUTF8[deviceNameUTF8Length - 1] = '\0';
 
-  strncpy(deviceUniqueIdUTF8, deviceUniqueId.UTF8String, deviceUniqueIdUTF8Length);
+  strncpy(deviceUniqueIdUTF8, deviceUniqueId.UTF8String,
+          deviceUniqueIdUTF8Length);
   deviceUniqueIdUTF8[deviceUniqueIdUTF8Length - 1] = '\0';
 
   if (productUniqueIdUTF8) {
@@ -140,14 +148,14 @@ int32_t DeviceInfoIos::GetCapability(const char* deviceUniqueIdUTF8,
   return -1;
 }
 
-int32_t DeviceInfoIos::DisplayCaptureSettingsDialogBox(const char* deviceUniqueIdUTF8,
-                                                       const char* dialogTitleUTF8,
-                                                       void* parentWindow, uint32_t positionX,
-                                                       uint32_t positionY) {
+int32_t DeviceInfoIos::DisplayCaptureSettingsDialogBox(
+    const char* deviceUniqueIdUTF8, const char* dialogTitleUTF8,
+    void* parentWindow, uint32_t positionX, uint32_t positionY) {
   IOS_UNSUPPORTED();
 }
 
-int32_t DeviceInfoIos::GetOrientation(const char* deviceUniqueIdUTF8, VideoRotation& orientation) {
+int32_t DeviceInfoIos::GetOrientation(const char* deviceUniqueIdUTF8,
+                                      VideoRotation& orientation) {
   if (strcmp(deviceUniqueIdUTF8, "Front Camera") == 0) {
     orientation = kVideoRotation_0;
   } else {

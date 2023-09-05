@@ -24,7 +24,8 @@ nsresult CopyCocoaStringToXPCOMString(NSString* aFrom, nsAString& aTo) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  [aFrom getCharacters:reinterpret_cast<unichar*>(aTo.BeginWriting()) range:NSMakeRange(0, len)];
+  [aFrom getCharacters:reinterpret_cast<unichar*>(aTo.BeginWriting())
+                 range:NSMakeRange(0, len)];
 
   return NS_OK;
 

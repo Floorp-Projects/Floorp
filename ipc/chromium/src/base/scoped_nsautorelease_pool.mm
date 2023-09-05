@@ -15,7 +15,9 @@ ScopedNSAutoreleasePool::ScopedNSAutoreleasePool()
   DCHECK(autorelease_pool_);
 }
 
-ScopedNSAutoreleasePool::~ScopedNSAutoreleasePool() { [autorelease_pool_ drain]; }
+ScopedNSAutoreleasePool::~ScopedNSAutoreleasePool() {
+  [autorelease_pool_ drain];
+}
 
 // Cycle the internal pool, allowing everything there to get cleaned up and
 // start anew.

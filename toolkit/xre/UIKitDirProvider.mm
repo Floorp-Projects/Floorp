@@ -8,8 +8,10 @@
 #include "UIKitDirProvider.h"
 
 bool GetUIKitDirectory(bool aLocal, nsACString& aUserDir) {
-  NSSearchPathDirectory directory = aLocal ? NSCachesDirectory : NSApplicationSupportDirectory;
-  NSArray* paths = NSSearchPathForDirectoriesInDomains(directory, NSUserDomainMask, YES);
+  NSSearchPathDirectory directory =
+      aLocal ? NSCachesDirectory : NSApplicationSupportDirectory;
+  NSArray* paths =
+      NSSearchPathForDirectoriesInDomains(directory, NSUserDomainMask, YES);
   if ([paths count] == 0) {
     return false;
   }

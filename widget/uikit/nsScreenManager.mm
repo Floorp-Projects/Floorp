@@ -15,12 +15,14 @@ static bool gScreenBoundsSet = false;
 UIKitScreen::UIKitScreen(UIScreen* aScreen) { mScreen = [aScreen retain]; }
 
 NS_IMETHODIMP
-UIKitScreen::GetRect(int32_t* outX, int32_t* outY, int32_t* outWidth, int32_t* outHeight) {
+UIKitScreen::GetRect(int32_t* outX, int32_t* outY, int32_t* outWidth,
+                     int32_t* outHeight) {
   return GetRectDisplayPix(outX, outY, outWidth, outHeight);
 }
 
 NS_IMETHODIMP
-UIKitScreen::GetAvailRect(int32_t* outX, int32_t* outY, int32_t* outWidth, int32_t* outHeight) {
+UIKitScreen::GetAvailRect(int32_t* outX, int32_t* outY, int32_t* outWidth,
+                          int32_t* outHeight) {
   return GetAvailRectDisplayPix(outX, outY, outWidth, outHeight);
 }
 
@@ -37,8 +39,8 @@ UIKitScreen::GetRectDisplayPix(int32_t* outX, int32_t* outY, int32_t* outWidth,
 }
 
 NS_IMETHODIMP
-UIKitScreen::GetAvailRectDisplayPix(int32_t* outX, int32_t* outY, int32_t* outWidth,
-                                    int32_t* outHeight) {
+UIKitScreen::GetAvailRectDisplayPix(int32_t* outX, int32_t* outY,
+                                    int32_t* outWidth, int32_t* outHeight) {
   CGRect rect = [mScreen applicationFrame];
   CGFloat scale = [mScreen scale];
 
@@ -58,7 +60,9 @@ UIKitScreen::GetPixelDepth(int32_t* aPixelDepth) {
 }
 
 NS_IMETHODIMP
-UIKitScreen::GetColorDepth(int32_t* aColorDepth) { return GetPixelDepth(aColorDepth); }
+UIKitScreen::GetColorDepth(int32_t* aColorDepth) {
+  return GetPixelDepth(aColorDepth);
+}
 
 NS_IMETHODIMP
 UIKitScreen::GetContentsScaleFactor(double* aContentsScaleFactor) {
@@ -68,7 +72,8 @@ UIKitScreen::GetContentsScaleFactor(double* aContentsScaleFactor) {
 
 NS_IMPL_ISUPPORTS(UIKitScreenManager, nsIScreenManager)
 
-UIKitScreenManager::UIKitScreenManager() : mScreen(new UIKitScreen([UIScreen mainScreen])) {}
+UIKitScreenManager::UIKitScreenManager()
+    : mScreen(new UIKitScreen([UIScreen mainScreen])) {}
 
 LayoutDeviceIntRect UIKitScreenManager::GetBounds() {
   if (!gScreenBoundsSet) {
@@ -80,8 +85,8 @@ LayoutDeviceIntRect UIKitScreenManager::GetBounds() {
     gScreenBounds.height = rect.size.height * scale;
     gScreenBoundsSet = true;
   }
-  printf("UIKitScreenManager::GetBounds: %d %d %d %d\n", gScreenBounds.x, gScreenBounds.y,
-         gScreenBounds.width, gScreenBounds.height);
+  printf("UIKitScreenManager::GetBounds: %d %d %d %d\n", gScreenBounds.x,
+         gScreenBounds.y, gScreenBounds.width, gScreenBounds.height);
   return gScreenBounds;
 }
 
@@ -92,7 +97,8 @@ UIKitScreenManager::GetPrimaryScreen(nsIScreen** outScreen) {
 }
 
 NS_IMETHODIMP
-UIKitScreenManager::ScreenForRect(int32_t inLeft, int32_t inTop, int32_t inWidth, int32_t inHeight,
+UIKitScreenManager::ScreenForRect(int32_t inLeft, int32_t inTop,
+                                  int32_t inWidth, int32_t inHeight,
                                   nsIScreen** outScreen) {
   return GetPrimaryScreen(outScreen);
 }

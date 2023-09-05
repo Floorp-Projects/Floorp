@@ -32,7 +32,8 @@ nsOSPermissionRequest::GetScreenCapturePermissionState(uint16_t* aScreen) {
 }
 
 NS_IMETHODIMP
-nsOSPermissionRequest::RequestVideoCapturePermission(JSContext* aCx, Promise** aPromiseOut) {
+nsOSPermissionRequest::RequestVideoCapturePermission(JSContext* aCx,
+                                                     Promise** aPromiseOut) {
   RefPtr<Promise> promiseHandle;
   nsresult rv = GetPromise(aCx, promiseHandle);
   if (NS_FAILED(rv)) {
@@ -45,7 +46,8 @@ nsOSPermissionRequest::RequestVideoCapturePermission(JSContext* aCx, Promise** a
 }
 
 NS_IMETHODIMP
-nsOSPermissionRequest::RequestAudioCapturePermission(JSContext* aCx, Promise** aPromiseOut) {
+nsOSPermissionRequest::RequestAudioCapturePermission(JSContext* aCx,
+                                                     Promise** aPromiseOut) {
   RefPtr<Promise> promiseHandle;
   nsresult rv = GetPromise(aCx, promiseHandle);
   if (NS_FAILED(rv)) {

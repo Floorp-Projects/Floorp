@@ -119,7 +119,8 @@ nsNativeAppSupportCocoa::ReOpen() {
         windowList->HasMoreElements(&more);
         continue;
       }
-      NSWindow* cocoaWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
+      NSWindow* cocoaWindow =
+          (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
       if (![cocoaWindow isMiniaturized]) {
         haveNonMiniaturized = true;
         break;  // have un-minimized windows, nothing to do
@@ -154,7 +155,8 @@ nsNativeAppSupportCocoa::ReOpen() {
       nsCOMPtr<nsICommandLineRunner> cmdLine(new nsCommandLine());
 
       nsresult rv;
-      rv = cmdLine->Init(0, argv, nullptr, nsICommandLine::STATE_REMOTE_EXPLICIT);
+      rv = cmdLine->Init(0, argv, nullptr,
+                         nsICommandLine::STATE_REMOTE_EXPLICIT);
       NS_ENSURE_SUCCESS(rv, rv);
 
       return cmdLine->Run();

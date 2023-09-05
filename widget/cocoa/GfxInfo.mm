@@ -31,7 +31,9 @@ using namespace mozilla::widget;
 NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
-GfxInfo::GfxInfo() : mNumGPUsDetected(0), mOSXVersion{0} { mAdapterRAM[0] = mAdapterRAM[1] = 0; }
+GfxInfo::GfxInfo() : mNumGPUsDetected(0), mOSXVersion{0} {
+  mAdapterRAM[0] = mAdapterRAM[1] = 0;
+}
 
 static OperatingSystem OSXVersionToOperatingSystem(uint32_t aOSXVersion) {
   switch (nsCocoaFeatures::ExtractMajorVersion(aOSXVersion)) {
@@ -78,10 +80,11 @@ static OperatingSystem OSXVersionToOperatingSystem(uint32_t aOSXVersion) {
   return OperatingSystem::Unknown;
 }
 // The following three functions are derived from Chromium code
-static CFTypeRef SearchPortForProperty(io_registry_entry_t dspPort, CFStringRef propertyName) {
-  return IORegistryEntrySearchCFProperty(dspPort, kIOServicePlane, propertyName,
-                                         kCFAllocatorDefault,
-                                         kIORegistryIterateRecursively | kIORegistryIterateParents);
+static CFTypeRef SearchPortForProperty(io_registry_entry_t dspPort,
+                                       CFStringRef propertyName) {
+  return IORegistryEntrySearchCFProperty(
+      dspPort, kIOServicePlane, propertyName, kCFAllocatorDefault,
+      kIORegistryIterateRecursively | kIORegistryIterateParents);
 }
 
 static uint32_t IntValueOfCFData(CFDataRef d) {
@@ -100,29 +103,33 @@ void GfxInfo::GetDeviceInfo() {
 
   CFMutableDictionaryRef pci_dev_dict = IOServiceMatching("IOPCIDevice");
   io_iterator_t io_iter;
-  if (IOServiceGetMatchingServices(kIOMasterPortDefault, pci_dev_dict, &io_iter) !=
-      kIOReturnSuccess) {
-    MOZ_DIAGNOSTIC_ASSERT(false,
-                          "Failed to detect any GPUs (couldn't enumerate IOPCIDevice services)");
+  if (IOServiceGetMatchingServices(kIOMasterPortDefault, pci_dev_dict,
+                                   &io_iter) != kIOReturnSuccess) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        false,
+        "Failed to detect any GPUs (couldn't enumerate IOPCIDevice services)");
     return;
   }
 
   io_registry_entry_t entry = IO_OBJECT_NULL;
   while ((entry = IOIteratorNext(io_iter)) != IO_OBJECT_NULL) {
     constexpr uint32_t kClassCodeDisplayVGA = 0x30000;
-    CFTypeRef class_code_ref = SearchPortForProperty(entry, CFSTR("class-code"));
+    CFTypeRef class_code_ref =
+        SearchPortForProperty(entry, CFSTR("class-code"));
     if (class_code_ref) {
       const uint32_t class_code = IntValueOfCFData((CFDataRef)class_code_ref);
       CFRelease(class_code_ref);
 
       if (class_code == kClassCodeDisplayVGA) {
-        CFTypeRef vendor_id_ref = SearchPortForProperty(entry, CFSTR("vendor-id"));
+        CFTypeRef vendor_id_ref =
+            SearchPortForProperty(entry, CFSTR("vendor-id"));
         if (vendor_id_ref) {
           mAdapterVendorID[mNumGPUsDetected].AppendPrintf(
               "0x%04x", IntValueOfCFData((CFDataRef)vendor_id_ref));
           CFRelease(vendor_id_ref);
         }
-        CFTypeRef device_id_ref = SearchPortForProperty(entry, CFSTR("device-id"));
+        CFTypeRef device_id_ref =
+            SearchPortForProperty(entry, CFSTR("device-id"));
         if (device_id_ref) {
           mAdapterDeviceID[mNumGPUsDetected].AppendPrintf(
               "0x%04x", IntValueOfCFData((CFDataRef)device_id_ref));
@@ -145,14 +152,15 @@ void GfxInfo::GetDeviceInfo() {
   }
 
   CFMutableDictionaryRef agx_dev_dict = IOServiceMatching("AGXAccelerator");
-  if (IOServiceGetMatchingServices(kIOMasterPortDefault, agx_dev_dict, &io_iter) ==
-      kIOReturnSuccess) {
+  if (IOServiceGetMatchingServices(kIOMasterPortDefault, agx_dev_dict,
+                                   &io_iter) == kIOReturnSuccess) {
     io_registry_entry_t entry = IO_OBJECT_NULL;
     while ((entry = IOIteratorNext(io_iter)) != IO_OBJECT_NULL) {
-      CFTypeRef vendor_id_ref = SearchPortForProperty(entry, CFSTR("vendor-id"));
+      CFTypeRef vendor_id_ref =
+          SearchPortForProperty(entry, CFSTR("vendor-id"));
       if (vendor_id_ref) {
-        mAdapterVendorID[mNumGPUsDetected].AppendPrintf("0x%04x",
-                                                        IntValueOfCFData((CFDataRef)vendor_id_ref));
+        mAdapterVendorID[mNumGPUsDetected].AppendPrintf(
+            "0x%04x", IntValueOfCFData((CFDataRef)vendor_id_ref));
         CFRelease(vendor_id_ref);
         ++mNumGPUsDetected;
       }
@@ -189,22 +197,32 @@ NS_IMETHODIMP
 GfxInfo::GetDWriteEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
 
 /* readonly attribute bool HasBattery; */
-NS_IMETHODIMP GfxInfo::GetHasBattery(bool* aHasBattery) { return NS_ERROR_NOT_IMPLEMENTED; }
+NS_IMETHODIMP GfxInfo::GetHasBattery(bool* aHasBattery) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /* readonly attribute DOMString DWriteVersion; */
 NS_IMETHODIMP
-GfxInfo::GetDWriteVersion(nsAString& aDwriteVersion) { return NS_ERROR_FAILURE; }
+GfxInfo::GetDWriteVersion(nsAString& aDwriteVersion) {
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
-GfxInfo::GetEmbeddedInFirefoxReality(bool* aEmbeddedInFirefoxReality) { return NS_ERROR_FAILURE; }
+GfxInfo::GetEmbeddedInFirefoxReality(bool* aEmbeddedInFirefoxReality) {
+  return NS_ERROR_FAILURE;
+}
 
 /* readonly attribute DOMString cleartypeParameters; */
 NS_IMETHODIMP
-GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) { return NS_ERROR_FAILURE; }
+GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
+  return NS_ERROR_FAILURE;
+}
 
 /* readonly attribute DOMString windowProtocol; */
 NS_IMETHODIMP
-GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) { return NS_ERROR_NOT_IMPLEMENTED; }
+GfxInfo::GetWindowProtocol(nsAString& aWindowProtocol) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /* readonly attribute DOMString testType; */
 NS_IMETHODIMP
@@ -348,14 +366,20 @@ GfxInfo::GetAdapterDeviceID2(nsAString& aAdapterDeviceID) {
 
 /* readonly attribute DOMString adapterSubsysID; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterSubsysID(nsAString& aAdapterSubsysID) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterSubsysID(nsAString& aAdapterSubsysID) {
+  return NS_ERROR_FAILURE;
+}
 
 /* readonly attribute DOMString adapterSubsysID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) { return NS_ERROR_FAILURE; }
+GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) {
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
-GfxInfo::GetDrmRenderDevice(nsACString& aDrmRenderDevice) { return NS_ERROR_NOT_IMPLEMENTED; }
+GfxInfo::GetDrmRenderDevice(nsACString& aDrmRenderDevice) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /* readonly attribute boolean isGPU2Active; */
 NS_IMETHODIMP
@@ -372,60 +396,70 @@ void GfxInfo::AddCrashReportAnnotations() {
   GetAdapterDriverVersion(driverVersion);
   CopyUTF16toUTF8(driverVersion, narrowDriverVersion);
 
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterVendorID, narrowVendorID);
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDeviceID, narrowDeviceID);
-  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDriverVersion,
-                                     narrowDriverVersion);
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterVendorID,
+                                     narrowVendorID);
+  CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AdapterDeviceID,
+                                     narrowDeviceID);
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::AdapterDriverVersion, narrowDriverVersion);
 }
 
 // We don't support checking driver versions on Mac.
-#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, device, features, blockOn, ruleId)          \
-  APPEND_TO_DRIVER_BLOCKLIST(os, device, features, blockOn, DRIVER_COMPARISON_IGNORED, \
-                             V(0, 0, 0, 0), ruleId, "")
+#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, device, features, blockOn, ruleId)  \
+  APPEND_TO_DRIVER_BLOCKLIST(os, device, features, blockOn,                    \
+                             DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0), ruleId, \
+                             "")
 
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, DeviceFamily::RadeonX1000, nsIGfxInfo::FEATURE_OPENGL_LAYERS,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_MAC_RADEONX1000_NO_TEXTURE2D");
+        OperatingSystem::OSX, DeviceFamily::RadeonX1000,
+        nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        "FEATURE_FAILURE_MAC_RADEONX1000_NO_TEXTURE2D");
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, DeviceFamily::Geforce7300GT, nsIGfxInfo::FEATURE_WEBGL_OPENGL,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_MAC_7300_NO_WEBGL");
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::IntelHDGraphicsToIvyBridge,
-                                   nsIGfxInfo::FEATURE_GL_SWIZZLE,
-                                   nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-                                   "FEATURE_FAILURE_MAC_INTELHD4000_NO_SWIZZLE");
-    // We block texture swizzling everwhere on mac because it's broken in some configurations
-    // and we want to support GPU switching.
+        OperatingSystem::OSX, DeviceFamily::Geforce7300GT,
+        nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        "FEATURE_FAILURE_MAC_7300_NO_WEBGL");
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
+        OperatingSystem::OSX, DeviceFamily::IntelHDGraphicsToIvyBridge,
+        nsIGfxInfo::FEATURE_GL_SWIZZLE, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        "FEATURE_FAILURE_MAC_INTELHD4000_NO_SWIZZLE");
+    // We block texture swizzling everwhere on mac because it's broken in some
+    // configurations and we want to support GPU switching.
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, DeviceFamily::All, nsIGfxInfo::FEATURE_GL_SWIZZLE,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_MAC_GPU_SWITCHING_NO_SWIZZLE");
+        nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        "FEATURE_FAILURE_MAC_GPU_SWITCHING_NO_SWIZZLE");
 
     // Older generation Intel devices do not perform well with WebRender.
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, DeviceFamily::IntelWebRenderBlocked, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_INTEL_GEN5_OR_OLDER");
+        OperatingSystem::OSX, DeviceFamily::IntelWebRenderBlocked,
+        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        "FEATURE_FAILURE_INTEL_GEN5_OR_OLDER");
 
     // Intel HD3000 disabled due to bug 1661505
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
-        OperatingSystem::OSX, DeviceFamily::IntelSandyBridge, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DEVICE, "FEATURE_FAILURE_INTEL_MAC_HD3000_NO_WEBRENDER");
+        OperatingSystem::OSX, DeviceFamily::IntelSandyBridge,
+        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        "FEATURE_FAILURE_INTEL_MAC_HD3000_NO_WEBRENDER");
 
     // wgpu doesn't safely support OOB behavior on Metal yet.
-    IMPLEMENT_MAC_DRIVER_BLOCKLIST(OperatingSystem::OSX, DeviceFamily::All,
-                                   nsIGfxInfo::FEATURE_WEBGPU, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-                                   "FEATURE_FAILURE_MAC_WGPU_NO_METAL_BOUNDS_CHECKS");
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
+        OperatingSystem::OSX, DeviceFamily::All, nsIGfxInfo::FEATURE_WEBGPU,
+        nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        "FEATURE_FAILURE_MAC_WGPU_NO_METAL_BOUNDS_CHECKS");
   }
   return *sDriverInfo;
 }
 
-OperatingSystem GfxInfo::GetOperatingSystem() { return OSXVersionToOperatingSystem(mOSXVersion); }
+OperatingSystem GfxInfo::GetOperatingSystem() {
+  return OSXVersionToOperatingSystem(mOSXVersion);
+}
 
-nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
-                                       nsAString& aSuggestedDriverVersion,
-                                       const nsTArray<GfxDriverInfo>& aDriverInfo,
-                                       nsACString& aFailureId,
-                                       OperatingSystem* aOS /* = nullptr */) {
+nsresult GfxInfo::GetFeatureStatusImpl(
+    int32_t aFeature, int32_t* aStatus, nsAString& aSuggestedDriverVersion,
+    const nsTArray<GfxDriverInfo>& aDriverInfo, nsACString& aFailureId,
+    OperatingSystem* aOS /* = nullptr */) {
   NS_ENSURE_ARG_POINTER(aStatus);
   aSuggestedDriverVersion.SetIsVoid(true);
   *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
@@ -436,7 +470,8 @@ nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
     return NS_OK;
   }
 
-  // Don't evaluate special cases when we're evaluating the downloaded blocklist.
+  // Don't evaluate special cases when we're evaluating the downloaded
+  // blocklist.
   if (!aDriverInfo.Length()) {
     if (aFeature == nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION) {
       // See bug 1249659
@@ -460,8 +495,8 @@ nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
     }
   }
 
-  return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo,
-                                           aFailureId, &os);
+  return GfxInfoBase::GetFeatureStatusImpl(
+      aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
 }
 
 #ifdef DEBUG

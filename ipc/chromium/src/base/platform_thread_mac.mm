@@ -42,7 +42,9 @@ void InitThreading() {
 
   static BOOL multithreaded = [NSThread isMultiThreaded];
   if (!multithreaded) {
-    [NSThread detachNewThreadSelector:@selector(noOp) toTarget:[NoOp class] withObject:nil];
+    [NSThread detachNewThreadSelector:@selector(noOp)
+                             toTarget:[NoOp class]
+                           withObject:nil];
     multithreaded = YES;
 
     DCHECK([NSThread isMultiThreaded]);

@@ -7,6 +7,10 @@
 #include "nsMIMEInfoUIKit.h"
 
 NS_IMETHODIMP
-nsMIMEInfoUIKit::LaunchWithFile(nsIFile* aFile) { return NS_ERROR_NOT_IMPLEMENTED; }
+nsMIMEInfoUIKit::LaunchWithFile(nsIFile* aFile) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-nsresult nsMIMEInfoUIKit::LoadUriInternal(nsIURI* aURI) { return NS_ERROR_NOT_IMPLEMENTED; }
+nsresult nsMIMEInfoUIKit::LoadUriInternal(nsIURI* aURI) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

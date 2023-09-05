@@ -22,20 +22,22 @@
 #include "nsXPCOM.h"
 #include "RemoteUtils.h"
 
-CFDataRef messageServerCallback(CFMessagePortRef aLocal, int32_t aMsgid, CFDataRef aData,
-                                void* aInfo) {
+CFDataRef messageServerCallback(CFMessagePortRef aLocal, int32_t aMsgid,
+                                CFDataRef aData, void* aInfo) {
   // One of the clients submitted a structure.
   static_cast<nsMacRemoteServer*>(aInfo)->HandleCommandLine(aData);
 
   return NULL;
 }
 
-// aData contains serialized Dictionary, which in turn contains command line arguments
+// aData contains serialized Dictionary, which in turn contains command line
+// arguments
 void nsMacRemoteServer::HandleCommandLine(CFDataRef aData) {
   mozilla::MacAutoreleasePool pool;
 
   if (aData) {
-    NSDictionary* dict = [NSKeyedUnarchiver unarchiveObjectWithData:(NSData*)aData];
+    NSDictionary* dict =
+        [NSKeyedUnarchiver unarchiveObjectWithData:(NSData*)aData];
     if (dict && [dict isKindOfClass:[NSDictionary class]]) {
       NSArray* args = dict[@"args"];
       if (!args) {
@@ -54,7 +56,8 @@ void nsMacRemoteServer::HandleCommandLine(CFDataRef aData) {
         argv[i] = arg;
       }
 
-      nsresult rv = cmdLine->Init(argc, argv, nullptr, nsICommandLine::STATE_REMOTE_AUTO);
+      nsresult rv =
+          cmdLine->Init(argc, argv, nullptr, nsICommandLine::STATE_REMOTE_AUTO);
 
       // Cleaning up C array.
       delete[] argv;
@@ -75,21 +78,22 @@ void nsMacRemoteServer::HandleCommandLine(CFDataRef aData) {
   }
 }
 
-nsresult nsMacRemoteServer::Startup(const char* aAppName, const char* aProfileName) {
+nsresult nsMacRemoteServer::Startup(const char* aAppName,
+                                    const char* aProfileName) {
   // This is the first instance ever.
   // Let's register a notification listener here,
-  // In case future instances would want to notify us about command line arguments
-  // passed to them. Note, that if mozilla process is restarting, we still need to
-  // register for notifications.
+  // In case future instances would want to notify us about command line
+  // arguments passed to them. Note, that if mozilla process is restarting, we
+  // still need to register for notifications.
 
   mozilla::MacAutoreleasePool pool;
 
   nsString className;
   BuildClassName(aAppName, aProfileName, className);
 
-  NSString* serverNameString =
-      [NSString stringWithCharacters:reinterpret_cast<const unichar*>(className.get())
-                              length:className.Length()];
+  NSString* serverNameString = [NSString
+      stringWithCharacters:reinterpret_cast<const unichar*>(className.get())
+                    length:className.Length()];
 
   CFMessagePortContext context;
   context.copyDescription = NULL;
@@ -97,8 +101,9 @@ nsresult nsMacRemoteServer::Startup(const char* aAppName, const char* aProfileNa
   context.release = NULL;
   context.retain = NULL;
   context.version = NULL;
-  mMessageServer = CFMessagePortCreateLocal(NULL, (CFStringRef)serverNameString,
-                                            messageServerCallback, &context, NULL);
+  mMessageServer =
+      CFMessagePortCreateLocal(NULL, (CFStringRef)serverNameString,
+                               messageServerCallback, &context, NULL);
   if (!mMessageServer) {
     return NS_ERROR_FAILURE;
   }

@@ -24,24 +24,26 @@ HeadlessKeyBindings& HeadlessKeyBindings::GetInstance() {
   return *sInstance;
 }
 
-nsresult HeadlessKeyBindings::AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent) {
+nsresult HeadlessKeyBindings::AttachNativeKeyEvent(
+    WidgetKeyboardEvent& aEvent) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  aEvent.mNativeKeyEvent = nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(aEvent, 0, nil);
+  aEvent.mNativeKeyEvent =
+      nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(aEvent, 0, nil);
 
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-void HeadlessKeyBindings::GetEditCommands(NativeKeyBindingsType aType,
-                                          const WidgetKeyboardEvent& aEvent,
-                                          const Maybe<WritingMode>& aWritingMode,
-                                          nsTArray<CommandInt>& aCommands) {
+void HeadlessKeyBindings::GetEditCommands(
+    NativeKeyBindingsType aType, const WidgetKeyboardEvent& aEvent,
+    const Maybe<WritingMode>& aWritingMode, nsTArray<CommandInt>& aCommands) {
   // Convert the widget keyboard into a cocoa event so it can be translated
   // into commands in the NativeKeyBindings.
   WidgetKeyboardEvent modifiedEvent(aEvent);
-  modifiedEvent.mNativeKeyEvent = nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(aEvent, 0, nil);
+  modifiedEvent.mNativeKeyEvent =
+      nsCocoaUtils::MakeNewCococaEventFromWidgetEvent(aEvent, 0, nil);
 
   NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
   keyBindings->GetEditCommands(modifiedEvent, aWritingMode, aCommands);

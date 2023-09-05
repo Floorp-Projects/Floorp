@@ -63,8 +63,9 @@ static void GetStringForNSString(const NSString* aSrc, nsAString& aDest) {
 }
 
 static NSString* GetNSStringForString(const nsAString& aSrc) {
-  return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(aSrc.BeginReading())
-                                 length:aSrc.Length()];
+  return [NSString
+      stringWithCharacters:reinterpret_cast<const unichar*>(aSrc.BeginReading())
+                    length:aSrc.Length()];
 }
 
 #define LOG_FONTLIST(args) \
@@ -77,7 +78,8 @@ static NSString* GetNSStringForString(const nsAString& aSrc) {
 class gfxMacFontFamily final : public CTFontFamily {
  public:
   gfxMacFontFamily(const nsACString& aName, NSFont* aSystemFont)
-      : CTFontFamily(aName, FontVisibility::Unknown), mForSystemFont(aSystemFont) {
+      : CTFontFamily(aName, FontVisibility::Unknown),
+        mForSystemFont(aSystemFont) {
     // I don't think the system font instance is at much risk of being deleted,
     // but to be on the safe side let's retain a reference until we're finished
     // using it for lazy initialization.
@@ -88,9 +90,9 @@ class gfxMacFontFamily final : public CTFontFamily {
       MOZ_REQUIRES(mLock) override;
 
  protected:
-  // If non-null, this is a family representing the system UI font, and should use
-  // the given NSFont as the basis for initialization as the normal font-manager APIs
-  // based on family name won't handle it.
+  // If non-null, this is a family representing the system UI font, and should
+  // use the given NSFont as the basis for initialization as the normal
+  // font-manager APIs based on family name won't handle it.
   NSFont* mForSystemFont = nullptr;
 };
 
@@ -99,7 +101,8 @@ void gfxMacFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
     return;
   }
 
-  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("gfxMacFontFamily::FindStyleVariations", LAYOUT, mName);
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("gfxMacFontFamily::FindStyleVariations",
+                                        LAYOUT, mName);
 
   nsAutoreleasePool localPool;
 
@@ -113,12 +116,14 @@ void gfxMacFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
       nsCocoaUtils::GetStringForNSString(psNameNS, nameUTF16);
       CopyUTF16toUTF8(nameUTF16, psName);
 
-      auto* fe = new CTFontEntry(psName, WeightRange(FontWeight::NORMAL), true, 0.0);
+      auto* fe =
+          new CTFontEntry(psName, WeightRange(FontWeight::NORMAL), true, 0.0);
 
       // Set the appropriate style, assuming it may not have a variation range.
       fe->mStyleRange = SlantStyleRange(
-          ([[aNSFont fontDescriptor] symbolicTraits] & NSFontItalicTrait) ? FontSlantStyle::ITALIC
-                                                                          : FontSlantStyle::NORMAL);
+          ([[aNSFont fontDescriptor] symbolicTraits] & NSFontItalicTrait)
+              ? FontSlantStyle::ITALIC
+              : FontSlantStyle::NORMAL);
 
       // Set up weight (and width, if present) ranges.
       fe->SetupVariationRanges();
@@ -128,7 +133,8 @@ void gfxMacFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
     addToFamily(mForSystemFont);
 
     // See if there is a corresponding italic face, and add it to the family.
-    NSFont* italicFont = [sFontManager convertFont:mForSystemFont toHaveTrait:NSItalicFontMask];
+    NSFont* italicFont = [sFontManager convertFont:mForSystemFont
+                                       toHaveTrait:NSItalicFontMask];
     if (italicFont != mForSystemFont) {
       addToFamily(italicFont);
     }
@@ -147,7 +153,8 @@ void gfxMacFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
 
 class gfxSingleFaceMacFontFamily final : public gfxFontFamily {
  public:
-  gfxSingleFaceMacFontFamily(const nsACString& aName, FontVisibility aVisibility)
+  gfxSingleFaceMacFontFamily(const nsACString& aName,
+                             FontVisibility aVisibility)
       : gfxFontFamily(aName, aVisibility) {
     mFaceNamesInitialized = true;  // omit from face name lists
   }
@@ -175,8 +182,9 @@ void gfxSingleFaceMacFontFamily::LocalizedName(nsACString& aLocalizedName) {
   }
 
   gfxFontEntry* fe = mAvailableFonts[0];
-  NSFont* font = [NSFont fontWithName:GetNSStringForString(NS_ConvertUTF8toUTF16(fe->Name()))
-                                 size:0.0];
+  NSFont* font = [NSFont
+      fontWithName:GetNSStringForString(NS_ConvertUTF8toUTF16(fe->Name()))
+              size:0.0];
   if (font) {
     NSString* localized = [font displayName];
     if (localized) {
@@ -191,7 +199,8 @@ void gfxSingleFaceMacFontFamily::LocalizedName(nsACString& aLocalizedName) {
   aLocalizedName = mName;
 }
 
-void gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList* aPlatformFontList) {
+void gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(
+    gfxPlatformFontList* aPlatformFontList) {
   AutoWriteLock lock(mLock);
   if (mOtherFamilyNamesInitialized) {
     return;
@@ -209,7 +218,8 @@ void gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList* aPlat
     return;
   }
 
-  mHasOtherFamilyNames = ReadOtherFamilyNamesForFace(aPlatformFontList, nameTable, true);
+  mHasOtherFamilyNames =
+      ReadOtherFamilyNamesForFace(aPlatformFontList, nameTable, true);
 
   mOtherFamilyNamesInitialized = true;
 }
@@ -229,7 +239,8 @@ gfxMacPlatformFontList::gfxMacPlatformFontList() : CoreTextFontList() {
   gfxFontUtils::GetPrefsFontList("font.single-face-list", mSingleFaceFonts);
 }
 
-FontVisibility gfxMacPlatformFontList::GetVisibilityForFamily(const nsACString& aName) const {
+FontVisibility gfxMacPlatformFontList::GetVisibilityForFamily(
+    const nsACString& aName) const {
   if (aName[0] == '.' || aName.LowerCaseEqualsLiteral("lastresort")) {
     return FontVisibility::Hidden;
   }
@@ -244,7 +255,8 @@ FontVisibility gfxMacPlatformFontList::GetVisibilityForFamily(const nsACString& 
   return FontVisibility::User;
 }
 
-bool gfxMacPlatformFontList::DeprecatedFamilyIsAvailable(const nsACString& aName) {
+bool gfxMacPlatformFontList::DeprecatedFamilyIsAvailable(
+    const nsACString& aName) {
   NSString* family = GetNSStringForString(NS_ConvertUTF8toUTF16(aName));
   return [[sFontManager availableMembersOfFontFamily:family] count] > 0;
 }
@@ -364,7 +376,8 @@ void gfxMacPlatformFontList::InitSingleFaceList() {
 
     // We found the correct face, so create the single-face family record.
     GenerateFontListKey(aliasName, key);
-    LOG_FONTLIST(("(fontlist-singleface) family name: %s, key: %s\n", aliasName.get(), key.get()));
+    LOG_FONTLIST(("(fontlist-singleface) family name: %s, key: %s\n",
+                  aliasName.get(), key.get()));
 
     // add only if doesn't exist already
     if (!mFontFamilies.GetWeak(key)) {
@@ -372,13 +385,14 @@ void gfxMacPlatformFontList::InitSingleFaceList() {
           new gfxSingleFaceMacFontFamily(aliasName, family->Visibility());
       // We need a separate font entry, because its family name will
       // differ from the one we found in the main list.
-      CTFontEntry* fontEntry = new CTFontEntry(fe->Name(), fe->Weight(), true,
-                                               static_cast<const CTFontEntry*>(fe)->mSizeHint);
+      CTFontEntry* fontEntry =
+          new CTFontEntry(fe->Name(), fe->Weight(), true,
+                          static_cast<const CTFontEntry*>(fe)->mSizeHint);
       familyEntry->AddFontEntry(fontEntry);
       familyEntry->SetHasStyles(true);
       mFontFamilies.InsertOrUpdate(key, std::move(familyEntry));
-      LOG_FONTLIST(
-          ("(fontlist-singleface) added new family: %s, key: %s\n", aliasName.get(), key.get()));
+      LOG_FONTLIST(("(fontlist-singleface) added new family: %s, key: %s\n",
+                    aliasName.get(), key.get()));
     }
   }
 }
@@ -404,12 +418,14 @@ static NSString* GetRealFamilyName(NSFont* aFont) {
   // Eventually we should move to using CTFontUIFontType constants to identify
   // system fonts, and eliminate the need to instantiate them (indirectly) from
   // their postscript names.
-  AutoCFRelease<CGFontRef> cgFont = CGFontCreateWithFontName(CFStringRef(psName));
+  AutoCFRelease<CGFontRef> cgFont =
+      CGFontCreateWithFontName(CFStringRef(psName));
   if (!cgFont) {
     return [aFont familyName];
   }
 
-  AutoCFRelease<CTFontRef> ctFont = CTFontCreateWithGraphicsFont(cgFont, 0.0, nullptr, nullptr);
+  AutoCFRelease<CTFontRef> ctFont =
+      CTFontCreateWithGraphicsFont(cgFont, 0.0, nullptr, nullptr);
   if (!ctFont) {
     return [aFont familyName];
   }
@@ -441,7 +457,8 @@ void gfxMacPlatformFontList::InitSystemFontNames() {
   // the hidden system fonts may be excluded from the font list altogether.
   if (nsCocoaFeatures::OnCatalinaOrLater()) {
     // This family will be populated based on the given NSFont.
-    RefPtr<gfxFontFamily> fam = new gfxMacFontFamily(mSystemTextFontFamilyName, sys);
+    RefPtr<gfxFontFamily> fam =
+        new gfxMacFontFamily(mSystemTextFontFamilyName, sys);
     if (fam) {
       nsAutoCString key;
       GenerateFontListKey(mSystemTextFontFamilyName, key);
@@ -465,20 +482,23 @@ void gfxMacPlatformFontList::InitSystemFontNames() {
   // different system font API's always map to the same family under OSX, so
   // just assume that and emit a warning if that ever changes
   NSString* sysFamily = GetRealFamilyName([NSFont systemFontOfSize:0.0]);
-  if ([sysFamily compare:GetRealFamilyName([NSFont boldSystemFontOfSize:0.0])] != NSOrderedSame ||
-      [sysFamily compare:GetRealFamilyName([NSFont controlContentFontOfSize:0.0])] !=
+  if ([sysFamily compare:GetRealFamilyName([NSFont
+                             boldSystemFontOfSize:0.0])] != NSOrderedSame ||
+      [sysFamily compare:GetRealFamilyName([NSFont
+                             controlContentFontOfSize:0.0])] != NSOrderedSame ||
+      [sysFamily compare:GetRealFamilyName([NSFont menuBarFontOfSize:0.0])] !=
           NSOrderedSame ||
-      [sysFamily compare:GetRealFamilyName([NSFont menuBarFontOfSize:0.0])] != NSOrderedSame ||
-      [sysFamily compare:GetRealFamilyName([NSFont toolTipsFontOfSize:0.0])] != NSOrderedSame) {
+      [sysFamily compare:GetRealFamilyName([NSFont toolTipsFontOfSize:0.0])] !=
+          NSOrderedSame) {
     NS_WARNING("system font types map to different font families"
                " -- please log a bug!!");
   }
 #endif
 }
 
-FontFamily gfxMacPlatformFontList::GetDefaultFontForPlatform(nsPresContext* aPresContext,
-                                                             const gfxFontStyle* aStyle,
-                                                             nsAtom* aLanguage) {
+FontFamily gfxMacPlatformFontList::GetDefaultFontForPlatform(
+    nsPresContext* aPresContext, const gfxFontStyle* aStyle,
+    nsAtom* aLanguage) {
   nsAutoreleasePool localPool;
 
   NSString* defaultFamily = [[NSFont userFontOfSize:aStyle->size] familyName];
@@ -538,11 +558,14 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
   }
 
   NSFontSymbolicTraits traits = [[font fontDescriptor] symbolicTraits];
-  aFontStyle.style = (traits & NSFontItalicTrait) ? FontSlantStyle::ITALIC : FontSlantStyle::NORMAL;
-  aFontStyle.weight = (traits & NSFontBoldTrait) ? FontWeight::BOLD : FontWeight::NORMAL;
-  aFontStyle.stretch = (traits & NSFontExpandedTrait)    ? FontStretch::EXPANDED
-                       : (traits & NSFontCondensedTrait) ? FontStretch::CONDENSED
-                                                         : FontStretch::NORMAL;
+  aFontStyle.style = (traits & NSFontItalicTrait) ? FontSlantStyle::ITALIC
+                                                  : FontSlantStyle::NORMAL;
+  aFontStyle.weight =
+      (traits & NSFontBoldTrait) ? FontWeight::BOLD : FontWeight::NORMAL;
+  aFontStyle.stretch = (traits & NSFontExpandedTrait) ? FontStretch::EXPANDED
+                       : (traits & NSFontCondensedTrait)
+                           ? FontStretch::CONDENSED
+                           : FontStretch::NORMAL;
   aFontStyle.size = [font pointSize];
   aFontStyle.systemFont = true;
 }

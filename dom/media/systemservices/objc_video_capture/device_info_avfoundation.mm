@@ -17,12 +17,14 @@
 
 namespace webrtc::videocapturemodule {
 /* static */
-int32_t DeviceInfoAvFoundation::ConvertAVFrameRateToCapabilityFPS(Float64 aRate) {
+int32_t DeviceInfoAvFoundation::ConvertAVFrameRateToCapabilityFPS(
+    Float64 aRate) {
   return static_cast<int32_t>(aRate);
 }
 
 /* static */
-webrtc::VideoType DeviceInfoAvFoundation::ConvertFourCCToVideoType(FourCharCode aCode) {
+webrtc::VideoType DeviceInfoAvFoundation::ConvertFourCCToVideoType(
+    FourCharCode aCode) {
   switch (aCode) {
     case kCVPixelFormatType_420YpCbCr8Planar:
     case kCVPixelFormatType_420YpCbCr8PlanarFullRange:
@@ -57,11 +59,14 @@ webrtc::VideoType DeviceInfoAvFoundation::ConvertFourCCToVideoType(FourCharCode 
 }
 
 DeviceInfoAvFoundation::DeviceInfoAvFoundation()
-    : mInvalidateCapabilities(false), mDeviceChangeCaptureInfo([[DeviceInfoIosObjC alloc] init]) {
+    : mInvalidateCapabilities(false),
+      mDeviceChangeCaptureInfo([[DeviceInfoIosObjC alloc] init]) {
   [mDeviceChangeCaptureInfo registerOwner:this];
 }
 
-DeviceInfoAvFoundation::~DeviceInfoAvFoundation() { [mDeviceChangeCaptureInfo registerOwner:nil]; }
+DeviceInfoAvFoundation::~DeviceInfoAvFoundation() {
+  [mDeviceChangeCaptureInfo registerOwner:nil];
+}
 
 void DeviceInfoAvFoundation::DeviceChange() {
   mInvalidateCapabilities = true;
@@ -74,12 +79,11 @@ uint32_t DeviceInfoAvFoundation::NumberOfDevices() {
   return mDevicesAndCapabilities.size();
 }
 
-int32_t DeviceInfoAvFoundation::GetDeviceName(uint32_t aDeviceNumber, char* aDeviceNameUTF8,
-                                              uint32_t aDeviceNameLength, char* aDeviceUniqueIdUTF8,
-                                              uint32_t aDeviceUniqueIdUTF8Length,
-                                              char* /* aProductUniqueIdUTF8 */,
-                                              uint32_t /* aProductUniqueIdUTF8Length */,
-                                              pid_t* /* aPid */) {
+int32_t DeviceInfoAvFoundation::GetDeviceName(
+    uint32_t aDeviceNumber, char* aDeviceNameUTF8, uint32_t aDeviceNameLength,
+    char* aDeviceUniqueIdUTF8, uint32_t aDeviceUniqueIdUTF8Length,
+    char* /* aProductUniqueIdUTF8 */, uint32_t /* aProductUniqueIdUTF8Length */,
+    pid_t* /* aPid */) {
   RTC_DCHECK_RUN_ON(&mChecker);
   // Don't EnsureCapabilitiesMap() here, since:
   // 1) That might invalidate the capabilities map
@@ -100,7 +104,8 @@ int32_t DeviceInfoAvFoundation::GetDeviceName(uint32_t aDeviceNumber, char* aDev
   return 0;
 }
 
-int32_t DeviceInfoAvFoundation::NumberOfCapabilities(const char* aDeviceUniqueIdUTF8) {
+int32_t DeviceInfoAvFoundation::NumberOfCapabilities(
+    const char* aDeviceUniqueIdUTF8) {
   RTC_DCHECK_RUN_ON(&mChecker);
 
   std::string deviceUniqueId(aDeviceUniqueIdUTF8);
@@ -113,9 +118,9 @@ int32_t DeviceInfoAvFoundation::NumberOfCapabilities(const char* aDeviceUniqueId
   return static_cast<int32_t>(capabilities.size());
 }
 
-int32_t DeviceInfoAvFoundation::GetCapability(const char* aDeviceUniqueIdUTF8,
-                                              const uint32_t aDeviceCapabilityNumber,
-                                              VideoCaptureCapability& aCapability) {
+int32_t DeviceInfoAvFoundation::GetCapability(
+    const char* aDeviceUniqueIdUTF8, const uint32_t aDeviceCapabilityNumber,
+    VideoCaptureCapability& aCapability) {
   RTC_DCHECK_RUN_ON(&mChecker);
 
   std::string deviceUniqueId(aDeviceUniqueIdUTF8);
@@ -133,7 +138,8 @@ int32_t DeviceInfoAvFoundation::GetCapability(const char* aDeviceUniqueIdUTF8,
   return 0;
 }
 
-int32_t DeviceInfoAvFoundation::CreateCapabilityMap(const char* aDeviceUniqueIdUTF8) {
+int32_t DeviceInfoAvFoundation::CreateCapabilityMap(
+    const char* aDeviceUniqueIdUTF8) {
   RTC_DCHECK_RUN_ON(&mChecker);
 
   const size_t deviceUniqueIdUTF8Length = strlen(aDeviceUniqueIdUTF8);
@@ -141,7 +147,8 @@ int32_t DeviceInfoAvFoundation::CreateCapabilityMap(const char* aDeviceUniqueIdU
     RTC_LOG(LS_INFO) << "Device name too long";
     return -1;
   }
-  RTC_LOG(LS_INFO) << "CreateCapabilityMap called for device " << aDeviceUniqueIdUTF8;
+  RTC_LOG(LS_INFO) << "CreateCapabilityMap called for device "
+                   << aDeviceUniqueIdUTF8;
   std::string deviceUniqueId(aDeviceUniqueIdUTF8);
   const auto* tup = FindDeviceAndCapabilities(deviceUniqueId);
   if (!tup) {
@@ -151,16 +158,18 @@ int32_t DeviceInfoAvFoundation::CreateCapabilityMap(const char* aDeviceUniqueIdU
 
   // Store the new used device name
   _lastUsedDeviceNameLength = deviceUniqueIdUTF8Length;
-  _lastUsedDeviceName =
-      static_cast<char*>(realloc(_lastUsedDeviceName, _lastUsedDeviceNameLength + 1));
-  memcpy(_lastUsedDeviceName, aDeviceUniqueIdUTF8, _lastUsedDeviceNameLength + 1);
+  _lastUsedDeviceName = static_cast<char*>(
+      realloc(_lastUsedDeviceName, _lastUsedDeviceNameLength + 1));
+  memcpy(_lastUsedDeviceName, aDeviceUniqueIdUTF8,
+         _lastUsedDeviceNameLength + 1);
 
   const auto& [_, __, capabilities] = *tup;
   _captureCapabilities = capabilities;
   return static_cast<int32_t>(_captureCapabilities.size());
 }
 
-auto DeviceInfoAvFoundation::FindDeviceAndCapabilities(const std::string& aDeviceUniqueId) const
+auto DeviceInfoAvFoundation::FindDeviceAndCapabilities(
+    const std::string& aDeviceUniqueId) const
     -> const std::tuple<std::string, std::string, VideoCaptureCapabilities>* {
   RTC_DCHECK_RUN_ON(&mChecker);
   for (const auto& tup : mDevicesAndCapabilities) {
@@ -185,13 +194,14 @@ void DeviceInfoAvFoundation::EnsureCapabilitiesMap() {
   for (AVCaptureDevice* device in [RTCCameraVideoCapturer captureDevices]) {
     std::string uniqueId = [NSString stdStringForString:device.uniqueID];
     std::string name = [NSString stdStringForString:device.localizedName];
-    auto& [_, __, capabilities] =
-        mDevicesAndCapabilities.emplace_back(uniqueId, name, VideoCaptureCapabilities());
+    auto& [_, __, capabilities] = mDevicesAndCapabilities.emplace_back(
+        uniqueId, name, VideoCaptureCapabilities());
 
     for (AVCaptureDeviceFormat* format in
          [RTCCameraVideoCapturer supportedFormatsForDevice:device]) {
       VideoCaptureCapability cap;
-      FourCharCode fourcc = CMFormatDescriptionGetMediaSubType(format.formatDescription);
+      FourCharCode fourcc =
+          CMFormatDescriptionGetMediaSubType(format.formatDescription);
       cap.videoType = ConvertFourCCToVideoType(fourcc);
       CMVideoDimensions dimensions =
           CMVideoFormatDescriptionGetDimensions(format.formatDescription);

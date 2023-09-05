@@ -25,7 +25,8 @@
 #import <ApplicationServices/ApplicationServices.h>
 
 // chrome URL's
-#define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
+#define HELPERAPPLAUNCHER_BUNDLE_URL \
+  "chrome://global/locale/helperAppLauncher.properties"
 #define BRAND_BUNDLE_URL "chrome://branding/locale/brand.properties"
 
 nsresult GetDefaultBundleURL(const nsACString& aScheme, CFURLRef* aBundleURL) {
@@ -34,18 +35,20 @@ nsresult GetDefaultBundleURL(const nsACString& aScheme, CFURLRef* aBundleURL) {
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
   CFStringRef schemeCFString = ::CFStringCreateWithBytes(
-      kCFAllocatorDefault, (const UInt8*)PromiseFlatCString(aScheme).get(), aScheme.Length(),
-      kCFStringEncodingUTF8, false);
+      kCFAllocatorDefault, (const UInt8*)PromiseFlatCString(aScheme).get(),
+      aScheme.Length(), kCFStringEncodingUTF8, false);
 
   if (schemeCFString) {
     CFStringRef lookupCFString =
         ::CFStringCreateWithFormat(NULL, NULL, CFSTR("%@:"), schemeCFString);
 
     if (lookupCFString) {
-      CFURLRef lookupCFURL = ::CFURLCreateWithString(NULL, lookupCFString, NULL);
+      CFURLRef lookupCFURL =
+          ::CFURLCreateWithString(NULL, lookupCFString, NULL);
 
       if (lookupCFURL) {
-        *aBundleURL = ::LSCopyDefaultApplicationURLForURL(lookupCFURL, kLSRolesAll, NULL);
+        *aBundleURL =
+            ::LSCopyDefaultApplicationURLForURL(lookupCFURL, kLSRolesAll, NULL);
         if (*aBundleURL) {
           rv = NS_OK;
         }
@@ -88,15 +91,15 @@ using mozilla::LogLevel;
 
 nsOSHelperAppService::~nsOSHelperAppService() {}
 
-nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aProtocolScheme,
-                                                       bool* aHandlerExists) {
+nsresult nsOSHelperAppService::OSProtocolHandlerExists(
+    const char* aProtocolScheme, bool* aHandlerExists) {
   // CFStringCreateWithBytes() can fail even if we're not out of memory --
   // for example if the 'bytes' parameter is something very weird (like
   // "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
   // specified in the 'encoding' parameter.  See bug 548719.
-  CFStringRef schemeString =
-      ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)aProtocolScheme,
-                                strlen(aProtocolScheme), kCFStringEncodingUTF8, false);
+  CFStringRef schemeString = ::CFStringCreateWithBytes(
+      kCFAllocatorDefault, (const UInt8*)aProtocolScheme,
+      strlen(aProtocolScheme), kCFStringEncodingUTF8, false);
   if (schemeString) {
     // LSCopyDefaultHandlerForURLScheme() can fail to find the default handler
     // for aProtocolScheme when it's never been explicitly set (using
@@ -118,8 +121,8 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aProtocolSche
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme,
-                                                              nsAString& _retval) {
+NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(
+    const nsACString& aScheme, nsAString& _retval) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
@@ -136,14 +139,17 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
 
     // Get the human-readable name of the bundle
     CFStringRef bundleName =
-        (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(handlerBundle, kCFBundleNameKey);
+        (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(handlerBundle,
+                                                            kCFBundleNameKey);
 
     if (bundleName) {
       AutoTArray<UniChar, 255> buffer;
       CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
       buffer.SetLength(bundleNameLength);
-      ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength), buffer.Elements());
-      _retval.Assign(reinterpret_cast<char16_t*>(buffer.Elements()), bundleNameLength);
+      ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
+                              buffer.Elements());
+      _retval.Assign(reinterpret_cast<char16_t*>(buffer.Elements()),
+                     bundleNameLength);
       rv = NS_OK;
     }
     ::CFRelease(handlerBundle);
@@ -155,8 +161,8 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(const nsACString& aScheme,
-                                                                     bool* _retval) {
+NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(
+    const nsACString& aScheme, bool* _retval) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
@@ -164,7 +170,8 @@ NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(const nsACS
   CFURLRef handlerBundleURL;
   rv = GetDefaultBundleURL(aScheme, &handlerBundleURL);
   if (NS_SUCCEEDED(rv) && handlerBundleURL) {
-    // Ensure we don't accidentally return success if we can't get an app bundle.
+    // Ensure we don't accidentally return success if we can't get an app
+    // bundle.
     rv = NS_ERROR_NOT_AVAILABLE;
     CFBundleRef appBundle = ::CFBundleGetMainBundle();
     if (appBundle) {
@@ -181,23 +188,25 @@ NS_IMETHODIMP nsOSHelperAppService::IsCurrentAppOSDefaultForProtocol(const nsACS
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-nsresult nsOSHelperAppService::GetFileTokenForPath(const char16_t* aPlatformAppPath,
-                                                   nsIFile** aFile) {
+nsresult nsOSHelperAppService::GetFileTokenForPath(
+    const char16_t* aPlatformAppPath, nsIFile** aFile) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsresult rv;
-  nsCOMPtr<nsILocalFileMac> localFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  nsCOMPtr<nsILocalFileMac> localFile(
+      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
   CFURLRef pathAsCFURL;
   CFStringRef pathAsCFString = ::CFStringCreateWithCharacters(
-      NULL, reinterpret_cast<const UniChar*>(aPlatformAppPath), NS_strlen(aPlatformAppPath));
+      NULL, reinterpret_cast<const UniChar*>(aPlatformAppPath),
+      NS_strlen(aPlatformAppPath));
   if (!pathAsCFString) return NS_ERROR_OUT_OF_MEMORY;
 
   if (::CFStringGetCharacterAtIndex(pathAsCFString, 0) == '/') {
     // we have a Posix path
-    pathAsCFURL =
-        ::CFURLCreateWithFileSystemPath(nullptr, pathAsCFString, kCFURLPOSIXPathStyle, false);
+    pathAsCFURL = ::CFURLCreateWithFileSystemPath(nullptr, pathAsCFString,
+                                                  kCFURLPOSIXPathStyle, false);
     if (!pathAsCFURL) {
       ::CFRelease(pathAsCFString);
       return NS_ERROR_OUT_OF_MEMORY;
@@ -214,8 +223,8 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const char16_t* aPlatformAppP
       return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
 
-    pathAsCFURL =
-        ::CFURLCreateWithFileSystemPath(nullptr, pathAsCFString, kCFURLHFSPathStyle, false);
+    pathAsCFURL = ::CFURLCreateWithFileSystemPath(nullptr, pathAsCFString,
+                                                  kCFURLHFSPathStyle, false);
     if (!pathAsCFURL) {
       ::CFRelease(pathAsCFString);
       return NS_ERROR_OUT_OF_MEMORY;
@@ -259,7 +268,8 @@ static CFArrayRef GetMIMETypesHandledByApp(FSRef* aAppRef) {
   if (!infoDict) {
     return NULL;
   }
-  CFTypeRef cfObject = ::CFDictionaryGetValue(infoDict, CFSTR("CFBundleDocumentTypes"));
+  CFTypeRef cfObject =
+      ::CFDictionaryGetValue(infoDict, CFSTR("CFBundleDocumentTypes"));
   if (!cfObject || (::CFGetTypeID(cfObject) != ::CFArrayGetTypeID())) {
     ::CFRelease(infoDict);
     return NULL;
@@ -307,7 +317,8 @@ static CFArrayRef GetMIMETypesHandledByApp(FSRef* aAppRef) {
 }
 
 nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
-                                                 const nsACString& aFileExt, bool* aFound,
+                                                 const nsACString& aFileExt,
+                                                 bool* aFound,
                                                  nsIMIMEInfo** aMIMEInfo) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -318,7 +329,8 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   const nsCString& flatExt = PromiseFlatCString(aFileExt);
 
   MOZ_LOG(sLog, LogLevel::Debug,
-          ("Mac: HelperAppService lookup for type '%s' ext '%s'\n", flatType.get(), flatExt.get()));
+          ("Mac: HelperAppService lookup for type '%s' ext '%s'\n",
+           flatType.get(), flatExt.get()));
 
   // Create a Mac-specific MIME info so we can use Mac-specific members.
   RefPtr<nsMIMEInfoMac> mimeInfoMac = new nsMIMEInfoMac(aMIMEType);
@@ -337,13 +349,15 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   CFStringRef cfMIMEType = NULL;
 
   if (!aMIMEType.IsEmpty()) {
-    typeIsOctetStream = aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM);
+    typeIsOctetStream =
+        aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM);
     CFURLRef appURL = NULL;
     // CFStringCreateWithCString() can fail even if we're not out of memory --
     // for example if the 'cStr' parameter is something very weird (like
     // "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
     // specified in the 'encoding' parameter.  See bug 548719.
-    cfMIMEType = ::CFStringCreateWithCString(NULL, flatType.get(), kCFStringEncodingUTF8);
+    cfMIMEType = ::CFStringCreateWithCString(NULL, flatType.get(),
+                                             kCFStringEncodingUTF8);
     if (cfMIMEType) {
       err = ::LSCopyApplicationForMIMEType(cfMIMEType, kLSRolesAll, &appURL);
       if ((err == noErr) && appURL && ::CFURLGetFSRef(appURL, &typeAppFSRef)) {
@@ -361,13 +375,15 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     // for example if the 'cStr' parameter is something very weird (like
     // "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
     // specified in the 'encoding' parameter.  See bug 548719.
-    CFStringRef cfExt = ::CFStringCreateWithCString(NULL, flatExt.get(), kCFStringEncodingUTF8);
+    CFStringRef cfExt =
+        ::CFStringCreateWithCString(NULL, flatExt.get(), kCFStringEncodingUTF8);
     if (cfExt) {
-      err = ::LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, cfExt, kLSRolesAll,
-                                      &extAppFSRef, nullptr);
+      err = ::LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, cfExt,
+                                      kLSRolesAll, &extAppFSRef, nullptr);
       if (err == noErr) {
         haveAppForExt = true;
-        MOZ_LOG(sLog, LogLevel::Debug, ("LSGetApplicationForInfo found a default application\n"));
+        MOZ_LOG(sLog, LogLevel::Debug,
+                ("LSGetApplicationForInfo found a default application\n"));
       }
       ::CFRelease(cfExt);
     }
@@ -375,7 +391,8 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 
   if (haveAppForType && haveAppForExt) {
     // Do aMIMEType and aFileExt match?
-    if (::FSCompareFSRefs((const FSRef*)&typeAppFSRef, (const FSRef*)&extAppFSRef) == noErr) {
+    if (::FSCompareFSRefs((const FSRef*)&typeAppFSRef,
+                          (const FSRef*)&extAppFSRef) == noErr) {
       typeAppIsDefault = true;
       *aFound = true;
     }
@@ -418,9 +435,10 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
       CFArrayRef extAppMIMETypes = GetMIMETypesHandledByApp(&extAppFSRef);
       if (extAppMIMETypes) {
         if (cfMIMEType) {
-          if (::CFArrayContainsValue(extAppMIMETypes,
-                                     ::CFRangeMake(0, ::CFArrayGetCount(extAppMIMETypes)),
-                                     cfMIMEType)) {
+          if (::CFArrayContainsValue(
+                  extAppMIMETypes,
+                  ::CFRangeMake(0, ::CFArrayGetCount(extAppMIMETypes)),
+                  cfMIMEType)) {
             extAppIsDefault = true;
             *aFound = true;
           }
@@ -445,11 +463,13 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
       // the doc for this method says that if we have a MIME type (in
       // aMIMEType), we need to give it preference.)
       NSURLFileTypeMappings* map = [NSURLFileTypeMappings sharedMappings];
-      NSString* extStr = [NSString stringWithCString:flatExt.get() encoding:NSASCIIStringEncoding];
+      NSString* extStr = [NSString stringWithCString:flatExt.get()
+                                            encoding:NSASCIIStringEncoding];
       NSString* typeStr = map ? [map MIMETypeForExtension:extStr] : NULL;
       if (typeStr) {
         nsAutoCString mimeType;
-        mimeType.Assign((char*)[typeStr cStringUsingEncoding:NSASCIIStringEncoding]);
+        mimeType.Assign(
+            (char*)[typeStr cStringUsingEncoding:NSASCIIStringEncoding]);
         mimeInfoMac->SetMIMEType(mimeType);
         haveAppForType = true;
       } else {
@@ -476,7 +496,8 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     if (haveAppForExt) mimeInfoMac->AppendExtension(aFileExt);
 
     nsresult rv;
-    nsCOMPtr<nsILocalFileMac> app(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+    nsCOMPtr<nsILocalFileMac> app(
+        do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) {
       [localPool release];
       return rv;
@@ -485,20 +506,22 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     CFStringRef cfAppName = NULL;
     if (typeAppIsDefault) {
       app->InitWithFSRef(&typeAppFSRef);
-      ::LSCopyItemAttribute((const FSRef*)&typeAppFSRef, kLSRolesAll, kLSItemDisplayName,
-                            (CFTypeRef*)&cfAppName);
+      ::LSCopyItemAttribute((const FSRef*)&typeAppFSRef, kLSRolesAll,
+                            kLSItemDisplayName, (CFTypeRef*)&cfAppName);
     } else {
       app->InitWithFSRef(&extAppFSRef);
-      ::LSCopyItemAttribute((const FSRef*)&extAppFSRef, kLSRolesAll, kLSItemDisplayName,
-                            (CFTypeRef*)&cfAppName);
+      ::LSCopyItemAttribute((const FSRef*)&extAppFSRef, kLSRolesAll,
+                            kLSItemDisplayName, (CFTypeRef*)&cfAppName);
     }
     if (cfAppName) {
       AutoTArray<UniChar, 255> buffer;
       CFIndex appNameLength = ::CFStringGetLength(cfAppName);
       buffer.SetLength(appNameLength);
-      ::CFStringGetCharacters(cfAppName, CFRangeMake(0, appNameLength), buffer.Elements());
+      ::CFStringGetCharacters(cfAppName, CFRangeMake(0, appNameLength),
+                              buffer.Elements());
       nsAutoString appName;
-      appName.Assign(reinterpret_cast<char16_t*>(buffer.Elements()), appNameLength);
+      appName.Assign(reinterpret_cast<char16_t*>(buffer.Elements()),
+                     appNameLength);
       mimeInfoMac->SetDefaultDescription(appName);
       ::CFRelease(cfAppName);
     }
@@ -516,25 +539,29 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     // If we have a MIME type, make sure its extension list is included in our
     // list.
     NSURLFileTypeMappings* map = [NSURLFileTypeMappings sharedMappings];
-    NSString* typeStr = [NSString stringWithCString:mimeType.get() encoding:NSASCIIStringEncoding];
+    NSString* typeStr = [NSString stringWithCString:mimeType.get()
+                                           encoding:NSASCIIStringEncoding];
     NSArray* extensionsList = map ? [map extensionsForMIMEType:typeStr] : NULL;
     if (extensionsList) {
       for (NSString* extension in extensionsList) {
         nsAutoCString ext;
-        ext.Assign((char*)[extension cStringUsingEncoding:NSASCIIStringEncoding]);
+        ext.Assign(
+            (char*)[extension cStringUsingEncoding:NSASCIIStringEncoding]);
         mimeInfoMac->AppendExtension(ext);
       }
     }
 
-    if (CFStringRef cfType =
-            ::CFStringCreateWithCString(NULL, mimeType.get(), kCFStringEncodingUTF8)) {
+    if (CFStringRef cfType = ::CFStringCreateWithCString(
+            NULL, mimeType.get(), kCFStringEncodingUTF8)) {
       if (CFStringRef cfTypeDesc = ::UTTypeCopyDescription(cfType)) {
         AutoTArray<UniChar, 255> buffer;
         CFIndex typeDescLength = ::CFStringGetLength(cfTypeDesc);
         buffer.SetLength(typeDescLength);
-        ::CFStringGetCharacters(cfTypeDesc, CFRangeMake(0, typeDescLength), buffer.Elements());
+        ::CFStringGetCharacters(cfTypeDesc, CFRangeMake(0, typeDescLength),
+                                buffer.Elements());
         nsAutoString typeDesc;
-        typeDesc.Assign(reinterpret_cast<char16_t*>(buffer.Elements()), typeDescLength);
+        typeDesc.Assign(reinterpret_cast<char16_t*>(buffer.Elements()),
+                        typeDescLength);
         mimeInfoMac->SetDescription(typeDesc);
         ::CFRelease(cfTypeDesc);
       }
@@ -542,7 +569,8 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     }
   }
 
-  MOZ_LOG(sLog, LogLevel::Debug, ("OS gave us: type '%s' found '%i'\n", mimeType.get(), *aFound));
+  MOZ_LOG(sLog, LogLevel::Debug,
+          ("OS gave us: type '%s' found '%i'\n", mimeType.get(), *aFound));
 
   [localPool release];
   mimeInfoMac.forget(aMIMEInfo);
@@ -552,14 +580,17 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 }
 
 NS_IMETHODIMP
-nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString& aScheme, bool* found,
+nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString& aScheme,
+                                                   bool* found,
                                                    nsIHandlerInfo** _retval) {
   NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
 
-  nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(), found);
+  nsresult rv =
+      OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(), found);
   if (NS_FAILED(rv)) return rv;
 
-  nsMIMEInfoMac* handlerInfo = new nsMIMEInfoMac(aScheme, nsMIMEInfoBase::eProtocolInfo);
+  nsMIMEInfoMac* handlerInfo =
+      new nsMIMEInfoMac(aScheme, nsMIMEInfoBase::eProtocolInfo);
   NS_ENSURE_TRUE(handlerInfo, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*_retval = handlerInfo);
 

@@ -42,7 +42,8 @@ nsIconChannel::~nsIconChannel() {
   }
 }
 
-NS_IMPL_ISUPPORTS(nsIconChannel, nsIChannel, nsIRequest, nsIRequestObserver, nsIStreamListener)
+NS_IMPL_ISUPPORTS(nsIconChannel, nsIChannel, nsIRequest, nsIRequestObserver,
+                  nsIStreamListener)
 
 nsresult nsIconChannel::Init(nsIURI* uri) {
   NS_ASSERTION(uri, "no uri");
@@ -73,7 +74,8 @@ NS_IMETHODIMP nsIconChannel::GetCanceledReason(nsACString& aReason) {
   return GetCanceledReasonImpl(aReason);
 }
 
-NS_IMETHODIMP nsIconChannel::CancelWithReason(nsresult aStatus, const nsACString& aReason) {
+NS_IMETHODIMP nsIconChannel::CancelWithReason(nsresult aStatus,
+                                              const nsACString& aReason) {
   return CancelWithReasonImpl(aStatus, aReason);
 }
 
@@ -121,8 +123,8 @@ nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 
 // nsIStreamListener methods
 NS_IMETHODIMP
-nsIconChannel::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream, uint64_t aOffset,
-                               uint32_t aCount) {
+nsIconChannel::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
+                               uint64_t aOffset, uint32_t aCount) {
   if (mListener) {
     return mListener->OnDataAvailable(this, aStream, aOffset, aCount);
   }
@@ -156,13 +158,15 @@ nsIconChannel::GetURI(nsIURI** aURI) {
 NS_IMETHODIMP
 nsIconChannel::Open(nsIInputStream** _retval) {
   nsCOMPtr<nsIStreamListener> listener;
-  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return MakeInputStream(_retval, false);
 }
 
-nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile** aLocalFile, uint32_t* aDesiredImageSize,
+nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile** aLocalFile,
+                                               uint32_t* aDesiredImageSize,
                                                nsACString& aContentType,
                                                nsACString& aFileExtension) {
   nsresult rv = NS_OK;
@@ -196,18 +200,21 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile** aLocalFile, uint32_t* a
 NS_IMETHODIMP
 nsIconChannel::AsyncOpen(nsIStreamListener* aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  nsresult rv =
+      nsContentSecurityManager::doContentSecurityCheck(this, listener);
   if (NS_FAILED(rv)) {
     mCallbacks = nullptr;
     return rv;
   }
 
-  MOZ_ASSERT(mLoadInfo->GetSecurityMode() == 0 || mLoadInfo->GetInitialSecurityCheckDone() ||
-                 (mLoadInfo->GetSecurityMode() ==
-                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL &&
-                  mLoadInfo->GetLoadingPrincipal() &&
-                  mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()),
-             "security flags in loadInfo but doContentSecurityCheck() not called");
+  MOZ_ASSERT(
+      mLoadInfo->GetSecurityMode() == 0 ||
+          mLoadInfo->GetInitialSecurityCheckDone() ||
+          (mLoadInfo->GetSecurityMode() ==
+               nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL &&
+           mLoadInfo->GetLoadingPrincipal() &&
+           mLoadInfo->GetLoadingPrincipal()->IsSystemPrincipal()),
+      "security flags in loadInfo but doContentSecurityCheck() not called");
 
   nsCOMPtr<nsIInputStream> inStream;
   rv = MakeInputStream(getter_AddRefs(inStream), true);
@@ -218,7 +225,8 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   // Init our stream pump
   nsCOMPtr<nsISerialEventTarget> target =
-      nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, mozilla::TaskCategory::Other);
+      nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo,
+                                               mozilla::TaskCategory::Other);
   rv = mPump->Init(inStream, 0, 0, false, target);
   if (NS_FAILED(rv)) {
     mCallbacks = nullptr;
@@ -240,15 +248,16 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener) {
   return rv;
 }
 
-nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlocking) {
+nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval,
+                                        bool aNonBlocking) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   nsCString contentType;
   nsAutoCString fileExt;
   nsCOMPtr<nsIFile> fileloc;  // file we want an icon for
   uint32_t desiredImageSize;
-  nsresult rv =
-      ExtractIconInfoFromUrl(getter_AddRefs(fileloc), &desiredImageSize, contentType, fileExt);
+  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(fileloc),
+                                       &desiredImageSize, contentType, fileExt);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool fileExists = false;
@@ -265,7 +274,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
 
     CFURLRef macURL;
     if (NS_SUCCEEDED(localFileMac->GetCFURL(&macURL))) {
-      iconImage = [[NSWorkspace sharedWorkspace] iconForFile:[(NSURL*)macURL path]];
+      iconImage =
+          [[NSWorkspace sharedWorkspace] iconForFile:[(NSURL*)macURL path]];
       ::CFRelease(macURL);
     }
   }
@@ -278,7 +288,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
 
   // If we still don't have an icon, get the generic document icon.
   if (!iconImage) {
-    iconImage = [[NSWorkspace sharedWorkspace] iconForFileType:NSFileTypeUnknown];
+    iconImage =
+        [[NSWorkspace sharedWorkspace] iconForFileType:NSFileTypeUnknown];
   }
 
   if (!iconImage) {
@@ -296,8 +307,10 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
   // account when it requests these icons; e.g. it will request an icon with
   // size 16, place it in a 16x16 CSS pixel sized image, and then display it in
   // a window on a HiDPI screen where the icon now covers 32x32 physical screen
-  // pixels. So we just always double the size here in order to prevent blurriness.
-  uint32_t size = (desiredImageSize < 128) ? desiredImageSize * 2 : desiredImageSize;
+  // pixels. So we just always double the size here in order to prevent
+  // blurriness.
+  uint32_t size =
+      (desiredImageSize < 128) ? desiredImageSize * 2 : desiredImageSize;
   uint32_t width = size;
   uint32_t height = size;
 
@@ -322,14 +335,15 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
   // This gives us the image data in the format we want: BGRA, four bytes per
   // pixel, in host endianness, with premultiplied alpha.
   CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
-  CGContextRef ctx =
-      CGBitmapContextCreate(imageBuf, width, height, 8 /* bitsPerComponent */, width * 4, cs,
-                            kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst);
+  CGContextRef ctx = CGBitmapContextCreate(
+      imageBuf, width, height, 8 /* bitsPerComponent */, width * 4, cs,
+      kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst);
   CGColorSpaceRelease(cs);
 
   NSGraphicsContext* oldContext = [NSGraphicsContext currentContext];
-  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithCGContext:ctx
-                                                                               flipped:NO]];
+  [NSGraphicsContext
+      setCurrentContext:[NSGraphicsContext graphicsContextWithCGContext:ctx
+                                                                flipped:NO]];
 
   [iconImage drawInRect:NSMakeRect(0, 0, width, height)];
 
@@ -340,8 +354,8 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlock
   // Now, create a pipe and stuff our data into it
   nsCOMPtr<nsIInputStream> inStream;
   nsCOMPtr<nsIOutputStream> outStream;
-  NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream), bufferCapacity, bufferCapacity,
-             aNonBlocking);
+  NS_NewPipe(getter_AddRefs(inStream), getter_AddRefs(outStream),
+             bufferCapacity, bufferCapacity, aNonBlocking);
 
   uint32_t written;
   rv = outStream->Write((char*)fileBuf.get(), bufferCapacity, &written);
@@ -368,10 +382,14 @@ nsIconChannel::SetLoadFlags(uint32_t aLoadAttributes) {
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetTRRMode(nsIRequest::TRRMode* aTRRMode) { return GetTRRModeImpl(aTRRMode); }
+nsIconChannel::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
 
 NS_IMETHODIMP
-nsIconChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) { return SetTRRModeImpl(aTRRMode); }
+nsIconChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
+}
 
 NS_IMETHODIMP
 nsIconChannel::GetIsDocument(bool* aIsDocument) {
@@ -415,17 +433,20 @@ nsIconChannel::SetContentDisposition(uint32_t aContentDisposition) {
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetContentDispositionFilename(nsAString& aContentDispositionFilename) {
+nsIconChannel::GetContentDispositionFilename(
+    nsAString& aContentDispositionFilename) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetContentDispositionFilename(const nsAString& aContentDispositionFilename) {
+nsIconChannel::SetContentDispositionFilename(
+    const nsAString& aContentDispositionFilename) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetContentDispositionHeader(nsACString& aContentDispositionHeader) {
+nsIconChannel::GetContentDispositionHeader(
+    nsACString& aContentDispositionHeader) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -481,14 +502,16 @@ nsIconChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
 }
 
 NS_IMETHODIMP
-nsIconChannel::GetNotificationCallbacks(nsIInterfaceRequestor** aNotificationCallbacks) {
+nsIconChannel::GetNotificationCallbacks(
+    nsIInterfaceRequestor** aNotificationCallbacks) {
   *aNotificationCallbacks = mCallbacks.get();
   NS_IF_ADDREF(*aNotificationCallbacks);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsIconChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks) {
+nsIconChannel::SetNotificationCallbacks(
+    nsIInterfaceRequestor* aNotificationCallbacks) {
   mCallbacks = aNotificationCallbacks;
   return NS_OK;
 }

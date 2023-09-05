@@ -56,12 +56,16 @@ void NativeKeyBindings::Shutdown() {
 
 NativeKeyBindings::NativeKeyBindings() {}
 
-inline objc_selector* ToObjcSelectorPtr(SEL aSel) { return reinterpret_cast<objc_selector*>(aSel); }
-#define SEL_TO_COMMAND(aSel, aCommand) \
-  mSelectorToCommand.InsertOrUpdate(ToObjcSelectorPtr(@selector(aSel)), aCommand)
+inline objc_selector* ToObjcSelectorPtr(SEL aSel) {
+  return reinterpret_cast<objc_selector*>(aSel);
+}
+#define SEL_TO_COMMAND(aSel, aCommand)                                  \
+  mSelectorToCommand.InsertOrUpdate(ToObjcSelectorPtr(@selector(aSel)), \
+                                    aCommand)
 
 void NativeKeyBindings::Init(NativeKeyBindingsType aType) {
-  MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info, ("%p NativeKeyBindings::Init", this));
+  MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
+          ("%p NativeKeyBindings::Init", this));
 
   // Many selectors have a one-to-one mapping to a Gecko command. Those mappings
   // are registered in mSelectorToCommand.
@@ -88,7 +92,8 @@ void NativeKeyBindings::Init(NativeKeyBindingsType aType) {
 
   // TODO: deleteTo* selectors are also supposed to add text to a kill buffer
   SEL_TO_COMMAND(deleteToBeginningOfLine:, Command::DeleteToBeginningOfLine);
-  SEL_TO_COMMAND(deleteToBeginningOfParagraph:, Command::DeleteToBeginningOfLine);
+  SEL_TO_COMMAND(deleteToBeginningOfParagraph:,
+                 Command::DeleteToBeginningOfLine);
   SEL_TO_COMMAND(deleteToEndOfLine:, Command::DeleteToEndOfLine);
   SEL_TO_COMMAND(deleteToEndOfParagraph:, Command::DeleteToEndOfLine);
   // SEL_TO_COMMAND(deleteToMark:, );
@@ -119,26 +124,34 @@ void NativeKeyBindings::Init(NativeKeyBindingsType aType) {
   SEL_TO_COMMAND(moveForwardAndModifySelection:, Command::SelectCharNext);
   SEL_TO_COMMAND(moveLeft:, Command::CharPrevious);
   SEL_TO_COMMAND(moveLeftAndModifySelection:, Command::SelectCharPrevious);
-  SEL_TO_COMMAND(moveParagraphBackwardAndModifySelection:, Command::SelectBeginLine);
-  SEL_TO_COMMAND(moveParagraphForwardAndModifySelection:, Command::SelectEndLine);
+  SEL_TO_COMMAND(moveParagraphBackwardAndModifySelection:,
+                 Command::SelectBeginLine);
+  SEL_TO_COMMAND(moveParagraphForwardAndModifySelection:,
+                 Command::SelectEndLine);
   SEL_TO_COMMAND(moveRight:, Command::CharNext);
   SEL_TO_COMMAND(moveRightAndModifySelection:, Command::SelectCharNext);
   SEL_TO_COMMAND(moveToBeginningOfDocument:, Command::MoveTop);
-  SEL_TO_COMMAND(moveToBeginningOfDocumentAndModifySelection:, Command::SelectTop);
+  SEL_TO_COMMAND(moveToBeginningOfDocumentAndModifySelection:,
+                 Command::SelectTop);
   SEL_TO_COMMAND(moveToBeginningOfLine:, Command::BeginLine);
-  SEL_TO_COMMAND(moveToBeginningOfLineAndModifySelection:, Command::SelectBeginLine);
+  SEL_TO_COMMAND(moveToBeginningOfLineAndModifySelection:,
+                 Command::SelectBeginLine);
   SEL_TO_COMMAND(moveToBeginningOfParagraph:, Command::BeginLine);
-  SEL_TO_COMMAND(moveToBeginningOfParagraphAndModifySelection:, Command::SelectBeginLine);
+  SEL_TO_COMMAND(moveToBeginningOfParagraphAndModifySelection:,
+                 Command::SelectBeginLine);
   SEL_TO_COMMAND(moveToEndOfDocument:, Command::MoveBottom);
   SEL_TO_COMMAND(moveToEndOfDocumentAndModifySelection:, Command::SelectBottom);
   SEL_TO_COMMAND(moveToEndOfLine:, Command::EndLine);
   SEL_TO_COMMAND(moveToEndOfLineAndModifySelection:, Command::SelectEndLine);
   SEL_TO_COMMAND(moveToEndOfParagraph:, Command::EndLine);
-  SEL_TO_COMMAND(moveToEndOfParagraphAndModifySelection:, Command::SelectEndLine);
+  SEL_TO_COMMAND(moveToEndOfParagraphAndModifySelection:,
+                 Command::SelectEndLine);
   SEL_TO_COMMAND(moveToLeftEndOfLine:, Command::BeginLine);
-  SEL_TO_COMMAND(moveToLeftEndOfLineAndModifySelection:, Command::SelectBeginLine);
+  SEL_TO_COMMAND(moveToLeftEndOfLineAndModifySelection:,
+                 Command::SelectBeginLine);
   SEL_TO_COMMAND(moveToRightEndOfLine:, Command::EndLine);
-  SEL_TO_COMMAND(moveToRightEndOfLineAndModifySelection:, Command::SelectEndLine);
+  SEL_TO_COMMAND(moveToRightEndOfLineAndModifySelection:,
+                 Command::SelectEndLine);
   if (aType == NativeKeyBindingsType::SingleLineEditor) {
     SEL_TO_COMMAND(moveUp:, Command::BeginLine);
   } else {
@@ -146,7 +159,8 @@ void NativeKeyBindings::Init(NativeKeyBindingsType aType) {
   }
   SEL_TO_COMMAND(moveUpAndModifySelection:, Command::SelectLinePrevious);
   SEL_TO_COMMAND(moveWordBackward:, Command::WordPrevious);
-  SEL_TO_COMMAND(moveWordBackwardAndModifySelection:, Command::SelectWordPrevious);
+  SEL_TO_COMMAND(moveWordBackwardAndModifySelection:,
+                 Command::SelectWordPrevious);
   SEL_TO_COMMAND(moveWordForward:, Command::WordNext);
   SEL_TO_COMMAND(moveWordForwardAndModifySelection:, Command::SelectWordNext);
   SEL_TO_COMMAND(moveWordLeft:, Command::WordPrevious);
@@ -191,7 +205,8 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
   MOZ_ASSERT(!aEvent.mFlags.mIsSynthesizedForTests);
   MOZ_ASSERT(aCommands.IsEmpty());
 
-  MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info, ("%p NativeKeyBindings::GetEditCommands", this));
+  MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
+          ("%p NativeKeyBindings::GetEditCommands", this));
 
   // Recover the current event, which should always be the key down we are
   // responding to.
@@ -200,7 +215,8 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
 
   if (!cocoaEvent || [cocoaEvent type] != NSEventTypeKeyDown) {
     MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-            ("%p NativeKeyBindings::GetEditCommands, no Cocoa key down event", this));
+            ("%p NativeKeyBindings::GetEditCommands, no Cocoa key down event",
+             this));
 
     return;
   }
@@ -210,7 +226,8 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
     NSEvent* originalEvent = cocoaEvent;
 
     // TODO: Use KeyNameIndex rather than legacy keyCode.
-    uint32_t remappedGeckoKeyCode = aEvent.GetRemappedKeyCode(aWritingMode.ref());
+    uint32_t remappedGeckoKeyCode =
+        aEvent.GetRemappedKeyCode(aWritingMode.ref());
     uint32_t remappedCocoaKeyCode = 0;
     switch (remappedGeckoKeyCode) {
       case NS_VK_UP:
@@ -229,8 +246,10 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
         MOZ_ASSERT_UNREACHABLE("Add a case for the new remapped key");
         return;
     }
-    unichar ch = nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(remappedGeckoKeyCode);
-    NSString* chars = [[[NSString alloc] initWithCharacters:&ch length:1] autorelease];
+    unichar ch =
+        nsCocoaUtils::ConvertGeckoKeyCodeToMacCharCode(remappedGeckoKeyCode);
+    NSString* chars = [[[NSString alloc] initWithCharacters:&ch
+                                                     length:1] autorelease];
     cocoaEvent = [NSEvent keyEventWithType:[originalEvent type]
                                   location:[originalEvent locationInWindow]
                              modifierFlags:[originalEvent modifierFlags]
@@ -272,11 +291,12 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
   LogEditCommands(aCommands, "NativeKeyBindings::GetEditCommands");
 }
 
-void NativeKeyBindings::AppendEditCommandsForSelector(objc_selector* aSelector,
-                                                      nsTArray<CommandInt>& aCommands) const {
+void NativeKeyBindings::AppendEditCommandsForSelector(
+    objc_selector* aSelector, nsTArray<CommandInt>& aCommands) const {
   // Try to find a simple mapping in the hashtable
   Command geckoCommand = Command::DoNothing;
-  if (mSelectorToCommand.Get(aSelector, &geckoCommand) && geckoCommand != Command::DoNothing) {
+  if (mSelectorToCommand.Get(aSelector, &geckoCommand) &&
+      geckoCommand != Command::DoNothing) {
     aCommands.AppendElement(static_cast<CommandInt>(geckoCommand));
   } else if (aSelector == ToObjcSelectorPtr(@selector(selectLine:))) {
     // This is functional, but Cocoa's version is direction-less in that
@@ -300,7 +320,8 @@ void NativeKeyBindings::LogEditCommands(const nsTArray<CommandInt>& aCommands,
   }
 
   if (aCommands.IsEmpty()) {
-    MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info, ("%p %s, no edit commands", this, aDescription));
+    MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
+            ("%p %s, no edit commands", this, aDescription));
     return;
   }
 
@@ -313,10 +334,9 @@ void NativeKeyBindings::LogEditCommands(const nsTArray<CommandInt>& aCommands,
 }
 
 // static
-void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
-                                                const WidgetKeyboardEvent& aEvent,
-                                                const Maybe<WritingMode>& aWritingMode,
-                                                nsTArray<CommandInt>& aCommands) {
+void NativeKeyBindings::GetEditCommandsForTests(
+    NativeKeyBindingsType aType, const WidgetKeyboardEvent& aEvent,
+    const Maybe<WritingMode>& aWritingMode, nsTArray<CommandInt>& aCommands) {
   MOZ_DIAGNOSTIC_ASSERT(aEvent.IsTrusted());
 
   // The following mapping is checked on Big Sur. Some of them are defined in:
@@ -325,8 +345,9 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
   if (NS_WARN_IF(!instance)) {
     return;
   }
-  switch (aWritingMode.isSome() ? aEvent.GetRemappedKeyNameIndex(aWritingMode.ref())
-                                : aEvent.mKeyNameIndex) {
+  switch (aWritingMode.isSome()
+              ? aEvent.GetRemappedKeyNameIndex(aWritingMode.ref())
+              : aEvent.mKeyNameIndex) {
     case KEY_NAME_INDEX_USE_STRING:
       if (!aEvent.IsControl() || aEvent.IsAlt() || aEvent.IsMeta()) {
         break;
@@ -337,21 +358,23 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
           instance->AppendEditCommandsForSelector(
               !aEvent.IsShift()
                   ? ToObjcSelectorPtr(@selector(moveToBeginningOfParagraph:))
-                  : ToObjcSelectorPtr(@selector(moveToBeginningOfParagraphAndModifySelection:)),
+                  : ToObjcSelectorPtr(@selector(
+                        moveToBeginningOfParagraphAndModifySelection:)),
               aCommands);
           break;
         case 'b':
         case 'B':
           instance->AppendEditCommandsForSelector(
               !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(moveBackward:))
-                                : ToObjcSelectorPtr(@selector(moveBackwardAndModifySelection:)),
+                                : ToObjcSelectorPtr(@selector(
+                                      moveBackwardAndModifySelection:)),
               aCommands);
           break;
         case 'd':
         case 'D':
           if (!aEvent.IsShift()) {
-            instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(deleteForward:)),
-                                                    aCommands);
+            instance->AppendEditCommandsForSelector(
+                ToObjcSelectorPtr(@selector(deleteForward:)), aCommands);
           }
           break;
         case 'e':
@@ -359,42 +382,47 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
           instance->AppendEditCommandsForSelector(
               !aEvent.IsShift()
                   ? ToObjcSelectorPtr(@selector(moveToEndOfParagraph:))
-                  : ToObjcSelectorPtr(@selector(moveToEndOfParagraphAndModifySelection:)),
+                  : ToObjcSelectorPtr(
+                        @selector(moveToEndOfParagraphAndModifySelection:)),
               aCommands);
           break;
         case 'f':
         case 'F':
           instance->AppendEditCommandsForSelector(
               !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(moveForward:))
-                                : ToObjcSelectorPtr(@selector(moveForwardAndModifySelection:)),
+                                : ToObjcSelectorPtr(@selector(
+                                      moveForwardAndModifySelection:)),
               aCommands);
           break;
         case 'h':
         case 'H':
           if (!aEvent.IsShift()) {
-            instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(deleteBackward:)),
-                                                    aCommands);
+            instance->AppendEditCommandsForSelector(
+                ToObjcSelectorPtr(@selector(deleteBackward:)), aCommands);
           }
           break;
         case 'k':
         case 'K':
           if (!aEvent.IsShift()) {
             instance->AppendEditCommandsForSelector(
-                ToObjcSelectorPtr(@selector(deleteToEndOfParagraph:)), aCommands);
+                ToObjcSelectorPtr(@selector(deleteToEndOfParagraph:)),
+                aCommands);
           }
           break;
         case 'n':
         case 'N':
           instance->AppendEditCommandsForSelector(
-              !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(moveDown:))
-                                : ToObjcSelectorPtr(@selector(moveDownAndModifySelection:)),
+              !aEvent.IsShift()
+                  ? ToObjcSelectorPtr(@selector(moveDown:))
+                  : ToObjcSelectorPtr(@selector(moveDownAndModifySelection:)),
               aCommands);
           break;
         case 'p':
         case 'P':
           instance->AppendEditCommandsForSelector(
-              !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(moveUp:))
-                                : ToObjcSelectorPtr(@selector(moveUpAndModifySelection:)),
+              !aEvent.IsShift()
+                  ? ToObjcSelectorPtr(@selector(moveUp:))
+                  : ToObjcSelectorPtr(@selector(moveUpAndModifySelection:)),
               aCommands);
           break;
         default:
@@ -413,21 +441,22 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
       }
       if (aEvent.IsAlt()) {
         // Shift and Control are ignored.
-        instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(deleteWordBackward:)),
-                                                aCommands);
+        instance->AppendEditCommandsForSelector(
+            ToObjcSelectorPtr(@selector(deleteWordBackward:)), aCommands);
         break;
       }
       if (aEvent.IsControl()) {
         if (aEvent.IsShift()) {
           instance->AppendEditCommandsForSelector(
-              ToObjcSelectorPtr(@selector(deleteBackwardByDecomposingPreviousCharacter:)),
+              ToObjcSelectorPtr(
+                  @selector(deleteBackwardByDecomposingPreviousCharacter:)),
               aCommands);
         }
         break;
       }
       // Shift is ignored.
-      instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(deleteBackward:)),
-                                              aCommands);
+      instance->AppendEditCommandsForSelector(
+          ToObjcSelectorPtr(@selector(deleteBackward:)), aCommands);
       break;
     case KEY_NAME_INDEX_Delete:
       if (aEvent.IsControl() || aEvent.IsMeta()) {
@@ -435,13 +464,13 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
       }
       if (aEvent.IsAlt()) {
         // Shift is ignored.
-        instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(deleteWordForward:)),
-                                                aCommands);
+        instance->AppendEditCommandsForSelector(
+            ToObjcSelectorPtr(@selector(deleteWordForward:)), aCommands);
         break;
       }
       // Shift is ignored.
-      instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(deleteForward:)),
-                                              aCommands);
+      instance->AppendEditCommandsForSelector(
+          ToObjcSelectorPtr(@selector(deleteForward:)), aCommands);
       break;
     case KEY_NAME_INDEX_PageDown:
       if (aEvent.IsControl() || aEvent.IsMeta()) {
@@ -449,12 +478,14 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
       }
       if (aEvent.IsAlt()) {
         // Shift is ignored.
-        instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(pageDown:)), aCommands);
+        instance->AppendEditCommandsForSelector(
+            ToObjcSelectorPtr(@selector(pageDown:)), aCommands);
         break;
       }
       instance->AppendEditCommandsForSelector(
-          !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(scrollPageDown:))
-                            : ToObjcSelectorPtr(@selector(pageDownAndModifySelection:)),
+          !aEvent.IsShift()
+              ? ToObjcSelectorPtr(@selector(scrollPageDown:))
+              : ToObjcSelectorPtr(@selector(pageDownAndModifySelection:)),
           aCommands);
       break;
     case KEY_NAME_INDEX_PageUp:
@@ -463,12 +494,14 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
       }
       if (aEvent.IsAlt()) {
         // Shift is ignored.
-        instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(pageUp:)), aCommands);
+        instance->AppendEditCommandsForSelector(
+            ToObjcSelectorPtr(@selector(pageUp:)), aCommands);
         break;
       }
       instance->AppendEditCommandsForSelector(
-          !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(scrollPageUp:))
-                            : ToObjcSelectorPtr(@selector(pageUpAndModifySelection:)),
+          !aEvent.IsShift()
+              ? ToObjcSelectorPtr(@selector(scrollPageUp:))
+              : ToObjcSelectorPtr(@selector(pageUpAndModifySelection:)),
           aCommands);
       break;
     case KEY_NAME_INDEX_Home:
@@ -478,7 +511,8 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
       instance->AppendEditCommandsForSelector(
           !aEvent.IsShift()
               ? ToObjcSelectorPtr(@selector(scrollToBeginningOfDocument:))
-              : ToObjcSelectorPtr(@selector(moveToBeginningOfDocumentAndModifySelection:)),
+              : ToObjcSelectorPtr(
+                    @selector(moveToBeginningOfDocumentAndModifySelection:)),
           aCommands);
       break;
     case KEY_NAME_INDEX_End:
@@ -486,8 +520,10 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
         break;
       }
       instance->AppendEditCommandsForSelector(
-          !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(scrollToEndOfDocument:))
-                            : ToObjcSelectorPtr(@selector(moveToEndOfDocumentAndModifySelection:)),
+          !aEvent.IsShift()
+              ? ToObjcSelectorPtr(@selector(scrollToEndOfDocument:))
+              : ToObjcSelectorPtr(@selector
+                                  (moveToEndOfDocumentAndModifySelection:)),
           aCommands);
       break;
     case KEY_NAME_INDEX_ArrowLeft:
@@ -498,7 +534,8 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
         instance->AppendEditCommandsForSelector(
             !aEvent.IsShift()
                 ? ToObjcSelectorPtr(@selector(moveToLeftEndOfLine:))
-                : ToObjcSelectorPtr(@selector(moveToLeftEndOfLineAndModifySelection:)),
+                : ToObjcSelectorPtr(@selector
+                                    (moveToLeftEndOfLineAndModifySelection:)),
             aCommands);
         break;
       }
@@ -506,8 +543,9 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
         break;
       }
       instance->AppendEditCommandsForSelector(
-          !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(moveLeft:))
-                            : ToObjcSelectorPtr(@selector(moveLeftAndModifySelection:)),
+          !aEvent.IsShift()
+              ? ToObjcSelectorPtr(@selector(moveLeft:))
+              : ToObjcSelectorPtr(@selector(moveLeftAndModifySelection:)),
           aCommands);
       break;
     case KEY_NAME_INDEX_ArrowRight:
@@ -518,7 +556,8 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
         instance->AppendEditCommandsForSelector(
             !aEvent.IsShift()
                 ? ToObjcSelectorPtr(@selector(moveToRightEndOfLine:))
-                : ToObjcSelectorPtr(@selector(moveToRightEndOfLineAndModifySelection:)),
+                : ToObjcSelectorPtr(@selector
+                                    (moveToRightEndOfLineAndModifySelection:)),
             aCommands);
         break;
       }
@@ -526,8 +565,9 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
         break;
       }
       instance->AppendEditCommandsForSelector(
-          !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(moveRight:))
-                            : ToObjcSelectorPtr(@selector(moveRightAndModifySelection:)),
+          !aEvent.IsShift()
+              ? ToObjcSelectorPtr(@selector(moveRight:))
+              : ToObjcSelectorPtr(@selector(moveRightAndModifySelection:)),
           aCommands);
       break;
     case KEY_NAME_INDEX_ArrowUp:
@@ -541,25 +581,30 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
         instance->AppendEditCommandsForSelector(
             !aEvent.IsShift()
                 ? ToObjcSelectorPtr(@selector(moveToBeginningOfDocument:))
-                : ToObjcSelectorPtr(@selector(moveToBegginingOfDocumentAndModifySelection:)),
+                : ToObjcSelectorPtr(
+                      @selector(moveToBegginingOfDocumentAndModifySelection:)),
             aCommands);
         break;
       }
       if (aEvent.IsAlt()) {
         if (!aEvent.IsShift()) {
-          instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(moveBackward:)),
-                                                  aCommands);
           instance->AppendEditCommandsForSelector(
-              ToObjcSelectorPtr(@selector(moveToBeginningOfParagraph:)), aCommands);
+              ToObjcSelectorPtr(@selector(moveBackward:)), aCommands);
+          instance->AppendEditCommandsForSelector(
+              ToObjcSelectorPtr(@selector(moveToBeginningOfParagraph:)),
+              aCommands);
           break;
         }
         instance->AppendEditCommandsForSelector(
-            ToObjcSelectorPtr(@selector(moveParagraphBackwardAndModifySelection:)), aCommands);
+            ToObjcSelectorPtr(@selector
+                              (moveParagraphBackwardAndModifySelection:)),
+            aCommands);
         break;
       }
       instance->AppendEditCommandsForSelector(
-          !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(moveUp:))
-                            : ToObjcSelectorPtr(@selector(moveUpAndModifySelection:)),
+          !aEvent.IsShift()
+              ? ToObjcSelectorPtr(@selector(moveUp:))
+              : ToObjcSelectorPtr(@selector(moveUpAndModifySelection:)),
           aCommands);
       break;
     case KEY_NAME_INDEX_ArrowDown:
@@ -573,32 +618,37 @@ void NativeKeyBindings::GetEditCommandsForTests(NativeKeyBindingsType aType,
         instance->AppendEditCommandsForSelector(
             !aEvent.IsShift()
                 ? ToObjcSelectorPtr(@selector(moveToEndOfDocument:))
-                : ToObjcSelectorPtr(@selector(moveToEndOfDocumentAndModifySelection:)),
+                : ToObjcSelectorPtr(@selector
+                                    (moveToEndOfDocumentAndModifySelection:)),
             aCommands);
         break;
       }
       if (aEvent.IsAlt()) {
         if (!aEvent.IsShift()) {
-          instance->AppendEditCommandsForSelector(ToObjcSelectorPtr(@selector(moveForward:)),
-                                                  aCommands);
+          instance->AppendEditCommandsForSelector(
+              ToObjcSelectorPtr(@selector(moveForward:)), aCommands);
           instance->AppendEditCommandsForSelector(
               ToObjcSelectorPtr(@selector(moveToEndOfParagraph:)), aCommands);
           break;
         }
         instance->AppendEditCommandsForSelector(
-            ToObjcSelectorPtr(@selector(moveParagraphForwardAndModifySelection:)), aCommands);
+            ToObjcSelectorPtr(@selector
+                              (moveParagraphForwardAndModifySelection:)),
+            aCommands);
         break;
       }
       instance->AppendEditCommandsForSelector(
-          !aEvent.IsShift() ? ToObjcSelectorPtr(@selector(moveDown:))
-                            : ToObjcSelectorPtr(@selector(moveDownAndModifySelection:)),
+          !aEvent.IsShift()
+              ? ToObjcSelectorPtr(@selector(moveDown:))
+              : ToObjcSelectorPtr(@selector(moveDownAndModifySelection:)),
           aCommands);
       break;
     default:
       break;
   }
 
-  instance->LogEditCommands(aCommands, "NativeKeyBindings::GetEditCommandsForTests");
+  instance->LogEditCommands(aCommands,
+                            "NativeKeyBindings::GetEditCommandsForTests");
 }
 
 }  // namespace widget

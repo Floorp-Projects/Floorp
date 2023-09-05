@@ -35,12 +35,15 @@ nsresult ReauthenticateUserMacOS(const nsAString& aPrompt,
           localizedReason:prompt
                     reply:^(BOOL success, NSError* error) {
                       dispatch_async(dispatch_get_main_queue(), ^{
-                        // error is not particularly useful in this context, and we have no
-                        // mechanism to really return it. We could use it to set the nsresult,
-                        // but this is a best-effort mechanism and there's no particular case for
-                        // propagating up XPCOM. The one exception being a user account that
-                        // has no passcode set, which we handle below.
-                        errorPasswordNotSet = error && [error code] == kPasswordNotSetErrorCode;
+                        // error is not particularly useful in this context, and
+                        // we have no mechanism to really return it. We could
+                        // use it to set the nsresult, but this is a best-effort
+                        // mechanism and there's no particular case for
+                        // propagating up XPCOM. The one exception being a user
+                        // account that has no passcode set, which we handle
+                        // below.
+                        errorPasswordNotSet =
+                            error && [error code] == kPasswordNotSetErrorCode;
                         biometricSuccess = success || errorPasswordNotSet;
                         dispatch_semaphore_signal(sema);
                       });

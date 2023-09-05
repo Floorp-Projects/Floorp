@@ -29,15 +29,18 @@
 using namespace mozilla;
 
 static const CLLocationAccuracy kHIGH_ACCURACY = kCLLocationAccuracyBest;
-static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTenMeters;
+static const CLLocationAccuracy kDEFAULT_ACCURACY =
+    kCLLocationAccuracyNearestTenMeters;
 
 @interface LocationDelegate : NSObject <CLLocationManagerDelegate> {
   CoreLocationLocationProvider* mProvider;
 }
 
 - (id)init:(CoreLocationLocationProvider*)aProvider;
-- (void)locationManager:(CLLocationManager*)aManager didFailWithError:(NSError*)aError;
-- (void)locationManager:(CLLocationManager*)aManager didUpdateLocations:(NSArray*)locations;
+- (void)locationManager:(CLLocationManager*)aManager
+       didFailWithError:(NSError*)aError;
+- (void)locationManager:(CLLocationManager*)aManager
+     didUpdateLocations:(NSArray*)locations;
 
 @end
 
@@ -50,28 +53,32 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
   return self;
 }
 
-- (void)locationManager:(CLLocationManager*)aManager didFailWithError:(NSError*)aError {
-  nsCOMPtr<nsIConsoleService> console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+- (void)locationManager:(CLLocationManager*)aManager
+       didFailWithError:(NSError*)aError {
+  nsCOMPtr<nsIConsoleService> console =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID);
 
   NS_ENSURE_TRUE_VOID(console);
 
-  NSString* message =
-      [@"Failed to acquire position: " stringByAppendingString:[aError localizedDescription]];
+  NSString* message = [@"Failed to acquire position: "
+      stringByAppendingString:[aError localizedDescription]];
 
   console->LogStringMessage(NS_ConvertUTF8toUTF16([message UTF8String]).get());
 
   if ([aError code] == kCLErrorDenied) {
-    mProvider->NotifyError(dom::GeolocationPositionError_Binding::PERMISSION_DENIED);
+    mProvider->NotifyError(
+        dom::GeolocationPositionError_Binding::PERMISSION_DENIED);
     return;
   }
 
-  // The CL provider does not fallback to GeoIP, so use NetworkGeolocationProvider for this.
-  // The concept here is: on error, hand off geolocation to MLS, which will then report
-  // back a location or error.
+  // The CL provider does not fallback to GeoIP, so use
+  // NetworkGeolocationProvider for this. The concept here is: on error, hand
+  // off geolocation to MLS, which will then report back a location or error.
   mProvider->CreateMLSFallbackProvider();
 }
 
-- (void)locationManager:(CLLocationManager*)aManager didUpdateLocations:(NSArray*)aLocations {
+- (void)locationManager:(CLLocationManager*)aManager
+     didUpdateLocations:(NSArray*)aLocations {
   if (aLocations.count < 1) {
     return;
   }
@@ -92,24 +99,29 @@ static const CLLocationAccuracy kDEFAULT_ACCURACY = kCLLocationAccuracyNearestTe
     altitudeAccuracy = UnspecifiedNaN<double>();
   }
 
-  double speed = location.speed >= 0 ? location.speed : UnspecifiedNaN<double>();
+  double speed =
+      location.speed >= 0 ? location.speed : UnspecifiedNaN<double>();
 
-  double heading = location.course >= 0 ? location.course : UnspecifiedNaN<double>();
+  double heading =
+      location.course >= 0 ? location.course : UnspecifiedNaN<double>();
 
   // nsGeoPositionCoords will convert NaNs to null for optional properties of
   // the JavaScript Coordinates object.
   nsCOMPtr<nsIDOMGeoPosition> geoPosition = new nsGeoPosition(
       location.coordinate.latitude, location.coordinate.longitude, altitude,
-      location.horizontalAccuracy, altitudeAccuracy, heading, speed, PR_Now() / PR_USEC_PER_MSEC);
+      location.horizontalAccuracy, altitudeAccuracy, heading, speed,
+      PR_Now() / PR_USEC_PER_MSEC);
 
   mProvider->Update(geoPosition);
   Telemetry::Accumulate(Telemetry::GEOLOCATION_OSX_SOURCE_IS_MLS, false);
 }
 @end
 
-NS_IMPL_ISUPPORTS(CoreLocationLocationProvider::MLSUpdate, nsIGeolocationUpdate);
+NS_IMPL_ISUPPORTS(CoreLocationLocationProvider::MLSUpdate,
+                  nsIGeolocationUpdate);
 
-CoreLocationLocationProvider::MLSUpdate::MLSUpdate(CoreLocationLocationProvider& parentProvider)
+CoreLocationLocationProvider::MLSUpdate::MLSUpdate(
+    CoreLocationLocationProvider& parentProvider)
     : mParentLocationProvider(parentProvider) {}
 
 NS_IMETHODIMP
@@ -175,7 +187,8 @@ CoreLocationLocationProvider::Startup() {
     mCLObjects = clObjs.release();
   }
 
-  // Must be stopped before starting or response (success or failure) is not guaranteed
+  // Must be stopped before starting or response (success or failure) is not
+  // guaranteed
   [mCLObjects->mLocationManager stopUpdatingLocation];
   [mCLObjects->mLocationManager startUpdatingLocation];
   return NS_OK;
@@ -212,7 +225,8 @@ NS_IMETHODIMP
 CoreLocationLocationProvider::SetHighAccuracy(bool aEnable) {
   NS_ENSURE_STATE(mCLObjects);
 
-  mCLObjects->mLocationManager.desiredAccuracy = (aEnable ? kHIGH_ACCURACY : kDEFAULT_ACCURACY);
+  mCLObjects->mLocationManager.desiredAccuracy =
+      (aEnable ? kHIGH_ACCURACY : kDEFAULT_ACCURACY);
 
   return NS_OK;
 }

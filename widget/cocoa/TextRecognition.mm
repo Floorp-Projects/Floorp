@@ -18,7 +18,8 @@
 namespace mozilla::widget {
 
 auto TextRecognition::DoFindText(gfx::DataSourceSurface& aSurface,
-                                 const nsTArray<nsCString>& aLanguages) -> RefPtr<NativePromise> {
+                                 const nsTArray<nsCString>& aLanguages)
+    -> RefPtr<NativePromise> {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK
 
   // TODO - Is this the most efficient path? Maybe we can write a new
@@ -26,7 +27,8 @@ auto TextRecognition::DoFindText(gfx::DataSourceSurface& aSurface,
   CGImageRef imageRef = NULL;
   nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(&aSurface, &imageRef);
   if (NS_FAILED(rv) || !imageRef) {
-    return NativePromise::CreateAndReject("Failed to create CGImage"_ns, __func__);
+    return NativePromise::CreateAndReject("Failed to create CGImage"_ns,
+                                          __func__);
   }
 
   auto promise = MakeRefPtr<NativePromise::Private>(__func__);
@@ -48,47 +50,63 @@ auto TextRecognition::DoFindText(gfx::DataSourceSurface& aSurface,
             dom::TextRecognitionResult result;
             dom::TextRecognitionResult* pResult = &result;
 
-            // Define the request to use, which also handles the result. It will be run below
-            // directly in this thread. After creating this request.
-            VNRecognizeTextRequest* textRecognitionRequest = [[VNRecognizeTextRequest alloc]
-                initWithCompletionHandler:^(VNRequest* _Nonnull request, NSError* _Nullable error) {
-                  NSArray<VNRecognizedTextObservation*>* observations = request.results;
+            // Define the request to use, which also handles the result. It will
+            // be run below directly in this thread. After creating this
+            // request.
+            VNRecognizeTextRequest* textRecognitionRequest =
+                [[VNRecognizeTextRequest alloc] initWithCompletionHandler:^(
+                                                    VNRequest* _Nonnull request,
+                                                    NSError* _Nullable error) {
+                  NSArray<VNRecognizedTextObservation*>* observations =
+                      request.results;
 
-                  [observations
-                      enumerateObjectsUsingBlock:^(VNRecognizedTextObservation* _Nonnull obj,
-                                                   NSUInteger idx, BOOL* _Nonnull stop) {
-                        // Requests the n top candidates for a recognized text string.
-                        VNRecognizedText* recognizedText = [obj topCandidates:1].firstObject;
+                  [observations enumerateObjectsUsingBlock:^(
+                                    VNRecognizedTextObservation* _Nonnull obj,
+                                    NSUInteger idx, BOOL* _Nonnull stop) {
+                    // Requests the n top candidates for a recognized text
+                    // string.
+                    VNRecognizedText* recognizedText =
+                        [obj topCandidates:1].firstObject;
 
-                        // https://developer.apple.com/documentation/vision/vnrecognizedtext?language=objc
-                        auto& quad = *pResult->quads().AppendElement();
-                        CopyCocoaStringToXPCOMString(recognizedText.string, quad.string());
-                        quad.confidence() = recognizedText.confidence;
+                    // https://developer.apple.com/documentation/vision/vnrecognizedtext?language=objc
+                    auto& quad = *pResult->quads().AppendElement();
+                    CopyCocoaStringToXPCOMString(recognizedText.string,
+                                                 quad.string());
+                    quad.confidence() = recognizedText.confidence;
 
-                        auto ToImagePoint = [](CGPoint aPoint) -> ImagePoint {
-                          return {static_cast<float>(aPoint.x), static_cast<float>(aPoint.y)};
-                        };
-                        *quad.points().AppendElement() = ToImagePoint(obj.bottomLeft);
-                        *quad.points().AppendElement() = ToImagePoint(obj.topLeft);
-                        *quad.points().AppendElement() = ToImagePoint(obj.topRight);
-                        *quad.points().AppendElement() = ToImagePoint(obj.bottomRight);
-                      }];
+                    auto ToImagePoint = [](CGPoint aPoint) -> ImagePoint {
+                      return {static_cast<float>(aPoint.x),
+                              static_cast<float>(aPoint.y)};
+                    };
+                    *quad.points().AppendElement() =
+                        ToImagePoint(obj.bottomLeft);
+                    *quad.points().AppendElement() = ToImagePoint(obj.topLeft);
+                    *quad.points().AppendElement() = ToImagePoint(obj.topRight);
+                    *quad.points().AppendElement() =
+                        ToImagePoint(obj.bottomRight);
+                  }];
                 }];
 
-            textRecognitionRequest.recognitionLevel = VNRequestTextRecognitionLevelAccurate;
+            textRecognitionRequest.recognitionLevel =
+                VNRequestTextRecognitionLevelAccurate;
             textRecognitionRequest.recognitionLanguages = recognitionLanguages;
             textRecognitionRequest.usesLanguageCorrection = true;
 
-            // Send out the request. This blocks execution of this thread with an expensive
-            // CPU call.
+            // Send out the request. This blocks execution of this thread with
+            // an expensive CPU call.
             NSError* error = nil;
             VNImageRequestHandler* requestHandler =
-                [[[VNImageRequestHandler alloc] initWithCGImage:imageRef options:@{}] autorelease];
+                [[[VNImageRequestHandler alloc] initWithCGImage:imageRef
+                                                        options:@{}]
+                    autorelease];
 
-            [requestHandler performRequests:@[ textRecognitionRequest ] error:&error];
+            [requestHandler performRequests:@[ textRecognitionRequest ]
+                                      error:&error];
             if (error != nil) {
               promise->Reject(
-                  nsPrintfCString("Failed to perform text recognition request (%ld)\n", error.code),
+                  nsPrintfCString(
+                      "Failed to perform text recognition request (%ld)\n",
+                      error.code),
                   __func__);
             } else {
               promise->Resolve(std::move(result), __func__);

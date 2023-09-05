@@ -80,20 +80,21 @@ typedef struct sensorSpec {
 //
 // These values came from SeisMaCalibrate calibration reports. In general I've
 // found the following:
-//	- All Intel-based SMSs have 250 counts per g, centered on 0, but the signs
-//		are different (and in one case two axes are swapped)
+//	- All Intel-based SMSs have 250 counts per g, centered on 0, but the
+// signs 		are different (and in one case two axes are swapped)
 //	- PowerBooks and iBooks all have sensors centered on 0, and reading
 //		50-53 steps per gravity (but with differing polarities!)
-//	- PowerBooks and iBooks of the same model all have the same axis polarities
+//	- PowerBooks and iBooks of the same model all have the same axis
+// polarities
 //	- PowerBook and iBook access methods are model- and OS version-specific
 //
 // So, the sequence of tests is:
-//	- Try model-specific access methods. Note that the test is for a match to the
-//		beginning of the model name, e.g. the record with model name "MacBook"
-//		matches computer models "MacBookPro1,2" and "MacBook1,1" (and ""
+//	- Try model-specific access methods. Note that the test is for a match
+// to the 		beginning of the model name, e.g. the record with model name
+// "MacBook" 		matches computer models "MacBookPro1,2" and "MacBook1,1" (and ""
 //		matches any model).
-//	- If no model-specific record's access fails, then try each model-independent
-//		access method in order, stopping when one works.
+//	- If no model-specific record's access fails, then try each
+// model-independent 		access method in order, stopping when one works.
 static const sensorSpec sensors[] = {
     // ****** Model-dependent methods ******
     // The PowerBook5,6 is one of the G4 models that seems to lose
@@ -142,7 +143,8 @@ static const sensorSpec sensors[] = {
      5,
      40,
      {{1, 0, 2, 0, 251}, {1, 2, 2, 0, -251}, {1, 4, 2, 0, -251}}},
-    // MacBook Pro Core 2 Duo 15" AND 17" with LED backlight, introduced June '07.
+    // MacBook Pro Core 2 Duo 15" AND 17" with LED backlight, introduced June
+    // '07.
     // NOTE! The 17" machines have the signs of their X and Y axes reversed
     // from this calibration, but there's no clear way to discriminate between
     // the two machines.
@@ -169,7 +171,8 @@ static const sensorSpec sensors[] = {
      5,
      40,
      {{1, 0, 2, 0, -251}, {1, 2, 2, 0, -251}, {1, 4, 2, 0, 251}}},
-    // This is speculative, based on a single user's report. Looks like the X and Y axes
+    // This is speculative, based on a single user's report. Looks like the X
+    // and Y axes
     // are swapped. This is true for no other known Appple laptop.
     {"MacBookPro5,3",
      "SMCMotionSensor",
@@ -185,10 +188,18 @@ static const sensorSpec sensors[] = {
     // ****** Model-independent methods ******
     // Seen once with PowerBook6,8 under system 10.3.9; I suspect
     // other G4-based 10.3.* systems might use this
-    {"", "IOI2CMotionSensor", 24, 60, {{1, 0, 1, 0, 51.5}, {1, 1, 1, 0, 51.5}, {1, 2, 1, 0, 51.5}}},
+    {"",
+     "IOI2CMotionSensor",
+     24,
+     60,
+     {{1, 0, 1, 0, 51.5}, {1, 1, 1, 0, 51.5}, {1, 2, 1, 0, 51.5}}},
     // PowerBook5,6 , PowerBook5,7 , PowerBook6,7 , PowerBook6,8
     // under OS X 10.4.*
-    {"", "IOI2CMotionSensor", 21, 60, {{1, 0, 1, 0, 51.5}, {1, 1, 1, 0, 51.5}, {1, 2, 1, 0, 51.5}}},
+    {"",
+     "IOI2CMotionSensor",
+     21,
+     60,
+     {{1, 0, 1, 0, 51.5}, {1, 1, 1, 0, 51.5}, {1, 2, 1, 0, 51.5}}},
     // PowerBook5,8 , PowerBook5,9 under OS X 10.4.*
     {"",
      "PMUMotionSensor",
@@ -200,9 +211,11 @@ static const sensorSpec sensors[] = {
       {1, 0, 1, 0, -51.5},
       {1, 1, 1, -6, -51.5},
       {1, 2, 1, 0, -51.5}}},
-    // All MacBook, MacBookPro models. Hardware (at least on early MacBookPro 15")
+    // All MacBook, MacBookPro models. Hardware (at least on early MacBookPro
+    // 15")
     // is Kionix KXM52-1050 three-axis accelerometer chip. Data is at
-    // http://kionix.com/Product-Index/product-index.htm. Specific MB and MBP models
+    // http://kionix.com/Product-Index/product-index.htm. Specific MB and MBP
+    // models
     // that use this are:
     //		MacBook1,1
     //		MacBook2,1
@@ -215,13 +228,18 @@ static const sensorSpec sensors[] = {
     //		MacBookPro1,2
     //		MacBookPro4,1
     //		MacBookPro5,5
-    {"", "SMCMotionSensor", 5, 40, {{1, 0, 2, 0, 251}, {1, 2, 2, 0, 251}, {1, 4, 2, 0, 251}}}};
+    {"",
+     "SMCMotionSensor",
+     5,
+     40,
+     {{1, 0, 2, 0, 251}, {1, 2, 2, 0, 251}, {1, 4, 2, 0, 251}}}};
 
 #define SENSOR_COUNT (sizeof(sensors) / sizeof(sensorSpec))
 
 #pragma mark Internal prototypes
 
-static int getData(sms_acceleration* accel, int calibrated, id logObject, SEL logSelector);
+static int getData(sms_acceleration* accel, int calibrated, id logObject,
+                   SEL logSelector);
 static float getAxis(int which, int calibrated);
 static int signExtend(int value, int size);
 static NSString* getModelName(void);
@@ -259,7 +277,8 @@ static float onegs[3];              // X, Y and Z one-g calibration values
 // Name of configuration for given axis' zero (axis specified by integer)
 #define ZERO_NAME(a) [NSString stringWithFormat:@"%@-Axis-Zero", INT_TO_AXIS(a)]
 // Name of configuration for given axis' oneg (axis specified by integer)
-#define ONEG_NAME(a) [NSString stringWithFormat:@"%@-Axis-One-g", INT_TO_AXIS(a)]
+#define ONEG_NAME(a) \
+  [NSString stringWithFormat:@"%@-Axis-One-g", INT_TO_AXIS(a)]
 // Name of "Is calibrated" preference
 #define CALIBRATED_NAME (@"Calibrated")
 // Application domain for SeisMac library
@@ -271,19 +290,22 @@ static float onegs[3];              // X, Y and Z one-g calibration values
   if (logObject) {                                              \
     [logObject performSelector:logSelector withObject:message]; \
   }
-#define LOG_ARG(format, var1)                                                                    \
-  if (logObject) {                                                                               \
-    [logObject performSelector:logSelector withObject:[NSString stringWithFormat:format, var1]]; \
+#define LOG_ARG(format, var1)                                             \
+  if (logObject) {                                                        \
+    [logObject performSelector:logSelector                                \
+                    withObject:[NSString stringWithFormat:format, var1]]; \
   }
-#define LOG_2ARG(format, var1, var2)                                            \
-  if (logObject) {                                                              \
-    [logObject performSelector:logSelector                                      \
-                    withObject:[NSString stringWithFormat:format, var1, var2]]; \
+#define LOG_2ARG(format, var1, var2)                                     \
+  if (logObject) {                                                       \
+    [logObject                                                           \
+        performSelector:logSelector                                      \
+             withObject:[NSString stringWithFormat:format, var1, var2]]; \
   }
-#define LOG_3ARG(format, var1, var2, var3)                                            \
-  if (logObject) {                                                                    \
-    [logObject performSelector:logSelector                                            \
-                    withObject:[NSString stringWithFormat:format, var1, var2, var3]]; \
+#define LOG_3ARG(format, var1, var2, var3)                                     \
+  if (logObject) {                                                             \
+    [logObject                                                                 \
+        performSelector:logSelector                                            \
+             withObject:[NSString stringWithFormat:format, var1, var2, var3]]; \
   }
 
 #pragma mark Function definitions
@@ -322,11 +344,12 @@ int smsStartup(id logObject, SEL logSelector) {
     recordSize = sensors[sensorNum].recordSize;
     function = sensors[sensorNum].function;
 
-    LOG_3ARG(@"Trying service \"%s\" with selector %d and %d byte record:\n", serviceName, function,
-             recordSize);
+    LOG_3ARG(@"Trying service \"%s\" with selector %d and %d byte record:\n",
+             serviceName, function, recordSize);
 
-    NSString* targetName = [NSString stringWithCString:sensors[sensorNum].model
-                                              encoding:NSMacOSRomanStringEncoding];
+    NSString* targetName =
+        [NSString stringWithCString:sensors[sensorNum].model
+                           encoding:NSMacOSRomanStringEncoding];
     LOG_ARG(@"    Comparing model name to target \"%@\": ", targetName);
     if ([targetName length] == 0 || [modelName hasPrefix:targetName]) {
       LOG(@"success.\n");
@@ -350,7 +373,8 @@ int smsStartup(id logObject, SEL logSelector) {
     }
 
     LOG(@"    Getting list of matching services: ");
-    result = IOServiceGetMatchingServices(kIOMasterPortDefault, dict, &iterator);
+    result =
+        IOServiceGetMatchingServices(kIOMasterPortDefault, dict, &iterator);
 
     if (result == KERN_SUCCESS) {
       LOG(@"success.\n");
@@ -386,7 +410,9 @@ int smsStartup(id logObject, SEL logSelector) {
       }
       continue;
     } else if (connection == 0) {
-      LOG_ARG(@"'success', but didn't get a connection (return value was: 0x%x).\n", result);
+      LOG_ARG(
+          @"'success', but didn't get a connection (return value was: 0x%x).\n",
+          result);
       IOObjectRelease(device);
       if (failure_result < SMS_FAIL_CONNECTION) {
         failure_result = SMS_FAIL_CONNECTION;
@@ -551,14 +577,15 @@ void smsGetBufferData(char* buffer) {
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
   const size_t InStructSize = recordSize;
   size_t OutStructSize = recordSize;
-  result =
-      IOConnectCallStructMethod(connection,
-                                function,  // magic kernel function number
-                                (const void*)iRecord, InStructSize, (void*)buffer, &OutStructSize);
+  result = IOConnectCallStructMethod(connection,
+                                     function,  // magic kernel function number
+                                     (const void*)iRecord, InStructSize,
+                                     (void*)buffer, &OutStructSize);
 #else   // __MAC_OS_X_VERSION_MIN_REQUIRED 1050
-  result = IOConnectMethodStructureIStructureO(connection,
-                                               function,  // magic kernel function number
-                                               iSize, &oSize, iRecord, buffer);
+  result = IOConnectMethodStructureIStructureO(
+      connection,
+      function,  // magic kernel function number
+      iSize, &oSize, iRecord, buffer);
 #endif  // __MAC_OS_X_VERSION_MIN_REQUIRED 1050
 
   if (result != KERN_SUCCESS) {
@@ -580,9 +607,10 @@ NSString* smsGetCalibrationDescription(void) {
   [s appendString:@"---- SeisMac Calibration Record ----\n \n"];
   [s appendFormat:@"Machine model: %@\n", getModelName()];
   [s appendFormat:@"OS X build: %@\n", getOSVersion()];
-  [s appendFormat:@"SeisMacLib version %s, record %d\n \n", SMSLIB_VERSION, sensorNum];
-  [s appendFormat:@"Using service \"%s\", function index %d, size %d\n \n", serviceName, function,
-                  recordSize];
+  [s appendFormat:@"SeisMacLib version %s, record %d\n \n", SMSLIB_VERSION,
+                  sensorNum];
+  [s appendFormat:@"Using service \"%s\", function index %d, size %d\n \n",
+                  serviceName, function, recordSize];
   if (prefIntRead(CALIBRATED_NAME, &success) && success) {
     [s appendString:@"Calibration values (from calibration):\n"];
   } else {
@@ -670,7 +698,8 @@ static void deleteCalibration(void) {
 static float prefFloatRead(NSString* prefName, BOOL* success) {
   float result = 0.0f;
 
-  CFPropertyListRef ref = CFPreferencesCopyAppValue((CFStringRef)prefName, APP_ID);
+  CFPropertyListRef ref =
+      CFPreferencesCopyAppValue((CFStringRef)prefName, APP_ID);
   // If there isn't such a preference, fail
   if (ref == NULL) {
     *success = NO;
@@ -682,7 +711,8 @@ static float prefFloatRead(NSString* prefName, BOOL* success) {
     // Is it a floating point number?
     if (CFNumberIsFloatType((CFNumberRef)ref)) {
       // Yup: grab it.
-      *success = CFNumberGetValue((__CFNumber*)ref, kCFNumberFloat32Type, &result);
+      *success =
+          CFNumberGetValue((__CFNumber*)ref, kCFNumberFloat32Type, &result);
     } else {
       // Nope: grab as an integer, and convert to a float.
       long num;
@@ -707,7 +737,8 @@ static float prefFloatRead(NSString* prefName, BOOL* success) {
 
 // Writes a named floating point value to the stored preferences.
 static void prefFloatWrite(NSString* prefName, float prefValue) {
-  CFNumberRef cfFloat = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &prefValue);
+  CFNumberRef cfFloat =
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType, &prefValue);
   CFPreferencesSetAppValue((CFStringRef)prefName, cfFloat, APP_ID);
   CFRelease(cfFloat);
 }
@@ -715,7 +746,8 @@ static void prefFloatWrite(NSString* prefName, float prefValue) {
 // Reads a named integer value from the stored preferences.
 static int prefIntRead(NSString* prefName, BOOL* success) {
   Boolean internalSuccess;
-  CFIndex result = CFPreferencesGetAppIntegerValue((CFStringRef)prefName, APP_ID, &internalSuccess);
+  CFIndex result = CFPreferencesGetAppIntegerValue((CFStringRef)prefName,
+                                                   APP_ID, &internalSuccess);
   *success = internalSuccess;
 
   return result;
@@ -723,7 +755,8 @@ static int prefIntRead(NSString* prefName, BOOL* success) {
 
 // Writes a named integer value to the stored preferences.
 static void prefIntWrite(NSString* prefName, int prefValue) {
-  CFPreferencesSetAppValue((CFStringRef)prefName, (CFNumberRef)[NSNumber numberWithInt:prefValue],
+  CFPreferencesSetAppValue((CFStringRef)prefName,
+                           (CFNumberRef)[NSNumber numberWithInt:prefValue],
                            APP_ID);
 }
 
@@ -736,7 +769,8 @@ static void prefDelete(NSString* prefName) {
 static void prefSynchronize(void) { CFPreferencesAppSynchronize(APP_ID); }
 
 // Internal version of accelGetData, with logging
-int getData(sms_acceleration* accel, int calibrated, id logObject, SEL logSelector) {
+int getData(sms_acceleration* accel, int calibrated, id logObject,
+            SEL logSelector) {
   IOItemCount iSize = recordSize;
   IOByteCount oSize = recordSize;
   kern_return_t result;
@@ -754,14 +788,15 @@ int getData(sms_acceleration* accel, int calibrated, id logObject, SEL logSelect
 #if __MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
   const size_t InStructSize = recordSize;
   size_t OutStructSize = recordSize;
-  result =
-      IOConnectCallStructMethod(connection,
-                                function,  // magic kernel function number
-                                (const void*)iRecord, InStructSize, (void*)oRecord, &OutStructSize);
+  result = IOConnectCallStructMethod(connection,
+                                     function,  // magic kernel function number
+                                     (const void*)iRecord, InStructSize,
+                                     (void*)oRecord, &OutStructSize);
 #else   // __MAC_OS_X_VERSION_MIN_REQUIRED 1050
-  result = IOConnectMethodStructureIStructureO(connection,
-                                               function,  // magic kernel function number
-                                               iSize, &oSize, iRecord, oRecord);
+  result = IOConnectMethodStructureIStructureO(
+      connection,
+      function,  // magic kernel function number
+      iSize, &oSize, iRecord, oRecord);
 #endif  // __MAC_OS_X_VERSION_MIN_REQUIRED 1050
 
   if (result != KERN_SUCCESS) {
@@ -845,11 +880,13 @@ NSString* getModelName(void) {
 
 // Returns the current OS X version and build (e.g. "10.4.7 (build 8J2135a)")
 NSString* getOSVersion(void) {
-  NSDictionary* dict = [NSDictionary
-      dictionaryWithContentsOfFile:@"/System/Library/CoreServices/SystemVersion.plist"];
+  NSDictionary* dict =
+      [NSDictionary dictionaryWithContentsOfFile:
+                        @"/System/Library/CoreServices/SystemVersion.plist"];
   NSString* versionString = [dict objectForKey:@"ProductVersion"];
   NSString* buildString = [dict objectForKey:@"ProductBuildVersion"];
-  NSString* wholeString = [NSString stringWithFormat:@"%@ (build %@)", versionString, buildString];
+  NSString* wholeString =
+      [NSString stringWithFormat:@"%@ (build %@)", versionString, buildString];
   return wholeString;
 }
 

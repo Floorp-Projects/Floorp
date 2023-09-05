@@ -10,7 +10,7 @@
 #include "nsIURI.h"
 
 NS_IMETHODIMP
-nsLocalHandlerAppUIKit::LaunchWithURI(nsIURI* aURI,
-                                      mozilla::dom::BrowsingContext* aBrowsingContext) {
+nsLocalHandlerAppUIKit::LaunchWithURI(
+    nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

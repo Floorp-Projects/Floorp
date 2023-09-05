@@ -16,27 +16,29 @@ using namespace mozilla;
 @interface MOZVibrantView : NSVisualEffectView {
   VibrancyType mType;
 }
-- (instancetype)initWithFrame:(NSRect)aRect vibrancyType:(VibrancyType)aVibrancyType;
+- (instancetype)initWithFrame:(NSRect)aRect
+                 vibrancyType:(VibrancyType)aVibrancyType;
 @end
 
 @interface MOZVibrantLeafView : MOZVibrantView
 @end
 
-static NSVisualEffectState VisualEffectStateForVibrancyType(VibrancyType aType) {
+static NSVisualEffectState VisualEffectStateForVibrancyType(
+    VibrancyType aType) {
   switch (aType) {
     case VibrancyType::TOOLTIP:
     case VibrancyType::MENU:
     case VibrancyType::HIGHLIGHTED_MENUITEM:
-      // Tooltip and menu windows are never "key", so we need to tell the vibrancy effect to look
-      // active regardless of window state.
+      // Tooltip and menu windows are never "key", so we need to tell the
+      // vibrancy effect to look active regardless of window state.
       return NSVisualEffectStateActive;
     default:
       return NSVisualEffectStateFollowsWindowActiveState;
   }
 }
 
-static NSVisualEffectMaterial VisualEffectMaterialForVibrancyType(VibrancyType aType,
-                                                                  BOOL* aOutIsEmphasized) {
+static NSVisualEffectMaterial VisualEffectMaterialForVibrancyType(
+    VibrancyType aType, BOOL* aOutIsEmphasized) {
   switch (aType) {
     case VibrancyType::TOOLTIP:
       return (NSVisualEffectMaterial)NSVisualEffectMaterialToolTip;
@@ -90,8 +92,8 @@ static NSVisualEffectMaterial VisualEffectMaterialForVibrancyType(VibrancyType a
 
 @end
 
-bool VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
-                                          const LayoutDeviceIntRegion& aRegion) {
+bool VibrancyManager::UpdateVibrantRegion(
+    VibrancyType aType, const LayoutDeviceIntRegion& aRegion) {
   if (aRegion.IsEmpty()) {
     return mVibrantRegions.Remove(uint32_t(aType));
   }
@@ -109,7 +111,10 @@ LayoutDeviceIntRegion VibrancyManager::GetUnionOfVibrantRegions() const {
   return result;
 }
 
-/* static */ NSView* VibrancyManager::CreateEffectView(VibrancyType aType, BOOL aIsContainer) {
-  return aIsContainer ? [[MOZVibrantView alloc] initWithFrame:NSZeroRect vibrancyType:aType]
-                      : [[MOZVibrantLeafView alloc] initWithFrame:NSZeroRect vibrancyType:aType];
+/* static */ NSView* VibrancyManager::CreateEffectView(VibrancyType aType,
+                                                       BOOL aIsContainer) {
+  return aIsContainer ? [[MOZVibrantView alloc] initWithFrame:NSZeroRect
+                                                 vibrancyType:aType]
+                      : [[MOZVibrantLeafView alloc] initWithFrame:NSZeroRect
+                                                     vibrancyType:aType];
 }

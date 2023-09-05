@@ -96,25 +96,30 @@ nsColorPicker::~nsColorPicker() {
 // TODO(bug 1805397): Implement default colors
 NS_IMETHODIMP
 nsColorPicker::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                    const nsAString& aInitialColor, const nsTArray<nsString>& aDefaultColors) {
-  MOZ_ASSERT(NS_IsMainThread(), "Color pickers can only be opened from main thread currently");
+                    const nsAString& aInitialColor,
+                    const nsTArray<nsString>& aDefaultColors) {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Color pickers can only be opened from main thread currently");
   mTitle = aTitle;
   mColor = aInitialColor;
   mColorPanelWrapper = [[NSColorPanelWrapper alloc] initWithPicker:this];
   return NS_OK;
 }
 
-/* static */ NSColor* nsColorPicker::GetNSColorFromHexString(const nsAString& aColor) {
+/* static */ NSColor* nsColorPicker::GetNSColorFromHexString(
+    const nsAString& aColor) {
   NSString* str = nsCocoaUtils::ToNSString(aColor);
 
   double red = HexStrToInt([str substringWithRange:NSMakeRange(1, 2)]) / 255.0;
-  double green = HexStrToInt([str substringWithRange:NSMakeRange(3, 2)]) / 255.0;
+  double green =
+      HexStrToInt([str substringWithRange:NSMakeRange(3, 2)]) / 255.0;
   double blue = HexStrToInt([str substringWithRange:NSMakeRange(5, 2)]) / 255.0;
 
   return [NSColor colorWithDeviceRed:red green:green blue:blue alpha:1.0];
 }
 
-/* static */ void nsColorPicker::GetHexStringFromNSColor(NSColor* aColor, nsAString& aResult) {
+/* static */ void nsColorPicker::GetHexStringFromNSColor(NSColor* aColor,
+                                                         nsAString& aResult) {
   CGFloat redFloat, greenFloat, blueFloat;
 
   NSColor* color = aColor;
@@ -126,7 +131,8 @@ nsColorPicker::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
   }
 
   nsCocoaUtils::GetStringForNSString(
-      [NSString stringWithFormat:@"#%02x%02x%02x", (int)(redFloat * 255), (int)(greenFloat * 255),
+      [NSString stringWithFormat:@"#%02x%02x%02x", (int)(redFloat * 255),
+                                 (int)(greenFloat * 255),
                                  (int)(blueFloat * 255)],
       aResult);
 }
@@ -136,7 +142,8 @@ nsColorPicker::Open(nsIColorPickerShownCallback* aCallback) {
   MOZ_ASSERT(aCallback);
   mCallback = aCallback;
 
-  [mColorPanelWrapper open:GetNSColorFromHexString(mColor) title:nsCocoaUtils::ToNSString(mTitle)];
+  [mColorPanelWrapper open:GetNSColorFromHexString(mColor)
+                     title:nsCocoaUtils::ToNSString(mTitle)];
 
   NS_ADDREF_THIS();
 

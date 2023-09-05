@@ -62,7 +62,8 @@
 
   if (!inWindow || [self dataForWindow:inWindow]) return;
 
-  TopLevelWindowData* windowData = [[TopLevelWindowData alloc] initWithWindow:inWindow];
+  TopLevelWindowData* windowData =
+      [[TopLevelWindowData alloc] initWithWindow:inWindow];
   [self setData:windowData forWindow:inWindow];  // takes ownership
   [windowData release];
 
@@ -114,30 +115,35 @@
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   if ((self = [super init])) {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(windowBecameKey:)
-                                                 name:NSWindowDidBecomeKeyNotification
-                                               object:inWindow];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(windowBecameKey:)
+               name:NSWindowDidBecomeKeyNotification
+             object:inWindow];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(windowResignedKey:)
-                                                 name:NSWindowDidResignKeyNotification
-                                               object:inWindow];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(windowResignedKey:)
+               name:NSWindowDidResignKeyNotification
+             object:inWindow];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(windowBecameMain:)
-                                                 name:NSWindowDidBecomeMainNotification
-                                               object:inWindow];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(windowBecameMain:)
+               name:NSWindowDidBecomeMainNotification
+             object:inWindow];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(windowResignedMain:)
-                                                 name:NSWindowDidResignMainNotification
-                                               object:inWindow];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(windowResignedMain:)
+               name:NSWindowDidResignMainNotification
+             object:inWindow];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(windowWillClose:)
-                                                 name:NSWindowWillCloseNotification
-                                               object:inWindow];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(windowWillClose:)
+               name:NSWindowWillCloseNotification
+             object:inWindow];
   }
   return self;
 
@@ -200,7 +206,8 @@
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   id firstResponder = [aWindow firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]]) [firstResponder viewsWindowDidBecomeKey];
+  if ([firstResponder isKindOfClass:[ChildView class]])
+    [firstResponder viewsWindowDidBecomeKey];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -211,7 +218,8 @@
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   id firstResponder = [aWindow firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]]) [firstResponder viewsWindowDidResignKey];
+  if ([firstResponder isKindOfClass:[ChildView class]])
+    [firstResponder viewsWindowDidResignKey];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -253,7 +261,8 @@
   // Don't send events to a top-level window that has a sheet open above it --
   // as far as Gecko is concerned, it's inactive, and stays so until the sheet
   // closes.
-  if (delegate && [delegate isKindOfClass:[WindowDelegate class]] && ![window attachedSheet])
+  if (delegate && [delegate isKindOfClass:[WindowDelegate class]] &&
+      ![window attachedSheet])
     [TopLevelWindowData activateInWindow:window];
 }
 
@@ -261,7 +270,8 @@
   NSWindow* window = (NSWindow*)[inNotification object];
 
   id delegate = [window delegate];
-  if (delegate && [delegate isKindOfClass:[WindowDelegate class]] && ![window attachedSheet])
+  if (delegate && [delegate isKindOfClass:[WindowDelegate class]] &&
+      ![window attachedSheet])
     [TopLevelWindowData deactivateInWindow:window];
 }
 
@@ -272,7 +282,8 @@
   [[self retain] autorelease];
 
   // remove ourselves from the window map (which owns us)
-  [[WindowDataMap sharedWindowDataMap] removeDataForWindow:[inNotification object]];
+  [[WindowDataMap sharedWindowDataMap]
+      removeDataForWindow:[inNotification object]];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }

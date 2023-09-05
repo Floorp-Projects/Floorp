@@ -32,7 +32,8 @@ NS_IMPL_ISUPPORTS(nsMacDockSupport, nsIMacDockSupport, nsITaskbarProgress)
 @synthesize fractionValue = mFractionValue;
 
 - (void)drawRect:(NSRect)aRect {
-  // Erase the background behind this view, i.e. cut a rectangle hole in the icon.
+  // Erase the background behind this view, i.e. cut a rectangle hole in the
+  // icon.
   [[NSColor clearColor] set];
   NSRectFill(self.bounds);
 
@@ -103,7 +104,8 @@ NS_IMETHODIMP
 nsMacDockSupport::ActivateApplication(bool aIgnoreOtherApplications) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  [[NSApplication sharedApplication] activateIgnoringOtherApps:aIgnoreOtherApplications];
+  [[NSApplication sharedApplication]
+      activateIgnoringOtherApps:aIgnoreOtherApplications];
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -118,9 +120,11 @@ nsMacDockSupport::SetBadgeText(const nsAString& aBadgeText) {
   if (aBadgeText.IsEmpty())
     [tile setBadgeLabel:nil];
   else
-    [tile setBadgeLabel:[NSString
-                            stringWithCharacters:reinterpret_cast<const unichar*>(mBadgeText.get())
-                                          length:mBadgeText.Length()]];
+    [tile
+        setBadgeLabel:[NSString
+                          stringWithCharacters:reinterpret_cast<const unichar*>(
+                                                   mBadgeText.get())
+                                        length:mBadgeText.Length()]];
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -133,8 +137,8 @@ nsMacDockSupport::GetBadgeText(nsAString& aBadgeText) {
 }
 
 NS_IMETHODIMP
-nsMacDockSupport::SetProgressState(nsTaskbarProgressState aState, uint64_t aCurrentValue,
-                                   uint64_t aMaxValue) {
+nsMacDockSupport::SetProgressState(nsTaskbarProgressState aState,
+                                   uint64_t aCurrentValue, uint64_t aMaxValue) {
   NS_ENSURE_ARG_RANGE(aState, 0, STATE_PAUSED);
   if (aState == STATE_NO_PROGRESS || aState == STATE_INDETERMINATE) {
     NS_ENSURE_TRUE(aCurrentValue == 0, NS_ERROR_INVALID_ARG);
@@ -162,22 +166,26 @@ nsresult nsMacDockSupport::UpdateDockTile() {
       // Create the following NSView hierarchy:
       // * mDockTileWrapperView (NSView)
       //    * imageView (NSImageView) <- has the application icon
-      //    * mProgressDockOverlayView (MOZProgressDockOverlayView) <- draws the progress bar
+      //    * mProgressDockOverlayView (MOZProgressDockOverlayView) <- draws the
+      //    progress bar
 
-      mDockTileWrapperView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 32, 32)];
-      mDockTileWrapperView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+      mDockTileWrapperView =
+          [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 32, 32)];
+      mDockTileWrapperView.autoresizingMask =
+          NSViewWidthSizable | NSViewHeightSizable;
 
-      NSImageView* imageView = [[NSImageView alloc] initWithFrame:[mDockTileWrapperView bounds]];
+      NSImageView* imageView =
+          [[NSImageView alloc] initWithFrame:[mDockTileWrapperView bounds]];
       imageView.image = [NSImage imageNamed:@"NSApplicationIcon"];
       imageView.imageScaling = NSImageScaleAxesIndependently;
       imageView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
       [mDockTileWrapperView addSubview:imageView];
 
-      mProgressDockOverlayView =
-          [[MOZProgressDockOverlayView alloc] initWithFrame:NSMakeRect(1, 3, 30, 4)];
-      mProgressDockOverlayView.autoresizingMask = NSViewMinXMargin | NSViewWidthSizable |
-                                                  NSViewMaxXMargin | NSViewMinYMargin |
-                                                  NSViewHeightSizable | NSViewMaxYMargin;
+      mProgressDockOverlayView = [[MOZProgressDockOverlayView alloc]
+          initWithFrame:NSMakeRect(1, 3, 30, 4)];
+      mProgressDockOverlayView.autoresizingMask =
+          NSViewMinXMargin | NSViewWidthSizable | NSViewMaxXMargin |
+          NSViewMinYMargin | NSViewHeightSizable | NSViewMaxYMargin;
       [mDockTileWrapperView addSubview:mProgressDockOverlayView];
     }
     if (NSApp.dockTile.contentView != mDockTileWrapperView) {
@@ -205,21 +213,23 @@ nsresult nsMacDockSupport::UpdateDockTile() {
 extern "C" {
 // Private CFURL API used by the Dock.
 CFPropertyListRef _CFURLCopyPropertyListRepresentation(CFURLRef url);
-CFURLRef _CFURLCreateFromPropertyListRepresentation(CFAllocatorRef alloc,
-                                                    CFPropertyListRef pListRepresentation);
+CFURLRef _CFURLCreateFromPropertyListRepresentation(
+    CFAllocatorRef alloc, CFPropertyListRef pListRepresentation);
 }  // extern "C"
 
 namespace {
 
-const NSArray* const browserAppNames =
-    [NSArray arrayWithObjects:@"Firefox.app", @"Firefox Beta.app", @"Firefox Nightly.app",
-                              @"Safari.app", @"WebKit.app", @"Google Chrome.app",
-                              @"Google Chrome Canary.app", @"Chromium.app", @"Opera.app", nil];
+const NSArray* const browserAppNames = [NSArray
+    arrayWithObjects:@"Firefox.app", @"Firefox Beta.app",
+                     @"Firefox Nightly.app", @"Safari.app", @"WebKit.app",
+                     @"Google Chrome.app", @"Google Chrome Canary.app",
+                     @"Chromium.app", @"Opera.app", nil];
 
 constexpr NSString* const kDockDomainName = @"com.apple.dock";
 // See https://developer.apple.com/documentation/devicemanagement/dock
 constexpr NSString* const kDockPersistentAppsKey = @"persistent-apps";
-// See https://developer.apple.com/documentation/devicemanagement/dock/staticitem
+// See
+// https://developer.apple.com/documentation/devicemanagement/dock/staticitem
 constexpr NSString* const kDockTileDataKey = @"tile-data";
 constexpr NSString* const kDockFileDataKey = @"file-data";
 
@@ -247,7 +257,8 @@ NSString* GetPathForApp(NSDictionary* aPersistantApp) {
     // Some special tiles may not have DockFileData but we can ignore those.
     return nil;
   }
-  NSURL* url = CFBridgingRelease(_CFURLCreateFromPropertyListRepresentation(NULL, fileData));
+  NSURL* url = CFBridgingRelease(
+      _CFURLCreateFromPropertyListRepresentation(NULL, fileData));
   if (!url) {
     return nil;
   }
@@ -257,7 +268,8 @@ NSString* GetPathForApp(NSDictionary* aPersistantApp) {
 // The only reliable way to get our changes to take effect seems to be to use
 // `kill`.
 void RefreshDock(NSDictionary* aDockPlist) {
-  [[NSUserDefaults standardUserDefaults] setPersistentDomain:aDockPlist forName:kDockDomainName];
+  [[NSUserDefaults standardUserDefaults] setPersistentDomain:aDockPlist
+                                                     forName:kDockDomainName];
   NSRunningApplication* dockApp = [[NSRunningApplication
       runningApplicationsWithBundleIdentifier:@"com.apple.dock"] firstObject];
   if (!dockApp) {
@@ -276,8 +288,8 @@ nsresult nsMacDockSupport::GetIsAppInDock(bool* aIsInDock) {
 
   *aIsInDock = false;
 
-  NSDictionary* dockPlist =
-      [[NSUserDefaults standardUserDefaults] persistentDomainForName:kDockDomainName];
+  NSDictionary* dockPlist = [[NSUserDefaults standardUserDefaults]
+      persistentDomainForName:kDockDomainName];
   if (!dockPlist) {
     return NS_ERROR_FAILURE;
   }
@@ -302,22 +314,22 @@ nsresult nsMacDockSupport::GetIsAppInDock(bool* aIsInDock) {
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-nsresult nsMacDockSupport::EnsureAppIsPinnedToDock(const nsAString& aAppPath,
-                                                   const nsAString& aAppToReplacePath,
-                                                   bool* aIsInDock) {
+nsresult nsMacDockSupport::EnsureAppIsPinnedToDock(
+    const nsAString& aAppPath, const nsAString& aAppToReplacePath,
+    bool* aIsInDock) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(aAppPath != aAppToReplacePath || !aAppPath.IsEmpty());
 
   *aIsInDock = false;
 
-  NSString* appPath =
-      !aAppPath.IsEmpty() ? nsCocoaUtils::ToNSString(aAppPath) : [[NSBundle mainBundle] bundlePath];
+  NSString* appPath = !aAppPath.IsEmpty() ? nsCocoaUtils::ToNSString(aAppPath)
+                                          : [[NSBundle mainBundle] bundlePath];
   NSString* appToReplacePath = nsCocoaUtils::ToNSString(aAppToReplacePath);
 
-  NSMutableDictionary* dockPlist =
-      [NSMutableDictionary dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]
-                                                        persistentDomainForName:kDockDomainName]];
+  NSMutableDictionary* dockPlist = [NSMutableDictionary
+      dictionaryWithDictionary:[[NSUserDefaults standardUserDefaults]
+                                   persistentDomainForName:kDockDomainName]];
   if (!dockPlist) {
     return NS_ERROR_FAILURE;
   }
@@ -335,11 +347,13 @@ nsresult nsMacDockSupport::EnsureAppIsPinnedToDock(const nsAString& aAppPath,
   NSUInteger toReplaceAppIndex = NSNotFound;
   NSUInteger lastBrowserAppIndex = NSNotFound;
   for (NSUInteger index = 0; index < [persistentApps count]; ++index) {
-    NSString* persistentAppPath = GetPathForApp([persistentApps objectAtIndex:index]);
+    NSString* persistentAppPath =
+        GetPathForApp([persistentApps objectAtIndex:index]);
 
     if ([persistentAppPath isEqualToString:appPath]) {
       preexistingAppIndex = index;
-    } else if (appToReplacePath && [persistentAppPath isEqualToString:appToReplacePath]) {
+    } else if (appToReplacePath &&
+               [persistentAppPath isEqualToString:appToReplacePath]) {
       toReplaceAppIndex = index;
     } else {
       NSString* appName = [appPath lastPathComponent];
@@ -381,14 +395,16 @@ nsresult nsMacDockSupport::EnsureAppIsPinnedToDock(const nsAString& aAppPath,
   NSDictionary* newDockTile = nullptr;
   {
     NSURL* appUrl = [NSURL fileURLWithPath:appPath isDirectory:YES];
-    NSDictionary* dict =
-        CFBridgingRelease(_CFURLCopyPropertyListRepresentation((__bridge CFURLRef)appUrl));
+    NSDictionary* dict = CFBridgingRelease(
+        _CFURLCopyPropertyListRepresentation((__bridge CFURLRef)appUrl));
     if (!dict) {
       return NS_ERROR_FAILURE;
     }
-    NSDictionary* dockTileData = [NSDictionary dictionaryWithObject:dict forKey:kDockFileDataKey];
+    NSDictionary* dockTileData =
+        [NSDictionary dictionaryWithObject:dict forKey:kDockFileDataKey];
     if (dockTileData) {
-      newDockTile = [NSDictionary dictionaryWithObject:dockTileData forKey:kDockTileDataKey];
+      newDockTile = [NSDictionary dictionaryWithObject:dockTileData
+                                                forKey:kDockTileDataKey];
     }
     if (!newDockTile) {
       return NS_ERROR_FAILURE;
@@ -397,7 +413,8 @@ nsresult nsMacDockSupport::EnsureAppIsPinnedToDock(const nsAString& aAppPath,
 
   // Update the Dock:
   if (toReplaceAppIndex != NSNotFound) {
-    [persistentApps replaceObjectAtIndex:toReplaceAppIndex withObject:newDockTile];
+    [persistentApps replaceObjectAtIndex:toReplaceAppIndex
+                              withObject:newDockTile];
   } else {
     NSUInteger index;
     if (sameNameAppIndex != NSNotFound) {

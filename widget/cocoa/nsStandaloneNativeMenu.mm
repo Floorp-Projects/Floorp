@@ -39,7 +39,8 @@ nsStandaloneNativeMenu::Init(Element* aElement) {
 
 NS_IMETHODIMP
 nsStandaloneNativeMenu::MenuWillOpen(bool* aResult) {
-  NS_ASSERTION(mMenu != nullptr, "nsStandaloneNativeMenu::OnOpen - mMenu is null!");
+  NS_ASSERTION(mMenu != nullptr,
+               "nsStandaloneNativeMenu::OnOpen - mMenu is null!");
 
   mMenu->MenuWillOpen();
 
@@ -48,7 +49,8 @@ nsStandaloneNativeMenu::MenuWillOpen(bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsStandaloneNativeMenu::ActivateNativeMenuItemAt(const nsAString& aIndexString) {
+nsStandaloneNativeMenu::ActivateNativeMenuItemAt(
+    const nsAString& aIndexString) {
   if (!mMenu) {
     return NS_ERROR_NOT_INITIALIZED;
   }

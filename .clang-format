@@ -1,4 +1,5 @@
 BasedOnStyle: Google
+ColumnLimit: 80
 
 # Prevent the loss of indentation with these macros
 MacroBlockBegin: "^\
