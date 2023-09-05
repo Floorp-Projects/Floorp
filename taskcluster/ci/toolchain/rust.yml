@@ -102,28 +102,6 @@ linux64-rust-cross-1.72:
         ]
         toolchain-alias: linux64-rust-cross
 
-linux64-rust-cross-beta:
-    description: "rust beta repack with macos and windows cross support"
-    treeherder:
-        symbol: TL(rust-cross-beta)
-    run:
-        arguments: [
-            '--channel', 'beta-2022-12-14',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'x86_64-apple-darwin',
-            '--target', 'aarch64-apple-darwin',
-            '--target', 'x86_64-pc-windows-msvc',
-            '--target', 'i686-pc-windows-msvc',
-            '--target', 'aarch64-pc-windows-msvc',
-            '--target', 'armv7-linux-androideabi',
-            '--target', 'thumbv7neon-linux-androideabi',
-            '--target', 'aarch64-linux-android',
-            '--target', 'i686-linux-android',
-            '--target', 'x86_64-linux-android',
-        ]
-
 linux64-rust-static-1.72:
     description: "rust repack with static linking support"
     treeherder:
