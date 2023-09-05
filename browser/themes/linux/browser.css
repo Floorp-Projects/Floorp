@@ -294,19 +294,41 @@ menuitem.bookmark-item {
   color: -moz-headerbarinactivetext;
 }
 
-:root[tabsintitlebar] #navigator-toolbox-background {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-titlebar-maximized;
-  background-color: transparent;
-  color: CaptionText;
+:root[tabsintitlebar] {
+  #navigator-toolbox-background {
+    appearance: auto;
+    -moz-default-appearance: -moz-window-titlebar-maximized;
+    background-color: transparent;
+    color: CaptionText;
+  }
+
+  #navigator-toolbox-background:-moz-window-inactive {
+    color: InactiveCaptionText;
+  }
+
+  /* When temporarily showing the menu bar, make it at least as tall as the tab
+   * bar such that the window controls don't appear to move up. */
+  #toolbar-menubar[autohide="true"] {
+    height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
+  }
 }
 
-:root[tabsintitlebar] #navigator-toolbox-background:-moz-window-inactive {
-  color: InactiveCaptionText;
-}
+:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) {
+  #navigator-toolbox-background {
+    -moz-default-appearance: -moz-window-titlebar;
+  }
 
-:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox-background {
-  -moz-default-appearance: -moz-window-titlebar;
+  #navigator-toolbox:-moz-lwtheme, dialog::backdrop {
+    border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
+    border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
+  }
+
+  @media (-moz-gtk-csd-rounded-bottom-corners) {
+    body {
+      border-bottom-left-radius: env(-moz-gtk-csd-titlebar-radius);
+      border-bottom-right-radius: env(-moz-gtk-csd-titlebar-radius);
+    }
+  }
 }
 
 /*
@@ -320,18 +342,6 @@ menuitem.bookmark-item {
 :root:is([tabsintitlebar], *) #navigator-toolbox-background:-moz-lwtheme {
   background-color: transparent;
   color: inherit;
-}
-
-:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme,
-:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) dialog::backdrop {
-  border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
-  border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
-}
-
-/* When temporarily showing the menu bar, make it at least as tall as the tab
- * bar such that the window controls don't appear to move up. */
-:root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
-  height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
 }
 
 /* The button box must appear on top of the navigator-toolbox in order for
