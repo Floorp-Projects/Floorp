@@ -13,10 +13,11 @@
     static get fragment() {
       if (!this._template) {
         let parser = new DOMParser();
+        let cssPath = "chrome://global/content/elements/panel-list.css";
         let doc = parser.parseFromString(
           `
           <template>
-            <link rel="stylesheet" href="chrome://global/content/elements/panel-list.css">
+            <link rel="stylesheet" href=${cssPath}>
             <div class="arrow top" role="presentation"></div>
             <div class="list" role="presentation">
               <slot></slot>
@@ -31,11 +32,7 @@
           true
         );
       }
-      let frag = this._template.content.cloneNode(true);
-      if (window.IS_STORYBOOK) {
-        frag.querySelector("link").href = "./panel-list/panel-list.css";
-      }
-      return frag;
+      return this._template.content.cloneNode(true);
     }
 
     constructor() {
@@ -512,9 +509,7 @@
 
       let style = document.createElement("link");
       style.rel = "stylesheet";
-      style.href = window.IS_STORYBOOK
-        ? "./panel-list/panel-item.css"
-        : "chrome://global/content/elements/panel-item.css";
+      style.href = "chrome://global/content/elements/panel-item.css";
 
       this.button = document.createElement("button");
       this.button.setAttribute("role", "menuitem");

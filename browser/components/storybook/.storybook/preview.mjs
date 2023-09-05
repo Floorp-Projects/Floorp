@@ -14,22 +14,6 @@ connectFluent();
 // Any fluent imports should go through MozXULElement.insertFTLIfNeeded.
 window.MozXULElement = {
   insertFTLIfNeeded,
-
-  // For some reason Storybook doesn't watch the static folder. By creating a
-  // method with a dynamic import we can pull the desired files into the bundle.
-  async importCss(resourceName) {
-    // eslint-disable-next-line no-unsanitized/method
-    let file = await import(
-      /* webpackInclude: /.*[\/\\].*\.css$/ */
-      `browser/themes/shared/${resourceName}`
-    );
-    // eslint-disable-next-line no-unsanitized/method
-    file = await import(
-      /* webpackInclude: /.*[\/\\].*\.css$/ */
-      `browser/components/firefoxview/${resourceName}`
-    );
-    return file;
-  },
 };
 
 /**
