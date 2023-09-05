@@ -72,8 +72,8 @@ def split_variants(config, tasks):
     def remove_expired(variants, expired):
         remaining_variants = []
         for name in variants:
-            parts = [p for p in name.split("+") if p not in expired]
-            if len(parts) == 0:
+            parts = [p for p in name.split("+") if p in expired]
+            if len(parts) > 0:
                 continue
 
             remaining_variants.append(name)
