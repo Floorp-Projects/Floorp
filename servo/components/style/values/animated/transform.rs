@@ -1390,6 +1390,7 @@ impl ComputedRotate {
 impl Animate for ComputedRotate {
     #[inline]
     fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
+        use euclid::approxeq::ApproxEq;
         match (self, other) {
             (&Rotate::None, &Rotate::None) => Ok(Rotate::None),
             (&Rotate::Rotate3D(fx, fy, fz, fa), &Rotate::None) => {
@@ -1428,7 +1429,13 @@ impl Animate for ComputedRotate {
 
                 // The rotation angle gets interpolated numerically and the rotation vector of the
                 // non-zero angle is used or (0, 0, 1) if both angles are zero.
-                if fa.is_zero() || ta.is_zero() || (fx, fy, fz) == (tx, ty, tz) {
+                //
+                // Note: the normalization may get two different vectors because of the
+                // floating-point precision, so we have to use approx_eq to compare two
+                // vectors.
+                let fv = DirectionVector::new(fx, fy, fz);
+                let tv = DirectionVector::new(tx, ty, tz);
+                if fa.is_zero() || ta.is_zero() || fv.approx_eq(&tv) {
                     let (x, y, z) = if fa.is_zero() && ta.is_zero() {
                         (0., 0., 1.)
                     } else if fa.is_zero() {
@@ -1452,8 +1459,6 @@ impl Animate for ComputedRotate {
                 // scale, skew, and persepctive in the matrix3D.
                 //
                 // [1] https://github.com/w3c/csswg-drafts/issues/9278
-                let fv = DirectionVector::new(fx, fy, fz);
-                let tv = DirectionVector::new(tx, ty, tz);
                 let fq = Quaternion::from_direction_and_angle(&fv, fa.radians64());
                 let tq = Quaternion::from_direction_and_angle(&tv, ta.radians64());
 
@@ -1479,6 +1484,7 @@ impl Animate for ComputedRotate {
 impl ComputeSquaredDistance for ComputedRotate {
     #[inline]
     fn compute_squared_distance(&self, other: &Self) -> Result<SquaredDistance, ()> {
+        use euclid::approxeq::ApproxEq;
         match (self, other) {
             (&Rotate::None, &Rotate::None) => Ok(SquaredDistance::from_sqrt(0.)),
             (&Rotate::Rotate3D(_, _, _, a), &Rotate::None) |
@@ -1501,11 +1507,11 @@ impl ComputeSquaredDistance for ComputedRotate {
                     (tx, ty, tz) = (fx, fy, fz);
                 }
 
-                if (fx, fy, fz) == (tx, ty, tz) {
+                let v1 = DirectionVector::new(fx, fy, fz);
+                let v2 = DirectionVector::new(tx, ty, tz);
+                if v1.approx_eq(&v2) {
                     angle1.compute_squared_distance(&angle2)
                 } else {
-                    let v1 = DirectionVector::new(fx, fy, fz);
-                    let v2 = DirectionVector::new(tx, ty, tz);
                     let q1 = Quaternion::from_direction_and_angle(&v1, angle1.radians64());
                     let q2 = Quaternion::from_direction_and_angle(&v2, angle2.radians64());
                     q1.compute_squared_distance(&q2)
