@@ -17799,9 +17799,13 @@ class CGDictionary(CGThing):
         return "m" + name[0].upper() + IDLToCIdentifier(name[1:])
 
     def getMemberType(self, memberInfo):
-        _, conversionInfo = memberInfo
+        member, conversionInfo = memberInfo
         # We can't handle having a holderType here
         assert conversionInfo.holderType is None
+
+        if member.getExtendedAttribute("BinaryType"):
+            return member.getExtendedAttribute("BinaryType")[0]
+
         declType = conversionInfo.declType
         if conversionInfo.dealWithOptional:
             declType = CGTemplatedType("Optional", declType)

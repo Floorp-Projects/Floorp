@@ -1272,6 +1272,11 @@ dictionary DictWithAllowSharedMembers {
   AllowSharedArrayBufferViewTypedef f;
 };
 
+dictionary DictWithBinaryType {
+  [BinaryType="nsAutoString"]
+  DOMString otherTypeOfStorageStr = "";
+};
+
 [Exposed=Window]
 interface TestIndexedGetterInterface {
   getter long item(unsigned long idx);
