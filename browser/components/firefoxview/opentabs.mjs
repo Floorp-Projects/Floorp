@@ -297,17 +297,6 @@ class OpenTabsInViewCard extends ViewPage {
     return -1;
   }
 
-  toggleShowMore(event) {
-    if (
-      event.type == "click" ||
-      (event.type == "keydown" && event.code == "Enter") ||
-      (event.type == "keydown" && event.code == "Space")
-    ) {
-      event.preventDefault();
-      this.showMore = !this.showMore;
-    }
-  }
-
   render() {
     return html`
       <link
@@ -339,8 +328,7 @@ class OpenTabsInViewCard extends ViewPage {
         </div>
         ${!this.recentBrowsing
           ? html` <div
-              @click=${this.toggleShowMore}
-              @keydown=${this.toggleShowMore}
+              @click=${() => (this.showMore = !this.showMore)}
               data-l10n-id="${this.showMore
                 ? "firefoxview-show-less"
                 : "firefoxview-show-more"}"
@@ -348,7 +336,6 @@ class OpenTabsInViewCard extends ViewPage {
               this.tabs.length <=
                 OpenTabsInViewCard.MAX_TABS_FOR_COMPACT_HEIGHT}
               slot="footer"
-              tabindex="0"
             ></div>`
           : null}
       </card-container>
