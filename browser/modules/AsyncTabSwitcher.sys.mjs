@@ -276,7 +276,8 @@ export class AsyncTabSwitcher {
       if (remoteTab) {
         browser.renderLayers = true;
         remoteTab.priorityHint = true;
-      } else {
+      }
+      if (browser.hasLayers) {
         this.onLayersReady(browser);
       }
     } else if (state == this.STATE_UNLOADING) {
@@ -286,7 +287,8 @@ export class AsyncTabSwitcher {
       browser.docShellIsActive = false;
       if (remoteTab) {
         remoteTab.priorityHint = false;
-      } else {
+      }
+      if (!browser.hasLayers) {
         this.onLayersCleared(browser);
       }
     } else if (state == this.STATE_LOADED) {
@@ -294,8 +296,8 @@ export class AsyncTabSwitcher {
     }
 
     if (!tab.linkedBrowser.isRemoteBrowser) {
-      // setTabState is potentially re-entrant in the non-remote case,
-      // so we must re-get the state for this assertion.
+      // setTabState is potentially re-entrant, so we must re-get the state for
+      // this assertion.
       let nonRemoteState = this.getTabState(tab);
       // Non-remote tabs can never stay in the STATE_LOADING
       // or STATE_UNLOADING states. By the time this function
