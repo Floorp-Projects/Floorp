@@ -6726,6 +6726,12 @@
 # Prefs starting with "html5."
 #---------------------------------------------------------------------------
 
+# Turn HTML:inert on or off.
+- name: html5.inert.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Time in milliseconds between the time a network buffer is seen and the timer
 # firing when the timer hasn't fired previously in this parse in the
 # off-the-main-thread HTML5 parser.
