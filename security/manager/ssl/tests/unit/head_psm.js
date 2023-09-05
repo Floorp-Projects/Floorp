@@ -40,8 +40,9 @@ const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"].getService(
 // The test EV roots are only enabled in debug builds as a security measure.
 const gEVExpected = isDebugBuild;
 
-const CLIENT_AUTH_FILE_NAME = "ClientAuthRememberList.txt";
-const SSS_STATE_FILE_NAME = "SiteSecurityServiceState.txt";
+const CLIENT_AUTH_FILE_NAME = "ClientAuthRememberList.bin";
+const SSS_STATE_FILE_NAME = "SiteSecurityServiceState.bin";
+const SSS_STATE_OLD_FILE_NAME = "SiteSecurityServiceState.txt";
 const CERT_OVERRIDE_FILE_NAME = "cert_override.txt";
 
 const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
@@ -1193,4 +1194,57 @@ function run_certutil_on_directory(directory, args, expectSuccess = true) {
   if (expectSuccess) {
     Assert.equal(process.exitValue, 0, "certutil should succeed");
   }
+}
+
+function get_data_storage_contents(dataStorageFileName) {
+  let stateFile = do_get_profile();
+  stateFile.append(dataStorageFileName);
+  if (!stateFile.exists()) {
+    return undefined;
+  }
+  return readFile(stateFile);
+}
+
+function u16_to_big_endian_bytes(u16) {
+  Assert.less(u16, 65536);
+  return [u16 / 256, u16 % 256];
+}
+
+// Appends a line to the given data storage file (as an nsIOutputStream).
+// score is an integer representing the number of unique days the item has been accessed.
+// lastAccessed is the day since the epoch the item was last accessed.
+// key and value are strings representing the key and value of the item.
+function append_line_to_data_storage_file(
+  outputStream,
+  score,
+  lastAccessed,
+  key,
+  value,
+  valueLength = 24,
+  useBadChecksum = false
+) {
+  let line = arrayToString(u16_to_big_endian_bytes(score));
+  line = line + arrayToString(u16_to_big_endian_bytes(lastAccessed));
+  line = line + key;
+  let keyPadding = [];
+  for (let i = 0; i < 256 - key.length; i++) {
+    keyPadding.push(0);
+  }
+  line = line + arrayToString(keyPadding);
+  line = line + value;
+  let valuePadding = [];
+  for (let i = 0; i < valueLength - value.length; i++) {
+    valuePadding.push(0);
+  }
+  line = line + arrayToString(valuePadding);
+  let checksum = 0;
+  Assert.equal(line.length % 2, 0);
+  for (let i = 0; i < line.length; i += 2) {
+    checksum ^= (line.charCodeAt(i) << 8) + line.charCodeAt(i + 1);
+  }
+  line =
+    arrayToString(
+      u16_to_big_endian_bytes(useBadChecksum ? ~checksum & 0xffff : checksum)
+    ) + line;
+  outputStream.write(line, line.length);
 }
