@@ -33,6 +33,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   permissions: "chrome://remote/content/marionette/permissions.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
+  PromptListener:
+    "chrome://remote/content/shared/listeners/PromptListener.sys.mjs",
   quit: "chrome://remote/content/shared/Browser.sys.mjs",
   reftest: "chrome://remote/content/marionette/reftest.sys.mjs",
   registerCommandsActor:
@@ -123,9 +125,9 @@ export function GeckoDriver(server) {
   // Use content context by default
   this.context = lazy.Context.Content;
 
-  // used for modal dialogs or tab modal alerts
+  // used for modal dialogs
   this.dialog = null;
-  this.dialogObserver = null;
+  this.promptListener = null;
 }
 
 /**
@@ -197,20 +199,20 @@ GeckoDriver.prototype.QueryInterface = ChromeUtils.generateQI([
 ]);
 
 /**
- * Callback used to observe the creation of new modal or tab modal dialogs
+ * Callback used to observe the closing of modal dialogs
  * during the session's lifetime.
  */
-GeckoDriver.prototype.handleModalDialog = function (action, dialog) {
-  if (!this.currentSession) {
-    return;
-  }
+GeckoDriver.prototype.handleClosedModalDialog = function () {
+  this.dialog = null;
+};
 
-  if (action === lazy.modal.ACTION_OPENED) {
-    this.dialog = dialog;
-    this.getActor().notifyDialogOpened();
-  } else if (action === lazy.modal.ACTION_CLOSED) {
-    this.dialog = null;
-  }
+/**
+ * Callback used to observe the creation of new modal dialogs
+ * during the session's lifetime.
+ */
+GeckoDriver.prototype.handleOpenModalDialog = function (eventName, data) {
+  this.dialog = data.prompt;
+  this.getActor().notifyDialogOpened();
 };
 
 /**
@@ -448,10 +450,10 @@ GeckoDriver.prototype.newSession = async function (cmd) {
       this.mainFrame = appWin;
 
       // Setup observer for modal dialogs
-      this.dialogObserver = new lazy.modal.DialogObserver(
-        () => this.curBrowser
-      );
-      this.dialogObserver.add(this.handleModalDialog.bind(this));
+      this.promptListener = new lazy.PromptListener(() => this.curBrowser);
+      this.promptListener.on("closed", this.handleClosedModalDialog.bind(this));
+      this.promptListener.on("opened", this.handleOpenModalDialog.bind(this));
+      this.promptListener.startListening();
 
       for (let win of lazy.windowManager.windows) {
         this.registerWindow(win, { registerBrowsers: true });
@@ -2393,9 +2395,9 @@ GeckoDriver.prototype.deleteSession = function () {
   // reset to the top-most frame
   this.mainFrame = null;
 
-  if (this.dialogObserver) {
-    this.dialogObserver.cleanup();
-    this.dialogObserver = null;
+  if (this.promptListener) {
+    this.promptListener.stopListening();
+    this.promptListener = null;
   }
 
   try {
@@ -2696,7 +2698,7 @@ GeckoDriver.prototype.fullscreenWindow = async function () {
 };
 
 /**
- * Dismisses a currently displayed tab modal, or returns no such alert if
+ * Dismisses a currently displayed modal dialogs, or returns no such alert if
  * no modal is displayed.
  *
  * @throws {NoSuchAlertError}
@@ -2708,7 +2710,7 @@ GeckoDriver.prototype.dismissDialog = async function () {
   lazy.assert.open(this.getBrowsingContext({ top: true }));
   this._checkIfAlertIsPresent();
 
-  const dialogClosed = this.dialogObserver.dialogClosed();
+  const dialogClosed = this.promptListener.dialogClosed();
   this.dialog.dismiss();
   await dialogClosed;
 
@@ -2717,7 +2719,7 @@ GeckoDriver.prototype.dismissDialog = async function () {
 };
 
 /**
- * Accepts a currently displayed tab modal, or returns no such alert if
+ * Accepts a currently displayed dialog modal, or returns no such alert if
  * no modal is displayed.
  *
  * @throws {NoSuchAlertError}
@@ -2729,7 +2731,7 @@ GeckoDriver.prototype.acceptDialog = async function () {
   lazy.assert.open(this.getBrowsingContext({ top: true }));
   this._checkIfAlertIsPresent();
 
-  const dialogClosed = this.dialogObserver.dialogClosed();
+  const dialogClosed = this.promptListener.dialogClosed();
   this.dialog.accept();
   await dialogClosed;
 
@@ -2758,7 +2760,7 @@ GeckoDriver.prototype.getTextFromDialog = async function () {
  *
  * Sends keys to the input field of a currently displayed modal, or
  * returns a no such alert error if no modal is currently displayed. If
- * a tab modal is currently displayed but has no means for text input,
+ * a modal dialog is currently displayed but has no means for text input,
  * an element not visible error is returned.
  *
  * @param {object} cmd
