@@ -56,7 +56,7 @@ object MockWebServerHelper {
  * If the dispatcher is unable to read a requested asset, it will fail the test by throwing an
  * Exception on the main thread.
  *
- * @sample [org.mozilla.fenix.ui.NavigationToolbarTest.visitURLTest]
+ * @sample [org.mozilla.fenix.ui.BookmarksTest.verifyBookmarkButtonTest]
  */
 const val HTTP_OK = 200
 const val HTTP_NOT_FOUND = 404

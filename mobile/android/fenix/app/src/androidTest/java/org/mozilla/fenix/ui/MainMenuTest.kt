@@ -17,10 +17,12 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.runWithCondition
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class MainMenuTest {
@@ -243,6 +245,118 @@ class MainMenuTest {
             verifyThreeDotMenuExists()
         }.forceRefreshPage {
             verifyPageContent("REFRESHED")
+        }
+    }
+
+    @Test
+    fun goBackTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val nextWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            mDevice.waitForIdle()
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(nextWebPage.url) {
+            verifyUrl(nextWebPage.url.toString())
+        }.openThreeDotMenu {
+        }.goToPreviousPage {
+            mDevice.waitForIdle()
+            verifyUrl(defaultWebPage.url.toString())
+        }
+    }
+
+    @Test
+    fun goForwardTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val nextWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            mDevice.waitForIdle()
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(nextWebPage.url) {
+            mDevice.waitForIdle()
+            verifyUrl(nextWebPage.url.toString())
+        }.openThreeDotMenu {
+        }.goToPreviousPage {
+            mDevice.waitForIdle()
+            verifyUrl(defaultWebPage.url.toString())
+        }
+
+        // Re-open the three-dot menu for verification
+        navigationToolbar {
+        }.openThreeDotMenu {
+            verifyThreeDotMenuExists()
+        }.goForward {
+            verifyUrl(nextWebPage.url.toString())
+        }
+    }
+
+    @Test
+    fun findInPageTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 3)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+            verifyThreeDotMenuExists()
+            verifyFindInPageButton()
+        }.openFindInPage {
+            verifyFindInPageNextButton()
+            verifyFindInPagePrevButton()
+            verifyFindInPageCloseButton()
+            enterFindInPageQuery("a")
+            verifyFindNextInPageResult("1/3")
+            clickFindInPageNextButton()
+            verifyFindNextInPageResult("2/3")
+            clickFindInPageNextButton()
+            verifyFindNextInPageResult("3/3")
+            clickFindInPagePrevButton()
+            verifyFindPrevInPageResult("2/3")
+            clickFindInPagePrevButton()
+            verifyFindPrevInPageResult("1/3")
+        }.closeFindInPageWithCloseButton {
+            verifyFindInPageBar(false)
+        }.openThreeDotMenu {
+        }.openFindInPage {
+            enterFindInPageQuery("3")
+            verifyFindNextInPageResult("1/1")
+        }.closeFindInPageWithBackButton {
+            verifyFindInPageBar(false)
+        }
+    }
+
+    @Test
+    fun pdfFindInPageTest() {
+        val genericURL =
+            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            clickPageObject(itemWithText("PDF form file"))
+        }.openThreeDotMenu {
+            verifyThreeDotMenuExists()
+            verifyFindInPageButton()
+        }.openFindInPage {
+            verifyFindInPageNextButton()
+            verifyFindInPagePrevButton()
+            verifyFindInPageCloseButton()
+            enterFindInPageQuery("l")
+            verifyFindNextInPageResult("1/2")
+            clickFindInPageNextButton()
+            verifyFindNextInPageResult("2/2")
+            clickFindInPagePrevButton()
+            verifyFindPrevInPageResult("1/2")
+        }.closeFindInPageWithCloseButton {
+            verifyFindInPageBar(false)
+        }.openThreeDotMenu {
+        }.openFindInPage {
+            enterFindInPageQuery("p")
+            verifyFindNextInPageResult("1/1")
+        }.closeFindInPageWithBackButton {
+            verifyFindInPageBar(false)
         }
     }
 }

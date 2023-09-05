@@ -20,7 +20,6 @@ gcloud:
   performance-metrics: true
 
   test-targets:
-    - class org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest
     - class org.mozilla.fenix.ui.HistoryTest#visitedUrlHistoryTest
     - class org.mozilla.fenix.ui.MainMenuTest#openMainMenuSettingsItemTest
     - class org.mozilla.fenix.ui.SettingsSearchTest#toggleSearchSuggestionsTest

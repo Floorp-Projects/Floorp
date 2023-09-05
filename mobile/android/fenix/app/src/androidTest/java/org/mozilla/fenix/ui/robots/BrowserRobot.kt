@@ -249,15 +249,6 @@ class BrowserRobot {
 
     fun verifyMenuButton() = threeDotButton().check(matches(isDisplayed()))
 
-    fun verifyNavURLBarItems() {
-        navURLBar().waitForExists(waitingTime)
-        verifyMenuButton()
-        verifyTabCounter("1")
-        verifySearchBar()
-        verifySecureConnectionLockIcon()
-        verifyHomeScreenButton()
-    }
-
     fun verifyNoLinkImageContextMenuItems(containsURL: Uri) {
         mDevice.waitNotNull(Until.findObject(By.textContains(containsURL.toString())))
         mDevice.waitNotNull(
