@@ -5772,15 +5772,6 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
     mBusyFlags = (BusyFlags)(BUSY_FLAGS_BUSY | BUSY_FLAGS_BEFORE_PAGE_LOAD);
 
     if ((aStateFlags & STATE_RESTORING) == 0) {
-      // Show the progress cursor if the pref is set
-      if (StaticPrefs::ui_use_activity_cursor()) {
-        nsCOMPtr<nsIWidget> mainWidget;
-        GetMainWidget(getter_AddRefs(mainWidget));
-        if (mainWidget) {
-          mainWidget->SetCursor(nsIWidget::Cursor{eCursor_spinning});
-        }
-      }
-
       if (StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
         if (IsForceReloadType(mLoadType)) {
           if (WindowContext* windowContext =
@@ -5798,15 +5789,6 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
   } else if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_NETWORK)) {
     // Page has finished loading
     mBusyFlags = BUSY_FLAGS_NONE;
-
-    // Hide the progress cursor if the pref is set
-    if (StaticPrefs::ui_use_activity_cursor()) {
-      nsCOMPtr<nsIWidget> mainWidget;
-      GetMainWidget(getter_AddRefs(mainWidget));
-      if (mainWidget) {
-        mainWidget->SetCursor(nsIWidget::Cursor{eCursor_standard});
-      }
-    }
   }
 
   if ((~aStateFlags & (STATE_IS_DOCUMENT | STATE_STOP)) == 0) {
