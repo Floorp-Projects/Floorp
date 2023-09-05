@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.balrog_submit:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.balrog_submit
     - gecko_taskgraph.transforms.scriptworker:add_balrog_scopes
-    - gecko_taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - beetmover-repackage
@@ -24,8 +25,10 @@ not-for-build-platforms:
     - android-x86-shippable/opt
     - android-aarch64-shippable/opt
 
-job-template:
-    update-no-wnp:
-        by-release-type:
-            nightly.*: false
-            default: true
+jobs:
+    balrog:
+        from-deps: {}
+        update-no-wnp:
+            by-release-type:
+                nightly.*: false
+                default: true
