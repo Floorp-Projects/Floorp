@@ -18,6 +18,8 @@
 #include "mozilla/Unused.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
+namespace mozilla::default_agent {
+
 using BrowserResult = mozilla::WindowsErrorResult<Browser>;
 
 constexpr std::pair<std::string_view, Browser> kStringBrowserMap[]{
@@ -214,3 +216,5 @@ void MaybeMigrateCurrentDefault() {
                                               value.c_str());
   }
 }
+
+}  // namespace mozilla::default_agent

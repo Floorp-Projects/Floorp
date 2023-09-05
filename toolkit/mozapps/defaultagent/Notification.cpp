@@ -38,6 +38,8 @@
 // and we should give up on it
 #define MUTEX_TIMEOUT_MS (10 * 60 * 1000)
 
+namespace mozilla::default_agent {
+
 bool FirefoxInstallIsEnglish();
 
 static bool SetInitialNotificationShown(bool wasShown) {
@@ -681,3 +683,5 @@ void EnsureValidNotificationAction(std::string& actionString) {
     actionString = "no-action";
   }
 }
+
+}  // namespace mozilla::default_agent

@@ -12,6 +12,8 @@
 #include "mozilla/DefineEnum.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
+namespace mozilla::default_agent {
+
 MOZ_DEFINE_ENUM_CLASS(Browser, (Unknown, Firefox, Chrome, EdgeWithEdgeHTML,
                                 EdgeWithBlink, InternetExplorer, Opera, Brave,
                                 Yandex, QQBrowser, _360Browser, Sogou));
@@ -27,5 +29,7 @@ DefaultBrowserResult GetDefaultBrowserInfo();
 
 std::string GetStringForBrowser(Browser browser);
 void MaybeMigrateCurrentDefault();
+
+}  // namespace mozilla::default_agent
 
 #endif  // __DEFAULT_BROWSER_DEFAULT_BROWSER_H__

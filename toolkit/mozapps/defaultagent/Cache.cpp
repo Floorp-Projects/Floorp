@@ -12,6 +12,8 @@
 #include "EventLog.h"
 #include "mozilla/Unused.h"
 
+namespace mozilla::default_agent {
+
 // Cache entry version documentation:
 //   Version 1:
 //     The version number is written explicitly when version 1 cache entries are
@@ -588,3 +590,5 @@ Cache::MaybeEntryResult Cache::Dequeue() {
   LOG_ERROR_MESSAGE(L"Unexpected: This line shouldn't be reached");
   return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
 }
+
+}  // namespace mozilla::default_agent
