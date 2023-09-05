@@ -23,6 +23,7 @@ namespace mozilla::default_agent {
 using BrowserResult = mozilla::WindowsErrorResult<Browser>;
 
 constexpr std::pair<std::string_view, Browser> kStringBrowserMap[]{
+    {"error", Browser::Error},
     {"", Browser::Unknown},
     {"firefox", Browser::Firefox},
     {"chrome", Browser::Chrome},
@@ -114,6 +115,15 @@ static BrowserResult GetDefaultBrowser() {
       // 搜狗高速浏览器 UTF-16 encoding
       {L"\u641c\u72d7\u9ad8\u901f\u6d4f\u89c8\u5668", Browser::Sogou},
   };
+
+  // We should have one prefix for every browser we track, minus exceptions
+  // listed below.
+  // Error - not a real browser.
+  // Unknown - not a real browser.
+  // EdgeWithEdgeHTML - duplicate friendly name with EdgeWithBlink with special
+  //   handling below.
+  static_assert(mozilla::ArrayLength(kFriendlyNamePrefixes) ==
+                kBrowserCount - 3);
 
   for (const auto& [prefix, browser] : kFriendlyNamePrefixes) {
     // Find matching Friendly Name prefix.
