@@ -112,6 +112,18 @@ export class MozLitElement extends LitElement {
     }
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (
+      this.renderRoot == this.shadowRoot &&
+      this._l10nRootConnected &&
+      document.l10n
+    ) {
+      document.l10n.disconnectRoot(this.renderRoot);
+      this._l10nRootConnected = false;
+    }
+  }
+
   async dispatchOnUpdateComplete(event) {
     await this.updateComplete;
     this.dispatchEvent(event);
