@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "chrome://global/content/shopping/reporting_request.schema.json",
+  "title": "Report back in stock response",
+  "type": "object",
+  "properties": {
+    "message": {
+      "description": "String indicating current state",
+      "type": "string",
+      "examples": ["report created", "already reported", "not deleted"]
+    }
+  }
+}
