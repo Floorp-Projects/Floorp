@@ -113,14 +113,18 @@
 }
 
 .card-container-footer {
-  text-align: center;
+  display: flex;
+  justify-content: center;
   color: var(--fxview-primary-action-background);
   cursor: pointer;
 }
 
-::slotted([slot=footer]) {
+::slotted([slot=footer]:not([hidden])) {
   text-decoration: underline;
-  padding-block: 0.5rem;
+  display: inline-block;
+  outline-offset: 2px;
+  border-radius: 2px;
+  margin-block: 0.5rem;
 }
 
 @media (max-width: 39rem) {
