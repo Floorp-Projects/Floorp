@@ -3018,7 +3018,7 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     if (*segIndex >= env_.elemSegments.length()) {
       return fail("table.init segment index out of range");
     }
-    if (!checkIsSubtypeOf(env_.elemSegments[*segIndex]->elemType,
+    if (!checkIsSubtypeOf(env_.elemSegments[*segIndex].elemType,
                           env_.tables[*dstMemOrTableIndex].elemType)) {
       return false;
     }
@@ -3512,8 +3512,8 @@ inline bool OpIter<Policy>::readArrayNewElem(uint32_t* typeIndex,
     return fail("segment index is out of range");
   }
 
-  const ElemSegment* elemSeg = env_.elemSegments[*segIndex];
-  RefType srcElemType = elemSeg->elemType;
+  const ModuleElemSegment& elemSeg = env_.elemSegments[*segIndex];
+  RefType srcElemType = elemSeg.elemType;
   // srcElemType needs to be a subtype (child) of dstElemType
   if (!checkIsSubtypeOf(srcElemType, dstElemType.refType())) {
     return fail("incompatible element types");

@@ -94,7 +94,12 @@ class Table : public ShareableBase<Table> {
                    JSContext* cx);
 
   AnyRef getAnyRef(uint32_t index) const;
+  void setAnyRef(uint32_t index, AnyRef ref);
   void fillAnyRef(uint32_t index, uint32_t fillCount, AnyRef ref);
+
+  // Sets ref automatically using the correct setter depending on the ref and
+  // table type (setNull, setFuncRef, or setAnyRef)
+  void setRef(uint32_t index, AnyRef ref);
 
   // Get the element at index and convert it to a JS value.
   [[nodiscard]] bool getValue(JSContext* cx, uint32_t index,

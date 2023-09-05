@@ -1771,15 +1771,12 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
       index += funcImportMap_.count();
     }
 
-    MutableElemSegment seg = js_new<ElemSegment>();
-    if (!seg) {
-      return false;
-    }
-    seg->elemType = RefType::func();
-    seg->tableIndex = tableIndex;
-    seg->offsetIfActive = Some(InitExpr(LitVal(uint32_t(0))));
-    seg->encoding = ElemSegment::Encoding::Indices;
-    seg->elemIndices = std::move(elems);
+    ModuleElemSegment seg = ModuleElemSegment();
+    seg.elemType = RefType::func();
+    seg.tableIndex = tableIndex;
+    seg.offsetIfActive = Some(InitExpr(LitVal(uint32_t(0))));
+    seg.encoding = ModuleElemSegment::Encoding::Indices;
+    seg.elemIndices = std::move(elems);
     return moduleEnv_.elemSegments.append(std::move(seg));
   }
 

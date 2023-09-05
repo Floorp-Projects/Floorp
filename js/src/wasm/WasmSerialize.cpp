@@ -710,9 +710,9 @@ CoderResult CodeTagDesc(Coder<mode>& coder, CoderArg<mode, TagDesc> item) {
 }
 
 template <CoderMode mode>
-CoderResult CodeElemSegment(Coder<mode>& coder,
-                            CoderArg<mode, ElemSegment> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ElemSegment, 280);
+CoderResult CodeModuleElemSegment(Coder<mode>& coder,
+                                  CoderArg<mode, ModuleElemSegment> item) {
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ModuleElemSegment, 232);
   MOZ_TRY(CodePod(coder, &item->kind));
   MOZ_TRY(CodePod(coder, &item->tableIndex));
   MOZ_TRY(CodeRefType(coder, &item->elemType));
@@ -722,7 +722,6 @@ CoderResult CodeElemSegment(Coder<mode>& coder,
   MOZ_TRY(CodePodVector(coder, &item->elemIndices));
   MOZ_TRY(CodePod(coder, &item->elemExpressions.count));
   MOZ_TRY(CodePodVector(coder, &item->elemExpressions.exprBytes));
-  MOZ_TRY(CodePodVector(coder, &item->elemExpressions.exprOffsets));
   return Ok();
 }
 
@@ -1121,12 +1120,11 @@ CoderResult CodeModule(Coder<MODE_DECODE>& coder, MutableModule* item) {
                                   &CodeDataSegment<MODE_DECODE>>>(
       coder, &dataSegments)));
 
-  ElemSegmentVector elemSegments;
+  ModuleElemSegmentVector elemSegments;
   MOZ_TRY(Magic(coder, Marker::ElemSegments));
-  MOZ_TRY((CodeVector<MODE_DECODE, SharedElemSegment,
-                      &CodeRefPtr<MODE_DECODE, const ElemSegment,
-                                  &CodeElemSegment<MODE_DECODE>>>(
-      coder, &elemSegments)));
+  MOZ_TRY(
+      (CodeVector<MODE_DECODE, ModuleElemSegment,
+                  &CodeModuleElemSegment<MODE_DECODE>>(coder, &elemSegments)));
 
   CustomSectionVector customSections;
   MOZ_TRY(Magic(coder, Marker::CustomSections));
@@ -1172,10 +1170,8 @@ CoderResult CodeModule(Coder<mode>& coder, CoderArg<mode, Module> item,
                   &CodeRefPtr<mode, const DataSegment, CodeDataSegment<mode>>>(
           coder, &item->dataSegments_)));
   MOZ_TRY(Magic(coder, Marker::ElemSegments));
-  MOZ_TRY(
-      (CodeVector<mode, SharedElemSegment,
-                  &CodeRefPtr<mode, const ElemSegment, CodeElemSegment<mode>>>(
-          coder, &item->elemSegments_)));
+  MOZ_TRY((CodeVector<mode, ModuleElemSegment, CodeModuleElemSegment<mode>>(
+      coder, &item->elemSegments_)));
   MOZ_TRY(Magic(coder, Marker::CustomSections));
   MOZ_TRY((CodeVector<mode, CustomSection, &CodeCustomSection<mode>>(
       coder, &item->customSections_)));
@@ -1250,8 +1246,7 @@ void Module::initGCMallocBytesExcludingCode() {
   (void)CodeVector<MODE, SharedDataSegment,
                    &CodeRefPtr<MODE, const DataSegment, CodeDataSegment<MODE>>>(
       coder, &dataSegments_);
-  (void)CodeVector<MODE, SharedElemSegment,
-                   &CodeRefPtr<MODE, const ElemSegment, CodeElemSegment<MODE>>>(
+  (void)CodeVector<MODE, ModuleElemSegment, CodeModuleElemSegment<MODE>>(
       coder, &elemSegments_);
   (void)CodeVector<MODE, CustomSection, &CodeCustomSection<MODE>>(
       coder, &customSections_);

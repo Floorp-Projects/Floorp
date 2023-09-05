@@ -45,9 +45,15 @@ enum class InitExprKind {
   Variable,
 };
 
-// A InitExpr describes a deferred initializer expression, used to initialize
-// a global or a table element offset. Such expressions are created during
-// decoding and actually executed on module instantiation.
+// A InitExpr describes a WebAssembly constant expression, such as those used to
+// initialize a global, specify memory offsets in data segments, or populate
+// element segments. Such expressions are created during decoding and actually
+// executed on module instantiation.
+//
+// An InitExpr can only contain constant instructions, which are defined here in
+// the spec:
+//
+// https://webassembly.github.io/spec/core/valid/instructions.html#constant-expressions
 
 class InitExpr {
   InitExprKind kind_;

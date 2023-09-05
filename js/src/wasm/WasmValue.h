@@ -538,4 +538,9 @@ struct InternalBarrierMethods<wasm::Val> {
 
 }  // namespace js
 
+template <>
+struct JS::SafelyInitialized<js::wasm::AnyRef> {
+  static js::wasm::AnyRef create() { return js::wasm::AnyRef::null(); }
+};
+
 #endif  // wasm_val_h
