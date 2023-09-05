@@ -187,6 +187,7 @@ nsLookAndFeel::nsLookAndFeel() {
 }
 
 nsLookAndFeel::~nsLookAndFeel() {
+  ClearRoundedCornerProvider();
   if (mDBusSettingsProxy) {
     g_signal_handlers_disconnect_by_func(
         mDBusSettingsProxy, FuncToGpointer(settings_changed_signal_cb), this);
@@ -1210,8 +1211,9 @@ void nsLookAndFeel::RestoreSystemTheme() {
                  "gtk-application-prefer-dark-theme",
                  mSystemTheme.mPreferDarkTheme, nullptr);
   }
-  moz_gtk_refresh();
   mSystemThemeOverridden = false;
+  UpdateRoundedBottomCornerStyles();
+  moz_gtk_refresh();
 }
 
 static bool AnyColorChannelIsDifferent(nscolor aColor) {
@@ -1327,6 +1329,46 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
   // Right now we're using the opposite color-scheme theme, make sure to record
   // it.
   mSystemThemeOverridden = true;
+  UpdateRoundedBottomCornerStyles();
+}
+
+void nsLookAndFeel::ClearRoundedCornerProvider() {
+  if (mRoundedCornerProvider) {
+    gtk_style_context_remove_provider_for_screen(
+        gdk_screen_get_default(),
+        GTK_STYLE_PROVIDER(mRoundedCornerProvider.get()));
+    mRoundedCornerProvider = nullptr;
+  }
+}
+
+void nsLookAndFeel::UpdateRoundedBottomCornerStyles() {
+  ClearRoundedCornerProvider();
+  if (!StaticPrefs::widget_gtk_rounded_bottom_corners_enabled()) {
+    return;
+  }
+  int32_t radius = EffectiveTheme().mTitlebarRadius;
+  if (!radius) {
+    return;
+  }
+  mRoundedCornerProvider = dont_AddRef(gtk_css_provider_new());
+  nsPrintfCString string(
+      "window.csd decoration {"
+      "border-bottom-right-radius: %dpx;"
+      "border-bottom-left-radius: %dpx;"
+      "}\n",
+      radius, radius);
+  GUniquePtr<GError> error;
+  if (!gtk_css_provider_load_from_data(mRoundedCornerProvider.get(),
+                                       string.get(), string.Length(),
+                                       getter_Transfers(error))) {
+    NS_WARNING(nsPrintfCString("Failed to load provider: %s - %s\n",
+                               string.get(), error ? error->message : nullptr)
+                   .get());
+  }
+  gtk_style_context_add_provider_for_screen(
+      gdk_screen_get_default(),
+      GTK_STYLE_PROVIDER(mRoundedCornerProvider.get()),
+      GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 }
 
 Maybe<ColorScheme> nsLookAndFeel::ComputeColorSchemeSetting() {
@@ -1546,8 +1588,9 @@ void nsLookAndFeel::ConfigureFinalEffectiveTheme() {
                    "gtk-application-prefer-dark-theme",
                    mAltTheme.mPreferDarkTheme, nullptr);
     }
-    moz_gtk_refresh();
     mSystemThemeOverridden = true;
+    UpdateRoundedBottomCornerStyles();
+    moz_gtk_refresh();
   }
 }
 

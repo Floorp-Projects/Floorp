@@ -6922,7 +6922,8 @@ LayoutDeviceIntCoord nsWindow::GetTitlebarRadius() {
 // to draw transparent corners of default Gtk titlebar.
 // Both implementations (cairo_region_t and wl_region) needs to be synced.
 static void SubtractTitlebarCorners(cairo_region_t* aRegion, int aX, int aY,
-                                    int aWindowWidth, int aTitlebarRadius) {
+                                    int aWindowWidth, int aWindowHeight,
+                                    int aTitlebarRadius) {
   if (!aTitlebarRadius) {
     return;
   }
@@ -6935,9 +6936,23 @@ static void SubtractTitlebarCorners(cairo_region_t* aRegion, int aX, int aY,
       aTitlebarRadius,
   };
   cairo_region_subtract_rectangle(aRegion, &rect);
+  rect = {
+      aX,
+      aY + aWindowHeight - aTitlebarRadius,
+      aTitlebarRadius,
+      aTitlebarRadius,
+  };
+  cairo_region_subtract_rectangle(aRegion, &rect);
+  rect = {
+      aX + aWindowWidth - aTitlebarRadius,
+      aY + aWindowHeight - aTitlebarRadius,
+      aTitlebarRadius,
+      aTitlebarRadius,
+  };
+  cairo_region_subtract_rectangle(aRegion, &rect);
 }
 
-void nsWindow::UpdateTopLevelOpaqueRegion(void) {
+void nsWindow::UpdateTopLevelOpaqueRegion() {
   if (!mCompositedScreen) {
     return;
   }
@@ -6962,8 +6977,10 @@ void nsWindow::UpdateTopLevelOpaqueRegion(void) {
   cairo_rectangle_int_t rect = {x, y, width, height};
   cairo_region_union_rectangle(region, &rect);
 
+  // TODO: We actually could get a proper opaque region from layout, see
+  // nsIWidget::UpdateOpaqueRegion. This could simplify titlebar drawing.
   int radius = DoDrawTilebarCorners() ? int(GetTitlebarRadius()) : 0;
-  SubtractTitlebarCorners(region, x, y, width, radius);
+  SubtractTitlebarCorners(region, x, y, width, height, radius);
 
   gdk_window_set_opaque_region(window, region);
 

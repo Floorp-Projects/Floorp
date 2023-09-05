@@ -16,6 +16,7 @@
 enum WidgetNodeType : int;
 struct _GtkStyle;
 typedef struct _GDBusProxy GDBusProxy;
+typedef struct _GtkCssProvider GtkCssProvider;
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:
@@ -173,6 +174,11 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   int32_t mCSDMaximizeButtonPosition = 0;
   int32_t mCSDMinimizeButtonPosition = 0;
   int32_t mCSDCloseButtonPosition = 0;
+
+  RefPtr<GtkCssProvider> mRoundedCornerProvider;
+  void UpdateRoundedBottomCornerStyles();
+
+  void ClearRoundedCornerProvider();
 
   void EnsureInit() {
     if (mInitialized) {

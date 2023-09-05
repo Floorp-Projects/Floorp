@@ -524,6 +524,11 @@ static wl_region* moz_container_wayland_create_opaque_region(
     wl_region_subtract(region, aX, aY, aCornerRadius, aCornerRadius);
     wl_region_subtract(region, aX + aWidth - aCornerRadius, aY, aCornerRadius,
                        aCornerRadius);
+    wl_region_subtract(region, aX, aY + aHeight - aCornerRadius, aCornerRadius,
+                       aCornerRadius);
+    wl_region_subtract(region, aX + aWidth - aCornerRadius,
+                       aY + aHeight - aCornerRadius, aCornerRadius,
+                       aCornerRadius);
   }
   return region;
 }

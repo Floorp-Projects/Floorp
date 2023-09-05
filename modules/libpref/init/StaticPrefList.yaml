@@ -15271,6 +15271,16 @@
   value: true
   mirror: always
 
+# Whether we enable rounded bottom corners on GTK by default.
+#
+# The implementation is a bit hacky (see details in bug 1850827) so behind a
+# pref for emergency purposes.
+- name: widget.gtk.rounded-bottom-corners.enabled
+  type: bool
+  value: true
+  mirror: always
+  rust: true
+
 # Whether selection colors for the non-system theme get passed from the system
 # GTK theme.
 - name: widget.gtk.alt-theme.selection
