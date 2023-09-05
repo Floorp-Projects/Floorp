@@ -244,17 +244,18 @@ export const BrowserWindowTracker = {
 
     // Prevent leaks in case the window closes before we track it as an open
     // window.
-    window.addEventListener(
-      "unload",
-      () => {
+    const topic = "browsing-context-discarded";
+    const observer = (aSubject, aTopic, aData) => {
+      if (window.browsingContext == aSubject) {
         let pending = this.pendingWindows.get(window);
         if (pending) {
           this.pendingWindows.delete(window);
           pending.deferred.resolve(window);
         }
-      },
-      { once: true }
-    );
+        Services.obs.removeObserver(observer, topic);
+      }
+    };
+    Services.obs.addObserver(observer, topic);
   },
 
   /**
