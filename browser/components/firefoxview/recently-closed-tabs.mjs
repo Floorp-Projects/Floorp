@@ -78,6 +78,7 @@ class RecentlyClosedTabsList extends MozLitElement {
   }
 
   disconnectedCallback() {
+    super.disconnectedCallback();
     clearInterval(this.intervalID);
   }
 

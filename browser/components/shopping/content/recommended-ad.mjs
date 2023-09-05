@@ -26,6 +26,7 @@ class RecommendedAd extends MozLitElement {
   }
 
   disconnectedCallback() {
+    super.disconnectedCallback();
     this.clearRecommendationAdTimeout();
     this.revokeImageUrl();
   }
