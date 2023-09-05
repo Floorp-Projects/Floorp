@@ -401,6 +401,8 @@ export class PromptParent extends JSWindowActorParent {
         ? {
             wasPermitUnload: args.inPermitUnload,
             areLeaving: args.ok,
+            // If a prompt was not accepted, do not return the prompt value.
+            value: args.ok ? args.value : null,
           }
         : null;
 
