@@ -176,7 +176,12 @@ getAllBackupedNotes().then(content => {
   }
 });
 
+/*------------------------------------- user.js -------------------------------------*/
 // Apply Floorp user.js
+
+let userjsUtils = ChromeUtils.importESModule(
+  "resource:///modules/userjsUtils.sys.mjs"
+);
 
 const FLOORP_USERJS_PREF = "floorp.browser.userjs";
 
@@ -184,6 +189,7 @@ const FLOORP_USERJS_PREF = "floorp.browser.userjs";
   const pref = Services.prefs.getStringPref("floorp.user.js.customize", "");
 
   if (pref != "") {
+    let url = userjsUtils.userJsList[pref][0];
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
     const userjs = PathUtils.join(PROFILE_DIR, "user.js");
 
@@ -191,7 +197,7 @@ const FLOORP_USERJS_PREF = "floorp.browser.userjs";
       userjs.remove(false);
     } catch (e) {}
 
-    fetch(pref)
+    fetch(url)
       .then(response => response.text())
       .then(async data => {
         const encoder = new TextEncoder("UTF-8");

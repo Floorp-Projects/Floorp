@@ -24,5 +24,6 @@ EXTRA_JS_MODULES += [
     "FloorpStartup.sys.mjs",
     "OpenLinkInExternal.sys.mjs",
     "PortableUpdate.sys.mjs",
+    "userjsUtils.sys.mjs",
     "WorkspaceUtils.sys.mjs",
 ]

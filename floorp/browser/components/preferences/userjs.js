@@ -6,6 +6,11 @@
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+
+let userjsUtils = ChromeUtils.importESModule(
+  "resource:///modules/userjsUtils.sys.mjs"
+);
+
 let l10n = new Localization(["browser/floorp.ftl"], true);
 
 XPCOMUtils.defineLazyGetter(this, "L10n", () => {
@@ -26,6 +31,7 @@ const gUserjsPane = {
     for (let button of buttons) {
       button.addEventListener("click", async function (event) {
         let url = event.target.getAttribute("data-url");
+        let id = event.target.getAttribute("id");
         const prompts = Services.prompt;
         const check = { value: false };
         const flags =
@@ -46,17 +52,17 @@ const gUserjsPane = {
         );
         if (result == 0) {
           if (!url) {
-            await resetPreferences();
+            await userjsUtils.userjsUtilsFunctions.resetPreferencesWithUserJsContents();
             window.setTimeout(async function () {
               try{FileUtils.getFile("ProfD", ["user.js"]).remove(false);} catch(e) {};
               Services.prefs.clearUserPref("floorp.user.js.customize");
               Services.obs.notifyObservers([], "floorp-restart-browser");
             }, 3000);
           } else {
-            await resetPreferences();
+            await userjsUtils.userjsUtilsFunctions.resetPreferencesWithUserJsContents();
             window.setTimeout(async function () {
-              await setUserJSWithURL(url);
-              Services.prefs.setStringPref("floorp.user.js.customize", url);
+              await userjsUtils.userjsUtilsFunctions.setUserJSWithURL(url);
+              Services.prefs.setStringPref("floorp.user.js.customize", id);
             }, 3000);
           }
         }
@@ -64,54 +70,3 @@ const gUserjsPane = {
     }
   },
 };
-
-
-async function setUserJSWithURL(url) {
-  try{userjs.remove(false);} catch(e) {}
-  fetch(url)
-    .then(response => response.text())
-    .then(async data => {
-      const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-      const userjs = PathUtils.join(PROFILE_DIR, "user.js");
-      const encoder = new TextEncoder("UTF-8");
-      const writeData = encoder.encode(data);
-
-      await IOUtils.write(userjs, writeData);
-      Services.obs.notifyObservers([], "floorp-restart-browser");
-    });
-}
-
-
-async function resetPreferences() {
-  const FileUtilsPath = FileUtils.getFile("ProfD", ["user.js"]);
-  const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-
-  if (!FileUtilsPath.exists()) {
-    console.warn("user.js does not exist");
-    const path = PathUtils.join(PROFILE_DIR, "user.js");
-    const encoder = new TextEncoder("UTF-8");
-    const data = encoder.encode("fake data");
-    await IOUtils.write(path, data);
-  }
-
-  const decoder = new TextDecoder("UTF-8");
-  const path = PathUtils.join(PROFILE_DIR, "user.js");
-  let read = await IOUtils.read(path);
-  let inputStream = decoder.decode(read);
-
-  const prefPattern = /user_pref\("([^"]+)",\s*(true|false|\d+|"[^"]*")\);/g;
-  let match;
-  while ((match = prefPattern.exec(inputStream)) !== null) {
-    if (!match[0].startsWith("//")) {
-      const settingName = match[1];
-      await new Promise(resolve => {
-        setTimeout(() => {
-          Services.prefs.clearUserPref(settingName);
-          console.info("resetting " + settingName);
-        }, 100);
-        resolve();
-      });
-    }
-  }
-
-}
