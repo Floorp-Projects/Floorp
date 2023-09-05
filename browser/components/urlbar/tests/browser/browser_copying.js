@@ -414,3 +414,47 @@ function testCopy(copyVal, targetValue) {
     goDoCommand("cmd_copy")
   );
 }
+
+add_task(async function includingProtocol() {
+  await PlacesUtils.history.clear();
+  await PlacesTestUtils.clearInputHistory();
+
+  await PlacesTestUtils.addVisits(["https://example.com/"]);
+
+  // If the url is autofilled, the protocol should be included in the copied
+  // value.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "example",
+    fireInputEvent: true,
+  });
+  Assert.ok(
+    (await UrlbarTestUtils.getDetailsOfResultAt(window, 0)).autofill,
+    "The first result should be aufotill suggestion"
+  );
+
+  window.goDoCommand("cmd_selectAll");
+  await SimpleTest.promiseClipboardChange("https://example.com/", () =>
+    goDoCommand("cmd_copy")
+  );
+  Assert.ok(true, "Expected value is copied");
+
+  // Then, when adding some more characters, should not be included.
+  gURLBar.selectionStart = gURLBar.value.length;
+  gURLBar.selectionEnd = gURLBar.value.length;
+  EventUtils.synthesizeKey("x");
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  Assert.ok(
+    !(await UrlbarTestUtils.getDetailsOfResultAt(window, 0)).autofill,
+    "The first result should not be aufotill suggestion"
+  );
+
+  window.goDoCommand("cmd_selectAll");
+  await SimpleTest.promiseClipboardChange("example.com/x", () =>
+    goDoCommand("cmd_copy")
+  );
+  Assert.ok(true, "Expected value is copied");
+
+  await PlacesUtils.history.clear();
+  await PlacesTestUtils.clearInputHistory();
+});
