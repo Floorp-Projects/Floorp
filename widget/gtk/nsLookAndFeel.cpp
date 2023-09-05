@@ -1219,22 +1219,13 @@ static bool AnyColorChannelIsDifferent(nscolor aColor) {
          NS_GET_R(aColor) != NS_GET_B(aColor);
 }
 
-void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
+bool nsLookAndFeel::ConfigureAltTheme() {
   GtkSettings* settings = gtk_settings_get_default();
-
-  bool fellBackToDefaultTheme = false;
-
-  // Try to select the opposite variant of the current theme first...
-  LOGLNF("    toggling gtk-application-prefer-dark-theme\n");
-  g_object_set(settings, "gtk-application-prefer-dark-theme",
-               !mSystemTheme.mIsDark, nullptr);
-  moz_gtk_refresh();
-
   // Toggling gtk-application-prefer-dark-theme is not enough generally to
   // switch from dark to light theme.  If the theme didn't change, and we have
   // a dark theme, try to first remove -Dark{,er,est} from the theme name to
   // find the light variant.
-  if (mSystemTheme.mIsDark && mSystemTheme.mIsDark == GetThemeIsDark()) {
+  if (mSystemTheme.mIsDark) {
     nsCString potentialLightThemeName = mSystemTheme.mName;
     // clang-format off
     constexpr nsLiteralCString kSubstringsToRemove[] = {
@@ -1245,7 +1236,7 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
     };
     // clang-format on
     bool found = false;
-    for (auto& s : kSubstringsToRemove) {
+    for (const auto& s : kSubstringsToRemove) {
       potentialLightThemeName = mSystemTheme.mName;
       potentialLightThemeName.ReplaceSubstring(s, ""_ns);
       if (potentialLightThemeName.Length() != mSystemTheme.mName.Length()) {
@@ -1254,29 +1245,49 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
       }
     }
     if (found) {
+      LOGLNF("    found potential light variant of %s: %s",
+             mSystemTheme.mName.get(), potentialLightThemeName.get());
       g_object_set(settings, "gtk-theme-name", potentialLightThemeName.get(),
+                   "gtk-application-prefer-dark-theme", !mSystemTheme.mIsDark,
                    nullptr);
       moz_gtk_refresh();
+
+      if (!GetThemeIsDark()) {
+        return true;  // Success!
+      }
     }
   }
 
-  if (mSystemTheme.mIsDark == GetThemeIsDark()) {
-    // If the theme still didn't change enough, fall back to Adwaita with the
-    // appropriate color preference.
-    g_object_set(settings, "gtk-theme-name", "Adwaita",
-                 "gtk-application-prefer-dark-theme", !mSystemTheme.mIsDark,
-                 nullptr);
+  LOGLNF("    toggling gtk-application-prefer-dark-theme");
+  g_object_set(settings, "gtk-application-prefer-dark-theme",
+               !mSystemTheme.mIsDark, nullptr);
+  moz_gtk_refresh();
+  if (mSystemTheme.mIsDark != GetThemeIsDark()) {
+    return true;  // Success!
+  }
+
+  LOGLNF("    didn't work, falling back to default theme");
+  // If the theme still didn't change enough, fall back to Adwaita with the
+  // appropriate color preference.
+  g_object_set(settings, "gtk-theme-name", "Adwaita",
+               "gtk-application-prefer-dark-theme", !mSystemTheme.mIsDark,
+               nullptr);
+  moz_gtk_refresh();
+
+  // If it _still_ didn't change enough, and we're looking for a dark theme,
+  // try to set Adwaita-dark as a theme name. This might be needed in older GTK
+  // versions.
+  if (!mSystemTheme.mIsDark && !GetThemeIsDark()) {
+    LOGLNF("    last resort Adwaita-dark fallback");
+    g_object_set(settings, "gtk-theme-name", "Adwaita-dark", nullptr);
     moz_gtk_refresh();
-
-    // If it _still_ didn't change enough, and we're dark, try to set
-    // Adwaita-dark as a theme name. This might be needed in older GTK versions.
-    if (!mSystemTheme.mIsDark && !GetThemeIsDark()) {
-      g_object_set(settings, "gtk-theme-name", "Adwaita-dark", nullptr);
-      moz_gtk_refresh();
-    }
-
-    fellBackToDefaultTheme = true;
   }
+
+  return false;
+}
+
+void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
+  const bool fellBackToDefaultTheme = !ConfigureAltTheme();
 
   mAltTheme.Init();
 
