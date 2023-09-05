@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Open Tabs Tests</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <link rel="localization" href="browser/firefoxView.ftl">
   <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="module" src="chrome://browser/content/firefoxview/opentabs.mjs"></script>
@@ -173,6 +174,15 @@
     is(cards.length, NUMBER_OF_WINDOWS, "There are four windows.");
     const lastCard = cards[NUMBER_OF_WINDOWS - 1];
     const lastWindow = windows[NUMBER_OF_WINDOWS - 2];
+    const tab = () => {
+      info("Tab");
+      synthesizeKey("KEY_Tab", {});
+    };
+    const enter = () => {
+      info("Enter");
+      synthesizeKey("KEY_Enter", {});
+    };
+
     for (let i = 0; i < NUMBER_OF_TABS - 1; i++) {
       await BrowserTestUtils.openNewForegroundTab(lastWindow.gBrowser);
     }
@@ -188,6 +198,48 @@
       { childList: true, subtree: true },
       () => getRowsForCard(lastCard).length === NUMBER_OF_TABS
     );
+
+    info("Toggle the Show Less link.");
+    lastCard.shadowRoot.querySelector("div[slot=footer]").click();
+    await BrowserTestUtils.waitForMutationCondition(
+      lastCard.shadowRoot,
+      { childList: true, subtree: true },
+      () => getRowsForCard(lastCard).length < NUMBER_OF_TABS
+    );
+
+    // Setting this pref allows the test to run as expected with a keyboard on MacOS
+    await window.SpecialPowers.pushPrefEnv({
+      set: [["accessibility.tabfocus", 7]],
+    });
+
+    info("Toggle the Show More link with keyboard.");
+    lastCard.shadowRoot.querySelector("card-container").summaryEl.focus();
+    // Tab to first item in the list
+    tab();
+    // Tab to the footer
+    tab();
+    enter();
+    await BrowserTestUtils.waitForMutationCondition(
+      lastCard.shadowRoot,
+      { childList: true, subtree: true },
+      () => getRowsForCard(lastCard).length === NUMBER_OF_TABS
+    );
+
+    info("Toggle the Show Less link with keyboard.");
+    lastCard.shadowRoot.querySelector("card-container").summaryEl.focus();
+    // Tab to first item in the list
+    tab();
+    // Tab to the footer
+    tab();
+    enter();
+    await BrowserTestUtils.waitForMutationCondition(
+      lastCard.shadowRoot,
+      { childList: true, subtree: true },
+      () => getRowsForCard(lastCard).length < NUMBER_OF_TABS
+    );
+
+    await window.SpecialPowers.popPrefEnv();
+
     for (let win of windows) {
       await BrowserTestUtils.closeWindow(win);
     }
