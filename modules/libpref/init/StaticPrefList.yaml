@@ -2860,6 +2860,20 @@
   value: false
   mirror: always
 
+# The minimum number of ticks after page navigation
+# that need to occur before user input events are allowed to be handled.
+- name: dom.input_events.security.minNumTicks
+  type: uint32_t
+  value: 3
+  mirror: always
+
+# The minimum elapsed time (in milliseconds) after page navigation
+# for user input events are allowed to be handled.
+- name: dom.input_events.security.minTimeElapsedInMS
+  type: uint32_t
+  value: 100
+  mirror: always
+
 # The maximum time (milliseconds) we reserve for handling input events in each
 # frame.
 - name: dom.input_event_queue.duration.max

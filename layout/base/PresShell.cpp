@@ -1983,6 +1983,26 @@ bool PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight) {
   return true;
 }
 
+bool PresShell::CanHandleUserInputEvents(WidgetGUIEvent* aGUIEvent) {
+  if (XRE_IsParentProcess()) {
+    return true;
+  }
+
+  if (aGUIEvent->mFlags.mIsSynthesizedForTests) {
+    return true;
+  }
+
+  if (!aGUIEvent->IsUserAction()) {
+    return true;
+  }
+
+  if (nsPresContext* rootPresContext = mPresContext->GetRootPresContext()) {
+    return rootPresContext->UserInputEventsAllowed();
+  }
+
+  return true;
+}
+
 void PresShell::AddResizeEventFlushObserverIfNeeded() {
   if (!mIsDestroying && !mResizeEventPending &&
       MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
@@ -6864,6 +6884,17 @@ nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
       aGUIEvent->AsMouseEvent()->mReason == WidgetMouseEvent::eSynthesized) {
     return NS_OK;
   }
+
+  // Here we are granting some delays to ensure that user input events are
+  // created while the page content may not be visible to the user are not
+  // processed.
+  // The main purpose of this is to avoid user inputs are handled in the
+  // new document where as the user inputs were originally targeting some
+  // content in the old document.
+  if (!CanHandleUserInputEvents(aGUIEvent)) {
+    return NS_OK;
+  }
+
   EventHandler eventHandler(*this);
   return eventHandler.HandleEvent(aFrameForPresShell, aGUIEvent,
                                   aDontRetargetEvents, aEventStatus);
@@ -9285,6 +9316,10 @@ void PresShell::Freeze(bool aIncludeSubDocuments) {
     if (presContext->RefreshDriver()->GetPresContext() == presContext) {
       presContext->RefreshDriver()->Freeze();
     }
+
+    if (nsPresContext* rootPresContext = presContext->GetRootPresContext()) {
+      rootPresContext->ResetUserInputEventsAllowed();
+    }
   }
 
   mFrozen = true;
@@ -9343,6 +9378,16 @@ void PresShell::Thaw(bool aIncludeSubDocuments) {
   UpdateImageLockingState();
 
   UnsuppressPainting();
+
+  // In case the above UnsuppressPainting call didn't start the
+  // refresh driver, we manually start the refresh driver to
+  // ensure nsPresContext::MaybeIncreaseMeasuredTicksSinceLoading
+  // can be called for user input events handling.
+  if (presContext && presContext->IsRoot()) {
+    if (!presContext->RefreshDriver()->HasPendingTick()) {
+      presContext->RefreshDriver()->InitializeTimer();
+    }
+  }
 }
 
 //--------------------------------------------------------
