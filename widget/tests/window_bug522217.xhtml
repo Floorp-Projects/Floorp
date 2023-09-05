@@ -43,13 +43,13 @@ async function start() {
   await waitForEvent(window, "focus");
   var oldOuterWidth = window.outerWidth, oldOuterHeight = window.outerHeight;
   var oldInnerWidth = window.innerWidth, oldInnerHeight = window.innerHeight;
-  document.documentElement.setAttribute("drawintitlebar", "true");
+  document.documentElement.setAttribute("chromemargin", "0,0,0,0");
 
   await executeSoon();
-  is(window.outerWidth, oldOuterWidth, "drawintitlebar shouldn't change the window's outerWidth");
-  is(window.outerHeight, oldOuterHeight, "drawintitlebar shouldn't change the window's outerHeight");
-  is(window.innerWidth, oldOuterWidth, "if drawintitlebar is set, innerWidth and outerWidth should be the same");
-  is(window.innerHeight, oldOuterHeight, "if drawintitlebar is set, innerHeight and outerHeight should be the same");
+  is(window.outerWidth, oldOuterWidth, "chromemargin shouldn't change the window's outerWidth");
+  is(window.outerHeight, oldOuterHeight, "chromemargin shouldn't change the window's outerHeight");
+  is(window.innerWidth, oldOuterWidth, "if chromemargin is set, innerWidth and outerWidth should be the same");
+  is(window.innerHeight, oldOuterHeight, "if chromemargin is set, innerHeight and outerHeight should be the same");
 
   // Wait for going full screen and back.
   let sizemodeChange = waitForEvent(window, "sizemodechange");
@@ -62,13 +62,13 @@ async function start() {
   is(window.outerHeight, oldOuterHeight, "wrong outerHeight after fullscreen mode");
   is(window.innerWidth, oldOuterWidth, "wrong innerWidth after fullscreen mode");
   is(window.innerHeight, oldOuterHeight, "wrong innerHeight after fullscreen mode");
-  document.documentElement.removeAttribute("drawintitlebar");
+  document.documentElement.removeAttribute("chromemargin");
 
   await executeSoon();
-  is(window.outerWidth, oldOuterWidth, "wrong outerWidth after removing drawintitlebar");
-  is(window.outerHeight, oldOuterHeight, "wrong outerHeight after removing drawintitlebar");
-  is(window.innerWidth, oldInnerWidth, "wrong innerWidth after removing drawintitlebar");
-  is(window.innerHeight, oldInnerHeight, "wrong innerHeight after removing drawintitlebar");
+  is(window.outerWidth, oldOuterWidth, "wrong outerWidth after removing chromemargin");
+  is(window.outerHeight, oldOuterHeight, "wrong outerHeight after removing chromemargin");
+  is(window.innerWidth, oldInnerWidth, "wrong innerWidth after removing chromemargin");
+  is(window.innerHeight, oldInnerHeight, "wrong innerHeight after removing chromemargin");
   window.arguments[0].SimpleTest.finish();
   window.close();
 }

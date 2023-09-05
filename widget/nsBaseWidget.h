@@ -270,7 +270,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   }
   bool HasPendingInputEvent() override;
   void SetIcon(const nsAString& aIconSpec) override {}
-  void SetDrawsInTitlebar(bool aState) override {}
   bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override;
   void FreeNativeData(void* data, uint32_t aDataType) override {}
   nsresult ActivateNativeMenuItemAt(const nsAString& indexString) override {
