@@ -1,0 +1,115 @@
+From 2836e92ea557be53fcd91e38cb05a989ad0167e9 Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Wed, 8 Mar 2023 14:44:58 +0900
+Subject: [PATCH] Revert "Split getCompileUnitFor{Data,Code}Address."
+
+This reverts commit 02e8eb1a438bdb1dc9a97aea75a8c9c748048039, which
+applies on top of cead4eceb01b935fae07bf4a7e91911b344d2fec, that we
+revert too.
+---
+ .../llvm/DebugInfo/DWARF/DWARFContext.h       | 11 +--------
+ llvm/lib/DebugInfo/DWARF/DWARFContext.cpp     | 23 ++++++++-----------
+ 2 files changed, 11 insertions(+), 23 deletions(-)
+
+diff --git a/llvm/include/llvm/DebugInfo/DWARF/DWARFContext.h b/llvm/include/llvm/DebugInfo/DWARF/DWARFContext.h
+index 4bd8394e6b4e..3f49fadc2b98 100644
+--- a/llvm/include/llvm/DebugInfo/DWARF/DWARFContext.h
++++ b/llvm/include/llvm/DebugInfo/DWARF/DWARFContext.h
+@@ -459,16 +459,7 @@ public:
+   /// address.
+   /// TODO: change input parameter from "uint64_t Address"
+   ///       into "SectionedAddress Address"
+-  DWARFCompileUnit *getCompileUnitForCodeAddress(uint64_t Address);
+-
+-  /// Return the compile unit which contains data with the provided address.
+-  /// Note: This is more expensive than `getCompileUnitForAddress`, as if
+-  /// `Address` isn't found in the CU ranges (which is cheap), then it falls
+-  /// back to an expensive O(n) walk of all CU's looking for data that spans the
+-  /// address.
+-  /// TODO: change input parameter from "uint64_t Address" into
+-  ///       "SectionedAddress Address"
+-  DWARFCompileUnit *getCompileUnitForDataAddress(uint64_t Address);
++  DWARFCompileUnit *getCompileUnitForAddress(uint64_t Address);
+ 
+   /// Returns whether CU/TU should be populated manually. TU Index populated
+   /// manually only for DWARF5.
+diff --git a/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp b/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp
+index a45ed0e56553..692304ac6774 100644
+--- a/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp
++++ b/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp
+@@ -1492,17 +1492,14 @@ DWARFCompileUnit *DWARFContext::getCompileUnitForOffset(uint64_t Offset) {
+       State->getNormalUnits().getUnitForOffset(Offset));
+ }
+ 
+-DWARFCompileUnit *DWARFContext::getCompileUnitForCodeAddress(uint64_t Address) {
+-  uint64_t CUOffset = getDebugAranges()->findAddress(Address);
+-  return getCompileUnitForOffset(CUOffset);
+-}
+-
+-DWARFCompileUnit *DWARFContext::getCompileUnitForDataAddress(uint64_t Address) {
++DWARFCompileUnit *DWARFContext::getCompileUnitForAddress(uint64_t Address) {
++  // First, get the offset of the compile unit.
+   uint64_t CUOffset = getDebugAranges()->findAddress(Address);
++  // Retrieve the compile unit.
+   if (DWARFCompileUnit *OffsetCU = getCompileUnitForOffset(CUOffset))
+     return OffsetCU;
+ 
+-  // Global variables are often missed by the above search, for one of two
++  // Global variables are often not found by the above search, for one of two
+   // reasons:
+   //   1. .debug_aranges may not include global variables. On clang, it seems we
+   //      put the globals in the aranges, but this isn't true for gcc.
+@@ -1523,7 +1520,7 @@ DWARFCompileUnit *DWARFContext::getCompileUnitForDataAddress(uint64_t Address) {
+ DWARFContext::DIEsForAddress DWARFContext::getDIEsForAddress(uint64_t Address) {
+   DIEsForAddress Result;
+ 
+-  DWARFCompileUnit *CU = getCompileUnitForCodeAddress(Address);
++  DWARFCompileUnit *CU = getCompileUnitForAddress(Address);
+   if (!CU)
+     return Result;
+ 
+@@ -1674,7 +1671,7 @@ void DWARFContext::addLocalsForDie(DWARFCompileUnit *CU, DWARFDie Subprogram,
+ std::vector<DILocal>
+ DWARFContext::getLocalsForAddress(object::SectionedAddress Address) {
+   std::vector<DILocal> Result;
+-  DWARFCompileUnit *CU = getCompileUnitForCodeAddress(Address.Address);
++  DWARFCompileUnit *CU = getCompileUnitForAddress(Address.Address);
+   if (!CU)
+     return Result;
+ 
+@@ -1687,7 +1684,7 @@ DWARFContext::getLocalsForAddress(object::SectionedAddress Address) {
+ DILineInfo DWARFContext::getLineInfoForAddress(object::SectionedAddress Address,
+                                                DILineInfoSpecifier Spec) {
+   DILineInfo Result;
+-  DWARFCompileUnit *CU = getCompileUnitForCodeAddress(Address.Address);
++  DWARFCompileUnit *CU = getCompileUnitForAddress(Address.Address);
+   if (!CU)
+     return Result;
+ 
+@@ -1708,7 +1705,7 @@ DILineInfo DWARFContext::getLineInfoForAddress(object::SectionedAddress Address,
+ DILineInfo
+ DWARFContext::getLineInfoForDataAddress(object::SectionedAddress Address) {
+   DILineInfo Result;
+-  DWARFCompileUnit *CU = getCompileUnitForDataAddress(Address.Address);
++  DWARFCompileUnit *CU = getCompileUnitForAddress(Address.Address);
+   if (!CU)
+     return Result;
+ 
+@@ -1723,7 +1720,7 @@ DWARFContext::getLineInfoForDataAddress(object::SectionedAddress Address) {
+ DILineInfoTable DWARFContext::getLineInfoForAddressRange(
+     object::SectionedAddress Address, uint64_t Size, DILineInfoSpecifier Spec) {
+   DILineInfoTable Lines;
+-  DWARFCompileUnit *CU = getCompileUnitForCodeAddress(Address.Address);
++  DWARFCompileUnit *CU = getCompileUnitForAddress(Address.Address);
+   if (!CU)
+     return Lines;
+ 
+@@ -1779,7 +1776,7 @@ DWARFContext::getInliningInfoForAddress(object::SectionedAddress Address,
+                                         DILineInfoSpecifier Spec) {
+   DIInliningInfo InliningInfo;
+ 
+-  DWARFCompileUnit *CU = getCompileUnitForCodeAddress(Address.Address);
++  DWARFCompileUnit *CU = getCompileUnitForAddress(Address.Address);
+   if (!CU)
+     return InliningInfo;
+ 
