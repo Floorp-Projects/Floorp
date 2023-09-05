@@ -940,7 +940,6 @@
   "resource://pdf.js/PdfjsParent.jsm": "toolkit/components/pdfjs/content/PdfjsParent.jsm",
   "resource://pdf.js/build/pdf.sandbox.external.js": "toolkit/components/pdfjs/content/build/pdf.sandbox.external.js",
   "resource://reftest/AsyncSpellCheckTestHelper.jsm": "editor/AsyncSpellCheckTestHelper.jsm",
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm": "editor/AsyncSpellCheckTestHelper.jsm",
   "resource://reftest/PerTestCoverageUtils.jsm": "tools/code-coverage/PerTestCoverageUtils.jsm",
   "resource://reftest/ReftestFissionChild.jsm": "layout/tools/reftest/ReftestFissionChild.jsm",
   "resource://reftest/ReftestFissionParent.jsm": "layout/tools/reftest/ReftestFissionParent.jsm",

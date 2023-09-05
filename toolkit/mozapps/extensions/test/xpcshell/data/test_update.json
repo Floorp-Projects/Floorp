@@ -6,7 +6,6 @@
           "version": "1.0",
           "applications": {
             "gecko": {
-              "strict_min_version": "1",
               "strict_min_version": "1"
             }
           }
@@ -15,7 +14,6 @@
           "version": "1.0",
           "applications": {
             "gecko": {
-              "strict_min_version": "2",
               "strict_min_version": "2"
             }
           }
@@ -26,22 +24,7 @@
           "update_info_url": "http://example.com/updateInfo.xhtml",
           "applications": {
             "gecko": {
-              "strict_min_version": "1",
               "strict_min_version": "1"
-            }
-          }
-        }
-      ]
-    },
-
-    "addon2@tests.mozilla.org": {
-      "updates": [
-        {
-          "version": "1.0",
-          "applications": {
-            "gecko": {
-              "strict_min_version": "0",
-              "advisory_max_version": "1"
             }
           }
         }

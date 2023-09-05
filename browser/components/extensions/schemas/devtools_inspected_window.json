@@ -217,7 +217,6 @@
         "unsupported": true,
         "type": "function",
         "description": "Retrieves the list of resources from the inspected page.",
-        "unsupported": true,
         "async": "callback",
         "parameters": [
           {
