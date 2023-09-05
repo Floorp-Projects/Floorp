@@ -64,34 +64,6 @@ nsIWidget* ChromeObserver::GetWindowWidget() {
   return nullptr;
 }
 
-class SetDrawInTitleBarEvent : public Runnable {
- public:
-  SetDrawInTitleBarEvent(nsIWidget* aWidget, bool aState)
-      : mozilla::Runnable("SetDrawInTitleBarEvent"),
-        mWidget(aWidget),
-        mState(aState) {}
-
-  NS_IMETHOD Run() override {
-    NS_ASSERTION(mWidget,
-                 "You shouldn't call this runnable with a null widget!");
-
-    mWidget->SetDrawsInTitlebar(mState);
-    return NS_OK;
-  }
-
- private:
-  nsCOMPtr<nsIWidget> mWidget;
-  bool mState;
-};
-
-void ChromeObserver::SetDrawsInTitlebar(bool aState) {
-  nsIWidget* mainWidget = GetWindowWidget();
-  if (mainWidget) {
-    nsContentUtils::AddScriptRunner(
-        new SetDrawInTitleBarEvent(mainWidget, aState));
-  }
-}
-
 void ChromeObserver::SetDrawsTitle(bool aState) {
   nsIWidget* mainWidget = GetWindowWidget();
   if (mainWidget) {
@@ -159,8 +131,6 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
     // any root node (windows, dialogs, etc)
     else if (aName == nsGkAtoms::title) {
       mDocument->NotifyPossibleTitleChange(false);
-    } else if (aName == nsGkAtoms::drawintitlebar) {
-      SetDrawsInTitlebar(value->Equals(u"true"_ns, eCaseMatters));
     } else if (aName == nsGkAtoms::drawtitle) {
       SetDrawsTitle(value->Equals(u"true"_ns, eCaseMatters));
     } else if (aName == nsGkAtoms::localedir) {
@@ -184,8 +154,6 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
     } else if (aName == nsGkAtoms::lwtheme) {
       // if the lwtheme changed, make sure to restyle appropriately
       mDocument->ResetDocumentLWTheme();
-    } else if (aName == nsGkAtoms::drawintitlebar) {
-      SetDrawsInTitlebar(false);
     } else if (aName == nsGkAtoms::drawtitle) {
       SetDrawsTitle(false);
     }

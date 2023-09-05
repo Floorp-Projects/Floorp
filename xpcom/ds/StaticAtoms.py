@@ -403,7 +403,6 @@ STATIC_ATOMS = [
     Atom("draggable", "draggable"),
     Atom("dragging", "dragging"),
     Atom("dragSession", "dragSession"),
-    Atom("drawintitlebar", "drawintitlebar"),
     Atom("drawtitle", "drawtitle"),
     Atom("dropAfter", "dropAfter"),
     Atom("dropBefore", "dropBefore"),
