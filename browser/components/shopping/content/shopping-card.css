@@ -32,7 +32,7 @@ button {
 #label-wrapper {
   display: flex;
   justify-content: space-between;
-  align-self: stretch;
+  gap: 0.5rem;
 }
 
 :host([type="accordion"]) #label-wrapper {
