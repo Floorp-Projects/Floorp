@@ -120,6 +120,8 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
   VideoCaptureOptions::Callback* callback_ RTC_GUARDED_BY(&callback_lock_) =
       nullptr;
 
+  VideoCaptureOptions::Status status_;
+
   struct pw_thread_loop* pw_main_loop_ = nullptr;
   struct pw_context* pw_context_ = nullptr;
   struct pw_core* pw_core_ = nullptr;
