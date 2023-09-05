@@ -81,27 +81,39 @@ class MediaPlaybackStatus final {
     ~ContextMediaInfo() = default;
 
     void IncreaseControlledMediaNum() {
+#ifndef FUZZING_SNAPSHOT
       MOZ_DIAGNOSTIC_ASSERT(mControlledMediaNum < UINT_MAX);
+#endif
       mControlledMediaNum++;
     }
     void DecreaseControlledMediaNum() {
+#ifndef FUZZING_SNAPSHOT
       MOZ_DIAGNOSTIC_ASSERT(mControlledMediaNum > 0);
+#endif
       mControlledMediaNum--;
     }
     void IncreasePlayingMediaNum() {
+#ifndef FUZZING_SNAPSHOT
       MOZ_DIAGNOSTIC_ASSERT(mPlayingMediaNum < mControlledMediaNum);
+#endif
       mPlayingMediaNum++;
     }
     void DecreasePlayingMediaNum() {
+#ifndef FUZZING_SNAPSHOT
       MOZ_DIAGNOSTIC_ASSERT(mPlayingMediaNum > 0);
+#endif
       mPlayingMediaNum--;
     }
     void IncreaseAudibleMediaNum() {
+#ifndef FUZZING_SNAPSHOT
       MOZ_DIAGNOSTIC_ASSERT(mAudibleMediaNum < mPlayingMediaNum);
+#endif
       mAudibleMediaNum++;
     }
     void DecreaseAudibleMediaNum() {
+#ifndef FUZZING_SNAPSHOT
       MOZ_DIAGNOSTIC_ASSERT(mAudibleMediaNum > 0);
+#endif
       mAudibleMediaNum--;
     }
     bool IsPlaying() const { return mPlayingMediaNum > 0; }
