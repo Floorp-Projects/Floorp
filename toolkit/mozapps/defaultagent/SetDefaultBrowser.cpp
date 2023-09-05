@@ -28,8 +28,8 @@ namespace mozilla::default_agent {
  *
  * @param aSid Current user's string SID
  *
- * @param aFileExtensions Optional null-terminated list of file association
- * pairs to set as default, like `{ L".pdf", "FirefoxPDF", nullptr }`.
+ * @param aExtraFileExtensions Optional array of extra file association pairs to
+ * set as default, like `[ ".pdf", "FirefoxPDF" ]`.
  *
  * @returns S_OK           All associations set and checked successfully.
  *          MOZ_E_REJECTED UserChoice was set, but checking the default did not
@@ -38,7 +38,7 @@ namespace mozilla::default_agent {
  */
 static HRESULT SetDefaultExtensionHandlersUserChoiceImpl(
     const wchar_t* aAumi, const wchar_t* const aSid,
-    const wchar_t* const* aFileExtensions);
+    const nsTArray<nsString>& aFileExtensions);
 
 static bool AddMillisecondsToSystemTime(SYSTEMTIME& aSystemTime,
                                         ULONGLONG aIncrementMS) {
@@ -225,7 +225,7 @@ static bool VerifyUserDefault(const wchar_t* aExt, const wchar_t* aProgID) {
 }
 
 HRESULT SetDefaultBrowserUserChoice(
-    const wchar_t* aAumi, const wchar_t* const* aExtraFileExtensions) {
+    const wchar_t* aAumi, const nsTArray<nsString>& aExtraFileExtensions) {
   auto urlProgID = FormatProgID(L"FirefoxURL", aAumi);
   if (!CheckProgIDExists(urlProgID.get())) {
     LOG_ERROR_MESSAGE(L"ProgID %s not found", urlProgID.get());
@@ -308,7 +308,7 @@ HRESULT SetDefaultBrowserUserChoice(
 }
 
 HRESULT SetDefaultExtensionHandlersUserChoice(
-    const wchar_t* aAumi, const wchar_t* const* aFileExtensions) {
+    const wchar_t* aAumi, const nsTArray<nsString>& aFileExtensions) {
   auto sid = GetCurrentUserStringSid();
   if (!sid) {
     return E_FAIL;
@@ -342,25 +342,23 @@ HRESULT SetDefaultExtensionHandlersUserChoice(
 
 HRESULT SetDefaultExtensionHandlersUserChoiceImpl(
     const wchar_t* aAumi, const wchar_t* const aSid,
-    const wchar_t* const* aFileExtensions) {
-  const wchar_t* const* extraFileExtension = aFileExtensions;
-  const wchar_t* const* extraProgIDRoot = aFileExtensions + 1;
-  while (extraFileExtension && *extraFileExtension && extraProgIDRoot &&
-         *extraProgIDRoot) {
+    const nsTArray<nsString>& aFileExtensions) {
+  for (size_t i = 0; i + 1 < aFileExtensions.Length(); i += 2) {
+    const wchar_t* extraFileExtension =
+        PromiseFlatString(aFileExtensions[i]).get();
+    const wchar_t* extraProgIDRoot =
+        PromiseFlatString(aFileExtensions[i + 1]).get();
     // Formatting the ProgID here prevents using this helper to target arbitrary
     // ProgIDs.
-    auto extraProgID = FormatProgID(*extraProgIDRoot, aAumi);
+    auto extraProgID = FormatProgID(extraProgIDRoot, aAumi);
 
-    if (!SetUserChoice(*extraFileExtension, aSid, extraProgID.get())) {
+    if (!SetUserChoice(extraFileExtension, aSid, extraProgID.get())) {
       return E_FAIL;
     }
 
-    if (!VerifyUserDefault(*extraFileExtension, extraProgID.get())) {
+    if (!VerifyUserDefault(extraFileExtension, extraProgID.get())) {
       return MOZ_E_REJECTED;
     }
-
-    extraFileExtension += 2;
-    extraProgIDRoot += 2;
   }
 
   return S_OK;
