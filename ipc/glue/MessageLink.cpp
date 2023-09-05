@@ -28,6 +28,17 @@ using namespace mozilla;
 namespace mozilla {
 namespace ipc {
 
+const char* StringFromIPCSide(Side side) {
+  switch (side) {
+    case ChildSide:
+      return "Child";
+    case ParentSide:
+      return "Parent";
+    default:
+      return "Unknown";
+  }
+}
+
 MessageLink::MessageLink(MessageChannel* aChan) : mChan(aChan) {}
 
 MessageLink::~MessageLink() {

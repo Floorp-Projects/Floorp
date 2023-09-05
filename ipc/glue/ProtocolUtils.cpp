@@ -331,8 +331,7 @@ IProtocol::~IProtocol() {
         nsPrintfCString("Actor destructor for '%s%s' called before IPC "
                         "lifecycle complete!\n"
                         "References to this actor may unexpectedly dangle!",
-                        GetProtocolName(),
-                        GetSide() == ChildSide ? "Child" : "Parent")
+                        GetProtocolName(), StringFromIPCSide(GetSide()))
             .get());
 
     mLifecycleProxy->mActor = nullptr;
