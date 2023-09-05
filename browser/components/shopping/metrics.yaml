@@ -206,3 +206,22 @@ shopping:
           Whether the button was used to expand or collapse the more reviews
           card.
         type: string
+
+  surface_no_review_reliability_available:
+    type: event
+    description: |
+      Review reliability was not available for display in the shopping side
+      bar. This metric does not contain any information about the product 
+      the user is viewing.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849243
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892#c6
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
