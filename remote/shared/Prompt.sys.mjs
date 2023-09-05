@@ -144,14 +144,26 @@ modal.DialogObserver = class {
     const chromeWin = event.target.opener
       ? event.target.opener.ownerGlobal
       : event.target.ownerGlobal;
+    const curBrowser = this._curBrowserFn();
 
-    if (chromeWin != this._curBrowserFn().window) {
+    if (curBrowser && chromeWin != curBrowser.window) {
       return;
     }
 
-    this.callbacks.forEach(callback => {
-      callback(modal.ACTION_CLOSED, event.target);
-    });
+    let contentBrowser;
+    if (lazy.AppInfo.isAndroid) {
+      const tabBrowser = lazy.TabManager.getTabBrowser(event.target);
+      // Since on Android we always have only one tab we can just check
+      // the selected tab.
+      const tab = tabBrowser.selectedTab;
+      contentBrowser = lazy.TabManager.getBrowserForTab(tab);
+    } else {
+      contentBrowser = event.target;
+    }
+
+    this.callbacks.forEach(callback =>
+      callback(modal.ACTION_CLOSED, event.detail, contentBrowser)
+    );
   }
 
   observe(subject, topic) {

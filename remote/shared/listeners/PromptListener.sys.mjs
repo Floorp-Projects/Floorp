@@ -30,6 +30,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
  *            The <xul:browser> which hold the <var>prompt</var>.
  *      - {modal.Dialog} prompt
  *            Returns instance of the Dialog class.
+ *
+ *    The PromptListener emits "closed" events,
+ *    with the following object as payload:
+ *      - {XULBrowser} contentBrowser
+ *            The <xul:browser> which is the target of the event.
+ *      - {object} detail
+ *        {boolean=} detail.accepted
+ *            Returns true if a user prompt was accepted
+ *            and false if it was dismissed.
+ *        {string=} detail.userText
+ *            The user text specified in a prompt.
  */
 export class PromptListener {
   #observer;
@@ -60,11 +71,30 @@ export class PromptListener {
     this.#observer = null;
   }
 
-  #onEvent = async (action, prompt, contentBrowser) => {
+  #onEvent = async (action, data, contentBrowser) => {
     if (action === lazy.modal.ACTION_OPENED) {
       this.emit("opened", {
         contentBrowser,
-        prompt,
+        prompt: data,
+      });
+    } else if (action === lazy.modal.ACTION_CLOSED) {
+      const detail = {};
+
+      // The event details are present now only on Desktop.
+      // See the bug 1849621 for Android.
+      if (data) {
+        const { areLeaving, value } = data;
+        // `areLeaving` returns undefined for alerts, for confirms and prompts
+        // it returns true if a user prompt was accepted and false if it was dismissed.
+        detail.accepted = areLeaving === undefined ? true : areLeaving;
+        if (value) {
+          detail.userText = value;
+        }
+      }
+
+      this.emit("closed", {
+        contentBrowser,
+        detail,
       });
     }
   };
