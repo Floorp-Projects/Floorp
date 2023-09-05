@@ -83,7 +83,7 @@ class Module : public JS::WasmModule {
   const ImportVector imports_;
   const ExportVector exports_;
   const DataSegmentVector dataSegments_;
-  const ElemSegmentVector elemSegments_;
+  const ModuleElemSegmentVector elemSegments_;
   const CustomSectionVector customSections_;
 
   // This field is only meaningful when code_->metadata().debugEnabled.
@@ -134,7 +134,8 @@ class Module : public JS::WasmModule {
 
  public:
   Module(const Code& code, ImportVector&& imports, ExportVector&& exports,
-         DataSegmentVector&& dataSegments, ElemSegmentVector&& elemSegments,
+         DataSegmentVector&& dataSegments,
+         ModuleElemSegmentVector&& elemSegments,
          CustomSectionVector&& customSections,
          const ShareableBytes* debugBytecode = nullptr,
          bool loggingDeserialized = false)

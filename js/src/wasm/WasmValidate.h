@@ -66,7 +66,7 @@ struct ModuleEnvironment {
   ImportVector imports;
   ExportVector exports;
   Maybe<uint32_t> startFuncIndex;
-  ElemSegmentVector elemSegments;
+  ModuleElemSegmentVector elemSegments;
   MaybeSectionRange codeSection;
 
   // The start offset of the FuncImportInstanceData[] section of the instance

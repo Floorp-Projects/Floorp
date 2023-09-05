@@ -22,13 +22,16 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 
+#include <functional>
+
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
 #include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/TypeDecls.h"
 #include "vm/SharedMem.h"
-#include "wasm/WasmExprType.h"   // for ResultType
-#include "wasm/WasmLog.h"        // for PrintCallback
+#include "wasm/WasmExprType.h"  // for ResultType
+#include "wasm/WasmLog.h"       // for PrintCallback
+#include "wasm/WasmModuleTypes.h"
 #include "wasm/WasmShareable.h"  // for SeenSet
 #include "wasm/WasmTypeDecls.h"
 #include "wasm/WasmValue.h"
@@ -171,8 +174,8 @@ class alignas(16) Instance {
   // Passive data segments for use with bulk memory instructions
   DataSegmentVector passiveDataSegments_;
 
-  // Passive elem segments for use with bulk memory instructions
-  ElemSegmentVector passiveElemSegments_;
+  // Passive elem segments for use with tables
+  InstanceElemSegmentVector passiveElemSegments_;
 
   // The wasm::DebugState for this instance, if any
   const UniqueDebugState maybeDebug_;
@@ -229,7 +232,7 @@ class alignas(16) Instance {
             const WasmGlobalObjectVector& globalObjs,
             const WasmTagObjectVector& tagObjs,
             const DataSegmentVector& dataSegments,
-            const ElemSegmentVector& elemSegments);
+            const ModuleElemSegmentVector& elemSegments);
 
   // Trace any GC roots on the stack, for the frame associated with |wfi|,
   // whose next instruction to execute is |nextPC|.
@@ -370,14 +373,42 @@ class alignas(16) Instance {
   void onMovingGrowTable(const Table* table);
 
   bool initSegments(JSContext* cx, const DataSegmentVector& dataSegments,
-                    const ElemSegmentVector& elemSegments);
+                    const ModuleElemSegmentVector& elemSegments);
 
   // Called to apply a single ElemSegment at a given offset, assuming
   // that all bounds validation has already been performed.
+  [[nodiscard]] bool initElems(uint32_t tableIndex,
+                               const ModuleElemSegment& seg,
+                               uint32_t dstOffset);
 
-  [[nodiscard]] bool initElems(uint32_t tableIndex, const ElemSegment& seg,
-                               uint32_t dstOffset, uint32_t srcOffset,
-                               uint32_t len);
+  // Iterates through elements of a ModuleElemSegment containing functions.
+  // Unlike iterElemsAnyrefs, this method can get function data (instance and
+  // code pointers) without creating intermediate JSFunctions.
+  //
+  // NOTE: This method only works for element segments that use the index
+  // encoding. If the expression encoding is used, you must use
+  // iterElemsAnyrefs.
+  //
+  // Signature for onFunc:
+  //
+  //   (uint32_t index, void* code, Instance* instance) -> bool
+  //
+  template <typename F>
+  [[nodiscard]] bool iterElemsFunctions(const ModuleElemSegment& seg,
+                                        const F& onFunc);
+
+  // Iterates through elements of a ModuleElemSegment. This method works for any
+  // type of wasm ref and both element segment encodings. As required by AnyRef,
+  // any functions will be wrapped in JSFunction - if possible, you should use
+  // iterElemsFunctions to avoid this.
+  //
+  // Signature for onAnyRef:
+  //
+  //   (uint32_t index, AnyRef ref) -> bool
+  //
+  template <typename F>
+  [[nodiscard]] bool iterElemsAnyrefs(const ModuleElemSegment& seg,
+                                      const F& onAnyRef);
 
   // Debugger support:
 
@@ -499,7 +530,7 @@ class alignas(16) Instance {
                             uint32_t numElements,
                             TypeDefInstanceData* typeDefData,
                             uint32_t segIndex);
-  static void* arrayNewElem(Instance* instance, uint32_t segElemIndex,
+  static void* arrayNewElem(Instance* instance, uint32_t srcOffset,
                             uint32_t numElements,
                             TypeDefInstanceData* typeDefData,
                             uint32_t segIndex);

@@ -381,12 +381,7 @@ struct TagDesc {
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;
 using ElemExprOffsetVector = Vector<size_t, 0, SystemAllocPolicy>;
 
-// When a ElemSegment is "passive" it is shared between a wasm::Module and its
-// wasm::Instances. To allow each segment to be released as soon as the last
-// Instance elem.drops it and the Module is destroyed, each ElemSegment is
-// individually atomically ref-counted.
-
-struct ElemSegment : AtomicRefCounted<ElemSegment> {
+struct ModuleElemSegment {
   enum class Kind {
     Active,
     Passive,
@@ -403,14 +398,7 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
 
   struct Expressions {
     size_t count = 0;
-
-    // All expressions are validated but we cannot randomly access them since
-    // they have variable width. However, we need random access in order to
-    // efficiently copy an arbitrary range of the segment. During decoding, we
-    // therefore store the full bytes of the elements along with a vector of
-    // offsets within those bytes.
     Bytes exprBytes;
-    ElemExprOffsetVector exprOffsets;
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   };
@@ -444,9 +432,11 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
-using MutableElemSegment = RefPtr<ElemSegment>;
-using SharedElemSegment = RefPtr<const ElemSegment>;
-using ElemSegmentVector = Vector<SharedElemSegment, 0, SystemAllocPolicy>;
+using ModuleElemSegmentVector = Vector<ModuleElemSegment, 0, SystemAllocPolicy>;
+
+using InstanceElemSegment = GCVector<HeapPtr<AnyRef>, 0, SystemAllocPolicy>;
+using InstanceElemSegmentVector =
+    GCVector<InstanceElemSegment, 0, SystemAllocPolicy>;
 
 // DataSegmentEnv holds the initial results of decoding a data segment from the
 // bytecode and is stored in the ModuleEnvironment during compilation. When

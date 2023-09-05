@@ -1610,7 +1610,7 @@ void WasmInstanceObject::trace(JSTracer* trc, JSObject* obj) {
 WasmInstanceObject* WasmInstanceObject::create(
     JSContext* cx, const SharedCode& code,
     const DataSegmentVector& dataSegments,
-    const ElemSegmentVector& elemSegments, uint32_t instanceDataLength,
+    const ModuleElemSegmentVector& elemSegments, uint32_t instanceDataLength,
     Handle<WasmMemoryObjectVector> memories, SharedTableVector&& tables,
     const JSObjectVector& funcImports, const GlobalDescVector& globals,
     const ValVector& globalImportValues,
@@ -1832,19 +1832,20 @@ static bool WasmCall(JSContext* cx, unsigned argc, Value* vp) {
  * actually exposed to JS the first time.  The creation is performed by
  * getExportedFunction(), below, as follows:
  *
- *  - a function exported via the export section (or from asm.js) is created
+ *  - A function exported via the export section (or from asm.js) is created
  *    when the export object is created, which happens at instantiation time.
  *
- *  - a function implicitly exported via a table is created when the table
+ *  - A function implicitly exported via a table is created when the table
  *    element is read (by JS or wasm) and a function value is needed to
  *    represent that value.  Functions stored in tables by initializers have a
  *    special representation that does not require the function object to be
- *    created.
+ *    created, as long as the initializing element segment uses the more
+ *    efficient index encoding instead of the more general expression encoding.
  *
- *  - a function implicitly exported via a global initializer is created when
+ *  - A function implicitly exported via a global initializer is created when
  *    the global is initialized.
  *
- *  - a function referenced from a ref.func instruction in code is created when
+ *  - A function referenced from a ref.func instruction in code is created when
  *    that instruction is executed the first time.
  *
  * The JSFunction representing a wasm function never changes: every reference to

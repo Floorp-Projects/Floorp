@@ -42,7 +42,7 @@ result = structLarge();
 assertEq(wasmGcReadField(result, 2), 3n);
 assertEq(wasmGcReadField(result, 19), 19);
 
-// array.new, array.new_default, and array.new_fixed, and array.new_elem
+// array.new, array.new_default, array.new_fixed, and array.new_elem
 
 const { arrayNew, arrayNewDefault, arrayNewFixed, arrayNewElem } = wasmEvalText(`(module
     (type $r (struct (field i32) (field f32)))
@@ -85,13 +85,171 @@ assertEq(wasmGcReadField(wasmGcReadField(result, 0), 0), 10);
 assertEq(wasmGcReadField(wasmGcReadField(result, 0), 1), 16);
 assertEq(wasmGcReadField(result, 1), null);
 
-// Uncomment when element segments support the expression encoding:
-// result = arrayNewElem();
-// assertEq(wasmGcArrayLength(result), 3);
-// assertEq(wasmGcReadField(wasmGcReadField(result, 0), 0), 1);
-// assertEq(wasmGcReadField(wasmGcReadField(result, 0), 1), 2);
-// assertEq(wasmGcReadField(wasmGcReadField(result, 1), 0), 3);
-// assertEq(wasmGcReadField(wasmGcReadField(result, 1), 1), 4);
-// assertEq(wasmGcReadField(wasmGcReadField(result, 2), 0), 5);
-// assertEq(wasmGcReadField(wasmGcReadField(result, 2), 1), 6);
-assertErrorMessage(() => arrayNewElem(), WebAssembly.RuntimeError, /array.new_elem does not yet support the expression encoding of element segments/);
+result = arrayNewElem();
+assertEq(wasmGcArrayLength(result), 3);
+assertEq(wasmGcReadField(wasmGcReadField(result, 0), 0), 1);
+assertEq(wasmGcReadField(wasmGcReadField(result, 0), 1), 2);
+assertEq(wasmGcReadField(wasmGcReadField(result, 1), 0), 3);
+assertEq(wasmGcReadField(wasmGcReadField(result, 1), 1), 4);
+assertEq(wasmGcReadField(wasmGcReadField(result, 2), 0), 5);
+assertEq(wasmGcReadField(wasmGcReadField(result, 2), 1), 6);
+
+// Simple table initialization
+{
+  // TODO: uncomment things and fix up this test once i31ref has landed.
+  const { t1, t2, t1init } = wasmEvalText(`(module
+    (type $s (struct (field i32)))
+    (type $a1 (array f64))
+    (type $a2 (array (ref null $s)))
+
+    ;; passive segment
+    (elem $e1 anyref
+      (item (struct.new $s (i32.const 123)))
+      (item (array.new $a1 (f64.const 234) (i32.const 3)))
+      (item (array.new_default $a2 (i32.const 3)))
+      ;; (item (i31.new (i32.const 345)))
+    )
+    (table $t1 (export "t1") 3 3 anyref)
+
+    ;; active segment
+    (table $t2 (export "t2") anyref (elem
+      (item (struct.new $s (i32.const 321)))
+      (item (array.new $a1 (f64.const 432) (i32.const 3)))
+      (item (array.new_default $a2 (i32.const 3)))
+      ;; (item (i31.new (i32.const 543)))
+    ))
+
+    (func (export "t1init") (table.init $t1 $e1 (i32.const 0) (i32.const 0) (i32.const 3)))
+  )`).exports;
+
+  assertEq(t1.get(0), null);
+  assertEq(t1.get(1), null);
+  assertEq(t1.get(2), null);
+
+  assertEq(wasmGcReadField(t2.get(0), 0), 321);
+  assertEq(wasmGcReadField(t2.get(1), 0), 432);
+  assertEq(wasmGcReadField(t2.get(1), 1), 432);
+  assertEq(wasmGcReadField(t2.get(1), 2), 432);
+  assertEq(wasmGcReadField(t2.get(2), 0), null);
+  assertEq(wasmGcReadField(t2.get(2), 1), null);
+  assertEq(wasmGcReadField(t2.get(2), 2), null);
+
+  t1init();
+  assertEq(wasmGcReadField(t1.get(0), 0), 123);
+  assertEq(wasmGcReadField(t1.get(1), 0), 234);
+  assertEq(wasmGcReadField(t1.get(1), 1), 234);
+  assertEq(wasmGcReadField(t1.get(1), 2), 234);
+  assertEq(wasmGcReadField(t1.get(2), 0), null);
+  assertEq(wasmGcReadField(t1.get(2), 1), null);
+  assertEq(wasmGcReadField(t1.get(2), 2), null);
+}
+
+// The contents of passive segments are unique per instance and evaluated at
+// instantiation time.
+{
+  const mod = new WebAssembly.Module(wasmTextToBinary(`(module
+    (type $s (struct (field (mut i32))))
+    (type $a (array (mut f64)))
+
+    (elem $e anyref
+      (item (struct.new $s (i32.const 123)))
+      (item (array.new $a (f64.const 234) (i32.const 1)))
+    )
+
+    (table $t1 (export "t1") 2 2 anyref)
+    (table $t2 (export "t2") 2 2 anyref)
+
+    (start $init1)
+
+    (func $init1
+      (table.init $t1 $e (i32.const 0) (i32.const 0) (i32.const 2))
+    )
+    (func (export "init2")
+      (table.init $t2 $e (i32.const 0) (i32.const 0) (i32.const 2))
+    )
+    (func (export "update1")
+      (ref.cast (ref $s) (table.get $t1 (i32.const 0)))
+      (struct.set $s 0 (i32.const 321))
+      (ref.cast (ref $a) (table.get $t1 (i32.const 1)))
+      (array.set $a (i32.const 0) (f64.const 432))
+    )
+    (func (export "update2")
+      (ref.cast (ref $s) (table.get $t1 (i32.const 0)))
+      (struct.set $s 0 (i32.const -321))
+      (ref.cast (ref $a) (table.get $t1 (i32.const 1)))
+      (array.set $a (i32.const 0) (f64.const -432))
+    )
+  )`));
+
+  const { t1: t1_1, t2: t2_1, init2: init2_1, update1: update1_1, update2: update2_1 } = new WebAssembly.Instance(mod, {}).exports;
+  const { t1: t1_2, t2: t2_2, init2: init2_2, update1: update1_2, update2: update2_2 } = new WebAssembly.Instance(mod, {}).exports;
+
+  assertEq(wasmGcReadField(t1_1.get(0), 0), 123);
+  assertEq(wasmGcReadField(t1_1.get(1), 0), 234);
+  assertEq(t2_1.get(0), null);
+  assertEq(t2_1.get(1), null);
+  assertEq(wasmGcReadField(t1_2.get(0), 0), 123);
+  assertEq(wasmGcReadField(t1_2.get(1), 0), 234);
+  assertEq(t2_2.get(0), null);
+  assertEq(t2_2.get(1), null);
+
+  update1_1();
+  assertEq(wasmGcReadField(t1_1.get(0), 0), 321);
+  assertEq(wasmGcReadField(t1_1.get(1), 0), 432);
+  assertEq(t2_1.get(0), null);
+  assertEq(t2_1.get(1), null);
+  assertEq(wasmGcReadField(t1_2.get(0), 0), 123);
+  assertEq(wasmGcReadField(t1_2.get(1), 0), 234);
+  assertEq(t2_2.get(0), null);
+  assertEq(t2_2.get(1), null);
+
+  init2_1();
+  assertEq(wasmGcReadField(t1_1.get(0), 0), 321);
+  assertEq(wasmGcReadField(t1_1.get(1), 0), 432);
+  assertEq(wasmGcReadField(t2_1.get(0), 0), 321);
+  assertEq(wasmGcReadField(t2_1.get(1), 0), 432);
+  assertEq(wasmGcReadField(t1_2.get(0), 0), 123);
+  assertEq(wasmGcReadField(t1_2.get(1), 0), 234);
+  assertEq(t2_2.get(0), null);
+  assertEq(t2_2.get(1), null);
+
+  init2_2();
+  assertEq(wasmGcReadField(t1_1.get(0), 0), 321);
+  assertEq(wasmGcReadField(t1_1.get(1), 0), 432);
+  assertEq(wasmGcReadField(t2_1.get(0), 0), 321);
+  assertEq(wasmGcReadField(t2_1.get(1), 0), 432);
+  assertEq(wasmGcReadField(t1_2.get(0), 0), 123);
+  assertEq(wasmGcReadField(t1_2.get(1), 0), 234);
+  assertEq(wasmGcReadField(t2_2.get(0), 0), 123);
+  assertEq(wasmGcReadField(t2_2.get(1), 0), 234);
+
+  update2_1();
+  assertEq(wasmGcReadField(t1_1.get(0), 0), -321);
+  assertEq(wasmGcReadField(t1_1.get(1), 0), -432);
+  assertEq(wasmGcReadField(t2_1.get(0), 0), -321);
+  assertEq(wasmGcReadField(t2_1.get(1), 0), -432);
+  assertEq(wasmGcReadField(t1_2.get(0), 0), 123);
+  assertEq(wasmGcReadField(t1_2.get(1), 0), 234);
+  assertEq(wasmGcReadField(t2_2.get(0), 0), 123);
+  assertEq(wasmGcReadField(t2_2.get(1), 0), 234);
+
+  update1_2();
+  assertEq(wasmGcReadField(t1_1.get(0), 0), -321);
+  assertEq(wasmGcReadField(t1_1.get(1), 0), -432);
+  assertEq(wasmGcReadField(t2_1.get(0), 0), -321);
+  assertEq(wasmGcReadField(t2_1.get(1), 0), -432);
+  assertEq(wasmGcReadField(t1_2.get(0), 0), 321);
+  assertEq(wasmGcReadField(t1_2.get(1), 0), 432);
+  assertEq(wasmGcReadField(t2_2.get(0), 0), 321);
+  assertEq(wasmGcReadField(t2_2.get(1), 0), 432);
+
+  update2_2();
+  assertEq(wasmGcReadField(t1_1.get(0), 0), -321);
+  assertEq(wasmGcReadField(t1_1.get(1), 0), -432);
+  assertEq(wasmGcReadField(t2_1.get(0), 0), -321);
+  assertEq(wasmGcReadField(t2_1.get(1), 0), -432);
+  assertEq(wasmGcReadField(t1_2.get(0), 0), -321);
+  assertEq(wasmGcReadField(t1_2.get(1), 0), -432);
+  assertEq(wasmGcReadField(t2_2.get(0), 0), -321);
+  assertEq(wasmGcReadField(t2_2.get(1), 0), -432);
+}

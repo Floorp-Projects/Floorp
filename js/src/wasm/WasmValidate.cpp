@@ -2676,18 +2676,18 @@ static bool DecodeStartSection(Decoder& d, ModuleEnvironment* env) {
   return d.finishSection(*range, "start");
 }
 
-static inline ElemSegment::Kind NormalizeElemSegmentKind(
+static inline ModuleElemSegment::Kind NormalizeElemSegmentKind(
     ElemSegmentKind decodedKind) {
   switch (decodedKind) {
     case ElemSegmentKind::Active:
     case ElemSegmentKind::ActiveWithTableIndex: {
-      return ElemSegment::Kind::Active;
+      return ModuleElemSegment::Kind::Active;
     }
     case ElemSegmentKind::Passive: {
-      return ElemSegment::Kind::Passive;
+      return ModuleElemSegment::Kind::Passive;
     }
     case ElemSegmentKind::Declared: {
-      return ElemSegment::Kind::Declared;
+      return ModuleElemSegment::Kind::Declared;
     }
   }
   MOZ_CRASH("unexpected elem segment kind");
@@ -2704,13 +2704,10 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
     return d.fail("invalid elem segment flags field");
   }
 
-  MutableElemSegment seg = js_new<ElemSegment>();
-  if (!seg) {
-    return false;
-  }
+  ModuleElemSegment seg = ModuleElemSegment();
 
   ElemSegmentKind segmentKind = flags->kind();
-  seg->kind = NormalizeElemSegmentKind(segmentKind);
+  seg.kind = NormalizeElemSegmentKind(segmentKind);
 
   if (segmentKind == ElemSegmentKind::Active ||
       segmentKind == ElemSegmentKind::ActiveWithTableIndex) {
@@ -2726,21 +2723,21 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
     if (tableIndex >= env->tables.length()) {
       return d.fail("table index out of range for element segment");
     }
-    seg->tableIndex = tableIndex;
+    seg.tableIndex = tableIndex;
 
     InitExpr offset;
     if (!InitExpr::decodeAndValidate(d, env, ValType::I32,
                                      env->globals.length(), &offset)) {
       return false;
     }
-    seg->offsetIfActive.emplace(std::move(offset));
+    seg.offsetIfActive.emplace(std::move(offset));
   } else {
     // Too many bugs result from keeping this value zero.  For passive
     // or declared segments, there really is no table index, and we should
     // never touch the field.
     MOZ_ASSERT(segmentKind == ElemSegmentKind::Passive ||
                segmentKind == ElemSegmentKind::Declared);
-    seg->tableIndex = (uint32_t)-1;
+    seg.tableIndex = (uint32_t)-1;
   }
 
   ElemSegmentPayload payload = flags->payload();
@@ -2774,15 +2771,15 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
 
   // For active segments, check if the element type is compatible with the
   // destination table type.
-  if (seg->active()) {
-    RefType tblElemType = env->tables[seg->tableIndex].elemType;
+  if (seg.active()) {
+    RefType tblElemType = env->tables[seg.tableIndex].elemType;
     if (!CheckIsSubtypeOf(d, *env, d.currentOffset(),
                           ValType(elemType).fieldType(),
                           ValType(tblElemType).fieldType())) {
       return false;
     }
   }
-  seg->elemType = elemType;
+  seg.elemType = elemType;
 
   uint32_t numElems;
   if (!d.readVarU32(&numElems)) {
@@ -2793,12 +2790,12 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
     return d.fail("too many elements in element segment");
   }
 
-  bool isAsmJS = seg->active() && env->tables[seg->tableIndex].isAsmJS;
+  bool isAsmJS = seg.active() && env->tables[seg.tableIndex].isAsmJS;
 
   switch (payload) {
     case ElemSegmentPayload::Indices: {
-      seg->encoding = ElemSegment::Encoding::Indices;
-      if (!seg->elemIndices.reserve(numElems)) {
+      seg.encoding = ModuleElemSegment::Encoding::Indices;
+      if (!seg.elemIndices.reserve(numElems)) {
         return false;
       }
 
@@ -2812,7 +2809,7 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
           return d.fail("element index out of range");
         }
 
-        seg->elemIndices.infallibleAppend(elemIndex);
+        seg.elemIndices.infallibleAppend(elemIndex);
         if (!isAsmJS) {
           env->declareFuncExported(elemIndex, /*eager=*/false,
                                    /*canRefFunc=*/true);
@@ -2820,24 +2817,18 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
       }
     } break;
     case ElemSegmentPayload::Expressions: {
-      seg->encoding = ElemSegment::Encoding::Expressions;
-      size_t exprsStartOffset = d.currentOffset();
+      seg.encoding = ModuleElemSegment::Encoding::Expressions;
       const uint8_t* exprsStart = d.currentPosition();
-      seg->elemExpressions.count = numElems;
+      seg.elemExpressions.count = numElems;
       for (uint32_t i = 0; i < numElems; i++) {
-        size_t exprOffset = d.currentOffset();
         Maybe<LitVal> unusedLiteral;
         if (!DecodeConstantExpression(d, env, elemType, env->globals.length(),
                                       &unusedLiteral)) {
           return false;
         }
-        if (!seg->elemExpressions.exprOffsets.append(exprOffset -
-                                                     exprsStartOffset)) {
-          return false;
-        }
       }
       const uint8_t* exprsEnd = d.currentPosition();
-      if (!seg->elemExpressions.exprBytes.append(exprsStart, exprsEnd)) {
+      if (!seg.elemExpressions.exprBytes.append(exprsStart, exprsEnd)) {
         return false;
       }
     } break;
