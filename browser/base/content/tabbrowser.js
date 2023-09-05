@@ -4494,7 +4494,7 @@
 
       let modifiedAttrs = [];
       if (aOtherTab.hasAttribute("muted")) {
-        aOurTab.setAttribute("muted", "true");
+        aOurTab.toggleAttribute("muted", true);
         aOurTab.muteReason = aOtherTab.muteReason;
         // For non-lazy tabs, mute() must be called.
         if (aOurTab.linkedPanel) {
@@ -4503,11 +4503,11 @@
         modifiedAttrs.push("muted");
       }
       if (aOtherTab.hasAttribute("undiscardable")) {
-        aOurTab.setAttribute("undiscardable", "true");
+        aOurTab.toggleAttribute("undiscardable", true);
         modifiedAttrs.push("undiscardable");
       }
       if (aOtherTab.hasAttribute("soundplaying")) {
-        aOurTab.setAttribute("soundplaying", "true");
+        aOurTab.toggleAttribute("soundplaying", true);
         modifiedAttrs.push("soundplaying");
       }
       if (aOtherTab.hasAttribute("usercontextid")) {
@@ -4521,7 +4521,7 @@
         webrtcUI.swapBrowserForNotification(otherBrowser, ourBrowser);
       }
       if (aOtherTab.hasAttribute("pictureinpicture")) {
-        aOurTab.setAttribute("pictureinpicture", true);
+        aOurTab.toggleAttribute("pictureinpicture", true);
         modifiedAttrs.push("pictureinpicture");
 
         let event = new CustomEvent("TabSwapPictureInPicture", {
@@ -6122,7 +6122,7 @@
         }
 
         if (!tab.hasAttribute("soundplaying")) {
-          tab.setAttribute("soundplaying", true);
+          tab.toggleAttribute("soundplaying", true);
           modifiedAttrs.push("soundplaying");
         }
 
@@ -6150,7 +6150,7 @@
             "--soundplaying-removal-delay",
             `${removalDelay - 300}ms`
           );
-          tab.setAttribute("soundplaying-scheduledremoval", "true");
+          tab.toggleAttribute("soundplaying-scheduledremoval", true);
           this._tabAttrModified(tab, ["soundplaying-scheduledremoval"]);
 
           tab._soundPlayingAttrRemovalTimer = setTimeout(() => {
