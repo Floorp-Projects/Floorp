@@ -209,6 +209,7 @@ add_task(async function testRecentlyClosedRestoreAllTabs() {
   await resetClosedTabs();
 
   await BrowserTestUtils.withNewTab("about:mozilla", async browser => {
+    const initialTabCount = gBrowser.visibleTabs.length;
     // Open and close a few of tabs
     const closedTabUrls = [
       "about:robots",
@@ -219,7 +220,11 @@ add_task(async function testRecentlyClosedRestoreAllTabs() {
       let tab = await openTab(url);
       await closeTab(tab);
     }
-
+    is(
+      gBrowser.visibleTabs.length,
+      initialTabCount,
+      "All the new tabs were closed"
+    );
     // Open the "Recently closed tabs" panel.
     let closeTabsPanel = await openRecentlyClosedTabsMenu();
 
@@ -234,15 +239,11 @@ add_task(async function testRecentlyClosedRestoreAllTabs() {
     let reopenedTab = await newTabPromise;
     is(
       reopenedTab.linkedBrowser.currentURI.spec,
-      closedTabUrls.pop(),
+      closedTabUrls[closedTabUrls.length - 1],
       "Opened correct URL"
     );
     info(`restored tab, total open tabs: ${gBrowser.tabs.length}`);
-    info("waiting for closeTab");
     await closeTab(reopenedTab);
-
-    let origTabCount = gBrowser.tabs.length;
-    let reopenedTabs = [];
 
     await openRecentlyClosedTabsMenu();
     let restoreAllItem = closeTabsPanel.querySelector(".restoreallitem");
@@ -251,33 +252,28 @@ add_task(async function testRecentlyClosedRestoreAllTabs() {
       "Restore all menu item is not hidden"
     );
 
-    let tabsReOpenedPromise = new Promise(resolve => {
-      gBrowser.tabContainer.addEventListener("TabOpen", function onTabOpen(e) {
-        reopenedTabs.push(e.target);
-        if (reopenedTabs.length == closedTabUrls.length) {
-          gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
-          resolve();
-        }
-      });
-    });
     // Click the restore-all toolbar button in the panel.
     EventUtils.sendMouseEvent({ type: "click" }, restoreAllItem, window);
 
     info("waiting for restored tabs");
-    await tabsReOpenedPromise;
+    await BrowserTestUtils.waitForCondition(
+      () => SessionStore.getClosedTabCount() === 0,
+      "Waiting for all the closed tabs to be opened"
+    );
 
     is(
       gBrowser.tabs.length,
-      origTabCount + closedTabUrls.length,
+      initialTabCount + closedTabUrls.length,
       "The expected number of closed tabs were restored"
     );
     info(
-      `restored ${reopenedTabs} tabs, total open tabs: ${gBrowser.tabs.length}`
+      `restored ${closedTabUrls.length} tabs, total open tabs: ${gBrowser.tabs.length}`
     );
-    for (let tab of reopenedTabs) {
-      await closeTab(tab);
-    }
   });
+  // clean up extra tabs
+  while (gBrowser.tabs.length > 1) {
+    BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
+  }
 });
 
 add_task(async function testRecentlyClosedWindows() {
