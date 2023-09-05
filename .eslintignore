@@ -12,9 +12,8 @@
 # Include all js dot files.
 !.*.js
 
-# For now, skip all json files for ESLint, these will still be run through
-# Prettier.
-**/*.json
+# Ignore VSCode files
+.vscode/
 
 # Always ignore node_modules.
 **/node_modules/
@@ -125,6 +124,7 @@ dom/svg/test/test_SVG_namespace_ids.html
 
 # Strange encodings
 dom/base/test/file_bug687859-16.js
+dom/base/test/file_bug707142_bom.json
 dom/base/test/file_bug707142_utf-16.json
 dom/encoding/test/test_utf16_files.html
 dom/encoding/test/file_utf16_be_bom.js
