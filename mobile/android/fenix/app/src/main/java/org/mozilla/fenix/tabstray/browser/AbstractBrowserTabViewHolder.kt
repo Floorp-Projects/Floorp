@@ -111,7 +111,7 @@ abstract class AbstractBrowserTabViewHolder(
             }
         }
 
-        loadIntoThumbnailView(thumbnailView, tab.id)
+        loadIntoThumbnailView(thumbnailView, tab.id, tab.content.private)
     }
 
     override fun showTabIsMultiSelectEnabled(selectedMaskView: View?, isSelected: Boolean) {
@@ -201,8 +201,8 @@ abstract class AbstractBrowserTabViewHolder(
         }
     }
 
-    private fun loadIntoThumbnailView(thumbnailView: ImageView, id: String) {
-        imageLoader.loadIntoView(thumbnailView, ImageLoadRequest(id, thumbnailSize))
+    private fun loadIntoThumbnailView(thumbnailView: ImageView, id: String, isPrivate: Boolean) {
+        imageLoader.loadIntoView(thumbnailView, ImageLoadRequest(id, thumbnailSize, isPrivate))
     }
 
     private fun setSelectionInteractor(

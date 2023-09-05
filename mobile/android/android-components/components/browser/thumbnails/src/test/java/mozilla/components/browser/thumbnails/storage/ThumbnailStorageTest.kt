@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import mozilla.components.concept.base.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageSaveRequest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -35,6 +36,7 @@ class ThumbnailStorageTest {
     @After
     fun cleanUp() {
         sharedDiskCache.clear(testContext)
+        privateDiskCache.clear(testContext)
     }
 
     @Test
@@ -42,59 +44,99 @@ class ThumbnailStorageTest {
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
-        thumbnailStorage.saveThumbnail("test-tab1", bitmap).joinBlocking()
-        thumbnailStorage.saveThumbnail("test-tab2", bitmap).joinBlocking()
-        var thumbnail1 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab1", 100)).await()
-        var thumbnail2 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab2", 100)).await()
+        thumbnailStorage.saveThumbnail(ImageSaveRequest("test-tab1", false), bitmap).joinBlocking()
+        thumbnailStorage.saveThumbnail(ImageSaveRequest("test-tab2", false), bitmap).joinBlocking()
+        var thumbnail1 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab1", 100, false)).await()
+        var thumbnail2 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab2", 100, false)).await()
         assertNotNull(thumbnail1)
         assertNotNull(thumbnail2)
 
         thumbnailStorage.clearThumbnails()
-        thumbnail1 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab1", 100)).await()
-        thumbnail2 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab2", 100)).await()
+        thumbnail1 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab1", 100, false)).await()
+        thumbnail2 = thumbnailStorage.loadThumbnail(ImageLoadRequest("test-tab2", 100, false)).await()
         assertNull(thumbnail1)
         assertNull(thumbnail2)
     }
 
     @Test
     fun `deleteThumbnail`() = runTestOnMain {
-        val request = "test-tab1"
+        val request = ImageSaveRequest("test-tab1", false)
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
         thumbnailStorage.saveThumbnail(request, bitmap).joinBlocking()
-        var thumbnail = thumbnailStorage.loadThumbnail(ImageLoadRequest(request, 100)).await()
+        var thumbnail = thumbnailStorage.loadThumbnail(ImageLoadRequest(request.id, 100, request.isPrivate)).await()
         assertNotNull(thumbnail)
 
-        thumbnailStorage.deleteThumbnail(request).joinBlocking()
-        thumbnail = thumbnailStorage.loadThumbnail(ImageLoadRequest(request, 100)).await()
+        thumbnailStorage.deleteThumbnail(request.id, request.isPrivate).joinBlocking()
+        thumbnail = thumbnailStorage.loadThumbnail(ImageLoadRequest(request.id, 100, request.isPrivate)).await()
         assertNull(thumbnail)
     }
 
     @Test
     fun `saveThumbnail`() = runTestOnMain {
-        val request = ImageLoadRequest("test-tab1", 100)
+        val request = ImageLoadRequest("test-tab1", 100, false)
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext))
         var thumbnail = thumbnailStorage.loadThumbnail(request).await()
 
         assertNull(thumbnail)
 
-        thumbnailStorage.saveThumbnail(request.id, bitmap).joinBlocking()
+        thumbnailStorage.saveThumbnail(ImageSaveRequest(request.id, request.isPrivate), bitmap).joinBlocking()
+        thumbnail = thumbnailStorage.loadThumbnail(request).await()
+        assertNotNull(thumbnail)
+    }
+
+    @Test
+    fun `WHEN private save request THEN placed in private cache`() = runTestOnMain {
+        val request = ImageLoadRequest("test-tab1", 100, true)
+        val bitmap: Bitmap = mock()
+        val thumbnailStorage = spy(ThumbnailStorage(testContext))
+        var thumbnail = thumbnailStorage.loadThumbnail(request).await()
+
+        assertNull(thumbnail)
+
+        thumbnailStorage.saveThumbnail(ImageSaveRequest(request.id, request.isPrivate), bitmap).joinBlocking()
         thumbnail = thumbnailStorage.loadThumbnail(request).await()
         assertNotNull(thumbnail)
     }
 
     @Test
     fun `loadThumbnail`() = runTestOnMain {
-        val request = ImageLoadRequest("test-tab1", 100)
+        val request = ImageLoadRequest("test-tab1", 100, false)
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
-        thumbnailStorage.saveThumbnail(request.id, bitmap)
+        thumbnailStorage.saveThumbnail(ImageSaveRequest(request.id, request.isPrivate), bitmap)
         `when`(thumbnailStorage.loadThumbnail(request)).thenReturn(CompletableDeferred(bitmap))
 
         val thumbnail = thumbnailStorage.loadThumbnail(request).await()
         assertEquals(bitmap, thumbnail)
+    }
+
+    @Test
+    fun `WHEN private load request THEN loaded from private cache`() = runTestOnMain {
+        val request = ImageLoadRequest("test-tab1", 100, true)
+        val bitmap: Bitmap = mock()
+        val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
+
+        thumbnailStorage.saveThumbnail(ImageSaveRequest(request.id, request.isPrivate), bitmap)
+        `when`(thumbnailStorage.loadThumbnail(request)).thenReturn(CompletableDeferred(bitmap))
+
+        val thumbnail = thumbnailStorage.loadThumbnail(request).await()
+        assertEquals(bitmap, thumbnail)
+        assertNull(thumbnailStorage.loadThumbnail(ImageLoadRequest(request.id, request.size, false)).await())
+    }
+
+    @Test
+    fun `WHEN storage is initialized THEN private cache is cleared`() {
+        val request = ImageLoadRequest("test-tab1", 100, true)
+        val bitmap: Bitmap = mock()
+
+        privateDiskCache.putThumbnailBitmap(testContext, ImageSaveRequest(request.id, request.isPrivate), bitmap)
+        assertNotNull(privateDiskCache.getThumbnailData(testContext, request))
+        ThumbnailStorage(testContext, testDispatcher)
+
+        assertNull(privateDiskCache.getThumbnailData(testContext, request))
     }
 }

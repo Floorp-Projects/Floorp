@@ -130,7 +130,7 @@ class DefaultTabViewHolderTest {
 
         viewHolder.bind(tab, false, mock(), mock())
 
-        verify(loader).loadIntoView(any(), eq(ImageLoadRequest("123", 100)), nullable(), nullable())
+        verify(loader).loadIntoView(any(), eq(ImageLoadRequest("123", 100, false)), nullable(), nullable())
     }
 
     @Test

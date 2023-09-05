@@ -109,7 +109,7 @@ private data class ThumbnailImageState(
 private fun ThumbnailImagePreview() {
     FirefoxTheme {
         ThumbnailImage(
-            request = ImageLoadRequest("1", 1),
+            request = ImageLoadRequest("1", 1, false),
             storage = ThumbnailStorage(LocalContext.current),
             modifier = Modifier,
             contentScale = ContentScale.Crop,

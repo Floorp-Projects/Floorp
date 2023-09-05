@@ -120,6 +120,7 @@ fun RecentSyncedTab(
                             request = ImageLoadRequest(
                                 id = tab.url.hashCode().toString(),
                                 size = LocalDensity.current.run { THUMBNAIL_SIZE.dp.toPx().toInt() },
+                                isPrivate = false,
                             ),
                             storage = storage,
                             modifier = imageModifier,

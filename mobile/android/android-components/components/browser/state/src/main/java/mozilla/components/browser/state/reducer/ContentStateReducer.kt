@@ -29,9 +29,6 @@ internal object ContentStateReducer {
             is ContentAction.RemoveIconAction -> updateContentState(state, action.sessionId) {
                 it.copy(icon = null)
             }
-            is ContentAction.RemoveThumbnailAction -> {
-                throw IllegalStateException("You need to add ThumbnailsMiddleware to your BrowserStore. ($action)")
-            }
             is ContentAction.UpdateUrlAction -> updateContentState(state, action.sessionId) {
                 it.copy(
                     url = action.url,

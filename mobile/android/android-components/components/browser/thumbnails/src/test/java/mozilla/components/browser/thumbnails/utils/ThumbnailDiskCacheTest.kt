@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jakewharton.disklrucache.DiskLruCache
 import mozilla.components.concept.base.images.ImageLoadRequest
+import mozilla.components.concept.base.images.ImageSaveRequest
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -28,7 +29,7 @@ class ThumbnailDiskCacheTest {
     @Test
     fun `Writing and reading bitmap bytes for sdk higher than 29`() {
         val cache = ThumbnailDiskCache()
-        val request = ImageLoadRequest("123", 100)
+        val request = ImageLoadRequest("123", 100, false)
 
         val bitmap: Bitmap = mock()
         `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
@@ -43,7 +44,32 @@ class ThumbnailDiskCacheTest {
             true
         }
 
-        cache.putThumbnailBitmap(testContext, request.id, bitmap)
+        cache.putThumbnailBitmap(testContext, ImageSaveRequest(request.id, request.isPrivate), bitmap)
+
+        val data = cache.getThumbnailData(testContext, request)
+        assertNotNull(data!!)
+        Assert.assertEquals("Hello World", String(data))
+    }
+
+    @Test
+    fun `Writing and reading bitmap bytes for private cache`() {
+        val cache = ThumbnailDiskCache(isPrivate = true)
+        val request = ImageLoadRequest("123", 100, true)
+
+        val bitmap: Bitmap = mock()
+        `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
+            Assert.assertEquals(
+                Bitmap.CompressFormat.WEBP_LOSSY,
+                it.arguments[0] as Bitmap.CompressFormat,
+            )
+            Assert.assertEquals(90, it.arguments[1] as Int) // Quality
+
+            val stream = it.arguments[2] as OutputStream
+            stream.write("Hello World".toByteArray())
+            true
+        }
+
+        cache.putThumbnailBitmap(testContext, ImageSaveRequest(request.id, request.isPrivate), bitmap)
 
         val data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
@@ -54,7 +80,7 @@ class ThumbnailDiskCacheTest {
     @Test
     fun `Writing and reading bitmap bytes for sdk lower or equal to 29`() {
         val cache = ThumbnailDiskCache()
-        val request = ImageLoadRequest("123", 100)
+        val request = ImageLoadRequest("123", 100, false)
 
         val bitmap: Bitmap = mock()
         `when`(bitmap.compress(any(), ArgumentMatchers.anyInt(), any())).thenAnswer {
@@ -70,7 +96,7 @@ class ThumbnailDiskCacheTest {
             true
         }
 
-        cache.putThumbnailBitmap(testContext, request.id, bitmap)
+        cache.putThumbnailBitmap(testContext, ImageSaveRequest(request.id, request.isPrivate), bitmap)
 
         val data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
@@ -80,10 +106,10 @@ class ThumbnailDiskCacheTest {
     @Test
     fun `Removing bitmap from disk cache`() {
         val cache = ThumbnailDiskCache()
-        val request = ImageLoadRequest("123", 100)
+        val request = ImageLoadRequest("123", 100, false)
         val bitmap: Bitmap = mock()
 
-        cache.putThumbnailBitmap(testContext, request.id, bitmap)
+        cache.putThumbnailBitmap(testContext, ImageSaveRequest(request.id, request.isPrivate), bitmap)
         var data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
 
@@ -95,10 +121,10 @@ class ThumbnailDiskCacheTest {
     @Test
     fun `Clearing bitmap from disk cache`() {
         val cache = ThumbnailDiskCache()
-        val request = ImageLoadRequest("123", 100)
+        val request = ImageLoadRequest("123", 100, false)
         val bitmap: Bitmap = mock()
 
-        cache.putThumbnailBitmap(testContext, request.id, bitmap)
+        cache.putThumbnailBitmap(testContext, ImageSaveRequest(request.id, request.isPrivate), bitmap)
         var data = cache.getThumbnailData(testContext, request)
         assertNotNull(data!!)
 

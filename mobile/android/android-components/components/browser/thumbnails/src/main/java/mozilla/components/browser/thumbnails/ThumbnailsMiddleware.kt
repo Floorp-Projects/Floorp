@@ -9,6 +9,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
+import mozilla.components.concept.base.images.ImageSaveRequest
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 
@@ -28,12 +29,12 @@ class ThumbnailsMiddleware(
         when (action) {
             is TabListAction.RemoveAllNormalTabsAction -> {
                 context.state.tabs.filterNot { it.content.private }.forEach { tab ->
-                    thumbnailStorage.deleteThumbnail(tab.id)
+                    thumbnailStorage.deleteThumbnail(tab.id, isPrivate = false)
                 }
             }
             is TabListAction.RemoveAllPrivateTabsAction -> {
                 context.state.tabs.filter { it.content.private }.forEach { tab ->
-                    thumbnailStorage.deleteThumbnail(tab.id)
+                    thumbnailStorage.deleteThumbnail(tab.id, isPrivate = true)
                 }
             }
             is TabListAction.RemoveAllTabsAction -> {
@@ -41,19 +42,22 @@ class ThumbnailsMiddleware(
             }
             is TabListAction.RemoveTabAction -> {
                 // Delete the tab screenshot from the storage when the tab is removed.
-                thumbnailStorage.deleteThumbnail(action.tabId)
+                val isPrivate = context.state.isTabIdPrivate(action.tabId)
+                thumbnailStorage.deleteThumbnail(action.tabId, isPrivate)
             }
             is TabListAction.RemoveTabsAction -> {
-                action.tabIds.forEach { thumbnailStorage.deleteThumbnail(it) }
+                action.tabIds.forEach { id ->
+                    val isPrivate = context.state.isTabIdPrivate(id)
+                    thumbnailStorage.deleteThumbnail(id, isPrivate)
+                }
             }
             is ContentAction.UpdateThumbnailAction -> {
                 // Store the captured tab screenshot from the EngineView when the session's
                 // thumbnail is updated.
-                thumbnailStorage.saveThumbnail(action.sessionId, action.thumbnail)
-                return // Do not let the thumbnail actions continue through to the reducer.
-            }
-            is ContentAction.RemoveThumbnailAction -> {
-                thumbnailStorage.deleteThumbnail(action.sessionId)
+                context.store.state.tabs.find { it.id == action.sessionId }?.let { session ->
+                    val request = ImageSaveRequest(session.id, session.content.private)
+                    thumbnailStorage.saveThumbnail(request, action.thumbnail)
+                }
                 return // Do not let the thumbnail actions continue through to the reducer.
             }
             else -> {
@@ -62,4 +66,7 @@ class ThumbnailsMiddleware(
         }
         next(action)
     }
+
+    private fun BrowserState.isTabIdPrivate(id: String): Boolean =
+        tabs.any { it.id == id && it.content.private }
 }

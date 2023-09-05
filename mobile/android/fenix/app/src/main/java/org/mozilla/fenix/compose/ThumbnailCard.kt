@@ -97,7 +97,7 @@ private fun ThumbnailCardPreview() {
     FirefoxTheme {
         ThumbnailCard(
             url = "https://mozilla.com",
-            request = ImageLoadRequest("123", THUMBNAIL_SIZE),
+            request = ImageLoadRequest("123", THUMBNAIL_SIZE, false),
             storage = ThumbnailStorage(LocalContext.current),
             modifier = Modifier
                 .size(THUMBNAIL_SIZE.dp)

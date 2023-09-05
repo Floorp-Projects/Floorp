@@ -30,6 +30,7 @@ private const val MAXIMUM_SCALE_FACTOR = 2.0f
 private const val THREADS = 3
 
 internal val sharedDiskCache = ThumbnailDiskCache()
+internal val privateDiskCache = ThumbnailDiskCache(isPrivate = true)
 
 /**
  * Thumbnail storage layer which handles saving and loading the thumbnail from the disk cache.
@@ -47,6 +48,10 @@ class ThumbnailStorage(
         context.resources.getDimensionPixelSize(R.dimen.mozac_browser_thumbnails_maximum_size)
     private val scope = CoroutineScope(jobDispatcher)
 
+    init {
+        privateDiskCache.clear(context)
+    }
+
     /**
      * Clears all the stored thumbnails in the disk cache.
      */
@@ -54,16 +59,21 @@ class ThumbnailStorage(
         scope.launch {
             logger.debug("Cleared all thumbnails from disk")
             sharedDiskCache.clear(context)
+            privateDiskCache.clear(context)
         }
 
     /**
      * Deletes the given thumbnail [Bitmap] from the disk cache with the provided session ID or url
      * as its key.
      */
-    fun deleteThumbnail(sessionIdOrUrl: String): Job =
+    fun deleteThumbnail(sessionIdOrUrl: String, isPrivate: Boolean): Job =
         scope.launch {
             logger.debug("Removed thumbnail from disk (sessionIdOrUrl = $sessionIdOrUrl)")
-            sharedDiskCache.removeThumbnailData(context, sessionIdOrUrl)
+            if (isPrivate) {
+                privateDiskCache.removeThumbnailData(context, sessionIdOrUrl)
+            } else {
+                sharedDiskCache.removeThumbnailData(context, sessionIdOrUrl)
+            }
         }
 
     /**
@@ -91,7 +101,11 @@ class ThumbnailStorage(
             maxScaleFactor = MAXIMUM_SCALE_FACTOR,
         )
 
-        val data = sharedDiskCache.getThumbnailData(context, request)
+        val data = if (request.isPrivate) {
+            privateDiskCache.getThumbnailData(context, request)
+        } else {
+            sharedDiskCache.getThumbnailData(context, request)
+        }
 
         if (data != null) {
             return decoders.decode(data, desiredSize)
@@ -110,6 +124,10 @@ class ThumbnailStorage(
                 "Saved thumbnail to disk (id = $request, " +
                     "generationId = ${bitmap.generationId})",
             )
-            sharedDiskCache.putThumbnailBitmap(context, request, bitmap)
+            if (request.isPrivate) {
+                privateDiskCache.putThumbnailBitmap(context, request, bitmap)
+            } else {
+                sharedDiskCache.putThumbnailBitmap(context, request, bitmap)
+            }
         }
 }

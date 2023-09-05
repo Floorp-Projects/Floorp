@@ -112,7 +112,7 @@ class DefaultTabViewHolder(
             val thumbnailSize = THUMBNAIL_SIZE.dpToPx(thumbnailView.context.resources.displayMetrics)
             thumbnailLoader.loadIntoView(
                 thumbnailView,
-                ImageLoadRequest(id = tab.id, size = thumbnailSize),
+                ImageLoadRequest(id = tab.id, size = thumbnailSize, isPrivate = tab.content.private),
             )
         }
 

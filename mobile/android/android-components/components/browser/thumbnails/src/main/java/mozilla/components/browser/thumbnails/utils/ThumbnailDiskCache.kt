@@ -18,11 +18,14 @@ import java.io.IOException
 private const val MAXIMUM_CACHE_THUMBNAIL_DATA_BYTES: Long = 1024L * 1024L * 100L // 100 MB
 private const val THUMBNAIL_DISK_CACHE_VERSION = 1
 private const val WEBP_QUALITY = 90
+private const val BASE_DIR_NAME = "thumbnails"
 
 /**
  * Caching thumbnail bitmaps on disk.
+ *
+ * @property isPrivate whether this cache is intended for private browsing thumbnails
  */
-class ThumbnailDiskCache {
+class ThumbnailDiskCache(private val isPrivate: Boolean = false) {
     private val logger = Logger("ThumbnailDiskCache")
 
     @VisibleForTesting
@@ -78,7 +81,7 @@ class ThumbnailDiskCache {
         try {
             synchronized(thumbnailCacheWriteLock) {
                 val editor = getThumbnailCache(context)
-                    .edit(request) ?: return
+                    .edit(request.id) ?: return
 
                 editor.newOutputStream(0).use { stream ->
                     bitmap.compress(compressFormat, WEBP_QUALITY, stream)
@@ -108,8 +111,9 @@ class ThumbnailDiskCache {
     }
 
     private fun getThumbnailCacheDirectory(context: Context): File {
+        val dirName = if (isPrivate) "private_$BASE_DIR_NAME" else BASE_DIR_NAME
         val cacheDirectory = File(context.cacheDir, "mozac_browser_thumbnails")
-        return File(cacheDirectory, "thumbnails")
+        return File(cacheDirectory, dirName)
     }
 
     @Synchronized

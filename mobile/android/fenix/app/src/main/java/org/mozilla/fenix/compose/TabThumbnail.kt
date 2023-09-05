@@ -61,6 +61,7 @@ fun TabThumbnail(
             request = ImageLoadRequest(
                 id = tab.id,
                 size = size,
+                isPrivate = tab.content.private,
             ),
             storage = storage,
             modifier = modifier,

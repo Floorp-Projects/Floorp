@@ -431,11 +431,6 @@ sealed class ContentAction : BrowserAction() {
     data class RemoveIconAction(val sessionId: String) : ContentAction()
 
     /**
-     * Removes the thumbnail of the [ContentState] with the given [sessionId].
-     */
-    data class RemoveThumbnailAction(val sessionId: String) : ContentAction()
-
-    /**
      * Updates the URL of the [ContentState] with the given [sessionId].
      */
     data class UpdateUrlAction(val sessionId: String, val url: String) : ContentAction()

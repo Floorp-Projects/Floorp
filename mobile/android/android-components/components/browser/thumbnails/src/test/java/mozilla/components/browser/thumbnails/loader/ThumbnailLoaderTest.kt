@@ -34,7 +34,7 @@ class ThumbnailLoaderTest {
         val view: ImageView = mock()
         val storage: ThumbnailStorage = mock()
         val loader = spy(ThumbnailLoader(storage))
-        val request = ImageLoadRequest("123", 100)
+        val request = ImageLoadRequest("123", 100, false)
 
         doReturn(result).`when`(storage).loadThumbnail(request)
 
@@ -59,7 +59,7 @@ class ThumbnailLoaderTest {
         val error: Drawable = mock()
         val storage: ThumbnailStorage = mock()
         val loader = spy(ThumbnailLoader(storage))
-        val request = ImageLoadRequest("123", 100)
+        val request = ImageLoadRequest("123", 100, false)
 
         doReturn(result).`when`(storage).loadThumbnail(request)
 
@@ -79,7 +79,7 @@ class ThumbnailLoaderTest {
         val previousJob: Job = mock()
         val storage: ThumbnailStorage = mock()
         val loader = spy(ThumbnailLoader(storage))
-        val request = ImageLoadRequest("123", 100)
+        val request = ImageLoadRequest("123", 100, false)
 
         doReturn(previousJob).`when`(view).getTag(R.id.mozac_browser_thumbnails_tag_job)
         doReturn(result).`when`(storage).loadThumbnail(request)
