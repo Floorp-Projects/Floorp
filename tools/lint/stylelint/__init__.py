@@ -90,7 +90,7 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
         [
             binary,
             os.path.join(
-                module_path, "node_modules", "stylelint", "bin", "stylelint.js"
+                module_path, "node_modules", "stylelint", "bin", "stylelint.mjs"
             ),
             "--formatter",
             "json",
