@@ -765,6 +765,26 @@ nsresult ScriptLoader::PrepareHttpRequestAndInitiatorType(
   return rv;
 }
 
+nsresult ScriptLoader::PrepareIncrementalStreamLoader(
+    nsIIncrementalStreamLoader** aOutLoader, ScriptLoadRequest* aRequest) {
+  UniquePtr<mozilla::dom::SRICheckDataVerifier> sriDataVerifier;
+  if (!aRequest->mIntegrity.IsEmpty()) {
+    nsAutoCString sourceUri;
+    if (mDocument->GetDocumentURI()) {
+      mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
+    }
+    sriDataVerifier = MakeUnique<SRICheckDataVerifier>(aRequest->mIntegrity,
+                                                       sourceUri, mReporter);
+  }
+
+  RefPtr<ScriptLoadHandler> handler =
+      new ScriptLoadHandler(this, aRequest, std::move(sriDataVerifier));
+
+  nsresult rv = NS_NewIncrementalStreamLoader(aOutLoader, handler);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
+}
+
 nsresult ScriptLoader::StartLoadInternal(
     ScriptLoadRequest* aRequest, nsSecurityFlags securityFlags,
     const Maybe<nsAutoString>& aCharsetForPreload) {
@@ -808,21 +828,8 @@ nsresult ScriptLoader::StartLoadInternal(
       nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE,
       mDocument->NodePrincipal()->OriginAttributesRef());
 
-  UniquePtr<mozilla::dom::SRICheckDataVerifier> sriDataVerifier;
-  if (!aRequest->mIntegrity.IsEmpty()) {
-    nsAutoCString sourceUri;
-    if (mDocument->GetDocumentURI()) {
-      mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
-    }
-    sriDataVerifier = MakeUnique<SRICheckDataVerifier>(aRequest->mIntegrity,
-                                                       sourceUri, mReporter);
-  }
-
-  RefPtr<ScriptLoadHandler> handler =
-      new ScriptLoadHandler(this, aRequest, std::move(sriDataVerifier));
-
   nsCOMPtr<nsIIncrementalStreamLoader> loader;
-  rv = NS_NewIncrementalStreamLoader(getter_AddRefs(loader), handler);
+  rv = PrepareIncrementalStreamLoader(getter_AddRefs(loader), aRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
   auto key = PreloadHashKey::CreateAsScript(
