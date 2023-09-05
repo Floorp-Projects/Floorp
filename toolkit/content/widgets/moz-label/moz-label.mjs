@@ -20,10 +20,7 @@ class MozTextLabel extends HTMLLabelElement {
     return ["accesskey"];
   }
 
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./moz-label/moz-label.css"
-    : "chrome://global/content/elements/moz-label.css";
+  static stylesheetUrl = "chrome://global/content/elements/moz-label.css";
 
   constructor() {
     super();

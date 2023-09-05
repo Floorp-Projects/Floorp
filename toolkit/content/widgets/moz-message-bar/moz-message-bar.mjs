@@ -53,11 +53,6 @@ export default class MozMessageBar extends MozLitElement {
     dismissable: { type: Boolean },
   };
 
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./moz-message-bar/moz-message-bar.css"
-    : "chrome://global/content/elements/moz-message-bar.css";
-
   constructor() {
     super();
     MozXULElement.insertFTLIfNeeded("toolkit/global/mozMessageBar.ftl");
@@ -120,7 +115,10 @@ export default class MozMessageBar extends MozLitElement {
 
   render() {
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://global/content/elements/moz-message-bar.css"
+      />
       <div class="container">
         <div class="content">
           <div class="text-container">
