@@ -92,6 +92,28 @@ pub enum DisplayInside {
     WebkitBox,
 }
 
+impl DisplayInside {
+    fn is_valid_for_list_item(self) -> bool {
+        match self {
+            DisplayInside::Flow => true,
+            #[cfg(feature = "gecko")]
+            DisplayInside::FlowRoot => true,
+            _ => false,
+        }
+    }
+
+    /// https://drafts.csswg.org/css-display/#inside-model:
+    ///     If <display-outside> is omitted, the element’s outside display type defaults to block
+    ///     — except for ruby, which defaults to inline.
+    fn default_display_outside(self) -> DisplayOutside {
+        match self {
+            #[cfg(feature = "gecko")]
+            DisplayInside::Ruby => DisplayOutside::Inline,
+            _ => DisplayOutside::Block,
+        }
+    }
+}
+
 #[allow(missing_docs)]
 #[derive(
     Clone,
@@ -300,7 +322,6 @@ impl Display {
 }
 
 /// Shared Display impl for both Gecko and Servo.
-#[allow(non_upper_case_globals)]
 impl Display {
     /// The initial display value.
     #[inline]
@@ -410,6 +431,79 @@ impl Display {
     }
 }
 
+enum DisplayKeyword {
+    Full(Display),
+    Inside(DisplayInside),
+    Outside(DisplayOutside),
+    ListItem,
+}
+
+impl DisplayKeyword {
+    fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Self, ParseError<'i>> {
+        use self::DisplayKeyword::*;
+        Ok(try_match_ident_ignore_ascii_case! { input,
+            "none" => Full(Display::None),
+            #[cfg(any(feature = "servo-layout-2020", feature = "gecko"))]
+            "contents" => Full(Display::Contents),
+            "inline-block" => Full(Display::InlineBlock),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "inline-table" => Full(Display::InlineTable),
+            "-webkit-flex" if flexbox_enabled() => Full(Display::Flex),
+            "inline-flex" | "-webkit-inline-flex" if flexbox_enabled() => Full(Display::InlineFlex),
+            #[cfg(feature = "gecko")]
+            "inline-grid" => Full(Display::InlineGrid),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "table-caption" => Full(Display::TableCaption),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "table-row-group" => Full(Display::TableRowGroup),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "table-header-group" => Full(Display::TableHeaderGroup),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "table-footer-group" => Full(Display::TableFooterGroup),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "table-column" => Full(Display::TableColumn),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "table-column-group" => Full(Display::TableColumnGroup),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "table-row" => Full(Display::TableRow),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "table-cell" => Full(Display::TableCell),
+            #[cfg(feature = "gecko")]
+            "ruby-base" => Full(Display::RubyBase),
+            #[cfg(feature = "gecko")]
+            "ruby-base-container" => Full(Display::RubyBaseContainer),
+            #[cfg(feature = "gecko")]
+            "ruby-text" => Full(Display::RubyText),
+            #[cfg(feature = "gecko")]
+            "ruby-text-container" => Full(Display::RubyTextContainer),
+            #[cfg(feature = "gecko")]
+            "-webkit-box" => Full(Display::WebkitBox),
+            #[cfg(feature = "gecko")]
+            "-webkit-inline-box" => Full(Display::WebkitInlineBox),
+
+            /// <display-outside> = block | inline | run-in
+            /// https://drafts.csswg.org/css-display/#typedef-display-outside
+            "block" => Outside(DisplayOutside::Block),
+            "inline" => Outside(DisplayOutside::Inline),
+
+            "list-item" => ListItem,
+
+            /// <display-inside> = flow | flow-root | table | flex | grid | ruby
+            /// https://drafts.csswg.org/css-display/#typedef-display-inside
+            "flow" => Inside(DisplayInside::Flow),
+            "flex" if flexbox_enabled() => Inside(DisplayInside::Flex),
+            #[cfg(any(feature = "servo-layout-2020", feature = "gecko"))]
+            "flow-root" => Inside(DisplayInside::FlowRoot),
+            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
+            "table" => Inside(DisplayInside::Table),
+            #[cfg(feature = "gecko")]
+            "grid" => Inside(DisplayInside::Grid),
+            #[cfg(feature = "gecko")]
+            "ruby" => Inside(DisplayInside::Ruby),
+        })
+    }
+}
+
 impl ToCss for Display {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
@@ -452,151 +546,49 @@ impl ToCss for Display {
     }
 }
 
-/// <display-inside> = flow | flow-root | table | flex | grid | ruby
-/// https://drafts.csswg.org/css-display/#typedef-display-inside
-fn parse_display_inside<'i, 't>(
-    input: &mut Parser<'i, 't>,
-) -> Result<DisplayInside, ParseError<'i>> {
-    Ok(try_match_ident_ignore_ascii_case! { input,
-        "flow" => DisplayInside::Flow,
-        "flex" if flexbox_enabled() => DisplayInside::Flex,
-        #[cfg(any(feature = "servo-layout-2020", feature = "gecko"))]
-        "flow-root" => DisplayInside::FlowRoot,
-        #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-        "table" => DisplayInside::Table,
-        #[cfg(feature = "gecko")]
-        "grid" => DisplayInside::Grid,
-        #[cfg(feature = "gecko")]
-        "ruby" => DisplayInside::Ruby,
-    })
-}
-
-/// <display-outside> = block | inline | run-in
-/// https://drafts.csswg.org/css-display/#typedef-display-outside
-fn parse_display_outside<'i, 't>(
-    input: &mut Parser<'i, 't>,
-) -> Result<DisplayOutside, ParseError<'i>> {
-    Ok(try_match_ident_ignore_ascii_case! { input,
-        "block" => DisplayOutside::Block,
-        "inline" => DisplayOutside::Inline,
-        // FIXME(bug 2056): not supported in layout yet:
-        //"run-in" => DisplayOutside::RunIn,
-    })
-}
-
-/// (flow | flow-root)?
-fn parse_display_inside_for_list_item<'i, 't>(
-    input: &mut Parser<'i, 't>,
-) -> Result<DisplayInside, ParseError<'i>> {
-    Ok(try_match_ident_ignore_ascii_case! { input,
-        "flow" => DisplayInside::Flow,
-        #[cfg(feature = "gecko")]
-        "flow-root" => DisplayInside::FlowRoot,
-    })
-}
-/// Test a <display-inside> Result for same values as above.
-fn is_valid_inside_for_list_item<'i>(inside: &Result<DisplayInside, ParseError<'i>>) -> bool {
-    match inside {
-        Ok(DisplayInside::Flow) => true,
-        #[cfg(feature = "gecko")]
-        Ok(DisplayInside::FlowRoot) => true,
-        _ => false,
-    }
-}
-
-/// Parse `list-item`.
-fn parse_list_item<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), ParseError<'i>> {
-    Ok(input.expect_ident_matching("list-item")?)
-}
-
 impl Parse for Display {
-    #[allow(unused)] // `context` isn't used for servo-2020 for now
     fn parse<'i, 't>(
-        context: &ParserContext,
+        _: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Display, ParseError<'i>> {
-        // Parse all combinations of <display-inside/outside>? and `list-item`? first.
-        let mut got_list_item = input.try_parse(parse_list_item).is_ok();
-        let mut inside = if got_list_item {
-            input.try_parse(parse_display_inside_for_list_item)
-        } else {
-            input.try_parse(parse_display_inside)
+        let mut got_list_item = false;
+        let mut inside = None;
+        let mut outside = None;
+        match DisplayKeyword::parse(input)? {
+            DisplayKeyword::Full(d) => return Ok(d),
+            DisplayKeyword::Outside(o) => {
+                outside = Some(o);
+            }
+            DisplayKeyword::Inside(i) => {
+                inside = Some(i);
+            },
+            DisplayKeyword::ListItem => {
+                got_list_item = true;
+            }
         };
-        // <display-listitem> = <display-outside>? && [ flow | flow-root ]? && list-item
-        // https://drafts.csswg.org/css-display/#typedef-display-listitem
-        if !got_list_item && is_valid_inside_for_list_item(&inside) {
-            got_list_item = input.try_parse(parse_list_item).is_ok();
-        }
-        let outside = input.try_parse(parse_display_outside);
-        if outside.is_ok() {
-            if !got_list_item && (inside.is_err() || is_valid_inside_for_list_item(&inside)) {
-                got_list_item = input.try_parse(parse_list_item).is_ok();
-            }
-            if inside.is_err() {
-                inside = if got_list_item {
-                    input.try_parse(parse_display_inside_for_list_item)
-                } else {
-                    input.try_parse(parse_display_inside)
-                };
-                if !got_list_item && is_valid_inside_for_list_item(&inside) {
-                    got_list_item = input.try_parse(parse_list_item).is_ok();
+
+        while let Ok(kw) = input.try_parse(DisplayKeyword::parse) {
+            match kw {
+                DisplayKeyword::ListItem if !got_list_item => {
+                    got_list_item = true;
                 }
+                DisplayKeyword::Outside(o) if outside.is_none() => {
+                    outside = Some(o);
+                }
+                DisplayKeyword::Inside(i) if inside.is_none() => {
+                    inside = Some(i);
+                }
+                _ => return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
             }
-        }
-        if got_list_item || inside.is_ok() || outside.is_ok() {
-            let inside = inside.unwrap_or(DisplayInside::Flow);
-            let outside = outside.unwrap_or(match inside {
-                // "If <display-outside> is omitted, the element’s outside display type
-                // defaults to block — except for ruby, which defaults to inline."
-                // https://drafts.csswg.org/css-display/#inside-model
-                #[cfg(feature = "gecko")]
-                DisplayInside::Ruby => DisplayOutside::Inline,
-                _ => DisplayOutside::Block,
-            });
-            return Ok(Display::from3(outside, inside, got_list_item));
         }
 
-        // Now parse the single-keyword `display` values.
-        Ok(try_match_ident_ignore_ascii_case! { input,
-            "none" => Display::None,
-            #[cfg(any(feature = "servo-layout-2020", feature = "gecko"))]
-            "contents" => Display::Contents,
-            "inline-block" => Display::InlineBlock,
-            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-            "inline-table" => Display::InlineTable,
-            "-webkit-flex" if flexbox_enabled() => Display::Flex,
-            "inline-flex" | "-webkit-inline-flex" if flexbox_enabled() => Display::InlineFlex,
-            #[cfg(feature = "gecko")]
-            "inline-grid" => Display::InlineGrid,
-            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-            "table-caption" => Display::TableCaption,
-            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-            "table-row-group" => Display::TableRowGroup,
-            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-            "table-header-group" => Display::TableHeaderGroup,
-            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-            "table-footer-group" => Display::TableFooterGroup,
-            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-            "table-column" => Display::TableColumn,
-            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-            "table-column-group" => Display::TableColumnGroup,
-            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-            "table-row" => Display::TableRow,
-            #[cfg(any(feature = "servo-layout-2013", feature = "gecko"))]
-            "table-cell" => Display::TableCell,
-            #[cfg(feature = "gecko")]
-            "ruby-base" => Display::RubyBase,
-            #[cfg(feature = "gecko")]
-            "ruby-base-container" => Display::RubyBaseContainer,
-            #[cfg(feature = "gecko")]
-            "ruby-text" => Display::RubyText,
-            #[cfg(feature = "gecko")]
-            "ruby-text-container" => Display::RubyTextContainer,
-            #[cfg(feature = "gecko")]
-            "-webkit-box" => Display::WebkitBox,
-            #[cfg(feature = "gecko")]
-            "-webkit-inline-box" => Display::WebkitInlineBox,
-        })
+        let inside = inside.unwrap_or(DisplayInside::Flow);
+        let outside = outside.unwrap_or_else(|| inside.default_display_outside());
+        if got_list_item && !inside.is_valid_for_list_item() {
+            return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
+        }
+
+        return Ok(Display::from3(outside, inside, got_list_item));
     }
 }
 

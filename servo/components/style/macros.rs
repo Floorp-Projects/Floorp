@@ -55,7 +55,7 @@ macro_rules! trivial_to_computed_value {
 macro_rules! try_match_ident_ignore_ascii_case {
     ($input:expr, $( $match_body:tt )*) => {{
         let location = $input.current_source_location();
-        let ident = $input.expect_ident_cloned()?;
+        let ident = $input.expect_ident()?;
         match_ignore_ascii_case! { &ident,
             $( $match_body )*
             _ => return Err(location.new_custom_error(
