@@ -23,8 +23,9 @@ add_task(async () => {
 
   const previousConstructCount = utils.framesConstructed;
 
-  const loadPromise =
-      new Promise(resolve => image.addEventListener("load", resolve));
+  const loadPromise = image.complete
+    ? null
+    : new Promise(resolve => image.addEventListener("load", resolve));
 
   image.scrollIntoView();
 
