@@ -2470,6 +2470,14 @@ export class UrlbarInput {
       // 3. a url that was confirmed but didn't finish loading yet
       // If it's an url the untrimmedValue should resolve to a valid URI,
       // otherwise it's a search string that should be copied as-is.
+
+      // If the copied text is that autofilled value, return the url including
+      // the protocol from its suggestion.
+      let result = this.view.getResultAtIndex(0);
+      if (result?.autofill?.value == selectedVal) {
+        return result.payload.url;
+      }
+
       try {
         uri = Services.io.newURI(this._untrimmedValue);
       } catch (ex) {
