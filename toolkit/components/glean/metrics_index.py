@@ -23,6 +23,7 @@ gecko_metrics = [
     "mobile/android/actors/metrics.yaml",
     "netwerk/metrics.yaml",
     "netwerk/protocol/http/metrics.yaml",
+    "security/manager/ssl/metrics.yaml",
     "toolkit/components/cookiebanners/metrics.yaml",
     "toolkit/components/extensions/metrics.yaml",
     "toolkit/components/formautofill/metrics.yaml",

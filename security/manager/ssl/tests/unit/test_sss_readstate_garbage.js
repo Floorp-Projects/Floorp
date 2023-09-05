@@ -3,57 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// The purpose of this test is to create a mostly bogus site security service
-// state file and see that the site security service handles it properly.
-
-var gSSService = null;
-
-function checkStateRead(aSubject, aTopic, aData) {
-  if (aData == CLIENT_AUTH_FILE_NAME) {
-    return;
-  }
-
-  equal(aData, SSS_STATE_FILE_NAME);
-
-  const HSTS_HOSTS = [
-    "https://example1.example.com",
-    "https://example2.example.com",
-  ];
-  for (let host of HSTS_HOSTS) {
-    ok(
-      gSSService.isSecureURI(Services.io.newURI(host)),
-      `${host} should be HSTS enabled`
-    );
-  }
-
-  const NOT_HSTS_HOSTS = [
-    "https://example.com",
-    "https://example3.example.com",
-    "https://extra.comma.example.com",
-    "https://empty.statestring.example.com",
-    "https://rubbish.statestring.example.com",
-    "https://spaces.statestring.example.com",
-    "https://invalid.expirytime.example.com",
-    "https://text.securitypropertystate.example.com",
-    "https://invalid.securitypropertystate.example.com",
-    "https://text.includesubdomains.example.com",
-    "https://invalid.includesubdomains.example.com",
-  ];
-  for (let host of NOT_HSTS_HOSTS) {
-    ok(
-      !gSSService.isSecureURI(Services.io.newURI(host)),
-      `${host} should not be HSTS enabled`
-    );
-  }
-
-  do_test_finished();
-}
+// The purpose of this test is to create a mostly bogus old site security
+// service state file and see that the site security service migrates it
+// to the new format properly, discarding invalid data.
 
 function run_test() {
-  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
   let profileDir = do_get_profile();
   let stateFile = profileDir.clone();
-  stateFile.append(SSS_STATE_FILE_NAME);
+  stateFile.append(SSS_STATE_OLD_FILE_NAME);
   // Assuming we're working with a clean slate, the file shouldn't exist
   // until we create it.
   ok(!stateFile.exists());
@@ -81,15 +38,40 @@ function run_test() {
     `invalid.includesubdomains.example.com\t0\t0\t${expiryTime},1,0foo`,
   ];
   writeLinesAndClose(lines, outputStream);
-  Services.obs.addObserver(checkStateRead, "data-storage-ready");
-  do_test_pending();
-  gSSService = Cc["@mozilla.org/ssservice;1"].getService(
+
+  let siteSecurityService = Cc["@mozilla.org/ssservice;1"].getService(
     Ci.nsISiteSecurityService
   );
-  notEqual(gSSService, null);
+  notEqual(siteSecurityService, null);
 
-  Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
-  });
+  const HSTS_HOSTS = [
+    "https://example1.example.com",
+    "https://example2.example.com",
+  ];
+  for (let host of HSTS_HOSTS) {
+    ok(
+      siteSecurityService.isSecureURI(Services.io.newURI(host)),
+      `${host} should be HSTS enabled`
+    );
+  }
+
+  const NOT_HSTS_HOSTS = [
+    "https://example.com",
+    "https://example3.example.com",
+    "https://extra.comma.example.com",
+    "https://empty.statestring.example.com",
+    "https://rubbish.statestring.example.com",
+    "https://spaces.statestring.example.com",
+    "https://invalid.expirytime.example.com",
+    "https://text.securitypropertystate.example.com",
+    "https://invalid.securitypropertystate.example.com",
+    "https://text.includesubdomains.example.com",
+    "https://invalid.includesubdomains.example.com",
+  ];
+  for (let host of NOT_HSTS_HOSTS) {
+    ok(
+      !siteSecurityService.isSecureURI(Services.io.newURI(host)),
+      `${host} should not be HSTS enabled`
+    );
+  }
 }

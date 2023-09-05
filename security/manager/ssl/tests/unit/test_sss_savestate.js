@@ -6,92 +6,59 @@
 // The purpose of this test is to see that the site security service properly
 // writes its state file.
 
+ChromeUtils.defineESModuleGetters(this, {
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
+});
+
 const EXPECTED_ENTRIES = 5;
 const EXPECTED_HSTS_COLUMNS = 3;
 
-var gProfileDir = null;
-var gExpectingWrites = true;
+function contents_is_as_expected() {
+  // The file consists of a series of [score][last accessed][key][value], where
+  // score and last accessed are 2 bytes big-endian, key is 0-padded to 256
+  // bytes, and value is 0-padded to 24 bytes.
+  // Each score will be 1, and last accessed is some number of days (>255)
+  // since the epoch, so there will be 3 non-0 bytes just in front of the key.
+  // Splitting by 0 and filtering out zero-length strings will result in a series of
+  // [BBBkey1, value1, BBBkey2, value2, ...], where "BBB" are the score and
+  // last accessed bytes, which are ignored here.
+  let contents = get_data_storage_contents(SSS_STATE_FILE_NAME);
+  if (!contents) {
+    return false;
+  }
+  let keysAndValues = contents.split("\0").filter(s => !!s.length);
+  let keys = keysAndValues
+    .filter((_, i) => i % 2 == 0)
+    .map(key => key.substring(3));
+  let values = keysAndValues.filter((_, i) => i % 2 == 1);
 
-// For reference, the format of the state file is a list of:
-// <domain name> <expiration time in milliseconds>,<sts status>,<includeSubdomains>
-// separated by newlines ('\n')
-
-function checkStateWritten(aSubject, aTopic, aData) {
-  if (aData == CLIENT_AUTH_FILE_NAME) {
-    return;
+  if (keys.length != EXPECTED_ENTRIES || values.length != EXPECTED_ENTRIES) {
+    return false;
   }
 
-  equal(aData, SSS_STATE_FILE_NAME);
-  ok(gExpectingWrites);
-
-  let stateFile = gProfileDir.clone();
-  stateFile.append(SSS_STATE_FILE_NAME);
-  ok(stateFile.exists());
-  let stateFileContents = readFile(stateFile);
-  // the last line is removed because it's just a trailing newline
-  let lines = stateFileContents.split("\n").slice(0, -1);
-  equal(lines.length, EXPECTED_ENTRIES);
   let sites = {}; // a map of domain name -> [the entry in the state file]
-  for (let line of lines) {
-    let parts = line.split("\t");
-    let host = parts[0];
-    let entry = parts[3].split(",");
-    let expectedColumns = EXPECTED_HSTS_COLUMNS;
-    equal(entry.length, expectedColumns);
+  for (let i in keys) {
+    let host = keys[i];
+    let entry = values[i].split(",");
+    equal(entry.length, EXPECTED_HSTS_COLUMNS);
     sites[host] = entry;
   }
 
-  // While we're still processing headers, multiple writes of the backing data
-  // can be scheduled, and thus we can receive multiple data-storage-written
-  // notifications. In these cases, the data may not be as we expect. We only
-  // care about the final one being correct, however, so we return and wait for
-  // the next event if things aren't as we expect.
   // each sites[url][1] should be SecurityPropertySet (i.e. 1).
   // sites[url][2] corresponds to includeSubdomains, so every other one should
   // be set (i.e. 1);
-  if (sites["includesubdomains.preloaded.test"][1] != 1) {
-    return;
-  }
-  if (sites["includesubdomains.preloaded.test"][2] != 0) {
-    return;
-  }
-  if (sites["a.example.com"][1] != 1) {
-    return;
-  }
-  if (sites["a.example.com"][2] != 1) {
-    return;
-  }
-  if (sites["b.example.com"][1] != 1) {
-    return;
-  }
-  if (sites["b.example.com"][2] != 0) {
-    return;
-  }
-  if (sites["c.c.example.com"][1] != 1) {
-    return;
-  }
-  if (sites["c.c.example.com"][2] != 1) {
-    return;
-  }
-  if (sites["d.example.com"][1] != 1) {
-    return;
-  }
-  if (sites["d.example.com"][2] != 0) {
-    return;
-  }
-
-  // If we get here, the file was as expected and we no longer expect any
-  // data-storage-written notifications.
-  gExpectingWrites = false;
-
-  // Process the headers again to test that seeing them again after such a
-  // short delay doesn't cause another write.
-  process_headers();
-
-  // Wait a bit before finishing the test, to see if another write happens.
-  do_timeout(2000, function () {
-    do_test_finished();
-  });
+  return (
+    sites["includesubdomains.preloaded.test"][1] == 1 &&
+    sites["includesubdomains.preloaded.test"][2] == 0 &&
+    sites["a.example.com"][1] == 1 &&
+    sites["a.example.com"][2] == 1 &&
+    sites["b.example.com"][1] == 1 &&
+    sites["b.example.com"][2] == 0 &&
+    sites["c.c.example.com"][1] == 1 &&
+    sites["c.c.example.com"][2] == 1 &&
+    sites["d.example.com"][1] == 1 &&
+    sites["d.example.com"][2] == 0
+  );
 }
 
 function process_headers() {
@@ -118,9 +85,7 @@ function process_headers() {
 }
 
 function run_test() {
-  Services.prefs.setIntPref("test.datastorage.write_timer_ms", 100);
-  gProfileDir = do_get_profile();
+  do_get_profile();
   process_headers();
-  do_test_pending();
-  Services.obs.addObserver(checkStateWritten, "data-storage-written");
+  TestUtils.waitForCondition(contents_is_as_expected);
 }

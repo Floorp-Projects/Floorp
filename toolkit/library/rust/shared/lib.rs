@@ -23,6 +23,7 @@ extern crate cosec;
 extern crate cubeb_coreaudio;
 #[cfg(feature = "cubeb_pulse_rust")]
 extern crate cubeb_pulse;
+extern crate data_storage;
 extern crate encoding_glue;
 extern crate fog_control;
 extern crate gecko_profiler;
