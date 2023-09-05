@@ -117,20 +117,30 @@ const backupFloorpNotes = async () => {
   Services.prefs.setCharPref(FLOORP_NOTES_LATEST_BACKUP_TIME_PREF, time);
 
   try {
-  IOUtils.exists(PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "floorp_notes_backup.json")).then((data) => {
-    if (!data) {
-        let backupFilePath = PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "floorp_notes_backup.json");
+    IOUtils.exists(
+      PathUtils.join(
+        Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+        "floorp_notes_backup.json"
+      )
+    ).then(data => {
+      if (!data) {
+        let backupFilePath = PathUtils.join(
+          Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+          "floorp_notes_backup.json"
+        );
         IOUtils.writeUTF8(backupFilePath, `{"data":{${jsonToStr},`);
-    } else {
-        let backupFilePath = PathUtils.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, "floorp_notes_backup.json");
-        IOUtils.readUTF8(backupFilePath).then(
-          content => {
-            let appText = `${content}${jsonToStr},`;
-            IOUtils.writeUTF8(backupFilePath, appText);
-          });
-        }
-  });
-  } catch (e) {};
+      } else {
+        let backupFilePath = PathUtils.join(
+          Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+          "floorp_notes_backup.json"
+        );
+        IOUtils.readUTF8(backupFilePath).then(content => {
+          let appText = `${content}${jsonToStr},`;
+          IOUtils.writeUTF8(backupFilePath, appText);
+        });
+      }
+    });
+  } catch (e) {}
 };
 
 if (Services.prefs.getCharPref(FLOORP_NOTES_PREF) != "") {
@@ -139,16 +149,13 @@ if (Services.prefs.getCharPref(FLOORP_NOTES_PREF) != "") {
 
 function getAllBackupedNotes() {
   const filePath = PathUtils.join(
-    Services.dirsvc.get(
-      "ProfD", Ci.nsIFile).path,
+    Services.dirsvc.get("ProfD", Ci.nsIFile).path,
     "floorp_notes_backup.json"
   );
-  const content = IOUtils.readUTF8(filePath).then(
-    content => {
-      content = content.slice(0, -1) + "}}";
-      return JSON.parse(content);
-    }
-  );
+  const content = IOUtils.readUTF8(filePath).then(content => {
+    content = content.slice(0, -1) + "}}";
+    return JSON.parse(content);
+  });
   return content;
 }
 
@@ -167,11 +174,9 @@ getAllBackupedNotes().then(content => {
 
     let jsonToStr = JSON.stringify(content).slice(0, -2) + ",";
     const filePath = PathUtils.join(
-      Services.dirsvc.get(
-        "ProfD", Ci.nsIFile
-        ).path, 
-        "floorp_notes_backup.json"
-      )
+      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+      "floorp_notes_backup.json"
+    );
     IOUtils.writeUTF8(filePath, jsonToStr);
   }
 });

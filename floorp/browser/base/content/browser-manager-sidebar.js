@@ -140,7 +140,7 @@ const bmsController = {
         fxSidebar.style.order = "5";
       }
     },
-    selectSidebarItem: (event) => {
+    selectSidebarItem: event => {
       let custom_url_id = event.target.id.replace("select-", "");
       if (bmsController.nowPage == custom_url_id) {
         bmsController.controllFunctions.changeVisibleWenpanel();
@@ -272,7 +272,8 @@ const bmsController = {
       );
       const selectedURL = BROWSER_SIDEBAR_DATA.data[modeValuePref].url ?? "";
       bmsController.controllFunctions.changeVisibleCommandButton(
-        selectedURL.startsWith("floorp//") || Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")
+        selectedURL.startsWith("floorp//") ||
+          Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")
       );
       for (let elem of document.getElementsByClassName("webpanels")) {
         elem.hidden = true;
@@ -449,10 +450,13 @@ const bmsController = {
       }
 
       // Add-on Capability
-      if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){
+      if (
+        Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")
+      ) {
         isWeb = false;
       }
 
+      // eslint-disable-next-line no-lonely-if
       if (webpanobject == null) {
         let webpanelElem = window.MozXULElement.parseXULToFragment(`
               <browser 
@@ -484,10 +488,24 @@ const bmsController = {
           webpanelURL = webpanelURL.split(",")[3];
         }
 
-        if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled") && !isFloorp){
-          Services.prefs.setBoolPref("floorp.browser.sidebar2.addons.window.start", true);
-          Services.prefs.setStringPref("floorp.browser.sidebar2.start.url", webpanelURL);
-          webpanelElem.firstChild.setAttribute("src", "chrome://browser/content/browser.xhtml");
+        if (
+          Services.prefs.getBoolPref(
+            "floorp.browser.sidebar2.addons.enabled"
+          ) &&
+          !isFloorp
+        ) {
+          Services.prefs.setBoolPref(
+            "floorp.browser.sidebar2.addons.window.start",
+            true
+          );
+          Services.prefs.setStringPref(
+            "floorp.browser.sidebar2.start.url",
+            webpanelURL
+          );
+          webpanelElem.firstChild.setAttribute(
+            "src",
+            "chrome://browser/content/browser.xhtml"
+          );
         } else {
           webpanelElem.firstChild.setAttribute("src", webpanelURL);
         }
@@ -497,7 +515,9 @@ const bmsController = {
           webpanelURL = webpanelURL.split(",")[3];
         }
 
-        if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){
+        if (
+          Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")
+        ) {
           /* empty */
         } else {
           webpanobject.setAttribute("src", webpanelURL);
@@ -653,20 +673,32 @@ const bmsController = {
   },
   bmsWindowFunctions: {
     loadBMSURI: () => {
-      let embedded = Services.prefs.getStringPref("floorp.browser.sidebar2.start.url");
+      let embedded = Services.prefs.getStringPref(
+        "floorp.browser.sidebar2.start.url"
+      );
       gBrowser.loadURI(Services.io.newURI(embedded), {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
       });
-      document.getElementById("main-window").setAttribute("chromehidden", "toolbar", "menubar directories extrachrome");
+      document
+        .getElementById("main-window")
+        .setAttribute(
+          "chromehidden",
+          "toolbar",
+          "menubar directories extrachrome"
+        );
       document.getElementById("main-window").setAttribute("BSM-window", "true");
       Services.prefs.clearUserPref("floorp.browser.sidebar2.start.url");
-      Services.prefs.setBoolPref("floorp.browser.sidebar2.addons.window.start", false);
+      Services.prefs.setBoolPref(
+        "floorp.browser.sidebar2.addons.window.start",
+        false
+      );
 
       // Load CSS
       const BMSSyleElement = document.createElement("style");
       BMSSyleElement.textContent = `
          @import url("chrome://browser/content/browser-bms-window.css");
-       `
+       `;
       document.head.appendChild(BMSSyleElement);
     },
   },
@@ -779,22 +811,24 @@ const bmsController = {
     bmsController.eventFunctions.setFlexOrder();
   });
 
-  if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){ 
+  if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")) {
     // Browser Manager Sidebar embedded check
-    let embedded = Services.prefs.getStringPref("floorp.browser.sidebar2.start.url");
+    let embedded = Services.prefs.getStringPref(
+      "floorp.browser.sidebar2.start.url"
+    );
     if (embedded != "" && embedded !== false && embedded != undefined) {
-        if(gBrowser){
-          bmsController.bmsWindowFunctions.loadBMSURI();
-        } else {
-          checkgBrowserIsReady()
-        }
+      if (gBrowser) {
+        bmsController.bmsWindowFunctions.loadBMSURI();
+      } else {
+        checkgBrowserIsReady();
       }
-      function checkgBrowserIsReady() {
-        if (gBrowser) {
-          bmsController.bmsWindowFunctions.loadBMSURI();
-        } else {
-          window.setTimeout(checkgBrowserIsReady, 1000);
-        }
+    }
+    function checkgBrowserIsReady() {
+      if (gBrowser) {
+        bmsController.bmsWindowFunctions.loadBMSURI();
+      } else {
+        window.setTimeout(checkgBrowserIsReady, 1000);
       }
+    }
   }
 })();
