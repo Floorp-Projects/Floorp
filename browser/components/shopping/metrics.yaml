@@ -207,6 +207,97 @@ shopping:
           card.
         type: string
 
+  surface_show_terms_clicked:
+    type: event
+    description: |
+      The user clicked to view the Terms of Service.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849899
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+
+  surface_show_privacy_policy_clicked:
+    type: event
+    description: |
+      The user clicked to view the Privacy Policy.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849899
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+
+  surface_not_now_clicked:
+    type: event
+    description: |
+      The user clicked 'Not Now' to dismiss the dialog.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849899
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+
+  surface_opt_in_clicked:
+    type: event
+    description: |
+      The user clicked the "Yes, try it" element to use the Shopping product's
+      functionality.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849899
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+
+  surface_onboarding_displayed:
+    type: event
+    description: |
+      The Shopping Side bar displayed the onboarding experience.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849899
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+    extra_keys:
+      configuration:
+        description: >
+          Which version of the onboarding experience the user was shown.
+        type: string
+
   surface_no_review_reliability_available:
     type: event
     description: |

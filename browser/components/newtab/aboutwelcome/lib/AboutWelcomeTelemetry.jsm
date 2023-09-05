@@ -162,6 +162,11 @@ class AboutWelcomeTelemetry {
     if (typeof event_context === "string") {
       try {
         event_context = JSON.parse(event_context);
+        // This code is for directing Shopping component based clicks into
+        // the Glean Events ping.
+        if (event_context?.page === "about:shoppingsidebar") {
+          this.handleShoppingPings(ping, event_context);
+        }
       } catch (e) {
         // The Empty JSON strings and non-objects often provided by the
         // existing telemetry we need to send failing to parse do not fit in
@@ -243,5 +248,38 @@ class AboutWelcomeTelemetry {
     return s.toString().replace(/_([a-z])/gi, (_str, group) => {
       return group.toUpperCase();
     });
+  }
+
+  handleShoppingPings(ping, event_context) {
+    // This function helps direct a shopping ping to the correct Glean event.
+    if (ping?.message_id.startsWith("FAKESPOT_OPTIN_DEFAULT")) {
+      // Onboarding page message IDs are generated, but can reliably be
+      // assumed to start in this manner.
+      switch (ping?.event) {
+        case "CLICK_BUTTON":
+          switch (event_context?.source) {
+            case "privacy_policy":
+              Glean.shopping.surfaceShowPrivacyPolicyClicked.record();
+              break;
+            case "terms_of_use":
+              Glean.shopping.surfaceShowTermsClicked.record();
+              break;
+            case "primary_button":
+              // corresponds to 'Analyze Reviews'
+              Glean.shopping.surfaceOptInClicked.record();
+              break;
+            case "secondary_button":
+              // corresponds to "Not Now"
+              Glean.shopping.surfaceNotNowClicked.record();
+              break;
+          }
+          break;
+        case "IMPRESSION":
+          Glean.shopping.surfaceOnboardingDisplayed.record({
+            configuration: ping?.message_id,
+          });
+          break;
+      }
+    }
   }
 }
