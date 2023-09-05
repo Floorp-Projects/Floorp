@@ -271,14 +271,7 @@ export class MigrationWizard extends HTMLElement {
         true
       );
     }
-    let fragment = MigrationWizard.#template.content.cloneNode(true);
-    if (window.IS_STORYBOOK) {
-      // If we're using Storybook, load the CSS from the static local file
-      // system rather than chrome:// to take advantage of auto-reloading.
-      fragment.querySelector("link[rel=stylesheet]").href =
-        "./migration/migration-wizard.css";
-    }
-    return fragment;
+    return MigrationWizard.#template.content.cloneNode(true);
   }
 
   constructor() {
