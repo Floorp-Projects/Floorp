@@ -6,15 +6,7 @@
 
 Library("DefaultAgentTest")
 
-# Normally, we only include the test code in gtest sources because they get
-# linked against libxul. But the code we are testing is not part of libxul, so
-# if we want it to be available to us to test, we have to include it here.
 UNIFIED_SOURCES += [
-    "../../Cache.cpp",
-    "../../common.cpp",
-    "../../EventLog.cpp",
-    "../../Registry.cpp",
-    "../../UtfConvert.cpp",
     "CacheTest.cpp",
     "SetDefaultBrowserTest.cpp",
 ]
@@ -37,9 +29,5 @@ DEFINES["_UNICODE"] = True
 
 for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
     DEFINES[var] = '"%s"' % CONFIG[var]
-
-# We need STL headers that aren't allowed when wrapping is on (at least
-# <filesystem>, and possibly others).
-DisableStlWrapping()
 
 FINAL_LIBRARY = "xul-gtest"

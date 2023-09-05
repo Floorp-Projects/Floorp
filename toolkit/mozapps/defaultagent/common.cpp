@@ -10,6 +10,8 @@
 
 #include <windows.h>
 
+namespace mozilla::default_agent {
+
 ULONGLONG GetCurrentTimestamp() {
   FILETIME filetime;
   GetSystemTimeAsFileTime(&filetime);
@@ -79,3 +81,5 @@ FilePathResult GetRelativeBinaryPath(const wchar_t* suffix) {
 
   return std::wstring(relativePath);
 }
+
+}  // namespace mozilla::default_agent

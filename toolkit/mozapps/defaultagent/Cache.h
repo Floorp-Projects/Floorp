@@ -13,6 +13,8 @@
 
 #include "Registry.h"
 
+namespace mozilla::default_agent {
+
 using DwordResult = mozilla::WindowsErrorResult<uint32_t>;
 
 /**
@@ -181,5 +183,7 @@ class Cache {
   MaybeStringResult ReadEntryKeyString(const std::wstring& regKey,
                                        const wchar_t* regName, bool expected);
 };
+
+}  // namespace mozilla::default_agent
 
 #endif  // __DEFAULT_BROWSER_AGENT_CACHE_H__

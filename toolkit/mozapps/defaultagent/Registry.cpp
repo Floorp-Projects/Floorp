@@ -15,6 +15,8 @@
 
 #include "mozilla/Buffer.h"
 
+namespace mozilla::default_agent {
+
 using WStringResult = mozilla::WindowsErrorResult<std::wstring>;
 
 static WStringResult MaybePrefixRegistryValueName(
@@ -323,3 +325,5 @@ VoidResult RegistryDeleteValue(IsPrefixed isPrefixed,
 
   return mozilla::Ok();
 }
+
+}  // namespace mozilla::default_agent

@@ -11,10 +11,14 @@
 
 #include "mozilla/WinHeaderOnlyUtils.h"
 
+namespace mozilla::default_agent {
+
 using Utf16ToUtf8Result = mozilla::WindowsErrorResult<std::string>;
 using Utf8ToUtf16Result = mozilla::WindowsErrorResult<std::wstring>;
 
 Utf16ToUtf8Result Utf16ToUtf8(const wchar_t* const utf16);
 Utf8ToUtf16Result Utf8ToUtf16(const char* const utf8);
+
+}  // namespace mozilla::default_agent
 
 #endif  // DEFAULT_BROWSER_UTF_CONVERT_H__

@@ -13,6 +13,8 @@
 #include "mozilla/Buffer.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
+namespace mozilla::default_agent {
+
 Utf16ToUtf8Result Utf16ToUtf8(const wchar_t* const utf16) {
   int utf8Len =
       WideCharToMultiByte(CP_UTF8, 0, utf16, -1, nullptr, 0, nullptr, nullptr);
@@ -53,3 +55,5 @@ Utf8ToUtf16Result Utf8ToUtf16(const char* const utf8) {
 
   return std::wstring(utf16.Elements());
 }
+
+}  // namespace mozilla::default_agent

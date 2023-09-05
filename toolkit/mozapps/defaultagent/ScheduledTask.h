@@ -10,6 +10,8 @@
 #include <windows.h>
 #include <wtypes.h>
 
+namespace mozilla::default_agent {
+
 // uniqueToken should be a string unique to the installation, so that a
 // separate task can be created for each installation. Typically this will be
 // the install hash string.
@@ -21,5 +23,7 @@ enum class WhichTasks {
   AllTasksForInstallation,
 };
 HRESULT RemoveTasks(const wchar_t* uniqueToken, WhichTasks tasksToRemove);
+
+}  // namespace mozilla::default_agent
 
 #endif  // __DEFAULT_BROWSER_AGENT_SCHEDULED_TASK_H__

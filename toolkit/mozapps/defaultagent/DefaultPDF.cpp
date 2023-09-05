@@ -18,6 +18,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
+namespace mozilla::default_agent {
+
 using PdfResult = mozilla::WindowsErrorResult<std::string>;
 
 static PdfResult GetDefaultPdf() {
@@ -73,3 +75,5 @@ DefaultPdfResult GetDefaultPdfInfo() {
 
   return pdfInfo;
 }
+
+}  // namespace mozilla::default_agent

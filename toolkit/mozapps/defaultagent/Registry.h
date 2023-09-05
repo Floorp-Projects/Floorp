@@ -14,6 +14,8 @@
 #include "mozilla/Result.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
+namespace mozilla::default_agent {
+
 // Indicates whether or not a registry value name is prefixed with the install
 // directory path (Prefixed), or not (Unprefixed). Prefixing a registry value
 // name with the install directory makes that value specific to this
@@ -92,5 +94,7 @@ VoidResult RegistrySetValueDword(IsPrefixed isPrefixed,
 VoidResult RegistryDeleteValue(IsPrefixed isPrefixed,
                                const wchar_t* registryValueName,
                                const wchar_t* subKey = nullptr);
+
+}  // namespace mozilla::default_agent
 
 #endif  // __DEFAULT_BROWSER_AGENT_REGISTRY_H__
