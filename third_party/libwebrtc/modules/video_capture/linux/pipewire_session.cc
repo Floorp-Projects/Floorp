@@ -225,7 +225,8 @@ void CameraPortalNotifier::OnCameraRequestResult(
   }
 }
 
-PipeWireSession::PipeWireSession() {}
+PipeWireSession::PipeWireSession()
+    : status_(VideoCaptureOptions::Status::UNINITIALIZED) {}
 
 PipeWireSession::~PipeWireSession() {
   Cleanup();
