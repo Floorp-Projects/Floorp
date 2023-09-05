@@ -7,6 +7,10 @@ ChromeUtils.defineESModuleGetters(this, {
   ShoppingUtils: "resource:///modules/ShoppingUtils.sys.mjs",
 });
 
+const { SpecialMessageActions } = ChromeUtils.importESModule(
+  "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
+);
+
 /**
  * Toggle prefs involved in automatically activating the sidebar on PDPs if the
  * user has not opted in. Onboarding should only try to auto-activate the
@@ -54,9 +58,20 @@ function setOnboardingPrefs(states = {}) {
       states.active
     );
   }
+
+  if (Object.hasOwn(states, "telemetryEnabled")) {
+    Services.prefs.setBoolPref(
+      "browser.newtabpage.activity-stream.telemetry",
+      states.telemetryEnabled
+    );
+  }
 }
 
 add_setup(async function setup() {
+  // Block on testFlushAllChildren to ensure Glean is initialized before
+  // running tests.
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
   // Set all the prefs/states modified by this test to default values.
   registerCleanupFunction(() =>
     setOnboardingPrefs({
@@ -65,6 +80,7 @@ add_setup(async function setup() {
       lastAutoActivate: 0,
       autoActivateCount: 0,
       handledAutoActivate: false,
+      telementryEnabled: false,
     })
   );
 });
@@ -149,10 +165,14 @@ add_task(async function test_hideOnboarding_optedIn() {
 
 /**
  * Test to check onboarding message does not show when selecting "not now"
+ *
+ * Also confirms a Glean event was triggered.
  */
 add_task(async function test_hideOnboarding_onClose() {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
   // OptedIn pref value is 0 when a user has not opted-in
-  setOnboardingPrefs({ active: false, optedIn: 0 });
+  setOnboardingPrefs({ active: false, optedIn: 0, telemetryEnabled: true });
   await BrowserTestUtils.withNewTab(
     {
       url: "about:shoppingsidebar",
@@ -186,6 +206,167 @@ add_task(async function test_hideOnboarding_onClose() {
       });
     }
   );
+
+  await Services.fog.testFlushAllChildren();
+  let events = Glean.shopping.surfaceNotNowClicked.testGetValue();
+
+  await BrowserTestUtils.waitForCondition(() => {
+    let _events = Glean.shopping.surfaceNotNowClicked.testGetValue();
+    return _events?.length > 0;
+  });
+
+  Assert.greater(events.length, 0);
+  Assert.equal(events[0].category, "shopping");
+  Assert.equal(events[0].name, "surface_not_now_clicked");
+});
+
+/**
+ * Test to check behavior when selecting 'Yes, try it  to opt in to the
+ * shopping experience.
+ *
+ * Also tests if a Glean event was correctly recorded.
+ */
+add_task(async function test_onOptIn() {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+  setOnboardingPrefs({ active: false, optedIn: 0, telemetryEnabled: true });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForMutationCondition(
+          content.document,
+          { childList: true, subtree: true },
+          () => !!content.document.querySelector("shopping-container .primary")
+        );
+
+        // "Yes, try it" button
+        let primary = content.document.querySelector(
+          "shopping-container .primary"
+        );
+        primary.click();
+      });
+    }
+  );
+
+  await Services.fog.testFlushAllChildren();
+  let events = Glean.shopping.surfaceOptInClicked.testGetValue();
+
+  await BrowserTestUtils.waitForCondition(() => {
+    let _events = Glean.shopping.surfaceOptInClicked.testGetValue();
+    return _events?.length > 0;
+  });
+
+  Assert.greater(events.length, 0);
+  Assert.equal(events[0].category, "shopping");
+  Assert.equal(events[0].name, "surface_opt_in_clicked");
+});
+
+/**
+ * Helper function to click the links in the Legal Paragraph.
+ */
+async function legalParagraphClickLinks() {
+  const sandbox = sinon.createSandbox();
+
+  let handleActionStub = sandbox
+    .stub(SpecialMessageActions, "handleAction")
+    .withArgs(sandbox.match({ type: "OPEN_URL" }));
+
+  let handleActionStubCalled = new Promise(resolve =>
+    handleActionStub.callsFake(resolve)
+  );
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForMutationCondition(
+          content.document,
+          { childList: true, subtree: true },
+          // Can safely assume that if one of the link exists, they both do.
+          () =>
+            !!content.document.querySelector(
+              ".legal-paragraph a[value='terms_of_use']"
+            )
+        );
+
+        let termsOfUse = content.document.querySelector(
+          "shopping-container .legal-paragraph a[value='terms_of_use']"
+        );
+        termsOfUse.click();
+      });
+    }
+  );
+
+  await handleActionStubCalled;
+
+  handleActionStub.resetHistory();
+
+  handleActionStubCalled = new Promise(resolve =>
+    handleActionStub.callsFake(resolve)
+  );
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForMutationCondition(
+          content.document,
+          { childList: true, subtree: true },
+          // Can safely assume that if one of the link exists, they both do.
+          () =>
+            !!content.document.querySelector(
+              ".legal-paragraph a[value='terms_of_use']"
+            )
+        );
+        let privacyPolicy = content.document.querySelector(
+          "shopping-container .legal-paragraph a[value='privacy_policy']"
+        );
+        privacyPolicy.click();
+      });
+    }
+  );
+  await handleActionStubCalled;
+  sandbox.restore();
+}
+
+/**
+ * Test to check behavior when selecting links in the legal-paragraph
+ * to opt in to the
+ * shopping experience.
+ *
+ * Also tests if a Glean event was correctly recorded.
+ */
+add_task(async function test_linkParagraph() {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+  setOnboardingPrefs({ active: false, optedIn: 0, telemetryEnabled: true });
+
+  await legalParagraphClickLinks();
+
+  await Services.fog.testFlushAllChildren();
+  let privacyEvents =
+    Glean.shopping.surfaceShowPrivacyPolicyClicked.testGetValue();
+
+  Assert.greater(privacyEvents.length, 0);
+  Assert.equal(privacyEvents[0].category, "shopping");
+  Assert.equal(privacyEvents[0].name, "surface_show_privacy_policy_clicked");
+
+  let tosEvents = Glean.shopping.surfaceShowTermsClicked.testGetValue();
+
+  Assert.greater(tosEvents.length, 0);
+  Assert.equal(tosEvents[0].category, "shopping");
+  Assert.equal(tosEvents[0].name, "surface_show_terms_clicked");
 });
 
 add_task(async function test_onboarding_auto_activate_opt_in() {
