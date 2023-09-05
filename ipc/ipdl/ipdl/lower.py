@@ -362,6 +362,7 @@ def _cxxSide(side):
         return ExprVar("mozilla::ipc::ParentSide")
     assert 0
 
+
 def _otherSide(side):
     if side == "child":
         return "parent"
