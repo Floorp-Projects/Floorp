@@ -232,7 +232,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
   }
 
   HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
-  mPaintDC = hDC;
 
   bool forceRepaint =
       aDC || (TransparencyMode::Transparent == mTransparencyMode);
@@ -357,7 +356,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
     ::EndPaint(mWnd, &ps);
   }
 
-  mPaintDC = nullptr;
   mLastPaintEndTime = TimeStamp::Now();
 
   // Re-get the listener since painting may have killed it.
