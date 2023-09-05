@@ -63,14 +63,14 @@ Afterwards, you can run
 
 ::
 
-   $ python -m fuzzfetch -a --fuzzing --gtest -n firefox-fuzzing
+   $ python -m fuzzfetch -a --fuzzing --target gtest -n firefox-fuzzing
 
 to fetch the latest optimized build. Alternatively, we offer non-ASan debug builds
 which you can download using
 
 ::
 
-   $ python -m fuzzfetch -d --fuzzing --gtest -n firefox-fuzzing
+   $ python -m fuzzfetch -d --fuzzing --target gtest -n firefox-fuzzing
 
 In both commands, ``firefox-fuzzing`` indicates the name of the directory that
 will be created for the download.
@@ -123,6 +123,15 @@ Once your build is complete, if you want to run gtests, you **must** additionall
 
 to force the gtest libxul to be built.
 
+If you get the error ``error while loading shared libraries: libxul.so: cannot
+open shared object file: No such file or directory``, you need to explicitly
+set ``LD_LIBRARY_PATH`` to your build directory ``obj-dir`` before the command
+to invoke the fuzzing. For example an IPC fuzzing invocation:
+
+::
+
+  $ LD_LIBRARY_PATH=/path/to/obj-dir/dist/bin/ MOZ_FUZZ_TESTFILE=/path/to/test.bin NYX_FUZZER="IPC_Generic" /path/to/obj-dir/dist/bin/firefox /path/to/testcase.html
+
 .. note::
 
    **Note:** If you modify any code, please ensure that you run **both** build
@@ -157,7 +166,7 @@ non-determinism and loss of performance.
 
 If you are unsure if the fuzzing interface is the right approach for you or you
 require help in evaluating what could be done for your particular task, please
-don't hestitate to :ref:`contact us <Fuzzing#contact-us>`.
+don't hesitate to :ref:`contact us <Fuzzing#contact-us>`.
 
 
 Develop the fuzzing code
