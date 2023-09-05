@@ -71,12 +71,13 @@ bool SharedMemoryBasic::Create(size_t size) {
 
   memory_object_size_t memoryObjectSize = round_page(size);
 
-  kern_return_t kr = mach_make_memory_entry_64(mach_task_self(), &memoryObjectSize, 0,
-                                               MAP_MEM_NAMED_CREATE | VM_PROT_DEFAULT,
-                                               getter_Transfers(mPort), MACH_PORT_NULL);
+  kern_return_t kr =
+      mach_make_memory_entry_64(mach_task_self(), &memoryObjectSize, 0,
+                                MAP_MEM_NAMED_CREATE | VM_PROT_DEFAULT,
+                                getter_Transfers(mPort), MACH_PORT_NULL);
   if (kr != KERN_SUCCESS || memoryObjectSize < round_page(size)) {
-    LOG_ERROR("Failed to make memory entry (%zu bytes). %s (%x)\n", size, mach_error_string(kr),
-              kr);
+    LOG_ERROR("Failed to make memory entry (%zu bytes). %s (%x)\n", size,
+              mach_error_string(kr), kr);
     CloseHandle();
     return false;
   }
@@ -101,12 +102,15 @@ bool SharedMemoryBasic::Map(size_t size, void* fixed_address) {
   }
 
   kr = mach_vm_map(mach_task_self(), &address, round_page(size), 0,
-                   fixed_address ? VM_FLAGS_FIXED : VM_FLAGS_ANYWHERE, mPort.get(), 0, false,
-                   vmProtection, vmProtection, VM_INHERIT_NONE);
+                   fixed_address ? VM_FLAGS_FIXED : VM_FLAGS_ANYWHERE,
+                   mPort.get(), 0, false, vmProtection, vmProtection,
+                   VM_INHERIT_NONE);
   if (kr != KERN_SUCCESS) {
     if (!fixed_address) {
-      LOG_ERROR("Failed to map shared memory (%zu bytes) into %x, port %x. %s (%x)\n", size,
-                mach_task_self(), mach_port_t(mPort.get()), mach_error_string(kr), kr);
+      LOG_ERROR(
+          "Failed to map shared memory (%zu bytes) into %x, port %x. %s (%x)\n",
+          size, mach_task_self(), mach_port_t(mPort.get()),
+          mach_error_string(kr), kr);
     }
     return false;
   }
@@ -116,7 +120,8 @@ bool SharedMemoryBasic::Map(size_t size, void* fixed_address) {
     if (kr != KERN_SUCCESS) {
       LOG_ERROR("Failed to unmap shared memory at unsuitable address "
                 "(%zu bytes) from %x, port %x. %s (%x)\n",
-                size, mach_task_self(), mach_port_t(mPort.get()), mach_error_string(kr), kr);
+                size, mach_task_self(), mach_port_t(mPort.get()),
+                mach_error_string(kr), kr);
     }
     return false;
   }
@@ -129,8 +134,9 @@ bool SharedMemoryBasic::Map(size_t size, void* fixed_address) {
 void* SharedMemoryBasic::FindFreeAddressSpace(size_t size) {
   mach_vm_address_t address = 0;
   size = round_page(size);
-  if (mach_vm_map(mach_task_self(), &address, size, 0, VM_FLAGS_ANYWHERE, MEMORY_OBJECT_NULL, 0,
-                  false, VM_PROT_NONE, VM_PROT_NONE, VM_INHERIT_NONE) != KERN_SUCCESS ||
+  if (mach_vm_map(mach_task_self(), &address, size, 0, VM_FLAGS_ANYWHERE,
+                  MEMORY_OBJECT_NULL, 0, false, VM_PROT_NONE, VM_PROT_NONE,
+                  VM_INHERIT_NONE) != KERN_SUCCESS ||
       vm_deallocate(mach_task_self(), address, size) != KERN_SUCCESS) {
     return nullptr;
   }
@@ -146,9 +152,11 @@ void SharedMemoryBasic::Unmap() {
     return;
   }
   vm_address_t address = toVMAddress(mMemory);
-  kern_return_t kr = vm_deallocate(mach_task_self(), address, round_page(mMappedSize));
+  kern_return_t kr =
+      vm_deallocate(mach_task_self(), address, round_page(mMappedSize));
   if (kr != KERN_SUCCESS) {
-    LOG_ERROR("Failed to deallocate shared memory. %s (%x)\n", mach_error_string(kr), kr);
+    LOG_ERROR("Failed to deallocate shared memory. %s (%x)\n",
+              mach_error_string(kr), kr);
     return;
   }
   mMemory = nullptr;
@@ -161,7 +169,9 @@ void SharedMemoryBasic::CloseHandle() {
   }
 }
 
-bool SharedMemoryBasic::IsHandleValid(const Handle& aHandle) const { return aHandle != nullptr; }
+bool SharedMemoryBasic::IsHandleValid(const Handle& aHandle) const {
+  return aHandle != nullptr;
+}
 
 }  // namespace ipc
 }  // namespace mozilla

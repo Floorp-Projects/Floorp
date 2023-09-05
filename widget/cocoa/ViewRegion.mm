@@ -18,7 +18,8 @@ ViewRegion::~ViewRegion() {
 }
 
 bool ViewRegion::UpdateRegion(const LayoutDeviceIntRegion& aRegion,
-                              const nsChildView& aCoordinateConverter, NSView* aContainerView,
+                              const nsChildView& aCoordinateConverter,
+                              NSView* aContainerView,
                               NSView* (^aViewCreationCallback)()) {
   if (mRegion == aRegion) {
     return false;
@@ -33,7 +34,8 @@ bool ViewRegion::UpdateRegion(const LayoutDeviceIntRegion& aRegion,
   // The mViews array is now empty.
 
   size_t i = 0;
-  for (auto iter = aRegion.RectIter(); !iter.Done() || i < viewsToRecycle.Length(); i++) {
+  for (auto iter = aRegion.RectIter();
+       !iter.Done() || i < viewsToRecycle.Length(); i++) {
     if (!iter.Done()) {
       NSView* view = nil;
       NSRect rect = aCoordinateConverter.DevPixelsToCocoaPoints(iter.Get());

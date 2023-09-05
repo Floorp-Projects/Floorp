@@ -18,27 +18,31 @@ using namespace mozilla::widget;
 
 static const int kSystemDefinedEventMediaKeysSubtype = 8;
 
-static void SendFakeEvent(RefPtr<MediaHardwareKeysEventSourceMac>& aSource, int aKeyData) {
-  NSEvent* event = [NSEvent otherEventWithType:NSEventTypeSystemDefined
-                                      location:NSZeroPoint
-                                 modifierFlags:0
-                                     timestamp:0
-                                  windowNumber:0
-                                       context:nil
-                                       subtype:kSystemDefinedEventMediaKeysSubtype
-                                         data1:aKeyData
-                                         data2:0];
-  aSource->EventTapCallback(nullptr, static_cast<CGEventType>(0), [event CGEvent], aSource.get());
+static void SendFakeEvent(RefPtr<MediaHardwareKeysEventSourceMac>& aSource,
+                          int aKeyData) {
+  NSEvent* event =
+      [NSEvent otherEventWithType:NSEventTypeSystemDefined
+                         location:NSZeroPoint
+                    modifierFlags:0
+                        timestamp:0
+                     windowNumber:0
+                          context:nil
+                          subtype:kSystemDefinedEventMediaKeysSubtype
+                            data1:aKeyData
+                            data2:0];
+  aSource->EventTapCallback(nullptr, static_cast<CGEventType>(0),
+                            [event CGEvent], aSource.get());
 }
 
-static void NotifyFakeNonMediaKey(RefPtr<MediaHardwareKeysEventSourceMac>& aSource,
-                                  bool aIsKeyPressed) {
+static void NotifyFakeNonMediaKey(
+    RefPtr<MediaHardwareKeysEventSourceMac>& aSource, bool aIsKeyPressed) {
   int keyData = 0 | ((aIsKeyPressed ? 0xA : 0xB) << 8);
   SendFakeEvent(aSource, keyData);
 }
 
-static void NotifyFakeMediaControlKey(RefPtr<MediaHardwareKeysEventSourceMac>& aSource,
-                                      MediaControlKey aEvent, bool aIsKeyPressed) {
+static void NotifyFakeMediaControlKey(
+    RefPtr<MediaHardwareKeysEventSourceMac>& aSource, MediaControlKey aEvent,
+    bool aIsKeyPressed) {
   int keyData = 0;
   if (aEvent == MediaControlKey::Playpause) {
     keyData = NX_KEYTYPE_PLAY << 16;
@@ -51,27 +55,30 @@ static void NotifyFakeMediaControlKey(RefPtr<MediaHardwareKeysEventSourceMac>& a
   SendFakeEvent(aSource, keyData);
 }
 
-static void NotifyKeyPressedMediaKey(RefPtr<MediaHardwareKeysEventSourceMac>& aSource,
-                                     MediaControlKey aEvent) {
+static void NotifyKeyPressedMediaKey(
+    RefPtr<MediaHardwareKeysEventSourceMac>& aSource, MediaControlKey aEvent) {
   NotifyFakeMediaControlKey(aSource, aEvent, true /* key pressed */);
 }
 
-static void NotifyKeyReleasedMediaKeysEvent(RefPtr<MediaHardwareKeysEventSourceMac>& aSource,
-                                            MediaControlKey aEvent) {
+static void NotifyKeyReleasedMediaKeysEvent(
+    RefPtr<MediaHardwareKeysEventSourceMac>& aSource, MediaControlKey aEvent) {
   NotifyFakeMediaControlKey(aSource, aEvent, false /* key released */);
 }
 
-static void NotifyKeyPressedNonMediaKeysEvents(RefPtr<MediaHardwareKeysEventSourceMac>& aSource) {
+static void NotifyKeyPressedNonMediaKeysEvents(
+    RefPtr<MediaHardwareKeysEventSourceMac>& aSource) {
   NotifyFakeNonMediaKey(aSource, true /* key pressed */);
 }
 
-static void NotifyKeyReleasedNonMediaKeysEvents(RefPtr<MediaHardwareKeysEventSourceMac>& aSource) {
+static void NotifyKeyReleasedNonMediaKeysEvents(
+    RefPtr<MediaHardwareKeysEventSourceMac>& aSource) {
   NotifyFakeNonMediaKey(aSource, false /* key released */);
 }
 
 TEST(MediaHardwareKeysEventSourceMac, TestKeyPressedMediaKeysEvent)
 {
-  RefPtr<MediaHardwareKeysEventSourceMac> source = new MediaHardwareKeysEventSourceMac();
+  RefPtr<MediaHardwareKeysEventSourceMac> source =
+      new MediaHardwareKeysEventSourceMac();
   ASSERT_TRUE(source->GetListenersNum() == 0);
 
   RefPtr<MediaKeyListenerTest> listener = new MediaKeyListenerTest();
@@ -94,7 +101,8 @@ TEST(MediaHardwareKeysEventSourceMac, TestKeyPressedMediaKeysEvent)
 
 TEST(MediaHardwareKeysEventSourceMac, TestKeyReleasedMediaKeysEvent)
 {
-  RefPtr<MediaHardwareKeysEventSourceMac> source = new MediaHardwareKeysEventSourceMac();
+  RefPtr<MediaHardwareKeysEventSourceMac> source =
+      new MediaHardwareKeysEventSourceMac();
   ASSERT_TRUE(source->GetListenersNum() == 0);
 
   RefPtr<MediaKeyListenerTest> listener = new MediaKeyListenerTest();
@@ -117,7 +125,8 @@ TEST(MediaHardwareKeysEventSourceMac, TestKeyReleasedMediaKeysEvent)
 
 TEST(MediaHardwareKeysEventSourceMac, TestNonMediaKeysEvent)
 {
-  RefPtr<MediaHardwareKeysEventSourceMac> source = new MediaHardwareKeysEventSourceMac();
+  RefPtr<MediaHardwareKeysEventSourceMac> source =
+      new MediaHardwareKeysEventSourceMac();
   ASSERT_TRUE(source->GetListenersNum() == 0);
 
   RefPtr<MediaKeyListenerTest> listener = new MediaKeyListenerTest();

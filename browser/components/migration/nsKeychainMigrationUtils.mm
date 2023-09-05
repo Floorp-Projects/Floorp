@@ -19,7 +19,8 @@ NS_IMPL_ISUPPORTS(nsKeychainMigrationUtils, nsIKeychainMigrationUtils)
 
 NS_IMETHODIMP
 nsKeychainMigrationUtils::GetGenericPassword(const nsACString& aServiceName,
-                                             const nsACString& aAccountName, nsACString& aKey) {
+                                             const nsACString& aAccountName,
+                                             nsACString& aKey) {
   // To retrieve a secret, we create a CFDictionary of the form:
   // { class: generic password,
   //   service: the given service name
@@ -31,9 +32,12 @@ nsKeychainMigrationUtils::GetGenericPassword(const nsACString& aServiceName,
   // matching the given service and account names. We then extract the data
   // (i.e. the secret) and return it.
   NSDictionary* searchDictionary = @{
-    (__bridge NSString*)kSecClass : (__bridge NSString*)kSecClassGenericPassword,
-    (__bridge NSString*)kSecAttrService : nsCocoaUtils::ToNSString(aServiceName),
-    (__bridge NSString*)kSecAttrAccount : nsCocoaUtils::ToNSString(aAccountName),
+    (__bridge NSString*)
+    kSecClass : (__bridge NSString*)kSecClassGenericPassword,
+    (__bridge NSString*)
+    kSecAttrService : nsCocoaUtils::ToNSString(aServiceName),
+    (__bridge NSString*)
+    kSecAttrAccount : nsCocoaUtils::ToNSString(aAccountName),
     (__bridge NSString*)kSecMatchLimit : (__bridge NSString*)kSecMatchLimitOne,
     (__bridge NSString*)kSecReturnAttributes : @YES,
     (__bridge NSString*)kSecReturnData : @YES
@@ -41,9 +45,11 @@ nsKeychainMigrationUtils::GetGenericPassword(const nsACString& aServiceName,
 
   CFTypeRef item;
   // https://developer.apple.com/documentation/security/1398306-secitemcopymatching
-  OSStatus rv = SecItemCopyMatching((__bridge CFDictionaryRef)searchDictionary, &item);
+  OSStatus rv =
+      SecItemCopyMatching((__bridge CFDictionaryRef)searchDictionary, &item);
   if (rv != errSecSuccess) {
-    MOZ_LOG(gKeychainUtilsLog, LogLevel::Debug, ("SecItemCopyMatching failed: %d", rv));
+    MOZ_LOG(gKeychainUtilsLog, LogLevel::Debug,
+            ("SecItemCopyMatching failed: %d", rv));
     return NS_ERROR_FAILURE;
   }
   NSDictionary* resultDict = [(__bridge NSDictionary*)item autorelease];
@@ -53,8 +59,8 @@ nsKeychainMigrationUtils::GetGenericPassword(const nsACString& aServiceName,
     return NS_ERROR_FAILURE;
   }
   if ([secret length] != 0) {
-    // We assume that the data is UTF-8 encoded since that seems to be common and
-    // Keychain Access shows it with that encoding.
+    // We assume that the data is UTF-8 encoded since that seems to be common
+    // and Keychain Access shows it with that encoding.
     aKey.Assign(reinterpret_cast<const char*>([secret bytes]), [secret length]);
   }
 

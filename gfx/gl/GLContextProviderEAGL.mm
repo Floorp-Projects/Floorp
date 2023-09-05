@@ -52,7 +52,8 @@ bool GLContextEAGL::AttachToWindow(nsIWidget* aWidget) {
   // This should only be called once
   MOZ_ASSERT(!mBackbufferFB && !mBackbufferRB);
 
-  UIView* view = reinterpret_cast<UIView*>(aWidget->GetNativeData(NS_NATIVE_WIDGET));
+  UIView* view =
+      reinterpret_cast<UIView*>(aWidget->GetNativeData(NS_NATIVE_WIDGET));
 
   if (!view) {
     MOZ_CRASH("no view!");
@@ -82,10 +83,11 @@ bool GLContextEAGL::RecreateRB() {
   [mContext renderbufferStorage:LOCAL_GL_RENDERBUFFER fromDrawable:layer];
 
   fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mBackbufferFB);
-  fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_RENDERBUFFER,
-                           mBackbufferRB);
+  fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
+                           LOCAL_GL_RENDERBUFFER, mBackbufferRB);
 
-  return LOCAL_GL_FRAMEBUFFER_COMPLETE == fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+  return LOCAL_GL_FRAMEBUFFER_COMPLETE ==
+         fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
 }
 
 bool GLContextEAGL::MakeCurrentImpl() const {
@@ -97,7 +99,9 @@ bool GLContextEAGL::MakeCurrentImpl() const {
   return true;
 }
 
-bool GLContextEAGL::IsCurrentImpl() const { return [EAGLContext currentContext] == mContext; }
+bool GLContextEAGL::IsCurrentImpl() const {
+  return [EAGLContext currentContext] == mContext;
+}
 
 static PRFuncPtr GLAPIENTRY GetLoadedProcAddress(const char* const name) {
   PRLibrary* lib = nullptr;
@@ -121,7 +125,9 @@ bool GLContextEAGL::SwapBuffers() {
   return true;
 }
 
-void GLContextEAGL::GetWSIInfo(nsCString* const out) const { out->AppendLiteral("EAGL"); }
+void GLContextEAGL::GetWSIInfo(nsCString* const out) const {
+  out->AppendLiteral("EAGL");
+}
 
 static GLContextEAGL* GetGlobalContextEAGL() {
   return static_cast<GLContextEAGL*>(GLContextProviderEAGL::GetGlobalContext());
@@ -129,14 +135,16 @@ static GLContextEAGL* GetGlobalContextEAGL() {
 
 static RefPtr<GLContext> CreateEAGLContext(const GLContextDesc& desc,
                                            GLContextEAGL* sharedContext) {
-  EAGLRenderingAPI apis[] = {kEAGLRenderingAPIOpenGLES3, kEAGLRenderingAPIOpenGLES2};
+  EAGLRenderingAPI apis[] = {kEAGLRenderingAPIOpenGLES3,
+                             kEAGLRenderingAPIOpenGLES2};
 
   // Try to create a GLES3 context if we can, otherwise fall back to GLES2
   EAGLContext* context = nullptr;
   for (EAGLRenderingAPI api : apis) {
     if (sharedContext) {
-      context = [[EAGLContext alloc] initWithAPI:api
-                                      sharegroup:sharedContext->GetEAGLContext().sharegroup];
+      context = [[EAGLContext alloc]
+          initWithAPI:api
+           sharegroup:sharedContext->GetEAGLContext().sharegroup];
     } else {
       context = [[EAGLContext alloc] initWithAPI:api];
     }
@@ -150,7 +158,8 @@ static RefPtr<GLContext> CreateEAGLContext(const GLContextDesc& desc,
     return nullptr;
   }
 
-  RefPtr<GLContextEAGL> glContext = new GLContextEAGL(desc, context, sharedContext);
+  RefPtr<GLContextEAGL> glContext =
+      new GLContextEAGL(desc, context, sharedContext);
   if (!glContext->Init()) {
     glContext = nullptr;
     return nullptr;
@@ -160,7 +169,8 @@ static RefPtr<GLContext> CreateEAGLContext(const GLContextDesc& desc,
 }
 
 already_AddRefed<GLContext> GLContextProviderEAGL::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aHardwareWebRender, bool aForceAccelerated) {
+    CompositorWidget* aCompositorWidget, bool aHardwareWebRender,
+    bool aForceAccelerated) {
   if (!aCompositorWidget) {
     MOZ_ASSERT(false);
     return nullptr;
@@ -172,7 +182,8 @@ already_AddRefed<GLContext> GLContextProviderEAGL::CreateForCompositorWidget(
     return nullptr;
   }
 
-  if (!GLContextEAGL::Cast(glContext)->AttachToWindow(aCompositorWidget->RealWidget())) {
+  if (!GLContextEAGL::Cast(glContext)->AttachToWindow(
+          aCompositorWidget->RealWidget())) {
     return nullptr;
   }
 
@@ -193,7 +204,8 @@ GLContext* GLContextProviderEAGL::GetGlobalContext() {
   if (!triedToCreateContext) {
     triedToCreateContext = true;
 
-    MOZ_RELEASE_ASSERT(!gGlobalContext, "GFX: Global GL context already initialized.");
+    MOZ_RELEASE_ASSERT(!gGlobalContext,
+                       "GFX: Global GL context already initialized.");
     RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE);
     gGlobalContext = temp;
 

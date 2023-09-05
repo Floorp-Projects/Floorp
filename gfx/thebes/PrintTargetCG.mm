@@ -15,10 +15,14 @@
 
 namespace mozilla::gfx {
 
-static size_t PutBytesNull(void* info, const void* buffer, size_t count) { return count; }
+static size_t PutBytesNull(void* info, const void* buffer, size_t count) {
+  return count;
+}
 
-PrintTargetCG::PrintTargetCG(CGContextRef aPrintToStreamContext, PMPrintSession aPrintSession,
-                             PMPageFormat aPageFormat, PMPrintSettings aPrintSettings,
+PrintTargetCG::PrintTargetCG(CGContextRef aPrintToStreamContext,
+                             PMPrintSession aPrintSession,
+                             PMPageFormat aPageFormat,
+                             PMPrintSettings aPrintSettings,
                              const IntSize& aSize)
     : PrintTarget(/* aCairoSurface */ nullptr, aSize),
       mPrintToStreamContext(aPrintToStreamContext),
@@ -53,14 +57,16 @@ PrintTargetCG::~PrintTargetCG() {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-static size_t WriteStreamBytes(void* aInfo, const void* aBuffer, size_t aCount) {
+static size_t WriteStreamBytes(void* aInfo, const void* aBuffer,
+                               size_t aCount) {
   auto* stream = static_cast<nsIOutputStream*>(aInfo);
   auto* data = static_cast<const char*>(aBuffer);
   size_t remaining = aCount;
   do {
     uint32_t wrote = 0;
     // Handle potential narrowing from size_t to uint32_t.
-    uint32_t toWrite = uint32_t(std::min(remaining, size_t(std::numeric_limits<uint32_t>::max())));
+    uint32_t toWrite = uint32_t(
+        std::min(remaining, size_t(std::numeric_limits<uint32_t>::max())));
     if (NS_WARN_IF(NS_FAILED(stream->Write(data, toWrite, &wrote)))) {
       break;
     }
@@ -87,21 +93,25 @@ static CGContextRef CreatePrintToStreamContext(nsIOutputStream* aOutputStream,
   CGDataConsumerRef consumer = CGDataConsumerCreate(aOutputStream, &callbacks);
 
   // This metadata is added by the CorePrinting APIs in the non-stream case.
-  NSString* bundleName =
-      [NSBundle.mainBundle.localizedInfoDictionary objectForKey:(NSString*)kCFBundleNameKey];
+  NSString* bundleName = [NSBundle.mainBundle.localizedInfoDictionary
+      objectForKey:(NSString*)kCFBundleNameKey];
   CFMutableDictionaryRef auxiliaryInfo = CFDictionaryCreateMutable(
-      kCFAllocatorDefault, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-  CFDictionaryAddValue(auxiliaryInfo, kCGPDFContextCreator, (__bridge CFStringRef)bundleName);
+      kCFAllocatorDefault, 1, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  CFDictionaryAddValue(auxiliaryInfo, kCGPDFContextCreator,
+                       (__bridge CFStringRef)bundleName);
 
-  CGContextRef pdfContext = CGPDFContextCreate(consumer, &pageBox, auxiliaryInfo);
+  CGContextRef pdfContext =
+      CGPDFContextCreate(consumer, &pageBox, auxiliaryInfo);
   CGDataConsumerRelease(consumer);
   CFRelease(auxiliaryInfo);
   return pdfContext;
 }
 
 /* static */ already_AddRefed<PrintTargetCG> PrintTargetCG::CreateOrNull(
-    nsIOutputStream* aOutputStream, PMPrintSession aPrintSession, PMPageFormat aPageFormat,
-    PMPrintSettings aPrintSettings, const IntSize& aSize) {
+    nsIOutputStream* aOutputStream, PMPrintSession aPrintSession,
+    PMPageFormat aPageFormat, PMPrintSettings aPrintSettings,
+    const IntSize& aSize) {
   if (!Factory::CheckSurfaceSize(aSize)) {
     return nullptr;
   }
@@ -114,8 +124,8 @@ static CGContextRef CreatePrintToStreamContext(nsIOutputStream* aOutputStream,
     }
   }
 
-  RefPtr<PrintTargetCG> target =
-      new PrintTargetCG(printToStreamContext, aPrintSession, aPageFormat, aPrintSettings, aSize);
+  RefPtr<PrintTargetCG> target = new PrintTargetCG(
+      printToStreamContext, aPrintSession, aPageFormat, aPrintSettings, aSize);
 
   return target.forget();
 }
@@ -129,8 +139,8 @@ already_AddRefed<DrawTarget> PrintTargetCG::GetReferenceDrawTarget() {
     CGContextRef pdfContext = CGPDFContextCreate(consumer, nullptr, nullptr);
     CGDataConsumerRelease(consumer);
 
-    cairo_surface_t* similar =
-        cairo_quartz_surface_create_for_cg_context(pdfContext, size.width, size.height);
+    cairo_surface_t* similar = cairo_quartz_surface_create_for_cg_context(
+        pdfContext, size.width, size.height);
 
     CGContextRelease(pdfContext);
 
@@ -138,7 +148,8 @@ already_AddRefed<DrawTarget> PrintTargetCG::GetReferenceDrawTarget() {
       return nullptr;
     }
 
-    RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForCairoSurface(similar, size);
+    RefPtr<DrawTarget> dt =
+        Factory::CreateDrawTargetForCairoSurface(similar, size);
 
     // The DT addrefs the surface, so we need drop our own reference to it:
     cairo_surface_destroy(similar);
@@ -152,7 +163,8 @@ already_AddRefed<DrawTarget> PrintTargetCG::GetReferenceDrawTarget() {
   return do_AddRef(mRefDT);
 }
 
-nsresult PrintTargetCG::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName,
+nsresult PrintTargetCG::BeginPrinting(const nsAString& aTitle,
+                                      const nsAString& aPrintToFileName,
                                       int32_t aStartPage, int32_t aEndPage) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
@@ -182,7 +194,8 @@ nsresult PrintTargetCG::BeginPrinting(const nsAString& aTitle, const nsAString& 
   status = ::PMSetLastPage(mPrintSettings, aEndPage, false);
   NS_ASSERTION(status == noErr, "PMSetLastPage failed");
 
-  status = ::PMSessionBeginCGDocumentNoDialog(mPrintSession, mPrintSettings, mPageFormat);
+  status = ::PMSessionBeginCGDocumentNoDialog(mPrintSession, mPrintSettings,
+                                              mPageFormat);
 
   return status == noErr ? NS_OK : NS_ERROR_ABORT;
 
@@ -224,11 +237,13 @@ nsresult PrintTargetCG::BeginPage(const IntSize& aSizeInPoints) {
 
     if (StaticPrefs::layout_css_page_orientation_enabled()) {
       ::PMOrientation pageOrientation =
-          aSizeInPoints.width < aSizeInPoints.height ? kPMPortrait : kPMLandscape;
+          aSizeInPoints.width < aSizeInPoints.height ? kPMPortrait
+                                                     : kPMLandscape;
       ::PMSetOrientation(mPageFormat, pageOrientation, kPMUnlocked);
       // We don't need to reset the orientation, since we set it for every page.
     }
-    OSStatus status = ::PMSessionBeginPageNoDialog(mPrintSession, mPageFormat, nullptr);
+    OSStatus status =
+        ::PMSessionBeginPageNoDialog(mPrintSession, mPageFormat, nullptr);
     if (status != noErr) {
       return NS_ERROR_ABORT;
     }
@@ -257,7 +272,8 @@ nsresult PrintTargetCG::BeginPage(const IntSize& aSizeInPoints) {
   CGContextTranslateCTM(context, 0, height);
   CGContextScaleCTM(context, 1.0, -1.0);
 
-  cairo_surface_t* surface = cairo_quartz_surface_create_for_cg_context(context, width, height);
+  cairo_surface_t* surface =
+      cairo_quartz_surface_create_for_cg_context(context, width, height);
 
   if (cairo_surface_status(surface)) {
     return NS_ERROR_FAILURE;

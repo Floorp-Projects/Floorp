@@ -59,9 +59,11 @@ static void SetShowHiddenFileState(NSSavePanel* panel) {
   if (gCallSecretHiddenFileAPI) {
     // invoke a method to get a Cocoa-internal nav view
     SEL navViewSelector = @selector(_navView);
-    NSMethodSignature* navViewSignature = [panel methodSignatureForSelector:navViewSelector];
+    NSMethodSignature* navViewSignature =
+        [panel methodSignatureForSelector:navViewSelector];
     if (!navViewSignature) return;
-    NSInvocation* navViewInvocation = [NSInvocation invocationWithMethodSignature:navViewSignature];
+    NSInvocation* navViewInvocation =
+        [NSInvocation invocationWithMethodSignature:navViewSignature];
     [navViewInvocation setSelector:navViewSelector];
     [navViewInvocation setTarget:panel];
     [navViewInvocation invoke];
@@ -90,27 +92,32 @@ nsFilePicker::nsFilePicker() : mSelectedTypeIndex(0) {}
 
 nsFilePicker::~nsFilePicker() {}
 
-void nsFilePicker::InitNative(nsIWidget* aParent, const nsAString& aTitle) { mTitle = aTitle; }
+void nsFilePicker::InitNative(nsIWidget* aParent, const nsAString& aTitle) {
+  mTitle = aTitle;
+}
 
 NSView* nsFilePicker::GetAccessoryView() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  NSView* accessoryView = [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
+  NSView* accessoryView =
+      [[[NSView alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)] autorelease];
 
   // Set a label's default value.
   NSString* label = @"Format:";
 
   // Try to get the localized string.
-  nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  nsCOMPtr<nsIStringBundleService> sbs =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   nsCOMPtr<nsIStringBundle> bundle;
-  nsresult rv =
-      sbs->CreateBundle("chrome://global/locale/filepicker.properties", getter_AddRefs(bundle));
+  nsresult rv = sbs->CreateBundle(
+      "chrome://global/locale/filepicker.properties", getter_AddRefs(bundle));
   if (NS_SUCCEEDED(rv)) {
     nsAutoString locaLabel;
     rv = bundle->GetStringFromName("formatLabel", locaLabel);
     if (NS_SUCCEEDED(rv)) {
-      label = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(locaLabel.get())
-                                      length:locaLabel.Length()];
+      label = [NSString
+          stringWithCharacters:reinterpret_cast<const unichar*>(locaLabel.get())
+                        length:locaLabel.Length()];
     }
   }
 
@@ -127,8 +134,9 @@ NSView* nsFilePicker::GetAccessoryView() {
   [textField sizeToFit];
 
   // set up popup button
-  NSPopUpButton* popupButton = [[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)
-                                                           pullsDown:NO] autorelease];
+  NSPopUpButton* popupButton =
+      [[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 0, 0)
+                                  pullsDown:NO] autorelease];
   uint32_t numMenuItems = mTitles.Length();
   for (uint32_t i = 0; i < numMenuItems; i++) {
     const nsString& currentTitle = mTitles[i];
@@ -136,11 +144,13 @@ NSView* nsFilePicker::GetAccessoryView() {
     if (currentTitle.IsEmpty()) {
       const nsString& currentFilter = mFilters[i];
       titleString =
-          [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(currentFilter.get())
+          [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(
+                                                   currentFilter.get())
                                         length:currentFilter.Length()];
     } else {
       titleString =
-          [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(currentTitle.get())
+          [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(
+                                                   currentTitle.get())
                                         length:currentTitle.Length()];
     }
     [popupButton addItemWithTitle:titleString];
@@ -149,28 +159,34 @@ NSView* nsFilePicker::GetAccessoryView() {
   if (mSelectedTypeIndex >= 0 && (uint32_t)mSelectedTypeIndex < numMenuItems)
     [popupButton selectItemAtIndex:mSelectedTypeIndex];
   [popupButton setTag:kSaveTypeControlTag];
-  [popupButton sizeToFit];  // we have to do sizeToFit to get the height calculated for us
-  // This is just a default width that works well, doesn't truncate the vast majority of
-  // things that might end up in the menu.
+  [popupButton sizeToFit];  // we have to do sizeToFit to get the height
+                            // calculated for us
+  // This is just a default width that works well, doesn't truncate the vast
+  // majority of things that might end up in the menu.
   [popupButton setFrameSize:NSMakeSize(180, [popupButton frame].size.height)];
 
-  // position everything based on control sizes with kAccessoryViewPadding pix padding
-  // on each side kAccessoryViewPadding pix horizontal padding between controls
+  // position everything based on control sizes with kAccessoryViewPadding pix
+  // padding on each side kAccessoryViewPadding pix horizontal padding between
+  // controls
   float greatestHeight = [textField frame].size.height;
   if ([popupButton frame].size.height > greatestHeight)
     greatestHeight = [popupButton frame].size.height;
   float totalViewHeight = greatestHeight + kAccessoryViewPadding * 2;
-  float totalViewWidth =
-      [textField frame].size.width + [popupButton frame].size.width + kAccessoryViewPadding * 3;
+  float totalViewWidth = [textField frame].size.width +
+                         [popupButton frame].size.width +
+                         kAccessoryViewPadding * 3;
   [accessoryView setFrameSize:NSMakeSize(totalViewWidth, totalViewHeight)];
 
   float textFieldOriginY =
-      ((greatestHeight - [textField frame].size.height) / 2 + 1) + kAccessoryViewPadding;
-  [textField setFrameOrigin:NSMakePoint(kAccessoryViewPadding, textFieldOriginY)];
+      ((greatestHeight - [textField frame].size.height) / 2 + 1) +
+      kAccessoryViewPadding;
+  [textField
+      setFrameOrigin:NSMakePoint(kAccessoryViewPadding, textFieldOriginY)];
 
   float popupOriginX = [textField frame].size.width + kAccessoryViewPadding * 2;
   float popupOriginY =
-      ((greatestHeight - [popupButton frame].size.height) / 2) + kAccessoryViewPadding;
+      ((greatestHeight - [popupButton frame].size.height) / 2) +
+      kAccessoryViewPadding;
   [popupButton setFrameOrigin:NSMakePoint(popupOriginX, popupOriginY)];
 
   [accessoryView addSubview:textField];
@@ -255,9 +271,10 @@ static void UpdatePanelFileTypes(NSOpenPanel* aPanel, NSArray* aFilters) {
 }
 @end
 
-// Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog.
-nsIFilePicker::ResultCode nsFilePicker::GetLocalFiles(bool inAllowMultiple,
-                                                      nsCOMArray<nsIFile>& outFiles) {
+// Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in
+// the dialog.
+nsIFilePicker::ResultCode nsFilePicker::GetLocalFiles(
+    bool inAllowMultiple, nsCOMArray<nsIFile>& outFiles) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   ResultCode retVal = nsIFilePicker::returnCancel;
@@ -308,10 +325,11 @@ nsIFilePicker::ResultCode nsFilePicker::GetLocalFiles(bool inAllowMultiple,
     [observer setOpenPanel:thePanel];
     [observer setFilePicker:this];
 
-    [[NSNotificationCenter defaultCenter] addObserver:observer
-                                             selector:@selector(menuChangedItem:)
-                                                 name:NSMenuWillSendActionNotification
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:observer
+           selector:@selector(menuChangedItem:)
+               name:NSMenuWillSendActionNotification
+             object:nil];
 
     UpdatePanelFileTypes(thePanel, filters);
     result = [thePanel runModal];
@@ -343,7 +361,8 @@ nsIFilePicker::ResultCode nsFilePicker::GetLocalFiles(bool inAllowMultiple,
     nsCOMPtr<nsIFile> localFile;
     NS_NewLocalFile(u""_ns, true, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
-    if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)url))) {
+    if (macLocalFile &&
+        NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)url))) {
       outFiles.AppendObject(localFile);
     }
   }
@@ -355,10 +374,13 @@ nsIFilePicker::ResultCode nsFilePicker::GetLocalFiles(bool inAllowMultiple,
   NS_OBJC_END_TRY_BLOCK_RETURN(nsIFilePicker::returnOK);
 }
 
-// Use OpenPanel to do a GetFolder. Returns |returnOK| if the user presses OK in the dialog.
+// Use OpenPanel to do a GetFolder. Returns |returnOK| if the user presses OK in
+// the dialog.
 nsIFilePicker::ResultCode nsFilePicker::GetLocalFolder(nsIFile** outFile) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-  NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
+  NS_ASSERTION(
+      outFile,
+      "this protected member function expects a null initialized out pointer");
 
   ResultCode retVal = nsIFilePicker::returnCancel;
   NSOpenPanel* thePanel = [NSOpenPanel openPanel];
@@ -394,7 +416,8 @@ nsIFilePicker::ResultCode nsFilePicker::GetLocalFolder(nsIFile** outFile) {
     nsCOMPtr<nsIFile> localFile;
     NS_NewLocalFile(u""_ns, true, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
-    if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL))) {
+    if (macLocalFile &&
+        NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL))) {
       *outFile = localFile;
       NS_ADDREF(*outFile);
       retVal = returnOK;
@@ -409,7 +432,9 @@ nsIFilePicker::ResultCode nsFilePicker::GetLocalFolder(nsIFile** outFile) {
 // Returns |returnOK| if the user presses OK in the dialog.
 nsIFilePicker::ResultCode nsFilePicker::PutLocalFile(nsIFile** outFile) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
-  NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
+  NS_ASSERTION(
+      outFile,
+      "this protected member function expects a null initialized out pointer");
 
   ResultCode retVal = nsIFilePicker::returnCancel;
   NSSavePanel* thePanel = [NSSavePanel savePanel];
@@ -423,8 +448,9 @@ nsIFilePicker::ResultCode nsFilePicker::PutLocalFile(nsIFile** outFile) {
   [thePanel setAccessoryView:accessoryView];
 
   // set up default file name
-  NSString* defaultFilename = [NSString stringWithCharacters:(const unichar*)mDefaultFilename.get()
-                                                      length:mDefaultFilename.Length()];
+  NSString* defaultFilename =
+      [NSString stringWithCharacters:(const unichar*)mDefaultFilename.get()
+                              length:mDefaultFilename.Length()];
 
   // Set up the allowed type. This prevents the extension from being selected.
   NSString* extension = defaultFilename.pathExtension;
@@ -440,12 +466,13 @@ nsIFilePicker::ResultCode nsFilePicker::PutLocalFile(nsIFile** outFile) {
   // trying to add a non-default extension. To avoid the confusion, we ensure
   // that all extensions are shown in the panel if the remaining extension is
   // known by the OS.
-  NSString* fileName = [[defaultFilename lastPathComponent] stringByDeletingPathExtension];
+  NSString* fileName =
+      [[defaultFilename lastPathComponent] stringByDeletingPathExtension];
   NSString* otherExtension = fileName.pathExtension;
   if (otherExtension.length != 0) {
     // There's another extension here. Get the UTI.
-    CFStringRef type = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension,
-                                                             (CFStringRef)otherExtension, NULL);
+    CFStringRef type = UTTypeCreatePreferredIdentifierForTag(
+        kUTTagClassFilenameExtension, (CFStringRef)otherExtension, NULL);
     if (type) {
       if (!CFStringHasPrefix(type, CFSTR("dyn."))) {
         // We have a UTI, otherwise the type would have a "dyn." prefix. Ensure
@@ -480,11 +507,13 @@ nsIFilePicker::ResultCode nsFilePicker::PutLocalFile(nsIFile** outFile) {
     nsCOMPtr<nsIFile> localFile;
     NS_NewLocalFile(u""_ns, true, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
-    if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)fileURL))) {
+    if (macLocalFile &&
+        NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)fileURL))) {
       *outFile = localFile;
       NS_ADDREF(*outFile);
-      // We tell if we are replacing or not by just looking to see if the file exists.
-      // The user could not have hit OK and not meant to replace the file.
+      // We tell if we are replacing or not by just looking to see if the file
+      // exists. The user could not have hit OK and not meant to replace the
+      // file.
       if ([[NSFileManager defaultManager] fileExistsAtPath:[fileURL path]])
         retVal = returnReplace;
       else
@@ -505,7 +534,8 @@ NSArray* nsFilePicker::GetFilterList() {
   }
 
   if (mFilters.Length() <= (uint32_t)mSelectedTypeIndex) {
-    NS_WARNING("An out of range index has been selected. Using the first index instead.");
+    NS_WARNING("An out of range index has been selected. Using the first index "
+               "instead.");
     mSelectedTypeIndex = 0;
   }
 
@@ -522,17 +552,21 @@ NSArray* nsFilePicker::GetFilterList() {
   // in the format "ext" by NSOpenPanel. So we need to filter some characters.
   NSMutableString* filterString = [[[NSMutableString alloc]
       initWithString:[NSString
-                         stringWithCharacters:reinterpret_cast<const unichar*>(filterWide.get())
-                                       length:filterWide.Length()]] autorelease];
-  NSCharacterSet* set = [NSCharacterSet characterSetWithCharactersInString:@". *"];
+                         stringWithCharacters:reinterpret_cast<const unichar*>(
+                                                  filterWide.get())
+                                       length:filterWide.Length()]]
+      autorelease];
+  NSCharacterSet* set =
+      [NSCharacterSet characterSetWithCharactersInString:@". *"];
   NSRange range = [filterString rangeOfCharacterFromSet:set];
   while (range.length) {
     [filterString replaceCharactersInRange:range withString:@""];
     range = [filterString rangeOfCharacterFromSet:set];
   }
 
-  return
-      [[[NSArray alloc] initWithArray:[filterString componentsSeparatedByString:@";"]] autorelease];
+  return [[[NSArray alloc]
+      initWithArray:[filterString componentsSeparatedByString:@";"]]
+      autorelease];
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
@@ -546,8 +580,10 @@ void nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel) {
                                            length:inTitle.Length()]];
 
   if (!mOkButtonLabel.IsEmpty()) {
-    [aPanel setPrompt:[NSString stringWithCharacters:(const unichar*)mOkButtonLabel.get()
-                                              length:mOkButtonLabel.Length()]];
+    [aPanel
+        setPrompt:[NSString
+                      stringWithCharacters:(const unichar*)mOkButtonLabel.get()
+                                    length:mOkButtonLabel.Length()]];
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
@@ -562,9 +598,9 @@ NSString* nsFilePicker::PanelDefaultDirectory() {
   if (mDisplayDirectory) {
     nsAutoString pathStr;
     mDisplayDirectory->GetPath(pathStr);
-    directory =
-        [[[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(pathStr.get())
-                                       length:pathStr.Length()] autorelease];
+    directory = [[[NSString alloc]
+        initWithCharacters:reinterpret_cast<const unichar*>(pathStr.get())
+                    length:pathStr.Length()] autorelease];
   }
   return directory;
 
@@ -602,7 +638,9 @@ NS_IMETHODIMP nsFilePicker::SetDefaultString(const nsAString& aString) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::GetDefaultString(nsAString& aString) { return NS_ERROR_FAILURE; }
+NS_IMETHODIMP nsFilePicker::GetDefaultString(nsAString& aString) {
+  return NS_ERROR_FAILURE;
+}
 
 // The default extension to use for files
 NS_IMETHODIMP nsFilePicker::GetDefaultExtension(nsAString& aExtension) {
@@ -610,7 +648,9 @@ NS_IMETHODIMP nsFilePicker::GetDefaultExtension(nsAString& aExtension) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension) { return NS_OK; }
+NS_IMETHODIMP nsFilePicker::SetDefaultExtension(const nsAString& aExtension) {
+  return NS_OK;
+}
 
 // Append an entry to the filters array
 NS_IMETHODIMP

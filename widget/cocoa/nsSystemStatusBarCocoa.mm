@@ -36,13 +36,14 @@ nsSystemStatusBarCocoa::RemoveItem(Element* aElement) {
   return NS_OK;
 }
 
-nsSystemStatusBarCocoa::StatusItem::StatusItem(NativeMenuMac* aMenu) : mMenu(aMenu) {
+nsSystemStatusBarCocoa::StatusItem::StatusItem(NativeMenuMac* aMenu)
+    : mMenu(aMenu) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   MOZ_COUNT_CTOR(nsSystemStatusBarCocoa::StatusItem);
 
-  mStatusItem =
-      [[NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength] retain];
+  mStatusItem = [[NSStatusBar.systemStatusBar
+      statusItemWithLength:NSSquareStatusItemLength] retain];
   mStatusItem.menu = mMenu->NativeNSMenu();
   mStatusItem.highlightMode = YES;
 

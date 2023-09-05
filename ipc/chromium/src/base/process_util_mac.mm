@@ -41,7 +41,8 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 namespace base {
 
 Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
-                                  const LaunchOptions& options, ProcessHandle* process_handle) {
+                                  const LaunchOptions& options,
+                                  ProcessHandle* process_handle) {
   Result<Ok, LaunchError> retval = Ok();
 
   char* argv_copy[argv.size() + 1];
@@ -52,7 +53,8 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
 
   EnvironmentArray env_storage;
   const EnvironmentArray& vars =
-      options.full_env ? options.full_env : (env_storage = BuildEnvironmentArray(options.env_map));
+      options.full_env ? options.full_env
+                       : (env_storage = BuildEnvironmentArray(options.env_map));
 
   posix_spawn_file_actions_t file_actions;
   int err = posix_spawn_file_actions_init(&file_actions);
@@ -60,8 +62,8 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
     DLOG(WARNING) << "posix_spawn_file_actions_init failed";
     return Err(LaunchError("posix_spawn_file_actions_init", err));
   }
-  auto file_actions_guard =
-      mozilla::MakeScopeExit([&file_actions] { posix_spawn_file_actions_destroy(&file_actions); });
+  auto file_actions_guard = mozilla::MakeScopeExit(
+      [&file_actions] { posix_spawn_file_actions_destroy(&file_actions); });
 
   // Turn fds_to_remap array into a set of dup2 calls.
   //
@@ -85,7 +87,8 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
   }
 
   if (!options.workdir.empty()) {
-    int rv = posix_spawn_file_actions_addchdir_np(&file_actions, options.workdir.c_str());
+    int rv = posix_spawn_file_actions_addchdir_np(&file_actions,
+                                                  options.workdir.c_str());
     if (rv != 0) {
       DLOG(WARNING) << "posix_spawn_file_actions_addchdir_np failed";
       return Err(LaunchError("posix_spawn_file_actions_addchdir", rv));
@@ -99,15 +102,16 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
     DLOG(WARNING) << "posix_spawnattr_init failed";
     return Err(LaunchError("posix_spawnattr_init", err));
   }
-  auto spawnattr_guard =
-      mozilla::MakeScopeExit([&spawnattr] { posix_spawnattr_destroy(&spawnattr); });
+  auto spawnattr_guard = mozilla::MakeScopeExit(
+      [&spawnattr] { posix_spawnattr_destroy(&spawnattr); });
 
 #if defined(XP_MACOSX) && defined(__aarch64__)
   if (options.arch == PROCESS_ARCH_X86_64) {
     cpu_type_t cpu_pref = CPU_TYPE_X86_64;
     size_t count = 1;
     size_t ocount = 0;
-    int rv = posix_spawnattr_setbinpref_np(&spawnattr, count, &cpu_pref, &ocount);
+    int rv =
+        posix_spawnattr_setbinpref_np(&spawnattr, count, &cpu_pref, &ocount);
     if ((rv != 0) || (ocount != count)) {
       DLOG(WARNING) << "posix_spawnattr_setbinpref_np failed";
       return Err(LaunchError("posix_spawnattr_setbinpref_np", rv));
@@ -142,15 +146,16 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
   }
 
   int pid = 0;
-  int spawn_succeeded =
-      (posix_spawnp(&pid, argv_copy[0], &file_actions, &spawnattr, argv_copy, vars.get()) == 0);
+  int spawn_succeeded = (posix_spawnp(&pid, argv_copy[0], &file_actions,
+                                      &spawnattr, argv_copy, vars.get()) == 0);
 
   bool process_handle_valid = pid > 0;
   if (!spawn_succeeded || !process_handle_valid) {
     DLOG(WARNING) << "posix_spawnp failed";
     retval = Err(LaunchError("posix_spawnp", spawn_succeeded));
   } else {
-    gProcessLog.print("==> process %d launched child process %d\n", GetCurrentProcId(), pid);
+    gProcessLog.print("==> process %d launched child process %d\n",
+                      GetCurrentProcId(), pid);
     if (options.wait) HANDLE_EINTR(waitpid(pid, 0, 0));
 
     if (process_handle) *process_handle = pid;
@@ -159,7 +164,8 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
   return retval;
 }
 
-Result<Ok, LaunchError> LaunchApp(const CommandLine& cl, const LaunchOptions& options,
+Result<Ok, LaunchError> LaunchApp(const CommandLine& cl,
+                                  const LaunchOptions& options,
                                   ProcessHandle* process_handle) {
   return LaunchApp(cl.argv(), options, process_handle);
 }

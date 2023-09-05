@@ -24,27 +24,32 @@ using namespace mozilla::a11y;
 
 // xpcAccessibleMacNSObjectWrapper
 
-NS_IMPL_ISUPPORTS(xpcAccessibleMacNSObjectWrapper, nsIAccessibleMacNSObjectWrapper)
+NS_IMPL_ISUPPORTS(xpcAccessibleMacNSObjectWrapper,
+                  nsIAccessibleMacNSObjectWrapper)
 
 xpcAccessibleMacNSObjectWrapper::xpcAccessibleMacNSObjectWrapper(id aNativeObj)
     : mNativeObject(aNativeObj) {
   [mNativeObject retain];
 }
 
-xpcAccessibleMacNSObjectWrapper::~xpcAccessibleMacNSObjectWrapper() { [mNativeObject release]; }
+xpcAccessibleMacNSObjectWrapper::~xpcAccessibleMacNSObjectWrapper() {
+  [mNativeObject release];
+}
 
 id xpcAccessibleMacNSObjectWrapper::GetNativeObject() { return mNativeObject; }
 
 // xpcAccessibleMacInterface
 
-NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleMacInterface, xpcAccessibleMacNSObjectWrapper,
+NS_IMPL_ISUPPORTS_INHERITED(xpcAccessibleMacInterface,
+                            xpcAccessibleMacNSObjectWrapper,
                             nsIAccessibleMacInterface)
 
 xpcAccessibleMacInterface::xpcAccessibleMacInterface(Accessible* aObj)
     : xpcAccessibleMacNSObjectWrapper(GetNativeFromGeckoAccessible(aObj)) {}
 
 NS_IMETHODIMP
-xpcAccessibleMacInterface::GetAttributeNames(nsTArray<nsString>& aAttributeNames) {
+xpcAccessibleMacInterface::GetAttributeNames(
+    nsTArray<nsString>& aAttributeNames) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   if (!mNativeObject || [mNativeObject isExpired]) {
@@ -63,14 +68,16 @@ xpcAccessibleMacInterface::GetAttributeNames(nsTArray<nsString>& aAttributeNames
 }
 
 NS_IMETHODIMP
-xpcAccessibleMacInterface::GetParameterizedAttributeNames(nsTArray<nsString>& aAttributeNames) {
+xpcAccessibleMacInterface::GetParameterizedAttributeNames(
+    nsTArray<nsString>& aAttributeNames) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
   if (!mNativeObject || [mNativeObject isExpired]) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  for (NSString* name in [mNativeObject accessibilityParameterizedAttributeNames]) {
+  for (NSString* name in
+       [mNativeObject accessibilityParameterizedAttributeNames]) {
     nsAutoString attribName;
     nsCocoaUtils::GetStringForNSString(name, attribName);
     aAttributeNames.AppendElement(attribName);
@@ -117,7 +124,8 @@ xpcAccessibleMacInterface::PerformAction(const nsAString& aActionName) {
 }
 
 NS_IMETHODIMP
-xpcAccessibleMacInterface::GetAttributeValue(const nsAString& aAttributeName, JSContext* aCx,
+xpcAccessibleMacInterface::GetAttributeValue(const nsAString& aAttributeName,
+                                             JSContext* aCx,
                                              JS::MutableHandleValue aResult) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN
 
@@ -126,17 +134,20 @@ xpcAccessibleMacInterface::GetAttributeValue(const nsAString& aAttributeName, JS
   }
 
   NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
-  return NSObjectToJsValue([mNativeObject accessibilityAttributeValue:attribName], aCx, aResult);
+  return NSObjectToJsValue(
+      [mNativeObject accessibilityAttributeValue:attribName], aCx, aResult);
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE)
 }
 
 NS_IMETHODIMP
-xpcAccessibleMacInterface::IsAttributeSettable(const nsAString& aAttributeName, bool* aIsSettable) {
+xpcAccessibleMacInterface::IsAttributeSettable(const nsAString& aAttributeName,
+                                               bool* aIsSettable) {
   NS_ENSURE_ARG_POINTER(aIsSettable);
 
   NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
-  if ([mNativeObject respondsToSelector:@selector(accessibilityIsAttributeSettable:)]) {
+  if ([mNativeObject
+          respondsToSelector:@selector(accessibilityIsAttributeSettable:)]) {
     *aIsSettable = [mNativeObject accessibilityIsAttributeSettable:attribName];
     return NS_OK;
   }
@@ -146,13 +157,15 @@ xpcAccessibleMacInterface::IsAttributeSettable(const nsAString& aAttributeName, 
 
 NS_IMETHODIMP
 xpcAccessibleMacInterface::SetAttributeValue(const nsAString& aAttributeName,
-                                             JS::HandleValue aAttributeValue, JSContext* aCx) {
+                                             JS::HandleValue aAttributeValue,
+                                             JSContext* aCx) {
   nsresult rv = NS_OK;
   id obj = JsValueToNSObject(aAttributeValue, aCx, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
-  if ([mNativeObject respondsToSelector:@selector(accessibilitySetValue:forAttribute:)]) {
+  if ([mNativeObject respondsToSelector:@selector(accessibilitySetValue:
+                                                           forAttribute:)]) {
     // The NSObject has an attribute setter, call that.
     [mNativeObject accessibilitySetValue:obj forAttribute:attribName];
     return NS_OK;
@@ -162,29 +175,30 @@ xpcAccessibleMacInterface::SetAttributeValue(const nsAString& aAttributeName,
 }
 
 NS_IMETHODIMP
-xpcAccessibleMacInterface::GetParameterizedAttributeValue(const nsAString& aAttributeName,
-                                                          JS::HandleValue aParameter,
-                                                          JSContext* aCx,
-                                                          JS::MutableHandleValue aResult) {
+xpcAccessibleMacInterface::GetParameterizedAttributeValue(
+    const nsAString& aAttributeName, JS::HandleValue aParameter, JSContext* aCx,
+    JS::MutableHandleValue aResult) {
   nsresult rv = NS_OK;
   id paramObj = JsValueToNSObject(aParameter, aCx, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NSString* attribName = nsCocoaUtils::ToNSString(aAttributeName);
-  return NSObjectToJsValue(
-      [mNativeObject accessibilityAttributeValue:attribName forParameter:paramObj], aCx, aResult);
+  return NSObjectToJsValue([mNativeObject accessibilityAttributeValue:attribName
+                                                         forParameter:paramObj],
+                           aCx, aResult);
 }
 
 bool xpcAccessibleMacInterface::SupportsSelector(SEL aSelector) {
   // return true if we have this selector, and if isAccessibilitySelectorAllowed
   // is implemented too whether it is "allowed".
   return [mNativeObject respondsToSelector:aSelector] &&
-         (![mNativeObject respondsToSelector:@selector(isAccessibilitySelectorAllowed:selector:)] ||
+         (![mNativeObject respondsToSelector:@selector
+                          (isAccessibilitySelectorAllowed:selector:)] ||
           [mNativeObject isAccessibilitySelectorAllowed:aSelector]);
 }
 
-nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
-                                                      JS::MutableHandleValue aResult) {
+nsresult xpcAccessibleMacInterface::NSObjectToJsValue(
+    id aObj, JSContext* aCx, JS::MutableHandleValue aResult) {
   if (!aObj) {
     aResult.set(JS::NullValue());
   } else if ([aObj isKindOfClass:[NSString class]]) {
@@ -201,7 +215,8 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
         return NS_ERROR_FAILURE;
       }
     } else {
-      if (!mozilla::dom::ToJSValue(aCx, [(NSNumber*)aObj doubleValue], aResult)) {
+      if (!mozilla::dom::ToJSValue(aCx, [(NSNumber*)aObj doubleValue],
+                                   aResult)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -209,18 +224,25 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
              strcmp([(NSValue*)aObj objCType], @encode(NSPoint)) == 0) {
     NSPoint point = [(NSValue*)aObj pointValue];
     return NSObjectToJsValue(
-        @[ [NSNumber numberWithDouble:point.x], [NSNumber numberWithDouble:point.y] ], aCx,
-        aResult);
+        @[
+          [NSNumber numberWithDouble:point.x],
+          [NSNumber numberWithDouble:point.y]
+        ],
+        aCx, aResult);
   } else if ([aObj isKindOfClass:[NSValue class]] &&
              strcmp([(NSValue*)aObj objCType], @encode(NSSize)) == 0) {
     NSSize size = [(NSValue*)aObj sizeValue];
     return NSObjectToJsValue(
-        @[ [NSNumber numberWithDouble:size.width], [NSNumber numberWithDouble:size.height] ], aCx,
-        aResult);
+        @[
+          [NSNumber numberWithDouble:size.width],
+          [NSNumber numberWithDouble:size.height]
+        ],
+        aCx, aResult);
   } else if ([aObj isKindOfClass:[NSValue class]] &&
              strcmp([(NSValue*)aObj objCType], @encode(NSRange)) == 0) {
     NSRange range = [(NSValue*)aObj rangeValue];
-    return NSObjectToJsValue(@[ @(range.location), @(range.length) ], aCx, aResult);
+    return NSObjectToJsValue(@[ @(range.location), @(range.length) ], aCx,
+                             aResult);
   } else if ([aObj isKindOfClass:[NSValue class]] &&
              strcmp([(NSValue*)aObj objCType], @encode(NSRect)) == 0) {
     NSRect rect = [(NSValue*)aObj rectValue];
@@ -263,14 +285,18 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
 
     [attrStr
         enumerateAttributesInRange:NSMakeRange(0, [attrStr length])
-                           options:NSAttributedStringEnumerationLongestEffectiveRangeNotRequired
-                        usingBlock:^(NSDictionary* attributes, NSRange range, BOOL* stop) {
-                          NSString* str = [[attrStr string] substringWithRange:range];
+                           options:
+                               NSAttributedStringEnumerationLongestEffectiveRangeNotRequired
+                        usingBlock:^(NSDictionary* attributes, NSRange range,
+                                     BOOL* stop) {
+                          NSString* str =
+                              [[attrStr string] substringWithRange:range];
                           if (!str || !attributes) {
                             return;
                           }
 
-                          NSMutableDictionary* attrRun = [attributes mutableCopy];
+                          NSMutableDictionary* attrRun =
+                              [attributes mutableCopy];
                           attrRun[@"string"] = str;
 
                           [attrRunArray addObject:attrRun];
@@ -282,28 +308,34 @@ nsresult xpcAccessibleMacInterface::NSObjectToJsValue(id aObj, JSContext* aCx,
     return NSObjectToJsValue(attrRunArray, aCx, aResult);
   } else if (CFGetTypeID(aObj) == CGColorGetTypeID()) {
     const CGFloat* components = CGColorGetComponents((CGColorRef)aObj);
-    NSString* hexString =
-        [NSString stringWithFormat:@"#%02x%02x%02x", (int)(components[0] * 0xff),
-                                   (int)(components[1] * 0xff), (int)(components[2] * 0xff)];
+    NSString* hexString = [NSString
+        stringWithFormat:@"#%02x%02x%02x", (int)(components[0] * 0xff),
+                         (int)(components[1] * 0xff),
+                         (int)(components[2] * 0xff)];
     return NSObjectToJsValue(hexString, aCx, aResult);
   } else if ([aObj respondsToSelector:@selector(isAccessibilityElement)]) {
-    // We expect all of our accessibility objects to implement isAccessibilityElement
-    // at the very least. If it is implemented we will assume its an accessibility object.
-    nsCOMPtr<nsIAccessibleMacInterface> obj = new xpcAccessibleMacInterface(aObj);
-    return nsContentUtils::WrapNative(aCx, obj, &NS_GET_IID(nsIAccessibleMacInterface), aResult);
+    // We expect all of our accessibility objects to implement
+    // isAccessibilityElement at the very least. If it is implemented we will
+    // assume its an accessibility object.
+    nsCOMPtr<nsIAccessibleMacInterface> obj =
+        new xpcAccessibleMacInterface(aObj);
+    return nsContentUtils::WrapNative(
+        aCx, obj, &NS_GET_IID(nsIAccessibleMacInterface), aResult);
   } else {
     // If this is any other kind of NSObject, just wrap it and return it.
     // It will be opaque and immutable on the JS side, but it can be
     // brought back to us in an argument.
-    nsCOMPtr<nsIAccessibleMacNSObjectWrapper> obj = new xpcAccessibleMacNSObjectWrapper(aObj);
-    return nsContentUtils::WrapNative(aCx, obj, &NS_GET_IID(nsIAccessibleMacNSObjectWrapper),
-                                      aResult);
+    nsCOMPtr<nsIAccessibleMacNSObjectWrapper> obj =
+        new xpcAccessibleMacNSObjectWrapper(aObj);
+    return nsContentUtils::WrapNative(
+        aCx, obj, &NS_GET_IID(nsIAccessibleMacNSObjectWrapper), aResult);
   }
 
   return NS_OK;
 }
 
-id xpcAccessibleMacInterface::JsValueToNSObject(JS::HandleValue aValue, JSContext* aCx,
+id xpcAccessibleMacInterface::JsValueToNSObject(JS::HandleValue aValue,
+                                                JSContext* aCx,
                                                 nsresult* aResult) {
   *aResult = NS_OK;
   if (aValue.isInt32()) {
@@ -363,9 +395,11 @@ id xpcAccessibleMacInterface::JsValueToNSObject(JS::HandleValue aValue, JSContex
     nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
 
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
-    nsresult rv = xpc->GetWrappedNativeOfJSObject(aCx, obj, getter_AddRefs(wrappedObj));
+    nsresult rv =
+        xpc->GetWrappedNativeOfJSObject(aCx, obj, getter_AddRefs(wrappedObj));
     NS_ENSURE_SUCCESS(rv, nil);
-    nsCOMPtr<nsIAccessibleMacNSObjectWrapper> macObjIface = do_QueryInterface(wrappedObj->Native());
+    nsCOMPtr<nsIAccessibleMacNSObjectWrapper> macObjIface =
+        do_QueryInterface(wrappedObj->Native());
     return macObjIface->GetNativeObject();
   }
 
@@ -373,7 +407,8 @@ id xpcAccessibleMacInterface::JsValueToNSObject(JS::HandleValue aValue, JSContex
   return nil;
 }
 
-id xpcAccessibleMacInterface::JsValueToNSValue(JS::HandleObject aObject, JSContext* aCx,
+id xpcAccessibleMacInterface::JsValueToNSValue(JS::HandleObject aObject,
+                                               JSContext* aCx,
                                                nsresult* aResult) {
   *aResult = NS_ERROR_FAILURE;
   JS::RootedValue valueTypeValue(aCx);
@@ -421,14 +456,15 @@ id xpcAccessibleMacInterface::JsValueToNSValue(JS::HandleObject aObject, JSConte
     }
 
     *aResult = NS_OK;
-    return [NSValue valueWithRange:NSMakeRange(locationValue.toInt32(), lengthValue.toInt32())];
+    return [NSValue valueWithRange:NSMakeRange(locationValue.toInt32(),
+                                               lengthValue.toInt32())];
   }
 
   return nil;
 }
 
-id xpcAccessibleMacInterface::JsValueToSpecifiedNSObject(JS::HandleObject aObject, JSContext* aCx,
-                                                         nsresult* aResult) {
+id xpcAccessibleMacInterface::JsValueToSpecifiedNSObject(
+    JS::HandleObject aObject, JSContext* aCx, nsresult* aResult) {
   *aResult = NS_ERROR_FAILURE;
   JS::RootedValue objectTypeValue(aCx);
   if (!JS_GetProperty(aCx, aObject, "objectType", &objectTypeValue)) {
@@ -509,7 +545,8 @@ xpcAccessibleMacEvent::~xpcAccessibleMacEvent() {
 
 NS_IMETHODIMP
 xpcAccessibleMacEvent::GetMacIface(nsIAccessibleMacInterface** aMacIface) {
-  RefPtr<xpcAccessibleMacInterface> macIface = new xpcAccessibleMacInterface(mNativeObject);
+  RefPtr<xpcAccessibleMacInterface> macIface =
+      new xpcAccessibleMacInterface(mNativeObject);
   macIface.forget(aMacIface);
   return NS_OK;
 }
@@ -519,20 +556,25 @@ xpcAccessibleMacEvent::GetData(JSContext* aCx, JS::MutableHandleValue aData) {
   return xpcAccessibleMacInterface::NSObjectToJsValue(mData, aCx, aData);
 }
 
-void xpcAccessibleMacEvent::FireEvent(id aNativeObj, id aNotification, id aUserInfo) {
-  if (nsCOMPtr<nsIObserverService> obsService = services::GetObserverService()) {
+void xpcAccessibleMacEvent::FireEvent(id aNativeObj, id aNotification,
+                                      id aUserInfo) {
+  if (nsCOMPtr<nsIObserverService> obsService =
+          services::GetObserverService()) {
     nsCOMPtr<nsISimpleEnumerator> observers;
     // Get all observers for the mac event topic.
-    obsService->EnumerateObservers(NS_ACCESSIBLE_MAC_EVENT_TOPIC, getter_AddRefs(observers));
+    obsService->EnumerateObservers(NS_ACCESSIBLE_MAC_EVENT_TOPIC,
+                                   getter_AddRefs(observers));
     if (observers) {
       bool hasObservers = false;
       observers->HasMoreElements(&hasObservers);
       // If we have observers, notify them.
       if (hasObservers) {
-        nsCOMPtr<nsIAccessibleMacEvent> xpcIface = new xpcAccessibleMacEvent(aNativeObj, aUserInfo);
+        nsCOMPtr<nsIAccessibleMacEvent> xpcIface =
+            new xpcAccessibleMacEvent(aNativeObj, aUserInfo);
         nsAutoString notificationStr;
         nsCocoaUtils::GetStringForNSString(aNotification, notificationStr);
-        obsService->NotifyObservers(xpcIface, NS_ACCESSIBLE_MAC_EVENT_TOPIC, notificationStr.get());
+        obsService->NotifyObservers(xpcIface, NS_ACCESSIBLE_MAC_EVENT_TOPIC,
+                                    notificationStr.get());
       }
     }
   }

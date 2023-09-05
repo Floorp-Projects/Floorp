@@ -99,21 +99,24 @@
     [self setImageURI:aImageURI];
     [self setCallback:aCallback];
     if (aColor) {
-      [self setColor:[NSColor colorWithDisplayP3Red:((aColor >> 16) & 0xFF) / 255.0
-                                              green:((aColor >> 8) & 0xFF) / 255.0
-                                               blue:((aColor)&0xFF) / 255.0
-                                              alpha:1.0]];
+      [self setColor:[NSColor
+                         colorWithDisplayP3Red:((aColor >> 16) & 0xFF) / 255.0
+                                         green:((aColor >> 8) & 0xFF) / 255.0
+                                          blue:((aColor)&0xFF) / 255.0
+                                         alpha:1.0]];
     }
     if (aChildren) {
       uint32_t itemCount = 0;
       aChildren->GetLength(&itemCount);
-      NSMutableArray* orderedChildren = [NSMutableArray arrayWithCapacity:itemCount];
+      NSMutableArray* orderedChildren =
+          [NSMutableArray arrayWithCapacity:itemCount];
       for (uint32_t i = 0; i < itemCount; ++i) {
         nsCOMPtr<nsITouchBarInput> child = do_QueryElementAt(aChildren, i);
         if (!child) {
           continue;
         }
-        TouchBarInput* convertedChild = [[TouchBarInput alloc] initWithXPCOM:child];
+        TouchBarInput* convertedChild =
+            [[TouchBarInput alloc] initWithXPCOM:child];
         if (convertedChild) {
           orderedChildren[i] = convertedChild;
         }
@@ -207,7 +210,8 @@
   [super dealloc];
 }
 
-+ (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType withKey:(NSString*)aKey {
++ (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType
+                                             withKey:(NSString*)aKey {
   NSTouchBarItemIdentifier identifier;
   identifier = [kTouchBarBaseIdentifier stringByAppendingPathExtension:aType];
   if (aKey) {
@@ -216,7 +220,8 @@
   return identifier;
 }
 
-+ (NSTouchBarItemIdentifier)nativeIdentifierWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput {
++ (NSTouchBarItemIdentifier)nativeIdentifierWithXPCOM:
+    (nsCOMPtr<nsITouchBarInput>)aInput {
   nsAutoString keyStr;
   nsresult rv = aInput->GetKey(keyStr);
   if (NS_FAILED(rv)) {
@@ -239,7 +244,8 @@
 }
 
 + (NSTouchBarItemIdentifier)searchPopoverIdentifier {
-  return [TouchBarInput nativeIdentifierWithType:@"popover" withKey:@"search-popover"];
+  return [TouchBarInput nativeIdentifierWithType:@"popover"
+                                         withKey:@"search-popover"];
 }
 
 @end

@@ -11,8 +11,10 @@
 #include "nsMIMEInfoMac.h"
 #include "nsILocalFileMac.h"
 
-// We override this to make sure app bundles display their pretty name (without .app suffix)
-NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString& aDefaultDescription) {
+// We override this to make sure app bundles display their pretty name (without
+// .app suffix)
+NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(
+    nsAString& aDefaultDescription) {
   nsCOMPtr<nsIFile> defaultApp = GetDefaultApplication();
   if (defaultApp) {
     nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(defaultApp);
@@ -43,7 +45,8 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile) {
   if (mPreferredAction == useHelperApp) {
     // we don't yet support passing content by value (rather than reference)
     // to web apps.  at some point, we will probably want to.
-    nsCOMPtr<nsILocalHandlerApp> localHandlerApp = do_QueryInterface(mPreferredApplication, &rv);
+    nsCOMPtr<nsILocalHandlerApp> localHandlerApp =
+        do_QueryInterface(mPreferredApplication, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = localHandlerApp->GetExecutable(getter_AddRefs(application));
@@ -68,7 +71,8 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile) {
     tempFile->GetFSRef(&tempFileRef);
 
     FSRef appFSRef;
-    if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef, nullptr) == noErr) {
+    if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef,
+                                  nullptr) == noErr) {
       app = (do_CreateInstance("@mozilla.org/file/local;1"));
       if (!app) return NS_ERROR_FAILURE;
       app->InitWithFSRef(&appFSRef);
@@ -91,8 +95,9 @@ nsresult nsMIMEInfoMac::LoadUriInternal(nsIURI* aURI) {
   nsAutoCString uri;
   aURI->GetSpec(uri);
   if (!uri.IsEmpty()) {
-    CFURLRef myURLRef = ::CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8*)uri.get(),
-                                               strlen(uri.get()), kCFStringEncodingUTF8, NULL);
+    CFURLRef myURLRef =
+        ::CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8*)uri.get(),
+                               strlen(uri.get()), kCFStringEncodingUTF8, NULL);
     if (myURLRef) {
       OSStatus status = ::LSOpenCFURLRef(myURLRef, NULL);
       if (status == noErr) rv = NS_OK;

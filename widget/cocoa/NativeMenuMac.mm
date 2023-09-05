@@ -37,7 +37,8 @@ namespace widget {
 
 NativeMenuMac::NativeMenuMac(dom::Element* aElement)
     : mElement(aElement), mContainerStatusBarItem(nil) {
-  MOZ_RELEASE_ASSERT(aElement->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup));
+  MOZ_RELEASE_ASSERT(
+      aElement->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup));
   mMenuGroupOwner = new nsMenuGroupOwnerX(aElement, nullptr);
   mMenu = MakeRefPtr<nsMenuX>(nullptr, mMenuGroupOwner, aElement);
   mMenu->SetObserver(this);
@@ -78,9 +79,11 @@ bool NativeMenuMac::ActivateNativeMenuItemAt(const nsAString& aIndexString) {
   nsMenuUtilsX::CheckNativeMenuConsistency(menu);
 
   NSString* locationString =
-      [NSString stringWithCharacters:reinterpret_cast<const unichar*>(aIndexString.BeginReading())
+      [NSString stringWithCharacters:reinterpret_cast<const unichar*>(
+                                         aIndexString.BeginReading())
                               length:aIndexString.Length()];
-  NSMenuItem* item = nsMenuUtilsX::NativeMenuItemWithLocation(menu, locationString, false);
+  NSMenuItem* item =
+      nsMenuUtilsX::NativeMenuItemWithLocation(menu, locationString, false);
 
   // We can't perform an action on an item with a submenu, that will raise
   // an obj-c exception.
@@ -106,9 +109,11 @@ void NativeMenuMac::ForceUpdateNativeMenuAt(const nsAString& aIndexString) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSString* locationString =
-      [NSString stringWithCharacters:reinterpret_cast<const unichar*>(aIndexString.BeginReading())
+      [NSString stringWithCharacters:reinterpret_cast<const unichar*>(
+                                         aIndexString.BeginReading())
                               length:aIndexString.Length()];
-  NSArray<NSString*>* indexes = [locationString componentsSeparatedByString:@"|"];
+  NSArray<NSString*>* indexes =
+      [locationString componentsSeparatedByString:@"|"];
   RefPtr<nsMenuX> currentMenu = mMenu.get();
 
   // now find the correct submenu
@@ -124,7 +129,9 @@ void NativeMenuMac::ForceUpdateNativeMenuAt(const nsAString& aIndexString) {
       }
       RefPtr<nsIContent> content = targetMenu->match(
           [](const RefPtr<nsMenuX>& aMenu) { return aMenu->Content(); },
-          [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->Content(); });
+          [](const RefPtr<nsMenuItemX>& aMenuItem) {
+            return aMenuItem->Content();
+          });
       if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(content)) {
         visible++;
         if (targetMenu->is<RefPtr<nsMenuX>>() && visible == (targetIndex + 1)) {
@@ -175,8 +182,8 @@ void NativeMenuMac::OnMenuWillOpen(dom::Element* aPopupElement) {
     return;
   }
 
-  // Our caller isn't keeping us alive, so make sure we stay alive throughout this function in case
-  // one of the observer notifications destroys us.
+  // Our caller isn't keeping us alive, so make sure we stay alive throughout
+  // this function in case one of the observer notifications destroys us.
   RefPtr<NativeMenuMac> kungFuDeathGrip(this);
 
   for (NativeMenu::Observer* observer : mObservers.Clone()) {
@@ -185,8 +192,8 @@ void NativeMenuMac::OnMenuWillOpen(dom::Element* aPopupElement) {
 }
 
 void NativeMenuMac::OnMenuDidOpen(dom::Element* aPopupElement) {
-  // Our caller isn't keeping us alive, so make sure we stay alive throughout this function in case
-  // one of the observer notifications destroys us.
+  // Our caller isn't keeping us alive, so make sure we stay alive throughout
+  // this function in case one of the observer notifications destroys us.
   RefPtr<NativeMenuMac> kungFuDeathGrip(this);
 
   for (NativeMenu::Observer* observer : mObservers.Clone()) {
@@ -200,8 +207,8 @@ void NativeMenuMac::OnMenuDidOpen(dom::Element* aPopupElement) {
 
 void NativeMenuMac::OnMenuWillActivateItem(dom::Element* aPopupElement,
                                            dom::Element* aMenuItemElement) {
-  // Our caller isn't keeping us alive, so make sure we stay alive throughout this function in case
-  // one of the observer notifications destroys us.
+  // Our caller isn't keeping us alive, so make sure we stay alive throughout
+  // this function in case one of the observer notifications destroys us.
   RefPtr<NativeMenuMac> kungFuDeathGrip(this);
 
   for (NativeMenu::Observer* observer : mObservers.Clone()) {
@@ -210,8 +217,8 @@ void NativeMenuMac::OnMenuWillActivateItem(dom::Element* aPopupElement,
 }
 
 void NativeMenuMac::OnMenuClosed(dom::Element* aPopupElement) {
-  // Our caller isn't keeping us alive, so make sure we stay alive throughout this function in case
-  // one of the observer notifications destroys us.
+  // Our caller isn't keeping us alive, so make sure we stay alive throughout
+  // this function in case one of the observer notifications destroys us.
   RefPtr<NativeMenuMac> kungFuDeathGrip(this);
 
   for (NativeMenu::Observer* observer : mObservers.Clone()) {
@@ -236,7 +243,8 @@ static NSAppearance* NativeAppearanceForContent(nsIContent* aContent) {
   return NSAppearanceForColorScheme(LookAndFeel::ColorSchemeForFrame(f));
 }
 
-void NativeMenuMac::ShowAsContextMenu(nsIFrame* aClickedFrame, const CSSIntPoint& aPosition,
+void NativeMenuMac::ShowAsContextMenu(nsIFrame* aClickedFrame,
+                                      const CSSIntPoint& aPosition,
                                       bool aIsContextMenu) {
   nsPresContext* pc = aClickedFrame->PresContext();
   auto cssToDesktopScale =
@@ -250,24 +258,29 @@ void NativeMenuMac::ShowAsContextMenu(nsIFrame* aClickedFrame, const CSSIntPoint
   NSAppearance* appearance = NativeAppearanceForContent(mMenu->Content());
   NSPoint locationOnScreen = nsCocoaUtils::GeckoPointToCocoaPoint(desktopPoint);
 
-  // Let the MOZMenuOpeningCoordinator do the actual opening, so that this ShowAsContextMenu call
-  // does not spawn a nested event loop, which would be surprising to our callers.
-  mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance asynchronouslyOpenMenu:menu
-                                                                   atScreenPosition:locationOnScreen
-                                                                            forView:view
-                                                                     withAppearance:appearance
-                                                                      asContextMenu:aIsContextMenu];
+  // Let the MOZMenuOpeningCoordinator do the actual opening, so that this
+  // ShowAsContextMenu call does not spawn a nested event loop, which would be
+  // surprising to our callers.
+  mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance
+      asynchronouslyOpenMenu:menu
+            atScreenPosition:locationOnScreen
+                     forView:view
+              withAppearance:appearance
+               asContextMenu:aIsContextMenu];
 }
 
 bool NativeMenuMac::Close() {
   if (mOpeningHandle) {
-    // In case the menu was trying to open, but this Close() call interrupted it, cancel opening.
-    [MOZMenuOpeningCoordinator.sharedInstance cancelAsynchronousOpening:mOpeningHandle];
+    // In case the menu was trying to open, but this Close() call interrupted
+    // it, cancel opening.
+    [MOZMenuOpeningCoordinator.sharedInstance
+        cancelAsynchronousOpening:mOpeningHandle];
   }
   return mMenu->Close();
 }
 
-RefPtr<nsMenuX> NativeMenuMac::GetOpenMenuContainingElement(dom::Element* aElement) {
+RefPtr<nsMenuX> NativeMenuMac::GetOpenMenuContainingElement(
+    dom::Element* aElement) {
   nsTArray<RefPtr<dom::Element>> submenuChain;
   RefPtr<dom::Element> currentElement = aElement->GetParentElement();
   while (currentElement && currentElement != mElement) {
@@ -281,7 +294,8 @@ RefPtr<nsMenuX> NativeMenuMac::GetOpenMenuContainingElement(dom::Element* aEleme
     return nullptr;
   }
 
-  // Traverse submenuChain from shallow to deep, to find the nsMenuX that contains aElement.
+  // Traverse submenuChain from shallow to deep, to find the nsMenuX that
+  // contains aElement.
   submenuChain.Reverse();
   RefPtr<nsMenuX> menu = mMenu;
   for (const auto& submenu : submenuChain) {
@@ -321,7 +335,8 @@ static NSEventModifierFlags ConvertModifierFlags(Modifiers aModifiers) {
   return flags;
 }
 
-void NativeMenuMac::ActivateItem(dom::Element* aItemElement, Modifiers aModifiers, int16_t aButton,
+void NativeMenuMac::ActivateItem(dom::Element* aItemElement,
+                                 Modifiers aModifiers, int16_t aButton,
                                  ErrorResult& aRv) {
   RefPtr<nsMenuX> menu = GetOpenMenuContainingElement(aItemElement);
   if (!menu) {
@@ -343,27 +358,29 @@ void NativeMenuMac::ActivateItem(dom::Element* aItemElement, Modifiers aModifier
   NSMenuItem* nativeItem = [item->NativeNSMenuItem() retain];
 
   // First, initiate the closing of the NSMenu.
-  // This synchronously calls the menu delegate's menuDidClose handler. So menuDidClose is
-  // what runs first; this matches the order of events for user-initiated menu item activation.
-  // This call doesn't immediately hide the menu; the menu only hides once the stack unwinds
-  // from NSMenu's nested "tracking" event loop.
+  // This synchronously calls the menu delegate's menuDidClose handler. So
+  // menuDidClose is what runs first; this matches the order of events for
+  // user-initiated menu item activation. This call doesn't immediately hide the
+  // menu; the menu only hides once the stack unwinds from NSMenu's nested
+  // "tracking" event loop.
   [mMenu->NativeNSMenu() cancelTrackingWithoutAnimation];
 
-  // Next, call OnWillActivateItem. This also matches the order of calls that happen when a user
-  // activates a menu item in the real world: -[MenuDelegate menu:willActivateItem:] runs after
-  // menuDidClose.
+  // Next, call OnWillActivateItem. This also matches the order of calls that
+  // happen when a user activates a menu item in the real world: -[MenuDelegate
+  // menu:willActivateItem:] runs after menuDidClose.
   menu->OnWillActivateItem(nativeItem);
 
-  // Finally, call ActivateItemAfterClosing. This also mimics the order in the real world:
-  // menuItemHit is called after menu:willActivateItem:.
-  menu->ActivateItemAfterClosing(std::move(item), ConvertModifierFlags(aModifiers), aButton);
+  // Finally, call ActivateItemAfterClosing. This also mimics the order in the
+  // real world: menuItemHit is called after menu:willActivateItem:.
+  menu->ActivateItemAfterClosing(std::move(item),
+                                 ConvertModifierFlags(aModifiers), aButton);
 
   // Tell our native event loop that it should not process any more work before
   // unwinding the stack, so that we can get out of the menu's nested event loop
-  // as fast as possible. This was needed to fix spurious failures in tests, where
-  // a call to cancelTrackingWithoutAnimation was ignored if more native events were
-  // processed before the event loop was exited. As a result, the menu stayed open
-  // forever and the test never finished.
+  // as fast as possible. This was needed to fix spurious failures in tests,
+  // where a call to cancelTrackingWithoutAnimation was ignored if more native
+  // events were processed before the event loop was exited. As a result, the
+  // menu stayed open forever and the test never finished.
   MOZMenuOpeningCoordinator.needToUnwindForMenuClosing = YES;
 
   [nativeItem release];

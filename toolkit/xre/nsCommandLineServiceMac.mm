@@ -21,8 +21,8 @@ static bool sBuildingCommandLine = false;
 void AddToCommandLine(const char* inArgText) {
   if (sArgsUsed >= sArgsAllocated - 1) {
     // realloc does not free the given pointer if allocation fails
-    char** temp =
-        static_cast<char**>(realloc(sArgs, (sArgsAllocated + kArgsGrowSize) * sizeof(char*)));
+    char** temp = static_cast<char**>(
+        realloc(sArgs, (sArgsAllocated + kArgsGrowSize) * sizeof(char*)));
     if (!temp) return;
     sArgs = temp;
     sArgsAllocated += kArgsGrowSize;
@@ -67,7 +67,8 @@ void SetupMacCommandLine(int& argc, char**& argv, bool forRestart) {
   // if the parent is in the foreground.  This will be communicated in a
   // command-line argument to the child.
   if (forRestart) {
-    NSRunningApplication* frontApp = [[NSWorkspace sharedWorkspace] frontmostApplication];
+    NSRunningApplication* frontApp =
+        [[NSWorkspace sharedWorkspace] frontmostApplication];
     if ([frontApp isEqual:[NSRunningApplication currentApplication]]) {
       AddToCommandLine("-foreground");
     }

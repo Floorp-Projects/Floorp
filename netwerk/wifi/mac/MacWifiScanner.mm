@@ -29,7 +29,8 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
 
   @try {
     NSBundle* bundle = [[[NSBundle alloc]
-        initWithPath:@"/System/Library/Frameworks/CoreWLAN.framework"] autorelease];
+        initWithPath:@"/System/Library/Frameworks/CoreWLAN.framework"]
+        autorelease];
     if (!bundle) {
       [pool release];
       return NS_ERROR_NOT_AVAILABLE;
@@ -41,7 +42,8 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    id scanResult = [[CWI_class interface] scanForNetworksWithSSID:nil error:nil];
+    id scanResult = [[CWI_class interface] scanForNetworksWithSSID:nil
+                                                             error:nil];
     if (!scanResult) {
       [pool release];
       return NS_ERROR_NOT_AVAILABLE;
@@ -73,7 +75,8 @@ nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
         NSString* macString = [anObject bssid];
         if (macString && ([macString length] == 17)) {
           for (NSUInteger i = 0; i < 6; ++i) {
-            NSString* part = [macString substringWithRange:NSMakeRange(i * 3, 2)];
+            NSString* part =
+                [macString substringWithRange:NSMakeRange(i * 3, 2)];
             NSScanner* scanner = [NSScanner scannerWithString:part];
             unsigned int data = 0;
             if (![scanner scanHexInt:&data]) {

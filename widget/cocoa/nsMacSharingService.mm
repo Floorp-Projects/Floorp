@@ -15,11 +15,13 @@
 
 NS_IMPL_ISUPPORTS(nsMacSharingService, nsIMacSharingService)
 
-NSString* const remindersServiceName = @"com.apple.reminders.RemindersShareExtension";
+NSString* const remindersServiceName =
+    @"com.apple.reminders.RemindersShareExtension";
 
 // These are some undocumented constants also used by Safari
 // to let us open the preferences window
-NSString* const extensionPrefPanePath = @"/System/Library/PreferencePanes/Extensions.prefPane";
+NSString* const extensionPrefPanePath =
+    @"/System/Library/PreferencePanes/Extensions.prefPane";
 const UInt32 openSharingSubpaneDescriptorType = 'ptru';
 NSString* const openSharingSubpaneActionKey = @"action";
 NSString* const openSharingSubpaneActionValue = @"revealExtensionPoint";
@@ -31,10 +33,11 @@ NSString* const openSharingSubpaneProtocolValue = @"com.apple.share-services";
 - (id)name;
 @end
 
-// Filter providers that we do not want to expose to the user, because they are duplicates or do not
-// work correctly within the context
+// Filter providers that we do not want to expose to the user, because they are
+// duplicates or do not work correctly within the context
 static bool ShouldIgnoreProvider(NSString* aProviderName) {
-  return [aProviderName isEqualToString:@"com.apple.share.System.add-to-safari-reading-list"];
+  return [aProviderName
+      isEqualToString:@"com.apple.share.System.add-to-safari-reading-list"];
 }
 
 // Clean up the activity once the share is complete
@@ -61,7 +64,8 @@ static bool ShouldIgnoreProvider(NSString* aProviderName) {
   mShareActivity = nil;
 }
 
-- (void)sharingService:(NSSharingService*)sharingService didShareItems:(NSArray*)items {
+- (void)sharingService:(NSSharingService*)sharingService
+         didShareItems:(NSArray*)items {
   [self cleanup];
 }
 
@@ -80,16 +84,18 @@ static bool ShouldIgnoreProvider(NSString* aProviderName) {
 
 static NSString* NSImageToBase64(const NSImage* aImage) {
   CGImageRef cgRef = [aImage CGImageForProposedRect:nil context:nil hints:nil];
-  NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage:cgRef];
+  NSBitmapImageRep* bitmapRep =
+      [[NSBitmapImageRep alloc] initWithCGImage:cgRef];
   [bitmapRep setSize:[aImage size]];
-  NSData* imageData = [bitmapRep representationUsingType:NSPNGFileType properties:@{}];
+  NSData* imageData = [bitmapRep representationUsingType:NSPNGFileType
+                                              properties:@{}];
   NSString* base64Encoded = [imageData base64EncodedStringWithOptions:0];
   [bitmapRep release];
   return [NSString stringWithFormat:@"data:image/png;base64,%@", base64Encoded];
 }
 
-static void SetStrAttribute(JSContext* aCx, JS::Rooted<JSObject*>& aObj, const char* aKey,
-                            NSString* aVal) {
+static void SetStrAttribute(JSContext* aCx, JS::Rooted<JSObject*>& aObj,
+                            const char* aKey, NSString* aVal) {
   nsAutoString strVal;
   mozilla::CopyCocoaStringToXPCOMString(aVal, strVal);
   JS::Rooted<JSString*> title(aCx, JS_NewUCStringCopyZ(aCx, strVal.get()));
@@ -97,8 +103,9 @@ static void SetStrAttribute(JSContext* aCx, JS::Rooted<JSObject*>& aObj, const c
   JS_SetProperty(aCx, aObj, aKey, attVal);
 }
 
-nsresult nsMacSharingService::GetSharingProviders(const nsAString& aPageUrl, JSContext* aCx,
-                                                  JS::MutableHandle<JS::Value> aResult) {
+nsresult nsMacSharingService::GetSharingProviders(
+    const nsAString& aPageUrl, JSContext* aCx,
+    JS::MutableHandle<JS::Value> aResult) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSURL* url = nsCocoaUtils::ToNSURL(aPageUrl);
@@ -135,18 +142,20 @@ NS_IMETHODIMP
 nsMacSharingService::OpenSharingPreferences() {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  NSURL* prefPaneURL = [NSURL fileURLWithPath:extensionPrefPanePath isDirectory:YES];
+  NSURL* prefPaneURL = [NSURL fileURLWithPath:extensionPrefPanePath
+                                  isDirectory:YES];
   NSDictionary* args = @{
     openSharingSubpaneActionKey : openSharingSubpaneActionValue,
     openSharingSubpaneProtocolKey : openSharingSubpaneProtocolValue
   };
-  NSData* data = [NSPropertyListSerialization dataWithPropertyList:args
-                                                            format:NSPropertyListXMLFormat_v1_0
-                                                           options:0
-                                                             error:nil];
-  NSAppleEventDescriptor* descriptor =
-      [[NSAppleEventDescriptor alloc] initWithDescriptorType:openSharingSubpaneDescriptorType
-                                                        data:data];
+  NSData* data = [NSPropertyListSerialization
+      dataWithPropertyList:args
+                    format:NSPropertyListXMLFormat_v1_0
+                   options:0
+                     error:nil];
+  NSAppleEventDescriptor* descriptor = [[NSAppleEventDescriptor alloc]
+      initWithDescriptorType:openSharingSubpaneDescriptorType
+                        data:data];
 
   [[NSWorkspace sharedWorkspace] openURLs:@[ prefPaneURL ]
                   withAppBundleIdentifier:nil
@@ -161,19 +170,21 @@ nsMacSharingService::OpenSharingPreferences() {
 }
 
 NS_IMETHODIMP
-nsMacSharingService::ShareUrl(const nsAString& aServiceName, const nsAString& aPageUrl,
+nsMacSharingService::ShareUrl(const nsAString& aServiceName,
+                              const nsAString& aPageUrl,
                               const nsAString& aPageTitle) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSString* serviceName = nsCocoaUtils::ToNSString(aServiceName);
   NSURL* pageUrl = nsCocoaUtils::ToNSURL(aPageUrl);
   NSString* pageTitle = nsCocoaUtils::ToNSString(aPageTitle);
-  NSSharingService* service = [NSSharingService sharingServiceNamed:serviceName];
+  NSSharingService* service =
+      [NSSharingService sharingServiceNamed:serviceName];
 
   // Reminders fetch its data from an activity, not the share data
   if ([[service name] isEqual:remindersServiceName]) {
-    NSUserActivity* shareActivity =
-        [[NSUserActivity alloc] initWithActivityType:NSUserActivityTypeBrowsingWeb];
+    NSUserActivity* shareActivity = [[NSUserActivity alloc]
+        initWithActivityType:NSUserActivityTypeBrowsingWeb];
 
     if ([pageUrl.scheme hasPrefix:@"http"]) {
       [shareActivity setWebpageURL:pageUrl];

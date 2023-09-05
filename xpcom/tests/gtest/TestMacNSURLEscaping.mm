@@ -22,7 +22,8 @@ void ExpectUnchangedByNSURL(nsCString& aEncoded) {
 
   nsString geckoURLString;
   nsCocoaUtils::GetStringForNSString(macURLString, geckoURLString);
-  EXPECT_STREQ(aEncoded.BeginReading(), NS_ConvertUTF16toUTF8(geckoURLString).get());
+  EXPECT_STREQ(aEncoded.BeginReading(),
+               NS_ConvertUTF16toUTF8(geckoURLString).get());
 }
 
 // Test escaping of URLs to ensure that

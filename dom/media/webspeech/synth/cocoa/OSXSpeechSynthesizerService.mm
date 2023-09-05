@@ -1,4 +1,5 @@
-/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Objective-C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset:
+ * 2 -*- */
 /* vim: set ts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,7 +38,8 @@ class SpeechTaskCallback final : public nsISpeechTaskCallback {
                      const nsTArray<size_t>& aOffsets);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(SpeechTaskCallback, nsISpeechTaskCallback)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(SpeechTaskCallback,
+                                           nsISpeechTaskCallback)
 
   NS_DECL_NSISPEECHTASKCALLBACK
 
@@ -79,7 +81,8 @@ class SpeechTaskCallback final : public nsISpeechTaskCallback {
   mCallback->OnWillSpeakWord(aRange.location, aRange.length);
 }
 
-- (void)speechSynthesizer:(NSSpeechSynthesizer*)aSender didFinishSpeaking:(BOOL)aFinishedSpeaking {
+- (void)speechSynthesizer:(NSSpeechSynthesizer*)aSender
+        didFinishSpeaking:(BOOL)aFinishedSpeaking {
   mCallback->OnDidFinishSpeaking();
 }
 
@@ -101,9 +104,13 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SpeechTaskCallback)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechTaskCallback)
 
-SpeechTaskCallback::SpeechTaskCallback(nsISpeechTask* aTask, NSSpeechSynthesizer* aSynth,
+SpeechTaskCallback::SpeechTaskCallback(nsISpeechTask* aTask,
+                                       NSSpeechSynthesizer* aSynth,
                                        const nsTArray<size_t>& aOffsets)
-    : mTask(aTask), mSpeechSynthesizer(aSynth), mCurrentIndex(0), mOffsets(aOffsets.Clone()) {
+    : mTask(aTask),
+      mSpeechSynthesizer(aSynth),
+      mCurrentIndex(0),
+      mOffsets(aOffsets.Clone()) {
   mDelegate = [[SpeechDelegate alloc] initWithCallback:this];
   [mSpeechSynthesizer setDelegate:mDelegate];
   mStartingTime = TimeStamp::Now();
@@ -179,7 +186,8 @@ void SpeechTaskCallback::OnWillSpeakWord(uint32_t aIndex, uint32_t aLength) {
   if (!mTask) {
     return;
   }
-  mTask->DispatchBoundary(u"word"_ns, GetTimeDurationFromStart(), mCurrentIndex, aLength, 1);
+  mTask->DispatchBoundary(u"word"_ns, GetTimeDurationFromStart(), mCurrentIndex,
+                          aLength, 1);
 }
 
 void SpeechTaskCallback::OnError(uint32_t aIndex) {
@@ -210,8 +218,11 @@ struct OSXVoice {
 
 class RegisterVoicesRunnable final : public Runnable {
  public:
-  RegisterVoicesRunnable(OSXSpeechSynthesizerService* aSpeechService, nsTArray<OSXVoice>& aList)
-      : Runnable("RegisterVoicesRunnable"), mSpeechService(aSpeechService), mVoices(aList) {}
+  RegisterVoicesRunnable(OSXSpeechSynthesizerService* aSpeechService,
+                         nsTArray<OSXVoice>& aList)
+      : Runnable("RegisterVoicesRunnable"),
+        mSpeechService(aSpeechService),
+        mVoices(aList) {}
 
   NS_IMETHOD Run() override;
 
@@ -226,13 +237,15 @@ class RegisterVoicesRunnable final : public Runnable {
 NS_IMETHODIMP
 RegisterVoicesRunnable::Run() {
   nsresult rv;
-  nsCOMPtr<nsISynthVoiceRegistry> registry = do_GetService(NS_SYNTHVOICEREGISTRY_CONTRACTID, &rv);
+  nsCOMPtr<nsISynthVoiceRegistry> registry =
+      do_GetService(NS_SYNTHVOICEREGISTRY_CONTRACTID, &rv);
   if (!registry) {
     return rv;
   }
 
   for (OSXVoice voice : mVoices) {
-    rv = registry->AddVoice(mSpeechService, voice.mUri, voice.mName, voice.mLocale, true, false);
+    rv = registry->AddVoice(mSpeechService, voice.mUri, voice.mName,
+                            voice.mLocale, true, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
     }
@@ -275,11 +288,14 @@ EnumVoicesRunnable::Run() {
     NSDictionary* attr = [NSSpeechSynthesizer attributesForVoice:voice];
 
     nsAutoString identifier;
-    nsCocoaUtils::GetStringForNSString([attr objectForKey:NSVoiceIdentifier], identifier);
+    nsCocoaUtils::GetStringForNSString([attr objectForKey:NSVoiceIdentifier],
+                                       identifier);
 
-    nsCocoaUtils::GetStringForNSString([attr objectForKey:NSVoiceName], item.mName);
+    nsCocoaUtils::GetStringForNSString([attr objectForKey:NSVoiceName],
+                                       item.mName);
 
-    nsCocoaUtils::GetStringForNSString([attr objectForKey:NSVoiceLocaleIdentifier], item.mLocale);
+    nsCocoaUtils::GetStringForNSString(
+        [attr objectForKey:NSVoiceLocaleIdentifier], item.mLocale);
     item.mLocale.ReplaceChar('_', '-');
 
     item.mUri.AssignLiteral("urn:moz-tts:osx:");
@@ -292,16 +308,19 @@ EnumVoicesRunnable::Run() {
     list.AppendElement(item);
   }
 
-  RefPtr<RegisterVoicesRunnable> runnable = new RegisterVoicesRunnable(mSpeechService, list);
+  RefPtr<RegisterVoicesRunnable> runnable =
+      new RegisterVoicesRunnable(mSpeechService, list);
   NS_DispatchAndSpinEventLoopUntilComplete("EnumVoicesRunnable"_ns,
-                                           GetMainThreadSerialEventTarget(), runnable.forget());
+                                           GetMainThreadSerialEventTarget(),
+                                           runnable.forget());
 
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-StaticRefPtr<OSXSpeechSynthesizerService> OSXSpeechSynthesizerService::sSingleton;
+StaticRefPtr<OSXSpeechSynthesizerService>
+    OSXSpeechSynthesizerService::sSingleton;
 
 NS_INTERFACE_MAP_BEGIN(OSXSpeechSynthesizerService)
   NS_INTERFACE_MAP_ENTRY(nsISpeechService)
@@ -312,7 +331,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(OSXSpeechSynthesizerService)
 NS_IMPL_RELEASE(OSXSpeechSynthesizerService)
 
-OSXSpeechSynthesizerService::OSXSpeechSynthesizerService() : mInitialized(false) {}
+OSXSpeechSynthesizerService::OSXSpeechSynthesizerService()
+    : mInitialized(false) {}
 
 bool OSXSpeechSynthesizerService::Init() {
   if (Preferences::GetBool("media.webspeech.synth.test") ||
@@ -335,8 +355,10 @@ bool OSXSpeechSynthesizerService::Init() {
 }
 
 NS_IMETHODIMP
-OSXSpeechSynthesizerService::Speak(const nsAString& aText, const nsAString& aUri, float aVolume,
-                                   float aRate, float aPitch, nsISpeechTask* aTask) {
+OSXSpeechSynthesizerService::Speak(const nsAString& aText,
+                                   const nsAString& aUri, float aVolume,
+                                   float aRate, float aPitch,
+                                   nsISpeechTask* aTask) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(StringBeginsWith(aUri, u"urn:moz-tts:osx:"_ns),
@@ -348,11 +370,16 @@ OSXSpeechSynthesizerService::Speak(const nsAString& aText, const nsAString& aUri
   [synth setVoice:identifier];
 
   // default rate is 180-220
-  [synth setObject:[NSNumber numberWithInt:aRate * 200] forProperty:NSSpeechRateProperty error:nil];
+  [synth setObject:[NSNumber numberWithInt:aRate * 200]
+       forProperty:NSSpeechRateProperty
+             error:nil];
   // volume allows 0.0-1.0
-  [synth setObject:[NSNumber numberWithFloat:aVolume] forProperty:NSSpeechVolumeProperty error:nil];
+  [synth setObject:[NSNumber numberWithFloat:aVolume]
+       forProperty:NSSpeechVolumeProperty
+             error:nil];
   // Use default pitch value to calculate this
-  NSNumber* defaultPitch = [synth objectForProperty:NSSpeechPitchBaseProperty error:nil];
+  NSNumber* defaultPitch = [synth objectForProperty:NSSpeechPitchBaseProperty
+                                              error:nil];
   if (defaultPitch) {
     int newPitch = [defaultPitch intValue] * (aPitch / 2 + 0.5);
     [synth setObject:[NSNumber numberWithInt:newPitch]
@@ -370,8 +397,8 @@ OSXSpeechSynthesizerService::Speak(const nsAString& aText, const nsAString& aUri
   // This loop looks for occurances of "[[" or "]]", escapes them, and
   // populates the offsets array to supply a map to the original offsets.
   for (size_t i = 0; i < aText.Length(); i++) {
-    if (aText.Length() > i + 1 &&
-        ((aText[i] == ']' && aText[i + 1] == ']') || (aText[i] == '[' && aText[i + 1] == '['))) {
+    if (aText.Length() > i + 1 && ((aText[i] == ']' && aText[i + 1] == ']') ||
+                                   (aText[i] == '[' && aText[i + 1] == '['))) {
       escapedText.AppendLiteral(DLIM_ESCAPE_START);
       offsets.AppendElements(strlen(DLIM_ESCAPE_START));
       escapedText.Append(aText[i]);
@@ -386,7 +413,8 @@ OSXSpeechSynthesizerService::Speak(const nsAString& aText, const nsAString& aUri
     }
   }
 
-  RefPtr<SpeechTaskCallback> callback = new SpeechTaskCallback(aTask, synth, offsets);
+  RefPtr<SpeechTaskCallback> callback =
+      new SpeechTaskCallback(aTask, synth, offsets);
   nsresult rv = aTask->Setup(callback);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -413,7 +441,8 @@ OSXSpeechSynthesizerService* OSXSpeechSynthesizerService::GetInstance() {
   }
 
   if (!sSingleton) {
-    RefPtr<OSXSpeechSynthesizerService> speechService = new OSXSpeechSynthesizerService();
+    RefPtr<OSXSpeechSynthesizerService> speechService =
+        new OSXSpeechSynthesizerService();
     if (speechService->Init()) {
       sSingleton = speechService;
       ClearOnShutdown(&sSingleton);
@@ -422,7 +451,8 @@ OSXSpeechSynthesizerService* OSXSpeechSynthesizerService::GetInstance() {
   return sSingleton;
 }
 
-already_AddRefed<OSXSpeechSynthesizerService> OSXSpeechSynthesizerService::GetInstanceForService() {
+already_AddRefed<OSXSpeechSynthesizerService>
+OSXSpeechSynthesizerService::GetInstanceForService() {
   RefPtr<OSXSpeechSynthesizerService> speechService = GetInstance();
   return speechService.forget();
 }

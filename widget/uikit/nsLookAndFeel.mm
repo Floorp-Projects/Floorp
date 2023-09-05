@@ -22,7 +22,8 @@ static nscolor GetColorFromUIColor(UIColor* aColor) {
   CGColorSpaceModel model = CGColorSpaceGetModel(CGColorGetColorSpace(cgColor));
   const CGFloat* components = CGColorGetComponents(cgColor);
   if (model == kCGColorSpaceModelRGB) {
-    return NS_RGB((unsigned int)(components[0] * 255.0), (unsigned int)(components[1] * 255.0),
+    return NS_RGB((unsigned int)(components[0] * 255.0),
+                  (unsigned int)(components[1] * 255.0),
                   (unsigned int)(components[2] * 255.0));
   } else if (model == kCGColorSpaceModelMonochrome) {
     unsigned int val = (unsigned int)(components[0] * 255.0);
@@ -197,12 +198,13 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID, ColorScheme, nscolor& aResult) {
       aResult = NS_TRANSPARENT;
       break;
     case ColorID::MozNativehyperlinktext:
-      // There appears to be no available system defined color. HARDCODING to the appropriate color.
+      // There appears to be no available system defined color. HARDCODING to
+      // the appropriate color.
       aResult = NS_RGB(0x14, 0x4F, 0xAE);
       break;
     case ColorID::MozNativevisitedhyperlinktext:
-      // Safari defaults to the MacOS color implementation for visited links, which in turn uses
-      // systemPurpleColor, so we do the same here.
+      // Safari defaults to the MacOS color implementation for visited links,
+      // which in turn uses systemPurpleColor, so we do the same here.
       aResult = GetColorFromUIColor([UIColor systemPurpleColor]);
       break;
     default:
@@ -321,7 +323,8 @@ nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
   return res;
 }
 
-bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle& aFontStyle) {
+bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName,
+                                  gfxFontStyle& aFontStyle) {
   // hack for now
   if (aID == FontID::Window || aID == FontID::Document) {
     aFontStyle.style = FontSlantStyle::Normal();

@@ -45,14 +45,18 @@ using namespace mozilla::layers;
   fprintf(stderr, args); \
   fprintf(stderr, "\n")
 
-static LayoutDeviceIntPoint UIKitPointsToDevPixels(CGPoint aPoint, CGFloat aBackingScale) {
+static LayoutDeviceIntPoint UIKitPointsToDevPixels(CGPoint aPoint,
+                                                   CGFloat aBackingScale) {
   return LayoutDeviceIntPoint(NSToIntRound(aPoint.x * aBackingScale),
                               NSToIntRound(aPoint.y * aBackingScale));
 }
 
-static CGRect DevPixelsToUIKitPoints(const LayoutDeviceIntRect& aRect, CGFloat aBackingScale) {
-  return CGRectMake((CGFloat)aRect.x / aBackingScale, (CGFloat)aRect.y / aBackingScale,
-                    (CGFloat)aRect.width / aBackingScale, (CGFloat)aRect.height / aBackingScale);
+static CGRect DevPixelsToUIKitPoints(const LayoutDeviceIntRect& aRect,
+                                     CGFloat aBackingScale) {
+  return CGRectMake((CGFloat)aRect.x / aBackingScale,
+                    (CGFloat)aRect.y / aBackingScale,
+                    (CGFloat)aRect.width / aBackingScale,
+                    (CGFloat)aRect.height / aBackingScale);
 }
 
 // Used to retain a Cocoa object for the remainder of a method's execution.
@@ -85,7 +89,9 @@ class nsAutoRetainUIKitObject {
 - (BOOL)isUsingMainThreadOpenGL;
 - (void)drawUsingOpenGL;
 - (void)drawUsingOpenGLCallback;
-- (void)sendTouchEvent:(EventMessage)aType touches:(NSSet*)aTouches widget:(nsWindow*)aWindow;
+- (void)sendTouchEvent:(EventMessage)aType
+               touches:(NSSet*)aTouches
+                widget:(nsWindow*)aWindow;
 // Event handling (UIResponder)
 - (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event;
 - (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event;
@@ -103,16 +109,19 @@ class nsAutoRetainUIKitObject {
   if ((self = [super initWithFrame:inFrame])) {
     mGeckoChild = inChild;
   }
-  ALOG("[ChildView[%p] initWithFrame:] (mGeckoChild = %p)", (void*)self, (void*)mGeckoChild);
+  ALOG("[ChildView[%p] initWithFrame:] (mGeckoChild = %p)", (void*)self,
+       (void*)mGeckoChild);
   self.opaque = YES;
   self.alpha = 1.0;
 
   UITapGestureRecognizer* tapRecognizer =
-      [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
+      [[UITapGestureRecognizer alloc] initWithTarget:self
+                                              action:@selector(handleTap:)];
   tapRecognizer.numberOfTapsRequired = 1;
   [self addGestureRecognizer:tapRecognizer];
 
-  mTouches = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, nullptr, nullptr);
+  mTouches =
+      CFDictionaryCreateMutable(kCFAllocatorDefault, 0, nullptr, nullptr);
   mNextTouchID = 0;
   return self;
 }
@@ -130,7 +139,8 @@ class nsAutoRetainUIKitObject {
 - (void)sendMouseEvent:(EventMessage)aType
                  point:(LayoutDeviceIntPoint)aPoint
                 widget:(nsWindow*)aWindow {
-  WidgetMouseEvent event(true, aType, aWindow, WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
+  WidgetMouseEvent event(true, aType, aWindow, WidgetMouseEvent::eReal,
+                         WidgetMouseEvent::eNormal);
 
   event.mRefPoint = aPoint;
   event.mClickCount = 1;
@@ -145,24 +155,27 @@ class nsAutoRetainUIKitObject {
 - (void)handleTap:(UITapGestureRecognizer*)sender {
   if (sender.state == UIGestureRecognizerStateEnded) {
     ALOG("[ChildView[%p] handleTap]", self);
-    LayoutDeviceIntPoint lp =
-        UIKitPointsToDevPixels([sender locationInView:self], [self contentScaleFactor]);
+    LayoutDeviceIntPoint lp = UIKitPointsToDevPixels(
+        [sender locationInView:self], [self contentScaleFactor]);
     [self sendMouseEvent:eMouseMove point:lp widget:mGeckoChild];
     [self sendMouseEvent:eMouseDown point:lp widget:mGeckoChild];
     [self sendMouseEvent:eMouseUp point:lp widget:mGeckoChild];
   }
 }
 
-- (void)sendTouchEvent:(EventMessage)aType touches:(NSSet*)aTouches widget:(nsWindow*)aWindow {
+- (void)sendTouchEvent:(EventMessage)aType
+               touches:(NSSet*)aTouches
+                widget:(nsWindow*)aWindow {
   WidgetTouchEvent event(true, aType, aWindow);
   // XXX: I think nativeEvent.timestamp * 1000 is probably usable here but
   // I don't care that much right now.
   event.mTime = PR_IntervalNow();
   event.mTouches.SetCapacity(aTouches.count);
   for (UITouch* touch in aTouches) {
-    LayoutDeviceIntPoint loc =
-        UIKitPointsToDevPixels([touch locationInView:self], [self contentScaleFactor]);
-    LayoutDeviceIntPoint radius = UIKitPointsToDevPixels([touch majorRadius], [touch majorRadius]);
+    LayoutDeviceIntPoint loc = UIKitPointsToDevPixels(
+        [touch locationInView:self], [self contentScaleFactor]);
+    LayoutDeviceIntPoint radius =
+        UIKitPointsToDevPixels([touch majorRadius], [touch majorRadius]);
     void* value;
     if (!CFDictionaryGetValueIfPresent(mTouches, touch, (const void**)&value)) {
       // This shouldn't happen.
@@ -185,7 +198,9 @@ class nsAutoRetainUIKitObject {
     CFDictionaryAddValue(mTouches, touch, (void*)mNextTouchID);
     mNextTouchID++;
   }
-  [self sendTouchEvent:eTouchStart touches:[event allTouches] widget:mGeckoChild];
+  [self sendTouchEvent:eTouchStart
+               touches:[event allTouches]
+                widget:mGeckoChild];
 }
 
 - (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event {
@@ -216,7 +231,9 @@ class nsAutoRetainUIKitObject {
   ALOG("[ChildView[%p] touchesMoved", self);
   if (!mGeckoChild) return;
 
-  [self sendTouchEvent:eTouchMove touches:[event allTouches] widget:mGeckoChild];
+  [self sendTouchEvent:eTouchMove
+               touches:[event allTouches]
+                widget:mGeckoChild];
 }
 
 - (void)setNeedsDisplayInRect:(CGRect)aRect {
@@ -275,13 +292,16 @@ class nsAutoRetainUIKitObject {
 #ifdef DEBUG_UPDATE
   LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
 
-  fprintf(stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",
-          self, mGeckoChild, aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height,
-          aContext, geckoBounds.x, geckoBounds.y, geckoBounds.width, geckoBounds.height);
+  fprintf(stderr,
+          "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d "
+          "%d %d]\n",
+          self, mGeckoChild, aRect.origin.x, aRect.origin.y, aRect.size.width,
+          aRect.size.height, aContext, geckoBounds.x, geckoBounds.y,
+          geckoBounds.width, geckoBounds.height);
 
   CGAffineTransform xform = CGContextGetCTM(aContext);
-  fprintf(stderr, "  xform in: [%f %f %f %f %f %f]\n", xform.a, xform.b, xform.c, xform.d, xform.tx,
-          xform.ty);
+  fprintf(stderr, "  xform in: [%f %f %f %f %f %f]\n", xform.a, xform.b,
+          xform.c, xform.d, xform.tx, xform.ty);
 #endif
 
   if (true) {
@@ -310,15 +330,18 @@ class nsAutoRetainUIKitObject {
 
   CGContextSaveGState(aContext);
 
-  LayoutDeviceIntRegion region = LayoutDeviceIntRect(
-      NSToIntRound(aRect.origin.x * scale), NSToIntRound(aRect.origin.y * scale),
-      NSToIntRound(aRect.size.width * scale), NSToIntRound(aRect.size.height * scale));
+  LayoutDeviceIntRegion region =
+      LayoutDeviceIntRect(NSToIntRound(aRect.origin.x * scale),
+                          NSToIntRound(aRect.origin.y * scale),
+                          NSToIntRound(aRect.size.width * scale),
+                          NSToIntRound(aRect.size.height * scale));
 
   // Create Cairo objects.
   RefPtr<gfxQuartzSurface> targetSurface;
 
   UniquePtrPtr<gfxContext> targetContext;
-  if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BackendType::CAIRO)) {
+  if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(
+          gfx::BackendType::CAIRO)) {
     // This is dead code unless you mess with prefs, but keep it around for
     // debugging.
     targetSurface = new gfxQuartzSurface(aContext, backingSize);
@@ -379,7 +402,10 @@ class nsAutoRetainUIKitObject {
 @end
 
 nsWindow::nsWindow()
-    : mNativeView(nullptr), mVisible(false), mSizeMode(nsSizeMode_Normal), mParent(nullptr) {}
+    : mNativeView(nullptr),
+      mVisible(false),
+      mSizeMode(nsSizeMode_Normal),
+      mParent(nullptr) {}
 
 nsWindow::~nsWindow() {
   [mNativeView widgetDestroyed];  // Safe if mNativeView is nil.
@@ -396,7 +422,8 @@ void nsWindow::TearDownView() {
 }
 
 bool nsWindow::IsTopLevel() {
-  return mWindowType == WindowType::TopLevel || mWindowType == WindowType::Dialog ||
+  return mWindowType == WindowType::TopLevel ||
+         mWindowType == WindowType::Dialog ||
          mWindowType == WindowType::Invisible;
 }
 
@@ -405,7 +432,8 @@ bool nsWindow::IsTopLevel() {
 //
 
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
-                          const LayoutDeviceIntRect& aRect, widget::InitData* aInitData) {
+                          const LayoutDeviceIntRect& aRect,
+                          widget::InitData* aInitData) {
   ALOG("nsWindow[%p]::Create %p/%p [%d %d %d %d]", (void*)this, (void*)aParent,
        (void*)aNativeParent, aRect.x, aRect.y, aRect.width, aRect.height);
   nsWindow* parent = (nsWindow*)aParent;
@@ -429,8 +457,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     mBounds = aRect;
   }
 
-  ALOG("nsWindow[%p]::Create bounds: %d %d %d %d", (void*)this, mBounds.x, mBounds.y, mBounds.width,
-       mBounds.height);
+  ALOG("nsWindow[%p]::Create bounds: %d %d %d %d", (void*)this, mBounds.x,
+       mBounds.y, mBounds.width, mBounds.height);
 
   // Set defaults which can be overriden from aInitData in BaseCreate
   mWindowType = WindowType::TopLevel;
@@ -438,11 +466,12 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   Inherited::BaseCreate(aParent, aInitData);
 
-  NS_ASSERTION(IsTopLevel() || parent, "non top level window doesn't have a parent!");
+  NS_ASSERTION(IsTopLevel() || parent,
+               "non top level window doesn't have a parent!");
 
-  mNativeView =
-      [[ChildView alloc] initWithFrame:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())
-                            geckoChild:this];
+  mNativeView = [[ChildView alloc]
+      initWithFrame:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())
+         geckoChild:this];
   mNativeView.hidden = YES;
 
   if (parent) {
@@ -486,8 +515,9 @@ void nsWindow::Show(bool aState) {
   if (aState != mVisible) {
     mNativeView.hidden = aState ? NO : YES;
     if (aState) {
-      UIView* parentView =
-          mParent ? mParent->mNativeView : nsAppShell::gWindow.rootViewController.view;
+      UIView* parentView = mParent
+                               ? mParent->mNativeView
+                               : nsAppShell::gWindow.rootViewController.view;
       [parentView bringSubviewToFront:mNativeView];
       [mNativeView setNeedsDisplay];
     }
@@ -511,7 +541,8 @@ void nsWindow::Move(double aX, double aY) {
   ReportMoveEvent();
 }
 
-void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) {
+void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
+                      bool aRepaint) {
   BOOL isMoving = (mBounds.x != aX || mBounds.y != aY);
   BOOL isResizing = (mBounds.width != aWidth || mBounds.height != aHeight);
   if (!mNativeView || (!isMoving && !isResizing)) return;
@@ -535,7 +566,8 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, bool 
 }
 
 void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
-  if (!mNativeView || (mBounds.width == aWidth && mBounds.height == aHeight)) return;
+  if (!mNativeView || (mBounds.width == aWidth && mBounds.height == aHeight))
+    return;
 
   mBounds.width = aWidth;
   mBounds.height = aHeight;
@@ -563,11 +595,13 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
 void nsWindow::Invalidate(const LayoutDeviceIntRect& aRect) {
   if (!mNativeView || !mVisible) return;
 
-  MOZ_RELEASE_ASSERT(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_WR,
-                     "Shouldn't need to invalidate with accelerated OMTC layers!");
+  MOZ_RELEASE_ASSERT(
+      GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_WR,
+      "Shouldn't need to invalidate with accelerated OMTC layers!");
 
   [mNativeView setNeedsLayout];
-  [mNativeView setNeedsDisplayInRect:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())];
+  [mNativeView setNeedsDisplayInRect:DevPixelsToUIKitPoints(
+                                         mBounds, BackingScaleFactor())];
 }
 
 void nsWindow::SetFocus(Raise) {
@@ -644,21 +678,26 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
   return offset;
 }
 
-nsresult nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent, nsEventStatus& aStatus) {
+nsresult nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                 nsEventStatus& aStatus) {
   aStatus = nsEventStatus_eIgnore;
   nsCOMPtr<nsIWidget> kungFuDeathGrip(aEvent->mWidget);
 
-  if (mWidgetListener) aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
+  if (mWidgetListener)
+    aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
 
   return NS_OK;
 }
 
-void nsWindow::SetInputContext(const InputContext& aContext, const InputContextAction& aAction) {
+void nsWindow::SetInputContext(const InputContext& aContext,
+                               const InputContextAction& aAction) {
   // TODO: actually show VKB
   mInputContext = aContext;
 }
 
-mozilla::widget::InputContext nsWindow::GetInputContext() { return mInputContext; }
+mozilla::widget::InputContext nsWindow::GetInputContext() {
+  return mInputContext;
+}
 
 void nsWindow::SetBackgroundColor(const nscolor& aColor) {
   mNativeView.backgroundColor = [UIColor colorWithRed:NS_GET_R(aColor)

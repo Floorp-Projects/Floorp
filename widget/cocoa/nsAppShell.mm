@@ -57,7 +57,8 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-#define WAKE_LOCK_LOG(...) MOZ_LOG(gMacWakeLockLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define WAKE_LOCK_LOG(...) \
+  MOZ_LOG(gMacWakeLockLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 static mozilla::LazyLogModule gMacWakeLockLog("MacWakeLock");
 
 // A wake lock listener that disables screen saver when requested by
@@ -74,24 +75,30 @@ class MacWakeLockListener final : public nsIDOMMozWakeLockListener {
   IOPMAssertionID mAssertionNoDisplaySleepID = kIOPMNullAssertionID;
   IOPMAssertionID mAssertionNoIdleSleepID = kIOPMNullAssertionID;
 
-  NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) override {
+  NS_IMETHOD Callback(const nsAString& aTopic,
+                      const nsAString& aState) override {
     if (!aTopic.EqualsASCII("screen") && !aTopic.EqualsASCII("audio-playing") &&
         !aTopic.EqualsASCII("video-playing")) {
       return NS_OK;
     }
 
     // we should still hold the lock for background audio.
-    if (aTopic.EqualsASCII("audio-playing") && aState.EqualsASCII("locked-background")) {
+    if (aTopic.EqualsASCII("audio-playing") &&
+        aState.EqualsASCII("locked-background")) {
       WAKE_LOCK_LOG("keep audio playing even in background");
       return NS_OK;
     }
 
-    bool shouldKeepDisplayOn = aTopic.EqualsASCII("screen") || aTopic.EqualsASCII("video-playing");
-    CFStringRef assertionType =
-        shouldKeepDisplayOn ? kIOPMAssertionTypeNoDisplaySleep : kIOPMAssertionTypeNoIdleSleep;
-    IOPMAssertionID& assertionId =
-        shouldKeepDisplayOn ? mAssertionNoDisplaySleepID : mAssertionNoIdleSleepID;
-    WAKE_LOCK_LOG("topic=%s, state=%s, shouldKeepDisplayOn=%d", NS_ConvertUTF16toUTF8(aTopic).get(),
+    bool shouldKeepDisplayOn =
+        aTopic.EqualsASCII("screen") || aTopic.EqualsASCII("video-playing");
+    CFStringRef assertionType = shouldKeepDisplayOn
+                                    ? kIOPMAssertionTypeNoDisplaySleep
+                                    : kIOPMAssertionTypeNoIdleSleep;
+    IOPMAssertionID& assertionId = shouldKeepDisplayOn
+                                       ? mAssertionNoDisplaySleepID
+                                       : mAssertionNoIdleSleepID;
+    WAKE_LOCK_LOG("topic=%s, state=%s, shouldKeepDisplayOn=%d",
+                  NS_ConvertUTF16toUTF8(aTopic).get(),
                   NS_ConvertUTF16toUTF8(aState).get(), shouldKeepDisplayOn);
 
     // Note the wake lock code ensures that we're not sent duplicate
@@ -103,9 +110,10 @@ class MacWakeLockListener final : public nsIDOMMozWakeLockListener {
       }
       // Prevent screen saver.
       CFStringRef cf_topic = ::CFStringCreateWithCharacters(
-          kCFAllocatorDefault, reinterpret_cast<const UniChar*>(aTopic.Data()), aTopic.Length());
-      IOReturn success = ::IOPMAssertionCreateWithName(assertionType, kIOPMAssertionLevelOn,
-                                                       cf_topic, &assertionId);
+          kCFAllocatorDefault, reinterpret_cast<const UniChar*>(aTopic.Data()),
+          aTopic.Length());
+      IOReturn success = ::IOPMAssertionCreateWithName(
+          assertionType, kIOPMAssertionLevelOn, cf_topic, &assertionId);
       CFRelease(cf_topic);
       if (success != kIOReturnSuccess) {
         WAKE_LOCK_LOG("failed to disable screensaver");
@@ -133,19 +141,21 @@ static bool gAppShellMethodsSwizzled = false;
 
 void OnUncaughtException(NSException* aException) {
   nsObjCExceptionLog(aException);
-  MOZ_CRASH("Uncaught Objective C exception from NSSetUncaughtExceptionHandler");
+  MOZ_CRASH(
+      "Uncaught Objective C exception from NSSetUncaughtExceptionHandler");
 }
 
 @implementation GeckoNSApplication
 
-// Load is called very early during startup, when the Objective C runtime loads this class.
+// Load is called very early during startup, when the Objective C runtime loads
+// this class.
 + (void)load {
   NSSetUncaughtExceptionHandler(OnUncaughtException);
 }
 
-// This method is called from NSDefaultTopLevelErrorHandler, which is invoked when an Objective C
-// exception propagates up into the native event loop. It is possible that it is also called in
-// other cases.
+// This method is called from NSDefaultTopLevelErrorHandler, which is invoked
+// when an Objective C exception propagates up into the native event loop. It is
+// possible that it is also called in other cases.
 - (void)reportException:(NSException*)aException {
   if (ShouldIgnoreObjCException(aException)) {
     return;
@@ -154,14 +164,16 @@ void OnUncaughtException(NSException* aException) {
   nsObjCExceptionLog(aException);
 
 #ifdef NIGHTLY_BUILD
-  MOZ_CRASH("Uncaught Objective C exception from -[GeckoNSApplication reportException:]");
+  MOZ_CRASH("Uncaught Objective C exception from -[GeckoNSApplication "
+            "reportException:]");
 #endif
 }
 
 - (void)sendEvent:(NSEvent*)anEvent {
   mozilla::BackgroundHangMonitor().NotifyActivity();
 
-  if ([anEvent type] == NSEventTypeApplicationDefined && [anEvent subtype] == kEventSubtypeTrace) {
+  if ([anEvent type] == NSEventTypeApplicationDefined &&
+      [anEvent subtype] == kEventSubtypeTrace) {
     mozilla::SignalTracerThread();
     return;
   }
@@ -208,7 +220,8 @@ void OnUncaughtException(NSException* aException) {
 NS_IMETHODIMP
 nsAppShell::ResumeNative(void) {
   nsresult retval = nsBaseAppShell::ResumeNative();
-  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0) && mSkippedNativeCallback) {
+  if (NS_SUCCEEDED(retval) && (mSuspendNativeCount == 0) &&
+      mSkippedNativeCallback) {
     mSkippedNativeCallback = false;
     ScheduleNativeEventCallback();
   }
@@ -243,11 +256,13 @@ nsAppShell::~nsAppShell() {
 
   if (mCFRunLoop) {
     if (mCFRunLoopSource) {
-      ::CFRunLoopRemoveSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
+      ::CFRunLoopRemoveSource(mCFRunLoop, mCFRunLoopSource,
+                              kCFRunLoopCommonModes);
       ::CFRelease(mCFRunLoopSource);
     }
     if (mCFRunLoopObserver) {
-      ::CFRunLoopRemoveObserver(mCFRunLoop, mCFRunLoopObserver, kCFRunLoopCommonModes);
+      ::CFRunLoopRemoveObserver(mCFRunLoop, mCFRunLoopObserver,
+                                kCFRunLoopCommonModes);
       ::CFRelease(mCFRunLoopObserver);
     }
     ::CFRelease(mCFRunLoop);
@@ -274,7 +289,8 @@ static void AddScreenWakeLockListener() {
     sWakeLockListener = new MacWakeLockListener();
     sPowerManagerService->AddWakeLockListener(sWakeLockListener);
   } else {
-    NS_WARNING("Failed to retrieve PowerManagerService, wakelocks will be broken!");
+    NS_WARNING(
+        "Failed to retrieve PowerManagerService, wakelocks will be broken!");
   }
 }
 
@@ -288,8 +304,8 @@ static void RemoveScreenWakeLockListener() {
   }
 }
 
-void RunLoopObserverCallback(CFRunLoopObserverRef aObserver, CFRunLoopActivity aActivity,
-                             void* aInfo) {
+void RunLoopObserverCallback(CFRunLoopObserverRef aObserver,
+                             CFRunLoopActivity aActivity, void* aInfo) {
   static_cast<nsAppShell*>(aInfo)->OnRunLoopActivityChanged(aActivity);
 }
 
@@ -298,30 +314,34 @@ void nsAppShell::OnRunLoopActivityChanged(CFRunLoopActivity aActivity) {
     mozilla::BackgroundHangMonitor().NotifyWait();
   }
 
-  // When the event loop is in its waiting state, we would like the profiler to know that the thread
-  // is idle. The usual way to notify the profiler of idleness would be to place a profiler label
-  // frame with the IDLE category on the stack, for the duration of the function that does the
-  // waiting. However, since macOS uses an event loop model where "the event loop calls you", we do
-  // not control the function that does the waiting; the waiting happens inside CFRunLoop code.
-  // Instead, the run loop notifies us when it enters and exits the waiting state, by calling this
-  // function.
-  // So we do not have a function under our control that stays on the stack for the duration of the
-  // wait. So, rather than putting an AutoProfilerLabel on the stack, we will manually push and pop
-  // the label frame here.
-  // The location in the stack where this label frame is inserted is somewhat arbitrary. In
-  // practice, the label frame will be at the very tip of the stack, looking like it's "inside" the
+  // When the event loop is in its waiting state, we would like the profiler to
+  // know that the thread is idle. The usual way to notify the profiler of
+  // idleness would be to place a profiler label frame with the IDLE category on
+  // the stack, for the duration of the function that does the waiting. However,
+  // since macOS uses an event loop model where "the event loop calls you", we
+  // do not control the function that does the waiting; the waiting happens
+  // inside CFRunLoop code. Instead, the run loop notifies us when it enters and
+  // exits the waiting state, by calling this function. So we do not have a
+  // function under our control that stays on the stack for the duration of the
+  // wait. So, rather than putting an AutoProfilerLabel on the stack, we will
+  // manually push and pop the label frame here. The location in the stack where
+  // this label frame is inserted is somewhat arbitrary. In practice, the label
+  // frame will be at the very tip of the stack, looking like it's "inside" the
   // mach_msg_trap wait function.
   if (aActivity == kCFRunLoopBeforeWaiting) {
     using ThreadRegistration = mozilla::profiler::ThreadRegistration;
-    ThreadRegistration::WithOnThreadRef([&](ThreadRegistration::OnThreadRef aOnThreadRef) {
-      ProfilingStack& profilingStack =
-          aOnThreadRef.UnlockedConstReaderAndAtomicRWRef().ProfilingStackRef();
-      mProfilingStackWhileWaiting = &profilingStack;
-      uint8_t variableOnStack = 0;
-      profilingStack.pushLabelFrame("Native event loop idle", nullptr, &variableOnStack,
-                                    JS::ProfilingCategoryPair::IDLE, 0);
-      profiler_thread_sleep();
-    });
+    ThreadRegistration::WithOnThreadRef(
+        [&](ThreadRegistration::OnThreadRef aOnThreadRef) {
+          ProfilingStack& profilingStack =
+              aOnThreadRef.UnlockedConstReaderAndAtomicRWRef()
+                  .ProfilingStackRef();
+          mProfilingStackWhileWaiting = &profilingStack;
+          uint8_t variableOnStack = 0;
+          profilingStack.pushLabelFrame("Native event loop idle", nullptr,
+                                        &variableOnStack,
+                                        JS::ProfilingCategoryPair::IDLE, 0);
+          profiler_thread_sleep();
+        });
   } else {
     if (mProfilingStackWhileWaiting) {
       mProfilingStackWhileWaiting->pop();
@@ -356,8 +376,9 @@ nsresult nsAppShell::Init() {
   mAutoreleasePools = ::CFArrayCreateMutable(nullptr, 0, nullptr);
   NS_ENSURE_STATE(mAutoreleasePools);
 
-  bool isNSApplicationProcessType = (XRE_GetProcessType() != GeckoProcessType_RDD) &&
-                                    (XRE_GetProcessType() != GeckoProcessType_Socket);
+  bool isNSApplicationProcessType =
+      (XRE_GetProcessType() != GeckoProcessType_RDD) &&
+      (XRE_GetProcessType() != GeckoProcessType_Socket);
 
   if (isNSApplicationProcessType) {
     // This call initializes NSApplication unless:
@@ -391,14 +412,15 @@ nsresult nsAppShell::Init() {
 
   ::CFRunLoopAddSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
 
-  // Add a CFRunLoopObserver so that the profiler can be notified when we enter and exit the waiting
-  // state.
+  // Add a CFRunLoopObserver so that the profiler can be notified when we enter
+  // and exit the waiting state.
   CFRunLoopObserverContext observerContext;
   PodZero(&observerContext);
   observerContext.info = this;
 
   mCFRunLoopObserver = ::CFRunLoopObserverCreate(
-      kCFAllocatorDefault, kCFRunLoopBeforeWaiting | kCFRunLoopAfterWaiting | kCFRunLoopExit, true,
+      kCFAllocatorDefault,
+      kCFRunLoopBeforeWaiting | kCFRunLoopAfterWaiting | kCFRunLoopExit, true,
       0, RunLoopObserverCallback, &observerContext);
   NS_ENSURE_STATE(mCFRunLoopObserver);
 
@@ -491,9 +513,10 @@ void nsAppShell::ProcessGeckoEvents(void* aInfo) {
     // DummyEvent inserted by nsBaseAppShell::OnProcessNextEvent. This second
     // event will cause the second call to AcquireFirstMatchingEventInQueue in
     // nsAppShell::ProcessNextNativeEvent to return true. Which makes
-    // nsBaseAppShell::OnProcessNextEvent call nsAppShell::ProcessNextNativeEvent
-    // again during which it will loop until it sleeps because ProcessGeckoEvents()
-    // won't be called for the DummyEvent.
+    // nsBaseAppShell::OnProcessNextEvent call
+    // nsAppShell::ProcessNextNativeEvent again during which it will loop until
+    // it sleeps because ProcessGeckoEvents() won't be called for the
+    // DummyEvent.
     //
     // This is not a good approach and we should fix things up so that only
     // one postEvent is needed.
@@ -551,8 +574,8 @@ void nsAppShell::ProcessGeckoEvents(void* aInfo) {
   if (self->mTerminated) {
     int32_t releaseCount = 0;
     if (self->mNativeEventScheduledDepth > self->mNativeEventCallbackDepth) {
-      releaseCount =
-          PR_ATOMIC_SET(&self->mNativeEventScheduledDepth, self->mNativeEventCallbackDepth);
+      releaseCount = PR_ATOMIC_SET(&self->mNativeEventScheduledDepth,
+                                   self->mNativeEventCallbackDepth);
     }
     while (releaseCount-- > self->mNativeEventCallbackDepth) self->Release();
   } else {
@@ -651,10 +674,10 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
 
   if (mTerminated) return false;
 
-  // Do not call -[NSApplication nextEventMatchingMask:...] when we're trying to close a native
-  // menu. Doing so could confuse the NSMenu's closing mechanism. Instead, we try to unwind the
-  // stack as quickly as possible and return to the parent event loop. At that point, native events
-  // will be processed.
+  // Do not call -[NSApplication nextEventMatchingMask:...] when we're trying to
+  // close a native menu. Doing so could confuse the NSMenu's closing mechanism.
+  // Instead, we try to unwind the stack as quickly as possible and return to
+  // the parent event loop. At that point, native events will be processed.
   if (MOZMenuOpeningCoordinator.needToUnwindForMenuClosing) {
     return false;
   }
@@ -700,12 +723,13 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
       }
     } else {
       // In at least 10.15, AcquireFirstMatchingEventInQueue will move 1
-      // CGEvent from the CGEvent queue into the Carbon event queue. Unfortunately,
-      // once an event has been moved to the Carbon event queue it's no longer a
-      // candidate for coalescing. This means that even if we don't remove the
-      // event from the queue, just calling AcquireFirstMatchingEventInQueue can
-      // cause behaviour change. Prior to bug 1690687 landing, the event that we got
-      // from AcquireFirstMatchingEventInQueue was often our own ApplicationDefined
+      // CGEvent from the CGEvent queue into the Carbon event queue.
+      // Unfortunately, once an event has been moved to the Carbon event queue
+      // it's no longer a candidate for coalescing. This means that even if we
+      // don't remove the event from the queue, just calling
+      // AcquireFirstMatchingEventInQueue can cause behaviour change. Prior to
+      // bug 1690687 landing, the event that we got from
+      // AcquireFirstMatchingEventInQueue was often our own ApplicationDefined
       // event. However, once we stopped posting that event on every Gecko
       // event we're much more likely to get a CGEvent. When we have a high
       // amount of load on the main thread, we end up alternating between Gecko
@@ -719,8 +743,8 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
       // AcquireFirstMatchingEventInQueue() doesn't spin the (native) event
       // loop, though it does queue up any newly available events from the
       // window server.
-      EventRef currentEvent =
-          AcquireFirstMatchingEventInQueue(currentEventQueue, 0, NULL, kEventQueueOptionsNone);
+      EventRef currentEvent = AcquireFirstMatchingEventInQueue(
+          currentEventQueue, 0, NULL, kEventQueueOptionsNone);
       if (!currentEvent) {
         continue;
       }
@@ -729,7 +753,8 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
       UInt32 eventClass = GetEventClass(currentEvent);
       bool osCocoaEvent =
           ((eventClass == 'appl') || (eventClass == kEventClassAppleEvent) ||
-           ((eventClass == 'cgs ') && (eventKind != NSEventTypeApplicationDefined)));
+           ((eventClass == 'cgs ') &&
+            (eventKind != NSEventTypeApplicationDefined)));
       // If attrs is kEventAttributeUserEvent or kEventAttributeMonitored
       // (i.e. a user input event), we shouldn't process it here while
       // aMayWait is false.  Likewise if currentEvent will eventually be
@@ -761,8 +786,9 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
   } while (mRunningEventLoop);
 
   if (eventProcessed) {
-    moreEvents = (AcquireFirstMatchingEventInQueue(currentEventQueue, 0, NULL,
-                                                   kEventQueueOptionsNone) != NULL);
+    moreEvents =
+        (AcquireFirstMatchingEventInQueue(currentEventQueue, 0, NULL,
+                                          kEventQueueOptionsNone) != NULL);
   }
 
   mRunningEventLoop = wasRunningEventLoop;
@@ -790,7 +816,9 @@ bool nsAppShell::ProcessNextNativeEvent(bool aMayWait) {
 // (Ventura) than on other versions of macOS. So we only use this hack on
 // macOS 13 and up.
 static void PinSidecarCoreTextCStringSections() {
-  if (!dlopen("/System/Library/PrivateFrameworks/SidecarCore.framework/SidecarCore", RTLD_LAZY)) {
+  if (!dlopen(
+          "/System/Library/PrivateFrameworks/SidecarCore.framework/SidecarCore",
+          RTLD_LAZY)) {
     return;
   }
 
@@ -798,7 +826,8 @@ static void PinSidecarCoreTextCStringSections() {
   // normally runs automatically on the first Cmd-key combination.
   Class displayManagerClass = NSClassFromString(@"SidecarDisplayManager");
   if ([displayManagerClass respondsToSelector:@selector(sharedManager)]) {
-    id sharedManager = [displayManagerClass performSelector:@selector(sharedManager)];
+    id sharedManager =
+        [displayManagerClass performSelector:@selector(sharedManager)];
     if ([sharedManager respondsToSelector:@selector(devices)]) {
       [sharedManager performSelector:@selector(devices)];
     }
@@ -877,7 +906,8 @@ nsAppShell::Exit(void) {
   // [NSApp stop:], so we have to assume that one extra call to [NSApp stop:]
   // will do the job.)
   BOOL cocoaModal = [NSApp _isRunningModal];
-  NS_ASSERTION(!cocoaModal, "Don't call nsAppShell::Exit() from a modal event loop!");
+  NS_ASSERTION(!cocoaModal,
+               "Don't call nsAppShell::Exit() from a modal event loop!");
   if (cocoaModal) [NSApp stop:nullptr];
   [NSApp stop:nullptr];
 
@@ -911,7 +941,8 @@ NS_IMETHODIMP
 nsAppShell::OnProcessNextEvent(nsIThreadInternal* aThread, bool aMayWait) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  NS_ASSERTION(mAutoreleasePools, "No stack on which to store autorelease pool");
+  NS_ASSERTION(mAutoreleasePools,
+               "No stack on which to store autorelease pool");
 
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
   ::CFArrayAppendValue(mAutoreleasePools, pool);
@@ -929,15 +960,17 @@ nsAppShell::OnProcessNextEvent(nsIThreadInternal* aThread, bool aMayWait) {
 //
 // public
 NS_IMETHODIMP
-nsAppShell::AfterProcessNextEvent(nsIThreadInternal* aThread, bool aEventWasProcessed) {
+nsAppShell::AfterProcessNextEvent(nsIThreadInternal* aThread,
+                                  bool aEventWasProcessed) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   CFIndex count = ::CFArrayGetCount(mAutoreleasePools);
 
-  NS_ASSERTION(mAutoreleasePools && count, "Processed an event, but there's no autorelease pool?");
+  NS_ASSERTION(mAutoreleasePools && count,
+               "Processed an event, but there's no autorelease pool?");
 
-  const NSAutoreleasePool* pool =
-      static_cast<const NSAutoreleasePool*>(::CFArrayGetValueAtIndex(mAutoreleasePools, count - 1));
+  const NSAutoreleasePool* pool = static_cast<const NSAutoreleasePool*>(
+      ::CFArrayGetValueAtIndex(mAutoreleasePools, count - 1));
   ::CFArrayRemoveValueAtIndex(mAutoreleasePools, count - 1);
   [pool release];
 
@@ -952,11 +985,11 @@ void nsAppShell::InitMemoryPressureObserver() {
   // values. Hence this may need to be augmented with polling of the memory
   // pressure sysctls for lower latency reactions to OS memory pressure. This
   // was also observed when using DISPATCH_QUEUE_PRIORITY_HIGH.
-  mMemoryPressureSource =
-      dispatch_source_create(DISPATCH_SOURCE_TYPE_MEMORYPRESSURE, 0,
-                             DISPATCH_MEMORYPRESSURE_NORMAL | DISPATCH_MEMORYPRESSURE_WARN |
-                                 DISPATCH_MEMORYPRESSURE_CRITICAL,
-                             dispatch_get_main_queue());
+  mMemoryPressureSource = dispatch_source_create(
+      DISPATCH_SOURCE_TYPE_MEMORYPRESSURE, 0,
+      DISPATCH_MEMORYPRESSURE_NORMAL | DISPATCH_MEMORYPRESSURE_WARN |
+          DISPATCH_MEMORYPRESSURE_CRITICAL,
+      dispatch_get_main_queue());
 
   dispatch_source_set_event_handler(mMemoryPressureSource, ^{
     dispatch_source_memorypressure_flags_t pressureLevel =
@@ -971,7 +1004,8 @@ void nsAppShell::InitMemoryPressureObserver() {
       nsAvailableMemoryWatcherBase::GetSingleton());
 }
 
-void nsAppShell::OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t aPressureLevel) {
+void nsAppShell::OnMemoryPressureChanged(
+    dispatch_source_memorypressure_flags_t aPressureLevel) {
   // The memory pressure dispatch source is created (above) with
   // dispatch_get_main_queue() which always fires on the main thread.
   MOZ_ASSERT(NS_IsMainThread());
@@ -1008,18 +1042,21 @@ void nsAppShell::OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t 
   if ((self = [self init])) {
     mAppShell = aAppShell;
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(applicationWillTerminate:)
-                                                 name:NSApplicationWillTerminateNotification
-                                               object:NSApp];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(applicationDidBecomeActive:)
-                                                 name:NSApplicationDidBecomeActiveNotification
-                                               object:NSApp];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(timezoneChanged:)
-                                                 name:NSSystemTimeZoneDidChangeNotification
-                                               object:nil];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(applicationWillTerminate:)
+               name:NSApplicationWillTerminateNotification
+             object:NSApp];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(applicationDidBecomeActive:)
+               name:NSApplicationDidBecomeActiveNotification
+             object:NSApp];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(timezoneChanged:)
+               name:NSSystemTimeZoneDidChangeNotification
+             object:nil];
   }
 
   return self;
@@ -1061,12 +1098,14 @@ void nsAppShell::OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t 
   NSEvent* currentEvent = [NSApp currentEvent];
   if (currentEvent) {
     TextInputHandler::sLastModifierState =
-        [currentEvent modifierFlags] & NSEventModifierFlagDeviceIndependentFlagsMask;
+        [currentEvent modifierFlags] &
+        NSEventModifierFlagDeviceIndependentFlagsMask;
   }
 
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
-    observerService->NotifyObservers(nullptr, NS_WIDGET_MAC_APP_ACTIVATE_OBSERVER_TOPIC, nullptr);
+    observerService->NotifyObservers(
+        nullptr, NS_WIDGET_MAC_APP_ACTIVATE_OBSERVER_TOPIC, nullptr);
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
@@ -1111,8 +1150,9 @@ void nsAppShell::OnMemoryPressureChanged(dispatch_source_memorypressure_flags_t 
 // in XRE_Main(), which in particular means that ScopedXPCOMStartup's destructor
 // and NS_ShutdownXPCOM() never get called.
 - (void)nsAppShell_NSApplication_terminate:(id)sender {
-  [[NSNotificationCenter defaultCenter] postNotificationName:NSApplicationWillTerminateNotification
-                                                      object:NSApp];
+  [[NSNotificationCenter defaultCenter]
+      postNotificationName:NSApplicationWillTerminateNotification
+                    object:NSApp];
 }
 
 @end

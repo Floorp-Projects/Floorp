@@ -16,7 +16,8 @@ bool nsUserIdleServiceX::PollIdleTime(uint32_t* aIdleTime) {
   if (rval != KERN_SUCCESS) return false;
 
   io_iterator_t hidItr;
-  rval = IOServiceGetMatchingServices(masterPort, IOServiceMatching("IOHIDSystem"), &hidItr);
+  rval = IOServiceGetMatchingServices(
+      masterPort, IOServiceMatching("IOHIDSystem"), &hidItr);
 
   if (rval != KERN_SUCCESS) return false;
   NS_ASSERTION(hidItr, "Our iterator is null, but it ought not to be!");
@@ -27,14 +28,15 @@ bool nsUserIdleServiceX::PollIdleTime(uint32_t* aIdleTime) {
   IOObjectRelease(hidItr);
 
   NSMutableDictionary* hidProps;
-  rval = IORegistryEntryCreateCFProperties(entry, (CFMutableDictionaryRef*)&hidProps,
-                                           kCFAllocatorDefault, 0);
+  rval = IORegistryEntryCreateCFProperties(
+      entry, (CFMutableDictionaryRef*)&hidProps, kCFAllocatorDefault, 0);
   if (rval != KERN_SUCCESS) return false;
   NS_ASSERTION(hidProps, "HIDProperties is null, but no error was returned.");
   [hidProps autorelease];
 
   id idleObj = [hidProps objectForKey:@"HIDIdleTime"];
-  NS_ASSERTION([idleObj isKindOfClass:[NSData class]] || [idleObj isKindOfClass:[NSNumber class]],
+  NS_ASSERTION([idleObj isKindOfClass:[NSData class]] ||
+                   [idleObj isKindOfClass:[NSNumber class]],
                "What we got for the idle object is not what we expect!");
 
   uint64_t time;

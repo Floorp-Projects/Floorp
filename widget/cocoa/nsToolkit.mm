@@ -45,7 +45,9 @@ static io_connect_t gRootPort = MACH_PORT_NULL;
 nsToolkit* nsToolkit::gToolkit = nullptr;
 
 nsToolkit::nsToolkit()
-    : mSleepWakeNotificationRLS(nullptr), mPowerNotifier{0}, mAllProcessMouseMonitor(nil) {
+    : mSleepWakeNotificationRLS(nullptr),
+      mPowerNotifier{0},
+      mAllProcessMouseMonitor(nil) {
   MOZ_COUNT_CTOR(nsToolkit);
   RegisterForSleepWakeNotifications();
 }
@@ -58,11 +60,13 @@ nsToolkit::~nsToolkit() {
 
 void nsToolkit::PostSleepWakeNotification(const char* aNotification) {
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-  if (observerService) observerService->NotifyObservers(nullptr, aNotification, nullptr);
+  if (observerService)
+    observerService->NotifyObservers(nullptr, aNotification, nullptr);
 }
 
 // http://developer.apple.com/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/PowerMgmt/chapter_10_section_3.html
-static void ToolkitSleepWakeCallback(void* refCon, io_service_t service, natural_t messageType,
+static void ToolkitSleepWakeCallback(void* refCon, io_service_t service,
+                                     natural_t messageType,
                                      void* messageArgument) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
@@ -98,15 +102,17 @@ nsresult nsToolkit::RegisterForSleepWakeNotifications() {
 
   NS_ASSERTION(!mSleepWakeNotificationRLS, "Already registered for sleep/wake");
 
-  gRootPort =
-      ::IORegisterForSystemPower(0, &notifyPortRef, ToolkitSleepWakeCallback, &mPowerNotifier);
+  gRootPort = ::IORegisterForSystemPower(
+      0, &notifyPortRef, ToolkitSleepWakeCallback, &mPowerNotifier);
   if (gRootPort == MACH_PORT_NULL) {
     NS_ERROR("IORegisterForSystemPower failed");
     return NS_ERROR_FAILURE;
   }
 
-  mSleepWakeNotificationRLS = ::IONotificationPortGetRunLoopSource(notifyPortRef);
-  ::CFRunLoopAddSource(::CFRunLoopGetCurrent(), mSleepWakeNotificationRLS, kCFRunLoopDefaultMode);
+  mSleepWakeNotificationRLS =
+      ::IONotificationPortGetRunLoopSource(notifyPortRef);
+  ::CFRunLoopAddSource(::CFRunLoopGetCurrent(), mSleepWakeNotificationRLS,
+                       kCFRunLoopDefaultMode);
 
   return NS_OK;
 
@@ -146,14 +152,16 @@ void nsToolkit::MonitorAllProcessMouseEvents() {
 
   if (mAllProcessMouseMonitor == nil) {
     mAllProcessMouseMonitor = [NSEvent
-        addGlobalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown | NSEventMaskLeftMouseDown
+        addGlobalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown |
+                                              NSEventMaskLeftMouseDown
                                       handler:^(NSEvent* evt) {
                                         if ([NSApp isActive]) {
                                           return;
                                         }
 
                                         nsIRollupListener* rollupListener =
-                                            nsBaseWidget::GetActiveRollupListener();
+                                            nsBaseWidget::
+                                                GetActiveRollupListener();
                                         if (!rollupListener) {
                                           return;
                                         }
@@ -165,17 +173,22 @@ void nsToolkit::MonitorAllProcessMouseEvents() {
                                         }
 
                                         NSWindow* ctxMenuWindow =
-                                            (NSWindow*)rollupWidget->GetNativeData(
-                                                NS_NATIVE_WINDOW);
+                                            (NSWindow*)
+                                                rollupWidget->GetNativeData(
+                                                    NS_NATIVE_WINDOW);
                                         if (!ctxMenuWindow) {
                                           return;
                                         }
 
-                                        // Don't roll up the rollup widget if our mouseDown happens
-                                        // over it (doing so would break the corresponding context
-                                        // menu).
-                                        NSPoint screenLocation = [NSEvent mouseLocation];
-                                        if (NSPointInRect(screenLocation, [ctxMenuWindow frame])) {
+                                        // Don't roll up the rollup widget if
+                                        // our mouseDown happens over it (doing
+                                        // so would break the corresponding
+                                        // context menu).
+                                        NSPoint screenLocation =
+                                            [NSEvent mouseLocation];
+                                        if (NSPointInRect(
+                                                screenLocation,
+                                                [ctxMenuWindow frame])) {
                                           return;
                                         }
 
@@ -216,9 +229,9 @@ nsToolkit* nsToolkit::GetToolkit() {
 // Leopard and is available to 64-bit binaries on Leopard and above.  Based on
 // ideas and code from http://www.cocoadev.com/index.pl?MethodSwizzling.
 // Since the Method type becomes an opaque type as of Objective-C 2.0, we'll
-// have to switch to using accessor methods like method_exchangeImplementations()
-// when we build 64-bit binaries that use Objective-C 2.0 (on and for Leopard
-// and above).
+// have to switch to using accessor methods like
+// method_exchangeImplementations() when we build 64-bit binaries that use
+// Objective-C 2.0 (on and for Leopard and above).
 //
 // Be aware that, if aClass doesn't have an orgMethod selector but one of its
 // superclasses does, the method substitution will (in effect) take place in

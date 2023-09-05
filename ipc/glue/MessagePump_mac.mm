@@ -20,7 +20,8 @@ NS_IMPL_ADDREF_INHERITED(MessagePumpForNonMainUIThreads, MessagePump)
 NS_IMPL_RELEASE_INHERITED(MessagePumpForNonMainUIThreads, MessagePump)
 NS_IMPL_QUERY_INTERFACE(MessagePumpForNonMainUIThreads, nsIThreadObserver)
 
-MessagePumpForNonMainUIThreads::MessagePumpForNonMainUIThreads(nsISerialEventTarget* aEventTarget)
+MessagePumpForNonMainUIThreads::MessagePumpForNonMainUIThreads(
+    nsISerialEventTarget* aEventTarget)
     : mEventTarget(aEventTarget), keep_running_(true) {
   MOZ_ASSERT(mEventTarget);
   CFRunLoopSourceContext source_context = CFRunLoopSourceContext();
@@ -36,13 +37,15 @@ MessagePumpForNonMainUIThreads::~MessagePumpForNonMainUIThreads() {
   CFRelease(quit_source_);
 }
 
-void MessagePumpForNonMainUIThreads::DoRun(base::MessagePump::Delegate* aDelegate) {
-  // If this is a chromium thread and no nsThread is associated with it, this call will create a
-  // new nsThread.
+void MessagePumpForNonMainUIThreads::DoRun(
+    base::MessagePump::Delegate* aDelegate) {
+  // If this is a chromium thread and no nsThread is associated with it, this
+  // call will create a new nsThread.
   nsIThread* thread = NS_GetCurrentThread();
   MOZ_ASSERT(thread);
 
-  // Set the main thread observer so we can wake up when xpcom events need to get processed.
+  // Set the main thread observer so we can wake up when xpcom events need to
+  // get processed.
   nsCOMPtr<nsIThreadInternal> ti(do_QueryInterface(thread));
   MOZ_ASSERT(ti);
   ti->SetObserver(this);
@@ -63,7 +66,8 @@ void MessagePumpForNonMainUIThreads::DoRun(base::MessagePump::Delegate* aDelegat
 
     // Now process the CFRunLoop. It exits after running once.
     // NSRunLoop manages autorelease pools itself.
-    [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+    [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode
+                             beforeDate:[NSDate distantFuture]];
   }
 
   ti->SetObserver(nullptr);
@@ -77,14 +81,15 @@ void MessagePumpForNonMainUIThreads::Quit() {
 }
 
 NS_IMETHODIMP MessagePumpForNonMainUIThreads::OnDispatchedEvent() {
-  // ScheduleWork will signal an input source to the run loop, making it exit so it can process the
-  // xpcom event.
+  // ScheduleWork will signal an input source to the run loop, making it exit so
+  // it can process the xpcom event.
   ScheduleWork();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MessagePumpForNonMainUIThreads::OnProcessNextEvent(nsIThreadInternal* thread, bool mayWait) {
+MessagePumpForNonMainUIThreads::OnProcessNextEvent(nsIThreadInternal* thread,
+                                                   bool mayWait) {
   return NS_OK;
 }
 

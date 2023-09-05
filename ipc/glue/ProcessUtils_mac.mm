@@ -25,28 +25,32 @@ void SetThisProcessName(const char* aProcessName) {
     return;
   }
 
-  NSString* currentName =
-      [[[NSBundle mainBundle] localizedInfoDictionary] objectForKey:(NSString*)kCFBundleNameKey];
+  NSString* currentName = [[[NSBundle mainBundle] localizedInfoDictionary]
+      objectForKey:(NSString*)kCFBundleNameKey];
 
   char formattedName[1024];
-  SprintfLiteral(formattedName, "%s %s", [currentName UTF8String], aProcessName);
+  SprintfLiteral(formattedName, "%s %s", [currentName UTF8String],
+                 aProcessName);
 
   aProcessName = formattedName;
 
-  // This function is based on Chrome/Webkit's and relies on potentially dangerous SPI.
+  // This function is based on Chrome/Webkit's and relies on potentially
+  // dangerous SPI.
   typedef CFTypeRef (*LSGetASNType)();
-  typedef OSStatus (*LSSetInformationItemType)(int, CFTypeRef, CFStringRef, CFStringRef,
-                                               CFDictionaryRef*);
+  typedef OSStatus (*LSSetInformationItemType)(int, CFTypeRef, CFStringRef,
+                                               CFStringRef, CFDictionaryRef*);
 
-  CFBundleRef launchServices = ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.LaunchServices"));
+  CFBundleRef launchServices =
+      ::CFBundleGetBundleWithIdentifier(CFSTR("com.apple.LaunchServices"));
   if (!launchServices) {
-    NS_WARNING("Failed to set process name: Could not open LaunchServices bundle");
+    NS_WARNING(
+        "Failed to set process name: Could not open LaunchServices bundle");
     return;
   }
 
   if (!sApplicationASN) {
-    sApplicationASN =
-        ::CFBundleGetFunctionPointerForName(launchServices, CFSTR("_LSGetCurrentApplicationASN"));
+    sApplicationASN = ::CFBundleGetFunctionPointerForName(
+        launchServices, CFSTR("_LSGetCurrentApplicationASN"));
     if (!sApplicationASN) {
       NS_WARNING("Failed to set process name: Could not get function pointer "
                  "for LaunchServices");
@@ -64,12 +68,13 @@ void SetThisProcessName(const char* aProcessName) {
   LSSetInformationItemType setInformationItemFunc =
       reinterpret_cast<LSSetInformationItemType>(sApplicationInfoItem);
 
-  void* displayNameKeyAddr =
-      ::CFBundleGetDataPointerForName(launchServices, CFSTR("_kLSDisplayNameKey"));
+  void* displayNameKeyAddr = ::CFBundleGetDataPointerForName(
+      launchServices, CFSTR("_kLSDisplayNameKey"));
 
   CFStringRef displayNameKey = nil;
   if (displayNameKeyAddr) {
-    displayNameKey = reinterpret_cast<CFStringRef>(*(CFStringRef*)displayNameKeyAddr);
+    displayNameKey =
+        reinterpret_cast<CFStringRef>(*(CFStringRef*)displayNameKeyAddr);
   }
 
   // We need this to ensure we have a connection to the Process Manager, not
@@ -81,20 +86,22 @@ void SetThisProcessName(const char* aProcessName) {
 
   CFTypeRef currentAsn = getASNFunc ? getASNFunc() : nullptr;
 
-  if (!getASNFunc || !setInformationItemFunc || !displayNameKey || !currentAsn) {
+  if (!getASNFunc || !setInformationItemFunc || !displayNameKey ||
+      !currentAsn) {
     NS_WARNING("Failed to set process name: Accessing launchServices failed");
     return;
   }
 
-  CFStringRef processName = ::CFStringCreateWithCString(nil, aProcessName, kCFStringEncodingASCII);
+  CFStringRef processName =
+      ::CFStringCreateWithCString(nil, aProcessName, kCFStringEncodingASCII);
   if (!processName) {
     NS_WARNING("Failed to set process name: Could not create CFStringRef");
     return;
   }
 
-  OSErr err =
-      setInformationItemFunc(UNDOCUMENTED_SESSION_CONSTANT, currentAsn, displayNameKey, processName,
-                             nil);  // Optional out param
+  OSErr err = setInformationItemFunc(UNDOCUMENTED_SESSION_CONSTANT, currentAsn,
+                                     displayNameKey, processName,
+                                     nil);  // Optional out param
   ::CFRelease(processName);
   if (err != noErr) {
     NS_WARNING("Failed to set process name: LSSetInformationItemType err");

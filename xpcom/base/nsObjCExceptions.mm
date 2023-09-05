@@ -18,12 +18,15 @@
 #include "nsError.h"
 
 void nsObjCExceptionLog(NSException* aException) {
-  NSLog(@"Mozilla has caught an Obj-C exception [%@: %@]", [aException name], [aException reason]);
+  NSLog(@"Mozilla has caught an Obj-C exception [%@: %@]", [aException name],
+        [aException reason]);
 
   // Attach exception info to the crash report.
-  nsCOMPtr<nsICrashReporter> crashReporter = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+  nsCOMPtr<nsICrashReporter> crashReporter =
+      do_GetService("@mozilla.org/toolkit/crash-reporter;1");
   if (crashReporter) {
-    crashReporter->AppendObjCExceptionInfoToAppNotes(static_cast<void*>(aException));
+    crashReporter->AppendObjCExceptionInfoToAppNotes(
+        static_cast<void*>(aException));
   }
 
 #ifdef DEBUG
@@ -34,8 +37,8 @@ void nsObjCExceptionLog(NSException* aException) {
 namespace mozilla {
 
 bool ShouldIgnoreObjCException(NSException* aException) {
-  // Ignore known exceptions that we've seen in crash reports, which shouldn't cause a MOZ_CRASH in
-  // Nightly.
+  // Ignore known exceptions that we've seen in crash reports, which shouldn't
+  // cause a MOZ_CRASH in Nightly.
   if (aException.name == NSInternalInconsistencyException) {
     if ([aException.reason containsString:@"Missing Touches."]) {
       // Seen in bug 1694000.

@@ -12,8 +12,8 @@
 NS_IMPL_ISUPPORTS(nsParentalControlsService, nsIParentalControlsService)
 
 nsParentalControlsService::nsParentalControlsService() : mEnabled(false) {
-  mEnabled = CFPreferencesAppValueIsForced(CFSTR("restrictWeb"),
-                                           CFSTR("com.apple.familycontrols.contentfilter"));
+  mEnabled = CFPreferencesAppValueIsForced(
+      CFSTR("restrictWeb"), CFSTR("com.apple.familycontrols.contentfilter"));
 }
 
 nsParentalControlsService::~nsParentalControlsService() {}
@@ -37,13 +37,14 @@ nsParentalControlsService::GetLoggingEnabled(bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::Log(int16_t aEntryType, bool blocked, nsIURI* aSource,
-                               nsIFile* aTarget) {
+nsParentalControlsService::Log(int16_t aEntryType, bool blocked,
+                               nsIURI* aSource, nsIFile* aTarget) {
   // silently drop on the floor
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::IsAllowed(int16_t aAction, nsIURI* aUri, bool* _retval) {
+nsParentalControlsService::IsAllowed(int16_t aAction, nsIURI* aUri,
+                                     bool* _retval) {
   return NS_ERROR_NOT_AVAILABLE;
 }

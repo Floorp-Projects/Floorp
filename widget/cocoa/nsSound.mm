@@ -31,8 +31,9 @@ nsSound::Beep() {
 }
 
 NS_IMETHODIMP
-nsSound::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* context, nsresult aStatus,
-                          uint32_t dataLen, const uint8_t* data) {
+nsSound::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* context,
+                          nsresult aStatus, uint32_t dataLen,
+                          const uint8_t* data) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   NSData* value = [NSData dataWithBytes:data length:dataLen];
@@ -52,11 +53,12 @@ NS_IMETHODIMP
 nsSound::Play(nsIURL* aURL) {
   nsCOMPtr<nsIURI> uri(aURL);
   nsCOMPtr<nsIStreamLoader> loader;
-  return NS_NewStreamLoader(getter_AddRefs(loader), uri,
-                            this,  // aObserver
-                            nsContentUtils::GetSystemPrincipal(),
-                            nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-                            nsIContentPolicy::TYPE_OTHER);
+  return NS_NewStreamLoader(
+      getter_AddRefs(loader), uri,
+      this,  // aObserver
+      nsContentUtils::GetSystemPrincipal(),
+      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      nsIContentPolicy::TYPE_OTHER);
 }
 
 NS_IMETHODIMP

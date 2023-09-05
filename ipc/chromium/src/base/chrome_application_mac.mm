@@ -7,7 +7,8 @@
 #include "base/logging.h"
 
 @interface CrApplication ()
-@property(readwrite, getter=isHandlingSendEvent, nonatomic) BOOL handlingSendEvent;
+@property(readwrite, getter=isHandlingSendEvent, nonatomic)
+    BOOL handlingSendEvent;
 @end
 
 @implementation CrApplication
@@ -19,7 +20,8 @@
 + (NSApplication*)sharedApplication {
   NSApplication* app = [super sharedApplication];
   if (![NSApp isKindOfClass:self]) {
-    CHROMIUM_LOG(ERROR) << "NSApp should be of type " << [[self className] UTF8String] << ", not "
+    CHROMIUM_LOG(ERROR) << "NSApp should be of type "
+                        << [[self className] UTF8String] << ", not "
                         << [[NSApp className] UTF8String];
     DCHECK(false) << "NSApp is of wrong type";
   }
@@ -59,6 +61,8 @@ ScopedSendingEvent::ScopedSendingEvent()
   [app_ setHandlingSendEvent:YES];
 }
 
-ScopedSendingEvent::~ScopedSendingEvent() { [app_ setHandlingSendEvent:handling_]; }
+ScopedSendingEvent::~ScopedSendingEvent() {
+  [app_ setHandlingSendEvent:handling_];
+}
 
 }  // namespace chrome_application_mac

@@ -14,7 +14,8 @@
 using namespace mozilla::embedding;
 
 NS_IMETHODIMP
-nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings, PrintData* data) {
+nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings,
+                                              PrintData* data) {
   nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, data);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -32,9 +33,10 @@ nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings, Print
 }
 
 NS_IMETHODIMP
-nsPrintSettingsServiceX::DeserializeToPrintSettings(const PrintData& data,
-                                                    nsIPrintSettings* settings) {
-  nsresult rv = nsPrintSettingsService::DeserializeToPrintSettings(data, settings);
+nsPrintSettingsServiceX::DeserializeToPrintSettings(
+    const PrintData& data, nsIPrintSettings* settings) {
+  nsresult rv =
+      nsPrintSettingsService::DeserializeToPrintSettings(data, settings);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -50,11 +52,13 @@ nsPrintSettingsServiceX::DeserializeToPrintSettings(const PrintData& data,
   return NS_OK;
 }
 
-nsresult nsPrintSettingsServiceX::_CreatePrintSettings(nsIPrintSettings** _retval) {
+nsresult nsPrintSettingsServiceX::_CreatePrintSettings(
+    nsIPrintSettings** _retval) {
   nsresult rv;
   *_retval = nullptr;
 
-  nsPrintSettingsX* printSettings = new nsPrintSettingsX;  // does not initially ref count
+  nsPrintSettingsX* printSettings =
+      new nsPrintSettingsX;  // does not initially ref count
   NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*_retval = printSettings);
 
