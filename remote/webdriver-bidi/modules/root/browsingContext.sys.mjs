@@ -126,8 +126,9 @@ class BrowsingContextModule extends Module {
     this.#contextListener = new lazy.BrowsingContextListener();
     this.#contextListener.on("attached", this.#onContextAttached);
 
-    // Create the prompt listener and listen to "opened" events.
+    // Create the prompt listener and listen to "closed" and "opened" events.
     this.#promptListener = new lazy.PromptListener();
+    this.#promptListener.on("closed", this.#onPromptClosed);
     this.#promptListener.on("opened", this.#onPromptOpened);
 
     // Set of event names which have active subscriptions.
@@ -137,6 +138,10 @@ class BrowsingContextModule extends Module {
   destroy() {
     this.#contextListener.off("attached", this.#onContextAttached);
     this.#contextListener.destroy();
+
+    this.#promptListener.off("closed", this.#onPromptClosed);
+    this.#promptListener.off("opened", this.#onPromptOpened);
+    this.#promptListener.destroy();
 
     this.#subscribedEvents = null;
   }
@@ -1181,26 +1186,54 @@ class BrowsingContextModule extends Module {
     }
   };
 
-  #onPromptOpened = async (eventName, data) => {
-    const { contentBrowser, prompt } = data;
-    const contextId = lazy.TabManager.getIdForBrowser(contentBrowser);
-    // This event is emitted from the parent process but for a given browsing
-    // context. Set the event's contextInfo to the message handler corresponding
-    // to this browsing context.
-    const contextInfo = {
-      contextId,
-      type: lazy.WindowGlobalMessageHandler.type,
-    };
+  #onPromptClosed = async (eventName, data) => {
+    if (this.#subscribedEvents.has("browsingContext.userPromptClosed")) {
+      const { contentBrowser, detail } = data;
+      const contextId = lazy.TabManager.getIdForBrowser(contentBrowser);
 
-    this.emitEvent(
-      "browsingContext.userPromptOpened",
-      {
+      if (contextId === null) {
+        return;
+      }
+
+      // This event is emitted from the parent process but for a given browsing
+      // context. Set the event's contextInfo to the message handler corresponding
+      // to this browsing context.
+      const contextInfo = {
+        contextId,
+        type: lazy.WindowGlobalMessageHandler.type,
+      };
+
+      const params = {
         context: contextId,
-        type: prompt.promptType,
-        message: await prompt.getText(),
-      },
-      contextInfo
-    );
+        ...detail,
+      };
+
+      this.emitEvent("browsingContext.userPromptClosed", params, contextInfo);
+    }
+  };
+
+  #onPromptOpened = async (eventName, data) => {
+    if (this.#subscribedEvents.has("browsingContext.userPromptOpened")) {
+      const { contentBrowser, prompt } = data;
+      const contextId = lazy.TabManager.getIdForBrowser(contentBrowser);
+      // This event is emitted from the parent process but for a given browsing
+      // context. Set the event's contextInfo to the message handler corresponding
+      // to this browsing context.
+      const contextInfo = {
+        contextId,
+        type: lazy.WindowGlobalMessageHandler.type,
+      };
+
+      this.emitEvent(
+        "browsingContext.userPromptOpened",
+        {
+          context: contextId,
+          type: prompt.promptType,
+          message: await prompt.getText(),
+        },
+        contextInfo
+      );
+    }
   };
 
   #startListeningLocationChanged() {
@@ -1221,6 +1254,18 @@ class BrowsingContextModule extends Module {
     }
   }
 
+  #stopListeningToPromptEvent(event) {
+    this.#subscribedEvents.delete(event);
+
+    const hasPromptEvent =
+      this.#subscribedEvents.has("browsingContext.userPromptClosed") ||
+      this.#subscribedEvents.has("browsingContext.userPromptOpened");
+
+    if (!hasPromptEvent) {
+      this.#promptListener.stopListening();
+    }
+  }
+
   #subscribeEvent(event) {
     switch (event) {
       case "browsingContext.contextCreated": {
@@ -1230,6 +1275,11 @@ class BrowsingContextModule extends Module {
       }
       case "browsingContext.fragmentNavigated": {
         this.#startListeningLocationChanged();
+        this.#subscribedEvents.add(event);
+        break;
+      }
+      case "browsingContext.userPromptClosed": {
+        this.#promptListener.startListening();
         this.#subscribedEvents.add(event);
         break;
       }
@@ -1253,9 +1303,9 @@ class BrowsingContextModule extends Module {
         this.#subscribedEvents.delete(event);
         break;
       }
+      case "browsingContext.userPromptClosed":
       case "browsingContext.userPromptOpened": {
-        this.#promptListener.stopListening();
-        this.#subscribedEvents.delete(event);
+        this.#stopListeningToPromptEvent(event);
         break;
       }
     }
@@ -1296,6 +1346,7 @@ class BrowsingContextModule extends Module {
       "browsingContext.domContentLoaded",
       "browsingContext.fragmentNavigated",
       "browsingContext.load",
+      "browsingContext.userPromptClosed",
       "browsingContext.userPromptOpened",
     ];
   }

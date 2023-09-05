@@ -101,14 +101,20 @@ add_task(function test_handleCallbackOpenModalDialog() {
 
 add_task(function test_handleCallbackCloseModalDialog() {
   let observer = new modal.DialogObserver(() => mockCurBrowser);
+  const detail = {
+    areLeaving: true,
+    value: "text",
+  };
 
-  observer.add((action, dialog) => {
+  observer.add((action, eventDetail, contentBrowser) => {
     equal(action, modal.ACTION_CLOSED, "'closed' action has been passed");
-    equal(dialog, mockModalDialog, "dialog has been passed");
+    equal(detail, eventDetail, "dialog has been passed");
+    equal(contentBrowser, mockContentBrowser, "contentBrowser has been passed");
   });
   observer.handleEvent({
     type: "DOMModalDialogClosed",
-    target: mockModalDialog,
+    target: mockContentBrowser,
+    detail,
   });
 });
 
