@@ -65,6 +65,10 @@ class GeckoInstance(object):
         "dom.disable_beforeunload": True,
         # Enabling the support for File object creation in the content process.
         "dom.file.createInChild": True,
+        # Disable delayed user input event handling
+        "dom.input_events.security.minNumTicks": 0,
+        # Disable delayed user input event handling
+        "dom.input_events.security.minTimeElapsedInMS": 0,
         # Disable the ProcessHangMonitor
         "dom.ipc.reportProcessHangs": False,
         # No slow script dialogs

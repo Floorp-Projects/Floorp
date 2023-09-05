@@ -206,6 +206,10 @@ const COMMON_PREFERENCES = new Map([
   // Enabling the support for File object creation in the content process
   ["dom.file.createInChild", true],
 
+  // Disable delayed user input event handling
+  ["dom.input_events.security.minNumTicks", 0],
+  ["dom.input_events.security.minTimeElapsedInMS", 0],
+
   // Disable the ProcessHangMonitor
   ["dom.ipc.reportProcessHangs", false],
 
