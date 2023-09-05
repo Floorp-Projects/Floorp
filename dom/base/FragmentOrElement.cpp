@@ -1176,7 +1176,9 @@ void FragmentOrElement::SetTextContentInternal(const nsAString& aTextContent,
       tryReuse = firstChild->NodeType() == TEXT_NODE &&
                  !firstChild->GetNextSibling() &&
                  firstChild->OwnedOnlyByTheDOMAndFrameTrees() &&
+#ifdef ACCESSIBILITY
                  !GetAccService() &&
+#endif
                  !OwnerDoc()->MayHaveDOMMutationObservers() &&
                  !nsContentUtils::HasMutationListeners(
                      OwnerDoc(), NS_EVENT_BITS_MUTATION_ALL);
