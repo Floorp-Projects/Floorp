@@ -1,0 +1,65 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[Custom]
+typedef string RsJsonObject;
+
+namespace remote_settings {};
+
+dictionary RemoteSettingsConfig {
+    string? server_url = null;
+    string? bucket_name = null;
+    string collection_name;
+};
+
+dictionary RemoteSettingsResponse {
+    sequence<RemoteSettingsRecord> records;
+    u64 last_modified;
+};
+
+dictionary RemoteSettingsRecord {
+    string id;
+    u64 last_modified;
+    Attachment? attachment;
+    RsJsonObject fields;
+};
+
+dictionary Attachment {
+    string filename;
+    string mimetype;
+    string location;
+    string hash;
+    u64 size;
+};
+
+[Error]
+enum RemoteSettingsError {
+    "JSONError",
+    "FileError",
+    "ParseIntError",
+    "RequestError",
+    "UrlParsingError",
+    "BackoffError",
+    "ResponseError",
+    "AttachmentsUnsupportedError",
+};
+
+interface RemoteSettings {
+    // Construct a new Remote Settings client with the given configuration.
+    [Throws=RemoteSettingsError]
+    constructor(RemoteSettingsConfig remote_settings_config);
+
+    // Fetch all records for the configuration this client was initialized with.
+    [Throws=RemoteSettingsError]
+    RemoteSettingsResponse get_records();
+
+    // Fetch all records added to the server since the provided timestamp, 
+    // using the configuration this client was initialized with.
+    [Throws=RemoteSettingsError]
+    RemoteSettingsResponse get_records_since(u64 timestamp);
+
+    // Download an attachment with the provided id to the provided path.
+    [Throws=RemoteSettingsError]
+    void download_attachment_to_path(string attachment_id, string path);
+};

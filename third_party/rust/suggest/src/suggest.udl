@@ -1,0 +1,55 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+[External="remote_settings"]
+typedef extern RemoteSettingsConfig;
+
+namespace suggest {
+
+};
+
+[Error]
+interface SuggestApiError {
+    Other(string reason);
+};
+
+dictionary Suggestion {
+    i64 block_id;
+    string advertiser;
+    string iab_category;
+    boolean is_sponsored;
+    string full_keyword;
+    string title;
+    string url;
+    sequence<u8>? icon;
+    string? impression_url;
+    string? click_url;
+};
+
+dictionary SuggestionQuery {
+    string keyword;
+    boolean include_sponsored;
+    boolean include_non_sponsored;
+};
+
+dictionary SuggestIngestionConstraints {
+    u64? max_suggestions = null;
+};
+
+interface SuggestStore {
+    [Throws=SuggestApiError]
+    constructor([ByRef] string path, optional RemoteSettingsConfig? settings_config = null);
+
+    [Throws=SuggestApiError]
+    sequence<Suggestion> query(SuggestionQuery query);
+
+    void interrupt();
+
+    [Throws=SuggestApiError]
+    void ingest(SuggestIngestionConstraints constraints);
+
+    [Throws=SuggestApiError]
+    void clear();
+};
