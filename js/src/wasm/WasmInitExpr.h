@@ -31,6 +31,14 @@ namespace wasm {
 class Decoder;
 struct ModuleEnvironment;
 
+// Validates a constant expression. Returns an optional literal value if the
+// final value was from a simple instruction such as i32.const.
+[[nodiscard]] bool DecodeConstantExpression(
+    Decoder& d, ModuleEnvironment* env, ValType expected,
+    uint32_t
+        maxInitializedGlobalsIndexPlus1,  // typically env->globals.length()
+    Maybe<LitVal>* literal);
+
 enum class InitExprKind {
   None,
   Literal,
@@ -65,6 +73,14 @@ class InitExpr {
                                 ValType expected,
                                 uint32_t maxInitializedGlobalsIndexPlus1,
                                 InitExpr* expr);
+
+  // Decode and evaluate a constant expression at the current position of the
+  // decoder. Does not validate the expression first, since all InitExprs are
+  // required to have been validated. Failure conditions are the same as
+  // InitExpr::evaluate, i.e. failing only on OOM.
+  [[nodiscard]] static bool decodeAndEvaluate(
+      JSContext* cx, Handle<WasmInstanceObject*> instanceObj, Decoder& d,
+      MutableHandleVal result);
 
   // Evaluate the constant expresssion with the given context. This may only
   // fail due to an OOM, as all InitExpr's are required to have been validated.

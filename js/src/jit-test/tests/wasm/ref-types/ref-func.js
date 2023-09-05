@@ -167,8 +167,8 @@ function checkPassiveElemSegment(mangle, err) {
 
 checkPassiveElemSegment("");
 checkPassiveElemSegment("type", /bad type/);
-checkPassiveElemSegment("ref.func", /failed to read initializer operation/);
-checkPassiveElemSegment("end", /failed to read end of initializer expression/);
+checkPassiveElemSegment("ref.func", /unrecognized opcode/);
+checkPassiveElemSegment("end", /unrecognized opcode/);
 
 // Passive element segments can contain literal null values.
 

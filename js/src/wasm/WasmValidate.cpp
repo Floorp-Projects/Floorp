@@ -26,7 +26,9 @@
 #include "js/String.h"  // JS::MaxStringLength
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
+#include "wasm/WasmInitExpr.h"
 #include "wasm/WasmOpIter.h"
+#include "wasm/WasmTypeDecls.h"
 
 using namespace js;
 using namespace js::jit;
@@ -2691,6 +2693,160 @@ static inline ElemSegment::Kind NormalizeElemSegmentKind(
   MOZ_CRASH("unexpected elem segment kind");
 }
 
+static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
+  uint32_t segmentFlags;
+  if (!d.readVarU32(&segmentFlags)) {
+    return d.fail("expected elem segment flags field");
+  }
+
+  Maybe<ElemSegmentFlags> flags = ElemSegmentFlags::construct(segmentFlags);
+  if (!flags) {
+    return d.fail("invalid elem segment flags field");
+  }
+
+  MutableElemSegment seg = js_new<ElemSegment>();
+  if (!seg) {
+    return false;
+  }
+
+  ElemSegmentKind segmentKind = flags->kind();
+  seg->kind = NormalizeElemSegmentKind(segmentKind);
+
+  if (segmentKind == ElemSegmentKind::Active ||
+      segmentKind == ElemSegmentKind::ActiveWithTableIndex) {
+    if (env->tables.length() == 0) {
+      return d.fail("active elem segment requires a table");
+    }
+
+    uint32_t tableIndex = 0;
+    if (segmentKind == ElemSegmentKind::ActiveWithTableIndex &&
+        !d.readVarU32(&tableIndex)) {
+      return d.fail("expected table index");
+    }
+    if (tableIndex >= env->tables.length()) {
+      return d.fail("table index out of range for element segment");
+    }
+    seg->tableIndex = tableIndex;
+
+    InitExpr offset;
+    if (!InitExpr::decodeAndValidate(d, env, ValType::I32,
+                                     env->globals.length(), &offset)) {
+      return false;
+    }
+    seg->offsetIfActive.emplace(std::move(offset));
+  } else {
+    // Too many bugs result from keeping this value zero.  For passive
+    // or declared segments, there really is no table index, and we should
+    // never touch the field.
+    MOZ_ASSERT(segmentKind == ElemSegmentKind::Passive ||
+               segmentKind == ElemSegmentKind::Declared);
+    seg->tableIndex = (uint32_t)-1;
+  }
+
+  ElemSegmentPayload payload = flags->payload();
+  RefType elemType;
+
+  // `ActiveWithTableIndex`, `Declared`, and `Passive` element segments encode
+  // the type or definition kind of the payload. `Active` element segments are
+  // restricted to MVP behavior, which assumes only function indices.
+  if (segmentKind == ElemSegmentKind::Active) {
+    elemType = RefType::func();
+  } else {
+    switch (payload) {
+      case ElemSegmentPayload::Expressions: {
+        if (!d.readRefType(*env->types, env->features, &elemType)) {
+          return false;
+        }
+      } break;
+      case ElemSegmentPayload::Indices: {
+        uint8_t elemKind;
+        if (!d.readFixedU8(&elemKind)) {
+          return d.fail("expected element kind");
+        }
+
+        if (elemKind != uint8_t(DefinitionKind::Function)) {
+          return d.fail("invalid element kind");
+        }
+        elemType = RefType::func();
+      } break;
+    }
+  }
+
+  // For active segments, check if the element type is compatible with the
+  // destination table type.
+  if (seg->active()) {
+    RefType tblElemType = env->tables[seg->tableIndex].elemType;
+    if (!CheckIsSubtypeOf(d, *env, d.currentOffset(),
+                          ValType(elemType).fieldType(),
+                          ValType(tblElemType).fieldType())) {
+      return false;
+    }
+  }
+  seg->elemType = elemType;
+
+  uint32_t numElems;
+  if (!d.readVarU32(&numElems)) {
+    return d.fail("expected element segment size");
+  }
+
+  if (numElems > MaxElemSegmentLength) {
+    return d.fail("too many elements in element segment");
+  }
+
+  bool isAsmJS = seg->active() && env->tables[seg->tableIndex].isAsmJS;
+
+  switch (payload) {
+    case ElemSegmentPayload::Indices: {
+      seg->encoding = ElemSegment::Encoding::Indices;
+      if (!seg->elemIndices.reserve(numElems)) {
+        return false;
+      }
+
+      for (uint32_t i = 0; i < numElems; i++) {
+        uint32_t elemIndex;
+        if (!d.readVarU32(&elemIndex)) {
+          return d.fail("failed to read element index");
+        }
+        // The only valid type of index right now is a function index.
+        if (elemIndex >= env->numFuncs()) {
+          return d.fail("element index out of range");
+        }
+
+        seg->elemIndices.infallibleAppend(elemIndex);
+        if (!isAsmJS) {
+          env->declareFuncExported(elemIndex, /*eager=*/false,
+                                   /*canRefFunc=*/true);
+        }
+      }
+    } break;
+    case ElemSegmentPayload::Expressions: {
+      seg->encoding = ElemSegment::Encoding::Expressions;
+      size_t exprsStartOffset = d.currentOffset();
+      const uint8_t* exprsStart = d.currentPosition();
+      seg->elemExpressions.count = numElems;
+      for (uint32_t i = 0; i < numElems; i++) {
+        size_t exprOffset = d.currentOffset();
+        Maybe<LitVal> unusedLiteral;
+        if (!DecodeConstantExpression(d, env, elemType, env->globals.length(),
+                                      &unusedLiteral)) {
+          return false;
+        }
+        if (!seg->elemExpressions.exprOffsets.append(exprOffset -
+                                                     exprsStartOffset)) {
+          return false;
+        }
+      }
+      const uint8_t* exprsEnd = d.currentPosition();
+      if (!seg->elemExpressions.exprBytes.append(exprsStart, exprsEnd)) {
+        return false;
+      }
+    } break;
+  }
+
+  env->elemSegments.infallibleAppend(std::move(seg));
+  return true;
+}
+
 static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
   if (!d.startSection(SectionId::Elem, env, &range, "elem")) {
@@ -2714,182 +2870,9 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
   }
 
   for (uint32_t i = 0; i < numSegments; i++) {
-    uint32_t segmentFlags;
-    if (!d.readVarU32(&segmentFlags)) {
-      return d.fail("expected elem segment flags field");
-    }
-
-    Maybe<ElemSegmentFlags> flags = ElemSegmentFlags::construct(segmentFlags);
-    if (!flags) {
-      return d.fail("invalid elem segment flags field");
-    }
-
-    MutableElemSegment seg = js_new<ElemSegment>();
-    if (!seg) {
+    if (!DecodeElemSegment(d, env)) {
       return false;
     }
-
-    ElemSegmentKind kind = flags->kind();
-    seg->kind = NormalizeElemSegmentKind(kind);
-
-    if (kind == ElemSegmentKind::Active ||
-        kind == ElemSegmentKind::ActiveWithTableIndex) {
-      if (env->tables.length() == 0) {
-        return d.fail("active elem segment requires a table");
-      }
-
-      uint32_t tableIndex = 0;
-      if (kind == ElemSegmentKind::ActiveWithTableIndex &&
-          !d.readVarU32(&tableIndex)) {
-        return d.fail("expected table index");
-      }
-      if (tableIndex >= env->tables.length()) {
-        return d.fail("table index out of range for element segment");
-      }
-      seg->tableIndex = tableIndex;
-
-      InitExpr offset;
-      if (!InitExpr::decodeAndValidate(d, env, ValType::I32,
-                                       env->globals.length(), &offset)) {
-        return false;
-      }
-      seg->offsetIfActive.emplace(std::move(offset));
-    } else {
-      // Too many bugs result from keeping this value zero.  For passive
-      // or declared segments, there really is no table index, and we should
-      // never touch the field.
-      MOZ_ASSERT(kind == ElemSegmentKind::Passive ||
-                 kind == ElemSegmentKind::Declared);
-      seg->tableIndex = (uint32_t)-1;
-    }
-
-    ElemSegmentPayload payload = flags->payload();
-    RefType elemType;
-
-    // `ActiveWithTableIndex`, `Declared`, and `Passive` element segments encode
-    // the type or definition kind of the payload. `Active` element segments are
-    // restricted to MVP behavior, which assumes only function indices.
-    if (kind == ElemSegmentKind::Active) {
-      elemType = RefType::func();
-    } else {
-      switch (payload) {
-        case ElemSegmentPayload::ElemExpression: {
-          if (!d.readRefType(*env->types, env->features, &elemType)) {
-            return false;
-          }
-          break;
-        }
-        case ElemSegmentPayload::ExternIndex: {
-          uint8_t form;
-          if (!d.readFixedU8(&form)) {
-            return d.fail("expected type or extern kind");
-          }
-
-          if (form != uint8_t(DefinitionKind::Function)) {
-            return d.fail(
-                "segments with extern indices can only contain function "
-                "references");
-          }
-          elemType = RefType::func();
-        }
-      }
-    }
-
-    // Check constraints on the element type.
-    switch (kind) {
-      case ElemSegmentKind::Active:
-      case ElemSegmentKind::ActiveWithTableIndex: {
-        RefType tblElemType = env->tables[seg->tableIndex].elemType;
-        if (!CheckIsSubtypeOf(d, *env, d.currentOffset(),
-                              ValType(elemType).fieldType(),
-                              ValType(tblElemType).fieldType())) {
-          return false;
-        }
-        break;
-      }
-      case ElemSegmentKind::Declared:
-      case ElemSegmentKind::Passive: {
-        // Passive segment element types are checked when used with a
-        // `table.init` instruction.
-        break;
-      }
-    }
-    seg->elemType = elemType;
-
-    uint32_t numElems;
-    if (!d.readVarU32(&numElems)) {
-      return d.fail("expected segment size");
-    }
-
-    if (numElems > MaxElemSegmentLength) {
-      return d.fail("too many table elements");
-    }
-
-    if (!seg->elemFuncIndices.reserve(numElems)) {
-      return false;
-    }
-
-    bool isAsmJS = seg->active() && env->tables[seg->tableIndex].isAsmJS;
-
-    // For passive segments we should use InitExpr but we don't really want to
-    // generalize the ElemSection data structure yet, so instead read the
-    // required Ref.Func and End here.
-
-    for (uint32_t i = 0; i < numElems; i++) {
-      bool needIndex = true;
-
-      if (payload == ElemSegmentPayload::ElemExpression) {
-        OpBytes op;
-        if (!d.readOp(&op)) {
-          return d.fail("failed to read initializer operation");
-        }
-
-        RefType initType = RefType::extern_();
-        switch (op.b0) {
-          case uint16_t(Op::RefFunc):
-            initType = RefType::func();
-            break;
-          case uint16_t(Op::RefNull):
-            if (!d.readHeapType(*env->types, env->features, true, &initType)) {
-              return false;
-            }
-            needIndex = false;
-            break;
-          default:
-            return d.fail("failed to read initializer operation");
-        }
-        if (!CheckIsSubtypeOf(d, *env, d.currentOffset(),
-                              ValType(initType).fieldType(),
-                              ValType(elemType).fieldType())) {
-          return false;
-        }
-      }
-
-      uint32_t funcIndex = NullFuncIndex;
-      if (needIndex) {
-        if (!d.readVarU32(&funcIndex)) {
-          return d.fail("failed to read element function index");
-        }
-        if (funcIndex >= env->numFuncs()) {
-          return d.fail("table element out of range");
-        }
-      }
-
-      if (payload == ElemSegmentPayload::ElemExpression) {
-        OpBytes end;
-        if (!d.readOp(&end) || end.b0 != uint16_t(Op::End)) {
-          return d.fail("failed to read end of initializer expression");
-        }
-      }
-
-      seg->elemFuncIndices.infallibleAppend(funcIndex);
-      if (funcIndex != NullFuncIndex && !isAsmJS) {
-        env->declareFuncExported(funcIndex, /* eager */ false,
-                                 /* canRefFunc */ true);
-      }
-    }
-
-    env->elemSegments.infallibleAppend(std::move(seg));
   }
 
   return d.finishSection(*range, "elem");

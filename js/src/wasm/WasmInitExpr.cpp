@@ -34,208 +34,6 @@
 using namespace js;
 using namespace js::wasm;
 
-static bool ValidateInitExpr(Decoder& d, ModuleEnvironment* env,
-                             ValType expected,
-                             uint32_t maxInitializedGlobalsIndexPlus1,
-                             Maybe<LitVal>* literal) {
-  ValidatingOpIter iter(*env, d, ValidatingOpIter::InitExpr);
-
-  if (!iter.startInitExpr(expected, maxInitializedGlobalsIndexPlus1)) {
-    return false;
-  }
-
-  // Perform trivial constant recovery, this is done so that codegen may
-  // generate optimal code for global.get on immutable globals with simple
-  // initializers.
-  //
-  // We simply update the last seen literal value while validating an
-  // instruction with a literal value, and clear the literal value when
-  // validating an instruction with a dynamic value. The last value is the
-  // literal for this init expressions, if any. This is correct because there
-  // are no drops or control flow allowed in init expressions.
-  *literal = Nothing();
-
-  while (true) {
-    OpBytes op;
-    if (!iter.readOp(&op)) {
-      return false;
-    }
-
-#if defined(ENABLE_WASM_EXTENDED_CONST) || defined(ENABLE_WASM_GC)
-    Nothing nothing;
-#endif
-    NothingVector nothings{};
-    ResultType unusedType;
-
-    switch (op.b0) {
-      case uint16_t(Op::End): {
-        LabelKind kind;
-        if (!iter.readEnd(&kind, &unusedType, &nothings, &nothings)) {
-          return false;
-        }
-        MOZ_ASSERT(kind == LabelKind::Body);
-        iter.popEnd();
-        if (iter.controlStackEmpty()) {
-          return iter.endInitExpr();
-        }
-        break;
-      }
-      case uint16_t(Op::GlobalGet): {
-        uint32_t index;
-        if (!iter.readGetGlobal(&index)) {
-          return false;
-        }
-        *literal = Nothing();
-        break;
-      }
-      case uint16_t(Op::I32Const): {
-        int32_t c;
-        if (!iter.readI32Const(&c)) {
-          return false;
-        }
-        *literal = Some(LitVal(uint32_t(c)));
-        break;
-      }
-      case uint16_t(Op::I64Const): {
-        int64_t c;
-        if (!iter.readI64Const(&c)) {
-          return false;
-        }
-        *literal = Some(LitVal(uint64_t(c)));
-        break;
-      }
-      case uint16_t(Op::F32Const): {
-        float c;
-        if (!iter.readF32Const(&c)) {
-          return false;
-        }
-        *literal = Some(LitVal(c));
-        break;
-      }
-      case uint16_t(Op::F64Const): {
-        double c;
-        if (!iter.readF64Const(&c)) {
-          return false;
-        }
-        *literal = Some(LitVal(c));
-        break;
-      }
-#ifdef ENABLE_WASM_SIMD
-      case uint16_t(Op::SimdPrefix): {
-        if (!env->simdAvailable()) {
-          return d.fail("v128 not enabled");
-        }
-        if (op.b1 != uint32_t(SimdOp::V128Const)) {
-          return iter.unrecognizedOpcode(&op);
-        }
-        V128 c;
-        if (!iter.readV128Const(&c)) {
-          return false;
-        }
-        *literal = Some(LitVal(c));
-        break;
-      }
-#endif
-      case uint16_t(Op::RefFunc): {
-        uint32_t funcIndex;
-        if (!iter.readRefFunc(&funcIndex)) {
-          return false;
-        }
-        env->declareFuncExported(funcIndex, /* eager */ false,
-                                 /* canRefFunc */ true);
-        *literal = Nothing();
-        break;
-      }
-      case uint16_t(Op::RefNull): {
-        RefType type;
-        if (!iter.readRefNull(&type)) {
-          return false;
-        }
-        *literal = Some(LitVal(ValType(type)));
-        break;
-      }
-#ifdef ENABLE_WASM_EXTENDED_CONST
-      case uint16_t(Op::I32Add):
-      case uint16_t(Op::I32Sub):
-      case uint16_t(Op::I32Mul): {
-        if (!env->extendedConstEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
-        if (!iter.readBinary(ValType::I32, &nothing, &nothing)) {
-          return false;
-        }
-        *literal = Nothing();
-        break;
-      }
-      case uint16_t(Op::I64Add):
-      case uint16_t(Op::I64Sub):
-      case uint16_t(Op::I64Mul): {
-        if (!env->extendedConstEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
-        if (!iter.readBinary(ValType::I64, &nothing, &nothing)) {
-          return false;
-        }
-        *literal = Nothing();
-        break;
-      }
-#endif
-#ifdef ENABLE_WASM_GC
-      case uint16_t(Op::GcPrefix): {
-        if (!env->gcEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
-        switch (op.b1) {
-          case uint32_t(GcOp::StructNew): {
-            uint32_t typeIndex;
-            if (!iter.readStructNew(&typeIndex, &nothings)) {
-              return false;
-            }
-            break;
-          }
-          case uint32_t(GcOp::StructNewDefault): {
-            uint32_t typeIndex;
-            if (!iter.readStructNewDefault(&typeIndex)) {
-              return false;
-            }
-            break;
-          }
-          case uint32_t(GcOp::ArrayNew): {
-            uint32_t typeIndex;
-            if (!iter.readArrayNew(&typeIndex, &nothing, &nothing)) {
-              return false;
-            }
-            break;
-          }
-          case uint32_t(GcOp::ArrayNewFixed): {
-            uint32_t typeIndex, len;
-            if (!iter.readArrayNewFixed(&typeIndex, &len, &nothings)) {
-              return false;
-            }
-            break;
-          }
-          case uint32_t(GcOp::ArrayNewDefault): {
-            uint32_t typeIndex;
-            if (!iter.readArrayNewDefault(&typeIndex, &nothing)) {
-              return false;
-            }
-            break;
-          }
-          default: {
-            return iter.unrecognizedOpcode(&op);
-          }
-        }
-        *literal = Nothing();
-        break;
-      }
-#endif
-      default: {
-        return iter.unrecognizedOpcode(&op);
-      }
-    }
-  }
-}
-
 class MOZ_STACK_CLASS InitExprInterpreter {
  public:
   explicit InitExprInterpreter(JSContext* cx,
@@ -598,14 +396,216 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
 #undef CHECK
 }
 
+bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
+                                    ValType expected,
+                                    uint32_t maxInitializedGlobalsIndexPlus1,
+                                    Maybe<LitVal>* literal) {
+  ValidatingOpIter iter(*env, d, ValidatingOpIter::InitExpr);
+
+  if (!iter.startInitExpr(expected, maxInitializedGlobalsIndexPlus1)) {
+    return false;
+  }
+
+  // Perform trivial constant recovery, this is done so that codegen may
+  // generate optimal code for global.get on immutable globals with simple
+  // initializers.
+  //
+  // We simply update the last seen literal value while validating an
+  // instruction with a literal value, and clear the literal value when
+  // validating an instruction with a dynamic value. The last value is the
+  // literal for this init expressions, if any. This is correct because there
+  // are no drops or control flow allowed in init expressions.
+  *literal = Nothing();
+
+  while (true) {
+    OpBytes op;
+    if (!iter.readOp(&op)) {
+      return false;
+    }
+
+#if defined(ENABLE_WASM_EXTENDED_CONST) || defined(ENABLE_WASM_GC)
+    Nothing nothing;
+#endif
+    NothingVector nothings{};
+    ResultType unusedType;
+
+    switch (op.b0) {
+      case uint16_t(Op::End): {
+        LabelKind kind;
+        if (!iter.readEnd(&kind, &unusedType, &nothings, &nothings)) {
+          return false;
+        }
+        MOZ_ASSERT(kind == LabelKind::Body);
+        iter.popEnd();
+        if (iter.controlStackEmpty()) {
+          return iter.endInitExpr();
+        }
+        break;
+      }
+      case uint16_t(Op::GlobalGet): {
+        uint32_t index;
+        if (!iter.readGetGlobal(&index)) {
+          return false;
+        }
+        *literal = Nothing();
+        break;
+      }
+      case uint16_t(Op::I32Const): {
+        int32_t c;
+        if (!iter.readI32Const(&c)) {
+          return false;
+        }
+        *literal = Some(LitVal(uint32_t(c)));
+        break;
+      }
+      case uint16_t(Op::I64Const): {
+        int64_t c;
+        if (!iter.readI64Const(&c)) {
+          return false;
+        }
+        *literal = Some(LitVal(uint64_t(c)));
+        break;
+      }
+      case uint16_t(Op::F32Const): {
+        float c;
+        if (!iter.readF32Const(&c)) {
+          return false;
+        }
+        *literal = Some(LitVal(c));
+        break;
+      }
+      case uint16_t(Op::F64Const): {
+        double c;
+        if (!iter.readF64Const(&c)) {
+          return false;
+        }
+        *literal = Some(LitVal(c));
+        break;
+      }
+#ifdef ENABLE_WASM_SIMD
+      case uint16_t(Op::SimdPrefix): {
+        if (!env->simdAvailable()) {
+          return d.fail("v128 not enabled");
+        }
+        if (op.b1 != uint32_t(SimdOp::V128Const)) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        V128 c;
+        if (!iter.readV128Const(&c)) {
+          return false;
+        }
+        *literal = Some(LitVal(c));
+        break;
+      }
+#endif
+      case uint16_t(Op::RefFunc): {
+        uint32_t funcIndex;
+        if (!iter.readRefFunc(&funcIndex)) {
+          return false;
+        }
+        env->declareFuncExported(funcIndex, /* eager */ false,
+                                 /* canRefFunc */ true);
+        *literal = Nothing();
+        break;
+      }
+      case uint16_t(Op::RefNull): {
+        RefType type;
+        if (!iter.readRefNull(&type)) {
+          return false;
+        }
+        *literal = Some(LitVal(ValType(type)));
+        break;
+      }
+#ifdef ENABLE_WASM_EXTENDED_CONST
+      case uint16_t(Op::I32Add):
+      case uint16_t(Op::I32Sub):
+      case uint16_t(Op::I32Mul): {
+        if (!env->extendedConstEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        if (!iter.readBinary(ValType::I32, &nothing, &nothing)) {
+          return false;
+        }
+        *literal = Nothing();
+        break;
+      }
+      case uint16_t(Op::I64Add):
+      case uint16_t(Op::I64Sub):
+      case uint16_t(Op::I64Mul): {
+        if (!env->extendedConstEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        if (!iter.readBinary(ValType::I64, &nothing, &nothing)) {
+          return false;
+        }
+        *literal = Nothing();
+        break;
+      }
+#endif
+#ifdef ENABLE_WASM_GC
+      case uint16_t(Op::GcPrefix): {
+        if (!env->gcEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        switch (op.b1) {
+          case uint32_t(GcOp::StructNew): {
+            uint32_t typeIndex;
+            if (!iter.readStructNew(&typeIndex, &nothings)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::StructNewDefault): {
+            uint32_t typeIndex;
+            if (!iter.readStructNewDefault(&typeIndex)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::ArrayNew): {
+            uint32_t typeIndex;
+            if (!iter.readArrayNew(&typeIndex, &nothing, &nothing)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::ArrayNewFixed): {
+            uint32_t typeIndex, len;
+            if (!iter.readArrayNewFixed(&typeIndex, &len, &nothings)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::ArrayNewDefault): {
+            uint32_t typeIndex;
+            if (!iter.readArrayNewDefault(&typeIndex, &nothing)) {
+              return false;
+            }
+            break;
+          }
+          default: {
+            return iter.unrecognizedOpcode(&op);
+          }
+        }
+        *literal = Nothing();
+        break;
+      }
+#endif
+      default: {
+        return iter.unrecognizedOpcode(&op);
+      }
+    }
+  }
+}
+
 bool InitExpr::decodeAndValidate(Decoder& d, ModuleEnvironment* env,
                                  ValType expected,
                                  uint32_t maxInitializedGlobalsIndexPlus1,
                                  InitExpr* expr) {
   Maybe<LitVal> literal = Nothing();
   const uint8_t* exprStart = d.currentPosition();
-  if (!ValidateInitExpr(d, env, expected, maxInitializedGlobalsIndexPlus1,
-                        &literal)) {
+  if (!DecodeConstantExpression(d, env, expected,
+                                maxInitializedGlobalsIndexPlus1, &literal)) {
     return false;
   }
   const uint8_t* exprEnd = d.currentPosition();
@@ -625,6 +625,18 @@ bool InitExpr::decodeAndValidate(Decoder& d, ModuleEnvironment* env,
          expr->bytecode_.append(exprStart, exprEnd);
 }
 
+bool InitExpr::decodeAndEvaluate(JSContext* cx,
+                                 Handle<WasmInstanceObject*> instanceObj,
+                                 Decoder& d, MutableHandleVal result) {
+  InitExprInterpreter interp(cx, instanceObj);
+  if (!interp.evaluate(cx, d)) {
+    return false;
+  }
+
+  result.set(interp.result());
+  return true;
+}
+
 bool InitExpr::evaluate(JSContext* cx, Handle<WasmInstanceObject*> instanceObj,
                         MutableHandleVal result) const {
   MOZ_ASSERT(kind_ != InitExprKind::None);
@@ -636,15 +648,13 @@ bool InitExpr::evaluate(JSContext* cx, Handle<WasmInstanceObject*> instanceObj,
 
   UniqueChars error;
   Decoder d(bytecode_.begin(), bytecode_.end(), 0, &error);
-  InitExprInterpreter interp(cx, instanceObj);
-  if (!interp.evaluate(cx, d)) {
+  if (!decodeAndEvaluate(cx, instanceObj, d, result)) {
     // This expression should have been validated already. So we should only be
     // able to OOM, which is reported by having no error message.
     MOZ_RELEASE_ASSERT(!error);
     return false;
   }
 
-  result.set(interp.result());
   return true;
 }
 

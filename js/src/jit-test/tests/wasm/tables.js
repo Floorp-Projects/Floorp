@@ -14,8 +14,8 @@ function assertSegmentFitError(f) {
 var callee = i => `(func $f${i} (result i32) (i32.const ${i}))`;
 
 wasmFailValidateText(`(module (elem (i32.const 0) $f0) ${callee(0)})`, /elem segment requires a table/);
-wasmFailValidateText(`(module (table 10 funcref) (elem (i32.const 0) 0))`, /table element out of range/);
-wasmFailValidateText(`(module (table 10 funcref) (func) (elem (i32.const 0) 0 1))`, /table element out of range/);
+wasmFailValidateText(`(module (table 10 funcref) (elem (i32.const 0) 0))`, /element index out of range/);
+wasmFailValidateText(`(module (table 10 funcref) (func) (elem (i32.const 0) 0 1))`, /element index out of range/);
 wasmFailValidateText(`(module (table 10 funcref) (func) (elem (f32.const 0) 0) ${callee(0)})`, /type mismatch/);
 
 assertSegmentFitError(() => wasmEvalText(`(module (table 10 funcref) (elem (i32.const 10) $f0) ${callee(0)})`));
@@ -305,4 +305,96 @@ assertEq(tbl.get(0).foo, 42);
     assertErrorMessage(() => new WebAssembly.Module(makeIt(0x02, 0x01)),
                        WebAssembly.CompileError,
                        /table index out of range/);
+}
+
+// table of externref
+{
+    const myArray = ["yay", "arrays"];
+    const { set, get } = wasmEvalText(`(module
+        (table $t 2 externref)
+
+        (func (export "set") (param i32 externref)
+            (table.set $t (local.get 0) (local.get 1))
+        )
+        (func (export "get") (param i32) (result externref)
+            (table.get $t (local.get 0))
+        )
+    )`).exports;
+    assertEq(get(0), null);
+    assertEq(get(1), null);
+    set(0, "hello");
+    set(1, myArray);
+    assertEq(get(0), "hello");
+    assertEq(get(1), myArray);
+}
+
+// table of externref with active element segment
+{
+    const myArray = ["yay", "arrays"];
+    const { get } = wasmEvalText(`(module
+        (global (import "test" "g1") externref)
+        (global (import "test" "g2") externref)
+        (table $t externref (elem (global.get 0) (global.get 1)))
+
+        (func (export "get") (param i32) (result externref)
+            (table.get $t (local.get 0))
+        )
+    )`, { test: { g1: "hello", g2: myArray } }).exports;
+    assertEq(get(0), "hello");
+    assertEq(get(1), myArray);
+}
+
+// passive element segment of externref
+{
+    const myArray = ["yay", "arrays"];
+    const { get } = wasmEvalText(`(module
+        (global (import "test" "g1") externref)
+        (global (import "test" "g2") externref)
+        (table $t 2 externref)
+        (elem $e externref (global.get 0) (global.get 1))
+
+        (func $start
+            (table.init $t $e (i32.const 0) (i32.const 0) (table.size $t))
+        )
+        (func (export "get") (param i32) (result externref)
+            (table.get $t (local.get 0))
+        )
+
+        (start $start)
+    )`, { test: { g1: "hello", g2: myArray } }).exports;
+    assertEq(get(0), "hello");
+    assertEq(get(1), myArray);
+}
+
+// declared element segment of externref (literally useless but legal!)
+{
+    const myArray = ["yay", "arrays"];
+    wasmEvalText(`(module
+        (global (import "test" "g1") externref)
+        (global (import "test" "g2") externref)
+        (elem $e declare externref (global.get 0) (global.get 1))
+    )`, { test: { g1: "hello", g2: myArray } });
+}
+
+// result types are validated in element expressions
+{
+    assertErrorMessage(() => wasmEvalText(`(module
+        (elem $e externref (ref.func 0))
+        (func)
+    )`), WebAssembly.CompileError, /expression has type funcref but expected externref/);
+}
+
+// mutable globals are rejected (global.get is constant only if the global is constant)
+{
+    assertErrorMessage(() => {
+        wasmEvalText(`(module
+            (global (import "test" "g1") (mut externref))
+            (global (import "test" "g2") (mut externref))
+            (table $t externref (elem (global.get 0) (global.get 1)))
+
+            (func (export "get") (param i32) (result externref)
+                (table.get $t (local.get 0))
+            )
+        )`, { test: { g1: "hello", g2: ["yay", "arrays"] } });
+    }, WebAssembly.CompileError, /global.get in initializer expression must reference a global immutable import/);
 }

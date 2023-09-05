@@ -712,13 +712,17 @@ CoderResult CodeTagDesc(Coder<mode>& coder, CoderArg<mode, TagDesc> item) {
 template <CoderMode mode>
 CoderResult CodeElemSegment(Coder<mode>& coder,
                             CoderArg<mode, ElemSegment> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ElemSegment, 184);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::ElemSegment, 280);
   MOZ_TRY(CodePod(coder, &item->kind));
   MOZ_TRY(CodePod(coder, &item->tableIndex));
   MOZ_TRY(CodeRefType(coder, &item->elemType));
   MOZ_TRY((CodeMaybe<mode, InitExpr, &CodeInitExpr<mode>>(
       coder, &item->offsetIfActive)));
-  MOZ_TRY(CodePodVector(coder, &item->elemFuncIndices));
+  MOZ_TRY(CodePod(coder, &item->encoding));
+  MOZ_TRY(CodePodVector(coder, &item->elemIndices));
+  MOZ_TRY(CodePod(coder, &item->elemExpressions.count));
+  MOZ_TRY(CodePodVector(coder, &item->elemExpressions.exprBytes));
+  MOZ_TRY(CodePodVector(coder, &item->elemExpressions.exprOffsets));
   return Ok();
 }
 

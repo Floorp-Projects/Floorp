@@ -50,9 +50,11 @@
 #include "wasm/WasmDebug.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmGcObject.h"
+#include "wasm/WasmInitExpr.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmModule.h"
+#include "wasm/WasmModuleTypes.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmTypeDef.h"
 #include "wasm/WasmValType.h"
@@ -872,7 +874,7 @@ bool Instance::initSegments(JSContext* cx,
         return false;  // OOM
       }
       uint32_t offset = offsetVal.get().i32();
-      uint32_t count = seg->length();
+      uint32_t count = seg->numElements();
 
       uint32_t tableLength = tables()[seg->tableIndex]->length();
       if (offset > tableLength || tableLength - offset < count) {
@@ -923,61 +925,93 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   MOZ_ASSERT(dstOffset <= table.length());
   MOZ_ASSERT(len <= table.length() - dstOffset);
 
-  Tier tier = code().bestTier();
-  const MetadataTier& metadataTier = metadata(tier);
-  const FuncImportVector& funcImports = metadataTier.funcImports;
-  const CodeRangeVector& codeRanges = metadataTier.codeRanges;
-  const Uint32Vector& funcToCodeRange = metadataTier.funcToCodeRange;
-  const Uint32Vector& elemFuncIndices = seg.elemFuncIndices;
-  MOZ_ASSERT(srcOffset <= elemFuncIndices.length());
-  MOZ_ASSERT(len <= elemFuncIndices.length() - srcOffset);
+  Rooted<WasmInstanceObject*> instanceObj(cx(), object());
+  MOZ_ASSERT(srcOffset <= seg.numElements());
+  MOZ_ASSERT(len <= seg.numElements() - srcOffset);
 
-  uint8_t* codeBaseTier = codeBase(tier);
-  for (uint32_t i = 0; i < len; i++) {
-    uint32_t funcIndex = elemFuncIndices[srcOffset + i];
-    if (funcIndex == NullFuncIndex) {
-      table.setNull(dstOffset + i);
-    } else if (!table.isFunction()) {
-      // Note, fnref must be rooted if we do anything more than just store it.
-      void* fnref = Instance::refFunc(this, funcIndex);
-      if (fnref == AnyRef::invalid().forCompiledCode()) {
-        return false;  // OOM, which has already been reported.
-      }
-      table.fillAnyRef(dstOffset + i, 1, AnyRef::fromCompiledCode(fnref));
-    } else {
-      if (funcIndex < metadataTier.funcImports.length()) {
-        FuncImportInstanceData& import =
-            funcImportInstanceData(funcImports[funcIndex]);
-        MOZ_ASSERT(import.callable->isCallable());
-        if (import.callable->is<JSFunction>()) {
-          JSFunction* fun = &import.callable->as<JSFunction>();
-          if (IsWasmExportedFunction(fun)) {
-            // This element is a wasm function imported from another
-            // instance. To preserve the === function identity required by
-            // the JS embedding spec, we must set the element to the
-            // imported function's underlying CodeRange.funcCheckedCallEntry and
-            // Instance so that future Table.get()s produce the same
-            // function object as was imported.
-            WasmInstanceObject* calleeInstanceObj =
-                ExportedFunctionToInstanceObject(fun);
-            Instance& calleeInstance = calleeInstanceObj->instance();
-            Tier calleeTier = calleeInstance.code().bestTier();
-            const CodeRange& calleeCodeRange =
-                calleeInstanceObj->getExportedFunctionCodeRange(fun,
-                                                                calleeTier);
-            void* code = calleeInstance.codeBase(calleeTier) +
-                         calleeCodeRange.funcCheckedCallEntry();
-            table.setFuncRef(dstOffset + i, code, &calleeInstance);
-            continue;
+  if (len == 0) {
+    return true;
+  }
+
+  switch (seg.encoding) {
+    case ElemSegment::Encoding::Indices: {
+      // The only types of indices that exist right now are function indices, so
+      // this code is specialized to functions.
+
+      Tier tier = code().bestTier();
+      const MetadataTier& metadataTier = metadata(tier);
+      const FuncImportVector& funcImports = metadataTier.funcImports;
+      const CodeRangeVector& codeRanges = metadataTier.codeRanges;
+      const Uint32Vector& funcToCodeRange = metadataTier.funcToCodeRange;
+      const Uint32Vector& elemIndices = seg.elemIndices;
+
+      uint8_t* codeBaseTier = codeBase(tier);
+      for (uint32_t i = 0; i < len; i++) {
+        uint32_t elemIndex = elemIndices[srcOffset + i];
+        if (!table.isFunction()) {
+          // Note, fnref must be rooted if we do anything more than just store
+          // it.
+          void* fnref = Instance::refFunc(this, elemIndex);
+          if (fnref == AnyRef::invalid().forCompiledCode()) {
+            return false;  // OOM, which has already been reported.
           }
+          table.fillAnyRef(dstOffset + i, 1, AnyRef::fromCompiledCode(fnref));
+        } else {
+          if (elemIndex < metadataTier.funcImports.length()) {
+            FuncImportInstanceData& import =
+                funcImportInstanceData(funcImports[elemIndex]);
+            MOZ_ASSERT(import.callable->isCallable());
+            if (import.callable->is<JSFunction>()) {
+              JSFunction* fun = &import.callable->as<JSFunction>();
+              if (IsWasmExportedFunction(fun)) {
+                table.setFuncRef(dstOffset + i, fun);
+                continue;
+              }
+            }
+          }
+          void* code =
+              codeBaseTier +
+              codeRanges[funcToCodeRange[elemIndex]].funcCheckedCallEntry();
+          table.setFuncRef(dstOffset + i, code, this);
         }
       }
-      void* code =
-          codeBaseTier +
-          codeRanges[funcToCodeRange[funcIndex]].funcCheckedCallEntry();
-      table.setFuncRef(dstOffset + i, code, this);
-    }
+    } break;
+    case ElemSegment::Encoding::Expressions: {
+      const ElemSegment::Expressions& expressions = seg.elemExpressions;
+
+      MOZ_ASSERT(srcOffset < expressions.exprOffsets.length());
+      const uint8_t* begin =
+          expressions.exprBytes.begin() + expressions.exprOffsets[srcOffset];
+      const uint8_t* end = expressions.exprBytes.end();
+
+      UniqueChars error;
+      // The offset is a dummy because the expression has already been
+      // validated.
+      Decoder d(begin, end, 0, &error);
+      for (uint32_t i = 0; i < len; i++) {
+        RootedVal result(cx());
+        if (!InitExpr::decodeAndEvaluate(cx(), instanceObj, d, &result)) {
+          MOZ_ASSERT(!error);  // The only possible failure should be OOM.
+          return false;
+        }
+        // We would need to root this AnyRef if we were doing anything other
+        // than storing it.
+        AnyRef ref = result.get().ref();
+
+        if (ref.isNull()) {
+          table.setNull(dstOffset + i);
+        } else if (table.isFunction()) {
+          JSFunction* func = &ref.toJSObject().as<JSFunction>();
+          table.setFuncRef(dstOffset + i, func);
+        } else {
+          table.fillAnyRef(dstOffset + i, 1, ref);
+        }
+      }
+    } break;
+    default:
+      MOZ_CRASH("unknown encoding type for element segment");
   }
+
   return true;
 }
 
@@ -1002,7 +1036,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 
   const ElemSegment& seg = *instance->passiveElemSegments_[segIndex];
   MOZ_RELEASE_ASSERT(!seg.active());
-  const uint32_t segLen = seg.length();
+  const uint32_t segLen = seg.numElements();
 
   const Table& table = *instance->tables()[tableIndex];
   const uint32_t tableLen = table.length();
@@ -1480,6 +1514,11 @@ template void* Instance::arrayNew<false>(Instance* instance,
                      "ensured by validation");
   const ElemSegment* seg = instance->passiveElemSegments_[segIndex];
 
+  if (seg && seg->encoding != ElemSegment::Encoding::Indices) {
+    ReportTrapError(cx, JSMSG_WASM_ARRAY_NEW_ELEM_NOT_IMPLEMENTED);
+    return nullptr;
+  }
+
   // As with ::arrayNewData, if `seg` is nullptr then we can only safely copy
   // zero elements from it.
   if (!seg && (numElements != 0 || segElemIndex != 0)) {
@@ -1517,7 +1556,7 @@ template void* Instance::arrayNew<false>(Instance* instance,
   CheckedUint32 lastIndexPlus1 =
       CheckedUint32(segElemIndex) + CheckedUint32(numElements);
 
-  CheckedUint32 numElemsAvailable(seg->elemFuncIndices.length());
+  CheckedUint32 numElemsAvailable(seg->elemIndices.length());
   if (!lastIndexPlus1.isValid() || !numElemsAvailable.isValid() ||
       lastIndexPlus1.value() > numElemsAvailable.value()) {
     // Because the last element to copy doesn't exist inside
@@ -1529,21 +1568,19 @@ template void* Instance::arrayNew<false>(Instance* instance,
   // Do the initialisation, converting function indices into code pointers as
   // we go.
   void** dst = (void**)arrayObj->data_;
-  const uint32_t* src = &seg->elemFuncIndices[segElemIndex];
+  const uint32_t* src = &seg->elemIndices[segElemIndex];
   for (uint32_t i = 0; i < numElements; i++) {
     uint32_t funcIndex = src[i];
     FieldType elemType = typeDef->arrayType().elementType_;
     MOZ_RELEASE_ASSERT(elemType.isRefType());
     RootedVal value(cx, elemType.refType());
-    if (funcIndex == NullFuncIndex) {
-      // value remains null
-    } else {
-      void* funcRef = Instance::refFunc(instance, funcIndex);
-      if (funcRef == AnyRef::invalid().forCompiledCode()) {
-        return nullptr;  // OOM, which has already been reported.
-      }
-      value = Val(elemType.refType(), FuncRef::fromCompiledCode(funcRef));
+
+    void* funcRef = Instance::refFunc(instance, funcIndex);
+    if (funcRef == AnyRef::invalid().forCompiledCode()) {
+      return nullptr;  // OOM, which has already been reported.
     }
+    value = Val(elemType.refType(), FuncRef::fromCompiledCode(funcRef));
+
     value.get().writeToHeapLocation(&dst[i]);
   }
 

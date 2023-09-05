@@ -165,6 +165,24 @@ bool Table::getFuncRef(JSContext* cx, uint32_t index,
                                           codeRange.funcIndex(), fun);
 }
 
+void Table::setFuncRef(uint32_t index, JSFunction* fun) {
+  MOZ_ASSERT(isFunction());
+  MOZ_ASSERT(fun->isWasm());
+
+  // Tables can store references to wasm functions from other instances. To
+  // preserve the === function identity required by the JS embedding spec, we
+  // must set the element to the function's underlying
+  // CodeRange.funcCheckedCallEntry and Instance so that Table.get()s always
+  // produce the same function object as was imported.
+  WasmInstanceObject* instanceObj = ExportedFunctionToInstanceObject(fun);
+  Instance& instance = instanceObj->instance();
+  Tier tier = instance.code().bestTier();
+  const CodeRange& calleeCodeRange =
+      instanceObj->getExportedFunctionCodeRange(fun, tier);
+  void* code = instance.codeBase(tier) + calleeCodeRange.funcCheckedCallEntry();
+  setFuncRef(index, code, &instance);
+}
+
 void Table::setFuncRef(uint32_t index, void* code, Instance* instance) {
   MOZ_ASSERT(isFunction());
 

@@ -42,9 +42,9 @@ result = structLarge();
 assertEq(wasmGcReadField(result, 2), 3n);
 assertEq(wasmGcReadField(result, 19), 19);
 
-// array.new, array.new_default, and array.new_fixed
+// array.new, array.new_default, and array.new_fixed, and array.new_elem
 
-const { arrayNew, arrayNewDefault, arrayNewFixed } = wasmEvalText(`(module
+const { arrayNew, arrayNewDefault, arrayNewFixed, arrayNewElem } = wasmEvalText(`(module
     (type $r (struct (field i32) (field f32)))
     (type $a1 (array f64))
     (type $a2 (array i32))
@@ -56,20 +56,42 @@ const { arrayNew, arrayNewDefault, arrayNewFixed } = wasmEvalText(`(module
         (struct.new $r (i32.const 10) (f32.const 16.0))
         (ref.null $r)))
 
+    (elem $a3e (ref null $r)
+      (item (struct.new $r (i32.const 1) (f32.const 2.0)))
+      (item (struct.new $r (i32.const 3) (f32.const 4.0)))
+      (item (struct.new $r (i32.const 5) (f32.const 6.0)))
+    )
+
     (func (export "arrayNew") (result eqref) global.get $g1)
     (func (export "arrayNewDefault") (result eqref) global.get $g2)
     (func (export "arrayNewFixed") (result eqref) global.get $g3)
+    (func (export "arrayNewElem") (result eqref)
+      (array.new_elem $a3 $a3e (i32.const 0) (i32.const 3))
+    )
   )`).exports;
 
 result = arrayNew();
 assertEq(wasmGcArrayLength(result), 3);
 assertEq(wasmGcReadField(result, 0), 3.14);
 assertEq(wasmGcReadField(result, 2), 3.14);
+
 result = arrayNewDefault();
 assertEq(wasmGcArrayLength(result), 2);
 assertEq(wasmGcReadField(result, 1), 0);
+
 result = arrayNewFixed();
 assertEq(wasmGcArrayLength(result), 2);
 assertEq(wasmGcReadField(wasmGcReadField(result, 0), 0), 10);
 assertEq(wasmGcReadField(wasmGcReadField(result, 0), 1), 16);
 assertEq(wasmGcReadField(result, 1), null);
+
+// Uncomment when element segments support the expression encoding:
+// result = arrayNewElem();
+// assertEq(wasmGcArrayLength(result), 3);
+// assertEq(wasmGcReadField(wasmGcReadField(result, 0), 0), 1);
+// assertEq(wasmGcReadField(wasmGcReadField(result, 0), 1), 2);
+// assertEq(wasmGcReadField(wasmGcReadField(result, 1), 0), 3);
+// assertEq(wasmGcReadField(wasmGcReadField(result, 1), 1), 4);
+// assertEq(wasmGcReadField(wasmGcReadField(result, 2), 0), 5);
+// assertEq(wasmGcReadField(wasmGcReadField(result, 2), 1), 6);
+assertErrorMessage(() => arrayNewElem(), WebAssembly.RuntimeError, /array.new_elem does not yet support the expression encoding of element segments/);
