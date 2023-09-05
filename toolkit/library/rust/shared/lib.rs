@@ -16,9 +16,9 @@ extern crate bitsdownload;
 extern crate bookmark_sync;
 extern crate cascade_bloom_filter;
 extern crate cert_storage;
-extern crate crypto_hash;
 extern crate chardetng_c;
 extern crate cosec;
+extern crate crypto_hash;
 #[cfg(feature = "cubeb_coreaudio_rust")]
 extern crate cubeb_coreaudio;
 #[cfg(feature = "cubeb_pulse_rust")]
@@ -59,6 +59,14 @@ extern crate tabs;
 #[cfg(not(target_os = "android"))]
 mod reexport_tabs {
     tabs::uniffi_reexport_scaffolding!();
+}
+
+#[cfg(not(target_os = "android"))]
+extern crate suggest;
+
+#[cfg(not(target_os = "android"))]
+mod reexport_suggest {
+    suggest::uniffi_reexport_scaffolding!();
 }
 
 #[cfg(feature = "webrtc")]

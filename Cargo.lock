@@ -2188,6 +2188,7 @@ dependencies = [
  "rust_minidump_writer_linux",
  "static_prefs",
  "storage",
+ "suggest",
  "tabs",
  "unic-langid",
  "unic-langid-ffi",
@@ -4584,6 +4585,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 
 [[package]]
+name = "remote_settings"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=25972c388a4cf3a6d8256504f3a09b711db2fc6a#25972c388a4cf3a6d8256504f3a09b711db2fc6a"
+dependencies = [
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "uniffi",
+ "url",
+ "viaduct",
+]
+
+[[package]]
 name = "remove_dir_all"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5265,6 +5280,24 @@ name = "subtle"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
+
+[[package]]
+name = "suggest"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=25972c388a4cf3a6d8256504f3a09b711db2fc6a#25972c388a4cf3a6d8256504f3a09b711db2fc6a"
+dependencies = [
+ "anyhow",
+ "interrupt-support",
+ "once_cell",
+ "parking_lot",
+ "remote_settings",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sql-support",
+ "thiserror",
+ "uniffi",
+]
 
 [[package]]
 name = "svg_fmt"
