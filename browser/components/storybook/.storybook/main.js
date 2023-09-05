@@ -5,32 +5,9 @@
 
 const path = require("path");
 const webpack = require("webpack");
-
-const [prefixMap, aliasMap, sourceMap] = require("./chrome-map.js");
+const rewriteChromeUri = require("./chrome-uri-utils.js");
 
 const projectRoot = path.resolve(__dirname, "../../../../");
-
-function rewriteChromeUri(uri) {
-  if (uri in aliasMap) {
-    return rewriteChromeUri(aliasMap[uri]);
-  }
-  for (let [prefix, [bundlePath]] of Object.entries(prefixMap)) {
-    if (uri.startsWith(prefix)) {
-      if (!bundlePath.endsWith("/")) {
-        bundlePath += "/";
-      }
-      let relativePath = uri.slice(prefix.length);
-      let objdirPath = bundlePath + relativePath;
-      for (let [_objdirPath, [filePath]] of Object.entries(sourceMap)) {
-        if (_objdirPath == objdirPath) {
-          // We're just hoping this is the actual path =\
-          return filePath;
-        }
-      }
-    }
-  }
-  return "";
-}
 
 module.exports = {
   // The ordering for this stories array affects the order that they are displayed in Storybook
