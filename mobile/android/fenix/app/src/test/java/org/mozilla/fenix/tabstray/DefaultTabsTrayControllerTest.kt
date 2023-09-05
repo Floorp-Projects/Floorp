@@ -68,6 +68,7 @@ import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragment
+import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
 
@@ -102,6 +103,8 @@ class DefaultTabsTrayControllerTest {
 
     private val bookmarksUseCase: BookmarksUseCase = mockk(relaxed = true)
     private val collectionStorage: TabCollectionStorage = mockk(relaxed = true)
+
+    private val bookmarksSharedViewModel: BookmarksSharedViewModel = mockk(relaxed = true)
 
     private val coroutinesTestRule: MainCoroutineRule = MainCoroutineRule()
     private val testDispatcher = coroutinesTestRule.testDispatcher
@@ -1089,7 +1092,7 @@ class DefaultTabsTrayControllerTest {
             },
         ).handleBookmarkSelectedTabsClicked()
 
-        coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
+        coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any(), any()) }
         assertTrue(showBookmarkSnackbarInvoked)
 
         assertNotNull(TabsTray.bookmarkSelectedTabs.testGetValue())
@@ -1155,6 +1158,7 @@ class DefaultTabsTrayControllerTest {
             showCancelledDownloadWarning = showCancelledDownloadWarning,
             showCollectionSnackbar = showCollectionSnackbar,
             showBookmarkSnackbar = showBookmarkSnackbar,
+            bookmarksSharedViewModel = bookmarksSharedViewModel,
         )
     }
 }

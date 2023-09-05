@@ -29,13 +29,18 @@ class BookmarksUseCase(
          * one with the identical [url] already exists.
          */
         @WorkerThread
-        suspend operator fun invoke(url: String, title: String, position: UInt? = null): Boolean {
+        suspend operator fun invoke(
+            url: String,
+            title: String,
+            position: UInt? = null,
+            parentGuid: String? = null,
+        ): Boolean {
             return try {
                 val canAdd = storage.getBookmarksWithUrl(url).firstOrNull { it.url == url } == null
 
                 if (canAdd) {
                     storage.addItem(
-                        BookmarkRoot.Mobile.id,
+                        parentGuid ?: BookmarkRoot.Mobile.id,
                         url = url,
                         title = title,
                         position = position,

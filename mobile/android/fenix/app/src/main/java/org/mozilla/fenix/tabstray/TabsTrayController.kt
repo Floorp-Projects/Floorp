@@ -42,6 +42,7 @@ import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
 import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
 import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.home.HomeFragment
+import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.tabstray.browser.InactiveTabsController
 import org.mozilla.fenix.tabstray.browser.TabsTrayFabController
 import org.mozilla.fenix.tabstray.ext.getTabSessionState
@@ -193,6 +194,7 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
  * @param showBookmarkSnackbar Lambda used to display a snackbar upon saving tabs as bookmarks.
  * @param showCollectionSnackbar Lambda used to display a snackbar upon successfully saving tabs
  * to a collection.
+ * @param bookmarksSharedViewModel [BookmarksSharedViewModel] used to get currently selected bookmark root.
  */
 @Suppress("TooManyFunctions", "LongParameterList")
 class DefaultTabsTrayController(
@@ -219,6 +221,7 @@ class DefaultTabsTrayController(
         tabSize: Int,
         isNewCollection: Boolean,
     ) -> Unit,
+    private val bookmarksSharedViewModel: BookmarksSharedViewModel,
 ) : TabsTrayController {
 
     override fun handleNormalTabsFabClick() {
@@ -405,7 +408,11 @@ class DefaultTabsTrayController(
             // if we leave the fragment, i.e. we still want the bookmarks to be added if the
             // tabs tray closes before the job is done.
             CoroutineScope(ioDispatcher).launch {
-                bookmarksUseCase.addBookmark(tab.content.url, tab.content.title)
+                bookmarksUseCase.addBookmark(
+                    tab.content.url,
+                    tab.content.title,
+                    parentGuid = bookmarksSharedViewModel.selectedFolder?.guid,
+                )
             }
         }
 
