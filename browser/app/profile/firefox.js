@@ -1780,11 +1780,6 @@ pref("security.app_menu.recordEventTelemetry", true);
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
-// Show degraded UI for http pages.
-pref("security.insecure_connection_icon.enabled", true);
-// Show degraded UI for http pages in private mode.
-pref("security.insecure_connection_icon.pbmode.enabled", true);
-
 // Show "Not Secure" text for http pages; disabled for now
 pref("security.insecure_connection_text.enabled", false);
 pref("security.insecure_connection_text.pbmode.enabled", false);

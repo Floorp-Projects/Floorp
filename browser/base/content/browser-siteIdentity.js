@@ -298,25 +298,6 @@ var gIdentityHandler = {
       "identity-popup-clear-sitedata-footer"
     ));
   },
-
-  get _insecureConnectionIconEnabled() {
-    delete this._insecureConnectionIconEnabled;
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_insecureConnectionIconEnabled",
-      "security.insecure_connection_icon.enabled"
-    );
-    return this._insecureConnectionIconEnabled;
-  },
-  get _insecureConnectionIconPBModeEnabled() {
-    delete this._insecureConnectionIconPBModeEnabled;
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_insecureConnectionIconPBModeEnabled",
-      "security.insecure_connection_icon.pbmode.enabled"
-    );
-    return this._insecureConnectionIconPBModeEnabled;
-  },
   get _insecureConnectionTextEnabled() {
     delete this._insecureConnectionTextEnabled;
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -868,15 +849,9 @@ var gIdentityHandler = {
       this._identityBox.className = "localResource";
     } else {
       // This is an insecure connection.
-      let warnOnInsecure =
-        this._insecureConnectionIconEnabled ||
-        (this._insecureConnectionIconPBModeEnabled &&
-          PrivateBrowsingUtils.isWindowPrivate(window));
-      let className = warnOnInsecure ? "notSecure" : "unknownIdentity";
+      let className = "notSecure";
       this._identityBox.className = className;
-      tooltip = warnOnInsecure
-        ? gNavigatorBundle.getString("identity.notSecure.tooltip")
-        : "";
+      tooltip = gNavigatorBundle.getString("identity.notSecure.tooltip");
 
       let warnTextOnInsecure =
         this._insecureConnectionTextEnabled ||

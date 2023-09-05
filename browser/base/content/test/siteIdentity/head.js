@@ -164,25 +164,12 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
   );
 
   if (stateInsecure) {
-    const insecureConnectionIcon = Services.prefs.getBoolPref(
-      "security.insecure_connection_icon.enabled"
+    // HTTP request, there should be a broken padlock shown always.
+    ok(classList.contains("notSecure"), "notSecure on HTTP page");
+    ok(
+      !BrowserTestUtils.is_hidden(identityIcon),
+      "information icon should be visible"
     );
-    if (!insecureConnectionIcon) {
-      // HTTP request, there should be no MCB classes for the identity box and the non secure icon
-      // should always be visible regardless of MCB state.
-      ok(classList.contains("unknownIdentity"), "unknownIdentity on HTTP page");
-      ok(
-        BrowserTestUtils.is_visible(identityIcon),
-        "information icon should be still visible"
-      );
-    } else {
-      // HTTP request, there should be a broken padlock shown always.
-      ok(classList.contains("notSecure"), "notSecure on HTTP page");
-      ok(
-        !BrowserTestUtils.is_hidden(identityIcon),
-        "information icon should be visible"
-      );
-    }
 
     ok(!classList.contains("mixedActiveContent"), "No MCB icon on HTTP page");
     ok(!classList.contains("mixedActiveBlocked"), "No MCB icon on HTTP page");
