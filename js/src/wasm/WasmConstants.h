@@ -232,8 +232,8 @@ enum class ElemSegmentKind : uint32_t {
 };
 
 enum class ElemSegmentPayload : uint32_t {
-  ExternIndex = 0x0,
-  ElemExpression = 0x4,
+  Indices = 0x0,
+  Expressions = 0x4,
 };
 
 enum class TagKind {

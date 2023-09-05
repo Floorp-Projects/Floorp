@@ -379,6 +379,7 @@ struct TagDesc {
 };
 
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;
+using ElemExprOffsetVector = Vector<size_t, 0, SystemAllocPolicy>;
 
 // When a ElemSegment is "passive" it is shared between a wasm::Module and its
 // wasm::Instances. To allow each segment to be released as soon as the last
@@ -392,25 +393,56 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
     Declared,
   };
 
+  // The type of encoding used by this element segment. 0 is an invalid value to
+  // make sure we notice if we fail to correctly initialize the element segment
+  // - reading from the wrong representation could be a bad time.
+  enum class Encoding {
+    Indices = 1,
+    Expressions,
+  };
+
+  struct Expressions {
+    size_t count = 0;
+
+    // All expressions are validated but we cannot randomly access them since
+    // they have variable width. However, we need random access in order to
+    // efficiently copy an arbitrary range of the segment. During decoding, we
+    // therefore store the full bytes of the elements along with a vector of
+    // offsets within those bytes.
+    Bytes exprBytes;
+    ElemExprOffsetVector exprOffsets;
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  };
+
   Kind kind;
   uint32_t tableIndex;
   RefType elemType;
   Maybe<InitExpr> offsetIfActive;
-  Uint32Vector elemFuncIndices;  // Element may be NullFuncIndex
+
+  // We store either an array of indices or the full bytecode of the element
+  // expressions, depending on the encoding used for the element segment.
+  Encoding encoding;
+  Uint32Vector elemIndices;
+  Expressions elemExpressions;
 
   bool active() const { return kind == Kind::Active; }
 
   const InitExpr& offset() const { return *offsetIfActive; }
 
-  size_t length() const { return elemFuncIndices.length(); }
+  size_t numElements() const {
+    switch (encoding) {
+      case Encoding::Indices:
+        return elemIndices.length();
+      case Encoding::Expressions:
+        return elemExpressions.count;
+      default:
+        MOZ_CRASH("unknown element segment encoding");
+    }
+  }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
-
-// NullFuncIndex represents the case when an element segment (of type funcref)
-// contains a null element.
-constexpr uint32_t NullFuncIndex = UINT32_MAX;
-static_assert(NullFuncIndex > MaxFuncs, "Invariant");
 
 using MutableElemSegment = RefPtr<ElemSegment>;
 using SharedElemSegment = RefPtr<const ElemSegment>;

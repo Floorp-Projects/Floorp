@@ -69,6 +69,7 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmJS.h"
+#include "wasm/WasmModuleTypes.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmValidate.h"
@@ -1777,7 +1778,8 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     seg->elemType = RefType::func();
     seg->tableIndex = tableIndex;
     seg->offsetIfActive = Some(InitExpr(LitVal(uint32_t(0))));
-    seg->elemFuncIndices = std::move(elems);
+    seg->encoding = ElemSegment::Encoding::Indices;
+    seg->elemIndices = std::move(elems);
     return moduleEnv_.elemSegments.append(std::move(seg));
   }
 
