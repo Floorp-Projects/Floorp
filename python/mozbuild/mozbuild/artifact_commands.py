@@ -386,7 +386,7 @@ def artifact_toolchain(
                 "should be determined in the decision task.",
             )
             return 1
-        from gecko_taskgraph.optimize.strategies import IndexSearch
+        from taskgraph.optimize.strategies import IndexSearch
 
         from mozbuild.toolchains import toolchain_task_definitions
 

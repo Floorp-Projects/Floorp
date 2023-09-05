@@ -226,7 +226,7 @@ def bootstrap_path(path, **kwargs):
             if not command:
                 try:
                     IndexSearch = import_module(
-                        "gecko_taskgraph.optimize.strategies"
+                        "taskgraph.optimize.strategies"
                     ).IndexSearch
                 except Exception:
                     log.debug("Cannot bootstrap %s: missing taskgraph module", label)
