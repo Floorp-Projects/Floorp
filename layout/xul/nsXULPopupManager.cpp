@@ -1259,8 +1259,14 @@ void nsXULPopupManager::HidePopup(Element* aPopup, HidePopupOptions aOptions,
   }
 
   nsPopupState state = popupFrame->PopupState();
-  // If the popup is already being hidden, don't attempt to hide it again
   if (state == ePopupHiding) {
+    // If the popup is already being hidden, don't fire another popuphiding
+    // event. But finish hiding it sync if we need to.
+    if (aOptions.contains(HidePopupOption::DisableAnimations) &&
+        !aOptions.contains(HidePopupOption::Async)) {
+      HidePopupCallback(popupToHide, popupFrame, nullptr, nullptr,
+                        popupFrame->GetPopupType(), aOptions);
+    }
     return;
   }
 
@@ -1322,9 +1328,10 @@ class TransitionEnder final : public nsIDOMEventListener {
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD HandleEvent(Event* aEvent) override {
     mElement->RemoveSystemEventListener(u"transitionend"_ns, this, false);
+    mElement->RemoveSystemEventListener(u"transitioncancel"_ns, this, false);
 
     nsMenuPopupFrame* popupFrame = do_QueryFrame(mElement->GetPrimaryFrame());
-    if (!popupFrame) {
+    if (!popupFrame || popupFrame->PopupState() != ePopupHiding) {
       return NS_OK;
     }
 
@@ -1759,6 +1766,7 @@ void nsXULPopupManager::FirePopupHidingEvent(Element* aPopup,
                            aPopup, PseudoStyleType::NotPseudo)) {
     RefPtr<TransitionEnder> ender = new TransitionEnder(aPopup, aOptions);
     aPopup->AddSystemEventListener(u"transitionend"_ns, ender, false, false);
+    aPopup->AddSystemEventListener(u"transitioncancel"_ns, ender, false, false);
     return;
   }
 
