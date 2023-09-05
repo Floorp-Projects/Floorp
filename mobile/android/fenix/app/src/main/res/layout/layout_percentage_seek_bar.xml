@@ -41,7 +41,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:paddingStart="@dimen/top_bar_alignment_margin_start"
-        android:paddingEnd="70dp"
+        android:paddingEnd="80dp"
         app:layout_constraintBottom_toBottomOf="@+id/seekbar_value"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
