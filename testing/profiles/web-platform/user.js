@@ -85,3 +85,5 @@ user_pref("security.OCSP.enabled", 0);
 user_pref("security.remote_settings.intermediates.enabled", false);
 // Disable prefers-reduced-motion to ensure that smooth scrolls can be tested.
 user_pref("general.smoothScroll", true);
+// Prevent default handlers being added, since these can cause network fetches
+user_pref("gecko.handlerService.defaultHandlersVersion", 100);
