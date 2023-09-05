@@ -30,17 +30,16 @@ export default class LoginCommandButton extends MozLitElement {
     this.tooltip = "";
   }
 
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./login-command-button.css"
-    : "chrome://browser/content/aboutlogins/components/login-command-button.css";
-
   render() {
     return html`
       <link
         rel="stylesheet"
         href="chrome://global/skin/in-content/common.css"
       />
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/aboutlogins/components/login-command-button.css"
+      />
 
       <!-- Keeping the data-l10n-id in a separate span tag for the correct formatting of 
       img before the l10nid. Keeping it within the button will cause a different format and

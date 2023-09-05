@@ -21,11 +21,6 @@ export default class Timeline extends MozLitElement {
     this.history = [];
   }
 
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./login-timeline.css"
-    : "chrome://browser/content/aboutlogins/components/login-timeline.css";
-
   render() {
     this.history = this.history.filter(historyPoint => historyPoint.time);
     this.history.sort((a, b) => a.time - b.time);
@@ -64,7 +59,10 @@ export default class Timeline extends MozLitElement {
     });
 
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/aboutlogins/components/login-timeline.css"
+      />
       <div
         class="timeline ${classMap({ empty: !this.history.length })}"
         style=${styleMap({ gridTemplateColumns: columns })}

@@ -19,13 +19,12 @@ export class LoginAlert extends MozLitElement {
     };
   }
 
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./login-alert.css"
-    : "chrome://browser/content/aboutlogins/components/login-alert.css";
-
   render() {
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/aboutlogins/components/login-alert.css"
+      />
       <img src=${ifDefined(this.icon)} />
       <h3 data-l10n-id=${ifDefined(this.titleId)}></h3>
       <div>
@@ -43,17 +42,16 @@ export class VulnerablePasswordAlert extends MozLitElement {
     };
   }
 
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./login-alert.css"
-    : "chrome://browser/content/aboutlogins/components/login-alert.css";
-
   constructor() {
     super();
     this.hostname = "";
   }
   render() {
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/aboutlogins/components/login-alert.css"
+      />
       <login-alert
         variant="info"
         icon="chrome://browser/content/aboutlogins/icons/vulnerable-password.svg"
@@ -96,10 +94,6 @@ export class LoginBreachAlert extends MozLitElement {
     };
   }
 
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./login-alert.css"
-    : "chrome://browser/content/aboutlogins/components/login-alert.css";
-
   constructor() {
     super();
     this.date = 0;
@@ -116,7 +110,10 @@ export class LoginBreachAlert extends MozLitElement {
 
   render() {
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/aboutlogins/components/login-alert.css"
+      />
       <login-alert
         variant="error"
         icon="chrome://browser/content/aboutlogins/icons/breached-website.svg"

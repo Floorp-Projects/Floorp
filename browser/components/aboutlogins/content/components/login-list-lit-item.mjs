@@ -19,10 +19,6 @@ export class ListItem extends MozLitElement {
     };
   }
 
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./login-list-lit-item.css"
-    : "chrome://browser/content/aboutlogins/components/login-list-lit-item.css";
-
   constructor() {
     super();
     this.icon = "";
@@ -33,7 +29,7 @@ export class ListItem extends MozLitElement {
     const classes = { selected: this.selected, "list-item": true };
     return html` <link
         rel="stylesheet"
-        href=${this.constructor.stylesheetUrl}
+        href="chrome://browser/content/aboutlogins/components/login-list-lit-item.css"
       />
       <li class=${classMap(classes)} role="option">
         <img class="icon" src=${this.icon} />
@@ -49,10 +45,6 @@ export class NewListItem extends MozLitElement {
     selected: { type: Boolean },
   };
 
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./login-list-lit-item.css"
-    : "chrome://browser/content/aboutlogins/components/login-list-lit-item.css";
-
   constructor() {
     super();
     this.id = "new-login-list-item";
@@ -62,7 +54,10 @@ export class NewListItem extends MozLitElement {
 
   render() {
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/aboutlogins/components/login-list-lit-item.css"
+      />
       <list-item ?selected=${this.selected} icon=${this.icon}>
         <div class="labels" slot="login-info">
           <span
@@ -91,9 +86,6 @@ export class LoginListItem extends MozLitElement {
       selected: { type: Boolean },
     };
   }
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./login-list-lit-item.css"
-    : "chrome://browser/content/aboutlogins/components/login-list-lit-item.css";
 
   constructor() {
     super();
@@ -118,7 +110,10 @@ export class LoginListItem extends MozLitElement {
     }
 
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/aboutlogins/components/login-list-lit-item.css"
+      />
       <list-item
         icon=${this.favicon}
         title=${this.title}
