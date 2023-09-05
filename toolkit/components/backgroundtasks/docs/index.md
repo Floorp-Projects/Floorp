@@ -71,6 +71,10 @@ Use `BackgroundTasksRunner::RunInDetachedProcess` is a helper to open a new back
 
   Tests can use `toolkit.background_tasks.remove_directory.testing.sleep_ms` to see whether a longstanding task can finish the work even after the launching process is closed.
 
+* `BackgroundTask_defaultagent`
+
+  Reports telemetry on Windows for the system defaults. See [Default Browser Agent](https://firefox-source-docs.mozilla.org/toolkit/mozapps/defaultagent/default-browser-agent/index.html) for more information.
+
 ## The background task mode runtime environment
 
 ### Most background tasks run in ephemeral temporary profiles
