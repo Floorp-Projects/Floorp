@@ -28,11 +28,6 @@ export default class {class_name} extends MozLitElement {{
     variant: {{ type: String }},
   }};
 
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./{element_name}/{element_name}.css"
-    : "chrome://global/content/elements/{element_name}.css";
-
   constructor() {{
     super();
     this.variant = "default";
@@ -40,7 +35,7 @@ export default class {class_name} extends MozLitElement {{
 
   render() {{
     return html`
-      <link rel="stylesheet" href=${{this.constructor.stylesheetUrl}} />
+      <link rel="stylesheet" href="chrome://global/content/elements/{element_name}.css" />
       <div>Variant type: ${{this.variant}}</div>
     `;
   }}
