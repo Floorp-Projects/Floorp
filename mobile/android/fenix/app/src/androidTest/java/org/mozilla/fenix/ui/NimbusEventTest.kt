@@ -22,7 +22,6 @@ import org.mozilla.fenix.helpers.Experimentation
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.appContext
-import org.mozilla.fenix.ui.robots.homeScreen
 
 class NimbusEventTest {
     private lateinit var mDevice: UiDevice
@@ -56,8 +55,6 @@ class NimbusEventTest {
 
     @Test
     fun homeScreenNimbusEventsTest() {
-        homeScreen { }.dismissOnboarding()
-
         Experimentation.withHelper {
             assertTrue(evalJexl("'app_opened'|eventSum('Days', 28, 0) > 0"))
         }

@@ -63,7 +63,6 @@ class ComposeHomeScreenTest {
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1844580")
     @Test
     fun homeScreenItemsTest() {
-        homeScreen {}.dismissOnboarding()
         homeScreen {
             verifyHomeWordmark()
             verifyHomePrivateBrowsingButton()
@@ -86,7 +85,6 @@ class ComposeHomeScreenTest {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/244199
     @Test
     fun privateBrowsingHomeScreenItemsTest() {
-        homeScreen { }.dismissOnboarding()
         homeScreen { }.togglePrivateBrowsingMode()
 
         homeScreen {

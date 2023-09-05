@@ -44,8 +44,6 @@ class NoNetworkAccessStartupTests {
         activityTestRule.launchActivity(null)
 
         homeScreen {
-        }.dismissOnboarding()
-        homeScreen {
             verifyHomeScreen()
         }
     }

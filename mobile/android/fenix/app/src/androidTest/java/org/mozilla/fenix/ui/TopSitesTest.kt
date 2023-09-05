@@ -218,8 +218,6 @@ class TopSitesTest {
     // Expected for en-us defaults
     @Test
     fun verifyDefaultTopSitesList() {
-        homeScreen { }.dismissOnboarding()
-
         homeScreen {
             verifyExistingTopSitesList()
             defaultTopSitesList.values.forEach { value ->

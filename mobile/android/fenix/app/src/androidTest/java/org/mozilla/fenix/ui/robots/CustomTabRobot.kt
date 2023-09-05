@@ -167,13 +167,6 @@ class CustomTabRobot {
             ShareOverlayRobot().interact()
             return ShareOverlayRobot.Transition()
         }
-
-        fun goBackToOnboardingScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            mDevice.pressBack()
-
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
-        }
     }
 }
 

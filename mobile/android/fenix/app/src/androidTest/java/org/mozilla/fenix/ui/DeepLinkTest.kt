@@ -91,7 +91,6 @@ class DeepLinkTest {
 
     @Test
     fun openCollections() {
-        robot.openHomeScreen { /* do nothing */ }.dismissOnboarding()
         robot.openCollections {
             verifyCollectionsHeader()
         }

@@ -80,9 +80,6 @@ class AddToHomeScreenTest {
     @Test
     fun addPrivateBrowsingShortcutTest() {
         homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
         }.triggerPrivateBrowsingShortcutPrompt {
             verifyNoThanksPrivateBrowsingShortcutButton()
             verifyAddPrivateBrowsingShortcutButton()

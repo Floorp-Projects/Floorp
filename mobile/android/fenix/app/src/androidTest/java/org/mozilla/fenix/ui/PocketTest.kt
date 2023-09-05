@@ -30,6 +30,12 @@ class PocketTest {
     @Before
     fun setUp() {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        // Workaround to make sure the Pocket articles are populated before starting the tests.
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.goBack {}
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2252509
@@ -39,9 +45,6 @@ class PocketTest {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
         }
-
-        homeScreen {
-        }.dismissOnboarding()
 
         homeScreen {
             verifyThoughtProvokingStories(true)
@@ -71,9 +74,6 @@ class PocketTest {
         }
 
         homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
             verifyThoughtProvokingStories(true)
             scrollToPocketProvokingStories()
             firstPocketStoryPublisher = getProvokingStoryPublisher(1)
@@ -89,9 +89,6 @@ class PocketTest {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
         }
-
-        homeScreen {
-        }.dismissOnboarding()
 
         homeScreen {
             scrollToPocketProvokingStories()
@@ -110,9 +107,6 @@ class PocketTest {
         }
 
         homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
             verifyStoriesByTopicItemState(activityTestRule, false, 1)
             clickStoriesByTopicItem(activityTestRule, 1)
             verifyStoriesByTopicItemState(activityTestRule, true, 1)
@@ -126,9 +120,6 @@ class PocketTest {
             it.isRecentTabsFeatureEnabled = false
             it.isRecentlyVisitedFeatureEnabled = false
         }
-
-        homeScreen {
-        }.dismissOnboarding()
 
         homeScreen {
             verifyPoweredByPocket()

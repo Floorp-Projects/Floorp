@@ -494,10 +494,6 @@ class HomeScreenRobot {
             return SearchRobot.Transition()
         }
 
-        fun dismissOnboarding() {
-            openThreeDotMenu { }.openSettings { }.goBack { }
-        }
-
         fun clickUpgradingUserOnboardingSignInButton(
             testRule: ComposeTestRule,
             interact: SyncSignInRobot.() -> Unit,
