@@ -4579,11 +4579,6 @@ static already_AddRefed<Event> GetEventWithTarget(
     Document* aDoc, EventTarget* aTarget, const nsAString& aEventName,
     CanBubble aCanBubble, Cancelable aCancelable, Composed aComposed,
     Trusted aTrusted, ErrorResult& aErrorResult) {
-  if (!aDoc || !aTarget) {
-    aErrorResult.Throw(NS_ERROR_INVALID_ARG);
-    return nullptr;
-  }
-
   RefPtr<Event> event =
       aDoc->CreateEvent(u"Events"_ns, CallerType::System, aErrorResult);
   if (aErrorResult.Failed()) {
@@ -4626,6 +4621,10 @@ nsresult nsContentUtils::DispatchEvent(Document* aDoc, EventTarget* aTarget,
                                        Composed aComposed, Trusted aTrusted,
                                        bool* aDefaultAction,
                                        ChromeOnlyDispatch aOnlyChromeDispatch) {
+  if (!aDoc || !aTarget) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   ErrorResult err;
   RefPtr<Event> event =
       GetEventWithTarget(aDoc, aTarget, aEventName, aCanBubble, aCancelable,
@@ -4844,6 +4843,19 @@ nsresult nsContentUtils::DispatchInputEvent(
 nsresult nsContentUtils::DispatchChromeEvent(
     Document* aDoc, EventTarget* aTarget, const nsAString& aEventName,
     CanBubble aCanBubble, Cancelable aCancelable, bool* aDefaultAction) {
+  if (!aDoc || !aTarget) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!aDoc->GetWindow()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  EventTarget* piTarget = aDoc->GetWindow()->GetParentTarget();
+  if (!piTarget) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   ErrorResult err;
   RefPtr<Event> event =
       GetEventWithTarget(aDoc, aTarget, aEventName, aCanBubble, aCancelable,
@@ -4851,12 +4863,6 @@ nsresult nsContentUtils::DispatchChromeEvent(
   if (err.Failed()) {
     return err.StealNSResult();
   }
-
-  NS_ASSERTION(aDoc, "GetEventAndTarget lied?");
-  if (!aDoc->GetWindow()) return NS_ERROR_INVALID_ARG;
-
-  EventTarget* piTarget = aDoc->GetWindow()->GetParentTarget();
-  if (!piTarget) return NS_ERROR_INVALID_ARG;
 
   bool defaultActionEnabled =
       piTarget->DispatchEvent(*event, CallerType::System, err);
