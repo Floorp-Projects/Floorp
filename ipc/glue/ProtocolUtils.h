@@ -566,12 +566,15 @@ inline bool LoggingEnabled() {
 }
 
 #if defined(DEBUG) || defined(FUZZING)
-bool LoggingEnabledFor(const char* aTopLevelProtocol, const char* aFilter);
+bool LoggingEnabledFor(const char* aTopLevelProtocol, mozilla::ipc::Side aSide,
+                       const char* aFilter);
 #endif
 
-inline bool LoggingEnabledFor(const char* aTopLevelProtocol) {
+inline bool LoggingEnabledFor(const char* aTopLevelProtocol,
+                              mozilla::ipc::Side aSide) {
 #if defined(DEBUG) || defined(FUZZING)
-  return LoggingEnabledFor(aTopLevelProtocol, PR_GetEnv("MOZ_IPC_MESSAGE_LOG"));
+  return LoggingEnabledFor(aTopLevelProtocol, aSide,
+                           PR_GetEnv("MOZ_IPC_MESSAGE_LOG"));
 #else
   return false;
 #endif

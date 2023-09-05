@@ -1160,7 +1160,7 @@ section on :ref:`Message Logging`.  We just need to set an environment variable
 before starting the browser.  Let's turn it on for all ``PDemo`` and
 ``PDemoHelpline`` actors: ::
 
-    MOZ_IPC_MESSAGE_LOG="PDemoParent,PDemoChild,PDemoHelplineParent,PDemoHelplineChild"
+    MOZ_IPC_MESSAGE_LOG="PDemo,PDemoHelpline"
 
 To underscore what we said above, when logging is active, the change in timing
 makes the error message go away and everything closes properly on a tested
