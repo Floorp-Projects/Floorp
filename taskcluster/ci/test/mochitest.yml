@@ -64,7 +64,6 @@ mochitest-plain:
         - headless+socketprocess_networking
         - http3
         - http2
-        - editor-legacy-direction
     run-on-projects:
         by-variant:
             conditioned_profile:
@@ -124,10 +123,6 @@ mochitest-plain:
             http2:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
-                    default: []
-            editor-legacy-direction:
-                by-test-platform:
-                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -199,7 +194,6 @@ mochitest-a11y:
         - 1proc
         - socketprocess_networking+1proc
         - webrender-sw+1proc
-        - editor-legacy-direction
     run-on-projects:
         by-variant:
             socketprocess_networking+1proc:
@@ -212,10 +206,6 @@ mochitest-a11y:
                     linux.*64-qr/debug: built-projects
                     default: []
             1proc: built-projects
-            editor-legacy-direction:
-                by-test-platform:
-                    linux1804-64-qr/debug: ['mozilla-central']
-                    default: []
     mozharness:
         mochitest-flavor: a11y
 
@@ -231,7 +221,6 @@ mochitest-browser-chrome:
         - webrender-sw+a11y-checks
         - socketprocess_networking
         - msix
-        - editor-legacy-direction
     run-on-projects:
         by-variant:
             webrender-sw:
@@ -257,10 +246,6 @@ mochitest-browser-chrome:
                 by-test-platform:
                     windows11-64-2009-qr/debug: built-projects
                     windows11-64-2009(-shippable)?-qr/opt: built-projects
-                    default: []
-            editor-legacy-direction:
-                by-test-platform:
-                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -401,7 +386,6 @@ mochitest-chrome:
         - 1proc
         - socketprocess_networking+1proc
         - webrender-sw+1proc
-        - editor-legacy-direction
     run-on-projects:
         by-variant:
             socketprocess_networking+1proc:
@@ -414,10 +398,6 @@ mochitest-chrome:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
-                    default: []
-            editor-legacy-direction:
-                by-test-platform:
-                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             1proc:
                 by-test-platform:

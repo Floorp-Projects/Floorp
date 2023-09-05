@@ -34,9 +34,6 @@ SimpleTest.waitForFocus(runTests);
 const CARET_BEGIN  = 0;
 const CARET_MIDDLE = 1;
 const CARET_END    = 2;
-const isTraditionalSplitDirection =!SpecialPowers.getBoolPref(
-  "editor.join_split_direction.compatible_with_the_other_browsers"
-);
 
 function split(element, caretPos, nbKeyPresses) {
   // put the caret on the requested position
@@ -66,9 +63,7 @@ function undo(nbKeyPresses) {
 }
 
 function getNewElement(element) {
-  return isTraditionalSplitDirection
-    ? element.previousElementSibling
-    : element.nextElementSibling;
+  return element.nextElementSibling;
 }
 
 function runTests() {
