@@ -340,6 +340,22 @@ async function waitForPageWithAdImpressions() {
   });
 }
 
+async function waitForPageWithCategorizedDomains() {
+  return new Promise(resolve => {
+    let listener = win => {
+      Services.obs.removeObserver(
+        listener,
+        "reported-page-with-categorized-domains"
+      );
+      resolve();
+    };
+    Services.obs.addObserver(
+      listener,
+      "reported-page-with-categorized-domains"
+    );
+  });
+}
+
 async function promiseImpressionReceived() {
   return TestUtils.waitForCondition(() => {
     let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];

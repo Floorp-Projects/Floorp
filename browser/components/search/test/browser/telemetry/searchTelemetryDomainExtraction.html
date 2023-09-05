@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="results">
+    <div id="test1">
+      <div data-layout="organic">
+        <a href="https://foobar.com" data-testid="result-title-a">Extract domain from href (absolute URL).</a>
+      </div>
+    </div>
+
+     <div id="test2">
+      <div data-layout="organic">
+        <a href="https://foo.com" data-testid="result-title-a">Extract domain from href (absolute URL) - link1.</a>
+        <a href="https://bar.com" data-testid="result-title-a">Extract domain from href (absolute URL) - link2.</a>
+        <a href="https://baz.com" data-testid="result-title-a">Extract domain from href (absolute URL) - link3.</a>
+        <a href="https://qux.com" data-testid="result-title-a">Extract domain from href (absolute URL) - link4.</a>
+      </div>
+    </div>
+
+    <div id="test3">
+      <div data-layout="organic">
+        <a href="/dummy-page" data-testid="result-title-a">Extract domain from href (relative URL).</a>
+      </div>
+    </div>
+
+    <div id="test4">
+      <a href="#" data-dtld="www.abc.com">Extract domain from data attribute.</a>
+    </div>
+
+    <div id="test5">
+      <a href="#" data-dtld="www.foo.com">Extract domain from data attribute - link1.</a>
+      <a href="#" data-dtld="www.bar.com">Extract domain from data attribute - link2.</a>
+      <a href="#" data-dtld="www.baz.com">Extract domain from data attribute - link3.</a>
+      <a href="#" data-dtld="www.qux.com">Extract domain from data attribute - link4.</a>
+    </div>
+
+    <div id="test6">
+      <a href="example.com/testing?ad_domain=def.com" class="js-carousel-item-title">Extract domain from an href's query param value.</a>
+    </div>
+
+    <div id="test7">
+      <!-- Extraction preserves order of domains within the page. -->
+      <div data-layout="organic">
+        <a href="https://foobar.com" data-testid="result-title-a">Extract domain from href (absolute URL).</a>
+        <a href="#" data-dtld="www.abc.com">Extract domain from data attribute.</a>
+        <a href="example.com/testing?ad_domain=def.com" class="js-carousel-item-title">Extract domain from an href's query param value.</a>
+      </div>
+    </div>
+
+    <div id="test8">
+      <a href="nomatches.com">Link that doesn't match a selector.</a>
+    </div>
+
+    <div id="test9">
+      <a href="#" data-dtld="">Data attribute is present, but value is missing.</a>
+    </div>
+
+    <div id="test10">
+      <a href="example.com/testing?ad_domain=" class="js-carousel-item-title">Query param is present, but value is missing.</a>
+    </div>
+
+    <div id="test11">
+      <a href="git://testing.com/testrepo">Non-standard URL scheme.</a>
+    </div>
+  </div>
+</body>
+</html>

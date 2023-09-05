@@ -38,6 +38,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "serpEventTelemetryCategorization",
+  "browser.search.serpEventTelemetryCategorization.enabled",
+  false
+);
+
 export var SearchSERPTelemetryUtils = {
   ACTIONS: {
     CLICKED: "clicked",
@@ -320,6 +327,10 @@ class TelemetryHandler {
 
   reportPageWithAdImpressions(info, browser) {
     this._contentHandler._reportPageWithAdImpressions(info, browser);
+  }
+
+  reportPageDomains(info, browser) {
+    this._contentHandler._reportPageDomains(info, browser);
   }
 
   reportPageImpression(info, browser) {
@@ -1307,6 +1318,138 @@ class ContentHandler {
       lazy.logConsole.debug("Could not find an impression id.");
     }
   }
+
+  /**
+   * Initiates the categorization and reporting of domains extracted from
+   * SERPs.
+   *
+   * @param {object} info
+   *   The search provider infomation for the page.
+   * @param {Set} info.nonAdDomains
+       The non-ad domains extracted from the page. 
+   * @param {Set} info.adDomains
+       The ad domains extracted from the page. 
+   * @param {object} browser
+   *   The browser associated with the page.
+   */
+  _reportPageDomains(info, browser) {
+    let item = this._findBrowserItemForURL(info.url);
+    let telemetryState = item.browserTelemetryStateMap.get(browser);
+    if (lazy.serpEventTelemetryCategorization && telemetryState) {
+      let provider = item?.info.provider;
+      if (provider) {
+        SearchSERPCategorization.categorizeDomainsFromProvider(
+          info.nonAdDomains,
+          info.adDomains,
+          provider
+        );
+        Services.obs.notifyObservers(
+          null,
+          "reported-page-with-categorized-domains"
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Categorizes SERPs.
+ */
+class DomainCategorizer {
+  /**
+   * Categorizes domains extracted from SERPs.
+   *
+   * @param {Set} nonAdDomains
+   *   The non-ad domains extracted from the page.
+   * @param {Set} adDomains
+   *   The ad domains extracted from the page.
+   * @param {string} provider
+   *   The provider associated with the page.
+   */
+  categorizeDomainsFromProvider(nonAdDomains, adDomains, provider) {
+    nonAdDomains = this.processDomains(nonAdDomains, provider);
+    this.applyCategorizationLogic(nonAdDomains, false);
+    this.logDomains(nonAdDomains, false);
+
+    adDomains = this.processDomains(adDomains, provider);
+    this.applyCategorizationLogic(adDomains, true);
+    this.logDomains(adDomains, true);
+  }
+
+  // TODO: insert logic from DS for reducing extracted domains to a single
+  // category for the SERP.
+  applyCategorizationLogic(domains, areAdDomains) {}
+
+  // TODO: replace this method once we know where to send the categorized
+  // domains and overall SERP category.
+  logDomains(domains, areAdDomains) {
+    if (domains?.size) {
+      lazy.logConsole.debug(
+        areAdDomains ? "Ad Domains:" : "Domains:",
+        ...domains
+      );
+    }
+  }
+
+  /**
+   * Processes raw domains extracted from the SERP into their final form before
+   * categorization.
+   *
+   * @param {Set} domains
+   *   The domains extracted from the page.
+   * @param {string} provider
+   *   The provider associated with the page.
+   * @returns {Set} processedDomains
+   *   The final set of processed domains for a page.
+   */
+  processDomains(domains, provider) {
+    let processedDomains = new Set();
+
+    for (let domain of domains) {
+      // Don't include domains associated with the search provider.
+      if (
+        domain.startsWith(`${provider}.`) ||
+        domain.includes(`.${provider}.`)
+      ) {
+        continue;
+      }
+      let domainWithoutSubdomains = this.#stripDomainOfSubdomains(domain);
+      // We may have come across the same domain twice, once with www. prefixed
+      // and another time without.
+      if (
+        domainWithoutSubdomains &&
+        !processedDomains.has(domainWithoutSubdomains)
+      ) {
+        processedDomains.add(domainWithoutSubdomains);
+      }
+    }
+
+    return processedDomains;
+  }
+
+  /**
+   * Helper to strip domains of any subdomains.
+   *
+   * @param {string} domain
+   *   The domain to strip of any subdomains.
+   * @returns {object} browser
+   *   The given domain with any subdomains removed.
+   */
+  #stripDomainOfSubdomains(domain) {
+    let tld;
+    // Can throw an exception if the input has too few domain levels.
+    try {
+      tld = Services.eTLD.getKnownPublicSuffixFromHost(domain);
+    } catch (ex) {
+      return "";
+    }
+
+    let domainWithoutTLD = domain.substring(0, domain.length - tld.length);
+    let secondLevelDomain = domainWithoutTLD.split(".").at(-2);
+
+    return secondLevelDomain ? `${secondLevelDomain}.${tld}` : "";
+  }
 }
 
 export var SearchSERPTelemetry = new TelemetryHandler();
+export var SearchSERPCategorization = new DomainCategorizer();
