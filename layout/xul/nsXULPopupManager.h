@@ -751,7 +751,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
                                             nsMenuPopupFrame* aPopupFrame,
                                             bool aIsContextMenu,
                                             bool aSelectFirstItem);
-  MOZ_CAN_RUN_SCRIPT void HidePopupCallback(
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void HidePopupCallback(
       Element* aPopup, nsMenuPopupFrame* aPopupFrame, Element* aNextPopup,
       Element* aLastPopup, PopupType aPopupType, HidePopupOptions);
 
