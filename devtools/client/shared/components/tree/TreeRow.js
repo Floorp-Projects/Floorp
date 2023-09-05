@@ -121,7 +121,7 @@ define(function (require, exports, module) {
      */
     shouldComponentUpdate(nextProps) {
       for (const prop of UPDATE_ON_PROPS) {
-        if (nextProps.member[prop] != this.props.member[prop]) {
+        if (nextProps.member[prop] !== this.props.member[prop]) {
           return true;
         }
       }
