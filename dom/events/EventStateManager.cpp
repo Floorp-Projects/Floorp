@@ -4294,22 +4294,6 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
     hotspot = Some(customCursor.mHotspot);
   }
 
-  if (StaticPrefs::ui_use_activity_cursor()) {
-    // Check whether or not to show the busy cursor
-    nsCOMPtr<nsIDocShell> docShell(aPresContext->GetDocShell());
-    if (!docShell) return;
-    auto busyFlags = docShell->GetBusyFlags();
-
-    // Show busy cursor everywhere before page loads
-    // and just replace the arrow cursor after page starts loading
-    if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY &&
-        (cursor == StyleCursorKind::Auto ||
-         cursor == StyleCursorKind::Default)) {
-      cursor = StyleCursorKind::Progress;
-      container = nullptr;
-    }
-  }
-
   if (aTargetFrame) {
     if (cursor == StyleCursorKind::Pointer && IsSelectingLink(aTargetFrame)) {
       cursor = aTargetFrame->GetWritingMode().IsVertical()

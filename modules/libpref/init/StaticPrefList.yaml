@@ -14601,12 +14601,6 @@
   value: false
   mirror: always
 
-# Disable page loading activity cursor by default.
-- name: ui.use_activity_cursor
-  type: bool
-  value: false
-  mirror: always
-
 # Whether context menus should only appear on mouseup instead of mousedown,
 # on OSes where they normally appear on mousedown (macOS, *nix).
 # Note: ignored on Windows (context menus always use mouseup).
