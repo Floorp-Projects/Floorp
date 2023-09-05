@@ -60,7 +60,9 @@ interface KeyboardEvent : UIEvent
 
 dictionary KeyboardEventInit : EventModifierInit
 {
+  [BinaryType="nsAutoString"]
   DOMString      key           = "";
+  [BinaryType="nsAutoString"]
   DOMString      code          = "";
   unsigned long  location      = 0;
   boolean        repeat        = false;

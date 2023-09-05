@@ -5866,6 +5866,18 @@ class IDLArgument(IDLObjectWithIdentifier):
                         "dictionary member" % identifier,
                         [attribute.location],
                     )
+            elif self.dictionaryMember and identifier == "BinaryType":
+                if not len(attribute.listValue()) == 1:
+                    raise WebIDLError(
+                        "[%s] BinaryType must take one argument" % identifier,
+                        [attribute.location],
+                    )
+                if not self.defaultValue:
+                    raise WebIDLError(
+                        "[%s] BinaryType can't be used without default value"
+                        % identifier,
+                        [attribute.location],
+                    )
             else:
                 raise WebIDLError(
                     "Unhandled extended attribute on %s"
