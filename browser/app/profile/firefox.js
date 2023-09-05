@@ -724,6 +724,9 @@ pref("browser.search.serpEventTelemetry.enabled", true);
 pref("browser.search.serpEventTelemetry.enabled", false);
 #endif
 
+// Enables search SERP telemetry page categorization.
+pref("browser.search.serpEventTelemetryCategorization.enabled", false);
+
 // Enable new experimental shopping features. This is solely intended as a
 // rollout/"emergency stop" button - it will go away once the feature has
 // rolled out. There will be separate controls for user opt-in/opt-out.

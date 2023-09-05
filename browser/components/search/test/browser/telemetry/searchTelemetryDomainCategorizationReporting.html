@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="results">
+    <!-- Don't include domains matching the provider. -->
+    <div class="organic">
+      <a href="https://www.example.com"></a>
+      <a href="https://example.com"></a>
+    </div>
+    <div class="organic">
+      <a href="https://www.foobar.org"></a>
+    </div>
+    <div data-ad-domain="abc.org">
+      <a href="https://www.example.com/"></a>
+    </div>
+    <div>
+      <a class="ad" href="https://www.example.com/?ad_domain=def.org"></a>
+    </div>
+    <!-- Don't throw on anchors with non-standard or non-existent hrefs -->
+    <div>
+      <a href="javascript:console.log('hello world')">A javascript: URL link</a>
+    </div>
+    <div>
+      <a>An anchor that's missing an href attribute</a>
+    </div>
+    <div>
+      <a href="#">An anchor with a dummy href attribute value</a>
+    </div>
+  </div>
+  <aside>
+    <div class="organic">
+      <a href="https://foobaz.com"></a>
+    </div>
+  </aside>
+  <div class="organic">
+    <!-- Should not find this because it's not part of the results -->
+    <a href="https://outside-results.ca"></a>
+  </div>
+</body>
+</html>
