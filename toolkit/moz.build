@@ -25,11 +25,15 @@ DIRS += [
 ]
 
 if CONFIG["OS_ARCH"] == "WINNT":
-    if CONFIG["MOZ_NOTIFICATION_SERVER"]:
-        DIRS += ["mozapps/notificationserver"]
+    # mingw is missing Windows toast notification definitions.
+    if CONFIG["CC_TYPE"] == "clang-cl":
+        if CONFIG["MOZ_NOTIFICATION_SERVER"]:
+            DIRS += ["mozapps/notificationserver"]
 
-    if CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]:
-        DIRS += ["mozapps/defaultagent"]
+        # Default Browser Agent relies on Windows toast notifications, so should
+        # also not be built with mingw.
+        if CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]:
+            DIRS += ["mozapps/defaultagent"]
 
 if CONFIG["MOZ_UPDATER"] and CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     DIRS += ["mozapps/update"]
