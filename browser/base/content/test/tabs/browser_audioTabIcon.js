@@ -218,24 +218,28 @@ async function test_playing_icon_on_tab(tab, browser, isPinned) {
 
   await pause(tab);
 
+  ok(tab.hasAttribute("muted"), "Tab should still be muted (attribute check)");
   ok(
-    tab.hasAttribute("muted") && !tab.hasAttribute("soundplaying"),
-    "Tab should still be muted but not playing"
+    !tab.hasAttribute("soundplaying"),
+    "Tab should not be playing (attribute check)"
   );
-  ok(
-    tab.muted && !tab.soundPlaying,
-    "Tab should still be muted but not playing"
-  );
+  ok(tab.muted, "Tab should still be muted (property check)");
+  ok(!tab.soundPlaying, "Tab should not be playing (property check)");
 
   await test_tooltip(icon, "Unmute tab", isActiveTab, tab);
 
   await test_mute_tab(tab, icon, false);
 
   ok(
-    !tab.hasAttribute("muted") && !tab.hasAttribute("soundplaying"),
-    "Tab should not be be muted or playing"
+    !tab.hasAttribute("muted"),
+    "Tab should not be be muted (attribute check)"
   );
-  ok(!tab.muted && !tab.soundPlaying, "Tab should not be be muted or playing");
+  ok(
+    !tab.hasAttribute("soundplaying"),
+    "Tab should not be be playing (attribute check)"
+  );
+  ok(!tab.muted, "Tab should not be be muted (property check)");
+  ok(!tab.soundPlaying, "Tab should not be be playing (property check)");
 
   // Make sure it's possible to mute using the context menu.
   await test_muting_using_menu(tab, false);
@@ -561,6 +565,11 @@ async function test_mute_keybinding() {
     let mutedPromise = get_wait_for_mute_promise(tab, true);
     EventUtils.synthesizeKey("m", { ctrlKey: true });
     await mutedPromise;
+    is(
+      tab.hasAttribute("indicator-replaces-favicon"),
+      !tab.pinned,
+      "Mute indicator should replace the favicon on hover if the tab isn't pinned"
+    );
     mutedPromise = get_wait_for_mute_promise(tab, false);
     EventUtils.synthesizeKey("m", { ctrlKey: true });
     await mutedPromise;

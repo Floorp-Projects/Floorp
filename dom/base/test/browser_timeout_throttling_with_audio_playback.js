@@ -30,11 +30,7 @@ async function runTest(url) {
   let newBrowser = gBrowser.getBrowserForTab(newTab);
 
   // Wait for the UI to indicate that audio is being played back.
-  let promise = BrowserTestUtils.waitForAttribute(
-    "soundplaying",
-    newTab,
-    "true"
-  );
+  let promise = BrowserTestUtils.waitForAttribute("soundplaying", newTab);
   BrowserTestUtils.loadURIString(newBrowser, url);
   await promise;
 
