@@ -827,8 +827,6 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntRegion mDraggableRegion;
 
   // Graphics
-  HDC mPaintDC = nullptr;  // only set during painting
-
   LayoutDeviceIntRect mLastPaintBounds;
 
   ResizeState mResizeState = NOT_RESIZING;
