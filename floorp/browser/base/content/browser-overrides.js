@@ -101,10 +101,11 @@ if (Services.prefs.getStringPref(newtabOverrideURL, "") != "") {
 
 // Override close window function.
 // https://searchfox.org/mozilla-esr115/source/browser/base/content/browser.js#3004
-if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")) {
-  BrowserTryToCloseWindow = function (event) {
+
+BrowserTryToCloseWindow = function (event) {
+    let { setTimeout } = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
     if (WindowIsClosing(event)) {
-      console.log("WindowIsClosing");
+      if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")) {
       document
         .querySelectorAll(
           `.webpanels[src='chrome://browser/content/browser.xhtml']`
@@ -112,10 +113,11 @@ if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")) {
         .forEach(function (e) {
           e.remove();
         });
-
-      window.setTimeout(function () {
+        setTimeout(function () {
+          window.close();
+        }, 500);
+      } else {
         window.close();
-      }, 500);
+      }
     } // WindowIsClosing does all the necessary checks
-  };
-}
+};
