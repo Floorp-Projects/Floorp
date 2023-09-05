@@ -49,17 +49,17 @@ void HTMLSharedElement::GetHref(nsAString& aValue) {
 
 void HTMLSharedElement::DoneAddingChildren(bool aHaveNotified) {
   if (mNodeInfo->Equals(nsGkAtoms::head)) {
-    nsCOMPtr<Document> doc = GetUncomposedDoc();
-    if (doc) {
+    if (nsCOMPtr<Document> doc = GetUncomposedDoc()) {
       doc->OnL10nResourceContainerParsed();
+      if (!doc->IsLoadedAsData()) {
+        RefPtr<AsyncEventDispatcher> asyncDispatcher =
+            new AsyncEventDispatcher(this, u"DOMHeadElementParsed"_ns,
+                                     CanBubble::eYes, ChromeOnlyDispatch::eYes);
+        // Always run async in order to avoid running script when the content
+        // sink isn't expecting it.
+        asyncDispatcher->PostDOMEvent();
+      }
     }
-
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(this, u"DOMHeadElementParsed"_ns,
-                                 CanBubble::eYes, ChromeOnlyDispatch::eYes);
-    // Always run async in order to avoid running script when the content
-    // sink isn't expecting it.
-    asyncDispatcher->PostDOMEvent();
   }
 }
 
