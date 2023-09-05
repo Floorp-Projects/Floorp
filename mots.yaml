@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-08-30T18:00:03.763738'
+updated_at: '2023-09-05T11:25:41.469505'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -389,6 +389,10 @@ people:
     bmo_id: 403306
     name: Luke Crouch
     nick: groovecoder
+  - &gstoll
+    bmo_id: 714603
+    name: Greg Stoll
+    nick: gstoll
   - &gsvelto
     bmo_id: 448747
     name: Gabriele Svelto
@@ -816,6 +820,10 @@ people:
     bmo_id: 573202
     name: Ryan Hunt
     nick: rhunt
+  - &rkraesig
+    bmo_id: 699639
+    name: Ray Kraesig
+    nick: rkraesig
   - &robwu
     bmo_id: 447061
     name: Rob Wu
@@ -3363,9 +3371,11 @@ modules:
           components:
             - Firefox::Launcher Process
         owners:
-          - *mhowell
+          - *rkraesig
         peers:
           - *mhowell
+          - *gstoll
+          - *handyman
         machine_name: launcher_process
 
       - machine_name: localization
@@ -4155,5 +4165,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: e6db127e330341bf35fe787d456b248944bef4e7
-  export: 6fc9fdff3716c27347c867b266928e86119d325d
+  config: d3802db3090939a68e067bb69977e7b9ec588ec6
+  export: f69b8f91dc83de42362f0f784a9f7cf927840253
