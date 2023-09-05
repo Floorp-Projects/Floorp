@@ -21,7 +21,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
             "nsDBusRemoteClient.cpp",
             "nsDBusRemoteServer.cpp",
         ]
-        CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
         EXPORTS += [
             "nsUnixRemoteServer.h",
             "RemoteUtils.h",
