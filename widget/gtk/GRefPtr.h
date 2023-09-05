@@ -13,11 +13,6 @@
 #include <gtk/gtk.h>
 #include "mozilla/RefPtr.h"
 
-#ifdef MOZ_ENABLE_DBUS
-// TODO: Remove this (we should use GDBus instead, which is not deprecated).
-#  include <dbus/dbus-glib.h>
-#endif
-
 namespace mozilla {
 
 template <typename T>
@@ -45,10 +40,6 @@ GOBJECT_TRAITS(GdkPixbuf)
 GOBJECT_TRAITS(GCancellable)
 GOBJECT_TRAITS(GtkIMContext)
 GOBJECT_TRAITS(GUnixFDList)
-
-#ifdef MOZ_ENABLE_DBUS
-GOBJECT_TRAITS(DBusGProxy)
-#endif
 
 #undef GOBJECT_TRAITS
 
