@@ -2874,6 +2874,13 @@
   value: 100
   mirror: always
 
+# By default user input handling delay is disabled (mostly) for testing ,
+# this is used for forcefully enable it for certain tests.
+- name: dom.input_events.security.isUserInputHandlingDelayTest
+  type: bool
+  value: false
+  mirror: always
+
 # The maximum time (milliseconds) we reserve for handling input events in each
 # frame.
 - name: dom.input_event_queue.duration.max

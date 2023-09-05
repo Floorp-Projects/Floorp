@@ -1988,7 +1988,8 @@ bool PresShell::CanHandleUserInputEvents(WidgetGUIEvent* aGUIEvent) {
     return true;
   }
 
-  if (aGUIEvent->mFlags.mIsSynthesizedForTests) {
+  if (aGUIEvent->mFlags.mIsSynthesizedForTests &&
+      !StaticPrefs::dom_input_events_security_isUserInputHandlingDelayTest()) {
     return true;
   }
 
