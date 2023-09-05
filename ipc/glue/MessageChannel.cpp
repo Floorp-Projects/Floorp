@@ -561,17 +561,6 @@ int MessageChannel::DispatchingSyncMessageNestedLevel() const {
              : 0;
 }
 
-static const char* StringFromIPCSide(Side side) {
-  switch (side) {
-    case ChildSide:
-      return "Child";
-    case ParentSide:
-      return "Parent";
-    default:
-      return "Unknown";
-  }
-}
-
 static void PrintErrorMessage(Side side, const char* channelName,
                               const char* msg) {
   printf_stderr("\n###!!! [%s][%s] Error: %s\n\n", StringFromIPCSide(side),
@@ -947,8 +936,7 @@ bool MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg) {
             "channel.\n",
             XRE_GeckoProcessTypeToString(XRE_GetProcessType()),
             static_cast<uint32_t>(base::GetCurrentProcId()),
-            mListener->GetProtocolName(),
-            (mSide == ChildSide) ? "Child" : "Parent");
+            mListener->GetProtocolName(), StringFromIPCSide(mSide));
       }
 
       // Notify the worker thread that the connection has been closed, as we
@@ -2217,8 +2205,7 @@ void MessageChannel::DebugAbort(const char* file, int line, const char* cond,
   printf_stderr(
       "###!!! [MessageChannel][%s][%s:%d] "
       "Assertion (%s) failed.  %s %s\n",
-      mSide == ChildSide ? "Child" : "Parent", file, line, cond, why,
-      reply ? "(reply)" : "");
+      StringFromIPCSide(mSide), file, line, cond, why, reply ? "(reply)" : "");
 
   MessageQueue pending = std::move(mPending);
   while (!pending.isEmpty()) {

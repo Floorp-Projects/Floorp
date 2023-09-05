@@ -43,6 +43,8 @@ struct HasResultCodes {
 
 enum Side : uint8_t { ParentSide, ChildSide, UnknownSide };
 
+const char* StringFromIPCSide(Side side);
+
 class MessageLink {
  public:
   typedef IPC::Message Message;

@@ -355,6 +355,13 @@ def _cxxLifecycleProxyType(ptr=False):
     return Type("mozilla::ipc::ActorLifecycleProxy", ptr=ptr)
 
 
+def _cxxSide(side):
+    if side == "child":
+        return ExprVar("mozilla::ipc::ChildSide")
+    if side == "parent":
+        return ExprVar("mozilla::ipc::ParentSide")
+    assert 0
+
 def _otherSide(side):
     if side == "child":
         return "parent"
@@ -1915,13 +1922,9 @@ class _ParamTraits:
 
     @classmethod
     def ifsideis(cls, rdrwtr, side, then, els=None):
-        cxxside = ExprVar("mozilla::ipc::ChildSide")
-        if side == "parent":
-            cxxside = ExprVar("mozilla::ipc::ParentSide")
-
         ifstmt = StmtIf(
             ExprBinary(
-                cxxside,
+                _cxxSide(side),
                 "==",
                 ExprCode("${rdrwtr}->GetActor()->GetSide()", rdrwtr=rdrwtr),
             )
@@ -5570,11 +5573,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def logMessage(self, md, msgptr, pfx, actor=None, receiving=False):
         actorname = _actorName(self.protocol.name, self.side)
-        if self.side == "parent":
-            side = ExprVar("mozilla::ipc::ParentSide")
-        else:
-            side = ExprVar("mozilla::ipc::ChildSide")
-
         return StmtCode(
             """
             if (mozilla::ipc::LoggingEnabledFor(${protocolname}, ${side})) {
@@ -5587,7 +5585,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             }
             """,
             protocolname=ExprLiteral.String(self.protocol.name),
-            side=side,
+            side=_cxxSide(self.side),
             actorname=ExprLiteral.String(actorname),
             actor=actor or ExprVar.THIS,
             pfx=ExprLiteral.String(pfx),
