@@ -1707,7 +1707,7 @@
 #if defined(ANDROID)
   value: false
 #else
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
 #endif
   mirror: always
 
@@ -1715,7 +1715,7 @@
 # ORB.
 - name: browser.opaqueResponseBlocking.javascriptValidator
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # This pref controls how filtering of opaque responses for calls to `Window.fetch`.
