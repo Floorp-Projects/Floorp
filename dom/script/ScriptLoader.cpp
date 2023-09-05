@@ -711,6 +711,60 @@ void ScriptLoader::PrepareRequestPriorityAndRequestDependencies(
   }
 }
 
+// static
+nsresult ScriptLoader::PrepareHttpRequestAndInitiatorType(
+    nsIChannel* aChannel, ScriptLoadRequest* aRequest,
+    const Maybe<nsAutoString>& aCharsetForPreload) {
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+  nsresult rv = NS_OK;
+
+  if (httpChannel) {
+    // HTTP content negotation has little value in this context.
+    nsAutoCString acceptTypes("*/*");
+    rv = httpChannel->SetRequestHeader("Accept"_ns, acceptTypes, false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        new ReferrerInfo(aRequest->mReferrer, aRequest->ReferrerPolicy());
+    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsIHttpChannelInternal> internalChannel(
+        do_QueryInterface(httpChannel));
+    if (internalChannel) {
+      rv = internalChannel->SetIntegrityMetadata(
+          aRequest->mIntegrity.GetIntegrityString());
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+
+    nsAutoString hintCharset;
+    if (!aRequest->GetScriptLoadContext()->IsPreload() &&
+        aRequest->GetScriptLoadContext()->GetScriptElement()) {
+      aRequest->GetScriptLoadContext()->GetScriptElement()->GetScriptCharset(
+          hintCharset);
+    } else if (aCharsetForPreload.isSome()) {
+      hintCharset = aCharsetForPreload.ref();
+    }
+
+    rv = httpChannel->SetClassicScriptHintCharset(hintCharset);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Set the initiator type
+  nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
+  if (timedChannel) {
+    if (aRequest->mEarlyHintPreloaderId) {
+      timedChannel->SetInitiatorType(u"early-hints"_ns);
+    } else if (aRequest->GetScriptLoadContext()->IsLinkPreloadScript()) {
+      timedChannel->SetInitiatorType(u"link"_ns);
+    } else {
+      timedChannel->SetInitiatorType(u"script"_ns);
+    }
+  }
+
+  return rv;
+}
+
 nsresult ScriptLoader::StartLoadInternal(
     ScriptLoadRequest* aRequest, nsSecurityFlags securityFlags,
     const Maybe<nsAutoString>& aCharsetForPreload) {
@@ -745,55 +799,14 @@ nsresult ScriptLoader::StartLoadInternal(
 
   PrepareRequestPriorityAndRequestDependencies(channel, aRequest);
 
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-  if (httpChannel) {
-    // HTTP content negotation has little value in this context.
-    nsAutoCString acceptTypes("*/*");
-    rv = httpChannel->SetRequestHeader("Accept"_ns, acceptTypes, false);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new ReferrerInfo(aRequest->mReferrer, aRequest->ReferrerPolicy());
-    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    nsCOMPtr<nsIHttpChannelInternal> internalChannel(
-        do_QueryInterface(httpChannel));
-    if (internalChannel) {
-      rv = internalChannel->SetIntegrityMetadata(
-          aRequest->mIntegrity.GetIntegrityString());
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    }
-
-    nsAutoString hintCharset;
-    if (!aRequest->GetScriptLoadContext()->IsPreload() &&
-        aRequest->GetScriptLoadContext()->GetScriptElement()) {
-      aRequest->GetScriptLoadContext()->GetScriptElement()->GetScriptCharset(
-          hintCharset);
-    } else if (aCharsetForPreload.isSome()) {
-      hintCharset = aCharsetForPreload.ref();
-    }
-
-    rv = httpChannel->SetClassicScriptHintCharset(hintCharset);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  rv =
+      PrepareHttpRequestAndInitiatorType(channel, aRequest, aCharsetForPreload);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mozilla::net::PredictorLearn(
       aRequest->mURI, mDocument->GetDocumentURI(),
       nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE,
       mDocument->NodePrincipal()->OriginAttributesRef());
-
-  // Set the initiator type
-  nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));
-  if (timedChannel) {
-    if (aRequest->mEarlyHintPreloaderId) {
-      timedChannel->SetInitiatorType(u"early-hints"_ns);
-    } else if (aRequest->GetScriptLoadContext()->IsLinkPreloadScript()) {
-      timedChannel->SetInitiatorType(u"link"_ns);
-    } else {
-      timedChannel->SetInitiatorType(u"script"_ns);
-    }
-  }
 
   UniquePtr<mozilla::dom::SRICheckDataVerifier> sriDataVerifier;
   if (!aRequest->mIntegrity.IsEmpty()) {
