@@ -6,11 +6,6 @@ import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 export default class FxviewCategoryNavigation extends MozLitElement {
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./fxview-category-navigation.css"
-    : "chrome://browser/content/firefoxview/fxview-category-navigation.css";
-
   static properties = {
     currentCategory: { type: String },
   };
@@ -61,7 +56,10 @@ export default class FxviewCategoryNavigation extends MozLitElement {
 
   render() {
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/fxview-category-navigation.css"
+      />
       <nav>
         <div class="category-nav-header">
           <slot name="category-nav-header"></slot>
@@ -100,11 +98,6 @@ export default class FxviewCategoryNavigation extends MozLitElement {
 customElements.define("fxview-category-navigation", FxviewCategoryNavigation);
 
 export class FxviewCategoryButton extends MozLitElement {
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./fxview-category-button.css"
-    : "chrome://browser/content/firefoxview/fxview-category-button.css";
-
   static properties = {
     selected: { type: Boolean },
   };
@@ -133,7 +126,10 @@ export class FxviewCategoryButton extends MozLitElement {
 
   render() {
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/fxview-category-button.css"
+      />
       <button
         aria-hidden="true"
         tabindex="-1"

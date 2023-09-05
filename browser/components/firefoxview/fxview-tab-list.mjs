@@ -189,11 +189,6 @@ export default class FxviewTabList extends MozLitElement {
     }
   }
 
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./fxview-tab-list.css"
-    : "chrome://browser/content/firefoxview/fxview-tab-list.css";
-
   render() {
     if (this.maxTabsLength > 0) {
       // Can set maxTabsLength to -1 to have no max
@@ -207,7 +202,10 @@ export default class FxviewTabList extends MozLitElement {
       tabItems,
     } = this;
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/fxview-tab-list.css"
+      />
       <div
         id="fxview-tab-list"
         class="fxview-tab-list"
@@ -336,11 +334,6 @@ export class FxviewTabRow extends MozLitElement {
     return this.mainEl.id;
   }
 
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./fxview-tab-row.css"
-    : "chrome://browser/content/firefoxview/fxview-tab-row.css";
-
   dateFluentArgs(timestamp, dateTimeFormat) {
     if (dateTimeFormat === "date" || dateTimeFormat === "dateTime") {
       return JSON.stringify({ date: timestamp });
@@ -465,7 +458,10 @@ export class FxviewTabRow extends MozLitElement {
         rel="stylesheet"
         href="chrome://global/skin/in-content/common.css"
       />
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/fxview-tab-row.css"
+      />
       <a
         .href=${ifDefined(this.url)}
         class=${classMap({
