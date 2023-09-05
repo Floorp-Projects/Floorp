@@ -12,6 +12,9 @@ permalink: /changelog/
 
 * **feature-tabs**
   * Removed deprecated `TabsUseCases.AddNewPrivateTabUseCase`. [Bug 1853070](https://bugzilla.mozilla.org/show_bug.cgi?id=1853070)
+  
+* **lib-crash-sentry**
+  * `SentryService.initIfNeeded` is now public. [bug #1851676](https://bugzilla.mozilla.org/show_bug.cgi?id=1851676)
 
 * **feature-downloads**
   * Added a custom permission `${applicationId}.permission.RECEIVE_DOWNLOAD_BROADCAST` that needs to be used by apps in order to receive download related broadcasts

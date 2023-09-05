@@ -34,6 +34,7 @@ import mozilla.components.concept.base.crash.Breadcrumb as MozillaBreadcrumb
  * @param sendEventForNativeCrashes Allows configuring if native crashes should be submitted. Disabled by default.
  * @param sentryProjectUrl Base URL of the Sentry web interface pointing to the app/project.
  * @param sendCaughtExceptions Allows configuring if caught exceptions should be submitted. Enabled by default.
+ * @param autoInitializeSentry Initializes the Sentry SDK immediately on service creation.
  */
 class SentryService(
     private val applicationContext: Context,
@@ -108,9 +109,15 @@ class SentryService(
         }
     }
 
+    /**
+     * Initializes Sentry if needed.
+     *
+     * N.B: We've temporarily made this public so that Fenix can initialize Sentry on startup.
+     * As a result of https://bugzilla.mozilla.org/show_bug.cgi?id=1853059 we will have a better way
+     * to control how / when Sentry gets initialized and we will make this internal again.
+     */
     @Synchronized
-    @VisibleForTesting
-    internal fun initIfNeeded() {
+    fun initIfNeeded() {
         if (isInitialized) {
             return
         }

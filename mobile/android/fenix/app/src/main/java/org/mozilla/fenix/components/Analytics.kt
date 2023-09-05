@@ -18,7 +18,9 @@ import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import mozilla.components.service.nimbus.messaging.NimbusMessagingStorage
 import mozilla.components.service.nimbus.messaging.OnDiskMessageMetadataStorage
+import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.utils.BrowsersCache
+import mozilla.components.support.utils.RunWhenReadyQueue
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
@@ -46,6 +48,7 @@ import org.mozilla.geckoview.BuildConfig.MOZ_UPDATE_CHANNEL
  */
 class Analytics(
     private val context: Context,
+    private val runWhenReadyQueue: RunWhenReadyQueue,
 ) {
     val crashReporter: CrashReporter by lazyMonitored {
         val services = mutableListOf<CrashReporterService>()
@@ -74,6 +77,13 @@ class Analytics(
                 sendCaughtExceptions = shouldSendCaughtExceptions,
                 sentryProjectUrl = getSentryProjectUrl(),
             )
+
+            // We only want to initialize Sentry on startup on the main process.
+            if (context.isMainProcess()) {
+                runWhenReadyQueue.runIfReadyOrQueue {
+                    sentryService.initIfNeeded()
+                }
+            }
 
             services.add(sentryService)
         }
