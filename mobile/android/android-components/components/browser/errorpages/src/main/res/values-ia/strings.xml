@@ -18,7 +18,7 @@
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
         <li>Le pagina que tu tenta vider non pote esser monstrate perque le authenticitate del datos recipite non poteva esser verificate.</li>
-        <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
+        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
     
 ]]></string>
@@ -164,7 +164,7 @@
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
 <ul>
-  <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
+  <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
 </ul>
 ]]></string>
 
@@ -175,7 +175,7 @@
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
       <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite detegite.</p>
       <ul>
-        <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
+        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
     ]]></string>
 
@@ -184,7 +184,7 @@
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
       <p>Le pagina que tu tenta vider non pote esser monstrate perque un error in le transmission de datos ha essite detegite.</p>
       <ul>
-        <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
+        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
     ]]></string>
 
@@ -194,7 +194,7 @@
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
       <p>Le pagina que tu tenta vider non pote esser monstrate perque illo usa un forma de compression non valide o non supportate.</p>
       <ul>
-        <li>Continge le proprietarios del sito web pro informar les de iste problema.</li>
+        <li>Contacta le proprietarios del sito web pro informar les de iste problema.</li>
       </ul>
     ]]></string>
 

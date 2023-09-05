@@ -630,7 +630,7 @@
     <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
     <string name="wallpaper_artist_series_description">Voces Independientes ñembyaty.</string>
     <!-- Wallpaper onboarding dialog header text. -->
-    <string name="wallpapers_onboarding_dialog_title_text">Eipurukuaa sa’y sa’imi</string>
+    <string name="wallpapers_onboarding_dialog_title_text">Eiporukuaa sa’y sa’imi</string>
 
     <!-- Wallpaper onboarding dialog body text. -->
     <string name="wallpapers_onboarding_dialog_body_text">Eiporavo mba’erechaha rugua nde ehecharamóva.</string>
