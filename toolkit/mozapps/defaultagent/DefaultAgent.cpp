@@ -313,16 +313,21 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
   }
 
   DefaultBrowserResult defaultBrowserResult = GetDefaultBrowserInfo();
-  if (defaultBrowserResult.isErr()) {
-    return NS_ERROR_FAILURE;
+  DefaultBrowserInfo browserInfo{};
+  if (defaultBrowserResult.isOk()) {
+    browserInfo = defaultBrowserResult.unwrap();
+  } else {
+    browserInfo.currentDefaultBrowser = Browser::Error;
+    browserInfo.previousDefaultBrowser = Browser::Error;
   }
-  DefaultBrowserInfo browserInfo = defaultBrowserResult.unwrap();
 
   DefaultPdfResult defaultPdfResult = GetDefaultPdfInfo();
-  if (defaultPdfResult.isErr()) {
-    return NS_ERROR_FAILURE;
+  DefaultPdfInfo pdfInfo{};
+  if (defaultPdfResult.isOk()) {
+    pdfInfo = defaultPdfResult.unwrap();
+  } else {
+    pdfInfo.currentDefaultPdf = "error";
   }
-  DefaultPdfInfo pdfInfo = defaultPdfResult.unwrap();
 
   NotificationActivities activitiesPerformed;
   // We block while waiting for the notification which prevents STA thread
