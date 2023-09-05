@@ -310,6 +310,14 @@ const bmsController = {
       document.getElementById(`webpanel${id}`).remove();
       document.getElementById(`select-${id}`).removeAttribute("muted");
     },
+    unloadAllWebpanel: () => {
+      for (let elem of document.getElementsByClassName("webpanels")) {
+        elem.remove();
+      }
+      for (let elem of document.getElementsByClassName("sidepanel-icon")) {
+        elem.removeAttribute("muted");
+      }
+    },
     setUserContextColorLine: id => {
       const wibpanel_usercontext =
         BROWSER_SIDEBAR_DATA.data[id].usercontext ?? 0;
@@ -643,6 +651,25 @@ const bmsController = {
       }
     },
   },
+  bmsWindowFunctions: {
+    loadBMSURI: () => {
+      let embedded = Services.prefs.getStringPref("floorp.browser.sidebar2.start.url");
+      gBrowser.loadURI(Services.io.newURI(embedded), {
+        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+      document.getElementById("main-window").setAttribute("chromehidden", "toolbar", "menubar directories extrachrome");
+      document.getElementById("main-window").setAttribute("BSM-window", "true");
+      Services.prefs.clearUserPref("floorp.browser.sidebar2.start.url");
+      Services.prefs.setBoolPref("floorp.browser.sidebar2.addons.window.start", false);
+
+      // Load CSS
+      const BMSSyleElement = document.createElement("style");
+      BMSSyleElement.textContent = `
+         @import url("chrome://browser/content/browser-bms-window.css");
+       `
+      document.head.appendChild(BMSSyleElement);
+    },
+  },
   nowPage: null,
 };
 (async () => {
@@ -757,26 +784,17 @@ const bmsController = {
     let embedded = Services.prefs.getStringPref("floorp.browser.sidebar2.start.url");
     if (embedded != "" && embedded !== false && embedded != undefined) {
         if(gBrowser){
-          loadBMSURI();
+          bmsController.bmsWindowFunctions.loadBMSURI();
         } else {
-          window.setTimeout(loadBMSURI, 1000);
+          checkgBrowserIsReady()
         }
       }
-  
-    function loadBMSURI(){
-      gBrowser.loadURI(Services.io.newURI(embedded), {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
-      document.getElementById("main-window").setAttribute("chromehidden", "toolbar", "menubar directories extrachrome");
-      document.getElementById("main-window").setAttribute("BSM-window", "true");
-      Services.prefs.clearUserPref("floorp.browser.sidebar2.start.url");
-      Services.prefs.setBoolPref("floorp.browser.sidebar2.addons.window.start", false);
-
-      // Load CSS
-      const BMSSyleElement = document.createElement("style");
-      BMSSyleElement.textContent = `
-         @import url("chrome://browser/content/browser-bms-window.css");
-       `
-      document.head.appendChild(BMSSyleElement);
-    }}
+      function checkgBrowserIsReady() {
+        if (gBrowser) {
+          bmsController.bmsWindowFunctions.loadBMSURI();
+        } else {
+          window.setTimeout(checkgBrowserIsReady, 1000);
+        }
+      }
+  }
 })();

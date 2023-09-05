@@ -98,3 +98,20 @@ if (Services.prefs.getStringPref(newtabOverrideURL, "") != "") {
   const newTabURL = Services.prefs.getStringPref(newtabOverrideURL);
   AboutNewTab.newTabURL = newTabURL;
 }
+
+// Override close window function.
+// https://searchfox.org/mozilla-esr115/source/browser/base/content/browser.js#3004
+if(Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")){ 
+ BrowserTryToCloseWindow = function(event) {
+  if (WindowIsClosing(event)) {
+    console.log("WindowIsClosing");
+    document.querySelectorAll(`.webpanels[src='chrome://browser/content/browser.xhtml']`).forEach(function(e) {
+      e.remove();
+    });
+
+    window.setTimeout(function() {
+      window.close();
+    }, 500);
+  } // WindowIsClosing does all the necessary checks
+ }
+}
