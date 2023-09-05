@@ -56,8 +56,6 @@ class CardContainer extends MozLitElement {
     }
   }
 
-  disconnectedCallback() {}
-
   onToggleContainer() {
     this.isExpanded = this.detailsExpanded;
     if (this.preserveCollapseState) {
