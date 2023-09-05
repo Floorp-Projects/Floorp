@@ -27,11 +27,6 @@ export default class MozButtonGroup extends MozLitElement {
     platform: { state: true },
   };
 
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./moz-button-group/moz-button-group.css"
-    : "chrome://global/content/elements/moz-button-group.css";
-
   constructor() {
     super();
     this.#detectPlatform();
@@ -99,7 +94,10 @@ export default class MozButtonGroup extends MozLitElement {
       slots = [slots[1], slots[0]];
     }
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://global/content/elements/moz-button-group.css"
+      />
       ${slots}
     `;
   }

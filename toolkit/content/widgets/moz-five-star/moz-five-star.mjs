@@ -29,11 +29,6 @@ export default class MozFiveStar extends MozLitElement {
     };
   }
 
-  // Use a relative URL in storybook to get faster reloads on style changes.
-  static stylesheetUrl = window.IS_STORYBOOK
-    ? "./moz-five-star/moz-five-star.css"
-    : "chrome://global/content/elements/moz-five-star.css";
-
   getStarsFill() {
     let starFill = [];
     let roundedRating = Math.round(this.rating * 2) / 2;
@@ -52,7 +47,10 @@ export default class MozFiveStar extends MozLitElement {
   render() {
     let starFill = this.getStarsFill();
     return html`
-      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <link
+        rel="stylesheet"
+        href="chrome://global/content/elements/moz-five-star.css"
+      />
       <div
         class="stars"
         data-l10n-id=${ifDefined(this.title ? null : "moz-five-star-rating")}
