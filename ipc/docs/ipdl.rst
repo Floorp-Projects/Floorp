@@ -1756,11 +1756,19 @@ The environment variable ``MOZ_IPC_MESSAGE_LOG`` controls the logging of IPC
 messages.  It logs details about the transmission and reception of messages.
 This isn't controlled by ``MOZ_LOG`` -- it is a separate system.  Set this
 variable to ``1`` to log information on all IPDL messages, or specify a
-comma-separated list of **top-level** protocols to log (e.g.
-``MOZ_IPC_MESSAGE_LOG="PMyManagerChild,PMyManagedParent,PMyManagedChild"``).
+comma-separated list of protocols to log.
+If the ``Child`` or ``Parent`` suffix is given, then only activity on the given
+side is logged; otherwise, both sides are logged.  All protocol names must
+include the ``P`` prefix.
+
+For example:
+
+.. code-block::
+
+    MOZ_IPC_MESSAGE_LOG="PMyManagerChild,PMyManaged"
+
+This requests logging of child-side activity on ``PMyManager``, and both
+parent- and child-side activity on ``PMyManaged``.
+
 :ref:`Debugging with IPDL Logging` has an example where IPDL logging is useful
 in tracking down a bug.
-
-.. important::
-    The preceding ``P`` and the ``Parent`` or ``Child`` suffix are required
-    when listing individual protocols in ``MOZ_IPC_MESSAGE_LOG``.

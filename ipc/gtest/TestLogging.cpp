@@ -14,42 +14,51 @@ namespace mozilla::ipc {
 TEST(IPCLogging, EmptyFilter)
 {
   const char* emptyFilter = "";
-  EXPECT_FALSE(LoggingEnabledFor("PContentParent", emptyFilter));
-  EXPECT_FALSE(LoggingEnabledFor("PContentChild", emptyFilter));
+  EXPECT_FALSE(LoggingEnabledFor("PContent", ParentSide, emptyFilter));
+  EXPECT_FALSE(LoggingEnabledFor("PContent", ChildSide, emptyFilter));
 }
 
 TEST(IPCLogging, SingleProtocolFilter)
 {
   const char* contentParentFilter = "PContentParent";
-  EXPECT_TRUE(LoggingEnabledFor("PContentParent", contentParentFilter));
-  EXPECT_FALSE(LoggingEnabledFor("PContentChild", contentParentFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PContent", ParentSide, contentParentFilter));
+  EXPECT_FALSE(LoggingEnabledFor("PContent", ChildSide, contentParentFilter));
 }
 
 TEST(IPCLogging, CommaDelimitedProtocolsFilter)
 {
   const char* gmpContentFilter = "PGMPContentChild,PGMPContentParent";
-  EXPECT_TRUE(LoggingEnabledFor("PGMPContentChild", gmpContentFilter));
-  EXPECT_TRUE(LoggingEnabledFor("PGMPContentParent", gmpContentFilter));
-  EXPECT_FALSE(LoggingEnabledFor("PContentParent", gmpContentFilter));
-  EXPECT_FALSE(LoggingEnabledFor("PContentChild", gmpContentFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PGMPContent", ChildSide, gmpContentFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PGMPContent", ParentSide, gmpContentFilter));
+  EXPECT_FALSE(LoggingEnabledFor("PContent", ParentSide, gmpContentFilter));
+  EXPECT_FALSE(LoggingEnabledFor("PContent", ChildSide, gmpContentFilter));
 }
 
 TEST(IPCLogging, SpaceDelimitedProtocolsFilter)
 {
   const char* gmpContentFilter = "PGMPContentChild PGMPContentParent";
-  EXPECT_TRUE(LoggingEnabledFor("PGMPContentChild", gmpContentFilter));
-  EXPECT_TRUE(LoggingEnabledFor("PGMPContentParent", gmpContentFilter));
-  EXPECT_FALSE(LoggingEnabledFor("PContentParent", gmpContentFilter));
-  EXPECT_FALSE(LoggingEnabledFor("PContentChild", gmpContentFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PGMPContent", ChildSide, gmpContentFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PGMPContent", ParentSide, gmpContentFilter));
+  EXPECT_FALSE(LoggingEnabledFor("PContent", ParentSide, gmpContentFilter));
+  EXPECT_FALSE(LoggingEnabledFor("PContent", ChildSide, gmpContentFilter));
 }
 
 TEST(IPCLogging, CatchAllFilter)
 {
   const char* catchAllFilter = "1";
-  EXPECT_TRUE(LoggingEnabledFor("PGMPContentChild", catchAllFilter));
-  EXPECT_TRUE(LoggingEnabledFor("PGMPContentParent", catchAllFilter));
-  EXPECT_TRUE(LoggingEnabledFor("PContentParent", catchAllFilter));
-  EXPECT_TRUE(LoggingEnabledFor("PContentChild", catchAllFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PGMPContent", ChildSide, catchAllFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PGMPContent", ParentSide, catchAllFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PContent", ParentSide, catchAllFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PContent", ChildSide, catchAllFilter));
+}
+
+TEST(IPCLogging, BothSidesFilter)
+{
+  const char* gmpContentFilter = "PGMPContent,PContentParent";
+  EXPECT_TRUE(LoggingEnabledFor("PGMPContent", ChildSide, gmpContentFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PGMPContent", ParentSide, gmpContentFilter));
+  EXPECT_TRUE(LoggingEnabledFor("PContent", ParentSide, gmpContentFilter));
+  EXPECT_FALSE(LoggingEnabledFor("PContent", ChildSide, gmpContentFilter));
 }
 #endif  // defined(DEBUG) || defined(FUZZING)
 

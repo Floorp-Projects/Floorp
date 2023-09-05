@@ -941,13 +941,14 @@ bool MessageChannel::MaybeInterceptSpecialIOMessage(const Message& aMsg) {
       // ourselves as "Closing".
       mLink->Close();
       mChannelState = ChannelClosing;
-      if (LoggingEnabled()) {
+      if (LoggingEnabledFor(mListener->GetProtocolName(), mSide)) {
         printf(
-            "[%s %u] NOTE: %s actor received `Goodbye' message.  Closing "
+            "[%s %u] NOTE: %s%s actor received `Goodbye' message.  Closing "
             "channel.\n",
             XRE_GeckoProcessTypeToString(XRE_GetProcessType()),
             static_cast<uint32_t>(base::GetCurrentProcId()),
-            (mSide == ChildSide) ? "child" : "parent");
+            mListener->GetProtocolName(),
+            (mSide == ChildSide) ? "Child" : "Parent");
       }
 
       // Notify the worker thread that the connection has been closed, as we

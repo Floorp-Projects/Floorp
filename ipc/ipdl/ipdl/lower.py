@@ -363,18 +363,6 @@ def _otherSide(side):
     assert 0
 
 
-def _ifLogging(topLevelProtocol, stmts):
-    return StmtCode(
-        """
-        if (mozilla::ipc::LoggingEnabledFor(${proto})) {
-            $*{stmts}
-        }
-        """,
-        proto=topLevelProtocol,
-        stmts=stmts,
-    )
-
-
 # XXX we need to remove these and install proper error handling
 
 
@@ -5582,9 +5570,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def logMessage(self, md, msgptr, pfx, actor=None, receiving=False):
         actorname = _actorName(self.protocol.name, self.side)
+        if self.side == "parent":
+            side = ExprVar("mozilla::ipc::ParentSide")
+        else:
+            side = ExprVar("mozilla::ipc::ChildSide")
+
         return StmtCode(
             """
-            if (mozilla::ipc::LoggingEnabledFor(${actorname})) {
+            if (mozilla::ipc::LoggingEnabledFor(${protocolname}, ${side})) {
                 mozilla::ipc::LogMessageForProtocol(
                     ${actorname},
                     ${actor}->ToplevelProtocol()->OtherPidMaybeInvalid(),
@@ -5593,6 +5586,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     mozilla::ipc::MessageDirection::${direction});
             }
             """,
+            protocolname=ExprLiteral.String(self.protocol.name),
+            side=side,
             actorname=ExprLiteral.String(actorname),
             actor=actor or ExprVar.THIS,
             pfx=ExprLiteral.String(pfx),

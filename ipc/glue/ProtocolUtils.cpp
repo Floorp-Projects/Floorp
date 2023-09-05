@@ -25,6 +25,7 @@
 #endif
 #include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
+#include "nsReadableUtils.h"
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
 #  include "mozilla/sandboxTarget.h"
@@ -104,10 +105,20 @@ void AnnotateCrashReportWithErrno(CrashReporter::Annotation tag, int error) {
 #endif  // defined(XP_MACOSX)
 
 #if defined(DEBUG) || defined(FUZZING)
+// If aTopLevelProtocol matches any token in aFilter, return true.
+//
+// aTopLevelProtocol is a protocol name, without the "Parent" / "Child" suffix.
+// aSide indicates whether we're logging parent-side or child-side activity.
+//
+// aFilter is a list of protocol names separated by commas and/or
+// spaces. These may include the "Child" / "Parent" suffix, or omit
+// the suffix to log activity on both sides.
+//
 // This overload is for testability; application code should use the single-
 // argument version (defined in the ProtocolUtils.h) which takes the filter from
 // the environment.
-bool LoggingEnabledFor(const char* aTopLevelProtocol, const char* aFilter) {
+bool LoggingEnabledFor(const char* aTopLevelProtocol, Side aSide,
+                       const char* aFilter) {
   if (!aFilter) {
     return false;
   }
@@ -119,9 +130,27 @@ bool LoggingEnabledFor(const char* aTopLevelProtocol, const char* aFilter) {
   Tokenizer tokens(aFilter, kDelimiters);
   Tokenizer::Token t;
   while (tokens.Next(t)) {
-    if (t.Type() == Tokenizer::TOKEN_WORD &&
-        t.AsString() == aTopLevelProtocol) {
-      return true;
+    if (t.Type() == Tokenizer::TOKEN_WORD) {
+      auto filter = t.AsString();
+
+      // Since aTopLevelProtocol never includes the "Parent" / "Child" suffix,
+      // this will only occur when filter doesn't include it either, meaning
+      // that we should log activity on both sides.
+      if (filter == aTopLevelProtocol) {
+        return true;
+      }
+
+      if (aSide == ParentSide &&
+          StringEndsWith(filter, nsDependentCString("Parent")) &&
+          Substring(filter, 0, filter.Length() - 6) == aTopLevelProtocol) {
+        return true;
+      }
+
+      if (aSide == ChildSide &&
+          StringEndsWith(filter, nsDependentCString("Child")) &&
+          Substring(filter, 0, filter.Length() - 5) == aTopLevelProtocol) {
+        return true;
+      }
     }
   }
 
