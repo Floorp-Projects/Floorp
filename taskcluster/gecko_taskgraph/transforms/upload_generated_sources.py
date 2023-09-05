@@ -7,6 +7,7 @@ taskcluster/ci/upload-generated-sources/kind.yml, into an actual task descriptio
 """
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_primary_dependency
 
 transforms = TransformSequence()
 
@@ -14,8 +15,8 @@ transforms = TransformSequence()
 @transforms.add
 def add_task_info(config, jobs):
     for job in jobs:
-        dep_task = job["primary-dependency"]
-        del job["primary-dependency"]
+        dep_task = get_primary_dependency(config, job)
+        assert dep_task
 
         # Add a dependency on the build task.
         job["dependencies"] = {"build": dep_task.label}
@@ -36,5 +37,6 @@ def add_task_info(config, jobs):
             job["treeherder"]["symbol"] = "Ugs{}".format(dep_th["symbol"])
         job["run-on-projects"] = dep_task.attributes.get("run_on_projects")
         job["optimization"] = dep_task.optimization
+        job["shipping-product"] = dep_task.attributes.get("shipping_product")
 
         yield job
