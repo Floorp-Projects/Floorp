@@ -12,6 +12,9 @@ import {
   ATTRIBUTION_API,
   ATTRIBUTION_RESPONSE_SCHEMA,
   ATTRIBUTION_REQUEST_SCHEMA,
+  REPORTING_API,
+  REPORTING_RESPONSE_SCHEMA,
+  REPORTING_REQUEST_SCHEMA,
   ProductConfig,
 } from "chrome://global/content/shopping/ProductConfig.mjs";
 
@@ -728,6 +731,38 @@ export class ShoppingProduct {
     }
 
     let { url, requestSchema, responseSchema } = options;
+    let result = await this.request(url, requestOptions, {
+      requestSchema,
+      responseSchema,
+    });
+
+    return result;
+  }
+
+  /**
+   * Send a report that a product is back in stock.
+   *
+   * @param {Product} product
+   *  Product to request for (defaults to the instances product).
+   * @param {object} options
+   *  Override default API url and schema.
+   * @returns {object} result
+   *  Parsed JSON API result or null.
+   */
+  async sendReport(product = this.product, options = {}) {
+    if (!product) {
+      return null;
+    }
+
+    let url = options?.url || REPORTING_API;
+    let requestSchema = options?.requestSchema || REPORTING_REQUEST_SCHEMA;
+    let responseSchema = options?.responseSchema || REPORTING_RESPONSE_SCHEMA;
+
+    let requestOptions = {
+      product_id: product.id,
+      website: product.host,
+    };
+
     let result = await this.request(url, requestOptions, {
       requestSchema,
       responseSchema,

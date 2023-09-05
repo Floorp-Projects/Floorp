@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "chrome://global/content/shopping/reporting_request.schema.json",
+  "title": "Report back in stock request",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "description": "Product identifier (ASIN / SKU).",
+      "type": "string",
+      "examples": ["B07W59LRL9", "5200904.p", "1752657021"]
+    },
+    "website": {
+      "description": "Product websites.",
+      "type": "string",
+      "examples": ["amazon.com", "amazon.ca", "bestbuy.com", "walmart.com"]
+    }
+  },
+  "required": ["product_id", "website"]
+}

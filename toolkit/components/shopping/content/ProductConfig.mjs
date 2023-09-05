@@ -21,6 +21,12 @@ const ATTRIBUTION_RESPONSE_SCHEMA =
 const ATTRIBUTION_REQUEST_SCHEMA =
   "chrome://global/content/shopping/attribution_request.schema.json";
 
+let REPORTING_API = "https://trustwerty.com/api/v1/fx/report";
+const REPORTING_RESPONSE_SCHEMA =
+  "chrome://global/content/shopping/reporting_response.schema.json";
+const REPORTING_REQUEST_SCHEMA =
+  "chrome://global/content/shopping/reporting_request.schema.json";
+
 const ProductConfig = {
   amazon: {
     productIdFromURLRegex:
@@ -47,6 +53,8 @@ if (Cu.isInAutomation) {
     "https://example.com/browser/toolkit/components/shopping/test/browser/recommendations.sjs";
   ATTRIBUTION_API =
     "https://example.com/browser/toolkit/components/shopping/test/browser/attribution.sjs";
+  REPORTING_API =
+    "https://example.com/browser/toolkit/components/shopping/test/browser/reporting.sjs";
 }
 
 Object.freeze(ProductConfig);
@@ -61,5 +69,8 @@ export {
   ATTRIBUTION_API,
   ATTRIBUTION_RESPONSE_SCHEMA,
   ATTRIBUTION_REQUEST_SCHEMA,
+  REPORTING_API,
+  REPORTING_RESPONSE_SCHEMA,
+  REPORTING_REQUEST_SCHEMA,
   ProductConfig,
 };

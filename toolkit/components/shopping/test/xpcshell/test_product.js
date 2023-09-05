@@ -49,6 +49,7 @@ const API_ERROR_UNPROCESSABLE =
 const API_POLL = "http://example.com/poll/poll_analysis_response.json";
 const API_NEEDS_ANALYSIS =
   "http://example.com/poll/needs_analysis_response.json";
+const REPORTING_API_MOCK = "http://example.com/api/report_response.json";
 
 const TEST_AID =
   "1ALhiNLkZ2yR4al5lcP1Npbtlpl5toDfKRgJOATjeieAL6i5Dul99l9+ZTiIWyybUzGysChAdrOA6BWrMqr0EvjoymiH3veZ++XuOvJnC0y1NB/IQQtUzlYEO028XqVUJWJeJte47nPhnK2pSm2QhbdeKbxEnauKAty1cFQeEaBUP7LkvUgxh1GDzflwcVfuKcgMr7hOM3NzjYR2RN3vhmT385Ps4wUj--cv2ucc+1nozldFrl--i9GYyjuHYFFi+EgXXZ3ZsA==";
@@ -685,4 +686,46 @@ add_task(async function test_product_requestAnalysis_poll_max() {
     Cu.now() - startTime >= totalTime,
     `Waited for at least ${totalTime}ms`
   );
+});
+
+add_task(async function test_product_sendReport() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+
+  let report = await product.sendReport(undefined, {
+    url: REPORTING_API_MOCK,
+  });
+
+  Assert.ok(
+    typeof report == "object",
+    "Report object is loaded from JSON and validated"
+  );
+  Assert.equal(report.message, "report created", "Report is created.");
+});
+
+add_task(async function test_product_sendReport_OHTTP() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  Assert.ok(product.isProduct(), "Should recognize a valid product.");
+
+  gExpectedProductDetails = JSON.stringify({
+    product_id: "926485654",
+    website: "walmart.com",
+  });
+
+  enableOHTTP();
+
+  let report = await product.sendReport(undefined, {
+    url: REPORTING_API_MOCK,
+  });
+
+  Assert.ok(
+    typeof report == "object",
+    "Report object is loaded from JSON and validated"
+  );
+  Assert.equal(report.message, "report created", "Report is created.");
+  disableOHTTP();
 });
