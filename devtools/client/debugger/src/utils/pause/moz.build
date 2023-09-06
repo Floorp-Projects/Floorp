@@ -6,10 +6,10 @@
 DIRS += [
     "frames",
     "mapScopes",
-    "scopes",
 ]
 
 CompiledModules(
     "index.js",
+    "scopes.js",
     "why.js",
 )

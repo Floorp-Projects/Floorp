@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getScopes } from "..";
+import { getScopesItemsForSelectedFrame } from "../scopes";
 import {
   makeMockFrame,
   makeMockScope,
   makeWhyNormal,
   makeWhyThrow,
   mockScopeAddVariable,
-} from "../../../test-mockup";
+} from "../../test-mockup";
 
 function convertScope(scope) {
   return scope;
@@ -27,7 +27,11 @@ describe("scopes", () => {
       }
 
       const frameScopes = convertScope(selectedFrame.scope);
-      const scopes = getScopes(pauseData, selectedFrame, frameScopes);
+      const scopes = getScopesItemsForSelectedFrame(
+        pauseData,
+        selectedFrame,
+        frameScopes
+      );
       if (!scopes) {
         throw new Error("missing scopes");
       }
@@ -51,7 +55,11 @@ describe("scopes", () => {
       }
 
       const frameScopes = convertScope(selectedFrame.scope);
-      const scopes = getScopes(pauseData, selectedFrame, frameScopes);
+      const scopes = getScopesItemsForSelectedFrame(
+        pauseData,
+        selectedFrame,
+        frameScopes
+      );
       if (!scopes) {
         throw new Error("missing scopes");
       }
@@ -73,7 +81,11 @@ describe("scopes", () => {
       }
 
       const frameScopes = convertScope(selectedFrame.scope);
-      const scopes = getScopes(why, selectedFrame, frameScopes);
+      const scopes = getScopesItemsForSelectedFrame(
+        why,
+        selectedFrame,
+        frameScopes
+      );
       expect(scopes).toMatchObject([
         {
           path: "actor1-1",
@@ -107,7 +119,11 @@ describe("scopes", () => {
       }
 
       const frameScopes = convertScope(selectedFrame.scope);
-      const scopes = getScopes(why, selectedFrame, frameScopes);
+      const scopes = getScopesItemsForSelectedFrame(
+        why,
+        selectedFrame,
+        frameScopes
+      );
       expect(scopes).toMatchObject([
         {
           path: "actor1-1",
