@@ -88,7 +88,8 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
 
   void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                             int32_t aModType) override;

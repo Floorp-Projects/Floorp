@@ -315,8 +315,9 @@ void nsHTMLScrollFrame::ScrollbarActivityStopped() const {
   }
 }
 
-void nsHTMLScrollFrame::Destroy(DestroyContext& aContext) {
-  DestroyAbsoluteFrames(aContext);
+void nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                    PostDestroyData& aPostDestroyData) {
+  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
   if (mIsRoot) {
     PresShell()->ResetVisualViewportOffset();
   }
@@ -329,10 +330,10 @@ void nsHTMLScrollFrame::Destroy(DestroyContext& aContext) {
   }
 
   // Unbind the content created in CreateAnonymousContent later...
-  aContext.AddAnonymousContent(mHScrollbarContent.forget());
-  aContext.AddAnonymousContent(mVScrollbarContent.forget());
-  aContext.AddAnonymousContent(mScrollCornerContent.forget());
-  aContext.AddAnonymousContent(mResizerContent.forget());
+  aPostDestroyData.AddAnonymousContent(mHScrollbarContent.forget());
+  aPostDestroyData.AddAnonymousContent(mVScrollbarContent.forget());
+  aPostDestroyData.AddAnonymousContent(mScrollCornerContent.forget());
+  aPostDestroyData.AddAnonymousContent(mResizerContent.forget());
 
   if (mPostedReflowCallback) {
     PresShell()->CancelReflowCallback(this);
@@ -361,7 +362,7 @@ void nsHTMLScrollFrame::Destroy(DestroyContext& aContext) {
   if (mScrollEndEvent) {
     mScrollEndEvent->Revoke();
   }
-  nsContainerFrame::Destroy(aContext);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 void nsHTMLScrollFrame::SetInitialChildList(ChildListID aListID,

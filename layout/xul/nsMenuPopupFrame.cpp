@@ -2159,7 +2159,8 @@ void nsMenuPopupFrame::MoveToAttributePosition() {
       this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
 }
 
-void nsMenuPopupFrame::Destroy(DestroyContext& aContext) {
+void nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                   PostDestroyData& aPostDestroyData) {
   // XXX: Currently we don't fire popuphidden for these popups, that seems wrong
   // but alas, also pre-existing.
   HidePopup(/* aDeselectMenu = */ false, ePopupClosed,
@@ -2169,7 +2170,7 @@ void nsMenuPopupFrame::Destroy(DestroyContext& aContext) {
     pm->PopupDestroyed(this);
   }
 
-  nsBlockFrame::Destroy(aContext);
+  nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsMargin nsMenuPopupFrame::GetMargin() const {

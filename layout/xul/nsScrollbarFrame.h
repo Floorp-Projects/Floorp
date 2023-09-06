@@ -83,7 +83,8 @@ class nsScrollbarFrame final : public nsContainerFrame,
   nsSize ScrollbarMinSize() const;
   bool IsHorizontal() const;
 
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;

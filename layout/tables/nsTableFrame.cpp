@@ -210,9 +210,10 @@ void nsTableFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 // the header only has forward declarations of them.
 nsTableFrame::~nsTableFrame() = default;
 
-void nsTableFrame::Destroy(DestroyContext& aContext) {
-  mColGroups.DestroyFrames(aContext);
-  nsContainerFrame::Destroy(aContext);
+void nsTableFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                               PostDestroyData& aPostDestroyData) {
+  mColGroups.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 // Make sure any views are positioned properly

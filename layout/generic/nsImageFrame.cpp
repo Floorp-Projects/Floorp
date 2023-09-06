@@ -485,7 +485,8 @@ void nsImageFrame::DisconnectMap() {
 #endif
 }
 
-void nsImageFrame::Destroy(DestroyContext& aContext) {
+void nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                               PostDestroyData& aPostDestroyData) {
   MaybeSendIntrinsicSizeAndRatioToEmbedder(Nothing(), Nothing());
 
   if (mReflowCallbackPosted) {
@@ -523,7 +524,7 @@ void nsImageFrame::Destroy(DestroyContext& aContext) {
     BrokenImageIcon::RemoveObserver(this);
   }
 
-  nsAtomicContainerFrame::Destroy(aContext);
+  nsAtomicContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 void nsImageFrame::DeinitOwnedRequest() {

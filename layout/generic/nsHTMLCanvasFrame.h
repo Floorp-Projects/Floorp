@@ -43,7 +43,7 @@ class nsHTMLCanvasFrame final : public nsContainerFrame {
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame*, PostDestroyData&) override;
 
   bool UpdateWebRenderCanvasData(nsDisplayListBuilder* aBuilder,
                                  WebRenderCanvasData* aCanvasData);

@@ -346,11 +346,12 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)
 
-void nsHTMLCanvasFrame::Destroy(DestroyContext& aContext) {
+void nsHTMLCanvasFrame::DestroyFrom(nsIFrame* aDestroyRoot,
+                                    PostDestroyData& aPostDestroyData) {
   if (IsPrimaryFrame()) {
     HTMLCanvasElement::FromNode(*mContent)->ResetPrintCallback();
   }
-  nsContainerFrame::Destroy(aContext);
+  nsContainerFrame::DestroyFrom(aDestroyRoot, aPostDestroyData);
 }
 
 nsHTMLCanvasFrame::~nsHTMLCanvasFrame() = default;

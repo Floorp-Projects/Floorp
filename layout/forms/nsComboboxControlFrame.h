@@ -105,8 +105,8 @@ class nsComboboxControlFrame final : public nsBlockFrame,
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const final;
 #endif
-  void Destroy(DestroyContext&) final;
-
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) final;
   void SetInitialChildList(ChildListID aListID, nsFrameList&& aChildList) final;
   const nsFrameList& GetChildList(ChildListID aListID) const final;
   void GetChildLists(nsTArray<ChildList>* aLists) const final;

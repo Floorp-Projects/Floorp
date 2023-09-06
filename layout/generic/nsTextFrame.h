@@ -222,7 +222,8 @@ class nsTextFrame : public nsIFrame {
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   mozilla::Maybe<Cursor> GetCursor(const nsPoint&) final;
 

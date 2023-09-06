@@ -50,8 +50,7 @@ void nsFrameManager::Destroy() {
   mPresShell->SetIgnoreFrameDestruction(true);
 
   if (mRootFrame) {
-    FrameDestroyContext context(mRootFrame);
-    mRootFrame->Destroy(context);
+    mRootFrame->Destroy();
     mRootFrame = nullptr;
   }
 
