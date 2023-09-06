@@ -84,6 +84,7 @@ class AndroidWebAuthnResult {
 
   // Attestation-only
   nsTArray<uint8_t> mAttObj;
+  nsTArray<nsString> mTransports;
 
   // Attestations and assertions
   nsTArray<uint8_t> mKeyHandle;

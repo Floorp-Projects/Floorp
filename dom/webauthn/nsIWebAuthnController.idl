@@ -119,12 +119,7 @@ interface nsICtapRegisterResult : nsISupports {
     // attestationObject.
     readonly attribute Array<octet> credentialId;
 
-    // Bug 1536155
-    // readonly attribute Array<AString> transports;
-
-    // Bug 1816520
-    // readonly attribute Array<octet> publicKey
-    // readonly attribute COSEAlgorithmIdentifier publicKeyAlgorithm;
+    readonly attribute Array<AString> transports;
 
     // bug 1593571
     // readonly attribute bool hmacCreateSecret;

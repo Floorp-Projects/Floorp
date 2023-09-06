@@ -35,7 +35,11 @@ class AuthenticatorAttestationResponse final : public AuthenticatorResponse {
   void GetAttestationObject(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
                             ErrorResult& aRv);
 
-  nsresult SetAttestationObject(const nsTArray<uint8_t>& aBuffer);
+  void SetAttestationObject(const nsTArray<uint8_t>& aBuffer);
+
+  void GetTransports(nsTArray<nsString>& aTransports);
+
+  void SetTransports(const nsTArray<nsString>& aTransports);
 
   void GetAuthenticatorData(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
                             ErrorResult& aRv);
@@ -49,6 +53,7 @@ class AuthenticatorAttestationResponse final : public AuthenticatorResponse {
   nsTArray<uint8_t> mAttestationObject;
   nsCOMPtr<nsIWebAuthnAttObj> mAttestationObjectParsed;
   JS::Heap<JSObject*> mAttestationObjectCachedObj;
+  nsTArray<nsString> mTransports;
 };
 
 }  // namespace mozilla::dom

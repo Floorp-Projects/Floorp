@@ -92,6 +92,7 @@ struct WebAuthnMakeCredentialResult {
   nsCString ClientDataJSON;
   uint8_t[] AttestationObject;
   uint8_t[] KeyHandle;
+  nsString[] Transports;
   WebAuthnExtensionResult[] Extensions;
 };
 

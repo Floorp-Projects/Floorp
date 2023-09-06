@@ -711,6 +711,7 @@ void WebAuthnManager::FinishMakeCredential(
       new AuthenticatorAttestationResponse(mParent);
   attestation->SetClientDataJSON(aResult.ClientDataJSON());
   attestation->SetAttestationObject(aResult.AttestationObject());
+  attestation->SetTransports(aResult.Transports());
 
   RefPtr<PublicKeyCredential> credential = new PublicKeyCredential(mParent);
   credential->SetId(NS_ConvertASCIItoUTF16(keyHandleBase64Url));
