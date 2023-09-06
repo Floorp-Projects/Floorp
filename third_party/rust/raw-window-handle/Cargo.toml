@@ -10,9 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.64"
 name = "raw-window-handle"
-version = "0.5.0"
+version = "0.5.2"
 authors = ["Osspial <osspial@gmail.com>"]
 description = "Interoperability library for Rust Windowing applications."
 documentation = "https://docs.rs/raw-window-handle"
@@ -28,14 +29,6 @@ rustdoc-args = [
     "docsrs",
 ]
 
-[dependencies.cty]
-version = "0.2"
-
 [features]
 alloc = []
-
-[badges.appveyor]
-repository = "rust-windowing/raw-window-handle"
-
-[badges.travis-ci]
-repository = "rust-windowing/raw-window-handle"
+std = ["alloc"]

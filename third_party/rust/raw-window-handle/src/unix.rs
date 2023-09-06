@@ -1,7 +1,5 @@
-use core::ffi::c_void;
+use core::ffi::{c_int, c_ulong, c_void};
 use core::ptr;
-
-use cty::{c_int, c_ulong};
 
 /// Raw display handle for Xlib.
 ///
