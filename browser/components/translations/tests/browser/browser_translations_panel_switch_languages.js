@@ -18,47 +18,36 @@ add_task(async function test_translations_panel_switch_language() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
-  const { translateButton, fromMenuList, toMenuList } =
-    TranslationsPanel.elements;
+  const { translateButton } = TranslationsPanel.elements;
 
   ok(!translateButton.disabled, "The translate button starts as enabled");
-  is(fromMenuList.value, "es", "The from select starts as Spanish");
-  is(toMenuList.value, "en", "The to select starts as English");
 
-  info('Switch from language to "es"');
-  fromMenuList.value = "en";
-  fromMenuList.dispatchEvent(new Event("command"));
+  assertSelectedFromLanguage("es");
+  assertSelectedToLanguage("en");
+
+  switchSelectedFromLanguage("en");
 
   ok(
     translateButton.disabled,
     "The translate button is disabled when the languages are the same"
   );
 
-  info('Switch from language back to "es"');
-  fromMenuList.value = "es";
-  fromMenuList.dispatchEvent(new Event("command"));
+  switchSelectedFromLanguage("es");
 
   ok(
     !translateButton.disabled,
     "When the languages are different it can be translated"
   );
 
-  info("Switch to language to nothing");
-  fromMenuList.value = "";
-  fromMenuList.dispatchEvent(new Event("command"));
+  switchSelectedFromLanguage("");
 
   ok(
     translateButton.disabled,
     "The translate button is disabled nothing is selected."
   );
 
-  info('Switch from language to "en"');
-  fromMenuList.value = "en";
-  fromMenuList.dispatchEvent(new Event("command"));
-
-  info('Switch to language to "fr"');
-  toMenuList.value = "fr";
-  toMenuList.dispatchEvent(new Event("command"));
+  switchSelectedFromLanguage("en");
+  switchSelectedToLanguage("fr");
 
   ok(!translateButton.disabled, "The translate button can now be used");
 
