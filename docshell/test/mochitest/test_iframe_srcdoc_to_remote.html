@@ -22,7 +22,8 @@
                 // eslint-disable-next-line @microsoft/sdl/no-insecure-url
                 frame.contentWindow.location = "http://example.net/tests/docshell/test/dummy_page.html";
             });
-            if (SpecialPowers.useRemoteSubframes) {
+
+            if (SpecialPowers.effectiveIsolationStrategy() == SpecialPowers.ISOLATION_STRATEGY.IsolateEverything) {
               ok(SpecialPowers.Cu.isRemoteProxy(frame.contentWindow), "should be a remote frame");
             }
 
