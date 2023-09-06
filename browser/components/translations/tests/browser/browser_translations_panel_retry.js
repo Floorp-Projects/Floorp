@@ -36,14 +36,7 @@ add_task(async function test_translations_panel_retry() {
 
   await resolveDownloads(1);
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The pages H1 is translated.",
-      getH1,
-      "DON QUIJOTE DE LA MANCHA [es to en, html]"
-    );
-  });
+  await assertPageIsTranslated("es", "en", runInPage);
 
   await waitForTranslationsPopupEvent(
     "popupshown",
@@ -68,14 +61,7 @@ add_task(async function test_translations_panel_retry() {
   // This is a pivot language which requires 2 models.
   await resolveDownloads(2);
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The pages H1 is translated using the changed languages.",
-      getH1,
-      "DON QUIJOTE DE LA MANCHA [es to fr, html]"
-    );
-  });
+  await assertPageIsTranslated("es", "fr", runInPage);
 
   await cleanup();
 });

@@ -79,30 +79,7 @@ add_task(async function test_translations_panel_basics() {
 
   await resolveDownloads(1);
 
-  const { locale } = await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: true, icon: true },
-    "The icon presents the locale."
-  );
-
-  is(
-    button.getAttribute("data-l10n-id"),
-    "urlbar-translations-button-translated"
-  );
-  is(
-    button.getAttribute("data-l10n-args"),
-    '{"fromLanguage":"Spanish","toLanguage":"English"}'
-  );
-
-  is(locale.innerText, "en", "The English language tag is shown.");
-
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The pages H1 is translated.",
-      getH1,
-      "DON QUIJOTE DE LA MANCHA [es to en, html]"
-    );
-  });
+  await assertPageIsTranslated("es", "en", runInPage);
 
   await waitForTranslationsPopupEvent(
     "popupshown",
