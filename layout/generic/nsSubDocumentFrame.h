@@ -53,7 +53,8 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;

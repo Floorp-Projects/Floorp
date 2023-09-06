@@ -845,16 +845,17 @@ nsIFrame* nsComboboxControlFrame::CreateFrameForDisplayNode() {
   return mDisplayFrame;
 }
 
-void nsComboboxControlFrame::Destroy(DestroyContext& aContext) {
+void nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                         PostDestroyData& aPostDestroyData) {
   // Revoke any pending RedisplayTextEvent
   mRedisplayTextEvent.Revoke();
 
   mEventListener->Detach();
 
   // Cleanup frames in popup child list
-  aContext.AddAnonymousContent(mDisplayContent.forget());
-  aContext.AddAnonymousContent(mButtonContent.forget());
-  nsBlockFrame::Destroy(aContext);
+  aPostDestroyData.AddAnonymousContent(mDisplayContent.forget());
+  aPostDestroyData.AddAnonymousContent(mButtonContent.forget());
+  nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 const nsFrameList& nsComboboxControlFrame::GetChildList(

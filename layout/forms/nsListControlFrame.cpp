@@ -77,7 +77,8 @@ Maybe<nscoord> nsListControlFrame::GetNaturalBaselineBOffset(
   return Nothing{};
 }
 // for Bug 47302 (remove this comment later)
-void nsListControlFrame::Destroy(DestroyContext& aContext) {
+void nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                     PostDestroyData& aPostDestroyData) {
   // get the receiver interface from the browser button's content node
   NS_ENSURE_TRUE_VOID(mContent);
 
@@ -85,7 +86,7 @@ void nsListControlFrame::Destroy(DestroyContext& aContext) {
   // event listener can outlive the frame.
 
   mEventListener->Detach();
-  nsHTMLScrollFrame::Destroy(aContext);
+  nsHTMLScrollFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 void nsListControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,

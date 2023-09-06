@@ -136,8 +136,8 @@ class nsBlockFrame : public nsContainerFrame {
       mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
       BaselineExportContext aExportContext) const override;
   nscoord GetCaretBaseline() const override;
-  void Destroy(DestroyContext&) override;
-
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
   bool IsFloatContainingBlock() const override;
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
@@ -551,14 +551,19 @@ class nsBlockFrame : public nsContainerFrame {
    * -- destroys all removed frames
    */
   enum { REMOVE_FIXED_CONTINUATIONS = 0x02, FRAMES_ARE_EMPTY = 0x04 };
-  void DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags, DestroyContext&);
+  void DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags) {
+    AutoPostDestroyData data(PresContext());
+    DoRemoveFrameInternal(aDeletedFrame, aFlags, data.mData);
+  }
 
   void ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
                       bool aReparentSiblings);
 
-  bool ComputeCustomOverflow(mozilla::OverflowAreas&) override;
+  virtual bool ComputeCustomOverflow(
+      mozilla::OverflowAreas& aOverflowAreas) override;
 
-  void UnionChildOverflow(mozilla::OverflowAreas&) override;
+  virtual void UnionChildOverflow(
+      mozilla::OverflowAreas& aOverflowAreas) override;
 
   /**
    * Load all of aFrame's floats into the float manager iff aFrame is not a
@@ -596,6 +601,10 @@ class nsBlockFrame : public nsContainerFrame {
   bool IsInLineClampContext() const;
 
  protected:
+  /** @see DoRemoveFrame */
+  void DoRemoveFrameInternal(nsIFrame* aDeletedFrame, uint32_t aFlags,
+                             PostDestroyData& data);
+
   /** grab overflow lines from this block's prevInFlow, and make them
    * part of this block's mLines list.
    * @return true if any lines were drained.
@@ -668,7 +677,7 @@ class nsBlockFrame : public nsContainerFrame {
                        bool aCollectFromSiblings);
 
   // Remove a float, abs, rel positioned frame from the appropriate block's list
-  static void DoRemoveOutOfFlowFrame(nsIFrame* aFrame, DestroyContext&);
+  static void DoRemoveOutOfFlowFrame(nsIFrame* aFrame);
 
   /** set up the conditions necessary for an resize reflow
    * the primary task is to mark the minimumly sufficient lines dirty.

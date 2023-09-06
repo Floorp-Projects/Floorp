@@ -39,7 +39,8 @@ class nsFileControlFrame final : public nsBlockFrame,
   nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
   void SetFocus(bool aOn, bool aRepaint) override;
 
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;

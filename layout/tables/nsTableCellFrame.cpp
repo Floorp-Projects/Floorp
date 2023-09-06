@@ -81,10 +81,10 @@ void nsTableCellFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 }
 
-void nsTableCellFrame::Destroy(DestroyContext& aContext) {
-  nsTableFrame::MaybeUnregisterPositionedTablePart(this,
-                                                   aContext.DestructRoot());
-  nsContainerFrame::Destroy(aContext);
+void nsTableCellFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                   PostDestroyData& aPostDestroyData) {
+  nsTableFrame::MaybeUnregisterPositionedTablePart(this, aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 // nsIPercentBSizeObserver methods

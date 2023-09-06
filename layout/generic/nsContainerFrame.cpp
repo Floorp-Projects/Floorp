@@ -183,8 +183,7 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     // We really MUST use StealFrame() and nothing else here.
     // @see nsInlineFrame::StealFrame for details.
     parent->StealFrame(continuation);
-    DestroyContext context(continuation);
-    continuation->Destroy(context);
+    continuation->Destroy();
     if (generateReflowCommand && parent != lastParent) {
       presShell->FrameNeedsReflow(parent, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -193,23 +192,25 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   }
 }
 
-void nsContainerFrame::DestroyAbsoluteFrames(DestroyContext& aContext) {
+void nsContainerFrame::DestroyAbsoluteFrames(
+    nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) {
   if (IsAbsoluteContainer()) {
-    GetAbsoluteContainingBlock()->DestroyFrames(aContext);
+    GetAbsoluteContainingBlock()->DestroyFrames(this, aDestructRoot,
+                                                aPostDestroyData);
     MarkAsNotAbsoluteContainingBlock();
   }
 }
 
 void nsContainerFrame::SafelyDestroyFrameListProp(
-    DestroyContext& aContext, mozilla::PresShell* aPresShell,
-    FrameListPropertyDescriptor aProp) {
+    nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData,
+    mozilla::PresShell* aPresShell, FrameListPropertyDescriptor aProp) {
   // Note that the last frame can be removed through another route and thus
   // delete the property -- that's why we fetch the property again before
   // removing each frame rather than fetching it once and iterating the list.
   while (nsFrameList* frameList = GetProperty(aProp)) {
     nsIFrame* frame = frameList->RemoveFirstChild();
     if (MOZ_LIKELY(frame)) {
-      frame->Destroy(aContext);
+      frame->DestroyFrom(aDestructRoot, aPostDestroyData);
     } else {
       Unused << TakeProperty(aProp);
       frameList->Delete(aPresShell);
@@ -218,16 +219,17 @@ void nsContainerFrame::SafelyDestroyFrameListProp(
   }
 }
 
-void nsContainerFrame::Destroy(DestroyContext& aContext) {
+void nsContainerFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                   PostDestroyData& aPostDestroyData) {
   // Prevent event dispatch during destruction.
   if (HasView()) {
     GetView()->SetFrame(nullptr);
   }
 
-  DestroyAbsoluteFrames(aContext);
+  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
 
   // Destroy frames on the principal child list.
-  mFrames.DestroyFrames(aContext);
+  mFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
 
   // If we have any IB split siblings, clear their references to us.
   if (HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
@@ -273,18 +275,19 @@ void nsContainerFrame::Destroy(DestroyContext& aContext) {
     nsPresContext* pc = PresContext();
     mozilla::PresShell* presShell = pc->PresShell();
     if (hasO) {
-      SafelyDestroyFrameListProp(aContext, presShell, OverflowProperty());
+      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
+                                 OverflowProperty());
     }
 
     MOZ_ASSERT(
         IsFrameOfType(eCanContainOverflowContainers) || !(hasOC || hasEOC),
         "this type of frame shouldn't have overflow containers");
     if (hasOC) {
-      SafelyDestroyFrameListProp(aContext, presShell,
+      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
                                  OverflowContainersProperty());
     }
     if (hasEOC) {
-      SafelyDestroyFrameListProp(aContext, presShell,
+      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
                                  ExcessOverflowContainersProperty());
     }
 
@@ -292,11 +295,12 @@ void nsContainerFrame::Destroy(DestroyContext& aContext) {
                    StyleDisplay()->mTopLayer != StyleTopLayer::None,
                "only top layer frame may have backdrop");
     if (hasBackdrop) {
-      SafelyDestroyFrameListProp(aContext, presShell, BackdropProperty());
+      SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
+                                 BackdropProperty());
     }
   }
 
-  nsSplittableFrame::Destroy(aContext);
+  nsSplittableFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -892,7 +896,8 @@ void nsContainerFrame::ReflowChild(
   // but only if the NoDeleteNextInFlowChild flag isn't set.
   if (!aStatus.IsInlineBreakBefore() && aStatus.IsFullyComplete() &&
       !(aFlags & ReflowChildFlags::NoDeleteNextInFlowChild)) {
-    if (nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow()) {
+    nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow();
+    if (kidNextInFlow) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
@@ -931,7 +936,8 @@ void nsContainerFrame::ReflowChild(nsIFrame* aKidFrame,
   // but only if the NoDeleteNextInFlowChild flag isn't set.
   if (aStatus.IsFullyComplete() &&
       !(aFlags & ReflowChildFlags::NoDeleteNextInFlowChild)) {
-    if (nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow()) {
+    nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow();
+    if (kidNextInFlow) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
@@ -1375,8 +1381,8 @@ void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
       frames.AppendElement(f);
     }
     for (nsIFrame* delFrame : Reversed(frames)) {
-      nsContainerFrame* parent = delFrame->GetParent();
-      parent->DeleteNextInFlowChild(delFrame, aDeletingEmptyFrames);
+      delFrame->GetParent()->DeleteNextInFlowChild(delFrame,
+                                                   aDeletingEmptyFrames);
     }
   }
 
@@ -1391,8 +1397,7 @@ void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
 
   // Delete the next-in-flow frame and its descendants. This will also
   // remove it from its next-in-flow/prev-in-flow chain.
-  DestroyContext context(aNextInFlow);
-  aNextInFlow->Destroy(context);
+  aNextInFlow->Destroy();
 
   MOZ_ASSERT(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
 }

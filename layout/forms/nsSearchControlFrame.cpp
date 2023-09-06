@@ -39,9 +39,10 @@ nsSearchControlFrame::nsSearchControlFrame(ComputedStyle* aStyle,
                                            nsPresContext* aPresContext)
     : nsTextControlFrame(aStyle, aPresContext, kClassID) {}
 
-void nsSearchControlFrame::Destroy(DestroyContext& aContext) {
-  aContext.AddAnonymousContent(mClearButton.forget());
-  nsTextControlFrame::Destroy(aContext);
+void nsSearchControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                       PostDestroyData& aPostDestroyData) {
+  aPostDestroyData.AddAnonymousContent(mClearButton.forget());
+  nsTextControlFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsresult nsSearchControlFrame::CreateAnonymousContent(

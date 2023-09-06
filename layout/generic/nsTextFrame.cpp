@@ -3868,7 +3868,8 @@ void nsTextFrame::ClearFrameOffsetCache() {
   }
 }
 
-void nsTextFrame::Destroy(DestroyContext& aContext) {
+void nsTextFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                              PostDestroyData& aPostDestroyData) {
   ClearFrameOffsetCache();
 
   // We might want to clear NS_CREATE_FRAME_IF_NON_WHITESPACE or
@@ -3879,7 +3880,7 @@ void nsTextFrame::Destroy(DestroyContext& aContext) {
     mNextContinuation->SetPrevInFlow(nullptr);
   }
   // Let the base class destroy the frame
-  nsIFrame::Destroy(aContext);
+  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsTArray<nsTextFrame*>* nsTextFrame::GetContinuations() {
@@ -3921,7 +3922,8 @@ class nsContinuingTextFrame final : public nsTextFrame {
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) final;
 
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) final;
 
   nsTextFrame* GetPrevContinuation() const final { return mPrevContinuation; }
 
@@ -4087,7 +4089,8 @@ void nsContinuingTextFrame::Init(nsIContent* aContent,
   }  // prev frame is bidi
 }
 
-void nsContinuingTextFrame::Destroy(DestroyContext& aContext) {
+void nsContinuingTextFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                        PostDestroyData& aPostDestroyData) {
   ClearFrameOffsetCache();
 
   // The text associated with this frame will become associated with our
@@ -4110,7 +4113,7 @@ void nsContinuingTextFrame::Destroy(DestroyContext& aContext) {
   }
   nsSplittableFrame::RemoveFromFlow(this);
   // Let the base class destroy the frame
-  nsIFrame::Destroy(aContext);
+  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsIFrame* nsContinuingTextFrame::FirstInFlow() const {
@@ -8893,8 +8896,7 @@ static void RemoveEmptyInFlows(nsTextFrame* aFrame,
     // Manually call DoRemoveFrame so we can tell it that we're
     // removing empty frames; this will keep it from blowing away
     // text runs.
-    nsIFrame::DestroyContext context(aFrame);
-    parentBlock->DoRemoveFrame(aFrame, nsBlockFrame::FRAMES_ARE_EMPTY, context);
+    parentBlock->DoRemoveFrame(aFrame, nsBlockFrame::FRAMES_ARE_EMPTY);
   } else {
     // Just remove it normally; use FrameChildListID::NoReflowPrincipal to avoid
     // posting new reflows.

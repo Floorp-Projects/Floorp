@@ -26,9 +26,6 @@ class nsIFrame;
 class nsPresContext;
 
 namespace mozilla {
-
-struct FrameDestroyContext;
-
 class PresShell;
 class FrameChildList;
 enum class FrameChildListID {
@@ -52,6 +49,17 @@ enum class FrameChildListID {
   NoReflowPrincipal,
 };
 
+// A helper class for nsIFrame::Destroy[From].  It's defined here because
+// nsFrameList needs it and we can't use nsIFrame here.
+struct PostFrameDestroyData {
+  PostFrameDestroyData(const PostFrameDestroyData&) = delete;
+  PostFrameDestroyData() = default;
+
+  AutoTArray<RefPtr<nsIContent>, 100> mAnonymousContent;
+  void AddAnonymousContent(already_AddRefed<nsIContent>&& aContent) {
+    mAnonymousContent.AppendElement(aContent);
+  }
+};
 }  // namespace mozilla
 
 // Uncomment this to enable expensive frame-list integrity checking
@@ -133,9 +141,10 @@ class nsFrameList {
 
   /**
    * For each frame in this list: remove it from the list then call
-   * Destroy() on it with the passed context as an argument.
+   * DestroyFrom(aDestructRoot, aPostDestroyData) on it.
    */
-  void DestroyFrames(mozilla::FrameDestroyContext&);
+  void DestroyFramesFrom(nsIFrame* aDestructRoot,
+                         mozilla::PostFrameDestroyData& aPostDestroyData);
 
   void Clear() { mFirstChild = mLastChild = nullptr; }
 

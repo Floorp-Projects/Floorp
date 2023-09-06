@@ -68,8 +68,8 @@ class nsInlineFrame : public nsContainerFrame {
       PeekOffsetCharacterOptions aOptions =
           PeekOffsetCharacterOptions()) override;
 
-  void Destroy(DestroyContext&) override;
-
+  virtual void DestroyFrom(nsIFrame* aDestructRoot,
+                           PostDestroyData& aPostDestroyData) override;
   void StealFrame(nsIFrame* aChild) override;
 
   // nsIHTMLReflow overrides

@@ -38,12 +38,13 @@ nsMeterFrame::nsMeterFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
 
 nsMeterFrame::~nsMeterFrame() = default;
 
-void nsMeterFrame::Destroy(DestroyContext& aContext) {
+void nsMeterFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                               PostDestroyData& aPostDestroyData) {
   NS_ASSERTION(!GetPrevContinuation(),
                "nsMeterFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
-  aContext.AddAnonymousContent(mBarDiv.forget());
-  nsContainerFrame::Destroy(aContext);
+  aPostDestroyData.AddAnonymousContent(mBarDiv.forget());
+  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 nsresult nsMeterFrame::CreateAnonymousContent(

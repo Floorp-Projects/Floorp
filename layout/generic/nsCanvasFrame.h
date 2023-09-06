@@ -46,7 +46,8 @@ class nsCanvasFrame final : public nsContainerFrame,
 
   Element* GetDefaultTooltip() override;
 
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList&& aChildList) override;

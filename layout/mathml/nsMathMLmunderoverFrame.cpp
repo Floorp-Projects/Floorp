@@ -75,11 +75,12 @@ nsMathMLmunderoverFrame::InheritAutomaticData(nsIFrame* aParent) {
   return NS_OK;
 }
 
-void nsMathMLmunderoverFrame::Destroy(DestroyContext& aContext) {
+void nsMathMLmunderoverFrame::DestroyFrom(nsIFrame* aDestroyRoot,
+                                          PostDestroyData& aPostDestroyData) {
   if (!mPostReflowIncrementScriptLevelCommands.IsEmpty()) {
     PresShell()->CancelReflowCallback(this);
   }
-  nsMathMLContainerFrame::Destroy(aContext);
+  nsMathMLContainerFrame::DestroyFrom(aDestroyRoot, aPostDestroyData);
 }
 
 uint8_t nsMathMLmunderoverFrame::ScriptIncrement(nsIFrame* aFrame) {

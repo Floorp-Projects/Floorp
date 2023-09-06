@@ -40,7 +40,8 @@ class nsSearchControlFrame final : public nsTextControlFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsSearchControlFrame)
 
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
   // nsIAnonymousContentCreator
   nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;

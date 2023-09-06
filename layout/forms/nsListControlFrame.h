@@ -77,7 +77,8 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
 
   void DidReflow(nsPresContext* aPresContext,
                  const ReflowInput* aReflowInput) final;
-  void Destroy(DestroyContext&) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) final;
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) final;
