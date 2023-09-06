@@ -203,6 +203,10 @@ const bmsController = {
           needLoadedWebpanel[i].disabled = contextWebpanel == null;
         }
       },
+      showWithNumber: num => {
+        targetWebpanel = document.getElementsByClassName("sicon-list")[num];
+        targetWebpanel.click();
+      },
       unloadWebpanel: () => {
         bmsController.controllFunctions.unloadWebpanel(
           clickedWebpanel.replace("select-", "")

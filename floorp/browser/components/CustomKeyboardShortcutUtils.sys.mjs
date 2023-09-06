@@ -138,6 +138,16 @@ export const keyboradShortcutActions = {
 
     // BMS actions
     toggleBMS: ["bmsController.controllFunctions.changeVisibleWenpanel()", "show-bsm", "bms-action"],
+    showPanel1: ["bmsController.eventFunctions.contextMenu.showWithNumber(0)", "show-panel-1", "bms-action"],
+    showPanel2: ["bmsController.eventFunctions.contextMenu.showWithNumber(1)", "show-panel-2", "bms-action"],
+    showPanel3: ["bmsController.eventFunctions.contextMenu.showWithNumber(2)", "show-panel-3", "bms-action"],
+    showPanel4: ["bmsController.eventFunctions.contextMenu.showWithNumber(3)", "show-panel-4", "bms-action"],
+    showPanel5: ["bmsController.eventFunctions.contextMenu.showWithNumber(4)", "show-panel-5", "bms-action"],
+    showPanel6: ["bmsController.eventFunctions.contextMenu.showWithNumber(5)", "show-panel-6", "bms-action"],
+    showPanel7: ["bmsController.eventFunctions.contextMenu.showWithNumber(6)", "show-panel-7", "bms-action"],
+    showPanel8: ["bmsController.eventFunctions.contextMenu.showWithNumber(7)", "show-panel-8", "bms-action"],
+    showPanel9: ["bmsController.eventFunctions.contextMenu.showWithNumber(8)", "show-panel-9", "bms-action"],
+    showPanel10: ["bmsController.eventFunctions.contextMenu.showWithNumber(9)", "show-panel-10", "bms-action"],
 
     // Workspace actions
     openNextWorkspace: ["workspaceFunctions.manageWorkspaceFunctions.changeWorkspaceToBeforeNext();", "open-next-workspace", "workspace-action"],

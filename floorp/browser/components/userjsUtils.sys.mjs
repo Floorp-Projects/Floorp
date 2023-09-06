@@ -8,12 +8,28 @@ import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 
 export const EXPORTED_SYMBOLS = ["userjsUtils"];
 
+/**
+ * An object containing a list of user.js scripts with their corresponding URLs.
+ *
+ * @typedef  {object} UserJsList
+ * @property {string[]} BetterfoxDefault - The URL for the BetterfoxDefault user.js script.
+ * @property {string[]} Securefox - The URL for the Securefox user.js script.
+ * @property {string[]} Fastfox - The URL for the Fastfox user.js script.
+ * @property {string[]} Peskyfox - The URL for the Peskyfox user.js script.
+ * @property {string[]} Smoothfox - The URL for the Smoothfox user.js script.
+ */
+
+/**
+ * An object containing a list of user.js scripts with their corresponding URLs.
+ *
+ * @type {UserJsList}
+ */
 export const userJsList = {
-    BetterfoxDefault: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/user.js"],
-    Securefox: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/Securefox.js"],
-    Fastfox: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/Fastfox.js"],
-    Peskyfox: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/Peskyfox.js"],
-    Smoothfox: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/Smoothfox.js"],
+  BetterfoxDefault: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/user.js"],
+  Securefox: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/Securefox.js"],
+  Fastfox: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/Fastfox.js"],
+  Peskyfox: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/Peskyfox.js"],
+  Smoothfox: ["https://raw.githubusercontent.com/yokoffing/Betterfox/115.0/Smoothfox.js"],
 };
 
 
@@ -28,6 +44,13 @@ export const userjsUtilsFunctions = {
         }
     },
 
+    /**
+     * Sets the user.js file with the contents of the file at the given URL.
+     * 
+     * @async
+     * @param {string} url - The URL of the file to set as the user.js file.
+     * @returns {Promise<void>} - A Promise that resolves when the user.js file has been set.
+     */
     async setUserJSWithURL(url) {
         try{userjs.remove(false);} catch(e) {}
         fetch(url)
@@ -54,6 +77,12 @@ export const userjsUtilsFunctions = {
         await userjsUtilsFunctions.setUserJSWithURL(url);
     },
 
+    /**
+     * Resets preferences to Floorp's default values.
+     * 
+     * @async
+     * @returns {Promise<void>}
+     */
     async resetPreferencesWithUserJsContents() {
         const FileUtilsPath = FileUtils.getFile("ProfD", ["user.js"]);
         const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
