@@ -8,19 +8,47 @@ add_task(async function () {
   const dbg = await initDebugger("doc-return-values.html");
   await togglePauseOnExceptions(dbg, true, true);
 
-  await testReturnValue(dbg, "to sender");
-  await testThrowValue(dbg, "a fit");
+  info("Test return values");
+  await testReturnValue(dbg, "to sender", [
+    { label: "return_something" },
+    { label: "<return>", value: uneval("to sender") },
+  ]);
+  await testReturnValue(dbg, "undefined", [
+    { label: "return_something" },
+    { label: "<return>", value: '"undefined"' },
+  ]);
+  await testReturnValue(dbg, 2, [
+    { label: "return_something" },
+    { label: "<return>", value: "2" },
+  ]);
+  await testReturnValue(dbg, new Error("blah"), [
+    { label: "return_something" },
+    { label: "<return>", value: "Restricted" },
+  ]);
+
+  info("Test throw values");
+  await testThrowValue(dbg, "a fit", [
+    { label: "callee" },
+    // The "uneval" call here gives us the way one would write `val` as
+    // a JavaScript expression, similar to the way the debugger
+    // displays values, so this test works when `val` is a string.
+    { label: "<exception>", value: uneval("a fit") },
+  ]);
+  await testThrowValue(dbg, "undefined", [
+    { label: "callee" },
+    { label: "<exception>", value: '"undefined"' },
+  ]);
+  await testThrowValue(dbg, 2, [
+    { label: "callee" },
+    { label: "<exception>", value: "2" },
+  ]);
+  await testThrowValue(dbg, new Error("blah"), [
+    { label: "callee" },
+    { label: "<exception>", value: "Restricted" },
+  ]);
 });
 
-function getLabel(dbg, index) {
-  return findElement(dbg, "scopeNode", index).innerText;
-}
-
-function getValue(dbg, index) {
-  return findElement(dbg, "scopeValue", index).innerText;
-}
-
-async function testReturnValue(dbg, val) {
+async function testReturnValue(dbg, val, expectedScopeNodes) {
   invokeInTab("return_something", val);
   await waitForPaused(dbg);
 
@@ -29,25 +57,27 @@ async function testReturnValue(dbg, val) {
   await stepIn(dbg);
   await stepIn(dbg);
 
-  is(getLabel(dbg, 1), "return_something", "check for return_something");
-
-  // We don't show "undefined" but we do show other falsy values.
-  const label = getLabel(dbg, 2);
-  if (val === "undefined") {
-    ok(label !== "<return>", "do not show <return> for undefined");
-  } else {
-    is(label, "<return>", "check for <return>");
-    // The "uneval" call here gives us the way one would write `val` as
-    // a JavaScript expression, similar to the way the debugger
-    // displays values, so this test works when `val` is a string.
-    is(getValue(dbg, 2), uneval(val), `check value is ${uneval(val)}`);
+  for (const [i, scopeNode] of expectedScopeNodes.entries()) {
+    const index = i + 1;
+    is(
+      getScopeLabel(dbg, index),
+      scopeNode.label,
+      `check for ${scopeNode.label}`
+    );
+    if (scopeNode.value) {
+      is(
+        getScopeValue(dbg, index),
+        scopeNode.value,
+        `check value is ${scopeNode.value}`
+      );
+    }
   }
 
   await resume(dbg);
   assertNotPaused(dbg);
 }
 
-async function testThrowValue(dbg, val) {
+async function testThrowValue(dbg, val, expectedScopeNodes) {
   invokeInTab("throw_something", val);
   await waitForPaused(dbg);
 
@@ -55,12 +85,21 @@ async function testThrowValue(dbg, val) {
   // exception.
   await stepIn(dbg);
 
-  is(getLabel(dbg, 1), "callee", "check for callee");
-  is(getLabel(dbg, 2), "<exception>", "check for <exception>");
-  // The "uneval" call here gives us the way one would write `val` as
-  // a JavaScript expression, similar to the way the debugger
-  // displays values, so this test works when `val` is a string.
-  is(getValue(dbg, 2), uneval(val), `check exception is ${uneval(val)}`);
+  for (const [i, scopeNode] of expectedScopeNodes.entries()) {
+    const index = i + 1;
+    is(
+      getScopeLabel(dbg, index),
+      scopeNode.label,
+      `check for ${scopeNode.label}`
+    );
+    if (scopeNode.value) {
+      is(
+        getScopeValue(dbg, index),
+        scopeNode.value,
+        `check exception is ${scopeNode.value}`
+      );
+    }
+  }
 
   await resume(dbg);
   assertNotPaused(dbg);
