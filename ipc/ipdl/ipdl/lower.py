@@ -64,9 +64,9 @@ class LowerToCxx:
 
 
 def hashfunc(value):
-    h = hash_str(value) % 2 ** 32
+    h = hash_str(value) % 2**32
     if h < 0:
-        h += 2 ** 32
+        h += 2**32
     return h
 
 
@@ -2275,7 +2275,7 @@ class _ParamTraits:
         # After non-pod data, bulk read/write pod data in member order. This has
         # to be done after the result has been constructed, so that we have
         # somewhere to read into.
-        for (size, fields) in itertools.groupby(
+        for size, fields in itertools.groupby(
             sd.fields_member_order(), lambda f: pod_size(f.ipdltype)
         ):
             if size != pod_size_sentinel:
@@ -2517,7 +2517,7 @@ class _ComputeTypeDeps(TypeVisitor):
 
 def _fieldStaticAssertions(sd):
     staticasserts = []
-    for (size, fields) in itertools.groupby(
+    for size, fields in itertools.groupby(
         sd.fields_member_order(), lambda f: pod_size(f.ipdltype)
     ):
         if size == pod_size_sentinel:

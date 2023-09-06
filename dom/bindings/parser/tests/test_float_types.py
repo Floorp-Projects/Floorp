@@ -55,7 +55,7 @@ def WebIDLTest(parser, harness):
     method = iface.members[6]
     harness.ok(isinstance(method, WebIDL.IDLMethod), "Should be an IDLMethod")
     argtypes = [a.type for a in method.signatures()[0][1]]
-    for (idx, type) in enumerate(argtypes):
+    for idx, type in enumerate(argtypes):
         harness.ok(type.isFloat(), "Type %d should be float" % idx)
         harness.check(
             type.isUnrestricted(),

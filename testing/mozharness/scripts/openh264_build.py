@@ -103,7 +103,6 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
         all_actions=all_actions,
         default_actions=default_actions,
     ):
-
         # Default configuration
         default_config = {
             "debug_build": False,

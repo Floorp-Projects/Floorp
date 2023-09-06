@@ -135,7 +135,6 @@ def split_raptor_subtests(config, tests):
             continue
 
         for chunk_number, subtest in enumerate(subtests):
-
             # Create new test job
             chunked = copy_task(test)
             chunked["chunk-number"] = 1 + chunk_number

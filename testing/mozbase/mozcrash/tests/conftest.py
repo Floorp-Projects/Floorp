@@ -59,7 +59,7 @@ def minidump_files(request, tmpdir):
         extra = tmpdir.join("{}.extra".format(name))
 
         extra.write_text(
-            u"""
+            """
 {
   "ContentSandboxLevel":"2",
   "TelemetryEnvironment":"{🍪}",
@@ -119,7 +119,7 @@ def mock_popen(monkeypatch):
             self.returncode = 0
 
         def communicate(self):
-            return (u"Stackwalk command: {}".format(" ".join(self.args)), "")
+            return ("Stackwalk command: {}".format(" ".join(self.args)), "")
 
         def wait(self):
             return self.returncode

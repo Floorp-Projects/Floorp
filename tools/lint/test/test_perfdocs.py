@@ -549,7 +549,7 @@ def test_perfdocs_verifier_nonexistent_documented_metrics(
         verifier.validate_tree()
 
     assert len(logger.warning.call_args_list) == expected
-    for (args, _) in logger.warning.call_args_list:
+    for args, _ in logger.warning.call_args_list:
         assert "Cannot find documented metric" in args[0]
         assert "being used" in args[0]
 
@@ -604,7 +604,7 @@ def test_perfdocs_verifier_undocumented_metrics(
         verifier.validate_tree()
 
     assert len(logger.warning.call_args_list) == 1
-    for (args, _) in logger.warning.call_args_list:
+    for args, _ in logger.warning.call_args_list:
         assert "Missing description for the metric" in args[0]
 
 
@@ -668,7 +668,7 @@ def test_perfdocs_verifier_duplicate_metrics(
         verifier.validate_tree()
 
     assert len(logger.warning.call_args_list) == expected
-    for (args, _) in logger.warning.call_args_list:
+    for args, _ in logger.warning.call_args_list:
         assert "Duplicate definitions found for " in args[0]
 
 

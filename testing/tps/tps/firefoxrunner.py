@@ -12,7 +12,6 @@ from mozrunner import FirefoxRunner
 
 
 class TPSFirefoxRunner(object):
-
     PROCESS_TIMEOUT = 240
 
     def __init__(self, binary):

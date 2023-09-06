@@ -956,7 +956,6 @@ def save_cache(build_environment, configure_cache):
 @imports("glob")
 @imports(_from="os.path", _import="exists")
 def config_status_deps(build_env, build_project):
-
     topsrcdir = build_env.topsrcdir
     topobjdir = build_env.topobjdir
 

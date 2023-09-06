@@ -2012,10 +2012,10 @@ class XPCShellTests(object):
             maxTime = timedelta(seconds=options["verifyMaxTime"])
             for test_object in self.alltests:
                 stepResults = {}
-                for (descr, step) in steps:
+                for descr, step in steps:
                     stepResults[descr] = "not run / incomplete"
                 finalResult = "PASSED"
-                for (descr, step) in steps:
+                for descr, step in steps:
                     if (datetime.now() - startTime) > maxTime:
                         self.log.info(
                             "::: Test verification is taking too long: Giving up!"

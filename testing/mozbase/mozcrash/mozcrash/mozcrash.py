@@ -768,7 +768,6 @@ if mozinfo.isWin:
                 "kill_pid(): unable to get handle for pid %d: %d" % (pid, err)
             )
 
-
 else:
 
     def kill_pid(pid):

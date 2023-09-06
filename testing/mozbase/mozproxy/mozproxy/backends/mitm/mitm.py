@@ -178,7 +178,6 @@ class Mitmproxy(Playback):
             raise Exception("playback_files should be a list")
 
         for playback_file in self.config["playback_files"]:
-
             if playback_file.startswith("https://") and "mozilla.com" in playback_file:
                 # URL provided
                 dest = os.path.join(self.mozproxy_dir, os.path.basename(playback_file))
@@ -271,7 +270,6 @@ class Mitmproxy(Playback):
 
         # record mode
         if self.record_mode:
-
             # generate recording script paths
 
             command.extend(

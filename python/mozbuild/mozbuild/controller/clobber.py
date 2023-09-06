@@ -80,7 +80,6 @@ class Clobberer(object):
 
         # Object directory clobber older than current is fine.
         if os.path.getmtime(self.src_clobber) <= os.path.getmtime(self.obj_clobber):
-
             return False
 
         return True
@@ -232,7 +231,7 @@ class Clobberer(object):
             self.remove_objdir(False)
             print("Successfully completed auto clobber.", file=fh)
             return True, True, None
-        except (IOError) as error:
+        except IOError as error:
             return (
                 True,
                 False,

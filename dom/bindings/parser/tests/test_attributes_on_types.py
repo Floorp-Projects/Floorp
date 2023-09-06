@@ -337,7 +337,7 @@ def WebIDLTest(parser, harness):
         ),
     ]
 
-    for (name, template) in TEMPLATES:
+    for name, template in TEMPLATES:
         parser = parser.reset()
         threw = False
         try:
@@ -346,7 +346,7 @@ def WebIDLTest(parser, harness):
         except Exception:
             threw = True
         harness.ok(not threw, "Template for %s parses without attributes" % name)
-        for (attribute, type) in ATTRIBUTES:
+        for attribute, type in ATTRIBUTES:
             parser = parser.reset()
             threw = False
             try:

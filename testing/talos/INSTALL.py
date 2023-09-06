@@ -36,7 +36,6 @@ def which(binary, path=os.environ["PATH"]):
 
 
 def main(args=sys.argv[1:]):
-
     # sanity check
     # ensure setup.py exists
     setup_py = os.path.join(here, "setup.py")

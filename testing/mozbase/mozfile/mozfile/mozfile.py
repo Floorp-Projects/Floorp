@@ -387,7 +387,6 @@ def tree(directory, sort_key=lambda x: x.lower()):
     top = depth(directory)
 
     for dirpath, dirnames, filenames in os.walk(directory, topdown=True):
-
         abspath = os.path.abspath(dirpath)
         basename = os.path.basename(abspath)
         parent = os.path.dirname(abspath)
@@ -540,7 +539,6 @@ class NamedTemporaryFile(object):
     def __init__(
         self, mode="w+b", bufsize=-1, suffix="", prefix="tmp", dir=None, delete=True
     ):
-
         import tempfile
 
         fd, path = tempfile.mkstemp(suffix, prefix, dir, "t" in mode)

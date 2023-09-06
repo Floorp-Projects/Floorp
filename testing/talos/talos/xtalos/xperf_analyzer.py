@@ -306,7 +306,7 @@ class XPerfCounter(XPerfAttribute):
     def accumulate(self, evt):
         data = evt.get_whiteboard()
 
-        for (key, comp) in six.iteritems(self.filters):
+        for key, comp in six.iteritems(self.filters):
             try:
                 testdata = data[key]
             except KeyError:
@@ -335,7 +335,7 @@ class XPerfCounter(XPerfAttribute):
         )
         if self.values:
             msg += " with accumulated"
-            for (k, v) in six.iteritems(self.values):
+            for k, v in six.iteritems(self.values):
                 msg += " [[{!s}] == {!s}]".format((k), (v))
         return msg
 

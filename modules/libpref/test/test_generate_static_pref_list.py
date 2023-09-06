@@ -479,7 +479,7 @@ class TestGenerateStaticPrefList(unittest.TestCase):
     def test_bad(self):
         "Test various pieces of bad input."
 
-        for (input_string, expected) in bad_inputs:
+        for input_string, expected in bad_inputs:
             inp = StringIO(input_string)
             try:
                 pref_list = yaml.safe_load(inp)

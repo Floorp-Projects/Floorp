@@ -137,7 +137,7 @@ def _patch_absolute_paths(sentry_event, topsrcdir: Path):
         else:
             return value
 
-    for (target_path, replacement) in (
+    for target_path, replacement in (
         (get_state_dir(), "<statedir>"),
         (str(topsrcdir), "<topsrcdir>"),
         (str(Path.home()), "~"),

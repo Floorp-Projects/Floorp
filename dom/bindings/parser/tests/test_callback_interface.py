@@ -94,7 +94,7 @@ def WebIDLTest(parser, harness):
     """
     )
     results = parser.finish()
-    for (i, iface) in enumerate(results):
+    for i, iface in enumerate(results):
         harness.check(
             iface.isSingleOperationInterface(),
             i < 4,

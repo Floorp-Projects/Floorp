@@ -104,13 +104,13 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
             "android:versionCode from build ID %s: hours underflow "
             "bits allotted!" % buildid
         )
-    if base > 2 ** 17:
+    if base > 2**17:
         raise ValueError(
             "Something has gone horribly wrong: cannot calculate "
             "android:versionCode from build ID %s: hours overflow "
             "bits allotted!" % buildid
         )
-    if base > 2 ** 17 - 366 * 24:
+    if base > 2**17 - 366 * 24:
         raise ValueError(
             "Running out of low order bits calculating "
             "android:versionCode from build ID %s: "

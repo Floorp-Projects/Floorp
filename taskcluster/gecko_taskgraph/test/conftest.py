@@ -194,7 +194,6 @@ def maketgg(monkeypatch):
 
 @pytest.fixture
 def run_transform():
-
     graph_config = fake_load_graph_config("/root")
     kind = FakeKind.create("fake", {}, graph_config)
 
@@ -208,7 +207,6 @@ def run_transform():
 
 @pytest.fixture
 def run_full_config_transform():
-
     graph_config = fake_load_graph_config("/root")
     kind = FakeKind.create("fullfake", {}, graph_config)
 

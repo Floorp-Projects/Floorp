@@ -62,7 +62,6 @@ def verifyIniFile(initests, directory):
 
         found = False
         for f in files:
-
             fname = f.split("/")[-1]
             if fname.endswith(".in"):
                 fname = ".in".join(fname.split(".in")[:-1])

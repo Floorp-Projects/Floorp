@@ -130,7 +130,7 @@ def run(
         migration_configs = yaml.safe_load(f)
     for migration in migrations:
         migration_config = migration_configs["merge-automation"]["behaviors"][migration]
-        for (path, from_, to) in migration_config["replacements"]:
+        for path, from_, to in migration_config["replacements"]:
             if path in files_to_change:
                 contents = files_to_change[path]
             else:

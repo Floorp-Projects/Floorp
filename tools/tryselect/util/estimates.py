@@ -38,7 +38,6 @@ def find_all_dependencies(graph, tasklist):
 
 
 def find_longest_path(graph, tasklist, duration_data):
-
     dep_durations = dict()
 
     def find_dependency_durations(task):
@@ -60,7 +59,6 @@ def find_longest_path(graph, tasklist, duration_data):
 
 
 def determine_percentile(quantiles_file, duration):
-
     duration = duration.total_seconds()
 
     with open(quantiles_file) as f:

@@ -208,7 +208,7 @@ def main():
         if f in ignored_files and (f, 2) in functions:
             fail(f"There should be only one {f} file")
 
-    for (filename, n) in sorted(functions):
+    for filename, n in sorted(functions):
         for fn in functions[(filename, n)]:
             # An allocation is present in a non-special file.  Fail!
             fail("'" + fn + "' present in " + filename)

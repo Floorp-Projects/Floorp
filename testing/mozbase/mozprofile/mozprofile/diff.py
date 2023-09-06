@@ -18,7 +18,6 @@ __all__ = ["diff", "diff_profiles"]
 
 
 def diff(profile1, profile2, diff_function=difflib.unified_diff):
-
     profiles = (profile1, profile2)
     parts = {}
     parts_dict = {}
@@ -59,7 +58,6 @@ def diff(profile1, profile2, diff_function=difflib.unified_diff):
 
 
 def diff_profiles(args=sys.argv[1:]):
-
     # parse command line
     usage = "%prog [options] profile1 profile2"
     parser = optparse.OptionParser(usage=usage, description=__doc__)

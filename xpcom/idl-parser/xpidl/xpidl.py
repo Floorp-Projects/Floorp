@@ -1023,8 +1023,8 @@ class ConstMember(object):
         # Value is a lambda. Resolve it.
         self.value = self.valueFn(self.iface)
 
-        min_val = -(2 ** 31) if basetype.signed else 0
-        max_val = 2 ** 31 - 1 if basetype.signed else 2 ** 32 - 1
+        min_val = -(2**31) if basetype.signed else 0
+        max_val = 2**31 - 1 if basetype.signed else 2**32 - 1
         if self.value < min_val or self.value > max_val:
             raise IDLError(
                 "xpidl constants must fit within %s"

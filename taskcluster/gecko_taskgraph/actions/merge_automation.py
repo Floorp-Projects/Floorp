@@ -70,7 +70,6 @@ def is_release_promotion_available(parameters):
     },
 )
 def merge_automation_action(parameters, graph_config, input, task_group_id, task_id):
-
     # make parameters read-write
     parameters = dict(parameters)
 

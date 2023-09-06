@@ -118,7 +118,6 @@ def _collect(pipe, poll_interval):
     data = []
 
     try:
-
         # Establish initial values.
 
         # We should ideally use a monotonic clock. However, Python 2.7 doesn't
@@ -178,7 +177,6 @@ def _collect(pipe, poll_interval):
         warnings.warn("_collect failed: %s" % e)
 
     finally:
-
         for entry in data:
             pipe.send(entry)
 

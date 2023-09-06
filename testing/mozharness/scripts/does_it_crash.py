@@ -120,7 +120,6 @@ class DoesItCrash(BaseScript):
             self.error("unable to terminate process!")
 
     def run_thing(self):
-
         self.timed_out = False
 
         def timeout_handler(proc):

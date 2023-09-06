@@ -1454,7 +1454,6 @@ class TestEmitterBasic(unittest.TestCase):
 
             # Unified sources are not required
             if sources.have_unified_mapping:
-
                 for f in dict(sources.unified_source_mapping).keys():
                     self.assertIn(
                         mozpath.join(

@@ -24,7 +24,6 @@ SCM_1_LOGIN_SITES = ("facebook", "netflix")
 
 
 def before_iterations(kw):
-
     global next_site
     print("Setting up next site to record.")
 

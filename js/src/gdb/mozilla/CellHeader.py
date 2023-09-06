@@ -21,5 +21,5 @@ def get_header_length_and_flags(value, cache):
         # If we couldn't fetch the length directly, it must be stored
         # within `flags`.
         length = flags >> 32
-        flags = flags % 2 ** 32
+        flags = flags % 2**32
     return length, flags

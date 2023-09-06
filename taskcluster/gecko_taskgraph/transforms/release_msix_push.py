@@ -38,7 +38,6 @@ transforms.add_validate(push_msix_description_schema)
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-
         job["worker"]["upstream-artifacts"] = generate_upstream_artifacts(
             job["dependencies"]
         )

@@ -10,7 +10,6 @@ class TestClientActivity(FOGTestCase):
     """Tests for client activity and FOG's scheduling of the "baseline" ping."""
 
     def test_user_activity(self):
-
         # First test that restarting the browser sends a "active" ping
         ping0 = self.wait_for_ping(
             self.restart_browser, FOG_BASELINE_PING, ping_server=self.fog_ping_server

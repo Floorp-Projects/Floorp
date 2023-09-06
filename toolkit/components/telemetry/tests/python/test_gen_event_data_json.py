@@ -23,7 +23,6 @@ import gen_event_data  # noqa: E402
 
 
 class TestEventDataJson(unittest.TestCase):
-
     maxDiff = None
 
     def test_JSON_definitions_generation(self):

@@ -648,7 +648,6 @@ class FileRecordJSONDecoder(json.JSONDecoder):
 
 
 class Manifest(object):
-
     valid_formats = ("json",)
 
     def __init__(self, file_records=None):

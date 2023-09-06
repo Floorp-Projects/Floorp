@@ -20,7 +20,7 @@ import fontforge
 # generate a set of fonts, each with our special glyph at one codepoint,
 # and nothing else
 for codepoint in range(ord("A"), ord("D") + 1):
-    for (mark, width) in [("", 1500), ("2", 1800)]:
+    for mark, width in [("", 1500), ("2", 1800)]:
         charname = chr(codepoint)
         f = fontforge.font()
         n = "Mark" + mark + charname
@@ -41,8 +41,8 @@ for codepoint in range(ord("A"), ord("D") + 1):
 
 
 for codepoint in range(ord("A"), ord("A") + 1):
-    for (mark, width) in [("", 1500), ("2", 1800)]:
-        for (uposname, upos) in [("low", -350), ("high", -50)]:
+    for mark, width in [("", 1500), ("2", 1800)]:
+        for uposname, upos in [("low", -350), ("high", -50)]:
             charname = chr(codepoint)
             f = fontforge.font()
             n = "Mark" + mark + charname

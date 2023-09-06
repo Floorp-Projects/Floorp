@@ -154,7 +154,7 @@ langpack-contributors = { "" }
         self.assertEqual(len(description), 132)
 
     def test_get_version_maybe_buildid(self):
-        for (app_version, buildid, expected_version) in [
+        for app_version, buildid, expected_version in [
             ("109", "", "109"),
             ("109.0", "", "109.0"),
             ("109.0.0", "", "109.0.0"),

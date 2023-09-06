@@ -140,7 +140,6 @@ class CachesDeleteCleanupAtShutdownTestCase(MarionetteTestCase):
         beforeUsage = self.getUsage()
 
         def ensureCleanCallback():
-
             Wait(self.marionette, timeout=60).until(
                 lambda x: (self.getUsage() - beforeUsage)
                 < EXPECTED_CACHEDIR_SIZE_AFTER_CLEANUP,

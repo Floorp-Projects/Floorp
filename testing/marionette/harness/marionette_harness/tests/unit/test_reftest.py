@@ -46,11 +46,11 @@ class TestReftest(MarionetteTestCase):
         )
         self.marionette._send_message("reftest:teardown", {})
         expected = {
-            u"value": {
-                u"extra": {},
-                u"message": u"Testing about:blank == about:blank\n",
-                u"stack": None,
-                u"status": u"PASS",
+            "value": {
+                "extra": {},
+                "message": "Testing about:blank == about:blank\n",
+                "stack": None,
+                "status": "PASS",
             }
         }
         self.assertEqual(expected, rv)
@@ -70,7 +70,7 @@ class TestReftest(MarionetteTestCase):
             },
         )
         self.marionette._send_message("reftest:teardown", {})
-        self.assertEqual(u"PASS", rv[u"value"][u"status"])
+        self.assertEqual("PASS", rv["value"]["status"])
 
     def test_cache_multiple_sizes(self):
         teal = self.fixtures.where_is("reftest/teal-700x700.html")
@@ -88,7 +88,7 @@ class TestReftest(MarionetteTestCase):
                 "height": 600,
             },
         )
-        self.assertEqual(u"PASS", rv[u"value"][u"status"])
+        self.assertEqual("PASS", rv["value"]["status"])
 
         rv = self.marionette._send_message(
             "reftest:run",
@@ -101,5 +101,5 @@ class TestReftest(MarionetteTestCase):
                 "height": 700,
             },
         )
-        self.assertEqual(u"FAIL", rv[u"value"][u"status"])
+        self.assertEqual("FAIL", rv["value"]["status"])
         self.marionette._send_message("reftest:teardown", {})

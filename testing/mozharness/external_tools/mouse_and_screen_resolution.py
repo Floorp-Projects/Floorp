@@ -51,7 +51,6 @@ def wfetch(url, retries=5):
 
 
 def main():
-
     # NOTE: this script was written for windows 7, but works well with windows 10
     parser = OptionParser()
     parser.add_option(

@@ -21,7 +21,6 @@ if printdoccomments:
         for c in clist:
             fd.write("%s%s\n" % (indent, c))
 
-
 else:
 
     def printComments(fd, clist, indent):

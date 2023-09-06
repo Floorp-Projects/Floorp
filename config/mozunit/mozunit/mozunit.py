@@ -219,7 +219,7 @@ class _MockOpen(_MockBaseOpen):
             content = six.ensure_binary(content or b"")
             return MockedBytesFile(self, name, content)
         else:
-            content = six.ensure_text(content or u"")
+            content = six.ensure_text(content or "")
             return MockedStringFile(self, name, content)
 
 

@@ -508,7 +508,6 @@ class VirtualenvMixin(object):
                     )
 
                     if debug_exe_dir.exists():
-
                         for executable in {
                             "python.exe",
                             "python_d.exe",

@@ -329,7 +329,6 @@ def android_geckoview_docs(
     javadoc_path,
     upload_message,
 ):
-
     tasks = (
         command_context.substs["GRADLE_ANDROID_GECKOVIEW_DOCS_ARCHIVE_TASKS"]
         if archive or upload

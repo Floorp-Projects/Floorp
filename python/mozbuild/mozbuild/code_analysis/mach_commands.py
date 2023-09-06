@@ -99,7 +99,6 @@ class StaticAnalysisMonitor(object):
         self._warnings_database = WarningsDatabase()
 
         def on_warning(warning):
-
             # Output paths relative to repository root if the paths are under repo tree
             warning["filename"] = build_repo_relative_path(
                 warning["filename"], self._srcdir
@@ -542,7 +541,6 @@ def _get_clang_tidy_command(
     jobs,
     fix,
 ):
-
     if checks == "-*":
         checks = ",".join(get_clang_tidy_config(command_context).checks)
 
@@ -786,7 +784,6 @@ def autotest(
                 error_code = ret_val
 
         if error_code != TOOLS_SUCCESS:
-
             command_context.log(
                 logging.INFO,
                 "static-analysis",
@@ -1560,7 +1557,6 @@ def get_clang_tools(
     download_if_needed=True,
     verbose=False,
 ):
-
     rc, clang_paths = _set_clang_tools_paths(command_context)
 
     if rc != 0:
@@ -1803,7 +1799,6 @@ def _copy_clang_format_for_show_diff(
 def _run_clang_format_path(
     command_context, clang_format, paths, output_file, output_format
 ):
-
     # Run clang-format on files or directories directly
     from subprocess import CalledProcessError, check_output
 

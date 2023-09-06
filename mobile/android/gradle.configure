@@ -555,6 +555,7 @@ set_config(
 @imports(_from="itertools", _import="chain")
 def gradle_android_dependencies_tasks(*tasks):
     """Gradle tasks run by |mach android dependencies|."""
+
     # The union, plus a bit more, of all of the Gradle tasks
     # invoked by the android-* automation jobs.
     def withoutGeckoBinaries(task):

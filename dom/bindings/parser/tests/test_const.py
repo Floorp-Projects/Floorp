@@ -64,7 +64,7 @@ def WebIDLTest(parser, harness):
         len(iface.members), len(expected), "Expect %s members" % len(expected)
     )
 
-    for (const, (QName, name, type, value)) in zip(iface.members, expected):
+    for const, (QName, name, type, value) in zip(iface.members, expected):
         harness.ok(isinstance(const, WebIDL.IDLConst), "Should be an IDLConst")
         harness.ok(const.isConst(), "Const is a const")
         harness.ok(not const.isAttr(), "Const is not an attr")

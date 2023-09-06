@@ -114,7 +114,6 @@ class PerftestOutput(object):
         support_data_by_type = {}
 
         for data_set in self.supporting_data:
-
             data_type = data_set["type"]
             LOG.info("summarizing %s data" % data_type)
 
@@ -1353,7 +1352,6 @@ class RaptorOutput(PerftestOutput):
                     subtests.append(new_subtest)
 
             elif test["type"] == "benchmark":
-
                 if any(
                     [
                         "youtube-playback" in measurement

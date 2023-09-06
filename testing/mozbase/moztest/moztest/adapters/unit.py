@@ -169,7 +169,6 @@ class StructuredTestResult(TextTestResult):
 
 
 class StructuredTestRunner(unittest.TextTestRunner):
-
     resultclass = StructuredTestResult
 
     def __init__(self, **kwargs):

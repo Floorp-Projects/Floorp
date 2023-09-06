@@ -271,27 +271,27 @@ class MainTests(unittest.TestCase):
         output.seek(0)
         results = json.load(output)
         assert results == {
-            u"demo-feature": {
-                u"id": u"demo-feature",
-                u"title": u"Demo Feature",
-                u"description": u"A no-op feature to demo the feature gate system.",
-                u"restartRequired": False,
-                u"preference": u"foo.bar.baz",
-                u"type": u"boolean",
-                u"bugNumbers": [1479127],
-                u"isPublic": {u"default": True},
-                u"defaultValue": {u"default": False},
+            "demo-feature": {
+                "id": "demo-feature",
+                "title": "Demo Feature",
+                "description": "A no-op feature to demo the feature gate system.",
+                "restartRequired": False,
+                "preference": "foo.bar.baz",
+                "type": "boolean",
+                "bugNumbers": [1479127],
+                "isPublic": {"default": True},
+                "defaultValue": {"default": False},
             },
-            u"minimal-feature": {
-                u"id": u"minimal-feature",
-                u"title": u"Minimal Feature",
-                u"description": u"The smallest feature that is valid",
-                u"restartRequired": True,
-                u"preference": u"features.minimal-feature.enabled",
-                u"type": u"boolean",
-                u"bugNumbers": [1479127],
-                u"isPublic": {u"default": False},
-                u"defaultValue": {u"default": None},
+            "minimal-feature": {
+                "id": "minimal-feature",
+                "title": "Minimal Feature",
+                "description": "The smallest feature that is valid",
+                "restartRequired": True,
+                "preference": "features.minimal-feature.enabled",
+                "type": "boolean",
+                "bugNumbers": [1479127],
+                "isPublic": {"default": False},
+                "defaultValue": {"default": None},
             },
         }
 

@@ -102,14 +102,14 @@ def generate_feature_manifest(fd, input_file):
         )
 
         fd.write(f"export const FeatureManifest = {json.dumps(manifest)};")
-    except (IOError) as e:
+    except IOError as e:
         print(f"{input_file}: error:\n  {e}\n")
         sys.exit(1)
 
 
 def platform_feature_manifest_array(features):
     entries = []
-    for (feature, featureData) in features.items():
+    for feature, featureData in features.items():
         # Features have to be tagged isEarlyStartup to be accessible
         # to Nimbus platform API
         if not featureData.get("isEarlyStartup", False):
@@ -147,6 +147,6 @@ def generate_platform_feature_manifest(fd, input_file):
         with open(input_file, "r", encoding="utf-8") as yaml_input:
             data = yaml.safe_load(yaml_input)
             fd.write(file_structure(data))
-    except (IOError) as e:
+    except IOError as e:
         print("{}: error:\n  {}\n".format(input_file, e))
         sys.exit(1)

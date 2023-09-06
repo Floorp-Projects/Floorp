@@ -124,7 +124,6 @@ class SupportFilesConverter(object):
         for field, seen in self._fields:
             value = test.get(field, "")
             for pattern in value.split():
-
                 # We track uniqueness locally (per test) where duplicates are forbidden,
                 # and globally, where they are permitted. If a support file appears multiple
                 # times for a single test, there are unnecessary entries in the manifest. But

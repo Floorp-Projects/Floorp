@@ -17,7 +17,6 @@ def filter_changes(line):
 
 
 def run():
-
     parser = argparse.ArgumentParser(
         description="Classify output of taskgraph for CI analsyis"
     )
@@ -35,7 +34,6 @@ def run():
 
     out = {"files": {}, "status": "OK", "threshold": args.threshold}
     for path in args.path.glob("*.txt"):
-
         with path.open() as f:
             nb = len(list(filter(filter_changes, f.readlines())))
 

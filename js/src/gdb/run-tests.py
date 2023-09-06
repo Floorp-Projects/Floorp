@@ -114,7 +114,6 @@ class Summary(object):
             self.bar.finish()
 
         if self.failures:
-
             print("tests failed:")
             for test in self.failures:
                 test.show(sys.stdout)

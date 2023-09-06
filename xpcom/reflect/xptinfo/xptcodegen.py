@@ -148,7 +148,7 @@ def iid_bytes(iid):  # Get the byte representation of the IID for hashing.
 
 # Split a 16-bit integer into its high and low 8 bits
 def splitint(i):
-    assert i < 2 ** 16
+    assert i < 2**16
     return (i >> 8, i & 0xFF)
 
 

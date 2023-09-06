@@ -1033,6 +1033,7 @@ def sysroot(host_or_target, target_sysroot=None):
         opt = "--with-host-sysroot"
         env = "HOST_SYSROOT"
         when = depends(host)(lambda h: h.kernel == "Linux")
+
         # Only bootstrap a host sysroot when using a bootstrapped target sysroot
         # or when the target doesn't use a bootstrapped sysroot in the first place.
         @depends(when, bootstrap_target_when, target_sysroot.bootstrapped)
@@ -1731,7 +1732,6 @@ def select_linker_tmpl(host_or_target):
     @imports("os")
     @imports("shutil")
     def select_linker(linker, c_compiler, developer_options, toolchain_flags, target):
-
         if linker:
             linker = linker[0]
         else:
@@ -2500,6 +2500,7 @@ def cet_ldflags(c_compiler, target):
 
 set_config("MOZ_CETCOMPAT_LDFLAGS", cet_ldflags)
 
+
 # Frame pointers
 # ==============================================================
 @depends(c_compiler)
@@ -2785,6 +2786,7 @@ add_old_configure_assignment(
     "ENABLE_MOZSEARCH_PLUGIN", depends_if("--enable-mozsearch-plugin")(lambda _: True)
 )
 
+
 # Libstdc++ compatibility hacks
 # ==============================================================
 #
@@ -2965,6 +2967,7 @@ add_old_configure_assignment("LIBFUZZER_FLAGS", libfuzzer_flags.use_flags)
 
 # Shared library building
 # ==============================================================
+
 
 # XXX: The use of makefile constructs in these variables is awful.
 @depends(target, c_compiler)

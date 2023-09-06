@@ -64,7 +64,6 @@ def register_filter(func):
 
 
 def filters(*args):
-
     filters_ = [_FILTERS[filter] for filter in args]
     return filters_
 

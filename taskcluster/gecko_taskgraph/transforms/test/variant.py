@@ -60,7 +60,6 @@ def split_variants(config, tasks):
 
         today = datetime.datetime.today()
         for variant in variants:
-
             expiration = variants[variant]["expiration"]
             if len(expiration.split("-")) == 1:
                 continue

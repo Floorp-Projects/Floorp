@@ -128,7 +128,6 @@ class AddDeterministic:
                 with open(
                     path.join(path.dirname(__file__), "catapult/deterministic.js"), "r"
                 ) as jsfile:
-
                     js = jsfile.read().replace(
                         "REPLACE_LOAD_TIMESTAMP", str(self.millis)
                     )

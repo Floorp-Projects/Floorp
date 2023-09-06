@@ -123,7 +123,6 @@ def test_dir(lint, config, paths):
 
 
 def test_fixed(lint, create_temp_file):
-
     contents = """int  main ( ) { \n
 return 0; \n
 

@@ -19,7 +19,7 @@ def fake_cause():
 
 
 message = "foo"
-unicode_message = u"\u201Cfoo"
+unicode_message = "\u201Cfoo"
 cause = fake_cause()
 stacktrace = "first\nsecond"
 
@@ -93,7 +93,7 @@ class TestLookup(marionette_test.MarionetteTestCase):
 
     def test_by_known_unicode_string(self):
         self.assertEqual(
-            errors.NoSuchElementException, errors.lookup(u"no such element")
+            errors.NoSuchElementException, errors.lookup("no such element")
         )
 
 

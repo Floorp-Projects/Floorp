@@ -134,7 +134,7 @@ class ReftestRunner(MozbuildObject):
 
         hyphenation_path = os.path.join(self.topsrcdir, "intl", "locales")
 
-        for (dirpath, dirnames, filenames) in os.walk(hyphenation_path):
+        for dirpath, dirnames, filenames in os.walk(hyphenation_path):
             for filename in filenames:
                 if filename.endswith(".dic"):
                     args.extraProfileFiles.append(os.path.join(dirpath, filename))

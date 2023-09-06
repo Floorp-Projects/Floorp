@@ -410,7 +410,6 @@ class Profile(BaseProfile):
         for prefs_file in ("user.js", "prefs.js"):
             path = os.path.join(self.profile, prefs_file)
             if os.path.exists(path):
-
                 # prefs that get their own section
                 # This is currently only 'network.proxy.autoconfig_url'
                 # but could be expanded to include others

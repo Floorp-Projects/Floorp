@@ -2,7 +2,7 @@ import os
 
 
 def main(request, response):
-    filename = os.path.join(request.doc_root, u"media", u"2x2-green.ogv")
+    filename = os.path.join(request.doc_root, "media", "2x2-green.ogv")
     body = open(filename, "rb").read()
     length = len(body)
     headers = [

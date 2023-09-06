@@ -306,7 +306,6 @@ if platform.system() == "Windows":
             ctypes.windll.kernel32.CloseHandle(handle)
         return result
 
-
 else:
     # Just use the os.path version otherwise.
     realpath = os.path.realpath

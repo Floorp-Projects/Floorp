@@ -68,7 +68,7 @@ def expected_driver_args(runner):
 
     class ExpectedDict(dict):
         def assert_matches(self, actual):
-            for (k, v) in self.items():
+            for k, v in self.items():
                 assert actual[k] == v
 
         def assert_keys_not_in(self, actual):
@@ -85,7 +85,7 @@ class ManifestFixture:
     def __init__(
         self,
         name="mock_manifest",
-        tests=[{"path": u"test_something.py", "expected": "pass"}],
+        tests=[{"path": "test_something.py", "expected": "pass"}],
     ):
         self.filepath = "/path/to/fake/manifest.ini"
         self.n_disabled = len([t for t in tests if "disabled" in t])
@@ -111,13 +111,13 @@ def manifest_with_tests(request):
     included = []
     if "enabled" in request.param:
         included += [
-            (u"test_expected_pass.py", "pass"),
-            (u"test_expected_fail.py", "fail"),
+            ("test_expected_pass.py", "pass"),
+            ("test_expected_fail.py", "fail"),
         ]
     if "disabled" in request.param:
         included += [
-            (u"test_pass_disabled.py", "pass", "skip-if: true"),
-            (u"test_fail_disabled.py", "fail", "skip-if: true"),
+            ("test_pass_disabled.py", "pass", "skip-if: true"),
+            ("test_fail_disabled.py", "fail", "skip-if: true"),
         ]
     keys = ("path", "expected", "disabled")
     active_tests = [dict(list(zip(keys, values))) for values in included]
@@ -423,12 +423,12 @@ def test_reset_test_stats(mock_runner):
     mock_runner.failed = 1
     mock_runner.failures.append(["TEST-UNEXPECTED-FAIL"])
     assert not reset_successful(mock_runner)
-    mock_runner.run_tests([u"test_fake_thing.py"])
+    mock_runner.run_tests(["test_fake_thing.py"])
     assert reset_successful(mock_runner)
 
 
 def test_initialize_test_run(mock_runner):
-    tests = [u"test_fake_thing.py"]
+    tests = ["test_fake_thing.py"]
     mock_runner.reset_test_stats = Mock()
     mock_runner.run_tests(tests)
     assert mock_runner.reset_test_stats.called
@@ -447,7 +447,7 @@ def test_add_tests(mock_runner):
     fake_tests = ["test_" + i + ".py" for i in "abc"]
     mock_runner.run_tests(fake_tests)
     assert len(mock_runner.tests) == 3
-    for (test_name, added_test) in zip(fake_tests, mock_runner.tests):
+    for test_name, added_test in zip(fake_tests, mock_runner.tests):
         assert added_test["filepath"].endswith(test_name)
 
 
@@ -481,15 +481,15 @@ def test_run_until_failure(mock_runner):
 
 
 def test_catch_invalid_test_names(runner):
-    good_tests = [u"test_ok.py", u"test_is_ok.py"]
+    good_tests = ["test_ok.py", "test_is_ok.py"]
     bad_tests = [
-        u"bad_test.py",
-        u"testbad.py",
-        u"_test_bad.py",
-        u"test_bad.notpy",
-        u"test_bad",
-        u"test.py",
-        u"test_.py",
+        "bad_test.py",
+        "testbad.py",
+        "_test_bad.py",
+        "test_bad.notpy",
+        "test_bad",
+        "test.py",
+        "test_.py",
     ]
     with pytest.raises(Exception) as exc:
         runner._add_tests(good_tests + bad_tests)

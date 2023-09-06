@@ -53,7 +53,6 @@ class TestDecision(unittest.TestCase):
 
 
 class TestGetDecisionParameters(unittest.TestCase):
-
     ttc_file = os.path.join(os.getcwd(), "try_task_config.json")
 
     def setUp(self):

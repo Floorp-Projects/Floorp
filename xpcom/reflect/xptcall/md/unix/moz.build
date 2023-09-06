@@ -28,19 +28,15 @@ if CONFIG["OS_ARCH"] == "GNU":
     if CONFIG["CPU_ARCH"] == "x86":
         SOURCES += ["xptcinvoke_gcc_x86_unix.cpp", "xptcstubs_gcc_x86_unix.cpp"]
 
-if (
-    CONFIG["OS_ARCH"]
-    in (
-        "Linux",
-        "Bitrig",
-        "DragonFly",
-        "FreeBSD",
-        "NetBSD",
-        "OpenBSD",
-        "SunOS",
-    )
-    or CONFIG["OS_ARCH"].startswith("GNU_")
-):
+if CONFIG["OS_ARCH"] in (
+    "Linux",
+    "Bitrig",
+    "DragonFly",
+    "FreeBSD",
+    "NetBSD",
+    "OpenBSD",
+    "SunOS",
+) or CONFIG["OS_ARCH"].startswith("GNU_"):
     if CONFIG["CPU_ARCH"] == "x86_64":
         SOURCES += [
             "xptcinvoke_asm_x86_64_unix.S",

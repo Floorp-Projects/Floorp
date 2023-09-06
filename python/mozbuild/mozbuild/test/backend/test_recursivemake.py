@@ -1292,7 +1292,7 @@ class TestRecursiveMakeBackend(BackendTester):
             ("not-installed", "not-installed.prog"),
         ]
         prefix = "PROGRAM = "
-        for (subdir, expected_program) in expected:
+        for subdir, expected_program in expected:
             with io.open(os.path.join(env.topobjdir, subdir, "backend.mk"), "r") as fh:
                 lines = fh.readlines()
                 program = [

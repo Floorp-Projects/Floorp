@@ -58,10 +58,13 @@ def make_repackage_signing_description(config, jobs):
         label = dep_job.label.replace("repackage-", "repackage-signing-")
         # Linux
         label = label.replace("chunking-dummy-", "repackage-signing-")
-        description = "Signing of repackaged artifacts for partner repack id '{repack_id}' for build '" "{build_platform}/{build_type}'".format(  # NOQA: E501
-            repack_id=repack_id,
-            build_platform=attributes.get("build_platform"),
-            build_type=attributes.get("build_type"),
+        description = (
+            "Signing of repackaged artifacts for partner repack id '{repack_id}' for build '"
+            "{build_platform}/{build_type}'".format(  # NOQA: E501
+                repack_id=repack_id,
+                build_platform=attributes.get("build_platform"),
+                build_type=attributes.get("build_type"),
+            )
         )
 
         if "linux" in build_platform:

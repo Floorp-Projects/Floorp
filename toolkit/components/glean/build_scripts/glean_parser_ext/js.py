@@ -65,7 +65,7 @@ def ping_entry(ping_id, ping_string_index):
     The 2 pieces of information of a ping encoded into a single 32-bit integer.
     """
     assert ping_id < 2 ** (32 - PING_INDEX_BITS)
-    assert ping_string_index < 2 ** PING_INDEX_BITS
+    assert ping_string_index < 2**PING_INDEX_BITS
     return ping_id << PING_INDEX_BITS | ping_string_index
 
 

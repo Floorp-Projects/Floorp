@@ -202,7 +202,7 @@ def int_ranges(ints):
     """Yields consecutive ranges (inclusive) from integer values."""
     (a, b) = tee(sorted(ints))
     start = next(b)
-    for (curr, succ) in zip_longest(a, b):
+    for curr, succ in zip_longest(a, b):
         if curr + 1 != succ:
             yield (start, curr)
             start = succ
@@ -280,7 +280,7 @@ def process_derived_core_properties(derived_core_properties):
     id_start = set()
     id_continue = set()
 
-    for (char, prop) in read_derived_core_properties(derived_core_properties):
+    for char, prop in read_derived_core_properties(derived_core_properties):
         if prop == "ID_Start":
             id_start.add(char)
         if prop == "ID_Continue":
@@ -399,7 +399,7 @@ def process_case_folding(case_folding):
     folding_tests = []
     folding_codes = set()
 
-    for (code, mapping) in read_case_folding(case_folding):
+    for code, mapping in read_case_folding(case_folding):
         folding_map[code] = mapping
 
         if mapping not in rev_folding_map:
@@ -466,9 +466,7 @@ def process_special_casing(special_casing, table, index):
         (upper, lower, flags) = table[index[code]]
         return ((code + lower) & 0xFFFF, (code + upper) & 0xFFFF)
 
-    for (code, lower, upper, languages, contexts) in read_special_casing(
-        special_casing
-    ):
+    for code, lower, upper, languages, contexts in read_special_casing(special_casing):
         assert code <= MAX_BMP, "Unexpected character outside of BMP: %s" % code
         assert len(languages) <= 1, "Expected zero or one language ids: %s" % languages
         assert len(contexts) <= 1, (
@@ -686,7 +684,7 @@ def write_special_casing_methods(unconditional_toupper, codepoint_table, println
 
     def describe_range(ranges, depth):
         indent = depth * "    "
-        for (start, end) in ranges:
+        for start, end in ranges:
             if start == end:
                 println(indent, "// {}".format(codepoint_table.full_name(start)))
             else:
@@ -715,7 +713,7 @@ def write_special_casing_methods(unconditional_toupper, codepoint_table, println
     def in_any_range(ranges, spaces):
         """Tests if the input character is included in any of the given ranges."""
         lines = [[]]
-        for (start, end) in ranges:
+        for start, end in ranges:
             expr = in_range(start, end, parenthesize=True)
             line = " || ".join(lines[-1] + [expr])
             if len(line) < (100 - len(spaces) - len(" ||")):
@@ -836,9 +834,7 @@ def write_special_casing_methods(unconditional_toupper, codepoint_table, println
         println("{")
 
         println("    switch(ch) {")
-        for (code, converted) in sorted(
-            unconditional_toupper.items(), key=itemgetter(0)
-        ):
+        for code, converted in sorted(unconditional_toupper.items(), key=itemgetter(0)):
             println(
                 "      case {}: return {}; // {}".format(
                     hexlit(code), len(converted), codepoint_table.name(code)
@@ -860,9 +856,7 @@ def write_special_casing_methods(unconditional_toupper, codepoint_table, println
         println("{")
 
         println("    switch(ch) {")
-        for (code, converted) in sorted(
-            unconditional_toupper.items(), key=itemgetter(0)
-        ):
+        for code, converted in sorted(unconditional_toupper.items(), key=itemgetter(0)):
             println(
                 "      case {}: // {}".format(hexlit(code), codepoint_table.name(code))
             )
@@ -1306,7 +1300,7 @@ def make_unicode_file(
         println("bool")
         println("js::unicode::{}(char32_t codePoint)".format(name))
         println("{")
-        for (from_code, to_code) in int_ranges(group_set.keys()):
+        for from_code, to_code in int_ranges(group_set.keys()):
             println(
                 "    if (codePoint >= 0x{:X} && codePoint <= 0x{:X}) {{ // {} .. {}".format(
                     from_code,
@@ -1381,7 +1375,7 @@ def make_unicode_file(
 def getsize(data):
     """return smallest possible integer size for the given array"""
     maxdata = max(data)
-    assert maxdata < 2 ** 32
+    assert maxdata < 2**32
 
     if maxdata < 256:
         return 1
@@ -1421,7 +1415,7 @@ def splitbins(t):
     for shift in range(maxshift + 1):
         t1 = []
         t2 = []
-        size = 2 ** shift
+        size = 2**shift
         bincache = {}
 
         for i in range(0, len(t), size):
@@ -1445,7 +1439,7 @@ def splitbins(t):
     dump(t1, t2, shift, bytes)
 
     # exhaustively verify that the decomposition is correct
-    mask = 2 ** shift - 1
+    mask = 2**shift - 1
     for i in range(len(t)):
         assert t[i] == t2[(t1[i >> shift] << shift) + (i & mask)]
     return best

@@ -9,7 +9,7 @@ def test_basic(lint, paths):
     results = []
 
     for p in paths():
-        for (root, dirs, files) in os.walk(p):
+        for root, dirs, files in os.walk(p):
             for f in files:
                 if f == ".yamllint":
                     continue

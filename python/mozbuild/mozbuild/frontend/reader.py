@@ -531,7 +531,6 @@ class BuildReaderError(Exception):
         other_error=None,
         sandbox_called_error=None,
     ):
-
         self.file_stack = file_stack
         self.trace = trace
         self.sandbox_called_error = sandbox_called_error

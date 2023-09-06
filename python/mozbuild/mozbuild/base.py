@@ -751,7 +751,7 @@ class MozbuildObject(ProcessExecutionMixin):
             if not psutil or not job_size:
                 num_jobs = cpus
             else:
-                mem_gb = psutil.virtual_memory().total / 1024 ** 3
+                mem_gb = psutil.virtual_memory().total / 1024**3
                 from_mem = round(mem_gb / job_size)
                 num_jobs = max(1, min(cpus, from_mem))
                 print(

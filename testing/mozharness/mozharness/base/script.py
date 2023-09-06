@@ -201,7 +201,7 @@ class PlatformMixin(object):
         if self._is_darwin():
             # osx is a special snowflake and to ensure the arch, it is better to use the following
             return (
-                sys.maxsize > 2 ** 32
+                sys.maxsize > 2**32
             )  # context: https://docs.python.org/2/library/platform.html
         else:
             # Using machine() gives you the architecture of the host rather
@@ -578,7 +578,7 @@ class ScriptMixin(PlatformMixin):
             else:
                 local_file = open(file_name, "wb")
             while True:
-                block = f.read(1024 ** 2)
+                block = f.read(1024**2)
                 if not block:
                     if f_length is not None and got_length != f_length:
                         raise URLError(

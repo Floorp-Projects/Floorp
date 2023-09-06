@@ -14,7 +14,6 @@ if sys.version_info[0] < 3:
     class MetaPathFinder(object):
         pass
 
-
 else:
     from importlib.abc import MetaPathFinder
 

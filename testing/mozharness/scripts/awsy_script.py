@@ -93,7 +93,6 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
     ]
 
     def __init__(self, **kwargs):
-
         kwargs.setdefault("config_options", self.config_options)
         kwargs.setdefault(
             "all_actions",

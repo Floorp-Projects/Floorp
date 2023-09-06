@@ -248,7 +248,7 @@ class SymFileManager:
         self.sCacheLock.acquire()
         try:
             for pdbName in symDirsToInspect:
-                for (mtime, symbolDirPath) in symDirsToInspect[pdbName]:
+                for mtime, symbolDirPath in symDirsToInspect[pdbName]:
                     pdbId = os.path.basename(symbolDirPath)
                     if pdbName in self.sCache and pdbId in self.sCache[pdbName]:
                         symDirsToInspect[pdbName].remove((mtime, symbolDirPath))
@@ -262,7 +262,7 @@ class SymFileManager:
             # The corresponding symbol file name ends with .sym
             symFileName = re.sub(r"\.[^\.]+$", ".sym", pdbName)
 
-            for (mtime, symbolDirPath) in symDirsToInspect[pdbName]:
+            for mtime, symbolDirPath in symDirsToInspect[pdbName]:
                 pdbId = os.path.basename(symbolDirPath)
                 symbolFilePath = symbolDirPath + os.sep + symFileName
                 symbolInfo = self.FetchSymbolsFromFile(symbolFilePath)
@@ -285,7 +285,7 @@ class SymFileManager:
             # Make room for the new symbols
             self.MaybeEvict(fetchedCount)
 
-            for (pdbName, pdbId) in fetchedSymbols:
+            for pdbName, pdbId in fetchedSymbols:
                 if pdbName not in self.sCache:
                     self.sCache[pdbName] = {}
 
@@ -333,7 +333,7 @@ class SymFileManager:
 
         # Evict symbols until evict quota is met, starting with least recently
         # used
-        for (pdbName, pdbId) in reversed(self.sMruSymbols):
+        for pdbName, pdbId in reversed(self.sMruSymbols):
             if numToEvict <= 0:
                 break
 

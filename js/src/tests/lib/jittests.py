@@ -92,7 +92,6 @@ def extend_condition(condition, value):
 
 
 class JitTest:
-
     VALGRIND_CMD = []
     paths = (d for d in os.environ["PATH"].split(os.pathsep))
     valgrinds = (os.path.join(d, "valgrind") for d in paths)
@@ -488,7 +487,7 @@ def check_output(out, err, rc, timed_out, test, options):
         # Python 3 on Windows interprets process exit codes as unsigned
         # integers, where Python 2 used to allow signed integers. Account for
         # each possibility here.
-        if sys.platform == "win32" and rc in (3 - 2 ** 31, 3 + 2 ** 31):
+        if sys.platform == "win32" and rc in (3 - 2**31, 3 + 2**31):
             return True
 
         if sys.platform != "win32" and rc == -11:

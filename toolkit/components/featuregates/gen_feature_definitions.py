@@ -143,7 +143,7 @@ def expand_feature(feature):
             new_key = hyphens_to_camel_case(key)
             key_changes.append((key, new_key))
 
-    for (old_key, new_key) in key_changes:
+    for old_key, new_key in key_changes:
         feature[new_key] = feature[old_key]
         del feature[old_key]
 

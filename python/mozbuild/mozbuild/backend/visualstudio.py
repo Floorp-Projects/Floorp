@@ -441,7 +441,6 @@ class VisualStudioBackend(CommonBackend):
     def _create_natvis_type(
         self, doc, visualizer, name, displayString, stringView=None
     ):
-
         t = visualizer.appendChild(doc.createElement("Type"))
         t.setAttribute("Name", name)
 
@@ -593,7 +592,6 @@ class VisualStudioBackend(CommonBackend):
         headers=[],
         sources=[],
     ):
-
         impl = getDOMImplementation()
         doc = impl.createDocument(MSBUILD_NAMESPACE, "Project", None)
 

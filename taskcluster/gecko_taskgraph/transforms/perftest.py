@@ -289,7 +289,6 @@ def setup_perftest_test_date(config, jobs):
 def setup_regression_detector(config, jobs):
     for job in jobs:
         if "change-detector" in job.get("name"):
-
             tasks_to_analyze = []
             for task in config.params["try_task_config"].get("tasks", []):
                 # Explicitly skip these tasks since they're

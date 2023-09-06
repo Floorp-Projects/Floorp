@@ -835,7 +835,6 @@ class ManifestParser(object):
 
         # walk the directories, generating manifests
         def callback(directory, dirpath, dirnames, filenames):
-
             # absolute paths
             filenames = [os.path.join(dirpath, filename) for filename in filenames]
             # ensure new manifest isn't added

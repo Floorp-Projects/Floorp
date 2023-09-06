@@ -71,7 +71,7 @@ def coseSignature(payload, algorithm, signingKey, signingCertificate, bodyProtec
     #     external_aad : nil
     #     payload : bstr
     # ]
-    sigStructure = [u"Signature", bodyProtected, protectedEncoded, None, payload]
+    sigStructure = ["Signature", bodyProtected, protectedEncoded, None, payload]
     sigStructureEncoded = dumps(sigStructure)
     pykeyHash = coseAlgorithmToPykeyHash(algorithm)
     signature = signingKey.signRaw(sigStructureEncoded, pykeyHash)
@@ -97,7 +97,7 @@ def coseSig(payload, intermediates, signatures):
     protected = {KID: intermediates}
     protectedEncoded = dumps(protected)
     coseSignatures = []
-    for (algorithm, signingKey, signingCertificate) in signatures:
+    for algorithm, signingKey, signingCertificate in signatures:
         coseSignatures.append(
             coseSignature(
                 payload, algorithm, signingKey, signingCertificate, protectedEncoded
@@ -128,7 +128,7 @@ def addManifestEntry(filename, hashes, contents, entries):
     pairs to use, the contents of the file, and the current list
     of manifest entries."""
     entry = "Name: %s\n" % filename
-    for (hashFunc, name) in hashes:
+    for hashFunc, name in hashes:
         base64hash = b64encode(hashFunc(contents).digest()).decode("ascii")
         entry += "%s-Digest: %s\n" % (name, base64hash)
     entries.append(entry)
@@ -230,7 +230,7 @@ def signZip(
     mfEntries.append("")
 
     with zipfile.ZipFile(outputFile, "w", zipfile.ZIP_DEFLATED) as outZip:
-        for (fullPath, internalPath) in walkDirectory(appDirectory):
+        for fullPath, internalPath in walkDirectory(appDirectory):
             with open(fullPath, "rb") as inputFile:
                 contents = inputFile.read()
             outZip.writestr(internalPath, contents)
@@ -276,7 +276,7 @@ def signZip(
         if len(pkcs7Hashes) != 0 or emptySignerInfos:
             mfContents = "\n".join(mfEntries)
             sfContents = "Signature-Version: 1.0\n"
-            for (hashFunc, name) in signatureHashes:
+            for hashFunc, name in signatureHashes:
                 hashed = hashFunc(six.ensure_binary(mfContents)).digest()
                 base64hash = b64encode(hashed).decode("ascii")
                 sfContents += "%s-Digest-Manifest: %s\n" % (name, base64hash)

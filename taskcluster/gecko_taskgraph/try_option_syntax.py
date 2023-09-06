@@ -530,10 +530,8 @@ class TryOptionSyntax:
         # This might be somewhat confusing but we parse the string _backwards_ so
         # there is no ambiguity over what state we are in.
         for char in reversed(input_str):
-
             # , indicates exiting a state
             if char == ",":
-
                 # Exit a particular platform.
                 if in_platforms:
                     add_platform(token)

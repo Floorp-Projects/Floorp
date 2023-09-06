@@ -57,8 +57,7 @@ def read_ini(
     current_section = {}
     current_section_name = ""
     key_indent = 0
-    for (linenum, line) in enumerate(fp.read().splitlines(), start=1):
-
+    for linenum, line in enumerate(fp.read().splitlines(), start=1):
         stripped = line.strip()
 
         # ignore blank lines

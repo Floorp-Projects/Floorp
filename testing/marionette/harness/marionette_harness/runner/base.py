@@ -57,7 +57,6 @@ class MarionetteTest(TestResult):
 
 
 class MarionetteTestResult(StructuredTestResult, TestResultCollection):
-
     resultClass = MarionetteTest
 
     def __init__(self, *args, **kwargs):
@@ -233,7 +232,6 @@ class MarionetteTestResult(StructuredTestResult, TestResultCollection):
 
 
 class MarionetteTextTestRunner(StructuredTestRunner):
-
     resultclass = MarionetteTestResult
 
     def __init__(self, **kwargs):
@@ -603,7 +601,6 @@ class Fixtures(object):
 
 
 class BaseMarionetteTestRunner(object):
-
     textrunnerclass = MarionetteTextTestRunner
     driverclass = Marionette
 

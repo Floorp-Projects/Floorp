@@ -106,7 +106,6 @@ if sys.version_info[0] == 3:
             raise value_.with_traceback(tb_)
         raise value_
 
-
 else:
     exec("def reraise_(tp_, value_, tb_=None):\n    raise tp_, value_, tb_\n")
 
@@ -652,13 +651,13 @@ class RefTest(object):
         ]
 
         stepResults = {}
-        for (descr, step) in steps:
+        for descr, step in steps:
             stepResults[descr] = "not run / incomplete"
 
         startTime = datetime.now()
         maxTime = timedelta(seconds=options.verify_max_time)
         finalResult = "PASSED"
-        for (descr, step) in steps:
+        for descr, step in steps:
             if (datetime.now() - startTime) > maxTime:
                 self.log.info("::: Test verification is taking too long: Giving up!")
                 self.log.info(
@@ -730,7 +729,7 @@ class RefTest(object):
         # First job is only needs-focus tests.  Remaining jobs are
         # non-needs-focus and chunked.
         perProcessArgs[0].insert(-1, "--focus-filter-mode=needs-focus")
-        for (chunkNumber, jobArgs) in enumerate(perProcessArgs[1:], start=1):
+        for chunkNumber, jobArgs in enumerate(perProcessArgs[1:], start=1):
             jobArgs[-1:-1] = [
                 "--focus-filter-mode=non-needs-focus",
                 "--total-chunks=%d" % jobsWithoutFocus,
@@ -770,16 +769,16 @@ class RefTest(object):
         # Output the summaries that the ReftestThread filters suppressed.
         summaryObjects = [defaultdict(int) for s in summaryLines]
         for t in threads:
-            for (summaryObj, (text, categories)) in zip(summaryObjects, summaryLines):
+            for summaryObj, (text, categories) in zip(summaryObjects, summaryLines):
                 threadMatches = t.summaryMatches[text]
-                for (attribute, description) in categories:
+                for attribute, description in categories:
                     amount = int(threadMatches.group(attribute) if threadMatches else 0)
                     summaryObj[attribute] += amount
                 amount = int(threadMatches.group("total") if threadMatches else 0)
                 summaryObj["total"] += amount
 
         print("REFTEST INFO | Result summary:")
-        for (summaryObj, (text, categories)) in zip(summaryObjects, summaryLines):
+        for summaryObj, (text, categories) in zip(summaryObjects, summaryLines):
             details = ", ".join(
                 [
                     "%d %s" % (summaryObj[attribute], description)
@@ -863,7 +862,6 @@ class RefTest(object):
         valgrindSuppFiles=None,
         **profileArgs
     ):
-
         if cmdargs is None:
             cmdargs = []
         cmdargs = cmdargs[:]

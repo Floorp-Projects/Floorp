@@ -176,7 +176,6 @@ AVD_DICT = {
 
 
 def _get_device(substs, device_serial=None):
-
     adb_path = _find_sdk_exe(substs, "adb", False)
     if not adb_path:
         adb_path = "adb"

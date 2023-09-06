@@ -634,7 +634,6 @@ def puppeteer_test(
     product="firefox",
     **kwargs,
 ):
-
     logger = mozlog.commandline.setup_logging(
         "puppeteer-test", kwargs, {"mach": sys.stdout}
     )

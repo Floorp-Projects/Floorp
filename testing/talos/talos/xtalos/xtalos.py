@@ -154,7 +154,6 @@ class XtalosOptions(argparse.ArgumentParser):
         self.set_defaults(**defaults)
 
     def verifyOptions(self, options):
-
         # override options from config file
         if options.configFile:
             options_from_config(options.__dict__, options.configFile)

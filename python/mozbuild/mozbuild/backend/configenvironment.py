@@ -121,7 +121,6 @@ class ConfigEnvironment(object):
         source=None,
         mozconfig=None,
     ):
-
         if not source:
             source = mozpath.join(topobjdir, "config.status")
         self.source = source

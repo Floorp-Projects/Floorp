@@ -286,7 +286,6 @@ class MozconfigLoader(object):
         in_variable = None
 
         for line in output.splitlines():
-
             if not line:
                 continue
 

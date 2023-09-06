@@ -49,7 +49,7 @@ def main(o, crashManager):
     subst = [gen_process_map(), gen_process_pings()]
     with open(crashManager, "r") as src:
         for l in src.readlines():
-            for (id, value) in subst:
+            for id, value in subst:
                 if id in l:
                     l = l.replace(id, value)
             o.write(l)

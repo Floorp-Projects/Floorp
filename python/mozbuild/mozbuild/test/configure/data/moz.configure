@@ -38,6 +38,7 @@ option("--option", env="MOZ_OPTION", help="Option")
 # It is also possible to pass options through the environment only.
 option(env="CC", nargs=1, help="C Compiler")
 
+
 # Call the function when the --enable-simple option is processed, with its
 # OptionValue as argument.
 @depends("--enable-simple")
@@ -47,6 +48,7 @@ def simple(simple):
 
 
 set_config("ENABLED_SIMPLE", simple)
+
 
 # There can be multiple functions depending on the same option.
 @depends("--enable-simple")
@@ -64,6 +66,7 @@ def with_env(with_env):
 
 set_config("WITH_ENV", with_env)
 
+
 # It doesn't matter if the dependency is on --enable or --disable
 @depends("--disable-values")
 def with_env2(values):
@@ -71,6 +74,7 @@ def with_env2(values):
 
 
 set_config("VALUES", with_env2)
+
 
 # It is possible to @depends on environment-only options.
 @depends("CC")
@@ -80,6 +84,7 @@ def is_gcc(cc):
 
 set_config("IS_GCC", is_gcc)
 
+
 # It is possible to depend on the result from another function.
 @depends(with_env2)
 def with_env3(values):
@@ -87,6 +92,7 @@ def with_env3(values):
 
 
 set_config("VALUES2", with_env3)
+
 
 # @depends functions can also return results for use as input to another
 # @depends.
@@ -101,6 +107,7 @@ def with_env5(values):
 
 
 set_config("VALUES3", with_env5)
+
 
 # The result from @depends functions can also be used as input to options.
 # The result must be returned, not implied.
@@ -195,6 +202,7 @@ include(include_path)
 # decorators.
 option("--with-imports", nargs="?", help="Imports")
 
+
 # A limited set of functions from os.path are exposed by default.
 @depends("--with-imports")
 def with_imports(value):
@@ -203,6 +211,7 @@ def with_imports(value):
 
 
 set_config("HAS_ABSPATH", with_imports)
+
 
 # It is still possible to import the full set from os.path.
 # It is also possible to cherry-pick builtins.

@@ -145,7 +145,6 @@ if printdoccomments:
         s += "\n/// ```\n///\n"
         return s
 
-
 else:
 
     def printComments(fd, clist, indent):

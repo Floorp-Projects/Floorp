@@ -90,7 +90,6 @@ class MozProfileCLI(object):
         (self.options, self.args) = self.parser.parse_args(args)
 
     def add_options(self, parser):
-
         parser.add_option(
             "-p",
             "--profile",

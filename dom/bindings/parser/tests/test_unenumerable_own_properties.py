@@ -1,5 +1,4 @@
 def WebIDLTest(parser, harness):
-
     parser.parse(
         """
         interface Foo {};
