@@ -36,8 +36,7 @@ class nsTableWrapperFrame : public nsContainerFrame {
 
   // nsIFrame overrides - see there for a description
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   virtual const nsFrameList& GetChildList(ChildListID aListID) const override;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;

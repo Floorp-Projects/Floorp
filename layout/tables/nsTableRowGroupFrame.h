@@ -57,8 +57,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
     }
   }
 
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   /** @see nsIFrame::DidSetComputedStyle */
   void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;

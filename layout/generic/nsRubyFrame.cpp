@@ -260,8 +260,7 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     // line layout is not aware of the ruby text containers, hence
     // it is necessary to remove them here.
     for (uint32_t i = 0; i < rtcCount; i++) {
-      nsIFrame* nextRTC = textContainers[i]->GetNextInFlow();
-      if (nextRTC) {
+      if (nsIFrame* nextRTC = textContainers[i]->GetNextInFlow()) {
         nextRTC->GetParent()->DeleteNextInFlowChild(nextRTC, true);
       }
     }

@@ -396,10 +396,8 @@ bool nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
   return false;
 }
 
-void nsAbsoluteContainingBlock::DestroyFrames(
-    nsIFrame* aDelegatingFrame, nsIFrame* aDestructRoot,
-    PostDestroyData& aPostDestroyData) {
-  mAbsoluteFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
+void nsAbsoluteContainingBlock::DestroyFrames(DestroyContext& aContext) {
+  mAbsoluteFrames.DestroyFrames(aContext);
 }
 
 void nsAbsoluteContainingBlock::MarkSizeDependentFramesDirty() {

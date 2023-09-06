@@ -26,10 +26,9 @@ nsContainerFrame* NS_NewGfxButtonControlFrame(PresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGfxButtonControlFrame)
 
-void nsGfxButtonControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                          PostDestroyData& aPostDestroyData) {
-  aPostDestroyData.AddAnonymousContent(mTextContent.forget());
-  nsHTMLButtonControlFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsGfxButtonControlFrame::Destroy(DestroyContext& aContext) {
+  aContext.AddAnonymousContent(mTextContent.forget());
+  nsHTMLButtonControlFrame::Destroy(aContext);
 }
 
 #ifdef DEBUG_FRAME_DUMP

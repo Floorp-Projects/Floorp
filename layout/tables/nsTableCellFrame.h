@@ -66,8 +66,7 @@ class nsTableCellFrame : public nsContainerFrame,
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
 #ifdef ACCESSIBILITY
   mozilla::a11y::AccType AccessibleType() override;
