@@ -6,4 +6,4 @@
 
 @template
 def HunspellIncludes():
-    ForceInclude('hunspell_alloc_hooks.h', 'hunspell_fopen_hooks.h')
+    ForceInclude('hunspell_alloc_hooks.h')
