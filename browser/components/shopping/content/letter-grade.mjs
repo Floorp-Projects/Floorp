@@ -25,7 +25,7 @@ class LetterGrade extends MozLitElement {
 
   get fluentStrings() {
     if (!this._fluentStrings) {
-      this._fluentStrings = new Localization(["preview/shopping.ftl"], true);
+      this._fluentStrings = new Localization(["browser/shopping.ftl"], true);
     }
     return this._fluentStrings;
   }
