@@ -8,10 +8,7 @@ const frame2 = "frame2";
 
 add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["media.mediacontrol.testingevents.enabled", true],
-      ["dom.media.mediasession.enabled", true],
-    ],
+    set: [["media.mediacontrol.testingevents.enabled", true]],
   });
 });
 
