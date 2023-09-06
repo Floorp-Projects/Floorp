@@ -124,12 +124,17 @@ import org.mozilla.gecko.util.GeckoBundle;
     public final byte[] clientDataJson;
     public final byte[] keyHandle;
     public final byte[] attestationObject;
+    public final String[] transports;
 
     public MakeCredentialResponse(
-        final byte[] clientDataJson, final byte[] keyHandle, final byte[] attestationObject) {
+        final byte[] clientDataJson,
+        final byte[] keyHandle,
+        final byte[] attestationObject,
+        final String[] transports) {
       this.clientDataJson = clientDataJson;
       this.keyHandle = keyHandle;
       this.attestationObject = attestationObject;
+      this.transports = transports;
     }
   }
 
@@ -308,11 +313,15 @@ import org.mozilla.gecko.util.GeckoBundle;
                               + Base64.encodeToString(
                                   responseData.getAttestationObject(), Base64.DEFAULT));
 
+                      Log.d(
+                          LOGTAG, "transports: " + String.join(", ", responseData.getTransports()));
+
                       result.complete(
                           new WebAuthnTokenManager.MakeCredentialResponse(
                               responseData.getClientDataJSON(),
                               responseData.getKeyHandle(),
-                              responseData.getAttestationObject()));
+                              responseData.getAttestationObject(),
+                              responseData.getTransports()));
                     }
                   },
                   e -> {

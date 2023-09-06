@@ -34,7 +34,7 @@ use serde_cbor;
 use std::cell::RefCell;
 use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
 use std::sync::{Arc, Mutex};
-use thin_vec::ThinVec;
+use thin_vec::{thin_vec, ThinVec};
 use xpcom::interfaces::{
     nsICredentialParameters, nsICtapRegisterArgs, nsICtapRegisterResult, nsICtapSignArgs,
     nsICtapSignResult, nsIWebAuthnAttObj, nsIWebAuthnController, nsIWebAuthnTransport,
@@ -112,6 +112,18 @@ impl CtapRegisterResult {
             }
         }
         Err(NS_ERROR_FAILURE)
+    }
+
+    xpcom_method!(get_transports => GetTransports() -> ThinVec<nsString>);
+    fn get_transports(&self) -> Result<ThinVec<nsString>, nsresult> {
+        if self.result.is_err() {
+            return Err(NS_ERROR_FAILURE);
+        }
+        // The list that we return here might be included in a future GetAssertion request as a
+        // hint as to which transports to try. We currently only support the USB transport. If
+        // that changes, we will need a mechanism to track which transport was used for a
+        // request.
+        Ok(thin_vec![nsString::from("usb")])
     }
 
     xpcom_method!(get_status => GetStatus() -> nsresult);

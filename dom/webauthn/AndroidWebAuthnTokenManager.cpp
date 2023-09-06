@@ -261,9 +261,9 @@ void AndroidWebAuthnTokenManager::HandleRegisterResult(
         [self = RefPtr<AndroidWebAuthnTokenManager>(this),
          aResult = std::move(aResult)]() {
           nsTArray<WebAuthnExtensionResult> extensions;
-          WebAuthnMakeCredentialResult result(aResult.mClientDataJSON,
-                                              aResult.mAttObj,
-                                              aResult.mKeyHandle, extensions);
+          WebAuthnMakeCredentialResult result(
+              aResult.mClientDataJSON, aResult.mAttObj, aResult.mKeyHandle,
+              aResult.mTransports, extensions);
           self->mRegisterPromise.Resolve(std::move(result), __func__);
         }));
   }
@@ -411,6 +411,11 @@ AndroidWebAuthnResult::AndroidWebAuthnResult(
       reinterpret_cast<uint8_t*>(
           aResponse->AttestationObject()->GetElements().Elements()),
       aResponse->AttestationObject()->Length());
+  auto transports = aResponse->Transports();
+  for (size_t i = 0; i < transports->Length(); i++) {
+    mTransports.AppendElement(
+        jni::String::LocalRef(transports->GetElement(i))->ToString());
+  }
 }
 
 AndroidWebAuthnResult::AndroidWebAuthnResult(

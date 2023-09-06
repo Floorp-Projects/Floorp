@@ -409,9 +409,16 @@ void WebAuthnController::RunFinishRegister(
     return;
   }
 
+  nsTArray<nsString> transports;
+  rv = aResult->GetTransports(transports);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    AbortTransaction(aTransactionId, NS_ERROR_DOM_NOT_ALLOWED_ERR, true);
+    return;
+  }
+
   nsTArray<WebAuthnExtensionResult> extensions;
   WebAuthnMakeCredentialResult result(clientDataJson, attObj, credentialId,
-                                      extensions);
+                                      transports, extensions);
 
   Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                        u"CTAPRegisterFinish"_ns, 1);

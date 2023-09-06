@@ -64,13 +64,19 @@ void AuthenticatorAttestationResponse::GetAttestationObject(
   aValue.set(mAttestationObjectCachedObj);
 }
 
-nsresult AuthenticatorAttestationResponse::SetAttestationObject(
+void AuthenticatorAttestationResponse::SetAttestationObject(
     const nsTArray<uint8_t>& aBuffer) {
-  if (!mAttestationObject.Assign(aBuffer, mozilla::fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  mAttestationObject.Assign(aBuffer);
+}
 
-  return NS_OK;
+void AuthenticatorAttestationResponse::GetTransports(
+    nsTArray<nsString>& aTransports) {
+  aTransports.Assign(mTransports);
+}
+
+void AuthenticatorAttestationResponse::SetTransports(
+    const nsTArray<nsString>& aTransports) {
+  mTransports.Assign(aTransports);
 }
 
 void AuthenticatorAttestationResponse::GetAuthenticatorData(
