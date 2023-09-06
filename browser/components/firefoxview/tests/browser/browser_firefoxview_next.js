@@ -15,7 +15,7 @@ add_task(async function about_firefoxview_next_pref() {
     is(document.location.href, "about:firefoxview-next");
   });
   Services.prefs.setBoolPref("browser.tabs.firefox-view", true);
-  // Verify pref disables new Firefox view
+  // Verify pref disales new Firefox view
   Services.prefs.setBoolPref("browser.tabs.firefox-view-next", false);
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
@@ -91,21 +91,10 @@ add_task(async function test_aria_roles() {
       "Focus should be on button element of the synced tabs empty state"
     );
   });
-  // Verify pref disables new Firefox view
+  // Verify pref disales new Firefox view
   Services.prefs.setBoolPref("browser.tabs.firefox-view-next", false);
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview");
   });
-});
-
-add_task(async function firefoxview_next_icon() {
-  let viewButton = window.document.querySelector("#firefox-view-button");
-  let style = window.getComputedStyle(viewButton);
-  // Verify pref changes icon
-  Services.prefs.setBoolPref("browser.tabs.firefox-view-newIcon", false);
-  ok(style.listStyleImage.includes, "chrome://branding/content/about-logo.png");
-  // Verify icon changes back
-  Services.prefs.setBoolPref("browser.tabs.firefox-view-newIcon", true);
-  ok(style.listStyleImage.includes, "chrome://browser/skin/firefox-view.svg");
 });

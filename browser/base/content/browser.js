@@ -9874,10 +9874,6 @@ var FirefoxViewHandler = {
       !this._enabled
     );
     document.getElementById("menu_openFirefoxView").hidden = !this._enabled;
-    document.documentElement.toggleAttribute(
-      "firefoxview-newicon",
-      NimbusFeatures.firefoxViewNext.getVariable("newIcon")
-    );
   },
   onWidgetRemoved(aWidgetId) {
     if (aWidgetId == this.BUTTON_ID && this.tab) {
