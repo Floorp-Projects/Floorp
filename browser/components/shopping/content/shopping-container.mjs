@@ -127,7 +127,9 @@ export class ShoppingContainer extends MozLitElement {
       <review-highlights
         .highlights=${this.data.highlights}
       ></review-highlights>
-      <analysis-explainer></analysis-explainer>
+      <analysis-explainer
+        productUrl=${ifDefined(this.productUrl)}
+      </analysis-explainer>
       ${this.recommendationTemplate()}
     `;
   }
