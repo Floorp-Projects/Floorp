@@ -13,7 +13,6 @@
 #include "mozilla/dom/Credential.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/CryptoBuffer.h"
 
 namespace mozilla::dom {
 
@@ -37,7 +36,7 @@ class PublicKeyCredential final : public Credential {
 
   already_AddRefed<AuthenticatorResponse> Response() const;
 
-  nsresult SetRawId(CryptoBuffer& aBuffer);
+  void SetRawId(const nsTArray<uint8_t>& aBuffer);
 
   void SetResponse(RefPtr<AuthenticatorResponse>);
 
@@ -56,7 +55,7 @@ class PublicKeyCredential final : public Credential {
   void SetClientExtensionResultHmacSecret(bool aHmacCreateSecret);
 
  private:
-  CryptoBuffer mRawId;
+  nsTArray<uint8_t> mRawId;
   JS::Heap<JSObject*> mRawIdCachedObj;
   RefPtr<AuthenticatorResponse> mResponse;
   AuthenticationExtensionsClientOutputs mClientExtensionOutputs;

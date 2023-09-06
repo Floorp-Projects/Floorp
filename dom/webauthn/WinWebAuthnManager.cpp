@@ -9,7 +9,6 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/Unused.h"
 #include "nsIWebAuthnController.h"
 #include "nsTextFormatter.h"

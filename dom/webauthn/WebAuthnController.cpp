@@ -219,7 +219,7 @@ void WebAuthnController::Register(
   mTransactionParent = aTransactionParent;
 
   /* We could refactor to defer the hashing here */
-  CryptoBuffer rpIdHash, clientDataHash;
+  nsTArray<uint8_t> rpIdHash, clientDataHash;
   NS_ConvertUTF16toUTF8 rpId(aInfo.RpId());
   nsresult rv = BuildTransactionHashes(rpId, aInfo.ClientDataJSON(), rpIdHash,
                                        clientDataHash);
@@ -435,7 +435,7 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
   mTransactionParent = aTransactionParent;
 
   /* We could refactor to defer the hashing here */
-  CryptoBuffer rpIdHash, clientDataHash;
+  nsTArray<uint8_t> rpIdHash, clientDataHash;
   NS_ConvertUTF16toUTF8 rpId(aInfo.RpId());
   nsresult rv = BuildTransactionHashes(rpId, aInfo.ClientDataJSON(), rpIdHash,
                                        clientDataHash);
@@ -446,16 +446,25 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
     return;
   }
 
-  Maybe<nsTArray<uint8_t>> appIdHash = Nothing();
+  Maybe<nsTArray<uint8_t>> maybeAppIdHash = Nothing();
   for (const WebAuthnExtension& ext : aInfo.Extensions()) {
     if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
-      appIdHash = Some(ext.get_WebAuthnExtensionAppId().AppId().Clone());
+      nsTArray<uint8_t> appIdHash;
+      rv = HashCString(NS_ConvertUTF16toUTF8(
+                           ext.get_WebAuthnExtensionAppId().appIdentifier()),
+                       appIdHash);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        Unused << mTransactionParent->SendAbort(aTransactionId,
+                                                NS_ERROR_DOM_UNKNOWN_ERR);
+        return;
+      }
+      maybeAppIdHash = Some(std::move(appIdHash));
     }
   }
 
   // Hold on to any state that we need to finish the transaction.
-  mTransaction = Some(
-      Transaction(aTransactionId, rpIdHash, appIdHash, aInfo.ClientDataJSON()));
+  mTransaction = Some(Transaction(aTransactionId, rpIdHash, maybeAppIdHash,
+                                  aInfo.ClientDataJSON()));
 
   mPendingSignInfo = Some(aInfo);
 

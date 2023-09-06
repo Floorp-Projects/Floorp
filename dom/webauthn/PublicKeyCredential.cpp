@@ -61,7 +61,8 @@ void PublicKeyCredential::GetRawId(JSContext* aCx,
                                    JS::MutableHandle<JSObject*> aValue,
                                    ErrorResult& aRv) {
   if (!mRawIdCachedObj) {
-    mRawIdCachedObj = mRawId.ToArrayBuffer(aCx);
+    mRawIdCachedObj =
+        ArrayBuffer::Create(aCx, mRawId.Length(), mRawId.Elements());
     if (!mRawIdCachedObj) {
       aRv.NoteJSContextException(aCx);
       return;
@@ -75,11 +76,8 @@ already_AddRefed<AuthenticatorResponse> PublicKeyCredential::Response() const {
   return temp.forget();
 }
 
-nsresult PublicKeyCredential::SetRawId(CryptoBuffer& aBuffer) {
-  if (NS_WARN_IF(!mRawId.Assign(aBuffer))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
+void PublicKeyCredential::SetRawId(const nsTArray<uint8_t>& aBuffer) {
+  mRawId.Assign(aBuffer);
 }
 
 void PublicKeyCredential::SetResponse(RefPtr<AuthenticatorResponse> aResponse) {
