@@ -164,8 +164,8 @@ static nsTArray<nsCString> GuessMIMETypes(MIMECreateParam aParam) {
   return types;
 }
 
-static bool IsOnLinuxOrMac() {
-#if (defined(XP_LINUX) && !defined(ANDROID)) || defined(XP_MACOSX)
+static bool IsOnAndroid() {
+#if defined(ANDROID)
   return true;
 #else
   return false;
@@ -192,8 +192,8 @@ static bool IsSupportedCodec(const nsAString& aCodec) {
 
 // https://w3c.github.io/webcodecs/#check-configuration-support
 static bool CanDecode(MIMECreateParam aParam) {
-  // TODO: Enable on Windows and Android (Bug 1840508)
-  if (!IsOnLinuxOrMac()) {
+  // TODO: Enable WebCodecs on Android (Bug 1840508)
+  if (IsOnAndroid()) {
     return false;
   }
   if (!IsSupportedCodec(aParam.mParsedCodec)) {
