@@ -36,26 +36,7 @@ add_task(
       ],
     });
 
-    ok(
-      getByL10nId("translations-panel-error-unsupported"),
-      "The unsupported title is shown."
-    );
-
     await clickChangeSourceLanguageButton({ firstShow: true });
-
-    info("Waiting to find the translations panel header.");
-    const header = await waitForCondition(() =>
-      maybeGetByL10nId("translations-panel-intro-description")
-    );
-
-    ok(
-      header,
-      "The first-run panel header is there and we are ready to continue"
-    );
-    ok(
-      !maybeGetByL10nId("translations-panel-error-unsupported"),
-      "The unsupported title is hidden."
-    );
 
     await TestTranslationsTelemetry.assertEvent(
       Glean.translationsPanel.changeSourceLanguageButton,

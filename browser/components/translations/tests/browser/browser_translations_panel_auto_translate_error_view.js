@@ -76,19 +76,6 @@ add_task(
       onOpenPanel: assertPanelUnsupportedLanguageView,
     });
 
-    ok(
-      getByL10nId("translations-panel-error-unsupported"),
-      "The unsupported title is shown."
-    );
-    ok(
-      getByL10nId("translations-panel-error-unsupported-hint-known"),
-      "The unsupported language message is shown."
-    );
-    ok(
-      getByL10nId("translations-panel-learn-more-link"),
-      "The learn more link is available"
-    );
-
     await navigate("Navigate back to a Spanish page.", {
       url: SPANISH_PAGE_URL_DOT_ORG,
       downloadHandler: rejectDownloads,
@@ -96,21 +83,6 @@ add_task(
     });
 
     await assertPageIsUntranslated(runInPage);
-
-    info("Waiting to find the translations panel default header.");
-    const header = await waitForCondition(() =>
-      maybeGetByL10nId("translations-panel-header")
-    );
-    ok(header, "The default panel header is there.");
-
-    const errorMessage = await waitForCondition(() =>
-      maybeGetByL10nId("translations-panel-error-translating")
-    );
-    ok(errorMessage, "The translation error message is there.");
-    ok(
-      !maybeGetByL10nId("translations-panel-error-unsupported"),
-      "The unsupported header is hidden."
-    );
 
     await cleanup();
   }

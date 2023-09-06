@@ -257,6 +257,17 @@ async function clickNeverTranslateSite() {
 }
 
 /**
+ * Simulates the effect of clicking the manage-languages menuitem.
+ * Requires that the settings menu of the translations panel is open,
+ * otherwise the test will fail.
+ */
+async function clickManageLanguages() {
+  await clickSettingsMenuItemByL10nId(
+    "translations-panel-settings-manage-languages"
+  );
+}
+
+/**
  * Asserts that the always-translate-language checkbox matches the expected checked state.
  *
  * @param {string} langTag - A BCP-47 language tag
@@ -460,12 +471,15 @@ function assertPanelElementVisibility(expectations = {}) {
     fromLabel: false,
     header: false,
     intro: false,
+    introLearnMoreLink: false,
     langSelection: false,
     restoreButton: false,
     toLabel: false,
     toMenuList: false,
     translateButton: false,
+    unsupportedHeader: false,
     unsupportedHint: false,
+    unsupportedLearnMoreLink: false,
     ...expectations,
   };
   const elements = TranslationsPanel.elements;
@@ -514,6 +528,20 @@ const defaultViewVisibilityExpectations = {
 };
 
 /**
+ * Asserts that the TranslationsPanel header has the expected l10nId.
+ *
+ * @param {string} l10nId - The expected data-l10n-id of the header.
+ */
+function assertDefaultHeaderL10nId(l10nId) {
+  const { header } = TranslationsPanel.elements;
+  is(
+    header.getAttribute("data-l10n-id"),
+    l10nId,
+    "The translations panel header should match the expected data-l10n-id"
+  );
+}
+
+/**
  * Asserts that panel element visibility matches the default panel view.
  */
 function assertPanelDefaultView() {
@@ -521,6 +549,7 @@ function assertPanelDefaultView() {
   assertPanelElementVisibility({
     ...defaultViewVisibilityExpectations,
   });
+  assertDefaultHeaderL10nId("translations-panel-header");
 }
 
 function assertPanelLoadingView() {
@@ -541,6 +570,7 @@ function assertPanelErrorView() {
     error: true,
     ...defaultViewVisibilityExpectations,
   });
+  assertDefaultHeaderL10nId("translations-panel-header");
 }
 
 /**
@@ -550,8 +580,10 @@ function assertPanelFirstShowView() {
   assertPanelMainViewId("translations-panel-view-default");
   assertPanelElementVisibility({
     intro: true,
+    introLearnMoreLink: true,
     ...defaultViewVisibilityExpectations,
   });
+  assertDefaultHeaderL10nId("translations-panel-intro-header");
 }
 
 /**
@@ -566,6 +598,7 @@ function assertPanelFirstShowErrorView() {
     introLearnMoreLink: true,
     ...defaultViewVisibilityExpectations,
   });
+  assertDefaultHeaderL10nId("translations-panel-intro-header");
 }
 
 /**
@@ -581,6 +614,7 @@ function assertPanelRevisitView() {
     toMenuList: true,
     translateButton: true,
   });
+  assertDefaultHeaderL10nId("translations-panel-revisit-header");
 }
 
 /**
@@ -591,7 +625,9 @@ function assertPanelUnsupportedLanguageView() {
   assertPanelElementVisibility({
     changeSourceLanguageButton: true,
     dismissErrorButton: true,
+    unsupportedHeader: true,
     unsupportedHint: true,
+    unsupportedLearnMoreLink: true,
   });
 }
 

@@ -22,32 +22,7 @@ add_task(async function test_unsupported_lang() {
     onOpenPanel: assertPanelUnsupportedLanguageView,
   });
 
-  ok(
-    getByL10nId("translations-panel-error-unsupported"),
-    "The unsupported title is shown."
-  );
-  ok(
-    getByL10nId("translations-panel-error-unsupported-hint-known"),
-    "The unsupported language message is shown."
-  );
-  ok(
-    getByL10nId("translations-panel-learn-more-link"),
-    "The learn more link is available"
-  );
-
   await clickChangeSourceLanguageButton();
 
-  info("Waiting to find the translations panel header.");
-  const header = await waitForCondition(() =>
-    maybeGetByL10nId("translations-panel-header")
-  );
-  ok(
-    header,
-    "The original panel header is there and we are ready to translate again."
-  );
-  ok(
-    !maybeGetByL10nId("translations-panel-error-unsupported"),
-    "The unsupported title is hidden."
-  );
   await cleanup();
 });

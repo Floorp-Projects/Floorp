@@ -304,13 +304,22 @@ var TranslationsPanel = new (class {
       getter("fromLabel", "translations-panel-from-label");
       getter("header", "translations-panel-header");
       getter("intro", "translations-panel-intro");
+      getter("introLearnMoreLink", "translations-panel-intro-learn-more-link");
       getter("langSelection", "translations-panel-lang-selection");
       getter("multiview", "translations-panel-multiview");
       getter("restoreButton", "translations-panel-restore-button");
       getter("toLabel", "translations-panel-to-label");
       getter("toMenuList", "translations-panel-to");
       getter("translateButton", "translations-panel-translate");
+      getter(
+        "unsupportedHeader",
+        "translations-panel-unsupported-language-header"
+      );
       getter("unsupportedHint", "translations-panel-error-unsupported-hint");
+      getter(
+        "unsupportedLearnMoreLink",
+        "translations-panel-unsupported-learn-more-link"
+      );
 
       // Getters by class
       getter(
