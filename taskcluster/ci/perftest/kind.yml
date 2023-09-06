@@ -11,7 +11,6 @@ kind-dependencies:
 transforms:
     - gecko_taskgraph.transforms.perftest:transforms
     - gecko_taskgraph.transforms.source_test:transforms
-    - taskgraph.transforms.task_context
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -29,9 +28,6 @@ job-defaults:
     treeherder:
         kind: other
         tier: 3
-    task-context:
-        from-object: {}
-        substitution-fields: []
     worker:
         taskcluster-proxy: true
         max-run-time: 10800

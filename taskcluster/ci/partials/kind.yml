@@ -34,6 +34,5 @@ only-for-build-platforms:
 
 jobs:
     partials:
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         shipping-phase: promote

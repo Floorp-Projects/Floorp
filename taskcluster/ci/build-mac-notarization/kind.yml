@@ -20,7 +20,6 @@ only-for-attributes:
 jobs:
     build-mac-notarization:
         from-deps:
-            group-by: single-with-filters
             copy-attributes: true
         treeherder:
             symbol: BMN

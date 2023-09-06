@@ -19,8 +19,7 @@ only-for-attributes:
 
 jobs:
     beetmover-checksums:
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         shipping-phase: promote
         attributes:
             artifact_prefix: public

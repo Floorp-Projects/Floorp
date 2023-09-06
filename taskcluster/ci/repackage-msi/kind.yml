@@ -25,8 +25,7 @@ only-for-build-platforms:
 jobs:
     repackage-msi:
         worker-type: 'b-win2022'
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         mozharness:
             use-magic-mh-args: false
             config:

@@ -24,8 +24,7 @@ only-for-build-platforms:
 
 jobs:
     release-partner-repack-beetmover:
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         shipping-phase: promote
         partner-bucket-scope:
             by-release-level:

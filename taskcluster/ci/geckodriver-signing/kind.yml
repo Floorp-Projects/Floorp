@@ -13,8 +13,9 @@ transforms:
 kind-dependencies:
     - toolchain
 
+only-for-attributes:
+    - geckodriver
+
 jobs:
     geckodriver-signing:
-        from-deps:
-            with-attributes:
-                geckodriver: [true]
+        from-deps: {}

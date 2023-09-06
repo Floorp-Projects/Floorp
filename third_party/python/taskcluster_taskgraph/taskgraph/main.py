@@ -16,7 +16,6 @@ import traceback
 from collections import namedtuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
-from textwrap import dedent
 from typing import Any, List
 
 import appdirs
@@ -800,28 +799,16 @@ def init_taskgraph(options):
     # Populate some defaults from the current repository.
     context = {"project_name": root.name}
 
-    try:
-        repo_url = repo.get_url(remote=repo.remote_name)
-    except RuntimeError:
-        repo_url = ""
-
+    repo_url = repo.get_url()
     if repo.tool == "git" and "github.com" in repo_url:
         context["repo_host"] = "github"
     elif repo.tool == "hg" and "hg.mozilla.org" in repo_url:
         context["repo_host"] = "hgmo"
     else:
-        print(
-            dedent(
-                """\
-            Repository not supported!
-
-            Taskgraph only supports repositories hosted on Github or hg.mozilla.org.
-            Ensure you have a remote that points to one of these locations.
-            """
-            ),
-            file=sys.stderr,
+        raise RuntimeError(
+            "Repository not supported! Taskgraph currently only "
+            "supports repositories hosted on Github or hg.mozilla.org."
         )
-        return 1
 
     # Generate the project.
     cookiecutter(

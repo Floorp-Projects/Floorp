@@ -5,7 +5,6 @@
 
 import json
 import os
-import subprocess
 import tarfile
 from io import BytesIO
 from textwrap import dedent
@@ -102,9 +101,7 @@ def build_image(name, tag, args=None):
 
     buf = BytesIO()
     docker.stream_context_tar(".", image_dir, buf, "", args)
-    subprocess.run(
-        ["docker", "image", "build", "--no-cache", "-t", tag, "-"], input=buf.getvalue()
-    )
+    docker.post_to_docker(buf.getvalue(), "/build", nocache=1, t=tag)
 
     print(f"Successfully built {name} and tagged with {tag}")
 
@@ -208,9 +205,7 @@ def load_image(url, imageName=None, imageTag=None):
 
                 reader.close()
 
-    subprocess.run(
-        ["docker", "image", "load"], input=b"".join(download_and_modify_image())
-    )
+    docker.post_to_docker(download_and_modify_image(), "/images/load", quiet=0)
 
     # Check that we found a repositories file
     if not info.get("image") or not info.get("tag") or not info.get("layer"):

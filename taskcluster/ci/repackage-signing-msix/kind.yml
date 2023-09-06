@@ -15,5 +15,4 @@ kind-dependencies:
 
 jobs:
     repackage-signing-msix:
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
