@@ -217,6 +217,7 @@ exports.CSS_PROPERTIES = {
       "-moz-window-button-maximize",
       "-moz-window-button-minimize",
       "-moz-window-button-restore",
+      "-moz-window-decorations",
       "-moz-window-titlebar",
       "-moz-window-titlebar-maximized",
       "auto",
@@ -288,8 +289,7 @@ exports.CSS_PROPERTIES = {
       "treetwisty",
       "treetwistyopen",
       "treeview",
-      "unset",
-      "window"
+      "unset"
     ]
   },
   "-moz-backface-visibility": {
@@ -1468,6 +1468,7 @@ exports.CSS_PROPERTIES = {
       "-moz-window-button-maximize",
       "-moz-window-button-minimize",
       "-moz-window-button-restore",
+      "-moz-window-decorations",
       "-moz-window-titlebar",
       "-moz-window-titlebar-maximized",
       "auto",
@@ -1539,8 +1540,7 @@ exports.CSS_PROPERTIES = {
       "treetwisty",
       "treetwistyopen",
       "treeview",
-      "unset",
-      "window"
+      "unset"
     ]
   },
   "-webkit-backface-visibility": {
@@ -3503,6 +3503,7 @@ exports.CSS_PROPERTIES = {
       "-moz-window-button-maximize",
       "-moz-window-button-minimize",
       "-moz-window-button-restore",
+      "-moz-window-decorations",
       "-moz-window-titlebar",
       "-moz-window-titlebar-maximized",
       "auto",
@@ -3574,8 +3575,7 @@ exports.CSS_PROPERTIES = {
       "treetwisty",
       "treetwistyopen",
       "treeview",
-      "unset",
-      "window"
+      "unset"
     ]
   },
   "aspect-ratio": {

@@ -423,15 +423,28 @@ const ToolbarButtonGTKMetrics* GetToolbarButtonMetrics(
   return sToolbarMetrics.button + buttonIndex;
 }
 
-static gint moz_gtk_window_paint(cairo_t* cr, GdkRectangle* rect,
-                                 GtkTextDirection direction) {
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_WINDOW, direction);
+static gint moz_gtk_window_decoration_paint(cairo_t* cr,
+                                            const GdkRectangle* rect,
+                                            GtkWidgetState* state,
+                                            GtkTextDirection direction) {
+  if (mozilla::widget::GdkIsWaylandDisplay()) {
+    // Doesn't seem to be needed.
+    return MOZ_GTK_SUCCESS;
+  }
+  GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+  GtkStyleContext* windowStyle =
+      GetStyleContext(MOZ_GTK_HEADERBAR_WINDOW, state->image_scale);
+  const bool solidDecorations =
+      gtk_style_context_has_class(windowStyle, "solid-csd");
+  GtkStyleContext* decorationStyle =
+      GetStyleContext(solidDecorations ? MOZ_GTK_WINDOW_DECORATION_SOLID
+                                       : MOZ_GTK_WINDOW_DECORATION,
+                      state->image_scale, GTK_TEXT_DIR_LTR, state_flags);
 
-  gtk_style_context_save(style);
-  gtk_style_context_add_class(style, GTK_STYLE_CLASS_BACKGROUND);
-  gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
-  gtk_style_context_restore(style);
-
+  gtk_render_background(decorationStyle, cr, rect->x, rect->y, rect->width,
+                        rect->height);
+  gtk_render_frame(decorationStyle, cr, rect->x, rect->y, rect->width,
+                   rect->height);
   return MOZ_GTK_SUCCESS;
 }
 
@@ -1685,37 +1698,8 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
                             GTK_TEXT_DIR_NONE, state_flags);
   }
 
-// Some themes (Adwaita for instance) draws bold dark line at
-// titlebar bottom. It does not fit well with Firefox tabs so
-// draw with some extent to make the titlebar bottom part invisible.
-#define TITLEBAR_EXTENT 4
-
-  // We don't need to draw window decoration for MOZ_GTK_HEADER_BAR_MAXIMIZED,
-  // i.e. when main window is maximized.
-  //
-  // We also don't need to draw this on Wayland, since the compositor takes care
-  // of it.
-  if (widgetType == MOZ_GTK_HEADER_BAR &&
-      !mozilla::widget::GdkIsWaylandDisplay()) {
-    GtkStyleContext* windowStyle =
-        GetStyleContext(MOZ_GTK_HEADERBAR_WINDOW, state->image_scale);
-    const bool solidDecorations =
-        gtk_style_context_has_class(windowStyle, "solid-csd");
-    GtkStyleContext* decorationStyle =
-        GetStyleContext(solidDecorations ? MOZ_GTK_WINDOW_DECORATION_SOLID
-                                         : MOZ_GTK_WINDOW_DECORATION,
-                        state->image_scale, GTK_TEXT_DIR_LTR, state_flags);
-
-    gtk_render_background(decorationStyle, cr, rect->x, rect->y, rect->width,
-                          rect->height + TITLEBAR_EXTENT);
-    gtk_render_frame(decorationStyle, cr, rect->x, rect->y, rect->width,
-                     rect->height + TITLEBAR_EXTENT);
-  }
-
-  gtk_render_background(style, cr, rect->x, rect->y, rect->width,
-                        rect->height + TITLEBAR_EXTENT);
-  gtk_render_frame(style, cr, rect->x, rect->y, rect->width,
-                   rect->height + TITLEBAR_EXTENT);
+  gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
+  gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
 
   return MOZ_GTK_SUCCESS;
 }
@@ -1898,7 +1882,8 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     /* These widgets have no borders.*/
     case MOZ_GTK_INNER_SPIN_BUTTON:
     case MOZ_GTK_SPINBUTTON:
-    case MOZ_GTK_WINDOW:
+    case MOZ_GTK_WINDOW_DECORATION:
+    case MOZ_GTK_WINDOW_DECORATION_SOLID:
     case MOZ_GTK_RESIZER:
     case MOZ_GTK_TOOLBARBUTTON_ARROW:
     case MOZ_GTK_TOOLBAR:
@@ -2367,8 +2352,8 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
       return moz_gtk_vpaned_paint(cr, rect, state);
     case MOZ_GTK_SPLITTER_VERTICAL:
       return moz_gtk_hpaned_paint(cr, rect, state);
-    case MOZ_GTK_WINDOW:
-      return moz_gtk_window_paint(cr, rect, direction);
+    case MOZ_GTK_WINDOW_DECORATION:
+      return moz_gtk_window_decoration_paint(cr, rect, state, direction);
     case MOZ_GTK_HEADER_BAR:
     case MOZ_GTK_HEADER_BAR_MAXIMIZED:
       return moz_gtk_header_bar_paint(widget, cr, rect, state);

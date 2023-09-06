@@ -3406,7 +3406,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext,
 
     case StyleAppearance::Listbox:
     case StyleAppearance::Dialog:
-    case StyleAppearance::Window:
     case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowTitlebar:
     case StyleAppearance::Checkmenuitem:

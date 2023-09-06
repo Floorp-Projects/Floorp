@@ -39,6 +39,69 @@ toolbar[brighttext]:not(:-moz-lwtheme) {
   appearance: none;
   background-color: transparent;
   border-top: none;
+
+  &:not(:-moz-lwtheme) {
+    background-color: -moz-headerbar;
+    color: -moz-headerbartext;
+
+    &:-moz-window-inactive {
+      background-color: -moz-headerbarinactive;
+      color: -moz-headerbarinactivetext;
+    }
+  }
+}
+
+/**
+ * Titlebar drawing:
+ *
+ * GTK windows have both a window radius (exposed via the
+ * `-moz-gtk-csd-titlebar-radius`) environment variable, and a window shadow
+ * (which we can't read back from GTK). Note that the -moz-window-decorations
+ * (in X11) or the compositor (in Wayland) does draw the shadow corners
+ * already.
+ */
+:root[tabsintitlebar] {
+  background-color: transparent;
+
+  #navigator-toolbox:not(:-moz-lwtheme) {
+    appearance: auto;
+    -moz-default-appearance: -moz-window-titlebar-maximized;
+    background-color: transparent;
+    color: CaptionText;
+
+    &:-moz-window-inactive {
+      color: InactiveCaptionText;
+    }
+  }
+
+  /* When temporarily showing the menu bar, make it at least as tall as the tab
+   * bar such that the window controls don't appear to move up. */
+  #toolbar-menubar[autohide="true"] {
+    height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
+  }
+}
+
+:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) {
+  /* This takes care of drawing our window decorations on X11 */
+  -moz-default-appearance: -moz-window-decorations;
+  appearance: auto;
+
+  #navigator-toolbox:not(:-moz-lwtheme) {
+    -moz-default-appearance: -moz-window-titlebar;
+  }
+
+  #navigator-toolbox:-moz-lwtheme,
+  dialog::backdrop {
+    border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
+    border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
+  }
+
+  @media (-moz-gtk-csd-rounded-bottom-corners) {
+    body {
+      border-bottom-left-radius: env(-moz-gtk-csd-titlebar-radius);
+      border-bottom-right-radius: env(-moz-gtk-csd-titlebar-radius);
+    }
+  }
 }
 
 .browser-toolbar {
@@ -243,105 +306,6 @@ menuitem.bookmark-item {
   /* override toolkit/themes/linux/global/menu.css */
   padding-inline-end: 0 !important;
   margin-inline-end: 0 !important;
-}
-
-/**
- * Titlebar drawing:
- *
- * We draw to titlebar when Gkt+ CSD is available. This is mostly
- * straight-forward, but getting the window corners to look perfect is a bit
- * tricky, as there are different variables to take into account.
- *
- * GTK windows have both a window radius (exposed via the
- * `-moz-gtk-csd-titlebar-radius`) environment variable, and a window shadow
- * (which we can't read back from GTK). Note that the native drawing does draw
- * the shadow already.
- *
- * So there are multiple configurations to consider:
- *
- *  * Whether we're using Wayland vs. X11
- *  * Whether we're using a lightweight theme or not.
- *
- * Consider the simple case (default system theme). We render the titlebar
- * using `-moz-default-appearance: -moz-window-titlebar;`, then don't draw
- * anything else. Success!
- *
- * Now consider lightweight themes: We need to render the native titlebar
- * behind the "theme" titlebar in order to render the native shadow on X11. But
- * we can't just use the #navigator-toolbox as that's where the lightweight
- * theme background goes, so we need to use the #navigator-toolbox-background.
- * We still have to apply the corner radii to #navigator-toolbox of course, so
- * the lightweight theme background doesn't overflow the titlebar radius.
- *
- * In a Wayland-only world, the setup could be much simpler: We could apply the
- * titlebar appearance to #navigator-toolbox, and just apply the border radius
- * on the <body> or #navigator-toolbox-background to clip the extra shadow when
- * using the system theme. For the lightweight theme, we could use
- * appearance: none and the titlebar radius on the toolbox. In X11 however, we
- * do need the native titlebar behind at all times.
- */
-:root[tabsintitlebar][sizemode="normal"] {
-  background-color: transparent;
-}
-
-#navigator-toolbox-background {
-  background-color: -moz-headerbar;
-  color: -moz-headerbartext;
-}
-
-#navigator-toolbox-background:-moz-window-inactive {
-  background-color: -moz-headerbarinactive;
-  color: -moz-headerbarinactivetext;
-}
-
-:root[tabsintitlebar] {
-  #navigator-toolbox-background {
-    appearance: auto;
-    -moz-default-appearance: -moz-window-titlebar-maximized;
-    background-color: transparent;
-    color: CaptionText;
-  }
-
-  #navigator-toolbox-background:-moz-window-inactive {
-    color: InactiveCaptionText;
-  }
-
-  /* When temporarily showing the menu bar, make it at least as tall as the tab
-   * bar such that the window controls don't appear to move up. */
-  #toolbar-menubar[autohide="true"] {
-    height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
-  }
-}
-
-:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) {
-  #navigator-toolbox-background {
-    -moz-default-appearance: -moz-window-titlebar;
-  }
-
-  #navigator-toolbox:-moz-lwtheme, dialog::backdrop {
-    border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
-    border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
-  }
-
-  @media (-moz-gtk-csd-rounded-bottom-corners) {
-    body {
-      border-bottom-left-radius: env(-moz-gtk-csd-titlebar-radius);
-      border-bottom-right-radius: env(-moz-gtk-csd-titlebar-radius);
-    }
-  }
-}
-
-/*
- * NOTE: The odd :is() selector is needed so that specificity is greater than
- * the tabsintitlebar + inactive rule above.
- *
- * Note that we still want to use the native titlebar appearance, even if the
- * background is visually overridden by the lightweight theme, in order to
- * draw the corners correctly.
- */
-:root:is([tabsintitlebar], *) #navigator-toolbox-background:-moz-lwtheme {
-  background-color: transparent;
-  color: inherit;
 }
 
 /* The button box must appear on top of the navigator-toolbox in order for

@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <!--
-  GTK needs to draw behind the lightweight theme toolbox backgrounds, thus the extra box.
-  Also this box allows a negative margin-top to slide the toolbox off screen in
+  This box allows a negative margin-top to slide the toolbox off screen in
   fullscreen layout.
+  TODO(emilio, bug 1851651): The original use-case for this is gone, try to
+  remove this.
 -->
 <box id="navigator-toolbox-background">
 <toolbox id="navigator-toolbox" flex="1">
