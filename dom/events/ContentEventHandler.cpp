@@ -856,9 +856,10 @@ nsresult ContentEventHandler::GenerateFlatTextContent(
   return GenerateFlatTextContent(rawRange, aString, aLineBreakType);
 }
 
+template <typename NodeType, typename RangeBoundaryType>
 nsresult ContentEventHandler::GenerateFlatTextContent(
-    const UnsafeSimpleRange& aSimpleRange, nsString& aString,
-    LineBreakType aLineBreakType) {
+    const SimpleRangeBase<NodeType, RangeBoundaryType>& aSimpleRange,
+    nsString& aString, LineBreakType aLineBreakType) {
   MOZ_ASSERT(aString.IsEmpty());
 
   if (aSimpleRange.Collapsed()) {
@@ -1157,11 +1158,14 @@ nsresult ContentEventHandler::ExpandToClusterBoundary(
   return NS_OK;
 }
 
-Result<ContentEventHandler::DOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
-ContentEventHandler::ConvertFlatTextOffsetToDOMRange(
+template <typename RangeType, typename TextNodeType>
+Result<ContentEventHandler::DOMRangeAndAdjustedOffsetInFlattenedTextBase<
+           RangeType, TextNodeType>,
+       nsresult>
+ContentEventHandler::ConvertFlatTextOffsetToDOMRangeBase(
     uint32_t aOffset, uint32_t aLength, LineBreakType aLineBreakType,
     bool aExpandToClusterBoundaries) {
-  DOMRangeAndAdjustedOffsetInFlattenedText result;
+  DOMRangeAndAdjustedOffsetInFlattenedTextBase<RangeType, TextNodeType> result;
   result.mAdjustedOffset = aOffset;
 
   // Special case like <br contenteditable>
@@ -1593,15 +1597,16 @@ nsresult ContentEventHandler::OnQueryTextContent(
 
   LineBreakType lineBreakType = GetLineBreakType(aEvent);
 
-  Result<DOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
-      domRangeAndAdjustedOffsetOrError = ConvertFlatTextOffsetToDOMRange(
+  Result<UnsafeDOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
+      domRangeAndAdjustedOffsetOrError = ConvertFlatTextOffsetToUnsafeDOMRange(
           aEvent->mInput.mOffset, aEvent->mInput.mLength, lineBreakType, false);
   if (MOZ_UNLIKELY(domRangeAndAdjustedOffsetOrError.isErr())) {
-    NS_WARNING("ContentEventHandler::ConvertFlatTextOffsetToDOMRange() failed");
+    NS_WARNING(
+        "ContentEventHandler::ConvertFlatTextOffsetToDOMRangeBase() failed");
     return NS_ERROR_FAILURE;
   }
-  const DOMRangeAndAdjustedOffsetInFlattenedText domRangeAndAdjustedOffset =
-      domRangeAndAdjustedOffsetOrError.unwrap();
+  const UnsafeDOMRangeAndAdjustedOffsetInFlattenedText
+      domRangeAndAdjustedOffset = domRangeAndAdjustedOffsetOrError.unwrap();
 
   nsString textInRange;
   if (NS_WARN_IF(NS_FAILED(GenerateFlatTextContent(
@@ -1641,9 +1646,10 @@ void ContentEventHandler::EnsureNonEmptyRect(LayoutDeviceIntRect& aRect) const {
   aRect.width = std::max(1, aRect.width);
 }
 
+template <typename NodeType, typename RangeBoundaryType>
 ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetFirstFrameInRangeForTextRect(
-    const UnsafeSimpleRange& aSimpleRange) {
+    const SimpleRangeBase<NodeType, RangeBoundaryType>& aSimpleRange) {
   RawNodePosition nodePosition;
   UnsafePreContentIterator preOrderIter;
   nsresult rv = preOrderIter.Init(aSimpleRange.Start().AsRaw(),
@@ -1705,9 +1711,10 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(
       *nodePosition.Offset(RawNodePosition::OffsetFilter::kValidOffsets));
 }
 
+template <typename NodeType, typename RangeBoundaryType>
 ContentEventHandler::FrameAndNodeOffset
 ContentEventHandler::GetLastFrameInRangeForTextRect(
-    const UnsafeSimpleRange& aSimpleRange) {
+    const SimpleRangeBase<NodeType, RangeBoundaryType>& aSimpleRange) {
   RawNodePosition nodePosition;
   UnsafePreContentIterator preOrderIter;
   nsresult rv = preOrderIter.Init(aSimpleRange.Start().AsRaw(),
@@ -1716,7 +1723,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(
     return FrameAndNodeOffset();
   }
 
-  const RawRangeBoundary& endPoint = aSimpleRange.End();
+  const RangeBoundaryType& endPoint = aSimpleRange.End();
   MOZ_ASSERT(endPoint.IsSetAndValid());
   // If the end point is start of a text node or specified by its parent and
   // index, the node shouldn't be included into the range.  For example,
@@ -2088,7 +2095,7 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
             ConvertFlatTextOffsetToDOMRange(offset, 1, lineBreakType, true);
     if (MOZ_UNLIKELY(domRangeAndAdjustedOffsetOrError.isErr())) {
       NS_WARNING(
-          "ContentEventHandler::ConvertFlatTextOffsetToDOMRange() failed");
+          "ContentEventHandler::ConvertFlatTextOffsetToDOMRangeBase() failed");
       return domRangeAndAdjustedOffsetOrError.unwrapErr();
     }
     const DOMRangeAndAdjustedOffsetInFlattenedText domRangeAndAdjustedOffset =
@@ -2199,15 +2206,17 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
         // same as the start of query range, the query range starts from
         // between a line breaker (i.e., the range starts between "\r" and
         // "\n").
-        Result<DOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
-            domRangeAndAdjustedOffsetOrError = ConvertFlatTextOffsetToDOMRange(
-                aEvent->mInput.mOffset - 1, 1, lineBreakType, true);
+        Result<UnsafeDOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
+            domRangeAndAdjustedOffsetOrError =
+                ConvertFlatTextOffsetToUnsafeDOMRange(
+                    aEvent->mInput.mOffset - 1, 1, lineBreakType, true);
         if (MOZ_UNLIKELY(domRangeAndAdjustedOffsetOrError.isErr())) {
           NS_WARNING(
-              "ContentEventHandler::ConvertFlatTextOffsetToDOMRange() failed");
+              "ContentEventHandler::ConvertFlatTextOffsetToDOMRangeBase() "
+              "failed");
           return domRangeAndAdjustedOffsetOrError.unwrapErr();
         }
-        const DOMRangeAndAdjustedOffsetInFlattenedText
+        const UnsafeDOMRangeAndAdjustedOffsetInFlattenedText
             domRangeAndAdjustedOffsetOfPreviousChar =
                 domRangeAndAdjustedOffsetOrError.unwrap();
         startsBetweenLineBreaker =
@@ -2304,15 +2313,17 @@ nsresult ContentEventHandler::OnQueryTextRectArray(
         // the first frame for the start of query range are same, that means
         // the start offset is between the first line breaker (i.e., the range
         // starts between "\r" and "\n").
-        Result<DOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
-            domRangeAndAdjustedOffsetOrError = ConvertFlatTextOffsetToDOMRange(
-                aEvent->mInput.mOffset - 1, 1, lineBreakType, true);
+        Result<UnsafeDOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
+            domRangeAndAdjustedOffsetOrError =
+                ConvertFlatTextOffsetToUnsafeDOMRange(
+                    aEvent->mInput.mOffset - 1, 1, lineBreakType, true);
         if (MOZ_UNLIKELY(domRangeAndAdjustedOffsetOrError.isErr())) {
           NS_WARNING(
-              "ContentEventHandler::ConvertFlatTextOffsetToDOMRange() failed");
+              "ContentEventHandler::ConvertFlatTextOffsetToDOMRangeBase() "
+              "failed");
           return NS_ERROR_UNEXPECTED;
         }
-        const DOMRangeAndAdjustedOffsetInFlattenedText
+        const UnsafeDOMRangeAndAdjustedOffsetInFlattenedText
             domRangeAndAdjustedOffset =
                 domRangeAndAdjustedOffsetOrError.unwrap();
         FrameAndNodeOffset frameForPrevious =
@@ -2496,7 +2507,7 @@ nsresult ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent) {
       OffsetAndDataFor::EditorString);
 
   // used to iterate over all contents and their frames
-  UnsafePostContentIterator postOrderIter;
+  PostContentIterator postOrderIter;
   rv = postOrderIter.Init(domRangeAndAdjustedOffset.mRange.Start().AsRaw(),
                           domRangeAndAdjustedOffset.mRange.End().AsRaw());
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3388,17 +3399,18 @@ nsresult ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent) {
   Maybe<uint32_t> startNodeOffset;
   Maybe<uint32_t> endNodeOffset;
   {
-    Result<DOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
-        domRangeAndAdjustedOffsetOrError = ConvertFlatTextOffsetToDOMRange(
-            aEvent->mOffset, aEvent->mLength, GetLineBreakType(aEvent),
-            aEvent->mExpandToClusterBoundary);
+    Result<UnsafeDOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
+        domRangeAndAdjustedOffsetOrError =
+            ConvertFlatTextOffsetToUnsafeDOMRange(
+                aEvent->mOffset, aEvent->mLength, GetLineBreakType(aEvent),
+                aEvent->mExpandToClusterBoundary);
     if (MOZ_UNLIKELY(domRangeAndAdjustedOffsetOrError.isErr())) {
       NS_WARNING(
-          "ContentEventHandler::ConvertFlatTextOffsetToDOMRange() failed");
+          "ContentEventHandler::ConvertFlatTextOffsetToDOMRangeBase() failed");
       return domRangeAndAdjustedOffsetOrError.unwrapErr();
     }
-    const DOMRangeAndAdjustedOffsetInFlattenedText domRangeAndAdjustedOffset =
-        domRangeAndAdjustedOffsetOrError.unwrap();
+    const UnsafeDOMRangeAndAdjustedOffsetInFlattenedText
+        domRangeAndAdjustedOffset = domRangeAndAdjustedOffsetOrError.unwrap();
     startNode = domRangeAndAdjustedOffset.mRange.GetStartContainer();
     endNode = domRangeAndAdjustedOffset.mRange.GetEndContainer();
     startNodeOffset = Some(domRangeAndAdjustedOffset.mRange.StartOffset());
