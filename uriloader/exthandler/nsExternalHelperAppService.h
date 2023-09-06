@@ -363,6 +363,12 @@ class nsExternalAppHandler final : public nsIStreamListener,
   bool mForceSave;
 
   /**
+   * If set, any internally handled type that has a disposition of
+     nsIChannel::DISPOSITION_ATTACHMENT will be saved to disk.
+   */
+  bool mForceSaveInternallyHandled;
+
+  /**
    * The canceled flag is set if the user canceled the launching of this
    * application before we finished saving the data to a temp file.
    */
