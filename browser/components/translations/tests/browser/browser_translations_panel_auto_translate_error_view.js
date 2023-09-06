@@ -59,8 +59,9 @@ add_task(
 
     await assertPageIsTranslated("es", "en", runInPage);
 
-    info("Navigate to a page in an unsupported language");
-    await navigate(FRENCH_PAGE_URL);
+    await navigate("Navigate to a page in an unsupported language", {
+      url: FRENCH_PAGE_URL,
+    });
 
     await assertTranslationsButton(
       { button: false },
@@ -88,19 +89,14 @@ add_task(
       "The learn more link is available"
     );
 
-    info("Navigate back to the spanish page.");
-    await navigate(SPANISH_PAGE_URL_DOT_ORG);
-
-    await assertTranslationsButton(
-      { button: true, circleArrows: true, locale: false, icon: true },
-      "The icon presents the loading indicator."
-    );
-
-    await rejectDownloads(1);
+    await navigate("Navigate back to a Spanish page.", {
+      url: SPANISH_PAGE_URL_DOT_ORG,
+      downloadHandler: rejectDownloads,
+      onOpenPanel: assertPanelErrorView,
+    });
 
     await assertPageIsUntranslated(runInPage);
 
-    assertPanelErrorView();
     info("Waiting to find the translations panel default header.");
     const header = await waitForCondition(() =>
       maybeGetByL10nId("translations-panel-header")

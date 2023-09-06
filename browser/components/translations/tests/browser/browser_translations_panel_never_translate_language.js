@@ -35,14 +35,13 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
 
   await assertPageIsUntranslated(runInPage);
 
-  await navigate(SPANISH_PAGE_URL, "Reload the page");
+  await navigate("Reload the page", { url: SPANISH_PAGE_URL });
 
   await assertPageIsUntranslated(runInPage);
 
-  await navigate(
-    SPANISH_PAGE_URL_DOT_ORG,
-    "Navigate to a different Spanish page"
-  );
+  await navigate("Navigate to a different Spanish page", {
+    url: SPANISH_PAGE_URL_DOT_ORG,
+  });
 
   await assertPageIsUntranslated(runInPage);
 
@@ -91,7 +90,7 @@ add_task(
 
     await assertPageIsUntranslated(runInPage);
 
-    await navigate(SPANISH_PAGE_URL, "Reload the page");
+    await navigate("Reload the page", { url: SPANISH_PAGE_URL });
 
     await assertPageIsUntranslated(runInPage);
 
@@ -164,7 +163,7 @@ add_task(
 
     await assertPageIsUntranslated(runInPage);
 
-    await navigate(SPANISH_PAGE_URL, "Reload the page");
+    await navigate("Reload the page", { url: SPANISH_PAGE_URL });
 
     await assertPageIsUntranslated(runInPage);
 

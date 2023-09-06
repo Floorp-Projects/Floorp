@@ -157,28 +157,19 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
   );
 
   const { cleanup, rejectDownloads, runInPage } = await loadTestPage({
-    page: SPANISH_PAGE_URL,
+    page: BLANK_PAGE,
     languagePairs: LANGUAGE_PAIRS,
     prefs: [["browser.translations.alwaysTranslateLanguages", "es"]],
   });
 
-  await assertTranslationsButton(
-    { button: true },
-    "The translations button is available."
-  );
+  await navigate("Navigate to a Spanish page", {
+    url: SPANISH_PAGE_URL,
+    downloadHandler: rejectDownloads,
+    onOpenPanel: assertPanelErrorView,
+  });
 
   await assertPageIsUntranslated(runInPage);
 
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
-
-  await rejectDownloads(1);
-
-  await assertPageIsUntranslated(runInPage);
-
-  assertPanelErrorView();
   await TestTranslationsTelemetry.assertCounter(
     "RequestCount",
     Glean.translations.requestsCount,

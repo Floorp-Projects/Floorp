@@ -598,7 +598,10 @@ function assertPanelUnsupportedLanguageView() {
 /**
  * Navigate to a URL and indicate a message as to why.
  */
-async function navigate(url, message) {
+async function navigate(
+  message,
+  { url, onOpenPanel = null, downloadHandler = null, pivotTranslation = false }
+) {
   // When the translations panel is open from the app menu,
   // it doesn't close on navigate the way that it does when it's
   // open from the translations button, so ensure that we always
@@ -612,8 +615,28 @@ async function navigate(url, message) {
   BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, BLANK_PAGE);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  const loadTargetPage = async () => {
+    BrowserTestUtils.loadURIString(gBrowser.selectedBrowser, url);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    if (downloadHandler) {
+      await assertTranslationsButton(
+        { button: true, circleArrows: true, locale: false, icon: true },
+        "The icon presents the loading indicator."
+      );
+      await downloadHandler(pivotTranslation ? 2 : 1);
+    }
+  };
+
+  if (onOpenPanel) {
+    await waitForTranslationsPopupEvent(
+      "popupshown",
+      loadTargetPage,
+      onOpenPanel
+    );
+  } else {
+    await loadTargetPage();
+  }
 }
 
 /**

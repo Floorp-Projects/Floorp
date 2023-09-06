@@ -47,15 +47,10 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     "The page should be automatically translated."
   );
 
-  info("Navigate to a different Spanish page");
-  await navigate(SPANISH_PAGE_URL_DOT_ORG);
-
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
-
-  await resolveDownloads(1);
+  await navigate("Navigate to a different Spanish page", {
+    url: SPANISH_PAGE_URL_DOT_ORG,
+    downloadHandler: resolveDownloads,
+  });
 
   await assertPageIsTranslated(
     "es",
@@ -193,17 +188,10 @@ add_task(
       "The page should be automatically translated."
     );
 
-    await navigate(
-      SPANISH_PAGE_URL_DOT_ORG,
-      "Navigate to a different Spanish page"
-    );
-
-    await assertTranslationsButton(
-      { button: true, circleArrows: true, locale: false, icon: true },
-      "The icon presents the loading indicator."
-    );
-
-    await resolveDownloads(1);
+    await navigate("Navigate to a different Spanish page", {
+      url: SPANISH_PAGE_URL_DOT_ORG,
+      downloadHandler: resolveDownloads,
+    });
 
     await assertPageIsTranslated(
       "es",
@@ -239,7 +227,7 @@ add_task(
       "The button shows only the icon."
     );
 
-    await navigate(SPANISH_PAGE_URL_DOT_ORG, "Reload the page");
+    await navigate("Reload the page", { url: SPANISH_PAGE_URL_DOT_ORG });
 
     await assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },

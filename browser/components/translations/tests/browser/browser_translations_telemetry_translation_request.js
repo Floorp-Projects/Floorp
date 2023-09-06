@@ -122,17 +122,15 @@ add_task(async function test_translations_telemetry_manual_translation() {
  */
 add_task(async function test_translations_telemetry_auto_translation() {
   const { cleanup, resolveDownloads, runInPage } = await loadTestPage({
-    page: SPANISH_PAGE_URL,
+    page: BLANK_PAGE,
     languagePairs: LANGUAGE_PAIRS,
     prefs: [["browser.translations.alwaysTranslateLanguages", "es"]],
   });
 
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
-
-  await resolveDownloads(1);
+  await navigate("Navigate to a Spanish page", {
+    url: SPANISH_PAGE_URL,
+    downloadHandler: resolveDownloads,
+  });
 
   await assertPageIsTranslated("es", "en", runInPage);
 

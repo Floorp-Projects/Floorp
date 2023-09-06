@@ -36,16 +36,15 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
 
   await assertPageIsUntranslated(runInPage);
 
-  await navigate(
-    SPANISH_PAGE_URL_2,
-    "Navigate to a Spanish page with the same content principal"
-  );
+  await navigate("Navigate to a Spanish page with the same content principal", {
+    url: SPANISH_PAGE_URL_2,
+  });
 
   await assertPageIsUntranslated(runInPage);
 
   await navigate(
-    SPANISH_PAGE_URL_DOT_ORG,
-    "Navigate to a Spanish page with a different content principal"
+    "Navigate to a Spanish page with a different content principal",
+    { url: SPANISH_PAGE_URL_DOT_ORG }
   );
 
   await assertTranslationsButton(
@@ -102,20 +101,20 @@ add_task(
 
     await assertPageIsUntranslated(runInPage);
 
-    await navigate(SPANISH_PAGE_URL, "Reload the page");
+    await navigate("Reload the page", { url: SPANISH_PAGE_URL });
 
     await assertPageIsUntranslated(runInPage);
 
     await navigate(
-      SPANISH_PAGE_URL_2,
-      "Navigate to a Spanish page with the same content principal"
+      "Navigate to a Spanish page with the same content principal",
+      { url: SPANISH_PAGE_URL_2 }
     );
 
     await assertPageIsUntranslated(runInPage);
 
     await navigate(
-      SPANISH_PAGE_URL_DOT_ORG,
-      "Navigate to a Spanish page with a different content principal"
+      "Navigate to a Spanish page with a different content principal",
+      { url: SPANISH_PAGE_URL_DOT_ORG }
     );
 
     await assertTranslationsButton(
@@ -193,28 +192,24 @@ add_task(
 
     await assertPageIsUntranslated(runInPage);
 
-    await navigate(SPANISH_PAGE_URL, "Reload the page");
+    await navigate("Reload the page", { url: SPANISH_PAGE_URL });
 
     await assertPageIsUntranslated(runInPage);
 
     await navigate(
-      SPANISH_PAGE_URL_2,
-      "Navigate to a Spanish page with the same content principal"
+      "Navigate to a Spanish page with the same content principal",
+      { url: SPANISH_PAGE_URL_2 }
     );
 
     await assertPageIsUntranslated(runInPage);
 
     await navigate(
-      SPANISH_PAGE_URL_DOT_ORG,
-      "Navigate to a Spanish page with a different content principal"
+      "Navigate to a Spanish page with a different content principal",
+      {
+        url: SPANISH_PAGE_URL_DOT_ORG,
+        downloadHandler: resolveDownloads,
+      }
     );
-
-    await assertTranslationsButton(
-      { button: true, circleArrows: true, locale: false, icon: true },
-      "The icon presents the loading indicator."
-    );
-
-    await resolveDownloads(1);
 
     await assertPageIsTranslated("es", "en", runInPage);
 
