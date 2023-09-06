@@ -147,12 +147,7 @@ add_task(
       }
     );
 
-    await waitForTranslationsPopupEvent("popuphidden", () => {
-      click(
-        getByL10nId("translations-panel-error-dismiss-button"),
-        "Click the dismiss error button."
-      );
-    });
+    await clickDismissErrorButton();
 
     await TestTranslationsTelemetry.assertEvent(
       "DismissErrorButton",
