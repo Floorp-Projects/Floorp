@@ -11,7 +11,7 @@ Services.scriptloader.loadSubScript(
 /**
  * Returns the intl display name of a given language tag.
  *
- * @param {string} langTag - The BCP-47 language tag.
+ * @param {string} langTag - A BCP-47 language tag.
  */
 const getIntlDisplayName = (() => {
   let displayNames = null;
@@ -27,6 +27,13 @@ const getIntlDisplayName = (() => {
   };
 })();
 
+/**
+ * Asserts that the Spanish test page is untranslated by checking
+ * that the H1 element is still in its original Spanish form.
+ *
+ * @param {Function} runInPage - Allows running a closure in the content page.
+ * @param {string} message - An optional message to log to info.
+ */
 async function assertPageIsUntranslated(runInPage, message = null) {
   if (message) {
     info(message);
@@ -42,6 +49,15 @@ async function assertPageIsUntranslated(runInPage, message = null) {
   });
 }
 
+/**
+ * Asserts that the Spanish test page has been translated by checking
+ * that the H1 element has been modified from its original form.
+ *
+ * @param {string} fromLanguage - The BCP-47 language tag being translated from.
+ * @param {string} toLanguage - The BCP-47 language tag being translated into.
+ * @param {Function} runInPage - Allows running a closure in the content page.
+ * @param {string} message - An optional message to log to info.
+ */
 async function assertPageIsTranslated(
   fromLanguage,
   toLanguage,
@@ -107,6 +123,17 @@ async function assertTranslationsButton(visibleAssertions, message) {
   return elements;
 }
 
+/**
+ * Opens the translations panel.
+ *
+ * @param {object} config
+ * @param {Function} config.onOpenPanel
+ *  - A function to run as soon as the panel opens.
+ * @param {boolean} config.openFromAppMenu
+ *  - Open the panel from the app menu. If false, uses the translations button.
+ * @param {boolean} config.openWithKeyboard
+ *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
+ */
 async function openTranslationsPanel({
   onOpenPanel = null,
   openFromAppMenu = false,
@@ -123,6 +150,15 @@ async function openTranslationsPanel({
   }
 }
 
+/**
+ * Opens the translations panel via the translations button.
+ *
+ * @param {object} config
+ * @param {Function} config.onOpenPanel
+ *  - A function to run as soon as the panel opens.
+ * @param {boolean} config.openWithKeyboard
+ *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
+ */
 async function openTranslationsPanelViaTranslationsButton({
   onOpenPanel = null,
   openWithKeyboard = false,
@@ -145,6 +181,10 @@ async function openTranslationsPanelViaTranslationsButton({
   );
 }
 
+/**
+ * Opens the translations panel settings menu.
+ * Requires that the translations panel is already open.
+ */
 async function openTranslationsSettingsMenu() {
   info("Opening the translations panel settings menu");
   const gearIcons = getAllByL10nId("translations-panel-settings-button");
@@ -166,10 +206,13 @@ async function openTranslationsSettingsMenu() {
 }
 
 /**
- * A convenience function to open the translations panel
- * through the app menu.
+ * Opens the translations panel via the app menu.
  *
- * Fails the test if the menu cannot be opened.
+ * @param {object} config
+ * @param {Function} config.onOpenPanel
+ *  - A function to run as soon as the panel opens.
+ * @param {boolean} config.openWithKeyboard
+ *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
  */
 async function openTranslationsPanelViaAppMenu({
   onOpenPanel = null,
@@ -205,6 +248,11 @@ async function openTranslationsPanelViaAppMenu({
   );
 }
 
+/**
+ * Switches the selected from-language to the provided language tag.
+ *
+ * @param {string} langTag - A BCP-47 language tag.
+ */
 function switchSelectedFromLanguage(langTag) {
   info(`Switching the from-language to ${langTag}`);
   const { fromMenuList } = TranslationsPanel.elements;
@@ -212,6 +260,11 @@ function switchSelectedFromLanguage(langTag) {
   fromMenuList.dispatchEvent(new Event("command"));
 }
 
+/**
+ * Asserts that the selected from-language matches the provided language tag.
+ *
+ * @param {string} langTag - A BCP-47 language tag.
+ */
 function assertSelectedFromLanguage(langTag) {
   info(`Checking that the selected from-language matches ${langTag}`);
   const { fromMenuList } = TranslationsPanel.elements;
@@ -222,6 +275,11 @@ function assertSelectedFromLanguage(langTag) {
   );
 }
 
+/**
+ * Switches the selected to-language to the provided language tag.
+ *
+ * @param {string} langTag - A BCP-47 language tag.
+ */
 function switchSelectedToLanguage(langTag) {
   info(`Switching the to-language to ${langTag}`);
   const { toMenuList } = TranslationsPanel.elements;
@@ -229,6 +287,11 @@ function switchSelectedToLanguage(langTag) {
   toMenuList.dispatchEvent(new Event("command"));
 }
 
+/**
+ * Asserts that the selected to-language matches the provided language tag.
+ *
+ * @param {string} langTag - A BCP-47 language tag.
+ */
 function assertSelectedToLanguage(langTag) {
   info(`Checking that the selected to-language matches ${langTag}`);
   const { toMenuList } = TranslationsPanel.elements;
@@ -407,7 +470,7 @@ async function assertIsNeverTranslateSite(
  *
  * @param {string} dataL10nId - The data-l10n-id of the checkbox.
  * @param {object} expectations
- * @param {string} expectations.langTag - The BCP-47 language tag.
+ * @param {string} expectations.langTag - A BCP-47 language tag.
  * @param {boolean} expectations.checked - Whether the checkbox is expected to be checked.
  * @param {boolean} expectations.disabled - Whether the menuitem is expected to be disabled.
  */
@@ -444,6 +507,12 @@ async function assertCheckboxState(
   }
 }
 
+/**
+ * Asserts that the proper language tags are shown on the translations button.
+ *
+ * @param {string} fromLanguage - The BCP-47 language tag being translated from.
+ * @param {string} toLanguage - The BCP-47 language tag being translated into.
+ */
 async function assertLangTagIsShownOnTranslationsButton(
   fromLanguage,
   toLanguage
@@ -472,6 +541,9 @@ async function assertLangTagIsShownOnTranslationsButton(
   );
 }
 
+/**
+ * Simulates clicking the cancel button.
+ */
 async function clickCancelButton() {
   info("Clicking the cancel button");
   const { cancelButton } = TranslationsPanel.elements;
@@ -481,6 +553,9 @@ async function clickCancelButton() {
   });
 }
 
+/**
+ * Simulates clicking the restore-page button.
+ */
 async function clickRestoreButton() {
   info("Clicking the restore button");
   const { restoreButton } = TranslationsPanel.elements;
@@ -490,6 +565,9 @@ async function clickRestoreButton() {
   });
 }
 
+/**
+ * Simulates clicking the dismiss-error button.
+ */
 async function clickDismissErrorButton() {
   info("Clicking the dismiss-error button");
   const { dismissErrorButton } = TranslationsPanel.elements;
@@ -502,6 +580,17 @@ async function clickDismissErrorButton() {
   });
 }
 
+/**
+ * Simulates clicking the translate button.
+ *
+ * @param {object} config
+ * @param {Function} config.downloadHandler
+ *  - The function handle expected downloads, resolveDownloads() or rejectDownloads()
+ *    Leave as null to test more granularly, such as testing opening the loading view.
+ * @param {boolean} config.pivotTranslation
+ *  - True if the expected translation is a pivot translation, otherwise false.
+ *    Affects the number of expected downloads.
+ */
 async function clickTranslateButton({
   downloadHandler = null,
   pivotTranslation = false,
@@ -521,6 +610,14 @@ async function clickTranslateButton({
   }
 }
 
+/**
+ * Simulates clicking the change-source-language button.
+ *
+ * @param {object} config
+ * @param {boolean} config.firstShow
+ *  - True if the first-show view should be expected
+ *    False if the default view should be expected
+ */
 async function clickChangeSourceLanguageButton({ firstShow = false } = {}) {
   info("Clicking the change-source-language button");
   const { changeSourceLanguageButton } = TranslationsPanel.elements;
@@ -641,6 +738,9 @@ function assertPanelDefaultView() {
   assertDefaultHeaderL10nId("translations-panel-header");
 }
 
+/**
+ * Asserts that the panel element visibility matches the panel loading view.
+ */
 function assertPanelLoadingView() {
   info("Checking that the panel shows the loading view");
   assertPanelDefaultView();
@@ -794,7 +894,7 @@ async function toggleReaderMode() {
 }
 
 /**
- * Add a tab to the page
+ * Opens a new tab in the foreground.
  *
  * @param {string} url
  */
@@ -813,11 +913,22 @@ async function addTab(url) {
   };
 }
 
+/**
+ * Switches to a given tab.
+ *
+ * @param {object} tab - The tab to switch to
+ */
 async function switchTab(tab) {
   info("Switching tabs");
   await BrowserTestUtils.switchTab(gBrowser, tab);
 }
 
+/**
+ * Simulates clicking an element with the mouse.
+ *
+ * @param {element} element - The element to click.
+ * @param {string} message - A message to log to info.
+ */
 function click(element, message) {
   info(message);
   return new Promise(resolve => {
@@ -841,7 +952,9 @@ function click(element, message) {
 }
 
 /**
- * @param {Element} element
+ * Returns whether an element's computed style is visible.
+ *
+ * @param {Element} element - The element to check.
  * @returns {boolean}
  */
 function isVisible(element) {
@@ -891,6 +1004,8 @@ function getAllByL10nId(l10nId, doc = document) {
 }
 
 /**
+ * Retrieves an element by its id.
+ *
  * @param {string} id
  * @param {Document} [doc]
  * @returns {Element}
