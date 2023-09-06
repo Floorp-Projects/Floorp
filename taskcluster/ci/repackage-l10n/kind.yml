@@ -35,7 +35,8 @@ only-for-build-platforms:
 
 jobs:
     repackage-l10n:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         upstream-mac-kind:
             by-build-type:
                 debug: shippable-l10n-mac-signing

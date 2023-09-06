@@ -25,4 +25,5 @@ only-for-build-platforms:
 
 jobs:
     release-partner-repack-repackage-signing:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters

@@ -20,7 +20,8 @@ only-for-build-platforms:
 
 jobs:
     release-eme-free-repack-beetmover:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         shipping-phase: promote
         partner-bucket-scope:
             by-release-level:

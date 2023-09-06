@@ -27,7 +27,8 @@ only-for-build-platforms:
 
 jobs:
     release-partner-repack-repackage:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         upstream-mac-kind:
             by-build-type:
                 debug: release-partner-repack-mac-signing
