@@ -26,6 +26,7 @@ DEFINES["IMPL_MFBT"] = True
 OS_LIBS += [
     "advapi32",
     "kernel32",
+    "runtimeobject",
     "user32",
 ]
 
