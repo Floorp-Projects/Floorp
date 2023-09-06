@@ -147,7 +147,7 @@ class WebGPUParent final : public PWebGPUParent {
   /// Associated presentation data for each swapchain.
   std::unordered_map<layers::RemoteTextureOwnerId, RefPtr<PresentationData>,
                      layers::RemoteTextureOwnerId::HashFn>
-      mCanvasMap;
+      mPresentationDataMap;
 
   RefPtr<layers::RemoteTextureOwnerClient> mRemoteTextureOwner;
 
