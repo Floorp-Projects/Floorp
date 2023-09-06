@@ -314,7 +314,6 @@ def _activation_context():
     required_mach_sys_paths = [
         topsrcdir / "python" / "mach",
         topsrcdir / "third_party" / "python" / "packaging",
-        topsrcdir / "third_party" / "python" / "pyparsing",
         topsrcdir / "third_party" / "python" / "pip",
     ]
 
