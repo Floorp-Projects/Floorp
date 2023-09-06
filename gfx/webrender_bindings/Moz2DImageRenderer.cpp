@@ -370,21 +370,24 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     return false;
   }
 
+  // aRenderRect is the part of the blob that we are currently rendering
+  // (for example a tile) in the same coordinate space as aVisibleRect.
+  IntPoint origin = gfx::IntPoint(aRenderRect->min.x, aRenderRect->min.y);
+
+  dt = gfx::Factory::CreateOffsetDrawTarget(dt, origin);
+  if (!dt) {
+    return false;
+  }
+
   // We try hard to not have empty blobs but we can end up with
   // them because of CompositorHitTestInfo and merging.
   size_t footerSize = sizeof(size_t);
   MOZ_RELEASE_ASSERT(aBlob.length() >= footerSize);
   size_t indexOffset = ConvertFromBytes<size_t>(aBlob.end().get() - footerSize);
 
-  // aRenderRect is the part of the blob that we are currently rendering
-  // (for example a tile) in the same coordinate space as aVisibleRect.
-  IntPoint origin = gfx::IntPoint(aRenderRect->min.x, aRenderRect->min.y);
-
   MOZ_RELEASE_ASSERT(indexOffset <= aBlob.length() - footerSize);
   Reader reader(aBlob.begin().get() + indexOffset,
                 aBlob.length() - footerSize - indexOffset);
-
-  dt = gfx::Factory::CreateOffsetDrawTarget(dt, origin);
 
   auto bounds = gfx::IntRect(origin, size);
 

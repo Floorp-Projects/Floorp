@@ -1230,8 +1230,12 @@ RefPtr<DrawTarget> DrawTargetD2D1::CreateClippedDrawTarget(
   IntRect rect = RoundedOut(ToRect(clipRect));
 
   RefPtr<DrawTarget> dt = CreateSimilarDrawTarget(rect.Size(), aFormat);
-  result = gfx::Factory::CreateOffsetDrawTarget(dt, rect.TopLeft());
-  result->SetTransform(mTransform);
+  if (dt) {
+    result = gfx::Factory::CreateOffsetDrawTarget(dt, rect.TopLeft());
+    if (result) {
+      result->SetTransform(mTransform);
+    }
+  }
   if (!aBounds.IsEmpty()) {
     PopClip();
   }

@@ -1803,9 +1803,13 @@ RefPtr<DrawTarget> DrawTargetCairo::CreateClippedDrawTarget(
   if (!clipBounds.IsEmpty()) {
     RefPtr<DrawTarget> dt = CreateSimilarDrawTarget(
         IntSize(clipBounds.width, clipBounds.height), aFormat);
-    result = gfx::Factory::CreateOffsetDrawTarget(
-        dt, IntPoint(clipBounds.x, clipBounds.y));
-    result->SetTransform(mTransform);
+    if (dt) {
+      result = gfx::Factory::CreateOffsetDrawTarget(
+          dt, IntPoint(clipBounds.x, clipBounds.y));
+      if (result) {
+        result->SetTransform(mTransform);
+      }
+    }
   } else {
     // Everything is clipped but we still want some kind of surface
     result = CreateSimilarDrawTarget(IntSize(1, 1), aFormat);
