@@ -25,12 +25,9 @@ add_task(async function test_translations_panel_auto_offer_settings() {
     expectedEventCount: 0,
   });
 
-  info("Open the popup and gear icon menu.");
-  const alwaysOfferId = "translations-panel-settings-always-offer-translation";
-
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
   await openTranslationsSettingsMenu();
-  await assertCheckboxState(alwaysOfferId, { checked: false });
+  await assertIsAlwaysOfferTranslationsEnabled(false);
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
@@ -43,7 +40,6 @@ add_task(async function test_translations_panel_auto_offer_settings() {
     ],
   });
 
-  info("Turn on automatic offering of popups");
   await clickAlwaysOfferTranslations();
 
   await TestTranslationsTelemetry.assertEvent(
@@ -56,7 +52,7 @@ add_task(async function test_translations_panel_auto_offer_settings() {
   );
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
-  await assertCheckboxState(alwaysOfferId, { checked: true });
+  await assertIsAlwaysOfferTranslationsEnabled(true);
 
   await clickCancelButton();
 

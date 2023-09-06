@@ -308,6 +308,18 @@ async function clickManageLanguages() {
 }
 
 /**
+ * Asserts that the always-offer-translations checkbox matches the expected checked state.
+ *
+ * @param {boolean} checked
+ */
+async function assertIsAlwaysOfferTranslationsEnabled(checked) {
+  await assertCheckboxState(
+    "translations-panel-settings-always-offer-translation",
+    { checked }
+  );
+}
+
+/**
  * Asserts that the always-translate-language checkbox matches the expected checked state.
  *
  * @param {string} langTag - A BCP-47 language tag
