@@ -32,7 +32,7 @@ job-defaults:
                     # This is the list on-change locales, excluding ja/ja-JP-mac
                     # which bouncer_check doesn't support.
                     locales: ['en-US', 'en-CA', 'he', 'it']
-                    bouncer_prefix: "https://bouncer-bouncer-releng.stage.mozaws.net/"
+                    bouncer_prefix: "https://dev.bouncer.nonprod.webservices.mozgcp.net/"
                     cdn_urls:
                         - ftp.stage.mozaws.net
 

@@ -26,7 +26,7 @@ job-defaults:
         download-domain:
             by-release-level:
                 production: download.mozilla.org
-                staging: bouncer-bouncer-releng.stage.mozaws.net
+                staging: dev.bouncer.nonprod.webservices.mozgcp.net
     whats-new-config: browser/config/whats_new_page.yml
 
 jobs:
