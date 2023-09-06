@@ -59,18 +59,16 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
 add_task(
   async function test_uncheck_never_translate_site_with_always_translate_language() {
     const { cleanup, runInPage, resolveDownloads } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: BLANK_PAGE,
       languagePairs: LANGUAGE_PAIRS,
       permissionsUrls: [SPANISH_PAGE_URL],
       prefs: [["browser.translations.alwaysTranslateLanguages", "es"]],
     });
 
-    await assertTranslationsButton(
-      { button: true, circleArrows: true, locale: false, icon: true },
-      "The icon presents the loading indicator."
-    );
-
-    await resolveDownloads(1);
+    await navigate("Navigate to a Spanish page", {
+      url: SPANISH_PAGE_URL,
+      downloadHandler: resolveDownloads,
+    });
 
     await assertPageIsTranslated("es", "en", runInPage);
 

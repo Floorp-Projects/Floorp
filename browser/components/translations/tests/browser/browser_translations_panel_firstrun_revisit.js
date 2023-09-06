@@ -39,7 +39,9 @@ add_task(async function test_translations_panel_firstrun() {
 
   await clickCancelButton();
 
-  await navigate(SPANISH_PAGE_URL_DOT_ORG, "Navigate to a different website");
+  await navigate("Navigate to a different website", {
+    url: SPANISH_PAGE_URL_DOT_ORG,
+  });
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
@@ -51,7 +53,9 @@ add_task(async function test_translations_panel_firstrun() {
 
   await clickCancelButton();
 
-  await navigate(SPANISH_PAGE_URL, "Navigate back to the first website");
+  await navigate("Navigate back to the first website", {
+    url: SPANISH_PAGE_URL,
+  });
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 

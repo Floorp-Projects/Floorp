@@ -48,26 +48,19 @@ add_task(async function test_translations_panel_auto_offer() {
     }
   );
 
-  await navigate(
-    TRANSLATIONS_TESTER_ES_2,
-    "Navigate to another page on the same domain."
-  );
+  await navigate("Navigate to another page on the same domain.", {
+    url: TRANSLATIONS_TESTER_ES_2,
+  });
 
   await assertTranslationsButton(
     { button: true },
     "The button is still shown."
   );
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    async () => {
-      await navigate(
-        TRANSLATIONS_TESTER_ES_DOT_ORG,
-        "Navigate to a page on a different domain."
-      );
-    },
-    assertPanelDefaultView
-  );
+  await navigate("Navigate to a page on a different domain.", {
+    url: TRANSLATIONS_TESTER_ES_DOT_ORG,
+    onOpenPanel: assertPanelDefaultView,
+  });
 
   await clickCancelButton();
 

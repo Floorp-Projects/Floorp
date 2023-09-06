@@ -7,7 +7,7 @@
  * Tests that the first run message is displayed.
  */
 add_task(async function test_translations_panel_firstrun() {
-  const { cleanup, tab } = await loadTestPage({
+  const { cleanup } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
     prefs: [["browser.translations.panelShown", false]],
@@ -22,9 +22,9 @@ add_task(async function test_translations_panel_firstrun() {
 
   await clickCancelButton();
 
-  info("Loading a different page.");
-  BrowserTestUtils.loadURIString(tab.linkedBrowser, SPANISH_PAGE_URL_2);
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await navigate("Load a different page on the same site", {
+    url: SPANISH_PAGE_URL_2,
+  });
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
