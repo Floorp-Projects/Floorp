@@ -34,23 +34,18 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
 
   await assertPageIsTranslated("es", "en", runInPage);
 
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 1,
+    expectNewFlowId: true,
+    expectFirstInteraction: true,
+    finalValuePredicates: [
+      value => value.extra.auto_show === "false",
+      value => value.extra.view_name === "defaultView",
+      value => value.extra.opened_from === "translationsButton",
+      value => value.extra.document_language === "es",
+    ],
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: true,
-      expectFirstInteraction: true,
-      finalValuePredicates: [
-        value => value.extra.auto_show === "false",
-        value => value.extra.view_name === "defaultView",
-        value => value.extra.opened_from === "translationsButton",
-        value => value.extra.document_language === "es",
-      ],
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "alwaysTranslateLanguage",
     Glean.translationsPanel.alwaysTranslateLanguage,
     {
       expectedEventCount: 1,
@@ -59,26 +54,17 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
       finalValuePredicates: [value => value.extra.language === "es"],
     }
   );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 1,
+    expectNewFlowId: false,
+    expectFirstInteraction: true,
+  });
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 1,
+    expectNewFlowId: false,
+    expectFirstInteraction: true,
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: false,
-      expectFirstInteraction: true,
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: false,
-      expectFirstInteraction: true,
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "TranslationRequest",
     Glean.translations.translationRequest,
     {
       expectedEventCount: 1,
@@ -91,24 +77,19 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
 
   await clickRestoreButton();
 
-  await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 2,
-      expectNewFlowId: true,
-      expectFirstInteraction: false,
-      finalValuePredicates: [
-        value => value.extra.auto_show === "false",
-        value => value.extra.view_name === "revisitView",
-        value => value.extra.opened_from === "translationsButton",
-        value => value.extra.document_language === "es",
-      ],
-    }
-  );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 2,
+    expectNewFlowId: true,
+    expectFirstInteraction: false,
+    finalValuePredicates: [
+      value => value.extra.auto_show === "false",
+      value => value.extra.view_name === "revisitView",
+      value => value.extra.opened_from === "translationsButton",
+      value => value.extra.document_language === "es",
+    ],
+  });
 
   await TestTranslationsTelemetry.assertEvent(
-    "RestorePageButton",
     Glean.translationsPanel.restorePageButton,
     {
       expectedEventCount: 1,
@@ -117,15 +98,11 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
     }
   );
 
-  await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 2,
-      expectFirstInteraction: false,
-      expectNewFlowId: false,
-    }
-  );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 2,
+    expectFirstInteraction: false,
+    expectNewFlowId: false,
+  });
 
   await assertTranslationsButton({ button: true }, "The button is available.");
   await assertPageIsUntranslated(runInPage);

@@ -26,22 +26,17 @@ add_task(async function test_translations_telemetry_switch_from_language() {
   fromSelect.value = "en";
   fromSelect.dispatchEvent(new Event("command"));
 
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 1,
+    expectNewFlowId: true,
+    finalValuePredicates: [
+      value => value.extra.auto_show === "false",
+      value => value.extra.view_name === "defaultView",
+      value => value.extra.opened_from === "translationsButton",
+      value => value.extra.document_language === "es",
+    ],
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: true,
-      finalValuePredicates: [
-        value => value.extra.auto_show === "false",
-        value => value.extra.view_name === "defaultView",
-        value => value.extra.opened_from === "translationsButton",
-        value => value.extra.document_language === "es",
-      ],
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "ChangeFromLanguage",
     Glean.translationsPanel.changeFromLanguage,
     {
       expectedEventCount: 1,
@@ -55,7 +50,6 @@ add_task(async function test_translations_telemetry_switch_from_language() {
   fromSelect.dispatchEvent(new Event("command"));
 
   await TestTranslationsTelemetry.assertEvent(
-    "ChangeFromLanguage",
     Glean.translationsPanel.changeFromLanguage,
     {
       expectedEventCount: 2,
@@ -69,7 +63,6 @@ add_task(async function test_translations_telemetry_switch_from_language() {
   fromSelect.dispatchEvent(new Event("command"));
 
   await TestTranslationsTelemetry.assertEvent(
-    "ChangeFromLanguage",
     Glean.translationsPanel.changeFromLanguage,
     {
       expectedEventCount: 2,
@@ -81,7 +74,6 @@ add_task(async function test_translations_telemetry_switch_from_language() {
   fromSelect.dispatchEvent(new Event("command"));
 
   await TestTranslationsTelemetry.assertEvent(
-    "ChangeFromLanguage",
     Glean.translationsPanel.changeFromLanguage,
     {
       expectedEventCount: 3,
@@ -116,22 +108,17 @@ add_task(async function test_translations_telemetry_switch_to_language() {
   toSelect.value = "fr";
   toSelect.dispatchEvent(new Event("command"));
 
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 1,
+    expectNewFlowId: true,
+    finalValuePredicates: [
+      value => value.extra.auto_show === "false",
+      value => value.extra.view_name === "defaultView",
+      value => value.extra.opened_from === "translationsButton",
+      value => value.extra.document_language === "es",
+    ],
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: true,
-      finalValuePredicates: [
-        value => value.extra.auto_show === "false",
-        value => value.extra.view_name === "defaultView",
-        value => value.extra.opened_from === "translationsButton",
-        value => value.extra.document_language === "es",
-      ],
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "ChangeToLanguage",
     Glean.translationsPanel.changeToLanguage,
     {
       expectedEventCount: 1,
@@ -145,7 +132,6 @@ add_task(async function test_translations_telemetry_switch_to_language() {
   toSelect.dispatchEvent(new Event("command"));
 
   await TestTranslationsTelemetry.assertEvent(
-    "ChangeToLanguage",
     Glean.translationsPanel.changeToLanguage,
     {
       expectedEventCount: 2,
@@ -159,7 +145,6 @@ add_task(async function test_translations_telemetry_switch_to_language() {
   toSelect.dispatchEvent(new Event("command"));
 
   await TestTranslationsTelemetry.assertEvent(
-    "ChangeToLanguage",
     Glean.translationsPanel.changeToLanguage,
     {
       expectedEventCount: 2,
@@ -171,7 +156,6 @@ add_task(async function test_translations_telemetry_switch_to_language() {
   toSelect.dispatchEvent(new Event("command"));
 
   await TestTranslationsTelemetry.assertEvent(
-    "ChangeToLanguage",
     Glean.translationsPanel.changeToLanguage,
     {
       expectedEventCount: 3,

@@ -42,7 +42,6 @@ add_task(
       }
     );
     await TestTranslationsTelemetry.assertEvent(
-      "TranslationRequest",
       Glean.translations.translationRequest,
       {
         expectedEventCount: 0,
@@ -51,20 +50,16 @@ add_task(
 
     await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
-    await TestTranslationsTelemetry.assertEvent(
-      "OpenPanel",
-      Glean.translationsPanel.open,
-      {
-        expectedEventCount: 1,
-        expectNewFlowId: true,
-        finalValuePredicates: [
-          value => value.extra.auto_show === "false",
-          value => value.extra.view_name === "defaultView",
-          value => value.extra.opened_from === "translationsButton",
-          value => value.extra.document_language === "es",
-        ],
-      }
-    );
+    await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+      expectedEventCount: 1,
+      expectNewFlowId: true,
+      finalValuePredicates: [
+        value => value.extra.auto_show === "false",
+        value => value.extra.view_name === "defaultView",
+        value => value.extra.opened_from === "translationsButton",
+        value => value.extra.document_language === "es",
+      ],
+    });
 
     await clickTranslateButton({
       downloadHandler: rejectDownloads,
@@ -73,36 +68,27 @@ add_task(
 
     await assertPageIsUntranslated(runInPage);
 
+    await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+      expectedEventCount: 2,
+      expectNewFlowId: false,
+      finalValuePredicates: [
+        value => value.extra.auto_show === "true",
+        value => value.extra.view_name === "errorView",
+        value => value.extra.opened_from === "translationsButton",
+        value => value.extra.document_language === "es",
+      ],
+    });
     await TestTranslationsTelemetry.assertEvent(
-      "OpenPanel",
-      Glean.translationsPanel.open,
-      {
-        expectedEventCount: 2,
-        expectNewFlowId: false,
-        finalValuePredicates: [
-          value => value.extra.auto_show === "true",
-          value => value.extra.view_name === "errorView",
-          value => value.extra.opened_from === "translationsButton",
-          value => value.extra.document_language === "es",
-        ],
-      }
-    );
-    await TestTranslationsTelemetry.assertEvent(
-      "TranslateButton",
       Glean.translationsPanel.translateButton,
       {
         expectedEventCount: 1,
         expectNewFlowId: false,
       }
     );
-    await TestTranslationsTelemetry.assertEvent(
-      "ClosePanel",
-      Glean.translationsPanel.close,
-      {
-        expectedEventCount: 1,
-        expectNewFlowId: false,
-      }
-    );
+    await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+      expectedEventCount: 1,
+      expectNewFlowId: false,
+    });
     await TestTranslationsTelemetry.assertCounter(
       "RequestCount",
       Glean.translations.requestsCount,
@@ -116,20 +102,15 @@ add_task(
         expectedDenominator: 1,
       }
     );
+    await TestTranslationsTelemetry.assertEvent(Glean.translations.error, {
+      expectedEventCount: 1,
+      expectNewFlowId: false,
+      finalValuePredicates: [
+        value =>
+          value.extra.reason === "Error: Intentionally rejecting downloads.",
+      ],
+    });
     await TestTranslationsTelemetry.assertEvent(
-      "Error",
-      Glean.translations.error,
-      {
-        expectedEventCount: 1,
-        expectNewFlowId: false,
-        finalValuePredicates: [
-          value =>
-            value.extra.reason === "Error: Intentionally rejecting downloads.",
-        ],
-      }
-    );
-    await TestTranslationsTelemetry.assertEvent(
-      "TranslationRequest",
       Glean.translations.translationRequest,
       {
         expectedEventCount: 1,
@@ -183,42 +164,29 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
       expectedDenominator: 1,
     }
   );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 1,
+    expectNewFlowId: true,
+    finalValuePredicates: [
+      value => value.extra.auto_show === "true",
+      value => value.extra.view_name === "errorView",
+      value => value.extra.opened_from === "translationsButton",
+      value => value.extra.document_language === "es",
+    ],
+  });
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 0,
+    expectNewFlowId: false,
+  });
+  await TestTranslationsTelemetry.assertEvent(Glean.translations.error, {
+    expectedEventCount: 1,
+    expectNewFlowId: false,
+    finalValuePredicates: [
+      value =>
+        value.extra.reason === "Error: Intentionally rejecting downloads.",
+    ],
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: true,
-      finalValuePredicates: [
-        value => value.extra.auto_show === "true",
-        value => value.extra.view_name === "errorView",
-        value => value.extra.opened_from === "translationsButton",
-        value => value.extra.document_language === "es",
-      ],
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 0,
-      expectNewFlowId: false,
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "Error",
-    Glean.translations.error,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: false,
-      finalValuePredicates: [
-        value =>
-          value.extra.reason === "Error: Intentionally rejecting downloads.",
-      ],
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "TranslationRequest",
     Glean.translations.translationRequest,
     {
       expectedEventCount: 1,
@@ -235,21 +203,16 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
 
   await clickCancelButton();
   await TestTranslationsTelemetry.assertEvent(
-    "CancelButton",
     Glean.translationsPanel.cancelButton,
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
     }
   );
-  await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: false,
-    }
-  );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 1,
+    expectNewFlowId: false,
+  });
 
   await cleanup();
 });

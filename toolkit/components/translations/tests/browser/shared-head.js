@@ -1081,7 +1081,6 @@ class TestTranslationsTelemetry {
    * - An array of function predicates to assert for only the final event value.
    */
   static async assertEvent(
-    name,
     event,
     {
       expectedEventCount,
@@ -1096,6 +1095,8 @@ class TestTranslationsTelemetry {
     await Services.fog.testFlushAllChildren();
     const events = event.testGetValue() ?? [];
     const eventCount = events.length;
+    const name =
+      eventCount > 0 ? `${events[0].category}.${events[0].name}` : null;
 
     if (eventCount > 0 && expectFirstInteraction !== null) {
       is(
