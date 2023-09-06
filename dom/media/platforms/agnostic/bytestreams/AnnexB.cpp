@@ -379,9 +379,9 @@ AnnexB::ConvertNALUTo4BytesNALU(mozilla::MediaRawData* aSample,
   if (aNALUSize == 0 || aNALUSize > 4) {
     return Err(NS_ERROR_FAILURE);
   }
-  if (aNALUSize == 4) {
-    return Ok();
-  }
+
+  // We still do the conversion for 4-byte AVCC since we need to check if the
+  // data is corrupt.
 
   MOZ_ASSERT(aSample);
   nsTArray<uint8_t> dest;
@@ -399,10 +399,17 @@ AnnexB::ConvertNALUTo4BytesNALU(mozilla::MediaRawData* aSample,
       case 3:
         MOZ_TRY_VAR(nalLen, reader.ReadU24());
         break;
+      case 4:
+        MOZ_TRY_VAR(nalLen, reader.ReadU32());
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Bytes of the NAL body length must be in [1,4]");
+        return Err(NS_ERROR_ILLEGAL_VALUE);
     }
     const uint8_t* p = reader.Read(nalLen);
     if (!p) {
-      return Ok();
+      // The data may be corrupt.
+      return Err(NS_ERROR_UNEXPECTED);
     }
     if (!writer.WriteU32(nalLen) || !writer.Write(p, nalLen)) {
       return Err(NS_ERROR_OUT_OF_MEMORY);
