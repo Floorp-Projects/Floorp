@@ -51,6 +51,12 @@
           `Rated ${ratingRounded} out of 5`,
           "Rendered title must contain at most one fractional digit"
         );
+
+        is(
+          mozFiveStar.starsWrapperEl.getAttribute("role"),
+          "image",
+          "Rating element is an image for the title to be announced"
+        );
       }
 
       await testRating(0.0, "0", "empty,empty,empty,empty,empty");
