@@ -124,6 +124,27 @@ async function testTextRange(accDoc, browser, id, start, end) {
 }
 
 /**
+ * Since testTextChar can't handle non-rendered white space, this function first
+ * uses testTextChar to verify the first character and then ensures all
+ * characters thereafter have an incrementing x and a non-0 width.
+ */
+async function testLineWithNonRenderedSpace(docAcc, browser, id, length) {
+  await testChar(docAcc, browser, id, 0);
+  const acc = findAccessibleChildByID(docAcc, id, [nsIAccessibleText]);
+  let prevX = -1;
+  for (let offset = 0; offset < length; ++offset) {
+    const x = {};
+    const y = {};
+    const w = {};
+    const h = {};
+    acc.getCharacterExtents(offset, x, y, w, h, COORDTYPE_SCREEN_RELATIVE);
+    ok(x.value > prevX, `${id}: offset ${offset} x is larger (${x.value})`);
+    prevX = x.value;
+    ok(w.value > 0, `${id}: offset ${offset} width > 0`);
+  }
+}
+
+/**
  * Test the text range boundary for simple LtR text
  */
 addAccessibleTask(
@@ -693,4 +714,24 @@ X</pre>`,
     topLevel: true,
     iframe: true,
   }
+);
+
+/**
+ * Test character bounds where content white space isn't rendered.
+ */
+addAccessibleTask(
+  `
+<p id="single">a  b</p>
+<p id="multi"><ins>a </ins>
+b</p>
+<pre id="pre">a  b</pre>
+  `,
+  async function (browser, docAcc) {
+    await testLineWithNonRenderedSpace(docAcc, browser, "single", 3);
+    await testLineWithNonRenderedSpace(docAcc, browser, "multi", 2);
+    for (let offset = 0; offset < 4; ++offset) {
+      await testChar(docAcc, browser, "pre", offset);
+    }
+  },
+  { chrome: true, topLevel: true }
 );
