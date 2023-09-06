@@ -27,14 +27,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     "The button is available."
   );
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await waitForTranslationsPopupEvent(
     "popupshown",
@@ -74,14 +67,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
 
   await rejectDownloads(1);
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await TestTranslationsTelemetry.assertEvent(
     "OpenPanel",

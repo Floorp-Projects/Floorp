@@ -17,14 +17,7 @@ add_task(async function test_translations_button_hidden_in_reader_mode() {
     "The translations button is visible."
   );
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await toggleReaderMode();
 
@@ -58,14 +51,7 @@ add_task(async function test_translations_button_hidden_in_reader_mode() {
     "The translations button is visible again outside of reader mode."
   );
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await cleanup();
 });
@@ -84,14 +70,7 @@ add_task(async function test_translations_persist_in_reader_mode() {
     "The translations button is visible."
   );
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await waitForTranslationsPopupEvent("popupshown", () => {
     click(button, "Opening the popup");

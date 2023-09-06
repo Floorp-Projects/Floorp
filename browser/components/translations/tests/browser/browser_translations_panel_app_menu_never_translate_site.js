@@ -15,18 +15,7 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
     permissionsUrls: [SPANISH_PAGE_URL],
   });
 
-  info(
-    "Translations permissions are currently allowed for this test page " +
-      "and the page should be untranslated, in its original form."
-  );
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
@@ -108,15 +97,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
-    info("The page should still be in its original, untranslated form");
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     info(
       "Simulate clicking never-translate-site in the settings menu, " +

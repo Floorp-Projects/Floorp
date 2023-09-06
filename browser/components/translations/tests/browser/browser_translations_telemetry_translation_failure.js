@@ -26,14 +26,7 @@ add_task(
       "The button is available."
     );
 
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await TestTranslationsTelemetry.assertCounter(
       "RequestCount",
@@ -93,14 +86,7 @@ add_task(
 
     await rejectDownloads(1);
 
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     assertPanelErrorView();
     await TestTranslationsTelemetry.assertEvent(
@@ -197,14 +183,7 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
     "The translations button is available."
   );
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await assertTranslationsButton(
     { button: true, circleArrows: true, locale: false, icon: true },
@@ -213,14 +192,7 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
 
   await rejectDownloads(1);
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   assertPanelErrorView();
   await TestTranslationsTelemetry.assertCounter(

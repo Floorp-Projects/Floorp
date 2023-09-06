@@ -108,14 +108,7 @@ add_task(
 
     await rejectDownloads(1);
 
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     assertPanelErrorView();
     info("Waiting to find the translations panel default header.");

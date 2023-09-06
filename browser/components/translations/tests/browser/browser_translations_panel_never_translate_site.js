@@ -21,18 +21,7 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
     "The translations button is visible."
   );
 
-  info(
-    "Translations permissions are currently allowed for this test page " +
-      "and the page should be untranslated, in its original form."
-  );
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   info(
     "Simulate clicking never-translate-site in the settings menu, " +
@@ -44,42 +33,14 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
   await clickNeverTranslateSite();
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
-  info("The page should still be in its original, untranslated form");
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
-
-  await navigate(SPANISH_PAGE_URL, "Reload the page");
-
-  info("The page should still be in its original, untranslated form");
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await navigate(
     SPANISH_PAGE_URL_2,
     "Navigate to a Spanish page with the same content principal"
   );
 
-  info("The page should still be in its original, untranslated form");
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await navigate(
     SPANISH_PAGE_URL_DOT_ORG,
@@ -92,15 +53,7 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
       "has not been denied translations permissions"
   );
 
-  info("The page should still be in its original, untranslated form");
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await cleanup();
 });
@@ -125,18 +78,7 @@ add_task(
       "The translations button is visible."
     );
 
-    info(
-      "Translations permissions are currently allowed for this test page " +
-        "and the page should be untranslated, in its original form."
-    );
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await waitForTranslationsPopupEvent(
       "popupshown",
@@ -186,42 +128,18 @@ add_task(
     await clickNeverTranslateSite();
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
-    info("The page should still be in its original, untranslated form");
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await navigate(SPANISH_PAGE_URL, "Reload the page");
 
-    info("The page should still be in its original, untranslated form");
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await navigate(
       SPANISH_PAGE_URL_2,
       "Navigate to a Spanish page with the same content principal"
     );
 
-    info("The page should still be in its original, untranslated form");
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await navigate(
       SPANISH_PAGE_URL_DOT_ORG,
@@ -234,15 +152,7 @@ add_task(
         "has not been denied translations permissions"
     );
 
-    info("The page should still be in its original, untranslated form");
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await cleanup();
   }
@@ -321,42 +231,18 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
 
-    info("The page should still be in its original, untranslated form");
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await navigate(SPANISH_PAGE_URL, "Reload the page");
 
-    info("The page should still be in its original, untranslated form");
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await navigate(
       SPANISH_PAGE_URL_2,
       "Navigate to a Spanish page with the same content principal"
     );
 
-    info("The page should still be in its original, untranslated form");
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await navigate(
       SPANISH_PAGE_URL_DOT_ORG,
