@@ -337,6 +337,35 @@ async function legalParagraphClickLinks() {
     }
   );
   await handleActionStubCalled;
+
+  handleActionStub.resetHistory();
+
+  handleActionStubCalled = new Promise(resolve =>
+    handleActionStub.callsFake(resolve)
+  );
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForMutationCondition(
+          content.document,
+          { childList: true, subtree: true },
+          () => content.document.querySelector(".cta-paragraph a")
+        );
+        let cta = content.document.querySelector(
+          "shopping-container .cta-paragraph a"
+        );
+        // Learn More link button.
+        cta.click();
+      });
+    }
+  );
+  await handleActionStubCalled;
+
   sandbox.restore();
 }
 
@@ -367,6 +396,12 @@ add_task(async function test_linkParagraph() {
   Assert.greater(tosEvents.length, 0);
   Assert.equal(tosEvents[0].category, "shopping");
   Assert.equal(tosEvents[0].name, "surface_show_terms_clicked");
+
+  let learnMoreEvents = Glean.shopping.surfaceLearnMoreClicked.testGetValue();
+
+  Assert.greater(learnMoreEvents.length, 0);
+  Assert.equal(learnMoreEvents[0].category, "shopping");
+  Assert.equal(learnMoreEvents[0].name, "surface_learn_more_clicked");
 });
 
 add_task(async function test_onboarding_auto_activate_opt_in() {

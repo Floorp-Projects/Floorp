@@ -316,3 +316,22 @@ shopping:
       - fx-desktop-shopping-eng@mozilla.com
     send_in_pings:
       - events
+
+  surface_learn_more_clicked:
+    type: event
+    description: |
+      The user clicked the 'Learn More' link in the Shopping onboarding
+      experience.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851820 
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851820#c2
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+
