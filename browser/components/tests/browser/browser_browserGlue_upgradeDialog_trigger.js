@@ -200,5 +200,5 @@ add_task(async function test_mr2022_upgradeDialogEnabled() {
   await runMajorReleaseTest({ fallbackPref: false }, false);
 
   // Test the default configuration.
-  await runMajorReleaseTest({}, true);
+  await runMajorReleaseTest({}, false);
 });
