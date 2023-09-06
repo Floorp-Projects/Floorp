@@ -23,14 +23,9 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
   await openTranslationsSettingsMenu();
-  await clickAlwaysTranslateLanguage();
-
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
-
-  await resolveDownloads(1);
+  await clickAlwaysTranslateLanguage({
+    downloadHandler: resolveDownloads,
+  });
 
   await assertPageIsTranslated("es", "en", runInPage);
 

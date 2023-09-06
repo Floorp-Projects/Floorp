@@ -228,10 +228,20 @@ async function clickAlwaysOfferTranslations() {
  * Requires that the settings menu of the translations panel is open,
  * otherwise the test will fail.
  */
-async function clickAlwaysTranslateLanguage() {
+async function clickAlwaysTranslateLanguage({
+  downloadHandler = null,
+  pivotTranslation = false,
+} = {}) {
   await clickSettingsMenuItemByL10nId(
     "translations-panel-settings-always-translate-language"
   );
+  if (downloadHandler) {
+    await assertTranslationsButton(
+      { button: true, circleArrows: true, locale: false, icon: true },
+      "The icon presents the loading indicator."
+    );
+    await downloadHandler(pivotTranslation ? 2 : 1);
+  }
 }
 
 /**

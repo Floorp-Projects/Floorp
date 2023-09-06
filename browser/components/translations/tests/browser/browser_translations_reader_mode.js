@@ -78,13 +78,6 @@ add_task(async function test_translations_persist_in_reader_mode() {
     downloadHandler: resolveDownloads,
   });
 
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
-
-  await resolveDownloads(1);
-
   await assertPageIsTranslated("es", "en", runInPage);
 
   await toggleReaderMode();

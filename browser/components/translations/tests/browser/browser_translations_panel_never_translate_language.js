@@ -131,17 +131,12 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateLanguage("es", { checked: false });
 
-    await clickAlwaysTranslateLanguage();
+    await clickAlwaysTranslateLanguage({
+      downloadHandler: resolveDownloads,
+    });
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateLanguage("es", { checked: false });
-
-    await assertTranslationsButton(
-      { button: true, circleArrows: true, locale: false, icon: true },
-      "The icon presents the loading indicator."
-    );
-
-    await resolveDownloads(1);
 
     await assertPageIsTranslated("es", "en", runInPage);
 
