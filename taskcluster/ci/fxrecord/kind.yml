@@ -21,8 +21,7 @@ jobs:
     fxrecord:
         name: notify-fxrecord-failure
         description: "Desktop Startup Visual Metrics"
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         run-on-projects:
             - "mozilla-central"
         worker-type: performance-hardware/gecko-t-fxrecorder

@@ -31,8 +31,7 @@ only-for-build-platforms:
 
 jobs:
     mar-signing:
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         shipping-phase: promote
         treeherder-group: ms
         description-suffix: 'mar signing'

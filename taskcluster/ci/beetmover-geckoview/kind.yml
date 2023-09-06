@@ -38,8 +38,7 @@ not-for-build-platforms:
 
 jobs:
     beetmover-geckoview:
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         attributes:
             artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
         run-on-projects: ['mozilla-release']

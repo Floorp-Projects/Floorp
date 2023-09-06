@@ -21,6 +21,5 @@ kind-dependencies:
 jobs:
     upload-generated-sources-dummy:
         description: Dummy task to pull in mac x64 and aarch64 upload-generated-symbols tasks
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         worker-type: succeed

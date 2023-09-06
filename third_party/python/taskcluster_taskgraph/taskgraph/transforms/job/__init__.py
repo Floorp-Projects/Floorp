@@ -27,16 +27,6 @@ from taskgraph.util.workertypes import worker_type_implementation
 
 logger = logging.getLogger(__name__)
 
-# Fetches may be accepted in other transforms and eventually passed along
-# to a `job` (eg: from_deps). Defining this here allows them to re-use
-# the schema and avoid duplication.
-fetches_schema = {
-    Required("artifact"): str,
-    Optional("dest"): str,
-    Optional("extract"): bool,
-    Optional("verify-hash"): bool,
-}
-
 # Schema for a build description
 job_description_schema = Schema(
     {
@@ -86,7 +76,12 @@ job_description_schema = Schema(
             Any("toolchain", "fetch"): [str],
             str: [
                 str,
-                fetches_schema,
+                {
+                    Required("artifact"): str,
+                    Optional("dest"): str,
+                    Optional("extract"): bool,
+                    Optional("verify-hash"): bool,
+                },
             ],
         },
         # A description of how to run this job.
@@ -246,10 +241,9 @@ def use_fetches(config, jobs):
         worker = job.setdefault("worker", {})
         env = worker.setdefault("env", {})
         prefix = get_artifact_prefix(job)
-        for kind in sorted(fetches):
-            artifacts = fetches[kind]
+        for kind, artifacts in fetches.items():
             if kind in ("fetch", "toolchain"):
-                for fetch_name in sorted(artifacts):
+                for fetch_name in artifacts:
                     label = f"{kind}-{fetch_name}"
                     label = aliases.get(label, label)
                     if label not in artifact_names:
@@ -301,13 +295,7 @@ def use_fetches(config, jobs):
 
                     prefix = get_artifact_prefix(dep_tasks[0])
 
-                def cmp_artifacts(a):
-                    if isinstance(a, str):
-                        return a
-                    else:
-                        return a["artifact"]
-
-                for artifact in sorted(artifacts, key=cmp_artifacts):
+                for artifact in artifacts:
                     if isinstance(artifact, str):
                         path = artifact
                         dest = None

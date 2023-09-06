@@ -23,8 +23,7 @@ only-for-build-platforms:
 
 jobs:
     repackage-deb-l10n:
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         worker-type: b-linux-gcp
         worker:
             docker-image: {"in-tree": "debian12-repackage"}

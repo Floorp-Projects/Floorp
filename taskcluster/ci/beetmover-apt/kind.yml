@@ -21,7 +21,6 @@ only-for-build-platforms:
 
 jobs:
     beetmover-apt:
-        from-deps:
-            group-by: single-with-filters
+        from-deps: {}
         run-on-releases:
             - nightly
