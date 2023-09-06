@@ -53,6 +53,7 @@ export default class MozFiveStar extends MozLitElement {
       />
       <div
         class="stars"
+        role="image"
         data-l10n-id=${ifDefined(this.title ? null : "moz-five-star-rating")}
         data-l10n-args=${ifDefined(
           this.title ? null : JSON.stringify({ rating: this.rating ?? 0 })
