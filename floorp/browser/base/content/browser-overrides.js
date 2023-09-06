@@ -105,7 +105,7 @@ if (Services.prefs.getStringPref(newtabOverrideURL, "") != "") {
 BrowserTryToCloseWindow = function (event) {
     let { setTimeout } = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
     if (WindowIsClosing(event)) {
-      if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")) {
+      if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled", true)) {
       document
         .querySelectorAll(
           `.webpanels[src='chrome://browser/content/browser.xhtml']`
@@ -114,6 +114,7 @@ BrowserTryToCloseWindow = function (event) {
           e.remove();
         });
         setTimeout(function () {
+          console.info("BMS add-on is enabled. delay closing window.");
           window.close();
         }, 500);
       } else {
