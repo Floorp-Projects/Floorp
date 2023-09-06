@@ -23,10 +23,6 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
 
   await assertPageIsUntranslated(runInPage);
 
-  info(
-    "Simulate clicking never-translate-site in the settings menu, " +
-      "denying translations permissions for this content window principal"
-  );
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
   await openTranslationsSettingsMenu();
 
@@ -88,10 +84,6 @@ add_task(
 
     await assertPageIsTranslated("es", "en", runInPage);
 
-    info(
-      "Simulate clicking never-translate-site in the settings menu, " +
-        "denying translations permissions for this content window principal"
-    );
     await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
     await openTranslationsSettingsMenu();
 
@@ -151,10 +143,6 @@ add_task(
       "The button is available."
     );
 
-    info(
-      "Simulate clicking always-translate-language in the settings menu, " +
-        "adding the document language to the alwaysTranslateLanguages pref"
-    );
     await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
     await openTranslationsSettingsMenu();
 
@@ -170,10 +158,6 @@ add_task(
 
     await assertPageIsTranslated("es", "en", runInPage);
 
-    info(
-      "Simulate clicking never-translate-site in the settings menu, " +
-        "denying translations permissions for this content window principal"
-    );
     await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
     await openTranslationsSettingsMenu();
 

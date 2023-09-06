@@ -7,7 +7,6 @@
  * Tests that the automatic offering of the popup can be disabled.
  */
 add_task(async function test_translations_panel_auto_offer_settings() {
-  info("Load the test page in English so that no popups will be offered.");
   const { cleanup } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,

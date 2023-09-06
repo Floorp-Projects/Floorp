@@ -31,6 +31,7 @@ async function assertPageIsUntranslated(runInPage, message = null) {
   if (message) {
     info(message);
   }
+  info("Checking that the page is untranslated");
   await runInPage(async TranslationsTest => {
     const { getH1 } = TranslationsTest.getSelectors();
     await TranslationsTest.assertTranslationResult(
@@ -50,6 +51,7 @@ async function assertPageIsTranslated(
   if (message) {
     info(message);
   }
+  info("Checking that the page is translated");
   const callback = async (TranslationsTest, { fromLang, toLang }) => {
     const { getH1 } = TranslationsTest.getSelectors();
     await TranslationsTest.assertTranslationResult(
@@ -125,7 +127,7 @@ async function openTranslationsPanelViaTranslationsButton({
   onOpenPanel = null,
   openWithKeyboard = false,
 }) {
-  info("Opening the translations panel via the translations button.");
+  info("Opening the translations panel via the translations button");
   const { button } = await assertTranslationsButton(
     { button: true },
     "The translations button is visible."
@@ -144,6 +146,7 @@ async function openTranslationsPanelViaTranslationsButton({
 }
 
 async function openTranslationsSettingsMenu() {
+  info("Opening the translations panel settings menu");
   const gearIcons = getAllByL10nId("translations-panel-settings-button");
   for (const gearIcon of gearIcons) {
     if (gearIcon.hidden) {
@@ -172,6 +175,7 @@ async function openTranslationsPanelViaAppMenu({
   onOpenPanel = null,
   openWithKeyboard = false,
 }) {
+  info("Opening the translations panel via the app menu");
   const appMenuButton = getById("PanelUI-menu-button");
   if (openWithKeyboard) {
     hitEnterKey(appMenuButton, "Opening the app-menu button with keyboard");
@@ -202,12 +206,14 @@ async function openTranslationsPanelViaAppMenu({
 }
 
 function switchSelectedFromLanguage(langTag) {
+  info(`Switching the from-language to ${langTag}`);
   const { fromMenuList } = TranslationsPanel.elements;
   fromMenuList.value = langTag;
   fromMenuList.dispatchEvent(new Event("command"));
 }
 
 function assertSelectedFromLanguage(langTag) {
+  info(`Checking that the selected from-language matches ${langTag}`);
   const { fromMenuList } = TranslationsPanel.elements;
   is(
     fromMenuList.value,
@@ -217,12 +223,14 @@ function assertSelectedFromLanguage(langTag) {
 }
 
 function switchSelectedToLanguage(langTag) {
+  info(`Switching the to-language to ${langTag}`);
   const { toMenuList } = TranslationsPanel.elements;
   toMenuList.value = langTag;
   toMenuList.dispatchEvent(new Event("command"));
 }
 
 function assertSelectedToLanguage(langTag) {
+  info(`Checking that the selected to-language matches ${langTag}`);
   const { toMenuList } = TranslationsPanel.elements;
   is(
     toMenuList.value,
@@ -313,6 +321,11 @@ async function clickManageLanguages() {
  * @param {boolean} checked
  */
 async function assertIsAlwaysOfferTranslationsEnabled(checked) {
+  info(
+    `Checking that always-offer-translations is ${
+      checked ? "enabled" : "disabled"
+    }`
+  );
   await assertCheckboxState(
     "translations-panel-settings-always-offer-translation",
     { checked }
@@ -331,6 +344,11 @@ async function assertIsAlwaysTranslateLanguage(
   langTag,
   { checked = true, disabled = false }
 ) {
+  info(
+    `Checking that always-translate is ${
+      checked ? "enabled" : "disabled"
+    } for "${langTag}"`
+  );
   await assertCheckboxState(
     "translations-panel-settings-always-translate-language",
     { langTag, checked, disabled }
@@ -349,6 +367,11 @@ async function assertIsNeverTranslateLanguage(
   langTag,
   { checked = true, disabled = false }
 ) {
+  info(
+    `Checking that never-translate is ${
+      checked ? "enabled" : "disabled"
+    } for "${langTag}"`
+  );
   await assertCheckboxState(
     "translations-panel-settings-never-translate-language",
     { langTag, checked, disabled }
@@ -367,6 +390,11 @@ async function assertIsNeverTranslateSite(
   url,
   { checked = true, disabled = false }
 ) {
+  info(
+    `Checking that never-translate is ${
+      checked ? "enabled" : "disabled"
+    } for "${url}"`
+  );
   await assertCheckboxState(
     "translations-panel-settings-never-translate-site",
     { checked, disabled }
@@ -420,6 +448,9 @@ async function assertLangTagIsShownOnTranslationsButton(
   fromLanguage,
   toLanguage
 ) {
+  info(
+    `Ensuring that the translations button displays the language tag "${toLanguage}"`
+  );
   const { button, locale } = await assertTranslationsButton(
     { button: true, circleArrows: false, locale: true, icon: true },
     "The icon presents the locale."
@@ -442,6 +473,7 @@ async function assertLangTagIsShownOnTranslationsButton(
 }
 
 async function clickCancelButton() {
+  info("Clicking the cancel button");
   const { cancelButton } = TranslationsPanel.elements;
   ok(isVisible(cancelButton), "Expected the cancel button to be visible");
   await waitForTranslationsPopupEvent("popuphidden", () => {
@@ -450,6 +482,7 @@ async function clickCancelButton() {
 }
 
 async function clickRestoreButton() {
+  info("Clicking the restore button");
   const { restoreButton } = TranslationsPanel.elements;
   ok(isVisible(restoreButton), "Expect the restore-page button to be visible");
   await waitForTranslationsPopupEvent("popuphidden", () => {
@@ -458,6 +491,7 @@ async function clickRestoreButton() {
 }
 
 async function clickDismissErrorButton() {
+  info("Clicking the dismiss-error button");
   const { dismissErrorButton } = TranslationsPanel.elements;
   ok(
     isVisible(dismissErrorButton),
@@ -472,6 +506,7 @@ async function clickTranslateButton({
   downloadHandler = null,
   pivotTranslation = false,
 } = {}) {
+  info("Clicking the translate button");
   const { translateButton } = TranslationsPanel.elements;
   ok(isVisible(translateButton), "Expect the translate button to be visible");
   await waitForTranslationsPopupEvent("popuphidden", () => {
@@ -487,6 +522,7 @@ async function clickTranslateButton({
 }
 
 async function clickChangeSourceLanguageButton({ firstShow = false } = {}) {
+  info("Clicking the change-source-language button");
   const { changeSourceLanguageButton } = TranslationsPanel.elements;
   ok(
     isVisible(changeSourceLanguageButton),
@@ -597,6 +633,7 @@ function assertDefaultHeaderL10nId(l10nId) {
  * Asserts that panel element visibility matches the default panel view.
  */
 function assertPanelDefaultView() {
+  info("Checking that the panel shows the default view");
   assertPanelMainViewId("translations-panel-view-default");
   assertPanelElementVisibility({
     ...defaultViewVisibilityExpectations,
@@ -605,6 +642,7 @@ function assertPanelDefaultView() {
 }
 
 function assertPanelLoadingView() {
+  info("Checking that the panel shows the loading view");
   assertPanelDefaultView();
   const loadingButton = getByL10nId(
     "translations-panel-translate-button-loading"
@@ -617,6 +655,7 @@ function assertPanelLoadingView() {
  * Asserts that panel element visibility matches the panel error view.
  */
 function assertPanelErrorView() {
+  info("Checking that the panel shows the error view");
   assertPanelMainViewId("translations-panel-view-default");
   assertPanelElementVisibility({
     error: true,
@@ -629,6 +668,7 @@ function assertPanelErrorView() {
  * Asserts that panel element visibility matches the panel first-show view.
  */
 function assertPanelFirstShowView() {
+  info("Checking that the panel shows the first-show view");
   assertPanelMainViewId("translations-panel-view-default");
   assertPanelElementVisibility({
     intro: true,
@@ -657,6 +697,7 @@ function assertPanelFirstShowErrorView() {
  * Asserts that panel element visibility matches the panel revisit view.
  */
 function assertPanelRevisitView() {
+  info("Checking that the panel shows the revisit view");
   assertPanelMainViewId("translations-panel-view-default");
   assertPanelElementVisibility({
     header: true,
@@ -673,6 +714,7 @@ function assertPanelRevisitView() {
  * Asserts that panel element visibility matches the panel unsupported language view.
  */
 function assertPanelUnsupportedLanguageView() {
+  info("Checking that the panel shows the unsupported-language view");
   assertPanelMainViewId("translations-panel-view-unsupported-language");
   assertPanelElementVisibility({
     changeSourceLanguageButton: true,
@@ -716,6 +758,7 @@ async function navigate(
     }
   };
 
+  info(`Loading url: "${url}"`);
   if (onOpenPanel) {
     await waitForTranslationsPopupEvent(
       "popupshown",
@@ -733,7 +776,11 @@ async function navigate(
  */
 async function toggleReaderMode() {
   const readerButton = document.getElementById("reader-mode-button");
-  is(readerButton.hidden, false, "Reader mode button should be visible");
+  await waitForCondition(() => readerButton.hidden === false);
+
+  readerButton.getAttribute("readeractive")
+    ? info("Exiting reader mode")
+    : info("Entering reader mode");
 
   const readyPromise = readerButton.getAttribute("readeractive")
     ? waitForCondition(() => !readerButton.getAttribute("readeractive"))
@@ -752,7 +799,7 @@ async function toggleReaderMode() {
  * @param {string} url
  */
 async function addTab(url) {
-  info(`Adding tab for ` + url);
+  info(`Adding tab for "${url}"`);
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     url,

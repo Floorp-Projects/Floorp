@@ -448,6 +448,7 @@ async function loadTestPage({
   autoOffer,
   permissionsUrls = [],
 }) {
+  info(`Loading test page starting at url: ${page}`);
   Services.fog.testResetFOG();
   await SpecialPowers.pushPrefEnv({
     set: [

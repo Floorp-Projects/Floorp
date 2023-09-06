@@ -27,10 +27,6 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
     "The translations button is visible."
   );
 
-  info(
-    "Simulate clicking always-translate-language in the settings menu, " +
-      "adding the document language to the alwaysTranslateLanguages pref"
-  );
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
   await openTranslationsSettingsMenu();
 
