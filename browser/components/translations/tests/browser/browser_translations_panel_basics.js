@@ -50,12 +50,7 @@ add_task(async function test_translations_panel_basics() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelLoadingView });
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Start translating by clicking the translate button."
-    );
-  });
+  await clickCancelButton();
 
   await resolveDownloads(1);
 

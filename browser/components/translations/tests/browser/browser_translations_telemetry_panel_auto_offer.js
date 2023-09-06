@@ -13,12 +13,7 @@ add_task(async function test_translations_panel_auto_offer() {
     autoOffer: true,
   });
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Click the cancel button."
-    );
-  });
+  await clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(
     "OpenPanel",
@@ -74,12 +69,7 @@ add_task(async function test_translations_panel_auto_offer() {
     assertPanelDefaultView
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Click the cancel button."
-    );
-  });
+  await clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(
     "OpenPanel",

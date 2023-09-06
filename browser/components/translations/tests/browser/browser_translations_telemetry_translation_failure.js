@@ -252,12 +252,7 @@ add_task(async function test_translations_telemetry_auto_translation_failure() {
     }
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Click the cancel button."
-    );
-  });
+  await clickCancelButton();
   await TestTranslationsTelemetry.assertEvent(
     "CancelButton",
     Glean.translationsPanel.cancelButton,

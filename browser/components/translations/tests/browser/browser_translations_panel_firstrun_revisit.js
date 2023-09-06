@@ -28,12 +28,7 @@ add_task(async function test_translations_panel_firstrun() {
     "The intro text is available."
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Dismiss the panel"
-    );
-  });
+  await clickCancelButton();
 
   await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
@@ -42,12 +37,7 @@ add_task(async function test_translations_panel_firstrun() {
     "The intro text is available."
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Dismiss the panel"
-    );
-  });
+  await clickCancelButton();
 
   await navigate(SPANISH_PAGE_URL_DOT_ORG, "Navigate to a different website");
 
@@ -59,12 +49,7 @@ add_task(async function test_translations_panel_firstrun() {
     "The intro text is no longer shown."
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Dismiss the panel"
-    );
-  });
+  await clickCancelButton();
 
   await navigate(SPANISH_PAGE_URL, "Navigate back to the first website");
 
@@ -76,12 +61,7 @@ add_task(async function test_translations_panel_firstrun() {
     "The intro text is no longer shown."
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Dismiss the panel"
-    );
-  });
+  await clickCancelButton();
 
   await cleanup();
 });

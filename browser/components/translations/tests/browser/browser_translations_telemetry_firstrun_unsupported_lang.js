@@ -104,12 +104,7 @@ add_task(
       }
     );
 
-    await waitForTranslationsPopupEvent("popuphidden", () => {
-      click(
-        getByL10nId("translations-panel-translate-cancel"),
-        "Click the cancel button."
-      );
-    });
+    await clickCancelButton();
 
     await TestTranslationsTelemetry.assertEvent(
       "CancelButton",
