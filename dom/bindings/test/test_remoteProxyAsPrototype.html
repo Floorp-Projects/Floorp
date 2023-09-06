@@ -16,8 +16,12 @@ function go() {
   let frame = document.createElement("iframe");
   frame.onload = () => {
     let win = frame.contentWindow;
-    is(SpecialPowers.Cu.isRemoteProxy(win), SpecialPowers.useRemoteSubframes,
-       "win is a remote proxy if Fission is enabled");
+
+    // The processes will be remote only with isolateEverything strategy
+    const expected = SpecialPowers.effectiveIsolationStrategy() == SpecialPowers.ISOLATION_STRATEGY.IsolateEverything;
+
+    is(SpecialPowers.Cu.isRemoteProxy(win), expected,
+       "win is a remote proxy if Fission is enabled and strategy is isolateEverything");
     let o = {};
     Object.setPrototypeOf(o, win);
     is(Object.getPrototypeOf(o), win, "should have expected proto");

@@ -41,11 +41,13 @@ add_task(async function() {
     "frames[0].location is not a remote proxy"
   );
 
-  const { useRemoteSubframes } = SpecialPowers;
-  is(Cu.isRemoteProxy(frames[1]), useRemoteSubframes,
-     "frames[1] is a remote proxy if Fission is enabled");
-  is(Cu.isRemoteProxy(frames[1].location), useRemoteSubframes,
-    "frames[1].location is a remote proxy if Fission is enabled");
+  // The processes will be remote only with isolateEverything strategy
+  const expected = SpecialPowers.effectiveIsolationStrategy() == SpecialPowers.ISOLATION_STRATEGY.IsolateEverything;
+
+  is(Cu.isRemoteProxy(frames[1]), expected,
+     "frames[1] is a remote proxy if Fission is enabled and strategy is isolateEverything");
+  is(Cu.isRemoteProxy(frames[1].location), expected,
+     "frames[1].location is a remote proxy if Fission is enabled and strategy is isolateEverything");
 });
 
 </script>
