@@ -89,12 +89,7 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-restore-button"),
-      "Click the restore-page button."
-    );
-  });
+  await clickRestoreButton();
 
   await TestTranslationsTelemetry.assertEvent(
     "OpenPanel",
