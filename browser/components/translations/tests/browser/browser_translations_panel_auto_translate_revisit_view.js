@@ -34,7 +34,8 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "adding the document language to the alwaysTranslateLanguages pref"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await clickAlwaysTranslateLanguage();
@@ -60,7 +61,10 @@ add_task(
     info(
       "Open the translations panel to show the default unsupported language view."
     );
-    await openTranslationsPanelViaAppMenu();
+    await openTranslationsPanel({
+      openFromAppMenu: true,
+      onOpenPanel: assertPanelUnsupportedLanguageView,
+    });
 
     ok(
       getByL10nId("translations-panel-error-unsupported"),
@@ -87,7 +91,10 @@ add_task(
 
     await assertPageIsTranslated("es", "en", runInPage);
 
-    await openTranslationsPanelViaAppMenu();
+    await openTranslationsPanel({
+      openFromAppMenu: true,
+      onOpenPanel: assertPanelRevisitView,
+    });
 
     info("Waiting to find the translations panel revisit header.");
     const header = await waitForCondition(() =>

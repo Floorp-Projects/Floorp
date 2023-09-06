@@ -32,7 +32,8 @@ add_task(async function test_translations_panel_auto_offer_settings() {
   info("Open the popup and gear icon menu.");
   const alwaysOfferId = "translations-panel-settings-always-offer-translation";
 
-  await openTranslationsSettingsMenuViaTranslationsButton();
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await openTranslationsSettingsMenu();
   await assertCheckboxState(alwaysOfferId, { checked: false });
 
   await TestTranslationsTelemetry.assertEvent(
@@ -63,7 +64,7 @@ add_task(async function test_translations_panel_auto_offer_settings() {
     }
   );
 
-  await openTranslationsSettingsMenuViaTranslationsButton();
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
   await assertCheckboxState(alwaysOfferId, { checked: true });
 
   await waitForTranslationsPopupEvent("popuphidden", () => {

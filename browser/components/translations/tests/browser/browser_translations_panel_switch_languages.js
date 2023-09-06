@@ -12,20 +12,11 @@ add_task(async function test_translations_panel_switch_language() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const { button } = await assertTranslationsButton(
-    { button: true },
-    "The button is available."
-  );
+  await assertTranslationsButton({ button: true }, "The button is available.");
 
   await assertPageIsUntranslated(runInPage);
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   const translateButton = getByL10nId("translations-panel-translate-button");
   const fromSelect = getById("translations-panel-from");

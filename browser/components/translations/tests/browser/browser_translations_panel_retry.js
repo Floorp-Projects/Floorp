@@ -12,20 +12,11 @@ add_task(async function test_translations_panel_retry() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const { button } = await assertTranslationsButton(
-    { button: true },
-    "The button is available."
-  );
+  await assertTranslationsButton({ button: true }, "The button is available.");
 
   await assertPageIsUntranslated(runInPage);
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
@@ -38,13 +29,7 @@ add_task(async function test_translations_panel_retry() {
 
   await assertPageIsTranslated("es", "en", runInPage);
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Re-opening the popup");
-    },
-    assertPanelRevisitView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
 
   info('Switch to language to "fr"');
   const toSelect = getById("translations-panel-to");

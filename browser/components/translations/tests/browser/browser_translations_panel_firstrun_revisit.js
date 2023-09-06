@@ -16,18 +16,12 @@ add_task(async function test_translations_panel_firstrun() {
     prefs: [["browser.translations.panelShown", false]],
   });
 
-  const { button } = await assertTranslationsButton(
+  await assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
     "The button is available."
   );
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelFirstShowView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
   ok(
     getByL10nId("translations-panel-intro-description"),
@@ -41,13 +35,7 @@ add_task(async function test_translations_panel_firstrun() {
     );
   });
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelFirstShowView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
   ok(
     getByL10nId("translations-panel-intro-description"),
@@ -63,13 +51,7 @@ add_task(async function test_translations_panel_firstrun() {
 
   await navigate(SPANISH_PAGE_URL_DOT_ORG, "Navigate to a different website");
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   info("Checking for the intro text to be hidden.");
   await waitForCondition(
@@ -86,13 +68,7 @@ add_task(async function test_translations_panel_firstrun() {
 
   await navigate(SPANISH_PAGE_URL, "Navigate back to the first website");
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   info("Checking for the intro text to be hidden.");
   await waitForCondition(

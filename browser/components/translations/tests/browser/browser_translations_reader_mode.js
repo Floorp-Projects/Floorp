@@ -65,16 +65,14 @@ add_task(async function test_translations_persist_in_reader_mode() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const { button } = await assertTranslationsButton(
+  await assertTranslationsButton(
     { button: true },
     "The translations button is visible."
   );
 
   await assertPageIsUntranslated(runInPage);
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(

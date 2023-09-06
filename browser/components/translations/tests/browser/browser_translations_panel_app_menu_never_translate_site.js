@@ -26,7 +26,8 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
     "Simulate clicking never-translate-site in the settings menu, " +
       "denying translations permissions for this content window principal"
   );
-  await openTranslationsSettingsMenuViaTranslationsButton();
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
   await clickNeverTranslateSite();
@@ -36,7 +37,11 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
     "Simulate clicking always-translate-language in the settings menu, " +
       "adding the document language to the alwaysTranslateLanguages pref"
   );
-  await openTranslationsSettingsMenuViaAppMenu();
+  await openTranslationsPanel({
+    openFromAppMenu: true,
+    onOpenPanel: assertPanelDefaultView,
+  });
+  await openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });
   await clickNeverTranslateSite();
@@ -73,7 +78,8 @@ add_task(
       "Simulate clicking never-translate-site in the settings menu, " +
         "denying translations permissions for this content window principal"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
@@ -89,7 +95,11 @@ add_task(
       "Simulate clicking never-translate-site in the settings menu, " +
         "regranting translations permissions for this content window principal"
     );
-    await openTranslationsSettingsMenuViaAppMenu();
+    await openTranslationsPanel({
+      openFromAppMenu: true,
+      onOpenPanel: assertPanelDefaultView,
+    });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: true });

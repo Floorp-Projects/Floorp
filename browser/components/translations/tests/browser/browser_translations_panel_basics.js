@@ -21,13 +21,7 @@ add_task(async function test_translations_panel_basics() {
 
   await assertPageIsUntranslated(runInPage);
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   const panel = document.getElementById("translations-panel");
   const label = document.getElementById(panel.getAttribute("aria-labelledby"));
@@ -54,21 +48,7 @@ add_task(async function test_translations_panel_basics() {
     "The icon presents the loading indicator."
   );
 
-  is(button.getAttribute("data-l10n-id"), "urlbar-translations-button-loading");
-
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Open the popup again");
-    },
-    assertPanelDefaultView
-  );
-
-  const loadingButton = getByL10nId(
-    "translations-panel-translate-button-loading"
-  );
-  ok(loadingButton, "The loading button is present");
-  ok(loadingButton.disabled, "The loading button is disabled");
+  await openTranslationsPanel({ onOpenPanel: assertPanelLoadingView });
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
@@ -81,13 +61,7 @@ add_task(async function test_translations_panel_basics() {
 
   await assertPageIsTranslated("es", "en", runInPage);
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Re-opening the popup");
-    },
-    assertPanelRevisitView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
 
   ok(
     getByL10nId("translations-panel-translate-button").disabled,
