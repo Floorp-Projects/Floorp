@@ -47,6 +47,7 @@ enum spa_meta_type {
 	SPA_META_Control,	/**< metadata contains a spa_meta_control
 				  *  associated with the data */
 	SPA_META_Busy,		/**< don't write to buffer when count > 0 */
+	SPA_META_VideoTransform,	/**< struct spa_meta_transform */
 
 	_SPA_META_LAST,		/**< not part of ABI/API */
 };
@@ -150,6 +151,25 @@ struct spa_meta_control {
 struct spa_meta_busy {
 	uint32_t flags;
 	uint32_t count;			/**< number of users busy with the buffer */
+};
+
+enum spa_meta_videotransform_value {
+	SPA_META_TRANSFORMATION_None = 0,	/**< no transform */
+	SPA_META_TRANSFORMATION_90,		/**< 90 degree counter-clockwise */
+	SPA_META_TRANSFORMATION_180,		/**< 180 degree counter-clockwise */
+	SPA_META_TRANSFORMATION_270,		/**< 270 degree counter-clockwise */
+	SPA_META_TRANSFORMATION_Flipped,	/**< 180 degree flipped around the vertical axis. Equivalent
+						  * to a reflexion through the vertical line splitting the
+						  * bufffer in two equal sized parts */
+	SPA_META_TRANSFORMATION_Flipped90,	/**< flip then rotate around 90 degree counter-clockwise */
+	SPA_META_TRANSFORMATION_Flipped180,	/**< flip then rotate around 180 degree counter-clockwise */
+	SPA_META_TRANSFORMATION_Flipped270,	/**< flip then rotate around 270 degree counter-clockwise */
+};
+
+/** a transformation of the buffer */
+struct spa_meta_videotransform {
+	uint32_t transform;			/**< orientation transformation that was applied to the buffer,
+						  *  one of enum spa_meta_videotransform_value */
 };
 
 /**
