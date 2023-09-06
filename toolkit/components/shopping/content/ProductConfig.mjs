@@ -27,6 +27,9 @@ const REPORTING_RESPONSE_SCHEMA =
 const REPORTING_REQUEST_SCHEMA =
   "chrome://global/content/shopping/reporting_request.schema.json";
 
+const FAKESPOT_BASE_URL = "https://www.fakespot.com/";
+const FAKESPOT_ANALYSIS_URL = "https://www.fakespot.com/analyze?url=";
+
 const ProductConfig = {
   amazon: {
     productIdFromURLRegex:
@@ -44,7 +47,10 @@ const ProductConfig = {
   },
 };
 
-if (Cu.isInAutomation) {
+// Note (bug 1849401): the fakespot URLs are loaded by about page content,
+// where `Cu` is undefined--hence the check here. Would be good to find a
+// better approach.
+if (typeof Cu !== "undefined" && Cu.isInAutomation) {
   // Also allow example.com to allow for testing.
   ProductConfig.example = ProductConfig.amazon;
   ANALYSIS_API =
@@ -72,5 +78,7 @@ export {
   REPORTING_API,
   REPORTING_RESPONSE_SCHEMA,
   REPORTING_REQUEST_SCHEMA,
+  FAKESPOT_BASE_URL,
+  FAKESPOT_ANALYSIS_URL,
   ProductConfig,
 };
