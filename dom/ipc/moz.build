@@ -9,6 +9,8 @@ with Files("**"):
 
 DIRS += ["jsactor"]
 
+TEST_DIRS += ["gtest"]
+
 XPIDL_SOURCES += [
     "nsIDOMProcessChild.idl",
     "nsIDOMProcessParent.idl",
