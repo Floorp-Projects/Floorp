@@ -57,7 +57,8 @@ JSObject* AuthenticatorAssertionResponse::WrapObject(
 void AuthenticatorAssertionResponse::GetAuthenticatorData(
     JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
   if (!mAuthenticatorDataCachedObj) {
-    mAuthenticatorDataCachedObj = mAuthenticatorData.ToArrayBuffer(aCx);
+    mAuthenticatorDataCachedObj = ArrayBuffer::Create(
+        aCx, mAuthenticatorData.Length(), mAuthenticatorData.Elements());
     if (!mAuthenticatorDataCachedObj) {
       aRv.NoteJSContextException(aCx);
       return;
@@ -66,18 +67,16 @@ void AuthenticatorAssertionResponse::GetAuthenticatorData(
   aValue.set(mAuthenticatorDataCachedObj);
 }
 
-nsresult AuthenticatorAssertionResponse::SetAuthenticatorData(
-    CryptoBuffer& aBuffer) {
-  if (NS_WARN_IF(!mAuthenticatorData.Assign(aBuffer))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
+void AuthenticatorAssertionResponse::SetAuthenticatorData(
+    const nsTArray<uint8_t>& aBuffer) {
+  mAuthenticatorData.Assign(aBuffer);
 }
 
 void AuthenticatorAssertionResponse::GetSignature(
     JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
   if (!mSignatureCachedObj) {
-    mSignatureCachedObj = mSignature.ToArrayBuffer(aCx);
+    mSignatureCachedObj =
+        ArrayBuffer::Create(aCx, mSignature.Length(), mSignature.Elements());
     if (!mSignatureCachedObj) {
       aRv.NoteJSContextException(aCx);
       return;
@@ -86,11 +85,9 @@ void AuthenticatorAssertionResponse::GetSignature(
   aValue.set(mSignatureCachedObj);
 }
 
-nsresult AuthenticatorAssertionResponse::SetSignature(CryptoBuffer& aBuffer) {
-  if (NS_WARN_IF(!mSignature.Assign(aBuffer))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
+void AuthenticatorAssertionResponse::SetSignature(
+    const nsTArray<uint8_t>& aBuffer) {
+  mSignature.Assign(aBuffer);
 }
 
 void AuthenticatorAssertionResponse::GetUserHandle(
@@ -102,7 +99,8 @@ void AuthenticatorAssertionResponse::GetUserHandle(
     aValue.set(nullptr);
   } else {
     if (!mUserHandleCachedObj) {
-      mUserHandleCachedObj = mUserHandle.ToArrayBuffer(aCx);
+      mUserHandleCachedObj = ArrayBuffer::Create(aCx, mUserHandle.Length(),
+                                                 mUserHandle.Elements());
       if (!mUserHandleCachedObj) {
         aRv.NoteJSContextException(aCx);
         return;
@@ -112,11 +110,9 @@ void AuthenticatorAssertionResponse::GetUserHandle(
   }
 }
 
-nsresult AuthenticatorAssertionResponse::SetUserHandle(CryptoBuffer& aBuffer) {
-  if (NS_WARN_IF(!mUserHandle.Assign(aBuffer))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
+void AuthenticatorAssertionResponse::SetUserHandle(
+    const nsTArray<uint8_t>& aBuffer) {
+  mUserHandle.Assign(aBuffer);
 }
 
 }  // namespace mozilla::dom

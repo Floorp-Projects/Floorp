@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/AuthenticatorResponse.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/CryptoBuffer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -35,24 +34,24 @@ class AuthenticatorAssertionResponse final : public AuthenticatorResponse {
   void GetAuthenticatorData(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
                             ErrorResult& aRv);
 
-  nsresult SetAuthenticatorData(CryptoBuffer& aBuffer);
+  void SetAuthenticatorData(const nsTArray<uint8_t>& aBuffer);
 
   void GetSignature(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
                     ErrorResult& aRv);
 
-  nsresult SetSignature(CryptoBuffer& aBuffer);
+  void SetSignature(const nsTArray<uint8_t>& aBuffer);
 
   void GetUserHandle(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
                      ErrorResult& aRv);
 
-  nsresult SetUserHandle(CryptoBuffer& aUserHandle);
+  void SetUserHandle(const nsTArray<uint8_t>& aBuffer);
 
  private:
-  CryptoBuffer mAuthenticatorData;
+  nsTArray<uint8_t> mAuthenticatorData;
   JS::Heap<JSObject*> mAuthenticatorDataCachedObj;
-  CryptoBuffer mSignature;
+  nsTArray<uint8_t> mSignature;
   JS::Heap<JSObject*> mSignatureCachedObj;
-  CryptoBuffer mUserHandle;
+  nsTArray<uint8_t> mUserHandle;
   JS::Heap<JSObject*> mUserHandleCachedObj;
 };
 

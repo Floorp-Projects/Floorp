@@ -90,7 +90,6 @@ interface nsICtapSignArgs : nsISupports {
     // return code to signal presence.
     [must_use] readonly attribute bool hmacCreateSecret;
     [must_use] readonly attribute AString appId;
-    [must_use] readonly attribute Array<octet> appIdHash;
 
     // Options
     [must_use] readonly attribute AString userVerification;

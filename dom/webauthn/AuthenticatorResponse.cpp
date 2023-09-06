@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/AuthenticatorResponse.h"
-
+#include "mozilla/dom/TypedArray.h"
 #include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 
@@ -36,7 +36,7 @@ nsISupports* AuthenticatorResponse::GetParentObject() const { return mParent; }
 void AuthenticatorResponse::GetClientDataJSON(
     JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
   if (!mClientDataJSONCachedObj) {
-    mClientDataJSONCachedObj = mClientDataJSON.ToArrayBuffer(aCx);
+    mClientDataJSONCachedObj = ArrayBuffer::Create(aCx, mClientDataJSON);
     if (!mClientDataJSONCachedObj) {
       aRv.NoteJSContextException(aCx);
       return;
@@ -45,11 +45,8 @@ void AuthenticatorResponse::GetClientDataJSON(
   aValue.set(mClientDataJSONCachedObj);
 }
 
-nsresult AuthenticatorResponse::SetClientDataJSON(CryptoBuffer& aBuffer) {
-  if (NS_WARN_IF(!mClientDataJSON.Assign(aBuffer))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
+void AuthenticatorResponse::SetClientDataJSON(const nsCString& aBuffer) {
+  mClientDataJSON.Assign(aBuffer);
 }
 
 }  // namespace mozilla::dom

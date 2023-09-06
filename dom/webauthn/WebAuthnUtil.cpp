@@ -108,7 +108,7 @@ bool EvaluateAppID(nsPIDOMWindowInner* aParent, const nsString& aOrigin,
 }
 
 static nsresult HashCString(nsICryptoHash* aHashService, const nsACString& aIn,
-                            /* out */ CryptoBuffer& aOut) {
+                            /* out */ nsTArray<uint8_t>& aOut) {
   MOZ_ASSERT(aHashService);
 
   nsresult rv = aHashService->Init(nsICryptoHash::SHA256);
@@ -130,14 +130,14 @@ static nsresult HashCString(nsICryptoHash* aHashService, const nsACString& aIn,
     return rv;
   }
 
-  if (NS_WARN_IF(!aOut.Assign(fullHash))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  aOut.Clear();
+  aOut.AppendElements(reinterpret_cast<uint8_t const*>(fullHash.BeginReading()),
+                      fullHash.Length());
 
   return NS_OK;
 }
 
-nsresult HashCString(const nsACString& aIn, /* out */ CryptoBuffer& aOut) {
+nsresult HashCString(const nsACString& aIn, /* out */ nsTArray<uint8_t>& aOut) {
   nsresult srv;
   nsCOMPtr<nsICryptoHash> hashService =
       do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &srv);
@@ -155,8 +155,8 @@ nsresult HashCString(const nsACString& aIn, /* out */ CryptoBuffer& aOut) {
 
 nsresult BuildTransactionHashes(const nsCString& aRpId,
                                 const nsCString& aClientDataJSON,
-                                /* out */ CryptoBuffer& aRpIdHash,
-                                /* out */ CryptoBuffer& aClientDataHash) {
+                                /* out */ nsTArray<uint8_t>& aRpIdHash,
+                                /* out */ nsTArray<uint8_t>& aClientDataHash) {
   nsresult srv;
   nsCOMPtr<nsICryptoHash> hashService =
       do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &srv);
@@ -164,17 +164,13 @@ nsresult BuildTransactionHashes(const nsCString& aRpId,
     return srv;
   }
 
-  if (!aRpIdHash.SetLength(SHA256_LENGTH, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  aRpIdHash.SetLength(SHA256_LENGTH);
   srv = HashCString(hashService, aRpId, aRpIdHash);
   if (NS_WARN_IF(NS_FAILED(srv))) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!aClientDataHash.SetLength(SHA256_LENGTH, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  aClientDataHash.SetLength(SHA256_LENGTH);
   srv = HashCString(hashService, aClientDataJSON, aClientDataHash);
   if (NS_WARN_IF(NS_FAILED(srv))) {
     return NS_ERROR_FAILURE;
