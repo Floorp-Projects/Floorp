@@ -225,7 +225,7 @@ toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
   height: var(--bookmarks-toolbar-overlapping-browser-height);
 }
 
-:root[BookmarksToolbarOverlapsBrowser] #navigator-toolbox-background {
+:root[BookmarksToolbarOverlapsBrowser] #navigator-toolbox {
   /* Overlap the content area by the height of the bookmarks toolbar so that
      temporarily showing the toolbar for new tabs doesn't resize the content
      area for all tabs. */
