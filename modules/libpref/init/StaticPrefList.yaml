@@ -5323,6 +5323,21 @@
     value: false
     mirror: always
     rust: true
+
+# This configures a virtual authenticator for WebAuthn. The value encodes the
+# arguments to the WebDriver "Add Virtual Authenticator" extension command.
+# Bits 0, 1, 2, and 3 encode "is_user_verified", "is_user_consenting",
+# "has_user_verification", and "has_resident_key" in that order. Bit 5 encodes
+# the transport, either "usb" (0) or "internal" (1). Bits 6 and 7 encode the
+# protocol, either "ctap1/u2f" (1), "ctap2" (2), or "ctap2_1" (3). Note that
+# the valid protocol values are non-zero---an authenticator will not be
+# configured if this pref is set to zero. Changing this pref requires
+# a restart.
+- name: fuzzing.webauthn.authenticator_config
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+  rust: true
 #endif
 
 #---------------------------------------------------------------------------
@@ -13722,9 +13737,8 @@
   mirror: always
   rust: true
 
-# Dispatch WebAuthn requests to the software CTAP1 token.
-# (mutually exclusive with webauthn_enable_android_fido2,
-# and webauthn_enable_usbtoken)
+# Dispatch WebAuthn requests to virtual authenticators. (mutually exclusive
+# with webauthn_enable_android_fido2, and webauthn_enable_usbtoken)
 - name: security.webauth.webauthn_enable_softtoken
   type: RelaxedAtomicBool
   value: false

@@ -16,3 +16,6 @@ serde_cbor = "0.11"
 static_prefs = { path = "../../../modules/libpref/init/static_prefs" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
+
+[features]
+fuzzing = []
