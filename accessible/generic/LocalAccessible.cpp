@@ -3550,6 +3550,22 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
             currTextFrame->GetCharacterRectsInRange(
                 currTextFrame->GetContentOffset(), length, charBounds);
             for (nsRect& charRect : charBounds) {
+              if (charRect.width == 0 &&
+                  !currTextFrame->StyleText()->WhiteSpaceIsSignificant()) {
+                // GetCharacterRectsInRange gives us one rect per content
+                // offset. However, TextLeafAccessibles use rendered offsets;
+                // e.g. they might exclude some content white space. If we get
+                // a 0 width rect and it's white space, skip this rect, since
+                // this character isn't in the rendered text. We do have
+                // a way to convert between content and rendered offsets, but
+                // doing this for every character is expensive.
+                const char16_t contentChar = mContent->GetText()->CharAt(
+                    charData.Length() / kNumbersInRect);
+                if (contentChar == u' ' || contentChar == u'\t' ||
+                    contentChar == u'\n') {
+                  continue;
+                }
+              }
               // We expect each char rect to be relative to the text leaf
               // acc this text lives in. Unfortunately, GetCharacterRectsInRange
               // returns rects relative to their continuation. Add the
