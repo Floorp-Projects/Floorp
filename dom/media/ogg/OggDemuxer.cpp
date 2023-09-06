@@ -1492,6 +1492,9 @@ RefPtr<MediaRawData> OggTrackDemuxer::NextSample() {
       data->mOriginalPresentationWindow =
           Some(TimeInterval{data->mTime, data->GetEndTime()});
       data->mDuration -= toTrim;
+      if (data->mDuration.IsNegative()) {
+        data->mDuration = TimeUnit::Zero(data->mTime);
+      }
     }
   }
 
