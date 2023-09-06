@@ -319,9 +319,10 @@ class MOZ_STACK_CLASS ContentEventHandler {
   nsresult GenerateFlatTextContent(const Element* aElement, nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get the contents of aRange as plain text.
-  nsresult GenerateFlatTextContent(const UnsafeSimpleRange& aSimpleRange,
-                                   nsString& aString,
-                                   LineBreakType aLineBreakType);
+  template <typename NodeType, typename RangeBoundaryType>
+  nsresult GenerateFlatTextContent(
+      const SimpleRangeBase<NodeType, RangeBoundaryType>& aSimpleRange,
+      nsString& aString, LineBreakType aLineBreakType);
   // Get offset of start of aRange.  Note that the result includes the length
   // of line breaker caused by the start of aContent because aRange never
   // includes the line breaker caused by its start node.
@@ -344,7 +345,8 @@ class MOZ_STACK_CLASS ContentEventHandler {
   nsresult QueryContentRect(nsIContent* aContent,
                             WidgetQueryContentEvent* aEvent);
 
-  struct MOZ_STACK_CLASS DOMRangeAndAdjustedOffsetInFlattenedText {
+  template <typename RangeType, typename TextNodeType>
+  struct MOZ_STACK_CLASS DOMRangeAndAdjustedOffsetInFlattenedTextBase {
     bool RangeStartsFromLastTextNode() const {
       return mLastTextNode && mRange.GetStartContainer() == mLastTextNode;
     }
@@ -358,7 +360,7 @@ class MOZ_STACK_CLASS ContentEventHandler {
     }
 
     // The range in the DOM tree.
-    UnsafeSimpleRange mRange;
+    RangeType mRange;
     // Actual start offset of the range in the flattened text.  If aOffset
     // of ConvertFlatTextOffsetToDOMRange() is middle of a surrogate pair,
     // a CRLF or a complex character of some languages, this may be set to
@@ -367,16 +369,43 @@ class MOZ_STACK_CLASS ContentEventHandler {
     // The last text node which is found while walking the tree.
     // If the range ends in a text node, this is the text node.  Otherwise,
     // the last found text node before the end container of mRange.
-    dom::Text* mLastTextNode = nullptr;
+    TextNodeType mLastTextNode = nullptr;
   };
+  using DOMRangeAndAdjustedOffsetInFlattenedText =
+      DOMRangeAndAdjustedOffsetInFlattenedTextBase<SimpleRange,
+                                                   RefPtr<dom::Text>>;
+  using UnsafeDOMRangeAndAdjustedOffsetInFlattenedText =
+      DOMRangeAndAdjustedOffsetInFlattenedTextBase<UnsafeSimpleRange,
+                                                   dom::Text*>;
+
   /**
    * Scans the DOM tree and set mRange as same as from aOffset to aOffset +
    * aLength in the flattened text.
+   * NOTE: Use ConvertFlatTextOffsetToDOMRange() or
+   * ConvertFlatTextOffsetToUnsafeDOMRange() instead of
+   * ConvertFlatTextOffsetToDOMRangeBase<RangeType, TextNodeType>().
    */
-  Result<DOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
+  template <typename RangeType, typename TextNodeType>
+  Result<DOMRangeAndAdjustedOffsetInFlattenedTextBase<RangeType, TextNodeType>,
+         nsresult>
+  ConvertFlatTextOffsetToDOMRangeBase(uint32_t aOffset, uint32_t aLength,
+                                      LineBreakType aLineBreakType,
+                                      bool aExpandToClusterBoundaries);
+  MOZ_ALWAYS_INLINE Result<DOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
   ConvertFlatTextOffsetToDOMRange(uint32_t aOffset, uint32_t aLength,
                                   LineBreakType aLineBreakType,
-                                  bool aExpandToClusterBoundaries);
+                                  bool aExpandToClusterBoundaries) {
+    return ConvertFlatTextOffsetToDOMRangeBase<SimpleRange, RefPtr<dom::Text>>(
+        aOffset, aLength, aLineBreakType, aExpandToClusterBoundaries);
+  }
+  MOZ_ALWAYS_INLINE
+  Result<UnsafeDOMRangeAndAdjustedOffsetInFlattenedText, nsresult>
+  ConvertFlatTextOffsetToUnsafeDOMRange(uint32_t aOffset, uint32_t aLength,
+                                        LineBreakType aLineBreakType,
+                                        bool aExpandToClusterBoundaries) {
+    return ConvertFlatTextOffsetToDOMRangeBase<UnsafeSimpleRange, dom::Text*>(
+        aOffset, aLength, aLineBreakType, aExpandToClusterBoundaries);
+  }
 
   // If the aSimpleRange isn't in text node but next to a text node,
   // this method modifies it in the text node.  Otherwise, not modified.
@@ -430,15 +459,17 @@ class MOZ_STACK_CLASS ContentEventHandler {
   // This returns invalid FrameAndNodeOffset if there is no content which
   // should affect to computing text rect in the range.  mOffsetInNode is start
   // offset in the frame.
+  template <typename NodeType, typename RangeBoundaryType>
   FrameAndNodeOffset GetFirstFrameInRangeForTextRect(
-      const UnsafeSimpleRange& aSimpleRange);
+      const SimpleRangeBase<NodeType, RangeBoundaryType>& aSimpleRange);
 
   // Get last frame before the end of the given range for computing text rect.
   // This returns invalid FrameAndNodeOffset if there is no content which
   // should affect to computing text rect in the range.  mOffsetInNode is end
   // offset in the frame.
+  template <typename NodeType, typename RangeBoundaryType>
   FrameAndNodeOffset GetLastFrameInRangeForTextRect(
-      const UnsafeSimpleRange& aSimpleRange);
+      const SimpleRangeBase<NodeType, RangeBoundaryType>& aSimpleRange);
 
   struct MOZ_STACK_CLASS FrameRelativeRect final {
     // mRect is relative to the mBaseFrame's position.
