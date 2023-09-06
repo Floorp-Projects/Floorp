@@ -41,7 +41,10 @@ void RecordedTextureData::FillInfo(TextureData::Info& aInfo) const {
 }
 
 bool RecordedTextureData::Lock(OpenMode aMode) {
-  mCanvasChild->EnsureBeginTransaction();
+  if (!mCanvasChild->EnsureBeginTransaction()) {
+    return false;
+  }
+
   if (!mDT) {
     mTextureId = sNextRecordedTextureId++;
     mCanvasChild->RecordEvent(RecordedNextTextureId(mTextureId));
