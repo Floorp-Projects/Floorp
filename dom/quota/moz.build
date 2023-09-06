@@ -97,6 +97,7 @@ UNIFIED_SOURCES += [
     "OriginInfo.cpp",
     "OriginOperationBase.cpp",
     "OriginOperations.cpp",
+    "OriginParser.cpp",
     "PersistenceType.cpp",
     "QMResult.cpp",
     "QuotaCommon.cpp",
