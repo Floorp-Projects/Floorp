@@ -1164,14 +1164,14 @@ test = ["aiofiles", "coverage", "flake8", "httmock", "httptest", "hypothesis", "
 
 [[package]]
 name = "taskcluster-taskgraph"
-version = "5.7.0"
+version = "6.2.1"
 description = "Build taskcluster taskgraphs"
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "taskcluster-taskgraph-5.7.0.tar.gz", hash = "sha256:fb1e2b3d45a8dac713932d7849b919c7bf5d4c553a7ea791a8c3f3b222e845ae"},
-    {file = "taskcluster_taskgraph-5.7.0-py3-none-any.whl", hash = "sha256:a25bb0b68b9460902025ebd78aa5f00fe6674d07d0b1ccfa541a486d0112a82a"},
+    {file = "taskcluster-taskgraph-6.2.1.tar.gz", hash = "sha256:30b9f1ace27af870c77a0989e647b6ae9469a58acc6045f4c80e130b4e9ffc8a"},
+    {file = "taskcluster_taskgraph-6.2.1-py3-none-any.whl", hash = "sha256:04d794917af42e08ff18fda897d370791d193fe1c29194ea49fe727e6b25ddc8"},
 ]
 
 [package.dependencies]
@@ -1182,7 +1182,6 @@ mozilla-repo-urls = "*"
 PyYAML = ">=5.3.1"
 redo = ">=2.0"
 requests = ">=2.25"
-requests-unixsocket = ">=0.2"
 slugid = ">=2.0"
 taskcluster-urls = ">=11.0"
 voluptuous = ">=0.12.1"
@@ -1415,4 +1414,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "195fb2c45ba5de3c5c98f5d2fa44b5ce64fd3dd45c324d528477637245413d0f"
+content-hash = "ad71620e96d879f75e91e2ffd6508dcdb48967c70da59492d8307f0b3aaf62aa"

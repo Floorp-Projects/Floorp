@@ -8,14 +8,13 @@ Support for running jobs that are invoked via the `run-task` script.
 import dataclasses
 import os
 
-from voluptuous import Any, Extra, Optional, Required
+from voluptuous import Any, Optional, Required
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import support_vcs_checkout
 from taskgraph.transforms.task import taskref_or_string
 from taskgraph.util import path, taskcluster
 from taskgraph.util.schema import Schema
-from taskgraph.util.yaml import load_yaml
 
 EXEC_COMMANDS = {
     "bash": ["bash", "-cx"],
@@ -46,16 +45,6 @@ run_task_schema = Schema(
         # it will be included in a single argument to the command specified by
         # `exec-with`.
         Required("command"): Any([taskref_or_string], taskref_or_string),
-        # Context to substitute into the command using format string
-        # substitution (e.g {value}). This is useful if certain aspects of the
-        # command need to be generated in transforms.
-        Optional("command-context"): {
-            # If present, loads a set of context variables from an unnested yaml
-            # file. If a value is present in both the provided file and directly
-            # in command-context, the latter will take priority.
-            Optional("from-file"): str,
-            Extra: object,
-        },
         # What to execute the command with in the event command is a string.
         Optional("exec-with"): Any(*list(EXEC_COMMANDS)),
         # Command used to invoke the `run-task` script. Can be used if the script
@@ -137,25 +126,6 @@ def script_url(config, script):
     return f"{tc_url}/api/queue/v1/task/{task_id}/artifacts/public/{script}"
 
 
-def substitute_command_context(command_context, command):
-    from_file = command_context.pop("from-file", None)
-    full_context = {}
-    if from_file:
-        full_context = load_yaml(from_file)
-    else:
-        full_context = {}
-
-    full_context.update(command_context)
-
-    if isinstance(command, list):
-        for i in range(len(command)):
-            command[i] = command[i].format(**full_context)
-    else:
-        command = command.format(**full_context)
-
-    return command
-
-
 @run_job_using(
     "docker-worker", "run-task", schema=run_task_schema, defaults=worker_defaults
 )
@@ -176,13 +146,6 @@ def docker_worker_run_task(config, job, taskdesc):
         )
 
     run_command = run["command"]
-
-    if run.get("command-context"):
-        run_command = substitute_command_context(
-            run.get("command-context"), run["command"]
-        )
-    else:
-        run_command = run["command"]
 
     # dict is for the case of `{'task-reference': str}`.
     if isinstance(run_command, str) or isinstance(run_command, dict):
@@ -249,11 +212,6 @@ def generic_worker_run_task(config, job, taskdesc):
             run_command = f'"{run_command}"'
         exec_cmd = EXEC_COMMANDS[run.pop("exec-with", "bash")]
         run_command = exec_cmd + [run_command]
-
-    if run.get("command-context"):
-        run_command = substitute_command_context(
-            run.get("command-context"), run_command
-        )
 
     if run["run-as-root"]:
         command.extend(("--user", "root", "--group", "root"))

@@ -48,3 +48,33 @@ def merge(*objects):
     if len(objects) == 1:
         return copy.deepcopy(objects[0])
     return merge_to(objects[-1], merge(*objects[:-1]))
+
+
+def deep_get(dict_, field):
+    container, subfield = dict_, field
+    while "." in subfield:
+        f, subfield = subfield.split(".", 1)
+        if f not in container:
+            return None
+
+        container = container[f]
+
+    return container.get(subfield)
+
+
+def substitute(item, **subs):
+    if isinstance(item, list):
+        for i in range(len(item)):
+            item[i] = substitute(item[i], **subs)
+    elif isinstance(item, dict):
+        new_dict = {}
+        for k, v in item.items():
+            k = k.format(**subs)
+            new_dict[k] = substitute(v, **subs)
+        item = new_dict
+    elif isinstance(item, str):
+        item = item.format(**subs)
+    else:
+        item = item
+
+    return item

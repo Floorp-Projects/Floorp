@@ -42,6 +42,11 @@ from typing import Optional
 SECRET_BASEURL_TPL = "http://taskcluster/secrets/v1/secret/{}"
 
 GITHUB_SSH_FINGERPRINT = (
+    b"github.com ssh-ed25519 "
+    b"AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n"
+    b"github.com ecdsa-sha2-nistp256 "
+    b"AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB"
+    b"9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=\n"
     b"github.com ssh-rsa "
     b"AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY"
     b"4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDP"
