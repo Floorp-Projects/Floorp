@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from ../head.js */
+
 add_task(async function about_firefoxview_next_pref() {
   // Verify pref enables new Firefox view
   Services.prefs.setBoolPref("browser.tabs.firefox-view-next", true);
