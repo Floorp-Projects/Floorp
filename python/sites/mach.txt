@@ -74,7 +74,6 @@ vendored:third_party/python/mozilla_version
 vendored:third_party/python/packaging
 vendored:third_party/python/pip
 vendored:third_party/python/pip_tools
-vendored:third_party/python/pyparsing
 vendored:third_party/python/python-hglib
 vendored:third_party/python/requests
 vendored:third_party/python/sentry_sdk

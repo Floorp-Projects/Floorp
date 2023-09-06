@@ -65,7 +65,6 @@ vendored:third_party/python/mohawk
 vendored:third_party/python/mozilla_repo_urls
 vendored:third_party/python/packaging
 vendored:third_party/python/pkgutil_resolve_name
-vendored:third_party/python/pyparsing
 vendored:third_party/python/python_dateutil
 vendored:third_party/python/python_slugify
 vendored:third_party/python/redo

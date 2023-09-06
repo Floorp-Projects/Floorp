@@ -41,7 +41,6 @@ vendored:third_party/python/ply
 vendored:third_party/python/pyasn1
 vendored:third_party/python/pyasn1_modules
 vendored:third_party/python/pylru
-vendored:third_party/python/pyparsing
 vendored:third_party/python/pyrsistent
 vendored:third_party/python/python_dateutil
 vendored:third_party/python/python_slugify

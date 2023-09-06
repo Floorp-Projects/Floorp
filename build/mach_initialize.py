@@ -146,14 +146,12 @@ def initialize(topsrcdir, args=()):
         shutil.rmtree(deleted_dir, ignore_errors=True)
 
     # We need the "mach" module to access the logic to parse virtualenv
-    # requirements. Since that depends on "packaging" (and, transitively,
-    # "pyparsing"), we add those to the path too.
+    # requirements. Since that depends on "packaging", we add it to the path too.
     sys.path[0:0] = [
         os.path.join(topsrcdir, module)
         for module in (
             os.path.join("python", "mach"),
             os.path.join("third_party", "python", "packaging"),
-            os.path.join("third_party", "python", "pyparsing"),
         )
     ]
 
