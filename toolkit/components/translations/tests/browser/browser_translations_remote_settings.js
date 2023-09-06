@@ -23,6 +23,11 @@ const firefoxMajorVersion = firefoxFullVersion.match(/\d+/);
 // which is of the form `${firefoxMajorVersion}.a1`.
 const firefoxAlphaZeroVersion = `${firefoxMajorVersion}.a0`;
 
+// Used for self-built or automated testing builds.
+// https://remote-settings.readthedocs.io/en/latest/target-filters.html#env.channel
+const defaultChannel = "default";
+const releaseChannel = "release";
+
 /**
  * Creates a local RemoteSettingsClient for use within tests.
  *
@@ -37,10 +42,13 @@ async function createRemoteSettingsClient(mockedKey) {
 }
 
 // The following test ensures the capabilities of `filter_expression` in remote settings
-// to successfully discriminate against the Firefox version when retrieving records.
+// to successfully discriminate against the Firefox channel and version when retrieving records.
 //
-// This is used when making major breaking changes that would require particular records
-// to only show up in certain versions of Firefox, such as actual code changes that no
+// The channel filters are used to ship models to only particular channels, for example
+// shipping a new language model to only Firefox Nightly before Firefox Beta or Release.
+//
+// The version filters are used when making major breaking changes that would require particular
+// records to only show up in certain versions of Firefox, such as actual code changes that no
 // longer allow compatibility with given records.
 //
 // Some examples might be:
@@ -84,6 +92,18 @@ add_task(async function test_filter_current_firefox_version() {
       name: `env.version > ${firefoxAlphaZeroVersion}`,
       filter_expression: `env.version|versionCompare('${firefoxAlphaZeroVersion}') > 0`,
     },
+    {
+      name: `channel == ${defaultChannel} && env.version > ${firefoxAlphaZeroVersion}`,
+      filter_expression: `env.channel == "${defaultChannel}" && env.version|versionCompare('${firefoxAlphaZeroVersion}') > 0`,
+    },
+    {
+      name: `channel == ${releaseChannel} || env.version > ${firefoxAlphaZeroVersion}`,
+      filter_expression: `env.channel == "${releaseChannel}" || env.version|versionCompare('${firefoxAlphaZeroVersion}') > 0`,
+    },
+    {
+      name: `channel == ${defaultChannel} || env.version < 1`,
+      filter_expression: `env.channel == "${defaultChannel}" || env.version|versionCompare('1') < 0`,
+    },
   ];
   for (let record of expectedPresentRecords) {
     client.db.create(record);
@@ -95,6 +115,14 @@ add_task(async function test_filter_current_firefox_version() {
     {
       name: `env.version < 1`,
       filter_expression: `env.version|versionCompare('1') < 0`,
+    },
+    {
+      name: `channel == ${releaseChannel} && env.version > ${firefoxAlphaZeroVersion}`,
+      filter_expression: `env.channel == "${releaseChannel}" && env.version|versionCompare('${firefoxAlphaZeroVersion}') > 0`,
+    },
+    {
+      name: `channel == ${defaultChannel} && env.version < 1`,
+      filter_expression: `env.channel == "${defaultChannel}" && env.version|versionCompare('1') < 0`,
     },
   ];
   for (let record of expectedAbsentRecords) {
