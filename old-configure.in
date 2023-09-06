@@ -74,7 +74,7 @@ dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
 
-WINVER=601
+WINVER=0A00
 
 case "$target" in
 *-mingw*)
@@ -148,8 +148,7 @@ case "$target" in
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
-    # Require OS features provided by IE 8.0 (Win7)
-    AC_DEFINE_UNQUOTED(_WIN32_IE,0x0800)
+    AC_DEFINE_UNQUOTED(_WIN32_IE,0x0A00)
 
     ;;
 esac
