@@ -96,11 +96,10 @@ class PresentationData {
   NS_INLINE_DECL_REFCOUNTING(PresentationData);
 
  public:
-  RawId mDeviceId = 0;
-  RawId mQueueId = 0;
-  layers::RGBDescriptor mDesc;
-  uint32_t mSourcePitch = 0;
-  int32_t mNextFrameID = 1;
+  const RawId mDeviceId;
+  const RawId mQueueId;
+  const layers::RGBDescriptor mDesc;
+  const uint32_t mSourcePitch;
   std::vector<RawId> mUnassignedBufferIds MOZ_GUARDED_BY(mBuffersLock);
   std::vector<RawId> mAvailableBufferIds MOZ_GUARDED_BY(mBuffersLock);
   std::vector<RawId> mQueuedBufferIds MOZ_GUARDED_BY(mBuffersLock);
@@ -784,7 +783,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
 
   auto data = MakeRefPtr<PresentationData>(aDeviceId, aQueueId, aDesc,
                                            bufferStride, aBufferIds);
-  if (!mCanvasMap.emplace(aOwnerId, data).second) {
+  if (!mPresentationDataMap.emplace(aOwnerId, data).second) {
     NS_ERROR("External image is already registered as WebGPU canvas!");
   }
   return IPC_OK();
@@ -825,12 +824,12 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateShaderModule(
   return IPC_OK();
 }
 
-struct PresentRequest {
-  PresentRequest(const ffi::WGPUGlobal* aContext,
-                 RefPtr<PresentationData>& aData,
-                 RefPtr<layers::RemoteTextureOwnerClient>& aRemoteTextureOwner,
-                 const layers::RemoteTextureId aTextureId,
-                 const layers::RemoteTextureOwnerId aOwnerId)
+struct ReadbackPresentRequest {
+  ReadbackPresentRequest(
+      const ffi::WGPUGlobal* aContext, RefPtr<PresentationData>& aData,
+      RefPtr<layers::RemoteTextureOwnerClient>& aRemoteTextureOwner,
+      const layers::RemoteTextureId aTextureId,
+      const layers::RemoteTextureOwnerId aOwnerId)
       : mContext(aContext),
         mData(aData),
         mRemoteTextureOwner(aRemoteTextureOwner),
@@ -844,9 +843,10 @@ struct PresentRequest {
   const layers::RemoteTextureOwnerId mOwnerId;
 };
 
-static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
-                            uint8_t* userdata) {
-  UniquePtr<PresentRequest> req(reinterpret_cast<PresentRequest*>(userdata));
+static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
+                                    uint8_t* userdata) {
+  UniquePtr<ReadbackPresentRequest> req(
+      reinterpret_cast<ReadbackPresentRequest*>(userdata));
 
   if (!req->mRemoteTextureOwner->IsRegistered(req->mOwnerId)) {
     // SwapChain is already Destroyed
@@ -868,9 +868,9 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     data->mAvailableBufferIds.push_back(bufferId);
   });
 
-  MOZ_LOG(
-      sLogger, LogLevel::Info,
-      ("PresentCallback for buffer %" PRIu64 " status=%d\n", bufferId, status));
+  MOZ_LOG(sLogger, LogLevel::Info,
+          ("ReadbackPresentCallback for buffer %" PRIu64 " status=%d\n",
+           bufferId, status));
   // copy the data
   if (status == ffi::WGPUBufferMapAsyncStatus_Success) {
     const auto bufferSize = data->mDesc.size().height * data->mSourcePitch;
@@ -915,8 +915,8 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
 ipc::IPCResult WebGPUParent::GetFrontBufferSnapshot(
     IProtocol* aProtocol, const layers::RemoteTextureOwnerId& aOwnerId,
     Maybe<Shmem>& aShmem, gfx::IntSize& aSize) {
-  const auto& lookup = mCanvasMap.find(aOwnerId);
-  if (lookup == mCanvasMap.end() || !mRemoteTextureOwner) {
+  const auto& lookup = mPresentationDataMap.find(aOwnerId);
+  if (lookup == mPresentationDataMap.end() || !mRemoteTextureOwner) {
     return IPC_OK();
   }
 
@@ -941,8 +941,8 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     const layers::RemoteTextureId& aRemoteTextureId,
     const layers::RemoteTextureOwnerId& aOwnerId) {
   // step 0: get the data associated with the swapchain
-  const auto& lookup = mCanvasMap.find(aOwnerId);
-  if (lookup == mCanvasMap.end() || !mRemoteTextureOwner ||
+  const auto& lookup = mPresentationDataMap.find(aOwnerId);
+  if (lookup == mPresentationDataMap.end() || !mRemoteTextureOwner ||
       !mRemoteTextureOwner->IsRegistered(aOwnerId)) {
     NS_WARNING("WebGPU presenting on a destroyed swap chain!");
     return IPC_OK();
@@ -1041,11 +1041,12 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   // texture,
   // we can just give it the contents of the last mapped buffer instead of the
   // copy.
-  auto presentRequest = MakeUnique<PresentRequest>(
+  auto presentRequest = MakeUnique<ReadbackPresentRequest>(
       mContext.get(), data, mRemoteTextureOwner, aRemoteTextureId, aOwnerId);
 
   ffi::WGPUBufferMapCallbackC callback = {
-      &PresentCallback, reinterpret_cast<uint8_t*>(presentRequest.release())};
+      &ReadbackPresentCallback,
+      reinterpret_cast<uint8_t*>(presentRequest.release())};
   ffi::wgpu_server_buffer_map(mContext.get(), bufferId, 0, bufferSize,
                               ffi::WGPUHostMap_Read, callback);
 
@@ -1057,15 +1058,15 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
   if (mRemoteTextureOwner) {
     mRemoteTextureOwner->UnregisterTextureOwner(aOwnerId);
   }
-  const auto& lookup = mCanvasMap.find(aOwnerId);
-  MOZ_ASSERT(lookup != mCanvasMap.end());
-  if (lookup == mCanvasMap.end()) {
+  const auto& lookup = mPresentationDataMap.find(aOwnerId);
+  MOZ_ASSERT(lookup != mPresentationDataMap.end());
+  if (lookup == mPresentationDataMap.end()) {
     NS_WARNING("WebGPU presenting on a destroyed swap chain!");
     return IPC_OK();
   }
 
   RefPtr<PresentationData> data = lookup->second.get();
-  mCanvasMap.erase(lookup);
+  mPresentationDataMap.erase(lookup);
 
   MutexAutoLock lock(data->mBuffersLock);
   ipc::ByteBuf dropByteBuf;
@@ -1086,7 +1087,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
 
 void WebGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   mTimer.Stop();
-  mCanvasMap.clear();
+  mPresentationDataMap.clear();
   if (mRemoteTextureOwner) {
     mRemoteTextureOwner->UnregisterAllTextureOwners();
     mRemoteTextureOwner = nullptr;
