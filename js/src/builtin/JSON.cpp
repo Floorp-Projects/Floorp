@@ -1361,7 +1361,7 @@ static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
 
       MOZ_ASSERT(iter.done());
       if (top.isArray) {
-        MOZ_ASSERT(!top.nobj->isIndexed());
+        MOZ_ASSERT(!top.nobj->isIndexed() || IsPackedArray(top.nobj));
       } else {
         top.advanceToProperties();
       }

@@ -140,9 +140,12 @@ function testFastPath() {
 
     // Array has enumerated indexed + non-indexed slots.
     const nonElements = [];
-    Object.defineProperty(nonElements, 0, { value: "hi", enumerated: true });
+    Object.defineProperty(nonElements, 0, { value: "hi", enumerated: true, configurable: true });
     nonElements.named = 7;
     failures += checkFast(nonElements, "INELIGIBLE_OBJECT");
+
+    nonElements.splice(0);
+    failures += checkFast(nonElements);
 
     // Array's prototype has indexed slot and/or inherited element.
     const proto = {};
