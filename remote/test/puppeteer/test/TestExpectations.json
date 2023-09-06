@@ -2688,12 +2688,6 @@
     "expectations": ["SKIP"]
   },
   {
-    "testIdPattern": "[navigation.spec] navigation Page.reload should work",
-    "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["firefox", "webDriverBiDi"],
-    "expectations": ["FAIL"]
-  },
-  {
     "testIdPattern": "[navigation.spec] navigation Page.waitForNavigation should work",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["firefox", "webDriverBiDi"],
