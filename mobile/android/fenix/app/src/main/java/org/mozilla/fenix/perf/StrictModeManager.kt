@@ -176,7 +176,8 @@ open class StrictModeManager(
  * To add a new manufacturer to the list, log "Build.MANUFACTURER" from the device to get the
  * exact name of the manufacturer.
  */
-private fun isInStrictModeExceptionList() = ManufacturerCodes.isHuawei || ManufacturerCodes.isOnePlus
+private fun isInStrictModeExceptionList() =
+    ManufacturerCodes.isHuawei || ManufacturerCodes.isOnePlus || ManufacturerCodes.isOppo
 
 private fun StrictMode.ThreadPolicy.Builder.penaltyDeathWithIgnores(): StrictMode.ThreadPolicy.Builder {
     // This workaround was added before we realized we can ignored based on violation contents

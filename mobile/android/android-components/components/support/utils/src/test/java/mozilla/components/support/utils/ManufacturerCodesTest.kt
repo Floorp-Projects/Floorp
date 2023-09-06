@@ -23,6 +23,8 @@ class ManufacturerCodesTest {
         assertFalse(ManufacturerCodes.isOnePlus)
 
         assertFalse(ManufacturerCodes.isLG)
+
+        assertFalse(ManufacturerCodes.isOppo)
     }
 
     @Test
@@ -38,6 +40,8 @@ class ManufacturerCodesTest {
         assertFalse(ManufacturerCodes.isOnePlus)
 
         assertFalse(ManufacturerCodes.isLG)
+
+        assertFalse(ManufacturerCodes.isOppo)
     }
 
     @Test
@@ -53,6 +57,8 @@ class ManufacturerCodesTest {
         assertTrue(ManufacturerCodes.isXiaomi)
 
         assertFalse(ManufacturerCodes.isLG)
+
+        assertFalse(ManufacturerCodes.isOppo)
     }
 
     @Test
@@ -68,6 +74,8 @@ class ManufacturerCodesTest {
         assertTrue(ManufacturerCodes.isOnePlus)
 
         assertFalse(ManufacturerCodes.isLG)
+
+        assertFalse(ManufacturerCodes.isOppo)
     }
 
     @Test
@@ -83,5 +91,24 @@ class ManufacturerCodesTest {
         assertFalse(ManufacturerCodes.isOnePlus)
 
         assertTrue(ManufacturerCodes.isLG)
+
+        assertFalse(ManufacturerCodes.isOppo)
+    }
+
+    @Test
+    fun testIsOppo() {
+        manufacturer = "OPPO" // expected value for Oppo devices
+
+        assertFalse(ManufacturerCodes.isHuawei)
+
+        assertFalse(ManufacturerCodes.isSamsung)
+
+        assertFalse(ManufacturerCodes.isXiaomi)
+
+        assertFalse(ManufacturerCodes.isOnePlus)
+
+        assertFalse(ManufacturerCodes.isLG)
+
+        assertTrue(ManufacturerCodes.isOppo)
     }
 }

@@ -18,6 +18,7 @@ object ManufacturerCodes {
     private const val XIAOMI = "Xiaomi"
     private const val ONE_PLUS = "OnePlus"
     private const val LG = "LGE"
+    private const val OPPO = "OPPO"
 
     @VisibleForTesting
     internal var manufacturer = Build.MANUFACTURER // is a var for testing purposes
@@ -27,4 +28,5 @@ object ManufacturerCodes {
     val isXiaomi get() = manufacturer.equals(XIAOMI, ignoreCase = true)
     val isOnePlus get() = manufacturer.equals(ONE_PLUS, ignoreCase = true)
     val isLG get() = manufacturer.equals(LG, ignoreCase = true)
+    val isOppo get() = manufacturer.equals(OPPO, ignoreCase = true)
 }
