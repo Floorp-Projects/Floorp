@@ -217,7 +217,7 @@ var gSearchPane = {
     );
     permanentPBLabel.hidden = urlbarSuggests.hidden || !permanentPB;
 
-    this._updateTrendingCheckbox();
+    this._updateTrendingCheckbox(!suggestsPref.value || permanentPB);
   },
 
   _showAddEngineButton() {
@@ -231,14 +231,15 @@ var gSearchPane = {
     }
   },
 
-  async _updateTrendingCheckbox() {
+  async _updateTrendingCheckbox(suggestDisabled) {
     let trendingBox = document.getElementById("showTrendingSuggestionsBox");
+    let trendingCheckBox = document.getElementById("showTrendingSuggestions");
     let trendingSupported = TRENDING_ENGINES.includes(
       (await Services.search.getDefault()).name
     );
     trendingBox.hidden = !Preferences.get("browser.urlbar.trending.featureGate")
       .value;
-    trendingBox.disabled = !trendingSupported;
+    trendingCheckBox.disabled = suggestDisabled || !trendingSupported;
   },
 
   /**
