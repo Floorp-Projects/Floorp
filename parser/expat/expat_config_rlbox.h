@@ -8,6 +8,7 @@
 
 /* Wasm is little endian */
 #define BYTEORDER 1234
+#define IS_LITTLE_ENDIAN 1
 
 /* We don't redefine int as int32_t for our 32-bit Wasm machine. */
 #ifdef __cplusplus

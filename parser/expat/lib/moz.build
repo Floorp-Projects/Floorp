@@ -11,7 +11,12 @@ EXPORTS += [
     'expat_external.h',
 ]
 
-SOURCES += expat_sources
+if CONFIG["MOZ_WASM_SANDBOXING_EXPAT"]:
+    # Ideally we'd only build moz_extensions.c, but it's currently included
+    # from xmltok.c because it uses a lot of its internals.
+    SOURCES += ['xmltok.c']
+else:
+    SOURCES += expat_sources
 
 FINAL_LIBRARY = 'gkmedias'
 
