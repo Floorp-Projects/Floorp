@@ -8,7 +8,10 @@ const defaultFaviconName = "defaultFavicon.svg";
 
 add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [["media.mediacontrol.testingevents.enabled", true]],
+    set: [
+      ["media.mediacontrol.testingevents.enabled", true],
+      ["dom.media.mediasession.enabled", true],
+    ],
   });
 });
 

@@ -27,7 +27,7 @@ enum MediaSessionAction {
 
 callback MediaSessionActionHandler = undefined(MediaSessionActionDetails details);
 
-[Exposed=Window]
+[Exposed=Window, Pref="dom.media.mediasession.enabled"]
 interface MediaSession {
   attribute MediaMetadata? metadata;
 
@@ -43,7 +43,7 @@ interface MediaSession {
   undefined notifyHandler(MediaSessionActionDetails details);
 };
 
-[Exposed=Window]
+[Exposed=Window, Pref="dom.media.mediasession.enabled"]
 interface MediaMetadata {
   [Throws]
   constructor(optional MediaMetadataInit init = {});

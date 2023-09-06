@@ -8,7 +8,10 @@ const ACTION = "previoustrack";
 
 add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [["media.mediacontrol.testingevents.enabled", true]],
+    set: [
+      ["dom.media.mediasession.enabled", true],
+      ["media.mediacontrol.testingevents.enabled", true],
+    ],
   });
 });
 
