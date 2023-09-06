@@ -30,15 +30,10 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   await openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
-  await clickAlwaysTranslateLanguage();
+  await clickAlwaysTranslateLanguage({
+    downloadHandler: resolveDownloads,
+  });
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
-
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
-
-  await resolveDownloads(1);
 
   await assertPageIsTranslated(
     "es",
@@ -171,15 +166,10 @@ add_task(
     await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
-    await clickAlwaysTranslateLanguage();
+    await clickAlwaysTranslateLanguage({
+      downloadHandler: resolveDownloads,
+    });
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
-
-    await assertTranslationsButton(
-      { button: true, circleArrows: true, locale: false, icon: true },
-      "The icon presents the loading indicator."
-    );
-
-    await resolveDownloads(1);
 
     await assertPageIsTranslated(
       "es",

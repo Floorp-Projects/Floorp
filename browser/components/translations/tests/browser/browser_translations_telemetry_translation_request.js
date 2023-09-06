@@ -45,13 +45,6 @@ add_task(async function test_translations_telemetry_manual_translation() {
     downloadHandler: resolveDownloads,
   });
 
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
-
-  await resolveDownloads(1);
-
   await assertPageIsTranslated("es", "en", runInPage);
 
   await TestTranslationsTelemetry.assertCounter(
