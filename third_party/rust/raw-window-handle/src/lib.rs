@@ -18,12 +18,24 @@
 //! added without breaking backwards compatibility. Each struct provides an `empty` method that may
 //! be used along with the struct update syntax to construct it. See each specific struct for
 //! examples.
+//!
+//! ## Display Handles
+//!
+//! Some windowing systems use a separate display handle for some operations. The display usually
+//! represents a connection to some display server, but it is not necessarily tied to a particular
+//! window. See [`RawDisplayHandle`] for more details.
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
+#[cfg(feature = "std")]
+extern crate std;
+
 mod android;
 mod appkit;
+#[cfg(any(feature = "std", not(target_os = "android")))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "std", not(target_os = "android")))))]
+mod borrowed;
 mod haiku;
 mod redox;
 mod uikit;
@@ -33,6 +45,11 @@ mod windows;
 
 pub use android::{AndroidDisplayHandle, AndroidNdkWindowHandle};
 pub use appkit::{AppKitDisplayHandle, AppKitWindowHandle};
+#[cfg(any(feature = "std", not(target_os = "android")))]
+pub use borrowed::{
+    Active, ActiveHandle, DisplayHandle, HandleError, HasDisplayHandle, HasWindowHandle,
+    WindowHandle,
+};
 pub use haiku::{HaikuDisplayHandle, HaikuWindowHandle};
 pub use redox::{OrbitalDisplayHandle, OrbitalWindowHandle};
 pub use uikit::{UiKitDisplayHandle, UiKitWindowHandle};
@@ -81,7 +98,14 @@ unsafe impl<T: HasRawWindowHandle + ?Sized> HasRawWindowHandle for alloc::sync::
     }
 }
 
-/// An enum to simply combine the different possible raw window handle variants.
+/// A window handle for a particular windowing system.
+///
+/// Each variant contains a struct with fields specific to that windowing system
+/// (e.g. [`Win32WindowHandle`] will include a [HWND], [`WaylandWindowHandle`] uses [wl_surface],
+/// etc.)
+///
+/// [HWND]: https://learn.microsoft.com/en-us/windows/win32/winmsg/about-windows#window-handle
+/// [wl_surface]: https://wayland.freedesktop.org/docs/html/apa.html#protocol-spec-wl_surface
 ///
 /// # Variant Availability
 ///
@@ -216,7 +240,20 @@ unsafe impl<T: HasRawDisplayHandle + ?Sized> HasRawDisplayHandle for alloc::sync
     }
 }
 
-/// An enum to simply combine the different possible raw display handle variants.
+/// A display server handle for a particular windowing system.
+///
+/// The display usually represents a connection to some display server, but it is not necessarily
+/// tied to a particular window. Some APIs can use the display handle without ever creating a window
+/// handle (e.g. offscreen rendering, headless event handling).
+///
+/// Each variant contains a struct with fields specific to that windowing system
+/// (e.g. [`XlibDisplayHandle`] contains a [Display] connection to an X Server,
+/// [`WaylandDisplayHandle`] uses [wl_display] to connect to a compositor). Not all windowing
+/// systems have a separate display handle (or they haven't been implemented yet) and their variants
+/// contain empty structs.
+///
+/// [Display]: https://www.x.org/releases/current/doc/libX11/libX11/libX11.html#Display_Functions
+/// [wl_display]: https://wayland.freedesktop.org/docs/html/apb.html#Client-classwl__display
 ///
 /// # Variant Availability
 ///
@@ -305,3 +342,40 @@ pub enum RawDisplayHandle {
     /// This variant is used on HaikuOS.
     Haiku(HaikuDisplayHandle),
 }
+
+macro_rules! from_impl {
+    ($($to:ident, $enum:ident, $from:ty)*) => ($(
+        impl From<$from> for $to {
+            fn from(value: $from) -> Self {
+                $to::$enum(value)
+            }
+        }
+    )*)
+}
+
+from_impl!(RawDisplayHandle, UiKit, UiKitDisplayHandle);
+from_impl!(RawDisplayHandle, AppKit, AppKitDisplayHandle);
+from_impl!(RawDisplayHandle, Orbital, OrbitalDisplayHandle);
+from_impl!(RawDisplayHandle, Xlib, XlibDisplayHandle);
+from_impl!(RawDisplayHandle, Xcb, XcbDisplayHandle);
+from_impl!(RawDisplayHandle, Wayland, WaylandDisplayHandle);
+from_impl!(RawDisplayHandle, Drm, DrmDisplayHandle);
+from_impl!(RawDisplayHandle, Gbm, GbmDisplayHandle);
+from_impl!(RawDisplayHandle, Windows, WindowsDisplayHandle);
+from_impl!(RawDisplayHandle, Web, WebDisplayHandle);
+from_impl!(RawDisplayHandle, Android, AndroidDisplayHandle);
+from_impl!(RawDisplayHandle, Haiku, HaikuDisplayHandle);
+
+from_impl!(RawWindowHandle, UiKit, UiKitWindowHandle);
+from_impl!(RawWindowHandle, AppKit, AppKitWindowHandle);
+from_impl!(RawWindowHandle, Orbital, OrbitalWindowHandle);
+from_impl!(RawWindowHandle, Xlib, XlibWindowHandle);
+from_impl!(RawWindowHandle, Xcb, XcbWindowHandle);
+from_impl!(RawWindowHandle, Wayland, WaylandWindowHandle);
+from_impl!(RawWindowHandle, Drm, DrmWindowHandle);
+from_impl!(RawWindowHandle, Gbm, GbmWindowHandle);
+from_impl!(RawWindowHandle, Win32, Win32WindowHandle);
+from_impl!(RawWindowHandle, WinRt, WinRtWindowHandle);
+from_impl!(RawWindowHandle, Web, WebWindowHandle);
+from_impl!(RawWindowHandle, AndroidNdk, AndroidNdkWindowHandle);
+from_impl!(RawWindowHandle, Haiku, HaikuWindowHandle);
