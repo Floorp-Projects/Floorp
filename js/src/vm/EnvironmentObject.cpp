@@ -1705,15 +1705,18 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         AbstractFramePtr frame = maybeLiveEnv->frame();
         uint32_t local = loc.slot();
         MOZ_ASSERT(local < frame.script()->nfixed());
+        Value& localVal = frame.unaliasedLocal(local);
         if (action == GET) {
-          vp.set(frame.unaliasedLocal(local));
+          vp.set(localVal);
         } else {
-          if (frame.unaliasedLocal(local).isMagic(JS_UNINITIALIZED_LEXICAL)) {
+          // Note: localVal could also be JS_OPTIMIZED_OUT.
+          if (localVal.isMagic() &&
+              localVal.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
             ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
             return false;
           }
 
-          frame.unaliasedLocal(local) = vp;
+          localVal = vp;
         }
       } else if (AbstractGeneratorObject* genObj =
                      GetGeneratorObjectForEnvironment(cx, debugEnv);
