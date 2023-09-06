@@ -180,6 +180,14 @@
 #define IS_NOT_XP_WIN true
 #endif
 
+#ifdef XP_MACOSX
+#define IS_XP_MACOSX true
+#define IS_NOT_XP_MACOSX false
+#else
+#define IS_XP_MACOSX false
+#define IS_NOT_XP_MACOSX true
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "accessibility."
 #---------------------------------------------------------------------------
@@ -9647,13 +9655,13 @@
 # Does the GMPlugin process initialize minimal XPCOM
 - name: media.gmp.use-minimal-xpcom
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
-# Does the GMPlugin process initialize minimal XPCOM
+# Does the GMPlugin process use native event processing
 - name: media.gmp.use-native-event-processing
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_NOT_XP_MACOSX@
   mirror: always
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
