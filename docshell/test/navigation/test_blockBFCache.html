@@ -98,7 +98,7 @@ const blockBFCacheTests = [
   },
 ];
 
-if (SpecialPowers.Services.appinfo.fissionAutostart) {
+if (SpecialPowers.effectiveIsolationStrategy() == SpecialPowers.ISOLATION_STRATEGY.IsolateEverything) {
   blockBFCacheTests.push({
     name: "Loading OOP iframe",
     test: () => {
