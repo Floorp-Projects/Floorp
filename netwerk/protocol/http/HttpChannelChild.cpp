@@ -351,23 +351,11 @@ void HttpChannelChild::ProcessOnStartRequest(
   LOG(("HttpChannelChild::ProcessOnStartRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
-#ifdef NIGHTLY_BUILD
-  TimeStamp start = TimeStamp::Now();
-#endif
-
   mAltDataInputStream = DeserializeIPCStream(aAltData.altDataInputStream());
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
-#ifdef NIGHTLY_BUILD
-             aUseResponseHead, aRequestHeaders, aArgs, start]() {
-        TimeDuration delay = TimeStamp::Now() - start;
-        glean::networking::http_content_onstart_delay.AccumulateRawDuration(
-            delay);
-#else
              aUseResponseHead, aRequestHeaders, aArgs]() {
-#endif
-
         self->OnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
                              aArgs);
       }));
@@ -808,22 +796,11 @@ void HttpChannelChild::ProcessOnStopRequest(
        this, aFromSocketProcess));
   MOZ_ASSERT(OnSocketThread());
 
-#ifdef NIGHTLY_BUILD
-  TimeStamp start = TimeStamp::Now();
-#endif
-
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
              aResponseTrailers,
              consoleReports = CopyableTArray{aConsoleReports.Clone()},
-#ifdef NIGHTLY_BUILD
-             aFromSocketProcess, start]() mutable {
-        TimeDuration delay = TimeStamp::Now() - start;
-        glean::networking::http_content_onstop_delay.AccumulateRawDuration(
-            delay);
-#else
-              aFromSocketProcess]() mutable {
-#endif
+             aFromSocketProcess]() mutable {
         self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers);
         if (!aFromSocketProcess) {
           self->DoOnConsoleReport(std::move(consoleReports));
