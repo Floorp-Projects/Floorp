@@ -945,6 +945,40 @@ pub extern "C" fn authrs_transport_constructor(
         controller: Controller(RefCell::new(std::ptr::null())),
         pin_receiver: Arc::new(Mutex::new(None)),
     });
+
+    #[cfg(feature = "fuzzing")]
+    {
+        let fuzzing_config = static_prefs::pref!("fuzzing.webauthn.authenticator_config");
+        if fuzzing_config != 0 {
+            let is_user_verified = (fuzzing_config & 0x01) != 0;
+            let is_user_consenting = (fuzzing_config & 0x02) != 0;
+            let has_user_verification = (fuzzing_config & 0x04) != 0;
+            let has_resident_key = (fuzzing_config & 0x08) != 0;
+            let transport = nsCString::from(match (fuzzing_config & 0x10) >> 4 {
+                0 => "usb",
+                1 => "internal",
+                _ => unreachable!(),
+            });
+            let protocol = nsCString::from(match (fuzzing_config & 0x60) >> 5 {
+                0 => "", // reserved
+                1 => "ctap1/u2f",
+                2 => "ctap2",
+                3 => "ctap2_1",
+                _ => unreachable!(),
+            });
+            // If this fails it's probably because the protocol bits were zero,
+            // we'll just ignore it.
+            let _ = wrapper.add_virtual_authenticator(
+                &protocol,
+                &transport,
+                has_resident_key,
+                has_user_verification,
+                is_user_consenting,
+                is_user_verified,
+            );
+        }
+    }
+
     unsafe {
         RefPtr::new(wrapper.coerce::<nsIWebAuthnTransport>()).forget(&mut *result);
     }
