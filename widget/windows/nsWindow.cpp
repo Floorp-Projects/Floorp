@@ -5223,12 +5223,8 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_PAINT:
-      *aRetValue = (int)OnPaint(nullptr, 0);
+      *aRetValue = (int)OnPaint(0);
       result = true;
-      break;
-
-    case WM_PRINTCLIENT:
-      result = OnPaint((HDC)wParam, 0);
       break;
 
     case WM_HOTKEY:
