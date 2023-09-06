@@ -28,6 +28,10 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   void AssertIsOnIOTarget() const;
 
+#ifdef DEBUG
+  void SetRegistered(bool aRegistered) { mRegistered = aRegistered; }
+#endif
+
   // Safe to call while the actor is live.
   const RefPtr<fs::data::FileSystemDataManager>& DataManagerStrongRef() const;
 
@@ -78,6 +82,8 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
   FileSystemGetHandleResponse mRootResponse;
 
   FlippedOnce<false> mRequestedAllowToClose;
+
+  DEBUGONLY(bool mRegistered = false);
 
   DEBUGONLY(bool mActorDestroyed = false);
 };
