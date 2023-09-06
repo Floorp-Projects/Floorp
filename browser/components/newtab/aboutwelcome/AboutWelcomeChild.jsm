@@ -410,10 +410,12 @@ const OPTIN_DEFAULT = {
             },
           },
         },
-        secondary_button: {
+        additional_button: {
           label: {
             string_id: "shopping-onboarding-not-now-button",
+            marginInline: "100px",
           },
+          style: "link",
           action: {
             type: "SET_PREF",
             data: {
