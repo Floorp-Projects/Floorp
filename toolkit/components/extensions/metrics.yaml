@@ -73,18 +73,20 @@ extensions:
     bugs:
       - https://bugzilla.mozilla.org/1830157/
       - https://bugzilla.mozilla.org/1848223/
+      - https://bugzilla.mozilla.org/1850350/
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1830157#c7
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848223#c4 
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848223#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1850350#c2
     data_sensitivity:
       - technical
     labels:
-      - crashed
       - crashed_bg
       - crashed_fg
-      - created
       - created_bg
       - created_fg
+      - crashed_over_threshold_bg
+      - crashed_over_threshold_fg
 
 extensions.apis.dnr:
 

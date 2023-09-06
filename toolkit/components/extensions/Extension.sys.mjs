@@ -748,12 +748,9 @@ export var ExtensionProcessCrashObserver = {
         let pp = subject.QueryInterface(Ci.nsIDOMProcessParent);
         if (pp.remoteType === "extension") {
           this.currentProcessChildID = childID;
-          Glean.extensions.processEvent.created.add(1);
-          if (this._isAndroid) {
-            Glean.extensions.processEvent[
-              this.appInForeground ? "created_fg" : "created_bg"
-            ].add(1);
-          }
+          Glean.extensions.processEvent[
+            this.appInForeground ? "created_fg" : "created_bg"
+          ].add(1);
         }
         break;
       }
@@ -798,19 +795,22 @@ export var ExtensionProcessCrashObserver = {
           `Extension process crashed ${this.lastCrashTimestamps.length} times over the last ${lazy.processCrashTimeframe}ms`
         );
 
+        const { appInForeground } = this;
+
         if (this.processSpawningDisabled) {
+          if (appInForeground) {
+            Glean.extensions.processEvent.crashed_over_threshold_fg.add(1);
+          } else {
+            Glean.extensions.processEvent.crashed_over_threshold_bg.add(1);
+          }
           this.logger.warn(
             `Extension process respawning disabled because it crashed too often in the last ${lazy.processCrashTimeframe}ms (${this.lastCrashTimestamps.length} > ${lazy.processCrashThreshold}).`
           );
         }
 
-        const { appInForeground } = this;
-        Glean.extensions.processEvent.crashed.add(1);
-        if (this._isAndroid) {
-          Glean.extensions.processEvent[
-            appInForeground ? "crashed_fg" : "crashed_bg"
-          ].add(1);
-        }
+        Glean.extensions.processEvent[
+          appInForeground ? "crashed_fg" : "crashed_bg"
+        ].add(1);
         Management.emit("extension-process-crash", {
           childID,
           processSpawningDisabled: this.processSpawningDisabled,
