@@ -22,10 +22,6 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
 
   await assertPageIsUntranslated(runInPage);
 
-  info(
-    "Simulate clicking never-translate-language in the settings menu, " +
-      "adding the document language from the neverTranslateLanguages pref"
-  );
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
   await openTranslationsSettingsMenu();
 
@@ -77,10 +73,6 @@ add_task(
 
     await assertPageIsTranslated("es", "en", runInPage);
 
-    info(
-      "Simulate clicking never-translate-language in the settings menu, " +
-        "adding the document language from the neverTranslateLanguages pref"
-    );
     await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
     await openTranslationsSettingsMenu();
 
@@ -121,10 +113,6 @@ add_task(
       "The button is available."
     );
 
-    info(
-      "Simulate clicking always-translate-language in the settings menu, " +
-        "adding the document language to the alwaysTranslateLanguages pref"
-    );
     await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
     await openTranslationsSettingsMenu();
 
@@ -140,11 +128,6 @@ add_task(
 
     await assertPageIsTranslated("es", "en", runInPage);
 
-    info(
-      "Simulate clicking never-translate-language in the settings menu, " +
-        "adding the document language from the neverTranslateLanguages pref " +
-        "and removing it from the alwaysTranslateLanguages pref"
-    );
     await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
     await openTranslationsSettingsMenu();
 

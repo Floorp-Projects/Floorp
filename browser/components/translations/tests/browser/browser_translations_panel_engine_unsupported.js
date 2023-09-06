@@ -8,7 +8,6 @@
  * engine is not supported.
  */
 add_task(async function test_translations_button_hidden_when_cpu_unsupported() {
-  info("Start at a page in Spanish.");
   const { cleanup, runInPage } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
@@ -31,7 +30,6 @@ add_task(async function test_translations_button_hidden_when_cpu_unsupported() {
  */
 add_task(
   async function test_translate_page_app_menu_item_hidden_when_cpu_unsupported() {
-    info("Start at a page in Spanish.");
     const { cleanup, runInPage } = await loadTestPage({
       page: SPANISH_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
