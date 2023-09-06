@@ -72,12 +72,7 @@ add_task(async function test_translations_panel_basics() {
     "The from menulist is hidden."
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-restore-button"),
-      "Click the restore language button."
-    );
-  });
+  await clickRestoreButton();
 
   await assertPageIsUntranslated(runInPage);
 

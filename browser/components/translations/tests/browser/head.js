@@ -386,6 +386,14 @@ async function clickCancelButton() {
   });
 }
 
+async function clickRestoreButton() {
+  const { restoreButton } = TranslationsPanel.elements;
+  ok(isVisible(restoreButton), "Expect the restore-page button to be visible");
+  await waitForTranslationsPopupEvent("popuphidden", () => {
+    click(restoreButton, "Click the restore-page button");
+  });
+}
+
 /**
  * Asserts that for each provided expectation, the visible state of the corresponding
  * element in TranslationsPanel.elements both exists and matches the visibility expectation.

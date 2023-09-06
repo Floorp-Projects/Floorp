@@ -224,12 +224,7 @@ add_task(
 
     await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
 
-    await waitForTranslationsPopupEvent("popuphidden", () => {
-      click(
-        getByL10nId("translations-panel-restore-button"),
-        "Click the restore language button."
-      );
-    });
+    await clickRestoreButton();
 
     await assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
