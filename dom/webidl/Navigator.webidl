@@ -334,7 +334,7 @@ dictionary ShareData {
 // https://w3c.github.io/mediasession/#idl-index
 [Exposed=Window]
 partial interface Navigator {
-  [SameObject]
+  [Pref="dom.media.mediasession.enabled", SameObject]
   readonly attribute MediaSession mediaSession;
 };
 
