@@ -192,11 +192,11 @@ add_task(async function test_hideOnboarding_onClose() {
           "shopping-container"
         );
         // "Not now" button
-        let secondaryButton = await ContentTaskUtils.waitForCondition(() =>
-          shoppingContainer.querySelector(".secondary")
+        let notNowButton = await ContentTaskUtils.waitForCondition(() =>
+          shoppingContainer.querySelector(".additional-cta")
         );
 
-        secondaryButton.click();
+        notNowButton.click();
 
         // Does not render shopping container onboarding message
         ok(

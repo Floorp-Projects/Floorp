@@ -14,10 +14,15 @@
   height: auto;
   margin: 0 auto;
   min-height: fit-content;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(58, 57, 68, 20%);
 
-  // reset box-shadow
+  @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+    box-shadow: 0 2px 6px rgba(21, 20, 26, 100%);
+  }
+
   &::before {
-    content: none;
+    display: none;
   }
 
   .section-main {
@@ -26,10 +31,10 @@
     margin: 0 auto;
 
     .main-content {
-      border-radius: 0;
+      border-radius: 4px;
 
-      .inline-image {
-        margin-bottom: 26px;
+      @media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+        background-color: #52525E;
       }
 
       &.no-steps {
@@ -38,6 +43,7 @@
 
       .welcome-text {
         text-align: start;
+        margin-block: 10px;
 
         h1 {
           font-size: 1.37em;
@@ -56,6 +62,12 @@
         .primary,
         .secondary {
           min-width: auto;
+        }
+
+        .primary {
+          font-weight: 400;
+          font-size: 0.8em;
+          padding: 4px 16px;
         }
       }
 

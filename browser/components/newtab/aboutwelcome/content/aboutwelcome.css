@@ -656,9 +656,16 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   height: auto;
   margin: 0 auto;
   min-height: fit-content;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(58, 57, 68, 0.2);
+}
+@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+  .onboardingContainer.shopping .screen[pos=split] {
+    box-shadow: 0 2px 6px #15141a;
+  }
 }
 .onboardingContainer.shopping .screen[pos=split]::before {
-  content: none;
+  display: none;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main {
   width: auto;
@@ -666,16 +673,19 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   margin: 0 auto;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content {
-  border-radius: 0;
+  border-radius: 4px;
 }
-.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .inline-image {
-  margin-bottom: 26px;
+@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+  .onboardingContainer.shopping .screen[pos=split] .section-main .main-content {
+    background-color: #52525E;
+  }
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content.no-steps {
   padding: 16px 0 36px;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text {
   text-align: start;
+  margin-block: 10px;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .welcome-text h1 {
   font-size: 1.37em;
@@ -690,6 +700,11 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .primary,
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .secondary {
   min-width: auto;
+}
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons .primary {
+  font-weight: 400;
+  font-size: 0.8em;
+  padding: 4px 16px;
 }
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .legal-paragraph {
   font-size: 0.6875em;
