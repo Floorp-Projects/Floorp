@@ -6,15 +6,11 @@ package org.mozilla.fenix.addons
 
 import android.content.Context
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.AddonManager
-import mozilla.components.feature.addons.ui.translateName
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -60,25 +56,5 @@ class AddonsManagementFragmentTest {
 
         fragment.installExternalAddon(supportedAddons, "d1")
         verify { fragment.showErrorSnackBar(addonAlreadyInstalledErrorMessage) }
-    }
-
-    @Test
-    fun `GIVEN add-on is installed  WHEN add-on is blocklisted THEN error is shown`() {
-        val addonManger = mockk<AddonManager>()
-        val addon = Addon("1")
-        val onError = CapturingSlot<((String, Throwable) -> Unit)>()
-        val expectedErrorMessage = fragment.getString(
-            R.string.mozac_feature_addons_blocklisted,
-            addon.translateName(context),
-        )
-
-        every { fragment.provideAccessibilityServicesEnabled() } returns false
-        every { fragment.provideAddonManger() } returns addonManger
-        every { addonManger.installAddon(addon, any(), capture(onError)) } returns mockk()
-
-        fragment.installAddon(addon)
-        onError.captured("", WebExtensionInstallException.Blocklisted(mockk()))
-
-        verify { fragment.showErrorSnackBar(expectedErrorMessage) }
     }
 }

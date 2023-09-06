@@ -31,6 +31,7 @@ import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
+import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.log.logger.Logger
@@ -228,16 +229,32 @@ object WebExtensionSupport {
                 }
 
                 override fun onInstalled(extension: WebExtension) {
+                    logger.debug("onInstalled ${extension.id}")
                     registerInstalledExtension(store, extension)
                     // Built-in extensions are not installed by users, they are not aware of them
                     // for this reason we don't show any UI related to built-in extensions.
                     if (!extension.isBuiltIn()) {
                         store.dispatch(
                             WebExtensionAction.UpdatePromptRequestWebExtensionAction(
-                                WebExtensionPromptRequest.PostInstallation(extension),
+                                WebExtensionPromptRequest.AfterInstallation.PostInstallation(extension),
                             ),
                         )
                     }
+                }
+
+                override fun onInstallationFailedRequest(
+                    extension: WebExtension?,
+                    exception: WebExtensionInstallException,
+                ) {
+                    logger.error("onInstallationFailedRequest ${extension?.id}", exception)
+                    store.dispatch(
+                        WebExtensionAction.UpdatePromptRequestWebExtensionAction(
+                            WebExtensionPromptRequest.BeforeInstallation.InstallationFailed(
+                                extension,
+                                exception,
+                            ),
+                        ),
+                    )
                 }
 
                 override fun onUninstalled(extension: WebExtension) {
@@ -271,7 +288,7 @@ object WebExtensionSupport {
                 ) {
                     store.dispatch(
                         WebExtensionAction.UpdatePromptRequestWebExtensionAction(
-                            WebExtensionPromptRequest.Permissions(extension, onPermissionsGranted),
+                            WebExtensionPromptRequest.AfterInstallation.Permissions(extension, onPermissionsGranted),
                         ),
                     )
                 }

@@ -7,6 +7,7 @@ package org.mozilla.fenix.extension
 import android.content.Context
 import android.view.Gravity
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -15,12 +16,15 @@ import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.extension.WebExtensionPromptRequest
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.toInstalledState
 import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.android.content.appVersionName
+import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.ThemeManager
@@ -51,24 +55,47 @@ class WebExtensionPromptFeature(
             flow.mapNotNull { state ->
                 state.webExtensionPromptRequest
             }.distinctUntilChanged().collect { promptRequest ->
-                // The install flow in Fenix relies on an [Addon] object so let's convert the (GeckoView)
-                // extension into a minimal add-on. The missing metadata will be fetched when the user
-                // opens the add-ons manager.
-                val addon = Addon.newFromWebExtension(promptRequest.extension)
 
                 when (promptRequest) {
-                    is WebExtensionPromptRequest.Permissions -> handlePermissionRequest(
-                        addon,
-                        promptRequest,
-                    )
+                    is WebExtensionPromptRequest.AfterInstallation -> {
+                        handleAfterInstallationRequest(promptRequest)
+                    }
 
-                    is WebExtensionPromptRequest.PostInstallation -> handlePostInstallationRequest(
-                        addon.copy(installedState = promptRequest.extension.toInstalledState()),
-                    )
+                    is WebExtensionPromptRequest.BeforeInstallation.InstallationFailed -> {
+                        handleBeforeInstallationRequest(promptRequest)
+                        consumePromptRequest()
+                    }
                 }
             }
         }
         tryToReAttachButtonHandlersToPreviousDialog()
+    }
+
+    private fun handleAfterInstallationRequest(promptRequest: WebExtensionPromptRequest.AfterInstallation) {
+        // The install flow in Fenix relies on an [Addon] object so let's convert the (GeckoView)
+        // extension into a minimal add-on. The missing metadata will be fetched when the user
+        // opens the add-ons manager.
+        val addon = Addon.newFromWebExtension(promptRequest.extension)
+        when (promptRequest) {
+            is WebExtensionPromptRequest.AfterInstallation.Permissions -> handlePermissionRequest(
+                addon,
+                promptRequest,
+            )
+            is WebExtensionPromptRequest.AfterInstallation.PostInstallation -> handlePostInstallationRequest(
+                addon.copy(installedState = promptRequest.extension.toInstalledState()),
+            )
+        }
+    }
+
+    private fun handleBeforeInstallationRequest(promptRequest: WebExtensionPromptRequest.BeforeInstallation) {
+        when (promptRequest) {
+            is WebExtensionPromptRequest.BeforeInstallation.InstallationFailed -> {
+                handleInstallationFailedRequest(
+                    exception = promptRequest.exception,
+                )
+                consumePromptRequest()
+            }
+        }
     }
 
     private fun handlePostInstallationRequest(
@@ -79,13 +106,73 @@ class WebExtensionPromptFeature(
 
     private fun handlePermissionRequest(
         addon: Addon,
-        promptRequest: WebExtensionPromptRequest.Permissions,
+        promptRequest: WebExtensionPromptRequest.AfterInstallation.Permissions,
     ) {
-        if (hasExistingPermissionDialogFragment()) {
-            return
+        if (hasExistingPermissionDialogFragment()) return
+        showPermissionDialog(
+            addon,
+            promptRequest,
+        )
+    }
+
+    @VisibleForTesting
+    internal fun handleInstallationFailedRequest(
+        exception: WebExtensionInstallException,
+    ) {
+        val addonName = exception.extensionName ?: ""
+        var title = context.getString(R.string.mozac_feature_addons_failed_to_install, "")
+        val message = when (exception) {
+            is WebExtensionInstallException.Blocklisted -> {
+                context.getString(R.string.mozac_feature_addons_blocklisted, addonName)
+            }
+
+            is WebExtensionInstallException.UserCancelled -> {
+                // We don't want to show an error message when users cancel installation.
+                return
+            }
+
+            is WebExtensionInstallException.Unknown -> {
+                // Making sure we don't have a
+                // Title = Failed to install
+                // Message = Failed to install $addonName
+                title = ""
+                if (addonName.isNotEmpty()) {
+                    context.getString(R.string.mozac_feature_addons_failed_to_install, addonName)
+                } else {
+                    context.getString(R.string.mozac_feature_addons_failed_to_install_generic)
+                }
+            }
+
+            is WebExtensionInstallException.NetworkFailure -> {
+                context.getString(R.string.mozac_feature_addons_failed_to_install_network_error)
+            }
+
+            is WebExtensionInstallException.CorruptFile -> {
+                context.getString(R.string.mozac_feature_addons_failed_to_install_corrupt_error)
+            }
+
+            is WebExtensionInstallException.NotSigned -> {
+                context.getString(
+                    R.string.mozac_feature_addons_failed_to_install_not_signed_error,
+                )
+            }
+
+            is WebExtensionInstallException.Incompatible -> {
+                val appName = context.getString(R.string.app_name)
+                val version = context.appVersionName
+                context.getString(
+                    R.string.mozac_feature_addons_failed_to_install_incompatible_error,
+                    addonName,
+                    appName,
+                    version,
+                )
+            }
         }
 
-        showPermissionDialog(addon, promptRequest)
+        showDialog(
+            title = title,
+            message = message,
+        )
     }
 
     /**
@@ -98,7 +185,7 @@ class WebExtensionPromptFeature(
     @VisibleForTesting
     internal fun showPermissionDialog(
         addon: Addon,
-        promptRequest: WebExtensionPromptRequest.Permissions,
+        promptRequest: WebExtensionPromptRequest.AfterInstallation.Permissions,
     ) {
         if (!isInstallationInProgress && !hasExistingPermissionDialogFragment()) {
             val dialog = PermissionsDialogFragment.newInstance(
@@ -135,8 +222,8 @@ class WebExtensionPromptFeature(
         findPreviousPermissionDialogFragment()?.let { dialog ->
             dialog.onPositiveButtonClicked = { addon ->
                 store.state.webExtensionPromptRequest?.let { promptRequest ->
-                    if (addon.id == promptRequest.extension.id &&
-                        promptRequest is WebExtensionPromptRequest.Permissions
+                    if (promptRequest is WebExtensionPromptRequest.AfterInstallation.Permissions &&
+                        addon.id == promptRequest.extension.id
                     ) {
                         handleApprovedPermissions(promptRequest)
                     }
@@ -144,7 +231,7 @@ class WebExtensionPromptFeature(
             }
             dialog.onNegativeButtonClicked = {
                 store.state.webExtensionPromptRequest?.let { promptRequest ->
-                    if (promptRequest is WebExtensionPromptRequest.Permissions) {
+                    if (promptRequest is WebExtensionPromptRequest.AfterInstallation.Permissions) {
                         handleDeniedPermissions(promptRequest)
                     }
                 }
@@ -154,8 +241,8 @@ class WebExtensionPromptFeature(
         findPreviousPostInstallationDialogFragment()?.let { dialog ->
             dialog.onConfirmButtonClicked = { addon, allowInPrivateBrowsing ->
                 store.state.webExtensionPromptRequest?.let { promptRequest ->
-                    if (addon.id == promptRequest.extension.id &&
-                        promptRequest is WebExtensionPromptRequest.PostInstallation
+                    if (promptRequest is WebExtensionPromptRequest.AfterInstallation.PostInstallation &&
+                        addon.id == promptRequest.extension.id
                     ) {
                         handlePostInstallationButtonClicked(
                             allowInPrivateBrowsing = allowInPrivateBrowsing,
@@ -173,12 +260,12 @@ class WebExtensionPromptFeature(
         }
     }
 
-    private fun handleDeniedPermissions(promptRequest: WebExtensionPromptRequest.Permissions) {
+    private fun handleDeniedPermissions(promptRequest: WebExtensionPromptRequest.AfterInstallation.Permissions) {
         promptRequest.onConfirm(false)
         consumePromptRequest()
     }
 
-    private fun handleApprovedPermissions(promptRequest: WebExtensionPromptRequest.Permissions) {
+    private fun handleApprovedPermissions(promptRequest: WebExtensionPromptRequest.AfterInstallation.Permissions) {
         promptRequest.onConfirm(true)
         consumePromptRequest()
     }
@@ -265,6 +352,24 @@ class WebExtensionPromptFeature(
             )
         }
         consumePromptRequest()
+    }
+
+    @VisibleForTesting
+    internal fun showDialog(
+        title: String,
+        message: String,
+    ) {
+        context.let {
+            AlertDialog.Builder(it)
+                .setTitle(title)
+                .setPositiveButton(android.R.string.ok) { _, _ -> }
+                .setCancelable(false)
+                .setMessage(
+                    message,
+                )
+                .show()
+                .withCenterAlignedButtons()
+        }
     }
 
     companion object {

@@ -33,6 +33,7 @@ import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.engine.webextension.WebExtensionException
+import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -71,6 +72,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.OrientationController
 import org.mozilla.geckoview.StorageController
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_BLOCKLISTED
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_FILE_ACCESS
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_INCORRECT_HASH
@@ -2318,6 +2320,39 @@ class GeckoEngineTest {
         val capturedExtension =
             extensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(extension, capturedExtension.nativeExtension)
+    }
+
+    @Test
+    fun `web extension delegate handles add-on onInstallationFailed event`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val extension = mockNativeWebExtension("test", "uri")
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        val exception = mockGeckoInstallException(ERROR_BLOCKLISTED)
+
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val geckoDelegateCaptor = argumentCaptor<WebExtensionController.AddonManagerDelegate>()
+        verify(webExtensionController).setAddonManagerDelegate(geckoDelegateCaptor.capture())
+
+        assertEquals(Unit, geckoDelegateCaptor.value.onInstallationFailed(extension, exception))
+
+        val extensionCaptor = argumentCaptor<WebExtension>()
+        val exceptionCaptor = argumentCaptor<WebExtensionInstallException>()
+
+        verify(webExtensionsDelegate).onInstallationFailedRequest(
+            extensionCaptor.capture(),
+            exceptionCaptor.capture(),
+        )
+        val capturedExtension =
+            extensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(extension, capturedExtension.nativeExtension)
+
+        assertTrue(exceptionCaptor.value is WebExtensionInstallException.Blocklisted)
     }
 
     @Test

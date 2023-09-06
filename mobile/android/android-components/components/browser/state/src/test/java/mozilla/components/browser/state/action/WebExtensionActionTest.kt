@@ -392,7 +392,7 @@ class WebExtensionActionTest {
 
         assertNull(store.state.webExtensionPromptRequest)
 
-        val promptRequest = WebExtensionPromptRequest.Permissions(mock(), {})
+        val promptRequest = WebExtensionPromptRequest.AfterInstallation.Permissions(mock(), {})
 
         store.dispatch(WebExtensionAction.UpdatePromptRequestWebExtensionAction(promptRequest))
             .joinBlocking()
@@ -402,7 +402,7 @@ class WebExtensionActionTest {
 
     @Test
     fun `WHEN ConsumePromptRequestWebExtensionAction is dispatched THEN the actual WebExtensionPromptRequest is removed from the store`() {
-        val promptRequest = WebExtensionPromptRequest.Permissions(mock(), {})
+        val promptRequest = WebExtensionPromptRequest.AfterInstallation.Permissions(mock(), {})
 
         val store = BrowserStore(
             initialState = BrowserState(

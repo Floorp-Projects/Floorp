@@ -21,12 +21,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
-import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
-import mozilla.components.feature.addons.ui.translateName
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
@@ -34,14 +32,12 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.FragmentAddOnsManagementBinding
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.extension.WebExtensionPromptFeature
 import org.mozilla.fenix.theme.ThemeManager
-import java.util.concurrent.CancellationException
 
 /**
  * Fragment use for managing add-ons.
@@ -55,11 +51,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
 
     private val webExtensionPromptFeature = ViewBoundFeatureWrapper<WebExtensionPromptFeature>()
     private var addons: List<Addon> = emptyList()
-
-    /**
-     * Whether or not an add-on installation is in progress.
-     */
-    private var isInstallationInProgress = false
 
     private var installExternalAddonComplete: Boolean
         set(value) {
@@ -138,7 +129,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                                 excludedAddonIDs,
                             )
                         }
-                        isInstallationInProgress = false
                         binding?.addOnsProgressBar?.isVisible = false
                         binding?.addOnsEmptyMessage?.isVisible = false
 
@@ -163,7 +153,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                                 getString(R.string.mozac_feature_addons_failed_to_query_add_ons),
                             )
                         }
-                        isInstallationInProgress = false
                         binding?.addOnsProgressBar?.isVisible = false
                         binding?.addOnsEmptyMessage?.isVisible = true
                     }
@@ -230,30 +219,12 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
             addon,
             onSuccess = {
                 runIfFragmentIsAttached {
-                    isInstallationInProgress = false
                     adapter?.updateAddon(it)
                     binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
                 }
             },
-            onError = { _, e ->
-                this@AddonsManagementFragment.view?.let { view ->
-                    // No need to display an error message if installation was cancelled by the user.
-                    if (e !is CancellationException && e !is WebExtensionInstallException.UserCancelled) {
-                        val rootView = activity?.getRootView() ?: view
-                        var messageId = R.string.mozac_feature_addons_failed_to_install
-                        if (e is WebExtensionInstallException.Blocklisted) {
-                            messageId = R.string.mozac_feature_addons_blocklisted
-                        }
-                        context?.let {
-                            showErrorSnackBar(
-                                text = getString(messageId, addon.translateName(it)),
-                                anchorView = rootView,
-                            )
-                        }
-                    }
-                    binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
-                    isInstallationInProgress = false
-                }
+            onError = { _, _ ->
+                binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
             },
         )
         binding?.addonProgressOverlay?.cancelButton?.setOnClickListener {

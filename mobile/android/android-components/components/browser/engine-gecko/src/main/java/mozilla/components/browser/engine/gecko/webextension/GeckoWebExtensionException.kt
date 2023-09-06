@@ -8,6 +8,10 @@ import mozilla.components.concept.engine.webextension.WebExtensionException
 import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import org.mozilla.geckoview.WebExtension.InstallException
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_BLOCKLISTED
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_INCOMPATIBLE
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_NETWORK_FAILURE
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
 
 /**
@@ -22,9 +26,37 @@ class GeckoWebExtensionException(throwable: Throwable) : WebExtensionException(t
         internal fun createWebExtensionException(throwable: Throwable): WebExtensionException {
             if (throwable is InstallException) {
                 return when (throwable.code) {
-                    ERROR_USER_CANCELED -> WebExtensionInstallException.UserCancelled(throwable)
-                    ERROR_BLOCKLISTED -> WebExtensionInstallException.Blocklisted(throwable)
-                    else -> GeckoWebExtensionException(throwable)
+                    ERROR_USER_CANCELED -> WebExtensionInstallException.UserCancelled(
+                        extensionName = throwable.extensionName,
+                        throwable,
+                    )
+
+                    ERROR_BLOCKLISTED -> WebExtensionInstallException.Blocklisted(
+                        extensionName = throwable.extensionName,
+                        throwable,
+                    )
+
+                    ERROR_CORRUPT_FILE -> WebExtensionInstallException.CorruptFile(
+                        throwable = throwable,
+                    )
+
+                    ERROR_NETWORK_FAILURE -> WebExtensionInstallException.NetworkFailure(
+                        throwable = throwable,
+                    )
+
+                    ERROR_SIGNEDSTATE_REQUIRED -> WebExtensionInstallException.NotSigned(
+                        throwable = throwable,
+                    )
+
+                    ERROR_INCOMPATIBLE -> WebExtensionInstallException.Incompatible(
+                        extensionName = throwable.extensionName,
+                        throwable,
+                    )
+
+                    else -> WebExtensionInstallException.Unknown(
+                        extensionName = throwable.extensionName,
+                        throwable,
+                    )
                 }
             }
 

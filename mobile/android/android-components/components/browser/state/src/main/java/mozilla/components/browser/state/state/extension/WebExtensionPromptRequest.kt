@@ -5,32 +5,56 @@
 package mozilla.components.browser.state.state.extension
 
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 
 /**
  * Value type that represents a request for showing a native dialog from a [WebExtension].
  *
  * @param extension The [WebExtension] that requested the dialog to be shown.
  */
-sealed class WebExtensionPromptRequest(
-    open val extension: WebExtension,
-) {
+sealed class WebExtensionPromptRequest {
 
     /**
-     * Value type that represents a request for a permission prompt.
-     * @property extension The [WebExtension] that requested the dialog to be shown.
-     * @property onConfirm A callback indicating whether the permissions were granted or not.
+     * Value type that represents a request for showing a native dialog from a [WebExtension] before
+     * the installation succeeds.
      */
-    data class Permissions(
-        override val extension: WebExtension,
-        val onConfirm: (Boolean) -> Unit,
-    ) : WebExtensionPromptRequest(extension)
+    sealed class BeforeInstallation(open val extension: WebExtension?) :
+        WebExtensionPromptRequest() {
+        /**
+         * Value type that represents a request for showing error prompt when an installation failed.
+         * @property extension The exception with failed to installed.
+         * @property exception The reason why the installation failed.
+         */
+        data class InstallationFailed(
+            override val extension: WebExtension?,
+            val exception: WebExtensionInstallException,
+        ) : BeforeInstallation(extension)
+    }
 
     /**
-     * Value type that represents a request for showing post-installation prompt.
-     * Normally used to give users an opportunity to enable the [extension] in private browsing mode.
-     * @property extension The installed extension.
+     * Value type that represents a request for showing a native dialog from a [WebExtension] after
+     * installation succeeds.
+     *
+     * @param extension The [WebExtension] that requested the dialog to be shown.
      */
-    data class PostInstallation(
-        override val extension: WebExtension,
-    ) : WebExtensionPromptRequest(extension)
+    sealed class AfterInstallation(open val extension: WebExtension) : WebExtensionPromptRequest() {
+        /**
+         * Value type that represents a request for a permission prompt.
+         * @property extension The [WebExtension] that requested the dialog to be shown.
+         * @property onConfirm A callback indicating whether the permissions were granted or not.
+         */
+        data class Permissions(
+            override val extension: WebExtension,
+            val onConfirm: (Boolean) -> Unit,
+        ) : AfterInstallation(extension)
+
+        /**
+         * Value type that represents a request for showing post-installation prompt.
+         * Normally used to give users an opportunity to enable the [extension] in private browsing mode.
+         * @property extension The installed extension.
+         */
+        data class PostInstallation(
+            override val extension: WebExtension,
+        ) : AfterInstallation(extension)
+    }
 }
