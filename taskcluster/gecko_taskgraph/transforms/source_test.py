@@ -254,8 +254,13 @@ def set_base_revision_in_tgdiff(config, jobs):
             yield job
             continue
 
-        job["run"]["command-context"] = {
-            "base_rev": data["changesets"][0]["parents"][0]
+        job["task-context"] = {
+            "from-object": {
+                "base_rev": data["changesets"][0]["parents"][0],
+            },
+            "substitution-fields": [
+                "run.command",
+            ],
         }
         yield job
 
