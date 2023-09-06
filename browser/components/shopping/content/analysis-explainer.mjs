@@ -23,14 +23,18 @@ const VALID_EXPLAINER_L10N_IDS = new Map([
  * Class for displaying details about letter grades, adjusted rating, and highlights.
  */
 class AnalysisExplainer extends MozLitElement {
-  static properties = {
-    productURL: { type: String, reflect: true },
-  };
-
   getGradesDescriptionTemplate() {
     return html`
       <section id="analysis-explainer-grades-wrapper">
         <p data-l10n-id="shopping-analysis-explainer-grades-intro"></p>
+        <ul id="analysis-explainer-grades-list">
+          <li
+            data-l10n-id="shopping-analysis-explainer-higher-grade-description"
+          ></li>
+          <li
+            data-l10n-id="shopping-analysis-explainer-lower-grade-description"
+          ></li>
+        </ul>
       </section>
     `;
   }
@@ -60,6 +64,10 @@ class AnalysisExplainer extends MozLitElement {
   getGradingScaleListTemplate() {
     return html`
       <section id="analysis-explainer-grading-scale-wrapper">
+        <p
+          id="analysis-explainer-grading-scale-header"
+          data-l10n-id="shopping-analysis-explainer-review-grading-scale"
+        ></p>
         <dl id="analysis-explainer-grading-scale-list">
           ${this.createGradingScaleEntry(
             ["A", "B"],
@@ -78,20 +86,6 @@ class AnalysisExplainer extends MozLitElement {
     `;
   }
 
-  getRetailerDisplayName() {
-    if (!this.productURL) {
-      return "";
-    }
-    let url = new URL(this.productURL);
-    let hostname = url.hostname;
-    let displayNames = {
-      "www.amazon.com": "Amazon",
-      "www.bestbuy.com": "Best Buy",
-      "www.walmart.com": "Walmart",
-    };
-    return displayNames[hostname];
-  }
-
   render() {
     return html`
       <link
@@ -107,15 +101,11 @@ class AnalysisExplainer extends MozLitElement {
           <div id="analysis-explainer-wrapper">
             <p data-l10n-id="shopping-analysis-explainer-intro"></p>
             ${this.getGradesDescriptionTemplate()}
-            ${this.getGradingScaleListTemplate()}
             <p
               data-l10n-id="shopping-analysis-explainer-adjusted-rating-description"
             ></p>
             <p
               data-l10n-id="shopping-analysis-explainer-highlights-description"
-              data-l10n-args="${JSON.stringify({
-                retailer: this.getRetailerDisplayName(),
-              })}"
             ></p>
             <p data-l10n-id="shopping-analysis-explainer-learn-more">
               <a
@@ -124,6 +114,7 @@ class AnalysisExplainer extends MozLitElement {
                 data-l10n-name="review-quality-url"
               ></a>
             </p>
+            ${this.getGradingScaleListTemplate()}
           </div>
         </div>
       </shopping-card>
