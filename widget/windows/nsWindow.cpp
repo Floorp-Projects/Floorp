@@ -8795,8 +8795,6 @@ mozilla::Maybe<UINT> nsWindow::GetHiddenTaskbarEdge() {
   const auto kEdges = {ABE_BOTTOM, ABE_TOP, ABE_LEFT, ABE_RIGHT};
   for (auto edge : kEdges) {
     appBarData.uEdge = edge;
-    // ABM_GETAUTOHIDEBAREX is not defined before Windows 8.
-    static constexpr DWORD ABM_GETAUTOHIDEBAREX = 0x000b;
     HWND appBarHwnd = (HWND)SHAppBarMessage(ABM_GETAUTOHIDEBAREX, &appBarData);
     if (appBarHwnd) {
       nsAutoString className;
