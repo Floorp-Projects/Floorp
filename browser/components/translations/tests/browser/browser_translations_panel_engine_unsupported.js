@@ -15,14 +15,7 @@ add_task(async function test_translations_button_hidden_when_cpu_unsupported() {
     prefs: [["browser.translations.simulateUnsupportedEngine", true]],
   });
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await assertTranslationsButton(
     { button: false },
@@ -45,14 +38,7 @@ add_task(
       prefs: [["browser.translations.simulateUnsupportedEngine", true]],
     });
 
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     const appMenuButton = getById("PanelUI-menu-button");
 

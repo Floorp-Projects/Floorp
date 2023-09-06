@@ -17,14 +17,7 @@ add_task(async function test_translations_panel_switch_language() {
     "The button is available."
   );
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await waitForTranslationsPopupEvent(
     "popupshown",

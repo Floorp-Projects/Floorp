@@ -27,6 +27,20 @@ const getIntlDisplayName = (() => {
   };
 })();
 
+async function assertPageIsUntranslated(runInPage, message = null) {
+  if (message) {
+    info(message);
+  }
+  await runInPage(async TranslationsTest => {
+    const { getH1 } = TranslationsTest.getSelectors();
+    await TranslationsTest.assertTranslationResult(
+      "The page's H1 is untranslated and in the original Spanish.",
+      getH1,
+      "Don Quijote de La Mancha"
+    );
+  });
+}
+
 /**
  * Assert some property about the translations button.
  *

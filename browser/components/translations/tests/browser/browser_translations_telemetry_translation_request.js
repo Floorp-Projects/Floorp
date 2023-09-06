@@ -17,14 +17,7 @@ add_task(async function test_translations_telemetry_manual_translation() {
     "The button is available."
   );
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await TestTranslationsTelemetry.assertCounter(
     "RequestCount",

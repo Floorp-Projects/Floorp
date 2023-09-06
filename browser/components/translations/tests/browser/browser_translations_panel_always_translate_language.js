@@ -20,18 +20,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     "The translations button is visible."
   );
 
-  info(
-    'The document language "es" is not in the alwaysTranslateLanguages pref, ' +
-      "so the page should be untranslated, in its original form"
-  );
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   info(
     "Simulate clicking always-translate-language in the settings menu, " +
@@ -115,18 +104,7 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     "Only the button appears"
   );
 
-  info(
-    "The page should no longer automatically translated because the document language " +
-      "should be removed from the always-translate pref"
-  );
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await cleanup();
 });
@@ -149,18 +127,7 @@ add_task(
       "The button is available."
     );
 
-    info(
-      'The document language "es" is not in the alwaysTranslateLanguages pref, ' +
-        "so the page should be untranslated, in its original form"
-    );
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await waitForTranslationsPopupEvent(
       "popupshown",
@@ -239,18 +206,7 @@ add_task(
       "Only the button appears"
     );
 
-    info(
-      "The page should no longer automatically translated because the document language " +
-        "should be removed from the always-translate pref"
-    );
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await cleanup();
   }
@@ -274,18 +230,7 @@ add_task(
       "The translations button is visible."
     );
 
-    info(
-      'The document language "es" is not in the alwaysTranslateLanguages pref, ' +
-        "so the page should be untranslated, in its original form"
-    );
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     info(
       "Simulate clicking always-translate-language in the settings menu, " +
@@ -376,14 +321,7 @@ add_task(
       "The button is reverted to have an icon."
     );
 
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is restored to Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     info(
       "Simulate clicking always-translate-language in the settings menu, " +
@@ -407,14 +345,7 @@ add_task(
       "The button shows only the icon."
     );
 
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is restored to Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await cleanup();
   }

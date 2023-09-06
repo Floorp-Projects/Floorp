@@ -20,18 +20,7 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
     "The translations button is visible."
   );
 
-  info(
-    'The document language "es" is not in the neverTranslateLanguages pref, ' +
-      "so the page should be untranslated, in its original form."
-  );
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   info(
     "Simulate clicking never-translate-language in the settings menu, " +
@@ -43,51 +32,18 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
   await clickNeverTranslateLanguage();
   await assertIsNeverTranslateLanguage("es", { checked: true });
 
-  info(
-    "The page should still be in its original, untranslated form because " +
-      "the document language is in the neverTranslateLanguages pref"
-  );
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await navigate(SPANISH_PAGE_URL, "Reload the page");
 
-  info(
-    "The page should still be in its original, untranslated form because " +
-      "the document language is in the neverTranslateLanguages pref"
-  );
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await navigate(
     SPANISH_PAGE_URL_DOT_ORG,
     "Navigate to a different Spanish page"
   );
 
-  info(
-    "The page should still be in its original, untranslated form because " +
-      "the document language is in the neverTranslateLanguages pref"
-  );
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await cleanup();
 });
@@ -111,18 +67,7 @@ add_task(
       "The button is available."
     );
 
-    info(
-      'The document language "es" is not in the alwaysTranslateLanguages pref, ' +
-        "so the page should be untranslated, in its original form"
-    );
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await waitForTranslationsPopupEvent(
       "popupshown",
@@ -172,33 +117,11 @@ add_task(
     await clickNeverTranslateLanguage();
     await assertIsNeverTranslateLanguage("es", { checked: true });
 
-    info(
-      "The page should still be in its original, untranslated form because " +
-        "the document language is in the neverTranslateLanguages pref"
-    );
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await navigate(SPANISH_PAGE_URL, "Reload the page");
 
-    info(
-      "The page should still be in its original, untranslated form because " +
-        "the document language is in the neverTranslateLanguages pref"
-    );
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await cleanup();
   }
@@ -279,33 +202,11 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateLanguage("es", { checked: true });
 
-    info(
-      "The page should still be in its original, untranslated form because " +
-        "the document language is in the neverTranslateLanguages pref"
-    );
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await navigate(SPANISH_PAGE_URL, "Reload the page");
 
-    info(
-      "The page should still be in its original, untranslated form because " +
-        "the document language is in the neverTranslateLanguages pref"
-    );
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The page's H1 is in Spanish.",
-        getH1,
-        "Don Quijote de La Mancha"
-      );
-    });
+    await assertPageIsUntranslated(runInPage);
 
     await cleanup();
   }

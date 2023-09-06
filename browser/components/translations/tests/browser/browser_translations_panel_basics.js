@@ -19,14 +19,7 @@ add_task(async function test_translations_panel_basics() {
 
   is(button.getAttribute("data-l10n-id"), "urlbar-translations-button2");
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is in Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await waitForTranslationsPopupEvent(
     "popupshown",
@@ -140,14 +133,7 @@ add_task(async function test_translations_panel_basics() {
     );
   });
 
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is restored to Spanish.",
-      getH1,
-      "Don Quijote de La Mancha"
-    );
-  });
+  await assertPageIsUntranslated(runInPage);
 
   await assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
