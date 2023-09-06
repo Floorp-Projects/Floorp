@@ -406,7 +406,10 @@ bool CanvasEventRingBuffer::SwitchBuffer(
 
   // Make sure the drop buffer event has been read before continuing. We can't
   // write an actual checkpoint because there will be no buffer to read from.
-  WaitForCheckpoint(mOurCount);
+  if (!WaitForCheckpoint(mOurCount)) {
+    return false;
+  }
+
   mBuf = nullptr;
   mBufPos = nullptr;
   mRead = nullptr;

@@ -231,10 +231,10 @@ void CanvasChild::OnTextureForwarded() {
   mRecorder->TakeExternalSurfaces(mLastTransactionExternalSurfaces);
 }
 
-void CanvasChild::EnsureBeginTransaction() {
+bool CanvasChild::EnsureBeginTransaction() {
   // We drop mRecorder in ActorDestroy to break the reference cycle.
   if (!mRecorder) {
-    return;
+    return false;
   }
 
   if (!mIsInTransaction) {
@@ -245,13 +245,15 @@ void CanvasChild::EnsureBeginTransaction() {
       if (!mRecorder->SwitchBuffer(OtherPid(), &handle) ||
           !SendNewBuffer(std::move(handle))) {
         mRecorder = nullptr;
-        return;
+        return false;
       }
     }
 
     mRecorder->RecordEvent(RecordedCanvasBeginTransaction());
     mIsInTransaction = true;
   }
+
+  return true;
 }
 
 void CanvasChild::EndTransaction() {
@@ -324,7 +326,11 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
   if (!mIsInTransaction) {
     mTransactionsSinceGetDataSurface = 0;
   }
-  EnsureBeginTransaction();
+
+  if (!EnsureBeginTransaction()) {
+    return nullptr;
+  }
+
   mRecorder->RecordEvent(RecordedPrepareDataForSurface(aSurface));
   uint32_t checkpoint = mRecorder->CreateCheckpoint();
 

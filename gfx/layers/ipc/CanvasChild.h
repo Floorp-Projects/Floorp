@@ -81,8 +81,9 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   /**
    * Ensures that we have sent a begin transaction event, since the last
    * end transaction.
+   * @returns false on failure to begin transaction
    */
-  void EnsureBeginTransaction();
+  bool EnsureBeginTransaction();
 
   /**
    * Send an end transaction event to indicate the end of events for this frame.
