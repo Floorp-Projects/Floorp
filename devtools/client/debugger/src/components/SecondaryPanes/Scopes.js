@@ -57,7 +57,6 @@ class Scopes extends PureComponent {
       originalFrameScopes: PropTypes.object,
       removeWatchpoint: PropTypes.func.isRequired,
       setExpandedScope: PropTypes.func.isRequired,
-      toggleMapScopes: PropTypes.func.isRequired,
       unHighlightDomElement: PropTypes.func.isRequired,
       why: PropTypes.object.isRequired,
       selectedFrame: PropTypes.object,
@@ -99,10 +98,6 @@ class Scopes extends PureComponent {
       });
     }
   }
-
-  onToggleMapScopes = () => {
-    this.props.toggleMapScopes();
-  };
 
   onContextMenu = (event, item) => {
     const { addWatchpoint, removeWatchpoint } = this.props;
@@ -311,7 +306,6 @@ export default connect(mapStateToProps, {
   openElementInInspector: actions.openElementInInspectorCommand,
   highlightDomElement: actions.highlightDomElement,
   unHighlightDomElement: actions.unHighlightDomElement,
-  toggleMapScopes: actions.toggleMapScopes,
   setExpandedScope: actions.setExpandedScope,
   addWatchpoint: actions.addWatchpoint,
   removeWatchpoint: actions.removeWatchpoint,
