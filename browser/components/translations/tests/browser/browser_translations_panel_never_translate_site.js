@@ -83,19 +83,9 @@ add_task(
 
     await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
-    await waitForTranslationsPopupEvent("popuphidden", () => {
-      click(
-        getByL10nId("translations-panel-translate-button"),
-        "Start translating by clicking the translate button."
-      );
+    await clickTranslateButton({
+      downloadHandler: resolveDownloads,
     });
-
-    await assertTranslationsButton(
-      { button: true, circleArrows: true, locale: false, icon: true },
-      "The icon presents the loading indicator."
-    );
-
-    await resolveDownloads(1);
 
     await assertPageIsTranslated("es", "en", runInPage);
 

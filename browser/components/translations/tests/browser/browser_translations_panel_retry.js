@@ -18,14 +18,9 @@ add_task(async function test_translations_panel_retry() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-button"),
-      "Start translating by clicking the translate button."
-    );
+  await clickTranslateButton({
+    downloadHandler: resolveDownloads,
   });
-
-  await resolveDownloads(1);
 
   await assertPageIsTranslated("es", "en", runInPage);
 
@@ -36,15 +31,10 @@ add_task(async function test_translations_panel_retry() {
   toSelect.value = "fr";
   toSelect.dispatchEvent(new Event("command"));
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-button"),
-      "Re-translate the page by clicking the translate button."
-    );
+  await clickTranslateButton({
+    downloadHandler: resolveDownloads,
+    pivotTranslation: true,
   });
-
-  // This is a pivot language which requires 2 models.
-  await resolveDownloads(2);
 
   await assertPageIsTranslated("es", "fr", runInPage);
 

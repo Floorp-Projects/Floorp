@@ -74,11 +74,8 @@ add_task(async function test_translations_persist_in_reader_mode() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-button"),
-      "Start translating by clicking the translate button."
-    );
+  await clickTranslateButton({
+    downloadHandler: resolveDownloads,
   });
 
   await assertTranslationsButton(

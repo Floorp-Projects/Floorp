@@ -47,19 +47,10 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     }
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-button"),
-      "Start translating by clicking the translate button."
-    );
+  await clickTranslateButton({
+    downloadHandler: rejectDownloads,
+    onOpenPanel: assertPanelFirstShowErrorView,
   });
-
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
-
-  await rejectDownloads(1);
 
   await assertPageIsUntranslated(runInPage);
 
@@ -126,7 +117,6 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     }
   );
 
-  assertPanelErrorView();
   await clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(

@@ -63,14 +63,9 @@ add_task(async function test_translations_panel_switch_language() {
 
   ok(!translateButton.disabled, "The translate button can now be used");
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      translateButton,
-      "Start translating by clicking the translate button."
-    );
+  await clickTranslateButton({
+    downloadHandler: resolveDownloads,
   });
-
-  await resolveDownloads(1);
 
   await assertPageIsTranslated("en", "fr", runInPage);
 

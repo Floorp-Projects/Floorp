@@ -36,17 +36,7 @@ add_task(async function test_translations_panel_basics() {
     "The from menulist is visible."
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-button"),
-      "Start translating by clicking the translate button."
-    );
-  });
-
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
+  await clickTranslateButton();
 
   await openTranslationsPanel({ onOpenPanel: assertPanelLoadingView });
 
