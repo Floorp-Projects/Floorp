@@ -4135,7 +4135,7 @@ class ADBDevice(ADBCommand):
         # against bool prior to testing it against int in order to
         # prevent falsely identifying a bool value as an int.
         if extras:
-            for (key, val) in extras.items():
+            for key, val in extras.items():
                 if isinstance(val, bool):
                     extra_type_param = "--ez"
                 elif isinstance(val, int):
@@ -4196,7 +4196,7 @@ class ADBDevice(ADBCommand):
         if moz_env:
             # moz_env is expected to be a dictionary of environment variables:
             # Fennec itself will set them when launched
-            for (env_count, (env_key, env_val)) in enumerate(moz_env.items()):
+            for env_count, (env_key, env_val) in enumerate(moz_env.items()):
                 extras["env" + str(env_count)] = env_key + "=" + env_val
 
         # Additional command line arguments that fennec will read and use (e.g.
@@ -4261,13 +4261,13 @@ class ADBDevice(ADBCommand):
         if moz_env:
             # moz_env is expected to be a dictionary of environment variables:
             # geckoview_example itself will set them when launched
-            for (env_count, (env_key, env_val)) in enumerate(moz_env.items()):
+            for env_count, (env_key, env_val) in enumerate(moz_env.items()):
                 extras["env" + str(env_count)] = env_key + "=" + env_val
 
         # Additional command line arguments that the app will read and use (e.g.
         # with a custom profile)
         if extra_args:
-            for (arg_count, arg) in enumerate(extra_args):
+            for arg_count, arg in enumerate(extra_args):
                 extras["arg" + str(arg_count)] = arg
 
         extras["use_multiprocess"] = e10s
@@ -4329,13 +4329,13 @@ class ADBDevice(ADBCommand):
         if moz_env:
             # moz_env is expected to be a dictionary of environment variables:
             # geckoview_example itself will set them when launched
-            for (env_count, (env_key, env_val)) in enumerate(moz_env.items()):
+            for env_count, (env_key, env_val) in enumerate(moz_env.items()):
                 extras["env" + str(env_count)] = env_key + "=" + env_val
 
         # Additional command line arguments that the app will read and use (e.g.
         # with a custom profile)
         if extra_args:
-            for (arg_count, arg) in enumerate(extra_args):
+            for arg_count, arg in enumerate(extra_args):
                 extras["arg" + str(arg_count)] = arg
 
         extras["use_multiprocess"] = e10s

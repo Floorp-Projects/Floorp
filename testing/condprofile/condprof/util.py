@@ -274,7 +274,6 @@ def extract_from_dmg(dmg, target):
 
 @contextlib.contextmanager
 def latest_nightly(binary=None):
-
     if binary is None:
         # we want to use the latest nightly
         nightly_archive = get_firefox_download_link()
@@ -333,7 +332,7 @@ def get_current_platform():
 
     e.g. macosx64, win32, linux64, etc..
     """
-    arch = sys.maxsize == 2 ** 63 - 1 and "64" or "32"
+    arch = sys.maxsize == 2**63 - 1 and "64" or "32"
     plat = platform.system().lower()
     if plat == "windows":
         plat = "win"

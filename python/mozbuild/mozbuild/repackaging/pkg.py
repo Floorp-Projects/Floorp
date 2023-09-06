@@ -13,7 +13,6 @@ from mozbuild.bootstrap import bootstrap_toolchain
 
 
 def repackage_pkg(infile, output):
-
     if not tarfile.is_tarfile(infile):
         raise Exception("Input file %s is not a valid tarfile." % infile)
 

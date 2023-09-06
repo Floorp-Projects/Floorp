@@ -47,7 +47,6 @@ try:
             ret["Dependencies"] = "\n" + dist.get_metadata("requires.txt")
         return ret
 
-
 except ImportError:
     # package resources not avaialable
     def get_metadata_from_egg(module):

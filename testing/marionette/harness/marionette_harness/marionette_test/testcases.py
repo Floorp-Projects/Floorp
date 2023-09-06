@@ -82,7 +82,6 @@ class MetaParameterized(type):
 
 @six.add_metaclass(MetaParameterized)
 class CommonTestCase(unittest.TestCase):
-
     match_re = None
     failureException = AssertionError
     pydebugger = None
@@ -337,7 +336,6 @@ class CommonTestCase(unittest.TestCase):
 
 
 class MarionetteTestCase(CommonTestCase):
-
     match_re = re.compile(r"test_(.*)\.py$")
 
     def __init__(

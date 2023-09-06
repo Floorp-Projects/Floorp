@@ -41,7 +41,7 @@ def test_host_platform():
     if sys.platform.startswith("darwin"):
         assert plat == "darwin"
     else:
-        if sys.maxsize > 2 ** 32:
+        if sys.maxsize > 2**32:
             assert "64" in plat
         else:
             assert "64" not in plat
@@ -166,7 +166,6 @@ class ImportMe:
 
 
 def test_load_class():
-
     with pytest.raises(ImportError):
         load_class("notimportable")
 

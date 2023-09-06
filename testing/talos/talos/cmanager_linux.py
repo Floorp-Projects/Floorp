@@ -82,7 +82,6 @@ def GetPrivateBytes(pids):
     for pid in pids:
         mapfile = "/proc/%s/maps" % pid
         with open(mapfile) as maps:
-
             private = 0
 
             for line in maps:
@@ -113,7 +112,6 @@ def GetResidentSize(pids):
         file = "/proc/%s/status" % pid
 
         with open(file) as status:
-
             for line in status:
                 if line.find("VmRSS") >= 0:
                     RSS += int(line.split()[1]) * 1024

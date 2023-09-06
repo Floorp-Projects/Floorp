@@ -660,7 +660,7 @@ class TestTypeConversions(BaseStructuredTest):
                     b"\xf0\x90\x8d\x84\xf0\x90\x8c\xb4\xf0\x90"
                     b"\x8d\x83\xf0\x90\x8d\x84".decode(),
                     42,
-                    u"\u16a4",
+                    "\u16a4",
                 )
             )
         else:
@@ -669,13 +669,13 @@ class TestTypeConversions(BaseStructuredTest):
                     "\xf0\x90\x8d\x84\xf0\x90\x8c\xb4\xf0\x90"
                     "\x8d\x83\xf0\x90\x8d\x84",
                     42,
-                    u"\u16a4",
+                    "\u16a4",
                 )
             )
         self.assert_log_equals(
             {
                 "action": "test_start",
-                "test": (u"\U00010344\U00010334\U00010343\U00010344", u"42", u"\u16a4"),
+                "test": ("\U00010344\U00010334\U00010343\U00010344", "42", "\u16a4"),
             }
         )
         self.logger.suite_end()
@@ -899,7 +899,7 @@ class TestCommandline(unittest.TestCase):
     def test_setup_logging_optparse_unicode(self):
         parser = optparse.OptionParser()
         commandline.add_logging_group(parser)
-        args, _ = parser.parse_args([u"--log-raw=-"])
+        args, _ = parser.parse_args(["--log-raw=-"])
         logger = commandline.setup_logging("test_optparse_unicode", args, {})
         self.assertEqual(len(logger.handlers), 1)
         self.assertEqual(logger.handlers[0].stream, sys.stdout)

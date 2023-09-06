@@ -9,7 +9,6 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG["CPU_ARCH"] == "ppc64" and CONFIG["OS_TARGET"] == "Linux":
-
     DEFINES["TOOLCHAIN_MISS_ASM_HWCAP_H"] = True
 
 SOURCES += [

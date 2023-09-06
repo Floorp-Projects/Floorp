@@ -62,7 +62,6 @@ class MockMozCrash(object):
 
 
 class BaseCrashTestCase(MarionetteTestCase):
-
     # Reduce the timeout for faster processing of the tests
     socket_timeout = 10
 

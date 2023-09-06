@@ -16,12 +16,12 @@ class TestTree(unittest.TestCase):
     def test_unicode_paths(self):
         """Test creating tree structure from a Unicode path."""
         try:
-            tmpdir = tempfile.mkdtemp(suffix=u"tmp🍪")
-            os.mkdir(os.path.join(tmpdir, u"dir🍪"))
-            with open(os.path.join(tmpdir, u"file🍪"), "w") as f:
+            tmpdir = tempfile.mkdtemp(suffix="tmp🍪")
+            os.mkdir(os.path.join(tmpdir, "dir🍪"))
+            with open(os.path.join(tmpdir, "file🍪"), "w") as f:
                 f.write("foo")
 
-            self.assertEqual(u"{}\n├file🍪\n└dir🍪".format(tmpdir), tree(tmpdir))
+            self.assertEqual("{}\n├file🍪\n└dir🍪".format(tmpdir), tree(tmpdir))
         finally:
             shutil.rmtree(tmpdir)
 

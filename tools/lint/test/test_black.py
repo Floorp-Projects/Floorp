@@ -11,7 +11,6 @@ fixed = 0
 
 
 def test_lint_fix(lint, create_temp_file):
-
     contents = """def is_unique(
                s
                ):

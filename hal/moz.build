@@ -46,7 +46,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
         "android/AndroidHal.cpp",
     ]
 elif CONFIG["OS_TARGET"] == "Linux":
-
     UNIFIED_SOURCES += [
         "fallback/FallbackScreenConfiguration.cpp",
         "fallback/FallbackSensor.cpp",

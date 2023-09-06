@@ -27,7 +27,6 @@ def setup_env(options):
 @pytest.mark.parametrize("no_filter", [True, False])
 @mock.patch("mozperftest.metrics.notebookupload.PerftestNotebook")
 def test_notebookupload_with_filter(notebook, no_filter):
-
     options = {
         "notebook-metrics": [],
         "notebook-prefix": "",

@@ -282,7 +282,6 @@ def _parse_checkstyle_output(config, topsrcdir=None, report_path=None):
     root = tree.getroot()
 
     for file in root.findall("file"):
-
         for error in file.findall("error"):
             # Like <error column="42" line="22" message="Name 'mPorts' must match pattern 'xm[A-Z][A-Za-z]*$'." severity="error" source="com.puppycrawl.tools.checkstyle.checks.naming.MemberNameCheck" />.  # NOQA: E501
             err = {

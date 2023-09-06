@@ -60,7 +60,6 @@ def scan_directory(path):
         sys.exit(1)
 
     for file in path.rglob("*"):
-
         if not file.is_file():
             continue
 

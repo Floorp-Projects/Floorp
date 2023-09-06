@@ -90,7 +90,7 @@ def WebIDLTest(parser, harness):
         )
 
         sigpairs = zip(method.signatures(), signatures)
-        for (gotSignature, expectedSignature) in sigpairs:
+        for gotSignature, expectedSignature in sigpairs:
             (gotRetType, gotArgs) = gotSignature
             (expectedRetType, expectedArgs) = expectedSignature
 

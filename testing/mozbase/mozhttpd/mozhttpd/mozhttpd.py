@@ -67,7 +67,6 @@ class Request(object):
 
 
 class RequestHandler(SimpleHTTPRequestHandler):
-
     docroot = os.getcwd()  # current working directory at time of import
     proxy_host_dirs = False
     request_log = []
@@ -94,7 +93,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     self.request, *m.groups()
                 )
                 self.send_response(response_code)
-                for (keyword, value) in iteritems(headerdict):
+                for keyword, value in iteritems(headerdict):
                     self.send_header(keyword, value)
                 self.end_headers()
                 self.wfile.write(ensure_binary(data))

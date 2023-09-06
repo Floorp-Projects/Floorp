@@ -94,7 +94,7 @@ def preprocess_locale_files(config_dir, l10ndirs):
     fp = open_utf16le_file(join(config_dir, "baseLocale.nsh"))
     fp.write(
         (
-            u""";NSIS Modern User Interface - Language File
+            """;NSIS Modern User Interface - Language File
 ;Compatible with Modern UI 1.68
 ;Language: baseLocale (0)
 !insertmacro MOZ_MUI_LANGUAGEFILE_BEGIN \"baseLocale\"
@@ -106,7 +106,7 @@ def preprocess_locale_files(config_dir, l10ndirs):
         lookup("mui.properties", l10ndirs), "!define ", " ", True
     )
     fp.write(locale_strings.encode("utf-16-le"))
-    fp.write(u"!insertmacro MOZ_MUI_LANGUAGEFILE_END\n".encode("utf-16-le"))
+    fp.write("!insertmacro MOZ_MUI_LANGUAGEFILE_END\n".encode("utf-16-le"))
     fp.close()
 
     # Create the custom language file for our custom strings
@@ -149,7 +149,7 @@ def create_nlf_file(moz_dir, ab_cd, config_dir):
     fp = open_utf16le_file(join(config_dir, "baseLocale.nlf"))
     fp.write(
         (
-            u"""# Header, don't edit
+            """# Header, don't edit
 NLF v6
 # Start editing here
 # Language ID

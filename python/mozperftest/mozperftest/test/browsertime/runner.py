@@ -148,7 +148,6 @@ class BrowsertimeRunner(NodeRunner):
             "browsertime",
             "package.json",
         ).open() as package:
-
             return json.load(package)
 
     def _get_browsertime_resolved(self):
@@ -362,7 +361,6 @@ class BrowsertimeRunner(NodeRunner):
 
         cycles = self.get_arg("cycles", 1)
         for cycle in range(1, cycles + 1):
-
             # Build an output directory
             output = self.get_arg("output")
             if output is None:

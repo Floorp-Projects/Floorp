@@ -78,7 +78,7 @@ def get_type(data):
 
 
 async def exp_backoff(retry_num):
-    await asyncio.sleep(2 ** retry_num)
+    await asyncio.sleep(2**retry_num)
 
 
 async def server_has_file(client, server, filename):

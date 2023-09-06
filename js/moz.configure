@@ -173,6 +173,7 @@ def enable_decorators(value):
 set_config("ENABLE_DECORATORS", enable_decorators)
 set_define("ENABLE_DECORATORS", enable_decorators)
 
+
 # JIT support
 # =======================================================
 @depends(target, "--enable-record-tuple")
@@ -506,6 +507,7 @@ set_config("JS_MASM_VERBOSE", depends_if("--enable-masm-verbose")(lambda _: True
 # Architecture feature flags
 # =======================================================
 
+
 # Apple silicon does not seem to have any way to query the OS for the JSCVT
 # flag stored in the ID_AA64ISAR1_EL1 system register. In the mean time, we
 # hard code the value of the JSCVT flag which guards the implementation of
@@ -520,6 +522,7 @@ option(
     default=is_apple_silicon,
     help="{Enable|Disable} static use of FJCVTZS instruction on Aarch64 targets.",
 )
+
 
 # The "ARM Architecture Reference Manual" for ARMv8 defines the JSCVT flag as
 # being a 4 bit integer (D12.2.52) and it can be manipulated using >= operator
@@ -548,6 +551,7 @@ def has_pthread_jit_write_protect_np(target):
 # On Apple Silicon we use MAP_JIT with pthread_jit_write_protect_np to implement
 # JIT code write protection.
 set_define("JS_USE_APPLE_FAST_WX", True, when=has_pthread_jit_write_protect_np)
+
 
 # CTypes
 # =======================================================

@@ -357,7 +357,6 @@ def run(
     result = None
 
     try:
-
         lint.read(linters_info["lint_paths"])
 
         if check_exclude_list:

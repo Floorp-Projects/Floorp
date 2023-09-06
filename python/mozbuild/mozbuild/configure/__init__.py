@@ -944,7 +944,6 @@ class ConfigureSandbox(dict):
             @imports(_from='mozpack', _import='path', _as='mozpath')
         """
         for value, required in ((_import, True), (_from, False), (_as, False)):
-
             if not isinstance(value, six.string_types) and (
                 required or value is not None
             ):

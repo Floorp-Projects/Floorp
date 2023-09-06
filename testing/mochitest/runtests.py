@@ -442,7 +442,6 @@ if mozinfo.isWin:
         finally:
             ctypes.windll.kernel32.CloseHandle(pHandle)
 
-
 else:
     import errno
 
@@ -473,7 +472,6 @@ else:
 
 
 class MochitestServer(object):
-
     "Web server used to serve Mochitests, for closer fidelity to the real web."
 
     instance_count = 0
@@ -635,7 +633,6 @@ class MochitestServer(object):
 
 
 class WebSocketServer(object):
-
     "Class which encapsulates the mod_pywebsocket server"
 
     def __init__(self, options, scriptdir, logger, debuggerInfo=None):
@@ -1307,7 +1304,7 @@ class MochitestDesktop(object):
             paths.append(test)
 
         # Generate test by schemes
-        for (scheme, grouped_tests) in self.groupTestsByScheme(paths).items():
+        for scheme, grouped_tests in self.groupTestsByScheme(paths).items():
             # Bug 883865 - add this functionality into manifestparser
             with open(
                 os.path.join(SCRIPT_DIR, options.testRunManifestFile), "w"
@@ -3292,13 +3289,13 @@ toolbar#nav-bar {
             ]
 
         stepResults = {}
-        for (descr, step) in steps:
+        for descr, step in steps:
             stepResults[descr] = "not run / incomplete"
 
         startTime = datetime.now()
         maxTime = timedelta(seconds=options.verify_max_time)
         finalResult = "PASSED"
-        for (descr, step) in steps:
+        for descr, step in steps:
             if (datetime.now() - startTime) > maxTime:
                 self.log.info("::: Test verification is taking too long: Giving up!")
                 self.log.info(
@@ -3683,7 +3680,7 @@ toolbar#nav-bar {
 
             # testsToFilter parameter is used to filter out the test list that
             # is sent to getTestsByScheme
-            for (scheme, tests) in self.getTestsByScheme(
+            for scheme, tests in self.getTestsByScheme(
                 options, testsToFilter, True, manifestToFilter
             ):
                 # read the number of tests here, if we are not going to run any,

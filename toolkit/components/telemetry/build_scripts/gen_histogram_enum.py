@@ -66,7 +66,7 @@ def main(output, *filenames):
     # contiguous block.
     print("enum HistogramID : uint32_t {", file=output)
     seen_group_types = {"UseCounter": False, "UseCounterWorker": False}
-    for (group_type, histograms) in groups:
+    for group_type, histograms in groups:
         if group_type is not None:
             assert isinstance(group_type, str)
             assert group_type in seen_group_types.keys()
@@ -95,7 +95,7 @@ def main(output, *filenames):
 
     print("  HistogramCount,", file=output)
 
-    for (key, value) in sorted(seen_group_types.items()):
+    for key, value in sorted(seen_group_types.items()):
         if value:
             print(
                 "  Histogram{0}Count = HistogramLast{0} - HistogramFirst{0} + 1,".format(

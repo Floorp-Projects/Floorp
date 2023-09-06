@@ -10,7 +10,6 @@ from marionette_harness import MarionetteTestCase
 
 
 class TestSafeBrowsingInitialDownload(MarionetteTestCase):
-
     v2_file_extensions = [
         "vlpset",
         "sbstore",

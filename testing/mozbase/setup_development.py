@@ -145,7 +145,6 @@ def unroll_dependencies(dependencies):
         packages.update(deps)
 
     while len(order) != len(packages):
-
         for package in packages.difference(order):
             if set(dependencies.get(package, set())).issubset(order):
                 order.append(package)
@@ -159,7 +158,6 @@ def unroll_dependencies(dependencies):
 
 
 def main(args=sys.argv[1:]):
-
     # parse command line options
     usage = "%prog [options] [package] [package] [...]"
     parser = OptionParser(usage=usage, description=__doc__)

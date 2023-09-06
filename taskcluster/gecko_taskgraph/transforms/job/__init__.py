@@ -286,7 +286,7 @@ def use_fetches(config, jobs):
         for task in config.kind_dependencies_tasks.values()
         if task.kind in ("fetch", "toolchain")
     )
-    for (kind, task) in tasks:
+    for kind, task in tasks:
         get_attribute(
             artifact_names, task["label"], task["attributes"], f"{kind}-artifact"
         )

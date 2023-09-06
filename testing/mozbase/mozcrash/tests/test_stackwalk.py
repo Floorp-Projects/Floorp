@@ -28,7 +28,7 @@ def test_stackwalk_envvar(check_for_crashes, minidump_files, stackwalk):
 
 def test_stackwalk_unicode(check_for_crashes, minidump_files, tmpdir, capsys):
     """Test that check_for_crashes can handle unicode in dump_directory."""
-    stackwalk = tmpdir.mkdir(u"🍪").join("stackwalk")
+    stackwalk = tmpdir.mkdir("🍪").join("stackwalk")
     stackwalk.write("fake binary")
     stackwalk.chmod(0o744)
 

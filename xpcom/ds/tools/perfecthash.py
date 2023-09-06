@@ -291,8 +291,9 @@ class CGHelper(object):
         if return_type is None:
             return_type = "const %s&" % self.entry_type
 
-        return textwrap.dedent(
-            """
+        return (
+            textwrap.dedent(
+                """
             %(return_type)s
             %(name)s(%(key_type)s aKey)
             {
@@ -305,16 +306,18 @@ class CGHelper(object):
               %(return_entry)s
             }
             """
-        ) % {
-            "name": name,
-            "basis_table": self._indent(self.basis_table()),
-            "entries_name": self.entries_name,
-            "return_type": return_type,
-            "return_entry": self._indent(return_entry),
-            "key_type": key_type,
-            "key_bytes": key_bytes,
-            "key_length": key_length,
-        }
+            )
+            % {
+                "name": name,
+                "basis_table": self._indent(self.basis_table()),
+                "entries_name": self.entries_name,
+                "return_type": return_type,
+                "return_entry": self._indent(return_entry),
+                "key_type": key_type,
+                "key_bytes": key_bytes,
+                "key_length": key_length,
+            }
+        )
 
     def gen_jslinearstr_getter(
         self, name, return_type=None, return_entry="return entry;"
@@ -337,8 +340,9 @@ class CGHelper(object):
         if return_type is None:
             return_type = "const %s&" % self.entry_type
 
-        return textwrap.dedent(
-            """
+        return (
+            textwrap.dedent(
+                """
             %(return_type)s
             %(name)s(JSLinearString* aKey)
             {
@@ -362,10 +366,12 @@ class CGHelper(object):
               }
             }
             """
-        ) % {
-            "name": name,
-            "basis_table": self._indent(self.basis_table()),
-            "entries_name": self.entries_name,
-            "return_type": return_type,
-            "return_entry": self._indent(return_entry, 2),
-        }
+            )
+            % {
+                "name": name,
+                "basis_table": self._indent(self.basis_table()),
+                "entries_name": self.entries_name,
+                "return_type": return_type,
+                "return_entry": self._indent(return_entry, 2),
+            }
+        )

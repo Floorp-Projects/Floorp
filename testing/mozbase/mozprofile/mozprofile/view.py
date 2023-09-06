@@ -17,7 +17,6 @@ __all__ = ["view_profile"]
 
 
 def view_profile(args=sys.argv[1:]):
-
     usage = "%prog [options] profile_path <...>"
     parser = optparse.OptionParser(usage=usage, description=__doc__)
     options, args = parser.parse_args(args)

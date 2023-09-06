@@ -216,7 +216,7 @@ def get_transformers(dirpath=None):
     for file in tfm_files:
         members = get_transformer(file.resolve().as_posix(), True)
 
-        for (name, tfm_class) in members:
+        for name, tfm_class in members:
             if name in ret:
                 raise NotebookDuplicateTransformsError(
                     f"Duplicated transformer {name} "

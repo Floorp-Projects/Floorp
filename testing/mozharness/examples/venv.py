@@ -17,6 +17,7 @@ from mozharness.base.errors import PythonErrorList
 from mozharness.base.python import virtualenv_config_options, VirtualenvMixin
 from mozharness.base.script import BaseScript
 
+
 # VirtualenvExample {{{1
 class VirtualenvExample(VirtualenvMixin, BaseScript):
     config_options = [

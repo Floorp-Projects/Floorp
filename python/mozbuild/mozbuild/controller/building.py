@@ -919,8 +919,8 @@ class CCacheStats(object):
     ABSOLUTE_KEYS = {"cache_files", "cache_size", "cache_max_size"}
     FORMAT_KEYS = {"cache_size", "cache_max_size"}
 
-    GiB = 1024 ** 3
-    MiB = 1024 ** 2
+    GiB = 1024**3
+    MiB = 1024**2
     KiB = 1024
 
     def __init__(self, output=None, has_machine_format=False):

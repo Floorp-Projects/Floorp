@@ -225,7 +225,7 @@ class FasterMakeBackend(MakeBackend, PartialBackend):
             mk.create_rule([target]).add_dependencies(
                 "%s" % d[0] for d in sorted(deps, key=itemgetter(0))
             )
-            for (merge, ref_file, l10n_file) in deps:
+            for merge, ref_file, l10n_file in deps:
                 rule = mk.create_rule([merge]).add_dependencies(
                     [ref_file, l10n_file] + python_deps
                 )

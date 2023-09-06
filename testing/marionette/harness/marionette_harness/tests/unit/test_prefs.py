@@ -174,7 +174,6 @@ class TestPreferences(MarionetteTestCase):
                 pref_not_existent: "existent",
             }
         ):
-
             self.assertTrue(self.marionette.get_pref(self.prefs["bool"]), True)
             self.assertEqual(self.marionette.get_pref(self.prefs["int"]), 24)
             self.assertEqual(self.marionette.get_pref(self.prefs["string"]), "def")

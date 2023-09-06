@@ -291,7 +291,6 @@ class AndroidMixin(object):
         dir = self.query_abs_dirs()["abs_blob_upload_dir"]
         perf_path = os.path.join(dir, "android-performance.log")
         with open(perf_path, "w") as f:
-
             f.write("\n\nHost cpufreq/scaling_governor:\n")
             cpus = glob.glob("/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
             for cpu in cpus:
@@ -473,7 +472,7 @@ class AndroidMixin(object):
             return self.device.shell_output(
                 cmd, timeout=30, enable_run_as=enable_run_as
             )
-        except (mozdevice.ADBTimeoutError) as e:
+        except mozdevice.ADBTimeoutError as e:
             self.info(
                 "Failed to run shell command %s from %s: %s %s"
                 % (cmd, self.device_name, type(e).__name__, e)

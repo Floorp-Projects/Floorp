@@ -40,7 +40,6 @@ class BaseCompileChecks(unittest.TestCase):
         return mock_compiler
 
     def do_compile_test(self, command, expected_test_content=None, expected_flags=None):
-
         paths = {
             os.path.abspath("/usr/bin/mockcc"): self.get_mock_compiler(
                 expected_test_content=expected_test_content,
@@ -350,7 +349,6 @@ class TestHeaderChecks(BaseCompileChecks):
         )
 
     def test_check_headers_not_found(self):
-
         cmd = textwrap.dedent(
             """\
             baz_bar, quux_bar = check_headers('baz/foo-bar.h', 'baz-quux/foo-bar.h',

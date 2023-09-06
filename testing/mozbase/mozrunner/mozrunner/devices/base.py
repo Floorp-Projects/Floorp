@@ -242,12 +242,12 @@ class ProfileConfigParser(RawConfigParser):
     def write(self, fp):
         if self._defaults:
             fp.write("[%s]\n" % ConfigParser.DEFAULTSECT)
-            for (key, value) in self._defaults.items():
+            for key, value in self._defaults.items():
                 fp.write("%s=%s\n" % (key, str(value).replace("\n", "\n\t")))
             fp.write("\n")
         for section in self._sections:
             fp.write("[%s]\n" % section)
-            for (key, value) in self._sections[section].items():
+            for key, value in self._sections[section].items():
                 if key == "__name__":
                     continue
                 if (value is not None) or (self._optcre == self.OPTCRE):

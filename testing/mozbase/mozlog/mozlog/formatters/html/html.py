@@ -340,4 +340,4 @@ class HTMLFormatter(base.BaseFormatter):
                 ),
             )
 
-        return u"<!DOCTYPE html>\n" + doc.unicode(indent=2)
+        return "<!DOCTYPE html>\n" + doc.unicode(indent=2)

@@ -136,7 +136,6 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
 
 
 def run(cmd_args, config):
-
     shell = False
     if (
         os.environ.get("MSYSTEM") in ("MINGW32", "MINGW64")

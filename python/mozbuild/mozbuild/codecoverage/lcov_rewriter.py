@@ -42,7 +42,6 @@ class LcovRecord(object):
         self.lines = {}
 
     def __iadd__(self, other):
-
         # These shouldn't differ.
         self.source_file = other.source_file
         if hasattr(other, "test_name"):

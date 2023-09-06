@@ -26,7 +26,6 @@ FLAVORS = "desktop-browser", "mobile-browser", "doc", "xpcshell", "webpagetest"
 
 
 class Options:
-
     general_args = {
         "--flavor": {
             "choices": FLAVORS,

@@ -35,7 +35,6 @@ if sys.version_info >= (3, 0):
             return x.__unicode__()
         return str(x)
 
-
 else:
 
     def u(s):
@@ -255,7 +254,6 @@ class SimpleUnicodeVisitor(object):
 
 
 class HtmlVisitor(SimpleUnicodeVisitor):
-
     single = dict(
         [
             (x, 1)

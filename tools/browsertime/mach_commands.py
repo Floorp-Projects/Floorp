@@ -155,7 +155,7 @@ def visualmetrics_path():
 
 
 def host_platform():
-    is_64bits = sys.maxsize > 2 ** 32
+    is_64bits = sys.maxsize > 2**32
 
     if sys.platform.startswith("win"):
         if is_64bits:

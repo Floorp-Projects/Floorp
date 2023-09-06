@@ -327,7 +327,7 @@ class AndroidHardwareTest(
             ("xpcshell", {"xpcshell": "xpcshell"}),
         ]
         suites = []
-        for (category, all_suites) in all:
+        for category, all_suites in all:
             cat_suites = self.query_per_test_category_suites(category, all_suites)
             for k in cat_suites.keys():
                 suites.append((k, cat_suites[k]))
@@ -401,7 +401,7 @@ class AndroidHardwareTest(
         per_test_args = []
         suites = self._query_suites()
         minidump = self.query_minidump_stackwalk()
-        for (per_test_suite, suite) in suites:
+        for per_test_suite, suite in suites:
             self.test_suite = suite
 
             try:

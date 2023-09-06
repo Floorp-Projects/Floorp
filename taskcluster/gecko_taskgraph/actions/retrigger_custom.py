@@ -164,7 +164,7 @@ def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task
         custom_mach_command += ["--repeat", str(input.get("repeat", 30))]
 
     # add any custom gecko preferences
-    for (key, val) in input.get("preferences", {}).items():
+    for key, val in input.get("preferences", {}).items():
         custom_mach_command += ["--setpref", f"{key}={val}"]
 
     custom_mach_command += [input["path"]]

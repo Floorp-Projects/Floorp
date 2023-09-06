@@ -511,7 +511,7 @@ def process_test262(test262Dir, test262OutDir, strictTests, externManifests):
     explicitIncludes[os.path.join("built-ins", "Temporal")] = ["temporalHelpers.js"]
 
     # Process all test directories recursively.
-    for (dirPath, dirNames, fileNames) in os.walk(testDir):
+    for dirPath, dirNames, fileNames in os.walk(testDir):
         relPath = os.path.relpath(dirPath, testDir)
         if relPath == ".":
             continue
@@ -554,7 +554,7 @@ def process_test262(test262Dir, test262OutDir, strictTests, externManifests):
                     test262parser, testSource, testName, includeSet, strictTests
                 )
 
-            for (newFileName, newSource, externRefTest) in convert:
+            for newFileName, newSource, externRefTest in convert:
                 writeTestFile(test262OutDir, newFileName, newSource)
 
                 if externRefTest is not None:

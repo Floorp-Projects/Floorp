@@ -181,7 +181,6 @@ def generate_upstream_artifacts(
     partner_path,
     repack_stub_installer=False,
 ):
-
     upstream_artifacts = []
     artifact_prefix = get_artifact_prefix(job)
 

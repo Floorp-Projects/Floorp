@@ -50,7 +50,6 @@ class TryConfig:
 
 
 class Artifact(TryConfig):
-
     arguments = [
         [
             ["--artifact"],
@@ -173,7 +172,6 @@ class Pernosco(TryConfig):
 
 
 class Path(TryConfig):
-
     arguments = [
         [
             ["paths"],
@@ -208,7 +206,6 @@ class Path(TryConfig):
 
 
 class Environment(TryConfig):
-
     arguments = [
         [
             ["--env"],
@@ -246,7 +243,6 @@ class RangeAction(Action):
 
 
 class Rebuild(TryConfig):
-
     arguments = [
         [
             ["--rebuild"],
@@ -300,7 +296,6 @@ class Routes(TryConfig):
 
 
 class ChemspillPrio(TryConfig):
-
     arguments = [
         [
             ["--chemspill-prio"],
@@ -423,7 +418,6 @@ class Browsertime(TryConfig):
 
 
 class DisablePgo(TryConfig):
-
     arguments = [
         [
             ["--disable-pgo"],
@@ -442,7 +436,6 @@ class DisablePgo(TryConfig):
 
 
 class WorkerOverrides(TryConfig):
-
     arguments = [
         [
             ["--worker-override"],

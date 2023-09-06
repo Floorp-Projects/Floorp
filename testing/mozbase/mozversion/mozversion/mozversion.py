@@ -126,7 +126,7 @@ def get_version(binary=None):
     else:
         version = LocalVersion(binary)
 
-    for (key, value) in sorted(version._info.items()):
+    for key, value in sorted(version._info.items()):
         if value:
             version._logger.info("%s: %s" % (key, value))
 

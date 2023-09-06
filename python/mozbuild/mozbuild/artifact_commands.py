@@ -513,7 +513,6 @@ def artifact_toolchain(
                 requests.exceptions.ChunkedEncodingError,
                 requests.exceptions.ConnectionError,
             ) as e:
-
                 if isinstance(e, requests.exceptions.HTTPError):
                     # The relengapi proxy likes to return error 400 bad request
                     # which seems improbably to be due to our (simple) GET

@@ -98,7 +98,6 @@ class DeprecatedJarManifest(Exception):
 
 
 class JarManifestParser(object):
-
     ignore = re.compile("\s*(\#.*)?$")
     jarline = re.compile(
         """
@@ -210,7 +209,6 @@ class JarMaker(object):
     def __init__(
         self, outputFormat="flat", useJarfileManifest=True, useChromeManifest=False
     ):
-
         self.outputFormat = outputFormat
         self.useJarfileManifest = useJarfileManifest
         self.useChromeManifest = useChromeManifest

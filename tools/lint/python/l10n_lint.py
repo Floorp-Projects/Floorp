@@ -19,6 +19,7 @@ STRINGS_REPO = "https://hg.mozilla.org/l10n/gecko-strings"
 
 PULL_AFTER = timedelta(days=2)
 
+
 # Wrapper to call lint_strings with mozilla-central configuration
 # comm-central defines its own wrapper since comm-central strings are
 # in separate repositories

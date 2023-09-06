@@ -62,7 +62,7 @@ def generate(output, dataFile):
         "const int32_t nsCSSProps::"
         "kIDLNameSortPositionTable[eCSSProperty_COUNT] = {\n"
     )
-    for (p, position) in ps:
+    for p, position in ps:
         output.write("  {},\n".format(position))
     output.write("};\n\n")
 

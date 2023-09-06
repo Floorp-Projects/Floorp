@@ -234,7 +234,7 @@ enum IPCMessages {
 )
 
 for protocol in sorted(allmessages.keys()):
-    for (msg, num) in allmessages[protocol].idnums:
+    for msg, num in allmessages[protocol].idnums:
         if num:
             print("  %s = %s," % (msg, num), file=ipc_msgtype_name)
         elif not msg.endswith("End"):
@@ -256,7 +256,7 @@ const char* StringFromIPCMessageType(uint32_t aMessageType)
 )
 
 for protocol in sorted(allmessages.keys()):
-    for (msg, num) in allmessages[protocol].idnums:
+    for msg, num in allmessages[protocol].idnums:
         if num or msg.endswith("End"):
             continue
         print(

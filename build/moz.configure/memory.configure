@@ -58,6 +58,7 @@ set_config("MOZ_REPLACE_MALLOC_STATIC", replace_malloc_static)
 # PHC (Probabilistic Heap Checker)
 # ==============================================================
 
+
 # In general, it only makes sense for PHC to run on the platforms that have a
 # crash reporter.
 @depends(

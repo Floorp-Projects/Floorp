@@ -610,7 +610,6 @@ def etlparser_from_config(config_file, **kwargs):
 
 
 def main(args=sys.argv[1:]):
-
     # parse command line arguments
     parser = xtalos.XtalosOptions()
     args = parser.parse_args(args)

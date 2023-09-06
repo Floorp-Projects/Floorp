@@ -36,7 +36,6 @@ def generateTalosConfig(command_line, browser_config, test_config, pid=None):
         and ("xperf_user_providers" in test_config)
         and ("xperf_stackwalk" in test_config)
     ):  # noqa
-
         print("extending with xperf!")
         browser_config["xperf_providers"] = test_config["xperf_providers"]
         browser_config["xperf_user_providers"] = test_config["xperf_user_providers"]

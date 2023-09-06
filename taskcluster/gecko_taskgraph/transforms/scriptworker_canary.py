@@ -29,7 +29,6 @@ def build_command(config, jobs):
         return
 
     for job in jobs:
-
         command = ["release", "push-scriptworker-canary"]
         for scriptworker in scriptworkers:
             command.extend(["--scriptworker", scriptworker])

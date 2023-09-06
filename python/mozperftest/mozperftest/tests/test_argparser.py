@@ -60,7 +60,6 @@ def test_test_date_today():
 
 
 def test_perfherder_metrics():
-
     parser = PerftestArgumentParser()
     args = [
         "test_one.js",

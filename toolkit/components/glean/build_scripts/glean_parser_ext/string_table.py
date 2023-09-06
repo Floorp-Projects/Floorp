@@ -79,7 +79,7 @@ class StringTable:
         f.write("#else\n")
         f.write("constexpr char %s[] = {\n" % name)
         f.write("#endif\n")
-        for (string, offset) in sorted(entries, key=lambda x: x[1]):
+        for string, offset in sorted(entries, key=lambda x: x[1]):
             if "*/" in string:
                 raise ValueError(
                     "String in string table contains unexpected sequence '*/': %s"

@@ -483,13 +483,13 @@ class TestHelperFunctions(unittest.TestCase):
         self.s = script.BaseScript(initial_config_file="test/test.json")
         # create a very long path that the command-prompt cannot delete
         # by using unicode format (max path length 32000)
-        path = u"\\\\?\\%s\\test_dir" % os.getcwd()
-        win32file.CreateDirectoryExW(u".", path)
+        path = "\\\\?\\%s\\test_dir" % os.getcwd()
+        win32file.CreateDirectoryExW(".", path)
 
         for x in range(0, 20):
             print("path=%s" % path)
-            path = path + u"\\%sxxxxxxxxxxxxxxxxxxxx" % x
-            win32file.CreateDirectoryExW(u".", path)
+            path = path + "\\%sxxxxxxxxxxxxxxxxxxxx" % x
+            win32file.CreateDirectoryExW(".", path)
         self.s.rmtree("test_dir")
         self.assertFalse(os.path.exists("test_dir"), msg="rmtree unsuccessful")
 

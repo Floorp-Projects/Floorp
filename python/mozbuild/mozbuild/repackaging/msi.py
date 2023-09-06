@@ -20,7 +20,6 @@ _MSI_ARCH = {
 
 
 def update_wsx(wfile, pvalues):
-
     parsed = minidom.parse(wfile)
 
     # construct a dictinary for the pre-processing options

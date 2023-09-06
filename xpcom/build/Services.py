@@ -83,7 +83,7 @@ def services_h(output):
 """
     )
 
-    for (name, iface, contractid) in services:
+    for name, iface, contractid in services:
         # Write out a forward declaration for the type in question
         segs = iface.split("::")
         for namespace in segs[:-1]:
@@ -126,7 +126,7 @@ def services_cpp(output):
     )
     output.write(CPP_INCLUDES)
 
-    for (name, iface, contractid) in services:
+    for name, iface, contractid in services:
         output.write(
             """
 static %(type)s* g%(name)s = nullptr;
@@ -165,6 +165,6 @@ mozilla::services::Shutdown()
   gXPCOMShuttingDown = true;
 """
     )
-    for (name, iface, contractid) in services:
+    for name, iface, contractid in services:
         output.write("  NS_IF_RELEASE(g%s);\n" % name)
     output.write("}\n")

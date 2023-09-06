@@ -112,7 +112,6 @@ def test_cli_for_exclude_list(run, monkeypatch, capfd):
 
 
 def test_cli_run_with_wrong_linters(run, capfd):
-
     run(["-l", "external", "-l", "foobar"])
     out, err = capfd.readouterr()
 

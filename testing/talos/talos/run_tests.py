@@ -456,7 +456,6 @@ def make_comparison_result(base_and_reference_results):
     # each set of two results is actually a base test followed by the
     # reference test; we want to go through each set of base vs reference
     for x in range(0, len(base_and_reference_results.results[0].results), 2):
-
         # separate the 'base' and 'reference' result run values
         results = base_and_reference_results.results[0].results
         base_result_runs = results[x]["runs"]

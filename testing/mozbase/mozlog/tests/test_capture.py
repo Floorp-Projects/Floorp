@@ -30,7 +30,7 @@ class TestCaptureIO(unittest.TestCase):
         self.assertIn("STDOUT: message 1", messages)
         self.assertIn("STDOUT: message 2", messages)
         self.assertIn("STDERR: message 3", messages)
-        self.assertIn(u"STDOUT: \xff", messages)
+        self.assertIn("STDOUT: \xff", messages)
 
 
 if __name__ == "__main__":

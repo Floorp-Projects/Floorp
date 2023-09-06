@@ -50,7 +50,13 @@ def process_log(log_lines):
         if not log_line.startswith("<"):
             continue
 
-        (class_name, obj, ignore, operation, count,) = log_line.strip("\r\n").split(
+        (
+            class_name,
+            obj,
+            ignore,
+            operation,
+            count,
+        ) = log_line.strip("\r\n").split(
             " "
         )[:5]
 

@@ -139,7 +139,7 @@ class OpcodeInfo:
 
 
 def find_by_name(list, name):
-    for (n, body) in list:
+    for n, body in list:
         if n == name:
             return body
 

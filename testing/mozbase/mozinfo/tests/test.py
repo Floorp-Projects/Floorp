@@ -164,8 +164,8 @@ def test_compare_to_string():
     assert b > a
 
     # Make sure we can compare against unicode (for python 2).
-    assert a == u"1.2.5a"
-    assert u"1.2.5a" == a
+    assert a == "1.2.5a"
+    assert "1.2.5a" == a
 
 
 def test_to_string():

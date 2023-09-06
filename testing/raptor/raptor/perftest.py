@@ -505,7 +505,6 @@ class Perftest(object):
         # run is added with extra_profiler_run flag.
         if self.config["gecko_profile"] or self.config.get("extra_profiler_run"):
             if self.config["app"] == "firefox":
-
                 self.gecko_profiler.symbolicate()
                 # clean up the temp gecko profiling folders
                 LOG.info("cleaning up after gecko profiling")

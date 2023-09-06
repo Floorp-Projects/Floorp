@@ -248,7 +248,7 @@ class Configuration(DescriptorProvider):
                 for m in t.flatMemberTypes:
                     addUnions(m)
 
-        for (t, _) in getAllTypes(self.descriptors, self.dictionaries, self.callbacks):
+        for t, _ in getAllTypes(self.descriptors, self.dictionaries, self.callbacks):
             addUnions(t)
 
         for d in getDictionariesConvertedToJS(
@@ -440,7 +440,7 @@ class Configuration(DescriptorProvider):
                                 name,
                             )
                         )
-                    for (k, v) in firstExtAttrs.items():
+                    for k, v in firstExtAttrs.items():
                         if extAttrs[k] != v:
                             raise TypeError(
                                 "%s on %s and %s on %s have different values for extended attribute %s, but they're using the same template %s."

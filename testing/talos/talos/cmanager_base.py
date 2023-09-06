@@ -4,7 +4,6 @@
 
 
 class CounterManager(object):
-
     counterDict = {}
 
     def __init__(self):

@@ -231,7 +231,7 @@ def memory(**kwargs) -> DoctorCheck:
     """Check the host machine has the recommended memory to develop Firefox."""
     memory = psutil.virtual_memory().total
     # Convert to gigabytes.
-    memory_GB = memory / 1024 ** 3.0
+    memory_GB = memory / 1024**3.0
     if memory_GB < MEMORY_THRESHOLD:
         status = CheckStatus.WARNING
         desc = "%.1fGB of physical memory, <%.1fGB" % (memory_GB, MEMORY_THRESHOLD)
@@ -266,8 +266,8 @@ def storage_freespace(topsrcdir: str, topobjdir: str, **kwargs) -> List[DoctorCh
         try:
             usage = psutil.disk_usage(mount)
             freespace, size = usage.free, usage.total
-            freespace_GB = freespace / 1024 ** 3
-            size_GB = size / 1024 ** 3
+            freespace_GB = freespace / 1024**3
+            size_GB = size / 1024**3
             if freespace_GB < FREESPACE_THRESHOLD:
                 status = CheckStatus.WARNING
                 desc.append(

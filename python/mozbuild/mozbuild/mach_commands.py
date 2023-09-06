@@ -936,7 +936,6 @@ def gtest(
     debugger,
     debugger_args,
 ):
-
     # We lazy build gtest because it's slow to link
     try:
         command_context.config_environment

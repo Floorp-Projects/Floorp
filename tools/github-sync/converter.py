@@ -132,7 +132,7 @@ def get_real_base_hg_rev(hg_data, commit_map):
     # commit). The "tail" hg revisions are the ones for which we don't have their
     # ancestors in hg_data.
     tails = []
-    for (rev, cset) in hg_data.items():
+    for rev, cset in hg_data.items():
         for parent in cset.parents:
             if parent not in hg_data:
                 tails.append(rev)
@@ -245,7 +245,7 @@ def fake_commit(hg_rev, parent1, parent2):
 
 
 def build_tree(builder, treedata):
-    for (name, value) in treedata.items():
+    for name, value in treedata.items():
         if isinstance(value, dict):
             subbuilder = downstream_git_repo.TreeBuilder()
             build_tree(subbuilder, value)
@@ -269,7 +269,7 @@ def author_to_signature(author):
 def real_commit(hg_rev, parent1, parent2):
     filetree = dict()
     manifest = mozilla_hg_repo.manifest(rev=hg_rev)
-    for (nodeid, permission, executable, symlink, filename) in manifest:
+    for nodeid, permission, executable, symlink, filename in manifest:
         if not filename.startswith(relative_path.encode("utf-8")):
             continue
         if symlink:
@@ -460,12 +460,12 @@ if not hg_commits[hg_tip].touches_sync_code and len(hg_commits[hg_tip].parents) 
     hg_tip = new_tip
 
 eprint("--- Interesting changesets ---")
-for (rev, cset) in hg_commits.items():
+for rev, cset in hg_commits.items():
     if cset.touches_sync_code or len(cset.parents) > 1 or rev in hg_to_git_commit_map:
         eprint(pretty_print(rev, cset))
 if DEBUG:
     eprint("--- Other changesets (not really interesting) ---")
-    for (rev, cset) in hg_commits.items():
+    for rev, cset in hg_commits.items():
         if not (
             cset.touches_sync_code
             or len(cset.parents) > 1

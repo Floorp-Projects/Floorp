@@ -62,11 +62,11 @@ def test_search_counts(browser, helpers):
     ]
 
     assert search_counts1 == {
-        u"range": [1, 2],
-        u"bucket_count": 3,
-        u"histogram_type": 4,
-        u"values": {u"1": 0, u"0": 1},
-        u"sum": 1,
+        "range": [1, 2],
+        "bucket_count": 3,
+        "histogram_type": 4,
+        "values": {"1": 0, "0": 1},
+        "sum": 1,
     }
 
     # - Install addon
@@ -157,11 +157,11 @@ def test_search_counts(browser, helpers):
         "{}.urlbar".format(search_engine)
     ]
     assert search_counts3 == {
-        u"range": [1, 2],
-        u"bucket_count": 3,
-        u"histogram_type": 4,
-        u"values": {u"1": 0, u"0": 3},
-        u"sum": 3,
+        "range": [1, 2],
+        "bucket_count": 3,
+        "histogram_type": 4,
+        "values": {"1": 0, "0": 3},
+        "sum": 3,
     }
 
 

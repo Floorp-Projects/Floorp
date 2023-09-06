@@ -89,7 +89,7 @@ def WebIDLTest(parser, harness):
         interface PrepareForTest {
         """
     )
-    for (i, type) in enumerate(types):
+    for i, type in enumerate(types):
         interface += string.Template(
             """
           readonly attribute ${type} attr${i};
@@ -155,7 +155,7 @@ def WebIDLTest(parser, harness):
         interface TestUnion {
         """
     )
-    for (i, type) in enumerate(validUnionTypes):
+    for i, type in enumerate(validUnionTypes):
         interface += string.Template(
             """
           undefined method${i}(${type} arg);

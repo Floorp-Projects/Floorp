@@ -22,7 +22,6 @@ import gen_scalar_data  # noqa: E402
 
 
 class TestScalarDataJson(unittest.TestCase):
-
     maxDiff = None
 
     def test_JSON_definitions_generation(self):

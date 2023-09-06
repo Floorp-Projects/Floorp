@@ -44,7 +44,7 @@ def test_unchecked_exception(check_for_java_exception, test_log):
 
 def test_test_name_unicode(check_for_java_exception, test_log):
     """Test that check_for_crashes can handle unicode in dump_directory."""
-    assert 1 == check_for_java_exception(test_log, test_name=u"🍪", quiet=False)
+    assert 1 == check_for_java_exception(test_log, test_name="🍪", quiet=False)
 
 
 if __name__ == "__main__":

@@ -14,7 +14,6 @@ from gecko_taskgraph.decision import full_task_graph_to_runnable_jobs
 
 
 class TestRunnableJobs(unittest.TestCase):
-
     tasks = [
         {
             "kind": "build",

@@ -73,7 +73,7 @@ def init_device(options):
 
             context = MozbuildObject.from_environment()
             adb_path = get_adb_path(context)
-        except (ImportError):
+        except ImportError:
             adb_path = "adb"
 
         DEVICE = ADBDeviceFactory(

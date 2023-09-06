@@ -8,6 +8,7 @@ LOGIN_CSS = ".login-page-container"
 # The site can take a little time to load, and this includes
 # interstitial ads, so for now we give it 10 seconds.
 
+
 # Skip Android as the site blocks many Android devices including the emulator
 @pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio

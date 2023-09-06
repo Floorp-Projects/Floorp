@@ -224,7 +224,7 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
                 return TelemetryController.getCurrentPingData(true);
                 """
             )
-            return ping_data[u"payload"][u"info"][u"subsessionId"]
+            return ping_data["payload"]["info"]["subsessionId"]
 
     def tearDown(self, *args, **kwargs):
         """Stop the ping server and tear down the testcase."""

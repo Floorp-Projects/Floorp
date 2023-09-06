@@ -962,7 +962,7 @@ def from_files(filenames, strict_type_checks=True):
         if not isinstance(histograms, OrderedDict):
             ParserError("Histogram parser did not provide an OrderedDict.").handle_now()
 
-        for (name, definition) in histograms.items():
+        for name, definition in histograms.items():
             if name in all_histograms:
                 ParserError('Duplicate histogram name "%s".' % name).handle_later()
             all_histograms[name] = definition
@@ -1005,5 +1005,5 @@ def from_files(filenames, strict_type_checks=True):
             )
             ParserError(msg % (", ".join(sorted(orphaned)))).handle_later()
 
-    for (name, definition) in all_histograms.items():
+    for name, definition in all_histograms.items():
         yield Histogram(name, definition, strict_type_checks=strict_type_checks)

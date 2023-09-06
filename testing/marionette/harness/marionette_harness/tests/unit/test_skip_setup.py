@@ -6,7 +6,6 @@ from marionette_harness import MarionetteTestCase, SkipTest
 
 
 class TestSetUpSkipped(MarionetteTestCase):
-
     testVar = {"test": "SkipTest"}
 
     def setUp(self):
@@ -21,7 +20,6 @@ class TestSetUpSkipped(MarionetteTestCase):
 
 
 class TestSetUpNotSkipped(MarionetteTestCase):
-
     testVar = {"test": "SkipTest"}
 
     def setUp(self):

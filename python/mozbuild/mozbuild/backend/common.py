@@ -363,7 +363,6 @@ class CommonBackend(BuildBackend):
         )
 
     def _handle_webidl_collection(self, webidls):
-
         bindings_dir = mozpath.join(self.environment.topobjdir, "dom", "bindings")
 
         all_inputs = set(webidls.all_static_sources())

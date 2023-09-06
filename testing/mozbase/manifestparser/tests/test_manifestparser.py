@@ -734,7 +734,6 @@ yellow = submarine
         self.assertFalse("test_0202_app_launch_apply_update_dirlocked.js" in names)
 
     def test_verifyDirectory(self):
-
         directory = os.path.join(here, "verifyDirectory")
 
         # correct manifest
@@ -758,7 +757,6 @@ yellow = submarine
         self.assertEqual(missing, (set([missing_test]), set()))
 
     def test_verifyDirectory_toml(self):
-
         directory = os.path.join(here, "verifyDirectory")
 
         # correct manifest

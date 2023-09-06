@@ -32,7 +32,7 @@ async def do_2fa(client):
         client.await_element_hidden(loader)
     for digit in digits:
         if digit.property("value"):
-            digit.send_keys(u"\ue003")  # backspace
+            digit.send_keys("\ue003")  # backspace
 
     code = input("**** Enter two-factor authentication code: ")
     for i, digit in enumerate(code):

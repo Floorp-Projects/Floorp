@@ -71,7 +71,6 @@ def get_s3_keys(s3, bucket):
 
 
 def s3_set_redirects(redirects):
-
     s3, bucket = create_aws_session()
 
     configuration = {"IndexDocument": {"Suffix": "index.html"}, "RoutingRules": []}

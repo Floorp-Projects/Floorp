@@ -1721,7 +1721,6 @@ class CheckTypes(TcheckVisitor):
             )
 
         if mtype.compress and (not mtype.isAsync() or mtype.isCtor() or mtype.isDtor()):
-
             if mtype.isCtor() or mtype.isDtor():
                 message_type = "constructor" if mtype.isCtor() else "destructor"
                 error_message = (

@@ -137,7 +137,6 @@ class MitmproxyDesktop(Mitmproxy):
             ) in contents:
                 LOG.info("Verified mitmproxy CA certificate is installed in Firefox")
             else:
-
                 return False
         except Exception as e:
             LOG.info("failed to read Firefox policies file, exeption: %s" % e)

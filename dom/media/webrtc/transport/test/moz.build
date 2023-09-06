@@ -7,7 +7,6 @@
 include("/ipc/chromium/chromium-config.mozbuild")
 
 if CONFIG["OS_TARGET"] != "WINNT":
-
     if CONFIG["OS_TARGET"] != "Android":
         SOURCES += [
             "ice_unittest.cpp",

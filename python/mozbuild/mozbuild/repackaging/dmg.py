@@ -13,7 +13,6 @@ from mozbuild.repackaging.application_ini import get_application_ini_value
 
 
 def repackage_dmg(infile, output):
-
     if not tarfile.is_tarfile(infile):
         raise Exception("Input file %s is not a valid tarfile." % infile)
 

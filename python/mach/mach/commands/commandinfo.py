@@ -452,7 +452,6 @@ def completion_fish(command_context, outfile):
             cmds_opts.append(comp)
 
         for sub in cmd.subcommands:
-
             for opt_strs, description in sub.options.items():
                 comp = (
                     "complete -c mach -A -n '__fish_mach_complete_subcommand {} {}' "

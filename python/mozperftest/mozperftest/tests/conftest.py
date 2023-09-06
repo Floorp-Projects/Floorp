@@ -143,7 +143,6 @@ def ptnb(standarized_data):
 
 @pytest.fixture(scope="function", autouse=True)
 def perftestetl_plugin():
-
     ret = HERE / "data" / "perftestetl_plugin"
 
     os.environ["PERFTESTETL_PLUGIN"] = ret.resolve().as_posix()

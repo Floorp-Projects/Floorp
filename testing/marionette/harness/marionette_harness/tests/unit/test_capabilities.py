@@ -195,7 +195,7 @@ class TestCapabilityMatching(MarionetteTestCase):
 
         self.delete_session()
 
-        timeouts = {"implicit": 0, "pageLoad": 2.0, "script": 2 ** 53 - 1}
+        timeouts = {"implicit": 0, "pageLoad": 2.0, "script": 2**53 - 1}
         self.marionette.start_session({"timeouts": timeouts})
         self.assertIn("timeouts", self.marionette.session_capabilities)
         self.assertDictEqual(self.marionette.session_capabilities["timeouts"], timeouts)

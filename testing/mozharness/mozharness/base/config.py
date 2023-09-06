@@ -100,7 +100,7 @@ class ReadOnlyDict(dict):
         assert not self._lock, "ReadOnlyDict is locked!"
 
     def lock(self):
-        for (k, v) in list(self.items()):
+        for k, v in list(self.items()):
             self[k] = make_immutable(v)
         self._lock = True
 

@@ -23,7 +23,6 @@ class TestDefaultSkipif(unittest.TestCase):
     """Tests applying a skip-if condition in [DEFAULT] and || with the value for the test"""
 
     def test_defaults(self):
-
         default = os.path.join(here, "default-skipif.ini")
         parser = ManifestParser(manifests=(default,), use_toml=False)
         for test in parser.tests:
@@ -52,7 +51,6 @@ class TestDefaultSkipif(unittest.TestCase):
                 )
 
     def test_defaults_toml(self):
-
         default = os.path.join(here, "default-skipif.toml")
         parser = ManifestParser(manifests=(default,), use_toml=True)
         for test in parser.tests:
@@ -81,7 +79,6 @@ class TestDefaultSkipif(unittest.TestCase):
                 )
 
     def test_defaults_toml_multiline(self):
-
         default = os.path.join(here, "default-skipif-multiline.toml")
         parser = ManifestParser(manifests=(default,), use_toml=True)
         for test in parser.tests:
@@ -114,7 +111,6 @@ class TestDefaultSupportFiles(unittest.TestCase):
     """Tests combining support-files field in [DEFAULT] with the value for a test"""
 
     def test_defaults(self):
-
         default = os.path.join(here, "default-suppfiles.ini")
         parser = ManifestParser(manifests=(default,), use_toml=False)
         expected_supp_files = {
@@ -127,7 +123,6 @@ class TestDefaultSupportFiles(unittest.TestCase):
             self.assertEqual(test["support-files"], expected)
 
     def test_defaults_toml(self):
-
         default = os.path.join(here, "default-suppfiles.toml")
         parser = ManifestParser(manifests=(default,), use_toml=True)
         expected_supp_files = {

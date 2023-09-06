@@ -21,23 +21,23 @@ def process_config(toml_content):
     if not new_base:
         new_base = b"."  # relpath to '.' is '', sadly
     base_line = b'\nbasepath = "%s"' % new_base
-    content1 = re.sub(br"^\s*basepath\s*=\s*.+", base_line, toml_content, flags=re.M)
+    content1 = re.sub(rb"^\s*basepath\s*=\s*.+", base_line, toml_content, flags=re.M)
 
     # process [[paths]]
     start = 0
     content2 = b""
     for m in re.finditer(
-        br"\[\[\s*paths\s*\]\].+?(?=\[|\Z)", content1, re.M | re.DOTALL
+        rb"\[\[\s*paths\s*\]\].+?(?=\[|\Z)", content1, re.M | re.DOTALL
     ):
         content2 += content1[start : m.start()]
         path_content = m.group()
-        l10n_line = re.search(br"^\s*l10n\s*=.*$", path_content, flags=re.M).group()
+        l10n_line = re.search(rb"^\s*l10n\s*=.*$", path_content, flags=re.M).group()
         # remove variable expansions
-        new_reference = re.sub(br"{\s*\S+\s*}", b"", l10n_line)
+        new_reference = re.sub(rb"{\s*\S+\s*}", b"", l10n_line)
         # make the l10n a reference line
-        new_reference = re.sub(br"^(\s*)l10n(\s*=)", br"\1reference\2", new_reference)
+        new_reference = re.sub(rb"^(\s*)l10n(\s*=)", rb"\1reference\2", new_reference)
         content2 += re.sub(
-            br"^\s*reference\s*=.*$", new_reference, path_content, flags=re.M
+            rb"^\s*reference\s*=.*$", new_reference, path_content, flags=re.M
         )
         start = m.end()
     content2 += content1[start:]
@@ -45,11 +45,11 @@ def process_config(toml_content):
     start = 0
     content3 = b""
     for m in re.finditer(
-        br"\[\[\s*includes\s*\]\].+?(?=\[|\Z)", content2, re.M | re.DOTALL
+        rb"\[\[\s*includes\s*\]\].+?(?=\[|\Z)", content2, re.M | re.DOTALL
     ):
         content3 += content2[start : m.start()]
         include_content = m.group()
-        m_ = re.search(br'^\s*path = "(.+?)"', include_content, flags=re.M)
+        m_ = re.search(rb'^\s*path = "(.+?)"', include_content, flags=re.M)
         content3 += (
             include_content[: m_.start(1)]
             + generate_filename(m_.group(1))
