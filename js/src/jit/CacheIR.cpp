@@ -1560,7 +1560,8 @@ AttachDecision GetPropIRGenerator::tryAttachScriptedProxy(
 
   writer.guardIsProxy(objId);
   writer.guardHasProxyHandler(objId, &ScriptedProxyHandler::singleton);
-  ObjOperandId handlerObjId = writer.loadScriptedProxyHandler(objId);
+  ValOperandId handlerValId = writer.loadScriptedProxyHandler(objId);
+  ObjOperandId handlerObjId = writer.guardToObject(handlerValId);
   ObjOperandId targetObjId = writer.loadWrapperTarget(objId);
 
   if (trapKind == NativeGetPropKind::Missing) {
