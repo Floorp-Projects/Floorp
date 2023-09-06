@@ -41,6 +41,7 @@ FileSystemManagerParent::FileSystemManagerParent(
 
 FileSystemManagerParent::~FileSystemManagerParent() {
   LOG(("Destroying FileSystemManagerParent %p", this));
+  MOZ_ASSERT(!mRegistered);
 }
 
 void FileSystemManagerParent::AssertIsOnIOTarget() const {

@@ -320,6 +320,10 @@ void FileSystemDataManager::RegisterActor(
   MOZ_ASSERT(!mBackgroundThreadAccessible.Access()->mActors.Contains(aActor));
 
   mBackgroundThreadAccessible.Access()->mActors.Insert(aActor);
+
+#ifdef DEBUG
+  aActor->SetRegistered(true);
+#endif
 }
 
 void FileSystemDataManager::UnregisterActor(
@@ -327,6 +331,10 @@ void FileSystemDataManager::UnregisterActor(
   MOZ_ASSERT(mBackgroundThreadAccessible.Access()->mActors.Contains(aActor));
 
   mBackgroundThreadAccessible.Access()->mActors.Remove(aActor);
+
+#ifdef DEBUG
+  aActor->SetRegistered(false);
+#endif
 
   if (IsInactive()) {
     BeginClose();
