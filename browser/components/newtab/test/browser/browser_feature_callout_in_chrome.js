@@ -870,7 +870,7 @@ add_task(
     );
 
     // Add height to the top of the browser to simulate an infobar or other element
-    const navigatorToolBox = doc.querySelector("#navigator-toolbox-background");
+    const navigatorToolBox = doc.querySelector("#navigator-toolbox");
     navigatorToolBox.style.height = "150px";
     // We test in a new tab because the callout does not adjust itself
     // when size of the navigator-toolbox-background box changes.
