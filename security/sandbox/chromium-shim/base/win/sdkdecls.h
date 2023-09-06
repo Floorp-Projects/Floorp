@@ -245,7 +245,7 @@ DeriveAppContainerSidFromAppContainerName(
 #define PROCESS_CREATION_MITIGATION_POLICY_BLOCK_NON_MICROSOFT_BINARIES_RESERVED          (0x00000003uLL << 44)
 #endif
 
-#if (_WIN32_WINNT < 0x0A00)
+#if (_WIN32_WINNT < 0x0A00) || defined(__MINGW32__)
 //
 // Define Font Disable Policy.  When enabled, this option will
 // block loading Non System Fonts.
