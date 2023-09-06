@@ -13,23 +13,12 @@ describe("LegalParagraph component", () => {
 
     wrapper = mount(
       <LegalParagraph
-        content={{
-          legal_paragraph: {
-            text: {
-              string_id:
-                "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
-            },
-            link_keys: ["privacy_policy"],
+        text_content={{
+          text: {
+            string_id:
+              "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
           },
-          privacy_policy: {
-            action: {
-              type: "OPEN_URL",
-              data: {
-                args: "https://www.mozilla.org/privacy/firefox/",
-                where: "tab",
-              },
-            },
-          },
+          link_keys: ["privacy_policy"],
         }}
         handleAction={handleAction}
       />
@@ -56,32 +45,12 @@ describe("LegalParagraph component", () => {
 
   it("should render two links if an additional link id is passed", () => {
     wrapper.setProps({
-      content: {
-        legal_paragraph: {
-          text: {
-            string_id:
-              "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
-          },
-          link_keys: ["privacy_policy", "terms_of_use"],
+      text_content: {
+        text: {
+          string_id:
+            "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
         },
-        privacy_policy: {
-          action: {
-            type: "OPEN_URL",
-            data: {
-              args: "https://www.mozilla.org/privacy/firefox/",
-              where: "tab",
-            },
-          },
-        },
-        temrs_of_use: {
-          action: {
-            type: "OPEN_URL",
-            data: {
-              args: "https://www.mozilla.org/about/legal/terms/firefox/",
-              where: "tab",
-            },
-          },
-        },
+        link_keys: ["privacy_policy", "terms_of_use"],
       },
     });
     assert.strictEqual(wrapper.find(".legal-paragraph a").length, 2);
@@ -89,30 +58,26 @@ describe("LegalParagraph component", () => {
 
   it("should render no links when no link id is passed", () => {
     wrapper.setProps({
-      content: {
-        legal_paragraph: { links: null },
-      },
+      text_content: { links: null },
     });
     assert.strictEqual(wrapper.find(".legal-paragraph a").length, 0);
   });
 
   it("should render copy even when no link id is passed", () => {
     wrapper.setProps({
-      content: {
-        legal_paragraph: { links: null },
-      },
+      text_content: { links: null },
     });
     assert.ok(wrapper.find(".legal-paragraph"));
   });
 
   it("should not render LegalParagraph component if text is not passed", () => {
-    wrapper.setProps({ content: { legal_paragraph: { text: null } } });
+    wrapper.setProps({ text_content: { text: null } });
     assert.ok(wrapper.isEmptyRender());
   });
 
   it("should not render links if string_id is not provided", () => {
     wrapper.setProps({
-      content: { legal_paragraph: { text: { string_id: null } } },
+      text_content: { text: { string_id: null } },
     });
     assert.strictEqual(wrapper.find(".legal-paragraph a").length, 0);
   });

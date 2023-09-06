@@ -365,14 +365,21 @@ const OPTIN_DEFAULT = {
             },
           },
         },
-        legal_paragraph: {
-          text: {
-            // fluent ids required to render copy
-            string_id:
-              "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
+        above_button_content: [
+          {
+            type: "image",
+            url: "chrome://browser/content/shopping/assets/temp-fakespot-rating.svg",
+            height: "auto",
           },
-          link_keys: ["privacy_policy", "terms_of_use"],
-        },
+          {
+            type: "text",
+            text: {
+              string_id:
+                "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
+            },
+            link_keys: ["privacy_policy", "terms_of_use"],
+          },
+        ],
         privacy_policy: {
           action: {
             type: "OPEN_URL",
@@ -416,10 +423,6 @@ const OPTIN_DEFAULT = {
               },
             },
           },
-        },
-        inline_image: {
-          url: "chrome://browser/content/shopping/assets/temp-fakespot-rating.svg",
-          height: "auto",
         },
       },
     },

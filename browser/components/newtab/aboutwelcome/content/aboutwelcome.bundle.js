@@ -1121,6 +1121,32 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     }))));
   }
 
+  renderOrderedContent(content) {
+    const elements = [];
+
+    for (const item of content) {
+      switch (item.type) {
+        case "text":
+          elements.push( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_LegalParagraph__WEBPACK_IMPORTED_MODULE_15__.LegalParagraph, {
+            text_content: item,
+            handleAction: this.props.handleAction
+          }));
+          break;
+
+        case "image":
+          elements.push(this.renderPicture({
+            imageURL: item.url,
+            darkModeImageURL: item.darkModeImageURL,
+            height: item.height,
+            alt: item.alt_text,
+            className: "inline-image"
+          }));
+      }
+    }
+
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, elements);
+  }
+
   render() {
     var _content$tiles, _content$tiles2, _this$props$appAndSys, _this$props$messageId;
 
@@ -1193,16 +1219,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     }) : null), content.video_container ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_OnboardingVideo__WEBPACK_IMPORTED_MODULE_11__.OnboardingVideo, {
       content: content.video_container,
       handleAction: this.props.handleAction
-    }) : null, content.inline_image ? this.renderPicture({
-      imageURL: content.inline_image.url,
-      darkModeImageURL: content.inline_image.darkModeImageURL,
-      height: content.inline_image.height,
-      alt: content.inline_image.alt_text,
-      className: "inline-image"
-    }) : null, content.legal_paragraph ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_LegalParagraph__WEBPACK_IMPORTED_MODULE_15__.LegalParagraph, {
-      content: content,
-      handleAction: this.props.handleAction
-    }) : null, this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ProtonScreenActionButtons, {
+    }) : null, content.above_button_content ? this.renderOrderedContent(content.above_button_content) : null, this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ProtonScreenActionButtons, {
       content: content,
       addonName: this.props.addonName,
       handleAction: this.props.handleAction,
@@ -2198,10 +2215,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const LegalParagraph = props => {
-  var _legal_paragraph$link;
+  var _text_content$link_ke;
 
   const {
-    content,
+    text_content,
     handleAction
   } = props;
   const handleParagraphAction = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(event => {
@@ -2216,17 +2233,14 @@ const LegalParagraph = props => {
       handleParagraphAction(event);
     }
   }, [handleParagraphAction]);
-  const {
-    legal_paragraph
-  } = content;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: legal_paragraph.text
+    text: text_content.text
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
     className: "legal-paragraph",
     onClick: handleParagraphAction,
     value: "legal_paragraph",
     onKeyPress: onKeyPress
-  }, (_legal_paragraph$link = legal_paragraph.link_keys) === null || _legal_paragraph$link === void 0 ? void 0 : _legal_paragraph$link.map(link => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
+  }, (_text_content$link_ke = text_content.link_keys) === null || _text_content$link_ke === void 0 ? void 0 : _text_content$link_ke.map(link => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
     key: link,
     value: link,
     "data-l10n-name": link,

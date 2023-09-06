@@ -282,11 +282,14 @@ describe("MultiStageAboutWelcomeProton module", () => {
     it("should render an inline image with alt text and height property", async () => {
       const SCREEN_PROPS = {
         content: {
-          inline_image: {
-            url: "https://example.com/test.svg",
-            height: "auto",
-            alt_text: "test alt text",
-          },
+          above_button_content: [
+            {
+              type: "image",
+              url: "https://example.com/test.svg",
+              height: "auto",
+              alt_text: "test alt text",
+            },
+          ],
         },
       };
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
@@ -296,6 +299,55 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.propertyVal(imageEl.prop("style"), "height", "auto");
       const altTextCointainer = wrapper.find(".sr-only");
       assert.equal(altTextCointainer.contains("test alt text"), true);
+    });
+
+    it("should render multiple inline elements in correct order", async () => {
+      const SCREEN_PROPS = {
+        content: {
+          above_button_content: [
+            {
+              type: "image",
+              url: "https://example.com/test.svg",
+              height: "auto",
+              alt_text: "test alt text",
+            },
+            {
+              type: "text",
+              text: {
+                string_id: "test-string-id",
+              },
+              link_keys: ["privacy_policy", "terms_of_use"],
+            },
+            {
+              type: "image",
+              url: "https://example.com/test_2.svg",
+              height: "auto",
+              alt_text: "test alt text 2",
+            },
+            {
+              type: "text",
+              text: {
+                string_id: "test-string-id-2",
+              },
+              link_keys: ["privacy_policy", "terms_of_use"],
+            },
+          ],
+        },
+      };
+
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      const imageEl = wrapper.find(".inline-image img");
+      const textEl = wrapper.find(".legal-paragraph");
+
+      assert.equal(imageEl.length, 2);
+      assert.equal(textEl.length, 2);
+
+      assert.equal(imageEl.at(0).prop("src"), "https://example.com/test.svg");
+      assert.equal(imageEl.at(1).prop("src"), "https://example.com/test_2.svg");
+
+      assert.equal(textEl.at(0).prop("data-l10n-id"), "test-string-id");
+      assert.equal(textEl.at(1).prop("data-l10n-id"), "test-string-id-2");
     });
   });
 

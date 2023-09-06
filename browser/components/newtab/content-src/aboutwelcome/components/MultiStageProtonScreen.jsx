@@ -403,6 +403,33 @@ export class ProtonScreen extends React.PureComponent {
     );
   }
 
+  renderOrderedContent(content) {
+    const elements = [];
+    for (const item of content) {
+      switch (item.type) {
+        case "text":
+          elements.push(
+            <LegalParagraph
+              text_content={item}
+              handleAction={this.props.handleAction}
+            />
+          );
+          break;
+        case "image":
+          elements.push(
+            this.renderPicture({
+              imageURL: item.url,
+              darkModeImageURL: item.darkModeImageURL,
+              height: item.height,
+              alt: item.alt_text,
+              className: "inline-image",
+            })
+          );
+      }
+    }
+    return <>{elements}</>;
+  }
+
   render() {
     const {
       autoAdvance,
@@ -527,21 +554,9 @@ export class ProtonScreen extends React.PureComponent {
                   handleAction={this.props.handleAction}
                 />
               ) : null}
-              {content.inline_image
-                ? this.renderPicture({
-                    imageURL: content.inline_image.url,
-                    darkModeImageURL: content.inline_image.darkModeImageURL,
-                    height: content.inline_image.height,
-                    alt: content.inline_image.alt_text,
-                    className: "inline-image",
-                  })
+              {content.above_button_content
+                ? this.renderOrderedContent(content.above_button_content)
                 : null}
-              {content.legal_paragraph ? (
-                <LegalParagraph
-                  content={content}
-                  handleAction={this.props.handleAction}
-                />
-              ) : null}
               {this.renderContentTiles()}
               {this.renderLanguageSwitcher()}
               <ProtonScreenActionButtons
