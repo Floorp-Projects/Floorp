@@ -17,6 +17,12 @@ body {
   background-color: var(--in-content-box-background-odd);
 }
 
+@media (prefers-contrast) {
+  #shopping-container {
+    border-inline-start: 1px solid var(--in-content-box-border-color);
+  }
+}
+
 #shopping-icon {
   width: 32px;
   height: 32px;
