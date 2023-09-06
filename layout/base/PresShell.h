@@ -930,9 +930,7 @@ class PresShell final : public nsStubDocumentObserver,
   }
 
   void ActivenessMaybeChanged();
-  // See ComputeActiveness() for details of these two booleans.
   bool IsActive() const { return mIsActive; }
-  bool IsInActiveTab() const { return mIsInActiveTab; }
 
   /**
    * Keep track of how many times this presshell has been rendered to
@@ -1759,12 +1757,8 @@ class PresShell final : public nsStubDocumentObserver,
  private:
   ~PresShell();
 
-  void SetIsActive(bool aIsActive, bool aIsInActiveTab);
-  struct Activeness {
-    bool mShouldBeActive = false;
-    bool mIsInActiveTab = false;
-  };
-  Activeness ComputeActiveness() const;
+  void SetIsActive(bool aIsActive);
+  bool ComputeActiveness() const;
 
   MOZ_CAN_RUN_SCRIPT
   void PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags);
@@ -3120,7 +3114,6 @@ class PresShell final : public nsStubDocumentObserver,
   bool mIgnoreFrameDestruction : 1;
 
   bool mIsActive : 1;
-  bool mIsInActiveTab : 1;
   bool mFrozen : 1;
   bool mIsFirstPaint : 1;
   bool mObservesMutationsForPrint : 1;
