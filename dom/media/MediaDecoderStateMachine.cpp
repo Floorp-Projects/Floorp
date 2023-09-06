@@ -2101,7 +2101,8 @@ class MediaDecoderStateMachine::AccurateSeekingState
     }
 
     bool ok = aAudio->SetTrimWindow(
-        {mSeekJob.mTarget->GetTime(), aAudio->GetEndTime()});
+        {mSeekJob.mTarget->GetTime().ToBase(aAudio->mTime),
+         aAudio->GetEndTime()});
     if (!ok) {
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
