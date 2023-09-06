@@ -21,10 +21,12 @@
 #include <windows.h>
 
 #if (NTDDI_VERSION < NTDDI_WIN10_RS4) || defined(__MINGW32__)
+WINBASEAPI
 PVOID WINAPI VirtualAlloc2(HANDLE Process, PVOID BaseAddress, SIZE_T Size,
                            ULONG AllocationType, ULONG PageProtection,
                            MEM_EXTENDED_PARAMETER* ExtendedParameters,
                            ULONG ParameterCount);
+WINBASEAPI
 PVOID WINAPI MapViewOfFile3(HANDLE FileMapping, HANDLE Process,
                             PVOID BaseAddress, ULONG64 Offset, SIZE_T ViewSize,
                             ULONG AllocationType, ULONG PageProtection,
