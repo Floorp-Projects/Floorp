@@ -39,6 +39,13 @@ class ShoppingMessageBar extends MozLitElement {
         composed: true,
       })
     );
+    this.dispatchEvent(
+      new CustomEvent("ShoppingTelemetryEvent", {
+        bubbles: true,
+        composed: true,
+        detail: "reanalyzeClicked",
+      })
+    );
   }
 
   onClickProductAvailable() {
