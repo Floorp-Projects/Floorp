@@ -10048,11 +10048,6 @@ var ShoppingSidebarManager = {
       document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
         sidebar.remove();
       });
-
-      if (optedOut) {
-        let button = document.getElementById("shopping-sidebar-button");
-        button.hidden = true;
-      }
       return;
     }
 
