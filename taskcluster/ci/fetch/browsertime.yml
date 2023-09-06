@@ -47,36 +47,6 @@ mac64-chromedriver-109:
         sha256: e1fcfd4d75b38ec147493595757e72bf13803138a8cb3f3917394ed975fa7af0
         size: 9186656
 
-win32-chromedriver-114:
-    description: "Win32 chromedriver v114"
-    fetch:
-        type: static-url
-        artifact-name: chromedriver_win32_114.tar.zst
-        add-prefix: "114"
-        url: https://chromedriver.storage.googleapis.com/114.0.5735.16/chromedriver_win32.zip
-        sha256: 9dcad58796e1319cd942575ea8a38b1c9a720170aaf79f3a1451458c1bd485d1
-        size: 6604629
-
-linux64-chromedriver-114:
-    description: "Linux64 chromedriver v114"
-    fetch:
-        type: static-url
-        artifact-name: chromedriver_linux64_114.tar.zst
-        add-prefix: "114"
-        url: https://chromedriver.storage.googleapis.com/114.0.5735.16/chromedriver_linux64.zip
-        sha256: 87472593a65e09b700c0e9f54451e4b8ae49bbf92e13a37dcf60e5eb93235875
-        size: 7399878
-
-mac64-chromedriver-114:
-    description: "Mac64 chromedriver v114"
-    fetch:
-        type: static-url
-        artifact-name: chromedriver_mac64_114.tar.zst
-        add-prefix: "114"
-        url: https://chromedriver.storage.googleapis.com/114.0.5735.16/chromedriver_mac64.zip
-        sha256: 80f1e41949c017d897d8076e400521691cc018aa2276157c35e44a1e1f984b69
-        size: 8609836
-
 win32-chromedriver-115:
     description: "Win32 chromedriver v115"
     fetch:
@@ -136,6 +106,36 @@ mac64-chromedriver-116:
         url: https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/116.0.5845.96/mac-x64/chromedriver-mac-x64.zip
         sha256: 3ec691569dc8e98d803cf206c5fd4627e56836c81a5d1c9b7e5644a4e61ffd3f
         size: 9382699
+
+win32-chromedriver-117:
+    description: "Win32 chromedriver v117"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_win32_117.tar.zst
+        add-prefix: "117"
+        url: https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/117.0.5938.35/win32/chromedriver-win32.zip
+        sha256: 1d19a2db90a3a868783a761e838154d3fe5f6d116c8587d7c482f18f3fd5cacd
+        size: 7325429
+
+linux64-chromedriver-117:
+    description: "Linux64 chromedriver v117"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_linux64_117.tar.zst
+        add-prefix: "117"
+        url: https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/117.0.5938.35/linux64/chromedriver-linux64.zip
+        sha256: a00c0a42cb04ddfbe1a92ec191405cd5303da317c547c0ceb79a5d224d1405f5
+        size: 8205792
+
+mac64-chromedriver-117:
+    description: "Mac64 chromedriver v117"
+    fetch:
+        type: static-url
+        artifact-name: chromedriver_mac64_117.tar.zst
+        add-prefix: "117"
+        url: https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/117.0.5938.35/mac-x64/chromedriver-mac-x64.zip
+        sha256: 757d132b3ca4abbe0c3c68af2be8c2990f062f5e066acc8b2d3d7c498e0b3dbc
+        size: 9606014
 
 upload-speed-test-file:
     description: "File used for the upload speed performance test"
