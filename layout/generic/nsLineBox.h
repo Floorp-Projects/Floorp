@@ -396,10 +396,9 @@ class nsLineBox final : public nsLineLink {
     mBounds.BSize(mWritingMode) = 0;
   }
 
-  using PostDestroyData = nsIFrame::PostDestroyData;
+  using DestroyContext = nsIFrame::DestroyContext;
   static void DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
-                             nsIFrame* aDestructRoot, nsFrameList* aFrames,
-                             PostDestroyData& aPostDestroyData);
+                             nsFrameList* aFrames, DestroyContext&);
 
   // search from end to beginning of [aBegin, aEnd)
   // Returns true if it found the line and false if not.

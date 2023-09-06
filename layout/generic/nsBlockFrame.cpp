@@ -472,43 +472,39 @@ void nsBlockFrame::AddSizeOfExcludingThisForTree(
   }
 }
 
-void nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                               PostDestroyData& aPostDestroyData) {
+void nsBlockFrame::Destroy(DestroyContext& aContext) {
   ClearLineCursors();
-  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
-  mFloats.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
+  DestroyAbsoluteFrames(aContext);
+  mFloats.DestroyFrames(aContext);
   nsPresContext* presContext = PresContext();
   mozilla::PresShell* presShell = presContext->PresShell();
-  nsLineBox::DeleteLineList(presContext, mLines, aDestructRoot, &mFrames,
-                            aPostDestroyData);
+  nsLineBox::DeleteLineList(presContext, mLines, &mFrames, aContext);
 
   if (HasPushedFloats()) {
-    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
-                               PushedFloatProperty());
+    SafelyDestroyFrameListProp(aContext, presShell, PushedFloatProperty());
     RemoveStateBits(NS_BLOCK_HAS_PUSHED_FLOATS);
   }
 
   // destroy overflow lines now
   FrameLines* overflowLines = RemoveOverflowLines();
   if (overflowLines) {
-    nsLineBox::DeleteLineList(presContext, overflowLines->mLines, aDestructRoot,
-                              &overflowLines->mFrames, aPostDestroyData);
+    nsLineBox::DeleteLineList(presContext, overflowLines->mLines,
+                              &overflowLines->mFrames, aContext);
     delete overflowLines;
   }
 
   if (HasAnyStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
-    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
+    SafelyDestroyFrameListProp(aContext, presShell,
                                OverflowOutOfFlowsProperty());
     RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   }
 
   if (HasOutsideMarker()) {
-    SafelyDestroyFrameListProp(aDestructRoot, aPostDestroyData, presShell,
-                               OutsideMarkerProperty());
+    SafelyDestroyFrameListProp(aContext, presShell, OutsideMarkerProperty());
     RemoveStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER);
   }
 
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::Destroy(aContext);
 }
 
 /* virtual */
@@ -5856,9 +5852,10 @@ void nsBlockFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   printf("\n");
 #endif
 
+  DestroyContext context(aOldFrame);
   if (aListID == FrameChildListID::Principal) {
     bool hasFloats = BlockHasAnyFloats(aOldFrame);
-    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
+    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS, context);
     if (hasFloats) {
       MarkSameFloatManagerLinesDirty(this);
     }
@@ -5874,10 +5871,10 @@ void nsBlockFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
       MarkSameFloatManagerLinesDirty(
           static_cast<nsBlockFrame*>(f->GetParent()));
     }
-    DoRemoveOutOfFlowFrame(aOldFrame);
+    DoRemoveOutOfFlowFrame(aOldFrame, context);
   } else if (FrameChildListID::NoReflowPrincipal == aListID) {
     // Skip the call to |FrameNeedsReflow| below by returning now.
-    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS);
+    DoRemoveFrame(aOldFrame, REMOVE_FIXED_CONTINUATIONS, context);
     return;
   } else {
     MOZ_CRASH("unexpected child list");
@@ -6131,7 +6128,8 @@ void nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
   }
 }
 
-void nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame) {
+void nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame,
+                                          DestroyContext& aContext) {
   // The containing block is always the parent of aFrame.
   nsBlockFrame* block = (nsBlockFrame*)aFrame->GetParent();
 
@@ -6149,7 +6147,7 @@ void nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame) {
     // Now remove aFrame from its child list and Destroy it.
     block->RemoveFloatFromFloatCache(aFrame);
     block->RemoveFloat(aFrame);
-    aFrame->Destroy();
+    aFrame->Destroy(aContext);
   }
 }
 
@@ -6431,9 +6429,8 @@ bool nsBlockInFlowLineIterator::FindValidLine() {
 // aDeletedFrame and remove aDeletedFrame from that line. But here we
 // start by locating aDeletedFrame and then scanning from that point
 // on looking for continuations.
-void nsBlockFrame::DoRemoveFrameInternal(nsIFrame* aDeletedFrame,
-                                         uint32_t aFlags,
-                                         PostDestroyData& aPostDestroyData) {
+void nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags,
+                                 DestroyContext& aContext) {
   // Clear our line cursor, since our lines may change.
   ClearLineCursors();
 
@@ -6442,8 +6439,9 @@ void nsBlockFrame::DoRemoveFrameInternal(nsIFrame* aDeletedFrame,
     if (!aDeletedFrame->GetPrevInFlow()) {
       NS_ASSERTION(aDeletedFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
                    "Expected out-of-flow frame");
-      DoRemoveOutOfFlowFrame(aDeletedFrame);
+      DoRemoveOutOfFlowFrame(aDeletedFrame, aContext);
     } else {
+      // FIXME(emilio): aContext is lost here, maybe it's not a big deal?
       nsContainerFrame::DeleteNextInFlowChild(aDeletedFrame,
                                               (aFlags & FRAMES_ARE_EMPTY) != 0);
     }
@@ -6559,7 +6557,7 @@ void nsBlockFrame::DoRemoveFrameInternal(nsIFrame* aDeletedFrame,
       deletedNextContinuation = nullptr;
     }
 
-    aDeletedFrame->DestroyFrom(aDeletedFrame, aPostDestroyData);
+    aDeletedFrame->Destroy(aContext);
     aDeletedFrame = deletedNextContinuation;
 
     bool haveAdvancedToNextLine = false;
@@ -6666,7 +6664,7 @@ void nsBlockFrame::DoRemoveFrameInternal(nsIFrame* aDeletedFrame,
   nsBlockFrame* nextBlock = do_QueryFrame(aDeletedFrame->GetParent());
   NS_ASSERTION(nextBlock, "Our child's continuation's parent is not a block?");
   uint32_t flags = (aFlags & REMOVE_FIXED_CONTINUATIONS);
-  nextBlock->DoRemoveFrameInternal(aDeletedFrame, flags, aPostDestroyData);
+  nextBlock->DoRemoveFrame(aDeletedFrame, flags, aContext);
 }
 
 static bool FindBlockLineFor(nsIFrame* aChild, nsLineList::iterator aBegin,
@@ -6780,7 +6778,9 @@ void nsBlockFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
       nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(aNextInFlow);
     }
 #endif
-    DoRemoveFrame(aNextInFlow, aDeletingEmptyFrames ? FRAMES_ARE_EMPTY : 0);
+    DestroyContext context(aNextInFlow);
+    DoRemoveFrame(aNextInFlow, aDeletingEmptyFrames ? FRAMES_ARE_EMPTY : 0,
+                  context);
   }
 }
 

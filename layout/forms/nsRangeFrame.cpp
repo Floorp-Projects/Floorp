@@ -69,8 +69,7 @@ NS_QUERYFRAME_HEAD(nsRangeFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-void nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                               PostDestroyData& aPostDestroyData) {
+void nsRangeFrame::Destroy(DestroyContext& aContext) {
   NS_ASSERTION(!GetPrevContinuation() && !GetNextContinuation(),
                "nsRangeFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
@@ -78,10 +77,10 @@ void nsRangeFrame::DestroyFrom(nsIFrame* aDestructRoot,
   if (mListMutationObserver) {
     mListMutationObserver->Detach();
   }
-  aPostDestroyData.AddAnonymousContent(mTrackDiv.forget());
-  aPostDestroyData.AddAnonymousContent(mProgressDiv.forget());
-  aPostDestroyData.AddAnonymousContent(mThumbDiv.forget());
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  aContext.AddAnonymousContent(mTrackDiv.forget());
+  aContext.AddAnonymousContent(mProgressDiv.forget());
+  aContext.AddAnonymousContent(mThumbDiv.forget());
+  nsContainerFrame::Destroy(aContext);
 }
 
 nsresult nsRangeFrame::MakeAnonymousDiv(Element** aResult,

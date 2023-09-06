@@ -146,19 +146,18 @@ static FrameChildListID ChildListIDForOutOfFlow(nsFrameState aPlaceholderState,
   return FrameChildListID::Float;
 }
 
-void nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                     PostDestroyData& aPostDestroyData) {
+void nsPlaceholderFrame::Destroy(DestroyContext& aContext) {
   nsIFrame* oof = mOutOfFlowFrame;
   if (oof) {
     mOutOfFlowFrame = nullptr;
     oof->RemoveProperty(nsIFrame::PlaceholderFrameProperty());
 
-    // If aDestructRoot is not an ancestor of the out-of-flow frame,
-    // then call RemoveFrame on it here.
+    // If the destruct root is not an ancestor of the out-of-flow frame, then
+    // call RemoveFrame on it here.
     // Also destroy it here if it's a popup frame. (Bug 96291)
     // FIXME(emilio): Is the popup special-case still needed?
     if (oof->IsMenuPopupFrame() ||
-        !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof)) {
+        !nsLayoutUtils::IsProperAncestorFrame(aContext.DestructRoot(), oof)) {
       ChildListID listId = ChildListIDForOutOfFlow(GetStateBits(), oof);
       nsFrameManager* fm = PresContext()->FrameConstructor();
       fm->RemoveFrame(listId, oof);
@@ -166,7 +165,7 @@ void nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot,
     // else oof will be destroyed by its parent
   }
 
-  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::Destroy(aContext);
 }
 
 /* virtual */

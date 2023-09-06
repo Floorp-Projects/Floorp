@@ -210,10 +210,9 @@ void MiddleCroppingBlockFrame::AppendAnonymousContentTo(
   aContent.AppendElement(mTextNode);
 }
 
-void MiddleCroppingBlockFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                           PostDestroyData& aPostDestroyData) {
-  aPostDestroyData.AddAnonymousContent(mTextNode.forget());
-  nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void MiddleCroppingBlockFrame::Destroy(DestroyContext& aContext) {
+  aContext.AddAnonymousContent(mTextNode.forget());
+  nsBlockFrame::Destroy(aContext);
 }
 
 }  // namespace mozilla

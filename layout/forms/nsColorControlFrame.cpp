@@ -38,10 +38,9 @@ NS_QUERYFRAME_HEAD(nsColorControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLButtonControlFrame)
 
-void nsColorControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                      PostDestroyData& aPostDestroyData) {
-  aPostDestroyData.AddAnonymousContent(mColorContent.forget());
-  nsHTMLButtonControlFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsColorControlFrame::Destroy(DestroyContext& aContext) {
+  aContext.AddAnonymousContent(mColorContent.forget());
+  nsHTMLButtonControlFrame::Destroy(aContext);
 }
 
 #ifdef DEBUG_FRAME_DUMP

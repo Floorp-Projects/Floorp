@@ -298,8 +298,7 @@ void nsTreeBodyFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 }
 
-void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                  PostDestroyData& aPostDestroyData) {
+void nsTreeBodyFrame::Destroy(DestroyContext& aContext) {
   if (mScrollbarActivity) {
     mScrollbarActivity->Destroy();
     mScrollbarActivity = nullptr;
@@ -334,7 +333,7 @@ void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
     mTree->BodyDestroyed(mTopRowIndex);
   }
 
-  SimpleXULLeafFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  SimpleXULLeafFrame::Destroy(aContext);
 }
 
 void nsTreeBodyFrame::EnsureView() {

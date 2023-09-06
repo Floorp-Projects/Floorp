@@ -217,11 +217,10 @@ static void SetOrUpdateRectValuedProperty(
   }
 }
 
-/* static */
-void nsIFrame::DestroyAnonymousContent(
-    nsPresContext* aPresContext, already_AddRefed<nsIContent>&& aContent) {
-  if (nsCOMPtr<nsIContent> content = aContent) {
-    aPresContext->PresShell()->NativeAnonymousContentRemoved(content);
+FrameDestroyContext::~FrameDestroyContext() {
+  auto* ps = mPresContext->PresShell();
+  for (auto& content : mozilla::Reversed(mAnonymousContent)) {
+    ps->NativeAnonymousContentRemoved(content);
     content->UnbindFromTree();
   }
 }
@@ -764,13 +763,12 @@ void nsIFrame::InitPrimaryFrame() {
   HandleLastRememberedSize();
 }
 
-void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) {
+void nsIFrame::Destroy(DestroyContext& aContext) {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "destroy called on frame while scripts not blocked");
   NS_ASSERTION(!GetNextSibling() && !GetPrevSibling(),
                "Frames should be removed before destruction.");
-  NS_ASSERTION(aDestructRoot, "Must specify destruct root");
+  NS_ASSERTION(aContext.DestructRoot(), "Must specify destruct root");
   MOZ_ASSERT(!HasAbsolutelyPositionedChildren());
   MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT),
              "NS_FRAME_PART_OF_IBSPLIT set on non-nsContainerFrame?");
@@ -796,10 +794,10 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
   if (HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     nsPlaceholderFrame* placeholder = GetPlaceholderFrame();
     NS_ASSERTION(
-        !placeholder || (aDestructRoot != this),
+        !placeholder || aContext.DestructRoot() != this,
         "Don't call Destroy() on OOFs, call Destroy() on the placeholder.");
     NS_ASSERTION(!placeholder || nsLayoutUtils::IsProperAncestorFrame(
-                                     aDestructRoot, placeholder),
+                                     aContext.DestructRoot(), placeholder),
                  "Placeholder relationship should have been torn down already; "
                  "this might mean we have a stray placeholder in the tree.");
     if (placeholder) {
@@ -869,7 +867,7 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
     // aPostDestroyData to unbind it after frame destruction is done.
     if (HasAnyStateBits(NS_FRAME_GENERATED_CONTENT) &&
         mContent->IsRootOfNativeAnonymousSubtree()) {
-      aPostDestroyData.AddAnonymousContent(mContent.forget());
+      aContext.AddAnonymousContent(mContent.forget());
     }
   }
 
