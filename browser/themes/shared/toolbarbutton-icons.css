@@ -466,5 +466,9 @@ toolbarbutton.bookmark-item {
 }
 
 #firefox-view-button {
-  list-style-image: url("chrome://browser/skin/firefox-view.svg");
+  list-style-image: url("chrome://branding/content/about-logo.png");
+
+  :root[firefoxview-newicon] & {
+    list-style-image: url("chrome://browser/skin/firefox-view.svg");
+  }
 }
