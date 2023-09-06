@@ -18,7 +18,7 @@
 #  include "nsPrintfCString.h"
 #endif  // defined(MOZILLA_INTERNAL_API)
 
-#if NTDDI_VERSION < NTDDI_WINBLUE
+#if NTDDI_VERSION < NTDDI_WINBLUE || defined(__MINGW32__)
 
 // Declarations from Windows SDK specific to Windows 8.1
 
