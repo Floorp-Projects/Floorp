@@ -3262,22 +3262,30 @@ nsIFrame* Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion,
   // The block position and size are set so as to fill the frame in that axis.
   // (i.e. block-position of 0, and block-size matching the frame's own block
   // size).
-  // TODO(dholbert): Vertical-WM version coming in next patch in the series.
-
+  const WritingMode wm = frame->GetWritingMode();
   // Helper to determine the inline-axis position for the aRect outparam.
   auto GetInlinePosition = [&]() {
     if (isText) {
-      return pt.x;
+      return wm.IsVertical() ? pt.y : pt.x;
     }
-    // Return the frame's physical "inline-end" edge, relative to the frame.
-    // That's just its height or width.
-    return frame->GetRect().Width();
+    // Return the frame's physical end edge of its inline axis, relative to the
+    // frame.  That's just its height or width.
+    // TODO(dholbert): This seems to work, but perhaps we really want the
+    // inline-end edge (rather than physical end of inline axis)? (i.e. if we
+    // have direction:rtl, maybe this code would want to return 0 instead of
+    // height/width?)
+    return frame->ISize(wm);
   };
 
   // Set the inline position and block-size. Leave inline size and block
   // position set to 0, as discussed above.
-  aRect->x = GetInlinePosition();
-  aRect->SetHeight(frame->GetRect().Height());
+  if (wm.IsVertical()) {
+    aRect->y = GetInlinePosition();
+    aRect->SetWidth(frame->ISize(wm));
+  } else {
+    aRect->x = GetInlinePosition();
+    aRect->SetHeight(frame->ISize(wm));
+  }
 
   return frame;
 }
