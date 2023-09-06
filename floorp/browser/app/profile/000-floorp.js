@@ -158,6 +158,9 @@ pref("floorp.browser.profile-manager.enabled", false);
 // [実験] 新しいタブのオーバーライド
 pref("floorp.newtab.overrides.newtaburl", "");
 
+//Portable
+pref("floorp.portable.isUpdate", true);
+
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //ブックマークツールバー
