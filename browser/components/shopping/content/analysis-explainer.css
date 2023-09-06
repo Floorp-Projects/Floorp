@@ -5,14 +5,8 @@
 @import url("chrome://global/skin/in-content/common.css");
 
 #analysis-explainer-wrapper p,
-#analysis-explainer-grades-list > li,
 .analysis-explainer-grading-scale-description {
   line-height: 150%;
-}
-
-#analysis-explainer-grades-list {
-  padding: 0;
-  margin-inline-start: 1.05em;
 }
 
 #analysis-explainer-grading-scale-wrapper {

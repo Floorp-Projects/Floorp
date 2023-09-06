@@ -110,6 +110,7 @@ class RecommendedAd extends MozLitElement {
           </div>
         </a>
       </shopping-card>
+      <p data-l10n-id="ad-by-fakespot"></p>
     `;
   }
 }

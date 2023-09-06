@@ -14,3 +14,13 @@
   display: flex;
   justify-self: center;
 }
+
+#powered-by-fakespot {
+  font-size: 12px;
+  color: var(--text-color-deemphasized);
+}
+
+#shopping-ads-learn-more {
+  margin-inline-end: 20px;
+  color: var(--text-color-deemphasized);
+}
