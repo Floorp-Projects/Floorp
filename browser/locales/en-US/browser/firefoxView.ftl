@@ -241,3 +241,5 @@ firefoxview-recentlyclosed-empty-description-two = To find tabs from longer ago,
 ## This message is displayed below the name of another connected device when it doesn't have any open tabs.
 
 firefoxview-syncedtabs-device-notabs = No tabs open on this device
+
+firefoxview-syncedtabs-connect-another-device = Connect another device
