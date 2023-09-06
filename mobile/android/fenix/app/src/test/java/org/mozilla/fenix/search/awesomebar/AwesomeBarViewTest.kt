@@ -765,24 +765,9 @@ class AwesomeBarViewTest {
     }
 
     @Test
-    fun `GIVEN unified search feature is enabled WHEN configuring providers THEN don't add the engine suggestions provider`() {
+    fun `GIVEN a search is made by the user WHEN configuring providers THEN search engine suggestion provider should always be added`() {
         val settings: Settings = mockk(relaxed = true) {
             every { showUnifiedSearchFeature } returns true
-        }
-        every { activity.settings() } returns settings
-        val state = getSearchProviderState(
-            searchEngineSource = SearchEngineSource.Default(mockk(relaxed = true)),
-        )
-
-        val result = awesomeBarView.getProvidersToAdd(state)
-
-        assertEquals(0, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
-    }
-
-    @Test
-    fun `GIVEN unified search feature is disabled WHEN configuring providers THEN add the engine suggestions provider`() {
-        val settings: Settings = mockk(relaxed = true) {
-            every { showUnifiedSearchFeature } returns false
         }
         every { activity.settings() } returns settings
         val state = getSearchProviderState(
@@ -834,7 +819,7 @@ class AwesomeBarViewTest {
     }
 
     @Test
-    fun `GIVEN a search from the default engine with no suggestions asked WHEN configuring providers THEN don't add any provider`() {
+    fun `GIVEN a search from the default engine with no suggestions asked WHEN configuring providers THEN add only search engine suggestion provider`() {
         val settings: Settings = mockk(relaxed = true) {
             every { showUnifiedSearchFeature } returns true
         }
@@ -862,7 +847,7 @@ class AwesomeBarViewTest {
         assertEquals(0, result.filterIsInstance<SearchSuggestionProvider>().size)
         assertEquals(0, result.filterIsInstance<SyncedTabsStorageSuggestionProvider>().size)
         assertEquals(0, result.filterIsInstance<SessionSuggestionProvider>().size)
-        assertEquals(0, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
+        assertEquals(1, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
     }
 
     @Test

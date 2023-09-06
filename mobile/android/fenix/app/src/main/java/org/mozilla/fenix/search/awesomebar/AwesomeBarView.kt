@@ -318,9 +318,7 @@ class AwesomeBarView(
             providersToAdd.add(getLocalTabsProvider(state.searchEngineSource, true))
         }
 
-        if (!activity.settings().showUnifiedSearchFeature) {
-            providersToAdd.add(searchEngineSuggestionProvider)
-        }
+        providersToAdd.add(searchEngineSuggestionProvider)
 
         return providersToAdd
     }
