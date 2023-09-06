@@ -21,6 +21,7 @@ class ShoppingSettings extends MozLitElement {
     return {
       recommendationsToggleEl: "#shopping-settings-recommendations-toggle",
       optOutButtonEl: "#shopping-settings-opt-out-button",
+      shoppingCardEl: "shopping-card",
     };
   }
 
@@ -34,6 +35,7 @@ class ShoppingSettings extends MozLitElement {
 
   onDisableShopping() {
     RPMSetPref("browser.shopping.experience2023.optedIn", 2);
+    RPMSetPref("browser.shopping.experience2023.active", false);
   }
 
   render() {
