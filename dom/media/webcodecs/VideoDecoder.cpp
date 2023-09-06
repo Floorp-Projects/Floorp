@@ -1068,6 +1068,9 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
 Result<Ok, nsresult> VideoDecoder::Reset(const nsresult& aResult) {
   AssertIsOnOwningThread();
 
+  LOG("VideoDecoder %p reset with 0x%08" PRIx32, this,
+      static_cast<uint32_t>(aResult));
+
   if (mState == CodecState::Closed) {
     return Err(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
@@ -1093,6 +1096,9 @@ Result<Ok, nsresult> VideoDecoder::Reset(const nsresult& aResult) {
 // https://w3c.github.io/webcodecs/#close-videodecoder
 Result<Ok, nsresult> VideoDecoder::Close(const nsresult& aResult) {
   AssertIsOnOwningThread();
+
+  LOG("VideoDecoder %p close with 0x%08" PRIx32, this,
+      static_cast<uint32_t>(aResult));
 
   MOZ_TRY(Reset(aResult));
   mState = CodecState::Closed;
@@ -1218,6 +1224,9 @@ void VideoDecoder::ScheduleOutputVideoFrames(
 void VideoDecoder::ScheduleClose(const nsresult& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
+
+  LOG("VideoDecoder %p has schedule a close with 0x%08" PRIx32, this,
+      static_cast<uint32_t>(aResult));
 
   auto task = [self = RefPtr{this}, result = aResult] {
     if (self->mState == CodecState::Closed) {
