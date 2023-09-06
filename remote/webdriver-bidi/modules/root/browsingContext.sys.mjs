@@ -726,9 +726,20 @@ class BrowsingContextModule extends Module {
       );
     }
 
-    return this.#awaitNavigation(webProgress, targetURI, {
-      wait,
-    });
+    return this.#awaitNavigation(
+      webProgress,
+      () => {
+        context.loadURI(targetURI, {
+          loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK,
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
+          hasValidUserGestureActivation: true,
+        });
+      },
+      {
+        wait,
+      }
+    );
   }
 
   /**
@@ -878,6 +889,58 @@ class BrowsingContextModule extends Module {
   }
 
   /**
+   * Reload the given context's document, with the provided wait condition.
+   *
+   * @param {object=} options
+   * @param {string} options.context
+   *     Id of the browsing context to navigate.
+   * @param {bool=} options.ignoreCache
+   *     If true ignore the browser cache. [Not yet supported]
+   * @param {WaitCondition=} options.wait
+   *     Wait condition for the navigation, one of "none", "interactive", "complete".
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context for contextId cannot be found.
+   */
+  async reload(options = {}) {
+    const {
+      context: contextId,
+      ignoreCache,
+      wait = WaitCondition.None,
+    } = options;
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+
+    if (typeof ignoreCache != "undefined") {
+      throw new lazy.error.UnsupportedOperationError(
+        `Argument "ignoreCache" is not supported yet.`
+      );
+    }
+
+    const waitConditions = Object.values(WaitCondition);
+    if (!waitConditions.includes(wait)) {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected "wait" to be one of ${waitConditions}, got ${wait}`
+      );
+    }
+
+    const context = this.#getBrowsingContext(contextId);
+
+    // webProgress will be stable even if the context navigates, retrieve it
+    // immediately before doing any asynchronous call.
+    const webProgress = context.webProgress;
+
+    // TODO: Return the navigation result once the BiDi specification has been
+    // fixed. See https://github.com/w3c/webdriver-bidi/issues/527
+    await this.#awaitNavigation(webProgress, () => context.reload(0), { wait });
+  }
+
+  /**
    * Set the top-level browsing context's viewport to a given dimension.
    *
    * @param {object=} options
@@ -973,13 +1036,13 @@ class BrowsingContextModule extends Module {
    *
    * @param {WebProgress} webProgress
    *     The WebProgress instance to observe for this navigation.
-   * @param {nsIURI} targetURI
-   *     The URI to navigate to.
+   * @param {Function} callback
+   *     A callback that starts a navigation.
    * @param {object} options
    * @param {WaitCondition} options.wait
    *     The WaitCondition to use to wait for the navigation.
    */
-  async #awaitNavigation(webProgress, targetURI, options) {
+  async #awaitNavigation(webProgress, callback, options) {
     const { wait } = options;
 
     const context = webProgress.browsingContext;
@@ -1035,11 +1098,7 @@ class BrowsingContextModule extends Module {
       }
     });
 
-    context.loadURI(targetURI, {
-      loadFlags: Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      hasValidUserGestureActivation: true,
-    });
+    await callback();
     await navigated;
 
     let url;
