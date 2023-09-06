@@ -63,18 +63,18 @@ export class ShoppingSidebarChild extends RemotePageChild {
   receiveMessage(message) {
     switch (message.name) {
       case "ShoppingSidebar:UpdateProductURL":
-        let { url } = message.data;
+        let { url, isReload } = message.data;
         let uri = url ? Services.io.newURI(url) : null;
         // If we're going from null to null, bail out:
         if (!this.#productURI && !uri) {
           return;
         }
         // Otherwise, check if we now have a product:
-        if (uri && this.#productURI?.equalsExceptRef(uri)) {
+        if (uri && this.#productURI?.equalsExceptRef(uri) && !isReload) {
           return;
         }
         this.#productURI = uri;
-        this.updateContent({ haveUpdatedURI: true });
+        this.updateContent({ haveUpdatedURI: true, isReload });
         break;
     }
   }
@@ -135,11 +135,14 @@ export class ShoppingSidebarChild extends RemotePageChild {
    *        Whether we've got an up-to-date URI already. If true, we avoid
    *        fetching the URI from the parent, and assume `this.#productURI`
    *        is current. Defaults to false.
+   * @param {bool} options.isPolledRequest = false
+   * @param {bool} options.isReload = false
    *
    */
   async updateContent({
     haveUpdatedURI = false,
     isPolledRequest = false,
+    isReload = false,
   } = {}) {
     // updateContent is an async function, and when we're off making requests or doing
     // other things asynchronously, the actor can be destroyed, the user
@@ -191,6 +194,11 @@ export class ShoppingSidebarChild extends RemotePageChild {
       this.#product = new ShoppingProduct(uri);
       let data;
       let isPolledRequestDone;
+      // If a reload took place during polling we want to clear
+      // the in-progress message with the next update.
+      if (isReload) {
+        isPolledRequestDone = true;
+      }
       try {
         if (!isPolledRequest) {
           data = await this.#product.requestAnalysis();

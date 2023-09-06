@@ -5,9 +5,10 @@
 export class ShoppingSidebarParent extends JSWindowActorParent {
   static SHOPPING_ACTIVE_PREF = "browser.shopping.experience2023.active";
 
-  updateProductURL(uri) {
+  updateProductURL(uri, flags) {
     this.sendAsyncMessage("ShoppingSidebar:UpdateProductURL", {
       url: uri?.spec ?? null,
+      isReload: !!(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_RELOAD),
     });
   }
 
