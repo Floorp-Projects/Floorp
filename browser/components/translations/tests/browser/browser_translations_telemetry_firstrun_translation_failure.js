@@ -31,21 +31,17 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
-  await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: true,
-      expectFirstInteraction: true,
-      finalValuePredicates: [
-        value => value.extra.auto_show === "false",
-        value => value.extra.view_name === "defaultView",
-        value => value.extra.opened_from === "translationsButton",
-        value => value.extra.document_language === "es",
-      ],
-    }
-  );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 1,
+    expectNewFlowId: true,
+    expectFirstInteraction: true,
+    finalValuePredicates: [
+      value => value.extra.auto_show === "false",
+      value => value.extra.view_name === "defaultView",
+      value => value.extra.opened_from === "translationsButton",
+      value => value.extra.document_language === "es",
+    ],
+  });
 
   await clickTranslateButton({
     downloadHandler: rejectDownloads,
@@ -54,23 +50,18 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
 
   await assertPageIsUntranslated(runInPage);
 
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 2,
+    expectNewFlowId: false,
+    expectFirstInteraction: true,
+    finalValuePredicates: [
+      value => value.extra.auto_show === "true",
+      value => value.extra.view_name === "errorView",
+      value => value.extra.opened_from === "translationsButton",
+      value => value.extra.document_language === "es",
+    ],
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 2,
-      expectNewFlowId: false,
-      expectFirstInteraction: true,
-      finalValuePredicates: [
-        value => value.extra.auto_show === "true",
-        value => value.extra.view_name === "errorView",
-        value => value.extra.opened_from === "translationsButton",
-        value => value.extra.document_language === "es",
-      ],
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "TranslateButton",
     Glean.translationsPanel.translateButton,
     {
       expectedEventCount: 1,
@@ -78,30 +69,21 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
       expectFirstInteraction: true,
     }
   );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 1,
+    expectNewFlowId: false,
+    expectFirstInteraction: true,
+  });
+  await TestTranslationsTelemetry.assertEvent(Glean.translations.error, {
+    expectedEventCount: 1,
+    expectNewFlowId: false,
+    expectFirstInteraction: true,
+    finalValuePredicates: [
+      value =>
+        value.extra.reason === "Error: Intentionally rejecting downloads.",
+    ],
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: false,
-      expectFirstInteraction: true,
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "Error",
-    Glean.translations.error,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: false,
-      expectFirstInteraction: true,
-      finalValuePredicates: [
-        value =>
-          value.extra.reason === "Error: Intentionally rejecting downloads.",
-      ],
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "TranslationRequest",
     Glean.translations.translationRequest,
     {
       expectedEventCount: 1,
@@ -120,7 +102,6 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
   await clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(
-    "CancelButton",
     Glean.translationsPanel.cancelButton,
     {
       expectedEventCount: 1,
@@ -128,38 +109,29 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
       expectFirstInteraction: true,
     }
   );
-  await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 2,
-      expectNewFlowId: false,
-      expectFirstInteraction: true,
-    }
-  );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 2,
+    expectNewFlowId: false,
+    expectFirstInteraction: true,
+  });
 
   await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
-  await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 3,
-      expectNewFlowId: true,
-      expectFirstInteraction: false,
-      finalValuePredicates: [
-        value => value.extra.auto_show === "false",
-        value => value.extra.view_name === "defaultView",
-        value => value.extra.opened_from === "translationsButton",
-        value => value.extra.document_language === "es",
-      ],
-    }
-  );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 3,
+    expectNewFlowId: true,
+    expectFirstInteraction: false,
+    finalValuePredicates: [
+      value => value.extra.auto_show === "false",
+      value => value.extra.view_name === "defaultView",
+      value => value.extra.opened_from === "translationsButton",
+      value => value.extra.document_language === "es",
+    ],
+  });
 
   await clickCancelButton();
 
   await TestTranslationsTelemetry.assertEvent(
-    "CancelButton",
     Glean.translationsPanel.cancelButton,
     {
       expectedEventCount: 2,
@@ -167,15 +139,11 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
       expectFirstInteraction: false,
     }
   );
-  await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 3,
-      expectNewFlowId: false,
-      expectFirstInteraction: false,
-    }
-  );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 3,
+    expectNewFlowId: false,
+    expectFirstInteraction: false,
+  });
 
   await cleanup();
 });

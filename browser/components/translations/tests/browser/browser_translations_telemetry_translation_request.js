@@ -33,7 +33,6 @@ add_task(async function test_translations_telemetry_manual_translation() {
     }
   );
   await TestTranslationsTelemetry.assertEvent(
-    "TranslationRequest",
     Glean.translations.translationRequest,
     {
       expectedEventCount: 0,
@@ -68,38 +67,28 @@ add_task(async function test_translations_telemetry_manual_translation() {
       expectedDenominator: 1,
     }
   );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 1,
+    expectNewFlowId: true,
+    finalValuePredicates: [
+      value => value.extra.auto_show === "false",
+      value => value.extra.view_name === "defaultView",
+      value => value.extra.opened_from === "translationsButton",
+      value => value.extra.document_language === "es",
+    ],
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: true,
-      finalValuePredicates: [
-        value => value.extra.auto_show === "false",
-        value => value.extra.view_name === "defaultView",
-        value => value.extra.opened_from === "translationsButton",
-        value => value.extra.document_language === "es",
-      ],
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "TranslateButton",
     Glean.translationsPanel.translateButton,
     {
       expectedEventCount: 1,
       expectNewFlowId: false,
     }
   );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 1,
+    expectNewFlowId: false,
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 1,
-      expectNewFlowId: false,
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "TranslationRequest",
     Glean.translations.translationRequest,
     {
       expectedEventCount: 1,
@@ -147,29 +136,19 @@ add_task(async function test_translations_telemetry_auto_translation() {
       expectedDenominator: 1,
     }
   );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
+    expectedEventCount: 0,
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "OpenPanel",
-    Glean.translationsPanel.open,
-    {
-      expectedEventCount: 0,
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "TranslateButton",
     Glean.translationsPanel.translateButton,
     {
       expectedEventCount: 0,
     }
   );
+  await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.close, {
+    expectedEventCount: 0,
+  });
   await TestTranslationsTelemetry.assertEvent(
-    "ClosePanel",
-    Glean.translationsPanel.close,
-    {
-      expectedEventCount: 0,
-    }
-  );
-  await TestTranslationsTelemetry.assertEvent(
-    "TranslationRequest",
     Glean.translations.translationRequest,
     {
       expectedEventCount: 1,
