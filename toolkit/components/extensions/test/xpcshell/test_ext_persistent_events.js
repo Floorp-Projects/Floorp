@@ -92,8 +92,6 @@ const API = class extends ExtensionAPI {
 
       assertResetOnIdleOnEvent() {
         const expectResetIdleOnEventFalse =
-          this.context.envType !== "addon_parent" ||
-          !this.context.isBackgroundContext ||
           this.context.extension.persistentBackground;
         if (expectResetIdleOnEventFalse && this.resetIdleOnEvent) {
           const details = {
