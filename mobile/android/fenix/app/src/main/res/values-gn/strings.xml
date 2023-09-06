@@ -62,7 +62,7 @@
     <!-- Private Browsing -->
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s omopotĩ nde jeheka ha kundahára rembiasakue tendayke ñemiguápe emboty térã esẽenguévo ko tembiporu’ígui. Kóva nande kuaukáiramo jepe ñanduti rendápe térã ne ñanduti me’ẽhárape, nombohasýi eime ñemi hag̃ua opaite tapicha oipurúva ko mba’e’oka renondépe.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s omopotĩ nde jeheka ha kundahára rembiasakue tendayke ñemiguápe emboty térã esẽenguévo ko tembiporu’ígui. Kóva nande kuaukáiramo jepe ñanduti rendápe térã ne ñanduti me’ẽhárape, nombohasýi eime ñemi hag̃ua opaite tapicha oiporúva ko mba’e’oka renondépe.</string>
     <string name="private_browsing_common_myths">
        Mombe’ugua’u kundahára ñemi rehegua
     </string>
@@ -1616,7 +1616,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title_2">Kookie tenda ojuasáva</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Ejoko kookie oipurúva ñanduti marandugua ha mba’apohaguasu mba’ekuaarã resa’ỹijoha ombyatýva kundahára mba’ekuaarã oikévo tendápe.</string>
+    <string name="etp_cookies_description">Ejoko kookie oiporúva ñanduti marandugua ha mba’apohaguasu mba’ekuaarã resa’ỹijoha ombyatýva kundahára mba’ekuaarã oikévo tendápe.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description_2">Ñemo’ãmbaite kookie rovake oreko kookie tenda reimehápe g̃uarã, avei tapykuehoha ndojepurukuaái ohapykueho hag̃ua tendakuéra pa’ũme.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -1675,7 +1675,7 @@
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">Marandu ñemoneĩgua</string>
     <!-- About page link text to open a screen with libraries that are used -->
-    <string name="about_other_open_source_libraries">Arandukarenda roipurúva</string>
+    <string name="about_other_open_source_libraries">Arandukarenda roiporúva</string>
 
     <!-- Toast shown to the user when they are activating the secret dev menu
         The first parameter is number of long clicks left to enable the menu -->

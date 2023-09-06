@@ -378,6 +378,8 @@
     <string name="preferences_default_search_engine">Privzeti iskalnik</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Iskanje</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Iskalnike</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Naslovna vrstica</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -639,6 +641,8 @@
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
     <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Dodatki so začasno onemogočeni</string>
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Eden ali več dodatkov je prenehal delovati, zaradi česar je sistem postal nestabilen. %1$s jih je poskušal znova zagnati, a ni uspel.\n\nMed trenutno sejo se dodatki ne bodo znova zagnali.\n\nTežavo lahko odpravite tako, da odstranite ali onemogočite dodatke.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Poskusi znova zagnati dodatke</string>
     <!-- The user will continue with all add-ons disabled -->
@@ -1374,12 +1378,16 @@
     <string name="preferences_delete_browsing_data_tabs_subtitle">Zavihkov: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">Zgodovina brskanja in podatki strani</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Zgodovino brskanja</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Naslovov: %d</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">Piškotki</string>
 
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Piškotke in podatke strani</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Odjavljeni boste z večine strani</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
