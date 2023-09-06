@@ -23,6 +23,7 @@ add_setup(() => {
   // but in Desktop build the xpcshell test would get stuck on
   // the call to testGetValue.
   Services.fog.initializeFOG();
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_process_crash_telemetry() {
@@ -55,16 +56,14 @@ add_task(async function test_process_crash_telemetry() {
   );
 
   Assert.ok(
-    Glean.extensions.processEvent.created.testGetValue() > 0,
-    "Expect glean processEvent.created to be set"
+    Glean.extensions.processEvent.created_fg.testGetValue() > 0,
+    "Expect glean processEvent.created_fg to be set."
   );
-
-  if (ExtensionProcessCrashObserver._isAndroid) {
-    Assert.ok(
-      Glean.extensions.processEvent.created_fg.testGetValue() > 0,
-      "Expect glean processEvent.created_fg to be set on Android builds"
-    );
-  }
+  Assert.equal(
+    undefined,
+    Glean.extensions.processEvent.created_bg.testGetValue(),
+    "Expect glean processEvent.created_bg to be not set."
+  );
 
   info("Mock application-background observer service topic");
   ExtensionProcessCrashObserver.observe(null, "application-background");
@@ -87,15 +86,15 @@ add_task(async function test_process_crash_telemetry() {
     currentProcessChildID
   );
 
-  Assert.ok(
-    Glean.extensions.processEvent.crashed.testGetValue() > 0,
-    "Expect glean processEvent.crashed to be set"
-  );
-
   if (ExtensionProcessCrashObserver._isAndroid) {
     Assert.ok(
       Glean.extensions.processEvent.crashed_bg.testGetValue() > 0,
-      "Expect glean processEvent.crashed_bg to be set on Android builds"
+      "Expect glean processEvent.crashed_bg to be set on Android builds."
+    );
+  } else {
+    Assert.ok(
+      Glean.extensions.processEvent.crashed_fg.testGetValue() > 0,
+      "Expect glean processEvent.crashed_fg to be set on desktop."
     );
   }
 

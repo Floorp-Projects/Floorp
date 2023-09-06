@@ -84,6 +84,10 @@ add_setup(function () {
   // Set a high threshold because this test crashes a few times on purpose and
   // we don't want to disable process spawning.
   Services.prefs.setIntPref("extensions.webextensions.crash.threshold", 100);
+
+  // Need a profile to init Glean.
+  do_get_profile();
+  Services.fog.initializeFOG();
 });
 
 add_setup(
@@ -624,6 +628,39 @@ add_task(
     // Force-enable process spawning because that will reset the internals of
     // the crash observer.
     ExtensionProcessCrashObserver.enableProcessSpawning();
+    Services.fog.testResetFOG();
+
+    function assertCrashThresholdTelemetry({ expectToBeSet }) {
+      // Desktop builds are only expected to record crashed_over_threshold_fg,
+      // on Android builds xpcshell tests are detected as being in foreground
+      // unless we explicitly mock the app being moved in the background as
+      // the test tasks test_background_restarted_after_crash already does
+      // (and crashed_over_threshold_bg is covered in that test task).
+
+      equal(
+        undefined,
+        Glean.extensions.processEvent.crashed_over_threshold_bg.testGetValue(),
+        `Initial value of crashed_over_threshold_bg.`
+      );
+
+      if (expectToBeSet) {
+        ok(
+          Glean.extensions.processEvent.crashed_over_threshold_fg.testGetValue() >
+            0,
+          "Expect crashed_over_threshold_fg count to be set."
+        );
+        return;
+      }
+
+      equal(
+        undefined,
+        Glean.extensions.processEvent.crashed_over_threshold_fg.testGetValue(),
+        `Initial value of crashed_over_threshold_fg.`
+      );
+    }
+
+    assertCrashThresholdTelemetry({ expectToBeSet: false });
+
     Assert.equal(
       ExtensionProcessCrashObserver.processSpawningDisabled,
       false,
@@ -697,8 +734,13 @@ add_task(
       );
     }
 
+    assertCrashThresholdTelemetry({ expectToBeSet: false });
+
     info("Crash one more time");
     await crashExtensionBackground(extension);
+
+    assertCrashThresholdTelemetry({ expectToBeSet: true });
+
     Assert.ok(
       ExtensionProcessCrashObserver.processSpawningDisabled,
       "Expect process spawning to be disabled"
@@ -762,9 +804,39 @@ add_task(
       "Expect process spawning to be enabled"
     );
 
+    function assertCrashThresholdTelemetry({ fg, bg }) {
+      if (fg) {
+        ok(
+          Glean.extensions.processEvent.crashed_over_threshold_fg.testGetValue() >
+            0,
+          "Expect crashed_over_threshold_fg count to be set."
+        );
+      } else {
+        equal(
+          undefined,
+          Glean.extensions.processEvent.crashed_over_threshold_fg.testGetValue(),
+          `Initial value of crashed_over_threshold_fg.`
+        );
+      }
+      if (bg) {
+        ok(
+          Glean.extensions.processEvent.crashed_over_threshold_bg.testGetValue() >
+            0,
+          "Expect crashed_over_threshold_bg count to be set."
+        );
+      } else {
+        equal(
+          undefined,
+          Glean.extensions.processEvent.crashed_over_threshold_bg.testGetValue(),
+          `Initial value of crashed_over_threshold_bg.`
+        );
+      }
+    }
+
     // Setup test environment to match a fully started browser instance
     await ExtensionTestCommon.resetStartupPromises();
     await AddonTestUtils.notifyEarlyStartup();
+    Services.fog.testResetFOG();
 
     let extension = ExtensionTestUtils.loadExtension({
       manifest: {
@@ -855,13 +927,17 @@ add_task(
 
     info("Mock another crash to be exceeding enforced crash threshold");
 
+    assertCrashThresholdTelemetry({ fg: false, bg: false });
+
     // Mock application moved into the background and background page
     // auto-restart to be deferred to the application being moved
     // back in the foreground.
     if (ExtensionProcessCrashObserver._isAndroid) {
       await mockCrashOnAndroidAppInBackground();
+      assertCrashThresholdTelemetry({ fg: false, bg: true });
     } else {
       await crashExtensionBackground(extension);
+      assertCrashThresholdTelemetry({ fg: true, bg: false });
     }
 
     Assert.ok(
@@ -911,6 +987,8 @@ add_task(
 
       // Crash one more time to exceed the threshold.
       await crashExtensionBackground(extension);
+
+      assertCrashThresholdTelemetry({ fg: true, bg: true });
 
       Assert.ok(
         ExtensionProcessCrashObserver.processSpawningDisabled,

@@ -105,8 +105,13 @@ add_task(async function test_ExtensionProcessCrashObserver() {
   const bgPageBrowser = await promiseBackgroundBrowser;
 
   Assert.ok(
-    Glean.extensions.processEvent.created.testGetValue() > 0,
-    "Expect glean processEvent.created to be set"
+    Glean.extensions.processEvent.created_fg.testGetValue() > 0,
+    "Expect glean processEvent.created_fg to be set."
+  );
+  Assert.equal(
+    undefined,
+    Glean.extensions.processEvent.created_bg.testGetValue(),
+    "Creating in the background is not expected on desktop."
   );
 
   info("Force extension process crash");
@@ -154,9 +159,15 @@ add_task(async function test_ExtensionProcessCrashObserver() {
   );
 
   Assert.ok(
-    Glean.extensions.processEvent.crashed.testGetValue() > 0,
-    "Expect glean processEvent.crashed to be set"
+    Glean.extensions.processEvent.crashed_fg.testGetValue() > 0,
+    "Expect glean processEvent.crashed_fg to be set"
   );
+  Assert.equal(
+    undefined,
+    Glean.extensions.processEvent.crashed_bg.testGetValue(),
+    "Crashing in the background is not expected on desktop."
+  );
+
   info("Wait for mv3 extension shutdown");
   await mv3Extension.unload();
   info("Wait for mv2 extension shutdown");
