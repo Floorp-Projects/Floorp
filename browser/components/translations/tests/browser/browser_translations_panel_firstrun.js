@@ -20,12 +20,7 @@ add_task(async function test_translations_panel_firstrun() {
     "The intro text is available."
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Dismiss the panel"
-    );
-  });
+  await clickCancelButton();
 
   info("Loading a different page.");
   BrowserTestUtils.loadURIString(tab.linkedBrowser, SPANISH_PAGE_URL_2);
@@ -39,12 +34,7 @@ add_task(async function test_translations_panel_firstrun() {
     "The intro text is no longer shown."
   );
 
-  await waitForTranslationsPopupEvent("popuphidden", () => {
-    click(
-      getByL10nId("translations-panel-translate-cancel"),
-      "Dismiss the panel"
-    );
-  });
+  await clickCancelButton();
 
   await cleanup();
 });
