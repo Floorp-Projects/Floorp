@@ -1695,6 +1695,7 @@ bool WarpBuilder::build_EndIter(BytecodeLocation loc) {
 
 bool WarpBuilder::build_CloseIter(BytecodeLocation loc) {
   MDefinition* iter = current->pop();
+  iter = unboxObjectInfallible(iter);
   return buildIC(loc, CacheKind::CloseIter, {iter});
 }
 
@@ -2901,6 +2902,10 @@ bool WarpBuilder::build_SpreadCall(BytecodeLocation loc) {
   CallInfo callInfo(alloc(), constructing, loc.resultIsPopped());
   callInfo.initForSpreadCall(current);
 
+  // The argument must be an array object.
+  MOZ_ASSERT(callInfo.argc() == 1);
+  callInfo.setArg(0, unboxObjectInfallible(callInfo.getArg(0)));
+
   if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
     return transpileCall(loc, cacheIRSnapshot, &callInfo);
   }
@@ -2920,6 +2925,10 @@ bool WarpBuilder::build_SpreadNew(BytecodeLocation loc) {
   bool constructing = true;
   CallInfo callInfo(alloc(), constructing, loc.resultIsPopped());
   callInfo.initForSpreadCall(current);
+
+  // The argument must be an array object.
+  MOZ_ASSERT(callInfo.argc() == 1);
+  callInfo.setArg(0, unboxObjectInfallible(callInfo.getArg(0)));
 
   if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
     return transpileCall(loc, cacheIRSnapshot, &callInfo);
