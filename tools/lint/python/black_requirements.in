@@ -1,4 +1,4 @@
-black==21.11b1
+black==23.3.0
 typing-extensions==3.10.0.2
 dataclasses==0.6
 
