@@ -15,11 +15,6 @@ add_task(async function test_translations_panel_firstrun() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
-  ok(
-    getByL10nId("translations-panel-intro-description"),
-    "The intro text is available."
-  );
-
   await clickCancelButton();
 
   await navigate("Load a different page on the same site", {
@@ -27,12 +22,6 @@ add_task(async function test_translations_panel_firstrun() {
   });
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
-
-  info("Checking for the intro text to be hidden.");
-  await waitForCondition(
-    () => !maybeGetByL10nId("translations-panel-intro-description"),
-    "The intro text is no longer shown."
-  );
 
   await clickCancelButton();
 

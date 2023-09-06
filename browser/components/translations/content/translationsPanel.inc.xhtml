@@ -35,7 +35,8 @@
       <vbox class="translations-panel-content">
         <html:div id="translations-panel-intro">
           <html:span data-l10n-id="translations-panel-intro-description"></html:span>
-          <html:a is="moz-support-link"
+          <html:a id="translations-panel-intro-learn-more-link"
+                  is="moz-support-link"
                   data-l10n-id="translations-panel-learn-more-link"
                   support-page="website-translation"
                   onclick="TranslationsPanel.onLearnMoreLink()" />
@@ -108,7 +109,7 @@
                showheader="true">
       <hbox class="panel-header translations-panel-header">
         <image class="translations-panel-error-icon" />
-        <html:h1>
+        <html:h1 id="translations-panel-unsupported-language-header">
           <html:span data-l10n-id="translations-panel-error-unsupported"></html:span>
         </html:h1>
       </hbox>
@@ -116,7 +117,8 @@
       <vbox class="translations-panel-content">
         <html:div>
           <html:span id="translations-panel-error-unsupported-hint"></html:span>
-          <html:a is="moz-support-link"
+          <html:a id="translations-panel-unsupported-learn-more-link"
+                  is="moz-support-link"
                   data-l10n-id="translations-panel-learn-more-link"
                   support-page="website-translation"
                   onclick="TranslationsPanel.onLearnMoreLink()" />

@@ -27,14 +27,6 @@ add_task(async function test_translations_panel_basics() {
   const label = document.getElementById(panel.getAttribute("aria-labelledby"));
   ok(label, "The a11y label for the panel can be found.");
   ok(isVisible(label), "The a11y label for the panel is visible.");
-  ok(
-    getByL10nId("translations-panel-from-label"),
-    "The from label is visible."
-  );
-  ok(
-    isVisible(document.getElementById("translations-panel-from")),
-    "The from menulist is visible."
-  );
 
   await clickTranslateButton();
 
@@ -47,20 +39,6 @@ add_task(async function test_translations_panel_basics() {
   await assertPageIsTranslated("es", "en", runInPage);
 
   await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
-
-  ok(
-    getByL10nId("translations-panel-translate-button").disabled,
-    "The translate button is disabled when re-opening."
-  );
-
-  ok(
-    !maybeGetByL10nId("translations-panel-from-label"),
-    "The from label is hidden."
-  );
-  ok(
-    !isVisible(document.getElementById("translations-panel-from")),
-    "The from menulist is hidden."
-  );
 
   await clickRestoreButton();
 
