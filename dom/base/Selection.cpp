@@ -3236,7 +3236,7 @@ nsIFrame* Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion,
   nsFrameSelection::AdjustFrameForLineStart(frame, frameOffset);
 
   // Figure out what node type we have, then get the
-  // appropriate rect for its nodeOffset.
+  // appropriate rect for it's nodeOffset.
   bool isText = node->IsText();
 
   nsPoint pt(0, 0);
@@ -3250,42 +3250,19 @@ nsIFrame* Selection::GetSelectionEndPointGeometry(SelectionRegion aRegion,
 
     frame = childFrame;
 
-    // Get the coordinates of the offset into the text frame.
+    // Get the x coordinate of the offset into the text frame.
     rv = GetCachedFrameOffset(frame, nodeOffset, pt);
     if (NS_FAILED(rv)) return nullptr;
   }
 
-  // Return the rect relative to the frame, with zero inline-size.  The
-  // inline-position is either 'pt' (if we're a text node) or otherwise just
-  // the physical "end" edge of the frame (which we express as the frame's own
-  // width or height, since the returned position is relative to the frame).
-  // The block position and size are set so as to fill the frame in that axis.
-  // (i.e. block-position of 0, and block-size matching the frame's own block
-  // size).
-  const WritingMode wm = frame->GetWritingMode();
-  // Helper to determine the inline-axis position for the aRect outparam.
-  auto GetInlinePosition = [&]() {
-    if (isText) {
-      return wm.IsVertical() ? pt.y : pt.x;
-    }
-    // Return the frame's physical end edge of its inline axis, relative to the
-    // frame.  That's just its height or width.
-    // TODO(dholbert): This seems to work, but perhaps we really want the
-    // inline-end edge (rather than physical end of inline axis)? (i.e. if we
-    // have direction:rtl, maybe this code would want to return 0 instead of
-    // height/width?)
-    return frame->ISize(wm);
-  };
-
-  // Set the inline position and block-size. Leave inline size and block
-  // position set to 0, as discussed above.
-  if (wm.IsVertical()) {
-    aRect->y = GetInlinePosition();
-    aRect->SetWidth(frame->ISize(wm));
-  } else {
-    aRect->x = GetInlinePosition();
-    aRect->SetHeight(frame->ISize(wm));
+  // Return the rect relative to the frame, with zero width.
+  if (isText) {
+    aRect->x = pt.x;
+  } else if (mFrameSelection->GetHint() == CARET_ASSOCIATE_BEFORE) {
+    // It's the frame's right edge we're interested in.
+    aRect->x = frame->GetRect().Width();
   }
+  aRect->SetHeight(frame->GetRect().Height());
 
   return frame;
 }
