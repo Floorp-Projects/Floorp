@@ -32,7 +32,7 @@ def skip_only_or_not(config, task):
     return False
 
 
-@group_by("single")
+@group_by("single-with-filters")
 def single_grouping(config, tasks):
     for task in tasks:
         if skip_only_or_not(config.config, task):

@@ -22,5 +22,6 @@ jobs:
     upload-symbols-dummy:
         description: Dummy task to pull in mac x64 and aarch64 upload-symbols tasks
         from-deps:
+            group-by: single-with-filters
             unique-kinds: false
         worker-type: succeed

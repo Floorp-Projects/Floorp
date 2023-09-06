@@ -16,7 +16,8 @@ kind-dependencies:
 
 jobs:
     beetmover-source:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         shipping-phase: promote
         attributes:
             artifact_map: taskcluster/gecko_taskgraph/manifests/source_files.yml

@@ -25,4 +25,5 @@ only-for-build-platforms:
 
 jobs:
     repackage-signing:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters

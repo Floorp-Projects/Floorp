@@ -15,7 +15,8 @@ kind-dependencies:
 
 jobs:
     partials-signing:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         shipping-phase: promote
         treeherder-group: ps
         description-suffix: 'partial signing'

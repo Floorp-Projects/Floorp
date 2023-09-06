@@ -18,7 +18,8 @@ only-for-build-platforms:
 
 jobs:
     mar-signing-autograph-stage:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         shipping-phase: null
         treeherder-group: ms-stage
         treeherder:

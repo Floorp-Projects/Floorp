@@ -25,7 +25,8 @@ only-for-build-platforms:
 
 jobs:
     build-mac-signing:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         treeherder:
             symbol: BMS
         enable-signing-routes: false
