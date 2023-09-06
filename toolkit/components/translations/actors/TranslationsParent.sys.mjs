@@ -463,6 +463,14 @@ export class TranslationsParent extends JSWindowActorParent {
       return;
     }
 
+    if (detectedLanguages.docLangTag === detectedLanguages.userLangTag) {
+      lazy.console.error(
+        "maybeOfferTranslations - The document and user lang tag are the same, not offering a translation.",
+        documentURI.spec
+      );
+      return;
+    }
+
     // Only offer the translation if it's still the current page.
     if (
       documentURI.spec ===
@@ -628,6 +636,14 @@ export class TranslationsParent extends JSWindowActorParent {
         // The user hasn't customized their accept languages, this means that English
         // is always provided as a fallback language, even if it is not available.
         TranslationsParent.#webContentLanguages.delete("en");
+      }
+
+      if (TranslationsParent.#webContentLanguages.size === 0) {
+        // The user has removed all of their web content languages, default to the
+        // app locale.
+        TranslationsParent.#webContentLanguages.add(
+          new Intl.Locale(Services.locale.appLocaleAsBCP47).language
+        );
       }
     }
 
