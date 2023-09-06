@@ -423,6 +423,24 @@ async function clickTranslateButton({
   }
 }
 
+async function clickChangeSourceLanguageButton({ firstShow = false } = {}) {
+  const { changeSourceLanguageButton } = TranslationsPanel.elements;
+  ok(
+    isVisible(changeSourceLanguageButton),
+    "Expect the translate button to be visible"
+  );
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      click(
+        changeSourceLanguageButton,
+        "Click the change-source-language button"
+      );
+    },
+    firstShow ? assertPanelFirstShowView : assertPanelDefaultView
+  );
+}
+
 /**
  * Asserts that for each provided expectation, the visible state of the corresponding
  * element in TranslationsPanel.elements both exists and matches the visibility expectation.

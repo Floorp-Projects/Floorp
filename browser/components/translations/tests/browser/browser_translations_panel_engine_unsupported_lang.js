@@ -35,16 +35,7 @@ add_task(async function test_unsupported_lang() {
     "The learn more link is available"
   );
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(
-        getByL10nId("translations-panel-error-change-button"),
-        "Change the languages."
-      );
-    },
-    assertPanelDefaultView
-  );
+  await clickChangeSourceLanguageButton();
 
   info("Waiting to find the translations panel header.");
   const header = await waitForCondition(() =>

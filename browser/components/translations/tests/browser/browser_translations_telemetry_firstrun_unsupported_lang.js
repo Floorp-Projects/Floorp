@@ -45,16 +45,7 @@ add_task(
       "The unsupported title is shown."
     );
 
-    await waitForTranslationsPopupEvent(
-      "popupshown",
-      () => {
-        click(
-          getByL10nId("translations-panel-error-change-button"),
-          "Change the languages."
-        );
-      },
-      assertPanelFirstShowView
-    );
+    await clickChangeSourceLanguageButton({ firstShow: true });
 
     info("Waiting to find the translations panel header.");
     const header = await waitForCondition(() =>
