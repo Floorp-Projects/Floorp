@@ -273,7 +273,12 @@ already_AddRefed<MediaRawData> OggCodecState::PacketOutAsMediaRawData() {
   NS_ASSERTION(endTimestamp.IsPositiveOrZero(), "timestamp invalid");
 
   TimeUnit duration = PacketDuration(packet.get());
-  NS_ASSERTION(duration.IsPositiveOrZero(), "duration invalid");
+  if (!duration.IsPositiveOrZero()) {
+    NS_WARNING(
+        nsPrintfCString("duration invalid! (%s)", duration.ToString().get())
+            .get());
+    duration = TimeUnit::Zero(endTimestamp);
+  }
 
   sample->mTimecode = Time(packet->granulepos);
   sample->mTime = endTimestamp - duration;
@@ -1278,6 +1283,9 @@ already_AddRefed<MediaRawData> OpusState::PacketOutAsMediaRawData() {
     data->mOriginalPresentationWindow =
         Some(media::TimeInterval{data->mTime, data->mTime + data->mDuration});
     data->mDuration -= toTrim;
+    if (data->mDuration.IsNegative()) {
+      data->mDuration = TimeUnit::Zero(data->mTime);
+    }
   }
 
   // Save this packet's granule position in case we need to perform end
