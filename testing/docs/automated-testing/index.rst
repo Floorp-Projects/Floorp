@@ -336,3 +336,13 @@ was created:
    **Note:** JS engine tests do not use testing/profiles yet, instead
    `set prefs
    here <https://searchfox.org/mozilla-central/source/js/src/tests/user.js>`__.
+
+Adding New Context to Skip Conditions
+-------------------------------------
+
+Often when standing up new test configurations, it's necessary to add new keys
+that can be used in ``skip-if`` annotations.
+
+.. toctree::
+
+   manifest-sandbox
