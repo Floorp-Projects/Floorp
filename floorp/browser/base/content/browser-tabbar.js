@@ -130,6 +130,9 @@ const tabbarDisplayStyleFunctions = {
           #toolbar-menubar > .titlebar-buttonbox-container {
             display: none !important;
           }
+          :root[inFullscreen]:not([macOSNativeFullscreen]) #titlebar {
+            display: none !important;
+          }
         `;
         document.querySelector("head").appendChild(tabbarContents.modifyCSS);
         tabbarContents.tabbarElement.setAttribute(
