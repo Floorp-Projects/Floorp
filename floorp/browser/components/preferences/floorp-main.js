@@ -24,6 +24,7 @@ Preferences.addAll([
   { id: "floorp.browser.workspace.tab.enabled", type: "bool" },
   { id: "floorp.tabscroll.reverse", type: "bool" },
   { id: "floorp.tabscroll.wrap", type: "bool" },
+  { id: "floorp.portable.isUpdate", type: "bool" },
 ]);
 
 window.addEventListener("pageshow", async function() {
@@ -153,10 +154,37 @@ window.addEventListener("pageshow", async function() {
       elem.checked = !Services.prefs.getBoolPref(prefName, true);
     });
   }
+
+  if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
+      document.getElementById("floorpPortableUpdateAuto").removeAttribute("hidden");
+      document.getElementById("floorpPortableUpdateHeader").removeAttribute("hidden");
+  }
+  
 }, { once: true });
 
 // Optimize for portable version
 if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
   // https://searchfox.org/mozilla-esr102/source/browser/components/preferences/main.js#1306-1311
   getShellService = function() {};
+
+  const portableCSSElem = document.createElement("style");
+  portableCSSElem.id = "portableCSS";
+  portableCSSElem.innerText = `
+  #updateDeck {
+    display: none;
+  }
+
+  #showUpdateHistory {
+    display: none;
+  }
+  
+  #updateSettingsContainer {
+    display: none;
+  }
+
+  #updateAllowDescription {
+    display: none;
+  }
+  `;
+  document.head.appendChild(portableCSSElem);
 }

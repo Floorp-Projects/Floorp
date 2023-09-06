@@ -556,6 +556,11 @@
 
 #ifdef MOZ_UPDATER
   <description id="updateAllowDescription" data-l10n-id="update-application-allow-description"></description>
+
+  <html:h2 id="floorpPortableUpdateHeader" hidden="true" data-l10n-id="floorp-portable-update-application-allow"/>
+  <checkbox id="floorpPortableUpdateAuto" preference="floorp.portable.isUpdate" hidden="true"
+            data-l10n-id="floorp-update-application-auto-enabled-option"/>
+
   <vbox id="updateSettingsContainer" class="info-box-container">
     <radiogroup id="updateRadioGroup">
       <radio id="autoDesktop"
