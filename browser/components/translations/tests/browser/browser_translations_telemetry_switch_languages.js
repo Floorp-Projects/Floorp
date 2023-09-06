@@ -12,20 +12,11 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const { button } = await assertTranslationsButton(
-    { button: true },
-    "The button is available."
-  );
+  await assertTranslationsButton({ button: true }, "The button is available.");
 
   await assertPageIsUntranslated(runInPage);
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   const fromSelect = getById("translations-panel-from");
 
@@ -111,20 +102,11 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const { button } = await assertTranslationsButton(
-    { button: true },
-    "The button is available."
-  );
+  await assertTranslationsButton({ button: true }, "The button is available.");
 
   await assertPageIsUntranslated(runInPage);
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   const toSelect = getById("translations-panel-to");
 

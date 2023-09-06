@@ -17,14 +17,12 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
     ],
   });
 
-  const { button } = await assertTranslationsButton(
-    { button: true },
-    "The button is available."
-  );
+  await assertTranslationsButton({ button: true }, "The button is available.");
 
   await assertPageIsUntranslated(runInPage);
 
-  await openTranslationsSettingsMenuViaTranslationsButton();
+  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
+  await openTranslationsSettingsMenu();
   await clickAlwaysTranslateLanguage();
 
   await assertTranslationsButton(
@@ -89,13 +87,7 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
     }
   );
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelRevisitView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(

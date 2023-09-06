@@ -13,24 +13,7 @@ add_task(async function test_translations_panel_firstrun() {
     prefs: [["browser.translations.panelShown", false]],
   });
 
-  const { button } = await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: false, icon: true },
-    "The button is available."
-  );
-
-  is(
-    button.getAttribute("data-l10n-id"),
-    "urlbar-translations-button-intro",
-    "The intro message is displayed."
-  );
-
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelFirstShowView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
   ok(
     getByL10nId("translations-panel-intro-description"),
@@ -48,19 +31,7 @@ add_task(async function test_translations_panel_firstrun() {
   BrowserTestUtils.loadURIString(tab.linkedBrowser, SPANISH_PAGE_URL_2);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  is(
-    button.getAttribute("data-l10n-id"),
-    "urlbar-translations-button2",
-    "The intro message is no longer there."
-  );
-
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   info("Checking for the intro text to be hidden.");
   await waitForCondition(

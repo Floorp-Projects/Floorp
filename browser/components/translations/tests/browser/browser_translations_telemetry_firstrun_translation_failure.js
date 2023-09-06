@@ -22,20 +22,14 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     prefs: [["browser.translations.panelShown", false]],
   });
 
-  const { button } = await assertTranslationsButton(
+  await assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
     "The button is available."
   );
 
   await assertPageIsUntranslated(runInPage);
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelFirstShowView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
   await TestTranslationsTelemetry.assertEvent(
     "OpenPanel",
@@ -159,13 +153,7 @@ add_task(async function test_translations_telemetry_firstrun_failure() {
     }
   );
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelFirstShowView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelFirstShowView });
 
   await TestTranslationsTelemetry.assertEvent(
     "OpenPanel",

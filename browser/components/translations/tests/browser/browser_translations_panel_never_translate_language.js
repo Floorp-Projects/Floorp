@@ -26,7 +26,8 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
     "Simulate clicking never-translate-language in the settings menu, " +
       "adding the document language from the neverTranslateLanguages pref"
   );
-  await openTranslationsSettingsMenuViaTranslationsButton();
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateLanguage("es", { checked: false });
   await clickNeverTranslateLanguage();
@@ -62,20 +63,14 @@ add_task(
       prefs: [["browser.translations.neverTranslateLanguages", "pl,fr"]],
     });
 
-    const { button } = await assertTranslationsButton(
+    await assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The button is available."
     );
 
     await assertPageIsUntranslated(runInPage);
 
-    await waitForTranslationsPopupEvent(
-      "popupshown",
-      () => {
-        click(button, "Opening the popup");
-      },
-      assertPanelDefaultView
-    );
+    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
     await waitForTranslationsPopupEvent("popuphidden", () => {
       click(
@@ -97,7 +92,8 @@ add_task(
       "Simulate clicking never-translate-language in the settings menu, " +
         "adding the document language from the neverTranslateLanguages pref"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await openTranslationsSettingsMenu();
 
     await assertIsNeverTranslateLanguage("es", { checked: false });
     await clickNeverTranslateLanguage();
@@ -140,7 +136,8 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "adding the document language to the alwaysTranslateLanguages pref"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateLanguage("es", { checked: false });
@@ -164,7 +161,8 @@ add_task(
         "adding the document language from the neverTranslateLanguages pref " +
         "and removing it from the alwaysTranslateLanguages pref"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateLanguage("es", { checked: false });

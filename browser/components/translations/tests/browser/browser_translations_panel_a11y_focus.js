@@ -12,18 +12,12 @@ add_task(async function test_translations_panel_a11y_focus() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const { button } = await assertTranslationsButton(
-    { button: true },
-    "The button is available."
-  );
+  await assertTranslationsButton({ button: true }, "The button is available.");
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      hitEnterKey(button, "Opening the popup with the Enter key.");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({
+    openWithKeyboard: true,
+    onOpenPanel: assertPanelDefaultView,
+  });
 
   is(
     document.activeElement.getAttribute("data-l10n-id"),

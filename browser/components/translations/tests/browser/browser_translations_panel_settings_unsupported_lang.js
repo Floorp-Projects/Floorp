@@ -31,7 +31,8 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
     "Simulate clicking always-translate-language in the settings menu, " +
       "adding the document language to the alwaysTranslateLanguages pref"
   );
-  await openTranslationsSettingsMenuViaTranslationsButton();
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
   await clickAlwaysTranslateLanguage();
@@ -56,7 +57,10 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
     "The translations button should be unavailable."
   );
 
-  await openTranslationsSettingsMenuViaAppMenu();
+  await openTranslationsPanel({
+    openFromAppMenu: true,
+    onOpenPanel: assertPanelUnsupportedLanguageView,
+  });
   assertIsAlwaysTranslateLanguage("fr", { checked: false, disabled: true });
   assertIsNeverTranslateLanguage("fr", { checked: false, disabled: true });
 

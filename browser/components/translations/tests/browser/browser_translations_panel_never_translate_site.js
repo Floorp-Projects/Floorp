@@ -27,7 +27,8 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
     "Simulate clicking never-translate-site in the settings menu, " +
       "denying translations permissions for this content window principal"
   );
-  await openTranslationsSettingsMenuViaTranslationsButton();
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await openTranslationsSettingsMenu();
 
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
   await clickNeverTranslateSite();
@@ -73,20 +74,14 @@ add_task(
       permissionsUrls: [SPANISH_PAGE_URL],
     });
 
-    const { button } = await assertTranslationsButton(
+    await assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The translations button is visible."
     );
 
     await assertPageIsUntranslated(runInPage);
 
-    await waitForTranslationsPopupEvent(
-      "popupshown",
-      () => {
-        click(button, "Opening the popup");
-      },
-      assertPanelDefaultView
-    );
+    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
     await waitForTranslationsPopupEvent("popuphidden", () => {
       click(
@@ -108,7 +103,8 @@ add_task(
       "Simulate clicking never-translate-site in the settings menu, " +
         "denying translations permissions for this content window principal"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await openTranslationsSettingsMenu();
 
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
     await clickNeverTranslateSite();
@@ -170,7 +166,8 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "adding the document language to the alwaysTranslateLanguages pref"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
@@ -193,7 +190,8 @@ add_task(
       "Simulate clicking never-translate-site in the settings menu, " +
         "denying translations permissions for this content window principal"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });

@@ -12,7 +12,7 @@ add_task(async function test_translations_telemetry_manual_translation() {
     languagePairs: LANGUAGE_PAIRS,
   });
 
-  const { button } = await assertTranslationsButton(
+  await assertTranslationsButton(
     { button: true, circleArrows: false, locale: false, icon: true },
     "The button is available."
   );
@@ -40,13 +40,7 @@ add_task(async function test_translations_telemetry_manual_translation() {
     }
   );
 
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(button, "Opening the popup");
-    },
-    assertPanelDefaultView
-  );
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(

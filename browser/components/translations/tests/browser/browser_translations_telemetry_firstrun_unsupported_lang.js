@@ -19,18 +19,10 @@ add_task(
       prefs: [["browser.translations.panelShown", false]],
     });
 
-    const appMenuButton = getById("PanelUI-menu-button");
-
-    click(appMenuButton, "Opening the app menu");
-    await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
-
-    await waitForTranslationsPopupEvent(
-      "popupshown",
-      () => {
-        click(getByL10nId("appmenuitem-translate"), "Opening the popup");
-      },
-      assertPanelUnsupportedLanguageView
-    );
+    await openTranslationsPanel({
+      openFromAppMenu: true,
+      onOpenPanel: assertPanelUnsupportedLanguageView,
+    });
 
     await TestTranslationsTelemetry.assertEvent(
       "OpenPanel",
@@ -139,16 +131,10 @@ add_task(
       }
     );
 
-    click(appMenuButton, "Opening the app menu");
-    await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
-
-    await waitForTranslationsPopupEvent(
-      "popupshown",
-      () => {
-        click(getByL10nId("appmenuitem-translate"), "Opening the popup");
-      },
-      assertPanelUnsupportedLanguageView
-    );
+    await openTranslationsPanel({
+      openFromAppMenu: true,
+      onOpenPanel: assertPanelUnsupportedLanguageView,
+    });
 
     await TestTranslationsTelemetry.assertEvent(
       "OpenPanel",

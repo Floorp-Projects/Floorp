@@ -17,18 +17,10 @@ add_task(async function test_unsupported_lang() {
     ],
   });
 
-  const appMenuButton = getById("PanelUI-menu-button");
-
-  click(appMenuButton, "Opening the app menu");
-  await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
-
-  await waitForTranslationsPopupEvent(
-    "popupshown",
-    () => {
-      click(getByL10nId("appmenuitem-translate"), "Opening the popup");
-    },
-    assertPanelUnsupportedLanguageView
-  );
+  await openTranslationsPanel({
+    openFromAppMenu: true,
+    onOpenPanel: assertPanelUnsupportedLanguageView,
+  });
 
   ok(
     getByL10nId("translations-panel-error-unsupported"),

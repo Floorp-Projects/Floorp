@@ -43,7 +43,8 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "adding the document language to the alwaysTranslateLanguages pref"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await clickAlwaysTranslateLanguage();
@@ -69,7 +70,10 @@ add_task(
     info(
       "Open the translations panel to show the default unsupported language view."
     );
-    await openTranslationsPanelViaAppMenu();
+    await openTranslationsPanel({
+      openFromAppMenu: true,
+      onOpenPanel: assertPanelUnsupportedLanguageView,
+    });
 
     ok(
       getByL10nId("translations-panel-error-unsupported"),

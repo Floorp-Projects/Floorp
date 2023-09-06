@@ -26,7 +26,8 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     "Simulate clicking always-translate-language in the settings menu, " +
       "adding the document language to the alwaysTranslateLanguages pref"
   );
-  await openTranslationsSettingsMenuViaTranslationsButton();
+  await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+  await openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: false });
   await clickAlwaysTranslateLanguage();
@@ -67,7 +68,8 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
     "Simulate clicking always-translate-language in the settings menu " +
       "removing the document language from the alwaysTranslateLanguages pref"
   );
-  await openTranslationsSettingsMenuViaTranslationsButton();
+  await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+  await openTranslationsSettingsMenu();
 
   await assertIsAlwaysTranslateLanguage("es", { checked: true });
   await clickAlwaysTranslateLanguage();
@@ -96,20 +98,14 @@ add_task(
       prefs: [["browser.translations.alwaysTranslateLanguages", "pl,fr"]],
     });
 
-    const { button } = await assertTranslationsButton(
+    await assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The button is available."
     );
 
     await assertPageIsUntranslated(runInPage);
 
-    await waitForTranslationsPopupEvent(
-      "popupshown",
-      () => {
-        click(button, "Opening the popup");
-      },
-      assertPanelDefaultView
-    );
+    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
     await waitForTranslationsPopupEvent("popuphidden", () => {
       click(
@@ -131,7 +127,8 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "adding the document language to the alwaysTranslateLanguages pref"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await clickAlwaysTranslateLanguage();
@@ -143,6 +140,9 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu " +
         "removing the document language from the alwaysTranslateLanguages pref"
     );
+    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
+    await openTranslationsSettingsMenu();
+
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await clickAlwaysTranslateLanguage();
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
@@ -171,7 +171,7 @@ add_task(
       prefs: [["browser.translations.alwaysTranslateLanguages", "pl,fr"]],
     });
 
-    const { button } = await assertTranslationsButton(
+    await assertTranslationsButton(
       { button: true, circleArrows: false, locale: false, icon: true },
       "The translations button is visible."
     );
@@ -182,7 +182,8 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "adding the document language to the alwaysTranslateLanguages pref"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: false });
     await clickAlwaysTranslateLanguage();
@@ -221,13 +222,7 @@ add_task(
       "The page should be automatically translated."
     );
 
-    await waitForTranslationsPopupEvent(
-      "popupshown",
-      () => {
-        click(button, "Re-opening the popup");
-      },
-      assertPanelRevisitView
-    );
+    await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
 
     await waitForTranslationsPopupEvent("popuphidden", () => {
       click(
@@ -247,7 +242,8 @@ add_task(
       "Simulate clicking always-translate-language in the settings menu, " +
         "removing the document language to the alwaysTranslateLanguages pref"
     );
-    await openTranslationsSettingsMenuViaTranslationsButton();
+    await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
+    await openTranslationsSettingsMenu();
 
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await clickAlwaysTranslateLanguage();

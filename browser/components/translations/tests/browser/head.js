@@ -105,50 +105,45 @@ async function assertTranslationsButton(visibleAssertions, message) {
   return elements;
 }
 
-/**
- * A convenience function to open the translations panel settings
- * menu by clicking on the translations button.
- *
- * Fails the test if the menu cannot be opened.
- */
-async function openTranslationsSettingsMenuViaTranslationsButton() {
+async function openTranslationsPanel({
+  onOpenPanel = null,
+  openFromAppMenu = false,
+  openWithKeyboard = false,
+}) {
   await closeTranslationsPanelIfOpen();
-
-  const { button } = await assertTranslationsButton(
-    { button: true },
-    "The button is available."
-  );
-
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(button, "Opening the popup");
-  });
-
-  const gearIcons = getAllByL10nId("translations-panel-settings-button");
-  for (const gearIcon of gearIcons) {
-    if (gearIcon.hidden) {
-      continue;
-    }
-    click(gearIcon, "Open the settings menu");
-    info("Waiting for settings menu to open.");
-    const manageLanguages = await waitForCondition(() =>
-      maybeGetByL10nId("translations-panel-settings-manage-languages")
-    );
-    ok(
-      manageLanguages,
-      "The manage languages item should be visible in the settings menu."
-    );
-    return;
+  if (openFromAppMenu) {
+    await openTranslationsPanelViaAppMenu({ onOpenPanel, openWithKeyboard });
+  } else {
+    await openTranslationsPanelViaTranslationsButton({
+      onOpenPanel,
+      openWithKeyboard,
+    });
   }
 }
 
-/**
- * A convenience function to open the translations panel settings
- * menu through the app menu.
- *
- * Fails the test if the menu cannot be opened.
- */
-async function openTranslationsSettingsMenuViaAppMenu() {
-  await openTranslationsPanelViaAppMenu();
+async function openTranslationsPanelViaTranslationsButton({
+  onOpenPanel = null,
+  openWithKeyboard = false,
+}) {
+  info("Opening the translations panel via the translations button.");
+  const { button } = await assertTranslationsButton(
+    { button: true },
+    "The translations button is visible."
+  );
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      if (openWithKeyboard) {
+        hitEnterKey(button, "Opening the popup with keyboard");
+      } else {
+        click(button, "Opening the popup");
+      }
+    },
+    onOpenPanel
+  );
+}
+
+async function openTranslationsSettingsMenu() {
   const gearIcons = getAllByL10nId("translations-panel-settings-button");
   for (const gearIcon of gearIcons) {
     if (gearIcon.hidden) {
@@ -173,10 +168,16 @@ async function openTranslationsSettingsMenuViaAppMenu() {
  *
  * Fails the test if the menu cannot be opened.
  */
-async function openTranslationsPanelViaAppMenu() {
-  await closeTranslationsPanelIfOpen();
+async function openTranslationsPanelViaAppMenu({
+  onOpenPanel = null,
+  openWithKeyboard = false,
+}) {
   const appMenuButton = getById("PanelUI-menu-button");
-  click(appMenuButton, "Opening the app-menu button");
+  if (openWithKeyboard) {
+    hitEnterKey(appMenuButton, "Opening the app-menu button with keyboard");
+  } else {
+    click(appMenuButton, "Opening the app-menu button");
+  }
   await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
 
   const translateSiteButton = getById("appMenu-translate-button");
@@ -187,9 +188,17 @@ async function openTranslationsPanelViaAppMenu() {
     "The app-menu translate button should be enabled"
   );
 
-  await waitForTranslationsPopupEvent("popupshown", () => {
-    click(translateSiteButton);
-  });
+  await waitForTranslationsPopupEvent(
+    "popupshown",
+    () => {
+      if (openWithKeyboard) {
+        hitEnterKey(translateSiteButton, "Opening the popup with keyboard");
+      } else {
+        click(translateSiteButton, "Opening the popup");
+      }
+    },
+    onOpenPanel
+  );
 }
 
 /*
@@ -449,6 +458,15 @@ function assertPanelDefaultView() {
   assertPanelElementVisibility({
     ...defaultViewVisibilityExpectations,
   });
+}
+
+function assertPanelLoadingView() {
+  assertPanelDefaultView();
+  const loadingButton = getByL10nId(
+    "translations-panel-translate-button-loading"
+  );
+  ok(loadingButton, "The loading button is present");
+  ok(loadingButton.disabled, "The loading button is disabled");
 }
 
 /**
