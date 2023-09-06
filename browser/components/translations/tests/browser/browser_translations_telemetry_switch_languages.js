@@ -18,13 +18,8 @@ add_task(async function test_translations_telemetry_switch_from_language() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
-  const fromSelect = getById("translations-panel-from");
-
-  is(fromSelect.value, "es", "The from select starts as Spanish");
-
-  info('Switch from language to "es"');
-  fromSelect.value = "en";
-  fromSelect.dispatchEvent(new Event("command"));
+  assertSelectedFromLanguage("es");
+  switchSelectedFromLanguage("en");
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
@@ -45,9 +40,7 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     }
   );
 
-  info('Switch from language back to "es"');
-  fromSelect.value = "es";
-  fromSelect.dispatchEvent(new Event("command"));
+  switchSelectedFromLanguage("es");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeFromLanguage,
@@ -58,9 +51,7 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     }
   );
 
-  info("Switch to language to nothing");
-  fromSelect.value = "";
-  fromSelect.dispatchEvent(new Event("command"));
+  switchSelectedFromLanguage("");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeFromLanguage,
@@ -69,9 +60,7 @@ add_task(async function test_translations_telemetry_switch_from_language() {
     }
   );
 
-  info('Switch from language to "en"');
-  fromSelect.value = "en";
-  fromSelect.dispatchEvent(new Event("command"));
+  switchSelectedFromLanguage("en");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeFromLanguage,
@@ -100,13 +89,8 @@ add_task(async function test_translations_telemetry_switch_to_language() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelDefaultView });
 
-  const toSelect = getById("translations-panel-to");
-
-  is(toSelect.value, "en", "The to select starts as English");
-
-  info('Switch to language to "fr"');
-  toSelect.value = "fr";
-  toSelect.dispatchEvent(new Event("command"));
+  assertSelectedToLanguage("en");
+  switchSelectedToLanguage("fr");
 
   await TestTranslationsTelemetry.assertEvent(Glean.translationsPanel.open, {
     expectedEventCount: 1,
@@ -127,9 +111,7 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     }
   );
 
-  info('Switch to language back to "en"');
-  toSelect.value = "en";
-  toSelect.dispatchEvent(new Event("command"));
+  switchSelectedToLanguage("en");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeToLanguage,
@@ -140,9 +122,7 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     }
   );
 
-  info("Switch to language to nothing");
-  toSelect.value = "";
-  toSelect.dispatchEvent(new Event("command"));
+  switchSelectedToLanguage("");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeToLanguage,
@@ -151,9 +131,7 @@ add_task(async function test_translations_telemetry_switch_to_language() {
     }
   );
 
-  info('Switch to language to "en"');
-  toSelect.value = "en";
-  toSelect.dispatchEvent(new Event("command"));
+  switchSelectedToLanguage("en");
 
   await TestTranslationsTelemetry.assertEvent(
     Glean.translationsPanel.changeToLanguage,

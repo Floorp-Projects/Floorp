@@ -201,6 +201,36 @@ async function openTranslationsPanelViaAppMenu({
   );
 }
 
+function switchSelectedFromLanguage(langTag) {
+  const { fromMenuList } = TranslationsPanel.elements;
+  fromMenuList.value = langTag;
+  fromMenuList.dispatchEvent(new Event("command"));
+}
+
+function assertSelectedFromLanguage(langTag) {
+  const { fromMenuList } = TranslationsPanel.elements;
+  is(
+    fromMenuList.value,
+    langTag,
+    "Expected selected from-language to match the given language tag"
+  );
+}
+
+function switchSelectedToLanguage(langTag) {
+  const { toMenuList } = TranslationsPanel.elements;
+  toMenuList.value = langTag;
+  toMenuList.dispatchEvent(new Event("command"));
+}
+
+function assertSelectedToLanguage(langTag) {
+  const { toMenuList } = TranslationsPanel.elements;
+  is(
+    toMenuList.value,
+    langTag,
+    "Expected selected to-language to match the given language tag"
+  );
+}
+
 /*
  * Simulates the effect of toggling a menu item in the translations panel
  * settings menu. Requires that the settings menu is currently open,

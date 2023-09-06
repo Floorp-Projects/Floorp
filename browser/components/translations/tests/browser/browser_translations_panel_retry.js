@@ -26,10 +26,7 @@ add_task(async function test_translations_panel_retry() {
 
   await openTranslationsPanel({ onOpenPanel: assertPanelRevisitView });
 
-  info('Switch to language to "fr"');
-  const toSelect = getById("translations-panel-to");
-  toSelect.value = "fr";
-  toSelect.dispatchEvent(new Event("command"));
+  switchSelectedToLanguage("fr");
 
   await clickTranslateButton({
     downloadHandler: resolveDownloads,
