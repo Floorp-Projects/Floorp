@@ -41,6 +41,27 @@ async function assertPageIsUntranslated(runInPage, message = null) {
   });
 }
 
+async function assertPageIsTranslated(
+  fromLanguage,
+  toLanguage,
+  runInPage,
+  message = null
+) {
+  if (message) {
+    info(message);
+  }
+  const callback = async (TranslationsTest, { fromLang, toLang }) => {
+    const { getH1 } = TranslationsTest.getSelectors();
+    await TranslationsTest.assertTranslationResult(
+      "The page's H1 is translated.",
+      getH1,
+      `DON QUIJOTE DE LA MANCHA [${fromLang} to ${toLang}, html]`
+    );
+  };
+  await runInPage(callback, { fromLang: fromLanguage, toLang: toLanguage });
+  await assertLangTagIsShownOnTranslationsButton(fromLanguage, toLanguage);
+}
+
 /**
  * Assert some property about the translations button.
  *
@@ -321,6 +342,31 @@ async function assertCheckboxState(
       `Should match expected checkbox state for ${dataL10nId}`
     );
   }
+}
+
+async function assertLangTagIsShownOnTranslationsButton(
+  fromLanguage,
+  toLanguage
+) {
+  const { button, locale } = await assertTranslationsButton(
+    { button: true, circleArrows: false, locale: true, icon: true },
+    "The icon presents the locale."
+  );
+  is(
+    locale.innerText,
+    toLanguage,
+    `The expected language tag "${toLanguage}" is shown.`
+  );
+  is(
+    button.getAttribute("data-l10n-id"),
+    "urlbar-translations-button-translated"
+  );
+  const fromLangDisplay = getIntlDisplayName(fromLanguage);
+  const toLangDisplay = getIntlDisplayName(toLanguage);
+  is(
+    button.getAttribute("data-l10n-args"),
+    `{"fromLanguage":"${fromLangDisplay}","toLanguage":"${toLangDisplay}"}`
+  );
 }
 
 /**

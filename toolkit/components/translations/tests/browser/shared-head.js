@@ -550,7 +550,7 @@ async function loadTestPage({
      * @param {(TranslationsTest: import("./translations-test.mjs")) => any} callback
      * @returns {Promise<void>}
      */
-    runInPage(callback) {
+    runInPage(callback, data = {}) {
       // ContentTask.spawn runs the `Function.prototype.toString` on this function in
       // order to send it into the content process. The following function is doing its
       // own string manipulation in order to load in the TranslationsTest module.
@@ -562,7 +562,9 @@ async function loadTestPage({
         // Pass in the values that get injected by the task runner.
         TranslationsTest.setup({Assert, ContentTaskUtils, content});
 
-        return (${callback.toString()})(TranslationsTest);
+        const data = ${JSON.stringify(data)};
+
+        return (${callback.toString()})(TranslationsTest, data);
       `);
 
       return ContentTask.spawn(

@@ -62,21 +62,7 @@ add_task(async function test_translations_telemetry_manual_translation() {
 
   await resolveDownloads(1);
 
-  const { locale } = await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: true, icon: true },
-    "The icon presents the locale."
-  );
-
-  is(locale.innerText, "en", "The English language tag is shown.");
-
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The pages H1 is translated.",
-      getH1,
-      "DON QUIJOTE DE LA MANCHA [es to en, html]"
-    );
-  });
+  await assertPageIsTranslated("es", "en", runInPage);
 
   await TestTranslationsTelemetry.assertCounter(
     "RequestCount",
@@ -157,21 +143,7 @@ add_task(async function test_translations_telemetry_auto_translation() {
 
   await resolveDownloads(1);
 
-  const { locale } = await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: true, icon: true },
-    "The icon presents the locale."
-  );
-
-  is(locale.innerText, "en", "The English language tag is shown.");
-
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The pages H1 is translated.",
-      getH1,
-      "DON QUIJOTE DE LA MANCHA [es to en, html]"
-    );
-  });
+  await assertPageIsTranslated("es", "en", runInPage);
 
   await TestTranslationsTelemetry.assertCounter(
     "RequestCount",

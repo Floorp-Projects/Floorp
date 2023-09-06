@@ -44,21 +44,7 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
 
   await resolveDownloads(1);
 
-  const { locale } = await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: true, icon: true },
-    "The icon presents the locale."
-  );
-
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The page's H1 is translated automatically",
-      getH1,
-      "DON QUIJOTE DE LA MANCHA [es to en, html]"
-    );
-  });
-
-  is(locale.innerText, "en", "The English language tag is shown.");
+  await assertPageIsTranslated("es", "en", runInPage);
 
   await navigate(
     FRENCH_PAGE_URL,

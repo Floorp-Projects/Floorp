@@ -90,21 +90,7 @@ add_task(async function test_translations_persist_in_reader_mode() {
 
   await resolveDownloads(1);
 
-  const { locale } = await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: true, icon: true },
-    "The icon presents the locale."
-  );
-
-  is(locale.innerText, "en", "The English language tag is shown.");
-
-  await runInPage(async TranslationsTest => {
-    const { getH1 } = TranslationsTest.getSelectors();
-    await TranslationsTest.assertTranslationResult(
-      "The pages H1 is translated.",
-      getH1,
-      "DON QUIJOTE DE LA MANCHA [es to en, html]"
-    );
-  });
+  await assertPageIsTranslated("es", "en", runInPage);
 
   await toggleReaderMode();
 

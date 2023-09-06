@@ -67,21 +67,7 @@ add_task(
 
     await resolveDownloads(1);
 
-    const { locale } = await assertTranslationsButton(
-      { button: true, circleArrows: false, locale: true, icon: true },
-      "The icon presents the locale."
-    );
-
-    is(locale.innerText, "en", "The English language tag is shown.");
-
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The pages H1 is translated.",
-        getH1,
-        "DON QUIJOTE DE LA MANCHA [es to en, html]"
-      );
-    });
+    await assertPageIsTranslated("es", "en", runInPage);
 
     info(
       "Simulate clicking never-translate-site in the settings menu, " +
@@ -113,16 +99,7 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", { checked: true });
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, { checked: false });
 
-    is(locale.innerText, "en", "The English language tag is shown.");
-
-    await runInPage(async TranslationsTest => {
-      const { getH1 } = TranslationsTest.getSelectors();
-      await TranslationsTest.assertTranslationResult(
-        "The pages H1 was automatically translated.",
-        getH1,
-        "DON QUIJOTE DE LA MANCHA [es to en, html]"
-      );
-    });
+    await assertPageIsTranslated("es", "en", runInPage);
 
     await cleanup();
   }
