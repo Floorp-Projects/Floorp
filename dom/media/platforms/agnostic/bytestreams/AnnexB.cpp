@@ -380,8 +380,9 @@ AnnexB::ConvertNALUTo4BytesNALU(mozilla::MediaRawData* aSample,
     return Err(NS_ERROR_FAILURE);
   }
 
-  // We still do the conversion for 4-byte AVCC since we need to check if the
-  // data is corrupt.
+  // If the nalLenSize is already 4, we can only check if the data is corrupt
+  // without replacing data in aSample.
+  bool needConversion = aNALUSize != 4;
 
   MOZ_ASSERT(aSample);
   nsTArray<uint8_t> dest;
@@ -411,9 +412,17 @@ AnnexB::ConvertNALUTo4BytesNALU(mozilla::MediaRawData* aSample,
       // The data may be corrupt.
       return Err(NS_ERROR_UNEXPECTED);
     }
+    if (!needConversion) {
+      // We only parse aSample to see if it's corrupt.
+      continue;
+    }
     if (!writer.WriteU32(nalLen) || !writer.Write(p, nalLen)) {
       return Err(NS_ERROR_OUT_OF_MEMORY);
     }
+  }
+  if (!needConversion) {
+    // We've parsed all the data, and it's all good.
+    return Ok();
   }
   UniquePtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
   if (!samplewriter->Replace(dest.Elements(), dest.Length())) {
