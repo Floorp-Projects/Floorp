@@ -58,3 +58,21 @@ label {
   display: flex;
   align-items: center;
 }
+
+.syncedtabs-footer {
+  display: flex;
+  justify-content: end;
+  margin-block-end: 2rem;
+}
+
+.syncedtabs-footer button {
+  display: flex;
+  align-items: center;
+  min-width: unset;
+  margin-inline: 0;
+  padding: 0.5rem 0.7rem;
+}
+
+.syncedtabs-footer button .icon {
+  margin-inline-end: 0.7rem;
+}

@@ -413,6 +413,22 @@ class SyncedTabsInView extends ViewPage {
         );
       }
     }
+    if (!this.recentBrowsing) {
+      renderArray.push(
+        html`<div class="syncedtabs-footer">
+          <button data-action="add-device" @click=${this.handleEvent}>
+            <img
+              class="icon"
+              role="presentation"
+              src="chrome://global/skin/icons/plus.svg"
+            /><span
+              data-l10n-id="firefoxview-syncedtabs-connect-another-device"
+              data-action="add-device"
+            ></span>
+          </button>
+        </div>`
+      );
+    }
     return renderArray;
   }
 
