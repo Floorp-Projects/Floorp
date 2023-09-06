@@ -7,6 +7,7 @@ loader: gecko_taskgraph.loader.transform:loader
 transforms:
     - gecko_taskgraph.transforms.try_job:transforms
     - gecko_taskgraph.transforms.source_test:transforms
+    - taskgraph.transforms.task_context
     - gecko_taskgraph.transforms.release_notifications:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
@@ -38,3 +39,6 @@ jobs-from:
 job-defaults:
     attributes:
         retrigger: true
+    task-context:
+        from-object: {}
+        substitution-fields: []
