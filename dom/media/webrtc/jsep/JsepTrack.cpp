@@ -550,7 +550,8 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
       if (codec->mName != "red" && codec->mName != "ulpfec") {
         JsepVideoCodecDescription* videoCodec =
             static_cast<JsepVideoCodecDescription*>(codec.get());
-        videoCodec->EnableFec(red->mDefaultPt, ulpfec->mDefaultPt);
+        videoCodec->EnableFec(red->mDefaultPt, ulpfec->mDefaultPt,
+                              red->mRtxPayloadType);
       }
     }
   }

@@ -828,6 +828,9 @@ static void JsepCodecDescToVideoCodecConfig(
     if (SdpHelper::GetPtAsInt(aCodec.mULPFECPayloadType, &pt)) {
       (*aConfig)->mULPFECPayloadType = pt;
     }
+    if (SdpHelper::GetPtAsInt(aCodec.mREDRTXPayloadType, &pt)) {
+      (*aConfig)->mREDRTXPayloadType = pt;
+    }
   }
   if (aCodec.mRtxEnabled) {
     uint16_t pt;
