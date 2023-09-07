@@ -1739,6 +1739,10 @@ firefoxViewNext:
       type: boolean
       fallbackPref: "browser.tabs.firefox-view-next"
       description: "Whether or not to enable the new Firefox View"
+    newIcon:
+      type: boolean
+      fallbackPref: "browser.tabs.firefox-view-newIcon"
+      description: "Whether or not use the new icon"
 
 backgroundUpdate:
   description: Prefs to control aspects of the background update process.
