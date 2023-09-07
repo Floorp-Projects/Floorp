@@ -2549,11 +2549,10 @@ export class UrlbarView {
   }
 
   #enableOrDisableRowWrap() {
-    if (getBoundsWithoutFlushing(this.input.textbox).width < 650) {
-      this.#rows.setAttribute("wrap", "true");
-    } else {
-      this.#rows.removeAttribute("wrap");
-    }
+    this.#rows.toggleAttribute(
+      "wrap",
+      getBoundsWithoutFlushing(this.input.textbox).width < 650
+    );
   }
 
   /**
