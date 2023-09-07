@@ -15,6 +15,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -95,6 +96,7 @@ class SitePermissionsTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @SmokeTest
     @Test
     fun rememberBlockAudioVideoPermissionChoiceTest() {
@@ -118,6 +120,7 @@ class SitePermissionsTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @SmokeTest
     @Test
     fun rememberAllowAudioVideoPermissionChoiceTest() {
@@ -158,6 +161,7 @@ class SitePermissionsTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun rememberBlockMicrophonePermissionChoiceTest() {
         assumeTrue(micManager.microphones.isNotEmpty())
@@ -179,6 +183,7 @@ class SitePermissionsTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun rememberAllowMicrophonePermissionChoiceTest() {
         assumeTrue(micManager.microphones.isNotEmpty())
@@ -217,6 +222,7 @@ class SitePermissionsTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun rememberBlockCameraPermissionChoiceTest() {
         assumeTrue(cameraManager.cameraIdList.isNotEmpty())
@@ -238,6 +244,7 @@ class SitePermissionsTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun rememberAllowCameraPermissionChoiceTest() {
         assumeTrue(cameraManager.cameraIdList.isNotEmpty())
