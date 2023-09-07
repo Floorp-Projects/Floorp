@@ -39,29 +39,29 @@ add_task(async function () {
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, sortedSrc.id, 9, 4);
 
-  is(getScopeLabel(dbg, 1), "Block");
-  is(getScopeLabel(dbg, 2), "na");
-  is(getScopeLabel(dbg, 3), "nb");
+  is(getScopeNodeLabel(dbg, 1), "Block");
+  is(getScopeNodeLabel(dbg, 2), "na");
+  is(getScopeNodeLabel(dbg, 3), "nb");
 
-  is(getScopeLabel(dbg, 4), "Function Body");
+  is(getScopeNodeLabel(dbg, 4), "Function Body");
 
   await toggleScopeNode(dbg, 4);
 
-  is(getScopeLabel(dbg, 5), "ma");
-  is(getScopeLabel(dbg, 6), "mb");
+  is(getScopeNodeLabel(dbg, 5), "ma");
+  is(getScopeNodeLabel(dbg, 6), "mb");
 
   await toggleScopeNode(dbg, 7);
 
-  is(getScopeLabel(dbg, 8), "a");
-  is(getScopeLabel(dbg, 9), "b");
+  is(getScopeNodeLabel(dbg, 8), "a");
+  is(getScopeNodeLabel(dbg, 9), "b");
 
-  is(getScopeLabel(dbg, 10), "Module");
+  is(getScopeNodeLabel(dbg, 10), "Module");
 
   await toggleScopeNode(dbg, 10);
 
-  is(getScopeLabel(dbg, 11), "binaryLookup:o(n, e, r)");
-  is(getScopeLabel(dbg, 12), "comparer:t(n, e)");
-  is(getScopeLabel(dbg, 13), "fancySort");
+  is(getScopeNodeLabel(dbg, 11), "binaryLookup:o(n, e, r)");
+  is(getScopeNodeLabel(dbg, 12), "comparer:t(n, e)");
+  is(getScopeNodeLabel(dbg, 13), "fancySort");
 
   const frameLabels = [
     ...findAllElementsWithSelector(dbg, ".pane.frames .frame .title"),

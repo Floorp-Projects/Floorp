@@ -60,13 +60,13 @@ async function testReturnValue(dbg, val, expectedScopeNodes) {
   for (const [i, scopeNode] of expectedScopeNodes.entries()) {
     const index = i + 1;
     is(
-      getScopeLabel(dbg, index),
+      getScopeNodeLabel(dbg, index),
       scopeNode.label,
       `check for ${scopeNode.label}`
     );
     if (scopeNode.value) {
       is(
-        getScopeValue(dbg, index),
+        getScopeNodeValue(dbg, index),
         scopeNode.value,
         `check value is ${scopeNode.value}`
       );
@@ -88,13 +88,13 @@ async function testThrowValue(dbg, val, expectedScopeNodes) {
   for (const [i, scopeNode] of expectedScopeNodes.entries()) {
     const index = i + 1;
     is(
-      getScopeLabel(dbg, index),
+      getScopeNodeLabel(dbg, index),
       scopeNode.label,
       `check for ${scopeNode.label}`
     );
     if (scopeNode.value) {
       is(
-        getScopeValue(dbg, index),
+        getScopeNodeValue(dbg, index),
         scopeNode.value,
         `check exception is ${scopeNode.value}`
       );

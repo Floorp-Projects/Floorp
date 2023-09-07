@@ -40,14 +40,10 @@ add_task(async function () {
   ]);
 });
 
-function getLabel(dbg, index) {
-  return findElement(dbg, "scopeNode", index).innerText;
-}
-
 function expectLabels(dbg, array) {
   for (let i = 0; i < array.length; i++) {
     is(
-      getLabel(dbg, i + 1),
+      getScopeNodeLabel(dbg, i + 1),
       array[i],
       `Correct label ${array[i]} for index ${i + 1}`
     );

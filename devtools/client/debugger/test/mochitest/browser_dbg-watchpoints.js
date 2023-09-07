@@ -34,7 +34,7 @@ add_task(async function () {
   await waitForPaused(dbg);
   await waitForState(dbg, () => dbg.selectors.getSelectedInlinePreviews());
   assertPausedAtSourceAndLine(dbg, sourceId, 17);
-  is(await getScopeValue(dbg, 5), "3");
+  is(await getScopeNodeValue(dbg, 5), "3");
   const whyPaused = await waitFor(
     () => dbg.win.document.querySelector(".why-paused")?.innerText
   );
@@ -116,7 +116,3 @@ add_task(async function () {
 
   await waitForRequestsToSettle(dbg);
 });
-
-async function getScopeValue(dbg, index) {
-  return (await waitForElement(dbg, "scopeValue", index)).innerText;
-}
