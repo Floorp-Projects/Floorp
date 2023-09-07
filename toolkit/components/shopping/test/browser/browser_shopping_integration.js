@@ -126,3 +126,75 @@ add_task(async function test_sidebar_navigation() {
     });
   });
 });
+
+add_task(async function test_button_hidden_when_opted_out() {
+  await BrowserTestUtils.withNewTab(
+    {
+      url: PRODUCT_TEST_URL,
+      gBrowser,
+    },
+    async browser => {
+      let shoppingBrowser = gBrowser.ownerDocument.querySelector(
+        "browser.shopping-sidebar"
+      );
+
+      let shoppingButton = document.getElementById("shopping-sidebar-button");
+
+      ok(
+        BrowserTestUtils.is_visible(shoppingButton),
+        "Shopping Button should be visible on a product page"
+      );
+
+      let sidebar = gBrowser
+        .getPanel(browser)
+        .querySelector("shopping-sidebar");
+      Assert.ok(sidebar, "Sidebar should exist");
+      Assert.ok(
+        BrowserTestUtils.is_visible(sidebar),
+        "Sidebar should be visible."
+      );
+      info("Waiting for sidebar to update.");
+      await promiseSidebarUpdated(sidebar, PRODUCT_TEST_URL);
+
+      await SpecialPowers.spawn(shoppingBrowser, [], async () => {
+        let shoppingContainer =
+          content.document.querySelector("shopping-container").wrappedJSObject;
+        // shoppingContainer.data = Cu.cloneInto(mockData, content);
+        await shoppingContainer.updateComplete;
+        let shoppingSettings = shoppingContainer.settingsEl;
+        await shoppingSettings.updateComplete;
+
+        shoppingSettings.shoppingCardEl.detailsEl.open = true;
+        let optOutButton = shoppingSettings.optOutButtonEl;
+        optOutButton.click();
+      });
+
+      await BrowserTestUtils.waitForMutationCondition(
+        shoppingButton,
+        { attributes: true, attributeFilter: ["hidden"] },
+        () => shoppingButton.hidden
+      );
+
+      ok(
+        !Services.prefs.getBoolPref("browser.shopping.experience2023.active"),
+        "Shopping sidebar is no longer active"
+      );
+      is(
+        Services.prefs.getIntPref("browser.shopping.experience2023.optedIn"),
+        2,
+        "Opted out of shopping experience"
+      );
+
+      ok(
+        BrowserTestUtils.is_hidden(shoppingButton),
+        "Shopping Button should be hidden after opting out"
+      );
+
+      Services.prefs.setBoolPref(
+        "browser.shopping.experience2023.active",
+        true
+      );
+      Services.prefs.setIntPref("browser.shopping.experience2023.optedIn", 1);
+    }
+  );
+});
