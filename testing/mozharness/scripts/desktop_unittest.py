@@ -959,6 +959,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
             return
 
         self._stage_files(self.config["xpcshell_name"])
+        if "plugin_container_name" in self.config:
+            self._stage_files(self.config["plugin_container_name"])
         # http3server isn't built for Windows tests or Linux asan/tsan
         # builds. Only stage if the `http3server_name` config is set and if
         # the file actually exists.

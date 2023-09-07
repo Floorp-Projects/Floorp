@@ -124,6 +124,7 @@ class ArtifactJob(object):
         ("bin/screentopng", ("bin", "bin")),
         ("bin/ssltunnel", ("bin", "bin")),
         ("bin/xpcshell", ("bin", "bin")),
+        ("bin/plugin-container", ("bin", "bin")),
         ("bin/http3server", ("bin", "bin")),
         ("bin/plugins/gmp-*/*/*", ("bin/plugins", "bin")),
         ("bin/plugins/*", ("bin/plugins", "plugins")),
