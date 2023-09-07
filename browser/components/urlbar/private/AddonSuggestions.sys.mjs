@@ -389,8 +389,13 @@ export class AddonSuggestions extends BaseFeature {
         break;
       // selType == "dismiss" when the user presses the dismiss key shortcut.
       case "dismiss":
-      case RESULT_MENU_COMMAND.NOT_INTERESTED:
       case RESULT_MENU_COMMAND.NOT_RELEVANT:
+        lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
+        view.acknowledgeDismissal(result, {
+          id: "firefox-suggest-dismissal-acknowledgment-one",
+        });
+        break;
+      case RESULT_MENU_COMMAND.NOT_INTERESTED:
         lazy.UrlbarPrefs.set("suggest.addons", false);
         view.acknowledgeDismissal(result, {
           id: "firefox-suggest-dismissal-acknowledgment-all",
