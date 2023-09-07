@@ -28,6 +28,13 @@ class UnanalyzedProductCard extends MozLitElement {
         composed: true,
       })
     );
+    this.dispatchEvent(
+      new CustomEvent("ShoppingTelemetryEvent", {
+        bubbles: true,
+        composed: true,
+        detail: "analyzeReviewsNoneAvailableClicked",
+      })
+    );
   }
 
   // TODO: add link for product analysis once finalized

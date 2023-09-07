@@ -317,6 +317,25 @@ shopping:
     send_in_pings:
       - events
 
+  surface_analyze_reviews_none_available_clicked:
+    type: event
+    description: |
+      The user clicked to analyze reviews in the case the reliability rating
+      was not available for display in the shopping side bar. This metric 
+      does not contain any information about the product the user is viewing.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849244
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+
   surface_learn_more_clicked:
     type: event
     description: |

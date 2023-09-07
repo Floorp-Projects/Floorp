@@ -322,6 +322,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
           action: details,
         });
         break;
+      case "analyzeReviewsNoneAvailableClicked":
+        Glean.shopping.surfaceAnalyzeReviewsNoneAvailableClicked.record();
+        break;
     }
   }
 }
