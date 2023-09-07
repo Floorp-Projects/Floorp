@@ -28,7 +28,8 @@ only-for-attributes:
 
 jobs:
     repackage-deb:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         shipping-phase: promote
         worker-type: b-linux-gcp
         worker:

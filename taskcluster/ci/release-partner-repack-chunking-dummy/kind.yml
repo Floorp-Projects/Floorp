@@ -21,6 +21,7 @@ only-for-build-platforms:
 jobs:
     release-partner-repack-chunking-dummy:
         from-deps:
+            group-by: single-with-filters
             copy-attributes: true
         shipping-phase: promote
         shipping-product: firefox
