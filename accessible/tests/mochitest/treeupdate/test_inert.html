@@ -16,55 +16,49 @@
 
   <script>
     async function doTest() {
-      if (SpecialPowers.getBoolPref("html5.inert.enabled")) {
-        const inertContainer = getAccessible("inertContainer");
-        const inertTree = { SECTION: [ // inertContainer
-          { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // before
-          { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // after
-        ]};
-        testAccessibleTree(inertContainer, inertTree);
+      const inertContainer = getAccessible("inertContainer");
+      const inertTree = { SECTION: [ // inertContainer
+        { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // before
+        { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // after
+      ]};
+      testAccessibleTree(inertContainer, inertTree);
 
-        info("Unsetting inert");
-        let reordered = waitForEvent(EVENT_REORDER, inertContainer);
-        const inertNode = getNode("inert");
-        inertNode.inert = false;
-        await reordered;
-        testAccessibleTree(inertContainer, { SECTION: [ // inertContainer
-          { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // before
-          { SECTION: [ // inert
-            { TEXT_LEAF: [] },
-            { PUSHBUTTON: [] },
-          ] },
-          { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // after
-        ]});
-
-        info("Setting inert");
-        reordered = waitForEvent(EVENT_REORDER, inertContainer);
-        inertNode.inert = true;
-        await reordered;
-        testAccessibleTree(inertContainer, inertTree);
-      } else {
-        // It's too late to flip the pref now. We'd need to load a new document
-        // to pick up the change.
-        todo(false, "Inert not enabled, skipping inert tests");
-      }
-
-      const noDialogTree = { SECTION: [ // dialogContainer
-        { TEXT_LEAF: [] }
-      ] };
-      testAccessibleTree("dialogContainer", noDialogTree);
-
-      info("Showing modal dialog");
-      let reordered = waitForEvent(EVENT_REORDER, document);
-      const dialogNode = getNode("dialog");
-      dialogNode.showModal();
+      info("Unsetting inert");
+      let reordered = waitForEvent(EVENT_REORDER, inertContainer);
+      const inertNode = getNode("inert");
+      inertNode.inert = false;
       await reordered;
-      // The dialog makes everything else in the document inert.
-      testAccessibleTree(document, { DOCUMENT: [
-        { DIALOG: [
-          { PUSHBUTTON: [] }
-        ] }
-      ] });
+      testAccessibleTree(inertContainer, { SECTION: [ // inertContainer
+        { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // before
+        { SECTION: [ // inert
+          { TEXT_LEAF: [] },
+          { PUSHBUTTON: [] },
+        ] },
+        { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // after
+      ]});
+
+      info("Setting inert");
+      reordered = waitForEvent(EVENT_REORDER, inertContainer);
+      inertNode.inert = true;
+      await reordered;
+      testAccessibleTree(inertContainer, inertTree);
+
+    const noDialogTree = { SECTION: [ // dialogContainer
+      { TEXT_LEAF: [] }
+    ] };
+    testAccessibleTree("dialogContainer", noDialogTree);
+
+    info("Showing modal dialog");
+    reordered = waitForEvent(EVENT_REORDER, document);
+    const dialogNode = getNode("dialog");
+    dialogNode.showModal();
+    await reordered;
+    // The dialog makes everything else in the document inert.
+    testAccessibleTree(document, { DOCUMENT: [
+      { DIALOG: [
+        { PUSHBUTTON: [] }
+      ] }
+    ] });
 
       info("Closing dialog");
       reordered = waitForEvent(EVENT_REORDER, document);
