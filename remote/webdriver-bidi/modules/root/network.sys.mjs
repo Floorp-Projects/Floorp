@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
+  matchURLPattern:
+    "chrome://remote/content/shared/webdriver/URLPattern.sys.mjs",
   notifyNavigationStarted:
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NetworkListener:
@@ -24,10 +26,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /**
  * @typedef {object} BaseParameters
  * @property {string=} context
+ * @property {Array<string>?} intercepts
+ * @property {boolean} isBlocked
  * @property {Navigation=} navigation
  * @property {number} redirectCount
  * @property {RequestData} request
  * @property {number} timestamp
+ */
+
+/**
+ * @typedef {object} BlockedRequest
+ * @property {NetworkEventRecord} networkEventRecord
+ * @property {InterceptPhase} phase
  */
 
 /**
@@ -223,12 +233,16 @@ const InterceptPhase = {
 /* eslint-enable jsdoc/valid-types */
 
 class NetworkModule extends Module {
+  #blockedRequests;
   #interceptMap;
   #networkListener;
   #subscribedEvents;
 
   constructor(messageHandler) {
     super(messageHandler);
+
+    // Map of request id to BlockedRequest
+    this.#blockedRequests = new Map();
 
     // Map of intercept id to InterceptProperties
     this.#interceptMap = new Map();
@@ -248,6 +262,7 @@ class NetworkModule extends Module {
     this.#networkListener.off("response-started", this.#onResponseEvent);
     this.#networkListener.destroy();
 
+    this.#blockedRequests = null;
     this.#interceptMap = null;
     this.#subscribedEvents = null;
   }
@@ -359,24 +374,67 @@ class NetworkModule extends Module {
     };
   }
 
-  #getOrCreateNavigationId(browsingContext, url) {
-    const navigation =
+  #getNetworkIntercepts(event, requestData) {
+    const intercepts = [];
+
+    let phase;
+    switch (event) {
+      case "network.beforeRequestSent":
+        phase = InterceptPhase.BeforeRequestSent;
+        break;
+      case "network.responseStarted":
+        phase = InterceptPhase.ResponseStarted;
+        break;
+      case "network.authRequired":
+        phase = InterceptPhase.AuthRequired;
+        break;
+      case "network.responseCompleted":
+        // The network.responseCompleted event does not match any interception
+        // phase. Return immediately.
+        return intercepts;
+    }
+
+    const url = requestData.url;
+    for (const [interceptId, intercept] of this.#interceptMap) {
+      if (intercept.phases.includes(phase)) {
+        const urlPatterns = intercept.urlPatterns;
+        if (
+          !urlPatterns.length ||
+          urlPatterns.some(pattern => lazy.matchURLPattern(pattern, url))
+        ) {
+          intercepts.push(interceptId);
+        }
+      }
+    }
+
+    return intercepts;
+  }
+
+  #getNavigationId(eventName, isNavigationRequest, browsingContext, url) {
+    if (!isNavigationRequest) {
+      // Not a navigation request return null.
+      return null;
+    }
+
+    let navigation =
       this.messageHandler.navigationManager.getNavigationForBrowsingContext(
         browsingContext
       );
 
-    // Check if an ongoing navigation is available for this browsing context.
-    // onBeforeRequestSent might be too early for the NavigationManager.
+    // `onBeforeRequestSent` might be too early for the NavigationManager.
+    // If there is no ongoing navigation, create one ourselves.
     // TODO: Bug 1835704 to detect navigations earlier and avoid this.
-    if (navigation && !navigation.finished) {
-      return navigation.navigationId;
+    if (
+      eventName === "network.beforeRequestSent" &&
+      (!navigation || navigation.finished)
+    ) {
+      navigation = lazy.notifyNavigationStarted({
+        contextDetails: { context: browsingContext },
+        url,
+      });
     }
 
-    // No ongoing navigation for this browsing context, create a new one.
-    return lazy.notifyNavigationStarted({
-      contextDetails: { context: browsingContext },
-      url,
-    }).navigationId;
+    return navigation ? navigation.navigationId : null;
   }
 
   #onBeforeRequestSent = (name, data) => {
@@ -384,27 +442,33 @@ class NetworkModule extends Module {
       contextId,
       isNavigationRequest,
       redirectCount,
+      requestChannel,
       requestData,
       timestamp,
     } = data;
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+    const protocolEventName = "network.beforeRequestSent";
+    const isListening = this.messageHandler.eventsDispatcher.hasListener(
+      protocolEventName,
+      { contextId }
+    );
+    if (!isListening) {
+      // If there are no listeners subscribed to this event and this context,
+      // bail out.
+      return;
+    }
+
+    const baseParameters = this.#processNetworkEvent(protocolEventName, {
+      contextId,
+      isNavigationRequest,
+      redirectCount,
+      requestData,
+      timestamp,
+    });
 
     // Bug 1805479: Handle the initiator, including stacktrace details.
     const initiator = {
       type: InitiatorType.Other,
-    };
-
-    const navigationId = isNavigationRequest
-      ? this.#getOrCreateNavigationId(browsingContext, requestData.url)
-      : null;
-
-    const baseParameters = {
-      context: contextId,
-      navigation: navigationId,
-      redirectCount,
-      request: requestData,
-      timestamp,
     };
 
     const beforeRequestSentEvent = this.#serializeNetworkEvent({
@@ -412,11 +476,27 @@ class NetworkModule extends Module {
       initiator,
     });
 
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
     this.emitEvent(
-      "network.beforeRequestSent",
+      protocolEventName,
       beforeRequestSentEvent,
       this.#getContextInfo(browsingContext)
     );
+
+    if (beforeRequestSentEvent.isBlocked) {
+      // TODO: Requests suspended in beforeRequestSent still reach the server at
+      // the moment. https://bugzilla.mozilla.org/show_bug.cgi?id=1849686
+      requestChannel.suspend();
+
+      this.#blockedRequests.set(beforeRequestSentEvent.request.request, {
+        request: requestChannel,
+        phase: InterceptPhase.BeforeRequestSent,
+      });
+
+      // TODO: Once we implement network.continueRequest, we should create a
+      // promise here which will wait until the request is resumed and removes
+      // the request from the blockedRequests. See Bug 1850680.
+    }
   };
 
   #onResponseEvent = (name, data) => {
@@ -424,43 +504,118 @@ class NetworkModule extends Module {
       contextId,
       isNavigationRequest,
       redirectCount,
+      requestChannel,
       requestData,
+      responseChannel,
       responseData,
       timestamp,
     } = data;
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+    const protocolEventName =
+      name === "response-started"
+        ? "network.responseStarted"
+        : "network.responseCompleted";
+    const isListening = this.messageHandler.eventsDispatcher.hasListener(
+      protocolEventName,
+      { contextId }
+    );
+    if (!isListening) {
+      // If there are no listeners subscribed to this event and this context,
+      // bail out.
+      return;
+    }
 
-    const navigation = isNavigationRequest
-      ? this.messageHandler.navigationManager.getNavigationForBrowsingContext(
-          browsingContext
-        )
-      : null;
-
-    const baseParameters = {
-      context: contextId,
-      navigation: navigation ? navigation.navigationId : null,
+    const baseParameters = this.#processNetworkEvent(protocolEventName, {
+      contextId,
+      isNavigationRequest,
       redirectCount,
-      request: requestData,
+      requestData,
       timestamp,
-    };
+    });
 
     const responseEvent = this.#serializeNetworkEvent({
       ...baseParameters,
       response: responseData,
     });
 
-    const protocolEventName =
-      name === "response-started"
-        ? "network.responseStarted"
-        : "network.responseCompleted";
-
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
     this.emitEvent(
       protocolEventName,
       responseEvent,
       this.#getContextInfo(browsingContext)
     );
+
+    if (
+      protocolEventName === "network.responseStarted" &&
+      responseEvent.isBlocked
+    ) {
+      requestChannel.suspend();
+
+      this.#blockedRequests.set(responseEvent.request.request, {
+        request: requestChannel,
+        response: responseChannel,
+        phase: InterceptPhase.ResponseStarted,
+      });
+
+      // TODO: Once we implement network.continueRequest, we should create a
+      // promise here which will wait until the request is resumed and removes
+      // the request from the blockedRequests. See Bug 1850680.
+    }
   };
+
+  /**
+   * Process the network event data for a given network event name and create
+   * the corresponding base parameters.
+   *
+   * @param {string} eventName
+   *     One of the supported network event names.
+   * @param {object} data
+   * @param {string} data.contextId
+   *     The browsing context id for the network event.
+   * @param {boolean} data.isNavigationRequest
+   *     True if the network event is related to a navigation request.
+   * @param {number} data.redirectCount
+   *     The redirect count for the network event.
+   * @param {RequestData} data.requestData
+   *     The network.RequestData information for the network event.
+   * @param {number} data.timestamp
+   *     The timestamp when the network event was created.
+   */
+  #processNetworkEvent(eventName, data) {
+    const {
+      contextId,
+      isNavigationRequest,
+      redirectCount,
+      requestData,
+      timestamp,
+    } = data;
+
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+
+    const navigation = this.#getNavigationId(
+      eventName,
+      isNavigationRequest,
+      browsingContext,
+      requestData.url
+    );
+    const intercepts = this.#getNetworkIntercepts(eventName, requestData);
+    const isBlocked = !!intercepts.length;
+
+    const baseParameters = {
+      context: contextId,
+      isBlocked,
+      navigation,
+      redirectCount,
+      request: requestData,
+      timestamp,
+    };
+
+    if (isBlocked) {
+      baseParameters.intercepts = intercepts;
+    }
+
+    return baseParameters;
+  }
 
   #serializeHeadersOrCookies(headersOrCookies) {
     return headersOrCookies.map(item => ({
