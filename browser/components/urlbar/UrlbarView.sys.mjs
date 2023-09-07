@@ -2683,6 +2683,12 @@ export class UrlbarView {
       ) {
         idArgs.push({ id: "urlbar-group-best-match" });
       }
+      if (
+        lazy.UrlbarPrefs.get("quickSuggestEnabled") &&
+        lazy.UrlbarPrefs.get("addonsFeatureGate")
+      ) {
+        idArgs.push({ id: "urlbar-group-addon" });
+      }
     }
 
     if (
