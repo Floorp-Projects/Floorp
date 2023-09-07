@@ -33,31 +33,15 @@ interface nsICookieTransactionCallback : nsISupports
  *       observer. Doing so will cause undefined behavior. Mutating the cookie
  *       list (e.g. by calling methods on nsICookieService and friends) is
  *       allowed, but beware that there may be pending notifications you haven't
- *       seen yet -- for instance, a "batch-deleted" notification will likely be
- *       immediately followed by "added". You may check the state of the cookie
+ *       seen yet -- for instance, a COOKIES_BATCH_DELETED notification will likely be
+ *       immediately followed by COOKIE_ADDED. You may check the state of the cookie
  *       list to determine if this is the case.
  *
  * topic  : "cookie-changed"
  *          broadcast whenever the cookie list changes in some way. see
  *          explanation of data strings below.
- * subject: see below.
- * data   : "deleted"
- *          a cookie was deleted. the subject is an nsICookie representing
- *          the deleted cookie.
- *          "added"
- *          a cookie was added. the subject is an nsICookie representing
- *          the added cookie.
- *          "changed"
- *          a cookie was changed. the subject is an nsICookie representing
- *          the new cookie. (note that host, path, and name are invariant
- *          for a given cookie; other parameters may change.)
- *          "batch-deleted"
- *          a set of cookies was purged (typically, because they have either
- *          expired or because the cookie list has grown too large). The subject
- *          is an nsIArray of nsICookie's representing the deleted cookies.
- *          Note that the array could contain a single cookie.
- *          "cleared"
- *          the entire cookie list was cleared. the subject is null.
+ * subject: The cookie notification. See nsICookieNotification for details.
+ * data   : none. For possible actions see nsICookieNotification_Action.
  *
  * topic  : "cookie-rejected"
  *          broadcast whenever a cookie was rejected from being set as a
