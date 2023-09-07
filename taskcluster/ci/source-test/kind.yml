@@ -16,9 +16,11 @@ kind-dependencies:
     - fetch
     - toolchain
     - build
+    - external-gradle-dependencies
 
 jobs-from:
     - android-compare-locales.yml
+    - android-detekt.yml
     - buildconfig.yml
     - clang.yml
     - cram.yml
