@@ -1007,8 +1007,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
   sShadowRealmsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.shadow_realms");
-  sWellFormedUnicodeStringsEnabled = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "well_formed_unicode_strings");
+  sWellFormedUnicodeStringsEnabled =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "well_formed_unicode_strings");
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
