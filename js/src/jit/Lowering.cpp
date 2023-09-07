@@ -4426,7 +4426,7 @@ void LIRGenerator::visitLoadScriptedProxyHandler(
     MLoadScriptedProxyHandler* ins) {
   LLoadScriptedProxyHandler* lir = new (alloc())
       LLoadScriptedProxyHandler(useRegisterAtStart(ins->object()));
-  define(lir, ins);
+  defineBox(lir, ins);
 }
 
 void LIRGenerator::visitIdToStringOrSymbol(MIdToStringOrSymbol* ins) {

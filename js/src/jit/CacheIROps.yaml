@@ -668,7 +668,7 @@
   transpile: true
   cost_estimate: 1
   args:
-    result: ObjId
+    result: ValId
     obj: ObjId
 
 - name: IdToStringOrSymbol
