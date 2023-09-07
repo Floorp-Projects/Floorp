@@ -3,10 +3,6 @@
 
 "use strict";
 
-const {
-  getClientCssProperties,
-} = require("resource://devtools/client/fronts/css-properties.js");
-
 add_task(async function () {
   await pushPref("layout.css.backdrop-filter.enabled", true);
   await pushPref("layout.css.individual-transform.enabled", true);
