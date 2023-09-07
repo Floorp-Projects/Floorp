@@ -968,10 +968,11 @@ bool gfxPlatformMac::SupportsHDR() {
   if (GetScreenDepth() <= 24) {
     return false;
   }
+
   // Screen is capable. Is the OS capable?
 #ifdef EARLY_BETA_OR_EARLIER
   // More-or-less supported in Catalina.
-  return nsCocoaFeatures::OnCatalinaOrLater();
+  return true;
 #else
   // Definitely supported in Big Sur.
   return nsCocoaFeatures::OnBigSurOrLater();
@@ -1014,13 +1015,7 @@ nsTArray<uint8_t> gfxPlatformMac::GetPlatformCMSOutputProfileData() {
   return result;
 }
 
-bool gfxPlatformMac::CheckVariationFontSupport() {
-  // We don't allow variation fonts to be enabled before 10.13,
-  // as although the Core Text APIs existed, they are known to be
-  // fairly buggy.
-  // (Note that Safari also requires 10.13 for variation-font support.)
-  return nsCocoaFeatures::OnHighSierraOrLater();
-}
+bool gfxPlatformMac::CheckVariationFontSupport() { return true; }
 
 void gfxPlatformMac::InitPlatformGPUProcessPrefs() {
   FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);

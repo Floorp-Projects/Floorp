@@ -18,7 +18,6 @@
 #endif
 
 #include "nsIMemoryReporter.h"
-#include "nsCocoaFeatures.h"
 
 namespace mozilla {
 namespace gfx {

@@ -83,7 +83,6 @@
 #elif defined(XP_MACOSX)
 #  include "gfxPlatformMac.h"
 #  include "gfxQuartzSurface.h"
-#  include "nsCocoaFeatures.h"
 #elif defined(MOZ_WIDGET_GTK)
 #  include "gfxPlatformGtk.h"
 #elif defined(ANDROID)
