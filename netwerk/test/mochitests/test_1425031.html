@@ -22,21 +22,22 @@ SimpleTest.waitForExplicitFinish();
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('file_1331680.js'));
 var testsNum = 0;
 var cookieString = "cookie0=test";
+let {COOKIE_ADDED, COOKIE_DELETED} = SpecialPowers.Ci.nsICookieNotification;
 
 // Confirm the notify which represents the cookie is updating.
 function confirmCookieOperation(op) {
   testsNum++;
   switch(testsNum) {
     case 1:
-      is(op, "added", "Confirm the cookie operation is added.");
+      is(op, COOKIE_ADDED, "Confirm the cookie operation is added.");
       is(document.cookie, cookieString, "Confirm the cookie string is unaffected by the addition");
       break;
     case 2:
-      is(op, "deleted", "Confirm the cookie operation is deleted.");
+      is(op, COOKIE_DELETED, "Confirm the cookie operation is deleted.");
       is(document.cookie, cookieString, "Confirm the cookie string is unaffected by the deletion");
       break;
     case 3:
-      is(op, "added", "Confirm the cookie operation is added.");
+      is(op, COOKIE_ADDED, "Confirm the cookie operation is added.");
       is(document.cookie, cookieString, "Confirm the cookie string is unaffected by the second addition.");
       document.cookie = "cookie0=; expires=Thu, 01-Jan-1970 00:00:01 GMT;";
       gScript.sendAsyncMessage('removeObserver');

@@ -230,8 +230,11 @@ async function addTestData(data) {
 }
 
 function promiseCookiesCleared() {
-  return TestUtils.topicObserved("cookie-changed", (subj, data) => {
-    return data === "cleared";
+  return TestUtils.topicObserved("cookie-changed", subj => {
+    return (
+      subj.QueryInterface(Ci.nsICookieNotification).action ==
+      Ci.nsICookieNotification.ALL_COOKIES_CLEARED
+    );
   });
 }
 
