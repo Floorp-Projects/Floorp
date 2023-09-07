@@ -238,7 +238,7 @@ export class AddonSuggestions extends BaseFeature {
       dynamicType: "addons",
     };
 
-    return Object.assign(
+    let result = Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
         lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -249,6 +249,17 @@ export class AddonSuggestions extends BaseFeature {
       ),
       { showFeedbackMenu: true }
     );
+
+    // UrlbarProviderQuickSuggest will make the result a best match only if
+    // `browser.urlbar.bestMatch.enabled` is true. Addon suggestions should be
+    // best matches regardless (as long as `suggestion.is_top_pick` is true), so
+    // override the provider behavior by setting the related properties here.
+    if (suggestion.is_top_pick) {
+      result.isBestMatch = true;
+      result.suggestedIndex = 1;
+    }
+
+    return result;
   }
 
   getViewUpdate(result) {
