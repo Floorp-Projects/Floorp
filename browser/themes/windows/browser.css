@@ -9,18 +9,21 @@
 :root {
   --toolbar-non-lwt-bgcolor: color-mix(in srgb, -moz-dialog 85%, white);
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
-
   --chrome-content-separator-color: ThreeDShadow;
-}
 
-@media not (prefers-contrast) {
-  :root {
-    --toolbar-non-lwt-bgcolor: -moz-dialog;
+  &:-moz-lwtheme {
+    --chrome-content-separator-color: rgba(0,0,0,.3);
   }
-}
 
-:root:-moz-lwtheme {
-  --chrome-content-separator-color: rgba(0,0,0,.3);
+  &[tabsintitlebar]:not(:-moz-lwtheme) {
+    background-color: ActiveCaption;
+    color: CaptionText;
+
+    &:-moz-window-inactive {
+      background-color: InactiveCaption;
+      color: InactiveCaptionText;
+    }
+  }
 }
 
 #menubar-items {
@@ -95,23 +98,6 @@
   background-color: var(--toolbar-bgcolor);
   background-clip: padding-box;
   color: var(--toolbar-color);
-}
-
-/* See bug 1715990 about why we do this ourselves on HCM */
-@media (prefers-contrast) {
-  :root[tabsintitlebar]:not(:-moz-lwtheme) {
-    background-color: ActiveCaption;
-    color: CaptionText;
-  }
-
-  :root[tabsintitlebar]:not(:-moz-lwtheme):-moz-window-inactive {
-    background-color: InactiveCaption;
-    color: InactiveCaptionText;
-  }
-
-  #appcontent:not(:-moz-lwtheme) {
-    background-color: -moz-dialog;
-  }
 }
 
 #nav-bar:not([tabs-hidden="true"]) {
@@ -336,15 +322,6 @@ menuitem.bookmark-item {
 }
 
 /* Address bar */
-
-@media not (prefers-contrast) {
-  :root:not(:-moz-lwtheme) #urlbar {
-    --urlbar-box-bgcolor: white;
-  }
-  :root[lwt-default-theme-in-dark-mode] #urlbar {
-    --urlbar-box-bgcolor: var(--toolbar-field-focus-background-color);
-  }
-}
 
 #urlbar,
 #searchbar {
