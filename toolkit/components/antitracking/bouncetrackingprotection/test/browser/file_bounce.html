@@ -20,16 +20,29 @@
           redirectDelay = 50;
         }
 
-        let setCookie = url.searchParams.get("setCookie");
-        if (setCookie) {
-          let cookie = document.cookie;
+        let setState = url.searchParams.get("setState");
+        if (setState) {
+          let id = Math.random().toString();
 
-          if (cookie) {
-            console.info("Received cookie", cookie);
-          } else {
-            let newCookie = `id=${Math.random()}`;
-            console.info("Setting new cookie", newCookie);
-            document.cookie = newCookie;
+          if (setState == "cookie-client") {
+            let cookie = document.cookie;
+
+            if (cookie) {
+              console.info("Received cookie", cookie);
+            } else {
+              let newCookie = `id=${id}`;
+              console.info("Setting new cookie", newCookie);
+              document.cookie = newCookie;
+            }
+          } else if (setState == "localStorage") {
+            let entry = localStorage.getItem("id");
+
+            if (entry) {
+              console.info("Found localStorage entry. id", entry);
+            } else {
+              console.info("Setting new localStorage entry. id", id);
+              localStorage.setItem(id, id);
+            }
           }
         }
 
