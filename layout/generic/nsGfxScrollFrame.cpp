@@ -60,6 +60,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLMarqueeElement.h"
 #include "mozilla/dom/ScrollTimeline.h"
+#include "mozilla/dom/BrowserChild.h"
 #include <stdint.h>
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Telemetry.h"
@@ -2930,7 +2931,11 @@ bool nsHTMLScrollFrame::GetDisplayPortAtLastApproximateFrameVisibilityUpdate(
   return mHadDisplayPortAtLastFrameUpdate;
 }
 
-MatrixScales GetPaintedLayerScaleForFrame(nsIFrame* aFrame) {
+/* aIncludeCSSTransform controls if we include CSS transforms that are in this
+ * process (the BrowserChild EffectsInfo mTransformToAncestorScale will include
+ * CSS transforms in ancestor processes in all cases). */
+MatrixScales GetPaintedLayerScaleForFrame(nsIFrame* aFrame,
+                                          bool aIncludeCSSTransform) {
   MOZ_ASSERT(aFrame, "need a frame");
 
   nsPresContext* presCtx = aFrame->PresContext()->GetRootPresContext();
@@ -2940,11 +2945,22 @@ MatrixScales GetPaintedLayerScaleForFrame(nsIFrame* aFrame) {
     MOZ_ASSERT(presCtx);
   }
 
-  ParentLayerToScreenScale2D transformToAncestorScale =
+  ParentLayerToScreenScale2D transformToAncestorScale;
+  if (aIncludeCSSTransform) {
+    transformToAncestorScale =
+        nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
+            aFrame);
+  } else {
+    if (BrowserChild* browserChild =
+            BrowserChild::GetFrom(aFrame->PresShell())) {
+      transformToAncestorScale =
+          browserChild->GetEffectsInfo().mTransformToAncestorScale;
+    }
+  }
+  transformToAncestorScale =
       ParentLayerToParentLayerScale(
           presCtx->PresShell()->GetCumulativeResolution()) *
-      nsLayoutUtils::GetTransformToAncestorScaleCrossProcessForFrameMetrics(
-          aFrame);
+      transformToAncestorScale;
 
   return transformToAncestorScale.ToUnknownScale();
 }
@@ -2999,7 +3015,8 @@ void nsHTMLScrollFrame::ScrollToImpl(
   nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   // 'scale' is our estimate of the scale factor that will be applied
   // when rendering the scrolled content to its own PaintedLayer.
-  MatrixScales scale = GetPaintedLayerScaleForFrame(mScrolledFrame);
+  MatrixScales scale = GetPaintedLayerScaleForFrame(
+      mScrolledFrame, /* aIncludeCSSTransform = */ true);
   nsPoint curPos = GetScrollPosition();
 
   // Try to align aPt with curPos so they have an integer number of layer
@@ -6845,7 +6862,8 @@ nsRect nsHTMLScrollFrame::GetScrolledRect() const {
   // We snap to layer pixels, so we need to respect the layer's scale.
   nscoord appUnitsPerDevPixel =
       mScrolledFrame->PresContext()->AppUnitsPerDevPixel();
-  MatrixScales scale = GetPaintedLayerScaleForFrame(mScrolledFrame);
+  MatrixScales scale = GetPaintedLayerScaleForFrame(
+      mScrolledFrame, /* aIncludeCSSTransform = */ false);
   if (scale.xScale == 0 || scale.yScale == 0) {
     scale = MatrixScales();
   }
