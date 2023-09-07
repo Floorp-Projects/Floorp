@@ -179,6 +179,10 @@ class SyncedTabsInView extends ViewPage {
       description: "firefoxview-syncedtabs-synctabs-description",
       buttonLabel: "firefoxview-tabpickup-synctabs-primarybutton",
     },
+    loading: {
+      header: "firefoxview-syncedtabs-loading-header",
+      description: "firefoxview-syncedtabs-loading-description",
+    },
   };
 
   generateMessageCard({ error = false, action, errorState }) {
@@ -438,7 +442,7 @@ class SyncedTabsInView extends ViewPage {
         if (this.errorState) {
           return this.generateMessageCard({ error: true });
         }
-        break;
+        return this.generateMessageCard({ action: "loading" });
       case 1 /* not-signed-in */:
         if (Services.prefs.prefHasUserValue("services.sync.lastversion")) {
           // If this pref is set, the user has signed out of sync.
