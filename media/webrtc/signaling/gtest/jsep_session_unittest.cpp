@@ -7428,7 +7428,7 @@ TEST_F(JsepSessionTest, TestDuplicatePayloadTypes) {
       JsepVideoCodecDescription* videoCodec =
           static_cast<JsepVideoCodecDescription*>(codec.get());
       videoCodec->mRtxPayloadType = "97";
-      videoCodec->EnableFec("97", "97");
+      videoCodec->EnableFec("97", "97", "97");
     }
   }
 
