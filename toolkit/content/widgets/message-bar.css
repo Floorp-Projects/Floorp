@@ -91,16 +91,11 @@
 }
 
 .icon::after {
-  display: inline-block;
   appearance: none;
   -moz-context-properties: fill, stroke;
   fill: currentColor;
   stroke: currentColor;
-  content: "";
-  background-image: var(--message-bar-icon-url);
-  background-size: var(--icon-size);
-  width: var(--icon-size);
-  height: var(--icon-size);
+  content: var(--message-bar-icon-url);
 }
 
 /* Use a spacer to position the close button at the end, but also support
