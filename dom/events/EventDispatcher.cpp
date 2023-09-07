@@ -993,6 +993,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
   targetEtci->GetEventTargetParent(preVisitor);
 
   if (preVisitor.mWantsActivationBehavior) {
+    preVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
     activationTarget = targetEtci;
   }
 
@@ -1061,6 +1062,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
 
       if (preVisitor.mWantsActivationBehavior && !activationTarget &&
           aEvent->mFlags.mBubbles) {
+        preVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
         activationTarget = parentEtci;
       }
 

@@ -3102,6 +3102,37 @@ bool HTMLInputElement::IsDisabledForEvents(WidgetEvent* aEvent) {
   return IsElementDisabledForEvents(aEvent, GetPrimaryFrame());
 }
 
+bool HTMLInputElement::CheckActivationBehaviorPreconditions(
+    EventChainVisitor& aVisitor) const {
+  switch (mType) {
+    case FormControlType::InputColor:
+    case FormControlType::InputCheckbox:
+    case FormControlType::InputRadio:
+    case FormControlType::InputFile:
+    case FormControlType::InputSubmit:
+    case FormControlType::InputImage:
+    case FormControlType::InputReset:
+    case FormControlType::InputButton: {
+      // Track whether we're in the outermost Dispatch invocation that will
+      // cause activation of the input.  That is, if we're a click event, or a
+      // DOMActivate that was dispatched directly, this will be set, but if
+      // we're a DOMActivate dispatched from click handling, it will not be set.
+      WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+      bool outerActivateEvent =
+          ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
+           (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
+            !mInInternalActivate));
+      if (outerActivateEvent) {
+        aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
+      }
+      return outerActivateEvent &&
+             !aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented;
+    }
+    default:
+      return false;
+  }
+}
+
 void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   // Do not process any DOM events if the element is disabled
   aVisitor.mCanHandle = false;
@@ -3115,96 +3146,21 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
     if (textControlFrame) textControlFrame->EnsureEditorInitialized();
   }
 
-  //
-  // Web pages expect the value of a radio button or checkbox to be set
-  // *before* onclick and DOMActivate fire, and they expect that if they set
-  // the value explicitly during onclick or DOMActivate it will not be toggled
-  // or any such nonsense.
-  // In order to support that (bug 57137 and 58460 are examples) we toggle
-  // the checked attribute *first*, and then fire onclick.  If the user
-  // returns false, we reset the control to the old checked value.  Otherwise,
-  // we dispatch DOMActivate.  If DOMActivate is cancelled, we also reset
-  // the control to the old checked value.  We need to keep track of whether
-  // we've already toggled the state from onclick since the user could
-  // explicitly dispatch DOMActivate on the element.
-  //
-  // These are compatibility hacks and are defined as legacy-pre-activation
-  // and legacy-canceled-activation behavior in HTML.
-  //
+  if (CheckActivationBehaviorPreconditions(aVisitor)) {
+    aVisitor.mWantsActivationBehavior = true;
 
-  // Track whether we're in the outermost Dispatch invocation that will
-  // cause activation of the input.  That is, if we're a click event, or a
-  // DOMActivate that was dispatched directly, this will be set, but if we're
-  // a DOMActivate dispatched from click handling, it will not be set.
-  WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
-  bool outerActivateEvent = ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
-                             (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
-                              !mInInternalActivate));
-
-  if (outerActivateEvent) {
-    aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
-  }
-
-  bool originalCheckedValue = false;
-
-  if (outerActivateEvent &&
-      !aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented) {
-    mCheckedIsToggled = false;
-    aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
-
-    switch (mType) {
-      case FormControlType::InputCheckbox: {
-        if (mIndeterminate) {
-          // indeterminate is always set to FALSE when the checkbox is toggled
-          SetIndeterminateInternal(false, false);
-          aVisitor.mItemFlags |= NS_ORIGINAL_INDETERMINATE_VALUE;
-        }
-
-        originalCheckedValue = Checked();
-        DoSetChecked(!originalCheckedValue, true, true);
-        mCheckedIsToggled = true;
-
-        if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
-          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
-        }
-      } break;
-
-      case FormControlType::InputRadio: {
-        HTMLInputElement* selectedRadioButton = GetSelectedRadioButton();
-        aVisitor.mItemData = static_cast<Element*>(selectedRadioButton);
-
-        originalCheckedValue = mChecked;
-        if (!originalCheckedValue) {
-          DoSetChecked(true, true, true);
-          mCheckedIsToggled = true;
-        }
-
-        if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
-          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
-        }
-      } break;
-
-      case FormControlType::InputSubmit:
-      case FormControlType::InputImage:
-        if (mForm) {
-          // Make sure other submit elements don't try to trigger submission.
-          aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
-          aVisitor.mItemData = static_cast<Element*>(mForm);
-          // tell the form that we are about to enter a click handler.
-          // that means that if there are scripted submissions, the
-          // latest one will be deferred until after the exit point of the
-          // handler.
-          mForm->OnSubmitClickBegin(this);
-        }
-        break;
-
-      default:
-        break;
+    if ((mType == FormControlType::InputSubmit ||
+         mType == FormControlType::InputImage) &&
+        mForm) {
+      // Make sure other submit elements don't try to trigger submission.
+      aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
+      aVisitor.mItemData = static_cast<Element*>(mForm);
+      // tell the form that we are about to enter a click handler.
+      // that means that if there are scripted submissions, the
+      // latest one will be deferred until after the exit point of the
+      // handler.
+      mForm->OnSubmitClickBegin(this);
     }
-  }
-
-  if (originalCheckedValue) {
-    aVisitor.mItemFlags |= NS_ORIGINAL_CHECKED_VALUE;
   }
 
   // We must cache type because mType may change during JS event (bug 2369)
@@ -3304,6 +3260,62 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
             relatedTarget->FindFirstNonChromeOnlyAccessContent()) {
       aVisitor.mCanHandle = false;
     }
+  }
+}
+
+void HTMLInputElement::LegacyPreActivationBehavior(
+    EventChainVisitor& aVisitor) {
+  //
+  // Web pages expect the value of a radio button or checkbox to be set
+  // *before* onclick and DOMActivate fire, and they expect that if they set
+  // the value explicitly during onclick or DOMActivate it will not be toggled
+  // or any such nonsense.
+  // In order to support that (bug 57137 and 58460 are examples) we toggle
+  // the checked attribute *first*, and then fire onclick.  If the user
+  // returns false, we reset the control to the old checked value.  Otherwise,
+  // we dispatch DOMActivate.  If DOMActivate is cancelled, we also reset
+  // the control to the old checked value.  We need to keep track of whether
+  // we've already toggled the state from onclick since the user could
+  // explicitly dispatch DOMActivate on the element.
+  //
+  // These are compatibility hacks and are defined as legacy-pre-activation
+  // and legacy-canceled-activation behavior in HTML.
+  //
+
+  bool originalCheckedValue = false;
+  mCheckedIsToggled = false;
+
+  if (mType == FormControlType::InputCheckbox) {
+    if (mIndeterminate) {
+      // indeterminate is always set to FALSE when the checkbox is toggled
+      SetIndeterminateInternal(false, false);
+      aVisitor.mItemFlags |= NS_ORIGINAL_INDETERMINATE_VALUE;
+    }
+
+    originalCheckedValue = Checked();
+    DoSetChecked(!originalCheckedValue, true, true);
+    mCheckedIsToggled = true;
+
+    if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
+      aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+    }
+  } else if (mType == FormControlType::InputRadio) {
+    HTMLInputElement* selectedRadioButton = GetSelectedRadioButton();
+    aVisitor.mItemData = static_cast<Element*>(selectedRadioButton);
+
+    originalCheckedValue = Checked();
+    if (!originalCheckedValue) {
+      DoSetChecked(true, true, true);
+      mCheckedIsToggled = true;
+    }
+
+    if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
+      aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+    }
+  }
+
+  if (originalCheckedValue) {
+    aVisitor.mItemFlags |= NS_ORIGINAL_CHECKED_VALUE;
   }
 }
 
@@ -3639,8 +3651,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 
   nsresult rv = NS_OK;
   bool outerActivateEvent = !!(aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT);
-  bool originalCheckedValue =
-      !!(aVisitor.mItemFlags & NS_ORIGINAL_CHECKED_VALUE);
   auto oldType = FormControlType(NS_CONTROL_TYPE(aVisitor.mItemFlags));
 
   // Ideally we would make the default action for click and space just dispatch
@@ -3687,59 +3697,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     // web compat. See:
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:activation-behaviour
     preventDefault = true;
-  }
-
-  // now check to see if the event was canceled
-  if (mCheckedIsToggled && outerActivateEvent) {
-    if (preventDefault) {
-      // if it was canceled and a radio button, then set the old
-      // selected btn to TRUE. if it is a checkbox then set it to its
-      // original value (legacy-canceled-activation)
-      if (oldType == FormControlType::InputRadio) {
-        nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
-        HTMLInputElement* selectedRadioButton =
-            HTMLInputElement::FromNodeOrNull(content);
-        if (selectedRadioButton) {
-          selectedRadioButton->SetChecked(true);
-        }
-        // If there was no checked radio button or this one is no longer a
-        // radio button we must reset it back to false to cancel the action.
-        // See how the web of hack grows?
-        if (!selectedRadioButton || mType != FormControlType::InputRadio) {
-          DoSetChecked(false, true, true);
-        }
-      } else if (oldType == FormControlType::InputCheckbox) {
-        bool originalIndeterminateValue =
-            !!(aVisitor.mItemFlags & NS_ORIGINAL_INDETERMINATE_VALUE);
-        SetIndeterminateInternal(originalIndeterminateValue, false);
-        DoSetChecked(originalCheckedValue, true, true);
-      }
-    } else {
-      // Fire input event and then change event.
-      DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                           "Failed to dispatch input event");
-
-      nsContentUtils::DispatchTrustedEvent<WidgetEvent>(
-          OwnerDoc(), static_cast<Element*>(this), eFormChange, CanBubble::eYes,
-          Cancelable::eNo);
-#ifdef ACCESSIBILITY
-      // Fire an event to notify accessibility
-      if (mType == FormControlType::InputCheckbox) {
-        if (nsContentUtils::MayHaveFormCheckboxStateChangeListeners()) {
-          FireEventForAccessibility(this, eFormCheckboxStateChange);
-        }
-      } else if (nsContentUtils::MayHaveFormRadioStateChangeListeners()) {
-        FireEventForAccessibility(this, eFormRadioStateChange);
-        // Fire event for the previous selected radio.
-        nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
-        HTMLInputElement* previous = HTMLInputElement::FromNodeOrNull(content);
-        if (previous) {
-          FireEventForAccessibility(previous, eFormRadioStateChange);
-        }
-      }
-#endif
-    }
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -4033,6 +3990,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           break;
       }
 
+      // Bug 1459231: should be in ActivationBehavior(). blocked by 1803805
       if (outerActivateEvent) {
         switch (mType) {
           case FormControlType::InputReset:
@@ -4085,6 +4043,78 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     MOZ_TRY(MaybeInitPickers(aVisitor));
   }
   return NS_OK;
+}
+
+void HTMLInputElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
+  auto oldType = FormControlType(NS_CONTROL_TYPE(aVisitor.mItemFlags));
+
+  if (IsDisabled() && oldType != FormControlType::InputCheckbox &&
+      oldType != FormControlType::InputRadio) {
+    // Behave as if defaultPrevented when the element becomes disabled by event
+    // listeners. Checkboxes and radio buttons should still process clicks for
+    // web compat. See:
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:activation-behaviour
+    return;
+  }
+
+  if (mCheckedIsToggled) {
+    // Fire input event and then change event.
+    DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(this);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "Failed to dispatch input event");
+
+    nsContentUtils::DispatchTrustedEvent<WidgetEvent>(
+        OwnerDoc(), static_cast<Element*>(this), eFormChange, CanBubble::eYes,
+        Cancelable::eNo);
+#ifdef ACCESSIBILITY
+    // Fire an event to notify accessibility
+    if (mType == FormControlType::InputCheckbox) {
+      if (nsContentUtils::MayHaveFormCheckboxStateChangeListeners()) {
+        FireEventForAccessibility(this, eFormCheckboxStateChange);
+      }
+    } else if (nsContentUtils::MayHaveFormRadioStateChangeListeners()) {
+      FireEventForAccessibility(this, eFormRadioStateChange);
+      // Fire event for the previous selected radio.
+      nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
+      if (HTMLInputElement* previous =
+              HTMLInputElement::FromNodeOrNull(content)) {
+        FireEventForAccessibility(previous, eFormRadioStateChange);
+      }
+    }
+#endif
+  }
+}
+
+void HTMLInputElement::LegacyCanceledActivationBehavior(
+    EventChainPostVisitor& aVisitor) {
+  bool originalCheckedValue =
+      !!(aVisitor.mItemFlags & NS_ORIGINAL_CHECKED_VALUE);
+  auto oldType = FormControlType(NS_CONTROL_TYPE(aVisitor.mItemFlags));
+
+  if (mCheckedIsToggled) {
+    // if it was canceled and a radio button, then set the old
+    // selected btn to TRUE. if it is a checkbox then set it to its
+    // original value (legacy-canceled-activation)
+    if (oldType == FormControlType::InputRadio) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
+      HTMLInputElement* selectedRadioButton =
+          HTMLInputElement::FromNodeOrNull(content);
+      if (selectedRadioButton) {
+        selectedRadioButton->SetChecked(true);
+      }
+      // If there was no checked radio button or this one is no longer a
+      // radio button we must reset it back to false to cancel the action.
+      // See how the web of hack grows?
+      if (!selectedRadioButton || mType != FormControlType::InputRadio) {
+        DoSetChecked(false, true, true);
+      }
+    } else if (oldType == FormControlType::InputCheckbox) {
+      bool originalIndeterminateValue =
+          !!(aVisitor.mItemFlags & NS_ORIGINAL_INDETERMINATE_VALUE);
+      SetIndeterminateInternal(originalIndeterminateValue, false);
+      DoSetChecked(originalCheckedValue, true, true);
+    }
+  }
 }
 
 enum class RadioButtonMove { Back, Forward, None };
