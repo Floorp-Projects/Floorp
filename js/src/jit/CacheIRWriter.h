@@ -220,9 +220,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     MOZ_ASSERT(sym);
     addStubField(uintptr_t(sym), StubField::Type::Symbol);
   }
-  void writeBaseScriptField(BaseScript* script) {
+  void writeWeakBaseScriptField(BaseScript* script) {
     MOZ_ASSERT(script);
-    addStubField(uintptr_t(script), StubField::Type::BaseScript);
+    addStubField(uintptr_t(script), StubField::Type::WeakBaseScript);
   }
   void writeJitCodeField(JitCode* code) {
     MOZ_ASSERT(code);

@@ -217,7 +217,8 @@ JSAtom* CacheIRCloner::getAtomField(uint32_t stubOffset) {
 JS::Symbol* CacheIRCloner::getSymbolField(uint32_t stubOffset) {
   return reinterpret_cast<JS::Symbol*>(readStubWord(stubOffset));
 }
-BaseScript* CacheIRCloner::getBaseScriptField(uint32_t stubOffset) {
+BaseScript* CacheIRCloner::getWeakBaseScriptField(uint32_t stubOffset) {
+  // No barrier is required to clone a weak pointer.
   return reinterpret_cast<BaseScript*>(readStubWord(stubOffset));
 }
 JitCode* CacheIRCloner::getJitCodeField(uint32_t stubOffset) {

@@ -241,7 +241,7 @@ class StubField {
     WeakObject,
     Symbol,
     String,
-    BaseScript,
+    WeakBaseScript,
     JitCode,
 
     Id,
