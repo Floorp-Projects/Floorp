@@ -19,6 +19,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
+const UTM_PARAMS = {
+  utm_medium: "firefox-desktop",
+  utm_source: "firefox-suggest",
+};
+
 const VIEW_TEMPLATE = {
   attributes: {
     selectable: true,
@@ -226,9 +231,19 @@ export class AddonSuggestions extends BaseFeature {
       return null;
     }
 
+    // Set UTM params unless they're already defined. This allows remote
+    // settings or Merino to override them if need be.
+    let url = new URL(suggestion.url);
+    for (let [key, value] of Object.entries(UTM_PARAMS)) {
+      if (!url.searchParams.has(key)) {
+        url.searchParams.set(key, value);
+      }
+    }
+
     const payload = {
       icon: suggestion.icon,
-      url: suggestion.url,
+      url: url.href,
+      originalUrl: suggestion.url,
       title: suggestion.title,
       description: suggestion.description,
       rating: Number(rating),

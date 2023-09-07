@@ -107,7 +107,8 @@ add_task(async function basic() {
     const icon = row.querySelector(".urlbarView-dynamic-addons-icon");
     Assert.equal(icon.src, merinoSuggestion.icon);
     const url = row.querySelector(".urlbarView-dynamic-addons-url");
-    Assert.equal(url.textContent, merinoSuggestion.url);
+    const expectedUrl = makeExpectedUrl(merinoSuggestion.url);
+    Assert.equal(url.textContent, expectedUrl);
     const title = row.querySelector(".urlbarView-dynamic-addons-title");
     Assert.equal(title.textContent, merinoSuggestion.title);
     const description = row.querySelector(
@@ -139,7 +140,7 @@ add_task(async function basic() {
     const onLoad = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
       false,
-      merinoSuggestion.url
+      expectedUrl
     );
     EventUtils.synthesizeMouseAtCenter(row, {});
     await onLoad;
@@ -501,4 +502,11 @@ async function doDismissTest(command) {
   await UrlbarTestUtils.promisePopupClose(window);
 
   UrlbarPrefs.clear("suggest.addons");
+}
+
+function makeExpectedUrl(originalUrl) {
+  let url = new URL(originalUrl);
+  url.searchParams.set("utm_medium", "firefox-desktop");
+  url.searchParams.set("utm_source", "firefox-suggest");
+  return url.href;
 }
