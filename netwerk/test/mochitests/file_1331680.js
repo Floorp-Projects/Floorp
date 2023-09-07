@@ -3,11 +3,12 @@
 "use strict";
 
 var observer = {
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "cookie-changed") {
-      let cookie = subject.QueryInterface(Ci.nsICookie);
+      let notification = subject.QueryInterface(Ci.nsICookieNotification);
+      let cookie = notification.cookie.QueryInterface(Ci.nsICookie);
       sendAsyncMessage("cookieName", cookie.name + "=" + cookie.value);
-      sendAsyncMessage("cookieOperation", data);
+      sendAsyncMessage("cookieOperation", notification.action);
     }
   },
 };
