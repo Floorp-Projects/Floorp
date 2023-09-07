@@ -106,7 +106,7 @@ add_task(async function runTests() {
   // cookieBehaviors both are BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN in
   // the strict feature value.
   await testCookieBlockingInfoStrict(
-    "tp,tpPrivate,cookieBehavior5,cookieBehaviorPBM5,cm,fp,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp",
+    "tp,tpPrivate,cookieBehavior5,cookieBehaviorPBM5,cm,fp,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp,fpp,fppPrivate",
     false
   );
 
@@ -114,7 +114,7 @@ add_task(async function runTests() {
   // cookieBehavior is BEHAVIOR_REJECT_TRACKER and the private cookieBehavior is
   // BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
   await testCookieBlockingInfoStrict(
-    "tp,tpPrivate,cookieBehavior4,cookieBehaviorPBM5,cm,fp,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp",
+    "tp,tpPrivate,cookieBehavior4,cookieBehaviorPBM5,cm,fp,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp,fpp,fppPrivate",
     true
   );
 

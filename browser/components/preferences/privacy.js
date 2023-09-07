@@ -914,6 +914,15 @@ var gPrivacyPane = {
       gPrivacyPane.networkCookieBehaviorReadPrefs.bind(gPrivacyPane)
     );
 
+    Preferences.get("privacy.fingerprintingProtection").on(
+      "change",
+      gPrivacyPane.fingerprintingProtectionReadPrefs.bind(gPrivacyPane)
+    );
+    Preferences.get("privacy.fingerprintingProtection.pbmode").on(
+      "change",
+      gPrivacyPane.fingerprintingProtectionReadPrefs.bind(gPrivacyPane)
+    );
+
     setEventListener(
       "trackingProtectionExceptions",
       "command",

@@ -1333,6 +1333,14 @@ BrowserGlue.prototype = {
       this._matchCBCategory
     );
     Services.prefs.removeObserver(
+      "privacy.fingerprintingProtection",
+      this._matchCBCategory
+    );
+    Services.prefs.removeObserver(
+      "privacy.fingerprintingProtection.pbmode",
+      this._matchCBCategory
+    );
+    Services.prefs.removeObserver(
       ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY,
       this._updateCBCategory
     );
@@ -1842,6 +1850,14 @@ BrowserGlue.prototype = {
     );
     Services.prefs.addObserver(
       "privacy.query_stripping.enabled.pbmode",
+      this._matchCBCategory
+    );
+    Services.prefs.addObserver(
+      "privacy.fingerprintingProtection",
+      this._matchCBCategory
+    );
+    Services.prefs.addObserver(
+      "privacy.fingerprintingProtection.pbmode",
       this._matchCBCategory
     );
     Services.prefs.addObserver(
@@ -4750,6 +4766,8 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.partition.network_state.ocsp_cache": null,
         "privacy.query_stripping.enabled": null,
         "privacy.query_stripping.enabled.pbmode": null,
+        "privacy.fingerprintingProtection": null,
+        "privacy.fingerprintingProtection.pbmode": null,
       },
       standard: {
         "network.cookie.cookieBehavior": null,
@@ -4768,6 +4786,8 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.partition.network_state.ocsp_cache": null,
         "privacy.query_stripping.enabled": null,
         "privacy.query_stripping.enabled.pbmode": null,
+        "privacy.fingerprintingProtection": null,
+        "privacy.fingerprintingProtection.pbmode": null,
       },
     };
     let type = "strict";
@@ -4900,6 +4920,22 @@ var ContentBlockingCategoriesPrefs = {
         case "-qpsPBM":
           this.CATEGORY_PREFS[type][
             "privacy.query_stripping.enabled.pbmode"
+          ] = false;
+          break;
+        case "fpp":
+          this.CATEGORY_PREFS[type]["privacy.fingerprintingProtection"] = true;
+          break;
+        case "-fpp":
+          this.CATEGORY_PREFS[type]["privacy.fingerprintingProtection"] = false;
+          break;
+        case "fppPrivate":
+          this.CATEGORY_PREFS[type][
+            "privacy.fingerprintingProtection.pbmode"
+          ] = true;
+          break;
+        case "-fppPrivate":
+          this.CATEGORY_PREFS[type][
+            "privacy.fingerprintingProtection.pbmode"
           ] = false;
           break;
         case "cookieBehavior0":
