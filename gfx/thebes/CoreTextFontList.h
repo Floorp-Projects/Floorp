@@ -114,9 +114,8 @@ class CTFontEntry final : public gfxFontEntry {
 
 class CTFontFamily : public gfxFontFamily {
  public:
-  CTFontFamily(const nsACString& aName, FontVisibility aVisibility,
-               double aSizeHint = 0.0)
-      : gfxFontFamily(aName, aVisibility), mSizeHint(aSizeHint) {}
+  CTFontFamily(const nsACString& aName, FontVisibility aVisibility)
+      : gfxFontFamily(aName, aVisibility) {}
 
   virtual ~CTFontFamily() = default;
 
@@ -127,8 +126,6 @@ class CTFontFamily : public gfxFontFamily {
 
  protected:
   void AddFace(CTFontDescriptorRef aFace) MOZ_REQUIRES(mLock);
-
-  double mSizeHint = 0.0;
 };
 
 class CoreTextFontList : public gfxPlatformFontList {
