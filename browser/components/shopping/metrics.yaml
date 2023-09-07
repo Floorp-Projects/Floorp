@@ -354,3 +354,20 @@ shopping:
     send_in_pings:
       - events
 
+  surface_show_quality_explainer_url_clicked:
+    type: event
+    description: |
+      The user clicked to see the explanation of Review Quality in the
+      shopping component.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849382
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848870
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
