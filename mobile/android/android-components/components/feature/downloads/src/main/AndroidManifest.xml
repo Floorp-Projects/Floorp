@@ -16,8 +16,11 @@
     <!-- Needed to prompt the user to give permission to install a downloaded apk -->
     <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- Needed to receive broadcasts from AC code-->
+    <uses-permission android:name="${applicationId}.permission.RECEIVE_DOWNLOAD_BROADCAST" />
+
     <permission
-        android:name="org.mozilla.permission.RECEIVE_DOWNLOAD_BROADCAST"
+        android:name="${applicationId}.permission.RECEIVE_DOWNLOAD_BROADCAST"
         android:protectionLevel="signature" />
 
     <application android:supportsRtl="true">

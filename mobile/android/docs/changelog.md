@@ -12,7 +12,7 @@ permalink: /changelog/
 
 
 * **feature-downloads**
-  * Added a custom permission `org.mozilla.permission.RECEIVE_DOWNLOAD_BROADCAST` that needs to be used by apps in order to receive download related broadcasts
+  * Added a custom permission `${applicationId}.permission.RECEIVE_DOWNLOAD_BROADCAST` that needs to be used by apps in order to receive download related broadcasts
   
 * **ui-tabcounter**
   * Adds a mask overlay to the tabcounter that can be shown with `toggleCounterMask`.
