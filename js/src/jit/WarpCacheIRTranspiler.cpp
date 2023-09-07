@@ -912,7 +912,7 @@ bool WarpCacheIRTranspiler::emitGuardDynamicSlotValue(ObjOperandId objId,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitLoadScriptedProxyHandler(ObjOperandId resultId,
+bool WarpCacheIRTranspiler::emitLoadScriptedProxyHandler(ValOperandId resultId,
                                                          ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
