@@ -7,11 +7,12 @@ Transform the beetmover task into an actual task description.
 
 import logging
 
-from android_taskgraph.util.scriptworker import generate_beetmover_artifact_map
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
 from voluptuous import ALLOW_EXTRA, Optional, Required, Schema
+
+from android_taskgraph.util.scriptworker import generate_beetmover_artifact_map
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ def make_task_description(config, tasks):
         )
         bucket_scope = task.pop("bucket-scope")
 
-        task = {
+        taskdesc = {
             "label": label,
             "description": description,
             "worker-type": "beetmover-android",
@@ -71,7 +72,7 @@ def make_task_description(config, tasks):
             "treeherder": task["treeherder"],
         }
 
-        yield task
+        yield taskdesc
 
 
 _STAGING_PREFIX = "staging-"

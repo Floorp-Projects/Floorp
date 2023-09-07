@@ -7,9 +7,10 @@ build-apk and build-bundle kinds.
 """
 
 
-from android_taskgraph.build_config import get_variant
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util import path
+
+from android_taskgraph.build_config import get_variant
 
 transforms = TransformSequence()
 

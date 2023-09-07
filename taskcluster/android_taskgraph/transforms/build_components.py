@@ -127,7 +127,7 @@ def set_external_gradle_dependencies(config, tasks):
 
 @transforms.add
 def add_artifacts(config, tasks):
-    timestamp = _get_timestamp(config)
+    _get_timestamp(config)
     version = config.params["version"]
     nightly_version = get_nightly_version(config, version)
 
