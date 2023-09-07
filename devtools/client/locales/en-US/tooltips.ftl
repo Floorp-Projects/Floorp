@@ -33,6 +33,8 @@ inactive-css-not-inline-or-tablecell = <strong>{ $property }</strong> has no eff
 
 inactive-css-first-line-pseudo-element-not-supported = <strong>{ $property }</strong> is not supported on ::first-line pseudo-elements.
 
+inactive-css-placeholder-pseudo-element-not-supported = <strong>{ $property }</strong> is not supported on ::placeholder pseudo-elements.
+
 inactive-css-property-because-of-display = <strong>{ $property }</strong> has no effect on this element since it has a display of <strong>{ $display }</strong>.
 
 inactive-css-not-display-block-on-floated = The <strong>display</strong> value has been changed by the engine to <strong>block</strong> because the element is <strong>floated</strong>.
