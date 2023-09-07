@@ -14,6 +14,9 @@ GROUP_BY_MAP = {}
 
 def group_by(name, schema=None):
     def wrapper(func):
+        assert (
+            name not in GROUP_BY_MAP
+        ), f"duplicate group_by function name {name} ({func} and {GROUP_BY_MAP[name]})"
         GROUP_BY_MAP[name] = func
         func.schema = schema
         return func

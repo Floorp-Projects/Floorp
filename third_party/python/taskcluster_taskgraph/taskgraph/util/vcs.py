@@ -353,13 +353,19 @@ class GitRepository(Repository):
     def remote_name(self):
         try:
             remote_branch_name = self.run(
-                "rev-parse", "--verify", "--abbrev-ref", "--symbolic-full-name", "@{u}"
+                "rev-parse",
+                "--verify",
+                "--abbrev-ref",
+                "--symbolic-full-name",
+                "@{u}",
+                stderr=subprocess.PIPE,
             ).strip()
             return remote_branch_name.split("/")[0]
         except subprocess.CalledProcessError as e:
             # Error code 128 comes with the message:
             # "fatal: no upstream configured for branch $BRANCH"
             if e.returncode != 128:
+                print(e.stderr)
                 raise
 
         return self._get_most_suitable_remote("`git remote add origin $URL`")
