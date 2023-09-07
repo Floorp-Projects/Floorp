@@ -15,17 +15,31 @@ interface SuggestApiError {
     Other(string reason);
 };
 
-dictionary Suggestion {
-    i64 block_id;
-    string advertiser;
-    string iab_category;
-    boolean is_sponsored;
-    string full_keyword;
-    string title;
-    string url;
-    sequence<u8>? icon;
-    string? impression_url;
-    string? click_url;
+
+enum SuggestionProvider {
+    "Amp",
+    "Wikipedia",
+};
+
+[Enum]
+interface Suggestion {
+    Amp(
+        string title,
+        string url,
+        sequence<u8>? icon,
+        string full_keyword,
+        i64 block_id,
+        string advertiser,
+        string iab_category,
+        string impression_url,
+        string click_url
+    );
+    Wikipedia(
+        string title,
+        string url,
+        sequence<u8>? icon,
+        string full_keyword
+    );
 };
 
 dictionary SuggestionQuery {

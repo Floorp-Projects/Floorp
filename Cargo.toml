@@ -202,13 +202,13 @@ warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef
 malloc_size_of_derive = { path = "xpcom/rust/malloc_size_of_derive" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }
-suggest = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "25972c388a4cf3a6d8256504f3a09b711db2fc6a" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "1a59041d0c7d36ef1abc713a48304c5333e45a1a" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "1a59041d0c7d36ef1abc713a48304c5333e45a1a" }
+suggest = { git = "https://github.com/mozilla/application-services", rev = "1a59041d0c7d36ef1abc713a48304c5333e45a1a" }
+sync15 = { git = "https://github.com/mozilla/application-services", rev = "1a59041d0c7d36ef1abc713a48304c5333e45a1a" }
+tabs = { git = "https://github.com/mozilla/application-services", rev = "1a59041d0c7d36ef1abc713a48304c5333e45a1a" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "1a59041d0c7d36ef1abc713a48304c5333e45a1a" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "1a59041d0c7d36ef1abc713a48304c5333e45a1a" }
 
 # ICU4X 1.2 with synstructure 0.13.x / syn 2.x. When updating to next version, this should be removed.
 diplomat = { git = "https://github.com/rust-diplomat/diplomat", rev = "8d125999893fedfdf30595e97334c21ec4b18da9" }

@@ -50,6 +50,11 @@ extern "C" {
   void uniffi_suggest_fn_method_suggeststore_interrupt(void *, RustCallStatus*);
   void uniffi_suggest_fn_method_suggeststore_ingest(void *, RustBuffer, RustCallStatus*);
   void uniffi_suggest_fn_method_suggeststore_clear(void *, RustCallStatus*);
+  void uniffi_remote_settings_fn_free_remotesettings(void *, RustCallStatus*);
+  void * uniffi_remote_settings_fn_constructor_remotesettings_new(RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_remote_settings_fn_method_remotesettings_get_records(void *, RustCallStatus*);
+  RustBuffer uniffi_remote_settings_fn_method_remotesettings_get_records_since(void *, uint64_t, RustCallStatus*);
+  void uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path(void *, RustBuffer, RustBuffer, RustCallStatus*);
 }
 
 // Define pointer types
@@ -64,6 +69,10 @@ const static mozilla::uniffi::UniFFIPointerType kTabsTabsBridgedEnginePointerTyp
 const static mozilla::uniffi::UniFFIPointerType kSuggestSuggestStorePointerType {
   "suggest::SuggestStore"_ns,
   uniffi_suggest_fn_free_suggeststore
+};
+const static mozilla::uniffi::UniFFIPointerType kRemoteSettingsRemoteSettingsPointerType {
+  "remote_settings::RemoteSettings"_ns,
+  uniffi_remote_settings_fn_free_remotesettings
 };
 
 // Define the data we need per-callback interface
@@ -170,6 +179,22 @@ Maybe<already_AddRefed<Promise>> UniFFICallAsync(const GlobalObject& aGlobal, ui
     case 22: { // suggest:uniffi_suggest_fn_method_suggeststore_clear
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSuggestSuggestStorePointerType>>;
       return Some(CallHandler::CallAsync(uniffi_suggest_fn_method_suggeststore_clear, aGlobal, aArgs, "uniffi_suggest_fn_method_suggeststore_clear: "_ns, aError));
+    }
+    case 23: { // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_remote_settings_fn_constructor_remotesettings_new, aGlobal, aArgs, "uniffi_remote_settings_fn_constructor_remotesettings_new: "_ns, aError));
+    }
+    case 24: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_remote_settings_fn_method_remotesettings_get_records, aGlobal, aArgs, "uniffi_remote_settings_fn_method_remotesettings_get_records: "_ns, aError));
+    }
+    case 25: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<uint64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_remote_settings_fn_method_remotesettings_get_records_since, aGlobal, aArgs, "uniffi_remote_settings_fn_method_remotesettings_get_records_since: "_ns, aError));
+    }
+    case 26: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path, aGlobal, aArgs, "uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path: "_ns, aError));
     }
   }
   return Nothing();
@@ -292,6 +317,26 @@ bool UniFFICallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<Sc
       CallHandler::CallSync(uniffi_suggest_fn_method_suggeststore_clear, aGlobal, aArgs, aReturnValue, "uniffi_suggest_fn_method_suggeststore_clear: "_ns, aError);
       return true;
     }
+    case 23: { // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_remote_settings_fn_constructor_remotesettings_new, aGlobal, aArgs, aReturnValue, "uniffi_remote_settings_fn_constructor_remotesettings_new: "_ns, aError);
+      return true;
+    }
+    case 24: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>>;
+      CallHandler::CallSync(uniffi_remote_settings_fn_method_remotesettings_get_records, aGlobal, aArgs, aReturnValue, "uniffi_remote_settings_fn_method_remotesettings_get_records: "_ns, aError);
+      return true;
+    }
+    case 25: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<uint64_t>>;
+      CallHandler::CallSync(uniffi_remote_settings_fn_method_remotesettings_get_records_since, aGlobal, aArgs, aReturnValue, "uniffi_remote_settings_fn_method_remotesettings_get_records_since: "_ns, aError);
+      return true;
+    }
+    case 26: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path, aGlobal, aArgs, aReturnValue, "uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path: "_ns, aError);
+      return true;
+    }
   }
   return false;
 }
@@ -309,6 +354,10 @@ Maybe<already_AddRefed<UniFFIPointer>> UniFFIReadPointer(const GlobalObject& aGl
     }
     case 2: { // suggest:SuggestStore
       type = &kSuggestSuggestStorePointerType;
+      break;
+    }
+    case 3: { // remote_settings:RemoteSettings
+      type = &kRemoteSettingsRemoteSettingsPointerType;
       break;
     }
     default:
@@ -330,6 +379,10 @@ bool UniFFIWritePointer(const GlobalObject& aGlobal, uint64_t aId, const UniFFIP
     }
     case 2: { // suggest:SuggestStore
       type = &kSuggestSuggestStorePointerType;
+      break;
+    }
+    case 3: { // remote_settings:RemoteSettings
+      type = &kRemoteSettingsRemoteSettingsPointerType;
       break;
     }
     default:

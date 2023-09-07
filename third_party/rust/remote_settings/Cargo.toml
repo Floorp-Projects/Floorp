@@ -17,6 +17,7 @@ authors = [
     "The Android Mobile Team <firefox-android-team@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
 ]
+exclude = ["/android"]
 description = "A Remote Settings client intended for application layer platforms."
 license = "MPL-2.0"
 
@@ -32,6 +33,7 @@ url = "2.1"
 path = "../viaduct"
 
 [dev-dependencies]
+expect-test = "1.4"
 mockito = "0.31"
 
 [dev-dependencies.viaduct-reqwest]

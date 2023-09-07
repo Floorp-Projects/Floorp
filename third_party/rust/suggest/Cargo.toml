@@ -48,10 +48,14 @@ path = "../support/sql"
 
 [dev-dependencies]
 expect-test = "1.4"
+hex = "0.4"
 
 [dev-dependencies.env_logger]
 version = "0.7"
 default-features = false
+
+[dev-dependencies.rc_crypto]
+path = "../support/rc_crypto"
 
 [build-dependencies.uniffi]
 version = "0.24.1"
