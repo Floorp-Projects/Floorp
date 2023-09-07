@@ -474,7 +474,7 @@ const PREF_OTHER_DEFAULTS = new Map([
 // defaults are the values of their fallbacks.
 const NIMBUS_DEFAULTS = {
   addonsShowLessFrequentlyCap: 0,
-  addonsUITreatment: "a",
+  addonsUITreatment: "b",
   experimentType: "",
   isBestMatchExperiment: false,
   pocketShowLessFrequentlyCap: 0,

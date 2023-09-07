@@ -459,12 +459,13 @@
   grid-area: icon;
   width: 60px;
   height: 60px;
-  margin-inline-end: 8px;
+  margin-inline-end: calc(/* .urlbarView-row-inner padding-inline */ var(--urlbarView-item-inline-padding) + /* .urlbarView-dynamic-addons-content padding */ 4px);
 }
 
 .urlbarView-dynamic-addons-header {
   grid-area: header;
   display: flex;
+  align-items: baseline;
   overflow: hidden;
 }
 

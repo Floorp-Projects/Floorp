@@ -748,6 +748,7 @@ function makeExpectedAddonResult({ suggestion, source = "remote-settings" }) {
     type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
+    isBestMatch: true,
     payload: {
       source,
       provider: source == "remote-settings" ? "AddonSuggestions" : "amo",

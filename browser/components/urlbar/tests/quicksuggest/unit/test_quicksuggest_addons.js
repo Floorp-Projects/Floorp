@@ -71,9 +71,7 @@ const REMOTE_SETTINGS_RESULTS = [
 
 add_setup(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
-  UrlbarPrefs.set("bestMatch.enabled", true);
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
-  UrlbarPrefs.set("addons.featureGate", true);
 
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
@@ -82,6 +80,7 @@ add_setup(async function init() {
     remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
     merinoSuggestions: MERINO_SUGGESTIONS,
   });
+  await waitForRemoteSettingsSuggestions();
 });
 
 add_task(async function telemetryType() {
@@ -92,41 +91,38 @@ add_task(async function telemetryType() {
   );
 });
 
-// When non-sponsored suggestions are disabled, addon suggestions should be
-// disabled.
-add_task(async function nonsponsoredDisabled() {
-  // Disable sponsored suggestions. Addon suggestions are non-sponsored, so
-  // doing this should not prevent them from being enabled.
-  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
-
-  // First make sure the suggestion is added when non-sponsored suggestions are
-  // enabled.
-  await check_results({
-    context: createContext("test", {
-      providers: [UrlbarProviderQuickSuggest.name],
-      isPrivate: false,
-    }),
-    matches: [
-      makeExpectedResult({
-        suggestion: MERINO_SUGGESTIONS[0],
-        source: "merino",
-        isTopPick: true,
+// When quick suggest prefs are disabled, addon suggestions should be disabled.
+add_task(async function quickSuggestPrefsDisabled() {
+  let prefs = ["quicksuggest.enabled", "suggest.quicksuggest.nonsponsored"];
+  for (let pref of prefs) {
+    // Before disabling the pref, first make sure the suggestion is added.
+    await check_results({
+      context: createContext("test", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
       }),
-    ],
-  });
+      matches: [
+        makeExpectedResult({
+          suggestion: MERINO_SUGGESTIONS[0],
+          source: "merino",
+          isTopPick: true,
+        }),
+      ],
+    });
 
-  // Now disable them.
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
-  await check_results({
-    context: createContext("test", {
-      providers: [UrlbarProviderQuickSuggest.name],
-      isPrivate: false,
-    }),
-    matches: [],
-  });
+    // Now disable the pref.
+    UrlbarPrefs.set(pref, false);
+    await check_results({
+      context: createContext("test", {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: [],
+    });
 
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
-  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+    UrlbarPrefs.set(pref, true);
+    await waitForRemoteSettingsSuggestions();
+  }
 });
 
 // When addon suggestions specific preference is disabled, addon suggestions
@@ -160,7 +156,8 @@ add_task(async function addonSuggestionsSpecificPrefDisabled() {
     });
 
     // Revert.
-    UrlbarPrefs.set(pref, true);
+    UrlbarPrefs.clear(pref);
+    await waitForRemoteSettingsSuggestions();
   }
 });
 
@@ -181,6 +178,7 @@ add_task(async function nimbus() {
   const cleanUpNimbusEnable = await UrlbarTestUtils.initNimbusFeature({
     addonsFeatureGate: true,
   });
+  await waitForRemoteSettingsSuggestions();
   await check_results({
     context: createContext("test", {
       providers: [UrlbarProviderQuickSuggest.name],
@@ -198,6 +196,7 @@ add_task(async function nimbus() {
 
   // Enable locally.
   UrlbarPrefs.set("addons.featureGate", true);
+  await waitForRemoteSettingsSuggestions();
 
   // Disable by Nimbus.
   const cleanUpNimbusDisable = await UrlbarTestUtils.initNimbusFeature({
@@ -213,7 +212,8 @@ add_task(async function nimbus() {
   await cleanUpNimbusDisable();
 
   // Revert.
-  UrlbarPrefs.set("addons.featureGate", true);
+  UrlbarPrefs.clear("addons.featureGate");
+  await waitForRemoteSettingsSuggestions();
 });
 
 add_task(async function hideIfAlreadyInstalled() {
@@ -532,4 +532,12 @@ function makeExpectedResult({ suggestion, source, isTopPick }) {
       provider,
     },
   };
+}
+
+async function waitForRemoteSettingsSuggestions(keyword = "first") {
+  let feature = QuickSuggest.getFeature("AddonSuggestions");
+  await TestUtils.waitForCondition(async () => {
+    let suggestions = await feature.queryRemoteSettings(keyword);
+    return !!suggestions.length;
+  }, "Waiting for AddonSuggestions to serve remote settings suggestions");
 }
