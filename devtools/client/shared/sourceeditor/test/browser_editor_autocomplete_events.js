@@ -16,13 +16,12 @@ async function runTests() {
   const target = await createAndAttachTargetForTab(gBrowser.selectedTab);
   const inspector = await target.getFront("inspector");
   const walker = inspector.walker;
-  const cssPropertiesFront = await target.getFront("cssProperties");
   const { ed, win, edWin } = await setup({
     autocomplete: true,
     mode: Editor.modes.css,
     autocompleteOpts: {
       walker,
-      cssProperties: cssPropertiesFront.cssProperties,
+      cssProperties: getClientCssProperties(),
     },
   });
   await testMouse(ed, edWin);

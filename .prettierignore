@@ -1054,6 +1054,7 @@ devtools/client/debugger/webpack.config.js
 devtools/client/preferences/
 
 # Ignore devtools generated code
+devtools/shared/css/generated/properties-db.js
 devtools/client/webconsole/test/node/fixtures/stubs/*.js
 !devtools/client/webconsole/test/node/fixtures/stubs/index.js
 devtools/client/shared/components/test/node/stubs/reps/*.js
