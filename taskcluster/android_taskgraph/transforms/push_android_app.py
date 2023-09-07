@@ -38,7 +38,6 @@ def resolve_keys(config, tasks):
 
 @transforms.add
 def add_startup_test(config, tasks):
-    # TODO: change kind.yml to have the right dependency upfront
     for task in tasks:
         if "nightly" not in task["attributes"].get("build-type", ""):
             yield task

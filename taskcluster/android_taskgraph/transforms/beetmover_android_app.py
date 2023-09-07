@@ -26,7 +26,7 @@ beetmover_description_schema = Schema(
         Optional("dependencies"): task_description_schema["dependencies"],
         Optional("bucket-scope"): optionally_keyed_by("level", "build-type", str),
     },
-    extra=ALLOW_EXTRA
+    extra=ALLOW_EXTRA,
 )
 
 transforms = TransformSequence()

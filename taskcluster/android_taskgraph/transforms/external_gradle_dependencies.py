@@ -17,13 +17,12 @@ def set_treeherder_config(config, tasks):
         treeherder = task.setdefault("treeherder", {})
         if not treeherder.get("symbol"):
             gradle_project = get_gradle_project(task)
-            treeherder_group = task.get("attributes", {}).get("treeherder-group", gradle_project)
+            treeherder_group = task.get("attributes", {}).get(
+                "treeherder-group", gradle_project
+            )
             treeherder["symbol"] = f"{treeherder_group}(egd)"
 
         yield task
-
-
-
 
 
 @transforms.add
@@ -39,11 +38,13 @@ def extend_resources(config, tasks):
             dependencies = deps_per_gradle_project[gradle_project]
             gradle_project_and_deps = [gradle_project] + dependencies
 
-            resources.extend([
-                path
-                for gradle_project in gradle_project_and_deps
-                for path in _get_build_gradle_paths(gradle_project)
-            ])
+            resources.extend(
+                [
+                    path
+                    for gradle_project in gradle_project_and_deps
+                    for path in _get_build_gradle_paths(gradle_project)
+                ]
+            )
 
         run["resources"] = sorted(list(set(resources)))
 
@@ -68,9 +69,13 @@ def _get_build_gradle_paths(gradle_project):
 
     # Make sure we rebuild the cache when Fenix or Focus dependencies are changed
     if gradle_project == "fenix":
-        file_list.append(f"{project_dir}/plugins/fenixdependencies/src/main/java/FenixDependenciesPlugin.kt")
+        file_list.append(
+            f"{project_dir}/plugins/fenixdependencies/src/main/java/FenixDependenciesPlugin.kt"
+        )
     elif gradle_project == "focus":
-        file_list.append(f"{project_dir}/plugins/focusdependencies/src/main/java/FocusDependenciesPlugin.kt")
+        file_list.append(
+            f"{project_dir}/plugins/focusdependencies/src/main/java/FocusDependenciesPlugin.kt"
+        )
 
     return file_list
 
@@ -95,14 +100,20 @@ def set_command_arguments(config, tasks):
             project_dir = _get_gradle_project_dir(gradle_project)
 
             arguments.append(project_dir)
-            gradle_task_template = "{gradle_task_name}" if gradle_project in ("focus", "fenix") else "{gradle_project}:{gradle_task_name}"
-            arguments.extend([
-                gradle_task_template.format(
-                    gradle_project=gradle_project,
-                    gradle_task_name=gradle_task_name,
-                )
-                for gradle_task_name in _get_gradle_task_names(gradle_project)
-            ])
+            gradle_task_template = (
+                "{gradle_task_name}"
+                if gradle_project in ("focus", "fenix")
+                else "{gradle_project}:{gradle_task_name}"
+            )
+            arguments.extend(
+                [
+                    gradle_task_template.format(
+                        gradle_project=gradle_project,
+                        gradle_task_name=gradle_task_name,
+                    )
+                    for gradle_task_name in _get_gradle_task_names(gradle_project)
+                ]
+            )
 
         yield task
 
@@ -110,10 +121,25 @@ def set_command_arguments(config, tasks):
 def _get_gradle_task_names(gradle_project):
     gradle_tasks_name = []
     if gradle_project == "focus":
-        gradle_tasks_name.extend(["assembleFocusDebug", "assembleAndroidTest", "testFocusDebugUnitTest", "lint"])
+        gradle_tasks_name.extend(
+            [
+                "assembleFocusDebug",
+                "assembleAndroidTest",
+                "testFocusDebugUnitTest",
+                "lint",
+            ]
+        )
     elif gradle_project == "fenix":
-        gradle_tasks_name.extend(["assemble", "assembleAndroidTest", "testClasses", "lint"])
+        gradle_tasks_name.extend(
+            ["assemble", "assembleAndroidTest", "testClasses", "lint"]
+        )
     else:
-        lint_task_name = "lint" if gradle_project in ("tooling-lint", "samples-browser") else "lintRelease"
-        gradle_tasks_name.extend(["assemble", "assembleAndroidTest", "test", lint_task_name])
+        lint_task_name = (
+            "lint"
+            if gradle_project in ("tooling-lint", "samples-browser")
+            else "lintRelease"
+        )
+        gradle_tasks_name.extend(
+            ["assemble", "assembleAndroidTest", "test", lint_task_name]
+        )
     return tuple(gradle_tasks_name)
