@@ -74,14 +74,6 @@ add_task(async function () {
   );
 });
 
-function getScopeNodeLabel(dbg, index) {
-  return findElement(dbg, "scopeNode", index).innerText;
-}
-
-function getScopeNodeValue(dbg, index) {
-  return findElement(dbg, "scopeValue", index).innerText;
-}
-
 function expandNode(dbg, index) {
   const node = findElement(dbg, "scopeNode", index);
   const objectInspector = node.closest(".object-inspector");

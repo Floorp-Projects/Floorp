@@ -1183,18 +1183,18 @@ async function assertScopes(dbg, items) {
 
   for (const [i, val] of items.entries()) {
     if (Array.isArray(val)) {
-      is(getScopeLabel(dbg, i + 1), val[0]);
+      is(getScopeNodeLabel(dbg, i + 1), val[0]);
       is(
-        getScopeValue(dbg, i + 1),
+        getScopeNodeValue(dbg, i + 1),
         val[1],
         `"${val[0]}" has the expected "${val[1]}" value`
       );
     } else {
-      is(getScopeLabel(dbg, i + 1), val);
+      is(getScopeNodeLabel(dbg, i + 1), val);
     }
   }
 
-  is(getScopeLabel(dbg, items.length + 1), "Window");
+  is(getScopeNodeLabel(dbg, items.length + 1), "Window");
 }
 
 function findSourceTreeThreadByName(dbg, name) {
@@ -2026,11 +2026,11 @@ function rightClickScopeNode(dbg, index) {
   rightClickObjectInspectorNode(dbg, findElement(dbg, "scopeNode", index));
 }
 
-function getScopeLabel(dbg, index) {
+function getScopeNodeLabel(dbg, index) {
   return findElement(dbg, "scopeNode", index).innerText;
 }
 
-function getScopeValue(dbg, index) {
+function getScopeNodeValue(dbg, index) {
   return findElement(dbg, "scopeValue", index).innerText;
 }
 

@@ -18,14 +18,14 @@ add_task(async function () {
   invokeInTab("firstCall");
   await ready;
 
-  is(getScopeLabel(dbg, 1), "secondCall");
-  is(getScopeLabel(dbg, 2), "<this>");
-  is(getScopeLabel(dbg, 4), "foo()");
+  is(getScopeNodeLabel(dbg, 1), "secondCall");
+  is(getScopeNodeLabel(dbg, 2), "<this>");
+  is(getScopeNodeLabel(dbg, 4), "foo()");
   await toggleScopeNode(dbg, 4);
-  is(getScopeLabel(dbg, 5), "arguments");
+  is(getScopeNodeLabel(dbg, 5), "arguments");
 
   await stepOver(dbg);
-  is(getScopeLabel(dbg, 4), "foo()");
-  is(getScopeLabel(dbg, 5), "Window");
-  is(getScopeValue(dbg, 5), "Global");
+  is(getScopeNodeLabel(dbg, 4), "foo()");
+  is(getScopeNodeLabel(dbg, 5), "Window");
+  is(getScopeNodeValue(dbg, 5), "Global");
 });
