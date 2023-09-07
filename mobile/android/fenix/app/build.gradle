@@ -599,7 +599,7 @@ dependencies {
     implementation FenixDependencies.androidx_navigation_fragment
     implementation FenixDependencies.androidx_navigation_ui
     implementation ComponentsDependencies.androidx_recyclerview
-    implementation FenixDependencies.androidx_lifecycle_common
+    implementation ComponentsDependencies.androidx_lifecycle_common
     implementation ComponentsDependencies.androidx_lifecycle_livedata
     implementation ComponentsDependencies.androidx_lifecycle_process
     implementation ComponentsDependencies.androidx_lifecycle_runtime
