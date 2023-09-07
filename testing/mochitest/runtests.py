@@ -779,8 +779,7 @@ class SSLTunnel:
 
         env = test_environment(xrePath=self.xrePath, log=self.log)
         env["LD_LIBRARY_PATH"] = self.xrePath
-        self.process = mozprocess.ProcessHandler([ssltunnel, self.configFile], env=env)
-        self.process.run()
+        self.process = subprocess.Popen([ssltunnel, self.configFile], env=env)
         self.log.info("runtests.py | SSL tunnel pid: %d" % self.process.pid)
 
     def stop(self):
