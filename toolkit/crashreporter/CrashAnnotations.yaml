@@ -168,16 +168,6 @@ BuildID:
   type: string
   ping: true
 
-ClassRegistrationInfoChild:
-  description: >
-    Microsoft COM class registration annotation for the child process.
-  type: string
-
-ClassRegistrationInfoParent:
-  description: >
-    Microsoft COM class registration annotation for the parent process.
-  type: string
-
 ContentSandboxCapabilities:
   description: >
     List of capabilities of the content process sandbox.
