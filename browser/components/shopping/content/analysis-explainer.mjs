@@ -96,6 +96,18 @@ class AnalysisExplainer extends MozLitElement {
     return displayNames[hostname] ?? defaultName;
   }
 
+  handleReviewQualityUrlClicked(e) {
+    if (e.target.localName == "a" && e.button == 0) {
+      this.dispatchEvent(
+        new CustomEvent("ShoppingTelemetryEvent", {
+          composed: true,
+          bubbles: true,
+          detail: "surfaceReviewQualityExplainerURLClicked",
+        })
+      );
+    }
+  }
+
   render() {
     return html`
       <link
@@ -121,7 +133,10 @@ class AnalysisExplainer extends MozLitElement {
                 retailer: this.getRetailerDisplayName(),
               })}"
             ></p>
-            <p data-l10n-id="shopping-analysis-explainer-learn-more">
+            <p
+              data-l10n-id="shopping-analysis-explainer-learn-more"
+              @click=${this.handleReviewQualityUrlClicked}
+            >
               <a
                 is="moz-support-link"
                 support-page="todo"
