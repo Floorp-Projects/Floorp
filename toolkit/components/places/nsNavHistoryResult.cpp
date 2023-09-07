@@ -378,6 +378,14 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
     return NS_OK;
   }
 
+  // Tags are enabled for bookmarks only.
+  if (mParent && mParent->IsQuery() &&
+      mParent->mOptions->QueryType() !=
+          nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
+    aTags.Truncate();
+    return NS_OK;
+  }
+
   // Initially, the tags string is set to a void string (see constructor).  We
   // then build it the first time this method called is called (and by that,
   // implicitly unset the void flag). Result observers may re-set the void flag
@@ -434,17 +442,6 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
     NS_ENSURE_SUCCESS(rv, rv);
     aTags.Assign(mTags);
     mAreTagsSorted = true;
-  }
-
-  // If this node is a child of a history query, we need to make sure changes
-  // to tags are properly live-updated.
-  if (mParent && mParent->IsQuery() &&
-      mParent->mOptions->QueryType() ==
-          nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY) {
-    nsNavHistoryQueryResultNode* query = mParent->GetAsQuery();
-    nsNavHistoryResult* result = query->GetResult();
-    NS_ENSURE_STATE(result);
-    result->AddAllBookmarksObserver(query);
   }
 
   return NS_OK;
