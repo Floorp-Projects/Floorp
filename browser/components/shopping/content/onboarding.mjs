@@ -7,21 +7,9 @@ const BUNDLE_SRC =
 
 class Onboarding {
   constructor({ win } = {}) {
-    this.win = win;
     this.doc = win.document;
-    this.OnboardingSetup = false;
-
-    win.addEventListener("Update", async event => {
-      let { showOnboarding, productUrl } = event.detail;
-      // Prepare showing opt-in message by including respective
-      // assets needed to render onboarding message
-      if (!showOnboarding || !productUrl) {
-        return;
-      }
-      let url = new URL(productUrl);
-
-      await this.win.AWSetProductURL(url.hostname);
-      this.showOptInMessage();
+    win.addEventListener("RenderWelcome", () => this._addScriptsAndRender(), {
+      once: true,
     });
   }
 
@@ -69,14 +57,6 @@ class Onboarding {
     let bundleScript = this.doc.createElement("script");
     bundleScript.src = BUNDLE_SRC;
     this.doc.head.appendChild(bundleScript);
-  }
-
-  showOptInMessage() {
-    if (this.OnboardingSetup) {
-      return;
-    }
-    this._addScriptsAndRender();
-    this.OnboardingSetup = true;
   }
 
   static getOnboarding() {

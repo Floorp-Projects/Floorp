@@ -436,13 +436,22 @@ const OPTIN_DEFAULT = {
 let optInDynamicContent;
 
 class AboutWelcomeShoppingChild extends AboutWelcomeChild {
-  exportFunctions() {
-    let window = this.contentWindow;
+  handleEvent(event) {
+    // Decide when to show/hide a message
+    const { productUrl, showOnboarding } = event.detail;
+    const ready = showOnboarding && productUrl;
+    this.document.getElementById("multi-stage-message-root").hidden = !ready;
+    if (!ready) {
+      return;
+    }
 
-    Cu.exportFunction(this.AWSetProductURL.bind(this), window, {
-      defineAs: "AWSetProductURL",
-    });
-    super.exportFunctions();
+    // Render opt-in message
+    this.AWSetProductURL(new URL(productUrl).hostname);
+    this.document.dispatchEvent(
+      new this.contentWindow.CustomEvent("RenderWelcome", {
+        bubbles: true,
+      })
+    );
   }
 
   // TODO - Add dismiss: true to the primary CTA so it cleans up the React
