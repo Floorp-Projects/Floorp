@@ -4,12 +4,7 @@
 
 import { createSelector } from "reselect";
 
-import {
-  getPrettySourceURL,
-  isGenerated,
-  isPretty,
-  isJavaScript,
-} from "../utils/source";
+import { getPrettySourceURL, isPretty, isJavaScript } from "../utils/source";
 
 import { findPosition } from "../utils/breakpoint/breakpointPositions";
 import { isFulfilled } from "../utils/async-value";
@@ -77,7 +72,7 @@ export function getGeneratedSource(state, source) {
     return null;
   }
 
-  if (isGenerated(source)) {
+  if (!source.isOriginal) {
     return source;
   }
 

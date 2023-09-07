@@ -12,11 +12,7 @@ import { recordEvent } from "../../utils/telemetry";
 import { updateBreakpointsForNewPrettyPrintedSource } from "../breakpoints";
 import { createLocation } from "../../utils/location";
 
-import {
-  getPrettySourceURL,
-  isGenerated,
-  isJavaScript,
-} from "../../utils/source";
+import { getPrettySourceURL, isJavaScript } from "../../utils/source";
 import { isFulfilled } from "../../utils/async-value";
 import { getOriginalLocation } from "../../utils/source-maps";
 import { prefs } from "../../utils/prefs";
@@ -292,7 +288,7 @@ export function togglePrettyPrint(sourceId) {
     }
 
     assert(
-      isGenerated(source),
+      !source.isOriginal,
       "Pretty-printing only allowed on generated sources"
     );
 
