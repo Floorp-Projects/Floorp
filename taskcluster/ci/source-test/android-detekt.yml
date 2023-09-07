@@ -1,0 +1,84 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: 'Run detekt over all modules'
+    run:
+        using: gradlew
+        gradlew: ['detekt', 'githubLintDetektDetails']
+        use-caches: false
+    worker:
+        artifacts:
+            - name: public/github
+              path: /builds/worker/github
+              type: directory
+        docker-image: {in-tree: lint}
+        max-run-time: 1200
+        env:
+            JAVA_HOME: "/builds/worker/fetches/jdk/jdk-17.0.6+10"
+    attributes:
+        code-review: true
+    always-target: true
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-components
+    fetches:
+        toolchain:
+            - android-sdk-linux
+            - linux64-jdk-repack
+        external-gradle-dependencies:
+            - external-gradle-dependencies.tar.xz
+    platform: 'lint/opt'
+    treeherder:
+        kind: test
+        tier: 1
+    worker-type: b-linux-gcp
+    when:
+        files-changed:
+            - "mobile/android/android-components/**"
+
+
+detekt-android-components:
+    run:
+        pre-gradlew:
+            - ["cd", "mobile/android/android-components"]
+    treeherder:
+        symbol: detekt(AC)
+    worker:
+        artifacts:
+            - name: public/reports
+              path: /builds/worker/checkouts/gecko/mobile/android/android-components/build/reports
+              type: directory
+
+detekt-focus:
+    when:
+        files-changed:
+            - "mobile/android/focus-android/**"
+    run:
+        pre-gradlew:
+            - ["cd", "mobile/android/focus-android"]
+    treeherder:
+        symbol: detekt(focus)
+    worker:
+        artifacts:
+            - name: public/reports
+              path: /builds/worker/checkouts/gecko/mobile/android/focus-android/build/reports
+              type: directory
+
+detekt-fenix:
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
+    when:
+        files-changed:
+            - "mobile/android/fenix/**"
+    run:
+        pre-gradlew:
+            - ["cd", "mobile/android/fenix"]
+        gradlew: [detekt, githubLintDetektDetails, 'mozilla-detekt-rules:test']
+    treeherder:
+        symbol: detekt(fenix)
+    worker:
+        artifacts:
+            - name: public/reports
+              path: /builds/worker/checkouts/gecko/mobile/android/fenix/build/reports
+              type: directory
