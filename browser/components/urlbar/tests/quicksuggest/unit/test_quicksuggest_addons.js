@@ -15,7 +15,7 @@ const MERINO_SUGGESTIONS = [
   {
     provider: "amo",
     icon: "icon",
-    url: "url",
+    url: "https://example.com/merino-addon",
     title: "title",
     description: "description",
     is_top_pick: true,
@@ -64,6 +64,16 @@ const REMOTE_SETTINGS_RESULTS = [
         keywords: ["third", "3rd"],
         description: "Description for the Third Addon",
         number_of_ratings: 3,
+      },
+      {
+        url: "https://example.com/fourth-addon?utm_medium=aaa&utm_source=bbb",
+        guid: "fourth@addon",
+        icon: "https://example.com/fourth-addon.svg",
+        title: "Fourth Addon",
+        rating: "4.7",
+        keywords: ["fourth", "4th"],
+        description: "Description for the Fourth Addon",
+        number_of_ratings: 4,
       },
     ],
   },
@@ -425,6 +435,15 @@ add_task(async function remoteSettings() {
         isTopPick: true,
       }),
     },
+    {
+      input: "fourth",
+      expected: makeExpectedResult({
+        suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[3],
+        source: "remote-settings",
+        isTopPick: true,
+        setUtmParams: false,
+      }),
+    },
   ];
 
   // Disable Merino so we trigger only remote settings suggestions.
@@ -496,7 +515,12 @@ add_task(async function showLessFrequently() {
   });
 });
 
-function makeExpectedResult({ suggestion, source, isTopPick }) {
+function makeExpectedResult({
+  suggestion,
+  source,
+  isTopPick,
+  setUtmParams = true,
+}) {
   let provider;
   let rating;
   let number_of_ratings;
@@ -510,6 +534,16 @@ function makeExpectedResult({ suggestion, source, isTopPick }) {
     number_of_ratings = suggestion.custom_details.amo.number_of_ratings;
   }
 
+  let url;
+  if (setUtmParams) {
+    url = new URL(suggestion.url);
+    url.searchParams.set("utm_medium", "firefox-desktop");
+    url.searchParams.set("utm_source", "firefox-suggest");
+    url = url.href;
+  } else {
+    url = suggestion.url;
+  }
+
   return {
     isBestMatch: isTopPick,
     suggestedIndex: isTopPick ? 1 : -1,
@@ -520,8 +554,9 @@ function makeExpectedResult({ suggestion, source, isTopPick }) {
       telemetryType: "amo",
       dynamicType: "addons",
       title: suggestion.title,
-      url: suggestion.url,
-      displayUrl: suggestion.url.replace(/^https:\/\//, ""),
+      url,
+      originalUrl: suggestion.url,
+      displayUrl: url.replace(/^https:\/\//, ""),
       icon: suggestion.icon,
       description: suggestion.description,
       rating: Number(rating),
