@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "serpEventsEnabled",
   "browser.search.serpEventTelemetry.enabled",
-  false
+  true
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
