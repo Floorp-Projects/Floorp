@@ -198,8 +198,6 @@ export const SpecialMessageActions = {
       "browser.migrate.preferences-entrypoint.enabled",
       "browser.shopping.experience2023.active",
       "browser.shopping.experience2023.optedIn",
-      "browser.shopping.experience2023.survey.hasSeen",
-      "browser.shopping.experience2023.survey.pdpVisits",
       "browser.startup.homepage",
       "browser.privateWindowSeparation.enabled",
       "browser.firefox-view.feature-tour",

@@ -389,7 +389,9 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/AboutWelcomeChild.jsm",
       events: {
-        Update: {},
+        // This is added so the actor instantiates immediately and makes
+        // methods available to the page js on load.
+        DOMDocElementInserted: {},
       },
     },
     matches: ["about:shoppingsidebar"],
