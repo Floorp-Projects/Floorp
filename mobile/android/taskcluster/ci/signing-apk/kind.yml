@@ -40,7 +40,9 @@ tasks:
                 # No test job runs on push against this build type. Although we do want nightly-simulation
                 # signed to use it in the gecko trees.
                 # We want beta on push so that we detect problem before shipping it
-                (fenix-nightly-simulation|fenix-beta-firebase|fenix-android-test-beta|fenix-android-test-mozillaonline|fenix-nightly-firebase|fenix-android-test-nightly): [github-push]
+                (fenix-nightly-simulation|fenix-beta-firebase|fenix-android-test-beta|fenix-nightly-firebase|fenix-android-test-nightly): [github-push]
+                # bug 1851826
+                (fenix-android-test-mozillaonline): []
                 default: []
         treeherder:
             job-symbol:

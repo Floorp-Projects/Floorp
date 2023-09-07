@@ -473,7 +473,7 @@ tasks:
             gradle-extra-options:
                 - -PmozillaOnline
             test-build-type: beta
-        run-on-tasks-for: [github-push] # We want this on push so that we detect problem before triggering a new beta
+        run-on-tasks-for: []  # bug 1851826
         source-project-name: "fenix"
         treeherder:
             symbol: fenix-beta(Bat-mo)
@@ -505,7 +505,7 @@ tasks:
         apk-artifact-template:
             github-name: 'fenix-mozillaonline-{version}-{abi}.apk'
         attributes:
-            release-type: beta
+            # release-type: beta  # bug 1851826
             shipping_phase: promote
             shipping-product: fenix
         include-release-version: true
@@ -516,6 +516,7 @@ tasks:
             gradle-build: fenix
             gradle-extra-options:
                 - -PmozillaOnline
+        run-on-tasks-for: []  # bug 1851826
         source-project-name: "fenix"
         treeherder:
             symbol: fenix-beta(Bmo)
@@ -528,7 +529,7 @@ tasks:
         apk-artifact-template:
             github-name: 'fenix-mozillaonline-{version}-{abi}.apk'
         attributes:
-            release-type: release
+            # release-type: release  # bug 1851826
             shipping_phase: promote
             shipping-product: fenix
         include-release-version: true
@@ -539,6 +540,7 @@ tasks:
             gradle-build: fenix
             gradle-extra-options:
                 - -PmozillaOnline
+        run-on-tasks-for: []  # bug 1851826
         source-project-name: "fenix"
         treeherder:
             symbol: fenix-release(Bmo)
