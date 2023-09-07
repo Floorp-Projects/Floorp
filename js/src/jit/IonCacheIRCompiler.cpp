@@ -2088,7 +2088,7 @@ bool IonCacheIRCompiler::emitGuardFunctionScript(ObjOperandId funId,
 
   Register fun = allocator.useRegister(masm, funId);
   AutoScratchRegister scratch(allocator, masm);
-  BaseScript* expected = baseScriptStubField(expectedOffset);
+  BaseScript* expected = weakBaseScriptStubField(expectedOffset);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {

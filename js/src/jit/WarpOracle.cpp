@@ -1185,10 +1185,14 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
         static_assert(std::is_convertible_v<JS::Symbol*, gc::TenuredCell*>,
                       "Code assumes symbols are tenured");
         break;
-      case StubField::Type::BaseScript:
+      case StubField::Type::WeakBaseScript: {
         static_assert(std::is_convertible_v<BaseScript*, gc::TenuredCell*>,
                       "Code assumes scripts are tenured");
+        BaseScript* script =
+            stubInfo->getStubField<ICCacheIRStub, BaseScript*>(stub, offset);
+        gc::ExposeGCThingToActiveJS(JS::GCCellPtr(script));
         break;
+      }
       case StubField::Type::JitCode:
         static_assert(std::is_convertible_v<JitCode*, gc::TenuredCell*>,
                       "Code assumes JitCodes are tenured");
