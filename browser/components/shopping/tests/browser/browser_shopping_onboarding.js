@@ -123,11 +123,6 @@ add_task(async function test_showOnboarding_notOptedIn() {
           "multi-stage-message-slot",
           "multi-stage-message-slot showing opt-in message rendered"
         );
-
-        ok(
-          !content.document.getElementById("multi-stage-message-root").hidden,
-          "message is shown"
-        );
       });
     }
   );
@@ -153,15 +148,16 @@ add_task(async function test_hideOnboarding_optedIn() {
       actor.updateProductURL("https://example.com/product/B09TJGHL5F");
 
       await SpecialPowers.spawn(browser, [], async () => {
-        await ContentTaskUtils.waitForCondition(
+        let shoppingContainer = await ContentTaskUtils.waitForCondition(
           () => content.document.querySelector("shopping-container"),
           "shopping-container"
         );
 
-        ok(
-          content.document.getElementById("multi-stage-message-root").hidden,
-          "message is hidden"
-        );
+        let containerElem =
+          shoppingContainer.shadowRoot.getElementById("shopping-container");
+        let messageSlot = containerElem.getElementsByTagName("slot");
+
+        ok(!messageSlot.length, `message slot element doesn't exist`);
       });
     }
   );
