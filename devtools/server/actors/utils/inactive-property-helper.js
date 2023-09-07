@@ -87,6 +87,9 @@ const REGEXP_HIGHLIGHT_PSEUDO_ELEMENTS = new RegExp(
 const FIRST_LINE_PSEUDO_ELEMENT_STYLING_SPEC_URL =
   "https://www.w3.org/TR/css-pseudo-4/#first-line-styling";
 
+const PLACEHOLDER_PSEUDO_ELEMENT_STYLING_SPEC_URL =
+  "https://www.w3.org/TR/css-pseudo-4/#placeholder-pseudo";
+
 class InactivePropertyHelper {
   /**
    * A list of rules for when CSS properties have no effect.
@@ -264,6 +267,30 @@ class InactivePropertyHelper {
         fixId: "learn-more",
         msgId: "inactive-css-first-line-pseudo-element-not-supported",
         learnMoreURL: FIRST_LINE_PSEUDO_ELEMENT_STYLING_SPEC_URL,
+      },
+      // Writing mode or inline properties used on ::placeholder pseudo-element.
+      {
+        invalidProperties: [
+          "baseline-source",
+          "direction",
+          "dominant-baseline",
+          "line-height",
+          "text-orientation",
+          "vertical-align",
+          "writing-mode",
+          // Below are properties not yet implemented in Firefox (Bug 1312611)
+          "alignment-baseline",
+          "baseline-shift",
+          "initial-letter",
+          "text-box-trim",
+        ],
+        when: () => {
+          const { selectorText } = this.cssRule;
+          return selectorText && selectorText.includes("::placeholder");
+        },
+        fixId: "learn-more",
+        msgId: "inactive-css-placeholder-pseudo-element-not-supported",
+        learnMoreURL: PLACEHOLDER_PSEUDO_ELEMENT_STYLING_SPEC_URL,
       },
       // (max-|min-)width used on inline elements, table rows, or row groups.
       {
