@@ -62,6 +62,15 @@ parent:
                                       PrincipalInfo requestingPrincipal,
                                       OriginAttributes originAttributes);
 
+  // Send cookies to the parent for a given channel. Compared to PCookieService
+  // SetCookies this method allows the parent to determine which BrowsingContext
+  // the request was sent for.
+  async SetCookies(nsCString baseDomain,
+                                    OriginAttributes attrs,
+                                    nullable nsIURI host,
+                                    bool fromHttp,
+                                    CookieStruct[] cookies);
+
   // After receiving this message, the parent calls SendDeleteSelf, and makes
   // sure not to send any more messages after that.
   async DeletingChannel();
