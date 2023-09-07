@@ -80,21 +80,20 @@ typedef struct sensorSpec {
 //
 // These values came from SeisMaCalibrate calibration reports. In general I've
 // found the following:
-//	- All Intel-based SMSs have 250 counts per g, centered on 0, but the
-// signs 		are different (and in one case two axes are swapped)
-//	- PowerBooks and iBooks all have sensors centered on 0, and reading
-//		50-53 steps per gravity (but with differing polarities!)
-//	- PowerBooks and iBooks of the same model all have the same axis
-// polarities
-//	- PowerBook and iBook access methods are model- and OS version-specific
+// - All Intel-based SMSs have 250 counts per g, centered on 0, but the signs
+//   are different (and in one case two axes are swapped)
+// - PowerBooks and iBooks all have sensors centered on 0, and reading 50-53
+//   steps per gravity (but with differing polarities!)
+// - PowerBooks and iBooks of the same model all have the same axis polarities
+// - PowerBook and iBook access methods are model- and OS version-specific
 //
 // So, the sequence of tests is:
-//	- Try model-specific access methods. Note that the test is for a match
-// to the 		beginning of the model name, e.g. the record with model name
-// "MacBook" 		matches computer models "MacBookPro1,2" and "MacBook1,1" (and ""
-//		matches any model).
-//	- If no model-specific record's access fails, then try each
-// model-independent 		access method in order, stopping when one works.
+// - Try model-specific access methods. Note that the test is for a match to the
+//   beginning of the model name, e.g. the record with model name "MacBook"
+//   matches computer models "MacBookPro1,2" and "MacBook1,1" (and "" matches
+//   any model).
+// - If no model-specific record's access fails, then try each model-independent
+//   method in order, stopping when one works.
 static const sensorSpec sensors[] = {
     // ****** Model-dependent methods ******
     // The PowerBook5,6 is one of the G4 models that seems to lose
