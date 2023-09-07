@@ -936,7 +936,7 @@ void CoreTextFontList::AddFamily(const nsACString& aFamilyName,
   ToLowerCase(aFamilyName, key);
 
   RefPtr<gfxFontFamily> familyEntry =
-      new CTFontFamily(aFamilyName, aVisibility, 0.0);
+      new CTFontFamily(aFamilyName, aVisibility);
   mFontFamilies.InsertOrUpdate(key, RefPtr{familyEntry});
 
   // check the bad underline blocklist
