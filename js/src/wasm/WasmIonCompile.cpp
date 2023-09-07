@@ -5101,8 +5101,7 @@ static bool EmitReturnCall(FunctionCompiler& f) {
 
   uint32_t funcIndex;
   DefVector args;
-  DefVector unused_values;
-  if (!f.iter().readReturnCall(&funcIndex, &args, &unused_values)) {
+  if (!f.iter().readReturnCall(&funcIndex, &args)) {
     return false;
   }
 
@@ -5142,9 +5141,8 @@ static bool EmitReturnCallIndirect(FunctionCompiler& f) {
   uint32_t tableIndex;
   MDefinition* callee;
   DefVector args;
-  DefVector unused_values;
   if (!f.iter().readReturnCallIndirect(&funcTypeIndex, &tableIndex, &callee,
-                                       &args, &unused_values)) {
+                                       &args)) {
     return false;
   }
 
@@ -5176,9 +5174,8 @@ static bool EmitReturnCallRef(FunctionCompiler& f) {
   const FuncType* funcType;
   MDefinition* callee;
   DefVector args;
-  DefVector unused_values;
 
-  if (!f.iter().readReturnCallRef(&funcType, &callee, &args, &unused_values)) {
+  if (!f.iter().readReturnCallRef(&funcType, &callee, &args)) {
     return false;
   }
 

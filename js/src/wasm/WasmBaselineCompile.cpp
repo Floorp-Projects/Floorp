@@ -4817,8 +4817,7 @@ bool BaseCompiler::emitCall() {
 bool BaseCompiler::emitReturnCall() {
   uint32_t funcIndex;
   BaseNothingVector args_{};
-  BaseNothingVector unused_values{};
-  if (!iter_.readReturnCall(&funcIndex, &args_, &unused_values)) {
+  if (!iter_.readReturnCall(&funcIndex, &args_)) {
     return false;
   }
 
@@ -4934,9 +4933,8 @@ bool BaseCompiler::emitReturnCallIndirect() {
   uint32_t tableIndex;
   Nothing callee_;
   BaseNothingVector args_{};
-  BaseNothingVector unused_values{};
   if (!iter_.readReturnCallIndirect(&funcTypeIndex, &tableIndex, &callee_,
-                                    &args_, &unused_values)) {
+                                    &args_)) {
     return false;
   }
 
@@ -5042,9 +5040,7 @@ bool BaseCompiler::emitReturnCallRef() {
   const FuncType* funcType;
   Nothing unused_callee;
   BaseNothingVector unused_args{};
-  BaseNothingVector unused_values{};
-  if (!iter_.readReturnCallRef(&funcType, &unused_callee, &unused_args,
-                               &unused_values)) {
+  if (!iter_.readReturnCallRef(&funcType, &unused_callee, &unused_args)) {
     return false;
   }
 

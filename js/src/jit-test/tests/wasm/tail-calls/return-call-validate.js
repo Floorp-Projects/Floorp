@@ -97,7 +97,7 @@ wasmFailValidateText(
        (func $type-void-vs-num (result i32)
          (return_call 1) (i32.const 0))
        (func))`,
-    /popping value from empty stack/);
+    /type mismatch: expected 1 values, got 0 values/);
 
 wasmFailValidateText(
     `(module

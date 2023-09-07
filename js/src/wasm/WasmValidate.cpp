@@ -223,8 +223,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         }
         uint32_t unusedIndex;
         NothingVector unusedArgs{};
-        NothingVector unusedValues{};
-        CHECK(iter.readReturnCall(&unusedIndex, &unusedArgs, &unusedValues));
+        CHECK(iter.readReturnCall(&unusedIndex, &unusedArgs));
       }
       case uint16_t(Op::ReturnCallIndirect): {
         if (!env.tailCallsEnabled()) {
@@ -232,9 +231,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         }
         uint32_t unusedIndex, unusedIndex2;
         NothingVector unusedArgs{};
-        NothingVector unusedValues{};
         CHECK(iter.readReturnCallIndirect(&unusedIndex, &unusedIndex2, &nothing,
-                                          &unusedArgs, &unusedValues));
+                                          &unusedArgs));
       }
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
@@ -253,9 +251,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         }
         const FuncType* unusedType;
         NothingVector unusedArgs{};
-        NothingVector unusedValues{};
-        CHECK(iter.readReturnCallRef(&unusedType, &nothing, &unusedArgs,
-                                     &unusedValues));
+        CHECK(iter.readReturnCallRef(&unusedType, &nothing, &unusedArgs));
       }
 #  endif
 #endif
