@@ -18,14 +18,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * NetworkListener instance which created it.
  */
 export class NetworkEventRecord {
-  #channel;
   #contextId;
   #fromCache;
   #isMainDocumentChannel;
   #networkListener;
   #redirectCount;
+  #requestChannel;
   #requestData;
   #requestId;
+  #responseChannel;
   #responseData;
   #wrappedChannel;
 
@@ -40,7 +41,9 @@ export class NetworkEventRecord {
    *     The NetworkListener which created this NetworkEventRecord.
    */
   constructor(networkEvent, channel, networkListener) {
-    this.#channel = channel;
+    this.#requestChannel = channel;
+    this.#responseChannel = null;
+
     this.#fromCache = networkEvent.fromCache;
     this.#isMainDocumentChannel = channel.isMainDocumentChannel;
 
@@ -122,6 +125,8 @@ export class NetworkEventRecord {
    */
   addResponseStart(options) {
     const { channel, fromCache, rawHeaders = "" } = options;
+    this.#responseChannel = channel;
+
     const { headers } =
       lazy.NetworkUtils.fetchResponseHeadersAndCookies(channel);
 
@@ -232,6 +237,7 @@ export class NetworkEventRecord {
     this.#networkListener.emit("before-request-sent", {
       contextId: this.#contextId,
       isNavigationRequest: this.#isMainDocumentChannel,
+      requestChannel: this.#requestChannel,
       redirectCount: this.#redirectCount,
       requestData: this.#requestData,
       timestamp: Date.now(),
@@ -245,7 +251,9 @@ export class NetworkEventRecord {
       contextId: this.#contextId,
       isNavigationRequest: this.#isMainDocumentChannel,
       redirectCount: this.#redirectCount,
+      requestChannel: this.#requestChannel,
       requestData: this.#requestData,
+      responseChannel: this.#responseChannel,
       responseData: this.#responseData,
       timestamp: Date.now(),
     });
@@ -258,7 +266,9 @@ export class NetworkEventRecord {
       contextId: this.#contextId,
       isNavigationRequest: this.#isMainDocumentChannel,
       redirectCount: this.#redirectCount,
+      requestChannel: this.#requestChannel,
       requestData: this.#requestData,
+      responseChannel: this.#responseChannel,
       responseData: this.#responseData,
       timestamp: Date.now(),
     });
@@ -288,7 +298,9 @@ export class NetworkEventRecord {
   }
 
   #getBrowsingContext() {
-    const id = lazy.NetworkUtils.getChannelBrowsingContextID(this.#channel);
+    const id = lazy.NetworkUtils.getChannelBrowsingContextID(
+      this.#requestChannel
+    );
     return BrowsingContext.get(id);
   }
 
@@ -314,7 +326,7 @@ export class NetworkEventRecord {
 
     try {
       mimeType = this.#wrappedChannel.contentType;
-      const contentCharset = this.#channel.contentCharset;
+      const contentCharset = this.#requestChannel.contentCharset;
       if (contentCharset) {
         mimeType += `;charset=${contentCharset}`;
       }
@@ -379,7 +391,9 @@ export class NetworkEventRecord {
    * any event from this class.
    */
   #updateDataFromTimedChannel() {
-    const timedChannel = this.#channel.QueryInterface(Ci.nsITimedChannel);
+    const timedChannel = this.#requestChannel.QueryInterface(
+      Ci.nsITimedChannel
+    );
     this.#redirectCount = timedChannel.redirectCount;
     this.#requestData.timings = this.#getTimingsFromTimedChannel(timedChannel);
   }
