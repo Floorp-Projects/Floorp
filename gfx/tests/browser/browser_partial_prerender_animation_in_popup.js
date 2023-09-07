@@ -74,7 +74,12 @@ add_task(async () => {
   );
 
   // Collect restyling markers in 5 frames.
-  const markers = await observeStylingInTargetWindow(panel.ownerGlobal, 5);
+  const [markers, counter] = await observeStylingInTargetWindow(
+    panel.ownerGlobal,
+    5
+  );
+
+  Assert.equal(markers.length, counter);
 
   // On non WebRender we observe two restyling markers because we get the second
   // jank report from the compositor thread before a new pre-rendered result,
