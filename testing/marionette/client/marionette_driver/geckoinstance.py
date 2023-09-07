@@ -48,7 +48,8 @@ class GeckoInstance(object):
         # Don't pull Top Sites content from the network
         "browser.topsites.contile.enabled": False,
         # Disable UI tour
-        "browser.uitour.enabled": False,
+        "browser.uitour.pinnedTabUrl": "http://%(server)s/uitour-dummy/pinnedTab",
+        "browser.uitour.url": "http://%(server)s/uitour-dummy/tour",
         # Disable captive portal
         "captivedetect.canonicalURL": "",
         # Defensively disable data reporting systems
