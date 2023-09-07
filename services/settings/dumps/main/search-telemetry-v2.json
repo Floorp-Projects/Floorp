@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "schema": 1690815538300,
+      "schema": 1693526406093,
       "components": [
         {
           "type": "ad_carousel",
@@ -102,9 +102,7 @@
       "queryParamName": "q",
       "searchPageRegexp": "^https://duckduckgo\\.com/",
       "expectedOrganicCodes": [
-        "hz",
         "h_",
-        "hs",
         "ha",
         "hb",
         "hc",
@@ -114,14 +112,30 @@
         "hg",
         "hh",
         "hi",
-        "hj"
+        "hj",
+        "hk",
+        "hl",
+        "hm",
+        "hn",
+        "ho",
+        "hp",
+        "hq",
+        "hr",
+        "hs",
+        "ht",
+        "hu",
+        "hv",
+        "hw",
+        "hx",
+        "hy",
+        "hz"
       ],
       "extraAdServersRegexps": [
         "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
         "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
       ],
       "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
-      "last_modified": 1690923607452
+      "last_modified": 1694014137037
     },
     {
       "schema": 1690815534466,
@@ -497,5 +511,5 @@
       "last_modified": 1643136933989
     }
   ],
-  "timestamp": 1690923607452
+  "timestamp": 1694014137037
 }
