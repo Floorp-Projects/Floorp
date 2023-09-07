@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for AudioWorklet + WASM features</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="common.js"></script>
+</head>
+<body>
+
+<script type="application/javascript">
+function runTestInIframe() {
+  let audioContext = new AudioContext();
+  audioContext.audioWorklet.addModule("worklet_audioWorklet_WASM_features.js")
+  .then(() => {
+    const node = new AudioWorkletNode(audioContext, 'wasm');
+    node.port.onmessage = e => {
+      let result = e.data;
+      ok(result === true, "Compilation succeeded");
+      SimpleTest.finish();
+    }
+    node.connect(audioContext.destination);
+  });
+}
+</script>
+
+</body>
+</html>
