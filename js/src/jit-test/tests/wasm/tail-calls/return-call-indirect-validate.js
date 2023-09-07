@@ -143,7 +143,7 @@ wasmFailValidateText(
        (table 0 anyfunc)
        (func $type-void-vs-num (result i32)
          (i32.eqz (return_call_indirect (type 0) (i32.const 0)))))`,
-    /popping value from empty stack/);
+    /type mismatch: expected 1 values, got 0 values/);
 
 wasmFailValidateText(
     `(module
@@ -151,7 +151,7 @@ wasmFailValidateText(
        (table 0 anyfunc)
        (func $type-num-vs-num
          (i32.eqz (return_call_indirect (type 0) (i32.const 0)))))`,
-    /unused values not explicitly dropped/);
+    /type mismatch: expected 0 values, got 1 values/);
 
 wasmFailValidateText(
     `(module

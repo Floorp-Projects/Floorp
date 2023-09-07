@@ -690,12 +690,10 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                       ValueVector* argValues);
 #ifdef ENABLE_WASM_TAIL_CALLS
   [[nodiscard]] bool readReturnCall(uint32_t* funcTypeIndex,
-                                    ValueVector* argValues,
-                                    ValueVector* values);
+                                    ValueVector* argValues);
   [[nodiscard]] bool readReturnCallIndirect(uint32_t* funcTypeIndex,
                                             uint32_t* tableIndex, Value* callee,
-                                            ValueVector* argValues,
-                                            ValueVector* values);
+                                            ValueVector* argValues);
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   [[nodiscard]] bool readCallRef(const FuncType** funcType, Value* callee,
@@ -703,8 +701,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
 #  ifdef ENABLE_WASM_TAIL_CALLS
   [[nodiscard]] bool readReturnCallRef(const FuncType** funcType, Value* callee,
-                                       ValueVector* argValues,
-                                       ValueVector* values);
+                                       ValueVector* argValues);
 #  endif
 #endif
   [[nodiscard]] bool readOldCallDirect(uint32_t numFuncImports,
@@ -2462,8 +2459,7 @@ inline bool OpIter<Policy>::readCall(uint32_t* funcTypeIndex,
 #ifdef ENABLE_WASM_TAIL_CALLS
 template <typename Policy>
 inline bool OpIter<Policy>::readReturnCall(uint32_t* funcTypeIndex,
-                                           ValueVector* argValues,
-                                           ValueVector* values) {
+                                           ValueVector* argValues) {
   MOZ_ASSERT(Classify(op_) == OpKind::ReturnCall);
 
   if (!readVarU32(funcTypeIndex)) {
@@ -2480,15 +2476,11 @@ inline bool OpIter<Policy>::readReturnCall(uint32_t* funcTypeIndex,
     return false;
   }
 
-  if (!push(ResultType::Vector(funcType.results()))) {
-    return false;
-  }
-
+  // Check if callee results are subtypes of caller's.
   Control& body = controlStack_[0];
   MOZ_ASSERT(body.kind() == LabelKind::Body);
-
-  // Pop function results as the instruction will cause a return.
-  if (!popWithType(body.resultType(), values)) {
+  if (!checkIsSubtypeOf(ResultType::Vector(funcType.results()),
+                        body.resultType())) {
     return false;
   }
 
@@ -2549,8 +2541,7 @@ template <typename Policy>
 inline bool OpIter<Policy>::readReturnCallIndirect(uint32_t* funcTypeIndex,
                                                    uint32_t* tableIndex,
                                                    Value* callee,
-                                                   ValueVector* argValues,
-                                                   ValueVector* values) {
+                                                   ValueVector* argValues) {
   MOZ_ASSERT(Classify(op_) == OpKind::ReturnCallIndirect);
   MOZ_ASSERT(funcTypeIndex != tableIndex);
 
@@ -2589,15 +2580,11 @@ inline bool OpIter<Policy>::readReturnCallIndirect(uint32_t* funcTypeIndex,
     return false;
   }
 
-  if (!push(ResultType::Vector(funcType.results()))) {
-    return false;
-  }
-
+  // Check if callee results are subtypes of caller's.
   Control& body = controlStack_[0];
   MOZ_ASSERT(body.kind() == LabelKind::Body);
-
-  // Pop function results as the instruction will cause a return.
-  if (!popWithType(body.resultType(), values)) {
+  if (!checkIsSubtypeOf(ResultType::Vector(funcType.results()),
+                        body.resultType())) {
     return false;
   }
 
@@ -2636,8 +2623,7 @@ inline bool OpIter<Policy>::readCallRef(const FuncType** funcType,
 template <typename Policy>
 inline bool OpIter<Policy>::readReturnCallRef(const FuncType** funcType,
                                               Value* callee,
-                                              ValueVector* argValues,
-                                              ValueVector* values) {
+                                              ValueVector* argValues) {
   MOZ_ASSERT(Classify(op_) == OpKind::ReturnCallRef);
 
   uint32_t funcTypeIndex;
@@ -2656,15 +2642,11 @@ inline bool OpIter<Policy>::readReturnCallRef(const FuncType** funcType,
     return false;
   }
 
-  if (!push(ResultType::Vector((*funcType)->results()))) {
-    return false;
-  }
-
+  // Check if callee results are subtypes of caller's.
   Control& body = controlStack_[0];
   MOZ_ASSERT(body.kind() == LabelKind::Body);
-
-  // Pop function results as the instruction will cause a return.
-  if (!popWithType(body.resultType(), values)) {
+  if (!checkIsSubtypeOf(ResultType::Vector((*funcType)->results()),
+                        body.resultType())) {
     return false;
   }
 

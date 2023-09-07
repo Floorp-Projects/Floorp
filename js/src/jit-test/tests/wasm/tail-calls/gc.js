@@ -168,3 +168,53 @@ let fns = i.exports;
 
 assertEq(fns.churn(800), -575895114);
 assertEq(fns.churn(1200), -1164697516);
+
+wasmValidateText(`(module
+  (rec
+    (type $s1 (sub (struct i32)))
+    (type $s2 (sub $s1 (struct i32 f32)))
+  )
+  (func (result (ref $s2))
+    struct.new_default $s2
+  )
+  (func (export "f") (result (ref $s1))
+    return_call 0
+  )
+)`);
+
+wasmFailValidateText(`(module
+  (rec
+    (type $s1 (sub (struct i32)))
+    (type $s2 (sub $s1 (struct i32 f32)))
+  )
+  (func (result (ref $s1))
+    struct.new_default $s1
+  )
+  (func (export "f") (result (ref $s2))
+    return_call 0
+  )
+)`, /type mismatch/);
+
+wasmValidateText(`(module
+  (rec
+    (type $s1 (sub (struct i32)))
+    (type $s2 (sub $s1 (struct i32 f32)))
+  )
+  (type $t (func (result (ref $s2))))
+  (func (export "f") (param (ref $t)) (result (ref $s1))
+    local.get 0
+    return_call_ref $t
+  )
+)`);
+
+wasmFailValidateText(`(module
+  (rec
+    (type $s1 (sub (struct i32)))
+    (type $s2 (sub $s1 (struct i32 f32)))
+  )
+  (type $t (func (result (ref $s1))))
+  (func (export "f") (param (ref $t)) (result (ref $s2))
+    local.get 0
+    return_call_ref $t
+  )
+)`, /type mismatch/);
