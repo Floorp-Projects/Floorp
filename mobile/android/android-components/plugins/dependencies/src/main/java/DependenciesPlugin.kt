@@ -71,7 +71,7 @@ object Versions {
         const val core = "1.12.0"
         const val drawerlayout = "1.2.0"
         const val fragment = "1.6.1"
-        const val recyclerview = "1.3.0"
+        const val recyclerview = "1.3.1"
         const val test = "1.5.0"
         const val test_ext = "1.1.5"
         const val test_runner = "1.5.2"
