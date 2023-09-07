@@ -33,8 +33,7 @@ def add_signing_indexes(config, task):
         subs["artifact_type"] = "components"
         subs["artifact_name"] = task["attributes"]["component"]
         new_signing_routes = [
-            template.format(**subs)
-            for template in SIGNING_ROUTE_TEMPLATES
+            template.format(**subs) for template in SIGNING_ROUTE_TEMPLATES
         ]
 
     elif task["attributes"].get("apks"):
@@ -42,10 +41,9 @@ def add_signing_indexes(config, task):
         new_signing_routes = []
         for abi in task["attributes"]["apks"].keys():
             subs["artifact_name"] = abi
-            new_signing_routes.extend([
-                template.format(**subs)
-                for template in SIGNING_ROUTE_TEMPLATES
-            ])
+            new_signing_routes.extend(
+                [template.format(**subs) for template in SIGNING_ROUTE_TEMPLATES]
+            )
 
     elif task["attributes"].get("aab"):
         # no indexes for AAB signing

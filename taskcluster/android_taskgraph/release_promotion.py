@@ -197,5 +197,9 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
 
 
 def read_version_file():
-    with open(os.path.join(os.path.dirname(__file__), "..", "..", "mobile", "android", "version.txt")) as f:
+    with open(
+        os.path.join(
+            os.path.dirname(__file__), "..", "..", "mobile", "android", "version.txt"
+        )
+    ) as f:
         return f.read().strip()

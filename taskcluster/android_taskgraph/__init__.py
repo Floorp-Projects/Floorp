@@ -7,7 +7,9 @@ import os
 from importlib import import_module
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-PROJECT_DIR = os.path.realpath(os.path.join(CURRENT_DIR, "..", "..", "mobile", "android"))
+PROJECT_DIR = os.path.realpath(
+    os.path.join(CURRENT_DIR, "..", "..", "mobile", "android")
+)
 ANDROID_COMPONENTS_DIR = os.path.join(PROJECT_DIR, "android-components")
 FOCUS_DIR = os.path.join(PROJECT_DIR, "focus-android")
 FENIX_DIR = os.path.join(PROJECT_DIR, "fenix")

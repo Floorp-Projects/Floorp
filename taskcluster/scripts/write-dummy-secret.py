@@ -20,15 +20,19 @@ def write_secret_to_file(path, secret):
 
     print(f"Outputting secret to: {path}")
 
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         f.write(secret)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Store a dummy secret to a file")
 
-    parser.add_argument("-c", dest="content", action="store", help="content of the secret")
-    parser.add_argument("-f", dest="path", action="store", help="file to save secret to")
+    parser.add_argument(
+        "-c", dest="content", action="store", help="content of the secret"
+    )
+    parser.add_argument(
+        "-f", dest="path", action="store", help="file to save secret to"
+    )
 
     result = parser.parse_args()
 

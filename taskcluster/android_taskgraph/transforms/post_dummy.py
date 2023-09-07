@@ -21,7 +21,8 @@ def set_name_and_clear_artifacts(config, tasks):
 def resolve_keys(config, tasks):
     for task in tasks:
         resolve_keyed_by(
-            task, "treeherder.symbol",
+            task,
+            "treeherder.symbol",
             item_name=task["name"],
             **{
                 "build-type": task["attributes"]["build-type"],

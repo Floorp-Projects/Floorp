@@ -36,7 +36,7 @@ def component_grouping(config, tasks):
     return groups.values()
 
 
-@group_by('build-type')
+@group_by("build-type")
 def build_type_grouping(config, tasks):
     groups = {}
     for task in tasks:
@@ -45,7 +45,7 @@ def build_type_grouping(config, tasks):
         if not task.attributes.get("is_final_chunked_task", True):
             continue
 
-        build_type = task.attributes.get('build-type')
+        build_type = task.attributes.get("build-type")
         groups.setdefault(build_type, []).append(task)
 
     return groups.values()

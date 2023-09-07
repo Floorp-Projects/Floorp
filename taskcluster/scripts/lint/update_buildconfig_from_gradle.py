@@ -46,8 +46,7 @@ def _get_upstream_deps_per_gradle_project(gradle_root, existing_build_config):
     current_project_name = None
     print(f"Running command: {' '.join(cmd)}")
     try:
-        output = subprocess.check_output(
-            cmd, universal_newlines=True, cwd=gradle_root)
+        output = subprocess.check_output(cmd, universal_newlines=True, cwd=gradle_root)
     except subprocess.CalledProcessError as cpe:
         print(cpe.output)
         raise

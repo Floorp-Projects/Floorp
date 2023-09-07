@@ -23,7 +23,14 @@ logger = logging.getLogger(__name__)
 
 
 def _buildconfig_files_diff():
-    cmd = ["hg", "diff", "--rev", "draft() and ancestors(.)", "-I", "**/.buildconfig.yml"]
+    cmd = [
+        "hg",
+        "diff",
+        "--rev",
+        "draft() and ancestors(.)",
+        "-I",
+        "**/.buildconfig.yml",
+    ]
     p = subprocess.run(cmd, capture_output=True, universal_newlines=True)
     return p.stdout
 
