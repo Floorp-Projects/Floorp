@@ -250,6 +250,7 @@ export class ShoppingContainer extends MozLitElement {
           ></button>
         </div>
         <div id="content" aria-busy=${!this.data}>
+          <slot name="multi-stage-message-slot"></slot>
           ${sidebarContent}
           ${!hideSettings
             ? html`<shopping-settings
@@ -264,7 +265,7 @@ export class ShoppingContainer extends MozLitElement {
     let content;
     let hideSettings;
     if (this.showOnboarding) {
-      content = html`<slot name="multi-stage-message-slot"></slot>`;
+      content = html``;
       hideSettings = true;
     } else if (this.isOffline) {
       content = html`<shopping-message-bar
