@@ -617,7 +617,7 @@ pref("browser.urlbar.bestMatch.blockingEnabled", true);
 pref("browser.urlbar.contextualSearch.enabled", false);
 
 // Feature gate pref for addon suggestions in the urlbar.
-pref("browser.urlbar.addons.featureGate", false);
+pref("browser.urlbar.addons.featureGate", true);
 
 // If `browser.urlbar.addons.featureGate` is true, this controls whether
 // addons suggestions are turned on.
