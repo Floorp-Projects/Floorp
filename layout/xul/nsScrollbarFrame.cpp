@@ -58,14 +58,13 @@ void nsScrollbarFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   AddStateBits(NS_FRAME_REFLOW_ROOT);
 }
 
-void nsScrollbarFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                   PostDestroyData& aPostDestroyData) {
-  aPostDestroyData.AddAnonymousContent(mUpTopButton.forget());
-  aPostDestroyData.AddAnonymousContent(mDownTopButton.forget());
-  aPostDestroyData.AddAnonymousContent(mSlider.forget());
-  aPostDestroyData.AddAnonymousContent(mUpBottomButton.forget());
-  aPostDestroyData.AddAnonymousContent(mDownBottomButton.forget());
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsScrollbarFrame::Destroy(DestroyContext& aContext) {
+  aContext.AddAnonymousContent(mUpTopButton.forget());
+  aContext.AddAnonymousContent(mDownTopButton.forget());
+  aContext.AddAnonymousContent(mSlider.forget());
+  aContext.AddAnonymousContent(mUpBottomButton.forget());
+  aContext.AddAnonymousContent(mDownBottomButton.forget());
+  nsContainerFrame::Destroy(aContext);
 }
 
 void nsScrollbarFrame::Reflow(nsPresContext* aPresContext,

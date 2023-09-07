@@ -95,9 +95,8 @@ class nsAbsoluteContainingBlock {
               const nsRect& aContainingBlock, AbsPosReflowFlags aFlags,
               mozilla::OverflowAreas* aOverflowAreas);
 
-  using PostDestroyData = nsIFrame::PostDestroyData;
-  void DestroyFrames(nsIFrame* aDelegatingFrame, nsIFrame* aDestructRoot,
-                     PostDestroyData& aPostDestroyData);
+  using DestroyContext = nsIFrame::DestroyContext;
+  void DestroyFrames(DestroyContext&);
 
   bool HasAbsoluteFrames() const { return mAbsoluteFrames.NotEmpty(); }
 

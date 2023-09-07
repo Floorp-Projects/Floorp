@@ -53,8 +53,7 @@ class MiddleCroppingBlockFrame : public nsBlockFrame,
    */
   void UpdateDisplayedValue(const nsAString& aValue, bool aIsCropped,
                             bool aNotify);
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   RefPtr<dom::Text> mTextNode;
   bool mCropped = false;

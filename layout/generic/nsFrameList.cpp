@@ -37,17 +37,15 @@ void nsFrameList::Delete(mozilla::PresShell* aPresShell) {
 
 void nsFrameList::DestroyFrames() {
   while (nsIFrame* frame = RemoveFirstChild()) {
-    frame->Destroy();
+    FrameDestroyContext context(frame);
+    frame->Destroy(context);
   }
   mLastChild = nullptr;
 }
 
-void nsFrameList::DestroyFramesFrom(nsIFrame* aDestructRoot,
-                                    PostFrameDestroyData& aPostDestroyData) {
-  MOZ_ASSERT(aDestructRoot, "Missing destruct root");
-
+void nsFrameList::DestroyFrames(FrameDestroyContext& aContext) {
   while (nsIFrame* frame = RemoveFirstChild()) {
-    frame->DestroyFrom(aDestructRoot, aPostDestroyData);
+    frame->Destroy(aContext);
   }
   mLastChild = nullptr;
 }
@@ -108,7 +106,8 @@ nsIFrame* nsFrameList::RemoveFirstChild() {
 void nsFrameList::DestroyFrame(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame, "null ptr");
   RemoveFrame(aFrame);
-  aFrame->Destroy();
+  FrameDestroyContext context(aFrame);
+  aFrame->Destroy(context);
 }
 
 nsFrameList::Slice nsFrameList::InsertFrames(nsContainerFrame* aParent,

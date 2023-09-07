@@ -32,8 +32,7 @@ class nsScrollbarButtonFrame final : public mozilla::SimpleXULLeafFrame {
       : mozilla::SimpleXULLeafFrame(aStyle, aPresContext, kClassID) {}
 
   // Overrides
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   friend nsIFrame* NS_NewScrollbarButtonFrame(mozilla::PresShell* aPresShell,
                                               ComputedStyle* aStyle);
