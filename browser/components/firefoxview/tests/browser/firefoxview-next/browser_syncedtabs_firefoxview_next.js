@@ -223,6 +223,9 @@ add_task(async function test_tabs() {
     );
     return Promise.resolve(getRecentTabsResult);
   });
+  sandbox.stub(SyncedTabs, "getTabClients").callsFake(() => {
+    return Promise.resolve(syncedTabsData1);
+  });
 
   await withFirefoxView({ openNewWindow: true }, async browser => {
     const { document } = browser.contentWindow;
