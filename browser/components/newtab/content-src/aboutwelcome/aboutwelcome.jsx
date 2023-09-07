@@ -81,6 +81,7 @@ class AboutWelcome extends React.PureComponent {
         backdrop={props.backdrop}
         startScreen={props.startScreen || 0}
         appAndSystemLocaleInfo={props.appAndSystemLocaleInfo}
+        ariaRole={props.aria_role}
       />
     );
   }
