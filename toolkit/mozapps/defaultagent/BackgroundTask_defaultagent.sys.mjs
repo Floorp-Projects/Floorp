@@ -92,7 +92,7 @@ export async function runBackgroundTask(commandLine) {
     }
     case "do-task": {
       let aumid = commandLine.getArgument(1);
-      let force = commandLine.findFlag("force", true);
+      let force = commandLine.findFlag("force", true) != -1;
       defaultAgent.doTask(aumid, force);
       return EXIT_CODE.SUCCESS;
     }
