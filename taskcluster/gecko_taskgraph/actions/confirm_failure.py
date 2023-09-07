@@ -227,7 +227,7 @@ def create_confirm_failure_tasks(task_definition, failures, level):
             task_definition["payload"]["env"]["MOZHARNESS_TEST_PATHS"] = json.dumps(
                 {suite: [fpath]}, sort_keys=True
             )
-            task_definition["payload"]["env"]["MOZLOG_DUMP_ALL_TESTS"] = 1
+            task_definition["payload"]["env"]["MOZLOG_DUMP_ALL_TESTS"] = "1"
 
             logger.info(
                 "Creating task for path {} with command {}".format(
