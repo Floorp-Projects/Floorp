@@ -135,7 +135,6 @@ MessagePumpForUI::MessagePumpForUI()
   // This is needed to allow Run calls inside Dispatch.
   g_source_set_can_recurse(work_source_, TRUE);
   g_source_attach(work_source_, context_);
-  gdk_event_handler_set(&EventDispatcher, this, NULL);
 }
 
 MessagePumpForUI::~MessagePumpForUI() {
@@ -147,8 +146,7 @@ MessagePumpForUI::~MessagePumpForUI() {
   close(wakeup_pipe_write_);
 }
 
-void MessagePumpForUI::RunWithDispatcher(Delegate* delegate,
-                                         Dispatcher* dispatcher) {
+void MessagePumpForUI::Run(Delegate* delegate) {
 #ifndef NDEBUG
   // Make sure we only run this on one thread.  GTK only has one message pump
   // so we can only have one UI loop per process.
@@ -160,7 +158,6 @@ void MessagePumpForUI::RunWithDispatcher(Delegate* delegate,
 
   RunState state;
   state.delegate = delegate;
-  state.dispatcher = dispatcher;
   state.should_quit = false;
   state.run_depth = state_ ? state_->run_depth + 1 : 1;
   state.has_work = false;
@@ -261,22 +258,6 @@ void MessagePumpForUI::HandleDispatch() {
   state_->delegate->DoDelayedWork(&delayed_work_time_);
 }
 
-void MessagePumpForUI::AddObserver(Observer* observer) {
-  observers_.AddObserver(observer);
-}
-
-void MessagePumpForUI::RemoveObserver(Observer* observer) {
-  observers_.RemoveObserver(observer);
-}
-
-void MessagePumpForUI::WillProcessEvent(GdkEvent* event) {
-  FOR_EACH_OBSERVER(Observer, observers_, WillProcessEvent(event));
-}
-
-void MessagePumpForUI::DidProcessEvent(GdkEvent* event) {
-  FOR_EACH_OBSERVER(Observer, observers_, DidProcessEvent(event));
-}
-
 void MessagePumpForUI::Quit() {
   if (state_) {
     state_->should_quit = true;
@@ -305,21 +286,6 @@ void MessagePumpForUI::ScheduleDelayedWork(const TimeTicks& delayed_work_time) {
   // adjusted.  This will cause us to try to do work, but that's ok.
   delayed_work_time_ = delayed_work_time;
   ScheduleWork();
-}
-
-// static
-void MessagePumpForUI::EventDispatcher(GdkEvent* event, gpointer data) {
-  MessagePumpForUI* message_pump = reinterpret_cast<MessagePumpForUI*>(data);
-
-  message_pump->WillProcessEvent(event);
-  if (message_pump->state_ &&  // state_ may be null during tests.
-      message_pump->state_->dispatcher) {
-    if (!message_pump->state_->dispatcher->Dispatch(event))
-      message_pump->state_->should_quit = true;
-  } else {
-    gtk_main_do_event(event);
-  }
-  message_pump->DidProcessEvent(event);
 }
 
 }  // namespace base
