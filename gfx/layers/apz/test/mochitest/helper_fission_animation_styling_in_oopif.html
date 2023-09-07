@@ -58,8 +58,8 @@ async function observe_styling_in_oopif(aFrameCount) {
   const observe_styling = function(frameCount) {
     // Start in a rAF callback.
     waitForAnimationFrames(1).then(() => {
-      observeStyling(frameCount).then(markers => {
-        FissionTestHelper.fireEventInEmbedder("OOPIF:StyleCount", markers.length);
+      observeStyling(frameCount).then(([markers, counter]) => {
+        FissionTestHelper.fireEventInEmbedder("OOPIF:StyleCount", [markers.length, counter]);
       });
     });
 
@@ -80,8 +80,9 @@ async function test() {
   // overflow: hidden style in the out-of-process iframe.
   await setup_in_oopif();
 
-  let styleCount = await observe_styling_in_oopif(5);
-  is(styleCount, 0,
+  let [markerCount, restyleCounter] = await observe_styling_in_oopif(5);
+  is(restyleCounter, markerCount, "Restyle counter should match number of markers");
+  is(markerCount, 0,
      "Animation in an out-of-process iframe which is initially clipped out " +
        "due to 'overflow: hidden' should be throttled");
 
@@ -95,8 +96,9 @@ async function test() {
   // from APZC reaches the iframe process
   await observe_styling_in_oopif(1);
 
-  styleCount = await observe_styling_in_oopif(5);
-  is(styleCount, 5,
+  [markerCount, restyleCounter] = await observe_styling_in_oopif(5);
+  is(restyleCounter, markerCount, "Restyle counter should match number of markers");
+  is(markerCount, 5,
      "Animation in an out-of-process iframe which is no longer clipped out " +
        "should NOT be throttled");
 
@@ -110,8 +112,9 @@ async function test() {
   // from APZC reaches the iframe process
   await observe_styling_in_oopif(1);
 
-  styleCount = await observe_styling_in_oopif(5);
-  is(styleCount, 0,
+  [markerCount, restyleCounter] = await observe_styling_in_oopif(5);
+  is(restyleCounter, markerCount, "Restyle counter should match number of markers");
+  is(markerCount, 0,
      "Animation in an out-of-process iframe which is clipped out again " +
        "should be throttled again");
 
@@ -125,8 +128,9 @@ async function test() {
   // helper_fission_scroll_oopif.html
   await observe_styling_in_oopif(60);
 
-  styleCount = await observe_styling_in_oopif(5);
-  is(styleCount, 5,
+  [markerCount, restyleCounter] = await observe_styling_in_oopif(5);
+  is(restyleCounter, markerCount, "Restyle counter should match number of markers");
+  is(markerCount, 5,
      "Animation in an out-of-process iframe which is now visible by " +
        "asynchronous scrolling should NOT be throttled");
 
@@ -137,8 +141,9 @@ async function test() {
   // Wait for the asyncronous scroll finish.
   await observe_styling_in_oopif(60);
 
-  styleCount = await observe_styling_in_oopif(5);
-  is(styleCount, 0,
+  [markerCount, restyleCounter] = await observe_styling_in_oopif(5);
+  is(restyleCounter, markerCount, "Restyle counter should match number of markers");
+  is(markerCount, 0,
      "Animation in an out-of-process iframe which is scrolled out of view by " +
        "asynchronous scrolling should be throttled");
 
@@ -149,8 +154,9 @@ async function test() {
   // Wait for the asyncronous scroll finish.
   await observe_styling_in_oopif(60);
 
-  styleCount = await observe_styling_in_oopif(5);
-  is(styleCount, 5,
+  [markerCount, restyleCounter] = await observe_styling_in_oopif(5);
+  is(restyleCounter, markerCount, "Restyle counter should match number of markers");
+  is(markerCount, 5,
      "Animation in an out-of-process iframe appeared by the asynchronous " +
        "scrolling should be NOT throttled");
 }

@@ -511,17 +511,25 @@ function observeStyling(frameCount, onFrame) {
 function observeStylingInTargetWindow(aWindow, aFrameCount, aOnFrame) {
   const docShell = getDocShellForObservingRestylesForWindow(aWindow);
 
+  let priorAnimationTriggeredRestyles =
+    SpecialPowers.wrap(aWindow).windowUtils.animationTriggeredRestyles;
+
   return new Promise(resolve => {
     return waitForAnimationFrames(aFrameCount, aOnFrame, aWindow).then(() => {
+      let restyleCount =
+        SpecialPowers.wrap(aWindow).windowUtils.animationTriggeredRestyles -
+        priorAnimationTriggeredRestyles;
+
       const markers = docShell.popProfileTimelineMarkers();
       docShell.recordProfileTimelineMarkers = false;
+
       const stylingMarkers = Array.prototype.filter.call(
         markers,
         (marker, index) => {
           return marker.name == "Styles" && marker.isAnimationOnly;
         }
       );
-      resolve(stylingMarkers);
+      resolve([stylingMarkers, restyleCount]);
     });
   });
 }
