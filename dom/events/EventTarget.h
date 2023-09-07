@@ -262,6 +262,26 @@ class EventTarget : public nsISupports, public nsWrapperCache {
   virtual void GetEventTargetParent(EventChainPreVisitor& aVisitor) = 0;
 
   /**
+   * Called on the activation target during dispatch of activation events.
+   * https://dom.spec.whatwg.org/#eventtarget-legacy-pre-activation-behavior
+   */
+  virtual void LegacyPreActivationBehavior(EventChainVisitor& aVisitor) {}
+
+  /**
+   * Called on the activation target during dispatch of activation events.
+   * https://dom.spec.whatwg.org/#eventtarget-activation-behavior
+   */
+  MOZ_CAN_RUN_SCRIPT
+  virtual void ActivationBehavior(EventChainPostVisitor& aVisitor) {}
+
+  /**
+   * Called on the activation target during dispatch of activation events.
+   * https://dom.spec.whatwg.org/#eventtarget-legacy-canceled-activation-behavior
+   */
+  virtual void LegacyCanceledActivationBehavior(
+      EventChainPostVisitor& aVisitor) {}
+
+  /**
    * Called before the capture phase of the event flow and after event target
    * chain creation. This is used to handle things that must be executed before
    * dispatching the event to DOM.

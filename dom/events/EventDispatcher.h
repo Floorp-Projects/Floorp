@@ -132,6 +132,7 @@ class MOZ_STACK_CLASS EventChainPreVisitor final : public EventChainVisitor {
         mParentIsChromeHandler(false),
         mRelatedTargetRetargetedInCurrentScope(false),
         mIgnoreBecauseOfShadowDOM(false),
+        mWantsActivationBehavior(false),
         mParentTarget(nullptr),
         mEventTargetAtParent(nullptr),
         mRetargetedRelatedTarget(nullptr),
@@ -154,6 +155,7 @@ class MOZ_STACK_CLASS EventChainPreVisitor final : public EventChainVisitor {
     // since it is used during event path creation to indicate whether
     // relatedTarget may need to be retargeted.
     mIgnoreBecauseOfShadowDOM = false;
+    mWantsActivationBehavior = false;
     mParentTarget = nullptr;
     mEventTargetAtParent = nullptr;
     mRetargetedRelatedTarget = nullptr;
@@ -257,6 +259,12 @@ class MOZ_STACK_CLASS EventChainPreVisitor final : public EventChainVisitor {
    * to not show up in the event path.
    */
   bool mIgnoreBecauseOfShadowDOM;
+
+  /*
+   * True if the activation behavior of the current item should run
+   * See activationTarget in https://dom.spec.whatwg.org/#concept-event-dispatch
+   */
+  bool mWantsActivationBehavior;
 
  private:
   /**
