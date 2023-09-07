@@ -19,7 +19,6 @@ import { validateSelectedFrame } from "../../utils/context";
 import { PROMISE } from "../utils/middleware/promise";
 
 import { log } from "../../utils/log";
-import { isGenerated } from "../../utils/source";
 
 import { buildMappedScopes } from "../../utils/pause/mapScopes";
 import { isFulfilled } from "../../utils/async-value";
@@ -153,7 +152,7 @@ export function getMappedScopes(scopes, locations) {
       !generatedSource ||
       generatedSource.isWasm ||
       source.isPrettyPrinted ||
-      isGenerated(source)
+      !source.isOriginal
     ) {
       return null;
     }

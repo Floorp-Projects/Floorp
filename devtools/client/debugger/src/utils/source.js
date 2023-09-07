@@ -489,10 +489,6 @@ export function isDescendantOfRoot(source, rootUrlWithoutThreadActor) {
   return !!source.url && source.url.includes(rootUrlWithoutThreadActor);
 }
 
-export function isGenerated(source) {
-  return !source.isOriginal;
-}
-
 export function getSourceQueryString(source) {
   if (!source) {
     return "";
