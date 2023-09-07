@@ -25,6 +25,8 @@ const REFERRER_TOP_PREF =
 const OCSP_PREF = "privacy.partition.network_state.ocsp_cache";
 const QUERY_PARAM_STRIP_PREF = "privacy.query_stripping.enabled";
 const QUERY_PARAM_STRIP_PBM_PREF = "privacy.query_stripping.enabled.pbmode";
+const FPP_PREF = "privacy.fingerprintingProtection";
+const FPP_PBM_PREF = "privacy.fingerprintingProtection.pbmode";
 const STRICT_DEF_PREF = "browser.contentblocking.features.strict";
 
 // Tests that the content blocking standard category definition is based on the default settings of
@@ -99,6 +101,14 @@ add_task(async function testContentBlockingStandardDefinition() {
     !Services.prefs.prefHasUserValue(QUERY_PARAM_STRIP_PBM_PREF),
     `${QUERY_PARAM_STRIP_PBM_PREF} pref has the default value`
   );
+  ok(
+    !Services.prefs.prefHasUserValue(FPP_PREF),
+    `${FPP_PREF} pref has the default value`
+  );
+  ok(
+    !Services.prefs.prefHasUserValue(FPP_PBM_PREF),
+    `${FPP_PBM_PREF} pref has the default value`
+  );
 
   let defaults = Services.prefs.getDefaultBranch("");
   let originalTP = defaults.getBoolPref(TP_PREF);
@@ -118,6 +128,8 @@ add_task(async function testContentBlockingStandardDefinition() {
   let originalQueryParamStripPBM = defaults.getBoolPref(
     QUERY_PARAM_STRIP_PBM_PREF
   );
+  let originalFPP = defaults.getBoolPref(FPP_PREF);
+  let originalFPPPBM = defaults.getBoolPref(FPP_PBM_PREF);
 
   let nonDefaultNCB;
   switch (originalNCB) {
@@ -153,6 +165,8 @@ add_task(async function testContentBlockingStandardDefinition() {
   defaults.setBoolPref(OCSP_PREF, !originalOCSP);
   defaults.setBoolPref(QUERY_PARAM_STRIP_PREF, !originalQueryParamStrip);
   defaults.setBoolPref(QUERY_PARAM_STRIP_PBM_PREF, !originalQueryParamStripPBM);
+  defaults.setBoolPref(FPP_PREF, !originalFPP);
+  defaults.setBoolPref(FPP_PBM_PREF, !originalFPPPBM);
 
   ok(
     !Services.prefs.prefHasUserValue(TP_PREF),
@@ -214,6 +228,14 @@ add_task(async function testContentBlockingStandardDefinition() {
     !Services.prefs.prefHasUserValue(QUERY_PARAM_STRIP_PBM_PREF),
     `${QUERY_PARAM_STRIP_PBM_PREF} pref has the default value`
   );
+  ok(
+    !Services.prefs.prefHasUserValue(FPP_PREF),
+    `${FPP_PREF} pref has the default value`
+  );
+  ok(
+    !Services.prefs.prefHasUserValue(FPP_PBM_PREF),
+    `${FPP_PBM_PREF} pref has the default value`
+  );
 
   // cleanup
   defaults.setIntPref(NCB_PREF, originalNCB);
@@ -232,6 +254,8 @@ add_task(async function testContentBlockingStandardDefinition() {
   defaults.setBoolPref(OCSP_PREF, originalOCSP);
   defaults.setBoolPref(QUERY_PARAM_STRIP_PREF, originalQueryParamStrip);
   defaults.setBoolPref(QUERY_PARAM_STRIP_PBM_PREF, originalQueryParamStripPBM);
+  defaults.setBoolPref(FPP_PREF, originalFPP);
+  defaults.setBoolPref(FPP_PBM_PREF, originalFPPPBM);
 });
 
 // Tests that the content blocking strict category definition changes the behavior
@@ -242,7 +266,7 @@ add_task(async function testContentBlockingStrictDefinition() {
   let originalStrictPref = defaults.getStringPref(STRICT_DEF_PREF);
   defaults.setStringPref(
     STRICT_DEF_PREF,
-    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp,qps,qpsPBM"
+    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp,qps,qpsPBM,fpp,fppPrivate"
   );
   Services.prefs.setStringPref(CAT_PREF, "strict");
   is(
@@ -257,7 +281,7 @@ add_task(async function testContentBlockingStrictDefinition() {
   );
   is(
     Services.prefs.getStringPref(STRICT_DEF_PREF),
-    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp,qps,qpsPBM",
+    "tp,tpPrivate,fp,cm,cookieBehavior0,cookieBehaviorPBM0,stp,emailTP,emailTPPrivate,lvl2,rp,rpTop,ocsp,qps,qpsPBM,fpp,fppPrivate",
     `${STRICT_DEF_PREF} changed to what we set.`
   );
 
@@ -336,6 +360,16 @@ add_task(async function testContentBlockingStrictDefinition() {
     true,
     `${QUERY_PARAM_STRIP_PBM_PREF} pref has been set to true`
   );
+  is(
+    Services.prefs.getBoolPref(FPP_PREF),
+    true,
+    `${FPP_PREF} pref has been set to true`
+  );
+  is(
+    Services.prefs.getBoolPref(FPP_PBM_PREF),
+    true,
+    `${FPP_PBM_PREF} pref has been set to true`
+  );
 
   // Note, if a pref is not listed it will use the default value, however this is only meant as a
   // backup if a mistake is made. The UI will not respond correctly.
@@ -400,10 +434,18 @@ add_task(async function testContentBlockingStrictDefinition() {
     !Services.prefs.prefHasUserValue(QUERY_PARAM_STRIP_PBM_PREF),
     `${QUERY_PARAM_STRIP_PBM_PREF} pref has the default value`
   );
+  ok(
+    !Services.prefs.prefHasUserValue(FPP_PREF),
+    `${FPP_PREF} pref has the default value`
+  );
+  ok(
+    !Services.prefs.prefHasUserValue(FPP_PBM_PREF),
+    `${FPP_PBM_PREF} pref has the default value`
+  );
 
   defaults.setStringPref(
     STRICT_DEF_PREF,
-    "-tpPrivate,-fp,-cm,-tp,cookieBehavior3,cookieBehaviorPBM2,-stp,-emailTP,-emailTPPrivate,-lvl2,-rp,-ocsp,-qps,-qpsPBM"
+    "-tpPrivate,-fp,-cm,-tp,cookieBehavior3,cookieBehaviorPBM2,-stp,-emailTP,-emailTPPrivate,-lvl2,-rp,-ocsp,-qps,-qpsPBM,-fpp,-fppPrivate"
   );
   is(
     Services.prefs.getBoolPref(TP_PREF),
@@ -479,6 +521,16 @@ add_task(async function testContentBlockingStrictDefinition() {
     Services.prefs.getBoolPref(QUERY_PARAM_STRIP_PBM_PREF),
     false,
     `${QUERY_PARAM_STRIP_PBM_PREF} pref has been set to false`
+  );
+  is(
+    Services.prefs.getBoolPref(FPP_PREF),
+    false,
+    `${FPP_PREF} pref has been set to false`
+  );
+  is(
+    Services.prefs.getBoolPref(FPP_PBM_PREF),
+    false,
+    `${FPP_PBM_PREF} pref has been set to false`
   );
 
   // cleanup

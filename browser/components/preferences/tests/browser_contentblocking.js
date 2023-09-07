@@ -337,6 +337,8 @@ add_task(async function testContentBlockingStandardCategory() {
     [OCSP_PREF]: null,
     [QUERY_PARAM_STRIP_PREF]: null,
     [QUERY_PARAM_STRIP_PBM_PREF]: null,
+    [FPP_PREF]: null,
+    [FPP_PBM_PREF]: null,
   };
 
   for (let pref in prefs) {
@@ -397,6 +399,11 @@ add_task(async function testContentBlockingStandardCategory() {
   Services.prefs.setBoolPref(
     QUERY_PARAM_STRIP_PBM_PREF,
     !Services.prefs.getBoolPref(QUERY_PARAM_STRIP_PBM_PREF)
+  );
+  Services.prefs.setBoolPref(FPP_PREF, !Services.prefs.getBoolPref(FPP_PREF));
+  Services.prefs.setBoolPref(
+    FPP_PBM_PREF,
+    !Services.prefs.getBoolPref(FPP_PBM_PREF)
   );
 
   for (let pref in prefs) {
@@ -466,6 +473,8 @@ add_task(async function testContentBlockingStrictCategory() {
   Services.prefs.setBoolPref(OCSP_PREF, false);
   Services.prefs.setBoolPref(QUERY_PARAM_STRIP_PREF, false);
   Services.prefs.setBoolPref(QUERY_PARAM_STRIP_PBM_PREF, false);
+  Services.prefs.setBoolPref(FPP_PREF, false);
+  Services.prefs.setBoolPref(FPP_PBM_PREF, false);
   Services.prefs.setIntPref(
     NCB_PREF,
     Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN
@@ -670,6 +679,34 @@ add_task(async function testContentBlockingStrictCategory() {
           Services.prefs.getBoolPref(QUERY_PARAM_STRIP_PBM_PREF),
           false,
           `${QUERY_PARAM_STRIP_PBM_PREF} has been set to false`
+        );
+        break;
+      case "fpp":
+        is(
+          Services.prefs.getBoolPref(FPP_PREF),
+          true,
+          `${FPP_PREF} has been set to true`
+        );
+        break;
+      case "-fpp":
+        is(
+          Services.prefs.getBoolPref(FPP_PREF),
+          false,
+          `${FPP_PREF} has been set to false`
+        );
+        break;
+      case "fppPrivate":
+        is(
+          Services.prefs.getBoolPref(FPP_PBM_PREF),
+          true,
+          `${FPP_PBM_PREF} has been set to true`
+        );
+        break;
+      case "-fppPrivate":
+        is(
+          Services.prefs.getBoolPref(FPP_PBM_PREF),
+          false,
+          `${FPP_PBM_PREF} has been set to false`
         );
         break;
       case "cookieBehavior0":
