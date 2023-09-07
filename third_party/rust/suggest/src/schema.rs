@@ -6,7 +6,7 @@
 use rusqlite::{Connection, Transaction};
 use sql_support::open_database::{self, ConnectionInitializer};
 
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 3;
 
 pub const SQL: &str = "
     CREATE TABLE meta(
@@ -26,14 +26,26 @@ pub const SQL: &str = "
     CREATE TABLE suggestions(
         id INTEGER PRIMARY KEY,
         record_id TEXT NOT NULL,
-        block_id INTEGER NOT NULL,
-        advertiser TEXT NOT NULL,
-        iab_category TEXT NOT NULL,
+        provider INTEGER NOT NULL,
         title TEXT NOT NULL,
-        url TEXT NOT NULL,
+        url TEXT NOT NULL
+    );
+
+    CREATE TABLE amp_custom_details(
+        suggestion_id INTEGER PRIMARY KEY,
+        advertiser TEXT NOT NULL,
+        block_id INTEGER NOT NULL,
+        iab_category TEXT NOT NULL,
+        impression_url TEXT NOT NULL,
+        click_url TEXT NOT NULL,
         icon_id TEXT NOT NULL,
-        impression_url TEXT,
-        click_url TEXT
+        FOREIGN KEY(suggestion_id) REFERENCES suggestions(id)
+        ON DELETE CASCADE
+    );
+
+    CREATE TABLE wikipedia_custom_details(
+        suggestion_id INTEGER PRIMARY KEY REFERENCES suggestions(id) ON DELETE CASCADE,
+        icon_id TEXT NOT NULL
     );
 
     CREATE INDEX suggestions_record_id ON suggestions(record_id);
@@ -71,6 +83,14 @@ impl ConnectionInitializer for SuggestConnectionInitializer {
     }
 
     fn upgrade_from(&self, _db: &Transaction<'_>, version: u32) -> open_database::Result<()> {
-        Err(open_database::Error::IncompatibleVersion(version))
+        match version {
+            1..=2 => {
+                // These schema versions were used during development, and never
+                // shipped in any applications. Treat these databases as
+                // corrupt, so that they'll be replaced.
+                Err(open_database::Error::Corrupt)
+            }
+            _ => Err(open_database::Error::IncompatibleVersion(version)),
+        }
     }
 }

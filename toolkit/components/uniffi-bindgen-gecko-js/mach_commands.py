@@ -14,6 +14,7 @@ UDL_FILES = [
     "third_party/rust/sync15/src/sync15.udl",
     "third_party/rust/tabs/src/tabs.udl",
     "third_party/rust/suggest/src/suggest.udl",
+    "third_party/rust/remote_settings/src/remote_settings.udl",
 ]
 
 FIXTURE_UDL_FILES = [

@@ -4,6 +4,12 @@ main = [
   "log_even_numbers_main_thread",
 ]
 
+[remote_settings.receiver_thread]
+default = "worker"
+main = [
+  "RemoteSettings",
+]
+
 [suggest.receiver_thread]
 default = "worker"
 main = [

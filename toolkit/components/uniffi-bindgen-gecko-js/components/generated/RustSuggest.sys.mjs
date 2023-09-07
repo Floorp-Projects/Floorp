@@ -578,244 +578,6 @@ export class FfiConverterTypeSuggestIngestionConstraints extends FfiConverterArr
     }
 }
 
-export class Suggestion {
-    constructor(blockId,advertiser,iabCategory,isSponsored,fullKeyword,title,url,icon,impressionUrl,clickUrl) {
-        try {
-            FfiConverterI64.checkType(blockId)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("blockId");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(advertiser)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("advertiser");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(iabCategory)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("iabCategory");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterBool.checkType(isSponsored)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("isSponsored");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(fullKeyword)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("fullKeyword");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(title)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("title");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(url)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("url");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterOptionalSequenceu8.checkType(icon)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("icon");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterOptionalstring.checkType(impressionUrl)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("impressionUrl");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterOptionalstring.checkType(clickUrl)
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart("clickUrl");
-            }
-            throw e;
-        }
-        this.blockId = blockId;
-        this.advertiser = advertiser;
-        this.iabCategory = iabCategory;
-        this.isSponsored = isSponsored;
-        this.fullKeyword = fullKeyword;
-        this.title = title;
-        this.url = url;
-        this.icon = icon;
-        this.impressionUrl = impressionUrl;
-        this.clickUrl = clickUrl;
-    }
-    equals(other) {
-        return (
-            this.blockId == other.blockId &&
-            this.advertiser == other.advertiser &&
-            this.iabCategory == other.iabCategory &&
-            this.isSponsored == other.isSponsored &&
-            this.fullKeyword == other.fullKeyword &&
-            this.title == other.title &&
-            this.url == other.url &&
-            this.icon == other.icon &&
-            this.impressionUrl == other.impressionUrl &&
-            this.clickUrl == other.clickUrl
-        )
-    }
-}
-
-// Export the FFIConverter object to make external types work.
-export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
-    static read(dataStream) {
-        return new Suggestion(
-            FfiConverterI64.read(dataStream), 
-            FfiConverterString.read(dataStream), 
-            FfiConverterString.read(dataStream), 
-            FfiConverterBool.read(dataStream), 
-            FfiConverterString.read(dataStream), 
-            FfiConverterString.read(dataStream), 
-            FfiConverterString.read(dataStream), 
-            FfiConverterOptionalSequenceu8.read(dataStream), 
-            FfiConverterOptionalstring.read(dataStream), 
-            FfiConverterOptionalstring.read(dataStream)
-        );
-    }
-    static write(dataStream, value) {
-        FfiConverterI64.write(dataStream, value.blockId);
-        FfiConverterString.write(dataStream, value.advertiser);
-        FfiConverterString.write(dataStream, value.iabCategory);
-        FfiConverterBool.write(dataStream, value.isSponsored);
-        FfiConverterString.write(dataStream, value.fullKeyword);
-        FfiConverterString.write(dataStream, value.title);
-        FfiConverterString.write(dataStream, value.url);
-        FfiConverterOptionalSequenceu8.write(dataStream, value.icon);
-        FfiConverterOptionalstring.write(dataStream, value.impressionUrl);
-        FfiConverterOptionalstring.write(dataStream, value.clickUrl);
-    }
-
-    static computeSize(value) {
-        let totalSize = 0;
-        totalSize += FfiConverterI64.computeSize(value.blockId);
-        totalSize += FfiConverterString.computeSize(value.advertiser);
-        totalSize += FfiConverterString.computeSize(value.iabCategory);
-        totalSize += FfiConverterBool.computeSize(value.isSponsored);
-        totalSize += FfiConverterString.computeSize(value.fullKeyword);
-        totalSize += FfiConverterString.computeSize(value.title);
-        totalSize += FfiConverterString.computeSize(value.url);
-        totalSize += FfiConverterOptionalSequenceu8.computeSize(value.icon);
-        totalSize += FfiConverterOptionalstring.computeSize(value.impressionUrl);
-        totalSize += FfiConverterOptionalstring.computeSize(value.clickUrl);
-        return totalSize
-    }
-
-    static checkType(value) {
-        super.checkType(value);
-        try {
-            FfiConverterI64.checkType(value.blockId);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".blockId");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(value.advertiser);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".advertiser");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(value.iabCategory);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".iabCategory");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterBool.checkType(value.isSponsored);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".isSponsored");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(value.fullKeyword);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".fullKeyword");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(value.title);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".title");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterString.checkType(value.url);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".url");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterOptionalSequenceu8.checkType(value.icon);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".icon");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterOptionalstring.checkType(value.impressionUrl);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".impressionUrl");
-            }
-            throw e;
-        }
-        try {
-            FfiConverterOptionalstring.checkType(value.clickUrl);
-        } catch (e) {
-            if (e instanceof UniFFITypeError) {
-                e.addItemDescriptionPart(".clickUrl");
-            }
-            throw e;
-        }
-    }
-}
-
 export class SuggestionQuery {
     constructor(keyword,includeSponsored,includeNonSponsored) {
         try {
@@ -960,6 +722,177 @@ export class FfiConverterTypeSuggestApiError extends FfiConverterArrayBuffer {
     static errorClass = SuggestApiError;
 }
 
+
+export class Suggestion {}
+Suggestion.Amp = class extends Suggestion{
+    constructor(
+        title,
+        url,
+        icon,
+        fullKeyword,
+        blockId,
+        advertiser,
+        iabCategory,
+        impressionUrl,
+        clickUrl
+        ) {
+            super();
+            this.title = title;
+            this.url = url;
+            this.icon = icon;
+            this.fullKeyword = fullKeyword;
+            this.blockId = blockId;
+            this.advertiser = advertiser;
+            this.iabCategory = iabCategory;
+            this.impressionUrl = impressionUrl;
+            this.clickUrl = clickUrl;
+        }
+}
+Suggestion.Wikipedia = class extends Suggestion{
+    constructor(
+        title,
+        url,
+        icon,
+        fullKeyword
+        ) {
+            super();
+            this.title = title;
+            this.url = url;
+            this.icon = icon;
+            this.fullKeyword = fullKeyword;
+        }
+}
+
+// Export the FFIConverter object to make external types work.
+export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
+    static read(dataStream) {
+        switch (dataStream.readInt32()) {
+            case 1:
+                return new Suggestion.Amp(
+                    FfiConverterString.read(dataStream),
+                    FfiConverterString.read(dataStream),
+                    FfiConverterOptionalSequenceu8.read(dataStream),
+                    FfiConverterString.read(dataStream),
+                    FfiConverterI64.read(dataStream),
+                    FfiConverterString.read(dataStream),
+                    FfiConverterString.read(dataStream),
+                    FfiConverterString.read(dataStream),
+                    FfiConverterString.read(dataStream)
+                    );
+            case 2:
+                return new Suggestion.Wikipedia(
+                    FfiConverterString.read(dataStream),
+                    FfiConverterString.read(dataStream),
+                    FfiConverterOptionalSequenceu8.read(dataStream),
+                    FfiConverterString.read(dataStream)
+                    );
+            default:
+                return new Error("Unknown Suggestion variant");
+        }
+    }
+
+    static write(dataStream, value) {
+        if (value instanceof Suggestion.Amp) {
+            dataStream.writeInt32(1);
+            FfiConverterString.write(dataStream, value.title);
+            FfiConverterString.write(dataStream, value.url);
+            FfiConverterOptionalSequenceu8.write(dataStream, value.icon);
+            FfiConverterString.write(dataStream, value.fullKeyword);
+            FfiConverterI64.write(dataStream, value.blockId);
+            FfiConverterString.write(dataStream, value.advertiser);
+            FfiConverterString.write(dataStream, value.iabCategory);
+            FfiConverterString.write(dataStream, value.impressionUrl);
+            FfiConverterString.write(dataStream, value.clickUrl);
+            return;
+        }
+        if (value instanceof Suggestion.Wikipedia) {
+            dataStream.writeInt32(2);
+            FfiConverterString.write(dataStream, value.title);
+            FfiConverterString.write(dataStream, value.url);
+            FfiConverterOptionalSequenceu8.write(dataStream, value.icon);
+            FfiConverterString.write(dataStream, value.fullKeyword);
+            return;
+        }
+        return new Error("Unknown Suggestion variant");
+    }
+
+    static computeSize(value) {
+        // Size of the Int indicating the variant
+        let totalSize = 4;
+        if (value instanceof Suggestion.Amp) {
+            totalSize += FfiConverterString.computeSize(value.title);
+            totalSize += FfiConverterString.computeSize(value.url);
+            totalSize += FfiConverterOptionalSequenceu8.computeSize(value.icon);
+            totalSize += FfiConverterString.computeSize(value.fullKeyword);
+            totalSize += FfiConverterI64.computeSize(value.blockId);
+            totalSize += FfiConverterString.computeSize(value.advertiser);
+            totalSize += FfiConverterString.computeSize(value.iabCategory);
+            totalSize += FfiConverterString.computeSize(value.impressionUrl);
+            totalSize += FfiConverterString.computeSize(value.clickUrl);
+            return totalSize;
+        }
+        if (value instanceof Suggestion.Wikipedia) {
+            totalSize += FfiConverterString.computeSize(value.title);
+            totalSize += FfiConverterString.computeSize(value.url);
+            totalSize += FfiConverterOptionalSequenceu8.computeSize(value.icon);
+            totalSize += FfiConverterString.computeSize(value.fullKeyword);
+            return totalSize;
+        }
+        return new Error("Unknown Suggestion variant");
+    }
+
+    static checkType(value) {
+      if (!(value instanceof Suggestion)) {
+        throw new UniFFITypeError(`${value} is not a subclass instance of Suggestion`);
+      }
+    }
+}
+
+
+
+export const SuggestionProvider = {
+    AMP: 1,
+    WIKIPEDIA: 2,
+};
+
+Object.freeze(SuggestionProvider);
+// Export the FFIConverter object to make external types work.
+export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer {
+    static read(dataStream) {
+        switch (dataStream.readInt32()) {
+            case 1:
+                return SuggestionProvider.AMP
+            case 2:
+                return SuggestionProvider.WIKIPEDIA
+            default:
+                return new Error("Unknown SuggestionProvider variant");
+        }
+    }
+
+    static write(dataStream, value) {
+        if (value === SuggestionProvider.AMP) {
+            dataStream.writeInt32(1);
+            return;
+        }
+        if (value === SuggestionProvider.WIKIPEDIA) {
+            dataStream.writeInt32(2);
+            return;
+        }
+        return new Error("Unknown SuggestionProvider variant");
+    }
+
+    static computeSize(value) {
+        return 4;
+    }
+
+    static checkType(value) {
+      if (!Number.isInteger(value) || value < 1 || value > 2) {
+          throw new UniFFITypeError(`${value} is not a valid value for SuggestionProvider`);
+      }
+    }
+}
+
+
 // Export the FFIConverter object to make external types work.
 export class FfiConverterOptionalu64 extends FfiConverterArrayBuffer {
     static checkType(value) {
@@ -994,43 +927,6 @@ export class FfiConverterOptionalu64 extends FfiConverterArrayBuffer {
             return 1;
         }
         return 1 + FfiConverterU64.computeSize(value)
-    }
-}
-
-// Export the FFIConverter object to make external types work.
-export class FfiConverterOptionalstring extends FfiConverterArrayBuffer {
-    static checkType(value) {
-        if (value !== undefined && value !== null) {
-            FfiConverterString.checkType(value)
-        }
-    }
-
-    static read(dataStream) {
-        const code = dataStream.readUint8(0);
-        switch (code) {
-            case 0:
-                return null
-            case 1:
-                return FfiConverterString.read(dataStream)
-            default:
-                throw UniFFIError(`Unexpected code: ${code}`);
-        }
-    }
-
-    static write(dataStream, value) {
-        if (value === null || value === undefined) {
-            dataStream.writeUint8(0);
-            return;
-        }
-        dataStream.writeUint8(1);
-        FfiConverterString.write(dataStream, value)
-    }
-
-    static computeSize(value) {
-        if (value === null || value === undefined) {
-            return 1;
-        }
-        return 1 + FfiConverterString.computeSize(value)
     }
 }
 

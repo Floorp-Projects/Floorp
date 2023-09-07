@@ -1,9 +1,40 @@
-use std::ops::Deref;
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-use remote_settings::{Attachment, GetItemsOptions};
-use serde::Deserialize;
+//! Crate-internal types for interacting with Remote Settings (`rs`). Types in
+//! this module describe records and attachments in the Suggest Remote Settings
+//! collection.
+//!
+//! To add a new suggestion `T` to this component, you'll generally need to:
+//!
+//!  1. Add a variant named `T` to [`SuggestRecord`]. The variant must have a
+//!     `#[serde(rename)]` attribute that matches the suggestion record's
+//!     `type` field.
+//!  2. Define a `DownloadedTSuggestion` type with the new suggestion's fields,
+//!     matching their attachment's schema. Your new type must derive or
+//!     implement [`serde::Deserialize`].
+//!  3. Update the database schema in the [`schema`] module to store the new
+//!     suggestion.
+//!  4. Add an `insert_t_suggestions()` method to [`db::SuggestDao`] that
+//!     inserts `DownloadedTSuggestion`s into the database.
+//!  5. Update [`store::SuggestStoreInner::ingest()`] to download, deserialize,
+//!     and store the new suggestion.
+//!  6. Add a variant named `T` to [`suggestion::Suggestion`], with the fields
+//!     that you'd like to expose to the application. These can be the same
+//!     fields as `DownloadedTSuggestion`, or slightly different, depending on
+//!     what the application needs to show the suggestion.
+//!  7. Update any [`db::SuggestDao`] methods that query the database to include
+//!     the new suggestion in their results, and return `Suggestion::T` variants
+//!     as needed.
 
-use crate::Result;
+use std::borrow::Cow;
+
+use remote_settings::{GetItemsOptions, RemoteSettingsResponse};
+use serde::{Deserialize, Deserializer};
+
+use crate::{provider::SuggestionProvider, Result};
 
 /// The Suggest Remote Settings collection name.
 pub(crate) const REMOTE_SETTINGS_COLLECTION: &str = "quicksuggest";
@@ -19,119 +50,72 @@ pub(crate) const SUGGESTIONS_PER_ATTACHMENT: u64 = 200;
 /// This trait lets tests use a mock client.
 pub(crate) trait SuggestRemoteSettingsClient {
     /// Fetches records from the Suggest Remote Settings collection.
-    fn get_records_with_options(
-        &self,
-        options: &GetItemsOptions,
-    ) -> Result<SuggestRemoteSettingsRecords>;
+    fn get_records_with_options(&self, options: &GetItemsOptions)
+        -> Result<RemoteSettingsResponse>;
 
-    /// Fetches a data attachment with suggestions to ingest from the Suggest
-    /// Remote Settings collection.
-    fn get_data_attachment(&self, location: &str) -> Result<DownloadedSuggestDataAttachment>;
-
-    /// Fetches an icon attachment from the Suggest Remote Settings collection.
-    fn get_icon_attachment(&self, location: &str) -> Result<Vec<u8>>;
+    /// Fetches a record's attachment from the Suggest Remote Settings
+    /// collection.
+    fn get_attachment(&self, location: &str) -> Result<Vec<u8>>;
 }
 
 impl SuggestRemoteSettingsClient for remote_settings::Client {
     fn get_records_with_options(
         &self,
         options: &GetItemsOptions,
-    ) -> Result<SuggestRemoteSettingsRecords> {
-        Ok(self.get_records_raw_with_options(options)?.json()?)
+    ) -> Result<RemoteSettingsResponse> {
+        Ok(remote_settings::Client::get_records_with_options(
+            self, options,
+        )?)
     }
 
-    fn get_data_attachment(&self, location: &str) -> Result<DownloadedSuggestDataAttachment> {
-        Ok(self.get_attachment(location)?.json()?)
-    }
-
-    fn get_icon_attachment(&self, location: &str) -> Result<Vec<u8>> {
-        Ok(self.get_attachment(location)?.body)
+    fn get_attachment(&self, location: &str) -> Result<Vec<u8>> {
+        Ok(remote_settings::Client::get_attachment(self, location)?)
     }
 }
 
-/// The response body for a Suggest Remote Settings collection request.
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct SuggestRemoteSettingsRecords {
-    pub data: Vec<SuggestRecord>,
-}
-
-/// A record with a known or an unknown type, or a tombstone, in the Suggest
-/// Remote Settings collection.
+/// A record in the Suggest Remote Settings collection.
 ///
-/// Because `#[serde(other)]` doesn't support associated data
-/// (serde-rs/serde#1973), we can't define variants for all the known types and
-/// the unknown type in the same enum. Instead, we have this "outer", untagged
-/// `SuggestRecord` with the "unknown type" variant, and an "inner", internally
-/// tagged `TypedSuggestRecord` with all the "known type" variants.
-#[derive(Clone, Debug, Deserialize, PartialEq)]
-#[serde(untagged)]
-pub(crate) enum SuggestRecord {
-    /// A record with a known type.
-    Typed(TypedSuggestRecord),
-
-    /// A tombstone, or a record with an unknown type, that we don't know how
-    /// to ingest.
-    ///
-    /// Tombstones only have these three fields, with `deleted` set to `true`.
-    /// Records with unknown types have `deleted` set to `false`, and may
-    /// contain other fields that we ignore.
-    Untyped {
-        id: SuggestRecordId,
-        last_modified: u64,
-        #[serde(default)]
-        deleted: bool,
-    },
-}
-
-/// A record that we know how to ingest from Remote Settings.
+/// Except for the type, Suggest records don't carry additional fields. All
+/// suggestions are stored in each record's attachment.
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(tag = "type")]
-pub(crate) enum TypedSuggestRecord {
+pub(crate) enum SuggestRecord {
     #[serde(rename = "icon")]
-    Icon {
-        id: SuggestRecordId,
-        last_modified: u64,
-        attachment: Attachment,
-    },
+    Icon,
     #[serde(rename = "data")]
-    Data {
-        id: SuggestRecordId,
-        last_modified: u64,
-        attachment: Attachment,
-    },
+    AmpWikipedia,
 }
 
 /// Represents either a single value, or a list of values. This is used to
-/// deserialize downloaded data attachments.
+/// deserialize downloaded attachments.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
-pub(crate) enum OneOrMany<T> {
+enum OneOrMany<T> {
     One(T),
     Many(Vec<T>),
 }
 
-impl<T> Deref for OneOrMany<T> {
-    type Target = [T];
+/// A downloaded Remote Settings attachment that contains suggestions.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(transparent)]
+pub(crate) struct SuggestAttachment<T>(OneOrMany<T>);
 
-    fn deref(&self) -> &Self::Target {
-        match self {
+impl<T> SuggestAttachment<T> {
+    /// Returns a slice of suggestions to ingest from the downloaded attachment.
+    pub fn suggestions(&self) -> &[T] {
+        match &self.0 {
             OneOrMany::One(value) => std::slice::from_ref(value),
             OneOrMany::Many(values) => values,
         }
     }
 }
 
-/// The contents of a downloaded [`TypedSuggestRecord::Data`] attachment.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(transparent)]
-pub(crate) struct DownloadedSuggestDataAttachment(pub OneOrMany<DownloadedSuggestion>);
-
 /// The ID of a record in the Suggest Remote Settings collection.
 #[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[serde(transparent)]
-pub(crate) struct SuggestRecordId(String);
+pub(crate) struct SuggestRecordId<'a>(Cow<'a, str>);
 
-impl SuggestRecordId {
+impl<'a> SuggestRecordId<'a> {
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -146,18 +130,107 @@ impl SuggestRecordId {
     }
 }
 
-/// A suggestion to ingest from a downloaded Remote Settings attachment.
-#[derive(Clone, Debug, Deserialize)]
-pub(crate) struct DownloadedSuggestion {
-    #[serde(rename = "id")]
-    pub block_id: i64,
-    pub advertiser: String,
-    pub iab_category: String,
+impl<'a, T> From<T> for SuggestRecordId<'a>
+where
+    T: Into<Cow<'a, str>>,
+{
+    fn from(value: T) -> Self {
+        Self(value.into())
+    }
+}
+
+/// Fields that are common to all downloaded suggestions.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+pub(crate) struct DownloadedSuggestionCommonDetails {
     pub keywords: Vec<String>,
     pub title: String,
     pub url: String,
+}
+
+/// An AMP suggestion to ingest from an AMP-Wikipedia attachment.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+pub(crate) struct DownloadedAmpSuggestion {
+    #[serde(flatten)]
+    pub common_details: DownloadedSuggestionCommonDetails,
+    pub advertiser: String,
+    #[serde(rename = "id")]
+    pub block_id: i32,
+    pub iab_category: String,
+    pub click_url: String,
+    pub impression_url: String,
     #[serde(rename = "icon")]
     pub icon_id: String,
-    pub impression_url: Option<String>,
-    pub click_url: Option<String>,
+}
+
+/// A Wikipedia suggestion to ingest from an AMP-Wikipedia attachment.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
+pub(crate) struct DownloadedWikipediaSuggestion {
+    #[serde(flatten)]
+    pub common_details: DownloadedSuggestionCommonDetails,
+    #[serde(rename = "icon")]
+    pub icon_id: String,
+}
+
+/// A suggestion to ingest from an AMP-Wikipedia attachment downloaded from
+/// Remote Settings.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) enum DownloadedAmpWikipediaSuggestion {
+    Amp(DownloadedAmpSuggestion),
+    Wikipedia(DownloadedWikipediaSuggestion),
+}
+
+impl DownloadedAmpWikipediaSuggestion {
+    /// Returns the details that are common to AMP and Wikipedia suggestions.
+    pub fn common_details(&self) -> &DownloadedSuggestionCommonDetails {
+        match self {
+            Self::Amp(DownloadedAmpSuggestion { common_details, .. }) => common_details,
+            Self::Wikipedia(DownloadedWikipediaSuggestion { common_details, .. }) => common_details,
+        }
+    }
+
+    /// Returns the provider of this suggestion.
+    pub fn provider(&self) -> SuggestionProvider {
+        match self {
+            DownloadedAmpWikipediaSuggestion::Amp(_) => SuggestionProvider::Amp,
+            DownloadedAmpWikipediaSuggestion::Wikipedia(_) => SuggestionProvider::Wikipedia,
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for DownloadedAmpWikipediaSuggestion {
+    fn deserialize<D>(
+        deserializer: D,
+    ) -> std::result::Result<DownloadedAmpWikipediaSuggestion, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        // AMP and Wikipedia suggestions use the same schema. To separate them,
+        // we use a "maybe tagged" outer enum with tagged and untagged variants,
+        // and a "tagged" inner enum.
+        //
+        // Wikipedia suggestions will deserialize successfully into the tagged
+        // variant. AMP suggestions will try the tagged variant, fail, and fall
+        // back to the untagged variant.
+        //
+        // This approach works around serde-rs/serde#912.
+
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum MaybeTagged {
+            Tagged(Tagged),
+            Untagged(DownloadedAmpSuggestion),
+        }
+
+        #[derive(Deserialize)]
+        #[serde(tag = "advertiser")]
+        enum Tagged {
+            #[serde(rename = "Wikipedia")]
+            Wikipedia(DownloadedWikipediaSuggestion),
+        }
+
+        Ok(match MaybeTagged::deserialize(deserializer)? {
+            MaybeTagged::Tagged(Tagged::Wikipedia(wikipedia)) => Self::Wikipedia(wikipedia),
+            MaybeTagged::Untagged(amp) => Self::Amp(amp),
+        })
+    }
 }

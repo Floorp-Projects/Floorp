@@ -45,7 +45,7 @@ impl RemoteSettings {
     ) -> Result<()> {
         let resp = self.client.get_attachment(&attachment_location)?;
         let mut file = File::create(path)?;
-        file.write_all(&resp.body)?;
+        file.write_all(&resp)?;
         Ok(())
     }
 }
@@ -66,7 +66,7 @@ mod test {
         .with_body(response_body())
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_header("etag", "1000")
+        .with_header("etag", "\"1000\"")
         .create();
 
         let config = RemoteSettingsConfig {
@@ -94,7 +94,7 @@ mod test {
         .with_body(response_body())
         .with_status(200)
         .with_header("content-type", "application/json")
-        .with_header("etag", "1000")
+        .with_header("etag", "\"1000\"")
         .create();
 
         let config = RemoteSettingsConfig {
