@@ -25,7 +25,8 @@ not-for-build-platforms:
 jobs:
     upload-generated-sources:
         description: Upload generated source files from build
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         worker-type: t-linux-xlarge
         treeherder:
             symbol: Ugs

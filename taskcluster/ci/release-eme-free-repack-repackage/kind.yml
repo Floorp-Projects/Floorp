@@ -26,7 +26,8 @@ only-for-build-platforms:
 
 jobs:
     release-eme-free-repack-repackage:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         upstream-mac-kind:
             by-build-type:
                 debug: release-eme-free-repack-mac-signing

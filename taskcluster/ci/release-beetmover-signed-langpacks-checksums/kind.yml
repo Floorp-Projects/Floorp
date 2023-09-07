@@ -15,7 +15,8 @@ kind-dependencies:
 
 jobs:
     release-beetmover-signed-langpacks-checksums:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         shipping-phase: promote
         attributes:
             artifact_prefix: public

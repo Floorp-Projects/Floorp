@@ -27,7 +27,8 @@ not-for-build-platforms:
 
 jobs:
     balrog:
-        from-deps: {}
+        from-deps:
+            group-by: single-with-filters
         update-no-wnp:
             by-release-type:
                 nightly.*: false
