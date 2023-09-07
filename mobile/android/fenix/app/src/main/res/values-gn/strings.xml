@@ -573,7 +573,7 @@
     <!-- Hint displayed on input field for custom collection name -->
     <string name="customize_addon_collection_hint">Ñembyatyha réra</string>
     <!-- Hint displayed on input field for custom collection user ID-->
-    <string name="customize_addon_collection_user_hint">Ñembyatyha jára (puruhára ID)</string>
+    <string name="customize_addon_collection_user_hint">Ñembyatyha jára (poruhára ID)</string>
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Moĩmbaha aty moambuepyre. Embotyhína tembiporu’i emoambuekuaa hag̃ua…</string>
@@ -1721,12 +1721,12 @@
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Emyenyhẽjey %1$s-pe</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill_description">Emoĩmba ha eñongatu puruhára réra ha ñe’ẽñemi ñanduti rendápe eipuru aja %1$s.</string>
+    <string name="preferences_passwords_autofill_description">Emoĩmba ha eñongatu poruhára réra ha ñe’ẽñemi ñanduti rendápe eipuru aja %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Emyanyhẽjey ambue apps-pe</string>
 
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
-    <string name="preferences_android_autofill_description">Emoĩmba ha eñongatu puruhára réra ha ñe’ẽñemi ambue tembiporu’ípe ne mba’e’oka pegua.</string>
+    <string name="preferences_android_autofill_description">Emoĩmba ha eñongatu poruhára réra ha ñe’ẽñemi ambue tembiporu’ípe ne mba’e’oka pegua.</string>
 
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Embojuaju jeike</string>
@@ -1754,21 +1754,21 @@
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Tenda</string>
     <!-- The header for the username for a login -->
-    <string name="preferences_passwords_saved_logins_username">Puruhára réra</string>
+    <string name="preferences_passwords_saved_logins_username">Poruhára réra</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Ñe’ẽñemi</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Ñe’ẽñemi ohasáva kuatiajokohápe</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
-    <string name="logins_username_copied">Puruhára réra ohasáva kuatiajokohápe</string>
+    <string name="logins_username_copied">Poruhára réra ohasáva kuatiajokohápe</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Emonguatia ñe’ẽñemi</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
     <string name="saved_logins_clear_password">Embogue ñe’ẽñemi</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
-    <string name="saved_login_copy_username">Emonguatia puruhára réra</string>
+    <string name="saved_login_copy_username">Emonguatia poruhára réra</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
-    <string name="saved_login_clear_username">Embogue puruhára réra</string>
+    <string name="saved_login_clear_username">Embogue poruhára réra</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">Emopotĩ mohendahavusu réra</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1780,9 +1780,9 @@
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message">Emyandyjey ehecha hag̃ua ne rembiapo ñepyrũ ñongatupyre</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Erekokuaa nde puruhára ha ñe’ẽñemi</string>
+    <string name="logins_warning_dialog_title">Erekokuaa nde poruhára ha ñe’ẽñemi</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Emboheko pe patrõ jokoháva mba’e’oka pegua, PIN térã ñe’ẽñemi emo’ã hag̃ua nde puruhára ha ñe’ẽñemi ñongatupyrépe jeike ambue orekórõ ne mba’e’oka.</string>
+    <string name="logins_warning_dialog_message">Emboheko pe patrõ jokoháva mba’e’oka pegua, PIN térã ñe’ẽñemi emo’ã hag̃ua nde poruhára ha ñe’ẽñemi ñongatupyrépe jeike ambue orekórõ ne mba’e’oka.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Upéi</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -2045,7 +2045,7 @@
     <!--  The editable text field for a login's web address. -->
     <string name="saved_login_hostname_description">Moñe’ẽha kora isako’ikuaáava ñanduti kundaharape rembiapo ñepyrũme.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Moñe’ẽha kora isako’ikuaáava puruhára réra rembiapo ñepyrũme.</string>
+    <string name="saved_login_username_description">Moñe’ẽha kora isako’ikuaáava poruhára réra rembiapo ñepyrũme.</string>
     <!--  The editable text field for a login's password. -->
     <string name="saved_login_password_description">Moñe’ẽha kora isako’ikuaáava ñe’ẽñemi rembiapo ñepyrũme.</string>
     <!--  The button description to save changes to an edited login. -->
@@ -2057,7 +2057,7 @@
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Tekotevẽ ñe’ẽñemi</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Puruhára réra jerurepyre</string>
+    <string name="saved_login_username_required">Poruhára réra jerurepyre</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Mohendahavusu réra jerurepyre</string>
     <!-- Voice search button content description  -->
@@ -2066,7 +2066,7 @@
     <string name="voice_search_explainer">Eñe’ẽ ko’ág̃a</string>
 
     <!--  The error message in edit login view when a duplicate username exists. -->
-    <string name="saved_login_duplicate">Oĩma tembiapo ñepyrũ puruhára réra peichagua</string>
+    <string name="saved_login_duplicate">Oĩma tembiapo ñepyrũ poruhára réra peichagua</string>
 
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>

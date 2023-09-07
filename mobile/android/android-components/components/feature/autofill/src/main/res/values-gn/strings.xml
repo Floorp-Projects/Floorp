@@ -8,7 +8,7 @@
     <!-- Autofill: Text shown in popup in third-party app if we found a matching account, but no
     username is saved (e.g. we only have a password). This text will be shown in place where otherwise
     the username would be displayed. -->
-    <string name="mozac_feature_autofill_popup_no_username">(Puruhára hera’ỹva)</string>
+    <string name="mozac_feature_autofill_popup_no_username">(Poruhára hera’ỹva)</string>
 
     <!-- Autofill: Text shown in popup in third-party app to autofill the password for an account.
     %1$s will be replaced with the login/username of the account. -->
