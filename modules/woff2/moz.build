@@ -9,7 +9,8 @@ include("sources.mozbuild")
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Graphics: Text')
 
-UNIFIED_SOURCES += woff2_sources
+if not CONFIG["MOZ_WASM_SANDBOXING_WOFF2"]:
+    UNIFIED_SOURCES += woff2_sources
 
 EXPORTS.woff2 += [
     'include/woff2/decode.h',
