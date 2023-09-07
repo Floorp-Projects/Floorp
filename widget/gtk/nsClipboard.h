@@ -144,7 +144,7 @@ class nsClipboard : public ClipboardSetDataHelper, public nsIObserver {
                                     int32_t aWhichClipboard) override;
 
  private:
-  virtual ~nsClipboard();
+  virtual ~nsClipboard() = default;
 
   // Get our hands on the correct transferable, given a specific
   // clipboard
