@@ -16,6 +16,7 @@
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 
+#include "CodecConfig.h"
 #include "PeerConnectionImpl.h"
 #include "sdp/SdpMediaSection.h"
 #include "sdp/SipccSdpParser.h"
@@ -7440,6 +7441,135 @@ TEST_F(JsepSessionTest, TestOfferRtxNoMsid) {
   ASSERT_NE(std::string::npos, offer.find("FID")) << offer;
 }
 
+TEST_F(JsepSessionTest, TestRedRtxAddedToVideoCodec) {
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(*mSessionOff, "video");
+  AddTracks(*mSessionAns, "video");
+
+  OfferAnswer();
+
+  std::vector<sdp::Direction> directions = {sdp::kSend, sdp::kRecv};
+
+  for (auto direction : directions) {
+    UniquePtr<JsepCodecDescription> codec;
+    std::set<std::string> payloadTypes;
+    std::string redPt, ulpfecPt, redRtxPt;
+    for (size_t i = 0; i < 4; ++i) {
+      GetCodec(*mSessionOff, 0, direction, 0, i, &codec);
+      ASSERT_TRUE(codec);
+      JsepVideoCodecDescription* videoCodec =
+          static_cast<JsepVideoCodecDescription*>(codec.get());
+
+      // Ensure RED, ULPFEC, and RTX RED are not empty which validates that
+      // EnableFEC worked.
+      ASSERT_FALSE(videoCodec->mREDPayloadType.empty());
+      ASSERT_FALSE(videoCodec->mULPFECPayloadType.empty());
+      ASSERT_FALSE(videoCodec->mREDRTXPayloadType.empty());
+      ASSERT_TRUE(payloadTypes.insert(videoCodec->mDefaultPt).second);
+      ASSERT_TRUE(payloadTypes.insert(videoCodec->mRtxPayloadType).second);
+      // ULPFEC, RED, and RED RTX payload types are the same for each codec, so
+      // we only check them for the first one.
+      if (i == 0) {
+        ASSERT_TRUE(payloadTypes.insert(videoCodec->mREDPayloadType).second)
+        << "RED is using a duplicate payload type.";
+        ASSERT_TRUE(payloadTypes.insert(videoCodec->mULPFECPayloadType).second)
+        << "ULPFEC is using a duplicate payload type.";
+        ASSERT_TRUE(payloadTypes.insert(videoCodec->mREDRTXPayloadType).second)
+        << "RED RTX is using a duplicate payload type.";
+        redPt = videoCodec->mREDPayloadType;
+        ulpfecPt = videoCodec->mULPFECPayloadType;
+        redRtxPt = videoCodec->mREDRTXPayloadType;
+      } else {
+        ASSERT_TRUE(redPt == videoCodec->mREDPayloadType);
+        ASSERT_TRUE(ulpfecPt == videoCodec->mULPFECPayloadType);
+        ASSERT_TRUE(redRtxPt == videoCodec->mREDRTXPayloadType);
+      }
+    }
+  }
+}
+
+TEST_P(JsepSessionTest, TestNegotiatedDetailsToVideoCodecConfigs) {
+  AddTracks(*mSessionOff);
+  AddTracks(*mSessionAns);
+  OfferAnswer();
+
+  // Check all the video tracks to ensure negotiated details is added to
+  // VideoCodecConfig. Especially information related to FEC, RED, and RED RTX.
+  std::vector<JsepTrack> tracks;
+  for (const auto& transceiver : GetTransceivers(*mSessionOff)) {
+    tracks.push_back(transceiver.mSendTrack);
+    tracks.push_back(transceiver.mRecvTrack);
+  }
+
+  for (const JsepTrack& track : tracks) {
+    if (track.GetMediaType() != SdpMediaSection::kVideo) {
+      continue;
+    }
+
+    const auto& details(*track.GetNegotiatedDetails());
+    std::vector<VideoCodecConfig> videoConfigs;
+    dom::RTCRtpTransceiver::NegotiatedDetailsToVideoCodecConfigs(details,
+                                                                 &videoConfigs);
+    ASSERT_FALSE(videoConfigs.empty());
+    ASSERT_EQ(1U, details.GetEncodingCount());
+
+    const JsepTrackEncoding& encoding = details.GetEncoding(0);
+
+    ASSERT_EQ(encoding.GetCodecs().size(), videoConfigs.size());
+    // Since encodings and videoConfigs is the same size and order we can loop
+    // through them both at the same time and validate that videoConfigs
+    // contains the expected encoding data from negotiated details.
+    for (unsigned int i = 0; i < videoConfigs.size(); i++) {
+      const JsepVideoCodecDescription& codec =
+          static_cast<const JsepVideoCodecDescription&>(
+              *encoding.GetCodecs().at(i));
+      const auto& config = videoConfigs.at(i);
+
+      uint16_t payloadType;
+      ASSERT_TRUE(codec.GetPtAsInt(&payloadType));
+      ASSERT_EQ(payloadType, config.mType);
+      ASSERT_EQ(codec.mName, config.mName);
+      ASSERT_EQ(codec.RtcpFbRembIsSet(), config.mRembFbSet);
+      ASSERT_EQ(codec.mFECEnabled, config.mFECFbSet);
+      ASSERT_EQ(codec.RtcpFbTransportCCIsSet(), config.mTransportCCFbSet);
+      ASSERT_EQ(details.GetTias(), config.mTias);
+      ASSERT_EQ(codec.mConstraints, config.mEncodingConstraints);
+
+      if (codec.mName == "H264") {
+        ASSERT_EQ((codec.mProfileLevelId & 0x00FF0000) >> 16, config.mProfile);
+        ASSERT_EQ((codec.mProfileLevelId & 0x0000FF00) >> 8,
+                  config.mConstraints);
+        ASSERT_EQ(codec.mProfileLevelId & 0x000000FF, config.mLevel);
+        ASSERT_EQ(codec.mPacketizationMode, config.mPacketizationMode);
+        ASSERT_EQ(codec.mSpropParameterSets, config.mSpropParameterSets);
+      }
+
+      if (codec.mFECEnabled) {
+        uint16_t redPayloadType, ulpFecPayloadType, redRtxPayloadType;
+
+        ASSERT_TRUE(
+            SdpHelper::GetPtAsInt(codec.mREDPayloadType, &redPayloadType));
+        ASSERT_TRUE(SdpHelper::GetPtAsInt(codec.mULPFECPayloadType,
+                                          &ulpFecPayloadType));
+        ASSERT_TRUE(SdpHelper::GetPtAsInt(codec.mREDRTXPayloadType,
+                                          &redRtxPayloadType));
+
+        ASSERT_EQ(redPayloadType, config.mREDPayloadType);
+        ASSERT_EQ(ulpFecPayloadType, config.mULPFECPayloadType);
+        ASSERT_EQ(redRtxPayloadType, config.mREDRTXPayloadType);
+      }
+
+      if (codec.mRtxEnabled) {
+        uint16_t rtxPayloadType;
+
+        ASSERT_TRUE(
+            SdpHelper::GetPtAsInt(codec.mRtxPayloadType, &rtxPayloadType));
+        ASSERT_EQ(rtxPayloadType, config.mRTXPayloadType);
+      }
+    }
+  }
+}
+
 TEST_F(JsepSessionTest, TestDuplicatePayloadTypes) {
   for (auto& codec : mSessionOff->Codecs()) {
     if (codec->Type() == SdpMediaSection::kVideo) {
@@ -7460,7 +7590,7 @@ TEST_F(JsepSessionTest, TestDuplicatePayloadTypes) {
   for (auto direction : directions) {
     UniquePtr<JsepCodecDescription> codec;
     std::set<std::string> payloadTypes;
-    std::string redPt, ulpfecPt;
+    std::string redPt, ulpfecPt, redRtxPt;
     for (size_t i = 0; i < 4; ++i) {
       GetCodec(*mSessionOff, 0, direction, 0, i, &codec);
       ASSERT_TRUE(codec);
@@ -7473,11 +7603,14 @@ TEST_F(JsepSessionTest, TestDuplicatePayloadTypes) {
       if (i == 0) {
         ASSERT_TRUE(payloadTypes.insert(videoCodec->mREDPayloadType).second);
         ASSERT_TRUE(payloadTypes.insert(videoCodec->mULPFECPayloadType).second);
+        ASSERT_TRUE(payloadTypes.insert(videoCodec->mREDRTXPayloadType).second);
         redPt = videoCodec->mREDPayloadType;
         ulpfecPt = videoCodec->mULPFECPayloadType;
+        redRtxPt = videoCodec->mREDRTXPayloadType;
       } else {
         ASSERT_TRUE(redPt == videoCodec->mREDPayloadType);
         ASSERT_TRUE(ulpfecPt == videoCodec->mULPFECPayloadType);
+        ASSERT_TRUE(redRtxPt == videoCodec->mREDRTXPayloadType);
       }
     }
   }
