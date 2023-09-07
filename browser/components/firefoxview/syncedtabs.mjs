@@ -454,6 +454,11 @@ class SyncedTabsInView extends ViewPage {
       case 3 /* disabled-tab-sync */:
         return this.generateMessageCard({ action: "sync-tabs-disabled" });
       case 4 /* synced-tabs-loaded*/:
+        // There seems to be an edge case where sync says everything worked
+        // fine but we have no devices.
+        if (!this.devices.length) {
+          return this.generateMessageCard({ action: "add-device" });
+        }
         return this.generateTabList();
     }
     return html``;

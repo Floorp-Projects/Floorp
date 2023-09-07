@@ -71,6 +71,7 @@ add_task(async function test_network_offline() {
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
     );
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
     await BrowserTestUtils.waitForMutationCondition(
       syncedTabsComponent.shadowRoot.querySelector(".cards-container"),
       { childList: true },
@@ -122,6 +123,7 @@ add_task(async function test_sync_error() {
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
     );
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
     await BrowserTestUtils.waitForMutationCondition(
       syncedTabsComponent.shadowRoot.querySelector(".cards-container"),
       { childList: true },
