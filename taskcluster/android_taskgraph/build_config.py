@@ -6,8 +6,9 @@
 import os
 
 import yaml
-from android_taskgraph import ANDROID_COMPONENTS_DIR, FENIX_DIR, FOCUS_DIR, PROJECT_DIR
 from taskgraph.util.memoize import memoize
+
+from android_taskgraph import ANDROID_COMPONENTS_DIR, FENIX_DIR, FOCUS_DIR
 
 EXTENSIONS = {
     "aar": (".aar", ".pom", "-sources.jar"),

@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+from gecko_taskgraph.util.scriptworker import get_signing_cert_scope
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
-from gecko_taskgraph.util.scriptworker import get_signing_cert_scope
 
 from ..build_config import CHECKSUMS_EXTENSIONS
 

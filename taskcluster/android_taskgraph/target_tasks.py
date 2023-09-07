@@ -4,10 +4,11 @@
 
 import os
 
-from android_taskgraph.release_type import does_task_match_release_type
 from redo import retry
 from taskgraph.target_tasks import _target_task
 from taskgraph.util.taskcluster import find_task_id
+
+from android_taskgraph.release_type import does_task_match_release_type
 
 
 def index_exists(index_path, reason=""):

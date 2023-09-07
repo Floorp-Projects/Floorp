@@ -220,7 +220,6 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
                 "{s3_bucket_path}/{dest_path}/{filename}".format(
                     s3_bucket_path=bucket_path,
                     dest_path=dest_path,
-                    locale_prefix=file_config["locale_prefix"],
                     filename=file_config.get("pretty_name", filename),
                 )
                 for dest_path, bucket_path in itertools.product(
