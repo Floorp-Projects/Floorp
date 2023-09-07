@@ -4,8 +4,6 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
 const lazy = {};
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
@@ -26,10 +24,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
-
-// On Linux, the default theme picks up the right colors from dark GTK themes.
-const DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME =
-  AppConstants.platform == "linux";
 
 const toolkitVariableMap = [
   [
@@ -237,11 +231,9 @@ LightweightThemeConsumer.prototype = {
       if (!hasDarkTheme) {
         return false;
       }
+
       if (this.darkThemeMediaQuery?.matches) {
-        return (
-          themeData.darkTheme.id != DEFAULT_THEME_ID ||
-          !DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME
-        );
+        return themeData.darkTheme.id != DEFAULT_THEME_ID;
       }
 
       // If enabled, apply the dark theme variant to private browsing windows.
@@ -258,6 +250,10 @@ LightweightThemeConsumer.prototype = {
       // _determineToolbarAndContentTheme, because it applies the color scheme
       // globally for all windows. Skipping this method also means we don't
       // switch the content theme to dark.
+      //
+      // TODO: On Linux we most likely need to apply the dark theme, but on
+      // Windows and macOS we should be able to render light and dark windows
+      // with the default theme at the same time.
       updateGlobalThemeData = false;
       return true;
     })();
@@ -314,11 +310,6 @@ LightweightThemeConsumer.prototype = {
     } else {
       _determineToolbarAndContentTheme(this._doc, null);
       root.removeAttribute("lwtheme");
-    }
-    if (theme.id == DEFAULT_THEME_ID && useDarkTheme) {
-      root.setAttribute("lwt-default-theme-in-dark-mode", "true");
-    } else {
-      root.removeAttribute("lwt-default-theme-in-dark-mode");
     }
 
     _setDarkModeAttributes(this._doc, root, theme._processedColors);
@@ -491,9 +482,6 @@ function _determineToolbarAndContentTheme(
 
   let toolbarTheme = (function () {
     if (!aTheme) {
-      if (!DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME) {
-        return kLight;
-      }
       return kSystem;
     }
     let themeValue = colorSchemeValue(aTheme.color_scheme);
@@ -528,9 +516,6 @@ function _determineToolbarAndContentTheme(
       return toolbarTheme;
     }
     if (!aTheme) {
-      if (!DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME) {
-        return kLight;
-      }
       return kSystem;
     }
     let themeValue = colorSchemeValue(
