@@ -214,13 +214,13 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
   }
   mLastPaintBounds = mBounds;
 
+  const bool isTransparent = mTransparencyMode == TransparencyMode::Transparent;
   // For layered translucent windows all drawing should go to memory DC and no
   // WM_PAINT messages are normally generated. To support asynchronous painting
   // we force generation of WM_PAINT messages by invalidating window areas with
   // RedrawWindow, InvalidateRect or InvalidateRgn function calls.
   const bool usingMemoryDC =
-      renderer->GetBackendType() == LayersBackend::LAYERS_NONE &&
-      mTransparencyMode == TransparencyMode::Transparent;
+      renderer->GetBackendType() == LayersBackend::LAYERS_NONE && isTransparent;
 
   HDC hDC = nullptr;
   if (usingMemoryDC) {
@@ -237,7 +237,7 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
     hDC = ::BeginPaint(mWnd, &ps);
   }
 
-  const bool forceRepaint = mTransparencyMode == TransparencyMode::Transparent;
+  const bool forceRepaint = isTransparent;
   const LayoutDeviceIntRegion region = GetRegionToPaint(forceRepaint, ps, hDC);
 
   if (knowsCompositor && layerManager) {
@@ -289,7 +289,7 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
       RefPtr<gfxASurface> targetSurface;
 
       // don't support transparency for non-GDI rendering, for now
-      if (TransparencyMode::Transparent == mTransparencyMode) {
+      if (isTransparent) {
         // This mutex needs to be held when EnsureTransparentSurface is
         // called.
         MutexAutoLock lock(mBasicLayersSurface->GetTransparentSurfaceLock());
@@ -298,9 +298,8 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
 
       RefPtr<gfxWindowsSurface> targetSurfaceWin;
       if (!targetSurface) {
-        uint32_t flags = (mTransparencyMode == TransparencyMode::Opaque)
-                             ? 0
-                             : gfxWindowsSurface::FLAG_IS_TRANSPARENT;
+        uint32_t flags =
+            isTransparent ? gfxWindowsSurface::FLAG_IS_TRANSPARENT : 0;
         targetSurfaceWin = new gfxWindowsSurface(hDC, flags);
         targetSurface = targetSurfaceWin;
       }
@@ -316,18 +315,13 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
         return false;
       }
 
-      // don't need to double buffer with anything but GDI
-      BufferMode doubleBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
-      switch (mTransparencyMode) {
-        case TransparencyMode::Transparent:
-          // If we're rendering with translucency, we're going to be
-          // rendering the whole window; make sure we clear it first
-          dt->ClearRect(Rect(dt->GetRect()));
-          break;
-        default:
-          // If we're not doing translucency, then double buffer
-          doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
-          break;
+      // Don't need to double buffer with anything but GDI
+      const auto doubleBuffering =
+          isTransparent ? BufferMode::BUFFER_NONE : BufferMode::BUFFERED;
+      if (isTransparent) {
+        // If we're rendering with translucency, we're going to be
+        // rendering the whole window; make sure we clear it first
+        dt->ClearRect(Rect(dt->GetRect()));
       }
 
       gfxContext thebesContext(dt);
@@ -340,7 +334,7 @@ bool nsWindow::OnPaint(uint32_t aNestingLevel) {
         }
       }
 
-      if (TransparencyMode::Transparent == mTransparencyMode) {
+      if (isTransparent) {
         // Data from offscreen drawing surface was copied to memory bitmap of
         // transparent bitmap. Now it can be read from memory bitmap to apply
         // alpha channel and after that displayed on the screen.
