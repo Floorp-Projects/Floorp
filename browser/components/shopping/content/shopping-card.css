@@ -6,10 +6,10 @@
 
 :host {
   display: block;
-  border: 1px solid var(--in-content-box-border-color);
+  border: 1px solid transparent;
   border-radius: 8px;
   background-color: var(--in-content-page-background);
-  box-shadow: var(--shadow-10);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
 }
 
@@ -105,4 +105,15 @@ details[open] .chevron-icon {
 
 .show-more ::slotted(div) {
   margin-block-end: 4rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    background-color: #42414d;
+  }
+
+  .show-more footer {
+    background-color: #42414d;
+    box-shadow: 2px -10px 11px #42414d;
+  }
 }
