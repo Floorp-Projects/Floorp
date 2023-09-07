@@ -5318,13 +5318,14 @@ void nsWindow::OnScaleChanged(bool aNotify) {
 #endif
     return 0.0;
   }();
-  LOG("OnScaleChanged %d, %f -> %d, %f\n", int(mCeiledScaleFactor),
-      FractionalScaleFactor(), newCeiled, newFractional);
 
   if (mCeiledScaleFactor == newCeiled &&
       mFractionalScaleFactor == newFractional) {
     return;
   }
+
+  LOG("OnScaleChanged %d, %f -> %d, %f\n", int(mCeiledScaleFactor),
+      mFractionalScaleFactor, newCeiled, newFractional);
 
   mCeiledScaleFactor = newCeiled;
   mFractionalScaleFactor = newFractional;
