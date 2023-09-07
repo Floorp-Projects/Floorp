@@ -789,7 +789,7 @@ mochitest-webgl1-core:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-(tsan|wayland).*: []
+                    .*-tsan.*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
