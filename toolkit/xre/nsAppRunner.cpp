@@ -6144,6 +6144,9 @@ mozilla::BinPathType XRE_GetChildProcBinPathType(
     return BinPathType::PluginContainer;
   }
 
+#ifdef XP_WIN
+  // On Windows, plugin-container may or may not be used depending on
+  // the process type (e.g., actual plugins vs. content processes)
   switch (aProcessType) {
 #define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
                            process_bin_type, procinfo_typename,               \
@@ -6155,6 +6158,13 @@ mozilla::BinPathType XRE_GetChildProcBinPathType(
     default:
       return BinPathType::PluginContainer;
   }
+#else
+  // On (non-macOS) Unix, plugin-container isn't used (except in cases
+  // like xpcshell that are handled by the gRunSelfAsContentProc check
+  // above).  It isn't necessary the way it is on other platforms, and
+  // it interferes with using the fork server.
+  return BinPathType::Self;
+#endif
 }
 
 // From mozglue/static/rust/lib.rs
