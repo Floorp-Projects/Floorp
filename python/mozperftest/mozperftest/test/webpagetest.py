@@ -237,7 +237,7 @@ class WebPageTest(Layer):
         location_list = {}
         try:
             location_list = self.request_with_timeout(
-                "https://www.webpagetest.org/getLocations.php?f=json"
+                "https://webpagetest.org/getLocations.php?f=json"
             )["data"]
         except Exception:
             self.error(
@@ -255,7 +255,8 @@ class WebPageTest(Layer):
         )
 
     def request_with_timeout(self, url):
-        requested_results = requests.get(url)
+        request_header = {"Host": "www.webpagetest.org"}
+        requested_results = requests.get(url, headers=request_header)
         results_of_request = json.loads(requested_results.text)
         start = time.monotonic()
         if (
@@ -271,7 +272,7 @@ class WebPageTest(Layer):
                 and results_of_request["statusCode"] != 200
             )
         ):
-            requested_results = requests.get(url)
+            requested_results = requests.get(url, headers=request_header)
             results_of_request = json.loads(requested_results.text)
             time.sleep(self.wait_between_requests)
         if time.monotonic() - start > self.timeout_limit:
@@ -310,7 +311,7 @@ class WebPageTest(Layer):
         wpt_test_request_link = self.create_wpt_request_link(options, website)
         send_wpt_test_request = self.request_with_timeout(wpt_test_request_link)[
             "data"
-        ]["jsonUrl"]
+        ]["jsonUrl"].replace("www.", "")
         results_of_test = self.request_with_timeout(send_wpt_test_request)
         return results_of_test
 
@@ -319,7 +320,7 @@ class WebPageTest(Layer):
         for key_value_pair in list(options.items())[6:]:
             test_parameters += "&{}={}".format(*key_value_pair)
         return (
-            f"https://www.webpagetest.org/runtest.php?url={website_to_be_tested}&k={self.WPT_key}&"
+            f"https://webpagetest.org/runtest.php?url={website_to_be_tested}&k={self.WPT_key}&"
             f"location={options['location']}:{options['browser']}.{options['connection']}&"
             f"f=json{test_parameters}"
         )
