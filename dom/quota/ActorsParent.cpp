@@ -5465,7 +5465,7 @@ QuotaManager::GetInfoFromValidatedPrincipalInfo(
 
       nsCString origin = info.originNoSuffix() + suffix;
 
-      if (StringBeginsWith(origin, kUUIDOriginScheme)) {
+      if (IsUUIDOrigin(origin)) {
         QM_TRY_INSPECT(const auto& originalOrigin,
                        GetOriginFromStorageOrigin(origin));
 
