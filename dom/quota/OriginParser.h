@@ -104,6 +104,8 @@ class MOZ_STACK_CLASS OriginParser final {
   void HandleTrailingSeparator();
 };
 
+bool IsUUIDOrigin(const nsCString& aOrigin);
+
 }  // namespace dom::quota
 }  // namespace mozilla
 
