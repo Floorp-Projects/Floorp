@@ -61,7 +61,7 @@ class MOZ_RAII CacheIRCloner {
 
   Shape* getShapeField(uint32_t stubOffset);
   Shape* getWeakShapeField(uint32_t stubOffset);
-  GetterSetter* getGetterSetterField(uint32_t stubOffset);
+  GetterSetter* getWeakGetterSetterField(uint32_t stubOffset);
   JSObject* getObjectField(uint32_t stubOffset);
   JSObject* getWeakObjectField(uint32_t stubOffset);
   JSString* getStringField(uint32_t stubOffset);

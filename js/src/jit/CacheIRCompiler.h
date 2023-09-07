@@ -902,9 +902,12 @@ class MOZ_RAII CacheIRCompiler {
     gc::ReadBarrier(shape);
     return shape;
   }
-  GetterSetter* getterSetterStubField(uint32_t offset) {
+  GetterSetter* weakGetterSetterStubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
-    return (GetterSetter*)readStubWord(offset, StubField::Type::GetterSetter);
+    GetterSetter* gs =
+        (GetterSetter*)readStubWord(offset, StubField::Type::WeakGetterSetter);
+    gc::ReadBarrier(gs);
+    return gs;
   }
   JSObject* objectStubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);

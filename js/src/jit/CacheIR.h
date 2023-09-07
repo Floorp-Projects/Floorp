@@ -236,7 +236,7 @@ class StubField {
     RawPointer,
     Shape,
     WeakShape,
-    GetterSetter,
+    WeakGetterSetter,
     JSObject,
     WeakObject,
     Symbol,
