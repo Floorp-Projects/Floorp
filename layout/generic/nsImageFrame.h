@@ -70,7 +70,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   NS_DECL_FRAMEARENA_HELPERS(nsImageFrame)
   NS_DECL_QUERYFRAME
 
-  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData&) override;
+  void Destroy(DestroyContext&) override;
   void DidSetComputedStyle(ComputedStyle* aOldStyle) final;
 
   void Init(nsIContent* aContent, nsContainerFrame* aParent,

@@ -150,7 +150,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 
   void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) final;
 
-  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData&) override;
+  void Destroy(DestroyContext&) override;
 
   nsIScrollableFrame* GetScrollTargetFrame() const final {
     return const_cast<nsHTMLScrollFrame*>(this);

@@ -37,13 +37,12 @@ nsProgressFrame::nsProgressFrame(ComputedStyle* aStyle,
 
 nsProgressFrame::~nsProgressFrame() = default;
 
-void nsProgressFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                  PostDestroyData& aPostDestroyData) {
+void nsProgressFrame::Destroy(DestroyContext& aContext) {
   NS_ASSERTION(!GetPrevContinuation(),
                "nsProgressFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
-  aPostDestroyData.AddAnonymousContent(mBarDiv.forget());
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  aContext.AddAnonymousContent(mBarDiv.forget());
+  nsContainerFrame::Destroy(aContext);
 }
 
 nsresult nsProgressFrame::CreateAnonymousContent(

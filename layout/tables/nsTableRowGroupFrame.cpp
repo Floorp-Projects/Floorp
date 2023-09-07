@@ -62,10 +62,10 @@ nsTableRowGroupFrame::nsTableRowGroupFrame(ComputedStyle* aStyle,
 
 nsTableRowGroupFrame::~nsTableRowGroupFrame() = default;
 
-void nsTableRowGroupFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                       PostDestroyData& aPostDestroyData) {
-  nsTableFrame::MaybeUnregisterPositionedTablePart(this, aDestructRoot);
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsTableRowGroupFrame::Destroy(DestroyContext& aContext) {
+  nsTableFrame::MaybeUnregisterPositionedTablePart(this,
+                                                   aContext.DestructRoot());
+  nsContainerFrame::Destroy(aContext);
 }
 
 NS_QUERYFRAME_HEAD(nsTableRowGroupFrame)

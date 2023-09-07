@@ -27,8 +27,7 @@ class nsGfxButtonControlFrame final : public nsHTMLButtonControlFrame,
   explicit nsGfxButtonControlFrame(ComputedStyle* aStyle,
                                    nsPresContext* aPresContext);
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,

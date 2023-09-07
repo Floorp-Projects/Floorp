@@ -82,11 +82,10 @@ a11y::AccType nsTableWrapperFrame::AccessibleType() {
 }
 #endif
 
-void nsTableWrapperFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                      PostDestroyData& aPostDestroyData) {
-  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
-  mCaptionFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsTableWrapperFrame::Destroy(DestroyContext& aContext) {
+  DestroyAbsoluteFrames(aContext);
+  mCaptionFrames.DestroyFrames(aContext);
+  nsContainerFrame::Destroy(aContext);
 }
 
 const nsFrameList& nsTableWrapperFrame::GetChildList(

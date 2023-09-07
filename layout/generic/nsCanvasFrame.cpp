@@ -203,19 +203,18 @@ void nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
   }
 }
 
-void nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                PostDestroyData& aPostDestroyData) {
+void nsCanvasFrame::Destroy(DestroyContext& aContext) {
   nsIScrollableFrame* sf =
       PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
   if (sf) {
     sf->RemoveScrollPositionListener(this);
   }
 
-  aPostDestroyData.AddAnonymousContent(mCustomContentContainer.forget());
+  aContext.AddAnonymousContent(mCustomContentContainer.forget());
   if (mTooltipContent) {
-    aPostDestroyData.AddAnonymousContent(mTooltipContent.forget());
+    aContext.AddAnonymousContent(mTooltipContent.forget());
   }
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::Destroy(aContext);
 }
 
 void nsCanvasFrame::ScrollPositionWillChange(nscoord aX, nscoord aY) {
