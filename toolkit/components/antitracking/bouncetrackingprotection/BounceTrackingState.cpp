@@ -8,12 +8,14 @@
 #include "BounceTrackingState.h"
 #include "BounceTrackingRecord.h"
 
+#include "BounceTrackingStorageObserver.h"
 #include "ErrorList.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextWebProgress.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
+#include "nsError.h"
 #include "nsIBrowser.h"
 #include "nsIChannel.h"
 #include "nsIEffectiveTLDService.h"
@@ -32,6 +34,8 @@ namespace mozilla {
 // Global map: browserId -> BounceTrackingState
 static StaticAutoPtr<nsTHashMap<uint64_t, RefPtr<BounceTrackingState>>>
     sBounceTrackingStates;
+
+static StaticRefPtr<BounceTrackingStorageObserver> sStorageObserver;
 
 NS_IMPL_ISUPPORTS(BounceTrackingState, nsIWebProgressListener,
                   nsISupportsWeakReference);
@@ -62,6 +66,14 @@ already_AddRefed<BounceTrackingState> BounceTrackingState::GetOrCreate(
     sBounceTrackingStates =
         new nsTHashMap<nsUint64HashKey, RefPtr<BounceTrackingState>>();
     ClearOnShutdown(&sBounceTrackingStates);
+  }
+
+  if (!sStorageObserver) {
+    sStorageObserver = new BounceTrackingStorageObserver();
+    ClearOnShutdown(&sStorageObserver);
+
+    DebugOnly<nsresult> rv = sStorageObserver->Init();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to init storage observer");
   }
 
   dom::BrowsingContext* browsingContext = aWebProgress->GetBrowsingContext();
@@ -521,6 +533,21 @@ nsresult BounceTrackingState::OnDocumentLoaded(
   // finalSite.
   mBounceTrackingRecord->SetFinalHost(siteHost);
 
+  return NS_OK;
+}
+
+nsresult BounceTrackingState::OnCookieWrite(const nsACString& aSiteHost) {
+  NS_ENSURE_TRUE(!aSiteHost.IsEmpty(), NS_ERROR_FAILURE);
+
+  MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
+          ("%s: OnCookieWrite: %s.", __FUNCTION__,
+           PromiseFlatCString(aSiteHost).get()));
+
+  if (!mBounceTrackingRecord) {
+    return NS_OK;
+  }
+
+  mBounceTrackingRecord->AddStorageAccessHost(aSiteHost);
   return NS_OK;
 }
 
