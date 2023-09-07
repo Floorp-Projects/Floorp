@@ -123,7 +123,7 @@ enum class WasmFeatureStage {
   FEATURE(                                                              \
     /* capitalized name   */ Exceptions,                                \
     /* lower case name    */ exceptions,                                \
-    /* stage              */ WasmFeatureStage::Tentative,               \
+    /* stage              */ WasmFeatureStage::Default,                 \
     /* compile predicate  */ true,                                      \
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \

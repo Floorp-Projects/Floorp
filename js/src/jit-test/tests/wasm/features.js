@@ -19,6 +19,8 @@
 //        feature to work correctly. All features should have a 'disabled.js'
 //        test to verify this. Basic testing for this is included with each
 //        feature in this test for sanity.
+// NOTE2: Keep this file in sync with:
+//        `dom/worklet/tests/worklet_audioWorklet_WASM_features.js`.
 
 let { release_or_beta } = getBuildConfiguration();
 let nightly = !release_or_beta;
