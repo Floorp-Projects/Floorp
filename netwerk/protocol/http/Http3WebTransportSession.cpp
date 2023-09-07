@@ -331,8 +331,10 @@ void Http3WebTransportSession::Close(nsresult aResult) {
   mRecvState = RECV_DONE;
   mSendState = SEND_DONE;
 
-  mSession->CloseWebTransportConn();
-  mSession = nullptr;
+  if (mSession) {
+    mSession->CloseWebTransportConn();
+    mSession = nullptr;
+  }
 }
 
 void Http3WebTransportSession::OnSessionClosed(bool aCleanly, uint32_t aStatus,
