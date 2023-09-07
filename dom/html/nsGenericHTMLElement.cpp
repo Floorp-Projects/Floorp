@@ -773,8 +773,7 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
         SetFlags(NODE_HAS_ACCESSKEY);
         RegUnRegAccessKey(true);
       }
-    } else if (aName == nsGkAtoms::inert &&
-               StaticPrefs::html5_inert_enabled()) {
+    } else if (aName == nsGkAtoms::inert) {
       if (aValue) {
         AddStates(ElementState::INERT);
       } else {
