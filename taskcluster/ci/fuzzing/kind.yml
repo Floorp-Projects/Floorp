@@ -6,6 +6,7 @@ loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.source_test:transforms
+    - taskgraph.transforms.task_context
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -23,6 +24,9 @@ job-defaults:
     treeherder:
         kind: test
         tier: 3
+    task-context:
+        from-object: {}
+        substitution-fields: []
     if-dependencies: [build]
 
 jobs:
