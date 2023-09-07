@@ -25,7 +25,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsCharTraits.h"
-#include "nsCocoaFeatures.h"
 #include "nsCocoaUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -434,48 +433,23 @@ static NSString* GetRealFamilyName(NSFont* aFont) {
   return [familyName autorelease];
 }
 
-// System fonts under OSX 10.11 use a combination of two families, one
-// for text sizes and another for larger, display sizes. Each has a
-// different number of weights. There aren't efficient API's for looking
-// this information up, so hard code the logic here but confirm via
-// debug assertions that the logic is correct.
-
 void gfxMacPlatformFontList::InitSystemFontNames() {
-  // On Catalina+, the system font uses optical sizing rather than individual
-  // faces, so we don't need to look for a separate display-sized face.
-  mUseSizeSensitiveSystemFont = !nsCocoaFeatures::OnCatalinaOrLater();
-
   // text font family
   NSFont* sys = [NSFont systemFontOfSize:0.0];
   NSString* textFamilyName = GetRealFamilyName(sys);
   nsAutoString familyName;
   nsCocoaUtils::GetStringForNSString(textFamilyName, familyName);
-  CopyUTF16toUTF8(familyName, mSystemTextFontFamilyName);
+  CopyUTF16toUTF8(familyName, mSystemFontFamilyName);
 
-  // On Catalina or later, we store an in-process gfxFontFamily for the system
-  // font even if using the shared fontlist to manage "normal" fonts, because
-  // the hidden system fonts may be excluded from the font list altogether.
-  if (nsCocoaFeatures::OnCatalinaOrLater()) {
-    // This family will be populated based on the given NSFont.
-    RefPtr<gfxFontFamily> fam =
-        new gfxMacFontFamily(mSystemTextFontFamilyName, sys);
-    if (fam) {
-      nsAutoCString key;
-      GenerateFontListKey(mSystemTextFontFamilyName, key);
-      mFontFamilies.InsertOrUpdate(key, std::move(fam));
-    }
-  }
-
-  // display font family, if on OSX 10.11 - 10.14
-  if (mUseSizeSensitiveSystemFont) {
-    NSFont* displaySys = [NSFont systemFontOfSize:128.0];
-    NSString* displayFamilyName = GetRealFamilyName(displaySys);
-    if ([displayFamilyName isEqualToString:textFamilyName]) {
-      mUseSizeSensitiveSystemFont = false;
-    } else {
-      nsCocoaUtils::GetStringForNSString(displayFamilyName, familyName);
-      CopyUTF16toUTF8(familyName, mSystemDisplayFontFamilyName);
-    }
+  // We store an in-process gfxFontFamily for the system font even if using the
+  // shared fontlist to manage "normal" fonts, because the hidden system fonts
+  // may be excluded from the font list altogether. This family will be
+  // populated based on the given NSFont.
+  RefPtr<gfxFontFamily> fam = new gfxMacFontFamily(mSystemFontFamilyName, sys);
+  if (fam) {
+    nsAutoCString key;
+    GenerateFontListKey(mSystemFontFamilyName, key);
+    mFontFamilies.InsertOrUpdate(key, std::move(fam));
   }
 
 #ifdef DEBUG

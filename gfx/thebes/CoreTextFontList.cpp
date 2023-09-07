@@ -898,9 +898,7 @@ void CTFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
 #pragma mark -
 
 CoreTextFontList::CoreTextFontList()
-    : gfxPlatformFontList(false),
-      mDefaultFont(nullptr),
-      mUseSizeSensitiveSystemFont(false) {
+    : gfxPlatformFontList(false), mDefaultFont(nullptr) {
 #ifdef MOZ_BUNDLED_FONTS
   // We activate bundled fonts if the pref is > 0 (on) or < 0 (auto), only an
   // explicit value of 0 (off) will disable them.
@@ -934,17 +932,11 @@ CoreTextFontList::~CoreTextFontList() {
 
 void CoreTextFontList::AddFamily(const nsACString& aFamilyName,
                                  FontVisibility aVisibility) {
-  double sizeHint = 0.0;
-  if (aVisibility == FontVisibility::Hidden && mUseSizeSensitiveSystemFont &&
-      mSystemDisplayFontFamilyName.Equals(aFamilyName)) {
-    sizeHint = 128.0;
-  }
-
   nsAutoCString key;
   ToLowerCase(aFamilyName, key);
 
   RefPtr<gfxFontFamily> familyEntry =
-      new CTFontFamily(aFamilyName, aVisibility, sizeHint);
+      new CTFontFamily(aFamilyName, aVisibility, 0.0);
   mFontFamilies.InsertOrUpdate(key, RefPtr{familyEntry});
 
   // check the bad underline blocklist
@@ -1028,18 +1020,12 @@ void CoreTextFontList::ActivateFontsFromDir(
 
 void CoreTextFontList::ReadSystemFontList(dom::SystemFontList* aList)
     MOZ_NO_THREAD_SAFETY_ANALYSIS {
-  // Note: We rely on the records for mSystemTextFontFamilyName and
-  // mSystemDisplayFontFamilyName (if present) being *before* the main
-  // font list, so that those names are known in the content process
+  // Note: We rely on the records for mSystemFontFamilyName (if present) being
+  // *before* the main font list, so that name is known in the content process
   // by the time we add the actual family records to the font list.
-  aList->entries().AppendElement(
-      FontFamilyListEntry(mSystemTextFontFamilyName, FontVisibility::Unknown,
-                          kTextSizeSystemFontFamily));
-  if (mUseSizeSensitiveSystemFont) {
-    aList->entries().AppendElement(FontFamilyListEntry(
-        mSystemDisplayFontFamilyName, FontVisibility::Unknown,
-        kDisplaySizeSystemFontFamily));
-  }
+  aList->entries().AppendElement(FontFamilyListEntry(
+      mSystemFontFamilyName, FontVisibility::Unknown, kSystemFontFamily));
+
   // Now collect the list of available families, with visibility attributes.
   for (auto f = mFontFamilies.Iter(); !f.Done(); f.Next()) {
     auto macFamily = f.Data().get();
@@ -1105,18 +1091,13 @@ nsresult CoreTextFontList::InitFontListForPlatform() {
     for (FontFamilyListEntry& ffe : fontList.entries()) {
       switch (ffe.entryType()) {
         case kStandardFontFamily:
-          if (ffe.familyName() == mSystemTextFontFamilyName ||
-              ffe.familyName() == mSystemDisplayFontFamilyName) {
+          if (ffe.familyName() == mSystemFontFamilyName) {
             continue;
           }
           AddFamily(ffe.familyName(), ffe.visibility());
           break;
-        case kTextSizeSystemFontFamily:
-          mSystemTextFontFamilyName = ffe.familyName();
-          break;
-        case kDisplaySizeSystemFontFamily:
-          mSystemDisplayFontFamilyName = ffe.familyName();
-          mUseSizeSensitiveSystemFont = true;
+        case kSystemFontFamily:
+          mSystemFontFamilyName = ffe.familyName();
           break;
       }
     }
@@ -1427,14 +1408,6 @@ gfxFontEntry* CoreTextFontList::MakePlatformFont(const nsACString& aFontName,
 // WebCore/platform/graphics/mac/FontCacheMac.mm
 static const char kSystemFont_system[] = "-apple-system";
 
-// System fonts under OSX 10.11 use a combination of two families, one
-// for text sizes and another for larger, display sizes. Each has a
-// different number of weights. There aren't efficient API's for looking
-// this information up, so hard code the logic here but confirm via
-// debug assertions that the logic is correct.
-
-const CGFloat kTextDisplayCrossover = 20.0;  // use text family below this size
-
 bool CoreTextFontList::FindAndAddFamiliesLocked(
     nsPresContext* aPresContext, StyleGenericFontFamily aGeneric,
     const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
@@ -1442,15 +1415,9 @@ bool CoreTextFontList::FindAndAddFamiliesLocked(
     gfxFloat aDevToCssSize) {
   if (aFamily.EqualsLiteral(kSystemFont_system)) {
     // Search for special system font name, -apple-system. This is not done via
-    // the shared fontlist on Catalina or later, because the hidden system font
-    // may not be included there; we create a separate gfxFontFamily to manage
-    // this family.
-    const nsCString& systemFontFamilyName =
-        mUseSizeSensitiveSystemFont && aStyle &&
-                (aStyle->size * aDevToCssSize) >= kTextDisplayCrossover
-            ? mSystemDisplayFontFamilyName
-            : mSystemTextFontFamilyName;
-    if (auto* fam = FindSystemFontFamily(systemFontFamilyName)) {
+    // the shared fontlist because the hidden system font may not be included
+    // there; we create a separate gfxFontFamily to manage this family.
+    if (auto* fam = FindSystemFontFamily(mSystemFontFamilyName)) {
       aOutput->AppendElement(fam);
       return true;
     }
