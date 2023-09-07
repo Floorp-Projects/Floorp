@@ -1177,10 +1177,14 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
         gc::ExposeGCThingToActiveJS(JS::GCCellPtr(shape));
         break;
       }
-      case StubField::Type::GetterSetter:
+      case StubField::Type::WeakGetterSetter: {
         static_assert(std::is_convertible_v<GetterSetter*, gc::TenuredCell*>,
                       "Code assumes GetterSetters are tenured");
+        GetterSetter* gs =
+            stubInfo->getStubField<ICCacheIRStub, GetterSetter*>(stub, offset);
+        gc::ExposeGCThingToActiveJS(JS::GCCellPtr(gs));
         break;
+      }
       case StubField::Type::Symbol:
         static_assert(std::is_convertible_v<JS::Symbol*, gc::TenuredCell*>,
                       "Code assumes symbols are tenured");

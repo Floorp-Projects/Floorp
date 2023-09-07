@@ -578,7 +578,7 @@
   args:
     obj: ObjId
     id: IdField
-    getterSetter: GetterSetterField
+    getterSetter: WeakGetterSetterField
 
 - name: GuardInt32IsNonNegative
   shared: true
