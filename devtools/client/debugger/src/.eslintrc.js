@@ -51,23 +51,23 @@ module.exports = {
     // devtools coding style.
 
     // Rules from the mozilla plugin
-    "mozilla/mark-test-function-used": 1,
-    "mozilla/no-aArgs": 1,
+    "mozilla/mark-test-function-used": "error",
+    "mozilla/no-aArgs": "error",
     // See bug 1224289.
-    "mozilla/reject-importGlobalProperties": 1,
-    "mozilla/var-only-at-top-level": 1,
+    "mozilla/reject-importGlobalProperties": "error",
+    "mozilla/var-only-at-top-level": "error",
 
     // Rules from the React plugin
-    "react/jsx-uses-react": [2],
-    "react/jsx-uses-vars": [2],
-    "react/no-danger": 1,
-    "react/no-did-mount-set-state": 1,
-    "react/no-did-update-set-state": 1,
-    "react/no-direct-mutation-state": 1,
-    "react/no-unknown-property": 1,
-    "react/prop-types": 1,
+    "react/jsx-uses-react": "error",
+    "react/jsx-uses-vars": "error",
+    "react/no-danger": "error",
+    "react/no-did-mount-set-state": "error",
+    "react/no-did-update-set-state": "error",
+    "react/no-direct-mutation-state": "error",
+    "react/no-unknown-property": "error",
+    "react/prop-types": "off",
     "react/sort-comp": [
-      1,
+      "error",
       {
         order: ["propTypes", "everything-else", "render"],
       },
