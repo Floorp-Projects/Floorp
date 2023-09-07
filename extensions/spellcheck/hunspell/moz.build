@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ["glue", "src"]
+DIRS += ["glue"]
+
+if not CONFIG["MOZ_WASM_SANDBOXING_HUNSPELL"]:
+    DIRS += ["src"]
 
 if CONFIG["ENABLE_TESTS"]:
     XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
