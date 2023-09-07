@@ -10074,7 +10074,6 @@ var ShoppingSidebarManager = {
         sidebar.querySelector("browser").browsingContext.currentWindowGlobal;
       actor = global.getExistingActor("ShoppingSidebar");
     }
-    let button = document.getElementById("shopping-sidebar-button");
     let isProduct = isProductURL(aLocationURI);
     if (isProduct && this.isActive) {
       if (!sidebar) {
@@ -10091,17 +10090,31 @@ var ShoppingSidebarManager = {
       sidebar.hidden = true;
     }
 
-    button.hidden = !isProduct;
-    button.setAttribute("shoppingsidebaropen", !!this.isActive);
-    document.l10n.setAttributes(
-      button,
-      `shopping-sidebar-${this.isActive ? "close" : "open"}-button`
-    );
+    this.setShoppingButtonState(aBrowser);
+
     if (isProduct) {
       // This is the auto-enable behavior that toggles the `active` pref. It
       // must be at the end of this function, or 2 sidebars could be created.
       ShoppingUtils.handleAutoActivateOnProduct();
     }
+  },
+
+  setShoppingButtonState(aBrowser) {
+    if (aBrowser !== gBrowser.selectedBrowser) {
+      return;
+    }
+
+    let button = document.getElementById("shopping-sidebar-button");
+
+    let isCurrentBrowserProduct = isProductURL(
+      gBrowser.selectedBrowser.currentURI
+    );
+    button.hidden = !isCurrentBrowserProduct;
+    button.setAttribute("shoppingsidebaropen", !!this.isActive);
+    let l10nId = this.isActive
+      ? "shopping-sidebar-close-button"
+      : "shopping-sidebar-open-button";
+    document.l10n.setAttributes(button, l10nId);
   },
 
   handleEvent(event) {
