@@ -967,6 +967,10 @@ html {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
 }
+.onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary:hover:active {
+  background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
+}
 .onboardingContainer .screen[pos=center].addons-picker {
   justify-content: center;
   align-items: center;
@@ -1057,6 +1061,10 @@ html {
 .onboardingContainer .screen[pos=center].addons-picker .main-content .secondary-cta .secondary:hover {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
+}
+.onboardingContainer .screen[pos=center].addons-picker .main-content .secondary-cta .secondary:hover:active {
+  background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 .onboardingContainer .screen[pos=center].addons-picker .addon-container {
   display: flex;
@@ -1247,6 +1255,10 @@ html {
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary:hover {
   background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary:hover:active {
+  background-color: var(--in-content-button-background-active);
+  color: var(--in-content-button-text-color-active);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .arrow-icon {
   -moz-context-properties: fill;
