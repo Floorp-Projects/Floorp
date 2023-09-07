@@ -313,12 +313,12 @@ add_task(async function resultMenu_showLessFrequently() {
 
 // Tests the "Not interested" result menu dismissal command.
 add_task(async function resultMenu_notInterested() {
-  await doDismissTest("not_interested");
+  await doDismissTest("not_interested", true);
 });
 
 // Tests the "Not relevant" result menu dismissal command.
 add_task(async function notRelevant() {
-  await doDismissTest("not_relevant");
+  await doDismissTest("not_relevant", false);
 });
 
 add_task(async function rowLabel() {
@@ -418,7 +418,7 @@ async function doShowLessFrequently({ input, expected }) {
   await UrlbarTestUtils.promisePopupClose(window);
 }
 
-async function doDismissTest(command) {
+async function doDismissTest(command, allDismissed) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "123",
@@ -443,9 +443,17 @@ async function doDismissTest(command) {
     { resultIndex, openByMouse: true }
   );
 
-  Assert.ok(
-    !UrlbarPrefs.get("suggest.addons"),
-    "suggest.addons pref should be set to false after dismissal"
+  Assert.equal(
+    UrlbarPrefs.get("suggest.addons"),
+    !allDismissed,
+    "suggest.addons should be true iff all suggestions weren't dismissed"
+  );
+  Assert.equal(
+    await QuickSuggest.blockedSuggestions.has(
+      details.result.payload.originalUrl
+    ),
+    !allDismissed,
+    "Suggestion URL should be blocked iff all suggestions weren't dismissed"
   );
 
   // The row should be a tip now.
@@ -470,6 +478,15 @@ async function doDismissTest(command) {
     !details.element.row.hasAttribute("feedback-acknowledgment"),
     "Row should not have feedback acknowledgment after dismissal"
   );
+
+  // Check tip title.
+  let title = details.element.row.querySelector(".urlbarView-title");
+  let titleL10nId = title.dataset.l10nId;
+  if (allDismissed) {
+    Assert.equal(titleL10nId, "firefox-suggest-dismissal-acknowledgment-all");
+  } else {
+    Assert.equal(titleL10nId, "firefox-suggest-dismissal-acknowledgment-one");
+  }
 
   // Get the dismissal acknowledgment's "Got it" button and click it.
   let gotItButton = UrlbarTestUtils.getButtonForResultIndex(
@@ -502,6 +519,7 @@ async function doDismissTest(command) {
   await UrlbarTestUtils.promisePopupClose(window);
 
   UrlbarPrefs.clear("suggest.addons");
+  await QuickSuggest.blockedSuggestions.clear();
 }
 
 function makeExpectedUrl(originalUrl) {
