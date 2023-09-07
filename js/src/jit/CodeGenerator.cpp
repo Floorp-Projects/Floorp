@@ -14563,12 +14563,14 @@ void CodeGenerator::visitMegamorphicSetElement(LMegamorphicSetElement* lir) {
 void CodeGenerator::visitLoadScriptedProxyHandler(
     LLoadScriptedProxyHandler* ins) {
   const Register obj = ToRegister(ins->getOperand(0));
-  Register output = ToRegister(ins->output());
+  ValueOperand output = ToOutValue(ins);
 
-  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), output);
-  masm.unboxObject(Address(output, js::detail::ProxyReservedSlots::offsetOfSlot(
+  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()),
+               output.scratchReg());
+  masm.loadValue(
+      Address(output.scratchReg(), js::detail::ProxyReservedSlots::offsetOfSlot(
                                        ScriptedProxyHandler::HANDLER_EXTRA)),
-                   output);
+      output);
 }
 
 #ifdef JS_PUNBOX64

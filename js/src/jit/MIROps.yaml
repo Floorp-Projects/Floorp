@@ -525,7 +525,7 @@
 - name: LoadScriptedProxyHandler
   operands:
     object: Object
-  result_type: Object
+  result_type: Value
   congruent_to: if_operands_equal
   alias_set: none
 

@@ -1977,7 +1977,7 @@
   mir_op: ClampToUint8
 
 - name: LoadScriptedProxyHandler
-  result_type: WordSized
+  result_type: BoxedValue
   operands:
     object: WordSized
   mir_op: true

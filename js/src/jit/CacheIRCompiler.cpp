@@ -2253,17 +2253,19 @@ bool CacheIRCompiler::emitGuardDynamicSlotValue(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitLoadScriptedProxyHandler(ObjOperandId resultId,
+bool CacheIRCompiler::emitLoadScriptedProxyHandler(ValOperandId resultId,
                                                    ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   Register obj = allocator.useRegister(masm, objId);
-  Register output = allocator.defineRegister(masm, resultId);
+  ValueOperand output = allocator.defineValueRegister(masm, resultId);
 
-  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), output);
-  masm.unboxObject(Address(output, js::detail::ProxyReservedSlots::offsetOfSlot(
+  masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()),
+               output.scratchReg());
+  masm.loadValue(
+      Address(output.scratchReg(), js::detail::ProxyReservedSlots::offsetOfSlot(
                                        ScriptedProxyHandler::HANDLER_EXTRA)),
-                   output);
+      output);
   return true;
 }
 
