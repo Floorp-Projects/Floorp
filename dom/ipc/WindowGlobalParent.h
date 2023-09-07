@@ -313,6 +313,10 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvHasStorageAccessPermission(
       HasStorageAccessPermissionResolver&& aResolve);
 
+  mozilla::ipc::IPCResult RecvSetCookies(
+      const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
+      nsIURI* aHost, bool aFromHttp, const nsTArray<CookieStruct>& aCookies);
+
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,
