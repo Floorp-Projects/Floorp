@@ -214,6 +214,11 @@ html {
     &:hover {
       background-color: var(--in-content-button-background-hover);
       color: var(--in-content-button-text-color-hover);
+
+      &:active {
+        background-color: var(--in-content-button-background-active);
+        color: var(--in-content-button-text-color-active);
+      }
     }
   }
 
