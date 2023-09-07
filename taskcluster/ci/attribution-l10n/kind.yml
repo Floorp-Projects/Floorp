@@ -7,6 +7,7 @@ loader: gecko_taskgraph.loader.transform:loader
 transforms:
     - gecko_taskgraph.transforms.split_by_locale:transforms
     - gecko_taskgraph.transforms.attribution:transforms
+    - taskgraph.transforms.task_context
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -37,6 +38,10 @@ job-defaults:
     fetches:
         repackage-signing-l10n:
             - "{locale}/target.installer.exe"
+    task-context:
+        from-file: browser/installer/attribution.yml
+        substitution-fields:
+            - run.command
     worker:
         artifacts:
             - name: public/build
@@ -62,8 +67,6 @@ job-defaults:
             # attribution of other files, which they can append themselves.
             - --input
             - /builds/worker/fetches/target.installer.exe
-        command-context:
-            from-file: browser/installer/attribution.yml
 
 jobs:
     win32-devedition/opt:
