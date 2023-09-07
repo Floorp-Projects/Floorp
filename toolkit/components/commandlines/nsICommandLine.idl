@@ -49,7 +49,8 @@ interface nsICommandLine : nsISupports
    * @param aFlag          The flag name to locate. Do not include the initial
    *                       hyphen.
    * @param aCaseSensitive Whether to do case-sensitive comparisons.
-   * @return               The position of the flag in the command line.
+   * @return               The position of the flag in the command line, or -1 if
+   *                       not found.
    */
   long findFlag(in AString aFlag, in boolean aCaseSensitive);
 
