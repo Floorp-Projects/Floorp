@@ -63,6 +63,7 @@ export const MultiStageProtonScreen = props => {
       negotiatedLanguage={props.negotiatedLanguage}
       langPackInstallPhase={props.langPackInstallPhase}
       forceHideStepsIndicator={props.forceHideStepsIndicator}
+      ariaRole={props.ariaRole}
     />
   );
 };
@@ -72,6 +73,15 @@ export const ProtonScreenActionButtons = props => {
   const defaultValue = content.checkbox?.defaultValue;
 
   const [isChecked, setIsChecked] = useState(defaultValue || false);
+  const buttonRef = React.useRef(null);
+
+  const shouldFocusButton = content?.primary_button?.should_focus_button;
+
+  useEffect(() => {
+    if (shouldFocusButton) {
+      buttonRef.current?.focus();
+    }
+  }, [shouldFocusButton]);
 
   if (
     !content.primary_button &&
@@ -97,6 +107,7 @@ export const ProtonScreenActionButtons = props => {
     >
       <Localized text={content.primary_button?.label}>
         <button
+          ref={buttonRef}
           className={`${content.primary_button?.style ?? "primary"}${
             content.primary_button?.has_arrow_icon ? " arrow-icon" : ""
           }`}
@@ -440,6 +451,7 @@ export class ProtonScreen extends React.PureComponent {
       isLastScreen,
       isSingleScreen,
       forceHideStepsIndicator,
+      ariaRole,
     } = this.props;
     const includeNoodles = content.has_noodles;
     // The default screen position is "center"
@@ -469,7 +481,7 @@ export class ProtonScreen extends React.PureComponent {
       <main
         className={`screen ${this.props.id || ""}
           ${screenClassName} ${textColorClass}`}
-        role="alertdialog"
+        role={ariaRole ?? "alertdialog"}
         layout={content.layout}
         pos={content.position || "center"}
         tabIndex="-1"

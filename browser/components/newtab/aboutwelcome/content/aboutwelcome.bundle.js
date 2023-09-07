@@ -400,7 +400,8 @@ const MultiStageAboutWelcome = props => {
       autoAdvance: screen.auto_advance,
       negotiatedLanguage: negotiatedLanguage,
       langPackInstallPhase: langPackInstallPhase,
-      forceHideStepsIndicator: screen.force_hide_steps_indicator
+      forceHideStepsIndicator: screen.force_hide_steps_indicator,
+      ariaRole: props.ariaRole
     }) : null;
   })));
 };
@@ -659,7 +660,8 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       isSingleScreen: this.props.isSingleScreen,
       startsWithCorner: this.props.startsWithCorner,
       autoAdvance: this.props.autoAdvance,
-      forceHideStepsIndicator: this.props.forceHideStepsIndicator
+      forceHideStepsIndicator: this.props.forceHideStepsIndicator,
+      ariaRole: this.props.ariaRole
     });
   }
 
@@ -862,11 +864,12 @@ const MultiStageProtonScreen = props => {
     messageId: props.messageId,
     negotiatedLanguage: props.negotiatedLanguage,
     langPackInstallPhase: props.langPackInstallPhase,
-    forceHideStepsIndicator: props.forceHideStepsIndicator
+    forceHideStepsIndicator: props.forceHideStepsIndicator,
+    ariaRole: props.ariaRole
   });
 };
 const ProtonScreenActionButtons = props => {
-  var _content$checkbox, _content$additional_b, _content$primary_butt, _content$primary_butt2, _content$primary_butt3, _content$primary_butt4;
+  var _content$checkbox, _content$primary_butt, _content$additional_b, _content$primary_butt2, _content$primary_butt3, _content$primary_butt4, _content$primary_butt5;
 
   const {
     content,
@@ -875,6 +878,15 @@ const ProtonScreenActionButtons = props => {
   } = props;
   const defaultValue = (_content$checkbox = content.checkbox) === null || _content$checkbox === void 0 ? void 0 : _content$checkbox.defaultValue;
   const [isChecked, setIsChecked] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultValue || false);
+  const buttonRef = react__WEBPACK_IMPORTED_MODULE_0___default().useRef(null);
+  const shouldFocusButton = content === null || content === void 0 ? void 0 : (_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : _content$primary_butt.should_focus_button;
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    if (shouldFocusButton) {
+      var _buttonRef$current;
+
+      (_buttonRef$current = buttonRef.current) === null || _buttonRef$current === void 0 ? void 0 : _buttonRef$current.focus();
+    }
+  }, [shouldFocusButton]);
 
   if (!content.primary_button && !content.secondary_button && !content.additional_button) {
     return null;
@@ -888,15 +900,16 @@ const ProtonScreenActionButtons = props => {
     className: `action-buttons ${content.additional_button ? "additional-cta-container" : ""}`,
     flow: (_content$additional_b = content.additional_button) === null || _content$additional_b === void 0 ? void 0 : _content$additional_b.flow
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: (_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : _content$primary_butt.label
+    text: (_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    className: `${((_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.style) ?? "primary"}${(_content$primary_butt3 = content.primary_button) !== null && _content$primary_butt3 !== void 0 && _content$primary_butt3.has_arrow_icon ? " arrow-icon" : ""}` // Whether or not the checkbox is checked determines which action
+    ref: buttonRef,
+    className: `${((_content$primary_butt3 = content.primary_button) === null || _content$primary_butt3 === void 0 ? void 0 : _content$primary_butt3.style) ?? "primary"}${(_content$primary_butt4 = content.primary_button) !== null && _content$primary_butt4 !== void 0 && _content$primary_butt4.has_arrow_icon ? " arrow-icon" : ""}` // Whether or not the checkbox is checked determines which action
     // should be handled. By setting value here, we indicate to
     // this.handleAction() where in the content tree it should take
     // the action to execute from.
     ,
     value: isChecked ? "checkbox" : "primary_button",
-    disabled: isPrimaryDisabled((_content$primary_butt4 = content.primary_button) === null || _content$primary_butt4 === void 0 ? void 0 : _content$primary_butt4.disabled),
+    disabled: isPrimaryDisabled((_content$primary_butt5 = content.primary_button) === null || _content$primary_butt5 === void 0 ? void 0 : _content$primary_butt5.disabled),
     onClick: props.handleAction,
     "data-l10n-args": addonName ? JSON.stringify({
       "addon-name": addonName
@@ -1158,7 +1171,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       isFirstScreen,
       isLastScreen,
       isSingleScreen,
-      forceHideStepsIndicator
+      forceHideStepsIndicator,
+      ariaRole
     } = this.props;
     const includeNoodles = content.has_noodles; // The default screen position is "center"
 
@@ -1172,7 +1186,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("main", {
       className: `screen ${this.props.id || ""}
           ${screenClassName} ${textColorClass}`,
-      role: "alertdialog",
+      role: ariaRole ?? "alertdialog",
       layout: content.layout,
       pos: content.position || "center",
       tabIndex: "-1",
@@ -2595,7 +2609,8 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       transitions: props.transitions,
       backdrop: props.backdrop,
       startScreen: props.startScreen || 0,
-      appAndSystemLocaleInfo: props.appAndSystemLocaleInfo
+      appAndSystemLocaleInfo: props.appAndSystemLocaleInfo,
+      ariaRole: props.aria_role
     });
   }
 

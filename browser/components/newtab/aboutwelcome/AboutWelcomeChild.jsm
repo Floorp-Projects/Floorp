@@ -345,6 +345,7 @@ const OPTIN_DEFAULT = {
   id: "FAKESPOT_OPTIN_DEFAULT",
   template: "multistage",
   backdrop: "transparent",
+  aria_role: "alert",
   screens: [
     {
       id: "FS_OPT_IN",
@@ -399,6 +400,7 @@ const OPTIN_DEFAULT = {
           },
         },
         primary_button: {
+          should_focus_button: true,
           label: { string_id: "shopping-onboarding-opt-in-button" },
           action: {
             type: "SET_PREF",
