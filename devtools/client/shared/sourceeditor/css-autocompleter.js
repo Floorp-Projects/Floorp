@@ -8,9 +8,6 @@ const {
   cssTokenizer,
   cssTokenizerWithLineColumn,
 } = require("resource://devtools/shared/css/parsing-utils.js");
-const {
-  getClientCssProperties,
-} = require("resource://devtools/client/fronts/css-properties.js");
 
 /**
  * Here is what this file (+ css-parsing-utils.js) do.
@@ -89,8 +86,7 @@ const SELECTOR_STATES = {
 function CSSCompleter(options = {}) {
   this.walker = options.walker;
   this.maxEntries = options.maxEntries || 15;
-  // If no css properties database is passed in, default to the client list.
-  this.cssProperties = options.cssProperties || getClientCssProperties();
+  this.cssProperties = options.cssProperties;
 
   this.propertyNames = this.cssProperties.getNames().sort();
 

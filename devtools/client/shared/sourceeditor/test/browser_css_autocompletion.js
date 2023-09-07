@@ -93,9 +93,10 @@ async function runTests() {
   const target = await createAndAttachTargetForTab(gBrowser.selectedTab);
   inspector = await target.getFront("inspector");
   const walker = inspector.walker;
+  const cssPropertiesFront = await target.getFront("cssProperties");
   completer = new CSSCompleter({
     walker,
-    cssProperties: getClientCssProperties(),
+    cssProperties: cssPropertiesFront.cssProperties,
   });
   await checkStateAndMoveOn();
   await completer.walker.release();
