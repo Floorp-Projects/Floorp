@@ -314,6 +314,13 @@ void Http3Session::Shutdown() {
     RemoveStreamFromQueues(stream);
     mStreamIdHash.Remove(stream->StreamId());
   }
+
+  RefPtr<Http3StreamBase> stream;
+  while ((stream = mQueuedStreams.PopFront())) {
+    LOG(("Close remaining stream in queue:%p", stream.get()));
+    stream->SetQueued(false);
+    stream->Close(NS_ERROR_ABORT);
+  }
   mWebTransportStreams.Clear();
 }
 

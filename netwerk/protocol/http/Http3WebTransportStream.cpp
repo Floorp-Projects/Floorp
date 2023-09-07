@@ -357,6 +357,9 @@ nsresult Http3WebTransportStream::ReadSegments() {
         nsresult rv2 = OnReadSegment("", 0, &wasted);
         LOG3(("  OnReadSegment returned 0x%08" PRIx32,
               static_cast<uint32_t>(rv2)));
+        if (mSendState != WAITING_DATA) {
+          break;
+        }
       }
         [[fallthrough]];
       case WAITING_DATA:
