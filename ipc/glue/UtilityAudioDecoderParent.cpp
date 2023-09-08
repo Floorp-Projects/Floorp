@@ -101,8 +101,7 @@ void UtilityAudioDecoderParent::Start(
 
 #ifdef MOZ_WIDGET_ANDROID
   if (StaticPrefs::media_utility_android_media_codec_enabled()) {
-    AndroidDecoderModule::SetSupportedMimeTypes(
-        AndroidDecoderModule::GetSupportedMimeTypes());
+    AndroidDecoderModule::SetSupportedMimeTypes();
   }
 #endif
 
