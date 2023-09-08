@@ -262,8 +262,8 @@ def run_test_iteration(test_status, test_loader, test_source,
     unexpected_pass_tests = defaultdict(list)
     recording.pause()
     retry_counts = kwargs["retry_unexpected"]
-    for i in range(retry_counts + 1):
-        if i > 0:
+    for retry_index in range(retry_counts + 1):
+        if retry_index > 0:
             if kwargs["fail_on_unexpected_pass"]:
                 for (subtests, test_type), tests in unexpected_pass_tests.items():
                     unexpected_fail_tests[(subtests, test_type)].extend(tests)
@@ -282,6 +282,7 @@ def run_test_iteration(test_status, test_loader, test_source,
         with ManagerGroup("web-platform-tests",
                           test_source,
                           test_implementations,
+                          retry_index,
                           kwargs["rerun"],
                           kwargs["pause_after_test"],
                           kwargs["pause_on_unexpected"],
