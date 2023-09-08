@@ -674,13 +674,13 @@ onload = function() {
 
   var test_scheme_urls = ['ftp://example.invalid/?x=\u00E5',
                           'file:///?x=\u00E5',
-                          'gopher://example.invalid/?x=\u00E5',
                           'http://example.invalid/?x=\u00E5',
                           'https://example.invalid/?x=\u00E5',
                          ];
 
   var test_scheme_urls_utf8 = ['ws://example.invalid/?x=\u00E5',
                                'wss://example.invalid/?x=\u00E5',
+                               'gopher://example.invalid/?x=\u00E5',
                                'mailto:example@invalid?x=\u00E5',
                                'data:text/plain;charset='+encoding+',?x=\u00E5',
                                'javascript:"?x=\u00E5"',
