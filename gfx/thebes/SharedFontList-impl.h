@@ -334,11 +334,7 @@ class FontList {
     mozilla::UniquePtr<base::SharedMemory> mShmem;
   };
 
-  Header& GetHeader() {
-    // It's invalid to try and access this before the first block exists.
-    MOZ_ASSERT(mBlocks.Length() > 0);
-    return *static_cast<Header*>(mBlocks[0]->Memory());
-  }
+  Header& GetHeader() const;
 
   /**
    * Create a new shared memory block and append to the FontList's list
