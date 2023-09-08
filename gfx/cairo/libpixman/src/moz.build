@@ -73,8 +73,10 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['pixman-sse2.c'].flags += CONFIG['SSE_FLAGS'] + CONFIG['SSE2_FLAGS']
     SOURCES['pixman-ssse3.c'].flags += CONFIG['SSSE3_FLAGS']
 # AArch64 NEON optimizations don't build on Windows and Mac out of the box.
-elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] in ('Android', 'Linux'):
+elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] in ('Android', 'Linux', 'Darwin'):
     DEFINES['USE_ARM_A64_NEON'] = True
+    if CONFIG['OS_TARGET'] == 'Darwin':
+        DEFINES['ASM_LEADING_UNDERSCORE'] = True
     SOURCES += [
         'pixman-arm-neon.c',
         'pixman-arma64-neon-asm-bilinear.S',
