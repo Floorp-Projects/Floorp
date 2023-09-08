@@ -1111,13 +1111,7 @@ class WheelScrollAction extends WheelAction {
 
   static fromJSON(id, actionItem) {
     const { duration, origin, x, y, deltaX, deltaY } = actionItem;
-    if (duration !== undefined) {
-      lazy.assert.positiveInteger(
-        duration,
-        lazy.pprint`Expected 'duration' (${duration}) to be >= 0`
-      );
-    }
-    const originObject = Origin.fromJSON(origin);
+
     lazy.assert.integer(x, lazy.pprint`Expected 'x' (${x}) to be an Integer`);
     lazy.assert.integer(y, lazy.pprint`Expected 'y' (${y}) to be an Integer`);
     lazy.assert.integer(
@@ -1128,6 +1122,20 @@ class WheelScrollAction extends WheelAction {
       deltaY,
       lazy.pprint`Expected 'deltaY' (${deltaY}) to be an Integer`
     );
+
+    const originObject = Origin.fromJSON(origin);
+    if (originObject instanceof PointerOrigin) {
+      throw new lazy.error.InvalidArgumentError(
+        `"pointer" origin not supported for "wheel" input source.`
+      );
+    }
+
+    if (duration !== undefined) {
+      lazy.assert.positiveInteger(
+        duration,
+        lazy.pprint`Expected 'duration' (${duration}) to be >= 0`
+      );
+    }
 
     return new this(id, {
       duration,
