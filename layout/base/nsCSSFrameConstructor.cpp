@@ -3703,6 +3703,11 @@ nsCSSFrameConstructor::FindCanvasData(const Element& aElement,
   return &sCanvasData;
 }
 
+static MOZ_NEVER_INLINE void DestroyFramesInList(PresShell* aPs, nsFrameList& aList) {
+  nsIFrame::DestroyContext context(aPs);
+  aList.DestroyFrames(context);
+}
+
 void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
     FrameConstructionItem& aItem, nsFrameConstructorState& aState,
     nsContainerFrame* aParentFrame, nsFrameList& aFrameList) {
@@ -3912,8 +3917,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
 
         if (childList.NotEmpty()) {
           // an error must have occurred, delete unprocessed frames
-          DestroyContext context(mPresShell);
-          childList.DestroyFrames(context);
+          DestroyFramesInList(mPresShell, childList);
         }
 
         childList = std::move(newList);
