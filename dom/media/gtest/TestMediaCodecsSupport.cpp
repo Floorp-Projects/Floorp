@@ -155,3 +155,36 @@ TEST(MediaCodecsSupport, GetMediaCodecsSupportedString)
   MCSInfo::GetMediaCodecsSupportedString(supportString, MCSInfo::GetSupport());
   EXPECT_TRUE(supportString.Equals("H264 SW\nH264 HW\nVP8 SW"_ns));
 }
+
+// Test MCSInfo::GetMediaCodecFromMimeType function.
+// This function returns a MediaCodec enum for a given MIME type string.
+TEST(MediaCodecsSupport, GetMediaCodecFromMimeType)
+{
+  std::vector<std::pair<nsCString, MediaCodec>> testPairs = {
+// Video codecs
+#ifdef MOZ_AV1
+      {"video/av1"_ns, MediaCodec::AV1},
+#endif
+      {"video/avc"_ns, MediaCodec::H264},
+      {"video/mp4"_ns, MediaCodec::H264},
+      {"video/theora"_ns, MediaCodec::Theora},
+      {"video/vp8"_ns, MediaCodec::VP8},
+      {"video/vp9"_ns, MediaCodec::VP9},
+      // Audio codecs
+      {"audio/mp4a-latm"_ns, MediaCodec::AAC},
+      {"audio/flac"_ns, MediaCodec::FLAC},
+      {"audio/mpeg"_ns, MediaCodec::MP3},
+      {"audio/opus"_ns, MediaCodec::Opus},
+      {"audio/vorbis"_ns, MediaCodec::Vorbis},
+      {"audio/x-wav"_ns, MediaCodec::Wave},
+      // Non-existant codecs that should fail
+      {"audio/jukebox"_ns, MediaCodec::SENTINEL},
+      {"video/stopmotion"_ns, MediaCodec::SENTINEL},
+      {"漢字"_ns, MediaCodec::SENTINEL},
+      {"/"_ns, MediaCodec::SENTINEL},
+      {""_ns, MediaCodec::SENTINEL},
+  };
+  for (auto& p : testPairs) {
+    EXPECT_TRUE(MCSInfo::GetMediaCodecFromMimeType(p.first) == p.second);
+  }
+}
