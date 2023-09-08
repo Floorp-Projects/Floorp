@@ -4,22 +4,17 @@
 
 "use strict";
 
+const { SessionStoreTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SessionStoreTestUtils.sys.mjs"
+);
+const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
+
+SessionStoreTestUtils.init(this, window);
+
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://example.com"
 );
-
-async function openTab(URL) {
-  let tab = BrowserTestUtils.addTab(gBrowser, URL);
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  return tab;
-}
-
-async function closeTab(tab) {
-  const sessionStorePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
-  BrowserTestUtils.removeTab(tab);
-  await sessionStorePromise;
-}
 
 let panelMenuWidgetAdded = false;
 function prepareHistoryPanel() {
@@ -108,8 +103,10 @@ add_task(async function testRecentlyClosedDisabled() {
   await hideHistoryPanel();
 
   gBrowser.selectedTab.focus();
-  let tab = await openTab(TEST_PATH + "dummy_history_item.html");
-  await closeTab(tab);
+  await SessionStoreTestUtils.openAndCloseTab(
+    window,
+    TEST_PATH + "dummy_history_item.html"
+  );
 
   await openHistoryPanel();
 
@@ -207,69 +204,85 @@ add_task(async function testRecentlyClosedRestoreAllTabs() {
   // We need to make sure the history is cleared before starting the test
   await Sanitizer.sanitize(["history"]);
   await resetClosedTabs();
+  const initialTabCount = gBrowser.visibleTabs.length;
 
-  await BrowserTestUtils.withNewTab("about:mozilla", async browser => {
-    const initialTabCount = gBrowser.visibleTabs.length;
-    // Open and close a few of tabs
-    const closedTabUrls = [
-      "about:robots",
-      "https://example.com/",
-      "https://example.org/",
-    ];
-    for (let url of closedTabUrls) {
-      let tab = await openTab(url);
-      await closeTab(tab);
-    }
-    is(
-      gBrowser.visibleTabs.length,
-      initialTabCount,
-      "All the new tabs were closed"
-    );
-    // Open the "Recently closed tabs" panel.
-    let closeTabsPanel = await openRecentlyClosedTabsMenu();
-
-    // Click the first toolbar button in the panel.
-    let toolbarButton = closeTabsPanel.querySelector(
-      ".panel-subview-body toolbarbutton"
-    );
-    let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-    EventUtils.sendMouseEvent({ type: "click" }, toolbarButton, window);
-
-    info("waiting for reopenedTab");
-    let reopenedTab = await newTabPromise;
-    is(
-      reopenedTab.linkedBrowser.currentURI.spec,
-      closedTabUrls[closedTabUrls.length - 1],
-      "Opened correct URL"
-    );
-    info(`restored tab, total open tabs: ${gBrowser.tabs.length}`);
-    await closeTab(reopenedTab);
-
-    await openRecentlyClosedTabsMenu();
-    let restoreAllItem = closeTabsPanel.querySelector(".restoreallitem");
-    ok(
-      restoreAllItem && !restoreAllItem.hidden,
-      "Restore all menu item is not hidden"
-    );
-
-    // Click the restore-all toolbar button in the panel.
-    EventUtils.sendMouseEvent({ type: "click" }, restoreAllItem, window);
-
-    info("waiting for restored tabs");
-    await BrowserTestUtils.waitForCondition(
-      () => SessionStore.getClosedTabCount() === 0,
-      "Waiting for all the closed tabs to be opened"
-    );
-
-    is(
-      gBrowser.tabs.length,
-      initialTabCount + closedTabUrls.length,
-      "The expected number of closed tabs were restored"
-    );
-    info(
-      `restored ${closedTabUrls.length} tabs, total open tabs: ${gBrowser.tabs.length}`
-    );
+  const closedTabUrls = [
+    "about:robots",
+    "https://example.com/",
+    "https://example.org/",
+  ];
+  const windowState = {
+    tabs: [
+      {
+        entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }],
+      },
+    ],
+    _closedTabs: closedTabUrls.map(url => {
+      return {
+        title: url,
+        state: {
+          entries: [
+            {
+              url,
+              triggeringPrincipal_base64,
+            },
+          ],
+        },
+      };
+    }),
+  };
+  await SessionStoreTestUtils.promiseBrowserState({
+    windows: [windowState],
   });
+
+  is(gBrowser.visibleTabs.length, 1, "We start with one tab open");
+  // Open the "Recently closed tabs" panel.
+  let closeTabsPanel = await openRecentlyClosedTabsMenu();
+
+  // Click the first toolbar button in the panel.
+  let toolbarButton = closeTabsPanel.querySelector(
+    ".panel-subview-body toolbarbutton"
+  );
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  EventUtils.sendMouseEvent({ type: "click" }, toolbarButton, window);
+
+  info(
+    "We should reopen the first of closedTabUrls: " +
+      JSON.stringify(closedTabUrls)
+  );
+  let reopenedTab = await newTabPromise;
+  is(
+    reopenedTab.linkedBrowser.currentURI.spec,
+    closedTabUrls[0],
+    "Opened the first URL"
+  );
+  info(`restored tab, total open tabs: ${gBrowser.tabs.length}`);
+
+  info("waiting for closeTab");
+  await SessionStoreTestUtils.closeTab(reopenedTab);
+
+  await openRecentlyClosedTabsMenu();
+  let restoreAllItem = closeTabsPanel.querySelector(".restoreallitem");
+  ok(
+    restoreAllItem && !restoreAllItem.hidden,
+    "Restore all menu item is not hidden"
+  );
+
+  // Click the restore-all toolbar button in the panel.
+  EventUtils.sendMouseEvent({ type: "click" }, restoreAllItem, window);
+
+  info("waiting for restored tabs");
+  await BrowserTestUtils.waitForCondition(
+    () => SessionStore.getClosedTabCount() === 0,
+    "Waiting for all the closed tabs to be opened"
+  );
+
+  is(
+    gBrowser.tabs.length,
+    initialTabCount + closedTabUrls.length,
+    "The expected number of closed tabs were restored"
+  );
+
   // clean up extra tabs
   while (gBrowser.tabs.length > 1) {
     BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
@@ -279,6 +292,7 @@ add_task(async function testRecentlyClosedRestoreAllTabs() {
 add_task(async function testRecentlyClosedWindows() {
   // We need to make sure the history is cleared before starting the test
   await Sanitizer.sanitize(["history"]);
+  await resetClosedTabs();
 
   // Open and close a new window.
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
@@ -290,7 +304,11 @@ add_task(async function testRecentlyClosedWindows() {
     "https://example.com"
   );
   await loadedPromise;
+  let closedObjectsChangePromise = TestUtils.topicObserved(
+    "sessionstore-closed-objects-changed"
+  );
   await BrowserTestUtils.closeWindow(newWin);
+  await closedObjectsChangePromise;
 
   prepareHistoryPanel();
   await openHistoryPanel();
@@ -307,15 +325,16 @@ add_task(async function testRecentlyClosedWindows() {
   // Click the first toolbar button in the panel.
   let panelBody = winPanel.querySelector(".panel-subview-body");
   let toolbarButton = panelBody.querySelector("toolbarbutton");
-  let newWindowPromise = BrowserTestUtils.waitForNewWindow();
+  let newWindowPromise = BrowserTestUtils.waitForNewWindow({
+    url: "https://example.com/",
+  });
+  closedObjectsChangePromise = TestUtils.topicObserved(
+    "sessionstore-closed-objects-changed"
+  );
   EventUtils.sendMouseEvent({ type: "click" }, toolbarButton, window);
 
   newWin = await newWindowPromise;
-  is(
-    newWin.gBrowser.currentURI.spec,
-    "https://example.com/",
-    "Opened correct URL"
-  );
+  await closedObjectsChangePromise;
   is(gBrowser.tabs.length, 1, "Did not open new tabs");
 
   await BrowserTestUtils.closeWindow(newWin);

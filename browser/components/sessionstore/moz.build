@@ -29,5 +29,9 @@ EXTRA_JS_MODULES.sessionstore = [
     "TabStateFlusher.sys.mjs",
 ]
 
+TESTING_JS_MODULES += [
+    "test/SessionStoreTestUtils.sys.mjs",
+]
+
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Session Restore")

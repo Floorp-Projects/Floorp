@@ -64,57 +64,8 @@ const multiWindowState = {
   ],
 };
 
-async function setupWithBrowserState(browserState) {
-  let numTabs = browserState.windows.reduce((count, winData) => {
-    return count + winData.tabs.length;
-  }, 0);
-  let loadCount = 0;
-  let windowOpenedCount = 1; // pre-count the first window
-  let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function (
-      aBrowser,
-      aNeedRestore,
-      aRestoring,
-      aRestored
-    ) {
-      if (++loadCount == numTabs) {
-        // We don't actually care about load order in this test, just that they all
-        // do load.
-        is(loadCount, numTabs, "all tabs were restored");
-        is(aNeedRestore, 0, "there are no tabs left needing restore");
-
-        gProgressListener.unsetCallback();
-        resolve();
-      }
-    });
-  });
-
-  // We also want to catch the 2nd window, so we need to observe domwindowopened
-  Services.ww.registerNotification(function observer(aSubject, aTopic, aData) {
-    if (aTopic == "domwindowopened") {
-      let win = aSubject;
-      win.addEventListener(
-        "load",
-        function () {
-          if (++windowOpenedCount == browserState.windows.length) {
-            Services.ww.unregisterNotification(observer);
-            win.gBrowser.addTabsProgressListener(gProgressListener);
-          }
-        },
-        { once: true }
-      );
-    }
-  });
-
-  const stateRestored = TestUtils.topicObserved(
-    "sessionstore-browser-state-restored"
-  );
-  await ss.setBrowserState(JSON.stringify(browserState));
-  await stateRestored;
-  await promiseRestoringTabs;
-}
 add_setup(async function testSetup() {
-  await setupWithBrowserState(multiWindowState);
+  await SessionStoreTestUtils.promiseBrowserState(multiWindowState);
 });
 
 add_task(async function test_ClosedTabMethods() {

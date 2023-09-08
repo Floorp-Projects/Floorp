@@ -30,6 +30,12 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
+const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
+const { SessionStoreTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SessionStoreTestUtils.sys.mjs"
+);
+SessionStoreTestUtils.init(this, window);
+
 ChromeUtils.defineESModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
@@ -537,18 +543,7 @@ class TelemetrySpy {
  * has been updated after closing the tab.
  */
 async function open_then_close(url, win = window) {
-  let { updatePromise } = await BrowserTestUtils.withNewTab(
-    { url, gBrowser: win.gBrowser },
-    async browser => {
-      return {
-        updatePromise: BrowserTestUtils.waitForSessionStoreUpdate({
-          linkedBrowser: browser,
-        }),
-      };
-    }
-  );
-  await updatePromise;
-  return TestUtils.topicObserved("sessionstore-closed-objects-changed");
+  return SessionStoreTestUtils.openAndCloseTab(win, url);
 }
 
 /**
