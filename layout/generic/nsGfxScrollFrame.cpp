@@ -390,10 +390,11 @@ void nsHTMLScrollFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   ReloadChildFrames();
 }
 
-void nsHTMLScrollFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsHTMLScrollFrame::RemoveFrame(DestroyContext& aContext,
+                                    ChildListID aListID, nsIFrame* aOldFrame) {
   NS_ASSERTION(aListID == FrameChildListID::Principal,
                "Only main list supported");
-  mFrames.DestroyFrame(aOldFrame);
+  mFrames.DestroyFrame(aContext, aOldFrame);
   ReloadChildFrames();
 }
 

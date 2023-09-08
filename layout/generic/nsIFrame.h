@@ -505,9 +505,8 @@ namespace mozilla {
 // it's a bit simpler, though we generally don't have that much nested anonymous
 // content (except for scrollbars).
 struct MOZ_RAII FrameDestroyContext {
-  explicit FrameDestroyContext(nsIFrame* aRoot);
+  explicit FrameDestroyContext(PresShell* aPs) : mPresShell(aPs) {}
 
-  nsIFrame* DestructRoot() const { return mDestructRoot; }
   void AddAnonymousContent(already_AddRefed<nsIContent>&& aContent) {
     if (RefPtr<nsIContent> content = aContent) {
       mAnonymousContent.AppendElement(std::move(content));
@@ -517,8 +516,7 @@ struct MOZ_RAII FrameDestroyContext {
   ~FrameDestroyContext();
 
  private:
-  nsIFrame* const mDestructRoot;
-  nsPresContext* const mPresContext;
+  PresShell* const mPresShell;
   AutoTArray<RefPtr<nsIContent>, 100> mAnonymousContent;
 };
 
@@ -5614,14 +5612,5 @@ inline nsIFrame* nsFrameList::BackwardFrameTraversal::Prev(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame);
   return aFrame->GetNextSibling();
 }
-
-namespace mozilla {
-
-inline FrameDestroyContext::FrameDestroyContext(nsIFrame* aRoot)
-    : mDestructRoot(aRoot), mPresContext(aRoot->PresContext()) {
-  MOZ_ASSERT(mDestructRoot);
-}
-
-}  // namespace mozilla
 
 #endif /* nsIFrame_h___ */

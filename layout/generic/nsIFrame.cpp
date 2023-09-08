@@ -218,9 +218,8 @@ static void SetOrUpdateRectValuedProperty(
 }
 
 FrameDestroyContext::~FrameDestroyContext() {
-  auto* ps = mPresContext->PresShell();
   for (auto& content : mozilla::Reversed(mAnonymousContent)) {
-    ps->NativeAnonymousContentRemoved(content);
+    mPresShell->NativeAnonymousContentRemoved(content);
     content->UnbindFromTree();
   }
 }
@@ -791,15 +790,7 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
   nsPresContext* presContext = PresContext();
   mozilla::PresShell* presShell = presContext->GetPresShell();
   if (HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-    nsPlaceholderFrame* placeholder = GetPlaceholderFrame();
-    NS_ASSERTION(
-        !placeholder || aContext.DestructRoot() != this,
-        "Don't call Destroy() on OOFs, call Destroy() on the placeholder.");
-    NS_ASSERTION(!placeholder || nsLayoutUtils::IsProperAncestorFrame(
-                                     aContext.DestructRoot(), placeholder),
-                 "Placeholder relationship should have been torn down already; "
-                 "this might mean we have a stray placeholder in the tree.");
-    if (placeholder) {
+    if (nsPlaceholderFrame* placeholder = GetPlaceholderFrame()) {
       placeholder->SetOutOfFlowFrame(nullptr);
     }
   }

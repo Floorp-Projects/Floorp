@@ -153,7 +153,8 @@ void nsContainerFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   }
 }
 
-void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                   ChildListID aListID, nsIFrame* aOldFrame) {
   MOZ_ASSERT(aListID == FrameChildListID::Principal ||
                  aListID == FrameChildListID::NoReflowPrincipal,
              "unexpected child list");
@@ -175,7 +176,7 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   // Request a reflow on the parent frames involved unless we were explicitly
   // told not to (FrameChildListID::NoReflowPrincipal).
   const bool generateReflowCommand =
-      (FrameChildListID::NoReflowPrincipal != aListID);
+      aListID != FrameChildListID::NoReflowPrincipal;
   for (nsIFrame* continuation : Reversed(continuations)) {
     nsContainerFrame* parent = continuation->GetParent();
 
@@ -183,8 +184,7 @@ void nsContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     // We really MUST use StealFrame() and nothing else here.
     // @see nsInlineFrame::StealFrame for details.
     parent->StealFrame(continuation);
-    DestroyContext context(continuation);
-    continuation->Destroy(context);
+    continuation->Destroy(aContext);
     if (generateReflowCommand && parent != lastParent) {
       presShell->FrameNeedsReflow(parent, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -897,7 +897,9 @@ void nsContainerFrame::ReflowChild(
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
       nsOverflowContinuationTracker::AutoFinish fini(aTracker, aKidFrame);
-      kidNextInFlow->GetParent()->DeleteNextInFlowChild(kidNextInFlow, true);
+      DestroyContext context(PresShell());
+      kidNextInFlow->GetParent()->DeleteNextInFlowChild(context, kidNextInFlow,
+                                                        true);
     }
   }
 }
@@ -936,7 +938,9 @@ void nsContainerFrame::ReflowChild(nsIFrame* aKidFrame,
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
       nsOverflowContinuationTracker::AutoFinish fini(aTracker, aKidFrame);
-      kidNextInFlow->GetParent()->DeleteNextInFlowChild(kidNextInFlow, true);
+      DestroyContext context(PresShell());
+      kidNextInFlow->GetParent()->DeleteNextInFlowChild(context, kidNextInFlow,
+                                                        true);
     }
   }
 }
@@ -1357,7 +1361,8 @@ nsIFrame* nsContainerFrame::CreateNextInFlow(nsIFrame* aFrame) {
  * Remove and delete aNextInFlow and its next-in-flows. Updates the sibling and
  * flow pointers
  */
-void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
+void nsContainerFrame::DeleteNextInFlowChild(DestroyContext& aContext,
+                                             nsIFrame* aNextInFlow,
                                              bool aDeletingEmptyFrames) {
 #ifdef DEBUG
   nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
@@ -1376,7 +1381,7 @@ void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
     }
     for (nsIFrame* delFrame : Reversed(frames)) {
       nsContainerFrame* parent = delFrame->GetParent();
-      parent->DeleteNextInFlowChild(delFrame, aDeletingEmptyFrames);
+      parent->DeleteNextInFlowChild(aContext, delFrame, aDeletingEmptyFrames);
     }
   }
 
@@ -1391,8 +1396,7 @@ void nsContainerFrame::DeleteNextInFlowChild(nsIFrame* aNextInFlow,
 
   // Delete the next-in-flow frame and its descendants. This will also
   // remove it from its next-in-flow/prev-in-flow chain.
-  DestroyContext context(aNextInFlow);
-  aNextInFlow->Destroy(context);
+  aNextInFlow->Destroy(aContext);
 
   MOZ_ASSERT(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
 }

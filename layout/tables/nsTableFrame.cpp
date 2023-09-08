@@ -567,11 +567,12 @@ void nsTableFrame::InsertCol(nsTableColFrame& aColFrame, int32_t aColIndex) {
                 (nsTableColGroupFrame*)mColGroups.LastChild();
             if (lastColGroup) {
               MOZ_ASSERT(lastColGroup->IsSynthetic());
-              lastColGroup->RemoveChild(*lastCol, false);
+              DestroyContext context(PresShell());
+              lastColGroup->RemoveChild(context, *lastCol, false);
 
               // remove the col group if it is empty
               if (lastColGroup->GetColCount() <= 0) {
-                mColGroups.DestroyFrame((nsIFrame*)lastColGroup);
+                mColGroups.DestroyFrame(context, (nsIFrame*)lastColGroup);
               }
             }
             removedFromCache = true;
@@ -782,13 +783,13 @@ int32_t nsTableFrame::DestroyAnonymousColFrames(int32_t aNumFrames) {
   int32_t endIndex = mColFrames.Length() - 1;
   int32_t startIndex = (endIndex - aNumFrames) + 1;
   int32_t numColsRemoved = 0;
+  DestroyContext context(PresShell());
   for (int32_t colIdx = endIndex; colIdx >= startIndex; colIdx--) {
     nsTableColFrame* colFrame = GetColFrame(colIdx);
     if (colFrame && (eColAnonymousCell == colFrame->GetColType())) {
-      nsTableColGroupFrame* cgFrame =
-          static_cast<nsTableColGroupFrame*>(colFrame->GetParent());
+      auto* cgFrame = static_cast<nsTableColGroupFrame*>(colFrame->GetParent());
       // remove the frame from the colgroup
-      cgFrame->RemoveChild(*colFrame, false);
+      cgFrame->RemoveChild(context, *colFrame, false);
       // remove the frame from the cache, but not the cell map
       RemoveCol(nullptr, colIdx, true, false);
       numColsRemoved++;
@@ -2339,13 +2340,14 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
 #endif
 }
 
-void nsTableFrame::DoRemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsTableFrame::DoRemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                                 nsIFrame* aOldFrame) {
   if (aListID == FrameChildListID::ColGroup) {
     nsIFrame* nextColGroupFrame = aOldFrame->GetNextSibling();
     nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
     int32_t firstColIndex = colGroup->GetStartColumnIndex();
     int32_t lastColIndex = firstColIndex + colGroup->GetColCount() - 1;
-    mColGroups.DestroyFrame(aOldFrame);
+    mColGroups.DestroyFrame(aContext, aOldFrame);
     nsTableColGroupFrame::ResetColIndices(nextColGroupFrame, firstColIndex);
     // remove the cols from the table
     int32_t colIdx;
@@ -2394,7 +2396,7 @@ void nsTableFrame::DoRemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     }
 
     // remove the row group frame from the sibling chain
-    mFrames.DestroyFrame(aOldFrame);
+    mFrames.DestroyFrame(aContext, aOldFrame);
 
     // the removal of a row group changes the cellmap, the columns might change
     if (cellMap) {
@@ -2411,7 +2413,8 @@ void nsTableFrame::DoRemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   }
 }
 
-void nsTableFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsTableFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                               nsIFrame* aOldFrame) {
   NS_ASSERTION(aListID == FrameChildListID::ColGroup ||
                    mozilla::StyleDisplay::TableColumnGroup !=
                        aOldFrame->StyleDisplay()->mDisplay,
@@ -2424,7 +2427,7 @@ void nsTableFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     if (parent != lastParent) {
       parent->DrainSelfOverflowList();
     }
-    parent->DoRemoveFrame(aListID, aOldFrame);
+    parent->DoRemoveFrame(aContext, aListID, aOldFrame);
     aOldFrame = oldFrameNextContinuation;
     if (parent != lastParent) {
       // for now, just bail and recalc all of the collapsing borders

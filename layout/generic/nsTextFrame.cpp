@@ -8867,7 +8867,7 @@ static void RemoveEmptyInFlows(nsTextFrame* aFrame,
     // f is going to be destroyed soon, after it is unlinked from the
     // continuation chain. If its textrun is going to be destroyed we need to
     // do it now, before we unlink the frames to remove from the flow,
-    // because DestroyFrom calls ClearTextRuns() and that will start at the
+    // because Destroy calls ClearTextRuns() and that will start at the
     // first frame with the text run and walk the continuations.
     if (f->IsInTextRunUserData()) {
       f->ClearTextRuns();
@@ -8888,17 +8888,17 @@ static void RemoveEmptyInFlows(nsTextFrame* aFrame,
   aFrame->SetPrevInFlow(nullptr);
 
   nsContainerFrame* parent = aFrame->GetParent();
+  nsIFrame::DestroyContext context(aFrame->PresShell());
   nsBlockFrame* parentBlock = do_QueryFrame(parent);
   if (parentBlock) {
     // Manually call DoRemoveFrame so we can tell it that we're
     // removing empty frames; this will keep it from blowing away
     // text runs.
-    nsIFrame::DestroyContext context(aFrame);
-    parentBlock->DoRemoveFrame(aFrame, nsBlockFrame::FRAMES_ARE_EMPTY, context);
+    parentBlock->DoRemoveFrame(context, aFrame, nsBlockFrame::FRAMES_ARE_EMPTY);
   } else {
     // Just remove it normally; use FrameChildListID::NoReflowPrincipal to avoid
     // posting new reflows.
-    parent->RemoveFrame(FrameChildListID::NoReflowPrincipal, aFrame);
+    parent->RemoveFrame(context, FrameChildListID::NoReflowPrincipal, aFrame);
   }
 }
 

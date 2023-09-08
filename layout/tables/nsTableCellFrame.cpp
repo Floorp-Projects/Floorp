@@ -224,7 +224,7 @@ void nsTableCellFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   MOZ_CRASH("unsupported operation");
 }
 
-void nsTableCellFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsTableCellFrame::RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) {
   MOZ_CRASH("unsupported operation");
 }
 #endif

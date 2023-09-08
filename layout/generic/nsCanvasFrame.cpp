@@ -277,9 +277,10 @@ void nsCanvasFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 }
 
 #ifdef DEBUG
-void nsCanvasFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsCanvasFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                                nsIFrame* aOldFrame) {
   MOZ_ASSERT(aListID == FrameChildListID::Principal, "unexpected child list");
-  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+  nsContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
 }
 #endif
 

@@ -111,8 +111,9 @@ void nsSliderFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   mCurPos = GetCurrentPosition(aContent);
 }
 
-void nsSliderFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
-  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+void nsSliderFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                                nsIFrame* aOldFrame) {
+  nsContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
   if (mFrames.IsEmpty()) {
     RemoveListener();
   }

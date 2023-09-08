@@ -63,8 +63,8 @@ class nsAbsoluteContainingBlock {
   void InsertFrames(nsIFrame* aDelegatingFrame,
                     mozilla::FrameChildListID aListID, nsIFrame* aPrevFrame,
                     nsFrameList&& aFrameList);
-  void RemoveFrame(nsIFrame* aDelegatingFrame,
-                   mozilla::FrameChildListID aListID, nsIFrame* aOldFrame);
+  void RemoveFrame(mozilla::FrameDestroyContext&, mozilla::FrameChildListID,
+                   nsIFrame*);
 
   enum class AbsPosReflowFlags {
     ConstrainHeight = 0x1,

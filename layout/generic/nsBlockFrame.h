@@ -121,7 +121,7 @@ class nsBlockFrame : public nsContainerFrame {
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
-  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame* aOldFrame) override;
   nsContainerFrame* GetContentInsertionFrame() override;
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
   const nsFrameList& GetChildList(ChildListID aListID) const override;
@@ -323,7 +323,7 @@ class nsBlockFrame : public nsContainerFrame {
 
   void StealFrame(nsIFrame* aChild) override;
 
-  void DeleteNextInFlowChild(nsIFrame* aNextInFlow,
+  void DeleteNextInFlowChild(DestroyContext&, nsIFrame* aNextInFlow,
                              bool aDeletingEmptyFrames) override;
 
   /**
@@ -551,7 +551,7 @@ class nsBlockFrame : public nsContainerFrame {
    * -- destroys all removed frames
    */
   enum { REMOVE_FIXED_CONTINUATIONS = 0x02, FRAMES_ARE_EMPTY = 0x04 };
-  void DoRemoveFrame(nsIFrame* aDeletedFrame, uint32_t aFlags, DestroyContext&);
+  void DoRemoveFrame(DestroyContext&, nsIFrame* aDeletedFrame, uint32_t aFlags);
 
   void ReparentFloats(nsIFrame* aFirstFrame, nsBlockFrame* aOldParent,
                       bool aReparentSiblings);
@@ -668,7 +668,7 @@ class nsBlockFrame : public nsContainerFrame {
                        bool aCollectFromSiblings);
 
   // Remove a float, abs, rel positioned frame from the appropriate block's list
-  static void DoRemoveOutOfFlowFrame(nsIFrame* aFrame, DestroyContext&);
+  static void DoRemoveOutOfFlowFrame(DestroyContext&, nsIFrame*);
 
   /** set up the conditions necessary for an resize reflow
    * the primary task is to mark the minimumly sufficient lines dirty.
