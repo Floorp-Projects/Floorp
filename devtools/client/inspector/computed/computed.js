@@ -565,13 +565,82 @@ CssComputedView.prototype = {
           return Promise.resolve();
         }
 
+        this._computed = computed;
         this._matchedProperties = new Set();
+        const customProperties = new Set();
+
         for (const name in computed) {
           if (computed[name].matched) {
             this._matchedProperties.add(name);
           }
+          if (name.startsWith("--")) {
+            customProperties.add(name);
+          }
         }
-        this._computed = computed;
+
+        // Removing custom property PropertyViews which won't be used
+        let customPropertiesStartIndex;
+        for (let i = this.propertyViews.length - 1; i >= 0; i--) {
+          const propView = this.propertyViews[i];
+
+          // custom properties are displayed at the bottom of the list, and we're looping
+          // backward through propertyViews, so if the current item does not represent
+          // a custom property, we can stop looping.
+          if (!propView.isCustomProperty) {
+            customPropertiesStartIndex = i + 1;
+            break;
+          }
+
+          // If the custom property will be used, move to the next item.
+          if (customProperties.has(propView.name)) {
+            customProperties.delete(propView.name);
+            continue;
+          }
+
+          // Otherwise remove property view element
+          if (propView.element) {
+            propView.element.remove();
+          }
+
+          propView.destroy();
+          this.propertyViews.splice(i, 1);
+        }
+
+        // At this point, `customProperties` only contains custom property names for
+        // which we don't have a PropertyView yet.
+        let insertIndex = customPropertiesStartIndex;
+        for (const customPropertyName of Array.from(customProperties).sort()) {
+          const propertyView = new PropertyView(
+            this,
+            customPropertyName,
+            // isCustomProperty
+            true
+          );
+
+          const len = this.propertyViews.length;
+          if (insertIndex !== len) {
+            for (let i = insertIndex; i <= len; i++) {
+              const existingPropView = this.propertyViews[i];
+              if (
+                !existingPropView ||
+                !existingPropView.isCustomProperty ||
+                customPropertyName < existingPropView.name
+              ) {
+                insertIndex = i;
+                break;
+              }
+            }
+          }
+          this.propertyViews.splice(insertIndex, 0, propertyView);
+
+          // Insert the custom property PropertyView at the right spot so we
+          // keep the list ordered.
+          const previousSibling = this.element.childNodes[insertIndex - 1];
+          previousSibling.insertAdjacentElement(
+            "afterend",
+            propertyView.createListItemElement()
+          );
+        }
 
         if (this._refreshProcess) {
           this._refreshProcess.cancel();
@@ -909,18 +978,24 @@ PropertyInfo.prototype = {
  * A container to give easy access to property data from the template engine.
  */
 class PropertyView {
-  /* @param {CssComputedView} tree
+  /*
+   * @param {CssComputedView} tree
    *        The CssComputedView instance we are working with.
    * @param {String} name
    *        The CSS property name for which this PropertyView
    *        instance will render the rules.
+   * @param {Boolean} isCustomProperty
+   *        Set to true if this will represent a custom property.
    */
-
-  constructor(tree, name) {
+  constructor(tree, name, isCustomProperty = false) {
     this.tree = tree;
     this.name = name;
 
-    this.link = "https://developer.mozilla.org/docs/Web/CSS/" + name;
+    this.isCustomProperty = isCustomProperty;
+
+    if (!this.isCustomProperty) {
+      this.link = "https://developer.mozilla.org/docs/Web/CSS/" + name;
+    }
 
     this.#propertyInfo = new PropertyInfo(tree, name);
     const win = this.tree.styleWindow;
@@ -1312,6 +1387,9 @@ class PropertyView {
    * The action when a user clicks on the MDN help link for a property.
    */
   mdnLinkClick(event) {
+    if (!this.link) {
+      return;
+    }
     openContentLink(this.link);
   }
 
@@ -1330,7 +1408,11 @@ class PropertyView {
       this.#abortController = null;
     }
 
-    this.shortcuts.destroy();
+    if (this.shortcuts) {
+      this.shortcuts.destroy();
+    }
+
+    this.shortcuts = null;
     this.element = null;
     this.matchedExpander = null;
     this.valueNode = null;

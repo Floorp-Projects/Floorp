@@ -24,6 +24,21 @@ function fireCopyEvent(element) {
 }
 
 /**
+ * Return all the computed items in the computed view
+ *
+ * @param {CssComputedView} view
+ *        The instance of the computed view panel
+ * @returns {Array<Element>}
+ */
+function getComputedViewProperties(view) {
+  return Array.from(
+    view.styleDocument.querySelectorAll(
+      "#computed-container .computed-property-view"
+    )
+  );
+}
+
+/**
  * Get references to the name and value span nodes corresponding to a given
  * property name in the computed-view
  *
@@ -35,9 +50,7 @@ function fireCopyEvent(element) {
  */
 function getComputedViewProperty(view, name) {
   let prop;
-  for (const property of view.styleDocument.querySelectorAll(
-    "#computed-container .computed-property-view"
-  )) {
+  for (const property of getComputedViewProperties(view)) {
     const nameSpan = property.querySelector(".computed-property-name");
     const valueSpan = property.querySelector(".computed-property-value");
 
@@ -120,9 +133,8 @@ var getComputedViewMatchedRules = async function (view, name) {
  *        The name of the property to retrieve
  * @return {String} The property value
  */
-function getComputedViewPropertyValue(view, name, propertyName) {
-  return getComputedViewProperty(view, name, propertyName).valueSpan
-    .textContent;
+function getComputedViewPropertyValue(view, name) {
+  return getComputedViewProperty(view, name).valueSpan.textContent;
 }
 
 /**
