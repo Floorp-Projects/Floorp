@@ -269,7 +269,7 @@ RunnerManagerState = _RunnerManagerState()
 
 class TestRunnerManager(threading.Thread):
     def __init__(self, suite_name, index, test_queue, test_source_cls,
-                 test_implementations, stop_flag, rerun=1,
+                 test_implementations, stop_flag, retry_index=0, rerun=1,
                  pause_after_test=False, pause_on_unexpected=False,
                  restart_on_unexpected=True, debug_info=None,
                  capture_stdio=True, restart_on_new_group=True, recording=None, max_restarts=5):
@@ -316,6 +316,9 @@ class TestRunnerManager(threading.Thread):
         self.parent_stop_flag = stop_flag
         self.child_stop_flag = mp.Event()
 
+        # Keep track of the current retry index. The retries are meant to handle
+        # flakiness, so at retry round we should restart the browser after each test.
+        self.retry_index = retry_index
         self.rerun = rerun
         self.run_count = 0
         self.pause_after_test = pause_after_test
@@ -731,7 +734,7 @@ class TestRunnerManager(threading.Thread):
                              stack=file_result.stack,
                              subsuite=self.state.subsuite)
 
-        restart_before_next = (test.restart_after or
+        restart_before_next = (self.retry_index > 0 or test.restart_after or
                                file_result.status in ("CRASH", "EXTERNAL-TIMEOUT", "INTERNAL-ERROR") or
                                ((subtest_unexpected or is_unexpected) and
                                 self.restart_on_unexpected))
@@ -902,6 +905,7 @@ def make_test_queue(tests, test_source):
 class ManagerGroup:
     """Main thread object that owns all the TestRunnerManager threads."""
     def __init__(self, suite_name, test_source, test_implementations,
+                 retry_index=0,
                  rerun=1,
                  pause_after_test=False,
                  pause_on_unexpected=False,
@@ -918,6 +922,7 @@ class ManagerGroup:
         self.pause_on_unexpected = pause_on_unexpected
         self.restart_on_unexpected = restart_on_unexpected
         self.debug_info = debug_info
+        self.retry_index = retry_index
         self.rerun = rerun
         self.capture_stdio = capture_stdio
         self.restart_on_new_group = restart_on_new_group
@@ -950,6 +955,7 @@ class ManagerGroup:
                                         self.test_source.cls,
                                         self.test_implementations,
                                         self.stop_flag,
+                                        self.retry_index,
                                         self.rerun,
                                         self.pause_after_test,
                                         self.pause_on_unexpected,
