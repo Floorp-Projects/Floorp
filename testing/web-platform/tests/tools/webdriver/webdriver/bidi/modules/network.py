@@ -59,5 +59,5 @@ class Network(BidiModule):
 
     @command
     def remove_intercept(self, intercept: str) -> Mapping[str, Any]:
-        params: MutableMapping[str, Any] = { "intercept": intercept }
+        params: MutableMapping[str, Any] = {"intercept": intercept}
         return params
