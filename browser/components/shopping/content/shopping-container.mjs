@@ -113,6 +113,12 @@ export class ShoppingContainer extends MozLitElement {
         break;
       case "ReportedProductAvailable":
         this.userReportedAvailable = true;
+        window.dispatchEvent(
+          new CustomEvent("ReportProductAvailable", {
+            bubbles: true,
+            composed: true,
+          })
+        );
         break;
       case "adsEnabledByUserChanged":
         this.adsEnabledByUser = event.detail?.adsEnabledByUser;
