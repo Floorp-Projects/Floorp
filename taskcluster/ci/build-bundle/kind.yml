@@ -2,30 +2,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.build_android_app:transforms
     - android_taskgraph.transforms.gradle_optimization:transforms
-    - taskgraph.transforms.job:transforms
-    - taskgraph.transforms.task:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
     - toolchain
     - external-gradle-dependencies
 
-task-defaults:
+job-defaults:
     aab-artifact-template:
         type: file
         name: 'public/build/target.aab'
-        path: '/builds/worker/checkouts/vcs/{source_project_name}/app/build/outputs/bundle/{variant_name}/app-{gradle_build}-{gradle_build_type}.aab'
+        path: '/builds/worker/checkouts/gecko/mobile/android/{source_project_name}/app/build/outputs/bundle/{variant_name}/app-{gradle_build}-{gradle_build_type}.aab'
     run:
         gradle-package-command: bundle
         gradle-extra-options:
             - -Paab
 
 
-tasks:
+jobs:
     focus-debug:
         attributes:
             code-review: true
@@ -33,10 +33,6 @@ tasks:
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         description: 'Focus debug AAB build from source code'
-        run-on-tasks-for:
-            - github-pull-request
-            - github-pull-request-untrusted
-            - github-push
         run:
             gradle-build-type: debug
             gradle-build-name: focusDebug
@@ -53,10 +49,6 @@ tasks:
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         description: 'Klar debug AAB build from source code'
-        run-on-tasks-for:
-            - github-pull-request
-            - github-pull-request-untrusted
-            - github-push
         run:
             gradle-build-type: debug
             gradle-build-name: klarDebug
@@ -73,10 +65,6 @@ tasks:
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         description: 'Fenix debug AAB build from source code'
-        run-on-tasks-for:
-            - github-pull-request
-            - github-pull-request-untrusted
-            - github-push
         run:
             gradle-build-type: debug
             gradle-build-name: fenixDebug
