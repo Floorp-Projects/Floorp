@@ -423,8 +423,10 @@ inline int32_t ValidateIPv4Number(const nsACString& host, int32_t bases[4],
   for (int32_t i = 0; i < length; i++) {
     char current = host[i];
     if (current == '.') {
-      if (!lastWasNumber) {  // A dot should not follow an X or a dot, or be
-                             // first
+      // A dot should not follow a dot, or be first - it can follow an x though.
+      if (!(lastWasNumber ||
+            (i >= 2 && (host[i - 1] == 'X' || host[i - 1] == 'x') &&
+             host[i - 2] == '0'))) {
         return -1;
       }
 
@@ -3904,4 +3906,17 @@ size_t nsStandardURL::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 // For unit tests.  Including nsStandardURL.h seems to cause problems
 nsresult Test_NormalizeIPv4(const nsACString& host, nsCString& result) {
   return mozilla::net::nsStandardURL::NormalizeIPv4(host, result);
+}
+
+// For unit tests.  Including nsStandardURL.h seems to cause problems
+nsresult Test_ParseIPv4Number(const nsACString& input, int32_t base,
+                              uint32_t& number, uint32_t maxNumber) {
+  return mozilla::net::ParseIPv4Number(input, base, number, maxNumber);
+}
+
+int32_t Test_ValidateIPv4Number(const nsACString& host, int32_t bases[4],
+                                int32_t dotIndex[3], bool& onlyBase10,
+                                int32_t& length) {
+  return mozilla::net::ValidateIPv4Number(host, bases, dotIndex, onlyBase10,
+                                          length);
 }
