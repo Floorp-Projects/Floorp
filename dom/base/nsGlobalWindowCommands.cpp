@@ -1015,8 +1015,7 @@ nsLookUpDictionaryCommand::DoCommandParams(const char* aCommandName,
     }
 
     intl::WordRange range = intl::WordBreaker::FindWord(
-        queryTextContentEvent.mReply->DataRef().get(),
-        queryTextContentEvent.mReply->DataLength(),
+        queryTextContentEvent.mReply->DataRef(),
         queryCharAtPointEvent.mReply->StartOffset() - offset);
     if (range.mEnd == range.mBegin) {
       return NS_ERROR_FAILURE;

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/intl/UnicodeProperties.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -102,15 +103,15 @@ WordBreaker::WordBreakClass WordBreaker::GetClass(char16_t c) {
   return kWbClassAlphaLetter;
 }
 
-WordRange WordBreaker::FindWord(const char16_t* aText, uint32_t aLen,
-                                uint32_t aPos) {
-  MOZ_ASSERT(aText);
+WordRange WordBreaker::FindWord(const nsAString& aText, uint32_t aPos) {
+  const CheckedInt<uint32_t> len = aText.Length();
+  MOZ_RELEASE_ASSERT(len.isValid());
 
-  if (aPos >= aLen) {
-    return {aLen, aLen};
+  if (aPos >= len.value()) {
+    return {len.value(), len.value()};
   }
 
-  WordRange range{0, aLen};
+  WordRange range{0, len.value()};
 
 #if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
   if (StaticPrefs::intl_icu4x_segmenter_enabled()) {
@@ -118,14 +119,14 @@ WordRange WordBreaker::FindWord(const char16_t* aText, uint32_t aLen,
         capi::ICU4XWordSegmenter_create_auto(mozilla::intl::GetDataProvider());
     MOZ_ASSERT(result.is_ok);
     ICU4XWordSegmenter segmenter(result.ok);
-    ICU4XWordBreakIteratorUtf16 iterator =
-        segmenter.segment_utf16(diplomat::span((const uint16_t*)aText, aLen));
+    ICU4XWordBreakIteratorUtf16 iterator = segmenter.segment_utf16(
+        diplomat::span((const uint16_t*)aText.BeginReading(), aText.Length()));
 
     uint32_t previousPos = 0;
     while (true) {
       const int32_t nextPos = iterator.next();
       if (nextPos < 0) {
-        return {previousPos, aLen};
+        return {previousPos, len.value()};
       }
       if ((uint32_t)nextPos > aPos) {
         return {previousPos, (uint32_t)nextPos};
@@ -139,7 +140,7 @@ WordRange WordBreaker::FindWord(const char16_t* aText, uint32_t aLen,
   WordBreakClass c = GetClass(aText[aPos]);
 
   // Scan forward
-  for (uint32_t i = aPos + 1; i <= aLen; i++) {
+  for (uint32_t i = aPos + 1; i < len.value(); i++) {
     if (c != GetClass(aText[i])) {
       range.mEnd = i;
       break;
@@ -159,7 +160,8 @@ WordRange WordBreaker::FindWord(const char16_t* aText, uint32_t aLen,
     // shorter answer
     AutoTArray<uint8_t, 256> breakBefore;
     breakBefore.SetLength(range.mEnd - range.mBegin);
-    ComplexBreaker::GetBreaks(aText + range.mBegin, range.mEnd - range.mBegin,
+    ComplexBreaker::GetBreaks(aText.BeginReading() + range.mBegin,
+                              range.mEnd - range.mBegin,
                               breakBefore.Elements());
 
     // Scan forward

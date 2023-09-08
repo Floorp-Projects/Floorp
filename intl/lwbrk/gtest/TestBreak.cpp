@@ -240,8 +240,7 @@ void TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
 
   NS_ConvertASCIItoUTF16 fragText(wb[fragN]);
 
-  mozilla::intl::WordRange res =
-      WordBreaker::FindWord(fragText.get(), fragText.Length(), offset);
+  mozilla::intl::WordRange res = WordBreaker::FindWord(fragText, offset);
 
   nsAutoString result(Substring(fragText, res.mBegin, res.mEnd - res.mBegin));
 
@@ -264,8 +263,7 @@ void TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
       if (canBreak) {
         break;
       }
-      mozilla::intl::WordRange r =
-          WordBreaker::FindWord(nextFragText.get(), nextFragText.Length(), 0);
+      mozilla::intl::WordRange r = WordBreaker::FindWord(nextFragText, 0);
 
       result.Append(Substring(nextFragText, r.mBegin, r.mEnd - r.mBegin));
 
@@ -295,9 +293,8 @@ TEST(WordBreak, TestNextWordBreakWithComplexLanguage)
 
 TEST(WordBreak, TestFindWordWithEmptyString)
 {
-  char16_t empty[] = {};
   mozilla::intl::WordRange expect{0, 0};
-  mozilla::intl::WordRange result = WordBreaker::FindWord(empty, 0, 0);
+  mozilla::intl::WordRange result = WordBreaker::FindWord(EmptyString(), 0);
   ASSERT_EQ(expect.mBegin, result.mBegin);
   ASSERT_EQ(expect.mEnd, result.mEnd);
 }
