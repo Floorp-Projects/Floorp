@@ -531,6 +531,8 @@
         tabToWarm = gBrowser._findTabToBlurTo(this);
       }
       gBrowser.warmupTab(tabToWarm);
+
+      this.dispatchEvent(new CustomEvent("TabHoverStart", { bubbles: true }));
     }
 
     _mouseleave() {
@@ -542,6 +544,7 @@
         this.linkedBrowser.unselectedTabHover(false);
         this.cancelUnselectedTabHoverTimer();
       }
+      this.dispatchEvent(new CustomEvent("TabHoverEnd", { bubbles: true }));
     }
 
     setSecondaryTabTooltipLabel(l10nID, l10nArgs) {
