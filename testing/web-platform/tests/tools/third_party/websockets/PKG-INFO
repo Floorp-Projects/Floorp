@@ -1,3 +1,30 @@
+Metadata-Version: 2.1
+Name: websockets
+Version: 10.3
+Summary: An implementation of the WebSocket Protocol (RFC 6455 & 7692)
+Home-page: https://github.com/aaugustin/websockets
+Author: Aymeric Augustin
+Author-email: aymeric.augustin@m4x.org
+License: BSD
+Project-URL: Changelog, https://websockets.readthedocs.io/en/stable/project/changelog.html
+Project-URL: Documentation, https://websockets.readthedocs.io/
+Project-URL: Funding, https://tidelift.com/subscription/pkg/pypi-websockets?utm_source=pypi-websockets&utm_medium=referral&utm_campaign=readme
+Project-URL: Tracker, https://github.com/aaugustin/websockets/issues
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Requires-Python: >=3.7
+License-File: LICENSE
+
 .. image:: logo/horizontal.svg
    :width: 480px
    :alt: websockets
@@ -76,16 +103,6 @@ Does that look good?
 
 `Get started with the tutorial! <https://websockets.readthedocs.io/en/stable/intro/index.html>`_
 
-.. raw:: html
-
-    <hr>
-    <img align="left" height="150" width="150" src="https://raw.githubusercontent.com/aaugustin/websockets/main/logo/tidelift.png">
-    <h3 align="center"><i>websockets for enterprise</i></h3>
-    <p align="center"><i>Available as part of the Tidelift Subscription</i></p>
-    <p align="center"><i>The maintainers of websockets and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. <a href="https://tidelift.com/subscription/pkg/pypi-websockets?utm_source=pypi-websockets&utm_medium=referral&utm_campaign=readme">Learn more.</a></i></p>
-    <hr>
-    <p>(If you contribute to <code>websockets</code> and would like to become an official support provider, <a href="https://fractalideas.com/">let me know</a>.)</p>
-
 Why should I use ``websockets``?
 --------------------------------
 
@@ -153,3 +170,5 @@ Participants must uphold the `Contributor Covenant code of conduct`_.
 ``websockets`` is released under the `BSD license`_.
 
 .. _BSD license: https://github.com/aaugustin/websockets/blob/main/LICENSE
+
+
