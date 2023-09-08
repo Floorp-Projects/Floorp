@@ -87,6 +87,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
       case "PolledRequestMade":
         this.updateContent({ isPolledRequest: true });
         break;
+      case "ReportProductAvailable":
+        this.reportProductAvailable();
+        break;
       case "ShoppingTelemetryEvent":
         this.submitShoppingEvent(event.detail);
         break;
@@ -281,6 +284,10 @@ export class ShoppingSidebarChild extends RemotePageChild {
       detail: Cu.cloneInto(detail, win),
     });
     win.document.dispatchEvent(evt);
+  }
+
+  async reportProductAvailable() {
+    await this.#product.sendReport();
   }
 
   /**
