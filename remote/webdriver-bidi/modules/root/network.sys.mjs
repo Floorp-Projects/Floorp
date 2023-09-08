@@ -447,6 +447,13 @@ class NetworkModule extends Module {
       timestamp,
     } = data;
 
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+    if (!browsingContext) {
+      // Do not emit events if the context id does not match any existing
+      // browsing context.
+      return;
+    }
+
     const protocolEventName = "network.beforeRequestSent";
     const isListening = this.messageHandler.eventsDispatcher.hasListener(
       protocolEventName,
@@ -476,7 +483,6 @@ class NetworkModule extends Module {
       initiator,
     });
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
     this.emitEvent(
       protocolEventName,
       beforeRequestSentEvent,
@@ -511,6 +517,13 @@ class NetworkModule extends Module {
       timestamp,
     } = data;
 
+    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+    if (!browsingContext) {
+      // Do not emit events if the context id does not match any existing
+      // browsing context.
+      return;
+    }
+
     const protocolEventName =
       name === "response-started"
         ? "network.responseStarted"
@@ -538,7 +551,6 @@ class NetworkModule extends Module {
       response: responseData,
     });
 
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
     this.emitEvent(
       protocolEventName,
       responseEvent,
