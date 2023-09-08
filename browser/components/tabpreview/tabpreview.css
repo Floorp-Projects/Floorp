@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.tab-preview-container {
+  background-color: #ffffff;
+  color: #15141a;
+  border-radius: 9px;
+  display: inline-block;
+  width: 280px;
+  overflow: hidden;
+  line-height: 1.5;
+}
+
+.tab-preview-title {
+  max-height: 3em;
+  overflow: hidden;
+  font-weight: 600;
+}
+
+.tab-preview-uri {
+  color: #4a4b49;
+  max-height: 1.5em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tab-preview-text-container {
+  padding: 8px;
+}
+
+.tab-preview-thumbnail-container img,
+.tab-preview-thumbnail-container canvas {
+  display: block;
+  width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .tab-preview-container {
+    background-color: #42414d;
+    color: #fbfbfe;
+  }
+  .tab-preview-uri {
+    color: #cfcfd8;
+  }
+}
+
+@media (prefers-contrast) {
+  .tab-preview-container {
+    background-color: Canvas;
+    color: CanvasText;
+  }
+  .tab-preview-uri {
+    color: CanvasText;
+  }
+}
+
+@media (max-width: 640px) {
+  .tab-preview-thumbnail-container {
+    display: none;
+  }
+}

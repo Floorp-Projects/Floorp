@@ -9,6 +9,8 @@
 // This is loaded into all browser windows. Wrap in a block to prevent
 // leaking to window scope.
 {
+  const TAB_PREVIEW_PREF = "browser.tabs.cardPreview.enabled";
+
   class MozTabbrowserTabs extends MozElements.TabsBase {
     constructor() {
       super();
@@ -20,6 +22,8 @@
       this.addEventListener("TabShow", this);
       this.addEventListener("TabPinned", this);
       this.addEventListener("TabUnpinned", this);
+      this.addEventListener("TabHoverStart", this);
+      this.addEventListener("TabHoverEnd", this);
       this.addEventListener("transitionend", this);
       this.addEventListener("dblclick", this);
       this.addEventListener("click", this);
@@ -118,6 +122,24 @@
       if (gMultiProcessBrowser) {
         this.tabbox.tabpanels.setAttribute("async", "true");
       }
+
+      this.configureTooltip = () => {
+        // fall back to original tooltip behavior if pref is not set
+        this.tooltip = this._showCardPreviews ? null : "tabbrowser-tab-tooltip";
+
+        // activate new tooltip behavior if pref is set
+        document
+          .getElementById("tabbrowser-tab-preview")
+          .toggleAttribute("hidden", !this._showCardPreviews);
+      };
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "_showCardPreviews",
+        TAB_PREVIEW_PREF,
+        false,
+        () => this.configureTooltip()
+      );
+      this.configureTooltip();
     }
 
     on_TabSelect(event) {
@@ -1791,6 +1813,22 @@
 
     handleEvent(aEvent) {
       switch (aEvent.type) {
+        case "TabHoverStart":
+          if (this._showCardPreviews) {
+            const previewContainer = document.getElementById(
+              "tabbrowser-tab-preview"
+            );
+            previewContainer.tab = aEvent.target;
+          }
+          break;
+        case "TabHoverEnd":
+          if (this._showCardPreviews) {
+            const previewContainer = document.getElementById(
+              "tabbrowser-tab-preview"
+            );
+            previewContainer.tab = null;
+          }
+          break;
         case "mouseout":
           // If the "related target" (the node to which the pointer went) is not
           // a child of the current document, the mouse just left the window.
