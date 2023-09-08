@@ -11762,14 +11762,6 @@
   value: false
   mirror: always
 
-# When this pref is true we enforce a 253 character limit on domains we try to
-# resolve. See bug 1264117. If it doesn't cause any web-compat issues we can
-# remove it in a few releases
-- name: network.dns.limit_253_chars
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # When this pref is true, we copy the host name to a fresh string before
 # calling into getaddrinfo.
 - name: network.dns.copy_string_before_call
