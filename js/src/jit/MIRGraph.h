@@ -584,6 +584,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   void dump(GenericPrinter& out);
   void dump();
 
+  void updateTrackedSite(BytecodeSite* site) {
+    MOZ_ASSERT(site->tree() == trackedSite_->tree());
+    trackedSite_ = site;
+  }
   BytecodeSite* trackedSite() const { return trackedSite_; }
   InlineScriptTree* trackedTree() const { return trackedSite_->tree(); }
 
