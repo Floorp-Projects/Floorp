@@ -155,8 +155,7 @@ void nsTableRowFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 void nsTableRowFrame::Destroy(DestroyContext& aContext) {
-  nsTableFrame::MaybeUnregisterPositionedTablePart(this,
-                                                   aContext.DestructRoot());
+  nsTableFrame::MaybeUnregisterPositionedTablePart(this);
   nsContainerFrame::Destroy(aContext);
 }
 

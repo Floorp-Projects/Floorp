@@ -82,8 +82,7 @@ void nsTableCellFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 }
 
 void nsTableCellFrame::Destroy(DestroyContext& aContext) {
-  nsTableFrame::MaybeUnregisterPositionedTablePart(this,
-                                                   aContext.DestructRoot());
+  nsTableFrame::MaybeUnregisterPositionedTablePart(this);
   nsContainerFrame::Destroy(aContext);
 }
 
