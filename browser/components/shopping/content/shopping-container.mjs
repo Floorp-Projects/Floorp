@@ -119,6 +119,13 @@ export class ShoppingContainer extends MozLitElement {
             composed: true,
           })
         );
+        window.dispatchEvent(
+          new CustomEvent("ShoppingTelemetryEvent", {
+            bubbles: true,
+            composed: true,
+            detail: "surfaceReactivatedButtonClicked",
+          })
+        );
         break;
       case "adsEnabledByUserChanged":
         this.adsEnabledByUser = event.detail?.adsEnabledByUser;
