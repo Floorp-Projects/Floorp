@@ -87,6 +87,9 @@ const REGEXP_HIGHLIGHT_PSEUDO_ELEMENTS = new RegExp(
 const FIRST_LINE_PSEUDO_ELEMENT_STYLING_SPEC_URL =
   "https://www.w3.org/TR/css-pseudo-4/#first-line-styling";
 
+const FIRST_LETTER_PSEUDO_ELEMENT_STYLING_SPEC_URL =
+  "https://www.w3.org/TR/css-pseudo-4/#first-letter-styling";
+
 const PLACEHOLDER_PSEUDO_ELEMENT_STYLING_SPEC_URL =
   "https://www.w3.org/TR/css-pseudo-4/#placeholder-pseudo";
 
@@ -267,6 +270,14 @@ class InactivePropertyHelper {
         fixId: "learn-more",
         msgId: "inactive-css-first-line-pseudo-element-not-supported",
         learnMoreURL: FIRST_LINE_PSEUDO_ELEMENT_STYLING_SPEC_URL,
+      },
+      // Content modifying properties used on ::first-letter pseudo-element.
+      {
+        invalidProperties: ["content"],
+        when: () => this.isFirstLetter,
+        fixId: "learn-more",
+        msgId: "inactive-css-first-letter-pseudo-element-not-supported",
+        learnMoreURL: FIRST_LETTER_PSEUDO_ELEMENT_STYLING_SPEC_URL,
       },
       // Writing mode or inline properties used on ::placeholder pseudo-element.
       {
