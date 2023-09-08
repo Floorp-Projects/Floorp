@@ -388,6 +388,11 @@ export class WebDriverSession {
  *     The list of seen nodes.
  */
 export function getSeenNodesForBrowsingContext(sessionId, browsingContext) {
+  if (!CanonicalBrowsingContext.isInstance(browsingContext)) {
+    // If browsingContext is not a valid Browsing Context, return an empty set.
+    return new Set();
+  }
+
   const navigable =
     lazy.TabManager.getNavigableForBrowsingContext(browsingContext);
   const session = getWebDriverSessionById(sessionId);
