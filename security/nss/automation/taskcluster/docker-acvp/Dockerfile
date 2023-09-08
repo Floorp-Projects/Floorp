@@ -1,5 +1,5 @@
 # Minimal image with clang-format 3.9.
-FROM rust:1.64
+FROM rust:1.70
 LABEL maintainer="iaroslav.gridin@tuni.fi"
 
 # for new clang/llvm
