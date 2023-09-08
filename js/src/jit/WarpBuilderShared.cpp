@@ -51,7 +51,8 @@ void WarpBuilderShared::pushConstant(const Value& v) {
   current->push(cst);
 }
 
-MDefinition* WarpBuilderShared::unboxObjectInfallible(MDefinition* def) {
+MDefinition* WarpBuilderShared::unboxObjectInfallible(MDefinition* def,
+                                                      IsMovable movable) {
   if (def->type() == MIRType::Object) {
     return def;
   }
@@ -59,6 +60,9 @@ MDefinition* WarpBuilderShared::unboxObjectInfallible(MDefinition* def) {
   MOZ_ASSERT(def->type() == MIRType::Value);
 
   auto* unbox = MUnbox::New(alloc(), def, MIRType::Object, MUnbox::Infallible);
+  if (movable == IsMovable::No) {
+    unbox->setNotMovable();
+  }
   current->add(unbox);
   return unbox;
 }

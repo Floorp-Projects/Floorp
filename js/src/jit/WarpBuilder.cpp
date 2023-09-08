@@ -1700,7 +1700,7 @@ bool WarpBuilder::build_EndIter(BytecodeLocation loc) {
 
 bool WarpBuilder::build_CloseIter(BytecodeLocation loc) {
   MDefinition* iter = current->pop();
-  iter = unboxObjectInfallible(iter);
+  iter = unboxObjectInfallible(iter, IsMovable::Yes);
   return buildIC(loc, CacheKind::CloseIter, {iter});
 }
 
@@ -2907,9 +2907,11 @@ bool WarpBuilder::build_SpreadCall(BytecodeLocation loc) {
   CallInfo callInfo(alloc(), constructing, loc.resultIsPopped());
   callInfo.initForSpreadCall(current);
 
-  // The argument must be an array object.
+  // The argument must be an array object. Add an infallible MUnbox if needed,
+  // but ensure it's not loop hoisted before the branch in the bytecode guarding
+  // that it's not undefined.
   MOZ_ASSERT(callInfo.argc() == 1);
-  callInfo.setArg(0, unboxObjectInfallible(callInfo.getArg(0)));
+  callInfo.setArg(0, unboxObjectInfallible(callInfo.getArg(0), IsMovable::No));
 
   if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
     return transpileCall(loc, cacheIRSnapshot, &callInfo);
@@ -2931,9 +2933,9 @@ bool WarpBuilder::build_SpreadNew(BytecodeLocation loc) {
   CallInfo callInfo(alloc(), constructing, loc.resultIsPopped());
   callInfo.initForSpreadCall(current);
 
-  // The argument must be an array object.
+  // See build_SpreadCall.
   MOZ_ASSERT(callInfo.argc() == 1);
-  callInfo.setArg(0, unboxObjectInfallible(callInfo.getArg(0)));
+  callInfo.setArg(0, unboxObjectInfallible(callInfo.getArg(0), IsMovable::No));
 
   if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
     return transpileCall(loc, cacheIRSnapshot, &callInfo);
