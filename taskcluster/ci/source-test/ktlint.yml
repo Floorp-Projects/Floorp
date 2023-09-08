@@ -1,0 +1,63 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: 'Run ktlint over all modules'
+    run:
+        using: gradlew
+        gradlew: ['ktlint']
+        use-caches: false
+    attributes:
+        code-review: true
+    always-target: true
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-components
+    fetches:
+        toolchain:
+            - android-sdk-linux
+            - linux64-jdk-repack
+        external-gradle-dependencies:
+            - external-gradle-dependencies.tar.xz
+    platform: 'lint/opt'
+    treeherder:
+        kind: test
+        tier: 1
+    worker-type: b-linux-gcp
+    worker:
+        docker-image: {in-tree: lint}
+        max-run-time: 1200
+        env:
+            JAVA_HOME: "/builds/worker/fetches/jdk/jdk-17.0.6+10"
+    when:
+        files-changed:
+            - "mobile/android/android-components/**"
+
+android-components:
+    run:
+        pre-gradlew:
+            - ["cd", "mobile/android/android-components"]
+    treeherder:
+        symbol: ktlint(AC)
+
+focus:
+    when:
+        files-changed:
+            - "mobile/android/focus-android/**"
+    run:
+        pre-gradlew:
+            - ["cd", "mobile/android/focus-android"]
+    treeherder:
+        symbol: ktlint(focus)
+
+fenix:
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
+    when:
+        files-changed:
+            - "mobile/android/fenix/**"
+    run:
+        pre-gradlew:
+            - ["cd", "mobile/android/fenix"]
+    treeherder:
+        symbol: ktlint(fenix)

@@ -247,6 +247,7 @@ treeherder:
         'buildconfig': 'Make sure the content of .buildconfig.yml matches what gradle knows about its projects'
         'compare-locales': 'Validate strings.xml with compare-locales'
         'detekt': 'detekt linter'
+        'ktlint': 'ktlint linter'
 
         'focus': 'Focus general tasks no matter the variant'
         'focus-beta': 'Focus beta-related tasks'
@@ -392,7 +393,6 @@ treeherder:
         'samples-browser-gecko': 'samples-browser-gecko'
         'samples-browser-system': 'samples-browser-system'
 
-        # ktlint: ktlint linter
         # lint: gradle lint linter
 
         # forPerformanceTest: Builds made for Raptor and other performance tests

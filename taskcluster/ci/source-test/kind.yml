@@ -27,6 +27,7 @@ jobs-from:
     - doc.yml
     - file-metadata.yml
     - jsshell.yml
+    - ktlint.yml
     - mozlint.yml
     - mozlint-android.yml
     - node.yml
