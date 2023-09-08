@@ -150,6 +150,14 @@ add_task(async function test_getNavigableForBrowsingContext() {
     childContext,
     "Child browsing context has itself as navigable"
   );
+
+  const invalidValues = [undefined, null, 1, "test", {}, []];
+  for (const invalidValue of invalidValues) {
+    Assert.throws(
+      () => TabManager.getNavigableForBrowsingContext(invalidValue),
+      /Expected browsingContext to be a CanonicalBrowsingContext/
+    );
+  }
 });
 
 add_task(async function test_getTabForBrowsingContext() {
