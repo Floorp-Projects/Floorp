@@ -167,7 +167,6 @@ const tabbarDisplayStyleFunctions = {
 
     if (workspaceButton == null && Services.prefs.getBooleanPref("floorp.browser.workspace.tab.enabled")) {
       window.setTimeout(tabbarDisplayStyleFunctions.setWorkspaceLabelToNavbar, 3000);
-      return;
     }
 
     customizeTarget.before(workspaceButton);
@@ -177,7 +176,6 @@ const tabbarDisplayStyleFunctions = {
     let workspaceButton = document.getElementById("workspace-button");
     if (workspaceButton == null && Services.prefs.getBooleanPref("floorp.browser.workspace.tab.enabled")) {
       window.setTimeout(tabbarDisplayStyleFunctions.moveToDefaultSpace, 3000);
-      return;
     }
     document.querySelector(".toolbar-items").before(workspaceButton);
   },
