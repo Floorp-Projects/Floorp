@@ -139,7 +139,7 @@ class WebTaskScheduler : public nsWrapperCache, public SupportsWeakPtr {
   virtual bool DispatchEventLoopRunnable() = 0;
 
   nsClassHashtable<nsUint32HashKey, WebTaskQueue> mStaticPriorityTaskQueues;
-  nsClassHashtable<nsPtrHashKey<TaskSignal>, WebTaskQueue>
+  nsClassHashtable<nsRefPtrHashKey<TaskSignal>, WebTaskQueue>
       mDynamicPriorityTaskQueues;
 };
 
