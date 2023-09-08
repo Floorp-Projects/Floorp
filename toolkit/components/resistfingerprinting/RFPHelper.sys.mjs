@@ -167,18 +167,12 @@ class _RFPHelper {
       // Works like disabling accept-language spoofing.
       // fall through
       case 1: // don't spoof
-        if (
-          Services.prefs.prefHasUserValue("javascript.use_us_english_locale")
-        ) {
-          Services.prefs.clearUserPref("javascript.use_us_english_locale");
-        }
         // We don't reset intl.accept_languages. Instead, setting
         // privacy.spoof_english to 1 allows user to change preferred language
         // settings through Preferences UI.
         break;
       case 2: // spoof
         Services.prefs.setCharPref("intl.accept_languages", "en-US, en");
-        Services.prefs.setBoolPref("javascript.use_us_english_locale", true);
         break;
       default:
         break;

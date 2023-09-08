@@ -192,7 +192,7 @@ bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
   if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() ||
       StaticPrefs::privacy_resistFingerprinting_pbmode_DoNotUseDirectly()) {
     if (aTarget == RFPTarget::JSLocale) {
-      return Preferences::GetBool("javascript.use_us_english_locale", false);
+      return StaticPrefs::privacy_spoof_english() == 2;
     }
     return true;
   }
