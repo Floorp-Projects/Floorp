@@ -165,6 +165,7 @@ onload = function() {
 
   var query_to_image_width = {
     '%E5':1,
+    '%26%23229%3B':1,
     '%C3%A5':2,
     '%3F':16,
     'unknown query':256,
@@ -230,6 +231,7 @@ onload = function() {
 
   var query_to_video_duration = {
     '%E5':3,
+    '%26%23229%3B':3,
     '%C3%A5':5,
     '%3F':30,
     'unknown query':300,
