@@ -123,12 +123,9 @@ class nsContainerFrame : public nsSplittableFrame {
    * This method is responsible for removing a frame in the frame
    * list.  The implementation should do something with the removed frame
    * and then generate a reflow command. The implementation is responsible
-   * for destroying aOldFrame (the caller mustn't destroy aOldFrame).
-   *
-   * @param   aListID the child list identifier.
-   * @param   aOldFrame the frame to remove
+   * for destroying the frame (the caller mustn't destroy it).
    */
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame);
+  virtual void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*);
 
   /**
    * Helper method to create next-in-flows if necessary. If aFrame
@@ -149,7 +146,7 @@ class nsContainerFrame : public nsSplittableFrame {
    * content was complete before aNextInFlow, so aNextInFlow and its
    * next-in-flows no longer map any real content.
    */
-  virtual void DeleteNextInFlowChild(nsIFrame* aNextInFlow,
+  virtual void DeleteNextInFlowChild(DestroyContext&, nsIFrame* aNextInFlow,
                                      bool aDeletingEmptyFrames);
 
   // Positions the frame's view based on the frame's origin

@@ -257,17 +257,18 @@ void nsTableRowFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   tableFrame->SetGeometryDirty();
 }
 
-void nsTableRowFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsTableRowFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                                  nsIFrame* aOldFrame) {
   NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
-
   MOZ_ASSERT((nsTableCellFrame*)do_QueryFrame(aOldFrame));
-  nsTableCellFrame* cellFrame = static_cast<nsTableCellFrame*>(aOldFrame);
+
+  auto* cellFrame = static_cast<nsTableCellFrame*>(aOldFrame);
   // remove the cell from the cell map
   nsTableFrame* tableFrame = GetTableFrame();
   tableFrame->RemoveCell(cellFrame, GetRowIndex());
 
   // Remove the frame and destroy it
-  mFrames.DestroyFrame(aOldFrame);
+  mFrames.DestroyFrame(aContext, aOldFrame);
 
   PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);

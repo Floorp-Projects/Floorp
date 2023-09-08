@@ -36,8 +36,8 @@ class nsTableColGroupFrame final : public nsContainerFrame {
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   // nsIFrame overrides
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override {
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override {
     nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
     if (!aPrevInFlow) {
       mWritingMode = GetTableFrame()->GetWritingMode();
@@ -52,8 +52,8 @@ class nsTableColGroupFrame final : public nsContainerFrame {
     return static_cast<nsTableFrame*>(parent);
   }
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   /** A colgroup can be caused by three things:
    * 1) An element with table-column-group display
@@ -82,7 +82,7 @@ class nsTableColGroupFrame final : public nsContainerFrame {
   static nsTableColGroupFrame* GetLastRealColGroup(nsTableFrame* aTableFrame);
 
   /** @see nsIFrame::DidSetComputedStyle */
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList&& aChildList) override;
@@ -90,7 +90,7 @@ class nsTableColGroupFrame final : public nsContainerFrame {
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) override;
 
   /** remove the column aChild from the column group, if requested renumber
    * the subsequent columns in this column group and all following column
@@ -99,7 +99,8 @@ class nsTableColGroupFrame final : public nsContainerFrame {
    * @param aResetSubsequentColIndices - if true the columns that follow
    *                                     after aChild will be reenumerated
    */
-  void RemoveChild(nsTableColFrame& aChild, bool aResetSubsequentColIndices);
+  void RemoveChild(DestroyContext& aContext, nsTableColFrame& aChild,
+                   bool aResetSubsequentColIndices);
 
   /** reflow of a column group is a trivial matter of reflowing
    * the col group's children (columns), and setting this frame
@@ -107,9 +108,9 @@ class nsTableColGroupFrame final : public nsContainerFrame {
    * don't play directly in the rendering game.  They do however
    * maintain important state that effects table and cell layout.
    */
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
   /** Add column frames to the table storages: colframe cache and cellmap
    * this doesn't change the mFrames of the colgroup frame.
@@ -130,7 +131,7 @@ class nsTableColGroupFrame final : public nsContainerFrame {
                           const nsFrameList::Slice& aCols);
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
   void Dump(int32_t aIndent);
 #endif
 
@@ -138,7 +139,7 @@ class nsTableColGroupFrame final : public nsContainerFrame {
    * if there are col children, count them (taking into account the span of
    * each) else, check my own span attribute.
    */
-  virtual int32_t GetColCount() const;
+  int32_t GetColCount() const;
 
   /** first column on the child list */
   nsTableColFrame* GetFirstColumn();
@@ -190,7 +191,7 @@ class nsTableColGroupFrame final : public nsContainerFrame {
   void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
                                   BCPixelSize aPixelValue);
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & (eSupportsContainLayoutAndPaint | eSupportsAspectRatio)) {
       return false;
     }
@@ -198,18 +199,15 @@ class nsTableColGroupFrame final : public nsContainerFrame {
     return nsContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));
   }
 
-  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0,
+  void InvalidateFrame(uint32_t aDisplayItemKey = 0,
+                       bool aRebuildDisplayItems = true) override;
+  void InvalidateFrameWithRect(const nsRect& aRect,
+                               uint32_t aDisplayItemKey = 0,
                                bool aRebuildDisplayItems = true) override;
-  virtual void InvalidateFrameWithRect(
-      const nsRect& aRect, uint32_t aDisplayItemKey = 0,
-      bool aRebuildDisplayItems = true) override;
-  virtual void InvalidateFrameForRemoval() override {
-    InvalidateFrameSubtree();
-  }
+  void InvalidateFrameForRemoval() override { InvalidateFrameSubtree(); }
 
  protected:
-  explicit nsTableColGroupFrame(ComputedStyle* aStyle,
-                                nsPresContext* aPresContext);
+  nsTableColGroupFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
 
   void InsertColsReflow(int32_t aColIndex, const nsFrameList::Slice& aCols);
 

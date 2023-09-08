@@ -154,7 +154,7 @@ void nsPlaceholderFrame::Destroy(DestroyContext& aContext) {
     // Destroy the out of flow now.
     ChildListID listId = ChildListIDForOutOfFlow(GetStateBits(), oof);
     nsFrameManager* fm = PresContext()->FrameConstructor();
-    fm->RemoveFrame(listId, oof);
+    fm->RemoveFrame(aContext, listId, oof);
   }
 
   nsIFrame::Destroy(aContext);

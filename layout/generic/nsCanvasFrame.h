@@ -55,7 +55,7 @@ class nsCanvasFrame final : public nsContainerFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
 #ifdef DEBUG
-  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) override;
 #endif
 
   nscoord GetMinISize(gfxContext* aRenderingContext) override;

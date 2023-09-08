@@ -1056,9 +1056,10 @@ void nsTableRowGroupFrame::UndoContinuedRow(nsPresContext* aPresContext,
     return;
   }
 
+  DestroyContext context(aPresContext->PresShell());
   // Destroy aRow, its cells, and their cell blocks. Cell blocks that have split
   // will not have reflowed yet to pick up content from any overflow lines.
-  overflows->DestroyFrame(aRow);
+  overflows->DestroyFrame(context, aRow);
 
   // Put the overflow rows into our child list
   if (!overflows->IsEmpty()) {
@@ -1533,7 +1534,8 @@ void nsTableRowGroupFrame::InsertFrames(
   }
 }
 
-void nsTableRowGroupFrame::RemoveFrame(ChildListID aListID,
+void nsTableRowGroupFrame::RemoveFrame(DestroyContext& aContext,
+                                       ChildListID aListID,
                                        nsIFrame* aOldFrame) {
   NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
 
@@ -1550,7 +1552,7 @@ void nsTableRowGroupFrame::RemoveFrame(ChildListID aListID,
                                   NS_FRAME_HAS_DIRTY_CHILDREN);
     tableFrame->SetGeometryDirty();
   }
-  mFrames.DestroyFrame(aOldFrame);
+  mFrames.DestroyFrame(aContext, aOldFrame);
 }
 
 /* virtual */

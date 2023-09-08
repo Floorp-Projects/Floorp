@@ -270,9 +270,10 @@ void ViewportFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                                  std::move(aFrameList));
 }
 
-void ViewportFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void ViewportFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                                nsIFrame* aOldFrame) {
   NS_ASSERTION(aListID == FrameChildListID::Principal, "unexpected child list");
-  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+  nsContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
 }
 #endif
 

@@ -35,14 +35,6 @@ void nsFrameList::Delete(mozilla::PresShell* aPresShell) {
   aPresShell->FreeByObjectID(eArenaObjectID_nsFrameList, this);
 }
 
-void nsFrameList::DestroyFrames() {
-  while (nsIFrame* frame = RemoveFirstChild()) {
-    FrameDestroyContext context(frame);
-    frame->Destroy(context);
-  }
-  mLastChild = nullptr;
-}
-
 void nsFrameList::DestroyFrames(FrameDestroyContext& aContext) {
   while (nsIFrame* frame = RemoveFirstChild()) {
     frame->Destroy(aContext);
@@ -103,11 +95,11 @@ nsIFrame* nsFrameList::RemoveFirstChild() {
   return nullptr;
 }
 
-void nsFrameList::DestroyFrame(nsIFrame* aFrame) {
+void nsFrameList::DestroyFrame(FrameDestroyContext& aContext,
+                               nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame, "null ptr");
   RemoveFrame(aFrame);
-  FrameDestroyContext context(aFrame);
-  aFrame->Destroy(context);
+  aFrame->Destroy(aContext);
 }
 
 nsFrameList::Slice nsFrameList::InsertFrames(nsContainerFrame* aParent,

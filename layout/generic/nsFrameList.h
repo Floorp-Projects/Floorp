@@ -127,12 +127,6 @@ class nsFrameList {
 
   /**
    * For each frame in this list: remove it from the list then call
-   * Destroy() on it.
-   */
-  void DestroyFrames();
-
-  /**
-   * For each frame in this list: remove it from the list then call
    * Destroy() on it with the passed context as an argument.
    */
   void DestroyFrames(mozilla::FrameDestroyContext&);
@@ -218,10 +212,10 @@ class nsFrameList {
   inline bool ContinueRemoveFrame(nsIFrame* aFrame);
 
   /**
-   * Take aFrame out of the frame list and then destroy it.
+   * Take a frame out of the frame list and then destroy it.
    * The frame must be non-null and present on this list.
    */
-  void DestroyFrame(nsIFrame* aFrame);
+  void DestroyFrame(mozilla::FrameDestroyContext&, nsIFrame*);
 
   /**
    * Insert aFrame right after aPrevSibling, or prepend it to this

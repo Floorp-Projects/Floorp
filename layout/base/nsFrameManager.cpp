@@ -50,7 +50,7 @@ void nsFrameManager::Destroy() {
   mPresShell->SetIgnoreFrameDestruction(true);
 
   if (mRootFrame) {
-    FrameDestroyContext context(mRootFrame);
+    FrameDestroyContext context(mPresShell);
     mRootFrame->Destroy(context);
     mRootFrame = nullptr;
   }
@@ -93,7 +93,8 @@ void nsFrameManager::InsertFrames(nsContainerFrame* aParentFrame,
   }
 }
 
-void nsFrameManager::RemoveFrame(FrameChildListID aListID,
+void nsFrameManager::RemoveFrame(DestroyContext& aContext,
+                                 FrameChildListID aListID,
                                  nsIFrame* aOldFrame) {
   // In case the reflow doesn't invalidate anything since it just leaves
   // a gap where the old frame was, we invalidate it here.  (This is
@@ -114,10 +115,10 @@ void nsFrameManager::RemoveFrame(FrameChildListID aListID,
   nsContainerFrame* parentFrame = aOldFrame->GetParent();
   if (parentFrame->IsAbsoluteContainer() &&
       aListID == parentFrame->GetAbsoluteListID()) {
-    parentFrame->GetAbsoluteContainingBlock()->RemoveFrame(parentFrame, aListID,
+    parentFrame->GetAbsoluteContainingBlock()->RemoveFrame(aContext, aListID,
                                                            aOldFrame);
   } else {
-    parentFrame->RemoveFrame(aListID, aOldFrame);
+    parentFrame->RemoveFrame(aContext, aListID, aOldFrame);
   }
 }
 
