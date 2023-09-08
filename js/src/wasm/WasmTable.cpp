@@ -44,6 +44,9 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       isAsmJS_(desc.isAsmJS),
       length_(desc.initialLength),
       maximum_(desc.maximumLength) {
+  // Acquire a strong reference to the type definition this table may be
+  // referencing.
+  elemType_.AddRef();
   MOZ_ASSERT(repr() == TableRepr::Func);
 }
 
@@ -56,7 +59,15 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       isAsmJS_(desc.isAsmJS),
       length_(desc.initialLength),
       maximum_(desc.maximumLength) {
+  // Acquire a strong reference to the type definition this table may be
+  // referencing.
+  elemType_.AddRef();
   MOZ_ASSERT(repr() == TableRepr::Ref);
+}
+
+Table::~Table() {
+  // Release the strong reference, if any.
+  elemType_.Release();
 }
 
 /* static */

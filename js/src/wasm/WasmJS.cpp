@@ -1139,7 +1139,7 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
       case DefinitionKind::Tag: {
         size_t tagIndex = numTagImport++;
         const TagDesc& tag = metadata.tags[tagIndex];
-        typeObj = TagTypeToObject(cx, tag.type->argTypes_);
+        typeObj = TagTypeToObject(cx, tag.type->argTypes());
         break;
       }
     }
@@ -1243,7 +1243,7 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
       }
       case DefinitionKind::Tag: {
         const TagDesc& tag = metadata.tags[exp.tagIndex()];
-        typeObj = TagTypeToObject(cx, tag.type->argTypes_);
+        typeObj = TagTypeToObject(cx, tag.type->argTypes());
         break;
       }
     }
@@ -3186,6 +3186,9 @@ void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
 void WasmGlobalObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   WasmGlobalObject* global = reinterpret_cast<WasmGlobalObject*>(obj);
   if (!global->isNewborn()) {
+    // Release the strong reference to the type definitions this global could
+    // be referencing.
+    global->type().Release();
     gcx->delete_(obj, &global->val(), MemoryUse::WasmGlobalCell);
   }
 }
@@ -3213,6 +3216,9 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal value,
   // It's simpler to initialize the cell after the object has been created,
   // to avoid needing to root the cell before the object creation.
   obj->val() = value.get();
+  // Acquire a strong reference to a type definition this global could
+  // be referencing.
+  obj->type().AddRef();
 
   MOZ_ASSERT(!obj->isNewborn());
 
@@ -3544,7 +3550,7 @@ const TagType* WasmTagObject::tagType() const {
 };
 
 const wasm::ValTypeVector& WasmTagObject::valueTypes() const {
-  return tagType()->argTypes_;
+  return tagType()->argTypes();
 };
 
 wasm::ResultType WasmTagObject::resultType() const {
@@ -3593,7 +3599,7 @@ void WasmExceptionObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   if (exnObj.isNewborn()) {
     return;
   }
-  gcx->free_(obj, exnObj.typedMem(), exnObj.tagType()->size_,
+  gcx->free_(obj, exnObj.typedMem(), exnObj.tagType()->tagSize(),
              MemoryUse::WasmExceptionData);
   exnObj.tagType()->Release();
 }
@@ -3606,8 +3612,8 @@ void WasmExceptionObject::trace(JSTracer* trc, JSObject* obj) {
   }
 
   wasm::SharedTagType tag = exnObj.tagType();
-  const wasm::ValTypeVector& params = tag->argTypes_;
-  const wasm::TagOffsetVector& offsets = tag->argOffsets_;
+  const wasm::ValTypeVector& params = tag->argTypes();
+  const wasm::TagOffsetVector& offsets = tag->argOffsets();
   uint8_t* typedMem = exnObj.typedMem();
   for (size_t i = 0; i < params.length(); i++) {
     ValType paramType = params[i];
@@ -3708,8 +3714,8 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   wasm::SharedTagType tagType = exnObj->tagType();
-  const wasm::ValTypeVector& params = tagType->argTypes_;
-  const wasm::TagOffsetVector& offsets = tagType->argOffsets_;
+  const wasm::ValTypeVector& params = tagType->argTypes();
+  const wasm::TagOffsetVector& offsets = tagType->argOffsets();
 
   RootedValue nextArg(cx);
   for (size_t i = 0; i < params.length(); i++) {
@@ -3754,7 +3760,7 @@ WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
 
   // Allocate the data buffer before initializing the object so that an OOM
   // does not result in a partially constructed object.
-  uint8_t* data = (uint8_t*)js_calloc(tagType->size_);
+  uint8_t* data = (uint8_t*)js_calloc(tagType->tagSize());
   if (!data) {
     ReportOutOfMemory(cx);
     return nullptr;
@@ -3764,7 +3770,7 @@ WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
   obj->initFixedSlot(TAG_SLOT, ObjectValue(*tag));
   tagType->AddRef();
   obj->initFixedSlot(TYPE_SLOT, PrivateValue((void*)tagType));
-  InitReservedSlot(obj, DATA_SLOT, data, tagType->size_,
+  InitReservedSlot(obj, DATA_SLOT, data, tagType->tagSize(),
                    MemoryUse::WasmExceptionData);
   obj->initFixedSlot(STACK_SLOT, ObjectOrNullValue(stack));
 
@@ -3846,7 +3852,7 @@ bool WasmExceptionObject::getArgImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  uint32_t offset = exnTag->tagType()->argOffsets_[index];
+  uint32_t offset = exnTag->tagType()->argOffsets()[index];
   RootedValue result(cx);
   if (!exnObj->loadValue(cx, offset, params[index], &result)) {
     return false;

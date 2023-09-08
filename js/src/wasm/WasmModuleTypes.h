@@ -339,26 +339,22 @@ using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;
 // data buffer stored in a Wasm exception.
 using TagOffsetVector = Vector<uint32_t, 2, SystemAllocPolicy>;
 
-struct TagType : AtomicRefCounted<TagType> {
+class TagType : public AtomicRefCounted<TagType> {
   ValTypeVector argTypes_;
   TagOffsetVector argOffsets_;
   uint32_t size_;
 
+ public:
   TagType() : size_(0) {}
+  ~TagType();
 
+  const ValTypeVector& argTypes() const { return argTypes_; }
+  const TagOffsetVector& argOffsets() const { return argOffsets_; }
   ResultType resultType() const { return ResultType::Vector(argTypes_); }
 
-  [[nodiscard]] bool initialize(ValTypeVector&& argTypes);
+  uint32_t tagSize() const { return size_; }
 
-  [[nodiscard]] bool clone(const TagType& src) {
-    MOZ_ASSERT(argTypes_.empty() && argOffsets_.empty() && size_ == 0);
-    if (!argTypes_.appendAll(src.argTypes_) ||
-        !argOffsets_.appendAll(src.argOffsets_)) {
-      return false;
-    }
-    size_ = src.size_;
-    return true;
-  }
+  [[nodiscard]] bool initialize(ValTypeVector&& argTypes);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
