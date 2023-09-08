@@ -392,9 +392,9 @@ onload = function() {
       elm.href = input_arr[0];
       elm.search = '?' + input_arr[1];
       var got_href = elm.getAttribute('href');
-      assert_true(got_href.indexOf(expected_current) > -1, 'href content attribute ' + msg(expected_current, got_href));
+      assert_true(got_href.indexOf(expected_utf8) > -1, 'href content attribute ' + msg(expected_utf8, got_href));
       var got_search = elm.search;
-      assert_true(got_search.indexOf(expected_current) > -1, 'getting .search '+msg(expected_current, got_search));
+      assert_true(got_search.indexOf(expected_utf8) > -1, 'getting .search '+msg(expected_utf8, got_search));
     }, '<'+tag+'>.search');
   }
   'a, area'.split(', ').forEach(function(str) {
