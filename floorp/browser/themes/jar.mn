@@ -45,13 +45,6 @@ browser.jar:
   skin/classic/browser/options/native-verticaltab-hover.css               (designs/options/native-verticaltab-hover.css)
   skin/classic/browser/options/sharemode.css                              (designs/options/sharemode.css)
 
-# tabbar
-  skin/classic/browser/tabbar/hide-tabbrowser.css                        (designs/tabbar/hide-tabbrowser.css)
-  skin/classic/browser/tabbar/verticaltab.css                            (designs/tabbar/verticaltab.css)
-  skin/classic/browser/tabbar/tabs_on_bottom.css                         (designs/tabbar/tabs_on_bottom.css)
-  skin/classic/browser/tabbar/tabbar_on_window_bottom.css                (designs/tabbar/tabbar_on_window_bottom.css)
-  skin/classic/browser/tabbar/tabbar_on_window_bottom.js                 (designs/tabbar/tabbar_on_window_bottom.js)
-
 # Undo Closed Tab
   skin/classic/browser/undo-closed-tab.svg                                (icons/undo-closed-tab.svg)
 

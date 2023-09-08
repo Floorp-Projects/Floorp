@@ -247,12 +247,6 @@ Notice: Floorp is not based on Waterfox. The structure is a reference and has no
 - [MIT](https://github.com/bmFtZQ/edge-frfox/blob/main/LICENSE)
 - Author: [bmFtZQ](https://github.com/bmFtZQ)
 
-### 🎨 Firefox-csshacks
-
-- [Firefox-csshacks](https://github.com/MrOtherGuy/firefox-csshacks)
-- [Mozilla Public License 2.0](https://github.com/MrOtherGuy/firefox-csshacks/blob/master/LICENSE)
-- Author: [MrOtherGuy](https://github.com/MrOtherGuy)
-
 ### 🎨 Material-Fox
 
 - [Material-Fox](https://github.com/muckSponge/MaterialFox)

@@ -1,70 +1,7 @@
-  /* Source file https://github.com/MrOtherGuy/firefox-csshacks/tree/master/chrome/floating_findbar_on_top.css made available under Mozilla Public License v. 2.0
-    See the above repository for updates as well as full license text. */
-    
-    /* Note that privacy.resistFingerprinting.letterboxing prevents this from working properly */
-    
-    findbar{
-        order: 0;
-        margin-bottom: -33px;
-        position: relative;
-        border-top: none !important;
-        padding: 0 !important;
-        transition: transform 82ms linear, opacity 82ms linear 32ms !important;
-        background: none !important;
-        pointer-events: none;
-        z-index: 1;
-      }
-      
-      .findbar-container > .findbar-find-fast{
-        padding: var(--toolbarbutton-inner-padding) 1px;
-        margin: 0 !important;
-      }
-      
-      findbar[hidden]{ transform: translateY(-30px);}
-      
-      findbar > .findbar-container,
-      findbar > .close-icon{
-        border: 1px solid var(--chrome-content-separator-color);
-        border-width: 0 0 1px 0px;
-        background: var(--uc-light-bkgnd-color,var(--toolbar-bgcolor)) !important;
-        pointer-events: auto;
-      }
-      findbar > .findbar-container{
-        flex-direction: reverse;
-        border-left-width: 1px;
-        border-bottom-left-radius: 4px;
-      }
-      
-      .findbar-find-status{
-        display: -moz-box;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        -moz-box-flex: 1;
-      }
-      
-      .findbar-closebutton{
-        margin: 0 !important;
-        border-radius: 0 !important;
-        padding: 5px !important;
-      }
-      .findbar-closebutton > image{ padding: 3px }
-      .findbar-closebutton:hover > image{
-        background: var(--toolbarbutton-hover-background) !important;
-        border-radius: 4px
-      }
-      findbar > .findbar-container > hbox{ margin: 0 5px }
-      
-      findbar::before{
-        content:"";
-        display: -moz-box;
-        -moz-box-flex: 100;
-      }
-      
-      /*
-      Move findbar so it isn't over the scrollbar
-      Delete if you want findbar to begin from right window edge
-      */
-      findbar{
-        margin-right: 16px;
-        border-right: 1px solid var(--chrome-content-separator-color);
-      }
+/*-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+findbar{
+  order: -1;
+}
