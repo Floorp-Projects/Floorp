@@ -134,8 +134,8 @@ void RemoteObjectProxyBase::GetOrCreateProxyObject(
       xpc::CompartmentPrivate::Get(JS::CurrentGlobalOrNull(aCx));
   xpc::CompartmentPrivate::RemoteProxyMap& map = priv->GetRemoteProxyMap();
   if (auto result = map.lookup(aNative)) {
-    MOZ_ASSERT(!aTransplantTo,
-               "No existing value allowed if we're doing a transplant");
+    MOZ_RELEASE_ASSERT(!aTransplantTo,
+                       "GOCPO failed by finding an existing value");
 
     aProxy.set(result->value());
 
@@ -153,11 +153,14 @@ void RemoteObjectProxyBase::GetOrCreateProxyObject(
   JS::Rooted<JSObject*> obj(
       aCx, js::NewProxyObject(aCx, this, native, nullptr, options));
   if (!obj) {
+    MOZ_RELEASE_ASSERT(!aTransplantTo, "GOCPO failed at NewProxyObject");
     return;
   }
 
   bool success;
   if (!JS_SetImmutablePrototype(aCx, obj, &success)) {
+    MOZ_RELEASE_ASSERT(!aTransplantTo,
+                       "GOCPO failed at JS_SetImmutablePrototype");
     return;
   }
   MOZ_ASSERT(success);
@@ -168,9 +171,11 @@ void RemoteObjectProxyBase::GetOrCreateProxyObject(
   // not have the same class as aClasp to ensure that the release assert earlier
   // in this function will actually fire if we try to return a proxy object in
   // the middle of a transplant.
-  MOZ_ASSERT_IF(aTransplantTo, JS::GetClass(aTransplantTo) != aClasp);
+  MOZ_RELEASE_ASSERT(!aTransplantTo || (JS::GetClass(aTransplantTo) != aClasp),
+                     "GOCPO failed by not changing the class");
 
   if (!map.put(aNative, aTransplantTo ? aTransplantTo : obj)) {
+    MOZ_RELEASE_ASSERT(!aTransplantTo, "GOCPO failed at map.put");
     return;
   }
 

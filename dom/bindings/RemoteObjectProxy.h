@@ -111,6 +111,9 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
    * object was created, callers probably need to addref the native in that
    * case. aNewObjectCreated can be true even if aProxy is null, if something
    * failed after creating the object.
+   *
+   * If aTransplantTo is non-null, failure is assumed to be unrecoverable, so
+   * this will crash.
    */
   void GetOrCreateProxyObject(JSContext* aCx, void* aNative,
                               const JSClass* aClasp,

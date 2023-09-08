@@ -1419,7 +1419,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
  *
  * If aTransplantTo is non-null, then the WindowProxy object will eventually be
  * transplanted onto it. Therefore it should be used as the value in the remote
- * proxy map.
+ * proxy map. We assume that in this case the failure is unrecoverable, so we
+ * crash immediately rather than return false.
  */
 extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
                                       JS::Handle<JSObject*> aTransplantTo,
