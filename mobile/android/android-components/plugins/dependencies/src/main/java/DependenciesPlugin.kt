@@ -21,7 +21,7 @@ object Versions {
 
     const val junit = "4.13.2"
     const val robolectric = "4.10.3"
-    const val mockito = "5.4.0"
+    const val mockito = "5.5.0"
     const val maven_ant_tasks = "2.1.3"
     const val jacoco = "0.8.10"
 
