@@ -7813,31 +7813,9 @@ static bool SetDefaultLocale(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (args[0].isString() && !args[0].toString()->empty()) {
-    Rooted<JSLinearString*> str(cx, args[0].toString()->ensureLinear(cx));
-    if (!str) {
-      return false;
-    }
-
-    if (!StringIsAscii(str)) {
-      ReportUsageErrorASCII(cx, callee,
-                            "First argument contains non-ASCII characters");
-      return false;
-    }
-
-    UniqueChars locale = JS_EncodeStringToASCII(cx, str);
+    RootedString str(cx, args[0].toString());
+    UniqueChars locale = StringToLocale(cx, callee, str);
     if (!locale) {
-      return false;
-    }
-
-    bool containsOnlyValidBCP47Characters =
-        mozilla::IsAsciiAlpha(locale[0]) &&
-        std::all_of(locale.get(), locale.get() + str->length(), [](auto c) {
-          return mozilla::IsAsciiAlphanumeric(c) || c == '-';
-        });
-
-    if (!containsOnlyValidBCP47Characters) {
-      ReportUsageErrorASCII(cx, callee,
-                            "First argument should be a BCP47 language tag");
       return false;
     }
 
