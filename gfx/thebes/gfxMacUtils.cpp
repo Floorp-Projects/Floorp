@@ -8,15 +8,6 @@
 
 /* static */ CFStringRef gfxMacUtils::CFStringForTransferFunction(
     mozilla::gfx::TransferFunction aTransferFunction) {
-#if !defined(MAC_OS_VERSION_10_13) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
-  CFStringRef kCVImageBufferTransferFunction_sRGB = CFSTR("IEC_sRGB");
-  CFStringRef kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ =
-      CFSTR("SMPTE_ST_2084_PQ");
-  CFStringRef kCVImageBufferTransferFunction_ITU_R_2100_HLG =
-      CFSTR("ITU_R_2100_HLG");
-#endif
-
   switch (aTransferFunction) {
     case mozilla::gfx::TransferFunction::BT709:
       return kCVImageBufferTransferFunction_ITU_R_709_2;

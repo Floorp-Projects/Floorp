@@ -9,7 +9,6 @@
 #import <objc/message.h>
 
 #include "nsChildView.h"
-#include "SDKDeclarations.h"
 
 using namespace mozilla;
 

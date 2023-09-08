@@ -12,7 +12,6 @@
 #include "mozilla/StaticPrefs_widget.h"
 
 #include "nsXULAppAPI.h"
-#include "SDKDeclarations.h"
 
 static void ToolbarThemePrefChanged(const char* aPref, void* aUserInfo);
 

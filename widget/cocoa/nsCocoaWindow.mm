@@ -23,7 +23,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIAppWindow.h"
 #include "nsToolkit.h"
-#include "nsTouchBarNativeAPIDefines.h"
 #include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 #include "nsMenuBarX.h"
@@ -35,7 +34,6 @@
 #include "nsCocoaFeatures.h"
 #include "nsIScreenManager.h"
 #include "nsIWidgetListener.h"
-#include "SDKDeclarations.h"
 #include "VibrancyManager.h"
 #include "nsPresContext.h"
 #include "nsDocShell.h"
@@ -3948,12 +3946,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     // NSWindows that this view is used in, including the floating full screen
     // toolbar window. The drawing bug was filed as FB9056136. See bug 1700211
     // for more details.
-#if !defined(MAC_OS_VERSION_11_0) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
-    if (nsCocoaFeatures::OnBigSurOrLater()) {
-#else
     if (@available(macOS 11.0, *)) {
-#endif
       aWindow.titlebarSeparatorStyle = NSTitlebarSeparatorStyleNone;
     }
   }
@@ -4046,12 +4039,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     mInitialTitlebarHeight = [self titlebarHeight];
 
     [self setTitlebarAppearsTransparent:YES];
-#if !defined(MAC_OS_VERSION_11_0) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
-    if (nsCocoaFeatures::OnBigSurOrLater()) {
-#else
     if (@available(macOS 11.0, *)) {
-#endif
       self.titlebarSeparatorStyle = NSTitlebarSeparatorStyleNone;
     }
     [self updateTitlebarView];

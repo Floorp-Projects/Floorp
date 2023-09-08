@@ -17,7 +17,6 @@
 #include "nsCocoaUtils.h"
 #include "nsMenuX.h"
 #include "nsObjCExceptions.h"
-#include "SDKDeclarations.h"
 
 static BOOL sNeedToUnwindForMenuClosing = NO;
 
@@ -163,12 +162,7 @@ static BOOL sNeedToUnwindForMenuClosing = NO;
   // option 5.
 
   if (aAppearance) {
-#if !defined(MAC_OS_VERSION_11_0) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
-    if (nsCocoaFeatures::OnBigSurOrLater()) {
-#else
     if (@available(macOS 11.0, *)) {
-#endif
       // By default, NSMenu inherits its appearance from the opening NSEvent's
       // window. If CSS has overridden it, on Big Sur + we can respect it with
       // -[NSMenu setAppearance].
