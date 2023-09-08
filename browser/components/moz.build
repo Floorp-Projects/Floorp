@@ -56,7 +56,6 @@ DIRS += [
     "sessionstore",
     "shell",
     "syncedtabs",
-    "tabpreview",
     "tabunloader",
     "textrecognition",
     "translations",
