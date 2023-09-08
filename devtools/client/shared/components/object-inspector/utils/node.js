@@ -33,6 +33,7 @@ const NODE_TYPES = {
   SET: Symbol("<set>"),
   PROTOTYPE: Symbol("<prototype>"),
   BLOCK: Symbol("☲"),
+  PRIMITIVE_VALUE: Symbol("<primitive value>")
 };
 
 let WINDOW_PROPERTIES = {};
@@ -383,6 +384,17 @@ function makeNodesForEntries(item) {
   });
 }
 
+function makeNodeForPrimitiveValue(parent, value) {
+  const nodeName = "<primitive value>";
+
+  return createNode({
+    parent,
+    name: nodeName,
+    contents: {value},
+    type: NODE_TYPES.PRIMITIVE_VALUE,
+  });
+}
+
 function makeNodesForMapEntry(item) {
   const nodeValue = getValue(item);
   if (!nodeValue || !nodeValue.preview) {
@@ -655,6 +667,13 @@ function makeNodesForProperties(objProps, parent) {
         })
       );
     }
+  }
+
+  const preview = parentValue?.preview;
+
+  if (preview && Object.hasOwn(preview, 'wrappedValue')) {
+    const primitiveValue = preview.wrappedValue
+    nodes.push(makeNodeForPrimitiveValue(parentValue, primitiveValue))
   }
 
   // Add the prototype if it exists and is not null
