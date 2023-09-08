@@ -19,7 +19,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * @property onShowExtensionProcessDisabledPopup a callback invoked when the application should open a
  * popup.
  */
-open class ExtensionProcessDisabledPopupFeature(
+open class ExtensionProcessDisabledPopupObserver(
     private val store: BrowserStore,
     private val onShowExtensionProcessDisabledPopup: () -> Unit = { },
 ) : LifecycleAwareFeature {

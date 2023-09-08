@@ -18,7 +18,7 @@ import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
-import mozilla.components.support.webextensions.WebExtensionPopupFeature
+import mozilla.components.support.webextensions.WebExtensionPopupObserver
 import org.mozilla.samples.browser.addons.WebExtensionActionPopupActivity
 import org.mozilla.samples.browser.ext.components
 
@@ -26,8 +26,8 @@ import org.mozilla.samples.browser.ext.components
  * Activity that holds the [BrowserFragment].
  */
 open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2 {
-    private val webExtensionPopupFeature by lazy {
-        WebExtensionPopupFeature(components.store, ::openPopup)
+    private val webExtensionPopupObserver by lazy {
+        WebExtensionPopupObserver(components.store, ::openPopup)
     }
 
     /**
@@ -48,7 +48,7 @@ open class BrowserActivity : LocaleAwareAppCompatActivity(), ComponentCallbacks2
             }
         }
 
-        lifecycle.addObserver(webExtensionPopupFeature)
+        lifecycle.addObserver(webExtensionPopupObserver)
         components.historyStorage.registerStorageMaintenanceWorker()
         components.notificationsDelegate.bindToActivity(this)
     }

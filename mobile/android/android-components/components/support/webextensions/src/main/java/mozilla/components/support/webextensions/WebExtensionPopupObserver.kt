@@ -22,7 +22,7 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  * popup. This is a lambda accepting the [WebExtensionState] of the extension
  * that wants to open a popup.
  */
-class WebExtensionPopupFeature(
+class WebExtensionPopupObserver(
     private val store: BrowserStore,
     private val onOpenPopup: (WebExtensionState) -> Unit = { },
 ) : LifecycleAwareFeature {

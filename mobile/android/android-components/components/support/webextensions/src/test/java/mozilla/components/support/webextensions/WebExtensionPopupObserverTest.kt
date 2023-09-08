@@ -18,7 +18,7 @@ import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 
-class WebExtensionPopupFeatureTest {
+class WebExtensionPopupObserverTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -34,11 +34,11 @@ class WebExtensionPopupFeatureTest {
         )
 
         var extensionOpeningPopup: WebExtensionState? = null
-        val feature = WebExtensionPopupFeature(store) {
+        val observer = WebExtensionPopupObserver(store) {
             extensionOpeningPopup = it
         }
 
-        feature.start()
+        observer.start()
         assertNull(extensionOpeningPopup)
 
         store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extensionId, popupSession = engineSession)).joinBlocking()
@@ -48,7 +48,7 @@ class WebExtensionPopupFeatureTest {
 
         // Verify that stopped feature does not observe and forward requests to open popup
         extensionOpeningPopup = null
-        feature.stop()
+        observer.stop()
         store.dispatch(WebExtensionAction.UpdatePopupSessionAction(extensionId, popupSession = mock())).joinBlocking()
         assertNull(extensionOpeningPopup)
     }
