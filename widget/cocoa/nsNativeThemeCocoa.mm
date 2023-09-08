@@ -39,7 +39,6 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsLookAndFeel.h"
 #include "MacThemeGeometryType.h"
-#include "SDKDeclarations.h"
 #include "VibrancyManager.h"
 
 #include "gfxContext.h"

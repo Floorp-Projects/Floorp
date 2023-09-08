@@ -9,9 +9,9 @@
 
 #include "nsITouchBarHelper.h"
 #include "nsTouchBarInput.h"
-#include "nsTouchBarNativeAPIDefines.h"
 
-const NSTouchBarItemIdentifier kTouchBarBaseIdentifier = @"com.mozilla.firefox.touchbar";
+const NSTouchBarItemIdentifier kTouchBarBaseIdentifier =
+    @"com.mozilla.firefox.touchbar";
 
 /**
  * Our TouchBar is its own delegate. This is adequate for our purposes,
@@ -34,7 +34,8 @@ const NSTouchBarItemIdentifier kTouchBarBaseIdentifier = @"com.mozilla.firefox.t
  * Contains TouchBarInput representations of the inputs currently in
  * the Touch Bar. Populated in `init` and updated by nsITouchBarUpdater.
  */
-@property(strong) NSMutableDictionary<NSTouchBarItemIdentifier, TouchBarInput*>* mappedLayoutItems;
+@property(strong) NSMutableDictionary<NSTouchBarItemIdentifier, TouchBarInput*>*
+    mappedLayoutItems;
 
 /**
  * Stores buttons displayed in a NSScrollView. They must be stored separately
@@ -42,7 +43,8 @@ const NSTouchBarItemIdentifier kTouchBarBaseIdentifier = @"com.mozilla.firefox.t
  * cannot be retrieved with [NSTouchBar itemForIdentifier].
  */
 @property(strong)
-    NSMutableDictionary<NSTouchBarItemIdentifier, NSCustomTouchBarItem*>* scrollViewButtons;
+    NSMutableDictionary<NSTouchBarItemIdentifier, NSCustomTouchBarItem*>*
+        scrollViewButtons;
 
 /**
  * Returns an instance of nsTouchBar based on implementation details
@@ -104,8 +106,10 @@ const NSTouchBarItemIdentifier kTouchBarBaseIdentifier = @"com.mozilla.firefox.t
        withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 - (void)updateScrollView:(NSCustomTouchBarItem*)aScrollViewItem
           withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
-- (void)updateLabel:(NSTextField*)aLabel withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
-- (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
+- (void)updateLabel:(NSTextField*)aLabel
+     withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
+- (NSTouchBarItem*)makeShareScrubberForIdentifier:
+    (NSTouchBarItemIdentifier)aIdentifier;
 
 /**
  * If aShowing is true, aPopover is shown. Otherwise, it is hidden.
@@ -125,9 +129,10 @@ const NSTouchBarItemIdentifier kTouchBarBaseIdentifier = @"com.mozilla.firefox.t
 - (NSArray*)itemsForSharingServicePickerTouchBarItem:
     (NSSharingServicePickerTouchBarItem*)aPickerTouchBarItem;
 
-- (NSArray<NSSharingService*>*)sharingServicePicker:(NSSharingServicePicker*)aSharingServicePicker
-                            sharingServicesForItems:(NSArray*)aItems
-                            proposedSharingServices:(NSArray<NSSharingService*>*)aProposedServices;
+- (NSArray<NSSharingService*>*)
+       sharingServicePicker:(NSSharingServicePicker*)aSharingServicePicker
+    sharingServicesForItems:(NSArray*)aItems
+    proposedSharingServices:(NSArray<NSSharingService*>*)aProposedServices;
 
 - (void)releaseJSObjects;
 

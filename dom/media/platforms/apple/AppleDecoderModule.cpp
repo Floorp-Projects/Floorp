@@ -221,12 +221,7 @@ bool AppleDecoderModule::CanCreateHWDecoder(media::MediaCodec aCodec) {
 /* static */
 bool AppleDecoderModule::RegisterSupplementalVP9Decoder() {
   static bool sRegisterIfAvailable = []() {
-#if !defined(MAC_OS_VERSION_11_0) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
-    if (nsCocoaFeatures::OnBigSurOrLater()) {
-#else
     if (__builtin_available(macos 11.0, *)) {
-#endif
       VTRegisterSupplementalVideoDecoderIfAvailable(kCMVideoCodecType_VP9);
       return true;
     }

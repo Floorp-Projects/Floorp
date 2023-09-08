@@ -19,7 +19,6 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
-#include "SDKDeclarations.h"
 
 #import <Cocoa/Cocoa.h>
 #import <AppKit/NSColor.h>

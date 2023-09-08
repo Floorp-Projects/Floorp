@@ -8,7 +8,6 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsITouchBarInput.h"
-#include "nsTouchBarNativeAPIDefines.h"
 #include "nsCOMPtr.h"
 
 using namespace mozilla::dom;
@@ -73,8 +72,10 @@ class nsTouchBarInputIcon;
  * TouchBarInput's nativeIdentifier (e.g. nsTouchBarUpdater looking up a
  * popover in mappedLayoutItems).
  */
-+ (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType withKey:(NSString*)aKey;
-+ (NSTouchBarItemIdentifier)nativeIdentifierWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput;
++ (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType
+                                             withKey:(NSString*)aKey;
++ (NSTouchBarItemIdentifier)nativeIdentifierWithXPCOM:
+    (nsCOMPtr<nsITouchBarInput>)aInput;
 
 // Non-JS scrubber implemention for the Share Scrubber,
 // since it is defined by an Apple API.

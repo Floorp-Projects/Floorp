@@ -8,7 +8,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include "SDKDeclarations.h"
 #include "mozilla/ColorScheme.h"
 
 enum ColorName {
@@ -41,16 +40,17 @@ inline float NativeGreyColorAsFloat(ColorName name, BOOL isMain) {
   return NativeGreyColorAsInt(name, isMain) / 255.0f;
 }
 
-inline void DrawNativeGreyColorInRect(CGContextRef context, ColorName name, CGRect rect,
-                                      BOOL isMain) {
+inline void DrawNativeGreyColorInRect(CGContextRef context, ColorName name,
+                                      CGRect rect, BOOL isMain) {
   float grey = NativeGreyColorAsFloat(name, isMain);
   CGContextSetRGBFillColor(context, grey, grey, grey, 1.0f);
   CGContextFillRect(context, rect);
 }
 
 inline NSAppearance* NSAppearanceForColorScheme(mozilla::ColorScheme aScheme) {
-  NSAppearanceName appearanceName =
-      aScheme == mozilla::ColorScheme::Light ? NSAppearanceNameAqua : NSAppearanceNameDarkAqua;
+  NSAppearanceName appearanceName = aScheme == mozilla::ColorScheme::Light
+                                        ? NSAppearanceNameAqua
+                                        : NSAppearanceNameDarkAqua;
   return [NSAppearance appearanceNamed:appearanceName];
 }
 

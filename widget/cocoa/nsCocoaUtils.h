@@ -115,10 +115,6 @@ struct KeyBindingsCommand {
 
 @end  // NativeKeyBindingsRecorder
 
-#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
-typedef NSString* AVMediaType;
-#endif
-
 class nsCocoaUtils {
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
@@ -130,7 +126,8 @@ class nsCocoaUtils {
   // Get the backing scale factor from an object that supports this selector
   // (NSView/Window/Screen, on 10.7 or later), returning 1.0 if not supported
   static CGFloat GetBackingScaleFactor(id aObject) {
-    if (HiDPIEnabled() && [aObject respondsToSelector:@selector(backingScaleFactor)]) {
+    if (HiDPIEnabled() &&
+        [aObject respondsToSelector:@selector(backingScaleFactor)]) {
       return [aObject backingScaleFactor];
     }
     return 1.0;
@@ -142,36 +139,41 @@ class nsCocoaUtils {
     return NSToIntRound(aPts * aBackingScale);
   }
 
-  static LayoutDeviceIntPoint CocoaPointsToDevPixels(const NSPoint& aPt, CGFloat aBackingScale) {
+  static LayoutDeviceIntPoint CocoaPointsToDevPixels(const NSPoint& aPt,
+                                                     CGFloat aBackingScale) {
     return LayoutDeviceIntPoint(NSToIntRound(aPt.x * aBackingScale),
                                 NSToIntRound(aPt.y * aBackingScale));
   }
 
-  static LayoutDeviceIntPoint CocoaPointsToDevPixelsRoundDown(const NSPoint& aPt,
-                                                              CGFloat aBackingScale) {
+  static LayoutDeviceIntPoint CocoaPointsToDevPixelsRoundDown(
+      const NSPoint& aPt, CGFloat aBackingScale) {
     return LayoutDeviceIntPoint(NSToIntFloor(aPt.x * aBackingScale),
                                 NSToIntFloor(aPt.y * aBackingScale));
   }
 
-  static LayoutDeviceIntRect CocoaPointsToDevPixels(const NSRect& aRect, CGFloat aBackingScale) {
+  static LayoutDeviceIntRect CocoaPointsToDevPixels(const NSRect& aRect,
+                                                    CGFloat aBackingScale) {
     return LayoutDeviceIntRect(NSToIntRound(aRect.origin.x * aBackingScale),
                                NSToIntRound(aRect.origin.y * aBackingScale),
                                NSToIntRound(aRect.size.width * aBackingScale),
                                NSToIntRound(aRect.size.height * aBackingScale));
   }
 
-  static CGFloat DevPixelsToCocoaPoints(int32_t aPixels, CGFloat aBackingScale) {
+  static CGFloat DevPixelsToCocoaPoints(int32_t aPixels,
+                                        CGFloat aBackingScale) {
     return (CGFloat)aPixels / aBackingScale;
   }
 
-  static NSPoint DevPixelsToCocoaPoints(const mozilla::LayoutDeviceIntPoint& aPt,
-                                        CGFloat aBackingScale) {
-    return NSMakePoint((CGFloat)aPt.x / aBackingScale, (CGFloat)aPt.y / aBackingScale);
+  static NSPoint DevPixelsToCocoaPoints(
+      const mozilla::LayoutDeviceIntPoint& aPt, CGFloat aBackingScale) {
+    return NSMakePoint((CGFloat)aPt.x / aBackingScale,
+                       (CGFloat)aPt.y / aBackingScale);
   }
 
   // Implements an NSPoint equivalent of -[NSWindow convertRectFromScreen:].
   static NSPoint ConvertPointFromScreen(NSWindow* aWindow, const NSPoint& aPt) {
-    return [aWindow convertRectFromScreen:NSMakeRect(aPt.x, aPt.y, 0, 0)].origin;
+    return
+        [aWindow convertRectFromScreen:NSMakeRect(aPt.x, aPt.y, 0, 0)].origin;
   }
 
   // Implements an NSPoint equivalent of -[NSWindow convertRectToScreen:].
@@ -179,8 +181,10 @@ class nsCocoaUtils {
     return [aWindow convertRectToScreen:NSMakeRect(aPt.x, aPt.y, 0, 0)].origin;
   }
 
-  static NSRect DevPixelsToCocoaPoints(const LayoutDeviceIntRect& aRect, CGFloat aBackingScale) {
-    return NSMakeRect((CGFloat)aRect.X() / aBackingScale, (CGFloat)aRect.Y() / aBackingScale,
+  static NSRect DevPixelsToCocoaPoints(const LayoutDeviceIntRect& aRect,
+                                       CGFloat aBackingScale) {
+    return NSMakeRect((CGFloat)aRect.X() / aBackingScale,
+                      (CGFloat)aRect.Y() / aBackingScale,
                       (CGFloat)aRect.Width() / aBackingScale,
                       (CGFloat)aRect.Height() / aBackingScale);
   }
@@ -207,14 +211,14 @@ class nsCocoaUtils {
   static NSPoint GeckoPointToCocoaPoint(const mozilla::DesktopPoint& aPoint);
 
   // Converts aGeckoRect in dev pixels to points in Cocoa coordinates
-  static NSRect GeckoRectToCocoaRectDevPix(const mozilla::LayoutDeviceIntRect& aGeckoRect,
-                                           CGFloat aBackingScale);
+  static NSRect GeckoRectToCocoaRectDevPix(
+      const mozilla::LayoutDeviceIntRect& aGeckoRect, CGFloat aBackingScale);
 
   // See explanation for geckoRectToCocoaRect, guess what this does...
   static mozilla::DesktopIntRect CocoaRectToGeckoRect(const NSRect& cocoaRect);
 
-  static mozilla::LayoutDeviceIntRect CocoaRectToGeckoRectDevPix(const NSRect& aCocoaRect,
-                                                                 CGFloat aBackingScale);
+  static mozilla::LayoutDeviceIntRect CocoaRectToGeckoRectDevPix(
+      const NSRect& aCocoaRect, CGFloat aBackingScale);
 
   // Gives the location for the event in screen coordinates. Do not call this
   // unless the window the event was originally targeted at is still alive!
@@ -225,10 +229,10 @@ class nsCocoaUtils {
   // is for the window. Does not take window z-order into account.
   static BOOL IsEventOverWindow(NSEvent* anEvent, NSWindow* aWindow);
 
-  // Events are set up so that their coordinates refer to the window to which they
-  // were originally sent. If we reroute the event somewhere else, we'll have
-  // to get the window coordinates this way. Do not call this unless the window
-  // the event was originally targeted at is still alive!
+  // Events are set up so that their coordinates refer to the window to which
+  // they were originally sent. If we reroute the event somewhere else, we'll
+  // have to get the window coordinates this way. Do not call this unless the
+  // window the event was originally targeted at is still alive!
   static NSPoint EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow);
 
   static BOOL IsMomentumScrollEvent(NSEvent* aEvent);
@@ -248,12 +252,13 @@ class nsCocoaUtils {
   static void PrepareForNativeAppModalDialog();
   static void CleanUpAfterNativeAppModalDialog();
 
-  // 3 utility functions to go from a frame of imgIContainer to CGImage and then to NSImage
-  // Convert imgIContainer -> CGImageRef, caller owns result
+  // 3 utility functions to go from a frame of imgIContainer to CGImage and then
+  // to NSImage Convert imgIContainer -> CGImageRef, caller owns result
 
-  /** Creates a <code>CGImageRef</code> from a frame contained in an <code>imgIContainer</code>.
-      Copies the pixel data from the indicated frame of the <code>imgIContainer</code> into a new
-     <code>CGImageRef</code>. The caller owns the <code>CGImageRef</code>.
+  /** Creates a <code>CGImageRef</code> from a frame contained in an
+     <code>imgIContainer</code>. Copies the pixel data from the indicated frame
+     of the <code>imgIContainer</code> into a new <code>CGImageRef</code>. The
+     caller owns the <code>CGImageRef</code>.
       @param aFrame the frame to convert
       @param aResult the resulting CGImageRef
       @param aIsEntirelyBlack an outparam that, if non-null, will be set to a
@@ -261,44 +266,48 @@ class nsCocoaUtils {
                               pixels are zero
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
-  static nsresult CreateCGImageFromSurface(SourceSurface* aSurface, CGImageRef* aResult,
+  static nsresult CreateCGImageFromSurface(SourceSurface* aSurface,
+                                           CGImageRef* aResult,
                                            bool* aIsEntirelyBlack = nullptr);
 
   /** Creates a Cocoa <code>NSImage</code> from a <code>CGImageRef</code>.
-      Copies the pixel data from the <code>CGImageRef</code> into a new <code>NSImage</code>.
-      The caller owns the <code>NSImage</code>.
+      Copies the pixel data from the <code>CGImageRef</code> into a new
+     <code>NSImage</code>. The caller owns the <code>NSImage</code>.
       @param aInputImage the image to convert
       @param aResult the resulting NSImage
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
-  static nsresult CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage** aResult);
+  static nsresult CreateNSImageFromCGImage(CGImageRef aInputImage,
+                                           NSImage** aResult);
 
-  /** Creates a Cocoa <code>NSImage</code> from a frame of an <code>imgIContainer</code>.
-      Combines the two methods above. The caller owns the <code>NSImage</code>.
+  /** Creates a Cocoa <code>NSImage</code> from a frame of an
+     <code>imgIContainer</code>. Combines the two methods above. The caller owns
+     the <code>NSImage</code>.
       @param aImage the image to extract a frame from
       @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
-      @param aComputedStyle the ComputedStyle of the element that the image is for, to support SVG
-                            context paint properties, can be null
+      @param aComputedStyle the ComputedStyle of the element that the image is
+     for, to support SVG context paint properties, can be null
       @param aResult the resulting NSImage
-      @param scaleFactor the desired scale factor of the NSImage (2 for a retina display)
+      @param scaleFactor the desired scale factor of the NSImage (2 for a retina
+     display)
       @param aIsEntirelyBlack an outparam that, if non-null, will be set to a
                               bool that indicates whether the RGB values on all
                               pixels are zero
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
-  static nsresult CreateNSImageFromImageContainer(imgIContainer* aImage, uint32_t aWhichFrame,
-                                                  const nsPresContext* aPresContext,
-                                                  const mozilla::ComputedStyle* aComputedStyle,
-                                                  NSImage** aResult, CGFloat scaleFactor,
-                                                  bool* aIsEntirelyBlack = nullptr);
+  static nsresult CreateNSImageFromImageContainer(
+      imgIContainer* aImage, uint32_t aWhichFrame,
+      const nsPresContext* aPresContext,
+      const mozilla::ComputedStyle* aComputedStyle, NSImage** aResult,
+      CGFloat scaleFactor, bool* aIsEntirelyBlack = nullptr);
 
-  /** Creates a Cocoa <code>NSImage</code> from a frame of an <code>imgIContainer</code>.
-      The new <code>NSImage</code> will have both a regular and HiDPI representation.
-      The caller owns the <code>NSImage</code>.
+  /** Creates a Cocoa <code>NSImage</code> from a frame of an
+     <code>imgIContainer</code>. The new <code>NSImage</code> will have both a
+     regular and HiDPI representation. The caller owns the <code>NSImage</code>.
       @param aImage the image to extract a frame from
       @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
-      @param aComputedStyle the ComputedStyle of the element that the image is for, to support SVG
-                            context paint properties, can be null
+      @param aComputedStyle the ComputedStyle of the element that the image is
+     for, to support SVG context paint properties, can be null
       @param aResult the resulting NSImage
       @param aIsEntirelyBlack an outparam that, if non-null, will be set to a
                               bool that indicates whether the RGB values on all
@@ -306,7 +315,8 @@ class nsCocoaUtils {
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
   static nsresult CreateDualRepresentationNSImageFromImageContainer(
-      imgIContainer* aImage, uint32_t aWhichFrame, const nsPresContext* aPresContext,
+      imgIContainer* aImage, uint32_t aWhichFrame,
+      const nsPresContext* aPresContext,
       const mozilla::ComputedStyle* aComputedStyle, NSImage** aResult,
       bool* aIsEntirelyBlack = nullptr);
 
@@ -335,31 +345,35 @@ class nsCocoaUtils {
    * Just copies values between the two types; it does no coordinate-system
    * conversion, so both rects must have the same coordinate origin/direction.
    */
-  static void GeckoRectToNSRect(const nsIntRect& aGeckoRect, NSRect& aOutCocoaRect);
+  static void GeckoRectToNSRect(const nsIntRect& aGeckoRect,
+                                NSRect& aOutCocoaRect);
 
   /**
    * Returns Gecko rect for aCocoaRect.
    * Just copies values between the two types; it does no coordinate-system
    * conversion, so both rects must have the same coordinate origin/direction.
    */
-  static void NSRectToGeckoRect(const NSRect& aCocoaRect, nsIntRect& aOutGeckoRect);
+  static void NSRectToGeckoRect(const NSRect& aCocoaRect,
+                                nsIntRect& aOutGeckoRect);
 
   /**
    * Makes NSEvent instance for aEventTytpe and aEvent.
    */
-  static NSEvent* MakeNewCocoaEventWithType(NSEventType aEventType, NSEvent* aEvent);
+  static NSEvent* MakeNewCocoaEventWithType(NSEventType aEventType,
+                                            NSEvent* aEvent);
 
   /**
    * Makes a cocoa event from a widget keyboard event.
    */
-  static NSEvent* MakeNewCococaEventFromWidgetEvent(const mozilla::WidgetKeyboardEvent& aKeyEvent,
-                                                    NSInteger aWindowNumber,
-                                                    NSGraphicsContext* aContext);
+  static NSEvent* MakeNewCococaEventFromWidgetEvent(
+      const mozilla::WidgetKeyboardEvent& aKeyEvent, NSInteger aWindowNumber,
+      NSGraphicsContext* aContext);
 
   /**
    * Initializes WidgetInputEvent for aNativeEvent or aModifiers.
    */
-  static void InitInputEvent(mozilla::WidgetInputEvent& aInputEvent, NSEvent* aNativeEvent);
+  static void InitInputEvent(mozilla::WidgetInputEvent& aInputEvent,
+                             NSEvent* aNativeEvent);
 
   /**
    * Converts the native modifiers from aNativeEvent into WidgetMouseEvent
@@ -385,7 +399,8 @@ class nsCocoaUtils {
    * commands based on selectors. This collects any such commands in the
    * provided array.
    */
-  static void GetCommandsFromKeyEvent(NSEvent* aEvent, nsTArray<KeyBindingsCommand>& aCommands);
+  static void GetCommandsFromKeyEvent(NSEvent* aEvent,
+                                      nsTArray<KeyBindingsCommand>& aCommands);
 
   /**
    * Converts the string name of a Gecko key (like "VK_HOME") to the
@@ -478,20 +493,23 @@ class nsCocoaUtils {
 
   static mozilla::PanGestureInput CreatePanGestureEvent(
       NSEvent* aNativeEvent, mozilla::TimeStamp aTimeStamp,
-      const mozilla::ScreenPoint& aPanStartPoint, const mozilla::ScreenPoint& aPreciseDelta,
-      const mozilla::gfx::IntPoint& aLineOrPageDelta, mozilla::Modifiers aModifiers);
+      const mozilla::ScreenPoint& aPanStartPoint,
+      const mozilla::ScreenPoint& aPreciseDelta,
+      const mozilla::gfx::IntPoint& aLineOrPageDelta,
+      mozilla::Modifiers aModifiers);
 
   /**
    * Return true if aAvailableType is a vaild NSPasteboard type.
    */
-  static bool IsValidPasteboardType(NSString* aAvailableType, bool aAllowFileURL);
+  static bool IsValidPasteboardType(NSString* aAvailableType,
+                                    bool aAllowFileURL);
 
   /**
    * Set data for specific type from NSPasteboardItem to Transferable.
    */
-  static void SetTransferDataForTypeFromPasteboardItem(nsITransferable* aTransferable,
-                                                       const nsCString& aFlavor,
-                                                       NSPasteboardItem* aItem);
+  static void SetTransferDataForTypeFromPasteboardItem(
+      nsITransferable* aTransferable, const nsCString& aFlavor,
+      NSPasteboardItem* aItem);
 
  private:
   /**
@@ -519,21 +537,23 @@ class nsCocoaUtils {
    *                 or ResolveVideoCapturePromises) to be used as
    *                 the requestAccessForMediaType callback.
    */
-  static nsresult RequestCapturePermission(NSString* aType, RefPtr<Promise>& aPromise,
+  static nsresult RequestCapturePermission(NSString* aType,
+                                           RefPtr<Promise>& aPromise,
                                            PromiseArray& aPromiseList,
                                            void (^aHandler)(BOOL granted));
   /**
    * Resolves the pending promises that are waiting for a response
    * to a request video or audio capture permission.
    */
-  static void ResolveMediaCapturePromises(bool aGranted, PromiseArray& aPromiseList);
+  static void ResolveMediaCapturePromises(bool aGranted,
+                                          PromiseArray& aPromiseList);
 
   /**
    * Get string data for a specific type from NSPasteboardItem.
    */
-  static NSString* GetStringForTypeFromPasteboardItem(NSPasteboardItem* aItem,
-                                                      const NSString* aType,
-                                                      bool aAllowFileURL = false);
+  static NSString* GetStringForTypeFromPasteboardItem(
+      NSPasteboardItem* aItem, const NSString* aType,
+      bool aAllowFileURL = false);
 
   /**
    * Get the file path from NSPasteboardItem.

@@ -27,7 +27,6 @@ EXPORTS += [
     "nsChangeObserver.h",
     "nsCocoaFeatures.h",
     "nsCocoaUtils.h",
-    "SDKDeclarations.h",
 ]
 
 UNIFIED_SOURCES += [
