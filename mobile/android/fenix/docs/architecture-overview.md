@@ -16,7 +16,7 @@ A store of State.
 
 See [mozilla.components.lib.state.Store](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt)
 
-Holds app State. 
+Holds app State.
 
 Receives [Actions](#action), which are used to compute new State using [Reducers](#reducer) and can have [Middlewares](#middleware) attached which respond to and manipulate actions.
 

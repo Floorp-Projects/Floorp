@@ -13,9 +13,9 @@ Now that Fenix has been fully migrated to rely on Android Component's `lib-state
 
 ## Motivation
 
-The `Interactor/Controller` types, as a design pattern, have recently had their usefulness and clarity come into question in reviews and conversations with some regularity. `Interactor`s in particular seem to often be an unnecessary abstraction layer, usually containing methods that call similarly named methods in a `Controller` that share a similar name to the interactor calling them. Interactors that are used solely to delegate to other classes will be referred to as 'passthrough' interactors throughout this document. 
+The `Interactor/Controller` types, as a design pattern, have recently had their usefulness and clarity come into question in reviews and conversations with some regularity. `Interactor`s in particular seem to often be an unnecessary abstraction layer, usually containing methods that call similarly named methods in a `Controller` that share a similar name to the interactor calling them. Interactors that are used solely to delegate to other classes will be referred to as 'passthrough' interactors throughout this document.
 
-The [definition](../../fenix/docs/architecture-overview.md#interactor) of interactors in our architecture overview indicate that this is at least partially intentional: 'Called in response to a direct user action. Delegates to something else'. This is even referenced as a [limitation at the end of the overview](../../fenix/docs/architecture-overview.md#known-limitations). 
+The [definition](../../fenix/docs/architecture-overview.md#interactor) of interactors in our architecture overview indicate that this is at least partially intentional: 'Called in response to a direct user action. Delegates to something else'. This is even referenced as a [limitation at the end of the overview](../../fenix/docs/architecture-overview.md#known-limitations).
 
 Historically, the interactor/controller pattern evolved from a Presenter/Controller/View pattern that originated in Android Components. The underlying motivation of that pattern was to separate code presenting the state from the view (Presenters) and the code that updated the state from the view (Controllers).
 
@@ -46,7 +46,7 @@ An investigation was previously done to provide [further context](https://docs.g
 The proposal is to remove interactors and controllers completely from the codebase. Their usages will be replaced with direct Store observations and direct action dispatches to those Stores. All state changes would be handled by reducers, and side-effects like telemetry or disk writes would be handled in middlewares.
 
 This would address all the goals listed above:
-1. Code comprehensibility should be improved by having a single architectural pattern. All business logic would be discoverable within `Reducer`s, and changes to `State` would be much more explicit. 
+1. Code comprehensibility should be improved by having a single architectural pattern. All business logic would be discoverable within `Reducer`s, and changes to `State` would be much more explicit.
 2. Responsibility would be clearly delineated as all business logic would be handled by `Reducer`s and all side-effects by `Middleware`, instead of being scattered between those components as well as `Interactor`s, `Controller`s, and various utility classes.
 3. `State` management would happen within `Reducer`s and would still accomplish the usual goals around testability.
 4. Refactoring interactors/controllers to instead dispatch actions and react to state changes should be doable on a per-component basis.
@@ -203,8 +203,8 @@ class PocketCategoriesViewHolder(
             categoryColors = categoryColors,
             categories = categories ?: emptyList(),
             categoriesSelections = categoriesSelections ?: emptyList(),
-            onCategoryClick = { name -> 
-                components.appStore.dispatch(AppAction.TogglePocketStoriesCategory(name)) 
+            onCategoryClick = { name ->
+                components.appStore.dispatch(AppAction.TogglePocketStoriesCategory(name))
             },
         )
     }
@@ -219,7 +219,7 @@ This should simplify the search for underlying logic by:
 
 ### Extending the example: separating state and side-effects
 
-To demonstrate the bullets above, here is the method definition in the `DefaultPocketStoriesController` that currently handles the business logic initiated from the `interactor::onCategoryClicked` call above. 
+To demonstrate the bullets above, here is the method definition in the `DefaultPocketStoriesController` that currently handles the business logic initiated from the `interactor::onCategoryClicked` call above.
 
 ```kotlin
     override fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory) {
@@ -366,7 +366,7 @@ Overall, this should convey the following improvements
 
 ### An example refactor: removing interactors and controllers from HistoryFragment
 
-A [small example refactor](https://github.com/mozilla-mobile/firefox-android/pull/2347) was done to demonstrate some of the concepts presented throughout the document by removing interactors and controllers from the `HistoryFragment` and package. This is not necessarily an idealized version of that area, but is instead intended to demonstrate the first steps in creating architectural consistency. 
+A [small example refactor](https://github.com/mozilla-mobile/firefox-android/pull/2347) was done to demonstrate some of the concepts presented throughout the document by removing interactors and controllers from the `HistoryFragment` and package. This is not necessarily an idealized version of that area, but is instead intended to demonstrate the first steps in creating architectural consistency.
 
 ---
 
@@ -387,9 +387,9 @@ To demonstrate some of the concepts discussed in this proposal in more detail, a
 
 Following that, should this proposal be accepted the following suggestions are made for adoption with a focus on increasing the team's familiarity and knowledge of the pattern:
 
-1. Architecture documentation should be updated with guidelines matching this proposal. 
+1. Architecture documentation should be updated with guidelines matching this proposal.
 1. A number (1-3) of refactors should be planned to help demonstrate the pattern, especially in regards to things like using middleware to handle side-effects, how to structure local vs global state, and how to propagate state and actions to Composables and XML views.
-1. Where possible, new feature work should require refactoring to the established architecture before feature implementation. 
+1. Where possible, new feature work should require refactoring to the established architecture before feature implementation.
 1. Investigate further improvements to the architecture. For example, a "single Store" model that more closely follows Redux patterns.
 
 ### Consolidating Stores
