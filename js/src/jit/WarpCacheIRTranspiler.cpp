@@ -5313,7 +5313,7 @@ bool WarpCacheIRTranspiler::emitCallBoundScriptedFunction(
     auto* boundArgs = MLoadFixedSlot::New(
         alloc(), callee, BoundFunctionObject::firstInlineBoundArgSlot());
     add(boundArgs);
-    auto* boundArgsObj = unboxObjectInfallible(boundArgs);
+    auto* boundArgsObj = unboxObjectInfallible(boundArgs, IsMovable::Yes);
     elements = MElements::New(alloc(), boundArgsObj);
     add(elements);
   }

@@ -420,7 +420,12 @@ class WarpBuilderShared {
   MConstant* constant(const JS::Value& v);
   void pushConstant(const JS::Value& v);
 
-  MDefinition* unboxObjectInfallible(MDefinition* def);
+  // Note: unboxObjectInfallible defaults to adding a non-movable MUnbox to
+  // ensure we don't hoist the infallible unbox before a branch checking the
+  // value type.
+  enum class IsMovable : bool { No, Yes };
+  MDefinition* unboxObjectInfallible(MDefinition* def,
+                                     IsMovable movable = IsMovable::No);
 
   MCall* makeCall(CallInfo& callInfo, bool needsThisCheck,
                   WrappedFunction* target = nullptr, bool isDOMCall = false);
