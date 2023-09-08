@@ -165,8 +165,8 @@ const tabbarDisplayStyleFunctions = {
       "nav-bar-customization-target"
     );
 
-    if (workspaceButton == null) {
-      console.error("Workspace button not found");
+    if (workspaceButton == null && Services.prefs.getBooleanPref("floorp.browser.workspace.tab.enabled")) {
+      window.setTimeout(tabbarDisplayStyleFunctions.setWorkspaceLabelToNavbar, 3000);
       return;
     }
 
@@ -175,8 +175,8 @@ const tabbarDisplayStyleFunctions = {
 
   moveToDefaultSpace() {
     let workspaceButton = document.getElementById("workspace-button");
-    if (workspaceButton == null) {
-      console.error("Workspace button not found");
+    if (workspaceButton == null && Services.prefs.getBooleanPref("floorp.browser.workspace.tab.enabled")) {
+      window.setTimeout(tabbarDisplayStyleFunctions.moveToDefaultSpace, 3000);
       return;
     }
     document.querySelector(".toolbar-items").before(workspaceButton);
