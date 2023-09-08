@@ -199,9 +199,7 @@ void JitScript::trace(JSTracer* trc) {
 
 void JitScript::traceWeak(JSTracer* trc) {
   if (!icScript_.traceWeak(trc)) {
-#ifdef DEBUG
-    hasPurgedStubs_ = true;
-#endif
+    notePurgedStubs();
   }
 
   if (hasInliningRoot()) {
@@ -421,10 +419,8 @@ void JitScript::purgeOptimizedStubs(JSScript* script) {
   if (hasInliningRoot()) {
     inliningRoot()->purgeOptimizedStubs(zone);
   }
-#ifdef DEBUG
-  failedICHash_.reset();
-  hasPurgedStubs_ = true;
-#endif
+
+  notePurgedStubs();
 }
 
 void ICScript::purgeOptimizedStubs(Zone* zone) {
