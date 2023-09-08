@@ -251,12 +251,7 @@ validConfigs.forEach(config => {
       assert_equals(new_config.latencyMode, config.latencyMode);
     if (config.alpha)
       assert_equals(new_config.alpha, config.alpha);
-    if (config.codec.startsWith('avc')) {
-      if (config.avc) {
-        assert_equals(new_config.avc.format, config.avc.format);
-      }
-    } else {
-      assert_equals(new_config.avc, undefined);
-    }
+    if (config.avc)
+      assert_equals(new_config.avc.format, config.avc.format);
   }, "VideoEncoder.isConfigSupported() supports:" + JSON.stringify(config));
 });
