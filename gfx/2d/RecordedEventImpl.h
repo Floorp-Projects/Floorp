@@ -2132,6 +2132,9 @@ inline bool RecordedCreateDrawTargetForFilter::PlayEvent(
 
   RefPtr<DrawTarget> newDT =
       dt->CreateSimilarDrawTarget(transformedRect.Size(), mFormat);
+  if (!newDT) {
+    return false;
+  }
   newDT =
       gfx::Factory::CreateOffsetDrawTarget(newDT, transformedRect.TopLeft());
 
