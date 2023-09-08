@@ -155,7 +155,7 @@ EC_FillParams(PLArenaPool *arena, const SECItem *encodedParams,
              * (the NIST P-256 curve)
              */
             CHECK_SEC_OK(gf_populate_params_bytes(ECCurve_X9_62_PRIME_256V1,
-                                                  ec_field_GFp, params));
+                                                  ec_field_plain, params));
             break;
 
         case SEC_OID_SECG_EC_SECP384R1:
@@ -176,7 +176,8 @@ EC_FillParams(PLArenaPool *arena, const SECItem *encodedParams,
 
         case SEC_OID_CURVE25519:
             /* Populate params for Curve25519 */
-            CHECK_SEC_OK(gf_populate_params_bytes(ECCurve25519, ec_field_plain,
+            CHECK_SEC_OK(gf_populate_params_bytes(ECCurve25519,
+                                                  ec_field_plain,
                                                   params));
             break;
 
@@ -249,4 +250,19 @@ EC_GetPointSize(const ECParams *params)
         return curveParams->scalarSize;
     }
     return curveParams->pointSize - 1;
+}
+
+int
+EC_GetScalarSize(const ECParams *params)
+{
+    ECCurveName name = params->name;
+    const ECCurveBytes *curveParams;
+
+    if ((name < ECCurve_noName) || (name > ECCurve_pastLastCurve) ||
+        ((curveParams = ecCurve_map[name]) == NULL)) {
+        /* unknown curve, calculate scalar size from field size in params */
+        int sizeInBytes = (params->fieldID.size + 7) / 8;
+        return sizeInBytes;
+    }
+    return curveParams->scalarSize;
 }

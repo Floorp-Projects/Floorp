@@ -291,7 +291,6 @@
       'type': 'static_library',
       'sources': [
         'gcm-ppc.c',
-        'sha512-p8.s',
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports'
@@ -313,7 +312,12 @@
           'cflags_mozilla': [
             '-maltivec'
           ],
-        }]
+        }],
+        [ 'ppc_abi==2', {
+          'sources': [
+            'sha512-p8.s',
+          ],
+        }],
       ]
     },
     {
@@ -839,6 +843,7 @@
         'defines':[
           'HACL_CAN_COMPILE_VEC128',
           'HACL_CAN_COMPILE_VEC256',
+          'HACL_CAN_COMPILE_INTRINSICS',
         ],
       }],
       # MSVC has no __int128 type. Use emulated int128 and leave
@@ -847,6 +852,7 @@
         'defines': [
           # The Makefile does version-tests on GCC, but we're not doing that here.
           'HAVE_INT128_SUPPORT',
+          'HACL_CAN_COMPILE_UINT128'
         ],
       }, {
         'defines': [
@@ -937,6 +943,9 @@
         # When the compiler uses the softfloat ABI, we want to use the compatible softfp ABI when enabling NEON for these objects.
         # Confusingly, __SOFTFP__ is the name of the define for the softfloat ABI, not for the softfp ABI.
         'softfp_cflags': '<!(${CC:-cc} -o - -E -dM - ${CFLAGS} < /dev/null | grep __SOFTFP__ > /dev/null && echo -mfloat-abi=softfp || true)',
+      }],
+      [ 'target_arch=="ppc64" or target_arch=="ppc64le"', {
+       'ppc_abi': '<!(${CC:-cc} -dM -E - < /dev/null | awk \'$2 == "_CALL_ELF" {print $3}\')',
       }],
     ],
   }

@@ -21,7 +21,15 @@
 static const ECMethod kMethods[] = {
     { ECCurve25519,
       ec_Curve25519_pt_mul,
-      ec_Curve25519_pt_validate }
+      ec_Curve25519_pt_validate,
+      NULL, NULL },
+    {
+        ECCurve_NIST_P256,
+        ec_secp256r1_pt_mul,
+        ec_secp256r1_pt_validate,
+        ec_secp256r1_sign_digest,
+        ec_secp256r1_verify_digest,
+    }
 };
 
 static const ECMethod *
@@ -287,7 +295,11 @@ ec_NewKey(ECParams *ecParams, ECPrivateKey **privKey,
             goto cleanup;
         }
         rv = method->mul(&key->publicValue, &key->privateValue, NULL);
-        goto done;
+        if (rv != SECSuccess) {
+            goto cleanup;
+        } else {
+            goto done;
+        }
     }
 
     CHECK_MPI_OK(mp_init(&k));
@@ -372,6 +384,7 @@ ec_GenerateRandomPrivateKey(const unsigned char *order, int len)
     CHECK_MPI_OK(mp_add(&privKeyVal, &one, &privKeyVal));
     CHECK_MPI_OK(mp_to_fixlen_octets(&privKeyVal, privKeyBytes, len));
     memset(privKeyBytes + len, 0, len);
+
 cleanup:
     mp_clear(&privKeyVal);
     mp_clear(&order_1);
@@ -440,7 +453,8 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
     if (!ecParams || ecParams->name == ECCurve_noName ||
         !publicValue || !publicValue->len) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
+        rv = SECFailure;
+        return rv;
     }
 
     /* Uses curve specific code for point validation. */
@@ -449,9 +463,14 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
         if (method == NULL || method->validate == NULL) {
             /* unknown curve */
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
-            return SECFailure;
+            rv = SECFailure;
+            return rv;
         }
-        return method->validate(publicValue);
+        rv = method->validate(publicValue);
+        if (rv != SECSuccess) {
+            PORT_SetError(SEC_ERROR_BAD_KEY);
+        }
+        return rv;
     }
 
     /* NOTE: We only support uncompressed points for now */
@@ -510,6 +529,7 @@ cleanup:
     ECGroup_free(group);
     mp_clear(&Px);
     mp_clear(&Py);
+
     if (err) {
         MP_TO_SEC_ERROR(err);
         rv = SECFailure;
@@ -536,18 +556,14 @@ ECDH_Derive(SECItem *publicValue,
 {
     SECStatus rv = SECFailure;
     unsigned int len = 0;
-    SECItem pointQ = { siBuffer, NULL, 0 };
-    mp_int k; /* to hold the private value */
     mp_err err = MP_OKAY;
-#if EC_DEBUG
-    int i;
-#endif
 
     if (!publicValue || !publicValue->len ||
         !ecParams || ecParams->name == ECCurve_noName ||
         !privateValue || !privateValue->len || !derivedSecret) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return SECFailure;
+        rv = SECFailure;
+        return rv;
     }
 
     /*
@@ -556,30 +572,39 @@ ECDH_Derive(SECItem *publicValue,
      */
     if (EC_ValidatePublicKey(ecParams, publicValue) != SECSuccess) {
         PORT_SetError(SEC_ERROR_BAD_KEY);
-        return SECFailure;
+        rv = SECFailure;
+        return rv;
     }
 
     /* Perform curve specific multiplication using ECMethod */
     if (ecParams->fieldID.type == ec_field_plain) {
         const ECMethod *method;
         memset(derivedSecret, 0, sizeof(*derivedSecret));
-        derivedSecret = SECITEM_AllocItem(NULL, derivedSecret, EC_GetPointSize(ecParams));
+        derivedSecret = SECITEM_AllocItem(NULL, derivedSecret, EC_GetScalarSize(ecParams));
         if (derivedSecret == NULL) {
             PORT_SetError(SEC_ERROR_NO_MEMORY);
-            return SECFailure;
+            rv = SECFailure;
+            return rv;
         }
         method = ec_get_method_from_name(ecParams->name);
         if (method == NULL || method->validate == NULL ||
             method->mul == NULL) {
             PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-            return SECFailure;
+            rv = SECFailure;
+            goto done;
         }
         rv = method->mul(derivedSecret, privateValue, publicValue);
         if (rv != SECSuccess) {
-            SECITEM_ZfreeItem(derivedSecret, PR_FALSE);
+            PORT_SetError(SEC_ERROR_BAD_KEY);
         }
-        return rv;
+        goto done;
     }
+
+    SECItem pointQ = { siBuffer, NULL, 0 };
+    mp_int k; /* to hold the private value */
+#if EC_DEBUG
+    int i;
+#endif
 
     /*
      * We fail if the public value is the point at infinity, since
@@ -638,14 +663,18 @@ ECDH_Derive(SECItem *publicValue,
 cleanup:
     mp_clear(&k);
 
-    if (err) {
-        MP_TO_SEC_ERROR(err);
-    }
-
     if (pointQ.data) {
         PORT_ZFree(pointQ.data, pointQ.len);
     }
 
+done:
+
+    if (err) {
+        MP_TO_SEC_ERROR(err);
+    }
+    if (rv != SECSuccess) {
+        SECITEM_ZfreeItem(derivedSecret, PR_FALSE);
+    }
     return rv;
 }
 
@@ -659,19 +688,57 @@ ec_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
                       const SECItem *digest, const unsigned char *kb, const int kblen)
 {
     SECStatus rv = SECFailure;
+    ECParams *ecParams = NULL;
+    mp_err err = MP_OKAY;
+    int flen = 0;  /* length in bytes of the field size */
+    unsigned olen; /* length in bytes of the base point order */
+
+    /* Check args */
+    if (!key || !signature || !digest || !kb || (kblen <= 0)) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        rv = SECFailure;
+        goto done;
+    }
+
+    ecParams = &(key->ecParams);
+    flen = (ecParams->fieldID.size + 7) >> 3;
+    olen = ecParams->order.len;
+    if (signature->data == NULL) {
+        /* a call to get the signature length only */
+        signature->len = 2 * olen;
+        rv = SECSuccess;
+        goto done;
+    }
+    if (signature->len < 2 * olen) {
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        rv = SECFailure;
+        goto done;
+    }
+
+    /* Perform curve specific signature using ECMethod */
+    if (ecParams->fieldID.type == ec_field_plain) {
+        const ECMethod *method = ec_get_method_from_name(ecParams->name);
+        if (method == NULL || method->sign_digest == NULL) {
+            PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+            rv = SECFailure;
+            goto done;
+        }
+        rv = method->sign_digest(key, signature, digest, kb, kblen);
+        if (rv != SECSuccess) {
+            PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        }
+        goto done;
+    }
+
     mp_int x1;
     mp_int d, k; /* private key, random integer */
     mp_int r, s; /* tuple (r, s) is the signature */
     mp_int t;    /* holding tmp values */
     mp_int n;
     mp_int ar; /* blinding value */
-    mp_err err = MP_OKAY;
-    ECParams *ecParams = NULL;
     SECItem kGpoint = { siBuffer, NULL, 0 };
-    int flen = 0;   /* length in bytes of the field size */
-    unsigned olen;  /* length in bytes of the base point order */
-    unsigned obits; /* length in bits  of the base point order */
     unsigned char *t2 = NULL;
+    unsigned obits; /* length in bits  of the base point order */
 
 #if EC_DEBUG
     char mpstr[256];
@@ -687,24 +754,6 @@ ec_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     MP_DIGITS(&n) = 0;
     MP_DIGITS(&t) = 0;
     MP_DIGITS(&ar) = 0;
-
-    /* Check args */
-    if (!key || !signature || !digest || !kb || (kblen < 0)) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        goto cleanup;
-    }
-
-    ecParams = &(key->ecParams);
-    flen = (ecParams->fieldID.size + 7) >> 3;
-    olen = ecParams->order.len;
-    if (signature->data == NULL) {
-        /* a call to get the signature length only */
-        goto finish;
-    }
-    if (signature->len < 2 * olen) {
-        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
-        goto cleanup;
-    }
 
     CHECK_MPI_OK(mp_init(&x1));
     CHECK_MPI_OK(mp_init(&d));
@@ -851,11 +900,11 @@ ec_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     */
     CHECK_MPI_OK(mp_to_fixlen_octets(&r, signature->data, olen));
     CHECK_MPI_OK(mp_to_fixlen_octets(&s, signature->data + olen, olen));
-finish:
-    signature->len = 2 * olen;
 
+    signature->len = 2 * olen;
     rv = SECSuccess;
     err = MP_OKAY;
+
 cleanup:
     mp_clear(&x1);
     mp_clear(&d);
@@ -874,6 +923,7 @@ cleanup:
         PORT_ZFree(kGpoint.data, kGpoint.len);
     }
 
+done:
     if (err) {
         MP_TO_SEC_ERROR(err);
         rv = SECFailure;
@@ -892,12 +942,12 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
                          const SECItem *digest, const unsigned char *kb, const int kblen)
 {
 #if EC_DEBUG || EC_DOUBLECHECK
-
     SECItem *signature2 = SECITEM_AllocItem(NULL, NULL, signature->len);
     SECStatus signSuccess = ec_SignDigestWithSeed(key, signature, digest, kb, kblen);
     SECStatus signSuccessDouble = ec_SignDigestWithSeed(key, signature2, digest, kb, kblen);
-    int signaturesEqual = NSS_SecureMemcmp(signature, signature2, signature->len);
+    int signaturesEqual = NSS_SecureMemcmp(signature->data, signature2->data, signature->len);
     SECStatus rv;
+
     if ((signaturesEqual == 0) && (signSuccess == SECSuccess) && (signSuccessDouble == SECSuccess)) {
         rv = SECSuccess;
     } else {
@@ -966,12 +1016,37 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
                    const SECItem *digest)
 {
     SECStatus rv = SECFailure;
+    ECParams *ecParams = NULL;
+    mp_err err = MP_OKAY;
+
+    /* Check args */
+    if (!key || !signature || !digest) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        rv = SECFailure;
+        goto done;
+    }
+
+    ecParams = &(key->ecParams);
+
+    /* Perform curve specific signature verification using ECMethod */
+    if (ecParams->fieldID.type == ec_field_plain) {
+        const ECMethod *method = ec_get_method_from_name(ecParams->name);
+        if (method == NULL || method->verify_digest == NULL) {
+            PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+            rv = SECFailure;
+            goto done;
+        }
+        rv = method->verify_digest(key, signature, digest);
+        if (rv != SECSuccess) {
+            PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+        }
+        goto done;
+    }
+
     mp_int r_, s_;       /* tuple (r', s') is received signature) */
     mp_int c, u1, u2, v; /* intermediate values used in verification */
     mp_int x1;
     mp_int n;
-    mp_err err = MP_OKAY;
-    ECParams *ecParams = NULL;
     SECItem pointC = { siBuffer, NULL, 0 };
     int slen;       /* length in bytes of a half signature (r or s) */
     int flen;       /* length in bytes of the field size */
@@ -994,13 +1069,15 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     MP_DIGITS(&v) = 0;
     MP_DIGITS(&n) = 0;
 
-    /* Check args */
-    if (!key || !signature || !digest) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        goto cleanup;
-    }
+    CHECK_MPI_OK(mp_init(&r_));
+    CHECK_MPI_OK(mp_init(&s_));
+    CHECK_MPI_OK(mp_init(&c));
+    CHECK_MPI_OK(mp_init(&u1));
+    CHECK_MPI_OK(mp_init(&u2));
+    CHECK_MPI_OK(mp_init(&x1));
+    CHECK_MPI_OK(mp_init(&v));
+    CHECK_MPI_OK(mp_init(&n));
 
-    ecParams = &(key->ecParams);
     flen = (ecParams->fieldID.size + 7) >> 3;
     olen = ecParams->order.len;
     if (signature->len == 0 || signature->len % 2 != 0 ||
@@ -1018,15 +1095,6 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     if (pointC.data == NULL) {
         goto cleanup;
     }
-
-    CHECK_MPI_OK(mp_init(&r_));
-    CHECK_MPI_OK(mp_init(&s_));
-    CHECK_MPI_OK(mp_init(&c));
-    CHECK_MPI_OK(mp_init(&u1));
-    CHECK_MPI_OK(mp_init(&u2));
-    CHECK_MPI_OK(mp_init(&x1));
-    CHECK_MPI_OK(mp_init(&v));
-    CHECK_MPI_OK(mp_init(&n));
 
     /*
     ** Convert received signature (r', s') into MPI integers.
@@ -1156,6 +1224,8 @@ cleanup:
 
     if (pointC.data)
         SECITEM_ZfreeItem(&pointC, PR_FALSE);
+
+done:
     if (err) {
         MP_TO_SEC_ERROR(err);
         rv = SECFailure;

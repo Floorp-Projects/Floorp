@@ -12,15 +12,24 @@ export RUSTFLAGS="-C instrument-coverage"
 cd nss
 CC=clang-15 CXX=clang++-15 ./build.sh -g -v --sourcecov --static --disable-tests
 
+TEST_DIRECTORY=$NSS_SOURCES_PATH/tests/acvp
+
 git clone --depth=1 https://gitlab.com/nisec/nss-project/acvp-rust.git
 cd acvp-rust
 cargo build
 TESTRUN="cargo run --bin test -- --profdata-command llvm-profdata-15"
-echo "AES-GCM:"
-$TESTRUN acvp-rust/samples/aes-gcm.json symmetric nss
-echo "ECDSA:"
-$TESTRUN acvp-rust/samples/ecdsa.json ecdsa nss
-echo "RSA:"
-$TESTRUN acvp-rust/samples/rsa.json rsa nss
-echo "SHA-256:"
-$TESTRUN acvp-rust/samples/sha256.json sha nss
+echo "Big Number (fuzzed):"
+$TESTRUN $TEST_DIRECTORY/fuzzed/bn.json bn nss
+echo "AES-GCM (acvp-server):"
+$TESTRUN $TEST_DIRECTORY/aes-gcm.json symmetric nss
+echo "ECDSA (acvp-server):"
+$TESTRUN $TEST_DIRECTORY/ecdsa.json ecdsa nss
+echo "ECDSA (fuzzed):"
+$TESTRUN $TEST_DIRECTORY/fuzzed/ecdsa.json ecdsa nss
+echo "RSA (acvp-server):"
+$TESTRUN $TEST_DIRECTORY/rsa.json rsa nss
+echo "RSA (fuzzed):"
+$TESTRUN $TEST_DIRECTORY/fuzzed/rsa.json rsa nss
+echo "SHA-256 (acvp-server):"
+$TESTRUN $TEST_DIRECTORY/sha256.json sha nss
+$TESTRUN $TEST_DIRECTORY/sha256.mct.json sha nss

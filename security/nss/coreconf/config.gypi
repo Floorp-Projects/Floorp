@@ -143,6 +143,7 @@
     'enable_draft_hpke%': 0,
     'force_integrated_as%': 0,
     'disable_ckbi%': 0,
+    'ppc_abi%': 0,
   },
   'target_defaults': {
     # Settings specific to targets should go here.

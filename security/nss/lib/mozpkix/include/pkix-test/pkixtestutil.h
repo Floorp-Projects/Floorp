@@ -36,7 +36,31 @@ namespace mozilla {
 namespace pkix {
 namespace test {
 
-typedef std::basic_string<uint8_t> ByteString;
+class ByteString : public std::string {
+ public:
+  ByteString() {}
+  ByteString(size_t count, uint8_t value) : std::string(count, char(value)) {}
+  explicit ByteString(const uint8_t* data)
+      : std::string(reinterpret_cast<const char*>(data)) {}
+  ByteString(const uint8_t* data, size_t length)
+      : std::string(reinterpret_cast<const char*>(data), length) {}
+  ByteString operator+(const ByteString& rhs) const {
+    ByteString result = *this;
+    result.std::string::append(rhs);
+    return result;
+  }
+  const uint8_t* data() const {
+    return reinterpret_cast<const uint8_t*>(std::string::data());
+  }
+  void assign(const uint8_t* data, size_t length) {
+    std::string::assign(reinterpret_cast<const char*>(data), length);
+  }
+  void append(const ByteString& other) { std::string::append(other); }
+  void append(const uint8_t* data, size_t length) {
+    std::string::append(reinterpret_cast<const char*>(data), length);
+  }
+  void push_back(uint8_t c) { std::string::push_back(char(c)); }
+};
 
 inline bool ENCODING_FAILED(const ByteString& bs) { return bs.empty(); }
 

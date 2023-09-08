@@ -15,6 +15,8 @@ struct ECMethodStr {
     ECCurveName name;
     SECStatus (*mul)(SECItem *result, SECItem *scalar, SECItem *point);
     SECStatus (*validate)(const SECItem *point);
+    SECStatus (*sign_digest)(ECPrivateKey *key, SECItem *signature, const SECItem *digest, const unsigned char *kb, const unsigned int kblen);
+    SECStatus (*verify_digest)(ECPublicKey *key, const SECItem *signature, const SECItem *digest);
 };
 typedef struct ECMethodStr ECMethod;
 

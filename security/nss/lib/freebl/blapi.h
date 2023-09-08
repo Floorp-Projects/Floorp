@@ -1891,6 +1891,11 @@ extern SECStatus EC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
  */
 extern int EC_GetPointSize(const ECParams *params);
 
+/*
+ * use the internal table to get the size in bytes of a single EC coordinate
+ */
+extern int EC_GetScalarSize(const ECParams *params);
+
 SEC_END_PROTOS
 
 #endif /* _BLAPI_H_ */
