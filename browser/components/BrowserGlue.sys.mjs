@@ -2065,11 +2065,7 @@ BrowserGlue.prototype = {
       () => lazy.NewTabUtils.uninit(),
       () => lazy.Normandy.uninit(),
       () => lazy.RFPHelper.uninit(),
-      () => {
-        if (AppConstants.NIGHTLY_BUILD) {
-          lazy.ShoppingUtils.uninit();
-        }
-      },
+      () => lazy.ShoppingUtils.uninit(),
       () => lazy.ASRouterNewTabHook.destroy(),
       () => {
         if (AppConstants.MOZ_UPDATER) {
@@ -2982,7 +2978,6 @@ BrowserGlue.prototype = {
 
       {
         name: "ShoppingUtils.init",
-        condition: AppConstants.NIGHTLY_BUILD,
         task: () => {
           lazy.ShoppingUtils.init();
         },
