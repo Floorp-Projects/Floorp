@@ -376,7 +376,7 @@ const workspaceFunctions = {
     },
 
     deleteworkspace(workspace) {
-      if (workspace !== defaultWorkspaceName) {
+      if (workspace !== WorkspaceUtils.defaultWorkspaceName) {
         let allWorkspaces = Services.prefs
           .getCharPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF)
           .split(",");
@@ -392,7 +392,7 @@ const workspaceFunctions = {
           );
           Services.prefs.setStringPref(
             WorkspaceUtils.workspacesPreferences.WORKSPACE_CURRENT_PREF,
-            defaultWorkspaceName
+            WorkspaceUtils.defaultWorkspaceName
           );
           workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
         }
@@ -912,7 +912,7 @@ const workspaceFunctions = {
 
   iconFunctions: {
     getIcon(iconName) {
-      if (!CONTAINER_ICONS.has(iconName)) {
+      if (!WorkspaceUtils.CONTAINER_ICONS.has(iconName)) {
         throw console.error(`Invalid icon ${iconName} for workspace`);
       }
       return `chrome://browser/skin/workspace-icons/${iconName}.svg`;
@@ -1208,7 +1208,7 @@ const workspaceFunctions = {
 
       if (
         e.explicitOriginalTarget.getAttribute("workspace") ==
-        defaultWorkspaceName
+        WorkspaceUtils.defaultWorkspaceName
       ) {
         menuitemElem.firstChild.remove();
       }

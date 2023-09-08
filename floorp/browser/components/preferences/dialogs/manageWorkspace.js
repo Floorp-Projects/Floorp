@@ -6,42 +6,17 @@
 /* import-globals-from /toolkit/content/preferencesBindings.js */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-let { BrowserManagerSidebar } = ChromeUtils.importESModule("resource:///modules/BrowserManagerSidebar.sys.mjs")
+
+const WorkspaceUtils = ChromeUtils.importESModule(
+  "resource:///modules/WorkspaceUtils.sys.mjs"
+);
+
 XPCOMUtils.defineLazyGetter(this, "L10n", () => {
   return new Localization([
     "branding/brand.ftl",
     "browser/floorp",
   ]);
 });
-
-const WORKSPACE_CURRENT_PREF = "floorp.browser.workspace.current";
-const WORKSPACE_ALL_PREF = "floorp.browser.workspace.all";
-const WORKSPACE_TABS_PREF = "floorp.browser.workspace.tabs.state";
-const WORKSPACE_CLOSE_POPUP_AFTER_CLICK_PREF =
-  "floorp.browser.workspace.closePopupAfterClick";
-const WORKSPACE_EXCLUDED_PINNED_TABS_PREF =
-  "floorp.browser.workspace.excludePinnedTabs";
-const WORKSPACE_INFO_PREF = "floorp.browser.workspace.info";
-const l10n = new Localization(["browser/floorp.ftl"], true);
-const defaultWorkspaceName = Services.prefs
-  .getStringPref(WORKSPACE_ALL_PREF)
-  .split(",")[0];
-
-const CONTAINER_ICONS = new Set([
-  "briefcase",
-  "cart",
-  "circle",
-  "dollar",
-  "fence",
-  "fingerprint",
-  "gift",
-  "vacation",
-  "food",
-  "fruit",
-  "pet",
-  "tree",
-  "chill",
-]);
 
 function setTitle() {
     let winElem = document.documentElement;
@@ -50,7 +25,7 @@ function setTitle() {
  setTitle();
   
   function onLoad() {
-    const workspaces = Services.prefs.getStringPref(WORKSPACE_ALL_PREF).split(",");
+    const workspaces = Services.prefs.getStringPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_ALL_PREF).split(",");
 
     const workspaceSelect = document.getElementById("workspacesPopup");
     const workspaceNameLabel = document.getElementById("workspaceName");
@@ -66,14 +41,14 @@ function setTitle() {
     if(window.arguments != undefined) {
       workspaceNameLabel.value = window.arguments[0].workspaceName;
     } else {
-      workspaceNameLabel.value = defaultWorkspaceName;
+      workspaceNameLabel.value = WorkspaceUtils.defaultWorkspaceName;
     }
 
     //icon
     const iconSelect = document.getElementById("workspacesIconSelectPopup");
     const iconNameLabel = document.getElementById("iconName");
 
-    for (let icon of CONTAINER_ICONS) {
+    for (let icon of WorkspaceUtils.CONTAINER_ICONS) {
       const element = window.MozXULElement.parseXULToFragment(`
         <menuitem value="${icon}" data-l10n-id="workspace-icon-${icon}"
                   style="list-style-image: url(chrome://browser/skin/workspace-icons/${icon}.svg);">
