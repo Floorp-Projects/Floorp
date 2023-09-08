@@ -692,10 +692,19 @@ CoderResult CodeGlobalDesc(Coder<mode>& coder,
 template <CoderMode mode>
 CoderResult CodeTagType(Coder<mode>& coder, CoderArg<mode, TagType> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TagType, 232);
-  MOZ_TRY(
-      (CodeVector<mode, ValType, &CodeValType<mode>>(coder, &item->argTypes_)));
-  MOZ_TRY(CodePodVector(coder, &item->argOffsets_));
-  MOZ_TRY(CodePod(coder, &item->size_));
+  // We skip serializing/deserializing the size and argOffsets fields because
+  // those are computed from the argTypes field when we deserialize.
+  if constexpr (mode == MODE_DECODE) {
+    ValTypeVector argTypes;
+    MOZ_TRY((CodeVector<MODE_DECODE, ValType, &CodeValType<MODE_DECODE>>(
+        coder, &argTypes)));
+    if (!item->initialize(std::move(argTypes))) {
+      return Err(OutOfMemory());
+    }
+  } else {
+    MOZ_TRY((CodeVector<mode, ValType, &CodeValType<mode>>(coder,
+                                                           &item->argTypes())));
+  }
   return Ok();
 }
 

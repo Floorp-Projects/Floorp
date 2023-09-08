@@ -1292,6 +1292,34 @@ inline MatchTypeCode MatchTypeCode::forMatch(PackedTypeCode ptc,
   return mtc;
 }
 
+template <class T>
+void PackedType<T>::AddRef() const {
+  if (!isRefType()) {
+    return;
+  }
+  refType().AddRef();
+}
+template <class T>
+void PackedType<T>::Release() const {
+  if (!isRefType()) {
+    return;
+  }
+  refType().Release();
+}
+
+void RefType::AddRef() const {
+  if (!isTypeRef()) {
+    return;
+  }
+  typeDef()->recGroup().AddRef();
+}
+void RefType::Release() const {
+  if (!isTypeRef()) {
+    return;
+  }
+  typeDef()->recGroup().Release();
+}
+
 inline RefTypeHierarchy RefType::hierarchy() const {
   switch (kind()) {
     case RefType::Func:

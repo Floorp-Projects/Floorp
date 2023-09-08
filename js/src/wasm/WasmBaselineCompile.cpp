@@ -4102,8 +4102,8 @@ bool BaseCompiler::emitCatch() {
 
   // Extract the arguments in the exception package and push them.
   const SharedTagType& tagType = moduleEnv_.tags[tagIndex].type;
-  const ValTypeVector& params = tagType->argTypes_;
-  const TagOffsetVector& offsets = tagType->argOffsets_;
+  const ValTypeVector& params = tagType->argTypes();
+  const TagOffsetVector& offsets = tagType->argOffsets();
 
   // The landing pad uses the block return protocol to communicate the
   // exception object pointer to the catch block.
@@ -4442,7 +4442,7 @@ bool BaseCompiler::emitThrow() {
 
   const TagDesc& tagDesc = moduleEnv_.tags[tagIndex];
   const ResultType& params = tagDesc.type->resultType();
-  const TagOffsetVector& offsets = tagDesc.type->argOffsets_;
+  const TagOffsetVector& offsets = tagDesc.type->argOffsets();
 
   // Load the tag object
 #ifdef RABALDR_PIN_INSTANCE

@@ -64,6 +64,7 @@ class Table : public ShareableBase<Table> {
  public:
   static RefPtr<Table> create(JSContext* cx, const TableDesc& desc,
                               Handle<WasmTableObject*> maybeObject);
+  ~Table();
   void trace(JSTracer* trc);
 
   RefType elemType() const { return elemType_; }

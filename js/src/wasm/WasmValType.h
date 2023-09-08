@@ -420,6 +420,9 @@ class RefType {
   // for RefType::Struct.
   TypeDefKind typeDefKind() const;
 
+  inline void AddRef() const;
+  inline void Release() const;
+
   bool operator==(const RefType& that) const { return ptc_ == that.ptc_; }
   bool operator!=(const RefType& that) const { return ptc_ != that.ptc_; }
 };
@@ -609,6 +612,9 @@ class PackedType : public T {
   }
 
   explicit PackedType(PackedTypeCode ptc) : tc_(ptc) { MOZ_ASSERT(isValid()); }
+
+  inline void AddRef() const;
+  inline void Release() const;
 
   static PackedType fromMIRType(jit::MIRType mty) {
     switch (mty) {
