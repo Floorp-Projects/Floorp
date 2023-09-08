@@ -19,7 +19,7 @@ def components_loader(kind, path, config, params, loaded_tasks):
 
 
 def components_and_apks_loader(kind, path, config, params, loaded_tasks):
-    """Loader that yield one task per android-componend and per apk-based project.
+    """Loader that yields one task per android-component and per apk-based project.
 
     For instance focus-android yields one task.
     Config is read from various .buildconfig.yml files.
