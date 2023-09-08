@@ -59,10 +59,6 @@ JSObject* CreateScriptPrivate(JSContext* cx,
     JS::MutableHandle<JS::Value> privateValue,
     JS::MutableHandle<JSString*> elementAttributeName);
 
-[[nodiscard]] JS::UniqueChars StringToLocale(JSContext* cx,
-                                             JS::Handle<JSObject*> callee,
-                                             JS::Handle<JSString*> str_);
-
 } /* namespace js */
 
 #endif /* builtin_TestingUtility_h */

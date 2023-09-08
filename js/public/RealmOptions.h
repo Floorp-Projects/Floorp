@@ -18,7 +18,6 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Class.h"  // JSTraceOp
-#include "js/RefCounted.h"
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
@@ -59,14 +58,6 @@ enum class WeakRefSpecifier {
   Disabled,
   EnabledWithCleanupSome,
   EnabledWithoutCleanupSome
-};
-
-struct LocaleString : js::RefCounted<LocaleString> {
-  const char* chars_;
-
-  explicit LocaleString(const char* chars) : chars_(chars) {}
-
-  auto chars() const { return chars_; }
 };
 
 /**
@@ -268,9 +259,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-  RefPtr<LocaleString> locale() const { return locale_; }
-  RealmCreationOptions& setLocaleCopyZ(const char* locale);
-
   // Always use the fdlibm implementation of math functions instead of the
   // platform native libc implementations. Useful for fingerprinting protection
   // and cross-platform consistency.
@@ -294,7 +282,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     Zone* zone_;
   };
   uint64_t profilerRealmID_ = 0;
-  RefPtr<LocaleString> locale_;
   WeakRefSpecifier weakRefs_ = WeakRefSpecifier::Disabled;
   bool invisibleToDebugger_ = false;
   bool preserveJitCode_ = false;

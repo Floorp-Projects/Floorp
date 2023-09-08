@@ -22,10 +22,6 @@
     }                                                \
   }
 
-namespace JS {
-class RealmOptions;
-}
-
 namespace JS::loader {
 class ModuleLoaderBase;
 }
@@ -89,8 +85,6 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
 
  protected:
   ~WorkletGlobalScope();
-
-  JS::RealmOptions CreateRealmOptions() const;
 
   const RefPtr<WorkletImpl> mImpl;
 

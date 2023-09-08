@@ -43,12 +43,16 @@ void XPCLocaleObserver::Init() {
       mozilla::services::GetObserverService();
 
   observerService->AddObserver(this, "intl:app-locales-changed", false);
+
+  Preferences::AddStrongObserver(this, "javascript.use_us_english_locale");
 }
 
 NS_IMETHODIMP
 XPCLocaleObserver::Observe(nsISupports* aSubject, const char* aTopic,
                            const char16_t* aData) {
-  if (!strcmp(aTopic, "intl:app-locales-changed")) {
+  if (!strcmp(aTopic, "intl:app-locales-changed") ||
+      (!strcmp(aTopic, "nsPref:changed") &&
+       !NS_strcmp(aData, u"javascript.use_us_english_locale"))) {
     JSRuntime* rt = CycleCollectedJSRuntime::Get()->Runtime();
     if (!xpc_LocalizeRuntime(rt)) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -125,7 +129,16 @@ bool xpc_LocalizeRuntime(JSRuntime* rt) {
     JS_SetLocaleCallbacks(rt, new XPCLocaleCallbacks());
   }
 
-  // Set the default locale from the regional prefs locales.
+  // Set the default locale.
+
+  // Check a pref to see if we should use US English locale regardless
+  // of the system locale.
+  if (Preferences::GetBool("javascript.use_us_english_locale", false)) {
+    return JS_SetDefaultLocale(rt, "en-US");
+  }
+
+  // No pref has been found, so get the default locale from the
+  // regional prefs locales.
   AutoTArray<nsCString, 10> rpLocales;
   LocaleService::GetInstance()->GetRegionalPrefsLocales(rpLocales);
 

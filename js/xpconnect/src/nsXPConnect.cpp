@@ -47,7 +47,6 @@
 #include "nsContentUtils.h"
 #include "nsScriptError.h"
 #include "nsJSUtils.h"
-#include "nsRFPService.h"
 #include "prsystem.h"
 
 #include "xpcprivate.h"
@@ -484,7 +483,7 @@ JSObject* CreateGlobalObject(JSContext* cx, const JSClass* clasp,
 
 void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
                              bool aIsSystemPrincipal, bool aForceUTC,
-                             bool aAlwaysUseFdlibm, bool aLocaleEnUS) {
+                             bool aAlwaysUseFdlibm) {
   bool shouldDiscardSystemSource = ShouldDiscardSystemSource();
 
   if (aIsSystemPrincipal) {
@@ -497,10 +496,6 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
 
   aOptions.creationOptions().setForceUTC(aForceUTC);
   aOptions.creationOptions().setAlwaysUseFdlibm(aAlwaysUseFdlibm);
-  if (aLocaleEnUS) {
-    nsCString locale = nsRFPService::GetSpoofedJSLocale();
-    aOptions.creationOptions().setLocaleCopyZ(locale.get());
-  }
 
   if (shouldDiscardSystemSource) {
     aOptions.behaviors().setDiscardSource(aIsSystemPrincipal);
@@ -553,8 +548,7 @@ nsresult InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
   MOZ_RELEASE_ASSERT(aPrincipal->IsSystemPrincipal());
 
   InitGlobalObjectOptions(aOptions, /* aSystemPrincipal */ true,
-                          /* aForceUTC */ false, /* aAlwaysUseFdlibm */ false,
-                          /* aLocaleEnUS */ false);
+                          /* aForceUTC */ false, /* aAlwaysUseFdlibm */ false);
 
   // Call into XPCWrappedNative to make a new global object, scope, and global
   // prototype.

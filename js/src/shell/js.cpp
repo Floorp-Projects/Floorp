@@ -6776,9 +6776,6 @@ static bool WrapWithProto(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject callee(cx, &args.callee());
-
   JS::RealmOptions options;
   JS::RealmCreationOptions& creationOptions = options.creationOptions();
   JS::RealmBehaviors& behaviors = options.behaviors();
@@ -6797,6 +6794,7 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
 
   JS::AutoHoldPrincipals principals(cx);
 
+  CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 1 && args[0].isObject()) {
     RootedObject opts(cx, &args[0].toObject());
     RootedValue v(cx);
@@ -6915,18 +6913,6 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (v.isBoolean()) {
       creationOptions.setAlwaysUseFdlibm(v.toBoolean());
-    }
-
-    if (!JS_GetProperty(cx, opts, "locale", &v)) {
-      return false;
-    }
-    if (v.isString()) {
-      RootedString str(cx, v.toString());
-      UniqueChars locale = StringToLocale(cx, callee, str);
-      if (!locale) {
-        return false;
-      }
-      creationOptions.setLocaleCopyZ(locale.get());
     }
   }
 
