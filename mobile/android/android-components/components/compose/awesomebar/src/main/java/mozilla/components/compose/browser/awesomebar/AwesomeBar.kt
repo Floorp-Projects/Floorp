@@ -104,7 +104,7 @@ fun AwesomeBar(
         }
 
         Suggestions(
-            suggestions.toMap(),
+            suggestions,
             colors,
             orientation,
             onSuggestionClicked,
