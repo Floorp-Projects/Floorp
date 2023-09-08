@@ -1722,6 +1722,24 @@ JS::RealmCreationOptions& JS::RealmCreationOptions::setCoopAndCoepEnabled(
   return *this;
 }
 
+JS::RealmCreationOptions& JS::RealmCreationOptions::setLocaleCopyZ(
+    const char* locale) {
+  const size_t size = strlen(locale) + 1;
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  char* memoryPtr = js_pod_malloc<char>(sizeof(LocaleString) + size);
+  if (!memoryPtr) {
+    oomUnsafe.crash("RealmCreationOptions::setLocaleCopyZ");
+  }
+
+  char* localePtr = memoryPtr + sizeof(LocaleString);
+  memcpy(localePtr, locale, size);
+
+  locale_ = new (memoryPtr) LocaleString(localePtr);
+
+  return *this;
+}
+
 const JS::RealmBehaviors& JS::RealmBehaviorsRef(JS::Realm* realm) {
   return realm->behaviors();
 }
