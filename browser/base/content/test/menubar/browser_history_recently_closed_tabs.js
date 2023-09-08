@@ -9,23 +9,11 @@
  * the current window.
  */
 
-const openedTabs = [];
-
-async function closeTab(tab) {
-  const sessionStoreChanged = TestUtils.topicObserved(
-    "sessionstore-closed-objects-changed"
-  );
-  BrowserTestUtils.removeTab(tab);
-  await sessionStoreChanged;
-  const idx = openedTabs.indexOf(tab);
-  ok(idx >= 0, "Tab was found in the openedTabs array");
-  openedTabs.splice(idx, 1);
-}
-
-async function openTab(win = window, url) {
-  const tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
-  openedTabs.push(tab);
-}
+const { SessionStoreTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SessionStoreTestUtils.sys.mjs"
+);
+const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
+SessionStoreTestUtils.init(this, window);
 
 async function checkMenu(window, expected) {
   await SimpleTest.promiseFocus(window);
@@ -52,24 +40,11 @@ async function checkMenu(window, expected) {
   info("checkMenu:, menuHidden, returning");
 }
 
-async function resetHistory() {
+function resetClosedTabsAndWindows() {
   // Clear the lists of closed windows and tabs.
-  let sessionStoreChanged;
-  while (SessionStore.getClosedWindowCount() > 0) {
-    sessionStoreChanged = TestUtils.topicObserved(
-      "sessionstore-closed-objects-changed"
-    );
-    SessionStore.forgetClosedWindow(0);
-    await sessionStoreChanged;
-  }
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  is(SessionStore.getClosedWindowCount(), 0, "Expect 0 closed windows");
   for (const win of BrowserWindowTracker.orderedWindows) {
-    while (SessionStore.getClosedTabCountForWindow(win)) {
-      sessionStoreChanged = TestUtils.topicObserved(
-        "sessionstore-closed-objects-changed"
-      );
-      SessionStore.forgetClosedTab(win, 0);
-      await sessionStoreChanged;
-    }
     is(
       SessionStore.getClosedTabCountForWindow(win),
       0,
@@ -79,16 +54,20 @@ async function resetHistory() {
 }
 
 add_task(async function test_recently_closed_tabs_nonprivate() {
-  await resetHistory();
-  is(openedTabs.length, 0, "Got expected openedTabs length");
+  await resetClosedTabsAndWindows();
 
   const win1 = window;
   const win2 = await BrowserTestUtils.openNewBrowserWindow();
-  await openTab(win1, "https://example.com");
+  await BrowserTestUtils.openNewForegroundTab(
+    win1.gBrowser,
+    "https://example.com"
+  );
   // we're going to close a tab and don't want to accidentally close the window when it has 0 tabs
-  await openTab(win2, "about:about");
-  await openTab(win2, "https://example.org");
-  is(openedTabs.length, 3, "Got expected openedTabs length");
+  await BrowserTestUtils.openNewForegroundTab(win2.gBrowser, "about:about");
+  await BrowserTestUtils.openNewForegroundTab(
+    win2.gBrowser,
+    "https://example.org"
+  );
 
   info("Checking the menuitem is initially disabled in both windows");
   for (let win of [win1, win2]) {
@@ -97,8 +76,7 @@ add_task(async function test_recently_closed_tabs_nonprivate() {
     });
   }
 
-  await closeTab(win2.gBrowser.selectedTab);
-  is(openedTabs.length, 2, "Got expected openedTabs length");
+  await SessionStoreTestUtils.closeTab(win2.gBrowser.selectedTab);
   is(
     SessionStore.getClosedTabCount(),
     1,
@@ -121,26 +99,31 @@ add_task(async function test_recently_closed_tabs_nonprivate() {
 
   info("starting tab cleanup");
   while (gBrowser.tabs.length > 1) {
-    await closeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    await SessionStoreTestUtils.closeTab(
+      gBrowser.tabs[gBrowser.tabs.length - 1]
+    );
   }
   info("finished tab cleanup");
-  openedTabs.length = 0;
 });
 
 add_task(async function test_recently_closed_tabs_nonprivate_pref_off() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.sessionstore.closedTabsFromAllWindows", false]],
   });
-  await resetHistory();
-  is(openedTabs.length, 0, "Got expected openedTabs length");
+  await resetClosedTabsAndWindows();
 
   const win1 = window;
   const win2 = await BrowserTestUtils.openNewBrowserWindow();
-  await openTab(win1, "https://example.com");
+  await BrowserTestUtils.openNewForegroundTab(
+    win1.gBrowser,
+    "https://example.com"
+  );
   // we're going to close a tab and don't want to accidentally close the window when it has 0 tabs
-  await openTab(win2, "about:about");
-  await openTab(win2, "https://example.org");
-  is(openedTabs.length, 3, "Got expected openedTabs length");
+  await BrowserTestUtils.openNewForegroundTab(win2.gBrowser, "about:about");
+  await BrowserTestUtils.openNewForegroundTab(
+    win2.gBrowser,
+    "https://example.org"
+  );
 
   info("Checking the menuitem is initially disabled in both windows");
   for (let win of [win1, win2]) {
@@ -148,10 +131,8 @@ add_task(async function test_recently_closed_tabs_nonprivate_pref_off() {
       menuItemDisabled: true,
     });
   }
-  is(win2, BrowserWindowTracker.getTopWindow(), "Check topWindow");
-
-  await closeTab(win2.gBrowser.selectedTab);
-  is(openedTabs.length, 2, "Got expected openedTabs length");
+  await SimpleTest.promiseFocus(win2);
+  await SessionStoreTestUtils.closeTab(win2.gBrowser.selectedTab);
   is(
     SessionStore.getClosedTabCount(),
     1,
@@ -175,31 +156,39 @@ add_task(async function test_recently_closed_tabs_nonprivate_pref_off() {
 
   info("starting tab cleanup");
   while (gBrowser.tabs.length > 1) {
-    await closeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    await SessionStoreTestUtils.closeTab(
+      gBrowser.tabs[gBrowser.tabs.length - 1]
+    );
   }
   info("finished tab cleanup");
-  openedTabs.length = 0;
   SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_recently_closed_tabs_mixed_private() {
-  await resetHistory();
-  is(openedTabs.length, 0, "Got expected openedTabs length");
+  await resetClosedTabsAndWindows();
   is(
     SessionStore.getClosedTabCount(),
     0,
     "Expect closed tab count of 0 after reset"
   );
 
-  await openTab(window, "about:robots");
-  await openTab(window, "https://example.com");
+  await BrowserTestUtils.openNewForegroundTab(window.gBrowser, "about:robots");
+  await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "https://example.com"
+  );
 
   const privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  await openTab(privateWin, "about:about");
-  await openTab(privateWin, "https://example.org");
-  is(openedTabs.length, 4, "Got expected openedTabs length");
+  await BrowserTestUtils.openNewForegroundTab(
+    privateWin.gBrowser,
+    "about:about"
+  );
+  await BrowserTestUtils.openNewForegroundTab(
+    privateWin.gBrowser,
+    "https://example.org"
+  );
 
   for (let win of [window, privateWin]) {
     await checkMenu(win, {
@@ -207,8 +196,7 @@ add_task(async function test_recently_closed_tabs_mixed_private() {
     });
   }
 
-  await closeTab(privateWin.gBrowser.selectedTab);
-  is(openedTabs.length, 3, "Got expected openedTabs length");
+  await SessionStoreTestUtils.closeTab(privateWin.gBrowser.selectedTab);
   is(
     SessionStore.getClosedTabCount(privateWin),
     1,
@@ -228,21 +216,16 @@ add_task(async function test_recently_closed_tabs_mixed_private() {
     menuItemDisabled: false,
   });
 
-  await resetHistory();
-  is(
-    SessionStore.getClosedTabCount(privateWin),
-    0,
-    "Expect 0 closed tab count after reset"
-  );
-  is(
-    SessionStore.getClosedTabCount(window),
-    0,
-    "Expect 0 closed tab count after reset"
-  );
+  await resetClosedTabsAndWindows();
+  await SimpleTest.promiseFocus(window);
 
   info("closing tab in non-private window");
-  await closeTab(window.gBrowser.selectedTab);
-  is(openedTabs.length, 2, "Got expected openedTabs length");
+  await SessionStoreTestUtils.closeTab(window.gBrowser.selectedTab);
+  is(
+    SessionStore.getClosedTabCount(window),
+    1,
+    "Expect 1 closed tab count after closing the a tab in the non-private window"
+  );
 
   // the menu should be enabled only for the non-private window
   await checkMenu(window, {
@@ -259,33 +242,36 @@ add_task(async function test_recently_closed_tabs_mixed_private() {
 
   info("starting tab cleanup");
   while (gBrowser.tabs.length > 1) {
-    await closeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    await SessionStoreTestUtils.closeTab(
+      gBrowser.tabs[gBrowser.tabs.length - 1]
+    );
   }
   info("finished tab cleanup");
-  openedTabs.length = 0;
 });
 
 add_task(async function test_recently_closed_tabs_mixed_private_pref_off() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.sessionstore.closedTabsFromAllWindows", false]],
   });
-  await resetHistory();
-  is(openedTabs.length, 0, "Got expected openedTabs length");
-  is(
-    SessionStore.getClosedTabCount(),
-    0,
-    "Expect closed tab count of 0 after reset"
-  );
+  await resetClosedTabsAndWindows();
 
-  await openTab(window, "about:robots");
-  await openTab(window, "https://example.com");
+  await BrowserTestUtils.openNewForegroundTab(window.gBrowser, "about:robots");
+  await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "https://example.com"
+  );
 
   const privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  await openTab(privateWin, "about:about");
-  await openTab(privateWin, "https://example.org");
-  is(openedTabs.length, 4, "Got expected openedTabs length");
+  await BrowserTestUtils.openNewForegroundTab(
+    privateWin.gBrowser,
+    "about:about"
+  );
+  await BrowserTestUtils.openNewForegroundTab(
+    privateWin.gBrowser,
+    "https://example.org"
+  );
 
   for (let win of [window, privateWin]) {
     await checkMenu(win, {
@@ -293,8 +279,8 @@ add_task(async function test_recently_closed_tabs_mixed_private_pref_off() {
     });
   }
 
-  await closeTab(privateWin.gBrowser.selectedTab);
-  is(openedTabs.length, 3, "Got expected openedTabs length");
+  await SimpleTest.promiseFocus(privateWin);
+  await SessionStoreTestUtils.closeTab(privateWin.gBrowser.selectedTab);
   is(
     SessionStore.getClosedTabCount(privateWin),
     1,
@@ -314,7 +300,7 @@ add_task(async function test_recently_closed_tabs_mixed_private_pref_off() {
     menuItemDisabled: false,
   });
 
-  await resetHistory();
+  await resetClosedTabsAndWindows();
   is(
     SessionStore.getClosedTabCount(privateWin),
     0,
@@ -327,8 +313,8 @@ add_task(async function test_recently_closed_tabs_mixed_private_pref_off() {
   );
 
   info("closing tab in non-private window");
-  await closeTab(window.gBrowser.selectedTab);
-  is(openedTabs.length, 2, "Got expected openedTabs length");
+  await SimpleTest.promiseFocus(window);
+  await SessionStoreTestUtils.closeTab(window.gBrowser.selectedTab);
 
   // the menu should be enabled only for the non-private window
   await checkMenu(window, {
@@ -345,9 +331,10 @@ add_task(async function test_recently_closed_tabs_mixed_private_pref_off() {
 
   info("starting tab cleanup");
   while (gBrowser.tabs.length > 1) {
-    await closeTab(gBrowser.tabs[gBrowser.tabs.length - 1]);
+    await SessionStoreTestUtils.closeTab(
+      gBrowser.tabs[gBrowser.tabs.length - 1]
+    );
   }
   info("finished tab cleanup");
-  openedTabs.length = 0;
   SpecialPowers.popPrefEnv();
 });
