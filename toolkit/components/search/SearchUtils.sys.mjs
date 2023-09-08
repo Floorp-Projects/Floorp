@@ -248,19 +248,24 @@ export var SearchUtils = {
    *
    * @param {string|nsIURI} url
    *   The URL string from which to create an nsIChannel.
+   * @param {nsIContentPolicy} contentPolicyType
+   *   The type of document being loaded.
    * @returns {nsIChannel}
    *   an nsIChannel object, or null if the url is invalid.
    */
-  makeChannel(url) {
+  makeChannel(url, contentPolicyType) {
+    if (!contentPolicyType) {
+      throw new Error("makeChannel called with invalid content policy type");
+    }
     try {
       let uri = typeof url == "string" ? Services.io.newURI(url) : url;
       return Services.io.newChannelFromURI(
         uri,
         null /* loadingNode */,
-        Services.scriptSecurityManager.getSystemPrincipal(),
+        Services.scriptSecurityManager.createNullPrincipal({}),
         null /* triggeringPrincipal */,
         Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-        Ci.nsIContentPolicy.TYPE_OTHER
+        contentPolicyType
       );
     } catch (ex) {}
 

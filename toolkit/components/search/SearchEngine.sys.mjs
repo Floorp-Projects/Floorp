@@ -811,7 +811,10 @@ export class SearchEngine {
           this._hasPreferredIcon = isPreferred;
         };
 
-        let chan = lazy.SearchUtils.makeChannel(uri);
+        let chan = lazy.SearchUtils.makeChannel(
+          uri,
+          Ci.nsIContentPolicy.TYPE_IMAGE
+        );
         let listener = new lazy.SearchUtils.LoadListener(
           chan,
           /^image\//,

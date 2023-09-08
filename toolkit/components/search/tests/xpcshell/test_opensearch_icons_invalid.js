@@ -12,9 +12,11 @@ add_task(async function setup() {
 });
 
 add_task(async function test_installedresourceicon() {
+  // Attempts to load a resource:// url as an icon.
   let engine1 = await SearchTestUtils.promiseNewSearchEngine({
     url: `${gDataUrl}opensearch/resourceicon.xml`,
   });
+  // Attempts to load a chrome:// url as an icon.
   let engine2 = await SearchTestUtils.promiseNewSearchEngine({
     url: `${gDataUrl}opensearch/chromeicon.xml`,
   });
@@ -32,12 +34,13 @@ add_task(async function test_installedhttpplace() {
 
   // The easiest way to test adding the icon is via a generated xml, otherwise
   // we have to somehow insert the address of the server into it.
+  // Attempts to load a non-image page into an image icon.
   let engine = await SearchTestUtils.promiseNewSearchEngine({
     url:
       `${gDataUrl}data/engineMaker.sjs?` +
       JSON.stringify({
         baseURL: gDataUrl,
-        image: "opensearch/resourceicon.xml",
+        image: "head_search.js",
         name: "invalidicon",
         method: "GET",
       }),
