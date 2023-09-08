@@ -371,3 +371,20 @@ shopping:
       - fx-desktop-shopping-eng@mozilla.com
     send_in_pings:
       - events
+
+  address_bar_icon_displayed:
+    type: event
+    description: |
+      The Shopping product Address Bar Icon was displayed to the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851036
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events

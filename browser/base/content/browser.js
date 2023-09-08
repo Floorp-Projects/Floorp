@@ -10118,6 +10118,13 @@ var ShoppingSidebarManager = {
     let isCurrentBrowserProduct = isProductURL(
       gBrowser.selectedBrowser.currentURI
     );
+
+    // Only record if the state of the icon will change from hidden to visible.
+    if (button.hidden && isCurrentBrowserProduct) {
+      console.log("visibility of shopping address bar icon changed");
+      Glean.shopping.addressBarIconDisplayed.record();
+    }
+
     button.hidden = !isCurrentBrowserProduct;
     button.setAttribute("shoppingsidebaropen", !!this.isActive);
     let l10nId = this.isActive
