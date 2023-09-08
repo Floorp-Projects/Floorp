@@ -18,6 +18,7 @@
 #include "js/RootingAPI.h"          // JS::Rooted, JS::Handle
 #include "js/Utility.h"             // JS::UniqueChars
 #include "js/Value.h"               // JS::Value, JS::StringValue
+#include "vm/JSContext.h"           // JS::ReportUsageErrorASCII
 #include "vm/JSScript.h"
 
 bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
@@ -254,4 +255,37 @@ bool js::ParseDebugMetadata(JSContext* cx, JS::Handle<JSObject*> opts,
   }
 
   return true;
+}
+
+JS::UniqueChars js::StringToLocale(JSContext* cx, JS::Handle<JSObject*> callee,
+                                   JS::Handle<JSString*> str_) {
+  Rooted<JSLinearString*> str(cx, str_->ensureLinear(cx));
+  if (!str) {
+    return nullptr;
+  }
+
+  if (!StringIsAscii(str)) {
+    ReportUsageErrorASCII(cx, callee,
+                          "First argument contains non-ASCII characters");
+    return nullptr;
+  }
+
+  UniqueChars locale = JS_EncodeStringToASCII(cx, str);
+  if (!locale) {
+    return nullptr;
+  }
+
+  bool containsOnlyValidBCP47Characters =
+      mozilla::IsAsciiAlpha(locale[0]) &&
+      std::all_of(locale.get(), locale.get() + str->length(), [](auto c) {
+        return mozilla::IsAsciiAlphanumeric(c) || c == '-';
+      });
+
+  if (!containsOnlyValidBCP47Characters) {
+    ReportUsageErrorASCII(cx, callee,
+                          "First argument should be a BCP47 language tag");
+    return nullptr;
+  }
+
+  return locale;
 }

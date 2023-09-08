@@ -673,6 +673,9 @@ class JS::Realm : public JS::shadow::Realm {
 
   bool shouldCaptureStackForThrow();
 
+  // Returns the locale for this realm. (Pointer must NOT be freed!)
+  const char* getLocale() const;
+
   // Initializes randomNumberGenerator if needed.
   mozilla::non_crypto::XorShift128PlusRNG& getOrCreateRandomNumberGenerator();
 
