@@ -284,22 +284,21 @@
   background-size: contain;
   -moz-context-properties: fill, stroke;
   stroke: var(--toolbar-field-focus-background-color);
-}
 
-/* Favicon badges have this priority: pinned > bookmark. */
+  /* Favicon badges have this priority: pinned > bookmark. */
+  .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > & {
+    background-image: url(chrome://browser/skin/bookmark-12.svg);
+    fill: var(--toolbarbutton-icon-fill-attention);
+  }
 
-.urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  background-image: url(chrome://browser/skin/bookmark-12.svg);
-  fill: var(--toolbarbutton-icon-fill-attention);
-}
+  .urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > & {
+    background-image: url(chrome://browser/skin/pin-12.svg);
+    fill: rgb(91,91,102);
 
-.urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  background-image: url(chrome://browser/skin/pin-12.svg);
-  fill: rgb(91,91,102);
-}
-
-:root[lwt-toolbar-field-focus-brighttext] .urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
-  fill: rgb(251,251,254);
+    :root[lwt-toolbar-field-focus-brighttext] & {
+      fill: rgb(251,251,254);
+    }
+  }
 }
 
 /* Buttons */
