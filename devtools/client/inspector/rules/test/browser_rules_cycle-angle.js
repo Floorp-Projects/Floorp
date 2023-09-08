@@ -108,7 +108,7 @@ async function checkSwatchShiftClick(container, win, expectedValue, comment) {
   const swatch = container.querySelector(".ruleview-angleswatch");
   const valueNode = container.querySelector(".ruleview-angle");
 
-  const onUnitChange = swatch.once("unit-change");
+  const onUnitChange = once(swatch, "unit-change");
   EventUtils.synthesizeMouseAtCenter(
     swatch,
     {
