@@ -708,6 +708,7 @@ class SearchTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1851419")
     @SmokeTest
     @Test
     fun searchHistoryNotRememberedInPrivateBrowsingTest() {
