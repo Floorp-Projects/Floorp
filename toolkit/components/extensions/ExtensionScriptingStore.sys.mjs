@@ -287,10 +287,15 @@ export const ExtensionScriptingStore = {
     // so the return value always matches the initial result from
     // `initExtension`.
     return new Map(
-      Array.from(
-        extension.registeredContentScripts.entries(),
-        ([scriptId, options]) => [options.id, scriptId]
-      )
+      Array.from(extension.registeredContentScripts.entries())
+        .filter(
+          // Filter out entries without an options.id property, which are the
+          // ones registered through the contentScripts API namespace where the
+          // id attribute is not allowed, while it is mandatory for the
+          // scripting API namespace.
+          ([_id, options]) => options.id?.length
+        )
+        .map(([scriptId, options]) => [options.id, scriptId])
     );
   },
 
