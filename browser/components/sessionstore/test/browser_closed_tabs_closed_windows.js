@@ -19,6 +19,7 @@ add_setup(async function testSetup() {
     Services.obs.notifyObservers(null, "browser:purge-session-history");
   });
   preparedClosedIds = await prepareClosedData();
+  SimpleTest.promiseFocus(window);
 });
 
 async function prepareClosedData() {
@@ -92,9 +93,14 @@ async function prepareClosedData() {
 
 add_task(async function get_closed_tabs_from_closed_windows() {
   Assert.equal(
-    SessionStore.getClosedTabCount(),
+    SessionStore.getClosedTabCount({ closedTabsFromClosedWindows: false }),
     1,
-    "Expected closed tab count (in currently-open windows)"
+    "Expected closed tab count (in currently-open windows only)"
+  );
+  Assert.equal(
+    SessionStore.getClosedTabCount(),
+    5,
+    "Expected closed tab count (in currently-open and closed windows)"
   );
   // We dont keep the closed tab from the private window
   Assert.equal(

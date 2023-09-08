@@ -62,6 +62,22 @@ const multiWindowState = {
       selected: 1,
     },
   ],
+  _closedWindows: [
+    {
+      _closedTabs: [
+        {
+          state: {
+            entries: [
+              {
+                url: "https://example.org#closedWindowClosedTab0",
+                triggeringPrincipal_base64,
+              },
+            ],
+          },
+        },
+      ],
+    },
+  ],
 };
 
 add_setup(async function testSetup() {
@@ -96,17 +112,37 @@ add_task(async function test_ClosedTabMethods() {
   Assert.equal(1, closedCount, "1 closed tab for this window");
 
   closedCount = SessionStore.getClosedTabCount();
-  Assert.equal(3, closedCount, "3 closed tab for all windows");
+  // 3 closed tabs from open windows, 1 closed tab from the closed window
+  Assert.equal(4, closedCount, "4 closed tab for all windows");
 
   let allWindowsClosedTabs = SessionStore.getClosedTabData();
   Assert.equal(
-    closedCount,
+    SessionStore.getClosedTabCount({ closedTabsFromClosedWindows: false }),
     allWindowsClosedTabs.length,
     "getClosedTabData returned the correct number of entries"
   );
   for (let tabData of allWindowsClosedTabs) {
     Assert.ok(tabData.sourceWindowId, "each tab has a sourceWindowId property");
   }
+
+  closedCount = SessionStore.getClosedTabCountFromClosedWindows();
+  Assert.equal(1, closedCount, "1 closed tabs from closed windows");
+
+  sessionStoreUpdated = TestUtils.topicObserved(
+    "sessionstore-closed-objects-changed"
+  );
+  SessionStore.forgetClosedTab(
+    { sourceClosedId: SessionStore.getClosedWindowData()[0].closedId },
+    0
+  );
+  await sessionStoreUpdated;
+
+  closedCount = SessionStore.getClosedTabCountFromClosedWindows();
+  Assert.equal(
+    0,
+    closedCount,
+    "0 closed tabs from closed windows after forgetting them"
+  );
 
   // ***********************************
   // check with the pref off
@@ -198,14 +234,26 @@ add_task(async function test_ClosedTabMethods() {
 
   Assert.equal(
     0,
-    SessionStore.getClosedTabCount(),
-    "Theres now 0 closed tabs after closing the other browser window which had the last one"
+    SessionStore.getClosedTabCount({ closedTabsFromClosedWindows: false }),
+    "Theres now 0 closed tabs from open windows after closing the other browser window which had the last one"
+  );
+
+  Assert.equal(
+    1,
+    SessionStore.getClosedTabCount({ closedTabsFromClosedWindows: true }),
+    "Theres now 1 closed tabs including closed windows after closing the other browser window which had the last one"
   );
 
   Assert.equal(
     0,
     SessionStore.getClosedTabData().length,
     "We get the right number of tab entries from getClosedTabData()"
+  );
+
+  Assert.equal(
+    1,
+    SessionStore.getClosedTabCountFromClosedWindows(),
+    "There's 1 closed tabs from closed windows"
   );
 
   // Cleanup.

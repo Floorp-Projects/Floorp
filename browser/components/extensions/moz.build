@@ -28,6 +28,7 @@ DIRS += ["schemas"]
 BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser-private.ini",
     "test/browser/browser.ini",
+    "test/browser/browser_legacy_recent_tabs.ini",
 ]
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]

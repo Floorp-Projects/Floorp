@@ -181,17 +181,17 @@ async function prepareClosedTabs() {
     "Expected 1 closed tab from a closed window"
   );
 
-  const closedTabsFromOpenWindowsCount = SessionStore.getClosedTabCount(window);
+  const closedTabsFromOpenWindowsCount = SessionStore.getClosedTabCount({
+    sourceWindow: window,
+    closedTabsFromClosedWindows: false,
+  });
+  const actualClosedTabCount = SessionStore.getClosedTabCount();
   is(
     closedTabsFromOpenWindowsCount,
     3,
     "Expected 3 closed tabs currently-open windows"
   );
 
-  // For illustrative purposes.
-  // Currently "recently-closed" tab count is the sum of these 2 return values:
-  let actualClosedTabCount =
-    closedTabsFromOpenWindowsCount + closedTabsFromClosedWindowsCount;
   is(
     actualClosedTabCount,
     preparedClosedTabCount,
@@ -547,6 +547,7 @@ add_task(async function test_dismiss_tab() {
 });
 
 add_task(async function test_empty_states() {
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
     SessionStore.getClosedTabCount(window),
     0,
