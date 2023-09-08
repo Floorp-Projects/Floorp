@@ -1,3 +1,5 @@
+// |reftest| shell-option(--enable-well-formed-unicode-strings) skip-if(!String.prototype.isWellFormed||!xulRuntime.shell)
+
 function IsLatin1String(str) {
   for (var i = 0; i < str.length; ++i) {
     if (str.charCodeAt(i) > 0xff) {
