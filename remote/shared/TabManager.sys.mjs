@@ -264,8 +264,17 @@ export var TabManager = {
    * @param {BrowsingContext} browsingContext
    *
    * @returns {BrowsingContext|XULBrowser} The navigable
+   *
+   * @throws {TypeError}
+   *     If `browsingContext` is not a CanonicalBrowsingContext instance.
    */
   getNavigableForBrowsingContext(browsingContext) {
+    if (!CanonicalBrowsingContext.isInstance(browsingContext)) {
+      throw new TypeError(
+        `Expected browsingContext to be a CanonicalBrowsingContext, got ${browsingContext}`
+      );
+    }
+
     if (browsingContext.isContent && browsingContext.parent === null) {
       return browsingContext.embedderElement;
     }
