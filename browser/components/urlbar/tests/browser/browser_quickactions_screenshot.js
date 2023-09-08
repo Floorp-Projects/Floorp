@@ -32,6 +32,16 @@ async function clickQuickActionOneoffButton() {
   });
 }
 
+add_setup(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.quickactions.enabled", true],
+      ["browser.urlbar.suggest.quickactions", true],
+      ["browser.urlbar.shortcuts.quickactions", true],
+    ],
+  });
+});
+
 add_task(async function test_screenshot() {
   await SpecialPowers.pushPrefEnv({
     set: [["screenshots.browser.component.enabled", true]],
