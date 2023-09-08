@@ -19,6 +19,7 @@ class ShoppingMessageBar extends MozLitElement {
     ],
     ["offline", () => this.getOfflineWarningTemplate()],
     ["analysis-in-progress", () => this.getAnalysisInProgressTemplate()],
+    ["page-not-supported", () => this.pageNotSupportedTemplate()],
   ]);
 
   static properties = {
@@ -179,6 +180,20 @@ class ShoppingMessageBar extends MozLitElement {
         ></strong>
         <span
           data-l10n-id="shopping-message-bar-warning-offline-message"
+        ></span>
+      </article>
+    </message-bar>`;
+  }
+
+  pageNotSupportedTemplate() {
+    return html` <message-bar>
+      <article id="message-bar-container" aria-labelledby="header">
+        <strong
+          id="header"
+          data-l10n-id="shopping-message-bar-page-not-supported-title"
+        ></strong>
+        <span
+          data-l10n-id="shopping-message-bar-page-not-supported-message"
         ></span>
       </article>
     </message-bar>`;
