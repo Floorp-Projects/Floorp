@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>tab</title>
+    <title>form</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -9,7 +9,6 @@
     <script src="/wai-aria/scripts/ATTAcomm.js"></script>
     <script>
     setup({explicit_timeout: true, explicit_done: true });
-
     var theTest = new ATTAcomm(
     {
    "steps" : [
@@ -21,7 +20,7 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_PAGE_TAB"
+                  "ROLE_SECTION"
                ]
             ],
             "AXAPI" : [
@@ -29,13 +28,21 @@
                   "property",
                   "AXRole",
                   "is",
-                  "AXRadioButton"
+                  "AXGroup"
                ],
                [
                   "property",
                   "AXSubrole",
                   "is",
-                  "AXTabButton"
+                  "<nil>"
+               ]
+            ],
+            "IAccessible2" : [
+               [
+                  "property",
+                  "role",
+                  "is",
+                  "IA2_ROLE_SECTION"
                ]
             ],
             "MSAA" : [
@@ -43,7 +50,7 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_SYSTEM_PAGETAB"
+                  "ROLE_SYSTEM_GROUPING"
                ]
             ],
             "UIA" : [
@@ -51,7 +58,7 @@
                   "property",
                   "ControlType",
                   "is",
-                  "TabItem"
+                  "Group"
                ]
             ]
          },
@@ -59,17 +66,15 @@
          "type" : "test"
       }
    ],
-   "title" : "tab"
+   "title" : "unnamed form"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for tab.</p>
-    <div role='tablist'>
-    <div role='tab' id='test'>content</div>
-  </div>
+  <p>This test examines the ARIA properties for an unnamed form.</p>
+    <div role='form' id='test'>content</div>
 
   <div id="manualMode"></div>
   <div id="log"></div>

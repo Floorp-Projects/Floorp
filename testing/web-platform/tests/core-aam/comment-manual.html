@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>tab</title>
+    <title>comment</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -21,7 +21,13 @@
                   "property",
                   "role",
                   "is",
-                  "ROLE_PAGE_TAB"
+                  "ROLE_COMMENT"
+               ],
+               [
+                  "property",
+                  "objectAttributes",
+                  "contains",
+                  "xml-roles:comment"
                ]
             ],
             "AXAPI" : [
@@ -29,21 +35,21 @@
                   "property",
                   "AXRole",
                   "is",
-                  "AXRadioButton"
-               ],
-               [
-                  "property",
-                  "AXSubrole",
-                  "is",
-                  "AXTabButton"
+                  "AXGroup"
                ]
             ],
-            "MSAA" : [
+            "IAccessible2" : [
                [
                   "property",
                   "role",
                   "is",
-                  "ROLE_SYSTEM_PAGETAB"
+                  "IA2_ROLE_COMMENT"
+               ],
+               [
+                  "property",
+                  "objectAttributes",
+                  "contains",
+                  "xml-roles:comment"
                ]
             ],
             "UIA" : [
@@ -51,7 +57,13 @@
                   "property",
                   "ControlType",
                   "is",
-                  "TabItem"
+                  "Group"
+               ],
+               [
+                  "property",
+                  "LocalizedControlType",
+                  "is",
+                  "comment"
                ]
             ]
          },
@@ -59,17 +71,15 @@
          "type" : "test"
       }
    ],
-   "title" : "tab"
+   "title" : "comment"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for tab.</p>
-    <div role='tablist'>
-    <div role='tab' id='test'>content</div>
-  </div>
+  <p>This test examines the ARIA properties for comment.</p>
+    <div role='comment' id='test'>content</div>
 
   <div id="manualMode"></div>
   <div id="log"></div>
