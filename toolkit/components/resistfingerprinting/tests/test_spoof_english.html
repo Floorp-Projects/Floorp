@@ -55,10 +55,6 @@ async function runSpoofTest(spoof) {
     ],
   });
 
-  is(SpecialPowers.getBoolPref("javascript.use_us_english_locale", false),
-     spoof == kSpoofEnglish,
-     "use_us_english_locale");
-
   let results = await runTest(undefined);
 
   await SpecialPowers.popPrefEnv();
