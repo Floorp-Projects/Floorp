@@ -708,7 +708,6 @@ class SearchTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1851419")
     @SmokeTest
     @Test
     fun searchHistoryNotRememberedInPrivateBrowsingTest() {
@@ -745,7 +744,7 @@ class SearchTest {
                 searchTerm = "test page 1",
             )
             // 2 search engine suggestions and 2 browser suggestions (1 history, 1 bookmark)
-            verifySearchSuggestionsCount(activityTestRule, numberOfSuggestions = 4)
+            verifySearchSuggestionsCount(activityTestRule, numberOfSuggestions = 4, searchTerm = "test page")
             verifySuggestionsAreNotDisplayed(
                 activityTestRule,
                 searchSuggestions = arrayOf(
