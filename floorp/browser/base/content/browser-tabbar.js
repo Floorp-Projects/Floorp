@@ -83,6 +83,10 @@ const tabbarDisplayStyleFunctions = {
           "floorp-tabbar-display-style",
           "1"
         );
+
+        window.setTimeout(() => {
+          tabbarDisplayStyleFunctions.setWorkspaceLabelToNavbar();
+        }, 3000);
         break;
       case 3:
         tabbarDisplayStyleFunctions.revertToDefaultStyle();
@@ -165,8 +169,9 @@ const tabbarDisplayStyleFunctions = {
       "nav-bar-customization-target"
     );
 
-    if (workspaceButton == null && Services.prefs.getBooleanPref("floorp.browser.workspace.tab.enabled")) {
-      window.setTimeout(tabbarDisplayStyleFunctions.setWorkspaceLabelToNavbar, 3000);
+    if (workspaceButton == null) {
+      console.error("Workspace button not found");
+      return;
     }
 
     customizeTarget.before(workspaceButton);
@@ -174,8 +179,9 @@ const tabbarDisplayStyleFunctions = {
 
   moveToDefaultSpace() {
     let workspaceButton = document.getElementById("workspace-button");
-    if (workspaceButton == null && Services.prefs.getBooleanPref("floorp.browser.workspace.tab.enabled")) {
-      window.setTimeout(tabbarDisplayStyleFunctions.moveToDefaultSpace, 3000);
+    if (workspaceButton == null) {
+      console.error("Workspace button not found");
+      return;
     }
     document.querySelector(".toolbar-items").before(workspaceButton);
   },
