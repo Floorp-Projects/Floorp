@@ -732,7 +732,7 @@ TextPropertyEditor.prototype = {
     );
     if (this.ruleEditor.isEditable) {
       for (const angleSpan of this.angleSwatchSpans) {
-        angleSpan.on("unit-change", this._onSwatchCommit);
+        angleSpan.addEventListener("unit-change", this._onSwatchCommit);
         const title = l10n("rule.angleSwatch.tooltip");
         angleSpan.setAttribute("title", title);
       }
@@ -1174,13 +1174,12 @@ TextPropertyEditor.prototype = {
     if (this._colorSwatchSpans && this._colorSwatchSpans.length) {
       for (const span of this._colorSwatchSpans) {
         this.ruleView.tooltips.getTooltip("colorPicker").removeSwatch(span);
-        span.off("unit-change", this._onSwatchCommit);
       }
     }
 
     if (this.angleSwatchSpans && this.angleSwatchSpans.length) {
       for (const span of this.angleSwatchSpans) {
-        span.off("unit-change", this._onSwatchCommit);
+        span.removeEventListener("unit-change", this._onSwatchCommit);
       }
     }
 

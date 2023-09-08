@@ -203,7 +203,7 @@ async function checkSwatchShiftClick(view, valueSpan, expectedValue, comment) {
   info(
     "Shift-click the color swatch and wait for the color type and ruleview to update"
   );
-  const onUnitChange = swatchNode.once("unit-change");
+  const onUnitChange = once(swatchNode, "unit-change");
 
   EventUtils.synthesizeMouseAtCenter(
     swatchNode,
