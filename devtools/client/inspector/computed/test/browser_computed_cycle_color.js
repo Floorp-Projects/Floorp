@@ -72,7 +72,7 @@ async function checkSwatchShiftClick(container, win, expectedValue, comment) {
   const valueNode = container.querySelector(".computed-color");
   swatch.scrollIntoView();
 
-  const onUnitChange = once(swatch, "unit-change");
+  const onUnitChange = swatch.once("unit-change");
   EventUtils.synthesizeMouseAtCenter(
     swatch,
     {

@@ -9,6 +9,7 @@ const {
 } = require("resource://devtools/client/shared/css-angle.js");
 const { colorUtils } = require("resource://devtools/shared/css/color.js");
 const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
+const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const {
   appendText,
 } = require("resource://devtools/client/inspector/shared/utils.js");
@@ -1488,6 +1489,7 @@ class OutputParser {
           event.stopPropagation();
         }
       });
+      EventEmitter.decorate(swatch);
       container.appendChild(swatch);
     }
 
@@ -1567,6 +1569,8 @@ class OutputParser {
           swatch.dataset.colorFunction = options.colorFunction;
         }
         swatch.addEventListener("mousedown", this.#onColorSwatchMouseDown);
+        EventEmitter.decorate(swatch);
+
         container.appendChild(swatch);
       }
 
@@ -1657,9 +1661,7 @@ class OutputParser {
 
     swatch.nextElementSibling.textContent = val;
     swatch.parentNode.dataset.color = val;
-
-    const unitChangeEvent = new swatch.ownerGlobal.CustomEvent("unit-change");
-    swatch.dispatchEvent(unitChangeEvent);
+    swatch.emit("unit-change", val);
   };
 
   #onAngleSwatchMouseDown = event => {
@@ -1674,9 +1676,7 @@ class OutputParser {
     const val = angle.nextAngleUnit();
 
     swatch.nextElementSibling.textContent = val;
-
-    const unitChangeEvent = new swatch.ownerGlobal.CustomEvent("unit-change");
-    swatch.dispatchEvent(unitChangeEvent);
+    swatch.emit("unit-change", val);
   };
 
   /**
