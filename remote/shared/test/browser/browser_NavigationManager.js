@@ -18,7 +18,7 @@ const FIRST_COOP_URL =
 const SECOND_COOP_URL =
   "https://example.net/document-builder.sjs?headers=Cross-Origin-Opener-Policy:same-origin&html=second_coop";
 
-add_task(async function testSimpleNavigation() {
+add_task(async function test_simpleNavigation() {
   const events = [];
   const onEvent = (name, data) => events.push({ name, data });
 
@@ -244,7 +244,7 @@ add_task(async function test_loadPageWithCoop() {
   navigationManager.stopMonitoring();
 });
 
-add_task(async function testSameDocumentNavigation() {
+add_task(async function test_sameDocumentNavigation() {
   const events = [];
   const onEvent = (name, data) => events.push({ name, data });
 
@@ -335,4 +335,35 @@ add_task(async function testSameDocumentNavigation() {
   navigationManager.off("navigation-stopped", onEvent);
 
   navigationManager.stopMonitoring();
+});
+
+add_task(async function test_startNavigationAndCloseTab() {
+  const events = [];
+  const onEvent = (name, data) => events.push({ name, data });
+
+  const navigationManager = new NavigationManager();
+  navigationManager.on("navigation-started", onEvent);
+  navigationManager.on("navigation-stopped", onEvent);
+
+  const tab = addTab(gBrowser, FIRST_URL);
+  const browser = tab.linkedBrowser;
+  await BrowserTestUtils.browserLoaded(browser);
+
+  navigationManager.startMonitoring();
+  loadURL(browser, SECOND_URL);
+  gBrowser.removeTab(tab);
+
+  // On top of the assertions below, the test also validates that there is no
+  // unhandled promise rejection related to handling the navigation-started event
+  // for the destroyed browsing context.
+  is(events.length, 0, "No event was received");
+  is(
+    navigationManager.getNavigationForBrowsingContext(browser.browsingContext),
+    null,
+    "No navigation was recorded for the destroyed tab"
+  );
+  navigationManager.stopMonitoring();
+
+  navigationManager.off("navigation-started", onEvent);
+  navigationManager.off("navigation-stopped", onEvent);
 });
