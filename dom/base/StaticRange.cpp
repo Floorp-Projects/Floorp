@@ -46,8 +46,8 @@ template void StaticRange::DoSetRange(const RawRangeBoundary& aStartBoundary,
 
 nsTArray<RefPtr<StaticRange>>* StaticRange::sCachedRanges = nullptr;
 
-NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(StaticRange)
-NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_INTERRUPTABLE_LAST_RELEASE(
+NS_IMPL_CYCLE_COLLECTING_ADDREF(StaticRange)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_INTERRUPTABLE_LAST_RELEASE(
     StaticRange, DoSetRange(RawRangeBoundary(), RawRangeBoundary(), nullptr),
     AbstractRange::MaybeCacheToReuse(*this))
 
