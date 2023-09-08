@@ -223,6 +223,12 @@ class nsRFPService final : public nsIObserver {
 
   // --------------------------------------------------------------------------
 
+  // This method generates the locale string (e.g. "en-US") that should be
+  // spoofed by the JavaScript engine.
+  static nsCString GetSpoofedJSLocale();
+
+  // --------------------------------------------------------------------------
+
   /**
    * This method for getting spoofed modifier states for the given keyboard
    * event.

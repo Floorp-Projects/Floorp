@@ -2418,7 +2418,7 @@ JSObject* CreateGlobalObject(JSContext* cx, const JSClass* clasp,
 // object.)
 void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
                              bool aIsSystemPrincipal, bool aForceUTC,
-                             bool aAlwaysUseFdlibm);
+                             bool aAlwaysUseFdlibm, bool aLocaleEnUS);
 
 // Finish initializing an already-created, not-yet-exposed-to-script global
 // object.  This will attach a Components object (if necessary) and call

@@ -2452,6 +2452,12 @@ WorkerPrivate::WorkerPrivate(
       contentCreationOptions.setAlwaysUseFdlibm(
           ShouldResistFingerprinting(RFPTarget::JSMathFdlibm));
 
+      if (ShouldResistFingerprinting(RFPTarget::JSLocale)) {
+        nsCString locale = nsRFPService::GetSpoofedJSLocale();
+        chromeCreationOptions.setLocaleCopyZ(locale.get());
+        contentCreationOptions.setLocaleCopyZ(locale.get());
+      }
+
       // Check if it's a privileged addon executing in order to allow access
       // to SharedArrayBuffer
       if (mLoadInfo.mPrincipal) {
