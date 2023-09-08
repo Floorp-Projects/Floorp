@@ -104,7 +104,7 @@ def check_args(**kwargs):
     require_arg(kwargs, "binary")
 
 
-def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
+def browser_kwargs(logger, test_type, run_info_data, config, subsuite, **kwargs):
     browser_kwargs = {"binary": kwargs["binary"],
                       "webdriver_binary": kwargs["webdriver_binary"],
                       "webdriver_args": kwargs["webdriver_args"],
@@ -134,6 +134,8 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
                       "debug_test": kwargs["debug_test"]}
     if test_type == "wdspec" and kwargs["binary"]:
         browser_kwargs["webdriver_args"].extend(["--binary", kwargs["binary"]])
+    browser_kwargs["binary_args"].extend(subsuite.config.get("binary_args", []))
+    browser_kwargs["extra_prefs"].extend(subsuite.config.get("prefs", []))
     return browser_kwargs
 
 
@@ -232,8 +234,17 @@ def run_info_browser_version(**kwargs):
 
 
 def update_properties():
-    return (["os", "debug", "fission", "processor", "swgl", "asan", "tsan"],
-            {"os": ["version"], "processor": ["bits"]})
+    return ([
+        "os",
+        "debug",
+        "fission",
+        "processor",
+        "swgl",
+        "asan",
+        "tsan",
+        "subsuite"], {
+        "os": ["version"],
+        "processor": ["bits"]})
 
 
 def log_gecko_crashes(logger, process, test, profile_dir, symbols_path, stackwalk_binary):
