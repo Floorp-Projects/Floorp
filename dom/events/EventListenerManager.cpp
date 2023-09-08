@@ -1868,7 +1868,7 @@ bool EventListenerManager::HasListeners() const {
 
 nsresult EventListenerManager::GetListenerInfo(
     nsTArray<RefPtr<nsIEventListenerInfo>>& aList) {
-  RefPtr<EventTarget> target = mTarget;
+  nsCOMPtr<EventTarget> target = mTarget;
   NS_ENSURE_STATE(target);
   aList.Clear();
   for (const auto& entry : mListenerMap.mEntries) {

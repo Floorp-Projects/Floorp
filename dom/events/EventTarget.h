@@ -52,13 +52,6 @@ class EventTarget : public nsISupports, public nsWrapperCache {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_EVENTTARGET_IID)
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-
-#ifndef NS_BUILD_REFCNT_LOGGING
-  MozExternalRefCountType NonVirtualAddRef();
-  MozExternalRefCountType NonVirtualRelease();
-#endif
-
   // WebIDL API
   static already_AddRefed<EventTarget> Constructor(const GlobalObject& aGlobal,
                                                    ErrorResult& aRv);
@@ -434,18 +427,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(EventTarget, NS_EVENTTARGET_IID)
   NS_IMPL_FROMEVENTTARGET_HELPER_WITH_GETTER_INNER(_class, _getter)
 
 }  // namespace dom
-
-#ifndef NS_BUILD_REFCNT_LOGGING
-template <>
-class RefPtrTraits<dom::EventTarget> {
- public:
-  static void Release(dom::EventTarget* aTarget) {
-    aTarget->NonVirtualRelease();
-  }
-  static void AddRef(dom::EventTarget* aTarget) { aTarget->NonVirtualAddRef(); }
-};
-#endif
-
 }  // namespace mozilla
 
 #endif  // mozilla_dom_EventTarget_h_

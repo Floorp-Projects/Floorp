@@ -374,8 +374,8 @@ class EventTargetChainItem {
   MOZ_CAN_RUN_SCRIPT void PostHandleEvent(EventChainPostVisitor& aVisitor);
 
  private:
-  const RefPtr<EventTarget> mTarget;
-  RefPtr<EventTarget> mRetargetedRelatedTarget;
+  const nsCOMPtr<EventTarget> mTarget;
+  nsCOMPtr<EventTarget> mRetargetedRelatedTarget;
   Maybe<nsTArray<RefPtr<EventTarget>>> mRetargetedTouchTargets;
   Maybe<nsTArray<RefPtr<dom::Touch>>> mInitialTargetTouches;
 
@@ -410,7 +410,7 @@ class EventTargetChainItem {
   uint16_t mItemFlags;
   nsCOMPtr<nsISupports> mItemData;
   // Event retargeting must happen whenever mNewTarget is non-null.
-  RefPtr<EventTarget> mNewTarget;
+  nsCOMPtr<EventTarget> mNewTarget;
   // Cache mTarget's event listener manager.
   RefPtr<EventListenerManager> mManager;
 
@@ -830,7 +830,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
   NS_ENSURE_TRUE(!nsContentUtils::IsInStableOrMetaStableState(),
                  NS_ERROR_DOM_INVALID_STATE_ERR);
 
-  RefPtr<EventTarget> target(aTarget);
+  nsCOMPtr<EventTarget> target(aTarget);
 
   RefPtr<PerformanceEventTiming> eventTimingEntry;
   // Similar to PerformancePaintTiming, we don't need to
@@ -845,7 +845,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
   if (aEvent->mFlags.mRetargetToNonNativeAnonymous) {
     nsIContent* content = nsIContent::FromEventTargetOrNull(target);
     if (content && content->IsInNativeAnonymousSubtree()) {
-      RefPtr<EventTarget> newTarget =
+      nsCOMPtr<EventTarget> newTarget =
           content->FindFirstNonChromeOnlyAccessContent();
       NS_ENSURE_STATE(newTarget);
 

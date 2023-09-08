@@ -198,6 +198,33 @@
 
 using namespace mozilla;
 
+struct NurseryPurpleBufferEntry {
+  void* mPtr;
+  nsCycleCollectionParticipant* mParticipant;
+  nsCycleCollectingAutoRefCnt* mRefCnt;
+};
+
+#define NURSERY_PURPLE_BUFFER_SIZE 2048
+bool gNurseryPurpleBufferEnabled = true;
+NurseryPurpleBufferEntry gNurseryPurpleBufferEntry[NURSERY_PURPLE_BUFFER_SIZE];
+uint32_t gNurseryPurpleBufferEntryCount = 0;
+
+void ClearNurseryPurpleBuffer();
+
+static void SuspectUsingNurseryPurpleBuffer(
+    void* aPtr, nsCycleCollectionParticipant* aCp,
+    nsCycleCollectingAutoRefCnt* aRefCnt) {
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(gNurseryPurpleBufferEnabled);
+  if (gNurseryPurpleBufferEntryCount == NURSERY_PURPLE_BUFFER_SIZE) {
+    ClearNurseryPurpleBuffer();
+  }
+
+  gNurseryPurpleBufferEntry[gNurseryPurpleBufferEntryCount] = {aPtr, aCp,
+                                                               aRefCnt};
+  ++gNurseryPurpleBufferEntryCount;
+}
+
 // #define COLLECT_TIME_DEBUG
 
 // Enable assertions that are useful for diagnosing errors in graph
@@ -851,26 +878,13 @@ static nsISupports* CanonicalizeXPCOMParticipant(nsISupports* aIn) {
   return out;
 }
 
-#define NURSERY_PURPLE_BUFFER_SIZE 2048
-
-struct NurseryPurpleBufferEntry {
-  NurseryPurpleBufferEntry() = default;
-  NurseryPurpleBufferEntry(void* aObject, nsCycleCollectingAutoRefCnt* aRefCnt,
-                           nsCycleCollectionParticipant* aParticipant)
-      : mObject(aObject), mRefCnt(aRefCnt), mParticipant(aParticipant) {}
-
-  void* mObject;
-  nsCycleCollectingAutoRefCnt* mRefCnt;
-  nsCycleCollectionParticipant* mParticipant;  // nullptr for nsISupports
-};
-
-struct nsPurpleBufferEntry : public NurseryPurpleBufferEntry {
+struct nsPurpleBufferEntry {
   nsPurpleBufferEntry(void* aObject, nsCycleCollectingAutoRefCnt* aRefCnt,
                       nsCycleCollectionParticipant* aParticipant)
-      : NurseryPurpleBufferEntry(aObject, aRefCnt, aParticipant) {}
+      : mObject(aObject), mRefCnt(aRefCnt), mParticipant(aParticipant) {}
 
   nsPurpleBufferEntry(nsPurpleBufferEntry&& aOther)
-      : NurseryPurpleBufferEntry(nullptr, nullptr, nullptr) {
+      : mObject(nullptr), mRefCnt(nullptr), mParticipant(nullptr) {
     Swap(aOther);
   }
 
@@ -892,13 +906,17 @@ struct nsPurpleBufferEntry : public NurseryPurpleBufferEntry {
       mRefCnt->RemoveFromPurpleBuffer();
     }
   }
+
+  void* mObject;
+  nsCycleCollectingAutoRefCnt* mRefCnt;
+  nsCycleCollectionParticipant* mParticipant;  // nullptr for nsISupports
 };
 
 class nsCycleCollector;
 
 struct nsPurpleBuffer {
  private:
-  uint32_t mCount = 0;
+  uint32_t mCount;
 
   // Try to match the size of a jemalloc bucket, to minimize slop bytes.
   // - On 32-bit platforms sizeof(nsPurpleBufferEntry) is 12, so mEntries'
@@ -913,14 +931,8 @@ struct nsPurpleBuffer {
       PurpleBufferVector;
   PurpleBufferVector mEntries;
 
-  NurseryPurpleBufferEntry
-      mNurseryPurpleBufferEntry[NURSERY_PURPLE_BUFFER_SIZE];
-  uint32_t mNurseryPurpleBufferEntryCount = 0;
-
-  bool mNurseryPurpleBufferEnabled = true;
-
  public:
-  explicit nsPurpleBuffer() {
+  nsPurpleBuffer() : mCount(0) {
     static_assert(
         sizeof(PurpleBufferVector::Segment) == 16372 ||      // 32-bit
             sizeof(PurpleBufferVector::Segment) == 32760 ||  // 64-bit
@@ -930,14 +942,15 @@ struct nsPurpleBuffer {
 
   ~nsPurpleBuffer() = default;
 
-  void DisableNurseryPurpleBuffer() { mNurseryPurpleBufferEnabled = false; }
-
   // This method compacts mEntries.
   template <class PurpleVisitor>
   void VisitEntries(PurpleVisitor& aVisitor) {
-    AutoRestore<bool> ar(mNurseryPurpleBufferEnabled);
-    mNurseryPurpleBufferEnabled = false;
-    SuspectNurseryEntries();
+    Maybe<AutoRestore<bool>> ar;
+    if (NS_IsMainThread()) {
+      ar.emplace(gNurseryPurpleBufferEnabled);
+      gNurseryPurpleBufferEnabled = false;
+      ClearNurseryPurpleBuffer();
+    }
 
     if (mEntries.IsEmpty()) {
       return;
@@ -1034,46 +1047,19 @@ struct nsPurpleBuffer {
 
   MOZ_ALWAYS_INLINE void Put(void* aObject, nsCycleCollectionParticipant* aCp,
                              nsCycleCollectingAutoRefCnt* aRefCnt) {
-    if (mNurseryPurpleBufferEnabled) {
-      if (mNurseryPurpleBufferEntryCount == NURSERY_PURPLE_BUFFER_SIZE) {
-        SuspectNurseryEntries();
-      }
-
-      mNurseryPurpleBufferEntry[mNurseryPurpleBufferEntryCount] = {
-          aObject, aRefCnt, aCp};
-      ++mNurseryPurpleBufferEntryCount;
-      return;
-    }
-
-    PutToMainBuffer(aObject, aCp, aRefCnt);
-  }
-
- private:
-  MOZ_ALWAYS_INLINE void PutToMainBuffer(void* aObject,
-                                         nsCycleCollectionParticipant* aCp,
-                                         nsCycleCollectingAutoRefCnt* aRefCnt) {
     nsPurpleBufferEntry entry(aObject, aRefCnt, aCp);
     Unused << mEntries.Append(std::move(entry));
     MOZ_ASSERT(!entry.mRefCnt, "Move didn't work!");
     ++mCount;
   }
 
-  void SuspectNurseryEntries() {
-    while (mNurseryPurpleBufferEntryCount) {
-      NurseryPurpleBufferEntry& entry =
-          mNurseryPurpleBufferEntry[--mNurseryPurpleBufferEntryCount];
-      PutToMainBuffer(entry.mObject, entry.mParticipant, entry.mRefCnt);
-    }
-  }
-
- public:
   void Remove(nsPurpleBufferEntry* aEntry) {
     MOZ_ASSERT(mCount != 0, "must have entries");
     --mCount;
     aEntry->Clear();
   }
 
-  uint32_t Count() const { return mCount + mNurseryPurpleBufferEntryCount; }
+  uint32_t Count() const { return mCount; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     return mEntries.SizeOfExcludingThis(aMallocSizeOf);
@@ -1190,6 +1176,7 @@ class nsCycleCollector : public nsIMemoryReporter {
 
   void Suspect(void* aPtr, nsCycleCollectionParticipant* aCp,
                nsCycleCollectingAutoRefCnt* aRefCnt);
+  void SuspectNurseryEntries();
   uint32_t SuspectedCount();
   void ForgetSkippable(js::SliceBudget& aBudget, bool aRemoveChildlessNodes,
                        bool aAsyncSnowWhiteFreeing);
@@ -3299,6 +3286,15 @@ MOZ_ALWAYS_INLINE void nsCycleCollector::Suspect(
   mPurpleBuf.Put(aPtr, aParti, aRefCnt);
 }
 
+void nsCycleCollector::SuspectNurseryEntries() {
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  while (gNurseryPurpleBufferEntryCount) {
+    NurseryPurpleBufferEntry& entry =
+        gNurseryPurpleBufferEntry[--gNurseryPurpleBufferEntryCount];
+    mPurpleBuf.Put(entry.mPtr, entry.mParticipant, entry.mRefCnt);
+  }
+}
+
 void nsCycleCollector::CheckThreadSafety() {
 #ifdef DEBUG
   MOZ_ASSERT(mEventTarget->IsOnCurrentThread());
@@ -3705,13 +3701,19 @@ void nsCycleCollector::BeginCollection(
 
 uint32_t nsCycleCollector::SuspectedCount() {
   CheckThreadSafety();
+  if (NS_IsMainThread()) {
+    return gNurseryPurpleBufferEntryCount + mPurpleBuf.Count();
+  }
+
   return mPurpleBuf.Count();
 }
 
 void nsCycleCollector::Shutdown(bool aDoCollect) {
   CheckThreadSafety();
 
-  mPurpleBuf.DisableNurseryPurpleBuffer();
+  if (NS_IsMainThread()) {
+    gNurseryPurpleBufferEnabled = false;
+  }
 
   // Always delete snow white objects.
   FreeSnowWhite(true);
@@ -3848,6 +3850,27 @@ void NS_CycleCollectorSuspect3(void* aPtr, nsCycleCollectionParticipant* aCp,
     return;
   }
   SuspectAfterShutdown(aPtr, aCp, aRefCnt, aShouldDelete);
+}
+
+void ClearNurseryPurpleBuffer() {
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  CollectorData* data = sCollectorData.get();
+  MOZ_ASSERT(data);
+  MOZ_ASSERT(data->mCollector);
+  data->mCollector->SuspectNurseryEntries();
+}
+
+void NS_CycleCollectorSuspectUsingNursery(void* aPtr,
+                                          nsCycleCollectionParticipant* aCp,
+                                          nsCycleCollectingAutoRefCnt* aRefCnt,
+                                          bool* aShouldDelete) {
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  if (!gNurseryPurpleBufferEnabled) {
+    NS_CycleCollectorSuspect3(aPtr, aCp, aRefCnt, aShouldDelete);
+    return;
+  }
+
+  SuspectUsingNurseryPurpleBuffer(aPtr, aCp, aRefCnt);
 }
 
 uint32_t nsCycleCollector_suspectedCount() {
