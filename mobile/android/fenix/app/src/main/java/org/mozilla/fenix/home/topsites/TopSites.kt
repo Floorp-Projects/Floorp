@@ -116,7 +116,10 @@ fun TopSites(
             HorizontalPager(
                 state = pagerState,
             ) { page ->
-                Column {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
                     val topSitesWindows = topSites.windowed(
                         size = TOP_SITES_PER_PAGE,
                         step = TOP_SITES_PER_PAGE,
