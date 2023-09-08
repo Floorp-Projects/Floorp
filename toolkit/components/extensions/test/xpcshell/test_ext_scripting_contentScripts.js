@@ -410,3 +410,43 @@ add_task(async function test_register_update_and_unregister() {
 
   await extension.unload();
 });
+
+// The following test case is a regression test for Bug 1851173.
+add_task(
+  {
+    // contentScripts API not exposed to background service workers and
+    // Bug 1851173 can't be hit.
+    skip_if: () => ExtensionTestUtils.isInBackgroundServiceWorkerTests(),
+  },
+  async function test_contentScriptsAPI_vs_scriptingGetRegistered() {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        manifest_version: 2,
+        permissions: ["scripting", "<all_urls>"],
+      },
+      async background() {
+        await browser.contentScripts.register({
+          runAt: "document_start",
+          js: [{ file: "testcs.js" }],
+          matches: ["<all_urls>"],
+        });
+
+        const scriptingScripts =
+          await browser.scripting.getRegisteredContentScripts();
+        browser.test.assertDeepEq(
+          [],
+          scriptingScripts,
+          "Expect an empty array"
+        );
+        browser.test.sendMessage("background-done");
+      },
+      files: {
+        "testcs.js": "",
+      },
+    });
+
+    await extension.startup();
+    await extension.awaitMessage("background-done");
+    await extension.unload();
+  }
+);
