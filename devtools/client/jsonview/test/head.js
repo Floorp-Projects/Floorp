@@ -148,14 +148,32 @@ function selectJsonViewContentTab(name) {
 
   // eslint-disable-next-line no-shadow
   return ContentTask.spawn(gBrowser.selectedBrowser, name, async name => {
-    const selector = ".tabs-menu .tabs-menu-item." + CSS.escape(name) + " a";
-    const element = content.document.querySelector(selector);
-    is(element.getAttribute("aria-selected"), "false", "Tab not selected yet");
+    const tabsSelector = ".tabs-menu .tabs-menu-item";
+    const targetTabSelector = `${tabsSelector}.${CSS.escape(name)}`;
+    const targetTab = content.document.querySelector(targetTabSelector);
+    const targetTabIndex = Array.prototype.indexOf.call(
+      content.document.querySelectorAll(tabsSelector),
+      targetTab
+    );
+    const targetTabButton = targetTab.querySelector("a");
     await new Promise(resolve => {
-      content.addEventListener("TabChanged", resolve, { once: true });
-      element.click();
+      content.addEventListener(
+        "TabChanged",
+        ({ detail: { index } }) => {
+          is(index, targetTabIndex, "Hm?");
+          if (index === targetTabIndex) {
+            resolve();
+          }
+        },
+        { once: true }
+      );
+      targetTabButton.click();
     });
-    is(element.getAttribute("aria-selected"), "true", "Tab is now selected");
+    is(
+      targetTabButton.getAttribute("aria-selected"),
+      "true",
+      "Tab is now selected"
+    );
   });
 }
 

@@ -61,7 +61,9 @@ define(function (require, exports, module) {
       this.setState({ activeTab: index });
 
       // Send notification event to the window. This is useful for tests.
-      window.dispatchEvent(new CustomEvent("TabChanged"));
+      window.dispatchEvent(
+        new CustomEvent("TabChanged", { detail: { index } })
+      );
     }
 
     render() {
@@ -96,6 +98,8 @@ define(function (require, exports, module) {
               !(this.state.json instanceof Error) &&
               document.readyState != "loading",
             data: this.state.jsonText,
+            errorMessage:
+              this.state.json instanceof Error ? this.state.json + "" : null,
             actions: this.props.actions,
           })
         ),

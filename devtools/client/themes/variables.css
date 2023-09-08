@@ -76,6 +76,7 @@
   --yellow-70: #a47f00;
   --yellow-80: #715100;
 
+  --red-05: #ffe6e8;
   --red-20: #ffb3d2;
   --red-40: #ff3b6b;
   --red-40-a90: rgba(255, 59, 107, 0.9);
@@ -124,6 +125,7 @@
   --theme-toolbar-background-hover: rgba(221, 225, 228, 0.66);
   --theme-toolbar-background-alt: #f5f5f5;
   --theme-toolbar-background-highlighted: #b9dcff;
+  --theme-toolbar-error-background: var(--red-05);
   --theme-toolbar-hover: var(--grey-20);
   --theme-toolbar-hover-active: var(--grey-20);
   --theme-toolbar-separator: var(--grey-90-a10);
@@ -251,6 +253,7 @@
   --theme-toolbar-background-hover: #232327;
   --theme-toolbar-background-alt: var(--grey-85);
   --theme-toolbar-background-highlighted: var(--blue-60);
+  --theme-toolbar-error-background: var(--red-70);
   --theme-toolbar-hover: #232327;
   --theme-toolbar-hover-active: #252526;
   --theme-toolbar-separator: var(--grey-10-a20);
@@ -295,7 +298,7 @@
   --theme-body-color: var(--grey-40);
   --theme-text-color-alt: var(--grey-45);
   --theme-text-color-inactive: var(--grey-50);
-  --theme-text-color-error: var(--red-40);
+  --theme-text-color-error: var(--grey-10);
   --theme-text-color-strong: var(--grey-30);
   --theme-stack-trace-text: var(--red-50);
 
