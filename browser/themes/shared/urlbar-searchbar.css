@@ -726,7 +726,7 @@
 /* Shopping Sidebar icon */
 
 #shopping-sidebar-button > .urlbar-icon {
-  list-style-image: url(resource://usercontext-content/cart.svg);
+  list-style-image: url(chrome://browser/content/shopping/assets/shopping.svg);
 }
 
 #shopping-sidebar-button[shoppingsidebaropen="true"] > .urlbar-icon {
