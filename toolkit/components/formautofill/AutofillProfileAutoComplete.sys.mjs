@@ -454,7 +454,7 @@ export const ProfileAutocomplete = {
     let selectedIndex = this._getSelectedIndex(focusedInput.ownerGlobal);
     const validIndex =
       selectedIndex >= 0 &&
-      selectedIndex < this.lastProfileAutoCompleteResult.matchCount;
+      selectedIndex < this.lastProfileAutoCompleteResult?.matchCount;
     const comment = validIndex
       ? this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex)
       : null;
