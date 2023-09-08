@@ -820,6 +820,10 @@ build-components
 ----------------
 Build android-components.
 
+build-bundle
+------------
+Build Focus, Klar, and Fenix android app bundles.
+
 build-apk
 ---------
 Build Focus, Klar, and Fenix apks.
