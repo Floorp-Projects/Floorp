@@ -5,9 +5,9 @@
 import json
 import logging
 import os
-from pathlib import Path
 import subprocess
 import time
+from pathlib import Path
 
 import pytest
 import requests
@@ -129,7 +129,7 @@ def fixture_experiment_slug(experiment_data):
 @pytest.fixture(name="start_app")
 def fixture_start_app():
     def _():
-        command = f"nimbus-cli --app fenix --channel developer open"
+        command = "nimbus-cli --app fenix --channel developer open"
         try:
             out = subprocess.check_output(
                 command,
