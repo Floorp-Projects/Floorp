@@ -18,9 +18,9 @@
   var link = document.createElement("link");
   var keys = Object.keys(values);
   for (var i = 0; i < keys.length; ++i) {
-  test(function() {
-    link.as = keys[i];
-    assert_equals(link.as, values[keys[i]]);
-  }, `Link preload "as" value for "${keys[i]}" should be "${values[keys[i]]}".`);
+    test(function() {
+      link.as = keys[i];
+      assert_equals(link.as, values[keys[i]]);
+    }, `Link preload "as" value for "${keys[i]}" should be "${values[keys[i]]}".`);
   }
 </script>
