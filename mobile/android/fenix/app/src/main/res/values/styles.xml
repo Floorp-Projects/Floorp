@@ -126,8 +126,6 @@
         <item name="fenixLogo">@drawable/ic_logo_wordmark_normal</item>
         <item name="fenixWordmarkText">@drawable/ic_wordmark_text_normal</item>
         <item name="fenixWordmarkLogo">@drawable/ic_wordmark_logo</item>
-        <item name="fenixWordmarkTextHeight">@dimen/wordmark_text_height</item>
-        <item name="fenixWordmarkTextMarginTop">@dimen/wordmark_text_margin_top</item>
         <item name="homeBackground">@color/fx_mobile_layer_color_1</item>
         <item name="bottomBarBackground">@drawable/home_bottom_bar_background</item>
         <item name="bottomBarBackgroundTop">@drawable/home_bottom_bar_background_top</item>
@@ -319,8 +317,6 @@
         <item name="fenixLogo">@drawable/ic_logo_wordmark_private</item>
         <item name="fenixWordmarkText">@drawable/ic_wordmark_text_private</item>
         <item name="fenixWordmarkLogo">@drawable/ic_wordmark_logo</item>
-        <item name="fenixWordmarkTextHeight">@dimen/wordmark_text_height</item>
-        <item name="fenixWordmarkTextMarginTop">@dimen/wordmark_text_margin_top</item>
         <item name="homeBackground">@drawable/private_home_background_gradient</item>
         <item name="bottomBarBackground">@drawable/private_home_bottom_bar_background_gradient</item>
         <item name="bottomBarBackgroundTop">@drawable/private_home_bottom_bar_background_gradient_top</item>
@@ -340,9 +336,6 @@
     <style name="PrivateTheme" parent="PrivateThemeBase" />
     <style name="FeltPrivateTheme" parent="PrivateThemeBase">
         <item name="homeBackground">@drawable/felt_private_home_background_gradient</item>
-        <item name="fenixWordmarkText">@drawable/ic_wordmark_text_felt_privacy</item>
-        <item name="fenixWordmarkTextHeight">@dimen/wordmark_text_height_felt_privacy</item>
-        <item name="fenixWordmarkTextMarginTop">@dimen/wordmark_text_margin_top_felt_privacy</item>
     </style>
 
     <!-- Fade animation for theme switching -->

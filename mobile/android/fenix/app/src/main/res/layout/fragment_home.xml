@@ -75,10 +75,10 @@
                 <ImageView
                     android:id="@+id/wordmarkText"
                     android:layout_width="wrap_content"
-                    android:layout_height="?fenixWordmarkTextHeight"
+                    android:layout_height="@dimen/wordmark_text_height"
                     android:adjustViewBounds="true"
                     android:contentDescription="@null"
-                    android:layout_marginTop="?fenixWordmarkTextMarginTop"
+                    android:layout_marginTop="@dimen/wordmark_text_margin_top"
                     app:srcCompat="?fenixWordmarkText" />
             </LinearLayout>
 
