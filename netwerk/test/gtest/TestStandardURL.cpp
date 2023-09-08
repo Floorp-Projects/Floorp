@@ -19,7 +19,11 @@ using namespace mozilla;
 
 // In nsStandardURL.cpp
 extern nsresult Test_NormalizeIPv4(const nsACString& host, nsCString& result);
-
+extern nsresult Test_ParseIPv4Number(const nsACString& input, int32_t base,
+                                     uint32_t& number, uint32_t maxNumber);
+extern int32_t Test_ValidateIPv4Number(const nsACString& host, int32_t bases[4],
+                                       int32_t dotIndex[3], bool& onlyBase10,
+                                       int32_t& length);
 TEST(TestStandardURL, Simple)
 {
   nsCOMPtr<nsIURI> url;
@@ -185,14 +189,13 @@ TEST(TestStandardURL, NormalizeBad)
 {
   nsAutoCString result;
   const char* manual[] = {
-      "x22.232.12.32", "122..12.32",    "122.12.32.12.32", "122.12.32..",
-      "122.12.xx.22",  "122.12.0xx.22", "0xx.12.01.22",    "0x.12.01.22",
-      "12.12.02x.22",  "1q.12.2.22",    "122.01f.02.22",   "12a.01.02.22",
-      "12.01.02.20x1", "10x2.01.02.20", "0xx.01.02.20",    "10.x.02.20",
-      "10.00x2.02.20", "10.13.02x2.20", "10.x13.02.20",    "10.0x134def.02.20",
-      "\0.2.2.2",      "256.2.2.2",     "2.256.2.2",       "2.2.256.2",
-      "2.2.2.256",     "2.2.-2.3",      "+2.2.2.3",        "13.0x2x2.2.3",
-      "0x2x2.13.2.3"};
+      "x22.232.12.32", "122..12.32",    "122.12.32.12.32",   "122.12.32..",
+      "122.12.xx.22",  "122.12.0xx.22", "0xx.12.01.22",      "12.12.02x.22",
+      "1q.12.2.22",    "122.01f.02.22", "12a.01.02.22",      "12.01.02.20x1",
+      "10x2.01.02.20", "0xx.01.02.20",  "10.x.02.20",        "10.00x2.02.20",
+      "10.13.02x2.20", "10.x13.02.20",  "10.0x134def.02.20", "\0.2.2.2",
+      "256.2.2.2",     "2.256.2.2",     "2.2.256.2",         "2.2.2.256",
+      "2.2.-2.3",      "+2.2.2.3",      "13.0x2x2.2.3",      "0x2x2.13.2.3"};
 
   for (auto& i : manual) {
     nsCString encHost(i);
@@ -415,4 +418,24 @@ TEST(TestStandardURL, CorruptSerialization)
   ASSERT_EQ(
       NS_ERROR_MALFORMED_URI,
       NS_DeserializeObject(serialization, getter_AddRefs(deserializedObject)));
+}
+
+TEST(TestStandardURL, ParseIPv4Num)
+{
+  auto host = "0x.0x.0"_ns;
+
+  int32_t bases[4] = {10, 10, 10, 10};
+  bool onlyBase10 = true;  // Track this as a special case
+  int32_t dotIndex[3];     // The positions of the dots in the string
+  int32_t length = static_cast<int32_t>(host.Length());
+
+  ASSERT_EQ(2,
+            Test_ValidateIPv4Number(host, bases, dotIndex, onlyBase10, length));
+
+  nsCString result;
+  ASSERT_EQ(NS_OK, Test_NormalizeIPv4("0x.0x.0"_ns, result));
+
+  uint32_t number;
+  Test_ParseIPv4Number("0x10"_ns, 16, number, 255);
+  ASSERT_EQ(number, (uint32_t)16);
 }
