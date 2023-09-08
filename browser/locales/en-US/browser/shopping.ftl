@@ -58,6 +58,9 @@ shopping-message-bar-warning-offline-message = Check your network connection. Th
 shopping-message-bar-analysis-in-progress-title = Analysis coming soon
 shopping-message-bar-analysis-in-progress-message = When it’s done, we’ll automatically show the updated info here.
 
+shopping-message-bar-page-not-supported-title = We can’t check these reviews
+shopping-message-bar-page-not-supported-message = Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.
+
 ## The word 'analyzer' when used here reflects what this tool is called on
 ## fakespot.com. If possible, a different word should be used for the Fakespot
 ## tool (the Fakespot by Mozilla 'analyzer') other than 'checker', which is

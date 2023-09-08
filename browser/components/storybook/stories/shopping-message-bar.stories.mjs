@@ -23,6 +23,7 @@ export default {
           "thanks-for-reporting",
           "offline",
           "analysis-in-progress",
+          "page-not-supported",
         ],
       },
     },
@@ -51,6 +52,8 @@ shopping-message-bar-warning-offline-title = No network connection
 shopping-message-bar-warning-offline-message = Check your network connection. Then, try reloading the page.
 shopping-message-bar-analysis-in-progress-title = Analysis coming soon
 shopping-message-bar-analysis-in-progress-message = When it’s done, we’ll automatically show the updated info here.
+shopping-message-bar-page-not-supported-title = We can't check these reviews
+shopping-message-bar-page-not-supported-message = Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.
     `,
   },
 };
