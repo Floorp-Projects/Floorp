@@ -39,6 +39,7 @@ enum class MediaCodec : int {
 #undef X
       SENTINEL
 };
+using MediaCodecSet = EnumSet<MediaCodec, uint64_t>;
 
 // Helper macros used to create codec-specific SW/HW decode enums below.
 #define SW_DECODE(codec) codec##SoftwareDecode
@@ -156,9 +157,33 @@ class MCSInfo final {
   static void GetMediaCodecsSupportedString(
       nsCString& aSupportString, const MediaCodecsSupported& aSupportedCodecs);
 
-  // Returns array of hardcoded codec definitions used to generate hashtables
-  // that convert between types
+  // Returns a MediaCodec enum representing the given MIME type string.
+  //
+  // Example input:
+  //   "audio/flac"_ns
+  //
+  // Example output:
+  //   MediaCodec::FLAC
+  //
+  static MediaCodec GetMediaCodecFromMimeType(const nsACString& aMimeType);
+
+  // Returns array of hardcoded codec definitions.
   static std::array<CodecDefinition, 12> GetAllCodecDefinitions();
+
+  // Parses an array of MIME type strings and returns a MediaCodecSet.
+  static MediaCodecSet GetMediaCodecSetFromMimeTypes(
+      const nsTArray<nsCString>& aCodecStrings);
+
+  // Returns a MediaCodecsSupport enum corresponding to the provided
+  // codec type and decode support level requested.
+  static MediaCodecsSupport GetMediaCodecsSupportEnum(
+      const MediaCodec& aCodec, const DecodeSupport& aSupport);
+
+  // Returns true if SW/HW decode enum for a given codec is present in the args.
+  static bool SupportsSoftwareDecode(
+      const MediaCodecsSupported& aSupportedCodecs, const MediaCodec& aCodec);
+  static bool SupportsHardwareDecode(
+      const MediaCodecsSupported& aSupportedCodecs, const MediaCodec& aCodec);
 
   MCSInfo(MCSInfo const&) = delete;
   void operator=(MCSInfo const&) = delete;
