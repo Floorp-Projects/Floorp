@@ -51,6 +51,12 @@ const STYLE_INSPECTOR_PROPERTIES =
   "devtools/shared/locales/styleinspector.properties";
 const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
+const L10N_TWISTY_EXPAND_LABEL = STYLE_INSPECTOR_L10N.getStr(
+  "rule.twistyExpand.label"
+);
+const L10N_TWISTY_COLLAPSE_LABEL = STYLE_INSPECTOR_L10N.getStr(
+  "rule.twistyCollapse.label"
+);
 
 const FILTER_CHANGED_TIMEOUT = 150;
 
@@ -1131,10 +1137,7 @@ class PropertyView {
     this.matchedExpander = doc.createElement("div");
     this.matchedExpander.className = "computed-expander theme-twisty";
     this.matchedExpander.setAttribute("role", "button");
-    this.matchedExpander.setAttribute(
-      "aria-label",
-      STYLE_INSPECTOR_L10N.getStr("rule.twistyExpand.label")
-    );
+    this.matchedExpander.setAttribute("aria-label", L10N_TWISTY_EXPAND_LABEL);
     this.matchedExpander.addEventListener(
       "click",
       this.onMatchedToggle,
@@ -1223,10 +1226,7 @@ class PropertyView {
       this.matchedSelectorsContainer.parentNode.hidden = true;
       this.matchedSelectorsContainer.textContent = "";
       this.matchedExpander.removeAttribute("open");
-      this.matchedExpander.setAttribute(
-        "aria-label",
-        STYLE_INSPECTOR_L10N.getStr("rule.twistyExpand.label")
-      );
+      this.matchedExpander.setAttribute("aria-label", L10N_TWISTY_EXPAND_LABEL);
       return;
     }
 
@@ -1277,7 +1277,7 @@ class PropertyView {
           this.matchedExpander.setAttribute("open", "");
           this.matchedExpander.setAttribute(
             "aria-label",
-            STYLE_INSPECTOR_L10N.getStr("rule.twistyCollapse.label")
+            L10N_TWISTY_COLLAPSE_LABEL
           );
           this.tree.inspector.emit("computed-view-property-expanded");
         })
@@ -1286,10 +1286,7 @@ class PropertyView {
 
     this.matchedSelectorsContainer.innerHTML = "";
     this.matchedExpander.removeAttribute("open");
-    this.matchedExpander.setAttribute(
-      "aria-label",
-      STYLE_INSPECTOR_L10N.getStr("rule.twistyExpand.label")
-    );
+    this.matchedExpander.setAttribute("aria-label", L10N_TWISTY_EXPAND_LABEL);
     this.tree.inspector.emit("computed-view-property-collapsed");
     return Promise.resolve(undefined);
   }
