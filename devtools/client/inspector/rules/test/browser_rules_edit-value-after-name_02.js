@@ -50,7 +50,7 @@ add_task(async function () {
   editor.input.value = "background-image";
 
   const onPropertyValueUpdate = view.once("property-value-updated");
-  const onSwatchUnitChange = swatchSpan.once("unit-change");
+  const onSwatchUnitChange = once(swatchSpan, "unit-change");
   const onRuleViewChanged = view.once("ruleview-changed");
 
   info("blur propEditor.nameSpan by clicking on the color swatch");
