@@ -514,13 +514,6 @@ onload = function() {
   }, 'Worker() in a dedicated worker');
 
   subsetTestByKey('workers', async_test, function() {
-    var worker = new Worker(input_url_worker_sharedworker);
-    worker.onmessage = this.step_func_done(function(e) {
-      assert_equals(e.data, expected_utf8);
-    });
-  }, 'SharedWorker() in a dedicated worker');
-
-  subsetTestByKey('workers', async_test, function() {
     var worker = new SharedWorker(input_url_sharedworker_importScripts);
     worker.port.onmessage = this.step_func_done(function(e) {
       assert_equals(e.data, expected_utf8);
@@ -533,13 +526,6 @@ onload = function() {
       assert_equals(e.data, expected_utf8);
     });
   }, 'Worker() in a shared worker');
-
-  subsetTestByKey('workers', async_test, function() {
-    var worker = new SharedWorker(input_url_sharedworker_sharedworker);
-    worker.port.onmessage = this.step_func_done(function(e) {
-      assert_equals(e.data, expected_utf8);
-    });
-  }, 'SharedWorker() in a shared worker');
 
   // WebSocket()
   subsetTestByKey('websocket', async_test, function() {
