@@ -21,6 +21,7 @@ kind-dependencies:
 jobs-from:
     - android-compare-locales.yml
     - android-detekt.yml
+    - android-lint.yml
     - buildconfig.yml
     - clang.yml
     - cram.yml

@@ -248,6 +248,7 @@ treeherder:
         'compare-locales': 'Validate strings.xml with compare-locales'
         'detekt': 'detekt linter'
         'ktlint': 'ktlint linter'
+        'lint': 'gradle lint linter'
 
         'focus': 'Focus general tasks no matter the variant'
         'focus-beta': 'Focus beta-related tasks'
@@ -392,8 +393,6 @@ treeherder:
         'samples-browser': 'samples-browser'
         'samples-browser-gecko': 'samples-browser-gecko'
         'samples-browser-system': 'samples-browser-system'
-
-        # lint: gradle lint linter
 
         # forPerformanceTest: Builds made for Raptor and other performance tests
         'Rap-P': 'Raptor power tests'
