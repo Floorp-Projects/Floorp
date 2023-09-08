@@ -84,6 +84,7 @@ class ReviewHighlights extends MozLitElement {
     let l10nId = VALID_HIGHLIGHT_L10N_IDs.get(type);
     highlightEl.id = type;
     highlightEl.l10nId = l10nId;
+    highlightEl.highlightType = type;
     highlightEl.reviews = reviews;
     // At present, en is only supported. Once we support more locales,
     // update this attribute accordingly.

@@ -12,6 +12,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  */
 class Highlight extends MozLitElement {
   l10nId;
+  highlightType;
   /**
    * reviews is a list of Strings, representing all the reviews to display
    * under a highlight category.
@@ -41,7 +42,7 @@ class Highlight extends MozLitElement {
         href="chrome://browser/content/shopping/highlight-item.css"
       />
       <div class="highlight-item-wrapper">
-        <span class="highlight-icon"></span>
+        <span class="highlight-icon ${this.highlightType}"></span>
         <dt class="highlight-label" data-l10n-id=${this.l10nId}></dt>
         <dd class="highlight-details">
           <ul class="highlight-details-list">
