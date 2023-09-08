@@ -1393,8 +1393,7 @@ ColorScheme LookAndFeel::ColorSchemeForStyle(
   }
   // No value specified. Chrome docs always supports both, so use the preferred
   // color-scheme.
-  if (aMode == ColorSchemeMode::Preferred ||
-      nsContentUtils::IsChromeDoc(&aDoc)) {
+  if (aMode == ColorSchemeMode::Preferred || aDoc.ChromeRulesEnabled()) {
     return aDoc.PreferredColorScheme();
   }
   // Default content to light.
