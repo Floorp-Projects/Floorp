@@ -159,7 +159,7 @@ pref("floorp.browser.profile-manager.enabled", true);
 pref("floorp.newtab.overrides.newtaburl", "");
 
 //Portable
-pref("floorp.portable.isUpdate", true);
+pref("floorp.portable.isUpdate", false);
 
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
