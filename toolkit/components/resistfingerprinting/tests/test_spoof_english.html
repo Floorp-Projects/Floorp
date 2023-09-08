@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1486258
 </pre>
 
 <script type="text/javascript">
-/* global SpecialPowers, content */
+/* global SpecialPowers */
 
 const { BrowserTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/BrowserTestUtils.sys.mjs"
@@ -35,12 +35,11 @@ const kSpoofEnglish = 2;
 async function runTest(locale) {
   return BrowserTestUtils.withNewTab("http://example.com/", browser => {
     return SpecialPowers.spawn(browser, [locale], _locale => {
-      let locale = JSON.stringify(_locale);
-      return content.eval(`({
-        locale: new Intl.PluralRules(${locale}).resolvedOptions().locale,
-        weekday: new Date(0).toLocaleString(${locale}, {weekday: "long"}),
-        currency: Number(1000).toLocaleString(${locale}, {currency: "USD"}),
-      })`);
+      return {
+        locale: new Intl.PluralRules(_locale).resolvedOptions().locale,
+        weekday: new Date(0).toLocaleString(_locale, {weekday: "long"}),
+        currency: Number(1000).toLocaleString(_locale, {currency: "USD"}),
+      };
     });
   });
 }
@@ -54,6 +53,10 @@ async function runSpoofTest(spoof) {
       ["privacy.spoof_english", spoof],
     ],
   });
+
+  is(SpecialPowers.getBoolPref("javascript.use_us_english_locale", false),
+     spoof == kSpoofEnglish,
+     "use_us_english_locale");
 
   let results = await runTest(undefined);
 
@@ -86,11 +89,11 @@ async function clearLocale() {
   let enResults = await runTest("en-US");
   is(enResults.locale, "en-US", "default locale");
 
-  let deResults = await runTest("de-DE");
-  is(deResults.locale, "de-DE", "default locale");
+  let deResults = await runTest("de");
+  is(deResults.locale, "de", "default locale");
 
   // 3. set system locale to German
-  await setupLocale("de-DE");
+  await setupLocale("de");
 
   // 4. log non-spoofed results
   let nonSpoofedResults = await runSpoofTest(kDoNotSpoof);

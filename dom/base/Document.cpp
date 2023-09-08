@@ -2787,9 +2787,9 @@ nsresult Document::Init(nsIPrincipal* aPrincipal,
 
   if (aPrincipal) {
     SetPrincipals(aPrincipal, aPartitionedPrincipal);
-  } else {
-    RecomputeResistFingerprinting();
   }
+
+  RecomputeResistFingerprinting();
 
   return NS_OK;
 }
@@ -4240,8 +4240,6 @@ void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
   mCachedURLData = nullptr;
 
   mCSSLoader->RegisterInSheetCache();
-
-  RecomputeResistFingerprinting();
 
 #ifdef DEBUG
   // Validate that the docgroup is set correctly by calling its getter and

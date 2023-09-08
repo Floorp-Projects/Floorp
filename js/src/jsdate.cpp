@@ -156,8 +156,7 @@ class DateTimeHelper {
   static double UTC(DateTimeInfo::ForceUTC forceUTC, double t);
   static JSString* timeZoneComment(JSContext* cx,
                                    DateTimeInfo::ForceUTC forceUTC,
-                                   const char* locale, double utcTime,
-                                   double localTime);
+                                   double utcTime, double localTime);
 #if !JS_HAS_INTL_API
   static size_t formatTime(DateTimeInfo::ForceUTC forceUTC, char* buf,
                            size_t buflen, const char* fmt, double utcTime,
@@ -2945,8 +2944,8 @@ static bool date_toJSON(JSContext* cx, unsigned argc, Value* vp) {
 #if JS_HAS_INTL_API
 JSString* DateTimeHelper::timeZoneComment(JSContext* cx,
                                           DateTimeInfo::ForceUTC forceUTC,
-                                          const char* locale, double utcTime,
-                                          double localTime) {
+                                          double utcTime, double localTime) {
+  const char* locale = cx->runtime()->getDefaultLocale();
   if (!locale) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_DEFAULT_LOCALE_ERROR);
@@ -3019,8 +3018,7 @@ size_t DateTimeHelper::formatTime(DateTimeInfo::ForceUTC forceUTC, char* buf,
 
 JSString* DateTimeHelper::timeZoneComment(JSContext* cx,
                                           DateTimeInfo::ForceUTC forceUTC,
-                                          const char* locale, double utcTime,
-                                          double localTime) {
+                                          double utcTime, double localTime) {
   char tzbuf[100];
 
   size_t tzlen =
@@ -3057,7 +3055,7 @@ JSString* DateTimeHelper::timeZoneComment(JSContext* cx,
 enum class FormatSpec { DateTime, Date, Time };
 
 static bool FormatDate(JSContext* cx, DateTimeInfo::ForceUTC forceUTC,
-                       const char* locale, double utcTime, FormatSpec format,
+                       double utcTime, FormatSpec format,
                        MutableHandleValue rval) {
   if (!std::isfinite(utcTime)) {
     rval.setString(cx->names().Invalid_Date_);
@@ -3093,8 +3091,8 @@ static bool FormatDate(JSContext* cx, DateTimeInfo::ForceUTC forceUTC,
     // also means the time zone string may not fit into Latin-1.
 
     // Get a time zone string from the OS or ICU to include as a comment.
-    timeZoneComment = DateTimeHelper::timeZoneComment(cx, forceUTC, locale,
-                                                      utcTime, localTime);
+    timeZoneComment =
+        DateTimeHelper::timeZoneComment(cx, forceUTC, utcTime, localTime);
     if (!timeZoneComment) {
       return false;
     }
@@ -3144,12 +3142,9 @@ static bool FormatDate(JSContext* cx, DateTimeInfo::ForceUTC forceUTC,
 }
 
 #if !JS_HAS_INTL_API
-static bool ToLocaleFormatHelper(JSContext* cx, DateObject* unwrapped,
-                                 const char* format, MutableHandleValue rval) {
-  DateTimeInfo::ForceUTC forceUTC = unwrapped->forceUTC();
-  const char* locale = unwrapped->realm()->getLocale();
-  double utcTime = unwrapped->UTCTime().toNumber();
-
+static bool ToLocaleFormatHelper(JSContext* cx, DateTimeInfo::ForceUTC forceUTC,
+                                 double utcTime, const char* format,
+                                 MutableHandleValue rval) {
   char buf[100];
   if (!std::isfinite(utcTime)) {
     strcpy(buf, "InvalidDate");
@@ -3162,8 +3157,7 @@ static bool ToLocaleFormatHelper(JSContext* cx, DateObject* unwrapped,
 
     /* If it failed, default to toString. */
     if (result_len == 0) {
-      return FormatDate(cx, forceUTC, locale, utcTime, FormatSpec::DateTime,
-                        rval);
+      return FormatDate(cx, forceUTC, utcTime, FormatSpec::DateTime, rval);
     }
 
     /* Hacked check against undesired 2-digit year 00/00/00 form. */
@@ -3218,7 +3212,9 @@ static bool date_toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
 #  endif
       ;
 
-  return ToLocaleFormatHelper(cx, unwrapped, format, args.rval());
+  return ToLocaleFormatHelper(cx, unwrapped->forceUTC(),
+                              unwrapped->UTCTime().toNumber(), format,
+                              args.rval());
 }
 
 static bool date_toLocaleDateString(JSContext* cx, unsigned argc, Value* vp) {
@@ -3244,7 +3240,9 @@ static bool date_toLocaleDateString(JSContext* cx, unsigned argc, Value* vp) {
 #  endif
       ;
 
-  return ToLocaleFormatHelper(cx, unwrapped, format, args.rval());
+  return ToLocaleFormatHelper(cx, unwrapped->forceUTC(),
+                              unwrapped->UTCTime().toNumber(), format,
+                              args.rval());
 }
 
 static bool date_toLocaleTimeString(JSContext* cx, unsigned argc, Value* vp) {
@@ -3258,7 +3256,9 @@ static bool date_toLocaleTimeString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  return ToLocaleFormatHelper(cx, unwrapped, "%X", args.rval());
+  return ToLocaleFormatHelper(cx, unwrapped->forceUTC(),
+                              unwrapped->UTCTime().toNumber(), "%X",
+                              args.rval());
 }
 #endif /* !JS_HAS_INTL_API */
 
@@ -3272,9 +3272,8 @@ static bool date_toTimeString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  return FormatDate(cx, unwrapped->forceUTC(), unwrapped->realm()->getLocale(),
-                    unwrapped->UTCTime().toNumber(), FormatSpec::Time,
-                    args.rval());
+  return FormatDate(cx, unwrapped->forceUTC(), unwrapped->UTCTime().toNumber(),
+                    FormatSpec::Time, args.rval());
 }
 
 static bool date_toDateString(JSContext* cx, unsigned argc, Value* vp) {
@@ -3287,9 +3286,8 @@ static bool date_toDateString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  return FormatDate(cx, unwrapped->forceUTC(), unwrapped->realm()->getLocale(),
-                    unwrapped->UTCTime().toNumber(), FormatSpec::Date,
-                    args.rval());
+  return FormatDate(cx, unwrapped->forceUTC(), unwrapped->UTCTime().toNumber(),
+                    FormatSpec::Date, args.rval());
 }
 
 static bool date_toSource(JSContext* cx, unsigned argc, Value* vp) {
@@ -3325,9 +3323,8 @@ bool date_toString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  return FormatDate(cx, unwrapped->forceUTC(), unwrapped->realm()->getLocale(),
-                    unwrapped->UTCTime().toNumber(), FormatSpec::DateTime,
-                    args.rval());
+  return FormatDate(cx, unwrapped->forceUTC(), unwrapped->UTCTime().toNumber(),
+                    FormatSpec::DateTime, args.rval());
 }
 
 bool js::date_valueOf(JSContext* cx, unsigned argc, Value* vp) {
@@ -3483,8 +3480,8 @@ static bool NewDateObject(JSContext* cx, const CallArgs& args, ClippedTime t) {
 }
 
 static bool ToDateString(JSContext* cx, const CallArgs& args, ClippedTime t) {
-  return FormatDate(cx, ForceUTC(cx->realm()), cx->realm()->getLocale(),
-                    t.toDouble(), FormatSpec::DateTime, args.rval());
+  return FormatDate(cx, ForceUTC(cx->realm()), t.toDouble(),
+                    FormatSpec::DateTime, args.rval());
 }
 
 static bool DateNoArguments(JSContext* cx, const CallArgs& args) {

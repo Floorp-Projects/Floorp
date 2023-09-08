@@ -2045,8 +2045,7 @@ static nsresult CreateNativeGlobalForInner(
   xpc::InitGlobalObjectOptions(
       options, principal->IsSystemPrincipal(),
       aDocument->ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC),
-      aDocument->ShouldResistFingerprinting(RFPTarget::JSMathFdlibm),
-      aDocument->ShouldResistFingerprinting(RFPTarget::JSLocale));
+      aDocument->ShouldResistFingerprinting(RFPTarget::JSMathFdlibm));
 
   // Determine if we need the Components object.
   bool needComponents = principal->IsSystemPrincipal();
