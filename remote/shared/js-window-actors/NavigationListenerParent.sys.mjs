@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const lazy = {};
+
 ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
   notifyLocationChanged:
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
   notifyNavigationStarted:
@@ -12,32 +14,45 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
+
 export class NavigationListenerParent extends JSWindowActorParent {
   async receiveMessage(message) {
-    switch (message.name) {
-      case "NavigationListenerChild:locationChanged": {
-        lazy.notifyLocationChanged({
-          contextDetails: message.data.contextDetails,
-          url: message.data.url,
-        });
-        break;
+    try {
+      switch (message.name) {
+        case "NavigationListenerChild:locationChanged": {
+          lazy.notifyLocationChanged({
+            contextDetails: message.data.contextDetails,
+            url: message.data.url,
+          });
+          break;
+        }
+        case "NavigationListenerChild:navigationStarted": {
+          lazy.notifyNavigationStarted({
+            contextDetails: message.data.contextDetails,
+            url: message.data.url,
+          });
+          break;
+        }
+        case "NavigationListenerChild:navigationStopped": {
+          lazy.notifyNavigationStopped({
+            contextDetails: message.data.contextDetails,
+            url: message.data.url,
+          });
+          break;
+        }
+        default:
+          throw new Error("Unsupported message:" + message.name);
       }
-      case "NavigationListenerChild:navigationStarted": {
-        lazy.notifyNavigationStarted({
-          contextDetails: message.data.contextDetails,
-          url: message.data.url,
-        });
-        break;
+    } catch (e) {
+      if (e instanceof TypeError) {
+        // Avoid error spam from errors due to unavailable browsing contexts.
+        lazy.logger.trace(
+          `Failed to handle a navigation listener message: ${e.message}`
+        );
+      } else {
+        throw e;
       }
-      case "NavigationListenerChild:navigationStopped": {
-        lazy.notifyNavigationStopped({
-          contextDetails: message.data.contextDetails,
-          url: message.data.url,
-        });
-        break;
-      }
-      default:
-        throw new Error("Unsupported message:" + message.name);
     }
   }
 }
