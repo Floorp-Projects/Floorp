@@ -1,0 +1,69 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: 'Run lint over all modules'
+    run:
+        using: gradlew
+        gradlew: ['lint', 'githubLintAndroidDetails']
+        use-caches: false
+    worker:
+        artifacts:
+            - name: public/github
+              path: /builds/worker/github
+              type: directory
+        max-run-time: 2700
+        env:
+            JAVA_HOME: "/builds/worker/fetches/jdk/jdk-17.0.6+10"
+        docker-image: {in-tree: lint}
+    always-target: true
+    attributes:
+        code-review: true
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-components
+    fetches:
+        toolchain:
+            - android-sdk-linux
+            - linux64-jdk-repack
+        external-gradle-dependencies:
+            - external-gradle-dependencies.tar.xz
+    platform: 'lint/opt'
+    treeherder:
+        kind: test
+        tier: 1
+    worker-type: b-linux-gcp
+    when:
+        files-changed:
+            - "mobile/android/android-components/**"
+
+
+android-components:
+    run:
+        pre-gradlew:
+            - ["cd", "mobile/android/android-components"]
+    treeherder:
+        symbol: lint(AC)
+
+focus:
+    when:
+        files-changed:
+            - "mobile/android/focus-android/**"
+    run:
+        pre-gradlew:
+            - ["cd", "mobile/android/focus-android"]
+    treeherder:
+        symbol: lint(focus)
+
+fenix:
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
+    when:
+        files-changed:
+            - "mobile/android/fenix/**"
+    run:
+        pre-gradlew:
+            - ["cd", "mobile/android/fenix"]
+        gradlew: ['lintDebug', 'githubLintAndroidDetails', 'mozilla-lint-rules:test']
+    treeherder:
+        symbol: lint(fenix)
