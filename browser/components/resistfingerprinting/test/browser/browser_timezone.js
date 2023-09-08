@@ -152,3 +152,43 @@ add_task(async function test_timezone_exempt_wrong_domain() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_timezone_exmpt_browser() {
+  SpecialPowers.Cu.getJSTestingFunctions().setTimeZone("PST8PDT");
+  is(
+    Intl.DateTimeFormat("en-US").resolvedOptions().timeZone,
+    "PST8PDT",
+    "Default time zone should have changed"
+  );
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.resistFingerprinting", true]],
+  });
+
+  is(
+    Intl.DateTimeFormat("en-US").resolvedOptions().timeZone,
+    "PST8PDT",
+    "Timezone in chrome should be unaffected by resistFingerprinting"
+  );
+
+  let newWindow = Services.ww.openWindow(
+    null,
+    AppConstants.BROWSER_CHROME_URL,
+    "_blank",
+    "chrome,dialog=no,all,alwaysRaised",
+    null
+  );
+
+  is(
+    newWindow.Intl.DateTimeFormat("en-US").resolvedOptions().timeZone,
+    "PST8PDT",
+    "Timezone in new chrome window should be unaffected by resistFingerprinting"
+  );
+
+  newWindow.close();
+
+  await SpecialPowers.popPrefEnv();
+
+  // Reset timezone
+  SpecialPowers.Cu.getJSTestingFunctions().setTimeZone(undefined);
+});
