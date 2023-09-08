@@ -7534,6 +7534,10 @@ bool BaseCompiler::emitI31New() {
     return false;
   }
 
+  if (deadCode_) {
+    return true;
+  }
+
   RegI32 intValue = popI32();
   RegRef i31Value = needRef();
   masm.truncate32ToWasmI31Ref(intValue, i31Value);
@@ -7548,6 +7552,10 @@ bool BaseCompiler::emitI31Get(FieldWideningOp wideningOp) {
   Nothing value;
   if (!iter_.readConversion(ValType(RefType::i31()), ValType::I32, &value)) {
     return false;
+  }
+
+  if (deadCode_) {
+    return true;
   }
 
   RegRef i31Value = popRef();

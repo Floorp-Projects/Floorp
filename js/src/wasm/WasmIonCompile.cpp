@@ -7419,6 +7419,11 @@ static bool EmitI31New(FunctionCompiler& f) {
   if (!f.iter().readConversion(ValType::I32, ValType(RefType::i31()), &input)) {
     return false;
   }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
   MDefinition* output = f.i31New(input);
   if (!output) {
     return false;
@@ -7434,6 +7439,11 @@ static bool EmitI31Get(FunctionCompiler& f, FieldWideningOp wideningOp) {
   if (!f.iter().readConversion(ValType(RefType::i31()), ValType::I32, &input)) {
     return false;
   }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
   MDefinition* output = f.i31Get(input, wideningOp);
   if (!output) {
     return false;
