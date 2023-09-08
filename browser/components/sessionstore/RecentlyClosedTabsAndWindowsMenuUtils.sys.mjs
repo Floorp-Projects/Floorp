@@ -8,6 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
@@ -18,8 +19,13 @@ ChromeUtils.defineLazyGetter(lazy, "l10n", () => {
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "closedTabsFromAllWindowsEnabled",
-  "browser.sessionstore.closedTabsFromAllWindows",
-  true
+  "browser.sessionstore.closedTabsFromAllWindows"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "closedTabsFromClosedWindowsEnabled",
+  "browser.sessionstore.closedTabsFromClosedWindows"
 );
 
 export var RecentlyClosedTabsAndWindowsMenuUtils = {
@@ -36,13 +42,21 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
    */
   getTabsFragment(aWindow, aTagName, aPrefixRestoreAll = false) {
     let doc = aWindow.document;
+    const isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(aWindow);
     const fragment = doc.createDocumentFragment();
-    const browserWindows = lazy.closedTabsFromAllWindowsEnabled
-      ? lazy.SessionStore.getWindows(aWindow)
-      : [aWindow];
-    const tabCount = lazy.SessionStore.getClosedTabCount(aWindow);
+    let isEmpty = true;
 
-    if (tabCount > 0) {
+    if (
+      lazy.SessionStore.getClosedTabCount({
+        sourceWindow: aWindow,
+        closedTabsFromClosedWindows: false,
+      })
+    ) {
+      isEmpty = false;
+      const browserWindows = lazy.closedTabsFromAllWindowsEnabled
+        ? lazy.SessionStore.getWindows(aWindow)
+        : [aWindow];
+
       for (const win of browserWindows) {
         const closedTabs = lazy.SessionStore.getClosedTabDataForWindow(win);
         for (let i = 0; i < closedTabs.length; i++) {
@@ -57,7 +71,29 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
           );
         }
       }
+    }
 
+    if (
+      !isPrivate &&
+      lazy.closedTabsFromClosedWindowsEnabled &&
+      lazy.SessionStore.getClosedTabCountFromClosedWindows()
+    ) {
+      isEmpty = false;
+      const closedTabs = lazy.SessionStore.getClosedTabDataFromClosedWindows();
+      for (let i = 0; i < closedTabs.length; i++) {
+        createEntry(
+          aTagName,
+          false,
+          i,
+          closedTabs[i],
+          doc,
+          closedTabs[i].title,
+          fragment
+        );
+      }
+    }
+
+    if (!isEmpty) {
       createRestoreAllEntry(
         doc,
         fragment,
@@ -130,6 +166,15 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
         lazy.SessionStore.undoCloseTab(sourceWindow, 0, currentWindow);
       }
     }
+    if (lazy.closedTabsFromClosedWindowsEnabled) {
+      for (let tabData of lazy.SessionStore.getClosedTabDataFromClosedWindows()) {
+        lazy.SessionStore.undoClosedTabFromClosedWindow(
+          { sourceClosedId: tabData.sourceClosedId },
+          tabData.closedId,
+          currentWindow
+        );
+      }
+    }
   },
 
   /**
@@ -154,11 +199,20 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
     if (aEvent.button != 1) {
       return;
     }
-
-    aEvent.view.undoCloseTab(
-      aEvent.originalTarget.getAttribute("value"),
-      aEvent.originalTarget.getAttribute("source-window-id")
-    );
+    if (aEvent.originalTarget.hasAttribute("source-closed-id")) {
+      lazy.SessionStore.undoClosedTabFromClosedWindow(
+        {
+          sourceClosedId:
+            aEvent.originalTarget.getAttribute("source-closed-id"),
+        },
+        aEvent.originalTarget.getAttribute("value")
+      );
+    } else {
+      aEvent.view.undoCloseTab(
+        aEvent.originalTarget.getAttribute("value"),
+        aEvent.originalTarget.getAttribute("source-window-id")
+      );
+    }
     aEvent.view.gBrowser.moveTabToEnd();
     let ancestorPanel = aEvent.target.closest("panel");
     if (ancestorPanel) {
@@ -203,6 +257,22 @@ function createEntry(
 
   if (aIsWindowsFragment) {
     element.setAttribute("oncommand", `undoCloseWindow("${aIndex}");`);
+  } else if (typeof aClosedTab.sourceClosedId == "number") {
+    // sourceClosedId is used to look up the closed window to remove it when the tab is restored
+    let sourceClosedId = aClosedTab.sourceClosedId;
+    element.setAttribute("source-closed-id", sourceClosedId);
+    element.setAttribute("value", aClosedTab.closedId);
+    element.removeAttribute("oncommand");
+    element.addEventListener(
+      "command",
+      event => {
+        lazy.SessionStore.undoClosedTabFromClosedWindow(
+          { sourceClosedId },
+          aClosedTab.closedId
+        );
+      },
+      { once: true }
+    );
   } else {
     // sourceWindowId is used to look up the closed tab entry to remove it when it is restored
     let sourceWindowId = aClosedTab.sourceWindowId;

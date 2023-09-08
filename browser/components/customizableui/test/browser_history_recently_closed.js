@@ -33,6 +33,10 @@ async function openRecentlyClosedTabsMenu() {
   await openHistoryPanel();
 
   let recentlyClosedTabs = document.getElementById("appMenuRecentlyClosedTabs");
+  Assert.ok(
+    !recentlyClosedTabs.getAttribute("disabled"),
+    "Recently closed tabs button enabled"
+  );
   let closeTabsPanel = document.getElementById(
     "appMenu-library-recentlyClosedTabs"
   );
@@ -52,23 +56,21 @@ async function openRecentlyClosedTabsMenu() {
   return closeTabsPanel;
 }
 
-async function resetClosedTabs(win) {
-  // Clear the lists of closed tabs.
-  let sessionStoreChanged;
-  let windows = win ? [win] : BrowserWindowTracker.orderedWindows;
-  for (win of windows) {
-    while (SessionStore.getClosedTabCountForWindow(win)) {
-      sessionStoreChanged = TestUtils.topicObserved(
-        "sessionstore-closed-objects-changed"
-      );
-      SessionStore.forgetClosedTab(win, 0);
-      await sessionStoreChanged;
-    }
+function resetClosedTabsAndWindows() {
+  // Clear the lists of closed windows and tabs.
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  is(SessionStore.getClosedWindowCount(), 0, "Expect 0 closed windows");
+  for (const win of BrowserWindowTracker.orderedWindows) {
+    is(
+      SessionStore.getClosedTabCountForWindow(win),
+      0,
+      "Expect 0 closed tabs for this window"
+    );
   }
 }
 
 registerCleanupFunction(async () => {
-  await resetClosedTabs();
+  await resetClosedTabsAndWindows();
 });
 
 add_task(async function testRecentlyClosedDisabled() {
@@ -203,7 +205,7 @@ add_task(async function testRecentlyClosedTabsDisabledPersists() {
 add_task(async function testRecentlyClosedRestoreAllTabs() {
   // We need to make sure the history is cleared before starting the test
   await Sanitizer.sanitize(["history"]);
-  await resetClosedTabs();
+  await resetClosedTabsAndWindows();
   const initialTabCount = gBrowser.visibleTabs.length;
 
   const closedTabUrls = [
@@ -292,7 +294,7 @@ add_task(async function testRecentlyClosedRestoreAllTabs() {
 add_task(async function testRecentlyClosedWindows() {
   // We need to make sure the history is cleared before starting the test
   await Sanitizer.sanitize(["history"]);
-  await resetClosedTabs();
+  await resetClosedTabsAndWindows();
 
   // Open and close a new window.
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
@@ -338,4 +340,91 @@ add_task(async function testRecentlyClosedWindows() {
   is(gBrowser.tabs.length, 1, "Did not open new tabs");
 
   await BrowserTestUtils.closeWindow(newWin);
+});
+
+add_task(async function testRecentlyClosedTabsFromClosedWindows() {
+  await resetClosedTabsAndWindows();
+  const closedTabUrls = [
+    "about:robots",
+    "https://example.com/",
+    "https://example.org/",
+  ];
+  const closedWindowState = {
+    tabs: [
+      {
+        entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }],
+      },
+    ],
+    _closedTabs: closedTabUrls.map(url => {
+      return {
+        title: url,
+        state: {
+          entries: [
+            {
+              url,
+              triggeringPrincipal_base64,
+            },
+          ],
+        },
+      };
+    }),
+  };
+  await SessionStoreTestUtils.promiseBrowserState({
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }],
+          },
+        ],
+      },
+    ],
+    _closedWindows: [closedWindowState],
+  });
+  Assert.equal(
+    SessionStore.getClosedTabCountFromClosedWindows(),
+    closedTabUrls.length,
+    "Sanity check number of closed tabs from closed windows"
+  );
+
+  prepareHistoryPanel();
+  let closeTabsPanel = await openRecentlyClosedTabsMenu();
+  // make sure we can actually restore one of these closed tabs
+  const closedTabItems = closeTabsPanel.querySelectorAll(
+    "toolbarbutton[targetURI]"
+  );
+  Assert.equal(
+    closedTabItems.length,
+    closedTabUrls.length,
+    "We have expected number of closed tab items"
+  );
+
+  const newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+  const closedObjectsChangePromise = TestUtils.topicObserved(
+    "sessionstore-closed-objects-changed"
+  );
+  EventUtils.sendMouseEvent({ type: "click" }, closedTabItems[0], window);
+  await newTabPromise;
+  await closedObjectsChangePromise;
+
+  // flip the pref so none of the closed tabs from closed window are included
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.sessionstore.closedTabsFromClosedWindows", false]],
+  });
+  await openHistoryPanel();
+
+  // verify the recently-closed-tabs menu item is disabled
+  let recentlyClosedTabsItem = document.getElementById(
+    "appMenuRecentlyClosedTabs"
+  );
+  Assert.ok(
+    recentlyClosedTabsItem.hasAttribute("disabled"),
+    "Recently closed tabs button is now disabled"
+  );
+  SpecialPowers.popPrefEnv();
+  while (gBrowser.tabs.length > 1) {
+    await SessionStoreTestUtils.closeTab(
+      gBrowser.tabs[gBrowser.tabs.length - 1]
+    );
+  }
 });

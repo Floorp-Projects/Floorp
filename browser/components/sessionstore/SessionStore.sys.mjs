@@ -407,15 +407,21 @@ export var SessionStore = {
 
   /**
    * Get the number of closed tabs associated with all matching windows
-   * @param {Window} [aWindow] Optional window argument used to determine if we're counting for private or non-private windows
+   * @param {Window|Object} [aOptions]
+   *        Either a DOMWindow (see aOptions.sourceWindow) or an object with properties
+            to identify which closed tabs to include in the count.
+   * @param {Window} aOptions.sourceWindow
+            A browser window used to identity privateness.
+            When closedTabsFromAllWindows is false, we only count closed tabs assocated with this window.
+   * @param {boolean} [aOptions.private = false]
+            Explicit indicator to constrain tab count to only private or non-private windows,
+   * @param {boolean} [aOptions.closedTabsFromAllWindows]
+            Override the value of the closedTabsFromAllWindows preference.
+   * @param {boolean} [aOptions.closedTabsFromClosedWindows]
+            Override the value of the closedTabsFromClosedWindows preference.
    */
-  getClosedTabCount: function ss_getClosedTabCount(aWindow) {
-    if (!SessionStoreInternal._closedTabsFromAllWindowsEnabled) {
-      return this.getClosedTabCountForWindow(
-        aWindow ?? SessionStoreInternal._getTopWindow()
-      );
-    }
-    return SessionStoreInternal.getClosedTabCount(aWindow);
+  getClosedTabCount: function ss_getClosedTabCount(aOptions) {
+    return SessionStoreInternal.getClosedTabCount(aOptions);
   },
 
   /**
@@ -439,18 +445,21 @@ export var SessionStore = {
 
   /**
    * Get the closed tab data associated with all matching windows
-   * @param {Window} [aWindow] Optional window argument used to determine if we're collecting data for private or non-private windows, will
-   *                           default to non-private only due to SessionStoreInternal._getTopWindow(false).
+   * @param {Window|Object} [aOptions]
+   *        Either a DOMWindow (see aOptions.sourceWindow) or an object with properties
+            to identify which closed tabs to get data from
+   * @param {Window} aOptions.sourceWindow
+            A browser window used to identity privateness.
+            When closedTabsFromAllWindows is false, we only include closed tabs assocated with this window.
+   * @param {boolean} [aOptions.private = false]
+            Explicit indicator to constrain tab data to only private or non-private windows,
+   * @param {boolean} [aOptions.closedTabsFromAllWindows]
+            Override the value of the closedTabsFromAllWindows preference.
+   * @param {boolean} [aOptions.closedTabsFromClosedWindows]
+            Override the value of the closedTabsFromClosedWindows preference.
    */
-  getClosedTabData: function ss_getClosedTabData(aWindow) {
-    if (!SessionStoreInternal._closedTabsFromAllWindowsEnabled) {
-      return this.getClosedTabDataForWindow(
-        aWindow ?? SessionStoreInternal._getTopWindow(false)
-      );
-    }
-    return SessionStoreInternal.getClosedTabData(
-      aWindow ?? SessionStoreInternal._getTopWindow(false)
-    );
+  getClosedTabData: function ss_getClosedTabData(aOptions) {
+    return SessionStoreInternal.getClosedTabData(aOptions);
   },
 
   /**
@@ -1321,8 +1330,7 @@ var SessionStoreInternal = {
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
 
     this._closedTabsFromAllWindowsEnabled = this._prefBranch.getBoolPref(
-      "sessionstore.closedTabsFromAllWindows",
-      true
+      "sessionstore.closedTabsFromAllWindows"
     );
     this._prefBranch.addObserver(
       "sessionstore.closedTabsFromAllWindows",
@@ -1331,8 +1339,7 @@ var SessionStoreInternal = {
     );
 
     this._closedTabsFromClosedWindowsEnabled = this._prefBranch.getBoolPref(
-      "sessionstore.closedTabsFromClosedWindows",
-      true
+      "sessionstore.closedTabsFromClosedWindows"
     );
     this._prefBranch.addObserver(
       "sessionstore.closedTabsFromClosedWindows",
@@ -2853,9 +2860,15 @@ var SessionStoreInternal = {
         break;
       case "sessionstore.closedTabsFromAllWindows":
         this._closedTabsFromAllWindowsEnabled = this._prefBranch.getBoolPref(
-          "sessionstore.closedTabsFromAllWindows",
-          true
+          "sessionstore.closedTabsFromAllWindows"
         );
+        this._closedObjectsChanged = true;
+        break;
+      case "sessionstore.closedTabsFromClosedWindows":
+        this._closedTabsFromClosedWindowsEnabled = this._prefBranch.getBoolPref(
+          "sessionstore.closedTabsFromClosedWindows"
+        );
+        this._closedObjectsChanged = true;
         break;
     }
   },
@@ -3738,11 +3751,43 @@ var SessionStoreInternal = {
     return DyingWindowCache.get(aWindow)._closedTabs.length;
   },
 
-  getClosedTabCount(aLikeWindow) {
-    const openBrowserWindows = this.getWindows(aLikeWindow);
-    const tabCount = openBrowserWindows
-      .map(win => this.getClosedTabCountForWindow(win))
-      .reduce((total, count) => total + count, 0);
+  _prepareClosedTabOptions(aOptions = {}) {
+    const sourceOptions = Object.assign(
+      {
+        closedTabsFromAllWindows: this._closedTabsFromAllWindowsEnabled,
+        closedTabsFromClosedWindows: this._closedTabsFromClosedWindowsEnabled,
+        sourceWindow: null,
+      },
+      aOptions instanceof Ci.nsIDOMWindow
+        ? { sourceWindow: aOptions }
+        : aOptions
+    );
+    if (!sourceOptions.sourceWindow) {
+      sourceOptions.sourceWindow = this._getTopWindow(sourceOptions.private);
+    }
+    if (!sourceOptions.hasOwnProperty("private")) {
+      sourceOptions.private = PrivateBrowsingUtils.isWindowPrivate(
+        sourceOptions.sourceWindow
+      );
+    }
+    return sourceOptions;
+  },
+
+  getClosedTabCount(aOptions) {
+    const sourceOptions = this._prepareClosedTabOptions(aOptions);
+    let tabCount = 0;
+
+    if (sourceOptions.closedTabsFromAllWindows) {
+      tabCount += this.getWindows({ private: sourceOptions.private })
+        .map(win => this.getClosedTabCountForWindow(win))
+        .reduce((total, count) => total + count, 0);
+    } else {
+      tabCount += this.getClosedTabCountForWindow(sourceOptions.sourceWindow);
+    }
+
+    if (!sourceOptions.private && sourceOptions.closedTabsFromClosedWindows) {
+      tabCount += this.getClosedTabCountFromClosedWindows();
+    }
     return tabCount;
   },
 
@@ -3778,11 +3823,17 @@ var SessionStoreInternal = {
     return Cu.cloneInto(data._closedTabs, {}, options);
   },
 
-  getClosedTabData: function ssi_getClosedTabData(aLikeWindow) {
-    const windows = this.getWindows(aLikeWindow);
+  getClosedTabData: function ssi_getClosedTabData(aOptions) {
+    const sourceOptions = this._prepareClosedTabOptions(aOptions);
     const closedTabData = [];
-    for (let win of windows) {
-      closedTabData.push(...this.getClosedTabDataForWindow(win));
+    if (sourceOptions.closedTabsFromAllWindows) {
+      for (let win of this.getWindows({ private: sourceOptions.private })) {
+        closedTabData.push(...this.getClosedTabDataForWindow(win));
+      }
+    } else {
+      closedTabData.push(
+        ...this.getClosedTabDataForWindow(sourceOptions.sourceWindow)
+      );
     }
     return closedTabData;
   },

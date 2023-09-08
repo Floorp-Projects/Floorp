@@ -338,3 +338,60 @@ add_task(async function test_recently_closed_tabs_mixed_private_pref_off() {
   info("finished tab cleanup");
   SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_recently_closed_tabs_closed_windows() {
+  // prepare window state with closed tabs from closed windows
+  await SpecialPowers.pushPrefEnv({
+    set: [["sessionstore.closedTabsFromClosedWindows", true]],
+  });
+  const closedTabUrls = ["about:robots"];
+  const closedWindowState = {
+    tabs: [
+      {
+        entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }],
+      },
+    ],
+    _closedTabs: closedTabUrls.map(url => {
+      return {
+        state: {
+          entries: [
+            {
+              url,
+              triggeringPrincipal_base64,
+            },
+          ],
+        },
+      };
+    }),
+  };
+  await SessionStoreTestUtils.promiseBrowserState({
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }],
+          },
+        ],
+      },
+    ],
+    _closedWindows: [closedWindowState],
+  });
+
+  // verify the recently-closed-tabs menu item is enabled
+  await checkMenu(window, {
+    menuItemDisabled: false,
+  });
+
+  // flip the pref
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.sessionstore.closedTabsFromClosedWindows", false]],
+  });
+
+  // verify the recently-closed-tabs menu item is disabled
+  await checkMenu(window, {
+    menuItemDisabled: true,
+  });
+
+  SpecialPowers.popPrefEnv();
+});
