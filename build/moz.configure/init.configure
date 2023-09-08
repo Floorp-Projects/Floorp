@@ -728,7 +728,12 @@ def real_target(value, host, shell, project, application):
         project = project[0]
     if not value:
         if project == "mobile/android":
-            return split_triplet("arm-unknown-linux-androideabi")
+            target_cpu, target_system = (
+                ("aarch64", "android")
+                if host.cpu == "aarch64"
+                else ("arm", "androideabi")
+            )
+            return split_triplet(f"{target_cpu}-unknown-linux-{target_system}")
         return host
     # If --target was only given a cpu arch, expand it with the
     # non-cpu part of the host. For mobile/android, expand it with
