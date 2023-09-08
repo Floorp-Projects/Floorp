@@ -99,7 +99,7 @@ if CONFIG['MOZ_AAUDIO']:
     DEFINES['USE_AAUDIO'] = True
 
 if CONFIG['MOZ_OPENSL']:
-    SOURCES += ['cubeb_opensl.c']
+    SOURCES += ['cubeb_opensl.cpp']
     DEFINES['USE_OPENSL'] = True
 
 FINAL_LIBRARY = 'gkmedias'
