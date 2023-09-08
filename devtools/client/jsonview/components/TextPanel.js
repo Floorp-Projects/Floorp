@@ -26,6 +26,7 @@ define(function (require, exports, module) {
       return {
         isValidJson: PropTypes.bool,
         actions: PropTypes.object,
+        errorMessage: PropTypes.instanceOf(Text),
         data: PropTypes.instanceOf(Text),
       };
     }
@@ -42,6 +43,9 @@ define(function (require, exports, module) {
           actions: this.props.actions,
           isValidJson: this.props.isValidJson,
         }),
+        this.props.errorMessage
+          ? div({ className: "jsonParseError" }, this.props.errorMessage)
+          : null,
         div({ className: "panelContent" }, LiveText({ data: this.props.data }))
       );
     }
