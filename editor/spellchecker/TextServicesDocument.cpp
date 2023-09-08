@@ -2693,11 +2693,10 @@ TextServicesDocument::OffsetEntryArray::FindWordRange(
   // of the word from our calculated string offset.
 
   const char16_t* str = aAllTextInBlock.BeginReading();
-  uint32_t strLen = aAllTextInBlock.Length();
-  MOZ_ASSERT(strOffset <= strLen,
+  MOZ_ASSERT(strOffset <= aAllTextInBlock.Length(),
              "The string offset shouldn't be greater than the string length!");
 
-  intl::WordRange res = intl::WordBreaker::FindWord(str, strLen, strOffset);
+  intl::WordRange res = intl::WordBreaker::FindWord(aAllTextInBlock, strOffset);
 
   // Strip out the NBSPs at the ends
   while (res.mBegin <= res.mEnd && IS_NBSP_CHAR(str[res.mBegin])) {

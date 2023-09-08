@@ -849,12 +849,11 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
   if (mOffset == 0) {
     word.mBegin = 0;
   } else if (mOffset == static_cast<int32_t>(text.Length())) {
-    word = WordBreaker::FindWord(text.get(), text.Length(), mOffset - 1);
+    word = WordBreaker::FindWord(text, mOffset - 1);
   } else {
-    word = WordBreaker::FindWord(text.get(), text.Length(), mOffset);
+    word = WordBreaker::FindWord(text, mOffset);
   }
-  for (;; word = WordBreaker::FindWord(text.get(), text.Length(),
-                                       word.mBegin - 1)) {
+  for (;; word = WordBreaker::FindWord(text, word.mBegin - 1)) {
     if (!aIncludeOrigin && static_cast<int32_t>(word.mBegin) == mOffset) {
       // A word possibly starts at the origin, but the caller doesn't want this
       // included.

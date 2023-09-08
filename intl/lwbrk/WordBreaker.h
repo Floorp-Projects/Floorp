@@ -5,6 +5,7 @@
 #ifndef mozilla_intl_WordBreaker_h__
 #define mozilla_intl_WordBreaker_h__
 
+#include "nsStringFwd.h"
 #include <cstdint>
 
 #define NS_WORDBREAKER_NEED_MORE_TEXT -1
@@ -28,12 +29,11 @@ class WordBreaker final {
   //
   // @return WordRange where mBegin equals to the offset to first character in
   // the word and mEnd equals to the offset to the last character plus 1. mEnd
-  // can be aLen if the desired word is at the end of aText.
+  // can be aText.Lengh() if the desired word is at the end of aText.
   //
   // If aPos is already at the end of aText or beyond, both mBegin and mEnd
-  // equals to aLen.
-  static WordRange FindWord(const char16_t* aText, uint32_t aLen,
-                            uint32_t aPos);
+  // equals to aText.Length().
+  static WordRange FindWord(const nsAString& aText, uint32_t aPos);
 
   // Find the next word break opportunity starting from aPos + 1. It can return
   // aLen if there's no break opportunity between [aPos + 1, aLen - 1].
