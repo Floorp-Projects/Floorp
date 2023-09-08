@@ -187,8 +187,7 @@ class nsTableFrame : public nsContainerFrame {
       nsIFrame*, mozilla::ComputedStyle* aOldStyle);
 
   // Unregister a positioned table part with its nsTableFrame, if needed.
-  static void MaybeUnregisterPositionedTablePart(nsIFrame* aFrame,
-                                                 nsIFrame* aDestructRoot);
+  static void MaybeUnregisterPositionedTablePart(nsIFrame* aFrame);
 
   /*
    * Notification that rowspan or colspan has changed for content inside a
@@ -220,13 +219,6 @@ class nsTableFrame : public nsContainerFrame {
 
   /** helper method to find the table parent of any table frame object */
   static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
-
-  /* Like GetTableFrame, but will set *aDidPassThrough to false if we don't
-   * pass through aMustPassThrough on the way to the table.
-   */
-  static nsTableFrame* GetTableFramePassingThrough(nsIFrame* aMustPassThrough,
-                                                   nsIFrame* aSourceFrame,
-                                                   bool* aDidPassThrough);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
@@ -828,6 +820,8 @@ class nsTableFrame : public nsContainerFrame {
     return mDeletedRowIndexRanges.empty();
   }
 
+  bool IsDestroying() const { return mBits.mIsDestroying; }
+
  public:
 #ifdef DEBUG
   void Dump(bool aDumpRows, bool aDumpCols, bool aDumpCellMap);
@@ -861,6 +855,8 @@ class nsTableFrame : public nsContainerFrame {
     uint32_t mResizedColumns : 1;  // have we resized columns since last reflow?
     uint32_t mNeedToCalcHasBCBorders : 1;
     uint32_t mHasBCBorders : 1;
+    uint32_t mIsDestroying : 1;  // Whether we're in the process of destroying
+                                 // this table frame.
   } mBits;
 
   std::map<int32_t, int32_t> mDeletedRowIndexRanges;  // maintains ranges of row

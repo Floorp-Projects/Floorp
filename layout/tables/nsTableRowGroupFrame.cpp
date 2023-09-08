@@ -63,8 +63,7 @@ nsTableRowGroupFrame::nsTableRowGroupFrame(ComputedStyle* aStyle,
 nsTableRowGroupFrame::~nsTableRowGroupFrame() = default;
 
 void nsTableRowGroupFrame::Destroy(DestroyContext& aContext) {
-  nsTableFrame::MaybeUnregisterPositionedTablePart(this,
-                                                   aContext.DestructRoot());
+  nsTableFrame::MaybeUnregisterPositionedTablePart(this);
   nsContainerFrame::Destroy(aContext);
 }
 

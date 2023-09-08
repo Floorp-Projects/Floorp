@@ -211,6 +211,8 @@ void nsTableFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 nsTableFrame::~nsTableFrame() = default;
 
 void nsTableFrame::Destroy(DestroyContext& aContext) {
+  MOZ_ASSERT(!mBits.mIsDestroying);
+  mBits.mIsDestroying = true;
   mColGroups.DestroyFrames(aContext);
   nsContainerFrame::Destroy(aContext);
 }
@@ -260,7 +262,7 @@ void nsTableFrame::PositionedTablePartMaybeChanged(nsIFrame* aFrame,
     return;
   }
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(aFrame);
+  nsTableFrame* tableFrame = GetTableFrame(aFrame);
   MOZ_ASSERT(tableFrame, "Should have a table frame here");
   tableFrame = static_cast<nsTableFrame*>(tableFrame->FirstContinuation());
 
@@ -283,22 +285,16 @@ void nsTableFrame::PositionedTablePartMaybeChanged(nsIFrame* aFrame,
 }
 
 /* static */
-void nsTableFrame::MaybeUnregisterPositionedTablePart(nsIFrame* aFrame,
-                                                      nsIFrame* aDestructRoot) {
+void nsTableFrame::MaybeUnregisterPositionedTablePart(nsIFrame* aFrame) {
   if (!aFrame->IsAbsPosContainingBlock()) {
     return;
   }
-  // Retrieve the table frame, and check if we hit aDestructRoot on the way.
-  bool didPassThrough;
-  nsTableFrame* tableFrame =
-      GetTableFramePassingThrough(aDestructRoot, aFrame, &didPassThrough);
-  if (!didPassThrough && !tableFrame->GetPrevContinuation()) {
-    // The table frame will be destroyed, and it's the first im flow (and thus
-    // owning the PositionedTablePartArray), so we don't need to do
-    // anything.
-    return;
-  }
+  nsTableFrame* tableFrame = GetTableFrame(aFrame);
   tableFrame = static_cast<nsTableFrame*>(tableFrame->FirstContinuation());
+
+  if (tableFrame->IsDestroying()) {
+    return;  // We're throwing the table away anyways.
+  }
 
   // Retrieve the positioned parts array for this table.
   FrameTArray* positionedParts =
@@ -3601,31 +3597,6 @@ nsTableFrame* nsTableFrame::GetTableFrame(nsIFrame* aFrame) {
   }
   MOZ_CRASH("unable to find table parent");
   return nullptr;
-}
-
-nsTableFrame* nsTableFrame::GetTableFramePassingThrough(
-    nsIFrame* aMustPassThrough, nsIFrame* aFrame, bool* aDidPassThrough) {
-  MOZ_ASSERT(aMustPassThrough == aFrame ||
-                 nsLayoutUtils::IsProperAncestorFrame(aMustPassThrough, aFrame),
-             "aMustPassThrough should be an ancestor");
-
-  // Retrieve the table frame, and check if we hit aMustPassThrough on the
-  // way.
-  *aDidPassThrough = false;
-  nsTableFrame* tableFrame = nullptr;
-  for (nsIFrame* ancestor = aFrame; ancestor;
-       ancestor = ancestor->GetParent()) {
-    if (ancestor == aMustPassThrough) {
-      *aDidPassThrough = true;
-    }
-    if (ancestor->IsTableFrame()) {
-      tableFrame = static_cast<nsTableFrame*>(ancestor);
-      break;
-    }
-  }
-
-  MOZ_ASSERT(tableFrame, "Should have a table frame here");
-  return tableFrame;
 }
 
 bool nsTableFrame::IsAutoBSize(WritingMode aWM) {
