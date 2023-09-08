@@ -2,15 +2,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
-		<title>CSS Test: text-space-trim - trim-inner - basic cases</title>
+		<title>CSS Test: white-space-trim - discard-inner - basic cases</title>
 		<link rel="author" title="Satoshi Umehara" href="mailto:umehara@est.co.jp" />
-		<link rel="help" title="CSS Text Level 4: 3.2. White Space Trimming: the ‘text-space-trim’ property" href="https://drafts.csswg.org/css-text-4/#white-space-trim" />
-		<link rel="match" href="reference/text-space-trim-trim-inner-001-ref.xht"/>
-		<meta name="assert" content="The UA should discard all white space at the beginning of a block and all white space at the end of a block when text-space-trim is set to trim-inner." />
+		<link rel="help" title="CSS Text Level 4: 3.2. White Space Trimming: the ‘white-space-trim’ property" href="https://drafts.csswg.org/css-text-4/#white-space-trim" />
+		<link rel="match" href="reference/white-space-trim-discard-inner-001-ref.xht"/>
+		<meta name="assert" content="The UA should discard all white space at the beginning of a block and all white space at the end of a block when white-space-trim is set to discard-inner." />
 		<style type="text/css">
 			<![CDATA[
 				.test span {
-					text-space-trim: trim-inner;
+					white-space-trim: discard-inner;
 				}
 				/* the CSS below is not part of the test */
 				div {
