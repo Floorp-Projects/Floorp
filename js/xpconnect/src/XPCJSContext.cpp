@@ -777,9 +777,9 @@ static mozilla::Atomic<bool> sWeakRefsEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
 static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
 static mozilla::Atomic<bool> sShadowRealmsEnabled(false);
-static mozilla::Atomic<bool> sWellFormedUnicodeStringsEnabled(true);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sArrayGroupingEnabled(false);
+static mozilla::Atomic<bool> sWellFormedUnicodeStringsEnabled(false);
 static mozilla::Atomic<bool> sNewSetMethodsEnabled(false);
 static mozilla::Atomic<bool> sArrayBufferTransferEnabled(false);
 #endif
@@ -806,9 +806,9 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setWeakRefsEnabled(GetWeakRefsEnabled())
       .setIteratorHelpersEnabled(sIteratorHelpersEnabled)
       .setShadowRealmsEnabled(sShadowRealmsEnabled)
-      .setWellFormedUnicodeStringsEnabled(sWellFormedUnicodeStringsEnabled)
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(sArrayGroupingEnabled)
+      .setWellFormedUnicodeStringsEnabled(sWellFormedUnicodeStringsEnabled)
       .setNewSetMethodsEnabled(sNewSetMethodsEnabled)
       .setArrayBufferTransferEnabled(sArrayBufferTransferEnabled)
 #endif
@@ -1007,13 +1007,13 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       JS_OPTIONS_DOT_STR "experimental.weakrefs.expose_cleanupSome");
   sShadowRealmsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.shadow_realms");
-  sWellFormedUnicodeStringsEnabled =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "well_formed_unicode_strings");
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
   sArrayGroupingEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.array_grouping");
+  sWellFormedUnicodeStringsEnabled = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "experimental.well_formed_unicode_strings");
   sNewSetMethodsEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.new_set_methods");
   sArrayBufferTransferEnabled = Preferences::GetBool(

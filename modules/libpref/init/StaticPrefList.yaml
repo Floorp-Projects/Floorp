@@ -7456,12 +7456,6 @@
   value: false
   mirror: always
 
-# Support for String.prototype.{is,to}WellFormed in JavaScript.
-- name: javascript.options.well_formed_unicode_strings
-  type: bool
-  value: true
-  mirror: always
-
 #ifdef NIGHTLY_BUILD
   # Experimental support for Iterator Helpers in JavaScript.
 -   name: javascript.options.experimental.iterator_helpers
@@ -7471,6 +7465,12 @@
 
   # Experimental support for Array Grouping in JavaScript.
 -   name: javascript.options.experimental.array_grouping
+    type: bool
+    value: false
+    mirror: always
+
+  # Experimental support for String.prototype.{is,to}WellFormed in JavaScript.
+-   name: javascript.options.experimental.well_formed_unicode_strings
     type: bool
     value: false
     mirror: always
