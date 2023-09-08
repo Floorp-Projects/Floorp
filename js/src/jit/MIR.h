@@ -620,14 +620,8 @@ class MDefinition : public MNode {
   MBasicBlock* block() const { return definitionBlock(); }
 
  private:
-#ifdef DEBUG
-  bool trackedSiteMatchesBlock(const BytecodeSite* site) const;
-#endif
-
   void setTrackedSite(const BytecodeSite* site) {
     MOZ_ASSERT(site);
-    MOZ_ASSERT(trackedSiteMatchesBlock(site),
-               "tracked bytecode site should match block bytecode site");
     trackedSite_ = site;
   }
 
@@ -635,8 +629,6 @@ class MDefinition : public MNode {
   const BytecodeSite* trackedSite() const {
     MOZ_ASSERT(trackedSite_,
                "missing tracked bytecode site; node not assigned to a block?");
-    MOZ_ASSERT(trackedSiteMatchesBlock(trackedSite_),
-               "tracked bytecode site should match block bytecode site");
     return trackedSite_;
   }
 
