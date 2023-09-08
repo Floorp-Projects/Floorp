@@ -169,6 +169,9 @@ async function showErrorAsync(browser, messageId, messageArgs) {
 }
 
 function customizeNotificationHeader(notification) {
+  if (!notification) {
+    return;
+  }
   const document = notification.owner.panel.ownerDocument;
   const description = document.querySelector(
     `description[popupid=${notification.id}]`
@@ -228,12 +231,16 @@ async function showReusableMasksAsync(browser, origin, error) {
   let notification;
 
   function getReusableMasksList() {
-    return notification.owner.panel.getElementsByClassName(
+    return notification?.owner.panel.getElementsByClassName(
       "reusable-relay-masks"
     )[0];
   }
 
   function notificationShown() {
+    if (!notification) {
+      return;
+    }
+
     customizeNotificationHeader(notification);
 
     notification.owner.panel.getElementsByClassName(
