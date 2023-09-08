@@ -306,6 +306,9 @@ NS_IMETHODIMP DocumentChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
     return NS_OK;
   }
 
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::MozCrashReason,
+      nsPrintfCString("Differing load flags: %x", mLoadFlags ^ aLoadFlags));
   MOZ_CRASH("DocumentChannel::SetLoadFlags: Don't set flags after creation");
 }
 
