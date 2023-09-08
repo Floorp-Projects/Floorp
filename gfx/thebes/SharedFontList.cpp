@@ -725,6 +725,24 @@ FontList::FontList(uint32_t aGeneration) {
 
 FontList::~FontList() { DetachShmBlocks(); }
 
+FontList::Header& FontList::GetHeader() const MOZ_NO_THREAD_SAFETY_ANALYSIS {
+  // We only need to lock if we're not on the main thread.
+  bool isMainThread = NS_IsMainThread();
+  if (!isMainThread) {
+    gfxPlatformFontList::PlatformFontList()->Lock();
+  }
+
+  // It's invalid to try and access this before the first block exists.
+  MOZ_ASSERT(mBlocks.Length() > 0);
+  auto& result = *static_cast<Header*>(mBlocks[0]->Memory());
+
+  if (!isMainThread) {
+    gfxPlatformFontList::PlatformFontList()->Unlock();
+  }
+
+  return result;
+}
+
 bool FontList::AppendShmBlock(uint32_t aSizeNeeded) {
   MOZ_ASSERT(XRE_IsParentProcess());
   uint32_t size = std::max(aSizeNeeded, SHM_BLOCK_SIZE);
