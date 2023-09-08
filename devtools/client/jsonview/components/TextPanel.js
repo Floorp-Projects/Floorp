@@ -26,7 +26,7 @@ define(function (require, exports, module) {
       return {
         isValidJson: PropTypes.bool,
         actions: PropTypes.object,
-        errorMessage: PropTypes.instanceOf(Text),
+        errorMessage: PropTypes.string,
         data: PropTypes.instanceOf(Text),
       };
     }
