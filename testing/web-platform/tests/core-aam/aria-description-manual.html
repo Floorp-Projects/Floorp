@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>aria-describedby</title>
+    <title>aria-description</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
     <script src="/resources/testharness.js"></script>
@@ -19,15 +19,9 @@
             "ATK" : [
                [
                   "property",
-                  "description",
+                  "Description",
                   "is",
                   "hello world"
-               ],
-               [
-                  "relation",
-                  "RELATION_DESCRIBED_BY",
-                  "is",
-                  "[description]"
                ]
             ],
             "AXAPI" : [
@@ -41,15 +35,9 @@
             "IAccessible2" : [
                [
                   "property",
-                  "accDescription",
+                  "accDescriptio",
                   "is",
                   "hello world"
-               ],
-               [
-                  "relation",
-                  "IA2_RELATION_DESCRIBED_BY",
-                  "is",
-                  "[description]"
                ]
             ],
             "UIA" : [
@@ -58,52 +46,22 @@
                   "FullDescription",
                   "is",
                   "hello world"
-               ],
-               [
-                  "property",
-                  "DescribedBy",
-                  "is",
-                  "[description]"
                ]
             ]
          },
          "title" : "step 1",
          "type" : "test"
-      },
-      {
-         "element" : "description",
-         "test" : {
-            "ATK" : [
-               [
-                  "relation",
-                  "RELATION_DESCRIPTION_FOR",
-                  "is",
-                  "[test]"
-               ]
-            ],
-            "IAccessible2" : [
-               [
-                  "relation",
-                  "IA2_RELATION_DESCRIPTION_FOR",
-                  "is",
-                  "[test]"
-               ]
-            ]
-         },
-         "title" : "step 2",
-         "type" : "test"
       }
    ],
-   "title" : "aria-describedby"
+   "title" : "aria-description"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for aria-describedby.</p>
-    <div role='group' id='test' aria-describedby='description'>content</div>
-  <div id='description'>hello world</div>
+  <p>This test examines the ARIA properties for aria-description.</p>
+    <div role='group' id='test' aria-description='hello world'>content</div>
 
   <div id="manualMode"></div>
   <div id="log"></div>
