@@ -104,8 +104,6 @@ nsresult NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
 
 void WriteConsoleLog();
 
-void OverrideDefaultLocaleIfNeeded();
-
 /**
  * Allow exit() calls to complete. This should be done from a proper Gecko
  * shutdown path. Otherwise we aim to catch improper shutdowns.
