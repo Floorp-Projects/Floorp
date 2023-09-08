@@ -2052,9 +2052,7 @@ var gBrowserInit = {
 
     CaptivePortalWatcher.delayedStartup();
 
-    if (AppConstants.NIGHTLY_BUILD) {
-      ShoppingSidebarManager.init();
-    }
+    ShoppingSidebarManager.init();
 
     SessionStore.promiseAllWindowsRestored.then(() => {
       this._schedulePerWindowIdleTasks();
@@ -2475,9 +2473,7 @@ var gBrowserInit = {
 
     FirefoxViewHandler.uninit();
 
-    if (AppConstants.NIGHTLY_BUILD) {
-      ShoppingSidebarManager.uninit();
-    }
+    ShoppingSidebarManager.uninit();
 
     // Now either cancel delayedStartup, or clean up the services initialized from
     // it.
@@ -5885,9 +5881,7 @@ var TabsProgressListener = {
 
     // Some shops use pushState to move between individual products, so
     // the shopping code needs to be told about all of these.
-    if (AppConstants.NIGHTLY_BUILD) {
-      ShoppingSidebarManager.onLocationChange(aBrowser, aLocationURI, aFlags);
-    }
+    ShoppingSidebarManager.onLocationChange(aBrowser, aLocationURI, aFlags);
 
     // Filter out location changes caused by anchor navigation
     // or history.push/pop/replaceState.
