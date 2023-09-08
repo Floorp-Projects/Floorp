@@ -388,3 +388,20 @@ shopping:
       - fx-desktop-shopping-eng@mozilla.com
     send_in_pings:
       - events
+
+  surface_reactivated_button_clicked:
+    type: event
+    description: |
+      The user clicked the reactivated product button.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851675
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851675#c4
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
