@@ -654,7 +654,7 @@ function testtag_notification_State(nb, ntf, testid, label, value, image, priori
     critical: "chrome://global/skin/icons/error.svg",
   };
   let icon = icons[type];
-  is(getComputedStyle(ntf.messageImage, "::after").content, `url("${icon}")`, "notification image is set");
+  is(getComputedStyle(ntf.messageImage, "::after").backgroundImage, `url("${icon}")`, "notification image is set");
 }
 
 function checkPopupTest(nb, ntf)
