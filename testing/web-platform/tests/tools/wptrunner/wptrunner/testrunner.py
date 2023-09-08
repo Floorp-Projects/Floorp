@@ -773,6 +773,7 @@ class TestRunnerManager(threading.Thread):
                 self.logger.info("Restarting browser for new test group")
                 restart = True
         else:
+            subsuite = self.state.subsuite
             test_type = self.state.test_type
             test_group = self.state.test_group
             group_metadata = self.state.group_metadata
