@@ -368,12 +368,16 @@ impl AnimationValue {
                     let custom_properties =
                         extra_custom_properties.or_else(|| context.style().custom_properties());
 
+                    debug_assert!(
+                        context.builder.stylist.is_some(),
+                        "Need a Stylist to substitute variables!"
+                    );
                     declaration.value.substitute_variables(
                         declaration.id,
                         context.builder.writing_mode,
                         custom_properties,
                         context.quirks_mode,
-                        context.device(),
+                        context.builder.stylist.unwrap(),
                         &mut cache,
                     )
                 };

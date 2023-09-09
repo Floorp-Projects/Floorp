@@ -888,7 +888,7 @@ impl PropertyDeclarationBlock {
                         computed_values.writing_mode,
                         custom_properties.as_ref(),
                         QuirksMode::NoQuirks,
-                        stylist.device(),
+                        stylist,
                         &mut Default::default(),
                     )
                     .to_css(dest)

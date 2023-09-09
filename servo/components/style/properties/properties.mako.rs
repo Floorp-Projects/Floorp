@@ -1687,7 +1687,7 @@ impl UnparsedValue {
         writing_mode: WritingMode,
         custom_properties: Option<<&Arc<crate::custom_properties::CustomPropertiesMap>>,
         quirks_mode: QuirksMode,
-        device: &Device,
+        stylist: &Stylist,
         shorthand_cache: &'cache mut ShorthandsWithPropertyReferencesCache,
     ) -> Cow<'cache, PropertyDeclaration> {
         let invalid_at_computed_value_time = || {
@@ -1714,7 +1714,7 @@ impl UnparsedValue {
             &self.css,
             self.first_token_type,
             custom_properties,
-            device,
+            stylist,
         ) {
             Ok(css) => css,
             Err(..) => return invalid_at_computed_value_time(),
