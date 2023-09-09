@@ -317,6 +317,10 @@ class VendorManifest(MozbuildObject):
             from mozbuild.vendor.host_github import GitHubHost
 
             return GitHubHost(self.manifest)
+        elif self.manifest["vendoring"]["source-hosting"] == "git":
+            from mozbuild.vendor.host_git import GitHost
+
+            return GitHost(self.manifest)
         elif self.manifest["vendoring"]["source-hosting"] == "googlesource":
             from mozbuild.vendor.host_googlesource import GoogleSourceHost
 
@@ -413,14 +417,19 @@ class VendorManifest(MozbuildObject):
             url = self.source_host.upstream_release_artifact(revision, release_artifact)
         else:
             url = self.source_host.upstream_snapshot(revision)
+
         self.logInfo({"url": url}, "Fetching code archive from {url}")
 
         with mozfile.NamedTemporaryFile() as tmptarfile:
             tmpextractdir = tempfile.TemporaryDirectory()
             try:
-                req = requests.get(url, stream=True)
-                for data in req.iter_content(4096):
-                    tmptarfile.write(data)
+                if url.startswith("file://"):
+                    with open(url[len("file://") :], "rb") as tarinput:
+                        tmptarfile.write(tarinput.read())
+                else:
+                    req = requests.get(url, stream=True)
+                    for data in req.iter_content(4096):
+                        tmptarfile.write(data)
                 tmptarfile.seek(0)
 
                 vendor_dir = mozpath.normsep(
