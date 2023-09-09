@@ -7587,6 +7587,10 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
                                     const nsRect& aVisibleRect, float aOpacity,
                                     bool aIsRecording) {
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
+  gfxTextRun* textRun = f->GetTextRun(nsTextFrame::eInflated);
+  if (!textRun) {
+    return;
+  }
 
   // Add 1 pixel of dirty area around mVisibleRect to allow us to paint
   // antialiased pixels beyond the measured text extents.
@@ -7626,7 +7630,7 @@ void nsDisplayText::RenderToContext(gfxContext* aCtx,
       // necessary. This is done here because we want selection be
       // compressed at the same time as text.
       gfxPoint pt = nsLayoutUtils::PointToGfxPoint(framePt, A2D);
-      if (f->GetTextRun(nsTextFrame::eInflated)->IsRightToLeft()) {
+      if (textRun->IsRightToLeft()) {
         pt.x += gfxFloat(f->GetSize().width) / A2D;
       }
       gfxMatrix mat = aCtx->CurrentMatrixDouble()
