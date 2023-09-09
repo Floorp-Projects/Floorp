@@ -778,7 +778,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
                 &mut map,
                 self.inherited.map(|m| &**m),
                 &self.seen,
-                self.stylist.device(),
+                self.stylist,
             );
         }
 
@@ -803,7 +803,7 @@ fn substitute_all(
     custom_properties_map: &mut CustomPropertiesMap,
     inherited: Option<&CustomPropertiesMap>,
     seen: &PrecomputedHashSet<&Name>,
-    device: &Device,
+    stylist: &Stylist,
 ) {
     // The cycle dependencies removal in this function is a variant
     // of Tarjan's algorithm. It is mostly based on the pseudo-code
@@ -827,7 +827,6 @@ fn substitute_all(
     }
     /// Context struct for traversing the variable graph, so that we can
     /// avoid referencing all the fields multiple times.
-    #[derive(Debug)]
     struct Context<'a> {
         /// Number of variables visited. This is used as the order index
         /// when we visit a new unresolved variable.
@@ -842,8 +841,9 @@ fn substitute_all(
         map: &'a mut CustomPropertiesMap,
         /// The inherited custom properties to handle wide keywords.
         inherited: Option<&'a CustomPropertiesMap>,
-        /// To resolve the environment to substitute `env()` variables.
-        device: &'a Device,
+        /// The stylist is used to get registered properties, and to resolve the environment to
+        /// substitute `env()` variables.
+        stylist: &'a Stylist,
     }
 
     /// This function combines the traversal for cycle removal and value
@@ -982,7 +982,7 @@ fn substitute_all(
             &value,
             &mut context.map,
             context.inherited,
-            &context.device,
+            context.stylist.device(),
         );
 
         // All resolved, so return the signal value.
@@ -1000,7 +1000,7 @@ fn substitute_all(
             var_info: SmallVec::new(),
             map: custom_properties_map,
             inherited,
-            device,
+            stylist,
         };
         traverse(name, &mut context);
     }
