@@ -4,8 +4,11 @@
 
 //! Parsing for registered custom properties.
 
-use super::syntax::{
-    data_type::DataType, Component as SyntaxComponent, ComponentName, Descriptor, Multiplier,
+use super::{
+    registry::PropertyRegistration,
+    syntax::{
+        data_type::DataType, Component as SyntaxComponent, ComponentName, Descriptor, Multiplier,
+    },
 };
 use crate::custom_properties::ComputedValue as ComputedPropertyValue;
 use crate::parser::{Parse, ParserContext};
@@ -68,6 +71,21 @@ pub enum ComputedValue {
 }
 
 impl ComputedValue {
+    /// Parse and validate a registered custom property, given a string and a property registration.
+    pub fn compute<'i, 't>(
+        input: &mut CSSParser<'i, 't>,
+        registration: &PropertyRegistration,
+    ) -> Result<(), StyleParseError<'i>> {
+        Self::parse(
+            input,
+            &registration.syntax,
+            &registration.url_data,
+            AllowComputationallyDependent::Yes,
+        )?;
+        // TODO(zrhoffman, 1846632): Return a CSS string for the computed value.
+        Ok(())
+    }
+
     /// Parse and validate a registered custom property value according to its syntax descriptor,
     /// and check for computational independence.
     pub fn parse<'i, 't>(
