@@ -273,7 +273,7 @@ already_AddRefed<MediaRawData> OggCodecState::PacketOutAsMediaRawData() {
   NS_ASSERTION(endTimestamp.IsPositiveOrZero(), "timestamp invalid");
 
   TimeUnit duration = PacketDuration(packet.get());
-  if (!duration.IsPositiveOrZero()) {
+  if (!duration.IsValid() || !duration.IsPositiveOrZero()) {
     NS_WARNING(
         nsPrintfCString("duration invalid! (%s)", duration.ToString().get())
             .get());
