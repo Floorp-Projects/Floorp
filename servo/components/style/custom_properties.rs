@@ -687,7 +687,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
                         unparsed_value,
                         map,
                         self.inherited.map(|m| &**m),
-                        self.stylist.device(),
+                        self.stylist,
                     );
                     return;
                 }
@@ -982,7 +982,7 @@ fn substitute_all(
             &value,
             &mut context.map,
             context.inherited,
-            context.stylist.device(),
+            context.stylist,
         );
 
         // All resolved, so return the signal value.
@@ -1012,7 +1012,7 @@ fn substitute_references_in_value_and_apply(
     value: &VariableValue,
     custom_properties: &mut CustomPropertiesMap,
     inherited: Option<&CustomPropertiesMap>,
-    device: &Device,
+    stylist: &Stylist,
 ) {
     debug_assert!(value.has_references());
 
@@ -1028,7 +1028,7 @@ fn substitute_references_in_value_and_apply(
             &mut position,
             &mut computed_value,
             custom_properties,
-            device,
+            stylist,
         );
 
         let last_token_type = match last_token_type {
@@ -1099,7 +1099,7 @@ fn substitute_block<'i>(
     position: &mut (SourcePosition, TokenSerializationType),
     partial_computed_value: &mut ComputedValue,
     custom_properties: &CustomPropertiesMap,
-    device: &Device,
+    stylist: &Stylist,
 ) -> Result<TokenSerializationType, ParseError<'i>> {
     let mut last_token_type = TokenSerializationType::nothing();
     let mut set_position_at_next_iteration = false;
@@ -1145,6 +1145,7 @@ fn substitute_block<'i>(
 
                     let env_value;
                     let value = if is_env {
+                        let device = stylist.device();
                         if let Some(v) = device.environment().get(&name, device) {
                             env_value = v;
                             Some(&env_value)
@@ -1179,7 +1180,7 @@ fn substitute_block<'i>(
                             &mut position,
                             partial_computed_value,
                             custom_properties,
-                            device,
+                            stylist,
                         )?;
                         partial_computed_value.push_from(input, position, last_token_type)?;
                     }
@@ -1197,7 +1198,7 @@ fn substitute_block<'i>(
                         position,
                         partial_computed_value,
                         custom_properties,
-                        device,
+                        stylist,
                     )
                 })?;
                 // It's the same type for CloseCurlyBracket and CloseSquareBracket.
@@ -1223,7 +1224,7 @@ pub fn substitute<'i>(
     input: &'i str,
     first_token_type: TokenSerializationType,
     computed_values_map: Option<&Arc<CustomPropertiesMap>>,
-    device: &Device,
+    stylist: &Stylist,
 ) -> Result<String, ParseError<'i>> {
     let mut substituted = ComputedValue::empty();
     let mut input = ParserInput::new(input);
@@ -1239,7 +1240,7 @@ pub fn substitute<'i>(
         &mut position,
         &mut substituted,
         &custom_properties,
-        device,
+        stylist,
     )?;
     substituted.push_from(&input, position, last_token_type)?;
     Ok(substituted.css)
