@@ -57,6 +57,8 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
   NS_DECL_NSICLONEABLEINPUTSTREAM
 
  private:
+  void InitStreams();
+
   struct MOZ_STACK_CLASS ReadSegmentsState {
     nsCOMPtr<nsIInputStream> mThisStream;
     nsWriteSegmentFun mWriter{nullptr};
@@ -75,10 +77,12 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
   nsTArray<HeaderEntry> mHeaders;
 
   nsCOMPtr<nsIInputStream> mStream;
-  Atomic<bool, mozilla::Relaxed> mStartedReading{false};
+  bool mStartedReading{false};
 
-  mozilla::Mutex mMutex{"nsMIMEInputStream::mMutex"};
-  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback MOZ_GUARDED_BY(mMutex);
+  mozilla::Mutex mMutex MOZ_UNANNOTATED{"nsMIMEInputStream::mMutex"};
+
+  // This is protected by mutex.
+  nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
 
   // This is protected by mutex.
   nsCOMPtr<nsIInputStreamLengthCallback> mAsyncInputStreamLengthCallback;
@@ -154,10 +158,18 @@ nsMIMEInputStream::GetData(nsIInputStream** aStream) {
   return NS_OK;
 }
 
+// set up the internal streams
+void nsMIMEInputStream::InitStreams() {
+  NS_ASSERTION(!mStartedReading,
+               "Don't call initStreams twice without rewinding");
+
+  mStartedReading = true;
+}
+
 #define INITSTREAMS                               \
   if (!mStartedReading) {                         \
     NS_ENSURE_TRUE(mStream, NS_ERROR_UNEXPECTED); \
-    mStartedReading = true;                       \
+    InitStreams();                                \
   }
 
 // Reset mStartedReading when Seek-ing to start
@@ -203,7 +215,7 @@ nsresult nsMIMEInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
 }
 
 /**
- * Forward everything else to the mStream after calling INITSTREAMS
+ * Forward everything else to the mStream after calling InitStreams()
  */
 
 // nsIInputStream
@@ -493,7 +505,7 @@ nsMIMEInputStream::Clone(nsIInputStream** aResult) {
   }
 
   static_cast<nsMIMEInputStream*>(mimeStream.get())->mStartedReading =
-      static_cast<bool>(mStartedReading);
+      mStartedReading;
 
   mimeStream.forget(aResult);
   return NS_OK;
