@@ -585,6 +585,32 @@ fn parse_fallback<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), ParseError<'
     })
 }
 
+fn parse_and_substitute_fallback<'i>(
+    input: &mut Parser<'i, '_>,
+    custom_properties: &CustomPropertiesMap,
+    stylist: &Stylist,
+) -> Result<ComputedValue, ParseError<'i>> {
+    input.skip_whitespace();
+    let after_comma = input.state();
+    let first_token_type = input
+        .next_including_whitespace_and_comments()
+        .ok()
+        .map_or_else(TokenSerializationType::nothing, |t| t.serialization_type());
+    input.reset(&after_comma);
+    let mut position = (after_comma.position(), first_token_type);
+
+    let mut fallback = ComputedValue::empty();
+    let last_token_type = substitute_block(
+        input,
+        &mut position,
+        &mut fallback,
+        custom_properties,
+        stylist,
+    )?;
+    fallback.push_from(input, position, last_token_type)?;
+    Ok(fallback)
+}
+
 // If the var function is valid, return Ok((custom_property_name, fallback))
 fn parse_var_function<'i, 't>(
     input: &mut Parser<'i, 't>,
@@ -1167,7 +1193,10 @@ fn substitute_block<'i>(
                     };
 
                     let env_value;
+
+                    let registration;
                     let value = if is_env {
+                        registration = None;
                         let device = stylist.device();
                         if let Some(v) = device.environment().get(&name, device) {
                             env_value = v;
@@ -1176,36 +1205,56 @@ fn substitute_block<'i>(
                             None
                         }
                     } else {
+                        registration = stylist.get_custom_property_registration(&name);
                         custom_properties.get(&name).map(|v| &**v)
                     };
 
                     if let Some(v) = value {
                         last_token_type = v.last_token_type;
+
+                        if let Some(registration) = registration {
+                            if input.try_parse(|input| input.expect_comma()).is_ok() {
+                                let fallback = parse_and_substitute_fallback(
+                                    input,
+                                    custom_properties,
+                                    stylist,
+                                )?;
+                                let mut fallback_input = ParserInput::new(&fallback.css);
+                                let mut fallback_input = Parser::new(&mut fallback_input);
+                                let compute_result = ComputedRegisteredValue::compute(
+                                    &mut fallback_input,
+                                    registration,
+                                );
+                                if compute_result.is_err() {
+                                    return Err(input
+                                        .new_custom_error(StyleParseErrorKind::UnspecifiedError));
+                                }
+                            }
+                        } else {
+                            // Skip over the fallback, as `parse_nested_block` would return `Err`
+                            // if we don't consume all of `input`.
+                            // FIXME: Add a specialized method to cssparser to do this with less work.
+                            while input.next().is_ok() {}
+                        }
                         partial_computed_value.push_variable(input, v)?;
-                        // Skip over the fallback, as `parse_nested_block` would return `Err`
-                        // if we don't consume all of `input`.
-                        // FIXME: Add a specialized method to cssparser to do this with less work.
-                        while input.next().is_ok() {}
                     } else {
                         input.expect_comma()?;
-                        input.skip_whitespace();
-                        let after_comma = input.state();
-                        let first_token_type = input
-                            .next_including_whitespace_and_comments()
-                            .ok()
-                            .map_or_else(TokenSerializationType::nothing, |t| {
-                                t.serialization_type()
-                            });
-                        input.reset(&after_comma);
-                        let mut position = (after_comma.position(), first_token_type);
-                        last_token_type = substitute_block(
-                            input,
-                            &mut position,
-                            partial_computed_value,
-                            custom_properties,
-                            stylist,
-                        )?;
-                        partial_computed_value.push_from(input, position, last_token_type)?;
+                        let fallback =
+                            parse_and_substitute_fallback(input, custom_properties, stylist)?;
+                        last_token_type = fallback.last_token_type;
+
+                        if let Some(registration) = registration {
+                            let mut fallback_input = ParserInput::new(&fallback.css);
+                            let mut fallback_input = Parser::new(&mut fallback_input);
+                            let compute_result =
+                                ComputedRegisteredValue::compute(&mut fallback_input, registration);
+                            if compute_result.is_err() {
+                                return Err(
+                                    input.new_custom_error(StyleParseErrorKind::UnspecifiedError)
+                                );
+                            }
+                        }
+                        partial_computed_value.push_variable(&input, &fallback)?;
                     }
                     Ok(())
                 })?;
