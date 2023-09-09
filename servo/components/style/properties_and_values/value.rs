@@ -75,13 +75,16 @@ impl ComputedValue {
     pub fn compute<'i, 't>(
         input: &mut CSSParser<'i, 't>,
         registration: &PropertyRegistration,
-    ) -> Result<(), StyleParseError<'i>> {
-        Self::parse(
+    ) -> Result<(), ()> {
+        let parse_result = Self::parse(
             input,
             &registration.syntax,
             &registration.url_data,
             AllowComputationallyDependent::Yes,
-        )?;
+        );
+        if parse_result.is_err() {
+            return Err(());
+        }
         // TODO(zrhoffman, 1846632): Return a CSS string for the computed value.
         Ok(())
     }
