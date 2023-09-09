@@ -157,7 +157,7 @@
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Embojuajúke %1$s rehe</string>
     <!-- This is the caption for not yet supported screen caption -->
-    <string name="mozac_feature_addons_not_yet_supported_caption">Firefox moĩmbaha rembiporupyahu oñemoĩporãve. Ko’ã moĩmbaha oipuru frameworks ndojokupytýiva Firefox 75 ha ramovegua ndive.</string>
+    <string name="mozac_feature_addons_not_yet_supported_caption">Firefox moĩmbaha rembiporupyahu oñemoĩporãve. Ko’ã moĩmbaha oiporu frameworks ndojokupytýiva Firefox 75 ha ramovegua ndive.</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption2">Ko’ág̃a romoheñóima pytyvõrã poravopy ñepyrũrãva Jepysokue ñe’ẽporãmbyre.</string>
     <!-- This is the caption for the add-on installation progress overlay -->

@@ -56,8 +56,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Opanungáva…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[<label><b>%1$s</b>oguereko peteĩ ñe’ẽñemi ñeñangarekorã hérava HTTP Strict Transport Security (HSTS), he’iséva <b>%2$s</b> ikatuha oñembojoaju hese ñeñangareko reheve añoite. Ndaikatúi remoĩ peteĩ oĩ’ỹva reike hag̃ua ko tendápe.]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
 <label> <b>%1$s</b> oguereko peteĩ ñe’ẽñemi ñeñangarekorã hérava HTTP Strict Transport Security (HSTS), he’iséva <b>%2$s</b> ikatuha oñembojoaju hekopete añoite. Ndaikatúi remoĩ peteĩ oĩ’ỹva reike hag̃ua ko tendápe. </label>
     ]]></string>
@@ -165,7 +163,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Tetepy mbopapapy jejavy</string>
 
-    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Ko kuatiarogue eñeha’ãva ehecha ndojehechaukakuaái oipuru rupi ñeikumby oiko’ỹvaa térã ipu’aka’ỹva.</p>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Ko kuatiarogue eñeha’ãva ehecha ndojehechaukakuaái oiporu rupi ñeikumby oiko’ỹvaa térã ipu’aka’ỹva.</p>
       <ul>
         <li>Eñe’ẽ ñanduti renda jára ndive emombe’u hag̃ua chupekuéra ko apañuãi.</li>
       </ul>]]></string>
@@ -229,7 +227,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Mohendahavusu proxy ombotove jeike</string>
 
-    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Ko kundahára oñemboheko oipuru hag̃ua mohendahavusu proxy, hákatu pe proxy omboyke jeike.</p>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Ko kundahára oñemboheko oiporu hag̃ua mohendahavusu proxy, hákatu pe proxy omboyke jeike.</p>
       <ul>
         <li>Oĩporãpa proxy ñemboheko kundahárape. Ehechajey ñemboheko ha eha’ãjey.</li>
         <li>¿Omoneĩpa proxy mba’epuru jeike ko ñanduti guive?</li>
@@ -239,7 +237,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">Ndojejuhúi mohendahavusu proxy</string>
 
-    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Ko kundahára oñemboheko oipuru hag̃ua mohendahavusu proxy, hákatu ndojejuhúi mohendahavusu proxy?</p>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Ko kundahára oñemboheko oiporu hag̃ua mohendahavusu proxy, hákatu ndojejuhúi mohendahavusu proxy?</p>
       <ul>
         <li>Oĩporã proxy kundahára ñemboheko? Ehechajey ñemboheko ha eha’ãjey.</li>
         <li>¿Pe mohendaha ojoajuhína ñanduti oikóvare?</li>
