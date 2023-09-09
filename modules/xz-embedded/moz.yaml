@@ -1,0 +1,74 @@
+schema: 1
+
+bugzilla:
+  product: GeckoView
+  component: General
+
+origin:
+  name: xz embedded
+  description: https://tukaani.org/xz/embedded.html
+
+  url: https://tukaani.org/xz/embedded.html
+
+  release: b'e75f4eb79165213a02d567940d344f5c2ff1be03' (b'2015-11-03 21:27:39 +0200').
+  revision: b'e75f4eb79165213a02d567940d344f5c2ff1be03'
+
+  license: Public Domain
+  license-file: COPYING
+
+vendoring:
+  url: http://git.tukaani.org/xz-embedded.git
+  source-hosting: git
+  tracking: commit
+
+  exclude:
+    - ".*"
+    - "*"
+    - "**"
+
+  keep:
+    - COPYING
+
+  include:
+    - userspace/xz_config.h
+    - linux/include/linux/xz.h
+    - linux/lib/xz/xz_private.h
+    - linux/lib/xz/xz_lzma2.h
+    - linux/lib/xz/xz_stream.h
+    - linux/lib/xz/xz_crc32.c
+    - linux/lib/xz/xz_crc64.c
+    - linux/lib/xz/xz_dec_bcj.c
+    - linux/lib/xz/xz_dec_stream.c
+    - linux/lib/xz/xz_dec_lzma2.c
+
+  update-actions:
+    - action: move-file
+      from: '{vendor_dir}/userspace/xz_config.h'
+      to: '{vendor_dir}/src/'
+    - action: move-file
+      from: '{vendor_dir}/linux/include/linux/xz.h'
+      to: '{vendor_dir}/src/'
+    - action: move-file
+      from: '{vendor_dir}/linux/lib/xz/xz_private.h'
+      to: '{vendor_dir}/src/'
+    - action: move-file
+      from: '{vendor_dir}/linux/lib/xz/xz_lzma2.h'
+      to: '{vendor_dir}/src/'
+    - action: move-file
+      from: '{vendor_dir}/linux/lib/xz/xz_stream.h'
+      to: '{vendor_dir}/src/'
+    - action: move-file
+      from: '{vendor_dir}/linux/lib/xz/xz_crc32.c'
+      to: '{vendor_dir}/src/'
+    - action: move-file
+      from: '{vendor_dir}/linux/lib/xz/xz_crc64.c'
+      to: '{vendor_dir}/src/'
+    - action: move-file
+      from: '{vendor_dir}/linux/lib/xz/xz_dec_bcj.c'
+      to: '{vendor_dir}/src/'
+    - action: move-file
+      from: '{vendor_dir}/linux/lib/xz/xz_dec_stream.c'
+      to: '{vendor_dir}/src/'
+    - action: move-file
+      from: '{vendor_dir}/linux/lib/xz/xz_dec_lzma2.c'
+      to: '{vendor_dir}/src/'
