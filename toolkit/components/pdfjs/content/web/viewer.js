@@ -8562,7 +8562,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.11.16';
+    const viewerVersion = '3.11.42';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -11259,33 +11259,36 @@ class TextAccessibilityManager {
       id
     } = element;
     if (!id) {
-      return;
+      return null;
     }
     if (!this.#enabled) {
       this.#waitingElements.set(element, isRemovable);
-      return;
+      return null;
     }
     if (isRemovable) {
       this.removePointerInTextLayer(element);
     }
     const children = this.#textChildren;
     if (!children || children.length === 0) {
-      return;
+      return null;
     }
     const index = (0, _ui_utils.binarySearchFirstItem)(children, node => TextAccessibilityManager.#compareElementPositions(element, node) < 0);
     const nodeIndex = Math.max(0, index - 1);
-    this.#addIdToAriaOwns(id, children[nodeIndex]);
+    const child = children[nodeIndex];
+    this.#addIdToAriaOwns(id, child);
     this.#textNodes.set(id, nodeIndex);
+    const parent = child.parentNode;
+    return parent?.classList.contains("markedContent") ? parent.id : null;
   }
   moveElementInDOM(container, element, contentElement, isRemovable) {
-    this.addPointerInTextLayer(contentElement, isRemovable);
+    const id = this.addPointerInTextLayer(contentElement, isRemovable);
     if (!container.hasChildNodes()) {
       container.append(element);
-      return;
+      return id;
     }
     const children = Array.from(container.childNodes).filter(node => node !== element);
     if (children.length === 0) {
-      return;
+      return id;
     }
     const elementToCompare = contentElement || element;
     const index = (0, _ui_utils.binarySearchFirstItem)(children, node => TextAccessibilityManager.#compareElementPositions(elementToCompare, node) < 0);
@@ -11294,6 +11297,7 @@ class TextAccessibilityManager {
     } else {
       children[index - 1].after(element);
     }
+    return id;
   }
 }
 exports.TextAccessibilityManager = TextAccessibilityManager;
@@ -12708,8 +12712,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.11.16';
-const pdfjsBuild = '87ea2ed4e';
+const pdfjsVersion = '3.11.42';
+const pdfjsBuild = 'cf7efdb04';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
