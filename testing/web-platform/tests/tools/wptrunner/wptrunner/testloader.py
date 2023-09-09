@@ -149,15 +149,17 @@ def read_include_from_file(file):
 
 
 def update_include_for_groups(test_groups, include):
+    new_include = []
     if include is None:
         # We're just running everything
-        return
-    new_include = []
-    for item in include:
-        if item in test_groups.tests_by_group:
-            new_include.extend(test_groups.tests_by_group[item])
-        else:
-            new_include.append(item)
+        for tests in test_groups.tests_by_group.values():
+            new_include.extend(tests)
+    else:
+        for item in include:
+            if item in test_groups.tests_by_group:
+                new_include.extend(test_groups.tests_by_group[item])
+            else:
+                new_include.append(item)
     return new_include
 
 
@@ -658,7 +660,6 @@ class GroupFileTestSource(TestSource):
 
     @classmethod
     def tests_by_group(cls, tests_by_type, **kwargs):
-        logger = kwargs["logger"]
         test_groups = kwargs["test_groups"]
 
         tests_by_group = defaultdict(list)
@@ -667,7 +668,7 @@ class GroupFileTestSource(TestSource):
                 try:
                     group = test_groups.group_by_test[(subsuite, test.id)]
                 except KeyError:
-                    logger.error("%s is missing from test groups file" % test.id)
+                    print(f"{test.id} is missing from test groups file")
                     raise
                 if subsuite:
                     group_name = f"{subsuite}:{group}"
