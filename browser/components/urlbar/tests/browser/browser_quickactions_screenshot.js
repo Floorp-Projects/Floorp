@@ -7,6 +7,8 @@
 
 "use strict";
 
+requestLongerTimeout(3);
+
 const DUMMY_PAGE =
   "https://example.com/browser/browser/base/content/test/general/dummy_page.html";
 
