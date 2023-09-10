@@ -18,6 +18,10 @@
 
 #ifndef XP_LINUX
 // We still support libstd++ versions without codecvt support on Linux.
+//
+// When the minimum supported libstd++ version is bumped to 3.4.21, we can
+// enable the codecvt code path for Linux, too. This should happen in 2024 when
+// support for CentOS 7 is removed.
 #  include <codecvt>
 #endif
 #include <cwchar>
@@ -658,6 +662,7 @@ JS_PUBLIC_API JS::UniqueChars JS::EncodeWideToUtf8(JSContext* cx,
 
   // STL returns |codecvt_base::partial| for empty strings.
   if (len == 0) {
+    utf8[0] = '\0';  // Explicit null-termination required.
     return utf8;
   }
 
@@ -687,6 +692,10 @@ JS_PUBLIC_API JS::UniqueChars JS::EncodeWideToUtf8(JSContext* cx,
 
   return utf8;
 #else
+  // Alternative code path for Linux, because we still support libstd++ versions
+  // without codecvt support. See also the top comment where <codecvt> is
+  // included.
+
   static_assert(sizeof(wchar_t) == 4,
                 "Assume wchar_t is UTF-32 on Linux systems");
 
@@ -772,6 +781,7 @@ JS_PUBLIC_API JS::UniqueWideChars JS::EncodeUtf8ToWide(JSContext* cx,
 
   // STL returns |codecvt_base::partial| for empty strings.
   if (len == 0) {
+    wideChars[0] = '\0';  // Explicit null-termination required.
     return wideChars;
   }
 
@@ -791,6 +801,10 @@ JS_PUBLIC_API JS::UniqueWideChars JS::EncodeUtf8ToWide(JSContext* cx,
 
   return wideChars;
 #else
+  // Alternative code path for Linux, because we still support libstd++ versions
+  // without codecvt support. See also the top comment where <codecvt> is
+  // included.
+
   static_assert(sizeof(wchar_t) == 4,
                 "Assume wchar_t is UTF-32 on Linux systems");
 
