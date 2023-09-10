@@ -304,7 +304,7 @@ let ShellServiceInternal = {
         arguments: exeArgs,
       });
       telemetryResult = "ErrOther";
-      this._handleWDBAResult(exeProcess);
+      await this._handleWDBAResult(exeProcess);
       telemetryResult = "Success";
     } catch (ex) {
       if (ex instanceof WDBAError) {
@@ -342,7 +342,7 @@ let ShellServiceInternal = {
         ],
       });
       telemetryResult = "ErrOther";
-      this._handleWDBAResult(exeProcess);
+      await this._handleWDBAResult(exeProcess);
       telemetryResult = "Success";
     } catch (ex) {
       if (ex instanceof WDBAError) {
