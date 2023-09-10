@@ -1464,6 +1464,10 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   margin: auto !important;
 }
 
+[soundplaying] .tab-icon-stack[indicator-replaces-favicon] > :not(.tab-icon-overlay){
+  opacity: 1 !important;
+}
+
 
 .tab-throbber,
 .tab-throbber-fallback,
