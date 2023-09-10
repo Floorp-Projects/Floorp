@@ -4981,6 +4981,10 @@ var XULBrowserWindow = {
       return;
     }
 
+    if (!document.hasFocus()) {
+      return;
+    }
+
     let elt = document.getElementById("remoteBrowserTooltip");
     elt.label = tooltip;
     elt.style.direction = direction;
