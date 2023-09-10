@@ -537,8 +537,9 @@ class AddonInstallObserver {
 
   async onInstallationFailed(aAddon, aAddonName, aError) {
     // aAddon could be null if we have a network error where we can't download the xpi file.
+    // aAddon could also be a valid object without an ID when the xpi file is corrupt.
     let extension = null;
-    if (aAddon !== null) {
+    if (aAddon?.id) {
       extension = await exportExtension(
         aAddon,
         aAddon.userPermissions,
