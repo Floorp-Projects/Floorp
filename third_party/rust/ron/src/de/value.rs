@@ -5,8 +5,10 @@ use serde::{
     Deserialize, Deserializer,
 };
 
-use crate::error::SpannedResult;
-use crate::value::{Map, Number, Value};
+use crate::{
+    error::SpannedResult,
+    value::{Map, Number, Value},
+};
 
 impl std::str::FromStr for Value {
     type Err = crate::error::SpannedError;
@@ -181,8 +183,9 @@ impl<'de> Visitor<'de> for ValueVisitor {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::str::FromStr;
+
+    use super::*;
 
     fn eval(s: &str) -> Value {
         s.parse().expect("Failed to parse")

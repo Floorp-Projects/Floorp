@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use serde_bytes;
+use serde_derive::Deserialize;
 
 use crate::{
     de::from_str,
@@ -162,8 +162,9 @@ fn err<T>(kind: Error, line: usize, col: usize) -> SpannedResult<T> {
 
 #[test]
 fn test_err_wrong_value() {
-    use self::Error::*;
     use std::collections::HashMap;
+
+    use self::Error::*;
 
     assert_eq!(from_str::<f32>("'c'"), err(ExpectedFloat, 1, 1));
     assert_eq!(from_str::<String>("'c'"), err(ExpectedString, 1, 1));

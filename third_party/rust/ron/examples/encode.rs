@@ -1,6 +1,7 @@
+use std::{collections::HashMap, iter::FromIterator};
+
 use ron::ser::{to_string_pretty, PrettyConfig};
 use serde::Serialize;
-use std::{collections::HashMap, iter::FromIterator};
 
 #[derive(Serialize)]
 struct Config {

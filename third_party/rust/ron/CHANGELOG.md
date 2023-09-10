@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.8.1] - 2023-08-17
+- Fix issues [#277](https://github.com/ron-rs/ron/issues/277) and [#405](https://github.com/ron-rs/ron/issues/405) with `Value::Map` `IntoIter` and extraneous item check for `Value::Seq` ([#406](https://github.com/ron-rs/ron/pull/406))
+- Fix issue [#401](https://github.com/ron-rs/ron/issues/401) with correct raw struct name identifier parsing ([#402](https://github.com/ron-rs/ron/pull/402))
+- Fix issue [#410](https://github.com/ron-rs/ron/issues/410) trailing comma parsing in tuples and `Some` ([#412](https://github.com/ron-rs/ron/pull/412))
+- Error instead of panic when deserializing non-identifiers as field names ([#415](https://github.com/ron-rs/ron/pull/415))
+- [Non-API] Breaking: Fix issue [#307](https://github.com/ron-rs/ron/issues/307) stack overflow with explicit recursion limits in serialising and deserialising ([#420](https://github.com/ron-rs/ron/pull/420))
+- Fix issue [#423](https://github.com/ron-rs/ron/issues/423) deserialising an identifier into a borrowed str ([#424](https://github.com/ron-rs/ron/pull/424))
+- Bump MSRV to 1.57.0 and bump dependency: `base64` to 0.20 ([#431](https://github.com/ron-rs/ron/pull/431))
+- Bump dependency `base64` to 0.21 ([#433](https://github.com/ron-rs/ron/pull/433))
+- Depend on `serde_derive` directly to potentially enable more compilation parallelism ([#441](https://github.com/ron-rs/ron/pull/441))
+- [Non-API] Breaking: Bump `bitflags` dependency to 2.0, changes `serde` impls of `Extensions` ([#443](https://github.com/ron-rs/ron/pull/443))
+- Add `Map::retain` method ([#460](https://github.com/ron-rs/ron/pull/460))
+- Bump MSRV to 1.64.0 and bump dependency: `indexmap` to 2.0 ([#459](https://github.com/ron-rs/ron/pull/459))
+
 ## [0.8.0] - 2022-08-17
 
 - Bump dependencies: `bitflags` to 1.3, `indexmap` to 1.9 ([#399](https://github.com/ron-rs/ron/pull/399))

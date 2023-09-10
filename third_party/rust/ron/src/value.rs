@@ -9,13 +9,13 @@ use std::{
 
 use serde::{
     de::{DeserializeOwned, DeserializeSeed, Deserializer, MapAccess, SeqAccess, Visitor},
-    forward_to_deserialize_any, Deserialize, Serialize,
+    forward_to_deserialize_any,
 };
+use serde_derive::{Deserialize, Serialize};
 
-use crate::de::Error;
-use crate::error::Result;
+use crate::{de::Error, error::Result};
 
-/// A `Value` to `Value` map.
+/// A [`Value`] to [`Value`] map.
 ///
 /// This structure either uses a [BTreeMap](std::collections::BTreeMap) or the
 /// [IndexMap](indexmap::IndexMap) internally.
@@ -26,7 +26,7 @@ use crate::error::Result;
 pub struct Map(MapInner);
 
 impl Map {
-    /// Creates a new, empty `Map`.
+    /// Creates a new, empty [`Map`].
     pub fn new() -> Map {
         Default::default()
     }
@@ -76,11 +76,34 @@ impl Map {
     pub fn values_mut(&mut self) -> impl Iterator<Item = &mut Value> + DoubleEndedIterator {
         self.0.values_mut()
     }
+
+    /// Retains only the elements specified by the `keep` predicate.
+    ///
+    /// In other words, remove all pairs `(k, v)` for which `keep(&k, &mut v)`
+    /// returns `false`.
+    ///
+    /// The elements are visited in iteration order.
+    pub fn retain<F>(&mut self, keep: F)
+    where
+        F: FnMut(&Value, &mut Value) -> bool,
+    {
+        self.0.retain(keep);
+    }
 }
 
 impl FromIterator<(Value, Value)> for Map {
     fn from_iter<T: IntoIterator<Item = (Value, Value)>>(iter: T) -> Self {
         Map(MapInner::from_iter(iter))
+    }
+}
+
+impl IntoIterator for Map {
+    type Item = (Value, Value);
+
+    type IntoIter = <MapInner as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 
@@ -131,20 +154,20 @@ type MapInner = std::collections::BTreeMap<Value, Value>;
 #[cfg(feature = "indexmap")]
 type MapInner = indexmap::IndexMap<Value, Value>;
 
-/// A wrapper for a number, which can be either `f64` or `i64`.
+/// A wrapper for a number, which can be either [`f64`] or [`i64`].
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Hash, Ord)]
 pub enum Number {
     Integer(i64),
     Float(Float),
 }
 
-/// A wrapper for `f64`, which guarantees that the inner value
-/// is finite and thus implements `Eq`, `Hash` and `Ord`.
+/// A wrapper for [`f64`], which guarantees that the inner value
+/// is finite and thus implements [`Eq`], [`Hash`] and [`Ord`].
 #[derive(Copy, Clone, Debug)]
 pub struct Float(f64);
 
 impl Float {
-    /// Construct a new `Float`.
+    /// Construct a new [`Float`].
     pub fn new(v: f64) -> Self {
         Float(v)
     }
@@ -161,8 +184,8 @@ impl Number {
         v.into()
     }
 
-    /// Returns the `f64` representation of the number regardless of whether the number is stored
-    /// as a float or integer.
+    /// Returns the [`f64`] representation of the [`Number`] regardless of
+    /// whether the number is stored as a float or integer.
     ///
     /// # Example
     ///
@@ -177,7 +200,7 @@ impl Number {
         self.map_to(|i| i as f64, |f| f)
     }
 
-    /// If the `Number` is a float, return it. Otherwise return `None`.
+    /// If the [`Number`] is a float, return it. Otherwise return [`None`].
     ///
     /// # Example
     ///
@@ -192,7 +215,7 @@ impl Number {
         self.map_to(|_| None, Some)
     }
 
-    /// If the `Number` is an integer, return it. Otherwise return `None`.
+    /// If the [`Number`] is an integer, return it. Otherwise return [`None`].
     ///
     /// # Example
     ///
@@ -248,8 +271,9 @@ impl From<i32> for Number {
     }
 }
 
-// The following number conversion checks if the integer fits losslessly into an i64, before
-// constructing a Number::Integer variant. If not, the conversion defaults to float.
+/// The following [`Number`] conversion checks if the integer fits losslessly
+/// into an [`i64`], before constructing a [`Number::Integer`] variant.
+/// If not, the conversion defaults to [`Number::Float`].
 
 impl From<u64> for Number {
     fn from(i: u64) -> Number {
@@ -262,9 +286,9 @@ impl From<u64> for Number {
 }
 
 /// Partial equality comparison
-/// In order to be able to use `Number` as a mapping key, NaN floating values
-/// wrapped in `Float` are equals to each other. It is not the case for
-/// underlying `f64` values itself.
+/// In order to be able to use [`Number`] as a mapping key, NaN floating values
+/// wrapped in [`Float`] are equal to each other. It is not the case for
+/// underlying [`f64`] values itself.
 impl PartialEq for Float {
     fn eq(&self, other: &Self) -> bool {
         self.0.is_nan() && other.0.is_nan() || self.0 == other.0
@@ -272,9 +296,9 @@ impl PartialEq for Float {
 }
 
 /// Equality comparison
-/// In order to be able to use `Float` as a mapping key, NaN floating values
-/// wrapped in `Float` are equals to each other. It is not the case for
-/// underlying `f64` values itself.
+/// In order to be able to use [`Float`] as a mapping key, NaN floating values
+/// wrapped in [`Float`] are equal to each other. It is not the case for
+/// underlying [`f64`] values itself.
 impl Eq for Float {}
 
 impl Hash for Float {
@@ -284,9 +308,11 @@ impl Hash for Float {
 }
 
 /// Partial ordering comparison
-/// In order to be able to use `Number` as a mapping key, NaN floating values
-/// wrapped in `Number` are equals to each other and are less then any other
-/// floating value. It is not the case for the underlying `f64` values themselves.
+/// In order to be able to use [`Number`] as a mapping key, NaN floating values
+/// wrapped in [`Number`] are equal to each other and are less then any other
+/// floating value. It is not the case for the underlying [`f64`] values
+/// themselves.
+///
 /// ```
 /// use ron::value::Number;
 /// assert!(Number::new(std::f64::NAN) < Number::new(std::f64::NEG_INFINITY));
@@ -304,10 +330,10 @@ impl PartialOrd for Float {
 }
 
 /// Ordering comparison
-/// In order to be able to use `Float` as a mapping key, NaN floating values
-/// wrapped in `Float` are equals to each other and are less then any other
-/// floating value. It is not the case for underlying `f64` values itself. See
-/// the `PartialEq` implementation.
+/// In order to be able to use [`Float`] as a mapping key, NaN floating values
+/// wrapped in [`Float`] are equal to each other and are less then any other
+/// floating value. It is not the case for underlying [`f64`] values itself.
+/// See the [`PartialEq`] implementation.
 impl Ord for Float {
     fn cmp(&self, other: &Self) -> Ordering {
         self.partial_cmp(other).expect("Bug: Contract violation")
@@ -327,7 +353,7 @@ pub enum Value {
 }
 
 impl Value {
-    /// Tries to deserialize this `Value` into `T`.
+    /// Tries to deserialize this [`Value`] into `T`.
     pub fn into_rust<T>(self) -> Result<T>
     where
         T: DeserializeOwned,
@@ -336,8 +362,8 @@ impl Value {
     }
 }
 
-/// Deserializer implementation for RON `Value`.
-/// This does not support enums (because `Value` doesn't store them).
+/// Deserializer implementation for RON [`Value`].
+/// This does not support enums (because [`Value`] does not store them).
 impl<'de> Deserializer<'de> for Value {
     type Error = Error;
 
@@ -354,18 +380,45 @@ impl<'de> Deserializer<'de> for Value {
         match self {
             Value::Bool(b) => visitor.visit_bool(b),
             Value::Char(c) => visitor.visit_char(c),
-            Value::Map(m) => visitor.visit_map(MapAccessor {
-                keys: m.keys().cloned().rev().collect(),
-                values: m.values().cloned().rev().collect(),
-            }),
+            Value::Map(m) => {
+                let old_len = m.len();
+
+                let mut items: Vec<(Value, Value)> = m.into_iter().collect();
+                items.reverse();
+
+                let value = visitor.visit_map(MapAccessor {
+                    items: &mut items,
+                    value: None,
+                })?;
+
+                if items.is_empty() {
+                    Ok(value)
+                } else {
+                    Err(Error::ExpectedDifferentLength {
+                        expected: format!("a map of length {}", old_len - items.len()),
+                        found: old_len,
+                    })
+                }
+            }
             Value::Number(Number::Float(ref f)) => visitor.visit_f64(f.get()),
             Value::Number(Number::Integer(i)) => visitor.visit_i64(i),
             Value::Option(Some(o)) => visitor.visit_some(*o),
             Value::Option(None) => visitor.visit_none(),
             Value::String(s) => visitor.visit_string(s),
             Value::Seq(mut seq) => {
+                let old_len = seq.len();
+
                 seq.reverse();
-                visitor.visit_seq(Seq { seq })
+                let value = visitor.visit_seq(Seq { seq: &mut seq })?;
+
+                if seq.is_empty() {
+                    Ok(value)
+                } else {
+                    Err(Error::ExpectedDifferentLength {
+                        expected: format!("a sequence of length {}", old_len - seq.len()),
+                        found: old_len,
+                    })
+                }
             }
             Value::Unit => visitor.visit_unit(),
         }
@@ -434,12 +487,12 @@ impl<'de> Deserializer<'de> for Value {
     }
 }
 
-struct MapAccessor {
-    keys: Vec<Value>,
-    values: Vec<Value>,
+struct MapAccessor<'a> {
+    items: &'a mut Vec<(Value, Value)>,
+    value: Option<Value>,
 }
 
-impl<'de> MapAccess<'de> for MapAccessor {
+impl<'a, 'de> MapAccess<'de> for MapAccessor<'a> {
     type Error = Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
@@ -447,28 +500,35 @@ impl<'de> MapAccess<'de> for MapAccessor {
         K: DeserializeSeed<'de>,
     {
         // The `Vec` is reversed, so we can pop to get the originally first element
-        self.keys
-            .pop()
-            .map_or(Ok(None), |v| seed.deserialize(v).map(Some))
+        match self.items.pop() {
+            Some((key, value)) => {
+                self.value = Some(value);
+                seed.deserialize(key).map(Some)
+            }
+            None => Ok(None),
+        }
     }
 
     fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value>
     where
         V: DeserializeSeed<'de>,
     {
-        // The `Vec` is reversed, so we can pop to get the originally first element
-        self.values
-            .pop()
-            .map(|v| seed.deserialize(v))
-            .expect("Contract violation")
+        match self.value.take() {
+            Some(value) => seed.deserialize(value),
+            None => panic!("Contract violation: value before key"),
+        }
+    }
+
+    fn size_hint(&self) -> Option<usize> {
+        Some(self.items.len())
     }
 }
 
-struct Seq {
-    seq: Vec<Value>,
+struct Seq<'a> {
+    seq: &'a mut Vec<Value>,
 }
 
-impl<'de> SeqAccess<'de> for Seq {
+impl<'a, 'de> SeqAccess<'de> for Seq<'a> {
     type Error = Error;
 
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
@@ -480,13 +540,19 @@ impl<'de> SeqAccess<'de> for Seq {
             .pop()
             .map_or(Ok(None), |v| seed.deserialize(v).map(Some))
     }
+
+    fn size_hint(&self) -> Option<usize> {
+        Some(self.seq.len())
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use serde::Deserialize;
     use std::{collections::BTreeMap, fmt::Debug};
+
+    use serde::Deserialize;
+
+    use super::*;
 
     fn assert_same<'de, T>(s: &'de str)
     where

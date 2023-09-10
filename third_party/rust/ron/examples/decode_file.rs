@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 
+use std::{collections::HashMap, fs::File};
+
 use ron::de::from_reader;
 use serde::Deserialize;
-use std::{collections::HashMap, fs::File};
 
 #[derive(Debug, Deserialize)]
 struct Config {

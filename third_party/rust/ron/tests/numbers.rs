@@ -1,5 +1,7 @@
-use ron::de::from_str;
-use ron::error::{Error, Position, SpannedError};
+use ron::{
+    de::from_str,
+    error::{Error, Position, SpannedError},
+};
 
 #[test]
 fn test_hex() {

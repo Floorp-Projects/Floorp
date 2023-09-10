@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![doc(html_root_url = "https://docs.rs/ron/0.8.0")]
+#![doc(html_root_url = "https://docs.rs/ron/0.8.1")]
 
 pub mod de;
 pub mod ser;

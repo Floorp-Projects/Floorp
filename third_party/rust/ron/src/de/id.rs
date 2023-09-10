@@ -40,35 +40,35 @@ impl<'a, 'b: 'a, 'c> de::Deserializer<'b> for &'c mut IdDeserializer<'a, 'b> {
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_i8<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_i16<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_i32<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_i64<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     #[cfg(feature = "integer128")]
@@ -76,35 +76,35 @@ impl<'a, 'b: 'a, 'c> de::Deserializer<'b> for &'c mut IdDeserializer<'a, 'b> {
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_u8<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_u16<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_u32<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_u64<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     #[cfg(feature = "integer128")]
@@ -112,105 +112,105 @@ impl<'a, 'b: 'a, 'c> de::Deserializer<'b> for &'c mut IdDeserializer<'a, 'b> {
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_f32<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_f64<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_char<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_string<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_bytes<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_byte_buf<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_option<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_unit<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_unit_struct<V>(self, _: &'static str, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_newtype_struct<V>(self, _: &'static str, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_seq<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_tuple<V>(self, _: usize, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_tuple_struct<V>(self, _: &'static str, _: usize, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_map<V>(self, _: V) -> Result<V::Value>
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_struct<V>(
@@ -222,7 +222,7 @@ impl<'a, 'b: 'a, 'c> de::Deserializer<'b> for &'c mut IdDeserializer<'a, 'b> {
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_enum<V>(
@@ -234,7 +234,7 @@ impl<'a, 'b: 'a, 'c> de::Deserializer<'b> for &'c mut IdDeserializer<'a, 'b> {
     where
         V: Visitor<'b>,
     {
-        unimplemented!("IdDeserializer may only be used for identifiers")
+        Err(Error::ExpectedIdentifier)
     }
 
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value>

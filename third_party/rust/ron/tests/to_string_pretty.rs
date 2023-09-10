@@ -1,5 +1,7 @@
-use ron::ser::{to_string_pretty, PrettyConfig};
-use ron::to_string;
+use ron::{
+    ser::{to_string_pretty, PrettyConfig},
+    to_string,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Deserialize, Serialize)]
