@@ -97,7 +97,7 @@ pub enum FontFaceSourceFormatKeyword {
 bitflags! {
     /// Flags for the @font-face tech() function, indicating font technologies
     /// required by the resource.
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, ToShmem)]
+    #[derive(ToShmem)]
     #[repr(C)]
     pub struct FontFaceSourceTechFlags: u16 {
         /// Font requires OpenType feature support.

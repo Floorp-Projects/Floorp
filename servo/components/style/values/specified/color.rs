@@ -1031,7 +1031,7 @@ impl Parse for CaretColor {
 bitflags! {
     /// Various flags to represent the color-scheme property in an efficient
     /// way.
-    #[derive(Clone, Copy, Default, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(Default, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
     #[repr(C)]
     #[value_info(other_values = "light,dark,only")]
     pub struct ColorSchemeFlags: u8 {

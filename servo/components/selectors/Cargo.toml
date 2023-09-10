@@ -18,7 +18,7 @@ path = "lib.rs"
 bench = []
 
 [dependencies]
-bitflags = "2"
+bitflags = "1.0"
 cssparser = "0.32"
 derive_more = { version = "0.99", default-features = false, features = ["add", "add_assign"] }
 fxhash = "0.2"

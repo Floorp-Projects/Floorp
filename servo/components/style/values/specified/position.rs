@@ -372,7 +372,7 @@ impl Side for VerticalPositionKeyword {
 bitflags! {
     /// Controls how the auto-placement algorithm works specifying exactly how auto-placed items
     /// get flowed into the grid.
-    #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
     #[value_info(other_values = "row,column,dense")]
     #[repr(C)]
     pub struct GridAutoFlow: u8 {
