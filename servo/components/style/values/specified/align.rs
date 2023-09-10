@@ -13,7 +13,7 @@ use style_traits::{CssWriter, KeywordsCollectFn, ParseError, SpecifiedValueInfo,
 
 bitflags! {
     /// Constants shared by multiple CSS Box Alignment properties
-    #[derive(Clone, Copy, Eq, MallocSizeOf, PartialEq, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(MallocSizeOf, ToComputedValue, ToResolvedValue, ToShmem)]
     #[repr(C)]
     pub struct AlignFlags: u8 {
         // Enumeration stored in the lower 5 bits:

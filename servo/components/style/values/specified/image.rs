@@ -208,7 +208,6 @@ pub type MozImageRect = generic::GenericMozImageRect<NumberOrPercentage, Specifi
 pub enum MozImageRect {}
 
 bitflags! {
-    #[derive(Clone, Copy)]
     struct ParseImageFlags: u8 {
         const FORBID_NONE = 1 << 0;
         const FORBID_IMAGE_SET = 1 << 1;

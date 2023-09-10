@@ -11,4 +11,4 @@ license = "MPL-2.0"
 path = "lib.rs"
 
 [dependencies]
-bitflags = "2"
+bitflags = "1.0"

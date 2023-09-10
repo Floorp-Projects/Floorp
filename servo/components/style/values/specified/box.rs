@@ -1022,7 +1022,7 @@ impl WillChange {
 
 bitflags! {
     /// The change bits that we care about.
-    #[derive(Clone, Copy, Default, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(Default, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
     #[repr(C)]
     pub struct WillChangeBits: u16 {
         /// Whether a property which can create a stacking context **on any
@@ -1133,7 +1133,7 @@ impl Parse for WillChange {
 
 bitflags! {
     /// Values for the `touch-action` property.
-    #[derive(Clone, Copy, Eq, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+    #[derive(MallocSizeOf, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
     #[css(bitflags(single = "none,auto,manipulation", mixed = "pan-x,pan-y,pinch-zoom"))]
     #[repr(C)]
     pub struct TouchAction: u8 {
@@ -1161,7 +1161,7 @@ impl TouchAction {
 }
 
 bitflags! {
-    #[derive(Clone, Copy, Eq, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+    #[derive(MallocSizeOf, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
     #[css(bitflags(single = "none,strict,content", mixed="size,layout,style,paint,inline-size", overlapping_bits))]
     #[repr(C)]
     /// Constants for contain: https://drafts.csswg.org/css-contain/#contain-property
@@ -1855,7 +1855,7 @@ impl Overflow {
 }
 
 bitflags! {
-    #[derive(Clone, Copy, Eq, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+    #[derive(MallocSizeOf, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
     #[repr(C)]
     #[css(bitflags(single = "auto", mixed = "stable,both-edges", validate_mixed="Self::has_stable"))]
     /// Values for scrollbar-gutter:

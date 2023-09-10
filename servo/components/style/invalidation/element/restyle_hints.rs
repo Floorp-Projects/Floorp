@@ -9,7 +9,6 @@ use crate::traversal_flags::TraversalFlags;
 bitflags! {
     /// The kind of restyle we need to do for a given element.
     #[repr(C)]
-    #[derive(Clone, Copy, Debug)]
     pub struct RestyleHint: u16 {
         /// Do a selector match of the element.
         const RESTYLE_SELF = 1 << 0;

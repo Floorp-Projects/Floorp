@@ -25,7 +25,7 @@ pub enum GenericColor<Percentage> {
 
 bitflags! {
     /// Flags used to modify the calculation of a color mix result.
-    #[derive(Clone, Copy, Default, MallocSizeOf, PartialEq, ToShmem)]
+    #[derive(MallocSizeOf, ToShmem)]
     #[repr(C)]
     pub struct ColorMixFlags : u8 {
         /// Normalize the weights of the mix.
