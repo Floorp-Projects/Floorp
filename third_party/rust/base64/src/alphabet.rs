@@ -1,7 +1,7 @@
 //! Provides [Alphabet] and constants for alphabets commonly used in the wild.
 
 use crate::PAD_BYTE;
-use core::fmt;
+use core::{convert, fmt};
 #[cfg(any(feature = "std", test))]
 use std::error;
 
@@ -12,12 +12,43 @@ const ALPHABET_SIZE: usize = 64;
 /// Common alphabets are provided as constants, and custom alphabets
 /// can be made via `from_str` or the `TryFrom<str>` implementation.
 ///
+/// # Examples
+///
+/// Building and using a custom Alphabet:
+///
 /// ```
 /// let custom = base64::alphabet::Alphabet::new("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/").unwrap();
 ///
 /// let engine = base64::engine::GeneralPurpose::new(
 ///     &custom,
 ///     base64::engine::general_purpose::PAD);
+/// ```
+///
+/// Building a const:
+///
+/// ```
+/// use base64::alphabet::Alphabet;
+///
+/// static CUSTOM: Alphabet = {
+///     // Result::unwrap() isn't const yet, but panic!() is OK
+///     match Alphabet::new("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/") {
+///         Ok(x) => x,
+///         Err(_) => panic!("creation of alphabet failed"),
+///     }
+/// };
+/// ```
+///
+/// Building a lazy_static:
+///
+/// ```
+/// use base64::{
+///     alphabet::Alphabet,
+///     engine::{general_purpose::GeneralPurpose, GeneralPurposeConfig},
+/// };
+///
+/// lazy_static::lazy_static! {
+///     static ref CUSTOM: Alphabet = Alphabet::new("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/").unwrap();
+/// }
 /// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Alphabet {
@@ -93,7 +124,7 @@ impl Alphabet {
     }
 }
 
-impl TryFrom<&str> for Alphabet {
+impl convert::TryFrom<&str> for Alphabet {
     type Error = ParseAlphabetError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
@@ -171,7 +202,7 @@ pub const BIN_HEX: Alphabet = Alphabet::from_str_unchecked(
 #[cfg(test)]
 mod tests {
     use crate::alphabet::*;
-    use std::convert::TryFrom as _;
+    use core::convert::TryFrom as _;
 
     #[test]
     fn detects_duplicate_start() {

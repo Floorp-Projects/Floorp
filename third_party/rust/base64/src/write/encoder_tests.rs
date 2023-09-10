@@ -358,7 +358,7 @@ fn retrying_writes_that_error_with_interrupted_works() {
                     Ok(_) => break,
                     Err(e) => match e.kind() {
                         io::ErrorKind::Interrupted => continue,
-                        _ => Err(e).unwrap(), // bail
+                        _ => panic!("{:?}", e), // bail
                     },
                 }
             }

@@ -1,11 +1,11 @@
+use crate::{
+    encode::add_padding,
+    engine::{Config, Engine},
+};
 #[cfg(any(feature = "alloc", feature = "std", test))]
 use alloc::string::String;
-use core::cmp;
 #[cfg(any(feature = "alloc", feature = "std", test))]
 use core::str;
-
-use crate::encode::add_padding;
-use crate::engine::{Config, Engine};
 
 /// The output mechanism for ChunkedEncoder's encoded bytes.
 pub trait Sink {
@@ -15,69 +15,35 @@ pub trait Sink {
     fn write_encoded_bytes(&mut self, encoded: &[u8]) -> Result<(), Self::Error>;
 }
 
-const BUF_SIZE: usize = 1024;
-
 /// A base64 encoder that emits encoded bytes in chunks without heap allocation.
 pub struct ChunkedEncoder<'e, E: Engine + ?Sized> {
     engine: &'e E,
-    max_input_chunk_len: usize,
 }
 
 impl<'e, E: Engine + ?Sized> ChunkedEncoder<'e, E> {
     pub fn new(engine: &'e E) -> ChunkedEncoder<'e, E> {
-        ChunkedEncoder {
-            engine,
-            max_input_chunk_len: max_input_length(BUF_SIZE, engine.config().encode_padding()),
-        }
+        ChunkedEncoder { engine }
     }
 
     pub fn encode<S: Sink>(&self, bytes: &[u8], sink: &mut S) -> Result<(), S::Error> {
-        let mut encode_buf: [u8; BUF_SIZE] = [0; BUF_SIZE];
-        let mut input_index = 0;
+        const BUF_SIZE: usize = 1024;
+        const CHUNK_SIZE: usize = BUF_SIZE / 4 * 3;
 
-        while input_index < bytes.len() {
-            // either the full input chunk size, or it's the last iteration
-            let input_chunk_len = cmp::min(self.max_input_chunk_len, bytes.len() - input_index);
-
-            let chunk = &bytes[input_index..(input_index + input_chunk_len)];
-
-            let mut b64_bytes_written = self.engine.internal_encode(chunk, &mut encode_buf);
-
-            input_index += input_chunk_len;
-            let more_input_left = input_index < bytes.len();
-
-            if self.engine.config().encode_padding() && !more_input_left {
-                // no more input, add padding if needed. Buffer will have room because
-                // max_input_length leaves room for it.
-                b64_bytes_written += add_padding(bytes.len(), &mut encode_buf[b64_bytes_written..]);
+        let mut buf = [0; BUF_SIZE];
+        for chunk in bytes.chunks(CHUNK_SIZE) {
+            let mut len = self.engine.internal_encode(chunk, &mut buf);
+            if chunk.len() != CHUNK_SIZE && self.engine.config().encode_padding() {
+                // Final, potentially partial, chunk.
+                // Only need to consider if padding is needed on a partial chunk since full chunk
+                // is a multiple of 3, which therefore won't be padded.
+                // Pad output to multiple of four bytes if required by config.
+                len += add_padding(len, &mut buf[len..]);
             }
-
-            sink.write_encoded_bytes(&encode_buf[0..b64_bytes_written])?;
+            sink.write_encoded_bytes(&buf[..len])?;
         }
 
         Ok(())
     }
-}
-
-/// Calculate the longest input that can be encoded for the given output buffer size.
-///
-/// If the config requires padding, two bytes of buffer space will be set aside so that the last
-/// chunk of input can be encoded safely.
-///
-/// The input length will always be a multiple of 3 so that no encoding state has to be carried over
-/// between chunks.
-fn max_input_length(encoded_buf_len: usize, padded: bool) -> usize {
-    let effective_buf_len = if padded {
-        // make room for padding
-        encoded_buf_len
-            .checked_sub(2)
-            .expect("Don't use a tiny buffer")
-    } else {
-        encoded_buf_len
-    };
-
-    // No padding, so just normal base64 expansion.
-    (effective_buf_len / 4) * 3
 }
 
 // A really simple sink that just appends to a string
@@ -151,38 +117,13 @@ pub mod tests {
         chunked_encode_matches_normal_encode_random(&helper);
     }
 
-    #[test]
-    fn max_input_length_no_pad() {
-        assert_eq!(768, max_input_length(1024, false));
-    }
-
-    #[test]
-    fn max_input_length_with_pad_decrements_one_triple() {
-        assert_eq!(765, max_input_length(1024, true));
-    }
-
-    #[test]
-    fn max_input_length_with_pad_one_byte_short() {
-        assert_eq!(765, max_input_length(1025, true));
-    }
-
-    #[test]
-    fn max_input_length_with_pad_fits_exactly() {
-        assert_eq!(768, max_input_length(1026, true));
-    }
-
-    #[test]
-    fn max_input_length_cant_use_extra_single_encoded_byte() {
-        assert_eq!(300, max_input_length(401, false));
-    }
-
     pub fn chunked_encode_matches_normal_encode_random<S: SinkTestHelper>(sink_test_helper: &S) {
         let mut input_buf: Vec<u8> = Vec::new();
         let mut output_buf = String::new();
         let mut rng = rand::rngs::SmallRng::from_entropy();
         let input_len_range = Uniform::new(1, 10_000);
 
-        for _ in 0..5_000 {
+        for _ in 0..20_000 {
             input_buf.clear();
             output_buf.clear();
 
