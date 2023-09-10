@@ -5299,13 +5299,6 @@
           "tag": "TD_UINT32"
         },
         "value": 8
-      },
-      {
-        "name": "FIXUP_FLAG_FORCE_ALTERNATE_URI",
-        "type": {
-          "tag": "TD_UINT32"
-        },
-        "value": 16
       }
     ],
     "flags": [],

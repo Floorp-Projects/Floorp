@@ -6197,8 +6197,7 @@ already_AddRefed<nsIURI> nsDocShell::AttemptURIFixup(
       nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
       if (uriFixup) {
         nsCOMPtr<nsIURIFixupInfo> fixupInfo;
-        uriFixup->GetFixupURIInfo(oldSpec,
-                                  nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
+        uriFixup->GetFixupURIInfo(oldSpec, nsIURIFixup::FIXUP_FLAG_NONE,
                                   getter_AddRefs(fixupInfo));
         if (fixupInfo) {
           fixupInfo->GetPreferredURI(getter_AddRefs(newURI));

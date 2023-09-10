@@ -108,12 +108,6 @@ interface nsIURIFixup : nsISupports
      */
     const unsigned long FIXUP_FLAG_FIX_SCHEME_TYPOS = 8;
 
-    /*
-     * Force the fixup to make an alternate URI from the input URI regardless
-     * of the browser.fixup.alternate.enabled preference.
-     */
-    const unsigned long FIXUP_FLAG_FORCE_ALTERNATE_URI = 16;
-
     /**
      * Tries to converts the specified string into a URI, first attempting
      * to correct any errors in the syntax or other vagaries.

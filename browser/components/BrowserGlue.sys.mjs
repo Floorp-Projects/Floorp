@@ -3630,7 +3630,7 @@ BrowserGlue.prototype = {
   _migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 139;
+    const UI_VERSION = 140;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -4209,6 +4209,11 @@ BrowserGlue.prototype = {
           );
         }
       });
+    }
+
+    if (currentUIVersion < 140) {
+      // Remove browser.fixup.alternate.enabled pref in Bug 1850902.
+      Services.prefs.clearUserPref("browser.fixup.alternate.enabled");
     }
 
     // Update the migration version.
