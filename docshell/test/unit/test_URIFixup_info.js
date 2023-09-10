@@ -3,7 +3,6 @@ const { AppConstants } = ChromeUtils.importESModule(
 );
 
 const kForceDNSLookup = "browser.fixup.dns_first_for_single_words";
-const kFixupEnabled = "browser.fixup.alternate.enabled";
 
 // TODO(bug 1522134), this test should also use
 // combinations of the following flags.
@@ -12,7 +11,6 @@ var flagInputs = [
   Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
     Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT,
   Services.uriFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI,
-  Services.uriFixup.FIXUP_FLAG_FORCE_ALTERNATE_URI,
   Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
   // This should not really generate a search, but it does, see Bug 1588118.
   Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
@@ -878,22 +876,18 @@ add_task(async function run_test() {
   }
   Assert.equal(affectedTests.length, 0);
   await do_single_test_run();
-  await do_single_test_run(true);
   gSingleWordDNSLookup = true;
   await do_single_test_run();
-  await do_single_test_run(true);
   gSingleWordDNSLookup = false;
   await Services.search.setDefault(
     Services.search.getEngineByName(kPostSearchEngineID),
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   await do_single_test_run();
-  await do_single_test_run(true);
 });
 
-async function do_single_test_run(browserFixupAlternateEnabled = false) {
+async function do_single_test_run() {
   Services.prefs.setBoolPref(kForceDNSLookup, gSingleWordDNSLookup);
-  Services.prefs.setBoolPref(kFixupEnabled, browserFixupAlternateEnabled);
   let relevantTests = gSingleWordDNSLookup
     ? testcases.filter(t => t.keywordLookup)
     : testcases;
@@ -934,9 +928,6 @@ async function do_single_test_run(browserFixupAlternateEnabled = false) {
           flags +
           " (DNS lookup for single words: " +
           (gSingleWordDNSLookup ? "yes" : "no") +
-          "," +
-          " browser fixup alt enabled: " +
-          (browserFixupAlternateEnabled ? "yes" : "no") +
           ")"
       );
 
@@ -955,12 +946,8 @@ async function do_single_test_run(browserFixupAlternateEnabled = false) {
       }
 
       // Check the fixedURI:
-      let fixupFlag = browserFixupAlternateEnabled
-        ? Services.uriFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI
-        : Services.uriFixup.FIXUP_FLAG_NONE;
-      let forceAlternativeURI =
-        flags & Services.uriFixup.FIXUP_FLAG_FORCE_ALTERNATE_URI;
-      let makeAlternativeURI = flags & fixupFlag || forceAlternativeURI;
+      let makeAlternativeURI =
+        flags & Services.uriFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI;
 
       if (makeAlternativeURI && alternativeURI != null) {
         Assert.equal(
