@@ -1,9 +1,10 @@
+use std::collections::BTreeMap;
+
 use ron::{
     de::from_str,
     ser::{to_string_pretty, PrettyConfig},
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Config {

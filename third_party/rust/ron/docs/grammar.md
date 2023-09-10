@@ -18,7 +18,8 @@ RON = [extensions], ws, value, ws;
 ```ebnf
 ws = { ws_single | comment };
 ws_single = "\n" | "\t" | "\r" | " ";
-comment = ["//", { no_newline }, "\n"] | ["/*", { ? any character ? }, "*/"];
+comment = ["//", { no_newline }, "\n"] | ["/*", nested_block_comment, "*/"];
+nested_block_comment = { ? any characters except "/*" or "*/" ? }, [ "/*", nested_block_comment, "*/", nested_block_comment ];
 ```
 
 ## Commas
@@ -137,4 +138,15 @@ enum_variant = enum_variant_unit | enum_variant_tuple | enum_variant_named;
 enum_variant_unit = ident;
 enum_variant_tuple = ident, ws, tuple;
 enum_variant_named = ident, ws, "(", [named_field, { comma, named_field }, [comma]], ")";
+```
+
+## Identifier
+
+```ebnf
+ident = ident_std | ident_raw;
+ident_std = ident_std_first, { ident_std_rest };
+ident_std_first = "A" | ... | "Z" | "a" | ... | "z" | "_";
+ident_std_rest = ident_std_first | digit;
+ident_raw = "r", "#", ident_raw_rest, { ident_raw_rest };
+ident_raw_rest = ident_std_rest | "." | "+" | "-";
 ```

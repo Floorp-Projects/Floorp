@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 
 use ron::{
-    de::from_str, error::Error, extensions::Extensions, ser::to_string_pretty, ser::PrettyConfig,
+    de::from_str,
+    error::Error,
+    extensions::Extensions,
+    ser::{to_string_pretty, PrettyConfig},
 };
 use serde::{Deserialize, Serialize};
 

@@ -14,7 +14,7 @@ fn test_adjacently_tagged() {
 
     let ron_string = to_string(&source).unwrap();
 
-    assert_eq!(ron_string, "(type:\"Index\",data:1)");
+    assert_eq!(ron_string, "(type:Index,data:1)");
 
     let deserialized = from_str::<TestEnum>(&ron_string).unwrap();
 

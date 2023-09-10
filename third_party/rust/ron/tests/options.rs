@@ -1,6 +1,5 @@
-use serde::{Deserialize, Serialize};
-
 use ron::{extensions::Extensions, ser::PrettyConfig, Options};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 struct Newtype(f64);

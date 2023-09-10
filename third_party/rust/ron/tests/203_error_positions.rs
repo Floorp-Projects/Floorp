@@ -13,7 +13,7 @@ enum Test {
     StructVariant { a: bool, b: NonZeroU32, c: i32 },
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq)] // GRCOV_EXCL_LINE
 struct TypeError;
 
 impl<'de> Deserialize<'de> for TypeError {

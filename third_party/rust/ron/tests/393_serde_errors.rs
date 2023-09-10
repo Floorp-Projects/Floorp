@@ -188,13 +188,13 @@ fn test_adjacently_tagged_enum() {
     //        the enum as a struct
 
     assert_eq!(
-        ron::from_str::<TestEnumAdjacent>("(type: \"StructVariant\", content: (d: 4))"),
+        ron::from_str::<TestEnumAdjacent>("(type: StructVariant, content: (d: 4))"),
         Err(SpannedError {
             code: Error::MissingStructField {
                 field: "a",
                 outer: Some(String::from("TestEnumAdjacent")),
             },
-            position: Position { line: 1, col: 39 },
+            position: Position { line: 1, col: 37 },
         })
     );
 }
