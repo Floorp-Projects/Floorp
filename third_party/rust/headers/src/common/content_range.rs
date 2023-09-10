@@ -178,22 +178,23 @@ fn split_in_two(s: &str, separator: char) -> Option<(&str, &str)> {
 }
 
 /*
-        test_header!(test_bytes,
-            vec![b"bytes 0-499/500"],
-            Some(ContentRange(ContentRangeSpec::Bytes {
-                range: Some((0, 499)),
-                complete_length: Some(500)
-            })));
+test_header!(test_bytes,
+    vec![b"bytes 0-499/500"],
+    Some(ContentRange(ContentRangeSpec::Bytes {
+        range: Some((0, 499)),
+        complete_length: Some(500)
+    })));
 
-        test_header!(test_bytes_unknown_len,
-            vec![b"bytes 0-499/*"],
-            Some(ContentRange(ContentRangeSpec::Bytes {
-                range: Some((0, 499)),
-                complete_length: None
-            })));
+test_header!(test_bytes_unknown_len,
+    vec![b"bytes 0-499/*"],
+    Some(ContentRange(ContentRangeSpec::Bytes {
+        range: Some((0, 499)),
+        complete_length: None
+    })));
 
-        test_header!(test_bytes_unknown_range,
-            vec![b"bytes */500"],
+test_header!(test_bytes_unknown_range,
+    vec![b"bytes */
+500"],
             Some(ContentRange(ContentRangeSpec::Bytes {
                 range: None,
                 complete_length: Some(500)

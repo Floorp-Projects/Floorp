@@ -50,9 +50,7 @@ error_type!(InvalidETag);
 impl FromStr for ETag {
     type Err = InvalidETag;
     fn from_str(src: &str) -> Result<Self, Self::Err> {
-        let val = src
-            .parse()
-            .map_err(|_| InvalidETag { _inner: () })?;
+        let val = src.parse().map_err(|_| InvalidETag { _inner: () })?;
 
         EntityTag::from_owned(val)
             .map(ETag)

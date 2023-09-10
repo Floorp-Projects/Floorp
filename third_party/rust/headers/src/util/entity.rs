@@ -167,9 +167,7 @@ impl EntityTag {
     }
 
     pub(crate) fn from_val(val: &HeaderValue) -> Option<EntityTag> {
-        EntityTag::parse(val.as_bytes()).map(|_entity| {
-            EntityTag(val.clone())
-        })
+        EntityTag::parse(val.as_bytes()).map(|_entity| EntityTag(val.clone()))
     }
 }
 
@@ -239,11 +237,10 @@ impl EntityTagRange {
     {
         match *self {
             EntityTagRange::Any => true,
-            EntityTagRange::Tags(ref tags) => {
-                tags.iter()
-                    .flat_map(EntityTag::<&str>::parse)
-                    .any(|tag| func(&tag, entity))
-            },
+            EntityTagRange::Tags(ref tags) => tags
+                .iter()
+                .flat_map(EntityTag::<&str>::parse)
+                .any(|tag| func(&tag, entity)),
         }
     }
 }

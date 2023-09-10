@@ -64,7 +64,9 @@ impl IfRange {
     pub fn is_modified(&self, etag: Option<&ETag>, last_modified: Option<&LastModified>) -> bool {
         match self.0 {
             IfRange_::Date(since) => last_modified.map(|time| since < time.0).unwrap_or(true),
-            IfRange_::EntityTag(ref entity) => etag.map(|etag| !etag.0.strong_eq(entity)).unwrap_or(true),
+            IfRange_::EntityTag(ref entity) => {
+                etag.map(|etag| !etag.0.strong_eq(entity)).unwrap_or(true)
+            }
         }
     }
 }

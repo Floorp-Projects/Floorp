@@ -1,5 +1,5 @@
-use std::fmt;
 use std::convert::TryFrom;
+use std::fmt;
 
 use http::uri::Authority;
 

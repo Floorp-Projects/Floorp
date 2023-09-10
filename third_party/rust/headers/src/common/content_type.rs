@@ -135,6 +135,16 @@ impl fmt::Display for ContentType {
     }
 }
 
+impl std::str::FromStr for ContentType {
+    type Err = ::Error;
+
+    fn from_str(s: &str) -> Result<ContentType, Self::Err> {
+        s.parse::<Mime>()
+            .map(|m| m.into())
+            .map_err(|_| ::Error::invalid())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::test_decode;
@@ -146,6 +156,15 @@ mod tests {
             test_decode::<ContentType>(&["application/json"]),
             Some(ContentType::json()),
         );
+    }
+
+    #[test]
+    fn from_str() {
+        assert_eq!(
+            "application/json".parse::<ContentType>().unwrap(),
+            ContentType::json(),
+        );
+        assert!("invalid-mimetype".parse::<ContentType>().is_err());
     }
 
     bench_header!(bench_plain, ContentType, "text/plain");
