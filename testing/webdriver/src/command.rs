@@ -1405,7 +1405,9 @@ mod tests {
 
     #[test]
     fn test_json_credential() {
-        let encoded_string = base64::encode_config(b"hello internet~", base64::URL_SAFE);
+        use base64::{engine::general_purpose::URL_SAFE, Engine};
+
+        let encoded_string = URL_SAFE.encode(b"hello internet~");
         let params = CredentialParameters {
             credential_id: r"c3VwZXIgcmVhZGVy".to_string(),
             is_resident_credential: true,
