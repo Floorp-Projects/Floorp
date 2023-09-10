@@ -4,16 +4,68 @@
 
  "use strict";
 
- const { XPCOMUtils } = ChromeUtils.importESModule(
-   "resource://gre/modules/XPCOMUtils.sys.mjs"
- );
- 
- XPCOMUtils.defineLazyServiceGetter(
-   this,
-   "ProfileService",
-   "@mozilla.org/toolkit/profile-service;1",
-   "nsIToolkitProfileService"
- );
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
+let FxAccounts = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccounts.sys.mjs"
+).getFxAccountsSingleton();
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "ProfileService",
+  "@mozilla.org/toolkit/profile-service;1",
+  "nsIToolkitProfileService"
+);
+
+async function buildFxAccountsInfo() {
+  let info = await FxAccounts.getSignedInUser();
+
+  let avatar = document.getElementById("fxa-avatar");
+  avatar.src = info.avatar;
+
+  let displayName = document.getElementById("fxa-display-name");
+  displayName.textContent = info.displayName;
+
+  let email = document.getElementById("fxa-email");
+  email.textContent = info.email;
+
+  setEventListeners();
+}
+
+function manageFxAccounts() {
+  window.open("https://accounts.firefox.com/settings");
+}
+
+function openPasswordManager() {
+  window.open("about:logins");
+}
+
+function openSyncSettings() {
+  window.open("about:preferences#sync");
+}
+
+function setEventListeners() {
+  let manageFxAccountsButton = document.getElementById("fxa-avatar");
+  manageFxAccountsButton.addEventListener("click", manageFxAccounts);
+
+  let openPasswordManagerButton = document.getElementById("fxa-password-icon");
+  openPasswordManagerButton.addEventListener("click", openPasswordManager);
+
+  let openSyncSettingsButton = document.getElementById("fxa-setting-icon");
+  openSyncSettingsButton.addEventListener("click", openSyncSettings);
+
+  let addAnotherDeviceButton = document.getElementById("fxa-pairing-icon");
+  addAnotherDeviceButton.addEventListener("click", addAnotherDeviceToSync);
+}
+
+async function addAnotherDeviceToSync() {
+  let info = await FxAccounts.getSignedInUser()
+  let uid = info.uid;
+  let email = info.email;
+  window.open(`https://accounts.firefox.com/connect_another_device?context=fx_desktop_v3&entrypoint=preferences&service=sync&uid=${uid}&email=${email}`);
+}
  
  async function flush() {
    try {
@@ -336,9 +388,11 @@
  
  window.addEventListener(
    "DOMContentLoaded",
-   function () {
+   async function () {
      let createButton = document.getElementById("create-button");
      createButton.addEventListener("click", createProfileWizard);
+
+     await buildFxAccountsInfo();
  
      if (ProfileService.isListOutdated) {
        document.getElementById("owned").hidden = true;

@@ -518,7 +518,7 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
 
 #profile-switcher-browser {
   min-width: 25em !important;
-  min-height: 35em !important;
+  min-height: 41em !important;
 }
 
 #profile-manager {
