@@ -2817,6 +2817,10 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
   }
   gfx::Size GetSize() const override { return Size(mSize); }
 
+  CSSSize GetCSSViewportSize() const override {
+    return GetCSSViewportSizeFromContext(mPresContext);
+  }
+
  private:
   GeckoFontMetrics GetFontMetricsForType(Type aType) const override {
     switch (aType) {
