@@ -109,12 +109,18 @@ export class PromptListener {
       contentBrowser = event.target;
     }
 
-    const { areLeaving, value } = event.detail;
-    // `areLeaving` returns undefined for alerts, for confirms and prompts
-    // it returns true if a user prompt was accepted and false if it was dismissed.
-    const detail = { accepted: areLeaving === undefined ? true : areLeaving };
-    if (value) {
-      detail.userText = value;
+    const detail = {};
+
+    // The event details are present now only on Desktop.
+    // See the bug 1849621 for Android.
+    if (event.detail) {
+      const { areLeaving, value } = event.detail;
+      // `areLeaving` returns undefined for alerts, for confirms and prompts
+      // it returns true if a user prompt was accepted and false if it was dismissed.
+      detail.accepted = areLeaving === undefined ? true : areLeaving;
+      if (value) {
+        detail.userText = value;
+      }
     }
 
     this.emit("closed", {
