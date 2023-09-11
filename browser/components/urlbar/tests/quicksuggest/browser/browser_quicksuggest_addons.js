@@ -5,6 +5,9 @@
 
 // Test for addon suggestions.
 
+// The expected index of the addon suggestion.
+const EXPECTED_RESULT_INDEX = 1;
+
 // Allow more time for TV runs.
 requestLongerTimeout(5);
 
@@ -251,13 +254,9 @@ add_task(async function resultMenu_showLessFrequently() {
     set: [["browser.urlbar.addons.showLessFrequentlyCount", 0]],
   });
 
-  const cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
-    addonsShowLessFrequentlyCap: 3,
+  await QuickSuggestTestUtils.setConfig({
+    show_less_frequently_cap: 3,
   });
-
-  // Sanity check.
-  Assert.equal(UrlbarPrefs.get("addonsShowLessFrequentlyCap"), 3);
-  Assert.equal(UrlbarPrefs.get("addons.showLessFrequentlyCount"), 0);
 
   await doShowLessFrequently({
     input: "aaa b",
@@ -277,7 +276,10 @@ add_task(async function resultMenu_showLessFrequently() {
   });
   Assert.equal(UrlbarPrefs.get("addons.showLessFrequentlyCount"), 2);
 
+  // The cap will be reached this time. Keep the view open so we can make sure
+  // the command has been removed from the menu before it closes.
   await doShowLessFrequently({
+    keepViewOpen: true,
     input: "aaa b",
     expected: {
       isSuggestionShown: true,
@@ -285,6 +287,17 @@ add_task(async function resultMenu_showLessFrequently() {
     },
   });
   Assert.equal(UrlbarPrefs.get("addons.showLessFrequentlyCount"), 3);
+
+  // Make sure the command has been removed.
+  let menuitem = await UrlbarTestUtils.openResultMenuAndGetItem({
+    window,
+    command: "show_less_frequently",
+    resultIndex: EXPECTED_RESULT_INDEX,
+    openByMouse: true,
+  });
+  Assert.ok(!menuitem, "Menuitem should be absent before closing the view");
+  gURLBar.view.resultMenu.hidePopup(true);
+  await UrlbarTestUtils.promisePopupClose(window);
 
   await doShowLessFrequently({
     input: "aaa b",
@@ -307,7 +320,7 @@ add_task(async function resultMenu_showLessFrequently() {
     },
   });
 
-  await cleanUpNimbus();
+  await QuickSuggestTestUtils.setConfig(QuickSuggestTestUtils.DEFAULT_CONFIG);
   await SpecialPowers.popPrefEnv();
 });
 
@@ -355,7 +368,7 @@ add_task(async function rowLabel() {
   }
 });
 
-async function doShowLessFrequently({ input, expected }) {
+async function doShowLessFrequently({ input, expected, keepViewOpen = false }) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: input,
@@ -374,10 +387,9 @@ async function doShowLessFrequently({ input, expected }) {
     return;
   }
 
-  const resultIndex = 1;
   const details = await UrlbarTestUtils.getDetailsOfResultAt(
     window,
-    resultIndex
+    EXPECTED_RESULT_INDEX
   );
   Assert.equal(
     details.result.payload.dynamicType,
@@ -391,7 +403,7 @@ async function doShowLessFrequently({ input, expected }) {
       window,
       "show_less_frequently",
       {
-        resultIndex,
+        resultIndex: EXPECTED_RESULT_INDEX,
       }
     );
     Assert.ok(expected.isMenuItemShown);
@@ -415,7 +427,9 @@ async function doShowLessFrequently({ input, expected }) {
     );
   }
 
-  await UrlbarTestUtils.promisePopupClose(window);
+  if (!keepViewOpen) {
+    await UrlbarTestUtils.promisePopupClose(window);
+  }
 }
 
 async function doDismissTest(command, allDismissed) {
@@ -425,8 +439,10 @@ async function doDismissTest(command, allDismissed) {
   });
 
   const resultCount = UrlbarTestUtils.getResultCount(window);
-  const resultIndex = 1;
-  let details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    EXPECTED_RESULT_INDEX
+  );
   Assert.equal(
     details.result.payload.dynamicType,
     "addons",
@@ -440,7 +456,7 @@ async function doDismissTest(command, allDismissed) {
   await UrlbarTestUtils.openResultMenuAndClickItem(
     window,
     ["[data-l10n-id=firefox-suggest-command-dont-show-this]", command],
-    { resultIndex, openByMouse: true }
+    { resultIndex: EXPECTED_RESULT_INDEX, openByMouse: true }
   );
 
   Assert.equal(
@@ -463,7 +479,10 @@ async function doDismissTest(command, allDismissed) {
     resultCount,
     "The result count should not haved changed after dismissal"
   );
-  details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  details = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    EXPECTED_RESULT_INDEX
+  );
   Assert.equal(
     details.type,
     UrlbarUtils.RESULT_TYPE.TIP,
@@ -492,7 +511,7 @@ async function doDismissTest(command, allDismissed) {
   let gotItButton = UrlbarTestUtils.getButtonForResultIndex(
     window,
     0,
-    resultIndex
+    EXPECTED_RESULT_INDEX
   );
   Assert.ok(gotItButton, "Row should have a 'Got it' button");
   EventUtils.synthesizeMouseAtCenter(gotItButton, {}, window);
