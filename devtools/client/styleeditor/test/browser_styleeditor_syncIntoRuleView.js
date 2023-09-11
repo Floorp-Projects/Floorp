@@ -24,7 +24,6 @@ add_task(async function () {
   const { panel, ui } = await openStyleEditor();
 
   const editor = await ui.editors[0].getSourceEditor();
-  const onRuleViewRefreshed = view.once("ruleview-refreshed");
   await new Promise(res => waitForFocus(res, panel.panelWindow));
 
   info("Type new rule in stylesheet");
@@ -33,7 +32,8 @@ add_task(async function () {
   ok(editor.unsaved, "new editor has unsaved flag");
 
   info("Wait for ruleview to update");
-  await onRuleViewRefreshed;
+  await inspector.toolbox.selectTool("inspector");
+  await waitFor(() => getRuleViewRule(view, "#testid"));
 
   info("Check that edits were synced to rule view");
   const value = getRuleViewPropertyValue(view, "#testid", "color");
