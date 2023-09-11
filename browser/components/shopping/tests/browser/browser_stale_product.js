@@ -30,8 +30,7 @@ add_task(async function test_stale_product() {
       );
 
       verifyAnalysisDetailsVisible(shoppingContainer);
-
-      ok(shoppingContainer.settingsEl, "Got the shopping-settings element");
+      verifyFooterVisible(shoppingContainer);
     }
   );
 });

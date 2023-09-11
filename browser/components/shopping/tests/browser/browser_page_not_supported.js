@@ -5,7 +5,7 @@
 
 /**
  * Tests that the correct shopping-message-bar component appears if a page is not supported.
- * Only settings should be visible.
+ * Only footer should be visible.
  */
 add_task(async function test_page_not_supported() {
   await BrowserTestUtils.withNewTab(
@@ -30,8 +30,7 @@ add_task(async function test_page_not_supported() {
       );
 
       verifyAnalysisDetailsHidden(shoppingContainer);
-
-      ok(shoppingContainer.settingsEl, "Got the shopping-settings element");
+      verifyFooterVisible(shoppingContainer);
     }
   );
 });

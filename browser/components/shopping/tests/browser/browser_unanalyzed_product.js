@@ -25,8 +25,7 @@ add_task(async function test_unanalyzed_product() {
       );
 
       verifyAnalysisDetailsHidden(shoppingContainer);
-
-      ok(shoppingContainer.settingsEl, "Got the shopping-settings element");
+      verifyFooterVisible(shoppingContainer);
     }
   );
 });
@@ -53,8 +52,7 @@ add_task(async function test_analyzed_product() {
       );
 
       verifyAnalysisDetailsVisible(shoppingContainer);
-
-      ok(shoppingContainer.settingsEl, "Got the shopping-settings element");
+      verifyFooterVisible(shoppingContainer);
     }
   );
 });
