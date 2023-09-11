@@ -406,6 +406,9 @@ export class AddonSuggestions extends BaseFeature {
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
         view.acknowledgeFeedback(result);
         this.incrementShowLessFrequentlyCount();
+        if (!this.canShowLessFrequently) {
+          view.invalidateResultMenuCommands();
+        }
         break;
     }
   }
