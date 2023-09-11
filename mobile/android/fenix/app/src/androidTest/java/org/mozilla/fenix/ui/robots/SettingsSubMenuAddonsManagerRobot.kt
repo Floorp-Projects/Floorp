@@ -41,6 +41,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
@@ -51,6 +52,22 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  */
 
 class SettingsSubMenuAddonsManagerRobot {
+    fun verifyAddonsListIsDisplayed(shouldBeDisplayed: Boolean) {
+        if (shouldBeDisplayed) {
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector().resourceId("$packageName:id/add_ons_list"),
+                ).waitForExists(waitingTime),
+            )
+        } else {
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector().resourceId("$packageName:id/add_ons_list"),
+                ).waitUntilGone(waitingTime),
+            )
+        }
+    }
+
     fun verifyAddonPermissionPrompt(addonName: String) {
         mDevice.waitNotNull(Until.findObject(By.text("Add $addonName?")), waitingTime)
 

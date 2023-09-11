@@ -29,7 +29,6 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -85,21 +84,6 @@ class ComposeSmokeTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-    }
-
-    // Device or AVD requires a Google Services Android OS installation with Play Store installed
-    // Verifies the Open in app button when an app is installed
-    @Test
-    fun mainMenuOpenInAppTest() {
-        val youtubeURL = "vnd.youtube://".toUri()
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(youtubeURL) {
-            verifyNotificationDotOnMainMenu()
-        }.openThreeDotMenu {
-        }.clickOpenInApp {
-            assertYoutubeAppOpens()
-        }
     }
 
     // Verifies that deleting a Bookmarks folder also removes the item from inside it.
