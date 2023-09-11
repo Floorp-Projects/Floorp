@@ -5,8 +5,6 @@
 
 #include "lib/jxl/enc_optimize.h"
 
-#include <stdio.h>
-
 #include "lib/jxl/testing.h"
 
 namespace jxl {

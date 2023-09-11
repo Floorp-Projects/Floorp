@@ -158,7 +158,9 @@ HWY_NOINLINE void TestFastIDCT() {
   auto idct_mem = hwy::AllocateAligned<int16_t>(N * M);
   int16_t* idct = idct_mem.get();
 
-  auto scratch_space_mem = hwy::AllocateAligned<float>(N * M * 2);
+  const HWY_FULL(float) df;
+  auto scratch_space_mem = hwy::AllocateAligned<float>(
+      N * M * 2 + 3 * std::max(N, M) * MaxLanes(df));
   float* scratch_space = scratch_space_mem.get();
   auto scratch_space_i_mem = hwy::AllocateAligned<int16_t>(N * M * 2);
   int16_t* scratch_space_i = scratch_space_i_mem.get();
@@ -205,7 +207,7 @@ HWY_NOINLINE void TestFloatIDCT() {
   auto dct_in_mem = hwy::AllocateAligned<float>(N * M);
   float* dct_in = dct_mem.get();
 
-  auto scratch_space_mem = hwy::AllocateAligned<float>(N * M * 2);
+  auto scratch_space_mem = hwy::AllocateAligned<float>(N * M * 5);
   float* scratch_space = scratch_space_mem.get();
 
   Rng rng(0);

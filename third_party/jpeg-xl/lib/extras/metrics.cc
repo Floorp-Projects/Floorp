@@ -42,7 +42,7 @@ double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
     using T = float;
 #endif
     const HWY_FULL(T) d;
-    constexpr size_t N = MaxLanes(HWY_FULL(T)());
+    constexpr size_t N = MaxLanes(d);
     // Manually aligned storage to avoid asan crash on clang-7 due to
     // unaligned spill.
     HWY_ALIGN T sum_totals0[N] = {0};

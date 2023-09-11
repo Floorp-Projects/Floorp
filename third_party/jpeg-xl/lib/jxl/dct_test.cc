@@ -12,7 +12,7 @@
 #define HWY_TARGET_INCLUDE "lib/jxl/dct_test.cc"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
-#include <hwy/tests/test_util-inl.h>
+#include <hwy/tests/hwy_gtest.h>
 
 #include "lib/jxl/common.h"
 #include "lib/jxl/dct-inl.h"
@@ -20,6 +20,7 @@
 #include "lib/jxl/dct_scales.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/test_utils.h"
+#include "lib/jxl/testing.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -33,7 +34,7 @@ namespace HWY_NAMESPACE {
 template <size_t N>
 void ComputeDCT(float block[N * N]) {
   HWY_ALIGN float tmp_block[N * N];
-  HWY_ALIGN float scratch_space[N * N];
+  HWY_ALIGN float scratch_space[4 * N * N];
   ComputeScaledDCT<N, N>()(DCTFrom(block, N), tmp_block, scratch_space);
 
   // Untranspose.
@@ -45,7 +46,7 @@ void ComputeDCT(float block[N * N]) {
 template <int N>
 void ComputeIDCT(float block[N * N]) {
   HWY_ALIGN float tmp_block[N * N];
-  HWY_ALIGN float scratch_space[N * N];
+  HWY_ALIGN float scratch_space[4 * N * N];
   // Untranspose.
   Transpose<N, N>::Run(DCTFrom(block, N), DCTTo(tmp_block, N));
 
@@ -88,6 +89,7 @@ void ColumnDctRoundtripT(float accuracy) {
   // regular 8x8 block transformation. On the bright side - we could check all
   // 8 basis vectors at once.
   HWY_ALIGN float block[kBlockSize];
+  HWY_ALIGN float scratch[3 * kBlockSize];
   DCTTo to(block, N);
   DCTFrom from(block, N);
   for (size_t i = 0; i < N; ++i) {
@@ -102,8 +104,8 @@ void ColumnDctRoundtripT(float accuracy) {
   DCTTo to_tmp(tmp, N);
   DCTFrom from_tmp(tmp, N);
 
-  DCT1D<N, N>()(from, to_tmp);
-  IDCT1D<N, N>()(from_tmp, to);
+  DCT1D<N, N>()(from, to_tmp, scratch);
+  IDCT1D<N, N>()(from_tmp, to, scratch);
 
   for (size_t i = 0; i < N; ++i) {
     for (size_t j = 0; j < N; ++j) {
@@ -229,7 +231,7 @@ void TestRectInverseT(float accuracy) {
     HWY_ALIGN float out[kBlockSize] = {0.0f};
     x[i] = 1.0;
     HWY_ALIGN float coeffs[kBlockSize] = {0.0f};
-    HWY_ALIGN float scratch_space[kBlockSize * 2];
+    HWY_ALIGN float scratch_space[kBlockSize * 5];
 
     ComputeScaledDCT<ROWS, COLS>()(DCTFrom(x, COLS), coeffs, scratch_space);
     ComputeScaledIDCT<ROWS, COLS>()(coeffs, DCTTo(out, COLS), scratch_space);
@@ -263,7 +265,7 @@ void TestRectInverse() {
 template <size_t ROWS, size_t COLS>
 void TestRectTransposeT(float accuracy) {
   constexpr size_t kBlockSize = ROWS * COLS;
-  HWY_ALIGN float scratch_space[kBlockSize * 2];
+  HWY_ALIGN float scratch_space[kBlockSize * 5];
   for (size_t px = 0; px < COLS; ++px) {
     for (size_t py = 0; py < ROWS; ++py) {
       HWY_ALIGN float x1[kBlockSize] = {0.0f};

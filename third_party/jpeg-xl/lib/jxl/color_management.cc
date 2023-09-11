@@ -52,8 +52,9 @@ Status ToneMapPixel(const ColorEncoding& c, const float in[3],
   float linear[3];
   HWY_CAPPED(float, 1) d;
   if (c.tf.IsPQ()) {
+    TF_PQ tf_pq(/*display_intensity_target=*/10000.0);
     for (size_t i = 0; i < 3; ++i) {
-      linear[i] = TF_PQ().DisplayFromEncoded(in[i]);
+      linear[i] = tf_pq.DisplayFromEncoded(in[i]);
     }
   } else {
     for (size_t i = 0; i < 3; ++i) {
@@ -126,12 +127,13 @@ std::vector<uint16_t> CreateTableCurve(uint32_t N, const ExtraTF tf,
                                    {0, kDefaultIntensityTarget}, kLuminances);
   // No point using float - LCMS converts to 16-bit for A2B/MFT.
   std::vector<uint16_t> table(N);
+  TF_PQ tf_pq(/*display_intensity_target=*/10000.0);
   for (uint32_t i = 0; i < N; ++i) {
     const float x = static_cast<float>(i) / (N - 1);  // 1.0 at index N - 1.
     const double dx = static_cast<double>(x);
     // LCMS requires EOTF (e.g. 2.4 exponent).
     double y = (tf == ExtraTF::kHLG) ? TF_HLG().DisplayFromEncoded(dx)
-                                     : TF_PQ().DisplayFromEncoded(dx);
+                                     : tf_pq.DisplayFromEncoded(dx);
     if (tone_map && tf == ExtraTF::kPQ &&
         kPQIntensityTarget > kDefaultIntensityTarget) {
       D df;

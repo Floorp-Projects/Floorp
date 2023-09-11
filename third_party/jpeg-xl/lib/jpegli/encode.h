@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 //
-// This file conatins the C API of the encoder part of the libjpegli library,
+// This file contains the C API of the encoder part of the libjpegli library,
 // which is based on the C API of libjpeg, with the function names changed from
 // jpeg_* to jpegli_*, while compressor object definitions are included directly
 // from jpeglib.h
@@ -135,7 +135,7 @@ void jpegli_set_cicp_transfer_function(j_compress_ptr cinfo, int code);
 void jpegli_set_input_format(j_compress_ptr cinfo, JpegliDataType data_type,
                              JpegliEndianness endianness);
 
-// Sets whether or not the encoder uses adaptive quantization for createing more
+// Sets whether or not the encoder uses adaptive quantization for creating more
 // zero coefficients based on the local properties of the image.
 // Enabled by default.
 void jpegli_enable_adaptive_quantization(j_compress_ptr cinfo, boolean value);

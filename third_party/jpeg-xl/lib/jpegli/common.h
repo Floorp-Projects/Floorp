@@ -3,9 +3,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 //
-// This file conatins the C API of the common encoder/decoder part of libjpegli
+// This file contains the C API of the common encoder/decoder part of libjpegli
 // library, which is based on the C API of libjpeg, with the function names
-// changed from jpeg_* to jpegli_*, while compressor and dempressor object
+// changed from jpeg_* to jpegli_*, while compressor and decompressor object
 // definitions are included directly from jpeglib.h
 //
 // Applications can use the libjpegli library in one of the following ways:

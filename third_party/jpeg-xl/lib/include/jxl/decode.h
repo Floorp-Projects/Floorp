@@ -320,6 +320,33 @@ typedef enum {
   JXL_DEC_FRAME_PROGRESSION = 0x8000,
 } JxlDecoderStatus;
 
+/** Types of progressive detail.
+ * Setting a progressive detail with value N implies all progressive details
+ * with smaller or equal value. Currently only the following level of
+ * progressive detail is implemented:
+ *  - kDC (which implies kFrames)
+ *  - kLastPasses (which implies kDC and kFrames)
+ *  - kPasses (which implies kLastPasses, kDC and kFrames)
+ */
+typedef enum {
+  // after completed kRegularFrames
+  kFrames = 0,
+  // after completed DC (1:8)
+  kDC = 1,
+  // after completed AC passes that are the last pass for their resolution
+  // target.
+  kLastPasses = 2,
+  // after completed AC passes that are not the last pass for their resolution
+  // target.
+  kPasses = 3,
+  // during DC frame when lower resolution are completed (1:32, 1:16)
+  kDCProgressive = 4,
+  // after completed groups
+  kDCGroups = 5,
+  // after completed groups
+  kGroups = 6,
+} JxlProgressiveDetail;
+
 /** Rewinds decoder to the beginning. The same input must be given again from
  * the beginning of the file and the decoder will emit events from the beginning
  * again. When rewinding (as opposed to @ref JxlDecoderReset), the decoder can

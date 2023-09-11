@@ -125,12 +125,14 @@ FlatTree FilterTree(const Tree &global_tree,
   return output;
 }
 
+namespace detail {
 template <bool uses_lz77>
 Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
                                  const std::vector<uint8_t> &context_map,
                                  const Tree &global_tree,
                                  const weighted::Header &wp_header,
                                  pixel_type chan, size_t group_id,
+                                 TreeLut<uint8_t, true> &tree_lut,
                                  Image *image) {
   Channel &channel = image->channel[chan];
 
@@ -267,16 +269,11 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
 
   // Check if this tree is a WP-only tree with a small enough property value
   // range.
-  // Initialized to avoid clang-tidy complaining.
-  uint8_t context_lookup[2 * kPropRangeFast] = {};
-  int8_t multipliers[2 * kPropRangeFast] = {};
-  int8_t offsets[2 * kPropRangeFast] = {};
   if (is_wp_only) {
-    is_wp_only = TreeToLookupTable(tree, context_lookup, offsets, multipliers);
+    is_wp_only = TreeToLookupTable(tree, tree_lut);
   }
   if (is_gradient_only) {
-    is_gradient_only =
-        TreeToLookupTable(tree, context_lookup, offsets, multipliers);
+    is_gradient_only = TreeToLookupTable(tree, tree_lut);
   }
 
   if (is_gradient_only) {
@@ -294,11 +291,12 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
             std::min<pixel_type_w>(
                 std::max<pixel_type_w>(-kPropRangeFast, top + left - topleft),
                 kPropRangeFast - 1);
-        uint32_t ctx_id = context_lookup[pos];
+        uint32_t ctx_id = tree_lut.context_lookup[pos];
         uint64_t v =
             reader->ReadHybridUintClusteredMaybeInlined<uses_lz77>(ctx_id, br);
-        r[x] = make_pixel(v, multipliers[pos],
-                          static_cast<pixel_type_w>(offsets[pos]) + guess);
+        r[x] = make_pixel(
+            v, tree_lut.multipliers[pos],
+            static_cast<pixel_type_w>(tree_lut.offsets[pos]) + guess);
       }
     }
   } else if (!uses_lz77 && is_wp_only && channel.w > 8) {
@@ -326,11 +324,12 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
         uint32_t pos =
             kPropRangeFast + std::min(std::max(-kPropRangeFast, properties[0]),
                                       kPropRangeFast - 1);
-        uint32_t ctx_id = context_lookup[pos];
+        uint32_t ctx_id = tree_lut.context_lookup[pos];
         uint64_t v =
             reader->ReadHybridUintClusteredInlined<uses_lz77>(ctx_id, br);
-        r[x] = make_pixel(v, multipliers[pos],
-                          static_cast<pixel_type_w>(offsets[pos]) + guess);
+        r[x] = make_pixel(
+            v, tree_lut.multipliers[pos],
+            static_cast<pixel_type_w>(tree_lut.offsets[pos]) + guess);
         wp_state.UpdateErrors(r[x], x, y, channel.w);
       }
       for (x = 1; x + 1 < channel.w; x++) {
@@ -341,11 +340,12 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
         uint32_t pos =
             kPropRangeFast + std::min(std::max(-kPropRangeFast, properties[0]),
                                       kPropRangeFast - 1);
-        uint32_t ctx_id = context_lookup[pos];
+        uint32_t ctx_id = tree_lut.context_lookup[pos];
         uint64_t v =
             reader->ReadHybridUintClusteredInlined<uses_lz77>(ctx_id, br);
-        r[x] = make_pixel(v, multipliers[pos],
-                          static_cast<pixel_type_w>(offsets[pos]) + guess);
+        r[x] = make_pixel(
+            v, tree_lut.multipliers[pos],
+            static_cast<pixel_type_w>(tree_lut.offsets[pos]) + guess);
         wp_state.UpdateErrors(r[x], x, y, channel.w);
       }
       {
@@ -356,11 +356,12 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
         uint32_t pos =
             kPropRangeFast + std::min(std::max(-kPropRangeFast, properties[0]),
                                       kPropRangeFast - 1);
-        uint32_t ctx_id = context_lookup[pos];
+        uint32_t ctx_id = tree_lut.context_lookup[pos];
         uint64_t v =
             reader->ReadHybridUintClusteredInlined<uses_lz77>(ctx_id, br);
-        r[x] = make_pixel(v, multipliers[pos],
-                          static_cast<pixel_type_w>(offsets[pos]) + guess);
+        r[x] = make_pixel(
+            v, tree_lut.multipliers[pos],
+            static_cast<pixel_type_w>(tree_lut.offsets[pos]) + guess);
         wp_state.UpdateErrors(r[x], x, y, channel.w);
       }
     }
@@ -466,6 +467,25 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
   }
   return true;
 }
+}  // namespace detail
+
+Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
+                                 const std::vector<uint8_t> &context_map,
+                                 const Tree &global_tree,
+                                 const weighted::Header &wp_header,
+                                 pixel_type chan, size_t group_id,
+                                 TreeLut<uint8_t, true> &tree_lut,
+                                 Image *image) {
+  if (reader->UsesLZ77()) {
+    return detail::DecodeModularChannelMAANS</*uses_lz77=*/true>(
+        br, reader, context_map, global_tree, wp_header, chan, group_id,
+        tree_lut, image);
+  } else {
+    return detail::DecodeModularChannelMAANS</*uses_lz77=*/false>(
+        br, reader, context_map, global_tree, wp_header, chan, group_id,
+        tree_lut, image);
+  }
+}
 
 GroupHeader::GroupHeader() { Bundle::Init(this); }
 
@@ -497,7 +517,7 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
                      size_t group_id, ModularOptions *options,
                      const Tree *global_tree, const ANSCode *global_code,
                      const std::vector<uint8_t> *global_ctx_map,
-                     bool allow_truncated_group) {
+                     const bool allow_truncated_group) {
   if (image.channel.empty()) return true;
 
   // decode transforms
@@ -547,12 +567,12 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
 
   size_t next_channel = 0;
   auto scope_guard = MakeScopeGuard([&]() {
-    // Do not do anything if truncated groups are not allowed.
-    if (!allow_truncated_group) return;
-    for (size_t c = next_channel; c < nb_channels; c++) {
+    for (size_t c = next_channel; c < image.channel.size(); c++) {
       ZeroFillImage(&image.channel[c].plane);
     }
   });
+  // Do not do anything if truncated groups are not allowed.
+  if (allow_truncated_group) scope_guard.Disarm();
 
   // Read tree.
   Tree tree_storage;
@@ -588,6 +608,7 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
 
   // Read channels
   ANSSymbolReader reader(code, br, distance_multiplier);
+  auto tree_lut = jxl::make_unique<TreeLut<uint8_t, true>>();
   for (; next_channel < nb_channels; next_channel++) {
     Channel &channel = image.channel[next_channel];
     if (!channel.w || !channel.h) {
@@ -598,15 +619,9 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
          channel.h > options->max_chan_size)) {
       break;
     }
-    if (reader.UsesLZ77()) {
-      JXL_RETURN_IF_ERROR(DecodeModularChannelMAANS</*uses_lz77=*/true>(
-          br, &reader, *context_map, *tree, header.wp_header, next_channel,
-          group_id, &image));
-    } else {
-      JXL_RETURN_IF_ERROR(DecodeModularChannelMAANS</*uses_lz77=*/false>(
-          br, &reader, *context_map, *tree, header.wp_header, next_channel,
-          group_id, &image));
-    }
+    JXL_RETURN_IF_ERROR(DecodeModularChannelMAANS(
+        br, &reader, *context_map, *tree, header.wp_header, next_channel,
+        group_id, *tree_lut, &image));
 
     // Truncated group.
     if (!br->AllReadsWithinBounds()) {

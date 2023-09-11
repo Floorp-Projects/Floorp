@@ -1964,9 +1964,9 @@ static JxlDecoderStatus HandleBoxes(JxlDecoder* dec) {
         dec->box_stage = BoxStage::kHeader;
         // If successful JPEG reconstruction, return the success if the user
         // cares about it, otherwise continue.
-        if (dec->events_wanted & recon_result) {
-          dec->events_wanted &= ~recon_result;
-          return recon_result;
+        if (dec->events_wanted & JXL_DEC_JPEG_RECONSTRUCTION) {
+          dec->events_wanted &= ~JXL_DEC_JPEG_RECONSTRUCTION;
+          return JXL_DEC_JPEG_RECONSTRUCTION;
         }
       } else {
         // If anything else, return the result.

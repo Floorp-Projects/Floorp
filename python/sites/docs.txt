@@ -2,7 +2,7 @@ pth:tools/lint/eslint/
 pypi:Babel==2.12.1
 pypi:Markdown==3.4.3
 pypi:Pygments==2.14.0
-pypi:Sphinx==5.1.1
+pypi:Sphinx==5.3.0
 pypi:alabaster==0.7.13
 pypi:backports-abc==0.5
 pypi:boto3==1.26.80

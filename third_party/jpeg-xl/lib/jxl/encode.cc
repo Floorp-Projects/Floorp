@@ -15,9 +15,13 @@
 
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/padded_bytes.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/base/status.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/enc_aux_out.h"
+#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_fast_lossless.h"
@@ -29,7 +33,38 @@
 #include "lib/jxl/exif.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 #include "lib/jxl/luminance.h"
+#include "lib/jxl/memory_manager_internal.h"
 #include "lib/jxl/sanitizers.h"
+
+struct JxlErrorOrStatus {
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator jxl::Status() const {
+    switch (error_) {
+      case JXL_ENC_SUCCESS:
+        return jxl::OkStatus();
+      case JXL_ENC_NEED_MORE_OUTPUT:
+        return jxl::StatusCode::kNotEnoughBytes;
+      default:
+        return jxl::StatusCode::kGenericError;
+    }
+  }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator JxlEncoderStatus() const { return error_; }
+
+  static JxlErrorOrStatus Success() {
+    return JxlErrorOrStatus(JXL_ENC_SUCCESS);
+  }
+
+  static JxlErrorOrStatus MoreOutput() {
+    return JxlErrorOrStatus(JXL_ENC_NEED_MORE_OUTPUT);
+  }
+
+  static JxlErrorOrStatus Error() { return JxlErrorOrStatus(JXL_ENC_ERROR); }
+
+ private:
+  explicit JxlErrorOrStatus(JxlEncoderStatus error) : error_(error) {}
+  JxlEncoderStatus error_;
+};
 
 // Debug-printing failure macro similar to JXL_FAILURE, but for the status code
 // JXL_ENC_ERROR
@@ -37,22 +72,336 @@
 #define JXL_API_ERROR(enc, error_code, format, ...)                          \
   (enc->error = error_code,                                                  \
    ::jxl::Debug(("%s:%d: " format "\n"), __FILE__, __LINE__, ##__VA_ARGS__), \
-   ::jxl::Abort(), JXL_ENC_ERROR)
+   ::jxl::Abort(), JxlErrorOrStatus::Error())
 #define JXL_API_ERROR_NOSET(format, ...)                                     \
   (::jxl::Debug(("%s:%d: " format "\n"), __FILE__, __LINE__, ##__VA_ARGS__), \
-   ::jxl::Abort(), JXL_ENC_ERROR)
+   ::jxl::Abort(), JxlErrorOrStatus::Error())
 #else  // JXL_CRASH_ON_ERROR
 #define JXL_API_ERROR(enc, error_code, format, ...)                            \
   (enc->error = error_code,                                                    \
    ((JXL_DEBUG_ON_ERROR) &&                                                    \
     ::jxl::Debug(("%s:%d: " format "\n"), __FILE__, __LINE__, ##__VA_ARGS__)), \
-   JXL_ENC_ERROR)
+   JxlErrorOrStatus::Error())
 #define JXL_API_ERROR_NOSET(format, ...)                                     \
   (::jxl::Debug(("%s:%d: " format "\n"), __FILE__, __LINE__, ##__VA_ARGS__), \
-   JXL_ENC_ERROR)
+   JxlErrorOrStatus::Error())
 #endif  // JXL_CRASH_ON_ERROR
 
-namespace jxl {}  // namespace jxl
+jxl::StatusOr<JxlOutputProcessorBuffer>
+JxlEncoderOutputProcessorWrapper::GetBuffer(size_t min_size,
+                                            size_t requested_size) {
+  JXL_ASSERT(min_size > 0);
+  JXL_ASSERT(!has_buffer_);
+  if (stop_requested_) return jxl::StatusCode::kNotEnoughBytes;
+  requested_size = std::max(min_size, requested_size);
+
+  // If we support seeking, output_position_ == position_.
+  if (external_output_processor_ && external_output_processor_->seek) {
+    JXL_ASSERT(output_position_ == position_);
+  }
+  // Otherwise, output_position_ <= position_.
+  JXL_ASSERT(output_position_ <= position_);
+  size_t additional_size = position_ - output_position_;
+
+  if (external_output_processor_) {
+    // TODO(veluca): here, we cannot just ask for a larger buffer, as it will be
+    // released with a prefix of the buffer that has not been written yet.
+    // Figure out if there is a good way to do this more efficiently.
+    if (additional_size == 0) {
+      size_t size = requested_size;
+      uint8_t* user_buffer =
+          static_cast<uint8_t*>(external_output_processor_->get_buffer(
+              external_output_processor_->opaque, &size));
+      if (size == 0 || user_buffer == nullptr) {
+        stop_requested_ = true;
+        return jxl::StatusCode::kNotEnoughBytes;
+      }
+      if (size < min_size) {
+        external_output_processor_->release_buffer(
+            external_output_processor_->opaque, 0);
+      } else {
+        internal_buffers_.emplace(position_, InternalBuffer());
+        has_buffer_ = true;
+        return JxlOutputProcessorBuffer(user_buffer, size, 0, this);
+      }
+    }
+  } else {
+    if (min_size + additional_size < *avail_out_) {
+      internal_buffers_.emplace(position_, InternalBuffer());
+      has_buffer_ = true;
+      return JxlOutputProcessorBuffer(*next_out_ + additional_size,
+                                      *avail_out_ - additional_size, 0, this);
+    }
+  }
+
+  // Otherwise, we need to allocate our own buffer.
+  auto it = internal_buffers_.emplace(position_, InternalBuffer()).first;
+  InternalBuffer& buffer = it->second;
+  size_t alloc_size = requested_size;
+  it++;
+  if (it != internal_buffers_.end()) {
+    alloc_size = std::min(alloc_size, it->first - position_);
+    JXL_ASSERT(alloc_size >= min_size);
+  }
+  buffer.owned_data.resize(alloc_size);
+  has_buffer_ = true;
+  return JxlOutputProcessorBuffer(buffer.owned_data.data(), alloc_size, 0,
+                                  this);
+}
+
+void JxlEncoderOutputProcessorWrapper::Seek(size_t pos) {
+  JXL_ASSERT(!has_buffer_);
+  if (external_output_processor_ && external_output_processor_->seek) {
+    external_output_processor_->seek(external_output_processor_->opaque, pos);
+    output_position_ = pos;
+  }
+  JXL_ASSERT(pos >= finalized_position_);
+  position_ = pos;
+}
+
+void JxlEncoderOutputProcessorWrapper::SetFinalizedPosition() {
+  JXL_ASSERT(!has_buffer_);
+  if (external_output_processor_ && external_output_processor_->seek) {
+    external_output_processor_->set_finalized_position(
+        external_output_processor_->opaque, position_);
+  }
+  finalized_position_ = position_;
+  FlushOutput();
+}
+
+bool JxlEncoderOutputProcessorWrapper::SetAvailOut(uint8_t** next_out,
+                                                   size_t* avail_out) {
+  if (external_output_processor_) return false;
+  avail_out_ = avail_out;
+  next_out_ = next_out;
+  FlushOutput();
+  return true;
+}
+
+void JxlEncoderOutputProcessorWrapper::ReleaseBuffer(size_t bytes_used) {
+  JXL_ASSERT(has_buffer_);
+  has_buffer_ = false;
+  auto it = internal_buffers_.find(position_);
+  JXL_ASSERT(it != internal_buffers_.end());
+  if (bytes_used == 0) {
+    if (external_output_processor_) {
+      external_output_processor_->release_buffer(
+          external_output_processor_->opaque, bytes_used);
+    }
+    internal_buffers_.erase(it);
+    return;
+  }
+  it->second.written_bytes = bytes_used;
+  position_ += bytes_used;
+
+  auto it_to_next = it;
+  it_to_next++;
+  if (it_to_next != internal_buffers_.end()) {
+    JXL_ASSERT(it_to_next->first >= position_);
+  }
+
+  if (external_output_processor_) {
+    // If the buffer was given by the user, tell the user it is not needed
+    // anymore.
+    if (it->second.owned_data.empty()) {
+      external_output_processor_->release_buffer(
+          external_output_processor_->opaque, bytes_used);
+      // If we don't support seeking, this implies we will never modify again
+      // the bytes that were written so far. Advance the finalized position and
+      // flush the output to clean up the internal buffers.
+      if (!external_output_processor_->seek) {
+        SetFinalizedPosition();
+        JXL_ASSERT(output_position_ == finalized_position_);
+        JXL_ASSERT(output_position_ == position_);
+      } else {
+        // Otherwise, advance the output position accordingly.
+        output_position_ += bytes_used;
+        JXL_ASSERT(output_position_ >= finalized_position_);
+        JXL_ASSERT(output_position_ == position_);
+      }
+    } else if (external_output_processor_->seek) {
+      // If we had buffered the data internally, flush it out to the external
+      // processor if we can.
+      external_output_processor_->seek(external_output_processor_->opaque,
+                                       position_ - bytes_used);
+      output_position_ = position_ - bytes_used;
+      while (output_position_ < position_) {
+        size_t num_to_write = position_ - output_position_;
+        if (!AppendBufferToExternalProcessor(it->second.owned_data.data() +
+                                                 output_position_ - position_ +
+                                                 bytes_used,
+                                             num_to_write)) {
+          return;
+        }
+      }
+      it->second.owned_data.clear();
+    }
+  }
+}
+
+// Tries to write all the bytes up to the finalized position.
+void JxlEncoderOutputProcessorWrapper::FlushOutput() {
+  JXL_ASSERT(!has_buffer_);
+  while (output_position_ < finalized_position_ &&
+         (avail_out_ == nullptr || *avail_out_ > 0)) {
+    JXL_ASSERT(!internal_buffers_.empty());
+    auto it = internal_buffers_.begin();
+    // If this fails, we are trying to move the finalized position past data
+    // that was not written yet. This is a library programming error.
+    JXL_ASSERT(output_position_ >= it->first);
+    JXL_ASSERT(it->second.written_bytes != 0);
+    size_t buffer_last_byte = it->first + it->second.written_bytes;
+    if (!it->second.owned_data.empty()) {
+      size_t start_in_buffer = output_position_ - it->first;
+      // Guaranteed by the invariant on `internal_buffers_`.
+      JXL_ASSERT(buffer_last_byte > output_position_);
+      size_t num_to_write =
+          std::min(buffer_last_byte, finalized_position_) - output_position_;
+      if (avail_out_ != nullptr) {
+        size_t n = std::min(num_to_write, *avail_out_);
+        memcpy(*next_out_, it->second.owned_data.data() + start_in_buffer, n);
+        *avail_out_ -= n;
+        *next_out_ += n;
+        output_position_ += n;
+      } else {
+        if (!AppendBufferToExternalProcessor(
+                it->second.owned_data.data() + start_in_buffer, num_to_write)) {
+          return;
+        }
+      }
+    } else {
+      size_t advance =
+          std::min(buffer_last_byte, finalized_position_) - output_position_;
+      output_position_ += advance;
+      if (avail_out_ != nullptr) {
+        *next_out_ += advance;
+        *avail_out_ -= advance;
+      }
+    }
+    if (buffer_last_byte == output_position_) {
+      internal_buffers_.erase(it);
+    }
+    if (external_output_processor_ && !external_output_processor_->seek) {
+      external_output_processor_->set_finalized_position(
+          external_output_processor_->opaque, output_position_);
+    }
+  }
+}
+
+bool JxlEncoderOutputProcessorWrapper::AppendBufferToExternalProcessor(
+    void* data, size_t count) {
+  JXL_ASSERT(external_output_processor_);
+  size_t n = count;
+  void* user_buffer = external_output_processor_->get_buffer(
+      external_output_processor_->opaque, &n);
+  if (user_buffer == nullptr || n == 0) {
+    stop_requested_ = true;
+    return false;
+  }
+  n = std::min(n, count);
+  memcpy(user_buffer, data, n);
+  external_output_processor_->release_buffer(external_output_processor_->opaque,
+                                             n);
+  output_position_ += n;
+  return true;
+}
+
+namespace jxl {
+
+size_t WriteBoxHeader(const jxl::BoxType& type, size_t size, bool unbounded,
+                      bool force_large_box, uint8_t* output) {
+  uint64_t box_size = 0;
+  bool large_size = false;
+  if (!unbounded) {
+    if (box_size >= kLargeBoxContentSizeThreshold || force_large_box) {
+      large_size = true;
+      // TODO: send a separate CL for this (+ test),
+      // quick fix in the old code: box_size += 8
+      box_size = size + kLargeBoxHeaderSize;
+    } else {
+      box_size = size + kSmallBoxHeaderSize;
+    }
+  }
+
+  size_t idx = 0;
+  {
+    const uint64_t store = large_size ? 1 : box_size;
+    for (size_t i = 0; i < 4; i++) {
+      output[idx++] = store >> (8 * (3 - i)) & 0xff;
+    }
+  }
+  for (size_t i = 0; i < 4; i++) {
+    output[idx++] = type[i];
+  }
+
+  if (large_size) {
+    for (size_t i = 0; i < 8; i++) {
+      output[idx++] = box_size >> (8 * (7 - i)) & 0xff;
+    }
+  }
+  return idx;
+}
+}  // namespace jxl
+
+template <typename WriteBox>
+jxl::Status JxlEncoderStruct::AppendBox(const jxl::BoxType& type,
+                                        bool unbounded, size_t box_max_size,
+                                        const WriteBox& write_box) {
+  size_t current_position = output_processor.CurrentPosition();
+  bool large_box = false;
+  if (box_max_size >= jxl::kLargeBoxContentSizeThreshold && !unbounded) {
+    output_processor.Seek(current_position + jxl::kLargeBoxHeaderSize);
+    large_box = true;
+  } else {
+    output_processor.Seek(current_position + jxl::kSmallBoxHeaderSize);
+  }
+  size_t box_contents_start = output_processor.CurrentPosition();
+  JXL_RETURN_IF_ERROR(write_box());
+  size_t box_contents_end = output_processor.CurrentPosition();
+  output_processor.Seek(current_position);
+  JXL_ASSERT(box_contents_end >= box_contents_start);
+  if (box_contents_end - box_contents_start > box_max_size) {
+    return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
+                         "Internal error: upper bound on box size was "
+                         "violated, upper bound: %" PRIuS ", actual: %" PRIuS,
+                         box_max_size, box_contents_end - box_contents_start);
+  }
+  // We need to release the buffer before Seek.
+  {
+    JXL_ASSIGN_OR_RETURN(
+        auto buffer,
+        output_processor.GetBuffer(box_contents_start - current_position));
+    buffer.advance(jxl::WriteBoxHeader(type,
+                                       box_contents_end - box_contents_start,
+                                       unbounded, large_box, buffer.data()));
+  }
+  output_processor.Seek(box_contents_end);
+  output_processor.SetFinalizedPosition();
+  return jxl::OkStatus();
+}
+
+template <typename T>
+jxl::Status AppendData(JxlEncoderOutputProcessorWrapper& output_processor,
+                       const T& data) {
+  size_t size = std::end(data) - std::begin(data);
+  size_t written = 0;
+  while (written < size) {
+    JXL_ASSIGN_OR_RETURN(auto buffer,
+                         output_processor.GetBuffer(1, size - written));
+    size_t n = std::min(size - written, buffer.size());
+    buffer.append(data.data() + written, n);
+    written += n;
+  }
+  return jxl::OkStatus();
+}
+
+template <typename BoxContents>
+jxl::Status JxlEncoderStruct::AppendBoxWithContents(
+    const jxl::BoxType& type, const BoxContents& contents) {
+  size_t size = std::end(contents) - std::begin(contents);
+  return AppendBox(type, /*unbounded=*/false, size,
+                   [&]() { return AppendData(output_processor, contents); });
+}
 
 uint32_t JxlEncoderVersion(void) {
   return JPEGXL_MAJOR_VERSION * 1000000 + JPEGXL_MINOR_VERSION * 1000 +
@@ -60,12 +409,14 @@ uint32_t JxlEncoderVersion(void) {
 }
 
 namespace {
-template <typename T>
-void AppendJxlpBoxCounter(uint32_t counter, bool last, T* output) {
+void WriteJxlpBoxCounter(uint32_t counter, bool last,
+                         JxlOutputProcessorBuffer& buffer) {
   if (last) counter |= 0x80000000;
+  uint8_t buf[4];
   for (size_t i = 0; i < 4; i++) {
-    output->push_back(counter >> (8 * (3 - i)) & 0xff);
+    buf[i] = counter >> (8 * (3 - i)) & 0xff;
   }
+  buffer.append(buf, 4);
 }
 
 void QueueFrame(
@@ -132,7 +483,7 @@ JxlEncoderStatus BrotliCompress(int quality, const uint8_t* in, size_t in_size,
     if (BrotliEncoderIsFinished(enc.get())) break;
   }
 
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 // The JXL codestream can have level 5 or level 10. Levels have certain
@@ -253,12 +604,12 @@ JxlEncoderStatus CheckValidBitdepth(uint32_t bits_per_sample,
              (bits_per_sample < 3 + exponent_bits_per_sample)) {
     return JXL_API_ERROR_NOSET("Invalid float description");
   }
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus VerifyInputBitDepth(JxlBitDepth bit_depth,
                                      JxlPixelFormat format) {
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 bool EncodeFrameIndexBox(const jxl::JxlEncoderFrameIndexBox& frame_index_box,
@@ -340,7 +691,7 @@ bool EncodeFrameIndexBox(const jxl::JxlEncoderFrameIndexBox& frame_index_box,
 
 }  // namespace
 
-JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
+jxl::Status JxlEncoderStruct::ProcessOneEnqueuedInput() {
   jxl::PaddedBytes bytes;
 
   jxl::JxlEncoderQueuedInput& input = input_queue[0];
@@ -405,16 +756,19 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
 
     if (MustUseContainer()) {
       // Add "JXL " and ftyp box.
-      output_byte_queue.insert(
-          output_byte_queue.end(), jxl::kContainerHeader,
-          jxl::kContainerHeader + sizeof(jxl::kContainerHeader));
+      {
+        JXL_ASSIGN_OR_RETURN(auto buffer, output_processor.GetBuffer(
+                                              jxl::kContainerHeader.size()));
+        buffer.append(jxl::kContainerHeader);
+      }
       if (codestream_level != 5) {
         // Add jxll box directly after the ftyp box to indicate the codestream
         // level.
-        output_byte_queue.insert(
-            output_byte_queue.end(), jxl::kLevelBoxHeader,
-            jxl::kLevelBoxHeader + sizeof(jxl::kLevelBoxHeader));
-        output_byte_queue.push_back(codestream_level);
+        JXL_ASSIGN_OR_RETURN(auto buffer, output_processor.GetBuffer(
+                                              jxl::kLevelBoxHeader.size() + 1));
+        buffer.append(jxl::kLevelBoxHeader);
+        uint8_t cl = codestream_level;
+        buffer.append(&cl, 1);
       }
 
       // Whether to write the basic info and color profile header of the
@@ -428,20 +782,21 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
           (use_boxes && (!input.frame && !input.fast_lossless_frame));
 
       if (partial_header) {
-        jxl::AppendBoxHeader(jxl::MakeBoxType("jxlp"), bytes.size() + 4,
-                             /*unbounded=*/false, &output_byte_queue);
-        AppendJxlpBoxCounter(jxlp_counter++, /*last=*/false,
-                             &output_byte_queue);
-        output_byte_queue.insert(output_byte_queue.end(), bytes.data(),
-                                 bytes.data() + bytes.size());
+        JXL_RETURN_IF_ERROR(AppendBox(
+            jxl::MakeBoxType("jxlp"), /*unbounded=*/false, bytes.size() + 4,
+            [&]() {
+              JXL_ASSIGN_OR_RETURN(
+                  auto buffer, output_processor.GetBuffer(bytes.size() + 4));
+              WriteJxlpBoxCounter(jxlp_counter++, /*last=*/false, buffer);
+              buffer.append(bytes);
+              return jxl::OkStatus();
+            }));
         bytes.clear();
       }
 
       if (store_jpeg_metadata && !jpeg_metadata.empty()) {
-        jxl::AppendBoxHeader(jxl::MakeBoxType("jbrd"), jpeg_metadata.size(),
-                             false, &output_byte_queue);
-        output_byte_queue.insert(output_byte_queue.end(), jpeg_metadata.begin(),
-                                 jpeg_metadata.end());
+        JXL_RETURN_IF_ERROR(
+            AppendBoxWithContents(jxl::MakeBoxType("jbrd"), jpeg_metadata));
       }
     }
     wrote_bytes = true;
@@ -452,9 +807,8 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
   if (input.frame || input.fast_lossless_frame) {
     jxl::MemoryManagerUniquePtr<jxl::JxlEncoderQueuedFrame> input_frame =
         std::move(input.frame);
-    if (input.fast_lossless_frame) {
-      output_fast_frame_queue.push_back(std::move(input.fast_lossless_frame));
-    }
+    jxl::FJXLFrameUniquePtr fast_lossless_frame =
+        std::move(input.fast_lossless_frame);
     input_queue.erase(input_queue.begin());
     num_queued_frames--;
     if (input_frame) {
@@ -499,9 +853,10 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
 
     bool last_frame = frames_closed && !num_queued_frames;
 
-    size_t codestream_byte_size = 0;
-
     jxl::BitWriter writer;
+
+    std::function<jxl::Status()> append_frame_codestream;
+    size_t codestream_upper_bound = 0;
 
     if (input_frame) {
       jxl::PassesEncoderState enc_state;
@@ -580,41 +935,69 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
       // the first frame, and the codestream header was not encoded as jxlp
       // above.
       bytes.append(std::move(writer).TakeBytes());
-      codestream_byte_size = bytes.size();
+      codestream_upper_bound = bytes.size();
+      append_frame_codestream = [&bytes, this]() {
+        return AppendData(output_processor, bytes);
+      };
     } else {
-      JXL_CHECK(!output_fast_frame_queue.empty());
-      JxlFastLosslessPrepareHeader(output_fast_frame_queue.front().get(),
+      JXL_CHECK(fast_lossless_frame);
+      JxlFastLosslessPrepareHeader(fast_lossless_frame.get(),
                                    /*add_image_header=*/0, last_frame);
-      codestream_byte_size =
-          JxlFastLosslessOutputSize(output_fast_frame_queue.front().get()) +
-          bytes.size();
+      size_t fl_size = JxlFastLosslessOutputSize(fast_lossless_frame.get());
+      codestream_upper_bound = fl_size + bytes.size();
+      append_frame_codestream = [&bytes, &fast_lossless_frame, fl_size,
+                                 this]() {
+        if (!bytes.empty()) {
+          JXL_RETURN_IF_ERROR(AppendData(output_processor, bytes));
+        }
+        size_t written = 0;
+        while (true) {
+          JXL_ASSIGN_OR_RETURN(
+              auto buffer, output_processor.GetBuffer(32, fl_size - written));
+          size_t n = JxlFastLosslessWriteOutput(fast_lossless_frame.get(),
+                                                buffer.data(), buffer.size());
+          if (n == 0) break;
+          buffer.advance(n);
+          written += n;
+        };
+        return jxl::OkStatus();
+      };
     }
 
     if (MustUseContainer()) {
       if (last_frame && jxlp_counter == 0) {
         // If this is the last frame and no jxlp boxes were used yet, it's
-        // slighly more efficient to write a jxlc box since it has 4 bytes
+        // slightly more efficient to write a jxlc box since it has 4 bytes
         // less overhead.
-        jxl::AppendBoxHeader(jxl::MakeBoxType("jxlc"), codestream_byte_size,
-                             /*unbounded=*/false, &output_byte_queue);
+        JXL_RETURN_IF_ERROR(
+            AppendBox(jxl::MakeBoxType("jxlc"), /*unbounded=*/false,
+                      codestream_upper_bound, append_frame_codestream));
       } else {
-        jxl::AppendBoxHeader(jxl::MakeBoxType("jxlp"), codestream_byte_size + 4,
-                             /*unbounded=*/false, &output_byte_queue);
-        AppendJxlpBoxCounter(jxlp_counter++, last_frame, &output_byte_queue);
+        JXL_RETURN_IF_ERROR(AppendBox(
+            jxl::MakeBoxType("jxlp"), /*unbounded=*/false,
+            codestream_upper_bound + 4, [&]() {
+              {
+                JXL_ASSIGN_OR_RETURN(auto buffer,
+                                     output_processor.GetBuffer(4));
+                WriteJxlpBoxCounter(jxlp_counter++, last_frame, buffer);
+              }
+              return append_frame_codestream();
+            }));
       }
+    } else {
+      JXL_RETURN_IF_ERROR(append_frame_codestream());
+      output_processor.SetFinalizedPosition();
     }
-
-    output_byte_queue.insert(output_byte_queue.end(), bytes.data(),
-                             bytes.data() + bytes.size());
 
     if (input_frame) {
       last_used_cparams = input_frame->option_values.cparams;
     }
     if (last_frame && frame_index_box.StoreFrameIndexBox()) {
-      bytes.clear();
+      jxl::BitWriter writer;
       EncodeFrameIndexBox(frame_index_box, writer);
-      jxl::AppendBoxHeader(jxl::MakeBoxType("jxli"), bytes.size(),
-                           /*unbounded=*/false, &output_byte_queue);
+      writer.ZeroPadToByte();
+      JXL_RETURN_IF_ERROR(
+          AppendBoxWithContents(jxl::MakeBoxType("jxli"), writer.GetSpan()));
     }
   } else {
     // Not a frame, so is a box instead
@@ -636,19 +1019,15 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
         return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
                              "Brotli compression for brob box failed");
       }
-      jxl::AppendBoxHeader(jxl::MakeBoxType("brob"), compressed.size(), false,
-                           &output_byte_queue);
-      output_byte_queue.insert(output_byte_queue.end(), compressed.data(),
-                               compressed.data() + compressed.size());
+
+      JXL_RETURN_IF_ERROR(
+          AppendBoxWithContents(jxl::MakeBoxType("brob"), compressed));
     } else {
-      jxl::AppendBoxHeader(box->type, box->contents.size(), false,
-                           &output_byte_queue);
-      output_byte_queue.insert(output_byte_queue.end(), box->contents.data(),
-                               box->contents.data() + box->contents.size());
+      JXL_RETURN_IF_ERROR(AppendBoxWithContents(box->type, box->contents));
     }
   }
 
-  return JXL_ENC_SUCCESS;
+  return jxl::OkStatus();
 }
 
 JxlEncoderStatus JxlEncoderSetColorEncoding(JxlEncoder* enc,
@@ -680,7 +1059,7 @@ JxlEncoderStatus JxlEncoderSetColorEncoding(JxlEncoder* enc,
   if (!enc->intensity_target_set) {
     jxl::SetIntensityTarget(&enc->metadata.m);
   }
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderSetICCProfile(JxlEncoder* enc,
@@ -723,7 +1102,7 @@ JxlEncoderStatus JxlEncoderSetICCProfile(JxlEncoder* enc,
     enc->metadata.m.color_encoding.DecideIfWantICC(enc->cms);
   }
 
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 void JxlEncoderInitBasicInfo(JxlBasicInfo* info) {
@@ -902,7 +1281,7 @@ JxlEncoderStatus JxlEncoderSetBasicInfo(JxlEncoder* enc,
          std::to_string(enc->codestream_level) + " failed: " + level_message)
             .c_str());
   }
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 void JxlEncoderInitExtraChannelInfo(JxlExtraChannelType type,
@@ -924,7 +1303,7 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetUpsamplingMode(JxlEncoder* enc,
                                                         const int64_t factor,
                                                         const int64_t mode) {
   // for convenience, allow calling this with factor 1 and just make it a no-op
-  if (factor == 1) return JXL_ENC_SUCCESS;
+  if (factor == 1) return JxlErrorOrStatus::Success();
   if (factor != 2 && factor != 4 && factor != 8)
     return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE,
                          "Invalid upsampling factor");
@@ -966,7 +1345,7 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetUpsamplingMode(JxlEncoder* enc,
       for (int i : {54, 124}) weights[i] = 0.5f;
     }
   }
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelInfo(
@@ -1006,7 +1385,7 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelInfo(
          std::to_string(enc->codestream_level) + " failed: " + level_message)
             .c_str());
   }
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelName(JxlEncoder* enc,
@@ -1019,7 +1398,7 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelName(JxlEncoder* enc,
   }
   enc->metadata.m.extra_channel_info[index].name =
       std::string(name, name + size);
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderFrameSettings* JxlEncoderFrameSettingsCreate(
@@ -1051,7 +1430,7 @@ JxlEncoderStatus JxlEncoderSetFrameLossless(
         "Set uses_original_profile=true for lossless encoding");
   }
   frame_settings->values.lossless = lossless;
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderSetFrameDistance(
@@ -1065,7 +1444,7 @@ JxlEncoderStatus JxlEncoderSetFrameDistance(
     distance = 0.01f;
   }
   frame_settings->values.cparams.butteraugli_distance = distance;
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderSetExtraChannelDistance(
@@ -1092,7 +1471,7 @@ JxlEncoderStatus JxlEncoderSetExtraChannelDistance(
   }
 
   frame_settings->values.cparams.ec_distance[index] = distance;
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
@@ -1138,7 +1517,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       }
       frame_settings->values.cparams.speed_tier =
           static_cast<jxl::SpeedTier>(10 - value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_BROTLI_EFFORT:
       if (value < -1 || value > 11) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
@@ -1148,21 +1527,21 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       frame_settings->values.cparams.brotli_effort = value;
       // set enc option for brotli use in brob boxes
       frame_settings->enc->brotli_effort = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_DECODING_SPEED:
       if (value < 0 || value > 4) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
                              "Decoding speed has to be in [0..4]");
       }
       frame_settings->values.cparams.decoding_speed_tier = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_RESAMPLING:
       if (value != -1 && value != 1 && value != 2 && value != 4 && value != 8) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                              "Resampling factor has to be 1, 2, 4 or 8");
       }
       frame_settings->values.cparams.resampling = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_EXTRA_CHANNEL_RESAMPLING:
       // TODO(lode): the jxl codestream allows choosing a different resampling
       // factor for each extra channel, independently per frame. Move this
@@ -1175,74 +1554,74 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
                              "Resampling factor has to be 1, 2, 4 or 8");
       }
       frame_settings->values.cparams.ec_resampling = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_ALREADY_DOWNSAMPLED:
       if (value < 0 || value > 1) {
-        return JXL_ENC_ERROR;
+        return JxlErrorOrStatus::Error();
       }
       frame_settings->values.cparams.already_downsampled = (value == 1);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_NOISE:
       frame_settings->values.cparams.noise = static_cast<jxl::Override>(value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_DOTS:
       frame_settings->values.cparams.dots = static_cast<jxl::Override>(value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_PATCHES:
       frame_settings->values.cparams.patches =
           static_cast<jxl::Override>(value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_EPF:
       if (value < -1 || value > 3) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                              "EPF value has to be in [-1..3]");
       }
       frame_settings->values.cparams.epf = static_cast<int>(value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_GABORISH:
       frame_settings->values.cparams.gaborish =
           static_cast<jxl::Override>(value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_MODULAR:
       frame_settings->values.cparams.modular_mode = (value == 1);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_KEEP_INVISIBLE:
       frame_settings->values.cparams.keep_invisible =
           static_cast<jxl::Override>(value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_GROUP_ORDER:
       frame_settings->values.cparams.centerfirst = (value == 1);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_GROUP_ORDER_CENTER_X:
       if (value < -1) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                              "Center x coordinate has to be -1 or positive");
       }
       frame_settings->values.cparams.center_x = static_cast<size_t>(value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_GROUP_ORDER_CENTER_Y:
       if (value < -1) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                              "Center y coordinate has to be -1 or positive");
       }
       frame_settings->values.cparams.center_y = static_cast<size_t>(value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_RESPONSIVE:
       frame_settings->values.cparams.responsive = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_PROGRESSIVE_AC:
       frame_settings->values.cparams.progressive_mode = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_QPROGRESSIVE_AC:
       frame_settings->values.cparams.qprogressive_mode = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC:
       if (value < -1 || value > 2) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                              "Progressive DC has to be in [-1..2]");
       }
       frame_settings->values.cparams.progressive_dc = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_PALETTE_COLORS:
       if (value < -1 || value > 70913) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
@@ -1253,13 +1632,14 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       } else {
         frame_settings->values.cparams.palette_colors = value;
       }
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_LOSSY_PALETTE:
       // TODO(lode): the defaults of some palette settings depend on others.
       // See the logic in cjxl. Similar for other settings. This should be
       // handled in the encoder during JxlEncoderProcessOutput (or,
       // alternatively, in the cjxl binary like now)
       frame_settings->values.cparams.lossy_palette = (value == 1);
+      break;
       return JXL_ENC_SUCCESS;
     case JXL_ENC_FRAME_SETTING_COLOR_TRANSFORM:
       if (value < -1 || value > 2) {
@@ -1273,21 +1653,21 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
         frame_settings->values.cparams.color_transform =
             static_cast<jxl::ColorTransform>(value);
       }
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_MODULAR_COLOR_SPACE:
       if (value < -1 || value > 41) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                              "Option value has to be in [-1..41]");
       }
       frame_settings->values.cparams.colorspace = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_MODULAR_GROUP_SIZE:
       if (value < -1 || value > 3) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                              "Option value has to be in [-1..3]");
       }
       frame_settings->values.cparams.modular_group_size_shift = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_MODULAR_PREDICTOR:
       if (value < -1 || value > 15) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
@@ -1295,7 +1675,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       }
       frame_settings->values.cparams.options.predictor =
           static_cast<jxl::Predictor>(value);
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_MODULAR_NB_PREV_CHANNELS:
       // The max allowed value can in theory be higher. However, it depends on
       // the effort setting. 11 is the highest safe value that doesn't cause
@@ -1311,44 +1691,45 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       } else {
         frame_settings->values.cparams.options.max_properties = value;
       }
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_JPEG_RECON_CFL:
       if (value == -1) {
         frame_settings->values.cparams.force_cfl_jpeg_recompression = true;
       } else {
         frame_settings->values.cparams.force_cfl_jpeg_recompression = value;
       }
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_INDEX_BOX:
       frame_settings->values.frame_index_box = true;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_PHOTON_NOISE:
       return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
                            "Float option, try setting it with "
                            "JxlEncoderFrameSettingsSetFloatOption");
     case JXL_ENC_FRAME_SETTING_JPEG_COMPRESS_BOXES:
       frame_settings->values.cparams.jpeg_compress_boxes = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_BUFFERING:
       if (value < 0 || value > 3) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
                              "Buffering has to be in [0..3]");
       }
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_JPEG_KEEP_EXIF:
       frame_settings->values.cparams.jpeg_keep_exif = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_JPEG_KEEP_XMP:
       frame_settings->values.cparams.jpeg_keep_xmp = value;
-      return JXL_ENC_SUCCESS;
+      break;
     case JXL_ENC_FRAME_SETTING_JPEG_KEEP_JUMBF:
       frame_settings->values.cparams.jpeg_keep_jumbf = value;
-      return JXL_ENC_SUCCESS;
+      break;
 
     default:
       return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
                            "Unknown option");
   }
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderFrameSettingsSetFloatOption(
@@ -1360,7 +1741,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetFloatOption(
       // TODO(lode): add encoder setting to set the 8 floating point values of
       // the noise synthesis parameters per frame for more fine grained control.
       frame_settings->values.cparams.photon_noise_iso = value;
-      return JXL_ENC_SUCCESS;
+      return JxlErrorOrStatus::Success();
     case JXL_ENC_FRAME_SETTING_MODULAR_MA_TREE_LEARNING_PERCENT:
       if (value < -1.f || value > 100.f) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
@@ -1378,7 +1759,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetFloatOption(
       } else {
         frame_settings->values.cparams.options.nb_repeats = value * 0.01f;
       }
-      return JXL_ENC_SUCCESS;
+      return JxlErrorOrStatus::Success();
     case JXL_ENC_FRAME_SETTING_CHANNEL_COLORS_GLOBAL_PERCENT:
       if (value < -1.f || value > 100.f) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
@@ -1391,7 +1772,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetFloatOption(
         frame_settings->values.cparams.channel_colors_pre_transform_percent =
             value;
       }
-      return JXL_ENC_SUCCESS;
+      return JxlErrorOrStatus::Success();
     case JXL_ENC_FRAME_SETTING_CHANNEL_COLORS_GROUP_PERCENT:
       if (value < -1.f || value > 100.f) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
@@ -1402,7 +1783,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetFloatOption(
       } else {
         frame_settings->values.cparams.channel_colors_percent = value;
       }
-      return JXL_ENC_SUCCESS;
+      return JxlErrorOrStatus::Success();
     case JXL_ENC_FRAME_SETTING_EFFORT:
     case JXL_ENC_FRAME_SETTING_DECODING_SPEED:
     case JXL_ENC_FRAME_SETTING_RESAMPLING:
@@ -1473,8 +1854,6 @@ void JxlEncoderReset(JxlEncoder* enc) {
   enc->num_queued_frames = 0;
   enc->num_queued_boxes = 0;
   enc->encoder_options.clear();
-  enc->output_byte_queue.clear();
-  enc->output_fast_frame_queue.clear();
   enc->codestream_bytes_written_beginning_of_frame = 0;
   enc->codestream_bytes_written_end_of_frame = 0;
   enc->wrote_bytes = false;
@@ -1489,6 +1868,7 @@ void JxlEncoderReset(JxlEncoder* enc) {
   enc->use_container = false;
   enc->use_boxes = false;
   enc->codestream_level = -1;
+  enc->output_processor = JxlEncoderOutputProcessorWrapper();
   JxlEncoderInitBasicInfo(&enc->basic_info);
 }
 
@@ -1510,7 +1890,7 @@ JxlEncoderStatus JxlEncoderUseContainer(JxlEncoder* enc,
                          "this setting can only be set at the beginning");
   }
   enc->use_container = static_cast<bool>(use_container);
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderStoreJPEGMetadata(JxlEncoder* enc,
@@ -1520,7 +1900,7 @@ JxlEncoderStatus JxlEncoderStoreJPEGMetadata(JxlEncoder* enc,
                          "this setting can only be set at the beginning");
   }
   enc->store_jpeg_metadata = static_cast<bool>(store_jpeg_metadata);
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderSetCodestreamLevel(JxlEncoder* enc, int level) {
@@ -1532,7 +1912,7 @@ JxlEncoderStatus JxlEncoderSetCodestreamLevel(JxlEncoder* enc, int level) {
                          "this setting can only be set at the beginning");
   }
   enc->codestream_level = level;
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 int JxlEncoderGetRequiredCodestreamLevel(const JxlEncoder* enc) {
@@ -1558,7 +1938,7 @@ JxlEncoderStatus JxlEncoderSetParallelRunner(JxlEncoder* enc,
     return JXL_API_ERROR(enc, JXL_ENC_ERR_GENERIC,
                          "error setting parallel runner");
   }
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 namespace {
@@ -1580,7 +1960,7 @@ JxlEncoderStatus GetCurrentDimensions(
     return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                          "zero-sized frame is not allowed");
   }
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 }  // namespace
 
@@ -1713,7 +2093,7 @@ JxlEncoderStatus JxlEncoderAddJPEGFrame(
   queued_frame->frame.chroma_subsampling = io.Main().chroma_subsampling;
 
   QueueFrame(frame_settings, queued_frame);
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 static bool CanDoFastLossless(const JxlEncoderFrameSettings* frame_settings,
@@ -1851,7 +2231,7 @@ JxlEncoderStatus JxlEncoderAddImageFrame(
             frame_settings->enc->metadata.m.bit_depth.bits_per_sample,
             big_endian, /*effort=*/2, frame_settings->enc->thread_pool.get(),
             runner));
-    return JXL_ENC_SUCCESS;
+    return JxlErrorOrStatus::Success();
   }
 
   auto queued_frame = jxl::MemoryManagerMakeUnique<jxl::JxlEncoderQueuedFrame>(
@@ -1944,7 +2324,7 @@ JxlEncoderStatus JxlEncoderAddImageFrame(
       frame_settings->enc->codestream_level;
 
   QueueFrame(frame_settings, queued_frame);
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderUseBoxes(JxlEncoder* enc) {
@@ -1953,7 +2333,7 @@ JxlEncoderStatus JxlEncoderUseBoxes(JxlEncoder* enc) {
                          "this setting can only be set at the beginning");
   }
   enc->use_boxes = true;
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderAddBox(JxlEncoder* enc, const JxlBoxType type,
@@ -1963,6 +2343,10 @@ JxlEncoderStatus JxlEncoderAddBox(JxlEncoder* enc, const JxlBoxType type,
     return JXL_API_ERROR(
         enc, JXL_ENC_ERR_API_USAGE,
         "must set JxlEncoderUseBoxes at the beginning to add boxes");
+  }
+  if (enc->boxes_closed) {
+    return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE,
+                         "Box input already closed");
   }
   if (compress_box) {
     if (memcmp("jxl", type, 3) == 0) {
@@ -1990,7 +2374,7 @@ JxlEncoderStatus JxlEncoderAddBox(JxlEncoder* enc, const JxlBoxType type,
   box->contents.assign(contents, contents + size);
   box->compress_box = !!compress_box;
   QueueBox(enc, box);
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelBuffer(
@@ -2039,7 +2423,7 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelBuffer(
   }
   queued_frame->ec_initialized[index] = 1;
 
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 void JxlEncoderCloseFrames(JxlEncoder* enc) { enc->frames_closed = true; }
@@ -2050,39 +2434,54 @@ void JxlEncoderCloseInput(JxlEncoder* enc) {
   JxlEncoderCloseFrames(enc);
   JxlEncoderCloseBoxes(enc);
 }
+
+JXL_EXPORT JxlEncoderStatus JxlEncoderFlushInput(JxlEncoder* enc) {
+  if (!enc->output_processor.OutputProcessorSet()) {
+    return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE,
+                         "Cannot flush input without setting output "
+                         "processor with JxlEncoderSetOutputProcessor");
+  }
+  while (!enc->input_queue.empty()) {
+    if (!enc->ProcessOneEnqueuedInput()) {
+      return JxlErrorOrStatus::Error();
+    }
+  }
+  return JxlErrorOrStatus::Success();
+}
+
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetOutputProcessor(
+    JxlEncoder* enc, JxlEncoderOutputProcessor output_processor) {
+  if (enc->output_processor.HasAvailOut()) {
+    return JXL_API_ERROR(
+        enc, JXL_ENC_ERR_API_USAGE,
+        "Cannot set an output processor when some output was already produced");
+  }
+  if (!output_processor.set_finalized_position ||
+      !output_processor.get_buffer || !output_processor.release_buffer) {
+    return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE,
+                         "Missing output processor functions");
+  }
+  enc->output_processor = JxlEncoderOutputProcessorWrapper(output_processor);
+  return JxlErrorOrStatus::Success();
+}
+
 JxlEncoderStatus JxlEncoderProcessOutput(JxlEncoder* enc, uint8_t** next_out,
                                          size_t* avail_out) {
-  while (*avail_out >= 32 &&
-         (!enc->output_byte_queue.empty() ||
-          !enc->output_fast_frame_queue.empty() || !enc->input_queue.empty())) {
-    if (!enc->output_byte_queue.empty()) {
-      size_t to_copy = std::min(*avail_out, enc->output_byte_queue.size());
-      std::copy_n(enc->output_byte_queue.begin(), to_copy, *next_out);
-      *next_out += to_copy;
-      *avail_out -= to_copy;
-      enc->output_byte_queue.erase(enc->output_byte_queue.begin(),
-                                   enc->output_byte_queue.begin() + to_copy);
-    } else if (!enc->output_fast_frame_queue.empty()) {
-      size_t count = JxlFastLosslessWriteOutput(
-          enc->output_fast_frame_queue.front().get(), *next_out, *avail_out);
-      *next_out += count;
-      *avail_out -= count;
-      if (count == 0) {
-        enc->output_fast_frame_queue.pop_front();
-      }
-
-    } else if (!enc->input_queue.empty()) {
-      if (enc->RefillOutputByteQueue() != JXL_ENC_SUCCESS) {
-        return JXL_ENC_ERROR;
-      }
+  if (!enc->output_processor.SetAvailOut(next_out, avail_out)) {
+    return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE,
+                         "Cannot call JxlEncoderProcessOutput after calling "
+                         "JxlEncoderSetOutputProcessor");
+  }
+  while (*avail_out != 0 && !enc->input_queue.empty()) {
+    if (!enc->ProcessOneEnqueuedInput()) {
+      return JxlErrorOrStatus::Error();
     }
   }
 
-  if (!enc->output_byte_queue.empty() ||
-      !enc->output_fast_frame_queue.empty() || !enc->input_queue.empty()) {
-    return JXL_ENC_NEED_MORE_OUTPUT;
+  if (!enc->input_queue.empty() || enc->output_processor.HasOutputToWrite()) {
+    return JxlErrorOrStatus::MoreOutput();
   }
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderSetFrameHeader(
@@ -2105,7 +2504,7 @@ JxlEncoderStatus JxlEncoderSetFrameHeader(
   // JxlEncoderSetFrameName if desired.
   frame_settings->values.frame_name = "";
 
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderSetExtraChannelBlendInfo(
@@ -2124,7 +2523,7 @@ JxlEncoderStatus JxlEncoderSetExtraChannelBlendInfo(
         frame_settings->enc->metadata.m.num_extra_channels, default_blend_info);
   }
   frame_settings->values.extra_channel_blend_info[index] = *blend_info;
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderSetFrameName(JxlEncoderFrameSettings* frame_settings,
@@ -2136,7 +2535,7 @@ JxlEncoderStatus JxlEncoderSetFrameName(JxlEncoderFrameSettings* frame_settings,
   }
   frame_settings->values.frame_name = str;
   frame_settings->values.header.name_length = str.size();
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 JxlEncoderStatus JxlEncoderSetFrameBitDepth(
@@ -2149,7 +2548,7 @@ JxlEncoderStatus JxlEncoderSetFrameBitDepth(
         "for input buffers.");
   }
   frame_settings->values.image_bit_depth = *bit_depth;
-  return JXL_ENC_SUCCESS;
+  return JxlErrorOrStatus::Success();
 }
 
 void JxlColorEncodingSetToSRGB(JxlColorEncoding* color_encoding,

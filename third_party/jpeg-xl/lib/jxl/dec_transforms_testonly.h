@@ -23,7 +23,8 @@ void TransformToPixels(AcStrategy::Type strategy,
 
 // Equivalent of the above for DC image.
 void LowestFrequenciesFromDC(const jxl::AcStrategy::Type strategy,
-                             const float* dc, size_t dc_stride, float* llf);
+                             const float* dc, size_t dc_stride, float* llf,
+                             float* JXL_RESTRICT scratch);
 
 void AFVIDCT4x4(const float* JXL_RESTRICT coeffs, float* JXL_RESTRICT pixels);
 

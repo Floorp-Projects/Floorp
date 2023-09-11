@@ -9,7 +9,6 @@
 #define LIB_JXL_BUTTERAUGLI_BUTTERAUGLI_H_
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

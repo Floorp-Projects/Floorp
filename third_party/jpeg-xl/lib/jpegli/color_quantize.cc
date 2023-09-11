@@ -214,7 +214,7 @@ struct WangHasher {
 // Build an index of all the different colors in the input
 // image. To do this we map the 24 bit RGB representation of the colors
 // to a unique integer index assigned to the different colors in order of
-// appearence in the image.  Return the number of unique colors found.
+// appearance in the image.  Return the number of unique colors found.
 // The colors are pre-quantized to 3 * 6 bits precision.
 static int BuildRGBColorIndex(const uint8_t* const image, int const num_pixels,
                               int* const count, uint8_t* const red,

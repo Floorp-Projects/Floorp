@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-/// @addtogroup libjxl_threads
+/// @addtogroup libjxl_cpp
 /// @{
 ///
 /// @file thread_parallel_runner_cxx.h

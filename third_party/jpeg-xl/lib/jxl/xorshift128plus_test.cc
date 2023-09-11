@@ -4,7 +4,6 @@
 // license that can be found in the LICENSE file.
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include <algorithm>
 #include <vector>
@@ -13,10 +12,11 @@
 #define HWY_TARGET_INCLUDE "lib/jxl/xorshift128plus_test.cc"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
-#include <hwy/tests/test_util-inl.h>
+#include <hwy/tests/hwy_gtest.h>
 
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/test_utils.h"
+#include "lib/jxl/testing.h"
 #include "lib/jxl/xorshift128plus-inl.h"
 
 HWY_BEFORE_NAMESPACE();

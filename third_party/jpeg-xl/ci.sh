@@ -34,6 +34,8 @@ else
 fi
 # Whether we should post a message in the MR when the build fails.
 POST_MESSAGE_ON_ERROR="${POST_MESSAGE_ON_ERROR:-1}"
+# By default, do a lightweight debian HWY package build.
+HWY_PKG_OPTIONS="${HWY_PKG_OPTIONS:---set-envvar=HWY_EXTRA_CONFIG=-DBUILD_TESTING=OFF -DHWY_ENABLE_EXAMPLES=OFF -DHWY_ENABLE_CONTRIB=OFF}"
 
 # Set default compilers to clang if not already set
 export CC=${CC:-clang}
@@ -1354,6 +1356,7 @@ cmd_debian_stats() {
 build_debian_pkg() {
   local srcdir="$1"
   local srcpkg="$2"
+  local options="${3:-}"
 
   local debsdir="${BUILD_DIR}/debs"
   local builddir="${debsdir}/${srcpkg}"
@@ -1369,7 +1372,7 @@ build_debian_pkg() {
   done
   (
     cd "${builddir}"
-    debuild -b -uc -us
+    debuild "${options}" -b -uc -us
   )
 }
 
@@ -1381,7 +1384,7 @@ cmd_debian_build() {
       build_debian_pkg "${MYDIR}" "jpeg-xl"
       ;;
     highway)
-      build_debian_pkg "${MYDIR}/third_party/highway" "highway"
+      build_debian_pkg "${MYDIR}/third_party/highway" "highway" "${HWY_PKG_OPTIONS}"
       ;;
     *)
       echo "ERROR: Must pass a valid source package name to build." >&2

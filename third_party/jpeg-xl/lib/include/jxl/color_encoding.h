@@ -4,7 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
-/** @addtogroup libjxl_common
+/** @addtogroup libjxl_color
  * @{
  * @file color_encoding.h
  * @brief Color Encoding definitions used by JPEG XL.

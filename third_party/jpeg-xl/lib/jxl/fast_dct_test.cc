@@ -3,8 +3,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include <stdio.h>
-
 #include <numeric>
 
 #undef HWY_TARGET_INCLUDE
@@ -15,11 +13,12 @@
 #include "lib/jxl/dct-inl.h"
 #include "lib/jxl/fast_dct-inl.h"
 #include "lib/jxl/fast_dct.h"
+#include "lib/jxl/testing.h"
 #include "lib/jxl/transpose-inl.h"
 
 // Test utils
 #include <hwy/highway.h>
-#include <hwy/tests/test_util-inl.h>
+#include <hwy/tests/hwy_gtest.h>
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {

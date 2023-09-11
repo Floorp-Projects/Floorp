@@ -165,6 +165,12 @@ class TF_709 {
 // Perceptual Quantization
 class TF_PQ {
  public:
+  explicit TF_PQ(float display_intensity_target = kDefaultIntensityTarget)
+      : display_scaling_factor_to_10000_nits_(display_intensity_target *
+                                              (1.0f / 10000.0f)),
+        display_scaling_factor_from_10000_nits_(10000.0f /
+                                                display_intensity_target) {}
+
   // EOTF (defines the PQ approach). e = encoded.
   JXL_INLINE double DisplayFromEncoded(double e) const {
     if (e == 0.0) return 0.0;
@@ -177,7 +183,8 @@ class TF_PQ {
     JXL_DASSERT(den != 0.0);
     const double d = std::pow(num / den, 1.0 / kM1);
     JXL_DASSERT(d >= 0.0);  // Equal for e ~= 1E-9
-    return copysignf(d, original_sign);
+    return copysignf(d * display_scaling_factor_from_10000_nits_,
+                     original_sign);
   }
 
   // Maximum error 3e-6
@@ -201,7 +208,10 @@ class TF_PQ {
         HWY_REP4(2.67718770e+00f),
     };
     auto magnitude = EvalRationalPolynomial(d, xpxx, p, q);
-    return Or(AndNot(kSign, magnitude), original_sign);
+    return Or(
+        AndNot(kSign,
+               Mul(magnitude, Set(d, display_scaling_factor_from_10000_nits_))),
+        original_sign);
   }
 
   // Inverse EOTF. d = display.
@@ -210,7 +220,7 @@ class TF_PQ {
     const double original_sign = d;
     d = std::abs(d);
 
-    const double xp = std::pow(d, kM1);
+    const double xp = std::pow(d * display_scaling_factor_to_10000_nits_, kM1);
     const double num = kC1 + xp * kC2;
     const double den = 1.0 + xp * kC3;
     const double e = std::pow(num / den, kM2);
@@ -227,7 +237,8 @@ class TF_PQ {
     x = AndNot(kSign, x);  // abs
     // 4-over-4-degree rational polynomial approximation on x**0.25, with two
     // different polynomials above and below 1e-4.
-    auto xto025 = Sqrt(Sqrt(x));
+    auto xto025 =
+        Sqrt(Sqrt(Mul(x, Set(d, display_scaling_factor_to_10000_nits_))));
     HWY_ALIGN constexpr float p[(4 + 1) * 4] = {
         HWY_REP4(1.351392e-02f), HWY_REP4(-1.095778e+00f),
         HWY_REP4(5.522776e+01f), HWY_REP4(1.492516e+02f),
@@ -262,6 +273,9 @@ class TF_PQ {
   static constexpr double kC1 = 3424.0 / 4096;
   static constexpr double kC2 = (2413.0 / 4096) * 32;
   static constexpr double kC3 = (2392.0 / 4096) * 32;
+
+  const float display_scaling_factor_to_10000_nits_;
+  const float display_scaling_factor_from_10000_nits_;
 };
 
 // sRGB

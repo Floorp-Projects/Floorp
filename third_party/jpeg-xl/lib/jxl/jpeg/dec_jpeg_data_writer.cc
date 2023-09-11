@@ -483,6 +483,7 @@ bool EncodeDCTBlockSequential(const coeff_t* coeffs, HuffmanCodeTable* dc_huff,
                               coeff_t* last_dc_coeff, JpegBitWriter* bw) {
   coeff_t temp2;
   coeff_t temp;
+  coeff_t litmus = 0;
   temp2 = coeffs[0];
   temp = temp2 - *last_dc_coeff;
   *last_dc_coeff = temp2;
@@ -523,7 +524,9 @@ bool EncodeDCTBlockSequential(const coeff_t* coeffs, HuffmanCodeTable* dc_huff,
           r -= 16;
         }
       }
-      int ac_nbits = FloorLog2Nonzero<uint32_t>(temp2) + 1;
+      litmus |= temp2;
+      int ac_nbits =
+          FloorLog2Nonzero<uint32_t>(static_cast<uint16_t>(temp2)) + 1;
       int symbol = (r << 4u) + ac_nbits;
       WriteSymbolBits(symbol, ac_huff, bw, ac_nbits,
                       temp & ((1 << ac_nbits) - 1));
@@ -538,7 +541,7 @@ bool EncodeDCTBlockSequential(const coeff_t* coeffs, HuffmanCodeTable* dc_huff,
   if (r > 0) {
     WriteSymbol(0, ac_huff, bw);
   }
-  return true;
+  return (litmus >= 0);
 }
 
 bool EncodeDCTBlockProgressive(const coeff_t* coeffs, HuffmanCodeTable* dc_huff,
@@ -1031,8 +1034,8 @@ Status WriteJpegInternal(const JPEGData& jpg, const JPEGOutput& out,
 }  // namespace
 
 Status WriteJpeg(const JPEGData& jpg, const JPEGOutput& out) {
-  SerializationState ss;
-  return WriteJpegInternal(jpg, out, &ss);
+  auto ss = jxl::make_unique<SerializationState>();
+  return WriteJpegInternal(jpg, out, ss.get());
 }
 
 }  // namespace jpeg
