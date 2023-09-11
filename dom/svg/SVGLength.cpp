@@ -25,6 +25,10 @@ const unsigned short SVG_LENGTHTYPE_CH = 12;
 const unsigned short SVG_LENGTHTYPE_REM = 13;
 const unsigned short SVG_LENGTHTYPE_IC = 14;
 const unsigned short SVG_LENGTHTYPE_CAP = 15;
+const unsigned short SVG_LENGTHTYPE_VW = 16;
+const unsigned short SVG_LENGTHTYPE_VH = 17;
+const unsigned short SVG_LENGTHTYPE_VMIN = 18;
+const unsigned short SVG_LENGTHTYPE_VMAX = 19;
 
 void SVGLength::GetValueAsString(nsAString& aValue) const {
   nsTextFormatter::ssprintf(aValue, u"%g", (double)mValue);
@@ -143,12 +147,6 @@ float SVGLength::GetValueInSpecifiedUnit(uint8_t aUnit,
   float userUnitsPerNewUnit =
       SVGLength(0.0f, aUnit).GetPixelsPerUnit(userSpaceMetrics, aAxis);
 
-  NS_ASSERTION(
-      userUnitsPerCurrentUnit >= 0 || !std::isfinite(userUnitsPerCurrentUnit),
-      "bad userUnitsPerCurrentUnit");
-  NS_ASSERTION(userUnitsPerNewUnit >= 0 || !std::isfinite(userUnitsPerNewUnit),
-               "bad userUnitsPerNewUnit");
-
   float value = mValue * userUnitsPerCurrentUnit / userUnitsPerNewUnit;
 
   // userUnitsPerCurrentUnit could be infinity, or userUnitsPerNewUnit could
@@ -182,6 +180,18 @@ float SVGLength::GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
       return aMetrics.GetIcWidth(UserSpaceMetrics::Type::This);
     case SVG_LENGTHTYPE_CAP:
       return aMetrics.GetCapHeight(UserSpaceMetrics::Type::This);
+    case SVG_LENGTHTYPE_VW:
+      return aMetrics.GetCSSViewportSize().width / 100.f;
+    case SVG_LENGTHTYPE_VH:
+      return aMetrics.GetCSSViewportSize().height / 100.f;
+    case SVG_LENGTHTYPE_VMIN: {
+      auto sz = aMetrics.GetCSSViewportSize();
+      return std::min(sz.width, sz.height) / 100.f;
+    }
+    case SVG_LENGTHTYPE_VMAX: {
+      auto sz = aMetrics.GetCSSViewportSize();
+      return std::max(sz.width, sz.height) / 100.f;
+    }
     default:
       MOZ_ASSERT(IsAbsoluteUnit(aUnitType));
       return GetAbsUnitsPerAbsUnit(SVG_LENGTHTYPE_PX, aUnitType);
@@ -233,6 +243,18 @@ nsCSSUnit SVGLength::SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit) {
 
     case SVG_LENGTHTYPE_CAP:
       return nsCSSUnit::eCSSUnit_CapHeight;
+
+    case SVG_LENGTHTYPE_VW:
+      return nsCSSUnit::eCSSUnit_VW;
+
+    case SVG_LENGTHTYPE_VH:
+      return nsCSSUnit::eCSSUnit_VH;
+
+    case SVG_LENGTHTYPE_VMIN:
+      return nsCSSUnit::eCSSUnit_VMin;
+
+    case SVG_LENGTHTYPE_VMAX:
+      return nsCSSUnit::eCSSUnit_VMax;
 
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown unit type");
@@ -288,6 +310,18 @@ void SVGLength::GetUnitString(nsAString& aUnit, uint16_t aUnitType) {
     case SVG_LENGTHTYPE_CAP:
       aUnit.AssignLiteral("cap");
       return;
+    case SVG_LENGTHTYPE_VW:
+      aUnit.AssignLiteral("vw");
+      return;
+    case SVG_LENGTHTYPE_VH:
+      aUnit.AssignLiteral("vh");
+      return;
+    case SVG_LENGTHTYPE_VMIN:
+      aUnit.AssignLiteral("vmin");
+      return;
+    case SVG_LENGTHTYPE_VMAX:
+      aUnit.AssignLiteral("vmax");
+      return;
   }
   MOZ_ASSERT_UNREACHABLE(
       "Unknown unit type! Someone's using an SVGLength "
@@ -340,6 +374,18 @@ uint16_t SVGLength::GetUnitTypeForString(const nsAString& aUnit) {
   }
   if (aUnit.LowerCaseEqualsLiteral("cap")) {
     return SVG_LENGTHTYPE_CAP;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("vw")) {
+    return SVG_LENGTHTYPE_VW;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("vh")) {
+    return SVG_LENGTHTYPE_VH;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("vmin")) {
+    return SVG_LENGTHTYPE_VMIN;
+  }
+  if (aUnit.LowerCaseEqualsLiteral("vmax")) {
+    return SVG_LENGTHTYPE_VMAX;
   }
   return SVG_LENGTHTYPE_UNKNOWN;
 }
