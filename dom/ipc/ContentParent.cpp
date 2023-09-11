@@ -226,7 +226,6 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIX509Cert.h"
 #include "nsIXULRuntime.h"
-#include "nsICookieNotification.h"
 #if defined(MOZ_WIDGET_GTK) || defined(XP_WIN)
 #  include "nsIconChannel.h"
 #endif
@@ -4078,12 +4077,9 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
     Unused << SendUpdateRequestedLocales(requestedLocales);
   } else if (!strcmp(aTopic, "cookie-changed") ||
              !strcmp(aTopic, "private-cookie-changed")) {
-    MOZ_ASSERT(aSubject, "cookie changed notification must have subject.");
-    nsCOMPtr<nsICookieNotification> notification = do_QueryInterface(aSubject);
-    MOZ_ASSERT(notification,
-               "cookie changed notification must have nsICookieNotification.");
-    nsICookieNotification::Action action = notification->GetAction();
-
+    if (!aData) {
+      return NS_ERROR_UNEXPECTED;
+    }
     PNeckoParent* neckoParent = LoneManagedOrNullAsserts(ManagedPNeckoParent());
     if (!neckoParent) {
       return NS_OK;
@@ -4094,16 +4090,14 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
     auto* cs = static_cast<CookieServiceParent*>(csParent);
-    if (action == nsICookieNotification::COOKIES_BATCH_DELETED) {
-      nsCOMPtr<nsIArray> cookieList;
-      DebugOnly<nsresult> rv =
-          notification->GetBatchDeletedCookies(getter_AddRefs(cookieList));
-      NS_ASSERTION(NS_SUCCEEDED(rv) && cookieList, "couldn't get cookie list");
+    if (!nsCRT::strcmp(aData, u"batch-deleted")) {
+      nsCOMPtr<nsIArray> cookieList = do_QueryInterface(aSubject);
+      NS_ASSERTION(cookieList, "couldn't get cookie list");
       cs->RemoveBatchDeletedCookies(cookieList);
       return NS_OK;
     }
 
-    if (action == nsICookieNotification::ALL_COOKIES_CLEARED) {
+    if (!nsCRT::strcmp(aData, u"cleared")) {
       cs->RemoveAll();
       return NS_OK;
     }
@@ -4114,9 +4108,8 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    nsCOMPtr<nsICookie> xpcCookie;
-    DebugOnly<nsresult> rv = notification->GetCookie(getter_AddRefs(xpcCookie));
-    NS_ASSERTION(NS_SUCCEEDED(rv) && xpcCookie, "couldn't get cookie");
+    nsCOMPtr<nsICookie> xpcCookie = do_QueryInterface(aSubject);
+    NS_ASSERTION(xpcCookie, "couldn't get cookie");
 
     // only broadcast the cookie change to content processes that need it
     const Cookie& cookie = xpcCookie->AsCookie();
@@ -4126,10 +4119,10 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    if (action == nsICookieNotification::COOKIE_DELETED) {
+    if (!nsCRT::strcmp(aData, u"deleted")) {
       cs->RemoveCookie(cookie);
-    } else if (action == nsICookieNotification::COOKIE_ADDED ||
-               action == nsICookieNotification::COOKIE_CHANGED) {
+    } else if ((!nsCRT::strcmp(aData, u"added")) ||
+               (!nsCRT::strcmp(aData, u"changed"))) {
       cs->AddCookie(cookie);
     }
   } else if (!strcmp(aTopic, NS_NETWORK_LINK_TYPE_TOPIC)) {

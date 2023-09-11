@@ -4,8 +4,6 @@ const { NetUtil } = ChromeUtils.importESModule(
 
 const URI = Services.io.newURI("http://example.org/");
 
-const { COOKIE_CHANGED, COOKIE_ADDED } = Ci.nsICookieNotification;
-
 function run_test() {
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
@@ -15,7 +13,7 @@ function run_test() {
 
   // Add a new cookie.
   setCookie("foo=bar", {
-    type: COOKIE_ADDED,
+    type: "added",
     isSession: true,
     isSecure: false,
     isHttpOnly: false,
@@ -23,7 +21,7 @@ function run_test() {
 
   // Update cookie with isHttpOnly=true.
   setCookie("foo=bar; HttpOnly", {
-    type: COOKIE_CHANGED,
+    type: "changed",
     isSession: true,
     isSecure: false,
     isHttpOnly: true,
@@ -31,7 +29,7 @@ function run_test() {
 
   // Update cookie with isSecure=true.
   setCookie("foo=bar; Secure", {
-    type: COOKIE_CHANGED,
+    type: "changed",
     isSession: true,
     isSecure: true,
     isHttpOnly: false,
@@ -41,7 +39,7 @@ function run_test() {
   let expiry = new Date();
   expiry.setUTCFullYear(expiry.getUTCFullYear() + 2);
   setCookie(`foo=bar; Expires=${expiry.toGMTString()}`, {
-    type: COOKIE_CHANGED,
+    type: "changed",
     isSession: false,
     isSecure: false,
     isHttpOnly: false,
@@ -49,7 +47,7 @@ function run_test() {
 
   // Reset cookie.
   setCookie("foo=bar", {
-    type: COOKIE_CHANGED,
+    type: "changed",
     isSession: true,
     isSecure: false,
     isHttpOnly: false,
@@ -58,19 +56,17 @@ function run_test() {
 
 function setCookie(value, expected) {
   function setCookieInternal(valueInternal, expectedInternal = null) {
-    function observer(subject) {
+    function observer(subject, topic, data) {
       if (!expectedInternal) {
         do_throw("no notification expected");
         return;
       }
 
-      let notification = subject.QueryInterface(Ci.nsICookieNotification);
-
       // Check we saw the right notification.
-      Assert.equal(notification.action, expectedInternal.type);
+      Assert.equal(data, expectedInternal.type);
 
       // Check cookie details.
-      let cookie = notification.cookie.QueryInterface(Ci.nsICookie);
+      let cookie = subject.QueryInterface(Ci.nsICookie);
       Assert.equal(cookie.isSession, expectedInternal.isSession);
       Assert.equal(cookie.isSecure, expectedInternal.isSecure);
       Assert.equal(cookie.isHttpOnly, expectedInternal.isHttpOnly);

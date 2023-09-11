@@ -13,8 +13,6 @@
 #include "StorageUtils.h"
 
 #include "mozilla/BasePrincipal.h"
-#include "nsCOMPtr.h"
-#include "nsICookieNotification.h"
 #include "nsIObserverService.h"
 #include "nsIURI.h"
 #include "nsIPermission.h"
@@ -245,11 +243,7 @@ StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
   // Clear everything, caches + database
   if (!strcmp(aTopic, "cookie-changed")) {
-    nsCOMPtr<nsICookieNotification> notification = do_QueryInterface(aSubject);
-    NS_ENSURE_TRUE(notification, NS_ERROR_FAILURE);
-
-    if (notification->GetAction() !=
-        nsICookieNotification::ALL_COOKIES_CLEARED) {
+    if (!u"cleared"_ns.Equals(aData)) {
       return NS_OK;
     }
 

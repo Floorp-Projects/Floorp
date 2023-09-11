@@ -72,8 +72,8 @@ class CookiePersistentStorage final : public CookieStorage {
  protected:
   const char* NotificationTopic() const override { return "cookie-changed"; }
 
-  void NotifyChangedInternal(nsICookieNotification* aNotification,
-                             bool aOldCookieIsSession) override;
+  void NotifyChangedInternal(nsISupports* aSubject, const char16_t* aData,
+                             bool aOldCOokieIsSession) override;
 
   void RemoveAllInternal() override;
 
