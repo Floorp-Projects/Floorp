@@ -213,6 +213,7 @@ macro_rules! impl_f {
         impl_math_float_sin!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
         impl_math_float_sqrt!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
         impl_math_float_sqrte!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
+        impl_math_float_tanh!([$elem_ty; $elem_n]: $tuple_id | $test_tt);
         impl_cmp_vertical!(
             [$elem_ty; $elem_n]: $tuple_id, $mask_ty, false, (1., 0.)
                 | $test_tt

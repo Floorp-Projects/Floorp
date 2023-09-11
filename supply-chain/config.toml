@@ -155,10 +155,6 @@ audit-as-crates-io = false
 audit-as-crates-io = true
 notes = "wgpu-core pins this crate."
 
-[policy.packed_simd]
-audit-as-crates-io = true
-notes = "Based on upstream, see bug 1719674."
-
 [policy.peek-poke]
 audit-as-crates-io = false
 

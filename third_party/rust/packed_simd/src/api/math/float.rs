@@ -39,6 +39,9 @@ mod sqrt;
 #[macro_use]
 mod sqrte;
 
+#[macro_use]
+mod tanh;
+
 macro_rules! impl_float_category {
     ([$elem_ty:ident; $elem_count:expr]: $id:ident, $mask_ty:ident) => {
         impl $id {

@@ -39,8 +39,8 @@ rustdoc-args = [
     "doc_cfg",
 ]
 
-[dependencies]
-cfg-if = "1.0.0"
+[dependencies.cfg-if]
+version = "1.0.0"
 
 [dependencies.core_arch]
 version = "0.1.5"
@@ -48,14 +48,15 @@ optional = true
 
 [dependencies.num-traits]
 version = "0.2.14"
+features = ["libm"]
 default-features = false
-
-[dev-dependencies]
-paste = "^1"
 
 [dev-dependencies.arrayvec]
 version = "^0.5"
 default-features = false
+
+[dev-dependencies.paste]
+version = "^1"
 
 [features]
 default = []
@@ -66,9 +67,11 @@ libcore_neon = []
 version = "0.1.2"
 optional = true
 
-[target.wasm32-unknown-unknown.dev-dependencies]
-wasm-bindgen = "=0.2.87"
-wasm-bindgen-test = "=0.3.37"
+[target.wasm32-unknown-unknown.dev-dependencies.wasm-bindgen]
+version = "=0.2.87"
+
+[target.wasm32-unknown-unknown.dev-dependencies.wasm-bindgen-test]
+version = "=0.3.37"
 
 [badges.is-it-maintained-issue-resolution]
 repository = "rust-lang/packed_simd"
