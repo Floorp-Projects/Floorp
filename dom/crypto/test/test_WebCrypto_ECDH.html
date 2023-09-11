@@ -393,6 +393,27 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "Derive an HKDF key from two ECDH keys and derive an HMAC key from that",
+  function() {
+    var that = this;
+
+    async function doTest() {
+      let privKey = await crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_priv, "ECDH", false, ["deriveKey"]);
+      let pubKey = await crypto.subtle.importKey("jwk", tv.ecdh_p256.jwk_pub, "ECDH", false, []);
+      let ecdhAlg = { name: "ECDH", public: pubKey };
+      let hkdfAlg = { name: "HKDF", hash: "SHA-256", salt: new Uint8Array(), info: new Uint8Array() };
+      let hkdfKey = await crypto.subtle.deriveKey(ecdhAlg, privKey, hkdfAlg, false, ["deriveKey"]);
+      let hmacAlg = { name: "HMAC", hash: "SHA-256" };
+      let hmacKey = await crypto.subtle.deriveKey(hkdfAlg, hkdfKey, hmacAlg, false, ["sign"]);
+      return crypto.subtle.sign("HMAC", hmacKey, new Uint8Array());
+    }
+    const expected = util.hex2abv("acf62832fa93469824cd997593bc963b28a68e6f73f4516bbe51b35942fe9811");
+    doTest().then(memcmp_complete(that, expected), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "SPKI import/export of public ECDH keys (P-256)",
   function() {
     var that = this;
