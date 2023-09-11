@@ -62,10 +62,6 @@ const buildShortCutkeyFunctions = {
       }
     }
 
-    function reloadCurrentTab() {
-      BrowserReloadOrDuplicate("reload");
-    }
-    
     SessionStore.promiseInitialized.then(() => {
       Services.obs.addObserver(
         reloadCurrentTab,

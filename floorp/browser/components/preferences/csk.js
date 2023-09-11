@@ -162,5 +162,9 @@ const gCSKPane = {
       }
     }
     buildCustomShortcutkeyPreferences();
-  },
+
+    Services.prefs.addObserver(CustomKeyboardShortcutUtils.SHORTCUT_KEY_AND_ACTION_PREF, function () {
+      location.reload();
+    });
+  }, 
 };
