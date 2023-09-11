@@ -68,6 +68,7 @@ function changeStatusbarVisibility() {
 function showStatusbar() {
   let statuspanel_label = document.getElementById("statuspanel-label");
   document.getElementById("statusBarCSS")?.remove();
+  document.getElementById("status-text").style.overflow = "hidden";
   document.getElementById("status-text").appendChild(statuspanel_label);
   statuspanel_label.setAttribute("style", displayStatusbar);
 }
@@ -80,6 +81,7 @@ function hideStatusbar() {
   document
     .getElementsByTagName("head")[0]
     .insertAdjacentElement("beforeend", Tag);
+  document.getElementById("status-text").style.overflow = "";
   document.getElementById("statuspanel").appendChild(statuspanel_label);
   statuspanel_label.removeAttribute("style");
 }
