@@ -1010,7 +1010,7 @@ PlacesController.prototype = {
       } else if (queryType == Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
         await this._removeRowsFromHistory();
       } else {
-        throw new Error("implement support for QUERY_TYPE_UNIFIED");
+        throw new Error("Unknown query type");
       }
     } else {
       throw new Error("unexpected root");
