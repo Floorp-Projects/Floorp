@@ -764,35 +764,6 @@ class ConfigureCodec {
   bool mRedUlpfecEnabled;
 };
 
-class ConfigureRedCodec {
- public:
-  explicit ConfigureRedCodec(nsCOMPtr<nsIPrefBranch>& branch,
-                             std::vector<uint8_t>* redundantEncodings)
-      : mRedundantEncodings(redundantEncodings) {
-    // if we wanted to override or modify which encodings are considered
-    // for redundant encodings, we'd probably want to handle it here by
-    // checking prefs modifying the operator() code below
-  }
-
-  void operator()(UniquePtr<JsepCodecDescription>& codec) const {
-    if (codec->Type() == SdpMediaSection::kVideo && !codec->mEnabled) {
-      uint8_t pt = (uint8_t)strtoul(codec->mDefaultPt.c_str(), nullptr, 10);
-      // don't search for the codec payload type unless we have a valid
-      // conversion (non-zero)
-      if (pt != 0) {
-        std::vector<uint8_t>::iterator it = std::find(
-            mRedundantEncodings->begin(), mRedundantEncodings->end(), pt);
-        if (it != mRedundantEncodings->end()) {
-          mRedundantEncodings->erase(it);
-        }
-      }
-    }
-  }
-
- private:
-  std::vector<uint8_t>* mRedundantEncodings;
-};
-
 nsresult PeerConnectionImpl::ConfigureJsepSessionCodecs() {
   nsresult res;
   nsCOMPtr<nsIPrefService> prefs =
@@ -812,17 +783,6 @@ nsresult PeerConnectionImpl::ConfigureJsepSessionCodecs() {
 
   ConfigureCodec configurer(branch);
   mJsepSession->ForEachCodec(configurer);
-
-  // if red codec is enabled, configure it for the other enabled codecs
-  for (auto& codec : mJsepSession->Codecs()) {
-    if (codec->mName == "red" && codec->mEnabled) {
-      JsepVideoCodecDescription* redCodec =
-          static_cast<JsepVideoCodecDescription*>(codec.get());
-      ConfigureRedCodec configureRed(branch, &(redCodec->mRedundantEncodings));
-      mJsepSession->ForEachCodec(configureRed);
-      break;
-    }
-  }
 
   // We use this to sort the list of codecs once everything is configured
   CompareCodecPriority comparator;
@@ -2385,15 +2345,6 @@ void PeerConnectionImpl::SetupPreferredCodecs(
 
   GetDefaultVideoCodecs(aPreferredCodecs, useRtx);
   GetDefaultAudioCodecs(aPreferredCodecs);
-
-  // With red update the redundant encodings list
-  for (auto& videoCodec : aPreferredCodecs) {
-    if (videoCodec->mName == "red") {
-      JsepVideoCodecDescription& red =
-          static_cast<JsepVideoCodecDescription&>(*videoCodec);
-      red.UpdateRedundantEncodings(aPreferredCodecs);
-    }
-  }
 }
 
 void PeerConnectionImpl::SetupPreferredRtpExtensions(
