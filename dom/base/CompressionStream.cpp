@@ -8,7 +8,6 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/dom/CompressionStreamBinding.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/WritableStream.h"
@@ -58,21 +57,16 @@ class CompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
     // https://wicg.github.io/compression/#compress-and-enqueue-a-chunk
 
     // Step 1: If chunk is not a BufferSource type, then throw a TypeError.
-    RootedUnion<OwningArrayBufferViewOrArrayBuffer> bufferSource(cx);
-    if (!bufferSource.Init(cx, aChunk)) {
-      aRv.MightThrowJSException();
-      aRv.StealExceptionFromJSContext(cx);
+    // (ExtractSpanFromBufferSource does it)
+    Span<const uint8_t> input = ExtractSpanFromBufferSource(cx, aChunk, aRv);
+    if (aRv.Failed()) {
       return;
     }
 
     // Step 2: Let buffer be the result of compressing chunk with cs's format
     // and context.
     // Step 3 - 5: (Done in CompressAndEnqueue)
-    ProcessTypedArraysFixed(
-        bufferSource,
-        [&](const Span<uint8_t>& aData) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-          CompressAndEnqueue(cx, aData, ZLibFlush::No, aController, aRv);
-        });
+    CompressAndEnqueue(cx, input, ZLibFlush::No, aController, aRv);
   }
 
   // Step 4 of

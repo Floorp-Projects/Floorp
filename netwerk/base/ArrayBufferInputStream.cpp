@@ -9,7 +9,6 @@
 #include "js/ArrayBuffer.h"  // JS::{GetArrayBuffer{ByteLength,Data},IsArrayBufferObject}
 #include "js/RootingAPI.h"  // JS::{Handle,Rooted}
 #include "js/Value.h"       // JS::Value
-#include "mozilla/Span.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/ScriptSettings.h"
 
@@ -19,8 +18,8 @@ NS_IMPL_ISUPPORTS(ArrayBufferInputStream, nsIArrayBufferInputStream,
                   nsIInputStream);
 
 NS_IMETHODIMP
-ArrayBufferInputStream::SetDataFromJS(JS::Handle<JS::Value> aBuffer,
-                                      uint64_t aByteOffset, uint64_t aLength) {
+ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
+                                uint64_t aByteOffset, uint64_t aLength) {
   NS_ASSERT_OWNINGTHREAD(ArrayBufferInputStream);
 
   if (!aBuffer.isObject()) {
@@ -40,7 +39,7 @@ ArrayBufferInputStream::SetDataFromJS(JS::Handle<JS::Value> aBuffer,
     return NS_ERROR_INVALID_ARG;
   }
 
-  mArrayBuffer = mozilla::MakeUniqueFallible<uint8_t[]>(bufferLength);
+  mArrayBuffer = mozilla::MakeUniqueFallible<char[]>(bufferLength);
   if (!mArrayBuffer) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -49,15 +48,9 @@ ArrayBufferInputStream::SetDataFromJS(JS::Handle<JS::Value> aBuffer,
 
   JS::AutoCheckCannotGC nogc;
   bool isShared;
-  uint8_t* src = JS::GetArrayBufferData(arrayBuffer, &isShared, nogc) + offset;
+  char* src =
+      (char*)JS::GetArrayBufferData(arrayBuffer, &isShared, nogc) + offset;
   memcpy(&mArrayBuffer[0], src, mBufferLength);
-  return NS_OK;
-}
-
-nsresult ArrayBufferInputStream::SetData(mozilla::UniquePtr<uint8_t[]> aBytes,
-                                         uint64_t aByteLen) {
-  mArrayBuffer = std::move(aBytes);
-  mBufferLength = aByteLen;
   return NS_OK;
 }
 
@@ -115,8 +108,8 @@ ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void* closure,
     }
 
     uint32_t written;
-    nsresult rv = writer(this, closure, (char*)&mArrayBuffer[0] + mPos, *result,
-                         count, &written);
+    nsresult rv = writer(this, closure, &mArrayBuffer[0] + mPos, *result, count,
+                         &written);
     if (NS_FAILED(rv)) {
       // InputStreams do not propagate errors to caller.
       return NS_OK;

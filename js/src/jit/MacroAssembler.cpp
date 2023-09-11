@@ -6821,8 +6821,8 @@ void MacroAssembler::branchIfHasDetachedArrayBuffer(Register obj, Register temp,
                Address(temp, ObjectElements::offsetOfFlags()),
                Imm32(ObjectElements::SHARED_MEMORY), &done);
 
-  // An ArrayBufferView with a null/true buffer has never had its buffer
-  // exposed, so nothing can possibly detach it.
+  // An ArrayBufferView with a null buffer has never had its buffer exposed to
+  // become detached.
   fallibleUnboxObject(Address(obj, ArrayBufferViewObject::bufferOffset()), temp,
                       &done);
 

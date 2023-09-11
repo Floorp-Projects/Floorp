@@ -38,30 +38,46 @@ uint8_t* CryptoBuffer::Assign(const nsTArray<uint8_t>& aData) {
 }
 
 uint8_t* CryptoBuffer::Assign(const ArrayBuffer& aData) {
-  Clear();
-  return aData.AppendDataTo(*this) ? Elements() : nullptr;
+  aData.ComputeState();
+  return Assign(aData.Data(), aData.Length());
 }
 
 uint8_t* CryptoBuffer::Assign(const ArrayBufferView& aData) {
-  Clear();
-  return aData.AppendDataTo(*this) ? Elements() : nullptr;
+  aData.ComputeState();
+  return Assign(aData.Data(), aData.Length());
 }
 
 uint8_t* CryptoBuffer::Assign(const ArrayBufferViewOrArrayBuffer& aData) {
-  Clear();
+  if (aData.IsArrayBufferView()) {
+    return Assign(aData.GetAsArrayBufferView());
+  }
+  if (aData.IsArrayBuffer()) {
+    return Assign(aData.GetAsArrayBuffer());
+  }
 
-  return AppendTypedArrayDataTo(aData, *this) ? Elements() : nullptr;
+  // If your union is uninitialized, something's wrong
+  MOZ_ASSERT(false);
+  Clear();
+  return nullptr;
 }
 
 uint8_t* CryptoBuffer::Assign(const OwningArrayBufferViewOrArrayBuffer& aData) {
-  Clear();
+  if (aData.IsArrayBufferView()) {
+    return Assign(aData.GetAsArrayBufferView());
+  }
+  if (aData.IsArrayBuffer()) {
+    return Assign(aData.GetAsArrayBuffer());
+  }
 
-  return AppendTypedArrayDataTo(aData, *this) ? Elements() : nullptr;
+  // If your union is uninitialized, something's wrong
+  MOZ_ASSERT(false);
+  Clear();
+  return nullptr;
 }
 
 uint8_t* CryptoBuffer::Assign(const Uint8Array& aArray) {
-  Clear();
-  return aArray.AppendDataTo(*this) ? Elements() : nullptr;
+  aArray.ComputeState();
+  return Assign(aArray.Data(), aArray.Length());
 }
 
 uint8_t* CryptoBuffer::AppendSECItem(const SECItem* aItem) {

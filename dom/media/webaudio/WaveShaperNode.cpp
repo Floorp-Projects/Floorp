@@ -330,12 +330,17 @@ void WaveShaperNode::SetCurve(const Nullable<Float32Array>& aCurve,
     return;
   }
 
+  const Float32Array& floats = aCurve.Value();
+  floats.ComputeState();
+
   nsTArray<float> curve;
-  if (!aCurve.Value().AppendDataTo(curve)) {
+  uint32_t argLength = floats.Length();
+  if (!curve.SetLength(argLength, fallible)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
+  PodCopy(curve.Elements(), floats.Data(), argLength);
   SetCurveInternal(curve, aRv);
 }
 

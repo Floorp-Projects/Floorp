@@ -323,10 +323,8 @@ void AudioBuffer::CopyFromChannel(const Float32Array& aDestination,
     return;
   }
   JS::AutoCheckCannotGC nogc;
-  MOZ_RELEASE_ASSERT(!JS_GetTypedArraySharedness(aDestination.Obj()));
-  auto calculateCount = [=](uint32_t aLength) -> uint32_t {
-    return std::min(length - aBufferOffset, aLength);
-  };
+  aDestination.ComputeState();
+  uint32_t count = std::min(length - aBufferOffset, aDestination.Length());
 
   JSObject* channelArray = mJSChannels[aChannelNumber];
   if (channelArray) {
@@ -340,27 +338,17 @@ void AudioBuffer::CopyFromChannel(const Float32Array& aDestination,
     // The sourceData arrays should all have originated in
     // RestoreJSChannelData, where they are created unshared.
     MOZ_ASSERT(!isShared);
-    aDestination.ProcessData(
-        [&](const Span<float>& aData, JS::AutoCheckCannotGC&&) {
-          PodMove(aData.Elements(), sourceData + aBufferOffset,
-                  calculateCount(aData.Length()));
-        });
+    PodMove(aDestination.Data(), sourceData + aBufferOffset, count);
     return;
   }
 
   if (!mSharedChannels.IsNull()) {
-    aDestination.ProcessData([&](const Span<float>& aData,
-                                 JS::AutoCheckCannotGC&&) {
-      CopyChannelDataToFloat(mSharedChannels, aChannelNumber, aBufferOffset,
-                             aData.Elements(), calculateCount(aData.Length()));
-    });
+    CopyChannelDataToFloat(mSharedChannels, aChannelNumber, aBufferOffset,
+                           aDestination.Data(), count);
     return;
   }
 
-  aDestination.ProcessData(
-      [&](const Span<float>& aData, JS::AutoCheckCannotGC&&) {
-        PodZero(aData.Elements(), calculateCount(aData.Length()));
-      });
+  PodZero(aDestination.Data(), count);
 }
 
 void AudioBuffer::CopyToChannel(JSContext* aJSContext,
@@ -386,20 +374,14 @@ void AudioBuffer::CopyToChannel(JSContext* aJSContext,
     return;
   }
 
-  int64_t offset = aBufferOffset;
-  aSource.ProcessData([&](const Span<float>& aData, JS::AutoCheckCannotGC&&) {
-    MOZ_ASSERT_IF(std::numeric_limits<decltype(aData.Length())>::max() >
-                      std::numeric_limits<int64_t>::max(),
-                  aData.Length() <= std::numeric_limits<int64_t>::max());
-    int64_t srcLength = int64_t(aData.Length());
-    size_t count = std::max(int64_t(0), std::min(length - offset, srcLength));
-    bool isShared = false;
-    float* channelData = JS_GetFloat32ArrayData(channelArray, &isShared, nogc);
-    // The channelData arrays should all have originated in
-    // RestoreJSChannelData, where they are created unshared.
-    MOZ_ASSERT(!isShared);
-    PodMove(channelData + aBufferOffset, aData.Elements(), count);
-  });
+  aSource.ComputeState();
+  uint32_t count = std::min(length - aBufferOffset, aSource.Length());
+  bool isShared = false;
+  float* channelData = JS_GetFloat32ArrayData(channelArray, &isShared, nogc);
+  // The channelData arrays should all have originated in
+  // RestoreJSChannelData, where they are created unshared.
+  MOZ_ASSERT(!isShared);
+  PodMove(channelData + aBufferOffset, aSource.Data(), count);
 }
 
 void AudioBuffer::GetChannelData(JSContext* aJSContext, uint32_t aChannel,

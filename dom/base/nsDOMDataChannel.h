@@ -108,7 +108,8 @@ class nsDOMDataChannel final : public mozilla::DOMEventTargetHelper,
   ~nsDOMDataChannel();
 
  private:
-  bool CheckReadyState(mozilla::ErrorResult& aRv);
+  void Send(mozilla::dom::Blob* aMsgBlob, const nsACString* aMsgString,
+            bool aIsBinary, mozilla::ErrorResult& aRv);
 
   void ReleaseSelf();
 

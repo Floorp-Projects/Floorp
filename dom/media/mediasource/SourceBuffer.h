@@ -151,10 +151,10 @@ class SourceBuffer final : public DOMEventTargetHelper,
   void CheckEndTime();
 
   // Shared implementation of AppendBuffer overloads.
-  void AppendData(RefPtr<MediaByteBuffer>&& aData, ErrorResult& aRv);
+  void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
   // Shared implementation of AppendBufferAsync overloads.
-  already_AddRefed<Promise> AppendDataAsync(RefPtr<MediaByteBuffer>&& aData,
-                                            ErrorResult& aRv);
+  already_AddRefed<Promise> AppendDataAsync(const uint8_t* aData,
+                                            uint32_t aLength, ErrorResult& aRv);
 
   void PrepareRemove(double aStart, double aEnd, ErrorResult& aRv);
 
@@ -168,9 +168,6 @@ class SourceBuffer final : public DOMEventTargetHelper,
   // on success or nullptr (with aRv set) on error.
   already_AddRefed<MediaByteBuffer> PrepareAppend(const uint8_t* aData,
                                                   uint32_t aLength,
-                                                  ErrorResult& aRv);
-  template <typename T>
-  already_AddRefed<MediaByteBuffer> PrepareAppend(const T& aData,
                                                   ErrorResult& aRv);
 
   void AppendDataCompletedWithSuccess(

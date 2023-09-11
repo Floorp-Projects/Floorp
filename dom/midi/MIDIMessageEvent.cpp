@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/Realm.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/MIDIMessageEvent.h"
 #include "mozilla/dom/MIDIMessageEventBinding.h"
@@ -64,10 +63,10 @@ already_AddRefed<MIDIMessageEvent> MIDIMessageEvent::Constructor(
   // Set data for event. Timestamp will always be set to Now() (default for
   // event) using this constructor.
   if (aEventInitDict.mData.WasPassed()) {
-    JSAutoRealm ar(aGlobal.Context(), aGlobal.Get());
-    JS::Rooted<JSObject*> data(aGlobal.Context(),
-                               aEventInitDict.mData.Value().Obj());
-    e->mData = JS_NewUint8ArrayFromArray(aGlobal.Context(), data);
+    const auto& a = aEventInitDict.mData.Value();
+    a.ComputeState();
+    e->mData =
+        Uint8Array::Create(aGlobal.Context(), owner, a.Length(), a.Data());
     if (NS_WARN_IF(!e->mData)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;

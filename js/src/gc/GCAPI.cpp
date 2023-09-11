@@ -157,13 +157,10 @@ JS::AutoAssertNoGC::AutoAssertNoGC(JSContext* maybecx) {
   }
 }
 
-JS::AutoAssertNoGC::~AutoAssertNoGC() { reset(); }
-
-void JS::AutoAssertNoGC::reset() {
+JS::AutoAssertNoGC::~AutoAssertNoGC() {
   if (cx_) {
     MOZ_ASSERT(cx_->inUnsafeRegion > 0);
     cx_->inUnsafeRegion--;
-    cx_ = nullptr;
   }
 }
 

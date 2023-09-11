@@ -275,32 +275,6 @@ namespace JS {
  */
 JS_PUBLIC_API bool IsLargeArrayBufferView(JSObject* obj);
 
-/*
- * Given an ArrayBuffer or view, prevent the length of the underlying
- * ArrayBuffer from changing (with pin=true) until unfrozen (with
- * pin=false). Note that some objects (eg SharedArrayBuffers) cannot change
- * length to begin with, and are treated as always pinned.
- *
- * Normally, ArrayBuffers and their views cannot change length, but one way
- * currently exists: detaching them. In the future, more will be added with
- * GrowableArrayBuffer and ResizableArrayBuffer.
- *
- * Returns whether the pinned status changed.
- */
-JS_PUBLIC_API bool PinArrayBufferOrViewLength(JSObject* obj, bool pin);
-
-/*
- * Given an ArrayBuffer or view, make sure its contents are not stored inline
- * so that the data is safe for use even if a GC moves the owning object.
- *
- * Note that this by itself does not make it safe to use the data pointer
- * if JS can run or the ArrayBuffer can be detached in any way. Consider using
- * this in conjunction with PinArrayBufferOrViewLength, which will cause any
- * potentially invalidating operations to fail.
- */
-JS_PUBLIC_API bool EnsureNonInlineArrayBufferOrView(JSContext* cx,
-                                                    JSObject* obj);
-
 namespace detail {
 
 // Map from eg Uint8Clamped -> uint8_t, Uint8 -> uint8_t, or Float64 ->

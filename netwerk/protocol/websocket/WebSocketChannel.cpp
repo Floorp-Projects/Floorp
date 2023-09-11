@@ -2134,8 +2134,10 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
   if (!mIsServerSide) {
     // Perform the sending mask. Never use a zero mask
     do {
+      uint8_t* buffer;
       static_assert(4 == sizeof(mask), "Size of the mask should be equal to 4");
-      nsresult rv = mRandomGenerator->GenerateRandomBytesInto(mask);
+      nsresult rv =
+          mRandomGenerator->GenerateRandomBytes(sizeof(mask), &buffer);
       if (NS_FAILED(rv)) {
         LOG(
             ("WebSocketChannel::PrimeNewOutgoingMessage(): "
@@ -2144,6 +2146,8 @@ void WebSocketChannel::PrimeNewOutgoingMessage() {
         AbortSession(rv);
         return;
       }
+      memcpy(&mask, buffer, sizeof(mask));
+      free(buffer);
     } while (!mask);
     NetworkEndian::writeUint32(payload - sizeof(uint32_t), mask);
   }

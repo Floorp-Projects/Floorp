@@ -5870,7 +5870,8 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     nsIPrincipal& aSubjectPrincipal, JSObject** aRetval) {
   MOZ_ASSERT(aWidth && aHeight);
 
-  // Restrict the typed array length to INT32_MAX because that's all we support.
+  // Restrict the typed array length to INT32_MAX because that's all we support
+  // in dom::TypedArray::ComputeState.
   CheckedInt<uint32_t> len = CheckedInt<uint32_t>(aWidth) * aHeight * 4;
   if (!len.isValid() || len.value() > INT32_MAX) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -6099,13 +6100,18 @@ void CanvasRenderingContext2D::PutImageData_explicit(
     return;
   }
 
-  RefPtr<DataSourceSurface> sourceSurface;
-  uint8_t* lockedBits = nullptr;
+  arr.ComputeState();
 
-  // The canvas spec says that the current path, transformation matrix,
-  // shadow attributes, global alpha, the clipping region, and global
-  // composition operator must not affect the getImageData() and
-  // putImageData() methods.
+  uint32_t dataLen = arr.Length();
+
+  uint32_t len = width * height * 4;
+  if (dataLen != len) {
+    return aRv.ThrowInvalidStateError("Invalid width or height");
+  }
+
+  // The canvas spec says that the current path, transformation matrix, shadow
+  // attributes, global alpha, the clipping region, and global composition
+  // operator must not affect the getImageData() and putImageData() methods.
   const gfx::Rect putRect(dirtyRect);
   EnsureTarget(&putRect);
 
@@ -6114,6 +6120,8 @@ void CanvasRenderingContext2D::PutImageData_explicit(
   }
 
   DataSourceSurface::MappedSurface map;
+  RefPtr<DataSourceSurface> sourceSurface;
+  uint8_t* lockedBits = nullptr;
   uint8_t* dstData;
   IntSize dstSize;
   int32_t dstStride;
@@ -6124,11 +6132,10 @@ void CanvasRenderingContext2D::PutImageData_explicit(
     sourceSurface = Factory::CreateDataSourceSurface(
         dirtyRect.Size(), SurfaceFormat::B8G8R8A8, false);
 
-    // In certain scenarios, requesting larger than 8k image fails.  Bug
-    // 803568 covers the details of how to run into it, but the full
-    // detailed investigation hasn't been done to determine the
-    // underlying cause.  We will just handle the failure to allocate
-    // the surface to avoid a crash.
+    // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
+    // covers the details of how to run into it, but the full detailed
+    // investigation hasn't been done to determine the underlying cause.  We
+    // will just handle the failure to allocate the surface to avoid a crash.
     if (!sourceSurface) {
       return aRv.Throw(NS_ERROR_FAILURE);
     }
@@ -6144,27 +6151,12 @@ void CanvasRenderingContext2D::PutImageData_explicit(
     dstFormat = sourceSurface->GetFormat();
   }
 
-  arr.ProcessData(
-      [&](const Span<uint8_t>& aData, JS::AutoCheckCannotGC&& nogc) {
-        // Verify that the length hasn't changed.
-        if (aData.Length() != width * height * 4) {
-          // FIXME Should this call ReleaseBits/Unmap?
-          return aRv.ThrowInvalidStateError("Invalid width or height");
-        }
+  uint8_t* srcData = arr.Data() + srcRect.y * (width * 4) + srcRect.x * 4;
 
-        uint8_t* srcData =
-            aData.Elements() + srcRect.y * (width * 4) + srcRect.x * 4;
-
-        PremultiplyData(srcData, width * 4, SurfaceFormat::R8G8B8A8, dstData,
-                        dstStride,
-                        mOpaque ? SurfaceFormat::X8R8G8B8_UINT32
-                                : SurfaceFormat::A8R8G8B8_UINT32,
-                        dirtyRect.Size());
-      });
-
-  if (aRv.Failed()) {
-    return;
-  }
+  PremultiplyData(
+      srcData, width * 4, SurfaceFormat::R8G8B8A8, dstData, dstStride,
+      mOpaque ? SurfaceFormat::X8R8G8B8_UINT32 : SurfaceFormat::A8R8G8B8_UINT32,
+      dirtyRect.Size());
 
   if (lockedBits) {
     mTarget->ReleaseBits(lockedBits);

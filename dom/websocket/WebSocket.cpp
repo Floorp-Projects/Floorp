@@ -2388,31 +2388,37 @@ void WebSocket::Send(Blob& aData, ErrorResult& aRv) {
 void WebSocket::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
   AssertIsOnTargetThread();
 
-  static_assert(
-      sizeof(std::remove_reference_t<decltype(aData)>::element_type) == 1,
-      "byte-sized data required");
+  aData.ComputeState();
 
-  nsCString msgString;
-  if (!aData.AppendDataTo(msgString)) {
+  static_assert(sizeof(*aData.Data()) == 1, "byte-sized data required");
+
+  uint32_t len = aData.Length();
+  char* data = reinterpret_cast<char*>(aData.Data());
+
+  nsDependentCSubstring msgString;
+  if (!msgString.Assign(data, len, mozilla::fallible_t())) {
     aRv.Throw(NS_ERROR_FILE_TOO_BIG);
     return;
   }
-  Send(nullptr, msgString, msgString.Length(), true, aRv);
+  Send(nullptr, msgString, len, true, aRv);
 }
 
 void WebSocket::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
   AssertIsOnTargetThread();
 
-  static_assert(
-      sizeof(std::remove_reference_t<decltype(aData)>::element_type) == 1,
-      "byte-sized data required");
+  aData.ComputeState();
 
-  nsCString msgString;
-  if (!aData.AppendDataTo(msgString)) {
+  static_assert(sizeof(*aData.Data()) == 1, "byte-sized data required");
+
+  uint32_t len = aData.Length();
+  char* data = reinterpret_cast<char*>(aData.Data());
+
+  nsDependentCSubstring msgString;
+  if (!msgString.Assign(data, len, mozilla::fallible_t())) {
     aRv.Throw(NS_ERROR_FILE_TOO_BIG);
     return;
   }
-  Send(nullptr, msgString, msgString.Length(), true, aRv);
+  Send(nullptr, msgString, len, true, aRv);
 }
 
 void WebSocket::Send(nsIInputStream* aMsgStream, const nsACString& aMsgString,
