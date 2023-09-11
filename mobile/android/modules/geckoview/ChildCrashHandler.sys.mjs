@@ -27,53 +27,73 @@ function getPendingMinidump(id) {
 }
 
 export var ChildCrashHandler = {
+  // Map a child ID to a remote type.
+  childMap: new Map(),
+
   // The event listener for this is hooked up in GeckoViewStartup.jsm
   observe(aSubject, aTopic, aData) {
-    if (
-      aTopic !== "ipc:content-shutdown" &&
-      aTopic !== "compositor:process-aborted"
-    ) {
-      return;
+    const childID = aData;
+
+    switch (aTopic) {
+      case "process-type-set":
+      // Intentional fall-through
+      case "ipc:content-created": {
+        const pp = aSubject.QueryInterface(Ci.nsIDOMProcessParent);
+        this.childMap.set(childID, pp.remoteType);
+        break;
+      }
+
+      case "ipc:content-shutdown":
+      // Intentional fall-through
+      case "compositor:process-aborted": {
+        aSubject.QueryInterface(Ci.nsIPropertyBag2);
+
+        const disableReporting = Services.env.get(
+          "MOZ_CRASHREPORTER_NO_REPORT"
+        );
+
+        if (
+          !aSubject.get("abnormal") ||
+          !AppConstants.MOZ_CRASHREPORTER ||
+          disableReporting
+        ) {
+          return;
+        }
+
+        // If dumpID is empty the process was likely killed by the system and we therefore do not
+        // want to report the crash.
+        const dumpID = aSubject.get("dumpID");
+        if (!dumpID) {
+          Services.telemetry
+            .getHistogramById("FX_CONTENT_CRASH_DUMP_UNAVAILABLE")
+            .add(1);
+          return;
+        }
+
+        debug`Notifying child process crash, dump ID ${dumpID}`;
+        const [minidumpPath, extrasPath] = getPendingMinidump(dumpID);
+
+        // Report GPU process crashes as occuring in a background process, and others as foreground.
+        const processType =
+          aTopic === "compositor:process-aborted"
+            ? "BACKGROUND_CHILD"
+            : "FOREGROUND_CHILD";
+
+        const remoteType = this.childMap.get(childID);
+        this.childMap.delete(childID);
+
+        lazy.EventDispatcher.instance.sendRequest({
+          type: "GeckoView:ChildCrashReport",
+          minidumpPath,
+          extrasPath,
+          success: true,
+          fatal: false,
+          processType,
+          remoteType,
+        });
+
+        break;
+      }
     }
-
-    aSubject.QueryInterface(Ci.nsIPropertyBag2);
-
-    const disableReporting = Services.env.get("MOZ_CRASHREPORTER_NO_REPORT");
-
-    if (
-      !aSubject.get("abnormal") ||
-      !AppConstants.MOZ_CRASHREPORTER ||
-      disableReporting
-    ) {
-      return;
-    }
-
-    // If dumpID is empty the process was likely killed by the system and we therefore do not want
-    // to report the crash.
-    const dumpID = aSubject.get("dumpID");
-    if (!dumpID) {
-      Services.telemetry
-        .getHistogramById("FX_CONTENT_CRASH_DUMP_UNAVAILABLE")
-        .add(1);
-      return;
-    }
-
-    debug`Notifying child process crash, dump ID ${dumpID}`;
-    const [minidumpPath, extrasPath] = getPendingMinidump(dumpID);
-
-    // Report GPU process crashes as occuring in a background process, and others as foreground.
-    const processType =
-      aTopic === "compositor:process-aborted"
-        ? "BACKGROUND_CHILD"
-        : "FOREGROUND_CHILD";
-
-    lazy.EventDispatcher.instance.sendRequest({
-      type: "GeckoView:ChildCrashReport",
-      minidumpPath,
-      extrasPath,
-      success: true,
-      fatal: false,
-      processType,
-    });
   },
 };
