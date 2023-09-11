@@ -39,6 +39,7 @@ class SettingsPrivateBrowsingTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/555822
     @Test
     fun verifyPrivateBrowsingMenuItemsTest() {
         homeScreen {
@@ -145,8 +146,9 @@ class SettingsPrivateBrowsingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/414583
     @Test
-    fun addPrivateBrowsingShortcut() {
+    fun addPrivateBrowsingShortcutFromSettingsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {

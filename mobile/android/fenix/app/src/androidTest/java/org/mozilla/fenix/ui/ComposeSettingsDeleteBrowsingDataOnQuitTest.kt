@@ -68,7 +68,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
     }
 
     @Test
-    fun deleteBrowsingDataOnQuitSettingsItemsTest() {
+    fun deleteBrowsingDataOnQuitSettingTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -120,7 +120,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
     }
 
     @Test
-    fun deleteHistoryOnQuitTest() {
+    fun deleteBrowsingHistoryOnQuitTest() {
         val genericPage =
             getStorageTestAsset(mockWebServer, "generic1.html")
 
@@ -147,6 +147,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416051
     @Test
     fun deleteCookiesAndSiteDataOnQuitTest() {
         val storageWritePage =

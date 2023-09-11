@@ -44,6 +44,7 @@ class SettingsPrivacyTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2092698
     @Test
     fun settingsPrivacyItemsTest() {
         homeScreen {
@@ -68,8 +69,9 @@ class SettingsPrivacyTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243362
     @Test
-    fun verifyDataCollectionTest() {
+    fun verifyDataCollectionSettingsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -79,44 +81,14 @@ class SettingsPrivacyTest {
                 true,
                 "On",
             )
-        }
-    }
-
-    @Test
-    fun verifyUsageAndTechnicalDataToggleTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSettingsSubMenuDataCollection {
-            verifyUsageAndTechnicalDataToggle(true)
             clickUsageAndTechnicalDataToggle()
             verifyUsageAndTechnicalDataToggle(false)
-        }
-    }
-
-    @Test
-    fun verifyMarketingDataToggleTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSettingsSubMenuDataCollection {
-            verifyMarketingDataToggle(true)
+            clickUsageAndTechnicalDataToggle()
+            verifyUsageAndTechnicalDataToggle(true)
             clickMarketingDataToggle()
             verifyMarketingDataToggle(false)
-        }
-    }
-
-    @Test
-    fun verifyStudiesToggleTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSettingsSubMenuDataCollection {
-            verifyDataCollectionView(
-                true,
-                true,
-                "On",
-            )
+            clickMarketingDataToggle()
+            verifyMarketingDataToggle(true)
             clickStudiesOption()
             verifyStudiesToggle(true)
             clickStudiesToggle()
@@ -126,26 +98,7 @@ class SettingsPrivacyTest {
         }
     }
 
-    @Test
-    fun sitePermissionsItemsTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSettingsSubMenuSitePermissions {
-            verifySitePermissionsToolbarTitle()
-            verifyToolbarGoBackButton()
-            verifySitePermissionOption("Autoplay", "Block audio only")
-            verifySitePermissionOption("Camera", "Blocked by Android")
-            verifySitePermissionOption("Location", "Blocked by Android")
-            verifySitePermissionOption("Microphone", "Blocked by Android")
-            verifySitePermissionOption("Notification", "Ask to allow")
-            verifySitePermissionOption("Persistent Storage", "Ask to allow")
-            verifySitePermissionOption("Cross-site cookies", "Ask to allow")
-            verifySitePermissionOption("DRM-controlled content", "Ask to allow")
-            verifySitePermissionOption("Exceptions")
-        }
-    }
-
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1024594
     @Test
     fun verifyNotificationsSettingsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

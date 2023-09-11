@@ -32,6 +32,7 @@ class SettingsHTTPSOnlyModeTest {
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1724825
     @Test
     fun httpsOnlyModeMenuItemsTest() {
         homeScreen {
@@ -58,6 +59,7 @@ class SettingsHTTPSOnlyModeTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1724827
     @SmokeTest
     @Test
     fun httpsOnlyModeEnabledInNormalBrowsingTest() {
@@ -93,8 +95,9 @@ class SettingsHTTPSOnlyModeTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2091057
     @Test
-    fun httpsOnlyModeExceptionPersistsForCurrentSession() {
+    fun httpsOnlyModeExceptionPersistsForCurrentSessionTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -120,6 +123,7 @@ class SettingsHTTPSOnlyModeTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1724828
     @Test
     fun httpsOnlyModeEnabledOnlyInPrivateBrowsingTest() {
         homeScreen {
@@ -159,6 +163,7 @@ class SettingsHTTPSOnlyModeTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2091058
     @Test
     fun turnOffHttpsOnlyModeTest() {
         homeScreen {

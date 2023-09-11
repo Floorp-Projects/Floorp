@@ -60,8 +60,9 @@ class SettingsDeleteBrowsingDataOnQuitTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416048
     @Test
-    fun deleteBrowsingDataOnQuitSettingsItemsTest() {
+    fun deleteBrowsingDataOnQuitSettingTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -88,6 +89,7 @@ class SettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416049
     @Test
     fun deleteOpenTabsOnQuitTest() {
         val testPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -112,8 +114,9 @@ class SettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416050
     @Test
-    fun deleteHistoryOnQuitTest() {
+    fun deleteBrowsingHistoryOnQuitTest() {
         val genericPage =
             getStorageTestAsset(mockWebServer, "generic1.html")
 
@@ -140,6 +143,7 @@ class SettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416051
     @Test
     fun deleteCookiesAndSiteDataOnQuitTest() {
         val storageWritePage =
@@ -174,6 +178,7 @@ class SettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1243096
     @SmokeTest
     @Test
     fun deleteDownloadsOnQuitTest() {
@@ -207,6 +212,7 @@ class SettingsDeleteBrowsingDataOnQuitTest {
         deleteDownloadedFileOnStorage("smallZip.zip")
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416053
     @SmokeTest
     @Test
     fun deleteSitePermissionsOnQuitTest() {
@@ -242,6 +248,7 @@ class SettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416052
     @Test
     fun deleteCachedFilesOnQuitTest() {
         val pocketTopArticles = TestHelper.getStringResource(R.string.pocket_pinned_top_articles)

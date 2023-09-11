@@ -63,6 +63,7 @@ class EnhancedTrackingProtectionTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416046
     @Test
     fun testETPSettingsItemsAndSubMenus() {
         homeScreen {
@@ -97,30 +98,9 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1514599
     @Test
-    fun testETPSettingsSummaryChange() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifyEnhancedTrackingProtectionButton()
-            verifySettingsOptionSummary("Enhanced Tracking Protection", "Standard")
-        }.openEnhancedTrackingProtectionSubMenu {
-            selectTrackingProtectionOption("Strict")
-        }.goBack {
-            verifySettingsOptionSummary("Enhanced Tracking Protection", "Strict")
-        }.openEnhancedTrackingProtectionSubMenu {
-            selectTrackingProtectionOption("Custom")
-        }.goBack {
-            verifySettingsOptionSummary("Enhanced Tracking Protection", "Custom")
-        }.openEnhancedTrackingProtectionSubMenu {
-            switchEnhancedTrackingProtectionToggle()
-        }.goBack {
-            verifySettingsOptionSummary("Enhanced Tracking Protection", "Off")
-        }
-    }
-
-    @Test
-    fun testETPOffGlobally() {
+    fun verifyETPStateIsReflectedInTPSheetTest() {
         val genericPage = getGenericAsset(mockWebServer, 1)
 
         homeScreen {
@@ -129,6 +109,8 @@ class EnhancedTrackingProtectionTest {
         }.openEnhancedTrackingProtectionSubMenu {
             switchEnhancedTrackingProtectionToggle()
             verifyEnhancedTrackingProtectionOptionsEnabled(false)
+        }.goBack {
+            verifySettingsOptionSummary("Enhanced Tracking Protection", "Off")
             exitMenu()
         }
 
@@ -151,10 +133,11 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/339712
     // Tests adding ETP exceptions to websites and keeping that preference after restart
     @SmokeTest
     @Test
-    fun testDisableETPExceptionToggle() {
+    fun disablingETPOnAWebsiteAddsItToExceptionListTest() {
         val firstPage = getGenericAsset(mockWebServer, 1)
         val secondPage = "example.com"
 
@@ -182,8 +165,9 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/339714
     @Test
-    fun trackingProtectionSwitchEnabledRemovesExceptionTest() {
+    fun enablingETPOnAWebsiteRemovesItFromTheExceptionListTest() {
         val trackingPage = getEnhancedTrackingProtectionAsset(mockWebServer)
 
         navigationToolbar {
@@ -212,9 +196,10 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/339713
     // Tests removing TP exceptions individually or all at once
     @Test
-    fun clearTrackingProtectionExceptionsTest() {
+    fun clearWebsitesFromTPExceptionListTest() {
         val firstPage = getGenericAsset(mockWebServer, 1)
         val secondPage = "example.com"
 
@@ -249,10 +234,19 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/417444
     @Test
-    fun testStandardETPVisitSheetDetails() {
+    fun verifyTrackersBlockedWithStandardTPTest() {
         val genericPage = getGenericAsset(mockWebServer, 1)
         val trackingProtectionTest = getEnhancedTrackingProtectionAsset(mockWebServer).url
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            verifyEnhancedTrackingProtectionButton()
+            verifySettingsOptionSummary("Enhanced Tracking Protection", "Standard")
+            exitMenu()
+        }
 
         // browsing a generic page to allow GV to load on a fresh run
         navigationToolbar {
@@ -280,11 +274,20 @@ class EnhancedTrackingProtectionTest {
         }.closeEnhancedTrackingProtectionSheet {}
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/417441
     @Test
-    fun testStrictVisitSheetDetails() {
+    fun verifyTrackersBlockedWithStrictTPTest() {
         appContext.settings().setStrictETP()
         val genericPage = getGenericAsset(mockWebServer, 1)
         val trackingProtectionTest = getEnhancedTrackingProtectionAsset(mockWebServer).url
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            verifyEnhancedTrackingProtectionButton()
+            verifySettingsOptionSummary("Enhanced Tracking Protection", "Strict")
+            exitMenu()
+        }
 
         // browsing a generic page to allow GV to load on a fresh run
         navigationToolbar {
@@ -316,9 +319,10 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/561637
     @SmokeTest
     @Test
-    fun defaultCustomTrackingProtectionSettingsTest() {
+    fun verifyTrackersBlockedWithCustomTPTest() {
         val genericWebPage = getGenericAsset(mockWebServer, 1)
         val trackingPage = getEnhancedTrackingProtectionAsset(mockWebServer)
 
@@ -328,9 +332,12 @@ class EnhancedTrackingProtectionTest {
         }.openEnhancedTrackingProtectionSubMenu {
             selectTrackingProtectionOption("Custom")
             verifyCustomTrackingProtectionSettings()
-        }.goBackToHomeScreen {
-        }.openNavigationToolbar {
-            // browsing a basic page to allow GV to load on a fresh run
+        }.goBack {
+            verifySettingsOptionSummary("Enhanced Tracking Protection", "Custom")
+            exitMenu()
+        }
+
+        navigationToolbar {
         }.enterURLAndEnterToBrowser(genericWebPage.url) {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(trackingPage.url) {
@@ -355,6 +362,7 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/562710
     // Tests the trackers blocked with the following Custom TP set up:
     // - Cookies set to "All cookies"
     // - Tracking content option OFF
@@ -398,8 +406,9 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/562709
     @Test
-    fun disableCustomTrackingProtectionOptionsTest() {
+    fun verifyTrackersBlockedWithCustomTPOptionsDisabledTest() {
         val genericWebPage = getGenericAsset(mockWebServer, 1)
         val trackingPage = getEnhancedTrackingProtectionAsset(mockWebServer)
 
@@ -430,8 +439,9 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2106997
     @Test
-    fun testTrackingContentBlockedOnlyInPrivateTabs() {
+    fun verifyTrackingContentBlockedOnlyInPrivateTabsTest() {
         val genericWebPage = getGenericAsset(mockWebServer, 1)
         val trackingPage = getEnhancedTrackingProtectionAsset(mockWebServer)
 
@@ -480,6 +490,7 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2285368
     @SmokeTest
     @Test
     fun blockCookiesStorageAccessTest() {
@@ -502,6 +513,7 @@ class EnhancedTrackingProtectionTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2285369
     @SmokeTest
     @Test
     fun allowCookiesStorageAccessTest() {

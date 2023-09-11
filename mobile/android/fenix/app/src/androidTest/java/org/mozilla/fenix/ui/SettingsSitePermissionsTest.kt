@@ -69,11 +69,33 @@ class SettingsSitePermissionsTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/246974
+    @Test
+    fun sitePermissionsItemsTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSettingsSubMenuSitePermissions {
+            verifySitePermissionsToolbarTitle()
+            verifyToolbarGoBackButton()
+            verifySitePermissionOption("Autoplay", "Block audio only")
+            verifySitePermissionOption("Camera", "Blocked by Android")
+            verifySitePermissionOption("Location", "Blocked by Android")
+            verifySitePermissionOption("Microphone", "Blocked by Android")
+            verifySitePermissionOption("Notification", "Ask to allow")
+            verifySitePermissionOption("Persistent Storage", "Ask to allow")
+            verifySitePermissionOption("Cross-site cookies", "Ask to allow")
+            verifySitePermissionOption("DRM-controlled content", "Ask to allow")
+            verifySitePermissionOption("Exceptions")
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/247680
     // Verifies that you can go to System settings and change app's permissions from inside the app
     @SmokeTest
     @Test
     @SdkSuppress(minSdkVersion = 29)
-    fun redirectToAppPermissionsSystemSettingsTest() {
+    fun systemBlockedPermissionsRedirectToSystemAppSettingsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -108,9 +130,10 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2095125
     @SmokeTest
     @Test
-    fun verifyAutoplayBlockAudioOnlySettingTest() {
+    fun verifyAutoplayBlockAudioOnlySettingOnNotMutedVideoTest() {
         val genericPage = getGenericAsset(mockWebServer, 1)
         val videoTestPage = getVideoPageAsset(mockWebServer)
 
@@ -146,6 +169,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2286807
     @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1827599")
     @SmokeTest
     @Test
@@ -173,8 +197,9 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2095124
     @Test
-    fun verifyAutoplayAllowAudioVideoSettingTest() {
+    fun verifyAutoplayAllowAudioVideoSettingOnNotMutedVideoTestTest() {
         val genericPage = getGenericAsset(mockWebServer, 1)
         val videoTestPage = getVideoPageAsset(mockWebServer)
 
@@ -208,6 +233,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2286806
     @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1827599")
     @Test
     fun verifyAutoplayAllowAudioVideoSettingOnMutedVideoTest() {
@@ -235,8 +261,9 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2095126
     @Test
-    fun verifyAutoplayBlockAudioAndVideoSettingTest() {
+    fun verifyAutoplayBlockAudioAndVideoSettingOnNotMutedVideoTest() {
         val videoTestPage = getVideoPageAsset(mockWebServer)
 
         homeScreen {
@@ -265,6 +292,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2286808
     @Test
     fun verifyAutoplayBlockAudioAndVideoSettingOnMutedVideoTest() {
         val mutedVideoTestPage = getMutedVideoPageAsset(mockWebServer)
@@ -294,6 +322,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/247362
     @Test
     fun verifyCameraPermissionSettingsTest() {
         navigationToolbar {
@@ -319,6 +348,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/247364
     @Test
     fun verifyMicrophonePermissionSettingsTest() {
         navigationToolbar {
@@ -344,6 +374,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/247363
     @Test
     fun verifyLocationPermissionSettingsTest() {
         navigationToolbar {
@@ -368,6 +399,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/247365
     @Test
     fun verifyNotificationsPermissionSettingsTest() {
         navigationToolbar {
@@ -392,6 +424,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1923415
     @Test
     fun verifyPersistentStoragePermissionSettingsTest() {
         navigationToolbar {
@@ -416,6 +449,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1923417
     @Ignore("Flaky, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1829889")
     @Test
     fun verifyDRMControlledContentPermissionSettingsTest() {
@@ -454,6 +488,7 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/246976
     @SmokeTest
     @Test
     fun clearAllSitePermissionsExceptionsTest() {
@@ -476,8 +511,9 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/247007
     @Test
-    fun clearOneSiteAllPermissionsExceptionsTest() {
+    fun addAndClearOneWebPagePermission() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(permissionsTestPage.toUri()) {
         }.clickOpenNotificationButton {
@@ -498,8 +534,9 @@ class SettingsSitePermissionsTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/326477
     @Test
-    fun clearOneSiteOnePermissionExceptionTest() {
+    fun clearIndividuallyAWebPagePermission() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(permissionsTestPage.toUri()) {
         }.clickOpenNotificationButton {

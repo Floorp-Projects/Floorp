@@ -117,7 +117,7 @@ class ComposeSettingsDeleteBrowsingDataTest {
     }
 
     @Test
-    fun deleteTabsDataWithNoOpenTabsTest() {
+    fun deleteOpenTabsBrowsingDataWithNoOpenTabsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -135,7 +135,7 @@ class ComposeSettingsDeleteBrowsingDataTest {
 
     @SmokeTest
     @Test
-    fun deleteTabsDataTest() {
+    fun deleteOpenTabsBrowsingDataTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {

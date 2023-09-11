@@ -14,17 +14,17 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class CookieBannerReductionTest {
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1980504
     // Bug causing flakiness https://bugzilla.mozilla.org/show_bug.cgi?id=1807440
     @Ignore("Disabled: https://bugzilla.mozilla.org/show_bug.cgi?id=1852803")
     @SmokeTest
     @Test
-    fun verifyCookieBannerReductionTest() {
+    fun verifyCookieBannerReductionFunctionalityTest() {
         val webSite = "startsiden.no"
 
         homeScreen {
@@ -62,57 +62,6 @@ class CookieBannerReductionTest {
 
         exitMenu()
 
-        browserScreen {
-            waitForPageToLoad()
-        }.openThreeDotMenu {
-        }.refreshPage {
-            verifyCookieBannerExists(exists = false)
-        }
-    }
-
-    // Bug causing flakiness https://bugzilla.mozilla.org/show_bug.cgi?id=1807440
-    @SmokeTest
-    @Test
-    fun verifyCookieBannerReductionInPrivateBrowsingTest() {
-        val webSite = "startsiden.no"
-
-        homeScreen {
-        }.togglePrivateBrowsingMode()
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(webSite.toUri()) {
-            waitForPageToLoad()
-            verifyCookieBannerExists(exists = true)
-        }.openThreeDotMenu {
-        }.openSettings {
-            verifySettingsOptionSummary("Cookie banner reduction", "Off")
-        }.openCookieBannerReductionSubMenu {
-            verifyCookieBannerView(isCookieBannerReductionChecked = false)
-            clickCookieBannerReductionToggle()
-            verifyCheckedCookieBannerReductionToggle(isCookieBannerReductionChecked = true)
-        }.goBack {
-            verifySettingsOptionSummary("Cookie banner reduction", "On")
-        }
-
-        exitMenu()
-
-        browserScreen {
-            verifyCookieBannerExists(exists = false)
-        }
-
-        restartApp(activityTestRule)
-
-        homeScreen {
-        }.openTabDrawer {
-        }.openTab("Startsiden.no") {
-            verifyCookieBannerExists(exists = false)
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openCookieBannerReductionSubMenu {
-            clickCookieBannerReductionToggle()
-            verifyCheckedCookieBannerReductionToggle(false)
-            exitMenu()
-        }
         browserScreen {
             waitForPageToLoad()
         }.openThreeDotMenu {
