@@ -4116,7 +4116,8 @@ dependencies = [
 [[package]]
 name = "packed_simd"
 version = "0.3.9"
-source = "git+https://github.com/hsivonen/packed_simd?rev=e588ceb568878e1a3156ea9ce551d5b63ef0cdc4#e588ceb568878e1a3156ea9ce551d5b63ef0cdc4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f9f08af0c877571712e2e3e686ad79efad9657dbf0f7c3c8ba943ff6c38932d"
 dependencies = [
  "cfg-if 1.0.0",
  "num-traits",

@@ -16,3 +16,4 @@ pub(crate) mod sin_cos_pi;
 pub(crate) mod sin_pi;
 pub(crate) mod sqrt;
 pub(crate) mod sqrte;
+pub(crate) mod tanh;
