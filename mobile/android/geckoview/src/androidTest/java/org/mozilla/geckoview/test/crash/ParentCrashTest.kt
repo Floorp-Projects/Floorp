@@ -31,7 +31,7 @@ class ParentCrashTest : BaseSessionTest() {
         val client = TestCrashHandler.Client(targetContext)
 
         assertTrue(client.connect(timeout))
-        client.setEvalNextCrashDump(GeckoRuntime.CRASHED_PROCESS_TYPE_MAIN)
+        client.setEvalNextCrashDump(GeckoRuntime.CRASHED_PROCESS_TYPE_MAIN, null)
 
         val runtime = TestRuntimeService.RuntimeInstance.start(
             targetContext,
