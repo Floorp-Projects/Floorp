@@ -80,7 +80,7 @@ void nsTableColFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 }
 
 void nsTableColFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
-                                                 nscoord aPixelValue) {
+                                                 BCPixelSize aPixelValue) {
   switch (aForSide) {
     case eLogicalSideBStart:
       mBStartContBorderWidth = aPixelValue;

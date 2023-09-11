@@ -205,10 +205,12 @@ class nsTableRowFrame : public nsContainerFrame {
   nscoord GetUnpaginatedBSize();
   void SetUnpaginatedBSize(nsPresContext* aPresContext, nscoord aValue);
 
-  nscoord GetBStartBCBorderWidth() const { return mBStartBorderWidth; }
-  nscoord GetBEndBCBorderWidth() const { return mBEndBorderWidth; }
-  void SetBStartBCBorderWidth(nscoord aWidth) { mBStartBorderWidth = aWidth; }
-  void SetBEndBCBorderWidth(nscoord aWidth) { mBEndBorderWidth = aWidth; }
+  BCPixelSize GetBStartBCBorderWidth() const { return mBStartBorderWidth; }
+  BCPixelSize GetBEndBCBorderWidth() const { return mBEndBorderWidth; }
+  void SetBStartBCBorderWidth(BCPixelSize aWidth) {
+    mBStartBorderWidth = aWidth;
+  }
+  void SetBEndBCBorderWidth(BCPixelSize aWidth) { mBEndBorderWidth = aWidth; }
   mozilla::LogicalMargin GetBCBorderWidth(mozilla::WritingMode aWM);
 
   /**
@@ -229,7 +231,7 @@ class nsTableRowFrame : public nsContainerFrame {
    * @param aForSide - side to set; only accepts iend, istart, and bstart
    */
   void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
-                                  nscoord aPixelValue);
+                                  BCPixelSize aPixelValue);
 
   bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & (eSupportsContainLayoutAndPaint | eSupportsAspectRatio)) {
@@ -301,13 +303,13 @@ class nsTableRowFrame : public nsContainerFrame {
   nscoord mMaxCellAscent = 0;   // does include cells with rowspan > 1
   nscoord mMaxCellDescent = 0;  // does *not* include cells with rowspan > 1
 
-  // border widths in the collapsing border model of the *inner*
+  // border widths in pixels in the collapsing border model of the *inner*
   // half of the border only
-  nscoord mBStartBorderWidth = 0;
-  nscoord mBEndBorderWidth = 0;
-  nscoord mIEndContBorderWidth = 0;
-  nscoord mBStartContBorderWidth = 0;
-  nscoord mIStartContBorderWidth = 0;
+  BCPixelSize mBStartBorderWidth = 0;
+  BCPixelSize mBEndBorderWidth = 0;
+  BCPixelSize mIEndContBorderWidth = 0;
+  BCPixelSize mBStartContBorderWidth = 0;
+  BCPixelSize mIStartContBorderWidth = 0;
 
   /**
    * Sets the NS_ROW_HAS_CELL_WITH_STYLE_BSIZE bit to indicate whether
@@ -408,19 +410,23 @@ inline void nsTableRowFrame::SetHasUnpaginatedBSize(bool aValue) {
 
 inline mozilla::LogicalMargin nsTableRowFrame::GetBCBorderWidth(
     mozilla::WritingMode aWM) {
-  return mozilla::LogicalMargin(aWM, mBStartBorderWidth, 0, mBEndBorderWidth,
-                                0);
+  nsPresContext* presContext = PresContext();
+  return mozilla::LogicalMargin(
+      aWM, presContext->DevPixelsToAppUnits(mBStartBorderWidth), 0,
+      presContext->DevPixelsToAppUnits(mBEndBorderWidth), 0);
 }
 
 inline void nsTableRowFrame::GetContinuousBCBorderWidth(
     mozilla::WritingMode aWM, mozilla::LogicalMargin& aBorder) {
-  aBorder.IEnd(aWM) = BC_BORDER_START_HALF(mIStartContBorderWidth);
-  aBorder.BStart(aWM) = BC_BORDER_END_HALF(mBStartContBorderWidth);
-  aBorder.IStart(aWM) = BC_BORDER_END_HALF(mIEndContBorderWidth);
+  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
+  aBorder.IEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mIStartContBorderWidth);
+  aBorder.BStart(aWM) = BC_BORDER_END_HALF_COORD(d2a, mBStartContBorderWidth);
+  aBorder.IStart(aWM) = BC_BORDER_END_HALF_COORD(d2a, mIEndContBorderWidth);
 }
 
 inline nscoord nsTableRowFrame::GetOuterBStartContBCBorderWidth() {
-  return BC_BORDER_START_HALF(mBStartContBorderWidth);
+  int32_t aPixelsToTwips = mozilla::AppUnitsPerCSSPixel();
+  return BC_BORDER_START_HALF_COORD(aPixelsToTwips, mBStartContBorderWidth);
 }
 
 #endif

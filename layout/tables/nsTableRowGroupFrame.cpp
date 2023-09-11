@@ -1652,13 +1652,15 @@ LogicalMargin nsTableRowGroupFrame::GetBCBorderWidth(WritingMode aWM) {
        rowFrame = rowFrame->GetNextRow()) {
     lastRowFrame = rowFrame;
   }
-  border.BStart(aWM) = firstRowFrame->GetBStartBCBorderWidth();
-  border.BEnd(aWM) = lastRowFrame->GetBEndBCBorderWidth();
+  border.BStart(aWM) = PresContext()->DevPixelsToAppUnits(
+      firstRowFrame->GetBStartBCBorderWidth());
+  border.BEnd(aWM) =
+      PresContext()->DevPixelsToAppUnits(lastRowFrame->GetBEndBCBorderWidth());
   return border;
 }
 
 void nsTableRowGroupFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
-                                                      nscoord aPixelValue) {
+                                                      BCPixelSize aPixelValue) {
   switch (aForSide) {
     case eLogicalSideIEnd:
       mIEndContBorderWidth = aPixelValue;

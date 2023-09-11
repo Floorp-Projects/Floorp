@@ -146,16 +146,26 @@ enum BCBorderOwner {
   eAjaCellOwner = 10  // cell to the top or to the left
 };
 
+// BCPixelSize is in device pixels.
+typedef uint16_t BCPixelSize;
+
 // These are the max sizes that are stored. If they are exceeded, then the max
 // is stored and the actual value is computed when needed.
-#define MAX_BORDER_WIDTH nscoord((1u << (sizeof(uint16_t) * 8)) - 1)
+#define MAX_BORDER_WIDTH nscoord((1u << (sizeof(BCPixelSize) * 8)) - 1)
 
 // The half of border on inline/block-axis start side
-static inline nscoord BC_BORDER_START_HALF(nscoord aCoord) {
-  return aCoord - aCoord / 2;
+static inline BCPixelSize BC_BORDER_START_HALF(BCPixelSize px) {
+  return px - px / 2;
 }
 // The half of border on inline/block-axis end side
-static inline nscoord BC_BORDER_END_HALF(nscoord aCoord) { return aCoord / 2; }
+static inline BCPixelSize BC_BORDER_END_HALF(BCPixelSize px) { return px / 2; }
+
+static inline nscoord BC_BORDER_START_HALF_COORD(int32_t d2a, BCPixelSize px) {
+  return BC_BORDER_START_HALF(px) * d2a;
+}
+static inline nscoord BC_BORDER_END_HALF_COORD(int32_t d2a, BCPixelSize px) {
+  return BC_BORDER_END_HALF(px) * d2a;
+}
 
 // BCData stores the bstart and istart border info and the corner connecting the
 // two.
@@ -173,9 +183,10 @@ class BCData {
 
   void SetBStartEdge(BCBorderOwner aOwner, nscoord aSize, bool aStart);
 
-  nscoord GetCorner(mozilla::LogicalSide& aOwnerSide, bool& aBevel) const;
+  BCPixelSize GetCorner(mozilla::LogicalSide& aCornerOwner, bool& aBevel) const;
 
-  void SetCorner(nscoord aSubSize, mozilla::LogicalSide aOwner, bool aBevel);
+  void SetCorner(BCPixelSize aSubSize, mozilla::LogicalSide aOwner,
+                 bool aBevel);
 
   inline bool IsIStartStart() const { return (bool)mIStartStart; }
 
@@ -186,23 +197,23 @@ class BCData {
   inline void SetBStartStart(bool aValue) { mBStartStart = aValue; }
 
  protected:
-  nscoord mIStartSize;        // size of iStart border
-  nscoord mBStartSize;        // size of bStart border
-  nscoord mCornerSubSize;     // size of the largest border not in the
-                              //   dominant plane (for example, if corner is
-                              //   owned by the segment to its bStart or bEnd,
-                              //   then the size is the max of the border
-                              //   sizes of the segments to its iStart or iEnd.
-  unsigned mIStartOwner : 4;  // owner of iStart border
-  unsigned mBStartOwner : 4;  // owner of bStart border
-  unsigned mIStartStart : 1;  // set if this is the start of a block-dir border
-                              // segment
-  unsigned mBStartStart : 1;  // set if this is the start of an inline-dir
-                              // border segment
-  unsigned mCornerSide : 2;   // LogicalSide of the owner of the bStart-iStart
-                              // corner relative to the corner
-  unsigned mCornerBevel : 1;  // is the corner beveled (only two segments,
-                              // perpendicular, not dashed or dotted).
+  BCPixelSize mIStartSize;     // size in pixels of iStart border
+  BCPixelSize mBStartSize;     // size in pixels of bStart border
+  BCPixelSize mCornerSubSize;  // size of the largest border not in the
+                               //   dominant plane (for example, if corner is
+                               //   owned by the segment to its bStart or bEnd,
+                               //   then the size is the max of the border
+                               //   sizes of the segments to its iStart or iEnd.
+  unsigned mIStartOwner : 4;   // owner of iStart border
+  unsigned mBStartOwner : 4;   // owner of bStart border
+  unsigned mIStartStart : 1;   // set if this is the start of a block-dir border
+                               // segment
+  unsigned mBStartStart : 1;   // set if this is the start of an inline-dir
+                               // border segment
+  unsigned mCornerSide : 2;    // LogicalSide of the owner of the bStart-iStart
+                               // corner relative to the corner
+  unsigned mCornerBevel : 1;   // is the corner beveled (only two segments,
+                               // perpendicular, not dashed or dotted).
 };
 
 // BCCellData entries replace CellData entries in the cell map if the border
@@ -372,15 +383,15 @@ inline void BCData::SetBStartEdge(BCBorderOwner aOwner, nscoord aSize,
   SetBStartStart(aStart);
 }
 
-inline nscoord BCData::GetCorner(mozilla::LogicalSide& aOwnerSide,
-                                 bool& aBevel) const {
+inline BCPixelSize BCData::GetCorner(mozilla::LogicalSide& aOwnerSide,
+                                     bool& aBevel) const {
   aOwnerSide = mozilla::LogicalSide(mCornerSide);
   aBevel = (bool)mCornerBevel;
   return mCornerSubSize;
 }
 
-inline void BCData::SetCorner(nscoord aSubSize, mozilla::LogicalSide aOwnerSide,
-                              bool aBevel) {
+inline void BCData::SetCorner(BCPixelSize aSubSize,
+                              mozilla::LogicalSide aOwnerSide, bool aBevel) {
   mCornerSubSize = aSubSize;
   mCornerSide = aOwnerSide;
   mCornerBevel = aBevel;
