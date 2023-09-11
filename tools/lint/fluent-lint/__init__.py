@@ -112,6 +112,9 @@ class Linter(visitor.Visitor):
             "buttonaccesskey",
             "secondarybuttonlabel",
             "secondarybuttonaccesskey",
+            # Commonly used in Lit-based web components
+            "heading",
+            "description",
         ]
         self.known_attribute_list = [a.lower() for a in attributes]
 
