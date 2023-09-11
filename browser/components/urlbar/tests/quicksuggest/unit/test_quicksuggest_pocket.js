@@ -432,7 +432,7 @@ add_task(async function notRelevant() {
   info("Triggering the 'Not relevant' command");
   QuickSuggest.getFeature("PocketSuggestions").handleCommand(
     {
-      acknowledgeDismissal() {},
+      controller: { removeResult() {} },
     },
     result,
     "not_relevant"
@@ -497,7 +497,7 @@ add_task(async function notInterested() {
   info("Triggering the 'Not interested' command");
   QuickSuggest.getFeature("PocketSuggestions").handleCommand(
     {
-      acknowledgeDismissal() {},
+      controller: { removeResult() {} },
     },
     result,
     "not_interested"

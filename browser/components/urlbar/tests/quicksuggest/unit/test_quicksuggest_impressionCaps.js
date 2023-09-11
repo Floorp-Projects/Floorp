@@ -3896,7 +3896,6 @@ async function checkSearch({ name, searchString, expectedResults }) {
     controller: {
       removeResult() {},
     },
-    acknowledgeDismissal() {},
   });
   UrlbarProviderQuickSuggest.onEngagement(
     "engagement",
