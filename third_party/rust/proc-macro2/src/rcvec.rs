@@ -1,7 +1,8 @@
+use alloc::rc::Rc;
+use alloc::vec;
 use core::mem;
+use core::panic::RefUnwindSafe;
 use core::slice;
-use std::rc::Rc;
-use std::vec;
 
 pub(crate) struct RcVec<T> {
     inner: Rc<Vec<T>>,
@@ -52,7 +53,7 @@ impl<T> RcVec<T> {
         T: Clone,
     {
         let vec = if let Some(owned) = Rc::get_mut(&mut self.inner) {
-            mem::replace(owned, Vec::new())
+            mem::take(owned)
         } else {
             Vec::clone(&self.inner)
         };
@@ -140,3 +141,5 @@ impl<T> Iterator for RcVecIntoIter<T> {
         self.inner.size_hint()
     }
 }
+
+impl<T> RefUnwindSafe for RcVec<T> where T: RefUnwindSafe {}

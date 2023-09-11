@@ -3,18 +3,15 @@ use crate::location::LineColumn;
 use crate::parse::{self, Cursor};
 use crate::rcvec::{RcVec, RcVecBuilder, RcVecIntoIter, RcVecMut};
 use crate::{Delimiter, Spacing, TokenTree};
-#[cfg(span_locations)]
+#[cfg(all(span_locations, not(fuzzing)))]
 use core::cell::RefCell;
 #[cfg(span_locations)]
 use core::cmp;
 use core::fmt::{self, Debug, Display, Write};
-use core::iter::FromIterator;
 use core::mem::ManuallyDrop;
 use core::ops::RangeBounds;
 use core::ptr;
 use core::str::FromStr;
-#[cfg(procmacro2_semver_exempt)]
-use std::path::Path;
 use std::path::PathBuf;
 
 /// Force use of proc-macro2's fallback implementation of the API for now, even
@@ -73,7 +70,6 @@ impl TokenStream {
 fn push_token_from_proc_macro(mut vec: RcVecMut<TokenTree>, token: TokenTree) {
     // https://github.com/dtolnay/proc-macro2/issues/235
     match token {
-        #[cfg(not(no_bind_by_move_pattern_guard))]
         TokenTree::Literal(crate::Literal {
             #[cfg(wrap_proc_macro)]
                 inner: crate::imp::Literal::Fallback(literal),
@@ -83,20 +79,6 @@ fn push_token_from_proc_macro(mut vec: RcVecMut<TokenTree>, token: TokenTree) {
         }) if literal.repr.starts_with('-') => {
             push_negative_literal(vec, literal);
         }
-        #[cfg(no_bind_by_move_pattern_guard)]
-        TokenTree::Literal(crate::Literal {
-            #[cfg(wrap_proc_macro)]
-                inner: crate::imp::Literal::Fallback(literal),
-            #[cfg(not(wrap_proc_macro))]
-                inner: literal,
-            ..
-        }) => {
-            if literal.repr.starts_with('-') {
-                push_negative_literal(vec, literal);
-            } else {
-                vec.push(TokenTree::Literal(crate::Literal::_new_stable(literal)));
-            }
-        }
         _ => vec.push(token),
     }
 
@@ -104,9 +86,9 @@ fn push_token_from_proc_macro(mut vec: RcVecMut<TokenTree>, token: TokenTree) {
     fn push_negative_literal(mut vec: RcVecMut<TokenTree>, mut literal: Literal) {
         literal.repr.remove(0);
         let mut punct = crate::Punct::new('-', Spacing::Alone);
-        punct.set_span(crate::Span::_new_stable(literal.span));
+        punct.set_span(crate::Span::_new_fallback(literal.span));
         vec.push(TokenTree::Punct(punct));
-        vec.push(TokenTree::Literal(crate::Literal::_new_stable(literal)));
+        vec.push(TokenTree::Literal(crate::Literal::_new_fallback(literal)));
     }
 }
 
@@ -162,11 +144,14 @@ impl TokenStreamBuilder {
 
 #[cfg(span_locations)]
 fn get_cursor(src: &str) -> Cursor {
+    #[cfg(fuzzing)]
+    return Cursor { rest: src, off: 1 };
+
     // Create a dummy file & add it to the source map
+    #[cfg(not(fuzzing))]
     SOURCE_MAP.with(|cm| {
         let mut cm = cm.borrow_mut();
-        let name = format!("<parsed string {}>", cm.files.len());
-        let span = cm.add_file(&name, src);
+        let span = cm.add_file(src);
         Cursor {
             rest: src,
             off: span.lo,
@@ -232,7 +217,7 @@ impl Debug for TokenStream {
     }
 }
 
-#[cfg(use_proc_macro)]
+#[cfg(feature = "proc-macro")]
 impl From<proc_macro::TokenStream> for TokenStream {
     fn from(inner: proc_macro::TokenStream) -> Self {
         inner
@@ -242,7 +227,7 @@ impl From<proc_macro::TokenStream> for TokenStream {
     }
 }
 
-#[cfg(use_proc_macro)]
+#[cfg(feature = "proc-macro")]
 impl From<TokenStream> for proc_macro::TokenStream {
     fn from(inner: TokenStream) -> Self {
         inner
@@ -334,29 +319,27 @@ impl Debug for SourceFile {
     }
 }
 
-#[cfg(span_locations)]
+#[cfg(all(span_locations, not(fuzzing)))]
 thread_local! {
     static SOURCE_MAP: RefCell<SourceMap> = RefCell::new(SourceMap {
         // NOTE: We start with a single dummy file which all call_site() and
         // def_site() spans reference.
         files: vec![FileInfo {
-            #[cfg(procmacro2_semver_exempt)]
-            name: "<unspecified>".to_owned(),
+            source_text: String::new(),
             span: Span { lo: 0, hi: 0 },
             lines: vec![0],
         }],
     });
 }
 
-#[cfg(span_locations)]
+#[cfg(all(span_locations, not(fuzzing)))]
 struct FileInfo {
-    #[cfg(procmacro2_semver_exempt)]
-    name: String,
+    source_text: String,
     span: Span,
     lines: Vec<usize>,
 }
 
-#[cfg(span_locations)]
+#[cfg(all(span_locations, not(fuzzing)))]
 impl FileInfo {
     fn offset_line_column(&self, offset: usize) -> LineColumn {
         assert!(self.span_within(Span {
@@ -379,11 +362,17 @@ impl FileInfo {
     fn span_within(&self, span: Span) -> bool {
         span.lo >= self.span.lo && span.hi <= self.span.hi
     }
+
+    fn source_text(&self, span: Span) -> String {
+        let lo = (span.lo - self.span.lo) as usize;
+        let hi = (span.hi - self.span.lo) as usize;
+        self.source_text[lo..hi].to_owned()
+    }
 }
 
 /// Computes the offsets of each line in the given source string
 /// and the total number of characters
-#[cfg(span_locations)]
+#[cfg(all(span_locations, not(fuzzing)))]
 fn lines_offsets(s: &str) -> (usize, Vec<usize>) {
     let mut lines = vec![0];
     let mut total = 0;
@@ -398,12 +387,12 @@ fn lines_offsets(s: &str) -> (usize, Vec<usize>) {
     (total, lines)
 }
 
-#[cfg(span_locations)]
+#[cfg(all(span_locations, not(fuzzing)))]
 struct SourceMap {
     files: Vec<FileInfo>,
 }
 
-#[cfg(span_locations)]
+#[cfg(all(span_locations, not(fuzzing)))]
 impl SourceMap {
     fn next_start_pos(&self) -> u32 {
         // Add 1 so there's always space between files.
@@ -413,7 +402,7 @@ impl SourceMap {
         self.files.last().unwrap().span.hi + 1
     }
 
-    fn add_file(&mut self, name: &str, src: &str) -> Span {
+    fn add_file(&mut self, src: &str) -> Span {
         let (len, lines) = lines_offsets(src);
         let lo = self.next_start_pos();
         // XXX(nika): Should we bother doing a checked cast or checked add here?
@@ -423,16 +412,26 @@ impl SourceMap {
         };
 
         self.files.push(FileInfo {
-            #[cfg(procmacro2_semver_exempt)]
-            name: name.to_owned(),
+            source_text: src.to_owned(),
             span,
             lines,
         });
 
-        #[cfg(not(procmacro2_semver_exempt))]
-        let _ = name;
-
         span
+    }
+
+    #[cfg(procmacro2_semver_exempt)]
+    fn filepath(&self, span: Span) -> PathBuf {
+        for (i, file) in self.files.iter().enumerate() {
+            if file.span_within(span) {
+                return PathBuf::from(if i == 0 {
+                    "<unspecified>".to_owned()
+                } else {
+                    format!("<parsed string {}>", i)
+                });
+            }
+        }
+        unreachable!("Invalid span with no related FileInfo!");
     }
 
     fn fileinfo(&self, span: Span) -> &FileInfo {
@@ -441,7 +440,7 @@ impl SourceMap {
                 return file;
             }
         }
-        panic!("Invalid span with no related FileInfo!");
+        unreachable!("Invalid span with no related FileInfo!");
     }
 }
 
@@ -464,7 +463,6 @@ impl Span {
         Span { lo: 0, hi: 0 }
     }
 
-    #[cfg(not(no_hygiene))]
     pub fn mixed_site() -> Self {
         Span::call_site()
     }
@@ -487,17 +485,25 @@ impl Span {
 
     #[cfg(procmacro2_semver_exempt)]
     pub fn source_file(&self) -> SourceFile {
+        #[cfg(fuzzing)]
+        return SourceFile {
+            path: PathBuf::from("<unspecified>"),
+        };
+
+        #[cfg(not(fuzzing))]
         SOURCE_MAP.with(|cm| {
             let cm = cm.borrow();
-            let fi = cm.fileinfo(*self);
-            SourceFile {
-                path: Path::new(&fi.name).to_owned(),
-            }
+            let path = cm.filepath(*self);
+            SourceFile { path }
         })
     }
 
     #[cfg(span_locations)]
     pub fn start(&self) -> LineColumn {
+        #[cfg(fuzzing)]
+        return LineColumn { line: 0, column: 0 };
+
+        #[cfg(not(fuzzing))]
         SOURCE_MAP.with(|cm| {
             let cm = cm.borrow();
             let fi = cm.fileinfo(*self);
@@ -507,31 +513,15 @@ impl Span {
 
     #[cfg(span_locations)]
     pub fn end(&self) -> LineColumn {
+        #[cfg(fuzzing)]
+        return LineColumn { line: 0, column: 0 };
+
+        #[cfg(not(fuzzing))]
         SOURCE_MAP.with(|cm| {
             let cm = cm.borrow();
             let fi = cm.fileinfo(*self);
             fi.offset_line_column(self.hi as usize)
         })
-    }
-
-    #[cfg(procmacro2_semver_exempt)]
-    pub fn before(&self) -> Span {
-        Span {
-            #[cfg(span_locations)]
-            lo: self.lo,
-            #[cfg(span_locations)]
-            hi: self.lo,
-        }
-    }
-
-    #[cfg(procmacro2_semver_exempt)]
-    pub fn after(&self) -> Span {
-        Span {
-            #[cfg(span_locations)]
-            lo: self.hi,
-            #[cfg(span_locations)]
-            hi: self.hi,
-        }
     }
 
     #[cfg(not(span_locations))]
@@ -541,6 +531,13 @@ impl Span {
 
     #[cfg(span_locations)]
     pub fn join(&self, other: Span) -> Option<Span> {
+        #[cfg(fuzzing)]
+        return {
+            let _ = other;
+            None
+        };
+
+        #[cfg(not(fuzzing))]
         SOURCE_MAP.with(|cm| {
             let cm = cm.borrow();
             // If `other` is not within the same FileInfo as us, return None.
@@ -555,12 +552,32 @@ impl Span {
     }
 
     #[cfg(not(span_locations))]
-    fn first_byte(self) -> Self {
+    pub fn source_text(&self) -> Option<String> {
+        None
+    }
+
+    #[cfg(span_locations)]
+    pub fn source_text(&self) -> Option<String> {
+        #[cfg(fuzzing)]
+        return None;
+
+        #[cfg(not(fuzzing))]
+        {
+            if self.is_call_site() {
+                None
+            } else {
+                Some(SOURCE_MAP.with(|cm| cm.borrow().fileinfo(*self).source_text(*self)))
+            }
+        }
+    }
+
+    #[cfg(not(span_locations))]
+    pub(crate) fn first_byte(self) -> Self {
         self
     }
 
     #[cfg(span_locations)]
-    fn first_byte(self) -> Self {
+    pub(crate) fn first_byte(self) -> Self {
         Span {
             lo: self.lo,
             hi: cmp::min(self.lo.saturating_add(1), self.hi),
@@ -568,16 +585,21 @@ impl Span {
     }
 
     #[cfg(not(span_locations))]
-    fn last_byte(self) -> Self {
+    pub(crate) fn last_byte(self) -> Self {
         self
     }
 
     #[cfg(span_locations)]
-    fn last_byte(self) -> Self {
+    pub(crate) fn last_byte(self) -> Self {
         Span {
             lo: cmp::max(self.hi.saturating_sub(1), self.lo),
             hi: self.hi,
         }
+    }
+
+    #[cfg(span_locations)]
+    fn is_call_site(&self) -> bool {
+        self.lo == 0 && self.hi == 0
     }
 }
 
@@ -594,7 +616,7 @@ impl Debug for Span {
 pub(crate) fn debug_span_field_if_nontrivial(debug: &mut fmt::DebugStruct, span: Span) {
     #[cfg(span_locations)]
     {
-        if span.lo == 0 && span.hi == 0 {
+        if span.is_call_site() {
             return;
         }
     }
@@ -730,7 +752,7 @@ fn validate_ident(string: &str, raw: bool) {
         panic!("Ident is not allowed to be empty; use Option<Ident>");
     }
 
-    if string.bytes().all(|digit| digit >= b'0' && digit <= b'9') {
+    if string.bytes().all(|digit| b'0' <= digit && digit <= b'9') {
         panic!("Ident cannot be a number; use Literal instead");
     }
 
@@ -791,6 +813,7 @@ impl Display for Ident {
     }
 }
 
+#[allow(clippy::missing_fields_in_debug)]
 impl Debug for Ident {
     // Ident(proc_macro), Ident(r#union)
     #[cfg(not(span_locations))]
@@ -899,12 +922,25 @@ impl Literal {
     pub fn string(t: &str) -> Literal {
         let mut repr = String::with_capacity(t.len() + 2);
         repr.push('"');
-        for c in t.chars() {
-            if c == '\'' {
+        let mut chars = t.chars();
+        while let Some(ch) = chars.next() {
+            if ch == '\0' {
+                repr.push_str(
+                    if chars
+                        .as_str()
+                        .starts_with(|next| '0' <= next && next <= '7')
+                    {
+                        // circumvent clippy::octal_escapes lint
+                        "\\x00"
+                    } else {
+                        "\\0"
+                    },
+                );
+            } else if ch == '\'' {
                 // escape_debug turns this into "\'" which is unnecessary.
-                repr.push(c);
+                repr.push(ch);
             } else {
-                repr.extend(c.escape_debug());
+                repr.extend(ch.escape_debug());
             }
         }
         repr.push('"');
@@ -926,16 +962,21 @@ impl Literal {
 
     pub fn byte_string(bytes: &[u8]) -> Literal {
         let mut escaped = "b\"".to_string();
-        for b in bytes {
+        let mut bytes = bytes.iter();
+        while let Some(&b) = bytes.next() {
             #[allow(clippy::match_overlapping_arm)]
-            match *b {
-                b'\0' => escaped.push_str(r"\0"),
+            match b {
+                b'\0' => escaped.push_str(match bytes.as_slice().first() {
+                    // circumvent clippy::octal_escapes lint
+                    Some(b'0'..=b'7') => r"\x00",
+                    _ => r"\0",
+                }),
                 b'\t' => escaped.push_str(r"\t"),
                 b'\n' => escaped.push_str(r"\n"),
                 b'\r' => escaped.push_str(r"\r"),
                 b'"' => escaped.push_str("\\\""),
                 b'\\' => escaped.push_str("\\\\"),
-                b'\x20'..=b'\x7E' => escaped.push(*b as char),
+                b'\x20'..=b'\x7E' => escaped.push(b as char),
                 _ => {
                     let _ = write!(escaped, "\\x{:02X}", b);
                 }
@@ -953,28 +994,75 @@ impl Literal {
         self.span = span;
     }
 
-    pub fn subspan<R: RangeBounds<usize>>(&self, _range: R) -> Option<Span> {
-        None
+    pub fn subspan<R: RangeBounds<usize>>(&self, range: R) -> Option<Span> {
+        #[cfg(not(span_locations))]
+        {
+            let _ = range;
+            None
+        }
+
+        #[cfg(span_locations)]
+        {
+            use core::ops::Bound;
+
+            let lo = match range.start_bound() {
+                Bound::Included(start) => {
+                    let start = u32::try_from(*start).ok()?;
+                    self.span.lo.checked_add(start)?
+                }
+                Bound::Excluded(start) => {
+                    let start = u32::try_from(*start).ok()?;
+                    self.span.lo.checked_add(start)?.checked_add(1)?
+                }
+                Bound::Unbounded => self.span.lo,
+            };
+            let hi = match range.end_bound() {
+                Bound::Included(end) => {
+                    let end = u32::try_from(*end).ok()?;
+                    self.span.lo.checked_add(end)?.checked_add(1)?
+                }
+                Bound::Excluded(end) => {
+                    let end = u32::try_from(*end).ok()?;
+                    self.span.lo.checked_add(end)?
+                }
+                Bound::Unbounded => self.span.hi,
+            };
+            if lo <= hi && hi <= self.span.hi {
+                Some(Span { lo, hi })
+            } else {
+                None
+            }
+        }
     }
 }
 
 impl FromStr for Literal {
     type Err = LexError;
 
-    fn from_str(mut repr: &str) -> Result<Self, Self::Err> {
-        let negative = repr.starts_with('-');
+    fn from_str(repr: &str) -> Result<Self, Self::Err> {
+        let mut cursor = get_cursor(repr);
+        #[cfg(span_locations)]
+        let lo = cursor.off;
+
+        let negative = cursor.starts_with_char('-');
         if negative {
-            repr = &repr[1..];
-            if !repr.starts_with(|ch: char| ch.is_ascii_digit()) {
+            cursor = cursor.advance(1);
+            if !cursor.starts_with_fn(|ch| ch.is_ascii_digit()) {
                 return Err(LexError::call_site());
             }
         }
-        let cursor = get_cursor(repr);
-        if let Ok((_rest, mut literal)) = parse::literal(cursor) {
-            if literal.repr.len() == repr.len() {
+
+        if let Ok((rest, mut literal)) = parse::literal(cursor) {
+            if rest.is_empty() {
                 if negative {
                     literal.repr.insert(0, '-');
                 }
+                literal.span = Span {
+                    #[cfg(span_locations)]
+                    lo,
+                    #[cfg(span_locations)]
+                    hi: rest.off,
+                };
                 return Ok(literal);
             }
         }
