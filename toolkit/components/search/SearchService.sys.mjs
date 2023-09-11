@@ -1590,11 +1590,18 @@ export class SearchService {
       "engines reported by AddonManager startup"
     );
     for (let extension of this.#startupExtensions) {
-      await this.#installExtensionEngine(
-        extension,
-        [lazy.SearchUtils.DEFAULT_TAG],
-        true
-      );
+      try {
+        await this.#installExtensionEngine(
+          extension,
+          [lazy.SearchUtils.DEFAULT_TAG],
+          true
+        );
+      } catch (ex) {
+        lazy.logConsole.error(
+          `#installExtensionEngine failed for ${extension.id}`,
+          ex
+        );
+      }
     }
     this.#startupExtensions.clear();
 
