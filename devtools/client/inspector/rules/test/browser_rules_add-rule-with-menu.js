@@ -28,10 +28,10 @@ async function addNewRuleFromContextMenu(inspector, view) {
 
   ok(menuitemAddRule.visible, "Add rule is visible");
 
-  info("Adding the new rule and expecting a ruleview-changed event");
-  const onRuleViewChanged = view.once("ruleview-changed");
+  info("Adding the new rule and expecting a new-rule-added event");
+  const onNewRuleAdded = view.once("new-rule-added");
   menuitemAddRule.click();
-  await onRuleViewChanged;
+  await onNewRuleAdded;
 }
 
 function testNewRule(view) {

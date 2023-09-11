@@ -152,6 +152,10 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     return this._form.ancestorData;
   }
 
+  get userAdded() {
+    return this._form.userAdded;
+  }
+
   async modifySelector(node, value) {
     const response = await super.modifySelector(
       node,
