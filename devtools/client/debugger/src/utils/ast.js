@@ -2,31 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-export function findBestMatchExpression(symbols, tokenPos) {
-  if (!symbols) {
-    return null;
-  }
-
-  const { line, column } = tokenPos;
-  const { memberExpressions, identifiers, literals } = symbols;
-  const members = memberExpressions.filter(({ computed }) => !computed);
-
-  return []
-    .concat(identifiers, members, literals)
-    .reduce((found, expression) => {
-      const overlaps =
-        expression.location.start.line == line &&
-        expression.location.start.column <= column &&
-        expression.location.end.column >= column;
-
-      if (overlaps) {
-        return expression;
-      }
-
-      return found;
-    }, null);
-}
-
 // Check whether location A starts after location B
 export function positionAfter(a, b) {
   return (
