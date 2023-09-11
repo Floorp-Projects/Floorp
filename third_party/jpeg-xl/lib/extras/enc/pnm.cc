@@ -5,7 +5,6 @@
 
 #include "lib/extras/enc/pnm.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include <string>

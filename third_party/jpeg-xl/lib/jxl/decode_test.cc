@@ -4845,8 +4845,7 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
   ASSERT_TRUE(
       EncodeJPEGData(*orig_io.Main().jpeg_data.get(), &jpeg_data, cparams));
   jxl::PaddedBytes container;
-  container.append(jxl::kContainerHeader,
-                   jxl::kContainerHeader + sizeof(jxl::kContainerHeader));
+  container.append(jxl::kContainerHeader.begin(), jxl::kContainerHeader.end());
   jxl::AppendBoxHeader(jxl::MakeBoxType("jbrd"), jpeg_data.size(), false,
                        &container);
   container.append(jpeg_data.data(), jpeg_data.data() + jpeg_data.size());

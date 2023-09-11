@@ -10,7 +10,6 @@
 
 #include <inttypes.h>
 #include <stddef.h>
-#include <stdio.h>
 
 #include <limits>  // numeric_limits
 #include <memory>  // unique_ptr

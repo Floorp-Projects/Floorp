@@ -6,7 +6,6 @@
 #include "lib/jxl/image_ops.h"
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <utility>

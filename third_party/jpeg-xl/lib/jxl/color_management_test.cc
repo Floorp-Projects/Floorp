@@ -6,7 +6,6 @@
 #include "lib/jxl/color_management.h"
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include <algorithm>
 #include <new>

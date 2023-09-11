@@ -29,6 +29,7 @@
 #include "lib/jxl/image.h"
 #include "lib/jxl/opsin_params.h"
 #include "lib/jxl/quant_weights.h"
+#include "lib/jxl/simd_util.h"
 
 namespace jxl {
 
@@ -42,7 +43,7 @@ struct CfLHeuristics {
   void Init(const Image3F& opsin);
 
   void PrepareForThreads(size_t num_threads) {
-    mem = hwy::AllocateAligned<float>(num_threads * kItemsPerThread);
+    mem = hwy::AllocateAligned<float>(num_threads * ItemsPerThread());
   }
 
   void ComputeTile(const Rect& r, const Image3F& opsin,
@@ -57,10 +58,14 @@ struct CfLHeuristics {
   hwy::AlignedFreeUniquePtr<float[]> mem;
 
   // Working set is too large for stack; allocate dynamically.
-  constexpr static size_t kItemsPerThread =
-      AcStrategy::kMaxCoeffArea * 3        // Blocks
-      + kColorTileDim * kColorTileDim * 4  // AC coeff storage
-      + AcStrategy::kMaxCoeffArea * 2;     // Scratch space
+  static size_t ItemsPerThread() {
+    const size_t dct_scratch_size =
+        3 * (MaxVectorSize() / sizeof(float)) * AcStrategy::kMaxBlockDim;
+    return AcStrategy::kMaxCoeffArea * 3        // Blocks
+           + kColorTileDim * kColorTileDim * 4  // AC coeff storage
+           + AcStrategy::kMaxCoeffArea * 2      // Scratch space
+           + dct_scratch_size;
+  }
 };
 
 }  // namespace jxl
