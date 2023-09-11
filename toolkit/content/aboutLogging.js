@@ -111,6 +111,17 @@ const gLoggingPresets = {
       description: "about-logging-preset-webgpu-description",
     },
   },
+  gfx: {
+    modules:
+      "webrender::*:5,webrender_bindings::*:5,webrender_types::*:5,gfx2d:5,WebRenderBridgeParent:5,DcompSurface:5,apz.displayport:5,layout:5,dl.content:5,dl.parent:5,nsRefreshDriver:5,fontlist:5,fontinit:5,textrun:5,textrunui:5,textperf:5",
+    l10nIds: {
+      label: "about-logging-preset-gfx-label",
+      description: "about-logging-preset-gfx-description",
+    },
+    // The graphics profiler preset enables the threads we want but loses the screenshots.
+    // We could add an extra preset for that if we miss it.
+    profilerPreset: "graphics",
+  },
   custom: {
     modules: "",
     l10nIds: {
