@@ -731,7 +731,39 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   // void PassUnionWithInterfaces(const TestInterfaceOrTestExternalInterface&
   // arg); void PassUnionWithInterfacesAndNullable(const
   // TestInterfaceOrNullOrTestExternalInterface& arg);
-  void PassUnionWithArrayBuffer(const ArrayBufferOrLong&);
+  void PassUnionWithArrayBuffer(const UTF8StringOrArrayBuffer& aArg) {
+    auto processor = [](const Span<uint8_t>& aData) -> int { return -1; };
+    static_assert(
+        std::is_same_v<decltype(ProcessTypedArraysFixed(aArg, processor)),
+                       Maybe<int>>,
+        "If the union can contain non-typedarray members we need to signal "
+        "that with a Maybe<…> rv.");
+  }
+  void PassUnionWithArrayBufferOrNull(
+      const UTF8StringOrArrayBufferOrNull& aArg) {
+    auto processor = [](const Span<uint8_t>& aData) -> int { return -1; };
+    static_assert(
+        std::is_same_v<decltype(ProcessTypedArraysFixed(aArg, processor)),
+                       Maybe<int>>,
+        "If the union can contain non-typedarray members or null we need to "
+        "signal that with a Maybe<…> rv.");
+  }
+  void PassUnionWithTypedArrays(const ArrayBufferViewOrArrayBuffer& aArg) {
+    auto processor = [](const Span<uint8_t>& aData) -> int { return -1; };
+    static_assert(
+        std::is_same_v<decltype(ProcessTypedArraysFixed(aArg, processor)), int>,
+        "If the union can't contain non-typedarray members or null we can just "
+        "return the result of calling the lambda.");
+  }
+  void PassUnionWithTypedArraysOrNull(
+      const ArrayBufferViewOrArrayBufferOrNull& aArg) {
+    auto processor = [](const Span<uint8_t>& aData) -> int { return -1; };
+    static_assert(
+        std::is_same_v<decltype(ProcessTypedArraysFixed(aArg, processor)),
+                       Maybe<int>>,
+        "If the union can contain non-typedarray members or null we need to "
+        "signal that with a Maybe<…> rv.");
+  }
   void PassUnionWithString(JSContext*, const StringOrObject&);
   void PassUnionWithEnum(JSContext*, const SupportedTypeOrObject&);
   // void PassUnionWithCallback(JSContext*, const TestCallbackOrLong&);
