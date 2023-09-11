@@ -126,7 +126,7 @@ audit-as-crates-io = false
 audit-as-crates-io = true
 notes = "wgpu-core pins this crate."
 
-[policy.packed_simd_2]
+[policy.packed_simd]
 audit-as-crates-io = true
 notes = "Based on upstream, see bug 1719674."
 
@@ -637,8 +637,8 @@ criteria = "safe-to-deploy"
 version = "0.4.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.packed_simd_2]]
-version = "0.3.7"
+[[exemptions.packed_simd]]
+version = "0.3.8"
 criteria = "safe-to-deploy"
 
 [[exemptions.phf]]

@@ -249,7 +249,7 @@ endif
 ifndef RUSTC_BOOTSTRAP
 RUSTC_BOOTSTRAP := mozglue_static,qcms
 ifdef MOZ_RUST_SIMD
-RUSTC_BOOTSTRAP := $(RUSTC_BOOTSTRAP),encoding_rs,packed_simd_2
+RUSTC_BOOTSTRAP := $(RUSTC_BOOTSTRAP),encoding_rs,packed_simd
 endif
 export RUSTC_BOOTSTRAP
 endif

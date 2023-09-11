@@ -161,6 +161,14 @@ start = "2019-03-04"
 end = "2024-05-05"
 notes = "Lina developed this crate as Mozilla staff."
 
+[[wildcard-audits.encoding_rs]]
+who = "Henri Sivonen <hsivonen@hsivonen.fi>"
+criteria = "safe-to-deploy"
+user-id = 4484 # Henri Sivonen (hsivonen)
+start = "2019-02-26"
+end = "2024-08-28"
+notes = "I, Henri Sivonen, wrote encoding_rs for Gecko and have reviewed contributions by others. There are two caveats to the certification: 1) The crate does things that are documented to be UB but that do not appear to actually be UB due to integer types differing from the general rule; https://github.com/hsivonen/encoding_rs/issues/79 . 2) It would be prudent to re-review the code that reinterprets buffers of integers as SIMD vectors; see https://github.com/hsivonen/encoding_rs/issues/87 ."
+
 [[wildcard-audits.etagere]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -2000,6 +2008,18 @@ delta = "6.1.0 -> 6.3.0"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "6.3.0 -> 6.4.1"
+
+[[audits.packed_simd]]
+who = "Henri Sivonen <hsivonen@hsivonen.fi>"
+criteria = "safe-to-deploy"
+delta = "0.3.8 -> 0.3.9"
+notes = "The update from 0.3.8 to 0.3.9 makes mechanical changes to accommodate renaming, compiler updates, and CI service updates."
+
+[[audits.packed_simd]]
+who = "Henri Sivonen <hsivonen@hsivonen.fi>"
+criteria = "safe-to-deploy"
+delta = "0.3.9 -> 0.3.9@git:e588ceb568878e1a3156ea9ce551d5b63ef0cdc4"
+notes = "The patch on top of crates.io version 0.3.9 merely deletes code for a feature that Firefox does not use."
 
 [[audits.packed_simd_2]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

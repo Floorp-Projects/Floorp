@@ -50,9 +50,9 @@ git = "https://github.com/hsivonen/chardetng_c"
 rev = "ed8a4c6f900a90d4dbc1d64b856e61490a1c3570"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/hsivonen/packed_simd?rev=412f9a0aa556611de021bde89dee8fefe6e0fbbd"]
+[source."git+https://github.com/hsivonen/packed_simd?rev=e588ceb568878e1a3156ea9ce551d5b63ef0cdc4"]
 git = "https://github.com/hsivonen/packed_simd"
-rev = "412f9a0aa556611de021bde89dee8fefe6e0fbbd"
+rev = "e588ceb568878e1a3156ea9ce551d5b63ef0cdc4"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/jfkthame/mapped_hyph.git?rev=c7651a0cffff41996ad13c44f689bd9cd2192c01"]
