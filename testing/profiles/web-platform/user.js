@@ -49,6 +49,7 @@ user_pref("browser.safebrowsing.downloads.enabled", false);
 user_pref("browser.safebrowsing.passwords.enabled", false);
 user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.phishing.enabled", false);
+user_pref("browser.safebrowsing.update.enabled", false);
 // Automatically unload beforeunload alerts
 user_pref("dom.disable_beforeunload", true);
 // Enable implicit keyframes since the common animation interpolation test

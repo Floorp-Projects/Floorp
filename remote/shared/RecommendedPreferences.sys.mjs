@@ -42,16 +42,16 @@ if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
 // Preferences for remote control and automation can be set from several entry
 // points:
 // - remote/shared/RecommendedPreferences.sys.mjs
-// - remote/test/puppeteer/src/node/FirefoxLauncher.ts
+// - remote/test/puppeteer/packages/browsers/src/browser-data/firefox.ts
 // - testing/geckodriver/src/prefs.rs
 // - testing/marionette/client/marionette_driver/geckoinstance.py
 //
-// The preferences in `FirefoxLauncher.ts`, `prefs.rs` and `geckoinstance.py`
-// will be applied before the Application starts, and should typically be used
-// for preferences which cannot be updated during the lifetime of the Application.
+// The preferences in `firefox.ts`, `prefs.rs` and `geckoinstance.py`
+// will be applied before the application starts, and should typically be used
+// for preferences which cannot be updated during the lifetime of the application.
 //
 // The preferences in `RecommendedPreferences.sys.mjs` are applied after
-// the Application has started, which means that the application must apply this
+// the application has started, which means that the application must apply this
 // change dynamically and behave correctly. Note that you can also define
 // protocol specific preferences (CDP, WebDriver, ...) which are merged with the
 // COMMON_PREFERENCES from `RecommendedPreferences.sys.mjs`.
@@ -112,14 +112,17 @@ const COMMON_PREFERENCES = new Map([
   // thumbnails in general cannot hurt
   ["browser.pagethumbnails.capturing_disabled", true],
 
+  // Disable geolocation ping(#1)
+  ["browser.region.network.url", ""],
+
   // Disable safebrowsing components.
   //
   // These should also be set in the profile prior to starting Firefox,
   // as it is picked up at runtime.
   ["browser.safebrowsing.blockedURIs.enabled", false],
   ["browser.safebrowsing.downloads.enabled", false],
-  ["browser.safebrowsing.passwords.enabled", false],
   ["browser.safebrowsing.malware.enabled", false],
+  ["browser.safebrowsing.passwords.enabled", false],
   ["browser.safebrowsing.phishing.enabled", false],
 
   // Disable updates to search engines.
@@ -172,11 +175,6 @@ const COMMON_PREFERENCES = new Map([
   // Disable first run splash page on Windows 10
   ["browser.usedOnWindows10.introURL", ""],
 
-  // Disable the UI tour.
-  //
-  // Should be set in profile.
-  ["browser.uitour.enabled", false],
-
   // Turn off Merino suggestions in the location bar so as not to trigger
   // network connections.
   ["browser.urlbar.merino.endpointURL", ""],
@@ -187,6 +185,9 @@ const COMMON_PREFERENCES = new Map([
 
   // Do not warn on quitting Firefox
   ["browser.warnOnQuit", false],
+
+  // Disable captive portal
+  ["captivedetect.canonicalURL", ""],
 
   // Do not show datareporting policy notifications which can
   // interfere with tests
@@ -248,11 +249,45 @@ const COMMON_PREFERENCES = new Map([
   // Make sure opening about:addons will not hit the network
   ["extensions.getAddons.discovery.api_url", "data:, "],
 
+  // Redirect various extension update URLs
+  [
+    "extensions.blocklist.detailsURL",
+    "http://%(server)s/extensions-dummy/blocklistDetailsURL",
+  ],
+  [
+    "extensions.blocklist.itemURL",
+    "http://%(server)s/extensions-dummy/blocklistItemURL",
+  ],
+  ["extensions.hotfix.url", "http://%(server)s/extensions-dummy/hotfixURL"],
+  [
+    "extensions.systemAddon.update.url",
+    "http://%(server)s/dummy-system-addons.xml",
+  ],
+  [
+    "extensions.update.background.url",
+    "http://%(server)s/extensions-dummy/updateBackgroundURL",
+  ],
+  ["extensions.update.url", "http://%(server)s/extensions-dummy/updateURL"],
+
+  // Make sure opening about: addons won't hit the network
+  ["extensions.getAddons.discovery.api_url", "data:, "],
+  [
+    "extensions.getAddons.get.url",
+    "http://%(server)s/extensions-dummy/repositoryGetURL",
+  ],
+  [
+    "extensions.getAddons.search.browseURL",
+    "http://%(server)s/extensions-dummy/repositoryBrowseURL",
+  ],
+
   // Allow the application to have focus even it runs in the background
   ["focusmanager.testmode", true],
 
   // Disable useragent updates
   ["general.useragent.updates.enabled", false],
+
+  // Disable geolocation ping(#2)
+  ["geo.provider.network.url", ""],
 
   // Always use network provider for geolocation tests so we bypass the
   // macOS dialog raised by the corelocation provider
@@ -260,6 +295,12 @@ const COMMON_PREFERENCES = new Map([
 
   // Do not scan Wifi
   ["geo.wifi.scan", false],
+
+  // Disable Firefox accounts ping
+  ["identity.fxaccounts.auth.uri", "https://{server}/dummy/fxa"],
+
+  // Disable connectivity service pings
+  ["network.connectivity-service.enabled", false],
 
   // Do not prompt with long usernames or passwords in URLs
   ["network.http.phishy-userpass-length", 255],
@@ -306,6 +347,9 @@ const COMMON_PREFERENCES = new Map([
 
   // Prevent starting into safe mode after application crashes
   ["toolkit.startup.max_resumed_crashes", -1],
+
+  // Disable all telemetry pings
+  ["toolkit.telemetry.server", "https://%(server)s/telemetry-dummy/"],
 
   // Disable window occlusion on Windows, which can prevent webdriver commands
   // such as WebDriver:FindElements from working properly (Bug 1802473).

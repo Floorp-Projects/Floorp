@@ -49,8 +49,7 @@ class GeckoInstance(object):
         # beta. See Bug 1836093.
         "browser.translations.enable": False,
         # Disable UI tour
-        "browser.uitour.pinnedTabUrl": "http://%(server)s/uitour-dummy/pinnedTab",
-        "browser.uitour.url": "http://%(server)s/uitour-dummy/tour",
+        "browser.uitour.enabled": False,
         # Disable captive portal
         "captivedetect.canonicalURL": "",
         # Defensively disable data reporting systems
