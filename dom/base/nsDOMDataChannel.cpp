@@ -172,16 +172,25 @@ void nsDOMDataChannel::Close() {
 
 // All of the following is copy/pasted from WebSocket.cpp.
 void nsDOMDataChannel::Send(const nsAString& aData, ErrorResult& aRv) {
+  if (!CheckReadyState(aRv)) {
+    return;
+  }
+
   nsAutoCString msgString;
   if (!AppendUTF16toUTF8(aData, msgString, mozilla::fallible_t())) {
     aRv.Throw(NS_ERROR_FILE_TOO_BIG);
     return;
   }
-  Send(nullptr, &msgString, false, aRv);
+
+  mDataChannel->SendMsg(msgString, aRv);
 }
 
 void nsDOMDataChannel::Send(Blob& aData, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
+
+  if (!CheckReadyState(aRv)) {
+    return;
+  }
 
   nsCOMPtr<nsIInputStream> msgStream;
   aData.CreateInputStream(getter_AddRefs(msgStream), aRv);
@@ -199,50 +208,42 @@ void nsDOMDataChannel::Send(Blob& aData, ErrorResult& aRv) {
     return;
   }
 
-  Send(&aData, nullptr, true, aRv);
+  mDataChannel->SendBinaryBlob(aData, aRv);
 }
 
 void nsDOMDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
-  aData.ComputeState();
+  if (!CheckReadyState(aRv)) {
+    return;
+  }
 
-  static_assert(sizeof(*aData.Data()) == 1, "byte-sized data required");
-
-  uint32_t len = aData.Length();
-  char* data = reinterpret_cast<char*>(aData.Data());
-
-  nsDependentCSubstring msgString;
-  if (!msgString.Assign(data, len, mozilla::fallible_t())) {
+  nsCString msgString;
+  if (!aData.AppendDataTo(msgString)) {
     aRv.Throw(NS_ERROR_FILE_TOO_BIG);
     return;
   }
 
-  Send(nullptr, &msgString, true, aRv);
+  mDataChannel->SendBinaryMsg(msgString, aRv);
 }
 
 void nsDOMDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
-  aData.ComputeState();
+  if (!CheckReadyState(aRv)) {
+    return;
+  }
 
-  static_assert(sizeof(*aData.Data()) == 1, "byte-sized data required");
-
-  uint32_t len = aData.Length();
-  char* data = reinterpret_cast<char*>(aData.Data());
-
-  nsDependentCSubstring msgString;
-  if (!msgString.Assign(data, len, mozilla::fallible_t())) {
+  nsCString msgString;
+  if (!aData.AppendDataTo(msgString)) {
     aRv.Throw(NS_ERROR_FILE_TOO_BIG);
     return;
   }
 
-  Send(nullptr, &msgString, true, aRv);
+  mDataChannel->SendBinaryMsg(msgString, aRv);
 }
 
-void nsDOMDataChannel::Send(mozilla::dom::Blob* aMsgBlob,
-                            const nsACString* aMsgString, bool aIsBinary,
-                            mozilla::ErrorResult& aRv) {
+bool nsDOMDataChannel::CheckReadyState(ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   uint16_t state = mozilla::DataChannel::CLOSED;
   if (!mSentClose) {
@@ -253,26 +254,18 @@ void nsDOMDataChannel::Send(mozilla::dom::Blob* aMsgBlob,
   // look like WebSockets
   if (state == mozilla::DataChannel::CONNECTING) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
+    return false;
   }
 
   if (state == mozilla::DataChannel::CLOSING ||
       state == mozilla::DataChannel::CLOSED) {
-    return;
+    return false;
   }
 
   MOZ_ASSERT(state == mozilla::DataChannel::OPEN,
              "Unknown state in nsDOMDataChannel::Send");
 
-  if (aMsgBlob) {
-    mDataChannel->SendBinaryBlob(*aMsgBlob, aRv);
-  } else {
-    if (aIsBinary) {
-      mDataChannel->SendBinaryMsg(*aMsgString, aRv);
-    } else {
-      mDataChannel->SendMsg(*aMsgString, aRv);
-    }
-  }
+  return true;
 }
 
 nsresult nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,

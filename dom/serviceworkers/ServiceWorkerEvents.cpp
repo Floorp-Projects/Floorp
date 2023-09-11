@@ -1030,19 +1030,10 @@ nsresult ExtractBytesFromUSVString(const nsAString& aStr,
 nsresult ExtractBytesFromData(
     const OwningArrayBufferViewOrArrayBufferOrUSVString& aDataInit,
     nsTArray<uint8_t>& aBytes) {
-  if (aDataInit.IsArrayBufferView()) {
-    const ArrayBufferView& view = aDataInit.GetAsArrayBufferView();
-    if (NS_WARN_IF(!PushUtil::CopyArrayBufferViewToArray(view, aBytes))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return NS_OK;
-  }
-  if (aDataInit.IsArrayBuffer()) {
-    const ArrayBuffer& buffer = aDataInit.GetAsArrayBuffer();
-    if (NS_WARN_IF(!PushUtil::CopyArrayBufferToArray(buffer, aBytes))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return NS_OK;
+  MOZ_ASSERT(aBytes.IsEmpty());
+  Maybe<bool> result = AppendTypedArrayDataTo(aDataInit, aBytes);
+  if (result.isSome()) {
+    return NS_WARN_IF(!result.value()) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
   }
   if (aDataInit.IsUSVString()) {
     return ExtractBytesFromUSVString(aDataInit.GetAsUSVString(), aBytes);

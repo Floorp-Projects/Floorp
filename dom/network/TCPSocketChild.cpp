@@ -145,19 +145,8 @@ void TCPSocketChild::SendSend(const nsACString& aData) {
   SendData(nsCString(aData));
 }
 
-nsresult TCPSocketChild::SendSend(const ArrayBuffer& aData,
-                                  uint32_t aByteOffset, uint32_t aByteLength) {
-  uint32_t buflen = aData.Length();
-  uint32_t offset = std::min(buflen, aByteOffset);
-  uint32_t nbytes = std::min(buflen - aByteOffset, aByteLength);
-  FallibleTArray<uint8_t> fallibleArr;
-  if (!fallibleArr.InsertElementsAt(0, aData.Data() + offset, nbytes,
-                                    fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SendData(SendableData{std::move(fallibleArr)});
-  return NS_OK;
+void TCPSocketChild::SendSend(nsTArray<uint8_t>&& aData) {
+  SendData(SendableData{std::move(aData)});
 }
 
 void TCPSocketChild::SetSocket(TCPSocket* aSocket) { mSocket = aSocket; }
