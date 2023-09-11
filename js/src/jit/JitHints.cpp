@@ -20,12 +20,6 @@ JitHintsMap::~JitHintsMap() {
 
 JitHintsMap::IonHint* JitHintsMap::addIonHint(ScriptKey key,
                                               ScriptToHintMap::AddPtr& p) {
-  if (ionHintMap_.count() >= IonHintMaxEntries) {
-    IonHint* h = ionHintQueue_.popFirst();
-    ionHintMap_.remove(h->key());
-    js_delete(h);
-  }
-
   IonHint* hint = js_new<IonHint>(key);
   if (!hint) {
     return nullptr;
@@ -36,6 +30,13 @@ JitHintsMap::IonHint* JitHintsMap::addIonHint(ScriptKey key,
   }
 
   ionHintQueue_.insertBack(hint);
+
+  if (ionHintMap_.count() > IonHintMaxEntries) {
+    IonHint* h = ionHintQueue_.popFirst();
+    ionHintMap_.remove(h->key());
+    js_delete(h);
+  }
+
   return hint;
 }
 
