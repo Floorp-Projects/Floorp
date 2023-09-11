@@ -28,7 +28,6 @@
   --fc-link-color: var(--fc-link-color-light, #0061E0);
   --fc-link-color-hover: var(--fc-link-color-hover-light, #0250BB);
   --fc-link-color-active: var(--fc-link-color-active-light, #053E94);
-  color-scheme: light;
   position: absolute;
   z-index: 2147483647;
   outline: none;
@@ -95,6 +94,9 @@
     --fc-link-color-active: var(--fc-link-color-active-hcm, ActiveText);
   }
 }
+#feature-callout.simulateContent {
+  color-scheme: env(-moz-content-preferred-color-scheme);
+}
 @media (-moz-content-prefers-color-scheme: light) {
   #feature-callout.simulateContent {
     --fc-background: var(--fc-background-light, #fff);
@@ -123,7 +125,6 @@
     --fc-link-color: var(--fc-link-color-light, #0061E0);
     --fc-link-color-hover: var(--fc-link-color-hover-light, #0250BB);
     --fc-link-color-active: var(--fc-link-color-active-light, #053E94);
-    color-scheme: light;
   }
 }
 @media (-moz-content-prefers-color-scheme: dark) {
@@ -153,7 +154,6 @@
     --fc-link-color: var(--fc-link-color-dark, #00DDFF);
     --fc-link-color-hover: var(--fc-link-color-hover-dark, #80EBFF);
     --fc-link-color-active: var(--fc-link-color-hover-active, #AAF2FF);
-    color-scheme: dark;
   }
 }
 @media (prefers-contrast) {
