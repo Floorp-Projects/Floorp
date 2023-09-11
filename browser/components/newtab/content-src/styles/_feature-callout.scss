@@ -9,7 +9,6 @@
   // FeatureCallout.sys.mjs for the color values
   @include light-theme;
 
-  color-scheme: light;
   position: absolute;
   z-index: 2147483647;
   outline: none;
@@ -30,16 +29,15 @@
   // displayed on top of content. Each context has its own color scheme, so they
   // may not match. In that case, we use the special media query below.
   &.simulateContent {
+    color-scheme: env(-moz-content-preferred-color-scheme);
+
+    // TODO - replace 2 mixins with a single mixin with light-dark() values.
     @media (-moz-content-prefers-color-scheme: light) {
       @include light-theme;
-
-      color-scheme: light;
     }
 
     @media (-moz-content-prefers-color-scheme: dark) {
       @include dark-theme;
-
-      color-scheme: dark;
     }
 
     @media (prefers-contrast) {
