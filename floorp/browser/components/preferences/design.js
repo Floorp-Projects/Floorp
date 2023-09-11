@@ -74,10 +74,6 @@ const TSTStatus = async (addonID, className) => {
       .${className} {
         display: none !important;
       }
-
-      #treestyletabSettings {
-        visibility: visible !important;
-      }
       `;
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend", addontag);
   }
