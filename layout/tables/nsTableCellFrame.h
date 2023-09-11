@@ -315,11 +315,11 @@ class nsBCTableCellFrame final : public nsTableCellFrame {
   // Get the *inner half of the border only*, in twips.
   LogicalMargin GetBorderWidth(WritingMode aWM) const override;
 
-  // Get the *inner half of the border only*, in pixels.
-  BCPixelSize GetBorderWidth(LogicalSide aSide) const;
+  // Get the *inner half of the border only*.
+  nscoord GetBorderWidth(LogicalSide aSide) const;
 
   // Set the full (both halves) width of the border
-  void SetBorderWidth(LogicalSide aSide, BCPixelSize aPixelValue);
+  void SetBorderWidth(LogicalSide aSide, nscoord aValue);
 
   nsMargin GetBorderOverflow() override;
 
@@ -334,10 +334,10 @@ class nsBCTableCellFrame final : public nsTableCellFrame {
  private:
   // These are the entire width of the border (the cell edge contains only
   // the inner half, per the macros in nsTablePainter.h).
-  BCPixelSize mBStartBorder;
-  BCPixelSize mIEndBorder;
-  BCPixelSize mBEndBorder;
-  BCPixelSize mIStartBorder;
+  nscoord mBStartBorder;
+  nscoord mIEndBorder;
+  nscoord mBEndBorder;
+  nscoord mIStartBorder;
 };
 
 // Implemented here because that's a sane-ish way to make the includes work out.
