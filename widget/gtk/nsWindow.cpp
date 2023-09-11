@@ -2571,7 +2571,7 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
     return false;
   }
 
-  if (popupFrame->IsFlippedByLayout()) {
+  if (popupFrame->IsConstrainedByLayout()) {
     LOG("  can't use move-to-rect, flipped / constrained by layout");
     return false;
   }

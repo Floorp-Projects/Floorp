@@ -345,6 +345,8 @@ class nsMenuPopupFrame final : public nsBlockFrame {
     mOverrideConstraintRect = mozilla::CSSIntRect::ToAppUnits(aRect);
   }
 
+  bool IsConstrainedByLayout() const { return mConstrainedByLayout; }
+
   struct Rects {
     // For anchored popups, the anchor rectangle. For non-anchored popups, the
     // size will be 0.
@@ -360,6 +362,7 @@ class nsMenuPopupFrame final : public nsBlockFrame {
     nscoord mAlignmentOffset = 0;
     bool mHFlip = false;
     bool mVFlip = false;
+    bool mConstrainedByLayout = false;
     // The client offset of our widget.
     mozilla::LayoutDeviceIntPoint mClientOffset;
     nsPoint mViewPoint;
@@ -536,7 +539,6 @@ class nsMenuPopupFrame final : public nsBlockFrame {
   int GetPopupAlignment() const { return mPopupAlignment; }
   int GetPopupAnchor() const { return mPopupAnchor; }
   FlipType GetFlipType() const { return mFlip; }
-  bool IsFlippedByLayout() const { return mHFlip || mVFlip; }
 
   void WidgetPositionOrSizeDidChange();
 
@@ -611,6 +613,8 @@ class nsMenuPopupFrame final : public nsBlockFrame {
   // The flip modes that were used when the popup was opened
   bool mHFlip = false;
   bool mVFlip = false;
+  // Whether layout has constrained this popup in some way.
+  bool mConstrainedByLayout = false;
 
   // Whether the most recent initialization of this menupopup happened via
   // InitializePopupAsNativeContextMenu.
