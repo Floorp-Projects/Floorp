@@ -203,12 +203,7 @@ export class GeckoViewStartup {
 
           GeckoViewUtils.addLazyGetter(this, "ChildCrashHandler", {
             module: "resource://gre/modules/ChildCrashHandler.sys.mjs",
-            observers: [
-              "compositor:process-aborted",
-              "ipc:content-created",
-              "ipc:content-shutdown",
-              "process-type-set",
-            ],
+            observers: ["ipc:content-shutdown", "compositor:process-aborted"],
           });
 
           lazy.EventDispatcher.instance.registerListener(this, [
