@@ -1,0 +1,10 @@
+diff --git a/lib/url.js b/lib/url.js
+index c9da02a8ec225..b0f4434fe5b41 100644
+--- a/lib/url.js
++++ b/lib/url.js
+@@ -18,4 +18,4 @@
+  * * https://bugzilla.mozilla.org/show_bug.cgi?id=1374505
+  * * https://bugs.chromium.org/p/chromium/issues/detail?id=734880
+  */
+-module.exports = require("whatwg-url").URL;
++module.exports = require("../../whatwg-url.js").URL;
