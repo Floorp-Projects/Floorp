@@ -1299,8 +1299,24 @@ fn prepare_interned_prim_for_render(
 
                 let content_origin = DevicePoint::new(x0, y0);
 
+                let pic_surface_index = pic.raster_config.as_ref().unwrap().surface_index;
+                let prim_local_rect = frame_state
+                    .surfaces[pic_surface_index.0]
+                    .clipped_local_rect
+                    .cast_unit();
+
+                let main_prim_address = write_prim_blocks(
+                    frame_state.frame_gpu_data,
+                    prim_local_rect,
+                    prim_instance.vis.clip_chain.local_clip_rect,
+                    PremultipliedColorF::WHITE,
+                    &[],
+                );
+
                 let masks = MaskSubPass {
                     clip_node_range: prim_instance.vis.clip_chain.clips_range,
+                    prim_spatial_node_index,
+                    main_prim_address,
                 };
 
                 let parent_task_id = if in_place_mask {
@@ -2121,6 +2137,8 @@ fn add_segment(
 
         let masks = MaskSubPass {
             clip_node_range: prim_instance.vis.clip_chain.clips_range,
+            prim_spatial_node_index,
+            main_prim_address,
         };
 
         let task = frame_state.rg_builder.get_task_mut(task_id);
