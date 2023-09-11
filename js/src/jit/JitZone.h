@@ -114,6 +114,14 @@ class JitZone {
 
   mozilla::LinkedList<JitScript> jitScripts_;
 
+  // The following two fields are a pair of associated scripts. If they are
+  // non-null, the child has been inlined into the parent, and we have bailed
+  // out due to a MonomorphicInlinedStubFolding bailout. If it wasn't
+  // trial-inlined, we need to track for the parent if we attach a new case to
+  // the corresponding folded stub which belongs to the child.
+  WeakHeapPtr<JSScript*> lastStubFoldingBailoutChild_;
+  WeakHeapPtr<JSScript*> lastStubFoldingBailoutParent_;
+
   // The JitZone stores stubs to concatenate strings inline and perform RegExp
   // calls inline. These bake in zone specific pointers and can't be stored in
   // JitRuntime. They also are dependent on the value of 'initialStringHeap' and
@@ -215,6 +223,24 @@ class JitZone {
 
   void removeInlinedCompilations(JSScript* inlined) {
     inlinedCompilations_.remove(inlined);
+  }
+
+  void noteStubFoldingBailout(JSScript* child, JSScript* parent) {
+    lastStubFoldingBailoutChild_ = child;
+    lastStubFoldingBailoutParent_ = parent;
+  }
+  bool hasStubFoldingBailoutData(JSScript* child) const {
+    return lastStubFoldingBailoutChild_ &&
+           lastStubFoldingBailoutChild_.get() == child &&
+           lastStubFoldingBailoutParent_;
+  }
+  JSScript* stubFoldingBailoutParent() const {
+    MOZ_ASSERT(lastStubFoldingBailoutChild_);
+    return lastStubFoldingBailoutParent_.get();
+  }
+  void clearStubFoldingBailoutData() {
+    lastStubFoldingBailoutChild_ = nullptr;
+    lastStubFoldingBailoutParent_ = nullptr;
   }
 
   void registerJitScript(JitScript* script) { jitScripts_.insertBack(script); }

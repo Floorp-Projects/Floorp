@@ -530,6 +530,11 @@ void JitZone::traceWeak(JSTracer* trc, Zone* zone) {
 
   baselineCacheIRStubCodes_.traceWeak(trc);
   inlinedCompilations_.traceWeak(trc);
+
+  TraceWeakEdge(trc, &lastStubFoldingBailoutChild_,
+                "JitZone::lastStubFoldingBailoutChild_");
+  TraceWeakEdge(trc, &lastStubFoldingBailoutParent_,
+                "JitZone::lastStubFoldingBailoutParent_");
 }
 
 void JitZone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
