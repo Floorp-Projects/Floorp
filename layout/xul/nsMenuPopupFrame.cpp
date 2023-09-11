@@ -1598,6 +1598,20 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
                     result.mUsedRect.height, waylandSize.height);
         result.mUsedRect.height = waylandSize.height;
       }
+      if (RefPtr<widget::Screen> s = widget->GetWidgetScreen()) {
+        const nsSize screenSize =
+            LayoutDeviceIntSize::ToAppUnits(s->GetAvailRect().Size(), a2d);
+        if (result.mUsedRect.height > screenSize.height) {
+          LOG_WAYLAND("Wayland constraint height to screen [%p]:  %d to %d",
+                      widget, result.mUsedRect.height, screenSize.height);
+          result.mUsedRect.height = screenSize.height;
+        }
+        if (result.mUsedRect.width > screenSize.width) {
+          LOG_WAYLAND("Wayland constraint widthto screen [%p]:  %d to %d",
+                      widget, result.mUsedRect.width, screenSize.width);
+          result.mUsedRect.width = screenSize.width;
+        }
+      }
     }
 
     // At this point the anchor (anchorRect) is within the available screen
