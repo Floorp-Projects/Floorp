@@ -7,6 +7,10 @@
  * Tests that the settings component is rendered as expected.
  */
 add_task(async function test_shopping_settings() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["toolkit.telemetry.testing.overridePreRelease", true]],
+  });
+
   let opt_in_status = Services.prefs.getIntPref(
     "browser.shopping.experience2023.optedIn",
     undefined
@@ -25,11 +29,16 @@ add_task(async function test_shopping_settings() {
     Glean.shoppingSettings.hasOnboarded.testGetValue(),
     "Has Onboarded metric should correctly reflect the preference value"
   );
+
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_shopping_setting_update() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.shopping.experience2023.optedIn", 2]],
+    set: [
+      ["toolkit.telemetry.testing.overridePreRelease", true],
+      ["browser.shopping.experience2023.optedIn", 2],
+    ],
   });
 
   Assert.equal(
