@@ -69,8 +69,16 @@ export class ShoppingSidebarChild extends RemotePageChild {
         if (!this.#productURI && !uri) {
           return;
         }
-        // Otherwise, check if we now have a product:
-        if (uri && this.#productURI?.equalsExceptRef(uri) && !isReload) {
+
+        let equalURIs = uri && this.#productURI?.equalsExceptRef(uri);
+        // If we have a previous product, check that the ids have changed:
+        if (!isReload && !equalURIs && this.#product && uri) {
+          let updatedProduct = ShoppingProduct.fromURL(URL.fromURI(uri));
+          if (updatedProduct?.id === this.#product.product.id) {
+            return;
+          }
+          // Otherwise, just check if we now have a new product url:
+        } else if (!isReload && equalURIs) {
           return;
         }
         this.#productURI = uri;
