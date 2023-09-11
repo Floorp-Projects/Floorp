@@ -23,6 +23,7 @@ use crate::values::generics::transform::{Rotate, Scale, Translate};
 use crate::values::CSSFloat;
 use crate::Zero;
 use std::cmp;
+use std::ops::Add;
 
 // ------------------------------------
 // Animations for Matrix/Matrix3D.
@@ -388,6 +389,14 @@ impl Quaternion {
     }
 }
 
+impl Add for Quaternion {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self(self.0 + other.0, self.1 + other.1, self.2 + other.2, self.3 + other.3)
+    }
+}
+
 impl Animate for Quaternion {
     fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
         let (this_weight, other_weight) = procedure.weights();
@@ -434,32 +443,37 @@ impl Animate for Quaternion {
             ));
         }
 
-        // Straight from gfxQuaternion::Slerp.
+        // https://drafts.csswg.org/css-transforms-2/#interpolation-of-decomposed-3d-matrix-values
         //
         // Dot product, clamped between -1 and 1.
-        let dot = (self.0 * other.0 + self.1 * other.1 + self.2 * other.2 + self.3 * other.3)
-            .min(1.0)
-            .max(-1.0);
+        let cos_half_theta =
+            (self.0 * other.0 + self.1 * other.1 + self.2 * other.2 + self.3 * other.3)
+                .min(1.0)
+                .max(-1.0);
 
-        if dot.abs() == 1.0 {
+        if cos_half_theta.abs() == 1.0 {
             return Ok(*self);
         }
 
-        let theta = dot.acos();
-        let rsintheta = 1.0 / (1.0 - dot * dot).sqrt();
+        let half_theta = cos_half_theta.acos();
+        let sin_half_theta = (1.0 - cos_half_theta * cos_half_theta).sqrt();
 
-        let right_weight = (other_weight * theta).sin() * rsintheta;
-        let left_weight = (other_weight * theta).cos() - dot * right_weight;
+        let right_weight = (other_weight * half_theta).sin() / sin_half_theta;
+        // The spec would like to use
+        // "(other_weight * half_theta).cos() - cos_half_theta * right_weight". However, this
+        // formula may produce some precision issues of floating-point number calculation, e.g.
+        // when the progress is 100% (i.e. |other_weight| is 1), the |left_weight| may not be
+        // perfectly equal to 0. It could be something like -2.22e-16, which is approximately equal
+        // to zero, in the test. And after we recompose the Matrix3D, these approximated zeros
+        // make us failed to treat this Matrix3D as a Matrix2D, when serializating it.
+        //
+        // Therefore, we use another formula to calculate |left_weight| here. Blink and WebKit also
+        // use this formula, which is defined in:
+        // https://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/index.htm
+        // https://github.com/w3c/csswg-drafts/issues/9338
+        let left_weight = (this_weight * half_theta).sin() / sin_half_theta;
 
-        let left = self.scale(left_weight);
-        let right = other.scale(right_weight);
-
-        Ok(Quaternion(
-            left.0 + right.0,
-            left.1 + right.1,
-            left.2 + right.2,
-            left.3 + right.3,
-        ))
+        Ok(self.scale(left_weight) + other.scale(right_weight))
     }
 }
 
