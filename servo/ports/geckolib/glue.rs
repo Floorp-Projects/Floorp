@@ -5352,6 +5352,18 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
         structs::nsCSSUnit::eCSSUnit_XHeight => {
             NoCalcLength::FontRelative(FontRelativeLength::Ex(value))
         },
+        structs::nsCSSUnit::eCSSUnit_RootEM => {
+            NoCalcLength::FontRelative(FontRelativeLength::Rem(value))
+        },
+        structs::nsCSSUnit::eCSSUnit_Char => {
+            NoCalcLength::FontRelative(FontRelativeLength::Ch(value))
+        },
+        structs::nsCSSUnit::eCSSUnit_Ideographic => {
+            NoCalcLength::FontRelative(FontRelativeLength::Ic(value))
+        },
+        structs::nsCSSUnit::eCSSUnit_CapHeight => {
+            NoCalcLength::FontRelative(FontRelativeLength::Cap(value))
+        },
         structs::nsCSSUnit::eCSSUnit_Pixel => NoCalcLength::Absolute(AbsoluteLength::Px(value)),
         structs::nsCSSUnit::eCSSUnit_Inch => NoCalcLength::Absolute(AbsoluteLength::In(value)),
         structs::nsCSSUnit::eCSSUnit_Centimeter => {
