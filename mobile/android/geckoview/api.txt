@@ -802,6 +802,7 @@ package org.mozilla.geckoview {
     field public static final String CRASHED_PROCESS_TYPE_MAIN = "MAIN";
     field public static final Parcelable.Creator<GeckoRuntime> CREATOR;
     field public static final String EXTRA_CRASH_PROCESS_TYPE = "processType";
+    field public static final String EXTRA_CRASH_REMOTE_TYPE = "remoteType";
     field public static final String EXTRA_EXTRAS_PATH = "extrasPath";
     field public static final String EXTRA_MINIDUMP_PATH = "minidumpPath";
   }

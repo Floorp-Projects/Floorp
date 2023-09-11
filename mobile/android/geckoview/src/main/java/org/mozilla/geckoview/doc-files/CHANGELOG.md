@@ -13,6 +13,9 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v119
+- Added `remoteType` to GeckoView child crash intent. ([bug 1851518]({{bugzilla}}1851518))
+
 ## v118
 - Added [`ExperimentDelegate`][118.1] to allow GeckoView to send and retrieve experiment information from an embedder.
 - Added [`ERROR_BLOCKLISTED`][118.2] to `WebExtension.InstallException.ErrorCodes`. ([bug 1845745]({{bugzilla}}1845745))
@@ -1425,4 +1428,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 501b08f47ddafdeb4e320238860d90d93c80eebb
+[api-version]: ee73ede94d2e7c382fe9e9793c1fecbb01beb18d
