@@ -112,7 +112,7 @@ add_task(async function restore_default() {
 });
 
 add_task(async function ensure_fallback() {
-  if (AppConstants.platform != "win") {
+  if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     info("Nothing to test on non-Windows");
     return;
   }
