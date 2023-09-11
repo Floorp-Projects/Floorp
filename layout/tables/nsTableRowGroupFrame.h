@@ -165,7 +165,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
    * @param aForSide - side to set; only IEnd, IStart, BEnd are valid
    */
   void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
-                                  BCPixelSize aPixelValue);
+                                  nscoord aPixelValue);
   /**
    * Adjust to the effect of visibility:collapse on the row group and
    * its children
@@ -363,10 +363,10 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   void UndoContinuedRow(nsPresContext* aPresContext, nsTableRowFrame* aRow);
 
  private:
-  // border widths in pixels in the collapsing border model
-  BCPixelSize mIEndContBorderWidth = 0;
-  BCPixelSize mBEndContBorderWidth = 0;
-  BCPixelSize mIStartContBorderWidth = 0;
+  // border widths in the collapsing border model
+  nscoord mIEndContBorderWidth = 0;
+  nscoord mBEndContBorderWidth = 0;
+  nscoord mIStartContBorderWidth = 0;
 
  public:
   bool IsRepeatable() const;
@@ -403,9 +403,8 @@ inline void nsTableRowGroupFrame::SetHasStyleBSize(bool aValue) {
 
 inline void nsTableRowGroupFrame::GetContinuousBCBorderWidth(
     mozilla::WritingMode aWM, mozilla::LogicalMargin& aBorder) {
-  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
-  aBorder.IEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mIEndContBorderWidth);
-  aBorder.BEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mBEndContBorderWidth);
-  aBorder.IStart(aWM) = BC_BORDER_END_HALF_COORD(d2a, mIStartContBorderWidth);
+  aBorder.IEnd(aWM) = BC_BORDER_START_HALF(mIEndContBorderWidth);
+  aBorder.BEnd(aWM) = BC_BORDER_START_HALF(mBEndContBorderWidth);
+  aBorder.IStart(aWM) = BC_BORDER_END_HALF(mIStartContBorderWidth);
 }
 #endif

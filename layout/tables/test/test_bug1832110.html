@@ -45,7 +45,7 @@ function raf() {
 }
 
 async function show_table(table, other) {
-  // TODO(dshin): Once bug 1825384 resolves, this should not be needed.
+  // Don't tempt subpixel snapping - try to position each table exactly the same.
   table.classList.remove("hide");
   other.classList.add("hide");
   getComputedStyle(table).getPropertyValue("display");

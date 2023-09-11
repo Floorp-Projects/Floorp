@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<title>Test for Bug 1825384</title>
+<style>
+div {
+  display: inline-block;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td {
+  border: 10px solid black;
+  line-height: 0;
+  padding: 0;
+}
+
+span {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: grey;
+}
+
+</style>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script class="testbody" type="text/javascript">
+function raf() {
+  return new Promise(resolve => {
+    requestAnimationFrame(resolve);
+  });
+}
+
+const zoomsToTest = [
+  110,
+  120,
+  130,
+  140,
+  150,
+  160,
+  170,
+  180,
+  190,
+  200,
+];
+
+const originalZoom = SpecialPowers.getFullZoom(window);
+SimpleTest.waitForExplicitFinish();
+
+add_task(async () => {
+  const s1 = await snapshotRect(window, emptyrows.getBoundingClientRect());
+  for (let i = 0; i < zoomsToTest.length; ++i) {
+    let relativeZoom = originalZoom * zoomsToTest[i] / 100;
+    SpecialPowers.setFullZoom(window, relativeZoom);
+    await raf();
+  }
+  SpecialPowers.setFullZoom(window, originalZoom);
+  await raf();
+  const s2 = await snapshotRect(window, emptyrows.getBoundingClientRect());
+  assertSnapshots(s1, s2, true, null, "before", "after");
+});
+add_task(async () => { SpecialPowers.setFullZoom(window, originalZoom); });
+</script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1825384">Mozilla Bug 1825384</a><br>
+<div id="emptyrows">
+<table>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+<tr></tr>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+<tr></tr>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+<tr></tr>
+<tr><td><span></span></td><td><span></span></td><td><span></span></td></tr>
+</table>
+</div>
