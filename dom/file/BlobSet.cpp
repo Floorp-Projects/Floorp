@@ -30,6 +30,13 @@ nsresult BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength) {
   return AppendBlobImpl(blobImpl);
 }
 
+nsresult BlobSet::AppendVector(Vector<uint8_t>&& aData) {
+  size_t length = aData.length();
+  RefPtr<BlobImpl> blobImpl =
+      new MemoryBlobImpl(aData.extractOrCopyRawBuffer(), length, u""_ns);
+  return AppendBlobImpl(blobImpl);
+}
+
 nsresult BlobSet::AppendUTF8String(const nsACString& aUTF8String,
                                    bool nativeEOL) {
   nsCString utf8Str;

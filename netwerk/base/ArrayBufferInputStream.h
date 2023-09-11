@@ -31,7 +31,7 @@ class ArrayBufferInputStream : public nsIArrayBufferInputStream {
 
  private:
   virtual ~ArrayBufferInputStream() = default;
-  mozilla::UniquePtr<char[]> mArrayBuffer;
+  mozilla::UniquePtr<uint8_t[]> mArrayBuffer;
   uint32_t mBufferLength{0};
   uint32_t mPos{0};
   bool mClosed{false};

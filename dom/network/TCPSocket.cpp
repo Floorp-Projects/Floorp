@@ -828,13 +828,16 @@ bool TCPSocket::Send(const ArrayBuffer& aData, uint32_t aByteOffset,
 
     mSocketBridgeChild->SendSend(std::move(arrayBuffer));
   } else {
-    aData.ComputeState();
-    calculateOffsetAndCount(aData.Length());
-
-    JS::Rooted<JS::Value> value(RootingCx(), JS::ObjectValue(*aData.Obj()));
+    mozilla::Maybe<mozilla::UniquePtr<uint8_t[]>> arrayBuffer =
+        aData.CreateFromData<mozilla::UniquePtr<uint8_t[]>>(
+            calculateOffsetAndCount);
+    if (arrayBuffer.isNothing()) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return false;
+    }
 
     stream = do_CreateInstance("@mozilla.org/io/arraybuffer-input-stream;1");
-    nsresult rv = stream->SetData(value, aByteOffset, nbytes);
+    nsresult rv = stream->SetData(arrayBuffer.extract(), nbytes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
       return false;

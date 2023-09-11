@@ -32,16 +32,16 @@ template <typename T>
 static void GetDataFrom(const T& aObject, uint8_t*& aBuffer,
                         uint32_t& aLength) {
   MOZ_ASSERT(!aBuffer);
-  aObject.ComputeState();
-  // We use malloc here rather than a FallibleTArray or fallible
-  // operator new[] since the gfxUserFontEntry will be calling free
-  // on it.
-  aBuffer = (uint8_t*)malloc(aObject.Length());
-  if (!aBuffer) {
+  // We need to use malloc here because the gfxUserFontEntry will be calling
+  // free on it, so the Vector's default AllocPolicy (MallocAllocPolicy) is
+  // fine.
+  Maybe<Vector<uint8_t>> buffer =
+      aObject.template CreateFromData<Vector<uint8_t>>();
+  if (buffer.isNothing()) {
     return;
   }
-  memcpy((void*)aBuffer, aObject.Data(), aObject.Length());
-  aLength = aObject.Length();
+  aLength = buffer->length();
+  aBuffer = buffer->extractOrCopyRawBuffer();
 }
 
 // -- FontFace ---------------------------------------------------------------
