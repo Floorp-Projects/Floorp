@@ -140,10 +140,6 @@ export class ShoppingContainer extends MozLitElement {
       <review-highlights
         .highlights=${this.data.highlights}
       ></review-highlights>
-      <analysis-explainer
-        productUrl=${ifDefined(this.productUrl)}
-      </analysis-explainer>
-      ${this.recommendationTemplate()}
     `;
   }
 
@@ -246,7 +242,7 @@ export class ShoppingContainer extends MozLitElement {
     `;
   }
 
-  renderContainer(sidebarContent, hideSettings = false) {
+  renderContainer(sidebarContent, hideFooter = false) {
     return html`<link
         rel="stylesheet"
         href="chrome://browser/content/shopping/shopping-container.css"
@@ -269,33 +265,41 @@ export class ShoppingContainer extends MozLitElement {
         </div>
         <div id="content" aria-busy=${!this.data}>
           <slot name="multi-stage-message-slot"></slot>
-          ${sidebarContent}
-          ${!hideSettings
-            ? html`<shopping-settings
-                ?adsEnabledByUser=${this.adsEnabledByUser}
-              ></shopping-settings>`
-            : null}
+          ${sidebarContent} ${!hideFooter ? this.getFooterTemplate() : null}
         </div>
       </div>`;
   }
 
+  getFooterTemplate() {
+    return html`
+      <analysis-explainer
+        productUrl=${ifDefined(this.productUrl)}
+      ></analysis-explainer>
+      ${this.recommendationTemplate()}
+      <shopping-settings
+        ?adsEnabledByUser=${this.adsEnabledByUser}
+      ></shopping-settings>
+    `;
+  }
+
   render() {
     let content;
-    let hideSettings;
+    let hideFooter;
     if (this.showOnboarding) {
       content = html``;
-      hideSettings = true;
+      hideFooter = true;
     } else if (this.isOffline) {
       content = html`<shopping-message-bar
         type="offline"
       ></shopping-message-bar>`;
+      hideFooter = true;
     } else if (!this.data) {
       content = this.getLoadingTemplate();
-      hideSettings = true;
+      hideFooter = true;
     } else {
       content = this.getContentTemplate();
     }
-    return this.renderContainer(content, hideSettings);
+    return this.renderContainer(content, hideFooter);
   }
 
   handleClick() {
