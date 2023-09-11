@@ -706,6 +706,9 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   font-size: 0.8em;
   padding: 4px 16px;
 }
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .action-buttons.additional-cta-container {
+  align-items: center;
+}
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .legal-paragraph {
   font-size: 0.6875em;
   line-height: 1.5;
