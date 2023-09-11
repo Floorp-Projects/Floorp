@@ -784,6 +784,7 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
   mIsTopLevelContextMenu = false;
   mVFlip = false;
   mHFlip = false;
+  mConstrainedByLayout = false;
   mAlignmentOffset = 0;
   mPositionedOffset = 0;
   mPositionedByMoveToRect = false;
@@ -1049,6 +1050,7 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState,
 
   mIsOpenChanged = false;
   mHFlip = mVFlip = false;
+  mConstrainedByLayout = false;
 
   if (auto* widget = GetWidget()) {
     // Ideally we should call ClearCachedWebrenderResources but there are
@@ -1556,6 +1558,7 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
       if (result.mUsedRect.height > constraintRect->height) {
         result.mUsedRect.height = constraintRect->height;
       }
+      result.mConstrainedByLayout = true;
     }
 
     if (IS_WAYLAND_DISPLAY() && widget) {
@@ -1710,6 +1713,7 @@ void nsMenuPopupFrame::PerformMove(const Rects& aRects) {
   mLastClientOffset = aRects.mClientOffset;
   mHFlip = aRects.mHFlip;
   mVFlip = aRects.mVFlip;
+  mConstrainedByLayout = aRects.mConstrainedByLayout;
 
   // If this is a noautohide popup, set the screen coordinates of the popup.
   // This way, the popup stays at the location where it was opened even when the
