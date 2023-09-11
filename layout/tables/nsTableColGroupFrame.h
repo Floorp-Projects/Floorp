@@ -189,7 +189,7 @@ class nsTableColGroupFrame final : public nsContainerFrame {
    * @param aForSide - side to set; only accepts bstart and bend
    */
   void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
-                                  nscoord aPixelValue);
+                                  BCPixelSize aPixelValue);
 
   bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & (eSupportsContainLayoutAndPaint | eSupportsAspectRatio)) {
@@ -218,8 +218,9 @@ class nsTableColGroupFrame final : public nsContainerFrame {
   // the starting column index this col group represents. Must be >= 0.
   int32_t mStartColIndex;
 
-  nscoord mBStartContBorderWidth;
-  nscoord mBEndContBorderWidth;
+  // border width in pixels
+  BCPixelSize mBStartContBorderWidth;
+  BCPixelSize mBEndContBorderWidth;
 };
 
 inline nsTableColGroupFrame::nsTableColGroupFrame(ComputedStyle* aStyle,

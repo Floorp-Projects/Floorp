@@ -1324,7 +1324,7 @@ nscoord nsTableRowFrame::GetUnpaginatedBSize() {
 }
 
 void nsTableRowFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
-                                                 nscoord aPixelValue) {
+                                                 BCPixelSize aPixelValue) {
   switch (aForSide) {
     case eLogicalSideIEnd:
       mIEndContBorderWidth = aPixelValue;

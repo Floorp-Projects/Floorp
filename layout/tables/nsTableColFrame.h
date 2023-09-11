@@ -86,10 +86,10 @@ class nsTableColFrame final : public nsSplittableFrame {
   /** convenience method, calls into cellmap */
   int32_t Count() const;
 
-  nscoord GetIStartBorderWidth() const { return mIStartBorderWidth; }
-  nscoord GetIEndBorderWidth() const { return mIEndBorderWidth; }
-  void SetIStartBorderWidth(nscoord aWidth) { mIStartBorderWidth = aWidth; }
-  void SetIEndBorderWidth(nscoord aWidth) { mIEndBorderWidth = aWidth; }
+  BCPixelSize GetIStartBorderWidth() const { return mIStartBorderWidth; }
+  BCPixelSize GetIEndBorderWidth() const { return mIEndBorderWidth; }
+  void SetIStartBorderWidth(BCPixelSize aWidth) { mIStartBorderWidth = aWidth; }
+  void SetIEndBorderWidth(BCPixelSize aWidth) { mIEndBorderWidth = aWidth; }
 
   /**
    * Gets inner border widths before collapsing with cell borders
@@ -106,7 +106,7 @@ class nsTableColFrame final : public nsSplittableFrame {
    * @param aForSide - side to set; only valid for bstart, iend, and bend
    */
   void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
-                                  nscoord aPixelValue);
+                                  BCPixelSize aPixelValue);
 #ifdef DEBUG
   void Dump(int32_t aIndent);
 #endif
@@ -296,12 +296,12 @@ class nsTableColFrame final : public nsSplittableFrame {
   // colgroup
   uint32_t mColIndex;
 
-  // border width of the inner half of the border only
-  nscoord mIStartBorderWidth;
-  nscoord mIEndBorderWidth;
-  nscoord mBStartContBorderWidth;
-  nscoord mIEndContBorderWidth;
-  nscoord mBEndContBorderWidth;
+  // border width in pixels of the inner half of the border only
+  BCPixelSize mIStartBorderWidth;
+  BCPixelSize mIEndBorderWidth;
+  BCPixelSize mBStartContBorderWidth;
+  BCPixelSize mIEndContBorderWidth;
+  BCPixelSize mBEndContBorderWidth;
 
   bool mHasSpecifiedCoord;
 };
@@ -314,10 +314,11 @@ inline void nsTableColFrame::SetColIndex(int32_t aColIndex) {
 
 inline nscoord nsTableColFrame::GetContinuousBCBorderWidth(
     mozilla::WritingMode aWM, mozilla::LogicalMargin& aBorder) {
-  aBorder.BStart(aWM) = BC_BORDER_END_HALF(mBStartContBorderWidth);
-  aBorder.IEnd(aWM) = BC_BORDER_START_HALF(mIEndContBorderWidth);
-  aBorder.BEnd(aWM) = BC_BORDER_START_HALF(mBEndContBorderWidth);
-  return BC_BORDER_END_HALF(mIEndContBorderWidth);
+  int32_t d2a = PresContext()->AppUnitsPerDevPixel();
+  aBorder.BStart(aWM) = BC_BORDER_END_HALF_COORD(d2a, mBStartContBorderWidth);
+  aBorder.IEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mIEndContBorderWidth);
+  aBorder.BEnd(aWM) = BC_BORDER_START_HALF_COORD(d2a, mBEndContBorderWidth);
+  return BC_BORDER_END_HALF_COORD(d2a, mIEndContBorderWidth);
 }
 
 #endif
