@@ -88,6 +88,7 @@ body {
     width: 45px;
     margin: auto;
     border-radius: 100px;
+    fill: currentColor;
 }
 
 #fxa-avatar:hover {

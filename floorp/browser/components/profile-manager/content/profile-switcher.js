@@ -22,6 +22,15 @@ XPCOMUtils.defineLazyServiceGetter(
 async function buildFxAccountsInfo() {
   let info = await FxAccounts.getSignedInUser();
 
+  setEventListeners();
+
+  if (!info) {
+    let displayName = document.getElementById("fxa-display-name");
+    displayName.setAttribute("data-l10n-id", "fxa-not-signed-in");
+    document.getElementById("fxa-pairing-icon").hidden = true;
+    return;
+  }
+
   let avatar = document.getElementById("fxa-avatar");
   avatar.src = info.avatar;
 
@@ -30,8 +39,6 @@ async function buildFxAccountsInfo() {
 
   let email = document.getElementById("fxa-email");
   email.textContent = info.email;
-
-  setEventListeners();
 }
 
 function manageFxAccounts() {
