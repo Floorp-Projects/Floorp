@@ -564,9 +564,10 @@ class ProviderWeather extends UrlbarProvider {
       case RESULT_MENU_COMMAND.NOT_RELEVANT:
         this.logger.info("Dismissing weather result");
         lazy.UrlbarPrefs.set("suggest.weather", false);
-        view.acknowledgeDismissal(result, {
+        result.acknowledgeDismissalL10n = {
           id: "firefox-suggest-dismissal-acknowledgment-all",
-        });
+        };
+        view.controller.removeResult(result);
         break;
       case RESULT_MENU_COMMAND.INACCURATE_LOCATION:
         // Currently the only way we record this feedback is in the Glean

@@ -331,14 +331,16 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
           controller.view.acknowledgeFeedback(details.result);
           break;
         case DISMISS_ONE_COMMAND:
-          controller.view.acknowledgeDismissal(details.result, {
+          details.result.acknowledgeDismissalL10n = {
             id: "firefox-suggest-dismissal-acknowledgment-one",
-          });
+          };
+          controller.removeResult(details.result);
           break;
         case DISMISS_ALL_COMMAND:
-          controller.view.acknowledgeDismissal(details.result, {
+          details.result.acknowledgeDismissalL10n = {
             id: "firefox-suggest-dismissal-acknowledgment-all",
-          });
+          };
+          controller.removeResult(details.result);
           break;
       }
     }
