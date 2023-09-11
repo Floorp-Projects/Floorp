@@ -69,6 +69,7 @@ pub extern "C" fn wgpu_server_new(factory: IdentityRecyclerFactory) -> *mut Glob
         wgt::InstanceDescriptor {
             backends,
             dx12_shader_compiler: wgt::Dx12Compiler::Fxc,
+            gles_minor_version: wgt::Gles3MinorVersion::Automatic,
         },
     ));
     Box::into_raw(Box::new(global))
