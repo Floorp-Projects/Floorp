@@ -9,6 +9,7 @@
 #include "pk11pub.h"
 #include "prerror.h"
 #include "secerr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 NS_IMPL_ISUPPORTS(nsRandomGenerator, nsIRandomGenerator)
 
@@ -17,20 +18,24 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength, uint8_t** aBuffer) {
   NS_ENSURE_ARG_POINTER(aBuffer);
   *aBuffer = nullptr;
 
+  mozilla::UniqueFreePtr<uint8_t> buf(
+      static_cast<uint8_t*>(moz_xmalloc(aLength)));
+  nsresult rv = GenerateRandomBytesInto(buf.get(), aLength);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aBuffer = buf.release();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRandomGenerator::GenerateRandomBytesInto(uint8_t* aBuffer, uint32_t aLength) {
+  NS_ENSURE_ARG_POINTER(aBuffer);
+
   mozilla::UniquePK11SlotInfo slot(PK11_GetInternalSlot());
   if (!slot) {
     return NS_ERROR_FAILURE;
   }
 
-  auto buf = static_cast<uint8_t*>(moz_xmalloc(aLength));
-
-  SECStatus srv = PK11_GenerateRandomOnSlot(slot.get(), buf, aLength);
-  if (srv != SECSuccess) {
-    free(buf);
-    return NS_ERROR_FAILURE;
-  }
-
-  *aBuffer = buf;
-
-  return NS_OK;
+  SECStatus srv = PK11_GenerateRandomOnSlot(slot.get(), aBuffer, aLength);
+  return srv == SECSuccess ? NS_OK : NS_ERROR_FAILURE;
 }

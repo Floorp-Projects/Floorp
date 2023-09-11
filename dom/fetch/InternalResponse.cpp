@@ -331,8 +331,7 @@ nsresult InternalResponse::GeneratePaddingInfo() {
 
   MOZ_DIAGNOSTIC_ASSERT(randomGenerator);
 
-  uint8_t* buffer;
-  rv = randomGenerator->GenerateRandomBytes(sizeof(randomNumber), &buffer);
+  rv = randomGenerator->GenerateRandomBytesInto(randomNumber);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Maybe<uint64_t> maybeRandomNum = RandomUint64();
     if (maybeRandomNum.isSome()) {
@@ -341,9 +340,6 @@ nsresult InternalResponse::GeneratePaddingInfo() {
     }
     return rv;
   }
-
-  memcpy(&randomNumber, buffer, sizeof(randomNumber));
-  free(buffer);
 
   mPaddingInfo.emplace(randomNumber % kMaxRandomNumber);
 
