@@ -1640,6 +1640,9 @@ const setEvenyListeners = function () {
 };
 
 const startWorkspace = function () {
+  if (!Services.prefs.getBoolPref(WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF)) {
+    return;
+  }
   let list = Services.wm.getEnumerator("navigator:browser");
   while (list.hasMoreElements()) {
     if (list.getNext() != window) {
@@ -1701,9 +1704,6 @@ function disableWorkspacesByDefaultCheck() {
       WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF,
       function () {
         Services.prefs.setBoolPref(tempDisabled, false);
-        Services.prefs.removeObserver(
-          WorkspaceUtils.workspacesPreferences.WORKSPACE_TAB_ENABLED_PREF
-        );
       }
     );
   } else {

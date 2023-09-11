@@ -70,10 +70,10 @@ const gCSKPane = {
         const removeButton = document.querySelector(`.csks-remove-button[value="${actionName}"]`);
         const button = document.querySelector(`.csks-button[value="${actionName}"]`);
         const descriptionItem = document.querySelector(`.csks-box-item-description[value="${actionName}"]`);
-        button.setAttribute("disabled", "false");
+        button.removeAttribute("disabled");
         removeButton.setAttribute("hidden", "true");
-        descriptionItem.remove();
-        window.location.reload();
+        descriptionItem?.remove();
+        location.reload();
       }
     }
 
@@ -128,19 +128,20 @@ const gCSKPane = {
               boxItem.after(keyboradShortcutInfo);
 
               // add l10n
-              if(!keyboradShortcutObj.keyCode || keyboradShortcutObj.keyCode === ""){
+              if(modifiers && key){
                 const descriptionItem = document.querySelector(`.csks-box-item-description[value="${action}"]`);
                 document.l10n.setAttributes(
                   descriptionItem,
                   "CSK-keyborad-shortcut-info",
                   { key, modifiers }
-                );  
+                );
               } else {
                 const descriptionItem = document.querySelector(`.csks-box-item-description[value="${action}"]`);
+                let result = key ? key : keyboradShortcutObj.keyCode;
                 document.l10n.setAttributes(
                   descriptionItem,
                   "CSK-keyborad-shortcut-info-with-keycode",
-                  { key: keyboradShortcutObj.keyCode }
+                  { key: result }
                 );
               }
 

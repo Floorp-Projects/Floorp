@@ -180,4 +180,5 @@ function setTitle() {
     }
 
     CustomKeyboardShortcutUtils.keyboradShortcutFunctions.preferencesFunctions.addKeyForShortcutAction(shortcutKeyName, keyListInput[0].toLowerCase(), keyCodeResult, modifiersResult);
+    Services.obs.notifyObservers({}, "reload-current-tab")
   }

@@ -61,6 +61,17 @@ const buildShortCutkeyFunctions = {
         console.error("Invalid shortcut key config: " + shortcutObj);
       }
     }
+
+    function reloadCurrentTab() {
+      BrowserReloadOrDuplicate("reload");
+    }
+    
+    SessionStore.promiseInitialized.then(() => {
+      Services.obs.addObserver(
+        reloadCurrentTab,
+        "reload-current-tab",
+      );
+    });
   },
 
   buildShortCutkeyFunction(name, key, keyCode, modifiers) {
