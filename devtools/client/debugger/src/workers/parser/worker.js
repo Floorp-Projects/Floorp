@@ -7,6 +7,7 @@ import { clearASTs } from "./utils/ast";
 import getScopes, { clearScopes } from "./getScopes";
 import { setSource, clearSources } from "./sources";
 import findOutOfScopeLocations from "./findOutOfScopeLocations";
+import findBestMatchExpression from "./findBestMatchExpression";
 import { hasSyntaxError } from "./validate";
 import mapExpression from "./mapExpression";
 
@@ -21,6 +22,7 @@ function clearAllHelpersForSources(sourceIds) {
 
 self.onmessage = workerHandler({
   findOutOfScopeLocations,
+  findBestMatchExpression,
   getSymbols,
   getScopes,
   clearSources: clearAllHelpersForSources,

@@ -324,11 +324,10 @@ export function getSymbols(sourceId) {
     // And within the worker by `findOutOfScopeLocations`
     functions: symbols.functions,
 
-    // The three following attributes are only used by `findBestMatchExpression` from the main thread:
-    memberExpressions: symbols.memberExpressions,
-    literals: symbols.literals,
+    // The three following attributes are only used by `findBestMatchExpression` within the worker thread
+    // `memberExpressions`, `literals`
     // This one is also used within the worker for framework computation
-    identifiers: symbols.identifiers,
+    // `identifiers`
 
     // This is used within the worker for framework computation,
     // and in the main thread by the outline panel

@@ -41985,11 +41985,10 @@
         // And within the worker by `findOutOfScopeLocations`
         functions: symbols.functions,
 
-        // The three following attributes are only used by `findBestMatchExpression` from the main thread:
-        memberExpressions: symbols.memberExpressions,
-        literals: symbols.literals,
+        // The three following attributes are only used by `findBestMatchExpression` within the worker thread
+        // `memberExpressions`, `literals`
         // This one is also used within the worker for framework computation
-        identifiers: symbols.identifiers,
+        // `identifiers`
 
         // This is used within the worker for framework computation,
         // and in the main thread by the outline panel
@@ -43228,6 +43227,37 @@
       return removeOverlaps(outerLocations);
     }
 
+    function findBestMatchExpression(sourceId, tokenPos) {
+      const symbols = getInternalSymbols(sourceId);
+      if (!symbols) {
+        return null;
+      }
+
+      const { line, column } = tokenPos;
+      const { memberExpressions, identifiers, literals } = symbols;
+
+      function matchExpression(expression) {
+        const { location } = expression;
+        const { start, end } = location;
+        return start.line == line && start.column <= column && end.column >= column;
+      }
+      function matchMemberExpression(expression) {
+        // For member expressions we ignore "computed" member expressions `foo[bar]`,
+        // to only match the one that looks like: `foo.bar`.
+        return !expression.computed && matchExpression(expression);
+      }
+      // Avoid duplicating these arrays and be careful about performance as they can be large
+      //
+      // Process member expressions first as they can be including identifiers which
+      // are subset of the member expression.
+      // Ex: `foo.bar` is a member expression made of `foo` and `bar` identifiers.
+      return (
+        memberExpressions.find(matchMemberExpression) ||
+        literals.find(matchExpression) ||
+        identifiers.find(matchExpression)
+      );
+    }
+
     function hasSyntaxError(input) {
       try {
         parseScript(input);
@@ -43848,6 +43878,7 @@
 
     self.onmessage = workerUtilsExports.workerHandler({
       findOutOfScopeLocations,
+      findBestMatchExpression,
       getSymbols,
       getScopes,
       clearSources: clearAllHelpersForSources,

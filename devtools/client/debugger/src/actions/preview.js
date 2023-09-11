@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { isConsole } from "../utils/preview";
-import { findBestMatchExpression } from "../utils/ast";
 import { getGrip, getFront } from "../utils/evaluation-result";
 import { getExpressionFromCoords } from "../utils/editor/get-expression";
 
@@ -13,33 +12,33 @@ import {
   getSelectedSource,
   getSelectedLocation,
   getSelectedFrame,
-  getSymbols,
   getCurrentThread,
   getSelectedException,
 } from "../selectors";
 
 import { getMappedExpression } from "./expressions";
 
-function findExpressionMatch(state, codeMirror, tokenPos) {
+async function findExpressionMatch(state, parserWorker, codeMirror, tokenPos) {
   const location = getSelectedLocation(state);
   if (!location) {
     return null;
   }
 
-  const symbols = getSymbols(state, location);
-
-  let match;
-  if (!symbols) {
-    match = getExpressionFromCoords(codeMirror, tokenPos);
-  } else {
-    match = findBestMatchExpression(symbols, tokenPos);
+  // Fallback on expression from codemirror cursor if parser worker misses symbols
+  // or is unable to find a match.
+  const match = await parserWorker.findBestMatchExpression(
+    location.source.id,
+    tokenPos
+  );
+  if (match) {
+    return match;
   }
-  return match;
+  return getExpressionFromCoords(codeMirror, tokenPos);
 }
 
 export function getPreview(target, tokenPos, codeMirror) {
   return async thunkArgs => {
-    const { getState, client } = thunkArgs;
+    const { getState, client, parserWorker } = thunkArgs;
     if (
       !isSelectedFrameVisible(getState()) ||
       !isLineInScope(getState(), tokenPos.line)
@@ -57,7 +56,12 @@ export function getPreview(target, tokenPos, codeMirror) {
       return null;
     }
 
-    const match = findExpressionMatch(getState(), codeMirror, tokenPos);
+    const match = await findExpressionMatch(
+      getState(),
+      parserWorker,
+      codeMirror,
+      tokenPos
+    );
     if (!match) {
       return null;
     }
@@ -124,8 +128,13 @@ export function getPreview(target, tokenPos, codeMirror) {
 }
 
 export function getExceptionPreview(target, tokenPos, codeMirror) {
-  return async ({ dispatch, getState }) => {
-    const match = findExpressionMatch(getState(), codeMirror, tokenPos);
+  return async ({ dispatch, getState, parserWorker }) => {
+    const match = await findExpressionMatch(
+      getState(),
+      parserWorker,
+      codeMirror,
+      tokenPos
+    );
     if (!match) {
       return null;
     }
