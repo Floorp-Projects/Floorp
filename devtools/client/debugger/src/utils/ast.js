@@ -87,11 +87,3 @@ export function findClosestFunction(symbols, location) {
 
   return findClosestofSymbol(symbols.functions, location);
 }
-
-export function findClosestClass(symbols, location) {
-  if (!symbols) {
-    return null;
-  }
-
-  return findClosestofSymbol(symbols.classes, location);
-}

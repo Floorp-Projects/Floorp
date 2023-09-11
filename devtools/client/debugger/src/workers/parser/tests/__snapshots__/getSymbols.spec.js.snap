@@ -10,11 +10,6 @@ exports[`Parser.getSymbols allSymbols 1`] = `
 [(24, 2), (26, 3)]  constructor() Ultra
 [(28, 2), (30, 3)]  beAwesome(person) Ultra
 
-callExpressions:
-[(13, 12), (13, 15)]  log   hey
-[(29, 12), (29, 15)]  log
-[(33, 19), (33, 23)]  push
-
 memberExpressions:
 [(13, 12), (13, 15)] console.log log
 [(20, 4), (20, 12)] Obj.property property
@@ -28,11 +23,7 @@ memberExpressions:
 [(33, 44), (33, 47)] this.props.dac dac
 [(33, 38), (33, 43)] this.props props
 
-objectProperties:
-[(11, 2), (11, 5)] Obj.foo foo
-[(15, 2), (15, 14)] Obj.doOtherThing doOtherThing
-
-comments:
+literals:
 
 
 identifiers:
@@ -75,12 +66,6 @@ identifiers:
 classes:
 [(23, 0), (31, 1)]  Ultra
 
-imports:
-
-
-literals:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -92,15 +77,6 @@ exports[`Parser.getSymbols call expression 1`] = `
 "functions:
 [(2, 0), (2, 70)]  evaluate(script, , )
 
-callExpressions:
-[(1, 0), (1, 8)]  dispatch
-[(4, 0), (4, 1)]  a
-[(4, 2), (4, 3)]  b
-[(4, 4), (4, 5)]  c
-[(6, 6), (6, 7)]  c
-[(6, 2), (6, 3)]  b
-[(7, 6), (7, 7)]  d
-
 memberExpressions:
 [(6, 6), (6, 7)]  c
 [(6, 2), (6, 3)] a.b b
@@ -108,14 +84,7 @@ memberExpressions:
 [(7, 4), (7, 5)] a.b.c c
 [(7, 2), (7, 3)] a.b b
 
-objectProperties:
-[(1, 11), (1, 12)]  d
-[(2, 28), (2, 35)]  frameId
-[(2, 41), (2, 48)]  frameId
-[(2, 55), (2, 56)]  c
-[(2, 61), (2, 62)]  c
-
-comments:
+literals:
 
 
 identifiers:
@@ -141,12 +110,6 @@ identifiers:
 classes:
 
 
-imports:
-
-
-literals:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -158,22 +121,11 @@ exports[`Parser.getSymbols call sites 1`] = `
 "functions:
 
 
-callExpressions:
-[(1, 0), (1, 3)]  aaa
-[(1, 4), (1, 7)]  bbb
-[(1, 11), (1, 14)]  ccc
-[(4, 3), (4, 7)]  ffff
-[(3, 3), (3, 6)]  eee
-[(2, 0), (2, 4)]  dddd
-
 memberExpressions:
 [(4, 3), (4, 7)]  ffff
 [(3, 3), (3, 6)]  eee
 
-objectProperties:
-
-
-comments:
+literals:
 
 
 identifiers:
@@ -185,12 +137,6 @@ identifiers:
 [(4, 3), (4, 7)] ffff ffff
 
 classes:
-
-
-imports:
-
-
-literals:
 
 
 hasJsx: false
@@ -207,9 +153,6 @@ exports[`Parser.getSymbols class 1`] = `
 [(17, 2), (19, 3)]  bar(a) Test
 [(21, 8), (23, 3)]  baz(b) Test
 
-callExpressions:
-[(18, 12), (18, 15)]  log   bar
-
 memberExpressions:
 [(6, 27), (6, 35)] this.myStatic myStatic
 [(9, 19), (9, 27)] this.myStatic myStatic
@@ -217,10 +160,7 @@ memberExpressions:
 [(14, 9), (14, 25)] this.#privateProperty #privateProperty
 [(18, 12), (18, 15)] console.log log
 
-objectProperties:
-
-
-comments:
+literals:
 
 
 identifiers:
@@ -255,12 +195,6 @@ classes:
 [(1, 0), (24, 1)]  Test
 [(26, 0), (26, 14)]  Test2
 
-imports:
-
-
-literals:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -283,20 +217,6 @@ exports[`Parser.getSymbols component 1`] = `
 [(70, 8), (70, 21)]  x()
 [(72, 33), (79, 1)]  createElement(color)
 [(82, 26), (84, 1)]  update(newColor)
-
-callExpressions:
-[(7, 4), (7, 9)]
-[(8, 32), (8, 36)]  bind
-[(26, 31), (26, 37)]  extend
-[(30, 12), (30, 15)]  log   yo
-[(34, 18), (34, 29)]  createClass
-[(38, 12), (38, 15)]  log   yo
-[(42, 12), (42, 23)]  createClass
-[(46, 12), (46, 15)]  log   yo
-[(50, 16), (50, 27)]  createClass
-[(54, 12), (54, 15)]  log   yo
-[(65, 16), (65, 20)]  call
-[(68, 26), (68, 32)]  create
 
 memberExpressions:
 [(8, 9), (8, 16)] this.onClick onClick
@@ -322,21 +242,8 @@ memberExpressions:
 [(82, 7), (82, 16)] Button.prototype prototype
 [(83, 27), (83, 32)] this.color color
 
-objectProperties:
-[(27, 2), (27, 9)]  tagName
-[(29, 2), (29, 8)]  render
-[(35, 2), (35, 9)]  tagName
-[(37, 2), (37, 8)]  render
-[(43, 2), (43, 9)]  tagName
-[(45, 2), (45, 8)]  render
-[(51, 2), (51, 9)]  tagName
-[(53, 2), (53, 8)]  render
+literals:
 
-comments:
-[(1, 0), (3, 3)]
-[(22, 0), (24, 3)]
-[(58, 0), (60, 3)]
-[(81, 0), (81, 34)]
 
 identifiers:
 [(5, 6), (5, 11)] Punny Punny
@@ -417,12 +324,6 @@ identifiers:
 classes:
 [(5, 0), (20, 1)]  Punny
 
-imports:
-
-
-literals:
-
-
 hasJsx: true
 
 hasTypes: false
@@ -434,31 +335,12 @@ exports[`Parser.getSymbols destruct 1`] = `
 "functions:
 
 
-callExpressions:
-[(1, 21), (1, 28)]  compute
-[(4, 21), (4, 28)]  compute
-[(7, 35), (7, 42)]  entries
-[(8, 10), (8, 13)]  log
-
 memberExpressions:
 [(7, 35), (7, 42)] arr.entries entries
 [(8, 10), (8, 13)] console.log log
 [(16, 34), (16, 46)] prefsBlueprint[accessorName] accessorName
 
-objectProperties:
-[(1, 8), (1, 9)] b b
-[(1, 11), (1, 16)] resty resty
-[(2, 8), (2, 13)] first first
-[(2, 18), (2, 22)] last last
-[(11, 8), (11, 9)] a a
-[(11, 20), (11, 21)] b b
-[(11, 36), (11, 37)] a a
-[(12, 8), (12, 12)] temp temp
-[(12, 17), (12, 20)]  foo
-[(14, 7), (14, 10)] [key] key
-[(14, 23), (14, 24)] z z
-
-comments:
+literals:
 
 
 identifiers:
@@ -506,12 +388,6 @@ identifiers:
 classes:
 
 
-imports:
-
-
-literals:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -523,16 +399,10 @@ exports[`Parser.getSymbols es6 1`] = `
 "functions:
 
 
-callExpressions:
-[(1, 0), (1, 8)]  dispatch
-
 memberExpressions:
 
 
-objectProperties:
-[(1, 23), (1, 30)]  PROMISE
-
-comments:
+literals:
 
 
 identifiers:
@@ -542,12 +412,6 @@ identifiers:
 [(1, 33), (1, 40)] promise promise
 
 classes:
-
-
-imports:
-
-
-literals:
 
 
 hasJsx: false
@@ -562,10 +426,6 @@ exports[`Parser.getSymbols expression 1`] = `
 [(10, 10), (10, 23)]  render() TodoView
 [(23, 0), (23, 28)]  params()
 [(24, 11), (24, 32)]  pars()
-
-callExpressions:
-[(9, 24), (9, 30)]  extend
-[(25, 18), (25, 24)]  doEvil
 
 memberExpressions:
 [(2, 19), (2, 33)] obj2.c.secondProperty secondProperty
@@ -589,50 +449,10 @@ memberExpressions:
 [(25, 27), (25, 28)]  c
 [(25, 18), (25, 24)] obj2.doEvil doEvil
 
-objectProperties:
-[(1, 14), (1, 15)] obj.a a
-[(1, 19), (1, 20)] obj.a.b b
-[(5, 15), (5, 16)] com[a] a
-[(5, 21), (5, 22)] com[a].b b
-[(5, 30), (5, 31)] com[a][d] d
-[(5, 42), (5, 43)] com[b] b
-[(10, 2), (10, 8)]  render
-[(14, 12), (14, 13)] obj.foo.a a
-[(14, 17), (14, 18)] obj.foo.a.b b
-[(14, 27), (14, 28)] obj.foo.b b
-[(15, 8), (15, 9)] com.a a
-[(15, 13), (15, 14)] com.a.b b
-[(15, 23), (15, 24)] com.b b
-[(18, 15), (18, 16)] res[0].a a
-[(18, 25), (18, 26)] res[1].b b
-[(19, 15), (19, 16)] res2.a a
-[(19, 21), (19, 22)] res2.a[0].b b
-[(20, 15), (20, 16)] res3.a a
-[(20, 21), (20, 22)] res3.a[0].b b
-[(20, 30), (20, 31)] res3.b b
-[(20, 36), (20, 37)] res3.b[0].c c
-[(21, 17), (21, 18)] res4[0].a a
-[(21, 29), (21, 30)] res4[0].b b
-[(23, 18), (23, 19)] a a
-[(23, 21), (23, 22)] b b
-[(24, 22), (24, 23)] a a
-[(24, 25), (24, 26)] b b
-
-comments:
-[(1, 29), (1, 44)]
-[(2, 35), (2, 68)]
-[(4, 0), (4, 22)]
-[(5, 51), (5, 67)]
-[(13, 0), (13, 14)]
-[(14, 35), (14, 54)]
-[(15, 31), (15, 46)]
-[(17, 0), (17, 9)]
-[(18, 34), (18, 50)]
-[(19, 32), (19, 50)]
-[(20, 47), (20, 65)]
-[(21, 47), (21, 66)]
-[(23, 29), (23, 38)]
-[(25, 45), (25, 70)]
+literals:
+[(6, 37), (6, 38)] collection.books[1] 1
+[(7, 46), (7, 54)] collection.genres[\\"sci-fi\\"] sci-fi
+[(7, 63), (7, 64)] collection.genres[\\"sci-fi\\"].movies[0] 0
 
 identifiers:
 [(1, 6), (1, 9)] obj obj
@@ -723,14 +543,6 @@ identifiers:
 classes:
 
 
-imports:
-
-
-literals:
-[(6, 37), (6, 38)] collection.books[1] 1
-[(7, 46), (7, 54)] collection.genres[\\"sci-fi\\"] sci-fi
-[(7, 63), (7, 64)] collection.genres[\\"sci-fi\\"].movies[0] 0
-
 hasJsx: false
 
 hasTypes: false
@@ -744,16 +556,6 @@ exports[`Parser.getSymbols finds symbols in an html file 1`] = `
 [(22, 21), (24, 3)]  capitalize(name)
 [(36, 3), (39, 3)]  iife()
 
-callExpressions:
-[(23, 18), (23, 29)]  toUpperCase
-[(23, 39), (23, 48)]  substring   1
-[(28, 4), (28, 8)]  join
-[(27, 4), (27, 7)]  map
-[(26, 4), (26, 7)]  map
-[(36, 3), (39, 3)]
-[(37, 20), (37, 28)]  sayHello   Ryan
-[(38, 11), (38, 14)]  log
-
 memberExpressions:
 [(23, 18), (23, 29)] name[0].toUpperCase toUpperCase
 [(23, 15), (23, 16)] name[0]
@@ -764,12 +566,8 @@ memberExpressions:
 [(30, 15), (30, 24)] globalObject.greetings greetings
 [(38, 11), (38, 14)] console.log log
 
-objectProperties:
-[(5, 3), (5, 8)] globalObject.first first
-[(6, 3), (6, 7)] globalObject.last last
-
-comments:
-
+literals:
+[(23, 15), (23, 16)] name[0] 0
 
 identifiers:
 [(4, 6), (4, 18)] globalObject globalObject
@@ -805,12 +603,6 @@ identifiers:
 classes:
 
 
-imports:
-
-
-literals:
-[(23, 15), (23, 16)] name[0] 0
-
 hasJsx: false
 
 hasTypes: false
@@ -822,16 +614,10 @@ exports[`Parser.getSymbols flow 1`] = `
 "functions:
 [(2, 2), (4, 3)]  renderHello(name, action, ) App
 
-callExpressions:
-
-
 memberExpressions:
 
 
-objectProperties:
-[(2, 51), (2, 56)] todos todos
-
-comments:
+literals:
 
 
 identifiers:
@@ -844,12 +630,6 @@ identifiers:
 
 classes:
 [(1, 0), (5, 1)]  App
-
-imports:
-
-
-literals:
-
 
 hasJsx: false
 
@@ -874,23 +654,10 @@ exports[`Parser.getSymbols func 1`] = `
 [(44, 0), (44, 13)]  anonymous()    1
 [(46, 0), (50, 1)]  ret2()
 
-callExpressions:
-[(18, 9), (18, 12)]  foo
-[(23, 1), (25, 1)]
-[(41, 10), (41, 13)]  log   pause next here
-[(48, 4), (48, 7)]  foo
-
 memberExpressions:
 [(41, 10), (41, 13)] console.log log
 
-objectProperties:
-[(28, 2), (28, 5)] obj.foo foo
-[(40, 29), (40, 31)]  a3
-[(40, 33), (40, 35)]  a4
-[(40, 37), (40, 39)]  a5
-[(40, 43), (40, 45)]  a6
-
-comments:
+literals:
 
 
 identifiers:
@@ -926,12 +693,6 @@ identifiers:
 [(48, 4), (48, 7)] foo foo
 
 classes:
-
-
-imports:
-
-
-literals:
 
 
 hasJsx: false
@@ -979,25 +740,11 @@ exports[`Parser.getSymbols function names 1`] = `
 [(49, 0), (49, 40)]  f(first = defaultArr, second)
 [(50, 0), (50, 34)]  g(first = null, second)
 
-callExpressions:
-
-
 memberExpressions:
 [(14, 4), (14, 7)] obj.foo foo
 
-objectProperties:
-[(4, 2), (4, 5)]  foo
-[(5, 2), (5, 7)]
-[(6, 2), (6, 4)]
-[(18, 5), (18, 8)] foo foo
-[(21, 2), (21, 5)] undefined.foo foo
-[(22, 2), (22, 5)] undefined.bar bar
-[(25, 13), (25, 16)]  foo
-[(26, 13), (26, 16)]  bar
-[(42, 20), (42, 21)] defaultObj.a a
+literals:
 
-comments:
-[(1, 0), (1, 20)]
 
 identifiers:
 [(4, 2), (4, 5)]  foo
@@ -1053,12 +800,6 @@ identifiers:
 classes:
 [(28, 0), (36, 1)]  Cls
 
-imports:
-
-
-literals:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -1070,17 +811,10 @@ exports[`Parser.getSymbols jsx 1`] = `
 "functions:
 
 
-callExpressions:
-[(3, 17), (3, 20)]  foo
-[(4, 9), (4, 12)]  foo
-
 memberExpressions:
 
 
-objectProperties:
-
-
-comments:
+literals:
 
 
 identifiers:
@@ -1089,12 +823,6 @@ identifiers:
 [(4, 9), (4, 12)] foo foo
 
 classes:
-
-
-imports:
-
-
-literals:
 
 
 hasJsx: true
@@ -1111,19 +839,11 @@ exports[`Parser.getSymbols math 1`] = `
 [(14, 12), (14, 25)]  child()
 [(15, 9), (15, 22)]  child2()
 
-callExpressions:
-[(8, 14), (8, 20)]  square   2
-[(10, 15), (10, 22)]  squaare   4
-
 memberExpressions:
 
 
-objectProperties:
+literals:
 
-
-comments:
-[(3, 4), (3, 21)]
-[(7, 2), (7, 24)]
 
 identifiers:
 [(1, 9), (1, 13)] math math
@@ -1144,12 +864,6 @@ identifiers:
 classes:
 
 
-imports:
-
-
-literals:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -1161,28 +875,10 @@ exports[`Parser.getSymbols object expressions 1`] = `
 "functions:
 
 
-callExpressions:
-[(3, 62), (3, 70)]  getValue   2
-
 memberExpressions:
 
 
-objectProperties:
-[(1, 13), (1, 19)] y.params params
-[(2, 15), (2, 16)] foo.b b
-[(3, 14), (3, 15)] bar.x x
-[(3, 20), (3, 21)] bar.y y
-[(3, 30), (3, 31)] bar.z z
-[(3, 39), (3, 40)] bar.a a
-[(3, 48), (3, 49)] bar.s s
-[(3, 58), (3, 59)] bar.d d
-[(4, 27), (4, 37)]  frameActor
-[(6, 20), (6, 26)] collection.genres genres
-[(6, 29), (6, 37)] collection.genres
-[(6, 40), (6, 46)] collection.genres.undefined.movies movies
-[(6, 50), (6, 58)] collection.genres.undefined.movies[0].director director
-
-comments:
+literals:
 
 
 identifiers:
@@ -1226,12 +922,6 @@ identifiers:
 classes:
 
 
-imports:
-
-
-literals:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -1243,18 +933,12 @@ exports[`Parser.getSymbols optional chaining 1`] = `
 "functions:
 
 
-callExpressions:
-
-
 memberExpressions:
 [(2, 5), (2, 6)] obj?.a a
 [(3, 8), (3, 9)] obj?.a?.b b
 [(3, 5), (3, 6)] obj?.a a
 
-objectProperties:
-
-
-comments:
+literals:
 
 
 identifiers:
@@ -1266,12 +950,6 @@ identifiers:
 [(3, 8), (3, 9)] b b
 
 classes:
-
-
-imports:
-
-
-literals:
 
 
 hasJsx: false
@@ -1287,9 +965,6 @@ exports[`Parser.getSymbols private fields 1`] = `
 [(13, 2), (15, 3)]  #getSalt() MyClass
 [(17, 2), (23, 3)]  debug() MyClass
 
-callExpressions:
-[(21, 22), (21, 30)]
-
 memberExpressions:
 [(4, 9), (4, 16)] this.#secret #secret
 [(5, 9), (5, 20)] self.#restParams #restParams
@@ -1298,10 +973,7 @@ memberExpressions:
 [(20, 24), (20, 31)] this.#secret #secret
 [(21, 22), (21, 30)] self.#getSalt #getSalt
 
-objectProperties:
-
-
-comments:
+literals:
 
 
 identifiers:
@@ -1343,12 +1015,6 @@ identifiers:
 classes:
 [(1, 0), (24, 1)]  MyClass
 
-imports:
-
-
-literals:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -1364,21 +1030,12 @@ exports[`Parser.getSymbols proto 1`] = `
 [(8, 2), (10, 3)]  doThing(b) TodoView
 [(11, 10), (13, 3)]  render() TodoView
 
-callExpressions:
-[(5, 31), (5, 37)]  extend
-[(9, 12), (9, 15)]  log   hi
-
 memberExpressions:
 [(5, 31), (5, 37)] Backbone.View.extend extend
 [(5, 26), (5, 30)] Backbone.View View
 [(9, 12), (9, 15)] console.log log
 
-objectProperties:
-[(6, 2), (6, 9)]  tagName
-[(7, 2), (7, 12)]  initialize
-[(11, 2), (11, 8)]  render
-
-comments:
+literals:
 
 
 identifiers:
@@ -1402,12 +1059,6 @@ identifiers:
 classes:
 
 
-imports:
-
-
-literals:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -1419,16 +1070,10 @@ exports[`Parser.getSymbols react component 1`] = `
 "functions:
 
 
-callExpressions:
-
-
 memberExpressions:
 
 
-objectProperties:
-
-
-comments:
+literals:
 
 
 identifiers:
@@ -1439,12 +1084,6 @@ identifiers:
 
 classes:
 [(3, 0), (3, 39)]  PrimaryPanes
-
-imports:
-[(1, 0), (1, 41)]    React, Component
-
-literals:
-
 
 hasJsx: false
 
@@ -1457,28 +1096,16 @@ exports[`Parser.getSymbols regexp 1`] = `
 "functions:
 
 
-callExpressions:
-
-
 memberExpressions:
 
 
-objectProperties:
-
-
-comments:
+literals:
 
 
 identifiers:
 [(1, 6), (1, 8)] re re
 
 classes:
-
-
-imports:
-
-
-literals:
 
 
 hasJsx: false
@@ -1492,24 +1119,10 @@ exports[`Parser.getSymbols var 1`] = `
 "functions:
 
 
-callExpressions:
-
-
 memberExpressions:
 
 
-objectProperties:
-[(8, 6), (8, 9)] foo foo
-[(8, 13), (8, 16)] foo.baw baw
-[(9, 5), (9, 8)] bap bap
-[(10, 5), (10, 7)] ll ll
-[(15, 6), (15, 7)] a a
-[(17, 10), (17, 12)]  my
-[(19, 13), (19, 15)]  oy
-[(19, 17), (19, 20)]  vey
-[(19, 28), (19, 35)]  mitzvot
-
-comments:
+literals:
 
 
 identifiers:
@@ -1541,12 +1154,6 @@ identifiers:
 [(21, 13), (21, 18)] stuff stuff
 
 classes:
-
-
-imports:
-
-
-literals:
 
 
 hasJsx: false
