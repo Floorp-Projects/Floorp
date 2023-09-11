@@ -52,6 +52,10 @@
   padding: 0 16px 16px;
 }
 
+#content:focus-visible {
+  outline-offset: -2px;
+}
+
 .loading-box {
   box-shadow: none;
   border: none;
