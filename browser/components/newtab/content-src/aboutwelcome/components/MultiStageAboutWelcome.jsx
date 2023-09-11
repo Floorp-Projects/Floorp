@@ -246,6 +246,7 @@ export const MultiStageAboutWelcome = props => {
               langPackInstallPhase={langPackInstallPhase}
               forceHideStepsIndicator={screen.force_hide_steps_indicator}
               ariaRole={props.ariaRole}
+              aboveButtonStepsIndicator={screen.above_button_steps_indicator}
             />
           ) : null;
         })}
@@ -515,6 +516,7 @@ export class WelcomeScreen extends React.PureComponent {
         autoAdvance={this.props.autoAdvance}
         forceHideStepsIndicator={this.props.forceHideStepsIndicator}
         ariaRole={this.props.ariaRole}
+        aboveButtonStepsIndicator={this.props.aboveButtonStepsIndicator}
       />
     );
   }
