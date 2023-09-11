@@ -4464,13 +4464,107 @@ function toOpenWindowByType(inType, uri, features) {
 }
 
 /**
- * Open a new browser window. See `BrowserWindowTracker.openWindow` for
- * options.
+ * Open a new browser window.
  *
+ * @param {Object} options
+ *        {
+ *          private: A boolean indicating if the window should be
+ *                   private
+ *          remote:  A boolean indicating if the window should run
+ *                   remote browser tabs or not. If omitted, the window
+ *                   will choose the profile default state.
+ *          fission: A boolean indicating if the window should run
+ *                   with fission enabled or not. If omitted, the window
+ *                   will choose the profile default state.
+ *        }
  * @return a reference to the new window.
  */
-function OpenBrowserWindow(options = {}) {
-  return BrowserWindowTracker.openWindow({ openerWindow: window, ...options });
+function OpenBrowserWindow(options) {
+  var telemetryObj = {};
+  TelemetryStopwatch.start("FX_NEW_WINDOW_MS", telemetryObj);
+
+  var defaultArgs = BrowserHandler.defaultArgs;
+  var wintype = document.documentElement.getAttribute("windowtype");
+
+  var extraFeatures = "";
+  if (options && options.private && PrivateBrowsingUtils.enabled) {
+    extraFeatures = ",private";
+    if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      // Force the new window to load about:privatebrowsing instead of the default home page
+      defaultArgs = "about:privatebrowsing";
+    }
+  } else {
+    extraFeatures = ",non-private";
+  }
+
+  if (options && options.remote) {
+    extraFeatures += ",remote";
+  } else if (options && options.remote === false) {
+    extraFeatures += ",non-remote";
+  }
+
+  if (options && options.fission) {
+    extraFeatures += ",fission";
+  } else if (options && options.fission === false) {
+    extraFeatures += ",non-fission";
+  }
+
+  // If the window is maximized, we want to skip the animation, since we're
+  // going to be taking up most of the screen anyways, and we want to optimize
+  // for showing the user a useful window as soon as possible.
+  if (window.windowState == window.STATE_MAXIMIZED) {
+    extraFeatures += ",suppressanimation";
+  }
+
+  // if and only if the current window is a browser window and it has a document with a character
+  // set, then extract the current charset menu setting from the current document and use it to
+  // initialize the new browser window...
+  var win;
+  if (
+    window &&
+    wintype == "navigator:browser" &&
+    window.content &&
+    window.content.document
+  ) {
+    var DocCharset = window.content.document.characterSet;
+    let charsetArg = "charset=" + DocCharset;
+
+    // we should "inherit" the charset menu setting in a new window
+    win = window.openDialog(
+      AppConstants.BROWSER_CHROME_URL,
+      "_blank",
+      "chrome,all,dialog=no" + extraFeatures,
+      defaultArgs,
+      charsetArg
+    );
+  } else {
+    // forget about the charset information.
+    win = window.openDialog(
+      AppConstants.BROWSER_CHROME_URL,
+      "_blank",
+      "chrome,all,dialog=no" + extraFeatures,
+      defaultArgs
+    );
+  }
+
+  win.addEventListener(
+    "MozAfterPaint",
+    () => {
+      TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
+      if (
+        Services.prefs.getIntPref("browser.startup.page") == 1 &&
+        defaultArgs == HomePage.get()
+      ) {
+        // A notification for when a user has triggered their homepage. This is used
+        // to display a doorhanger explaining that an extension has modified the
+        // homepage, if necessary.
+        Services.obs.notifyObservers(win, "browser-open-homepage-start");
+      }
+    },
+    { once: true }
+  );
+
+  return win;
 }
 
 /**

@@ -552,9 +552,10 @@ var PlacesCommandHook = {
   },
 
   async searchBookmarks() {
-    let win =
-      BrowserWindowTracker.getTopWindow() ??
-      (await BrowserWindowTracker.promiseOpenWindow());
+    let win = BrowserWindowTracker.getTopWindow();
+    if (!win) {
+      win = await BrowserUIUtils.openNewBrowserWindow();
+    }
     win.gURLBar.search(UrlbarTokenizer.RESTRICT.BOOKMARK, {
       searchModeEntry: "bookmarkmenu",
     });
