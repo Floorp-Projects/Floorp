@@ -232,6 +232,14 @@ class MOZ_STACK_CLASS ContentEventHandler {
 #endif  // #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
    public:
+    const RawNodePosition& operator=(const RawNodePosition& aOther) {
+      if (this != &aOther) {
+        RawRangeBoundary::operator=(aOther);
+        mAfterOpenTag = aOther.mAfterOpenTag;
+      }
+      return *this;
+    }
+
     bool operator==(const RawNodePosition& aOther) const {
       return RawRangeBoundary::operator==(aOther) &&
              mAfterOpenTag == aOther.mAfterOpenTag;
