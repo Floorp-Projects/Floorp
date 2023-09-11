@@ -55,14 +55,12 @@ enum nsCSSUnit : uint32_t {
                            // different behavior than percent)
 
   // Font relative measure
-  eCSSUnit_EM = 800,           // == current font size
-  eCSSUnit_XHeight = 801,      // distance from top of lower case x to
-                               // baseline
-  eCSSUnit_Char = 802,         // number of characters, used for width with
-                               // monospace font
-  eCSSUnit_RootEM = 803,       // == root element font size
-  eCSSUnit_Ideographic = 804,  // == CJK water ideograph width
-  eCSSUnit_CapHeight = 805,    // == Capital letter height
+  eCSSUnit_EM = 800,       // == current font size
+  eCSSUnit_XHeight = 801,  // distance from top of lower case x to
+                           // baseline
+  eCSSUnit_Char = 802,     // number of characters, used for width with
+                           // monospace font
+  eCSSUnit_RootEM = 803,   // == root element font size
 
   // Screen relative measure
   eCSSUnit_Point = 900,       // 4/3 of a CSS pixel
@@ -72,12 +70,6 @@ enum nsCSSUnit : uint32_t {
   eCSSUnit_Pica = 904,        // 12 points == 16 CSS pixls
   eCSSUnit_Quarter = 905,     // 96/101.6 CSS pixels
   eCSSUnit_Pixel = 906,       // CSS pixel unit
-
-  // Viewport percentage lengths
-  eCSSUnit_VW = 950,
-  eCSSUnit_VH = 951,
-  eCSSUnit_VMin = 952,
-  eCSSUnit_VMax = 953,
 };
 
 struct nsCSSValuePair;
