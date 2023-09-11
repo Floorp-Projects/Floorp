@@ -678,10 +678,11 @@ class BrowsingContextModule extends Module {
    *
    * @returns {BrowsingContextNavigateResult}
    *     Navigation result.
+   *
    * @throws {InvalidArgumentError}
    *     Raised if an argument is of an invalid type or value.
    * @throws {NoSuchFrameError}
-   *     If the browsing context for contextId cannot be found.
+   *     If the browsing context for context cannot be found.
    */
   async navigate(options = {}) {
     const { context: contextId, url, wait = WaitCondition.None } = options;
@@ -899,10 +900,13 @@ class BrowsingContextModule extends Module {
    * @param {WaitCondition=} options.wait
    *     Wait condition for the navigation, one of "none", "interactive", "complete".
    *
+   * @returns {BrowsingContextNavigateResult}
+   *     Navigation result.
+   *
    * @throws {InvalidArgumentError}
    *     Raised if an argument is of an invalid type or value.
    * @throws {NoSuchFrameError}
-   *     If the browsing context for contextId cannot be found.
+   *     If the browsing context for context cannot be found.
    */
   async reload(options = {}) {
     const {
@@ -935,9 +939,13 @@ class BrowsingContextModule extends Module {
     // immediately before doing any asynchronous call.
     const webProgress = context.webProgress;
 
-    // TODO: Return the navigation result once the BiDi specification has been
-    // fixed. See https://github.com/w3c/webdriver-bidi/issues/527
-    await this.#awaitNavigation(webProgress, () => context.reload(0), { wait });
+    return this.#awaitNavigation(
+      webProgress,
+      () => {
+        context.reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
+      },
+      { wait }
+    );
   }
 
   /**
@@ -1036,13 +1044,16 @@ class BrowsingContextModule extends Module {
    *
    * @param {WebProgress} webProgress
    *     The WebProgress instance to observe for this navigation.
-   * @param {Function} callback
+   * @param {Function} startNavigationFn
    *     A callback that starts a navigation.
    * @param {object} options
    * @param {WaitCondition} options.wait
    *     The WaitCondition to use to wait for the navigation.
+   *
+   * @returns {Promise<BrowsingContextNavigateResult>}
+   *     A Promise that resolves to navigate results when the navigation is done.
    */
-  async #awaitNavigation(webProgress, callback, options) {
+  async #awaitNavigation(webProgress, startNavigationFn, options) {
     const { wait } = options;
 
     const context = webProgress.browsingContext;
@@ -1098,7 +1109,7 @@ class BrowsingContextModule extends Module {
       }
     });
 
-    await callback();
+    await startNavigationFn();
     await navigated;
 
     let url;
