@@ -583,6 +583,15 @@ pub struct QuadSegment {
     pub task_id: RenderTaskId,
 }
 
+#[derive(Copy, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(u32)]
+pub enum ClipSpace {
+    Raster = 0,
+    Primitive = 1,
+}
+
 #[repr(C)]
 #[derive(Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -591,7 +600,8 @@ pub struct MaskInstance {
     pub prim: PrimitiveInstanceData,
     pub clip_transform_id: TransformPaletteId,
     pub clip_address: i32,
-    pub info: [i32; 2],
+    pub clip_space: ClipSpace,
+    pub unused: i32,
 }
 
 

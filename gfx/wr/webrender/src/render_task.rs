@@ -882,6 +882,8 @@ pub type TaskDependencies = SmallVec<[RenderTaskId;2]>;
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct MaskSubPass {
     pub clip_node_range: ClipNodeRange,
+    pub prim_spatial_node_index: SpatialNodeIndex,
+    pub main_prim_address: GpuBufferAddress,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]

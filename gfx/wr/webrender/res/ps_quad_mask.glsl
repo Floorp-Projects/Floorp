@@ -4,7 +4,7 @@
 
 #include ps_quad,ellipse
 
-varying highp vec2 vClipLocalPos;
+varying highp vec4 vClipLocalPos;
 
 #ifdef WR_FEATURE_FAST_PATH
 flat varying highp vec3 v_clip_params;      // xy = box size, z = radius
@@ -24,6 +24,9 @@ flat varying highp vec2 vClipMode;
 
 PER_INSTANCE in ivec4 aClipData;
 
+#define CLIP_SPACE_RASTER       0
+#define CLIP_SPACE_PRIMITIVE    1
+
 struct Clip {
     RectWithEndpoint rect;
 #ifdef WR_FEATURE_FAST_PATH
@@ -33,10 +36,13 @@ struct Clip {
     vec4 radii_bottom;
 #endif
     float mode;
+    int space;
 };
 
 Clip fetch_clip(int index) {
     Clip clip;
+
+    clip.space = aClipData.z;
 
 #ifdef WR_FEATURE_FAST_PATH
     vec4 texels[3] = fetch_from_gpu_buffer_3(index);
@@ -58,16 +64,22 @@ void main(void) {
     PrimitiveInfo prim_info = ps_quad_main();
 
     Clip clip = fetch_clip(aClipData.y);
-
-    RectWithEndpoint xf_bounds = RectWithEndpoint(
-        max(clip.rect.p0, prim_info.local_clip_rect.p0),
-        min(clip.rect.p1, prim_info.local_clip_rect.p1)
-    );
-    vTransformBounds = vec4(xf_bounds.p0, xf_bounds.p1);
-
     Transform clip_transform = fetch_transform(aClipData.x);
 
-    vClipLocalPos = (clip_transform.m * vec4(prim_info.local_pos, 0.0, 1.0)).xy;
+    vClipLocalPos = clip_transform.m * vec4(prim_info.local_pos, 0.0, 1.0);
+
+#ifndef WR_FEATURE_FAST_PATH
+    if (clip.space == CLIP_SPACE_RASTER) {
+        vTransformBounds = vec4(clip.rect.p0, clip.rect.p1);
+    } else {
+        RectWithEndpoint xf_bounds = RectWithEndpoint(
+            max(clip.rect.p0, prim_info.local_clip_rect.p0),
+            min(clip.rect.p1, prim_info.local_clip_rect.p1)
+        );
+        vTransformBounds = vec4(xf_bounds.p0, xf_bounds.p1);
+    }
+#endif
+
     vClipMode.x = clip.mode;
 
 #ifdef WR_FEATURE_FAST_PATH
@@ -75,7 +87,7 @@ void main(void) {
     // signed distance function to get a rounded rect clip.
     vec2 half_size = 0.5 * (clip.rect.p1 - clip.rect.p0);
     float radius = clip.radii.x;
-    vClipLocalPos -= (half_size + clip.rect.p0);
+    vClipLocalPos.xy -= (half_size + clip.rect.p0) * vClipLocalPos.w;
     v_clip_params = vec3(half_size - vec2(radius), radius);
 #else
     vec2 r_tl = clip.radii_top.xy;
@@ -135,13 +147,14 @@ float sd_rounded_box(in vec2 pos, in vec2 box_size, in float radius) {
 #endif
 
 void main(void) {
-    float aa_range = compute_aa_range(vClipLocalPos);
+    vec2 clip_local_pos = vClipLocalPos.xy / vClipLocalPos.w;
+    float aa_range = compute_aa_range(clip_local_pos);
 
 #ifdef WR_FEATURE_FAST_PATH
-    float dist = sd_rounded_box(vClipLocalPos, v_clip_params.xy, v_clip_params.z);
+    float dist = sd_rounded_box(clip_local_pos, v_clip_params.xy, v_clip_params.z);
 #else
     float dist = distance_to_rounded_rect(
-        vClipLocalPos,
+        clip_local_pos,
         vClipPlane_TL,
         vClipCenter_Radius_TL,
         vClipPlane_TR,
