@@ -74,19 +74,23 @@ HWY_NOINLINE void BM_TFSRGB(benchmark::State& state) {
 }
 
 HWY_NOINLINE void BM_PQDFE(benchmark::State& state) {
-  RUN_BENCHMARK(TF_PQ().DisplayFromEncoded);
+  TF_PQ tf_pq(10000.0);
+  RUN_BENCHMARK(tf_pq.DisplayFromEncoded);
 }
 
 HWY_NOINLINE void BM_PQEFD(benchmark::State& state) {
-  RUN_BENCHMARK(TF_PQ().EncodedFromDisplay);
+  TF_PQ tf_pq(10000.0);
+  RUN_BENCHMARK(tf_pq.EncodedFromDisplay);
 }
 
 HWY_NOINLINE void BM_PQSlowDFE(benchmark::State& state) {
-  RUN_BENCHMARK_SCALAR(TF_PQ().DisplayFromEncoded);
+  TF_PQ tf_pq(10000.0);
+  RUN_BENCHMARK_SCALAR(tf_pq.DisplayFromEncoded);
 }
 
 HWY_NOINLINE void BM_PQSlowEFD(benchmark::State& state) {
-  RUN_BENCHMARK_SCALAR(TF_PQ().EncodedFromDisplay);
+  TF_PQ tf_pq(10000.0);
+  RUN_BENCHMARK_SCALAR(tf_pq.EncodedFromDisplay);
 }
 }  // namespace
 // NOLINTNEXTLINE(google-readability-namespace-comments)

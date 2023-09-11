@@ -11,7 +11,6 @@
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -371,6 +370,8 @@ class VisitorBase : public Visitor {
   ExtensionStates extension_states_;
 };
 }  // namespace fields_internal
+
+Status CheckHasEnoughBits(Visitor* visitor, size_t bits);
 
 }  // namespace jxl
 

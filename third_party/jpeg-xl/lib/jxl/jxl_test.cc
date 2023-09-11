@@ -6,7 +6,6 @@
 #include "lib/extras/dec/jxl.h"
 
 #include <stdint.h>
-#include <stdio.h>
 
 #include <array>
 #include <future>

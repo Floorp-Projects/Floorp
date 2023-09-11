@@ -4,7 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
-/** @addtogroup libjxl_common
+/** @addtogroup libjxl_color
  * @{
  * @file cms_interface.h
  * @brief Interface to allow the injection of different color management systems

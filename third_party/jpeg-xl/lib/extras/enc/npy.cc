@@ -6,7 +6,6 @@
 #include "lib/extras/enc/npy.h"
 
 #include <jxl/types.h>
-#include <stdio.h>
 
 #include <sstream>
 #include <string>

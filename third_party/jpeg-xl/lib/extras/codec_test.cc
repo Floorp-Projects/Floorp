@@ -6,7 +6,6 @@
 #include "lib/extras/codec.h"
 
 #include <stddef.h>
-#include <stdio.h>
 
 #include <algorithm>
 #include <sstream>

@@ -4,7 +4,7 @@
  * license that can be found in the LICENSE file.
  */
 
-/** @addtogroup libjxl_common
+/** @addtogroup libjxl_metadata
  * @{
  * @file codestream_header.h
  * @brief Definitions of structs and enums for the metadata from the JPEG XL

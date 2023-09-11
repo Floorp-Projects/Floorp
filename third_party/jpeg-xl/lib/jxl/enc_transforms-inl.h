@@ -49,7 +49,7 @@ HWY_INLINE void ReinterpretingIDCT(const float* input,
   }
 
   // ROWS, COLS <= 8, so we can put scratch space on the stack.
-  HWY_ALIGN float scratch_space[ROWS * COLS];
+  HWY_ALIGN float scratch_space[ROWS * COLS * 3];
   ComputeScaledIDCT<ROWS, COLS>()(block, DCTTo(output, output_stride),
                                   scratch_space);
 }
@@ -399,7 +399,7 @@ template <size_t afv_kind>
 void AFVTransformFromPixels(const float* JXL_RESTRICT pixels,
                             size_t pixels_stride,
                             float* JXL_RESTRICT coefficients) {
-  HWY_ALIGN float scratch_space[4 * 8 * 2];
+  HWY_ALIGN float scratch_space[4 * 8 * 5];
   size_t afv_x = afv_kind & 1;
   size_t afv_y = afv_kind / 2;
   HWY_ALIGN float block[4 * 8];

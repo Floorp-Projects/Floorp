@@ -30,6 +30,7 @@
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/modular/encoding/encoding.h"
 #include "lib/jxl/quantizer.h"
+#include "lib/jxl/simd_util.h"
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
@@ -209,6 +210,8 @@ void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
                 "Invalid color tile dim");
   size_t xsize_blocks = opsin.xsize() / kBlockDim;
   constexpr float kDistanceMultiplierAC = 1e-9f;
+  const size_t dct_scratch_size =
+      3 * (MaxVectorSize() / sizeof(float)) * AcStrategy::kMaxBlockDim;
 
   const size_t y0 = r.y0();
   const size_t x0 = r.x0();
@@ -235,8 +238,10 @@ void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
   float* HWY_RESTRICT coeffs_yb = coeffs_x + kColorTileDim * kColorTileDim;
   float* HWY_RESTRICT coeffs_b = coeffs_yb + kColorTileDim * kColorTileDim;
   float* HWY_RESTRICT scratch_space = coeffs_b + kColorTileDim * kColorTileDim;
-  JXL_DASSERT(scratch_space + 2 * AcStrategy::kMaxCoeffArea ==
-              block_y + CfLHeuristics::kItemsPerThread);
+  float* scratch_space_end =
+      scratch_space + 2 * AcStrategy::kMaxCoeffArea + dct_scratch_size;
+  JXL_DASSERT(scratch_space_end == block_y + CfLHeuristics::ItemsPerThread());
+  (void)scratch_space_end;
 
   // Small (~256 bytes each)
   HWY_ALIGN_MAX float
@@ -369,7 +374,7 @@ void CfLHeuristics::ComputeTile(const Rect& r, const Image3F& opsin,
   HWY_DYNAMIC_DISPATCH(ComputeTile)
   (opsin, dequant, ac_strategy, raw_quant_field, quantizer, r, fast, use_dct8,
    &cmap->ytox_map, &cmap->ytob_map, &dc_values,
-   mem.get() + thread * kItemsPerThread);
+   mem.get() + thread * ItemsPerThread());
 }
 
 void CfLHeuristics::ComputeDC(bool fast, ColorCorrelationMap* cmap) {

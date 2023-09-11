@@ -6,7 +6,6 @@
 #include "lib/jxl/dec_noise.h"
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <algorithm>

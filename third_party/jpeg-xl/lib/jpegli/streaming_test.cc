@@ -35,7 +35,7 @@ struct SourceManager {
 // A destination manager that empties its output buffer into a SourceManager's
 // input buffer. The buffer size is kept short because empty_output_buffer() is
 // called only when the output buffer is full, and we want to update the decoder
-// input frequently to demostrate that streaming works.
+// input frequently to demonstrate that streaming works.
 static constexpr size_t kOutputBufferSize = 1024;
 struct DestinationManager {
   jpeg_destination_mgr pub;

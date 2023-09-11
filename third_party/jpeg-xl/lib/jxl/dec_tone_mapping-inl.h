@@ -61,8 +61,7 @@ class Rec2408ToneMapper {
     const V e4 = MulAdd(e3, pq_mastering_range, pq_mastering_min);
     const V new_luminance =
         Min(Set(df_, target_range_.second),
-            ZeroIfNegative(
-                Mul(Set(df_, 10000), TF_PQ().DisplayFromEncoded(df_, e4))));
+            ZeroIfNegative(tf_pq_.DisplayFromEncoded(df_, e4)));
     const V min_luminance = Set(df_, 1e-6f);
     const auto use_cap = Le(luminance, min_luminance);
     const V ratio = Div(new_luminance, Max(luminance, min_luminance));
@@ -76,11 +75,10 @@ class Rec2408ToneMapper {
 
  private:
   V InvEOTF(const V luminance) const {
-    return TF_PQ().EncodedFromDisplay(df_,
-                                      Mul(luminance, Set(df_, 1. / 10000)));
+    return tf_pq_.EncodedFromDisplay(df_, luminance);
   }
   float InvEOTF(const float luminance) const {
-    return TF_PQ().EncodedFromDisplay(luminance / 10000.0f);
+    return tf_pq_.EncodedFromDisplay(luminance);
   }
   V T(const V a) const {
     const V ks = Set(df_, ks_);
@@ -108,6 +106,8 @@ class Rec2408ToneMapper {
   const float red_Y_;
   const float green_Y_;
   const float blue_Y_;
+
+  const TF_PQ tf_pq_ = TF_PQ(/*display_intensity_target=*/1.0);
 
   const float pq_mastering_min_ = InvEOTF(source_range_.first);
   const float pq_mastering_max_ = InvEOTF(source_range_.second);

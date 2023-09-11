@@ -5,8 +5,6 @@
 
 #include "lib/jxl/color_encoding_internal.h"
 
-#include <stdio.h>
-
 #include "lib/jxl/encode_internal.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"

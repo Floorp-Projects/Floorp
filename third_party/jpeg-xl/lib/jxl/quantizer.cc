@@ -5,7 +5,6 @@
 
 #include "lib/jxl/quantizer.h"
 
-#include <stdio.h>
 #include <string.h>
 
 #include <algorithm>

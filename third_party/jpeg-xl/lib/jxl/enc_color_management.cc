@@ -98,16 +98,11 @@ Status BeforeTransform(JxlCms* t, const float* buf_src, float* xform_src,
       break;
 
     case ExtraTF::kPQ: {
-      // By default, PQ content has an intensity target of 10000, stored
-      // exactly.
       HWY_FULL(float) df;
-      const auto multiplier = Set(df, t->intensity_target == 10000.f
-                                          ? 1.0f
-                                          : 10000.f / t->intensity_target);
+      TF_PQ tf_pq(t->intensity_target);
       for (size_t i = 0; i < buf_size; i += Lanes(df)) {
         const auto val = Load(df, buf_src + i);
-        const auto result =
-            Mul(multiplier, TF_PQ().DisplayFromEncoded(df, val));
+        const auto result = tf_pq.DisplayFromEncoded(df, val);
         Store(result, df, xform_src + i);
       }
 #if JXL_CMS_VERBOSE >= 2
@@ -159,13 +154,10 @@ Status AfterTransform(JxlCms* t, float* JXL_RESTRICT buf_dst, size_t buf_size) {
       break;
     case ExtraTF::kPQ: {
       HWY_FULL(float) df;
-      const auto multiplier =
-          Set(df, t->intensity_target == 10000.f ? 1.0f
-                                                 : t->intensity_target * 1e-4f);
+      TF_PQ tf_pq(t->intensity_target);
       for (size_t i = 0; i < buf_size; i += Lanes(df)) {
         const auto val = Load(df, buf_dst + i);
-        const auto result =
-            TF_PQ().EncodedFromDisplay(df, Mul(multiplier, val));
+        const auto result = tf_pq.EncodedFromDisplay(df, val);
         Store(result, df, buf_dst + i);
       }
 #if JXL_CMS_VERBOSE >= 2
@@ -192,8 +184,7 @@ Status AfterTransform(JxlCms* t, float* JXL_RESTRICT buf_dst, size_t buf_size) {
       HWY_FULL(float) df;
       for (size_t i = 0; i < buf_size; i += Lanes(df)) {
         const auto val = Load(df, buf_dst + i);
-        const auto result =
-            TF_SRGB().EncodedFromDisplay(HWY_FULL(float)(), val);
+        const auto result = TF_SRGB().EncodedFromDisplay(df, val);
         Store(result, df, buf_dst + i);
       }
 #if JXL_CMS_VERBOSE >= 2

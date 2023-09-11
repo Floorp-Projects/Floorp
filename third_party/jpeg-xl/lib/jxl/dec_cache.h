@@ -210,7 +210,7 @@ struct GroupDecCache {
       max_block_area_ = max_block_area;
       // We need 3x float blocks for dequantized coefficients and 1x for scratch
       // space for transforms.
-      float_memory_ = hwy::AllocateAligned<float>(max_block_area_ * 4);
+      float_memory_ = hwy::AllocateAligned<float>(max_block_area_ * 7);
       // We need 3x int32 or int16 blocks for quantized coefficients.
       int32_memory_ = hwy::AllocateAligned<int32_t>(max_block_area_ * 3);
       int16_memory_ = hwy::AllocateAligned<int16_t>(max_block_area_ * 3);

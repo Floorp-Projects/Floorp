@@ -39,6 +39,10 @@ class Span {
 
   constexpr bool empty() const noexcept { return len_ == 0; }
 
+  constexpr T* begin() const noexcept { return data(); }
+
+  constexpr T* end() const noexcept { return data() + size(); }
+
   constexpr T& operator[](size_t i) const noexcept {
     // MSVC 2015 accepts this as constexpr, but not ptr_[i]
     return *(data() + i);
