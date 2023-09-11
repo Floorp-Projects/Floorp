@@ -8,18 +8,24 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/GeckoBindings.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/SMILValue.h"
+#include "mozilla/StaticPresData.h"
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "DOMSVGAnimatedLength.h"
 #include "DOMSVGLength.h"
+#include "gfxTextRun.h"
 #include "LayoutLogging.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
+#include "nsLayoutUtils.h"
 #include "nsTextFormatter.h"
 #include "SMILFloatType.h"
 #include "SVGAttrTearoffTable.h"
+#include "SVGGeometryProperty.h"
 
 using namespace mozilla::dom;
 
@@ -104,21 +110,101 @@ static float FixAxisLength(float aLength) {
   return aLength;
 }
 
+GeckoFontMetrics UserSpaceMetrics::DefaultFontMetrics() {
+  return {StyleLength::FromPixels(16.0f),
+          StyleLength::FromPixels(-1),
+          StyleLength::FromPixels(-1),
+          StyleLength::FromPixels(-1),
+          StyleLength::FromPixels(-1),
+          StyleLength::FromPixels(16.0f),
+          0.0f,
+          0.0f};
+}
+
+GeckoFontMetrics UserSpaceMetrics::GetFontMetrics(const Element* aElement) {
+  GeckoFontMetrics metrics = DefaultFontMetrics();
+  auto* presContext =
+      aElement ? nsContentUtils::GetContextForContent(aElement) : nullptr;
+  if (presContext) {
+    SVGGeometryProperty::DoForComputedStyle(
+        aElement, [&](const ComputedStyle* style) {
+          metrics = Gecko_GetFontMetrics(
+              presContext, WritingMode(style).IsVertical(), style->StyleFont(),
+              style->StyleFont()->mFont.size,
+              /* aUseUserFontSet = */ true,
+              /* aRetrieveMathScales */ false);
+        });
+  }
+  return metrics;
+}
+
+WritingMode UserSpaceMetrics::GetWritingMode(const Element* aElement) {
+  WritingMode writingMode;
+  SVGGeometryProperty::DoForComputedStyle(
+      aElement,
+      [&](const ComputedStyle* style) { writingMode = WritingMode(style); });
+  return writingMode;
+}
+
+float UserSpaceMetrics::GetExLength(Type aType) const {
+  return GetFontMetricsForType(aType).mXSize.ToCSSPixels();
+}
+
+float UserSpaceMetrics::GetChSize(Type aType) const {
+  auto metrics = GetFontMetricsForType(aType);
+  if (metrics.mChSize.ToCSSPixels() > 0.0) {
+    return metrics.mChSize.ToCSSPixels();
+  }
+  auto emLength = GetEmLength(aType);
+  WritingMode writingMode = GetWritingModeForType(aType);
+  return writingMode.IsVertical() && !writingMode.IsSideways()
+             ? emLength
+             : emLength * 0.5f;
+}
+
+float UserSpaceMetrics::GetIcWidth(Type aType) const {
+  auto metrics = GetFontMetricsForType(aType);
+  if (metrics.mIcWidth.ToCSSPixels() > 0.0) {
+    return metrics.mIcWidth.ToCSSPixels();
+  }
+  return GetEmLength(aType);
+}
+
+float UserSpaceMetrics::GetCapHeight(Type aType) const {
+  auto metrics = GetFontMetricsForType(aType);
+  if (metrics.mCapHeight.ToCSSPixels() > 0.0) {
+    return metrics.mCapHeight.ToCSSPixels();
+  }
+  return GetEmLength(aType);
+}
+
 SVGElementMetrics::SVGElementMetrics(const SVGElement* aSVGElement,
                                      const SVGViewportElement* aCtx)
     : mSVGElement(aSVGElement), mCtx(aCtx) {}
 
-float SVGElementMetrics::GetEmLength() const {
-  return SVGContentUtils::GetFontSize(mSVGElement);
+const Element* SVGElementMetrics::GetElementForType(Type aType) const {
+  switch (aType) {
+    case Type::This:
+      return mSVGElement;
+    case Type::Root:
+      return mSVGElement ? mSVGElement->OwnerDoc()->GetRootElement() : nullptr;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Was a new value added to the enumeration?");
+      return nullptr;
+  }
 }
 
-float SVGElementMetrics::GetExLength() const {
-  return SVGContentUtils::GetFontXHeight(mSVGElement);
+GeckoFontMetrics SVGElementMetrics::GetFontMetricsForType(Type aType) const {
+  return GetFontMetrics(GetElementForType(aType));
+}
+
+WritingMode SVGElementMetrics::GetWritingModeForType(Type aType) const {
+  return GetWritingMode(GetElementForType(aType));
 }
 
 float SVGElementMetrics::GetAxisLength(uint8_t aCtxType) const {
   if (!EnsureCtx()) {
-    return 1;
+    return 1.0f;
   }
 
   return FixAxisLength(mCtx->GetLength(aCtxType));
@@ -140,14 +226,53 @@ bool SVGElementMetrics::EnsureCtx() const {
 }
 
 NonSVGFrameUserSpaceMetrics::NonSVGFrameUserSpaceMetrics(nsIFrame* aFrame)
-    : mFrame(aFrame) {}
-
-float NonSVGFrameUserSpaceMetrics::GetEmLength() const {
-  return SVGContentUtils::GetFontSize(mFrame);
+    : mFrame(aFrame) {
+  MOZ_ASSERT(mFrame, "Need a frame");
 }
 
-float NonSVGFrameUserSpaceMetrics::GetExLength() const {
-  return SVGContentUtils::GetFontXHeight(mFrame);
+float NonSVGFrameUserSpaceMetrics::GetEmLength(Type aType) const {
+  switch (aType) {
+    case Type::This:
+      return SVGContentUtils::GetFontSize(mFrame);
+    case Type::Root:
+      return SVGContentUtils::GetFontSize(
+          mFrame->PresContext()->Document()->GetRootElement());
+    default:
+      MOZ_ASSERT_UNREACHABLE("Was a new value added to the enumeration?");
+      return 1.0f;
+  }
+}
+
+GeckoFontMetrics NonSVGFrameUserSpaceMetrics::GetFontMetricsForType(
+    Type aType) const {
+  switch (aType) {
+    case Type::This:
+      return Gecko_GetFontMetrics(
+          mFrame->PresContext(), mFrame->GetWritingMode().IsVertical(),
+          mFrame->StyleFont(), mFrame->StyleFont()->mFont.size,
+          /* aUseUserFontSet = */ true,
+          /* aRetrieveMathScales */ false);
+    case Type::Root:
+      return GetFontMetrics(
+          mFrame->PresContext()->Document()->GetRootElement());
+    default:
+      MOZ_ASSERT_UNREACHABLE("Was a new value added to the enumeration?");
+      return DefaultFontMetrics();
+  }
+}
+
+WritingMode NonSVGFrameUserSpaceMetrics::GetWritingModeForType(
+    Type aType) const {
+  switch (aType) {
+    case Type::This:
+      return mFrame->GetWritingMode();
+    case Type::Root:
+      return GetWritingMode(
+          mFrame->PresContext()->Document()->GetRootElement());
+    default:
+      MOZ_ASSERT_UNREACHABLE("Was a new value added to the enumeration?");
+      return WritingMode();
+  }
 }
 
 gfx::Size NonSVGFrameUserSpaceMetrics::GetSize() const {
