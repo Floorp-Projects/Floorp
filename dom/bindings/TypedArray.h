@@ -348,7 +348,10 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
         mLength(aOther.mLength),
         mShared(aOther.mShared),
         mComputed(aOther.mComputed) {
-    aOther.Reset();
+    aOther.mData = nullptr;
+    aOther.mLength = 0;
+    aOther.mShared = false;
+    aOther.mComputed = false;
   }
 
  private:
@@ -367,21 +370,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
   // About shared memory:
   //
   // Any DOM TypedArray as well as any DOM ArrayBufferView can map the
-  // memory of either a JS ArrayBuffer or a JS SharedArrayBuffer.  If
-  // the TypedArray maps a SharedArrayBuffer the Length() and Data()
-  // accessors on the DOM view will return zero and nullptr; to get
-  // the actual length and data, call the LengthAllowShared() and
-  // DataAllowShared() accessors instead.
-  //
-  // Two methods are available for determining if a DOM view maps
-  // shared memory.  The IsShared() method is cheap and can be called
-  // if the view has been computed; the JS_GetTypedArraySharedness()
-  // method is slightly more expensive and can be called on the Obj()
-  // value if the view may not have been computed and if the value is
-  // known to represent a JS TypedArray.
-  //
-  // (Just use JS::IsSharedArrayBuffer() to test if any object is of
-  // that type.)
+  // memory of either a JS ArrayBuffer or a JS SharedArrayBuffer.
   //
   // Code that elects to allow views that map shared memory to be used
   // -- ie, code that "opts in to shared memory" -- should generally
@@ -405,34 +394,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
   // Finally, note that the buffer memory of a SharedArrayBuffer is
   // not detachable.
 
-  inline bool IsShared() const {
-    MOZ_ASSERT(mComputed);
-    return mShared;
-  }
-
-  inline element_type* Data() const {
-    MOZ_ASSERT(mComputed);
-    return mData;
-  }
-
-  inline uint32_t Length() const {
-    MOZ_ASSERT(mComputed);
-    return mLength;
-  }
-
-  inline void ComputeState() const {
-    MOZ_ASSERT(inited());
-    MOZ_ASSERT(!mComputed);
-    size_t length;
-    JS::AutoCheckCannotGC nogc;
-    mData =
-        ArrayT::fromObject(mImplObj).getLengthAndData(&length, &mShared, nogc);
-    MOZ_RELEASE_ASSERT(length <= INT32_MAX,
-                       "Bindings must have checked ArrayBuffer{View} length");
-    mLength = length;
-    mComputed = true;
-  }
-
+ public:
   /**
    * Helper functions to append a copy of this typed array's data to a
    * container. Returns false if the allocation for copying the data fails.
@@ -702,21 +664,20 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
     return CallProcessor(GetCurrentData(), std::forward<Processor>(aProcessor));
   }
 
- public:
-  inline void Reset() {
-    // This method mostly exists to inform the GC rooting hazard analysis that
-    // the variable can be considered dead, at least until you do anything else
-    // with it.
-    mData = nullptr;
-    mLength = 0;
-    mShared = false;
-    mComputed = false;
-  }
-
  private:
   Span<element_type> GetCurrentData() const {
-    ComputeState();
-    return Span(Data(), Length());
+    MOZ_ASSERT(inited());
+    if (!mComputed) {
+      size_t length;
+      JS::AutoCheckCannotGC nogc;
+      mData = ArrayT::fromObject(mImplObj).getLengthAndData(&length, &mShared,
+                                                            nogc);
+      MOZ_RELEASE_ASSERT(length <= INT32_MAX,
+                         "Bindings must have checked ArrayBuffer{View} length");
+      mLength = length;
+      mComputed = true;
+    }
+    return Span(mData, mLength);
   }
 
   template <typename T, typename F, typename... Calculator>
