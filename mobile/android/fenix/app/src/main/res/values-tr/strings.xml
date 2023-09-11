@@ -904,9 +904,9 @@
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">Gizli sekme ekle</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
-    <string name="tab_drawer_fab_content">Gizli</string>
+    <string name="tab_drawer_fab_content">GİZLİ</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
-    <string name="tab_drawer_fab_sync">Eşitle</string>
+    <string name="tab_drawer_fab_sync">EŞİTLE</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Tüm sekmeleri paylaş</string>
     <!-- Text shown in the menu to view recently closed tabs -->
