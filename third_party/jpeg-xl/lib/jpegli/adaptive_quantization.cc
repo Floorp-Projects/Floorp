@@ -6,7 +6,6 @@
 #include "lib/jpegli/adaptive_quantization.h"
 
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <algorithm>

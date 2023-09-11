@@ -87,6 +87,9 @@ HWY_INLINE HWY_MAYBE_UNUSED V EvalRationalPolynomial(const D d, const V x,
   if (kDegP >= 7) yp = MulAdd(yp, x, LoadDup128(d, p + ((kDegP - 7) * 4)));
   if (kDegQ >= 7) yq = MulAdd(yq, x, LoadDup128(d, q + ((kDegQ - 7) * 4)));
 
+  static_assert(kDegP < 8, "Polynomial degree is too high");
+  static_assert(kDegQ < 8, "Polynomial degree is too high");
+
   return FastDivision<T, V>()(yp, yq);
 }
 

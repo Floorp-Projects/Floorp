@@ -6,7 +6,6 @@
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 
 #include <brotli/encode.h>
-#include <stdio.h>
 
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/image_bundle.h"

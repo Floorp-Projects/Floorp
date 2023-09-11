@@ -216,7 +216,8 @@ struct OutputStore {
   void operator()(const V& out, float* JXL_RESTRICT pos,
                   ptrdiff_t offset) const {
     // Stream helps for large images but is slower for images that fit in cache.
-    Store(out, HWY_FULL(float)(), pos + offset);
+    const HWY_FULL(float) df;
+    Store(out, df, pos + offset);
   }
 };
 
@@ -226,7 +227,8 @@ class SingleInput {
  public:
   explicit SingleInput(const float* pos) : pos_(pos) {}
   Vec<HWY_FULL(float)> operator()(const size_t offset) const {
-    return Load(HWY_FULL(float)(), pos_ + offset);
+    const HWY_FULL(float) df;
+    return Load(df, pos_ + offset);
   }
   const float* pos_;
 };
@@ -237,8 +239,9 @@ class TwoInputs {
  public:
   TwoInputs(const float* pos1, const float* pos2) : pos1_(pos1), pos2_(pos2) {}
   Vec<HWY_FULL(float)> operator()(const size_t offset) const {
-    const auto in1 = Load(HWY_FULL(float)(), pos1_ + offset);
-    const auto in2 = Load(HWY_FULL(float)(), pos2_ + offset);
+    const HWY_FULL(float) df;
+    const auto in1 = Load(df, pos1_ + offset);
+    const auto in2 = Load(df, pos2_ + offset);
     return Add(in1, in2);
   }
 
@@ -378,8 +381,9 @@ void FastGaussianVertical(const hwy::AlignedUniquePtr<RecursiveGaussian>& rg,
                           ImageF* JXL_RESTRICT out) {
   JXL_CHECK(SameSize(in, *out));
 
+  const HWY_FULL(float) df;
   constexpr size_t kCacheLineLanes = 64 / sizeof(float);
-  constexpr size_t kVN = MaxLanes(HWY_FULL(float)());
+  constexpr size_t kVN = MaxLanes(df);
   constexpr size_t kCacheLineVectors =
       (kVN < kCacheLineLanes) ? (kCacheLineLanes / kVN) : 4;
   constexpr size_t kFastPace = kCacheLineVectors * kVN;

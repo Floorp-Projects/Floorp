@@ -100,7 +100,7 @@ test_printf_size_t() {
     ret=1
   fi
 
-  if grep -n -E 'gtest\.h' \
+  if grep -n -E '[^_]gtest\.h' \
       $(git ls-files | grep -E '(\.c|\.cc|\.cpp|\.h)$' | grep -v -F /testing.h); then
     echo "Don't include gtest directly, instead include 'testing.h'. " >&2
     ret=1

@@ -499,7 +499,7 @@ class LossyFrameEncoder {
       shared.frame_header.x_qm_scale =
           std::max<int>(shared.frame_header.x_qm_scale,
                         2 + pixel_stats.HowMuchIsXChannelPixelized());
-      // B only ajudsted by pixel-based approach.
+      // B only adjusted by pixel-based approach.
       shared.frame_header.b_qm_scale =
           2 + pixel_stats.HowMuchIsBChannelPixelized();
     }

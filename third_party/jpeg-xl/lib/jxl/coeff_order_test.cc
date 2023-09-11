@@ -5,8 +5,6 @@
 
 #include "lib/jxl/coeff_order.h"
 
-#include <stdio.h>
-
 #include <algorithm>
 #include <numeric>  // iota
 #include <utility>

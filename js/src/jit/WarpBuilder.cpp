@@ -1850,6 +1850,7 @@ bool WarpBuilder::build_GetName(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
   MDefinition* env = current->environmentChain();
+  env = unboxObjectInfallible(env, IsMovable::Yes);
   return buildIC(loc, CacheKind::GetName, {env});
 }
 
@@ -1864,6 +1865,7 @@ bool WarpBuilder::build_BindName(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 
   MDefinition* env = current->environmentChain();
+  env = unboxObjectInfallible(env, IsMovable::Yes);
   return buildIC(loc, CacheKind::BindName, {env});
 }
 

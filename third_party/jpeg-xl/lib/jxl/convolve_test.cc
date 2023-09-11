@@ -12,7 +12,7 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 #include <hwy/nanobenchmark.h>
-#include <hwy/tests/test_util-inl.h>
+#include <hwy/tests/hwy_gtest.h>
 #include <vector>
 
 #include "lib/jxl/base/compiler_specific.h"
@@ -37,24 +37,27 @@ namespace HWY_NAMESPACE {
 void TestNeighbors() {
   const Neighbors::D d;
   const Neighbors::V v = Iota(d, 0);
-  HWY_ALIGN float actual[hwy::kTestMaxVectorSize / sizeof(float)] = {0};
+  constexpr size_t kMaxVectorSize = 64;
+  constexpr size_t M = kMaxVectorSize / sizeof(float);
+  HWY_ALIGN float actual[M] = {0};
 
-  HWY_ALIGN float first_l1[hwy::kTestMaxVectorSize / sizeof(float)] = {
-      0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+  HWY_ALIGN float first_l1[M] = {0, 0, 1, 2,  3,  4,  5,  6,
+                                 7, 8, 9, 10, 11, 12, 13, 14};
   Store(Neighbors::FirstL1(v), d, actual);
   const size_t N = Lanes(d);
+  ASSERT_LE(N, M);
   EXPECT_EQ(std::vector<float>(first_l1, first_l1 + N),
             std::vector<float>(actual, actual + N));
 
 #if HWY_TARGET != HWY_SCALAR
-  HWY_ALIGN float first_l2[hwy::kTestMaxVectorSize / sizeof(float)] = {
-      1, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+  HWY_ALIGN float first_l2[M] = {1, 0, 0, 1, 2,  3,  4,  5,
+                                 6, 7, 8, 9, 10, 11, 12, 13};
   Store(Neighbors::FirstL2(v), d, actual);
   EXPECT_EQ(std::vector<float>(first_l2, first_l2 + N),
             std::vector<float>(actual, actual + N));
 
-  HWY_ALIGN float first_l3[hwy::kTestMaxVectorSize / sizeof(float)] = {
-      2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  HWY_ALIGN float first_l3[] = {2, 1, 0, 0, 1, 2,  3,  4,
+                                5, 6, 7, 8, 9, 10, 11, 12};
   Store(Neighbors::FirstL3(v), d, actual);
   EXPECT_EQ(std::vector<float>(first_l3, first_l3 + N),
             std::vector<float>(actual, actual + N));

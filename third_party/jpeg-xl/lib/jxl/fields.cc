@@ -266,6 +266,8 @@ class ReadVisitor : public VisitorBase {
   uint64_t extension_bits_[Bundle::kMaxExtensions] = {0};
   uint64_t total_extension_bits_ = 0;
   size_t pos_after_ext_size_ = 0;  // 0 iff extensions == 0.
+
+  friend Status jxl::CheckHasEnoughBits(Visitor*, size_t);
 };
 
 class MaxBitsVisitor : public VisitorBase {
@@ -637,6 +639,18 @@ Status F16Coder::CanEncode(float value, size_t* JXL_RESTRICT encoded_bits) {
     return JXL_FAILURE("Should not attempt to store NaN and infinity");
   }
   return std::abs(value) <= 65504.0f;
+}
+
+Status CheckHasEnoughBits(Visitor* visitor, size_t bits) {
+  if (!visitor->IsReading()) return false;
+  ReadVisitor* rv = static_cast<ReadVisitor*>(visitor);
+  size_t have_bits = rv->reader_->TotalBytes() * kBitsPerByte;
+  size_t want_bits = bits + rv->reader_->TotalBitsConsumed();
+  if (have_bits < want_bits) {
+    return JXL_STATUS(StatusCode::kNotEnoughBytes,
+                      "Not enough bytes for header");
+  }
+  return true;
 }
 
 }  // namespace jxl

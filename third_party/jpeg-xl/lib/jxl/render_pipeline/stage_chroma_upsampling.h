@@ -7,7 +7,6 @@
 #define LIB_JXL_RENDER_PIPELINE_STAGE_CHROMA_UPSAMPLING_H_
 #include <math.h>
 #include <stdint.h>
-#include <stdio.h>
 
 #include <algorithm>
 #include <utility>

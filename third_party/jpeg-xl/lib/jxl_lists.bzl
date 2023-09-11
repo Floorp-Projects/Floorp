@@ -286,6 +286,8 @@ libjxl_dec_sources = [
     "jxl/render_pipeline/stage_ycbcr.h",
     "jxl/sanitizers.h",
     "jxl/simd_util-inl.h",
+    "jxl/simd_util.cc",
+    "jxl/simd_util.h",
     "jxl/splines.cc",
     "jxl/splines.h",
     "jxl/toc.cc",

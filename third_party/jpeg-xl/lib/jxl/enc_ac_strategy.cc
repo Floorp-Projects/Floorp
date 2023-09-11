@@ -31,6 +31,7 @@
 #include "lib/jxl/enc_transforms-inl.h"
 #include "lib/jxl/entropy_coder.h"
 #include "lib/jxl/fast_math-inl.h"
+#include "lib/jxl/simd_util.h"
 
 // Some of the floating point constants in this file and in other
 // files in the libjxl project have been obtained using the
@@ -844,7 +845,7 @@ void ProcessRectACS(PassesEncoderState* JXL_RESTRICT enc_state,
   // 2. Merging them into larger transforms where possibly, but
   // starting from the smallest transforms (16x8 and 8x16).
   // Additional complication: 16x8 and 8x16 are considered
-  // simultanouesly and fairly against each other.
+  // simultaneously and fairly against each other.
   // We are looking at 64x64 squares since the YtoX and YtoB
   // maps happen to be at that resolution, and having
   // integral transforms cross these boundaries leads to
@@ -852,8 +853,11 @@ void ProcessRectACS(PassesEncoderState* JXL_RESTRICT enc_state,
   const CompressParams& cparams = enc_state->cparams;
   const float butteraugli_target = cparams.butteraugli_distance;
   AcStrategyImage* ac_strategy = &enc_state->shared.ac_strategy;
+  const size_t dct_scratch_size =
+      3 * (MaxVectorSize() / sizeof(float)) * AcStrategy::kMaxBlockDim;
   // TODO(veluca): reuse allocations
-  auto mem = hwy::AllocateAligned<float>(5 * AcStrategy::kMaxCoeffArea);
+  auto mem = hwy::AllocateAligned<float>(5 * AcStrategy::kMaxCoeffArea +
+                                         dct_scratch_size);
   auto qmem = hwy::AllocateAligned<uint32_t>(AcStrategy::kMaxCoeffArea);
   uint32_t* JXL_RESTRICT quantized = qmem.get();
   float* JXL_RESTRICT block = mem.get();

@@ -54,10 +54,12 @@ struct OpRgb {
 };
 
 struct OpPq {
+  explicit OpPq(const float intensity_target) : tf_pq_(intensity_target) {}
   template <typename D, typename T>
   T Transform(D d, const T& encoded) const {
-    return TF_PQ().DisplayFromEncoded(d, encoded);
+    return tf_pq_.DisplayFromEncoded(d, encoded);
   }
+  TF_PQ tf_pq_;
 };
 
 struct OpHlg {
@@ -165,7 +167,8 @@ std::unique_ptr<RenderPipelineStage> GetToLinearStage(
   } else if (output_encoding_info.color_encoding.tf.IsSRGB()) {
     return MakeToLinearStage(MakePerChannelOp(OpRgb()));
   } else if (output_encoding_info.color_encoding.tf.IsPQ()) {
-    return MakeToLinearStage(MakePerChannelOp(OpPq()));
+    return MakeToLinearStage(
+        MakePerChannelOp(OpPq(output_encoding_info.orig_intensity_target)));
   } else if (output_encoding_info.color_encoding.tf.IsHLG()) {
     return MakeToLinearStage(OpHlg(output_encoding_info.luminances,
                                    output_encoding_info.orig_intensity_target));
