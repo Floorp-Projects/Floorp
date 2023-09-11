@@ -242,7 +242,7 @@ impl<'w> BlockContext<'w> {
                 let init = self.ir_module.constants[handle].init;
                 self.writer.constant_ids[init.index()]
             }
-            crate::Expression::ZeroValue(_) => self.writer.write_constant_null(result_type_id),
+            crate::Expression::ZeroValue(_) => self.writer.get_constant_null(result_type_id),
             crate::Expression::Compose {
                 ty: _,
                 ref components,
@@ -271,6 +271,7 @@ impl<'w> BlockContext<'w> {
                     crate::TypeInner::Vector { .. } => {
                         self.write_vector_access(expr_handle, base, index, block)?
                     }
+                    // Only binding arrays in the Handle address space will take this path (due to `is_intermediate`)
                     crate::TypeInner::BindingArray {
                         base: binding_type, ..
                     } => {
@@ -307,6 +308,14 @@ impl<'w> BlockContext<'w> {
                             result_id,
                             None,
                         ));
+
+                        // Subsequent image operations require the image/sampler to be decorated as NonUniform
+                        // if the image/sampler binding array was accessed with a non-uniform index
+                        // see VUID-RuntimeSpirv-NonUniform-06274
+                        if self.fun_info[index].uniformity.non_uniform_result.is_some() {
+                            self.writer
+                                .decorate_non_uniform_binding_array_access(load_id)?;
+                        }
 
                         load_id
                     }
@@ -347,6 +356,7 @@ impl<'w> BlockContext<'w> {
                         ));
                         id
                     }
+                    // Only binding arrays in the Handle address space will take this path (due to `is_intermediate`)
                     crate::TypeInner::BindingArray {
                         base: binding_type, ..
                     } => {
@@ -1426,8 +1436,8 @@ impl<'w> BlockContext<'w> {
     ) -> Result<ExpressionPointer, Error> {
         let result_lookup_ty = match self.fun_info[expr_handle].ty {
             TypeResolution::Handle(ty_handle) => match return_type_override {
-                // We use the return type override as a special case for binding arrays as the OpAccessChain
-                // needs to return a pointer, but indexing into a binding array just gives you the type of
+                // We use the return type override as a special case for handle binding arrays as the OpAccessChain
+                // needs to return a pointer, but indexing into a handle binding array just gives you the type of
                 // the binding in the IR.
                 Some(ty) => ty,
                 None => LookupType::Handle(ty_handle),
@@ -1454,12 +1464,20 @@ impl<'w> BlockContext<'w> {
                     if let crate::Expression::GlobalVariable(var_handle) =
                         self.ir_function.expressions[base]
                     {
-                        let gvar = &self.ir_module.global_variables[var_handle];
-                        if let crate::TypeInner::BindingArray { .. } =
-                            self.ir_module.types[gvar.ty].inner
-                        {
-                            is_non_uniform_binding_array |=
-                                self.fun_info[index].uniformity.non_uniform_result.is_some();
+                        let gvar: &crate::GlobalVariable =
+                            &self.ir_module.global_variables[var_handle];
+                        match gvar.space {
+                            crate::AddressSpace::Storage { .. } | crate::AddressSpace::Uniform => {
+                                if let crate::TypeInner::BindingArray { .. } =
+                                    self.ir_module.types[gvar.ty].inner
+                                {
+                                    is_non_uniform_binding_array = self.fun_info[index]
+                                        .uniformity
+                                        .non_uniform_result
+                                        .is_some();
+                                }
+                            }
+                            _ => {}
                         }
                     }
 
@@ -1543,6 +1561,9 @@ impl<'w> BlockContext<'w> {
             };
             (pointer_id, expr_pointer)
         };
+        // Subsequent load, store and atomic operations require the pointer to be decorated as NonUniform
+        // if the buffer binding array was accessed with a non-uniform index
+        // see VUID-RuntimeSpirv-NonUniform-06274
         if is_non_uniform_binding_array {
             self.writer
                 .decorate_non_uniform_binding_array_access(pointer_id)?;
@@ -1658,7 +1679,7 @@ impl<'w> BlockContext<'w> {
         size: u32,
         block: &mut Block,
     ) {
-        let mut partial_sum = self.writer.write_constant_null(result_type_id);
+        let mut partial_sum = self.writer.get_constant_null(result_type_id);
         let last_component = size - 1;
         for index in 0..=last_component {
             // compute the product of the current components
@@ -2315,7 +2336,7 @@ impl<'w> BlockContext<'w> {
             BlockExit::Return => match self.ir_function.result {
                 Some(ref result) if self.function.entry_point_context.is_none() => {
                     let type_id = self.get_type_id(LookupType::Handle(result.ty));
-                    let null_id = self.writer.write_constant_null(type_id);
+                    let null_id = self.writer.get_constant_null(type_id);
                     Instruction::return_value(null_id)
                 }
                 _ => Instruction::return_void(),
