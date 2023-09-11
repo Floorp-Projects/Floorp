@@ -338,8 +338,11 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = java::GeckoSystemStateListener::PrefersReducedMotion();
       break;
 
+    case IntID::UseAccessibilityTheme:
+    // If high contrast is enabled, enable prefers-reduced-transparency media
+    // query as well as there is no dedicated option.
     case IntID::PrefersReducedTransparency:
-      aResult = 0;
+      aResult = java::GeckoSystemStateListener::PrefersContrast();
       break;
 
     case IntID::InvertedColors:
