@@ -722,7 +722,6 @@ add_task(async function block() {
     controller: {
       removeResult() {},
     },
-    acknowledgeDismissal() {},
   });
   UrlbarProviderWeather.onEngagement(
     "engagement",

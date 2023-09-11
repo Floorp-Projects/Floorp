@@ -625,26 +625,21 @@ class ProviderSearchSuggestions extends UrlbarProvider {
   }
 
   /*
-   * Remove all but the first trending results and replace the
-   * first result with an acknowledgement that the trending suggestions
-   * have been turned off.
+   * Remove all the trending results and show an acknowledgement that the
+   * trending suggestions have been turned off.
    */
   #replaceTrendingResultWithAcknowledgement(controller) {
-    let firstResult = null;
-    let resultsToRemove = [];
-    for (let result of controller.view.visibleResults) {
-      if (!result.payload.trending) {
-        continue;
-      }
-      if (!firstResult) {
-        firstResult = result;
-      } else {
-        resultsToRemove.push(result);
-      }
+    let resultsToRemove = controller.view.visibleResults.filter(
+      result => result.payload.trending
+    );
+    if (resultsToRemove.length) {
+      // Show an acknowledgement tip for the first result.
+      resultsToRemove[0].acknowledgeDismissalL10n = {
+        id: "urlbar-trending-dismissal-acknowledgment",
+      };
     }
-    controller.view.acknowledgeDismissal(firstResult, {
-      id: "urlbar-trending-dismissal-acknowledgment",
-    });
+    // Remove results in reverse order so the acknowledgment tip isn't removed.
+    resultsToRemove.reverse();
     resultsToRemove.forEach(result => controller.removeResult(result));
   }
 }

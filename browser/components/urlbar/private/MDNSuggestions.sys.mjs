@@ -177,15 +177,17 @@ export class MDNSuggestions extends BaseFeature {
         // provided suggestions, need to use the original URL when adding to the
         // block list.
         lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
-        view.acknowledgeDismissal(result, {
+        result.acknowledgeDismissalL10n = {
           id: "firefox-suggest-dismissal-acknowledgment-one-mdn",
-        });
+        };
+        view.controller.removeResult(result);
         break;
       case RESULT_MENU_COMMAND.NOT_INTERESTED:
         lazy.UrlbarPrefs.set("suggest.mdn", false);
-        view.acknowledgeDismissal(result, {
+        result.acknowledgeDismissalL10n = {
           id: "firefox-suggest-dismissal-acknowledgment-all-mdn",
-        });
+        };
+        view.controller.removeResult(result);
         break;
     }
   }
