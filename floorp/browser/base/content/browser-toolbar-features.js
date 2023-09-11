@@ -100,7 +100,7 @@ async function profileManager() {
       aNode.setAttribute("type", "menu");
       const popup = window.MozXULElement.parseXULToFragment(`
         <menupopup id="profile-manager-popup" position="after_start" style="--panel-padding: 0 !important;">
-          <browser id="profile-switcher-browser" src="about:profile-manager" flex="1" type="content" disablehistory="true" disableglobalhistory="true" context="profile-popup-contextmenu" />
+          <browser id="profile-switcher-browser" src="chrome://browser/content/profile-manager/profile-switcher.xhtml" flex="1" type="content" disablehistory="true" disableglobalhistory="true" context="profile-popup-contextmenu" />
         </menupopup>
       `);
       aNode.style = "--panel-padding: 0 !important;";

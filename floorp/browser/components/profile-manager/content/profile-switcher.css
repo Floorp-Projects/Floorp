@@ -3,166 +3,169 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-    font: message-box;
-    appearance: none;
-    color: var(--in-content-page-color) !important;
+font: message-box;
+appearance: none;
+color: var(--in-content-page-color) !important;
 }
 
 html {
-    background: var(--in-content-page-background) !important;
-    padding: 10px;
-    overflow: hidden;
+background: var(--in-content-page-background) !important;
+padding: 10px;
+overflow: hidden;
 }
 
 body {
-    overflow: hidden;
+overflow: hidden;
 }
 
 .profile {
-    display: flex;
-    margin: 10px 0px;
-    padding: 5px;
-    border-bottom: 1px solid var(--in-content-box-border-color);
-    height: 35px;
+display: flex;
+margin: 10px 0px;
+padding: 5px;
+border-bottom: 1px solid var(--in-content-box-border-color);
+height: 35px;
 }
 
 .inuse, .current {
-    -moz-context-properties: fill;
-    fill: currentColor;
-    min-width: auto;
-    flex: 2;
+-moz-context-properties: fill;
+fill: currentColor;
+min-width: auto;
+flex: 2;
 }
 
 .name {
-    margin-right: auto;
-    flex: 2;
+margin-right: auto;
+flex: 2;
 }
 
 .run {
-    background-image: url("chrome://browser/skin/lepton/container-openin-16.svg");
-    background-repeat: no-repeat;
-    background-position: 5px;
-    -moz-context-properties: fill;
-    fill: currentColor;
-    min-width: auto;
-    flex: 1;
-    max-height: 20px;
-    padding: 0px 10px 0px 25px;
-    margin: 0 !important;
+background-image: url("chrome://browser/skin/lepton/container-openin-16.svg");
+background-repeat: no-repeat;
+background-position: 5px;
+-moz-context-properties: fill;
+fill: currentColor;
+min-width: auto;
+flex: 1;
+max-height: 20px;
+padding: 0px 10px 0px 25px;
+margin: 0 !important;
 }
 
 .tip-caption {
-    font-size: .9em;
-    color: var(--text-color-deemphasized);
+overflow: hidden;
+font-size: .9em;
+color: var(--text-color-deemphasized);
+position: relative;
+bottom: 5px;
 }
 
 #title {
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-bottom: 10px;
-    margin-right: auto;
+font-size: 1.5em;
+font-weight: bold;
+margin-bottom: 10px;
+margin-right: auto;
 }
 
 #owned-header {
-    display: flex;
-    overflow: hidden;
+display: flex;
+overflow: hidden;
 }
 
 #profiles {
-    overflow: scroll;
-    height: 47.5vh;
+overflow: scroll;
+height: 47.5vh;
 }
 
 #owned {
-    display: flex;
-    flex-direction: column;
+display: flex;
+flex-direction: column;
 }
 
 #fxa-header {
-    display: flex;
-    flex-direction: column;
+display: flex;
+flex-direction: column;
 }
 
 #fxa-avatar {
-    height: 45px;
-    width: 45px;
-    margin: auto;
-    border-radius: 100px;
-    fill: currentColor;
+height: 45px;
+width: 45px;
+margin: auto;
+border-radius: 100px;
+fill: currentColor;
 }
 
 #fxa-avatar:hover {
-    filter: brightness(70%);
+filter: brightness(70%);
 }
 
 #fxa-avatar:hover:active {
-    filter: brightness(50%);
+filter: brightness(50%);
 }
 
 #fxa-display-name {
-    margin: auto;
-    margin-top: 10px;
-    font-size: 16.5px;
-    font-weight: bold;
-  }
+margin: auto;
+margin-top: 10px;
+font-size: 16.5px;
+font-weight: bold;
+}
 
 #fxa-display-name::after {
-    content: "";
-    background-image: url("chrome://global/skin/icons/menu-check.svg");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 12px;
-    width: 12px;
-    height: 12px;
-    margin-left: 5px;
+content: "";
+background-image: url("chrome://global/skin/icons/menu-check.svg");
+background-repeat: no-repeat;
+background-position: center;
+background-size: 12px;
+width: 12px;
+height: 12px;
+margin-left: 5px;
 }
-  
+
 #fxa-header {
-    padding-bottom: 10px;
-    border-bottom: solid gray 1px;
+padding-bottom: 10px;
+border-bottom: solid gray 1px;
 }
-  
+
 #fxa-avatar {
-   height: 55px;
-   width: 55px;
+ height: 55px;
+ width: 55px;
 }
-  
-  
-  #fxa-email {
-    margin: auto;
-    opacity: 0.5;
-    font-size: 14.5px;
-  }
-  
-  
-  #fxa-display-name {
-    margin-bottom: 5px;
-  }
 
-  #fx-name {
-    margin: auto;
-    margin-bottom: 10px;
-    font-size: 20px;
-    font-weight: bold;
-  }
 
-  #fx-account-buttons {
-    margin: auto;
-    margin-top: 10px;
-  }
+#fxa-email {
+margin: auto;
+opacity: 0.5;
+font-size: 14.5px;
+}
 
-  .fx-icons {
-    -moz-context-properties: fill, fill-opacity;
-    fill: currentColor;
-    margin: 0px 5px;
-    padding: 5px;
-    border-radius: 5px;
-  }
 
-  .fx-icons:hover {
-    background-color: var(--in-content-button-background-hover);
-  }
+#fxa-display-name {
+margin-bottom: 5px;
+}
 
-  .fx-icons:hover:active {
-    fill: var(--in-content-accent-color) !important;
-  }
+#fx-name {
+margin: auto;
+margin-bottom: 10px;
+font-size: 20px;
+font-weight: bold;
+}
+
+#fx-account-buttons {
+margin: auto;
+margin-top: 10px;
+}
+
+.fx-icons {
+-moz-context-properties: fill, fill-opacity;
+fill: currentColor;
+margin: 0px 5px;
+padding: 5px;
+border-radius: 5px;
+}
+
+.fx-icons:hover {
+background-color: var(--in-content-button-background-hover);
+}
+
+.fx-icons:hover:active {
+fill: var(--in-content-accent-color) !important;
+}

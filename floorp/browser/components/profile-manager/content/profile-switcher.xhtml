@@ -37,16 +37,27 @@
     <link rel="localization" href="browser/floorp.ftl" />
   </head>
   <body id="body" class="wide-container">
-
     <hbox id="fxa-header">
       <label id="fx-name" data-l10n-id="floorp-profile" />
       <img id="fxa-avatar" src="chrome://browser/skin/fxa/avatar-color.svg" />
       <label id="fxa-display-name" data-l10n-id="fxa-title" />
       <label id="fxa-email" />
       <hbox id="fx-account-buttons">
-        <img id="fxa-pairing-icon" class="fx-icons" src="chrome://browser/skin/lepton/add-device.svg" />
-        <img id="fxa-password-icon" class="fx-icons" src="chrome://browser/skin/login.svg" />
-        <img id="fxa-setting-icon" class="fx-icons" src="chrome://browser/skin/settings.svg" />
+        <img
+          id="fxa-pairing-icon"
+          class="fx-icons"
+          src="chrome://browser/skin/lepton/add-device.svg"
+        />
+        <img
+          id="fxa-password-icon"
+          class="fx-icons"
+          src="chrome://browser/skin/login.svg"
+        />
+        <img
+          id="fxa-setting-icon"
+          class="fx-icons"
+          src="chrome://browser/skin/settings.svg"
+        />
       </hbox>
     </hbox>
 
@@ -55,14 +66,16 @@
     </div>
 
     <div id="owned">
-      <div id="profiles" class="tab">
-      </div>
+      <div id="profiles" class="tab"></div>
       <hbox id="owned-header">
-         <label id="title"/>
-         <button id="create-button" data-l10n-id="floorp-profiles-create" class="primary"></button>
+        <label id="title" />
+        <button
+          id="create-button"
+          data-l10n-id="floorp-profiles-create"
+          class="primary"
+        ></button>
       </hbox>
-      <div>
-      </div>
+      <div></div>
     </div>
   </body>
 </html>
