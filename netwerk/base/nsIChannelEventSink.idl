@@ -53,6 +53,14 @@ interface nsIChannelEventSink : nsISupports
     const unsigned long REDIRECT_STS_UPGRADE = 1 << 3;
 
     /**
+     * This is a internal redirect used to handle http authentication retries.
+     * Upon receiving a 401 or 407 the channel gets redirected to a new channel
+     * (same URL) that performs the request with the appropriate credentials.
+     * Auth retry to the server must be made after redirecting to a new channel
+     */
+    const unsigned long REDIRECT_AUTH_RETRY = 1 << 4;
+
+    /**
      * Called when a redirect occurs. This may happen due to an HTTP 3xx status
      * code. The purpose of this method is to notify the sink that a redirect
      * is about to happen, but also to give the sink the right to veto the
