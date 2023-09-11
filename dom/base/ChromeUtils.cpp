@@ -117,29 +117,17 @@ void ChromeUtils::Base64URLEncode(GlobalObject& aGlobal,
                                   const ArrayBufferViewOrArrayBuffer& aSource,
                                   const Base64URLEncodeOptions& aOptions,
                                   nsACString& aResult, ErrorResult& aRv) {
-  size_t length = 0;
-  uint8_t* data = nullptr;
-  if (aSource.IsArrayBuffer()) {
-    const ArrayBuffer& buffer = aSource.GetAsArrayBuffer();
-    buffer.ComputeState();
-    length = buffer.Length();
-    data = buffer.Data();
-  } else if (aSource.IsArrayBufferView()) {
-    const ArrayBufferView& view = aSource.GetAsArrayBufferView();
-    view.ComputeState();
-    length = view.Length();
-    data = view.Data();
-  } else {
-    MOZ_CRASH("Uninitialized union: expected buffer or view");
-  }
-
   auto paddingPolicy = aOptions.mPad ? Base64URLEncodePaddingPolicy::Include
                                      : Base64URLEncodePaddingPolicy::Omit;
-  nsresult rv = mozilla::Base64URLEncode(length, data, paddingPolicy, aResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aResult.Truncate();
-    aRv.Throw(rv);
-  }
+  ProcessTypedArrays(
+      aSource, [&](const Span<uint8_t>& aData, JS::AutoCheckCannotGC&&) {
+        nsresult rv = mozilla::Base64URLEncode(aData.Length(), aData.Elements(),
+                                               paddingPolicy, aResult);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          aResult.Truncate();
+          aRv.Throw(rv);
+        }
+      });
 }
 
 /* static */

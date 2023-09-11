@@ -18,33 +18,36 @@ OwnedRustBuffer::OwnedRustBuffer(const RustBuffer& aBuf) {
 
 Result<OwnedRustBuffer, nsCString> OwnedRustBuffer::FromArrayBuffer(
     const ArrayBuffer& aArrayBuffer) {
-  if (aArrayBuffer.Length() > INT32_MAX) {
-    return Err("Input ArrayBuffer is too large"_ns);
-  }
+  return aArrayBuffer.ProcessData(
+      [](const Span<uint8_t>& aData,
+         JS::AutoCheckCannotGC&&) -> Result<OwnedRustBuffer, nsCString> {
+        if (aData.Length() > INT32_MAX) {
+          return Err("Input ArrayBuffer is too large"_ns);
+        }
 
-  RustCallStatus status{};
-  RustBuffer buf = uniffi_rustbuffer_alloc(
-      static_cast<int32_t>(aArrayBuffer.Length()), &status);
-  buf.len = aArrayBuffer.Length();
-  if (status.code != 0) {
-    if (status.error_buf.data) {
-      auto message = nsCString("uniffi_rustbuffer_alloc: ");
-      message.Append(
-          nsDependentCSubstring(reinterpret_cast<char*>(status.error_buf.data),
-                                status.error_buf.len));
-      RustCallStatus status2{};
-      uniffi_rustbuffer_free(status.error_buf, &status2);
-      MOZ_RELEASE_ASSERT(status2.code == 0,
-                         "Freeing a rustbuffer should never fail");
-      return Err(message);
+        RustCallStatus status{};
+        RustBuffer buf = uniffi_rustbuffer_alloc(
+            static_cast<int32_t>(aData.Length()), &status);
+        buf.len = aData.Length();
+        if (status.code != 0) {
+          if (status.error_buf.data) {
+            auto message = nsCString("uniffi_rustbuffer_alloc: ");
+            message.Append(nsDependentCSubstring(
+                reinterpret_cast<char*>(status.error_buf.data),
+                status.error_buf.len));
+            RustCallStatus status2{};
+            uniffi_rustbuffer_free(status.error_buf, &status2);
+            MOZ_RELEASE_ASSERT(status2.code == 0,
+                               "Freeing a rustbuffer should never fail");
+            return Err(message);
+          }
 
-    } else {
-      return Err("Unknown error allocating rust buffer"_ns);
-    }
-  }
+          return Err("Unknown error allocating rust buffer"_ns);
+        }
 
-  memcpy(buf.data, aArrayBuffer.Data(), buf.len);
-  return OwnedRustBuffer(buf);
+        memcpy(buf.data, aData.Elements(), buf.len);
+        return OwnedRustBuffer(buf);
+      });
 }
 
 OwnedRustBuffer::OwnedRustBuffer(OwnedRustBuffer&& aOther) : mBuf(aOther.mBuf) {

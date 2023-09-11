@@ -198,50 +198,44 @@ already_AddRefed<Promise> WritableStreamToOutput::WriteCallback(
     return nullptr;
   }
 
-  // This is a duplicate of dom/encoding/TextDecoderStream.cpp#51-69
-  // PeterV will deal with that when he lands his patch for TypedArrays
-  auto dataSpan = [&data]() {
-    if (data.IsArrayBuffer()) {
-      const ArrayBuffer& buffer = data.GetAsArrayBuffer();
-      buffer.ComputeState();
-      return Span{buffer.Data(), buffer.Length()};
-    }
-    MOZ_ASSERT(data.IsArrayBufferView());
-    const ArrayBufferView& buffer = data.GetAsArrayBufferView();
-    buffer.ComputeState();
-    return Span{buffer.Data(), buffer.Length()};
-  }();
-
   // Try to write first, and only enqueue data if we were already blocked
   // or the write didn't write it all.  This avoids allocations and copies
   // in common cases.
   MOZ_ASSERT(!mPromise);
   MOZ_ASSERT(mWritten == 0);
   uint32_t written = 0;
-  nsresult rv = mOutput->Write(mozilla::AsChars(dataSpan).Elements(),
-                               dataSpan.Length(), &written);
-  if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
-    promise->MaybeRejectWithAbortError("error writing data");
-    return promise.forget();
-  }
-  if (NS_SUCCEEDED(rv)) {
-    if (written == dataSpan.Length()) {
-      promise->MaybeResolveWithUndefined();
-      return promise.forget();
+  ProcessTypedArraysFixed(data, [&](const Span<uint8_t>& aData) {
+    Span<uint8_t> dataSpan = aData;
+    nsresult rv = mOutput->Write(mozilla::AsChars(dataSpan).Elements(),
+                                 dataSpan.Length(), &written);
+    if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
+      promise->MaybeRejectWithAbortError("error writing data");
+      return;
     }
-    dataSpan = dataSpan.From(written);
+    if (NS_SUCCEEDED(rv)) {
+      if (written == dataSpan.Length()) {
+        promise->MaybeResolveWithUndefined();
+        return;
+      }
+      dataSpan = dataSpan.From(written);
+    }
+
+    auto buffer = Buffer<uint8_t>::CopyFrom(dataSpan);
+    if (buffer.isNothing()) {
+      promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    mData = std::move(buffer);
+  });
+
+  if (promise->State() != Promise::PromiseState::Pending) {
+    return promise.forget();
   }
 
-  auto buffer = Buffer<uint8_t>::CopyFrom(dataSpan);
-  if (buffer.isNothing()) {
-    promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-    return promise.forget();
-  }
-  mData = std::move(buffer);
   mPromise = promise;
 
   nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentSerialEventTarget();
-  rv = mOutput->AsyncWait(this, 0, 0, target);
+  nsresult rv = mOutput->AsyncWait(this, 0, 0, target);
   if (NS_FAILED(rv)) {
     ClearData();
     promise->MaybeRejectWithUnknownError("error waiting to write data");
