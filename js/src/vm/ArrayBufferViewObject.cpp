@@ -8,6 +8,7 @@
 
 #include "builtin/DataViewObject.h"
 #include "gc/Nursery.h"
+#include "js/ErrorReport.h"
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferView{Data,Buffer,Length,ByteOffset}, JS_GetObjectAsArrayBufferView, JS_IsArrayBufferViewObject
 #include "js/SharedArrayBuffer.h"
 #include "vm/Compartment.h"
@@ -39,11 +40,9 @@ void ArrayBufferViewObject::trace(JSTracer* trc, JSObject* obj) {
       // The data may or may not be inline with the buffer. The buffer can only
       // move during a compacting GC, in which case its objectMoved hook has
       // already updated the buffer's data pointer.
-      void* oldData = view->dataPointerEither_();
-      void* data = buffer->dataPointer() + offset;
-      if (data != oldData) {
-        view->getFixedSlotRef(DATA_SLOT).unbarrieredSet(PrivateValue(data));
-      }
+      view->notifyBufferMoved(
+          static_cast<uint8_t*>(view->dataPointerEither_()) - offset,
+          buffer->dataPointer());
     }
   }
 }
@@ -63,8 +62,33 @@ void ArrayBufferViewObject::notifyBufferDetached() {
   setFixedSlot(DATA_SLOT, UndefinedValue());
 }
 
+void ArrayBufferViewObject::notifyBufferMoved(uint8_t* srcBufStart,
+                                              uint8_t* dstBufStart) {
+  MOZ_ASSERT(!isSharedMemory());
+  MOZ_ASSERT(hasBuffer());
+
+  if (srcBufStart != dstBufStart) {
+    void* data = dstBufStart + byteOffset();
+    getFixedSlotRef(DATA_SLOT).unbarrieredSet(PrivateValue(data));
+  }
+}
+
 /* static */
-ArrayBufferObjectMaybeShared* ArrayBufferViewObject::bufferObject(
+bool ArrayBufferViewObject::ensureNonInline(
+    JSContext* cx, Handle<ArrayBufferViewObject*> view) {
+  MOZ_ASSERT(!view->isSharedMemory());
+  // Create an ArrayBuffer for the data if it was in the view.
+  ArrayBufferObjectMaybeShared* buffer = ensureBufferObject(cx, view);
+  if (!buffer) {
+    return false;
+  }
+  Rooted<ArrayBufferObject*> unsharedBuffer(cx,
+                                            &buffer->as<ArrayBufferObject>());
+  return ArrayBufferObject::ensureNonInline(cx, unsharedBuffer);
+}
+
+/* static */
+ArrayBufferObjectMaybeShared* ArrayBufferViewObject::ensureBufferObject(
     JSContext* cx, Handle<ArrayBufferViewObject*> thisObject) {
   if (thisObject->is<TypedArrayObject>()) {
     Rooted<TypedArrayObject*> typedArray(cx,
@@ -222,7 +246,8 @@ JS_PUBLIC_API JSObject* JS_GetArrayBufferViewBuffer(JSContext* cx,
   ArrayBufferObjectMaybeShared* unwrappedBuffer;
   {
     AutoRealm ar(cx, unwrappedView);
-    unwrappedBuffer = ArrayBufferViewObject::bufferObject(cx, unwrappedView);
+    unwrappedBuffer =
+        ArrayBufferViewObject::ensureBufferObject(cx, unwrappedView);
     if (!unwrappedBuffer) {
       return nullptr;
     }
@@ -336,5 +361,32 @@ JS_PUBLIC_API bool JS::PinArrayBufferOrViewLength(JSObject* obj, bool pin) {
     return view->pinLength(pin);
   }
 
+  return false;
+}
+
+JS_PUBLIC_API bool JS::EnsureNonInlineArrayBufferOrView(JSContext* cx,
+                                                        JSObject* obj) {
+  if (obj->is<SharedArrayBufferObject>()) {
+    // Always locked and out of line.
+    return true;
+  }
+
+  auto* buffer = obj->maybeUnwrapIf<ArrayBufferObject>();
+  if (buffer) {
+    Rooted<ArrayBufferObject*> rootedBuffer(cx, buffer);
+    return ArrayBufferObject::ensureNonInline(cx, rootedBuffer);
+  }
+
+  auto* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
+  if (view) {
+    if (view->isSharedMemory()) {
+      // Always locked and out of line.
+      return true;
+    }
+    Rooted<ArrayBufferViewObject*> rootedView(cx, view);
+    return ArrayBufferViewObject::ensureNonInline(cx, rootedView);
+  }
+
+  JS_ReportErrorASCII(cx, "unhandled type");
   return false;
 }

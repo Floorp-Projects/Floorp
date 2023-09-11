@@ -73,10 +73,11 @@ class ArrayBufferViewObject : public NativeObject {
                           size_t byteOffset, size_t length,
                           uint32_t bytesPerElement);
 
-  static ArrayBufferObjectMaybeShared* bufferObject(
+  static ArrayBufferObjectMaybeShared* ensureBufferObject(
       JSContext* cx, Handle<ArrayBufferViewObject*> obj);
 
   void notifyBufferDetached();
+  void notifyBufferMoved(uint8_t* srcBufStart, uint8_t* dstBufStart);
 
   void initDataPointer(SharedMem<uint8_t*> viewData) {
     // Install a pointer to the buffer location that corresponds
@@ -183,6 +184,9 @@ class ArrayBufferViewObject : public NativeObject {
     setFixedSlot(BUFFER_SLOT, JS::BooleanValue(pin));
     return true;
   }
+
+  static bool ensureNonInline(JSContext* cx,
+                              JS::Handle<ArrayBufferViewObject*> view);
 
   size_t byteOffset() const {
     return size_t(getFixedSlot(BYTEOFFSET_SLOT).toPrivate());

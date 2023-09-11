@@ -1950,6 +1950,55 @@ ArrayBufferObject::extractStructuredCloneContents(
 }
 
 /* static */
+bool ArrayBufferObject::ensureNonInline(JSContext* cx,
+                                        Handle<ArrayBufferObject*> buffer) {
+  if (buffer->isDetached()) {
+    return true;
+  }
+
+  if (buffer->isLengthPinned()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_ARRAYBUFFER_LENGTH_PINNED);
+    return false;
+  }
+
+  MOZ_ASSERT(!buffer->isPreparedForAsmJS());
+
+  BufferContents inlineContents = buffer->contents();
+  if (inlineContents.kind() != INLINE_DATA) {
+    return true;
+  }
+
+  size_t nbytes = buffer->byteLength();
+  ArrayBufferContents copy = NewCopiedBufferContents(cx, buffer);
+  if (!copy) {
+    return false;
+  }
+  BufferContents outOfLineContents =
+      BufferContents::createMalloced(copy.release());
+  buffer->setDataPointer(outOfLineContents);
+  AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
+
+  if (!buffer->firstView()) {
+    return true;  // No views! Easy!
+  }
+
+  buffer->firstView()->as<ArrayBufferViewObject>().notifyBufferMoved(
+      inlineContents.data(), outOfLineContents.data());
+
+  auto& innerViews = ObjectRealm::get(buffer).innerViews.get();
+  if (InnerViewTable::ViewVector* views =
+          innerViews.maybeViewsUnbarriered(buffer)) {
+    for (JSObject* view : *views) {
+      view->as<ArrayBufferViewObject>().notifyBufferMoved(
+          inlineContents.data(), outOfLineContents.data());
+    }
+  }
+
+  return true;
+}
+
+/* static */
 void ArrayBufferObject::addSizeOfExcludingThis(
     JSObject* obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo* info,
     JS::RuntimeSizes* runtimeSizes) {
