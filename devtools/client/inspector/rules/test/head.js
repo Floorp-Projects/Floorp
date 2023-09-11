@@ -505,11 +505,13 @@ var togglePropStatus = async function (view, textProp) {
  * @return a promise that resolves after the rule has been added
  */
 async function addNewRule(inspector, view) {
+  const onNewRuleAdded = view.once("new-rule-added");
   info("Adding the new rule using the button");
   view.addRuleButton.click();
 
-  info("Waiting for rule view to change");
-  await view.once("ruleview-changed");
+  info("Waiting for new-rule-added event…");
+  await onNewRuleAdded;
+  info("…received new-rule-added");
 }
 
 /**
