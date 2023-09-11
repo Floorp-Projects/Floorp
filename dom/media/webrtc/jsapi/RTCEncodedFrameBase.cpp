@@ -6,6 +6,7 @@
 
 #include "jsapi/RTCEncodedFrameBase.h"
 
+#include "js/GCAPI.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "js/ArrayBuffer.h"
@@ -45,9 +46,10 @@ unsigned long RTCEncodedFrameBase::Timestamp() const { return mTimestamp; }
 void RTCEncodedFrameBase::SetData(const ArrayBuffer& aData) {
   mData.set(aData.Obj());
   if (mFrame) {
-    aData.ComputeState();
-    mFrame->SetData(rtc::ArrayView<const uint8_t>(
-        static_cast<const uint8_t*>(aData.Data()), aData.Length()));
+    aData.ProcessData([&](const Span<uint8_t>& aData, JS::AutoCheckCannotGC&&) {
+      mFrame->SetData(
+          rtc::ArrayView<const uint8_t>(aData.Elements(), aData.Length()));
+    });
   }
 }
 

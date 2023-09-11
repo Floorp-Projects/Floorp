@@ -46,28 +46,6 @@ JSObject* TextDecoderStream::WrapObject(JSContext* aCx,
   return TextDecoderStream_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-// TODO: This does not allow shared array buffers, just as the non-stream
-// TextDecoder/Encoder don't. (Bug 1561594)
-Span<const uint8_t> ExtractSpanFromBufferSource(
-    JSContext* aCx, JS::Handle<JS::Value> aBufferSource, ErrorResult& aRv) {
-  RootedUnion<OwningArrayBufferViewOrArrayBuffer> bufferSource(aCx);
-  if (!bufferSource.Init(aCx, aBufferSource)) {
-    aRv.MightThrowJSException();
-    aRv.StealExceptionFromJSContext(aCx);
-    return Span<const uint8_t>();
-  }
-
-  if (bufferSource.IsArrayBufferView()) {
-    ArrayBufferView& view = bufferSource.GetAsArrayBufferView();
-    view.ComputeState();
-    return Span(view.Data(), view.Length());
-  }
-
-  ArrayBuffer& buffer = bufferSource.GetAsArrayBuffer();
-  buffer.ComputeState();
-  return Span(buffer.Data(), buffer.Length());
-}
-
 class TextDecoderStreamAlgorithms : public TransformerAlgorithmsWrapper {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextDecoderStreamAlgorithms,
@@ -81,24 +59,22 @@ class TextDecoderStreamAlgorithms : public TransformerAlgorithmsWrapper {
   // Note that the most of the decoding algorithm is implemented in
   // mozilla::Decoder, and this is mainly about calling it properly.
   // https://encoding.spec.whatwg.org/#decode-and-enqueue-a-chunk
-  MOZ_CAN_RUN_SCRIPT void DecodeSpanAndEnqueue(
-      JSContext* aCx, Span<const uint8_t> aInput, bool aFlush,
+  // TODO: This does not allow shared array buffers, just as the non-stream
+  // TextDecoder/Encoder don't. (Bug 1561594)
+  MOZ_CAN_RUN_SCRIPT void DecodeBufferSourceAndEnqueue(
+      JSContext* aCx, OwningArrayBufferViewOrArrayBuffer* aInput, bool aFlush,
       TransformStreamDefaultController& aController, ErrorResult& aRv) {
-    CheckedInt<nsAString::size_type> needed =
-        mDecoderStream->Decoder()->MaxUTF16BufferLength(aInput.Length());
-    if (!needed.isValid()) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return;
-    }
-
     nsString outDecodedString;
-    auto output = outDecodedString.GetMutableData(needed.value(), fallible);
-    if (!output) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return;
+    if (aInput) {
+      ProcessTypedArrays(*aInput, [&](const Span<const uint8_t>& aData,
+                                      JS::AutoCheckCannotGC&&) {
+        mDecoderStream->DecodeNative(aData, !aFlush, outDecodedString, aRv);
+      });
+    } else {
+      mDecoderStream->DecodeNative(Span<const uint8_t>(), !aFlush,
+                                   outDecodedString, aRv);
     }
 
-    mDecoderStream->DecodeNative(aInput, !aFlush, outDecodedString, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -107,7 +83,7 @@ class TextDecoderStreamAlgorithms : public TransformerAlgorithmsWrapper {
       // Step 4.2. If outputChunk is non-empty, then enqueue outputChunk in
       // decoder’s transform.
       JS::Rooted<JS::Value> outputChunk(aCx);
-      if (!xpc::NonVoidStringToJsval(aCx, outDecodedString, &outputChunk)) {
+      if (!ToJSValue(aCx, outDecodedString, &outputChunk)) {
         JS_ClearPendingException(aCx);
         aRv.Throw(NS_ERROR_UNEXPECTED);
         return;
@@ -136,13 +112,14 @@ class TextDecoderStreamAlgorithms : public TransformerAlgorithmsWrapper {
 
     // Step 1. Let bufferSource be the result of converting chunk to an
     // [AllowShared] BufferSource.
-    // (But here we get a mozilla::Span instead)
-    Span<const uint8_t> input = ExtractSpanFromBufferSource(cx, aChunk, aRv);
-    if (aRv.Failed()) {
+    RootedUnion<OwningArrayBufferViewOrArrayBuffer> bufferSource(cx);
+    if (!bufferSource.Init(cx, aChunk)) {
+      aRv.MightThrowJSException();
+      aRv.StealExceptionFromJSContext(cx);
       return;
     }
 
-    DecodeSpanAndEnqueue(cx, input, false, aController, aRv);
+    DecodeBufferSourceAndEnqueue(cx, &bufferSource, false, aController, aRv);
   }
 
   // https://encoding.spec.whatwg.org/#dom-textdecoderstream
@@ -162,7 +139,7 @@ class TextDecoderStreamAlgorithms : public TransformerAlgorithmsWrapper {
     // https://encoding.spec.whatwg.org/#flush-and-enqueue
     // (The flush and enqueue algorithm is basically a subset of decode and
     // enqueue one, so let's reuse it)
-    DecodeSpanAndEnqueue(cx, Span<const uint8_t>(), true, aController, aRv);
+    DecodeBufferSourceAndEnqueue(cx, nullptr, true, aController, aRv);
   }
 
  private:

@@ -7,9 +7,11 @@
 #define CLIENTWEBGLCONTEXT_H_
 
 #include "GLConsts.h"
+#include "js/GCAPI.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
+#include "mozilla/dom/TypedArray.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
@@ -24,6 +26,7 @@
 #include "WebGLCommandQueue.h"
 
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -618,22 +621,47 @@ using Float32ListU = dom::MaybeSharedFloat32ArrayOrUnrestrictedFloatSequence;
 using Int32ListU = dom::MaybeSharedInt32ArrayOrLongSequence;
 using Uint32ListU = dom::MaybeSharedUint32ArrayOrUnsignedLongSequence;
 
-inline Range<const float> MakeRange(const Float32ListU& list) {
-  if (list.IsFloat32Array()) return MakeRangeAbv(list.GetAsFloat32Array());
-
-  return MakeRange(list.GetAsUnrestrictedFloatSequence());
+template <typename Converter, typename T>
+inline bool ConvertSequence(const dom::Sequence<T>& sequence,
+                            Converter&& converter) {
+  // It's ok to GC here, but we need a common parameter list for
+  // Converter with the typed array version.
+  JS::AutoCheckCannotGC nogc;
+  nogc.reset();
+  return std::forward<Converter>(converter)(Span(sequence), std::move(nogc));
 }
 
-inline Range<const int32_t> MakeRange(const Int32ListU& list) {
-  if (list.IsInt32Array()) return MakeRangeAbv(list.GetAsInt32Array());
+template <typename Converter>
+inline bool Convert(const Float32ListU& list, Converter&& converter) {
+  if (list.IsFloat32Array()) {
+    return list.GetAsFloat32Array().ProcessData(
+        std::forward<Converter>(converter));
+  }
 
-  return MakeRange(list.GetAsLongSequence());
+  return ConvertSequence(list.GetAsUnrestrictedFloatSequence(),
+                         std::forward<Converter>(converter));
 }
 
-inline Range<const uint32_t> MakeRange(const Uint32ListU& list) {
-  if (list.IsUint32Array()) return MakeRangeAbv(list.GetAsUint32Array());
+template <typename Converter>
+inline bool Convert(const Int32ListU& list, Converter&& converter) {
+  if (list.IsInt32Array()) {
+    return list.GetAsInt32Array().ProcessData(
+        std::forward<Converter>(converter));
+  }
 
-  return MakeRange(list.GetAsUnsignedLongSequence());
+  return ConvertSequence(list.GetAsLongSequence(),
+                         std::forward<Converter>(converter));
+}
+
+template <typename Converter>
+inline bool Convert(const Uint32ListU& list, Converter&& converter) {
+  if (list.IsUint32Array()) {
+    return list.GetAsUint32Array().ProcessData(
+        std::forward<Converter>(converter));
+  }
+
+  return ConvertSequence(list.GetAsUnsignedLongSequence(),
+                         std::forward<Converter>(converter));
 }
 
 template <typename T>
@@ -642,6 +670,11 @@ inline Range<const uint8_t> MakeByteRange(const T& x) {
   return Range<const uint8_t>(
       reinterpret_cast<const uint8_t*>(typed.begin().get()),
       typed.length() * sizeof(typed[0]));
+}
+
+template <typename T>
+inline Range<const uint8_t> MakeByteRange(const Span<T>& x) {
+  return AsBytes(x);
 }
 
 // -
@@ -898,11 +931,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void EnqueueErrorImpl(GLenum errorOrZero, const nsACString&) const;
 
  public:
-  bool ValidateArrayBufferView(const dom::ArrayBufferView& view,
-                               GLuint elemOffset, GLuint elemCountOverride,
-                               const GLenum errorEnum,
-                               uint8_t** const out_bytes,
-                               size_t* const out_byteLen) const;
+  Maybe<Range<uint8_t>> ValidateArrayBufferView(const Span<uint8_t>& bytes,
+                                                size_t elemSize,
+                                                GLuint elemOffset,
+                                                GLuint elemCountOverride,
+                                                const GLenum errorEnum) const;
 
  protected:
   template <typename T>
@@ -1297,24 +1330,48 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // -
 
  private:
-  void ClearBufferTv(GLenum buffer, GLint drawBuffer, webgl::AttribBaseType,
-                     const Range<const uint8_t>& view, GLuint srcElemOffset);
+  void ClearBufferTv(const GLenum buffer, const GLint drawBuffer,
+                     const webgl::AttribBaseType type,
+                     JS::AutoCheckCannotGC&& nogc,
+                     const Span<const uint8_t>& view,
+                     const GLuint srcElemOffset);
 
  public:
   void ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32ListU& list,
                      GLuint srcElemOffset) {
-    ClearBufferTv(buffer, drawBuffer, webgl::AttribBaseType::Float,
-                  MakeByteRange(list), srcElemOffset);
+    const FuncScope funcScope(*this, "clearBufferfv");
+    if (!Convert(list, [&](const Span<const float>& aData,
+                           JS::AutoCheckCannotGC&& nogc) {
+          ClearBufferTv(buffer, drawBuffer, webgl::AttribBaseType::Float,
+                        std::move(nogc), AsBytes(aData), srcElemOffset);
+          return true;
+        })) {
+      EnqueueError(LOCAL_GL_INVALID_VALUE, "`values` too small.");
+    }
   }
   void ClearBufferiv(GLenum buffer, GLint drawBuffer, const Int32ListU& list,
                      GLuint srcElemOffset) {
-    ClearBufferTv(buffer, drawBuffer, webgl::AttribBaseType::Int,
-                  MakeByteRange(list), srcElemOffset);
+    const FuncScope funcScope(*this, "clearBufferiv");
+    if (!Convert(list, [&](const Span<const int32_t>& aData,
+                           JS::AutoCheckCannotGC&& nogc) {
+          ClearBufferTv(buffer, drawBuffer, webgl::AttribBaseType::Int,
+                        std::move(nogc), AsBytes(aData), srcElemOffset);
+          return true;
+        })) {
+      EnqueueError(LOCAL_GL_INVALID_VALUE, "`values` too small.");
+    }
   }
   void ClearBufferuiv(GLenum buffer, GLint drawBuffer, const Uint32ListU& list,
                       GLuint srcElemOffset) {
-    ClearBufferTv(buffer, drawBuffer, webgl::AttribBaseType::Uint,
-                  MakeByteRange(list), srcElemOffset);
+    const FuncScope funcScope(*this, "clearBufferuiv");
+    if (!Convert(list, [&](const Span<const uint32_t>& aData,
+                           JS::AutoCheckCannotGC&& nogc) {
+          ClearBufferTv(buffer, drawBuffer, webgl::AttribBaseType::Uint,
+                        std::move(nogc), AsBytes(aData), srcElemOffset);
+          return true;
+        })) {
+      EnqueueError(LOCAL_GL_INVALID_VALUE, "`values` too small.");
+    }
   }
 
   // -
@@ -1840,9 +1897,26 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
     return state.mActiveLinkResult.get();
   }
 
+  // Used by callers that have a `nogc` token that ensures that no GC will
+  // happen while `bytes` is alive. Internally, the nogc range will be ended
+  // after `bytes` is used (either successfully but where the data are possibly
+  // sent over IPC which has a tendency to GC, or unsuccesfully in which case
+  // error handling can GC.)
   void UniformData(GLenum funcElemType, const WebGLUniformLocationJS* const loc,
                    bool transpose, const Range<const uint8_t>& bytes,
-                   GLuint elemOffset = 0, GLuint elemCountOverride = 0) const;
+                   JS::AutoCheckCannotGC&& nogc, GLuint elemOffset = 0,
+                   GLuint elemCountOverride = 0) const;
+
+  // Used by callers that are not passing `bytes` that might be GC-controlled.
+  // This will create an artificial and unnecessary nogc region that should
+  // get optimized away to nothing.
+  void UniformData(GLenum funcElemType, const WebGLUniformLocationJS* const loc,
+                   bool transpose, const Range<const uint8_t>& bytes,
+                   GLuint elemOffset = 0, GLuint elemCountOverride = 0) const {
+    JS::AutoCheckCannotGC nogc;
+    UniformData(funcElemType, loc, transpose, bytes, std::move(nogc),
+                elemOffset, elemCountOverride);
+  }
 
   // -
 
@@ -1898,12 +1972,15 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   // -
 
-#define _(NT, TypeListU, TYPE)                                      \
-  void Uniform##NT##v(const WebGLUniformLocationJS* const loc,      \
-                      const TypeListU& list, GLuint elemOffset = 0, \
-                      GLuint elemCountOverride = 0) const {         \
-    UniformData(TYPE, loc, false, MakeByteRange(list), elemOffset,  \
-                elemCountOverride);                                 \
+#define _(NT, TypeListU, TYPE)                                             \
+  void Uniform##NT##v(const WebGLUniformLocationJS* const loc,             \
+                      const TypeListU& list, GLuint elemOffset = 0,        \
+                      GLuint elemCountOverride = 0) const {                \
+    Convert(list, [&](const auto& aData, JS::AutoCheckCannotGC&& nogc) {   \
+      UniformData(TYPE, loc, false, MakeByteRange(aData), std::move(nogc), \
+                  elemOffset, elemCountOverride);                          \
+      return true;                                                         \
+    });                                                                    \
   }
 
   _(1f, Float32ListU, LOCAL_GL_FLOAT)
@@ -1927,8 +2004,12 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void UniformMatrix##X##fv(const WebGLUniformLocationJS* loc, bool transpose, \
                             const Float32ListU& list, GLuint elemOffset = 0,   \
                             GLuint elemCountOverride = 0) const {              \
-    UniformData(LOCAL_GL_FLOAT_MAT##X, loc, transpose, MakeByteRange(list),    \
-                elemOffset, elemCountOverride);                                \
+    Convert(list, [&](const Span<const float>& aData,                          \
+                      JS::AutoCheckCannotGC&& nogc) {                          \
+      UniformData(LOCAL_GL_FLOAT_MAT##X, loc, transpose, MakeByteRange(aData), \
+                  std::move(nogc), elemOffset, elemCountOverride);             \
+      return true;                                                             \
+    });                                                                        \
   }
 
   _(2)
@@ -1978,53 +2059,88 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   // -
 
+  template <typename List, typename T, size_t N>
+  bool MakeArrayFromList(const List& list, T (&array)[N]) {
+    bool badLength = false;
+    if (!Convert(list, [&](const auto& aData, JS::AutoCheckCannotGC&&) {
+          static_assert(
+              std::is_same_v<std::remove_const_t<
+                                 std::remove_reference_t<decltype(aData[0])>>,
+                             T>);
+          if (N > aData.Length()) {
+            badLength = true;
+            return false;
+          }
+
+          std::copy_n(aData.begin(), N, array);
+          return true;
+        })) {
+      EnqueueError(
+          LOCAL_GL_INVALID_VALUE,
+          badLength
+              ? nsPrintfCString("Length of `list` must be >=%zu.", N).get()
+              : "Conversion of `list` failed.");
+      return false;
+    }
+    return true;
+  }
+
   void VertexAttrib1fv(const GLuint index, const Float32ListU& list) {
     const FuncScope funcScope(*this, "vertexAttrib1fv");
     if (IsContextLost()) return;
 
-    const auto range = MakeRange(list);
-    if (range.length() < 1) {
-      EnqueueError(LOCAL_GL_INVALID_VALUE, "Length of `list` must be >=1.");
+    float arr[1];
+    if (!MakeArrayFromList(list, arr)) {
       return;
     }
-
-    VertexAttrib1f(index, range[0]);
+    VertexAttrib1f(index, arr[0]);
   }
 
   void VertexAttrib2fv(const GLuint index, const Float32ListU& list) {
     const FuncScope funcScope(*this, "vertexAttrib1fv");
     if (IsContextLost()) return;
 
-    const auto range = MakeRange(list);
-    if (range.length() < 2) {
-      EnqueueError(LOCAL_GL_INVALID_VALUE, "Length of `list` must be >=2.");
+    float arr[2];
+    if (!MakeArrayFromList(list, arr)) {
       return;
     }
-
-    VertexAttrib2f(index, range[0], range[1]);
+    VertexAttrib2f(index, arr[0], arr[1]);
   }
 
   void VertexAttrib3fv(const GLuint index, const Float32ListU& list) {
     const FuncScope funcScope(*this, "vertexAttrib1fv");
     if (IsContextLost()) return;
 
-    const auto range = MakeRange(list);
-    if (range.length() < 3) {
-      EnqueueError(LOCAL_GL_INVALID_VALUE, "Length of `list` must be >=3.");
+    float arr[3];
+    if (!MakeArrayFromList(list, arr)) {
       return;
     }
-
-    VertexAttrib3f(index, range[0], range[1], range[2]);
+    VertexAttrib3f(index, arr[0], arr[1], arr[2]);
   }
 
   void VertexAttrib4fv(GLuint index, const Float32ListU& list) {
-    VertexAttrib4Tv(index, webgl::AttribBaseType::Float, MakeByteRange(list));
+    const FuncScope funcScope(*this, "vertexAttrib4fv");
+    float arr[4];
+    if (!MakeArrayFromList(list, arr)) {
+      return;
+    }
+    VertexAttrib4Tv(index, webgl::AttribBaseType::Float, MakeByteRange(arr));
   }
   void VertexAttribI4iv(GLuint index, const Int32ListU& list) {
-    VertexAttrib4Tv(index, webgl::AttribBaseType::Int, MakeByteRange(list));
+    const FuncScope funcScope(*this, "vertexAttribI4iv");
+    int32_t arr[4];
+    if (!MakeArrayFromList(list, arr)) {
+      return;
+    }
+    VertexAttrib4Tv(index, webgl::AttribBaseType::Int, MakeByteRange(arr));
   }
   void VertexAttribI4uiv(GLuint index, const Uint32ListU& list) {
-    VertexAttrib4Tv(index, webgl::AttribBaseType::Uint, MakeByteRange(list));
+    const FuncScope funcScope(*this, "vertexAttribI4uiv");
+    uint32_t arr[4];
+    if (!MakeArrayFromList(list, arr)) {
+      return;
+    }
+    VertexAttrib4Tv(index, webgl::AttribBaseType::Uint, MakeByteRange(arr));
   }
 
   void VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w) {
@@ -2214,6 +2330,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // method directly.  Otherwise, dispatch over IPC.
   template <typename MethodType, MethodType method, typename... Args>
   void Run(Args&&... aArgs) const;
+
+  // Same as above for use when using potentially GC-controlled data. The scope
+  // of `aNoGC` will be ended after the data is no longer needed.
+  template <typename MethodType, MethodType method, typename... Args>
+  void RunWithGCData(JS::AutoCheckCannotGC&& aNoGC, Args&&... aArgs) const;
 
   // -------------------------------------------------------------------------
   // Helpers for DOM operations, composition, actors, etc

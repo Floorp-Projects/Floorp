@@ -46,40 +46,6 @@ nsTArray<nsCString> GuessContainers(const nsAString& aCodec) {
  * The below are helpers to operate ArrayBuffer or ArrayBufferView.
  */
 
-template <class T>
-Result<Span<uint8_t>, nsresult> GetArrayBufferData(const T& aBuffer) {
-  // Get buffer's data and length before using it.
-  aBuffer.ComputeState();
-
-  CheckedInt<size_t> byteLength(sizeof(typename T::element_type));
-  byteLength *= aBuffer.Length();
-  if (NS_WARN_IF(!byteLength.isValid())) {
-    return Err(NS_ERROR_INVALID_ARG);
-  }
-
-  return Span<uint8_t>(aBuffer.Data(), byteLength.value());
-}
-
-Result<Span<uint8_t>, nsresult> GetSharedArrayBufferData(
-    const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
-  if (aBuffer.IsArrayBufferView()) {
-    return GetArrayBufferData(aBuffer.GetAsArrayBufferView());
-  }
-
-  MOZ_ASSERT(aBuffer.IsArrayBuffer());
-  return GetArrayBufferData(aBuffer.GetAsArrayBuffer());
-}
-
-Result<Span<uint8_t>, nsresult> GetSharedArrayBufferData(
-    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
-  if (aBuffer.IsArrayBufferView()) {
-    return GetArrayBufferData(aBuffer.GetAsArrayBufferView());
-  }
-
-  MOZ_ASSERT(aBuffer.IsArrayBuffer());
-  return GetArrayBufferData(aBuffer.GetAsArrayBuffer());
-}
-
 static std::tuple<JS::ArrayBufferOrView, size_t, size_t> GetArrayBufferInfo(
     JSContext* aCx,
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
