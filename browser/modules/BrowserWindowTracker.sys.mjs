@@ -8,11 +8,18 @@
  */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 // Lazy getters
+
+XPCOMUtils.defineLazyServiceGetters(lazy, {
+  BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
+});
+
 ChromeUtils.defineESModuleGetters(lazy, {
+  HomePage: "resource:///modules/HomePage.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
 });
@@ -99,6 +106,26 @@ function _untrackWindowOrder(window) {
   if (idx >= 0) {
     _trackedWindows.splice(idx, 1);
   }
+}
+
+function topicObserved(observeTopic, checkFn) {
+  return new Promise((resolve, reject) => {
+    function observer(subject, topic, data) {
+      try {
+        if (checkFn && !checkFn(subject, data)) {
+          return;
+        }
+        Services.obs.removeObserver(observer, topic);
+        checkFn = null;
+        resolve([subject, data]);
+      } catch (ex) {
+        Services.obs.removeObserver(observer, topic);
+        checkFn = null;
+        reject(ex);
+      }
+    }
+    Services.obs.addObserver(observer, observeTopic);
+  });
 }
 
 // Methods that impact a window. Put into single object for organization.
@@ -214,6 +241,20 @@ export const BrowserWindowTracker = {
       isPrivate,
       deferred,
     });
+
+    // Prevent leaks in case the window closes before we track it as an open
+    // window.
+    window.addEventListener(
+      "unload",
+      () => {
+        let pending = this.pendingWindows.get(window);
+        if (pending) {
+          this.pendingWindows.delete(window);
+          pending.deferred.resolve(window);
+        }
+      },
+      { once: true }
+    );
   },
 
   /**
@@ -221,36 +262,120 @@ export const BrowserWindowTracker = {
    *
    * @param {Object} [options]
    *   Options for the new window.
+   * @param {Window} [options.openerWindow]
+   *   An existing browser window to open the new one from.
    * @param {boolean} [options.private]
    *   True to make the window a private browsing window.
    * @param {String} [options.features]
    *   Additional window features to give the new window.
    * @param {nsIArray | nsISupportsString} [options.args]
    *   Arguments to pass to the new window.
+   * @param {boolean} [options.remote]
+   *   A boolean indicating if the window should run remote browser tabs or
+   *   not. If omitted, the window  will choose the profile default state.
+   * @param {boolean} [options.fission]
+   *   A boolean indicating if the window should run with fission enabled or
+   *   not. If omitted, the window will choose the profile default state.
    *
    * @returns {Window}
    */
   openWindow({
+    openerWindow = undefined,
     private: isPrivate = false,
     features = undefined,
     args = null,
+    remote = undefined,
+    fission = undefined,
   } = {}) {
+    let telemetryObj = {};
+    TelemetryStopwatch.start("FX_NEW_WINDOW_MS", telemetryObj);
+
     let windowFeatures = "chrome,dialog=no,all";
     if (features) {
       windowFeatures += `,${features}`;
     }
-    if (isPrivate) {
+    let loadURIString;
+    if (isPrivate && lazy.PrivateBrowsingUtils.enabled) {
       windowFeatures += ",private";
+      if (!args && !lazy.PrivateBrowsingUtils.permanentPrivateBrowsing) {
+        // Force the new window to load about:privatebrowsing instead of the
+        // default home page.
+        loadURIString = "about:privatebrowsing";
+      }
+    } else {
+      windowFeatures += ",non-private";
+    }
+    if (!args) {
+      loadURIString ??= lazy.BrowserHandler.defaultArgs;
+      args = Cc["@mozilla.org/supports-string;1"].createInstance(
+        Ci.nsISupportsString
+      );
+      args.data = loadURIString;
+    }
+
+    if (remote) {
+      windowFeatures += ",remote";
+    } else if (remote === false) {
+      windowFeatures += ",non-remote";
+    }
+
+    if (fission) {
+      windowFeatures += ",fission";
+    } else if (fission === false) {
+      windowFeatures += ",non-fission";
+    }
+
+    // If the opener window is maximized, we want to skip the animation, since
+    // we're going to be taking up most of the screen anyways, and we want to
+    // optimize for showing the user a useful window as soon as possible.
+    if (openerWindow?.windowState == openerWindow?.STATE_MAXIMIZED) {
+      windowFeatures += ",suppressanimation";
     }
 
     let win = Services.ww.openWindow(
-      null,
+      openerWindow,
       AppConstants.BROWSER_CHROME_URL,
       "_blank",
       windowFeatures,
       args
     );
     this.registerOpeningWindow(win, isPrivate);
+
+    win.addEventListener(
+      "MozAfterPaint",
+      () => {
+        TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
+        if (
+          Services.prefs.getIntPref("browser.startup.page") == 1 &&
+          loadURIString == lazy.HomePage.get()
+        ) {
+          // A notification for when a user has triggered their homepage. This
+          // is used to display a doorhanger explaining that an extension has
+          // modified the homepage, if necessary.
+          Services.obs.notifyObservers(win, "browser-open-homepage-start");
+        }
+      },
+      { once: true }
+    );
+
+    return win;
+  },
+
+  /**
+   * Async version of `openWindow` waiting for delayed startup of the new
+   * window before returning.
+   *
+   * @param {Object} [options]
+   *   Options for the new window. See `openWindow` for details.
+   *
+   * @returns {Window}
+   */
+  async promiseOpenWindow(options) {
+    let win = this.openWindow(options);
+    await topicObserved(
+      "browser-delayed-startup-finished",
+      subject => subject == win
+    );
     return win;
   },
 
