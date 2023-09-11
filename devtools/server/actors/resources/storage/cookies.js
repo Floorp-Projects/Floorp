@@ -107,9 +107,6 @@ class CookiesStorageActor extends BaseStorageActor {
    * the cookie belong to.
    */
   getMatchingHosts(cookies) {
-    if (!cookies) {
-      return [];
-    }
     if (!cookies.length) {
       cookies = [cookies];
     }
@@ -190,50 +187,50 @@ class CookiesStorageActor extends BaseStorageActor {
   /**
    * Notification observer for "cookie-change".
    *
-   * @param {(nsICookie|nsICookie[])} cookie - Cookie/s changed. Depending on the action
-   * this is either null, a single cookie or an array of cookies.
-   * @param {nsICookieNotification_Action} action - The cookie operation, see
-   * nsICookieNotification for details.
-   **/
-  onCookieChanged(cookie, action) {
-    const {
-      COOKIE_ADDED,
-      COOKIE_CHANGED,
-      COOKIE_DELETED,
-      COOKIES_BATCH_DELETED,
-      ALL_COOKIES_CLEARED,
-    } = Ci.nsICookieNotification;
-
-    const hosts = this.getMatchingHosts(cookie);
-    if (!hosts.length) {
-      return;
+   * @param subject
+   *        {Cookie|[Array]} A JSON parsed object containing either a single
+   *        cookie representation or an array. Array is only in case of
+   *        a "batch-deleted" action.
+   * @param {string} topic
+   *        The topic of the notification.
+   * @param {string} action
+   *        Additional data associated with the notification. Its the type of
+   *        cookie change in the "cookie-change" topic.
+   */
+  onCookieChanged(subject, topic, action) {
+    if (
+      (topic !== "cookie-changed" && topic !== "private-cookie-changed") ||
+      !this.storageActor ||
+      !this.storageActor.windows
+    ) {
+      return null;
     }
 
+    const hosts = this.getMatchingHosts(subject);
     const data = {};
 
     switch (action) {
-      case COOKIE_ADDED:
-      case COOKIE_CHANGED:
+      case "added":
+      case "changed":
         if (hosts.length) {
           for (const host of hosts) {
             const uniqueKey =
-              `${cookie.name}${SEPARATOR_GUID}${cookie.host}` +
-              `${SEPARATOR_GUID}${cookie.path}`;
+              `${subject.name}${SEPARATOR_GUID}${subject.host}` +
+              `${SEPARATOR_GUID}${subject.path}`;
 
-            this.hostVsStores.get(host).set(uniqueKey, cookie);
+            this.hostVsStores.get(host).set(uniqueKey, subject);
             data[host] = [uniqueKey];
           }
-          const actionStr = action == COOKIE_ADDED ? "added" : "changed";
-          this.storageActor.update(actionStr, "cookies", data);
+          this.storageActor.update(action, "cookies", data);
         }
         break;
 
-      case COOKIE_DELETED:
+      case "deleted":
         if (hosts.length) {
           for (const host of hosts) {
             const uniqueKey =
-              `${cookie.name}${SEPARATOR_GUID}${cookie.host}` +
-              `${SEPARATOR_GUID}${cookie.path}`;
+              `${subject.name}${SEPARATOR_GUID}${subject.host}` +
+              `${SEPARATOR_GUID}${subject.path}`;
 
             this.hostVsStores.get(host).delete(uniqueKey);
             data[host] = [uniqueKey];
@@ -242,15 +239,14 @@ class CookiesStorageActor extends BaseStorageActor {
         }
         break;
 
-      case COOKIES_BATCH_DELETED:
+      case "batch-deleted":
         if (hosts.length) {
           for (const host of hosts) {
             const stores = [];
-            // For COOKIES_BATCH_DELETED cookie is an array.
-            for (const batchCookie of cookie) {
+            for (const cookie of subject) {
               const uniqueKey =
-                `${batchCookie.name}${SEPARATOR_GUID}${batchCookie.host}` +
-                `${SEPARATOR_GUID}${batchCookie.path}`;
+                `${cookie.name}${SEPARATOR_GUID}${cookie.host}` +
+                `${SEPARATOR_GUID}${cookie.path}`;
 
               this.hostVsStores.get(host).delete(uniqueKey);
               stores.push(uniqueKey);
@@ -261,7 +257,7 @@ class CookiesStorageActor extends BaseStorageActor {
         }
         break;
 
-      case ALL_COOKIES_CLEARED:
+      case "cleared":
         if (hosts.length) {
           for (const host of hosts) {
             data[host] = [];
@@ -270,6 +266,7 @@ class CookiesStorageActor extends BaseStorageActor {
         }
         break;
     }
+    return null;
   }
 
   async getFields() {
@@ -528,32 +525,29 @@ class CookiesStorageActor extends BaseStorageActor {
     this._removeCookies(host, { domain, originAttributes });
   }
 
-  observe(subject, topic) {
+  observe(subject, topic, data) {
     if (
       !subject ||
-      (topic != "cookie-changed" && topic != "private-cookie-changed") ||
-      !this.storageActor ||
-      !this.storageActor.windows
+      (topic != "cookie-changed" && topic != "private-cookie-changed")
     ) {
       return;
     }
 
-    const notification = subject.QueryInterface(Ci.nsICookieNotification);
-    let cookie;
-    if (notification.action == Ci.nsICookieNotification.COOKIES_BATCH_DELETED) {
-      // Extract the batch deleted cookies from nsIArray.
-      const cookiesNoInterface =
-        notification.batchDeletedCookies.QueryInterface(Ci.nsIArray);
-      cookie = [];
+    if (data === "batch-deleted") {
+      const cookiesNoInterface = subject.QueryInterface(Ci.nsIArray);
+      const cookies = [];
+
       for (let i = 0; i < cookiesNoInterface.length; i++) {
-        cookie.push(cookiesNoInterface.queryElementAt(i, Ci.nsICookie));
+        const cookie = cookiesNoInterface.queryElementAt(i, Ci.nsICookie);
+        cookies.push(cookie);
       }
-    } else if (notification.cookie) {
-      // Otherwise, get the single cookie affected by the operation.
-      cookie = notification.cookie.QueryInterface(Ci.nsICookie);
+      this.onCookieChanged(cookies, topic, data);
+
+      return;
     }
 
-    this.onCookieChanged(cookie, notification.action);
+    const cookie = subject.QueryInterface(Ci.nsICookie);
+    this.onCookieChanged(cookie, topic, data);
   }
 }
 exports.CookiesStorageActor = CookiesStorageActor;

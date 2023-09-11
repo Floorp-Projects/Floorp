@@ -45,10 +45,6 @@ class BounceTrackingState : public nsIWebProgressListener,
   static already_AddRefed<BounceTrackingState> GetOrCreate(
       dom::BrowsingContextWebProgress* aWebProgress);
 
-  // Reset state for all BounceTrackingState instances this includes resetting
-  // BounceTrackingRecords and cancelling any running timers.
-  static void ResetAll();
-
   BounceTrackingRecord* GetBounceTrackingRecord();
 
   void ResetBounceTrackingRecord();
@@ -64,10 +60,6 @@ class BounceTrackingState : public nsIWebProgressListener,
   // Should only be called for top level content navigations.
   nsresult OnStartNavigation(nsIPrincipal* aTriggeringPrincipal,
                              const bool aHasValidUserGestureActivation);
-
-  // Record sites which have written cookies in the current extended
-  // navigation.
-  nsresult OnCookieWrite(const nsACString& aSiteHost);
 
   // Whether the given BrowsingContext should hold a BounceTrackingState
   // instance to monitor bounce tracking navigations.
@@ -132,6 +124,10 @@ class BounceTrackingState : public nsIWebProgressListener,
   // Record sites which have activated service workers in the current
   // extended navigation.
   nsresult OnServiceWorkerActivation();
+
+  // Record sites which have written cookies in the current extended
+  // navigation.
+  nsresult OnNetworkCookieWrite();
 };
 
 }  // namespace mozilla
