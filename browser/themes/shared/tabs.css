@@ -612,8 +612,8 @@ toolbar[brighttext] {
 
 /* Firefox View button and menu item */
 
-:root:not([privatebrowsingmode=temporary], [firefoxviewhidden]) :is(toolbarbutton, toolbarpaletteitem) + #tabbrowser-tabs,
-:root[privatebrowsingmode=temporary]:not([firefoxviewhidden]) :is(
+:root:not([privatebrowsingmode], [firefoxviewhidden]) :is(toolbarbutton, toolbarpaletteitem) + #tabbrowser-tabs,
+:root[privatebrowsingmode]:not([firefoxviewhidden]) :is(
   toolbarbutton:not(#firefox-view-button),
   toolbarpaletteitem:not(#wrapper-firefox-view-button)
 ) + #tabbrowser-tabs {
@@ -622,7 +622,7 @@ toolbar[brighttext] {
   margin-inline-start: 2px;
 }
 
-:root[privatebrowsingmode=temporary] :is(#firefox-view-button, #menu_openFirefoxView) {
+:root[privatebrowsingmode] :is(#firefox-view-button, #menu_openFirefoxView) {
   display: none;
 }
 
