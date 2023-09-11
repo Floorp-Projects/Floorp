@@ -104,16 +104,24 @@ async function testClearing(
 
     let cookiesCleared;
     if (testCookies) {
-      let promises = ["test1", "test2", "test3", "test4"].map(cookieName =>
-        TestUtils.topicObserved("cookie-changed", subj => {
-          let notification = subj.QueryInterface(Ci.nsICookieNotification);
-          return (
-            notification.action == Ci.nsICookieNotification.COOKIE_DELETED &&
-            notification.cookie.name == cookieName
-          );
-        })
-      );
-      cookiesCleared = Promise.all(promises);
+      cookiesCleared = Promise.all([
+        TestUtils.topicObserved(
+          "cookie-changed",
+          (subj, data) => data == "deleted" && subj.name == "test1"
+        ),
+        TestUtils.topicObserved(
+          "cookie-changed",
+          (subj, data) => data == "deleted" && subj.name == "test2"
+        ),
+        TestUtils.topicObserved(
+          "cookie-changed",
+          (subj, data) => data == "deleted" && subj.name == "test3"
+        ),
+        TestUtils.topicObserved(
+          "cookie-changed",
+          (subj, data) => data == "deleted" && subj.name == "test4"
+        ),
+      ]);
     }
 
     // Click the "Clear data" button.

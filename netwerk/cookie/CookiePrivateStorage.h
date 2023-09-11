@@ -36,7 +36,7 @@ class CookiePrivateStorage final : public CookieStorage {
     return "private-cookie-changed";
   }
 
-  void NotifyChangedInternal(nsICookieNotification* aNotification,
+  void NotifyChangedInternal(nsISupports* aSubject, const char16_t* aData,
                              bool aOldCookieIsSession) override {}
 
   void RemoveAllInternal() override {}

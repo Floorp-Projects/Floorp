@@ -4,8 +4,7 @@ function handleRequest(request, response) {
   Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
-  let setState = query.get("setState");
-  if (setState == "cookie-server") {
+  if (query.get("setCookie")) {
     response.setHeader("Set-Cookie", "foo=bar");
   }
 
