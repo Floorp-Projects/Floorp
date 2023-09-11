@@ -64,6 +64,7 @@ export const MultiStageProtonScreen = props => {
       langPackInstallPhase={props.langPackInstallPhase}
       forceHideStepsIndicator={props.forceHideStepsIndicator}
       ariaRole={props.ariaRole}
+      aboveButtonStepsIndicator={props.aboveButtonStepsIndicator}
     />
   );
 };
@@ -452,6 +453,7 @@ export class ProtonScreen extends React.PureComponent {
       isSingleScreen,
       forceHideStepsIndicator,
       ariaRole,
+      aboveButtonStepsIndicator,
     } = this.props;
     const includeNoodles = content.has_noodles;
     // The default screen position is "center"
@@ -571,6 +573,9 @@ export class ProtonScreen extends React.PureComponent {
                 : null}
               {this.renderContentTiles()}
               {this.renderLanguageSwitcher()}
+              {!hideStepsIndicator && aboveButtonStepsIndicator
+                ? this.renderStepsIndicator()
+                : null}
               <ProtonScreenActionButtons
                 content={content}
                 addonName={this.props.addonName}
@@ -578,7 +583,9 @@ export class ProtonScreen extends React.PureComponent {
                 activeMultiSelect={this.props.activeMultiSelect}
               />
             </div>
-            {!hideStepsIndicator ? this.renderStepsIndicator() : null}
+            {!hideStepsIndicator && !aboveButtonStepsIndicator
+              ? this.renderStepsIndicator()
+              : null}
           </div>
           {content.dismiss_button ? this.renderDismissButton() : null}
         </div>

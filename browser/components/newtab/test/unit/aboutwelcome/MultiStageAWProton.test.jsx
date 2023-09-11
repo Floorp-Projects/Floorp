@@ -254,6 +254,27 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.equal(wrapper.find(".steps").exists(), false);
     });
 
+    it("should render a steps indicator above action buttons", () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "test title",
+          progress_bar: true,
+          primary_button: {},
+        },
+        aboveButtonStepsIndicator: true,
+        totalNumberOfScreens: 2,
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+
+      const stepsIndicator = wrapper.find(".steps");
+      assert.ok(stepsIndicator, true);
+
+      const stepsDOMNode = stepsIndicator.getDOMNode();
+      const siblingElement = stepsDOMNode.nextElementSibling;
+      assert.equal(siblingElement.classList.contains("action-buttons"), true);
+    });
+
     it("should render a progress bar if there are 2 steps", () => {
       const SCREEN_PROPS = {
         content: {
