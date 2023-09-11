@@ -30,21 +30,17 @@ void TextEncoder::EncodeInto(JSContext* aCx, JS::Handle<JSString*> aSrc,
                              const Uint8Array& aDst,
                              TextEncoderEncodeIntoResult& aResult,
                              OOMReporter& aError) {
-  DebugOnly<size_t> dstLength = 0;
-  auto maybe = aDst.ProcessData(
-      [&](const Span<uint8_t>& aData, JS::AutoCheckCannotGC&&) {
-        dstLength = aData.Length();
-        return JS_EncodeStringToUTF8BufferPartial(aCx, aSrc,
-                                                  AsWritableChars(aData));
-      });
+  aDst.ComputeState();
+  size_t read;
+  size_t written;
+  auto maybe = JS_EncodeStringToUTF8BufferPartial(
+      aCx, aSrc, AsWritableChars(Span(aDst.Data(), aDst.Length())));
   if (!maybe) {
     aError.ReportOOM();
     return;
   }
-  size_t read;
-  size_t written;
   std::tie(read, written) = *maybe;
-  MOZ_ASSERT(written <= dstLength);
+  MOZ_ASSERT(written <= aDst.Length());
   aResult.mRead.Construct() = read;
   aResult.mWritten.Construct() = written;
 }

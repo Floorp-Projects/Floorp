@@ -26,12 +26,17 @@ namespace {
 template <class T>
 bool ReadFloat32Array(T& aDestination, const Float32Array& aSource,
                       ErrorResult& aRv) {
-  if (!aSource.CopyDataTo(aDestination)) {
+  constexpr size_t length = std::extent<T>::value;
+  aSource.ComputeState();
+  if (aSource.Length() != length) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
     // We don't want to MOZ_ASSERT here, as that would cause the
     // browser to crash, making it difficult to debug the problem
     // in JS code calling this API.
     return false;
+  }
+  for (size_t i = 0; i < length; i++) {
+    aDestination[i] = aSource.Data()[i];
   }
   return true;
 }

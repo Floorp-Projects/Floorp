@@ -659,17 +659,18 @@ already_AddRefed<Promise> AudioContext::DecodeAudioData(
   }
 
   JSAutoRealm ar(cx, obj);
+  aBuffer.ComputeState();
 
-  // Detach the array buffer
-  size_t length = JS::GetArrayBufferByteLength(obj);
-  uint8_t* data = static_cast<uint8_t*>(JS::StealArrayBufferContents(cx, obj));
-  if (!data) {
-    JS_ClearPendingException(cx);
-
+  if (!aBuffer.Data()) {
     // Throw if the buffer is detached
     aRv.ThrowTypeError("Buffer argument can't be a detached buffer");
     return nullptr;
   }
+
+  // Detach the array buffer
+  size_t length = aBuffer.Length();
+
+  uint8_t* data = static_cast<uint8_t*>(JS::StealArrayBufferContents(cx, obj));
 
   // Sniff the content of the media.
   // Failed type sniffing will be handled by AsyncDecodeWebAudio.

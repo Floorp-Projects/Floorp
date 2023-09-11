@@ -233,9 +233,15 @@ static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(MIMECreateParam aParam) {
 
 static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
-  RefPtr<MediaByteBuffer> data = MakeRefPtr<MediaByteBuffer>();
-  Unused << AppendTypedArrayDataTo(aBuffer, *data);
-  return data->Length() > 0 ? data : nullptr;
+  RefPtr<MediaByteBuffer> data = nullptr;
+  Span<uint8_t> buf;
+  MOZ_TRY_VAR(buf, GetSharedArrayBufferData(aBuffer));
+  if (buf.empty()) {
+    return data;
+  }
+  data = MakeRefPtr<MediaByteBuffer>();
+  data->AppendElements(buf);
+  return data;
 }
 
 static Result<UniquePtr<TrackInfo>, nsresult> CreateVideoInfo(

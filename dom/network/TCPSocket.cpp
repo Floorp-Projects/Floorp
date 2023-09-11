@@ -811,39 +811,27 @@ bool TCPSocket::Send(const ArrayBuffer& aData, uint32_t aByteOffset,
 
   nsCOMPtr<nsIArrayBufferInputStream> stream;
 
-  uint32_t nbytes;
-  auto calculateOffsetAndCount = [&](uint32_t aLength) {
-    uint32_t offset = std::min(aLength, aByteOffset);
-    nbytes = std::min(aLength - aByteOffset,
-                      aByteLength.WasPassed() ? aByteLength.Value() : aLength);
-    return std::pair(offset, nbytes);
-  };
+  aData.ComputeState();
+  uint32_t byteLength =
+      aByteLength.WasPassed() ? aByteLength.Value() : aData.Length();
 
   if (mSocketBridgeChild) {
-    nsTArray<uint8_t> arrayBuffer;
-    if (!aData.AppendDataTo(arrayBuffer, calculateOffsetAndCount)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    nsresult rv = mSocketBridgeChild->SendSend(aData, aByteOffset, byteLength);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
       return false;
     }
-
-    mSocketBridgeChild->SendSend(std::move(arrayBuffer));
   } else {
-    mozilla::Maybe<mozilla::UniquePtr<uint8_t[]>> arrayBuffer =
-        aData.CreateFromData<mozilla::UniquePtr<uint8_t[]>>(
-            calculateOffsetAndCount);
-    if (arrayBuffer.isNothing()) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return false;
-    }
+    JS::Rooted<JS::Value> value(RootingCx(), JS::ObjectValue(*aData.Obj()));
 
     stream = do_CreateInstance("@mozilla.org/io/arraybuffer-input-stream;1");
-    nsresult rv = stream->SetData(arrayBuffer.extract(), nbytes);
+    nsresult rv = stream->SetData(value, aByteOffset, byteLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
       return false;
     }
   }
-  return Send(stream, nbytes);
+  return Send(stream, byteLength);
 }
 
 bool TCPSocket::Send(nsIInputStream* aStream, uint32_t aByteLength) {

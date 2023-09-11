@@ -23,11 +23,34 @@ LogModule* GetEMEVerboseLog() {
   return log;
 }
 
+ArrayData GetArrayBufferViewOrArrayBufferData(
+    const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView) {
+  MOZ_ASSERT(aBufferOrView.IsArrayBuffer() ||
+             aBufferOrView.IsArrayBufferView());
+  JS::AutoCheckCannotGC nogc;
+  if (aBufferOrView.IsArrayBuffer()) {
+    const dom::ArrayBuffer& buffer = aBufferOrView.GetAsArrayBuffer();
+    buffer.ComputeState();
+    return ArrayData(buffer.Data(), buffer.Length());
+  } else if (aBufferOrView.IsArrayBufferView()) {
+    const dom::ArrayBufferView& bufferview =
+        aBufferOrView.GetAsArrayBufferView();
+    bufferview.ComputeState();
+    return ArrayData(bufferview.Data(), bufferview.Length());
+  }
+  return ArrayData(nullptr, 0);
+}
+
 void CopyArrayBufferViewOrArrayBufferData(
     const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView,
     nsTArray<uint8_t>& aOutData) {
+  JS::AutoCheckCannotGC nogc;
+  ArrayData data = GetArrayBufferViewOrArrayBufferData(aBufferOrView);
   aOutData.Clear();
-  Unused << dom::AppendTypedArrayDataTo(aBufferOrView, aOutData);
+  if (!data.IsValid()) {
+    return;
+  }
+  aOutData.AppendElements(data.mData, data.mLength);
 }
 
 bool IsClearkeyKeySystem(const nsAString& aKeySystem) {

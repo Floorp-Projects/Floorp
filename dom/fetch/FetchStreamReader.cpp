@@ -325,29 +325,21 @@ void FetchStreamReader::ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
     CloseAndRelease(aCx, NS_ERROR_DOM_WRONG_TYPE_ERR);
     return;
   }
+  chunk.ComputeState();
+
+  MOZ_DIAGNOSTIC_ASSERT(mBuffer.IsEmpty());
 
   // Let's take a copy of the data.
   // FIXME: We could sometimes avoid this copy by trying to write `chunk`
   // directly into `mPipeOut` eagerly, and only filling `mBuffer` if there isn't
   // enough space in the pipe's buffer.
-  nsTArray<uint8_t> buffer;
-  if (!chunk.AppendDataTo(buffer)) {
+  if (!mBuffer.AppendElements(chunk.Data(), chunk.Length(), fallible)) {
     CloseAndRelease(aCx, NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
-  uint32_t len = buffer.Length();
-  if (len == 0) {
-    // If there is nothing to read, let's do another reading.
-    OnOutputStreamReady(mPipeOut);
-    return;
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(mBuffer.IsEmpty());
-
-  mBuffer = std::move(buffer);
   mBufferOffset = 0;
-  mBufferRemaining = mBuffer.Length();
+  mBufferRemaining = chunk.Length();
 
   nsresult rv = WriteBuffer();
   if (NS_WARN_IF(NS_FAILED(rv))) {

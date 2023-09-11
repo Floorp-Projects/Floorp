@@ -279,8 +279,19 @@ already_AddRefed<Promise> OutgoingDatagramStreamAlgorithms::WriteCallback(
   // Step 3: Let datagrams be transport.[[Datagrams]].
   // (mDatagrams is transport.[[Datagrams]])
 
-  nsTArray<uint8_t> data;
-  Unused << AppendTypedArrayDataTo(arrayBuffer, data);
+  // This is a duplicate of dom/encoding/TextDecoderStream.cpp#51-69
+  // PeterV will deal with that when he lands his patch for TypedArrays
+  auto data = [&arrayBuffer]() {
+    if (arrayBuffer.IsArrayBuffer()) {
+      const ArrayBuffer& buffer = arrayBuffer.GetAsArrayBuffer();
+      buffer.ComputeState();
+      return Span{buffer.Data(), buffer.Length()};
+    }
+    MOZ_ASSERT(arrayBuffer.IsArrayBufferView());
+    const ArrayBufferView& buffer = arrayBuffer.GetAsArrayBufferView();
+    buffer.ComputeState();
+    return Span{buffer.Data(), buffer.Length()};
+  }();
 
   // Step 4: If datagrams.[[OutgoingMaxDatagramSize]] is less than data’s
   // [[ByteLength]], return a promise resolved with undefined.
@@ -298,9 +309,10 @@ already_AddRefed<Promise> OutgoingDatagramStreamAlgorithms::WriteCallback(
     // We pass along the datagram to the parent immediately.
     // The OutgoingDatagramsQueue lives there, and steps 6-9 generally are
     // implemented there
-    LOG(("Sending Datagram, size = %zu", data.Length()));
+    nsTArray<uint8_t> array(data);
+    LOG(("Sending Datagram, size = %zu", array.Length()));
     mChild->SendOutgoingDatagram(
-        std::move(data), now,
+        array, now,
         [promise](nsresult&&) {
           // XXX result
           LOG(("Datagram was sent"));
@@ -319,7 +331,7 @@ already_AddRefed<Promise> OutgoingDatagramStreamAlgorithms::WriteCallback(
     // We should be guaranteed that we don't get called again until the
     // promise is resolved.
     MOZ_ASSERT(mWaitConnect == nullptr);
-    mWaitConnect.reset(new DatagramEntry(std::move(data), now));
+    mWaitConnect.reset(new DatagramEntry(data, now));
     mWaitConnectPromise = promise;
   }
 

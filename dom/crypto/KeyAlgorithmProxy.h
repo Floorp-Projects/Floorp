@@ -45,6 +45,7 @@ struct RsaHashedKeyAlgorithmStorage {
     aRsa.mModulusLength = mModulusLength;
     aRsa.mHash.mName = mHash.mName;
     aRsa.mPublicExponent.Init(exponent);
+    aRsa.mPublicExponent.ComputeState();
 
     return true;
   }

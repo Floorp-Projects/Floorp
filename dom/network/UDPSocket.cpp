@@ -341,14 +341,16 @@ bool UDPSocket::Send(const StringOrBlobOrArrayBufferOrArrayBufferView& aData,
     if (aData.IsString()) {
       NS_ConvertUTF16toUTF8 data(aData.GetAsString());
       aRv = strStream->SetData(data.BeginReading(), data.Length());
+    } else if (aData.IsArrayBuffer()) {
+      const ArrayBuffer& data = aData.GetAsArrayBuffer();
+      data.ComputeState();
+      aRv = strStream->SetData(reinterpret_cast<const char*>(data.Data()),
+                               data.Length());
     } else {
-      Vector<char> data;
-      if (!AppendTypedArrayDataTo(aData, data)) {
-        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return false;
-      }
-      size_t length = data.length();
-      aRv = strStream->AdoptData(data.extractOrCopyRawBuffer(), length);
+      const ArrayBufferView& data = aData.GetAsArrayBufferView();
+      data.ComputeState();
+      aRv = strStream->SetData(reinterpret_cast<const char*>(data.Data()),
+                               data.Length());
     }
 
     if (NS_WARN_IF(aRv.Failed())) {

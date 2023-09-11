@@ -282,8 +282,9 @@ template <typename T>
 
 // Accept WebIDL dictionaries
 template <class T>
-[[nodiscard]] std::enable_if_t<is_dom_dictionary<T>, bool> ToJSValue(
-    JSContext* aCx, const T& aArgument, JS::MutableHandle<JS::Value> aValue) {
+[[nodiscard]] std::enable_if_t<std::is_base_of<DictionaryBase, T>::value, bool>
+ToJSValue(JSContext* aCx, const T& aArgument,
+          JS::MutableHandle<JS::Value> aValue) {
   return aArgument.ToObjectInternal(aCx, aValue);
 }
 
@@ -339,8 +340,10 @@ template <class T>
 
 // Accept owning WebIDL unions.
 template <typename T>
-[[nodiscard]] std::enable_if_t<is_dom_owning_union<T>, bool> ToJSValue(
-    JSContext* aCx, const T& aArgument, JS::MutableHandle<JS::Value> aValue) {
+[[nodiscard]] std::enable_if_t<std::is_base_of<AllOwningUnionBase, T>::value,
+                               bool>
+ToJSValue(JSContext* aCx, const T& aArgument,
+          JS::MutableHandle<JS::Value> aValue) {
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   return aArgument.ToJSVal(aCx, global, aValue);
 }

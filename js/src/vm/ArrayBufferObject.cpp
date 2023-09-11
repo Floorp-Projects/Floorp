@@ -681,7 +681,6 @@ void ArrayBufferObject::detach(JSContext* cx,
                                Handle<ArrayBufferObject*> buffer) {
   cx->check(buffer);
   MOZ_ASSERT(!buffer->isPreparedForAsmJS());
-  MOZ_ASSERT(!buffer->isLengthPinned());
 
   // Update all views of the buffer to account for the buffer having been
   // detached, and clear the buffer's data and list of views.
@@ -1333,10 +1332,6 @@ static void CheckStealPreconditions(Handle<ArrayBufferObject*> buffer,
 ArrayBufferObject* ArrayBufferObject::wasmGrowToPagesInPlace(
     wasm::IndexType t, Pages newPages, Handle<ArrayBufferObject*> oldBuf,
     JSContext* cx) {
-  if (oldBuf->isLengthPinned()) {
-    return nullptr;
-  }
-
   CheckStealPreconditions(oldBuf, cx);
 
   MOZ_ASSERT(oldBuf->isWasm());
@@ -1395,9 +1390,6 @@ ArrayBufferObject* ArrayBufferObject::wasmMovingGrowToPages(
     JSContext* cx) {
   // On failure, do not throw and ensure that the original buffer is
   // unmodified and valid.
-  if (oldBuf->isLengthPinned()) {
-    return nullptr;
-  }
 
   // Check that the new pages is within our allowable range. This will
   // simultaneously check against the maximum specified in source and our
@@ -1833,9 +1825,6 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 
 /* static */ uint8_t* ArrayBufferObject::stealMallocedContents(
     JSContext* cx, Handle<ArrayBufferObject*> buffer) {
-  if (buffer->isLengthPinned()) {
-    return nullptr;
-  }
   CheckStealPreconditions(buffer, cx);
 
   switch (buffer->bufferKind()) {
@@ -1891,12 +1880,6 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
 /* static */ ArrayBufferObject::BufferContents
 ArrayBufferObject::extractStructuredCloneContents(
     JSContext* cx, Handle<ArrayBufferObject*> buffer) {
-  if (buffer->isLengthPinned()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_ARRAYBUFFER_LENGTH_PINNED);
-    return BufferContents::createFailed();
-  }
-
   CheckStealPreconditions(buffer, cx);
 
   BufferContents contents = buffer->contents();
@@ -1947,55 +1930,6 @@ ArrayBufferObject::extractStructuredCloneContents(
 
   MOZ_ASSERT_UNREACHABLE("garbage kind computed");
   return BufferContents::createFailed();
-}
-
-/* static */
-bool ArrayBufferObject::ensureNonInline(JSContext* cx,
-                                        Handle<ArrayBufferObject*> buffer) {
-  if (buffer->isDetached()) {
-    return true;
-  }
-
-  if (buffer->isLengthPinned()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_ARRAYBUFFER_LENGTH_PINNED);
-    return false;
-  }
-
-  MOZ_ASSERT(!buffer->isPreparedForAsmJS());
-
-  BufferContents inlineContents = buffer->contents();
-  if (inlineContents.kind() != INLINE_DATA) {
-    return true;
-  }
-
-  size_t nbytes = buffer->byteLength();
-  ArrayBufferContents copy = NewCopiedBufferContents(cx, buffer);
-  if (!copy) {
-    return false;
-  }
-  BufferContents outOfLineContents =
-      BufferContents::createMalloced(copy.release());
-  buffer->setDataPointer(outOfLineContents);
-  AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
-
-  if (!buffer->firstView()) {
-    return true;  // No views! Easy!
-  }
-
-  buffer->firstView()->as<ArrayBufferViewObject>().notifyBufferMoved(
-      inlineContents.data(), outOfLineContents.data());
-
-  auto& innerViews = ObjectRealm::get(buffer).innerViews.get();
-  if (InnerViewTable::ViewVector* views =
-          innerViews.maybeViewsUnbarriered(buffer)) {
-    for (JSObject* view : *views) {
-      view->as<ArrayBufferViewObject>().notifyBufferMoved(
-          inlineContents.data(), outOfLineContents.data());
-    }
-  }
-
-  return true;
 }
 
 /* static */
@@ -2256,11 +2190,6 @@ JS_PUBLIC_API bool JS::DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   if (unwrappedBuffer->hasDefinedDetachKey()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_NO_TRANSFER);
-    return false;
-  }
-  if (unwrappedBuffer->isLengthPinned()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_ARRAYBUFFER_LENGTH_PINNED);
     return false;
   }
 

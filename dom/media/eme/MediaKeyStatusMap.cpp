@@ -35,36 +35,36 @@ nsPIDOMWindowInner* MediaKeyStatusMap::GetParentObject() const {
   return mParent;
 }
 
-const MediaKeyStatusMap::KeyStatus* MediaKeyStatusMap::FindKey(
-    const ArrayBufferViewOrArrayBuffer& aKey) const {
-  MOZ_ASSERT(aKey.IsArrayBuffer() || aKey.IsArrayBufferView());
-
-  return ProcessTypedArrays(aKey,
-                            [&](const Span<const uint8_t>& aData,
-                                JS::AutoCheckCannotGC&&) -> const KeyStatus* {
-                              for (const KeyStatus& status : mStatuses) {
-                                if (aData == Span(status.mKeyId)) {
-                                  return &status;
-                                }
-                              }
-                              return nullptr;
-                            });
-}
-
 void MediaKeyStatusMap::Get(const ArrayBufferViewOrArrayBuffer& aKey,
                             OwningMediaKeyStatusOrUndefined& aOutValue,
                             ErrorResult& aOutRv) const {
-  const KeyStatus* status = FindKey(aKey);
-  if (!status) {
+  ArrayData keyId = GetArrayBufferViewOrArrayBufferData(aKey);
+  if (!keyId.IsValid()) {
     aOutValue.SetUndefined();
     return;
   }
-
-  aOutValue.SetAsMediaKeyStatus() = status->mStatus;
+  for (const KeyStatus& status : mStatuses) {
+    if (keyId == status.mKeyId) {
+      aOutValue.SetAsMediaKeyStatus() = status.mStatus;
+      return;
+    }
+  }
+  aOutValue.SetUndefined();
 }
 
 bool MediaKeyStatusMap::Has(const ArrayBufferViewOrArrayBuffer& aKey) const {
-  return FindKey(aKey);
+  ArrayData keyId = GetArrayBufferViewOrArrayBufferData(aKey);
+  if (!keyId.IsValid()) {
+    return false;
+  }
+
+  for (const KeyStatus& status : mStatuses) {
+    if (keyId == status.mKeyId) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 uint32_t MediaKeyStatusMap::GetIterableLength() const {

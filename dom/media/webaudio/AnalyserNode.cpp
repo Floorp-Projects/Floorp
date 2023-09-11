@@ -215,14 +215,15 @@ void AnalyserNode::GetFloatFrequencyData(const Float32Array& aArray) {
     return;
   }
 
-  aArray.ProcessData([&](const Span<float>& aData, JS::AutoCheckCannotGC&&) {
-    size_t length = std::min(size_t(aData.Length()), mOutputBuffer.Length());
+  aArray.ComputeState();
 
-    for (size_t i = 0; i < length; ++i) {
-      aData[i] = WebAudioUtils::ConvertLinearToDecibels(
-          mOutputBuffer[i], -std::numeric_limits<float>::infinity());
-    }
-  });
+  float* buffer = aArray.Data();
+  size_t length = std::min(size_t(aArray.Length()), mOutputBuffer.Length());
+
+  for (size_t i = 0; i < length; ++i) {
+    buffer[i] = WebAudioUtils::ConvertLinearToDecibels(
+        mOutputBuffer[i], -std::numeric_limits<float>::infinity());
+  }
 }
 
 void AnalyserNode::GetByteFrequencyData(const Uint8Array& aArray) {
@@ -233,50 +234,51 @@ void AnalyserNode::GetByteFrequencyData(const Uint8Array& aArray) {
 
   const double rangeScaleFactor = 1.0 / (mMaxDecibels - mMinDecibels);
 
-  aArray.ProcessData([&](const Span<uint8_t>& aData, JS::AutoCheckCannotGC&&) {
-    size_t length = std::min(size_t(aData.Length()), mOutputBuffer.Length());
+  aArray.ComputeState();
 
-    for (size_t i = 0; i < length; ++i) {
-      const double decibels = WebAudioUtils::ConvertLinearToDecibels(
-          mOutputBuffer[i], mMinDecibels);
-      // scale down the value to the range of [0, UCHAR_MAX]
-      const double scaled = std::max(
-          0.0,
-          std::min(double(UCHAR_MAX),
-                   UCHAR_MAX * (decibels - mMinDecibels) * rangeScaleFactor));
-      aData[i] = static_cast<unsigned char>(scaled);
-    }
-  });
+  unsigned char* buffer = aArray.Data();
+  size_t length = std::min(size_t(aArray.Length()), mOutputBuffer.Length());
+
+  for (size_t i = 0; i < length; ++i) {
+    const double decibels =
+        WebAudioUtils::ConvertLinearToDecibels(mOutputBuffer[i], mMinDecibels);
+    // scale down the value to the range of [0, UCHAR_MAX]
+    const double scaled = std::max(
+        0.0, std::min(double(UCHAR_MAX), UCHAR_MAX * (decibels - mMinDecibels) *
+                                             rangeScaleFactor));
+    buffer[i] = static_cast<unsigned char>(scaled);
+  }
 }
 
 void AnalyserNode::GetFloatTimeDomainData(const Float32Array& aArray) {
-  aArray.ProcessData([&](const Span<float>& aData, JS::AutoCheckCannotGC&&) {
-    size_t length = std::min(aData.Length(), size_t(FftSize()));
+  aArray.ComputeState();
 
-    GetTimeDomainData(aData.Elements(), length);
-  });
+  float* buffer = aArray.Data();
+  size_t length = std::min(aArray.Length(), FftSize());
+
+  GetTimeDomainData(buffer, length);
 }
 
 void AnalyserNode::GetByteTimeDomainData(const Uint8Array& aArray) {
-  aArray.ProcessData([&](const Span<uint8_t>& aData, JS::AutoCheckCannotGC&&) {
-    size_t length = std::min(aData.Length(), size_t(FftSize()));
+  aArray.ComputeState();
 
-    AlignedTArray<float> tmpBuffer;
-    if (!tmpBuffer.SetLength(length, fallible)) {
-      return;
-    }
+  size_t length = std::min(aArray.Length(), FftSize());
 
-    GetTimeDomainData(tmpBuffer.Elements(), length);
+  AlignedTArray<float> tmpBuffer;
+  if (!tmpBuffer.SetLength(length, fallible)) {
+    return;
+  }
 
-    unsigned char* buffer = aData.Elements();
-    for (size_t i = 0; i < length; ++i) {
-      const float value = tmpBuffer[i];
-      // scale the value to the range of [0, UCHAR_MAX]
-      const float scaled =
-          std::max(0.0f, std::min(float(UCHAR_MAX), 128.0f * (value + 1.0f)));
-      buffer[i] = static_cast<unsigned char>(scaled);
-    }
-  });
+  GetTimeDomainData(tmpBuffer.Elements(), length);
+
+  unsigned char* buffer = aArray.Data();
+  for (size_t i = 0; i < length; ++i) {
+    const float value = tmpBuffer[i];
+    // scale the value to the range of [0, UCHAR_MAX]
+    const float scaled =
+        std::max(0.0f, std::min(float(UCHAR_MAX), 128.0f * (value + 1.0f)));
+    buffer[i] = static_cast<unsigned char>(scaled);
+  }
 }
 
 bool AnalyserNode::FFTAnalysis() {

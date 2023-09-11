@@ -228,7 +228,8 @@ already_AddRefed<PushSubscription> PushSubscription::Constructor(
   nsTArray<uint8_t> rawKey;
   if (aInitDict.mP256dhKey.WasPassed() &&
       !aInitDict.mP256dhKey.Value().IsNull() &&
-      !aInitDict.mP256dhKey.Value().Value().AppendDataTo(rawKey)) {
+      !PushUtil::CopyArrayBufferToArray(aInitDict.mP256dhKey.Value().Value(),
+                                        rawKey)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
@@ -236,7 +237,8 @@ already_AddRefed<PushSubscription> PushSubscription::Constructor(
   nsTArray<uint8_t> authSecret;
   if (aInitDict.mAuthSecret.WasPassed() &&
       !aInitDict.mAuthSecret.Value().IsNull() &&
-      !aInitDict.mAuthSecret.Value().Value().AppendDataTo(authSecret)) {
+      !PushUtil::CopyArrayBufferToArray(aInitDict.mAuthSecret.Value().Value(),
+                                        authSecret)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }

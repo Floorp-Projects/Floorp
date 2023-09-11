@@ -15,7 +15,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/MediaSourceBinding.h"
 #include "mozilla/dom/TimeRanges.h"
-#include "mozilla/dom/TypedArray.h"
 #include "nsError.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
@@ -179,24 +178,18 @@ void SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd,
 void SourceBuffer::AppendBuffer(const ArrayBuffer& aData, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("AppendBuffer(ArrayBuffer)");
-  RefPtr<MediaByteBuffer> data = PrepareAppend(aData, aRv);
-  if (!data) {
-    return;
-  }
-  DDLOG(DDLogCategory::API, "AppendBuffer", uint64_t(data->Length()));
-  AppendData(std::move(data), aRv);
+  aData.ComputeState();
+  DDLOG(DDLogCategory::API, "AppendBuffer", aData.Length());
+  AppendData(aData.Data(), aData.Length(), aRv);
 }
 
 void SourceBuffer::AppendBuffer(const ArrayBufferView& aData,
                                 ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_API("AppendBuffer(ArrayBufferView)");
-  RefPtr<MediaByteBuffer> data = PrepareAppend(aData, aRv);
-  if (!data) {
-    return;
-  }
-  DDLOG(DDLogCategory::API, "AppendBuffer", uint64_t(data->Length()));
-  AppendData(std::move(data), aRv);
+  aData.ComputeState();
+  DDLOG(DDLogCategory::API, "AppendBuffer", aData.Length());
+  AppendData(aData.Data(), aData.Length(), aRv);
 }
 
 already_AddRefed<Promise> SourceBuffer::AppendBufferAsync(
@@ -204,13 +197,10 @@ already_AddRefed<Promise> SourceBuffer::AppendBufferAsync(
   MOZ_ASSERT(NS_IsMainThread());
 
   MSE_API("AppendBufferAsync(ArrayBuffer)");
-  RefPtr<MediaByteBuffer> data = PrepareAppend(aData, aRv);
-  if (!data) {
-    return nullptr;
-  }
-  DDLOG(DDLogCategory::API, "AppendBufferAsync", uint64_t(data->Length()));
+  aData.ComputeState();
+  DDLOG(DDLogCategory::API, "AppendBufferAsync", aData.Length());
 
-  return AppendDataAsync(std::move(data), aRv);
+  return AppendDataAsync(aData.Data(), aData.Length(), aRv);
 }
 
 already_AddRefed<Promise> SourceBuffer::AppendBufferAsync(
@@ -218,13 +208,10 @@ already_AddRefed<Promise> SourceBuffer::AppendBufferAsync(
   MOZ_ASSERT(NS_IsMainThread());
 
   MSE_API("AppendBufferAsync(ArrayBufferView)");
-  RefPtr<MediaByteBuffer> data = PrepareAppend(aData, aRv);
-  if (!data) {
-    return nullptr;
-  }
-  DDLOG(DDLogCategory::API, "AppendBufferAsync", uint64_t(data->Length()));
+  aData.ComputeState();
+  DDLOG(DDLogCategory::API, "AppendBufferAsync", aData.Length());
 
-  return AppendDataAsync(std::move(data), aRv);
+  return AppendDataAsync(aData.Data(), aData.Length(), aRv);
 }
 
 void SourceBuffer::Abort(ErrorResult& aRv) {
@@ -559,22 +546,27 @@ void SourceBuffer::CheckEndTime() {
   }
 }
 
-void SourceBuffer::AppendData(RefPtr<MediaByteBuffer>&& aData,
+void SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength,
                               ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("AppendData(aLength=%zu)", aData->Length());
+  MSE_DEBUG("AppendData(aLength=%u)", aLength);
 
+  RefPtr<MediaByteBuffer> data = PrepareAppend(aData, aLength, aRv);
+  if (!data) {
+    return;
+  }
   StartUpdating();
 
-  mTrackBuffersManager->AppendData(aData.forget(), mCurrentAttributes)
+  mTrackBuffersManager->AppendData(data.forget(), mCurrentAttributes)
       ->Then(mAbstractMainThread, __func__, this,
              &SourceBuffer::AppendDataCompletedWithSuccess,
              &SourceBuffer::AppendDataErrored)
       ->Track(mPendingAppend);
 }
 
-already_AddRefed<Promise> SourceBuffer::AppendDataAsync(
-    RefPtr<MediaByteBuffer>&& aData, ErrorResult& aRv) {
+already_AddRefed<Promise> SourceBuffer::AppendDataAsync(const uint8_t* aData,
+                                                        uint32_t aLength,
+                                                        ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!IsAttached()) {
@@ -594,7 +586,7 @@ already_AddRefed<Promise> SourceBuffer::AppendDataAsync(
     return nullptr;
   }
 
-  AppendData(std::move(aData), aRv);
+  AppendData(aData, aLength, aRv);
 
   if (aRv.Failed()) {
     return nullptr;
@@ -726,13 +718,6 @@ already_AddRefed<MediaByteBuffer> SourceBuffer::PrepareAppend(
   return data.forget();
 }
 
-template <typename T>
-already_AddRefed<MediaByteBuffer> SourceBuffer::PrepareAppend(
-    const T& aData, ErrorResult& aRv) {
-  return aData.ProcessFixedData([&](const Span<uint8_t>& aData) {
-    return PrepareAppend(aData.Elements(), aData.Length(), aRv);
-  });
-}
 TimeUnit SourceBuffer::GetBufferedEnd() {
   MOZ_ASSERT(NS_IsMainThread());
   ErrorResult dummy;

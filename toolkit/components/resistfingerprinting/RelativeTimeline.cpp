@@ -21,11 +21,17 @@ int64_t RelativeTimeline::GetRandomTimelineSeed() {
       return mRandomTimelineSeed;
     }
 
-    rv = randomGenerator->GenerateRandomBytesInto(mRandomTimelineSeed);
+    uint8_t* buffer = nullptr;
+    rv = randomGenerator->GenerateRandomBytes(sizeof(mRandomTimelineSeed),
+                                              &buffer);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mRandomTimelineSeed = rand();
       return mRandomTimelineSeed;
     }
+
+    memcpy(&mRandomTimelineSeed, buffer, sizeof(mRandomTimelineSeed));
+    MOZ_ASSERT(buffer);
+    free(buffer);
   }
   return mRandomTimelineSeed;
 }

@@ -1290,6 +1290,7 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
         "failed?)");
     return nullptr;
   }
+  array.ComputeState();
   const SurfaceFormat FORMAT = SurfaceFormat::R8G8B8A8;
   // ImageData's underlying data is not alpha-premultiplied.
   auto alphaType = (aOptions.mPremultiplyAlpha == PremultiplyAlpha::Premultiply)
@@ -1300,6 +1301,7 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
   const uint32_t imageWidth = aImageData.Width();
   const uint32_t imageHeight = aImageData.Height();
   const uint32_t imageStride = imageWidth * BYTES_PER_PIXEL;
+  const uint32_t dataLength = array.Length();
   const gfx::IntSize imageSize(imageWidth, imageHeight);
 
   // Check the ImageData is neutered or not.
@@ -1308,46 +1310,52 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
     return nullptr;
   }
 
-  return array.ProcessFixedData(
-      [&](const Span<const uint8_t>& aData) -> already_AddRefed<ImageBitmap> {
-        const uint32_t dataLength = aData.Length();
-        if ((imageWidth * imageHeight * BYTES_PER_PIXEL) != dataLength) {
-          aRv.ThrowInvalidStateError("Data size / image format mismatch");
-          return nullptr;
-        }
+  if ((imageWidth * imageHeight * BYTES_PER_PIXEL) != dataLength) {
+    aRv.ThrowInvalidStateError("Data size / image format mismatch");
+    return nullptr;
+  }
 
-        // Create and Crop the raw data into a layers::Image
-        RefPtr<layers::Image> data;
+  // Create and Crop the raw data into a layers::Image
+  RefPtr<layers::Image> data;
 
-        uint8_t* fixedData = const_cast<uint8_t*>(aData.Elements());
+  // If the data could move during a GC, copy it out into a local buffer that
+  // lives until a CreateImageFromRawData lower in the stack copies it.
+  // Reassure the static analysis that we know what we're doing.
+  size_t maxInline = JS_MaxMovableTypedArraySize();
+  uint8_t inlineDataBuffer[maxInline];
+  uint8_t* fixedData = array.FixedData(inlineDataBuffer, maxInline);
 
-        if (NS_IsMainThread()) {
-          data =
-              CreateImageFromRawData(imageSize, imageStride, FORMAT, fixedData,
-                                     dataLength, aCropRect, aOptions);
-        } else {
-          RefPtr<CreateImageFromRawDataInMainThreadSyncTask> task =
-              new CreateImageFromRawDataInMainThreadSyncTask(
-                  fixedData, dataLength, imageStride, FORMAT, imageSize,
-                  aCropRect, getter_AddRefs(data), aOptions);
-          task->Dispatch(Canceling, aRv);
-        }
+  // Lie to the hazard analysis and say that we're done with everything that
+  // `array` was using (safe because the data buffer is fixed, and the holding
+  // JSObject is being kept alive elsewhere.)
+  array.Reset();
 
-        if (NS_WARN_IF(!data)) {
-          aRv.ThrowInvalidStateError("Failed to create internal image");
-          return nullptr;
-        }
+  if (NS_IsMainThread()) {
+    data = CreateImageFromRawData(imageSize, imageStride, FORMAT, fixedData,
+                                  dataLength, aCropRect, aOptions);
+  } else {
+    RefPtr<CreateImageFromRawDataInMainThreadSyncTask> task =
+        new CreateImageFromRawDataInMainThreadSyncTask(
+            fixedData, dataLength, imageStride, FORMAT, imageSize, aCropRect,
+            getter_AddRefs(data), aOptions);
+    task->Dispatch(Canceling, aRv);
+  }
 
-        // Create an ImageBitmap.
-        RefPtr<ImageBitmap> ret =
-            new ImageBitmap(aGlobal, data, false /* write-only */, alphaType);
-        ret->mAllocatedImageData = true;
+  if (NS_WARN_IF(!data)) {
+    aRv.ThrowInvalidStateError("Failed to create internal image");
+    return nullptr;
+  }
 
-        // The cropping information has been handled in the
-        // CreateImageFromRawData() function.
+  // Create an ImageBitmap.
+  RefPtr<ImageBitmap> ret =
+      new ImageBitmap(aGlobal, data, false /* write-only */, alphaType);
 
-        return ret.forget();
-      });
+  ret->mAllocatedImageData = true;
+
+  // The cropping information has been handled in the CreateImageFromRawData()
+  // function.
+
+  return ret.forget();
 }
 
 /* static */
