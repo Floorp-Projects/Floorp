@@ -13,7 +13,6 @@
 #include "nsContentUtils.h"
 
 #include "mozilla/intl/BidiEmbeddingLevel.h"
-#include "mozilla/GeckoBindings.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/SVGImageContext.h"
@@ -2799,57 +2798,37 @@ void CanvasRenderingContext2D::ParseSpacing(const nsACString& aSpacing,
 class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
  public:
   CanvasUserSpaceMetrics(const gfx::IntSize& aSize, const nsFont& aFont,
-                         const ComputedStyle* aCanvasStyle,
+                         nsAtom* aFontLanguage, bool aExplicitLanguage,
                          nsPresContext* aPresContext)
       : mSize(aSize),
         mFont(aFont),
-        mCanvasStyle(aCanvasStyle),
+        mFontLanguage(aFontLanguage),
+        mExplicitLanguage(aExplicitLanguage),
         mPresContext(aPresContext) {}
 
-  float GetEmLength(Type aType) const override {
-    switch (aType) {
-      case Type::This:
-        return mFont.size.ToCSSPixels();
-      case Type::Root:
-        return SVGContentUtils::GetFontSize(
-            mPresContext->Document()->GetRootElement());
-    }
+  virtual float GetEmLength() const override {
+    return mFont.size.ToCSSPixels();
   }
-  gfx::Size GetSize() const override { return Size(mSize); }
 
-  CSSSize GetCSSViewportSize() const override {
-    return GetCSSViewportSizeFromContext(mPresContext);
+  virtual float GetExLength() const override {
+    nsFontMetrics::Params params;
+    params.language = mFontLanguage;
+    params.explicitLanguage = mExplicitLanguage;
+    params.textPerf = mPresContext->GetTextPerfMetrics();
+    params.featureValueLookup = mPresContext->GetFontFeatureValuesLookup();
+    RefPtr<nsFontMetrics> fontMetrics =
+        mPresContext->GetMetricsFor(mFont, params);
+    return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
+                                   AppUnitsPerCSSPixel());
   }
+
+  virtual gfx::Size GetSize() const override { return Size(mSize); }
 
  private:
-  GeckoFontMetrics GetFontMetricsForType(Type aType) const override {
-    switch (aType) {
-      case Type::This: {
-        if (!mCanvasStyle) {
-          return DefaultFontMetrics();
-        }
-        return Gecko_GetFontMetrics(
-            mPresContext, WritingMode(mCanvasStyle).IsVertical(),
-            mCanvasStyle->StyleFont(), mCanvasStyle->StyleFont()->mFont.size,
-            /* aUseUserFontSet = */ true,
-            /* aRetrieveMathScales */ false);
-      }
-      case Type::Root:
-        return GetFontMetrics(mPresContext->Document()->GetRootElement());
-    }
-  }
-  WritingMode GetWritingModeForType(Type aType) const override {
-    switch (aType) {
-      case Type::This:
-        return WritingMode(mCanvasStyle);
-      case Type::Root:
-        return GetWritingMode(mPresContext->Document()->GetRootElement());
-    }
-  }
-
   gfx::IntSize mSize;
   const nsFont& mFont;
-  RefPtr<const ComputedStyle> mCanvasStyle;
+  nsAtom* mFontLanguage;
+  bool mExplicitLanguage;
   nsPresContext* mPresContext;
 };
 
@@ -2879,18 +2858,12 @@ void CanvasRenderingContext2D::UpdateFilter() {
     return;
   }
 
-  RefPtr<const ComputedStyle> canvasStyle;
-
   // The PresContext is only used with URL filters and we don't allow those to
   // be used on worker threads.
   nsPresContext* presContext = nullptr;
   if (presShell) {
     if (FiltersNeedFrameFlush(CurrentState().filterChain.AsSpan())) {
       presShell->FlushPendingNotifications(FlushType::Frames);
-      if (mCanvasElement) {
-        canvasStyle =
-            nsComputedDOMStyle::GetComputedStyleNoFlush(mCanvasElement);
-      }
     }
 
     if (MOZ_UNLIKELY(presShell->IsDestroying())) {
@@ -2904,8 +2877,9 @@ void CanvasRenderingContext2D::UpdateFilter() {
 
   CurrentState().filter = FilterInstance::GetFilterDescription(
       mCanvasElement, CurrentState().filterChain.AsSpan(), writeOnly,
-      CanvasUserSpaceMetrics(GetSize(), CurrentState().fontFont, canvasStyle,
-                             presContext),
+      CanvasUserSpaceMetrics(GetSize(), CurrentState().fontFont,
+                             CurrentState().fontLanguage,
+                             CurrentState().fontExplicitLanguage, presContext),
       gfxRect(0, 0, mWidth, mHeight), CurrentState().filterAdditionalImages);
   CurrentState().filterSourceGraphicTainted = writeOnly;
 }
