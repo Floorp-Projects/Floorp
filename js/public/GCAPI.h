@@ -1045,16 +1045,25 @@ class JS_PUBLIC_API AutoRequireNoGC {
 class JS_PUBLIC_API AutoAssertNoGC : public AutoRequireNoGC {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
  protected:
-  JSContext* cx_;
+  JSContext* cx_;  // nullptr if inactive.
 
  public:
-  // This gets the context from TLS if it is not passed in.
+  // Nullptr here means get the context from TLS. It does not mean inactive
+  // (though cx_ may end up nullptr, and thus inactive, if TLS has not yet been
+  // initialized.)
   explicit AutoAssertNoGC(JSContext* cx = nullptr);
+  AutoAssertNoGC(AutoAssertNoGC&& other) : cx_(other.cx_) {
+    other.cx_ = nullptr;
+  }
   ~AutoAssertNoGC();
+
+  void reset();
 #else
  public:
   explicit AutoAssertNoGC(JSContext* cx = nullptr) {}
   ~AutoAssertNoGC() {}
+
+  void reset() {}
 #endif
 };
 
@@ -1125,11 +1134,15 @@ class JS_PUBLIC_API AutoCheckCannotGC : public AutoAssertNoGC {
 #  else
   AutoCheckCannotGC(const AutoCheckCannotGC& other) : AutoCheckCannotGC() {}
 #  endif
+  AutoCheckCannotGC(AutoCheckCannotGC&& other)
+      : AutoAssertNoGC(std::forward<AutoAssertNoGC>(other)) {}
 #else
 class JS_PUBLIC_API AutoCheckCannotGC : public AutoRequireNoGC {
  public:
   explicit AutoCheckCannotGC(JSContext* cx = nullptr) {}
   AutoCheckCannotGC(const AutoCheckCannotGC& other) : AutoCheckCannotGC() {}
+  AutoCheckCannotGC(AutoCheckCannotGC&& other) : AutoCheckCannotGC() {}
+  void reset() {}
 #endif
 } JS_HAZ_GC_INVALIDATED JS_HAZ_GC_REF;
 
