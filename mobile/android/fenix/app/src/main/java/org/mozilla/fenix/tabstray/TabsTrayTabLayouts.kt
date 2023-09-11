@@ -14,9 +14,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -131,7 +131,7 @@ fun TabLayout(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun TabGrid(
     tabs: List<TabSessionState>,
@@ -197,11 +197,15 @@ private fun TabGrid(
             }
         }
 
-        items(
+        itemsIndexed(
             items = tabs,
-            key = { tab -> tab.id },
-        ) { tab ->
-            DragItemContainer(state = reorderState, key = tab.id) {
+            key = { _, tab -> tab.id },
+        ) { index, tab ->
+            DragItemContainer(
+                state = reorderState,
+                position = index + if (header != null) 1 else 0,
+                key = tab.id,
+            ) {
                 TabGridItem(
                     tab = tab,
                     thumbnailSize = tabThumbnailSize,
@@ -288,11 +292,15 @@ private fun TabList(
             }
         }
 
-        items(
+        itemsIndexed(
             items = tabs,
-            key = { tab -> tab.id },
-        ) { tab ->
-            DragItemContainer(state = reorderState, key = tab.id) {
+            key = { _, tab -> tab.id },
+        ) { index, tab ->
+            DragItemContainer(
+                state = reorderState,
+                position = index + if (header != null) 1 else 0,
+                key = tab.id,
+            ) {
                 TabListItem(
                     tab = tab,
                     thumbnailSize = tabThumbnailSize,

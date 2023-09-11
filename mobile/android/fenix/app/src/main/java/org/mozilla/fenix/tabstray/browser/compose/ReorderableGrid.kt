@@ -102,10 +102,16 @@ class GridReorderState internal constructor(
     private var draggingItemCumulatedOffset by mutableStateOf(Offset.Zero)
     private var draggingItemInitialOffset by mutableStateOf(Offset.Zero)
     internal var moved by mutableStateOf(false)
-    internal val draggingItemOffset: Offset
+    private val draggingItemOffset: Offset
         get() = draggingItemLayoutInfo?.let { item ->
             draggingItemInitialOffset + draggingItemCumulatedOffset - item.offset.toOffset()
         } ?: Offset.Zero
+
+    internal fun computeItemOffset(index: Int): Offset {
+        val itemAtIndex = gridState.layoutInfo.visibleItemsInfo.firstOrNull { info -> info.index == index }
+            ?: return Offset.Zero
+        return draggingItemInitialOffset + draggingItemCumulatedOffset - itemAtIndex.offset.toOffset()
+    }
 
     private val draggingItemLayoutInfo: LazyGridItemInfo?
         get() = gridState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == draggingItemKey }
@@ -202,6 +208,7 @@ class GridReorderState internal constructor(
  *
  * @param state State of the lazy grid.
  * @param key Key of the item to be displayed.
+ * @param position Position in the grid of the item to be displayed.
  * @param content Content of the item to be displayed.
  */
 @ExperimentalFoundationApi
@@ -209,6 +216,7 @@ class GridReorderState internal constructor(
 fun LazyGridItemScope.DragItemContainer(
     state: GridReorderState,
     key: Any,
+    position: Int,
     content: @Composable () -> Unit,
 ) {
     val modifier = when (key) {
@@ -216,8 +224,8 @@ fun LazyGridItemScope.DragItemContainer(
             Modifier
                 .zIndex(1f)
                 .graphicsLayer {
-                    translationX = state.draggingItemOffset.x
-                    translationY = state.draggingItemOffset.y
+                    translationX = state.computeItemOffset(position).x
+                    translationY = state.computeItemOffset(position).y
                 }
         }
 

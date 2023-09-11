@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -93,13 +94,19 @@ class ListReorderState internal constructor(
     var draggingItemKey by mutableStateOf<Any?>(null)
         private set
 
-    private var draggingItemCumulatedOffset by mutableStateOf(0f)
-    private var draggingItemInitialOffset by mutableStateOf(0f)
+    private var draggingItemCumulatedOffset by mutableFloatStateOf(0f)
+    private var draggingItemInitialOffset by mutableFloatStateOf(0f)
     internal var moved by mutableStateOf(false)
-    internal val draggingItemOffset: Float
+    private val draggingItemOffset: Float
         get() = draggingItemLayoutInfo?.let { item ->
             draggingItemInitialOffset + draggingItemCumulatedOffset - item.offset
         } ?: 0f
+
+    internal fun computeItemOffset(index: Int): Float {
+        val itemAtIndex = listState.layoutInfo.visibleItemsInfo.firstOrNull { info -> info.index == index }
+            ?: return draggingItemOffset
+        return draggingItemInitialOffset + draggingItemCumulatedOffset - itemAtIndex.offset
+    }
 
     private val draggingItemLayoutInfo: LazyListItemInfo?
         get() = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == draggingItemKey }
@@ -192,6 +199,7 @@ class ListReorderState internal constructor(
  *
  * @param state List reordering state.
  * @param key Key of the item to be displayed.
+ * @param position Position in the list of the item to be displayed.
  * @param content Content of the item to be displayed.
  */
 @ExperimentalFoundationApi
@@ -199,6 +207,7 @@ class ListReorderState internal constructor(
 fun LazyItemScope.DragItemContainer(
     state: ListReorderState,
     key: Any,
+    position: Int,
     content: @Composable () -> Unit,
 ) {
     val modifier = when (key) {
@@ -206,7 +215,7 @@ fun LazyItemScope.DragItemContainer(
             Modifier
                 .zIndex(1f)
                 .graphicsLayer {
-                    translationY = state.draggingItemOffset
+                    translationY = state.computeItemOffset(position)
                 }
         }
 
