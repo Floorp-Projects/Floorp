@@ -9481,7 +9481,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     // If it isn't a reload, the request already failed to be upgraded and
     // https-first is enabled then don't ask the user again for permission to
     // unload and just unload.
-    if (!isHistoryOrReload && aLoadState->IsExemptFromHTTPSOnlyMode() &&
+    if (!isHistoryOrReload && aLoadState->IsExemptFromHTTPSFirstMode() &&
         nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(isPrivateWin)) {
       rv = mContentViewer->PermitUnload(
           nsIContentViewer::PermitUnloadAction::eDontPromptAndUnload,

@@ -288,7 +288,7 @@ void SessionHistoryInfo::FillLoadInfo(nsDocShellLoadState& aLoadState) const {
   // point in re-retrying to upgrade. On a reload we still want to check,
   // because the exemptions set by the user could have changed.
   if ((mLoadType & nsIDocShell::LOAD_CMD_RELOAD) == 0) {
-    aLoadState.SetIsExemptFromHTTPSOnlyMode(true);
+    aLoadState.SetIsExemptFromHTTPSFirstMode(true);
   }
 }
 /* static */
