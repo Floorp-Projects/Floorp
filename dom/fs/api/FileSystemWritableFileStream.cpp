@@ -841,23 +841,18 @@ RefPtr<Int64Promise> FileSystemWritableFileStream::Write(
 
   // https://fs.spec.whatwg.org/#write-a-chunk
   // Step 3.4.6 If data is a BufferSource, let dataBytes be a copy of data.
-  if (aData.IsArrayBuffer() || aData.IsArrayBufferView()) {
-    const auto dataSpan = [&aData]() -> mozilla::Span<uint8_t> {
-      if (aData.IsArrayBuffer()) {
-        const ArrayBuffer& buffer = aData.GetAsArrayBuffer();
-        buffer.ComputeState();
-        return Span{buffer.Data(), buffer.Length()};
-      }
-
-      const ArrayBufferView& buffer = aData.GetAsArrayBufferView();
-      buffer.ComputeState();
-      return Span{buffer.Data(), buffer.Length()};
-    }();
+  auto vectorFromTypedArray = CreateFromTypedArrayData<Vector<uint8_t>>(aData);
+  if (vectorFromTypedArray.isSome()) {
+    Maybe<Vector<uint8_t>>& maybeVector = vectorFromTypedArray.ref();
+    QM_TRY(MOZ_TO_RESULT(maybeVector.isSome()), CreateAndRejectInt64Promise);
 
     // Here we copy
-    QM_TRY(MOZ_TO_RESULT(NS_NewByteInputStream(getter_AddRefs(inputStream),
-                                               AsChars(dataSpan),
-                                               NS_ASSIGNMENT_COPY)),
+
+    size_t length = maybeVector->length();
+    QM_TRY(MOZ_TO_RESULT(NS_NewByteInputStream(
+               getter_AddRefs(inputStream),
+               AsChars(Span(maybeVector->extractOrCopyRawBuffer(), length)),
+               NS_ASSIGNMENT_ADOPT)),
            CreateAndRejectInt64Promise);
 
     return WriteImpl(mTaskQueue, std::move(inputStream), mStreamOwner,
