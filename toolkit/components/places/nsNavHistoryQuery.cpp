@@ -27,9 +27,10 @@ using namespace mozilla::places;
 static nsresult ParseQueryBooleanString(const nsCString& aString, bool* aValue);
 
 // query getters
-typedef decltype(&nsINavHistoryQuery::GetOnlyBookmarked) BoolQueryGetter;
-typedef decltype(&nsINavHistoryQuery::GetBeginTimeReference) Uint32QueryGetter;
-typedef decltype(&nsINavHistoryQuery::GetBeginTime) Int64QueryGetter;
+using BoolQueryGetter = nsresult (NS_STDCALL nsINavHistoryQuery::*)(bool*);
+using Uint32QueryGetter =
+    nsresult (NS_STDCALL nsINavHistoryQuery::*)(uint32_t*);
+using Int64QueryGetter = nsresult (NS_STDCALL nsINavHistoryQuery::*)(int64_t*);
 static void AppendBoolKeyValueIfTrue(nsACString& aString,
                                      const nsCString& aName,
                                      nsINavHistoryQuery* aQuery,
@@ -44,9 +45,9 @@ static void AppendInt64KeyValueIfNonzero(nsACString& aString,
                                          Int64QueryGetter getter);
 
 // query setters
-typedef decltype(&nsINavHistoryQuery::SetOnlyBookmarked) BoolQuerySetter;
-typedef decltype(&nsINavHistoryQuery::SetBeginTimeReference) Uint32QuerySetter;
-typedef decltype(&nsINavHistoryQuery::SetBeginTime) Int64QuerySetter;
+using BoolQuerySetter = nsresult (NS_STDCALL nsINavHistoryQuery::*)(bool);
+using Uint32QuerySetter = nsresult (NS_STDCALL nsINavHistoryQuery::*)(uint32_t);
+using Int64QuerySetter = nsresult (NS_STDCALL nsINavHistoryQuery::*)(int64_t);
 static void SetQueryKeyBool(const nsCString& aValue, nsINavHistoryQuery* aQuery,
                             BoolQuerySetter setter);
 static void SetQueryKeyUint32(const nsCString& aValue,
@@ -57,10 +58,12 @@ static void SetQueryKeyInt64(const nsCString& aValue,
                              Int64QuerySetter setter);
 
 // options setters
-typedef decltype(&nsINavHistoryQueryOptions::SetExpandQueries)
-    BoolOptionsSetter;
-typedef decltype(&nsINavHistoryQueryOptions::SetMaxResults) Uint32OptionsSetter;
-typedef decltype(&nsINavHistoryQueryOptions::SetResultType) Uint16OptionsSetter;
+using BoolOptionsSetter =
+    nsresult (NS_STDCALL nsINavHistoryQueryOptions::*)(bool);
+using Uint32OptionsSetter =
+    nsresult (NS_STDCALL nsINavHistoryQueryOptions::*)(uint32_t);
+using Uint16OptionsSetter =
+    nsresult (NS_STDCALL nsINavHistoryQueryOptions::*)(uint16_t);
 static void SetOptionsKeyBool(const nsCString& aValue,
                               nsINavHistoryQueryOptions* aOptions,
                               BoolOptionsSetter setter);
@@ -81,12 +84,9 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_SEARCH_TERMS "terms"
 #define QUERYKEY_MIN_VISITS "minVisits"
 #define QUERYKEY_MAX_VISITS "maxVisits"
-#define QUERYKEY_ONLY_BOOKMARKED "onlyBookmarked"
 #define QUERYKEY_DOMAIN_IS_HOST "domainIsHost"
 #define QUERYKEY_DOMAIN "domain"
 #define QUERYKEY_PARENT "parent"
-#define QUERYKEY_NOTANNOTATION "!annotation"
-#define QUERYKEY_ANNOTATION "annotation"
 #define QUERYKEY_URI "uri"
 #define QUERYKEY_GROUP "group"
 #define QUERYKEY_SORT "sort"
@@ -189,8 +189,9 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery* aQuery,
     const nsString& searchTerms = query->SearchTerms();
     nsCString escapedTerms;
     if (!NS_Escape(NS_ConvertUTF16toUTF8(searchTerms), escapedTerms,
-                   url_XAlphas))
+                   url_XAlphas)) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     AppendAmpersandIfNonempty(queryString);
     queryString += nsLiteralCString(QUERYKEY_SEARCH_TERMS "=");
@@ -211,11 +212,6 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery* aQuery,
     queryString.AppendLiteral(QUERYKEY_MAX_VISITS "=");
     AppendInt32(queryString, maxVisits);
   }
-
-  // only bookmarked
-  AppendBoolKeyValueIfTrue(queryString,
-                           nsLiteralCString(QUERYKEY_ONLY_BOOKMARKED), query,
-                           &nsINavHistoryQuery::GetOnlyBookmarked);
 
   // domain (+ is host), only call if hasDomain, which means non-IsVoid
   // this means we may get an empty string for the domain in the result,
@@ -249,21 +245,6 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery* aQuery,
     queryString.Append(escaped);
   }
 
-  // annotation
-  if (!query->Annotation().IsEmpty()) {
-    AppendAmpersandIfNonempty(queryString);
-    if (query->AnnotationIsNot()) {
-      queryString.AppendLiteral(QUERYKEY_NOTANNOTATION "=");
-    } else {
-      queryString.AppendLiteral(QUERYKEY_ANNOTATION "=");
-    }
-    const nsCString& annot = query->Annotation();
-    nsAutoCString escaped;
-    bool success = NS_Escape(annot, escaped, url_XAlphas);
-    NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
-    queryString.Append(escaped);
-  }
-
   // parents
   const nsTArray<nsCString>& parents = query->Parents();
   for (uint32_t i = 0; i < parents.Length(); ++i) {
@@ -276,8 +257,9 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery* aQuery,
   const nsTArray<nsString>& tags = query->Tags();
   for (uint32_t i = 0; i < tags.Length(); ++i) {
     nsAutoCString escapedTag;
-    if (!NS_Escape(NS_ConvertUTF16toUTF8(tags[i]), escapedTag, url_XAlphas))
+    if (!NS_Escape(NS_ConvertUTF16toUTF8(tags[i]), escapedTag, url_XAlphas)) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     AppendAmpersandIfNonempty(queryString);
     queryString += nsLiteralCString(QUERYKEY_TAG "=");
@@ -298,14 +280,14 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery* aQuery,
   if (options->SortingMode() != nsINavHistoryQueryOptions::SORT_BY_NONE) {
     AppendAmpersandIfNonempty(queryString);
     queryString += nsLiteralCString(QUERYKEY_SORT "=");
-    AppendInt16(queryString, options->SortingMode());
+    AppendInt16(queryString, static_cast<int16_t>(options->SortingMode()));
   }
 
   // result type
   if (options->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_URI) {
     AppendAmpersandIfNonempty(queryString);
     queryString += nsLiteralCString(QUERYKEY_RESULT_TYPE "=");
-    AppendInt16(queryString, options->ResultType());
+    AppendInt16(queryString, static_cast<int16_t>(options->ResultType()));
   }
 
   // exclude items
@@ -336,14 +318,14 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery* aQuery,
   if (options->MaxResults()) {
     AppendAmpersandIfNonempty(queryString);
     queryString += nsLiteralCString(QUERYKEY_MAX_RESULTS "=");
-    AppendInt32(queryString, options->MaxResults());
+    AppendInt32(queryString, static_cast<int32_t>(options->MaxResults()));
   }
 
   // queryType
   if (options->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY) {
     AppendAmpersandIfNonempty(queryString);
     queryString += nsLiteralCString(QUERYKEY_QUERY_TYPE "=");
-    AppendInt16(queryString, options->QueryType());
+    AppendInt16(queryString, static_cast<int16_t>(options->QueryType()));
   }
 
   // async enabled
@@ -398,23 +380,20 @@ nsresult nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
       // min visits
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MIN_VISITS)) {
       int32_t visits = kvp.value.ToInteger(&rv);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
         aQuery->SetMinVisits(visits);
-      else
+      } else {
         NS_WARNING("Bad number for minVisits in query");
+      }
 
       // max visits
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_VISITS)) {
       int32_t visits = kvp.value.ToInteger(&rv);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
         aQuery->SetMaxVisits(visits);
-      else
+      } else {
         NS_WARNING("Bad number for maxVisits in query");
-
-      // onlyBookmarked flag
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_ONLY_BOOKMARKED)) {
-      SetQueryKeyBool(kvp.value, aQuery,
-                      &nsINavHistoryQuery::SetOnlyBookmarked);
+      }
 
       // domainIsHost flag
     } else if (kvp.key.EqualsLiteral(QUERYKEY_DOMAIN_IS_HOST)) {
@@ -443,20 +422,6 @@ nsresult nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
       rv = aQuery->SetUri(uri);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // not annotation
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_NOTANNOTATION)) {
-      nsAutoCString unescaped(kvp.value);
-      NS_UnescapeURL(unescaped);  // modifies input
-      aQuery->SetAnnotationIsNot(true);
-      aQuery->SetAnnotation(unescaped);
-
-      // annotation
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_ANNOTATION)) {
-      nsAutoCString unescaped(kvp.value);
-      NS_UnescapeURL(unescaped);  // modifies input
-      aQuery->SetAnnotationIsNot(false);
-      aQuery->SetAnnotation(unescaped);
-
       // tag
     } else if (kvp.key.EqualsLiteral(QUERYKEY_TAG)) {
       nsAutoCString unescaped(kvp.value);
@@ -474,8 +439,9 @@ nsresult nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
     } else if (kvp.key.EqualsLiteral(QUERYKEY_TRANSITION)) {
       uint32_t transition = kvp.value.ToInteger(&rv);
       if (NS_SUCCEEDED(rv)) {
-        if (!transitions.Contains(transition))
+        if (!transitions.Contains(transition)) {
           transitions.AppendElement(transition);
+        }
       } else {
         NS_WARNING("Invalid Int32 transition value.");
       }
@@ -576,9 +542,7 @@ nsNavHistoryQuery::nsNavHistoryQuery()
       mBeginTimeReference(TIME_RELATIVE_EPOCH),
       mEndTime(0),
       mEndTimeReference(TIME_RELATIVE_EPOCH),
-      mOnlyBookmarked(false),
       mDomainIsHost(false),
-      mAnnotationIsNot(false),
       mTagsAreNot(false) {
   // differentiate not set (IsVoid) from empty string (local files)
   mDomain.SetIsVoid(true);
@@ -592,12 +556,9 @@ nsNavHistoryQuery::nsNavHistoryQuery(const nsNavHistoryQuery& aOther)
       mEndTime(aOther.mEndTime),
       mEndTimeReference(aOther.mEndTimeReference),
       mSearchTerms(aOther.mSearchTerms),
-      mOnlyBookmarked(aOther.mOnlyBookmarked),
       mDomainIsHost(aOther.mDomainIsHost),
       mDomain(aOther.mDomain),
       mUri(aOther.mUri),
-      mAnnotationIsNot(aOther.mAnnotationIsNot),
-      mAnnotation(aOther.mAnnotation),
       mParents(aOther.mParents.Clone()),
       mTags(aOther.mTags.Clone()),
       mTagsAreNot(aOther.mTagsAreNot),
@@ -694,15 +655,6 @@ NS_IMETHODIMP nsNavHistoryQuery::SetMaxVisits(int32_t aVisits) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::GetOnlyBookmarked(bool* aOnlyBookmarked) {
-  *aOnlyBookmarked = mOnlyBookmarked;
-  return NS_OK;
-}
-NS_IMETHODIMP nsNavHistoryQuery::SetOnlyBookmarked(bool aOnlyBookmarked) {
-  mOnlyBookmarked = aOnlyBookmarked;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsNavHistoryQuery::GetDomainIsHost(bool* aDomainIsHost) {
   *aDomainIsHost = mDomainIsHost;
   return NS_OK;
@@ -739,28 +691,6 @@ NS_IMETHODIMP nsNavHistoryQuery::GetHasUri(bool* aHasUri) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::GetAnnotationIsNot(bool* aIsNot) {
-  *aIsNot = mAnnotationIsNot;
-  return NS_OK;
-}
-NS_IMETHODIMP nsNavHistoryQuery::SetAnnotationIsNot(bool aIsNot) {
-  mAnnotationIsNot = aIsNot;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsNavHistoryQuery::GetAnnotation(nsACString& aAnnotation) {
-  aAnnotation = mAnnotation;
-  return NS_OK;
-}
-NS_IMETHODIMP nsNavHistoryQuery::SetAnnotation(const nsACString& aAnnotation) {
-  mAnnotation = aAnnotation;
-  return NS_OK;
-}
-NS_IMETHODIMP nsNavHistoryQuery::GetHasAnnotation(bool* aHasIt) {
-  *aHasIt = !mAnnotation.IsEmpty();
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsNavHistoryQuery::GetTags(nsIVariant** aTags) {
   NS_ENSURE_ARG_POINTER(aTags);
 
@@ -769,9 +699,9 @@ NS_IMETHODIMP nsNavHistoryQuery::GetTags(nsIVariant** aTags) {
   uint32_t arrayLen = mTags.Length();
 
   nsresult rv;
-  if (arrayLen == 0)
+  if (arrayLen == 0) {
     rv = out->SetAsEmptyArray();
-  else {
+  } else {
     // Note: The resulting nsIVariant dupes both the array and its elements.
     const char16_t** array = reinterpret_cast<const char16_t**>(
         moz_xmalloc(arrayLen * sizeof(char16_t*)));
@@ -1059,8 +989,9 @@ nsNavHistoryQueryOptions::SetQueryType(uint16_t aQueryType) {
   // resultType is set.
   if (mResultType == RESULTS_AS_TAGS_ROOT ||
       mResultType == RESULTS_AS_LEFT_PANE_QUERY ||
-      mResultType == RESULTS_AS_ROOTS_QUERY)
+      mResultType == RESULTS_AS_ROOTS_QUERY) {
     return NS_OK;
+  }
   mQueryType = aQueryType;
   return NS_OK;
 }
