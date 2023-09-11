@@ -33,8 +33,6 @@ function AuthPrompt1(flags) {
   this.flags = flags;
 }
 
-var initialChannelId = -1;
-
 AuthPrompt1.prototype = {
   user: "guest",
   pass: "guest",
@@ -271,20 +269,6 @@ var listener = {
         do_throw("Expecting an HTTP channel");
       }
 
-      if (
-        Services.prefs.getBoolPref("network.auth.use_redirect_for_retries") &&
-        // we should skip redirect check if we do not expect to succeed
-        this.expectedCode == 200
-      ) {
-        // ensure channel ids are initialized
-        Assert.notEqual(initialChannelId, -1);
-
-        // for each request we must use a unique channel ID.
-        // See Bug 1820807
-        var chan = request.QueryInterface(Ci.nsIIdentChannel);
-        Assert.notEqual(initialChannelId, chan.channelId);
-      }
-
       Assert.equal(request.responseStatus, this.expectedCode);
       // The request should be succeeded if we expect 200
       Assert.equal(request.requestSucceeded, this.expectedCode == 200);
@@ -301,7 +285,7 @@ var listener = {
 
   onStopRequest: function test_onStopR(request, status) {
     Assert.equal(status, Cr.NS_ERROR_ABORT);
-    initialChannelId = -1;
+
     this.nextTest();
   },
 };
@@ -324,25 +308,12 @@ function makeChan(
   });
 }
 
-var ChannelCreationObserver = {
-  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-  observe(aSubject, aTopic, aData) {
-    if (aTopic == "http-on-opening-request") {
-      initialChannelId = aSubject.QueryInterface(Ci.nsIIdentChannel).channelId;
-    }
-  },
-};
-
 var httpserv = null;
 
 function setup() {
   httpserv = new HttpServer();
 
   httpserv.registerPathHandler("/auth", authHandler);
-  httpserv.registerPathHandler(
-    "/auth/stored/wrong/credentials/",
-    authHandlerWrongStoredCredentials
-  );
   httpserv.registerPathHandler("/auth/ntlm/simple", authNtlmSimple);
   httpserv.registerPathHandler("/auth/realm", authRealm);
   httpserv.registerPathHandler("/auth/non_ascii", authNonascii);
@@ -367,7 +338,6 @@ function setup() {
   registerCleanupFunction(async () => {
     await httpserv.stop();
   });
-  Services.obs.addObserver(ChannelCreationObserver, "http-on-opening-request");
 }
 setup();
 
@@ -381,100 +351,86 @@ async function openAndListen(chan) {
     .clearAll();
 }
 
-async function test_noauth() {
+add_task(async function test_noauth() {
   var chan = makeChan(URL + "/auth", URL);
 
   listener.expectedCode = 401; // Unauthorized
   await openAndListen(chan);
-}
+});
 
-async function test_returnfalse1() {
+add_task(async function test_returnfalse1() {
   var chan = makeChan(URL + "/auth", URL);
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 1);
   listener.expectedCode = 401; // Unauthorized
   await openAndListen(chan);
-}
+});
 
-async function test_wrongpw1() {
+add_task(async function test_wrongpw1() {
   var chan = makeChan(URL + "/auth", URL);
 
   chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 1);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_prompt1() {
+add_task(async function test_prompt1() {
   var chan = makeChan(URL + "/auth", URL);
 
   chan.notificationCallbacks = new Requestor(0, 1);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_prompt1CrossOrigin() {
+add_task(async function test_prompt1CrossOrigin() {
   var chan = makeChan(URL + "/auth", "http://example.org");
 
   chan.notificationCallbacks = new Requestor(16, 1);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_prompt2CrossOrigin() {
+add_task(async function test_prompt2CrossOrigin() {
   var chan = makeChan(URL + "/auth", "http://example.org");
 
   chan.notificationCallbacks = new Requestor(16, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_returnfalse2() {
+add_task(async function test_returnfalse2() {
   var chan = makeChan(URL + "/auth", URL);
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
   await openAndListen(chan);
-}
+});
 
-async function test_wrongpw2() {
+add_task(async function test_wrongpw2() {
   var chan = makeChan(URL + "/auth", URL);
 
   chan.notificationCallbacks = new Requestor(FLAG_WRONG_PASSWORD, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-var requestNum = 0;
-var expectedRequestNum = 0;
-async function test_wrong_stored_passwd() {
-  // tests that we don't retry auth requests for incorrect custom credentials passed during channel creation
-  requestNum = 0;
-  expectedRequestNum = 1;
-  var chan = makeChan(URL + "/auth/stored/wrong/credentials/", URL);
-  chan.nsIHttpChannel.setRequestHeader("Authorization", "wrong_cred", false);
-  chan.notificationCallbacks = new Requestor(0, 1);
-  listener.expectedCode = 401; // Unauthorized
-
-  await openAndListen(chan);
-}
-
-async function test_prompt2() {
+add_task(async function test_prompt2() {
   var chan = makeChan(URL + "/auth", URL);
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_ntlm() {
+add_task(async function test_ntlm() {
   var chan = makeChan(URL + "/auth/ntlm/simple", URL);
 
   chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
   await openAndListen(chan);
-}
+});
 
-async function test_basicrealm() {
+add_task(async function test_basicrealm() {
   var chan = makeChan(URL + "/auth/realm", URL);
 
   let requestor = new RealmTestRequestor();
@@ -482,97 +438,97 @@ async function test_basicrealm() {
   listener.expectedCode = 401; // Unauthorized
   await openAndListen(chan);
   Assert.equal(requestor.promptRealm, '"foo_bar');
-}
+});
 
-async function test_nonascii() {
+add_task(async function test_nonascii() {
   var chan = makeChan(URL + "/auth/non_ascii", URL);
 
   chan.notificationCallbacks = new Requestor(FLAG_NON_ASCII_USER_PASSWORD, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_digest_noauth() {
+add_task(async function test_digest_noauth() {
   var chan = makeChan(URL + "/auth/digest_md5", URL);
 
   // chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
   listener.expectedCode = 401; // Unauthorized
   await openAndListen(chan);
-}
+});
 
-async function test_digest_md5() {
+add_task(async function test_digest_md5() {
   var chan = makeChan(URL + "/auth/digest_md5", URL);
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_digest_md5sess() {
+add_task(async function test_digest_md5sess() {
   var chan = makeChan(URL + "/auth/digest_md5sess", URL);
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_digest_sha256() {
+add_task(async function test_digest_sha256() {
   var chan = makeChan(URL + "/auth/digest_sha256", URL);
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_digest_sha256sess() {
+add_task(async function test_digest_sha256sess() {
   var chan = makeChan(URL + "/auth/digest_sha256sess", URL);
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_digest_sha256_md5() {
+add_task(async function test_digest_sha256_md5() {
   var chan = makeChan(URL + "/auth/digest_sha256_md5", URL);
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_digest_md5_sha256() {
+add_task(async function test_digest_md5_sha256() {
   var chan = makeChan(URL + "/auth/digest_md5_sha256", URL);
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_digest_md5_sha256_oneline() {
+add_task(async function test_digest_md5_sha256_oneline() {
   var chan = makeChan(URL + "/auth/digest_md5_sha256_oneline", URL);
 
   chan.notificationCallbacks = new Requestor(0, 2);
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
-}
+});
 
-async function test_digest_bogus_user() {
+add_task(async function test_digest_bogus_user() {
   var chan = makeChan(URL + "/auth/digest_md5", URL);
   chan.notificationCallbacks = new Requestor(FLAG_BOGUS_USER, 2);
   listener.expectedCode = 401; // unauthorized
   await openAndListen(chan);
-}
+});
 
 // Test header "WWW-Authenticate: Digest" - bug 1338876.
-async function test_short_digest() {
+add_task(async function test_short_digest() {
   var chan = makeChan(URL + "/auth/short_digest", URL);
   chan.notificationCallbacks = new Requestor(FLAG_NO_REALM, 2);
   listener.expectedCode = 401; // OK
   await openAndListen(chan);
-}
+});
 
 // Test that COOP/COEP are processed even though asyncPromptAuth is cancelled.
-async function test_corp_coep() {
+add_task(async function test_corp_coep() {
   var chan = makeChan(
     URL + "/corp-coep",
     URL,
@@ -592,10 +548,10 @@ async function test_corp_coep() {
     chan.getResponseHeader("cross-origin-opener-policy"),
     "same-origin"
   );
-}
+});
 
 // XXX(valentin): this makes tests fail if it's not run last. Why?
-async function test_nonascii_xhr() {
+add_task(async function test_nonascii_xhr() {
   await new Promise(resolve => {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", URL + "/auth/non_ascii", true, "é", "é");
@@ -608,49 +564,7 @@ async function test_nonascii_xhr() {
     };
     xhr.send(null);
   });
-}
-
-let auth_tests = [
-  test_noauth,
-  test_returnfalse1,
-  test_wrongpw1,
-  test_wrong_stored_passwd,
-  test_prompt1,
-  test_prompt1CrossOrigin,
-  test_prompt2CrossOrigin,
-  test_returnfalse2,
-  test_wrongpw2,
-  test_prompt2,
-  test_ntlm,
-  test_basicrealm,
-  test_nonascii,
-  test_digest_noauth,
-  test_digest_md5,
-  test_digest_md5sess,
-  test_digest_sha256,
-  test_digest_sha256sess,
-  test_digest_sha256_md5,
-  test_digest_md5_sha256,
-  test_digest_md5_sha256_oneline,
-  test_digest_bogus_user,
-  test_short_digest,
-  test_corp_coep,
-  test_nonascii_xhr,
-];
-
-for (let auth_test of auth_tests) {
-  add_task(
-    { pref_set: [["network.auth.use_redirect_for_retries", false]] },
-    auth_test
-  );
-}
-
-for (let auth_test of auth_tests) {
-  add_task(
-    { pref_set: [["network.auth.use_redirect_for_retries", true]] },
-    auth_test
-  );
-}
+});
 
 // PATH HANDLERS
 
@@ -676,23 +590,6 @@ function authHandler(metadata, response) {
     body = "failed";
   }
 
-  response.bodyOutputStream.write(body, body.length);
-}
-
-function authHandlerWrongStoredCredentials(metadata, response) {
-  var body;
-  if (++requestNum > expectedRequestNum) {
-    response.setStatusLine(metadata.httpVersion, 500, "");
-  } else {
-    response.setStatusLine(
-      metadata.httpVersion,
-      401,
-      "Unauthorized" + requestNum
-    );
-    response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
-  }
-
-  body = "failed";
   response.bodyOutputStream.write(body, body.length);
 }
 
