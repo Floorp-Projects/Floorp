@@ -24,7 +24,10 @@ namespace js {
 
 class ArrayBufferViewObject : public NativeObject {
  public:
-  // Underlying (Shared)ArrayBufferObject.
+  // Underlying (Shared)ArrayBufferObject. ObjectValue if there is
+  // a buffer. Otherwise, the buffer is implicit because the data
+  // is held inline, and the buffer slot will store the pinned status
+  // (FalseValue or TrueValue).
   static constexpr size_t BUFFER_SLOT = 0;
   static_assert(BUFFER_SLOT == JS_TYPEDARRAYLAYOUT_BUFFER_SLOT,
                 "self-hosted code with burned-in constants must get the "
@@ -121,7 +124,8 @@ class ArrayBufferViewObject : public NativeObject {
     return &obj->as<SharedArrayBufferObject>();
   }
   ArrayBufferObjectMaybeShared* bufferEither() const {
-    JSObject* obj = bufferValue().toObjectOrNull();
+    JSObject* obj =
+        bufferValue().isBoolean() ? nullptr : bufferValue().toObjectOrNull();
     if (!obj) {
       return nullptr;
     }
@@ -144,6 +148,40 @@ class ArrayBufferViewObject : public NativeObject {
     }
 
     return buffer->isDetached();
+  }
+
+  bool isLengthPinned() const {
+    Value buffer = bufferValue();
+    if (buffer.isBoolean()) {
+      return buffer.toBoolean();
+    }
+    if (isSharedMemory()) {
+      return true;
+    }
+    return bufferUnshared()->isLengthPinned();
+  }
+
+  bool pinLength(bool pin) {
+    if (isSharedMemory()) {
+      // Always pinned, cannot change.
+      return false;
+    }
+
+    if (hasBuffer()) {
+      return bufferUnshared()->pinLength(pin);
+    }
+
+    // No ArrayBuffer (data is inline in the view). bufferValue() is a
+    // BooleanValue saying whether the length is currently pinned.
+    MOZ_ASSERT(bufferValue().isBoolean());
+
+    bool wasPinned = bufferValue().toBoolean();
+    if (wasPinned == pin) {
+      return false;
+    }
+
+    setFixedSlot(BUFFER_SLOT, JS::BooleanValue(pin));
+    return true;
   }
 
   size_t byteOffset() const {

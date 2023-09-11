@@ -56,6 +56,7 @@ bool JSObject::is<js::ArrayBufferViewObject>() const {
 void ArrayBufferViewObject::notifyBufferDetached() {
   MOZ_ASSERT(!isSharedMemory());
   MOZ_ASSERT(hasBuffer());
+  MOZ_ASSERT(!bufferUnshared()->isLengthPinned());
 
   setFixedSlot(LENGTH_SLOT, PrivateValue(size_t(0)));
   setFixedSlot(BYTEOFFSET_SLOT, PrivateValue(size_t(0)));
@@ -98,7 +99,12 @@ bool ArrayBufferViewObject::init(JSContext* cx,
 
   initFixedSlot(BYTEOFFSET_SLOT, PrivateValue(byteOffset));
   initFixedSlot(LENGTH_SLOT, PrivateValue(length));
-  initFixedSlot(BUFFER_SLOT, ObjectOrNullValue(buffer));
+  if (buffer) {
+    initFixedSlot(BUFFER_SLOT, ObjectValue(*buffer));
+  } else {
+    MOZ_ASSERT(!isSharedMemory());
+    initFixedSlot(BUFFER_SLOT, JS::FalseValue());
+  }
 
   if (buffer) {
     SharedMem<uint8_t*> ptr = buffer->dataPointerEither();
@@ -316,4 +322,19 @@ JS_PUBLIC_API bool JS::IsLargeArrayBufferView(JSObject* obj) {
                 ArrayBufferObject::MaxByteLengthForSmallBuffer);
   return false;
 #endif
+}
+
+JS_PUBLIC_API bool JS::PinArrayBufferOrViewLength(JSObject* obj, bool pin) {
+  ArrayBufferObjectMaybeShared* buffer =
+      obj->maybeUnwrapIf<ArrayBufferObjectMaybeShared>();
+  if (buffer) {
+    return buffer->pinLength(pin);
+  }
+
+  ArrayBufferViewObject* view = obj->maybeUnwrapAs<ArrayBufferViewObject>();
+  if (view) {
+    return view->pinLength(pin);
+  }
+
+  return false;
 }

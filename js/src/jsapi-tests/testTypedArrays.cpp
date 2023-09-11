@@ -107,6 +107,62 @@ BEGIN_TEST(testTypedArrays) {
   return ok;
 }
 
+// Test pinning a view's length.
+bool TestViewLengthPinning(Handle<JSObject*> view) {
+  // Pin the length of an inline view. (Fails if shared memory.)
+  bool isShared = view.as<NativeObject>()->isSharedMemory();
+  CHECK(JS::PinArrayBufferOrViewLength(view, true) == !isShared);
+
+  // Fail to pin an already-pinned length.
+  CHECK(!JS::PinArrayBufferOrViewLength(view, true));
+
+  // Extract an ArrayBuffer. This may cause it to be created, in which case it
+  // will inherit the pinned status from the view.
+  bool bufferIsShared;
+  Rooted<JSObject*> buffer(
+      cx, JS_GetArrayBufferViewBuffer(cx, view, &bufferIsShared));
+  CHECK(isShared == bufferIsShared);
+
+  // Cannot pin the buffer, since it is already pinned.
+  CHECK(!JS::PinArrayBufferOrViewLength(buffer, true));
+
+  // Should fail to be detached, since its length is pinned.
+  CHECK(!JS::DetachArrayBuffer(cx, buffer));
+  CHECK(cx->isExceptionPending());
+  cx->clearPendingException();
+
+  // Unpin (fails if shared memory).
+  CHECK(JS::PinArrayBufferOrViewLength(view, false) == !isShared);
+
+  // Fail to unpin when already unpinned.
+  CHECK(!JS::PinArrayBufferOrViewLength(view, false));
+
+  return true;
+}
+
+// Test pinning the length of an ArrayBuffer or SharedArrayBuffer.
+bool TestBufferLengthPinning(Handle<JSObject*> buffer) {
+  // Pin the length of an inline view. (Fails if shared memory.)
+  bool isShared = !buffer->is<ArrayBufferObject>();
+  CHECK(JS::PinArrayBufferOrViewLength(buffer, true) == !isShared);
+
+  // Fail to pin an already-pinned length.
+  CHECK(!JS::PinArrayBufferOrViewLength(buffer, true));
+
+  // Should fail to be detached, since its length is pinned.
+  CHECK(!JS::DetachArrayBuffer(cx, buffer));
+  CHECK(cx->isExceptionPending());
+  cx->clearPendingException();
+
+  // Unpin (fails if shared memory).
+  CHECK(JS::PinArrayBufferOrViewLength(buffer, false) == !isShared);
+
+  // Fail to unpin when already unpinned.
+  CHECK(!JS::PinArrayBufferOrViewLength(buffer, false));
+
+  return true;
+}
+
 // Shared memory can only be mapped by a TypedArray by creating the
 // TypedArray with a SharedArrayBuffer explicitly, so no tests here.
 
@@ -129,6 +185,8 @@ bool TestPlainTypedArray(JSContext* cx) {
   CHECK_EQUAL(JS_GetTypedArrayLength(array), 7u);
   CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0u);
   CHECK_EQUAL(JS_GetTypedArrayByteLength(array), sizeof(Element) * 7);
+
+  TestViewLengthPinning(array);
 
   {
     JS::AutoCheckCannotGC nogc;
@@ -159,6 +217,9 @@ bool TestArrayFromBuffer(JSContext* cx) {
   size_t nbytes = elts * sizeof(Element);
   RootedObject buffer(cx, Shared ? JS::NewSharedArrayBuffer(cx, nbytes)
                                  : JS::NewArrayBuffer(cx, nbytes));
+
+  TestBufferLengthPinning(buffer);
+
   {
     JS::AutoCheckCannotGC nogc;
     bool isShared;
@@ -184,6 +245,8 @@ bool TestArrayFromBuffer(JSContext* cx) {
                 (JSObject*)buffer);
     CHECK_EQUAL(Shared, isShared);
   }
+
+  TestViewLengthPinning(array);
 
   {
     JS::AutoCheckCannotGC nogc;

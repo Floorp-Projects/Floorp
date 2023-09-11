@@ -275,6 +275,20 @@ namespace JS {
  */
 JS_PUBLIC_API bool IsLargeArrayBufferView(JSObject* obj);
 
+/*
+ * Given an ArrayBuffer or view, prevent the length of the underlying
+ * ArrayBuffer from changing (with pin=true) until unfrozen (with
+ * pin=false). Note that some objects (eg SharedArrayBuffers) cannot change
+ * length to begin with, and are treated as always pinned.
+ *
+ * Normally, ArrayBuffers and their views cannot change length, but one way
+ * currently exists: detaching them. In the future, more will be added with
+ * GrowableArrayBuffer and ResizableArrayBuffer.
+ *
+ * Returns whether the pinned status changed.
+ */
+JS_PUBLIC_API bool PinArrayBufferOrViewLength(JSObject* obj, bool pin);
+
 namespace detail {
 
 // Map from eg Uint8Clamped -> uint8_t, Uint8 -> uint8_t, or Float64 ->

@@ -122,6 +122,8 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
     return false;
   }
 
+  buffer->pinLength(tarray->isLengthPinned());
+
   // Attaching the first view to an array buffer is infallible.
   MOZ_ALWAYS_TRUE(buffer->addView(cx, tarray));
 
@@ -477,7 +479,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
 
   static void initTypedArraySlots(TypedArrayObject* tarray, int32_t len) {
     MOZ_ASSERT(len >= 0);
-    tarray->initFixedSlot(TypedArrayObject::BUFFER_SLOT, NullValue());
+    tarray->initFixedSlot(TypedArrayObject::BUFFER_SLOT, JS::FalseValue());
     tarray->initFixedSlot(TypedArrayObject::LENGTH_SLOT, PrivateValue(len));
     tarray->initFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT,
                           PrivateValue(size_t(0)));
