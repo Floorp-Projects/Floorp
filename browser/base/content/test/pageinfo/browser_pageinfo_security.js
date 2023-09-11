@@ -320,9 +320,7 @@ add_task(async function test_Cookies() {
 
     let cookiesCleared = TestUtils.topicObserved(
       "cookie-changed",
-      subj =>
-        subj.QueryInterface(Ci.nsICookieNotification).action ==
-        Ci.nsICookieNotification.COOKIE_DELETED
+      (subj, data) => data == "deleted"
     );
 
     let removeDialogPromise = BrowserTestUtils.promiseAlertDialogOpen(

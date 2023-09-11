@@ -4,6 +4,7 @@
 "use strict";
 
 const BOUNCE_TRACKING_GRACE_PERIOD_SEC = 30;
+let btp;
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
@@ -12,9 +13,11 @@ add_setup(async function () {
         "privacy.bounceTrackingProtection.bounceTrackingGracePeriodSec",
         BOUNCE_TRACKING_GRACE_PERIOD_SEC,
       ],
-      ["privacy.bounceTrackingProtection.requireStatefulBounces", false],
     ],
   });
+  btp = Cc["@mozilla.org/bounce-tracking-protection;1"].getService(
+    Ci.nsIBounceTrackingProtection
+  );
 });
 
 /**
@@ -22,16 +25,16 @@ add_setup(async function () {
  */
 
 function initBounceTrackerState() {
-  bounceTrackingProtection.reset();
+  btp.reset();
 
   // Bounce time of 0 is out of the grace period which means we should purge.
-  bounceTrackingProtection.testAddBounceTrackerCandidate("example.com", 0);
-  bounceTrackingProtection.testAddBounceTrackerCandidate("example.net", 0);
+  btp.testAddBounceTrackerCandidate("example.com", 0);
+  btp.testAddBounceTrackerCandidate("example.net", 0);
 
   // Should not purge because within grace period.
   let timestampWithinGracePeriod =
     Date.now() - (BOUNCE_TRACKING_GRACE_PERIOD_SEC * 1000) / 2;
-  bounceTrackingProtection.testAddBounceTrackerCandidate(
+  btp.testAddBounceTrackerCandidate(
     "example.org",
     timestampWithinGracePeriod * 1000
   );
@@ -46,7 +49,7 @@ add_task(async function test_purging_skip_open_foreground_tab() {
     "https://example.com"
   );
   Assert.deepEqual(
-    await bounceTrackingProtection.testRunPurgeBounceTrackers(),
+    await btp.testRunPurgeBounceTrackers(),
     ["example.net"],
     "Should only purge example.net. example.org is within the grace period, example.com has an open tab."
   );
@@ -56,12 +59,12 @@ add_task(async function test_purging_skip_open_foreground_tab() {
 
   BrowserTestUtils.removeTab(tab);
   Assert.deepEqual(
-    (await bounceTrackingProtection.testRunPurgeBounceTrackers()).sort(),
+    (await btp.testRunPurgeBounceTrackers()).sort(),
     ["example.net", "example.com"].sort(),
     "example.com should have been purged now that it no longer has an open tab."
   );
 
-  bounceTrackingProtection.reset();
+  btp.reset();
 });
 
 add_task(async function test_purging_skip_open_background_tab() {
@@ -71,7 +74,7 @@ add_task(async function test_purging_skip_open_background_tab() {
   let tab = BrowserTestUtils.addTab(gBrowser, "https://example.com");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   Assert.deepEqual(
-    await bounceTrackingProtection.testRunPurgeBounceTrackers(),
+    await btp.testRunPurgeBounceTrackers(),
     ["example.net"],
     "Should only purge example.net. example.org is within the grace period, example.com has an open tab."
   );
@@ -81,12 +84,12 @@ add_task(async function test_purging_skip_open_background_tab() {
 
   BrowserTestUtils.removeTab(tab);
   Assert.deepEqual(
-    (await bounceTrackingProtection.testRunPurgeBounceTrackers()).sort(),
+    (await btp.testRunPurgeBounceTrackers()).sort(),
     ["example.net", "example.com"].sort(),
     "example.com should have been purged now that it no longer has an open tab."
   );
 
-  bounceTrackingProtection.reset();
+  btp.reset();
 });
 
 add_task(async function test_purging_skip_open_tab_extra_window() {
@@ -99,7 +102,7 @@ add_task(async function test_purging_skip_open_tab_extra_window() {
     "https://example.com"
   );
   Assert.deepEqual(
-    await bounceTrackingProtection.testRunPurgeBounceTrackers(),
+    await btp.testRunPurgeBounceTrackers(),
     ["example.net"],
     "Should only purge example.net. example.org is within the grace period, example.com has an open tab."
   );
@@ -111,10 +114,10 @@ add_task(async function test_purging_skip_open_tab_extra_window() {
 
   await BrowserTestUtils.closeWindow(win);
   Assert.deepEqual(
-    (await bounceTrackingProtection.testRunPurgeBounceTrackers()).sort(),
+    (await btp.testRunPurgeBounceTrackers()).sort(),
     ["example.net", "example.com"].sort(),
     "example.com should have been purged now that it no longer has an open tab."
   );
 
-  bounceTrackingProtection.reset();
+  btp.reset();
 });

@@ -28,13 +28,12 @@ function waitForNewCookie({ host, name, value }) {
   info(`waiting for cookie ${name}=${value} from ${host}...`);
 
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer(subj, topic) {
-      let notification = subj.QueryInterface(Ci.nsICookieNotification);
-      if (notification.action != Ci.nsICookieNotification.COOKIE_ADDED) {
+    Services.obs.addObserver(function observer(subj, topic, data) {
+      if (data != "added") {
         return;
       }
 
-      let cookie = notification.cookie.QueryInterface(Ci.nsICookie);
+      let cookie = subj.QueryInterface(Ci.nsICookie);
       if (cookie.host == host && cookie.name == name && cookie.value == value) {
         ok(true, "cookie added by the cookie service");
         Services.obs.removeObserver(observer, topic);

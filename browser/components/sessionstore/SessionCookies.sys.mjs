@@ -91,32 +91,22 @@ var SessionCookiesInternal = {
    * Handles observers notifications that are sent whenever cookies are added,
    * changed, or removed. Ensures that the storage is updated accordingly.
    */
-  observe(subject) {
-    let notification = subject.QueryInterface(Ci.nsICookieNotification);
-
-    let {
-      COOKIE_DELETED,
-      COOKIE_ADDED,
-      COOKIE_CHANGED,
-      ALL_COOKIES_CLEARED,
-      COOKIES_BATCH_DELETED,
-    } = Ci.nsICookieNotification;
-
-    switch (notification.action) {
-      case COOKIE_ADDED:
-        this._addCookie(notification.cookie);
+  observe(subject, topic, data) {
+    switch (data) {
+      case "added":
+        this._addCookie(subject);
         break;
-      case COOKIE_CHANGED:
-        this._updateCookie(notification.cookie);
+      case "changed":
+        this._updateCookie(subject);
         break;
-      case COOKIE_DELETED:
-        this._removeCookie(notification.cookie);
+      case "deleted":
+        this._removeCookie(subject);
         break;
-      case ALL_COOKIES_CLEARED:
+      case "cleared":
         CookieStore.clear();
         break;
-      case COOKIES_BATCH_DELETED:
-        this._removeCookies(notification.batchDeletedCookies);
+      case "batch-deleted":
+        this._removeCookies(subject);
         break;
       default:
         throw new Error("Unhandled session-cookie-changed notification.");
