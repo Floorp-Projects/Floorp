@@ -210,7 +210,7 @@ struct DocShellLoadStateInit
   bool InheritPrincipal;
   bool PrincipalIsExplicit;
   bool ForceAllowDataURI;
-  bool IsExemptFromHTTPSOnlyMode;
+  bool IsExemptFromHTTPSFirstMode;
   bool OriginalFrameSrc;
   bool IsFormSubmission;
   bool FirstParty;

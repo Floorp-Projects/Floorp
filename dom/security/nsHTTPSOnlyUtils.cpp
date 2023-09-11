@@ -652,8 +652,9 @@ void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
     // function is also consulted after redirects.
     httpsOnlyStatus &= ~nsILoadInfo::HTTPS_ONLY_EXEMPT;
   }
-  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT_NEXT_LOAD) {
-    httpsOnlyStatus &= ~nsILoadInfo::HTTPS_ONLY_EXEMPT_NEXT_LOAD;
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_FIRST_EXEMPT_NEXT_LOAD &&
+      isHttpsFirst) {
+    httpsOnlyStatus &= ~nsILoadInfo::HTTPS_FIRST_EXEMPT_NEXT_LOAD;
     httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
   }
   loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);

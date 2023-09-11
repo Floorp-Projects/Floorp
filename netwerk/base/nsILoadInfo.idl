@@ -516,9 +516,10 @@ interface nsILoadInfo : nsISupports
 
   /**
    * This flag indicates that HTTPS_ONLY_EXEMPT should be
-   * set the next time HTTPS-Only exemptions are checked.
+   * set the next time HTTPS-Only exemptions are checked
+   * and HTTPS-First is enabled.
    */
-  const unsigned long HTTPS_ONLY_EXEMPT_NEXT_LOAD = (1 << 9);
+  const unsigned long HTTPS_FIRST_EXEMPT_NEXT_LOAD = (1 << 9);
 
   /**
    * Upgrade state of HTTPS-Only Mode. The flag HTTPS_ONLY_EXEMPT can get

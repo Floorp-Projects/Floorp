@@ -62,7 +62,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mInheritPrincipal = aLoadState.InheritPrincipal();
   mPrincipalIsExplicit = aLoadState.PrincipalIsExplicit();
   mForceAllowDataURI = aLoadState.ForceAllowDataURI();
-  mIsExemptFromHTTPSOnlyMode = aLoadState.IsExemptFromHTTPSOnlyMode();
+  mIsExemptFromHTTPSFirstMode = aLoadState.IsExemptFromHTTPSFirstMode();
   mOriginalFrameSrc = aLoadState.OriginalFrameSrc();
   mIsFormSubmission = aLoadState.IsFormSubmission();
   mLoadType = aLoadState.LoadType();
@@ -163,7 +163,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mPrincipalToInherit(aOther.mPrincipalToInherit),
       mPartitionedPrincipalToInherit(aOther.mPartitionedPrincipalToInherit),
       mForceAllowDataURI(aOther.mForceAllowDataURI),
-      mIsExemptFromHTTPSOnlyMode(aOther.mIsExemptFromHTTPSOnlyMode),
+      mIsExemptFromHTTPSFirstMode(aOther.mIsExemptFromHTTPSFirstMode),
       mOriginalFrameSrc(aOther.mOriginalFrameSrc),
       mIsFormSubmission(aOther.mIsFormSubmission),
       mLoadType(aOther.mLoadType),
@@ -216,7 +216,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
       mPrincipalIsExplicit(false),
       mNotifiedBeforeUnloadListeners(false),
       mForceAllowDataURI(false),
-      mIsExemptFromHTTPSOnlyMode(false),
+      mIsExemptFromHTTPSFirstMode(false),
       mOriginalFrameSrc(false),
       mIsFormSubmission(false),
       mLoadType(LOAD_NORMAL),
@@ -619,13 +619,13 @@ void nsDocShellLoadState::SetForceAllowDataURI(bool aForceAllowDataURI) {
   mForceAllowDataURI = aForceAllowDataURI;
 }
 
-bool nsDocShellLoadState::IsExemptFromHTTPSOnlyMode() const {
-  return mIsExemptFromHTTPSOnlyMode;
+bool nsDocShellLoadState::IsExemptFromHTTPSFirstMode() const {
+  return mIsExemptFromHTTPSFirstMode;
 }
 
-void nsDocShellLoadState::SetIsExemptFromHTTPSOnlyMode(
-    bool aIsExemptFromHTTPSOnlyMode) {
-  mIsExemptFromHTTPSOnlyMode = aIsExemptFromHTTPSOnlyMode;
+void nsDocShellLoadState::SetIsExemptFromHTTPSFirstMode(
+    bool aIsExemptFromHTTPSFirstMode) {
+  mIsExemptFromHTTPSFirstMode = aIsExemptFromHTTPSFirstMode;
 }
 
 bool nsDocShellLoadState::OriginalFrameSrc() const { return mOriginalFrameSrc; }
@@ -1256,7 +1256,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize(
   loadState.InheritPrincipal() = mInheritPrincipal;
   loadState.PrincipalIsExplicit() = mPrincipalIsExplicit;
   loadState.ForceAllowDataURI() = mForceAllowDataURI;
-  loadState.IsExemptFromHTTPSOnlyMode() = mIsExemptFromHTTPSOnlyMode;
+  loadState.IsExemptFromHTTPSFirstMode() = mIsExemptFromHTTPSFirstMode;
   loadState.OriginalFrameSrc() = mOriginalFrameSrc;
   loadState.IsFormSubmission() = mIsFormSubmission;
   loadState.LoadType() = mLoadType;
