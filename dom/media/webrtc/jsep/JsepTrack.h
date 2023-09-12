@@ -168,10 +168,14 @@ class JsepTrack {
   virtual std::vector<uint32_t> GetRtxSsrcs() const {
     std::vector<uint32_t> result;
     if (mRtxIsAllowed &&
-        Preferences::GetBool("media.peerconnection.video.use_rtx", false)) {
-      std::for_each(
-          mSsrcToRtxSsrc.begin(), mSsrcToRtxSsrc.end(),
-          [&result](const auto& pair) { result.push_back(pair.second); });
+        Preferences::GetBool("media.peerconnection.video.use_rtx", false) &&
+        !mSsrcToRtxSsrc.empty()) {
+      MOZ_ASSERT(mSsrcToRtxSsrc.size() == mSsrcs.size());
+      for (const auto ssrc : mSsrcs) {
+        auto it = mSsrcToRtxSsrc.find(ssrc);
+        MOZ_ASSERT(it != mSsrcToRtxSsrc.end());
+        result.push_back(it->second);
+      }
     }
     return result;
   }
