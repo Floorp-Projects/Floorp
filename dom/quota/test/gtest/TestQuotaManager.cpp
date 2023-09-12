@@ -99,8 +99,7 @@ TEST_F(TestQuotaManager, ShutdownStorage_Ongoing) {
 
 // Test ShutdownStorage when a storage shutdown is already ongoing and storage
 // initialization is scheduled after that.
-TEST_F(TestQuotaManager,
-       DISABLED_ShutdownStorage_OngoingWithScheduledInitialization) {
+TEST_F(TestQuotaManager, ShutdownStorage_OngoingWithScheduledInitialization) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
   PerformOnIOThread([]() {
