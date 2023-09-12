@@ -17,7 +17,7 @@ import six
 from benchmark import Benchmark
 from logger.logger import RaptorLogger
 from manifestparser.util import evaluate_list_from_string
-from perftest import TRACE_APPS, Perftest
+from perftest import GECKO_PROFILER_APPS, TRACE_APPS, Perftest
 from results import BrowsertimeResultsHandler
 
 LOG = RaptorLogger(component="raptor-browsertime")
@@ -228,7 +228,7 @@ class Browsertime(Perftest):
         return (
             extra_profiler_run
             and test.get("expose_gecko_profiler")
-            and self.config["app"] in ("firefox",)
+            and self.config["app"] in GECKO_PROFILER_APPS
         )
 
     def _compose_cmd(self, test, timeout, extra_profiler_run=False):
@@ -500,7 +500,7 @@ class Browsertime(Perftest):
         else:
             priority1_options.extend(["--video", "false", "--visualMetrics", "false"])
 
-        if self.config["app"] == "firefox" and (
+        if self.config["app"] in GECKO_PROFILER_APPS and (
             self.config["gecko_profile"] or extra_profiler_run
         ):
             self.config[
