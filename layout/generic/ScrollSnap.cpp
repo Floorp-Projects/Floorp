@@ -45,23 +45,16 @@ class CalcSnapPoints final {
   void AddVerticalEdge(const SnapPosition& aEdge);
 
   struct CandidateTracker {
-    explicit CandidateTracker(nscoord aDestination)
-        : mBestEdge(SnapPosition{aDestination, StyleScrollSnapStop::Normal,
-                                 ScrollSnapTargetId::None}) {
-      // We use NSCoordSaturatingSubtract to calculate the distance between a
-      // given position and this second best edge position so that it can be an
-      // uninitialized value as the maximum possible value, because the first
-      // distance calculation would always be nscoord_MAX.
-      mSecondBestEdge = nscoord_MAX;
-      mEdgeFound = false;
-    }
-
     // keeps track of the position of the current best edge on this axis.
     SnapPosition mBestEdge;
     // keeps track of the position of the current second best edge on the
     // opposite side of the best edge on this axis.
-    nscoord mSecondBestEdge;
-    bool mEdgeFound;  // true if mBestEdge is storing a valid edge.
+    // We use NSCoordSaturatingSubtract to calculate the distance between a
+    // given position and this second best edge position so that it can be an
+    // uninitialized value as the maximum possible value, because the first
+    // distance calculation would always be nscoord_MAX.
+    nscoord mSecondBestEdge = nscoord_MAX;
+    bool mEdgeFound = false;  // true if mBestEdge is storing a valid edge.
 
     // Assuming in most cases there's no multiple coincide snap points.
     AutoTArray<ScrollSnapTargetId, 1> mTargetIds;
@@ -71,14 +64,18 @@ class CalcSnapPoints final {
                CandidateTracker* aCandidateTracker);
   SnapDestination GetBestEdge() const;
   nscoord XDistanceBetweenBestAndSecondEdge() const {
-    return std::abs(NSCoordSaturatingSubtract(mTrackerOnX.mSecondBestEdge,
-                                              mTrackerOnX.mBestEdge.mPosition,
-                                              nscoord_MAX));
+    return std::abs(NSCoordSaturatingSubtract(
+        mTrackerOnX.mSecondBestEdge,
+        mTrackerOnX.mEdgeFound ? mTrackerOnX.mBestEdge.mPosition
+                               : mDestination.x,
+        nscoord_MAX));
   }
   nscoord YDistanceBetweenBestAndSecondEdge() const {
-    return std::abs(NSCoordSaturatingSubtract(mTrackerOnY.mSecondBestEdge,
-                                              mTrackerOnY.mBestEdge.mPosition,
-                                              nscoord_MAX));
+    return std::abs(NSCoordSaturatingSubtract(
+        mTrackerOnY.mSecondBestEdge,
+        mTrackerOnY.mEdgeFound ? mTrackerOnY.mBestEdge.mPosition
+                               : mDestination.y,
+        nscoord_MAX));
   }
   const nsPoint& Destination() const { return mDestination; }
 
@@ -99,9 +96,7 @@ CalcSnapPoints::CalcSnapPoints(ScrollUnit aUnit, ScrollSnapFlags aSnapFlags,
     : mUnit(aUnit),
       mSnapFlags(aSnapFlags),
       mDestination(aDestination),
-      mStartPos(aStartPos),
-      mTrackerOnX(aDestination.x),
-      mTrackerOnY(aDestination.y) {
+      mStartPos(aStartPos) {
   MOZ_ASSERT(aSnapFlags != ScrollSnapFlags::Disabled);
 
   nsPoint direction = aDestination - aStartPos;
