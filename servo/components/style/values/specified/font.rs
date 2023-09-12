@@ -82,16 +82,16 @@ pub enum SystemFont {
     /// https://drafts.csswg.org/css-fonts/#valdef-font-status-bar
     StatusBar,
     /// Internal system font, used by the `<menupopup>`s on macOS.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozPullDownMenu,
     /// Internal system font, used for `<button>` elements.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozButton,
     /// Internal font, used by `<select>` elements.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozList,
     /// Internal font, used by `<input>` elements.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozField,
     #[css(skip)]
     End, // Just for indexing purposes.

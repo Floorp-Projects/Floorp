@@ -524,7 +524,7 @@ pub enum TextAlign {
     /// magic value that computes to the right thing. Since this is an
     /// implementation detail, it shouldn't be exposed to web content.
     #[cfg(feature = "gecko")]
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozCenterOrInherit,
 }
 
