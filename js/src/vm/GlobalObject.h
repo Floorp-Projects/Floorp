@@ -745,13 +745,6 @@ class GlobalObject : public NativeObject {
   static NativeObject* getOrCreateArrayIteratorPrototype(
       JSContext* cx, Handle<GlobalObject*> global);
 
-  NativeObject* maybeGetArrayIteratorPrototype() {
-    if (JSObject* obj = maybeBuiltinProto(ProtoKind::ArrayIteratorProto)) {
-      return &obj->as<NativeObject>();
-    }
-    return nullptr;
-  }
-
   static JSObject* getOrCreateStringIteratorPrototype(
       JSContext* cx, Handle<GlobalObject*> global);
 
@@ -1078,10 +1071,6 @@ class GlobalObject : public NativeObject {
   }
   void setBoundFunctionShapeWithDefaultProto(SharedShape* shape) {
     data().boundFunctionShapeWithDefaultProto = shape;
-  }
-
-  PropertyIteratorObject* maybeEmptyIterator() const {
-    return data().emptyIterator;
   }
 
   static PropertyIteratorObject* getOrCreateEmptyIterator(JSContext* cx);
