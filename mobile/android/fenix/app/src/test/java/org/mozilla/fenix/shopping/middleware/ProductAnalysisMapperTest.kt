@@ -38,11 +38,11 @@ class ProductAnalysisMapperTest {
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
             highlights = sortedMapOf(
-                HighlightType.QUALITY to listOf("quality"),
-                HighlightType.PRICE to listOf("price"),
-                HighlightType.SHIPPING to listOf("shipping"),
-                HighlightType.PACKAGING_AND_APPEARANCE to listOf("appearance"),
-                HighlightType.COMPETITIVENESS to listOf("competitiveness"),
+                HighlightType.QUALITY to listOf("\"quality\""),
+                HighlightType.PRICE to listOf("\"price\""),
+                HighlightType.SHIPPING to listOf("\"shipping\""),
+                HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
+                HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
             ),
         )
 
@@ -73,9 +73,9 @@ class ProductAnalysisMapperTest {
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
             highlights = sortedMapOf(
-                HighlightType.QUALITY to listOf("quality"),
-                HighlightType.PACKAGING_AND_APPEARANCE to listOf("appearance"),
-                HighlightType.COMPETITIVENESS to listOf("competitiveness"),
+                HighlightType.QUALITY to listOf("\"quality\""),
+                HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
+                HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
             ),
         )
 

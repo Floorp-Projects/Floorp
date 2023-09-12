@@ -67,7 +67,7 @@ private fun Highlight.highlightsForType(highlightType: HighlightType) =
         HighlightType.SHIPPING -> shipping
         HighlightType.PACKAGING_AND_APPEARANCE -> appearance
         HighlightType.COMPETITIVENESS -> competitiveness
-    }
+    }?.map { it.surroundWithQuotes() }
 
 /**
  * GeckoView sets 0.0 as default instead of null for adjusted rating. This maps 0.0 to null making
@@ -80,3 +80,6 @@ private fun Double.toFloatOrNull(): Float? =
     } else {
         toFloat()
     }
+
+private fun String.surroundWithQuotes(): String =
+    "\"$this\""
