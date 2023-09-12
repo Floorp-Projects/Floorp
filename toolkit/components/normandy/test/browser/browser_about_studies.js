@@ -706,7 +706,7 @@ add_task(async function test_nimbus_about_studies_rollout() {
         return content.document.querySelectorAll(".study-name").length;
       });
       // Make sure strings are properly shown
-      Assert.equal(studyCount, 0, "Rollout not loaded in non-debug mode");
+      Assert.equal(studyCount, 1, "Rollout loaded in non-debug mode");
     }
   );
   Services.prefs.setBoolPref("nimbus.debug", true);
