@@ -705,14 +705,11 @@ class QuotaManager final : public BackgroundThreadObject {
   LazyInitializedOnce<const nsString> mDefaultStoragePath;
   LazyInitializedOnce<const nsString> mPrivateStoragePath;
 
-  MozPromiseHolder<BoolPromise> mShutdownStoragePromiseHolder;
-
   uint64_t mTemporaryStorageLimit;
   uint64_t mTemporaryStorageUsage;
   int64_t mNextDirectoryLockId;
   bool mTemporaryStorageInitialized;
   bool mCacheUsable;
-  bool mShuttingDownStorage;
 };
 
 }  // namespace mozilla::dom::quota
