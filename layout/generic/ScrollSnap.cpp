@@ -30,10 +30,17 @@ class CalcSnapPoints final {
   CalcSnapPoints(ScrollUnit aUnit, ScrollSnapFlags aSnapFlags,
                  const nsPoint& aDestination, const nsPoint& aStartPos);
   struct SnapPosition : public SnapTarget {
-    SnapPosition(const SnapTarget& aSnapTarget, nscoord aPosition)
-        : SnapTarget(aSnapTarget), mPosition(aPosition) {}
+    SnapPosition(const SnapTarget& aSnapTarget, nscoord aPosition,
+                 nscoord aDistanceOnOtherAxis)
+        : SnapTarget(aSnapTarget),
+          mPosition(aPosition),
+          mDistanceOnOtherAxis(aDistanceOnOtherAxis) {}
 
     nscoord mPosition;
+    // The distance from the scroll destination to this snap position on the
+    // other axis. This value is used if there are multiple SnapPositions on
+    // this axis, but the positions on the other axis are different.
+    nscoord mDistanceOnOtherAxis;
   };
 
   void AddHorizontalEdge(const SnapTarget& aTarget);
@@ -60,7 +67,7 @@ class CalcSnapPoints final {
   void AddEdge(const SnapPosition& aEdge, nscoord aDestination,
                nscoord aStartPos, nscoord aScrollingDirection,
                CandidateTracker* aCandidateTracker);
-  SnapDestination GetBestEdge() const;
+  SnapDestination GetBestEdge(const nsSize& aSnapportSize) const;
   nscoord XDistanceBetweenBestAndSecondEdge() const {
     return std::abs(NSCoordSaturatingSubtract(
         mTrackerOnX.mSecondBestEdge,
@@ -113,7 +120,158 @@ CalcSnapPoints::CalcSnapPoints(ScrollUnit aUnit, ScrollSnapFlags aSnapFlags,
   }
 }
 
-SnapDestination CalcSnapPoints::GetBestEdge() const {
+SnapDestination CalcSnapPoints::GetBestEdge(const nsSize& aSnapportSize) const {
+  if (mTrackerOnX.EdgeFound() && mTrackerOnY.EdgeFound()) {
+    nsPoint bestCandidate(mTrackerOnX.mBestEdges[0].mPosition,
+                          mTrackerOnY.mBestEdges[0].mPosition);
+    nsRect snappedPort = nsRect(bestCandidate, aSnapportSize);
+
+    // If we've found the candidates on both axes, it's possible some of
+    // candidates will be outside of the snapport if we snap to the point
+    // (mTrackerOnX.mBestEdges[0].mPosition,
+    // mTrackerOnY.mBestEdges[0].mPosition). So we need to get the intersection
+    // of the snap area of each snap target element on each axis and the
+    // snapport to tell whether it's outside of the snapport or not.
+    //
+    // Also if at least either one of the elements will be outside of the
+    // snapport if we snap to (mTrackerOnX.mBestEdges[0].mPosition,
+    // mTrackerOnY.mBestEdges[0].mPosition). We need to choose one of
+    // combinations of the candidates which is closest to the destination.
+    //
+    // So here we iterate over mTrackerOnX and mTrackerOnY just once
+    // respectively for both purposes to avoid iterating over them again and
+    // again.
+    //
+    // NOTE: Ideally we have to iterate over every possible combinations of
+    // (mTrackerOnX.mBestEdges[i].mSnapPoint.mY,
+    //  mTrackerOnY.mBestEdges[j].mSnapPoint.mX) and tell whether the given
+    // combination will be visible in the snapport or not (maybe we should
+    // choose the one that the visible area, i.e., the intersection area of
+    // the snap target elements and the snapport, is the largest one rather than
+    // the closest one?). But it will be inefficient, so here we will not
+    // iterate all the combinations, we just iterate all the snap target
+    // elements in each axis respectively.
+
+    AutoTArray<ScrollSnapTargetId, 1> visibleTargetIdsOnX;
+    nscoord minimumDistanceOnY = nscoord_MAX;
+    size_t minimumXIndex = 0;
+    AutoTArray<ScrollSnapTargetId, 1> minimumDistanceTargetIdsOnX;
+    for (size_t i = 0; i < mTrackerOnX.mBestEdges.Length(); i++) {
+      const auto& targetX = mTrackerOnX.mBestEdges[i];
+      if (targetX.mSnapArea.Intersects(snappedPort)) {
+        visibleTargetIdsOnX.AppendElement(targetX.mTargetId);
+      }
+
+      if (targetX.mDistanceOnOtherAxis < minimumDistanceOnY) {
+        minimumDistanceOnY = targetX.mDistanceOnOtherAxis;
+        minimumXIndex = i;
+        minimumDistanceTargetIdsOnX =
+            AutoTArray<ScrollSnapTargetId, 1>{targetX.mTargetId};
+      } else if (minimumDistanceOnY != nscoord_MAX &&
+                 targetX.mDistanceOnOtherAxis == minimumDistanceOnY) {
+        minimumDistanceTargetIdsOnX.AppendElement(targetX.mTargetId);
+      }
+    }
+
+    AutoTArray<ScrollSnapTargetId, 1> visibleTargetIdsOnY;
+    nscoord minimumDistanceOnX = nscoord_MAX;
+    size_t minimumYIndex = 0;
+    AutoTArray<ScrollSnapTargetId, 1> minimumDistanceTargetIdsOnY;
+    for (size_t i = 0; i < mTrackerOnY.mBestEdges.Length(); i++) {
+      const auto& targetY = mTrackerOnY.mBestEdges[i];
+      if (targetY.mSnapArea.Intersects(snappedPort)) {
+        visibleTargetIdsOnY.AppendElement(targetY.mTargetId);
+      }
+
+      if (targetY.mDistanceOnOtherAxis < minimumDistanceOnX) {
+        minimumDistanceOnX = targetY.mDistanceOnOtherAxis;
+        minimumYIndex = i;
+        minimumDistanceTargetIdsOnY =
+            AutoTArray<ScrollSnapTargetId, 1>{targetY.mTargetId};
+      } else if (minimumDistanceOnX != nscoord_MAX &&
+                 targetY.mDistanceOnOtherAxis == minimumDistanceOnX) {
+        minimumDistanceTargetIdsOnY.AppendElement(targetY.mTargetId);
+      }
+    }
+
+    // If we have the target ids on both axes, it means the target elements
+    // (ids) specifying the best edge on X axis and the target elements
+    // specifying the best edge on Y axis are visible if we snap to the best
+    // edge. Thus they are valid snap positions.
+    if (!visibleTargetIdsOnX.IsEmpty() && !visibleTargetIdsOnY.IsEmpty()) {
+      return SnapDestination{
+          bestCandidate,
+          ScrollSnapTargetIds{visibleTargetIdsOnX, visibleTargetIdsOnY}};
+    }
+
+    // Now we've already known that snapping to
+    // (mTrackerOnX.mBestEdges[0].mPosition,
+    // mTrackerOnY.mBestEdges[0].mPosition) will make all candidates of
+    // mTrackerX or mTrackerY (or both) outside of the snapport. We need to
+    // choose another combination where candidates of both mTrackerX/Y are
+    // inside the snapport.
+
+    // There are three possibilities;
+    // 1) There's no candidate on X axis in mTrackerOnY (that means
+    //    each candidate's scroll-snap-align is `none` on X axis), but there's
+    //    any candidate in mTrackerOnX, the closest candidates of mTrackerOnX
+    //    should be used.
+    // 2) There's no candidate on Y axis in mTrackerOnX (that means
+    //    each candidate's scroll-snap-align is `none` on Y axis), but there's
+    //    any candidate in mTrackerOnY, the closest candidates of mTrackerOnY
+    //    should be used.
+    // 3) There are candidates on both axes. Choosing a combination such as
+    //    (mTrackerOnX.mBestEdges[i].mSnapPoint.mX,
+    //     mTrackerOnY.mBestEdges[i].mSnapPoint.mY)
+    //    would require us to iterate over the candidates again if the
+    //    combination position is outside the snapport, which we don't want to
+    //    do. Instead, we choose either one of the axis' candidates.
+    if ((minimumDistanceOnX == nscoord_MAX) &&
+        minimumDistanceOnY != nscoord_MAX) {
+      bestCandidate.y = *mTrackerOnX.mBestEdges[minimumXIndex].mSnapPoint.mY;
+      return SnapDestination{bestCandidate,
+                             ScrollSnapTargetIds{minimumDistanceTargetIdsOnX,
+                                                 minimumDistanceTargetIdsOnX}};
+    }
+
+    if (minimumDistanceOnX != nscoord_MAX &&
+        minimumDistanceOnY == nscoord_MAX) {
+      bestCandidate.x = *mTrackerOnY.mBestEdges[minimumYIndex].mSnapPoint.mX;
+      return SnapDestination{bestCandidate,
+                             ScrollSnapTargetIds{minimumDistanceTargetIdsOnY,
+                                                 minimumDistanceTargetIdsOnY}};
+    }
+
+    if (minimumDistanceOnX != nscoord_MAX &&
+        minimumDistanceOnY != nscoord_MAX) {
+      // If we've found candidates on both axes, choose the closest point either
+      // on X axis or Y axis from the scroll destination. I.e. choose
+      // `minimumXIndex` one or `minimumYIndex` one to make at least one of
+      // snap target elements visible inside the snapport.
+      //
+      // For example,
+      // [bestCandidate.x, mTrackerOnX.mBestEdges[minimumXIndex].mSnapPoint.mY]
+      // is a candidate generated from a single element, thus snapping to the
+      // point would definitely make the element visible inside the snapport.
+      if (hypotf(NSCoordToFloat(mDestination.x -
+                                mTrackerOnX.mBestEdges[0].mPosition),
+                 NSCoordToFloat(minimumDistanceOnY)) <
+          hypotf(NSCoordToFloat(minimumDistanceOnX),
+                 NSCoordToFloat(mDestination.y -
+                                mTrackerOnY.mBestEdges[0].mPosition))) {
+        bestCandidate.y = *mTrackerOnX.mBestEdges[minimumXIndex].mSnapPoint.mY;
+      } else {
+        bestCandidate.x = *mTrackerOnY.mBestEdges[minimumYIndex].mSnapPoint.mX;
+      }
+      return SnapDestination{bestCandidate,
+                             ScrollSnapTargetIds{minimumDistanceTargetIdsOnX,
+                                                 minimumDistanceTargetIdsOnY}};
+    }
+    MOZ_ASSERT_UNREACHABLE("There's at least one candidate on either axis");
+    // `minimumDistanceOnX == nscoord_MAX && minimumDistanceOnY == nscoord_MAX`
+    // should not happen but we fall back for safety.
+  }
+
   return SnapDestination{
       nsPoint(
           mTrackerOnX.EdgeFound() ? mTrackerOnX.mBestEdges[0].mPosition
@@ -132,14 +290,20 @@ SnapDestination CalcSnapPoints::GetBestEdge() const {
 
 void CalcSnapPoints::AddHorizontalEdge(const SnapTarget& aTarget) {
   MOZ_ASSERT(aTarget.mSnapPoint.mY);
-  AddEdge(SnapPosition{aTarget, *aTarget.mSnapPoint.mY}, mDestination.y,
-          mStartPos.y, mScrollingDirection.y, &mTrackerOnY);
+  AddEdge(SnapPosition{aTarget, *aTarget.mSnapPoint.mY,
+                       aTarget.mSnapPoint.mX
+                           ? std::abs(mDestination.x - *aTarget.mSnapPoint.mX)
+                           : nscoord_MAX},
+          mDestination.y, mStartPos.y, mScrollingDirection.y, &mTrackerOnY);
 }
 
 void CalcSnapPoints::AddVerticalEdge(const SnapTarget& aTarget) {
   MOZ_ASSERT(aTarget.mSnapPoint.mX);
-  AddEdge(SnapPosition{aTarget, *aTarget.mSnapPoint.mX}, mDestination.x,
-          mStartPos.x, mScrollingDirection.x, &mTrackerOnX);
+  AddEdge(SnapPosition{aTarget, *aTarget.mSnapPoint.mX,
+                       aTarget.mSnapPoint.mY
+                           ? std::abs(mDestination.y - *aTarget.mSnapPoint.mY)
+                           : nscoord_MAX},
+          mDestination.x, mStartPos.x, mScrollingDirection.x, &mTrackerOnX);
 }
 
 void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
@@ -355,7 +519,7 @@ Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForDestination(
   }
 
   bool snapped = false;
-  auto finalPos = calcSnapPoints.GetBestEdge();
+  auto finalPos = calcSnapPoints.GetBestEdge(aSnapInfo.mSnapportSize);
   constexpr float proximityRatio = 0.3;
   if (aSnapInfo.mScrollSnapStrictnessY ==
           StyleScrollSnapStrictness::Proximity &&
@@ -529,7 +693,7 @@ Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForResnap(
           return true;
         });
 
-    auto finalPos = calcSnapPoints.GetBestEdge();
+    auto finalPos = calcSnapPoints.GetBestEdge(aSnapInfo.mSnapportSize);
     if (!x) {
       x = Some(finalPos.mPosition.x);
     }
