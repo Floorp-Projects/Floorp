@@ -36,6 +36,7 @@ constexpr std::pair<std::string_view, Browser> kStringBrowserMap[]{
     {"qq-browser", Browser::QQBrowser},
     {"360-browser", Browser::_360Browser},
     {"sogou", Browser::Sogou},
+    {"duckduckgo", Browser::DuckDuckGo},
 };
 
 static_assert(mozilla::ArrayLength(kStringBrowserMap) == kBrowserCount);
@@ -114,6 +115,7 @@ static BrowserResult GetDefaultBrowser() {
        Browser::_360Browser},
       // 搜狗高速浏览器 UTF-16 encoding
       {L"\u641c\u72d7\u9ad8\u901f\u6d4f\u89c8\u5668", Browser::Sogou},
+      {L"DuckDuckGo", Browser::DuckDuckGo},
   };
 
   // We should have one prefix for every browser we track, minus exceptions
