@@ -59,7 +59,7 @@ const test = new SearchConfigTest({
   ],
 });
 
-add_task(async function setup() {
+add_setup(async function () {
   sinon.spy(NimbusFeatures.search, "onUpdate");
   sinon.stub(NimbusFeatures.search, "ready").resolves();
   await test.setup();

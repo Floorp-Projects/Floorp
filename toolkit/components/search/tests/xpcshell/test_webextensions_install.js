@@ -12,7 +12,7 @@ async function getEngineNames() {
   return engines.map(engine => engine._name);
 }
 
-add_task(async function setup() {
+add_setup(async function () {
   let server = useHttpServer();
   server.registerContentType("sjs", "sjs");
   gBaseUrl = `http://localhost:${server.identity.primaryPort}/`;

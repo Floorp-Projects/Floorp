@@ -31,7 +31,7 @@ const SUBMISSION_NO = [
   ["Other2 Test", "https://googlebutnotgoogle.com", "q={searchTerms}"],
 ];
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("data1");
   await AddonTestUtils.promiseStartupManager();
 });

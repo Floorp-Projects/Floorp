@@ -15,7 +15,7 @@ const TEST_CONFIG = [
   },
 ];
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("method-extensions", null, TEST_CONFIG);
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();

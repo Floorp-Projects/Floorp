@@ -60,7 +60,7 @@ let stub;
 let settingsFilePath;
 let userSettings;
 
-add_task(async function setup() {
+add_setup(async function () {
   SearchSettings.SETTINGS_INVALIDATION_DELAY = 100;
   SearchTestUtils.useMockIdleService();
   await SearchTestUtils.useTestEngines("data", null, CONFIG);

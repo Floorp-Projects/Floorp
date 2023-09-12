@@ -26,7 +26,7 @@ async function loadSettingsFile(settingsFile) {
 /**
  * Test reading from search.json.mozlz4
  */
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("data1");
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();

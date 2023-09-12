@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("method-extensions");
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();

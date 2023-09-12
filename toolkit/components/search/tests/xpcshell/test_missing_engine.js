@@ -33,7 +33,7 @@ const BAD_CONFIG = [
   },
 ];
 
-add_task(async function setup() {
+add_setup(async function () {
   SearchTestUtils.useMockIdleService();
   await AddonTestUtils.promiseStartupManager();
 

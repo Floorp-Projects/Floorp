@@ -8,7 +8,7 @@
 
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function () {
   await AddonTestUtils.promiseStartupManager();
 
   await SearchTestUtils.useTestEngines(

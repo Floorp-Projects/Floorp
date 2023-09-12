@@ -59,7 +59,7 @@ function countCookieEntries() {
 
 let engines;
 
-add_task(async function setup() {
+add_setup(async function () {
   await AddonTestUtils.promiseStartupManager();
 
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);

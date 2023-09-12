@@ -99,7 +99,7 @@ const tests = [
   },
 ];
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
 

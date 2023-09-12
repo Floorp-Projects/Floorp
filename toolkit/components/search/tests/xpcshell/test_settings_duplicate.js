@@ -69,7 +69,7 @@ const enginesSettings = {
   ],
 };
 
-add_task(async function setup() {
+add_setup(async function () {
   await AddonTestUtils.promiseStartupManager();
 
   // Allow telemetry probes which may otherwise be disabled for some applications (e.g. Thunderbird)

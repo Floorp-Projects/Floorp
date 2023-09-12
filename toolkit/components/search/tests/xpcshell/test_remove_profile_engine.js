@@ -4,7 +4,7 @@
 // This test is to ensure that we remove xml files from searchplugins/ in the
 // profile directory when a user removes the actual engine from their profile.
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("data1");
   await AddonTestUtils.promiseStartupManager();
 });

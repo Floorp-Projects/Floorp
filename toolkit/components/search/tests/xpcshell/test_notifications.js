@@ -6,7 +6,7 @@
 let engine;
 let appDefaultEngine;
 
-add_task(async function setup() {
+add_setup(async function () {
   await AddonTestUtils.promiseStartupManager();
   useHttpServer();
 

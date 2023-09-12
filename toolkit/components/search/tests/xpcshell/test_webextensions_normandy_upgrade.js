@@ -34,7 +34,7 @@ async function getEngineNames() {
   return engines.map(engine => engine._name);
 }
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("test-extensions", null, CONFIG_DEFAULT);
   await AddonTestUtils.promiseStartupManager();
   registerCleanupFunction(AddonTestUtils.promiseShutdownManager);

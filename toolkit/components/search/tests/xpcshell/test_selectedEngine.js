@@ -3,7 +3,7 @@
 
 const kDefaultEngineName = "engine1";
 
-add_task(async function setup() {
+add_setup(async function () {
   useHttpServer();
   await AddonTestUtils.promiseStartupManager();
   await SearchTestUtils.useTestEngines("data1");

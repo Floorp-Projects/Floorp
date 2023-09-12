@@ -13,7 +13,7 @@
  * and configuration of Firefox.
  */
 
-add_task(async function setup() {
+add_setup(async function () {
   useHttpServer();
   await AddonTestUtils.promiseStartupManager();
 });

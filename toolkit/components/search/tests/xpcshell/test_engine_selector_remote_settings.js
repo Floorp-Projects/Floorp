@@ -72,7 +72,7 @@ const TEST_CONFIG = [
 
 let getStub;
 
-add_task(async function setup() {
+add_setup(async function () {
   const searchConfigSettings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
   getStub = sinon.stub(searchConfigSettings, "get");
 

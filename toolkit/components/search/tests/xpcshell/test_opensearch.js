@@ -59,7 +59,7 @@ const tests = [
   },
 ];
 
-add_task(async function setup() {
+add_setup(async function () {
   Services.fog.initializeFOG();
   useHttpServer("opensearch");
   await AddonTestUtils.promiseStartupManager();

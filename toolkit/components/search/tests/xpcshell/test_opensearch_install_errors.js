@@ -5,7 +5,7 @@
  * Test that various install failures are handled correctly.
  */
 
-add_task(async function setup() {
+add_setup(async function () {
   useHttpServer("opensearch");
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();

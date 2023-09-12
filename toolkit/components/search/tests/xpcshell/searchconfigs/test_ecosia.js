@@ -28,7 +28,7 @@ const test = new SearchConfigTest({
   ],
 });
 
-add_task(async function setup() {
+add_setup(async function () {
   await test.setup();
 });
 

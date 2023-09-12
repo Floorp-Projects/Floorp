@@ -316,7 +316,7 @@ const test = new SearchConfigTest({
   ],
 });
 
-add_task(async function setup() {
+add_setup(async function () {
   // We only need to do setup on one of the tests.
   await test.setup("89.0");
 });

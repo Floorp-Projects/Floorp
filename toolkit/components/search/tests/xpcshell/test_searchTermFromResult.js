@@ -13,7 +13,7 @@ let defaultEngine;
 const TERM = "c;,?:@&=+$-_.!~*'()# d\u00E8f";
 const TERM_ENCODED = "c%3B%2C%3F%3A%40%26%3D%2B%24-_.!~*'()%23+d%C3%A8f";
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("data", null, [
     {
       webExtension: {
