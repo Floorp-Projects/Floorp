@@ -2,76 +2,105 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test no duplicate logins using autofill/autocomplete with related realms</title>
+  <title>Login Manager: Related Realms</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-Login Manager test: no duplicate logins when using autofill and autocomplete with related realms
 <p id="display"></p>
 <div id="content"></div>
 <pre id="test">
+Testing related realms
+
+Related realms is feature to provide login suggestion based on similar domains.
+
+Out of the scope of this feature is subdomain handling, which is already part
+of the base functionality. The intent is to cover the ebay.com/ebay.co.uk and
+all other country TLD cases where the sign in page is actually
+signin.ebay.com/signin.ebay.co.uk but credentials could have manually been
+entered for ebay.com/ebay.co.uk or automatically stored as
+signin.ebay.com/sigin.ebay.co.uk
+
+The related realms feature can be enabled via the preference
+signon.relatedRealms.enabled. It is disabled by default.
+
+This test proves that related logins show up in the autocomplete menu when
+the feature is enabled and that the related logins do not count as duplicates
+and therefore the form gets filled directly.
+
 <script class="testbody" type="text/javascript">
+const formTemplate = `<form id="form1" action="https://www.example.com">
+  <input type="text" name="uname">
+  <input type="password" name="pword">
+</form>`;
 
-/** Test for Login Manager: related realms autofill/autocomplete. **/
+add_setup(async () => {
+  await setStoredLoginsDuringTest(
+    ["https://example.com", "https://example.com", null, "example.com-user", "password", "uname", "pword"],
 
-function restoreForm(form) {
-  form.uname.value = "";
-  form.pword.value = "";
-  form.uname.focus();
-}
+    // Related domain relationship where example.com and other-example.com are in the related domains list
+    ["https://other-example.com", "https://other-example.com", null, "other-example.com-user", "password", "uname", "pword"],
 
-const loginInfos = [
-  // Simple related domain relationship where example.com and other-example.com are in the related domains list
-  ["https://other-example.com", "https://other-example.com", null, "relatedUser1", "relatedPass1", "uname", "pword"],
+    // example.com and example.co.uk are related, so sub.example.co.uk is also related
+    ["https://sub.example.co.uk", "https://sub.example.co.uk", null, "sub.example.co.uk-user", "password", "uname", "pword"],
 
-  // Example.com and example.co.uk are related, so sub.example.co.uk should appear on example.com's autocomplete dropdown
-  // The intent is to cover the ebay.com/ebay.co.uk and all other country TLD cases
-  // where the sign in page is actually signin.ebay.com/signin.ebay.co.uk but credentials could have manually been entered
-  // for ebay.com/ebay.co.uk or automatically stored as signin.ebay.com/sigin.ebay.co.uk
-  ["https://sub.example.co.uk", "https://sub.example.co.uk", null, "subUser1", "subPass1", "uname", "pword"],
+    // www subdomain on same TLD
+    ["https://www.example.com", "https://www.example.com", null, "www.example.com-user", "password", "uname", "pword"],
 
-  // Ensures there are no duplicates for the exact domain that the user is on
-  ["https://example.com", "https://example.com", null, "exactUser1", "exactPass1", "uname", "pword"],
-  ["https://www.example.com", "https://www.example.com", null, "exactWWWUser1", "exactWWWPass1", "uname", "pword"],
-];
-
-add_setup(() => {
-  listenForUnexpectedPopupShown();
+    // other subdomain on same TLD
+    ["https://sub.example.com", "https://sub.example.com", null, "sub.example.com-user", "password", "uname", "pword"],
+  );
 });
 
-add_task(async function test_no_duplicates_autocomplete_autofill() {
-  await storeLoginsDuringTask(...loginInfos);
-  const form = setContentForTask(`<form action="https://www.example.com">
-    <input type="text" name="uname" />
-    <input type="password" name="pword" />
-    <button type="submit">Submit</button>
-  </form>`);
+add_named_task("with relatedRealms disabled, related logins do not show up in autocomplete menu", async () => {
+  await setPreferencesForTask(["signon.relatedRealms.enabled", false]);
 
-  await promiseFormsProcessedInSameProcess();
-  await SimpleTest.promiseFocus(window);
-  const results = await popupBy(() => {
-    checkLoginForm(form.uname, "exactUser1", form.pword, "exactPass1")
-    restoreForm(form);
-  });
+  const form = setContentForTask(formTemplate);
 
-  const popupState = await getPopupState();
-  is(popupState.selectedIndex, -1, "Check no entires are selected upon opening");
-  const expectedMenuItems = ["exactUser1", "exactWWWUser1", "relatedUser1", "subUser1"];
-  checkAutoCompleteResults(results, expectedMenuItems, window.location.host, "Check all menuitems are displayed correctly");
+  const autofillResult = await formAutofillResult(form.id);
+  is(autofillResult, "filled", "form has been filled");
 
-  const acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
-  is(acEvents.length, 1, "One autocomplete event");
-  checkACTelemetryEvent(acEvents[0], form.uname, {
-    "hadPrevious": "0",
-    "login": expectedMenuItems.length + "",
-    "loginsFooter": "1"
-  });
-  restoreForm(form);
-  synthesizeKey("KEY_Escape");
+  // reset the form and open autocomplete popup by focusing username input
+  form.reset();
+  const results = await popupBy(() => form.uname.focus());
+  checkAutoCompleteResults(results, [
+    "example.com-user",
+    "sub.example.com-user",
+    "www.example.com-user",
+  ], window.location.host, "all logins are present and in order");
+});
+
+add_named_task("with relatedRealms enabled, related logins show up in autocomplete menu", async () => {
+  await setPreferencesForTask(["signon.relatedRealms.enabled", true]);
+
+  const form = setContentForTask(formTemplate);
+
+  const result = await formAutofillResult(form.id);
+  is(result, "filled", "form has been filled");
+
+  // reset the form and open autocomplete popup by focusing username input
+  form.reset();
+  const results = await popupBy(() => form.uname.focus());
+  checkAutoCompleteResults(results, [
+    "example.com-user",
+    "other-example.com-user",
+    "sub.example.co.uk-user",
+    "sub.example.com-user",
+    "www.example.com-user",
+  ], window.location.host, "all logins are present and in order");
+});
+
+add_named_task("even with relatedRealms enabled, related logins are not considered duplicates, so form will be filled", async () => {
+  await setPreferencesForTask(["signon.relatedRealms.enabled", true]);
+
+  const form = setContentForTask(formTemplate);
+
+  const autofillResult = await formAutofillResult(form.id);
+  is(autofillResult, "filled", "form has been filled");
+
+  is(form.uname.value, "example.com-user", "username from exact tld is filled in");
 });
 </script>
 </pre>

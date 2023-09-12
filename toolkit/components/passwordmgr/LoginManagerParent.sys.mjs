@@ -364,7 +364,7 @@ export class LoginManagerParent extends JSWindowActorParent {
       // Used by tests to detect that a form-fill has occurred. This redirects
       // to the top-level browsing context.
       case "PasswordManager:formProcessed": {
-        this.#onFormProcessed(data.formid);
+        this.#onFormProcessed(data.formid, data.autofillResult);
         break;
       }
 
@@ -497,13 +497,17 @@ export class LoginManagerParent extends JSWindowActorParent {
     });
   }
 
-  #onFormProcessed(formid) {
+  #onFormProcessed(formid, autofillResult) {
     const topActor =
       this.browsingContext.currentWindowGlobal.getActor("LoginManager");
     topActor.sendAsyncMessage("PasswordManager:formProcessed", { formid });
     if (gListenerForTests) {
       gListenerForTests("FormProcessed", {
         browsingContext: this.browsingContext,
+        data: {
+          formId: formid,
+          autofillResult,
+        },
       });
     }
   }
