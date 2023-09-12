@@ -70,7 +70,7 @@ class CalcSnapPoints final {
   void AddEdge(const SnapPosition& aEdge, nscoord aDestination,
                nscoord aStartPos, nscoord aScrollingDirection,
                CandidateTracker* aCandidateTracker);
-  SnapTarget GetBestEdge() const;
+  SnapDestination GetBestEdge() const;
   nscoord XDistanceBetweenBestAndSecondEdge() const {
     return std::abs(NSCoordSaturatingSubtract(
         mTrackerOnX.mSecondBestEdge.mPosition, mTrackerOnX.mBestEdge.mPosition,
@@ -121,8 +121,8 @@ CalcSnapPoints::CalcSnapPoints(ScrollUnit aUnit, ScrollSnapFlags aSnapFlags,
   }
 }
 
-SnapTarget CalcSnapPoints::GetBestEdge() const {
-  return SnapTarget{
+SnapDestination CalcSnapPoints::GetBestEdge() const {
+  return SnapDestination{
       nsPoint(
           mTrackerOnX.mEdgeFound ? mTrackerOnX.mBestEdge.mPosition
           // In the case of IntendedEndPosition (i.e. the destination point is
@@ -320,7 +320,7 @@ static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
   }
 }
 
-Maybe<SnapTarget> ScrollSnapUtils::GetSnapPointForDestination(
+Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForDestination(
     const ScrollSnapInfo& aSnapInfo, ScrollUnit aUnit,
     ScrollSnapFlags aSnapFlags, const nsRect& aScrollRange,
     const nsPoint& aStartPos, const nsPoint& aDestination) {
@@ -490,7 +490,7 @@ static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
   return {x, y};
 }
 
-Maybe<mozilla::SnapTarget> ScrollSnapUtils::GetSnapPointForResnap(
+Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForResnap(
     const ScrollSnapInfo& aSnapInfo, const nsRect& aScrollRange,
     const nsPoint& aCurrentPosition,
     const UniquePtr<ScrollSnapTargetIds>& aLastSnapTargetIds,
@@ -546,7 +546,7 @@ Maybe<mozilla::SnapTarget> ScrollSnapUtils::GetSnapPointForResnap(
     }
   }
 
-  SnapTarget snapTarget{nsPoint(*x, *y)};
+  SnapDestination snapTarget{nsPoint(*x, *y)};
   // Collect snap points where the position is still same as the new snap
   // position.
   for (const auto& target : aSnapInfo.mSnapTargets) {

@@ -639,11 +639,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
    * Returns true if a suitable snap point could be found and aDestination has
    * been updated to a valid snapping position.
    */
-  Maybe<mozilla::SnapTarget> GetSnapPointForDestination(
+  Maybe<mozilla::SnapDestination> GetSnapPointForDestination(
       mozilla::ScrollUnit aUnit, ScrollSnapFlags aFlags,
       const nsPoint& aStartPos, const nsPoint& aDestination);
 
-  Maybe<mozilla::SnapTarget> GetSnapPointForResnap();
+  Maybe<mozilla::SnapDestination> GetSnapPointForResnap();
   bool NeedsResnap();
 
   void SetLastSnapTargetIds(mozilla::UniquePtr<ScrollSnapTargetIds> aId);
