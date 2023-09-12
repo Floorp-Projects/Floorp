@@ -61,6 +61,8 @@ enum nsCSSUnit : uint32_t {
   eCSSUnit_Char = 802,     // number of characters, used for width with
                            // monospace font
   eCSSUnit_RootEM = 803,   // == root element font size
+  eCSSUnit_Ideographic = 804,  // == CJK water ideograph width
+  eCSSUnit_CapHeight = 805,    // == Capital letter height
 
   // Screen relative measure
   eCSSUnit_Point = 900,       // 4/3 of a CSS pixel
