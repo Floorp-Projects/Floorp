@@ -1218,7 +1218,14 @@ export class _ExperimentManager {
       const { name } = pref;
 
       if (!this._prefs.has(name)) {
-        const observer = () => this._onExperimentPrefChanged(pref);
+        const observer = (aSubject, aTopic, aData) => {
+          // This observer will be called for changes to `name` as well as any
+          // other pref that begins with `name.`, so we have to filter to
+          // exactly the pref we care about.
+          if (aData === name) {
+            this._onExperimentPrefChanged(pref);
+          }
+        };
         const entry = {
           slugs: new Set([slug]),
           enrollmentChanging: false,
