@@ -527,8 +527,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
   RefPtr<quota::ClientDirectoryLock> directoryLock =
       mQuotaManager->CreateDirectoryLock(
-          quota::PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
-          mozilla::dom::quota::Client::FILESYSTEM,
+          {mOriginMetadata, mozilla::dom::quota::Client::FILESYSTEM},
           /* aExclusive */ false);
 
   directoryLock->Acquire()

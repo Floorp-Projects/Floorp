@@ -274,8 +274,7 @@ class QuotaManager final : public BackgroundThreadObject {
   // In other words, protection which the lock represents dies with the lock
   // object itself.
   RefPtr<ClientDirectoryLock> CreateDirectoryLock(
-      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
-      Client::Type aClientType, bool aExclusive);
+      const ClientMetadata& aClientMetadata, bool aExclusive);
 
   // XXX RemoveMe once bug 1170279 gets fixed.
   RefPtr<UniversalDirectoryLock> CreateDirectoryLockInternal(
