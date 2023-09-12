@@ -52,10 +52,6 @@ const TEST_DATA_INITIAL = [
 ];
 
 add_task(async function () {
-  await pushPref(
-    "devtools.inspector.ruleview.inline-compatibility-warning.enabled",
-    true
-  );
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
 

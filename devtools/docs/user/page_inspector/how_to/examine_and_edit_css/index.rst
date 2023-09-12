@@ -45,10 +45,6 @@ Browser compat warnings
 
 CSS properties have varied level of support across different browsers. From Firefox 81, compatibility tooltips may be displayed next to any CSS properties that have known compatibility issues,as shown below.
 
-.. note::
-  This feature is enabled from Firefox 81 by setting the preference ``devtools.inspector.ruleview.inline-compatibility-warning.enabled`` to ``true`` (open ``about:config`` in the URL bar to view/set Firefox preferences).
-
-
 .. image:: firefox_compatibility_tootips.jpg
   :alt: Tooltip displayed next to CSS element. Hover to find out browsers with compatibility issues.
   :class: center
