@@ -10,7 +10,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/AuthenticatorResponse.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_security.h"
 
 #ifdef XP_WIN
 #  include "WinWebAuthnManager.h"
@@ -107,17 +107,23 @@ PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(
 
   promise->MaybeResolve(false);
 #elif defined(MOZ_WIDGET_ANDROID)
-  auto result = java::WebAuthnTokenManager::
-      WebAuthnIsUserVerifyingPlatformAuthenticatorAvailable();
-  auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
-  MozPromise<bool, bool, false>::FromGeckoResult(geckoResult)
-      ->Then(GetMainThreadSerialEventTarget(), __func__,
-             [promise](const MozPromise<bool, bool,
-                                        false>::ResolveOrRejectValue& aValue) {
-               if (aValue.IsResolve()) {
-                 promise->MaybeResolve(aValue.ResolveValue());
-               }
-             });
+  if (StaticPrefs::
+          security_webauthn_webauthn_enable_android_fido2_residentkey()) {
+    auto result = java::WebAuthnTokenManager::
+        WebAuthnIsUserVerifyingPlatformAuthenticatorAvailable();
+    auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
+    MozPromise<bool, bool, false>::FromGeckoResult(geckoResult)
+        ->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            [promise](const MozPromise<bool, bool, false>::ResolveOrRejectValue&
+                          aValue) {
+              if (aValue.IsResolve()) {
+                promise->MaybeResolve(aValue.ResolveValue());
+              }
+            });
+  } else {
+    promise->MaybeResolve(false);
+  }
 #else
   promise->MaybeResolve(false);
 #endif
@@ -138,12 +144,12 @@ PublicKeyCredential::IsExternalCTAP2SecurityKeySupported(GlobalObject& aGlobal,
   if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     promise->MaybeResolve(true);
   } else {
-    promise->MaybeResolve(Preferences::GetBool("security.webauthn.ctap2"));
+    promise->MaybeResolve(StaticPrefs::security_webauthn_ctap2());
   }
 #elif defined(MOZ_WIDGET_ANDROID)
   promise->MaybeResolve(false);
 #else
-  promise->MaybeResolve(Preferences::GetBool("security.webauthn.ctap2"));
+  promise->MaybeResolve(StaticPrefs::security_webauthn_ctap2());
 #endif
 
   return promise.forget();
