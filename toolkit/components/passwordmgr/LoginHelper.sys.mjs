@@ -176,6 +176,7 @@ class ImportRowProcessor {
     // ignored in that case, leading to multiple logins for the same username.
     let existingLogins = await Services.logins.searchLoginsAsync({
       origin: login.origin,
+      formActionOrigin: login.formActionOrigin,
       httpRealm: login.httpRealm,
     });
 
