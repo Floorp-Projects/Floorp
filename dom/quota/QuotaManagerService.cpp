@@ -134,6 +134,44 @@ nsresult GetClearResetOriginParams(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
+class BoolResponsePromiseResolveOrRejectCallback {
+ public:
+  using PromiseType = BoolResponsePromise;
+  using RequestType = Request;
+
+  explicit BoolResponsePromiseResolveOrRejectCallback(
+      RefPtr<RequestType> aRequest)
+      : mRequest(std::move(aRequest)) {}
+
+  void operator()(const PromiseType::ResolveOrRejectValue& aValue) {
+    if (aValue.IsResolve()) {
+      const BoolResponse& response = aValue.ResolveValue();
+
+      switch (response.type()) {
+        case BoolResponse::Tnsresult:
+          mRequest->SetError(response.get_nsresult());
+          break;
+
+        case BoolResponse::Tbool: {
+          RefPtr<nsVariant> variant = new nsVariant();
+          variant->SetAsBool(response.get_bool());
+
+          mRequest->SetResult(variant);
+          break;
+        }
+        default:
+          MOZ_CRASH("Unknown response type!");
+      }
+
+    } else {
+      mRequest->SetError(NS_ERROR_FAILURE);
+    }
+  }
+
+ private:
+  RefPtr<RequestType> mRequest;
+};
+
 }  // namespace
 
 class QuotaManagerService::PendingRequestInfo {
@@ -728,31 +766,7 @@ QuotaManagerService::ClearStoragesForPrivateBrowsing(
 
   mBackgroundActor->SendClearStoragesForPrivateBrowsing()->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [request](const PQuotaChild::ClearStoragesForPrivateBrowsingPromise::
-                    ResolveOrRejectValue& aValue) {
-        if (aValue.IsResolve()) {
-          const BoolResponse& response = aValue.ResolveValue();
-
-          switch (response.type()) {
-            case BoolResponse::Tnsresult:
-              request->SetError(response.get_nsresult());
-              break;
-
-            case BoolResponse::Tbool: {
-              RefPtr<nsVariant> variant = new nsVariant();
-              variant->SetAsBool(response.get_bool());
-
-              request->SetResult(variant);
-              break;
-            }
-            default:
-              MOZ_CRASH("Unknown response type!");
-          }
-
-        } else {
-          request->SetError(NS_ERROR_FAILURE);
-        }
-      });
+      BoolResponsePromiseResolveOrRejectCallback(request));
 
   request.forget(_retval);
   return NS_OK;
@@ -832,16 +846,13 @@ QuotaManagerService::Reset(nsIQuotaRequest** _retval) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  QM_TRY(MOZ_TO_RESULT(EnsureBackgroundActor()));
+
   RefPtr<Request> request = new Request();
 
-  ResetAllParams params;
-
-  RequestInfo info(request, params);
-
-  nsresult rv = InitiateRequest(info);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  mBackgroundActor->SendShutdownStorage()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      BoolResponsePromiseResolveOrRejectCallback(request));
 
   request.forget(_retval);
   return NS_OK;

@@ -66,7 +66,7 @@ RefPtr<QuotaRequestBase> CreateInitializeTemporaryOriginOp(
 RefPtr<QuotaRequestBase> CreateGetFullOriginMetadataOp(
     const GetFullOriginMetadataParams& aParams);
 
-RefPtr<QuotaRequestBase> CreateResetOrClearOp(bool aClear);
+RefPtr<QuotaRequestBase> CreateClearOp();
 
 RefPtr<QuotaRequestBase> CreateClearOriginOp(const RequestParams& aParams);
 

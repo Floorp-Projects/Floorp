@@ -367,7 +367,6 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
     case RequestResponse::TResetOriginResponse:
     case RequestResponse::TClearDataResponse:
     case RequestResponse::TClearAllResponse:
-    case RequestResponse::TResetAllResponse:
     case RequestResponse::TPersistResponse:
       HandleResponse();
       break;

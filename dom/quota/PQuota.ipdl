@@ -23,6 +23,17 @@ using mozilla::dom::ContentParentId
   from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {
+
+namespace ipc {
+
+union BoolResponse
+{
+  nsresult;
+  bool;
+};
+
+} // namespace ipc
+
 namespace dom {
 namespace quota {
 
@@ -109,10 +120,6 @@ struct ClearAllParams
 {
 };
 
-struct ResetAllParams
-{
-};
-
 struct PersistedParams
 {
   PrincipalInfo principalInfo;
@@ -146,17 +153,10 @@ union RequestParams
   ResetOriginParams;
   ClearDataParams;
   ClearAllParams;
-  ResetAllParams;
   PersistedParams;
   PersistParams;
   EstimateParams;
   ListOriginsParams;
-};
-
-union BoolResponse
-{
-  nsresult;
-  bool;
 };
 
 [ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
@@ -175,6 +175,9 @@ parent:
   async PQuotaRequest(RequestParams params);
 
   async ClearStoragesForPrivateBrowsing()
+      returns(BoolResponse response);
+
+  async ShutdownStorage()
       returns(BoolResponse response);
 
   async StartIdleMaintenance();
