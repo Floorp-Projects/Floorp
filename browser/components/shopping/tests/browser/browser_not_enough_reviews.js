@@ -6,7 +6,7 @@
 /**
  * Tests that the correct shopping-message-bar component appears if there are not enough
  * reviews to provided an analysis.
- * Settings should be the only other component that is visible.
+ * The footer should be visible.
  */
 add_task(async function test_not_enough_reviews() {
   await BrowserTestUtils.withNewTab(
@@ -31,8 +31,7 @@ add_task(async function test_not_enough_reviews() {
       );
 
       verifyAnalysisDetailsHidden(shoppingContainer);
-
-      ok(shoppingContainer.settingsEl, "Got the shopping-settings element");
+      verifyFooterVisible(shoppingContainer);
     }
   );
 });

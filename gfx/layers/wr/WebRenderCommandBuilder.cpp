@@ -273,6 +273,8 @@ static bool DetectContainerLayerPropertiesBoundsChange(
   if (aItem->GetType() == DisplayItemType::TYPE_FILTER) {
     // Filters get clipped to the BuildingRect since they can
     // have huge bounds outside of the visible area.
+    // This function and similar code in ComputeGeometryChange should be kept in
+    // sync.
     aGeometry.mBounds = aGeometry.mBounds.Intersect(aItem->GetBuildingRect());
   }
 
@@ -554,6 +556,13 @@ struct DIGroup {
           }
         }
       }
+    }
+
+    if (aData->mGeometry && aItem->GetType() == DisplayItemType::TYPE_FILTER) {
+      // This hunk DetectContainerLayerPropertiesBoundsChange should be kept in
+      // sync.
+      aData->mGeometry->mBounds =
+          aData->mGeometry->mBounds.Intersect(aItem->GetBuildingRect());
     }
 
     mHitTestBounds.OrWith(aData->mRect);

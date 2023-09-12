@@ -897,7 +897,6 @@ async function check_results({
     controller: {
       removeResult() {},
     },
-    acknowledgeDismissal() {},
   });
 
   if (incompleteSearch) {

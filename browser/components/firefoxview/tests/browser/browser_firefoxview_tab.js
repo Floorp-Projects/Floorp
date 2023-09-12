@@ -306,3 +306,65 @@ add_task(async function testFxViewNotMultiselect() {
     BrowserTestUtils.removeTab(tab2);
   });
 });
+
+add_task(async function testFxViewEntryPointsInPrivateBrowsing() {
+  async function checkMenu(win, expectedEnabled) {
+    await SimpleTest.promiseFocus(win);
+    const toolsMenu = win.document.getElementById("tools-menu");
+    const fxViewMenuItem = toolsMenu.querySelector("#menu_openFirefoxView");
+    const menuShown = BrowserTestUtils.waitForEvent(toolsMenu, "popupshown");
+
+    toolsMenu.openMenu(true);
+    await menuShown;
+    Assert.equal(
+      BrowserTestUtils.is_visible(fxViewMenuItem),
+      expectedEnabled,
+      `Firefox view menu item is ${expectedEnabled ? "enabled" : "hidden"}`
+    );
+    const menuHidden = BrowserTestUtils.waitForEvent(toolsMenu, "popuphidden");
+    toolsMenu.menupopup.hidePopup();
+    await menuHidden;
+  }
+
+  async function checkEntryPointsInWindow(win, expectedVisible) {
+    const fxViewBtn = win.document.getElementById("firefox-view-button");
+
+    if (AppConstants.platform != "macosx") {
+      await checkMenu(win, expectedVisible);
+    }
+    // check the tab button
+    Assert.equal(
+      BrowserTestUtils.is_visible(fxViewBtn),
+      expectedVisible,
+      `#${fxViewBtn.id} is ${
+        expectedVisible ? "visible" : "hidden"
+      } as expected`
+    );
+  }
+
+  info("Check permanent private browsing");
+  // Setting permanent private browsing normally requires a restart.
+  // We'll emulate by manually setting the attribute it controls manually
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.privatebrowsing.autostart", true]],
+  });
+  const newWin = await BrowserTestUtils.openNewBrowserWindow();
+  newWin.document.documentElement.setAttribute(
+    "privatebrowsingmode",
+    "permanent"
+  );
+  await checkEntryPointsInWindow(newWin, false);
+  await BrowserTestUtils.closeWindow(newWin);
+  await SpecialPowers.popPrefEnv();
+
+  info("Check defaults (non-private)");
+  await SimpleTest.promiseFocus(window);
+  await checkEntryPointsInWindow(window, true);
+
+  info("Check private (temporary) browsing");
+  const privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await checkEntryPointsInWindow(privateWin, false);
+  await BrowserTestUtils.closeWindow(privateWin);
+});

@@ -66,10 +66,6 @@ function extractSymbol(path, symbols, state) {
     symbols.imports.push(getImportDeclarationSymbol(path.node));
   }
 
-  if (t.isObjectProperty(path)) {
-    symbols.objectProperties.push(getObjectPropertySymbol(path));
-  }
-
   if (t.isMemberExpression(path) || t.isOptionalMemberExpression(path)) {
     symbols.memberExpressions.push(getMemberExpressionSymbol(path));
   }
@@ -99,7 +95,6 @@ function extractSymbols(sourceId) {
     functions: [],
     callExpressions: [],
     memberExpressions: [],
-    objectProperties: [],
     comments: [],
     identifiers: [],
     classes: [],
@@ -304,7 +299,7 @@ export function clearSymbols(sourceIds) {
   }
 }
 
-export function getSymbols(sourceId) {
+export function getInternalSymbols(sourceId) {
   if (symbolDeclarations.has(sourceId)) {
     const symbols = symbolDeclarations.get(sourceId);
     if (symbols) {
@@ -316,6 +311,40 @@ export function getSymbols(sourceId) {
 
   symbolDeclarations.set(sourceId, symbols);
   return symbols;
+}
+
+// This is only called from the main thread and we return a subset of attributes
+export function getSymbols(sourceId) {
+  const symbols = getInternalSymbols(sourceId);
+  return {
+    // This is used in the main thread by:
+    // - Outline panel
+    // - Quick Open
+    // - The mapping of frame function names
+    // And within the worker by `findOutOfScopeLocations`
+    functions: symbols.functions,
+
+    // The three following attributes are only used by `findBestMatchExpression` within the worker thread
+    // `memberExpressions`, `literals`
+    // This one is also used within the worker for framework computation
+    // `identifiers`
+
+    // This is used within the worker for framework computation,
+    // and in the main thread by the outline panel
+    classes: symbols.classes,
+
+    // The two following are only used by the main thread for computing CodeMirror "mode"
+    hasJsx: symbols.hasJsx,
+    hasTypes: symbols.hasTypes,
+
+    // This is used in the main thread only to compute the source icon
+    framework: symbols.framework,
+
+    // This is only used within the worker for framework computation:
+    // `imports`, `callExpressions`
+    // This is only used by `findOutOfScopeLocations`:
+    // `comments`
+  };
 }
 
 function getUniqueIdentifiers(identifiers) {
@@ -349,15 +378,6 @@ function getImportDeclarationSymbol(node) {
     source: node.source.value,
     location: node.loc,
     specifiers: getSpecifiers(node.specifiers),
-  };
-}
-
-function getObjectPropertySymbol(path) {
-  const { start, end, identifierName } = path.node.key.loc;
-  return {
-    name: identifierName,
-    location: { start, end },
-    expression: getSnippet(path),
   };
 }
 

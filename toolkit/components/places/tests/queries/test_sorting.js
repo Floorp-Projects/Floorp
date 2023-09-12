@@ -51,7 +51,6 @@ tests.push({
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
-    query.onlyBookmarked = true;
 
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
@@ -130,7 +129,6 @@ tests.push({
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
-    query.onlyBookmarked = true;
 
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
@@ -238,7 +236,6 @@ tests.push({
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
-    query.onlyBookmarked = true;
 
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
@@ -516,7 +513,6 @@ tests.push({
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
-    query.onlyBookmarked = true;
 
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
@@ -615,7 +611,6 @@ tests.push({
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
-    query.onlyBookmarked = true;
 
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
@@ -722,7 +717,6 @@ tests.push({
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
-    query.onlyBookmarked = true;
 
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
@@ -833,7 +827,6 @@ tests.push({
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setParents([PlacesUtils.bookmarks.toolbarGuid]);
-    query.onlyBookmarked = true;
 
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();

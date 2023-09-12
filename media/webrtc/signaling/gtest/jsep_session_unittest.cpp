@@ -3345,7 +3345,7 @@ TEST_F(JsepSessionTest, ValidateOfferedVideoCodecParams) {
   ASSERT_TRUE(video_attrs.HasAttribute(SdpAttribute::kFmtpAttribute));
   auto& fmtps = video_attrs.GetFmtp().mFmtps;
 
-  ASSERT_EQ(10U, fmtps.size());
+  ASSERT_EQ(9U, fmtps.size());
 
   // VP8
   const SdpFmtpAttributeList::Parameters* vp8_params =
@@ -3441,21 +3441,6 @@ TEST_F(JsepSessionTest, ValidateOfferedVideoCodecParams) {
           h264_0_rtx_params);
 
   ASSERT_EQ((uint32_t)97, parsed_h264_0_rtx_params.apt);
-
-  // red
-  const SdpFmtpAttributeList::Parameters* red_params =
-      video_section.FindFmtp("122");
-  ASSERT_TRUE(red_params);
-  ASSERT_EQ(SdpRtpmapAttributeList::kRed, red_params->codec_type);
-
-  const auto& parsed_red_params =
-      *static_cast<const SdpFmtpAttributeList::RedParameters*>(red_params);
-  ASSERT_EQ(5U, parsed_red_params.encodings.size());
-  ASSERT_EQ(120, parsed_red_params.encodings[0]);
-  ASSERT_EQ(121, parsed_red_params.encodings[1]);
-  ASSERT_EQ(126, parsed_red_params.encodings[2]);
-  ASSERT_EQ(97, parsed_red_params.encodings[3]);
-  ASSERT_EQ(123, parsed_red_params.encodings[4]);
 
   // red RTX
   const SdpFmtpAttributeList::Parameters* red_rtx_params =
@@ -3566,11 +3551,6 @@ TEST_F(JsepSessionTest, ValidateNoFmtpLineForRedInOfferAndAnswer) {
   AddTracksToStream(*mSessionOff, "offerer_stream", "audio,video");
 
   std::string offer = CreateOffer();
-
-  // look for line with fmtp:122 and remove it
-  size_t start = offer.find("a=fmtp:122");
-  size_t end = offer.find("\r\n", start);
-  offer.replace(start, end + 2 - start, "");
 
   SetLocalOffer(offer);
   SetRemoteOffer(offer);

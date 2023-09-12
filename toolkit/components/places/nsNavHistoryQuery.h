@@ -42,12 +42,9 @@ class nsNavHistoryQuery final : public nsINavHistoryQuery {
   PRTime EndTime() { return mEndTime; }
   uint32_t EndTimeReference() { return mEndTimeReference; }
   const nsString& SearchTerms() { return mSearchTerms; }
-  bool OnlyBookmarked() { return mOnlyBookmarked; }
   bool DomainIsHost() { return mDomainIsHost; }
   const nsCString& Domain() { return mDomain; }
   nsIURI* Uri() { return mUri; }  // NOT AddRef-ed!
-  bool AnnotationIsNot() { return mAnnotationIsNot; }
-  const nsCString& Annotation() { return mAnnotation; }
   const nsTArray<nsCString>& Parents() const { return mParents; }
 
   const nsTArray<nsString>& Tags() const { return mTags; }
@@ -71,12 +68,9 @@ class nsNavHistoryQuery final : public nsINavHistoryQuery {
   PRTime mEndTime;
   uint32_t mEndTimeReference;
   nsString mSearchTerms;
-  bool mOnlyBookmarked;
   bool mDomainIsHost;
   nsCString mDomain;  // Default is IsVoid, empty string is valid query
   nsCOMPtr<nsIURI> mUri;
-  bool mAnnotationIsNot;
-  nsCString mAnnotation;
   nsTArray<nsCString> mParents;
   nsTArray<nsString> mTags;
   bool mTagsAreNot;

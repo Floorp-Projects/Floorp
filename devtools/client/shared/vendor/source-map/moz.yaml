@@ -1,0 +1,50 @@
+schema: 1
+
+bugzilla:
+  product: DevTools
+  component: "General"
+
+origin:
+  name: source-map
+  description: library to generate and consume the source map
+
+  url: https://github.com/mozilla/source-map
+
+  release: 6cc15e15ffa9e042c7add5e16ce128d1e0b08115 (2023-04-04T12:55:01Z).
+  revision: 6cc15e15ffa9e042c7add5e16ce128d1e0b08115
+
+  license: BSD-3-Clause
+  license-file: LICENSE
+
+vendoring:
+  url: https://github.com/mozilla/source-map
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - ".*"
+    - "*"
+    - "**"
+    - "**/.gitignore"
+
+  keep:
+    - LICENSE
+
+  include:
+    - source-map.js
+    - "lib/*.js"
+    - "lib/*.wasm"
+
+  update-actions:
+    - action: move-file
+      from: '{vendor_dir}/lib/read-wasm-browser.js'
+      to: '{vendor_dir}/lib/read-wasm.js'
+    - action: move-file
+      from: '{vendor_dir}/lib/url-browser.js'
+      to: '{vendor_dir}/lib/url.js'
+
+  patches:
+    # Force using the local vendored whatwg-url module
+    - relative_url.patch
+    # Tweak read-wasm in order to support running in both Jest/Node and Firefox
+    - read_wasm.patch

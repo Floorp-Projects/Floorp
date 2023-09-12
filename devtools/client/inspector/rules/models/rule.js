@@ -57,6 +57,7 @@ class Rule {
     this.isUnmatched = options.isUnmatched || false;
     this.inherited = options.inherited || null;
     this.keyframes = options.keyframes || null;
+    this.userAdded = options.rule.userAdded;
 
     this.cssProperties = this.elementStyle.ruleView.cssProperties;
     this.inspector = this.elementStyle.ruleView.inspector;

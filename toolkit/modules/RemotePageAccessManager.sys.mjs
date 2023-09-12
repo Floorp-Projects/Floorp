@@ -169,6 +169,7 @@ export let RemotePageAccessManager = {
         "browser.privatebrowsing.vpnpromourl",
       ],
       RPMIsWindowPrivate: ["*"],
+      RPMGetBoolPref: ["browser.privatebrowsing.felt-privacy-v1"],
     },
     "about:protections": {
       RPMSendAsyncMessage: [
