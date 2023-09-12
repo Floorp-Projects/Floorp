@@ -1773,3 +1773,34 @@ bookmarks:
       type: string
       setPref: browser.toolbars.bookmarks.visibility
       description: If the bookmarks toolbar should never, always, or only show on newtab.
+
+cookieBannerHandling:
+  description: Automatically handle cookie banners on the user's behalf.
+  owner: pbz@mozilla.com
+  hasExposure: false
+  variables:
+    modeNormalBrowsing:
+      type: int
+      setPref: cookiebanners.service.mode
+      description: >-
+        Controls the cookie banner handling mode in normal browsing.
+        Values: 0 - disabled, 1 - reject all, 2 - reject all with accept all fallback.
+    modePrivateBrowsing:
+      type: int
+      setPref: cookiebanners.service.mode.privateBrowsing
+      description: >-
+        Controls the cookie banner handling mode in private browsing.
+        Values: 0 - disabled, 1 - reject all, 2 - reject all with accept all fallback.
+    enableGlobalRules:
+      type: boolean
+      setPref: cookiebanners.service.enableGlobalRules
+      description: >-
+        Enables use of global CookieBannerRules, which apply to all sites.
+        This enables handling of CMPs across sites without the use of site-specific rules.
+    enableDetectOnly:
+      type: boolean
+      setPref: cookiebanners.service.detectOnly
+      description: >-
+        When set to true, cookie banners are detected and detection events are
+        dispatched, but they will not be handled.
+        This pref applies to both normal and private browsing windows.
