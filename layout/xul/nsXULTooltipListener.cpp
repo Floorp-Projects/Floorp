@@ -366,8 +366,9 @@ nsresult nsXULTooltipListener::ShowTooltip() {
   // get the tooltip content designated for the target node
   nsCOMPtr<nsIContent> tooltipNode;
   GetTooltipFor(sourceNode, getter_AddRefs(tooltipNode));
-  if (!tooltipNode || sourceNode == tooltipNode)
+  if (!tooltipNode || sourceNode == tooltipNode) {
     return NS_ERROR_FAILURE;  // the target node doesn't need a tooltip
+  }
 
   // set the node in the document that triggered the tooltip and show it
   // Make sure the document still has focus.
@@ -376,41 +377,43 @@ nsresult nsXULTooltipListener::ShowTooltip() {
       !doc->HasFocus(IgnoreErrors())) {
     return NS_OK;
   }
+
   // Make sure the target node is still attached to some document.
   // It might have been deleted.
-  if (sourceNode->IsInComposedDoc()) {
-    if (!mIsSourceTree) {
-      mLastTreeRow = -1;
-      mLastTreeCol = nullptr;
-    }
-
-    mCurrentTooltip = do_GetWeakReference(tooltipNode);
-    LaunchTooltip();
-    mTargetNode = nullptr;
-
-    nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
-    if (!currentTooltip) return NS_OK;
-
-    // listen for popuphidden on the tooltip node, so that we can
-    // be sure DestroyPopup is called even if someone else closes the tooltip
-    currentTooltip->AddSystemEventListener(u"popuphiding"_ns, this, false,
-                                           false);
-
-    // listen for mousedown, mouseup, keydown, and mouse events at
-    // document level
-    if (Document* doc = sourceNode->GetComposedDoc()) {
-      // Probably, we should listen to untrusted events for hiding tooltips
-      // on content since tooltips might disturb something of web
-      // applications.  If we don't specify the aWantsUntrusted of
-      // AddSystemEventListener(), the event target sets it to TRUE if the
-      // target is in content.
-      doc->AddSystemEventListener(u"wheel"_ns, this, true);
-      doc->AddSystemEventListener(u"mousedown"_ns, this, true);
-      doc->AddSystemEventListener(u"mouseup"_ns, this, true);
-      doc->AddSystemEventListener(u"keydown"_ns, this, true);
-    }
-    mSourceNode = nullptr;
+  if (!sourceNode->IsInComposedDoc()) {
+    return NS_OK;
   }
+
+  if (!mIsSourceTree) {
+    mLastTreeRow = -1;
+    mLastTreeCol = nullptr;
+  }
+
+  mCurrentTooltip = do_GetWeakReference(tooltipNode);
+  LaunchTooltip();
+  mTargetNode = nullptr;
+
+  nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
+  if (!currentTooltip) {
+    return NS_OK;
+  }
+
+  // Listen for popuphidden on the tooltip node so that we can be sure
+  // DestroyPopup is called even if someone else closes the tooltip.
+  currentTooltip->AddSystemEventListener(u"popuphiding"_ns, this, false, false);
+
+  // Listen for mousedown, mouseup, keydown, and mouse events at document level.
+  if (Document* doc = sourceNode->GetComposedDoc()) {
+    // Probably, we should listen to untrusted events for hiding tooltips on
+    // content since tooltips might disturb something of web applications. If we
+    // don't specify the aWantsUntrusted of AddSystemEventListener(), the event
+    // target sets it to TRUE if the target is in content.
+    doc->AddSystemEventListener(u"wheel"_ns, this, true);
+    doc->AddSystemEventListener(u"mousedown"_ns, this, true);
+    doc->AddSystemEventListener(u"mouseup"_ns, this, true);
+    doc->AddSystemEventListener(u"keydown"_ns, this, true);
+  }
+  mSourceNode = nullptr;
 
   return NS_OK;
 }
