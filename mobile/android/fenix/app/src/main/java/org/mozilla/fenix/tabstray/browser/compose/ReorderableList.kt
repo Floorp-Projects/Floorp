@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 /**
  * Remember the reordering state for reordering list items.
@@ -157,7 +158,7 @@ class ListReorderState internal constructor(
         }
         val draggingItem = draggingItemLayoutInfo ?: return
 
-        if (!moved && draggingItemCumulatedOffset > touchSlop) {
+        if (!moved && abs(draggingItemCumulatedOffset) > touchSlop) {
             onExitLongPress()
         }
         val startOffset = draggingItem.offset + draggingItemOffset
@@ -169,12 +170,16 @@ class ListReorderState internal constructor(
         }
 
         if (targetItem != null && targetItem.key !in ignoredItems) {
-            if (draggingItem.index == listState.firstVisibleItemIndex) {
+            if (draggingItem.index == listState.firstVisibleItemIndex ||
+                targetItem.index == listState.firstVisibleItemIndex
+            ) {
                 scope.launch {
-                    listState.scrollBy(-draggingItem.size.toFloat())
+                    onMove.invoke(draggingItem, targetItem)
+                    listState.scrollBy(draggingItem.size.toFloat())
                 }
+            } else {
+                onMove.invoke(draggingItem, targetItem)
             }
-            onMove.invoke(draggingItem, targetItem)
         } else {
             val overscroll = when {
                 draggingItemCumulatedOffset > 0 ->
