@@ -3161,6 +3161,7 @@ export class LoginManagerChild extends JSWindowActorChild {
 
       this.sendAsyncMessage("PasswordManager:formProcessed", {
         formid: form.rootElement.id,
+        autofillResult,
       });
     }
   }

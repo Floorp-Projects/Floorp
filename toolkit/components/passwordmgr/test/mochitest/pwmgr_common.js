@@ -862,6 +862,30 @@ function manageLoginsInParent() {
     });
 
     /* eslint-env mozilla/chrome-script */
+    addMessageListener("getLogins", async () => {
+      const logins = await Services.logins.getAllLogins();
+      return logins.map(
+        ({
+          origin,
+          formActionOrigin,
+          httpRealm,
+          username,
+          password,
+          usernameField,
+          passwordField,
+        }) => [
+          origin,
+          formActionOrigin,
+          httpRealm,
+          username,
+          password,
+          usernameField,
+          passwordField,
+        ]
+      );
+    });
+
+    /* eslint-env mozilla/chrome-script */
     addMessageListener("addLogins", async logins => {
       let nsLoginInfo = Components.Constructor(
         "@mozilla.org/login-manager/loginInfo;1",
@@ -874,26 +898,6 @@ function manageLoginsInParent() {
         await Services.logins.addLogins(loginInfos);
       } catch (e) {
         assert.ok(false, "addLogins threw: " + e);
-      }
-    });
-
-    /* eslint-env mozilla/chrome-script */
-    addMessageListener("removeLogins", async searchParams => {
-      try {
-        for (const searchParam of searchParams) {
-          const [login] = await Services.logins.searchLoginsAsync(searchParam);
-          if (!login) {
-            info(
-              `removeLogins: could not find login ${JSON.stringify(
-                searchParam
-              )}`
-            );
-            continue;
-          }
-          Services.logins.removeLogin(login);
-        }
-      } catch (e) {
-        assert.ok(false, "removeLogins threw: " + e);
       }
     });
   });
@@ -921,24 +925,46 @@ async function setStoredLoginsAsync(...aLogins) {
   return script;
 }
 
-/** Store a list of logins, and remove them once task has finished.
+/**
+ * Sets given logins for the duration of the test. Existing logins are first
+ * removed and finally restored when the test is finished.
  * The logins are added within the parent chrome process.
  * @param {array} logins - a list of logins to add. Each login is an array of the arguments
  *                          that would be passed to nsLoginInfo.init().
  */
-async function storeLoginsDuringTask(...logins) {
+async function setStoredLoginsDuringTest(...logins) {
   const script = manageLoginsInParent();
-  const searchParams = logins.map(([origin, formActionOrigin, httpRealm]) => ({
-    origin,
-    formActionOrigin,
-    httpRealm,
-  }));
-  info(`Storing ${searchParams.length} logins for task`);
+  const loginsBefore = await script.sendQuery("getLogins");
+  await script.sendQuery("removeAllUserFacingLogins");
+  await script.sendQuery("addLogins", logins);
+  SimpleTest.registerCleanupFunction(async () => {
+    await script.sendQuery("removeAllUserFacingLogins");
+    await script.sendQuery("addLogins", loginsBefore);
+  });
+}
+
+/**
+ * Sets given logins for the duration of the task. Existing logins are first
+ * removed and finally restored when the task is finished.
+ * @param {array} logins - a list of logins to add. Each login is an array of the arguments
+ *                          that would be passed to nsLoginInfo.init().
+ */
+async function setStoredLoginsDuringTask(...logins) {
+  const script = manageLoginsInParent();
+  const loginsBefore = await script.sendQuery("getLogins");
+  await script.sendQuery("removeAllUserFacingLogins");
   await script.sendQuery("addLogins", logins);
   SimpleTest.registerTaskCleanupFunction(async () => {
-    info(`Removing ${searchParams.length} logins after task`);
-    await script.sendQuery("removeLogins", searchParams);
+    await script.sendQuery("removeAllUserFacingLogins");
+    await script.sendQuery("addLogins", loginsBefore);
   });
+}
+
+/** Returns a promise which resolves to a list of logins
+ */
+function getLogins() {
+  const script = manageLoginsInParent();
+  return script.sendQuery("getLogins");
 }
 
 /*
@@ -1093,4 +1119,62 @@ function setContentForTask(html) {
   // eslint-disable-next-line no-unsanitized/property
   content.innerHTML = html;
   return content.firstChild;
+}
+
+/*
+ * Set preferences via SpecialPowers.pushPrefEnv and reset them after current
+ * task has finished.
+ *
+ * @param {*Object} preferences
+ * */
+async function setPreferencesForTask(...preferences) {
+  await SpecialPowers.pushPrefEnv({
+    set: preferences,
+  });
+  SimpleTest.registerCurrentTaskCleanupFunction(() => SpecialPowers.popPrefEnv);
+}
+
+// capture form autofill results between tasks
+let gPwmgrCommonCapturedAutofillResults = {};
+PWMGR_COMMON_PARENT.addMessageListener(
+  "formProcessed",
+  ({ formId, autofillResult }) => {
+    if (formId === "observerforcer") {
+      return;
+    }
+
+    gPwmgrCommonCapturedAutofillResults[formId] = autofillResult;
+  }
+);
+SimpleTest.registerTaskCleanupFunction(() => {
+  gPwmgrCommonCapturedAutofillResults = {};
+});
+
+/**
+ * Create a promise that resolves when the form has been processed.
+ * Works with forms processed in the past since the task started and in the future,
+ * across parent and child processes.
+ *
+ * @param {String} formId / the id of the form of which to expect formautofill events
+ * @returns promise, resolving with the autofill result.
+ */
+async function formAutofillResult(formId) {
+  if (formId in gPwmgrCommonCapturedAutofillResults) {
+    const autofillResult = gPwmgrCommonCapturedAutofillResults[formId];
+    delete gPwmgrCommonCapturedAutofillResults[formId];
+    return autofillResult;
+  }
+  return new Promise((resolve, reject) => {
+    PWMGR_COMMON_PARENT.addMessageListener(
+      "formProcessed",
+      ({ formId: id, autofillResult }) => {
+        if (id !== formId) {
+          return;
+        }
+        delete gPwmgrCommonCapturedAutofillResults[formId];
+        resolve(autofillResult);
+      },
+      { once: true }
+    );
+  });
 }

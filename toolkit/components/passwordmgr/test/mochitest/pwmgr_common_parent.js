@@ -238,7 +238,7 @@ LoginManagerParent.setListenerForTests((msg, { origin, data }) => {
   } else if (msg == "PasswordEditedOrGenerated") {
     sendAsyncMessage("passwordEditedOrGenerated", { origin, data });
   } else if (msg == "FormProcessed") {
-    sendAsyncMessage("formProcessed", {});
+    sendAsyncMessage("formProcessed", data);
   }
 });
 

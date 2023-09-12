@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Login Manager Test Helper: setLoginsDuringTest</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test">
+Testing the test helpers `setStoredLoginsDuringTask` and `setStoredLoginsDuringTest`, which prepares the login storage during a test or task.
+
+<script class="testbody" type="text/javascript">
+add_setup(async () => {
+  await setStoredLoginsDuringTest(
+    ["https://example.com", "https://example.com", null, "example.com-user-one", "password", "uname", "pword"],
+    ["https://example.com", "https://example.com", null, "example.com-user-two", "password", "uname", "pword"],
+  );
+});
+
+add_named_task("logins should have been stored during setup", async () => {
+  const logins = await getLogins();
+  is(logins.length, 2, "two logins from setup should have been stored");
+  is(logins[0][3], "example.com-user-one", "Login one should have been restored");
+  is(logins[1][3], "example.com-user-two", "Login two should have been restored");
+});
+
+add_named_task("logins should be overwritten", async () => {
+  await setStoredLoginsDuringTask(
+    ["https://example.com", "https://example.com", null, "example.com-user-three", "password", "uname", "pword"],
+  );
+  const logins = await getLogins();
+  is(logins.length, 1, "logins should have been set to single login");
+  is(logins[0][3], "example.com-user-three", "Login three should have been restored");
+});
+
+add_named_task("logins should get restored", async () => {
+  const logins = await getLogins();
+  is(logins.length, 2, "Logins should have been restored");
+  is(logins[0][3], "example.com-user-one", "Login one should have been restored");
+  is(logins[1][3], "example.com-user-two", "Login two should have been restored");
+});
+</script>
+</pre>
+</body>
+</html>
