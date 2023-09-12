@@ -2838,6 +2838,7 @@ pref("browser.pdfjs.feature-tour", "{\"screen\":\"\",\"complete\":false}");
 // StaticPrefList.yaml for a description of the prefs.
 #ifdef NIGHTLY_BUILD
   pref("cookiebanners.service.mode.privateBrowsing", 1);
+  pref("cookiebanners.service.enableGlobalRules", true);
 #endif
 
 #if defined(EARLY_BETA_OR_EARLIER)
