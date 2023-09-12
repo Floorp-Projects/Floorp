@@ -151,26 +151,6 @@ int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor,
   return ExtractBugFixVersion(macOSVersion());
 }
 
-/* static */ bool nsCocoaFeatures::OnSierraExactly() {
-  return (macOSVersion() >= MACOS_VERSION_10_12_HEX) &&
-         (macOSVersion() < MACOS_VERSION_10_13_HEX);
-}
-
-/* Version of OnSierraExactly as global function callable from cairo & skia */
-bool Gecko_OnSierraExactly() { return nsCocoaFeatures::OnSierraExactly(); }
-
-/* static */ bool nsCocoaFeatures::OnHighSierraOrLater() {
-  return (macOSVersion() >= MACOS_VERSION_10_13_HEX);
-}
-
-/* static */ bool nsCocoaFeatures::OnMojaveOrLater() {
-  return (macOSVersion() >= MACOS_VERSION_10_14_HEX);
-}
-
-/* static */ bool nsCocoaFeatures::OnCatalinaOrLater() {
-  return (macOSVersion() >= MACOS_VERSION_10_15_HEX);
-}
-
 /* static */ bool nsCocoaFeatures::OnBigSurOrLater() {
   // Account for the version being 10.16 or 11.0 on Big Sur.
   // The version is reported as 10.16 if SYSTEM_VERSION_COMPAT is set to 1,
