@@ -82,10 +82,6 @@ const intermittently_loaded_scripts = {
     // Session store.
     "resource://gre/modules/sessionstore/SessionHistory.sys.mjs",
 
-    // Webcompat about:config front-end. This is part of a system add-on which
-    // may not load early enough for the test.
-    "resource://webcompat/AboutCompat.jsm",
-
     // Cookie banner handling.
     "resource://gre/actors/CookieBannerChild.sys.mjs",
     "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -100,11 +96,7 @@ const intermittently_loaded_scripts = {
     "resource://testing-common/WrapPrivileged.sys.mjs",
   ]),
   frameScripts: new Set([]),
-  processScripts: new Set([
-    // Webcompat about:config front-end. This is presently nightly-only and
-    // part of a system add-on which may not load early enough for the test.
-    "resource://webcompat/aboutPageProcessScript.js",
-  ]),
+  processScripts: new Set([]),
 };
 
 const forbiddenScripts = {
