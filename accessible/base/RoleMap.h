@@ -1387,7 +1387,7 @@ ROLE(CONTENT_DELETION,
      ROLE_SYSTEM_GROUPING,
      IA2_ROLE_CONTENT_DELETION,
      java::SessionAccessibility::CLASSNAME_VIEW,
-     eNoNameRule)
+     eNameFromSubtreeIfReqRule)
 
 ROLE(CONTENT_INSERTION,
      "content insertion",
@@ -1398,7 +1398,7 @@ ROLE(CONTENT_INSERTION,
      ROLE_SYSTEM_GROUPING,
      IA2_ROLE_CONTENT_INSERTION,
      java::SessionAccessibility::CLASSNAME_VIEW,
-     eNoNameRule)
+     eNameFromSubtreeIfReqRule)
 
 ROLE(FORM_LANDMARK,
      "form",
@@ -1453,7 +1453,7 @@ ROLE(CODE,
      ROLE_SYSTEM_GROUPING,
      IA2_ROLE_TEXT_FRAME,
      java::SessionAccessibility::CLASSNAME_VIEW,
-     eNoNameRule)
+     eNameFromSubtreeIfReqRule)
 
 ROLE(TIME_EDITOR,
      "time editor",
@@ -1497,7 +1497,7 @@ ROLE(SUBSCRIPT,
      ROLE_SYSTEM_GROUPING,
      IA2_ROLE_TEXT_FRAME,
      java::SessionAccessibility::CLASSNAME_VIEW,
-     eNoNameRule)
+     eNameFromSubtreeIfReqRule)
 
 ROLE(SUPERSCRIPT,
      "superscript",
@@ -1508,5 +1508,5 @@ ROLE(SUPERSCRIPT,
      ROLE_SYSTEM_GROUPING,
      IA2_ROLE_TEXT_FRAME,
      java::SessionAccessibility::CLASSNAME_VIEW,
-     eNoNameRule)
+     eNameFromSubtreeIfReqRule)
 // clang-format on
