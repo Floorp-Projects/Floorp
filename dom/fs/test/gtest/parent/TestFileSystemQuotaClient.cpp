@@ -71,7 +71,7 @@ class TestFileSystemQuotaClient
             quota::QuotaManager* qm = quota::QuotaManager::Get();
             ASSERT_TRUE(qm);
 
-            ASSERT_NSEQ(NS_OK, qm->EnsureStorageIsInitialized());
+            ASSERT_NSEQ(NS_OK, qm->EnsureStorageIsInitializedInternal());
 
             ASSERT_NSEQ(NS_OK, qm->EnsureTemporaryStorageIsInitialized());
 

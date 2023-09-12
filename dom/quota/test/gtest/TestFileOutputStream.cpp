@@ -56,7 +56,7 @@ TEST_F(TestFileOutputStream, extendFileStreamWithSetEOF) {
     auto originMetadata = GetOutputStreamTestOriginMetadata();
 
     {
-      ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitialized());
+      ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitializedInternal());
 
       ASSERT_NS_SUCCEEDED(quotaManager->EnsureTemporaryStorageIsInitialized());
 

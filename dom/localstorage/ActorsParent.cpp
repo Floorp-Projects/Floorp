@@ -2847,7 +2847,7 @@ nsresult LoadArchivedOrigins() {
   MOZ_ASSERT(quotaManager);
 
   // Ensure that the webappsstore.sqlite is moved to new place.
-  QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitialized()));
+  QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitializedInternal()));
 
   QM_TRY_INSPECT(const auto& connection, CreateArchiveStorageConnection(
                                              quotaManager->GetStoragePath()));
@@ -6921,7 +6921,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     MOZ_ASSERT(quotaManager);
 
     // This must be called before EnsureTemporaryStorageIsInitialized.
-    QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitialized()));
+    QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitializedInternal()));
 
     // This ensures that usages for existings origin directories are cached in
     // memory.
