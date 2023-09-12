@@ -27,8 +27,6 @@ ChromeUtils.defineLazyGetter(lazy, "gStringBundle", function () {
   );
 });
 
-const NIMBUS_DEBUG_PREF = "nimbus.debug";
-
 /**
  * Listen for DOM events bubbling up from the about:studies page, and perform
  * privileged actions in response to them. If we need to do anything that the
@@ -91,12 +89,6 @@ export class ShieldFrameChild extends JSWindowActorChild {
         this.triggerPageCallback(
           "ReceiveRemoteValue:StudiesEnabled",
           studiesEnabled
-        );
-        break;
-      case "GetRemoteValue:DebugModeOn":
-        this.triggerPageCallback(
-          "ReceiveRemoteValue:DebugModeOn",
-          Services.prefs.getBoolPref(NIMBUS_DEBUG_PREF)
         );
         break;
       case "NavigateToDataPreferences":
