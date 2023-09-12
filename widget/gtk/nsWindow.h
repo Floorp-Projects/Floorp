@@ -420,7 +420,7 @@ class nsWindow final : public nsBaseWidget {
   void FocusWaylandWindow(const char* aTokenID);
 
   bool GetCSDDecorationOffset(int* aDx, int* aDy);
-  void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
+  bool SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
   void WaylandDragWorkaround(GdkEventButton* aEvent);
 
   void CreateCompositorVsyncDispatcher() override;
