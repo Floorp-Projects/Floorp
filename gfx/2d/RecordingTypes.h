@@ -24,6 +24,28 @@ struct ElementStreamFormat {
     aStream.read(reinterpret_cast<char*>(&aElement), sizeof(T));
   }
 };
+template <class S>
+struct ElementStreamFormat<S, bool> {
+  static void Write(S& aStream, const bool& aElement) {
+    char boolChar = aElement ? '\x01' : '\x00';
+    aStream.write(&boolChar, sizeof(boolChar));
+  }
+  static void Read(S& aStream, bool& aElement) {
+    char boolChar;
+    aStream.read(&boolChar, sizeof(boolChar));
+    switch (boolChar) {
+      case '\x00':
+        aElement = false;
+        break;
+      case '\x01':
+        aElement = true;
+        break;
+      default:
+        aStream.SetIsBad();
+        break;
+    }
+  }
+};
 
 template <class S, class T>
 void WriteElement(S& aStream, const T& aElement) {
