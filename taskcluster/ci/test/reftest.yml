@@ -119,6 +119,7 @@ jsreftest:
     max-run-time:
         by-test-platform:
             .*ccov.*: 7200
+            .*-wayland/debug.*: 5400
             default: 3600
     variants:
         - no-fission
