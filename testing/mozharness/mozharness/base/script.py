@@ -2111,8 +2111,9 @@ class BaseScript(ScriptMixin, LogMixin, object):
         if here.replace("\\", "/").endswith(srcreldir):
             topsrcdir = os.path.normpath(os.path.join(here, "..", "..", "..", ".."))
             hg_dir = os.path.join(topsrcdir, ".hg")
-            git_dir = os.path.join(topsrcdir, ".git")
-            if os.path.isdir(hg_dir) or os.path.isdir(git_dir):
+            # .git might be a directory or a file for a git worktree
+            git_path = os.path.join(topsrcdir, ".git")
+            if os.path.isdir(hg_dir) or os.path.exists(git_path):
                 self.topsrcdir = topsrcdir
 
         # Set self.config to read-only.
