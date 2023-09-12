@@ -331,6 +331,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   RefPtr<BoolPromise> ClearPrivateRepository();
 
+  RefPtr<BoolPromise> ClearStorage();
+
   RefPtr<BoolPromise> ShutdownStorage();
 
   void ShutdownStorageInternal();

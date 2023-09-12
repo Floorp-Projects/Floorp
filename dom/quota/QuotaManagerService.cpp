@@ -740,16 +740,13 @@ QuotaManagerService::Clear(nsIQuotaRequest** _retval) {
     return NS_ERROR_UNEXPECTED;
   }
 
+  QM_TRY(MOZ_TO_RESULT(EnsureBackgroundActor()));
+
   RefPtr<Request> request = new Request();
 
-  ClearAllParams params;
-
-  RequestInfo info(request, params);
-
-  nsresult rv = InitiateRequest(info);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  mBackgroundActor->SendClearStorage()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      BoolResponsePromiseResolveOrRejectCallback(request));
 
   request.forget(_retval);
   return NS_OK;
