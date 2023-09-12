@@ -5,7 +5,7 @@
 
 const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
-add_task(async function setup() {
+add_setup(async function () {
   Services.locale.availableLocales = [
     ...Services.locale.availableLocales,
     "en",

@@ -91,7 +91,7 @@ function promiseContentSearchReady(browser) {
   });
 }
 
-add_task(async function test_setup() {
+add_setup(async function () {
   await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();

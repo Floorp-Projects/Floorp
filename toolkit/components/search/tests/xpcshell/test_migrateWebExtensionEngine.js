@@ -5,7 +5,7 @@
 
 const kExtensionID = "simple@tests.mozilla.org";
 
-add_task(async function setup() {
+add_setup(async function () {
   useHttpServer("opensearch");
   await AddonTestUtils.promiseStartupManager();
   await SearchTestUtils.useTestEngines("data1");

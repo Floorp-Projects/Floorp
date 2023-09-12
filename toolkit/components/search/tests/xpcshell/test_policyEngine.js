@@ -33,7 +33,7 @@ async function setupPolicyEngineWithJson(policy) {
   await settingsWritten;
 }
 
-add_task(async function setup() {
+add_setup(async function () {
   // This initializes the policy engine for xpcshell tests
   let policies = Cc["@mozilla.org/enterprisepolicies;1"].getService(
     Ci.nsIObserver

@@ -2,7 +2,7 @@
 // search in a private window, and then checks in the public window
 // whether there is an autocomplete entry for the private search.
 
-add_task(async function test_setup() {
+add_setup(async function () {
   await gCUITestUtils.addSearchBar();
   await SearchTestUtils.promiseNewSearchEngine({
     url: getRootDirectory(gTestPath) + "426329.xml",

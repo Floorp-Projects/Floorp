@@ -13,7 +13,7 @@ const kSearchEngineURL2 =
 const kSearchEngineURL3 = "https://example.com/?search={searchTerms}";
 const kExtensionID = "searchignore@mozilla.com";
 
-add_task(async function setup() {
+add_setup(async function () {
   await AddonTestUtils.promiseStartupManager();
 });
 

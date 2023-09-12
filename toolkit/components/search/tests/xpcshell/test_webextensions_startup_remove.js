@@ -7,7 +7,7 @@ const ENGINE_ID = "enginetest@example.com";
 let xpi;
 let profile = do_get_profile().clone();
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("data1");
   xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {

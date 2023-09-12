@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines();
 
   Services.locale.availableLocales = [

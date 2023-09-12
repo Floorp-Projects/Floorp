@@ -14,7 +14,7 @@ const { SearchSuggestionController } = ChromeUtils.importESModule(
 
 let engine;
 
-add_task(async function setup() {
+add_setup(async function () {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 
   let server = useHttpServer();

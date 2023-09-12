@@ -12,7 +12,7 @@ const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 let extension;
 let oldRemoveEngineFunc;
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("simple-engines");
   await promiseStartupManager();
 

@@ -122,7 +122,7 @@ async function visibleEngines() {
   return (await Services.search.getVisibleEngines()).map(e => e.identifier);
 }
 
-add_task(async function setup() {
+add_setup(async function () {
   Services.prefs.setBoolPref("browser.search.separatePrivateDefault", true);
   Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",

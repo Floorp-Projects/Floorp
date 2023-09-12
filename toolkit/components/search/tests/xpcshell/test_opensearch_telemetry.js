@@ -39,7 +39,7 @@ async function verifyTelemetry(probeNameFragment, engineCount, type) {
   );
 }
 
-add_task(async function setup() {
+add_setup(async function () {
   useHttpServer("opensearch");
 
   await promiseStartupManager();

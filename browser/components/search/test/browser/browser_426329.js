@@ -134,7 +134,7 @@ async function prepareTest() {
   await focusPromise;
 }
 
-add_task(async function testSetup() {
+add_setup(async function () {
   await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();

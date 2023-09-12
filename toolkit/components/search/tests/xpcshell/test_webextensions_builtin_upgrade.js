@@ -140,7 +140,7 @@ function makeMultiLocaleExtension(version) {
   };
 }
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("test-extensions", null, TEST_CONFIG);
   await promiseStartupManager();
 

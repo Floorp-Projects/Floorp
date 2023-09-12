@@ -29,7 +29,7 @@ function verifyProbeSum(probe, sum) {
   equal(snapshot.sum, sum, probe);
 }
 
-add_task(async function setup() {
+add_setup(async function () {
   await AddonTestUtils.promiseStartupManager();
 });
 

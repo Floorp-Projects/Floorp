@@ -17,7 +17,7 @@
 let appDefault;
 let appPrivateDefault;
 
-add_task(async function setup() {
+add_setup(async function () {
   useHttpServer();
   await SearchTestUtils.useTestEngines();
 

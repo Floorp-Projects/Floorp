@@ -10,7 +10,7 @@
  * - search.json.mozlz4 is created.
  */
 
-add_task(async function setup() {
+add_setup(async function () {
   useHttpServer();
   await AddonTestUtils.promiseStartupManager();
 });

@@ -1,6 +1,6 @@
 "use strict";
 
-add_task(async function setup() {
+add_setup(async function () {
   useHttpServer();
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();

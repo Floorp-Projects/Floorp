@@ -8,7 +8,7 @@
 const KEYWORD = "keyword";
 let timerManager;
 
-add_task(async function setup() {
+add_setup(async function () {
   let server = useHttpServer("");
   server.registerContentType("sjs", "sjs");
   await AddonTestUtils.promiseStartupManager();

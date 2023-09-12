@@ -40,7 +40,7 @@ async function visibleEngines(ss) {
   return (await ss.getVisibleEngines()).map(e => e._name);
 }
 
-add_task(async function setup() {
+add_setup(async function () {
   await SearchTestUtils.useTestEngines("test-extensions", null, CONFIG_DEFAULT);
   registerCleanupFunction(AddonTestUtils.promiseShutdownManager);
   await AddonTestUtils.promiseStartupManager();

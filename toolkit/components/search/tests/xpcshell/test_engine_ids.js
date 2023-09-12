@@ -25,7 +25,7 @@ const CONFIG = [
   },
 ];
 
-add_task(async function setup() {
+add_setup(async function () {
   useHttpServer("opensearch");
   await SearchTestUtils.useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
