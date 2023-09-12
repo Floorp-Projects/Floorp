@@ -2514,8 +2514,9 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       MOZ_CRASH("unexpected type");
   }
 
-  JSObject* proto = cx_->global()->maybeGetPrototype(protoKey);
+  JSObject* proto = GlobalObject::getOrCreatePrototype(cx_, protoKey);
   if (!proto) {
+    cx_->recoverFromOutOfMemory();
     return AttachDecision::NoAction;
   }
 
@@ -5510,8 +5511,10 @@ AttachDecision GetIteratorIRGenerator::tryAttachNullOrUndefined(
     return AttachDecision::NoAction;
   }
 
-  PropertyIteratorObject* emptyIter = cx_->global()->maybeEmptyIterator();
+  PropertyIteratorObject* emptyIter =
+      GlobalObject::getOrCreateEmptyIterator(cx_);
   if (!emptyIter) {
+    cx_->recoverFromOutOfMemory();
     return AttachDecision::NoAction;
   }
 
@@ -5561,15 +5564,16 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachStub() {
   return AttachDecision::NoAction;
 }
 
-static bool IsArrayPrototypeOptimizable(JSContext* cx, ArrayObject* arr,
-                                        NativeObject** arrProto, uint32_t* slot,
-                                        JSFunction** iterFun) {
+static bool IsArrayPrototypeOptimizable(JSContext* cx, Handle<ArrayObject*> arr,
+                                        MutableHandle<NativeObject*> arrProto,
+                                        uint32_t* slot,
+                                        MutableHandle<JSFunction*> iterFun) {
   // Prototype must be Array.prototype.
   auto* proto = cx->global()->maybeGetArrayPrototype();
   if (!proto || arr->staticPrototype() != proto) {
     return false;
   }
-  *arrProto = proto;
+  arrProto.set(proto);
 
   // The object must not have an own @@iterator property.
   PropertyKey iteratorKey =
@@ -5592,20 +5596,20 @@ static bool IsArrayPrototypeOptimizable(JSContext* cx, ArrayObject* arr,
     return false;
   }
 
-  *iterFun = &iterVal.toObject().as<JSFunction>();
-  return IsSelfHostedFunctionWithName(*iterFun,
-                                      cx->names().dollar_ArrayValues_);
+  iterFun.set(&iterVal.toObject().as<JSFunction>());
+  return IsSelfHostedFunctionWithName(iterFun, cx->names().dollar_ArrayValues_);
 }
 
-static bool IsArrayIteratorPrototypeOptimizable(JSContext* cx,
-                                                NativeObject** arrIterProto,
-                                                uint32_t* slot,
-                                                JSFunction** nextFun) {
-  auto* proto = cx->global()->maybeGetArrayIteratorPrototype();
+static bool IsArrayIteratorPrototypeOptimizable(
+    JSContext* cx, MutableHandle<NativeObject*> arrIterProto, uint32_t* slot,
+    MutableHandle<JSFunction*> nextFun) {
+  auto* proto =
+      GlobalObject::getOrCreateArrayIteratorPrototype(cx, cx->global());
   if (!proto) {
+    cx->recoverFromOutOfMemory();
     return false;
   }
-  *arrIterProto = proto;
+  arrIterProto.set(proto);
 
   // Ensure that %ArrayIteratorPrototype%'s "next" slot is unchanged.
   Maybe<PropertyInfo> prop = proto->lookupPure(cx->names().next);
@@ -5621,8 +5625,8 @@ static bool IsArrayIteratorPrototypeOptimizable(JSContext* cx,
     return false;
   }
 
-  *nextFun = &nextVal.toObject().as<JSFunction>();
-  return IsSelfHostedFunctionWithName(*nextFun, cx->names().ArrayIteratorNext);
+  nextFun.set(&nextVal.toObject().as<JSFunction>());
+  return IsSelfHostedFunctionWithName(nextFun, cx->names().ArrayIteratorNext);
 }
 
 AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
@@ -5634,25 +5638,25 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
   if (!val_.isObject()) {
     return AttachDecision::NoAction;
   }
-  JSObject* obj = &val_.toObject();
+  Rooted<JSObject*> obj(cx_, &val_.toObject());
   if (!IsPackedArray(obj)) {
     return AttachDecision::NoAction;
   }
 
   // Prototype must be Array.prototype and Array.prototype[@@iterator] must not
   // be modified.
-  NativeObject* arrProto;
+  Rooted<NativeObject*> arrProto(cx_);
   uint32_t arrProtoIterSlot;
-  JSFunction* iterFun;
-  if (!IsArrayPrototypeOptimizable(cx_, &obj->as<ArrayObject>(), &arrProto,
+  Rooted<JSFunction*> iterFun(cx_);
+  if (!IsArrayPrototypeOptimizable(cx_, obj.as<ArrayObject>(), &arrProto,
                                    &arrProtoIterSlot, &iterFun)) {
     return AttachDecision::NoAction;
   }
 
   // %ArrayIteratorPrototype%.next must not be modified.
-  NativeObject* arrayIteratorProto;
+  Rooted<NativeObject*> arrayIteratorProto(cx_);
   uint32_t iterNextSlot;
-  JSFunction* nextFun;
+  Rooted<JSFunction*> nextFun(cx_);
   if (!IsArrayIteratorPrototypeOptimizable(cx_, &arrayIteratorProto,
                                            &iterNextSlot, &nextFun)) {
     return AttachDecision::NoAction;
@@ -5710,9 +5714,9 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArguments() {
     return AttachDecision::NoAction;
   }
 
-  NativeObject* arrayIteratorProto;
+  Rooted<NativeObject*> arrayIteratorProto(cx_);
   uint32_t slot;
-  JSFunction* nextFun;
+  Rooted<JSFunction*> nextFun(cx_);
   if (!IsArrayIteratorPrototypeOptimizable(cx_, &arrayIteratorProto, &slot,
                                            &nextFun)) {
     return AttachDecision::NoAction;
@@ -9885,9 +9889,9 @@ InlinableNativeIRGenerator::tryAttachArrayIteratorPrototypeOptimizable() {
     return AttachDecision::NoAction;
   }
 
-  NativeObject* arrayIteratorProto;
+  Rooted<NativeObject*> arrayIteratorProto(cx_);
   uint32_t slot;
-  JSFunction* nextFun;
+  Rooted<JSFunction*> nextFun(cx_);
   if (!IsArrayIteratorPrototypeOptimizable(cx_, &arrayIteratorProto, &slot,
                                            &nextFun)) {
     return AttachDecision::NoAction;
