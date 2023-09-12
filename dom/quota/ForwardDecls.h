@@ -8,6 +8,8 @@
 #define DOM_QUOTA_FORWARD_DECLS_H_
 
 #include <cstdint>
+#include <functional>
+
 #include "mozilla/dom/quota/Config.h"
 
 enum class nsresult : uint32_t;
@@ -31,6 +33,17 @@ class MozPromise;
 
 using BoolPromise = MozPromise<bool, nsresult, false>;
 using Int64Promise = MozPromise<int64_t, nsresult, false>;
+
+namespace ipc {
+
+class BoolResponse;
+enum class ResponseRejectReason;
+
+using BoolResponsePromise =
+    MozPromise<BoolResponse, ResponseRejectReason, true>;
+using BoolResponseResolver = std::function<void(const BoolResponse&)>;
+
+}  // namespace ipc
 
 }  // namespace mozilla
 

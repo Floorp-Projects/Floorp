@@ -372,14 +372,12 @@ class GetFullOriginMetadataOp : public QuotaRequestBase {
   void GetResponse(RequestResponse& aResponse) override;
 };
 
-class ResetOrClearOp final : public QuotaRequestBase {
-  const bool mClear;
-
+class ClearOp final : public QuotaRequestBase {
  public:
-  explicit ResetOrClearOp(bool aClear);
+  ClearOp();
 
  private:
-  ~ResetOrClearOp() = default;
+  ~ClearOp() = default;
 
   void DeleteFiles(QuotaManager& aQuotaManager);
 
@@ -594,9 +592,7 @@ RefPtr<QuotaRequestBase> CreateGetFullOriginMetadataOp(
   return MakeRefPtr<GetFullOriginMetadataOp>(aParams);
 }
 
-RefPtr<QuotaRequestBase> CreateResetOrClearOp(bool aClear) {
-  return MakeRefPtr<ResetOrClearOp>(aClear);
-}
+RefPtr<QuotaRequestBase> CreateClearOp() { return MakeRefPtr<ClearOp>(); }
 
 RefPtr<QuotaRequestBase> CreateClearOriginOp(const RequestParams& aParams) {
   return MakeRefPtr<ClearOriginOp>(aParams);
@@ -1311,13 +1307,12 @@ void GetFullOriginMetadataOp::GetResponse(RequestResponse& aResponse) {
       std::move(mMaybeFullOriginMetadata);
 }
 
-ResetOrClearOp::ResetOrClearOp(bool aClear)
-    : QuotaRequestBase("dom::quota::ResetOrClearOp", /* aExclusive */ true),
-      mClear(aClear) {
+ClearOp::ClearOp()
+    : QuotaRequestBase("dom::quota::ClearOp", /* aExclusive */ true) {
   AssertIsOnOwningThread();
 }
 
-void ResetOrClearOp::DeleteFiles(QuotaManager& aQuotaManager) {
+void ClearOp::DeleteFiles(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
 
   nsresult rv = aQuotaManager.AboutToClearOrigins(Nullable<PersistenceType>(),
@@ -1342,7 +1337,7 @@ void ResetOrClearOp::DeleteFiles(QuotaManager& aQuotaManager) {
   }
 }
 
-void ResetOrClearOp::DeleteStorageFile(QuotaManager& aQuotaManager) {
+void ClearOp::DeleteStorageFile(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
 
   QM_TRY_INSPECT(const auto& storageFile,
@@ -1360,33 +1355,26 @@ void ResetOrClearOp::DeleteStorageFile(QuotaManager& aQuotaManager) {
   }
 }
 
-nsresult ResetOrClearOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
+nsresult ClearOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
 
-  AUTO_PROFILER_LABEL("ResetOrClearOp::DoDirectoryWork", OTHER);
+  AUTO_PROFILER_LABEL("ClearOp::DoDirectoryWork", OTHER);
 
-  if (mClear) {
-    DeleteFiles(aQuotaManager);
+  DeleteFiles(aQuotaManager);
 
-    aQuotaManager.RemoveQuota();
-  }
+  aQuotaManager.RemoveQuota();
 
   aQuotaManager.ShutdownStorageInternal();
 
-  if (mClear) {
-    DeleteStorageFile(aQuotaManager);
-  }
+  DeleteStorageFile(aQuotaManager);
 
   return NS_OK;
 }
 
-void ResetOrClearOp::GetResponse(RequestResponse& aResponse) {
+void ClearOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
-  if (mClear) {
-    aResponse = ClearAllResponse();
-  } else {
-    aResponse = ResetAllResponse();
-  }
+
+  aResponse = ClearAllResponse();
 }
 
 static Result<nsCOMPtr<nsIFile>, QMResult> OpenToBeRemovedDirectory(

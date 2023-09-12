@@ -53,6 +53,9 @@ class Quota final : public PQuotaParent {
   virtual mozilla::ipc::IPCResult RecvClearStoragesForPrivateBrowsing(
       ClearStoragesForPrivateBrowsingResolver&& aResolver) override;
 
+  virtual mozilla::ipc::IPCResult RecvShutdownStorage(
+      ShutdownStorageResolver&& aResolver) override;
+
   virtual mozilla::ipc::IPCResult RecvStartIdleMaintenance() override;
 
   virtual mozilla::ipc::IPCResult RecvStopIdleMaintenance() override;

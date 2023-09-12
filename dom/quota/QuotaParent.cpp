@@ -24,6 +24,36 @@ namespace mozilla::dom::quota {
 
 using namespace mozilla::ipc;
 
+namespace {
+
+class BoolPromiseResolveOrRejectCallback {
+ public:
+  using PromiseType = BoolPromise;
+  using ResolverType = BoolResponseResolver;
+
+  BoolPromiseResolveOrRejectCallback(RefPtr<Quota> aQuota,
+                                     ResolverType&& aResolver)
+      : mQuota(std::move(aQuota)), mResolver(std::move(aResolver)) {}
+
+  void operator()(const PromiseType::ResolveOrRejectValue& aValue) {
+    if (!mQuota->CanSend()) {
+      return;
+    }
+
+    if (aValue.IsResolve()) {
+      mResolver(aValue.ResolveValue());
+    } else {
+      mResolver(aValue.RejectValue());
+    }
+  }
+
+ private:
+  RefPtr<Quota> mQuota;
+  ResolverType mResolver;
+};
+
+}  // namespace
+
 PQuotaParent* AllocPQuotaParent() {
   AssertIsOnBackgroundThread();
 
@@ -204,7 +234,6 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
     }
 
     case RequestParams::TClearAllParams:
-    case RequestParams::TResetAllParams:
     case RequestParams::TListOriginsParams:
       break;
 
@@ -390,10 +419,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
         return CreateClearDataOp(aParams);
 
       case RequestParams::TClearAllParams:
-        return CreateResetOrClearOp(/* aClear */ true);
-
-      case RequestParams::TResetAllParams:
-        return CreateResetOrClearOp(/* aClear */ false);
+        return CreateClearOp();
 
       case RequestParams::TPersistedParams:
         return CreatePersistedOp(aParams);
@@ -466,18 +492,30 @@ mozilla::ipc::IPCResult Quota::RecvClearStoragesForPrivateBrowsing(
 
   quotaManager->ClearPrivateRepository()->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [self = RefPtr{this}, resolver = std::move(aResolver)](
-          const BoolPromise::ResolveOrRejectValue& aValue) {
-        if (!self->CanSend()) {
-          return;
-        }
+      BoolPromiseResolveOrRejectCallback(this, std::move(aResolver)));
 
-        if (aValue.IsResolve()) {
-          resolver(aValue.ResolveValue());
-        } else {
-          resolver(aValue.RejectValue());
-        }
-      });
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult Quota::RecvShutdownStorage(
+    ShutdownStorageResolver&& aResolver) {
+  AssertIsOnBackgroundThread();
+
+  QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
+         ([&aResolver](const auto rv) {
+           aResolver(rv);
+           return IPC_OK();
+         }));
+
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(), ([&aResolver](const auto rv) {
+                  aResolver(rv);
+                  return IPC_OK();
+                }));
+
+  quotaManager->ShutdownStorage()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      BoolPromiseResolveOrRejectCallback(this, std::move(aResolver)));
 
   return IPC_OK();
 }
