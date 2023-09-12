@@ -14171,6 +14171,11 @@ bool CodeGenerator::generate() {
   // Dump Native to bytecode entries to spew.
   dumpNativeToBytecodeEntries();
 
+  // We encode safepoints after the OSI-point offsets have been determined.
+  if (!encodeSafepoints()) {
+    return false;
+  }
+
   return !masm.oom();
 }
 
@@ -14251,11 +14256,6 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
   }
 
   uint32_t argumentSlots = (gen->outerInfo().nargs() + 1) * sizeof(Value);
-
-  // We encode safepoints after the OSI-point offsets have been determined.
-  if (!encodeSafepoints()) {
-    return false;
-  }
 
   size_t numNurseryObjects = snapshot->nurseryObjects().length();
 
