@@ -52,8 +52,7 @@ class CalcSnapPoints final {
       // given position and this second best edge position so that it can be an
       // uninitialized value as the maximum possible value, because the first
       // distance calculation would always be nscoord_MAX.
-      mSecondBestEdge = SnapPosition{nscoord_MAX, StyleScrollSnapStop::Normal,
-                                     ScrollSnapTargetId::None};
+      mSecondBestEdge = nscoord_MAX;
       mEdgeFound = false;
     }
 
@@ -61,7 +60,7 @@ class CalcSnapPoints final {
     SnapPosition mBestEdge;
     // keeps track of the position of the current second best edge on the
     // opposite side of the best edge on this axis.
-    SnapPosition mSecondBestEdge;
+    nscoord mSecondBestEdge;
     bool mEdgeFound;  // true if mBestEdge is storing a valid edge.
 
     // Assuming in most cases there's no multiple coincide snap points.
@@ -72,14 +71,14 @@ class CalcSnapPoints final {
                CandidateTracker* aCandidateTracker);
   SnapDestination GetBestEdge() const;
   nscoord XDistanceBetweenBestAndSecondEdge() const {
-    return std::abs(NSCoordSaturatingSubtract(
-        mTrackerOnX.mSecondBestEdge.mPosition, mTrackerOnX.mBestEdge.mPosition,
-        nscoord_MAX));
+    return std::abs(NSCoordSaturatingSubtract(mTrackerOnX.mSecondBestEdge,
+                                              mTrackerOnX.mBestEdge.mPosition,
+                                              nscoord_MAX));
   }
   nscoord YDistanceBetweenBestAndSecondEdge() const {
-    return std::abs(NSCoordSaturatingSubtract(
-        mTrackerOnY.mSecondBestEdge.mPosition, mTrackerOnY.mBestEdge.mPosition,
-        nscoord_MAX));
+    return std::abs(NSCoordSaturatingSubtract(mTrackerOnY.mSecondBestEdge,
+                                              mTrackerOnY.mBestEdge.mPosition,
+                                              nscoord_MAX));
   }
   const nsPoint& Destination() const { return mDestination; }
 
@@ -212,12 +211,13 @@ void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
         // diagram.
         // start        always    dest   other always
         //   |------------|---------|------|
-        aCandidateTracker->mSecondBestEdge = aEdge;
+        aCandidateTracker->mSecondBestEdge = aEdge.mPosition;
       } else if (isOnOppositeSide) {
         // Replace the second best edge with the current best edge only if the
         // new best edge (aEdge) is on the opposite side of the current best
         // edge.
-        aCandidateTracker->mSecondBestEdge = aCandidateTracker->mBestEdge;
+        aCandidateTracker->mSecondBestEdge =
+            aCandidateTracker->mBestEdge.mPosition;
       }
       aCandidateTracker->mBestEdge = aEdge;
       aCandidateTracker->mTargetIds =
@@ -227,7 +227,7 @@ void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
         aCandidateTracker->mTargetIds.AppendElement(aEdge.mTargetId);
       }
       if (aIsCloserThanSecond && isOnOppositeSide) {
-        aCandidateTracker->mSecondBestEdge = aEdge;
+        aCandidateTracker->mSecondBestEdge = aEdge.mPosition;
       }
     }
   };
@@ -243,9 +243,8 @@ void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
           std::abs(aCandidateTracker->mBestEdge.mPosition - aDestination);
       isCandidateOfSecondBest =
           std::abs(distanceFromDestination) <
-          std::abs(NSCoordSaturatingSubtract(
-              aCandidateTracker->mSecondBestEdge.mPosition, aDestination,
-              nscoord_MAX));
+          std::abs(NSCoordSaturatingSubtract(aCandidateTracker->mSecondBestEdge,
+                                             aDestination, nscoord_MAX));
       break;
     }
     case ScrollUnit::PAGES: {
@@ -259,9 +258,8 @@ void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
           aScrollingDirection;
 
       nscoord secondOvershoot =
-          NSCoordSaturatingSubtract(
-              aCandidateTracker->mSecondBestEdge.mPosition, aDestination,
-              nscoord_MAX) *
+          NSCoordSaturatingSubtract(aCandidateTracker->mSecondBestEdge,
+                                    aDestination, nscoord_MAX) *
           aScrollingDirection;
 
       // edges between the current position and the scrolling destination are
