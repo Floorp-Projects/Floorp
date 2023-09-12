@@ -119,7 +119,7 @@
   grid-area: description;
   display: flex;
   column-gap: var(--compatibility-base-unit);
-  row-gap: calc(var(--compatibility-base-unit) / 2);
+  row-gap: var(--compatibility-base-unit);
   flex-wrap: wrap;
   justify-content: space-between;
 }
@@ -164,8 +164,10 @@
 .compatibility-unsupported-browser-list {
   list-style: none;
   padding: 0;
-  column-gap: var(--compatibility-base-unit);
+  flex: 1 0 auto;
   display: flex;
+  column-gap: 6px;
+  justify-content: end;
 }
 
 .compatibility-browser {
