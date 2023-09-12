@@ -7295,12 +7295,12 @@ static void AppendScrollPositionsForSnap(
   // need the visible range of the target element.
   if (snapArea.width > aSnapInfo.mSnapportSize.width) {
     aSnapInfo.mXRangeWiderThanSnapport.AppendElement(
-        ScrollSnapInfo::ScrollSnapRange(snapArea.X(), snapArea.XMost(),
+        ScrollSnapInfo::ScrollSnapRange(snapArea, ScrollDirection::eHorizontal,
                                         targetId));
   }
   if (snapArea.height > aSnapInfo.mSnapportSize.height) {
     aSnapInfo.mYRangeWiderThanSnapport.AppendElement(
-        ScrollSnapInfo::ScrollSnapRange(snapArea.Y(), snapArea.YMost(),
+        ScrollSnapInfo::ScrollSnapRange(snapArea, ScrollDirection::eVertical,
                                         targetId));
   }
 

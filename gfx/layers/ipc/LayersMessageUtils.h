@@ -446,14 +446,14 @@ struct ParamTraits<mozilla::ScrollSnapInfo::ScrollSnapRange> {
   typedef mozilla::ScrollSnapInfo::ScrollSnapRange paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mStart);
-    WriteParam(aWriter, aParam.mEnd);
+    WriteParam(aWriter, aParam.mDirection);
+    WriteParam(aWriter, aParam.mSnapArea);
     WriteParam(aWriter, aParam.mTargetId);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &aResult->mStart) &&
-           ReadParam(aReader, &aResult->mEnd) &&
+    return ReadParam(aReader, &aResult->mDirection) &&
+           ReadParam(aReader, &aResult->mSnapArea) &&
            ReadParam(aReader, &aResult->mTargetId);
   }
 };
