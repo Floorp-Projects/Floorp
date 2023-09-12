@@ -444,6 +444,7 @@ MOZ_NEVER_INLINE NTSTATUS AfterMapViewOfExecutableSection(
   if (::RtlCompareUnicodeString(&k32Name, &leafOnStack, TRUE) == 0) {
     blockAction = BlockAction::Allow;
   } else {
+    auto noSharedSectionReset{SharedSection::AutoNoReset()};
     k32Exports = gSharedSection.GetKernel32Exports();
     // Small optimization: Since loading a dependent module does not involve
     // LdrLoadDll, we know isInjectedDependent is false if we hold a top frame.
