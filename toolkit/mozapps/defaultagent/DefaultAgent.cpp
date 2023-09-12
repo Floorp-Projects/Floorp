@@ -363,17 +363,15 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
 NS_IMETHODIMP
 DefaultAgent::SetDefaultBrowserUserChoice(
     const nsAString& aAumid, const nsTArray<nsString>& aExtraFileExtensions) {
-  HRESULT hr = default_agent::SetDefaultBrowserUserChoice(
+  return default_agent::SetDefaultBrowserUserChoice(
       PromiseFlatString(aAumid).get(), aExtraFileExtensions);
-  return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 DefaultAgent::SetDefaultExtensionHandlersUserChoice(
     const nsAString& aAumid, const nsTArray<nsString>& aFileExtensions) {
-  HRESULT hr = default_agent::SetDefaultExtensionHandlersUserChoice(
+  return default_agent::SetDefaultExtensionHandlersUserChoice(
       PromiseFlatString(aAumid).get(), aFileExtensions);
-  return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

@@ -25,17 +25,20 @@ namespace mozilla::default_agent {
  * @param aExtraFileExtensions Optional array of extra file association pairs to
  * set as default, like `[ ".pdf", "FirefoxPDF" ]`.
  *
- * @return S_OK             All associations set and checked successfully.
- *         MOZ_E_NO_PROGID  The ProgID classes had not been registered.
- *         MOZ_E_HASH_CHECK The existing UserChoice Hash could not be verified.
- *         MOZ_E_REJECTED   UserChoice was set, but checking the default
- *                          did not return our ProgID.
- *         MOZ_E_BUILD      The existing UserChoice Hash was verified, but
- *                          we're on an older, unsupported Windows build,
- *                          so do not attempt to update the UserChoice hash.
- *         E_FAIL           other failure
+ * @return NS_OK                    All associations set and checked
+ *                                  successfully.
+ *         NS_ERROR_WDBA_NO_PROGID  The ProgID classes had not been registered.
+ *         NS_ERROR_WDBA_HASH_CHECK The existing UserChoice Hash could not be
+ *                                  verified.
+ *         NS_ERROR_WDBA_REJECTED   UserChoice was set, but checking the default
+ *                                  did not return our ProgID.
+ *         NS_ERROR_WDBA_BUILD      The existing UserChoice Hash was verified,
+ *                                  but we're on an older, unsupported Windows
+ *                                  build, so do not attempt to update the
+ *                                  UserChoice hash.
+ *         NS_ERROR_FAILURE         other failure
  */
-HRESULT SetDefaultBrowserUserChoice(
+nsresult SetDefaultBrowserUserChoice(
     const wchar_t* aAumi,
     const nsTArray<nsString>& aExtraFileExtensions = nsTArray<nsString>());
 
@@ -48,23 +51,14 @@ HRESULT SetDefaultBrowserUserChoice(
  * @param aExtraFileExtensions Optional array of extra file association pairs to
  * set as default, like `[ ".pdf", "FirefoxPDF" ]`.
  *
- * @returns S_OK           All associations set and checked successfully.
- *          MOZ_E_REJECTED UserChoice was set, but checking the default did not
- *                         return our ProgID.
- *          E_FAIL         Failed to set at least one association.
+ * @returns NS_OK                  All associations set and checked
+ *                                 successfully.
+ *          NS_ERROR_WDBA_REJECTED UserChoice was set, but checking the default
+ *                                 did not return our ProgID.
+ *          NS_ERROR_FAILURE       Failed to set at least one association.
  */
-HRESULT SetDefaultExtensionHandlersUserChoice(
+nsresult SetDefaultExtensionHandlersUserChoice(
     const wchar_t* aAumi, const nsTArray<nsString>& aFileExtensions);
-
-/*
- * Additional HRESULT error codes from SetDefaultBrowserUserChoice
- *
- * 0x20000000 is set to put these in the customer-defined range.
- */
-const HRESULT MOZ_E_NO_PROGID = 0xa0000001L;
-const HRESULT MOZ_E_HASH_CHECK = 0xa0000002L;
-const HRESULT MOZ_E_REJECTED = 0xa0000003L;
-const HRESULT MOZ_E_BUILD = 0xa0000004L;
 
 }  // namespace mozilla::default_agent
 
