@@ -153,6 +153,21 @@ void DirectoryLockImpl::NotifyOpenListener() {
   mPending.Flip();
 }
 
+void DirectoryLockImpl::Invalidate() {
+  AssertIsOnOwningThread();
+
+  mInvalidated.EnsureFlipped();
+
+  if (mInvalidateCallback) {
+    MOZ_ALWAYS_SUCCEEDS(GetCurrentSerialEventTarget()->Dispatch(
+        NS_NewRunnableFunction("DirectoryLockImpl::Invalidate",
+                               [invalidateCallback = mInvalidateCallback]() {
+                                 invalidateCallback();
+                               }),
+        NS_DISPATCH_NORMAL));
+  }
+}
+
 void DirectoryLockImpl::Acquire(RefPtr<OpenDirectoryListener> aOpenListener) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aOpenListener);
@@ -266,6 +281,10 @@ void DirectoryLockImpl::AssertIsAcquiredExclusively() {
   MOZ_ASSERT(found);
 }
 #endif
+
+void DirectoryLockImpl::OnInvalidate(std::function<void()>&& aCallback) {
+  mInvalidateCallback = std::move(aCallback);
+}
 
 RefPtr<ClientDirectoryLock> DirectoryLockImpl::SpecializeForClient(
     PersistenceType aPersistenceType,
