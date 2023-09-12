@@ -90,7 +90,11 @@ bool RenderCompositorEGL::BeginFrame() {
   }
 #ifdef MOZ_WIDGET_GTK
   if (mWidget->AsGTK()) {
-    mWidget->AsGTK()->SetEGLNativeWindowSize(GetBufferSize());
+    if (!mWidget->AsGTK()->SetEGLNativeWindowSize(GetBufferSize())) {
+      gfxCriticalNote
+          << "We don't have GTK/EGLWindow with correct size, can't draw.";
+      return false;
+    }
   }
 #endif
   if (!MakeCurrent()) {

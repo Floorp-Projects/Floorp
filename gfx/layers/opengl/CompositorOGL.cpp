@@ -747,7 +747,10 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     mWidgetSize = LayoutDeviceIntSize::FromUnknownSize(rect.Size());
 #ifdef MOZ_WIDGET_GTK
     if (mWidget && mWidget->AsGTK()) {
-      mWidget->AsGTK()->SetEGLNativeWindowSize(mWidgetSize);
+      if (!mWidget->AsGTK()->SetEGLNativeWindowSize(mWidgetSize)) {
+        // We don't have correct window size to paint into.
+        return Nothing();
+      }
     }
 #endif
   } else {
