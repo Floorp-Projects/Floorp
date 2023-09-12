@@ -5102,6 +5102,8 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 }
 
 RefPtr<BoolPromise> QuotaManager::ClearPrivateRepository() {
+  AssertIsOnOwningThread();
+
   auto clearPrivateRepositoryOp = CreateClearPrivateRepositoryOp();
 
   RegisterNormalOriginOp(*clearPrivateRepositoryOp);
