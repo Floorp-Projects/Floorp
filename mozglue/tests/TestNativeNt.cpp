@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsEnumProcessModules.h"
 
+#include <limits>
 #include <stdio.h>
 #include <windows.h>
 #include <strsafe.h>
@@ -365,6 +366,42 @@ MOZ_NEVER_INLINE PVOID SwapThreadLocalStoragePointer(PVOID aNewValue) {
   return oldValue;
 }
 
+#if defined(_M_X64)
+bool TestCheckStack() {
+  auto stackBase = reinterpret_cast<uint8_t*>(RtlGetThreadStackBase());
+  auto stackLimit = reinterpret_cast<uint8_t*>(RtlGetThreadStackLimit());
+  uint8_t* stackPointer = nullptr;
+  asm volatile("mov %%rsp, %0;" : "=r"(stackPointer));
+  if (!(stackLimit < stackBase && stackLimit <= stackPointer &&
+        stackPointer < stackBase)) {
+    printf("TEST-FAIL | NativeNt | Stack addresses are not coherent.\n");
+    return false;
+  }
+  uintptr_t committedBytes = stackPointer - stackLimit;
+  const uint32_t maxExtraCommittedBytes = 0x10000;
+  if ((committedBytes + maxExtraCommittedBytes) >
+      std::numeric_limits<uint32_t>::max()) {
+    printf(
+        "TEST-FAIL | NativeNt | The stack limit is too high to perform the "
+        "test.\n");
+    return false;
+  }
+  for (uint32_t extraSize = 0; extraSize < maxExtraCommittedBytes;
+       ++extraSize) {
+    CheckStack(static_cast<uint32_t>(committedBytes) + extraSize);
+    auto expectedNewLimit = stackLimit - ((extraSize + 0xFFF) & ~0xFFF);
+    if (expectedNewLimit != RtlGetThreadStackLimit()) {
+      printf(
+          "TEST-FAIL | NativeNt | CheckStack did not grow the stack "
+          "correctly (expected: %p, got: %p).\n",
+          expectedNewLimit, RtlGetThreadStackLimit());
+      return false;
+    }
+  }
+  return true;
+}
+#endif  // _M_X64
+
 int wmain(int argc, wchar_t* argv[]) {
   UNICODE_STRING normal;
   ::RtlInitUnicodeString(&normal, kNormal);
@@ -600,6 +637,12 @@ int wmain(int argc, wchar_t* argv[]) {
   if (!TestModuleLoadedAsData()) {
     return 1;
   }
+
+#if defined(_M_X64)
+  if (!TestCheckStack()) {
+    return 1;
+  }
+#endif  // _M_X64
 
   printf("TEST-PASS | NativeNt | All tests ran successfully\n");
   return 0;

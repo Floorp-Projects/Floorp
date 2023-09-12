@@ -35,6 +35,10 @@
 
 #include <algorithm>
 
+#if defined(XP_WIN)
+#  include "mozilla/NativeNt.h"
+#endif
+
 // Activate BHR only for one every BHR_BETA_MOD users.
 // We're doing experimentation with collecting a lot more data from BHR, and
 // don't want to enable it for beta users at the moment. We can scale this up in
@@ -87,8 +91,14 @@ class BackgroundHangManager : public nsIObserver {
 
   ProfilerThreadId mHangMonitorProfilerThreadId;
 
-  void SetMonitorThreadId() {
+  void InitMonitorThread() {
     mHangMonitorProfilerThreadId = profiler_current_thread_id();
+#if defined(MOZ_GECKO_PROFILER) && defined(XP_WIN) && defined(_M_X64)
+    // Pre-commit 5 more pages of stack to guarantee enough commited stack
+    // space on this thread upon hang detection, when we will need to run
+    // profiler_suspend_and_sample_thread (bug 1840164).
+    mozilla::nt::CheckStack(5 * 0x1000);
+#endif
   }
 
   // Used for recording a permahang in case we don't ever make it back to
@@ -326,14 +336,14 @@ bool BackgroundHangThread::sTlsKeyInitialized;
 BackgroundHangManager::BackgroundHangManager()
     : mShutdown(false), mLock("BackgroundHangManager") {
   // Save a reference to sInstance now so that the destructor is not triggered
-  // if the SetMonitorThreadId RunnableMethod is released before we are done.
+  // if the InitMonitorThread RunnableMethod is released before we are done.
   sInstance = this;
 
   DebugOnly<nsresult> rv =
       NS_NewNamedThread("BHMgr Monitor", getter_AddRefs(mHangMonitorThread),
                         mozilla::NewRunnableMethod(
-                            "BackgroundHangManager::SetMonitorThreadId", this,
-                            &BackgroundHangManager::SetMonitorThreadId));
+                            "BackgroundHangManager::InitMonitorThread", this,
+                            &BackgroundHangManager::InitMonitorThread));
 
   MOZ_ASSERT(NS_SUCCEEDED(rv) && mHangMonitorThread,
              "Failed to create BHR processing thread");
