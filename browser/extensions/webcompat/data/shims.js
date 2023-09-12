@@ -687,6 +687,7 @@ const AVAILABLE_SHIMS = [
       ["*://web.powerva.microsoft.com/*", "*://login.microsoftonline.com/*"],
       ["*://teams.microsoft.com/*", "*://login.microsoftonline.com/*"],
       ["*://*.teams.microsoft.us/*", "*://login.microsoftonline.us/*"],
+      ["*://www.msn.com/*", "*://login.microsoftonline.com/*"],
     ],
     contentScripts: [
       {
@@ -695,6 +696,7 @@ const AVAILABLE_SHIMS = [
           "*://web.powerva.microsoft.com/*",
           "*://teams.microsoft.com/*",
           "*://*.teams.microsoft.us/*",
+          "*://www.msn.com/*",
         ],
         runAt: "document_start",
       },
