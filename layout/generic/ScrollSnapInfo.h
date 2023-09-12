@@ -12,6 +12,7 @@
 #include "mozilla/ScrollSnapTargetId.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "nsPoint.h"
 
 class nsIContent;
@@ -41,6 +42,7 @@ struct SnapPoint {
 };
 
 struct ScrollSnapInfo {
+  using ScrollDirection = layers::ScrollDirection;
   ScrollSnapInfo();
 
   bool operator==(const ScrollSnapInfo& aOther) const {
@@ -103,22 +105,33 @@ struct ScrollSnapInfo {
   struct ScrollSnapRange {
     ScrollSnapRange() = default;
 
-    ScrollSnapRange(nscoord aStart, nscoord aEnd, ScrollSnapTargetId aTargetId)
-        : mStart(aStart), mEnd(aEnd), mTargetId(aTargetId) {}
+    ScrollSnapRange(const nsRect& aSnapArea, ScrollDirection aDirection,
+                    ScrollSnapTargetId aTargetId)
+        : mSnapArea(aSnapArea), mDirection(aDirection), mTargetId(aTargetId) {}
 
-    nscoord mStart;
-    nscoord mEnd;
+    nsRect mSnapArea;
+    ScrollDirection mDirection;
     ScrollSnapTargetId mTargetId;
 
     bool operator==(const ScrollSnapRange& aOther) const {
-      return mStart == aOther.mStart && mEnd == aOther.mEnd &&
+      return mDirection == aOther.mDirection && mSnapArea == aOther.mSnapArea &&
              mTargetId == aOther.mTargetId;
+    }
+
+    nscoord Start() const {
+      return mDirection == ScrollDirection::eHorizontal ? mSnapArea.X()
+                                                        : mSnapArea.Y();
+    }
+
+    nscoord End() const {
+      return mDirection == ScrollDirection::eHorizontal ? mSnapArea.XMost()
+                                                        : mSnapArea.YMost();
     }
 
     // Returns true if |aPoint| is a valid snap position in this range.
     bool IsValid(nscoord aPoint, nscoord aSnapportSize) const {
-      MOZ_ASSERT(mEnd - mStart > aSnapportSize);
-      return mStart <= aPoint && aPoint <= mEnd - aSnapportSize;
+      MOZ_ASSERT(End() - Start() > aSnapportSize);
+      return Start() <= aPoint && aPoint <= End() - aSnapportSize;
     }
   };
   // An array of the range that the target element is larger than the snapport
