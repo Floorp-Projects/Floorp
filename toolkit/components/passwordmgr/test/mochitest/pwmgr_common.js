@@ -876,6 +876,26 @@ function manageLoginsInParent() {
         assert.ok(false, "addLogins threw: " + e);
       }
     });
+
+    /* eslint-env mozilla/chrome-script */
+    addMessageListener("removeLogins", async searchParams => {
+      try {
+        for (const searchParam of searchParams) {
+          const [login] = await Services.logins.searchLoginsAsync(searchParam);
+          if (!login) {
+            info(
+              `removeLogins: could not find login ${JSON.stringify(
+                searchParam
+              )}`
+            );
+            continue;
+          }
+          Services.logins.removeLogin(login);
+        }
+      } catch (e) {
+        assert.ok(false, "removeLogins threw: " + e);
+      }
+    });
   });
 }
 
@@ -899,6 +919,26 @@ async function setStoredLoginsAsync(...aLogins) {
   script.sendQuery("removeAllUserFacingLogins");
   await script.sendQuery("addLogins", aLogins);
   return script;
+}
+
+/** Store a list of logins, and remove them once task has finished.
+ * The logins are added within the parent chrome process.
+ * @param {array} logins - a list of logins to add. Each login is an array of the arguments
+ *                          that would be passed to nsLoginInfo.init().
+ */
+async function storeLoginsDuringTask(...logins) {
+  const script = manageLoginsInParent();
+  const searchParams = logins.map(([origin, formActionOrigin, httpRealm]) => ({
+    origin,
+    formActionOrigin,
+    httpRealm,
+  }));
+  info(`Storing ${searchParams.length} logins for task`);
+  await script.sendQuery("addLogins", logins);
+  SimpleTest.registerTaskCleanupFunction(async () => {
+    info(`Removing ${searchParams.length} logins after task`);
+    await script.sendQuery("removeLogins", searchParams);
+  });
 }
 
 /*
@@ -1033,3 +1073,24 @@ this.LoginManager = new Proxy(
     },
   }
 );
+
+/**
+ * Set innerHTML of the content div and ensure it gets reset after current
+ * task finishes.
+ * Returns the first child node of the newly created content div for convenient
+ * access of the newly created dom node.
+ *
+ * @param {String} html
+ *        string of dom content to be created
+ */
+function setContentForTask(html) {
+  const content = document.querySelector("#content");
+  const innerHTMLBefore = content.innerHTML || "";
+  SimpleTest.registerCurrentTaskCleanupFunction(
+    // eslint-disable-next-line no-unsanitized/property
+    () => (content.innerHTML = innerHTMLBefore)
+  );
+  // eslint-disable-next-line no-unsanitized/property
+  content.innerHTML = html;
+  return content.firstChild;
+}

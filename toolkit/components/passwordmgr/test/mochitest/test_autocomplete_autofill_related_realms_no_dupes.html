@@ -24,28 +24,32 @@ function restoreForm(form) {
   form.uname.focus();
 }
 
-add_setup(async () => {
-  await setStoredLoginsAsync(
-    // Simple related domain relationship where example.com and other-example.com are in the related domains list
-    ["https://other-example.com", "https://other-example.com", null, "relatedUser1", "relatedPass1", "uname", "pword"],
+const loginInfos = [
+  // Simple related domain relationship where example.com and other-example.com are in the related domains list
+  ["https://other-example.com", "https://other-example.com", null, "relatedUser1", "relatedPass1", "uname", "pword"],
 
-    // Example.com and example.co.uk are related, so sub.example.co.uk should appear on example.com's autocomplete dropdown
-    // The intent is to cover the ebay.com/ebay.co.uk and all other country TLD cases
-    // where the sign in page is actually signin.ebay.com/signin.ebay.co.uk but credentials could have manually been entered
-    // for ebay.com/ebay.co.uk or automatically stored as signin.ebay.com/sigin.ebay.co.uk
-    ["https://sub.example.co.uk", "https://sub.example.co.uk", null, "subUser1", "subPass1", "uname", "pword"],
+  // Example.com and example.co.uk are related, so sub.example.co.uk should appear on example.com's autocomplete dropdown
+  // The intent is to cover the ebay.com/ebay.co.uk and all other country TLD cases
+  // where the sign in page is actually signin.ebay.com/signin.ebay.co.uk but credentials could have manually been entered
+  // for ebay.com/ebay.co.uk or automatically stored as signin.ebay.com/sigin.ebay.co.uk
+  ["https://sub.example.co.uk", "https://sub.example.co.uk", null, "subUser1", "subPass1", "uname", "pword"],
 
-    // Ensures there are no duplicates for the exact domain that the user is on
-    ["https://example.com", "https://example.com", null, "exactUser1", "exactPass1", "uname", "pword"],
-    ["https://www.example.com", "https://www.example.com", null, "exactWWWUser1", "exactWWWPass1", "uname", "pword"],
-  );
+  // Ensures there are no duplicates for the exact domain that the user is on
+  ["https://example.com", "https://example.com", null, "exactUser1", "exactPass1", "uname", "pword"],
+  ["https://www.example.com", "https://www.example.com", null, "exactWWWUser1", "exactWWWPass1", "uname", "pword"],
+];
+
+add_setup(() => {
   listenForUnexpectedPopupShown();
 });
 
 add_task(async function test_no_duplicates_autocomplete_autofill() {
-  const form = createLoginForm({
-    action: "https://www.example.com"
-  });
+  await storeLoginsDuringTask(...loginInfos);
+  const form = setContentForTask(`<form action="https://www.example.com">
+    <input type="text" name="uname" />
+    <input type="password" name="pword" />
+    <button type="submit">Submit</button>
+  </form>`);
 
   await promiseFormsProcessedInSameProcess();
   await SimpleTest.promiseFocus(window);
