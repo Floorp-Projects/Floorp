@@ -313,27 +313,27 @@ fn disabled_by_pref(feature: &Atom, context: &ParserContext) -> bool {
             // forced-colors is always enabled in the ua and chrome. On
             // the web it is hidden behind a preference, which is defaulted
             // to 'true' as of bug 1659511.
-            return !context.in_ua_or_chrome_sheet() &&
+            return !context.chrome_rules_enabled() &&
                 !static_prefs::pref!("layout.css.forced-colors.enabled");
         }
         // prefers-contrast is always enabled in the ua and chrome. On
         // the web it is hidden behind a preference.
         if *feature == atom!("prefers-contrast") {
-            return !context.in_ua_or_chrome_sheet() &&
+            return !context.chrome_rules_enabled() &&
                 !static_prefs::pref!("layout.css.prefers-contrast.enabled");
         }
 
         // prefers-reduced-transparency is always enabled in the ua and chrome. On
         // the web it is hidden behind a preference (see Bug 1822176).
         if *feature == atom!("prefers-reduced-transparency") {
-            return !context.in_ua_or_chrome_sheet() &&
+            return !context.chrome_rules_enabled() &&
                 !static_prefs::pref!("layout.css.prefers-reduced-transparency.enabled");
         }
 
         // inverted-colors is always enabled in the ua and chrome. On
         // the web it is hidden behind a preferenc.
         if *feature == atom!("inverted-colors") {
-            return !context.in_ua_or_chrome_sheet() &&
+            return !context.chrome_rules_enabled() &&
                 !static_prefs::pref!("layout.css.inverted-colors.enabled");
         }
     }
@@ -410,7 +410,7 @@ impl QueryFeatureExpression {
         let location = input.current_source_location();
         let ident = input.expect_ident()?;
 
-        if context.in_ua_or_chrome_sheet() {
+        if context.chrome_rules_enabled() {
             flags.insert(FeatureFlags::CHROME_AND_UA_ONLY);
         }
 

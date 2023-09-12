@@ -245,7 +245,7 @@ impl SupportsCondition {
 #[cfg(feature = "gecko")]
 fn eval_moz_bool_pref(name: &CStr, cx: &ParserContext) -> bool {
     use crate::gecko_bindings::bindings;
-    if !cx.in_ua_or_chrome_sheet() {
+    if !cx.chrome_rules_enabled() {
         return false;
     }
     unsafe { bindings::Gecko_GetBoolPrefValue(name.as_ptr()) }

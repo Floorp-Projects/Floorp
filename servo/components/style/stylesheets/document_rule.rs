@@ -279,13 +279,11 @@ impl DocumentCondition {
 
     #[cfg(feature = "gecko")]
     fn allowed_in(&self, context: &ParserContext) -> bool {
-        use static_prefs::pref;
-
-        if context.in_ua_or_chrome_sheet() {
+        if context.chrome_rules_enabled() {
             return true;
         }
 
-        if pref!("layout.css.moz-document.content.enabled") {
+        if static_prefs::pref!("layout.css.moz-document.content.enabled") {
             return true;
         }
 

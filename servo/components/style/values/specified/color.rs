@@ -209,7 +209,7 @@ pub enum SystemColor {
     #[parse(aliases = "-moz-field")]
     Field,
     /// Used for disabled field backgrounds.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozDisabledfield,
     #[parse(aliases = "-moz-fieldtext")]
     Fieldtext,
@@ -265,7 +265,7 @@ pub enum SystemColor {
     /// Used for menu item backgrounds when hovered.
     MozMenuhover,
     /// Used for menu item backgrounds when hovered and disabled.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozMenuhoverdisabled,
     /// Used for menu item text when hovered.
     MozMenuhovertext,
@@ -278,25 +278,25 @@ pub enum SystemColor {
     MozOddtreerow,
 
     /// Used for button text when pressed.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozButtonactivetext,
 
     /// Used for button background when pressed.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozButtonactiveface,
 
     /// Used for button background when disabled.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozButtondisabledface,
 
     /// Colors used for the header bar (sorta like the tab bar / menubar).
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozHeaderbar,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozHeaderbartext,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozHeaderbarinactive,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozHeaderbarinactivetext,
 
     /// Foreground color of default buttons.
@@ -327,7 +327,7 @@ pub enum SystemColor {
     Accentcolortext,
 
     /// The background-color for :autofill-ed inputs.
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozAutofillBackground,
 
     /// Hyperlink color extracted from the system, not affected by the
@@ -350,12 +350,12 @@ pub enum SystemColor {
     Visitedtext,
 
     /// Color of tree column headers
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozColheadertext,
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozColheaderhovertext,
 
-    #[parse(condition = "ParserContext::in_ua_or_chrome_sheet")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
     TextSelectDisabledBackground,
     #[css(skip)]
     TextSelectAttentionBackground,
