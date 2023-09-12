@@ -80,7 +80,7 @@ struct ScrollSnapInfo {
     SnapTarget() = default;
 
     SnapTarget(Maybe<nscoord>&& aSnapPositionX, Maybe<nscoord>&& aSnapPositionY,
-               nsRect&& aSnapArea, StyleScrollSnapStop aScrollSnapStop,
+               const nsRect& aSnapArea, StyleScrollSnapStop aScrollSnapStop,
                ScrollSnapTargetId aTargetId)
         : mSnapPoint(std::move(aSnapPositionX), std::move(aSnapPositionY)),
           mSnapArea(aSnapArea),

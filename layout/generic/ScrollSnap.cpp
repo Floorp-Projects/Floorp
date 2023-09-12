@@ -24,23 +24,20 @@ namespace mozilla {
  * adding an edge depends on the scrolling unit.
  */
 class CalcSnapPoints final {
+  using SnapTarget = ScrollSnapInfo::SnapTarget;
+
  public:
   CalcSnapPoints(ScrollUnit aUnit, ScrollSnapFlags aSnapFlags,
                  const nsPoint& aDestination, const nsPoint& aStartPos);
-  struct SnapPosition {
-    SnapPosition(nscoord aPosition, StyleScrollSnapStop aScrollSnapStop,
-                 ScrollSnapTargetId aTargetId)
-        : mPosition(aPosition),
-          mScrollSnapStop(aScrollSnapStop),
-          mTargetId(aTargetId) {}
+  struct SnapPosition : public SnapTarget {
+    SnapPosition(const SnapTarget& aSnapTarget, nscoord aPosition)
+        : SnapTarget(aSnapTarget), mPosition(aPosition) {}
 
     nscoord mPosition;
-    StyleScrollSnapStop mScrollSnapStop;
-    ScrollSnapTargetId mTargetId;
   };
 
-  void AddHorizontalEdge(const SnapPosition& aEdge);
-  void AddVerticalEdge(const SnapPosition& aEdge);
+  void AddHorizontalEdge(const SnapTarget& aTarget);
+  void AddVerticalEdge(const SnapTarget& aTarget);
 
   struct CandidateTracker {
     // keeps track of the position of the current second best edge on the
@@ -133,14 +130,16 @@ SnapDestination CalcSnapPoints::GetBestEdge() const {
       ScrollSnapTargetIds{mTrackerOnX.mTargetIds, mTrackerOnY.mTargetIds}};
 }
 
-void CalcSnapPoints::AddHorizontalEdge(const SnapPosition& aEdge) {
-  AddEdge(aEdge, mDestination.y, mStartPos.y, mScrollingDirection.y,
-          &mTrackerOnY);
+void CalcSnapPoints::AddHorizontalEdge(const SnapTarget& aTarget) {
+  MOZ_ASSERT(aTarget.mSnapPoint.mY);
+  AddEdge(SnapPosition{aTarget, *aTarget.mSnapPoint.mY}, mDestination.y,
+          mStartPos.y, mScrollingDirection.y, &mTrackerOnY);
 }
 
-void CalcSnapPoints::AddVerticalEdge(const SnapPosition& aEdge) {
-  AddEdge(aEdge, mDestination.x, mStartPos.x, mScrollingDirection.x,
-          &mTrackerOnX);
+void CalcSnapPoints::AddVerticalEdge(const SnapTarget& aTarget) {
+  MOZ_ASSERT(aTarget.mSnapPoint.mX);
+  AddEdge(SnapPosition{aTarget, *aTarget.mSnapPoint.mX}, mDestination.x,
+          mStartPos.x, mScrollingDirection.x, &mTrackerOnX);
 }
 
 void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
@@ -299,15 +298,11 @@ static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
       aCalcSnapPoints.Destination(), [&](const auto& aTarget) -> bool {
         if (aTarget.mSnapPoint.mX && aSnapInfo.mScrollSnapStrictnessX !=
                                          StyleScrollSnapStrictness::None) {
-          aCalcSnapPoints.AddVerticalEdge({*aTarget.mSnapPoint.mX,
-                                           aTarget.mScrollSnapStop,
-                                           aTarget.mTargetId});
+          aCalcSnapPoints.AddVerticalEdge(aTarget);
         }
         if (aTarget.mSnapPoint.mY && aSnapInfo.mScrollSnapStrictnessY !=
                                          StyleScrollSnapStrictness::None) {
-          aCalcSnapPoints.AddHorizontalEdge({*aTarget.mSnapPoint.mY,
-                                             aTarget.mScrollSnapStop,
-                                             aTarget.mTargetId});
+          aCalcSnapPoints.AddHorizontalEdge(aTarget);
         }
         return true;
       });
@@ -342,8 +337,9 @@ Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForDestination(
     if (range.IsValid(clampedDestination.x, aSnapInfo.mSnapportSize.width) &&
         calcSnapPoints.XDistanceBetweenBestAndSecondEdge() >
             aSnapInfo.mSnapportSize.width) {
-      calcSnapPoints.AddVerticalEdge(CalcSnapPoints::SnapPosition{
-          clampedDestination.x, StyleScrollSnapStop::Normal, range.mTargetId});
+      calcSnapPoints.AddVerticalEdge(ScrollSnapInfo::SnapTarget{
+          Some(clampedDestination.x), Nothing(), range.mSnapArea,
+          StyleScrollSnapStop::Normal, range.mTargetId});
       break;
     }
   }
@@ -351,8 +347,9 @@ Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForDestination(
     if (range.IsValid(clampedDestination.y, aSnapInfo.mSnapportSize.height) &&
         calcSnapPoints.YDistanceBetweenBestAndSecondEdge() >
             aSnapInfo.mSnapportSize.height) {
-      calcSnapPoints.AddHorizontalEdge(CalcSnapPoints::SnapPosition{
-          clampedDestination.y, StyleScrollSnapStop::Normal, range.mTargetId});
+      calcSnapPoints.AddHorizontalEdge(ScrollSnapInfo::SnapTarget{
+          Nothing(), Some(clampedDestination.y), range.mSnapArea,
+          StyleScrollSnapStop::Normal, range.mTargetId});
       break;
     }
   }
@@ -522,16 +519,12 @@ Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForResnap(
           if (!x && aTarget.mSnapPoint.mX &&
               aSnapInfo.mScrollSnapStrictnessX !=
                   StyleScrollSnapStrictness::None) {
-            calcSnapPoints.AddVerticalEdge({*aTarget.mSnapPoint.mX,
-                                            aTarget.mScrollSnapStop,
-                                            aTarget.mTargetId});
+            calcSnapPoints.AddVerticalEdge(aTarget);
           }
           if (!y && aTarget.mSnapPoint.mY &&
               aSnapInfo.mScrollSnapStrictnessY !=
                   StyleScrollSnapStrictness::None) {
-            calcSnapPoints.AddHorizontalEdge({*aTarget.mSnapPoint.mY,
-                                              aTarget.mScrollSnapStop,
-                                              aTarget.mTargetId});
+            calcSnapPoints.AddHorizontalEdge(aTarget);
           }
           return true;
         });
