@@ -1,0 +1,64 @@
+diff --git a/lib/read-wasm.js b/lib/read-wasm.js
+index a4fb29c295516..75d7bd54153ad 100644
+--- a/lib/read-wasm.js
++++ b/lib/read-wasm.js
+@@ -1,22 +1,45 @@
+ "use strict";
+ 
++const isNode =
++  typeof process !== "undefined" &&
++  process.versions != null &&
++  process.versions.node != null;
++
+ let mappingsWasm = null;
+ 
+-module.exports = function readWasm() {
+-  if (typeof mappingsWasm === "string") {
+-    return fetch(mappingsWasm).then(response => response.arrayBuffer());
+-  }
+-  if (mappingsWasm instanceof ArrayBuffer) {
+-    return Promise.resolve(mappingsWasm);
+-  }
++if (isNode) {
++  const fs = require("fs");
++  const path = require("path");
+ 
+-  throw new Error(
+-    "You must provide the string URL or ArrayBuffer contents " +
+-      "of lib/mappings.wasm by calling " +
+-      "SourceMapConsumer.initialize({ 'lib/mappings.wasm': ... }) " +
+-      "before using SourceMapConsumer"
+-  );
+-};
++  module.exports = function readWasm() {
++    return new Promise((resolve, reject) => {
++      const wasmPath = path.join(__dirname, "mappings.wasm");
++      fs.readFile(wasmPath, null, (error, data) => {
++        if (error) {
++          reject(error);
++          return;
++        }
++
++        resolve(data.buffer);
++      });
++    });
++  };
++} else {
++  module.exports = function readWasm() {
++    if (typeof mappingsWasm === "string") {
++      return fetch(mappingsWasm)
++        .then(response => response.arrayBuffer());
++    }
++    if (mappingsWasm instanceof ArrayBuffer) {
++      return Promise.resolve(mappingsWasm);
++    }
++
++    throw new Error("You must provide the string URL or ArrayBuffer contents " +
++                    "of lib/mappings.wasm by calling " +
++                    "SourceMapConsumer.initialize({ 'lib/mappings.wasm': ... }) " +
++                    "before using SourceMapConsumer");
++  };
++}
+ 
+ module.exports.initialize = input => {
+   mappingsWasm = input;

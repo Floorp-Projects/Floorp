@@ -124,6 +124,33 @@ add_task(async function test_sidebar_navigation() {
       adjustedRating: "4.1",
       letterGrade: "B",
     });
+
+    // Navigate to a product URL with query params:
+    loadedPromise = BrowserTestUtils.browserLoaded(
+      browser,
+      false,
+      PRODUCT_TEST_URL + "?th=1"
+    );
+    // Navigate to the same product, but with a th=1 added.
+    BrowserTestUtils.loadURIString(browser, PRODUCT_TEST_URL + "?th=1");
+    // When just comparing URLs product info would be cleared out,
+    // but when comparing the parsed product ids, we do nothing as the product
+    // has not changed.
+    info("Verifying product has not changed before load.");
+    await verifyProductInfo(sidebar, {
+      productURL: PRODUCT_TEST_URL,
+      adjustedRating: "4.1",
+      letterGrade: "B",
+    });
+    // Wait for the page to load, but don't wait for the sidebar to update so
+    // we can be sure we still have the previous product info.
+    await loadedPromise;
+    info("Verifying product has not changed after load.");
+    await verifyProductInfo(sidebar, {
+      productURL: PRODUCT_TEST_URL,
+      adjustedRating: "4.1",
+      letterGrade: "B",
+    });
   });
 });
 

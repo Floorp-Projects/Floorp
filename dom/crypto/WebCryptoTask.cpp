@@ -186,11 +186,8 @@ inline size_t MapHashAlgorithmNameToBlockSize(const nsString& aName) {
   return 0;
 }
 
-inline nsresult GetKeyLengthForAlgorithm(JSContext* aCx,
-                                         const ObjectOrString& aAlgorithm,
-                                         size_t& aLength) {
-  aLength = 0;
-
+inline nsresult GetKeyLengthForAlgorithmIfSpecified(
+    JSContext* aCx, const ObjectOrString& aAlgorithm, Maybe<size_t>& aLength) {
   // Extract algorithm name
   nsString algName;
   if (NS_FAILED(GetAlgorithmName(aCx, aAlgorithm, algName))) {
@@ -212,7 +209,7 @@ inline nsresult GetKeyLengthForAlgorithm(JSContext* aCx,
       return NS_ERROR_DOM_OPERATION_ERR;
     }
 
-    aLength = params.mLength;
+    aLength.emplace(params.mLength);
     return NS_OK;
   }
 
@@ -226,7 +223,7 @@ inline nsresult GetKeyLengthForAlgorithm(JSContext* aCx,
 
     // Return the passed length, if any.
     if (params.mLength.WasPassed()) {
-      aLength = params.mLength.Value();
+      aLength.emplace(params.mLength.Value());
       return NS_OK;
     }
 
@@ -236,16 +233,31 @@ inline nsresult GetKeyLengthForAlgorithm(JSContext* aCx,
     }
 
     // Return the given hash algorithm's block size as the key length.
-    size_t length = MapHashAlgorithmNameToBlockSize(hashName);
-    if (length == 0) {
+    size_t blockSize = MapHashAlgorithmNameToBlockSize(hashName);
+    if (blockSize == 0) {
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
-    aLength = length;
+    aLength.emplace(blockSize);
     return NS_OK;
   }
 
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  return NS_OK;
+}
+
+inline nsresult GetKeyLengthForAlgorithm(JSContext* aCx,
+                                         const ObjectOrString& aAlgorithm,
+                                         size_t& aLength) {
+  Maybe<size_t> length;
+  nsresult rv = GetKeyLengthForAlgorithmIfSpecified(aCx, aAlgorithm, length);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (length.isNothing()) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+  aLength = *length;
+  return NS_OK;
 }
 
 inline bool MapOIDTagToNamedCurve(SECOidTag aOIDTag, nsString& aResult) {
@@ -2688,14 +2700,15 @@ class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask {
  public:
   DeriveEcdhBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                      CryptoKey& aKey, uint32_t aLength)
-      : mLength(aLength), mPrivKey(aKey.GetPrivateKey()) {
+      : mLength(Some(aLength)), mPrivKey(aKey.GetPrivateKey()) {
     Init(aCx, aAlgorithm, aKey);
   }
 
   DeriveEcdhBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                      CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
       : mPrivKey(aKey.GetPrivateKey()) {
-    mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, mLength);
+    mEarlyRv =
+        GetKeyLengthForAlgorithmIfSpecified(aCx, aTargetAlgorithm, mLength);
     if (NS_SUCCEEDED(mEarlyRv)) {
       Init(aCx, aAlgorithm, aKey);
     }
@@ -2711,13 +2724,15 @@ class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask {
       return;
     }
 
-    // Length must be a multiple of 8 bigger than zero.
-    if (mLength == 0 || mLength % 8) {
-      mEarlyRv = NS_ERROR_DOM_DATA_ERR;
-      return;
+    // If specified, length must be a multiple of 8 bigger than zero
+    // (otherwise, the full output of the key derivation is used).
+    if (mLength) {
+      if (*mLength == 0 || *mLength % 8) {
+        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+        return;
+      }
+      *mLength = *mLength >> 3;  // bits to bytes
     }
-
-    mLength = mLength >> 3;  // bits to bytes
 
     // Retrieve the peer's public key.
     RootedDictionary<EcdhKeyDeriveParams> params(aCx);
@@ -2747,7 +2762,7 @@ class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask {
   }
 
  private:
-  size_t mLength;
+  Maybe<size_t> mLength;
   UniqueSECKEYPrivateKey mPrivKey;
   UniqueSECKEYPublicKey mPubKey;
 
@@ -2773,12 +2788,13 @@ class DeriveEcdhBitsTask : public ReturnArrayBufferViewTask {
     // data, so mResult manages one copy, while symKey manages another.
     ATTEMPT_BUFFER_ASSIGN(mResult, PK11_GetKeyData(symKey.get()));
 
-    if (mLength > mResult.Length()) {
-      return NS_ERROR_DOM_DATA_ERR;
-    }
-
-    if (!mResult.SetLength(mLength, fallible)) {
-      return NS_ERROR_DOM_UNKNOWN_ERR;
+    if (mLength) {
+      if (*mLength > mResult.Length()) {
+        return NS_ERROR_DOM_DATA_ERR;
+      }
+      if (!mResult.SetLength(*mLength, fallible)) {
+        return NS_ERROR_DOM_UNKNOWN_ERR;
+      }
     }
 
     return NS_OK;

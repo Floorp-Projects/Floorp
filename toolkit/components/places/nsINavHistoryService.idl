@@ -649,12 +649,6 @@ interface nsINavHistoryQuery : nsISupports
   readonly attribute unsigned long transitionCount;
 
   /**
-   * When set, returns only bookmarked items, when unset, returns anything. Setting this
-   * is equivalent to listing all bookmark folders in the 'folders' parameter.
-   */
-  attribute boolean onlyBookmarked;
-
-  /**
    * This controls the meaning of 'domain', and whether it is an exact match
    * 'domainIsHost' = true, or hierarchical (= false).
    */
@@ -679,23 +673,6 @@ interface nsINavHistoryQuery : nsISupports
    */
   attribute nsIURI uri;
   readonly attribute boolean hasUri;
-
-  /**
-   * Test for existence or non-existence of a given annotation. We don't
-   * currently support >1 annotation name per query. If 'annotationIsNot' is
-   * true, we test for the non-existence of the specified annotation.
-   *
-   * Testing for not annotation will do the same thing as a normal query and
-   * remove everything that doesn't have that annotation. Asking for things
-   * that DO have a given annotation is a little different. It also includes
-   * things that have never been visited. This allows place queries to be
-   * returned as well as anything else that may have been tagged with an
-   * annotation. This will only work for RESULTS_AS_URI since there will be
-   * no visits for these items.
-   */
-  attribute boolean annotationIsNot;
-  attribute AUTF8String annotation;
-  readonly attribute boolean hasAnnotation;
 
   /**
    * Limit results to items that are tagged with all of the given tags.  This
@@ -897,8 +874,6 @@ interface nsINavHistoryQueryOptions : nsISupports
 
   const unsigned short QUERY_TYPE_HISTORY = 0;
   const unsigned short QUERY_TYPE_BOOKMARKS = 1;
-  /* Unified queries are not yet implemented. See bug 378798 */
-  const unsigned short QUERY_TYPE_UNIFIED = 2;
 
   /**
    * The type of search to use when querying the DB; This attribute is only

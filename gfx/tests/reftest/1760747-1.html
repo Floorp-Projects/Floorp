@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function scrollBottom() {
+  document.getElementById("thediv").scrollTo(0,999999);
+
+  document.defaultView.requestAnimationFrame(() => {
+    document.defaultView.requestAnimationFrame(scrollUp1);
+  });
+}
+function scrollUp1() {
+  document.getElementById("thediv").scrollTo(0,1216);
+
+  document.defaultView.requestAnimationFrame(() => {
+    document.defaultView.requestAnimationFrame(scrollUp2);
+  });
+}
+function scrollUp2() {
+  document.getElementById("thediv").scrollTo(0,971);
+
+  document.defaultView.requestAnimationFrame(() => {
+    document.defaultView.requestAnimationFrame(scrollUp3);
+  });
+}
+function scrollUp3() {
+  document.getElementById("thediv").scrollTo(0,523);
+
+  document.defaultView.requestAnimationFrame(() => {
+    document.defaultView.requestAnimationFrame(scrollUp4);
+  });
+}
+function scrollUp4() {
+  document.getElementById("thediv").scrollTo(0,0);
+
+  document.documentElement.removeAttribute('class');
+}
+
+window.addEventListener("MozReftestInvalidate", scrollBottom);
+</script>
+   <body>
+    <div id="thediv" style="height: calc(100vh - 48px); overflow: auto; background: pink;">
+      <svg viewBox="400 0 700.000037419857 3313.000026691723" width="700.000037419857" height="3313.000026691723" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+
+        <g id="shape-957b8a71-919c-11ec-986a-ef8b5c5f9609">
+            <g id="shape-957b6363-919c-11ec-986a-ef8b5c5f9609" rx="0" ry="0" style="fill: none;">
+              <g id="shape-957aee43-919c-11ec-986a-ef8b5c5f9609" filter="url(#filter_efeb8b30-a903-11ec-9f8a-8f99f800c080)">
+                  <defs>
+                    <filter id="filter_efeb8b30-a903-11ec-9f8a-8f99f800c080" x="-0.07038252421852338" y="-0.04350809057600663" width="1.1407650484370468" height="1.1104536811520134" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+                        <feflood flood-opacity="0" result="BackgroundImageFix"></feflood>
+                        <fecolormatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"></fecolormatrix>
+                        <femorphology radius="2" operator="dilate" in="SourceAlpha" result="filter_62f77df0-8aa0-11ec-964c-41abbc9945a1"></femorphology>
+                        <feoffset dx="0" dy="3"></feoffset>
+                        <fegaussianblur stdDeviation="6"></fegaussianblur>
+                        <fecolormatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"></fecolormatrix>
+                        <feblend mode="normal" in2="BackgroundImageFix" result="filter_62f77df0-8aa0-11ec-964c-41abbc9945a1"></feblend>
+                        <feblend mode="normal" in="SourceGraphic" in2="filter_62f77df0-8aa0-11ec-964c-41abbc9945a1" result="shape">
+                        </feblend>
+                    </filter>
+                  </defs>
+                  <g class="stroke-shape">
+                    <defs></defs>
+                    <path rx="0" ry="0" d="M653.5119461812897,606.9361755487703C653.5119461843797,598.437514118968,660.6813057936843,591.5376791790882,669.5119461839863,591.5376790200978L917.511946139,591.5376745549943C926.342586529302,591.5376743960032,933.5119461335889,598.4375090777221,933.5119461304989,606.9361705075248L933.5119460020705,960.1391780263225C933.5119459989801,968.6378394561248,926.3425863896755,975.5376743960046,917.5119459993734,975.5376745549952L669.5119460443602,975.537679020099C660.6813056540582,975.53767917909,653.5119460497713,968.6378444973707,653.5119460528613,960.1391830675684L653.5119461812897,606.9361755487703Z" style="fill: rgb(255, 255, 255); fill-opacity: 1;"></path>
+                  </g>
+              </g>
+            </g>
+        </g>
+      </svg>
+    </div>
+   </body>
+</html>

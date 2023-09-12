@@ -415,9 +415,9 @@ const OPTIN_DEFAULT = {
         additional_button: {
           label: {
             string_id: "shopping-onboarding-not-now-button",
-            marginInline: "100px",
           },
           style: "link",
+          flow: "column",
           action: {
             type: "SET_PREF",
             data: {

@@ -5,7 +5,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
  * Tests that the correct shopping-message-bar component appears if a product was marked as unavailable.
- * Only settings should be visible.
  */
 add_task(async function test_unavailable_product() {
   await BrowserTestUtils.withNewTab(
@@ -68,7 +67,6 @@ add_task(async function test_unavailable_product() {
 /**
  * Tests that the correct shopping-message-bar component appears if a product marked as unavailable
  * was reported to be back in stock by another user.
- * Only settings should be visible.
  */
 add_task(async function test_unavailable_product_reported() {
   await BrowserTestUtils.withNewTab(

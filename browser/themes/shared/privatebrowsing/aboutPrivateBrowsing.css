@@ -92,6 +92,13 @@ p {
   min-width: 70vw;
 }
 
+@supports -moz-bool-pref("browser.privatebrowsing.felt-privacy-v1") {
+  .search-inner-wrapper {
+    height: 52px;
+    padding: 0;
+  }
+}
+
 .promo-image-large {
   margin-inline-end: 6px;
   min-width: 160px;
@@ -246,6 +253,46 @@ p {
   }
 }
 
+@supports -moz-bool-pref("browser.privatebrowsing.felt-privacy-v1") {
+  .search-handoff-button,
+  .search-handoff-button:hover:not(.focused),
+  .search-handoff-button:active,
+  .search-handoff-button:enabled:hover:active {
+    border: 3px solid #952bb9;
+    border-radius: 6px;
+    box-shadow: none;
+  }
+
+  .search-handoff-button,
+  .search-handoff-button:hover:not(.focused),
+  .search-handoff-button:active,
+  .search-handoff-button:enabled:hover:active,
+  .search-inner-wrapper .search-handoff-button:hover,
+  .search-inner-wrapper .search-handoff-button:hover:active {
+    background-image: url(chrome://global/skin/icons/search-glass.svg);
+    background-color: #321c64;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    fill: rgb(251, 251, 254);
+  }
+
+  .search-handoff-button.focused:not(.disabled) {
+    border-width: 3px;
+  }
+
+  .fake-textbox {
+    color: #fbfbfe;
+    font-size: 0.87em;
+    opacity: 1;
+  }
+
+  @media not (prefers-contrast) {
+    .fake-caret {
+      background-color: #fbfbfe;
+    }
+  }
+}
+
 .search-banner {
   width: 100%;
   background-color: var(--in-content-banner-background);
@@ -314,6 +361,26 @@ p {
 
 .info #info-title:not([hidden]) + p {
   margin-top: 15px;
+}
+
+@supports -moz-bool-pref("browser.privatebrowsing.felt-privacy-v1") {
+  .info-border {
+    border-radius: 8px;
+    box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.20);
+    background: rgba(149, 43, 185, 0.5);
+    margin-top: 64px;
+    padding: 17px;
+  }
+
+  .info {
+    background-color: #321c64;
+    background-image: none;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.20);
+    font-size: 0.93em;
+    margin: 0;
+    padding-inline-start: 20px;
+  }
 }
 
 .search-banner-close-button {
@@ -486,4 +553,15 @@ p {
 
 .promo-link {
   margin: 0;
+}
+
+@supports -moz-bool-pref("browser.privatebrowsing.felt-privacy-v1") {
+  html.private {
+    background: linear-gradient(45deg, #722291 0%, #45278D 50%, #393473 100%);
+  }
+
+  .promo.below-search.promo-visible {
+    background-color: #321c64;
+    margin-block: 0 25px;
+  }
 }

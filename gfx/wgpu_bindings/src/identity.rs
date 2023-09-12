@@ -222,4 +222,8 @@ impl wgc::identity::IdentityHandlerFactory<id::SurfaceId> for IdentityRecyclerFa
     }
 }
 
-impl wgc::identity::GlobalIdentityHandlerFactory for IdentityRecyclerFactory {}
+impl wgc::identity::GlobalIdentityHandlerFactory for IdentityRecyclerFactory {
+    fn ids_are_generated_in_wgpu() -> bool {
+        false
+    }
+}

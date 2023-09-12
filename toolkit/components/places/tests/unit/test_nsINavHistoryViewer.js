@@ -203,7 +203,6 @@ add_task(async function check_bookmarks_query() {
 add_task(async function check_mixed_query() {
   let options = PlacesUtils.history.getNewQueryOptions();
   let query = PlacesUtils.history.getNewQuery();
-  query.onlyBookmarked = true;
   let result = PlacesUtils.history.executeQuery(query, options);
   result.addObserver(resultObserver);
   let root = result.root;

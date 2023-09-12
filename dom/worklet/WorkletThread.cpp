@@ -17,6 +17,7 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/ThreadEventQueue.h"
+#include "js/ContextOptions.h"
 #include "js/Exception.h"
 #include "js/Initialization.h"
 #include "XPCSelfHostedShmem.h"
@@ -346,7 +347,8 @@ static bool DispatchToEventLoop(void* aClosure,
 }
 
 // static
-void WorkletThread::EnsureCycleCollectedJSContext(JSRuntime* aParentRuntime) {
+void WorkletThread::EnsureCycleCollectedJSContext(
+    JSRuntime* aParentRuntime, const JS::ContextOptions& aOptions) {
   CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
   if (ccjscx) {
     MOZ_ASSERT(ccjscx->GetAsWorkletJSContext());
@@ -359,6 +361,8 @@ void WorkletThread::EnsureCycleCollectedJSContext(JSRuntime* aParentRuntime) {
     // TODO: error propagation
     return;
   }
+
+  JS::ContextOptionsRef(context->Context()) = aOptions;
 
   JS_SetGCParameter(context->Context(), JSGC_MAX_BYTES, uint32_t(-1));
 

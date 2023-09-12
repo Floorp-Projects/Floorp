@@ -2274,7 +2274,7 @@ void nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   // At the time we initiate a history entry load we already know if https-first
   // was able to upgrade the request from http to https. There is no point in
   // re-retrying to upgrade.
-  loadState->SetIsExemptFromHTTPSOnlyMode(true);
+  loadState->SetIsExemptFromHTTPSFirstMode(true);
 
   /* Set the loadType in the SHEntry too to  what was passed on.
    * This will be passed on to child subframes later in nsDocShell,

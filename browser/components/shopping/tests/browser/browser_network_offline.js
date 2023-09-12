@@ -14,7 +14,7 @@ add_task(async function test_setup() {
 
 /**
  * Tests that the correct shopping-message-bar component appears if there is no network connection.
- * Only settings should be visible.
+ * Only the footer should be visible.
  */
 add_task(async function test_offline_warning() {
   await BrowserTestUtils.withNewTab(
@@ -37,8 +37,7 @@ add_task(async function test_offline_warning() {
       );
 
       verifyAnalysisDetailsHidden(shoppingContainer);
-
-      ok(shoppingContainer.settingsEl, "Got the shopping-settings element");
+      verifyFooterHidden(shoppingContainer);
     }
   );
 });

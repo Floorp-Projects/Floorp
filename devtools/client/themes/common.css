@@ -16,7 +16,7 @@
   --tab-line-hover-color: rgba(0,0,0,.2);
   --tab-line-selected-color: var(--blue-50);
   --toggle-thumb-color: white;
-  --toggle-track-color: var(--grey-30);
+  --toggle-track-color: var(--grey-50);
 
   --searchbox-no-match-background-color: #ffe5e5;
   --searchbox-no-match-stroke-color: var(--red-60);
@@ -31,7 +31,6 @@
 
   --tab-line-hover-color: rgba(255,255,255,.2);
   --toggle-thumb-color: var(--grey-40);
-  --toggle-track-color: var(--grey-60);
 
   --searchbox-no-match-background-color: #402325;
   --searchbox-no-match-stroke-color: var(--red-50);

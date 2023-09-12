@@ -4,10 +4,10 @@
 
 import { containsLocation, containsPosition } from "./utils/contains";
 
-import { getSymbols } from "./getSymbols";
+import { getInternalSymbols } from "./getSymbols";
 
 function findSymbols(source) {
-  const { functions, comments } = getSymbols(source);
+  const { functions, comments } = getInternalSymbols(source);
   return { functions, comments };
 }
 

@@ -161,7 +161,7 @@ class PageStyleActor extends Actor {
   /**
    * Called when a style sheet is updated.
    */
-  _styleApplied(kind, styleSheet) {
+  _styleApplied(kind) {
     // No matter what kind of update is done, we need to invalidate
     // the keyframe cache.
     this.cssLogic.reset();
@@ -173,12 +173,13 @@ class PageStyleActor extends Actor {
   /**
    * Return or create a StyleRuleActor for the given item.
    * @param item Either a CSSStyleRule or a DOM element.
+   * @param userAdded Optional boolean to distinguish rules added by the user.
    */
-  _styleRef(item) {
+  _styleRef(item, userAdded = false) {
     if (this.refMap.has(item)) {
       return this.refMap.get(item);
     }
-    const actor = new StyleRuleActor(this, item);
+    const actor = new StyleRuleActor(this, item, userAdded);
     this.manage(actor);
     this.refMap.set(item, actor);
 
@@ -1075,7 +1076,7 @@ class PageStyleActor extends Actor {
     await this.styleSheetsManager.setStyleSheetText(resourceId, authoredText);
 
     const cssRule = sheet.cssRules.item(index);
-    const ruleActor = this._styleRef(cssRule);
+    const ruleActor = this._styleRef(cssRule, true);
 
     TrackChangeEmitter.trackChange({
       ...ruleActor.metadata,
