@@ -191,8 +191,6 @@ Preferences.addAll([
 
   { id: "security.OCSP.enabled", type: "int" },
 
-  { id: "security.enterprise_roots.enabled", type: "bool" },
-
   // Add-ons, malware, phishing
   { id: "xpinstall.whitelist.required", type: "bool" },
 
@@ -450,19 +448,6 @@ var gPrivacyPane = {
     };
     showPref.on("change", showQuickActionsGroup);
     showQuickActionsGroup();
-  },
-
-  _initThirdPartyCertsToggle() {
-    // Third-party certificate import is only implemented for Windows and Mac,
-    // and we should not expose this as a user-configurable setting if there's
-    // an enterprise policy controlling it (either to enable _or_ disable it).
-    let canConfigureThirdPartyCerts =
-      (AppConstants.platform == "win" || AppConstants.platform == "macosx") &&
-      typeof Services.policies.getActivePolicies()?.Certificates
-        ?.ImportEnterpriseRoots == "undefined";
-
-    document.getElementById("certEnableThirdPartyToggleBox").hidden =
-      !canConfigureThirdPartyCerts;
   },
 
   syncFromHttpsOnlyPref() {
@@ -901,7 +886,6 @@ var gPrivacyPane = {
     this.fingerprintingProtectionReadPrefs();
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
-    this._initThirdPartyCertsToggle();
 
     Services.telemetry.setEventRecordingEnabled("privacy.ui.fpp", true);
 
