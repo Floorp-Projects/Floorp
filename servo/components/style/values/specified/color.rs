@@ -15,8 +15,8 @@ use crate::values::generics::color::{
 use crate::values::specified::calc::CalcNode;
 use crate::values::specified::Percentage;
 use crate::values::{normalize, CustomIdent};
-use cssparser::{AngleOrNumber, Color as CSSParserColor, Parser, Token};
-use cssparser::{BasicParseErrorKind, NumberOrPercentage, ParseErrorKind};
+use cssparser_color::{AngleOrNumber, Color as CSSParserColor, NumberOrPercentage, FromParsedColor};
+use cssparser::{Parser, Token, BasicParseErrorKind, ParseErrorKind, color::PredefinedColorSpace};
 use itoa;
 use std::fmt::{self, Write};
 use std::io::Write as IoWrite;
@@ -425,7 +425,7 @@ impl SystemColor {
     }
 }
 
-impl cssparser::FromParsedColor for Color {
+impl FromParsedColor for Color {
     fn from_current_color() -> Self {
         Color::CurrentColor
     }
@@ -489,7 +489,7 @@ impl cssparser::FromParsedColor for Color {
     }
 
     fn from_color_function(
-        color_space: cssparser::PredefinedColorSpace,
+        color_space: PredefinedColorSpace,
         c1: Option<f32>,
         c2: Option<f32>,
         c3: Option<f32>,
@@ -500,7 +500,7 @@ impl cssparser::FromParsedColor for Color {
 }
 
 struct ColorParser<'a, 'b: 'a>(&'a ParserContext<'b>);
-impl<'a, 'b: 'a, 'i: 'a> ::cssparser::ColorParser<'i> for ColorParser<'a, 'b> {
+impl<'a, 'b: 'a, 'i: 'a> cssparser_color::ColorParser<'i> for ColorParser<'a, 'b> {
     type Output = Color;
     type Error = StyleParseErrorKind<'i>;
 
@@ -601,7 +601,7 @@ impl Color {
         };
 
         let color_parser = ColorParser(&*context);
-        match input.try_parse(|i| cssparser::parse_color_with(&color_parser, i)) {
+        match input.try_parse(|i| cssparser_color::parse_color_with(&color_parser, i)) {
             Ok(mut color) => {
                 if let Color::Absolute(ref mut absolute) = color {
                     let enabled = {
@@ -779,6 +779,14 @@ impl Color {
         })
     }
 
+
+    fn parse_hash<'i>(bytes: &[u8], loc: &cssparser::SourceLocation) -> Result<Self, ParseError<'i>> {
+        match cssparser::color::parse_hash_color(bytes) {
+            Ok((r, g, b, a)) => Ok(Self::from_rgba(r, g, b, a)),
+            Err(()) => Err(loc.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
+        }
+    }
+
     /// Parse a <quirky-color> value.
     ///
     /// <https://quirks.spec.whatwg.org/#the-hashless-hex-color-quirk>
@@ -798,9 +806,7 @@ impl Color {
                 if ident.len() != 3 && ident.len() != 6 {
                     return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
                 }
-                return cssparser::parse_hash_color(ident.as_bytes()).map_err(|()| {
-                    location.new_custom_error(StyleParseErrorKind::UnspecifiedError)
-                });
+                return Self::parse_hash(ident.as_bytes(), &location)
             },
             ref t => {
                 return Err(location.new_unexpected_token_error(t.clone()));
@@ -843,8 +849,7 @@ impl Color {
                 .unwrap();
         }
         debug_assert_eq!(written, 6);
-        cssparser::parse_hash_color(&serialization)
-            .map_err(|()| location.new_custom_error(StyleParseErrorKind::UnspecifiedError))
+        Self::parse_hash(&serialization, &location)
     }
 }
 

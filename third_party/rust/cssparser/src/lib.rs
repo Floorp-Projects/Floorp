@@ -67,12 +67,6 @@ fn parse_border_spacing(_context: &ParserContext, input: &mut Parser)
 
 #![recursion_limit = "200"] // For color::parse_color_keyword
 
-pub use crate::color::{
-    all_named_colors, hsl_to_rgb, hwb_to_rgb, parse_color_keyword, parse_color_with,
-    parse_hash_color, parse_named_color, serialize_color_alpha, AngleOrNumber, Color,
-    ColorFunction, ColorParser, FromParsedColor, Hsl, Hwb, Lab, Lch, NumberOrPercentage, Oklab,
-    Oklch, PredefinedColorSpace, RgbaLegacy,
-};
 pub use crate::cow_rc_str::CowRcStr;
 pub use crate::from_bytes::{stylesheet_encoding, EncodingSupport};
 #[doc(hidden)]
@@ -100,7 +94,7 @@ mod macros;
 mod rules_and_declarations;
 mod tokenizer;
 
-mod color;
+pub mod color;
 mod cow_rc_str;
 mod from_bytes;
 mod nth;

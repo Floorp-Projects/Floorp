@@ -15,7 +15,7 @@ gecko_refcount_logging = ["style/gecko_refcount_logging", "servo_arc/gecko_refco
 [dependencies]
 atomic_refcell = "0.1"
 bincode = "1.0"
-cssparser = "0.32"
+cssparser = "0.33"
 cstr = "0.2"
 dom = { path = "../../../dom/base/rust" }
 gecko-profiler = { path = "../../../tools/profiler/rust-api" }
