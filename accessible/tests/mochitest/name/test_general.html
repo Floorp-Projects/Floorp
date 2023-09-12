@@ -270,6 +270,9 @@
       // Label from a hidden element containing script and style elements.
       testName("buttonScriptStyle", "content");
 
+      // Name from subtree on a link containing <code>, etc.
+      testName("linkWithCodeSupSubInsDel", "before code sup sub ins del after");
+
       SimpleTest.finish();
     }
 
@@ -762,5 +765,16 @@
     <style> .noOp {} </style>
     <span>content</span>
   </div>
+
+  <!-- Name from subtree on link including <code>, etc. -->
+  <a id="linkWithCodeSupSubInsDel" href="#">
+    before
+    <code>code</code>
+    <sup>sup</sup>
+    <sub>sub</sub>
+    <ins>ins</ins>
+    <del>del</del>
+    after
+  </a>
 </body>
 </html>
