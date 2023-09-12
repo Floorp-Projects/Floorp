@@ -103,6 +103,3 @@ if CONFIG["MOZ_VPX"]:
     LOCAL_INCLUDES += [
         "/media/libvpx",
     ]
-
-if CONFIG["MOZ_PHC"]:
-    DEFINES["MOZ_PHC"] = 1
