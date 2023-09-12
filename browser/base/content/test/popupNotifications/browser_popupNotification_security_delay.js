@@ -26,7 +26,11 @@ function showNotification() {
         callback: () => {},
       },
     ],
-    {}
+    {
+      // Make test notifications persistent to ensure they are only closed
+      // explicitly by test actions and survive tab switches.
+      persistent: true,
+    }
   );
 }
 
@@ -38,12 +42,7 @@ add_setup(async function () {
   });
 });
 
-/**
- * Tests that when we show a second notification while the panel is open the
- * timeShown attribute is correctly set and the security delay is enforced
- * properly.
- */
-add_task(async function test_timeShownMultipleNotifications() {
+async function ensureSecurityDelayReady() {
   /**
    * The security delay calculation in PopupNotification.sys.mjs is dependent on
    * the monotonically increasing value of performance.now. This timestamp is
@@ -65,6 +64,15 @@ add_task(async function test_timeShownMultipleNotifications() {
     500,
     50
   );
+}
+
+/**
+ * Tests that when we show a second notification while the panel is open the
+ * timeShown attribute is correctly set and the security delay is enforced
+ * properly.
+ */
+add_task(async function test_timeShownMultipleNotifications() {
+  await ensureSecurityDelayReady();
 
   ok(
     !PopupNotifications.isPanelOpen,
@@ -135,6 +143,134 @@ add_task(async function test_timeShownMultipleNotifications() {
     "Notification should still be open because we clicked during the security delay."
   );
 
+  // If the notification is no longer shown (test failure) skip the remaining
+  // checks.
+  if (!notification) {
+    return;
+  }
+
+  // Ensure that once the security delay has passed the notification can be
+  // closed again.
+  let fakeTimeShown = TEST_SECURITY_DELAY + 500;
+  info(`Manually set timeShown to ${fakeTimeShown}ms in the past.`);
+  notification.timeShown = performance.now() - fakeTimeShown;
+
+  info("Trigger main action via button click outside security delay");
+  triggerMainCommand(PopupNotifications.panel);
+
+  info("Wait for panel to be hidden.");
+  await notificationHiddenPromise;
+
+  ok(
+    !PopupNotifications.getNotification("foo", gBrowser.selectedBrowser),
+    "Should not longer see the notification."
+  );
+});
+
+/**
+ * Tests that when we reshow a notification after a tab switch the timeShown
+ * attribute is correctly reset and the security delay is enforced.
+ */
+add_task(async function test_notificationReshowTabSwitch() {
+  await ensureSecurityDelayReady();
+
+  ok(
+    !PopupNotifications.isPanelOpen,
+    "PopupNotification panel should not be open initially."
+  );
+
+  info("Open the first notification.");
+  let popupShownPromise = waitForNotificationPanel();
+  showNotification();
+  await popupShownPromise;
+  ok(
+    PopupNotifications.isPanelOpen,
+    "PopupNotification should be open after first show call."
+  );
+
+  let notification = PopupNotifications.getNotification(
+    "foo",
+    gBrowser.selectedBrowser
+  );
+  is(notification?.id, "foo", "There should be a notification with id foo");
+  ok(notification.timeShown, "The notification should have timeShown set");
+
+  info("Trigger main action via button click during security delay");
+  triggerMainCommand(PopupNotifications.panel);
+
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
+  notification = PopupNotifications.getNotification(
+    "foo",
+    gBrowser.selectedBrowser
+  );
+  ok(
+    notification,
+    "Notification should still be open because we clicked during the security delay."
+  );
+
+  // If the notification is no longer shown (test failure) skip the remaining
+  // checks.
+  if (!notification) {
+    return;
+  }
+
+  let panelHiddenPromise = waitForNotificationPanelHidden();
+  let panelShownPromise;
+
+  info("Open a new tab which hides the notification panel.");
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    info("Wait for panel to be hidden by tab switch.");
+    await panelHiddenPromise;
+    info(
+      "Keep the tab open until the security delay for the original notification show has expired."
+    );
+    await new Promise(resolve =>
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      setTimeout(resolve, TEST_SECURITY_DELAY + 500)
+    );
+
+    panelShownPromise = waitForNotificationPanel();
+  });
+  info(
+    "Wait for the panel to show again after the tab close. We're showing the original tab again."
+  );
+  await panelShownPromise;
+
+  ok(
+    PopupNotifications.isPanelOpen,
+    "PopupNotification should be shown after tab close."
+  );
+  notification = PopupNotifications.getNotification(
+    "foo",
+    gBrowser.selectedBrowser
+  );
+  is(
+    notification?.id,
+    "foo",
+    "There should still be a notification with id foo"
+  );
+
+  let notificationHiddenPromise = waitForNotificationPanelHidden();
+
+  info(
+    "Because we re-show the panel after tab close / switch the security delay should have reset."
+  );
+  info("Trigger main action via button click during the new security delay.");
+  triggerMainCommand(PopupNotifications.panel);
+
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  ok(PopupNotifications.isPanelOpen, "PopupNotification should still be open.");
+  notification = PopupNotifications.getNotification(
+    "foo",
+    gBrowser.selectedBrowser
+  );
+  ok(
+    notification,
+    "Notification should still be open because we clicked during the security delay."
+  );
   // If the notification is no longer shown (test failure) skip the remaining
   // checks.
   if (!notification) {
