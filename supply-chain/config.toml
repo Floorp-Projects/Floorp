@@ -104,7 +104,7 @@ notes = "This is a first-party crate which is also published to crates.io. We ce
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
 
-[policy."minidump-common:0.17.0@git:87a29fba5e19cfae5ebf73a57ba31504a3872545"]
+[policy."minidump-common:0.17.0@git:6ae42a7f992e8a88ebee661bc77bcedb95cd671f"]
 audit-as-crates-io = true
 notes = "Unreleased upstream."
 

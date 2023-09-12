@@ -193,7 +193,7 @@ midir = { git = "https://github.com/mozilla/midir.git", rev = "519e651241e867af3
 # Avoid the dependency on chrono
 minidump-writer = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "a15bd5cab6a3de251c0c23264be14b977c0af09c" }
 # Bump some dependencies
-minidump-common = { git = "https://github.com/rust-minidump/rust-minidump", rev = "87a29fba5e19cfae5ebf73a57ba31504a3872545" }
+minidump-common = { git = "https://github.com/rust-minidump/rust-minidump", rev = "6ae42a7f992e8a88ebee661bc77bcedb95cd671f" }
 # warp 0.3.3 + https://github.com/seanmonstar/warp/pull/1007
 warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d" }
 # Allow webrender to have a versioned dependency on the older crate on crates.io
