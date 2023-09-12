@@ -79,19 +79,15 @@ struct ScrollSnapInfo {
              mScrollSnapStop == aOther.mScrollSnapStop &&
              mTargetId == aOther.mTargetId;
     }
-    bool IsValidFor(const nsPoint& aDestination,
-                    const nsSize aSnapportSize) const {
-      nsPoint snapPoint(mSnapPositionX ? *mSnapPositionX : aDestination.x,
-                        mSnapPositionY ? *mSnapPositionY : aDestination.y);
-      nsRect snappedPort = nsRect(snapPoint, aSnapportSize);
-      // Ignore snap points if snapping to the point would leave the snap area
-      // outside of the snapport.
-      // https://drafts.csswg.org/css-scroll-snap-1/#snap-scope
-      return snappedPort.Intersects(mSnapArea);
-    }
   };
 
   CopyableTArray<SnapTarget> mSnapTargets;
+
+  // A utility function to iterate over the valid snap targets for the given
+  // |aDestination| until |aFunc| returns false.
+  void ForEachValidTargetFor(
+      const nsPoint& aDestination,
+      const std::function<bool(const SnapTarget&)>& aFunc) const;
 
   struct ScrollSnapRange {
     ScrollSnapRange() = default;
