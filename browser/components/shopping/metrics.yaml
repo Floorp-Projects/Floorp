@@ -72,6 +72,28 @@ shopping.settings:
     telemetry_mirror: SHOPPING_HAS_ONBOARDED
 
 shopping:
+  surface_displayed:
+    type: event
+    description: |
+      The Shopping product Sidebar was displayed.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849236
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848870#c2
+    data_sensitivity:
+      - interaction
+    expires: 122
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events
+    extra_keys:
+      side_bar_state:
+        type: string
+        description: |
+          Which of the possible configurations of the sidebar was displayed.
+
   surface_reanalyze_clicked:
     type: event
     description: |

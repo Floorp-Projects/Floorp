@@ -10101,6 +10101,32 @@ var ShoppingSidebarManager = {
     this._setShoppingButtonState(aBrowser);
 
     if (isProduct) {
+      let isVisible = sidebar && !sidebar.hidden;
+
+      // Ignore same-document navigation, except in the case of Walmart
+      // as they use pushState to navigate between pages.
+      let isWalmart = aLocationURI.host.includes("walmart");
+      let isNewDocument = !aFlags;
+
+      let isSameDocument =
+        aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT;
+      let isReload = aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_RELOAD;
+      let isSessionRestore =
+        aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SESSION_STORE;
+
+      if (
+        isVisible &&
+        // On initial visit to a product page, even from another domain, both a page
+        // load and a pushstate will be triggered by Walmart, so this will
+        // capture only a single displayed event.
+        ((!isWalmart && (isNewDocument || isReload || isSessionRestore)) ||
+          (isWalmart && isSameDocument))
+      ) {
+        Glean.shopping.surfaceDisplayed.record();
+      }
+    }
+
+    if (isProduct) {
       // This is the auto-enable behavior that toggles the `active` pref. It
       // must be at the end of this function, or 2 sidebars could be created.
       ShoppingUtils.handleAutoActivateOnProduct();

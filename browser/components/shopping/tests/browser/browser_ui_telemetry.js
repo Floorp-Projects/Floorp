@@ -3,6 +3,9 @@
 
 "use strict";
 
+const CONTENT_PAGE = "https://example.com";
+const PRODUCT_PAGE = "https://example.com/product/B09TJGHL5F";
+
 add_task(async function test_shopping_reanalysis_event() {
   // testFlushAllChildren() is necessary to deal with the event being
   // recorded in content, but calling testGetValue() in parent.
@@ -47,6 +50,27 @@ add_task(async function test_shopping_UI_chevron_clicks() {
   Assert.greater(events.length, 0);
   Assert.equal(events[0].category, "shopping");
   Assert.equal(events[0].name, "surface_settings_expand_clicked");
+});
+
+add_task(async function test_shopping_sidebar_displayed() {
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function (browser) {
+    let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
+    await sidebar.complete;
+
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
+    );
+  });
+
+  Services.fog.testFlushAllChildren();
+  var events = Glean.shopping.surfaceDisplayed.testGetValue();
+
+  Assert.greater(events.length, 0);
+  Assert.equal(events[0].category, "shopping");
+  Assert.equal(events[0].name, "surface_displayed");
 });
 
 function clickReAnalyzeLink(browser, data) {
