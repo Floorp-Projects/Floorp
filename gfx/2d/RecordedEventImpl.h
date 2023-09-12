@@ -65,7 +65,7 @@ class RecordedDrawTargetCreation
   BackendType mBackendType;
   IntRect mRect;
   SurfaceFormat mFormat;
-  bool mHasExistingData;
+  bool mHasExistingData = false;
   RefPtr<SourceSurface> mExistingData;
 
  private:
