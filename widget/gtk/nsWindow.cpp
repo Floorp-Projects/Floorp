@@ -5869,7 +5869,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   // and do our common creation
   mParent = aParent;
-  mCreated = true;
   // save our bounds
   mBounds = aRect;
   LOG("  mBounds: x:%d y:%d w:%d h:%d\n", mBounds.x, mBounds.y, mBounds.width,
@@ -6140,6 +6139,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     LOG("    Is undecorated Window\n");
     gtk_window_set_titlebar(GTK_WINDOW(mShell), gtk_fixed_new());
     gtk_window_set_decorated(GTK_WINDOW(mShell), false);
+  } else if (mWindowType == WindowType::TopLevel) {
+    SetDrawsInTitlebar(LookAndFeel::DrawInTitlebar());
   }
 
   // Create a container to hold child windows and child GtkWidgets.
@@ -6383,6 +6384,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     mGtkWindowAppName = gAppData->name;
   }
 
+  mCreated = true;
   return NS_OK;
 }
 
@@ -8885,6 +8887,23 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     return;
   }
 
+  mDrawInTitlebar = aState;
+
+  // For unrealized (not-created yet) mShell and CSD decorations
+  // we can use a shortcut. Just set titlebar and let nsWindow::Create() do
+  // the rest.
+  if (mGtkWindowDecoration == GTK_DECORATION_CLIENT &&
+      !gtk_widget_get_realized(mShell)) {
+    LOG("    Using CSD shortcut\n");
+    MOZ_ASSERT(!mCreated);
+    if (aState) {
+      gtk_window_set_titlebar(GTK_WINDOW(mShell), gtk_fixed_new());
+    } else {
+      gtk_window_set_titlebar(GTK_WINDOW(mShell), nullptr);
+    }
+    return;
+  }
+
   if (mGtkWindowDecoration == GTK_DECORATION_SYSTEM) {
     SetWindowDecoration(aState ? BorderStyle::Border : mBorderStyle);
   } else if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
@@ -8956,8 +8975,6 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
 
     gtk_widget_destroy(tmpWindow);
   }
-
-  mDrawInTitlebar = aState;
 
   if (mTransparencyBitmapForTitlebar) {
     if (mDrawInTitlebar && mSizeMode == nsSizeMode_Normal && !mIsTiled) {
