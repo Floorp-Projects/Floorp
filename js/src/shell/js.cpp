@@ -4357,6 +4357,7 @@ static void WorkerMain(UniquePtr<WorkerInput> input) {
   auto guard = mozilla::MakeScopeExit([&] {
     sc->markObservers.reset();
     JS_SetContextPrivate(cx, nullptr);
+    JS::SetHostCleanupFinalizationRegistryCallback(cx, nullptr, nullptr);
     js_delete(sc);
     JS_DestroyContext(cx);
   });
@@ -11412,7 +11413,7 @@ int main(int argc, char** argv) {
   auto destroyShellContext = MakeScopeExit([cx, &sc] {
     // Must clear out some of sc's pointer containers before JS_DestroyContext.
     sc->markObservers.reset();
-
+    JS::SetHostCleanupFinalizationRegistryCallback(cx, nullptr, nullptr);
     JS_SetContextPrivate(cx, nullptr);
     sc.reset();
   });
