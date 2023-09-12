@@ -301,23 +301,22 @@ void CalcSnapPoints::AddEdge(const SnapPosition& aEdge, nscoord aDestination,
 
 static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
                                  const ScrollSnapInfo& aSnapInfo) {
-  for (const auto& target : aSnapInfo.mSnapTargets) {
-    if (!target.IsValidFor(aCalcSnapPoints.Destination(),
-                           aSnapInfo.mSnapportSize)) {
-      continue;
-    }
-
-    if (target.mSnapPositionX &&
-        aSnapInfo.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) {
-      aCalcSnapPoints.AddVerticalEdge(
-          {*target.mSnapPositionX, target.mScrollSnapStop, target.mTargetId});
-    }
-    if (target.mSnapPositionY &&
-        aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None) {
-      aCalcSnapPoints.AddHorizontalEdge(
-          {*target.mSnapPositionY, target.mScrollSnapStop, target.mTargetId});
-    }
-  }
+  aSnapInfo.ForEachValidTargetFor(
+      aCalcSnapPoints.Destination(), [&](const auto& aTarget) -> bool {
+        if (aTarget.mSnapPositionX && aSnapInfo.mScrollSnapStrictnessX !=
+                                          StyleScrollSnapStrictness::None) {
+          aCalcSnapPoints.AddVerticalEdge({*aTarget.mSnapPositionX,
+                                           aTarget.mScrollSnapStop,
+                                           aTarget.mTargetId});
+        }
+        if (aTarget.mSnapPositionY && aSnapInfo.mScrollSnapStrictnessY !=
+                                          StyleScrollSnapStrictness::None) {
+          aCalcSnapPoints.AddHorizontalEdge({*aTarget.mSnapPositionY,
+                                             aTarget.mScrollSnapStop,
+                                             aTarget.mTargetId});
+        }
+        return true;
+      });
 }
 
 Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForDestination(
@@ -411,81 +410,83 @@ static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
   // https://github.com/w3c/csswg-drafts/issues/7438
   const ScrollSnapInfo::SnapTarget* focusedTarget = nullptr;
   Maybe<nscoord> x, y;
-  for (const auto& target : aSnapInfo.mSnapTargets) {
-    if (!target.IsValidFor(aCurrentPosition, aSnapInfo.mSnapportSize)) {
-      continue;
-    }
+  aSnapInfo.ForEachValidTargetFor(
+      aCurrentPosition, [&](const auto& aTarget) -> bool {
+        if (aTarget.mSnapPositionX && aSnapInfo.mScrollSnapStrictnessX !=
+                                          StyleScrollSnapStrictness::None) {
+          if (aLastSnapTargetIds->mIdsOnX.Contains(aTarget.mTargetId)) {
+            if (targetIdForFocusedContent == aTarget.mTargetId) {
+              // If we've already found the candidate on Y axis, but if snapping
+              // to the point results this target is scrolled out, we can't use
+              // it.
+              if ((y && !aTarget.mSnapArea.Intersects(
+                            nsRect(nsPoint(*aTarget.mSnapPositionX, *y),
+                                   aSnapInfo.mSnapportSize)))) {
+                y.reset();
+              }
 
-    if (target.mSnapPositionX &&
-        aSnapInfo.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) {
-      if (aLastSnapTargetIds->mIdsOnX.Contains(target.mTargetId)) {
-        if (targetIdForFocusedContent == target.mTargetId) {
-          // If we've already found the candidate on Y axis, but if snapping to
-          // the point results this target is scrolled out, we can't use it.
-          if ((y && !target.mSnapArea.Intersects(
-                        nsRect(nsPoint(*target.mSnapPositionX, *y),
-                               aSnapInfo.mSnapportSize)))) {
-            y.reset();
-          }
+              focusedTarget = &aTarget;
+              // If the focused one is valid, then it's the candidate.
+              x = aTarget.mSnapPositionX;
+            }
 
-          focusedTarget = &target;
-          // If the focused one is valid, then it's the candidate.
-          x = target.mSnapPositionX;
-        }
-
-        if (!x) {
-          // Update the candidate on X axis only if
-          // 1) we haven't yet found the candidate on Y axis
-          // 2) or if we've found the candiate on Y axis and if snapping to the
-          //    candidate position result the target element is visible inside
-          //    the snapport.
-          if (!y || (y && target.mSnapArea.Intersects(
-                              nsRect(nsPoint(*target.mSnapPositionX, *y),
-                                     aSnapInfo.mSnapportSize)))) {
-            x = target.mSnapPositionX;
-          }
-        }
-      }
-    }
-    if (target.mSnapPositionY &&
-        aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None) {
-      if (aLastSnapTargetIds->mIdsOnY.Contains(target.mTargetId)) {
-        if (targetIdForFocusedContent == target.mTargetId) {
-          NS_ASSERTION(!focusedTarget || focusedTarget == &target,
-                       "If the focused target has been found on X axis, the "
-                       "target should be same");
-          // If we've already found the candidate on X axis other than the
-          // focused one, but if snapping to the point results this target is
-          // scrolled out, we can't use it.
-          if (!focusedTarget && (x && !target.mSnapArea.Intersects(nsRect(
-                                          nsPoint(*x, *target.mSnapPositionY),
-                                          aSnapInfo.mSnapportSize)))) {
-            x.reset();
-          }
-
-          focusedTarget = &target;
-          y = target.mSnapPositionY;
-        }
-
-        if (!y) {
-          if (!x || (x && target.mSnapArea.Intersects(
-                              nsRect(nsPoint(*x, *target.mSnapPositionY),
-                                     aSnapInfo.mSnapportSize)))) {
-            y = target.mSnapPositionY;
+            if (!x) {
+              // Update the candidate on X axis only if
+              // 1) we haven't yet found the candidate on Y axis
+              // 2) or if we've found the candiate on Y axis and if snapping to
+              // the
+              //    candidate position result the target element is visible
+              //    inside the snapport.
+              if (!y || (y && aTarget.mSnapArea.Intersects(
+                                  nsRect(nsPoint(*aTarget.mSnapPositionX, *y),
+                                         aSnapInfo.mSnapportSize)))) {
+                x = aTarget.mSnapPositionX;
+              }
+            }
           }
         }
-      }
-    }
+        if (aTarget.mSnapPositionY && aSnapInfo.mScrollSnapStrictnessY !=
+                                          StyleScrollSnapStrictness::None) {
+          if (aLastSnapTargetIds->mIdsOnY.Contains(aTarget.mTargetId)) {
+            if (targetIdForFocusedContent == aTarget.mTargetId) {
+              NS_ASSERTION(
+                  !focusedTarget || focusedTarget == &aTarget,
+                  "If the focused target has been found on X axis, the "
+                  "target should be same");
+              // If we've already found the candidate on X axis other than the
+              // focused one, but if snapping to the point results this target
+              // is scrolled out, we can't use it.
+              if (!focusedTarget &&
+                  (x && !aTarget.mSnapArea.Intersects(
+                            nsRect(nsPoint(*x, *aTarget.mSnapPositionY),
+                                   aSnapInfo.mSnapportSize)))) {
+                x.reset();
+              }
 
-    // If we found candidates on both axes, it's the one we need.
-    if (x && y &&
-        // If we haven't found the focused target, it's possible that we haven't
-        // iterated it, don't break in such case.
-        (targetIdForFocusedContent == ScrollSnapTargetId::None ||
-         focusedTarget)) {
-      break;
-    }
-  }
+              focusedTarget = &aTarget;
+              y = aTarget.mSnapPositionY;
+            }
+
+            if (!y) {
+              if (!x || (x && aTarget.mSnapArea.Intersects(
+                                  nsRect(nsPoint(*x, *aTarget.mSnapPositionY),
+                                         aSnapInfo.mSnapportSize)))) {
+                y = aTarget.mSnapPositionY;
+              }
+            }
+          }
+        }
+
+        // If we found candidates on both axes, it's the one we need.
+        if (x && y &&
+            // If we haven't found the focused target, it's possible that we
+            // haven't iterated it, don't break in such case.
+            (targetIdForFocusedContent == ScrollSnapTargetId::None ||
+             focusedTarget)) {
+          return false;
+        }
+        return true;
+      });
 
   return {x, y};
 }
@@ -521,22 +522,26 @@ Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForResnap(
     CalcSnapPoints calcSnapPoints(ScrollUnit::DEVICE_PIXELS,
                                   ScrollSnapFlags::IntendedEndPosition,
                                   newPosition, newPosition);
-    for (const auto& target : aSnapInfo.mSnapTargets) {
-      if (!target.IsValidFor(newPosition, aSnapInfo.mSnapportSize)) {
-        continue;
-      }
 
-      if (!x && target.mSnapPositionX &&
-          aSnapInfo.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) {
-        calcSnapPoints.AddVerticalEdge(
-            {*target.mSnapPositionX, target.mScrollSnapStop, target.mTargetId});
-      }
-      if (!y && target.mSnapPositionY &&
-          aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None) {
-        calcSnapPoints.AddHorizontalEdge(
-            {*target.mSnapPositionY, target.mScrollSnapStop, target.mTargetId});
-      }
-    }
+    aSnapInfo.ForEachValidTargetFor(
+        newPosition, [&, &x = x, &y = y](const auto& aTarget) -> bool {
+          if (!x && aTarget.mSnapPositionX &&
+              aSnapInfo.mScrollSnapStrictnessX !=
+                  StyleScrollSnapStrictness::None) {
+            calcSnapPoints.AddVerticalEdge({*aTarget.mSnapPositionX,
+                                            aTarget.mScrollSnapStop,
+                                            aTarget.mTargetId});
+          }
+          if (!y && aTarget.mSnapPositionY &&
+              aSnapInfo.mScrollSnapStrictnessY !=
+                  StyleScrollSnapStrictness::None) {
+            calcSnapPoints.AddHorizontalEdge({*aTarget.mSnapPositionY,
+                                              aTarget.mScrollSnapStop,
+                                              aTarget.mTargetId});
+          }
+          return true;
+        });
+
     auto finalPos = calcSnapPoints.GetBestEdge();
     if (!x) {
       x = Some(finalPos.mPosition.x);
@@ -549,23 +554,23 @@ Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForResnap(
   SnapDestination snapTarget{nsPoint(*x, *y)};
   // Collect snap points where the position is still same as the new snap
   // position.
-  for (const auto& target : aSnapInfo.mSnapTargets) {
-    if (!target.IsValidFor(snapTarget.mPosition, aSnapInfo.mSnapportSize)) {
-      continue;
-    }
+  aSnapInfo.ForEachValidTargetFor(
+      snapTarget.mPosition, [&, &x = x, &y = y](const auto& aTarget) -> bool {
+        if (aTarget.mSnapPositionX &&
+            aSnapInfo.mScrollSnapStrictnessX !=
+                StyleScrollSnapStrictness::None &&
+            aTarget.mSnapPositionX == x) {
+          snapTarget.mTargetIds.mIdsOnX.AppendElement(aTarget.mTargetId);
+        }
 
-    if (target.mSnapPositionX &&
-        aSnapInfo.mScrollSnapStrictnessX != StyleScrollSnapStrictness::None &&
-        target.mSnapPositionX == x) {
-      snapTarget.mTargetIds.mIdsOnX.AppendElement(target.mTargetId);
-    }
-
-    if (target.mSnapPositionY &&
-        aSnapInfo.mScrollSnapStrictnessY != StyleScrollSnapStrictness::None &&
-        target.mSnapPositionY == y) {
-      snapTarget.mTargetIds.mIdsOnY.AppendElement(target.mTargetId);
-    }
-  }
+        if (aTarget.mSnapPositionY &&
+            aSnapInfo.mScrollSnapStrictnessY !=
+                StyleScrollSnapStrictness::None &&
+            aTarget.mSnapPositionY == y) {
+          snapTarget.mTargetIds.mIdsOnY.AppendElement(aTarget.mTargetId);
+        }
+        return true;
+      });
   return Some(snapTarget);
 }
 
