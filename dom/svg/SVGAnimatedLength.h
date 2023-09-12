@@ -19,9 +19,6 @@
 #include "nsError.h"
 #include "nsMathUtils.h"
 
-struct GeckoFontMetrics;
-class nsPresContext;
-class nsFontMetrics;
 class mozAutoDocUpdate;
 class nsIFrame;
 
@@ -38,25 +35,11 @@ class SVGViewportElement;
 
 class UserSpaceMetrics {
  public:
-  enum class Type : uint32_t { This, Root };
-  static GeckoFontMetrics DefaultFontMetrics();
-  static GeckoFontMetrics GetFontMetrics(const Element* aElement);
-  static WritingMode GetWritingMode(const Element* aElement);
-  static CSSSize GetCSSViewportSizeFromContext(const nsPresContext* aContext);
-
   virtual ~UserSpaceMetrics() = default;
 
-  virtual float GetEmLength(Type aType) const = 0;
-  float GetExLength(Type aType) const;
-  float GetChSize(Type aType) const;
-  float GetIcWidth(Type aType) const;
-  float GetCapHeight(Type aType) const;
+  virtual float GetEmLength() const = 0;
+  virtual float GetExLength() const = 0;
   virtual float GetAxisLength(uint8_t aCtxType) const = 0;
-  virtual CSSSize GetCSSViewportSize() const = 0;
-
- protected:
-  virtual GeckoFontMetrics GetFontMetricsForType(Type aType) const = 0;
-  virtual WritingMode GetWritingModeForType(Type aType) const = 0;
 };
 
 class UserSpaceMetricsWithSize : public UserSpaceMetrics {
@@ -70,17 +53,12 @@ class SVGElementMetrics : public UserSpaceMetrics {
   explicit SVGElementMetrics(const SVGElement* aSVGElement,
                              const SVGViewportElement* aCtx = nullptr);
 
-  float GetEmLength(Type aType) const override {
-    return SVGContentUtils::GetFontSize(GetElementForType(aType));
-  }
+  float GetEmLength() const override;
+  float GetExLength() const override;
   float GetAxisLength(uint8_t aCtxType) const override;
-  CSSSize GetCSSViewportSize() const override;
 
  private:
   bool EnsureCtx() const;
-  const Element* GetElementForType(Type aType) const;
-  GeckoFontMetrics GetFontMetricsForType(Type aType) const override;
-  WritingMode GetWritingModeForType(Type aType) const override;
 
   const SVGElement* mSVGElement;
   mutable const SVGViewportElement* mCtx;
@@ -90,13 +68,11 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
  public:
   explicit NonSVGFrameUserSpaceMetrics(nsIFrame* aFrame);
 
-  float GetEmLength(Type aType) const override;
+  float GetEmLength() const override;
+  float GetExLength() const override;
   gfx::Size GetSize() const override;
-  CSSSize GetCSSViewportSize() const override;
 
  private:
-  GeckoFontMetrics GetFontMetricsForType(Type aType) const override;
-  WritingMode GetWritingModeForType(Type aType) const override;
   nsIFrame* mFrame;
 };
 
