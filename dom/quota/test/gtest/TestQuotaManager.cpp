@@ -46,4 +46,113 @@ TEST_F(TestQuotaManager, ShutdownStorage_Simple) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
 
+// Test ShutdownStorage when a storage shutdown is already ongoing.
+TEST_F(TestQuotaManager, ShutdownStorage_Ongoing) {
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+
+  PerformOnIOThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+
+    ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitialized());
+
+    ASSERT_TRUE(quotaManager->IsStorageInitialized());
+  });
+
+  PerformOnBackgroundThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    nsTArray<RefPtr<BoolPromise>> promises;
+
+    promises.AppendElement(quotaManager->ShutdownStorage());
+    promises.AppendElement(quotaManager->ShutdownStorage());
+
+    bool done = false;
+
+    BoolPromise::All(GetCurrentSerialEventTarget(), promises)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [&done](const CopyableTArray<bool>& aResolveValues) {
+              done = true;
+            },
+            [&done](nsresult aRejectValue) {
+              ASSERT_TRUE(false);
+
+              done = true;
+            });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
+
+  PerformOnIOThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+  });
+
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+}
+
+// Test ShutdownStorage when a storage shutdown is already ongoing and storage
+// initialization is scheduled after that.
+TEST_F(TestQuotaManager,
+       DISABLED_ShutdownStorage_OngoingWithScheduledInitialization) {
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+
+  PerformOnIOThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+
+    ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitialized());
+
+    ASSERT_TRUE(quotaManager->IsStorageInitialized());
+  });
+
+  PerformOnBackgroundThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    nsTArray<RefPtr<BoolPromise>> promises;
+
+    promises.AppendElement(quotaManager->ShutdownStorage());
+    // XXX We have to use ClearPrivateRepository for now because there's no
+    // dedicated method for initializing storage on the PBackground thread yet.
+    // ClearPrivateRepository triggers storage initialization before it clear
+    // the private repository.
+    promises.AppendElement(quotaManager->ClearPrivateRepository());
+    promises.AppendElement(quotaManager->ShutdownStorage());
+
+    bool done = false;
+
+    BoolPromise::All(GetCurrentSerialEventTarget(), promises)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [&done](const CopyableTArray<bool>& aResolveValues) {
+              done = true;
+            },
+            [&done](nsresult aRejectValue) {
+              ASSERT_TRUE(false);
+
+              done = true;
+            });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
+
+  PerformOnIOThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+  });
+
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+}
+
 }  // namespace mozilla::dom::quota::test
