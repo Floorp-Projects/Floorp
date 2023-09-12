@@ -37,7 +37,7 @@ struct ScrollSnapUtils {
    *                 not to touch main-thread-only data structures without
    *                 appropriate locking.
    */
-  static Maybe<SnapTarget> GetSnapPointForDestination(
+  static Maybe<SnapDestination> GetSnapPointForDestination(
       const ScrollSnapInfo& aSnapInfo, ScrollUnit aUnit,
       ScrollSnapFlags aSnapFlags, const nsRect& aScrollRange,
       const nsPoint& aStartPos, const nsPoint& aDestination);
@@ -52,7 +52,7 @@ struct ScrollSnapUtils {
    * Other parameters are same as GetSnapPointForDestination.
    */
 
-  static mozilla::Maybe<mozilla::SnapTarget> GetSnapPointForResnap(
+  static mozilla::Maybe<SnapDestination> GetSnapPointForResnap(
       const ScrollSnapInfo& aSnapInfo, const nsRect& aScrollRange,
       const nsPoint& aCurrentPosition,
       const UniquePtr<ScrollSnapTargetIds>& aLastSnapTargetIds,

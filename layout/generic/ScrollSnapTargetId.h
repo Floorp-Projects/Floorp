@@ -26,12 +26,12 @@ struct ScrollSnapTargetIds {
   }
 };
 
-struct SnapTarget {
+struct SnapDestination {
   nsPoint mPosition;
   ScrollSnapTargetIds mTargetIds;
 };
 
-struct CSSSnapTarget {
+struct CSSSnapDestination {
   CSSPoint mPosition;
   ScrollSnapTargetIds mTargetIds;
 };

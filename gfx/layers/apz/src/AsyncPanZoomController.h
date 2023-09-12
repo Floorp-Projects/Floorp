@@ -1600,13 +1600,13 @@ class AsyncPanZoomController {
 
   // Start a smooth-scrolling animation to the given destination, with physics
   // based on the prefs for the indicated origin.
-  void SmoothScrollTo(CSSSnapTarget&& aDestination,
+  void SmoothScrollTo(CSSSnapDestination&& aDestination,
                       ScrollTriggeredByScript aTriggeredByScript,
                       const ScrollOrigin& aOrigin);
 
   // Start a smooth-scrolling animation to the given destination, with MSD
   // physics that is suited for scroll-snapping.
-  void SmoothMsdScrollTo(CSSSnapTarget&& aDestination,
+  void SmoothMsdScrollTo(CSSSnapDestination&& aDestination,
                          ScrollTriggeredByScript aTriggeredByScript);
 
   // Returns whether overscroll is allowed during an event.
@@ -1909,17 +1909,17 @@ class AsyncPanZoomController {
   // |aUnit| affects the snapping behaviour (see ScrollSnapUtils::
   // GetSnapPointForDestination).
   // Returns true iff. a target snap point was found.
-  Maybe<CSSSnapTarget> MaybeAdjustDeltaForScrollSnapping(
+  Maybe<CSSSnapDestination> MaybeAdjustDeltaForScrollSnapping(
       ScrollUnit aUnit, ScrollSnapFlags aSnapFlags, ParentLayerPoint& aDelta,
       CSSPoint& aStartPosition);
 
   // A wrapper function of MaybeAdjustDeltaForScrollSnapping for
   // ScrollWheelInput.
-  Maybe<CSSSnapTarget> MaybeAdjustDeltaForScrollSnappingOnWheelInput(
+  Maybe<CSSSnapDestination> MaybeAdjustDeltaForScrollSnappingOnWheelInput(
       const ScrollWheelInput& aEvent, ParentLayerPoint& aDelta,
       CSSPoint& aStartPosition);
 
-  Maybe<CSSSnapTarget> MaybeAdjustDestinationForScrollSnapping(
+  Maybe<CSSSnapDestination> MaybeAdjustDestinationForScrollSnapping(
       const KeyboardInput& aEvent, CSSPoint& aDestination,
       ScrollSnapFlags aSnapFlags);
 
@@ -1938,9 +1938,9 @@ class AsyncPanZoomController {
   // |aUnit| affects the snapping behaviour (see ScrollSnapUtils::
   // GetSnapPointForDestination). It should generally be determined by the
   // type of event that's triggering the scroll.
-  Maybe<CSSSnapTarget> FindSnapPointNear(const CSSPoint& aDestination,
-                                         ScrollUnit aUnit,
-                                         ScrollSnapFlags aSnapFlags);
+  Maybe<CSSSnapDestination> FindSnapPointNear(const CSSPoint& aDestination,
+                                              ScrollUnit aUnit,
+                                              ScrollSnapFlags aSnapFlags);
 
   // If |aOriginalEvent| crosses the touch-start tolerance threshold, split it
   // into two events: one that just reaches the threshold, and the remainder.
