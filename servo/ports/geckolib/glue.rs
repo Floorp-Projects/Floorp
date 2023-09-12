@@ -5341,7 +5341,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     use style::properties::PropertyDeclaration;
     use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
-    use style::values::specified::length::{FontRelativeLength, LengthPercentage};
+    use style::values::specified::length::{FontRelativeLength, LengthPercentage, ViewportPercentageLength};
     use style::values::specified::FontSize;
 
     let long = get_longhand_from_id!(property);
@@ -5375,6 +5375,18 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
         structs::nsCSSUnit::eCSSUnit_Point => NoCalcLength::Absolute(AbsoluteLength::Pt(value)),
         structs::nsCSSUnit::eCSSUnit_Pica => NoCalcLength::Absolute(AbsoluteLength::Pc(value)),
         structs::nsCSSUnit::eCSSUnit_Quarter => NoCalcLength::Absolute(AbsoluteLength::Q(value)),
+        structs::nsCSSUnit::eCSSUnit_VW => {
+            NoCalcLength::ViewportPercentage(ViewportPercentageLength::Vw(value))
+        },
+        structs::nsCSSUnit::eCSSUnit_VH => {
+            NoCalcLength::ViewportPercentage(ViewportPercentageLength::Vh(value))
+        },
+        structs::nsCSSUnit::eCSSUnit_VMin => {
+            NoCalcLength::ViewportPercentage(ViewportPercentageLength::Vmin(value))
+        },
+        structs::nsCSSUnit::eCSSUnit_VMax => {
+            NoCalcLength::ViewportPercentage(ViewportPercentageLength::Vmax(value))
+        },
         _ => unreachable!("Unknown unit passed to SetLengthValue"),
     };
 
