@@ -16,6 +16,12 @@ _here = os.path.abspath(os.path.dirname(__file__))
 _external_tools_path = os.path.normpath(
     os.path.join(_here, "..", "..", "external_tools")
 )
+_mozbuild_action_path = os.path.normpath(
+    os.path.join(
+        _here, "..", "..", "..", "..", "python", "mozbuild", "mozbuild", "action"
+    )
+)
+_mozbuild_action_abspath = os.path.join("python", "mozbuild", "mozbuild", "action")
 
 
 class TooltoolMixin(object):
@@ -42,10 +48,25 @@ class TooltoolMixin(object):
                 "-v",
             ]
         else:
+            # In CI, tooltool.py is expected in external_tools; in local runs,
+            # tooltool.py is expected in mozbuild, but mozbuild might be hard
+            # to find, expecially if topsrcdir could not be found...
+            locations = [
+                os.path.join(_external_tools_path, "tooltool.py"),
+                os.path.join(_mozbuild_action_path, "tooltool.py"),
+                os.path.join(
+                    os.environ.get("GECKO_PATH", "."),
+                    _mozbuild_action_abspath,
+                    "tooltool.py",
+                ),
+            ]
+            tooltool_path = [p for p in locations if os.path.exists(p)]
+            if not tooltool_path:
+                raise Exception("unable to find tooltool client file tooltool.py")
             cmd = [
                 sys.executable,
                 "-u",
-                os.path.join(_external_tools_path, "tooltool.py"),
+                tooltool_path[0],
             ]
 
         if self.topsrcdir:
