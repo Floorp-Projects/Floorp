@@ -202,7 +202,7 @@ export class MessageHandlerRegistry extends EventEmitter {
     );
     messageHandler.on("message-handler-event", this._onMessageHandlerEvent);
 
-    messageHandler.applyInitialSessionDataItems(sessionDataItems);
+    messageHandler.initialize(sessionDataItems);
 
     this._messageHandlersMap.set(sessionId, messageHandler);
 

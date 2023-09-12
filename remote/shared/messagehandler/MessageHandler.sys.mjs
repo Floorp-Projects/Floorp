@@ -263,15 +263,15 @@ export class MessageHandler extends EventEmitter {
   }
 
   /**
-   * Apply the initial session data items provided to this MessageHandler on
-   * startup. Implementation is specific to each MessageHandler class.
+   * Execute the required initialization steps, inlcluding apply the initial session data items
+   * provided to this MessageHandler on startup. Implementation is specific to each MessageHandler class.
    *
    * By default the implementation is a no-op.
    *
    * @param {Array<SessionDataItem>} sessionDataItems
    *     Initial session data items for this MessageHandler.
    */
-  async applyInitialSessionDataItems(sessionDataItems) {}
+  async initialize(sessionDataItems) {}
 
   /**
    * Returns the module path corresponding to this MessageHandler class.

@@ -34,15 +34,33 @@ export class WindowGlobalMessageHandler extends MessageHandler {
 
     this.#innerWindowId = this.context.window.windowGlobalChild.innerWindowId;
 
-    // Maps sandbox names to instances of window realms,
-    // the default realm is mapped to an empty string sandbox name.
-    this.#realms = new Map([["", new lazy.WindowRealm(this.context.window)]]);
+    // Maps sandbox names to instances of window realms.
+    this.#realms = new Map();
+  }
+
+  initialize(sessionDataItems) {
+    // Create the default realm, it is mapped to an empty string sandbox name.
+    this.#realms.set("", this.#createRealm());
+
+    // This method, even though being async, is not awaited on purpose,
+    // since for now the sessionDataItems are passed in response to an event in a for loop.
+    this.#applyInitialSessionDataItems(sessionDataItems);
+
+    // With the session data applied the handler is now ready to be used.
+    this.emitEvent("window-global-handler-created", {
+      contextId: this.contextId,
+      innerWindowId: this.#innerWindowId,
+    });
   }
 
   destroy() {
     for (const realm of this.#realms.values()) {
       realm.destroy();
     }
+    this.emitEvent("windowglobal-pagehide", {
+      context: this.context,
+      innerWindowId: this.innerWindowId,
+    });
     this.#realms = null;
 
     super.destroy();
@@ -92,6 +110,19 @@ export class WindowGlobalMessageHandler extends MessageHandler {
     return this.context.window;
   }
 
+  #createRealm(sandboxName = null) {
+    const realm = new lazy.WindowRealm(this.context.window, {
+      sandboxName,
+    });
+
+    this.emitEvent("realm-created", {
+      realmId: realm.id,
+      innerWindowId: this.innerWindowId,
+    });
+
+    return realm;
+  }
+
   #getRealmFromSandboxName(sandboxName = null) {
     if (sandboxName === null || sandboxName === "") {
       return this.#realms.get("");
@@ -101,16 +132,14 @@ export class WindowGlobalMessageHandler extends MessageHandler {
       return this.#realms.get(sandboxName);
     }
 
-    const realm = new lazy.WindowRealm(this.context.window, {
-      sandboxName,
-    });
+    const realm = this.#createRealm(sandboxName);
 
     this.#realms.set(sandboxName, realm);
 
     return realm;
   }
 
-  async applyInitialSessionDataItems(sessionDataItems) {
+  async #applyInitialSessionDataItems(sessionDataItems) {
     if (!Array.isArray(sessionDataItems)) {
       return;
     }
@@ -163,12 +192,6 @@ export class WindowGlobalMessageHandler extends MessageHandler {
     }
 
     await Promise.all(sessionDataPromises);
-
-    // With the session data applied the handler is now ready to be used.
-    this.emitEvent("window-global-handler-created", {
-      contextId: this.contextId,
-      innerWindowId: this.#innerWindowId,
-    });
   }
 
   forwardCommand(command) {
