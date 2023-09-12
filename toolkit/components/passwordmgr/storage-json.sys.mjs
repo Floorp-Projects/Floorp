@@ -288,6 +288,7 @@ export class LoginManagerStorage_json {
       // check for duplicates
       let loginData = {
         origin: login.origin,
+        formActionOrigin: login.formActionOrigin,
         httpRealm: login.httpRealm,
       };
       const existingLogins = await Services.logins.searchLoginsAsync(loginData);
@@ -374,6 +375,7 @@ export class LoginManagerStorage_json {
     if (!newLogin.matches(oldLogin, true)) {
       let loginData = {
         origin: newLogin.origin,
+        formActionOrigin: newLogin.formActionOrigin,
         httpRealm: newLogin.httpRealm,
       };
 
@@ -558,6 +560,10 @@ export class LoginManagerStorage_json {
    * Private method to perform arbitrary searches on any field. Decryption is
    * left to the caller.
    *
+   * formActionOrigin is handled specially for compatibility. If a null string
+   * is passed and other match fields are present, it is treated as if it was
+   * not present.
+   *
    * Returns [logins, ids] for logins that match the arguments, where logins
    * is an array of encrypted nsLoginInfo and ids is an array of associated
    * ids in the database.
@@ -573,17 +579,6 @@ export class LoginManagerStorage_json {
     },
     candidateLogins = this._store.data.logins
   ) {
-    if (
-      "formActionOrigin" in matchData &&
-      matchData.formActionOrigin === "" &&
-      // Carve an exception out for a unit test in test_legacy_empty_formSubmitURL.js
-      Object.keys(matchData).length != 1
-    ) {
-      throw new Error(
-        "Searching with an empty `formActionOrigin` doesn't do a wildcard search"
-      );
-    }
-
     function match(aLoginItem) {
       for (let field in matchData) {
         let wantedValue = matchData[field];
@@ -606,7 +601,10 @@ export class LoginManagerStorage_json {
           case "formActionOrigin":
             if (wantedValue != null) {
               // Historical compatibility requires this special case
-              if (aLoginItem.formSubmitURL == "") {
+              if (
+                aLoginItem.formSubmitURL == "" ||
+                (wantedValue == "" && Object.keys(matchData).length != 1)
+              ) {
                 break;
               }
               if (

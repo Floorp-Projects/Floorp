@@ -743,6 +743,67 @@ add_task(async function test_sync_incoming_deleted_localchanged_localnewer() {
   }
 });
 
+add_task(async function test_sync_incoming_no_formactionorigin() {
+  _("Test syncing incoming a record where there is no formActionOrigin");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let collection = server.user("foo").collection("passwords");
+
+  const checkFields = [
+    "formSubmitURL",
+    "hostname",
+    "httpRealm",
+    "username",
+    "password",
+    "usernameField",
+    "passwordField",
+    "timeCreated",
+  ];
+
+  let guid1 = Utils.makeGUID();
+  let details = {
+    formSubmitURL: "",
+    hostname: "https://www.example.com",
+    httpRealm: null,
+    username: "rabbit",
+    password: "squirrel",
+    usernameField: "username-field",
+    passwordField: "password-field",
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
+  };
+
+  try {
+    // This test creates a remote server record and then verifies that the login
+    // has been added locally after the sync occurs.
+    _("Create remote login");
+    collection.insertRecord(Object.assign({}, details, { id: guid1 }));
+
+    _("Perform sync when remote login has been added");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let logins = await Services.logins.searchLoginsAsync({
+      origin: "https://www.example.com",
+      formActionOrigin: "",
+    });
+    equal(logins.length, 1);
+
+    equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid1);
+    checkFields.forEach(field => {
+      equal(logins[0][field], details[field]);
+    });
+    equal(logins[0].timePasswordChanged, details.timePasswordChanged);
+    equal(logins[0].syncCounter, 0);
+    equal(logins[0].everSynced, true);
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
 add_task(async function test_password_dupe() {
   let engine = Service.engineManager.get("passwords");
 
