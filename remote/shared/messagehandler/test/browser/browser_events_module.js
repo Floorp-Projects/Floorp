@@ -24,19 +24,38 @@ add_task(async function test_event() {
   const browsingContext = tab.linkedBrowser.browsingContext;
 
   const rootMessageHandler = createRootMessageHandler("session-id-event");
+  let messageHandlerEvent;
+  let registryEvent;
 
   // Events are emitted both as generic message-handler-event events as well
   // as under their own name. We expect to receive the event for both.
-  const onHandlerEvent = rootMessageHandler.once("message-handler-event");
+  const _onMessageHandlerEvent = (eventName, eventData) => {
+    if (eventData.name === "event-from-window-global") {
+      messageHandlerEvent = eventData;
+    }
+  };
+  rootMessageHandler.on("message-handler-event", _onMessageHandlerEvent);
   const onNamedEvent = rootMessageHandler.once("event-from-window-global");
   // MessageHandlerRegistry should forward all the message-handler-events.
-  const onRegistryEvent = RootMessageHandlerRegistry.once(
-    "message-handler-registry-event"
+  const _onMessageHandlerRegistryEvent = (eventName, eventData) => {
+    if (eventData.name === "event-from-window-global") {
+      registryEvent = eventData;
+    }
+  };
+  RootMessageHandlerRegistry.on(
+    "message-handler-registry-event",
+    _onMessageHandlerRegistryEvent
   );
 
   callTestEmitEvent(rootMessageHandler, browsingContext.id);
 
-  const messageHandlerEvent = await onHandlerEvent;
+  const namedEvent = await onNamedEvent;
+  is(
+    namedEvent.text,
+    `event from ${browsingContext.id}`,
+    "Received the expected payload"
+  );
+
   is(
     messageHandlerEvent.name,
     "event-from-window-global",
@@ -48,20 +67,16 @@ add_task(async function test_event() {
     "Received the expected payload"
   );
 
-  const namedEvent = await onNamedEvent;
-  is(
-    namedEvent.text,
-    `event from ${browsingContext.id}`,
-    "Received the expected payload"
-  );
-
-  const registryEvent = await onRegistryEvent;
   is(
     registryEvent,
     messageHandlerEvent,
     "The event forwarded by the MessageHandlerRegistry is identical to the MessageHandler event"
   );
-
+  rootMessageHandler.off("message-handler-event", _onMessageHandlerEvent);
+  RootMessageHandlerRegistry.off(
+    "message-handler-registry-event",
+    _onMessageHandlerRegistryEvent
+  );
   rootMessageHandler.destroy();
   gBrowser.removeTab(tab);
 });

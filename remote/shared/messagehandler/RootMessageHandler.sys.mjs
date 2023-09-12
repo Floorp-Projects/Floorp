@@ -25,6 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class RootMessageHandler extends MessageHandler {
   #navigationManager;
+  #realms;
   #rootTransport;
   #sessionData;
 
@@ -67,10 +68,23 @@ export class RootMessageHandler extends MessageHandler {
     this.#sessionData = new lazy.SessionData(this);
     this.#navigationManager = new lazy.NavigationManager();
     this.#navigationManager.startMonitoring();
+
+    // Map with inner window ids as keys, and sets of realm ids, assosiated with
+    // this window as values.
+    this.#realms = new Map();
+    // In the general case, we don't get notified that realms got destroyed,
+    // because there is no communication between content and parent process at this moment,
+    // so we have to listen to the this notification to clean up the internal
+    // map and trigger the events.
+    Services.obs.addObserver(this, "window-global-destroyed");
   }
 
   get navigationManager() {
     return this.#navigationManager;
+  }
+
+  get realms() {
+    return this.#realms;
   }
 
   get sessionData() {
@@ -80,6 +94,10 @@ export class RootMessageHandler extends MessageHandler {
   destroy() {
     this.#sessionData.destroy();
     this.#navigationManager.destroy();
+
+    Services.obs.removeObserver(this, "window-global-destroyed");
+    this.#realms = null;
+
     super.destroy();
   }
 
@@ -94,6 +112,22 @@ export class RootMessageHandler extends MessageHandler {
   addSessionDataItem(sessionData = {}) {
     sessionData.method = lazy.SessionDataMethod.Add;
     return this.updateSessionData([sessionData]);
+  }
+
+  emitEvent(name, eventPayload, contextInfo) {
+    // Intercept realm created and destroyed events to update internal map.
+    if (name === "realm-created") {
+      this.#onRealmCreated(eventPayload);
+    }
+    // We receive this events in the case of moving the page to BFCache.
+    if (name === "windowglobal-pagehide") {
+      this.#cleanUpRealmsForWindow(
+        eventPayload.innerWindowId,
+        eventPayload.context
+      );
+    }
+
+    super.emitEvent(name, eventPayload, contextInfo);
   }
 
   /**
@@ -137,6 +171,17 @@ export class RootMessageHandler extends MessageHandler {
     return true;
   }
 
+  observe(subject, topic) {
+    if (topic !== "window-global-destroyed") {
+      return;
+    }
+
+    this.#cleanUpRealmsForWindow(
+      subject.innerWindowId,
+      subject.browsingContext
+    );
+  }
+
   /**
    * Remove session data items of a given module, category and
    * contextDescriptor.
@@ -160,4 +205,33 @@ export class RootMessageHandler extends MessageHandler {
   async updateSessionData(sessionData = []) {
     await this.#sessionData.updateSessionData(sessionData);
   }
+
+  #cleanUpRealmsForWindow(innerWindowId, context) {
+    const realms = this.#realms.get(innerWindowId);
+
+    if (!realms) {
+      return;
+    }
+
+    realms.forEach(realm => {
+      this.#realms.get(innerWindowId).delete(realm);
+
+      this.emitEvent("realm-destroyed", {
+        context,
+        realm,
+      });
+    });
+
+    this.#realms.delete(innerWindowId);
+  }
+
+  #onRealmCreated = data => {
+    const { innerWindowId, realmId } = data;
+
+    if (!this.#realms.has(innerWindowId)) {
+      this.#realms.set(innerWindowId, new Set());
+    }
+
+    this.#realms.get(innerWindowId).add(realmId);
+  };
 }

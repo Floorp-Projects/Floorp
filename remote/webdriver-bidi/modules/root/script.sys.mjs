@@ -40,6 +40,7 @@ const ScriptEvaluateResultType = {
 
 class ScriptModule extends Module {
   #preloadScriptMap;
+  #subscribedEvents;
 
   constructor(messageHandler) {
     super(messageHandler);
@@ -48,10 +49,14 @@ class ScriptModule extends Module {
     // with an item named expression, which is a string,
     // and an item named sandbox which is a string or null.
     this.#preloadScriptMap = new Map();
+
+    // Set of event names which have active subscriptions.
+    this.#subscribedEvents = new Set();
   }
 
   destroy() {
     this.#preloadScriptMap = null;
+    this.#subscribedEvents = null;
   }
 
   /**
@@ -746,8 +751,77 @@ class ScriptModule extends Module {
       .filter(realm => realm.context !== null);
   }
 
+  #onRealmDestroyed = (eventName, { realm, context }) => {
+    // This event is emitted from the parent process but for a given browsing
+    // context. Set the event's contextInfo to the message handler corresponding
+    // to this browsing context.
+    const contextInfo = {
+      contextId: context.id,
+      type: lazy.WindowGlobalMessageHandler.type,
+    };
+
+    this.emitEvent("script.realmDestroyed", { realm }, contextInfo);
+  };
+
+  #startListingOnRealmDestroyed() {
+    if (!this.#subscribedEvents.has("script.realmDestroyed")) {
+      this.messageHandler.on("realm-destroyed", this.#onRealmDestroyed);
+    }
+  }
+
+  #stopListingOnRealmDestroyed() {
+    if (this.#subscribedEvents.has("script.realmDestroyed")) {
+      this.messageHandler.off("realm-destroyed", this.#onRealmDestroyed);
+    }
+  }
+
+  #subscribeEvent(event) {
+    switch (event) {
+      case "script.realmDestroyed": {
+        this.#startListingOnRealmDestroyed();
+        this.#subscribedEvents.add(event);
+        break;
+      }
+    }
+  }
+
+  #unsubscribeEvent(event) {
+    switch (event) {
+      case "script.realmDestroyed": {
+        this.#stopListingOnRealmDestroyed();
+        this.#subscribedEvents.delete(event);
+        break;
+      }
+    }
+  }
+
+  _applySessionData(params) {
+    // TODO: Bug 1775231. Move this logic to a shared module or an abstract
+    // class.
+    const { category } = params;
+    if (category === "event") {
+      const filteredSessionData = params.sessionData.filter(item =>
+        this.messageHandler.matchesContext(item.contextDescriptor)
+      );
+      for (const event of this.#subscribedEvents.values()) {
+        const hasSessionItem = filteredSessionData.some(
+          item => item.value === event
+        );
+        // If there are no session items for this context, we should unsubscribe from the event.
+        if (!hasSessionItem) {
+          this.#unsubscribeEvent(event);
+        }
+      }
+
+      // Subscribe to all events, which have an item in SessionData.
+      for (const { value } of filteredSessionData) {
+        this.#subscribeEvent(value);
+      }
+    }
+  }
+
   static get supportedEvents() {
-    return ["script.message"];
+    return ["script.message", "script.realmDestroyed"];
   }
 }
 
