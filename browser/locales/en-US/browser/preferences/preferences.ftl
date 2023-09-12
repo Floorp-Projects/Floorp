@@ -1472,6 +1472,10 @@ certs-devices =
     .label = Security Devices…
     .accesskey = D
 
+certs-thirdparty-toggle =
+    .label = Allow { -brand-short-name } to automatically trust third-party root certificates you install
+    .accesskey = t
+
 space-alert-over-5gb-settings-button =
     .label = Open Settings
     .accesskey = O
