@@ -20,6 +20,7 @@
 #include "AssemblyPayloads.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WindowsProcessMitigations.h"
 #include "nsWindowsDllInterceptor.h"
 #include "nsWindowsHelpers.h"
 
@@ -807,10 +808,13 @@ struct TestCase {
   const char* mFunctionName;
   uintptr_t mExpectedStub;
   bool mPatchedOnce;
-  explicit TestCase(const char* aFunctionName, uintptr_t aExpectedStub)
+  bool mSkipExec;
+  explicit TestCase(const char* aFunctionName, uintptr_t aExpectedStub,
+                    bool aSkipExec = false)
       : mFunctionName(aFunctionName),
         mExpectedStub(aExpectedStub),
-        mPatchedOnce(false) {}
+        mPatchedOnce(false),
+        mSkipExec(aSkipExec) {}
 } g_AssemblyTestCases[] = {
 #if defined(__clang__)
 // We disable these testcases because the code coverage instrumentation injects
@@ -819,7 +823,8 @@ struct TestCase {
 #    if defined(_M_X64)
     // Since we have PatchIfTargetIsRecognizedTrampoline for x64, we expect the
     // original jump destination is returned as a stub.
-    TestCase("MovPushRet", JumpDestination),
+    TestCase("MovPushRet", JumpDestination,
+             mozilla::IsUserShadowStackEnabled()),
     TestCase("MovRaxJump", JumpDestination),
     TestCase("DoubleJump", JumpDestination),
 
@@ -831,7 +836,8 @@ struct TestCase {
     TestCase("MovImm64", NoStubAddressCheck),
 #    elif defined(_M_IX86)
     // Skip the stub address check as we always generate a trampoline for x86.
-    TestCase("PushRet", NoStubAddressCheck),
+    TestCase("PushRet", NoStubAddressCheck,
+             mozilla::IsUserShadowStackEnabled()),
     TestCase("MovEaxJump", NoStubAddressCheck),
     TestCase("DoubleJump", NoStubAddressCheck),
     TestCase("Opcode83", NoStubAddressCheck),
@@ -912,18 +918,25 @@ bool TestAssemblyFunctions() {
       return false;
     }
 
-    patched_func_called = false;
-
-    auto originalFunction = reinterpret_cast<void (*)()>(
-        GetProcAddress(GetModuleHandleW(nullptr), testCase.mFunctionName));
-    originalFunction();
-
-    if (!patched_func_called) {
+    if (testCase.mSkipExec) {
       printf(
-          "TEST-FAILED | WindowsDllInterceptor | "
-          "Hook from %s was not called\n",
+          "TEST-SKIPPED | WindowsDllInterceptor | "
+          "Will not attempt to execute patched %s.\n",
           testCase.mFunctionName);
-      return false;
+    } else {
+      patched_func_called = false;
+
+      auto originalFunction = reinterpret_cast<void (*)()>(
+          GetProcAddress(GetModuleHandleW(nullptr), testCase.mFunctionName));
+      originalFunction();
+
+      if (!patched_func_called) {
+        printf(
+            "TEST-FAILED | WindowsDllInterceptor | "
+            "Hook from %s was not called\n",
+            testCase.mFunctionName);
+        return false;
+      }
     }
 
     printf("TEST-PASS | WindowsDllInterceptor | %s\n", testCase.mFunctionName);

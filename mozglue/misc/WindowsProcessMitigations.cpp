@@ -88,4 +88,20 @@ MFBT_API bool IsEafPlusEnabled() {
   return polInfo.EnableExportAddressFilterPlus;
 }
 
+MFBT_API bool IsUserShadowStackEnabled() {
+  auto pGetProcessMitigationPolicy = FetchGetProcessMitigationPolicyFunc();
+  if (!pGetProcessMitigationPolicy) {
+    return false;
+  }
+
+  PROCESS_MITIGATION_USER_SHADOW_STACK_POLICY polInfo;
+  if (!pGetProcessMitigationPolicy(::GetCurrentProcess(),
+                                   ProcessUserShadowStackPolicy, &polInfo,
+                                   sizeof(polInfo))) {
+    return false;
+  }
+
+  return polInfo.EnableUserShadowStack;
+}
+
 }  // namespace mozilla
