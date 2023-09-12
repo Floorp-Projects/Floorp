@@ -3066,32 +3066,16 @@ JSString* js::StringFlatReplaceString(JSContext* cx, HandleString string,
 JSString* js::str_replace_string_raw(JSContext* cx, HandleString string,
                                      HandleString pattern,
                                      HandleString replacement) {
-  Rooted<JSLinearString*> repl(cx, replacement->ensureLinear(cx));
-  if (!repl) {
-    return nullptr;
-  }
-
   Rooted<JSLinearString*> pat(cx, pattern->ensureLinear(cx));
   if (!pat) {
     return nullptr;
-  }
-
-  size_t patternLength = pat->length();
-  int32_t match;
-  uint32_t dollarIndex;
-
-  {
-    AutoCheckCannotGC nogc;
-    dollarIndex =
-        repl->hasLatin1Chars()
-            ? FindDollarIndex(repl->latin1Chars(nogc), repl->length())
-            : FindDollarIndex(repl->twoByteChars(nogc), repl->length());
   }
 
   /*
    * |string| could be a rope, so we want to avoid flattening it for as
    * long as possible.
    */
+  int32_t match;
   if (string->isRope()) {
     if (!RopeMatch(cx, &string->asRope(), pat, &match)) {
       return nullptr;
@@ -3103,6 +3087,21 @@ JSString* js::str_replace_string_raw(JSContext* cx, HandleString string,
   if (match < 0) {
     return string;
   }
+
+  Rooted<JSLinearString*> repl(cx, replacement->ensureLinear(cx));
+  if (!repl) {
+    return nullptr;
+  }
+  uint32_t dollarIndex;
+  {
+    AutoCheckCannotGC nogc;
+    dollarIndex =
+        repl->hasLatin1Chars()
+            ? FindDollarIndex(repl->latin1Chars(nogc), repl->length())
+            : FindDollarIndex(repl->twoByteChars(nogc), repl->length());
+  }
+
+  size_t patternLength = pat->length();
 
   if (dollarIndex != UINT32_MAX) {
     repl = InterpretDollarReplacement(cx, string, repl, dollarIndex, match,
