@@ -324,7 +324,7 @@ static const size_t kAllPagesSize = kNumAllPages * kPageSize;
 static const size_t kAllPagesJemallocSize = kAllPagesSize - kPageSize;
 
 // The default state for PHC.  Either Enabled or OnlyFree.
-#define DEFAULT_STATE mozilla::phc::Enabled
+#define DEFAULT_STATE mozilla::phc::OnlyFree
 
 // The junk value used to fill new allocation in debug builds. It's same value
 // as the one used by mozjemalloc. PHC applies it unconditionally in debug

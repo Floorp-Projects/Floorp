@@ -257,3 +257,15 @@ LOCAL_INCLUDES += [
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+
+if CONFIG["MOZ_PHC"]:
+    EXPORTS.mozilla += [
+        "PHCManager.h",
+    ]
+
+    DEFINES["MOZ_PHC"] = 1
+
+    UNIFIED_SOURCES += ["PHCManager.cpp"]
+
+with Files("PHCManager.*"):
+    BUG_COMPONENT = ("Core", "Memory Allocator")
