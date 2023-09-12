@@ -145,8 +145,8 @@ strong {
   width: 100%;
   list-style: none;
   padding: 0;
-  column-gap: var(--compatibility-tooltip-base-unit);
   display: flex;
+  justify-content: start;
 }
 
 /* Tooltip: query container info */
