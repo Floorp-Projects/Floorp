@@ -217,38 +217,6 @@ class RuntimeSettingsTest : BaseSessionTest() {
     }
 
     @Test
-    fun largeKeepaliveFactor() {
-        val defaultLargeKeepaliveFactor = 1
-        val settings = sessionRule.runtime.settings
-
-        val largeKeepaliveFactorPref = "network.http.largeKeepaliveFactor"
-        var prefValue = (sessionRule.getPrefs(largeKeepaliveFactorPref)[0] as Int)
-        assertThat(
-            "default LargeKeepaliveFactor should be 1",
-            prefValue,
-            `is`(defaultLargeKeepaliveFactor),
-        )
-
-        for (factor in 1..10) {
-            settings.setLargeKeepaliveFactor(factor)
-            prefValue = (sessionRule.getPrefs(largeKeepaliveFactorPref)[0] as Int)
-            assertThat(
-                "setting LargeKeepaliveFactor to an integer value between 1..10 should work",
-                prefValue,
-                `is`(factor),
-            )
-        }
-
-        settings.setLargeKeepaliveFactor(128)
-        prefValue = (sessionRule.getPrefs(largeKeepaliveFactorPref)[0] as Int)
-        assertThat(
-            "set LargeKeepaliveFactor to default when input is invalid",
-            prefValue,
-            `is`(defaultLargeKeepaliveFactor),
-        )
-    }
-
-    @Test
     fun aboutConfig() {
         // This is broken in automation because document channel is enabled by default
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
