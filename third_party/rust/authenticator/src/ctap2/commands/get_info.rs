@@ -340,6 +340,10 @@ pub struct AuthenticatorInfo {
 }
 
 impl AuthenticatorInfo {
+    pub fn supports_cred_protect(&self) -> bool {
+        self.extensions.contains(&"credProtect".to_string())
+    }
+
     pub fn supports_hmac_secret(&self) -> bool {
         self.extensions.contains(&"hmac-secret".to_string())
     }

@@ -3,11 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::ctap2::commands::client_pin::Pin;
-pub use crate::ctap2::commands::get_assertion::{GetAssertionExtensions, HmacSecretExtension};
-pub use crate::ctap2::commands::make_credentials::MakeCredentialsExtensions;
 use crate::ctap2::server::{
-    PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
-    ResidentKeyRequirement, User, UserVerificationRequirement,
+    AuthenticationExtensionsClientInputs, PublicKeyCredentialDescriptor,
+    PublicKeyCredentialParameters, RelyingParty, ResidentKeyRequirement, User,
+    UserVerificationRequirement,
 };
 use crate::errors::*;
 use crate::manager::Manager;
@@ -24,7 +23,7 @@ pub struct RegisterArgs {
     pub exclude_list: Vec<PublicKeyCredentialDescriptor>,
     pub user_verification_req: UserVerificationRequirement,
     pub resident_key_req: ResidentKeyRequirement,
-    pub extensions: MakeCredentialsExtensions,
+    pub extensions: AuthenticationExtensionsClientInputs,
     pub pin: Option<Pin>,
     pub use_ctap1_fallback: bool,
 }
@@ -37,16 +36,9 @@ pub struct SignArgs {
     pub allow_list: Vec<PublicKeyCredentialDescriptor>,
     pub user_verification_req: UserVerificationRequirement,
     pub user_presence_req: bool,
-    pub extensions: GetAssertionExtensions,
+    pub extensions: AuthenticationExtensionsClientInputs,
     pub pin: Option<Pin>,
-    pub alternate_rp_id: Option<String>,
     pub use_ctap1_fallback: bool,
-    // Todo: Extensions
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct AssertionExtensions {
-    pub hmac_secret: Option<HmacSecretExtension>,
 }
 
 pub trait AuthenticatorTransport {
@@ -479,7 +471,6 @@ mod tests {
                     user_presence_req: true,
                     extensions: Default::default(),
                     pin: None,
-                    alternate_rp_id: None,
                     use_ctap1_fallback: false,
                 },
                 status_tx,
@@ -579,7 +570,6 @@ mod tests {
                     user_presence_req: true,
                     extensions: Default::default(),
                     pin: None,
-                    alternate_rp_id: None,
                     use_ctap1_fallback: false,
                 },
                 status_tx,

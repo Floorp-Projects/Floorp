@@ -6,8 +6,9 @@ use authenticator::{
     authenticatorservice::{AuthenticatorService, RegisterArgs, SignArgs},
     crypto::COSEAlgorithm,
     ctap2::server::{
-        PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
-        ResidentKeyRequirement, Transport, User, UserVerificationRequirement,
+        AuthenticationExtensionsClientInputs, PublicKeyCredentialDescriptor,
+        PublicKeyCredentialParameters, RelyingParty, ResidentKeyRequirement, Transport, User,
+        UserVerificationRequirement,
     },
     statecallback::StateCallback,
     Pin, StatusPinUv, StatusUpdate,
@@ -132,7 +133,10 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
         }],
         user_verification_req: UserVerificationRequirement::Required,
         resident_key_req: ResidentKeyRequirement::Required,
-        extensions: Default::default(),
+        extensions: AuthenticationExtensionsClientInputs {
+            cred_props: Some(true),
+            ..Default::default()
+        },
         pin: None,
         use_ctap1_fallback: false,
     };
@@ -293,7 +297,6 @@ fn main() {
         user_presence_req: true,
         extensions: Default::default(),
         pin: None,
-        alternate_rp_id: None,
         use_ctap1_fallback: false,
     };
 
@@ -320,7 +323,7 @@ fn main() {
                 println!(
                     "{:?}",
                     assertion_object
-                        .0
+                        .assertions
                         .iter()
                         .map(|x| x.user.clone().unwrap().name.unwrap()) // Unwrapping here, as these shouldn't fail
                         .collect::<Vec<_>>()

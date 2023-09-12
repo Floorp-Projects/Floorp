@@ -11,6 +11,7 @@ macro_rules! try_or {
         match $val {
             Ok(v) => v,
             Err(e) => {
+                #[allow(clippy::redundant_closure_call)]
                 return $or(e);
             }
         }

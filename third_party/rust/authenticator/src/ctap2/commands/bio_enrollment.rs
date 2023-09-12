@@ -650,7 +650,7 @@ pub struct FingerprintSensorInfo {
 #[derive(Debug, Serialize)]
 pub enum BioEnrollmentResult {
     EnrollmentList(Vec<EnrollmentInfo>),
-    DeleteSucess(AuthenticatorInfo),
+    DeleteSuccess(AuthenticatorInfo),
     UpdateSuccess,
     AddSuccess(AuthenticatorInfo),
     FingerprintSensorInfo(FingerprintSensorInfo),

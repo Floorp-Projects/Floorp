@@ -392,7 +392,10 @@ impl VirtualFidoDevice for TestToken {
             }
         }
 
-        Ok(GetAssertionResult(assertions))
+        Ok(GetAssertionResult {
+            assertions,
+            extensions: Default::default(),
+        })
     }
 
     fn get_info(&self) -> Result<AuthenticatorInfo, HIDError> {
@@ -549,6 +552,7 @@ impl VirtualFidoDevice for TestToken {
                 auth_data,
                 att_stmt,
             },
+            extensions: Default::default(),
         };
         Ok(result)
     }

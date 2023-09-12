@@ -14,8 +14,9 @@ use authenticator::{
     ctap2::attestation::AttestationObject,
     ctap2::commands::get_info::AuthenticatorVersion,
     ctap2::server::{
-        PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
-        ResidentKeyRequirement, User, UserVerificationRequirement,
+        AuthenticationExtensionsClientInputs, PublicKeyCredentialDescriptor,
+        PublicKeyCredentialParameters, RelyingParty, ResidentKeyRequirement, User,
+        UserVerificationRequirement,
     },
     errors::{AuthenticatorError, PinError, U2FTokenError},
     statecallback::StateCallback,
@@ -320,8 +321,8 @@ impl Controller {
                 CtapSignResult::allocate(InitCtapSignResult { result: Err(e) })
                     .query_interface::<nsICtapSignResult>(),
             ),
-            Ok(assertion_vec) => {
-                for assertion in assertion_vec.0 {
+            Ok(result) => {
+                for assertion in result.assertions {
                     assertions.push(
                         CtapSignResult::allocate(InitCtapSignResult {
                             result: Ok(assertion),
@@ -728,10 +729,10 @@ impl AuthrsTransport {
             UserVerificationRequirement::Preferred
         };
 
-        let mut alternate_rp_id = None;
-        let mut maybe_alternate_rp_id = nsString::new();
-        match unsafe { args.GetAppId(&mut *maybe_alternate_rp_id) }.to_result() {
-            Ok(_) => alternate_rp_id = Some(maybe_alternate_rp_id.to_string()),
+        let mut app_id = None;
+        let mut maybe_app_id = nsString::new();
+        match unsafe { args.GetAppId(&mut *maybe_app_id) }.to_result() {
+            Ok(_) => app_id = Some(maybe_app_id.to_string()),
             _ => (),
         }
 
@@ -759,26 +760,21 @@ impl AuthrsTransport {
         };
 
         let controller = self.controller.clone();
-        let state_callback =
-            StateCallback::<Result<SignResult, AuthenticatorError>>::new(Box::new(move |result| {
-                let result = match result {
-                    Ok(mut assertion_object) => {
-                        // In CTAP 2.0, but not CTAP 2.1, the assertion object's credential field
-                        // "May be omitted if the allowList has exactly one Credential." If we had
-                        // a unique allowed credential, then copy its descriptor to the output.
-                        if uniq_allowed_cred.is_some() {
-                            if let Some(assertion) = assertion_object.0.first_mut() {
-                                if assertion.credentials.is_none() {
-                                    assertion.credentials = uniq_allowed_cred.clone();
-                                }
-                            }
-                        }
-                        Ok(assertion_object)
+        let state_callback = StateCallback::<Result<SignResult, AuthenticatorError>>::new(
+            Box::new(move |mut result| {
+                if uniq_allowed_cred.is_some() {
+                    // In CTAP 2.0, but not CTAP 2.1, the assertion object's credential field
+                    // "May be omitted if the allowList has exactly one credential." If we had
+                    // a unique allowed credential, then copy its descriptor to the output.
+                    if let Ok(Some(assertion)) =
+                        result.as_mut().map(|result| result.assertions.first_mut())
+                    {
+                        assertion.credentials = uniq_allowed_cred;
                     }
-                    Err(e) => Err(e),
-                };
+                }
                 let _ = controller.finish_sign(tid, result);
-            }));
+            }),
+        );
 
         let info = SignArgs {
             client_data_hash: client_data_hash_arr,
@@ -787,9 +783,11 @@ impl AuthrsTransport {
             allow_list,
             user_verification_req,
             user_presence_req: true,
-            extensions: Default::default(),
+            extensions: AuthenticationExtensionsClientInputs {
+                app_id,
+                ..Default::default()
+            },
             pin: None,
-            alternate_rp_id,
             use_ctap1_fallback: !static_prefs::pref!("security.webauthn.ctap2"),
         };
 

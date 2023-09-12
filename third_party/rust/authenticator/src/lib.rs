@@ -32,7 +32,6 @@ mod manager;
 mod statemachine;
 mod status_update;
 mod transport;
-mod u2fprotocol;
 mod u2ftypes;
 
 pub mod authenticatorservice;
@@ -110,7 +109,5 @@ extern crate assert_matches;
 
 #[cfg(fuzzing)]
 pub use consts::*;
-#[cfg(fuzzing)]
-pub use u2fprotocol::*;
 #[cfg(fuzzing)]
 pub use u2ftypes::*;
