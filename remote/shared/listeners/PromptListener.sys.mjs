@@ -111,8 +111,8 @@ export class PromptListener {
 
     const detail = {};
 
-    // The event details are present now only on Desktop.
-    // See the bug 1849621 for Android.
+    // At the moment the event details are present for GeckoView and on desktop
+    // only for Services.prompt.MODAL_TYPE_CONTENT prompts.
     if (event.detail) {
       const { areLeaving, value } = event.detail;
       // `areLeaving` returns undefined for alerts, for confirms and prompts

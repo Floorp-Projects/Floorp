@@ -47,10 +47,13 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
     const self = this;
     const prompts = [];
     // Marionette expects this event to be fired from the parent
-    const dialogClosedEvent = new CustomEvent("DOMModalDialogClosed", {
-      cancelable: true,
-      bubbles: true,
-    });
+    const createDialogClosedEvent = detail =>
+      new CustomEvent("DOMModalDialogClosed", {
+        cancelable: true,
+        bubbles: true,
+        detail,
+      });
+
     for (const [, prompt] of this._prompts) {
       // Adding only WebDriver compliant dialogs to the window
       if (prompt.isDialog) {
@@ -61,6 +64,7 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
             isDialog: prompt.isDialog,
           },
           setInputText(text) {
+            prompt.inputText = text;
             prompt.setInputText(text);
           },
           async getPromptText() {
@@ -71,11 +75,18 @@ export class GeckoViewPrompterParent extends GeckoViewActorParent {
           },
           acceptPrompt() {
             prompt.acceptPrompt();
-            self.window.dispatchEvent(dialogClosedEvent);
+            self.window.dispatchEvent(
+              createDialogClosedEvent({
+                areLeaving: true,
+                value: prompt.inputText,
+              })
+            );
           },
           dismissPrompt() {
             prompt.dismissPrompt();
-            self.window.dispatchEvent(dialogClosedEvent);
+            self.window.dispatchEvent(
+              createDialogClosedEvent({ areLeaving: false })
+            );
           },
         });
       }
