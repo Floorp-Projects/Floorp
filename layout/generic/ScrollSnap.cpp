@@ -301,15 +301,15 @@ static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
                                  const ScrollSnapInfo& aSnapInfo) {
   aSnapInfo.ForEachValidTargetFor(
       aCalcSnapPoints.Destination(), [&](const auto& aTarget) -> bool {
-        if (aTarget.mSnapPositionX && aSnapInfo.mScrollSnapStrictnessX !=
-                                          StyleScrollSnapStrictness::None) {
-          aCalcSnapPoints.AddVerticalEdge({*aTarget.mSnapPositionX,
+        if (aTarget.mSnapPoint.mX && aSnapInfo.mScrollSnapStrictnessX !=
+                                         StyleScrollSnapStrictness::None) {
+          aCalcSnapPoints.AddVerticalEdge({*aTarget.mSnapPoint.mX,
                                            aTarget.mScrollSnapStop,
                                            aTarget.mTargetId});
         }
-        if (aTarget.mSnapPositionY && aSnapInfo.mScrollSnapStrictnessY !=
-                                          StyleScrollSnapStrictness::None) {
-          aCalcSnapPoints.AddHorizontalEdge({*aTarget.mSnapPositionY,
+        if (aTarget.mSnapPoint.mY && aSnapInfo.mScrollSnapStrictnessY !=
+                                         StyleScrollSnapStrictness::None) {
+          aCalcSnapPoints.AddHorizontalEdge({*aTarget.mSnapPoint.mY,
                                              aTarget.mScrollSnapStop,
                                              aTarget.mTargetId});
         }
@@ -410,22 +410,22 @@ static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
   Maybe<nscoord> x, y;
   aSnapInfo.ForEachValidTargetFor(
       aCurrentPosition, [&](const auto& aTarget) -> bool {
-        if (aTarget.mSnapPositionX && aSnapInfo.mScrollSnapStrictnessX !=
-                                          StyleScrollSnapStrictness::None) {
+        if (aTarget.mSnapPoint.mX && aSnapInfo.mScrollSnapStrictnessX !=
+                                         StyleScrollSnapStrictness::None) {
           if (aLastSnapTargetIds->mIdsOnX.Contains(aTarget.mTargetId)) {
             if (targetIdForFocusedContent == aTarget.mTargetId) {
               // If we've already found the candidate on Y axis, but if snapping
               // to the point results this target is scrolled out, we can't use
               // it.
               if ((y && !aTarget.mSnapArea.Intersects(
-                            nsRect(nsPoint(*aTarget.mSnapPositionX, *y),
+                            nsRect(nsPoint(*aTarget.mSnapPoint.mX, *y),
                                    aSnapInfo.mSnapportSize)))) {
                 y.reset();
               }
 
               focusedTarget = &aTarget;
               // If the focused one is valid, then it's the candidate.
-              x = aTarget.mSnapPositionX;
+              x = aTarget.mSnapPoint.mX;
             }
 
             if (!x) {
@@ -436,15 +436,15 @@ static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
               //    candidate position result the target element is visible
               //    inside the snapport.
               if (!y || (y && aTarget.mSnapArea.Intersects(
-                                  nsRect(nsPoint(*aTarget.mSnapPositionX, *y),
+                                  nsRect(nsPoint(*aTarget.mSnapPoint.mX, *y),
                                          aSnapInfo.mSnapportSize)))) {
-                x = aTarget.mSnapPositionX;
+                x = aTarget.mSnapPoint.mX;
               }
             }
           }
         }
-        if (aTarget.mSnapPositionY && aSnapInfo.mScrollSnapStrictnessY !=
-                                          StyleScrollSnapStrictness::None) {
+        if (aTarget.mSnapPoint.mY && aSnapInfo.mScrollSnapStrictnessY !=
+                                         StyleScrollSnapStrictness::None) {
           if (aLastSnapTargetIds->mIdsOnY.Contains(aTarget.mTargetId)) {
             if (targetIdForFocusedContent == aTarget.mTargetId) {
               NS_ASSERTION(
@@ -456,20 +456,20 @@ static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
               // is scrolled out, we can't use it.
               if (!focusedTarget &&
                   (x && !aTarget.mSnapArea.Intersects(
-                            nsRect(nsPoint(*x, *aTarget.mSnapPositionY),
+                            nsRect(nsPoint(*x, *aTarget.mSnapPoint.mY),
                                    aSnapInfo.mSnapportSize)))) {
                 x.reset();
               }
 
               focusedTarget = &aTarget;
-              y = aTarget.mSnapPositionY;
+              y = aTarget.mSnapPoint.mY;
             }
 
             if (!y) {
               if (!x || (x && aTarget.mSnapArea.Intersects(
-                                  nsRect(nsPoint(*x, *aTarget.mSnapPositionY),
+                                  nsRect(nsPoint(*x, *aTarget.mSnapPoint.mY),
                                          aSnapInfo.mSnapportSize)))) {
-                y = aTarget.mSnapPositionY;
+                y = aTarget.mSnapPoint.mY;
               }
             }
           }
@@ -523,17 +523,17 @@ Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForResnap(
 
     aSnapInfo.ForEachValidTargetFor(
         newPosition, [&, &x = x, &y = y](const auto& aTarget) -> bool {
-          if (!x && aTarget.mSnapPositionX &&
+          if (!x && aTarget.mSnapPoint.mX &&
               aSnapInfo.mScrollSnapStrictnessX !=
                   StyleScrollSnapStrictness::None) {
-            calcSnapPoints.AddVerticalEdge({*aTarget.mSnapPositionX,
+            calcSnapPoints.AddVerticalEdge({*aTarget.mSnapPoint.mX,
                                             aTarget.mScrollSnapStop,
                                             aTarget.mTargetId});
           }
-          if (!y && aTarget.mSnapPositionY &&
+          if (!y && aTarget.mSnapPoint.mY &&
               aSnapInfo.mScrollSnapStrictnessY !=
                   StyleScrollSnapStrictness::None) {
-            calcSnapPoints.AddHorizontalEdge({*aTarget.mSnapPositionY,
+            calcSnapPoints.AddHorizontalEdge({*aTarget.mSnapPoint.mY,
                                               aTarget.mScrollSnapStop,
                                               aTarget.mTargetId});
           }
@@ -554,17 +554,17 @@ Maybe<SnapDestination> ScrollSnapUtils::GetSnapPointForResnap(
   // position.
   aSnapInfo.ForEachValidTargetFor(
       snapTarget.mPosition, [&, &x = x, &y = y](const auto& aTarget) -> bool {
-        if (aTarget.mSnapPositionX &&
+        if (aTarget.mSnapPoint.mX &&
             aSnapInfo.mScrollSnapStrictnessX !=
                 StyleScrollSnapStrictness::None &&
-            aTarget.mSnapPositionX == x) {
+            aTarget.mSnapPoint.mX == x) {
           snapTarget.mTargetIds.mIdsOnX.AppendElement(aTarget.mTargetId);
         }
 
-        if (aTarget.mSnapPositionY &&
+        if (aTarget.mSnapPoint.mY &&
             aSnapInfo.mScrollSnapStrictnessY !=
                 StyleScrollSnapStrictness::None &&
-            aTarget.mSnapPositionY == y) {
+            aTarget.mSnapPoint.mY == y) {
           snapTarget.mTargetIds.mIdsOnY.AppendElement(aTarget.mTargetId);
         }
         return true;

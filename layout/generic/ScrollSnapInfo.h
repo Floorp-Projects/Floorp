@@ -12,10 +12,10 @@
 #include "mozilla/ScrollSnapTargetId.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/Maybe.h"
+#include "nsPoint.h"
 
 class nsIContent;
 class nsIFrame;
-struct nsPoint;
 struct nsRect;
 struct nsSize;
 struct nsStyleDisplay;
@@ -24,6 +24,21 @@ namespace mozilla {
 
 enum class StyleScrollSnapStrictness : uint8_t;
 class WritingMode;
+
+struct SnapPoint {
+  SnapPoint() = default;
+  explicit SnapPoint(const nsPoint& aPoint)
+      : mX(Some(aPoint.x)), mY(Some(aPoint.y)) {}
+  SnapPoint(Maybe<nscoord>&& aX, Maybe<nscoord>&& aY)
+      : mX(std::move(aX)), mY(std::move(aY)) {}
+
+  bool operator==(const SnapPoint& aOther) const {
+    return mX == aOther.mX && mY == aOther.mY;
+  }
+
+  Maybe<nscoord> mX;
+  Maybe<nscoord> mY;
+};
 
 struct ScrollSnapInfo {
   ScrollSnapInfo();
@@ -49,8 +64,7 @@ struct ScrollSnapInfo {
 
   struct SnapTarget {
     // The scroll positions corresponding to scroll-snap-align values.
-    Maybe<nscoord> mSnapPositionX;
-    Maybe<nscoord> mSnapPositionY;
+    SnapPoint mSnapPoint;
 
     // https://drafts.csswg.org/css-scroll-snap/#scroll-snap-area
     nsRect mSnapArea;
@@ -66,16 +80,13 @@ struct ScrollSnapInfo {
     SnapTarget(Maybe<nscoord>&& aSnapPositionX, Maybe<nscoord>&& aSnapPositionY,
                nsRect&& aSnapArea, StyleScrollSnapStop aScrollSnapStop,
                ScrollSnapTargetId aTargetId)
-        : mSnapPositionX(std::move(aSnapPositionX)),
-          mSnapPositionY(std::move(aSnapPositionY)),
+        : mSnapPoint(std::move(aSnapPositionX), std::move(aSnapPositionY)),
           mSnapArea(aSnapArea),
           mScrollSnapStop(aScrollSnapStop),
           mTargetId(aTargetId) {}
 
     bool operator==(const SnapTarget& aOther) const {
-      return mSnapPositionX == aOther.mSnapPositionX &&
-             mSnapPositionY == aOther.mSnapPositionY &&
-             mSnapArea == aOther.mSnapArea &&
+      return mSnapPoint == aOther.mSnapPoint && mSnapArea == aOther.mSnapArea &&
              mScrollSnapStop == aOther.mScrollSnapStop &&
              mTargetId == aOther.mTargetId;
     }

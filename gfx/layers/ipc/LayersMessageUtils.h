@@ -409,20 +409,32 @@ struct ParamTraits<mozilla::ScrollSnapTargetId>
     : public PlainOldDataSerializer<mozilla::ScrollSnapTargetId> {};
 
 template <>
+struct ParamTraits<mozilla::SnapPoint> {
+  typedef mozilla::SnapPoint paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mX);
+    WriteParam(aWriter, aParam.mY);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mX) && ReadParam(aReader, &aResult->mY);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::ScrollSnapInfo::SnapTarget> {
   typedef mozilla::ScrollSnapInfo::SnapTarget paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mSnapPositionX);
-    WriteParam(aWriter, aParam.mSnapPositionY);
+    WriteParam(aWriter, aParam.mSnapPoint);
     WriteParam(aWriter, aParam.mSnapArea);
     WriteParam(aWriter, aParam.mScrollSnapStop);
     WriteParam(aWriter, aParam.mTargetId);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &aResult->mSnapPositionX) &&
-           ReadParam(aReader, &aResult->mSnapPositionY) &&
+    return ReadParam(aReader, &aResult->mSnapPoint) &&
            ReadParam(aReader, &aResult->mSnapArea) &&
            ReadParam(aReader, &aResult->mScrollSnapStop) &&
            ReadParam(aReader, &aResult->mTargetId);
