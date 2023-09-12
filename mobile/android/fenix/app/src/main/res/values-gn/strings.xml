@@ -781,7 +781,7 @@
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">Techaukaha Poravorã</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
-    <string name="library_desktop_bookmarks_toolbar">Techaukaha rembipuru renda</string>
+    <string name="library_desktop_bookmarks_toolbar">Techaukaha rembiporu renda</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">Ambue techaukahakuéra</string>
     <!-- Option in Library to open History page -->

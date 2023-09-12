@@ -69,7 +69,7 @@
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">Eike kundahára rembiasakuépe</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">Embohetave mboguatahára rembipuru eike hag̃ua ne mba’ekuaarã rendayke ijurujávape</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">Embohetave mboguatahára rembiporu eike hag̃ua ne mba’ekuaarã rendayke ijurujávape</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Peteĩchagua</string>
     <!-- The authors of an add-on. -->

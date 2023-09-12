@@ -166,7 +166,7 @@
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Дадаткі</string>
     <!-- Browser menu button that opens account settings -->
-    <string name="browser_menu_account_settings">Інфармацыя аб уліковым запісе</string>
+    <string name="browser_menu_account_settings">Ваш уліковы запіс</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Няма дадаткаў</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -178,7 +178,7 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Бібліятэка</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Версія для камп’ютара</string>
+    <string name="browser_menu_desktop_site">Версія для ПК</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Дадаць на хатні экран</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -637,6 +637,16 @@
     <string name="addon_not_supported_error">Дадатак не падтрымліваецца</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Дадатак ужо ўсталяваны</string>
+
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Дадаткі часова адключаны</string>
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Адзін ці некалькі дадаткаў перасталі працаваць, што зрабіла вашу сістэму нестабільнай. %1$s беспаспяхова спрабаваў перазапусціць дадатак(і).\n\nДадаткі не будуць перазапушчаны ў часе бягучага сеансу.\n\nВыдаленне або адключэнне дадаткаў можа вырашыць гэтую праблему.</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Паспрабаваць перазапусціць дадаткі</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Працягнуць з адключанымі дадаткамі</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -1948,6 +1958,8 @@
     <string name="search_add_custom_engine_suggest_string_hint">URL-адрас API пошукавых прапаноў</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_suggest_string_example" formatted="false" moz:RemovedIn="118" tools:ignore="UnusedResources">Замяніце запыт на «%s». Прыклад:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Замяніце запыт на «%s». Прыклад:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Захаваць</string>
 
