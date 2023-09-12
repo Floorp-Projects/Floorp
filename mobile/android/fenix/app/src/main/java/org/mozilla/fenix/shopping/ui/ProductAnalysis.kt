@@ -432,30 +432,29 @@ private fun HighlightType.toHighlight() =
         HighlightType.COMPETITIVENESS -> Highlight.COMPETITIVENESS
     }
 
-// As part of Bug 1841600, update iconResourceId for each highlight type.
 private enum class Highlight(
     val titleResourceId: Int,
     val iconResourceId: Int,
 ) {
     QUALITY(
         titleResourceId = R.string.review_quality_check_highlights_type_quality,
-        iconResourceId = R.drawable.ic_shopping_cart,
+        iconResourceId = R.drawable.mozac_ic_quality_24,
     ),
     PRICE(
         titleResourceId = R.string.review_quality_check_highlights_type_price,
-        iconResourceId = R.drawable.ic_shopping_cart,
+        iconResourceId = R.drawable.mozac_ic_price_24,
     ),
     SHIPPING(
         titleResourceId = R.string.review_quality_check_highlights_type_shipping,
-        iconResourceId = R.drawable.ic_shopping_cart,
+        iconResourceId = R.drawable.mozac_ic_shipping_24,
     ),
     PACKAGING_AND_APPEARANCE(
         titleResourceId = R.string.review_quality_check_highlights_type_packaging_appearance,
-        iconResourceId = R.drawable.ic_shopping_cart,
+        iconResourceId = R.drawable.mozac_ic_packaging_24,
     ),
     COMPETITIVENESS(
         titleResourceId = R.string.review_quality_check_highlights_type_competitiveness,
-        iconResourceId = R.drawable.ic_shopping_cart,
+        iconResourceId = R.drawable.mozac_ic_competitiveness_24,
     ),
 }
 

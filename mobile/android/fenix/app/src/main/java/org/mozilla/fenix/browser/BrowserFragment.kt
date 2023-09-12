@@ -217,17 +217,13 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private fun initReviewQualityCheck(context: Context, view: View) {
         val reviewQualityCheck =
-            BrowserToolbar.ToggleButton(
-                image = AppCompatResources.getDrawable(
+            BrowserToolbar.Button(
+                imageDrawable = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.ic_shopping_cart,
-                )!!,
-                imageSelected = AppCompatResources.getDrawable(
-                    context,
-                    R.drawable.ic_shopping_cart,
+                    R.drawable.mozac_ic_shopping_24,
                 )!!,
                 contentDescription = context.getString(R.string.browser_menu_review_quality_check),
-                contentDescriptionSelected = context.getString(R.string.browser_menu_review_quality_check_close),
+                iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
                 visible = { reviewQualityCheckAvailable },
                 listener = {
                     findNavController().navigate(
