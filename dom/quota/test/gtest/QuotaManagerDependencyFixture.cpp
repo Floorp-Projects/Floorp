@@ -125,6 +125,24 @@ void QuotaManagerDependencyFixture::StorageInitialized(bool* aResult) {
 }
 
 // static
+void QuotaManagerDependencyFixture::ShutdownStorage() {
+  PerformOnBackgroundThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    bool done = false;
+
+    quotaManager->ShutdownStorage()->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [&done](const BoolPromise::ResolveOrRejectValue& aValue) {
+          done = true;
+        });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
+}
+
+// static
 void QuotaManagerDependencyFixture::ClearStoragesForOrigin(
     const OriginMetadata& aOriginMetadata) {
   nsCOMPtr<nsIQuotaManagerService> qms = QuotaManagerService::GetOrCreate();

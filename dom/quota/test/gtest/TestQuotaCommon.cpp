@@ -28,6 +28,9 @@
 #include "mozilla/dom/quota/QuotaTestParent.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsCOMPtr.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsIFile.h"
 #include "nsLiteralString.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
@@ -35,8 +38,78 @@
 
 class nsISupports;
 
-using namespace mozilla;
-using namespace mozilla::dom::quota;
+namespace mozilla::dom::quota {
+
+namespace {
+
+void CheckUnknownFileEntry(nsIFile& aBase, const nsAString& aName,
+                           const bool aWarnIfFile, const bool aWarnIfDir) {
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aBase.Clone(getter_AddRefs(file));
+  ASSERT_EQ(rv, NS_OK);
+
+  rv = file->Append(aName);
+  ASSERT_EQ(rv, NS_OK);
+
+  rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
+  ASSERT_EQ(rv, NS_OK);
+
+  auto okOrErr = WARN_IF_FILE_IS_UNKNOWN(*file);
+  ASSERT_TRUE(okOrErr.isOk());
+
+#ifdef DEBUG
+  EXPECT_TRUE(okOrErr.inspect() == aWarnIfFile);
+#else
+  EXPECT_TRUE(okOrErr.inspect() == false);
+#endif
+
+  rv = file->Remove(false);
+  ASSERT_EQ(rv, NS_OK);
+
+  rv = file->Create(nsIFile::DIRECTORY_TYPE, 0700);
+  ASSERT_EQ(rv, NS_OK);
+
+  okOrErr = WARN_IF_FILE_IS_UNKNOWN(*file);
+  ASSERT_TRUE(okOrErr.isOk());
+
+#ifdef DEBUG
+  EXPECT_TRUE(okOrErr.inspect() == aWarnIfDir);
+#else
+  EXPECT_TRUE(okOrErr.inspect() == false);
+#endif
+
+  rv = file->Remove(false);
+  ASSERT_EQ(rv, NS_OK);
+}
+
+}  // namespace
+
+TEST(QuotaCommon_WarnIfFileIsUnknown, Basics)
+{
+  nsCOMPtr<nsIFile> base;
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(base));
+  ASSERT_EQ(rv, NS_OK);
+
+  rv = base->Append(u"mozquotatests"_ns);
+  ASSERT_EQ(rv, NS_OK);
+
+  base->Remove(true);
+
+  rv = base->Create(nsIFile::DIRECTORY_TYPE, 0700);
+  ASSERT_EQ(rv, NS_OK);
+
+  CheckUnknownFileEntry(*base, u"foo.bar"_ns, true, true);
+  CheckUnknownFileEntry(*base, u".DS_Store"_ns, false, true);
+  CheckUnknownFileEntry(*base, u".desktop"_ns, false, true);
+  CheckUnknownFileEntry(*base, u"desktop.ini"_ns, false, true);
+  CheckUnknownFileEntry(*base, u"DESKTOP.INI"_ns, false, true);
+  CheckUnknownFileEntry(*base, u"thumbs.db"_ns, false, true);
+  CheckUnknownFileEntry(*base, u"THUMBS.DB"_ns, false, true);
+  CheckUnknownFileEntry(*base, u".xyz"_ns, false, true);
+
+  rv = base->Remove(true);
+  ASSERT_EQ(rv, NS_OK);
+}
 
 mozilla::ipc::IPCResult QuotaTestParent::RecvTry_Success_CustomErr_QmIpcFail(
     bool* aTryDidNotReturn) {
@@ -2211,3 +2284,5 @@ TEST(QuotaCommon_MakeSourceFileRelativePath, OtherSourceFile)
 #ifdef __clang__
 #  pragma clang diagnostic pop
 #endif
+
+}  // namespace mozilla::dom::quota
