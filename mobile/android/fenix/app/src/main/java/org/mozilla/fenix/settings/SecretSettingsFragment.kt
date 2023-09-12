@@ -12,6 +12,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -61,6 +62,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         requirePreference<SwitchPreference>(R.string.pref_key_enable_shopping_experience).apply {
             isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().enableShoppingExperience
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_translations).apply {
+            isVisible = FeatureFlags.translations
+            isChecked = context.settings().enableTranslations
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
