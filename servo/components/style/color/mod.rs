@@ -8,6 +8,7 @@
 pub mod convert;
 pub mod mix;
 
+use cssparser::color::PredefinedColorSpace;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 
@@ -472,17 +473,17 @@ impl AbsoluteColor {
     }
 }
 
-impl From<cssparser::PredefinedColorSpace> for ColorSpace {
-    fn from(value: cssparser::PredefinedColorSpace) -> Self {
+impl From<PredefinedColorSpace> for ColorSpace {
+    fn from(value: PredefinedColorSpace) -> Self {
         match value {
-            cssparser::PredefinedColorSpace::Srgb => ColorSpace::Srgb,
-            cssparser::PredefinedColorSpace::SrgbLinear => ColorSpace::SrgbLinear,
-            cssparser::PredefinedColorSpace::DisplayP3 => ColorSpace::DisplayP3,
-            cssparser::PredefinedColorSpace::A98Rgb => ColorSpace::A98Rgb,
-            cssparser::PredefinedColorSpace::ProphotoRgb => ColorSpace::ProphotoRgb,
-            cssparser::PredefinedColorSpace::Rec2020 => ColorSpace::Rec2020,
-            cssparser::PredefinedColorSpace::XyzD50 => ColorSpace::XyzD50,
-            cssparser::PredefinedColorSpace::XyzD65 => ColorSpace::XyzD65,
+            PredefinedColorSpace::Srgb => ColorSpace::Srgb,
+            PredefinedColorSpace::SrgbLinear => ColorSpace::SrgbLinear,
+            PredefinedColorSpace::DisplayP3 => ColorSpace::DisplayP3,
+            PredefinedColorSpace::A98Rgb => ColorSpace::A98Rgb,
+            PredefinedColorSpace::ProphotoRgb => ColorSpace::ProphotoRgb,
+            PredefinedColorSpace::Rec2020 => ColorSpace::Rec2020,
+            PredefinedColorSpace::XyzD50 => ColorSpace::XyzD50,
+            PredefinedColorSpace::XyzD65 => ColorSpace::XyzD65,
         }
     }
 }
@@ -511,7 +512,7 @@ impl ToCss for AbsoluteColor {
             ColorSpace::Srgb if self.flags.contains(ColorFlags::IS_LEGACY_SRGB) => {
                 // The "none" keyword is not supported in the rgb/rgba legacy syntax.
                 cssparser::ToCss::to_css(
-                    &cssparser::RgbaLegacy::from_floats(
+                    &cssparser_color::RgbaLegacy::from_floats(
                         self.components.0,
                         self.components.1,
                         self.components.2,
@@ -522,19 +523,19 @@ impl ToCss for AbsoluteColor {
             },
             ColorSpace::Hsl | ColorSpace::Hwb => self.into_srgb_legacy().to_css(dest),
             ColorSpace::Lab => cssparser::ToCss::to_css(
-                &cssparser::Lab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &cssparser_color::Lab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
                 dest,
             ),
             ColorSpace::Lch => cssparser::ToCss::to_css(
-                &cssparser::Lch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &cssparser_color::Lch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
                 dest,
             ),
             ColorSpace::Oklab => cssparser::ToCss::to_css(
-                &cssparser::Oklab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &cssparser_color::Oklab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
                 dest,
             ),
             ColorSpace::Oklch => cssparser::ToCss::to_css(
-                &cssparser::Oklch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &cssparser_color::Oklch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
                 dest,
             ),
             _ => {
@@ -544,29 +545,29 @@ impl ToCss for AbsoluteColor {
                             !self.flags.contains(ColorFlags::IS_LEGACY_SRGB),
                             "legacy srgb is not a color function"
                         );
-                        cssparser::PredefinedColorSpace::Srgb
+                        PredefinedColorSpace::Srgb
                     },
-                    ColorSpace::SrgbLinear => cssparser::PredefinedColorSpace::SrgbLinear,
-                    ColorSpace::DisplayP3 => cssparser::PredefinedColorSpace::DisplayP3,
-                    ColorSpace::A98Rgb => cssparser::PredefinedColorSpace::A98Rgb,
-                    ColorSpace::ProphotoRgb => cssparser::PredefinedColorSpace::ProphotoRgb,
-                    ColorSpace::Rec2020 => cssparser::PredefinedColorSpace::Rec2020,
-                    ColorSpace::XyzD50 => cssparser::PredefinedColorSpace::XyzD50,
-                    ColorSpace::XyzD65 => cssparser::PredefinedColorSpace::XyzD65,
+                    ColorSpace::SrgbLinear => PredefinedColorSpace::SrgbLinear,
+                    ColorSpace::DisplayP3 => PredefinedColorSpace::DisplayP3,
+                    ColorSpace::A98Rgb => PredefinedColorSpace::A98Rgb,
+                    ColorSpace::ProphotoRgb => PredefinedColorSpace::ProphotoRgb,
+                    ColorSpace::Rec2020 => PredefinedColorSpace::Rec2020,
+                    ColorSpace::XyzD50 => PredefinedColorSpace::XyzD50,
+                    ColorSpace::XyzD65 => PredefinedColorSpace::XyzD65,
 
                     _ => {
                         unreachable!("other color spaces do not support color() syntax")
                     },
                 };
 
-                let color_function = cssparser::ColorFunction {
+                let color_function = cssparser_color::ColorFunction {
                     color_space,
                     c1: maybe_c1,
                     c2: maybe_c2,
                     c3: maybe_c3,
                     alpha: maybe_alpha,
                 };
-                let color = cssparser::Color::ColorFunction(color_function);
+                let color = cssparser_color::Color::ColorFunction(color_function);
                 cssparser::ToCss::to_css(&color, dest)
             },
         }

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use crate::match_byte;
 use dtoa_short::{self, Notation};
 use itoa;
 use std::fmt::{self, Write};
@@ -226,11 +227,15 @@ where
 {
     let mut chunk_start = 0;
     for (i, b) in value.bytes().enumerate() {
-        let escaped = match b {
+        let escaped = match_byte! { b,
             b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' | b'_' | b'-' => continue,
-            _ if !b.is_ascii() => continue,
             b'\0' => Some("\u{FFFD}"),
-            _ => None,
+            b => {
+                if !b.is_ascii() {
+                    continue;
+                }
+                None
+            },
         };
         dest.write_str(&value[chunk_start..i])?;
         if let Some(escaped) = escaped {
@@ -251,7 +256,7 @@ where
 {
     let mut chunk_start = 0;
     for (i, b) in value.bytes().enumerate() {
-        let hex = match b {
+        let hex = match_byte! { b,
             b'\0'..=b' ' | b'\x7F' => true,
             b'(' | b')' | b'"' | b'\'' | b'\\' => false,
             _ => continue,
@@ -304,7 +309,7 @@ where
 {
     /// Wrap a text writer to create a `CssStringWriter`.
     pub fn new(inner: &'a mut W) -> CssStringWriter<'a, W> {
-        CssStringWriter { inner: inner }
+        CssStringWriter { inner }
     }
 }
 
@@ -315,7 +320,7 @@ where
     fn write_str(&mut self, s: &str) -> fmt::Result {
         let mut chunk_start = 0;
         for (i, b) in s.bytes().enumerate() {
-            let escaped = match b {
+            let escaped = match_byte! { b,
                 b'"' => Some("\\\""),
                 b'\\' => Some("\\\\"),
                 b'\0' => Some("\u{FFFD}"),

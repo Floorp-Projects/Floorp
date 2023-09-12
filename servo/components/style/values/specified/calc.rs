@@ -13,7 +13,8 @@ use crate::values::specified::length::{AbsoluteLength, FontRelativeLength, NoCal
 use crate::values::specified::length::{ContainerRelativeLength, ViewportPercentageLength};
 use crate::values::specified::{self, Angle, Resolution, Time};
 use crate::values::{serialize_number, serialize_percentage, CSSFloat, CSSInteger};
-use cssparser::{AngleOrNumber, CowRcStr, NumberOrPercentage, Parser, Token};
+use cssparser::{CowRcStr, Parser, Token};
+use cssparser_color::{AngleOrNumber, NumberOrPercentage};
 use smallvec::SmallVec;
 use std::cmp;
 use std::fmt::{self, Write};

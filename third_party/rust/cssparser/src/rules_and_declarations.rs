@@ -8,7 +8,7 @@ use super::{
     BasicParseError, BasicParseErrorKind, Delimiter, Delimiters, ParseError, Parser, Token,
 };
 use crate::cow_rc_str::CowRcStr;
-use crate::parser::{parse_nested_block, parse_until_after, parse_until_before, ParserState};
+use crate::parser::{parse_nested_block, parse_until_after, ParseUntilErrorBehavior, ParserState};
 
 /// Parse `!important`.
 ///
@@ -266,14 +266,25 @@ where
                 // that in a slightly more straight-forward way
                 Token::Ident(ref name) if self.parser.parse_declarations() => {
                     let name = name.clone();
+                    let parse_qualified = self.parser.parse_qualified();
                     let result = {
+                        let error_behavior = if parse_qualified {
+                            ParseUntilErrorBehavior::Stop
+                        } else {
+                            ParseUntilErrorBehavior::Consume
+                        };
                         let parser = &mut self.parser;
-                        parse_until_after(self.input, Delimiter::Semicolon, |input| {
-                            input.expect_colon()?;
-                            parser.parse_value(name, input)
-                        })
+                        parse_until_after(
+                            self.input,
+                            Delimiter::Semicolon,
+                            error_behavior,
+                            |input| {
+                                input.expect_colon()?;
+                                parser.parse_value(name, input)
+                            },
+                        )
                     };
-                    if result.is_err() && self.parser.parse_qualified() {
+                    if result.is_err() && parse_qualified {
                         self.input.reset(&start);
                         // We ignore the resulting error here. The property declaration parse error
                         // is likely to be more relevant.
@@ -454,7 +465,7 @@ where
     P: AtRuleParser<'i, Error = E>,
 {
     let delimiters = Delimiter::Semicolon | Delimiter::CurlyBracketBlock;
-    let result = parse_until_before(input, delimiters, |input| parser.parse_prelude(name, input));
+    let result = input.parse_until_before(delimiters, |input| parser.parse_prelude(name, input));
     match result {
         Ok(prelude) => {
             let result = match input.next() {
@@ -488,7 +499,7 @@ fn parse_qualified_rule<'i, 't, P, E>(
 where
     P: QualifiedRuleParser<'i, Error = E>,
 {
-    let prelude = parse_until_before(input, delimiters, |input| parser.parse_prelude(input));
+    let prelude = input.parse_until_before(delimiters, |input| parser.parse_prelude(input));
     input.expect_curly_bracket_block()?;
     // Do this here so that we consume the `{` even if the prelude is `Err`.
     let prelude = prelude?;
