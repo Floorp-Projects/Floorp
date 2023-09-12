@@ -11,7 +11,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   CSV: "resource://gre/modules/CSV.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
-  ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.sys.mjs",
 });
 
 /**
@@ -120,9 +119,7 @@ export class LoginCSVImport {
    */
   static async importFromCSV(filePath) {
     TelemetryStopwatch.start("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
-    let responsivenessMonitor;
     try {
-      responsivenessMonitor = new lazy.ResponsivenessMonitor();
       let csvColumnToFieldMap = LoginCSVImport._getCSVColumnToFieldMap();
       let csvFieldToColumnMap = new Map();
 
@@ -195,16 +192,12 @@ export class LoginCSVImport {
         }
       }
 
-      // Record quantity, jank, and duration telemetry.
+      // Record quantity and duration telemetry.
       try {
         let histogram = Services.telemetry.getHistogramById(
           "PWMGR_IMPORT_LOGINS_FROM_FILE_CATEGORICAL"
         );
         this._recordHistogramTelemetry(histogram, report);
-        let accumulatedDelay = responsivenessMonitor.finish();
-        Services.telemetry
-          .getHistogramById("PWMGR_IMPORT_LOGINS_FROM_FILE_JANK_MS")
-          .add(accumulatedDelay);
         TelemetryStopwatch.finish("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
       } catch (ex) {
         console.error(ex);
@@ -215,7 +208,6 @@ export class LoginCSVImport {
       if (TelemetryStopwatch.running("PWMGR_IMPORT_LOGINS_FROM_FILE_MS")) {
         TelemetryStopwatch.cancel("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
       }
-      responsivenessMonitor.abort();
     }
   }
 }
