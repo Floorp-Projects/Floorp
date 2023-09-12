@@ -22,6 +22,7 @@
 #include "mozilla/layers/LayersTypes.h"          // for ScrollDirection
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
 #include "mozilla/ScrollPositionUpdate.h"        // for ScrollPositionUpdate
+#include "mozilla/ScrollSnapInfo.h"
 #include "mozilla/ScrollSnapTargetId.h"
 #include "mozilla/StaticPtr.h"  // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"  // for TimeStamp
@@ -31,10 +32,7 @@
 
 struct nsStyleDisplay;
 namespace mozilla {
-enum class StyleScrollSnapStop : uint8_t;
-enum class StyleScrollSnapStrictness : uint8_t;
 enum class StyleOverscrollBehavior : uint8_t;
-class WritingMode;
 }  // namespace mozilla
 
 namespace IPC {
@@ -693,110 +691,6 @@ struct FrameMetrics {
   //      The ParamTraits specialization in LayersMessageUtils.h
   //
   // Please add new fields above this comment.
-};
-
-struct ScrollSnapInfo {
-  ScrollSnapInfo();
-
-  bool operator==(const ScrollSnapInfo& aOther) const {
-    return mScrollSnapStrictnessX == aOther.mScrollSnapStrictnessX &&
-           mScrollSnapStrictnessY == aOther.mScrollSnapStrictnessY &&
-           mSnapTargets == aOther.mSnapTargets &&
-           mXRangeWiderThanSnapport == aOther.mXRangeWiderThanSnapport &&
-           mYRangeWiderThanSnapport == aOther.mYRangeWiderThanSnapport &&
-           mSnapportSize == aOther.mSnapportSize;
-  }
-
-  bool HasScrollSnapping() const;
-  bool HasSnapPositions() const;
-
-  void InitializeScrollSnapStrictness(WritingMode aWritingMode,
-                                      const nsStyleDisplay* aDisplay);
-
-  // The scroll frame's scroll-snap-type.
-  StyleScrollSnapStrictness mScrollSnapStrictnessX;
-  StyleScrollSnapStrictness mScrollSnapStrictnessY;
-
-  struct SnapTarget {
-    // The scroll positions corresponding to scroll-snap-align values.
-    Maybe<nscoord> mSnapPositionX;
-    Maybe<nscoord> mSnapPositionY;
-
-    // https://drafts.csswg.org/css-scroll-snap/#scroll-snap-area
-    nsRect mSnapArea;
-
-    // https://drafts.csswg.org/css-scroll-snap/#propdef-scroll-snap-stop
-    StyleScrollSnapStop mScrollSnapStop;
-
-    // Use for tracking the last snapped target.
-    ScrollSnapTargetId mTargetId;
-
-    SnapTarget() = default;
-
-    SnapTarget(Maybe<nscoord>&& aSnapPositionX, Maybe<nscoord>&& aSnapPositionY,
-               nsRect&& aSnapArea, StyleScrollSnapStop aScrollSnapStop,
-               ScrollSnapTargetId aTargetId)
-        : mSnapPositionX(std::move(aSnapPositionX)),
-          mSnapPositionY(std::move(aSnapPositionY)),
-          mSnapArea(std::move(aSnapArea)),
-          mScrollSnapStop(aScrollSnapStop),
-          mTargetId(aTargetId) {}
-
-    bool operator==(const SnapTarget& aOther) const {
-      return mSnapPositionX == aOther.mSnapPositionX &&
-             mSnapPositionY == aOther.mSnapPositionY &&
-             mSnapArea == aOther.mSnapArea &&
-             mScrollSnapStop == aOther.mScrollSnapStop &&
-             mTargetId == aOther.mTargetId;
-    }
-    bool IsValidFor(const nsPoint& aDestination,
-                    const nsSize aSnapportSize) const {
-      nsPoint snapPoint(mSnapPositionX ? *mSnapPositionX : aDestination.x,
-                        mSnapPositionY ? *mSnapPositionY : aDestination.y);
-      nsRect snappedPort = nsRect(snapPoint, aSnapportSize);
-      // Ignore snap points if snapping to the point would leave the snap area
-      // outside of the snapport.
-      // https://drafts.csswg.org/css-scroll-snap-1/#snap-scope
-      return snappedPort.Intersects(mSnapArea);
-    }
-  };
-
-  CopyableTArray<SnapTarget> mSnapTargets;
-
-  struct ScrollSnapRange {
-    ScrollSnapRange() = default;
-
-    ScrollSnapRange(nscoord aStart, nscoord aEnd, ScrollSnapTargetId aTargetId)
-        : mStart(aStart), mEnd(aEnd), mTargetId(aTargetId) {}
-
-    nscoord mStart;
-    nscoord mEnd;
-    ScrollSnapTargetId mTargetId;
-
-    bool operator==(const ScrollSnapRange& aOther) const {
-      return mStart == aOther.mStart && mEnd == aOther.mEnd &&
-             mTargetId == aOther.mTargetId;
-    }
-
-    // Returns true if |aPoint| is a valid snap position in this range.
-    bool IsValid(nscoord aPoint, nscoord aSnapportSize) const {
-      MOZ_ASSERT(mEnd - mStart > aSnapportSize);
-      return mStart <= aPoint && aPoint <= mEnd - aSnapportSize;
-    }
-  };
-  // An array of the range that the target element is larger than the snapport
-  // on the axis.
-  // Snap positions in this range will be valid snap positions in the case where
-  // the distance between the closest snap position and the second closest snap
-  // position is still larger than the snapport size.
-  // See https://drafts.csswg.org/css-scroll-snap-1/#snap-overflow
-  //
-  // Note: This range contains scroll-margin values.
-  CopyableTArray<ScrollSnapRange> mXRangeWiderThanSnapport;
-  CopyableTArray<ScrollSnapRange> mYRangeWiderThanSnapport;
-
-  // Note: This snapport size has been already deflated by scroll-padding.
-  nsSize mSnapportSize;
 };
 
 // clang-format off

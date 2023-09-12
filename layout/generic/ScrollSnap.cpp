@@ -8,6 +8,7 @@
 
 #include "FrameMetrics.h"
 
+#include "mozilla/ScrollSnapInfo.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
@@ -17,8 +18,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 
 namespace mozilla {
-
-using layers::ScrollSnapInfo;
 
 /**
  * Keeps track of the current best edge to snap to. The criteria for
@@ -397,7 +396,7 @@ ScrollSnapTargetId ScrollSnapUtils::GetTargetIdFor(const nsIFrame* aFrame) {
 }
 
 static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
-    const layers::ScrollSnapInfo& aSnapInfo, const nsPoint& aCurrentPosition,
+    const ScrollSnapInfo& aSnapInfo, const nsPoint& aCurrentPosition,
     const UniquePtr<ScrollSnapTargetIds>& aLastSnapTargetIds,
     const nsIContent* aFocusedContent) {
   ScrollSnapTargetId targetIdForFocusedContent = ScrollSnapTargetId::None;
@@ -492,7 +491,7 @@ static std::pair<Maybe<nscoord>, Maybe<nscoord>> GetCandidateInLastTargets(
 }
 
 Maybe<mozilla::SnapTarget> ScrollSnapUtils::GetSnapPointForResnap(
-    const layers::ScrollSnapInfo& aSnapInfo, const nsRect& aScrollRange,
+    const ScrollSnapInfo& aSnapInfo, const nsRect& aScrollRange,
     const nsPoint& aCurrentPosition,
     const UniquePtr<ScrollSnapTargetIds>& aLastSnapTargetIds,
     const nsIContent* aFocusedContent) {

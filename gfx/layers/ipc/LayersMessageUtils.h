@@ -16,6 +16,7 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/ScrollSnapInfo.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/layers/APZInputBridge.h"
@@ -408,8 +409,8 @@ struct ParamTraits<mozilla::ScrollSnapTargetId>
     : public PlainOldDataSerializer<mozilla::ScrollSnapTargetId> {};
 
 template <>
-struct ParamTraits<mozilla::layers::ScrollSnapInfo::SnapTarget> {
-  typedef mozilla::layers::ScrollSnapInfo::SnapTarget paramType;
+struct ParamTraits<mozilla::ScrollSnapInfo::SnapTarget> {
+  typedef mozilla::ScrollSnapInfo::SnapTarget paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mSnapPositionX);
@@ -429,8 +430,8 @@ struct ParamTraits<mozilla::layers::ScrollSnapInfo::SnapTarget> {
 };
 
 template <>
-struct ParamTraits<mozilla::layers::ScrollSnapInfo::ScrollSnapRange> {
-  typedef mozilla::layers::ScrollSnapInfo::ScrollSnapRange paramType;
+struct ParamTraits<mozilla::ScrollSnapInfo::ScrollSnapRange> {
+  typedef mozilla::ScrollSnapInfo::ScrollSnapRange paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mStart);
@@ -446,8 +447,8 @@ struct ParamTraits<mozilla::layers::ScrollSnapInfo::ScrollSnapRange> {
 };
 
 template <>
-struct ParamTraits<mozilla::layers::ScrollSnapInfo> {
-  typedef mozilla::layers::ScrollSnapInfo paramType;
+struct ParamTraits<mozilla::ScrollSnapInfo> {
+  typedef mozilla::ScrollSnapInfo paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mScrollSnapStrictnessX);

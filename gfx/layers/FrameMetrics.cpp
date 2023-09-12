@@ -10,8 +10,6 @@
 
 #include "gfxUtils.h"
 #include "nsStyleConsts.h"
-#include "nsStyleStruct.h"
-#include "mozilla/WritingModes.h"
 #include "mozilla/gfx/Types.h"
 
 namespace mozilla {
@@ -196,68 +194,6 @@ void FrameMetrics::UpdatePendingScrollInfo(const ScrollPositionUpdate& aInfo) {
   SetLayoutScrollOffset(aInfo.GetDestination());
   ClampAndSetVisualScrollOffset(aInfo.GetDestination() + relativeOffset);
   mScrollGeneration = aInfo.GetGeneration();
-}
-
-ScrollSnapInfo::ScrollSnapInfo()
-    : mScrollSnapStrictnessX(StyleScrollSnapStrictness::None),
-      mScrollSnapStrictnessY(StyleScrollSnapStrictness::None) {}
-
-bool ScrollSnapInfo::HasScrollSnapping() const {
-  return mScrollSnapStrictnessY != StyleScrollSnapStrictness::None ||
-         mScrollSnapStrictnessX != StyleScrollSnapStrictness::None;
-}
-
-bool ScrollSnapInfo::HasSnapPositions() const {
-  if (!HasScrollSnapping()) {
-    return false;
-  }
-
-  for (const auto& target : mSnapTargets) {
-    if ((target.mSnapPositionX &&
-         mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) ||
-        (target.mSnapPositionY &&
-         mScrollSnapStrictnessY != StyleScrollSnapStrictness::None)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void ScrollSnapInfo::InitializeScrollSnapStrictness(
-    WritingMode aWritingMode, const nsStyleDisplay* aDisplay) {
-  if (aDisplay->mScrollSnapType.strictness == StyleScrollSnapStrictness::None) {
-    return;
-  }
-
-  mScrollSnapStrictnessX = StyleScrollSnapStrictness::None;
-  mScrollSnapStrictnessY = StyleScrollSnapStrictness::None;
-
-  switch (aDisplay->mScrollSnapType.axis) {
-    case StyleScrollSnapAxis::X:
-      mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
-      break;
-    case StyleScrollSnapAxis::Y:
-      mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
-      break;
-    case StyleScrollSnapAxis::Block:
-      if (aWritingMode.IsVertical()) {
-        mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
-      } else {
-        mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
-      }
-      break;
-    case StyleScrollSnapAxis::Inline:
-      if (aWritingMode.IsVertical()) {
-        mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
-      } else {
-        mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
-      }
-      break;
-    case StyleScrollSnapAxis::Both:
-      mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
-      mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
-      break;
-  }
 }
 
 std::ostream& operator<<(std::ostream& aStream,

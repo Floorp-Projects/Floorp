@@ -68,7 +68,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   using ScrollSnapTargetIds = mozilla::ScrollSnapTargetIds;
   using FrameMetrics = mozilla::layers::FrameMetrics;
   using ScrollableLayerGuid = mozilla::layers::ScrollableLayerGuid;
-  using ScrollSnapInfo = mozilla::layers::ScrollSnapInfo;
+  using ScrollSnapInfo = mozilla::ScrollSnapInfo;
   using WebRenderLayerManager = mozilla::layers::WebRenderLayerManager;
   using APZScrollAnimationType = mozilla::APZScrollAnimationType;
   using ScrollDirections = mozilla::layers::ScrollDirections;
