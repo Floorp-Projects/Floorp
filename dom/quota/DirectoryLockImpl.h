@@ -32,6 +32,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
       const NotNull<RefPtr<OpenDirectoryListener>>>
       mOpenListener;
   MozPromiseHolder<BoolPromise> mAcquirePromiseHolder;
+  std::function<void()> mInvalidateCallback;
 
   nsTArray<NotNull<DirectoryLockImpl*>> mBlocking;
   nsTArray<NotNull<DirectoryLockImpl*>> mBlockedOn;
@@ -170,11 +171,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
 
   void NotifyOpenListener();
 
-  void Invalidate() {
-    AssertIsOnOwningThread();
-
-    mInvalidated.EnsureFlipped();
-  }
+  void Invalidate();
 
   // DirectoryLock interface
 
@@ -195,6 +192,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   {
   }
 #endif
+
+  void OnInvalidate(std::function<void()>&& aCallback) override;
 
   void Log() const override;
 
