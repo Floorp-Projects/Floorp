@@ -878,8 +878,9 @@ extern MOZ_EXPORT void add_history(char* line);
 }  // extern "C"
 #endif
 
-ShellContext::ShellContext(JSContext* cx)
-    : isWorker(false),
+ShellContext::ShellContext(JSContext* cx, IsWorkerEnum isWorker_)
+    : cx_(nullptr),
+      isWorker(isWorker_),
       lastWarningEnabled(false),
       trackUnhandledRejections(true),
       timeoutInterval(-1.0),
@@ -898,8 +899,6 @@ ShellContext::ShellContext(JSContext* cx)
       outFilePtr(nullptr),
       offThreadMonitor(mutexid::ShellOffThreadState),
       finalizationRegistryCleanupCallbacks(cx) {}
-
-ShellContext::~ShellContext() { MOZ_ASSERT(offThreadJobs.empty()); }
 
 ShellContext* js::shell::GetShellContext(JSContext* cx) {
   ShellContext* sc = static_cast<ShellContext*>(JS_GetContextPrivate(cx));
@@ -4348,40 +4347,13 @@ static void WorkerMain(UniquePtr<WorkerInput> input) {
   if (!cx) {
     return;
   }
+  auto destroyContext = MakeScopeExit([cx] { JS_DestroyContext(cx); });
 
-  ShellContext* sc = js_new<ShellContext>(cx);
-  if (!sc) {
+  UniquePtr<ShellContext> sc =
+      MakeUnique<ShellContext>(cx, ShellContext::Worker);
+  if (!sc || !sc->registerWithCx(cx)) {
     return;
   }
-
-  auto guard = mozilla::MakeScopeExit([&] {
-    sc->markObservers.reset();
-    JS_SetContextPrivate(cx, nullptr);
-    JS::SetHostCleanupFinalizationRegistryCallback(cx, nullptr, nullptr);
-    js_delete(sc);
-    JS_DestroyContext(cx);
-  });
-
-  sc->isWorker = true;
-
-  JS_SetContextPrivate(cx, sc);
-  JS_AddExtraGCRootsTracer(cx, TraceBlackRoots, nullptr);
-  JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
-  SetWorkerContextOptions(cx);
-
-  JS_SetFutexCanWait(cx);
-  JS::SetWarningReporter(cx, WarningReporter);
-  js::SetPreserveWrapperCallbacks(cx, DummyPreserveWrapperCallback,
-                                  DummyHasReleasedWrapperCallback);
-  JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
-  JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
-
-  js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
-
-  js::UseInternalJobQueues(cx);
-
-  JS::SetHostCleanupFinalizationRegistryCallback(
-      cx, ShellCleanupFinalizationRegistryCallback, sc);
 
   if (!JS::InitSelfHostedCode(cx)) {
     return;
@@ -4434,7 +4406,6 @@ static void WorkerMain(UniquePtr<WorkerInput> input) {
   } while (0);
 
   KillWatchdog(cx);
-  JS_SetGrayGCRootsTracer(cx, nullptr, nullptr);
 }
 
 // Workers can spawn other workers, so we need a lock to access workerThreads.
@@ -11007,6 +10978,44 @@ static void SetWorkerContextOptions(JSContext* cx) {
   return true;
 }
 
+bool ShellContext::registerWithCx(JSContext* cx) {
+  cx_ = cx;
+  JS_SetContextPrivate(cx, this);
+
+  if (isWorker) {
+    SetWorkerContextOptions(cx);
+  }
+
+  JS::SetWarningReporter(cx, WarningReporter);
+  JS_SetFutexCanWait(cx);
+  JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
+  JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
+  js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
+
+  js::UseInternalJobQueues(cx);
+
+  js::SetPreserveWrapperCallbacks(cx, DummyPreserveWrapperCallback,
+                                  DummyHasReleasedWrapperCallback);
+
+  JS::SetHostCleanupFinalizationRegistryCallback(
+      cx, ShellCleanupFinalizationRegistryCallback, this);
+  JS_AddExtraGCRootsTracer(cx, TraceBlackRoots, nullptr);
+  JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
+
+  return true;
+}
+
+ShellContext::~ShellContext() {
+  markObservers.reset();
+  if (cx_) {
+    JS_SetContextPrivate(cx_, nullptr);
+    JS::SetHostCleanupFinalizationRegistryCallback(cx_, nullptr, nullptr);
+    JS_SetGrayGCRootsTracer(cx_, nullptr, nullptr);
+    JS_RemoveExtraGCRootsTracer(cx_, TraceBlackRoots, nullptr);
+  }
+  MOZ_ASSERT(offThreadJobs.empty());
+}
+
 static int Shell(JSContext* cx, OptionParser* op) {
 #ifdef JS_STRUCTURED_SPEW
   cx->spewer().enableSpewing();
@@ -11406,27 +11415,11 @@ int main(int argc, char** argv) {
 
   auto destroyCx = MakeScopeExit([cx] { JS_DestroyContext(cx); });
 
-  UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
-  if (!sc) {
+  UniquePtr<ShellContext> sc =
+      MakeUnique<ShellContext>(cx, ShellContext::MainThread);
+  if (!sc || !sc->registerWithCx(cx)) {
     return 1;
   }
-  auto destroyShellContext = MakeScopeExit([cx, &sc] {
-    // Must clear out some of sc's pointer containers before JS_DestroyContext.
-    sc->markObservers.reset();
-    JS::SetHostCleanupFinalizationRegistryCallback(cx, nullptr, nullptr);
-    JS_SetContextPrivate(cx, nullptr);
-    sc.reset();
-  });
-
-  JS_SetContextPrivate(cx, sc.get());
-  JS_AddExtraGCRootsTracer(cx, TraceBlackRoots, nullptr);
-  JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
-  auto resetGrayGCRootsTracer =
-      MakeScopeExit([cx] { JS_SetGrayGCRootsTracer(cx, nullptr, nullptr); });
-
-  // Waiting is allowed on the shell's main thread, for now.
-  JS_SetFutexCanWait(cx);
-  JS::SetWarningReporter(cx, WarningReporter);
 
   if (!SetContextOptions(cx, op)) {
     return 1;
@@ -11434,10 +11427,6 @@ int main(int argc, char** argv) {
 
   JS_SetTrustedPrincipals(cx, &ShellPrincipals::fullyTrusted);
   JS_SetSecurityCallbacks(cx, &ShellPrincipals::securityCallbacks);
-  JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
-  JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
-
-  js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
 
   JS_AddInterruptCallback(cx, ShellInterruptCallback);
 
@@ -11458,11 +11447,6 @@ int main(int argc, char** argv) {
       cx, ForwardingPromiseRejectionTrackerCallback);
 
   JS::dbg::SetDebuggerMallocSizeOf(cx, moz_malloc_size_of);
-
-  js::UseInternalJobQueues(cx);
-
-  JS::SetHostCleanupFinalizationRegistryCallback(
-      cx, ShellCleanupFinalizationRegistryCallback, sc.get());
 
   auto shutdownShellThreads = MakeScopeExit([cx] {
     KillWatchdog(cx);
@@ -11499,9 +11483,6 @@ int main(int argc, char** argv) {
   EnvironmentPreparer environmentPreparer(cx);
 
   JS::SetProcessLargeAllocationFailureCallback(my_LargeAllocFailCallback);
-
-  js::SetPreserveWrapperCallbacks(cx, DummyPreserveWrapperCallback,
-                                  DummyHasReleasedWrapperCallback);
 
   if (op.getBoolOption("wasm-compile-and-serialize")) {
 #ifdef __wasi__
