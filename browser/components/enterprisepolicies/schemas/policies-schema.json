@@ -301,6 +301,10 @@
       "type": "string"
     },
 
+    "DisableAccounts": {
+      "type": "boolean"
+    },
+
     "DisableAppUpdate": {
       "type": "boolean"
     },
