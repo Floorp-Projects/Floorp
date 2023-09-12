@@ -12725,7 +12725,7 @@ void DeleteFilesRunnable::Open() {
   }
 
   RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
-      mFileManager->Type(), mFileManager->OriginMetadata(), quota::Client::IDB,
+      {mFileManager->OriginMetadata(), quota::Client::IDB},
       /* aExclusive */ false);
 
   mState = State_DirectoryOpenPending;
@@ -14953,9 +14953,9 @@ nsresult FactoryOp::FinishOpen() {
       }()));
 
   // Open directory
-  RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
-      persistenceType, mOriginMetadata, Client::IDB,
-      /* aExclusive */ false);
+  RefPtr<DirectoryLock> directoryLock =
+      quotaManager->CreateDirectoryLock({mOriginMetadata, Client::IDB},
+                                        /* aExclusive */ false);
 
   mState = State::DirectoryOpenPending;
 

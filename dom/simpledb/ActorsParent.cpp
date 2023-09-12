@@ -1131,8 +1131,7 @@ nsresult OpenOp::FinishOpen() {
   // Open the directory
 
   RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
-      GetConnection()->GetPersistenceType(), mOriginMetadata,
-      mozilla::dom::quota::Client::SDB,
+      {mOriginMetadata, mozilla::dom::quota::Client::SDB},
       /* aExclusive */ false);
 
   mState = State::DirectoryOpenPending;

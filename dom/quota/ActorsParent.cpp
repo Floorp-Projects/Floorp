@@ -4935,12 +4935,12 @@ nsresult QuotaManager::EnsureStorageIsInitializedInternal() {
 }
 
 RefPtr<ClientDirectoryLock> QuotaManager::CreateDirectoryLock(
-    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
-    Client::Type aClientType, bool aExclusive) {
+    const ClientMetadata& aClientMetadata, bool aExclusive) {
   AssertIsOnOwningThread();
 
-  return DirectoryLockImpl::Create(WrapNotNullUnchecked(this), aPersistenceType,
-                                   aOriginMetadata, aClientType, aExclusive);
+  return DirectoryLockImpl::Create(
+      WrapNotNullUnchecked(this), aClientMetadata.mPersistenceType,
+      aClientMetadata, aClientMetadata.mClientType, aExclusive);
 }
 
 RefPtr<UniversalDirectoryLock> QuotaManager::CreateDirectoryLockInternal(
