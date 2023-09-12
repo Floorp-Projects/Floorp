@@ -14,7 +14,8 @@
 
 MOZ_DEFINE_ENUM_CLASS(Browser, (Unknown, Firefox, Chrome, EdgeWithEdgeHTML,
                                 EdgeWithBlink, InternetExplorer, Opera, Brave,
-                                Yandex, QQBrowser, _360Browser, Sogou));
+                                Yandex, QQBrowser, _360Browser, Sogou,
+                                DuckDuckGo));
 
 struct DefaultBrowserInfo {
   Browser currentDefaultBrowser;
