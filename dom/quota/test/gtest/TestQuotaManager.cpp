@@ -27,11 +27,11 @@ TEST_F(TestQuotaManager, ShutdownStorage_Simple) {
     QuotaManager* quotaManager = QuotaManager::Get();
     ASSERT_TRUE(quotaManager);
 
-    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+    ASSERT_FALSE(quotaManager->IsStorageInitializedInternal());
 
-    ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitialized());
+    ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitializedInternal());
 
-    ASSERT_TRUE(quotaManager->IsStorageInitialized());
+    ASSERT_TRUE(quotaManager->IsStorageInitializedInternal());
   });
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
@@ -40,7 +40,7 @@ TEST_F(TestQuotaManager, ShutdownStorage_Simple) {
     QuotaManager* quotaManager = QuotaManager::Get();
     ASSERT_TRUE(quotaManager);
 
-    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+    ASSERT_FALSE(quotaManager->IsStorageInitializedInternal());
   });
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
@@ -54,11 +54,11 @@ TEST_F(TestQuotaManager, ShutdownStorage_Ongoing) {
     QuotaManager* quotaManager = QuotaManager::Get();
     ASSERT_TRUE(quotaManager);
 
-    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+    ASSERT_FALSE(quotaManager->IsStorageInitializedInternal());
 
-    ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitialized());
+    ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitializedInternal());
 
-    ASSERT_TRUE(quotaManager->IsStorageInitialized());
+    ASSERT_TRUE(quotaManager->IsStorageInitializedInternal());
   });
 
   PerformOnBackgroundThread([]() {
@@ -91,7 +91,7 @@ TEST_F(TestQuotaManager, ShutdownStorage_Ongoing) {
     QuotaManager* quotaManager = QuotaManager::Get();
     ASSERT_TRUE(quotaManager);
 
-    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+    ASSERT_FALSE(quotaManager->IsStorageInitializedInternal());
   });
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
@@ -106,11 +106,11 @@ TEST_F(TestQuotaManager, ShutdownStorage_OngoingWithScheduledInitialization) {
     QuotaManager* quotaManager = QuotaManager::Get();
     ASSERT_TRUE(quotaManager);
 
-    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+    ASSERT_FALSE(quotaManager->IsStorageInitializedInternal());
 
-    ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitialized());
+    ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitializedInternal());
 
-    ASSERT_TRUE(quotaManager->IsStorageInitialized());
+    ASSERT_TRUE(quotaManager->IsStorageInitializedInternal());
   });
 
   PerformOnBackgroundThread([]() {
@@ -148,7 +148,7 @@ TEST_F(TestQuotaManager, ShutdownStorage_OngoingWithScheduledInitialization) {
     QuotaManager* quotaManager = QuotaManager::Get();
     ASSERT_TRUE(quotaManager);
 
-    ASSERT_FALSE(quotaManager->IsStorageInitialized());
+    ASSERT_FALSE(quotaManager->IsStorageInitializedInternal());
   });
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());

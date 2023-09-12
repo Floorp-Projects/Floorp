@@ -4414,7 +4414,7 @@ Result<Ok, nsresult> QuotaManager::CopyLocalStorageArchiveFromWebAppsStore(
   // If there's any corruption detected during
   // MaybeCreateOrUpgradeLocalStorageArchive (including nested calls like
   // CopyLocalStorageArchiveFromWebAppsStore and CreateWebAppsStoreConnection)
-  // EnsureStorageIsInitialized will fallback to
+  // EnsureStorageIsInitializedInternal will fallback to
   // CreateEmptyLocalStorageArchive.
 
   // Ensure the storage directory actually exists.
@@ -4552,9 +4552,9 @@ nsresult QuotaManager::UpgradeLocalStorageArchiveFrom4To5(
 
 #ifdef DEBUG
 
-void QuotaManager::AssertStorageIsInitialized() const {
+void QuotaManager::AssertStorageIsInitializedInternal() const {
   AssertIsOnIOThread();
-  MOZ_ASSERT(IsStorageInitialized());
+  MOZ_ASSERT(IsStorageInitializedInternal());
 }
 
 #endif  // DEBUG
@@ -4847,7 +4847,7 @@ Result<Ok, nsresult> QuotaManager::CreateEmptyLocalStorageArchive(
   return Ok{};
 }
 
-nsresult QuotaManager::EnsureStorageIsInitialized() {
+nsresult QuotaManager::EnsureStorageIsInitializedInternal() {
   DiagnosticAssertIsOnIOThread();
 
   const auto innerFunc =
