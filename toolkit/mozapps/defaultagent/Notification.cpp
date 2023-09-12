@@ -260,29 +260,20 @@ static mozilla::WindowsError LaunchFirefoxToHandleDefaultBrowserAgent() {
  * showing the Default Apps page of Settings.
  *
  * @param aAumi The AUMI of the installation to set as default.
- *
- * @return Success (SUCCEEDED(hr)) if all associations were set with
- *         UserChoice and checked successfully.
- *         Other return codes indicate a failure which causes us to
- *         fall back to Settings, see return codes of
- *         SetDefaultBrowserUserChoice().
  */
-static HRESULT SetDefaultBrowserFromNotification(const wchar_t* aumi) {
-  // TODO maybe fall back to protocol dialog on Windows 11 (bug 1719832)?
-
-  HRESULT hr = E_FAIL;
+static void SetDefaultBrowserFromNotification(const wchar_t* aumi) {
+  nsresult rv = NS_ERROR_FAILURE;
   if (GetPrefSetDefaultBrowserUserChoice()) {
-    hr = SetDefaultBrowserUserChoice(aumi);
+    rv = SetDefaultBrowserUserChoice(aumi);
   }
 
-  if (!FAILED(hr)) {
+  if (NS_SUCCEEDED(rv)) {
     mozilla::Unused << LaunchFirefoxToHandleDefaultBrowserAgent();
   } else {
     LOG_ERROR_MESSAGE(L"Failed to SetDefaultBrowserUserChoice: %#X",
                       GetLastError());
     LaunchModernSettingsDialogDefaultApps();
   }
-  return hr;
 }
 
 // This encapsulates the data that needs to be protected by a mutex because it
