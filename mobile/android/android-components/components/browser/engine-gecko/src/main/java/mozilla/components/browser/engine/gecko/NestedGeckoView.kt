@@ -82,6 +82,8 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
 
             MotionEvent.ACTION_DOWN -> {
                 // A new gesture started. Ask GV if it can handle this.
+                inputResultDetail = InputResultDetail.newInstance(false)
+                parent?.requestDisallowInterceptTouchEvent(true)
                 updateInputResult(event)
 
                 nestedOffsetY = 0
@@ -97,9 +99,6 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
             // We don't care about other touch events
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 stopNestedScroll()
-                // Reset handled status so that parents of this View would not get the old value
-                // when querying it for a newly started touch event.
-                inputResultDetail = InputResultDetail.newInstance(true)
             }
         }
 
@@ -127,6 +126,7 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
                     it?.scrollableDirections(),
                     it?.overscrollDirections(),
                 )
+                parent?.requestDisallowInterceptTouchEvent(false)
                 startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
             }
     }
