@@ -152,6 +152,15 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final : public nt::SharedSection {
   static Layout* sWriteCopyView;
   static RTL_RUN_ONCE sEnsureOnce;
 
+  // The sLock lock guarantees that while it is held, sSectionHandle will not
+  // change nor get closed, sEnsureOnce will not get reinitialized, and
+  // sWriteCopyView will not change nor get unmapped once initialized. We take
+  // sLock on paths that could run concurrently with ConvertToReadOnly(). This
+  // method is only called on the main process, and very early, so the only
+  // real risk here should be threads started by third-party products reaching
+  // our patched_NtMapViewOfSection (see bug 1850969).
+  static nt::SRWLock sLock;
+
   static ULONG NTAPI EnsureWriteCopyViewOnce(PRTL_RUN_ONCE, PVOID, PVOID*);
   static Layout* EnsureWriteCopyView(bool requireKernel32Exports = false);
 
@@ -163,6 +172,10 @@ class MOZ_TRIVIAL_CTOR_DTOR SharedSection final : public nt::SharedSection {
  public:
   // Replace |sSectionHandle| with a given handle.
   static void Reset(HANDLE aNewSectionObject = sSectionHandle);
+
+  static inline nt::AutoSharedLock AutoNoReset() {
+    return nt::AutoSharedLock{sLock};
+  }
 
   // Replace |sSectionHandle| with a new readonly handle.
   static void ConvertToReadOnly();
