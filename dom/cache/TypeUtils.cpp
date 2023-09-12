@@ -184,7 +184,7 @@ void TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
   aOut.statusText() = aIn.GetUnfilteredStatusText();
   RefPtr<InternalHeaders> headers = aIn.UnfilteredHeaders();
   MOZ_DIAGNOSTIC_ASSERT(headers);
-  if (HasVaryStar(headers)) {
+  if (aIn.Type() != ResponseType::Opaque && HasVaryStar(headers)) {
     aRv.ThrowTypeError("Invalid Response object with a 'Vary: *' header.");
     return;
   }
