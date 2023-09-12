@@ -227,10 +227,7 @@ float ResolveWith(const ComputedStyle& aStyle, const SVGElement* aElement) {
 }
 
 template <class Func>
-bool DoForComputedStyle(const Element* aElement, Func aFunc) {
-  if (!aElement) {
-    return false;
-  }
+bool DoForComputedStyle(const SVGElement* aElement, Func aFunc) {
   if (const nsIFrame* f = aElement->GetPrimaryFrame()) {
     aFunc(f->Style());
     return true;
