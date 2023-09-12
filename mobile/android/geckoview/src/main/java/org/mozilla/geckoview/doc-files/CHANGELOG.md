@@ -15,6 +15,13 @@ exclude: true
 
 ## v119
 - Added `remoteType` to GeckoView child crash intent. ([bug 1851518]({{bugzilla}}1851518))
+- Added [`GeckoRuntimeSettings#setTrustedRecursiveResolverMode`][119.1] to enable DNS-over-HTTPS using different resolver modes ([bug 1591533]({{bugzilla}}1591533)).
+- Added [`GeckoRuntimeSettings#setTrustedRecursiveResolverUri`][119.2] to specify the DNS-over-HTTPS server to be used if DoH is enabled ([bug 1591533]({{bugzilla}}1591533)).
+- Added [`GeckoRuntimeSettings#setLargeKeepaliveFactor`][119.3] to increase the keepalive timeout used for a connection ([bug 1591533]({{bugzilla}}1591533)).
+
+[119.1]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverMode-int-
+[119.2]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setTrustedRecursiveResolverUri-java.lang.String-
+[119.3]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setLargeKeepaliveFactor-int-
 
 ## v118
 - Added [`ExperimentDelegate`][118.1] to allow GeckoView to send and retrieve experiment information from an embedder.
@@ -1428,4 +1435,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: ee73ede94d2e7c382fe9e9793c1fecbb01beb18d
+[api-version]: 87397d7c25be7722bce85c49c52c3e5ce4e8c420
