@@ -178,6 +178,11 @@ float UserSpaceMetrics::GetCapHeight(Type aType) const {
   return GetEmLength(aType);
 }
 
+CSSSize UserSpaceMetrics::GetCSSViewportSizeFromContext(
+    const nsPresContext* aContext) {
+  return CSSPixel::FromAppUnits(aContext->GetSizeForViewportUnits());
+}
+
 SVGElementMetrics::SVGElementMetrics(const SVGElement* aSVGElement,
                                      const SVGViewportElement* aCtx)
     : mSVGElement(aSVGElement), mCtx(aCtx) {}
@@ -208,6 +213,17 @@ float SVGElementMetrics::GetAxisLength(uint8_t aCtxType) const {
   }
 
   return FixAxisLength(mCtx->GetLength(aCtxType));
+}
+
+CSSSize SVGElementMetrics::GetCSSViewportSize() const {
+  if (!mSVGElement) {
+    return {0.0f, 0.0f};
+  }
+  nsPresContext* context = nsContentUtils::GetContextForContent(mSVGElement);
+  if (!context) {
+    return {0.0f, 0.0f};
+  }
+  return GetCSSViewportSizeFromContext(context);
 }
 
 bool SVGElementMetrics::EnsureCtx() const {
@@ -277,6 +293,10 @@ WritingMode NonSVGFrameUserSpaceMetrics::GetWritingModeForType(
 
 gfx::Size NonSVGFrameUserSpaceMetrics::GetSize() const {
   return SVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(mFrame);
+}
+
+CSSSize NonSVGFrameUserSpaceMetrics::GetCSSViewportSize() const {
+  return GetCSSViewportSizeFromContext(mFrame->PresContext());
 }
 
 float UserSpaceMetricsWithSize::GetAxisLength(uint8_t aCtxType) const {
