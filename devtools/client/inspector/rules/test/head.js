@@ -761,7 +761,8 @@ async function getPropertiesForRuleIndex(
 ) {
   const declaration = new Map();
   const ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
-  for (const currProp of ruleEditor.rule.textProps) {
+
+  for (const currProp of ruleEditor?.rule?.textProps || []) {
     const icon = currProp.editor.unusedState;
     const unused = currProp.editor.element.classList.contains("unused");
 
