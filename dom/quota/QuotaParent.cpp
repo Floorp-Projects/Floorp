@@ -12,6 +12,7 @@
 #include "mozilla/dom/quota/PQuota.h"
 #include "mozilla/dom/quota/PQuotaRequestParent.h"
 #include "mozilla/dom/quota/PQuotaUsageRequestParent.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -446,10 +447,13 @@ mozilla::ipc::IPCResult Quota::RecvClearStoragesForPrivateBrowsing(
     ClearStoragesForPrivateBrowsingResolver&& aResolver) {
   AssertIsOnBackgroundThread();
 
-  PBackgroundParent* actor = Manager();
-  MOZ_ASSERT(actor);
+  QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
+         ([&aResolver](const auto rv) {
+           aResolver(rv);
+           return IPC_OK();
+         }));
 
-  if (BackgroundParent::IsOtherProcessActor(actor)) {
+  if (BackgroundParent::IsOtherProcessActor(Manager())) {
     MOZ_CRASH_UNLESS_FUZZING();
     return IPC_FAIL(this, "Wrong actor");
   }
