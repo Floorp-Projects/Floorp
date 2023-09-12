@@ -41,8 +41,8 @@ fn main() {
         return;
     }
 
-    let mut manager = AuthenticatorService::new()
-        .expect("The auth service should initialize safely");
+    let mut manager =
+        AuthenticatorService::new().expect("The auth service should initialize safely");
     manager.add_u2f_usb_hid_platform_transports();
 
     let timeout_ms = match matches.opt_get_default::<u64>("timeout", 25) {

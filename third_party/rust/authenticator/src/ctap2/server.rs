@@ -3,7 +3,7 @@ use crate::{errors::AuthenticatorError, AuthenticatorTransports, KeyHandle};
 use base64::Engine;
 use serde::de::MapAccess;
 use serde::{
-    de::{Error as SerdeError, Visitor},
+    de::{Error as SerdeError, Unexpected, Visitor},
     ser::SerializeMap,
     Deserialize, Deserializer, Serialize, Serializer,
 };
@@ -302,7 +302,7 @@ impl<'de> Deserialize<'de> for PublicKeyCredentialDescriptor {
             }
         }
 
-        deserializer.deserialize_bytes(PublicKeyCredentialDescriptorVisitor)
+        deserializer.deserialize_any(PublicKeyCredentialDescriptorVisitor)
     }
 }
 
@@ -327,6 +327,80 @@ pub enum UserVerificationRequirement {
     Discouraged,
     Preferred,
     Required,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum CredentialProtectionPolicy {
+    UserVerificationOptional = 1,
+    UserVerificationOptionalWithCredentialIDList = 2,
+    UserVerificationRequired = 3,
+}
+
+impl Serialize for CredentialProtectionPolicy {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_u64(*self as u64)
+    }
+}
+
+impl<'de> Deserialize<'de> for CredentialProtectionPolicy {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct CredentialProtectionPolicyVisitor;
+
+        impl<'de> Visitor<'de> for CredentialProtectionPolicyVisitor {
+            type Value = CredentialProtectionPolicy;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("an integer")
+            }
+
+            fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+            where
+                E: SerdeError,
+            {
+                match v {
+                    1 => Ok(CredentialProtectionPolicy::UserVerificationOptional),
+                    2 => Ok(
+                        CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIDList,
+                    ),
+                    3 => Ok(CredentialProtectionPolicy::UserVerificationRequired),
+                    _ => Err(SerdeError::invalid_value(
+                        Unexpected::Unsigned(v),
+                        &"valid CredentialProtectionPolicy",
+                    )),
+                }
+            }
+        }
+
+        deserializer.deserialize_any(CredentialProtectionPolicyVisitor)
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct AuthenticationExtensionsClientInputs {
+    pub app_id: Option<String>,
+    pub cred_props: Option<bool>,
+    pub credential_protection_policy: Option<CredentialProtectionPolicy>,
+    pub enforce_credential_protection_policy: Option<bool>,
+    pub hmac_create_secret: Option<bool>,
+    pub min_pin_length: Option<bool>,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct CredentialProperties {
+    pub rk: bool,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct AuthenticationExtensionsClientOutputs {
+    pub app_id: Option<bool>,
+    pub cred_props: Option<CredentialProperties>,
+    pub hmac_create_secret: Option<bool>,
 }
 
 #[cfg(test)]

@@ -5,15 +5,15 @@
 use std::sync::{Arc, Condvar, Mutex};
 
 pub struct StateCallback<T> {
-    callback: Arc<Mutex<Option<Box<dyn Fn(T) + Send>>>>,
-    observer: Arc<Mutex<Option<Box<dyn Fn() + Send>>>>,
+    callback: Arc<Mutex<Option<Box<dyn FnOnce(T) + Send>>>>,
+    observer: Arc<Mutex<Option<Box<dyn FnOnce() + Send>>>>,
     condition: Arc<(Mutex<bool>, Condvar)>,
 }
 
 impl<T> StateCallback<T> {
     // This is used for the Condvar, which requires this kind of construction
     #[allow(clippy::mutex_atomic)]
-    pub fn new(cb: Box<dyn Fn(T) + Send>) -> Self {
+    pub fn new(cb: Box<dyn FnOnce(T) + Send>) -> Self {
         Self {
             callback: Arc::new(Mutex::new(Some(cb))),
             observer: Arc::new(Mutex::new(None)),
@@ -21,7 +21,7 @@ impl<T> StateCallback<T> {
         }
     }
 
-    pub fn add_uncloneable_observer(&mut self, obs: Box<dyn Fn() + Send>) {
+    pub fn add_uncloneable_observer(&mut self, obs: Box<dyn FnOnce() + Send>) {
         let mut opt = self.observer.lock().unwrap();
         if opt.is_some() {
             error!("Replacing an already-set observer.")

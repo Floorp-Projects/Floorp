@@ -3,9 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use authenticator::{
-    authenticatorservice::AuthenticatorService,
-    statecallback::StateCallback,
-    Pin, StatusPinUv, StatusUpdate,
+    authenticatorservice::AuthenticatorService, statecallback::StateCallback, Pin, StatusPinUv,
+    StatusUpdate,
 };
 use getopts::Options;
 use std::sync::mpsc::{channel, RecvError};
@@ -39,8 +38,8 @@ fn main() {
         return;
     }
 
-    let mut manager = AuthenticatorService::new()
-        .expect("The auth service should initialize safely");
+    let mut manager =
+        AuthenticatorService::new().expect("The auth service should initialize safely");
     manager.add_u2f_usb_hid_platform_transports();
 
     let timeout_ms = match matches.opt_get_default::<u64>("timeout", 25) {

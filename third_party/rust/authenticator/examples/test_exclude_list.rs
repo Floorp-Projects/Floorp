@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use authenticator::{
-    authenticatorservice::{AuthenticatorService, GetAssertionExtensions, RegisterArgs, SignArgs},
+    authenticatorservice::{AuthenticatorService, RegisterArgs, SignArgs},
     crypto::COSEAlgorithm,
     ctap2::commands::StatusCode,
     ctap2::server::{
@@ -183,7 +183,13 @@ fn main() {
             Ok(a) => {
                 println!("Ok!");
                 println!("Registering again with the key_handle we just got back. This should result in a 'already registered' error.");
-                let key_handle = a.att_obj.auth_data.credential_data.unwrap().credential_id.clone();
+                let key_handle = a
+                    .att_obj
+                    .auth_data
+                    .credential_data
+                    .unwrap()
+                    .credential_id
+                    .clone();
                 let pub_key = PublicKeyCredentialDescriptor {
                     id: key_handle,
                     transports: vec![Transport::USB],
@@ -220,9 +226,8 @@ fn main() {
         origin,
         relying_party_id: "example.com".to_string(),
         allow_list: vec![],
-        extensions: GetAssertionExtensions::default(),
+        extensions: Default::default(),
         pin: None,
-        alternate_rp_id: None,
         use_ctap1_fallback: false,
         user_verification_req: UserVerificationRequirement::Preferred,
         user_presence_req: true,

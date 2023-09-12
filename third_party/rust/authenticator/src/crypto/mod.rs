@@ -358,8 +358,7 @@ impl SharedSecret {
 pub struct PinUvAuthToken {
     pub pin_protocol: PinUvAuthProtocol,
     pin_token: Vec<u8>,
-    #[allow(dead_code)] // Not yet used
-    permissions: PinUvAuthTokenPermission,
+    pub permissions: PinUvAuthTokenPermission,
 }
 
 impl PinUvAuthToken {
@@ -440,7 +439,6 @@ impl Serialize for Curve {
         serializer.serialize_i64(*self as i64)
     }
 }
-
 
 impl TryFrom<i64> for Curve {
     type Error = CryptoError;
@@ -604,9 +602,15 @@ impl TryFrom<i64> for COSEAlgorithm {
             i if i == COSEAlgorithm::SHAKE256 as i64 => Ok(COSEAlgorithm::SHAKE256),
             i if i == COSEAlgorithm::SHA512 as i64 => Ok(COSEAlgorithm::SHA512),
             i if i == COSEAlgorithm::SHA384 as i64 => Ok(COSEAlgorithm::SHA384),
-            i if i == COSEAlgorithm::RSAES_OAEP_SHA_512 as i64 => Ok(COSEAlgorithm::RSAES_OAEP_SHA_512),
-            i if i == COSEAlgorithm::RSAES_OAEP_SHA_256 as i64 => Ok(COSEAlgorithm::RSAES_OAEP_SHA_256),
-            i if i == COSEAlgorithm::RSAES_OAEP_RFC_8017_default as i64 => Ok(COSEAlgorithm::RSAES_OAEP_RFC_8017_default),
+            i if i == COSEAlgorithm::RSAES_OAEP_SHA_512 as i64 => {
+                Ok(COSEAlgorithm::RSAES_OAEP_SHA_512)
+            }
+            i if i == COSEAlgorithm::RSAES_OAEP_SHA_256 as i64 => {
+                Ok(COSEAlgorithm::RSAES_OAEP_SHA_256)
+            }
+            i if i == COSEAlgorithm::RSAES_OAEP_RFC_8017_default as i64 => {
+                Ok(COSEAlgorithm::RSAES_OAEP_RFC_8017_default)
+            }
             i if i == COSEAlgorithm::PS512 as i64 => Ok(COSEAlgorithm::PS512),
             i if i == COSEAlgorithm::PS384 as i64 => Ok(COSEAlgorithm::PS384),
             i if i == COSEAlgorithm::PS256 as i64 => Ok(COSEAlgorithm::PS256),
@@ -627,10 +631,18 @@ impl TryFrom<i64> for COSEAlgorithm {
             i if i == COSEAlgorithm::SHA256 as i64 => Ok(COSEAlgorithm::SHA256),
             i if i == COSEAlgorithm::SHA256_64 as i64 => Ok(COSEAlgorithm::SHA256_64),
             i if i == COSEAlgorithm::SHA1 as i64 => Ok(COSEAlgorithm::SHA1),
-            i if i == COSEAlgorithm::Direct_HKDF_AES256 as i64 => Ok(COSEAlgorithm::Direct_HKDF_AES256),
-            i if i == COSEAlgorithm::Direct_HKDF_AES128 as i64 => Ok(COSEAlgorithm::Direct_HKDF_AES128),
-            i if i == COSEAlgorithm::Direct_HKDF_SHA512 as i64 => Ok(COSEAlgorithm::Direct_HKDF_SHA512),
-            i if i == COSEAlgorithm::Direct_HKDF_SHA256 as i64 => Ok(COSEAlgorithm::Direct_HKDF_SHA256),
+            i if i == COSEAlgorithm::Direct_HKDF_AES256 as i64 => {
+                Ok(COSEAlgorithm::Direct_HKDF_AES256)
+            }
+            i if i == COSEAlgorithm::Direct_HKDF_AES128 as i64 => {
+                Ok(COSEAlgorithm::Direct_HKDF_AES128)
+            }
+            i if i == COSEAlgorithm::Direct_HKDF_SHA512 as i64 => {
+                Ok(COSEAlgorithm::Direct_HKDF_SHA512)
+            }
+            i if i == COSEAlgorithm::Direct_HKDF_SHA256 as i64 => {
+                Ok(COSEAlgorithm::Direct_HKDF_SHA256)
+            }
             i if i == COSEAlgorithm::EDDSA as i64 => Ok(COSEAlgorithm::EDDSA),
             i if i == COSEAlgorithm::ES256 as i64 => Ok(COSEAlgorithm::ES256),
             i if i == COSEAlgorithm::Direct as i64 => Ok(COSEAlgorithm::Direct),
@@ -644,19 +656,37 @@ impl TryFrom<i64> for COSEAlgorithm {
             i if i == COSEAlgorithm::HMAC256_256 as i64 => Ok(COSEAlgorithm::HMAC256_256),
             i if i == COSEAlgorithm::HMAC384_384 as i64 => Ok(COSEAlgorithm::HMAC384_384),
             i if i == COSEAlgorithm::HMAC512_512 as i64 => Ok(COSEAlgorithm::HMAC512_512),
-            i if i == COSEAlgorithm::AES_CCM_16_64_128 as i64 => Ok(COSEAlgorithm::AES_CCM_16_64_128),
-            i if i == COSEAlgorithm::AES_CCM_16_64_256 as i64 => Ok(COSEAlgorithm::AES_CCM_16_64_256),
-            i if i == COSEAlgorithm::AES_CCM_64_64_128 as i64 => Ok(COSEAlgorithm::AES_CCM_64_64_128),
-            i if i == COSEAlgorithm::AES_CCM_64_64_256 as i64 => Ok(COSEAlgorithm::AES_CCM_64_64_256),
+            i if i == COSEAlgorithm::AES_CCM_16_64_128 as i64 => {
+                Ok(COSEAlgorithm::AES_CCM_16_64_128)
+            }
+            i if i == COSEAlgorithm::AES_CCM_16_64_256 as i64 => {
+                Ok(COSEAlgorithm::AES_CCM_16_64_256)
+            }
+            i if i == COSEAlgorithm::AES_CCM_64_64_128 as i64 => {
+                Ok(COSEAlgorithm::AES_CCM_64_64_128)
+            }
+            i if i == COSEAlgorithm::AES_CCM_64_64_256 as i64 => {
+                Ok(COSEAlgorithm::AES_CCM_64_64_256)
+            }
             i if i == COSEAlgorithm::AES_MAC_128_64 as i64 => Ok(COSEAlgorithm::AES_MAC_128_64),
             i if i == COSEAlgorithm::AES_MAC_256_64 as i64 => Ok(COSEAlgorithm::AES_MAC_256_64),
-            i if i == COSEAlgorithm::ChaCha20_Poly1305 as i64 => Ok(COSEAlgorithm::ChaCha20_Poly1305),
+            i if i == COSEAlgorithm::ChaCha20_Poly1305 as i64 => {
+                Ok(COSEAlgorithm::ChaCha20_Poly1305)
+            }
             i if i == COSEAlgorithm::AES_MAC_128_128 as i64 => Ok(COSEAlgorithm::AES_MAC_128_128),
             i if i == COSEAlgorithm::AES_MAC_256_128 as i64 => Ok(COSEAlgorithm::AES_MAC_256_128),
-            i if i == COSEAlgorithm::AES_CCM_16_128_128 as i64 => Ok(COSEAlgorithm::AES_CCM_16_128_128),
-            i if i == COSEAlgorithm::AES_CCM_16_128_256 as i64 => Ok(COSEAlgorithm::AES_CCM_16_128_256),
-            i if i == COSEAlgorithm::AES_CCM_64_128_128 as i64 => Ok(COSEAlgorithm::AES_CCM_64_128_128),
-            i if i == COSEAlgorithm::AES_CCM_64_128_256 as i64 => Ok(COSEAlgorithm::AES_CCM_64_128_256),
+            i if i == COSEAlgorithm::AES_CCM_16_128_128 as i64 => {
+                Ok(COSEAlgorithm::AES_CCM_16_128_128)
+            }
+            i if i == COSEAlgorithm::AES_CCM_16_128_256 as i64 => {
+                Ok(COSEAlgorithm::AES_CCM_16_128_256)
+            }
+            i if i == COSEAlgorithm::AES_CCM_64_128_128 as i64 => {
+                Ok(COSEAlgorithm::AES_CCM_64_128_128)
+            }
+            i if i == COSEAlgorithm::AES_CCM_64_128_256 as i64 => {
+                Ok(COSEAlgorithm::AES_CCM_64_128_256)
+            }
             i if i == COSEAlgorithm::IV_GENERATION as i64 => Ok(COSEAlgorithm::IV_GENERATION),
             i if i == COSEAlgorithm::INSECURE_RS1 as i64 => Ok(COSEAlgorithm::INSECURE_RS1),
             _ => Err(CryptoError::UnknownAlgorithm),
@@ -777,9 +807,9 @@ impl TryFrom<i64> for COSEKeyTypeId {
     type Error = CryptoError;
     fn try_from(i: i64) -> Result<Self, Self::Error> {
         match i {
-             i if i == COSEKeyTypeId::OKP as i64 => Ok(COSEKeyTypeId::OKP),
-             i if i == COSEKeyTypeId::EC2 as i64 => Ok(COSEKeyTypeId::EC2),
-             i if i == COSEKeyTypeId::RSA as i64 => Ok(COSEKeyTypeId::RSA),
+            i if i == COSEKeyTypeId::OKP as i64 => Ok(COSEKeyTypeId::OKP),
+            i if i == COSEKeyTypeId::EC2 as i64 => Ok(COSEKeyTypeId::EC2),
+            i if i == COSEKeyTypeId::RSA as i64 => Ok(COSEKeyTypeId::RSA),
             _ => Err(CryptoError::UnknownKeyType),
         }
     }
@@ -1097,7 +1127,7 @@ mod test {
         Curve, PinProtocolImpl, PinUvAuth1, PinUvAuth2, PinUvAuthProtocol, PublicInputs,
         SharedSecret,
     };
-    use crate::crypto::{COSEEC2Key, COSERSAKey, COSEKeyType};
+    use crate::crypto::{COSEEC2Key, COSEKeyType, COSERSAKey};
     use crate::ctap2::attestation::AAGuid;
     use crate::ctap2::commands::client_pin::Pin;
     use crate::ctap2::commands::get_info::{
@@ -1129,7 +1159,7 @@ mod test {
             0xa4, 0xcc, 0x21, 0x44, 0x58, 0x8b, 0xcd, 0x98, 0xe4, 0x3d, 0x53, 0x20, 0xfc, 0xfc,
             0x7b, 0x9f, 0x43, 0x35, 0xfb, 0x38, 0x37, 0x23, 0xd0, 0x76, 0xe3, 0x3d, 0x4f, 0x89,
             0x9b, 0x89, 0x32, 0x81, 0x89, 0xed, 0x58, 0xc0, 0x80, 0x18, 0x83, 0x5b, 0xaf, 0x5a,
-            0xa5, 0x21, 0x43, 0x01, 0x00, 0x01
+            0xa5, 0x21, 0x43, 0x01, 0x00, 0x01,
         ];
         let expected: COSEKey = COSEKey {
             alg: COSEAlgorithm::RS256,
@@ -1155,7 +1185,7 @@ mod test {
                     0x99, 0x41, 0x20, 0x5e, 0x1a, 0xa4, 0xcc, 0x21, 0x44, 0x58, 0x8b, 0xcd, 0x98,
                     0xe4, 0x3d, 0x53, 0x20, 0xfc, 0xfc, 0x7b, 0x9f, 0x43, 0x35, 0xfb, 0x38, 0x37,
                     0x23, 0xd0, 0x76, 0xe3, 0x3d, 0x4f, 0x89, 0x9b, 0x89, 0x32, 0x81, 0x89, 0xed,
-                    0x58, 0xc0, 0x80, 0x18, 0x83, 0x5b, 0xaf, 0x5a, 0xa5
+                    0x58, 0xc0, 0x80, 0x18, 0x83, 0x5b, 0xaf, 0x5a, 0xa5,
                 ],
             }),
         };

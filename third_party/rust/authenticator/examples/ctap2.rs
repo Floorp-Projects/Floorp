@@ -3,14 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use authenticator::{
-    authenticatorservice::{
-        AuthenticatorService, GetAssertionExtensions, HmacSecretExtension,
-        MakeCredentialsExtensions, RegisterArgs, SignArgs,
-    },
+    authenticatorservice::{AuthenticatorService, RegisterArgs, SignArgs},
     crypto::COSEAlgorithm,
     ctap2::server::{
+        AuthenticationExtensionsClientInputs, CredentialProtectionPolicy,
         PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
-        RelyingPartyWrapper, ResidentKeyRequirement, Transport, User, UserVerificationRequirement,
+        ResidentKeyRequirement, Transport, User, UserVerificationRequirement,
     },
     statecallback::StateCallback,
     Pin, StatusPinUv, StatusUpdate,
@@ -57,6 +55,8 @@ fn main() {
         print_usage(&program, opts);
         return;
     }
+
+    let using_app_id = matches.opt_present("app_id");
 
     let mut manager =
         AuthenticatorService::new().expect("The auth service should initialize safely");
@@ -146,7 +146,7 @@ fn main() {
     };
     // If we're testing AppID support, then register with an RP ID that isn't valid for the origin.
     let relying_party = RelyingParty {
-        id: if matches.opt_present("app_id") {
+        id: if using_app_id {
             app_id.clone()
         } else {
             rp_id.clone()
@@ -176,12 +176,13 @@ fn main() {
         }],
         user_verification_req: UserVerificationRequirement::Preferred,
         resident_key_req: ResidentKeyRequirement::Discouraged,
-        extensions: MakeCredentialsExtensions {
-            hmac_secret: if matches.opt_present("hmac_secret") {
-                Some(true)
-            } else {
-                None
-            },
+        extensions: AuthenticationExtensionsClientInputs {
+            cred_props: Some(true),
+            hmac_create_secret: Some(matches.opt_present("hmac_secret")),
+            min_pin_length: Some(true),
+            credential_protection_policy: Some(
+                CredentialProtectionPolicy::UserVerificationOptionalWithCredentialIDList,
+            ),
             ..Default::default()
         },
         pin: None,
@@ -229,7 +230,6 @@ fn main() {
         allow_list = Vec::new();
     }
 
-    let alternate_rp_id = matches.opt_present("app_id").then(|| app_id.clone());
     let ctap_args = SignArgs {
         client_data_hash: chall_bytes,
         origin: format!("https://{rp_id}"),
@@ -237,22 +237,11 @@ fn main() {
         allow_list,
         user_verification_req: UserVerificationRequirement::Preferred,
         user_presence_req: true,
-        extensions: GetAssertionExtensions {
-            hmac_secret: if matches.opt_present("hmac_secret") {
-                Some(HmacSecretExtension::new(
-                    vec![
-                        0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0x10, 0x11, 0x12, 0x13,
-                        0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25,
-                        0x26, 0x27, 0x28, 0x29, 0x30, 0x31, 0x32, 0x33, 0x34,
-                    ],
-                    None,
-                ))
-            } else {
-                None
-            },
+        extensions: AuthenticationExtensionsClientInputs {
+            app_id: using_app_id.then(|| app_id.clone()),
+            ..Default::default()
         },
         pin: None,
-        alternate_rp_id: alternate_rp_id.clone(),
         use_ctap1_fallback: fallback,
     };
 
@@ -274,12 +263,14 @@ fn main() {
         match sign_result {
             Ok(assertion_object) => {
                 println!("Assertion Object: {assertion_object:?}");
-                if let Some(alt_rp_id) = alternate_rp_id {
-                    assert_eq!(
-                        assertion_object.0[0].auth_data.rp_id_hash,
-                        RelyingPartyWrapper::from(alt_rp_id.as_str()).hash()
+                if using_app_id {
+                    println!(
+                        "Used AppID: {}",
+                        assertion_object
+                            .extensions
+                            .app_id
+                            .expect("app id extension should be set")
                     );
-                    println!("Used AppID");
                 }
                 println!("Done.");
                 break;
