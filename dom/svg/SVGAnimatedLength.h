@@ -42,6 +42,7 @@ class UserSpaceMetrics {
   static GeckoFontMetrics DefaultFontMetrics();
   static GeckoFontMetrics GetFontMetrics(const Element* aElement);
   static WritingMode GetWritingMode(const Element* aElement);
+  static CSSSize GetCSSViewportSizeFromContext(const nsPresContext* aContext);
 
   virtual ~UserSpaceMetrics() = default;
 
@@ -51,6 +52,7 @@ class UserSpaceMetrics {
   float GetIcWidth(Type aType) const;
   float GetCapHeight(Type aType) const;
   virtual float GetAxisLength(uint8_t aCtxType) const = 0;
+  virtual CSSSize GetCSSViewportSize() const = 0;
 
  protected:
   virtual GeckoFontMetrics GetFontMetricsForType(Type aType) const = 0;
@@ -72,6 +74,7 @@ class SVGElementMetrics : public UserSpaceMetrics {
     return SVGContentUtils::GetFontSize(GetElementForType(aType));
   }
   float GetAxisLength(uint8_t aCtxType) const override;
+  CSSSize GetCSSViewportSize() const override;
 
  private:
   bool EnsureCtx() const;
@@ -89,6 +92,7 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
 
   float GetEmLength(Type aType) const override;
   gfx::Size GetSize() const override;
+  CSSSize GetCSSViewportSize() const override;
 
  private:
   GeckoFontMetrics GetFontMetricsForType(Type aType) const override;
