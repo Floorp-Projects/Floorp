@@ -8,7 +8,6 @@
 //! [image]: https://drafts.csswg.org/css-images/#image-values
 
 use crate::color::mix::ColorInterpolationMethod;
-use crate::custom_properties::SpecifiedValue;
 use crate::parser::{Parse, ParserContext};
 use crate::stylesheets::CorsMode;
 use crate::values::generics::color::ColorMixFlags;
@@ -259,30 +258,19 @@ impl Image {
             return Ok(generic::Image::Gradient(Box::new(gradient)));
         }
 
-        if cross_fade_enabled() {
-            if let Ok(cf) =
-                input.try_parse(|input| CrossFade::parse(context, input, cors_mode, flags))
-            {
-                return Ok(generic::Image::CrossFade(Box::new(cf)));
-            }
-        }
-        #[cfg(feature = "servo-layout-2013")]
-        {
-            if let Ok(paint_worklet) = input.try_parse(|i| PaintWorklet::parse(context, i)) {
-                return Ok(generic::Image::PaintWorklet(paint_worklet));
-            }
-        }
-        #[cfg(feature = "gecko")]
-        {
-            if let Ok(image_rect) =
-                input.try_parse(|input| MozImageRect::parse(context, input, cors_mode))
-            {
-                return Ok(generic::Image::Rect(Box::new(image_rect)));
-            }
-            Ok(generic::Image::Element(Image::parse_element(input)?))
-        }
-        #[cfg(not(feature = "gecko"))]
-        Err(input.new_error_for_next_token())
+        let function = input.expect_function()?.clone();
+        input.parse_nested_block(|input| {
+            Ok(match_ignore_ascii_case! { &function,
+                #[cfg(feature = "servo-layout-2013")]
+                "paint" => Self::PaintWorklet(PaintWorklet::parse_args(context, input)?),
+                "cross-fade" if cross_fade_enabled() => Self::CrossFade(Box::new(CrossFade::parse_args(context, input, cors_mode, flags)?)),
+                #[cfg(feature = "gecko")]
+                "-moz-image-rect" => Self::Rect(Box::new(MozImageRect::parse_args(context, input, cors_mode)?)),
+                #[cfg(feature = "gecko")]
+                "-moz-element" => Self::Element(Self::parse_element(input)?),
+                _ => return Err(input.new_custom_error(StyleParseErrorKind::UnexpectedFunction(function))),
+            })
+        })
     }
 }
 
@@ -297,12 +285,11 @@ impl Image {
 
     /// Parses a `-moz-element(# <element-id>)`.
     #[cfg(feature = "gecko")]
-    fn parse_element<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Atom, ParseError<'i>> {
-        input.try_parse(|i| i.expect_function_matching("-moz-element"))?;
+    fn parse_element<'i>(input: &mut Parser<'i, '_>) -> Result<Atom, ParseError<'i>> {
         let location = input.current_source_location();
-        input.parse_nested_block(|i| match *i.next()? {
-            Token::IDHash(ref id) => Ok(Atom::from(id.as_ref())),
-            ref t => Err(location.new_unexpected_token_error(t.clone())),
+        Ok(match *input.next()? {
+            Token::IDHash(ref id) => Atom::from(id.as_ref()),
+            ref t => return Err(location.new_unexpected_token_error(t.clone())),
         })
     }
 
@@ -344,19 +331,15 @@ impl Image {
 
 impl CrossFade {
     /// cross-fade() = cross-fade( <cf-image># )
-    fn parse<'i, 't>(
+    fn parse_args<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         cors_mode: CorsMode,
         flags: ParseImageFlags,
     ) -> Result<Self, ParseError<'i>> {
-        input.expect_function_matching("cross-fade")?;
-        let elements = input.parse_nested_block(|input| {
-            input.parse_comma_separated(|input| {
-                CrossFadeElement::parse(context, input, cors_mode, flags)
-            })
-        })?;
-        let elements = crate::OwnedSlice::from(elements);
+        let elements = crate::OwnedSlice::from(input.parse_comma_separated(|input| {
+            CrossFadeElement::parse(context, input, cors_mode, flags)
+        })?);
         Ok(Self { elements })
     }
 }
@@ -1327,55 +1310,45 @@ impl<T> generic::ColorStop<Color, T> {
     }
 }
 
-impl Parse for PaintWorklet {
-    fn parse<'i, 't>(
-        _context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        input.expect_function_matching("paint")?;
-        input.parse_nested_block(|input| {
-            let name = Atom::from(&**input.expect_ident()?);
-            let arguments = input
-                .try_parse(|input| {
-                    input.expect_comma()?;
-                    input.parse_comma_separated(|input| SpecifiedValue::parse(input))
-                })
-                .unwrap_or(vec![]);
-            Ok(PaintWorklet { name, arguments })
-        })
+impl PaintWorklet {
+    #[cfg(feature = "servo")]
+    fn parse_args<'i>(input: &mut Parser<'i, '_>) -> Result<Self, ParseError<'i>> {
+        use crate::custom_properties::SpecifiedValue;
+        let name = Atom::from(&**input.expect_ident()?);
+        let arguments = input
+            .try_parse(|input| {
+                input.expect_comma()?;
+                input.parse_comma_separated(SpecifiedValue::parse)
+            })
+            .unwrap_or_default();
+        Ok(Self { name, arguments })
     }
 }
 
 impl MozImageRect {
     #[cfg(feature = "gecko")]
-    fn parse<'i, 't>(
+    fn parse_args<'i>(
         context: &ParserContext,
-        input: &mut Parser<'i, 't>,
+        input: &mut Parser<'i, '_>,
         cors_mode: CorsMode,
     ) -> Result<Self, ParseError<'i>> {
-        input.try_parse(|i| i.expect_function_matching("-moz-image-rect"))?;
-        input.parse_nested_block(|i| {
-            let string = i.expect_url_or_string()?;
-            let url = SpecifiedImageUrl::parse_from_string(
-                string.as_ref().to_owned(),
-                context,
-                cors_mode,
-            );
-            i.expect_comma()?;
-            let top = NumberOrPercentage::parse_non_negative(context, i)?;
-            i.expect_comma()?;
-            let right = NumberOrPercentage::parse_non_negative(context, i)?;
-            i.expect_comma()?;
-            let bottom = NumberOrPercentage::parse_non_negative(context, i)?;
-            i.expect_comma()?;
-            let left = NumberOrPercentage::parse_non_negative(context, i)?;
-            Ok(MozImageRect {
-                url,
-                top,
-                right,
-                bottom,
-                left,
-            })
+        let string = input.expect_url_or_string()?;
+        let url =
+            SpecifiedImageUrl::parse_from_string(string.as_ref().to_owned(), context, cors_mode);
+        input.expect_comma()?;
+        let top = NumberOrPercentage::parse_non_negative(context, input)?;
+        input.expect_comma()?;
+        let right = NumberOrPercentage::parse_non_negative(context, input)?;
+        input.expect_comma()?;
+        let bottom = NumberOrPercentage::parse_non_negative(context, input)?;
+        input.expect_comma()?;
+        let left = NumberOrPercentage::parse_non_negative(context, input)?;
+        Ok(MozImageRect {
+            url,
+            top,
+            right,
+            bottom,
+            left,
         })
     }
 }
