@@ -323,6 +323,9 @@ static const size_t kAllPagesSize = kNumAllPages * kPageSize;
 // AllocAllPages() for more information.
 static const size_t kAllPagesJemallocSize = kAllPagesSize - kPageSize;
 
+// The default state for PHC.  Either Enabled or OnlyFree.
+#define DEFAULT_STATE mozilla::phc::Enabled
+
 // The junk value used to fill new allocation in debug builds. It's same value
 // as the one used by mozjemalloc. PHC applies it unconditionally in debug
 // builds. Unlike mozjemalloc, PHC doesn't consult the MALLOC_OPTIONS
@@ -874,6 +877,14 @@ class GMut {
   }
 #endif
 
+  // Should we make new PHC allocations?
+  bool ShouldMakeNewAllocations() const {
+    return mPhcState == mozilla::phc::Enabled;
+  }
+
+  using PHCState = mozilla::phc::PHCState;
+  void SetState(PHCState aState) { mPhcState = aState; }
+
  private:
   template <int N>
   uint64_t RandomSeed() {
@@ -933,6 +944,11 @@ class GMut {
   size_t mPageAllocHits = 0;
   size_t mPageAllocMisses = 0;
 #endif
+
+  // This will only ever be updated from one thread.  The other threads should
+  // eventually get the update.
+  Atomic<PHCState, Relaxed> mPhcState =
+      Atomic<PHCState, Relaxed>(DEFAULT_STATE);
 };
 
 Mutex GMut::sMutex;
@@ -1071,6 +1087,11 @@ static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
   MOZ_ASSERT(IsPowerOfTwo(aAlignment));
 
   if (aReqSize > kPageSize) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(gMut);
+  if (!gMut->ShouldMakeNewAllocations()) {
     return nullptr;
   }
 
@@ -1344,7 +1365,7 @@ MOZ_ALWAYS_INLINE static void* PageRealloc(const Maybe<arena_id_t>& aArenaId,
   // Check for realloc() of a freed block.
   gMut->EnsureValidAndInUse(lock, aOldPtr, index);
 
-  if (aNewSize <= kPageSize) {
+  if (aNewSize <= kPageSize && gMut->ShouldMakeNewAllocations()) {
     // A page-to-page transition. Just keep using the page allocation. We do
     // this even if the thread is disabled, because it doesn't create a new
     // page allocation. Note that ResizePageInUse() checks aArenaId.
@@ -1686,6 +1707,12 @@ class PHCBridge : public ReplaceMallocBridge {
     } else {
       aMemoryUsage.mFragmentationBytes = 0;
     }
+  }
+
+  // Enable or Disable PHC at runtime.  If PHC is disabled it will still trap
+  // bad uses of previous allocations, but won't track any new allocations.
+  virtual void SetPHCState(mozilla::phc::PHCState aState) override {
+    gMut->SetState(aState);
   }
 };
 
