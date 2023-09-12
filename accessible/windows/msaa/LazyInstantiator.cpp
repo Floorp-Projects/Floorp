@@ -270,6 +270,7 @@ bool LazyInstantiator::ShouldInstantiate() {
     } else {
       for (const DWORD pid : uiaPids) {
         if (ShouldInstantiate(pid)) {
+          sShouldBlockUia = Some(false);
           return true;
         }
       }
