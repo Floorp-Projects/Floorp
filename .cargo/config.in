@@ -115,9 +115,9 @@ git = "https://github.com/rust-minidump/minidump-writer.git"
 rev = "a15bd5cab6a3de251c0c23264be14b977c0af09c"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/rust-minidump/rust-minidump?rev=87a29fba5e19cfae5ebf73a57ba31504a3872545"]
+[source."git+https://github.com/rust-minidump/rust-minidump?rev=6ae42a7f992e8a88ebee661bc77bcedb95cd671f"]
 git = "https://github.com/rust-minidump/rust-minidump"
-rev = "87a29fba5e19cfae5ebf73a57ba31504a3872545"
+rev = "6ae42a7f992e8a88ebee661bc77bcedb95cd671f"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/unicode-org/icu4x?rev=14e9a3a9857be74582abe2dfa7ab799c5eaac873"]

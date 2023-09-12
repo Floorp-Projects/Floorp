@@ -2163,6 +2163,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.17.0 -> 0.17.0@git:87a29fba5e19cfae5ebf73a57ba31504a3872545"
 
+[[audits.minidump-common]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.17.0@git:87a29fba5e19cfae5ebf73a57ba31504a3872545 -> 0.17.0@git:6ae42a7f992e8a88ebee661bc77bcedb95cd671f"
+
 [[audits.minidump-writer]]
 who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"

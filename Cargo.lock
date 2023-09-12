@@ -3423,7 +3423,7 @@ dependencies = [
 [[package]]
 name = "minidump-common"
 version = "0.17.0"
-source = "git+https://github.com/rust-minidump/rust-minidump?rev=87a29fba5e19cfae5ebf73a57ba31504a3872545#87a29fba5e19cfae5ebf73a57ba31504a3872545"
+source = "git+https://github.com/rust-minidump/rust-minidump?rev=6ae42a7f992e8a88ebee661bc77bcedb95cd671f#6ae42a7f992e8a88ebee661bc77bcedb95cd671f"
 dependencies = [
  "bitflags 1.3.2",
  "debugid",
