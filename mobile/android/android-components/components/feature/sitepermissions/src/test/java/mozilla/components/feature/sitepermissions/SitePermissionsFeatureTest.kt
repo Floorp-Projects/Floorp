@@ -601,6 +601,24 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `GIVEN sessionId which does not match a selected or custom tab WHEN onContentPermissionRequested() THEN reject, consumePermissionRequest are called `() {
+        val mockPermissionRequest: PermissionRequest = mock {
+            whenever(permissions).thenReturn(listOf(ContentVideoCamera(id = "permission")))
+        }
+
+        doNothing().`when`(mockPermissionRequest).reject()
+
+        sitePermissionFeature.sessionId = null
+
+        runTestOnMain {
+            sitePermissionFeature.onContentPermissionRequested(mockPermissionRequest, URL)
+        }
+
+        verify(mockPermissionRequest).reject()
+        verify(sitePermissionFeature).consumePermissionRequest(mockPermissionRequest)
+    }
+
+    @Test
     fun `GIVEN location permissionRequest and shouldApplyRules is true WHEN onContentPermissionRequested() THEN handleRuledFlow is called`() = runTestOnMain {
         // given
         val mockPermissionRequest: PermissionRequest = mock {

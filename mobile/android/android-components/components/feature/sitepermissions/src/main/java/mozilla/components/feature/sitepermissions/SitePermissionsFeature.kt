@@ -63,6 +63,7 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.components.support.ktx.kotlin.stripDefaultPort
@@ -98,7 +99,8 @@ internal const val STORAGE_ACCESS_DOCUMENTATION_URL =
 @Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class SitePermissionsFeature(
     private val context: Context,
-    private var sessionId: String? = null,
+    @set:VisibleForTesting
+    internal var sessionId: String? = null,
     private val storage: SitePermissionsStorage = OnDiskSitePermissionsStorage(context),
     var sitePermissionsRules: SitePermissionsRules? = null,
     private val fragmentManager: FragmentManager,
@@ -113,6 +115,8 @@ class SitePermissionsFeature(
     internal val selectOrAddUseCase by lazy {
         SelectOrAddUseCase(store)
     }
+
+    private val logger = Logger("SitePermissionsFeature")
 
     internal val ioCoroutineScope by lazy { coroutineScopeInitializer() }
 
@@ -427,8 +431,15 @@ class SitePermissionsFeature(
             return null
         }
 
-        val private: Boolean = store.state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.private
-            ?: throw IllegalStateException("Unable to find session for $sessionId or selected session")
+        val private: Boolean? =
+            store.state.findTabOrCustomTabOrSelectedTab(sessionId)?.content?.private
+
+        if (private == null) {
+            logger.error("Unable to find a tab for $sessionId rejecting the prompt request")
+            permissionRequest.reject()
+            consumePermissionRequest(permissionRequest)
+            return null
+        }
 
         val permissionFromStorage = withContext(coroutineScope.coroutineContext) {
             storage.findSitePermissionsBy(origin, private = private)
