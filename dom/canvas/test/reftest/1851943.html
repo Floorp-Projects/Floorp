@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<head><meta charset="utf-8"></head>
+<body>
+<canvas id="canvas" width="100" height="100" style="background-color: #555555;"></canvas>
+<script>
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+
+const canvasTemp = document.createElement('canvas');
+canvasTemp.width = 50;
+canvasTemp.height = 50;
+let ctxTemp = canvasTemp.getContext("2d");
+ctxTemp.fillStyle = "#ff0000";
+ctxTemp.fillRect(0, 0, 50, 50);
+ctxTemp.fillStyle = "#00ff00";
+ctxTemp.fillRect(2, 2, 46, 46);
+ctx.drawImage(canvasTemp, -25, -25, 100, 100, -25, -25, 100, 100);
+</script>
+</body>

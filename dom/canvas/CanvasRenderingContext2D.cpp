@@ -5084,6 +5084,7 @@ static void ClipImageDimension(double& aSourceCoord, double& aSourceSize,
     aDestSize = destEnd - aDestCoord;
     aSourceSize += relativeCoord;
     aSourceCoord = aClipOriginCoord;
+    relativeCoord = 0.0;
   }
   double delta = aClipSize - (relativeCoord + aSourceSize);
   if (delta < 0.0) {
