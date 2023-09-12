@@ -1310,6 +1310,20 @@ TEST_F(JsepTrackTest, SimulcastOffererWithRtx) {
   ASSERT_GT(posSsrc1, posSsrc0);
   ASSERT_GT(posSsrc2, posSsrc0);
   ASSERT_GT(posSsrc2, posSsrc1);
+
+  ASSERT_EQ(3U, mSendOff.GetRtxSsrcs().size());
+  const auto posRtxSsrc0 =
+      mOffer->ToString().find(std::to_string(mSendOff.GetRtxSsrcs()[0]));
+  const auto posRtxSsrc1 =
+      mOffer->ToString().find(std::to_string(mSendOff.GetRtxSsrcs()[1]));
+  const auto posRtxSsrc2 =
+      mOffer->ToString().find(std::to_string(mSendOff.GetRtxSsrcs()[2]));
+  ASSERT_NE(std::string::npos, posRtxSsrc0);
+  ASSERT_NE(std::string::npos, posRtxSsrc1);
+  ASSERT_NE(std::string::npos, posRtxSsrc2);
+  ASSERT_GT(posRtxSsrc1, posRtxSsrc0);
+  ASSERT_GT(posRtxSsrc2, posRtxSsrc0);
+  ASSERT_GT(posRtxSsrc2, posRtxSsrc1);
 }
 
 TEST_F(JsepTrackTest, SimulcastAnswerer) {
