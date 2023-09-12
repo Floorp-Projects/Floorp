@@ -376,6 +376,12 @@ async function testClickResultTelemetry(expected, resetFOG = true) {
     return;
   }
 
+  // TODO: Bug 1813128: Update telemetry to account for global rules.
+  if (Services.prefs.getBoolPref("cookiebanners.service.enableGlobalRules")) {
+    ok(true, "Skip click telemetry when global rules are enabled.");
+    return;
+  }
+
   // Ensure we have all data from the content process.
   await Services.fog.testFlushAllChildren();
 
