@@ -5113,6 +5113,18 @@ RefPtr<BoolPromise> QuotaManager::ClearPrivateRepository() {
   return clearPrivateRepositoryOp->OnResults();
 }
 
+RefPtr<BoolPromise> QuotaManager::ClearStorage() {
+  AssertIsOnOwningThread();
+
+  auto clearStorageOp = CreateClearStorageOp();
+
+  RegisterNormalOriginOp(*clearStorageOp);
+
+  clearStorageOp->RunImmediately();
+
+  return clearStorageOp->OnResults();
+}
+
 RefPtr<BoolPromise> QuotaManager::ShutdownStorage() {
   AssertIsOnOwningThread();
 

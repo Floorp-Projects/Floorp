@@ -63,10 +63,6 @@ struct ClearDataResponse
 {
 };
 
-struct ClearAllResponse
-{
-};
-
 struct PersistedResponse
 {
   bool persisted;
@@ -101,7 +97,6 @@ union RequestResponse
   ClearOriginResponse;
   ResetOriginResponse;
   ClearDataResponse;
-  ClearAllResponse;
   PersistedResponse;
   PersistResponse;
   EstimateResponse;

@@ -26,6 +26,22 @@ using namespace mozilla::ipc;
 
 namespace {
 
+class ResolveBoolResponseAndReturn {
+ public:
+  using ResolverType = BoolResponseResolver;
+
+  explicit ResolveBoolResponseAndReturn(const ResolverType& aResolver)
+      : mResolver(aResolver) {}
+
+  mozilla::ipc::IPCResult operator()(const nsresult rv) {
+    mResolver(rv);
+    return IPC_OK();
+  }
+
+ private:
+  const ResolverType& mResolver;
+};
+
 class BoolPromiseResolveOrRejectCallback {
  public:
   using PromiseType = BoolPromise;
@@ -233,7 +249,6 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
       break;
     }
 
-    case RequestParams::TClearAllParams:
     case RequestParams::TListOriginsParams:
       break;
 
@@ -418,9 +433,6 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
       case RequestParams::TClearDataParams:
         return CreateClearDataOp(aParams);
 
-      case RequestParams::TClearAllParams:
-        return CreateClearOp();
-
       case RequestParams::TPersistedParams:
         return CreatePersistedOp(aParams);
 
@@ -474,10 +486,7 @@ mozilla::ipc::IPCResult Quota::RecvClearStoragesForPrivateBrowsing(
   AssertIsOnBackgroundThread();
 
   QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
-         ([&aResolver](const auto rv) {
-           aResolver(rv);
-           return IPC_OK();
-         }));
+         ResolveBoolResponseAndReturn(aResolver));
 
   if (BackgroundParent::IsOtherProcessActor(Manager())) {
     MOZ_CRASH_UNLESS_FUZZING();
@@ -485,12 +494,28 @@ mozilla::ipc::IPCResult Quota::RecvClearStoragesForPrivateBrowsing(
   }
 
   QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
-                QuotaManager::GetOrCreate(), ([&aResolver](const auto rv) {
-                  aResolver(rv);
-                  return IPC_OK();
-                }));
+                QuotaManager::GetOrCreate(),
+                ResolveBoolResponseAndReturn(aResolver));
 
   quotaManager->ClearPrivateRepository()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      BoolPromiseResolveOrRejectCallback(this, std::move(aResolver)));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult Quota::RecvClearStorage(
+    ShutdownStorageResolver&& aResolver) {
+  AssertIsOnBackgroundThread();
+
+  QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
+         ResolveBoolResponseAndReturn(aResolver));
+
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(),
+                ResolveBoolResponseAndReturn(aResolver));
+
+  quotaManager->ClearStorage()->Then(
       GetCurrentSerialEventTarget(), __func__,
       BoolPromiseResolveOrRejectCallback(this, std::move(aResolver)));
 
@@ -502,16 +527,11 @@ mozilla::ipc::IPCResult Quota::RecvShutdownStorage(
   AssertIsOnBackgroundThread();
 
   QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
-         ([&aResolver](const auto rv) {
-           aResolver(rv);
-           return IPC_OK();
-         }));
+         ResolveBoolResponseAndReturn(aResolver));
 
   QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
-                QuotaManager::GetOrCreate(), ([&aResolver](const auto rv) {
-                  aResolver(rv);
-                  return IPC_OK();
-                }));
+                QuotaManager::GetOrCreate(),
+                ResolveBoolResponseAndReturn(aResolver));
 
   quotaManager->ShutdownStorage()->Then(
       GetCurrentSerialEventTarget(), __func__,

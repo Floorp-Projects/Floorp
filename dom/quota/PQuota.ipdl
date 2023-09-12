@@ -116,10 +116,6 @@ struct ClearDataParams
   OriginAttributesPattern pattern;
 };
 
-struct ClearAllParams
-{
-};
-
 struct PersistedParams
 {
   PrincipalInfo principalInfo;
@@ -152,7 +148,6 @@ union RequestParams
   ClearOriginParams;
   ResetOriginParams;
   ClearDataParams;
-  ClearAllParams;
   PersistedParams;
   PersistParams;
   EstimateParams;
@@ -175,6 +170,9 @@ parent:
   async PQuotaRequest(RequestParams params);
 
   async ClearStoragesForPrivateBrowsing()
+      returns(BoolResponse response);
+
+  async ClearStorage()
       returns(BoolResponse response);
 
   async ShutdownStorage()
