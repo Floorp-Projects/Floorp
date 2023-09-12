@@ -7505,7 +7505,7 @@ nsMargin nsHTMLScrollFrame::GetScrollPadding() const {
                                    GetScrollPortRect().Size());
 }
 
-layers::ScrollSnapInfo nsHTMLScrollFrame::ComputeScrollSnapInfo() {
+ScrollSnapInfo nsHTMLScrollFrame::ComputeScrollSnapInfo() {
   ScrollSnapInfo result;
 
   nsIFrame* scrollSnapFrame = GetFrameForStyle();
@@ -7529,7 +7529,7 @@ layers::ScrollSnapInfo nsHTMLScrollFrame::ComputeScrollSnapInfo() {
   return result;
 }
 
-layers::ScrollSnapInfo nsHTMLScrollFrame::GetScrollSnapInfo() {
+ScrollSnapInfo nsHTMLScrollFrame::GetScrollSnapInfo() {
   // TODO(botond): Should we cache it?
   return ComputeScrollSnapInfo();
 }

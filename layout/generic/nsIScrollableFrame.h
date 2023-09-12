@@ -52,7 +52,7 @@ class ScrollAnchorContainer;
 class nsIScrollableFrame : public nsIScrollbarMediator {
  public:
   using CSSIntPoint = mozilla::CSSIntPoint;
-  using ScrollSnapInfo = mozilla::layers::ScrollSnapInfo;
+  using ScrollSnapInfo = mozilla::ScrollSnapInfo;
   using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
   using ScrollMode = mozilla::ScrollMode;
   using ScrollOrigin = mozilla::ScrollOrigin;
