@@ -28,9 +28,9 @@ bool ScrollSnapInfo::HasSnapPositions() const {
   }
 
   for (const auto& target : mSnapTargets) {
-    if ((target.mSnapPositionX &&
+    if ((target.mSnapPoint.mX &&
          mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) ||
-        (target.mSnapPositionY &&
+        (target.mSnapPoint.mY &&
          mScrollSnapStrictnessY != StyleScrollSnapStrictness::None)) {
       return true;
     }
@@ -81,12 +81,12 @@ void ScrollSnapInfo::ForEachValidTargetFor(
   for (const auto& target : mSnapTargets) {
     nsPoint snapPoint(
         mScrollSnapStrictnessX != StyleScrollSnapStrictness::None &&
-                target.mSnapPositionX
-            ? *target.mSnapPositionX
+                target.mSnapPoint.mX
+            ? *target.mSnapPoint.mX
             : aDestination.x,
         mScrollSnapStrictnessY != StyleScrollSnapStrictness::None &&
-                target.mSnapPositionY
-            ? *target.mSnapPositionY
+                target.mSnapPoint.mY
+            ? *target.mSnapPoint.mY
             : aDestination.y);
     nsRect snappedPort = nsRect(snapPoint, mSnapportSize);
     // Ignore snap points if snapping to the point would leave the snap area
