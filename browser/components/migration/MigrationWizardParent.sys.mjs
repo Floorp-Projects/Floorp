@@ -161,6 +161,12 @@ export class MigrationWizardParent extends JSWindowActorParent {
         this.#recordEvent(message.data.type, message.data.args);
         break;
       }
+
+      case "OpenAboutAddons": {
+        let browser = this.browsingContext.top.embedderElement;
+        this.#openAboutAddons(browser);
+        break;
+      }
     }
 
     return null;
@@ -768,5 +774,17 @@ export class MigrationWizardParent extends JSWindowActorParent {
       brandImage: fileMigrator.constructor.brandImage,
       resourceTypes: [],
     };
+  }
+
+  /**
+   * Opens the about:addons page in a new background tab in the same window
+   * as the passed browser.
+   *
+   * @param {Element} browser
+   *   The browser element requesting that about:addons opens.
+   */
+  #openAboutAddons(browser) {
+    let window = browser.ownerGlobal;
+    window.openTrustedLinkIn("about:addons", "tab", { inBackground: true });
   }
 }
