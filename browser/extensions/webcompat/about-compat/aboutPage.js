@@ -4,7 +4,11 @@
 
 "use strict";
 
-/* global ExtensionAPI, XPCOMUtils, Services */
+/* global ExtensionAPI, XPCOMUtils */
+
+const Services =
+  globalThis.Services ||
+  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
