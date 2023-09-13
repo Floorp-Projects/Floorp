@@ -32,6 +32,7 @@
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/TimeZone.h"
+#include "builtin/temporal/ToString.h"
 #include "builtin/temporal/Wrapped.h"
 #include "builtin/temporal/ZonedDateTime.h"
 #include "ds/IdValuePair.h"
@@ -655,84 +656,6 @@ static bool ToTemporalDateTime(JSContext* cx, Handle<Value> item,
   *result = ToPlainDateTime(obj);
   calendar.set(obj->calendar());
   return calendar.wrap(cx);
-}
-
-/**
- * TemporalDateTimeToString ( isoYear, isoMonth, isoDay, hour, minute, second,
- * millisecond, microsecond, nanosecond, calendar, precision, showCalendar )
- */
-JSString* js::temporal::TemporalDateTimeToString(JSContext* cx,
-                                                 const PlainDateTime& dateTime,
-                                                 Handle<CalendarValue> calendar,
-                                                 Precision precision,
-                                                 CalendarOption showCalendar) {
-  JSStringBuilder result(cx);
-
-  // Note: This doesn't reserve too much space, because the string builder
-  // already internally reserves space for 64 characters.
-  constexpr size_t datePart = 1 + 6 + 1 + 2 + 1 + 2;          // 13
-  constexpr size_t timePart = 1 + 2 + 1 + 2 + 1 + 2 + 1 + 9;  // 19
-  constexpr size_t calendarPart = 30;
-
-  if (!result.reserve(datePart + timePart + calendarPart)) {
-    return nullptr;
-  }
-
-  // Step 1. (Not applicable in our implementation.)
-
-  // Step 2.
-  int32_t year = dateTime.date.year;
-  if (0 <= year && year <= 9999) {
-    result.infallibleAppend(char('0' + (year / 1000)));
-    result.infallibleAppend(char('0' + (year % 1000) / 100));
-    result.infallibleAppend(char('0' + (year % 100) / 10));
-    result.infallibleAppend(char('0' + (year % 10)));
-  } else {
-    result.infallibleAppend(year < 0 ? '-' : '+');
-
-    year = std::abs(year);
-    result.infallibleAppend(char('0' + (year / 100000)));
-    result.infallibleAppend(char('0' + (year % 100000) / 10000));
-    result.infallibleAppend(char('0' + (year % 10000) / 1000));
-    result.infallibleAppend(char('0' + (year % 1000) / 100));
-    result.infallibleAppend(char('0' + (year % 100) / 10));
-    result.infallibleAppend(char('0' + (year % 10)));
-  }
-
-  // Step 3.
-  int32_t month = dateTime.date.month;
-  result.infallibleAppend('-');
-  result.infallibleAppend(char('0' + (month / 10)));
-  result.infallibleAppend(char('0' + (month % 10)));
-
-  // Step 4.
-  int32_t day = dateTime.date.day;
-  result.infallibleAppend('-');
-  result.infallibleAppend(char('0' + (day / 10)));
-  result.infallibleAppend(char('0' + (day % 10)));
-
-  // Step 5.
-  int32_t hour = dateTime.time.hour;
-  result.infallibleAppend('T');
-  result.infallibleAppend(char('0' + (hour / 10)));
-  result.infallibleAppend(char('0' + (hour % 10)));
-
-  // Step 6.
-  int32_t minute = dateTime.time.minute;
-  result.infallibleAppend(':');
-  result.infallibleAppend(char('0' + (minute / 10)));
-  result.infallibleAppend(char('0' + (minute % 10)));
-
-  // Step 7.
-  FormatSecondsStringPart(result, dateTime.time, precision);
-
-  // Step 8.
-  if (!MaybeFormatCalendarAnnotation(cx, result, calendar, showCalendar)) {
-    return nullptr;
-  }
-
-  // Step 9.
-  return result.finishString();
 }
 
 /**

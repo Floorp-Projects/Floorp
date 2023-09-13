@@ -27,6 +27,7 @@ if CONFIG["JS_HAS_TEMPORAL_API"]:
         "TemporalNow.cpp",
         "TemporalParser.cpp",
         "TimeZone.cpp",
+        "ToString.cpp",
         "Wrapped.cpp",
         "ZonedDateTime.cpp",
     ]
