@@ -161,9 +161,9 @@ internal class TimePickerDialogFragment :
                         context = requireContext(),
                         selectedTime = initialDate.toCalendar(),
                         maxTime = maximumDate?.toCalendar()
-                            ?: MonthAndYearPicker.getDefaultMaxDate(),
+                            ?: TimePrecisionPicker.getDefaultMaxTime(),
                         minTime = minimumDate?.toCalendar()
-                            ?: MonthAndYearPicker.getDefaultMinDate(),
+                            ?: TimePrecisionPicker.getDefaultMinTime(),
                         stepValue = stepValue,
                         timeSetListener = this,
                     ),
