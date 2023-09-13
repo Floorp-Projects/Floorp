@@ -10,11 +10,7 @@
 #include "OriginOperationBase.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
-#include "mozilla/dom/quota/Client.h"
-#include "mozilla/dom/quota/OriginScope.h"
-#include "mozilla/dom/quota/PersistenceType.h"
 
 namespace mozilla::dom::quota {
 
@@ -24,12 +20,8 @@ class NormalOriginOperationBase
     : public OriginOperationBase,
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  protected:
-  OriginScope mOriginScope;
   RefPtr<DirectoryLock> mDirectoryLock;
-  Nullable<PersistenceType> mPersistenceType;
-  Nullable<Client::Type> mClientType;
   mozilla::Atomic<bool> mCanceled;
-  const bool mExclusive;
 
   // If we want to only forward declare DirectoryLock which is referenced by
   // the mDirectoryLock member then the constructor and destructor must be
@@ -38,11 +30,7 @@ class NormalOriginOperationBase
   // know how to call DirectoryLock::AddRef/Release in the constructor and
   // destructor
   NormalOriginOperationBase(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
-                            const char* aName,
-                            const Nullable<PersistenceType>& aPersistenceType,
-                            const OriginScope& aOriginScope,
-                            const Nullable<Client::Type>& aClientType,
-                            bool aExclusive);
+                            const char* aName);
 
   ~NormalOriginOperationBase();
 

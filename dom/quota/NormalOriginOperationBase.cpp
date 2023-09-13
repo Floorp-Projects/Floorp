@@ -12,15 +12,8 @@
 namespace mozilla::dom::quota {
 
 NormalOriginOperationBase::NormalOriginOperationBase(
-    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager, const char* aName,
-    const Nullable<PersistenceType>& aPersistenceType,
-    const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    bool aExclusive)
-    : OriginOperationBase(std::move(aQuotaManager), aName),
-      mOriginScope(aOriginScope),
-      mPersistenceType(aPersistenceType),
-      mClientType(aClientType),
-      mExclusive(aExclusive) {
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager, const char* aName)
+    : OriginOperationBase(std::move(aQuotaManager), aName) {
   AssertIsOnOwningThread();
 }
 
