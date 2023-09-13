@@ -232,6 +232,21 @@ ClientMetadata QuotaManagerDependencyFixture::GetTestClientMetadata() {
   return {GetTestOriginMetadata(), Client::SDB};
 }
 
+// static
+OriginMetadata QuotaManagerDependencyFixture::GetOtherTestOriginMetadata() {
+  return {""_ns,
+          "other-example.com"_ns,
+          "http://other-example.com"_ns,
+          "http://other-example.com"_ns,
+          /* aIsPrivate */ false,
+          PERSISTENCE_TYPE_DEFAULT};
+}
+
+// static
+ClientMetadata QuotaManagerDependencyFixture::GetOtherTestClientMetadata() {
+  return {GetOtherTestOriginMetadata(), Client::SDB};
+}
+
 nsCOMPtr<nsISerialEventTarget> QuotaManagerDependencyFixture::sBackgroundTarget;
 
 }  // namespace mozilla::dom::quota::test

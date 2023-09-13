@@ -23,8 +23,7 @@ class TestQuotaManager : public QuotaManagerDependencyFixture {
 
 // Test OpenClientDirctory when an opening of a client directory is already
 // ongoing and storage shutdown is scheduled after that.
-TEST_F(TestQuotaManager,
-       DISABLED_OpenClientDirectory_OngoingWithScheduledShutdown) {
+TEST_F(TestQuotaManager, OpenClientDirectory_OngoingWithScheduledShutdown) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
   ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
@@ -113,6 +112,266 @@ TEST_F(TestQuotaManager,
 
               done = true;
             });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+}
+
+// Test OpenClientDirectory when an opening of a client directory is already
+// ongoing and an exclusive directory lock is requested after that.
+TEST_F(TestQuotaManager,
+       OpenClientDirectory_OngoingWithExclusiveDirectoryLock) {
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+
+  PerformOnBackgroundThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    RefPtr<UniversalDirectoryLock> directoryLock =
+        quotaManager->CreateDirectoryLockInternal(Nullable<PersistenceType>(),
+                                                  OriginScope::FromNull(),
+                                                  Nullable<Client::Type>(),
+                                                  /* aExclusive */ true);
+
+    nsTArray<RefPtr<BoolPromise>> promises;
+
+    promises.AppendElement(
+        quotaManager->OpenClientDirectory(GetTestClientMetadata())
+            ->Then(GetCurrentSerialEventTarget(), __func__,
+                   [&directoryLock](
+                       const ClientDirectoryLockPromise::ResolveOrRejectValue&
+                           aValue) {
+                     directoryLock = nullptr;
+
+                     if (aValue.IsReject()) {
+                       return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                           __func__);
+                     }
+
+                     return BoolPromise::CreateAndResolve(true, __func__);
+                   }));
+    promises.AppendElement(directoryLock->Acquire());
+    promises.AppendElement(
+        quotaManager->OpenClientDirectory(GetTestClientMetadata())
+            ->Then(GetCurrentSerialEventTarget(), __func__,
+                   [](const ClientDirectoryLockPromise::ResolveOrRejectValue&
+                          aValue) {
+                     if (aValue.IsReject()) {
+                       return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                           __func__);
+                     }
+
+                     return BoolPromise::CreateAndResolve(true, __func__);
+                   }));
+
+    bool done = false;
+
+    BoolPromise::All(GetCurrentSerialEventTarget(), promises)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [&done](const CopyableTArray<bool>& aResolveValues) {
+              QuotaManager* quotaManager = QuotaManager::Get();
+              ASSERT_TRUE(quotaManager);
+
+              ASSERT_TRUE(quotaManager->IsStorageInitialized());
+
+              done = true;
+            },
+            [&done](nsresult aRejectValue) {
+              ASSERT_TRUE(false);
+
+              done = true;
+            });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+}
+
+// Test OpenClientDirectory when an opening of a client directory already
+// finished.
+TEST_F(TestQuotaManager, OpenClientDirectory_Finished) {
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+
+  PerformOnBackgroundThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    bool done = false;
+
+    quotaManager->OpenClientDirectory(GetTestClientMetadata())
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [&done](const ClientDirectoryLockPromise::ResolveOrRejectValue&
+                           aValue) {
+                 QuotaManager* quotaManager = QuotaManager::Get();
+                 ASSERT_TRUE(quotaManager);
+
+                 ASSERT_TRUE(quotaManager->IsStorageInitialized());
+
+                 done = true;
+               });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+
+    done = false;
+
+    quotaManager->OpenClientDirectory(GetTestClientMetadata())
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [&done](const ClientDirectoryLockPromise::ResolveOrRejectValue&
+                           aValue) {
+                 QuotaManager* quotaManager = QuotaManager::Get();
+                 ASSERT_TRUE(quotaManager);
+
+                 ASSERT_TRUE(quotaManager->IsStorageInitialized());
+
+                 done = true;
+               });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+}
+
+// Test OpenClientDirectory when an opening of a client directory already
+// finished but storage shutdown has just been scheduled.
+TEST_F(TestQuotaManager, OpenClientDirectory_FinishedWithScheduledShutdown) {
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+
+  PerformOnBackgroundThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    bool done = false;
+
+    quotaManager->OpenClientDirectory(GetTestClientMetadata())
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [&done](const ClientDirectoryLockPromise::ResolveOrRejectValue&
+                           aValue) {
+                 QuotaManager* quotaManager = QuotaManager::Get();
+                 ASSERT_TRUE(quotaManager);
+
+                 ASSERT_TRUE(quotaManager->IsStorageInitialized());
+
+                 done = true;
+               });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+
+    nsTArray<RefPtr<BoolPromise>> promises;
+
+    promises.AppendElement(quotaManager->ShutdownStorage());
+    promises.AppendElement(
+        quotaManager->OpenClientDirectory(GetTestClientMetadata())
+            ->Then(GetCurrentSerialEventTarget(), __func__,
+                   [](const ClientDirectoryLockPromise::ResolveOrRejectValue&
+                          aValue) {
+                     if (aValue.IsReject()) {
+                       return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                           __func__);
+                     }
+
+                     return BoolPromise::CreateAndResolve(true, __func__);
+                   }));
+
+    done = false;
+
+    BoolPromise::All(GetCurrentSerialEventTarget(), promises)
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [&done](const CopyableTArray<bool>& aResolveValues) {
+              QuotaManager* quotaManager = QuotaManager::Get();
+              ASSERT_TRUE(quotaManager);
+
+              ASSERT_TRUE(quotaManager->IsStorageInitialized());
+
+              done = true;
+            },
+            [&done](nsresult aRejectValue) {
+              ASSERT_TRUE(false);
+
+              done = true;
+            });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+}
+
+// Test OpenClientDirectory when an opening of a client directory already
+// finished with an exclusive client directory lock for a different origin is
+// acquired in between.
+TEST_F(TestQuotaManager,
+       OpenClientDirectory_FinishedWithOtherExclusiveClientDirectoryLock) {
+  ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
+
+  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+
+  PerformOnBackgroundThread([]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
+
+    bool done = false;
+
+    quotaManager->OpenClientDirectory(GetTestClientMetadata())
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [&done](const ClientDirectoryLockPromise::ResolveOrRejectValue&
+                           aValue) {
+                 QuotaManager* quotaManager = QuotaManager::Get();
+                 ASSERT_TRUE(quotaManager);
+
+                 ASSERT_TRUE(quotaManager->IsStorageInitialized());
+
+                 done = true;
+               });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+
+    RefPtr<ClientDirectoryLock> directoryLock =
+        quotaManager->CreateDirectoryLock(GetOtherTestClientMetadata(),
+                                          /* aExclusive */ true);
+
+    done = false;
+
+    directoryLock->Acquire()->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [&done](const BoolPromise::ResolveOrRejectValue& aValue) {
+          done = true;
+        });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+
+    done = false;
+
+    quotaManager->OpenClientDirectory(GetTestClientMetadata())
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [&done](const ClientDirectoryLockPromise::ResolveOrRejectValue&
+                           aValue) {
+                 QuotaManager* quotaManager = QuotaManager::Get();
+                 ASSERT_TRUE(quotaManager);
+
+                 ASSERT_TRUE(quotaManager->IsStorageInitialized());
+
+                 done = true;
+               });
 
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });

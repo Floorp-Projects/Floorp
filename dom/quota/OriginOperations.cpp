@@ -320,7 +320,8 @@ class InitOp final : public ResolvableNormalOriginOp<bool> {
   RefPtr<UniversalDirectoryLock> mDirectoryLock;
 
  public:
-  explicit InitOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);
+  InitOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+         RefPtr<UniversalDirectoryLock> aDirectoryLock);
 
  private:
   ~InitOp() = default;
@@ -668,8 +669,10 @@ RefPtr<QuotaRequestBase> CreateTemporaryStorageInitializedOp(
 }
 
 RefPtr<ResolvableNormalOriginOp<bool>> CreateInitOp(
-    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager) {
-  return MakeRefPtr<InitOp>(std::move(aQuotaManager));
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+    RefPtr<UniversalDirectoryLock> aDirectoryLock) {
+  return MakeRefPtr<InitOp>(std::move(aQuotaManager),
+                            std::move(aDirectoryLock));
 }
 
 RefPtr<QuotaRequestBase> CreateInitTemporaryStorageOp(
@@ -1293,20 +1296,18 @@ void TemporaryStorageInitializedOp::GetResponse(RequestResponse& aResponse) {
   aResponse = temporaryStorageInitializedResponse;
 }
 
-InitOp::InitOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
-    : ResolvableNormalOriginOp(std::move(aQuotaManager), "dom::quota::InitOp") {
+InitOp::InitOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+               RefPtr<UniversalDirectoryLock> aDirectoryLock)
+    : ResolvableNormalOriginOp(std::move(aQuotaManager), "dom::quota::InitOp"),
+      mDirectoryLock(std::move(aDirectoryLock)) {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mDirectoryLock);
 }
 
 RefPtr<BoolPromise> InitOp::OpenDirectory() {
   AssertIsOnOwningThread();
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
-      Nullable<PersistenceType>(), OriginScope::FromNull(),
-      Nullable<Client::Type>(),
-      /* aExclusive */ false);
-
-  return mDirectoryLock->Acquire();
+  return BoolPromise::CreateAndResolve(true, __func__);
 }
 
 nsresult InitOp::DoDirectoryWork(QuotaManager& aQuotaManager) {

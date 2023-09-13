@@ -86,6 +86,9 @@ class QuotaManagerDependencyFixture : public testing::Test {
   static OriginMetadata GetTestOriginMetadata();
   static ClientMetadata GetTestClientMetadata();
 
+  static OriginMetadata GetOtherTestOriginMetadata();
+  static ClientMetadata GetOtherTestClientMetadata();
+
  private:
   static nsCOMPtr<nsISerialEventTarget> sBackgroundTarget;
 };
