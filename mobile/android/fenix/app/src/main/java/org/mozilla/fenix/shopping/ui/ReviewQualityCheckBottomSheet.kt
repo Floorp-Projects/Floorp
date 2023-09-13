@@ -67,6 +67,13 @@ fun ReviewQualityCheckBottomSheet(
                             ),
                         )
                     },
+                    onBylineLinkClick = { url ->
+                        store.dispatch(
+                            ReviewQualityCheckAction.OpenLink(
+                                ReviewQualityCheckState.LinkType.ExternalLink(url),
+                            ),
+                        )
+                    },
                 )
             }
 
@@ -82,12 +89,14 @@ fun ReviewQualityCheckBottomSheet(
 }
 
 @Composable
+@Suppress("LongParameterList")
 private fun ProductReview(
     state: ReviewQualityCheckState.OptedIn,
     onOptOutClick: () -> Unit,
     onReanalyzeClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onReviewGradeLearnMoreClick: (String) -> Unit,
+    onBylineLinkClick: (String) -> Unit,
 ) {
     Crossfade(
         targetState = state.productReviewState,
@@ -102,6 +111,7 @@ private fun ProductReview(
                     onReanalyzeClick = onReanalyzeClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
+                    onBylineLinkClick = onBylineLinkClick,
                 )
             }
 
@@ -111,6 +121,7 @@ private fun ProductReview(
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
                     onOptOutClick = onOptOutClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
+                    onBylineLinkClick = onBylineLinkClick,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

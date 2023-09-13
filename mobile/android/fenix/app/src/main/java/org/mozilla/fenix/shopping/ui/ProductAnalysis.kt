@@ -52,6 +52,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
  * @param onReviewGradeLearnMoreClick Invoked when the user clicks to learn more about review grades.
+ * @param onBylineLinkClick Invoked when the user clicks on the byline link.
  * @param modifier The modifier to be applied to the Composable.
  */
 @Composable
@@ -63,6 +64,7 @@ fun ProductAnalysis(
     onReanalyzeClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onReviewGradeLearnMoreClick: (String) -> Unit,
+    onBylineLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -106,6 +108,10 @@ fun ProductAnalysis(
             onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
             onTurnOffReviewQualityCheckClick = onOptOutClick,
             modifier = Modifier.fillMaxWidth(),
+        )
+
+        ReviewQualityCheckFooter(
+            onLinkClick = onBylineLinkClick,
         )
     }
 }
@@ -392,6 +398,7 @@ private fun ProductAnalysisPreview() {
                     productRecommendationsEnabled.value = it
                 },
                 onReviewGradeLearnMoreClick = {},
+                onBylineLinkClick = {},
             )
         }
     }

@@ -24,6 +24,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onOptOutClick Invoked when the user opts out of the review quality check feature.
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
+ * @param onBylineLinkClick Invoked when the user clicks on the byline link.
  * @param modifier Modifier to apply to the layout.
  */
 @Composable
@@ -32,6 +33,7 @@ fun ProductAnalysisError(
     onReviewGradeLearnMoreClick: (String) -> Unit,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
+    onBylineLinkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -49,6 +51,10 @@ fun ProductAnalysisError(
             onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
             onTurnOffReviewQualityCheckClick = onOptOutClick,
             modifier = Modifier.fillMaxWidth(),
+        )
+
+        ReviewQualityCheckFooter(
+            onLinkClick = onBylineLinkClick,
         )
     }
 }
@@ -68,6 +74,7 @@ private fun ProductAnalysisErrorPreview() {
                 onReviewGradeLearnMoreClick = {},
                 onOptOutClick = {},
                 onProductRecommendationsEnabledStateChange = {},
+                onBylineLinkClick = {},
                 modifier = Modifier.fillMaxWidth(),
             )
         }
