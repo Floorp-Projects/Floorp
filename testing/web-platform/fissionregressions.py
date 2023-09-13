@@ -388,12 +388,19 @@ def run(logger, src_root, obj_root, **kwargs):
             run_info = platform_run_info.copy()
             run_info["fission"] = kind == "fission"
 
+            subsuites = testloader.load_subsuites(logger, run_info, None, set())
             test_loader = testloader.TestLoader(
-                test_manifests, wpttest.enabled_tests, run_info, manifest_filters=[]
+                test_manifests,
+                wpttest.enabled_tests,
+                run_info,
+                subsuites=subsuites,
+                manifest_filters=[],
             )
             tests[kind] = {
                 test.id: test
-                for _, _, test in test_loader.iter_tests()
+                for _, _, test in test_loader.iter_tests(
+                    run_info, test_loader.manifest_filters
+                )
                 if test._test_metadata is not None
             }
 
