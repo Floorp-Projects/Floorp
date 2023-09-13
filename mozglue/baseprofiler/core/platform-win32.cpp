@@ -293,7 +293,7 @@ static void PlatformInit(PSLockRef aLock) {}
     PopulateRegsFromContext(regs, &context);
 #endif
 
-#if defined(GP_PLAT_amd64_windows)
+#if defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
 static WindowsDllInterceptor NtDllIntercept;
 
 typedef NTSTATUS(NTAPI* LdrUnloadDll_func)(HMODULE module);
@@ -338,7 +338,7 @@ MFBT_API void InitializeWin64ProfilerHooks() {
   stub_LdrResolveDelayLoadedAPI.Set(NtDllIntercept, "LdrResolveDelayLoadedAPI",
                                     &patched_LdrResolveDelayLoadedAPI);
 }
-#endif  // defined(GP_PLAT_amd64_windows)
+#endif  // defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
 
 }  // namespace baseprofiler
 }  // namespace mozilla

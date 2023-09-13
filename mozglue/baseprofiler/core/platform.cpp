@@ -3071,7 +3071,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
   mozilla::base_profiler_markers_detail::EnsureBufferForMainThreadAddMarker();
 
-#if defined(GP_PLAT_amd64_windows)
+#if defined(GP_PLAT_amd64_windows) || defined(GP_PLAT_arm64_windows)
   InitializeWin64ProfilerHooks();
 #endif
 
