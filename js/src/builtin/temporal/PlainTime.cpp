@@ -32,6 +32,7 @@
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/TimeZone.h"
+#include "builtin/temporal/ToString.h"
 #include "builtin/temporal/Wrapped.h"
 #include "builtin/temporal/ZonedDateTime.h"
 #include "ds/IdValuePair.h"
@@ -679,40 +680,6 @@ bool js::temporal::ToTemporalTime(JSContext* cx, Handle<Value> item,
 
   *result = ToPlainTime(&obj.unwrap());
   return true;
-}
-
-/**
- * TemporalTimeToString ( hour, minute, second, millisecond, microsecond,
- * nanosecond, precision )
- */
-static JSString* TemporalTimeToString(JSContext* cx, const PlainTime& time,
-                                      Precision precision) {
-  JSStringBuilder result(cx);
-
-  // Note: This doesn't reserve too much space, because the string builder
-  // already internally reserves space for 64 characters.
-  constexpr size_t timePart = 2 + 1 + 2 + 1 + 2 + 1 + 9;  // 18
-
-  if (!result.reserve(timePart)) {
-    return nullptr;
-  }
-
-  // Step 1.
-  int32_t hour = time.hour;
-  result.infallibleAppend(char('0' + (hour / 10)));
-  result.infallibleAppend(char('0' + (hour % 10)));
-
-  // Step 2.
-  int32_t minute = time.minute;
-  result.infallibleAppend(':');
-  result.infallibleAppend(char('0' + (minute / 10)));
-  result.infallibleAppend(char('0' + (minute % 10)));
-
-  // Step 3.
-  FormatSecondsStringPart(result, time, precision);
-
-  // Step 4.
-  return result.finishString();
 }
 
 /**

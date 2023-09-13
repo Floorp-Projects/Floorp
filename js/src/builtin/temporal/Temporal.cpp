@@ -1118,7 +1118,7 @@ SecondsStringPrecision js::temporal::ToSecondsStringPrecision(
     TemporalUnit smallestUnit, Precision fractionalDigitCount) {
   MOZ_ASSERT(smallestUnit == TemporalUnit::Auto ||
              smallestUnit >= TemporalUnit::Minute);
-  MOZ_ASSERT(fractionalDigitCount.isAuto() ||
+  MOZ_ASSERT(fractionalDigitCount == Precision::Auto() ||
              fractionalDigitCount.value() <= 9);
 
   // Steps 1-5.
@@ -1157,7 +1157,7 @@ SecondsStringPrecision js::temporal::ToSecondsStringPrecision(
   // Step 6. (Not applicable in our implementation.)
 
   // Step 7.
-  if (fractionalDigitCount.isAuto()) {
+  if (fractionalDigitCount == Precision::Auto()) {
     return {Precision::Auto(), TemporalUnit::Nanosecond, Increment{1}};
   }
 
@@ -1192,70 +1192,6 @@ SecondsStringPrecision js::temporal::ToSecondsStringPrecision(
   // Step 12.
   return {fractionalDigitCount, TemporalUnit::Nanosecond,
           increments[9 - digitCount]};
-}
-
-/**
- * FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond,
- * precision )
- */
-void js::temporal::FormatSecondsStringPart(JSStringBuilder& result,
-                                           const PlainTime& time,
-                                           Precision precision) {
-  // Note: The caller is responsible for allocating enough space.
-
-  // Step 1. (Not applicable in our implementation.)
-
-  // Step 2.
-  if (precision.isMinute()) {
-    return;
-  }
-
-  // Step 3.
-  int32_t second = time.second;
-  result.infallibleAppend(':');
-  result.infallibleAppend(char('0' + (second / 10)));
-  result.infallibleAppend(char('0' + (second % 10)));
-
-  // Step 4.
-  int32_t fraction =
-      time.millisecond * 1'000'000 + time.microsecond * 1'000 + time.nanosecond;
-  MOZ_ASSERT(0 <= fraction && fraction < 1'000'000'000);
-
-  // Steps 5-6.
-  if (precision.isAuto()) {
-    // Step 5.a.
-    if (fraction == 0) {
-      return;
-    }
-
-    // Step 7. (Reordered)
-    result.infallibleAppend('.');
-
-    // Steps 5.b-c.
-    uint32_t k = 100'000'000;
-    do {
-      result.infallibleAppend(char('0' + (fraction / k)));
-      fraction %= k;
-      k /= 10;
-    } while (fraction);
-  } else {
-    // Step 6.a.
-    uint8_t p = precision.value();
-    if (p == 0) {
-      return;
-    }
-
-    // Step 7. (Reordered)
-    result.infallibleAppend('.');
-
-    // Steps 6.b-c.
-    uint32_t k = 100'000'000;
-    for (uint8_t i = 0; i < p; i++) {
-      result.infallibleAppend(char('0' + (fraction / k)));
-      fraction %= k;
-      k /= 10;
-    }
-  }
 }
 
 /**

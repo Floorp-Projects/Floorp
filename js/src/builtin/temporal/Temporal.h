@@ -22,7 +22,6 @@ namespace js {
 struct ClassSpec;
 class PlainObject;
 class PropertyName;
-class JSStringBuilder;
 }  // namespace js
 
 namespace js::temporal {
@@ -225,6 +224,12 @@ class Precision final {
     MOZ_ASSERT(value < 10);
   }
 
+  bool operator==(const Precision& other) const {
+    return value_ == other.value_;
+  }
+
+  bool operator!=(const Precision& other) const { return !(*this == other); }
+
   /**
    * Return the number of fractional second digits.
    */
@@ -232,16 +237,6 @@ class Precision final {
     MOZ_ASSERT(value_ >= 0, "auto and minute precision don't have a value");
     return uint8_t(value_);
   }
-
-  /**
-   * Limit the precision to trim off any trailing zeros.
-   */
-  bool isAuto() const { return value_ == -1; }
-
-  /**
-   * Limit the precision to minutes, i.e. don't display seconds and sub-seconds.
-   */
-  bool isMinute() const { return value_ == -2; }
 
   /**
    * Limit the precision to trim off any trailing zeros.
@@ -271,13 +266,6 @@ struct SecondsStringPrecision final {
  */
 SecondsStringPrecision ToSecondsStringPrecision(TemporalUnit smallestUnit,
                                                 Precision fractionalDigitCount);
-
-/**
- * FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond,
- * precision )
- */
-void FormatSecondsStringPart(JSStringBuilder& result, const PlainTime& time,
-                             Precision precision);
 
 enum class TemporalOverflow { Constrain, Reject };
 

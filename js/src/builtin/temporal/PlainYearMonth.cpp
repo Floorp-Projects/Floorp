@@ -27,6 +27,7 @@
 #include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
+#include "builtin/temporal/ToString.h"
 #include "builtin/temporal/Wrapped.h"
 #include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
@@ -310,81 +311,6 @@ static bool ToTemporalYearMonth(JSContext* cx, Handle<Value> item,
   *result = ToPlainDate(obj);
   calendar.set(obj->calendar());
   return calendar.wrap(cx);
-}
-
-/**
- * TemporalYearMonthToString ( yearMonth, showCalendar )
- */
-static JSString* TemporalYearMonthToString(
-    JSContext* cx, Handle<PlainYearMonthObject*> yearMonth,
-    CalendarOption showCalendar) {
-  // Steps 1-2. (Not applicable in our implementation.)
-
-  // Note: This doesn't reserve too much space, because the string builder
-  // already internally reserves space for 64 characters.
-  constexpr size_t datePart = 1 + 6 + 1 + 2 + 1 + 2;  // 13
-  constexpr size_t calendarPart = 30;
-
-  JSStringBuilder result(cx);
-
-  if (!result.reserve(datePart + calendarPart)) {
-    return nullptr;
-  }
-
-  // Step 6. (Reordered)
-  Rooted<CalendarValue> calendar(cx, yearMonth->calendar());
-  JSString* str = ToTemporalCalendarIdentifier(cx, calendar);
-  if (!str) {
-    return nullptr;
-  }
-
-  Rooted<JSLinearString*> calendarIdentifier(cx, str->ensureLinear(cx));
-  if (!calendarIdentifier) {
-    return nullptr;
-  }
-
-  // Step 3. (Reordered)
-  int32_t year = yearMonth->isoYear();
-  if (0 <= year && year <= 9999) {
-    result.infallibleAppend(char('0' + (year / 1000)));
-    result.infallibleAppend(char('0' + (year % 1000) / 100));
-    result.infallibleAppend(char('0' + (year % 100) / 10));
-    result.infallibleAppend(char('0' + (year % 10)));
-  } else {
-    result.infallibleAppend(year < 0 ? '-' : '+');
-
-    year = std::abs(year);
-    result.infallibleAppend(char('0' + (year / 100000)));
-    result.infallibleAppend(char('0' + (year % 100000) / 10000));
-    result.infallibleAppend(char('0' + (year % 10000) / 1000));
-    result.infallibleAppend(char('0' + (year % 1000) / 100));
-    result.infallibleAppend(char('0' + (year % 100) / 10));
-    result.infallibleAppend(char('0' + (year % 10)));
-  }
-
-  // Steps 4-5.
-  int32_t month = yearMonth->isoMonth();
-  result.infallibleAppend('-');
-  result.infallibleAppend(char('0' + (month / 10)));
-  result.infallibleAppend(char('0' + (month % 10)));
-
-  // Step 7.
-  if (showCalendar == CalendarOption::Always ||
-      showCalendar == CalendarOption::Critical ||
-      !StringEqualsLiteral(calendarIdentifier, "iso8601")) {
-    int32_t day = yearMonth->isoDay();
-    result.infallibleAppend('-');
-    result.infallibleAppend(char('0' + (day / 10)));
-    result.infallibleAppend(char('0' + (day % 10)));
-  }
-
-  // Steps 8-9.
-  if (!FormatCalendarAnnotation(cx, result, calendarIdentifier, showCalendar)) {
-    return nullptr;
-  }
-
-  // Step 10.
-  return result.finishString();
 }
 
 /**

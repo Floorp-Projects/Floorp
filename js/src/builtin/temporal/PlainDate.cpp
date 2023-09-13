@@ -35,6 +35,7 @@
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/TimeZone.h"
+#include "builtin/temporal/ToString.h"
 #include "builtin/temporal/Wrapped.h"
 #include "builtin/temporal/ZonedDateTime.h"
 #include "ds/IdValuePair.h"
@@ -543,60 +544,6 @@ bool js::temporal::ToTemporalDate(JSContext* cx, Handle<Value> item,
   *result = ToPlainDate(obj);
   calendar.set(obj->calendar());
   return calendar.wrap(cx);
-}
-
-/**
- * TemporalDateToString ( temporalDate, showCalendar )
- */
-static JSString* TemporalDateToString(JSContext* cx,
-                                      Handle<PlainDateObject*> temporalDate,
-                                      CalendarOption showCalendar) {
-  auto [year, month, day] = ToPlainDate(temporalDate);
-
-  // Steps 1-2. (Not applicable in our implementation.)
-
-  JSStringBuilder result(cx);
-
-  if (!result.reserve(1 + 6 + 1 + 2 + 1 + 2)) {
-    return nullptr;
-  }
-
-  // Step 3.
-  if (0 <= year && year <= 9999) {
-    result.infallibleAppend(char('0' + (year / 1000)));
-    result.infallibleAppend(char('0' + (year % 1000) / 100));
-    result.infallibleAppend(char('0' + (year % 100) / 10));
-    result.infallibleAppend(char('0' + (year % 10)));
-  } else {
-    result.infallibleAppend(year < 0 ? '-' : '+');
-
-    year = std::abs(year);
-    result.infallibleAppend(char('0' + (year / 100000)));
-    result.infallibleAppend(char('0' + (year % 100000) / 10000));
-    result.infallibleAppend(char('0' + (year % 10000) / 1000));
-    result.infallibleAppend(char('0' + (year % 1000) / 100));
-    result.infallibleAppend(char('0' + (year % 100) / 10));
-    result.infallibleAppend(char('0' + (year % 10)));
-  }
-
-  // Step 4.
-  result.infallibleAppend('-');
-  result.infallibleAppend(char('0' + (month / 10)));
-  result.infallibleAppend(char('0' + (month % 10)));
-
-  // Step 5.
-  result.infallibleAppend('-');
-  result.infallibleAppend(char('0' + (day / 10)));
-  result.infallibleAppend(char('0' + (day % 10)));
-
-  // Step 6.
-  Rooted<CalendarValue> calendar(cx, temporalDate->calendar());
-  if (!MaybeFormatCalendarAnnotation(cx, result, calendar, showCalendar)) {
-    return nullptr;
-  }
-
-  // Step 7.
-  return result.finishString();
 }
 
 /**
