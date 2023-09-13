@@ -370,6 +370,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   MIRGraph& graph() { return graph_; }
   const CompileInfo& info() const { return info_; }
   jsbytecode* pc() const { return trackedSite_->pc(); }
+  jsbytecode* entryPC() const { return entryResumePoint()->pc(); }
   uint32_t nslots() const { return slots_.length(); }
   uint32_t id() const { return id_; }
   uint32_t numPredecessors() const { return predecessors_.length(); }

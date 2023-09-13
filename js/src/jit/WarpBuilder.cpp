@@ -630,7 +630,8 @@ bool WarpBuilder::buildBody() {
       //
       // This loop never actually loops.
       if (loc.isBackedge() && !loopStack_.empty()) {
-        BytecodeLocation loopHead(script_, loopStack_.back().header()->pc());
+        BytecodeLocation loopHead(script_,
+                                  loopStack_.back().header()->entryPC());
         if (loc.isBackedgeForLoophead(loopHead)) {
           decLoopDepth();
           loopStack_.popBack();
