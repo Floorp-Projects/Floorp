@@ -6,54 +6,98 @@
 
 #include "OriginOperationBase.h"
 
+#include "mozilla/Assertions.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/dom/fs/TargetPtrHolder.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsError.h"
 #include "nsIThread.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla::dom::quota {
 
-void OriginOperationBase::Dispatch() {
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(GetState() == State_Initial);
-
-  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+OriginOperationBase::OriginOperationBase(const char* aName)
+    : BackgroundThreadObject(GetCurrentSerialEventTarget()),
+      mResultCode(NS_OK),
+      mActorDestroyed(false)
+#ifdef QM_COLLECTING_OPERATION_TELEMETRY
+      ,
+      mName(aName)
+#endif
+{
+  AssertIsOnOwningThread();
 }
 
-NS_IMETHODIMP
-OriginOperationBase::Run() {
-  nsresult rv;
+OriginOperationBase::~OriginOperationBase() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mActorDestroyed);
+}
 
-  switch (mState) {
-    case State_Initial: {
-      rv = Init();
-      break;
+void OriginOperationBase::RunImmediately() {
+  AssertIsOnOwningThread();
+
+  QuotaManager* const quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  [self = RefPtr(this)]() {
+    if (QuotaManager::IsShuttingDown()) {
+      return BoolPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
     }
 
-    case State_DirectoryOpenPending: {
-      rv = DirectoryOpen();
-      break;
-    }
+    QuotaManager* const quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
 
-    case State_DirectoryWorkOpen: {
-      rv = DirectoryWork();
-      break;
-    }
+    QM_TRY(MOZ_TO_RESULT(self->DoInit(*quotaManager)),
+           CreateAndRejectBoolPromise);
 
-    case State_UnblockingOpen: {
-      UnblockOpen();
-      return NS_OK;
-    }
+    return self->Open();
+  }()
+#ifdef DEBUG
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr(this)](
+                 const BoolPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsReject()) {
+                 return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                     __func__);
+               }
 
-    default:
-      MOZ_CRASH("Bad state!");
-  }
+               // Give derived classes the occasion to add additional debug
+               // only checks after the opening was successfully finished on
+               // the current thread before passing the work to the IO thread.
+               QM_TRY(MOZ_TO_RESULT(self->DirectoryOpen()),
+                      CreateAndRejectBoolPromise);
 
-  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State_UnblockingOpen) {
-    Finish(rv);
-  }
+               return BoolPromise::CreateAndResolve(true, __func__);
+             })
+#endif
+      ->Then(quotaManager->IOThread(), __func__,
+             [selfHolder = fs::TargetPtrHolder(this)](
+                 const BoolPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsReject()) {
+                 return BoolPromise::CreateAndReject(aValue.RejectValue(),
+                                                     __func__);
+               }
 
-  return NS_OK;
+               QuotaManager* const quotaManager = QuotaManager::Get();
+               QM_TRY(MOZ_TO_RESULT(quotaManager), CreateAndRejectBoolPromise);
+
+               QM_TRY(MOZ_TO_RESULT(selfHolder->DoDirectoryWork(*quotaManager)),
+                      CreateAndRejectBoolPromise);
+
+               return BoolPromise::CreateAndResolve(true, __func__);
+             })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr(this)](
+                 const BoolPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsReject()) {
+                 MOZ_ASSERT(NS_SUCCEEDED(self->mResultCode));
+
+                 self->mResultCode = aValue.RejectValue();
+               }
+
+               self->UnblockOpen();
+             });
 }
 
 nsresult OriginOperationBase::DoInit(QuotaManager& aQuotaManager) {
@@ -62,69 +106,12 @@ nsresult OriginOperationBase::DoInit(QuotaManager& aQuotaManager) {
   return NS_OK;
 }
 
+#ifdef DEBUG
 nsresult OriginOperationBase::DirectoryOpen() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State_DirectoryOpenPending);
-
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  QM_TRY(OkIf(quotaManager), NS_ERROR_FAILURE);
-
-  // Must set this before dispatching otherwise we will race with the IO thread.
-  AdvanceState();
-
-  QM_TRY(MOZ_TO_RESULT(
-             quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
-         NS_ERROR_FAILURE);
 
   return NS_OK;
 }
-
-void OriginOperationBase::Finish(nsresult aResult) {
-  if (NS_SUCCEEDED(mResultCode)) {
-    mResultCode = aResult;
-  }
-
-  // Must set mState before dispatching otherwise we will race with the main
-  // thread.
-  mState = State_UnblockingOpen;
-
-  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
-}
-
-nsresult OriginOperationBase::Init() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State_Initial);
-
-  if (QuotaManager::IsShuttingDown()) {
-    return NS_ERROR_ABORT;
-  }
-
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  QM_TRY(MOZ_TO_RESULT(DoInit(*quotaManager)));
-
-  Open();
-
-  return NS_OK;
-}
-
-nsresult OriginOperationBase::DirectoryWork() {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(mState == State_DirectoryWorkOpen);
-
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  QM_TRY(OkIf(quotaManager), NS_ERROR_FAILURE);
-
-  QM_TRY(MOZ_TO_RESULT(DoDirectoryWork(*quotaManager)));
-
-  // Must set mState before dispatching otherwise we will race with the owning
-  // thread.
-  AdvanceState();
-
-  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
-
-  return NS_OK;
-}
+#endif
 
 }  // namespace mozilla::dom::quota

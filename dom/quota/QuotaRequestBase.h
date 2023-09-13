@@ -17,16 +17,16 @@ class RequestResponse;
 class QuotaRequestBase : public NormalOriginOperationBase,
                          public PQuotaRequestParent {
  protected:
-  explicit QuotaRequestBase(const char* aRunnableName, bool aExclusive)
-      : NormalOriginOperationBase(aRunnableName, Nullable<PersistenceType>(),
+  QuotaRequestBase(const char* aName, bool aExclusive)
+      : NormalOriginOperationBase(aName, Nullable<PersistenceType>(),
                                   OriginScope::FromNull(),
                                   Nullable<Client::Type>(), aExclusive) {}
 
-  QuotaRequestBase(const char* aRunnableName,
+  QuotaRequestBase(const char* aName,
                    const Nullable<PersistenceType>& aPersistenceType,
                    const OriginScope& aOriginScope,
                    const Nullable<Client::Type>& aClientType, bool aExclusive)
-      : NormalOriginOperationBase(aRunnableName, aPersistenceType, aOriginScope,
+      : NormalOriginOperationBase(aName, aPersistenceType, aOriginScope,
                                   aClientType, aExclusive) {}
 
   // Subclasses use this override to set the IPDL response value.

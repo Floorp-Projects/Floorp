@@ -90,6 +90,7 @@
 #include "mozilla/dom/quota/AssertionsImpl.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
+#include "mozilla/dom/quota/Config.h"
 #include "mozilla/dom/quota/Constants.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/FileUtils.h"
@@ -2237,11 +2238,9 @@ void QuotaManager::Shutdown() {
     if (gNormalOriginOps) {
       annotation.AppendPrintf("QM: %zu normal origin ops pending\n",
                               gNormalOriginOps->Length());
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#ifdef QM_COLLECTING_OPERATION_TELEMETRY
       for (const auto& op : *gNormalOriginOps) {
-        nsCString name;
-        op->GetName(name);
-        annotation.AppendPrintf("Op: %s pending\n", name.get());
+        annotation.AppendPrintf("Op: %s pending\n", op->Name());
       }
 #endif
     }
@@ -6106,13 +6105,21 @@ void QuotaManager::FinalizeOriginEviction(
     nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks) {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  RefPtr<OriginOperationBase> op =
-      CreateFinalizeOriginEvictionOp(mOwningThread, std::move(aLocks));
+  auto finalizeOriginEviction = [locks = std::move(aLocks)]() mutable {
+    RefPtr<OriginOperationBase> op =
+        CreateFinalizeOriginEvictionOp(std::move(locks));
+
+    op->RunImmediately();
+  };
 
   if (IsOnBackgroundThread()) {
-    op->RunImmediately();
+    finalizeOriginEviction();
   } else {
-    op->Dispatch();
+    MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(
+        NS_NewRunnableFunction(
+            "dom::quota::QuotaManager::FinalizeOriginEviction",
+            std::move(finalizeOriginEviction)),
+        NS_DISPATCH_NORMAL));
   }
 }
 

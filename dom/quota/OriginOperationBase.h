@@ -8,44 +8,32 @@
 #define DOM_QUOTA_ORIGINOPERATIONBASE_H_
 
 #include "ErrorList.h"
-#include "mozilla/Assertions.h"
+#include "mozilla/dom/quota/Config.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
-#include "nsThreadUtils.h"
+#include "nsISupportsImpl.h"
+
+template <class T>
+class RefPtr;
 
 namespace mozilla::dom::quota {
 
 class QuotaManager;
 
-// We expect callers to be aware of what thread they're on and either call
-// `RunImmediately` if they're on the owning (PBackground) thread or `Dispatch`
-// if they are not and therefore the runnable needs to be dispatched to the
-// owning thread (PBackground).
-class OriginOperationBase : public BackgroundThreadObject, public Runnable {
+class OriginOperationBase : public BackgroundThreadObject {
  protected:
   nsresult mResultCode;
 
-  enum State {
-    // Not yet run.
-    State_Initial,
-
-    // Running on the owning thread in the listener for OpenDirectory.
-    State_DirectoryOpenPending,
-
-    // Running on the IO thread.
-    State_DirectoryWorkOpen,
-
-    // Running on the owning thread after all work is done.
-    State_UnblockingOpen,
-
-    // All done.
-    State_Complete
-  };
-
  private:
-  State mState;
   bool mActorDestroyed;
 
+#ifdef QM_COLLECTING_OPERATION_TELEMETRY
+  const char* mName = nullptr;
+#endif
+
  public:
+  NS_INLINE_DECL_REFCOUNTING(OriginOperationBase)
+
   void NoteActorDestroyed() {
     AssertIsOnOwningThread();
 
@@ -58,83 +46,29 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
     return mActorDestroyed;
   }
 
-  void RunImmediately() {
-    AssertIsOnOwningThread();
-    MOZ_ASSERT(GetState() == State_Initial);
-
-    MOZ_ALWAYS_SUCCEEDS(this->Run());
-  }
-
-  void Dispatch();
-
- protected:
-  explicit OriginOperationBase(nsISerialEventTarget* aOwningThread,
-                               const char* aRunnableName)
-      : BackgroundThreadObject(aOwningThread),
-        Runnable(aRunnableName),
-        mResultCode(NS_OK),
-        mState(State_Initial),
-        mActorDestroyed(false) {}
-
-  // Reference counted.
-  virtual ~OriginOperationBase() {
-    MOZ_ASSERT(mState == State_Complete);
-    MOZ_ASSERT(mActorDestroyed);
-  }
-
-#ifdef DEBUG
-  State GetState() const { return mState; }
+#ifdef QM_COLLECTING_OPERATION_TELEMETRY
+  const char* Name() const { return mName; }
 #endif
 
-  void SetState(State aState) {
-    MOZ_ASSERT(mState == State_Initial);
-    mState = aState;
-  }
+  void RunImmediately();
 
-  void AdvanceState() {
-    switch (mState) {
-      case State_Initial:
-        mState = State_DirectoryOpenPending;
-        return;
-      case State_DirectoryOpenPending:
-        mState = State_DirectoryWorkOpen;
-        return;
-      case State_DirectoryWorkOpen:
-        mState = State_UnblockingOpen;
-        return;
-      case State_UnblockingOpen:
-        mState = State_Complete;
-        return;
-      default:
-        MOZ_CRASH("Bad state!");
-    }
-  }
+ protected:
+  explicit OriginOperationBase(const char* aName);
 
-  NS_IMETHOD
-  Run() override;
+  // Reference counted.
+  virtual ~OriginOperationBase();
 
   virtual nsresult DoInit(QuotaManager& aQuotaManager);
 
-  virtual void Open() = 0;
+  virtual RefPtr<BoolPromise> Open() = 0;
 
 #ifdef DEBUG
   virtual nsresult DirectoryOpen();
-#else
-  nsresult DirectoryOpen();
 #endif
 
   virtual nsresult DoDirectoryWork(QuotaManager& aQuotaManager) = 0;
 
-  void Finish(nsresult aResult);
-
   virtual void UnblockOpen() = 0;
-
- private:
-  nsresult Init();
-
-  nsresult FinishInit();
-
-  nsresult DirectoryWork();
 };
 
 }  // namespace mozilla::dom::quota
