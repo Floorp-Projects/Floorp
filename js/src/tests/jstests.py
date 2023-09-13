@@ -560,6 +560,7 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
                 manifest_root, "_tests", "web-platform", "wptrunner.local.ini"
             ),
             "gecko_e10s": False,
+            "product": "firefox",
             "verify": False,
             "wasm": xul_tester.test("wasmIsSupported()"),
         }
@@ -592,10 +593,12 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
     path_filter = testloader.TestFilter(
         test_manifests, include=requested_paths, exclude=excluded_paths
     )
+    subsuites = testloader.load_subsuites(logger, run_info, None, set())
     loader = testloader.TestLoader(
         test_manifests,
         ["testharness"],
         run_info,
+        subsuites=subsuites,
         manifest_filters=[path_filter, filter_jsshell_tests],
     )
 
@@ -612,7 +615,7 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
         return os.path.join(wpt, os.path.dirname(test_path), script)
 
     tests = []
-    for test in loader.tests["testharness"]:
+    for test in loader.tests[""]["testharness"]:
         test_path = os.path.relpath(test.path, wpt)
         scripts = [resolve(test_path, s) for s in test.scripts]
         extra_helper_paths_for_test = extra_helper_paths + scripts
