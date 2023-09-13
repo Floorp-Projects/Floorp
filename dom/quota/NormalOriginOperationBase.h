@@ -37,7 +37,8 @@ class NormalOriginOperationBase
   // is included). The compiler would complain otherwise because it wouldn't
   // know how to call DirectoryLock::AddRef/Release in the constructor and
   // destructor
-  NormalOriginOperationBase(const char* aName,
+  NormalOriginOperationBase(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+                            const char* aName,
                             const Nullable<PersistenceType>& aPersistenceType,
                             const OriginScope& aOriginScope,
                             const Nullable<Client::Type>& aClientType,

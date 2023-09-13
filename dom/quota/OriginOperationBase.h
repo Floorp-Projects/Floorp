@@ -8,13 +8,12 @@
 #define DOM_QUOTA_ORIGINOPERATIONBASE_H_
 
 #include "ErrorList.h"
+#include "mozilla/NotNull.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/quota/Config.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "nsISupportsImpl.h"
-
-template <class T>
-class RefPtr;
 
 namespace mozilla::dom::quota {
 
@@ -22,6 +21,7 @@ class QuotaManager;
 
 class OriginOperationBase : public BackgroundThreadObject {
  protected:
+  const NotNull<RefPtr<QuotaManager>> mQuotaManager;
   nsresult mResultCode;
 
  private:
@@ -53,7 +53,8 @@ class OriginOperationBase : public BackgroundThreadObject {
   void RunImmediately();
 
  protected:
-  explicit OriginOperationBase(const char* aName);
+  OriginOperationBase(MovingNotNull<RefPtr<QuotaManager>>&& aQuotaManager,
+                      const char* aName);
 
   // Reference counted.
   virtual ~OriginOperationBase();

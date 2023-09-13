@@ -12,10 +12,11 @@
 namespace mozilla::dom::quota {
 
 NormalOriginOperationBase::NormalOriginOperationBase(
-    const char* aName, const Nullable<PersistenceType>& aPersistenceType,
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager, const char* aName,
+    const Nullable<PersistenceType>& aPersistenceType,
     const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
     bool aExclusive)
-    : OriginOperationBase(aName),
+    : OriginOperationBase(std::move(aQuotaManager), aName),
       mOriginScope(aOriginScope),
       mPersistenceType(aPersistenceType),
       mClientType(aClientType),
@@ -29,15 +30,13 @@ NormalOriginOperationBase::~NormalOriginOperationBase() {
 
 RefPtr<DirectoryLock> NormalOriginOperationBase::CreateDirectoryLock() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(QuotaManager::Get());
 
-  return QuotaManager::Get()->CreateDirectoryLockInternal(
+  return mQuotaManager->CreateDirectoryLockInternal(
       mPersistenceType, mOriginScope, mClientType, mExclusive);
 }
 
 RefPtr<BoolPromise> NormalOriginOperationBase::Open() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(QuotaManager::Get());
 
   RefPtr<DirectoryLock> directoryLock = CreateDirectoryLock();
 
@@ -61,7 +60,6 @@ RefPtr<BoolPromise> NormalOriginOperationBase::Open() {
 
 void NormalOriginOperationBase::UnblockOpen() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(QuotaManager::Get());
 
   SendResults();
 
@@ -69,7 +67,7 @@ void NormalOriginOperationBase::UnblockOpen() {
     mDirectoryLock = nullptr;
   }
 
-  QuotaManager::Get()->UnregisterNormalOriginOp(*this);
+  mQuotaManager->UnregisterNormalOriginOp(*this);
 }
 
 }  // namespace mozilla::dom::quota

@@ -2583,7 +2583,8 @@ void QuotaManager::UpdateOriginAccessTime(
 
     MutexAutoUnlock autoUnlock(mQuotaMutex);
 
-    auto op = CreateSaveOriginAccessTimeOp(aOriginMetadata, timestamp);
+    auto op = CreateSaveOriginAccessTimeOp(WrapMovingNotNullUnchecked(this),
+                                           aOriginMetadata, timestamp);
 
     RegisterNormalOriginOp(*op);
 
@@ -4859,7 +4860,7 @@ RefPtr<BoolPromise> QuotaManager::InitializeStorage() {
     return BoolPromise::CreateAndResolve(true, __func__);
   }
 
-  auto initializeStorageOp = CreateInitOp();
+  auto initializeStorageOp = CreateInitOp(WrapMovingNotNullUnchecked(this));
 
   RegisterNormalOriginOp(*initializeStorageOp);
 
@@ -5167,7 +5168,8 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 RefPtr<BoolPromise> QuotaManager::ClearPrivateRepository() {
   AssertIsOnOwningThread();
 
-  auto clearPrivateRepositoryOp = CreateClearPrivateRepositoryOp();
+  auto clearPrivateRepositoryOp =
+      CreateClearPrivateRepositoryOp(WrapMovingNotNullUnchecked(this));
 
   RegisterNormalOriginOp(*clearPrivateRepositoryOp);
 
@@ -5179,7 +5181,7 @@ RefPtr<BoolPromise> QuotaManager::ClearPrivateRepository() {
 RefPtr<BoolPromise> QuotaManager::ClearStorage() {
   AssertIsOnOwningThread();
 
-  auto clearStorageOp = CreateClearStorageOp();
+  auto clearStorageOp = CreateClearStorageOp(WrapMovingNotNullUnchecked(this));
 
   RegisterNormalOriginOp(*clearStorageOp);
 
@@ -5207,7 +5209,8 @@ RefPtr<BoolPromise> QuotaManager::ClearStorage() {
 RefPtr<BoolPromise> QuotaManager::ShutdownStorage() {
   AssertIsOnOwningThread();
 
-  auto shutdownStorageOp = CreateShutdownStorageOp();
+  auto shutdownStorageOp =
+      CreateShutdownStorageOp(WrapMovingNotNullUnchecked(this));
 
   RegisterNormalOriginOp(*shutdownStorageOp);
 
@@ -6106,8 +6109,11 @@ void QuotaManager::FinalizeOriginEviction(
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   auto finalizeOriginEviction = [locks = std::move(aLocks)]() mutable {
-    RefPtr<OriginOperationBase> op =
-        CreateFinalizeOriginEvictionOp(std::move(locks));
+    QuotaManager* quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
+
+    RefPtr<OriginOperationBase> op = CreateFinalizeOriginEvictionOp(
+        WrapMovingNotNull(quotaManager), std::move(locks));
 
     op->RunImmediately();
   };

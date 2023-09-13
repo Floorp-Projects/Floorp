@@ -26,11 +26,12 @@ class UsageRequestResponse;
 class QuotaUsageRequestBase : public NormalOriginOperationBase,
                               public PQuotaUsageRequestParent {
  protected:
-  QuotaUsageRequestBase(const char* aName)
-      : NormalOriginOperationBase(aName, Nullable<PersistenceType>(),
-                                  OriginScope::FromNull(),
-                                  Nullable<Client::Type>(),
-                                  /* aExclusive */ false) {}
+  QuotaUsageRequestBase(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+                        const char* aName)
+      : NormalOriginOperationBase(
+            std::move(aQuotaManager), aName, Nullable<PersistenceType>(),
+            OriginScope::FromNull(), Nullable<Client::Type>(),
+            /* aExclusive */ false) {}
 
   mozilla::Result<UsageInfo, nsresult> GetUsageForOrigin(
       QuotaManager& aQuotaManager, PersistenceType aPersistenceType,

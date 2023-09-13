@@ -17,8 +17,10 @@
 
 namespace mozilla::dom::quota {
 
-OriginOperationBase::OriginOperationBase(const char* aName)
+OriginOperationBase::OriginOperationBase(
+    MovingNotNull<RefPtr<QuotaManager>>&& aQuotaManager, const char* aName)
     : BackgroundThreadObject(GetCurrentSerialEventTarget()),
+      mQuotaManager(std::move(aQuotaManager)),
       mResultCode(NS_OK),
       mActorDestroyed(false)
 #ifdef QM_COLLECTING_OPERATION_TELEMETRY
@@ -37,18 +39,12 @@ OriginOperationBase::~OriginOperationBase() {
 void OriginOperationBase::RunImmediately() {
   AssertIsOnOwningThread();
 
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
   [self = RefPtr(this)]() {
     if (QuotaManager::IsShuttingDown()) {
       return BoolPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
     }
 
-    QuotaManager* const quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    QM_TRY(MOZ_TO_RESULT(self->DoInit(*quotaManager)),
+    QM_TRY(MOZ_TO_RESULT(self->DoInit(*self->mQuotaManager)),
            CreateAndRejectBoolPromise);
 
     return self->Open();
@@ -71,7 +67,7 @@ void OriginOperationBase::RunImmediately() {
                return BoolPromise::CreateAndResolve(true, __func__);
              })
 #endif
-      ->Then(quotaManager->IOThread(), __func__,
+      ->Then(mQuotaManager->IOThread(), __func__,
              [selfHolder = fs::TargetPtrHolder(this)](
                  const BoolPromise::ResolveOrRejectValue& aValue) {
                if (aValue.IsReject()) {
@@ -79,10 +75,8 @@ void OriginOperationBase::RunImmediately() {
                                                      __func__);
                }
 
-               QuotaManager* const quotaManager = QuotaManager::Get();
-               QM_TRY(MOZ_TO_RESULT(quotaManager), CreateAndRejectBoolPromise);
-
-               QM_TRY(MOZ_TO_RESULT(selfHolder->DoDirectoryWork(*quotaManager)),
+               QM_TRY(MOZ_TO_RESULT(selfHolder->DoDirectoryWork(
+                          *selfHolder->mQuotaManager)),
                       CreateAndRejectBoolPromise);
 
                return BoolPromise::CreateAndResolve(true, __func__);
