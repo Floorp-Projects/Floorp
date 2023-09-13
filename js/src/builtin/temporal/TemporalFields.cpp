@@ -138,6 +138,22 @@ static JS::UniqueChars QuoteString(JSContext* cx, const char* str) {
   return sprinter.release();
 }
 
+static JS::UniqueChars QuoteString(JSContext* cx, PropertyKey key) {
+  if (key.isString()) {
+    return QuoteString(cx, key.toString());
+  }
+
+  if (key.isInt()) {
+    Int32ToCStringBuf buf;
+    size_t length;
+    const char* str = Int32ToCString(&buf, key.toInt(), &length);
+    return DuplicateString(cx, str, length);
+  }
+
+  MOZ_ASSERT(key.isSymbol());
+  return QuoteString(cx, key.toSymbol()->description());
+}
+
 static mozilla::Maybe<TemporalField> ToTemporalField(JSContext* cx,
                                                      PropertyKey property) {
   static constexpr TemporalField fieldNames[] = {
@@ -269,10 +285,6 @@ static bool IsSorted(const JS::StackGCVector<PropertyKey>& fieldNames) {
 }
 #endif
 
-// FIXME: spec issue - Require the |fieldNames| list is already sorted instead
-// of repeatedly sorting them in PrepareTemporalFields.
-// https://github.com/tc39/proposal-temporal/issues/2532
-
 // clang-format off
 //
 // TODO: |fields| is often a built-in Temporal type, so we likely want to
@@ -320,34 +332,38 @@ bool js::temporal::PrepareTemporalFields(
     std::initializer_list<TemporalField> fieldNames,
     std::initializer_list<TemporalField> requiredFields,
     MutableHandle<TemporalFields> result) {
-  // Steps 1-2. (Not applicable in our implementation.)
+  // Steps 1-3. (Not applicable in our implementation.)
 
-  // Step 3. (|fieldNames| is sorted in our implementation.)
+  // Step 4. (|fieldNames| is sorted in our implementation.)
   MOZ_ASSERT(IsSorted(fieldNames));
 
-  // |requiredFields| is sorted, too. Neither list has any duplicate elements.
-  MOZ_ASSERT(IsSorted(requiredFields));
+  // Step 5. (The list doesn't contain duplicates in our implementation.)
   MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
              fieldNames.end());
+
+  // |requiredFields| is sorted and doesn't contain any duplicate elements.
+  MOZ_ASSERT(IsSorted(requiredFields));
   MOZ_ASSERT(std::adjacent_find(requiredFields.begin(), requiredFields.end()) ==
              requiredFields.end());
 
-  // Step 4.
+  // Step 6.
   Rooted<Value> value(cx);
   for (auto fieldName : fieldNames) {
     auto* property = ToPropertyName(cx, fieldName);
     auto* cstr = ToCString(fieldName);
 
-    // Step 4.a.
+    // Step 6.a. (Not applicable in our implementation.)
+
+    // Step 6.b.i.
     if (!GetProperty(cx, fields, fields, property, &value)) {
       return false;
     }
 
-    // Steps 4.b-c.
+    // Steps 6.b.ii-iii.
     if (!value.isUndefined()) {
-      // Step 4.b.i. (Not applicable in our implementation.)
+      // Step 6.b.ii.1. (Not applicable in our implementation.)
 
-      // Steps 4.b.ii-iii.
+      // Steps 6.b.ii.2-3.
       switch (fieldName) {
         case TemporalField::Year:
           if (!ToIntegerWithTruncation(cx, value, cstr, &result.year())) {
@@ -433,7 +449,7 @@ bool js::temporal::PrepareTemporalFields(
           break;
       }
     } else {
-      // Step 4.c.i.
+      // Step 6.b.iii.1.
       if (std::find(requiredFields.begin(), requiredFields.end(), fieldName) !=
           requiredFields.end()) {
         if (auto chars = QuoteString(cx, cstr)) {
@@ -447,7 +463,7 @@ bool js::temporal::PrepareTemporalFields(
       // `const` can be changed to `constexpr` when we switch to C++20.
       const TemporalFields FallbackValues{};
 
-      // Steps 4.c.ii-iii.
+      // Steps 6.b.iii.2-3.
       switch (fieldName) {
         case TemporalField::Year:
           result.year() = FallbackValues.year;
@@ -493,116 +509,140 @@ bool js::temporal::PrepareTemporalFields(
           break;
       }
     }
+
+    // Steps 6.c-d. (Not applicable in our implementation.)
   }
 
-  // Step 5. (Not applicable in our implementation.)
+  // Step 7. (Not applicable in our implementation.)
 
-  // Step 6.
+  // Step 8.
   return true;
 }
 
 /**
- * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields [ ,
+ * duplicateBehaviour ] )
  */
 PlainObject* js::temporal::PrepareTemporalFields(
     JSContext* cx, Handle<JSObject*> fields,
     Handle<JS::StackGCVector<PropertyKey>> fieldNames) {
-  // Step 1.
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
   Rooted<PlainObject*> result(cx, NewPlainObjectWithProto(cx, nullptr));
   if (!result) {
     return nullptr;
   }
 
-  // Step 2. (Not applicable in our implementation.)
+  // Step 3. (Not applicable in our implementation.)
 
-  // Step 3. (The list is already sorted in our implementation.)
+  // Step 4. (The list is already sorted in our implementation.)
   MOZ_ASSERT(IsSorted(fieldNames));
 
-  // Step 4.
+  // Step 5. (The list doesn't contain duplicates in our implementation.)
+  MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
+             fieldNames.end());
+
+  // Step 6.
   Rooted<Value> value(cx);
   for (size_t i = 0; i < fieldNames.length(); i++) {
     Handle<PropertyKey> property = fieldNames[i];
 
-    // Step 4.a.
+    // Step 6.a.
+    MOZ_ASSERT(property != NameToId(cx->names().constructor));
+    MOZ_ASSERT(property != NameToId(cx->names().proto_));
+
+    // Step 6.b.i.
     if (!GetProperty(cx, fields, fields, property, &value)) {
       return nullptr;
     }
 
-    // Steps 4.b-c.
+    // Steps 6.b.ii-iii.
     if (auto fieldName = ToTemporalField(cx, property)) {
       if (!value.isUndefined()) {
-        // Step 4.b.i. (Not applicable in our implementation.)
+        // Step 6.b.ii.1. (Not applicable in our implementation.)
 
-        // Step 4.b.ii.
+        // Step 6.b.ii.2.
         if (!TemporalFieldConvertValue(cx, *fieldName, &value)) {
           return nullptr;
         }
       } else {
-        // Step 4.c.i. (Not applicable in our implementation.)
+        // Step 6.b.iii.1. (Not applicable in our implementation.)
 
-        // Step 4.c.ii.
+        // Step 6.b.iii.2.
         value = TemporalFieldDefaultValue(*fieldName);
       }
-    } else {
-      // Steps 4.b.i-ii and 4.c.i-ii. (Not applicable in our implementation.)
     }
 
-    // Steps 4.b.iii and 4.c.iii.
+    // Steps 6.b.ii.3 and 6.b.iii.3.
     if (!DefineDataProperty(cx, result, property, value)) {
       return nullptr;
     }
+
+    // Steps 6.c-d. (Not applicable in our implementation.)
   }
 
-  // Step 5. (Not applicable in our implementation.)
+  // Step 7. (Not applicable in our implementation.)
 
-  // Step 6.
+  // Step 8.
   return result;
 }
 
 /**
- * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields [ ,
+ * duplicateBehaviour ] )
  */
 PlainObject* js::temporal::PrepareTemporalFields(
     JSContext* cx, Handle<JSObject*> fields,
     Handle<JS::StackGCVector<PropertyKey>> fieldNames,
     std::initializer_list<TemporalField> requiredFields) {
-  // Step 1.
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
   Rooted<PlainObject*> result(cx, NewPlainObjectWithProto(cx, nullptr));
   if (!result) {
     return nullptr;
   }
 
-  // Step 2. (Not applicable in our implementation.)
+  // Step 3. (Not applicable in our implementation.)
 
-  // Step 3. (The list is already sorted in our implementation.)
+  // Step 4. (The list is already sorted in our implementation.)
   MOZ_ASSERT(IsSorted(fieldNames));
+
+  // Step 5. (The list doesn't contain duplicates in our implementation.)
+  MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
+             fieldNames.end());
 
   // |requiredFields| is sorted and doesn't include any duplicate elements.
   MOZ_ASSERT(IsSorted(requiredFields));
   MOZ_ASSERT(std::adjacent_find(requiredFields.begin(), requiredFields.end()) ==
              requiredFields.end());
 
-  // Step 4.
+  // Step 6.
   Rooted<Value> value(cx);
   for (size_t i = 0; i < fieldNames.length(); i++) {
     Handle<PropertyKey> property = fieldNames[i];
 
-    // Step 4.a.
+    // Step 6.a.
+    MOZ_ASSERT(property != NameToId(cx->names().constructor));
+    MOZ_ASSERT(property != NameToId(cx->names().proto_));
+
+    // Step 6.b.i.
     if (!GetProperty(cx, fields, fields, property, &value)) {
       return nullptr;
     }
 
-    // Steps 4.b-c.
+    // Steps 6.b.ii-iii.
     if (auto fieldName = ToTemporalField(cx, property)) {
       if (!value.isUndefined()) {
-        // Step 4.b.i. (Not applicable in our implementation.)
+        // Step 6.b.ii.1. (Not applicable in our implementation.)
 
-        // Step 4.b.ii.
+        // Step 6.b.ii.2.
         if (!TemporalFieldConvertValue(cx, *fieldName, &value)) {
           return nullptr;
         }
       } else {
-        // Step 4.c.i.
+        // Step 6.b.iii.1.
         if (std::find(requiredFields.begin(), requiredFields.end(),
                       *fieldName) != requiredFields.end()) {
           if (auto chars = QuoteString(cx, property.toString())) {
@@ -613,103 +653,113 @@ PlainObject* js::temporal::PrepareTemporalFields(
           return nullptr;
         }
 
-        // Step 4.c.ii.
+        // Step 6.b.iii.2.
         value = TemporalFieldDefaultValue(*fieldName);
       }
-    } else {
-      // Steps 4.b.i-ii and 4.c.i-ii. (Not applicable in our implementation.)
     }
 
-    // Steps 4.b.iii and 4.c.iii.
+    // Steps 6.b.ii.3 and 6.b.iii.3.
     if (!DefineDataProperty(cx, result, property, value)) {
       return nullptr;
     }
+
+    // Steps 6.c-d. (Not applicable in our implementation.)
   }
 
-  // Step 5. (Not applicable in our implementation.)
+  // Step 7. (Not applicable in our implementation.)
 
-  // Step 6.
+  // Step 8.
   return result;
 }
 
 /**
- * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields [ ,
+ * duplicateBehaviour ] )
  */
 PlainObject* js::temporal::PreparePartialTemporalFields(
     JSContext* cx, Handle<JSObject*> fields,
     Handle<JS::StackGCVector<PropertyKey>> fieldNames) {
-  // Step 1.
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
   Rooted<PlainObject*> result(cx, NewPlainObjectWithProto(cx, nullptr));
   if (!result) {
     return nullptr;
   }
 
-  // Step 2.
+  // Step 3.
   bool any = false;
 
-  // Step 3. (The list is already sorted in our implementation.)
+  // Step 4. (The list is already sorted in our implementation.)
   MOZ_ASSERT(IsSorted(fieldNames));
 
-  // Step 4.
+  // Step 5. (The list doesn't contain duplicates in our implementation.)
+  MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
+             fieldNames.end());
+
+  // Step 6.
   Rooted<Value> value(cx);
   for (size_t i = 0; i < fieldNames.length(); i++) {
     Handle<PropertyKey> property = fieldNames[i];
 
-    // Step 4.a.
+    // Step 6.a.
+    MOZ_ASSERT(property != NameToId(cx->names().constructor));
+    MOZ_ASSERT(property != NameToId(cx->names().proto_));
+
+    // Step 6.b.i.
     if (!GetProperty(cx, fields, fields, property, &value)) {
       return nullptr;
     }
 
-    // Steps 4.b-c.
+    // Steps 6.b.ii-iii.
     if (!value.isUndefined()) {
-      // Step 4.b.i.
+      // Step 6.b.ii.1.
       any = true;
 
-      // Step 4.b.ii.
+      // Step 6.b.ii.2.
       if (auto fieldName = ToTemporalField(cx, property)) {
         if (!TemporalFieldConvertValue(cx, *fieldName, &value)) {
           return nullptr;
         }
       }
 
-      // Steps 4.b.iii.
+      // Steps 6.b.ii.3.
       if (!DefineDataProperty(cx, result, property, value)) {
         return nullptr;
       }
     } else {
-      // Step 4.c. (Not applicable in our implementation.)
+      // Step 6.b.iii. (Not applicable in our implementation.)
     }
+
+    // Steps 6.c-d. (Not applicable in our implementation.)
   }
 
-  // Step 5.
+  // Step 7.
   if (!any) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_MISSING_TEMPORAL_FIELDS);
     return nullptr;
   }
 
-  // Step 6.
+  // Step 8.
   return result;
 }
 
 /**
- * MergeLists ( a, b )
+ * Performs list-concatenation, removes any duplicates, and sorts the result.
  */
-bool js::temporal::MergeTemporalFieldNames(
+bool js::temporal::ConcatTemporalFieldNames(
     const JS::StackGCVector<PropertyKey>& receiverFieldNames,
     const JS::StackGCVector<PropertyKey>& inputFieldNames,
-    JS::StackGCVector<PropertyKey>& mergedFieldNames) {
+    JS::StackGCVector<PropertyKey>& concatenatedFieldNames) {
   MOZ_ASSERT(IsSorted(receiverFieldNames));
   MOZ_ASSERT(IsSorted(inputFieldNames));
-  MOZ_ASSERT(mergedFieldNames.empty());
-
-  // FIXME: spec issue - why do we care about removing duplicates here. In other
-  // operations we're okay with duplicates, cf. ToTemporalZonedDateTime.
-  // https://github.com/tc39/proposal-temporal/issues/2532
+  MOZ_ASSERT(concatenatedFieldNames.empty());
 
   auto appendUnique = [&](auto key) {
-    if (mergedFieldNames.empty() || mergedFieldNames.back() != key) {
-      return mergedFieldNames.append(key);
+    if (concatenatedFieldNames.empty() ||
+        concatenatedFieldNames.back() != key) {
+      return concatenatedFieldNames.append(key);
     }
     return true;
   };
@@ -752,18 +802,29 @@ bool js::temporal::MergeTemporalFieldNames(
   return true;
 }
 
-static inline bool ComparePropertyKeyLessThan(PropertyKey x, PropertyKey y) {
-  return ComparePropertyKey(x, y) < 0;
+static auto* LowerBound(PropertyKey* begin, PropertyKey* end, PropertyKey key) {
+  // Tell the analysis the |std::lower_bound| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  return std::lower_bound(begin, end, key, [](auto x, auto y) {
+    return ComparePropertyKey(x, y) < 0;
+  });
 }
 
 [[nodiscard]] static bool AppendSorted(
-    JS::StackGCVector<PropertyKey>& fieldNames, PropertyKey additionalName) {
-  // Tell the analysis the |std::upper_bound| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
+    JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames,
+    PropertyKey additionalName) {
   // Find the position where to add |additionalName|.
-  auto* p = std::upper_bound(fieldNames.begin(), fieldNames.end(),
-                             additionalName, ComparePropertyKeyLessThan);
+  auto* p = LowerBound(fieldNames.begin(), fieldNames.end(), additionalName);
+
+  // Reject duplicates per PrepareTemporalFields, step 6.c.
+  if (p != fieldNames.end() && *p == additionalName) {
+    if (auto chars = QuoteString(cx, additionalName)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_DUPLICATE_PROPERTY, chars.get());
+    }
+    return false;
+  }
 
   // Store the index, because growBy() may reallocate, which invalidates |p|.
   size_t index = std::distance(fieldNames.begin(), p);
@@ -783,20 +844,33 @@ static inline bool ComparePropertyKeyLessThan(PropertyKey x, PropertyKey y) {
 }
 
 [[nodiscard]] static bool AppendSorted(
-    JS::StackGCVector<PropertyKey>& fieldNames, PropertyKey additionalNameOne,
-    PropertyKey additionalNameTwo) {
-  MOZ_ASSERT(ComparePropertyKeyLessThan(additionalNameOne, additionalNameTwo));
-
-  // Tell the analysis the |std::upper_bound| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
+    JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames,
+    PropertyKey additionalNameOne, PropertyKey additionalNameTwo) {
+  MOZ_ASSERT(ComparePropertyKey(additionalNameOne, additionalNameTwo) < 0);
 
   // Find the position where to add |additionalNameOne|.
-  auto* p = std::upper_bound(fieldNames.begin(), fieldNames.end(),
-                             additionalNameOne, ComparePropertyKeyLessThan);
+  auto* p = LowerBound(fieldNames.begin(), fieldNames.end(), additionalNameOne);
 
   // |additionalNameTwo| can't occur before |p|.
-  auto* q = std::upper_bound(p, fieldNames.end(), additionalNameTwo,
-                             ComparePropertyKeyLessThan);
+  auto* q = LowerBound(p, fieldNames.end(), additionalNameTwo);
+
+  // Reject duplicates per PrepareTemporalFields, step 6.c.
+  if (p != fieldNames.end() && *p == additionalNameOne) {
+    if (auto chars = QuoteString(cx, additionalNameOne)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_DUPLICATE_PROPERTY, chars.get());
+    }
+    return false;
+  }
+
+  // Reject duplicates per PrepareTemporalFields, step 6.c.
+  if (q != fieldNames.end() && *q == additionalNameTwo) {
+    if (auto chars = QuoteString(cx, additionalNameTwo)) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_DUPLICATE_PROPERTY, chars.get());
+    }
+    return false;
+  }
 
   // Store the indices, because growBy() may reallocate.
   size_t indexOne = std::distance(fieldNames.begin(), p);
@@ -825,8 +899,10 @@ static inline bool ComparePropertyKeyLessThan(PropertyKey x, PropertyKey y) {
 bool js::temporal::AppendSorted(
     JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames,
     std::initializer_list<TemporalField> additionalNames) {
-  // |fieldNames| is sorted.
+  // |fieldNames| is sorted and doesn't include any duplicates
   MOZ_ASSERT(IsSorted(fieldNames));
+  MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
+             fieldNames.end());
 
   // |additionalNames| is non-empty, sorted, and doesn't include any duplicates.
   MOZ_ASSERT(additionalNames.size() > 0);
@@ -838,14 +914,14 @@ bool js::temporal::AppendSorted(
   if (additionalNames.size() == 1) {
     auto* it = additionalNames.begin();
     auto name = NameToId(ToPropertyName(cx, *it));
-    return ::AppendSorted(fieldNames, name);
+    return ::AppendSorted(cx, fieldNames, name);
   }
 
   if (additionalNames.size() == 2) {
     auto* it = additionalNames.begin();
     auto one = NameToId(ToPropertyName(cx, *it));
     auto two = NameToId(ToPropertyName(cx, *std::next(it)));
-    return ::AppendSorted(fieldNames, one, two);
+    return ::AppendSorted(cx, fieldNames, one, two);
   }
 
   // TODO: We can probably remove this general approach at a later time, because
@@ -866,9 +942,21 @@ bool js::temporal::AppendSorted(
     auto x = *std::prev(left);
     auto y = NameToId(ToPropertyName(cx, *std::prev(right)));
 
+    int32_t r = ComparePropertyKey(x, y);
+
+    // Reject duplicates per PrepareTemporalFields, step 6.c.
+    if (r == 0) {
+      if (auto chars = QuoteString(cx, x)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_TEMPORAL_DUPLICATE_PROPERTY,
+                                  chars.get());
+      }
+      return false;
+    }
+
     // Insert the lexicographically greater key.
     PropertyKey z;
-    if (ComparePropertyKey(x, y) > 0) {
+    if (r > 0) {
       z = x;
       left--;
     } else {
@@ -911,9 +999,36 @@ bool js::temporal::SortTemporalFieldNames(
   }
 
   // Sort all field names in alphabetical order.
-  return MergeSort(fieldNames.begin(), fieldNames.length(), scratch.begin(),
-                   [](const auto& x, const auto& y, bool* lessOrEqual) {
-                     *lessOrEqual = ComparePropertyKey(x, y) <= 0;
-                     return true;
-                   });
+  auto comparator = [](const auto& x, const auto& y, bool* lessOrEqual) {
+    *lessOrEqual = ComparePropertyKey(x, y) <= 0;
+    return true;
+  };
+  MOZ_ALWAYS_TRUE(MergeSort(fieldNames.begin(), fieldNames.length(),
+                            scratch.begin(), comparator));
+
+  for (size_t i = 0; i < fieldNames.length(); i++) {
+    auto property = fieldNames[i];
+
+    // Reject "constructor" and "__proto__" per PrepareTemporalFields, step 6.a.
+    if (property == NameToId(cx->names().constructor) ||
+        property == NameToId(cx->names().proto_)) {
+      if (auto chars = QuoteString(cx, property)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_TEMPORAL_INVALID_PROPERTY, chars.get());
+      }
+      return false;
+    }
+
+    // Reject duplicates per PrepareTemporalFields, step 6.c.
+    if (i > 0 && property == fieldNames[i - 1]) {
+      if (auto chars = QuoteString(cx, property)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_TEMPORAL_DUPLICATE_PROPERTY,
+                                  chars.get());
+      }
+      return false;
+    }
+  }
+
+  return true;
 }

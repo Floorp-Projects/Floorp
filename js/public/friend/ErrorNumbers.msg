@@ -834,6 +834,8 @@ MSG_DEF(JSMSG_TEMPORAL_MISSING_OPTION,              1, JSEXN_RANGEERR, "undefine
 MSG_DEF(JSMSG_TEMPORAL_MISSING_PROPERTY,            1, JSEXN_TYPEERR, "{0} property is undefined")
 MSG_DEF(JSMSG_TEMPORAL_UNEXPECTED_PROPERTY,         1, JSEXN_TYPEERR, "{0} property is not undefined")
 MSG_DEF(JSMSG_TEMPORAL_MISSING_TEMPORAL_FIELDS,     0, JSEXN_TYPEERR, "object must have at least one temporal property")
+MSG_DEF(JSMSG_TEMPORAL_DUPLICATE_PROPERTY,          1, JSEXN_RANGEERR, "duplicate property name \"{0}\"")
+MSG_DEF(JSMSG_TEMPORAL_INVALID_PROPERTY,            1, JSEXN_RANGEERR, "invalid property name \"{0}\"")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_INVALID,             0, JSEXN_RANGEERR, "epoch nanoseconds too large")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_NONINTEGER,          1, JSEXN_RANGEERR, "Instant must be an integer, but received {0}")
 MSG_DEF(JSMSG_TEMPORAL_INSTANT_BAD_DURATION,        1, JSEXN_RANGEERR, "duration \"{0}\" property must be zero")

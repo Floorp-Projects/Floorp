@@ -2575,10 +2575,6 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // FIXME: spec issue - "offset" can already be part of |fieldNames|. Consider
-  // using MergeLists(fieldNames, «"offset"») here.
-  // https://github.com/tc39/proposal-temporal/issues/2532
-
   // Step 8.
   if (!AppendSorted(cx, fieldNames.get(), {TemporalField::Offset})) {
     return false;
