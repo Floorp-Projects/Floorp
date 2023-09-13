@@ -9,6 +9,18 @@ const ANALYSIS_RESPONSE_SCHEMA =
 const ANALYSIS_REQUEST_SCHEMA =
   "chrome://global/content/shopping/analysis_request.schema.json";
 
+let ANALYZE_API = "https://trustwerty.com/api/v1/fx/analyze";
+const ANALYZE_RESPONSE_SCHEMA =
+  "chrome://global/content/shopping/analyze_response.schema.json";
+const ANALYZE_REQUEST_SCHEMA =
+  "chrome://global/content/shopping/analyze_request.schema.json";
+
+let ANALYSIS_STATUS_API = "https://trustwerty.com/api/v1/fx/analysis_status";
+const ANALYSIS_STATUS_RESPONSE_SCHEMA =
+  "chrome://global/content/shopping/analysis_status_response.schema.json";
+const ANALYSIS_STATUS_REQUEST_SCHEMA =
+  "chrome://global/content/shopping/analysis_status_request.schema.json";
+
 // Really const but needs to be overridable for tests.
 let RECOMMENDATIONS_API = "https://a.fakespot.com/v1/fx/sp_search";
 const RECOMMENDATIONS_RESPONSE_SCHEMA =
@@ -28,7 +40,6 @@ const REPORTING_REQUEST_SCHEMA =
   "chrome://global/content/shopping/reporting_request.schema.json";
 
 const FAKESPOT_BASE_URL = "https://www.fakespot.com/";
-const FAKESPOT_ANALYSIS_URL = "https://www.fakespot.com/analyze?url=";
 
 const ProductConfig = {
   amazon: {
@@ -61,6 +72,10 @@ if (typeof Cu !== "undefined" && Cu.isInAutomation) {
     "https://example.com/browser/toolkit/components/shopping/test/browser/attribution.sjs";
   REPORTING_API =
     "https://example.com/browser/toolkit/components/shopping/test/browser/reporting.sjs";
+  ANALYZE_API =
+    "https://example.com/browser/toolkit/components/shopping/test/browser/analyze.sjs";
+  ANALYSIS_STATUS_API =
+    "https://example.com/browser/toolkit/components/shopping/test/browser/analysis_status.sjs";
 }
 
 Object.freeze(ProductConfig);
@@ -69,6 +84,12 @@ export {
   ANALYSIS_API,
   ANALYSIS_RESPONSE_SCHEMA,
   ANALYSIS_REQUEST_SCHEMA,
+  ANALYZE_API,
+  ANALYZE_RESPONSE_SCHEMA,
+  ANALYZE_REQUEST_SCHEMA,
+  ANALYSIS_STATUS_API,
+  ANALYSIS_STATUS_RESPONSE_SCHEMA,
+  ANALYSIS_STATUS_REQUEST_SCHEMA,
   RECOMMENDATIONS_API,
   RECOMMENDATIONS_RESPONSE_SCHEMA,
   RECOMMENDATIONS_REQUEST_SCHEMA,
@@ -79,6 +100,5 @@ export {
   REPORTING_RESPONSE_SCHEMA,
   REPORTING_REQUEST_SCHEMA,
   FAKESPOT_BASE_URL,
-  FAKESPOT_ANALYSIS_URL,
   ProductConfig,
 };

@@ -10,8 +10,6 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/shopping/shopping-card.mjs";
 
-import { FAKESPOT_ANALYSIS_URL } from "chrome://global/content/shopping/ProductConfig.mjs";
-
 class UnanalyzedProductCard extends MozLitElement {
   static properties = {
     productURL: { type: String, reflect: true },
@@ -55,10 +53,6 @@ class UnanalyzedProductCard extends MozLitElement {
           <a
             id="unanalyzed-product-analysis-link"
             data-l10n-id="shopping-unanalyzed-product-analyze-link"
-            target="_blank"
-            href="${FAKESPOT_ANALYSIS_URL}${encodeURIComponent(
-              this.productURL
-            )}"
             @click=${this.onClickAnalysisLink}
           ></a>
         </div>

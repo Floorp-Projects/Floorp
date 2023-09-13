@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "chrome://global/content/shopping/analysis_status_response.schema.json",
+  "title": "Analysis Status response",
+  "type": "object",
+  "properties": {
+    "status": {
+      "description": "Current Analysis status",
+      "type": "string",
+      "examples": [
+        "pending",
+        "in_progress",
+        "completed",
+        "not_analyzable",
+        "unprocessable"
+      ]
+    },
+    "progress": {
+      "description": "Current Analysis progress 0.0..100.0",
+      "type": "number",
+      "examples": [10.0]
+    }
+  },
+  "required": ["status", "progress"]
+}
