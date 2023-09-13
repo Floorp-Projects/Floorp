@@ -29,6 +29,7 @@
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/PlainTime.h"
+#include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/TimeZone.h"
 #include "builtin/temporal/ZonedDateTime.h"

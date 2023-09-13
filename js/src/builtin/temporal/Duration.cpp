@@ -4085,7 +4085,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
         }
 
         // Step 8.b.
-        if (!ParseTimeZoneOffsetString(cx, offsetString, &offsetNs)) {
+        if (!ParseDateTimeUTCOffset(cx, offsetString, &offsetNs)) {
           return false;
         }
       } else {
@@ -4106,7 +4106,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
     bool isUTC;
     bool hasOffset;
     int64_t timeZoneOffset;
-    Rooted<JSString*> timeZoneName(cx);
+    Rooted<ParsedTimeZone> timeZoneName(cx);
     Rooted<JSString*> calendarString(cx);
     if (!ParseTemporalRelativeToString(cx, string, &dateTime, &isUTC,
                                        &hasOffset, &timeZoneOffset,
@@ -4150,7 +4150,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
       if (offsetBehaviour == OffsetBehaviour::Option) {
         MOZ_ASSERT(hasOffset);
 
-        // Steps 8.a-b.
+        // Step 8.a.
         offsetNs = timeZoneOffset;
       } else {
         // Step 9.

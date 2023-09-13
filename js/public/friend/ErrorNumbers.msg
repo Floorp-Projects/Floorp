@@ -829,7 +829,7 @@ MSG_DEF(JSMSG_TEMPORAL_INVALID_UNIT_RANGE,          0, JSEXN_RANGEERR, "smallest
 MSG_DEF(JSMSG_TEMPORAL_INVALID_UNIT_OPTION,         2, JSEXN_RANGEERR, "{0} is not a valid {1} option in this context")
 MSG_DEF(JSMSG_TEMPORAL_INVALID_NUMBER,              1, JSEXN_RANGEERR, "{0} must be larger than zero")
 MSG_DEF(JSMSG_TEMPORAL_INVALID_INTEGER,             1, JSEXN_RANGEERR, "{0} must be an integer")
-MSG_DEF(JSMSG_TEMPORAL_INVALID_OBJECT,              2, JSEXN_TYPEERR, "{0} mustn't be a {1} object")
+MSG_DEF(JSMSG_TEMPORAL_INVALID_OBJECT,              2, JSEXN_TYPEERR, "{0} must not be a {1} object")
 MSG_DEF(JSMSG_TEMPORAL_MISSING_OPTION,              1, JSEXN_RANGEERR, "undefined {0} option")
 MSG_DEF(JSMSG_TEMPORAL_MISSING_PROPERTY,            1, JSEXN_TYPEERR, "{0} property is undefined")
 MSG_DEF(JSMSG_TEMPORAL_UNEXPECTED_PROPERTY,         1, JSEXN_TYPEERR, "{0} property is not undefined")
@@ -906,5 +906,6 @@ MSG_DEF(JSMSG_TEMPORAL_PARSER_INVALID_UTC_DESIGNATOR,   0, JSEXN_RANGEERR, "unex
 MSG_DEF(JSMSG_TEMPORAL_PARSER_INVALID_UTC_DESIGNATOR_WITHOUT_NAME, 0, JSEXN_RANGEERR, "unexpected UTC designator 'Z' without a bracketed time zone")
 MSG_DEF(JSMSG_TEMPORAL_PARSER_MONTH_DAY_CALENDAR_NOT_ISO8601, 0, JSEXN_RANGEERR, "Month-Day formats only support the \"iso8601\" calendar")
 MSG_DEF(JSMSG_TEMPORAL_PARSER_YEAR_MONTH_CALENDAR_NOT_ISO8601, 0, JSEXN_RANGEERR, "Year-Month formats only support the \"iso8601\" calendar")
+MSG_DEF(JSMSG_TEMPORAL_PARSER_INVALID_SUBMINUTE_TIMEZONE, 0, JSEXN_RANGEERR, "time zone offset must not contain seconds precision")
 
 //clang-format on
