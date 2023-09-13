@@ -622,8 +622,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void clearScriptLCov(Realm* realm);
 
   // Add the target of JS WeakRef to a kept-alive set maintained by GC.
-  // See: https://tc39.es/proposal-weakrefs/#sec-keepduringjob
-  bool keepDuringJob(HandleObject target);
+  // https://tc39.es/ecma262/#sec-addtokeptobjects
+  bool addToKeptObjects(HandleObject target);
 
   void traceKeptObjects(JSTracer* trc);
 
