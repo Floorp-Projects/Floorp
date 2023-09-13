@@ -728,10 +728,12 @@ bool js::temporal::ToTemporalCalendar(JSContext* cx,
   }
 
   // Step 3.
-  Rooted<JSString*> str(cx, JS::ToString(cx, calendarLike));
-  if (!str) {
+  if (!calendarLike.isString()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK,
+                     calendarLike, nullptr, "not a string");
     return false;
   }
+  Rooted<JSString*> str(cx, calendarLike.toString());
 
   // Step 4.
   Rooted<JSLinearString*> identifier(cx, ParseTemporalCalendarString(cx, str));
@@ -3697,24 +3699,29 @@ static bool CalendarConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 2.
-  JSString* id = JS::ToString(cx, args.get(0));
-  if (!id) {
+  if (!args.requireAtLeast(cx, "Temporal.Calendar", 1)) {
     return false;
   }
 
-  Rooted<JSLinearString*> linear(cx, id->ensureLinear(cx));
-  if (!linear) {
+  if (!args[0].isString()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0],
+                     nullptr, "not a string");
+    return false;
+  }
+
+  Rooted<JSLinearString*> identifier(cx, args[0].toString()->ensureLinear(cx));
+  if (!identifier) {
     return false;
   }
 
   // Step 3.
-  linear = ThrowIfNotBuiltinCalendar(cx, linear);
-  if (!linear) {
+  identifier = ThrowIfNotBuiltinCalendar(cx, identifier);
+  if (!identifier) {
     return false;
   }
 
   // Step 4.
-  auto* calendar = CreateTemporalCalendar(cx, args, linear);
+  auto* calendar = CreateTemporalCalendar(cx, args, identifier);
   if (!calendar) {
     return false;
   }

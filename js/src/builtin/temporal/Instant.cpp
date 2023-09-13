@@ -684,6 +684,7 @@ static InstantObject* CreateTemporalInstant(JSContext* cx, const CallArgs& args,
 Wrapped<InstantObject*> js::temporal::ToTemporalInstant(JSContext* cx,
                                                         Handle<Value> item) {
   // Step 1.
+  Rooted<Value> primitiveValue(cx, item);
   if (item.isObject()) {
     JSObject* itemObj = &item.toObject();
 
@@ -697,22 +698,20 @@ Wrapped<InstantObject*> js::temporal::ToTemporalInstant(JSContext* cx,
       auto epochInstant = ToInstant(zonedDateTime);
       return CreateTemporalInstant(cx, epochInstant);
     }
+
+    // Steps 1.c-d.
+    if (!ToPrimitive(cx, JSTYPE_STRING, &primitiveValue)) {
+      return nullptr;
+    }
   }
 
   // Step 2.
-  Rooted<JSString*> string(cx, JS::ToString(cx, item));
-  if (!string) {
+  if (!primitiveValue.isString()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK,
+                     primitiveValue, nullptr, "not a string");
     return nullptr;
   }
-
-  // The string representation of other types can never be parsed as an instant,
-  // so directly throw an error here. But still perform ToString first for
-  // possible side-effects.
-  if (!item.isString() && !item.isObject()) {
-    ReportValueError(cx, JSMSG_TEMPORAL_INSTANT_PARSE_BAD_TYPE,
-                     JSDVG_IGNORE_STACK, item, nullptr);
-    return nullptr;
-  }
+  Rooted<JSString*> string(cx, primitiveValue.toString());
 
   // Step 3.
   Instant epochNanoseconds;
@@ -731,6 +730,7 @@ bool js::temporal::ToTemporalInstantEpochInstant(JSContext* cx,
                                                  Handle<Value> item,
                                                  Instant* result) {
   // Step 1.
+  Rooted<Value> primitiveValue(cx, item);
   if (item.isObject()) {
     JSObject* itemObj = &item.toObject();
 
@@ -745,23 +745,22 @@ bool js::temporal::ToTemporalInstantEpochInstant(JSContext* cx,
       *result = ToInstant(zonedDateTime);
       return true;
     }
+
+    // Steps 1.c-d.
+    if (!ToPrimitive(cx, JSTYPE_STRING, &primitiveValue)) {
+      return false;
+    }
   }
 
   // Step 2.
-  Rooted<JSString*> string(cx, JS::ToString(cx, item));
-  if (!string) {
+  if (!primitiveValue.isString()) {
+    // The value is always on the stack, so JSDVG_SEARCH_STACK can be used for
+    // better error reporting.
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK,
+                     primitiveValue, nullptr, "not a string");
     return false;
   }
-
-  // The string representation of other types can never be parsed as an instant,
-  // so directly throw an error here. The value is always on the stack, so
-  // JSDVG_SEARCH_STACK can be used for even better error reporting. But still
-  // perform ToString first for possible side-effects.
-  if (!item.isString() && !item.isObject()) {
-    ReportValueError(cx, JSMSG_TEMPORAL_INSTANT_PARSE_BAD_TYPE,
-                     JSDVG_SEARCH_STACK, item, nullptr);
-    return false;
-  }
+  Rooted<JSString*> string(cx, primitiveValue.toString());
 
   // Steps 3-4.
   Instant epochNanoseconds;

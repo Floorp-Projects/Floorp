@@ -849,25 +849,12 @@ bool js::temporal::ToTemporalTimeZone(JSContext* cx,
   }
 
   // Step 2.
-  Rooted<JSString*> identifier(cx, JS::ToString(cx, timeZoneLike));
-  if (!identifier) {
+  if (!timeZoneLike.isString()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK,
+                     timeZoneLike, nullptr, "not a string");
     return false;
   }
-
-  // The string representation of (most) other types can never be parsed as a
-  // time zone, so directly throw an error here. But still perform ToString
-  // first for possible side-effects.
-  //
-  // Numeric values are also accepted, because their ToString representation can
-  // be parsed as a time zone offset value, e.g. ToString(-10) == "-10", which
-  // is then interpreted as "-10:00".
-  //
-  // FIXME: spec issue - ToString for negative Numbers/BigInt also accepted?
-  if (!timeZoneLike.isString() && !timeZoneLike.isNumeric()) {
-    ReportValueError(cx, JSMSG_TEMPORAL_TIMEZONE_PARSE_BAD_TYPE,
-                     JSDVG_IGNORE_STACK, timeZoneLike, nullptr);
-    return false;
-  }
+  Rooted<JSString*> identifier(cx, timeZoneLike.toString());
 
   // Steps 3-6.
   return ToTemporalTimeZone(cx, identifier, result);
@@ -1755,22 +1742,27 @@ static bool TimeZoneConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 2.
-  Rooted<JSString*> identifier(cx, JS::ToString(cx, args.get(0)));
-  if (!identifier) {
+  if (!args.requireAtLeast(cx, "Temporal.TimeZone", 1)) {
     return false;
   }
 
-  Rooted<JSLinearString*> linearIdentifier(cx, identifier->ensureLinear(cx));
-  if (!linearIdentifier) {
+  if (!args[0].isString()) {
+    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0],
+                     nullptr, "not a string");
+    return false;
+  }
+
+  Rooted<JSLinearString*> identifier(cx, args[0].toString()->ensureLinear(cx));
+  if (!identifier) {
     return false;
   }
 
   Rooted<JSString*> canonical(cx);
   Rooted<Value> offsetNanoseconds(cx);
-  if (IsTimeZoneOffsetStringPrefix(linearIdentifier)) {
+  if (IsTimeZoneOffsetStringPrefix(identifier)) {
     // Step 3.
     int64_t nanoseconds;
-    if (!ParseTimeZoneOffsetString(cx, linearIdentifier, &nanoseconds)) {
+    if (!ParseTimeZoneOffsetString(cx, identifier, &nanoseconds)) {
       return false;
     }
     MOZ_ASSERT(std::abs(nanoseconds) < ToNanoseconds(TemporalUnit::Day));
@@ -1783,7 +1775,7 @@ static bool TimeZoneConstructor(JSContext* cx, unsigned argc, Value* vp) {
     offsetNanoseconds.setNumber(nanoseconds);
   } else {
     // Step 4.
-    canonical = ValidateAndCanonicalizeTimeZoneName(cx, linearIdentifier);
+    canonical = ValidateAndCanonicalizeTimeZoneName(cx, identifier);
     if (!canonical) {
       return false;
     }
