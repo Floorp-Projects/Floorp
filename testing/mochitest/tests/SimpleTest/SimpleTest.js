@@ -1496,9 +1496,14 @@ SimpleTest.finish = function () {
     } else if (workers.length) {
       let FULL_PROFILE_WORKERS_TO_IGNORE = [];
       if (parentRunner.conditionedProfile) {
-        // Full profile has service workers in the profile, without clearing the profile
-        // service workers will be leftover, in all my testing youtube is the only one.
-        FULL_PROFILE_WORKERS_TO_IGNORE = ["https://www.youtube.com/sw.js"];
+        // Full profile has service workers in the profile, without clearing the
+        // profile service workers will be leftover.  We perform a startsWith
+        // check below because some origins (s.0cf.io) use a cache-busting query
+        // parameter.
+        FULL_PROFILE_WORKERS_TO_IGNORE = [
+          "https://www.youtube.com/sw.js",
+          "https://s.0cf.io/sw.js",
+        ];
       } else {
         SimpleTest.ok(
           false,
@@ -1507,7 +1512,11 @@ SimpleTest.finish = function () {
       }
 
       for (let worker of workers) {
-        if (FULL_PROFILE_WORKERS_TO_IGNORE.includes(worker.scriptSpec)) {
+        if (
+          FULL_PROFILE_WORKERS_TO_IGNORE.some(ignoreBase =>
+            worker.scriptSpec.startsWith(ignoreBase)
+          )
+        ) {
           continue;
         }
         SimpleTest.ok(
