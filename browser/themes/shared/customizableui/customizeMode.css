@@ -312,7 +312,6 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 
 #customization-uidensity-menu {
   font: menu;
-  margin-inline: 0;
 
   /* Make the panel padding uniform across all platforms due to the
      styling of the section headers and footer. */
