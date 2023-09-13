@@ -1427,10 +1427,6 @@ bool js::temporal::GetPossibleInstantsFor(
     }
   }
 
-  // FIXME: spec issue - should there be a requirement that the list is sorted?
-  // FIXME: spec issue - are duplicates allowed?
-  // https://github.com/tc39/proposal-temporal/issues/2532
-
   // Step 3.
   Rooted<Value> thisv(cx, ObjectValue(*timeZoneObj));
   Rooted<Value> arg(cx, ObjectValue(*dateTime));

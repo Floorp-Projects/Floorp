@@ -872,14 +872,15 @@ static bool PlainMonthDay_toPlainDate(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 10.
-  JS::RootedVector<PropertyKey> mergedFieldNames(cx);
-  if (!MergeTemporalFieldNames(receiverFieldNames, inputFieldNames,
-                               mergedFieldNames.get())) {
+  JS::RootedVector<PropertyKey> concatenatedFieldNames(cx);
+  if (!ConcatTemporalFieldNames(receiverFieldNames, inputFieldNames,
+                                concatenatedFieldNames.get())) {
     return false;
   }
 
   // Step 11.
-  mergedFields = PrepareTemporalFields(cx, mergedFields, mergedFieldNames);
+  mergedFields =
+      PrepareTemporalFields(cx, mergedFields, concatenatedFieldNames);
   if (!mergedFields) {
     return false;
   }

@@ -1092,12 +1092,6 @@ bool js::temporal::CalendarFields(
     }
   }
 
-  // FIXME: spec issue - provide default implementation similar to
-  // DefaultMergeFields? Otherwise the input field names are returned as-is,
-  // including any duplicate field names. (Duplicate names are still possible
-  // through user-defined calendars, though.)
-  // https://github.com/tc39/proposal-temporal/issues/2532
-
   auto* array = NewDenseFullyAllocatedArray(cx, fieldNames.size());
   if (!array) {
     return false;
@@ -1113,11 +1107,6 @@ bool js::temporal::CalendarFields(
   if (!Call(cx, fields, calendarObj, fieldsArray, &fieldsArray)) {
     return false;
   }
-
-  // FIXME: spec issue - sort the result array here instead of in
-  // PrepareTemporalFields.
-  // FIXME: spec issue - maybe also check for duplicates here?
-  // https://github.com/tc39/proposal-temporal/issues/2532
 
   // Steps 3-4.
   if (!IterableToListOfStrings(cx, fieldsArray, result)) {

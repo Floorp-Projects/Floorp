@@ -141,7 +141,8 @@ class MutableWrappedPtrOperations<temporal::TemporalFields, Wrapper>
 namespace js::temporal {
 
 /**
- * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields [ ,
+ * duplicateBehaviour ] )
  */
 bool PrepareTemporalFields(JSContext* cx, JS::Handle<JSObject*> fields,
                            std::initializer_list<TemporalField> fieldNames,
@@ -149,14 +150,16 @@ bool PrepareTemporalFields(JSContext* cx, JS::Handle<JSObject*> fields,
                            JS::MutableHandle<TemporalFields> result);
 
 /**
- * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields [ ,
+ * duplicateBehaviour ] )
  */
 PlainObject* PrepareTemporalFields(
     JSContext* cx, JS::Handle<JSObject*> fields,
     JS::Handle<JS::StackGCVector<JS::PropertyKey>> fieldNames);
 
 /**
- * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields [ ,
+ * duplicateBehaviour ] )
  */
 PlainObject* PrepareTemporalFields(
     JSContext* cx, JS::Handle<JSObject*> fields,
@@ -164,19 +167,17 @@ PlainObject* PrepareTemporalFields(
     std::initializer_list<TemporalField> requiredFields);
 
 /**
- * PrepareTemporalFields ( fields, fieldNames, requiredFields )
+ * PrepareTemporalFields ( fields, fieldNames, requiredFields [ ,
+ * duplicateBehaviour ] )
  */
 PlainObject* PreparePartialTemporalFields(
     JSContext* cx, JS::Handle<JSObject*> fields,
     JS::Handle<JS::StackGCVector<JS::PropertyKey>> fieldNames);
 
-/**
- * MergeLists ( a, b )
- */
-[[nodiscard]] bool MergeTemporalFieldNames(
+[[nodiscard]] bool ConcatTemporalFieldNames(
     const JS::StackGCVector<JS::PropertyKey>& receiverFieldNames,
     const JS::StackGCVector<JS::PropertyKey>& inputFieldNames,
-    JS::StackGCVector<JS::PropertyKey>& mergedFieldNames);
+    JS::StackGCVector<JS::PropertyKey>& concatenatedFieldNames);
 
 [[nodiscard]] bool AppendSorted(
     JSContext* cx, JS::StackGCVector<JS::PropertyKey>& fieldNames,
