@@ -3989,9 +3989,25 @@ firefoxview_next:
   card_collapsed:
     objects: ["card_container"]
     description: >
-      Recorded when a card-container is collapsed
+      Recorded when a card-container is collapsed on the 'Recent browsing' page
     extra_keys:
       data_type: The type of data being collapsed in a card on the 'Recent browsing' page
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1842616
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  card_expanded:
+    objects: ["card_container"]
+    description: >
+      Recorded when a card-container is expanded on the 'Recent browsing' page
+    extra_keys:
+      data_type: The type of data being expanded in a card on the 'Recent browsing' page
     notification_emails:
       - firefoxview@mozilla.com
     products:
@@ -4008,6 +4024,24 @@ firefoxview_next:
       Recorded when the page/view is changed in Firefox View
     extra_keys:
       page: The short page name that the user is navigating to
+      source: Whether the page was changed via the side navigation vs the 'View all' link on cards on the Recent browsing page
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1842616
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  context_menu:
+    objects: ["tabs"]
+    description: >
+      Recorded when a context menu selection is made in Firefox View
+    extra_keys:
+      menu_action: The menu action the user has selected for a given tab
+      data_type: The type of data the user has used the context menu for
     notification_emails:
       - firefoxview@mozilla.com
     products:

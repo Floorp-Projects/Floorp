@@ -269,7 +269,7 @@ class SyncedTabsInView extends ViewPage {
 
   panelListTemplate() {
     return html`
-      <panel-list slot="menu">
+      <panel-list slot="menu" data-tab-type="syncedtabs">
         <panel-item
           @click=${this.openInNewWindow}
           data-l10n-id="fxviewtabrow-open-in-window"

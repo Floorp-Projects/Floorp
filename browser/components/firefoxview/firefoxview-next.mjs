@@ -22,7 +22,15 @@ function changePage(page) {
     );
     (currentCategoryButton || navigation.categoryButtons[0]).focus();
   }
+}
 
+function recordTelemetry(source, eventTarget) {
+  let page = "recentbrowsing";
+  if (source === "category-navigation") {
+    page = eventTarget.parentNode.currentCategory;
+  } else if (source === "view-all") {
+    page = eventTarget.shortPageName;
+  }
   // Record telemetry
   Services.telemetry.recordEvent(
     "firefoxview_next",
@@ -30,7 +38,8 @@ function changePage(page) {
     "navigation",
     null,
     {
-      page: navigation.currentCategory,
+      page,
+      source,
     }
   );
 }
@@ -44,6 +53,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("hashchange", onHashChange);
   window.addEventListener("change-category", function (event) {
     location.hash = event.target.getAttribute("name");
+    recordTelemetry("category-navigation", event.target);
+  });
+  window.addEventListener("card-container-view-all", function (event) {
+    recordTelemetry("view-all", event.originalTarget);
   });
   if (document.location.hash) {
     changePage(document.location.hash.substring(1));

@@ -61,11 +61,11 @@ class CardContainer extends MozLitElement {
     if (this.preserveCollapseState) {
       Services.prefs.setBoolPref(this.openStatePref, this.isExpanded);
     }
-    if (!this.isExpanded && this.shortPageName) {
-      // Record telemetry
+    // Record telemetry
+    if (this.shortPageName) {
       Services.telemetry.recordEvent(
         "firefoxview_next",
-        "card_collapsed",
+        this.isExpanded ? "card_expanded" : "card_collapsed",
         "card_container",
         null,
         {
@@ -73,6 +73,15 @@ class CardContainer extends MozLitElement {
         }
       );
     }
+  }
+
+  viewAllClicked() {
+    this.dispatchEvent(
+      new CustomEvent("card-container-view-all", {
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   render() {
@@ -111,6 +120,7 @@ class CardContainer extends MozLitElement {
           </summary>
           <a
             href="about:firefoxview-next#${this.shortPageName}"
+            @click=${this.viewAllClicked}
             class="view-all-link"
             data-l10n-id="firefoxview-view-all-link"
             ?hidden=${!this.showViewAll}

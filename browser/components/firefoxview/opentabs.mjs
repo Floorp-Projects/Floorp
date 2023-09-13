@@ -257,18 +257,21 @@ class OpenTabsInViewCard extends ViewPage {
   }
 
   static queries = {
+    cardEl: "card-container",
     panelList: "panel-list",
+    tabList: "fxview-tab-list",
   };
 
-  closeTab() {
+  closeTab(e) {
     const tab = this.triggerNode.tabElement;
     const browserWindow = tab.ownerGlobal;
     browserWindow.gBrowser.removeTab(tab, { animate: true });
+    this.recordContextMenuTelemetry("close-tab", e);
   }
 
   panelListTemplate() {
     return html`
-      <panel-list slot="menu">
+      <panel-list slot="menu" data-tab-type="opentabs">
         <panel-item
           data-l10n-id="fxviewtabrow-close-tab"
           data-l10n-attrs="accesskey"

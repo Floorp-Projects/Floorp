@@ -105,6 +105,7 @@ class HistoryInView extends ViewPage {
     migrationWizardDialog: "#migrationWizardDialog",
     emptyState: "fxview-empty-state",
     lists: { all: "fxview-tab-list" },
+    panelList: "panel-list",
   };
 
   static properties = {
@@ -210,6 +211,7 @@ class HistoryInView extends ViewPage {
 
   deleteFromHistory(e) {
     lazy.PlacesUtils.history.remove(this.triggerNode.url);
+    this.recordContextMenuTelemetry("delete-from-history", e);
   }
 
   async onChangeSortOption(e) {
@@ -268,7 +270,7 @@ class HistoryInView extends ViewPage {
 
   panelListTemplate() {
     return html`
-      <panel-list slot="menu">
+      <panel-list slot="menu" data-tab-type="history">
         <panel-item
           @click=${this.deleteFromHistory}
           data-l10n-id="firefoxview-history-context-delete"

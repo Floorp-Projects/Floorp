@@ -47,17 +47,6 @@ async function openFirefoxView(win) {
   );
 }
 
-function navigateToHistory(document) {
-  // Navigate to Recently closed tabs page/view
-  const navigation = document.querySelector("fxview-category-navigation");
-  let historyNavButton = Array.from(navigation.categoryButtons).find(
-    categoryButton => {
-      return categoryButton.name === "history";
-    }
-  );
-  historyNavButton.buttonEl.click();
-}
-
 async function addHistoryItems(dateAdded) {
   await PlacesUtils.history.insert({
     url: URLs[0],
@@ -101,7 +90,7 @@ add_task(async function test_list_ordering() {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
 
-    navigateToHistory(document);
+    navigateToCategory(document, "history");
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
@@ -158,7 +147,7 @@ add_task(async function test_empty_states() {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
 
-    navigateToHistory(document);
+    navigateToCategory(document, "history");
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
@@ -246,7 +235,7 @@ add_task(async function test_observers_removed_when_view_is_hidden() {
   );
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    navigateToHistory(document);
+    navigateToCategory(document, "history");
     const historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
     const visitList = await TestUtils.waitForCondition(() =>
