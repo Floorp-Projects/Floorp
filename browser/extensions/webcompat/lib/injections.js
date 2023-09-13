@@ -13,7 +13,7 @@ class Injections {
     this._injectionsEnabled = true;
 
     this._availableInjections = availableInjections;
-    this._activeInjections = new Map();
+    this._activeInjections = new Set();
     this._customFunctions = customFunctions;
   }
 
@@ -48,6 +48,33 @@ class Injections {
     return this._injectionsEnabled;
   }
 
+  async getPromiseRegisteredScriptIds(scriptIds) {
+    let registeredScriptIds = [];
+
+    // Try to avoid re-registering scripts already registered
+    // (e.g. if the webcompat background page is restarted
+    // after an extension process crash, after having registered
+    // the content scripts already once), but do not prevent
+    // to try registering them again if the getRegisteredContentScripts
+    // method returns an unexpected rejection.
+    try {
+      const registeredScripts =
+        await browser.scripting.getRegisteredContentScripts({
+          // By default only look for script ids that belongs to Injections
+          // (and ignore the ones that may belong to Shims).
+          ids: scriptIds ?? this._availableInjections.map(inj => inj.id),
+        });
+      registeredScriptIds = registeredScripts.map(script => script.id);
+    } catch (ex) {
+      console.error(
+        "Retrieve WebCompat GoFaster registered content scripts failed: ",
+        ex
+      );
+    }
+
+    return registeredScriptIds;
+  }
+
   async registerContentScripts() {
     const platformInfo = await browser.runtime.getPlatformInfo();
     const platformMatches = [
@@ -55,10 +82,13 @@ class Injections {
       platformInfo.os,
       platformInfo.os == "android" ? "android" : "desktop",
     ];
+
+    let registeredScriptIds = await this.getPromiseRegisteredScriptIds();
+
     for (const injection of this._availableInjections) {
       if (platformMatches.includes(injection.platform)) {
         injection.availableOnPlatform = true;
-        await this.enableInjection(injection);
+        await this.enableInjection(injection, registeredScriptIds);
       }
     }
 
@@ -70,17 +100,39 @@ class Injections {
     });
   }
 
-  assignContentScriptDefaults(contentScripts) {
+  buildContentScriptRegistrations(contentScripts) {
     let finalConfig = Object.assign({}, contentScripts);
+
+    // Don't persist the content scripts across browser restarts
+    // (at least not yet, we would need to apply some more changes
+    // to adjust webcompat for accounting for the scripts to be
+    // already registered).
+    //
+    // NOTE: scripting API has been introduced in Gecko 102,
+    // prior to Gecko 105 persistAcrossSessions option was required
+    // and only accepted false persistAcrossSessions, after Gecko 105
+    // is optional and defaults to true.
+    finalConfig.persistAcrossSessions = false;
 
     if (!finalConfig.runAt) {
       finalConfig.runAt = "document_start";
     }
 
+    // Convert js/css from contentScripts.register API method
+    // format to scripting.registerContentScripts API method
+    // format.
+    if (Array.isArray(finalConfig.js)) {
+      finalConfig.js = finalConfig.js.map(e => e.file);
+    }
+
+    if (Array.isArray(finalConfig.css)) {
+      finalConfig.css = finalConfig.css.map(e => e.file);
+    }
+
     return finalConfig;
   }
 
-  async enableInjection(injection) {
+  async enableInjection(injection, registeredScriptIds) {
     if (injection.active) {
       return undefined;
     }
@@ -89,7 +141,7 @@ class Injections {
       return this.enableCustomInjection(injection);
     }
 
-    return this.enableContentScripts(injection);
+    return this.enableContentScripts(injection, registeredScriptIds);
   }
 
   enableCustomInjection(injection) {
@@ -103,16 +155,31 @@ class Injections {
     }
   }
 
-  async enableContentScripts(injection) {
+  async enableContentScripts(injection, registeredScriptIds) {
+    let injectProps;
     try {
-      const handle = await browser.contentScripts.register(
-        this.assignContentScriptDefaults(injection.contentScripts)
+      const { id } = injection;
+      // enableContentScripts receives a registeredScriptIds already
+      // pre-computed once from registerContentScripts to register all
+      // the injection, whereas it does not expect to receive one when
+      // it is called from the AboutCompatBroker to re-enable one specific
+      // injection.
+      let activeScriptIds = Array.isArray(registeredScriptIds)
+        ? registeredScriptIds
+        : await this.getPromiseRegisteredScriptIds([id]);
+      injectProps = this.buildContentScriptRegistrations(
+        injection.contentScripts
       );
-      this._activeInjections.set(injection, handle);
+      injectProps.id = id;
+      if (!activeScriptIds.includes(id)) {
+        await browser.scripting.registerContentScripts([injectProps]);
+      }
+      this._activeInjections.add(id);
       injection.active = true;
     } catch (ex) {
       console.error(
         "Registering WebCompat GoFaster content scripts failed: ",
+        { injection, injectProps },
         ex
       );
     }
@@ -155,9 +222,10 @@ class Injections {
   }
 
   async disableContentScripts(injection) {
-    const contentScript = this._activeInjections.get(injection);
-    await contentScript.unregister();
-    this._activeInjections.delete(injection);
+    if (this._activeInjections.has(injection.id)) {
+      await browser.scripting.unregisterContentScripts({ ids: [injection.id] });
+      this._activeInjections.delete(injection);
+    }
     injection.active = false;
   }
 }
