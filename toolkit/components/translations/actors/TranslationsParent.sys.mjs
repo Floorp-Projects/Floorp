@@ -1907,6 +1907,20 @@ export class TranslationsParent extends JSWindowActorParent {
    *   an auto-translate.
    */
   translate(fromLanguage, toLanguage, reportAsAutoTranslate) {
+    if (fromLanguage === toLanguage) {
+      lazy.console.error(
+        "A translation was requested where the from and to language match.",
+        { fromLanguage, toLanguage, reportAsAutoTranslate }
+      );
+      return;
+    }
+    if (!fromLanguage || !toLanguage) {
+      lazy.console.error(
+        "A translation was requested but the fromLanguage or toLanguage was not set.",
+        { fromLanguage, toLanguage, reportAsAutoTranslate }
+      );
+      return;
+    }
     if (this.languageState.requestedTranslationPair) {
       // This page has already been translated, restore it and translate it
       // again once the actor has been recreated.
