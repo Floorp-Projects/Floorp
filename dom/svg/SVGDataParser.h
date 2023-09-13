@@ -7,7 +7,6 @@
 #ifndef DOM_SVG_SVGDATAPARSER_H_
 #define DOM_SVG_SVGDATAPARSER_H_
 
-#include <cctype>
 #include "mozilla/RangedPtr.h"
 #include "nsStringFwd.h"
 
@@ -22,11 +21,6 @@ class SVGDataParser {
   explicit SVGDataParser(const nsAString& aValue);
 
  protected:
-  static bool IsAlpha(char16_t aCh) {
-    // Exclude non-ascii characters before calling isalpha
-    return (aCh & 0x7f) == aCh && isalpha(aCh);
-  }
-
   // Returns true if there are more characters to read, false otherwise.
   bool SkipCommaWsp();
 
