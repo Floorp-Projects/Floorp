@@ -11,6 +11,7 @@ EXPORTS.brotli += [
     'include/brotli/decode.h',
     'include/brotli/encode.h',
     'include/brotli/port.h',
+    'include/brotli/shared_dictionary.h',
     'include/brotli/types.h',
 ]
 
@@ -19,6 +20,7 @@ UNIFIED_SOURCES += [
     'common/context.c',
     'common/dictionary.c',
     'common/platform.c',
+    'common/shared_dictionary.c',
     'common/transform.c',
     'dec/bit_reader.c',
     'dec/decode.c',
