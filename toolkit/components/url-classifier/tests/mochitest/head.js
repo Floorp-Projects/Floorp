@@ -17,19 +17,11 @@ function addCompletionToServer(list, url, mochitestUrl) {
 }
 
 function hash(str) {
-  function bytesFromString(str1) {
-    var converter = SpecialPowers.Cc[
-      "@mozilla.org/intl/scriptableunicodeconverter"
-    ].createInstance(SpecialPowers.Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    return converter.convertToByteArray(str1);
-  }
-
   var hasher = SpecialPowers.Cc["@mozilla.org/security/hash;1"].createInstance(
     SpecialPowers.Ci.nsICryptoHash
   );
 
-  var data = bytesFromString(str);
+  var data = new TextEncoder().encode(str);
   hasher.init(hasher.SHA256);
   hasher.update(data, data.length);
 

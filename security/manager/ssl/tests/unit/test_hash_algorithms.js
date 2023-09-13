@@ -67,11 +67,7 @@ function doHash(algo, value, cmp) {
   );
   hash.initWithString(algo);
 
-  let converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "utf8";
-  value = converter.convertToByteArray(value);
+  value = new TextEncoder().encode(value);
   hash.update(value, value.length);
   equal(
     hexify(hash.finish(false)),
@@ -99,11 +95,10 @@ function doHashStream(algo, value, cmp) {
   );
   hash.initWithString(algo);
 
-  let converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "utf8";
-  let stream = converter.convertToInputStream(value);
+  let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+    Ci.nsIStringInputStream
+  );
+  stream.setUTF8Data(value);
   hash.updateFromStream(stream, stream.available());
   equal(
     hexify(hash.finish(false)),
@@ -118,11 +113,7 @@ function testInitConstantAndBase64(
   message,
   expectedOutput
 ) {
-  let converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "utf8";
-  let value = converter.convertToByteArray(message);
+  let value = new TextEncoder().encode(message);
 
   let hash = Cc["@mozilla.org/security/hash;1"].createInstance(
     Ci.nsICryptoHash

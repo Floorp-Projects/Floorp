@@ -52,7 +52,7 @@ export var CryptoUtils = {
    * string containing bytes.
    */
   digestUTF8(message, hasher) {
-    let data = this._utf8Converter.convertToByteArray(message, {});
+    let data = lazy.textEncoder.encode(message);
     hasher.update(data, data.length);
     let result = hasher.finish(false);
     return result;
@@ -82,7 +82,7 @@ export var CryptoUtils = {
    * yourself.
    */
   updateUTF8(message, hasher) {
-    let bytes = this._utf8Converter.convertToByteArray(message, {});
+    let bytes = lazy.textEncoder.encode(message);
     hasher.update(bytes, bytes.length);
   },
 
@@ -95,7 +95,7 @@ export var CryptoUtils = {
   },
 
   sha256Base64(message) {
-    let data = this._utf8Converter.convertToByteArray(message, {});
+    let data = lazy.textEncoder.encode(message);
     let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
       Ci.nsICryptoHash
     );
@@ -527,15 +527,6 @@ export var CryptoUtils = {
     };
   },
 };
-
-ChromeUtils.defineLazyGetter(CryptoUtils, "_utf8Converter", function () {
-  let converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-
-  return converter;
-});
 
 var Svc = {};
 

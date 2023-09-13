@@ -7,7 +7,6 @@
 #include "nsString.h"
 #include "nsIScriptableUConv.h"
 #include "nsScriptableUConv.h"
-#include "nsIStringStream.h"
 #include "nsComponentManagerUtils.h"
 
 #include <tuple>
@@ -147,69 +146,6 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptableUnicodeConverter::ConvertToByteArray(const nsAString& aString,
-                                                 uint32_t* aLen,
-                                                 uint8_t** _aData) {
-  if (!mEncoder) return NS_ERROR_FAILURE;
-
-  CheckedInt<size_t> needed =
-      mEncoder->MaxBufferLengthFromUTF16WithoutReplacement(aString.Length());
-  if (!needed.isValid() || needed.value() > UINT32_MAX) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  uint8_t* data = (uint8_t*)malloc(needed.value());
-  if (!data) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  auto src = Span(aString);
-  auto dst = Span(data, needed.value());
-  size_t totalWritten = 0;
-  for (;;) {
-    auto [result, read, written] =
-        mEncoder->EncodeFromUTF16WithoutReplacement(src, dst, true);
-    if (result != kInputEmpty && result != kOutputFull) {
-      // There's always room for one byte in the case of
-      // an unmappable character, because otherwise
-      // we'd have gotten `kOutputFull`.
-      dst[written++] = '?';
-    }
-    totalWritten += written;
-    if (result == kInputEmpty) {
-      *_aData = data;
-      MOZ_ASSERT(totalWritten <= UINT32_MAX);
-      *aLen = totalWritten;
-      return NS_OK;
-    }
-    src = src.From(read);
-    dst = dst.From(written);
-  }
-}
-
-NS_IMETHODIMP
-nsScriptableUnicodeConverter::ConvertToInputStream(const nsAString& aString,
-                                                   nsIInputStream** _retval) {
-  nsresult rv;
-  nsCOMPtr<nsIStringInputStream> inputStream =
-      do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  uint8_t* data;
-  uint32_t dataLen;
-  rv = ConvertToByteArray(aString, &dataLen, &data);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = inputStream->AdoptData(reinterpret_cast<char*>(data), dataLen);
-  if (NS_FAILED(rv)) {
-    free(data);
-    return rv;
-  }
-
-  NS_ADDREF(*_retval = inputStream);
-  return rv;
 }
 
 NS_IMETHODIMP

@@ -626,11 +626,7 @@ function getPerInstallationMutexName(aGlobal = true) {
 
   let exeFile = Services.dirsvc.get(KEY_EXECUTABLE, Ci.nsIFile);
 
-  let converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-  var data = converter.convertToByteArray(exeFile.path.toLowerCase());
+  var data = new TextEncoder().encode(exeFile.path.toLowerCase());
 
   hasher.update(data, data.length);
   return (

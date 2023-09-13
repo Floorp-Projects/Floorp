@@ -50,21 +50,6 @@ interface nsIScriptableUnicodeConverter : nsISupports
   AString ConvertToUnicode(in ACString aSrc);
 
   /**
-   * Convert a unicode string to an array of bytes. Finish does not need to be
-   * called.
-   */
-  void convertToByteArray(in AString aString,
-                          [optional] out unsigned long aLen,
-                          [array, size_is(aLen),retval] out octet aData);
-
-  /**
-   * Converts a unicode string to an input stream. The bytes in the stream are
-   * encoded according to the charset attribute.
-   * The returned stream will be nonblocking.
-   */
-  nsIInputStream convertToInputStream(in AString aString);
-
-  /**
    * Current character set.
    *
    * @throw NS_ERROR_UCONV_NOCONV

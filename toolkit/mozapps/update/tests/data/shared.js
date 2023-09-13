@@ -676,11 +676,7 @@ function getPerInstallationMutexName() {
   hasher.init(hasher.SHA1);
 
   let exeFile = Services.dirsvc.get(XRE_EXECUTABLE_FILE, Ci.nsIFile);
-  let converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-  let data = converter.convertToByteArray(exeFile.path.toLowerCase());
+  let data = new TextEncoder().encode(exeFile.path.toLowerCase());
 
   hasher.update(data, data.length);
   return "Global\\MozillaUpdateMutex-" + hasher.finish(true);
