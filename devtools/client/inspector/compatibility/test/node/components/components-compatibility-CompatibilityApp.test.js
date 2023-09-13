@@ -40,7 +40,7 @@ describe("CompatibilityApp component", () => {
     const mockStore = configureStore([thunk()]);
     const store = mockStore({
       compatibility: {
-        isSettingsVisibile: true,
+        isSettingsVisible: true,
         selectedNodeIssues: [],
         topLevelTargetIssues: [],
       },
