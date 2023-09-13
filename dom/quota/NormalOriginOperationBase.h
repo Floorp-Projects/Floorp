@@ -46,7 +46,7 @@ class NormalOriginOperationBase
 
   ~NormalOriginOperationBase();
 
-  virtual RefPtr<DirectoryLock> CreateDirectoryLock();
+  virtual RefPtr<DirectoryLock> CreateDirectoryLock() = 0;
 
  private:
   virtual RefPtr<BoolPromise> Open() override;

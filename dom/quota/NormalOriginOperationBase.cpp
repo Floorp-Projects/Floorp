@@ -28,13 +28,6 @@ NormalOriginOperationBase::~NormalOriginOperationBase() {
   AssertIsOnOwningThread();
 }
 
-RefPtr<DirectoryLock> NormalOriginOperationBase::CreateDirectoryLock() {
-  AssertIsOnOwningThread();
-
-  return mQuotaManager->CreateDirectoryLockInternal(
-      mPersistenceType, mOriginScope, mClientType, mExclusive);
-}
-
 RefPtr<BoolPromise> NormalOriginOperationBase::Open() {
   AssertIsOnOwningThread();
 
