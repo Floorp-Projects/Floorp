@@ -7,11 +7,13 @@ import subprocess
 import sys
 import time
 import traceback
-from threading import Timer
+from threading import Event
 
 import mozcrash
 import psutil
+import six
 from mozlog import get_proxy_logger
+from mozprocess import ProcessHandler
 
 from talos.utils import TalosError
 
@@ -70,23 +72,27 @@ class ProcessContext(object):
 
 
 class Reader(object):
-    def __init__(self):
+    def __init__(self, event):
         self.output = []
         self.got_end_timestamp = False
         self.got_timeout = False
         self.timeout_message = ""
         self.got_error = False
+        self.event = event
         self.proc = None
 
     def __call__(self, line):
-        line = line.strip("\n")
+        line = six.ensure_str(line)
         if line.find("__endTimestamp") != -1:
             self.got_end_timestamp = True
+            self.event.set()
         elif line == "TART: TIMEOUT":
             self.got_timeout = True
             self.timeout_message = "TART"
+            self.event.set()
         elif line.startswith("TEST-UNEXPECTED-FAIL | "):
             self.got_error = True
+            self.event.set()
 
         if not (
             "JavaScript error:" in line
@@ -126,7 +132,7 @@ def run_browser(
     :param on_started: a callback that can be used to do things just after
                        the browser has been started. The callback must takes
                        an argument, which is the psutil.Process instance
-    :param kwargs: additional keyword arguments for the :class:`subprocess.Popen`
+    :param kwargs: additional keyword arguments for the :class:`ProcessHandler`
                    instance
 
     Returns a ProcessContext instance, with available output and pid used.
@@ -142,42 +148,34 @@ def run_browser(
     context = ProcessContext(is_launcher)
     first_time = int(time.time()) * 1000
     wait_for_quit_timeout = 20
-    reader = Reader()
+    event = Event()
+    reader = Reader(event)
 
     LOG.info("Using env: %s" % pprint.pformat(kwargs["env"]))
 
-    timed_out = False
-
-    def timeout_handler():
-        nonlocal timed_out
-        timed_out = True
-
-    proc_timer = Timer(timeout, timeout_handler)
-    proc_timer.start()
-
-    proc = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, **kwargs
-    )
+    kwargs["storeOutput"] = False
+    kwargs["processOutputLine"] = reader
+    kwargs["onFinish"] = event.set
+    proc = ProcessHandler(command, **kwargs)
     reader.proc = proc
+    proc.run()
 
     LOG.process_start(proc.pid, " ".join(command))
     try:
         context.process = psutil.Process(proc.pid)
         if on_started:
             on_started(context.process)
-
-        # read output until the browser terminates or the timeout is hit
-        for line in proc.stdout:
-            reader(line)
-            if timed_out:
-                LOG.info("Timeout waiting for test completion; killing browser...")
-                # try to extract the minidump stack if the browser hangs
-                kill_and_get_minidump(context, minidump_dir)
-                raise TalosError("timeout")
-                break
-
+        # wait until we saw __endTimestamp in the proc output,
+        # or the browser just terminated - or we have a timeout
+        if not event.wait(timeout):
+            LOG.info("Timeout waiting for test completion; killing browser...")
+            # try to extract the minidump stack if the browser hangs
+            kill_and_get_minidump(context, minidump_dir)
+            raise TalosError("timeout")
         if reader.got_end_timestamp:
-            proc.wait(wait_for_quit_timeout)
+            for i in six.moves.range(1, wait_for_quit_timeout):
+                if proc.wait(1) is not None:
+                    break
             if proc.poll() is None:
                 LOG.info(
                     "Browser shutdown timed out after {0} seconds, killing"
@@ -195,7 +193,6 @@ def run_browser(
     finally:
         # this also handle KeyboardInterrupt
         # ensure early the process is really terminated
-        proc_timer.cancel()
         return_code = None
         try:
             return_code = context.kill_process()
