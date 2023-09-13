@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "118.0.0",
+  "version": "118.2.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -65,6 +65,7 @@
 
   "permissions": [
     "mozillaAddons",
+    "scripting",
     "tabs",
     "webNavigation",
     "webRequest",

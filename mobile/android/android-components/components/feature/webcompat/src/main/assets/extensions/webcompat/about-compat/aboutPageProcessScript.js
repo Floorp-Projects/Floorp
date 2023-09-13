@@ -19,8 +19,8 @@ if (!Cm.isCIDRegistered(classID)) {
   );
 
   const factory = ComponentUtils.generateSingletonFactory(function () {
-    const { AboutCompat } = ChromeUtils.import(
-      "resource://webcompat/AboutCompat.jsm"
+    const { AboutCompat } = ChromeUtils.importESModule(
+      "resource://webcompat/AboutCompat.sys.mjs"
     );
     return new AboutCompat();
   });

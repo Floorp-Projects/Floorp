@@ -486,7 +486,7 @@ const AVAILABLE_UA_OVERRIDES = [
     domain: "granbluefantasy.jp",
     bug: "1722954",
     config: {
-      matches: ["*://*.granbluefantasy.jp/*"],
+      matches: ["*://*.granbluefantasy.jp/*", "*://*.gbf.game.mbga.jp/*"],
       uaTransformer: originalUA => {
         return originalUA + " iPhone OS 12_0 like Mac OS X";
       },

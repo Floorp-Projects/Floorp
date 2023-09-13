@@ -80,10 +80,10 @@ class Shim {
     this.contentScripts = contentScripts || [];
     for (const script of this.contentScripts) {
       if (typeof script.css === "string") {
-        script.css = [{ file: `/shims/${script.css}` }];
+        script.css = [`/shims/${script.css}`];
       }
       if (typeof script.js === "string") {
-        script.js = [{ file: `/shims/${script.js}` }];
+        script.js = [`/shims/${script.js}`];
       }
     }
 
@@ -244,10 +244,47 @@ class Shim {
       !this._contentScriptRegistrations.length
     ) {
       const matches = [];
+      let idx = 0;
       for (const options of this.contentScripts) {
         matches.push(options.matches);
-        const reg = await browser.contentScripts.register(options);
-        this._contentScriptRegistrations.push(reg);
+        // Some shims includes more than one script (e.g. Blogger one contains
+        // a content script to be run on document_start and one to be run
+        // on document_end.
+        options.id = `shim-${this.id}-${idx++}`;
+        options.persistAcrossSessions = false;
+        // Having to call getRegisteredContentScripts each time we are going to
+        // register a Shim content script is suboptimal, but avoiding that
+        // may require a bit more changes (e.g. rework both Injections, Shim and Shims
+        // classes to more easily register all content scripts with a single
+        // call to the scripting API methods when the background script page is loading
+        // and one per injection or shim being enabled from the AboutCompatBroker).
+        // In the short term we call getRegisteredContentScripts and restrict it to
+        // the script id we are about to register.
+        let isAlreadyRegistered = false;
+        try {
+          const registeredScripts =
+            await browser.scripting.getRegisteredContentScripts({
+              ids: [options.id],
+            });
+          isAlreadyRegistered = !!registeredScripts.length;
+        } catch (ex) {
+          console.error(
+            "Retrieve WebCompat GoFaster registered content scripts failed: ",
+            ex
+          );
+        }
+        try {
+          if (!isAlreadyRegistered) {
+            await browser.scripting.registerContentScripts([options]);
+          }
+          this._contentScriptRegistrations.push(options.id);
+        } catch (ex) {
+          console.error(
+            "Registering WebCompat Shim content scripts failed: ",
+            options,
+            ex
+          );
+        }
       }
       const urls = Array.from(new Set(matches.flat()));
       debug("Enabling content scripts for these URLs:", urls);
@@ -255,9 +292,8 @@ class Shim {
   }
 
   async _unregisterContentScripts() {
-    for (const registration of this._contentScriptRegistrations) {
-      registration.unregister();
-    }
+    const ids = this._contentScriptRegistrations;
+    await browser.scripting.unregisterContentScripts({ ids });
     this._contentScriptRegistrations = [];
   }
 
