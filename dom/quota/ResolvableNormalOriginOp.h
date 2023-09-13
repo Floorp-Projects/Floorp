@@ -25,12 +25,12 @@ class ResolvableNormalOriginOp : public NormalOriginOperationBase {
   }
 
  protected:
-  ResolvableNormalOriginOp(const char* aRunnableName,
+  ResolvableNormalOriginOp(const char* aName,
                            const Nullable<PersistenceType>& aPersistenceType,
                            const OriginScope& aOriginScope,
                            const Nullable<Client::Type> aClientType,
                            bool aExclusive)
-      : NormalOriginOperationBase(aRunnableName, aPersistenceType, aOriginScope,
+      : NormalOriginOperationBase(aName, aPersistenceType, aOriginScope,
                                   aClientType, aExclusive) {
     AssertIsOnOwningThread();
   }

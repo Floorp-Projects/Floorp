@@ -13,15 +13,15 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
-#include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/OriginScope.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 
 namespace mozilla::dom::quota {
 
+class DirectoryLock;
+
 class NormalOriginOperationBase
     : public OriginOperationBase,
-      public OpenDirectoryListener,
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  protected:
   OriginScope mOriginScope;
@@ -31,36 +31,26 @@ class NormalOriginOperationBase
   mozilla::Atomic<bool> mCanceled;
   const bool mExclusive;
 
-  NormalOriginOperationBase(const char* aRunnableName,
+  // If we want to only forward declare DirectoryLock which is referenced by
+  // the mDirectoryLock member then the constructor and destructor must be
+  // defined in the cpp where DirectoryLock is fully declared (DirectoryLock.h
+  // is included). The compiler would complain otherwise because it wouldn't
+  // know how to call DirectoryLock::AddRef/Release in the constructor and
+  // destructor
+  NormalOriginOperationBase(const char* aName,
                             const Nullable<PersistenceType>& aPersistenceType,
                             const OriginScope& aOriginScope,
-                            const Nullable<Client::Type> aClientType,
-                            bool aExclusive)
-      : OriginOperationBase(GetCurrentSerialEventTarget(), aRunnableName),
-        mOriginScope(aOriginScope),
-        mPersistenceType(aPersistenceType),
-        mClientType(aClientType),
-        mExclusive(aExclusive) {
-    AssertIsOnOwningThread();
-  }
+                            const Nullable<Client::Type>& aClientType,
+                            bool aExclusive);
 
-  ~NormalOriginOperationBase() = default;
+  ~NormalOriginOperationBase();
 
   virtual RefPtr<DirectoryLock> CreateDirectoryLock();
 
  private:
-  // Need to declare refcounting unconditionally, because
-  // OpenDirectoryListener has pure-virtual refcounting.
-  NS_DECL_ISUPPORTS_INHERITED
-
-  virtual void Open() override;
+  virtual RefPtr<BoolPromise> Open() override;
 
   virtual void UnblockOpen() override;
-
-  // OpenDirectoryListener overrides.
-  virtual void DirectoryLockAcquired(DirectoryLock* aLock) override;
-
-  virtual void DirectoryLockFailed() override;
 
   // Used to send results before unblocking open.
   virtual void SendResults() = 0;

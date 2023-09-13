@@ -26,8 +26,8 @@ class UsageRequestResponse;
 class QuotaUsageRequestBase : public NormalOriginOperationBase,
                               public PQuotaUsageRequestParent {
  protected:
-  QuotaUsageRequestBase(const char* aRunnableName)
-      : NormalOriginOperationBase(aRunnableName, Nullable<PersistenceType>(),
+  QuotaUsageRequestBase(const char* aName)
+      : NormalOriginOperationBase(aName, Nullable<PersistenceType>(),
                                   OriginScope::FromNull(),
                                   Nullable<Client::Type>(),
                                   /* aExclusive */ false) {}

@@ -73,18 +73,17 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
   nsTArray<RefPtr<OriginDirectoryLock>> mLocks;
 
  public:
-  FinalizeOriginEvictionOp(nsISerialEventTarget* aBackgroundThread,
-                           nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks)
-      : OriginOperationBase(aBackgroundThread,
-                            "dom::quota::FinalizeOriginEvictionOp"),
+  explicit FinalizeOriginEvictionOp(
+      nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks)
+      : OriginOperationBase("dom::quota::FinalizeOriginEvictionOp"),
         mLocks(std::move(aLocks)) {
-    MOZ_ASSERT(!NS_IsMainThread());
+    AssertIsOnOwningThread();
   }
 
  private:
   ~FinalizeOriginEvictionOp() = default;
 
-  virtual void Open() override;
+  virtual RefPtr<BoolPromise> Open() override;
 
   virtual nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
@@ -257,7 +256,7 @@ class InitializedRequestBase : public QuotaRequestBase {
  protected:
   bool mInitialized;
 
-  InitializedRequestBase(const char* aRunnableName);
+  InitializedRequestBase(const char* aName);
 
  private:
   RefPtr<DirectoryLock> CreateDirectoryLock() override;
@@ -322,7 +321,7 @@ class InitializeOriginRequestBase : public QuotaRequestBase {
   bool mIsPrivate;
   bool mCreated;
 
-  InitializeOriginRequestBase(const char* aRunnableName,
+  InitializeOriginRequestBase(const char* aName,
                               PersistenceType aPersistenceType,
                               const PrincipalInfo& aPrincipalInfo);
 
@@ -390,17 +389,17 @@ class ClearStorageOp final : public ResolvableNormalOriginOp<bool> {
 
 class ClearRequestBase : public QuotaRequestBase {
  protected:
-  explicit ClearRequestBase(const char* aRunnableName, bool aExclusive)
-      : QuotaRequestBase(aRunnableName, aExclusive) {
+  ClearRequestBase(const char* aName, bool aExclusive)
+      : QuotaRequestBase(aName, aExclusive) {
     AssertIsOnOwningThread();
   }
 
-  ClearRequestBase(const char* aRunnableName,
+  ClearRequestBase(const char* aName,
                    const Nullable<PersistenceType>& aPersistenceType,
                    const OriginScope& aOriginScope,
                    const Nullable<Client::Type>& aClientType, bool aExclusive)
-      : QuotaRequestBase(aRunnableName, aPersistenceType, aOriginScope,
-                         aClientType, aExclusive) {}
+      : QuotaRequestBase(aName, aPersistenceType, aOriginScope, aClientType,
+                         aExclusive) {}
 
   void DeleteFiles(QuotaManager& aQuotaManager,
                    PersistenceType aPersistenceType);
@@ -531,9 +530,8 @@ class ListOriginsOp final : public QuotaRequestBase,
 }  // namespace
 
 RefPtr<OriginOperationBase> CreateFinalizeOriginEvictionOp(
-    nsISerialEventTarget* aOwningThread,
     nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks) {
-  return MakeRefPtr<FinalizeOriginEvictionOp>(aOwningThread, std::move(aLocks));
+  return MakeRefPtr<FinalizeOriginEvictionOp>(std::move(aLocks));
 }
 
 RefPtr<NormalOriginOperationBase> CreateSaveOriginAccessTimeOp(
@@ -626,14 +624,10 @@ RefPtr<QuotaRequestBase> CreateListOriginsOp() {
   return MakeRefPtr<ListOriginsOp>();
 }
 
-void FinalizeOriginEvictionOp::Open() {
+RefPtr<BoolPromise> FinalizeOriginEvictionOp::Open() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(GetState() == State_Initial);
 
-  AdvanceState();
-
-  QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID,
-         [this](const nsresult rv) { Finish(rv); });
+  return BoolPromise::CreateAndResolve(true, __func__);
 }
 
 nsresult FinalizeOriginEvictionOp::DoDirectoryWork(
@@ -652,15 +646,12 @@ nsresult FinalizeOriginEvictionOp::DoDirectoryWork(
 
 void FinalizeOriginEvictionOp::UnblockOpen() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(GetState() == State_UnblockingOpen);
 
 #ifdef DEBUG
   NoteActorDestroyed();
 #endif
 
   mLocks.Clear();
-
-  AdvanceState();
 }
 
 nsresult SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -1052,9 +1043,8 @@ void StorageNameOp::GetResponse(RequestResponse& aResponse) {
   aResponse = storageNameResponse;
 }
 
-InitializedRequestBase::InitializedRequestBase(const char* aRunnableName)
-    : QuotaRequestBase(aRunnableName, /* aExclusive */ false),
-      mInitialized(false) {
+InitializedRequestBase::InitializedRequestBase(const char* aName)
+    : QuotaRequestBase(aName, /* aExclusive */ false), mInitialized(false) {
   AssertIsOnOwningThread();
 }
 
@@ -1149,9 +1139,9 @@ void InitTemporaryStorageOp::GetResponse(RequestResponse& aResponse) {
 }
 
 InitializeOriginRequestBase::InitializeOriginRequestBase(
-    const char* aRunnableName, const PersistenceType aPersistenceType,
+    const char* aName, const PersistenceType aPersistenceType,
     const PrincipalInfo& aPrincipalInfo)
-    : QuotaRequestBase(aRunnableName,
+    : QuotaRequestBase(aName,
                        /* aExclusive */ false),
       mPrincipalInfo(aPrincipalInfo),
       mCreated(false) {

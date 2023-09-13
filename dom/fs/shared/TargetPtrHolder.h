@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla::dom::fs {

@@ -11,7 +11,6 @@
 
 #include "nsTArrayForwardDeclare.h"
 
-class nsISerialEventTarget;
 template <class T>
 class RefPtr;
 
@@ -31,7 +30,6 @@ class ResolvableNormalOriginOp;
 class UsageRequestParams;
 
 RefPtr<OriginOperationBase> CreateFinalizeOriginEvictionOp(
-    nsISerialEventTarget* aOwningThread,
     nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks);
 
 RefPtr<NormalOriginOperationBase> CreateSaveOriginAccessTimeOp(
