@@ -258,18 +258,18 @@
   object-fit: contain;
   flex-shrink: 0;
   -moz-context-properties: fill, fill-opacity;
-}
 
-.urlbarView-row[tail-suggestion] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
-  visibility: hidden;
-}
+  .urlbarView-row[tail-suggestion] > .urlbarView-row-inner > .urlbarView-no-wrap > & {
+    visibility: hidden;
+  }
 
-.urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon {
-  /* We use the URL color for this icon to inherit its accessibility
-     properties, like adapting to high contrast modes. We also want to ensure
-     contrast from the result highlight. */
-  color: var(--urlbar-popup-url-color);
-  -moz-context-properties: fill;
+  .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > & {
+    /* We use the URL color for this icon to inherit its accessibility
+       properties, like adapting to high contrast modes. We also want to ensure
+       contrast from the result highlight. */
+    color: var(--urlbar-popup-url-color);
+    -moz-context-properties: fill;
+  }
 }
 
 /* Type icon */
