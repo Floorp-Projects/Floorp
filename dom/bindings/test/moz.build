@@ -14,7 +14,7 @@ Library("dombindings_test_s")
 
 MOCHITEST_MANIFESTS += ["mochitest.ini"]
 
-MOCHITEST_CHROME_MANIFESTS += ["chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["chrome.toml"]
 
 TEST_WEBIDL_FILES += [
     "TestCallback.webidl",

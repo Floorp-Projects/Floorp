@@ -1,0 +1,5 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+support-files = ["../head-common.js"]
+
+["test_migration_wizard.html"]

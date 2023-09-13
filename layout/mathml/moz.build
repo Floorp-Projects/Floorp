@@ -9,7 +9,7 @@ with Files("**"):
 
 if CONFIG["ENABLE_TESTS"]:
     MOCHITEST_CHROME_MANIFESTS += [
-        "tests/chrome.ini",
+        "tests/chrome.toml",
     ]
 
 UNIFIED_SOURCES += [

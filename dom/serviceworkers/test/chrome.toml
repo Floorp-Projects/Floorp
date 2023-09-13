@@ -1,0 +1,4 @@
+[DEFAULT]
+dupe-manifest = true
+
+["include:chrome-common.toml"]

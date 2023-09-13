@@ -1,0 +1,27 @@
+[DEFAULT]
+
+["test_on_new_promise.html"]
+
+["test_on_promise_settled.html"]
+
+["test_on_promise_settled_duplicates.html"]
+
+["test_promise_argument_xrays.html"]
+support-files = [
+  "file_promise_xrays.html",
+  "file_promise_argument_tests.js",
+]
+skip-if = ["!debug"]
+
+["test_promise_job_with_bind_from_discarded_iframe.html"]
+support-files = ["file_promise_job_with_bind_from_discarded_iframe.html"]
+
+["test_promise_retval_xrays.html"]
+support-files = [
+  "file_promise_xrays.html",
+  "file_promise_retval_tests.js"
+]
+skip-if = ["debug == false"]
+
+["test_promise_xrays.html"]
+support-files = ["file_promise_xrays.html"]

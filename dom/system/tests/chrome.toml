@@ -1,0 +1,6 @@
+[DEFAULT]
+
+["test_pathutils.html"]
+
+["test_pathutils_worker.xhtml"]
+support-files = ["pathutils_worker.js"]

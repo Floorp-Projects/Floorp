@@ -8,7 +8,7 @@ JAR_MANIFESTS += ["jar.mn"]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
 
 EXTRA_JS_MODULES += [
     "AboutCertViewerChild.sys.mjs",

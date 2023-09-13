@@ -1,0 +1,6 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+
+["test_bug1266815.html"]
+
+["test_bug434998.xhtml"]

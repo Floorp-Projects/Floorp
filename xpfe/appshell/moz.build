@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Window Management")
 
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 
 XPIDL_SOURCES += [
     "nsIAppShellService.idl",

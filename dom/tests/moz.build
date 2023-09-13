@@ -174,16 +174,16 @@ MOCHITEST_MANIFESTS += [
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    "mochitest/beacon/chrome.ini",
-    "mochitest/chrome/chrome.ini",
-    "mochitest/fs/chrome.ini",
-    "mochitest/general/chrome.ini",
-    "mochitest/geolocation/chrome.ini",
-    "mochitest/keyhandling/chrome.ini",
-    "mochitest/localstorage/chrome.ini",
-    "mochitest/sessionstorage/chrome.ini",
-    "mochitest/webcomponents/chrome.ini",
-    "mochitest/whatwg/chrome.ini",
+    "mochitest/beacon/chrome.toml",
+    "mochitest/chrome/chrome.toml",
+    "mochitest/fs/chrome.toml",
+    "mochitest/general/chrome.toml",
+    "mochitest/geolocation/chrome.toml",
+    "mochitest/keyhandling/chrome.toml",
+    "mochitest/localstorage/chrome.toml",
+    "mochitest/sessionstorage/chrome.toml",
+    "mochitest/webcomponents/chrome.toml",
+    "mochitest/whatwg/chrome.toml",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]

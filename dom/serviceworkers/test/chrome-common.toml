@@ -1,0 +1,26 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+support-files = [
+  "chrome_helpers.js",
+  "empty.js",
+  "fetch.js",
+  "hello.html",
+  "serviceworker.html",
+  "serviceworkerinfo_iframe.html",
+  "serviceworkermanager_iframe.html",
+  "serviceworkerregistrationinfo_iframe.html",
+  "utils.js",
+  "worker.js",
+  "worker2.js",
+]
+
+["test_devtools_track_serviceworker_time.html"]
+
+["test_privateBrowsing.html"]
+
+["test_serviceworkerinfo.xhtml"]
+skip-if = ["serviceworker_e10s"] # nsIWorkerDebugger attribute not implemented
+
+["test_serviceworkermanager.xhtml"]
+
+["test_serviceworkerregistrationinfo.xhtml"]

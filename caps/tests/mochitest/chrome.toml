@@ -1,0 +1,15 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+support-files = [
+  "file_data.txt",
+  "file_disableScript.html",
+  "!/caps/tests/mochitest/file_data.txt",
+  "!/caps/tests/mochitest/file_disableScript.html",
+]
+
+["test_addonMayLoad.html"]
+
+["test_bug995943.xhtml"]
+skip-if = ["(verify && debug && (os == 'mac'))"]
+
+["test_disableScript.xhtml"]

@@ -120,7 +120,7 @@ MOCHITEST_MANIFESTS += [
     "test/mochitest/mochitest-remote.ini",
     "test/mochitest/mochitest.ini",
 ]
-MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.toml"]
 XPCSHELL_TESTS_MANIFESTS += [
     "test/xpcshell/native_messaging.ini",
     "test/xpcshell/xpcshell-e10s.ini",

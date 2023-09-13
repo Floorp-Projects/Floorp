@@ -29,7 +29,7 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    "chrome/chrome.ini",
+    "chrome/chrome.toml",
 ]
 
 TEST_HARNESS_FILES.xpcshell.toolkit.components.places.tests += [

@@ -1,0 +1,152 @@
+[DEFAULT]
+tags = "devtools"
+skip-if = ["os == 'android'"]
+support-files = [
+  "doc_Debugger.Source.prototype.introductionType.xhtml",
+  "Debugger.Source.prototype.element.js",
+  "Debugger.Source.prototype.element-2.js",
+  "Debugger.Source.prototype.element.html",
+  "hello-actor.js",
+  "iframe1_makeGlobalObjectReference.html",
+  "iframe2_makeGlobalObjectReference.html",
+  "inspector_css-properties.html",
+  "inspector_display-type.html",
+  "inspector_getImageData.html",
+  "inspector_getOffsetParent.html",
+  "inspector-delay-image-response.sjs",
+  "inspector-eyedropper.html",
+  "inspector-helpers.js",
+  "inspector-search-data.html",
+  "inspector-styles-data.css",
+  "inspector-styles-data.html",
+  "inspector-template.html",
+  "inspector-traversal-data.html",
+  "large-image.jpg",
+  "memory-helpers.js",
+  "nonchrome_unsafeDereference.html",
+  "suspendTimeouts_content.html",
+  "suspendTimeouts_content.js",
+  "suspendTimeouts_worker.js",
+  "small-image.gif",
+  "test_suspendTimeouts.js",
+  "webconsole-helpers.js",
+  "inactive-property-helper/*.mjs",
+]
+
+["test_Debugger.Script.prototype.global.html"]
+
+["test_Debugger.Source.prototype.elementAttribute.html"]
+
+["test_Debugger.Source.prototype.introductionScript.html"]
+
+["test_Debugger.Source.prototype.introductionType.html"]
+
+["test_animation-type-longhand.html"]
+
+["test_css-logic-media-queries.html"]
+
+["test_css-logic-specificity.html"]
+
+["test_css-logic.html"]
+
+["test_css-properties.html"]
+
+["test_device.html"]
+
+["test_executeInGlobal-outerized_this.html"]
+
+["test_highlighter_paused_debugger.html"]
+
+["test_inspector-changeattrs.html"]
+
+["test_inspector-changevalue.html"]
+
+["test_inspector-display-type.html"]
+
+["test_inspector-duplicate-node.html"]
+
+["test_inspector-hide.html"]
+
+["test_inspector-inactive-property-helper.html"]
+
+["test_inspector-mutations-attr.html"]
+
+["test_inspector-mutations-events.html"]
+
+["test_inspector-mutations-value.html"]
+
+["test_inspector-pick-color.html"]
+
+["test_inspector-pseudoclass-lock.html"]
+
+["test_inspector-reload.html"]
+
+["test_inspector-resize.html"]
+
+["test_inspector-resolve-url.html"]
+
+["test_inspector-scroll-into-view.html"]
+
+["test_inspector-search-front.html"]
+
+["test_inspector-template.html"]
+
+["test_inspector_getImageData-wait-for-load.html"]
+
+["test_inspector_getImageData.html"]
+
+["test_inspector_getImageDataFromURL.html"]
+
+["test_inspector_getNodeFromActor.html"]
+
+["test_inspector_getOffsetParent.html"]
+
+["test_makeGlobalObjectReference.html"]
+
+["test_memory.html"]
+
+["test_memory_allocations_02.html"]
+
+["test_memory_allocations_03.html"]
+
+["test_memory_allocations_04.html"]
+
+["test_memory_allocations_05.html"]
+
+["test_memory_allocations_06.html"]
+
+["test_memory_allocations_07.html"]
+
+["test_memory_attach_01.html"]
+
+["test_memory_attach_02.html"]
+
+["test_memory_census.html"]
+
+["test_memory_gc_01.html"]
+
+["test_memory_gc_events.html"]
+
+["test_overflowing-body.html"]
+
+["test_overflowing-children.html"]
+
+["test_preference.html"]
+
+["test_styles-applied.html"]
+
+["test_styles-computed.html"]
+
+["test_styles-layout.html"]
+
+["test_styles-matched.html"]
+
+["test_styles-modify.html"]
+
+["test_styles-svg.html"]
+
+["test_suspendTimeouts.html"]
+
+["test_unsafeDereference.html"]
+
+["test_webconsole-node-grip.html"]

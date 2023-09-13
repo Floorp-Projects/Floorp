@@ -1,0 +1,38 @@
+[DEFAULT]
+support-files = [
+  "external_importMap.js",
+  "insert_a_base_element.js",
+  "module_simpleImportMap.mjs",
+  "module_simpleImportMap_dir.mjs",
+  "module_simpleImportMap_remap.mjs",
+  "module_simpleImportMap_remap_https.mjs",
+  "module_simpleExport.mjs",
+  "module_sortedImportMap.mjs",
+  "scope1/module_simpleExport.mjs",
+  "scope1/module_simpleImportMap.mjs",
+  "scope1/scope2/module_simpleExport.mjs",
+  "scope1/scope2/module_simpleImportMap.mjs",
+]
+prefs = ["dom.importMaps.enabled=true"]
+
+["test_dynamic_import_reject_importMap.html"]
+
+["test_externalImportMap.html"]
+
+["test_import_meta_resolve_importMap.html"]
+
+["test_inline_module_reject_importMap.html"]
+
+["test_load_importMap_with_base.html"]
+
+["test_load_importMap_with_base2.html"]
+
+["test_module_script_reject_importMap.html"]
+
+["test_parse_importMap_failed.html"]
+
+["test_reject_multiple_importMaps.html"]
+
+["test_simpleImportMap.html"]
+
+["test_sortedImportMap.html"]

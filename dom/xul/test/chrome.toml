@@ -1,0 +1,42 @@
+[DEFAULT]
+support-files = [
+  "398289-resource.xhtml",
+  "window_bug583948.xhtml",
+]
+
+["test_accesskey.xhtml"]
+
+["test_bug1070049_throw_from_script.xhtml"]
+
+["test_bug1290965.xhtml"]
+
+["test_bug1686822.xhtml"]
+support-files = ["window_bug1686822.xhtml"]
+
+["test_bug199692.xhtml"]
+
+["test_bug311681.xhtml"]
+
+["test_bug391002.xhtml"]
+
+["test_bug398289.html"]
+
+["test_bug403868.xhtml"]
+
+["test_bug418216.xhtml"]
+
+["test_bug445177.xhtml"]
+
+["test_bug468176.xhtml"]
+
+["test_bug583948.xhtml"]
+
+["test_bug749367.xhtml"]
+
+["test_bug775972.xhtml"]
+
+["test_html_template.xhtml"]
+
+["test_import_xul_to_content.xhtml"]
+
+["test_xul_tabindex_focus.xhtml"]

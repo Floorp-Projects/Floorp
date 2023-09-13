@@ -1,0 +1,10 @@
+[DEFAULT]
+
+["test_context_properties_allowed_domains.html"]
+support-files = ["file_context_fill_fallback_red.html"]
+
+["test_disabled_chrome.html"]
+support-files = [
+  "svg_example_test.html",
+  "svg_example_script.svg",
+]

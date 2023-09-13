@@ -10,7 +10,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     # GeckoView disables hunspell spellchecker.
     DIRS += ["locales"]
 
-MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
 MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
 
 SPHINX_TREES["/extensions/spellcheck"] = "docs"

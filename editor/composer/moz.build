@@ -6,7 +6,7 @@
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 
-MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
+MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 
 XPIDL_SOURCES += [
     "nsIEditingSession.idl",

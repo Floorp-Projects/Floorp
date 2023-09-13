@@ -1,0 +1,4 @@
+[DEFAULT]
+
+["test_device_reset.html"]
+subsuite = "gpu"

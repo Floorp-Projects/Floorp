@@ -14,7 +14,7 @@ with Files("content/docs/sslerrorreport/**"):
     SCHEDULES.exclusive = ["docs"]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    "content/test/chrome/chrome.ini",
+    "content/test/chrome/chrome.toml",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

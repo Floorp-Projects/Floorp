@@ -1,0 +1,7 @@
+[DEFAULT]
+prefs = ["gfx.font_loader.delay=0"]
+
+skip-if = ["os == 'android'"]
+
+["test_nsIEditorSpellCheck_ReplaceWord.html"]
+support-files = ["spellcheck.js"]

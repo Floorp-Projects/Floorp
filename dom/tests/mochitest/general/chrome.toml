@@ -1,0 +1,19 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+
+["test_focusrings.xhtml"]
+support-files = ["file_focusrings.html"]
+skip-if = ["toolkit == 'android'"] #TIMED_OUT
+
+["test_innerScreen.xhtml"]
+
+["test_nodeAdoption_chrome_boundary.xhtml"]
+
+["test_offsets.xhtml"]
+support-files = [
+  "test_offsets.css",
+  "test_offsets.js",
+]
+skip-if = ["(os == 'mac' && debug)"] #leaks Bug 1571583
+
+["test_spacetopagedown.html"]

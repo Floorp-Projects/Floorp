@@ -117,8 +117,8 @@ MOCHITEST_MANIFESTS += [
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
-    "test/chrome-dFPI.ini",
-    "test/chrome.ini",
+    "test/chrome-dFPI.toml",
+    "test/chrome.toml",
 ]
 
 BROWSER_CHROME_MANIFESTS += [
